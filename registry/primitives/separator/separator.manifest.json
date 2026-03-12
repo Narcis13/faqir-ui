@@ -1,0 +1,79 @@
+{
+  "name": "separator",
+  "version": "1.0.0",
+  "kind": "primitive",
+  "category": "layout",
+  "description": "Horizontal or vertical divider line",
+
+  "anatomy": {
+    "tag": "hr",
+    "selector": "[data-ui='separator']",
+    "content_model": "inline"
+  },
+
+  "slots": {
+    "label": {
+      "selector": "[data-part='label']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Optional text label centered on the separator"
+    }
+  },
+
+  "variants": {
+    "orientation": {
+      "values": ["horizontal", "vertical"],
+      "default": "horizontal",
+      "attr": "data-variant",
+      "applied_to": "root"
+    }
+  },
+
+  "states": {},
+
+  "a11y": {
+    "role": "separator",
+    "required_attrs": ["aria-orientation when vertical"],
+    "keyboard": {}
+  },
+
+  "tokens_used": [
+    "color-border", "color-fg-muted",
+    "space-4",
+    "font-sans", "text-xs"
+  ],
+
+  "templates": {
+    "html": "<hr data-ui=\"separator\">",
+    "html_vertical": "<hr data-ui=\"separator\" data-variant=\"vertical\" aria-orientation=\"vertical\">",
+    "html_with_label": "<div data-ui=\"separator\" role=\"separator\">\n  <span data-part=\"label\">{text}</span>\n</div>"
+  },
+
+  "safe_transforms": [
+    "change-orientation",
+    "add-label"
+  ],
+
+  "unsafe_transforms": [
+    "remove-separator-element"
+  ],
+
+  "composition": {
+    "contains": [],
+    "used_in": ["auth-form", "settings-page"]
+  },
+
+  "files": {
+    "html": "separator.html",
+    "css": "separator.css",
+    "manifest": "separator.manifest.json"
+  },
+
+  "tests": [
+    "renders-as-hr-element",
+    "horizontal-by-default",
+    "vertical-variant-sets-data-variant-vertical",
+    "vertical-has-aria-orientation",
+    "label-slot-is-optional"
+  ]
+}

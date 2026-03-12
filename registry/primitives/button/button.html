@@ -1,0 +1,52 @@
+<!-- @ui:component button -->
+<!-- @ui:kind primitive -->
+<!-- @ui:slots icon -->
+<!-- @ui:variants visual=default|primary|secondary|destructive|ghost|outline|link size=sm|md|lg -->
+
+<!-- Default -->
+<button data-ui="button">Default Button</button>
+
+<!-- Primary -->
+<button data-ui="button" data-variant="primary">Primary Button</button>
+
+<!-- Secondary -->
+<button data-ui="button" data-variant="secondary">Secondary Button</button>
+
+<!-- Destructive -->
+<button data-ui="button" data-variant="destructive">Destructive Button</button>
+
+<!-- Ghost -->
+<button data-ui="button" data-variant="ghost">Ghost Button</button>
+
+<!-- Outline -->
+<button data-ui="button" data-variant="outline">Outline Button</button>
+
+<!-- Link -->
+<button data-ui="button" data-variant="link">Link Button</button>
+
+<!-- Sizes -->
+<button data-ui="button" data-variant="primary" data-size="sm">Small</button>
+<button data-ui="button" data-variant="primary">Medium (default)</button>
+<button data-ui="button" data-variant="primary" data-size="lg">Large</button>
+
+<!-- With Icon -->
+<button data-ui="button" data-variant="primary">
+  <span data-part="icon">🔍</span>
+  Search
+</button>
+
+<!-- Icon Only (requires aria-label) -->
+<button data-ui="button" data-variant="ghost" aria-label="Settings">⚙️</button>
+
+<!-- Loading State -->
+<button data-ui="button" data-variant="primary" data-state="loading">Loading...</button>
+
+<!-- Disabled -->
+<button data-ui="button" data-variant="primary" disabled>Disabled</button>
+
+<!-- Button Group -->
+<div data-ui="button-group">
+  <button data-ui="button" data-variant="outline">Left</button>
+  <button data-ui="button" data-variant="outline">Center</button>
+  <button data-ui="button" data-variant="outline">Right</button>
+</div>

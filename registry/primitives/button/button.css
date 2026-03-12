@@ -1,0 +1,164 @@
+/* @ui:component button */
+/* @ui:tokens color-primary color-primary-hover color-primary-fg color-secondary color-secondary-hover color-secondary-fg color-destructive color-destructive-hover color-destructive-fg color-bg color-bg-muted color-bg-subtle color-fg color-border color-ring radius-md space-2 space-3 space-4 space-6 font-sans text-xs text-sm text-base weight-medium duration-fast ease-default shadow-xs radius-full */
+
+/* ── Base ── */
+[data-ui="button"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  height: var(--button-height-md, 40px);
+  padding-inline: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--button-radius, var(--radius-md));
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  line-height: 1;
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-default),
+              border-color var(--duration-fast) var(--ease-default),
+              color var(--duration-fast) var(--ease-default),
+              box-shadow var(--duration-fast) var(--ease-default);
+  user-select: none;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+[data-ui="button"]:hover {
+  background: var(--color-bg-muted);
+}
+
+[data-ui="button"]:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+}
+
+/* ── Variants ── */
+[data-ui="button"][data-variant="primary"] {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-primary-fg);
+}
+[data-ui="button"][data-variant="primary"]:hover {
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+}
+
+[data-ui="button"][data-variant="secondary"] {
+  background: var(--color-secondary);
+  border-color: var(--color-secondary);
+  color: var(--color-secondary-fg);
+}
+[data-ui="button"][data-variant="secondary"]:hover {
+  background: var(--color-secondary-hover);
+}
+
+[data-ui="button"][data-variant="destructive"] {
+  background: var(--color-destructive);
+  border-color: var(--color-destructive);
+  color: var(--color-destructive-fg);
+}
+[data-ui="button"][data-variant="destructive"]:hover {
+  background: var(--color-destructive-hover);
+  border-color: var(--color-destructive-hover);
+}
+
+[data-ui="button"][data-variant="ghost"] {
+  background: transparent;
+  border-color: transparent;
+}
+[data-ui="button"][data-variant="ghost"]:hover {
+  background: var(--color-bg-muted);
+}
+
+[data-ui="button"][data-variant="outline"] {
+  background: transparent;
+}
+[data-ui="button"][data-variant="outline"]:hover {
+  background: var(--color-bg-subtle);
+}
+
+[data-ui="button"][data-variant="link"] {
+  background: transparent;
+  border-color: transparent;
+  color: var(--color-primary);
+  height: auto;
+  padding: 0;
+}
+[data-ui="button"][data-variant="link"]:hover {
+  text-decoration: underline;
+}
+
+/* ── Sizes ── */
+[data-ui="button"][data-size="sm"] {
+  height: var(--button-height-sm, 32px);
+  padding-inline: var(--space-3);
+  font-size: var(--text-xs);
+}
+
+[data-ui="button"][data-size="lg"] {
+  height: var(--button-height-lg, 48px);
+  padding-inline: var(--space-6);
+  font-size: var(--text-base);
+}
+
+/* ── States ── */
+[data-ui="button"]:disabled,
+[data-ui="button"][data-state="disabled"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+[data-ui="button"][data-state="loading"] {
+  cursor: wait;
+  color: transparent;
+  position: relative;
+}
+[data-ui="button"][data-state="loading"]::after {
+  content: "";
+  position: absolute;
+  width: 1em;
+  height: 1em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: var(--radius-full);
+  animation: loom-spin 0.6s linear infinite;
+  color: var(--color-fg);
+}
+
+/* ── Parts ── */
+[data-ui="button"] [data-part="icon"] {
+  display: inline-flex;
+  width: 1em;
+  height: 1em;
+  flex-shrink: 0;
+}
+
+/* ── Button Group ── */
+[data-ui="button-group"] {
+  display: inline-flex;
+}
+[data-ui="button-group"] [data-ui="button"]:not(:first-child) {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  margin-left: -1px;
+}
+[data-ui="button-group"] [data-ui="button"]:not(:last-child) {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+/* ── Motion ── */
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="button"] {
+    transition: none;
+  }
+}
+
+@keyframes loom-spin {
+  to { transform: rotate(360deg); }
+}

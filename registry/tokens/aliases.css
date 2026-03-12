@@ -1,0 +1,40 @@
+/* @ui:tokens aliases — per-component overrides mapping to semantic tokens */
+
+:root {
+  /* ── Button ── */
+  --button-radius:     var(--radius-md);
+  --button-height-sm:  32px;
+  --button-height-md:  40px;
+  --button-height-lg:  48px;
+  --button-font:       var(--font-sans);
+  --button-weight:     var(--weight-medium);
+
+  /* ── Card ── */
+  --card-radius:       var(--radius-lg);
+  --card-shadow:       var(--shadow-sm);
+  --card-border:       var(--color-border);
+  --card-bg:           var(--color-bg);
+  --card-padding:      var(--space-6);
+
+  /* ── Input ── */
+  --input-radius:      var(--radius-md);
+  --input-height:      40px;
+  --input-border:      var(--color-border);
+  --input-bg:          var(--color-bg);
+  --input-font:        var(--font-sans);
+
+  /* ── Dialog ── */
+  --dialog-radius:     var(--radius-xl);
+  --dialog-shadow:     var(--shadow-xl);
+  --dialog-overlay-bg: oklch(0 0 0 / 0.5);
+
+  /* ── Badge ── */
+  --badge-radius:      var(--radius-full);
+  --badge-font:        var(--font-sans);
+
+  /* ── Avatar ── */
+  --avatar-radius:     var(--radius-full);
+  --avatar-size-sm:    32px;
+  --avatar-size-md:    40px;
+  --avatar-size-lg:    56px;
+}

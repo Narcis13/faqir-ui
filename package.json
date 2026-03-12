@@ -1,0 +1,26 @@
+{
+  "name": "@loom-ui/cli",
+  "version": "0.1.0",
+  "description": "Agent-native UI framework — CLI-distributed, manifest-driven, zero-dependency components",
+  "type": "module",
+  "bin": {
+    "loom": "./src/index.ts"
+  },
+  "scripts": {
+    "dev": "bun run src/index.ts",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit"
+  },
+  "files": [
+    "src/",
+    "registry/"
+  ],
+  "keywords": ["ui", "framework", "cli", "components", "agent-native", "html", "css"],
+  "license": "MIT",
+  "devDependencies": {
+    "@happy-dom/global-registrator": "^20.8.3",
+    "@types/bun": "latest",
+    "happy-dom": "^20.8.3",
+    "typescript": "^5.7.0"
+  }
+}

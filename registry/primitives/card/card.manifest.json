@@ -1,0 +1,112 @@
+{
+  "name": "card",
+  "version": "1.0.0",
+  "kind": "primitive",
+  "category": "layout",
+  "description": "Container surface with header, body, and footer slots",
+
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='card']",
+    "content_model": "slots"
+  },
+
+  "slots": {
+    "header": {
+      "selector": "[data-part='header']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Card header area containing title and description"
+    },
+    "title": {
+      "selector": "[data-part='title']",
+      "required": false,
+      "tag_hint": "h3",
+      "description": "Card title text"
+    },
+    "description": {
+      "selector": "[data-part='description']",
+      "required": false,
+      "tag_hint": "p",
+      "description": "Brief card description"
+    },
+    "body": {
+      "selector": "[data-part='body']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "Main card content"
+    },
+    "footer": {
+      "selector": "[data-part='footer']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Card footer with action buttons"
+    }
+  },
+
+  "variants": {
+    "visual": {
+      "values": ["default", "outlined", "filled"],
+      "default": "default",
+      "attr": "data-variant",
+      "applied_to": "root"
+    },
+    "size": {
+      "values": ["sm", "md", "lg"],
+      "default": "md",
+      "attr": "data-size",
+      "applied_to": "root"
+    }
+  },
+
+  "states": {},
+
+  "a11y": {
+    "keyboard": {}
+  },
+
+  "tokens_used": [
+    "color-bg", "color-bg-subtle", "color-fg", "color-fg-muted", "color-border",
+    "radius-lg", "shadow-sm",
+    "space-1", "space-2", "space-4", "space-6",
+    "font-sans", "text-sm", "text-lg",
+    "weight-semibold", "leading-tight"
+  ],
+
+  "templates": {
+    "html": "<div data-ui=\"card\">\n  <div data-part=\"header\">\n    <h3 data-part=\"title\">{title}</h3>\n    <p data-part=\"description\">{description}</p>\n  </div>\n  <div data-part=\"body\">{body}</div>\n  <div data-part=\"footer\">{footer}</div>\n</div>"
+  },
+
+  "safe_transforms": [
+    "change-variant",
+    "add-header",
+    "add-footer",
+    "change-title",
+    "restyle-background"
+  ],
+
+  "unsafe_transforms": [
+    "remove-body-slot",
+    "flatten-to-single-div"
+  ],
+
+  "composition": {
+    "contains": ["button"],
+    "used_in": ["auth-form", "dashboard-shell", "settings-page", "empty-state"]
+  },
+
+  "files": {
+    "html": "card.html",
+    "css": "card.css",
+    "manifest": "card.manifest.json"
+  },
+
+  "tests": [
+    "renders-as-div-with-data-ui-card",
+    "body-slot-is-required",
+    "header-slot-is-optional",
+    "footer-slot-is-optional",
+    "outlined-variant-sets-data-variant-outlined",
+    "filled-variant-has-subtle-background"
+  ]
+}

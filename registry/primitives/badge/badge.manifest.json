@@ -1,0 +1,80 @@
+{
+  "name": "badge",
+  "version": "1.0.0",
+  "kind": "primitive",
+  "category": "data-display",
+  "description": "Small status indicator with color variants",
+
+  "anatomy": {
+    "tag": "span",
+    "selector": "[data-ui='badge']",
+    "content_model": "inline"
+  },
+
+  "slots": {},
+
+  "variants": {
+    "visual": {
+      "values": ["default", "primary", "secondary", "destructive", "success", "warning"],
+      "default": "default",
+      "attr": "data-variant",
+      "applied_to": "root"
+    },
+    "size": {
+      "values": ["sm", "md", "lg"],
+      "default": "md",
+      "attr": "data-size",
+      "applied_to": "root"
+    }
+  },
+
+  "states": {},
+
+  "a11y": {
+    "keyboard": {}
+  },
+
+  "tokens_used": [
+    "color-bg-muted", "color-fg",
+    "color-primary", "color-primary-subtle",
+    "color-secondary", "color-secondary-fg",
+    "color-destructive", "color-destructive-subtle",
+    "color-success", "color-success-subtle",
+    "color-warning", "color-warning-subtle",
+    "radius-full", "space-1", "space-2",
+    "font-sans", "text-xs", "text-sm", "weight-medium"
+  ],
+
+  "templates": {
+    "html": "<span data-ui=\"badge\" data-variant=\"{variant}\">{text}</span>"
+  },
+
+  "safe_transforms": [
+    "change-variant",
+    "change-size",
+    "change-text-content"
+  ],
+
+  "unsafe_transforms": [
+    "remove-badge-element"
+  ],
+
+  "composition": {
+    "contains": [],
+    "used_in": ["crud-table", "search-results"]
+  },
+
+  "files": {
+    "html": "badge.html",
+    "css": "badge.css",
+    "manifest": "badge.manifest.json"
+  },
+
+  "tests": [
+    "renders-as-span-element",
+    "default-has-muted-background",
+    "primary-variant-uses-primary-subtle",
+    "destructive-variant-uses-destructive-subtle",
+    "sm-size-sets-data-size-sm"
+  ]
+}
