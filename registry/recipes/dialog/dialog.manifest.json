@@ -29,6 +29,12 @@
       "tag_hint": "div",
       "description": "Dialog surface containing the interactive content"
     },
+    "header": {
+      "selector": "[data-part='header']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Optional heading region that groups title and dismiss actions"
+    },
     "title": {
       "selector": "[data-part='title']",
       "required": true,
@@ -45,6 +51,12 @@
       "selector": "[data-part='body']",
       "required": true,
       "tag_hint": "div"
+    },
+    "footer": {
+      "selector": "[data-part='footer']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Optional action row for secondary and primary actions"
     },
     "close": {
       "selector": "[data-part='close']",
@@ -120,7 +132,7 @@
     "z-modal"
   ],
   "templates": {
-    "html": "<div data-ui=\"dialog\" data-state=\"closed\" id=\"{id}\">\n  <button data-ui=\"button\" data-part=\"trigger\" data-variant=\"primary\" type=\"button\">{trigger_text}</button>\n  <div data-part=\"overlay\" hidden></div>\n  <div data-part=\"panel\" id=\"{id}-panel\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"{id}-title\" aria-describedby=\"{id}-description\" data-size=\"md\" hidden tabindex=\"-1\">\n    <div data-part=\"header\">\n      <div>\n        <h2 id=\"{id}-title\" data-part=\"title\">{title}</h2>\n        <p id=\"{id}-description\" data-part=\"description\">{description}</p>\n      </div>\n      <button data-part=\"close\" type=\"button\" aria-label=\"Close dialog\">Close</button>\n    </div>\n    <div data-part=\"body\">{body}</div>\n    <div data-part=\"footer\">\n      <button data-ui=\"button\" data-part=\"close\" data-variant=\"secondary\" type=\"button\">Cancel</button>\n      <button data-ui=\"button\" data-variant=\"primary\" type=\"button\">Continue</button>\n    </div>\n  </div>\n</div>"
+    "html": "<div data-ui=\"dialog\" data-state=\"closed\" id=\"{id}\">\n  <button data-ui=\"button\" data-part=\"trigger\" data-variant=\"primary\" type=\"button\">{trigger_text}</button>\n  <div data-part=\"overlay\" hidden></div>\n  <div data-part=\"panel\" id=\"{id}-panel\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"{id}-title\" aria-describedby=\"{id}-description\" data-size=\"md\" hidden tabindex=\"-1\">\n    <div data-part=\"header\">\n      <div>\n        <h2 id=\"{id}-title\" data-part=\"title\">{title}</h2>\n        <p id=\"{id}-description\" data-part=\"description\">{description}</p>\n      </div>\n      <button data-part=\"close\" type=\"button\" aria-label=\"Close dialog\">Close</button>\n    </div>\n    <div data-part=\"body\">{body}</div>\n    <div data-part=\"footer\">\n      <button data-ui=\"button\" data-part=\"close\" data-variant=\"secondary\" type=\"button\" aria-label=\"Close dialog\">Cancel</button>\n      <button data-ui=\"button\" data-variant=\"primary\" type=\"button\">Continue</button>\n    </div>\n  </div>\n</div>"
   },
   "safe_transforms": [
     "change-size",

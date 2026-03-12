@@ -1,0 +1,41 @@
+<div data-ui="tabs" data-state="ready" data-orientation="horizontal" id="tabs-broken">
+  <div data-part="list" role="tablist" aria-label="Sections">
+    <button
+      data-part="trigger"
+      data-value="overview"
+      id="tabs-broken-overview-tab"
+      type="button"
+      role="tab"
+      aria-selected="true"
+      aria-controls="tabs-broken-overview-panel"
+      tabindex="0"
+    >
+      Overview
+    </button>
+  </div>
+
+  <section
+    data-part="panel"
+    data-value="overview"
+    id="tabs-broken-overview-panel"
+    role="tabpanel"
+    aria-labelledby="tabs-broken-overview-tab"
+  >
+    Overview
+  </section>
+
+  <section
+    data-part="panel"
+    data-value="activity"
+    id="tabs-broken-activity-panel"
+    role="tabpanel"
+    aria-labelledby="tabs-broken-activity-tab"
+    hidden
+  >
+    Activity
+  </section>
+
+  <div data-part="ghost">Unknown part</div>
+</div>
+
+<script type="module" src="./ui/loom.js"></script>

@@ -1,10 +1,12 @@
 #!/usr/bin/env bun
 
 import { addCommand } from "./commands/add";
+import { auditCommand } from "./commands/audit";
 import { doctorCommand } from "./commands/doctor";
 import { initCommand } from "./commands/init";
 import { inspectCommand } from "./commands/inspect";
 import { listCommand } from "./commands/list";
+import { repairCommand } from "./commands/repair";
 import { error, info } from "./utils/logger";
 
 export async function runCli(args = process.argv.slice(2), cwd = process.cwd()): Promise<number> {
@@ -45,6 +47,14 @@ export async function runCli(args = process.argv.slice(2), cwd = process.cwd()):
       return (await doctorCommand(rest, cwd)).ok ? 0 : 1;
     }
 
+    if (command === "audit") {
+      return await auditCommand(rest, cwd);
+    }
+
+    if (command === "repair") {
+      return await repairCommand(rest, cwd);
+    }
+
     error(`Unknown command: ${command}`);
     printHelp();
     return 1;
@@ -63,6 +73,8 @@ function printHelp(): void {
   info("  list      Show installed and available components");
   info("  inspect   Show a component manifest");
   info("  doctor    Check project health");
+  info("  audit     Check HTML and CSS contracts");
+  info("  repair    Apply deterministic audit fixes");
 }
 
 if (import.meta.main) {
