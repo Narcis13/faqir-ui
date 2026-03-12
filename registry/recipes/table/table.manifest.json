@@ -1,0 +1,149 @@
+{
+  "$schema": "https://loom.dev/manifest.schema.json",
+  "name": "table",
+  "version": "1.0.0",
+  "kind": "recipe",
+  "category": "data-display",
+  "description": "Enhanced table with sortable columns and row selection status",
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='table']",
+    "content_model": "slots"
+  },
+  "slots": {
+    "table": {
+      "selector": "[data-part='table']",
+      "required": true,
+      "tag_hint": "table"
+    },
+    "sort": {
+      "selector": "[data-part='sort']",
+      "required": true,
+      "tag_hint": "button"
+    },
+    "row": {
+      "selector": "[data-part='row']",
+      "required": true,
+      "tag_hint": "tr"
+    },
+    "row-select": {
+      "selector": "[data-part='row-select']",
+      "required": false,
+      "tag_hint": "input"
+    },
+    "status": {
+      "selector": "[data-part='status']",
+      "required": false,
+      "tag_hint": "p"
+    }
+  },
+  "states": {
+    "ready": {
+      "attr": "data-state=\"ready\"",
+      "default": true
+    }
+  },
+  "a11y": {
+    "required_attrs": [
+      "scope=\"col\" on table headers",
+      "aria-sort reflecting current sort state on sortable headers"
+    ],
+    "keyboard": {
+      "Enter": "sort active column",
+      "Space": "sort active column"
+    }
+  },
+  "tokens_used": [
+    "color-bg-elevated",
+    "color-bg-muted",
+    "color-bg-subtle",
+    "color-fg",
+    "color-fg-muted",
+    "color-fg-subtle",
+    "color-primary",
+    "color-primary-fg",
+    "color-primary-hover",
+    "color-primary-subtle",
+    "color-secondary",
+    "color-secondary-hover",
+    "color-secondary-fg",
+    "color-border",
+    "color-border-strong",
+    "color-ring",
+    "space-0",
+    "space-px",
+    "space-1",
+    "space-2",
+    "space-2h",
+    "space-3",
+    "space-4",
+    "space-5",
+    "space-6",
+    "space-8",
+    "text-xs",
+    "text-sm",
+    "text-base",
+    "text-lg",
+    "text-xl",
+    "leading-tight",
+    "leading-normal",
+    "leading-relaxed",
+    "weight-medium",
+    "weight-semibold",
+    "radius-sm",
+    "radius-md",
+    "radius-lg",
+    "radius-xl",
+    "radius-full",
+    "shadow-xs",
+    "shadow-sm",
+    "shadow-md",
+    "shadow-lg",
+    "shadow-xl",
+    "surface-radius",
+    "surface-shadow",
+    "dialog-radius",
+    "dialog-shadow",
+    "dialog-overlay-bg",
+    "input-height",
+    "input-radius",
+    "input-border",
+    "duration-fast",
+    "duration-normal",
+    "duration-slow",
+    "ease-default",
+    "ease-out",
+    "z-dropdown",
+    "z-overlay",
+    "z-modal",
+    "z-toast"
+  ],
+  "templates": {
+    "html": "<div data-ui=\"table\" data-state=\"ready\">\n  <table data-part=\"table\">\n    <thead><tr><th><button data-part=\"sort\" type=\"button\">{column}</button></th></tr></thead>\n  </table>\n</div>"
+  },
+  "safe_transforms": [
+    "add-column",
+    "remove-column",
+    "change-sort-defaults"
+  ],
+  "unsafe_transforms": [
+    "remove-table-semantics",
+    "remove-aria-sort"
+  ],
+  "composition": {
+    "contains": [],
+    "used_in": [
+      "crud-table"
+    ]
+  },
+  "files": {
+    "html": "table.html",
+    "css": "table.css",
+    "js": "table.js",
+    "manifest": "table.manifest.json"
+  },
+  "tests": [
+    "sorts-rows-on-header-click",
+    "tracks-selected-rows"
+  ]
+}

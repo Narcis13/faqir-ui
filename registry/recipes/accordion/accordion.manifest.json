@@ -1,0 +1,154 @@
+{
+  "$schema": "https://loom.dev/manifest.schema.json",
+  "name": "accordion",
+  "version": "1.0.0",
+  "kind": "recipe",
+  "category": "navigation",
+  "description": "Expandable sections with single or multiple-open modes",
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='accordion']",
+    "content_model": "slots"
+  },
+  "slots": {
+    "item": {
+      "selector": "[data-part='item']",
+      "required": true,
+      "tag_hint": "section"
+    },
+    "trigger": {
+      "selector": "[data-part='trigger']",
+      "required": true,
+      "tag_hint": "button"
+    },
+    "panel": {
+      "selector": "[data-part='panel']",
+      "required": true,
+      "tag_hint": "div"
+    }
+  },
+  "variants": {
+    "mode": {
+      "values": [
+        "single",
+        "multiple"
+      ],
+      "default": "single",
+      "attr": "data-mode",
+      "applied_to": "root"
+    }
+  },
+  "states": {
+    "ready": {
+      "attr": "data-state=\"ready\"",
+      "default": true
+    }
+  },
+  "a11y": {
+    "required_attrs": [
+      "aria-expanded reflecting item state",
+      "aria-controls linking each trigger to its panel"
+    ],
+    "keyboard": {
+      "Enter": "toggle item",
+      "Space": "toggle item",
+      "ArrowDown": "move to next trigger",
+      "ArrowUp": "move to previous trigger"
+    }
+  },
+  "tokens_used": [
+    "color-bg-elevated",
+    "color-bg-muted",
+    "color-bg-subtle",
+    "color-fg",
+    "color-fg-muted",
+    "color-fg-subtle",
+    "color-primary",
+    "color-primary-fg",
+    "color-primary-hover",
+    "color-primary-subtle",
+    "color-secondary",
+    "color-secondary-hover",
+    "color-secondary-fg",
+    "color-border",
+    "color-border-strong",
+    "color-ring",
+    "space-0",
+    "space-px",
+    "space-1",
+    "space-2",
+    "space-2h",
+    "space-3",
+    "space-4",
+    "space-5",
+    "space-6",
+    "space-8",
+    "text-xs",
+    "text-sm",
+    "text-base",
+    "text-lg",
+    "text-xl",
+    "leading-tight",
+    "leading-normal",
+    "leading-relaxed",
+    "weight-medium",
+    "weight-semibold",
+    "radius-sm",
+    "radius-md",
+    "radius-lg",
+    "radius-xl",
+    "radius-full",
+    "shadow-xs",
+    "shadow-sm",
+    "shadow-md",
+    "shadow-lg",
+    "shadow-xl",
+    "surface-radius",
+    "surface-shadow",
+    "dialog-radius",
+    "dialog-shadow",
+    "dialog-overlay-bg",
+    "input-height",
+    "input-radius",
+    "input-border",
+    "duration-fast",
+    "duration-normal",
+    "duration-slow",
+    "ease-default",
+    "ease-out",
+    "z-dropdown",
+    "z-overlay",
+    "z-modal",
+    "z-toast"
+  ],
+  "templates": {
+    "html": "<div data-ui=\"accordion\" data-state=\"ready\" data-mode=\"single\">\n  <section data-part=\"item\" data-state=\"open\">\n    <button data-part=\"trigger\" type=\"button\" aria-expanded=\"true\" aria-controls=\"faq-1\">{title}</button>\n    <div data-part=\"panel\" id=\"faq-1\">{content}</div>\n  </section>\n</div>"
+  },
+  "safe_transforms": [
+    "add-item",
+    "remove-item",
+    "change-mode",
+    "replace-panel-content"
+  ],
+  "unsafe_transforms": [
+    "remove-aria-expanded",
+    "desynchronize-panel-ids"
+  ],
+  "composition": {
+    "contains": [],
+    "used_in": [
+      "settings-page"
+    ]
+  },
+  "files": {
+    "html": "accordion.html",
+    "css": "accordion.css",
+    "js": "accordion.js",
+    "manifest": "accordion.manifest.json"
+  },
+  "tests": [
+    "toggles-item-on-click",
+    "supports-single-mode",
+    "supports-multiple-mode"
+  ]
+}

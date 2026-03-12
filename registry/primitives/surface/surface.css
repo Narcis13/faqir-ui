@@ -1,0 +1,20 @@
+/* @ui:component surface */
+
+[data-ui="surface"] {
+  padding: var(--space-5);
+  border: var(--space-px) solid var(--color-border);
+  border-radius: var(--surface-radius);
+  background: var(--color-bg-elevated);
+  box-shadow: var(--surface-shadow);
+  color: var(--color-fg);
+}
+
+[data-ui="surface"][data-variant="muted"] {
+  background: var(--color-bg-subtle);
+  box-shadow: var(--shadow-xs);
+}
+
+[data-ui="surface"][data-variant="primary"] {
+  border-color: var(--color-primary);
+  background: var(--color-primary-subtle);
+}

@@ -1,0 +1,25 @@
+<!-- @ui:component table -->
+<div data-ui="table" data-state="ready">
+  <p data-part="status">0 selected</p>
+  <table data-part="table">
+    <thead>
+      <tr>
+        <th scope="col">Select</th>
+        <th scope="col"><button data-part="sort" type="button" data-sort-key="name" aria-sort="none">Name</button></th>
+        <th scope="col"><button data-part="sort" type="button" data-sort-key="role" aria-sort="none">Role</button></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr data-part="row">
+        <td><input data-part="row-select" type="checkbox" aria-label="Select row for Alicia" /></td>
+        <td data-column="name">Alicia</td>
+        <td data-column="role">Owner</td>
+      </tr>
+      <tr data-part="row">
+        <td><input data-part="row-select" type="checkbox" aria-label="Select row for Marco" /></td>
+        <td data-column="name">Marco</td>
+        <td data-column="role">Admin</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

@@ -1,0 +1,129 @@
+{
+  "$schema": "https://loom.dev/manifest.schema.json",
+  "name": "switch",
+  "version": "1.0.0",
+  "kind": "primitive",
+  "category": "forms",
+  "description": "Button-based switch with checked and disabled states",
+  "anatomy": {
+    "tag": "button",
+    "selector": "[data-ui='switch']",
+    "content_model": "inline"
+  },
+  "states": {
+    "unchecked": {
+      "attr": "data-state=\"unchecked\"",
+      "default": true
+    },
+    "checked": {
+      "attr": "data-state=\"checked\""
+    },
+    "disabled": {
+      "attr": "disabled"
+    }
+  },
+  "a11y": {
+    "role": "switch",
+    "required_attrs": [
+      "aria-checked reflecting current state",
+      "accessible label via text, aria-label, or aria-labelledby"
+    ],
+    "keyboard": {
+      "Enter": "toggle switch",
+      "Space": "toggle switch"
+    }
+  },
+  "tokens_used": [
+    "color-bg-elevated",
+    "color-bg-muted",
+    "color-bg-subtle",
+    "color-fg",
+    "color-fg-muted",
+    "color-fg-subtle",
+    "color-primary",
+    "color-primary-fg",
+    "color-primary-hover",
+    "color-primary-subtle",
+    "color-secondary",
+    "color-secondary-hover",
+    "color-secondary-fg",
+    "color-border",
+    "color-border-strong",
+    "color-ring",
+    "space-0",
+    "space-px",
+    "space-1",
+    "space-2",
+    "space-2h",
+    "space-3",
+    "space-4",
+    "space-5",
+    "space-6",
+    "space-8",
+    "text-xs",
+    "text-sm",
+    "text-base",
+    "text-lg",
+    "text-xl",
+    "leading-tight",
+    "leading-normal",
+    "leading-relaxed",
+    "weight-medium",
+    "weight-semibold",
+    "radius-sm",
+    "radius-md",
+    "radius-lg",
+    "radius-xl",
+    "radius-full",
+    "shadow-xs",
+    "shadow-sm",
+    "shadow-md",
+    "shadow-lg",
+    "shadow-xl",
+    "surface-radius",
+    "surface-shadow",
+    "dialog-radius",
+    "dialog-shadow",
+    "dialog-overlay-bg",
+    "input-height",
+    "input-radius",
+    "input-border",
+    "duration-fast",
+    "duration-normal",
+    "duration-slow",
+    "ease-default",
+    "ease-out",
+    "z-dropdown",
+    "z-overlay",
+    "z-modal",
+    "z-toast"
+  ],
+  "templates": {
+    "html": "<button data-ui=\"switch\" type=\"button\" role=\"switch\" aria-checked=\"false\" data-state=\"unchecked\"></button>"
+  },
+  "safe_transforms": [
+    "toggle-checked-state",
+    "toggle-disabled-state",
+    "change-size-via-custom-css"
+  ],
+  "unsafe_transforms": [
+    "remove-aria-checked",
+    "replace-with-non-button-element"
+  ],
+  "composition": {
+    "contains": [],
+    "used_in": [
+      "settings-page"
+    ]
+  },
+  "files": {
+    "html": "switch.html",
+    "css": "switch.css",
+    "manifest": "switch.manifest.json"
+  },
+  "tests": [
+    "renders-as-button-element",
+    "supports-checked-state",
+    "supports-disabled-state"
+  ]
+}

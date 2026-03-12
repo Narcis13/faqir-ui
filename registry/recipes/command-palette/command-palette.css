@@ -1,0 +1,40 @@
+/* @ui:component command-palette */
+
+[data-ui="command-palette"] [data-part="overlay"][hidden],
+[data-ui="command-palette"] [data-part="panel"][hidden] { display: none; }
+[data-ui="command-palette"] [data-part="overlay"] {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  background: var(--dialog-overlay-bg);
+}
+[data-ui="command-palette"] [data-part="panel"] {
+  position: fixed;
+  top: 12vh;
+  left: 50%;
+  z-index: var(--z-modal);
+  display: grid;
+  gap: var(--space-4);
+  width: min(calc(100vw - var(--space-8)), 40rem);
+  padding: var(--space-5);
+  border: var(--space-px) solid var(--color-border);
+  border-radius: var(--dialog-radius);
+  background: var(--color-bg-elevated);
+  box-shadow: var(--dialog-shadow);
+  transform: translateX(-50%);
+}
+[data-ui="command-palette"] [data-part="header"] { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+[data-ui="command-palette"] [data-part="list"] { display: grid; gap: var(--space-2); }
+[data-ui="command-palette"] [data-part="item"] {
+  padding: var(--space-3);
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-fg);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+[data-ui="command-palette"] [data-part="item"][hidden] { display: none; }
+[data-ui="command-palette"] [data-part="item"][data-state="active"],
+[data-ui="command-palette"] [data-part="item"]:hover { background: var(--color-secondary); }

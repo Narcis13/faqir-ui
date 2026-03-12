@@ -1,0 +1,26 @@
+/* @ui:component tooltip */
+
+[data-ui="tooltip"] {
+  position: relative;
+  display: inline-flex;
+}
+
+[data-ui="tooltip"] [data-part="content"] {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + var(--space-2));
+  min-inline-size: max-content;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-fg);
+  color: var(--color-bg-elevated);
+  font-size: var(--text-xs);
+  line-height: var(--leading-tight);
+  box-shadow: var(--shadow-sm);
+  transform: translateX(-50%);
+  z-index: var(--z-dropdown);
+}
+
+[data-ui="tooltip"] [data-part="content"][hidden] {
+  display: none;
+}

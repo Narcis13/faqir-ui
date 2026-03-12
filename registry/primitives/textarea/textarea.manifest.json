@@ -1,0 +1,144 @@
+{
+  "$schema": "https://loom.dev/manifest.schema.json",
+  "name": "textarea",
+  "version": "1.0.0",
+  "kind": "primitive",
+  "category": "forms",
+  "description": "Multi-line text input with size and validation states",
+  "anatomy": {
+    "tag": "textarea",
+    "selector": "[data-ui='textarea']",
+    "content_model": "text"
+  },
+  "variants": {
+    "size": {
+      "values": [
+        "sm",
+        "md",
+        "lg"
+      ],
+      "default": "md",
+      "attr": "data-size",
+      "applied_to": "root"
+    }
+  },
+  "states": {
+    "default": {
+      "attr": "data-state=\"default\"",
+      "default": true
+    },
+    "invalid": {
+      "attr": "data-state=\"invalid\""
+    },
+    "readonly": {
+      "attr": "readonly"
+    },
+    "disabled": {
+      "attr": "disabled"
+    }
+  },
+  "a11y": {
+    "required_attrs": [
+      "label should be provided with a separate label element or aria-label",
+      "aria-invalid required when validation fails"
+    ]
+  },
+  "tokens_used": [
+    "input-height",
+    "input-radius",
+    "input-border",
+    "color-bg-elevated",
+    "color-bg-muted",
+    "color-bg-subtle",
+    "color-fg",
+    "color-fg-muted",
+    "color-fg-subtle",
+    "color-primary",
+    "color-primary-fg",
+    "color-primary-hover",
+    "color-primary-subtle",
+    "color-secondary",
+    "color-secondary-hover",
+    "color-secondary-fg",
+    "color-border",
+    "color-border-strong",
+    "color-ring",
+    "space-0",
+    "space-px",
+    "space-1",
+    "space-2",
+    "space-2h",
+    "space-3",
+    "space-4",
+    "space-5",
+    "space-6",
+    "space-8",
+    "text-xs",
+    "text-sm",
+    "text-base",
+    "text-lg",
+    "text-xl",
+    "leading-tight",
+    "leading-normal",
+    "leading-relaxed",
+    "weight-medium",
+    "weight-semibold",
+    "radius-sm",
+    "radius-md",
+    "radius-lg",
+    "radius-xl",
+    "radius-full",
+    "shadow-xs",
+    "shadow-sm",
+    "shadow-md",
+    "shadow-lg",
+    "shadow-xl",
+    "surface-radius",
+    "surface-shadow",
+    "dialog-radius",
+    "dialog-shadow",
+    "dialog-overlay-bg",
+    "input-height",
+    "input-radius",
+    "input-border",
+    "duration-fast",
+    "duration-normal",
+    "duration-slow",
+    "ease-default",
+    "ease-out",
+    "z-dropdown",
+    "z-overlay",
+    "z-modal",
+    "z-toast"
+  ],
+  "templates": {
+    "html": "<textarea data-ui=\"textarea\" data-size=\"{size}\" rows=\"4\" placeholder=\"{placeholder}\"></textarea>"
+  },
+  "safe_transforms": [
+    "change-placeholder",
+    "change-rows",
+    "toggle-disabled-state",
+    "set-invalid-state"
+  ],
+  "unsafe_transforms": [
+    "remove-label-association",
+    "replace-with-non-form-element"
+  ],
+  "composition": {
+    "contains": [],
+    "used_in": [
+      "settings-page",
+      "auth-form"
+    ]
+  },
+  "files": {
+    "html": "textarea.html",
+    "css": "textarea.css",
+    "manifest": "textarea.manifest.json"
+  },
+  "tests": [
+    "renders-as-textarea-element",
+    "supports-size-variants",
+    "supports-invalid-state"
+  ]
+}

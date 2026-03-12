@@ -1,0 +1,29 @@
+/* @ui:component date-picker */
+
+[data-ui="date-picker"] { position: relative; display: grid; gap: var(--space-2); }
+[data-ui="date-picker"] [data-part="calendar"] {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  left: 0;
+  z-index: var(--z-dropdown);
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: var(--space-px) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-elevated);
+  box-shadow: var(--shadow-md);
+}
+[data-ui="date-picker"] [data-part="calendar"][hidden] { display: none; }
+[data-ui="date-picker"] [data-part="grid"] { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-2); }
+[data-ui="date-picker"] [data-part="day"] {
+  min-inline-size: var(--space-8);
+  min-block-size: var(--space-8);
+  border: var(--space-px) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-fg);
+  font: inherit;
+  cursor: pointer;
+}
+[data-ui="date-picker"] [data-part="day"][data-state="selected"] { border-color: var(--color-primary); background: var(--color-primary-subtle); }

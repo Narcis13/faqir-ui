@@ -1,0 +1,132 @@
+{
+  "$schema": "https://loom.dev/manifest.schema.json",
+  "name": "spinner",
+  "version": "1.0.0",
+  "kind": "primitive",
+  "category": "feedback",
+  "description": "Loading indicator with size variants and reduced-motion support",
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='spinner']",
+    "content_model": "inline"
+  },
+  "variants": {
+    "size": {
+      "values": [
+        "sm",
+        "md",
+        "lg"
+      ],
+      "default": "md",
+      "attr": "data-size",
+      "applied_to": "root"
+    }
+  },
+  "states": {
+    "active": {
+      "attr": "data-state=\"active\"",
+      "default": true
+    },
+    "paused": {
+      "attr": "data-state=\"paused\""
+    }
+  },
+  "a11y": {
+    "role": "status",
+    "required_attrs": [
+      "aria-label or visually hidden loading text should be provided"
+    ]
+  },
+  "tokens_used": [
+    "color-bg-elevated",
+    "color-bg-muted",
+    "color-bg-subtle",
+    "color-fg",
+    "color-fg-muted",
+    "color-fg-subtle",
+    "color-primary",
+    "color-primary-fg",
+    "color-primary-hover",
+    "color-primary-subtle",
+    "color-secondary",
+    "color-secondary-hover",
+    "color-secondary-fg",
+    "color-border",
+    "color-border-strong",
+    "color-ring",
+    "space-0",
+    "space-px",
+    "space-1",
+    "space-2",
+    "space-2h",
+    "space-3",
+    "space-4",
+    "space-5",
+    "space-6",
+    "space-8",
+    "text-xs",
+    "text-sm",
+    "text-base",
+    "text-lg",
+    "text-xl",
+    "leading-tight",
+    "leading-normal",
+    "leading-relaxed",
+    "weight-medium",
+    "weight-semibold",
+    "radius-sm",
+    "radius-md",
+    "radius-lg",
+    "radius-xl",
+    "radius-full",
+    "shadow-xs",
+    "shadow-sm",
+    "shadow-md",
+    "shadow-lg",
+    "shadow-xl",
+    "surface-radius",
+    "surface-shadow",
+    "dialog-radius",
+    "dialog-shadow",
+    "dialog-overlay-bg",
+    "input-height",
+    "input-radius",
+    "input-border",
+    "duration-fast",
+    "duration-normal",
+    "duration-slow",
+    "ease-default",
+    "ease-out",
+    "z-dropdown",
+    "z-overlay",
+    "z-modal",
+    "z-toast"
+  ],
+  "templates": {
+    "html": "<div data-ui=\"spinner\" data-size=\"{size}\" role=\"status\" aria-label=\"Loading\"></div>"
+  },
+  "safe_transforms": [
+    "change-size",
+    "change-accent-color"
+  ],
+  "unsafe_transforms": [
+    "remove-loading-label"
+  ],
+  "composition": {
+    "contains": [],
+    "used_in": [
+      "search-results",
+      "command-palette"
+    ]
+  },
+  "files": {
+    "html": "spinner.html",
+    "css": "spinner.css",
+    "manifest": "spinner.manifest.json"
+  },
+  "tests": [
+    "renders-as-status-indicator",
+    "supports-size-variants",
+    "pauses-when-requested"
+  ]
+}

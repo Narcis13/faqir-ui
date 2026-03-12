@@ -1,0 +1,152 @@
+{
+  "$schema": "https://loom.dev/manifest.schema.json",
+  "name": "date-picker",
+  "version": "1.0.0",
+  "kind": "recipe",
+  "category": "forms",
+  "description": "Input-driven date picker with inline calendar popover",
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='date-picker']",
+    "content_model": "slots"
+  },
+  "slots": {
+    "input": {
+      "selector": "[data-part='input']",
+      "required": true,
+      "tag_hint": "input"
+    },
+    "trigger": {
+      "selector": "[data-part='trigger']",
+      "required": true,
+      "tag_hint": "button"
+    },
+    "calendar": {
+      "selector": "[data-part='calendar']",
+      "required": true,
+      "tag_hint": "div"
+    },
+    "day": {
+      "selector": "[data-part='day']",
+      "required": true,
+      "tag_hint": "button"
+    }
+  },
+  "states": {
+    "closed": {
+      "attr": "data-state=\"closed\"",
+      "default": true
+    },
+    "open": {
+      "attr": "data-state=\"open\""
+    }
+  },
+  "a11y": {
+    "required_attrs": [
+      "aria-expanded reflecting open state",
+      "aria-controls linking the trigger to the calendar surface"
+    ],
+    "keyboard": {
+      "ArrowDown": "open calendar",
+      "Enter": "select focused day",
+      "Escape": "close calendar"
+    }
+  },
+  "tokens_used": [
+    "color-bg-elevated",
+    "color-bg-muted",
+    "color-bg-subtle",
+    "color-fg",
+    "color-fg-muted",
+    "color-fg-subtle",
+    "color-primary",
+    "color-primary-fg",
+    "color-primary-hover",
+    "color-primary-subtle",
+    "color-secondary",
+    "color-secondary-hover",
+    "color-secondary-fg",
+    "color-border",
+    "color-border-strong",
+    "color-ring",
+    "space-0",
+    "space-px",
+    "space-1",
+    "space-2",
+    "space-2h",
+    "space-3",
+    "space-4",
+    "space-5",
+    "space-6",
+    "space-8",
+    "text-xs",
+    "text-sm",
+    "text-base",
+    "text-lg",
+    "text-xl",
+    "leading-tight",
+    "leading-normal",
+    "leading-relaxed",
+    "weight-medium",
+    "weight-semibold",
+    "radius-sm",
+    "radius-md",
+    "radius-lg",
+    "radius-xl",
+    "radius-full",
+    "shadow-xs",
+    "shadow-sm",
+    "shadow-md",
+    "shadow-lg",
+    "shadow-xl",
+    "surface-radius",
+    "surface-shadow",
+    "dialog-radius",
+    "dialog-shadow",
+    "dialog-overlay-bg",
+    "input-height",
+    "input-radius",
+    "input-border",
+    "duration-fast",
+    "duration-normal",
+    "duration-slow",
+    "ease-default",
+    "ease-out",
+    "z-dropdown",
+    "z-overlay",
+    "z-modal",
+    "z-toast"
+  ],
+  "templates": {
+    "html": "<div data-ui=\"date-picker\" data-state=\"closed\" id=\"{id}\">\n  <input data-ui=\"input\" data-part=\"input\" type=\"text\" />\n  <button data-ui=\"button\" data-part=\"trigger\" type=\"button\" aria-expanded=\"false\" aria-controls=\"{id}-calendar\">Open calendar</button>\n  <div data-part=\"calendar\" id=\"{id}-calendar\" hidden>\n    <button data-part=\"day\" type=\"button\" data-date=\"2026-03-12\">12</button>\n  </div>\n</div>"
+  },
+  "safe_transforms": [
+    "change-visible-days",
+    "change-date-format",
+    "change-placeholder"
+  ],
+  "unsafe_transforms": [
+    "remove-input-sync",
+    "remove-expanded-state-sync"
+  ],
+  "composition": {
+    "contains": [
+      "button",
+      "input"
+    ],
+    "used_in": [
+      "settings-page"
+    ]
+  },
+  "files": {
+    "html": "date-picker.html",
+    "css": "date-picker.css",
+    "js": "date-picker.js",
+    "manifest": "date-picker.manifest.json"
+  },
+  "tests": [
+    "opens-on-trigger-click",
+    "writes-selected-date-to-input",
+    "closes-on-outside-click"
+  ]
+}

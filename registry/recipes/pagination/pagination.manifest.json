@@ -1,0 +1,139 @@
+{
+  "$schema": "https://loom.dev/manifest.schema.json",
+  "name": "pagination",
+  "version": "1.0.0",
+  "kind": "recipe",
+  "category": "navigation",
+  "description": "Numbered pagination controls with prev and next navigation state",
+  "anatomy": {
+    "tag": "nav",
+    "selector": "[data-ui='pagination']",
+    "content_model": "slots"
+  },
+  "slots": {
+    "prev": {
+      "selector": "[data-part='prev']",
+      "required": true,
+      "tag_hint": "button"
+    },
+    "item": {
+      "selector": "[data-part='item']",
+      "required": true,
+      "tag_hint": "button"
+    },
+    "next": {
+      "selector": "[data-part='next']",
+      "required": true,
+      "tag_hint": "button"
+    }
+  },
+  "states": {
+    "ready": {
+      "attr": "data-state=\"ready\"",
+      "default": true
+    }
+  },
+  "a11y": {
+    "required_attrs": [
+      "aria-current=\"page\" on the active item"
+    ],
+    "keyboard": {
+      "Enter": "activate page",
+      "Space": "activate page"
+    }
+  },
+  "tokens_used": [
+    "color-bg-elevated",
+    "color-bg-muted",
+    "color-bg-subtle",
+    "color-fg",
+    "color-fg-muted",
+    "color-fg-subtle",
+    "color-primary",
+    "color-primary-fg",
+    "color-primary-hover",
+    "color-primary-subtle",
+    "color-secondary",
+    "color-secondary-hover",
+    "color-secondary-fg",
+    "color-border",
+    "color-border-strong",
+    "color-ring",
+    "space-0",
+    "space-px",
+    "space-1",
+    "space-2",
+    "space-2h",
+    "space-3",
+    "space-4",
+    "space-5",
+    "space-6",
+    "space-8",
+    "text-xs",
+    "text-sm",
+    "text-base",
+    "text-lg",
+    "text-xl",
+    "leading-tight",
+    "leading-normal",
+    "leading-relaxed",
+    "weight-medium",
+    "weight-semibold",
+    "radius-sm",
+    "radius-md",
+    "radius-lg",
+    "radius-xl",
+    "radius-full",
+    "shadow-xs",
+    "shadow-sm",
+    "shadow-md",
+    "shadow-lg",
+    "shadow-xl",
+    "surface-radius",
+    "surface-shadow",
+    "dialog-radius",
+    "dialog-shadow",
+    "dialog-overlay-bg",
+    "input-height",
+    "input-radius",
+    "input-border",
+    "duration-fast",
+    "duration-normal",
+    "duration-slow",
+    "ease-default",
+    "ease-out",
+    "z-dropdown",
+    "z-overlay",
+    "z-modal",
+    "z-toast"
+  ],
+  "templates": {
+    "html": "<nav data-ui=\"pagination\" data-state=\"ready\" data-page=\"1\">\n  <button data-part=\"prev\" type=\"button\">Previous</button>\n  <button data-part=\"item\" type=\"button\" aria-current=\"page\">1</button>\n  <button data-part=\"next\" type=\"button\">Next</button>\n</nav>"
+  },
+  "safe_transforms": [
+    "add-page",
+    "remove-page",
+    "change-labels"
+  ],
+  "unsafe_transforms": [
+    "remove-aria-current",
+    "remove-disabled-prev-next-state"
+  ],
+  "composition": {
+    "contains": [],
+    "used_in": [
+      "crud-table",
+      "search-results"
+    ]
+  },
+  "files": {
+    "html": "pagination.html",
+    "css": "pagination.css",
+    "js": "pagination.js",
+    "manifest": "pagination.manifest.json"
+  },
+  "tests": [
+    "activates-page-on-click",
+    "supports-prev-next-navigation"
+  ]
+}

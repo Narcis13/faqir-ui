@@ -1,0 +1,36 @@
+/* @ui:component spinner */
+
+[data-ui="spinner"] {
+  inline-size: var(--space-5);
+  block-size: var(--space-5);
+  border: var(--space-px) solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: var(--radius-full);
+  animation: loom-spin var(--duration-slow) linear infinite;
+}
+
+[data-ui="spinner"][data-size="sm"] {
+  inline-size: var(--space-4);
+  block-size: var(--space-4);
+}
+
+[data-ui="spinner"][data-size="lg"] {
+  inline-size: var(--space-6);
+  block-size: var(--space-6);
+}
+
+[data-ui="spinner"][data-state="paused"] {
+  animation-play-state: paused;
+}
+
+@keyframes loom-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="spinner"] {
+    animation-duration: calc(var(--duration-slow) * 3);
+  }
+}

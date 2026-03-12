@@ -1,0 +1,148 @@
+{
+  "$schema": "https://loom.dev/manifest.schema.json",
+  "name": "combobox",
+  "version": "1.0.0",
+  "kind": "recipe",
+  "category": "forms",
+  "description": "Input with filtered option list for autocomplete workflows",
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='combobox']",
+    "content_model": "slots"
+  },
+  "slots": {
+    "input": {
+      "selector": "[data-part='input']",
+      "required": true,
+      "tag_hint": "input"
+    },
+    "list": {
+      "selector": "[data-part='list']",
+      "required": true,
+      "tag_hint": "div"
+    },
+    "option": {
+      "selector": "[data-part='option']",
+      "required": true,
+      "tag_hint": "button"
+    }
+  },
+  "states": {
+    "closed": {
+      "attr": "data-state=\"closed\"",
+      "default": true
+    },
+    "open": {
+      "attr": "data-state=\"open\""
+    }
+  },
+  "a11y": {
+    "required_attrs": [
+      "role=\"combobox\" on the input",
+      "aria-controls linking the input to the listbox",
+      "role=\"option\" on each option"
+    ],
+    "keyboard": {
+      "ArrowDown": "move to next option",
+      "Enter": "select active option",
+      "Escape": "close list"
+    }
+  },
+  "tokens_used": [
+    "color-bg-elevated",
+    "color-bg-muted",
+    "color-bg-subtle",
+    "color-fg",
+    "color-fg-muted",
+    "color-fg-subtle",
+    "color-primary",
+    "color-primary-fg",
+    "color-primary-hover",
+    "color-primary-subtle",
+    "color-secondary",
+    "color-secondary-hover",
+    "color-secondary-fg",
+    "color-border",
+    "color-border-strong",
+    "color-ring",
+    "space-0",
+    "space-px",
+    "space-1",
+    "space-2",
+    "space-2h",
+    "space-3",
+    "space-4",
+    "space-5",
+    "space-6",
+    "space-8",
+    "text-xs",
+    "text-sm",
+    "text-base",
+    "text-lg",
+    "text-xl",
+    "leading-tight",
+    "leading-normal",
+    "leading-relaxed",
+    "weight-medium",
+    "weight-semibold",
+    "radius-sm",
+    "radius-md",
+    "radius-lg",
+    "radius-xl",
+    "radius-full",
+    "shadow-xs",
+    "shadow-sm",
+    "shadow-md",
+    "shadow-lg",
+    "shadow-xl",
+    "surface-radius",
+    "surface-shadow",
+    "dialog-radius",
+    "dialog-shadow",
+    "dialog-overlay-bg",
+    "input-height",
+    "input-radius",
+    "input-border",
+    "duration-fast",
+    "duration-normal",
+    "duration-slow",
+    "ease-default",
+    "ease-out",
+    "z-dropdown",
+    "z-overlay",
+    "z-modal",
+    "z-toast"
+  ],
+  "templates": {
+    "html": "<div data-ui=\"combobox\" data-state=\"closed\" id=\"{id}\">\n  <input data-ui=\"input\" data-part=\"input\" role=\"combobox\" aria-expanded=\"false\" aria-controls=\"{id}-list\" />\n  <div data-part=\"list\" id=\"{id}-list\" role=\"listbox\" hidden>\n    <button data-part=\"option\" type=\"button\" role=\"option\">{option}</button>\n  </div>\n</div>"
+  },
+  "safe_transforms": [
+    "change-options",
+    "change-placeholder",
+    "customize-empty-state"
+  ],
+  "unsafe_transforms": [
+    "remove-combobox-role",
+    "remove-listbox-role"
+  ],
+  "composition": {
+    "contains": [
+      "input"
+    ],
+    "used_in": [
+      "search-results",
+      "settings-page"
+    ]
+  },
+  "files": {
+    "html": "combobox.html",
+    "css": "combobox.css",
+    "js": "combobox.js",
+    "manifest": "combobox.manifest.json"
+  },
+  "tests": [
+    "opens-on-input-focus",
+    "filters-options",
+    "selects-option-on-click"
+  ]
+}

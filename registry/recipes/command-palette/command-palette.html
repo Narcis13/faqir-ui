@@ -1,0 +1,17 @@
+<!-- @ui:component command-palette -->
+<div data-ui="command-palette" data-state="closed" id="command-palette-demo">
+  <button data-ui="button" data-part="trigger" data-variant="outline" type="button">Open command palette</button>
+  <div data-part="overlay" hidden></div>
+  <div data-part="panel" role="dialog" aria-modal="true" aria-labelledby="command-palette-demo-title" hidden tabindex="-1">
+    <div data-part="header">
+      <h2 id="command-palette-demo-title" data-part="title">Quick actions</h2>
+      <button data-part="close" type="button" aria-label="Close command palette">Close</button>
+    </div>
+    <input data-ui="input" data-part="input" type="text" placeholder="Search commands" />
+    <div data-part="list" role="listbox">
+      <button data-part="item" type="button" data-value="Go to projects">Go to projects</button>
+      <button data-part="item" type="button" data-value="Create issue">Create issue</button>
+      <button data-part="item" type="button" data-value="Invite teammate">Invite teammate</button>
+    </div>
+  </div>
+</div>

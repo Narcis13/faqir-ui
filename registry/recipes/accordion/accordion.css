@@ -1,0 +1,37 @@
+/* @ui:component accordion */
+
+[data-ui="accordion"] {
+  border: var(--space-px) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-elevated);
+}
+
+[data-ui="accordion"] [data-part="item"] + [data-part="item"] {
+  border-top: var(--space-px) solid var(--color-border);
+}
+
+[data-ui="accordion"] [data-part="trigger"] {
+  display: flex;
+  justify-content: space-between;
+  inline-size: 100%;
+  padding: var(--space-4);
+  border: none;
+  background: transparent;
+  color: var(--color-fg);
+  font: inherit;
+  font-weight: var(--weight-medium);
+  text-align: left;
+  cursor: pointer;
+}
+
+[data-ui="accordion"] [data-part="panel"] {
+  padding: 0 var(--space-4) var(--space-4);
+  color: var(--color-fg-muted);
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+}
+
+[data-ui="accordion"] [data-part="trigger"]:focus-visible {
+  outline: var(--space-px) solid var(--color-ring);
+  outline-offset: calc(var(--space-px) * -1);
+}

@@ -1,0 +1,24 @@
+<!-- @ui:component drawer -->
+<div data-ui="drawer" data-state="closed" id="drawer-demo">
+  <button data-ui="button" data-part="trigger" data-variant="secondary" type="button">Open drawer</button>
+  <div data-part="overlay" hidden></div>
+  <aside
+    data-part="panel"
+    data-side="right"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="drawer-demo-title"
+    aria-describedby="drawer-demo-description"
+    hidden
+    tabindex="-1"
+  >
+    <div data-part="header">
+      <div>
+        <h2 id="drawer-demo-title" data-part="title">Workspace settings</h2>
+        <p id="drawer-demo-description" data-part="description">Edit project-level defaults without leaving the page.</p>
+      </div>
+      <button data-part="close" type="button" aria-label="Close drawer">Close</button>
+    </div>
+    <div data-part="body">Drawer body content</div>
+  </aside>
+</div>

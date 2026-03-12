@@ -1,0 +1,30 @@
+/* @ui:component select-custom */
+
+[data-ui="select-custom"] { position: relative; display: inline-grid; }
+[data-ui="select-custom"] [data-part="content"] {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  left: 0;
+  min-inline-size: 100%;
+  z-index: var(--z-dropdown);
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  border: var(--space-px) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-elevated);
+  box-shadow: var(--shadow-md);
+}
+[data-ui="select-custom"] [data-part="content"][hidden] { display: none; }
+[data-ui="select-custom"] [data-part="option"] {
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-fg);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+[data-ui="select-custom"] [data-part="option"]:hover,
+[data-ui="select-custom"] [data-part="option"][data-state="selected"] { background: var(--color-secondary); }

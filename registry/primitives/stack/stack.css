@@ -1,0 +1,32 @@
+/* @ui:component stack */
+
+[data-ui="stack"] {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-4);
+}
+
+[data-ui="stack"][data-direction="horizontal"] {
+  flex-direction: row;
+}
+
+[data-ui="stack"][data-gap="sm"] {
+  gap: var(--space-2);
+}
+
+[data-ui="stack"][data-gap="lg"] {
+  gap: var(--space-6);
+}
+
+[data-ui="stack"][data-align="start"] {
+  align-items: flex-start;
+}
+
+[data-ui="stack"][data-align="center"] {
+  align-items: center;
+}
+
+[data-ui="stack"][data-align="end"] {
+  align-items: flex-end;
+}

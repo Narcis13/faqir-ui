@@ -1,0 +1,194 @@
+{
+  "$schema": "https://loom.dev/manifest.schema.json",
+  "name": "drawer",
+  "version": "1.0.0",
+  "kind": "recipe",
+  "category": "overlay",
+  "description": "Side drawer with overlay backdrop, focus trap, and edge variants",
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='drawer']",
+    "content_model": "slots"
+  },
+  "slots": {
+    "trigger": {
+      "selector": "[data-part='trigger']",
+      "required": true,
+      "tag_hint": "button",
+      "description": "Button that opens the drawer"
+    },
+    "overlay": {
+      "selector": "[data-part='overlay']",
+      "required": true,
+      "tag_hint": "div"
+    },
+    "panel": {
+      "selector": "[data-part='panel']",
+      "required": true,
+      "tag_hint": "aside"
+    },
+    "title": {
+      "selector": "[data-part='title']",
+      "required": true,
+      "tag_hint": "h2"
+    },
+    "description": {
+      "selector": "[data-part='description']",
+      "required": false,
+      "tag_hint": "p"
+    },
+    "body": {
+      "selector": "[data-part='body']",
+      "required": true,
+      "tag_hint": "div"
+    },
+    "footer": {
+      "selector": "[data-part='footer']",
+      "required": false,
+      "tag_hint": "div"
+    },
+    "close": {
+      "selector": "[data-part='close']",
+      "required": true,
+      "tag_hint": "button"
+    }
+  },
+  "variants": {
+    "side": {
+      "values": [
+        "left",
+        "right"
+      ],
+      "default": "right",
+      "attr": "data-side",
+      "applied_to": "panel"
+    }
+  },
+  "states": {
+    "closed": {
+      "attr": "data-state=\"closed\"",
+      "default": true
+    },
+    "open": {
+      "attr": "data-state=\"open\""
+    },
+    "closing": {
+      "attr": "data-state=\"closing\"",
+      "transient": true
+    }
+  },
+  "a11y": {
+    "role": "dialog",
+    "aria-modal": true,
+    "required_attrs": [
+      "role=\"dialog\" on panel",
+      "aria-modal=\"true\" on panel",
+      "aria-labelledby linked to title"
+    ],
+    "focus_trap": true,
+    "escape_closes": true,
+    "return_focus": "trigger",
+    "keyboard": {
+      "Escape": "close drawer",
+      "Tab": "cycle focus within panel"
+    }
+  },
+  "tokens_used": [
+    "color-bg-elevated",
+    "color-bg-muted",
+    "color-bg-subtle",
+    "color-fg",
+    "color-fg-muted",
+    "color-fg-subtle",
+    "color-primary",
+    "color-primary-fg",
+    "color-primary-hover",
+    "color-primary-subtle",
+    "color-secondary",
+    "color-secondary-hover",
+    "color-secondary-fg",
+    "color-border",
+    "color-border-strong",
+    "color-ring",
+    "space-0",
+    "space-px",
+    "space-1",
+    "space-2",
+    "space-2h",
+    "space-3",
+    "space-4",
+    "space-5",
+    "space-6",
+    "space-8",
+    "text-xs",
+    "text-sm",
+    "text-base",
+    "text-lg",
+    "text-xl",
+    "leading-tight",
+    "leading-normal",
+    "leading-relaxed",
+    "weight-medium",
+    "weight-semibold",
+    "radius-sm",
+    "radius-md",
+    "radius-lg",
+    "radius-xl",
+    "radius-full",
+    "shadow-xs",
+    "shadow-sm",
+    "shadow-md",
+    "shadow-lg",
+    "shadow-xl",
+    "surface-radius",
+    "surface-shadow",
+    "dialog-radius",
+    "dialog-shadow",
+    "dialog-overlay-bg",
+    "input-height",
+    "input-radius",
+    "input-border",
+    "duration-fast",
+    "duration-normal",
+    "duration-slow",
+    "ease-default",
+    "ease-out",
+    "z-dropdown",
+    "z-overlay",
+    "z-modal",
+    "z-toast"
+  ],
+  "templates": {
+    "html": "<div data-ui=\"drawer\" data-state=\"closed\" id=\"{id}\">\n  <button data-ui=\"button\" data-part=\"trigger\" data-variant=\"secondary\" type=\"button\">Open drawer</button>\n  <div data-part=\"overlay\" hidden></div>\n  <aside data-part=\"panel\" data-side=\"right\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"{id}-title\" hidden tabindex=\"-1\">\n    <div data-part=\"header\">\n      <div>\n        <h2 id=\"{id}-title\" data-part=\"title\">{title}</h2>\n        <p id=\"{id}-description\" data-part=\"description\">{description}</p>\n      </div>\n      <button data-part=\"close\" type=\"button\" aria-label=\"Close drawer\">Close</button>\n    </div>\n    <div data-part=\"body\">{body}</div>\n  </aside>\n</div>"
+  },
+  "safe_transforms": [
+    "change-side",
+    "replace-body-content",
+    "customize-footer-actions"
+  ],
+  "unsafe_transforms": [
+    "remove-focus-trap",
+    "remove-overlay",
+    "change-panel-role"
+  ],
+  "composition": {
+    "contains": [
+      "button"
+    ],
+    "used_in": [
+      "dashboard-shell",
+      "settings-page"
+    ]
+  },
+  "files": {
+    "html": "drawer.html",
+    "css": "drawer.css",
+    "js": "drawer.js",
+    "manifest": "drawer.manifest.json"
+  },
+  "tests": [
+    "opens-on-trigger-click",
+    "closes-on-overlay-click",
+    "traps-focus-while-open"
+  ]
+}

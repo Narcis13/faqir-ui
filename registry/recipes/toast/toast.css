@@ -1,0 +1,34 @@
+/* @ui:component toast */
+
+[data-ui="toast"] {
+  position: fixed;
+  right: var(--space-4);
+  bottom: var(--space-4);
+  z-index: var(--z-toast);
+  display: grid;
+  gap: var(--space-3);
+}
+
+[data-ui="toast"] [data-part="item"] {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-3);
+  min-inline-size: 18rem;
+  padding: var(--space-4);
+  border: var(--space-px) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-elevated);
+  box-shadow: var(--shadow-lg);
+}
+
+[data-ui="toast"] [data-part="title"] {
+  color: var(--color-fg);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+}
+
+[data-ui="toast"] [data-part="description"] {
+  margin: var(--space-1) 0 0;
+  color: var(--color-fg-muted);
+  font-size: var(--text-sm);
+}

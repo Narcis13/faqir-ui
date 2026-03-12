@@ -71,9 +71,11 @@ describe("loom component commands", () => {
       expect(output).toContain("button");
       expect(output).toContain("card");
       expect(output).toContain("input");
-      expect(output).toContain("Available (7 not installed):");
+      expect(output).toContain("Available (29 not installed):");
+      expect(output).toContain("accordion");
       expect(output).toContain("avatar");
       expect(output).toContain("badge");
+      expect(output).toContain("date-picker");
       expect(output).toContain("RECIPES:");
       expect(output).toContain("dialog");
       expect(output).toContain("dropdown");
@@ -120,6 +122,40 @@ describe("loom component commands", () => {
       );
 
       expect(await runCli(["doctor"], cwd)).toBe(1);
+    } finally {
+      await rm(cwd, { recursive: true, force: true });
+    }
+  });
+
+  test("loom add --all installs the full MVP registry and regenerates context", async () => {
+    const cwd = await makeTempProject();
+
+    try {
+      expect(await runCli(["init"], cwd)).toBe(0);
+      expect(await runCli(["add", "--all"], cwd)).toBe(0);
+      expect(await runCli(["doctor"], cwd)).toBe(0);
+
+      const config = JSON.parse(await readFile(join(cwd, "loom.config.json"), "utf8"));
+      const context = JSON.parse(await readFile(join(cwd, ".loom", "context.json"), "utf8"));
+      const loomScript = await readFile(join(cwd, "ui", "loom.js"), "utf8");
+
+      expect(config.installed.primitives).toHaveLength(17);
+      expect(config.installed.recipes).toHaveLength(15);
+      expect(config.installed.patterns).toEqual([]);
+
+      expect(context.meta.component_count.primitives).toBe(17);
+      expect(context.meta.component_count.recipes).toBe(15);
+      expect(context.components.textarea.kind).toBe("primitive");
+      expect(context.components.drawer.kind).toBe("recipe");
+      expect(context.components["date-picker"].controller).toBe("date-picker.js");
+
+      expect(loomScript).toContain('import { createAccordion } from "./recipes/accordion/accordion.js";');
+      expect(loomScript).toContain('import { createDatePicker } from "./recipes/date-picker/date-picker.js";');
+      expect(loomScript).toContain('import { createToast } from "./recipes/toast/toast.js";');
+
+      await expect(stat(join(cwd, "ui", "primitives", "surface", "surface.css"))).resolves.toBeDefined();
+      await expect(stat(join(cwd, "ui", "recipes", "command-palette", "command-palette.js"))).resolves.toBeDefined();
+      await expect(stat(join(cwd, "ui", "recipes", "date-picker", "date-picker.manifest.json"))).resolves.toBeDefined();
     } finally {
       await rm(cwd, { recursive: true, force: true });
     }

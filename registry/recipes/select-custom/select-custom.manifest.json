@@ -1,0 +1,146 @@
+{
+  "$schema": "https://loom.dev/manifest.schema.json",
+  "name": "select-custom",
+  "version": "1.0.0",
+  "kind": "recipe",
+  "category": "forms",
+  "description": "Custom select built from a trigger and option list with keyboard dismissal",
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='select-custom']",
+    "content_model": "slots"
+  },
+  "slots": {
+    "trigger": {
+      "selector": "[data-part='trigger']",
+      "required": true,
+      "tag_hint": "button"
+    },
+    "content": {
+      "selector": "[data-part='content']",
+      "required": true,
+      "tag_hint": "div"
+    },
+    "option": {
+      "selector": "[data-part='option']",
+      "required": true,
+      "tag_hint": "button"
+    }
+  },
+  "states": {
+    "closed": {
+      "attr": "data-state=\"closed\"",
+      "default": true
+    },
+    "open": {
+      "attr": "data-state=\"open\""
+    }
+  },
+  "a11y": {
+    "required_attrs": [
+      "aria-expanded reflecting open state",
+      "role=\"listbox\" on content",
+      "role=\"option\" on each option"
+    ],
+    "keyboard": {
+      "ArrowDown": "open and move through options",
+      "Enter": "select option",
+      "Escape": "close select"
+    }
+  },
+  "tokens_used": [
+    "color-bg-elevated",
+    "color-bg-muted",
+    "color-bg-subtle",
+    "color-fg",
+    "color-fg-muted",
+    "color-fg-subtle",
+    "color-primary",
+    "color-primary-fg",
+    "color-primary-hover",
+    "color-primary-subtle",
+    "color-secondary",
+    "color-secondary-hover",
+    "color-secondary-fg",
+    "color-border",
+    "color-border-strong",
+    "color-ring",
+    "space-0",
+    "space-px",
+    "space-1",
+    "space-2",
+    "space-2h",
+    "space-3",
+    "space-4",
+    "space-5",
+    "space-6",
+    "space-8",
+    "text-xs",
+    "text-sm",
+    "text-base",
+    "text-lg",
+    "text-xl",
+    "leading-tight",
+    "leading-normal",
+    "leading-relaxed",
+    "weight-medium",
+    "weight-semibold",
+    "radius-sm",
+    "radius-md",
+    "radius-lg",
+    "radius-xl",
+    "radius-full",
+    "shadow-xs",
+    "shadow-sm",
+    "shadow-md",
+    "shadow-lg",
+    "shadow-xl",
+    "surface-radius",
+    "surface-shadow",
+    "dialog-radius",
+    "dialog-shadow",
+    "dialog-overlay-bg",
+    "input-height",
+    "input-radius",
+    "input-border",
+    "duration-fast",
+    "duration-normal",
+    "duration-slow",
+    "ease-default",
+    "ease-out",
+    "z-dropdown",
+    "z-overlay",
+    "z-modal",
+    "z-toast"
+  ],
+  "templates": {
+    "html": "<div data-ui=\"select-custom\" data-state=\"closed\" id=\"{id}\">\n  <button data-ui=\"button\" data-part=\"trigger\" type=\"button\" aria-expanded=\"false\" aria-controls=\"{id}-content\">{label}</button>\n  <div data-part=\"content\" id=\"{id}-content\" role=\"listbox\" hidden>\n    <button data-part=\"option\" type=\"button\" role=\"option\">{option}</button>\n  </div>\n</div>"
+  },
+  "safe_transforms": [
+    "change-options",
+    "change-default-value"
+  ],
+  "unsafe_transforms": [
+    "remove-listbox-role",
+    "remove-expanded-state-sync"
+  ],
+  "composition": {
+    "contains": [
+      "button"
+    ],
+    "used_in": [
+      "settings-page"
+    ]
+  },
+  "files": {
+    "html": "select-custom.html",
+    "css": "select-custom.css",
+    "js": "select-custom.js",
+    "manifest": "select-custom.manifest.json"
+  },
+  "tests": [
+    "opens-on-trigger-click",
+    "selects-option-on-click",
+    "closes-on-escape"
+  ]
+}

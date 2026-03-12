@@ -1,0 +1,143 @@
+{
+  "$schema": "https://loom.dev/manifest.schema.json",
+  "name": "popover",
+  "version": "1.0.0",
+  "kind": "recipe",
+  "category": "overlay",
+  "description": "Anchored popover with click-outside dismissal and close control",
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='popover']",
+    "content_model": "slots"
+  },
+  "slots": {
+    "trigger": {
+      "selector": "[data-part='trigger']",
+      "required": true,
+      "tag_hint": "button"
+    },
+    "content": {
+      "selector": "[data-part='content']",
+      "required": true,
+      "tag_hint": "div"
+    },
+    "close": {
+      "selector": "[data-part='close']",
+      "required": false,
+      "tag_hint": "button"
+    }
+  },
+  "states": {
+    "closed": {
+      "attr": "data-state=\"closed\"",
+      "default": true
+    },
+    "open": {
+      "attr": "data-state=\"open\""
+    }
+  },
+  "a11y": {
+    "required_attrs": [
+      "aria-expanded reflecting open state",
+      "aria-controls linking trigger to content"
+    ],
+    "keyboard": {
+      "Escape": "close popover"
+    }
+  },
+  "tokens_used": [
+    "color-bg-elevated",
+    "color-bg-muted",
+    "color-bg-subtle",
+    "color-fg",
+    "color-fg-muted",
+    "color-fg-subtle",
+    "color-primary",
+    "color-primary-fg",
+    "color-primary-hover",
+    "color-primary-subtle",
+    "color-secondary",
+    "color-secondary-hover",
+    "color-secondary-fg",
+    "color-border",
+    "color-border-strong",
+    "color-ring",
+    "space-0",
+    "space-px",
+    "space-1",
+    "space-2",
+    "space-2h",
+    "space-3",
+    "space-4",
+    "space-5",
+    "space-6",
+    "space-8",
+    "text-xs",
+    "text-sm",
+    "text-base",
+    "text-lg",
+    "text-xl",
+    "leading-tight",
+    "leading-normal",
+    "leading-relaxed",
+    "weight-medium",
+    "weight-semibold",
+    "radius-sm",
+    "radius-md",
+    "radius-lg",
+    "radius-xl",
+    "radius-full",
+    "shadow-xs",
+    "shadow-sm",
+    "shadow-md",
+    "shadow-lg",
+    "shadow-xl",
+    "surface-radius",
+    "surface-shadow",
+    "dialog-radius",
+    "dialog-shadow",
+    "dialog-overlay-bg",
+    "input-height",
+    "input-radius",
+    "input-border",
+    "duration-fast",
+    "duration-normal",
+    "duration-slow",
+    "ease-default",
+    "ease-out",
+    "z-dropdown",
+    "z-overlay",
+    "z-modal",
+    "z-toast"
+  ],
+  "templates": {
+    "html": "<div data-ui=\"popover\" data-state=\"closed\" id=\"{id}\">\n  <button data-ui=\"button\" data-part=\"trigger\" type=\"button\" aria-expanded=\"false\" aria-controls=\"{id}-content\">{label}</button>\n  <div data-part=\"content\" id=\"{id}-content\" hidden>{content}</div>\n</div>"
+  },
+  "safe_transforms": [
+    "replace-content",
+    "change-alignment-via-custom-css"
+  ],
+  "unsafe_transforms": [
+    "remove-expanded-state-sync",
+    "remove-outside-click-dismissal"
+  ],
+  "composition": {
+    "contains": [
+      "button"
+    ],
+    "used_in": [
+      "dashboard-shell"
+    ]
+  },
+  "files": {
+    "html": "popover.html",
+    "css": "popover.css",
+    "js": "popover.js",
+    "manifest": "popover.manifest.json"
+  },
+  "tests": [
+    "opens-on-trigger-click",
+    "closes-on-outside-click",
+    "closes-on-escape"
+  ]
+}

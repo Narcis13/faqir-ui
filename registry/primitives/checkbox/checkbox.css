@@ -1,0 +1,21 @@
+/* @ui:component checkbox */
+
+[data-ui="checkbox"] {
+  inline-size: var(--space-4);
+  block-size: var(--space-4);
+  margin: 0;
+  border-radius: var(--radius-sm);
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
+[data-ui="checkbox"]:focus-visible {
+  outline: var(--space-px) solid var(--color-ring);
+  outline-offset: var(--space-px);
+}
+
+[data-ui="checkbox"][disabled],
+[data-ui="checkbox"][data-state="disabled"] {
+  cursor: not-allowed;
+  opacity: 0.6;
+}

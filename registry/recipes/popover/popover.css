@@ -1,0 +1,16 @@
+/* @ui:component popover */
+
+[data-ui="popover"] { position: relative; display: inline-grid; }
+[data-ui="popover"] [data-part="content"] {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  z-index: var(--z-dropdown);
+  min-inline-size: 16rem;
+  padding: var(--space-4);
+  border: var(--space-px) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-elevated);
+  box-shadow: var(--shadow-md);
+}
+[data-ui="popover"] [data-part="content"][hidden] { display: none; }

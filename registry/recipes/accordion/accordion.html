@@ -1,0 +1,11 @@
+<!-- @ui:component accordion -->
+<div data-ui="accordion" data-state="ready" data-mode="single">
+  <section data-part="item" data-state="open">
+    <button data-part="trigger" type="button" aria-expanded="true" aria-controls="accordion-item-1">Billing details</button>
+    <div data-part="panel" id="accordion-item-1">Usage and invoice details live here.</div>
+  </section>
+  <section data-part="item" data-state="closed">
+    <button data-part="trigger" type="button" aria-expanded="false" aria-controls="accordion-item-2">Team members</button>
+    <div data-part="panel" id="accordion-item-2" hidden>Invite and permission controls.</div>
+  </section>
+</div>

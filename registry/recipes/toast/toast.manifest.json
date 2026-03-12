@@ -1,0 +1,144 @@
+{
+  "$schema": "https://loom.dev/manifest.schema.json",
+  "name": "toast",
+  "version": "1.0.0",
+  "kind": "recipe",
+  "category": "feedback",
+  "description": "Toast stack with close controls and auto-dismiss timers",
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='toast']",
+    "content_model": "slots"
+  },
+  "slots": {
+    "item": {
+      "selector": "[data-part='item']",
+      "required": true,
+      "tag_hint": "section"
+    },
+    "title": {
+      "selector": "[data-part='title']",
+      "required": true,
+      "tag_hint": "strong"
+    },
+    "description": {
+      "selector": "[data-part='description']",
+      "required": false,
+      "tag_hint": "p"
+    },
+    "close": {
+      "selector": "[data-part='close']",
+      "required": false,
+      "tag_hint": "button"
+    }
+  },
+  "states": {
+    "ready": {
+      "attr": "data-state=\"ready\"",
+      "default": true
+    },
+    "closing": {
+      "attr": "data-state=\"closing\"",
+      "transient": true
+    }
+  },
+  "a11y": {
+    "role": "status",
+    "required_attrs": [
+      "aria-live=\"polite\" on the container or item"
+    ]
+  },
+  "tokens_used": [
+    "color-bg-elevated",
+    "color-bg-muted",
+    "color-bg-subtle",
+    "color-fg",
+    "color-fg-muted",
+    "color-fg-subtle",
+    "color-primary",
+    "color-primary-fg",
+    "color-primary-hover",
+    "color-primary-subtle",
+    "color-secondary",
+    "color-secondary-hover",
+    "color-secondary-fg",
+    "color-border",
+    "color-border-strong",
+    "color-ring",
+    "space-0",
+    "space-px",
+    "space-1",
+    "space-2",
+    "space-2h",
+    "space-3",
+    "space-4",
+    "space-5",
+    "space-6",
+    "space-8",
+    "text-xs",
+    "text-sm",
+    "text-base",
+    "text-lg",
+    "text-xl",
+    "leading-tight",
+    "leading-normal",
+    "leading-relaxed",
+    "weight-medium",
+    "weight-semibold",
+    "radius-sm",
+    "radius-md",
+    "radius-lg",
+    "radius-xl",
+    "radius-full",
+    "shadow-xs",
+    "shadow-sm",
+    "shadow-md",
+    "shadow-lg",
+    "shadow-xl",
+    "surface-radius",
+    "surface-shadow",
+    "dialog-radius",
+    "dialog-shadow",
+    "dialog-overlay-bg",
+    "input-height",
+    "input-radius",
+    "input-border",
+    "duration-fast",
+    "duration-normal",
+    "duration-slow",
+    "ease-default",
+    "ease-out",
+    "z-dropdown",
+    "z-overlay",
+    "z-modal",
+    "z-toast"
+  ],
+  "templates": {
+    "html": "<div data-ui=\"toast\" data-state=\"ready\" aria-live=\"polite\">\n  <section data-part=\"item\" data-duration=\"4000\">\n    <strong data-part=\"title\">{title}</strong>\n    <p data-part=\"description\">{description}</p>\n  </section>\n</div>"
+  },
+  "safe_transforms": [
+    "change-auto-dismiss-duration",
+    "add-item",
+    "remove-item"
+  ],
+  "unsafe_transforms": [
+    "remove-aria-live",
+    "remove-dismiss-controls"
+  ],
+  "composition": {
+    "contains": [],
+    "used_in": [
+      "dashboard-shell"
+    ]
+  },
+  "files": {
+    "html": "toast.html",
+    "css": "toast.css",
+    "js": "toast.js",
+    "manifest": "toast.manifest.json"
+  },
+  "tests": [
+    "auto-dismisses-items",
+    "supports-manual-dismissal"
+  ]
+}

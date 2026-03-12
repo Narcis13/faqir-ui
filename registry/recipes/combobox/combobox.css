@@ -1,0 +1,30 @@
+/* @ui:component combobox */
+
+[data-ui="combobox"] { position: relative; }
+[data-ui="combobox"] [data-part="list"] {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  left: 0;
+  right: 0;
+  z-index: var(--z-dropdown);
+  display: grid;
+  padding: var(--space-2);
+  border: var(--space-px) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-elevated);
+  box-shadow: var(--shadow-md);
+}
+[data-ui="combobox"] [data-part="list"][hidden] { display: none; }
+[data-ui="combobox"] [data-part="option"] {
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-fg);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+[data-ui="combobox"] [data-part="option"][hidden] { display: none; }
+[data-ui="combobox"] [data-part="option"][data-state="active"],
+[data-ui="combobox"] [data-part="option"]:hover { background: var(--color-secondary); }

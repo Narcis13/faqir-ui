@@ -1,0 +1,28 @@
+/* @ui:component table */
+
+[data-ui="table"] { display: grid; gap: var(--space-3); }
+[data-ui="table"] [data-part="table"] {
+  width: 100%;
+  border-collapse: collapse;
+  border: var(--space-px) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--color-bg-elevated);
+}
+[data-ui="table"] th,
+[data-ui="table"] td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: var(--space-px) solid var(--color-border);
+  text-align: left;
+  color: var(--color-fg);
+  font-size: var(--text-sm);
+}
+[data-ui="table"] tbody tr:last-child td { border-bottom: none; }
+[data-ui="table"] [data-part="sort"] {
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+}

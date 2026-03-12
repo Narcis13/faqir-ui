@@ -1,0 +1,13 @@
+<!-- @ui:component date-picker -->
+<div data-ui="date-picker" data-state="closed" id="date-picker-demo">
+  <input data-ui="input" data-part="input" type="text" placeholder="YYYY-MM-DD" />
+  <button data-ui="button" data-part="trigger" data-variant="outline" type="button" aria-expanded="false" aria-controls="date-picker-demo-calendar">Pick a date</button>
+  <div data-part="calendar" id="date-picker-demo-calendar" hidden>
+    <div data-part="month">March 2026</div>
+    <div data-part="grid">
+      <button data-part="day" type="button" data-date="2026-03-12">12</button>
+      <button data-part="day" type="button" data-date="2026-03-13">13</button>
+      <button data-part="day" type="button" data-date="2026-03-14">14</button>
+    </div>
+  </div>
+</div>

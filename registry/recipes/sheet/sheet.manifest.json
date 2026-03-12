@@ -1,0 +1,174 @@
+{
+  "$schema": "https://loom.dev/manifest.schema.json",
+  "name": "sheet",
+  "version": "1.0.0",
+  "kind": "recipe",
+  "category": "overlay",
+  "description": "Edge-mounted sheet for mobile and compact workflows",
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='sheet']",
+    "content_model": "slots"
+  },
+  "slots": {
+    "trigger": {
+      "selector": "[data-part='trigger']",
+      "required": true,
+      "tag_hint": "button"
+    },
+    "overlay": {
+      "selector": "[data-part='overlay']",
+      "required": true,
+      "tag_hint": "div"
+    },
+    "panel": {
+      "selector": "[data-part='panel']",
+      "required": true,
+      "tag_hint": "section"
+    },
+    "title": {
+      "selector": "[data-part='title']",
+      "required": true,
+      "tag_hint": "h2"
+    },
+    "body": {
+      "selector": "[data-part='body']",
+      "required": true,
+      "tag_hint": "div"
+    },
+    "close": {
+      "selector": "[data-part='close']",
+      "required": true,
+      "tag_hint": "button"
+    }
+  },
+  "variants": {
+    "edge": {
+      "values": [
+        "bottom",
+        "right"
+      ],
+      "default": "bottom",
+      "attr": "data-edge",
+      "applied_to": "panel"
+    }
+  },
+  "states": {
+    "closed": {
+      "attr": "data-state=\"closed\"",
+      "default": true
+    },
+    "open": {
+      "attr": "data-state=\"open\""
+    },
+    "closing": {
+      "attr": "data-state=\"closing\"",
+      "transient": true
+    }
+  },
+  "a11y": {
+    "role": "dialog",
+    "aria-modal": true,
+    "focus_trap": true,
+    "escape_closes": true,
+    "return_focus": "trigger",
+    "required_attrs": [
+      "aria-labelledby linked to title"
+    ]
+  },
+  "tokens_used": [
+    "color-bg-elevated",
+    "color-bg-muted",
+    "color-bg-subtle",
+    "color-fg",
+    "color-fg-muted",
+    "color-fg-subtle",
+    "color-primary",
+    "color-primary-fg",
+    "color-primary-hover",
+    "color-primary-subtle",
+    "color-secondary",
+    "color-secondary-hover",
+    "color-secondary-fg",
+    "color-border",
+    "color-border-strong",
+    "color-ring",
+    "space-0",
+    "space-px",
+    "space-1",
+    "space-2",
+    "space-2h",
+    "space-3",
+    "space-4",
+    "space-5",
+    "space-6",
+    "space-8",
+    "text-xs",
+    "text-sm",
+    "text-base",
+    "text-lg",
+    "text-xl",
+    "leading-tight",
+    "leading-normal",
+    "leading-relaxed",
+    "weight-medium",
+    "weight-semibold",
+    "radius-sm",
+    "radius-md",
+    "radius-lg",
+    "radius-xl",
+    "radius-full",
+    "shadow-xs",
+    "shadow-sm",
+    "shadow-md",
+    "shadow-lg",
+    "shadow-xl",
+    "surface-radius",
+    "surface-shadow",
+    "dialog-radius",
+    "dialog-shadow",
+    "dialog-overlay-bg",
+    "input-height",
+    "input-radius",
+    "input-border",
+    "duration-fast",
+    "duration-normal",
+    "duration-slow",
+    "ease-default",
+    "ease-out",
+    "z-dropdown",
+    "z-overlay",
+    "z-modal",
+    "z-toast"
+  ],
+  "templates": {
+    "html": "<div data-ui=\"sheet\" data-state=\"closed\" id=\"{id}\">\n  <button data-ui=\"button\" data-part=\"trigger\" type=\"button\">{label}</button>\n  <div data-part=\"overlay\" hidden></div>\n  <section data-part=\"panel\" data-edge=\"bottom\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"{id}-title\" hidden tabindex=\"-1\">\n    <h2 id=\"{id}-title\" data-part=\"title\">{title}</h2>\n    <div data-part=\"body\">{body}</div>\n    <button data-part=\"close\" type=\"button\">Close</button>\n  </section>\n</div>"
+  },
+  "safe_transforms": [
+    "change-edge",
+    "replace-body-content"
+  ],
+  "unsafe_transforms": [
+    "remove-focus-trap",
+    "remove-overlay"
+  ],
+  "composition": {
+    "contains": [
+      "button"
+    ],
+    "used_in": [
+      "dashboard-shell"
+    ]
+  },
+  "files": {
+    "html": "sheet.html",
+    "css": "sheet.css",
+    "js": "sheet.js",
+    "manifest": "sheet.manifest.json"
+  },
+  "tests": [
+    "opens-on-trigger-click",
+    "closes-on-overlay-click",
+    "supports-edge-variants"
+  ]
+}
