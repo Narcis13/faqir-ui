@@ -1,0 +1,142 @@
+<!-- @ui:component dashboard-shell -->
+<!-- @ui:kind pattern -->
+
+<section data-ui="dashboard-shell" aria-labelledby="dashboard-shell-title">
+  <div data-ui="surface" data-variant="default" data-part="frame">
+    <header data-part="topbar">
+      <div data-part="brand">
+        <h1 id="dashboard-shell-title" data-part="headline">Operations overview</h1>
+        <p data-part="subhead">Monitor delivery, activity, and team performance from one place.</p>
+      </div>
+
+      <div data-ui="dropdown" data-state="closed" data-align="end" id="dashboard-user-menu">
+        <button
+          data-ui="button"
+          data-part="trigger"
+          data-variant="secondary"
+          type="button"
+          aria-haspopup="menu"
+          aria-expanded="false"
+          aria-controls="dashboard-user-menu-panel"
+        >
+          <span data-ui="avatar" aria-hidden="true">NB</span>
+          Narcis
+        </button>
+        <div data-part="menu" id="dashboard-user-menu-panel" role="menu" hidden>
+          <button data-part="item" type="button" role="menuitem">Profile</button>
+          <button data-part="item" type="button" role="menuitem">Billing</button>
+          <button data-part="item" type="button" role="menuitem">Sign out</button>
+        </div>
+      </div>
+    </header>
+
+    <div data-part="shell">
+      <aside data-ui="surface" data-variant="muted" data-part="sidebar">
+        <a data-part="nav-link" data-state="active" href="/">
+          Overview
+          <span data-ui="badge">Live</span>
+        </a>
+        <a data-part="nav-link" href="/">Incidents</a>
+        <a data-part="nav-link" href="/">Deployments</a>
+        <a data-part="nav-link" href="/">Customers</a>
+      </aside>
+
+      <div data-part="content">
+        <div data-ui="grid" data-columns="3" data-gap="md" data-part="stats">
+          <article data-ui="card">
+            <div data-part="body">
+              <div data-part="metric">
+                <p data-part="metric-label">Weekly revenue</p>
+                <p data-part="metric-value">$84k</p>
+                <span data-ui="badge">+12%</span>
+              </div>
+            </div>
+          </article>
+          <article data-ui="card">
+            <div data-part="body">
+              <div data-part="metric">
+                <p data-part="metric-label">Tickets closed</p>
+                <p data-part="metric-value">312</p>
+                <span data-ui="badge">Stable</span>
+              </div>
+            </div>
+          </article>
+          <article data-ui="card">
+            <div data-part="body">
+              <div data-part="metric">
+                <p data-part="metric-label">Deploy frequency</p>
+                <p data-part="metric-value">18</p>
+                <span data-ui="badge">This week</span>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <article data-ui="card">
+          <div data-part="body">
+            <div data-ui="tabs" data-state="ready" data-orientation="horizontal" id="dashboard-tabs">
+              <div data-part="list" role="tablist" aria-label="Dashboard views">
+                <button
+                  data-part="trigger"
+                  data-state="active"
+                  data-value="activity"
+                  id="dashboard-tabs-activity-tab"
+                  type="button"
+                  role="tab"
+                  aria-selected="true"
+                  aria-controls="dashboard-tabs-activity-panel"
+                  tabindex="0"
+                >
+                  Activity
+                </button>
+                <button
+                  data-part="trigger"
+                  data-state="inactive"
+                  data-value="ops"
+                  id="dashboard-tabs-ops-tab"
+                  type="button"
+                  role="tab"
+                  aria-selected="false"
+                  aria-controls="dashboard-tabs-ops-panel"
+                  tabindex="-1"
+                >
+                  Ops
+                </button>
+              </div>
+
+              <section
+                data-part="panel"
+                data-state="active"
+                data-value="activity"
+                id="dashboard-tabs-activity-panel"
+                role="tabpanel"
+                aria-labelledby="dashboard-tabs-activity-tab"
+              >
+                <div data-ui="stack" data-direction="vertical" data-gap="md" data-part="activity">
+                  <div data-ui="surface" data-variant="muted">New enterprise contract approved by finance.</div>
+                  <div data-ui="surface" data-variant="muted">Deployment 2.4.1 completed with no regressions.</div>
+                  <div data-ui="surface" data-variant="muted">Support queue returned to target SLA.</div>
+                </div>
+              </section>
+
+              <section
+                data-part="panel"
+                data-state="inactive"
+                data-value="ops"
+                id="dashboard-tabs-ops-panel"
+                role="tabpanel"
+                aria-labelledby="dashboard-tabs-ops-tab"
+                hidden
+              >
+                <div data-ui="stack" data-direction="vertical" data-gap="md" data-part="activity">
+                  <div data-ui="surface" data-variant="muted">CPU alerting is healthy across all regions.</div>
+                  <div data-ui="surface" data-variant="muted">Backups completed in 14 minutes.</div>
+                </div>
+              </section>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </div>
+</section>

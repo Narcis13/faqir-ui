@@ -1,0 +1,76 @@
+{
+  "$schema": "https://loom.dev/manifest.schema.json",
+  "name": "search-results",
+  "version": "1.0.0",
+  "kind": "pattern",
+  "category": "composite",
+  "description": "Search results layout with query input, loading affordance, result cards, and pagination",
+  "anatomy": {
+    "tag": "section",
+    "selector": "[data-ui='search-results']",
+    "content_model": "slots"
+  },
+  "slots": {
+    "header": {
+      "selector": "[data-part='header']",
+      "required": true,
+      "tag_hint": "header"
+    },
+    "results": {
+      "selector": "[data-part='results']",
+      "required": true,
+      "tag_hint": "div"
+    },
+    "footer": {
+      "selector": "[data-part='footer']",
+      "required": true,
+      "tag_hint": "footer"
+    }
+  },
+  "tokens_used": [
+    "color-bg",
+    "color-fg-muted",
+    "space-3",
+    "space-4",
+    "space-5",
+    "space-6",
+    "text-sm",
+    "text-lg",
+    "weight-semibold"
+  ],
+  "templates": {
+    "html": "<section data-ui=\"search-results\"><header data-part=\"header\">{query}</header><div data-part=\"results\">{results}</div></section>"
+  },
+  "safe_transforms": [
+    "replace-result-items",
+    "change-query-placeholder",
+    "adjust-pagination-count"
+  ],
+  "unsafe_transforms": [
+    "remove-input-label",
+    "remove-pagination-controls"
+  ],
+  "composition": {
+    "contains": [
+      "badge",
+      "card",
+      "input",
+      "pagination",
+      "spinner"
+    ],
+    "used_in": [
+      "landing-page",
+      "internal-tool"
+    ]
+  },
+  "files": {
+    "html": "search-results.html",
+    "css": "search-results.css",
+    "manifest": "search-results.manifest.json"
+  },
+  "tests": [
+    "renders-query-toolbar",
+    "renders-result-cards",
+    "renders-pagination"
+  ]
+}

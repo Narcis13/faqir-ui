@@ -43,7 +43,7 @@
   outline: var(--space-px) solid var(--color-ring);
   outline-offset: var(--space-px);
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 var(--space-px) var(--color-primary-subtle);
+  box-shadow: var(--field-focus-ring);
 }
 
 [data-ui="select"][data-state="invalid"],

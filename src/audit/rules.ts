@@ -5,6 +5,7 @@ import {
   findElements,
   getAttribute,
   getAttributeNode,
+  type HtmlDocument,
   type HtmlElement,
   hasAttribute,
 } from "../parser/html-parser";
@@ -90,6 +91,14 @@ export type CssAuditContext = {
   parsed: ParsedCss;
 };
 
+export type JsAuditContext = {
+  project: AuditProject;
+  componentName: string;
+  filePath: string;
+  source: string;
+  kind: "component-controller" | "loom-runtime";
+};
+
 export interface ComponentAuditRule {
   id: string;
   severity: AuditSeverity;
@@ -102,7 +111,38 @@ export interface CssAuditRule {
   check(context: CssAuditContext): AuditResult[];
 }
 
+export interface JsAuditRule {
+  id: string;
+  severity: AuditSeverity;
+  check(context: JsAuditContext): AuditResult[];
+}
+
 export const COMPONENT_AUDIT_RULES: ComponentAuditRule[] = [
+  {
+    id: "class-attribute",
+    severity: "error",
+    check(context) {
+      const targets = [context.component.root, ...findComponentScopedDescendants(context.component.root, () => true)];
+
+      return targets.flatMap((element) => {
+        const className = getAttribute(element, "class");
+
+        if (!className) {
+          return [];
+        }
+
+        return [
+          createResult(
+            context,
+            "class-attribute",
+            "error",
+            element,
+            `Classes are not allowed inside Loom component markup. Use data-ui, data-part, and data-state instead.`,
+          ),
+        ];
+      });
+    },
+  },
   {
     id: "required-slot",
     severity: "critical",
@@ -155,7 +195,7 @@ export const COMPONENT_AUDIT_RULES: ComponentAuditRule[] = [
     id: "focus-trap",
     severity: "critical",
     check(context) {
-      if (!context.manifest.a11y?.focus_trap || context.component.snippet) {
+      if (!context.manifest.a11y?.focus_trap || context.file.snippetComponentName !== null) {
         return [];
       }
 
@@ -242,7 +282,7 @@ export const COMPONENT_AUDIT_RULES: ComponentAuditRule[] = [
     id: "controller-loaded",
     severity: "error",
     check(context) {
-      if (context.manifest.kind !== "recipe" || context.component.snippet || hasControllerLoaded(context)) {
+      if (context.manifest.kind !== "recipe" || context.file.snippetComponentName !== null || hasControllerLoaded(context)) {
         return [];
       }
 
@@ -309,9 +349,13 @@ export const COMPONENT_AUDIT_RULES: ComponentAuditRule[] = [
     id: "orphan-part",
     severity: "warning",
     check(context) {
+      if (context.manifest.kind === "pattern") {
+        return [];
+      }
+
       const allowed = new Set(Object.keys(context.manifest.slots ?? {}));
 
-      return findElements(context.component.root, (element) => element !== context.component.root && hasAttribute(element, "data-part"))
+      return findComponentScopedDescendants(context.component.root, (element) => hasAttribute(element, "data-part"))
         .flatMap((element) => {
           const part = getAttribute(element, "data-part");
 
@@ -421,6 +465,44 @@ export const COMPONENT_AUDIT_RULES: ComponentAuditRule[] = [
 
 export const CSS_AUDIT_RULES: CssAuditRule[] = [
   {
+    id: "class-selector",
+    severity: "error",
+    check(context) {
+      return findCssSelectorViolations(context, "class-selector");
+    },
+  },
+  {
+    id: "id-selector",
+    severity: "error",
+    check(context) {
+      return findCssSelectorViolations(context, "id-selector");
+    },
+  },
+  {
+    id: "important",
+    severity: "error",
+    check(context) {
+      return collectSourceMatches(context.source, /!important\b/g).map((match) =>
+        createAssetResult(
+          "important",
+          "error",
+          context.entry.manifest.name,
+          context.entry.cssPath,
+          `Component CSS must not use !important`,
+          context.source,
+          match.index,
+        )
+      );
+    },
+  },
+  {
+    id: "token-discipline",
+    severity: "error",
+    check(context) {
+      return findTokenDisciplineViolations(context);
+    },
+  },
+  {
     id: "token-exists",
     severity: "warning",
     check(context) {
@@ -465,6 +547,378 @@ export const CSS_AUDIT_RULES: CssAuditRule[] = [
     },
   },
 ];
+
+export const JS_AUDIT_RULES: JsAuditRule[] = [
+  {
+    id: "external-dependency",
+    severity: "critical",
+    check(context) {
+      const results: AuditResult[] = [];
+
+      for (const match of collectSourceMatches(
+        context.source,
+        /^\s*import\s+(?:[\s\w{},*]+\s+from\s+)?["'](?![./])([^"']+)["'];?/gm,
+      )) {
+        results.push(
+          createAssetResult(
+            "external-dependency",
+            "critical",
+            context.componentName,
+            context.filePath,
+            `Loom controller code must not import external dependencies`,
+            context.source,
+            match.index,
+          ),
+        );
+      }
+
+      for (const match of collectSourceMatches(
+        context.source,
+        /\brequire\(\s*["'](?![./])([^"']+)["']\s*\)/g,
+      )) {
+        results.push(
+          createAssetResult(
+            "external-dependency",
+            "critical",
+            context.componentName,
+            context.filePath,
+            `Loom controller code must not require external dependencies`,
+            context.source,
+            match.index,
+          ),
+        );
+      }
+
+      return results;
+    },
+  },
+  {
+    id: "build-step",
+    severity: "error",
+    check(context) {
+      return collectSourceMatches(
+        context.source,
+        /\b(?:process\.env|import\.meta\.(?:env|glob)|__dirname|__filename|module\.exports|exports\.)\b/g,
+      ).map((match) =>
+        createAssetResult(
+          "build-step",
+          "error",
+          context.componentName,
+          context.filePath,
+          `Loom runtime code must stay browser-ready and cannot depend on build-tool globals`,
+          context.source,
+          match.index,
+        )
+      );
+    },
+  },
+  {
+    id: "runtime-lifecycle",
+    severity: "error",
+    check(context) {
+      return collectSourceMatches(context.source, /\bMutationObserver\b/g).map((match) =>
+        createAssetResult(
+          "runtime-lifecycle",
+          "error",
+          context.componentName,
+          context.filePath,
+          `Controllers must attach to existing DOM instead of managing lifecycle with observers`,
+          context.source,
+          match.index,
+        )
+      );
+    },
+  },
+  {
+    id: "class-api",
+    severity: "error",
+    check(context) {
+      return collectSourceMatches(
+        context.source,
+        /\b(?:classList|className)\b|\bsetAttribute\(\s*["']class["']|querySelector(?:All)?\(\s*["'][^"']*(?:\.[A-Za-z_-][\w-]*|\[class)/g,
+      ).map((match) =>
+        createAssetResult(
+          "class-api",
+          "error",
+          context.componentName,
+          context.filePath,
+          `Controllers must not use classes for component identity or state`,
+          context.source,
+          match.index,
+        )
+      );
+    },
+  },
+  {
+    id: "html-generation",
+    severity: "error",
+    check(context) {
+      return collectSourceMatches(
+        context.source,
+        /`[\s\S]*?<\w[\s\S]*?`|\b(?:innerHTML|outerHTML)\s*=|\binsertAdjacentHTML\(|\bReact\.createElement\b/g,
+      ).map((match) =>
+        createAssetResult(
+          "html-generation",
+          "error",
+          context.componentName,
+          context.filePath,
+          `Loom runtime code must not generate HTML with template literals or compile-to-HTML APIs`,
+          context.source,
+          match.index,
+        )
+      );
+    },
+  },
+  {
+    id: "app-runtime",
+    severity: "error",
+    check(context) {
+      return collectSourceMatches(
+        context.source,
+        /\bfetch\(|\bXMLHttpRequest\b|\bhistory\.(?:pushState|replaceState)\b|\bwindow\.location\b|\blocation\.(?:assign|replace)\b|\brenderToString\b|\bhydrate(?:Root)?\b|\bcreateBrowserRouter\b|\brouter\b|\bzustand\b|\bmobx\b|\bredux\b/g,
+      ).map((match) =>
+        createAssetResult(
+          "app-runtime",
+          "error",
+          context.componentName,
+          context.filePath,
+          `Loom controller code must not add routing, data fetching, SSR, or external state managers`,
+          context.source,
+          match.index,
+        )
+      );
+    },
+  },
+];
+
+type SourceMatch = {
+  index: number;
+  text: string;
+};
+
+type CssSelectorMatch = SourceMatch;
+
+type CssDeclarationMatch = SourceMatch & {
+  property: string;
+  value: string;
+};
+
+const CSS_CLASS_SELECTOR_RE = /(^|[\s>+~,])\.[A-Za-z_-][\w-]*/;
+const CSS_ID_SELECTOR_RE = /(^|[\s>+~,])#[A-Za-z_-][\w-]*/;
+const RAW_COLOR_RE = /#[0-9A-Fa-f]{3,8}\b|\b(?:rgba?|hsla?|oklch)\(/;
+const COLOR_PROPERTIES = new Set([
+  "color",
+  "background-color",
+  "border-color",
+  "outline-color",
+  "fill",
+  "stroke",
+  "caret-color",
+]);
+const SHADOW_PROPERTIES = new Set(["box-shadow", "text-shadow"]);
+const SPACING_PROPERTIES = new Set([
+  "margin",
+  "margin-top",
+  "margin-right",
+  "margin-bottom",
+  "margin-left",
+  "margin-inline",
+  "margin-inline-start",
+  "margin-inline-end",
+  "margin-block",
+  "margin-block-start",
+  "margin-block-end",
+  "padding",
+  "padding-top",
+  "padding-right",
+  "padding-bottom",
+  "padding-left",
+  "padding-inline",
+  "padding-inline-start",
+  "padding-inline-end",
+  "padding-block",
+  "padding-block-start",
+  "padding-block-end",
+  "gap",
+  "row-gap",
+  "column-gap",
+  "top",
+  "right",
+  "bottom",
+  "left",
+  "inset",
+  "inset-inline",
+  "inset-inline-start",
+  "inset-inline-end",
+  "inset-block",
+  "inset-block-start",
+  "inset-block-end",
+  "outline-offset",
+  "letter-spacing",
+  "scroll-margin",
+  "scroll-margin-block",
+  "scroll-margin-inline",
+  "scroll-padding",
+  "scroll-padding-block",
+  "scroll-padding-inline",
+]);
+
+function findCssSelectorViolations(context: CssAuditContext, ruleId: "class-selector" | "id-selector"): AuditResult[] {
+  const selectorPattern = ruleId === "class-selector" ? CSS_CLASS_SELECTOR_RE : CSS_ID_SELECTOR_RE;
+  const message = ruleId === "class-selector"
+    ? `Component CSS must not use class selectors. Use data-ui and data-part instead.`
+    : `Component CSS must not use ID selectors. IDs are reserved for ARIA relationships.`;
+
+  return findCssSelectors(context.source)
+    .filter((selector) => selectorPattern.test(selector.text))
+    .map((selector) =>
+      createAssetResult(
+        ruleId,
+        "error",
+        context.entry.manifest.name,
+        context.entry.cssPath,
+        message,
+        context.source,
+        selector.index,
+      )
+    );
+}
+
+function findTokenDisciplineViolations(context: CssAuditContext): AuditResult[] {
+  const results: AuditResult[] = [];
+
+  for (const declaration of findCssDeclarations(context.source)) {
+    if (COLOR_PROPERTIES.has(declaration.property) && RAW_COLOR_RE.test(declaration.value)) {
+      results.push(
+        createAssetResult(
+          "token-discipline",
+          "error",
+          context.entry.manifest.name,
+          context.entry.cssPath,
+          `Component CSS must use color tokens instead of hardcoded color values`,
+          context.source,
+          declaration.index,
+        ),
+      );
+      continue;
+    }
+
+    if (SHADOW_PROPERTIES.has(declaration.property) && !/^\s*(?:none|var\(--[^)]+\))\s*$/.test(declaration.value)) {
+      results.push(
+        createAssetResult(
+          "token-discipline",
+          "error",
+          context.entry.manifest.name,
+          context.entry.cssPath,
+          `Component CSS must use shadow tokens instead of hardcoded shadow values`,
+          context.source,
+          declaration.index,
+        ),
+      );
+      continue;
+    }
+
+    if (SPACING_PROPERTIES.has(declaration.property) && hasHardcodedSpacingValue(declaration.value)) {
+      results.push(
+        createAssetResult(
+          "token-discipline",
+          "error",
+          context.entry.manifest.name,
+          context.entry.cssPath,
+          `Component CSS must use spacing and typography tokens instead of hardcoded values`,
+          context.source,
+          declaration.index,
+        ),
+      );
+    }
+  }
+
+  return results;
+}
+
+function findCssSelectors(source: string): CssSelectorMatch[] {
+  const results: CssSelectorMatch[] = [];
+
+  for (const match of source.matchAll(/([^{}]+)\{/g)) {
+    const selector = match[1].trim();
+
+    if (!selector || selector.startsWith("@") || match.index === undefined) {
+      continue;
+    }
+
+    results.push({
+      index: match.index,
+      text: selector,
+    });
+  }
+
+  return results;
+}
+
+function findCssDeclarations(source: string): CssDeclarationMatch[] {
+  const results: CssDeclarationMatch[] = [];
+
+  for (const match of source.matchAll(/([A-Za-z-]+)\s*:\s*([^;{}]+);/g)) {
+    if (match.index === undefined) {
+      continue;
+    }
+
+    results.push({
+      index: match.index,
+      text: match[0],
+      property: match[1].toLowerCase(),
+      value: match[2].trim(),
+    });
+  }
+
+  return results;
+}
+
+function hasHardcodedSpacingValue(value: string): boolean {
+  if (/\bvar\(/.test(value) || /\bcalc\(/.test(value)) {
+    return false;
+  }
+
+  return /\b\d*\.?\d+(?:px|rem|em)\b/.test(value);
+}
+
+function collectSourceMatches(source: string, pattern: RegExp): SourceMatch[] {
+  const flags = pattern.flags.includes("g") ? pattern.flags : `${pattern.flags}g`;
+  const regex = new RegExp(pattern.source, flags);
+  const results: SourceMatch[] = [];
+
+  for (const match of source.matchAll(regex)) {
+    if (match.index === undefined) {
+      continue;
+    }
+
+    results.push({
+      index: match.index,
+      text: match[0],
+    });
+  }
+
+  return results;
+}
+
+function createAssetResult(
+  ruleId: string,
+  severity: AuditSeverity,
+  componentName: string,
+  filePath: string,
+  message: string,
+  source: string,
+  offset: number,
+): AuditResult {
+  return {
+    ruleId,
+    severity,
+    componentName,
+    filePath,
+    message,
+    location: getLocation(source, offset),
+  };
+}
 
 function checkDialogRequiredAria(context: ComponentAuditContext): AuditResult[] {
   const panel = getSlotElement(context.component.root, context.manifest, "panel");
@@ -797,7 +1251,7 @@ function getVariantTargets(root: HtmlElement, appliedTo?: string): HtmlElement[]
     return [root];
   }
 
-  return findAllBySelector(root, `[data-part='${appliedTo}']`);
+  return findComponentScopedElements(root, `[data-part='${appliedTo}']`);
 }
 
 function getDefaultState(manifest: LoomManifest): string | null {
@@ -864,10 +1318,47 @@ function getTabsPairs(root: HtmlElement): {
   panels: HtmlElement[];
 } {
   return {
-    list: findAllBySelector(root, "[data-part='list']")[0] ?? null,
-    triggers: findAllBySelector(root, "[data-part='trigger']"),
-    panels: findAllBySelector(root, "[data-part='panel']"),
+    list: findComponentScopedElements(root, "[data-part='list']")[0] ?? null,
+    triggers: findComponentScopedElements(root, "[data-part='trigger']"),
+    panels: findComponentScopedElements(root, "[data-part='panel']"),
   };
+}
+
+function findComponentScopedElements(root: HtmlElement, selector: string): HtmlElement[] {
+  return findAllBySelector(root, selector).filter((element) => belongsToComponent(root, element));
+}
+
+function findComponentScopedDescendants(
+  root: HtmlElement,
+  predicate: (element: HtmlElement) => boolean,
+): HtmlElement[] {
+  return findElements(root, (element) => belongsToComponent(root, element) && predicate(element));
+}
+
+function belongsToComponent(root: HtmlElement, element: HtmlElement): boolean {
+  if (element === root) {
+    return true;
+  }
+
+  if (hasAttribute(element, "data-ui")) {
+    return false;
+  }
+
+  let current = element.parent;
+
+  while (current.type === "element") {
+    if (current === root) {
+      return true;
+    }
+
+    if (hasAttribute(current, "data-ui")) {
+      return false;
+    }
+
+    current = current.parent;
+  }
+
+  return false;
 }
 
 function getTriggerId(context: ComponentAuditContext, trigger: HtmlElement, index: number): string {

@@ -1,0 +1,87 @@
+{
+  "$schema": "https://loom.dev/manifest.schema.json",
+  "name": "dashboard-shell",
+  "version": "1.0.0",
+  "kind": "pattern",
+  "category": "composite",
+  "description": "Application shell pattern with topbar, sidebar navigation, metrics, and tabbed content",
+  "anatomy": {
+    "tag": "section",
+    "selector": "[data-ui='dashboard-shell']",
+    "content_model": "slots"
+  },
+  "slots": {
+    "topbar": {
+      "selector": "[data-part='topbar']",
+      "required": true,
+      "tag_hint": "header"
+    },
+    "sidebar": {
+      "selector": "[data-part='sidebar']",
+      "required": true,
+      "tag_hint": "aside"
+    },
+    "content": {
+      "selector": "[data-part='content']",
+      "required": true,
+      "tag_hint": "div"
+    }
+  },
+  "tokens_used": [
+    "color-bg",
+    "color-bg-subtle",
+    "color-fg",
+    "color-fg-muted",
+    "color-primary",
+    "color-primary-subtle",
+    "radius-md",
+    "space-1",
+    "space-2",
+    "space-3",
+    "space-4",
+    "space-5",
+    "space-6",
+    "text-sm",
+    "text-xl",
+    "weight-semibold"
+  ],
+  "templates": {
+    "html": "<section data-ui=\"dashboard-shell\"><div data-part=\"topbar\">{header}</div><div data-part=\"content\">{content}</div></section>"
+  },
+  "safe_transforms": [
+    "replace-nav-links",
+    "add-metric-card",
+    "change-topbar-actions",
+    "swap-tab-panels"
+  ],
+  "unsafe_transforms": [
+    "remove-dropdown-aria-contract",
+    "desync-tab-controls"
+  ],
+  "composition": {
+    "contains": [
+      "avatar",
+      "badge",
+      "button",
+      "card",
+      "dropdown",
+      "grid",
+      "stack",
+      "surface",
+      "tabs"
+    ],
+    "used_in": [
+      "admin-dashboard"
+    ]
+  },
+  "files": {
+    "html": "dashboard-shell.html",
+    "css": "dashboard-shell.css",
+    "manifest": "dashboard-shell.manifest.json"
+  },
+  "tests": [
+    "renders-topbar-and-sidebar",
+    "includes-dropdown-controller-markup",
+    "includes-tabbed-content"
+  ]
+}

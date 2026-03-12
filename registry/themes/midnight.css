@@ -1,0 +1,39 @@
+/* @ui:component theme-midnight */
+
+:root {
+  color-scheme: dark;
+  --color-bg: oklch(0.14 0.03 258);
+  --color-bg-subtle: oklch(0.18 0.04 258);
+  --color-bg-muted: oklch(0.22 0.04 258);
+  --color-bg-elevated: oklch(0.19 0.04 260);
+  --color-fg: oklch(0.95 0.01 260);
+  --color-fg-muted: oklch(0.76 0.02 260);
+  --color-fg-subtle: oklch(0.64 0.02 260);
+  --color-link: oklch(0.82 0.12 233);
+  --color-primary: oklch(0.72 0.16 286);
+  --color-primary-hover: oklch(0.78 0.14 286);
+  --color-primary-active: oklch(0.66 0.17 286);
+  --color-primary-fg: oklch(0.18 0.02 286);
+  --color-primary-subtle: oklch(0.72 0.16 286 / 0.16);
+  --color-secondary: oklch(0.24 0.03 258);
+  --color-secondary-hover: oklch(0.28 0.03 258);
+  --color-secondary-active: oklch(0.32 0.03 258);
+  --color-secondary-fg: oklch(0.94 0.01 260);
+  --color-destructive: oklch(0.68 0.18 22);
+  --color-destructive-hover: oklch(0.74 0.16 22);
+  --color-destructive-fg: oklch(0.14 0.02 22);
+  --color-destructive-subtle: oklch(0.68 0.18 22 / 0.16);
+  --color-success: oklch(0.77 0.16 155);
+  --color-success-subtle: oklch(0.77 0.16 155 / 0.16);
+  --color-warning: oklch(0.83 0.15 83);
+  --color-warning-subtle: oklch(0.83 0.15 83 / 0.18);
+  --color-border: oklch(0.3 0.03 258);
+  --color-border-strong: oklch(0.38 0.03 258);
+  --color-ring: oklch(0.76 0.13 286 / 0.42);
+  --color-overlay: oklch(0.08 0.01 260 / 0.76);
+  --shadow-xs: 0 1px 2px oklch(0.02 0.01 260 / 0.32);
+  --shadow-sm: 0 8px 24px oklch(0.02 0.01 260 / 0.24);
+  --shadow-md: 0 18px 48px oklch(0.02 0.01 260 / 0.32);
+  --shadow-lg: 0 24px 72px oklch(0.02 0.01 260 / 0.38);
+  --shadow-xl: 0 40px 96px oklch(0.02 0.01 260 / 0.44);
+}

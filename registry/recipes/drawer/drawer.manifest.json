@@ -27,6 +27,11 @@
       "required": true,
       "tag_hint": "aside"
     },
+    "header": {
+      "selector": "[data-part='header']",
+      "required": true,
+      "tag_hint": "div"
+    },
     "title": {
       "selector": "[data-part='title']",
       "required": true,

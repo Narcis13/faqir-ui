@@ -1,0 +1,87 @@
+{
+  "$schema": "https://loom.dev/manifest.schema.json",
+  "name": "auth-form",
+  "version": "1.0.0",
+  "kind": "pattern",
+  "category": "composite",
+  "description": "Centered authentication form composition with card framing and primary actions",
+  "anatomy": {
+    "tag": "section",
+    "selector": "[data-ui='auth-form']",
+    "content_model": "slots"
+  },
+  "slots": {
+    "panel": {
+      "selector": "[data-part='panel']",
+      "required": true,
+      "tag_hint": "article"
+    },
+    "header": {
+      "selector": "[data-part='header']",
+      "required": true,
+      "tag_hint": "div"
+    },
+    "form": {
+      "selector": "[data-part='form']",
+      "required": true,
+      "tag_hint": "form"
+    },
+    "actions": {
+      "selector": "[data-part='actions']",
+      "required": true,
+      "tag_hint": "div"
+    }
+  },
+  "tokens_used": [
+    "color-bg",
+    "color-bg-subtle",
+    "color-fg-muted",
+    "color-link",
+    "color-primary",
+    "color-primary-subtle",
+    "space-2",
+    "space-3",
+    "space-4",
+    "space-6",
+    "text-xs",
+    "text-sm",
+    "weight-medium",
+    "weight-semibold",
+    "leading-tight"
+  ],
+  "templates": {
+    "html": "<section data-ui=\"auth-form\"><article data-ui=\"card\" data-part=\"panel\">{content}</article></section>"
+  },
+  "safe_transforms": [
+    "replace-copy",
+    "add-form-field",
+    "swap-primary-action",
+    "change-supporting-links"
+  ],
+  "unsafe_transforms": [
+    "remove-label-associations",
+    "remove-card-container"
+  ],
+  "composition": {
+    "contains": [
+      "button",
+      "card",
+      "input",
+      "label",
+      "separator"
+    ],
+    "used_in": [
+      "landing-page"
+    ]
+  },
+  "files": {
+    "html": "auth-form.html",
+    "css": "auth-form.css",
+    "manifest": "auth-form.manifest.json"
+  },
+  "tests": [
+    "renders-centered-card",
+    "includes-email-and-password-fields",
+    "uses-button-actions"
+  ]
+}

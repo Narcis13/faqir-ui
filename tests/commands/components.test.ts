@@ -71,12 +71,15 @@ describe("loom component commands", () => {
       expect(output).toContain("button");
       expect(output).toContain("card");
       expect(output).toContain("input");
-      expect(output).toContain("Available (29 not installed):");
+      expect(output).toContain("Available (35 not installed):");
       expect(output).toContain("accordion");
       expect(output).toContain("avatar");
       expect(output).toContain("badge");
       expect(output).toContain("date-picker");
       expect(output).toContain("RECIPES:");
+      expect(output).toContain("PATTERNS:");
+      expect(output).toContain("auth-form");
+      expect(output).toContain("dashboard-shell");
       expect(output).toContain("dialog");
       expect(output).toContain("dropdown");
       expect(output).toContain("label");
@@ -141,12 +144,15 @@ describe("loom component commands", () => {
 
       expect(config.installed.primitives).toHaveLength(17);
       expect(config.installed.recipes).toHaveLength(15);
-      expect(config.installed.patterns).toEqual([]);
+      expect(config.installed.patterns).toHaveLength(6);
 
       expect(context.meta.component_count.primitives).toBe(17);
       expect(context.meta.component_count.recipes).toBe(15);
+      expect(context.meta.component_count.patterns).toBe(6);
       expect(context.components.textarea.kind).toBe("primitive");
       expect(context.components.drawer.kind).toBe("recipe");
+      expect(context.components["auth-form"].kind).toBe("pattern");
+      expect(context.patterns["crud-table"].uses).toContain("table");
       expect(context.components["date-picker"].controller).toBe("date-picker.js");
 
       expect(loomScript).toContain('import { createAccordion } from "./recipes/accordion/accordion.js";');
@@ -156,6 +162,7 @@ describe("loom component commands", () => {
       await expect(stat(join(cwd, "ui", "primitives", "surface", "surface.css"))).resolves.toBeDefined();
       await expect(stat(join(cwd, "ui", "recipes", "command-palette", "command-palette.js"))).resolves.toBeDefined();
       await expect(stat(join(cwd, "ui", "recipes", "date-picker", "date-picker.manifest.json"))).resolves.toBeDefined();
+      await expect(stat(join(cwd, "ui", "patterns", "search-results", "search-results.css"))).resolves.toBeDefined();
     } finally {
       await rm(cwd, { recursive: true, force: true });
     }

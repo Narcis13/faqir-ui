@@ -1,0 +1,54 @@
+/* @ui:component settings-page */
+
+[data-ui="settings-page"] {
+  display: grid;
+  gap: var(--space-6);
+  padding: var(--space-6);
+  background: var(--color-bg);
+}
+
+[data-ui="settings-page"] [data-part="header"] {
+  display: grid;
+  gap: var(--space-2);
+}
+
+[data-ui="settings-page"] [data-part="title"] {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+}
+
+[data-ui="settings-page"] [data-part="description"] {
+  margin: 0;
+  color: var(--color-fg-muted);
+  font-size: var(--text-sm);
+}
+
+[data-ui="settings-page"] [data-part="panel"] {
+  display: grid;
+  gap: var(--space-5);
+}
+
+[data-ui="settings-page"] [data-part="form"] {
+  display: grid;
+  gap: var(--space-4);
+}
+
+[data-ui="settings-page"] [data-part="field"] {
+  display: grid;
+  gap: var(--space-2);
+}
+
+[data-ui="settings-page"] [data-part="inline-field"] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+[data-ui="settings-page"] [data-part="actions"] {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}

@@ -1,8 +1,8 @@
-import { generateContext } from "../generator/context";
 import { readConfigFile, type LoomConfig } from "../utils/config";
 import { copyTextFile, fileExists, writeJsonFile } from "../utils/fs";
 import { info, success } from "../utils/logger";
 import { resolvePackagePath } from "../utils/paths";
+import { regenerateProjectContext } from "../utils/project";
 import { ensureCoreModules, writeLoomScript } from "../utils/recipes";
 import {
   getComponentFileNames,
@@ -67,7 +67,7 @@ export async function addCommand(args: string[], cwd: string): Promise<void> {
 
   await writeLoomScript(cwd, config);
   await writeJsonFile(configPath, config);
-  await writeJsonFile(resolvePackagePath(cwd, ".loom", "context.json"), await generateContext(cwd, config));
+  await regenerateProjectContext(cwd, config);
 
   success(`Added ${plan.length} component(s): ${plan.map((component) => component.name).join(", ")}`);
 }

@@ -1,0 +1,44 @@
+/* @ui:component theme-brutalist */
+
+:root {
+  color-scheme: light;
+  --color-bg: oklch(0.98 0 0);
+  --color-bg-subtle: oklch(0.95 0 0);
+  --color-bg-muted: oklch(0.91 0 0);
+  --color-bg-elevated: oklch(1 0 0);
+  --color-fg: oklch(0.12 0 0);
+  --color-fg-muted: oklch(0.34 0 0);
+  --color-fg-subtle: oklch(0.48 0 0);
+  --color-link: oklch(0.14 0.18 259);
+  --color-primary: oklch(0.78 0.2 85);
+  --color-primary-hover: oklch(0.72 0.2 85);
+  --color-primary-active: oklch(0.66 0.2 85);
+  --color-primary-fg: oklch(0.12 0 0);
+  --color-primary-subtle: oklch(0.92 0.1 85);
+  --color-secondary: oklch(0.12 0 0);
+  --color-secondary-hover: oklch(0.2 0 0);
+  --color-secondary-active: oklch(0.28 0 0);
+  --color-secondary-fg: oklch(0.98 0 0);
+  --color-destructive: oklch(0.66 0.23 28);
+  --color-destructive-hover: oklch(0.6 0.23 28);
+  --color-destructive-fg: oklch(0.98 0 0);
+  --color-destructive-subtle: oklch(0.92 0.08 28);
+  --color-success: oklch(0.72 0.19 145);
+  --color-success-subtle: oklch(0.93 0.07 145);
+  --color-warning: oklch(0.82 0.18 95);
+  --color-warning-subtle: oklch(0.95 0.08 95);
+  --color-border: oklch(0.12 0 0);
+  --color-border-strong: oklch(0.12 0 0);
+  --color-ring: oklch(0.12 0 0 / 0.6);
+  --color-overlay: oklch(0.12 0 0 / 0.7);
+  --shadow-xs: 2px 2px 0 oklch(0.12 0 0);
+  --shadow-sm: 4px 4px 0 oklch(0.12 0 0);
+  --shadow-md: 6px 6px 0 oklch(0.12 0 0);
+  --shadow-lg: 8px 8px 0 oklch(0.12 0 0);
+  --shadow-xl: 10px 10px 0 oklch(0.12 0 0);
+  --button-radius: 0;
+  --input-radius: 0;
+  --card-radius: 0;
+  --dialog-radius: 0;
+  --surface-radius: 0;
+}

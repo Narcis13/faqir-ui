@@ -6,11 +6,15 @@ import { conformCommand } from "./commands/conform";
 import { contextCommand } from "./commands/context";
 import { doctorCommand } from "./commands/doctor";
 import { explainCommand } from "./commands/explain";
+import { galleryCommand } from "./commands/gallery";
 import { initCommand } from "./commands/init";
 import { inspectCommand } from "./commands/inspect";
 import { listCommand } from "./commands/list";
 import { repairCommand } from "./commands/repair";
+import { scaffoldCommand } from "./commands/scaffold";
+import { themeCommand } from "./commands/theme";
 import { traceCommand } from "./commands/trace";
+import { variantCommand } from "./commands/variant";
 import { error, info } from "./utils/logger";
 
 export async function runCli(args = process.argv.slice(2), cwd = process.cwd()): Promise<number> {
@@ -51,6 +55,11 @@ export async function runCli(args = process.argv.slice(2), cwd = process.cwd()):
       return (await doctorCommand(rest, cwd)).ok ? 0 : 1;
     }
 
+    if (command === "gallery") {
+      await galleryCommand(rest, cwd);
+      return 0;
+    }
+
     if (command === "audit") {
       return await auditCommand(rest, cwd);
     }
@@ -78,6 +87,21 @@ export async function runCli(args = process.argv.slice(2), cwd = process.cwd()):
       return await conformCommand(rest, cwd);
     }
 
+    if (command === "theme") {
+      await themeCommand(rest, cwd);
+      return 0;
+    }
+
+    if (command === "scaffold") {
+      await scaffoldCommand(rest, cwd);
+      return 0;
+    }
+
+    if (command === "variant") {
+      await variantCommand(rest, cwd);
+      return 0;
+    }
+
     error(`Unknown command: ${command}`);
     printHelp();
     return 1;
@@ -96,12 +120,16 @@ function printHelp(): void {
   info("  list      Show installed and available components");
   info("  inspect   Show a component manifest");
   info("  doctor    Check project health");
+  info("  gallery   Generate a self-hosted component gallery");
   info("  audit     Check HTML and CSS contracts");
   info("  repair    Apply deterministic audit fixes");
   info("  context   Generate AI context files");
   info("  explain   Human/agent-readable component explanation");
   info("  trace     Show dependency and file trace");
   info("  conform   Normalize component markup to canonical order");
+  info("  theme     Manage active and custom themes");
+  info("  scaffold  Generate full-page templates");
+  info("  variant   Add or remove component variant values");
 }
 
 if (import.meta.main) {

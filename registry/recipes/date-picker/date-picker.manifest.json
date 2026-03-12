@@ -26,6 +26,16 @@
       "required": true,
       "tag_hint": "div"
     },
+    "month": {
+      "selector": "[data-part='month']",
+      "required": true,
+      "tag_hint": "div"
+    },
+    "grid": {
+      "selector": "[data-part='grid']",
+      "required": true,
+      "tag_hint": "div"
+    },
     "day": {
       "selector": "[data-part='day']",
       "required": true,
@@ -118,7 +128,7 @@
     "z-toast"
   ],
   "templates": {
-    "html": "<div data-ui=\"date-picker\" data-state=\"closed\" id=\"{id}\">\n  <input data-ui=\"input\" data-part=\"input\" type=\"text\" />\n  <button data-ui=\"button\" data-part=\"trigger\" type=\"button\" aria-expanded=\"false\" aria-controls=\"{id}-calendar\">Open calendar</button>\n  <div data-part=\"calendar\" id=\"{id}-calendar\" hidden>\n    <button data-part=\"day\" type=\"button\" data-date=\"2026-03-12\">12</button>\n  </div>\n</div>"
+    "html": "<div data-ui=\"date-picker\" data-state=\"closed\" id=\"{id}\">\n  <input data-ui=\"input\" data-part=\"input\" type=\"text\" />\n  <button data-ui=\"button\" data-part=\"trigger\" type=\"button\" aria-expanded=\"false\" aria-controls=\"{id}-calendar\">Open calendar</button>\n  <div data-part=\"calendar\" id=\"{id}-calendar\" hidden>\n    <div data-part=\"month\">March 2026</div>\n    <div data-part=\"grid\">\n      <button data-part=\"day\" type=\"button\" data-date=\"2026-03-12\">12</button>\n    </div>\n  </div>\n</div>"
   },
   "safe_transforms": [
     "change-visible-days",

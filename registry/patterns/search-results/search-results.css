@@ -1,0 +1,59 @@
+/* @ui:component search-results */
+
+[data-ui="search-results"] {
+  display: grid;
+  gap: var(--space-5);
+  padding: var(--space-6);
+  background: var(--color-bg);
+}
+
+[data-ui="search-results"] [data-part="header"] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+[data-ui="search-results"] [data-part="query"] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+[data-ui="search-results"] [data-part="results"] {
+  display: grid;
+  gap: var(--space-4);
+}
+
+[data-ui="search-results"] [data-part="result"] {
+  display: grid;
+  gap: var(--space-3);
+}
+
+[data-ui="search-results"] [data-part="result-title"] {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+}
+
+[data-ui="search-results"] [data-part="result-copy"] {
+  margin: 0;
+  color: var(--color-fg-muted);
+  font-size: var(--text-sm);
+}
+
+[data-ui="search-results"] [data-part="result-meta"] {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+[data-ui="search-results"] [data-part="footer"] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}

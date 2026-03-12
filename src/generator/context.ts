@@ -8,6 +8,7 @@ export async function generateContext(
   config: LoomConfig,
 ): Promise<Record<string, unknown>> {
   const components = await loadInstalledComponentManifests(projectRoot, config);
+  const patternEntries = components.filter(({ layer }) => layer === "patterns");
 
   return {
     meta: {
@@ -42,6 +43,15 @@ export async function generateContext(
       components.map(({ manifest }) => [
         manifest.name,
         buildComponentEntry(manifest),
+      ]),
+    ),
+    patterns: Object.fromEntries(
+      patternEntries.map(({ manifest }) => [
+        manifest.name,
+        {
+          uses: manifest.composition.contains,
+          template: manifest.templates.html,
+        },
       ]),
     ),
     rules: {
@@ -223,7 +233,7 @@ export function generateCursorRules(context: Record<string, unknown>): string {
   lines.push("- Hardcode color/spacing/shadow values (use tokens)");
   lines.push("- Remove ARIA attributes from components");
   lines.push("- Remove focus trap from dialogs");
-  lines.push("- Use !important in component CSS");
+  lines.push("- Use `!important` in component CSS");
   lines.push("");
 
   return lines.join("\n");

@@ -1,0 +1,79 @@
+{
+  "$schema": "https://loom.dev/manifest.schema.json",
+  "name": "crud-table",
+  "version": "1.0.0",
+  "kind": "pattern",
+  "category": "composite",
+  "description": "Data management pattern with search, bulk actions, table controls, and destructive confirmation",
+  "anatomy": {
+    "tag": "section",
+    "selector": "[data-ui='crud-table']",
+    "content_model": "slots"
+  },
+  "slots": {
+    "header": {
+      "selector": "[data-part='header']",
+      "required": true,
+      "tag_hint": "header"
+    },
+    "table-card": {
+      "selector": "[data-part='table-card']",
+      "required": true,
+      "tag_hint": "article"
+    },
+    "footer": {
+      "selector": "[data-part='footer']",
+      "required": true,
+      "tag_hint": "footer"
+    }
+  },
+  "tokens_used": [
+    "color-bg",
+    "color-fg-muted",
+    "space-3",
+    "space-4",
+    "space-5",
+    "space-6",
+    "text-sm",
+    "text-xl",
+    "weight-semibold"
+  ],
+  "templates": {
+    "html": "<section data-ui=\"crud-table\"><header data-part=\"header\">{toolbar}</header><article data-part=\"table-card\">{table}</article></section>"
+  },
+  "safe_transforms": [
+    "add-table-column",
+    "change-bulk-actions",
+    "update-empty-copy",
+    "replace-dialog-copy"
+  ],
+  "unsafe_transforms": [
+    "remove-table-a11y-attributes",
+    "remove-dialog-controller-parts"
+  ],
+  "composition": {
+    "contains": [
+      "badge",
+      "button",
+      "card",
+      "dialog",
+      "input",
+      "pagination",
+      "table"
+    ],
+    "used_in": [
+      "admin-dashboard",
+      "internal-tool"
+    ]
+  },
+  "files": {
+    "html": "crud-table.html",
+    "css": "crud-table.css",
+    "manifest": "crud-table.manifest.json"
+  },
+  "tests": [
+    "renders-toolbar",
+    "includes-table-recipe",
+    "includes-dialog-for-destructive-action"
+  ]
+}

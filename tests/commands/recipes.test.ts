@@ -434,7 +434,7 @@ describe("loom recipes", () => {
     }
   });
 
-  test("generated loom.js auto-initializes installed recipes and observes new nodes", async () => {
+  test("generated loom.js auto-initializes installed recipes and supports manual init for new nodes", async () => {
     const cwd = await makeTempProject();
 
     try {
@@ -447,7 +447,10 @@ describe("loom recipes", () => {
         const tabs = buildTabsFixture(documentLike).root;
         const dropdown = buildDropdownFixture(documentLike).root;
 
-        const module = await importFromProject<{ controllers: Record<string, Function> }>(cwd, "ui/loom.js");
+        const module = await importFromProject<{
+          controllers: Record<string, Function>;
+          init(root?: unknown): void;
+        }>(cwd, "ui/loom.js");
 
         expect(Object.keys(module.controllers)).toEqual(["dialog", "dropdown", "tabs"]);
         expect(dialog["__loomDialog"]).toBeDefined();
@@ -455,7 +458,7 @@ describe("loom recipes", () => {
         expect(dropdown["__loomDropdown"]).toBeDefined();
 
         const nextDropdown = buildDropdownFixture(documentLike).root;
-        FakeMutationObserver.last?.flush([nextDropdown]);
+        module.init(nextDropdown);
         expect(nextDropdown["__loomDropdown"]).toBeDefined();
       });
     } finally {

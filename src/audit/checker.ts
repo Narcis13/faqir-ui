@@ -15,6 +15,7 @@ import {
   type KnownComponentEntry,
   COMPONENT_AUDIT_RULES,
   CSS_AUDIT_RULES,
+  JS_AUDIT_RULES,
 } from "./rules";
 
 export type AuditOptions = {
@@ -108,6 +109,42 @@ export async function auditProject(cwd: string, options: AuditOptions = {}): Pro
 
     for (const rule of CSS_AUDIT_RULES) {
       results.push(...rule.check({ project, entry, source, parsed }));
+    }
+  }
+
+  for (const entry of componentsByName.values()) {
+    if (!entry.jsPath || !(await fileExists(entry.jsPath))) {
+      continue;
+    }
+
+    const source = await readTextFile(entry.jsPath);
+
+    for (const rule of JS_AUDIT_RULES) {
+      results.push(
+        ...rule.check({
+          project,
+          componentName: entry.manifest.name,
+          filePath: entry.jsPath,
+          source,
+          kind: "component-controller",
+        }),
+      );
+    }
+  }
+
+  if (await fileExists(project.loomScriptPath)) {
+    const source = await readTextFile(project.loomScriptPath);
+
+    for (const rule of JS_AUDIT_RULES) {
+      results.push(
+        ...rule.check({
+          project,
+          componentName: "loom-runtime",
+          filePath: project.loomScriptPath,
+          source,
+          kind: "loom-runtime",
+        }),
+      );
     }
   }
 

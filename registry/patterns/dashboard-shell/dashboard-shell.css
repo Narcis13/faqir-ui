@@ -1,0 +1,114 @@
+/* @ui:component dashboard-shell */
+
+[data-ui="dashboard-shell"] {
+  display: grid;
+  gap: var(--space-6);
+  min-block-size: 100vh;
+  padding: var(--space-6);
+  background:
+    linear-gradient(180deg, var(--color-bg-subtle), transparent 20rem),
+    var(--color-bg);
+  color: var(--color-fg);
+}
+
+[data-ui="dashboard-shell"] [data-part="frame"] {
+  display: grid;
+  gap: var(--space-6);
+}
+
+[data-ui="dashboard-shell"] [data-part="topbar"] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+}
+
+[data-ui="dashboard-shell"] [data-part="brand"] {
+  display: grid;
+  gap: var(--space-1);
+}
+
+[data-ui="dashboard-shell"] [data-part="headline"] {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+}
+
+[data-ui="dashboard-shell"] [data-part="subhead"] {
+  margin: 0;
+  color: var(--color-fg-muted);
+  font-size: var(--text-sm);
+}
+
+[data-ui="dashboard-shell"] [data-part="shell"] {
+  display: grid;
+  gap: var(--space-6);
+}
+
+[data-ui="dashboard-shell"] [data-part="sidebar"] {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+  padding: var(--space-4);
+}
+
+[data-ui="dashboard-shell"] [data-part="nav-link"] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  color: inherit;
+  text-decoration: none;
+}
+
+[data-ui="dashboard-shell"] [data-part="nav-link"][data-state="active"] {
+  background: var(--color-primary-subtle);
+  color: var(--color-primary);
+}
+
+[data-ui="dashboard-shell"] [data-part="content"] {
+  display: grid;
+  gap: var(--space-6);
+}
+
+[data-ui="dashboard-shell"] [data-part="stats"] {
+  display: grid;
+  gap: var(--space-4);
+}
+
+[data-ui="dashboard-shell"] [data-part="metric"] {
+  display: grid;
+  gap: var(--space-2);
+}
+
+[data-ui="dashboard-shell"] [data-part="metric-value"] {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: var(--weight-semibold);
+  line-height: 1;
+}
+
+[data-ui="dashboard-shell"] [data-part="metric-label"] {
+  margin: 0;
+  color: var(--color-fg-muted);
+  font-size: var(--text-sm);
+}
+
+[data-ui="dashboard-shell"] [data-part="activity"] {
+  display: grid;
+  gap: var(--space-4);
+}
+
+@media (min-width: 72rem) {
+  [data-ui="dashboard-shell"] [data-part="shell"] {
+    grid-template-columns: 16rem minmax(0, 1fr);
+    align-items: start;
+  }
+
+  [data-ui="dashboard-shell"] [data-part="stats"] {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

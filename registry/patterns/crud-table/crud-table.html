@@ -1,0 +1,95 @@
+<!-- @ui:component crud-table -->
+<!-- @ui:kind pattern -->
+
+<section data-ui="crud-table" aria-labelledby="crud-table-title">
+  <header data-part="header">
+    <div data-part="intro">
+      <h1 id="crud-table-title" data-part="title">Team members</h1>
+      <p data-part="description">Filter, inspect, and manage the people with access to your workspace.</p>
+    </div>
+
+    <div data-part="toolbar">
+      <input data-ui="input" type="search" data-size="md" placeholder="Search people" aria-label="Search people" />
+      <span data-ui="badge">24 records</span>
+      <button data-ui="button" data-variant="primary" type="button">Invite member</button>
+    </div>
+  </header>
+
+  <article data-ui="card" data-part="table-card">
+    <div data-part="body">
+      <div data-ui="table" data-state="ready">
+        <p data-part="status">2 selected</p>
+        <table data-part="table">
+          <thead>
+            <tr>
+              <th scope="col">Select</th>
+              <th scope="col"><button data-part="sort" type="button" data-sort-key="name" aria-sort="ascending">Name</button></th>
+              <th scope="col"><button data-part="sort" type="button" data-sort-key="role" aria-sort="none">Role</button></th>
+              <th scope="col"><button data-part="sort" type="button" data-sort-key="status" aria-sort="none">Status</button></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr data-part="row">
+              <td><input data-part="row-select" type="checkbox" aria-label="Select Alex" checked /></td>
+              <td data-column="name">Alex Morgan</td>
+              <td data-column="role">Owner</td>
+              <td data-column="status"><span data-ui="badge">Active</span></td>
+            </tr>
+            <tr data-part="row">
+              <td><input data-part="row-select" type="checkbox" aria-label="Select Priya" checked /></td>
+              <td data-column="name">Priya Singh</td>
+              <td data-column="role">Admin</td>
+              <td data-column="status"><span data-ui="badge">Pending</span></td>
+            </tr>
+            <tr data-part="row">
+              <td><input data-part="row-select" type="checkbox" aria-label="Select Malik" /></td>
+              <td data-column="name">Malik Ortiz</td>
+              <td data-column="role">Member</td>
+              <td data-column="status"><span data-ui="badge">Viewer</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <footer data-part="footer">
+      <button data-ui="button" data-variant="outline" type="button">Archive selected</button>
+      <div data-ui="pagination" data-state="ready" aria-label="Pagination">
+        <button data-part="prev" type="button" aria-label="Previous page">Previous</button>
+        <button data-part="item" type="button" aria-current="page">1</button>
+        <button data-part="item" type="button">2</button>
+        <button data-part="item" type="button">3</button>
+        <button data-part="next" type="button" aria-label="Next page">Next</button>
+      </div>
+    </footer>
+  </article>
+
+  <div data-ui="dialog" data-state="closed" id="crud-delete-dialog">
+    <button data-part="trigger" data-ui="button" data-variant="ghost" type="button">
+      Open dialog
+    </button>
+    <div data-part="overlay" hidden></div>
+    <div
+      data-part="panel"
+      id="crud-delete-dialog-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="crud-delete-dialog-title"
+      data-size="sm"
+      hidden
+      tabindex="-1"
+    >
+      <div data-part="header">
+        <h2 id="crud-delete-dialog-title" data-part="title">Archive selected members?</h2>
+        <button data-part="close" type="button" aria-label="Close dialog">Close</button>
+      </div>
+      <div data-part="body">
+        <p>This removes access immediately and preserves the audit trail.</p>
+      </div>
+      <div data-part="footer">
+        <button data-ui="button" data-part="close" data-variant="secondary" type="button" aria-label="Close dialog">Cancel</button>
+        <button data-ui="button" data-variant="destructive" type="button">Archive</button>
+      </div>
+    </div>
+  </div>
+</section>

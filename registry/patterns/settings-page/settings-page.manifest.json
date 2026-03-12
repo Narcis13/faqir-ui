@@ -1,0 +1,81 @@
+{
+  "$schema": "https://loom.dev/manifest.schema.json",
+  "name": "settings-page",
+  "version": "1.0.0",
+  "kind": "pattern",
+  "category": "composite",
+  "description": "Settings workspace layout with tabbed sections, forms, switches, and confirmation dialog",
+  "anatomy": {
+    "tag": "section",
+    "selector": "[data-ui='settings-page']",
+    "content_model": "slots"
+  },
+  "slots": {
+    "header": {
+      "selector": "[data-part='header']",
+      "required": true,
+      "tag_hint": "header"
+    },
+    "panel": {
+      "selector": "[data-part='panel']",
+      "required": true,
+      "tag_hint": "article"
+    },
+    "actions": {
+      "selector": "[data-part='actions']",
+      "required": true,
+      "tag_hint": "div"
+    }
+  },
+  "tokens_used": [
+    "color-bg",
+    "color-fg-muted",
+    "space-2",
+    "space-3",
+    "space-4",
+    "space-5",
+    "space-6",
+    "text-sm",
+    "text-xl",
+    "weight-semibold"
+  ],
+  "templates": {
+    "html": "<section data-ui=\"settings-page\"><header data-part=\"header\">{intro}</header><div data-ui=\"tabs\">{sections}</div></section>"
+  },
+  "safe_transforms": [
+    "add-settings-field",
+    "reorder-tabs",
+    "replace-dialog-copy",
+    "change-switch-defaults"
+  ],
+  "unsafe_transforms": [
+    "remove-tab-relationships",
+    "remove-form-labels"
+  ],
+  "composition": {
+    "contains": [
+      "button",
+      "card",
+      "dialog",
+      "input",
+      "label",
+      "select",
+      "switch",
+      "tabs",
+      "textarea"
+    ],
+    "used_in": [
+      "internal-tool"
+    ]
+  },
+  "files": {
+    "html": "settings-page.html",
+    "css": "settings-page.css",
+    "manifest": "settings-page.manifest.json"
+  },
+  "tests": [
+    "renders-settings-tabs",
+    "includes-form-controls",
+    "includes-confirmation-dialog"
+  ]
+}

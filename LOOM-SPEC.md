@@ -1917,7 +1917,7 @@ When building UI with Loom, always read `.loom/context.json` first.
 1. Write README.md with examples
 2. Write CONTRIBUTING.md
 3. Write component gallery HTML page (self-hosted using Loom components)
-4. Run full audit on all components
+4. Run full audit /statuson all components
 5. Performance benchmarks (CLI speed, audit speed)
 6. Edge case testing
 7. Publish to npm as `@loom-ui/cli`

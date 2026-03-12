@@ -1,0 +1,63 @@
+<!-- @ui:component search-results -->
+<!-- @ui:kind pattern -->
+
+<section data-ui="search-results" aria-labelledby="search-results-title">
+  <header data-part="header">
+    <div>
+      <h1 id="search-results-title" data-part="result-title">Search results</h1>
+      <p data-part="result-copy">Browse docs, snippets, and implementation notes matching the active query.</p>
+    </div>
+
+    <div data-part="query">
+      <input data-ui="input" type="search" data-size="md" value="dialog accessibility" aria-label="Search query" />
+      <span data-ui="badge">18 matches</span>
+      <span data-ui="spinner" aria-hidden="true"></span>
+    </div>
+  </header>
+
+  <div data-part="results">
+    <article data-ui="card" data-part="result">
+      <div data-part="body">
+        <h2 data-part="result-title">Dialog accessibility contract</h2>
+        <p data-part="result-copy">Covers `aria-labelledby`, overlay behavior, and focus trapping for modal panels.</p>
+        <div data-part="result-meta">
+          <span data-ui="badge">Guide</span>
+          <span data-ui="badge">A11y</span>
+        </div>
+      </div>
+    </article>
+
+    <article data-ui="card" data-part="result">
+      <div data-part="body">
+        <h2 data-part="result-title">Tabs pattern composition</h2>
+        <p data-part="result-copy">Examples of tabbed settings panels and dashboard sections built with Loom recipes.</p>
+        <div data-part="result-meta">
+          <span data-ui="badge">Pattern</span>
+          <span data-ui="badge">Recipes</span>
+        </div>
+      </div>
+    </article>
+
+    <article data-ui="card" data-part="result">
+      <div data-part="body">
+        <h2 data-part="result-title">Repairing invalid variants</h2>
+        <p data-part="result-copy">How audit detects invalid values and how to extend a component with the variant CLI.</p>
+        <div data-part="result-meta">
+          <span data-ui="badge">CLI</span>
+          <span data-ui="badge">Variants</span>
+        </div>
+      </div>
+    </article>
+  </div>
+
+  <footer data-part="footer">
+    <p data-part="result-copy">Showing 1-3 of 18 results</p>
+    <div data-ui="pagination" data-state="ready" aria-label="Search results pages">
+      <button data-part="prev" type="button" aria-label="Previous page">Previous</button>
+      <button data-part="item" type="button" aria-current="page">1</button>
+      <button data-part="item" type="button">2</button>
+      <button data-part="item" type="button">3</button>
+      <button data-part="next" type="button" aria-label="Next page">Next</button>
+    </div>
+  </footer>
+</section>

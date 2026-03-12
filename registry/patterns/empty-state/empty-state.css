@@ -1,0 +1,46 @@
+/* @ui:component empty-state */
+
+[data-ui="empty-state"] {
+  display: grid;
+  place-items: center;
+  min-block-size: 60vh;
+  padding: var(--space-6);
+  background: linear-gradient(180deg, var(--color-bg-subtle), var(--color-bg));
+}
+
+[data-ui="empty-state"] [data-part="panel"] {
+  inline-size: min(100%, 32rem);
+  text-align: center;
+}
+
+[data-ui="empty-state"] [data-part="icon"] {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 4rem;
+  block-size: 4rem;
+  margin: 0 auto var(--space-4);
+  border-radius: var(--radius-full);
+  background: var(--color-primary-subtle);
+  color: var(--color-primary);
+  font-size: 1.5rem;
+  font-weight: var(--weight-semibold);
+}
+
+[data-ui="empty-state"] [data-part="title"] {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+}
+
+[data-ui="empty-state"] [data-part="description"] {
+  margin: var(--space-2) 0 0;
+  color: var(--color-fg-muted);
+  font-size: var(--text-sm);
+}
+
+[data-ui="empty-state"] [data-part="actions"] {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}

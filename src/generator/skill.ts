@@ -19,6 +19,7 @@ export function generateSkill(config: LoomConfig): string {
     "- Use `data-state` for runtime state (CSS targets this)",
     "- Use `data-variant` for visual variants",
     "- Use CSS tokens (`var(--color-primary)`) — never hardcode values",
+    "- Never use classes for component identity or state",
     "- Always include ARIA attributes per component manifest",
     "- Import recipe controllers: `import { createDialog } from \"./ui/recipes/dialog/dialog.js\"`",
     "",
@@ -33,10 +34,14 @@ export function generateSkill(config: LoomConfig): string {
     "- `loom add <name>` — add components",
     "- `loom audit` — check for contract violations",
     "- `loom repair` — auto-fix issues",
+    "- `loom gallery` — generate the self-hosted component gallery",
     "- `loom explain <name>` — get component details",
     "- `loom trace <name>` — show dependency and file trace",
     "- `loom context` — regenerate AI context file",
     "- `loom conform` — normalize component markup",
+    "- `loom theme set <name>` — switch the active theme",
+    "- `loom scaffold <name>` — generate a full page scaffold",
+    "- `loom variant add <component> <variant>=<value>` — extend a component variant",
     "",
   ].join("\n");
 }

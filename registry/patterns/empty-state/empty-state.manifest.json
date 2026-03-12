@@ -1,0 +1,72 @@
+{
+  "$schema": "https://loom.dev/manifest.schema.json",
+  "name": "empty-state",
+  "version": "1.0.0",
+  "kind": "pattern",
+  "category": "composite",
+  "description": "Centered empty-state callout with brief explanation and paired next-step actions",
+  "anatomy": {
+    "tag": "section",
+    "selector": "[data-ui='empty-state']",
+    "content_model": "slots"
+  },
+  "slots": {
+    "panel": {
+      "selector": "[data-part='panel']",
+      "required": true,
+      "tag_hint": "article"
+    },
+    "actions": {
+      "selector": "[data-part='actions']",
+      "required": true,
+      "tag_hint": "div"
+    }
+  },
+  "tokens_used": [
+    "color-bg",
+    "color-bg-subtle",
+    "color-fg-muted",
+    "color-primary",
+    "color-primary-subtle",
+    "radius-full",
+    "space-2",
+    "space-3",
+    "space-4",
+    "space-5",
+    "space-6",
+    "text-sm",
+    "text-xl",
+    "weight-semibold"
+  ],
+  "templates": {
+    "html": "<section data-ui=\"empty-state\"><article data-ui=\"card\" data-part=\"panel\">{content}</article></section>"
+  },
+  "safe_transforms": [
+    "replace-copy",
+    "swap-primary-action",
+    "add-secondary-action"
+  ],
+  "unsafe_transforms": [
+    "remove-actions",
+    "remove-card-body"
+  ],
+  "composition": {
+    "contains": [
+      "button",
+      "card",
+      "surface"
+    ],
+    "used_in": [
+      "landing-page"
+    ]
+  },
+  "files": {
+    "html": "empty-state.html",
+    "css": "empty-state.css",
+    "manifest": "empty-state.manifest.json"
+  },
+  "tests": [
+    "renders-single-card",
+    "includes-primary-action"
+  ]
+}

@@ -1,0 +1,147 @@
+<!-- @ui:component settings-page -->
+<!-- @ui:kind pattern -->
+
+<section data-ui="settings-page" aria-labelledby="settings-page-title">
+  <header data-part="header">
+    <h1 id="settings-page-title" data-part="title">Workspace settings</h1>
+    <p data-part="description">Update account, notification, and publishing preferences.</p>
+  </header>
+
+  <div data-ui="tabs" data-state="ready" data-orientation="horizontal" id="settings-page-tabs">
+    <div data-part="list" role="tablist" aria-label="Settings sections">
+      <button
+        data-part="trigger"
+        data-state="active"
+        data-value="profile"
+        id="settings-page-profile-tab"
+        type="button"
+        role="tab"
+        aria-selected="true"
+        aria-controls="settings-page-profile-panel"
+        tabindex="0"
+      >
+        Profile
+      </button>
+      <button
+        data-part="trigger"
+        data-state="inactive"
+        data-value="notifications"
+        id="settings-page-notifications-tab"
+        type="button"
+        role="tab"
+        aria-selected="false"
+        aria-controls="settings-page-notifications-panel"
+        tabindex="-1"
+      >
+        Notifications
+      </button>
+    </div>
+
+    <section
+      data-part="panel"
+      data-state="active"
+      data-value="profile"
+      id="settings-page-profile-panel"
+      role="tabpanel"
+      aria-labelledby="settings-page-profile-tab"
+    >
+      <article data-ui="card" data-part="panel">
+        <div data-part="body">
+          <form data-part="form">
+            <div data-part="field">
+              <label data-ui="label" for="settings-name">Workspace name</label>
+              <input data-ui="input" id="settings-name" type="text" value="Loom Labs" />
+            </div>
+
+            <div data-part="field">
+              <label data-ui="label" for="settings-slug">Default timezone</label>
+              <select data-ui="select" id="settings-slug">
+                <option>Europe/Bucharest</option>
+                <option>UTC</option>
+                <option>America/New_York</option>
+              </select>
+            </div>
+
+            <div data-part="field">
+              <label data-ui="label" for="settings-description">Description</label>
+              <textarea data-ui="textarea" id="settings-description">Agent-native design system for teams.</textarea>
+            </div>
+
+            <div data-part="actions">
+              <button data-ui="button" data-variant="secondary" type="button">Discard</button>
+              <button data-ui="button" data-variant="primary" type="submit">Save changes</button>
+            </div>
+          </form>
+        </div>
+      </article>
+    </section>
+
+    <section
+      data-part="panel"
+      data-state="inactive"
+      data-value="notifications"
+      id="settings-page-notifications-panel"
+      role="tabpanel"
+      aria-labelledby="settings-page-notifications-tab"
+      hidden
+    >
+      <article data-ui="card" data-part="panel">
+        <div data-part="body">
+          <div data-part="form">
+            <div data-part="inline-field">
+              <div>
+                <label data-ui="label" for="settings-email-notices">Email summaries</label>
+                <p data-part="description">Send a digest every weekday morning.</p>
+              </div>
+              <button data-ui="switch" id="settings-email-notices" type="button" aria-pressed="true"></button>
+            </div>
+
+            <div data-part="inline-field">
+              <div>
+                <label data-ui="label" for="settings-release-gate">Require review before publish</label>
+                <p data-part="description">Open a confirmation dialog before destructive releases.</p>
+              </div>
+              <button data-ui="switch" id="settings-release-gate" type="button" aria-pressed="false"></button>
+            </div>
+
+            <div data-part="actions">
+              <button data-ui="button" data-variant="outline" type="button">Reset</button>
+              <button data-ui="button" data-variant="primary" type="button" data-open="settings-confirm-dialog">
+                Save preferences
+              </button>
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
+  </div>
+
+  <div data-ui="dialog" data-state="closed" id="settings-confirm-dialog">
+    <button data-part="trigger" data-ui="button" data-variant="ghost" type="button">
+      Hidden trigger
+    </button>
+    <div data-part="overlay" hidden></div>
+    <div
+      data-part="panel"
+      id="settings-confirm-dialog-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="settings-confirm-dialog-title"
+      data-size="sm"
+      hidden
+      tabindex="-1"
+    >
+      <div data-part="header">
+        <h2 id="settings-confirm-dialog-title" data-part="title">Apply notification changes?</h2>
+        <button data-part="close" type="button" aria-label="Close dialog">Close</button>
+      </div>
+      <div data-part="body">
+        <p>All team members will receive the new default delivery settings.</p>
+      </div>
+      <div data-part="footer">
+        <button data-ui="button" data-part="close" data-variant="secondary" type="button" aria-label="Close dialog">Cancel</button>
+        <button data-ui="button" data-variant="primary" type="button">Apply</button>
+      </div>
+    </div>
+  </div>
+</section>
