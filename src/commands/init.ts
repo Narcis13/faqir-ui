@@ -18,6 +18,7 @@ import {
   resolvePackagePath,
   resolveRegistryPath,
 } from "../utils/paths";
+import { ensureCoreModules, writeLoomScript } from "../utils/recipes";
 
 const TOKEN_FILES = [
   "palette.css",
@@ -27,15 +28,6 @@ const TOKEN_FILES = [
   "typography.css",
   "effects.css",
   "motion.css",
-] as const;
-
-const CORE_FILES = [
-  "dom.js",
-  "events.js",
-  "focus.js",
-  "motion.js",
-  "store.js",
-  "utils.js",
 ] as const;
 
 type InitOptions = {
@@ -61,8 +53,10 @@ export async function initCommand(args: string[], cwd: string): Promise<void> {
   await writeBaseStyles(cwd, config);
 
   if (config.include_core) {
-    await writeCoreModules(cwd, config);
+    await ensureCoreModules(cwd, config);
   }
+
+  await writeLoomScript(cwd, config);
 
   await writeJsonFile(resolvePackagePath(cwd, "loom.config.json"), config);
   await ensureDir(resolvePackagePath(cwd, ".loom"));
@@ -192,18 +186,6 @@ async function writeBaseStyles(projectRoot: string, config: LoomConfig): Promise
     await writeTextFile(
       resolvePackagePath(baseDir, fileName),
       await readTextFile(resolveRegistryPath("base", fileName)),
-    );
-  }
-}
-
-async function writeCoreModules(projectRoot: string, config: LoomConfig): Promise<void> {
-  const outputRoot = resolvePackagePath(projectRoot, config.output_dir);
-  const coreDir = resolvePackagePath(outputRoot, "core");
-
-  for (const fileName of CORE_FILES) {
-    await writeTextFile(
-      resolvePackagePath(coreDir, fileName),
-      await readTextFile(resolveRegistryPath("core", fileName)),
     );
   }
 }

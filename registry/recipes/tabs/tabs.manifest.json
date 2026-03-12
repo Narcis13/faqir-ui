@@ -1,0 +1,117 @@
+{
+  "$schema": "https://loom.dev/manifest.schema.json",
+  "name": "tabs",
+  "version": "1.0.0",
+  "kind": "recipe",
+  "category": "navigation",
+  "description": "Accessible tabbed interface with click and keyboard navigation between linked panels",
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='tabs']",
+    "content_model": "slots"
+  },
+  "slots": {
+    "list": {
+      "selector": "[data-part='list']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "Tablist containing the interactive tab triggers"
+    },
+    "trigger": {
+      "selector": "[data-part='trigger']",
+      "required": true,
+      "tag_hint": "button",
+      "description": "Clickable tab that activates its associated panel"
+    },
+    "panel": {
+      "selector": "[data-part='panel']",
+      "required": true,
+      "tag_hint": "section",
+      "description": "Associated content panel for the active tab"
+    }
+  },
+  "variants": {
+    "orientation": {
+      "values": ["horizontal", "vertical"],
+      "default": "horizontal",
+      "attr": "data-orientation",
+      "applied_to": "root"
+    }
+  },
+  "states": {
+    "ready": {
+      "attr": "data-state=\"ready\"",
+      "default": true
+    }
+  },
+  "a11y": {
+    "required_attrs": [
+      "role=\"tablist\" on the list container",
+      "role=\"tab\" on each trigger",
+      "role=\"tabpanel\" on each panel",
+      "aria-controls linking each tab to a panel",
+      "aria-labelledby linking each panel back to a tab"
+    ],
+    "keyboard": {
+      "ArrowLeft": "move to previous horizontal tab",
+      "ArrowRight": "move to next horizontal tab",
+      "ArrowUp": "move to previous vertical tab",
+      "ArrowDown": "move to next vertical tab",
+      "Home": "move to first tab",
+      "End": "move to last tab"
+    }
+  },
+  "tokens_used": [
+    "color-bg-muted",
+    "color-bg-elevated",
+    "color-border",
+    "color-fg",
+    "color-fg-muted",
+    "color-ring",
+    "space-px",
+    "space-1",
+    "space-2",
+    "space-4",
+    "space-5",
+    "text-sm",
+    "weight-medium",
+    "leading-tight",
+    "radius-full",
+    "radius-xl",
+    "shadow-xs",
+    "shadow-sm",
+    "duration-fast",
+    "ease-default"
+  ],
+  "templates": {
+    "html": "<div data-ui=\"tabs\" data-state=\"ready\" data-orientation=\"horizontal\" id=\"{id}\">\n  <div data-part=\"list\" role=\"tablist\" aria-label=\"{label}\">\n    <button data-part=\"trigger\" data-state=\"active\" data-value=\"overview\" id=\"{id}-overview-tab\" type=\"button\" role=\"tab\" aria-selected=\"true\" aria-controls=\"{id}-overview-panel\" tabindex=\"0\">Overview</button>\n    <button data-part=\"trigger\" data-state=\"inactive\" data-value=\"activity\" id=\"{id}-activity-tab\" type=\"button\" role=\"tab\" aria-selected=\"false\" aria-controls=\"{id}-activity-panel\" tabindex=\"-1\">Activity</button>\n  </div>\n  <section data-part=\"panel\" data-state=\"active\" data-value=\"overview\" id=\"{id}-overview-panel\" role=\"tabpanel\" aria-labelledby=\"{id}-overview-tab\">{overview}</section>\n  <section data-part=\"panel\" data-state=\"inactive\" data-value=\"activity\" id=\"{id}-activity-panel\" role=\"tabpanel\" aria-labelledby=\"{id}-activity-tab\" hidden>{activity}</section>\n</div>"
+  },
+  "safe_transforms": [
+    "change-orientation",
+    "add-tab",
+    "remove-tab",
+    "update-panel-content",
+    "restyle-list-container"
+  ],
+  "unsafe_transforms": [
+    "remove-tab-roles",
+    "remove-aria-controls",
+    "desynchronize-panels-from-tabs"
+  ],
+  "composition": {
+    "contains": [],
+    "used_in": ["settings-page", "dashboard-shell"]
+  },
+  "files": {
+    "html": "tabs.html",
+    "css": "tabs.css",
+    "js": "tabs.js",
+    "manifest": "tabs.manifest.json"
+  },
+  "tests": [
+    "activates-tab-on-click",
+    "activates-next-tab-on-arrow-key",
+    "hides-inactive-panels",
+    "links-tabs-and-panels-with-aria"
+  ]
+}

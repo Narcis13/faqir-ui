@@ -71,11 +71,15 @@ describe("loom component commands", () => {
       expect(output).toContain("button");
       expect(output).toContain("card");
       expect(output).toContain("input");
-      expect(output).toContain("Available (4 not installed):");
+      expect(output).toContain("Available (7 not installed):");
       expect(output).toContain("avatar");
       expect(output).toContain("badge");
+      expect(output).toContain("RECIPES:");
+      expect(output).toContain("dialog");
+      expect(output).toContain("dropdown");
       expect(output).toContain("label");
       expect(output).toContain("separator");
+      expect(output).toContain("tabs");
     } finally {
       await rm(cwd, { recursive: true, force: true });
     }

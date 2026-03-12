@@ -1,0 +1,21 @@
+<!-- @ui:component dropdown -->
+
+<div data-ui="dropdown" data-state="closed" data-align="start" id="dropdown-demo">
+  <button
+    data-ui="button"
+    data-part="trigger"
+    data-variant="secondary"
+    type="button"
+    aria-haspopup="menu"
+    aria-expanded="false"
+    aria-controls="dropdown-demo-menu"
+  >
+    Actions
+  </button>
+
+  <div data-part="menu" id="dropdown-demo-menu" role="menu" hidden>
+    <button data-part="item" type="button" role="menuitem">Edit profile</button>
+    <button data-part="item" type="button" role="menuitem">Share access</button>
+    <button data-part="item" type="button" role="menuitem">Archive</button>
+  </div>
+</div>

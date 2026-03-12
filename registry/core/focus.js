@@ -1,47 +1,44 @@
-const FOCUSABLE = [
-  "a[href]",
-  "button:not([disabled])",
-  "input:not([disabled]):not([type='hidden'])",
-  "select:not([disabled])",
-  "textarea:not([disabled])",
-  "[tabindex]:not([tabindex='-1'])",
-].join(",");
+const FOCUSABLE = "a[href],button:not([disabled]),input:not([disabled]):not([type='hidden']),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex='-1'])";
+const KEY = "__loomFocusTrap";
 
-export function getFocusableElements(root) {
-  return Array.from(root.querySelectorAll(FOCUSABLE)).filter((element) => !element.hidden);
+export const getFocusableElements = (root) =>
+  [...root.querySelectorAll(FOCUSABLE)].filter((element) => !element.hidden && !element.disabled);
+
+export function releaseFocus(container, handler = container?.[KEY]) {
+  if (handler) {
+    container.removeEventListener("keydown", handler);
+    if (container[KEY] === handler) {
+      delete container[KEY];
+    }
+  }
 }
 
 export function trapFocus(container) {
-  function handleKeydown(event) {
+  releaseFocus(container);
+
+  const handler = (event) => {
     if (event.key !== "Tab") {
       return;
     }
 
-    const focusables = getFocusableElements(container);
-    if (focusables.length === 0) {
+    const items = getFocusableElements(container);
+    if (!items.length) {
       event.preventDefault();
       return;
     }
 
-    const first = focusables[0];
-    const last = focusables[focusables.length - 1];
+    const first = items[0];
+    const last = items[items.length - 1];
+    const active = document.activeElement;
 
-    if (event.shiftKey && document.activeElement === first) {
+    if ((event.shiftKey && active === first) || (!event.shiftKey && active === last)) {
       event.preventDefault();
-      last.focus();
-    } else if (!event.shiftKey && document.activeElement === last) {
-      event.preventDefault();
-      first.focus();
+      (event.shiftKey ? last : first).focus?.();
     }
-  }
+  };
 
-  container.addEventListener("keydown", handleKeydown);
-  const [first] = getFocusableElements(container);
-  first?.focus();
-
-  return () => releaseFocus(container, handleKeydown);
-}
-
-export function releaseFocus(container, handler) {
-  container.removeEventListener("keydown", handler);
+  container[KEY] = handler;
+  container.addEventListener("keydown", handler);
+  getFocusableElements(container)[0]?.focus?.();
+  return () => releaseFocus(container, handler);
 }

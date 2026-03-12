@@ -3,12 +3,17 @@ export function createStore(initialState) {
   const subscribers = new Set();
 
   return {
-    get() {
-      return state;
-    },
+    get: () => state,
     set(nextState) {
-      state = typeof nextState === "function" ? nextState(state) : nextState;
-      subscribers.forEach((subscriber) => subscriber(state));
+      const value = typeof nextState === "function" ? nextState(state) : nextState;
+      if (Object.is(value, state)) {
+        return state;
+      }
+      state = value;
+      for (const subscriber of subscribers) {
+        subscriber(state);
+      }
+      return state;
     },
     subscribe(subscriber) {
       subscribers.add(subscriber);

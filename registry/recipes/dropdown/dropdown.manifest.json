@@ -1,0 +1,114 @@
+{
+  "$schema": "https://loom.dev/manifest.schema.json",
+  "name": "dropdown",
+  "version": "1.0.0",
+  "kind": "recipe",
+  "category": "navigation",
+  "description": "Menu dropdown with outside-click dismissal and keyboard navigation between actions",
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='dropdown']",
+    "content_model": "slots"
+  },
+  "slots": {
+    "trigger": {
+      "selector": "[data-part='trigger']",
+      "required": true,
+      "tag_hint": "button",
+      "description": "Control that opens and closes the menu"
+    },
+    "menu": {
+      "selector": "[data-part='menu']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "Popup surface containing menu actions"
+    },
+    "item": {
+      "selector": "[data-part='item']",
+      "required": true,
+      "tag_hint": "button",
+      "description": "Focusable action inside the menu"
+    }
+  },
+  "variants": {
+    "align": {
+      "values": ["start", "end"],
+      "default": "start",
+      "attr": "data-align",
+      "applied_to": "root"
+    }
+  },
+  "states": {
+    "closed": {
+      "attr": "data-state=\"closed\"",
+      "default": true
+    },
+    "open": {
+      "attr": "data-state=\"open\""
+    }
+  },
+  "a11y": {
+    "required_attrs": [
+      "aria-haspopup=\"menu\" on trigger",
+      "aria-expanded reflecting open state",
+      "role=\"menu\" on menu container",
+      "role=\"menuitem\" on each item"
+    ],
+    "keyboard": {
+      "ArrowDown": "open and move to next item",
+      "ArrowUp": "open and move to previous item",
+      "Home": "move to first item",
+      "End": "move to last item",
+      "Escape": "close menu"
+    }
+  },
+  "tokens_used": [
+    "surface-shadow",
+    "color-bg-elevated",
+    "color-border",
+    "color-secondary",
+    "color-fg",
+    "space-px",
+    "space-1",
+    "space-2",
+    "space-3",
+    "text-sm",
+    "leading-tight",
+    "radius-md",
+    "radius-lg",
+    "duration-fast",
+    "ease-default",
+    "z-dropdown"
+  ],
+  "templates": {
+    "html": "<div data-ui=\"dropdown\" data-state=\"closed\" data-align=\"start\" id=\"{id}\">\n  <button data-ui=\"button\" data-part=\"trigger\" data-variant=\"secondary\" type=\"button\" aria-haspopup=\"menu\" aria-expanded=\"false\" aria-controls=\"{id}-menu\">Actions</button>\n  <div data-part=\"menu\" id=\"{id}-menu\" role=\"menu\" hidden>\n    <button data-part=\"item\" type=\"button\" role=\"menuitem\">Edit profile</button>\n    <button data-part=\"item\" type=\"button\" role=\"menuitem\">Share access</button>\n    <button data-part=\"item\" type=\"button\" role=\"menuitem\">Archive</button>\n  </div>\n</div>"
+  },
+  "safe_transforms": [
+    "change-align",
+    "add-menu-item",
+    "remove-menu-item",
+    "replace-item-labels",
+    "customize-surface-styles"
+  ],
+  "unsafe_transforms": [
+    "remove-outside-click-dismissal",
+    "remove-keyboard-navigation",
+    "remove-menu-roles"
+  ],
+  "composition": {
+    "contains": ["button"],
+    "used_in": ["dashboard-shell", "settings-page"]
+  },
+  "files": {
+    "html": "dropdown.html",
+    "css": "dropdown.css",
+    "js": "dropdown.js",
+    "manifest": "dropdown.manifest.json"
+  },
+  "tests": [
+    "opens-on-trigger-click",
+    "closes-on-outside-click",
+    "focuses-first-item-on-arrow-down",
+    "closes-on-escape"
+  ]
+}

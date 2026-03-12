@@ -3,6 +3,7 @@ import { readConfigFile, type LoomConfig } from "../utils/config";
 import { copyTextFile, fileExists, writeJsonFile } from "../utils/fs";
 import { info, success } from "../utils/logger";
 import { resolvePackagePath } from "../utils/paths";
+import { ensureCoreModules, writeLoomScript } from "../utils/recipes";
 import {
   getComponentFileNames,
   getRegistryComponent,
@@ -58,6 +59,13 @@ export async function addCommand(args: string[], cwd: string): Promise<void> {
   }
 
   await installComponents(cwd, config, plan);
+
+  if (config.installed.recipes.length > 0) {
+    config.include_core = true;
+    await ensureCoreModules(cwd, config);
+  }
+
+  await writeLoomScript(cwd, config);
   await writeJsonFile(configPath, config);
   await writeJsonFile(resolvePackagePath(cwd, ".loom", "context.json"), await generateContext(cwd, config));
 

@@ -3,16 +3,8 @@ import { fileExists } from "../utils/fs";
 import { error, info, success, warn } from "../utils/logger";
 import { readManifestFile } from "../utils/manifest";
 import { resolvePackagePath } from "../utils/paths";
+import { CORE_FILES, requiresCoreModules } from "../utils/recipes";
 import { type RegistryLayer } from "../utils/registry";
-
-const CORE_FILES = [
-  "dom.js",
-  "events.js",
-  "focus.js",
-  "motion.js",
-  "store.js",
-  "utils.js",
-] as const;
 
 type DoctorIssue = {
   level: "error" | "warning";
@@ -59,6 +51,7 @@ export async function doctorCommand(_args: string[], cwd: string): Promise<Docto
   await requireFile(issues, resolvePackagePath(outputRoot, "tokens", "index.css"), "Missing token bundle");
   await requireFile(issues, resolvePackagePath(outputRoot, "base", "reset.css"), "Missing base reset");
   await requireFile(issues, resolvePackagePath(outputRoot, "base", "prose.css"), "Missing prose styles");
+  await requireFile(issues, resolvePackagePath(outputRoot, "loom.js"), "Missing loom.js auto-init script");
   await requireFile(issues, resolvePackagePath(cwd, ".loom", "context.json"), "Missing .loom/context.json");
 
   if (config.tokens_split) {
@@ -80,7 +73,7 @@ export async function doctorCommand(_args: string[], cwd: string): Promise<Docto
     }
   }
 
-  if (config.include_core) {
+  if (requiresCoreModules(config)) {
     for (const fileName of CORE_FILES) {
       await requireFile(
         issues,

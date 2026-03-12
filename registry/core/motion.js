@@ -1,25 +1,24 @@
-export function prefersReducedMotion() {
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
+export const prefersReducedMotion = () =>
+  globalThis.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
 
-export function waitForTransition(element) {
-  if (prefersReducedMotion()) {
+export function waitForTransition(element, timeout = 350) {
+  if (prefersReducedMotion() || !element?.addEventListener) {
     return Promise.resolve();
   }
 
   return new Promise((resolve) => {
-    let settled = false;
-
-    function done() {
-      if (settled) {
+    let done = false;
+    const finish = () => {
+      if (done) {
         return;
       }
-      settled = true;
-      element.removeEventListener("transitionend", done);
+      done = true;
+      clearTimeout(id);
+      element.removeEventListener("transitionend", finish);
       resolve();
-    }
+    };
+    const id = setTimeout(finish, timeout);
 
-    element.addEventListener("transitionend", done, { once: true });
-    window.setTimeout(done, 350);
+    element.addEventListener("transitionend", finish, { once: true });
   });
 }

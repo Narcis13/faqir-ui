@@ -1,39 +1,25 @@
-export function on(target, type, listener, options) {
+const on = (target, type, listener, options) => {
   target.addEventListener(type, listener, options);
   return () => target.removeEventListener(type, listener, options);
-}
+};
 
-export function once(target, type, listener, options) {
-  return on(target, type, listener, { ...options, once: true });
-}
+export const once = (target, type, listener, options) =>
+  on(target, type, listener, { ...options, once: true });
 
 export function delegate(target, type, selector, listener, options) {
-  return on(
-    target,
-    type,
-    (event) => {
-      const match = event.target instanceof Element ? event.target.closest(selector) : null;
-      if (!match) {
-        return;
-      }
+  return on(target, type, (event) => {
+    const match = event.target?.closest?.(selector);
+    if (match && (!target.contains || target.contains(match))) {
       listener(event, match);
-    },
-    options,
-  );
+    }
+  }, options);
 }
 
 export function onOutsideClick(target, boundary, listener, options) {
-  return on(
-    target,
-    "click",
-    (event) => {
-      if (!(event.target instanceof Node)) {
-        return;
-      }
-      if (!boundary.contains(event.target)) {
-        listener(event);
-      }
-    },
-    options,
-  );
+  return on(target, "click", (event) => {
+    const node = event.target;
+    if (node && node !== boundary && !boundary.contains?.(node)) {
+      listener(event);
+    }
+  }, options);
 }

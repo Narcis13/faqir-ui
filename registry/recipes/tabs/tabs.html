@@ -1,0 +1,80 @@
+<!-- @ui:component tabs -->
+
+<div data-ui="tabs" data-state="ready" data-orientation="horizontal" id="tabs-demo">
+  <div data-part="list" role="tablist" aria-label="Project sections">
+    <button
+      data-part="trigger"
+      data-state="active"
+      data-value="overview"
+      id="tabs-demo-overview-tab"
+      type="button"
+      role="tab"
+      aria-selected="true"
+      aria-controls="tabs-demo-overview-panel"
+      tabindex="0"
+    >
+      Overview
+    </button>
+    <button
+      data-part="trigger"
+      data-state="inactive"
+      data-value="activity"
+      id="tabs-demo-activity-tab"
+      type="button"
+      role="tab"
+      aria-selected="false"
+      aria-controls="tabs-demo-activity-panel"
+      tabindex="-1"
+    >
+      Activity
+    </button>
+    <button
+      data-part="trigger"
+      data-state="inactive"
+      data-value="settings"
+      id="tabs-demo-settings-tab"
+      type="button"
+      role="tab"
+      aria-selected="false"
+      aria-controls="tabs-demo-settings-panel"
+      tabindex="-1"
+    >
+      Settings
+    </button>
+  </div>
+
+  <section
+    data-part="panel"
+    data-state="active"
+    data-value="overview"
+    id="tabs-demo-overview-panel"
+    role="tabpanel"
+    aria-labelledby="tabs-demo-overview-tab"
+  >
+    Overview content is visible by default.
+  </section>
+
+  <section
+    data-part="panel"
+    data-state="inactive"
+    data-value="activity"
+    id="tabs-demo-activity-panel"
+    role="tabpanel"
+    aria-labelledby="tabs-demo-activity-tab"
+    hidden
+  >
+    Activity content becomes visible when its tab is selected.
+  </section>
+
+  <section
+    data-part="panel"
+    data-state="inactive"
+    data-value="settings"
+    id="tabs-demo-settings-panel"
+    role="tabpanel"
+    aria-labelledby="tabs-demo-settings-tab"
+    hidden
+  >
+    Settings content can contain forms, actions, or details.
+  </section>
+</div>

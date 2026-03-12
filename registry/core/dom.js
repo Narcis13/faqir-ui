@@ -1,28 +1,19 @@
-export function $(selector, root = document) {
-  return root.querySelector(selector);
-}
+export const $ = (selector, root = document) => root.querySelector(selector);
 
-export function $$(selector, root = document) {
-  return Array.from(root.querySelectorAll(selector));
-}
+export const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 
-export function closest(element, selector) {
-  return element?.closest(selector) ?? null;
-}
+export const closest = (element, selector) => element?.closest?.(selector) ?? null;
 
 export function create(tagName, attributes = {}, children = []) {
   const element = document.createElement(tagName);
 
-  for (const [name, value] of Object.entries(attributes)) {
-    if (value == null) {
-      continue;
+  for (const name in attributes) {
+    const value = attributes[name];
+    if (value != null) {
+      element.setAttribute(name, value === true ? "" : String(value));
     }
-    element.setAttribute(name, String(value));
   }
 
-  for (const child of children) {
-    element.append(child);
-  }
-
+  element.append(...(Array.isArray(children) ? children : [children]));
   return element;
 }

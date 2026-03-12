@@ -21,6 +21,7 @@ describe("loom init", () => {
 
       const config = JSON.parse(await readFile(join(cwd, "loom.config.json"), "utf8"));
       const tokenBundle = await readFile(join(cwd, "ui", "tokens", "index.css"), "utf8");
+      const loomScript = await readFile(join(cwd, "ui", "loom.js"), "utf8");
 
       expect(config).toEqual({
         version: "1.0.0",
@@ -36,6 +37,7 @@ describe("loom init", () => {
       });
       expect(tokenBundle).toContain("Source: palette.css");
       expect(tokenBundle).toContain("Source: theme.css");
+      expect(loomScript).toContain("const controllers = {");
     } finally {
       await rm(cwd, { recursive: true, force: true });
     }
@@ -57,6 +59,7 @@ describe("loom init", () => {
       expect(indexCss).toContain('@import "./palette.css";');
       expect(indexCss).toContain('@import "./theme.css";');
       expect(themeCss).toContain("[data-theme=\"dark\"]");
+      await expect(stat(join(cwd, "design-system", "loom.js"))).resolves.toBeDefined();
       await expect(stat(join(cwd, "design-system", "core", "dom.js"))).rejects.toThrow();
     } finally {
       await rm(cwd, { recursive: true, force: true });
