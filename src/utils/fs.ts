@@ -23,6 +23,10 @@ export async function writeTextFile(path: string, content: string): Promise<void
   await writeFile(path, content, "utf8");
 }
 
+export async function copyTextFile(sourcePath: string, targetPath: string): Promise<void> {
+  await writeTextFile(targetPath, await readTextFile(sourcePath));
+}
+
 export async function readJsonFile(path: string): Promise<unknown> {
   return JSON.parse(await readTextFile(path));
 }

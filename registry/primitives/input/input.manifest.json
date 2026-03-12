@@ -1,0 +1,100 @@
+{
+  "$schema": "https://loom.dev/manifest.schema.json",
+  "name": "input",
+  "version": "1.0.0",
+  "kind": "primitive",
+  "category": "forms",
+  "description": "Single-line text input with size and validation states",
+  "anatomy": {
+    "tag": "input",
+    "selector": "[data-ui='input']",
+    "content_model": "text"
+  },
+  "variants": {
+    "size": {
+      "values": ["sm", "md", "lg"],
+      "default": "md",
+      "attr": "data-size",
+      "applied_to": "root"
+    }
+  },
+  "states": {
+    "default": {
+      "attr": "data-state=\"default\"",
+      "default": true
+    },
+    "invalid": {
+      "attr": "data-state=\"invalid\""
+    },
+    "readonly": {
+      "attr": "readonly"
+    },
+    "disabled": {
+      "attr": "disabled"
+    }
+  },
+  "a11y": {
+    "required_attrs": [
+      "type should be explicit",
+      "aria-invalid required when validation fails",
+      "label should be provided with a separate label element or aria-label"
+    ]
+  },
+  "tokens_used": [
+    "input-height",
+    "input-border",
+    "input-radius",
+    "color-bg-elevated",
+    "color-bg-muted",
+    "color-bg-subtle",
+    "color-fg",
+    "color-fg-muted",
+    "color-fg-subtle",
+    "color-ring",
+    "color-primary",
+    "color-primary-subtle",
+    "color-destructive",
+    "space-px",
+    "space-2",
+    "space-2h",
+    "space-3",
+    "space-4",
+    "text-xs",
+    "text-sm",
+    "text-base",
+    "leading-normal",
+    "font-sans",
+    "duration-fast",
+    "ease-default"
+  ],
+  "templates": {
+    "html": "<input data-ui=\"input\" type=\"text\" data-size=\"{size}\" placeholder=\"{placeholder}\" />"
+  },
+  "safe_transforms": [
+    "change-input-type",
+    "change-placeholder",
+    "toggle-disabled-state",
+    "toggle-readonly-state",
+    "set-invalid-state"
+  ],
+  "unsafe_transforms": [
+    "remove-data-ui-attribute",
+    "remove-label-association",
+    "replace-with-non-form-element"
+  ],
+  "composition": {
+    "contains": [],
+    "used_in": ["auth-form", "settings-page"]
+  },
+  "files": {
+    "html": "input.html",
+    "css": "input.css",
+    "manifest": "input.manifest.json"
+  },
+  "tests": [
+    "renders-as-input-element",
+    "supports-size-variants",
+    "invalid-state-can-be-signaled-with-aria-invalid",
+    "disabled-state-reduces-contrast-and-interaction"
+  ]
+}

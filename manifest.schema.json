@@ -1,0 +1,176 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://loom.dev/manifest.schema.json",
+  "title": "Loom Component Manifest",
+  "type": "object",
+  "required": [
+    "name",
+    "version",
+    "kind",
+    "category",
+    "description",
+    "anatomy",
+    "tokens_used",
+    "templates",
+    "safe_transforms",
+    "unsafe_transforms",
+    "composition",
+    "files",
+    "tests"
+  ],
+  "properties": {
+    "$schema": { "type": "string" },
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["primitive", "recipe", "pattern", "scaffold"]
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "actions",
+        "forms",
+        "layout",
+        "navigation",
+        "data-display",
+        "feedback",
+        "overlay",
+        "typography",
+        "composite"
+      ]
+    },
+    "description": { "type": "string", "minLength": 1 },
+    "anatomy": {
+      "type": "object",
+      "required": ["tag", "selector", "content_model"],
+      "properties": {
+        "tag": { "type": "string", "minLength": 1 },
+        "selector": { "type": "string", "minLength": 1 },
+        "content_model": {
+          "type": "string",
+          "enum": ["inline", "block", "slots", "text"]
+        }
+      },
+      "additionalProperties": true
+    },
+    "slots": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["selector", "required"],
+        "properties": {
+          "selector": { "type": "string", "minLength": 1 },
+          "required": { "type": "boolean" },
+          "tag_hint": { "type": "string" },
+          "description": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "variants": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["values", "default", "attr"],
+        "properties": {
+          "values": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 },
+            "minItems": 1
+          },
+          "default": { "type": "string", "minLength": 1 },
+          "attr": { "type": "string", "minLength": 1 },
+          "applied_to": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "states": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["attr"],
+        "properties": {
+          "attr": { "type": "string", "minLength": 1 },
+          "default": { "type": "boolean" },
+          "transient": { "type": "boolean" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "a11y": {
+      "type": "object",
+      "properties": {
+        "role": { "type": "string" },
+        "aria-modal": { "type": "boolean" },
+        "required_attrs": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "focus_trap": { "type": "boolean" },
+        "escape_closes": { "type": "boolean" },
+        "return_focus": { "type": "string" },
+        "keyboard": {
+          "type": "object",
+          "additionalProperties": { "type": "string", "minLength": 1 }
+        }
+      },
+      "additionalProperties": true
+    },
+    "tokens_used": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "templates": {
+      "type": "object",
+      "required": ["html"],
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    },
+    "safe_transforms": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "unsafe_transforms": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "composition": {
+      "type": "object",
+      "required": ["contains", "used_in"],
+      "properties": {
+        "contains": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "used_in": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      },
+      "additionalProperties": true
+    },
+    "files": {
+      "type": "object",
+      "required": ["html", "css", "manifest"],
+      "properties": {
+        "html": { "type": "string", "minLength": 1 },
+        "css": { "type": "string", "minLength": 1 },
+        "js": { "type": "string", "minLength": 1 },
+        "manifest": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": true
+    },
+    "tests": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    }
+  },
+  "additionalProperties": true
+}

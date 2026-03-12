@@ -68,7 +68,7 @@ export async function initCommand(args: string[], cwd: string): Promise<void> {
   await ensureDir(resolvePackagePath(cwd, ".loom"));
   await writeJsonFile(
     resolvePackagePath(cwd, ".loom", "context.json"),
-    generateContext(config),
+    await generateContext(cwd, config),
   );
 
   if (await fileExists(resolvePackagePath(cwd, ".git"))) {

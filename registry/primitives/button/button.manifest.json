@@ -1,0 +1,121 @@
+{
+  "$schema": "https://loom.dev/manifest.schema.json",
+  "name": "button",
+  "version": "1.0.0",
+  "kind": "primitive",
+  "category": "actions",
+  "description": "Interactive button with visual variants and size options",
+  "anatomy": {
+    "tag": "button",
+    "selector": "[data-ui='button']",
+    "content_model": "inline"
+  },
+  "slots": {
+    "icon": {
+      "selector": "[data-part='icon']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Optional leading icon container"
+    }
+  },
+  "variants": {
+    "visual": {
+      "values": ["default", "primary", "secondary", "destructive", "ghost", "outline", "link"],
+      "default": "default",
+      "attr": "data-variant",
+      "applied_to": "root"
+    },
+    "size": {
+      "values": ["sm", "md", "lg"],
+      "default": "md",
+      "attr": "data-size",
+      "applied_to": "root"
+    }
+  },
+  "states": {
+    "default": {
+      "attr": "data-state=\"default\"",
+      "default": true
+    },
+    "loading": {
+      "attr": "data-state=\"loading\""
+    },
+    "disabled": {
+      "attr": "disabled"
+    }
+  },
+  "a11y": {
+    "required_attrs": ["aria-label required when icon-only"],
+    "keyboard": {
+      "Enter": "activate",
+      "Space": "activate"
+    }
+  },
+  "tokens_used": [
+    "button-height-sm",
+    "button-height-md",
+    "button-height-lg",
+    "button-radius",
+    "button-font",
+    "button-weight",
+    "color-secondary",
+    "color-secondary-fg",
+    "color-secondary-hover",
+    "color-primary",
+    "color-primary-hover",
+    "color-primary-fg",
+    "color-destructive",
+    "color-destructive-hover",
+    "color-destructive-fg",
+    "color-border",
+    "color-link",
+    "color-fg",
+    "color-ring",
+    "space-0",
+    "space-px",
+    "space-2",
+    "space-3",
+    "space-4",
+    "space-5",
+    "text-xs",
+    "text-sm",
+    "text-base",
+    "leading-tight",
+    "shadow-xs",
+    "duration-fast",
+    "ease-default"
+  ],
+  "templates": {
+    "html": "<button data-ui=\"button\" data-variant=\"{variant}\" data-size=\"{size}\">{text}</button>",
+    "html_with_icon": "<button data-ui=\"button\" data-variant=\"{variant}\" data-size=\"{size}\"><span data-part=\"icon\">{icon}</span>{text}</button>",
+    "html_icon_only": "<button data-ui=\"button\" data-variant=\"{variant}\" data-size=\"{size}\" aria-label=\"{label}\">{icon}</button>"
+  },
+  "safe_transforms": [
+    "change-variant",
+    "change-size",
+    "add-icon",
+    "change-text-content",
+    "toggle-disabled-state"
+  ],
+  "unsafe_transforms": [
+    "change-to-div-without-role",
+    "remove-focus-visible-style",
+    "remove-disabled-handling"
+  ],
+  "composition": {
+    "contains": [],
+    "used_in": ["card", "dialog", "auth-form"]
+  },
+  "files": {
+    "html": "button.html",
+    "css": "button.css",
+    "manifest": "button.manifest.json"
+  },
+  "tests": [
+    "renders-as-button-element",
+    "supports-primary-variant",
+    "supports-sm-and-lg-size",
+    "disabled-state-uses-disabled-attribute",
+    "icon-only-button-requires-aria-label"
+  ]
+}

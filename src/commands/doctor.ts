@@ -1,7 +1,9 @@
 import { readConfigFile, type LoomConfig, validateConfig } from "../utils/config";
 import { fileExists } from "../utils/fs";
 import { error, info, success, warn } from "../utils/logger";
+import { readManifestFile } from "../utils/manifest";
 import { resolvePackagePath } from "../utils/paths";
+import { type RegistryLayer } from "../utils/registry";
 
 const CORE_FILES = [
   "dom.js",
@@ -121,28 +123,46 @@ async function checkInstalledComponents(
   const outputRoot = resolvePackagePath(projectRoot, config.output_dir);
 
   for (const name of config.installed.primitives) {
-    await requireComponentFiles(issues, resolvePackagePath(outputRoot, "primitives", name), name, [
+    await requireComponentFiles(
+      issues,
+      resolvePackagePath(outputRoot, "primitives", name),
+      name,
+      "primitives",
+      [
       `${name}.html`,
       `${name}.css`,
       `${name}.manifest.json`,
-    ]);
+      ],
+    );
   }
 
   for (const name of config.installed.recipes) {
-    await requireComponentFiles(issues, resolvePackagePath(outputRoot, "recipes", name), name, [
+    await requireComponentFiles(
+      issues,
+      resolvePackagePath(outputRoot, "recipes", name),
+      name,
+      "recipes",
+      [
       `${name}.html`,
       `${name}.css`,
       `${name}.js`,
       `${name}.manifest.json`,
-    ]);
+      ],
+    );
   }
 
   for (const name of config.installed.patterns) {
-    await requireComponentFiles(issues, resolvePackagePath(outputRoot, "patterns", name), name, [
+    await requireComponentFiles(
+      issues,
+      resolvePackagePath(outputRoot, "patterns", name),
+      name,
+      "patterns",
+      [
       `${name}.html`,
       `${name}.css`,
       `${name}.manifest.json`,
-    ]);
+      ],
+    );
   }
 }
 
@@ -150,6 +170,7 @@ async function requireComponentFiles(
   issues: DoctorIssue[],
   componentDir: string,
   name: string,
+  layer: RegistryLayer,
   fileNames: string[],
 ): Promise<void> {
   for (const fileName of fileNames) {
@@ -158,5 +179,35 @@ async function requireComponentFiles(
       resolvePackagePath(componentDir, fileName),
       `Installed component "${name}" is missing ${fileName}`,
     );
+  }
+
+  const manifestPath = resolvePackagePath(componentDir, `${name}.manifest.json`);
+
+  if (!(await fileExists(manifestPath))) {
+    return;
+  }
+
+  try {
+    const manifest = await readManifestFile(manifestPath);
+    const expectedKind = layer.slice(0, -1);
+
+    if (manifest.name !== name) {
+      issues.push({
+        level: "error",
+        message: `Installed component "${name}" has manifest.name="${manifest.name}"`,
+      });
+    }
+
+    if (manifest.kind !== expectedKind) {
+      issues.push({
+        level: "error",
+        message: `Installed component "${name}" has manifest.kind="${manifest.kind}", expected "${expectedKind}"`,
+      });
+    }
+  } catch (caught) {
+    issues.push({
+      level: "error",
+      message: caught instanceof Error ? caught.message : String(caught),
+    });
   }
 }

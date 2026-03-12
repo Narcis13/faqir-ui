@@ -1,6 +1,12 @@
 import type { LoomConfig } from "../utils/config";
+import { loadInstalledComponentManifests } from "../utils/registry";
 
-export function generateContext(config: LoomConfig): Record<string, unknown> {
+export async function generateContext(
+  projectRoot: string,
+  config: LoomConfig,
+): Promise<Record<string, unknown>> {
+  const components = await loadInstalledComponentManifests(projectRoot, config);
+
   return {
     generated_at: new Date().toISOString(),
     version: config.version,
@@ -17,5 +23,33 @@ export function generateContext(config: LoomConfig): Record<string, unknown> {
       recipes: `${config.output_dir}/recipes`,
       patterns: `${config.output_dir}/patterns`,
     },
+    components: Object.fromEntries(
+      components.map(({ manifest }) => [
+        manifest.name,
+        {
+          kind: manifest.kind,
+          category: manifest.category,
+          description: manifest.description,
+          selector: manifest.anatomy.selector,
+          slots: Object.keys(manifest.slots ?? {}),
+          variants: Object.fromEntries(
+            Object.entries(manifest.variants ?? {}).map(([name, variant]) => [
+              name,
+              {
+                values: variant.values,
+                default: variant.default,
+                attr: variant.attr,
+              },
+            ]),
+          ),
+          states: Object.keys(manifest.states ?? {}),
+          tokens_used: manifest.tokens_used,
+          safe_transforms: manifest.safe_transforms,
+          unsafe_transforms: manifest.unsafe_transforms,
+          files: manifest.files,
+          composition: manifest.composition,
+        },
+      ]),
+    ),
   };
 }

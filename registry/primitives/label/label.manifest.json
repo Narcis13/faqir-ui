@@ -1,0 +1,58 @@
+{
+  "$schema": "https://loom.dev/manifest.schema.json",
+  "name": "label",
+  "version": "1.0.0",
+  "kind": "primitive",
+  "category": "typography",
+  "description": "Form label text with default and muted emphasis levels",
+  "anatomy": {
+    "tag": "label",
+    "selector": "[data-ui='label']",
+    "content_model": "inline"
+  },
+  "variants": {
+    "visual": {
+      "values": ["default", "muted"],
+      "default": "default",
+      "attr": "data-variant",
+      "applied_to": "root"
+    }
+  },
+  "a11y": {
+    "required_attrs": ["for attribute should match the associated form control id"]
+  },
+  "tokens_used": [
+    "color-fg",
+    "color-fg-muted",
+    "font-sans",
+    "text-sm",
+    "weight-medium",
+    "leading-normal"
+  ],
+  "templates": {
+    "html": "<label data-ui=\"label\" data-variant=\"{variant}\" for=\"{for}\">{text}</label>"
+  },
+  "safe_transforms": [
+    "change-text-content",
+    "change-variant",
+    "update-associated-control"
+  ],
+  "unsafe_transforms": [
+    "remove-for-attribute",
+    "replace-with-non-label-element"
+  ],
+  "composition": {
+    "contains": [],
+    "used_in": ["auth-form", "settings-page"]
+  },
+  "files": {
+    "html": "label.html",
+    "css": "label.css",
+    "manifest": "label.manifest.json"
+  },
+  "tests": [
+    "renders-label-element",
+    "muted-variant-reduces-emphasis",
+    "supports-associated-control-via-for-attribute"
+  ]
+}

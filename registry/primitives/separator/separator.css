@@ -1,0 +1,12 @@
+/* @ui:component separator */
+
+[data-ui="separator"] {
+  inline-size: 100%;
+  block-size: var(--space-px);
+  background: var(--color-border);
+}
+
+[data-ui="separator"][data-orientation="vertical"] {
+  inline-size: var(--space-px);
+  block-size: var(--space-8);
+}

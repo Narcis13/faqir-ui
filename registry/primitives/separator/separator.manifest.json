@@ -1,0 +1,52 @@
+{
+  "$schema": "https://loom.dev/manifest.schema.json",
+  "name": "separator",
+  "version": "1.0.0",
+  "kind": "primitive",
+  "category": "layout",
+  "description": "Thin divider for grouping related content horizontally or vertically",
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='separator']",
+    "content_model": "block"
+  },
+  "variants": {
+    "orientation": {
+      "values": ["horizontal", "vertical"],
+      "default": "horizontal",
+      "attr": "data-orientation",
+      "applied_to": "root"
+    }
+  },
+  "a11y": {
+    "role": "separator",
+    "required_attrs": ["aria-orientation must match data-orientation when vertical"]
+  },
+  "tokens_used": [
+    "color-border",
+    "space-px",
+    "space-8"
+  ],
+  "templates": {
+    "html": "<div data-ui=\"separator\" data-orientation=\"{orientation}\" role=\"separator\" aria-orientation=\"{orientation}\"></div>"
+  },
+  "safe_transforms": [
+    "change-orientation"
+  ],
+  "unsafe_transforms": [
+    "remove-separator-role"
+  ],
+  "composition": {
+    "contains": [],
+    "used_in": ["card", "auth-form"]
+  },
+  "files": {
+    "html": "separator.html",
+    "css": "separator.css",
+    "manifest": "separator.manifest.json"
+  },
+  "tests": [
+    "renders-horizontal-separator-by-default",
+    "supports-vertical-orientation"
+  ]
+}

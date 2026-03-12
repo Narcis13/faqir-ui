@@ -1,0 +1,14 @@
+/* @ui:component label */
+
+[data-ui="label"] {
+  display: inline-block;
+  color: var(--color-fg);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-normal);
+}
+
+[data-ui="label"][data-variant="muted"] {
+  color: var(--color-fg-muted);
+}

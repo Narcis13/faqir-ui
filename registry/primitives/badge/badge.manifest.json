@@ -1,0 +1,82 @@
+{
+  "$schema": "https://loom.dev/manifest.schema.json",
+  "name": "badge",
+  "version": "1.0.0",
+  "kind": "primitive",
+  "category": "feedback",
+  "description": "Compact status pill for counts, labels, and semantic state",
+  "anatomy": {
+    "tag": "span",
+    "selector": "[data-ui='badge']",
+    "content_model": "inline"
+  },
+  "variants": {
+    "visual": {
+      "values": ["default", "primary", "success", "warning", "danger"],
+      "default": "default",
+      "attr": "data-variant",
+      "applied_to": "root"
+    },
+    "size": {
+      "values": ["sm", "lg"],
+      "default": "sm",
+      "attr": "data-size",
+      "applied_to": "root"
+    }
+  },
+  "states": {
+    "default": {
+      "attr": "data-state=\"default\"",
+      "default": true
+    }
+  },
+  "tokens_used": [
+    "color-secondary",
+    "color-secondary-fg",
+    "color-primary-subtle",
+    "color-primary-hover",
+    "color-success-subtle",
+    "color-success",
+    "color-warning-subtle",
+    "color-warning",
+    "color-destructive-subtle",
+    "color-destructive",
+    "radius-full",
+    "space-px",
+    "space-2h",
+    "space-3",
+    "space-6",
+    "space-7",
+    "text-xs",
+    "text-sm",
+    "leading-tight",
+    "weight-semibold",
+    "font-sans"
+  ],
+  "templates": {
+    "html": "<span data-ui=\"badge\" data-variant=\"{variant}\">{text}</span>"
+  },
+  "safe_transforms": [
+    "change-variant",
+    "change-size",
+    "change-text-content"
+  ],
+  "unsafe_transforms": [
+    "replace-with-block-container",
+    "remove-data-ui-attribute"
+  ],
+  "composition": {
+    "contains": [],
+    "used_in": ["card", "dashboard-shell"]
+  },
+  "files": {
+    "html": "badge.html",
+    "css": "badge.css",
+    "manifest": "badge.manifest.json"
+  },
+  "tests": [
+    "renders-inline-pill-shape",
+    "supports-semantic-variants",
+    "supports-large-size"
+  ]
+}

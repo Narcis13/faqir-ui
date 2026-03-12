@@ -1,0 +1,110 @@
+{
+  "$schema": "https://loom.dev/manifest.schema.json",
+  "name": "card",
+  "version": "1.0.0",
+  "kind": "primitive",
+  "category": "layout",
+  "description": "Elevated container with optional header, body, and footer regions",
+  "anatomy": {
+    "tag": "article",
+    "selector": "[data-ui='card']",
+    "content_model": "slots"
+  },
+  "slots": {
+    "header": {
+      "selector": "[data-part='header']",
+      "required": false,
+      "tag_hint": "header",
+      "description": "Optional top region for title and summary"
+    },
+    "title": {
+      "selector": "[data-part='title']",
+      "required": false,
+      "tag_hint": "h3",
+      "description": "Primary title inside the header"
+    },
+    "description": {
+      "selector": "[data-part='description']",
+      "required": false,
+      "tag_hint": "p",
+      "description": "Secondary supporting text"
+    },
+    "body": {
+      "selector": "[data-part='body']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "Main content region"
+    },
+    "footer": {
+      "selector": "[data-part='footer']",
+      "required": false,
+      "tag_hint": "footer",
+      "description": "Action area for buttons or metadata"
+    }
+  },
+  "variants": {
+    "visual": {
+      "values": ["default", "subtle", "interactive"],
+      "default": "default",
+      "attr": "data-variant",
+      "applied_to": "root"
+    }
+  },
+  "states": {
+    "default": {
+      "attr": "data-state=\"default\"",
+      "default": true
+    }
+  },
+  "tokens_used": [
+    "card-border",
+    "card-radius",
+    "card-bg",
+    "card-shadow",
+    "shadow-md",
+    "color-bg",
+    "color-fg",
+    "color-fg-muted",
+    "space-px",
+    "space-2",
+    "space-3",
+    "space-4",
+    "space-5",
+    "text-sm",
+    "text-lg",
+    "weight-semibold",
+    "leading-snug",
+    "duration-fast",
+    "ease-default"
+  ],
+  "templates": {
+    "html": "<article data-ui=\"card\"><div data-part=\"body\">{content}</div></article>",
+    "html_with_header": "<article data-ui=\"card\"><header data-part=\"header\"><h3 data-part=\"title\">{title}</h3><p data-part=\"description\">{description}</p></header><div data-part=\"body\">{content}</div><footer data-part=\"footer\">{actions}</footer></article>"
+  },
+  "safe_transforms": [
+    "add-header",
+    "add-footer",
+    "change-variant",
+    "replace-body-content"
+  ],
+  "unsafe_transforms": [
+    "remove-body-slot",
+    "strip-data-part-attributes",
+    "convert-interactive-card-to-non-focusable-click-target"
+  ],
+  "composition": {
+    "contains": [],
+    "used_in": ["auth-form", "dashboard-shell", "settings-page"]
+  },
+  "files": {
+    "html": "card.html",
+    "css": "card.css",
+    "manifest": "card.manifest.json"
+  },
+  "tests": [
+    "renders-article-root",
+    "body-slot-is-required",
+    "interactive-variant-adds-hover-elevation",
+    "header-and-footer-slots-are-optional"
+  ]
+}

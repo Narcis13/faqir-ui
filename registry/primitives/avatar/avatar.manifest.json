@@ -1,0 +1,88 @@
+{
+  "$schema": "https://loom.dev/manifest.schema.json",
+  "name": "avatar",
+  "version": "1.0.0",
+  "kind": "primitive",
+  "category": "data-display",
+  "description": "Circular user avatar with image and text fallback slots",
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='avatar']",
+    "content_model": "slots"
+  },
+  "slots": {
+    "image": {
+      "selector": "[data-part='image']",
+      "required": false,
+      "tag_hint": "img",
+      "description": "Avatar image element"
+    },
+    "fallback": {
+      "selector": "[data-part='fallback']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Fallback initials or icon when image is unavailable"
+    }
+  },
+  "variants": {
+    "size": {
+      "values": ["sm", "md", "lg"],
+      "default": "md",
+      "attr": "data-size",
+      "applied_to": "root"
+    }
+  },
+  "states": {
+    "default": {
+      "attr": "data-state=\"default\"",
+      "default": true
+    }
+  },
+  "a11y": {
+    "required_attrs": [
+      "img alt text required when image slot is present",
+      "fallback should be aria-hidden when equivalent label exists nearby"
+    ]
+  },
+  "tokens_used": [
+    "color-primary-subtle",
+    "color-primary-hover",
+    "radius-full",
+    "space-px",
+    "space-8",
+    "space-10",
+    "space-12",
+    "text-xs",
+    "text-sm",
+    "text-base",
+    "weight-semibold",
+    "font-sans"
+  ],
+  "templates": {
+    "html": "<div data-ui=\"avatar\" data-size=\"{size}\"><img data-part=\"image\" src=\"{src}\" alt=\"{alt}\" /></div>",
+    "html_with_fallback": "<div data-ui=\"avatar\" data-size=\"{size}\"><span data-part=\"fallback\" aria-hidden=\"true\">{initials}</span></div>"
+  },
+  "safe_transforms": [
+    "change-size",
+    "swap-image-source",
+    "replace-image-with-fallback"
+  ],
+  "unsafe_transforms": [
+    "remove-alt-text",
+    "replace-root-with-non-rounded-container"
+  ],
+  "composition": {
+    "contains": [],
+    "used_in": ["dashboard-shell", "card"]
+  },
+  "files": {
+    "html": "avatar.html",
+    "css": "avatar.css",
+    "manifest": "avatar.manifest.json"
+  },
+  "tests": [
+    "renders-circular-root",
+    "supports-image-and-fallback-slots",
+    "supports-size-variants"
+  ]
+}
