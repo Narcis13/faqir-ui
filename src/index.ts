@@ -2,11 +2,15 @@
 
 import { addCommand } from "./commands/add";
 import { auditCommand } from "./commands/audit";
+import { conformCommand } from "./commands/conform";
+import { contextCommand } from "./commands/context";
 import { doctorCommand } from "./commands/doctor";
+import { explainCommand } from "./commands/explain";
 import { initCommand } from "./commands/init";
 import { inspectCommand } from "./commands/inspect";
 import { listCommand } from "./commands/list";
 import { repairCommand } from "./commands/repair";
+import { traceCommand } from "./commands/trace";
 import { error, info } from "./utils/logger";
 
 export async function runCli(args = process.argv.slice(2), cwd = process.cwd()): Promise<number> {
@@ -55,6 +59,25 @@ export async function runCli(args = process.argv.slice(2), cwd = process.cwd()):
       return await repairCommand(rest, cwd);
     }
 
+    if (command === "context") {
+      await contextCommand(rest, cwd);
+      return 0;
+    }
+
+    if (command === "explain") {
+      await explainCommand(rest, cwd);
+      return 0;
+    }
+
+    if (command === "trace") {
+      await traceCommand(rest, cwd);
+      return 0;
+    }
+
+    if (command === "conform") {
+      return await conformCommand(rest, cwd);
+    }
+
     error(`Unknown command: ${command}`);
     printHelp();
     return 1;
@@ -75,6 +98,10 @@ function printHelp(): void {
   info("  doctor    Check project health");
   info("  audit     Check HTML and CSS contracts");
   info("  repair    Apply deterministic audit fixes");
+  info("  context   Generate AI context files");
+  info("  explain   Human/agent-readable component explanation");
+  info("  trace     Show dependency and file trace");
+  info("  conform   Normalize component markup to canonical order");
 }
 
 if (import.meta.main) {
