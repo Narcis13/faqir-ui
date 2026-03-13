@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loom UI — Component Gallery</title>
+
+  <!-- Tokens -->
+  <link rel="stylesheet" href="../registry/tokens/palette.css">
+  <link rel="stylesheet" href="../registry/tokens/spacing.css">
+  <link rel="stylesheet" href="../registry/tokens/typography.css">
+  <link rel="stylesheet" href="../registry/tokens/effects.css">
+  <link rel="stylesheet" href="../registry/tokens/motion.css">
+  <link rel="stylesheet" href="../registry/tokens/semantic.css">
+  <link rel="stylesheet" href="../registry/tokens/aliases.css">
+
+  <!-- Base -->
+  <link rel="stylesheet" href="../registry/base/reset.css">
+  <link rel="stylesheet" href="../registry/base/prose.css">
+
+  <!-- Theme (default includes dark mode) -->
+  <link rel="stylesheet" href="../registry/themes/default.css" id="theme-default">
+  <link rel="stylesheet" href="../registry/themes/midnight.css" id="theme-midnight" disabled>
+  <link rel="stylesheet" href="../registry/themes/paper.css" id="theme-paper" disabled>
+  <link rel="stylesheet" href="../registry/themes/brutalist.css" id="theme-brutalist" disabled>
+
+  <!-- Primitives -->
+  <link rel="stylesheet" href="../registry/primitives/button/button.css">
+  <link rel="stylesheet" href="../registry/primitives/input/input.css">
+  <link rel="stylesheet" href="../registry/primitives/textarea/textarea.css">
+  <link rel="stylesheet" href="../registry/primitives/select/select.css">
+  <link rel="stylesheet" href="../registry/primitives/checkbox/checkbox.css">
+  <link rel="stylesheet" href="../registry/primitives/radio/radio.css">
+  <link rel="stylesheet" href="../registry/primitives/switch/switch.css">
+  <link rel="stylesheet" href="../registry/primitives/label/label.css">
+  <link rel="stylesheet" href="../registry/primitives/badge/badge.css">
+  <link rel="stylesheet" href="../registry/primitives/card/card.css">
+  <link rel="stylesheet" href="../registry/primitives/separator/separator.css">
+  <link rel="stylesheet" href="../registry/primitives/avatar/avatar.css">
+  <link rel="stylesheet" href="../registry/primitives/spinner/spinner.css">
+  <link rel="stylesheet" href="../registry/primitives/kbd/kbd.css">
+  <link rel="stylesheet" href="../registry/primitives/stack/stack.css">
+  <link rel="stylesheet" href="../registry/primitives/grid/grid.css">
+  <link rel="stylesheet" href="../registry/primitives/surface/surface.css">
+
+  <!-- Recipes -->
+  <link rel="stylesheet" href="../registry/recipes/dialog/dialog.css">
+  <link rel="stylesheet" href="../registry/recipes/tabs/tabs.css">
+  <link rel="stylesheet" href="../registry/recipes/accordion/accordion.css">
+  <link rel="stylesheet" href="../registry/recipes/dropdown/dropdown.css">
+  <link rel="stylesheet" href="../registry/recipes/tooltip/tooltip.css">
+  <link rel="stylesheet" href="../registry/recipes/toast/toast.css">
+
+  <style>
+    /* ── Gallery Layout ── */
+    .gallery {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: var(--space-6) var(--space-4);
+    }
+
+    .gallery-header {
+      text-align: center;
+      padding: var(--space-12) 0 var(--space-8);
+    }
+
+    .gallery-title {
+      font-family: var(--font-sans);
+      font-size: var(--text-4xl);
+      font-weight: var(--weight-bold);
+      color: var(--color-fg);
+      margin: 0 0 var(--space-2);
+      letter-spacing: -0.02em;
+    }
+
+    .gallery-subtitle {
+      font-family: var(--font-sans);
+      font-size: var(--text-lg);
+      color: var(--color-fg-muted);
+      margin: 0 0 var(--space-8);
+    }
+
+    /* ── Theme + Mode Switcher ── */
+    .controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-3);
+      flex-wrap: wrap;
+      margin-bottom: var(--space-8);
+    }
+
+    .controls-group {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .controls-label {
+      font-family: var(--font-sans);
+      font-size: var(--text-sm);
+      font-weight: var(--weight-medium);
+      color: var(--color-fg-muted);
+    }
+
+    /* ── Section ── */
+    .section {
+      margin-bottom: var(--space-12);
+    }
+
+    .section-title {
+      font-family: var(--font-sans);
+      font-size: var(--text-2xl);
+      font-weight: var(--weight-bold);
+      color: var(--color-fg);
+      margin: 0 0 var(--space-2);
+    }
+
+    .section-description {
+      font-family: var(--font-sans);
+      font-size: var(--text-sm);
+      color: var(--color-fg-muted);
+      margin: 0 0 var(--space-6);
+    }
+
+    /* ── Component Demo ── */
+    .demo {
+      padding: var(--space-6);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-xl);
+      background: var(--color-bg);
+      margin-bottom: var(--space-4);
+    }
+
+    .demo-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      flex-wrap: wrap;
+      margin-bottom: var(--space-4);
+    }
+
+    .demo-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .demo-label {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      color: var(--color-fg-subtle);
+      min-width: 100px;
+      flex-shrink: 0;
+    }
+
+    .demo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: var(--space-4);
+    }
+
+    .demo-col {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+    }
+
+    /* ── Nav (sticky sidebar-like) ── */
+    .nav-bar {
+      display: flex;
+      gap: var(--space-2);
+      flex-wrap: wrap;
+      justify-content: center;
+      padding: var(--space-4);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-xl);
+      background: var(--color-bg-subtle);
+      margin-bottom: var(--space-8);
+    }
+
+    .nav-link {
+      font-family: var(--font-sans);
+      font-size: var(--text-xs);
+      font-weight: var(--weight-medium);
+      color: var(--color-fg-muted);
+      text-decoration: none;
+      padding: var(--space-1) var(--space-2);
+      border-radius: var(--radius-md);
+      transition: color var(--duration-fast) var(--ease-default),
+                  background var(--duration-fast) var(--ease-default);
+    }
+
+    .nav-link:hover {
+      color: var(--color-primary);
+      background: var(--color-primary-subtle);
+    }
+
+    /* ── Subsection ── */
+    .subsection {
+      margin-bottom: var(--space-6);
+    }
+
+    .subsection-title {
+      font-family: var(--font-sans);
+      font-size: var(--text-sm);
+      font-weight: var(--weight-semibold);
+      color: var(--color-fg-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin: 0 0 var(--space-3);
+    }
+
+    /* ── Helpers ── */
+    .w-full { width: 100%; }
+    .max-w-sm { max-width: 320px; }
+    .max-w-md { max-width: 480px; }
+    .inline { display: inline-flex; }
+
+    @media (max-width: 640px) {
+      .demo-row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .demo-label {
+        min-width: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="gallery">
+
+  <!-- ═══════════════════════════════════ HEADER ═══════════════════════════════════ -->
+  <header class="gallery-header">
+    <h1 class="gallery-title">Loom UI</h1>
+    <p class="gallery-subtitle">Agent-native component gallery — 17 primitives, 15 recipes, 4 themes</p>
+
+    <!-- Controls -->
+    <div class="controls">
+      <div class="controls-group">
+        <span class="controls-label">Theme</span>
+        <div data-ui="button-group">
+          <button data-ui="button" data-variant="primary" data-size="sm" onclick="setTheme('default')">Default</button>
+          <button data-ui="button" data-size="sm" onclick="setTheme('midnight')">Midnight</button>
+          <button data-ui="button" data-size="sm" onclick="setTheme('paper')">Paper</button>
+          <button data-ui="button" data-size="sm" onclick="setTheme('brutalist')">Brutalist</button>
+        </div>
+      </div>
+      <div class="controls-group">
+        <span class="controls-label">Mode</span>
+        <div data-ui="button-group">
+          <button data-ui="button" data-variant="primary" data-size="sm" onclick="setMode('light')">Light</button>
+          <button data-ui="button" data-size="sm" onclick="setMode('dark')">Dark</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Nav -->
+  <nav class="nav-bar" aria-label="Component navigation">
+    <a class="nav-link" href="#buttons">Button</a>
+    <a class="nav-link" href="#inputs">Input</a>
+    <a class="nav-link" href="#textarea">Textarea</a>
+    <a class="nav-link" href="#select">Select</a>
+    <a class="nav-link" href="#checkbox">Checkbox</a>
+    <a class="nav-link" href="#radio">Radio</a>
+    <a class="nav-link" href="#switch">Switch</a>
+    <a class="nav-link" href="#label">Label</a>
+    <a class="nav-link" href="#badge">Badge</a>
+    <a class="nav-link" href="#card">Card</a>
+    <a class="nav-link" href="#avatar">Avatar</a>
+    <a class="nav-link" href="#separator">Separator</a>
+    <a class="nav-link" href="#spinner">Spinner</a>
+    <a class="nav-link" href="#kbd">Kbd</a>
+    <a class="nav-link" href="#surface">Surface</a>
+    <a class="nav-link" href="#stack-grid">Stack &amp; Grid</a>
+    <a class="nav-link" href="#dialog">Dialog</a>
+    <a class="nav-link" href="#tabs">Tabs</a>
+    <a class="nav-link" href="#accordion">Accordion</a>
+    <a class="nav-link" href="#dropdown">Dropdown</a>
+    <a class="nav-link" href="#tooltip">Tooltip</a>
+    <a class="nav-link" href="#toast">Toast</a>
+  </nav>
+
+
+  <!-- ═══════════════════════════════ PRIMITIVES ═══════════════════════════════ -->
+
+  <hr data-ui="separator" style="margin-bottom: var(--space-8);">
+
+  <h2 style="font-family: var(--font-sans); font-size: var(--text-3xl); font-weight: var(--weight-bold); color: var(--color-fg); margin-bottom: var(--space-8); text-align: center;">Primitives</h2>
+
+
+  <!-- ── Button ── -->
+  <section class="section" id="buttons">
+    <h3 class="section-title">Button</h3>
+    <p class="section-description">Interactive button with 7 visual variants and 3 sizes.</p>
+
+    <div class="demo">
+      <div class="subsection">
+        <h4 class="subsection-title">Variants</h4>
+        <div class="demo-row">
+          <button data-ui="button">Default</button>
+          <button data-ui="button" data-variant="primary">Primary</button>
+          <button data-ui="button" data-variant="secondary">Secondary</button>
+          <button data-ui="button" data-variant="destructive">Destructive</button>
+          <button data-ui="button" data-variant="ghost">Ghost</button>
+          <button data-ui="button" data-variant="outline">Outline</button>
+          <button data-ui="button" data-variant="link">Link</button>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h4 class="subsection-title">Sizes</h4>
+        <div class="demo-row">
+          <button data-ui="button" data-variant="primary" data-size="sm">Small</button>
+          <button data-ui="button" data-variant="primary">Medium (default)</button>
+          <button data-ui="button" data-variant="primary" data-size="lg">Large</button>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h4 class="subsection-title">States</h4>
+        <div class="demo-row">
+          <button data-ui="button" data-variant="primary">Normal</button>
+          <button data-ui="button" data-variant="primary" disabled>Disabled</button>
+          <button data-ui="button" data-variant="primary" data-state="loading">Loading</button>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h4 class="subsection-title">With Icon</h4>
+        <div class="demo-row">
+          <button data-ui="button" data-variant="primary">
+            <span data-part="icon">&#9733;</span>
+            Star
+          </button>
+          <button data-ui="button" data-variant="outline">
+            <span data-part="icon">&#128190;</span>
+            Save
+          </button>
+          <button data-ui="button" data-variant="destructive">
+            <span data-part="icon">&#128465;</span>
+            Delete
+          </button>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h4 class="subsection-title">Button Group</h4>
+        <div class="demo-row">
+          <div data-ui="button-group">
+            <button data-ui="button" data-variant="outline">Left</button>
+            <button data-ui="button" data-variant="outline">Center</button>
+            <button data-ui="button" data-variant="outline">Right</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ── Input ── -->
+  <section class="section" id="inputs">
+    <h3 class="section-title">Input</h3>
+    <p class="section-description">Text input with sizes and states.</p>
+
+    <div class="demo">
+      <div class="demo-col max-w-md">
+        <div class="subsection">
+          <h4 class="subsection-title">Default</h4>
+          <input data-ui="input" type="text" placeholder="Enter your name...">
+        </div>
+        <div class="subsection">
+          <h4 class="subsection-title">Sizes</h4>
+          <input data-ui="input" data-size="sm" type="text" placeholder="Small input">
+          <input data-ui="input" type="text" placeholder="Medium input (default)" style="margin-top: var(--space-2);">
+          <input data-ui="input" data-size="lg" type="text" placeholder="Large input" style="margin-top: var(--space-2);">
+        </div>
+        <div class="subsection">
+          <h4 class="subsection-title">States</h4>
+          <input data-ui="input" type="text" value="Normal state">
+          <input data-ui="input" data-state="error" type="text" value="Error state" style="margin-top: var(--space-2);">
+          <input data-ui="input" type="text" value="Disabled state" disabled style="margin-top: var(--space-2);">
+        </div>
+        <div class="subsection">
+          <h4 class="subsection-title">Input Group (prefix/suffix)</h4>
+          <div data-ui="input-group">
+            <span data-part="prefix">&#128269;</span>
+            <input data-ui="input" type="text" placeholder="Search...">
+          </div>
+          <div data-ui="input-group" style="margin-top: var(--space-2);">
+            <input data-ui="input" type="text" placeholder="0.00">
+            <span data-part="suffix">USD</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ── Textarea ── -->
+  <section class="section" id="textarea">
+    <h3 class="section-title">Textarea</h3>
+    <p class="section-description">Multi-line text input with sizes and states.</p>
+
+    <div class="demo">
+      <div class="demo-col max-w-md">
+        <textarea data-ui="textarea" placeholder="Write something..."></textarea>
+        <textarea data-ui="textarea" data-size="sm" placeholder="Small textarea"></textarea>
+        <textarea data-ui="textarea" data-state="error" placeholder="Error state"></textarea>
+        <textarea data-ui="textarea" disabled placeholder="Disabled"></textarea>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ── Select ── -->
+  <section class="section" id="select">
+    <h3 class="section-title">Select</h3>
+    <p class="section-description">Native HTML select element, styled.</p>
+
+    <div class="demo">
+      <div class="demo-col max-w-md">
+        <select data-ui="select">
+          <option value="" disabled selected>Choose an option...</option>
+          <option value="1">Option One</option>
+          <option value="2">Option Two</option>
+          <option value="3">Option Three</option>
+        </select>
+        <select data-ui="select" data-size="sm">
+          <option value="">Small select</option>
+          <option value="a">Alpha</option>
+          <option value="b">Beta</option>
+        </select>
+        <select data-ui="select" data-size="lg">
+          <option value="">Large select</option>
+          <option value="a">Alpha</option>
+          <option value="b">Beta</option>
+        </select>
+        <select data-ui="select" data-state="error">
+          <option value="">Error state</option>
+        </select>
+        <select data-ui="select" disabled>
+          <option value="">Disabled</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ── Checkbox ── -->
+  <section class="section" id="checkbox">
+    <h3 class="section-title">Checkbox</h3>
+    <p class="section-description">Styled checkbox with checked and indeterminate states.</p>
+
+    <div class="demo">
+      <div class="demo-col">
+        <div class="demo-row">
+          <label data-ui="checkbox-label">
+            <input data-ui="checkbox" type="checkbox">
+            <span>Unchecked</span>
+          </label>
+          <label data-ui="checkbox-label">
+            <input data-ui="checkbox" type="checkbox" checked>
+            <span>Checked</span>
+          </label>
+          <label data-ui="checkbox-label">
+            <input data-ui="checkbox" type="checkbox" disabled>
+            <span>Disabled</span>
+          </label>
+        </div>
+        <div class="demo-row">
+          <label data-ui="checkbox-label">
+            <input data-ui="checkbox" type="checkbox" data-size="sm">
+            <span>Small</span>
+          </label>
+          <label data-ui="checkbox-label">
+            <input data-ui="checkbox" type="checkbox" checked>
+            <span>Medium</span>
+          </label>
+          <label data-ui="checkbox-label">
+            <input data-ui="checkbox" type="checkbox" data-size="lg" checked>
+            <span>Large</span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ── Radio ── -->
+  <section class="section" id="radio">
+    <h3 class="section-title">Radio</h3>
+    <p class="section-description">Radio buttons in a group.</p>
+
+    <div class="demo">
+      <div class="demo-row">
+        <fieldset data-ui="radio-group">
+          <label data-ui="radio-label">
+            <input data-ui="radio" type="radio" name="plan" value="free" checked>
+            <span>Free</span>
+          </label>
+          <label data-ui="radio-label">
+            <input data-ui="radio" type="radio" name="plan" value="pro">
+            <span>Pro</span>
+          </label>
+          <label data-ui="radio-label">
+            <input data-ui="radio" type="radio" name="plan" value="enterprise">
+            <span>Enterprise</span>
+          </label>
+          <label data-ui="radio-label">
+            <input data-ui="radio" type="radio" name="plan" value="disabled" disabled>
+            <span>Disabled</span>
+          </label>
+        </fieldset>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ── Switch ── -->
+  <section class="section" id="switch">
+    <h3 class="section-title">Switch</h3>
+    <p class="section-description">Toggle switch with sizes.</p>
+
+    <div class="demo">
+      <div class="demo-col">
+        <div class="demo-row">
+          <label data-ui="switch-label">
+            <button data-ui="switch" role="switch" aria-checked="false" data-state="off" onclick="toggleSwitch(this)">
+              <span data-part="thumb"></span>
+            </button>
+            <span>Notifications</span>
+          </label>
+          <label data-ui="switch-label">
+            <button data-ui="switch" role="switch" aria-checked="true" data-state="on" onclick="toggleSwitch(this)">
+              <span data-part="thumb"></span>
+            </button>
+            <span>Dark mode</span>
+          </label>
+          <label data-ui="switch-label">
+            <button data-ui="switch" role="switch" aria-checked="false" disabled>
+              <span data-part="thumb"></span>
+            </button>
+            <span>Disabled</span>
+          </label>
+        </div>
+        <div class="demo-row">
+          <label data-ui="switch-label">
+            <button data-ui="switch" data-size="sm" role="switch" aria-checked="true" data-state="on" onclick="toggleSwitch(this)">
+              <span data-part="thumb"></span>
+            </button>
+            <span>Small</span>
+          </label>
+          <label data-ui="switch-label">
+            <button data-ui="switch" role="switch" aria-checked="true" data-state="on" onclick="toggleSwitch(this)">
+              <span data-part="thumb"></span>
+            </button>
+            <span>Medium</span>
+          </label>
+          <label data-ui="switch-label">
+            <button data-ui="switch" data-size="lg" role="switch" aria-checked="true" data-state="on" onclick="toggleSwitch(this)">
+              <span data-part="thumb"></span>
+            </button>
+            <span>Large</span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ── Label ── -->
+  <section class="section" id="label">
+    <h3 class="section-title">Label</h3>
+    <p class="section-description">Form label with variants and sizes.</p>
+
+    <div class="demo">
+      <div class="demo-col max-w-md">
+        <div>
+          <label data-ui="label">Email address</label>
+          <input data-ui="input" type="email" placeholder="you@example.com">
+        </div>
+        <div>
+          <label data-ui="label" data-variant="required">Password <span data-part="indicator">*</span></label>
+          <input data-ui="input" type="password" placeholder="Enter password">
+        </div>
+        <div>
+          <label data-ui="label" data-size="sm">Small label</label>
+          <input data-ui="input" data-size="sm" type="text" placeholder="...">
+        </div>
+        <div>
+          <label data-ui="label" data-size="lg">Large label</label>
+          <input data-ui="input" data-size="lg" type="text" placeholder="...">
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ── Badge ── -->
+  <section class="section" id="badge">
+    <h3 class="section-title">Badge</h3>
+    <p class="section-description">Small status indicators with variants and sizes.</p>
+
+    <div class="demo">
+      <div class="demo-row">
+        <span data-ui="badge">Default</span>
+        <span data-ui="badge" data-variant="primary">Primary</span>
+        <span data-ui="badge" data-variant="secondary">Secondary</span>
+        <span data-ui="badge" data-variant="destructive">Destructive</span>
+        <span data-ui="badge" data-variant="success">Success</span>
+        <span data-ui="badge" data-variant="warning">Warning</span>
+      </div>
+      <div class="demo-row">
+        <span data-ui="badge" data-size="sm">Small</span>
+        <span data-ui="badge">Medium</span>
+        <span data-ui="badge" data-size="lg">Large</span>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ── Card ── -->
+  <section class="section" id="card">
+    <h3 class="section-title">Card</h3>
+    <p class="section-description">Container surface with header, body, and footer slots.</p>
+
+    <div class="demo">
+      <div class="demo-grid">
+        <!-- Default -->
+        <div data-ui="card">
+          <div data-part="header">
+            <h3 data-part="title">Default Card</h3>
+            <p data-part="description">This is the default card with a subtle shadow.</p>
+          </div>
+          <div data-part="body">
+            <p style="font-size: var(--text-sm); color: var(--color-fg-muted);">Cards are containers that group related content and actions. They use the Loom attribute protocol.</p>
+          </div>
+          <div data-part="footer">
+            <button data-ui="button" data-variant="ghost" data-size="sm">Cancel</button>
+            <button data-ui="button" data-variant="primary" data-size="sm">Save</button>
+          </div>
+        </div>
+
+        <!-- Outlined -->
+        <div data-ui="card" data-variant="outlined">
+          <div data-part="header">
+            <h3 data-part="title">Outlined Card</h3>
+            <p data-part="description">Border only, no shadow.</p>
+          </div>
+          <div data-part="body">
+            <p style="font-size: var(--text-sm); color: var(--color-fg-muted);">Use the outlined variant when you need a lighter visual weight.</p>
+          </div>
+          <div data-part="footer">
+            <button data-ui="button" data-variant="outline" data-size="sm">Details</button>
+          </div>
+        </div>
+
+        <!-- Filled -->
+        <div data-ui="card" data-variant="filled">
+          <div data-part="header">
+            <h3 data-part="title">Filled Card</h3>
+            <p data-part="description">Subtle background, no border.</p>
+          </div>
+          <div data-part="body">
+            <p style="font-size: var(--text-sm); color: var(--color-fg-muted);">The filled variant uses a subtle background color for grouping.</p>
+          </div>
+          <div data-part="footer">
+            <span data-ui="badge" data-variant="success">Active</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ── Avatar ── -->
+  <section class="section" id="avatar">
+    <h3 class="section-title">Avatar</h3>
+    <p class="section-description">User avatar with fallback initials.</p>
+
+    <div class="demo">
+      <div class="demo-row">
+        <span data-ui="avatar" data-size="sm">
+          <span data-part="fallback">SM</span>
+        </span>
+        <span data-ui="avatar">
+          <span data-part="fallback">MD</span>
+        </span>
+        <span data-ui="avatar" data-size="lg">
+          <span data-part="fallback">LG</span>
+        </span>
+        <span data-ui="avatar" style="background: var(--color-primary-subtle);">
+          <span data-part="fallback" style="color: var(--color-primary);">AB</span>
+        </span>
+        <span data-ui="avatar" style="background: var(--color-destructive-subtle);">
+          <span data-part="fallback" style="color: var(--color-destructive);">CD</span>
+        </span>
+        <span data-ui="avatar" style="background: var(--color-success-subtle);">
+          <span data-part="fallback" style="color: var(--color-success);">EF</span>
+        </span>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ── Separator ── -->
+  <section class="section" id="separator">
+    <h3 class="section-title">Separator</h3>
+    <p class="section-description">Horizontal divider, with optional label.</p>
+
+    <div class="demo">
+      <div class="demo-col">
+        <div style="padding: var(--space-3) 0;">
+          <p style="font-size: var(--text-sm); color: var(--color-fg-muted); margin-bottom: var(--space-3);">Content above</p>
+          <hr data-ui="separator">
+          <p style="font-size: var(--text-sm); color: var(--color-fg-muted); margin-top: var(--space-3);">Content below</p>
+        </div>
+        <div style="padding: var(--space-3) 0;">
+          <div data-ui="separator">
+            <span data-part="label">OR</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ── Spinner ── -->
+  <section class="section" id="spinner">
+    <h3 class="section-title">Spinner</h3>
+    <p class="section-description">Loading spinner animation with sizes.</p>
+
+    <div class="demo">
+      <div class="demo-row">
+        <div data-ui="spinner" data-size="sm"></div>
+        <div data-ui="spinner"></div>
+        <div data-ui="spinner" data-size="lg"></div>
+        <div data-ui="spinner" data-size="xl"></div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ── Kbd ── -->
+  <section class="section" id="kbd">
+    <h3 class="section-title">Kbd</h3>
+    <p class="section-description">Keyboard shortcut indicator.</p>
+
+    <div class="demo">
+      <div class="demo-row">
+        <kbd data-ui="kbd">&#8984;</kbd>
+        <kbd data-ui="kbd">K</kbd>
+        <span style="color: var(--color-fg-muted); font-size: var(--text-sm);">or</span>
+        <kbd data-ui="kbd">Ctrl</kbd>
+        <span style="color: var(--color-fg-muted); font-size: var(--text-sm);">+</span>
+        <kbd data-ui="kbd">K</kbd>
+      </div>
+      <div class="demo-row" style="margin-top: var(--space-3);">
+        <span style="font-size: var(--text-sm); color: var(--color-fg-muted);">Press</span>
+        <kbd data-ui="kbd">Esc</kbd>
+        <span style="font-size: var(--text-sm); color: var(--color-fg-muted);">to close,</span>
+        <kbd data-ui="kbd">&#8593;</kbd>
+        <kbd data-ui="kbd">&#8595;</kbd>
+        <span style="font-size: var(--text-sm); color: var(--color-fg-muted);">to navigate,</span>
+        <kbd data-ui="kbd">Enter</kbd>
+        <span style="font-size: var(--text-sm); color: var(--color-fg-muted);">to select</span>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ── Surface ── -->
+  <section class="section" id="surface">
+    <h3 class="section-title">Surface</h3>
+    <p class="section-description">Generic elevated container with variants.</p>
+
+    <div class="demo">
+      <div class="demo-grid">
+        <div data-ui="surface" data-variant="flat" data-size="md">
+          <p style="font-size: var(--text-sm); font-weight: var(--weight-medium);">Flat</p>
+          <p style="font-size: var(--text-xs); color: var(--color-fg-muted);">No border, no shadow</p>
+        </div>
+        <div data-ui="surface" data-size="md">
+          <p style="font-size: var(--text-sm); font-weight: var(--weight-medium);">Default</p>
+          <p style="font-size: var(--text-xs); color: var(--color-fg-muted);">Border, no shadow</p>
+        </div>
+        <div data-ui="surface" data-variant="raised" data-size="md">
+          <p style="font-size: var(--text-sm); font-weight: var(--weight-medium);">Raised</p>
+          <p style="font-size: var(--text-xs); color: var(--color-fg-muted);">Small shadow</p>
+        </div>
+        <div data-ui="surface" data-variant="overlay" data-size="md">
+          <p style="font-size: var(--text-sm); font-weight: var(--weight-medium);">Overlay</p>
+          <p style="font-size: var(--text-xs); color: var(--color-fg-muted);">Large shadow</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ── Stack & Grid ── -->
+  <section class="section" id="stack-grid">
+    <h3 class="section-title">Stack &amp; Grid</h3>
+    <p class="section-description">Layout primitives for flex and grid layouts.</p>
+
+    <div class="demo">
+      <div class="subsection">
+        <h4 class="subsection-title">Vertical Stack (gap=3)</h4>
+        <div data-ui="stack" data-gap="3">
+          <div data-ui="surface" data-size="sm" style="text-align:center;"><span style="font-size:var(--text-sm);">Item 1</span></div>
+          <div data-ui="surface" data-size="sm" style="text-align:center;"><span style="font-size:var(--text-sm);">Item 2</span></div>
+          <div data-ui="surface" data-size="sm" style="text-align:center;"><span style="font-size:var(--text-sm);">Item 3</span></div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h4 class="subsection-title">Horizontal Stack (gap=4)</h4>
+        <div data-ui="stack" data-variant="horizontal" data-gap="4">
+          <div data-ui="surface" data-size="sm" style="text-align:center; flex:1;"><span style="font-size:var(--text-sm);">Left</span></div>
+          <div data-ui="surface" data-size="sm" style="text-align:center; flex:1;"><span style="font-size:var(--text-sm);">Center</span></div>
+          <div data-ui="surface" data-size="sm" style="text-align:center; flex:1;"><span style="font-size:var(--text-sm);">Right</span></div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h4 class="subsection-title">Grid (3 columns, gap=4)</h4>
+        <div data-ui="grid" data-cols="3" data-gap="4">
+          <div data-ui="surface" data-size="sm" style="text-align:center;"><span style="font-size:var(--text-sm);">1</span></div>
+          <div data-ui="surface" data-size="sm" style="text-align:center;"><span style="font-size:var(--text-sm);">2</span></div>
+          <div data-ui="surface" data-size="sm" style="text-align:center;"><span style="font-size:var(--text-sm);">3</span></div>
+          <div data-ui="surface" data-size="sm" style="text-align:center;"><span style="font-size:var(--text-sm);">4</span></div>
+          <div data-ui="surface" data-size="sm" style="text-align:center;"><span style="font-size:var(--text-sm);">5</span></div>
+          <div data-ui="surface" data-size="sm" style="text-align:center;"><span style="font-size:var(--text-sm);">6</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════ RECIPES ═══════════════════════════════ -->
+
+  <hr data-ui="separator" style="margin-bottom: var(--space-8);">
+
+  <h2 style="font-family: var(--font-sans); font-size: var(--text-3xl); font-weight: var(--weight-bold); color: var(--color-fg); margin-bottom: var(--space-8); text-align: center;">Recipes</h2>
+
+
+  <!-- ── Dialog ── -->
+  <section class="section" id="dialog">
+    <h3 class="section-title">Dialog</h3>
+    <p class="section-description">Modal dialog with focus trap, escape-to-close, and overlay.</p>
+
+    <div class="demo">
+      <div class="demo-row">
+        <!-- Default Dialog -->
+        <div data-ui="dialog" data-state="closed" id="demo-dialog">
+          <button data-ui="button" data-part="trigger" data-variant="primary">Open Dialog</button>
+          <div data-part="overlay" hidden></div>
+          <div data-part="panel" role="dialog" aria-modal="true" aria-labelledby="demo-dialog-title" data-size="md" hidden tabindex="-1">
+            <div data-part="header">
+              <h2 id="demo-dialog-title" data-part="title">Edit Profile</h2>
+              <button data-part="close" aria-label="Close dialog">&#x2715;</button>
+            </div>
+            <div data-part="body">
+              <div data-ui="stack" data-gap="4">
+                <div>
+                  <label data-ui="label">Name</label>
+                  <input data-ui="input" type="text" placeholder="John Doe" value="John Doe">
+                </div>
+                <div>
+                  <label data-ui="label">Email</label>
+                  <input data-ui="input" type="email" placeholder="john@example.com" value="john@example.com">
+                </div>
+                <div>
+                  <label data-ui="label">Bio</label>
+                  <textarea data-ui="textarea" placeholder="Tell us about yourself...">Software developer who loves building tools.</textarea>
+                </div>
+              </div>
+            </div>
+            <div data-part="footer">
+              <button data-ui="button" data-variant="outline" data-part="close">Cancel</button>
+              <button data-ui="button" data-variant="primary" data-part="close">Save Changes</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Danger Dialog -->
+        <div data-ui="dialog" data-state="closed" id="demo-dialog-danger">
+          <button data-ui="button" data-part="trigger" data-variant="destructive">Delete Account</button>
+          <div data-part="overlay" hidden></div>
+          <div data-part="panel" role="dialog" aria-modal="true" aria-labelledby="demo-dialog-danger-title" data-size="sm" data-variant="danger" hidden tabindex="-1">
+            <div data-part="header">
+              <h2 id="demo-dialog-danger-title" data-part="title">Delete Account?</h2>
+              <button data-part="close" aria-label="Close dialog">&#x2715;</button>
+            </div>
+            <div data-part="body">
+              <p style="font-size: var(--text-sm); color: var(--color-fg-muted);">This action cannot be undone. All your data will be permanently removed.</p>
+            </div>
+            <div data-part="footer">
+              <button data-ui="button" data-variant="outline" data-part="close">Cancel</button>
+              <button data-ui="button" data-variant="destructive" data-part="close">Delete</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ── Tabs ── -->
+  <section class="section" id="tabs">
+    <h3 class="section-title">Tabs</h3>
+    <p class="section-description">Accessible tabbed interface with 3 style variants.</p>
+
+    <div class="demo">
+      <div class="subsection">
+        <h4 class="subsection-title">Underline Variant</h4>
+        <div data-ui="tabs" data-variant="underline">
+          <div data-part="list" role="tablist">
+            <button data-part="trigger" role="tab" aria-selected="true" id="tab-u1" aria-controls="panel-u1">Account</button>
+            <button data-part="trigger" role="tab" aria-selected="false" tabindex="-1" id="tab-u2" aria-controls="panel-u2">Security</button>
+            <button data-part="trigger" role="tab" aria-selected="false" tabindex="-1" id="tab-u3" aria-controls="panel-u3">Notifications</button>
+          </div>
+          <div data-part="panel" role="tabpanel" id="panel-u1" aria-labelledby="tab-u1">
+            <p style="font-size: var(--text-sm); color: var(--color-fg-muted);">Manage your account settings and preferences.</p>
+          </div>
+          <div data-part="panel" role="tabpanel" id="panel-u2" aria-labelledby="tab-u2" hidden>
+            <p style="font-size: var(--text-sm); color: var(--color-fg-muted);">Configure two-factor authentication and password.</p>
+          </div>
+          <div data-part="panel" role="tabpanel" id="panel-u3" aria-labelledby="tab-u3" hidden>
+            <p style="font-size: var(--text-sm); color: var(--color-fg-muted);">Choose which notifications you want to receive.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h4 class="subsection-title">Pill Variant</h4>
+        <div data-ui="tabs" data-variant="pill">
+          <div data-part="list" role="tablist">
+            <button data-part="trigger" role="tab" aria-selected="true" id="tab-p1" aria-controls="panel-p1">Overview</button>
+            <button data-part="trigger" role="tab" aria-selected="false" tabindex="-1" id="tab-p2" aria-controls="panel-p2">Analytics</button>
+            <button data-part="trigger" role="tab" aria-selected="false" tabindex="-1" id="tab-p3" aria-controls="panel-p3">Reports</button>
+          </div>
+          <div data-part="panel" role="tabpanel" id="panel-p1" aria-labelledby="tab-p1">
+            <p style="font-size: var(--text-sm); color: var(--color-fg-muted);">Dashboard overview with key metrics.</p>
+          </div>
+          <div data-part="panel" role="tabpanel" id="panel-p2" aria-labelledby="tab-p2" hidden>
+            <p style="font-size: var(--text-sm); color: var(--color-fg-muted);">Detailed analytics and charts.</p>
+          </div>
+          <div data-part="panel" role="tabpanel" id="panel-p3" aria-labelledby="tab-p3" hidden>
+            <p style="font-size: var(--text-sm); color: var(--color-fg-muted);">Generate and download reports.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h4 class="subsection-title">Enclosed Variant</h4>
+        <div data-ui="tabs" data-variant="enclosed">
+          <div data-part="list" role="tablist">
+            <button data-part="trigger" role="tab" aria-selected="true" id="tab-e1" aria-controls="panel-e1">HTML</button>
+            <button data-part="trigger" role="tab" aria-selected="false" tabindex="-1" id="tab-e2" aria-controls="panel-e2">CSS</button>
+            <button data-part="trigger" role="tab" aria-selected="false" tabindex="-1" id="tab-e3" aria-controls="panel-e3">JS</button>
+          </div>
+          <div data-part="panel" role="tabpanel" id="panel-e1" aria-labelledby="tab-e1">
+            <pre style="font-family: var(--font-mono); font-size: var(--text-xs); color: var(--color-fg-muted); margin: 0;">&lt;button data-ui="button"&gt;Click me&lt;/button&gt;</pre>
+          </div>
+          <div data-part="panel" role="tabpanel" id="panel-e2" aria-labelledby="tab-e2" hidden>
+            <pre style="font-family: var(--font-mono); font-size: var(--text-xs); color: var(--color-fg-muted); margin: 0;">[data-ui="button"] { background: var(--color-primary); }</pre>
+          </div>
+          <div data-part="panel" role="tabpanel" id="panel-e3" aria-labelledby="tab-e3" hidden>
+            <pre style="font-family: var(--font-mono); font-size: var(--text-xs); color: var(--color-fg-muted); margin: 0;">// No JS needed for primitives!</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ── Accordion ── -->
+  <section class="section" id="accordion">
+    <h3 class="section-title">Accordion</h3>
+    <p class="section-description">Expandable sections with single or multiple expand modes.</p>
+
+    <div class="demo">
+      <div class="demo-col max-w-md" style="max-width: 600px;">
+        <div class="subsection">
+          <h4 class="subsection-title">Default (multiple)</h4>
+          <div data-ui="accordion">
+            <div data-part="item" data-state="expanded">
+              <button data-part="trigger" aria-expanded="true">
+                What is Loom UI?
+                <span data-part="icon">&#9660;</span>
+              </button>
+              <div data-part="content">
+                Loom is a zero-dependency, HTML-first UI framework built for AI agents to generate, inspect, and repair.
+              </div>
+            </div>
+            <div data-part="item" data-state="collapsed">
+              <button data-part="trigger" aria-expanded="false">
+                How does the audit system work?
+                <span data-part="icon">&#9660;</span>
+              </button>
+              <div data-part="content" hidden>
+                The audit system validates your HTML against component manifests, checking for missing ARIA attributes, invalid variants, orphaned parts, and more.
+              </div>
+            </div>
+            <div data-part="item" data-state="collapsed">
+              <button data-part="trigger" aria-expanded="false">
+                Is there a build step?
+                <span data-part="icon">&#9660;</span>
+              </button>
+              <div data-part="content" hidden>
+                No. Everything works by opening an HTML file in a browser. No webpack, no Vite, no compile step.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="subsection">
+          <h4 class="subsection-title">Bordered</h4>
+          <div data-ui="accordion" data-bordered="true">
+            <div data-part="item" data-state="expanded">
+              <button data-part="trigger" aria-expanded="true">
+                Getting Started
+                <span data-part="icon">&#9660;</span>
+              </button>
+              <div data-part="content">
+                Run <code style="font-family: var(--font-mono); background: var(--color-bg-muted); padding: 0.125rem 0.25rem; border-radius: var(--radius-sm); font-size: 0.875em;">npx @loom-ui/cli init</code> to initialize a new project.
+              </div>
+            </div>
+            <div data-part="item" data-state="collapsed">
+              <button data-part="trigger" aria-expanded="false">
+                Adding Components
+                <span data-part="icon">&#9660;</span>
+              </button>
+              <div data-part="content" hidden>
+                Use <code style="font-family: var(--font-mono); background: var(--color-bg-muted); padding: 0.125rem 0.25rem; border-radius: var(--radius-sm); font-size: 0.875em;">loom add button dialog tabs</code> to add components.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ── Dropdown ── -->
+  <section class="section" id="dropdown">
+    <h3 class="section-title">Dropdown</h3>
+    <p class="section-description">Toggle menu with keyboard navigation and click-outside close.</p>
+
+    <div class="demo">
+      <div class="demo-row">
+        <div data-ui="dropdown" data-state="closed">
+          <button data-part="trigger" aria-expanded="false" aria-haspopup="true">
+            Actions &#9662;
+          </button>
+          <div data-part="menu" role="menu" hidden>
+            <button data-part="item" role="menuitem">Edit</button>
+            <button data-part="item" role="menuitem">Duplicate</button>
+            <button data-part="item" role="menuitem">Archive</button>
+            <hr data-part="separator">
+            <button data-part="item" role="menuitem" style="color: var(--color-destructive);">Delete</button>
+          </div>
+        </div>
+
+        <div data-ui="dropdown" data-state="closed" data-size="sm">
+          <button data-part="trigger" aria-expanded="false" aria-haspopup="true">
+            Small &#9662;
+          </button>
+          <div data-part="menu" role="menu" hidden>
+            <button data-part="item" role="menuitem">Option A</button>
+            <button data-part="item" role="menuitem">Option B</button>
+            <button data-part="item" role="menuitem">Option C</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ── Tooltip ── -->
+  <section class="section" id="tooltip">
+    <h3 class="section-title">Tooltip</h3>
+    <p class="section-description">Informational popup on hover/focus, with positioning.</p>
+
+    <div class="demo">
+      <div class="demo-row" style="justify-content: center; gap: var(--space-8);">
+        <div data-ui="tooltip" data-variant="top" data-state="hidden">
+          <button data-ui="button" data-variant="outline" data-part="trigger">Top</button>
+          <span data-part="content" role="tooltip" hidden>Tooltip on top</span>
+        </div>
+        <div data-ui="tooltip" data-variant="bottom" data-state="hidden">
+          <button data-ui="button" data-variant="outline" data-part="trigger">Bottom</button>
+          <span data-part="content" role="tooltip" hidden>Tooltip on bottom</span>
+        </div>
+        <div data-ui="tooltip" data-variant="left" data-state="hidden">
+          <button data-ui="button" data-variant="outline" data-part="trigger">Left</button>
+          <span data-part="content" role="tooltip" hidden>Tooltip on left</span>
+        </div>
+        <div data-ui="tooltip" data-variant="right" data-state="hidden">
+          <button data-ui="button" data-variant="outline" data-part="trigger">Right</button>
+          <span data-part="content" role="tooltip" hidden>Tooltip on right</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ── Toast ── -->
+  <section class="section" id="toast">
+    <h3 class="section-title">Toast</h3>
+    <p class="section-description">Notification messages with auto-dismiss and tone variants.</p>
+
+    <div class="demo">
+      <div class="demo-row">
+        <button data-ui="button" data-variant="outline" onclick="showToast('default')">Default Toast</button>
+        <button data-ui="button" data-variant="outline" onclick="showToast('success')">Success Toast</button>
+        <button data-ui="button" data-variant="outline" onclick="showToast('error')">Error Toast</button>
+        <button data-ui="button" data-variant="outline" onclick="showToast('warning')">Warning Toast</button>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════ COMPOSITION DEMO ═══════════════════════════════ -->
+
+  <hr data-ui="separator" style="margin-bottom: var(--space-8);">
+
+  <h2 style="font-family: var(--font-sans); font-size: var(--text-3xl); font-weight: var(--weight-bold); color: var(--color-fg); margin-bottom: var(--space-8); text-align: center;">Composition</h2>
+
+
+  <!-- ── Login Form ── -->
+  <section class="section" id="login-form">
+    <h3 class="section-title">Login Form</h3>
+    <p class="section-description">A real-world composition of card, input, button, label, checkbox, and separator.</p>
+
+    <div class="demo" style="display: flex; justify-content: center;">
+      <div data-ui="card" style="width: 100%; max-width: 400px;">
+        <div data-part="header" style="text-align: center;">
+          <h3 data-part="title" style="font-size: var(--text-xl);">Welcome back</h3>
+          <p data-part="description">Sign in to your account</p>
+        </div>
+        <div data-part="body">
+          <div data-ui="stack" data-gap="4">
+            <div>
+              <label data-ui="label" data-variant="required">Email <span data-part="indicator">*</span></label>
+              <input data-ui="input" type="email" placeholder="you@example.com">
+            </div>
+            <div>
+              <label data-ui="label" data-variant="required">Password <span data-part="indicator">*</span></label>
+              <input data-ui="input" type="password" placeholder="Enter password">
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <label data-ui="checkbox-label">
+                <input data-ui="checkbox" type="checkbox">
+                <span style="font-size: var(--text-sm);">Remember me</span>
+              </label>
+              <button data-ui="button" data-variant="link" style="font-size: var(--text-sm);">Forgot password?</button>
+            </div>
+            <button data-ui="button" data-variant="primary" style="width: 100%;">Sign In</button>
+            <div data-ui="separator">
+              <span data-part="label">OR</span>
+            </div>
+            <button data-ui="button" data-variant="outline" style="width: 100%;">Continue with Google</button>
+          </div>
+        </div>
+        <div data-part="footer" style="justify-content: center;">
+          <span style="font-size: var(--text-sm); color: var(--color-fg-muted);">Don't have an account?</span>
+          <button data-ui="button" data-variant="link" style="font-size: var(--text-sm);">Sign up</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ── Settings Page ── -->
+  <section class="section" id="settings-preview">
+    <h3 class="section-title">Settings Page</h3>
+    <p class="section-description">Tabs + card + form controls composition.</p>
+
+    <div class="demo">
+      <div data-ui="tabs" data-variant="underline">
+        <div data-part="list" role="tablist">
+          <button data-part="trigger" role="tab" aria-selected="true" id="st1" aria-controls="sp1">Profile</button>
+          <button data-part="trigger" role="tab" aria-selected="false" tabindex="-1" id="st2" aria-controls="sp2">Preferences</button>
+          <button data-part="trigger" role="tab" aria-selected="false" tabindex="-1" id="st3" aria-controls="sp3">Danger Zone</button>
+        </div>
+        <div data-part="panel" role="tabpanel" id="sp1" aria-labelledby="st1">
+          <div data-ui="stack" data-gap="4" style="max-width: 480px;">
+            <div>
+              <label data-ui="label">Display Name</label>
+              <input data-ui="input" type="text" value="Jane Developer">
+            </div>
+            <div>
+              <label data-ui="label">Email</label>
+              <input data-ui="input" type="email" value="jane@example.com">
+            </div>
+            <div>
+              <label data-ui="label">Bio</label>
+              <textarea data-ui="textarea">Full-stack developer passionate about developer experience.</textarea>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: var(--space-2);">
+              <button data-ui="button" data-variant="outline">Cancel</button>
+              <button data-ui="button" data-variant="primary">Save</button>
+            </div>
+          </div>
+        </div>
+        <div data-part="panel" role="tabpanel" id="sp2" aria-labelledby="st2" hidden>
+          <div data-ui="stack" data-gap="4" style="max-width: 480px;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <div>
+                <p style="font-size: var(--text-sm); font-weight: var(--weight-medium);">Email Notifications</p>
+                <p style="font-size: var(--text-xs); color: var(--color-fg-muted);">Receive emails about account activity</p>
+              </div>
+              <button data-ui="switch" role="switch" aria-checked="true" data-state="on" onclick="toggleSwitch(this)">
+                <span data-part="thumb"></span>
+              </button>
+            </div>
+            <hr data-ui="separator">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <div>
+                <p style="font-size: var(--text-sm); font-weight: var(--weight-medium);">Marketing Emails</p>
+                <p style="font-size: var(--text-xs); color: var(--color-fg-muted);">Hear about new features and updates</p>
+              </div>
+              <button data-ui="switch" role="switch" aria-checked="false" data-state="off" onclick="toggleSwitch(this)">
+                <span data-part="thumb"></span>
+              </button>
+            </div>
+            <hr data-ui="separator">
+            <div>
+              <label data-ui="label">Language</label>
+              <select data-ui="select">
+                <option value="en" selected>English</option>
+                <option value="es">Spanish</option>
+                <option value="fr">French</option>
+                <option value="de">German</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div data-part="panel" role="tabpanel" id="sp3" aria-labelledby="st3" hidden>
+          <div data-ui="card" data-variant="outlined" style="max-width: 480px; border-color: var(--color-destructive);">
+            <div data-part="body">
+              <h4 style="font-size: var(--text-base); font-weight: var(--weight-semibold); color: var(--color-destructive); margin-bottom: var(--space-2);">Delete Account</h4>
+              <p style="font-size: var(--text-sm); color: var(--color-fg-muted); margin-bottom: var(--space-4);">Once you delete your account, there is no going back. Please be certain.</p>
+              <button data-ui="button" data-variant="destructive">Delete my account</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ── Dashboard Cards ── -->
+  <section class="section" id="dashboard-preview">
+    <h3 class="section-title">Dashboard Cards</h3>
+    <p class="section-description">Grid + card + badge + avatar composition.</p>
+
+    <div class="demo">
+      <div data-ui="grid" data-cols="3" data-gap="4">
+        <div data-ui="card">
+          <div data-part="body">
+            <p style="font-size: var(--text-sm); color: var(--color-fg-muted);">Total Users</p>
+            <p style="font-size: var(--text-3xl); font-weight: var(--weight-bold); margin: var(--space-1) 0;">12,847</p>
+            <span data-ui="badge" data-variant="success">+12.5%</span>
+          </div>
+        </div>
+        <div data-ui="card">
+          <div data-part="body">
+            <p style="font-size: var(--text-sm); color: var(--color-fg-muted);">Revenue</p>
+            <p style="font-size: var(--text-3xl); font-weight: var(--weight-bold); margin: var(--space-1) 0;">$48,290</p>
+            <span data-ui="badge" data-variant="success">+8.2%</span>
+          </div>
+        </div>
+        <div data-ui="card">
+          <div data-part="body">
+            <p style="font-size: var(--text-sm); color: var(--color-fg-muted);">Bounce Rate</p>
+            <p style="font-size: var(--text-3xl); font-weight: var(--weight-bold); margin: var(--space-1) 0;">24.3%</p>
+            <span data-ui="badge" data-variant="destructive">+3.1%</span>
+          </div>
+        </div>
+      </div>
+
+      <div data-ui="card" style="margin-top: var(--space-4);">
+        <div data-part="header">
+          <h3 data-part="title">Recent Activity</h3>
+        </div>
+        <div data-part="body" style="padding-top: 0;">
+          <div data-ui="stack" data-gap="3">
+            <div style="display: flex; align-items: center; gap: var(--space-3);">
+              <span data-ui="avatar" data-size="sm"><span data-part="fallback">AK</span></span>
+              <div style="flex: 1;">
+                <p style="font-size: var(--text-sm); font-weight: var(--weight-medium);">Anna Kim created a new project</p>
+                <p style="font-size: var(--text-xs); color: var(--color-fg-muted);">2 minutes ago</p>
+              </div>
+              <span data-ui="badge" data-variant="primary">New</span>
+            </div>
+            <hr data-ui="separator">
+            <div style="display: flex; align-items: center; gap: var(--space-3);">
+              <span data-ui="avatar" data-size="sm" style="background: var(--color-success-subtle);"><span data-part="fallback" style="color: var(--color-success);">JD</span></span>
+              <div style="flex: 1;">
+                <p style="font-size: var(--text-sm); font-weight: var(--weight-medium);">John Doe merged pull request #42</p>
+                <p style="font-size: var(--text-xs); color: var(--color-fg-muted);">15 minutes ago</p>
+              </div>
+              <span data-ui="badge" data-variant="success">Merged</span>
+            </div>
+            <hr data-ui="separator">
+            <div style="display: flex; align-items: center; gap: var(--space-3);">
+              <span data-ui="avatar" data-size="sm" style="background: var(--color-warning-subtle);"><span data-part="fallback" style="color: var(--color-warning);">SL</span></span>
+              <div style="flex: 1;">
+                <p style="font-size: var(--text-sm); font-weight: var(--weight-medium);">Sarah Lee reported an issue</p>
+                <p style="font-size: var(--text-xs); color: var(--color-fg-muted);">1 hour ago</p>
+              </div>
+              <span data-ui="badge" data-variant="warning">Issue</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- Footer -->
+  <footer style="text-align: center; padding: var(--space-12) 0 var(--space-8); color: var(--color-fg-muted); font-size: var(--text-sm);">
+    <p>Loom UI v0.1.0 — 17 primitives, 15 recipes, 6 patterns, 4 themes</p>
+    <p style="margin-top: var(--space-1);">The CSS is the component. The JSON manifest is the documentation. The AI is the compiler.</p>
+  </footer>
+
+</div>
+
+
+<!-- ═══════════════════════════════ TOAST CONTAINER ═══════════════════════════════ -->
+<div data-ui="toast" data-part="container" data-variant="top-right" id="toast-container"></div>
+
+
+<!-- ═══════════════════════════════ SCRIPTS ═══════════════════════════════ -->
+<script type="module">
+  // ── Import Controllers ──
+  import { createDialog } from '../registry/recipes/dialog/dialog.js';
+  import { createTabs } from '../registry/recipes/tabs/tabs.js';
+  import { createAccordion } from '../registry/recipes/accordion/accordion.js';
+  import { createDropdown } from '../registry/recipes/dropdown/dropdown.js';
+  import { createTooltip } from '../registry/recipes/tooltip/tooltip.js';
+  import { createToastContainer } from '../registry/recipes/toast/toast.js';
+
+  // ── Auto-init all recipes ──
+  document.querySelectorAll('[data-ui="dialog"]').forEach(createDialog);
+  document.querySelectorAll('[data-ui="tabs"]').forEach(createTabs);
+  document.querySelectorAll('[data-ui="accordion"]').forEach(createAccordion);
+  document.querySelectorAll('[data-ui="dropdown"]').forEach(createDropdown);
+  document.querySelectorAll('[data-ui="tooltip"]').forEach(createTooltip);
+
+  // ── Toast ──
+  const toastContainer = document.getElementById('toast-container');
+  const toastApi = createToastContainer(toastContainer);
+
+  const toastMessages = {
+    default: { message: 'This is a notification.', tone: 'default' },
+    success: { message: 'Changes saved successfully!', tone: 'success', icon: '&#10003;' },
+    error: { message: 'Something went wrong. Please try again.', tone: 'error', icon: '&#10007;' },
+    warning: { message: 'Your session is about to expire.', tone: 'warning', icon: '&#9888;' },
+  };
+
+  window.showToast = function(type) {
+    const opts = toastMessages[type] || toastMessages.default;
+    toastApi.add({ ...opts, duration: 4000 });
+  };
+
+  // ── Theme Switcher ──
+  const themeSheets = {
+    default: document.getElementById('theme-default'),
+    midnight: document.getElementById('theme-midnight'),
+    paper: document.getElementById('theme-paper'),
+    brutalist: document.getElementById('theme-brutalist'),
+  };
+
+  let activeTheme = 'default';
+
+  window.setTheme = function(name) {
+    // Disable all theme sheets
+    Object.values(themeSheets).forEach(sheet => sheet.disabled = true);
+    // Enable selected
+    if (themeSheets[name]) {
+      themeSheets[name].disabled = false;
+    }
+    activeTheme = name;
+    updateThemeButtons();
+  };
+
+  window.setMode = function(mode) {
+    document.documentElement.dataset.theme = mode;
+    updateModeButtons();
+  };
+
+  function updateThemeButtons() {
+    const group = document.querySelectorAll('.controls .controls-group')[0];
+    if (!group) return;
+    const buttons = group.querySelectorAll('[data-ui="button"]');
+    const themes = ['default', 'midnight', 'paper', 'brutalist'];
+    buttons.forEach((btn, i) => {
+      if (themes[i] === activeTheme) {
+        btn.dataset.variant = 'primary';
+      } else {
+        delete btn.dataset.variant;
+      }
+    });
+  }
+
+  function updateModeButtons() {
+    const group = document.querySelectorAll('.controls .controls-group')[1];
+    if (!group) return;
+    const buttons = group.querySelectorAll('[data-ui="button"]');
+    const mode = document.documentElement.dataset.theme;
+    buttons.forEach((btn, i) => {
+      const btnMode = i === 0 ? 'light' : 'dark';
+      if (btnMode === mode) {
+        btn.dataset.variant = 'primary';
+      } else {
+        delete btn.dataset.variant;
+      }
+    });
+  }
+
+  // ── Switch Toggle Helper ──
+  window.toggleSwitch = function(el) {
+    const isOn = el.getAttribute('aria-checked') === 'true';
+    el.setAttribute('aria-checked', isOn ? 'false' : 'true');
+    el.dataset.state = isOn ? 'off' : 'on';
+  };
+</script>
+
+</body>
+</html>

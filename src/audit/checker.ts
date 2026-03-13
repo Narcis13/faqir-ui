@@ -3,7 +3,8 @@
 import { existsSync } from "node:fs";
 import { join, relative } from "node:path";
 import { extractComponents } from "../parser/html-parser";
-import { extractTokenReferences, collectDefinedTokens, hasReducedMotionQuery, hasAnimationProperties } from "../parser/css-parser";
+import { extractTokenReferences, collectDefinedTokens, hasReducedMotionQuery, hasAnimationProperties, findImportantDeclarations, findClassSelectors, findIdSelectors, findHardcodedColorValues } from "../parser/css-parser";
+import { findExternalImports, findDataFetching } from "../parser/js-parser";
 import { loadManifest, type Manifest } from "../manifest";
 import { type AuditResult, type Severity, ALL_RULES } from "./rules";
 import { readConfig } from "../utils/config";
@@ -135,6 +136,20 @@ export async function runAudit(options: AuditOptions = {}): Promise<AuditSummary
     results.push(...motionResults);
   }
 
+  // CSS anti-pattern checks
+  const CSS_AP_RULES = ["no-important", "no-class-selector", "no-id-selector", "no-hardcoded-values"];
+  if (CSS_AP_RULES.some(id => !skipRules.has(id))) {
+    const cssApResults = await checkCssAntiPatterns(outputDir, config.installed, cwd);
+    results.push(...cssApResults.filter(r => !skipRules.has(r.rule_id)));
+  }
+
+  // JS anti-pattern checks
+  const JS_AP_RULES = ["no-external-import", "no-fetch"];
+  if (JS_AP_RULES.some(id => !skipRules.has(id))) {
+    const jsApResults = await checkJsAntiPatterns(outputDir, config.installed, cwd);
+    results.push(...jsApResults.filter(r => !skipRules.has(r.rule_id)));
+  }
+
   // Count severities
   const counts: Record<Severity, number> = { critical: 0, error: 0, warning: 0, info: 0 };
   for (const r of results) {
@@ -251,6 +266,123 @@ async function checkTokens(
           message: `Token "--${ref.name}" referenced in ${name}.css is not defined in any token file`,
         });
       }
+    }
+  }
+
+  return results;
+}
+
+/**
+ * Check component CSS files for anti-patterns:
+ * no-important (#8), no-class-selector (#1), no-id-selector (#9), no-hardcoded-values (#2).
+ */
+async function checkCssAntiPatterns(
+  outputDir: string,
+  installed: { primitives: string[]; recipes: string[]; patterns: string[] },
+  cwd: string,
+): Promise<AuditResult[]> {
+  const results: AuditResult[] = [];
+
+  const allComponents = [
+    ...installed.primitives.map(n => ({ name: n, layer: "primitives" })),
+    ...installed.recipes.map(n => ({ name: n, layer: "recipes" })),
+    ...installed.patterns.map(n => ({ name: n, layer: "patterns" })),
+  ];
+
+  for (const { name, layer } of allComponents) {
+    const cssPath = join(outputDir, layer, name, `${name}.css`);
+    if (!existsSync(cssPath)) continue;
+
+    const source = await Bun.file(cssPath).text();
+    const relPath = relative(cwd, cssPath);
+
+    for (const v of findImportantDeclarations(source)) {
+      results.push({
+        rule_id: "no-important",
+        severity: "error",
+        component_name: name,
+        file: relPath,
+        line: v.line,
+        message: `!important used in ${name}.css — keep specificity low`,
+      });
+    }
+
+    for (const v of findClassSelectors(source)) {
+      results.push({
+        rule_id: "no-class-selector",
+        severity: "error",
+        component_name: name,
+        file: relPath,
+        line: v.line,
+        message: `Class selector "${v.text}" in ${name}.css — use [data-ui] or [data-part] attribute selectors instead`,
+      });
+    }
+
+    for (const v of findIdSelectors(source)) {
+      results.push({
+        rule_id: "no-id-selector",
+        severity: "error",
+        component_name: name,
+        file: relPath,
+        line: v.line,
+        message: `ID selector "${v.text}" in ${name}.css — IDs are for ARIA relationships only, not CSS selectors`,
+      });
+    }
+
+    for (const v of findHardcodedColorValues(source)) {
+      results.push({
+        rule_id: "no-hardcoded-values",
+        severity: "error",
+        component_name: name,
+        file: relPath,
+        line: v.line,
+        message: `Hardcoded color value "${v.text}" in ${name}.css — use a token via var(--token-name) instead`,
+      });
+    }
+  }
+
+  return results;
+}
+
+/**
+ * Check component JS controller files for anti-patterns:
+ * no-external-import (#4), no-fetch (#7).
+ */
+async function checkJsAntiPatterns(
+  outputDir: string,
+  installed: { primitives: string[]; recipes: string[]; patterns: string[] },
+  cwd: string,
+): Promise<AuditResult[]> {
+  const results: AuditResult[] = [];
+
+  // Only recipes have JS controllers
+  for (const name of installed.recipes) {
+    const jsPath = join(outputDir, "recipes", name, `${name}.js`);
+    if (!existsSync(jsPath)) continue;
+
+    const source = await Bun.file(jsPath).text();
+    const relPath = relative(cwd, jsPath);
+
+    for (const v of findExternalImports(source)) {
+      results.push({
+        rule_id: "no-external-import",
+        severity: "error",
+        component_name: name,
+        file: relPath,
+        line: v.line,
+        message: `External import "${v.text}" in ${name}.js — only import from ../../core/ or relative paths`,
+      });
+    }
+
+    for (const v of findDataFetching(source)) {
+      results.push({
+        rule_id: "no-fetch",
+        severity: "error",
+        component_name: name,
+        file: relPath,
+        line: v.line,
+        message: `Data fetching or routing pattern "${v.text}" in ${name}.js — controllers must not fetch data or manage routing`,
+      });
     }
   }
 
