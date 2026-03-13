@@ -1,0 +1,152 @@
+/* @ui:theme paper — warm, natural, print-inspired theme with cream tones and earthy accents */
+
+/* ── Light Mode Overrides ── */
+/* Warm cream backgrounds, dark brown text, earthy orange-brown primary */
+:root {
+  /* ── Surfaces ── */
+  --color-bg:              oklch(0.97 0.015 80);     /* warm cream white */
+  --color-bg-subtle:       oklch(0.95 0.02 80);      /* light parchment */
+  --color-bg-muted:        oklch(0.92 0.025 75);     /* warm tan */
+  --color-fg:              oklch(0.22 0.04 50);       /* warm dark brown */
+  --color-fg-muted:        oklch(0.48 0.04 55);      /* warm mid-brown */
+  --color-fg-subtle:       oklch(0.60 0.03 60);      /* warm light brown */
+
+  /* ── Interactive: Primary (warm orange-brown) ── */
+  --color-primary:         oklch(0.52 0.14 45);      /* earthy burnt sienna */
+  --color-primary-hover:   oklch(0.47 0.15 45);
+  --color-primary-active:  oklch(0.42 0.14 45);
+  --color-primary-fg:      oklch(0.97 0.015 80);     /* cream for contrast */
+  --color-primary-subtle:  oklch(0.94 0.04 50);      /* warm tinted highlight */
+
+  /* ── Interactive: Secondary ── */
+  --color-secondary:       oklch(0.93 0.02 75);
+  --color-secondary-hover: oklch(0.89 0.03 75);
+  --color-secondary-fg:    oklch(0.25 0.04 50);
+
+  /* ── Interactive: Destructive ── */
+  --color-destructive:        oklch(0.52 0.18 22);   /* warm brick red */
+  --color-destructive-hover:  oklch(0.47 0.20 22);
+  --color-destructive-fg:     white;
+  --color-destructive-subtle: oklch(0.95 0.04 22);
+
+  /* ── Feedback ── */
+  --color-success:         oklch(0.55 0.14 148);     /* muted sage green */
+  --color-success-subtle:  oklch(0.95 0.03 148);
+  --color-warning:         oklch(0.70 0.12 65);      /* warm goldenrod */
+  --color-warning-subtle:  oklch(0.95 0.04 65);
+  --color-info:            oklch(0.52 0.12 235);     /* dusty blue */
+  --color-info-subtle:     oklch(0.95 0.03 235);
+
+  /* ── Borders ── */
+  --color-border:          oklch(0.88 0.02 70);      /* warm tan border */
+  --color-border-strong:   oklch(0.78 0.03 65);      /* stronger warm border */
+  --color-ring:            oklch(0.52 0.14 45 / 0.35);
+
+  /* ── Shadows (warm, soft) ── */
+  --shadow-xs:  0 1px 2px oklch(0.30 0.04 50 / 0.06);
+  --shadow-sm:  0 1px 4px oklch(0.30 0.04 50 / 0.08);
+  --shadow-md:  0 4px 8px oklch(0.30 0.04 50 / 0.07), 0 1px 3px oklch(0.30 0.04 50 / 0.05);
+  --shadow-lg:  0 8px 16px oklch(0.30 0.04 50 / 0.08), 0 3px 6px oklch(0.30 0.04 50 / 0.05);
+  --shadow-xl:  0 16px 32px oklch(0.30 0.04 50 / 0.10), 0 6px 12px oklch(0.30 0.04 50 / 0.05);
+}
+
+/* ── Dark Mode ── */
+/* Deep warm brown backgrounds, cream foreground, muted earthy tones */
+[data-theme="dark"] {
+  /* ── Surfaces (deep warm brown) ── */
+  --color-bg:              oklch(0.15 0.03 55);      /* very dark warm brown */
+  --color-bg-subtle:       oklch(0.19 0.035 55);     /* dark chocolate */
+  --color-bg-muted:        oklch(0.24 0.04 55);      /* muted dark brown */
+  --color-fg:              oklch(0.93 0.015 75);      /* warm cream */
+  --color-fg-muted:        oklch(0.68 0.03 65);      /* warm gray-brown */
+  --color-fg-subtle:       oklch(0.52 0.025 60);     /* muted warm gray */
+
+  /* ── Interactive: Primary (muted warm terracotta) ── */
+  --color-primary:         oklch(0.68 0.12 50);      /* warm terracotta */
+  --color-primary-hover:   oklch(0.75 0.10 50);
+  --color-primary-active:  oklch(0.80 0.08 50);
+  --color-primary-fg:      oklch(0.15 0.03 55);      /* dark brown for contrast */
+  --color-primary-subtle:  oklch(0.68 0.12 50 / 0.14);
+
+  /* ── Interactive: Secondary ── */
+  --color-secondary:       oklch(0.24 0.035 55);
+  --color-secondary-hover: oklch(0.30 0.04 55);
+  --color-secondary-fg:    oklch(0.90 0.015 75);
+
+  /* ── Interactive: Destructive ── */
+  --color-destructive:        oklch(0.62 0.18 22);
+  --color-destructive-hover:  oklch(0.68 0.16 22);
+  --color-destructive-fg:     white;
+  --color-destructive-subtle: oklch(0.62 0.18 22 / 0.15);
+
+  /* ── Feedback ── */
+  --color-success:         oklch(0.65 0.14 148);
+  --color-success-subtle:  oklch(0.65 0.14 148 / 0.15);
+  --color-warning:         oklch(0.76 0.12 65);
+  --color-warning-subtle:  oklch(0.76 0.12 65 / 0.15);
+  --color-info:            oklch(0.62 0.12 235);
+  --color-info-subtle:     oklch(0.62 0.12 235 / 0.15);
+
+  /* ── Borders ── */
+  --color-border:          oklch(0.28 0.035 55);
+  --color-border-strong:   oklch(0.36 0.04 55);
+  --color-ring:            oklch(0.68 0.12 50 / 0.4);
+
+  /* ── Shadows (warm, diffuse) ── */
+  --shadow-xs:  none;
+  --shadow-sm:  0 1px 4px oklch(0.10 0.03 50 / 0.3);
+  --shadow-md:  0 4px 8px oklch(0.10 0.03 50 / 0.3), 0 1px 3px oklch(0.10 0.03 50 / 0.2);
+  --shadow-lg:  0 8px 20px oklch(0.10 0.03 50 / 0.35), 0 3px 8px oklch(0.10 0.03 50 / 0.2);
+  --shadow-xl:  0 16px 40px oklch(0.10 0.03 50 / 0.4), 0 6px 12px oklch(0.10 0.03 50 / 0.25);
+}
+
+/* ── Auto Dark Mode (system preference) ── */
+@media (prefers-color-scheme: dark) {
+  [data-theme="auto"] {
+    /* ── Surfaces (deep warm brown) ── */
+    --color-bg:              oklch(0.15 0.03 55);
+    --color-bg-subtle:       oklch(0.19 0.035 55);
+    --color-bg-muted:        oklch(0.24 0.04 55);
+    --color-fg:              oklch(0.93 0.015 75);
+    --color-fg-muted:        oklch(0.68 0.03 65);
+    --color-fg-subtle:       oklch(0.52 0.025 60);
+
+    /* ── Interactive: Primary (muted warm terracotta) ── */
+    --color-primary:         oklch(0.68 0.12 50);
+    --color-primary-hover:   oklch(0.75 0.10 50);
+    --color-primary-active:  oklch(0.80 0.08 50);
+    --color-primary-fg:      oklch(0.15 0.03 55);
+    --color-primary-subtle:  oklch(0.68 0.12 50 / 0.14);
+
+    /* ── Interactive: Secondary ── */
+    --color-secondary:       oklch(0.24 0.035 55);
+    --color-secondary-hover: oklch(0.30 0.04 55);
+    --color-secondary-fg:    oklch(0.90 0.015 75);
+
+    /* ── Interactive: Destructive ── */
+    --color-destructive:        oklch(0.62 0.18 22);
+    --color-destructive-hover:  oklch(0.68 0.16 22);
+    --color-destructive-fg:     white;
+    --color-destructive-subtle: oklch(0.62 0.18 22 / 0.15);
+
+    /* ── Feedback ── */
+    --color-success:         oklch(0.65 0.14 148);
+    --color-success-subtle:  oklch(0.65 0.14 148 / 0.15);
+    --color-warning:         oklch(0.76 0.12 65);
+    --color-warning-subtle:  oklch(0.76 0.12 65 / 0.15);
+    --color-info:            oklch(0.62 0.12 235);
+    --color-info-subtle:     oklch(0.62 0.12 235 / 0.15);
+
+    /* ── Borders ── */
+    --color-border:          oklch(0.28 0.035 55);
+    --color-border-strong:   oklch(0.36 0.04 55);
+    --color-ring:            oklch(0.68 0.12 50 / 0.4);
+
+    /* ── Shadows (warm, diffuse) ── */
+    --shadow-xs:  none;
+    --shadow-sm:  0 1px 4px oklch(0.10 0.03 50 / 0.3);
+    --shadow-md:  0 4px 8px oklch(0.10 0.03 50 / 0.3), 0 1px 3px oklch(0.10 0.03 50 / 0.2);
+    --shadow-lg:  0 8px 20px oklch(0.10 0.03 50 / 0.35), 0 3px 8px oklch(0.10 0.03 50 / 0.2);
+    --shadow-xl:  0 16px 40px oklch(0.10 0.03 50 / 0.4), 0 6px 12px oklch(0.10 0.03 50 / 0.25);
+  }
+}

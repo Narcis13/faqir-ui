@@ -1,0 +1,188 @@
+{
+  "name": "search-results",
+  "version": "1.0.0",
+  "kind": "pattern",
+  "category": "composite",
+  "description": "Search interface with input, filtered results list, and pagination",
+
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='search-results']",
+    "content_model": "slots"
+  },
+
+  "slots": {
+    "search-input": {
+      "selector": "[data-part='search-input']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "Search input container with search icon"
+    },
+    "filters": {
+      "selector": "[data-part='filters']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Filter badges or chips row"
+    },
+    "results-header": {
+      "selector": "[data-part='results-header']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Header bar with count and sort controls"
+    },
+    "results-count": {
+      "selector": "[data-part='results-count']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Text showing number of results found"
+    },
+    "sort": {
+      "selector": "[data-part='sort']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Sort control area"
+    },
+    "results-list": {
+      "selector": "[data-part='results-list']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "Container for result items"
+    },
+    "result-item": {
+      "selector": "[data-part='result-item']",
+      "required": false,
+      "tag_hint": "article",
+      "description": "Individual result entry"
+    },
+    "result-title": {
+      "selector": "[data-part='result-title']",
+      "required": false,
+      "tag_hint": "h3",
+      "description": "Title of a single result"
+    },
+    "result-description": {
+      "selector": "[data-part='result-description']",
+      "required": false,
+      "tag_hint": "p",
+      "description": "Description or excerpt of a single result"
+    },
+    "result-meta": {
+      "selector": "[data-part='result-meta']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Metadata area for a result (date, author, tags)"
+    },
+    "pagination": {
+      "selector": "[data-part='pagination']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Pagination controls at the bottom"
+    },
+    "empty-state": {
+      "selector": "[data-part='empty-state']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Empty state shown when no results match"
+    },
+    "loading": {
+      "selector": "[data-part='loading']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Loading indicator overlay"
+    }
+  },
+
+  "variants": {
+    "layout": {
+      "values": ["list", "grid"],
+      "default": "list",
+      "attr": "data-variant",
+      "applied_to": "root"
+    }
+  },
+
+  "states": {
+    "default": { "attr": "", "default": true },
+    "loading": { "attr": "data-state=\"loading\"", "applied_to": "root" },
+    "empty": { "attr": "data-state=\"empty\"", "applied_to": "root" },
+    "error": { "attr": "data-state=\"error\"", "applied_to": "root" }
+  },
+
+  "a11y": {
+    "required_attrs": [
+      "role=\"search\" on search-input container or parent form",
+      "aria-label=\"Search\" on search input",
+      "aria-live=\"polite\" on results-list for dynamic updates",
+      "aria-busy=\"true\" on results-list when loading"
+    ],
+    "keyboard": {
+      "Enter": "submit search query",
+      "Escape": "clear search input",
+      "Tab": "navigate between search, filters, results, pagination"
+    }
+  },
+
+  "tokens_used": [
+    "color-bg", "color-bg-subtle", "color-bg-muted", "color-fg", "color-fg-muted",
+    "color-border", "color-primary", "color-primary-fg",
+    "radius-md", "radius-lg", "shadow-sm",
+    "space-1", "space-2", "space-3", "space-4", "space-6", "space-8",
+    "font-sans", "text-xs", "text-sm", "text-base", "text-lg",
+    "weight-medium", "weight-semibold", "leading-tight", "leading-normal",
+    "duration-fast", "duration-normal", "ease-default"
+  ],
+
+  "templates": {
+    "html": "<div data-ui=\"search-results\" data-variant=\"{layout}\">\n  <div data-part=\"search-input\" role=\"search\">\n    <input data-ui=\"input\" type=\"search\" placeholder=\"Search...\" aria-label=\"Search\">\n  </div>\n  <div data-part=\"filters\">\n    <span data-ui=\"badge\">{filter}</span>\n  </div>\n  <div data-part=\"results-header\">\n    <span data-part=\"results-count\">{count} results</span>\n    <div data-part=\"sort\">\n      <select data-ui=\"select\">\n        <option>Relevance</option>\n        <option>Newest</option>\n      </select>\n    </div>\n  </div>\n  <div data-part=\"results-list\" aria-live=\"polite\">\n    <article data-part=\"result-item\">\n      <h3 data-part=\"result-title\">{title}</h3>\n      <p data-part=\"result-description\">{description}</p>\n      <div data-part=\"result-meta\">{meta}</div>\n    </article>\n  </div>\n  <div data-part=\"pagination\">\n    <div data-ui=\"pagination\"></div>\n  </div>\n</div>"
+  },
+
+  "safe_transforms": [
+    "change-layout-variant",
+    "add-filters",
+    "remove-filters",
+    "change-sort-options",
+    "add-result-meta-fields",
+    "change-results-count-text",
+    "restyle-result-items",
+    "change-empty-state-content",
+    "add-pagination",
+    "remove-pagination"
+  ],
+
+  "unsafe_transforms": [
+    "remove-search-input",
+    "remove-results-list",
+    "remove-aria-live",
+    "remove-role-search",
+    "remove-aria-label-from-input"
+  ],
+
+  "composition": {
+    "contains": ["input", "card", "badge", "pagination", "spinner"],
+    "used_in": []
+  },
+
+  "files": {
+    "html": "search-results.html",
+    "css": "search-results.css",
+    "manifest": "search-results.manifest.json"
+  },
+
+  "tests": [
+    "renders-as-div-with-data-ui-search-results",
+    "search-input-slot-is-required",
+    "results-list-slot-is-required",
+    "filters-slot-is-optional",
+    "pagination-slot-is-optional",
+    "default-layout-is-list",
+    "grid-variant-sets-data-variant-grid",
+    "loading-state-shows-spinner",
+    "loading-state-sets-aria-busy-true",
+    "empty-state-shown-when-no-results",
+    "results-list-has-aria-live-polite",
+    "search-input-has-role-search",
+    "search-input-has-aria-label",
+    "result-item-renders-as-article",
+    "reduced-motion-disables-animation"
+  ]
+}

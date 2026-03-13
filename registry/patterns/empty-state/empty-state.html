@@ -1,0 +1,60 @@
+<!-- @ui:component empty-state -->
+<!-- @ui:kind pattern -->
+<!-- @ui:slots icon title description action secondary-action -->
+<!-- @ui:variants size=sm|md|lg -->
+
+<!-- Default (medium) -->
+<div data-ui="empty-state">
+  <div data-part="icon">
+    <svg width="48" height="48" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+      <circle cx="24" cy="24" r="22" stroke="currentColor" stroke-width="2" stroke-dasharray="4 4"/>
+      <path d="M16 24h16M24 16v16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+  </div>
+  <h3 data-part="title">No items yet</h3>
+  <p data-part="description">Get started by creating your first item. It only takes a moment.</p>
+  <div data-part="action">
+    <button data-ui="button" data-variant="primary">Create Item</button>
+  </div>
+  <div data-part="secondary-action">
+    <button data-ui="button" data-variant="ghost">Learn more</button>
+  </div>
+</div>
+
+<!-- Compact (small) for inline use -->
+<div data-ui="empty-state" data-size="sm">
+  <div data-part="icon">
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+      <circle cx="16" cy="16" r="14" stroke="currentColor" stroke-width="2" stroke-dasharray="4 4"/>
+    </svg>
+  </div>
+  <h3 data-part="title">No results</h3>
+  <p data-part="description">Try adjusting your search or filters.</p>
+  <div data-part="action">
+    <button data-ui="button" data-variant="outline" data-size="sm">Clear filters</button>
+  </div>
+</div>
+
+<!-- Full (large) for page-level empty state -->
+<div data-ui="empty-state" data-size="lg">
+  <div data-part="icon">
+    <svg width="64" height="64" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+      <circle cx="32" cy="32" r="30" stroke="currentColor" stroke-width="2" stroke-dasharray="4 4"/>
+      <path d="M22 32h20M32 22v20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+  </div>
+  <h3 data-part="title">Welcome to your workspace</h3>
+  <p data-part="description">This is where your projects will appear. Create your first project to get started, or explore the documentation to learn more.</p>
+  <div data-part="action">
+    <button data-ui="button" data-variant="primary" data-size="lg">Create your first project</button>
+  </div>
+  <div data-part="secondary-action">
+    <button data-ui="button" data-variant="ghost">Read documentation</button>
+  </div>
+</div>
+
+<!-- Minimal (no icon, no secondary action) -->
+<div data-ui="empty-state">
+  <h3 data-part="title">No notifications</h3>
+  <p data-part="description">You're all caught up.</p>
+</div>

@@ -1,0 +1,121 @@
+{
+  "name": "empty-state",
+  "version": "1.0.0",
+  "kind": "pattern",
+  "category": "composite",
+  "description": "Placeholder display for empty content areas with icon, message, and action",
+
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='empty-state']",
+    "content_model": "slots"
+  },
+
+  "slots": {
+    "icon": {
+      "selector": "[data-part='icon']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Decorative icon or illustration area"
+    },
+    "title": {
+      "selector": "[data-part='title']",
+      "required": true,
+      "tag_hint": "h3",
+      "description": "Primary heading communicating the empty state"
+    },
+    "description": {
+      "selector": "[data-part='description']",
+      "required": false,
+      "tag_hint": "p",
+      "description": "Supporting message with context or guidance"
+    },
+    "action": {
+      "selector": "[data-part='action']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Primary call-to-action button slot"
+    },
+    "secondary-action": {
+      "selector": "[data-part='secondary-action']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Optional secondary action or link"
+    }
+  },
+
+  "variants": {
+    "size": {
+      "values": ["sm", "md", "lg"],
+      "default": "md",
+      "attr": "data-size",
+      "applied_to": "root"
+    }
+  },
+
+  "states": {},
+
+  "a11y": {
+    "required_attrs": [
+      "role=\"status\" on root when content changes dynamically"
+    ],
+    "keyboard": {}
+  },
+
+  "tokens_used": [
+    "color-bg", "color-bg-subtle", "color-fg", "color-fg-muted",
+    "color-border", "color-primary",
+    "radius-lg", "shadow-sm",
+    "space-2", "space-3", "space-4", "space-6", "space-8", "space-10",
+    "font-sans", "text-sm", "text-base", "text-lg", "text-xl", "text-2xl",
+    "weight-semibold", "leading-tight", "leading-normal",
+    "duration-normal", "ease-default"
+  ],
+
+  "templates": {
+    "html": "<div data-ui=\"empty-state\" data-size=\"{size}\">\n  <div data-part=\"icon\">{icon}</div>\n  <h3 data-part=\"title\">{title}</h3>\n  <p data-part=\"description\">{description}</p>\n  <div data-part=\"action\">\n    <button data-ui=\"button\" data-variant=\"primary\">{action_label}</button>\n  </div>\n  <div data-part=\"secondary-action\">\n    <button data-ui=\"button\" data-variant=\"ghost\">{secondary_label}</button>\n  </div>\n</div>"
+  },
+
+  "safe_transforms": [
+    "change-size",
+    "change-icon",
+    "change-title-text",
+    "change-description-text",
+    "change-action-button-variant",
+    "add-secondary-action",
+    "remove-secondary-action",
+    "remove-icon",
+    "restyle-background"
+  ],
+
+  "unsafe_transforms": [
+    "remove-title-slot",
+    "flatten-to-single-div",
+    "remove-action-without-alternative"
+  ],
+
+  "composition": {
+    "contains": ["card", "button", "surface"],
+    "used_in": []
+  },
+
+  "files": {
+    "html": "empty-state.html",
+    "css": "empty-state.css",
+    "manifest": "empty-state.manifest.json"
+  },
+
+  "tests": [
+    "renders-as-div-with-data-ui-empty-state",
+    "title-slot-is-required",
+    "icon-slot-is-optional",
+    "description-slot-is-optional",
+    "action-slot-is-optional",
+    "secondary-action-slot-is-optional",
+    "default-size-is-md",
+    "sm-variant-reduces-icon-and-text",
+    "lg-variant-increases-icon-and-text",
+    "centered-layout-by-default",
+    "reduced-motion-disables-animation"
+  ]
+}

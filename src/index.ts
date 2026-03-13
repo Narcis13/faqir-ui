@@ -11,6 +11,9 @@ import { context } from "./commands/context";
 import { explain } from "./commands/explain";
 import { trace } from "./commands/trace";
 import { conform } from "./commands/conform";
+import { theme } from "./commands/theme";
+import { variant } from "./commands/variant";
+import { scaffold } from "./commands/scaffold";
 import { log } from "./utils/logger";
 
 const VERSION = "0.1.0";
@@ -27,6 +30,9 @@ const COMMANDS: Record<string, (args: string[]) => Promise<void>> = {
   explain,
   trace,
   conform,
+  theme,
+  variant,
+  scaffold,
 };
 
 function printHelp() {
@@ -48,6 +54,9 @@ function printHelp() {
     ["explain", "Human/agent-readable component explanation"],
     ["trace", "Show dependency and file trace"],
     ["conform", "Normalize component markup"],
+    ["theme", "Manage themes (set, create, list)"],
+    ["variant", "Add or remove component variants"],
+    ["scaffold", "Generate full page templates"],
     ["doctor", "Check project health"],
     ["help", "Show this help message"],
     ["version", "Show version"],
