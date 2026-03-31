@@ -298,12 +298,14 @@
       var child = children[i];
 
       // Skip elements already initialized by l-for or l-if
-      if (child.__loomScope && !child.hasAttribute('l-data') && !child.hasAttribute('data-ui')) {
+      if (child.__loomScope && !child.hasAttribute('l-data')) {
         continue;
       }
 
-      if (child.hasAttribute('l-data') ||
-          (child.hasAttribute('data-ui') && !el.hasAttribute('data-ui'))) {
+      // Only l-data creates a new scope boundary.
+      // data-ui elements inherit the parent scope so directives
+      // inside Loom components can access the enclosing reactive data.
+      if (child.hasAttribute('l-data')) {
         initTree(child, scope);
         continue;
       }
@@ -2851,7 +2853,9 @@
       }
     }
 
-    // Find all scope roots
+    // Find all scope roots.
+    // l-data elements always create a scope.
+    // data-ui elements only create a scope when standalone (no l-data ancestor).
     var roots = document.querySelectorAll('[l-data], [data-ui]');
     var processed = new Set();
 
@@ -2859,20 +2863,34 @@
       var rootEl = roots[r];
       if (processed.has(rootEl)) continue;
 
-      // Skip if nested inside an unprocessed ancestor scope
+      // Skip if nested inside an unprocessed ancestor l-data scope
       var ancestor = rootEl.parentElement;
       var skipThis = false;
       while (ancestor) {
-        if ((ancestor.hasAttribute('l-data') || ancestor.hasAttribute('data-ui')) && !processed.has(ancestor)) {
+        if (ancestor.hasAttribute('l-data') && !processed.has(ancestor)) {
           skipThis = true;
           break;
         }
         ancestor = ancestor.parentElement;
       }
 
+      // data-ui elements without l-data only need a scope if they are standalone
+      // (not inside any l-data). If inside an l-data, they inherit that scope via walkChildren.
+      if (!skipThis && !rootEl.hasAttribute('l-data') && rootEl.hasAttribute('data-ui')) {
+        // Check if this data-ui is inside a processed l-data scope — if so, skip
+        var lDataAncestor = rootEl.parentElement;
+        while (lDataAncestor) {
+          if (lDataAncestor.hasAttribute('l-data') && processed.has(lDataAncestor)) {
+            skipThis = true;
+            break;
+          }
+          lDataAncestor = lDataAncestor.parentElement;
+        }
+      }
+
       if (!skipThis) {
         initTree(rootEl, null);
-        var descendants = rootEl.querySelectorAll('[l-data], [data-ui]');
+        var descendants = rootEl.querySelectorAll('[l-data]');
         for (var d = 0; d < descendants.length; d++) processed.add(descendants[d]);
         processed.add(rootEl);
       }
@@ -2893,8 +2911,11 @@
             controllerRegistry[uiName](node);
           }
 
-          if ((node.hasAttribute && node.hasAttribute('l-data')) || (node.hasAttribute && node.hasAttribute('data-ui'))) {
+          if (node.hasAttribute && node.hasAttribute('l-data')) {
             initTree(node, findParentScope(node));
+          } else if (node.hasAttribute && node.hasAttribute('data-ui') && !findParentScope(node)) {
+            // Standalone data-ui (no parent scope) — create its own scope
+            initTree(node, null);
           }
 
           if (node.querySelectorAll) {
@@ -2903,7 +2924,7 @@
               var cEls = node.querySelectorAll('[data-ui="' + cNames[cn] + '"]');
               for (var ce = 0; ce < cEls.length; ce++) controllerRegistry[cNames[cn]](cEls[ce]);
             }
-            var scopeEls = node.querySelectorAll('[l-data], [data-ui]');
+            var scopeEls = node.querySelectorAll('[l-data]');
             for (var se = 0; se < scopeEls.length; se++) {
               if (!scopeEls[se].__loomScope) {
                 initTree(scopeEls[se], findParentScope(scopeEls[se]));
