@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task Manager — Loom UI Showcase</title>
+
+  <!-- Tokens -->
+  <link rel="stylesheet" href="../registry/tokens/palette.css">
+  <link rel="stylesheet" href="../registry/tokens/spacing.css">
+  <link rel="stylesheet" href="../registry/tokens/typography.css">
+  <link rel="stylesheet" href="../registry/tokens/effects.css">
+  <link rel="stylesheet" href="../registry/tokens/motion.css">
+  <link rel="stylesheet" href="../registry/tokens/semantic.css">
+  <link rel="stylesheet" href="../registry/tokens/aliases.css">
+
+  <!-- Base -->
+  <link rel="stylesheet" href="../registry/base/reset.css">
+  <link rel="stylesheet" href="../registry/base/prose.css">
+
+  <!-- Theme -->
+  <link rel="stylesheet" href="../registry/themes/default.css">
+
+  <!-- Primitives -->
+  <link rel="stylesheet" href="../registry/primitives/button/button.css">
+  <link rel="stylesheet" href="../registry/primitives/input/input.css">
+  <link rel="stylesheet" href="../registry/primitives/badge/badge.css">
+  <link rel="stylesheet" href="../registry/primitives/card/card.css">
+  <link rel="stylesheet" href="../registry/primitives/checkbox/checkbox.css">
+  <link rel="stylesheet" href="../registry/primitives/switch/switch.css">
+  <link rel="stylesheet" href="../registry/primitives/separator/separator.css">
+  <link rel="stylesheet" href="../registry/primitives/spinner/spinner.css">
+  <link rel="stylesheet" href="../registry/primitives/avatar/avatar.css">
+  <link rel="stylesheet" href="../registry/primitives/select/select.css">
+
+  <style>
+    /* ── App Layout ── */
+    body {
+      background: var(--color-bg-subtle);
+      min-height: 100vh;
+    }
+
+    .app {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: var(--space-6) var(--space-4);
+    }
+
+    /* ── Header ── */
+    .app-header {
+      text-align: center;
+      padding: var(--space-10) 0 var(--space-6);
+    }
+
+    .app-logo {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 56px;
+      height: 56px;
+      border-radius: var(--radius-xl);
+      background: linear-gradient(135deg, var(--palette-indigo-500), var(--palette-indigo-700));
+      color: white;
+      font-size: var(--text-2xl);
+      margin-bottom: var(--space-4);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .app-title {
+      font-family: var(--font-sans);
+      font-size: var(--text-3xl);
+      font-weight: var(--weight-bold);
+      color: var(--color-fg);
+      margin: 0 0 var(--space-1);
+      letter-spacing: -0.02em;
+    }
+
+    .app-tagline {
+      font-family: var(--font-sans);
+      font-size: var(--text-sm);
+      color: var(--color-fg-muted);
+      margin: 0;
+    }
+
+    .app-tagline strong {
+      color: var(--color-primary);
+      font-weight: var(--weight-semibold);
+    }
+
+    /* ── Stats Row ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-3);
+      margin-bottom: var(--space-5);
+    }
+
+    .stat-card {
+      text-align: center;
+      padding: var(--space-4) var(--space-3);
+    }
+
+    .stat-value {
+      font-family: var(--font-sans);
+      font-size: var(--text-2xl);
+      font-weight: var(--weight-bold);
+      color: var(--color-fg);
+      line-height: 1;
+      margin-bottom: var(--space-1);
+    }
+
+    .stat-value.primary   { color: var(--color-primary); }
+    .stat-value.success   { color: var(--color-success); }
+    .stat-value.warning   { color: var(--color-warning); }
+    .stat-value.destructive { color: var(--color-destructive); }
+
+    .stat-label {
+      font-family: var(--font-sans);
+      font-size: var(--text-xs);
+      color: var(--color-fg-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: var(--weight-medium);
+    }
+
+    /* ── Progress Bar ── */
+    .progress-wrapper {
+      margin-bottom: var(--space-5);
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--space-2);
+    }
+
+    .progress-label {
+      font-family: var(--font-sans);
+      font-size: var(--text-sm);
+      font-weight: var(--weight-medium);
+      color: var(--color-fg);
+    }
+
+    .progress-pct {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      color: var(--color-fg-muted);
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 8px;
+      border-radius: var(--radius-full);
+      background: var(--color-bg-muted);
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: var(--radius-full);
+      background: linear-gradient(90deg, var(--palette-indigo-400), var(--palette-indigo-600));
+      transition: width var(--duration-slow) var(--ease-default);
+      min-width: 0;
+    }
+
+    /* ── Add Task Form ── */
+    .form-card {
+      margin-bottom: var(--space-5);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-3);
+    }
+
+    .form-grid .full-width {
+      grid-column: 1 / -1;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-1);
+    }
+
+    .form-label {
+      font-family: var(--font-sans);
+      font-size: var(--text-xs);
+      font-weight: var(--weight-medium);
+      color: var(--color-fg-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: var(--space-2);
+      margin-top: var(--space-3);
+    }
+
+    /* ── Toolbar ── */
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-3);
+      align-items: center;
+      margin-bottom: var(--space-4);
+    }
+
+    .toolbar-search {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .toolbar-filters {
+      display: flex;
+      gap: var(--space-2);
+      flex-wrap: wrap;
+    }
+
+    .toolbar-filters select[data-ui="select"] {
+      width: auto;
+      min-width: 130px;
+    }
+
+    .toolbar-actions {
+      display: flex;
+      gap: var(--space-2);
+      margin-left: auto;
+    }
+
+    /* ── Task List ── */
+    .task-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+      margin-bottom: var(--space-5);
+    }
+
+    .task-item {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-3);
+      padding: var(--space-4);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      background: var(--color-bg);
+      transition: box-shadow var(--duration-fast) var(--ease-default),
+                  border-color var(--duration-fast) var(--ease-default),
+                  opacity var(--duration-normal) var(--ease-default);
+    }
+
+    .task-item:hover {
+      border-color: var(--color-border-strong);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .task-item.completed {
+      opacity: 0.6;
+    }
+
+    .task-item.completed .task-title {
+      text-decoration: line-through;
+      color: var(--color-fg-muted);
+    }
+
+    .task-check {
+      padding-top: var(--space-0h);
+      flex-shrink: 0;
+    }
+
+    .task-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .task-header {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      flex-wrap: wrap;
+      margin-bottom: var(--space-1);
+    }
+
+    .task-title {
+      font-family: var(--font-sans);
+      font-size: var(--text-sm);
+      font-weight: var(--weight-semibold);
+      color: var(--color-fg);
+      margin: 0;
+      line-height: var(--leading-snug);
+    }
+
+    .task-description {
+      font-family: var(--font-sans);
+      font-size: var(--text-xs);
+      color: var(--color-fg-muted);
+      margin: 0 0 var(--space-2);
+      line-height: var(--leading-normal);
+    }
+
+    .task-meta {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      flex-wrap: wrap;
+    }
+
+    .task-meta-item {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-1);
+      font-family: var(--font-sans);
+      font-size: var(--text-xs);
+      color: var(--color-fg-muted);
+    }
+
+    .task-meta-item svg {
+      width: 12px;
+      height: 12px;
+      flex-shrink: 0;
+    }
+
+    .task-actions {
+      display: flex;
+      gap: var(--space-1);
+      flex-shrink: 0;
+      opacity: 0;
+      transition: opacity var(--duration-fast) var(--ease-default);
+    }
+
+    .task-item:hover .task-actions {
+      opacity: 1;
+    }
+
+    .task-overdue {
+      color: var(--color-destructive) !important;
+      font-weight: var(--weight-medium);
+    }
+
+    /* ── Category Colors ── */
+    [data-category="work"]     { --cat-bg: var(--palette-blue-50);   --cat-fg: var(--palette-blue-600); }
+    [data-category="personal"] { --cat-bg: var(--palette-green-50);  --cat-fg: var(--palette-green-600); }
+    [data-category="health"]   { --cat-bg: var(--palette-red-50);    --cat-fg: var(--palette-red-500); }
+    [data-category="learning"] { --cat-bg: var(--palette-amber-50);  --cat-fg: var(--palette-amber-600); }
+
+    .cat-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-1);
+      padding: 0.125rem var(--space-2);
+      border-radius: var(--radius-full);
+      background: var(--cat-bg);
+      color: var(--cat-fg);
+      font-family: var(--font-sans);
+      font-size: var(--text-xs);
+      font-weight: var(--weight-medium);
+      line-height: 1.5;
+      white-space: nowrap;
+    }
+
+    .cat-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: var(--radius-full);
+      background: var(--cat-fg);
+    }
+
+    /* ── Empty State ── */
+    .empty-state {
+      text-align: center;
+      padding: var(--space-16) var(--space-6);
+    }
+
+    .empty-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto var(--space-4);
+      border-radius: var(--radius-full);
+      background: var(--color-bg-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-fg-subtle);
+    }
+
+    .empty-icon svg {
+      width: 28px;
+      height: 28px;
+    }
+
+    .empty-title {
+      font-family: var(--font-sans);
+      font-size: var(--text-lg);
+      font-weight: var(--weight-semibold);
+      color: var(--color-fg);
+      margin: 0 0 var(--space-1);
+    }
+
+    .empty-text {
+      font-family: var(--font-sans);
+      font-size: var(--text-sm);
+      color: var(--color-fg-muted);
+      margin: 0;
+    }
+
+    /* ── Transitions (Loom convention: -enter-from, -enter-active, -enter-to) ── */
+    .fade-enter-from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+    .fade-enter-active {
+      transition: opacity var(--duration-normal) var(--ease-out),
+                  transform var(--duration-normal) var(--ease-out);
+    }
+    .fade-enter-to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .fade-leave-from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .fade-leave-active {
+      transition: opacity var(--duration-fast) var(--ease-in),
+                  transform var(--duration-fast) var(--ease-in);
+    }
+    .fade-leave-to {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+
+    /* ── Footer ── */
+    .app-footer {
+      text-align: center;
+      padding: var(--space-6) 0 var(--space-10);
+    }
+
+    .footer-text {
+      font-family: var(--font-sans);
+      font-size: var(--text-xs);
+      color: var(--color-fg-subtle);
+    }
+
+    .footer-text a {
+      color: var(--color-primary);
+      text-decoration: none;
+    }
+
+    .footer-text a:hover {
+      text-decoration: underline;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      .stats-row {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      .form-grid .full-width {
+        grid-column: 1;
+      }
+      .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .toolbar-actions {
+        margin-left: 0;
+        justify-content: flex-end;
+      }
+      .toolbar-filters {
+        flex-wrap: wrap;
+      }
+      .task-actions {
+        opacity: 1;
+      }
+    }
+
+    /* ── Cloak ── */
+    [l-cloak] {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+
+<div class="app" l-data="taskManager" l-cloak>
+
+  <!-- Reactive persistence: this hidden span's l-effect tracks tasks changes -->
+  <span hidden l-effect="saveTasks()"></span>
+
+  <!-- ── Header ── -->
+  <header class="app-header">
+    <div class="app-logo">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 11l3 3L22 4"/>
+        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+      </svg>
+    </div>
+    <h1 class="app-title">Task Manager</h1>
+    <p class="app-tagline">Built with <strong>Loom</strong> &mdash; zero dependencies, pure reactivity</p>
+  </header>
+
+  <!-- ── Stats ── -->
+  <div class="stats-row">
+    <div data-ui="card" data-variant="outlined" class="stat-card">
+      <div class="stat-value primary" l-text="totalCount">0</div>
+      <div class="stat-label">Total</div>
+    </div>
+    <div data-ui="card" data-variant="outlined" class="stat-card">
+      <div class="stat-value success" l-text="completedCount">0</div>
+      <div class="stat-label">Completed</div>
+    </div>
+    <div data-ui="card" data-variant="outlined" class="stat-card">
+      <div class="stat-value warning" l-text="activeCount">0</div>
+      <div class="stat-label">Active</div>
+    </div>
+    <div data-ui="card" data-variant="outlined" class="stat-card">
+      <div class="stat-value destructive" l-text="overdueCount">0</div>
+      <div class="stat-label">Overdue</div>
+    </div>
+  </div>
+
+  <!-- ── Progress Bar ── -->
+  <div class="progress-wrapper" l-show="totalCount > 0">
+    <div class="progress-header">
+      <span class="progress-label">Overall Progress</span>
+      <span class="progress-pct" l-text="progressPct + '%'">0%</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" :style="'width:' + progressPct + '%'"></div>
+    </div>
+  </div>
+
+  <!-- ── Add Task Form ── -->
+  <div data-ui="card" class="form-card">
+    <div data-part="header">
+      <h2 data-part="title" style="display:flex;align-items:center;gap:var(--space-2)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>
+        Add New Task
+      </h2>
+    </div>
+    <div data-part="body">
+      <form @submit.prevent="addTask()">
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label class="form-label">Title *</label>
+            <input data-ui="input" type="text" l-model.trim="newTitle" placeholder="What needs to be done?" @keydown.escape="clearForm()">
+          </div>
+
+          <div class="form-group full-width">
+            <label class="form-label">Description</label>
+            <input data-ui="input" type="text" l-model.trim="newDescription" placeholder="Add details (optional)">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Priority</label>
+            <select data-ui="select" l-model="newPriority">
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="urgent">Urgent</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Category</label>
+            <select data-ui="select" l-model="newCategory">
+              <option value="work">Work</option>
+              <option value="personal">Personal</option>
+              <option value="health">Health</option>
+              <option value="learning">Learning</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Due Date</label>
+            <input data-ui="input" type="date" l-model="newDueDate">
+          </div>
+
+          <div class="form-group" style="display:flex;justify-content:flex-end">
+            <div class="form-actions" style="margin-top:auto">
+              <button type="button" data-ui="button" data-variant="ghost" data-size="sm" @click="clearForm()">Clear</button>
+              <button type="submit" data-ui="button" data-variant="primary" :data-state="!newTitle ? 'disabled' : ''" :disabled="!newTitle">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                Add Task
+              </button>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── Toolbar: Search, Filters, Bulk Actions ── -->
+  <div class="toolbar">
+    <div class="toolbar-search">
+      <div data-ui="input-group">
+        <span data-part="prefix">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </span>
+        <input data-ui="input" type="text" l-model.debounce="searchQuery" placeholder="Search tasks...">
+      </div>
+    </div>
+
+    <div class="toolbar-filters">
+      <select data-ui="select" data-size="sm" l-model="filterStatus">
+        <option value="all">All Status</option>
+        <option value="active">Active</option>
+        <option value="completed">Completed</option>
+      </select>
+
+      <select data-ui="select" data-size="sm" l-model="filterPriority">
+        <option value="all">All Priorities</option>
+        <option value="urgent">Urgent</option>
+        <option value="high">High</option>
+        <option value="medium">Medium</option>
+        <option value="low">Low</option>
+      </select>
+
+      <select data-ui="select" data-size="sm" l-model="filterCategory">
+        <option value="all">All Categories</option>
+        <option value="work">Work</option>
+        <option value="personal">Personal</option>
+        <option value="health">Health</option>
+        <option value="learning">Learning</option>
+      </select>
+    </div>
+
+    <div class="toolbar-actions">
+      <button data-ui="button" data-variant="outline" data-size="sm" @click="markAllComplete()" l-show="activeCount > 0">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+        All Done
+      </button>
+      <button data-ui="button" data-variant="ghost" data-size="sm" @click="clearCompleted()" l-show="completedCount > 0">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+        Clear Done
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Filter summary ── -->
+  <template l-if="hasActiveFilters">
+    <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-3)">
+      <span style="font-size:var(--text-xs);color:var(--color-fg-muted);font-family:var(--font-sans)">
+        Showing <strong l-text="filteredTasks.length">0</strong> of <span l-text="totalCount">0</span> tasks
+      </span>
+      <button data-ui="button" data-variant="ghost" data-size="sm" @click="clearFilters()" style="font-size:var(--text-xs)">Clear filters</button>
+    </div>
+  </template>
+
+  <!-- ── Task List ── -->
+  <div class="task-list">
+    <template l-for="(task, i) in filteredTasks">
+      <div class="task-item" :class="task.completed ? 'completed' : ''" l-transition="fade">
+        <div class="task-check">
+          <input data-ui="checkbox"
+                 type="checkbox"
+                 :checked="task.completed"
+                 @change="toggleTask(task.id)">
+        </div>
+
+        <div class="task-body">
+          <div class="task-header">
+            <span class="task-title" l-text="task.title"></span>
+
+            <!-- Priority Badge -->
+            <template l-if="task.priority === 'urgent'">
+              <span data-ui="badge" data-variant="destructive" l-text="task.priority"></span>
+            </template>
+            <template l-if="task.priority === 'high'">
+              <span data-ui="badge" data-variant="warning" l-text="task.priority"></span>
+            </template>
+            <template l-if="task.priority === 'medium'">
+              <span data-ui="badge" data-variant="primary" l-text="task.priority"></span>
+            </template>
+            <template l-if="task.priority === 'low'">
+              <span data-ui="badge" data-variant="secondary" l-text="task.priority"></span>
+            </template>
+          </div>
+
+          <!-- Description -->
+          <template l-if="task.description">
+            <p class="task-description" l-text="task.description"></p>
+          </template>
+
+          <div class="task-meta">
+            <!-- Category -->
+            <span class="cat-badge" :data-category="task.category">
+              <span class="cat-dot"></span>
+              <span l-text="task.category"></span>
+            </span>
+
+            <!-- Due Date -->
+            <template l-if="task.dueDate">
+              <span class="task-meta-item" :class="isOverdue(task) ? 'task-overdue' : ''">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                <span l-text="formatDate(task.dueDate)"></span>
+              </span>
+            </template>
+
+            <!-- Created -->
+            <span class="task-meta-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span l-text="timeAgo(task.createdAt)"></span>
+            </span>
+          </div>
+        </div>
+
+        <div class="task-actions">
+          <button data-ui="button" data-variant="ghost" data-size="sm" @click="deleteTask(task.id)" style="color:var(--color-destructive);padding-inline:var(--space-2)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+          </button>
+        </div>
+      </div>
+    </template>
+  </div>
+
+  <!-- ── Empty State ── -->
+  <template l-if="filteredTasks.length === 0">
+    <div data-ui="card" data-variant="outlined">
+      <div class="empty-state">
+        <div class="empty-icon">
+          <template l-if="totalCount === 0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/><path d="m9 16 2 2 4-4"/></svg>
+          </template>
+          <template l-if="totalCount > 0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M11 8v6"/><path d="M8 11h6"/></svg>
+          </template>
+        </div>
+        <template l-if="totalCount === 0">
+          <h3 class="empty-title">No tasks yet</h3>
+          <p class="empty-text">Add your first task above to get started.</p>
+        </template>
+        <template l-if="totalCount > 0">
+          <h3 class="empty-title">No tasks match your filters</h3>
+          <p class="empty-text">Try adjusting your search or filter criteria.</p>
+        </template>
+      </div>
+    </div>
+  </template>
+
+  <!-- ── Keyboard shortcut hint ── -->
+  <div class="app-footer">
+    <p class="footer-text">
+      <span l-text="totalCount">0</span> tasks total &middot;
+      <span l-text="completedCount">0</span> completed &middot;
+      Data saved to localStorage
+    </p>
+  </div>
+
+</div>
+
+<!-- ── Loom Core ── -->
+<script src="../registry/core/loom-core.js" data-manual></script>
+<script>
+  Loom.data('taskManager', function () {
+    // Load from localStorage
+    var stored = [];
+    try {
+      var raw = localStorage.getItem('loom-task-manager');
+      if (raw) stored = JSON.parse(raw);
+    } catch (e) { /* ignore */ }
+
+    return {
+      // ── Task data ──
+      tasks: stored.length ? stored : [],
+      nextId: stored.length ? Math.max.apply(null, stored.map(function(t) { return t.id; })) + 1 : 1,
+
+      // ── Form state ──
+      newTitle: '',
+      newDescription: '',
+      newPriority: 'medium',
+      newCategory: 'work',
+      newDueDate: '',
+
+      // ── Filter state ──
+      searchQuery: '',
+      filterStatus: 'all',
+      filterPriority: 'all',
+      filterCategory: 'all',
+
+      // ── Computed-like getters (recalculated on access) ──
+      get totalCount() {
+        return this.tasks.length;
+      },
+
+      get completedCount() {
+        return this.tasks.filter(function(t) { return t.completed; }).length;
+      },
+
+      get activeCount() {
+        return this.tasks.filter(function(t) { return !t.completed; }).length;
+      },
+
+      get overdueCount() {
+        var now = new Date();
+        now.setHours(0, 0, 0, 0);
+        return this.tasks.filter(function(t) {
+          return !t.completed && t.dueDate && new Date(t.dueDate + 'T00:00:00') < now;
+        }).length;
+      },
+
+      get progressPct() {
+        if (this.tasks.length === 0) return 0;
+        return Math.round((this.completedCount / this.tasks.length) * 100);
+      },
+
+      get hasActiveFilters() {
+        return this.searchQuery !== '' ||
+               this.filterStatus !== 'all' ||
+               this.filterPriority !== 'all' ||
+               this.filterCategory !== 'all';
+      },
+
+      get filteredTasks() {
+        var self = this;
+        var result = self.tasks;
+
+        // Search filter
+        if (self.searchQuery) {
+          var q = self.searchQuery.toLowerCase();
+          result = result.filter(function(t) {
+            return t.title.toLowerCase().indexOf(q) !== -1 ||
+                   (t.description && t.description.toLowerCase().indexOf(q) !== -1);
+          });
+        }
+
+        // Status filter
+        if (self.filterStatus === 'active') {
+          result = result.filter(function(t) { return !t.completed; });
+        } else if (self.filterStatus === 'completed') {
+          result = result.filter(function(t) { return t.completed; });
+        }
+
+        // Priority filter
+        if (self.filterPriority !== 'all') {
+          result = result.filter(function(t) { return t.priority === self.filterPriority; });
+        }
+
+        // Category filter
+        if (self.filterCategory !== 'all') {
+          result = result.filter(function(t) { return t.category === self.filterCategory; });
+        }
+
+        // Sort: incomplete first, then by priority weight, then by creation date
+        var priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3 };
+        result = result.slice().sort(function(a, b) {
+          if (a.completed !== b.completed) return a.completed ? 1 : -1;
+          var pa = priorityOrder[a.priority] !== undefined ? priorityOrder[a.priority] : 2;
+          var pb = priorityOrder[b.priority] !== undefined ? priorityOrder[b.priority] : 2;
+          if (pa !== pb) return pa - pb;
+          return b.createdAt - a.createdAt;
+        });
+
+        return result;
+      },
+
+      // ── Actions ──
+      addTask: function () {
+        if (!this.newTitle) return;
+
+        var task = {
+          id: this.nextId++,
+          title: this.newTitle,
+          description: this.newDescription,
+          priority: this.newPriority,
+          category: this.newCategory,
+          dueDate: this.newDueDate,
+          completed: false,
+          createdAt: Date.now()
+        };
+
+        this.tasks = [task].concat(this.tasks);
+        this.clearForm();
+      },
+
+      clearForm: function () {
+        this.newTitle = '';
+        this.newDescription = '';
+        this.newPriority = 'medium';
+        this.newCategory = 'work';
+        this.newDueDate = '';
+      },
+
+      toggleTask: function (id) {
+        this.tasks = this.tasks.map(function(t) {
+          if (t.id === id) {
+            return Object.assign({}, t, { completed: !t.completed });
+          }
+          return t;
+        });
+      },
+
+      deleteTask: function (id) {
+        this.tasks = this.tasks.filter(function(t) { return t.id !== id; });
+      },
+
+      markAllComplete: function () {
+        this.tasks = this.tasks.map(function(t) {
+          return Object.assign({}, t, { completed: true });
+        });
+      },
+
+      clearCompleted: function () {
+        this.tasks = this.tasks.filter(function(t) { return !t.completed; });
+      },
+
+      clearFilters: function () {
+        this.searchQuery = '';
+        this.filterStatus = 'all';
+        this.filterPriority = 'all';
+        this.filterCategory = 'all';
+      },
+
+      // ── Helpers ──
+      isOverdue: function (task) {
+        if (!task.dueDate || task.completed) return false;
+        var now = new Date();
+        now.setHours(0, 0, 0, 0);
+        return new Date(task.dueDate + 'T00:00:00') < now;
+      },
+
+      formatDate: function (dateStr) {
+        if (!dateStr) return '';
+        var d = new Date(dateStr + 'T00:00:00');
+        var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        return months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+      },
+
+      timeAgo: function (timestamp) {
+        var seconds = Math.floor((Date.now() - timestamp) / 1000);
+        if (seconds < 60) return 'just now';
+        var minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return minutes + 'm ago';
+        var hours = Math.floor(minutes / 60);
+        if (hours < 24) return hours + 'h ago';
+        var days = Math.floor(hours / 24);
+        if (days < 7) return days + 'd ago';
+        var weeks = Math.floor(days / 7);
+        if (weeks < 4) return weeks + 'w ago';
+        return Math.floor(days / 30) + 'mo ago';
+      },
+
+      // ── Persistence (called reactively via l-effect) ──
+      saveTasks: function () {
+        try {
+          localStorage.setItem('loom-task-manager', JSON.stringify(this.tasks));
+        } catch (e) { /* storage full or unavailable */ }
+      }
+    };
+  });
+
+  Loom.start();
+</script>
+
+
+</body>
+</html>

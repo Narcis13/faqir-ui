@@ -1,0 +1,1447 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loom Board — Kanban Board</title>
+
+  <!-- Tokens -->
+  <link rel="stylesheet" href="../registry/tokens/palette.css">
+  <link rel="stylesheet" href="../registry/tokens/spacing.css">
+  <link rel="stylesheet" href="../registry/tokens/typography.css">
+  <link rel="stylesheet" href="../registry/tokens/effects.css">
+  <link rel="stylesheet" href="../registry/tokens/motion.css">
+  <link rel="stylesheet" href="../registry/tokens/semantic.css">
+  <link rel="stylesheet" href="../registry/tokens/aliases.css">
+
+  <!-- Base -->
+  <link rel="stylesheet" href="../registry/base/reset.css">
+  <link rel="stylesheet" href="../registry/base/prose.css">
+
+  <!-- Theme -->
+  <link rel="stylesheet" href="../registry/themes/default.css">
+
+  <!-- Primitives -->
+  <link rel="stylesheet" href="../registry/primitives/button/button.css">
+  <link rel="stylesheet" href="../registry/primitives/input/input.css">
+  <link rel="stylesheet" href="../registry/primitives/badge/badge.css">
+  <link rel="stylesheet" href="../registry/primitives/card/card.css">
+  <link rel="stylesheet" href="../registry/primitives/separator/separator.css">
+  <link rel="stylesheet" href="../registry/primitives/avatar/avatar.css">
+  <link rel="stylesheet" href="../registry/primitives/textarea/textarea.css">
+  <link rel="stylesheet" href="../registry/primitives/select/select.css">
+
+  <style>
+    /* ── App Shell ── */
+    * { box-sizing: border-box; }
+
+    body {
+      background: var(--color-bg-subtle);
+      color: var(--color-fg);
+      font-family: var(--font-sans);
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    [l-cloak] { display: none !important; }
+
+    /* ── Top Header ── */
+    .kb-header {
+      background: var(--color-bg);
+      border-bottom: 1px solid var(--color-border);
+      padding: var(--space-4) var(--space-6);
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      flex-wrap: wrap;
+      position: sticky;
+      top: 0;
+      z-index: var(--z-sticky);
+      box-shadow: var(--shadow-xs);
+    }
+
+    .kb-logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .kb-logo-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--color-primary);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: var(--weight-bold);
+      font-size: var(--text-sm);
+    }
+
+    .kb-logo-text {
+      font-size: var(--text-xl);
+      font-weight: var(--weight-bold);
+      color: var(--color-fg);
+      letter-spacing: -0.02em;
+    }
+
+    .kb-project-name {
+      font-size: var(--text-sm);
+      color: var(--color-fg-muted);
+      padding: var(--space-1) var(--space-3);
+      background: var(--color-bg-muted);
+      border-radius: var(--radius-full);
+    }
+
+    .kb-header-spacer { flex: 1; }
+
+    .kb-team {
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+
+    .kb-team [data-ui="avatar"] {
+      margin-left: -8px;
+      border: 2px solid var(--color-bg);
+      transition: transform var(--duration-fast) var(--ease-default);
+    }
+
+    .kb-team [data-ui="avatar"]:first-child {
+      margin-left: 0;
+    }
+
+    .kb-team [data-ui="avatar"]:hover {
+      transform: translateY(-2px);
+      z-index: 1;
+    }
+
+    /* ── Filters & Search Bar ── */
+    .kb-toolbar {
+      background: var(--color-bg);
+      border-bottom: 1px solid var(--color-border);
+      padding: var(--space-3) var(--space-6);
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      flex-wrap: wrap;
+    }
+
+    .kb-toolbar-label {
+      font-size: var(--text-xs);
+      font-weight: var(--weight-semibold);
+      color: var(--color-fg-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .kb-search-wrap {
+      position: relative;
+      width: 240px;
+    }
+
+    .kb-search-wrap svg {
+      position: absolute;
+      left: var(--space-3);
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--color-fg-muted);
+      pointer-events: none;
+    }
+
+    .kb-search-wrap [data-ui="input"] {
+      padding-left: var(--space-10);
+      height: 32px;
+      font-size: var(--text-xs);
+    }
+
+    .kb-filter-select {
+      height: 32px;
+      font-size: var(--text-xs);
+      width: auto;
+      min-width: 130px;
+    }
+
+    /* ── Stats Bar ── */
+    .kb-stats {
+      background: var(--color-bg);
+      border-bottom: 1px solid var(--color-border);
+      padding: var(--space-2) var(--space-6);
+      display: flex;
+      align-items: center;
+      gap: var(--space-6);
+      font-size: var(--text-xs);
+      color: var(--color-fg-muted);
+    }
+
+    .kb-stat {
+      display: flex;
+      align-items: center;
+      gap: var(--space-1h);
+    }
+
+    .kb-stat-value {
+      font-weight: var(--weight-semibold);
+      color: var(--color-fg);
+    }
+
+    .kb-progress-bar {
+      width: 120px;
+      height: 6px;
+      background: var(--color-bg-muted);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+    }
+
+    .kb-progress-fill {
+      height: 100%;
+      background: var(--color-success);
+      border-radius: var(--radius-full);
+      transition: width var(--duration-slow) var(--ease-default);
+    }
+
+    /* ── Board ── */
+    .kb-board {
+      flex: 1;
+      display: flex;
+      gap: var(--space-5);
+      padding: var(--space-5) var(--space-6);
+      overflow-x: auto;
+      align-items: flex-start;
+    }
+
+    .kb-board::-webkit-scrollbar {
+      height: 8px;
+    }
+
+    .kb-board::-webkit-scrollbar-track {
+      background: var(--color-bg-muted);
+      border-radius: var(--radius-full);
+    }
+
+    .kb-board::-webkit-scrollbar-thumb {
+      background: var(--color-border-strong);
+      border-radius: var(--radius-full);
+    }
+
+    /* ── Column ── */
+    .kb-column {
+      flex: 0 0 320px;
+      min-width: 320px;
+      background: var(--color-bg-muted);
+      border-radius: var(--radius-xl);
+      display: flex;
+      flex-direction: column;
+      max-height: calc(100vh - 200px);
+    }
+
+    .kb-column-header {
+      padding: var(--space-4);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .kb-column-accent {
+      width: 4px;
+      height: 16px;
+      border-radius: var(--radius-full);
+      flex-shrink: 0;
+    }
+
+    .kb-column-title {
+      font-size: var(--text-sm);
+      font-weight: var(--weight-semibold);
+      color: var(--color-fg);
+      flex: 1;
+    }
+
+    .kb-column-count {
+      font-size: var(--text-xs);
+      min-width: 22px;
+      height: 22px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-full);
+      background: var(--color-bg);
+      color: var(--color-fg-muted);
+      font-weight: var(--weight-medium);
+    }
+
+    .kb-column-cards {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 var(--space-3) var(--space-3);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2h);
+    }
+
+    .kb-column-cards::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .kb-column-cards::-webkit-scrollbar-thumb {
+      background: var(--color-border);
+      border-radius: var(--radius-full);
+    }
+
+    .kb-column-footer {
+      padding: var(--space-3);
+    }
+
+    /* ── WIP Warning ── */
+    .kb-wip-warning {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-1);
+      font-size: 0.625rem;
+      padding: 0 var(--space-2);
+      border-radius: var(--radius-full);
+      background: var(--color-warning-subtle);
+      color: var(--color-warning);
+      font-weight: var(--weight-semibold);
+      height: 22px;
+    }
+
+    /* ── Kanban Card ── */
+    .kb-card {
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-3) var(--space-4);
+      cursor: pointer;
+      transition: box-shadow var(--duration-fast) var(--ease-default),
+                  border-color var(--duration-fast) var(--ease-default),
+                  transform var(--duration-fast) var(--ease-default);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+
+    .kb-card:hover {
+      box-shadow: var(--shadow-md);
+      border-color: var(--color-border-strong);
+      transform: translateY(-1px);
+    }
+
+    .kb-card-title-row {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-2);
+    }
+
+    .kb-card-title {
+      font-size: var(--text-sm);
+      font-weight: var(--weight-semibold);
+      color: var(--color-fg);
+      flex: 1;
+      line-height: var(--leading-snug);
+    }
+
+    .kb-card-title-input {
+      flex: 1;
+      font-size: var(--text-sm);
+      font-weight: var(--weight-semibold);
+      padding: var(--space-1) var(--space-2);
+      border: 1px solid var(--color-primary);
+      border-radius: var(--radius-sm);
+      outline: none;
+      font-family: var(--font-sans);
+      background: var(--color-bg);
+      color: var(--color-fg);
+    }
+
+    .kb-card-desc {
+      font-size: var(--text-xs);
+      color: var(--color-fg-muted);
+      line-height: var(--leading-normal);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .kb-card-meta {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      flex-wrap: wrap;
+    }
+
+    .kb-card-tags {
+      display: flex;
+      gap: var(--space-1);
+      flex-wrap: wrap;
+    }
+
+    .kb-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: var(--space-1);
+    }
+
+    .kb-card-footer-left {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .kb-card-assignee {
+      display: flex;
+      align-items: center;
+      gap: var(--space-1h);
+    }
+
+    .kb-card-assignee-avatar {
+      width: 22px;
+      height: 22px;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.55rem;
+      font-weight: var(--weight-semibold);
+      color: white;
+      flex-shrink: 0;
+    }
+
+    .kb-card-assignee-name {
+      font-size: var(--text-xs);
+      color: var(--color-fg-muted);
+    }
+
+    .kb-card-due {
+      font-size: var(--text-xs);
+      color: var(--color-fg-muted);
+      display: flex;
+      align-items: center;
+      gap: var(--space-1);
+    }
+
+    .kb-card-due.overdue {
+      color: var(--color-destructive);
+    }
+
+    .kb-card-actions {
+      display: flex;
+      gap: var(--space-1);
+      opacity: 0;
+      transition: opacity var(--duration-fast) var(--ease-default);
+    }
+
+    .kb-card:hover .kb-card-actions {
+      opacity: 1;
+    }
+
+    .kb-move-btn {
+      width: 24px;
+      height: 24px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      background: var(--color-bg);
+      color: var(--color-fg-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      transition: all var(--duration-fast) var(--ease-default);
+      font-size: 12px;
+    }
+
+    .kb-move-btn:hover {
+      background: var(--color-primary-subtle);
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+
+    /* ── Inline Add Form ── */
+    .kb-add-form {
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-4);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+    }
+
+    .kb-form-label {
+      font-size: var(--text-xs);
+      font-weight: var(--weight-medium);
+      color: var(--color-fg-muted);
+      margin-bottom: var(--space-1);
+      display: block;
+    }
+
+    .kb-form-group {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-1);
+    }
+
+    .kb-form-row {
+      display: flex;
+      gap: var(--space-2);
+    }
+
+    .kb-form-row > * {
+      flex: 1;
+    }
+
+    .kb-form-actions {
+      display: flex;
+      gap: var(--space-2);
+      justify-content: flex-end;
+    }
+
+    .kb-tag-checkboxes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+    }
+
+    .kb-tag-checkbox {
+      display: flex;
+      align-items: center;
+      gap: var(--space-1);
+      font-size: var(--text-xs);
+      color: var(--color-fg-muted);
+      cursor: pointer;
+    }
+
+    .kb-tag-checkbox input {
+      accent-color: var(--color-primary);
+    }
+
+    /* ── Card Detail Overlay ── */
+    .kb-overlay {
+      position: fixed;
+      inset: 0;
+      background: oklch(0 0 0 / 0.5);
+      z-index: var(--z-overlay);
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: var(--space-12) var(--space-6);
+      overflow-y: auto;
+    }
+
+    .kb-detail {
+      background: var(--color-bg);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-xl);
+      width: 100%;
+      max-width: 640px;
+      display: flex;
+      flex-direction: column;
+      animation: kb-slide-up var(--duration-slow) var(--ease-out);
+    }
+
+    @keyframes kb-slide-up {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .kb-detail-header {
+      padding: var(--space-6);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .kb-detail-header-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: var(--space-4);
+    }
+
+    .kb-detail-title {
+      font-size: var(--text-xl);
+      font-weight: var(--weight-bold);
+      color: var(--color-fg);
+      flex: 1;
+    }
+
+    .kb-detail-close {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-border);
+      background: var(--color-bg);
+      color: var(--color-fg-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: var(--text-lg);
+      flex-shrink: 0;
+      transition: background var(--duration-fast) var(--ease-default);
+    }
+
+    .kb-detail-close:hover {
+      background: var(--color-bg-muted);
+    }
+
+    .kb-detail-meta {
+      display: flex;
+      gap: var(--space-3);
+      flex-wrap: wrap;
+    }
+
+    .kb-detail-meta-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-1h);
+      font-size: var(--text-xs);
+      color: var(--color-fg-muted);
+    }
+
+    .kb-detail-body {
+      padding: var(--space-6);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-6);
+    }
+
+    .kb-detail-section-title {
+      font-size: var(--text-sm);
+      font-weight: var(--weight-semibold);
+      color: var(--color-fg);
+      margin-bottom: var(--space-2);
+    }
+
+    .kb-detail-description {
+      font-size: var(--text-sm);
+      color: var(--color-fg-muted);
+      line-height: var(--leading-relaxed);
+    }
+
+    /* ── Comments ── */
+    .kb-comments {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+    }
+
+    .kb-comment {
+      display: flex;
+      gap: var(--space-3);
+    }
+
+    .kb-comment-body {
+      flex: 1;
+    }
+
+    .kb-comment-header {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      margin-bottom: var(--space-1);
+    }
+
+    .kb-comment-author {
+      font-size: var(--text-sm);
+      font-weight: var(--weight-semibold);
+      color: var(--color-fg);
+    }
+
+    .kb-comment-time {
+      font-size: var(--text-xs);
+      color: var(--color-fg-subtle);
+    }
+
+    .kb-comment-text {
+      font-size: var(--text-sm);
+      color: var(--color-fg-muted);
+      line-height: var(--leading-normal);
+    }
+
+    .kb-comment-form {
+      display: flex;
+      gap: var(--space-2);
+      align-items: flex-start;
+    }
+
+    .kb-comment-form textarea {
+      flex: 1;
+    }
+
+    /* ── Activity Log ── */
+    .kb-activity {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+    }
+
+    .kb-activity-item {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-3);
+      font-size: var(--text-xs);
+      color: var(--color-fg-muted);
+    }
+
+    .kb-activity-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: var(--radius-full);
+      background: var(--color-border-strong);
+      margin-top: 4px;
+      flex-shrink: 0;
+    }
+
+    .kb-activity-text strong {
+      font-weight: var(--weight-semibold);
+      color: var(--color-fg);
+    }
+
+    /* ── Footer ── */
+    .kb-footer {
+      text-align: center;
+      padding: var(--space-6);
+      font-size: var(--text-sm);
+      color: var(--color-fg-muted);
+      border-top: 1px solid var(--color-border);
+      background: var(--color-bg);
+    }
+
+    .kb-footer strong {
+      color: var(--color-primary);
+      font-weight: var(--weight-semibold);
+    }
+
+    /* ── Tag Colors ── */
+    .tag-bug      { background: var(--color-destructive-subtle); color: var(--color-destructive); }
+    .tag-feature  { background: var(--color-primary-subtle);     color: var(--color-primary); }
+    .tag-improve  { background: var(--color-success-subtle);     color: var(--color-success); }
+    .tag-docs     { background: var(--color-info-subtle);        color: var(--color-info); }
+    .tag-design   { background: oklch(0.92 0.08 330);            color: oklch(0.55 0.22 330); }
+    .tag-infra    { background: var(--color-warning-subtle);     color: var(--color-warning); }
+
+    /* ── Assignee avatar colors ── */
+    .avatar-indigo { background: var(--palette-indigo-500); }
+    .avatar-red    { background: var(--palette-red-400); }
+    .avatar-green  { background: var(--palette-green-500); }
+    .avatar-amber  { background: var(--palette-amber-500); }
+    .avatar-blue   { background: var(--palette-blue-500); }
+
+    /* ── Priority dot ── */
+    .priority-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: var(--radius-full);
+      flex-shrink: 0;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .kb-header { padding: var(--space-3) var(--space-4); }
+      .kb-toolbar { padding: var(--space-2) var(--space-4); }
+      .kb-stats { padding: var(--space-2) var(--space-4); gap: var(--space-3); }
+      .kb-board { padding: var(--space-3) var(--space-4); }
+      .kb-column { flex: 0 0 280px; min-width: 280px; }
+    }
+  </style>
+
+  <!-- Loom Core -->
+  <script src="../registry/core/loom-core.js" data-manual></script>
+</head>
+
+<body l-cloak>
+
+<div l-data="kanbanBoard">
+
+  <!-- ══════ HEADER ══════ -->
+  <header class="kb-header">
+    <div class="kb-logo">
+      <div class="kb-logo-icon">L</div>
+      <span class="kb-logo-text">Loom Board</span>
+    </div>
+    <span class="kb-project-name">Loom UI Framework</span>
+    <div class="kb-header-spacer"></div>
+
+    <!-- Team Avatars -->
+    <div class="kb-team">
+      <template l-for="(member, mi) in team">
+        <div data-ui="avatar" data-size="sm" :title="member.name">
+          <div data-part="fallback" :class="member.color">
+            <span l-text="member.initials"></span>
+          </div>
+        </div>
+      </template>
+    </div>
+
+    <button data-ui="button" data-variant="primary" data-size="sm" @click="openQuickAdd()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      New Card
+    </button>
+  </header>
+
+  <!-- ══════ TOOLBAR ══════ -->
+  <div class="kb-toolbar">
+    <span class="kb-toolbar-label">Filters</span>
+
+    <div class="kb-search-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input data-ui="input" placeholder="Search cards..." l-model="searchQuery">
+    </div>
+
+    <select data-ui="select" class="kb-filter-select" l-model="filterAssignee">
+      <option value="">All Assignees</option>
+      <template l-for="(member, fi) in team">
+        <option :value="member.name" l-text="member.name"></option>
+      </template>
+    </select>
+
+    <select data-ui="select" class="kb-filter-select" l-model="filterPriority">
+      <option value="">All Priorities</option>
+      <option value="Critical">Critical</option>
+      <option value="High">High</option>
+      <option value="Medium">Medium</option>
+      <option value="Low">Low</option>
+    </select>
+
+    <select data-ui="select" class="kb-filter-select" l-model="filterTag">
+      <option value="">All Tags</option>
+      <option value="Bug">Bug</option>
+      <option value="Feature">Feature</option>
+      <option value="Improvement">Improvement</option>
+      <option value="Docs">Docs</option>
+      <option value="Design">Design</option>
+      <option value="Infra">Infra</option>
+    </select>
+
+    <template l-if="hasActiveFilters()">
+      <button data-ui="button" data-variant="ghost" data-size="sm" @click="clearFilters()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        Clear
+      </button>
+    </template>
+  </div>
+
+  <!-- ══════ STATS BAR ══════ -->
+  <div class="kb-stats">
+    <div class="kb-stat">
+      Total: <span class="kb-stat-value" l-text="allCards().length"></span>
+    </div>
+    <template l-for="(col, si) in columns">
+      <div class="kb-stat">
+        <span l-text="col.title + ':'"></span>
+        <span class="kb-stat-value" l-text="filteredCards(col.id).length"></span>
+      </div>
+    </template>
+    <div class="kb-stat">
+      Done:
+      <span class="kb-stat-value" l-text="completionPct() + '%'"></span>
+      <div class="kb-progress-bar">
+        <div class="kb-progress-fill" :style="'width:' + completionPct() + '%'"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════ BOARD ══════ -->
+  <div class="kb-board">
+    <template l-for="(col, ci) in columns">
+      <div class="kb-column">
+        <!-- Column Header -->
+        <div class="kb-column-header">
+          <div class="kb-column-accent" :style="'background:' + col.color"></div>
+          <span class="kb-column-title" l-text="col.title"></span>
+
+          <template l-if="col.wipLimit > 0 && filteredCards(col.id).length > col.wipLimit">
+            <span class="kb-wip-warning">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              WIP
+            </span>
+          </template>
+
+          <span class="kb-column-count" l-text="filteredCards(col.id).length"></span>
+        </div>
+
+        <!-- Cards -->
+        <div class="kb-column-cards">
+          <template l-for="(card, ki) in filteredCards(col.id)">
+            <div class="kb-card" @click="openDetail(card)">
+
+              <!-- Title row -->
+              <div class="kb-card-title-row">
+                <div l-show="editingCardId !== card.id" class="kb-card-title" @dblclick.stop="startEditing(card)" l-text="card.title"></div>
+                <div l-show="editingCardId === card.id" style="flex:1;display:flex;gap:var(--space-1)">
+                  <input class="kb-card-title-input" :value="card.title" @keydown.enter="finishEditing(card, $event)" @keydown.escape="cancelEditing()" @blur="finishEditing(card, $event)" @click.stop>
+                </div>
+                <div class="priority-dot" :style="'background:' + priorityColor(card.priority)"></div>
+              </div>
+
+              <!-- Description -->
+              <template l-if="card.description">
+                <p class="kb-card-desc" l-text="card.description"></p>
+              </template>
+
+              <!-- Tags -->
+              <div class="kb-card-tags">
+                <template l-for="(tag, ti) in card.tags">
+                  <span data-ui="badge" data-size="sm" :class="tagClass(tag)" l-text="tag"></span>
+                </template>
+              </div>
+
+              <!-- Footer: assignee, due date, move buttons -->
+              <div class="kb-card-footer">
+                <div class="kb-card-footer-left">
+                  <div class="kb-card-assignee">
+                    <div class="kb-card-assignee-avatar" :class="getAssigneeColor(card.assignee)" l-text="getInitials(card.assignee)"></div>
+                    <span class="kb-card-assignee-name" l-text="card.assignee.split(' ')[0]"></span>
+                  </div>
+                  <template l-if="card.due">
+                    <span class="kb-card-due" :class="isOverdue(card.due) ? 'overdue' : ''">
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                      <span l-text="formatDue(card.due)"></span>
+                    </span>
+                  </template>
+                </div>
+
+                <!-- Move buttons -->
+                <div class="kb-card-actions">
+                  <template l-if="getColumnIndex(col.id) > 0">
+                    <button class="kb-move-btn" @click.stop="moveCard(card, -1)" title="Move left">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                    </button>
+                  </template>
+                  <template l-if="getColumnIndex(col.id) < columns.length - 1">
+                    <button class="kb-move-btn" @click.stop="moveCard(card, 1)" title="Move right">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    </button>
+                  </template>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <!-- Column Footer: Add Card -->
+        <div class="kb-column-footer">
+          <div l-show="!addingToColumn || addingToColumn !== col.id">
+            <button data-ui="button" data-variant="ghost" data-size="sm" style="width:100%;justify-content:flex-start;color:var(--color-fg-muted)" @click="startAdding(col.id)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add a card
+            </button>
+          </div>
+
+          <div l-show="addingToColumn === col.id" class="kb-add-form">
+            <div class="kb-form-group">
+              <label class="kb-form-label">Title *</label>
+              <input data-ui="input" data-size="sm" placeholder="Card title" l-model="newCard.title" @click.stop>
+            </div>
+            <div class="kb-form-group">
+              <label class="kb-form-label">Description</label>
+              <textarea data-ui="textarea" data-size="sm" placeholder="Brief description..." l-model="newCard.description" @click.stop></textarea>
+            </div>
+            <div class="kb-form-row">
+              <div class="kb-form-group">
+                <label class="kb-form-label">Priority</label>
+                <select data-ui="select" data-size="sm" l-model="newCard.priority" @click.stop>
+                  <option value="Low">Low</option>
+                  <option value="Medium">Medium</option>
+                  <option value="High">High</option>
+                  <option value="Critical">Critical</option>
+                </select>
+              </div>
+              <div class="kb-form-group">
+                <label class="kb-form-label">Assignee</label>
+                <select data-ui="select" data-size="sm" l-model="newCard.assignee" @click.stop>
+                  <template l-for="(member, ai) in team">
+                    <option :value="member.name" l-text="member.name"></option>
+                  </template>
+                </select>
+              </div>
+            </div>
+            <div class="kb-form-group">
+              <label class="kb-form-label">Tags</label>
+              <div class="kb-tag-checkboxes">
+                <label class="kb-tag-checkbox" @click.stop>
+                  <input type="checkbox" value="Bug" @change="toggleNewTag('Bug', $event)"> Bug
+                </label>
+                <label class="kb-tag-checkbox" @click.stop>
+                  <input type="checkbox" value="Feature" @change="toggleNewTag('Feature', $event)"> Feature
+                </label>
+                <label class="kb-tag-checkbox" @click.stop>
+                  <input type="checkbox" value="Improvement" @change="toggleNewTag('Improvement', $event)"> Improvement
+                </label>
+                <label class="kb-tag-checkbox" @click.stop>
+                  <input type="checkbox" value="Docs" @change="toggleNewTag('Docs', $event)"> Docs
+                </label>
+                <label class="kb-tag-checkbox" @click.stop>
+                  <input type="checkbox" value="Design" @change="toggleNewTag('Design', $event)"> Design
+                </label>
+                <label class="kb-tag-checkbox" @click.stop>
+                  <input type="checkbox" value="Infra" @change="toggleNewTag('Infra', $event)"> Infra
+                </label>
+              </div>
+            </div>
+            <div class="kb-form-actions">
+              <button data-ui="button" data-variant="ghost" data-size="sm" @click.stop="cancelAdding()">Cancel</button>
+              <button data-ui="button" data-variant="primary" data-size="sm" @click.stop="submitCard(col.id)">Add Card</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+  </div>
+
+  <!-- ══════ CARD DETAIL OVERLAY ══════ -->
+  <template l-if="detailCard !== null">
+    <div class="kb-overlay" @click="closeDetail()">
+      <div class="kb-detail" @click.stop>
+        <div class="kb-detail-header">
+          <div class="kb-detail-header-top">
+            <span class="kb-detail-title" l-text="detailCard.title"></span>
+            <button class="kb-detail-close" @click="closeDetail()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="kb-detail-meta">
+            <div class="kb-detail-meta-item">
+              <span data-ui="badge" :data-variant="priorityVariant(detailCard.priority)" l-text="detailCard.priority"></span>
+            </div>
+            <div class="kb-detail-meta-item">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <span l-text="detailCard.assignee"></span>
+            </div>
+            <template l-if="detailCard.due">
+              <div class="kb-detail-meta-item">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <span l-text="detailCard.due"></span>
+              </div>
+            </template>
+            <div class="kb-detail-meta-item">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="m9 12 2 2 4-4"/></svg>
+              <span l-text="getColumnTitle(detailCard.column)"></span>
+            </div>
+          </div>
+          <div class="kb-card-tags">
+            <template l-for="(tag, dti) in detailCard.tags">
+              <span data-ui="badge" :class="tagClass(tag)" l-text="tag"></span>
+            </template>
+          </div>
+        </div>
+
+        <div class="kb-detail-body">
+          <!-- Description -->
+          <div>
+            <div class="kb-detail-section-title">Description</div>
+            <p class="kb-detail-description" l-text="detailCard.description || 'No description provided.'"></p>
+          </div>
+
+          <hr data-ui="separator">
+
+          <!-- Comments -->
+          <div>
+            <div class="kb-detail-section-title">
+              Comments
+              <span style="font-weight:var(--weight-normal);color:var(--color-fg-muted)" l-text="'(' + (detailCard.comments ? detailCard.comments.length : 0) + ')'"></span>
+            </div>
+            <div class="kb-comments">
+              <template l-for="(comment, cmi) in (detailCard.comments || [])">
+                <div class="kb-comment">
+                  <div class="kb-card-assignee-avatar" :class="getAssigneeColor(comment.author)" style="width:28px;height:28px;font-size:0.6rem;margin-top:2px" l-text="getInitials(comment.author)"></div>
+                  <div class="kb-comment-body">
+                    <div class="kb-comment-header">
+                      <span class="kb-comment-author" l-text="comment.author"></span>
+                      <span class="kb-comment-time" l-text="comment.time"></span>
+                    </div>
+                    <p class="kb-comment-text" l-text="comment.text"></p>
+                  </div>
+                </div>
+              </template>
+
+              <div class="kb-comment-form">
+                <textarea data-ui="textarea" data-size="sm" placeholder="Add a comment..." l-model="newComment" style="min-height:48px"></textarea>
+                <button data-ui="button" data-variant="primary" data-size="sm" @click="addComment()" style="align-self:flex-end">Post</button>
+              </div>
+            </div>
+          </div>
+
+          <hr data-ui="separator">
+
+          <!-- Activity Log -->
+          <div>
+            <div class="kb-detail-section-title">Activity</div>
+            <div class="kb-activity">
+              <template l-for="(act, aci) in (detailCard.activity || [])">
+                <div class="kb-activity-item">
+                  <div class="kb-activity-dot"></div>
+                  <div class="kb-activity-text">
+                    <strong l-text="act.who"></strong>
+                    <span l-text="' ' + act.action"></span>
+                    <span style="margin-left:var(--space-2);color:var(--color-fg-subtle)" l-text="act.when"></span>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+</div>
+
+<!-- ══════ FOOTER ══════ -->
+<footer class="kb-footer">
+  Built with <strong>Loom UI</strong> — No virtual DOM. No build step. Just HTML.
+</footer>
+
+<script>
+Loom.data('kanbanBoard', function() {
+  var nextId = 16;
+
+  return {
+    // ── Team ──
+    team: [
+      { name: 'Alice Chen',    initials: 'AC', color: 'avatar-indigo' },
+      { name: 'Bob Martinez',  initials: 'BM', color: 'avatar-red' },
+      { name: 'Carol Davis',   initials: 'CD', color: 'avatar-green' },
+      { name: 'Dan Wilson',    initials: 'DW', color: 'avatar-amber' },
+      { name: 'Eva Park',      initials: 'EP', color: 'avatar-blue' }
+    ],
+
+    // ── Columns ──
+    columns: [
+      { id: 'backlog',     title: 'Backlog',     color: 'var(--palette-gray-400)',   wipLimit: 0 },
+      { id: 'in-progress', title: 'In Progress', color: 'var(--palette-blue-500)',   wipLimit: 5 },
+      { id: 'review',      title: 'Review',      color: 'var(--palette-amber-500)',  wipLimit: 3 },
+      { id: 'done',        title: 'Done',        color: 'var(--palette-green-500)',  wipLimit: 0 }
+    ],
+
+    // ── Cards ──
+    cards: [
+      // Backlog
+      { id: 1,  column: 'backlog', title: 'Design token audit',                description: 'Review all design tokens for consistency and naming conventions across the system.',         priority: 'Medium', assignee: 'Alice Chen',   due: '2026-04-15', tags: ['Design', 'Improvement'], comments: [{ author: 'Bob Martinez', text: 'I can help review the color tokens.', time: '2 days ago' }], activity: [{ who: 'Alice Chen', action: 'created this card', when: 'Mar 20' }] },
+      { id: 2,  column: 'backlog', title: 'Add dark mode toggle component',   description: 'Create a reusable theme toggle component with smooth transition animations.',              priority: 'High',   assignee: 'Dan Wilson',   due: '2026-04-10', tags: ['Feature'],               comments: [],                                                                                       activity: [{ who: 'Dan Wilson', action: 'created this card', when: 'Mar 22' }] },
+      { id: 3,  column: 'backlog', title: 'Fix badge overflow on mobile',     description: 'Badge text truncates incorrectly when container is narrow on small screens.',                priority: 'Low',    assignee: 'Carol Davis',  due: '',           tags: ['Bug'],                   comments: [],                                                                                       activity: [{ who: 'Carol Davis', action: 'created this card', when: 'Mar 23' }] },
+      { id: 4,  column: 'backlog', title: 'Write contribution guidelines',    description: 'Document coding standards, PR process, and component creation workflow.',                    priority: 'Low',    assignee: 'Eva Park',     due: '2026-04-20', tags: ['Docs'],                  comments: [],                                                                                       activity: [{ who: 'Eva Park', action: 'created this card', when: 'Mar 24' }] },
+
+      // In Progress
+      { id: 5,  column: 'in-progress', title: 'Implement toast notification system', description: 'Build a stacking toast system with auto-dismiss, pause on hover, and swipe to dismiss.', priority: 'Critical', assignee: 'Bob Martinez', due: '2026-04-02', tags: ['Feature'],               comments: [{ author: 'Alice Chen', text: 'Make sure to handle accessibility for screen readers.', time: '1 day ago' }, { author: 'Bob Martinez', text: 'Good point, will add aria-live region.', time: '5 hours ago' }], activity: [{ who: 'Bob Martinez', action: 'created this card', when: 'Mar 18' }, { who: 'Bob Martinez', action: 'moved to In Progress', when: 'Mar 25' }] },
+      { id: 6,  column: 'in-progress', title: 'Refactor reactive engine',           description: 'Optimize the signal-based reactivity for better batching and reduced re-renders.',        priority: 'High',     assignee: 'Alice Chen',   due: '2026-04-05', tags: ['Improvement', 'Infra'], comments: [],                                                                                       activity: [{ who: 'Alice Chen', action: 'created this card', when: 'Mar 19' }, { who: 'Alice Chen', action: 'moved to In Progress', when: 'Mar 26' }] },
+      { id: 7,  column: 'in-progress', title: 'Table component primitives',         description: 'Build sortable, filterable table with sticky headers and row selection.',                  priority: 'High',     assignee: 'Dan Wilson',   due: '2026-04-08', tags: ['Feature'],               comments: [{ author: 'Eva Park', text: 'Can we add virtual scrolling for large datasets?', time: '3 hours ago' }], activity: [{ who: 'Dan Wilson', action: 'created this card', when: 'Mar 20' }, { who: 'Dan Wilson', action: 'moved to In Progress', when: 'Mar 27' }] },
+      { id: 8,  column: 'in-progress', title: 'Fix input focus ring on Safari',     description: 'Safari shows double outline due to both outline and box-shadow on focus.',                 priority: 'Medium',   assignee: 'Carol Davis',  due: '2026-04-01', tags: ['Bug'],                   comments: [],                                                                                       activity: [{ who: 'Carol Davis', action: 'created this card', when: 'Mar 21' }] },
+
+      // Review
+      { id: 9,  column: 'review', title: 'Dropdown menu component',             description: 'Fully accessible dropdown with keyboard navigation, submenus, and focus trapping.',        priority: 'High',   assignee: 'Eva Park',     due: '2026-04-03', tags: ['Feature'],                  comments: [{ author: 'Alice Chen', text: 'Looks great! Minor comment on the blur handler.', time: '1 hour ago' }], activity: [{ who: 'Eva Park', action: 'created this card', when: 'Mar 15' }, { who: 'Eva Park', action: 'moved to Review', when: 'Mar 28' }] },
+      { id: 10, column: 'review', title: 'Update spacing scale documentation',  description: 'Add visual examples and usage guidance for the 4px base spacing system.',                  priority: 'Medium', assignee: 'Carol Davis',  due: '2026-04-06', tags: ['Docs', 'Design'],          comments: [],                                                                                       activity: [{ who: 'Carol Davis', action: 'created this card', when: 'Mar 17' }, { who: 'Carol Davis', action: 'moved to Review', when: 'Mar 29' }] },
+      { id: 11, column: 'review', title: 'Avatar component image loading',      description: 'Add lazy loading, error fallback, and skeleton placeholder for avatar images.',            priority: 'Medium', assignee: 'Bob Martinez', due: '2026-04-04', tags: ['Improvement'],             comments: [],                                                                                       activity: [{ who: 'Bob Martinez', action: 'created this card', when: 'Mar 16' }, { who: 'Bob Martinez', action: 'moved to Review', when: 'Mar 29' }] },
+
+      // Done
+      { id: 12, column: 'done', title: 'Set up CI/CD pipeline',           description: 'Configure automated testing, linting, and deployment for the component library.',          priority: 'Critical', assignee: 'Alice Chen',   due: '2026-03-20', tags: ['Infra'],                 comments: [{ author: 'Dan Wilson', text: 'Pipeline runs are blazing fast. Nice work!', time: '5 days ago' }], activity: [{ who: 'Alice Chen', action: 'created this card', when: 'Mar 10' }, { who: 'Alice Chen', action: 'completed this card', when: 'Mar 20' }] },
+      { id: 13, column: 'done', title: 'Button component with variants',  description: 'Primary, secondary, destructive, ghost, outline, and link button variants.',               priority: 'High',     assignee: 'Dan Wilson',   due: '2026-03-18', tags: ['Feature'],               comments: [],                                                                                       activity: [{ who: 'Dan Wilson', action: 'created this card', when: 'Mar 8' }, { who: 'Dan Wilson', action: 'completed this card', when: 'Mar 18' }] },
+      { id: 14, column: 'done', title: 'Input and form field primitives', description: 'Text input, textarea, select with sizes, states, and input groups.',                        priority: 'High',     assignee: 'Carol Davis',  due: '2026-03-22', tags: ['Feature'],               comments: [],                                                                                       activity: [{ who: 'Carol Davis', action: 'created this card', when: 'Mar 12' }, { who: 'Carol Davis', action: 'completed this card', when: 'Mar 22' }] },
+      { id: 15, column: 'done', title: 'Fix color contrast in badges',   description: 'Ensure all badge color combinations meet WCAG AA contrast requirements.',                   priority: 'Medium',   assignee: 'Eva Park',     due: '2026-03-25', tags: ['Bug', 'Design'],         comments: [],                                                                                       activity: [{ who: 'Eva Park', action: 'created this card', when: 'Mar 14' }, { who: 'Eva Park', action: 'completed this card', when: 'Mar 25' }] }
+    ],
+
+    // ── Filters ──
+    searchQuery: '',
+    filterAssignee: '',
+    filterPriority: '',
+    filterTag: '',
+
+    // ── UI State ──
+    editingCardId: null,
+    addingToColumn: null,
+    detailCard: null,
+    newComment: '',
+    newCard: {
+      title: '',
+      description: '',
+      priority: 'Medium',
+      assignee: 'Alice Chen',
+      tags: []
+    },
+
+    // ── Computed helpers ──
+    allCards: function() {
+      var self = this;
+      return self.cards.filter(function(c) {
+        return self._matchesFilters(c);
+      });
+    },
+
+    filteredCards: function(columnId) {
+      var self = this;
+      return self.cards.filter(function(c) {
+        return c.column === columnId && self._matchesFilters(c);
+      });
+    },
+
+    _matchesFilters: function(card) {
+      var self = this;
+      if (self.searchQuery) {
+        var q = self.searchQuery.toLowerCase();
+        var inTitle = card.title.toLowerCase().indexOf(q) !== -1;
+        var inDesc  = card.description.toLowerCase().indexOf(q) !== -1;
+        var inTags  = card.tags.some(function(t){ return t.toLowerCase().indexOf(q) !== -1; });
+        if (!inTitle && !inDesc && !inTags) return false;
+      }
+      if (self.filterAssignee && card.assignee !== self.filterAssignee) return false;
+      if (self.filterPriority && card.priority !== self.filterPriority) return false;
+      if (self.filterTag && card.tags.indexOf(self.filterTag) === -1) return false;
+      return true;
+    },
+
+    hasActiveFilters: function() {
+      return this.searchQuery || this.filterAssignee || this.filterPriority || this.filterTag;
+    },
+
+    clearFilters: function() {
+      this.searchQuery = '';
+      this.filterAssignee = '';
+      this.filterPriority = '';
+      this.filterTag = '';
+    },
+
+    completionPct: function() {
+      var total = this.cards.length;
+      if (total === 0) return 0;
+      var done = this.cards.filter(function(c) { return c.column === 'done'; }).length;
+      return Math.round((done / total) * 100);
+    },
+
+    // ── Column helpers ──
+    getColumnIndex: function(colId) {
+      for (var i = 0; i < this.columns.length; i++) {
+        if (this.columns[i].id === colId) return i;
+      }
+      return -1;
+    },
+
+    getColumnTitle: function(colId) {
+      for (var i = 0; i < this.columns.length; i++) {
+        if (this.columns[i].id === colId) return this.columns[i].title;
+      }
+      return '';
+    },
+
+    // ── Card actions ──
+    moveCard: function(card, direction) {
+      var idx = this.getColumnIndex(card.column);
+      var newIdx = idx + direction;
+      if (newIdx < 0 || newIdx >= this.columns.length) return;
+      var newCol = this.columns[newIdx].id;
+      var oldCol = card.column;
+
+      // Mutate and reassign for reactivity
+      var updated = this.cards.map(function(c) {
+        if (c.id === card.id) {
+          var clone = Object.assign({}, c);
+          clone.tags = c.tags.slice();
+          clone.comments = (c.comments || []).slice();
+          clone.activity = (c.activity || []).slice();
+          clone.column = newCol;
+          clone.activity.push({
+            who: c.assignee.split(' ')[0],
+            action: 'moved from ' + oldCol + ' to ' + newCol,
+            when: 'Just now'
+          });
+          return clone;
+        }
+        return c;
+      });
+      this.cards = updated;
+    },
+
+    // ── Inline editing ──
+    startEditing: function(card) {
+      this.editingCardId = card.id;
+    },
+
+    finishEditing: function(card, event) {
+      var newTitle = event.target.value.trim();
+      if (newTitle && newTitle !== card.title) {
+        this.cards = this.cards.map(function(c) {
+          if (c.id === card.id) {
+            var clone = Object.assign({}, c);
+            clone.tags = c.tags.slice();
+            clone.comments = (c.comments || []).slice();
+            clone.activity = (c.activity || []).slice();
+            clone.title = newTitle;
+            return clone;
+          }
+          return c;
+        });
+      }
+      this.editingCardId = null;
+    },
+
+    cancelEditing: function() {
+      this.editingCardId = null;
+    },
+
+    // ── Add card ──
+    startAdding: function(colId) {
+      this.addingToColumn = colId;
+      this.newCard = {
+        title: '',
+        description: '',
+        priority: 'Medium',
+        assignee: this.team[0].name,
+        tags: []
+      };
+    },
+
+    cancelAdding: function() {
+      this.addingToColumn = null;
+    },
+
+    toggleNewTag: function(tag, event) {
+      var tags = this.newCard.tags.slice();
+      var idx = tags.indexOf(tag);
+      if (event.target.checked && idx === -1) {
+        tags.push(tag);
+      } else if (!event.target.checked && idx !== -1) {
+        tags.splice(idx, 1);
+      }
+      this.newCard = Object.assign({}, this.newCard, { tags: tags });
+    },
+
+    submitCard: function(colId) {
+      if (!this.newCard.title.trim()) return;
+
+      var card = {
+        id: nextId++,
+        column: colId,
+        title: this.newCard.title.trim(),
+        description: this.newCard.description.trim(),
+        priority: this.newCard.priority,
+        assignee: this.newCard.assignee,
+        due: '',
+        tags: this.newCard.tags.slice(),
+        comments: [],
+        activity: [{ who: this.newCard.assignee.split(' ')[0], action: 'created this card', when: 'Just now' }]
+      };
+
+      this.cards = this.cards.concat([card]);
+      this.addingToColumn = null;
+    },
+
+    openQuickAdd: function() {
+      this.startAdding('backlog');
+    },
+
+    // ── Detail overlay ──
+    openDetail: function(card) {
+      if (this.editingCardId) return;
+      // Deep clone for display
+      this.detailCard = JSON.parse(JSON.stringify(card));
+    },
+
+    closeDetail: function() {
+      this.detailCard = null;
+      this.newComment = '';
+    },
+
+    addComment: function() {
+      if (!this.newComment.trim() || !this.detailCard) return;
+
+      var commentObj = {
+        author: this.team[0].name,
+        text: this.newComment.trim(),
+        time: 'Just now'
+      };
+
+      // Update the detail view
+      var updatedDetail = Object.assign({}, this.detailCard);
+      updatedDetail.comments = (this.detailCard.comments || []).concat([commentObj]);
+      updatedDetail.tags = this.detailCard.tags.slice();
+      updatedDetail.activity = (this.detailCard.activity || []).slice();
+      this.detailCard = updatedDetail;
+
+      // Also update the backing card
+      var cardId = this.detailCard.id;
+      this.cards = this.cards.map(function(c) {
+        if (c.id === cardId) {
+          var clone = Object.assign({}, c);
+          clone.tags = c.tags.slice();
+          clone.comments = (c.comments || []).concat([commentObj]);
+          clone.activity = (c.activity || []).slice();
+          return clone;
+        }
+        return c;
+      });
+
+      this.newComment = '';
+    },
+
+    // ── Display helpers ──
+    priorityColor: function(p) {
+      switch(p) {
+        case 'Critical': return 'var(--palette-red-500)';
+        case 'High':     return 'var(--palette-amber-500)';
+        case 'Medium':   return 'var(--palette-blue-400)';
+        case 'Low':      return 'var(--palette-gray-400)';
+        default:         return 'var(--palette-gray-300)';
+      }
+    },
+
+    priorityVariant: function(p) {
+      switch(p) {
+        case 'Critical': return 'destructive';
+        case 'High':     return 'warning';
+        case 'Medium':   return 'primary';
+        case 'Low':      return 'secondary';
+        default:         return 'default';
+      }
+    },
+
+    tagClass: function(tag) {
+      switch(tag) {
+        case 'Bug':         return 'tag-bug';
+        case 'Feature':     return 'tag-feature';
+        case 'Improvement': return 'tag-improve';
+        case 'Docs':        return 'tag-docs';
+        case 'Design':      return 'tag-design';
+        case 'Infra':       return 'tag-infra';
+        default:            return '';
+      }
+    },
+
+    getAssigneeColor: function(name) {
+      for (var i = 0; i < this.team.length; i++) {
+        if (this.team[i].name === name) return this.team[i].color;
+      }
+      return 'avatar-indigo';
+    },
+
+    getInitials: function(name) {
+      if (!name) return '??';
+      var parts = name.split(' ');
+      return (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+    },
+
+    formatDue: function(dateStr) {
+      if (!dateStr) return '';
+      var parts = dateStr.split('-');
+      var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      return months[parseInt(parts[1], 10) - 1] + ' ' + parseInt(parts[2], 10);
+    },
+
+    isOverdue: function(dateStr) {
+      if (!dateStr) return false;
+      var due = new Date(dateStr);
+      return due < new Date();
+    }
+  };
+});
+
+Loom.start();
+</script>
+
+</body>
+</html>
