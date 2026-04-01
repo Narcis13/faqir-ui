@@ -1,0 +1,102 @@
+/* @ui:component input */
+/* @ui:tokens color-bg color-fg color-fg-muted color-border color-border-strong color-ring color-destructive radius-md space-2 space-3 space-4 font-sans text-xs text-sm text-base duration-fast ease-default */
+
+/* ── Base ── */
+[data-ui="input"] {
+  display: block;
+  width: 100%;
+  height: var(--input-height, 40px);
+  padding-inline: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--input-radius, var(--radius-md));
+  background: var(--input-bg, var(--color-bg));
+  color: var(--color-fg);
+  font-family: var(--input-font, var(--font-sans));
+  font-size: var(--text-sm);
+  line-height: 1;
+  transition: border-color var(--duration-fast) var(--ease-default),
+              box-shadow var(--duration-fast) var(--ease-default);
+}
+
+[data-ui="input"]::placeholder {
+  color: var(--color-fg-muted);
+}
+
+[data-ui="input"]:hover {
+  border-color: var(--color-border-strong);
+}
+
+[data-ui="input"]:focus {
+  outline: 2px solid var(--color-ring);
+  outline-offset: -1px;
+  border-color: transparent;
+}
+
+/* ── Sizes ── */
+[data-ui="input"][data-size="sm"] {
+  height: 32px;
+  padding-inline: var(--space-2);
+  font-size: var(--text-xs);
+}
+
+[data-ui="input"][data-size="lg"] {
+  height: 48px;
+  padding-inline: var(--space-4);
+  font-size: var(--text-base);
+}
+
+/* ── States ── */
+[data-ui="input"][data-state="error"],
+[data-ui="input"][aria-invalid="true"] {
+  border-color: var(--color-destructive);
+}
+[data-ui="input"][data-state="error"]:focus,
+[data-ui="input"][aria-invalid="true"]:focus {
+  outline-color: var(--color-destructive);
+}
+
+[data-ui="input"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Input Group ── */
+[data-ui="input-group"] {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+[data-ui="input-group"] [data-part="prefix"],
+[data-ui="input-group"] [data-part="suffix"] {
+  display: flex;
+  align-items: center;
+  padding-inline: var(--space-3);
+  color: var(--color-fg-muted);
+  font-size: var(--text-sm);
+  pointer-events: none;
+  position: absolute;
+}
+
+[data-ui="input-group"] [data-part="prefix"] {
+  left: 0;
+}
+
+[data-ui="input-group"] [data-part="suffix"] {
+  right: 0;
+}
+
+[data-ui="input-group"]:has([data-part="prefix"]) [data-ui="input"] {
+  padding-left: var(--space-10, 2.5rem);
+}
+
+[data-ui="input-group"]:has([data-part="suffix"]) [data-ui="input"] {
+  padding-right: var(--space-10, 2.5rem);
+}
+
+/* ── Motion ── */
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="input"] {
+    transition: none;
+  }
+}

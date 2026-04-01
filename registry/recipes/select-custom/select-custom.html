@@ -1,0 +1,89 @@
+<!-- @ui:component select-custom -->
+<!-- @ui:kind recipe -->
+<!-- @ui:slots trigger value listbox option search empty -->
+<!-- @ui:variants size=sm|md|lg -->
+<!-- @ui:controller select-custom.js -->
+
+<!-- Default (medium) -->
+<div data-ui="select-custom" data-state="closed" data-size="md">
+  <button
+    data-part="trigger"
+    role="combobox"
+    aria-expanded="false"
+    aria-haspopup="listbox"
+    aria-controls="select-listbox-1"
+  >
+    <span data-part="value">Select an option</span>
+    <span data-part="chevron" aria-hidden="true">&#x25BE;</span>
+  </button>
+  <div data-part="listbox" role="listbox" id="select-listbox-1" hidden>
+    <div data-part="option" role="option" aria-selected="false" data-value="apple">Apple</div>
+    <div data-part="option" role="option" aria-selected="false" data-value="banana">Banana</div>
+    <div data-part="option" role="option" aria-selected="false" data-value="cherry">Cherry</div>
+    <div data-part="option" role="option" aria-selected="false" data-value="grape">Grape</div>
+    <div data-part="option" role="option" aria-selected="false" data-value="orange">Orange</div>
+  </div>
+</div>
+
+<!-- With search (medium) -->
+<div data-ui="select-custom" data-state="closed" data-size="md">
+  <button
+    data-part="trigger"
+    role="combobox"
+    aria-expanded="false"
+    aria-haspopup="listbox"
+    aria-controls="select-listbox-2"
+  >
+    <span data-part="value">Choose a country</span>
+    <span data-part="chevron" aria-hidden="true">&#x25BE;</span>
+  </button>
+  <div data-part="listbox" role="listbox" id="select-listbox-2" hidden>
+    <input data-part="search" type="text" placeholder="Search..." aria-label="Filter options">
+    <div data-part="option" role="option" aria-selected="false" data-value="us">United States</div>
+    <div data-part="option" role="option" aria-selected="false" data-value="uk">United Kingdom</div>
+    <div data-part="option" role="option" aria-selected="false" data-value="ca">Canada</div>
+    <div data-part="option" role="option" aria-selected="false" data-value="au">Australia</div>
+    <div data-part="option" role="option" aria-selected="false" data-value="de">Germany</div>
+    <div data-part="option" role="option" aria-selected="false" data-value="fr">France</div>
+    <div data-part="empty" hidden>No options found</div>
+  </div>
+</div>
+
+<!-- Small size -->
+<div data-ui="select-custom" data-state="closed" data-size="sm">
+  <button
+    data-part="trigger"
+    role="combobox"
+    aria-expanded="false"
+    aria-haspopup="listbox"
+    aria-controls="select-listbox-3"
+  >
+    <span data-part="value">Pick a color</span>
+    <span data-part="chevron" aria-hidden="true">&#x25BE;</span>
+  </button>
+  <div data-part="listbox" role="listbox" id="select-listbox-3" hidden>
+    <div data-part="option" role="option" aria-selected="false" data-value="red">Red</div>
+    <div data-part="option" role="option" aria-selected="false" data-value="green">Green</div>
+    <div data-part="option" role="option" aria-selected="false" data-value="blue">Blue</div>
+  </div>
+</div>
+
+<!-- Large size -->
+<div data-ui="select-custom" data-state="closed" data-size="lg">
+  <button
+    data-part="trigger"
+    role="combobox"
+    aria-expanded="false"
+    aria-haspopup="listbox"
+    aria-controls="select-listbox-4"
+  >
+    <span data-part="value">Select a category</span>
+    <span data-part="chevron" aria-hidden="true">&#x25BE;</span>
+  </button>
+  <div data-part="listbox" role="listbox" id="select-listbox-4" hidden>
+    <div data-part="option" role="option" aria-selected="false" data-value="design">Design</div>
+    <div data-part="option" role="option" aria-selected="false" data-value="engineering">Engineering</div>
+    <div data-part="option" role="option" aria-selected="false" data-value="marketing">Marketing</div>
+    <div data-part="option" role="option" aria-selected="false" data-value="sales">Sales</div>
+  </div>
+</div>

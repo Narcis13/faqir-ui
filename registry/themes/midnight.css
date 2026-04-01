@@ -1,0 +1,152 @@
+/* @ui:theme midnight — dark-first theme with deep navy/purple tones and vibrant cyan accents */
+
+/* ── Light Mode Overrides ── */
+/* Cool-shifted surfaces with deep blue-violet primary */
+:root {
+  /* ── Surfaces ── */
+  --color-bg:              oklch(0.97 0.008 270);    /* cool-tinted white */
+  --color-bg-subtle:       oklch(0.94 0.012 270);    /* subtle blue-gray */
+  --color-bg-muted:        oklch(0.91 0.016 270);    /* muted cool surface */
+  --color-fg:              oklch(0.18 0.04 280);      /* deep blue-black */
+  --color-fg-muted:        oklch(0.45 0.03 270);     /* muted blue-gray */
+  --color-fg-subtle:       oklch(0.58 0.025 270);    /* subtle blue-gray */
+
+  /* ── Interactive: Primary (blue-violet) ── */
+  --color-primary:         oklch(0.50 0.24 280);     /* deep blue-violet */
+  --color-primary-hover:   oklch(0.45 0.26 280);
+  --color-primary-active:  oklch(0.40 0.24 280);
+  --color-primary-fg:      white;
+  --color-primary-subtle:  oklch(0.92 0.06 280);
+
+  /* ── Interactive: Secondary ── */
+  --color-secondary:       oklch(0.93 0.014 270);
+  --color-secondary-hover: oklch(0.89 0.018 270);
+  --color-secondary-fg:    oklch(0.20 0.04 280);
+
+  /* ── Interactive: Destructive ── */
+  --color-destructive:        oklch(0.55 0.22 15);
+  --color-destructive-hover:  oklch(0.50 0.24 15);
+  --color-destructive-fg:     white;
+  --color-destructive-subtle: oklch(0.94 0.04 15);
+
+  /* ── Feedback ── */
+  --color-success:         oklch(0.58 0.18 160);
+  --color-success-subtle:  oklch(0.94 0.04 160);
+  --color-warning:         oklch(0.72 0.15 75);
+  --color-warning-subtle:  oklch(0.94 0.04 75);
+  --color-info:            oklch(0.55 0.20 250);
+  --color-info-subtle:     oklch(0.94 0.04 250);
+
+  /* ── Borders ── */
+  --color-border:          oklch(0.88 0.014 270);
+  --color-border-strong:   oklch(0.80 0.02 270);
+  --color-ring:            oklch(0.50 0.24 280 / 0.4);
+
+  /* ── Shadows (cool blue-tinted) ── */
+  --shadow-xs:  0 1px 2px oklch(0.20 0.04 270 / 0.08);
+  --shadow-sm:  0 1px 3px oklch(0.20 0.04 270 / 0.10), 0 1px 2px oklch(0.20 0.04 270 / 0.06);
+  --shadow-md:  0 4px 6px oklch(0.20 0.04 270 / 0.08), 0 2px 4px oklch(0.20 0.04 270 / 0.06);
+  --shadow-lg:  0 10px 15px oklch(0.20 0.04 270 / 0.10), 0 4px 6px oklch(0.20 0.04 270 / 0.06);
+  --shadow-xl:  0 20px 25px oklch(0.20 0.04 270 / 0.12), 0 8px 10px oklch(0.20 0.04 270 / 0.06);
+}
+
+/* ── Dark Mode (primary design target) ── */
+/* Deep navy backgrounds, vibrant cyan primary, purple-tinted shadows */
+[data-theme="dark"] {
+  /* ── Surfaces (deep navy) ── */
+  --color-bg:              oklch(0.12 0.04 275);     /* very dark navy */
+  --color-bg-subtle:       oklch(0.16 0.05 275);     /* dark navy */
+  --color-bg-muted:        oklch(0.21 0.05 275);     /* muted navy */
+  --color-fg:              oklch(0.95 0.01 260);      /* near-white, cool tint */
+  --color-fg-muted:        oklch(0.65 0.03 270);     /* muted cool gray */
+  --color-fg-subtle:       oklch(0.50 0.03 270);     /* subtle cool gray */
+
+  /* ── Interactive: Primary (vibrant cyan) ── */
+  --color-primary:         oklch(0.75 0.16 195);     /* vibrant cyan */
+  --color-primary-hover:   oklch(0.82 0.14 195);     /* lighter cyan */
+  --color-primary-active:  oklch(0.88 0.10 195);     /* lightest cyan */
+  --color-primary-fg:      oklch(0.12 0.04 275);     /* dark navy for contrast */
+  --color-primary-subtle:  oklch(0.75 0.16 195 / 0.12);
+
+  /* ── Interactive: Secondary ── */
+  --color-secondary:       oklch(0.24 0.05 275);
+  --color-secondary-hover: oklch(0.30 0.05 275);
+  --color-secondary-fg:    oklch(0.90 0.01 260);
+
+  /* ── Interactive: Destructive ── */
+  --color-destructive:        oklch(0.65 0.22 15);
+  --color-destructive-hover:  oklch(0.72 0.20 15);
+  --color-destructive-fg:     white;
+  --color-destructive-subtle: oklch(0.65 0.22 15 / 0.15);
+
+  /* ── Feedback ── */
+  --color-success:         oklch(0.72 0.18 160);
+  --color-success-subtle:  oklch(0.72 0.18 160 / 0.15);
+  --color-warning:         oklch(0.80 0.14 80);
+  --color-warning-subtle:  oklch(0.80 0.14 80 / 0.15);
+  --color-info:            oklch(0.70 0.16 250);
+  --color-info-subtle:     oklch(0.70 0.16 250 / 0.15);
+
+  /* ── Borders ── */
+  --color-border:          oklch(0.26 0.05 275);
+  --color-border-strong:   oklch(0.34 0.06 275);
+  --color-ring:            oklch(0.75 0.16 195 / 0.45);
+
+  /* ── Shadows (deep, dramatic, purple-tinted) ── */
+  --shadow-xs:  0 1px 3px oklch(0.08 0.06 285 / 0.4);
+  --shadow-sm:  0 2px 6px oklch(0.08 0.06 285 / 0.5);
+  --shadow-md:  0 6px 12px oklch(0.08 0.06 285 / 0.5), 0 2px 4px oklch(0.08 0.06 285 / 0.3);
+  --shadow-lg:  0 12px 24px oklch(0.08 0.06 285 / 0.6), 0 4px 8px oklch(0.08 0.06 285 / 0.3);
+  --shadow-xl:  0 24px 48px oklch(0.08 0.06 285 / 0.7), 0 8px 16px oklch(0.08 0.06 285 / 0.4);
+}
+
+/* ── Auto Dark Mode (system preference) ── */
+@media (prefers-color-scheme: dark) {
+  [data-theme="auto"] {
+    /* ── Surfaces (deep navy) ── */
+    --color-bg:              oklch(0.12 0.04 275);
+    --color-bg-subtle:       oklch(0.16 0.05 275);
+    --color-bg-muted:        oklch(0.21 0.05 275);
+    --color-fg:              oklch(0.95 0.01 260);
+    --color-fg-muted:        oklch(0.65 0.03 270);
+    --color-fg-subtle:       oklch(0.50 0.03 270);
+
+    /* ── Interactive: Primary (vibrant cyan) ── */
+    --color-primary:         oklch(0.75 0.16 195);
+    --color-primary-hover:   oklch(0.82 0.14 195);
+    --color-primary-active:  oklch(0.88 0.10 195);
+    --color-primary-fg:      oklch(0.12 0.04 275);
+    --color-primary-subtle:  oklch(0.75 0.16 195 / 0.12);
+
+    /* ── Interactive: Secondary ── */
+    --color-secondary:       oklch(0.24 0.05 275);
+    --color-secondary-hover: oklch(0.30 0.05 275);
+    --color-secondary-fg:    oklch(0.90 0.01 260);
+
+    /* ── Interactive: Destructive ── */
+    --color-destructive:        oklch(0.65 0.22 15);
+    --color-destructive-hover:  oklch(0.72 0.20 15);
+    --color-destructive-fg:     white;
+    --color-destructive-subtle: oklch(0.65 0.22 15 / 0.15);
+
+    /* ── Feedback ── */
+    --color-success:         oklch(0.72 0.18 160);
+    --color-success-subtle:  oklch(0.72 0.18 160 / 0.15);
+    --color-warning:         oklch(0.80 0.14 80);
+    --color-warning-subtle:  oklch(0.80 0.14 80 / 0.15);
+    --color-info:            oklch(0.70 0.16 250);
+    --color-info-subtle:     oklch(0.70 0.16 250 / 0.15);
+
+    /* ── Borders ── */
+    --color-border:          oklch(0.26 0.05 275);
+    --color-border-strong:   oklch(0.34 0.06 275);
+    --color-ring:            oklch(0.75 0.16 195 / 0.45);
+
+    /* ── Shadows (deep, dramatic, purple-tinted) ── */
+    --shadow-xs:  0 1px 3px oklch(0.08 0.06 285 / 0.4);
+    --shadow-sm:  0 2px 6px oklch(0.08 0.06 285 / 0.5);
+    --shadow-md:  0 6px 12px oklch(0.08 0.06 285 / 0.5), 0 2px 4px oklch(0.08 0.06 285 / 0.3);
+    --shadow-lg:  0 12px 24px oklch(0.08 0.06 285 / 0.6), 0 4px 8px oklch(0.08 0.06 285 / 0.3);
+    --shadow-xl:  0 24px 48px oklch(0.08 0.06 285 / 0.7), 0 8px 16px oklch(0.08 0.06 285 / 0.4);
+  }
+}

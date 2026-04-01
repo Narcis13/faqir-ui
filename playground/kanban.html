@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loom UI — Kanban Board</title>
+
+  <!-- Tokens -->
+  <link rel="stylesheet" href="../registry/tokens/palette.css">
+  <link rel="stylesheet" href="../registry/tokens/spacing.css">
+  <link rel="stylesheet" href="../registry/tokens/typography.css">
+  <link rel="stylesheet" href="../registry/tokens/effects.css">
+  <link rel="stylesheet" href="../registry/tokens/motion.css">
+  <link rel="stylesheet" href="../registry/tokens/semantic.css">
+  <link rel="stylesheet" href="../registry/tokens/aliases.css">
+
+  <!-- Base -->
+  <link rel="stylesheet" href="../registry/base/reset.css">
+
+  <!-- Theme -->
+  <link rel="stylesheet" href="../registry/themes/default.css">
+
+  <!-- Primitives -->
+  <link rel="stylesheet" href="../registry/primitives/button/button.css">
+  <link rel="stylesheet" href="../registry/primitives/input/input.css">
+  <link rel="stylesheet" href="../registry/primitives/textarea/textarea.css">
+  <link rel="stylesheet" href="../registry/primitives/select/select.css">
+  <link rel="stylesheet" href="../registry/primitives/badge/badge.css">
+  <link rel="stylesheet" href="../registry/primitives/card/card.css">
+  <link rel="stylesheet" href="../registry/primitives/separator/separator.css">
+  <link rel="stylesheet" href="../registry/primitives/avatar/avatar.css">
+  <link rel="stylesheet" href="../registry/primitives/stack/stack.css">
+  <link rel="stylesheet" href="../registry/primitives/grid/grid.css">
+  <link rel="stylesheet" href="../registry/primitives/surface/surface.css">
+  <link rel="stylesheet" href="../registry/primitives/label/label.css">
+  <link rel="stylesheet" href="../registry/primitives/switch/switch.css">
+  <link rel="stylesheet" href="../registry/primitives/text/text.css">
+
+  <!-- Recipes -->
+  <link rel="stylesheet" href="../registry/recipes/dialog/dialog.css">
+
+  <!-- Loom Core -->
+  <script src="../registry/core/loom-core.js" defer></script>
+
+  <style>
+    [l-cloak] { display: none !important; }
+  </style>
+</head>
+<body>
+  <div l-cloak l-data="{
+    darkMode: false,
+    search: '',
+    nextId: 13,
+
+    columns: [
+      {
+        id: 'backlog', title: 'Backlog',
+        cards: [
+          { id: 1, title: 'Research ARIA patterns for combobox', labels: ['research'], assignee: 'CL' },
+          { id: 2, title: 'Design token naming audit', labels: ['design'], assignee: 'SH' },
+          { id: 3, title: 'Write integration tests for audit engine', labels: ['testing'], assignee: '' }
+        ]
+      },
+      {
+        id: 'todo', title: 'To Do',
+        cards: [
+          { id: 4, title: 'Implement date-picker recipe', labels: ['development'], assignee: 'MK' },
+          { id: 5, title: 'Add toast positioning options', labels: ['development', 'enhancement'], assignee: 'AL' }
+        ]
+      },
+      {
+        id: 'progress', title: 'In Progress',
+        cards: [
+          { id: 6, title: 'Manifest validation for nested slots', labels: ['development'], assignee: 'CL' },
+          { id: 7, title: 'Dark mode token refinements', labels: ['design'], assignee: 'SH' }
+        ]
+      },
+      {
+        id: 'done', title: 'Done',
+        cards: [
+          { id: 8, title: 'Button group component', labels: ['development'], assignee: 'MK' },
+          { id: 9, title: 'Surface elevation variants', labels: ['development'], assignee: 'AL' }
+        ]
+      }
+    ],
+
+    addingTo: null,
+    newCardTitle: '',
+
+    startAdd(colId) {
+      this.addingTo = colId;
+      this.newCardTitle = '';
+    },
+
+    addCard(colId) {
+      if (!this.newCardTitle.trim()) return;
+      const col = this.columns.find(c => c.id === colId);
+      if (col) {
+        col.cards.push({
+          id: this.nextId++,
+          title: this.newCardTitle.trim(),
+          labels: [],
+          assignee: ''
+        });
+      }
+      this.addingTo = null;
+      this.newCardTitle = '';
+    },
+
+    moveCard(cardId, fromColId, toColId) {
+      const fromCol = this.columns.find(c => c.id === fromColId);
+      const toCol = this.columns.find(c => c.id === toColId);
+      if (!fromCol || !toCol) return;
+      const cardIndex = fromCol.cards.findIndex(c => c.id === cardId);
+      if (cardIndex === -1) return;
+      const [card] = fromCol.cards.splice(cardIndex, 1);
+      toCol.cards.push(card);
+    },
+
+    get filteredColumns() {
+      if (!this.search.trim()) return this.columns;
+      const q = this.search.toLowerCase();
+      return this.columns.map(col => ({
+        ...col,
+        cards: col.cards.filter(c => c.title.toLowerCase().includes(q))
+      }));
+    },
+
+    get totalCards() {
+      return this.columns.reduce((sum, col) => sum + col.cards.length, 0);
+    },
+
+    labelVariant(label) {
+      const map = { development: 'primary', design: 'warning', research: 'secondary', testing: 'success', enhancement: 'destructive' };
+      return map[label] || 'secondary';
+    },
+
+    toggleDark() {
+      this.darkMode = !this.darkMode;
+      document.documentElement.setAttribute('data-theme', this.darkMode ? 'dark' : 'light');
+    }
+  }">
+
+    <div data-ui="surface" data-variant="flat" data-max="xl" data-size="md" style="max-width: 1400px">
+      <div data-ui="stack" data-gap="4">
+
+        <!-- Header -->
+        <div data-ui="stack" data-variant="horizontal" data-gap="4" data-align="center" data-justify="between" data-wrap>
+          <div data-ui="stack" data-gap="1">
+            <h1 data-ui="heading" data-size="3">Kanban Board</h1>
+            <p style="font-size: var(--text-sm); color: var(--color-fg-muted)">
+              <span l-text="totalCards"></span> cards across <span l-text="columns.length"></span> columns
+            </p>
+          </div>
+          <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center">
+            <input data-ui="input" data-size="sm" placeholder="Search cards..." l-model="search" style="width: 200px">
+            <label data-ui="switch-label">
+              <input data-ui="switch" type="checkbox" role="switch" @change="toggleDark()">
+              <span l-text="darkMode ? 'Dark' : 'Light'" style="font-size: var(--text-sm)"></span>
+            </label>
+          </div>
+        </div>
+
+        <div data-ui="separator"></div>
+
+        <!-- Board -->
+        <div data-ui="grid" data-cols="4" data-gap="4">
+          <template l-for="col in filteredColumns">
+            <div data-ui="surface" data-size="sm" style="min-height: 300px">
+              <div data-ui="stack" data-gap="3">
+
+                <!-- Column header -->
+                <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center" style="justify-content: space-between">
+                  <span style="font-weight: var(--weight-semibold); font-size: var(--text-sm)" l-text="col.title"></span>
+                  <span data-ui="badge" data-size="sm" l-text="col.cards.length"></span>
+                </div>
+
+                <div data-ui="separator"></div>
+
+                <!-- Cards -->
+                <div data-ui="stack" data-gap="2">
+                  <template l-for="card in col.cards">
+                    <div data-ui="card" data-size="sm">
+                      <div data-part="body">
+                        <div data-ui="stack" data-gap="2">
+                          <span style="font-size: var(--text-sm); font-weight: var(--weight-medium)" l-text="card.title"></span>
+                          <template l-if="card.labels.length > 0">
+                            <div data-ui="stack" data-variant="horizontal" data-gap="1" style="flex-wrap: wrap">
+                              <template l-for="label in card.labels">
+                                <span data-ui="badge" data-size="sm" :data-variant="labelVariant(label)" l-text="label"></span>
+                              </template>
+                            </div>
+                          </template>
+                          <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center" style="justify-content: space-between">
+                            <template l-if="card.assignee">
+                              <div data-ui="avatar" data-size="sm">
+                                <span data-part="fallback" l-text="card.assignee"></span>
+                              </div>
+                            </template>
+                            <template l-if="!card.assignee">
+                              <span></span>
+                            </template>
+                            <!-- Move buttons -->
+                            <div data-ui="stack" data-variant="horizontal" data-gap="1">
+                              <template l-if="columns.indexOf(columns.find(c => c.id === col.id)) > 0">
+                                <button data-ui="button" data-variant="ghost" data-size="sm"
+                                        @click="moveCard(card.id, col.id, columns[columns.indexOf(columns.find(c => c.id === col.id)) - 1].id)"
+                                        style="font-size: var(--text-xs)">&larr;</button>
+                              </template>
+                              <template l-if="columns.indexOf(columns.find(c => c.id === col.id)) < columns.length - 1">
+                                <button data-ui="button" data-variant="ghost" data-size="sm"
+                                        @click="moveCard(card.id, col.id, columns[columns.indexOf(columns.find(c => c.id === col.id)) + 1].id)"
+                                        style="font-size: var(--text-xs)">&rarr;</button>
+                              </template>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+
+                <!-- Add card -->
+                <template l-if="addingTo === col.id">
+                  <div data-ui="stack" data-gap="2">
+                    <input data-ui="input" data-size="sm" placeholder="Card title..." l-model="newCardTitle" @keydown.enter="addCard(col.id)" @keydown.escape="addingTo = null">
+                    <div data-ui="stack" data-variant="horizontal" data-gap="1">
+                      <button data-ui="button" data-variant="primary" data-size="sm" @click="addCard(col.id)">Add</button>
+                      <button data-ui="button" data-variant="ghost" data-size="sm" @click="addingTo = null">Cancel</button>
+                    </div>
+                  </div>
+                </template>
+                <template l-if="addingTo !== col.id">
+                  <button data-ui="button" data-variant="ghost" data-size="sm" @click="startAdd(col.id)" style="width: 100%">+ Add card</button>
+                </template>
+
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <!-- Footer -->
+        <div data-ui="surface" data-variant="flat" data-align-text="center" style="padding: var(--space-4) 0">
+          <p data-ui="text" data-size="xs" data-variant="subtle">Loom UI Kanban — built with zero CSS classes</p>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

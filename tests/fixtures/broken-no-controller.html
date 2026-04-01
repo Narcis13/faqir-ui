@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><title>Broken — No Controller Script</title></head>
+<body>
+
+<!-- Dialog recipe without any script tag for controller -->
+<div data-ui="dialog" data-state="closed" id="no-ctrl-dialog">
+  <button data-part="trigger">Open</button>
+  <div data-part="overlay" hidden></div>
+  <div
+    data-part="panel"
+    data-size="md"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="no-ctrl-dialog-title"
+    hidden
+  >
+    <div data-part="header">
+      <h2 id="no-ctrl-dialog-title" data-part="title">Title</h2>
+      <button data-part="close" aria-label="Close dialog">&#x2715;</button>
+    </div>
+    <div data-part="body"><p>Content</p></div>
+  </div>
+</div>
+
+<!-- No script tags at all! -->
+</body>
+</html>

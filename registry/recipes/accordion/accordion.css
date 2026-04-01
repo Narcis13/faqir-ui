@@ -1,0 +1,94 @@
+/* @ui:component accordion */
+/* @ui:tokens color-bg color-fg color-fg-muted color-border space-3 space-4 text-sm text-base weight-medium duration-normal ease-default radius-lg */
+
+/* ── Root ── */
+[data-ui="accordion"] {
+  width: 100%;
+}
+
+/* ── Item ── */
+[data-ui="accordion"] [data-part="item"] {
+  border-bottom: 1px solid var(--color-border);
+}
+
+[data-ui="accordion"] [data-part="item"]:last-child {
+  border-bottom: none;
+}
+
+/* ── Trigger ── */
+[data-ui="accordion"] [data-part="trigger"] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--space-4);
+  border: none;
+  background: transparent;
+  color: var(--color-fg);
+  font-family: var(--font-sans, system-ui, sans-serif);
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  text-align: left;
+  cursor: pointer;
+  transition: color var(--duration-normal) var(--ease-default);
+}
+
+[data-ui="accordion"] [data-part="trigger"]:hover {
+  color: var(--color-fg);
+  background: var(--color-bg-muted, oklch(0.96 0.004 260));
+}
+
+[data-ui="accordion"] [data-part="trigger"]:focus-visible {
+  outline: 2px solid var(--color-ring, oklch(0.55 0.22 264 / 0.4));
+  outline-offset: -2px;
+  border-radius: var(--radius-sm, 0.25rem);
+}
+
+/* ── Icon (chevron) ── */
+[data-ui="accordion"] [data-part="icon"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  color: var(--color-fg-muted);
+  font-size: var(--text-sm);
+  transition: transform var(--duration-normal) var(--ease-default);
+  transform: rotate(0deg);
+}
+
+[data-ui="accordion"] [data-part="item"][data-state="expanded"] [data-part="icon"] {
+  transform: rotate(180deg);
+}
+
+/* ── Content ── */
+[data-ui="accordion"] [data-part="content"] {
+  overflow: hidden;
+  padding: 0 var(--space-4) var(--space-4);
+  color: var(--color-fg-muted);
+  font-size: var(--text-sm);
+}
+
+/* ── Bordered Variant ── */
+[data-ui="accordion"][data-bordered="true"] {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+[data-ui="accordion"][data-bordered="true"] [data-part="item"] {
+  border-bottom: 1px solid var(--color-border);
+}
+
+[data-ui="accordion"][data-bordered="true"] [data-part="item"]:last-child {
+  border-bottom: none;
+}
+
+/* ── Motion ── */
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="accordion"] [data-part="icon"],
+  [data-ui="accordion"] [data-part="trigger"] {
+    transition: none;
+  }
+}

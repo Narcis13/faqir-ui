@@ -1,0 +1,162 @@
+{
+  "name": "select-custom",
+  "version": "1.0.0",
+  "kind": "recipe",
+  "category": "forms",
+  "description": "Custom styled select dropdown with search filtering and keyboard navigation",
+
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='select-custom']",
+    "content_model": "slots"
+  },
+
+  "slots": {
+    "trigger": {
+      "selector": "[data-part='trigger']",
+      "required": true,
+      "tag_hint": "button",
+      "description": "Button that toggles the select dropdown"
+    },
+    "value": {
+      "selector": "[data-part='value']",
+      "required": true,
+      "tag_hint": "span",
+      "description": "Displays the currently selected value or placeholder"
+    },
+    "listbox": {
+      "selector": "[data-part='listbox']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "Dropdown container with role=listbox"
+    },
+    "option": {
+      "selector": "[data-part='option']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "Individual option with role=option and data-value"
+    },
+    "search": {
+      "selector": "[data-part='search']",
+      "required": false,
+      "tag_hint": "input",
+      "description": "Optional search input to filter options"
+    },
+    "empty": {
+      "selector": "[data-part='empty']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Empty state message when no options match the filter"
+    }
+  },
+
+  "variants": {
+    "size": {
+      "values": ["sm", "md", "lg"],
+      "default": "md",
+      "attr": "data-size",
+      "applied_to": "root"
+    }
+  },
+
+  "states": {
+    "closed": { "attr": "data-state=\"closed\"", "default": true },
+    "open": { "attr": "data-state=\"open\"" }
+  },
+
+  "props": {
+    "placeholder": { "type": "string", "default": "", "description": "Placeholder text" },
+    "value": { "type": "string", "default": "", "description": "Selected value" }
+  },
+
+  "a11y": {
+    "required_attrs": [
+      "role=\"combobox\" on trigger",
+      "aria-expanded on trigger",
+      "aria-haspopup=\"listbox\" on trigger",
+      "aria-controls on trigger pointing to listbox id",
+      "role=\"listbox\" on listbox",
+      "role=\"option\" on each option",
+      "aria-selected on options"
+    ],
+    "keyboard": {
+      "Enter / Space": "open select dropdown",
+      "ArrowDown": "highlight next option",
+      "ArrowUp": "highlight previous option",
+      "Enter": "select highlighted option",
+      "Escape": "close dropdown",
+      "Home": "highlight first option",
+      "End": "highlight last option"
+    }
+  },
+
+  "tokens_used": [
+    "color-bg", "color-fg", "color-fg-muted",
+    "color-border", "color-border-strong",
+    "color-primary", "color-primary-subtle", "color-ring",
+    "radius-md", "radius-lg",
+    "shadow-md",
+    "space-1", "space-2", "space-3", "space-4",
+    "text-sm", "text-xs",
+    "z-dropdown",
+    "duration-fast", "ease-default"
+  ],
+
+  "templates": {
+    "html": "<div data-ui=\"select-custom\" data-state=\"closed\" data-size=\"{size}\">\n  <button data-part=\"trigger\" role=\"combobox\" aria-expanded=\"false\" aria-haspopup=\"listbox\" aria-controls=\"{id}-listbox\">\n    <span data-part=\"value\" data-placeholder>{placeholder}</span>\n    <span data-part=\"chevron\" aria-hidden=\"true\">&#x25BE;</span>\n  </button>\n  <div data-part=\"listbox\" role=\"listbox\" id=\"{id}-listbox\" hidden>\n    <div data-part=\"option\" role=\"option\" aria-selected=\"false\" data-value=\"{val1}\">{label1}</div>\n    <div data-part=\"option\" role=\"option\" aria-selected=\"false\" data-value=\"{val2}\">{label2}</div>\n  </div>\n</div>"
+  },
+
+  "safe_transforms": [
+    "add-option",
+    "remove-option",
+    "add-search",
+    "remove-search",
+    "change-size",
+    "change-placeholder",
+    "restyle-listbox-background",
+    "customize-empty-message"
+  ],
+
+  "unsafe_transforms": [
+    "remove-combobox-role",
+    "remove-listbox-role",
+    "remove-option-role",
+    "remove-aria-expanded",
+    "remove-aria-haspopup",
+    "remove-keyboard-navigation",
+    "remove-click-outside-handler"
+  ],
+
+  "composition": {
+    "contains": [],
+    "used_in": ["settings-page"]
+  },
+
+  "files": {
+    "html": "select-custom.html",
+    "css": "select-custom.css",
+    "js": "select-custom.js",
+    "manifest": "select-custom.manifest.json"
+  },
+
+  "tests": [
+    "opens-on-trigger-click",
+    "closes-on-escape",
+    "closes-on-click-outside",
+    "closes-on-option-select",
+    "click-option-selects-value",
+    "displays-selected-value-in-trigger",
+    "search-filters-options",
+    "shows-empty-state-when-no-match",
+    "arrow-down-highlights-next-option",
+    "arrow-up-highlights-previous-option",
+    "enter-selects-highlighted-option",
+    "trigger-has-role-combobox",
+    "trigger-has-aria-expanded",
+    "trigger-has-aria-haspopup-listbox",
+    "listbox-has-role-listbox",
+    "options-have-role-option",
+    "selected-option-has-aria-selected-true",
+    "chevron-rotates-when-open"
+  ]
+}

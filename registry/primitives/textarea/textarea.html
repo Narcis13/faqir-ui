@@ -1,0 +1,25 @@
+<!-- @ui:component textarea -->
+<!-- @ui:kind primitive -->
+<!-- @ui:slots  -->
+<!-- @ui:variants size=sm|md|lg -->
+
+<!-- Default -->
+<label data-ui="label" for="comment-input">Comment</label>
+<textarea data-ui="textarea" id="comment-input" placeholder="Write a comment..."></textarea>
+
+<!-- Error state -->
+<label data-ui="label" for="bio-input">Bio</label>
+<textarea data-ui="textarea" id="bio-input" data-state="error" aria-invalid="true">This value is invalid</textarea>
+
+<!-- Disabled -->
+<label data-ui="label" for="notes-input">Notes</label>
+<textarea data-ui="textarea" id="notes-input" disabled>Cannot edit this field</textarea>
+
+<!-- Sizes -->
+<textarea data-ui="textarea" data-size="sm" placeholder="Small textarea"></textarea>
+<textarea data-ui="textarea" placeholder="Medium textarea (default)"></textarea>
+<textarea data-ui="textarea" data-size="lg" placeholder="Large textarea"></textarea>
+
+<!-- With rows attribute -->
+<label data-ui="label" for="description-input">Description</label>
+<textarea data-ui="textarea" id="description-input" rows="6" placeholder="Enter a detailed description..."></textarea>

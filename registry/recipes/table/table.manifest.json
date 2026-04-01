@@ -1,0 +1,166 @@
+{
+  "name": "table",
+  "version": "1.0.0",
+  "kind": "recipe",
+  "category": "data-display",
+  "description": "Enhanced data table with sortable columns and selectable rows",
+
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='table']",
+    "content_model": "slots"
+  },
+
+  "slots": {
+    "table": {
+      "selector": "[data-part='table']",
+      "required": true,
+      "tag_hint": "table",
+      "description": "The table element"
+    },
+    "thead": {
+      "selector": "[data-part='thead']",
+      "required": true,
+      "tag_hint": "thead",
+      "description": "Table header section"
+    },
+    "tbody": {
+      "selector": "[data-part='tbody']",
+      "required": true,
+      "tag_hint": "tbody",
+      "description": "Table body section"
+    },
+    "tr": {
+      "selector": "[data-part='tr']",
+      "required": true,
+      "tag_hint": "tr",
+      "description": "Table row"
+    },
+    "th": {
+      "selector": "[data-part='th']",
+      "required": true,
+      "tag_hint": "th",
+      "description": "Table header cell with scope=col"
+    },
+    "td": {
+      "selector": "[data-part='td']",
+      "required": true,
+      "tag_hint": "td",
+      "description": "Table data cell"
+    },
+    "checkbox": {
+      "selector": "[data-part='checkbox']",
+      "required": false,
+      "tag_hint": "input",
+      "description": "Checkbox for row selection"
+    }
+  },
+
+  "variants": {
+    "striped": {
+      "values": ["true", "false"],
+      "default": "false",
+      "attr": "data-variant",
+      "value": "striped",
+      "applied_to": "root"
+    },
+    "bordered": {
+      "values": ["true", "false"],
+      "default": "false",
+      "attr": "data-variant",
+      "value": "bordered",
+      "applied_to": "root"
+    },
+    "size": {
+      "values": ["sm", "md", "lg"],
+      "default": "md",
+      "attr": "data-size",
+      "applied_to": "root"
+    }
+  },
+
+  "states": {
+    "default": { "attr": "data-state=\"default\"", "default": true }
+  },
+
+  "props": {
+    "selectable": { "type": "boolean", "default": false, "description": "Whether rows are selectable" }
+  },
+
+  "a11y": {
+    "required_attrs": [
+      "Proper table semantics (table, thead, tbody, tr, th, td)",
+      "scope=\"col\" on th elements",
+      "aria-sort on sortable th elements",
+      "aria-label on selection checkboxes"
+    ],
+    "keyboard": {
+      "Click header": "toggle sort direction on sortable columns",
+      "Click checkbox": "toggle row selection",
+      "Shift+Click checkbox": "range selection from last selected"
+    }
+  },
+
+  "tokens_used": [
+    "color-bg", "color-bg-subtle", "color-fg", "color-fg-muted",
+    "color-border", "color-primary-subtle",
+    "space-2", "space-3", "space-4",
+    "text-xs", "text-sm",
+    "weight-semibold",
+    "duration-fast", "ease-default"
+  ],
+
+  "templates": {
+    "html": "<div data-ui=\"table\" data-size=\"{size}\">\n  <table data-part=\"table\">\n    <thead data-part=\"thead\">\n      <tr data-part=\"tr\">\n        <th data-part=\"th\" scope=\"col\"><input data-part=\"checkbox\" type=\"checkbox\" aria-label=\"Select all rows\"></th>\n        <th data-part=\"th\" scope=\"col\" data-sortable aria-sort=\"none\">{col1}</th>\n        <th data-part=\"th\" scope=\"col\" data-sortable aria-sort=\"none\">{col2}</th>\n      </tr>\n    </thead>\n    <tbody data-part=\"tbody\">\n      <tr data-part=\"tr\">\n        <td data-part=\"td\"><input data-part=\"checkbox\" type=\"checkbox\" aria-label=\"Select row\"></td>\n        <td data-part=\"td\">{val1}</td>\n        <td data-part=\"td\">{val2}</td>\n      </tr>\n    </tbody>\n  </table>\n</div>"
+  },
+
+  "safe_transforms": [
+    "add-column",
+    "remove-column",
+    "add-row",
+    "remove-row",
+    "change-size",
+    "toggle-striped",
+    "toggle-bordered",
+    "add-sortable",
+    "remove-sortable",
+    "restyle-header-background"
+  ],
+
+  "unsafe_transforms": [
+    "remove-table-semantics",
+    "remove-scope-col",
+    "remove-aria-sort",
+    "remove-checkbox-labels",
+    "remove-selection-checkboxes"
+  ],
+
+  "composition": {
+    "contains": ["checkbox", "badge", "button"],
+    "used_in": ["crud-table"]
+  },
+
+  "files": {
+    "html": "table.html",
+    "css": "table.css",
+    "js": "table.js",
+    "manifest": "table.manifest.json"
+  },
+
+  "tests": [
+    "renders-table-with-proper-semantics",
+    "th-has-scope-col",
+    "sortable-th-has-aria-sort",
+    "click-header-sorts-ascending",
+    "click-header-again-sorts-descending",
+    "sort-indicator-shows-direction",
+    "header-checkbox-selects-all",
+    "header-checkbox-deselects-all",
+    "row-checkbox-toggles-selection",
+    "selected-row-has-data-selected",
+    "shift-click-selects-range",
+    "header-checkbox-shows-indeterminate",
+    "striped-variant-alternates-bg",
+    "bordered-variant-has-borders"
+  ]
+}

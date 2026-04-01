@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><title>Broken Dialog — Missing ARIA</title></head>
+<body>
+
+<!-- Dialog missing: aria-modal, aria-labelledby, role on panel, aria-label on close -->
+<div data-ui="dialog" data-state="closed" id="broken-dialog">
+  <button data-part="trigger">Open</button>
+  <div data-part="overlay" hidden></div>
+  <div data-part="panel" data-size="md" hidden>
+    <div data-part="header">
+      <h2 id="broken-dialog-title" data-part="title">Title</h2>
+      <button data-part="close">&#x2715;</button>
+    </div>
+    <div data-part="body"><p>Content</p></div>
+    <div data-part="footer">
+      <button data-ui="button" data-variant="primary">OK</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="ui/core/loom.js"></script>
+</body>
+</html>

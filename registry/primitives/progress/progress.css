@@ -1,0 +1,64 @@
+/* @ui:component progress */
+/* @ui:tokens color-primary color-bg-muted color-success color-warning color-destructive radius-full radius-md space-1 duration-normal ease-default */
+
+/* ── Base ── */
+[data-ui="progress"] {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+/* ── Track ── */
+[data-ui="progress"] [data-part="track"] {
+  flex: 1;
+  height: 0.5rem;
+  background: var(--color-bg-muted);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+/* ── Fill ── */
+[data-ui="progress"] [data-part="fill"] {
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: var(--radius-full);
+  transition: width var(--duration-normal) var(--ease-default);
+}
+
+/* ── Variants ── */
+[data-ui="progress"][data-variant="success"] [data-part="fill"] {
+  background: var(--color-success);
+}
+
+[data-ui="progress"][data-variant="warning"] [data-part="fill"] {
+  background: var(--color-warning);
+}
+
+[data-ui="progress"][data-variant="destructive"] [data-part="fill"] {
+  background: var(--color-destructive);
+}
+
+/* ── Sizes ── */
+[data-ui="progress"][data-size="sm"] [data-part="track"] {
+  height: 0.25rem;
+}
+
+[data-ui="progress"][data-size="lg"] [data-part="track"] {
+  height: 0.75rem;
+}
+
+/* ── Label ── */
+[data-ui="progress"] [data-part="label"] {
+  font-size: var(--text-sm);
+  color: var(--color-fg-muted);
+  min-width: 3ch;
+  text-align: right;
+}
+
+/* ── Reduced Motion ── */
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="progress"] [data-part="fill"] {
+    transition: none;
+  }
+}

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><title>Valid Dialog Test</title></head>
+<body>
+
+<div data-ui="dialog" data-state="closed" id="test-dialog">
+  <button data-part="trigger">Open Dialog</button>
+  <div data-part="overlay" hidden></div>
+  <div
+    data-part="panel"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="test-dialog-title"
+    data-size="md"
+    hidden
+  >
+    <div data-part="header">
+      <h2 id="test-dialog-title" data-part="title">Test Title</h2>
+      <button data-part="close" aria-label="Close dialog">&#x2715;</button>
+    </div>
+    <div data-part="body">
+      <p>Body content here.</p>
+    </div>
+    <div data-part="footer">
+      <button data-ui="button" data-variant="primary">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="ui/core/loom.js"></script>
+</body>
+</html>

@@ -1,0 +1,86 @@
+{
+  "name": "empty-state",
+  "version": "1.0.0",
+  "kind": "primitive",
+  "category": "feedback",
+  "description": "Placeholder for empty content sections with icon, title, description, and action slots",
+
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='empty-state']",
+    "content_model": "slots"
+  },
+
+  "slots": {
+    "icon": {
+      "selector": "[data-part='icon']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Visual icon or emoji"
+    },
+    "title": {
+      "selector": "[data-part='title']",
+      "required": true,
+      "tag_hint": "h3",
+      "description": "Heading text"
+    },
+    "description": {
+      "selector": "[data-part='description']",
+      "required": false,
+      "tag_hint": "p",
+      "description": "Explanatory text"
+    },
+    "actions": {
+      "selector": "[data-part='actions']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Container for action buttons"
+    }
+  },
+
+  "variants": {},
+
+  "states": {},
+
+  "a11y": {
+    "keyboard": {}
+  },
+
+  "tokens_used": [
+    "color-fg", "color-fg-muted", "color-fg-subtle",
+    "text-sm", "text-lg", "text-3xl", "text-xs", "text-xl",
+    "weight-medium", "space-2", "space-3", "space-4", "space-8"
+  ],
+
+  "templates": {
+    "html": "<div data-ui=\"empty-state\"><span data-part=\"icon\">{icon}</span><h3 data-part=\"title\">{title}</h3><p data-part=\"description\">{description}</p><div data-part=\"actions\">{actions}</div></div>"
+  },
+
+  "safe_transforms": [
+    "Change icon content",
+    "Change title and description text",
+    "Add or remove actions slot",
+    "Add or remove icon slot"
+  ],
+  "unsafe_transforms": [
+    "Remove data-ui attribute",
+    "Remove title slot"
+  ],
+
+  "composition": {
+    "contains": ["button"],
+    "used_in": ["crud-table", "search-results"]
+  },
+
+  "files": {
+    "html": "empty-state.html",
+    "css": "empty-state.css",
+    "manifest": "empty-state.manifest.json"
+  },
+
+  "tests": [
+    "Renders title",
+    "Centers content",
+    "Compact size reduces spacing and font"
+  ]
+}

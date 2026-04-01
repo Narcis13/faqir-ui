@@ -1,0 +1,56 @@
+<!-- @ui:component stack -->
+<!-- @ui:kind primitive -->
+<!-- @ui:slots -->
+<!-- @ui:variants direction=vertical|horizontal gap=0|1|2|3|4|6|8 align=start|center|end|stretch -->
+
+<!-- Vertical Stack (default) -->
+<div data-ui="stack" data-gap="4">
+  <div>Item 1</div>
+  <div>Item 2</div>
+  <div>Item 3</div>
+</div>
+
+<!-- Horizontal Stack -->
+<div data-ui="stack" data-variant="horizontal" data-gap="4">
+  <div>Item 1</div>
+  <div>Item 2</div>
+  <div>Item 3</div>
+</div>
+
+<!-- Horizontal Stack, Center Aligned -->
+<div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center">
+  <div>Short</div>
+  <div>Taller<br>Item</div>
+  <div>Short</div>
+</div>
+
+<!-- Vertical Stack, Center Aligned -->
+<div data-ui="stack" data-gap="3" data-align="center">
+  <div>Centered Item 1</div>
+  <div>Centered Item 2</div>
+</div>
+
+<!-- Tight Stack (no gap) -->
+<div data-ui="stack" data-gap="0">
+  <div>No gap 1</div>
+  <div>No gap 2</div>
+  <div>No gap 3</div>
+</div>
+
+<!-- Spacious Stack -->
+<div data-ui="stack" data-gap="8">
+  <div>Spacious Item 1</div>
+  <div>Spacious Item 2</div>
+</div>
+
+<!-- Horizontal Stack, End Aligned -->
+<div data-ui="stack" data-variant="horizontal" data-gap="4" data-align="end">
+  <div>End 1</div>
+  <div>End 2</div>
+</div>
+
+<!-- Horizontal Stack, Stretch Aligned -->
+<div data-ui="stack" data-variant="horizontal" data-gap="4" data-align="stretch">
+  <div>Stretch 1</div>
+  <div>Stretch 2</div>
+</div>

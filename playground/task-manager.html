@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loom UI — Task Manager</title>
+
+  <!-- Tokens -->
+  <link rel="stylesheet" href="../registry/tokens/palette.css">
+  <link rel="stylesheet" href="../registry/tokens/spacing.css">
+  <link rel="stylesheet" href="../registry/tokens/typography.css">
+  <link rel="stylesheet" href="../registry/tokens/effects.css">
+  <link rel="stylesheet" href="../registry/tokens/motion.css">
+  <link rel="stylesheet" href="../registry/tokens/semantic.css">
+  <link rel="stylesheet" href="../registry/tokens/aliases.css">
+
+  <!-- Base -->
+  <link rel="stylesheet" href="../registry/base/reset.css">
+
+  <!-- Theme -->
+  <link rel="stylesheet" href="../registry/themes/default.css">
+
+  <!-- Primitives -->
+  <link rel="stylesheet" href="../registry/primitives/button/button.css">
+  <link rel="stylesheet" href="../registry/primitives/input/input.css">
+  <link rel="stylesheet" href="../registry/primitives/select/select.css">
+  <link rel="stylesheet" href="../registry/primitives/textarea/textarea.css">
+  <link rel="stylesheet" href="../registry/primitives/checkbox/checkbox.css">
+  <link rel="stylesheet" href="../registry/primitives/badge/badge.css">
+  <link rel="stylesheet" href="../registry/primitives/card/card.css">
+  <link rel="stylesheet" href="../registry/primitives/separator/separator.css">
+  <link rel="stylesheet" href="../registry/primitives/label/label.css">
+  <link rel="stylesheet" href="../registry/primitives/stack/stack.css">
+  <link rel="stylesheet" href="../registry/primitives/grid/grid.css">
+  <link rel="stylesheet" href="../registry/primitives/surface/surface.css">
+  <link rel="stylesheet" href="../registry/primitives/switch/switch.css">
+  <link rel="stylesheet" href="../registry/primitives/text/text.css">
+  <link rel="stylesheet" href="../registry/primitives/empty-state/empty-state.css">
+  <link rel="stylesheet" href="../registry/primitives/progress/progress.css">
+
+  <!-- Loom Core -->
+  <script src="../registry/core/loom-core.js" defer></script>
+
+  <style>
+    [l-cloak] { display: none !important; }
+  </style>
+</head>
+<body>
+  <div l-cloak l-data="{
+    tasks: [
+      { id: 1, title: 'Design token audit', description: 'Review all palette tokens for WCAG contrast compliance', done: false, priority: 'high', category: 'design' },
+      { id: 2, title: 'Write manifest for date-picker', description: 'Define slots, variants, states, and a11y requirements', done: false, priority: 'medium', category: 'development' },
+      { id: 3, title: 'Update README examples', description: 'Replace class-based examples with data-attribute patterns', done: true, priority: 'low', category: 'documentation' },
+      { id: 4, title: 'Add combobox keyboard nav', description: 'Implement arrow key navigation and type-ahead search', done: false, priority: 'high', category: 'development' },
+      { id: 5, title: 'Repair engine edge cases', description: 'Handle nested component repair when parent is also broken', done: false, priority: 'medium', category: 'development' }
+    ],
+    nextId: 6,
+    newTitle: '',
+    newDescription: '',
+    newPriority: 'medium',
+    newCategory: 'development',
+    filter: 'all',
+    search: '',
+    darkMode: false,
+
+    addTask() {
+      if (!this.newTitle.trim()) return;
+      this.tasks.push({
+        id: this.nextId++,
+        title: this.newTitle.trim(),
+        description: this.newDescription.trim(),
+        done: false,
+        priority: this.newPriority,
+        category: this.newCategory
+      });
+      this.newTitle = '';
+      this.newDescription = '';
+      this.newPriority = 'medium';
+    },
+
+    removeTask(id) {
+      this.tasks = this.tasks.filter(t => t.id !== id);
+    },
+
+    get filteredTasks() {
+      let result = this.tasks;
+      if (this.filter === 'active') result = result.filter(t => !t.done);
+      if (this.filter === 'done') result = result.filter(t => t.done);
+      if (this.search.trim()) {
+        const q = this.search.toLowerCase();
+        result = result.filter(t => t.title.toLowerCase().includes(q) || t.description.toLowerCase().includes(q));
+      }
+      return result;
+    },
+
+    get stats() {
+      const total = this.tasks.length;
+      const done = this.tasks.filter(t => t.done).length;
+      return { total, done, active: total - done };
+    },
+
+    toggleDark() {
+      this.darkMode = !this.darkMode;
+      document.documentElement.setAttribute('data-theme', this.darkMode ? 'dark' : 'light');
+    }
+  }">
+
+    <div data-ui="surface" data-variant="flat" data-max="lg" data-size="md">
+      <div data-ui="stack" data-gap="6">
+
+        <!-- Header -->
+        <div data-ui="stack" data-variant="horizontal" data-gap="4" data-align="center" data-justify="between" data-wrap>
+          <div data-ui="stack" data-gap="1">
+            <h1 data-ui="heading" data-size="3">Task Manager</h1>
+            <p data-ui="text" data-size="sm" data-variant="muted">Manage your work with zero CSS classes</p>
+          </div>
+          <label data-ui="switch-label">
+            <input data-ui="switch" type="checkbox" role="switch" @change="toggleDark()">
+            <span l-text="darkMode ? 'Dark' : 'Light'" style="font-size: var(--text-sm)"></span>
+          </label>
+        </div>
+
+        <!-- Stats -->
+        <div data-ui="grid" data-cols="3" data-gap="4">
+          <div data-ui="card" data-size="sm">
+            <div data-part="body">
+              <div data-ui="stack" data-gap="1" data-align="center" style="text-align: center">
+                <span style="font-size: var(--text-2xl); font-weight: var(--weight-bold)" l-text="stats.total"></span>
+                <span style="font-size: var(--text-sm); color: var(--color-fg-muted)">Total</span>
+              </div>
+            </div>
+          </div>
+          <div data-ui="card" data-size="sm">
+            <div data-part="body">
+              <div data-ui="stack" data-gap="1" data-align="center" style="text-align: center">
+                <span style="font-size: var(--text-2xl); font-weight: var(--weight-bold); color: var(--color-primary)" l-text="stats.active"></span>
+                <span style="font-size: var(--text-sm); color: var(--color-fg-muted)">Active</span>
+              </div>
+            </div>
+          </div>
+          <div data-ui="card" data-size="sm">
+            <div data-part="body">
+              <div data-ui="stack" data-gap="1" data-align="center" style="text-align: center">
+                <span style="font-size: var(--text-2xl); font-weight: var(--weight-bold); color: var(--color-success)" l-text="stats.done"></span>
+                <span style="font-size: var(--text-sm); color: var(--color-fg-muted)">Done</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add Task Form -->
+        <div data-ui="card">
+          <div data-part="header">
+            <h2 data-part="title">New Task</h2>
+          </div>
+          <div data-part="body">
+            <form @submit.prevent="addTask()">
+              <div data-ui="stack" data-gap="4">
+                <div data-ui="grid" data-cols="2" data-gap="4">
+                  <div data-ui="stack" data-gap="2">
+                    <label data-ui="label">Title</label>
+                    <input data-ui="input" placeholder="Task title..." l-model="newTitle" required>
+                  </div>
+                  <div data-ui="stack" data-variant="horizontal" data-gap="4">
+                    <div data-ui="stack" data-gap="2" style="flex: 1">
+                      <label data-ui="label">Priority</label>
+                      <select data-ui="select" l-model="newPriority">
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                      </select>
+                    </div>
+                    <div data-ui="stack" data-gap="2" style="flex: 1">
+                      <label data-ui="label">Category</label>
+                      <select data-ui="select" l-model="newCategory">
+                        <option value="design">Design</option>
+                        <option value="development">Development</option>
+                        <option value="documentation">Documentation</option>
+                        <option value="testing">Testing</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                <div data-ui="stack" data-gap="2">
+                  <label data-ui="label">Description</label>
+                  <textarea data-ui="textarea" rows="2" placeholder="Optional description..." l-model="newDescription"></textarea>
+                </div>
+                <div>
+                  <button data-ui="button" data-variant="primary" type="submit">Add Task</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center" style="flex-wrap: wrap">
+          <input data-ui="input" data-size="sm" placeholder="Search tasks..." l-model="search" style="max-width: 250px">
+          <div data-ui="stack" data-variant="horizontal" data-gap="1">
+            <button data-ui="button" data-size="sm"
+                    :data-variant="filter === 'all' ? 'primary' : 'ghost'"
+                    @click="filter = 'all'">All</button>
+            <button data-ui="button" data-size="sm"
+                    :data-variant="filter === 'active' ? 'primary' : 'ghost'"
+                    @click="filter = 'active'">Active</button>
+            <button data-ui="button" data-size="sm"
+                    :data-variant="filter === 'done' ? 'primary' : 'ghost'"
+                    @click="filter = 'done'">Done</button>
+          </div>
+        </div>
+
+        <!-- Task List -->
+        <div data-ui="stack" data-gap="3">
+          <template l-for="task in filteredTasks">
+            <div data-ui="card" data-size="sm">
+              <div data-part="body">
+                <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="start">
+                  <!-- Checkbox -->
+                  <label data-ui="checkbox-label" style="padding-top: var(--space-0h)">
+                    <input data-ui="checkbox" type="checkbox" l-model="task.done">
+                  </label>
+
+                  <!-- Content -->
+                  <div data-ui="stack" data-gap="1" style="flex: 1">
+                    <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center" style="flex-wrap: wrap">
+                      <span style="font-weight: var(--weight-medium)" :style="task.done ? 'text-decoration: line-through; color: var(--color-fg-subtle)' : ''" l-text="task.title"></span>
+                      <span data-ui="badge" data-size="sm"
+                            :data-variant="task.priority === 'high' ? 'destructive' : task.priority === 'medium' ? 'warning' : 'success'"
+                            l-text="task.priority"></span>
+                      <span data-ui="badge" data-size="sm" data-variant="secondary" l-text="task.category"></span>
+                    </div>
+                    <template l-if="task.description">
+                      <p style="font-size: var(--text-sm); color: var(--color-fg-muted)" l-text="task.description"></p>
+                    </template>
+                  </div>
+
+                  <!-- Delete -->
+                  <button data-ui="button" data-variant="ghost" data-size="sm" @click="removeTask(task.id)">&#x2715;</button>
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <!-- Empty state — uses the empty-state component -->
+          <template l-if="filteredTasks.length === 0">
+            <div data-ui="empty-state">
+              <span data-part="icon">&#x2714;</span>
+              <h3 data-part="title">No tasks found</h3>
+              <p data-part="description" l-text="search ? 'Try a different search term' : filter === 'done' ? 'No completed tasks yet' : 'Add a task to get started'"></p>
+            </div>
+          </template>
+        </div>
+
+        <!-- Footer -->
+        <div data-ui="surface" data-variant="flat" data-align-text="center" style="padding: var(--space-4) 0">
+          <p data-ui="text" data-size="xs" data-variant="subtle">Loom UI Task Manager — built with zero CSS classes</p>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

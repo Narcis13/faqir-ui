@@ -1,0 +1,186 @@
+<!-- @ui:component search-results -->
+<!-- @ui:kind pattern -->
+<!-- @ui:slots search-input filters results-header results-count sort results-list result-item result-title result-description result-meta pagination empty-state loading -->
+<!-- @ui:variants layout=list|grid -->
+<!-- @ui:states default loading empty error -->
+
+<!-- Default: List layout with results -->
+<div data-ui="search-results" data-variant="list">
+  <div data-part="search-input" role="search">
+    <div data-ui="input-group">
+      <span data-part="prefix">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </span>
+      <input data-ui="input" type="search" placeholder="Search..." aria-label="Search">
+    </div>
+  </div>
+
+  <div data-part="filters">
+    <span data-ui="badge" data-variant="primary">Active Filter</span>
+    <span data-ui="badge">Category</span>
+    <span data-ui="badge">Date Range</span>
+  </div>
+
+  <div data-part="results-header">
+    <span data-part="results-count">142 results</span>
+    <div data-part="sort">
+      <select data-ui="select">
+        <option value="relevance">Relevance</option>
+        <option value="newest">Newest first</option>
+        <option value="oldest">Oldest first</option>
+      </select>
+    </div>
+  </div>
+
+  <div data-part="results-list" aria-live="polite">
+    <article data-part="result-item">
+      <h3 data-part="result-title">Getting Started with Loom UI</h3>
+      <p data-part="result-description">Learn how to set up and configure the Loom UI framework for your project. This guide covers installation, theming, and basic component usage.</p>
+      <div data-part="result-meta">
+        <span data-ui="badge" data-size="sm">Documentation</span>
+        <span>Updated 3 days ago</span>
+      </div>
+    </article>
+
+    <article data-part="result-item">
+      <h3 data-part="result-title">Component Anatomy Reference</h3>
+      <p data-part="result-description">A comprehensive reference of all component slots, variants, and states available in the design system.</p>
+      <div data-part="result-meta">
+        <span data-ui="badge" data-size="sm">Reference</span>
+        <span>Updated 1 week ago</span>
+      </div>
+    </article>
+
+    <article data-part="result-item">
+      <h3 data-part="result-title">Theming and Design Tokens</h3>
+      <p data-part="result-description">How to customise the look and feel of Loom UI using design tokens and theme overrides.</p>
+      <div data-part="result-meta">
+        <span data-ui="badge" data-size="sm">Guide</span>
+        <span>Updated 2 weeks ago</span>
+      </div>
+    </article>
+  </div>
+
+  <div data-part="pagination">
+    <div data-ui="pagination">
+      <nav data-part="nav" role="navigation" aria-label="Pagination">
+        <button data-part="prev" aria-label="Previous page" disabled>&laquo; Prev</button>
+        <button data-part="page" data-page="1" data-state="active" aria-current="page">1</button>
+        <button data-part="page" data-page="2">2</button>
+        <button data-part="page" data-page="3">3</button>
+        <span data-part="ellipsis">&hellip;</span>
+        <button data-part="page" data-page="15">15</button>
+        <button data-part="next" aria-label="Next page">Next &raquo;</button>
+      </nav>
+    </div>
+  </div>
+</div>
+
+<!-- Grid layout variant -->
+<div data-ui="search-results" data-variant="grid">
+  <div data-part="search-input" role="search">
+    <div data-ui="input-group">
+      <span data-part="prefix">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </span>
+      <input data-ui="input" type="search" placeholder="Search..." aria-label="Search">
+    </div>
+  </div>
+
+  <div data-part="results-header">
+    <span data-part="results-count">24 results</span>
+    <div data-part="sort">
+      <select data-ui="select">
+        <option value="relevance">Relevance</option>
+        <option value="newest">Newest first</option>
+      </select>
+    </div>
+  </div>
+
+  <div data-part="results-list" aria-live="polite">
+    <article data-part="result-item">
+      <h3 data-part="result-title">Button Component</h3>
+      <p data-part="result-description">Interactive button with multiple variants and sizes.</p>
+      <div data-part="result-meta">
+        <span data-ui="badge" data-size="sm">Primitive</span>
+      </div>
+    </article>
+
+    <article data-part="result-item">
+      <h3 data-part="result-title">Card Component</h3>
+      <p data-part="result-description">Container surface with header, body, and footer slots.</p>
+      <div data-part="result-meta">
+        <span data-ui="badge" data-size="sm">Primitive</span>
+      </div>
+    </article>
+
+    <article data-part="result-item">
+      <h3 data-part="result-title">Dialog Component</h3>
+      <p data-part="result-description">Modal dialog with overlay, header, body, and footer.</p>
+      <div data-part="result-meta">
+        <span data-ui="badge" data-size="sm">Recipe</span>
+      </div>
+    </article>
+  </div>
+</div>
+
+<!-- Loading state -->
+<div data-ui="search-results" data-state="loading">
+  <div data-part="search-input" role="search">
+    <div data-ui="input-group">
+      <span data-part="prefix">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </span>
+      <input data-ui="input" type="search" placeholder="Search..." aria-label="Search" value="loading query">
+    </div>
+  </div>
+
+  <div data-part="results-list" aria-live="polite" aria-busy="true">
+    <div data-part="loading">
+      <div data-ui="spinner" role="status" aria-label="Loading results"></div>
+      <p>Searching...</p>
+    </div>
+  </div>
+</div>
+
+<!-- Empty state (no results) -->
+<div data-ui="search-results" data-state="empty">
+  <div data-part="search-input" role="search">
+    <div data-ui="input-group">
+      <span data-part="prefix">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </span>
+      <input data-ui="input" type="search" placeholder="Search..." aria-label="Search" value="xyznonexistent">
+    </div>
+  </div>
+
+  <div data-part="results-list" aria-live="polite">
+    <div data-part="empty-state">
+      <div data-ui="empty-state" data-size="sm">
+        <div data-part="icon">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+            <circle cx="14" cy="14" r="10" stroke="currentColor" stroke-width="2"/>
+            <path d="M22 22l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <h3 data-part="title">No results found</h3>
+        <p data-part="description">Try different keywords or remove some filters.</p>
+        <div data-part="action">
+          <button data-ui="button" data-variant="outline" data-size="sm">Clear search</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

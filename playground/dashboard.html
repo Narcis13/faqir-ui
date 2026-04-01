@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loom UI — Dashboard</title>
+
+  <!-- Tokens -->
+  <link rel="stylesheet" href="../registry/tokens/palette.css">
+  <link rel="stylesheet" href="../registry/tokens/spacing.css">
+  <link rel="stylesheet" href="../registry/tokens/typography.css">
+  <link rel="stylesheet" href="../registry/tokens/effects.css">
+  <link rel="stylesheet" href="../registry/tokens/motion.css">
+  <link rel="stylesheet" href="../registry/tokens/semantic.css">
+  <link rel="stylesheet" href="../registry/tokens/aliases.css">
+
+  <!-- Base -->
+  <link rel="stylesheet" href="../registry/base/reset.css">
+
+  <!-- Theme -->
+  <link rel="stylesheet" href="../registry/themes/default.css">
+
+  <!-- Primitives -->
+  <link rel="stylesheet" href="../registry/primitives/button/button.css">
+  <link rel="stylesheet" href="../registry/primitives/input/input.css">
+  <link rel="stylesheet" href="../registry/primitives/select/select.css">
+  <link rel="stylesheet" href="../registry/primitives/badge/badge.css">
+  <link rel="stylesheet" href="../registry/primitives/card/card.css">
+  <link rel="stylesheet" href="../registry/primitives/separator/separator.css">
+  <link rel="stylesheet" href="../registry/primitives/avatar/avatar.css">
+  <link rel="stylesheet" href="../registry/primitives/spinner/spinner.css">
+  <link rel="stylesheet" href="../registry/primitives/switch/switch.css">
+  <link rel="stylesheet" href="../registry/primitives/stack/stack.css">
+  <link rel="stylesheet" href="../registry/primitives/grid/grid.css">
+  <link rel="stylesheet" href="../registry/primitives/surface/surface.css">
+  <link rel="stylesheet" href="../registry/primitives/label/label.css">
+  <link rel="stylesheet" href="../registry/primitives/text/text.css">
+  <link rel="stylesheet" href="../registry/primitives/nav/nav.css">
+  <link rel="stylesheet" href="../registry/primitives/progress/progress.css">
+
+  <!-- Recipes -->
+  <link rel="stylesheet" href="../registry/recipes/tabs/tabs.css">
+
+  <!-- Loom Core -->
+  <script src="../registry/core/loom-core.js" defer></script>
+
+  <style>
+    [l-cloak] { display: none !important; }
+  </style>
+</head>
+<body>
+  <div l-cloak l-data="{
+    darkMode: false,
+    period: 'week',
+
+    kpis: [
+      { label: 'Total Revenue', value: '$48,250', change: '+12.5%', positive: true },
+      { label: 'Active Users', value: '2,847', change: '+8.2%', positive: true },
+      { label: 'Conversion', value: '3.24%', change: '-0.4%', positive: false },
+      { label: 'Avg. Order', value: '$127', change: '+2.1%', positive: true }
+    ],
+
+    activity: [
+      { initials: 'CL', name: 'Claude', action: 'deployed v2.4.0 to production', time: '2 min ago' },
+      { initials: 'SH', name: 'Sarah', action: 'merged PR #142 — audit improvements', time: '15 min ago' },
+      { initials: 'MK', name: 'Mike', action: 'opened issue #89 — token aliasing bug', time: '1 hour ago' },
+      { initials: 'AL', name: 'Alice', action: 'added new component: date-picker', time: '3 hours ago' },
+      { initials: 'JD', name: 'James', action: 'updated LOOM-SPEC.md section 4', time: '5 hours ago' }
+    ],
+
+    topComponents: [
+      { name: 'button', installs: 842, trend: 'up' },
+      { name: 'card', installs: 731, trend: 'up' },
+      { name: 'input', installs: 689, trend: 'up' },
+      { name: 'dialog', installs: 523, trend: 'down' },
+      { name: 'tabs', installs: 467, trend: 'up' }
+    ],
+
+    toggleDark() {
+      this.darkMode = !this.darkMode;
+      document.documentElement.setAttribute('data-theme', this.darkMode ? 'dark' : 'light');
+    }
+  }">
+
+    <div data-ui="surface" data-variant="flat" data-max="xl" data-size="md">
+      <div data-ui="stack" data-gap="6">
+
+        <!-- Header -->
+        <div data-ui="stack" data-variant="horizontal" data-gap="4" data-align="center" data-justify="between" data-wrap>
+          <div data-ui="stack" data-gap="1">
+            <h1 data-ui="heading" data-size="3">Dashboard</h1>
+            <p data-ui="text" data-size="sm" data-variant="muted">Loom UI analytics overview</p>
+          </div>
+          <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center">
+            <select data-ui="select" data-size="sm" l-model="period">
+              <option value="day">Today</option>
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+            </select>
+            <label data-ui="switch-label">
+              <input data-ui="switch" type="checkbox" role="switch" @change="toggleDark()">
+              <span l-text="darkMode ? 'Dark' : 'Light'" style="font-size: var(--text-sm)"></span>
+            </label>
+          </div>
+        </div>
+
+        <div data-ui="separator"></div>
+
+        <!-- KPI Cards -->
+        <div data-ui="grid" data-cols="4" data-gap="4">
+          <template l-for="kpi in kpis">
+            <div data-ui="card" data-size="sm">
+              <div data-part="body">
+                <div data-ui="stack" data-gap="2">
+                  <span style="font-size: var(--text-sm); color: var(--color-fg-muted)" l-text="kpi.label"></span>
+                  <span style="font-size: var(--text-2xl); font-weight: var(--weight-bold)" l-text="kpi.value"></span>
+                  <span data-ui="badge"
+                        :data-variant="kpi.positive ? 'success' : 'destructive'"
+                        data-size="sm"
+                        l-text="kpi.change"></span>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <!-- Main content -->
+        <div data-ui="grid" data-cols="3" data-gap="4">
+
+          <!-- Activity Feed (2 columns wide) -->
+          <div data-ui="card" style="grid-column: span 2">
+            <div data-part="header">
+              <h2 data-part="title">Recent Activity</h2>
+              <p data-part="description">Latest team actions</p>
+            </div>
+            <div data-part="body">
+              <div data-ui="stack" data-gap="0">
+                <template l-for="(item, i) in activity">
+                  <div data-ui="stack" data-gap="4">
+                    <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center" style="padding: var(--space-3) 0">
+                      <div data-ui="avatar" data-size="sm">
+                        <span data-part="fallback" l-text="item.initials"></span>
+                      </div>
+                      <div data-ui="stack" data-gap="0" style="flex: 1">
+                        <span style="font-size: var(--text-sm)">
+                          <strong l-text="item.name"></strong>
+                          <span l-text="' ' + item.action" style="color: var(--color-fg-muted)"></span>
+                        </span>
+                        <span style="font-size: var(--text-xs); color: var(--color-fg-subtle)" l-text="item.time"></span>
+                      </div>
+                    </div>
+                    <template l-if="i < activity.length - 1">
+                      <div data-ui="separator"></div>
+                    </template>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </div>
+
+          <!-- Top Components -->
+          <div data-ui="card">
+            <div data-part="header">
+              <h2 data-part="title">Top Components</h2>
+              <p data-part="description">Most installed this <span l-text="period"></span></p>
+            </div>
+            <div data-part="body">
+              <div data-ui="stack" data-gap="3">
+                <template l-for="(comp, i) in topComponents">
+                  <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center" style="justify-content: space-between">
+                    <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center">
+                      <span style="font-size: var(--text-sm); color: var(--color-fg-subtle); min-width: 1.5ch" l-text="i + 1"></span>
+                      <span style="font-size: var(--text-sm); font-weight: var(--weight-medium)" l-text="comp.name"></span>
+                    </div>
+                    <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center">
+                      <span style="font-size: var(--text-sm); color: var(--color-fg-muted)" l-text="comp.installs"></span>
+                      <span data-ui="badge" data-size="sm"
+                            :data-variant="comp.trend === 'up' ? 'success' : 'warning'"
+                            l-text="comp.trend === 'up' ? '\u2191' : '\u2193'"></span>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div data-ui="card">
+          <div data-part="header">
+            <h2 data-part="title">Quick Actions</h2>
+          </div>
+          <div data-part="body">
+            <div data-ui="stack" data-variant="horizontal" data-gap="3" style="flex-wrap: wrap">
+              <button data-ui="button" data-variant="primary">Add Component</button>
+              <button data-ui="button" data-variant="outline">Run Audit</button>
+              <button data-ui="button" data-variant="outline">Generate Context</button>
+              <button data-ui="button" data-variant="ghost">View Docs</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div data-ui="surface" data-variant="flat" data-align-text="center" style="padding: var(--space-4) 0">
+          <p data-ui="text" data-size="xs" data-variant="subtle">Loom UI Dashboard — built with zero CSS classes</p>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

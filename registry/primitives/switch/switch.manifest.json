@@ -1,0 +1,102 @@
+{
+  "name": "switch",
+  "version": "1.0.0",
+  "kind": "primitive",
+  "category": "forms",
+  "description": "Toggle switch with on/off states, disabled state, and size variants",
+
+  "anatomy": {
+    "tag": "button",
+    "selector": "[data-ui='switch']",
+    "content_model": "inline"
+  },
+
+  "slots": {
+    "label": {
+      "selector": "[data-part='label']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Text label displayed next to the switch"
+    }
+  },
+
+  "variants": {
+    "size": {
+      "values": ["sm", "md", "lg"],
+      "default": "md",
+      "attr": "data-size",
+      "applied_to": "root"
+    }
+  },
+
+  "states": {
+    "off": { "attr": "aria-checked=\"false\"", "default": true },
+    "on": { "attr": "data-state=\"on\"" },
+    "disabled": { "attr": "disabled" }
+  },
+
+  "props": {
+    "checked": { "type": "boolean", "default": false, "description": "Whether the switch is on" },
+    "disabled": { "type": "boolean", "default": false, "description": "Whether the switch is disabled" },
+    "label": { "type": "string", "default": "", "description": "Switch label text" }
+  },
+
+  "a11y": {
+    "required_attrs": [
+      "role=\"switch\" on the button element",
+      "aria-checked=\"true\" or aria-checked=\"false\"",
+      "aria-label or associated label for context"
+    ],
+    "keyboard": {
+      "Tab": "focus switch",
+      "Space": "toggle on/off",
+      "Enter": "toggle on/off"
+    }
+  },
+
+  "tokens_used": [
+    "color-bg-muted", "color-primary", "color-primary-fg",
+    "color-border", "color-ring",
+    "radius-full", "space-0h", "space-1",
+    "duration-fast", "ease-default"
+  ],
+
+  "templates": {
+    "html": "<button data-ui=\"switch\" role=\"switch\" aria-checked=\"false\">\n  <span data-part=\"thumb\"></span>\n</button>",
+    "html_with_label": "<label data-ui=\"switch-label\">\n  <button data-ui=\"switch\" role=\"switch\" aria-checked=\"false\">\n    <span data-part=\"thumb\"></span>\n  </button>\n  <span data-part=\"label\">{label}</span>\n</label>"
+  },
+
+  "safe_transforms": [
+    "change-size",
+    "toggle-state",
+    "toggle-disabled",
+    "change-label-text"
+  ],
+
+  "unsafe_transforms": [
+    "remove-button-element",
+    "remove-role-switch",
+    "remove-aria-checked"
+  ],
+
+  "composition": {
+    "contains": [],
+    "used_in": ["settings-page"]
+  },
+
+  "files": {
+    "html": "switch.html",
+    "css": "switch.css",
+    "manifest": "switch.manifest.json"
+  },
+
+  "tests": [
+    "renders-as-button-with-role-switch",
+    "off-state-has-aria-checked-false",
+    "on-state-has-aria-checked-true",
+    "thumb-translates-on-state-change",
+    "disabled-state-has-disabled-attribute",
+    "sm-size-sets-correct-dimensions",
+    "lg-size-sets-correct-dimensions"
+  ]
+}

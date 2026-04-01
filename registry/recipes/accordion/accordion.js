@@ -1,0 +1,104 @@
+// @ui:controller accordion
+// @ui:provides toggle expand collapse expandAll collapseAll destroy
+
+export function createAccordion(root) {
+  // Prevent double-init
+  if (root._loomAccordion) return root._loomAccordion;
+
+  const getItems = () => [...root.querySelectorAll("[data-part='item']")];
+  const isSingle = () => root.dataset.variant === "single";
+
+  function expand(index) {
+    const items = getItems();
+    if (index < 0 || index >= items.length) return;
+
+    // In single mode, collapse all others first
+    if (isSingle()) {
+      items.forEach((item, i) => {
+        if (i !== index) collapseItem(item);
+      });
+    }
+
+    expandItem(items[index]);
+  }
+
+  function collapse(index) {
+    const items = getItems();
+    if (index < 0 || index >= items.length) return;
+    collapseItem(items[index]);
+  }
+
+  function toggle(index) {
+    const items = getItems();
+    if (index < 0 || index >= items.length) return;
+
+    if (items[index].dataset.state === "expanded") {
+      collapse(index);
+    } else {
+      expand(index);
+    }
+  }
+
+  function expandAll() {
+    const items = getItems();
+    items.forEach((item) => expandItem(item));
+  }
+
+  function collapseAll() {
+    const items = getItems();
+    items.forEach((item) => collapseItem(item));
+  }
+
+  function expandItem(item) {
+    item.dataset.state = "expanded";
+    const trigger = item.querySelector("[data-part='trigger']");
+    const content = item.querySelector("[data-part='content']");
+    if (trigger) trigger.setAttribute("aria-expanded", "true");
+    if (content) content.hidden = false;
+  }
+
+  function collapseItem(item) {
+    item.dataset.state = "collapsed";
+    const trigger = item.querySelector("[data-part='trigger']");
+    const content = item.querySelector("[data-part='content']");
+    if (trigger) trigger.setAttribute("aria-expanded", "false");
+    if (content) content.hidden = true;
+  }
+
+  function onTriggerClick(e) {
+    const trigger = e.target.closest("[data-part='trigger']");
+    if (!trigger) return;
+    const item = trigger.closest("[data-part='item']");
+    if (!item) return;
+    const items = getItems();
+    const index = items.indexOf(item);
+    if (index >= 0) toggle(index);
+  }
+
+  function onKeyDown(e) {
+    if (e.key === "Enter" || e.key === " ") {
+      const trigger = e.target.closest("[data-part='trigger']");
+      if (trigger) {
+        e.preventDefault();
+        const item = trigger.closest("[data-part='item']");
+        if (!item) return;
+        const items = getItems();
+        const index = items.indexOf(item);
+        if (index >= 0) toggle(index);
+      }
+    }
+  }
+
+  root.addEventListener("click", onTriggerClick);
+  root.addEventListener("keydown", onKeyDown);
+
+  function destroy() {
+    root.removeEventListener("click", onTriggerClick);
+    root.removeEventListener("keydown", onKeyDown);
+    delete root._loomAccordion;
+  }
+
+  const api = { toggle, expand, collapse, expandAll, collapseAll, destroy };
+  root._loomAccordion = api;
+  return api;
+}

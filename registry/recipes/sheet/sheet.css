@@ -1,0 +1,199 @@
+/* @ui:component sheet */
+/* @ui:tokens color-bg color-fg color-border shadow-xl radius-xl space-4 space-6 z-overlay z-modal duration-normal duration-slow ease-out */
+
+/* ── Root ── */
+[data-ui="sheet"] {
+  position: relative;
+}
+
+/* ── Overlay ── */
+[data-ui="sheet"] [data-part="overlay"] {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  background: var(--sheet-overlay-bg, oklch(0 0 0 / 0.5));
+  opacity: 0;
+  transition: opacity var(--duration-normal) var(--ease-out);
+}
+
+[data-ui="sheet"][data-state="open"] [data-part="overlay"] {
+  opacity: 1;
+}
+
+[data-ui="sheet"][data-state="closing"] [data-part="overlay"] {
+  opacity: 0;
+}
+
+/* ── Panel (shared) ── */
+[data-ui="sheet"] [data-part="panel"] {
+  position: fixed;
+  z-index: var(--z-modal);
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg);
+  box-shadow: var(--shadow-xl);
+  transition: transform var(--duration-slow) var(--ease-out);
+}
+
+/* ── Side: Bottom ── */
+[data-ui="sheet"] [data-part="panel"][data-variant="bottom"] {
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-height: 90vh;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  transform: translateY(100%);
+}
+
+/* ── Side: Top ── */
+[data-ui="sheet"] [data-part="panel"][data-variant="top"] {
+  top: 0;
+  left: 0;
+  right: 0;
+  max-height: 90vh;
+  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+  transform: translateY(-100%);
+}
+
+/* ── Side: Left ── */
+[data-ui="sheet"] [data-part="panel"][data-variant="left"] {
+  top: 0;
+  left: 0;
+  bottom: 0;
+  max-width: 100vw;
+  border-radius: 0 var(--radius-xl) var(--radius-xl) 0;
+  border-right: 1px solid var(--color-border);
+  transform: translateX(-100%);
+}
+
+/* ── Side: Right ── */
+[data-ui="sheet"] [data-part="panel"][data-variant="right"] {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  max-width: 100vw;
+  border-radius: var(--radius-xl) 0 0 var(--radius-xl);
+  border-left: 1px solid var(--color-border);
+  transform: translateX(100%);
+}
+
+/* ── Open State ── */
+[data-ui="sheet"][data-state="open"] [data-part="panel"][data-variant="bottom"],
+[data-ui="sheet"][data-state="open"] [data-part="panel"][data-variant="top"] {
+  transform: translateY(0);
+}
+
+[data-ui="sheet"][data-state="open"] [data-part="panel"][data-variant="left"],
+[data-ui="sheet"][data-state="open"] [data-part="panel"][data-variant="right"] {
+  transform: translateX(0);
+}
+
+/* ── Closing State ── */
+[data-ui="sheet"][data-state="closing"] [data-part="panel"][data-variant="bottom"] {
+  transform: translateY(100%);
+}
+
+[data-ui="sheet"][data-state="closing"] [data-part="panel"][data-variant="top"] {
+  transform: translateY(-100%);
+}
+
+[data-ui="sheet"][data-state="closing"] [data-part="panel"][data-variant="left"] {
+  transform: translateX(-100%);
+}
+
+[data-ui="sheet"][data-state="closing"] [data-part="panel"][data-variant="right"] {
+  transform: translateX(100%);
+}
+
+/* ── Size for Bottom/Top ── */
+[data-ui="sheet"] [data-part="panel"][data-variant="bottom"][data-size="sm"],
+[data-ui="sheet"] [data-part="panel"][data-variant="top"][data-size="sm"] {
+  height: 30vh;
+}
+
+[data-ui="sheet"] [data-part="panel"][data-variant="bottom"][data-size="md"],
+[data-ui="sheet"] [data-part="panel"][data-variant="top"][data-size="md"] {
+  height: 50vh;
+}
+
+[data-ui="sheet"] [data-part="panel"][data-variant="bottom"][data-size="lg"],
+[data-ui="sheet"] [data-part="panel"][data-variant="top"][data-size="lg"] {
+  height: 75vh;
+}
+
+/* ── Size for Left/Right ── */
+[data-ui="sheet"] [data-part="panel"][data-variant="left"][data-size="sm"],
+[data-ui="sheet"] [data-part="panel"][data-variant="right"][data-size="sm"] {
+  width: 280px;
+}
+
+[data-ui="sheet"] [data-part="panel"][data-variant="left"][data-size="md"],
+[data-ui="sheet"] [data-part="panel"][data-variant="right"][data-size="md"] {
+  width: 380px;
+}
+
+[data-ui="sheet"] [data-part="panel"][data-variant="left"][data-size="lg"],
+[data-ui="sheet"] [data-part="panel"][data-variant="right"][data-size="lg"] {
+  width: 500px;
+}
+
+/* ── Header ── */
+[data-ui="sheet"] [data-part="header"] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-6);
+  padding-bottom: 0;
+  flex-shrink: 0;
+}
+
+/* ── Title ── */
+[data-ui="sheet"] [data-part="title"] {
+  margin: 0;
+  font-size: var(--text-lg, 1.125rem);
+  font-weight: var(--weight-semibold, 600);
+  color: var(--color-fg);
+}
+
+/* ── Close Button ── */
+[data-ui="sheet"] [data-part="close"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-md, 0.375rem);
+  background: transparent;
+  color: var(--color-fg-muted, oklch(0.55 0 0));
+  font-size: var(--text-base, 1rem);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+[data-ui="sheet"] [data-part="close"]:hover {
+  background: var(--color-bg-muted, oklch(0.96 0.004 260));
+  color: var(--color-fg);
+}
+
+[data-ui="sheet"] [data-part="close"]:focus-visible {
+  outline: 2px solid var(--color-ring, oklch(0.55 0.22 264 / 0.4));
+  outline-offset: 2px;
+}
+
+/* ── Body ── */
+[data-ui="sheet"] [data-part="body"] {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-6);
+  color: var(--color-fg);
+}
+
+/* ── Motion ── */
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="sheet"] [data-part="overlay"],
+  [data-ui="sheet"] [data-part="panel"] {
+    transition: none;
+  }
+}

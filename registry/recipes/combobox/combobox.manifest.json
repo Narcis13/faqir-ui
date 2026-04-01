@@ -1,0 +1,143 @@
+{
+  "name": "combobox",
+  "version": "1.0.0",
+  "kind": "recipe",
+  "category": "forms",
+  "description": "Autocomplete input with filtered dropdown list for type-ahead search",
+
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='combobox']",
+    "content_model": "slots"
+  },
+
+  "slots": {
+    "input": {
+      "selector": "[data-part='input']",
+      "required": true,
+      "tag_hint": "input",
+      "description": "Text input with role=combobox for type-ahead search"
+    },
+    "listbox": {
+      "selector": "[data-part='listbox']",
+      "required": true,
+      "tag_hint": "ul",
+      "description": "Dropdown list container with role=listbox"
+    },
+    "option": {
+      "selector": "[data-part='option']",
+      "required": true,
+      "tag_hint": "li",
+      "description": "Individual option with role=option"
+    },
+    "empty": {
+      "selector": "[data-part='empty']",
+      "required": false,
+      "tag_hint": "li",
+      "description": "Empty state message shown when no options match the filter"
+    }
+  },
+
+  "variants": {
+    "size": {
+      "values": ["sm", "md", "lg"],
+      "default": "md",
+      "attr": "data-size",
+      "applied_to": "root"
+    }
+  },
+
+  "states": {
+    "closed": { "attr": "data-state=\"closed\"", "default": true },
+    "open": { "attr": "data-state=\"open\"" },
+    "loading": { "attr": "data-state=\"loading\"" }
+  },
+
+  "props": {
+    "placeholder": { "type": "string", "default": "", "description": "Input placeholder text" },
+    "value": { "type": "string", "default": "", "description": "Selected value" }
+  },
+
+  "a11y": {
+    "required_attrs": [
+      "role=\"combobox\" on input",
+      "aria-expanded on input",
+      "aria-autocomplete=\"list\" on input",
+      "aria-controls on input pointing to listbox id",
+      "role=\"listbox\" on listbox",
+      "role=\"option\" on each option",
+      "aria-selected on active option"
+    ],
+    "keyboard": {
+      "ArrowDown": "highlight next option",
+      "ArrowUp": "highlight previous option",
+      "Enter": "select highlighted option",
+      "Escape": "close listbox",
+      "Home": "highlight first option",
+      "End": "highlight last option"
+    }
+  },
+
+  "tokens_used": [
+    "color-bg", "color-fg", "color-fg-muted", "color-border",
+    "color-primary-subtle", "color-ring",
+    "radius-md", "radius-lg",
+    "shadow-md",
+    "space-1", "space-2", "space-3",
+    "text-sm", "text-base",
+    "z-dropdown",
+    "duration-fast", "ease-default"
+  ],
+
+  "templates": {
+    "html": "<div data-ui=\"combobox\" data-state=\"closed\" data-size=\"{size}\">\n  <input data-part=\"input\" type=\"text\" role=\"combobox\" aria-expanded=\"false\" aria-autocomplete=\"list\" aria-controls=\"{id}-listbox\" placeholder=\"{placeholder}\">\n  <ul data-part=\"listbox\" role=\"listbox\" id=\"{id}-listbox\" hidden>\n    <li data-part=\"option\" role=\"option\" aria-selected=\"false\">{option1}</li>\n    <li data-part=\"option\" role=\"option\" aria-selected=\"false\">{option2}</li>\n    <li data-part=\"empty\" hidden>No results found</li>\n  </ul>\n</div>"
+  },
+
+  "safe_transforms": [
+    "add-option",
+    "remove-option",
+    "change-size",
+    "change-placeholder",
+    "restyle-listbox-background",
+    "customize-empty-message"
+  ],
+
+  "unsafe_transforms": [
+    "remove-combobox-role",
+    "remove-listbox-role",
+    "remove-option-role",
+    "remove-aria-expanded",
+    "remove-aria-autocomplete",
+    "remove-keyboard-navigation"
+  ],
+
+  "composition": {
+    "contains": [],
+    "used_in": ["search-results"]
+  },
+
+  "files": {
+    "html": "combobox.html",
+    "css": "combobox.css",
+    "js": "combobox.js",
+    "manifest": "combobox.manifest.json"
+  },
+
+  "tests": [
+    "opens-on-input-focus",
+    "closes-on-escape",
+    "closes-on-click-outside",
+    "filters-options-on-input",
+    "shows-empty-state-when-no-match",
+    "arrow-down-highlights-next-option",
+    "arrow-up-highlights-previous-option",
+    "enter-selects-highlighted-option",
+    "click-selects-option",
+    "input-has-role-combobox",
+    "input-has-aria-expanded",
+    "input-has-aria-autocomplete-list",
+    "listbox-has-role-listbox",
+    "options-have-role-option",
+    "selected-option-has-aria-selected-true"
+  ]
+}

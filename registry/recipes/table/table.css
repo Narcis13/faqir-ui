@@ -1,0 +1,140 @@
+/* @ui:component table */
+/* @ui:tokens color-bg color-bg-subtle color-fg color-fg-muted color-border color-primary-subtle space-2 space-3 space-4 text-xs text-sm weight-semibold duration-fast ease-default */
+
+/* ── Root ── */
+[data-ui="table"] {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* ── Table ── */
+[data-ui="table"] [data-part="table"] {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-family: var(--font-sans, system-ui, sans-serif);
+}
+
+/* ── Header Cell ── */
+[data-ui="table"] [data-part="th"] {
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-fg-muted);
+  background: var(--color-bg);
+  border-bottom: 2px solid var(--color-border);
+  white-space: nowrap;
+  user-select: none;
+}
+
+/* ── Sortable Header ── */
+[data-ui="table"] [data-part="th"][data-sortable] {
+  cursor: pointer;
+  transition: color var(--duration-fast) var(--ease-default);
+}
+
+[data-ui="table"] [data-part="th"][data-sortable]:hover {
+  color: var(--color-fg);
+}
+
+[data-ui="table"] [data-part="th"][data-sortable]::after {
+  content: "";
+  display: inline-block;
+  margin-left: var(--space-2);
+  width: 0;
+  height: 0;
+  vertical-align: middle;
+  opacity: 0.3;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-bottom: 5px solid currentColor;
+}
+
+[data-ui="table"] [data-part="th"][aria-sort="ascending"]::after {
+  opacity: 1;
+  border-bottom: 5px solid currentColor;
+  border-top: none;
+}
+
+[data-ui="table"] [data-part="th"][aria-sort="descending"]::after {
+  opacity: 1;
+  border-bottom: none;
+  border-top: 5px solid currentColor;
+}
+
+/* ── Data Cell ── */
+[data-ui="table"] [data-part="td"] {
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--color-fg);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg);
+  transition: background var(--duration-fast) var(--ease-default);
+}
+
+/* ── Checkbox Cell ── */
+[data-ui="table"] [data-part="checkbox"] {
+  cursor: pointer;
+}
+
+/* ── Row Hover ── */
+[data-ui="table"] [data-part="tbody"] [data-part="tr"]:hover [data-part="td"] {
+  background: var(--color-bg-subtle, oklch(0.97 0.004 260));
+}
+
+/* ── Selected Row ── */
+[data-ui="table"] [data-part="tr"][data-selected] [data-part="td"] {
+  background: var(--color-primary-subtle, oklch(0.96 0.04 264));
+}
+
+/* ── Striped Variant ── */
+[data-ui="table"][data-variant="striped"] [data-part="tbody"] [data-part="tr"]:nth-child(even) [data-part="td"] {
+  background: var(--color-bg-subtle, oklch(0.97 0.004 260));
+}
+
+[data-ui="table"][data-variant="striped"] [data-part="tbody"] [data-part="tr"]:nth-child(even):hover [data-part="td"] {
+  background: var(--color-bg-subtle, oklch(0.95 0.006 260));
+}
+
+/* ── Bordered Variant ── */
+[data-ui="table"][data-variant="bordered"] [data-part="table"] {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 0.375rem);
+  overflow: hidden;
+}
+
+[data-ui="table"][data-variant="bordered"] [data-part="th"],
+[data-ui="table"][data-variant="bordered"] [data-part="td"] {
+  border: 1px solid var(--color-border);
+}
+
+/* ── Size: Small ── */
+[data-ui="table"][data-size="sm"] [data-part="th"] {
+  padding: var(--space-2) var(--space-2);
+  font-size: var(--text-xs);
+}
+
+[data-ui="table"][data-size="sm"] [data-part="td"] {
+  padding: var(--space-2) var(--space-2);
+  font-size: var(--text-xs);
+}
+
+/* ── Size: Large ── */
+[data-ui="table"][data-size="lg"] [data-part="th"] {
+  padding: var(--space-4) var(--space-4);
+  font-size: var(--text-sm);
+}
+
+[data-ui="table"][data-size="lg"] [data-part="td"] {
+  padding: var(--space-4) var(--space-4);
+  font-size: var(--text-sm);
+}
+
+/* ── Motion ── */
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="table"] [data-part="th"],
+  [data-ui="table"] [data-part="td"] {
+    transition: none;
+  }
+}

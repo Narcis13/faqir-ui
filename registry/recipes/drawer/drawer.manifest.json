@@ -1,0 +1,173 @@
+{
+  "name": "drawer",
+  "version": "1.0.0",
+  "kind": "recipe",
+  "category": "overlay",
+  "description": "Side panel that slides in from screen edge with overlay backdrop",
+
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='drawer']",
+    "content_model": "slots"
+  },
+
+  "slots": {
+    "trigger": {
+      "selector": "[data-part='trigger']",
+      "required": true,
+      "tag_hint": "button",
+      "description": "Button that opens the drawer"
+    },
+    "overlay": {
+      "selector": "[data-part='overlay']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "Backdrop overlay, click to close"
+    },
+    "panel": {
+      "selector": "[data-part='panel']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "The drawer panel container"
+    },
+    "header": {
+      "selector": "[data-part='header']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Header area containing title and close button"
+    },
+    "title": {
+      "selector": "[data-part='title']",
+      "required": true,
+      "tag_hint": "h2",
+      "description": "Linked via aria-labelledby to panel"
+    },
+    "body": {
+      "selector": "[data-part='body']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "Scrollable content area"
+    },
+    "footer": {
+      "selector": "[data-part='footer']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Action buttons area"
+    },
+    "close": {
+      "selector": "[data-part='close']",
+      "required": true,
+      "tag_hint": "button",
+      "description": "Close button, must have aria-label"
+    }
+  },
+
+  "variants": {
+    "side": {
+      "values": ["left", "right"],
+      "default": "left",
+      "attr": "data-variant",
+      "applied_to": "panel"
+    },
+    "size": {
+      "values": ["sm", "md", "lg", "full"],
+      "default": "md",
+      "attr": "data-size",
+      "applied_to": "panel"
+    }
+  },
+
+  "states": {
+    "closed": { "attr": "data-state=\"closed\"", "default": true },
+    "open": { "attr": "data-state=\"open\"" },
+    "closing": { "attr": "data-state=\"closing\"", "transient": true }
+  },
+
+  "props": {
+    "title": { "type": "string", "default": "", "description": "Drawer title text" },
+    "triggerText": { "type": "string", "default": "Open", "description": "Text for the trigger button" }
+  },
+
+  "a11y": {
+    "role": "dialog",
+    "aria-modal": true,
+    "required_attrs": [
+      "role=\"dialog\" on panel",
+      "aria-modal=\"true\" on panel",
+      "aria-labelledby pointing to title id",
+      "aria-label on close button"
+    ],
+    "focus_trap": true,
+    "escape_closes": true,
+    "return_focus": "trigger",
+    "keyboard": {
+      "Escape": "close drawer",
+      "Tab": "cycle focus within panel",
+      "Shift+Tab": "reverse cycle focus within panel"
+    }
+  },
+
+  "tokens_used": [
+    "color-bg", "color-fg", "color-border", "shadow-xl",
+    "space-4", "space-6", "radius-none",
+    "z-overlay", "z-modal",
+    "duration-normal", "duration-slow", "ease-out", "ease-default"
+  ],
+
+  "templates": {
+    "html": "<div data-ui=\"drawer\" data-state=\"closed\" id=\"{id}\">\n  <button data-part=\"trigger\">{trigger_text}</button>\n  <div data-part=\"overlay\" hidden></div>\n  <div data-part=\"panel\" data-variant=\"{side}\" data-size=\"{size}\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"{id}-title\" hidden>\n    <div data-part=\"header\">\n      <h2 id=\"{id}-title\" data-part=\"title\">{title}</h2>\n      <button data-part=\"close\" aria-label=\"Close drawer\">\u2715</button>\n    </div>\n    <div data-part=\"body\">{body}</div>\n    <div data-part=\"footer\">{footer}</div>\n  </div>\n</div>"
+  },
+
+  "safe_transforms": [
+    "change-variant-side",
+    "change-variant-size",
+    "restyle-panel-background",
+    "add-form-to-body",
+    "customize-overlay-opacity",
+    "modify-footer-buttons",
+    "swap-slide-animation"
+  ],
+
+  "unsafe_transforms": [
+    "remove-focus-trap",
+    "remove-escape-handler",
+    "remove-aria-labelledby",
+    "remove-overlay",
+    "remove-close-button",
+    "change-panel-role",
+    "remove-aria-modal"
+  ],
+
+  "composition": {
+    "contains": ["button"],
+    "used_in": ["dashboard-shell"]
+  },
+
+  "files": {
+    "html": "drawer.html",
+    "css": "drawer.css",
+    "js": "drawer.js",
+    "manifest": "drawer.manifest.json"
+  },
+
+  "tests": [
+    "opens-on-trigger-click",
+    "closes-on-escape",
+    "closes-on-overlay-click",
+    "closes-on-close-button-click",
+    "traps-focus-within-panel",
+    "returns-focus-to-trigger-on-close",
+    "sets-data-state-to-open-when-opened",
+    "sets-data-state-to-closed-when-closed",
+    "panel-has-role-dialog",
+    "panel-has-aria-modal-true",
+    "title-is-linked-via-aria-labelledby",
+    "close-button-has-aria-label",
+    "overlay-and-panel-are-hidden-when-closed",
+    "left-variant-slides-from-left",
+    "right-variant-slides-from-right",
+    "size-sm-sets-320px-width",
+    "size-lg-sets-560px-width",
+    "size-full-sets-100vw-width"
+  ]
+}

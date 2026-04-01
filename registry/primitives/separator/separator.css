@@ -1,0 +1,41 @@
+/* @ui:component separator */
+/* @ui:tokens color-border space-4 text-xs color-fg-muted font-sans */
+
+/* ── Base (horizontal) ── */
+[data-ui="separator"] {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: 0;
+  width: 100%;
+}
+
+/* ── Vertical ── */
+[data-ui="separator"][data-variant="vertical"] {
+  border-top: none;
+  border-left: 1px solid var(--color-border);
+  width: auto;
+  height: 100%;
+  align-self: stretch;
+}
+
+/* ── With label ── */
+div[data-ui="separator"] {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  border-top: none;
+}
+
+div[data-ui="separator"]::before,
+div[data-ui="separator"]::after {
+  content: "";
+  flex: 1;
+  border-top: 1px solid var(--color-border);
+}
+
+[data-ui="separator"] [data-part="label"] {
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  color: var(--color-fg-muted);
+  white-space: nowrap;
+}

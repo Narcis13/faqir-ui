@@ -1,0 +1,96 @@
+{
+  "name": "progress",
+  "version": "1.0.0",
+  "kind": "primitive",
+  "category": "feedback",
+  "description": "Progress bar with animated fill, color variants, and optional label",
+
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='progress']",
+    "content_model": "slots"
+  },
+
+  "slots": {
+    "track": {
+      "selector": "[data-part='track']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "Background track container"
+    },
+    "fill": {
+      "selector": "[data-part='fill']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "Filled portion — width set via inline style or reactive binding"
+    },
+    "label": {
+      "selector": "[data-part='label']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Optional text label showing percentage or status"
+    }
+  },
+
+  "variants": {
+    "variant": {
+      "values": ["default", "success", "warning", "destructive"],
+      "default": "default",
+      "attr": "data-variant",
+      "applied_to": "root"
+    },
+    "size": {
+      "values": ["sm", "md", "lg"],
+      "default": "md",
+      "attr": "data-size"
+    }
+  },
+
+  "states": {},
+
+  "a11y": {
+    "role": "progressbar",
+    "required_attrs": ["aria-valuenow", "aria-valuemin", "aria-valuemax"],
+    "keyboard": {}
+  },
+
+  "tokens_used": [
+    "color-primary", "color-bg-muted", "color-success",
+    "color-warning", "color-destructive", "color-fg-muted",
+    "radius-full", "text-sm", "space-2",
+    "duration-normal", "ease-default"
+  ],
+
+  "templates": {
+    "html": "<div data-ui=\"progress\" data-variant=\"{variant}\" role=\"progressbar\" aria-valuenow=\"{value}\" aria-valuemin=\"0\" aria-valuemax=\"100\"><div data-part=\"track\"><div data-part=\"fill\" style=\"width: {value}%\"></div></div><span data-part=\"label\">{value}%</span></div>"
+  },
+
+  "safe_transforms": [
+    "Change data-variant to any listed variant",
+    "Change data-size to any listed size",
+    "Update fill width percentage",
+    "Add or remove label slot"
+  ],
+  "unsafe_transforms": [
+    "Remove data-ui attribute",
+    "Remove track or fill slots"
+  ],
+
+  "composition": {
+    "contains": [],
+    "used_in": ["dashboard-shell", "settings-page"]
+  },
+
+  "files": {
+    "html": "progress.html",
+    "css": "progress.css",
+    "manifest": "progress.manifest.json"
+  },
+
+  "tests": [
+    "Renders track and fill",
+    "Fill width reflects value",
+    "Variants change fill color",
+    "Sizes change track height"
+  ]
+}

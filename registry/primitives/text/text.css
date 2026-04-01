@@ -1,0 +1,93 @@
+/* @ui:component text */
+/* @ui:tokens color-fg color-fg-muted color-fg-subtle color-primary text-xs text-sm text-base text-lg text-xl text-2xl text-3xl text-4xl weight-normal weight-medium weight-semibold weight-bold leading-tight leading-snug leading-normal leading-relaxed font-sans font-mono */
+
+/* ── Heading ── */
+[data-ui="heading"] {
+  font-family: var(--font-sans);
+  font-weight: var(--weight-bold);
+  color: var(--color-fg);
+  line-height: var(--leading-tight);
+  letter-spacing: -0.01em;
+}
+
+[data-ui="heading"][data-size="1"] {
+  font-size: var(--text-4xl);
+  letter-spacing: -0.02em;
+}
+
+[data-ui="heading"][data-size="2"] {
+  font-size: var(--text-3xl);
+  letter-spacing: -0.02em;
+}
+
+[data-ui="heading"][data-size="3"] {
+  font-size: var(--text-2xl);
+}
+
+[data-ui="heading"][data-size="4"] {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+}
+
+[data-ui="heading"][data-size="5"] {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+}
+
+[data-ui="heading"][data-size="6"] {
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+}
+
+/* ── Text ── */
+[data-ui="text"] {
+  font-family: var(--font-sans);
+  color: var(--color-fg);
+}
+
+/* Text sizes */
+[data-ui="text"][data-size="xs"] { font-size: var(--text-xs); }
+[data-ui="text"][data-size="sm"] { font-size: var(--text-sm); }
+[data-ui="text"][data-size="base"] { font-size: var(--text-base); }
+[data-ui="text"][data-size="lg"] { font-size: var(--text-lg); }
+[data-ui="text"][data-size="xl"] { font-size: var(--text-xl); }
+
+/* Text color variants */
+[data-ui="text"][data-variant="muted"] { color: var(--color-fg-muted); }
+[data-ui="text"][data-variant="subtle"] { color: var(--color-fg-subtle); }
+[data-ui="text"][data-variant="primary"] { color: var(--color-primary); }
+
+/* Text weight */
+[data-ui="text"][data-weight="normal"] { font-weight: var(--weight-normal); }
+[data-ui="text"][data-weight="medium"] { font-weight: var(--weight-medium); }
+[data-ui="text"][data-weight="semibold"] { font-weight: var(--weight-semibold); }
+[data-ui="text"][data-weight="bold"] { font-weight: var(--weight-bold); }
+
+/* Text leading */
+[data-ui="text"][data-leading="tight"] { line-height: var(--leading-tight); }
+[data-ui="text"][data-leading="snug"] { line-height: var(--leading-snug); }
+[data-ui="text"][data-leading="normal"] { line-height: var(--leading-normal); }
+[data-ui="text"][data-leading="relaxed"] { line-height: var(--leading-relaxed); }
+
+/* Text alignment */
+[data-ui="text"][data-align="center"],
+[data-ui="heading"][data-align="center"] {
+  text-align: center;
+}
+
+[data-ui="text"][data-align="right"],
+[data-ui="heading"][data-align="right"] {
+  text-align: right;
+}
+
+/* Monospace variant */
+[data-ui="text"][data-variant="mono"] {
+  font-family: var(--font-mono);
+}
+
+/* Truncate */
+[data-ui="text"][data-truncate] {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

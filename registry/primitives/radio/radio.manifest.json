@@ -1,0 +1,107 @@
+{
+  "name": "radio",
+  "version": "1.0.0",
+  "kind": "primitive",
+  "category": "forms",
+  "description": "Custom styled radio button for single selection within a group, with size variants",
+
+  "anatomy": {
+    "tag": "input",
+    "selector": "[data-ui='radio']",
+    "content_model": "inline"
+  },
+
+  "slots": {
+    "label": {
+      "selector": "[data-part='label']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Text label displayed next to the radio button"
+    }
+  },
+
+  "variants": {
+    "size": {
+      "values": ["sm", "md", "lg"],
+      "default": "md",
+      "attr": "data-size",
+      "applied_to": "root"
+    }
+  },
+
+  "states": {
+    "default": { "attr": "data-state=\"default\"", "default": true },
+    "checked": { "attr": "checked" },
+    "disabled": { "attr": "disabled" }
+  },
+
+  "props": {
+    "checked": { "type": "boolean", "default": false, "description": "Whether the radio is checked" },
+    "disabled": { "type": "boolean", "default": false, "description": "Whether the radio is disabled" },
+    "value": { "type": "string", "default": "", "description": "Radio value" },
+    "label": { "type": "string", "default": "", "description": "Radio label text" }
+  },
+
+  "a11y": {
+    "required_attrs": [
+      "fieldset + legend for radio groups",
+      "each radio needs a wrapping label or aria-label",
+      "name attribute groups radios together",
+      "type=\"radio\" required on input element"
+    ],
+    "keyboard": {
+      "Tab": "focus radio group",
+      "ArrowUp/ArrowLeft": "select previous radio",
+      "ArrowDown/ArrowRight": "select next radio",
+      "Space": "select focused radio"
+    }
+  },
+
+  "tokens_used": [
+    "color-bg", "color-fg", "color-primary", "color-primary-fg",
+    "color-border", "color-border-strong", "color-ring",
+    "radius-full", "space-1", "space-2",
+    "duration-fast", "ease-default"
+  ],
+
+  "templates": {
+    "html_group": "<fieldset data-ui=\"radio-group\">\n  <legend data-ui=\"label\">{legend}</legend>\n  <label data-ui=\"radio-label\">\n    <input data-ui=\"radio\" type=\"radio\" name=\"{name}\" value=\"{value}\">\n    <span data-part=\"label\">{label}</span>\n  </label>\n</fieldset>",
+    "html_single": "<label data-ui=\"radio-label\">\n  <input data-ui=\"radio\" type=\"radio\" name=\"{name}\" value=\"{value}\">\n  <span data-part=\"label\">{label}</span>\n</label>"
+  },
+
+  "safe_transforms": [
+    "change-size",
+    "add-radio-option",
+    "remove-radio-option",
+    "set-default-checked",
+    "change-label-text"
+  ],
+
+  "unsafe_transforms": [
+    "remove-input-element",
+    "remove-fieldset-wrapper",
+    "remove-name-attribute",
+    "change-type-attribute"
+  ],
+
+  "composition": {
+    "contains": [],
+    "used_in": ["settings-page"]
+  },
+
+  "files": {
+    "html": "radio.html",
+    "css": "radio.css",
+    "manifest": "radio.manifest.json"
+  },
+
+  "tests": [
+    "renders-as-input-radio",
+    "checked-state-shows-inner-dot",
+    "disabled-state-has-disabled-attribute",
+    "sm-size-sets-data-size-sm",
+    "radios-share-name-attribute",
+    "group-wrapped-in-fieldset-with-legend",
+    "native-appearance-is-none"
+  ]
+}

@@ -1,0 +1,110 @@
+{
+  "name": "button",
+  "version": "1.0.0",
+  "kind": "primitive",
+  "category": "actions",
+  "description": "Interactive button with multiple visual variants and sizes",
+
+  "anatomy": {
+    "tag": "button",
+    "selector": "[data-ui='button']",
+    "content_model": "inline"
+  },
+
+  "slots": {
+    "icon": {
+      "selector": "[data-part='icon']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Optional leading icon container"
+    }
+  },
+
+  "variants": {
+    "visual": {
+      "values": ["default", "primary", "secondary", "destructive", "ghost", "outline", "link"],
+      "default": "default",
+      "attr": "data-variant",
+      "applied_to": "root"
+    },
+    "size": {
+      "values": ["sm", "md", "lg"],
+      "default": "md",
+      "attr": "data-size",
+      "applied_to": "root"
+    }
+  },
+
+  "states": {
+    "default": { "attr": "data-state=\"default\"", "default": true },
+    "loading": { "attr": "data-state=\"loading\"" },
+    "disabled": { "attr": "disabled" }
+  },
+
+  "props": {
+    "caption": { "type": "string", "default": "Click me", "description": "Button label text" },
+    "icon": { "type": "string", "default": "", "description": "Icon content for the icon slot" },
+    "disabled": { "type": "boolean", "default": false, "description": "Whether the button is disabled" }
+  },
+
+  "a11y": {
+    "required_attrs": ["aria-label required when icon-only (no text content)"],
+    "keyboard": {
+      "Enter": "activate",
+      "Space": "activate"
+    }
+  },
+
+  "tokens_used": [
+    "color-primary", "color-primary-hover", "color-primary-fg",
+    "color-secondary", "color-secondary-hover", "color-secondary-fg",
+    "color-destructive", "color-destructive-hover", "color-destructive-fg",
+    "color-bg", "color-bg-muted", "color-bg-subtle", "color-fg", "color-border", "color-ring",
+    "radius-md", "radius-full",
+    "space-2", "space-3", "space-4", "space-6",
+    "font-sans", "text-xs", "text-sm", "text-base", "weight-medium",
+    "duration-fast", "ease-default"
+  ],
+
+  "templates": {
+    "html": "<button data-ui=\"button\" data-variant=\"{variant}\" data-size=\"{size}\">{text}</button>",
+    "html_with_icon": "<button data-ui=\"button\" data-variant=\"{variant}\" data-size=\"{size}\"><span data-part=\"icon\">{icon}</span>{text}</button>",
+    "html_icon_only": "<button data-ui=\"button\" data-variant=\"{variant}\" data-size=\"{size}\" aria-label=\"{label}\">{icon}</button>"
+  },
+
+  "safe_transforms": [
+    "change-variant",
+    "change-size",
+    "add-icon",
+    "add-loading-state",
+    "wrap-in-button-group",
+    "change-text-content"
+  ],
+
+  "unsafe_transforms": [
+    "remove-button-element",
+    "change-to-div-without-role",
+    "remove-disabled-state-handling"
+  ],
+
+  "composition": {
+    "contains": [],
+    "used_in": ["card", "dialog", "auth-form", "crud-table"]
+  },
+
+  "files": {
+    "html": "button.html",
+    "css": "button.css",
+    "manifest": "button.manifest.json"
+  },
+
+  "tests": [
+    "renders-as-button-element",
+    "default-variant-has-no-data-variant-attr",
+    "primary-variant-sets-data-variant-primary",
+    "sm-size-sets-data-size-sm",
+    "disabled-state-has-disabled-attribute",
+    "loading-state-sets-data-state-loading",
+    "icon-only-requires-aria-label"
+  ]
+}

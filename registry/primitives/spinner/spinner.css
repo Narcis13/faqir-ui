@@ -1,0 +1,45 @@
+/* @ui:component spinner */
+/* @ui:tokens color-border color-primary radius-full duration-normal ease-default */
+
+/* ── Base ── */
+[data-ui="spinner"] {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: var(--radius-full);
+  animation: loom-spin 0.75s linear infinite;
+  flex-shrink: 0;
+}
+
+/* ── Sizes ── */
+[data-ui="spinner"][data-size="sm"] {
+  width: 16px;
+  height: 16px;
+}
+
+[data-ui="spinner"][data-size="lg"] {
+  width: 32px;
+  height: 32px;
+  border-width: 3px;
+}
+
+[data-ui="spinner"][data-size="xl"] {
+  width: 48px;
+  height: 48px;
+  border-width: 3px;
+}
+
+/* ── Motion ── */
+@keyframes loom-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="spinner"] {
+    animation: none;
+    border-top-color: var(--color-primary);
+    opacity: 0.8;
+  }
+}

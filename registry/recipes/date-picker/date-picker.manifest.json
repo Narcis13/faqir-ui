@@ -1,0 +1,170 @@
+{
+  "name": "date-picker",
+  "version": "1.0.0",
+  "kind": "recipe",
+  "category": "forms",
+  "description": "Date input with calendar dropdown for date selection",
+
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='date-picker']",
+    "content_model": "slots"
+  },
+
+  "slots": {
+    "trigger": {
+      "selector": "[data-part='trigger']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "Clickable area containing input and icon"
+    },
+    "input": {
+      "selector": "[data-part='input']",
+      "required": true,
+      "tag_hint": "input",
+      "description": "Text input displaying the selected date"
+    },
+    "calendar": {
+      "selector": "[data-part='calendar']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "Calendar dropdown container"
+    },
+    "header": {
+      "selector": "[data-part='header']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "Calendar header with navigation and month label"
+    },
+    "nav-prev": {
+      "selector": "[data-part='nav-prev']",
+      "required": true,
+      "tag_hint": "button",
+      "description": "Navigate to previous month"
+    },
+    "nav-next": {
+      "selector": "[data-part='nav-next']",
+      "required": true,
+      "tag_hint": "button",
+      "description": "Navigate to next month"
+    },
+    "month-label": {
+      "selector": "[data-part='month-label']",
+      "required": true,
+      "tag_hint": "span",
+      "description": "Displays current month and year"
+    },
+    "grid": {
+      "selector": "[data-part='grid']",
+      "required": true,
+      "tag_hint": "table",
+      "description": "Calendar grid with role=grid"
+    },
+    "day": {
+      "selector": "[data-part='day']",
+      "required": true,
+      "tag_hint": "button",
+      "description": "Individual day button within the grid"
+    }
+  },
+
+  "variants": {
+    "size": {
+      "values": ["sm", "md", "lg"],
+      "default": "md",
+      "attr": "data-size",
+      "applied_to": "root"
+    }
+  },
+
+  "states": {
+    "closed": { "attr": "data-state=\"closed\"", "default": true },
+    "open": { "attr": "data-state=\"open\"" }
+  },
+
+  "props": {
+    "value": { "type": "string", "default": "", "description": "Selected date value" },
+    "placeholder": { "type": "string", "default": "Select date", "description": "Input placeholder text" }
+  },
+
+  "a11y": {
+    "required_attrs": [
+      "aria-haspopup=\"dialog\" on input",
+      "aria-expanded on input",
+      "role=\"grid\" on calendar grid",
+      "aria-label on day buttons with full date",
+      "aria-label on nav-prev and nav-next",
+      "aria-selected=\"true\" on selected day"
+    ],
+    "keyboard": {
+      "Escape": "close calendar",
+      "Enter/Space": "select focused day",
+      "ArrowLeft": "focus previous day",
+      "ArrowRight": "focus next day",
+      "ArrowUp": "focus same day previous week",
+      "ArrowDown": "focus same day next week"
+    }
+  },
+
+  "tokens_used": [
+    "color-bg", "color-fg", "color-fg-muted", "color-fg-subtle",
+    "color-border", "color-primary", "color-primary-fg",
+    "color-primary-subtle", "color-ring",
+    "shadow-lg", "radius-md", "radius-lg", "radius-full",
+    "space-1", "space-2", "space-3", "space-4",
+    "text-xs", "text-sm", "weight-medium",
+    "z-dropdown", "duration-fast", "ease-default"
+  ],
+
+  "templates": {
+    "html": "<div data-ui=\"date-picker\" data-state=\"closed\" data-size=\"{size}\">\n  <div data-part=\"trigger\">\n    <input data-part=\"input\" type=\"text\" placeholder=\"Select a date\" readonly aria-haspopup=\"dialog\" aria-expanded=\"false\" aria-label=\"Choose date\">\n    <span data-part=\"icon\" aria-hidden=\"true\">&#x1F4C5;</span>\n  </div>\n  <div data-part=\"calendar\" role=\"dialog\" aria-label=\"Date picker\" hidden>\n    <div data-part=\"header\">\n      <button data-part=\"nav-prev\" aria-label=\"Previous month\">&lsaquo;</button>\n      <span data-part=\"month-label\"></span>\n      <button data-part=\"nav-next\" aria-label=\"Next month\">&rsaquo;</button>\n    </div>\n    <table data-part=\"grid\" role=\"grid\" aria-label=\"Calendar\">\n      <thead><tr><th>Su</th><th>Mo</th><th>Tu</th><th>We</th><th>Th</th><th>Fr</th><th>Sa</th></tr></thead>\n      <tbody data-part=\"grid-body\"></tbody>\n    </table>\n  </div>\n</div>"
+  },
+
+  "safe_transforms": [
+    "change-size",
+    "customize-date-format",
+    "restyle-selected-day",
+    "restyle-today-highlight",
+    "add-min-max-date",
+    "change-first-day-of-week"
+  ],
+
+  "unsafe_transforms": [
+    "remove-aria-expanded",
+    "remove-grid-role",
+    "remove-day-aria-labels",
+    "remove-keyboard-navigation",
+    "remove-outside-click-handler"
+  ],
+
+  "composition": {
+    "contains": ["button"],
+    "used_in": []
+  },
+
+  "files": {
+    "html": "date-picker.html",
+    "css": "date-picker.css",
+    "js": "date-picker.js",
+    "manifest": "date-picker.manifest.json"
+  },
+
+  "tests": [
+    "opens-calendar-on-trigger-click",
+    "closes-calendar-on-escape",
+    "closes-calendar-on-outside-click",
+    "selects-date-on-day-click",
+    "updates-input-on-selection",
+    "closes-after-selection",
+    "nav-prev-shows-previous-month",
+    "nav-next-shows-next-month",
+    "today-is-highlighted",
+    "selected-day-has-aria-selected",
+    "input-has-aria-expanded",
+    "input-has-aria-haspopup",
+    "grid-has-role-grid",
+    "day-buttons-have-aria-label",
+    "arrow-keys-navigate-days",
+    "generates-correct-calendar-grid"
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "name": "grid",
+  "version": "1.0.0",
+  "kind": "primitive",
+  "category": "layout",
+  "description": "CSS Grid container with configurable columns and gap",
+
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='grid']",
+    "content_model": "block"
+  },
+
+  "slots": {},
+
+  "variants": {
+    "cols": {
+      "values": ["1", "2", "3", "4", "6", "12"],
+      "default": "1",
+      "attr": "data-cols",
+      "applied_to": "root"
+    },
+    "gap": {
+      "values": ["2", "4", "6", "8"],
+      "default": "4",
+      "attr": "data-gap",
+      "applied_to": "root"
+    }
+  },
+
+  "states": {},
+
+  "a11y": {
+    "notes": "Layout-only primitive; no semantic role required",
+    "keyboard": {}
+  },
+
+  "tokens_used": [
+    "space-2", "space-4", "space-6", "space-8"
+  ],
+
+  "templates": {
+    "html": "<div data-ui=\"grid\" data-cols=\"{cols}\" data-gap=\"{gap}\">{children}</div>"
+  },
+
+  "safe_transforms": [
+    "change-cols",
+    "change-gap",
+    "add-children",
+    "remove-children"
+  ],
+
+  "unsafe_transforms": [
+    "change-display-property",
+    "replace-with-non-grid-container"
+  ],
+
+  "composition": {
+    "contains": [],
+    "used_in": ["dashboard-shell", "search-results"]
+  },
+
+  "files": {
+    "html": "grid.html",
+    "css": "grid.css",
+    "manifest": "grid.manifest.json"
+  },
+
+  "tests": [
+    "renders-as-div-element",
+    "displays-as-grid",
+    "cols-2-creates-two-columns",
+    "cols-3-creates-three-columns",
+    "cols-4-creates-four-columns",
+    "gap-4-applies-space-4",
+    "stacks-to-single-column-on-small-screens"
+  ]
+}

@@ -1,0 +1,108 @@
+/* @ui:component grid */
+/* @ui:tokens space-2 space-4 space-6 space-8 */
+
+/* ── Base ── */
+[data-ui="grid"] {
+  display: grid;
+}
+
+/* ── Columns ── */
+[data-ui="grid"][data-cols="1"] {
+  grid-template-columns: repeat(1, 1fr);
+}
+
+[data-ui="grid"][data-cols="2"] {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+[data-ui="grid"][data-cols="3"] {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+[data-ui="grid"][data-cols="4"] {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+[data-ui="grid"][data-cols="6"] {
+  grid-template-columns: repeat(6, 1fr);
+}
+
+[data-ui="grid"][data-cols="12"] {
+  grid-template-columns: repeat(12, 1fr);
+}
+
+/* ── Gap ── */
+[data-ui="grid"][data-gap="2"] {
+  gap: var(--space-2);
+}
+
+[data-ui="grid"][data-gap="4"] {
+  gap: var(--space-4);
+}
+
+[data-ui="grid"][data-gap="6"] {
+  gap: var(--space-6);
+}
+
+[data-ui="grid"][data-gap="8"] {
+  gap: var(--space-8);
+}
+
+/* ── Extended Gap ── */
+[data-ui="grid"][data-gap="10"] {
+  gap: var(--space-10);
+}
+
+[data-ui="grid"][data-gap="12"] {
+  gap: var(--space-12);
+}
+
+[data-ui="grid"][data-gap="16"] {
+  gap: var(--space-16);
+}
+
+/* ── Child Span ── */
+[data-ui="grid"] > [data-span="2"] {
+  grid-column: span 2;
+}
+
+[data-ui="grid"] > [data-span="3"] {
+  grid-column: span 3;
+}
+
+[data-ui="grid"] > [data-span="4"] {
+  grid-column: span 4;
+}
+
+[data-ui="grid"] > [data-span="6"] {
+  grid-column: span 6;
+}
+
+[data-ui="grid"] > [data-span="full"] {
+  grid-column: 1 / -1;
+}
+
+/* ── Responsive: stack to single column on small screens ── */
+@media (max-width: 640px) {
+  [data-ui="grid"] {
+    grid-template-columns: 1fr;
+  }
+
+  [data-ui="grid"] > [data-span] {
+    grid-column: span 1;
+  }
+}
+
+/* ── Responsive Column Overrides ── */
+@media (min-width: 641px) and (max-width: 1024px) {
+  [data-ui="grid"][data-cols-md="1"] { grid-template-columns: 1fr; }
+  [data-ui="grid"][data-cols-md="2"] { grid-template-columns: repeat(2, 1fr); }
+  [data-ui="grid"][data-cols-md="3"] { grid-template-columns: repeat(3, 1fr); }
+  [data-ui="grid"][data-cols-md="4"] { grid-template-columns: repeat(4, 1fr); }
+}
+
+@media (max-width: 640px) {
+  [data-ui="grid"][data-cols-sm="1"] { grid-template-columns: 1fr; }
+  [data-ui="grid"][data-cols-sm="2"] { grid-template-columns: repeat(2, 1fr); }
+  [data-ui="grid"][data-cols-sm="3"] { grid-template-columns: repeat(3, 1fr); }
+}

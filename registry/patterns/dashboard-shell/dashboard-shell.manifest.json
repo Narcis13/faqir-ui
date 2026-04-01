@@ -1,0 +1,168 @@
+{
+  "name": "dashboard-shell",
+  "version": "1.0.0",
+  "kind": "pattern",
+  "category": "composite",
+  "description": "Application dashboard layout with sidebar navigation, header, and content area",
+
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='dashboard-shell']",
+    "content_model": "slots"
+  },
+
+  "slots": {
+    "sidebar": {
+      "selector": "[data-part='sidebar']",
+      "required": true,
+      "tag_hint": "aside",
+      "description": "Collapsible sidebar containing logo, navigation, and user avatar"
+    },
+    "nav": {
+      "selector": "[data-part='nav']",
+      "required": true,
+      "tag_hint": "nav",
+      "description": "Primary navigation container within the sidebar"
+    },
+    "nav-item": {
+      "selector": "[data-part='nav-item']",
+      "required": true,
+      "tag_hint": "a",
+      "description": "Individual navigation link with optional icon and badge"
+    },
+    "header": {
+      "selector": "[data-part='header']",
+      "required": true,
+      "tag_hint": "header",
+      "description": "Top header bar with search, notifications, and user menu"
+    },
+    "logo": {
+      "selector": "[data-part='logo']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "Application logo displayed at the top of the sidebar"
+    },
+    "search": {
+      "selector": "[data-part='search']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Search input area within the header"
+    },
+    "user-menu": {
+      "selector": "[data-part='user-menu']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "User dropdown menu area in the header"
+    },
+    "content": {
+      "selector": "[data-part='content']",
+      "required": true,
+      "tag_hint": "main",
+      "description": "Main content area for dashboard pages"
+    },
+    "footer": {
+      "selector": "[data-part='footer']",
+      "required": false,
+      "tag_hint": "footer",
+      "description": "Optional footer at the bottom of the content area"
+    }
+  },
+
+  "variants": {
+    "sidebar-position": {
+      "values": ["left", "right"],
+      "default": "left",
+      "attr": "data-variant",
+      "applied_to": "root"
+    },
+    "sidebar-state": {
+      "values": ["expanded", "collapsed"],
+      "default": "expanded",
+      "attr": "data-state",
+      "applied_to": "sidebar"
+    }
+  },
+
+  "states": {
+    "default": { "description": "Standard dashboard view with expanded sidebar" }
+  },
+
+  "a11y": {
+    "required_attrs": [
+      "role=\"navigation\" on nav",
+      "aria-label on nav",
+      "aria-current=\"page\" on active nav-item",
+      "role=\"banner\" on header",
+      "role=\"main\" on content"
+    ],
+    "keyboard": {
+      "Tab": "move focus through interactive elements",
+      "Escape": "close open dropdown menus"
+    }
+  },
+
+  "tokens_used": [
+    "color-bg", "color-bg-subtle", "color-bg-muted", "color-fg", "color-fg-muted", "color-fg-subtle",
+    "color-border", "color-border-strong",
+    "color-primary", "color-primary-subtle", "color-primary-fg",
+    "space-2", "space-3", "space-4", "space-5", "space-6", "space-8", "space-12", "space-16",
+    "radius-md", "radius-lg",
+    "shadow-sm", "shadow-md",
+    "font-sans", "text-xs", "text-sm", "text-base", "text-lg",
+    "weight-medium", "weight-semibold",
+    "leading-tight", "leading-normal",
+    "duration-normal", "duration-slow", "ease-default", "ease-out",
+    "z-sticky"
+  ],
+
+  "templates": {
+    "html": "<div data-ui=\"dashboard-shell\">\n  <aside data-part=\"sidebar\" data-state=\"expanded\">\n    <div data-part=\"logo\">{logo}</div>\n    <nav data-part=\"nav\" aria-label=\"Main navigation\">\n      <a data-part=\"nav-item\" aria-current=\"page\">{item}</a>\n    </nav>\n  </aside>\n  <header data-part=\"header\">{header}</header>\n  <main data-part=\"content\">{content}</main>\n  <footer data-part=\"footer\">{footer}</footer>\n</div>"
+  },
+
+  "safe_transforms": [
+    "toggle-sidebar-state",
+    "change-sidebar-position",
+    "add-nav-item",
+    "remove-nav-item",
+    "add-footer",
+    "remove-footer",
+    "change-logo",
+    "restyle-sidebar-background"
+  ],
+
+  "unsafe_transforms": [
+    "remove-sidebar",
+    "remove-header",
+    "remove-content",
+    "remove-nav-role",
+    "flatten-layout"
+  ],
+
+  "composition": {
+    "contains": ["card", "grid", "avatar", "dropdown", "button", "separator", "badge"],
+    "used_in": []
+  },
+
+  "files": {
+    "html": "dashboard-shell.html",
+    "css": "dashboard-shell.css",
+    "manifest": "dashboard-shell.manifest.json"
+  },
+
+  "tests": [
+    "renders-as-div-with-data-ui-dashboard-shell",
+    "sidebar-slot-is-required",
+    "header-slot-is-required",
+    "content-slot-is-required",
+    "sidebar-has-expanded-state-by-default",
+    "sidebar-collapses-with-data-state-collapsed",
+    "sidebar-position-right-variant-moves-sidebar",
+    "nav-has-aria-label",
+    "active-nav-item-has-aria-current",
+    "sidebar-collapses-on-small-screens",
+    "contains-card-components",
+    "contains-grid-layout",
+    "contains-avatar-component",
+    "contains-dropdown-component"
+  ]
+}

@@ -1,0 +1,9 @@
+/* @ui:tokens index — aggregated token imports */
+
+@import './palette.css';
+@import './spacing.css';
+@import './typography.css';
+@import './effects.css';
+@import './motion.css';
+@import './semantic.css';
+@import './aliases.css';

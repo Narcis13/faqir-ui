@@ -1,0 +1,34 @@
+<!-- @ui:component progress -->
+<!-- @ui:kind primitive -->
+<!-- @ui:slots track fill label -->
+
+<!-- Default -->
+<div data-ui="progress">
+  <div data-part="track">
+    <div data-part="fill" style="width: 60%"></div>
+  </div>
+  <span data-part="label">60%</span>
+</div>
+
+<!-- With variant -->
+<div data-ui="progress" data-variant="success">
+  <div data-part="track">
+    <div data-part="fill" style="width: 100%"></div>
+  </div>
+  <span data-part="label">100%</span>
+</div>
+
+<!-- Small -->
+<div data-ui="progress" data-size="sm">
+  <div data-part="track">
+    <div data-part="fill" style="width: 40%"></div>
+  </div>
+</div>
+
+<!-- Large -->
+<div data-ui="progress" data-size="lg" data-variant="warning">
+  <div data-part="track">
+    <div data-part="fill" style="width: 75%"></div>
+  </div>
+  <span data-part="label">75%</span>
+</div>

@@ -1,0 +1,64 @@
+<!-- @ui:component radio -->
+<!-- @ui:kind primitive -->
+<!-- @ui:slots label -->
+<!-- @ui:variants size=sm|md|lg -->
+
+<!-- Radio group -->
+<fieldset data-ui="radio-group">
+  <legend data-ui="label">Notification preference</legend>
+
+  <label data-ui="radio-label">
+    <input data-ui="radio" type="radio" name="notification" value="all" checked>
+    <span data-part="label">All notifications</span>
+  </label>
+
+  <label data-ui="radio-label">
+    <input data-ui="radio" type="radio" name="notification" value="mentions">
+    <span data-part="label">Mentions only</span>
+  </label>
+
+  <label data-ui="radio-label">
+    <input data-ui="radio" type="radio" name="notification" value="none">
+    <span data-part="label">None</span>
+  </label>
+</fieldset>
+
+<!-- With disabled option -->
+<fieldset data-ui="radio-group">
+  <legend data-ui="label">Plan</legend>
+
+  <label data-ui="radio-label">
+    <input data-ui="radio" type="radio" name="plan" value="free" checked>
+    <span data-part="label">Free</span>
+  </label>
+
+  <label data-ui="radio-label">
+    <input data-ui="radio" type="radio" name="plan" value="pro">
+    <span data-part="label">Pro</span>
+  </label>
+
+  <label data-ui="radio-label">
+    <input data-ui="radio" type="radio" name="plan" value="enterprise" disabled>
+    <span data-part="label">Enterprise (contact sales)</span>
+  </label>
+</fieldset>
+
+<!-- Sizes -->
+<fieldset data-ui="radio-group">
+  <legend data-ui="label">Size variants</legend>
+
+  <label data-ui="radio-label">
+    <input data-ui="radio" data-size="sm" type="radio" name="size-demo" value="sm" checked>
+    <span data-part="label">Small</span>
+  </label>
+
+  <label data-ui="radio-label">
+    <input data-ui="radio" type="radio" name="size-demo-md" value="md" checked>
+    <span data-part="label">Medium (default)</span>
+  </label>
+
+  <label data-ui="radio-label">
+    <input data-ui="radio" data-size="lg" type="radio" name="size-demo-lg" value="lg" checked>
+    <span data-part="label">Large</span>
+  </label>
+</fieldset>

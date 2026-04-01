@@ -1,0 +1,113 @@
+/* @ui:component stepper */
+/* @ui:tokens color-primary color-primary-fg color-bg-muted color-fg-muted color-success color-border text-sm text-xs weight-medium radius-full space-2 space-3 space-1 */
+
+/* ── Base ── */
+[data-ui="stepper"] {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+/* ── Step ── */
+[data-ui="stepper"] [data-part="step"] {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+/* ── Indicator (circle) ── */
+[data-ui="stepper"] [data-part="indicator"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  background: var(--color-bg-muted);
+  color: var(--color-fg-muted);
+  flex-shrink: 0;
+}
+
+/* ── Active step ── */
+[data-ui="stepper"] [data-part="step"][data-state="active"] [data-part="indicator"] {
+  background: var(--color-primary);
+  color: var(--color-primary-fg);
+}
+
+/* ── Completed step ── */
+[data-ui="stepper"] [data-part="step"][data-state="completed"] [data-part="indicator"] {
+  background: var(--color-success);
+  color: white;
+}
+
+/* ── Step label ── */
+[data-ui="stepper"] [data-part="label"] {
+  font-size: var(--text-xs);
+  color: var(--color-fg-muted);
+  margin-left: var(--space-1);
+  white-space: nowrap;
+}
+
+[data-ui="stepper"] [data-part="step"][data-state="active"] [data-part="label"] {
+  color: var(--color-primary);
+  font-weight: var(--weight-medium);
+}
+
+[data-ui="stepper"] [data-part="step"][data-state="completed"] [data-part="label"] {
+  color: var(--color-success);
+}
+
+/* ── Connector ── */
+[data-ui="stepper"] [data-part="connector"] {
+  flex: 1;
+  height: 2px;
+  background: var(--color-border);
+  margin: 0 var(--space-2);
+  min-width: var(--space-4);
+}
+
+[data-ui="stepper"] [data-part="connector"][data-state="completed"] {
+  background: var(--color-success);
+}
+
+/* ── Vertical variant ── */
+[data-ui="stepper"][data-variant="vertical"] {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+[data-ui="stepper"][data-variant="vertical"] [data-part="step"] {
+  flex-direction: row;
+  align-items: center;
+}
+
+[data-ui="stepper"][data-variant="vertical"] [data-part="connector"] {
+  width: 2px;
+  height: var(--space-6);
+  min-width: 0;
+  margin: var(--space-1) 0 var(--space-1) calc(1rem - 1px);
+}
+
+/* ── Size: small ── */
+[data-ui="stepper"][data-size="sm"] [data-part="indicator"] {
+  width: 1.5rem;
+  height: 1.5rem;
+  font-size: var(--text-xs);
+}
+
+[data-ui="stepper"][data-size="sm"][data-variant="vertical"] [data-part="connector"] {
+  margin-left: calc(0.75rem - 1px);
+}
+
+/* ── Size: large ── */
+[data-ui="stepper"][data-size="lg"] [data-part="indicator"] {
+  width: 2.5rem;
+  height: 2.5rem;
+  font-size: var(--text-sm);
+}
+
+[data-ui="stepper"][data-size="lg"][data-variant="vertical"] [data-part="connector"] {
+  margin-left: calc(1.25rem - 1px);
+}

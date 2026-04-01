@@ -1,0 +1,128 @@
+<!-- @ui:component table -->
+<!-- @ui:kind recipe -->
+<!-- @ui:slots table thead tbody tr th td checkbox -->
+<!-- @ui:variants striped=true|false bordered=true|false size=sm|md|lg -->
+<!-- @ui:controller table.js -->
+
+<!-- Default (medium) -->
+<div data-ui="table" data-size="md">
+  <table data-part="table">
+    <thead data-part="thead">
+      <tr data-part="tr">
+        <th data-part="th" scope="col">
+          <input data-part="checkbox" type="checkbox" aria-label="Select all rows">
+        </th>
+        <th data-part="th" scope="col" data-sortable aria-sort="none">Name</th>
+        <th data-part="th" scope="col" data-sortable aria-sort="none">Email</th>
+        <th data-part="th" scope="col" data-sortable aria-sort="none">Role</th>
+        <th data-part="th" scope="col">Actions</th>
+      </tr>
+    </thead>
+    <tbody data-part="tbody">
+      <tr data-part="tr">
+        <td data-part="td">
+          <input data-part="checkbox" type="checkbox" aria-label="Select row">
+        </td>
+        <td data-part="td">Alice Johnson</td>
+        <td data-part="td">alice@example.com</td>
+        <td data-part="td">Admin</td>
+        <td data-part="td">Edit</td>
+      </tr>
+      <tr data-part="tr">
+        <td data-part="td">
+          <input data-part="checkbox" type="checkbox" aria-label="Select row">
+        </td>
+        <td data-part="td">Bob Smith</td>
+        <td data-part="td">bob@example.com</td>
+        <td data-part="td">Editor</td>
+        <td data-part="td">Edit</td>
+      </tr>
+      <tr data-part="tr">
+        <td data-part="td">
+          <input data-part="checkbox" type="checkbox" aria-label="Select row">
+        </td>
+        <td data-part="td">Carol White</td>
+        <td data-part="td">carol@example.com</td>
+        <td data-part="td">Viewer</td>
+        <td data-part="td">Edit</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Striped variant -->
+<div data-ui="table" data-variant="striped" data-size="md">
+  <table data-part="table">
+    <thead data-part="thead">
+      <tr data-part="tr">
+        <th data-part="th" scope="col" data-sortable aria-sort="none">Product</th>
+        <th data-part="th" scope="col" data-sortable aria-sort="none">Price</th>
+        <th data-part="th" scope="col">Stock</th>
+      </tr>
+    </thead>
+    <tbody data-part="tbody">
+      <tr data-part="tr">
+        <td data-part="td">Widget A</td>
+        <td data-part="td">$19.99</td>
+        <td data-part="td">142</td>
+      </tr>
+      <tr data-part="tr">
+        <td data-part="td">Widget B</td>
+        <td data-part="td">$29.99</td>
+        <td data-part="td">58</td>
+      </tr>
+      <tr data-part="tr">
+        <td data-part="td">Widget C</td>
+        <td data-part="td">$9.99</td>
+        <td data-part="td">305</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Bordered, small size -->
+<div data-ui="table" data-variant="bordered" data-size="sm">
+  <table data-part="table">
+    <thead data-part="thead">
+      <tr data-part="tr">
+        <th data-part="th" scope="col">Key</th>
+        <th data-part="th" scope="col">Value</th>
+      </tr>
+    </thead>
+    <tbody data-part="tbody">
+      <tr data-part="tr">
+        <td data-part="td">Host</td>
+        <td data-part="td">localhost</td>
+      </tr>
+      <tr data-part="tr">
+        <td data-part="td">Port</td>
+        <td data-part="td">3000</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Large size -->
+<div data-ui="table" data-size="lg">
+  <table data-part="table">
+    <thead data-part="thead">
+      <tr data-part="tr">
+        <th data-part="th" scope="col" data-sortable aria-sort="none">Title</th>
+        <th data-part="th" scope="col" data-sortable aria-sort="none">Author</th>
+        <th data-part="th" scope="col">Year</th>
+      </tr>
+    </thead>
+    <tbody data-part="tbody">
+      <tr data-part="tr">
+        <td data-part="td">The Great Gatsby</td>
+        <td data-part="td">F. Scott Fitzgerald</td>
+        <td data-part="td">1925</td>
+      </tr>
+      <tr data-part="tr">
+        <td data-part="td">To Kill a Mockingbird</td>
+        <td data-part="td">Harper Lee</td>
+        <td data-part="td">1960</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

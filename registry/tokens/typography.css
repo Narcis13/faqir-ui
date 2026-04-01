@@ -1,0 +1,31 @@
+/* @ui:tokens typography — font families, sizes, line-heights, weights */
+
+:root {
+  /* ── Font Families ── */
+  --font-sans:   system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono:   ui-monospace, 'Cascadia Code', 'JetBrains Mono', monospace;
+  --font-serif:  'Georgia', 'Times New Roman', serif;
+
+  /* ── Font Sizes ── */
+  --text-xs:     0.75rem;    /* 12px */
+  --text-sm:     0.875rem;   /* 14px */
+  --text-base:   1rem;       /* 16px */
+  --text-lg:     1.125rem;   /* 18px */
+  --text-xl:     1.25rem;    /* 20px */
+  --text-2xl:    1.5rem;     /* 24px */
+  --text-3xl:    1.875rem;   /* 30px */
+  --text-4xl:    2.25rem;    /* 36px */
+
+  /* ── Line Heights ── */
+  --leading-tight:   1.25;
+  --leading-snug:    1.375;
+  --leading-normal:  1.5;
+  --leading-relaxed: 1.625;
+  --leading-loose:   1.75;
+
+  /* ── Font Weights ── */
+  --weight-normal:   400;
+  --weight-medium:   500;
+  --weight-semibold: 600;
+  --weight-bold:     700;
+}

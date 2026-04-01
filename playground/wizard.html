@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loom UI — Setup Wizard</title>
+
+  <!-- Tokens -->
+  <link rel="stylesheet" href="../registry/tokens/palette.css">
+  <link rel="stylesheet" href="../registry/tokens/spacing.css">
+  <link rel="stylesheet" href="../registry/tokens/typography.css">
+  <link rel="stylesheet" href="../registry/tokens/effects.css">
+  <link rel="stylesheet" href="../registry/tokens/motion.css">
+  <link rel="stylesheet" href="../registry/tokens/semantic.css">
+  <link rel="stylesheet" href="../registry/tokens/aliases.css">
+
+  <!-- Base -->
+  <link rel="stylesheet" href="../registry/base/reset.css">
+
+  <!-- Theme -->
+  <link rel="stylesheet" href="../registry/themes/default.css">
+
+  <!-- Primitives -->
+  <link rel="stylesheet" href="../registry/primitives/button/button.css">
+  <link rel="stylesheet" href="../registry/primitives/input/input.css">
+  <link rel="stylesheet" href="../registry/primitives/select/select.css">
+  <link rel="stylesheet" href="../registry/primitives/textarea/textarea.css">
+  <link rel="stylesheet" href="../registry/primitives/checkbox/checkbox.css">
+  <link rel="stylesheet" href="../registry/primitives/switch/switch.css">
+  <link rel="stylesheet" href="../registry/primitives/badge/badge.css">
+  <link rel="stylesheet" href="../registry/primitives/card/card.css">
+  <link rel="stylesheet" href="../registry/primitives/separator/separator.css">
+  <link rel="stylesheet" href="../registry/primitives/label/label.css">
+  <link rel="stylesheet" href="../registry/primitives/spinner/spinner.css">
+  <link rel="stylesheet" href="../registry/primitives/stack/stack.css">
+  <link rel="stylesheet" href="../registry/primitives/grid/grid.css">
+  <link rel="stylesheet" href="../registry/primitives/surface/surface.css">
+  <link rel="stylesheet" href="../registry/primitives/stepper/stepper.css">
+  <link rel="stylesheet" href="../registry/primitives/progress/progress.css">
+  <link rel="stylesheet" href="../registry/primitives/text/text.css">
+
+  <!-- Loom Core -->
+  <script src="../registry/core/loom-core.js" defer></script>
+
+  <style>
+    [l-cloak] { display: none !important; }
+  </style>
+</head>
+<body>
+  <div l-cloak l-data="{
+    step: 1,
+    totalSteps: 4,
+    complete: false,
+    darkMode: false,
+
+    /* Step 1: Account */
+    name: '',
+    email: '',
+
+    /* Step 2: Project */
+    projectName: '',
+    framework: 'vanilla',
+    theme: 'default',
+
+    /* Step 3: Components */
+    includeButton: true,
+    includeInput: true,
+    includeCard: true,
+    includeDialog: false,
+    includeTabs: false,
+    includeAccordion: false,
+    includeDropdown: false,
+    includeToast: false,
+
+    /* Step 4: Preferences */
+    tokensSplit: false,
+    includeCore: true,
+    generateContext: true,
+
+    get progress() {
+      return Math.round((this.step / this.totalSteps) * 100);
+    },
+
+    get stepTitle() {
+      return ['Account', 'Project', 'Components', 'Preferences'][this.step - 1] || '';
+    },
+
+    get canNext() {
+      if (this.step === 1) return this.name.trim() && this.email.trim() && this.email.includes('@');
+      if (this.step === 2) return this.projectName.trim();
+      return true;
+    },
+
+    get selectedComponents() {
+      const comps = [];
+      if (this.includeButton) comps.push('button');
+      if (this.includeInput) comps.push('input');
+      if (this.includeCard) comps.push('card');
+      if (this.includeDialog) comps.push('dialog');
+      if (this.includeTabs) comps.push('tabs');
+      if (this.includeAccordion) comps.push('accordion');
+      if (this.includeDropdown) comps.push('dropdown');
+      if (this.includeToast) comps.push('toast');
+      return comps;
+    },
+
+    nextStep() {
+      if (this.step < this.totalSteps) {
+        this.step++;
+      } else {
+        this.complete = true;
+      }
+    },
+
+    prevStep() {
+      if (this.step > 1) this.step--;
+    },
+
+    restart() {
+      this.step = 1;
+      this.complete = false;
+      this.name = '';
+      this.email = '';
+      this.projectName = '';
+    },
+
+    toggleDark() {
+      this.darkMode = !this.darkMode;
+      document.documentElement.setAttribute('data-theme', this.darkMode ? 'dark' : 'light');
+    }
+  }">
+
+    <div data-ui="surface" data-variant="flat" data-max="md" data-size="lg">
+      <div data-ui="stack" data-gap="6">
+
+        <!-- Header -->
+        <div data-ui="stack" data-variant="horizontal" data-gap="4" data-align="center" data-justify="between">
+          <div data-ui="stack" data-gap="1">
+            <h1 data-ui="heading" data-size="3">Setup Wizard</h1>
+            <p data-ui="text" data-size="sm" data-variant="muted">Configure your Loom UI project</p>
+          </div>
+          <label data-ui="switch-label">
+            <input data-ui="switch" type="checkbox" role="switch" @change="toggleDark()">
+            <span l-text="darkMode ? 'Dark' : 'Light'" style="font-size: var(--text-sm)"></span>
+          </label>
+        </div>
+
+        <!-- Progress indicator — uses stepper and progress components -->
+        <template l-if="!complete">
+          <div data-ui="stack" data-gap="4">
+            <div data-ui="progress" data-size="sm">
+              <div data-part="track">
+                <div data-part="fill" :style="'width:' + progress + '%'"></div>
+              </div>
+              <span data-part="label" l-text="progress + '%'"></span>
+            </div>
+
+            <div data-ui="stepper" aria-label="Wizard steps">
+              <div data-part="step" :data-state="step > 1 ? 'completed' : step === 1 ? 'active' : ''">
+                <span data-part="indicator" l-text="step > 1 ? '\u2713' : '1'"></span>
+                <span data-part="label">Account</span>
+              </div>
+              <div data-part="connector" :data-state="step > 1 ? 'completed' : ''"></div>
+              <div data-part="step" :data-state="step > 2 ? 'completed' : step === 2 ? 'active' : ''">
+                <span data-part="indicator" l-text="step > 2 ? '\u2713' : '2'"></span>
+                <span data-part="label">Project</span>
+              </div>
+              <div data-part="connector" :data-state="step > 2 ? 'completed' : ''"></div>
+              <div data-part="step" :data-state="step > 3 ? 'completed' : step === 3 ? 'active' : ''">
+                <span data-part="indicator" l-text="step > 3 ? '\u2713' : '3'"></span>
+                <span data-part="label">Components</span>
+              </div>
+              <div data-part="connector" :data-state="step > 3 ? 'completed' : ''"></div>
+              <div data-part="step" :data-state="step === 4 ? 'active' : ''">
+                <span data-part="indicator">4</span>
+                <span data-part="label">Preferences</span>
+              </div>
+            </div>
+
+            <p data-ui="text" data-size="sm" data-variant="muted" data-align="center">
+              Step <span l-text="step"></span> of <span l-text="totalSteps"></span> — <span l-text="stepTitle"></span>
+            </p>
+          </div>
+        </template>
+
+        <!-- Step 1: Account -->
+        <template l-if="step === 1 && !complete">
+          <div data-ui="card">
+            <div data-part="header">
+              <h2 data-part="title">Account Details</h2>
+              <p data-part="description">Tell us about yourself</p>
+            </div>
+            <div data-part="body">
+              <div data-ui="stack" data-gap="4">
+                <div data-ui="stack" data-gap="2">
+                  <label data-ui="label">Full Name</label>
+                  <input data-ui="input" placeholder="Your name" l-model="name">
+                </div>
+                <div data-ui="stack" data-gap="2">
+                  <label data-ui="label">Email</label>
+                  <input data-ui="input" type="email" placeholder="you@example.com" l-model="email"
+                         :data-state="email && !email.includes('@') ? 'error' : ''">
+                  <template l-if="email && !email.includes('@')">
+                    <span style="font-size: var(--text-sm); color: var(--color-destructive)">Please enter a valid email address</span>
+                  </template>
+                </div>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <!-- Step 2: Project -->
+        <template l-if="step === 2 && !complete">
+          <div data-ui="card">
+            <div data-part="header">
+              <h2 data-part="title">Project Setup</h2>
+              <p data-part="description">Configure your project</p>
+            </div>
+            <div data-part="body">
+              <div data-ui="stack" data-gap="4">
+                <div data-ui="stack" data-gap="2">
+                  <label data-ui="label">Project Name</label>
+                  <input data-ui="input" placeholder="my-app" l-model="projectName">
+                </div>
+                <div data-ui="grid" data-cols="2" data-gap="4">
+                  <div data-ui="stack" data-gap="2">
+                    <label data-ui="label">Framework</label>
+                    <select data-ui="select" l-model="framework">
+                      <option value="vanilla">Vanilla HTML</option>
+                      <option value="astro">Astro</option>
+                      <option value="11ty">Eleventy</option>
+                      <option value="hugo">Hugo</option>
+                    </select>
+                  </div>
+                  <div data-ui="stack" data-gap="2">
+                    <label data-ui="label">Theme</label>
+                    <select data-ui="select" l-model="theme">
+                      <option value="default">Default</option>
+                      <option value="midnight">Midnight</option>
+                      <option value="paper">Paper</option>
+                      <option value="brutalist">Brutalist</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <!-- Step 3: Components -->
+        <template l-if="step === 3 && !complete">
+          <div data-ui="card">
+            <div data-part="header">
+              <h2 data-part="title">Select Components</h2>
+              <p data-part="description">Choose which components to install (<span l-text="selectedComponents.length"></span> selected)</p>
+            </div>
+            <div data-part="body">
+              <div data-ui="stack" data-gap="4">
+                <div data-ui="stack" data-gap="1">
+                  <span style="font-size: var(--text-sm); font-weight: var(--weight-medium)">Primitives</span>
+                  <div data-ui="separator"></div>
+                </div>
+                <div data-ui="grid" data-cols="2" data-gap="3">
+                  <label data-ui="checkbox-label">
+                    <input data-ui="checkbox" type="checkbox" l-model="includeButton"> button
+                  </label>
+                  <label data-ui="checkbox-label">
+                    <input data-ui="checkbox" type="checkbox" l-model="includeInput"> input
+                  </label>
+                  <label data-ui="checkbox-label">
+                    <input data-ui="checkbox" type="checkbox" l-model="includeCard"> card
+                  </label>
+                </div>
+
+                <div data-ui="stack" data-gap="1">
+                  <span style="font-size: var(--text-sm); font-weight: var(--weight-medium)">Recipes</span>
+                  <div data-ui="separator"></div>
+                </div>
+                <div data-ui="grid" data-cols="2" data-gap="3">
+                  <label data-ui="checkbox-label">
+                    <input data-ui="checkbox" type="checkbox" l-model="includeDialog"> dialog
+                  </label>
+                  <label data-ui="checkbox-label">
+                    <input data-ui="checkbox" type="checkbox" l-model="includeTabs"> tabs
+                  </label>
+                  <label data-ui="checkbox-label">
+                    <input data-ui="checkbox" type="checkbox" l-model="includeAccordion"> accordion
+                  </label>
+                  <label data-ui="checkbox-label">
+                    <input data-ui="checkbox" type="checkbox" l-model="includeDropdown"> dropdown
+                  </label>
+                  <label data-ui="checkbox-label">
+                    <input data-ui="checkbox" type="checkbox" l-model="includeToast"> toast
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <!-- Step 4: Preferences -->
+        <template l-if="step === 4 && !complete">
+          <div data-ui="card">
+            <div data-part="header">
+              <h2 data-part="title">Preferences</h2>
+              <p data-part="description">Fine-tune your setup</p>
+            </div>
+            <div data-part="body">
+              <div data-ui="stack" data-gap="4">
+                <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center" style="justify-content: space-between">
+                  <div data-ui="stack" data-gap="0">
+                    <span style="font-weight: var(--weight-medium)">Split token files</span>
+                    <span style="font-size: var(--text-sm); color: var(--color-fg-muted)">Keep palette, spacing, typography as separate files</span>
+                  </div>
+                  <label data-ui="switch-label">
+                    <input data-ui="switch" type="checkbox" role="switch" l-model="tokensSplit">
+                  </label>
+                </div>
+                <div data-ui="separator"></div>
+                <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center" style="justify-content: space-between">
+                  <div data-ui="stack" data-gap="0">
+                    <span style="font-weight: var(--weight-medium)">Include core modules</span>
+                    <span style="font-size: var(--text-sm); color: var(--color-fg-muted)">DOM, events, focus, motion, and store utilities</span>
+                  </div>
+                  <label data-ui="switch-label">
+                    <input data-ui="switch" type="checkbox" role="switch" l-model="includeCore">
+                  </label>
+                </div>
+                <div data-ui="separator"></div>
+                <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center" style="justify-content: space-between">
+                  <div data-ui="stack" data-gap="0">
+                    <span style="font-weight: var(--weight-medium)">Generate AI context</span>
+                    <span style="font-size: var(--text-sm); color: var(--color-fg-muted)">Create .loom/context.json for Claude and other agents</span>
+                  </div>
+                  <label data-ui="switch-label">
+                    <input data-ui="switch" type="checkbox" role="switch" l-model="generateContext">
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <!-- Complete -->
+        <template l-if="complete">
+          <div data-ui="card">
+            <div data-part="body">
+              <div data-ui="stack" data-gap="4" data-align="center" style="text-align: center; padding: var(--space-6) 0">
+                <span style="font-size: var(--text-4xl)">&#x2714;</span>
+                <h2 style="font-size: var(--text-2xl); font-weight: var(--weight-bold)">Setup Complete</h2>
+                <p style="color: var(--color-fg-muted)">Your project is ready to go</p>
+
+                <div data-ui="separator"></div>
+
+                <!-- Summary -->
+                <div data-ui="surface" data-size="md" style="text-align: left; width: 100%">
+                  <div data-ui="stack" data-gap="2">
+                    <div data-ui="stack" data-variant="horizontal" data-gap="2">
+                      <span style="font-size: var(--text-sm); color: var(--color-fg-muted); min-width: 8ch">Name:</span>
+                      <span style="font-size: var(--text-sm); font-weight: var(--weight-medium)" l-text="name"></span>
+                    </div>
+                    <div data-ui="stack" data-variant="horizontal" data-gap="2">
+                      <span style="font-size: var(--text-sm); color: var(--color-fg-muted); min-width: 8ch">Project:</span>
+                      <span style="font-size: var(--text-sm); font-weight: var(--weight-medium)" l-text="projectName"></span>
+                    </div>
+                    <div data-ui="stack" data-variant="horizontal" data-gap="2">
+                      <span style="font-size: var(--text-sm); color: var(--color-fg-muted); min-width: 8ch">Theme:</span>
+                      <span style="font-size: var(--text-sm); font-weight: var(--weight-medium)" l-text="theme"></span>
+                    </div>
+                    <div data-ui="stack" data-variant="horizontal" data-gap="2" style="flex-wrap: wrap">
+                      <span style="font-size: var(--text-sm); color: var(--color-fg-muted); min-width: 8ch">Components:</span>
+                      <div data-ui="stack" data-variant="horizontal" data-gap="1" style="flex-wrap: wrap">
+                        <template l-for="comp in selectedComponents">
+                          <span data-ui="badge" data-size="sm" data-variant="primary" l-text="comp"></span>
+                        </template>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div data-ui="stack" data-variant="horizontal" data-gap="3" style="padding-top: var(--space-4)">
+                  <button data-ui="button" data-variant="outline" @click="restart()">Start Over</button>
+                  <button data-ui="button" data-variant="primary">Open Project</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <!-- Navigation -->
+        <template l-if="!complete">
+          <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center" style="justify-content: space-between">
+            <button data-ui="button" data-variant="outline"
+                    @click="prevStep()"
+                    :disabled="step === 1">Back</button>
+            <button data-ui="button" data-variant="primary"
+                    @click="nextStep()"
+                    :disabled="!canNext"
+                    l-text="step === totalSteps ? 'Complete Setup' : 'Continue'"></button>
+          </div>
+        </template>
+
+        <!-- Footer -->
+        <div style="text-align: center; padding: var(--space-4) 0">
+          <p style="font-size: var(--text-xs); color: var(--color-fg-subtle)">Loom UI Wizard — built with zero CSS classes</p>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

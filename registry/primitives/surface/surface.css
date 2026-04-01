@@ -1,0 +1,71 @@
+/* @ui:component surface */
+/* @ui:tokens color-bg color-border radius-lg shadow-sm shadow-md shadow-lg space-3 space-4 space-6 */
+
+/* ── Base ── */
+[data-ui="surface"] {
+  background: var(--color-bg);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+}
+
+/* ── Elevation Variants ── */
+[data-ui="surface"][data-variant="flat"] {
+  border: none;
+  box-shadow: none;
+}
+
+[data-ui="surface"][data-variant="raised"] {
+  box-shadow: var(--shadow-sm);
+}
+
+[data-ui="surface"][data-variant="overlay"] {
+  box-shadow: var(--shadow-lg);
+  border: none;
+}
+
+/* ── Padding Sizes ── */
+[data-ui="surface"][data-size="sm"] {
+  padding: var(--space-3);
+}
+
+[data-ui="surface"][data-size="md"] {
+  padding: var(--space-4);
+}
+
+[data-ui="surface"][data-size="lg"] {
+  padding: var(--space-6);
+}
+
+/* ── Max-Width Containers ── */
+[data-ui="surface"][data-max="sm"] {
+  max-width: 640px;
+  margin-inline: auto;
+}
+
+[data-ui="surface"][data-max="md"] {
+  max-width: 768px;
+  margin-inline: auto;
+}
+
+[data-ui="surface"][data-max="lg"] {
+  max-width: 1024px;
+  margin-inline: auto;
+}
+
+[data-ui="surface"][data-max="xl"] {
+  max-width: 1280px;
+  margin-inline: auto;
+}
+
+[data-ui="surface"][data-max="full"] {
+  max-width: 100%;
+}
+
+/* ── Text Alignment ── */
+[data-ui="surface"][data-align-text="center"] {
+  text-align: center;
+}
+
+[data-ui="surface"][data-align-text="right"] {
+  text-align: right;
+}

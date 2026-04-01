@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><title>Broken Dialog — Bad Variant</title></head>
+<body>
+
+<!-- Dialog with invalid size variant "xl" (valid: sm, md, lg, full) -->
+<div data-ui="dialog" data-state="closed" id="bad-variant-dialog">
+  <button data-part="trigger">Open</button>
+  <div data-part="overlay" hidden></div>
+  <div
+    data-part="panel"
+    data-size="xl"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="bad-variant-dialog-title"
+    hidden
+  >
+    <div data-part="header">
+      <h2 id="bad-variant-dialog-title" data-part="title">Title</h2>
+      <button data-part="close" aria-label="Close dialog">&#x2715;</button>
+    </div>
+    <div data-part="body"><p>Content</p></div>
+    <div data-part="footer">
+      <button data-ui="button" data-variant="primary">OK</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="ui/core/loom.js"></script>
+</body>
+</html>

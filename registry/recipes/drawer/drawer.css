@@ -1,0 +1,167 @@
+/* @ui:component drawer */
+/* @ui:tokens color-bg color-fg color-border shadow-xl space-4 space-6 radius-none z-overlay z-modal duration-normal duration-slow ease-out ease-default */
+
+/* ── Root ── */
+[data-ui="drawer"] {
+  position: relative;
+}
+
+/* ── Overlay ── */
+[data-ui="drawer"] [data-part="overlay"] {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  background: var(--drawer-overlay-bg, oklch(0 0 0 / 0.5));
+  opacity: 0;
+  transition: opacity var(--duration-normal) var(--ease-default);
+}
+
+[data-ui="drawer"][data-state="open"] [data-part="overlay"] {
+  opacity: 1;
+}
+
+[data-ui="drawer"][data-state="closing"] [data-part="overlay"] {
+  opacity: 0;
+}
+
+/* ── Panel ── */
+[data-ui="drawer"] [data-part="panel"] {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  z-index: var(--z-modal);
+  display: flex;
+  flex-direction: column;
+  width: var(--drawer-width, 400px);
+  max-width: 100vw;
+  background: var(--color-bg);
+  border: none;
+  box-shadow: var(--drawer-shadow, var(--shadow-xl));
+  transition: transform var(--duration-slow) var(--ease-out);
+}
+
+/* ── Side Variants ── */
+[data-ui="drawer"] [data-part="panel"][data-variant="left"] {
+  left: 0;
+  right: auto;
+  border-right: 1px solid var(--color-border);
+  border-radius: 0 var(--radius-none, 0) var(--radius-none, 0) 0;
+  transform: translateX(-100%);
+}
+
+[data-ui="drawer"] [data-part="panel"][data-variant="right"] {
+  right: 0;
+  left: auto;
+  border-left: 1px solid var(--color-border);
+  border-radius: var(--radius-none, 0) 0 0 var(--radius-none, 0);
+  transform: translateX(100%);
+}
+
+/* ── Open State ── */
+[data-ui="drawer"][data-state="open"] [data-part="panel"][data-variant="left"],
+[data-ui="drawer"][data-state="open"] [data-part="panel"][data-variant="right"] {
+  transform: translateX(0);
+}
+
+/* ── Closing State ── */
+[data-ui="drawer"][data-state="closing"] [data-part="panel"][data-variant="left"] {
+  transform: translateX(-100%);
+}
+
+[data-ui="drawer"][data-state="closing"] [data-part="panel"][data-variant="right"] {
+  transform: translateX(100%);
+}
+
+/* ── Size Variants ── */
+[data-ui="drawer"] [data-part="panel"][data-size="sm"] {
+  --drawer-width: 320px;
+  width: var(--drawer-width);
+}
+
+[data-ui="drawer"] [data-part="panel"][data-size="md"] {
+  --drawer-width: 400px;
+  width: var(--drawer-width);
+}
+
+[data-ui="drawer"] [data-part="panel"][data-size="lg"] {
+  --drawer-width: 560px;
+  width: var(--drawer-width);
+}
+
+[data-ui="drawer"] [data-part="panel"][data-size="full"] {
+  --drawer-width: 100vw;
+  width: var(--drawer-width);
+}
+
+/* ── Header ── */
+[data-ui="drawer"] [data-part="header"] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-6);
+  padding-bottom: 0;
+  flex-shrink: 0;
+}
+
+/* ── Title ── */
+[data-ui="drawer"] [data-part="title"] {
+  margin: 0;
+  font-size: var(--text-lg, 1.125rem);
+  font-weight: var(--weight-semibold, 600);
+  color: var(--color-fg);
+}
+
+/* ── Close Button ── */
+[data-ui="drawer"] [data-part="close"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-md, 0.375rem);
+  background: transparent;
+  color: var(--color-fg-muted, oklch(0.55 0 0));
+  font-size: var(--text-base, 1rem);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+[data-ui="drawer"] [data-part="close"]:hover {
+  background: var(--color-bg-muted, oklch(0.96 0.004 260));
+  color: var(--color-fg);
+}
+
+[data-ui="drawer"] [data-part="close"]:focus-visible {
+  outline: 2px solid var(--color-ring, oklch(0.55 0.22 264 / 0.4));
+  outline-offset: 2px;
+}
+
+/* ── Body ── */
+[data-ui="drawer"] [data-part="body"] {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-6);
+  color: var(--color-fg);
+}
+
+/* ── Footer ── */
+[data-ui="drawer"] [data-part="footer"] {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3, 0.75rem);
+  padding: var(--space-6);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+/* ── Motion ── */
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="drawer"] [data-part="overlay"],
+  [data-ui="drawer"] [data-part="panel"] {
+    transition: none;
+  }
+}

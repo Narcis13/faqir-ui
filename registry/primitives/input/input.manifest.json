@@ -1,0 +1,106 @@
+{
+  "name": "input",
+  "version": "1.0.0",
+  "kind": "primitive",
+  "category": "forms",
+  "description": "Text input with error, disabled states and size variants",
+
+  "anatomy": {
+    "tag": "input",
+    "selector": "[data-ui='input']",
+    "content_model": "inline"
+  },
+
+  "slots": {
+    "prefix": {
+      "selector": "[data-part='prefix']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Leading icon or text inside input-group"
+    },
+    "suffix": {
+      "selector": "[data-part='suffix']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Trailing icon or text inside input-group"
+    }
+  },
+
+  "variants": {
+    "size": {
+      "values": ["sm", "md", "lg"],
+      "default": "md",
+      "attr": "data-size",
+      "applied_to": "root"
+    }
+  },
+
+  "states": {
+    "default": { "attr": "data-state=\"default\"", "default": true },
+    "error": { "attr": "data-state=\"error\"" },
+    "disabled": { "attr": "disabled" }
+  },
+
+  "props": {
+    "placeholder": { "type": "string", "default": "", "description": "Placeholder text" },
+    "value": { "type": "string", "default": "", "description": "Input value" },
+    "disabled": { "type": "boolean", "default": false, "description": "Whether the input is disabled" },
+    "type": { "type": "string", "default": "text", "description": "Input type attribute" }
+  },
+
+  "a11y": {
+    "required_attrs": [
+      "aria-invalid=\"true\" when in error state",
+      "id + matching label[for] for accessibility"
+    ],
+    "keyboard": {
+      "Tab": "focus input"
+    }
+  },
+
+  "tokens_used": [
+    "color-bg", "color-fg", "color-fg-muted",
+    "color-border", "color-border-strong", "color-ring", "color-destructive",
+    "radius-md", "space-2", "space-3", "space-4",
+    "font-sans", "text-xs", "text-sm", "text-base",
+    "duration-fast", "ease-default"
+  ],
+
+  "templates": {
+    "html": "<input data-ui=\"input\" type=\"{type}\" placeholder=\"{placeholder}\">"
+  },
+
+  "safe_transforms": [
+    "change-size",
+    "change-type",
+    "add-placeholder",
+    "wrap-in-input-group",
+    "add-prefix",
+    "add-suffix"
+  ],
+
+  "unsafe_transforms": [
+    "remove-input-element",
+    "change-to-div-without-role"
+  ],
+
+  "composition": {
+    "contains": [],
+    "used_in": ["auth-form", "search-results", "crud-table", "settings-page"]
+  },
+
+  "files": {
+    "html": "input.html",
+    "css": "input.css",
+    "manifest": "input.manifest.json"
+  },
+
+  "tests": [
+    "renders-as-input-element",
+    "error-state-sets-data-state-error",
+    "error-state-has-aria-invalid",
+    "disabled-state-has-disabled-attribute",
+    "sm-size-sets-data-size-sm",
+    "placeholder-is-styled"
+  ]
+}

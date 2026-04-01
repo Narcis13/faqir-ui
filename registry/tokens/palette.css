@@ -1,0 +1,82 @@
+/* @ui:tokens palette — raw oklch color values, never referenced by components directly */
+
+:root {
+  /* ── Indigo ── */
+  --palette-indigo-50:  oklch(0.96 0.04 264);
+  --palette-indigo-100: oklch(0.92 0.08 264);
+  --palette-indigo-200: oklch(0.85 0.12 264);
+  --palette-indigo-300: oklch(0.75 0.16 264);
+  --palette-indigo-400: oklch(0.65 0.20 264);
+  --palette-indigo-500: oklch(0.55 0.22 264);
+  --palette-indigo-600: oklch(0.50 0.22 264);
+  --palette-indigo-700: oklch(0.42 0.20 264);
+  --palette-indigo-800: oklch(0.35 0.18 264);
+  --palette-indigo-900: oklch(0.28 0.14 264);
+  --palette-indigo-950: oklch(0.20 0.10 264);
+
+  /* ── Red ── */
+  --palette-red-50:  oklch(0.96 0.04 25);
+  --palette-red-100: oklch(0.92 0.08 25);
+  --palette-red-200: oklch(0.85 0.12 25);
+  --palette-red-300: oklch(0.75 0.16 25);
+  --palette-red-400: oklch(0.65 0.20 25);
+  --palette-red-500: oklch(0.55 0.22 25);
+  --palette-red-600: oklch(0.50 0.22 25);
+  --palette-red-700: oklch(0.42 0.20 25);
+  --palette-red-800: oklch(0.35 0.18 25);
+  --palette-red-900: oklch(0.28 0.14 25);
+  --palette-red-950: oklch(0.20 0.10 25);
+
+  /* ── Green ── */
+  --palette-green-50:  oklch(0.96 0.04 155);
+  --palette-green-100: oklch(0.92 0.08 155);
+  --palette-green-200: oklch(0.85 0.12 155);
+  --palette-green-300: oklch(0.75 0.16 155);
+  --palette-green-400: oklch(0.65 0.18 155);
+  --palette-green-500: oklch(0.60 0.18 155);
+  --palette-green-600: oklch(0.55 0.18 155);
+  --palette-green-700: oklch(0.45 0.16 155);
+  --palette-green-800: oklch(0.38 0.14 155);
+  --palette-green-900: oklch(0.30 0.10 155);
+  --palette-green-950: oklch(0.22 0.08 155);
+
+  /* ── Amber ── */
+  --palette-amber-50:  oklch(0.96 0.04 85);
+  --palette-amber-100: oklch(0.92 0.08 85);
+  --palette-amber-200: oklch(0.88 0.12 85);
+  --palette-amber-300: oklch(0.82 0.14 80);
+  --palette-amber-400: oklch(0.78 0.15 78);
+  --palette-amber-500: oklch(0.75 0.15 75);
+  --palette-amber-600: oklch(0.66 0.14 55);
+  --palette-amber-700: oklch(0.55 0.12 50);
+  --palette-amber-800: oklch(0.45 0.10 50);
+  --palette-amber-900: oklch(0.38 0.08 50);
+  --palette-amber-950: oklch(0.28 0.06 50);
+
+  /* ── Gray (cool) ── */
+  --palette-gray-25:  oklch(0.995 0.001 260);
+  --palette-gray-50:  oklch(0.98 0.003 260);
+  --palette-gray-100: oklch(0.96 0.004 260);
+  --palette-gray-200: oklch(0.92 0.006 260);
+  --palette-gray-300: oklch(0.87 0.008 260);
+  --palette-gray-400: oklch(0.70 0.01 260);
+  --palette-gray-500: oklch(0.55 0.01 260);
+  --palette-gray-600: oklch(0.44 0.01 260);
+  --palette-gray-700: oklch(0.37 0.01 260);
+  --palette-gray-800: oklch(0.27 0.01 260);
+  --palette-gray-900: oklch(0.20 0.01 260);
+  --palette-gray-950: oklch(0.14 0.01 260);
+
+  /* ── Blue ── */
+  --palette-blue-50:  oklch(0.96 0.04 240);
+  --palette-blue-100: oklch(0.92 0.08 240);
+  --palette-blue-200: oklch(0.85 0.12 240);
+  --palette-blue-300: oklch(0.75 0.14 240);
+  --palette-blue-400: oklch(0.65 0.18 240);
+  --palette-blue-500: oklch(0.55 0.20 240);
+  --palette-blue-600: oklch(0.50 0.20 240);
+  --palette-blue-700: oklch(0.42 0.18 240);
+  --palette-blue-800: oklch(0.35 0.16 240);
+  --palette-blue-900: oklch(0.28 0.12 240);
+  --palette-blue-950: oklch(0.20 0.08 240);
+}

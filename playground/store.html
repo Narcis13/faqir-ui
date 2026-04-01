@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loom UI — Component Store</title>
+
+  <!-- Tokens -->
+  <link rel="stylesheet" href="../registry/tokens/palette.css">
+  <link rel="stylesheet" href="../registry/tokens/spacing.css">
+  <link rel="stylesheet" href="../registry/tokens/typography.css">
+  <link rel="stylesheet" href="../registry/tokens/effects.css">
+  <link rel="stylesheet" href="../registry/tokens/motion.css">
+  <link rel="stylesheet" href="../registry/tokens/semantic.css">
+  <link rel="stylesheet" href="../registry/tokens/aliases.css">
+
+  <!-- Base -->
+  <link rel="stylesheet" href="../registry/base/reset.css">
+
+  <!-- Theme -->
+  <link rel="stylesheet" href="../registry/themes/default.css">
+
+  <!-- Primitives -->
+  <link rel="stylesheet" href="../registry/primitives/button/button.css">
+  <link rel="stylesheet" href="../registry/primitives/input/input.css">
+  <link rel="stylesheet" href="../registry/primitives/select/select.css">
+  <link rel="stylesheet" href="../registry/primitives/badge/badge.css">
+  <link rel="stylesheet" href="../registry/primitives/card/card.css">
+  <link rel="stylesheet" href="../registry/primitives/separator/separator.css">
+  <link rel="stylesheet" href="../registry/primitives/stack/stack.css">
+  <link rel="stylesheet" href="../registry/primitives/grid/grid.css">
+  <link rel="stylesheet" href="../registry/primitives/surface/surface.css">
+  <link rel="stylesheet" href="../registry/primitives/label/label.css">
+  <link rel="stylesheet" href="../registry/primitives/switch/switch.css">
+  <link rel="stylesheet" href="../registry/primitives/spinner/spinner.css">
+  <link rel="stylesheet" href="../registry/primitives/text/text.css">
+  <link rel="stylesheet" href="../registry/primitives/empty-state/empty-state.css">
+
+  <!-- Recipes -->
+  <link rel="stylesheet" href="../registry/recipes/dialog/dialog.css">
+
+  <!-- Loom Core -->
+  <script src="../registry/core/loom-core.js" defer></script>
+
+  <style>
+    [l-cloak] { display: none !important; }
+  </style>
+</head>
+<body>
+  <div l-cloak l-data="{
+    darkMode: false,
+    search: '',
+    category: 'all',
+    sort: 'popular',
+    cartOpen: false,
+
+    products: [
+      { id: 1, name: 'Button', kind: 'primitive', description: 'Interactive button with 6 variants and 3 sizes', installs: 842, price: 0, inCart: 0 },
+      { id: 2, name: 'Card', kind: 'primitive', description: 'Container with header, body, and footer slots', installs: 731, price: 0, inCart: 0 },
+      { id: 3, name: 'Input', kind: 'primitive', description: 'Text input with error, disabled, and size variants', installs: 689, price: 0, inCart: 0 },
+      { id: 4, name: 'Dialog', kind: 'recipe', description: 'Modal with focus trap, overlay, and escape-to-close', installs: 523, price: 0, inCart: 0 },
+      { id: 5, name: 'Tabs', kind: 'recipe', description: 'Tab panel switcher with keyboard arrow navigation', installs: 467, price: 0, inCart: 0 },
+      { id: 6, name: 'Badge', kind: 'primitive', description: 'Inline status label with color variants', installs: 445, price: 0, inCart: 0 },
+      { id: 7, name: 'Accordion', kind: 'recipe', description: 'Expandable sections with single or multiple mode', installs: 398, price: 0, inCart: 0 },
+      { id: 8, name: 'Dropdown', kind: 'recipe', description: 'Menu with keyboard navigation and role=menu', installs: 376, price: 0, inCart: 0 },
+      { id: 9, name: 'Stack', kind: 'primitive', description: 'Flexbox container with direction, gap, and alignment', installs: 354, price: 0, inCart: 0 },
+      { id: 10, name: 'Grid', kind: 'primitive', description: 'CSS Grid layout with configurable columns and gap', installs: 312, price: 0, inCart: 0 },
+      { id: 11, name: 'Toast', kind: 'recipe', description: 'Notification messages with auto-dismiss', installs: 287, price: 0, inCart: 0 },
+      { id: 12, name: 'Surface', kind: 'primitive', description: 'Container with elevation and padding variants', installs: 265, price: 0, inCart: 0 }
+    ],
+
+    addToCart(id) {
+      const p = this.products.find(p => p.id === id);
+      if (p) p.inCart = 1;
+    },
+
+    removeFromCart(id) {
+      const p = this.products.find(p => p.id === id);
+      if (p) p.inCart = 0;
+    },
+
+    get cart() {
+      return this.products.filter(p => p.inCart > 0);
+    },
+
+    get cartCount() {
+      return this.cart.length;
+    },
+
+    get filteredProducts() {
+      let result = this.products;
+      if (this.category !== 'all') {
+        result = result.filter(p => p.kind === this.category);
+      }
+      if (this.search.trim()) {
+        const q = this.search.toLowerCase();
+        result = result.filter(p => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q));
+      }
+      if (this.sort === 'popular') {
+        result = [...result].sort((a, b) => b.installs - a.installs);
+      } else if (this.sort === 'name') {
+        result = [...result].sort((a, b) => a.name.localeCompare(b.name));
+      }
+      return result;
+    },
+
+    installAll() {
+      this.cart.forEach(p => p.inCart = 0);
+    },
+
+    toggleDark() {
+      this.darkMode = !this.darkMode;
+      document.documentElement.setAttribute('data-theme', this.darkMode ? 'dark' : 'light');
+    }
+  }">
+
+    <div data-ui="surface" data-variant="flat" data-max="xl" data-size="md">
+      <div data-ui="stack" data-gap="6">
+
+        <!-- Header -->
+        <div data-ui="stack" data-variant="horizontal" data-gap="4" data-align="center" data-justify="between" data-wrap>
+          <div data-ui="stack" data-gap="1">
+            <h1 data-ui="heading" data-size="3">Component Store</h1>
+            <p data-ui="text" data-size="sm" data-variant="muted">Browse and install Loom UI components</p>
+          </div>
+          <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center">
+            <button data-ui="button" data-variant="outline" data-size="sm" @click="cartOpen = !cartOpen">
+              Cart (<span l-text="cartCount"></span>)
+            </button>
+            <label data-ui="switch-label">
+              <input data-ui="switch" type="checkbox" role="switch" @change="toggleDark()">
+              <span l-text="darkMode ? 'Dark' : 'Light'" style="font-size: var(--text-sm)"></span>
+            </label>
+          </div>
+        </div>
+
+        <div data-ui="separator"></div>
+
+        <!-- Cart panel -->
+        <template l-if="cartOpen">
+          <div data-ui="card">
+            <div data-part="header">
+              <h2 data-part="title">Install Queue</h2>
+              <p data-part="description"><span l-text="cartCount"></span> component(s) selected</p>
+            </div>
+            <div data-part="body">
+              <template l-if="cart.length === 0">
+                <div data-ui="stack" data-gap="2" data-align="center" style="padding: var(--space-4) 0; text-align: center">
+                  <p style="color: var(--color-fg-muted)">No components selected</p>
+                  <p style="font-size: var(--text-sm); color: var(--color-fg-subtle)">Browse below and add components to your install queue</p>
+                </div>
+              </template>
+              <template l-if="cart.length > 0">
+                <div data-ui="stack" data-gap="3">
+                  <template l-for="item in cart">
+                    <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center" style="justify-content: space-between">
+                      <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center">
+                        <span data-ui="badge" data-size="sm" :data-variant="item.kind === 'recipe' ? 'primary' : 'secondary'" l-text="item.kind"></span>
+                        <span style="font-weight: var(--weight-medium)" l-text="item.name"></span>
+                      </div>
+                      <button data-ui="button" data-variant="ghost" data-size="sm" @click="removeFromCart(item.id)">Remove</button>
+                    </div>
+                  </template>
+                  <div data-ui="separator"></div>
+                  <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center" style="justify-content: space-between">
+                    <span style="font-size: var(--text-sm); color: var(--color-fg-muted)">
+                      loom add <span l-text="cart.map(c => c.name.toLowerCase()).join(' ')"></span>
+                    </span>
+                    <button data-ui="button" data-variant="primary" data-size="sm" @click="installAll()">Install All</button>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+        </template>
+
+        <!-- Toolbar -->
+        <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center" style="flex-wrap: wrap; justify-content: space-between">
+          <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center">
+            <input data-ui="input" data-size="sm" placeholder="Search components..." l-model="search" style="width: 220px">
+            <select data-ui="select" data-size="sm" l-model="category">
+              <option value="all">All Types</option>
+              <option value="primitive">Primitives</option>
+              <option value="recipe">Recipes</option>
+            </select>
+          </div>
+          <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center">
+            <span style="font-size: var(--text-sm); color: var(--color-fg-muted)">Sort:</span>
+            <select data-ui="select" data-size="sm" l-model="sort">
+              <option value="popular">Most Popular</option>
+              <option value="name">Name A-Z</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Results count -->
+        <p style="font-size: var(--text-sm); color: var(--color-fg-muted)">
+          Showing <span l-text="filteredProducts.length"></span> of <span l-text="products.length"></span> components
+        </p>
+
+        <!-- Product Grid -->
+        <div data-ui="grid" data-cols="3" data-gap="4">
+          <template l-for="product in filteredProducts">
+            <div data-ui="card">
+              <div data-part="header">
+                <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center" style="justify-content: space-between">
+                  <h3 data-part="title" l-text="product.name"></h3>
+                  <span data-ui="badge" data-size="sm"
+                        :data-variant="product.kind === 'recipe' ? 'primary' : 'secondary'"
+                        l-text="product.kind"></span>
+                </div>
+                <p data-part="description" l-text="product.description"></p>
+              </div>
+              <div data-part="body">
+                <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center">
+                  <span style="font-size: var(--text-sm); color: var(--color-fg-muted)">
+                    <span l-text="product.installs"></span> installs
+                  </span>
+                  <span data-ui="badge" data-variant="success" data-size="sm">Free</span>
+                </div>
+              </div>
+              <div data-part="footer">
+                <template l-if="product.inCart === 0">
+                  <button data-ui="button" data-variant="outline" data-size="sm" @click="addToCart(product.id)" style="width: 100%">Add to Queue</button>
+                </template>
+                <template l-if="product.inCart > 0">
+                  <button data-ui="button" data-variant="primary" data-size="sm" @click="removeFromCart(product.id)" style="width: 100%">&#x2713; In Queue</button>
+                </template>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <!-- Empty state — uses empty-state component -->
+        <template l-if="filteredProducts.length === 0">
+          <div data-ui="empty-state">
+            <span data-part="icon">&#x1F50D;</span>
+            <h3 data-part="title">No components found</h3>
+            <p data-part="description">Try adjusting your search or filters</p>
+          </div>
+        </template>
+
+        <!-- Footer -->
+        <div data-ui="surface" data-variant="flat" data-align-text="center" style="padding: var(--space-4) 0">
+          <p data-ui="text" data-size="xs" data-variant="subtle">Loom UI Store — built with zero CSS classes</p>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

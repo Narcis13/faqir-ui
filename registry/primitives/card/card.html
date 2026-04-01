@@ -1,0 +1,46 @@
+<!-- @ui:component card -->
+<!-- @ui:kind primitive -->
+<!-- @ui:slots header title description body footer -->
+<!-- @ui:variants variant=default|outlined|filled size=sm|md|lg -->
+
+<!-- Default Card -->
+<div data-ui="card">
+  <div data-part="header">
+    <h3 data-part="title">Card Title</h3>
+    <p data-part="description">A brief description of the card content.</p>
+  </div>
+  <div data-part="body">
+    <p>Card body content goes here.</p>
+  </div>
+  <div data-part="footer">
+    <button data-ui="button" data-variant="outline">Cancel</button>
+    <button data-ui="button" data-variant="primary">Save</button>
+  </div>
+</div>
+
+<!-- Outlined -->
+<div data-ui="card" data-variant="outlined">
+  <div data-part="header">
+    <h3 data-part="title">Outlined Card</h3>
+  </div>
+  <div data-part="body">
+    <p>Content with outlined style.</p>
+  </div>
+</div>
+
+<!-- Filled -->
+<div data-ui="card" data-variant="filled">
+  <div data-part="header">
+    <h3 data-part="title">Filled Card</h3>
+  </div>
+  <div data-part="body">
+    <p>Content with filled background.</p>
+  </div>
+</div>
+
+<!-- Simple Card (body only) -->
+<div data-ui="card">
+  <div data-part="body">
+    <p>A simple card with just body content.</p>
+  </div>
+</div>

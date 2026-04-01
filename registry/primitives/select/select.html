@@ -1,0 +1,38 @@
+<!-- @ui:component select -->
+<!-- @ui:kind primitive -->
+<!-- @ui:slots  -->
+<!-- @ui:variants size=sm|md|lg -->
+
+<!-- Default -->
+<label data-ui="label" for="country-select">Country</label>
+<select data-ui="select" id="country-select">
+  <option value="" disabled selected>Choose a country...</option>
+  <option value="us">United States</option>
+  <option value="uk">United Kingdom</option>
+  <option value="ca">Canada</option>
+</select>
+
+<!-- Error state -->
+<label data-ui="label" for="role-select">Role</label>
+<select data-ui="select" id="role-select" data-state="error" aria-invalid="true">
+  <option value="">Select a role...</option>
+  <option value="admin">Admin</option>
+  <option value="user">User</option>
+</select>
+
+<!-- Disabled -->
+<label data-ui="label" for="plan-select">Plan</label>
+<select data-ui="select" id="plan-select" disabled>
+  <option value="pro" selected>Pro (locked)</option>
+</select>
+
+<!-- Sizes -->
+<select data-ui="select" data-size="sm">
+  <option>Small select</option>
+</select>
+<select data-ui="select">
+  <option>Medium select (default)</option>
+</select>
+<select data-ui="select" data-size="lg">
+  <option>Large select</option>
+</select>

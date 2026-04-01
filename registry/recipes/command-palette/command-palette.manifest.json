@@ -1,0 +1,174 @@
+{
+  "name": "command-palette",
+  "version": "1.0.0",
+  "kind": "recipe",
+  "category": "navigation",
+  "description": "Cmd+K style modal command interface with search and keyboard navigation",
+
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='command-palette']",
+    "content_model": "slots"
+  },
+
+  "slots": {
+    "overlay": {
+      "selector": "[data-part='overlay']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "Backdrop overlay, click to close"
+    },
+    "panel": {
+      "selector": "[data-part='panel']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "The command palette dialog container"
+    },
+    "search": {
+      "selector": "[data-part='search']",
+      "required": true,
+      "tag_hint": "input",
+      "description": "Search input with role=combobox for filtering commands"
+    },
+    "list": {
+      "selector": "[data-part='list']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "Scrollable list container with role=listbox"
+    },
+    "group": {
+      "selector": "[data-part='group']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Group container with label and items"
+    },
+    "item": {
+      "selector": "[data-part='item']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "Individual command item with role=option"
+    },
+    "empty": {
+      "selector": "[data-part='empty']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Empty state shown when no commands match"
+    },
+    "kbd": {
+      "selector": "[data-part='kbd']",
+      "required": false,
+      "tag_hint": "kbd",
+      "description": "Keyboard shortcut hint displayed in items"
+    }
+  },
+
+  "variants": {
+    "size": {
+      "values": ["sm", "md", "lg"],
+      "default": "md",
+      "attr": "data-size",
+      "applied_to": "panel"
+    }
+  },
+
+  "states": {
+    "closed": { "attr": "data-state=\"closed\"", "default": true },
+    "open": { "attr": "data-state=\"open\"" }
+  },
+
+  "props": {
+    "placeholder": { "type": "string", "default": "Type a command...", "description": "Search input placeholder" }
+  },
+
+  "a11y": {
+    "role": "dialog",
+    "aria-modal": true,
+    "required_attrs": [
+      "role=\"dialog\" on panel",
+      "aria-modal=\"true\" on panel",
+      "aria-label on panel",
+      "role=\"combobox\" on search input",
+      "role=\"listbox\" on list",
+      "role=\"option\" on each item"
+    ],
+    "focus_trap": true,
+    "escape_closes": true,
+    "keyboard": {
+      "Cmd+K / Ctrl+K": "toggle command palette",
+      "Escape": "close command palette",
+      "ArrowDown": "highlight next item",
+      "ArrowUp": "highlight previous item",
+      "Enter": "activate selected item",
+      "Home": "highlight first item",
+      "End": "highlight last item"
+    }
+  },
+
+  "tokens_used": [
+    "color-bg", "color-fg", "color-fg-muted", "color-fg-subtle",
+    "color-border", "color-primary-subtle", "color-bg-muted",
+    "shadow-xl", "radius-xl",
+    "space-2", "space-3", "space-4",
+    "text-sm", "text-xs", "text-base",
+    "weight-medium", "font-mono",
+    "z-overlay", "z-modal",
+    "duration-fast", "duration-normal", "ease-out"
+  ],
+
+  "templates": {
+    "html": "<div data-ui=\"command-palette\" data-state=\"closed\">\n  <div data-part=\"overlay\" hidden></div>\n  <div data-part=\"panel\" role=\"dialog\" aria-modal=\"true\" aria-label=\"Command palette\" data-size=\"{size}\" hidden>\n    <div data-part=\"search-wrapper\">\n      <input data-part=\"search\" type=\"text\" role=\"combobox\" aria-expanded=\"true\" aria-autocomplete=\"list\" aria-controls=\"{id}-list\" placeholder=\"Type a command or search...\">\n    </div>\n    <div data-part=\"list\" role=\"listbox\" id=\"{id}-list\">\n      <div data-part=\"group\">\n        <div data-part=\"group-label\">{group_label}</div>\n        <div data-part=\"item\" role=\"option\" aria-selected=\"false\">\n          <span data-part=\"item-label\">{item_label}</span>\n          <kbd data-part=\"kbd\">{shortcut}</kbd>\n        </div>\n      </div>\n      <div data-part=\"empty\" hidden>No commands found</div>\n    </div>\n  </div>\n</div>"
+  },
+
+  "safe_transforms": [
+    "add-command-item",
+    "remove-command-item",
+    "add-group",
+    "remove-group",
+    "change-panel-size",
+    "change-placeholder",
+    "restyle-panel-background",
+    "customize-empty-message"
+  ],
+
+  "unsafe_transforms": [
+    "remove-dialog-role",
+    "remove-aria-modal",
+    "remove-focus-trap",
+    "remove-escape-handler",
+    "remove-keyboard-navigation",
+    "remove-global-shortcut"
+  ],
+
+  "composition": {
+    "contains": ["kbd"],
+    "used_in": []
+  },
+
+  "files": {
+    "html": "command-palette.html",
+    "css": "command-palette.css",
+    "js": "command-palette.js",
+    "manifest": "command-palette.manifest.json"
+  },
+
+  "tests": [
+    "opens-on-cmd-k",
+    "opens-on-ctrl-k",
+    "closes-on-escape",
+    "closes-on-overlay-click",
+    "traps-focus-within-panel",
+    "search-input-receives-focus-on-open",
+    "filters-items-on-search-input",
+    "hides-empty-groups-on-filter",
+    "shows-empty-state-when-no-match",
+    "arrow-down-highlights-next-item",
+    "arrow-up-highlights-previous-item",
+    "enter-activates-selected-item",
+    "panel-has-role-dialog",
+    "panel-has-aria-modal-true",
+    "search-has-role-combobox",
+    "items-have-role-option",
+    "list-has-role-listbox",
+    "returns-focus-on-close"
+  ]
+}

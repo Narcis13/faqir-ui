@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><title>Broken Dialog — Missing Required Slots</title></head>
+<body>
+
+<!-- Dialog missing required slots: overlay, title, body, close -->
+<div data-ui="dialog" data-state="closed" id="missing-slot-dialog">
+  <button data-part="trigger">Open</button>
+  <div
+    data-part="panel"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="missing-slot-dialog-title"
+    data-size="md"
+    hidden
+  >
+    <p>Some content without proper slots</p>
+  </div>
+</div>
+
+<script type="module" src="ui/core/loom.js"></script>
+</body>
+</html>

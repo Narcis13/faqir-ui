@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loom UI — Component Gallery</title>
+
+  <!-- Tokens -->
+  <link rel="stylesheet" href="../registry/tokens/palette.css">
+  <link rel="stylesheet" href="../registry/tokens/spacing.css">
+  <link rel="stylesheet" href="../registry/tokens/typography.css">
+  <link rel="stylesheet" href="../registry/tokens/effects.css">
+  <link rel="stylesheet" href="../registry/tokens/motion.css">
+  <link rel="stylesheet" href="../registry/tokens/semantic.css">
+  <link rel="stylesheet" href="../registry/tokens/aliases.css">
+
+  <!-- Base -->
+  <link rel="stylesheet" href="../registry/base/reset.css">
+  <link rel="stylesheet" href="../registry/base/prose.css">
+
+  <!-- Themes -->
+  <link rel="stylesheet" href="../registry/themes/default.css" id="theme-default">
+  <link rel="stylesheet" href="../registry/themes/midnight.css" id="theme-midnight" disabled>
+  <link rel="stylesheet" href="../registry/themes/paper.css" id="theme-paper" disabled>
+  <link rel="stylesheet" href="../registry/themes/brutalist.css" id="theme-brutalist" disabled>
+
+  <!-- Primitives -->
+  <link rel="stylesheet" href="../registry/primitives/button/button.css">
+  <link rel="stylesheet" href="../registry/primitives/input/input.css">
+  <link rel="stylesheet" href="../registry/primitives/textarea/textarea.css">
+  <link rel="stylesheet" href="../registry/primitives/select/select.css">
+  <link rel="stylesheet" href="../registry/primitives/checkbox/checkbox.css">
+  <link rel="stylesheet" href="../registry/primitives/radio/radio.css">
+  <link rel="stylesheet" href="../registry/primitives/switch/switch.css">
+  <link rel="stylesheet" href="../registry/primitives/label/label.css">
+  <link rel="stylesheet" href="../registry/primitives/badge/badge.css">
+  <link rel="stylesheet" href="../registry/primitives/card/card.css">
+  <link rel="stylesheet" href="../registry/primitives/separator/separator.css">
+  <link rel="stylesheet" href="../registry/primitives/avatar/avatar.css">
+  <link rel="stylesheet" href="../registry/primitives/spinner/spinner.css">
+  <link rel="stylesheet" href="../registry/primitives/kbd/kbd.css">
+  <link rel="stylesheet" href="../registry/primitives/stack/stack.css">
+  <link rel="stylesheet" href="../registry/primitives/grid/grid.css">
+  <link rel="stylesheet" href="../registry/primitives/surface/surface.css">
+  <link rel="stylesheet" href="../registry/primitives/progress/progress.css">
+  <link rel="stylesheet" href="../registry/primitives/stepper/stepper.css">
+  <link rel="stylesheet" href="../registry/primitives/empty-state/empty-state.css">
+  <link rel="stylesheet" href="../registry/primitives/text/text.css">
+  <link rel="stylesheet" href="../registry/primitives/nav/nav.css">
+
+  <!-- Recipes -->
+  <link rel="stylesheet" href="../registry/recipes/dialog/dialog.css">
+  <link rel="stylesheet" href="../registry/recipes/tabs/tabs.css">
+  <link rel="stylesheet" href="../registry/recipes/accordion/accordion.css">
+  <link rel="stylesheet" href="../registry/recipes/dropdown/dropdown.css">
+  <link rel="stylesheet" href="../registry/recipes/tooltip/tooltip.css">
+  <link rel="stylesheet" href="../registry/recipes/toast/toast.css">
+
+  <!-- Loom Core -->
+  <script src="../registry/core/loom-core.js" defer></script>
+
+  <style>
+    /* Zero classes — only data-attribute selectors allowed */
+    [l-cloak] { display: none !important; }
+  </style>
+</head>
+<body>
+  <div l-cloak l-data="{
+    currentTheme: 'default',
+    darkMode: false,
+
+    setTheme(name) {
+      ['default','midnight','paper','brutalist'].forEach(t => {
+        document.getElementById('theme-' + t).disabled = (t !== name);
+      });
+      this.currentTheme = name;
+    },
+
+    toggleDark() {
+      this.darkMode = !this.darkMode;
+      document.documentElement.setAttribute('data-theme', this.darkMode ? 'dark' : 'light');
+    }
+  }">
+
+    <!-- Page wrapper — uses data-max="xl" instead of inline max-width -->
+    <div data-ui="surface" data-variant="flat" data-max="xl" data-size="lg">
+      <div data-ui="stack" data-gap="8">
+
+        <!-- Header — uses data-ui="heading" and data-ui="text" primitives -->
+        <div data-ui="stack" data-gap="2" data-align="center" style="padding: var(--space-12) 0 var(--space-4)">
+          <h1 data-ui="heading" data-size="1" data-align="center">Loom UI</h1>
+          <p data-ui="text" data-size="lg" data-variant="muted" data-align="center">Manifest-guided components. Zero classes. Pure data attributes and tokens.</p>
+        </div>
+
+        <!-- Controls: Theme + Mode — uses data-justify and data-wrap -->
+        <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center" data-justify="center" data-wrap>
+          <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center">
+            <label data-ui="label" style="font-size: var(--text-sm)">Theme</label>
+            <select data-ui="select" data-size="sm" l-model="currentTheme" @change="setTheme(currentTheme)">
+              <option value="default">Default</option>
+              <option value="midnight">Midnight</option>
+              <option value="paper">Paper</option>
+              <option value="brutalist">Brutalist</option>
+            </select>
+          </div>
+          <div data-ui="separator" data-variant="vertical" style="height: 1.5rem"></div>
+          <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center">
+            <label data-ui="switch-label">
+              <input data-ui="switch" type="checkbox" role="switch" @change="toggleDark()">
+              <span l-text="darkMode ? 'Dark' : 'Light'"></span>
+            </label>
+          </div>
+        </div>
+
+        <div data-ui="separator"></div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!-- BUTTONS                                  -->
+        <!-- ════════════════════════════════════════ -->
+        <div data-ui="stack" data-gap="4">
+          <h2 style="font-size: var(--text-2xl); font-weight: var(--weight-semibold)">Button</h2>
+          <p style="color: var(--color-fg-muted)">Six variants, three sizes. CSS-only primitive.</p>
+
+          <div data-ui="stack" data-gap="3">
+            <h3 style="font-size: var(--text-lg); font-weight: var(--weight-medium)">Variants</h3>
+            <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center" style="flex-wrap: wrap">
+              <button data-ui="button" data-variant="primary">Primary</button>
+              <button data-ui="button" data-variant="secondary">Secondary</button>
+              <button data-ui="button" data-variant="destructive">Destructive</button>
+              <button data-ui="button" data-variant="ghost">Ghost</button>
+              <button data-ui="button" data-variant="outline">Outline</button>
+              <button data-ui="button" data-variant="link">Link</button>
+            </div>
+          </div>
+
+          <div data-ui="stack" data-gap="3">
+            <h3 style="font-size: var(--text-lg); font-weight: var(--weight-medium)">Sizes</h3>
+            <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center" style="flex-wrap: wrap">
+              <button data-ui="button" data-variant="primary" data-size="sm">Small</button>
+              <button data-ui="button" data-variant="primary" data-size="md">Medium</button>
+              <button data-ui="button" data-variant="primary" data-size="lg">Large</button>
+            </div>
+          </div>
+
+          <div data-ui="stack" data-gap="3">
+            <h3 style="font-size: var(--text-lg); font-weight: var(--weight-medium)">States</h3>
+            <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center" style="flex-wrap: wrap">
+              <button data-ui="button" data-variant="primary" disabled>Disabled</button>
+              <button data-ui="button" data-variant="primary" data-state="loading">Loading</button>
+            </div>
+          </div>
+
+          <div data-ui="stack" data-gap="3">
+            <h3 style="font-size: var(--text-lg); font-weight: var(--weight-medium)">Button Group</h3>
+            <div data-ui="button-group">
+              <button data-ui="button" data-variant="outline">Left</button>
+              <button data-ui="button" data-variant="outline">Center</button>
+              <button data-ui="button" data-variant="outline">Right</button>
+            </div>
+          </div>
+        </div>
+
+        <div data-ui="separator"></div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!-- FORM INPUTS                              -->
+        <!-- ════════════════════════════════════════ -->
+        <div data-ui="stack" data-gap="4">
+          <h2 style="font-size: var(--text-2xl); font-weight: var(--weight-semibold)">Form Inputs</h2>
+          <p style="color: var(--color-fg-muted)">Text input, textarea, select, checkbox, radio, and switch.</p>
+
+          <div data-ui="grid" data-cols="2" data-gap="4">
+            <!-- Input -->
+            <div data-ui="stack" data-gap="2">
+              <label data-ui="label">Text Input</label>
+              <input data-ui="input" type="text" placeholder="Enter text...">
+            </div>
+
+            <!-- Input with error -->
+            <div data-ui="stack" data-gap="2">
+              <label data-ui="label">Input (error state)</label>
+              <input data-ui="input" type="email" value="not-an-email" data-state="error">
+            </div>
+
+            <!-- Input sizes -->
+            <div data-ui="stack" data-gap="2">
+              <label data-ui="label">Small Input</label>
+              <input data-ui="input" data-size="sm" placeholder="Small">
+            </div>
+            <div data-ui="stack" data-gap="2">
+              <label data-ui="label">Large Input</label>
+              <input data-ui="input" data-size="lg" placeholder="Large">
+            </div>
+
+            <!-- Textarea -->
+            <div data-ui="stack" data-gap="2">
+              <label data-ui="label">Textarea</label>
+              <textarea data-ui="textarea" rows="3" placeholder="Write something..."></textarea>
+            </div>
+
+            <!-- Select -->
+            <div data-ui="stack" data-gap="2">
+              <label data-ui="label">Select</label>
+              <select data-ui="select">
+                <option>Option one</option>
+                <option>Option two</option>
+                <option>Option three</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Checkbox, Radio, Switch -->
+          <div data-ui="grid" data-cols="3" data-gap="4">
+            <div data-ui="stack" data-gap="3">
+              <h3 style="font-size: var(--text-lg); font-weight: var(--weight-medium)">Checkbox</h3>
+              <label data-ui="checkbox-label">
+                <input data-ui="checkbox" type="checkbox" checked> Checked
+              </label>
+              <label data-ui="checkbox-label">
+                <input data-ui="checkbox" type="checkbox"> Unchecked
+              </label>
+              <label data-ui="checkbox-label">
+                <input data-ui="checkbox" type="checkbox" disabled> Disabled
+              </label>
+            </div>
+
+            <div data-ui="stack" data-gap="3">
+              <h3 style="font-size: var(--text-lg); font-weight: var(--weight-medium)">Radio</h3>
+              <div data-ui="radio-group">
+                <label data-ui="radio-label">
+                  <input data-ui="radio" type="radio" name="demo-radio" checked> Option A
+                </label>
+                <label data-ui="radio-label">
+                  <input data-ui="radio" type="radio" name="demo-radio"> Option B
+                </label>
+                <label data-ui="radio-label">
+                  <input data-ui="radio" type="radio" name="demo-radio"> Option C
+                </label>
+              </div>
+            </div>
+
+            <div data-ui="stack" data-gap="3">
+              <h3 style="font-size: var(--text-lg); font-weight: var(--weight-medium)">Switch</h3>
+              <label data-ui="switch-label">
+                <input data-ui="switch" type="checkbox" role="switch" checked> Enabled
+              </label>
+              <label data-ui="switch-label">
+                <input data-ui="switch" type="checkbox" role="switch"> Disabled
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div data-ui="separator"></div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!-- CARDS                                    -->
+        <!-- ════════════════════════════════════════ -->
+        <div data-ui="stack" data-gap="4">
+          <h2 style="font-size: var(--text-2xl); font-weight: var(--weight-semibold)">Card</h2>
+          <p style="color: var(--color-fg-muted)">Container with header, body, and footer slots. Three visual variants.</p>
+
+          <div data-ui="grid" data-cols="3" data-gap="4">
+            <div data-ui="card">
+              <div data-part="header">
+                <h3 data-part="title">Default Card</h3>
+                <p data-part="description">Border and subtle shadow</p>
+              </div>
+              <div data-part="body">
+                <p>Card body content goes here.</p>
+              </div>
+              <div data-part="footer">
+                <button data-ui="button" data-variant="outline" data-size="sm">Action</button>
+              </div>
+            </div>
+
+            <div data-ui="card" data-variant="outlined">
+              <div data-part="header">
+                <h3 data-part="title">Outlined Card</h3>
+                <p data-part="description">Border only, no shadow</p>
+              </div>
+              <div data-part="body">
+                <p>Card body content goes here.</p>
+              </div>
+              <div data-part="footer">
+                <button data-ui="button" data-variant="outline" data-size="sm">Action</button>
+              </div>
+            </div>
+
+            <div data-ui="card" data-variant="filled">
+              <div data-part="header">
+                <h3 data-part="title">Filled Card</h3>
+                <p data-part="description">Subtle background fill</p>
+              </div>
+              <div data-part="body">
+                <p>Card body content goes here.</p>
+              </div>
+              <div data-part="footer">
+                <button data-ui="button" data-variant="outline" data-size="sm">Action</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div data-ui="separator"></div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!-- BADGES                                   -->
+        <!-- ════════════════════════════════════════ -->
+        <div data-ui="stack" data-gap="4">
+          <h2 style="font-size: var(--text-2xl); font-weight: var(--weight-semibold)">Badge</h2>
+          <p style="color: var(--color-fg-muted)">Inline status labels with color variants.</p>
+
+          <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center" style="flex-wrap: wrap">
+            <span data-ui="badge">Default</span>
+            <span data-ui="badge" data-variant="primary">Primary</span>
+            <span data-ui="badge" data-variant="secondary">Secondary</span>
+            <span data-ui="badge" data-variant="destructive">Destructive</span>
+            <span data-ui="badge" data-variant="success">Success</span>
+            <span data-ui="badge" data-variant="warning">Warning</span>
+          </div>
+
+          <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center">
+            <span data-ui="badge" data-variant="primary" data-size="sm">Small</span>
+            <span data-ui="badge" data-variant="primary">Default</span>
+            <span data-ui="badge" data-variant="primary" data-size="lg">Large</span>
+          </div>
+        </div>
+
+        <div data-ui="separator"></div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!-- AVATAR                                   -->
+        <!-- ════════════════════════════════════════ -->
+        <div data-ui="stack" data-gap="4">
+          <h2 style="font-size: var(--text-2xl); font-weight: var(--weight-semibold)">Avatar</h2>
+          <p style="color: var(--color-fg-muted)">Circular profile image with fallback initials.</p>
+
+          <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center">
+            <div data-ui="avatar" data-size="sm">
+              <span data-part="fallback">SM</span>
+            </div>
+            <div data-ui="avatar">
+              <span data-part="fallback">MD</span>
+            </div>
+            <div data-ui="avatar" data-size="lg">
+              <span data-part="fallback">LG</span>
+            </div>
+          </div>
+        </div>
+
+        <div data-ui="separator"></div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!-- SPINNER                                  -->
+        <!-- ════════════════════════════════════════ -->
+        <div data-ui="stack" data-gap="4">
+          <h2 style="font-size: var(--text-2xl); font-weight: var(--weight-semibold)">Spinner</h2>
+          <p style="color: var(--color-fg-muted)">Loading indicator animation.</p>
+
+          <div data-ui="stack" data-variant="horizontal" data-gap="4" data-align="center">
+            <div data-ui="spinner" data-size="sm"></div>
+            <div data-ui="spinner"></div>
+            <div data-ui="spinner" data-size="lg"></div>
+          </div>
+        </div>
+
+        <div data-ui="separator"></div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!-- KBD                                      -->
+        <!-- ════════════════════════════════════════ -->
+        <div data-ui="stack" data-gap="4">
+          <h2 style="font-size: var(--text-2xl); font-weight: var(--weight-semibold)">Kbd</h2>
+          <p style="color: var(--color-fg-muted)">Keyboard key representation.</p>
+
+          <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center">
+            <kbd data-ui="kbd">Ctrl</kbd>
+            <span style="color: var(--color-fg-muted)">+</span>
+            <kbd data-ui="kbd">Shift</kbd>
+            <span style="color: var(--color-fg-muted)">+</span>
+            <kbd data-ui="kbd">P</kbd>
+          </div>
+        </div>
+
+        <div data-ui="separator"></div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!-- LAYOUT PRIMITIVES                        -->
+        <!-- ════════════════════════════════════════ -->
+        <div data-ui="stack" data-gap="4">
+          <h2 style="font-size: var(--text-2xl); font-weight: var(--weight-semibold)">Layout Primitives</h2>
+          <p style="color: var(--color-fg-muted)">Stack, Grid, and Surface — layout without classes.</p>
+
+          <div data-ui="stack" data-gap="6">
+            <!-- Stack demo -->
+            <div data-ui="stack" data-gap="2">
+              <h3 style="font-size: var(--text-lg); font-weight: var(--weight-medium)">Stack (vertical, gap=3)</h3>
+              <div data-ui="stack" data-gap="3">
+                <div data-ui="surface" data-size="sm" data-variant="raised"><span style="font-size: var(--text-sm)">Item 1</span></div>
+                <div data-ui="surface" data-size="sm" data-variant="raised"><span style="font-size: var(--text-sm)">Item 2</span></div>
+                <div data-ui="surface" data-size="sm" data-variant="raised"><span style="font-size: var(--text-sm)">Item 3</span></div>
+              </div>
+            </div>
+
+            <!-- Horizontal stack demo -->
+            <div data-ui="stack" data-gap="2">
+              <h3 style="font-size: var(--text-lg); font-weight: var(--weight-medium)">Stack (horizontal, gap=4, center-aligned)</h3>
+              <div data-ui="stack" data-variant="horizontal" data-gap="4" data-align="center">
+                <div data-ui="surface" data-size="sm" data-variant="raised"><span style="font-size: var(--text-sm)">Left</span></div>
+                <div data-ui="surface" data-size="md" data-variant="raised"><span style="font-size: var(--text-sm)">Center (more padding)</span></div>
+                <div data-ui="surface" data-size="sm" data-variant="raised"><span style="font-size: var(--text-sm)">Right</span></div>
+              </div>
+            </div>
+
+            <!-- Grid demo -->
+            <div data-ui="stack" data-gap="2">
+              <h3 style="font-size: var(--text-lg); font-weight: var(--weight-medium)">Grid (3 columns, gap=4)</h3>
+              <div data-ui="grid" data-cols="3" data-gap="4">
+                <div data-ui="surface" data-size="sm" data-variant="raised"><span style="font-size: var(--text-sm)">Column 1</span></div>
+                <div data-ui="surface" data-size="sm" data-variant="raised"><span style="font-size: var(--text-sm)">Column 2</span></div>
+                <div data-ui="surface" data-size="sm" data-variant="raised"><span style="font-size: var(--text-sm)">Column 3</span></div>
+              </div>
+            </div>
+
+            <!-- Surface variants -->
+            <div data-ui="stack" data-gap="2">
+              <h3 style="font-size: var(--text-lg); font-weight: var(--weight-medium)">Surface Variants</h3>
+              <div data-ui="grid" data-cols="3" data-gap="4">
+                <div data-ui="surface" data-size="md">
+                  <p style="font-size: var(--text-sm); color: var(--color-fg-muted)">Default (border)</p>
+                </div>
+                <div data-ui="surface" data-size="md" data-variant="raised">
+                  <p style="font-size: var(--text-sm); color: var(--color-fg-muted)">Raised (shadow)</p>
+                </div>
+                <div data-ui="surface" data-size="md" data-variant="overlay">
+                  <p style="font-size: var(--text-sm); color: var(--color-fg-muted)">Overlay (large shadow)</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div data-ui="separator"></div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!-- SEPARATOR                                -->
+        <!-- ════════════════════════════════════════ -->
+        <div data-ui="stack" data-gap="4">
+          <h2 style="font-size: var(--text-2xl); font-weight: var(--weight-semibold)">Separator</h2>
+          <p style="color: var(--color-fg-muted)">Horizontal divider with optional label.</p>
+
+          <div data-ui="stack" data-gap="4">
+            <div data-ui="separator"></div>
+            <div data-ui="separator" data-label="OR"></div>
+          </div>
+        </div>
+
+        <div data-ui="separator"></div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!-- TABS (Recipe)                            -->
+        <!-- ════════════════════════════════════════ -->
+        <div data-ui="stack" data-gap="4">
+          <h2 style="font-size: var(--text-2xl); font-weight: var(--weight-semibold)">Tabs</h2>
+          <p style="color: var(--color-fg-muted)">Tab panel switcher with keyboard navigation. Recipe component.</p>
+
+          <div data-ui="tabs">
+            <div data-part="list" role="tablist">
+              <button data-part="trigger" role="tab" aria-selected="true">General</button>
+              <button data-part="trigger" role="tab" aria-selected="false" tabindex="-1">Security</button>
+              <button data-part="trigger" role="tab" aria-selected="false" tabindex="-1">Notifications</button>
+            </div>
+            <div data-part="panel" role="tabpanel">
+              <div data-ui="stack" data-gap="3" style="padding: var(--space-4) 0">
+                <p>General settings content. This panel is managed by the tabs controller.</p>
+                <div data-ui="stack" data-gap="2">
+                  <label data-ui="label">Display Name</label>
+                  <input data-ui="input" value="Claude Agent">
+                </div>
+              </div>
+            </div>
+            <div data-part="panel" role="tabpanel" hidden>
+              <div data-ui="stack" data-gap="3" style="padding: var(--space-4) 0">
+                <p>Security settings. Two-factor authentication and API keys.</p>
+                <label data-ui="switch-label">
+                  <input data-ui="switch" type="checkbox" role="switch"> Enable 2FA
+                </label>
+              </div>
+            </div>
+            <div data-part="panel" role="tabpanel" hidden>
+              <div data-ui="stack" data-gap="3" style="padding: var(--space-4) 0">
+                <p>Notification preferences.</p>
+                <label data-ui="checkbox-label">
+                  <input data-ui="checkbox" type="checkbox" checked> Email notifications
+                </label>
+                <label data-ui="checkbox-label">
+                  <input data-ui="checkbox" type="checkbox"> SMS notifications
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div data-ui="separator"></div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!-- ACCORDION (Recipe)                       -->
+        <!-- ════════════════════════════════════════ -->
+        <div data-ui="stack" data-gap="4">
+          <h2 style="font-size: var(--text-2xl); font-weight: var(--weight-semibold)">Accordion</h2>
+          <p style="color: var(--color-fg-muted)">Expandable sections. Recipe component.</p>
+
+          <div data-ui="accordion">
+            <div data-part="item">
+              <button data-part="trigger" aria-expanded="false">What is Loom UI?</button>
+              <div data-part="content" hidden>
+                <p style="padding: var(--space-3) 0">A manifest-guided, zero-class UI framework built for AI agents to generate, inspect, and repair components.</p>
+              </div>
+            </div>
+            <div data-part="item">
+              <button data-part="trigger" aria-expanded="false">Why no CSS classes?</button>
+              <div data-part="content" hidden>
+                <p style="padding: var(--space-3) 0">Classes create naming collisions and are not machine-readable. Data attributes have clear semantics that both CSS selectors and audit tools can parse reliably.</p>
+              </div>
+            </div>
+            <div data-part="item">
+              <button data-part="trigger" aria-expanded="false">What are design tokens?</button>
+              <div data-part="content" hidden>
+                <p style="padding: var(--space-3) 0">CSS custom properties organized in three layers: raw palette values, semantic tokens (what components use), and per-component aliases.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div data-ui="separator"></div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!-- DIALOG (Recipe)                          -->
+        <!-- ════════════════════════════════════════ -->
+        <div data-ui="stack" data-gap="4">
+          <h2 style="font-size: var(--text-2xl); font-weight: var(--weight-semibold)">Dialog</h2>
+          <p style="color: var(--color-fg-muted)">Modal with focus trap, overlay, and escape-to-close. Recipe component.</p>
+
+          <div data-ui="dialog" data-state="closed" id="demo-dialog">
+            <button data-part="trigger" data-ui="button" data-variant="primary">Open Dialog</button>
+            <div data-part="overlay" hidden></div>
+            <div data-part="panel" role="dialog" aria-modal="true" aria-labelledby="demo-dialog-title" hidden>
+              <div data-part="header">
+                <h3 id="demo-dialog-title" data-part="title">Confirm Action</h3>
+                <button data-part="close" aria-label="Close dialog">&#x2715;</button>
+              </div>
+              <div data-part="body">
+                <p>This is a modal dialog. It traps focus, closes on Escape, and dismisses when clicking the overlay.</p>
+              </div>
+              <div data-part="footer">
+                <button data-ui="button" data-variant="outline">Cancel</button>
+                <button data-ui="button" data-variant="primary">Confirm</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div data-ui="separator"></div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!-- DROPDOWN (Recipe)                        -->
+        <!-- ════════════════════════════════════════ -->
+        <div data-ui="stack" data-gap="4">
+          <h2 style="font-size: var(--text-2xl); font-weight: var(--weight-semibold)">Dropdown</h2>
+          <p style="color: var(--color-fg-muted)">Menu with keyboard navigation. Recipe component.</p>
+
+          <div data-ui="dropdown">
+            <button data-part="trigger" data-ui="button" data-variant="outline">Actions &#x25BE;</button>
+            <div data-part="menu" role="menu" hidden>
+              <button data-part="item" role="menuitem">Edit</button>
+              <button data-part="item" role="menuitem">Duplicate</button>
+              <div data-ui="separator"></div>
+              <button data-part="item" role="menuitem">Delete</button>
+            </div>
+          </div>
+        </div>
+
+        <div data-ui="separator"></div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!-- TOOLTIP (Recipe)                         -->
+        <!-- ════════════════════════════════════════ -->
+        <div data-ui="stack" data-gap="4">
+          <h2 style="font-size: var(--text-2xl); font-weight: var(--weight-semibold)">Tooltip</h2>
+          <p style="color: var(--color-fg-muted)">Hover information. Recipe component.</p>
+
+          <div data-ui="stack" data-variant="horizontal" data-gap="4">
+            <div data-ui="tooltip">
+              <button data-part="trigger" data-ui="button" data-variant="outline">Hover me</button>
+              <div data-part="content" role="tooltip">This is a tooltip</div>
+            </div>
+          </div>
+        </div>
+
+        <div data-ui="separator"></div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!-- REACTIVE DEMO (loom-core)                -->
+        <!-- ════════════════════════════════════════ -->
+        <div data-ui="stack" data-gap="4">
+          <h2 style="font-size: var(--text-2xl); font-weight: var(--weight-semibold)">Reactive Directives</h2>
+          <p style="color: var(--color-fg-muted)">loom-core.js provides Alpine-style reactivity with l-data, l-text, l-model, l-show, l-for, and more.</p>
+
+          <div data-ui="grid" data-cols="2" data-gap="4">
+            <!-- Counter -->
+            <div data-ui="card" l-data="{ count: 0 }">
+              <div data-part="header">
+                <h3 data-part="title">Counter</h3>
+                <p data-part="description">l-text + @click</p>
+              </div>
+              <div data-part="body">
+                <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center">
+                  <button data-ui="button" data-variant="outline" data-size="sm" @click="count--">-</button>
+                  <span style="font-size: var(--text-2xl); font-weight: var(--weight-bold); min-width: 3ch; text-align: center" l-text="count"></span>
+                  <button data-ui="button" data-variant="outline" data-size="sm" @click="count++">+</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Two-way binding -->
+            <div data-ui="card" l-data="{ name: '' }">
+              <div data-part="header">
+                <h3 data-part="title">Two-way Binding</h3>
+                <p data-part="description">l-model + l-text</p>
+              </div>
+              <div data-part="body">
+                <div data-ui="stack" data-gap="3">
+                  <input data-ui="input" placeholder="Type your name..." l-model="name">
+                  <p style="color: var(--color-fg-muted)">Hello, <strong l-text="name || '...'"></strong></p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Toggle -->
+            <div data-ui="card" l-data="{ visible: true }">
+              <div data-part="header">
+                <h3 data-part="title">Conditional</h3>
+                <p data-part="description">l-show + @click</p>
+              </div>
+              <div data-part="body">
+                <div data-ui="stack" data-gap="3">
+                  <button data-ui="button" data-variant="outline" data-size="sm" @click="visible = !visible" l-text="visible ? 'Hide' : 'Show'"></button>
+                  <div data-ui="surface" data-size="sm" data-variant="raised" l-show="visible">
+                    <p style="font-size: var(--text-sm)">Now you see me.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- List rendering -->
+            <div data-ui="card" l-data="{ items: ['Audit', 'Repair', 'Context'], newItem: '' }">
+              <div data-part="header">
+                <h3 data-part="title">List Rendering</h3>
+                <p data-part="description">l-for + l-model</p>
+              </div>
+              <div data-part="body">
+                <div data-ui="stack" data-gap="3">
+                  <div data-ui="stack" data-variant="horizontal" data-gap="2">
+                    <input data-ui="input" data-size="sm" placeholder="New item..." l-model="newItem" @keydown.enter="if(newItem.trim()){ items.push(newItem.trim()); newItem = '' }">
+                    <button data-ui="button" data-variant="primary" data-size="sm" @click="if(newItem.trim()){ items.push(newItem.trim()); newItem = '' }">Add</button>
+                  </div>
+                  <div data-ui="stack" data-gap="1">
+                    <template l-for="(item, i) in items">
+                      <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center">
+                        <span data-ui="badge" data-variant="primary" l-text="item"></span>
+                        <button data-ui="button" data-variant="ghost" data-size="sm" @click="items.splice(i, 1)" style="font-size: var(--text-xs)">&#x2715;</button>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div data-ui="separator"></div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!-- PROGRESS BAR (New)                       -->
+        <!-- ════════════════════════════════════════ -->
+        <div data-ui="stack" data-gap="4">
+          <h2 data-ui="heading" data-size="3">Progress</h2>
+          <p data-ui="text" data-variant="muted">Animated progress bar with color variants and sizes.</p>
+
+          <div data-ui="stack" data-gap="4" l-data="{ value: 60 }">
+            <div data-ui="stack" data-gap="2">
+              <p data-ui="text" data-size="sm" data-variant="muted">Interactive — drag the slider</p>
+              <input type="range" min="0" max="100" l-model.number="value" style="width: 200px">
+            </div>
+
+            <div data-ui="progress" role="progressbar" :aria-valuenow="value" aria-valuemin="0" aria-valuemax="100">
+              <div data-part="track">
+                <div data-part="fill" :style="'width:' + value + '%'"></div>
+              </div>
+              <span data-part="label" l-text="value + '%'"></span>
+            </div>
+
+            <div data-ui="grid" data-cols="2" data-gap="4">
+              <div data-ui="stack" data-gap="2">
+                <p data-ui="text" data-size="sm" data-weight="medium">Success variant</p>
+                <div data-ui="progress" data-variant="success">
+                  <div data-part="track">
+                    <div data-part="fill" style="width: 100%"></div>
+                  </div>
+                  <span data-part="label">100%</span>
+                </div>
+              </div>
+              <div data-ui="stack" data-gap="2">
+                <p data-ui="text" data-size="sm" data-weight="medium">Warning variant</p>
+                <div data-ui="progress" data-variant="warning">
+                  <div data-part="track">
+                    <div data-part="fill" style="width: 45%"></div>
+                  </div>
+                  <span data-part="label">45%</span>
+                </div>
+              </div>
+            </div>
+
+            <div data-ui="stack" data-gap="2">
+              <p data-ui="text" data-size="sm" data-weight="medium">Small + Large sizes</p>
+              <div data-ui="progress" data-size="sm">
+                <div data-part="track"><div data-part="fill" style="width: 80%"></div></div>
+              </div>
+              <div data-ui="progress" data-size="lg" data-variant="destructive">
+                <div data-part="track"><div data-part="fill" style="width: 25%"></div></div>
+                <span data-part="label">25%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div data-ui="separator"></div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!-- STEPPER (New)                            -->
+        <!-- ════════════════════════════════════════ -->
+        <div data-ui="stack" data-gap="4">
+          <h2 data-ui="heading" data-size="3">Stepper</h2>
+          <p data-ui="text" data-variant="muted">Step indicator for multi-step flows. Horizontal and vertical.</p>
+
+          <div data-ui="stack" data-gap="6" l-data="{ currentStep: 2 }">
+            <div data-ui="stepper" aria-label="Setup steps">
+              <div data-part="step" :data-state="currentStep > 1 ? 'completed' : currentStep === 1 ? 'active' : ''">
+                <span data-part="indicator" l-text="currentStep > 1 ? '\u2713' : '1'"></span>
+                <span data-part="label">Account</span>
+              </div>
+              <div data-part="connector" :data-state="currentStep > 1 ? 'completed' : ''"></div>
+              <div data-part="step" :data-state="currentStep > 2 ? 'completed' : currentStep === 2 ? 'active' : ''">
+                <span data-part="indicator" l-text="currentStep > 2 ? '\u2713' : '2'"></span>
+                <span data-part="label">Project</span>
+              </div>
+              <div data-part="connector" :data-state="currentStep > 2 ? 'completed' : ''"></div>
+              <div data-part="step" :data-state="currentStep > 3 ? 'completed' : currentStep === 3 ? 'active' : ''">
+                <span data-part="indicator" l-text="currentStep > 3 ? '\u2713' : '3'"></span>
+                <span data-part="label">Components</span>
+              </div>
+              <div data-part="connector" :data-state="currentStep > 3 ? 'completed' : ''"></div>
+              <div data-part="step" :data-state="currentStep === 4 ? 'active' : ''">
+                <span data-part="indicator">4</span>
+                <span data-part="label">Review</span>
+              </div>
+            </div>
+            <div data-ui="stack" data-variant="horizontal" data-gap="2" data-justify="center">
+              <button data-ui="button" data-variant="outline" data-size="sm" @click="if(currentStep > 1) currentStep--">Back</button>
+              <button data-ui="button" data-variant="primary" data-size="sm" @click="if(currentStep < 4) currentStep++">Next</button>
+            </div>
+          </div>
+        </div>
+
+        <div data-ui="separator"></div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!-- NAVIGATION (New)                         -->
+        <!-- ════════════════════════════════════════ -->
+        <div data-ui="stack" data-gap="4">
+          <h2 data-ui="heading" data-size="3">Nav</h2>
+          <p data-ui="text" data-variant="muted">Navigation bar with horizontal, underline, pill, and vertical variants.</p>
+
+          <div data-ui="grid" data-cols="2" data-gap="6">
+            <div data-ui="stack" data-gap="2">
+              <p data-ui="text" data-size="sm" data-weight="medium">Default (horizontal)</p>
+              <nav data-ui="nav" aria-label="Demo default">
+                <button data-part="link" data-state="active">Dashboard</button>
+                <button data-part="link">Components</button>
+                <button data-part="link">Settings</button>
+              </nav>
+            </div>
+
+            <div data-ui="stack" data-gap="2">
+              <p data-ui="text" data-size="sm" data-weight="medium">Underline</p>
+              <nav data-ui="nav" data-variant="underline" aria-label="Demo underline">
+                <button data-part="link" data-state="active">Overview</button>
+                <button data-part="link">Analytics</button>
+                <button data-part="link">Reports</button>
+              </nav>
+            </div>
+
+            <div data-ui="stack" data-gap="2">
+              <p data-ui="text" data-size="sm" data-weight="medium">Pill</p>
+              <nav data-ui="nav" data-variant="pill" aria-label="Demo pill">
+                <button data-part="link" data-state="active">Grid</button>
+                <button data-part="link">List</button>
+                <button data-part="link">Board</button>
+              </nav>
+            </div>
+
+            <div data-ui="stack" data-gap="2">
+              <p data-ui="text" data-size="sm" data-weight="medium">Vertical</p>
+              <nav data-ui="nav" data-variant="vertical" aria-label="Demo vertical">
+                <button data-part="link" data-state="active">Home</button>
+                <button data-part="link">Projects</button>
+                <div data-part="separator"></div>
+                <button data-part="link">Settings</button>
+              </nav>
+            </div>
+          </div>
+        </div>
+
+        <div data-ui="separator"></div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!-- EMPTY STATE (New)                        -->
+        <!-- ════════════════════════════════════════ -->
+        <div data-ui="stack" data-gap="4">
+          <h2 data-ui="heading" data-size="3">Empty State</h2>
+          <p data-ui="text" data-variant="muted">Placeholder for empty content with icon, title, description, and actions.</p>
+
+          <div data-ui="grid" data-cols="2" data-gap="4">
+            <div data-ui="card">
+              <div data-part="body">
+                <div data-ui="empty-state">
+                  <span data-part="icon">&#x1F4E6;</span>
+                  <h3 data-part="title">No components installed</h3>
+                  <p data-part="description">Get started by adding your first component with the CLI.</p>
+                  <div data-part="actions">
+                    <button data-ui="button" data-variant="primary" data-size="sm">Add Component</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div data-ui="card">
+              <div data-part="body">
+                <div data-ui="empty-state" data-size="sm">
+                  <span data-part="icon">&#x1F50D;</span>
+                  <h3 data-part="title">No results found</h3>
+                  <p data-part="description">Try adjusting your search or filters</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div data-ui="separator"></div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!-- TEXT & HEADING (New)                      -->
+        <!-- ════════════════════════════════════════ -->
+        <div data-ui="stack" data-gap="4">
+          <h2 data-ui="heading" data-size="3">Text &amp; Heading</h2>
+          <p data-ui="text" data-variant="muted">Typography primitives with size, color, weight, and alignment via data attributes.</p>
+
+          <div data-ui="stack" data-gap="3">
+            <h1 data-ui="heading" data-size="1">Heading 1</h1>
+            <h2 data-ui="heading" data-size="2">Heading 2</h2>
+            <h3 data-ui="heading" data-size="3">Heading 3</h3>
+            <h4 data-ui="heading" data-size="4">Heading 4</h4>
+            <h5 data-ui="heading" data-size="5">Heading 5</h5>
+            <h6 data-ui="heading" data-size="6">Heading 6</h6>
+          </div>
+
+          <div data-ui="separator"></div>
+
+          <div data-ui="grid" data-cols="2" data-gap="4">
+            <div data-ui="stack" data-gap="2">
+              <p data-ui="text" data-size="sm" data-weight="medium">Color variants</p>
+              <p data-ui="text">Default text</p>
+              <p data-ui="text" data-variant="muted">Muted text</p>
+              <p data-ui="text" data-variant="subtle">Subtle text</p>
+              <p data-ui="text" data-variant="primary">Primary text</p>
+              <p data-ui="text" data-variant="mono" data-size="sm">Monospace text</p>
+            </div>
+            <div data-ui="stack" data-gap="2">
+              <p data-ui="text" data-size="sm" data-weight="medium">Sizes &amp; weights</p>
+              <p data-ui="text" data-size="xs">Extra small text</p>
+              <p data-ui="text" data-size="sm">Small text</p>
+              <p data-ui="text" data-size="lg">Large text</p>
+              <p data-ui="text" data-size="xl" data-weight="bold">Extra large bold text</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div data-ui="separator"></div>
+        <div data-ui="surface" data-align-text="center" data-variant="flat" style="padding: var(--space-6) 0">
+          <p data-ui="text" data-size="sm" data-variant="muted">
+            Loom UI — Zero classes. Manifest-guided. Token-driven.
+          </p>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>
