@@ -91,3 +91,23 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* Extended sizes */
+[data-ui="text"][data-size="2xl"] { font-size: var(--text-2xl); }
+[data-ui="text"][data-size="3xl"] { font-size: var(--text-3xl); }
+[data-ui="text"][data-size="4xl"] { font-size: var(--text-4xl); }
+
+/* Destructive variant */
+[data-ui="text"][data-variant="destructive"] { color: var(--color-destructive); }
+
+/* Done state */
+[data-ui="text"][data-state="done"] {
+  text-decoration: line-through;
+  color: var(--color-fg-subtle);
+}
+
+/* Tabular — inline-block with min-width for aligned label/value lists */
+[data-ui="text"][data-tabular] {
+  display: inline-block;
+  min-width: var(--text-tabular-width, 8ch);
+}

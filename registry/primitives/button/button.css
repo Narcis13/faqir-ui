@@ -130,6 +130,11 @@
   color: var(--color-fg);
 }
 
+/* ── Full Width ── */
+[data-ui="button"][data-full] {
+  width: 100%;
+}
+
 /* ── Parts ── */
 [data-ui="button"] [data-part="icon"] {
   display: inline-flex;

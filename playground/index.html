@@ -58,11 +58,6 @@
 
   <!-- Loom Core -->
   <script src="../registry/core/loom-core.js" defer></script>
-
-  <style>
-    /* Zero classes — only data-attribute selectors allowed */
-    [l-cloak] { display: none !important; }
-  </style>
 </head>
 <body>
   <div l-cloak l-data="{
@@ -87,15 +82,17 @@
       <div data-ui="stack" data-gap="8">
 
         <!-- Header — uses data-ui="heading" and data-ui="text" primitives -->
-        <div data-ui="stack" data-gap="2" data-align="center" style="padding: var(--space-12) 0 var(--space-4)">
-          <h1 data-ui="heading" data-size="1" data-align="center">Loom UI</h1>
-          <p data-ui="text" data-size="lg" data-variant="muted" data-align="center">Manifest-guided components. Zero classes. Pure data attributes and tokens.</p>
+        <div data-ui="surface" data-variant="flat" data-size="lg" data-align-text="center">
+          <div data-ui="stack" data-gap="2" data-align="center">
+            <h1 data-ui="heading" data-size="1" data-align="center">Loom UI</h1>
+            <p data-ui="text" data-size="lg" data-variant="muted" data-align="center">Manifest-guided components. Zero classes. Pure data attributes and tokens.</p>
+          </div>
         </div>
 
         <!-- Controls: Theme + Mode — uses data-justify and data-wrap -->
         <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center" data-justify="center" data-wrap>
           <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center">
-            <label data-ui="label" style="font-size: var(--text-sm)">Theme</label>
+            <label data-ui="label" data-size="sm">Theme</label>
             <select data-ui="select" data-size="sm" l-model="currentTheme" @change="setTheme(currentTheme)">
               <option value="default">Default</option>
               <option value="midnight">Midnight</option>
@@ -103,7 +100,7 @@
               <option value="brutalist">Brutalist</option>
             </select>
           </div>
-          <div data-ui="separator" data-variant="vertical" style="height: 1.5rem"></div>
+          <div data-ui="separator" data-variant="vertical" data-size="md"></div>
           <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center">
             <label data-ui="switch-label">
               <input data-ui="switch" type="checkbox" role="switch" @change="toggleDark()">
@@ -118,12 +115,12 @@
         <!-- BUTTONS                                  -->
         <!-- ════════════════════════════════════════ -->
         <div data-ui="stack" data-gap="4">
-          <h2 style="font-size: var(--text-2xl); font-weight: var(--weight-semibold)">Button</h2>
-          <p style="color: var(--color-fg-muted)">Six variants, three sizes. CSS-only primitive.</p>
+          <h2 data-ui="heading" data-size="3">Button</h2>
+          <p data-ui="text" data-variant="muted">Six variants, three sizes. CSS-only primitive.</p>
 
           <div data-ui="stack" data-gap="3">
-            <h3 style="font-size: var(--text-lg); font-weight: var(--weight-medium)">Variants</h3>
-            <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center" style="flex-wrap: wrap">
+            <h3 data-ui="heading" data-size="5">Variants</h3>
+            <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center" data-wrap>
               <button data-ui="button" data-variant="primary">Primary</button>
               <button data-ui="button" data-variant="secondary">Secondary</button>
               <button data-ui="button" data-variant="destructive">Destructive</button>
@@ -134,8 +131,8 @@
           </div>
 
           <div data-ui="stack" data-gap="3">
-            <h3 style="font-size: var(--text-lg); font-weight: var(--weight-medium)">Sizes</h3>
-            <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center" style="flex-wrap: wrap">
+            <h3 data-ui="heading" data-size="5">Sizes</h3>
+            <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center" data-wrap>
               <button data-ui="button" data-variant="primary" data-size="sm">Small</button>
               <button data-ui="button" data-variant="primary" data-size="md">Medium</button>
               <button data-ui="button" data-variant="primary" data-size="lg">Large</button>
@@ -143,15 +140,15 @@
           </div>
 
           <div data-ui="stack" data-gap="3">
-            <h3 style="font-size: var(--text-lg); font-weight: var(--weight-medium)">States</h3>
-            <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center" style="flex-wrap: wrap">
+            <h3 data-ui="heading" data-size="5">States</h3>
+            <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center" data-wrap>
               <button data-ui="button" data-variant="primary" disabled>Disabled</button>
               <button data-ui="button" data-variant="primary" data-state="loading">Loading</button>
             </div>
           </div>
 
           <div data-ui="stack" data-gap="3">
-            <h3 style="font-size: var(--text-lg); font-weight: var(--weight-medium)">Button Group</h3>
+            <h3 data-ui="heading" data-size="5">Button Group</h3>
             <div data-ui="button-group">
               <button data-ui="button" data-variant="outline">Left</button>
               <button data-ui="button" data-variant="outline">Center</button>
@@ -166,8 +163,8 @@
         <!-- FORM INPUTS                              -->
         <!-- ════════════════════════════════════════ -->
         <div data-ui="stack" data-gap="4">
-          <h2 style="font-size: var(--text-2xl); font-weight: var(--weight-semibold)">Form Inputs</h2>
-          <p style="color: var(--color-fg-muted)">Text input, textarea, select, checkbox, radio, and switch.</p>
+          <h2 data-ui="heading" data-size="3">Form Inputs</h2>
+          <p data-ui="text" data-variant="muted">Text input, textarea, select, checkbox, radio, and switch.</p>
 
           <div data-ui="grid" data-cols="2" data-gap="4">
             <!-- Input -->
@@ -212,7 +209,7 @@
           <!-- Checkbox, Radio, Switch -->
           <div data-ui="grid" data-cols="3" data-gap="4">
             <div data-ui="stack" data-gap="3">
-              <h3 style="font-size: var(--text-lg); font-weight: var(--weight-medium)">Checkbox</h3>
+              <h3 data-ui="heading" data-size="5">Checkbox</h3>
               <label data-ui="checkbox-label">
                 <input data-ui="checkbox" type="checkbox" checked> Checked
               </label>
@@ -225,7 +222,7 @@
             </div>
 
             <div data-ui="stack" data-gap="3">
-              <h3 style="font-size: var(--text-lg); font-weight: var(--weight-medium)">Radio</h3>
+              <h3 data-ui="heading" data-size="5">Radio</h3>
               <div data-ui="radio-group">
                 <label data-ui="radio-label">
                   <input data-ui="radio" type="radio" name="demo-radio" checked> Option A
@@ -240,7 +237,7 @@
             </div>
 
             <div data-ui="stack" data-gap="3">
-              <h3 style="font-size: var(--text-lg); font-weight: var(--weight-medium)">Switch</h3>
+              <h3 data-ui="heading" data-size="5">Switch</h3>
               <label data-ui="switch-label">
                 <input data-ui="switch" type="checkbox" role="switch" checked> Enabled
               </label>
@@ -257,8 +254,8 @@
         <!-- CARDS                                    -->
         <!-- ════════════════════════════════════════ -->
         <div data-ui="stack" data-gap="4">
-          <h2 style="font-size: var(--text-2xl); font-weight: var(--weight-semibold)">Card</h2>
-          <p style="color: var(--color-fg-muted)">Container with header, body, and footer slots. Three visual variants.</p>
+          <h2 data-ui="heading" data-size="3">Card</h2>
+          <p data-ui="text" data-variant="muted">Container with header, body, and footer slots. Three visual variants.</p>
 
           <div data-ui="grid" data-cols="3" data-gap="4">
             <div data-ui="card">
@@ -308,10 +305,10 @@
         <!-- BADGES                                   -->
         <!-- ════════════════════════════════════════ -->
         <div data-ui="stack" data-gap="4">
-          <h2 style="font-size: var(--text-2xl); font-weight: var(--weight-semibold)">Badge</h2>
-          <p style="color: var(--color-fg-muted)">Inline status labels with color variants.</p>
+          <h2 data-ui="heading" data-size="3">Badge</h2>
+          <p data-ui="text" data-variant="muted">Inline status labels with color variants.</p>
 
-          <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center" style="flex-wrap: wrap">
+          <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center" data-wrap>
             <span data-ui="badge">Default</span>
             <span data-ui="badge" data-variant="primary">Primary</span>
             <span data-ui="badge" data-variant="secondary">Secondary</span>
@@ -333,8 +330,8 @@
         <!-- AVATAR                                   -->
         <!-- ════════════════════════════════════════ -->
         <div data-ui="stack" data-gap="4">
-          <h2 style="font-size: var(--text-2xl); font-weight: var(--weight-semibold)">Avatar</h2>
-          <p style="color: var(--color-fg-muted)">Circular profile image with fallback initials.</p>
+          <h2 data-ui="heading" data-size="3">Avatar</h2>
+          <p data-ui="text" data-variant="muted">Circular profile image with fallback initials.</p>
 
           <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center">
             <div data-ui="avatar" data-size="sm">
@@ -355,8 +352,8 @@
         <!-- SPINNER                                  -->
         <!-- ════════════════════════════════════════ -->
         <div data-ui="stack" data-gap="4">
-          <h2 style="font-size: var(--text-2xl); font-weight: var(--weight-semibold)">Spinner</h2>
-          <p style="color: var(--color-fg-muted)">Loading indicator animation.</p>
+          <h2 data-ui="heading" data-size="3">Spinner</h2>
+          <p data-ui="text" data-variant="muted">Loading indicator animation.</p>
 
           <div data-ui="stack" data-variant="horizontal" data-gap="4" data-align="center">
             <div data-ui="spinner" data-size="sm"></div>
@@ -371,14 +368,14 @@
         <!-- KBD                                      -->
         <!-- ════════════════════════════════════════ -->
         <div data-ui="stack" data-gap="4">
-          <h2 style="font-size: var(--text-2xl); font-weight: var(--weight-semibold)">Kbd</h2>
-          <p style="color: var(--color-fg-muted)">Keyboard key representation.</p>
+          <h2 data-ui="heading" data-size="3">Kbd</h2>
+          <p data-ui="text" data-variant="muted">Keyboard key representation.</p>
 
           <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center">
             <kbd data-ui="kbd">Ctrl</kbd>
-            <span style="color: var(--color-fg-muted)">+</span>
+            <span data-ui="text" data-variant="muted">+</span>
             <kbd data-ui="kbd">Shift</kbd>
-            <span style="color: var(--color-fg-muted)">+</span>
+            <span data-ui="text" data-variant="muted">+</span>
             <kbd data-ui="kbd">P</kbd>
           </div>
         </div>
@@ -389,52 +386,52 @@
         <!-- LAYOUT PRIMITIVES                        -->
         <!-- ════════════════════════════════════════ -->
         <div data-ui="stack" data-gap="4">
-          <h2 style="font-size: var(--text-2xl); font-weight: var(--weight-semibold)">Layout Primitives</h2>
-          <p style="color: var(--color-fg-muted)">Stack, Grid, and Surface — layout without classes.</p>
+          <h2 data-ui="heading" data-size="3">Layout Primitives</h2>
+          <p data-ui="text" data-variant="muted">Stack, Grid, and Surface — layout without classes.</p>
 
           <div data-ui="stack" data-gap="6">
             <!-- Stack demo -->
             <div data-ui="stack" data-gap="2">
-              <h3 style="font-size: var(--text-lg); font-weight: var(--weight-medium)">Stack (vertical, gap=3)</h3>
+              <h3 data-ui="heading" data-size="5">Stack (vertical, gap=3)</h3>
               <div data-ui="stack" data-gap="3">
-                <div data-ui="surface" data-size="sm" data-variant="raised"><span style="font-size: var(--text-sm)">Item 1</span></div>
-                <div data-ui="surface" data-size="sm" data-variant="raised"><span style="font-size: var(--text-sm)">Item 2</span></div>
-                <div data-ui="surface" data-size="sm" data-variant="raised"><span style="font-size: var(--text-sm)">Item 3</span></div>
+                <div data-ui="surface" data-size="sm" data-variant="raised"><span data-ui="text" data-size="sm">Item 1</span></div>
+                <div data-ui="surface" data-size="sm" data-variant="raised"><span data-ui="text" data-size="sm">Item 2</span></div>
+                <div data-ui="surface" data-size="sm" data-variant="raised"><span data-ui="text" data-size="sm">Item 3</span></div>
               </div>
             </div>
 
             <!-- Horizontal stack demo -->
             <div data-ui="stack" data-gap="2">
-              <h3 style="font-size: var(--text-lg); font-weight: var(--weight-medium)">Stack (horizontal, gap=4, center-aligned)</h3>
+              <h3 data-ui="heading" data-size="5">Stack (horizontal, gap=4, center-aligned)</h3>
               <div data-ui="stack" data-variant="horizontal" data-gap="4" data-align="center">
-                <div data-ui="surface" data-size="sm" data-variant="raised"><span style="font-size: var(--text-sm)">Left</span></div>
-                <div data-ui="surface" data-size="md" data-variant="raised"><span style="font-size: var(--text-sm)">Center (more padding)</span></div>
-                <div data-ui="surface" data-size="sm" data-variant="raised"><span style="font-size: var(--text-sm)">Right</span></div>
+                <div data-ui="surface" data-size="sm" data-variant="raised"><span data-ui="text" data-size="sm">Left</span></div>
+                <div data-ui="surface" data-size="md" data-variant="raised"><span data-ui="text" data-size="sm">Center (more padding)</span></div>
+                <div data-ui="surface" data-size="sm" data-variant="raised"><span data-ui="text" data-size="sm">Right</span></div>
               </div>
             </div>
 
             <!-- Grid demo -->
             <div data-ui="stack" data-gap="2">
-              <h3 style="font-size: var(--text-lg); font-weight: var(--weight-medium)">Grid (3 columns, gap=4)</h3>
+              <h3 data-ui="heading" data-size="5">Grid (3 columns, gap=4)</h3>
               <div data-ui="grid" data-cols="3" data-gap="4">
-                <div data-ui="surface" data-size="sm" data-variant="raised"><span style="font-size: var(--text-sm)">Column 1</span></div>
-                <div data-ui="surface" data-size="sm" data-variant="raised"><span style="font-size: var(--text-sm)">Column 2</span></div>
-                <div data-ui="surface" data-size="sm" data-variant="raised"><span style="font-size: var(--text-sm)">Column 3</span></div>
+                <div data-ui="surface" data-size="sm" data-variant="raised"><span data-ui="text" data-size="sm">Column 1</span></div>
+                <div data-ui="surface" data-size="sm" data-variant="raised"><span data-ui="text" data-size="sm">Column 2</span></div>
+                <div data-ui="surface" data-size="sm" data-variant="raised"><span data-ui="text" data-size="sm">Column 3</span></div>
               </div>
             </div>
 
             <!-- Surface variants -->
             <div data-ui="stack" data-gap="2">
-              <h3 style="font-size: var(--text-lg); font-weight: var(--weight-medium)">Surface Variants</h3>
+              <h3 data-ui="heading" data-size="5">Surface Variants</h3>
               <div data-ui="grid" data-cols="3" data-gap="4">
                 <div data-ui="surface" data-size="md">
-                  <p style="font-size: var(--text-sm); color: var(--color-fg-muted)">Default (border)</p>
+                  <p data-ui="text" data-size="sm" data-variant="muted">Default (border)</p>
                 </div>
                 <div data-ui="surface" data-size="md" data-variant="raised">
-                  <p style="font-size: var(--text-sm); color: var(--color-fg-muted)">Raised (shadow)</p>
+                  <p data-ui="text" data-size="sm" data-variant="muted">Raised (shadow)</p>
                 </div>
                 <div data-ui="surface" data-size="md" data-variant="overlay">
-                  <p style="font-size: var(--text-sm); color: var(--color-fg-muted)">Overlay (large shadow)</p>
+                  <p data-ui="text" data-size="sm" data-variant="muted">Overlay (large shadow)</p>
                 </div>
               </div>
             </div>
@@ -447,8 +444,8 @@
         <!-- SEPARATOR                                -->
         <!-- ════════════════════════════════════════ -->
         <div data-ui="stack" data-gap="4">
-          <h2 style="font-size: var(--text-2xl); font-weight: var(--weight-semibold)">Separator</h2>
-          <p style="color: var(--color-fg-muted)">Horizontal divider with optional label.</p>
+          <h2 data-ui="heading" data-size="3">Separator</h2>
+          <p data-ui="text" data-variant="muted">Horizontal divider with optional label.</p>
 
           <div data-ui="stack" data-gap="4">
             <div data-ui="separator"></div>
@@ -462,8 +459,8 @@
         <!-- TABS (Recipe)                            -->
         <!-- ════════════════════════════════════════ -->
         <div data-ui="stack" data-gap="4">
-          <h2 style="font-size: var(--text-2xl); font-weight: var(--weight-semibold)">Tabs</h2>
-          <p style="color: var(--color-fg-muted)">Tab panel switcher with keyboard navigation. Recipe component.</p>
+          <h2 data-ui="heading" data-size="3">Tabs</h2>
+          <p data-ui="text" data-variant="muted">Tab panel switcher with keyboard navigation. Recipe component.</p>
 
           <div data-ui="tabs">
             <div data-part="list" role="tablist">
@@ -472,31 +469,37 @@
               <button data-part="trigger" role="tab" aria-selected="false" tabindex="-1">Notifications</button>
             </div>
             <div data-part="panel" role="tabpanel">
-              <div data-ui="stack" data-gap="3" style="padding: var(--space-4) 0">
-                <p>General settings content. This panel is managed by the tabs controller.</p>
-                <div data-ui="stack" data-gap="2">
-                  <label data-ui="label">Display Name</label>
-                  <input data-ui="input" value="Claude Agent">
+              <div data-ui="surface" data-variant="flat" data-size="md">
+                <div data-ui="stack" data-gap="3">
+                  <p>General settings content. This panel is managed by the tabs controller.</p>
+                  <div data-ui="stack" data-gap="2">
+                    <label data-ui="label">Display Name</label>
+                    <input data-ui="input" value="Claude Agent">
+                  </div>
                 </div>
               </div>
             </div>
             <div data-part="panel" role="tabpanel" hidden>
-              <div data-ui="stack" data-gap="3" style="padding: var(--space-4) 0">
-                <p>Security settings. Two-factor authentication and API keys.</p>
-                <label data-ui="switch-label">
-                  <input data-ui="switch" type="checkbox" role="switch"> Enable 2FA
-                </label>
+              <div data-ui="surface" data-variant="flat" data-size="md">
+                <div data-ui="stack" data-gap="3">
+                  <p>Security settings. Two-factor authentication and API keys.</p>
+                  <label data-ui="switch-label">
+                    <input data-ui="switch" type="checkbox" role="switch"> Enable 2FA
+                  </label>
+                </div>
               </div>
             </div>
             <div data-part="panel" role="tabpanel" hidden>
-              <div data-ui="stack" data-gap="3" style="padding: var(--space-4) 0">
-                <p>Notification preferences.</p>
-                <label data-ui="checkbox-label">
-                  <input data-ui="checkbox" type="checkbox" checked> Email notifications
-                </label>
-                <label data-ui="checkbox-label">
-                  <input data-ui="checkbox" type="checkbox"> SMS notifications
-                </label>
+              <div data-ui="surface" data-variant="flat" data-size="md">
+                <div data-ui="stack" data-gap="3">
+                  <p>Notification preferences.</p>
+                  <label data-ui="checkbox-label">
+                    <input data-ui="checkbox" type="checkbox" checked> Email notifications
+                  </label>
+                  <label data-ui="checkbox-label">
+                    <input data-ui="checkbox" type="checkbox"> SMS notifications
+                  </label>
+                </div>
               </div>
             </div>
           </div>
@@ -508,26 +511,32 @@
         <!-- ACCORDION (Recipe)                       -->
         <!-- ════════════════════════════════════════ -->
         <div data-ui="stack" data-gap="4">
-          <h2 style="font-size: var(--text-2xl); font-weight: var(--weight-semibold)">Accordion</h2>
-          <p style="color: var(--color-fg-muted)">Expandable sections. Recipe component.</p>
+          <h2 data-ui="heading" data-size="3">Accordion</h2>
+          <p data-ui="text" data-variant="muted">Expandable sections. Recipe component.</p>
 
           <div data-ui="accordion">
             <div data-part="item">
               <button data-part="trigger" aria-expanded="false">What is Loom UI?</button>
               <div data-part="content" hidden>
-                <p style="padding: var(--space-3) 0">A manifest-guided, zero-class UI framework built for AI agents to generate, inspect, and repair components.</p>
+                <div data-ui="surface" data-variant="flat" data-size="sm">
+                  <p>A manifest-guided, zero-class UI framework built for AI agents to generate, inspect, and repair components.</p>
+                </div>
               </div>
             </div>
             <div data-part="item">
               <button data-part="trigger" aria-expanded="false">Why no CSS classes?</button>
               <div data-part="content" hidden>
-                <p style="padding: var(--space-3) 0">Classes create naming collisions and are not machine-readable. Data attributes have clear semantics that both CSS selectors and audit tools can parse reliably.</p>
+                <div data-ui="surface" data-variant="flat" data-size="sm">
+                  <p>Classes create naming collisions and are not machine-readable. Data attributes have clear semantics that both CSS selectors and audit tools can parse reliably.</p>
+                </div>
               </div>
             </div>
             <div data-part="item">
               <button data-part="trigger" aria-expanded="false">What are design tokens?</button>
               <div data-part="content" hidden>
-                <p style="padding: var(--space-3) 0">CSS custom properties organized in three layers: raw palette values, semantic tokens (what components use), and per-component aliases.</p>
+                <div data-ui="surface" data-variant="flat" data-size="sm">
+                  <p>CSS custom properties organized in three layers: raw palette values, semantic tokens (what components use), and per-component aliases.</p>
+                </div>
               </div>
             </div>
           </div>
@@ -539,8 +548,8 @@
         <!-- DIALOG (Recipe)                          -->
         <!-- ════════════════════════════════════════ -->
         <div data-ui="stack" data-gap="4">
-          <h2 style="font-size: var(--text-2xl); font-weight: var(--weight-semibold)">Dialog</h2>
-          <p style="color: var(--color-fg-muted)">Modal with focus trap, overlay, and escape-to-close. Recipe component.</p>
+          <h2 data-ui="heading" data-size="3">Dialog</h2>
+          <p data-ui="text" data-variant="muted">Modal with focus trap, overlay, and escape-to-close. Recipe component.</p>
 
           <div data-ui="dialog" data-state="closed" id="demo-dialog">
             <button data-part="trigger" data-ui="button" data-variant="primary">Open Dialog</button>
@@ -567,8 +576,8 @@
         <!-- DROPDOWN (Recipe)                        -->
         <!-- ════════════════════════════════════════ -->
         <div data-ui="stack" data-gap="4">
-          <h2 style="font-size: var(--text-2xl); font-weight: var(--weight-semibold)">Dropdown</h2>
-          <p style="color: var(--color-fg-muted)">Menu with keyboard navigation. Recipe component.</p>
+          <h2 data-ui="heading" data-size="3">Dropdown</h2>
+          <p data-ui="text" data-variant="muted">Menu with keyboard navigation. Recipe component.</p>
 
           <div data-ui="dropdown">
             <button data-part="trigger" data-ui="button" data-variant="outline">Actions &#x25BE;</button>
@@ -587,8 +596,8 @@
         <!-- TOOLTIP (Recipe)                         -->
         <!-- ════════════════════════════════════════ -->
         <div data-ui="stack" data-gap="4">
-          <h2 style="font-size: var(--text-2xl); font-weight: var(--weight-semibold)">Tooltip</h2>
-          <p style="color: var(--color-fg-muted)">Hover information. Recipe component.</p>
+          <h2 data-ui="heading" data-size="3">Tooltip</h2>
+          <p data-ui="text" data-variant="muted">Hover information. Recipe component.</p>
 
           <div data-ui="stack" data-variant="horizontal" data-gap="4">
             <div data-ui="tooltip">
@@ -604,8 +613,8 @@
         <!-- REACTIVE DEMO (loom-core)                -->
         <!-- ════════════════════════════════════════ -->
         <div data-ui="stack" data-gap="4">
-          <h2 style="font-size: var(--text-2xl); font-weight: var(--weight-semibold)">Reactive Directives</h2>
-          <p style="color: var(--color-fg-muted)">loom-core.js provides Alpine-style reactivity with l-data, l-text, l-model, l-show, l-for, and more.</p>
+          <h2 data-ui="heading" data-size="3">Reactive Directives</h2>
+          <p data-ui="text" data-variant="muted">loom-core.js provides Alpine-style reactivity with l-data, l-text, l-model, l-show, l-for, and more.</p>
 
           <div data-ui="grid" data-cols="2" data-gap="4">
             <!-- Counter -->
@@ -617,7 +626,7 @@
               <div data-part="body">
                 <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center">
                   <button data-ui="button" data-variant="outline" data-size="sm" @click="count--">-</button>
-                  <span style="font-size: var(--text-2xl); font-weight: var(--weight-bold); min-width: 3ch; text-align: center" l-text="count"></span>
+                  <span data-ui="text" data-size="2xl" data-weight="bold" data-align="center" data-tabular l-text="count"></span>
                   <button data-ui="button" data-variant="outline" data-size="sm" @click="count++">+</button>
                 </div>
               </div>
@@ -632,7 +641,7 @@
               <div data-part="body">
                 <div data-ui="stack" data-gap="3">
                   <input data-ui="input" placeholder="Type your name..." l-model="name">
-                  <p style="color: var(--color-fg-muted)">Hello, <strong l-text="name || '...'"></strong></p>
+                  <p data-ui="text" data-variant="muted">Hello, <strong l-text="name || '...'"></strong></p>
                 </div>
               </div>
             </div>
@@ -647,7 +656,7 @@
                 <div data-ui="stack" data-gap="3">
                   <button data-ui="button" data-variant="outline" data-size="sm" @click="visible = !visible" l-text="visible ? 'Hide' : 'Show'"></button>
                   <div data-ui="surface" data-size="sm" data-variant="raised" l-show="visible">
-                    <p style="font-size: var(--text-sm)">Now you see me.</p>
+                    <p data-ui="text" data-size="sm">Now you see me.</p>
                   </div>
                 </div>
               </div>
@@ -669,7 +678,7 @@
                     <template l-for="(item, i) in items">
                       <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center">
                         <span data-ui="badge" data-variant="primary" l-text="item"></span>
-                        <button data-ui="button" data-variant="ghost" data-size="sm" @click="items.splice(i, 1)" style="font-size: var(--text-xs)">&#x2715;</button>
+                        <button data-ui="button" data-variant="ghost" data-size="sm" @click="items.splice(i, 1)">&#x2715;</button>
                       </div>
                     </template>
                   </div>
@@ -691,7 +700,7 @@
           <div data-ui="stack" data-gap="4" l-data="{ value: 60 }">
             <div data-ui="stack" data-gap="2">
               <p data-ui="text" data-size="sm" data-variant="muted">Interactive — drag the slider</p>
-              <input type="range" min="0" max="100" l-model.number="value" style="width: 200px">
+              <input type="range" min="0" max="100" l-model.number="value">
             </div>
 
             <div data-ui="progress" role="progressbar" :aria-valuenow="value" aria-valuemin="0" aria-valuemax="100">
@@ -898,7 +907,7 @@
 
         <!-- Footer -->
         <div data-ui="separator"></div>
-        <div data-ui="surface" data-align-text="center" data-variant="flat" style="padding: var(--space-6) 0">
+        <div data-ui="surface" data-variant="flat" data-size="lg" data-align-text="center">
           <p data-ui="text" data-size="sm" data-variant="muted">
             Loom UI — Zero classes. Manifest-guided. Token-driven.
           </p>

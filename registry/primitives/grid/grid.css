@@ -84,7 +84,8 @@
 
 /* ── Responsive: stack to single column on small screens ── */
 @media (max-width: 640px) {
-  [data-ui="grid"] {
+  [data-ui="grid"],
+  [data-ui="grid"][data-cols] {
     grid-template-columns: 1fr;
   }
 
@@ -105,4 +106,21 @@
   [data-ui="grid"][data-cols-sm="1"] { grid-template-columns: 1fr; }
   [data-ui="grid"][data-cols-sm="2"] { grid-template-columns: repeat(2, 1fr); }
   [data-ui="grid"][data-cols-sm="3"] { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* ── Responsive Horizontal Scroll ── */
+@media (max-width: 640px) {
+  [data-ui="grid"][data-scroll] {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: var(--space-2);
+  }
+
+  [data-ui="grid"][data-scroll] > * {
+    min-width: 280px;
+    scroll-snap-align: start;
+    flex-shrink: 0;
+  }
 }

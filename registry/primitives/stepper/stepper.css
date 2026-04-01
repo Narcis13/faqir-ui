@@ -111,3 +111,15 @@
 [data-ui="stepper"][data-size="lg"][data-variant="vertical"] [data-part="connector"] {
   margin-left: calc(1.25rem - 1px);
 }
+
+/* ── Responsive: hide labels on mobile ── */
+@media (max-width: 640px) {
+  [data-ui="stepper"] [data-part="label"] {
+    display: none;
+  }
+
+  [data-ui="stepper"] [data-part="connector"] {
+    min-width: var(--space-2);
+    margin: 0 var(--space-1);
+  }
+}

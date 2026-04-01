@@ -41,10 +41,6 @@
 
   <!-- Loom Core -->
   <script src="../registry/core/loom-core.js" defer></script>
-
-  <style>
-    [l-cloak] { display: none !important; }
-  </style>
 </head>
 <body>
   <div l-cloak l-data="{
@@ -141,22 +137,22 @@
     }
   }">
 
-    <div data-ui="surface" data-variant="flat" data-max="xl" data-size="md" style="max-width: 1400px">
+    <div data-ui="surface" data-variant="flat" data-max="2xl" data-size="md">
       <div data-ui="stack" data-gap="4">
 
         <!-- Header -->
-        <div data-ui="stack" data-variant="horizontal" data-gap="4" data-align="center" data-justify="between" data-wrap>
+        <div data-ui="stack" data-variant="horizontal" data-gap="4" data-align="center" data-justify="between" data-wrap data-responsive>
           <div data-ui="stack" data-gap="1">
             <h1 data-ui="heading" data-size="3">Kanban Board</h1>
-            <p style="font-size: var(--text-sm); color: var(--color-fg-muted)">
+            <p data-ui="text" data-size="sm" data-variant="muted">
               <span l-text="totalCards"></span> cards across <span l-text="columns.length"></span> columns
             </p>
           </div>
           <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center">
-            <input data-ui="input" data-size="sm" placeholder="Search cards..." l-model="search" style="width: 200px">
+            <input data-ui="input" data-size="sm" data-width="fixed" placeholder="Search cards..." l-model="search">
             <label data-ui="switch-label">
               <input data-ui="switch" type="checkbox" role="switch" @change="toggleDark()">
-              <span l-text="darkMode ? 'Dark' : 'Light'" style="font-size: var(--text-sm)"></span>
+              <span data-ui="text" data-size="sm" l-text="darkMode ? 'Dark' : 'Light'"></span>
             </label>
           </div>
         </div>
@@ -164,14 +160,14 @@
         <div data-ui="separator"></div>
 
         <!-- Board -->
-        <div data-ui="grid" data-cols="4" data-gap="4">
+        <div data-ui="grid" data-cols="4" data-gap="4" data-scroll>
           <template l-for="col in filteredColumns">
-            <div data-ui="surface" data-size="sm" style="min-height: 300px">
+            <div data-ui="surface" data-size="sm">
               <div data-ui="stack" data-gap="3">
 
                 <!-- Column header -->
-                <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center" style="justify-content: space-between">
-                  <span style="font-weight: var(--weight-semibold); font-size: var(--text-sm)" l-text="col.title"></span>
+                <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center" data-justify="between">
+                  <span data-ui="text" data-size="sm" data-weight="semibold" l-text="col.title"></span>
                   <span data-ui="badge" data-size="sm" l-text="col.cards.length"></span>
                 </div>
 
@@ -183,15 +179,15 @@
                     <div data-ui="card" data-size="sm">
                       <div data-part="body">
                         <div data-ui="stack" data-gap="2">
-                          <span style="font-size: var(--text-sm); font-weight: var(--weight-medium)" l-text="card.title"></span>
+                          <span data-ui="text" data-size="sm" data-weight="medium" l-text="card.title"></span>
                           <template l-if="card.labels.length > 0">
-                            <div data-ui="stack" data-variant="horizontal" data-gap="1" style="flex-wrap: wrap">
+                            <div data-ui="stack" data-variant="horizontal" data-gap="1" data-wrap>
                               <template l-for="label in card.labels">
                                 <span data-ui="badge" data-size="sm" :data-variant="labelVariant(label)" l-text="label"></span>
                               </template>
                             </div>
                           </template>
-                          <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center" style="justify-content: space-between">
+                          <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center" data-justify="between">
                             <template l-if="card.assignee">
                               <div data-ui="avatar" data-size="sm">
                                 <span data-part="fallback" l-text="card.assignee"></span>
@@ -204,13 +200,11 @@
                             <div data-ui="stack" data-variant="horizontal" data-gap="1">
                               <template l-if="columns.indexOf(columns.find(c => c.id === col.id)) > 0">
                                 <button data-ui="button" data-variant="ghost" data-size="sm"
-                                        @click="moveCard(card.id, col.id, columns[columns.indexOf(columns.find(c => c.id === col.id)) - 1].id)"
-                                        style="font-size: var(--text-xs)">&larr;</button>
+                                        @click="moveCard(card.id, col.id, columns[columns.indexOf(columns.find(c => c.id === col.id)) - 1].id)">&larr;</button>
                               </template>
                               <template l-if="columns.indexOf(columns.find(c => c.id === col.id)) < columns.length - 1">
                                 <button data-ui="button" data-variant="ghost" data-size="sm"
-                                        @click="moveCard(card.id, col.id, columns[columns.indexOf(columns.find(c => c.id === col.id)) + 1].id)"
-                                        style="font-size: var(--text-xs)">&rarr;</button>
+                                        @click="moveCard(card.id, col.id, columns[columns.indexOf(columns.find(c => c.id === col.id)) + 1].id)">&rarr;</button>
                               </template>
                             </div>
                           </div>
@@ -231,7 +225,7 @@
                   </div>
                 </template>
                 <template l-if="addingTo !== col.id">
-                  <button data-ui="button" data-variant="ghost" data-size="sm" @click="startAdd(col.id)" style="width: 100%">+ Add card</button>
+                  <button data-ui="button" data-variant="ghost" data-size="sm" data-full @click="startAdd(col.id)">+ Add card</button>
                 </template>
 
               </div>
@@ -240,7 +234,7 @@
         </div>
 
         <!-- Footer -->
-        <div data-ui="surface" data-variant="flat" data-align-text="center" style="padding: var(--space-4) 0">
+        <div data-ui="surface" data-variant="flat" data-size="md" data-align-text="center">
           <p data-ui="text" data-size="xs" data-variant="subtle">Loom UI Kanban — built with zero CSS classes</p>
         </div>
 

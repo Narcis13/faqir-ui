@@ -109,3 +109,20 @@
 [data-ui="stack"] > [data-flex="none"] {
   flex: none;
 }
+
+/* ── Text Alignment ── */
+[data-ui="stack"][data-align-text="center"] {
+  text-align: center;
+}
+
+[data-ui="stack"][data-align-text="right"] {
+  text-align: right;
+}
+
+/* ── Responsive Collapse ── */
+@media (max-width: 640px) {
+  [data-ui="stack"][data-variant="horizontal"][data-responsive] {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

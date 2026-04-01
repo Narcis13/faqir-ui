@@ -94,6 +94,18 @@
   padding-right: var(--space-10, 2.5rem);
 }
 
+/* ── Width Variants ── */
+[data-ui="input"][data-width="fixed"] {
+  max-width: 250px;
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  [data-ui="input"][data-width="fixed"] {
+    max-width: 100%;
+  }
+}
+
 /* ── Motion ── */
 @media (prefers-reduced-motion: reduce) {
   [data-ui="input"] {
