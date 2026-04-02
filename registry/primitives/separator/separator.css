@@ -39,3 +39,16 @@ div[data-ui="separator"]::after {
   color: var(--color-fg-muted);
   white-space: nowrap;
 }
+
+/* ── Vertical Sizes ── */
+[data-ui="separator"][data-variant="vertical"][data-size="sm"] {
+  height: 1rem;
+}
+
+[data-ui="separator"][data-variant="vertical"][data-size="md"] {
+  height: 1.5rem;
+}
+
+[data-ui="separator"][data-variant="vertical"][data-size="lg"] {
+  height: 2rem;
+}

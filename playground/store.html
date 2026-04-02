@@ -41,10 +41,6 @@
 
   <!-- Loom Core -->
   <script src="../registry/core/loom-core.js" defer></script>
-
-  <style>
-    [l-cloak] { display: none !important; }
-  </style>
 </head>
 <body>
   <div l-cloak l-data="{
@@ -118,7 +114,7 @@
       <div data-ui="stack" data-gap="6">
 
         <!-- Header -->
-        <div data-ui="stack" data-variant="horizontal" data-gap="4" data-align="center" data-justify="between" data-wrap>
+        <div data-ui="stack" data-variant="horizontal" data-gap="4" data-align="center" data-justify="between" data-wrap data-responsive>
           <div data-ui="stack" data-gap="1">
             <h1 data-ui="heading" data-size="3">Component Store</h1>
             <p data-ui="text" data-size="sm" data-variant="muted">Browse and install Loom UI components</p>
@@ -129,7 +125,7 @@
             </button>
             <label data-ui="switch-label">
               <input data-ui="switch" type="checkbox" role="switch" @change="toggleDark()">
-              <span l-text="darkMode ? 'Dark' : 'Light'" style="font-size: var(--text-sm)"></span>
+              <span data-ui="text" data-size="sm" l-text="darkMode ? 'Dark' : 'Light'"></span>
             </label>
           </div>
         </div>
@@ -145,25 +141,27 @@
             </div>
             <div data-part="body">
               <template l-if="cart.length === 0">
-                <div data-ui="stack" data-gap="2" data-align="center" style="padding: var(--space-4) 0; text-align: center">
-                  <p style="color: var(--color-fg-muted)">No components selected</p>
-                  <p style="font-size: var(--text-sm); color: var(--color-fg-subtle)">Browse below and add components to your install queue</p>
+                <div data-ui="stack" data-gap="2" data-align="center" data-align-text="center">
+                  <div data-ui="surface" data-variant="flat" data-size="md">
+                    <p data-ui="text" data-variant="muted">No components selected</p>
+                    <p data-ui="text" data-size="sm" data-variant="subtle">Browse below and add components to your install queue</p>
+                  </div>
                 </div>
               </template>
               <template l-if="cart.length > 0">
                 <div data-ui="stack" data-gap="3">
                   <template l-for="item in cart">
-                    <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center" style="justify-content: space-between">
+                    <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center" data-justify="between">
                       <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center">
                         <span data-ui="badge" data-size="sm" :data-variant="item.kind === 'recipe' ? 'primary' : 'secondary'" l-text="item.kind"></span>
-                        <span style="font-weight: var(--weight-medium)" l-text="item.name"></span>
+                        <span data-ui="text" data-weight="medium" l-text="item.name"></span>
                       </div>
                       <button data-ui="button" data-variant="ghost" data-size="sm" @click="removeFromCart(item.id)">Remove</button>
                     </div>
                   </template>
                   <div data-ui="separator"></div>
-                  <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center" style="justify-content: space-between">
-                    <span style="font-size: var(--text-sm); color: var(--color-fg-muted)">
+                  <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center" data-justify="between" data-responsive>
+                    <span data-ui="text" data-size="sm" data-variant="muted">
                       loom add <span l-text="cart.map(c => c.name.toLowerCase()).join(' ')"></span>
                     </span>
                     <button data-ui="button" data-variant="primary" data-size="sm" @click="installAll()">Install All</button>
@@ -175,9 +173,9 @@
         </template>
 
         <!-- Toolbar -->
-        <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center" style="flex-wrap: wrap; justify-content: space-between">
+        <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center" data-wrap data-justify="between" data-responsive>
           <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center">
-            <input data-ui="input" data-size="sm" placeholder="Search components..." l-model="search" style="width: 220px">
+            <input data-ui="input" data-size="sm" data-width="fixed" placeholder="Search components..." l-model="search">
             <select data-ui="select" data-size="sm" l-model="category">
               <option value="all">All Types</option>
               <option value="primitive">Primitives</option>
@@ -185,7 +183,7 @@
             </select>
           </div>
           <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center">
-            <span style="font-size: var(--text-sm); color: var(--color-fg-muted)">Sort:</span>
+            <span data-ui="text" data-size="sm" data-variant="muted">Sort:</span>
             <select data-ui="select" data-size="sm" l-model="sort">
               <option value="popular">Most Popular</option>
               <option value="name">Name A-Z</option>
@@ -194,16 +192,16 @@
         </div>
 
         <!-- Results count -->
-        <p style="font-size: var(--text-sm); color: var(--color-fg-muted)">
+        <p data-ui="text" data-size="sm" data-variant="muted">
           Showing <span l-text="filteredProducts.length"></span> of <span l-text="products.length"></span> components
         </p>
 
         <!-- Product Grid -->
-        <div data-ui="grid" data-cols="3" data-gap="4">
+        <div data-ui="grid" data-cols="3" data-cols-md="2" data-gap="4">
           <template l-for="product in filteredProducts">
             <div data-ui="card">
               <div data-part="header">
-                <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center" style="justify-content: space-between">
+                <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center" data-justify="between">
                   <h3 data-part="title" l-text="product.name"></h3>
                   <span data-ui="badge" data-size="sm"
                         :data-variant="product.kind === 'recipe' ? 'primary' : 'secondary'"
@@ -213,7 +211,7 @@
               </div>
               <div data-part="body">
                 <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center">
-                  <span style="font-size: var(--text-sm); color: var(--color-fg-muted)">
+                  <span data-ui="text" data-size="sm" data-variant="muted">
                     <span l-text="product.installs"></span> installs
                   </span>
                   <span data-ui="badge" data-variant="success" data-size="sm">Free</span>
@@ -221,10 +219,10 @@
               </div>
               <div data-part="footer">
                 <template l-if="product.inCart === 0">
-                  <button data-ui="button" data-variant="outline" data-size="sm" @click="addToCart(product.id)" style="width: 100%">Add to Queue</button>
+                  <button data-ui="button" data-variant="outline" data-size="sm" data-full @click="addToCart(product.id)">Add to Queue</button>
                 </template>
                 <template l-if="product.inCart > 0">
-                  <button data-ui="button" data-variant="primary" data-size="sm" @click="removeFromCart(product.id)" style="width: 100%">&#x2713; In Queue</button>
+                  <button data-ui="button" data-variant="primary" data-size="sm" data-full @click="removeFromCart(product.id)">&#x2713; In Queue</button>
                 </template>
               </div>
             </div>
@@ -241,7 +239,7 @@
         </template>
 
         <!-- Footer -->
-        <div data-ui="surface" data-variant="flat" data-align-text="center" style="padding: var(--space-4) 0">
+        <div data-ui="surface" data-variant="flat" data-size="md" data-align-text="center">
           <p data-ui="text" data-size="xs" data-variant="subtle">Loom UI Store — built with zero CSS classes</p>
         </div>
 

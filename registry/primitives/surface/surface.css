@@ -57,6 +57,11 @@
   margin-inline: auto;
 }
 
+[data-ui="surface"][data-max="2xl"] {
+  max-width: 1400px;
+  margin-inline: auto;
+}
+
 [data-ui="surface"][data-max="full"] {
   max-width: 100%;
 }
