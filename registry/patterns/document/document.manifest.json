@@ -1,0 +1,131 @@
+{
+  "name": "document",
+  "version": "1.0.0",
+  "kind": "pattern",
+  "category": "composite",
+  "description": "Full-page document container optimized for screen display and print output",
+
+  "anatomy": {
+    "tag": "article",
+    "selector": "[data-ui='document']",
+    "content_model": "slots"
+  },
+
+  "slots": {
+    "header": {
+      "selector": "[data-part='header']",
+      "required": false,
+      "tag_hint": "header",
+      "description": "Document header — repeats on every printed page"
+    },
+    "body": {
+      "selector": "[data-part='body']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "Main document content area"
+    },
+    "footer": {
+      "selector": "[data-part='footer']",
+      "required": false,
+      "tag_hint": "footer",
+      "description": "Document footer — repeats on every printed page"
+    }
+  },
+
+  "variants": {
+    "variant": {
+      "values": ["invoice", "form", "report"],
+      "default": "",
+      "attr": "data-variant",
+      "applied_to": "root"
+    },
+    "format": {
+      "values": ["a4", "letter"],
+      "default": "a4",
+      "attr": "data-format",
+      "applied_to": "root"
+    },
+    "orientation": {
+      "values": ["portrait", "landscape"],
+      "default": "portrait",
+      "attr": "data-orientation",
+      "applied_to": "root"
+    }
+  },
+
+  "states": {},
+
+  "props": {
+    "theme": { "type": "string", "default": "", "description": "Theme name applied via data-theme attribute" }
+  },
+
+  "a11y": {
+    "required_attrs": [
+      "article element for document semantics",
+      "aria-label describing the document type and title"
+    ],
+    "keyboard": {}
+  },
+
+  "tokens_used": [
+    "color-bg", "color-fg", "color-fg-muted", "color-border",
+    "space-4", "space-6", "space-8", "space-12",
+    "shadow-md", "shadow-lg",
+    "radius-md",
+    "font-sans", "font-serif",
+    "text-xs", "text-sm", "text-base", "text-lg", "text-xl", "text-2xl",
+    "weight-medium", "weight-semibold", "weight-bold",
+    "leading-tight", "leading-normal"
+  ],
+
+  "templates": {
+    "html": "<article data-ui=\"document\" data-format=\"a4\" aria-label=\"{title}\">\n  <header data-part=\"header\">{header}</header>\n  <div data-part=\"body\">{body}</div>\n  <footer data-part=\"footer\">{footer}</footer>\n</article>",
+    "html_invoice": "<article data-ui=\"document\" data-variant=\"invoice\" data-format=\"a4\" aria-label=\"Invoice {number}\">\n  <header data-part=\"header\">{company_info}</header>\n  <div data-part=\"body\">{invoice_content}</div>\n  <footer data-part=\"footer\">{legal_text}</footer>\n</article>"
+  },
+
+  "safe_transforms": [
+    "change-variant",
+    "change-format",
+    "change-orientation",
+    "add-header",
+    "remove-header",
+    "add-footer",
+    "remove-footer",
+    "change-theme"
+  ],
+
+  "unsafe_transforms": [
+    "remove-body",
+    "remove-article-semantics",
+    "remove-aria-label"
+  ],
+
+  "composition": {
+    "contains": ["key-value", "table", "image", "signature", "callout", "page-break", "text", "separator", "field-group"],
+    "used_in": []
+  },
+
+  "files": {
+    "html": "document.html",
+    "css": "document.css",
+    "manifest": "document.manifest.json"
+  },
+
+  "tests": [
+    "renders-as-article-element",
+    "body-slot-is-required",
+    "header-slot-is-optional",
+    "footer-slot-is-optional",
+    "screen-has-paper-shadow",
+    "screen-has-max-width",
+    "screen-is-centered",
+    "a4-format-sets-210mm-width",
+    "letter-format-sets-8-5in-width",
+    "print-page-rules-applied",
+    "print-header-repeats",
+    "print-footer-repeats",
+    "invoice-variant-adjusts-spacing",
+    "form-variant-adjusts-spacing",
+    "report-variant-adjusts-typography"
+  ]
+}

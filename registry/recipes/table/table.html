@@ -1,6 +1,6 @@
 <!-- @ui:component table -->
 <!-- @ui:kind recipe -->
-<!-- @ui:slots table thead tbody tr th td checkbox -->
+<!-- @ui:slots table thead tbody tfoot tr th td checkbox group-header -->
 <!-- @ui:variants striped=true|false bordered=true|false size=sm|md|lg -->
 <!-- @ui:controller table.js -->
 
@@ -124,5 +124,111 @@
         <td data-part="td">1960</td>
       </tr>
     </tbody>
+  </table>
+</div>
+
+<!-- With footer (totals row), alignment, and number formatting -->
+<div data-ui="table" data-variant="bordered" data-size="md">
+  <table data-part="table">
+    <thead data-part="thead">
+      <tr data-part="tr">
+        <th data-part="th" scope="col">Item</th>
+        <th data-part="th" scope="col" data-align="center">Qty</th>
+        <th data-part="th" scope="col" data-align="right">Unit Price</th>
+        <th data-part="th" scope="col" data-align="right">Total</th>
+      </tr>
+    </thead>
+    <tbody data-part="tbody">
+      <tr data-part="tr">
+        <td data-part="td">Web Development</td>
+        <td data-part="td" data-align="center" data-format="number">10</td>
+        <td data-part="td" data-align="right" data-format="currency">150.00</td>
+        <td data-part="td" data-align="right" data-format="currency">1,500.00</td>
+      </tr>
+      <tr data-part="tr">
+        <td data-part="td">Design Services</td>
+        <td data-part="td" data-align="center" data-format="number">5</td>
+        <td data-part="td" data-align="right" data-format="currency">200.00</td>
+        <td data-part="td" data-align="right" data-format="currency">1,000.00</td>
+      </tr>
+    </tbody>
+    <tfoot data-part="tfoot">
+      <tr data-part="tr">
+        <td data-part="td" colspan="3" data-align="right">Subtotal</td>
+        <td data-part="td" data-align="right" data-format="currency">2,500.00</td>
+      </tr>
+      <tr data-part="tr">
+        <td data-part="td" colspan="3" data-align="right">VAT (19%)</td>
+        <td data-part="td" data-align="right" data-format="currency">475.00</td>
+      </tr>
+      <tr data-part="tr">
+        <td data-part="td" colspan="3" data-align="right">Total</td>
+        <td data-part="td" data-align="right" data-format="currency">2,975.00</td>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+
+<!-- Grouped rows -->
+<div data-ui="table" data-size="md">
+  <table data-part="table">
+    <thead data-part="thead">
+      <tr data-part="tr">
+        <th data-part="th" scope="col">Employee</th>
+        <th data-part="th" scope="col" data-align="right">Hours</th>
+        <th data-part="th" scope="col" data-align="right" data-format="currency">Rate</th>
+      </tr>
+    </thead>
+    <tbody data-part="tbody">
+      <tr data-part="group-header">
+        <td data-part="td" colspan="3">Engineering</td>
+      </tr>
+      <tr data-part="tr">
+        <td data-part="td">Alice Johnson</td>
+        <td data-part="td" data-align="right" data-format="number">40</td>
+        <td data-part="td" data-align="right" data-format="currency">85.00</td>
+      </tr>
+      <tr data-part="tr">
+        <td data-part="td">Bob Smith</td>
+        <td data-part="td" data-align="right" data-format="number">38</td>
+        <td data-part="td" data-align="right" data-format="currency">90.00</td>
+      </tr>
+      <tr data-part="group-header">
+        <td data-part="td" colspan="3">Design</td>
+      </tr>
+      <tr data-part="tr">
+        <td data-part="td">Carol White</td>
+        <td data-part="td" data-align="right" data-format="number">35</td>
+        <td data-part="td" data-align="right" data-format="currency">75.00</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Print compact -->
+<div data-ui="table" data-print="compact" data-size="sm">
+  <table data-part="table">
+    <thead data-part="thead">
+      <tr data-part="tr">
+        <th data-part="th" scope="col">Code</th>
+        <th data-part="th" scope="col">Description</th>
+        <th data-part="th" scope="col" data-align="right" data-format="percent">VAT %</th>
+        <th data-part="th" scope="col" data-align="right" data-format="currency">Amount</th>
+      </tr>
+    </thead>
+    <tbody data-part="tbody">
+      <tr data-part="tr">
+        <td data-part="td">SRV-001</td>
+        <td data-part="td">Consulting</td>
+        <td data-part="td" data-align="right" data-format="percent">19%</td>
+        <td data-part="td" data-align="right" data-format="currency">3,200.00</td>
+      </tr>
+    </tbody>
+    <tfoot data-part="tfoot">
+      <tr data-part="tr">
+        <td data-part="td" colspan="3" data-align="right">Total</td>
+        <td data-part="td" data-align="right" data-format="currency">3,200.00</td>
+      </tr>
+    </tfoot>
   </table>
 </div>

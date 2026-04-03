@@ -1,6 +1,6 @@
 ---
 name: loom-creator
-description: Expert agent for the Loom UI framework — generates, audits, repairs, and explains zero-class, manifest-driven UI components and pages. Use when building HTML pages or components with Loom UI, when the user asks to create/modify/audit Loom UI markup, when working with data-ui/data-part/data-variant/data-state attributes, when generating page layouts using Loom tokens and primitives, when creating new registry components (primitives, recipes, patterns), or when connecting pages to server data via apiSource(). Triggers on any Loom UI task including component creation, page scaffolding, code auditing, token usage, reactive directive usage (l-data, l-model, l-for), data-driven rendering with apiSource(), and CLI operations.
+description: Expert agent for the Loom UI framework — generates, audits, repairs, and explains zero-class, manifest-driven UI components and pages. Use when building HTML pages or components with Loom UI, when the user asks to create/modify/audit Loom UI markup, when working with data-ui/data-part/data-variant/data-state attributes, when generating page layouts using Loom tokens and primitives, when creating new registry components (primitives, recipes, patterns), when connecting pages to server data via l-source directive or apiSource(), or when building printable documents (invoices, reports, forms). Triggers on any Loom UI task including component creation, page scaffolding, code auditing, token usage, reactive directive usage (l-data, l-model, l-for, l-source), data-driven rendering, document/print layout, and CLI operations.
 ---
 
 # Loom Creator
@@ -51,16 +51,22 @@ Every Loom component uses exactly five data attributes — this is the DOM contr
 
 ## Component Inventory
 
-**22 Primitives** (CSS-only): avatar, badge, button, card, checkbox, empty-state, grid, input, kbd, label, nav, progress, radio, select, separator, spinner, stack, stepper, surface, switch, text, textarea
+**30 Primitives** (CSS-only): avatar, badge, button, callout, card, checkbox, description-list, empty-state, field-group, grid, image, input, kbd, key-value, label, nav, page-break, progress, radio, select, separator, signature, spinner, stack, stat, stepper, surface, switch, text, textarea
 
-**15 Recipes** (CSS + JS): accordion, combobox, command-palette, date-picker, dialog, drawer, dropdown, pagination, popover, select-custom, sheet, table, tabs, toast, tooltip
+**16 Recipes** (CSS + JS): accordion, combobox, command-palette, date-picker, dialog, drawer, dropdown, pagination, popover, qr-code, select-custom, sheet, table, tabs, toast, tooltip
 
-**6 Patterns** (composition, no JS): auth-form, crud-table, dashboard-shell, empty-state, search-results, settings-page
+**7 Patterns** (composition, no JS): auth-form, crud-table, dashboard-shell, document, empty-state, search-results, settings-page
 
 For exact HTML anatomy of each component, see:
 - [references/primitives.md](references/primitives.md) — all primitives with markup
 - [references/recipes.md](references/recipes.md) — all recipes with markup + JS patterns
 - [references/patterns.md](references/patterns.md) — all composition patterns
+
+## Themes
+
+`default`, `midnight`, `paper`, `brutalist`, `document`.
+
+Use `document` theme for printable documents (invoices, reports, forms) — no shadows, no radius, pt-based sizes, optimized for PDF renderers.
 
 ## Page Template
 
@@ -107,6 +113,44 @@ Always follow this structure for full pages:
 <link rel="stylesheet" href="ui/primitives/button/button.css">
 <link rel="stylesheet" href="ui/recipes/dialog/dialog.css">
 ```
+
+## Document Template
+
+For printable documents (invoices, reports, forms), use the `document` pattern with `document` theme:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invoice #001</title>
+  <link rel="stylesheet" href="ui/tokens/index.css">
+  <link rel="stylesheet" href="ui/themes/document.css">
+  <link rel="stylesheet" href="ui/base/reset.css">
+  <!-- Include document primitives as needed -->
+  <link rel="stylesheet" href="ui/patterns/document/document.css">
+  <link rel="stylesheet" href="ui/primitives/key-value/key-value.css">
+  <link rel="stylesheet" href="ui/recipes/table/table.css">
+  <link rel="stylesheet" href="ui/primitives/separator/separator.css">
+  <link rel="stylesheet" href="ui/primitives/signature/signature.css">
+  <link rel="stylesheet" href="ui/primitives/callout/callout.css">
+</head>
+<body>
+  <article data-ui="document" data-format="a4" aria-label="Invoice #001">
+    <header data-part="header"><!-- Company info, logo --></header>
+    <div data-part="body">
+      <!-- Use key-value, table, separator, callout, signature, etc. -->
+    </div>
+    <footer data-part="footer"><!-- Legal text, page numbers --></footer>
+  </article>
+</body>
+</html>
+```
+
+**Document-specific primitives:** callout, description-list, field-group, image, key-value, page-break, signature, stat
+**Document-specific tokens:** `--doc-*` (typography, spacing, table), `--page-*` (geometry)
+**Table features for documents:** `tfoot` (footer/totals), `data-align` (left/center/right), `data-format` (number/currency/percent), `group-header` (grouped rows), `data-print="compact"`
 
 ## Layout Patterns
 
@@ -203,90 +247,68 @@ loom explain <component> [--json]    # human/agent-readable explanation
 
 Themes: `default`, `midnight`, `paper`, `brutalist`.
 
-## Data-Driven Rendering with `apiSource()`
+## Data-Driven Rendering
 
-Loom includes `api-source.js` — a data service layer for connecting `l-data` scopes to REST APIs. Include it before `loom-core.js`:
+Two approaches for connecting UI to REST APIs:
+
+### `l-source` Directive (Recommended)
+
+Built into loom-core.js — no extra script needed. Declare on any `l-data` element:
+
+```html
+<div l-data="{ newTitle: '' }"
+     l-source:tasks="/api/tasks">
+
+  <!-- Auto-injected: tasks (array), tasksLoading (bool), tasksError (string|null) -->
+  <!-- Controller: $tasks.load(), .create(payload), .update(id, payload), .remove(id), .refresh() -->
+
+  <template l-for="task in tasks">
+    <span l-text="task.title"></span>
+    <button @click="$tasks.remove(task.id)">Delete</button>
+  </template>
+
+  <form @submit.prevent="$tasks.create({ title: newTitle }).then(() => newTitle = '')">
+    <input data-ui="input" l-model="newTitle" placeholder="New task...">
+    <button data-ui="button" data-variant="primary">Add</button>
+  </form>
+</div>
+```
+
+**Modifiers:** `.lazy` (don't auto-load), `.optimistic` (instant UI updates), `.poll.5000` (auto-refresh), `.key.uuid` (custom ID key)
+
+Example: `l-source:tasks.optimistic.poll.10000="/api/tasks"`
+
+### `apiSource()` Factory (Legacy)
+
+Requires `api-source.js` before `loom-core.js`. Returns an object to spread into `l-data`:
 
 ```html
 <script src="ui/core/api-source.js"></script>
 <script src="ui/core/loom-core.js" defer></script>
 ```
 
-### `apiSource(endpoint, options?)` Factory
-
-Returns an object to spread into `l-data`. Options: `idKey` (default `"id"`), `pollInterval` (default `0`), `optimistic` (default `true`).
-
-**Injected state:** `items` (array), `loading` (bool), `submitting` (bool), `error` (string|null)
-**CRUD methods:** `load()`, `create(payload)`, `update(id, payload)`, `remove(id)`
-**Polling:** `startPolling(ms?)`, `stopPolling()`
-
-### Pattern: Server-Backed CRUD Page
-
 ```html
-<div l-data="{
-       ...apiSource('/api/tasks', { idKey: 'id', optimistic: true }),
-       newTitle: '',
-       filter: 'all',
-
-       get filtered() {
-         if (this.filter === 'all') return this.items;
-         if (this.filter === 'done') return this.items.filter(t => t.done);
-         return this.items.filter(t => !t.done);
-       }
-     }"
+<div l-data="{ ...apiSource('/api/tasks', { idKey: 'id', optimistic: true }), newTitle: '' }"
      l-init="load()">
-
-  <!-- Loading -->
-  <template l-if="loading">
-    <div data-ui="spinner" data-size="sm"></div>
+  <template l-for="task in items">
+    <span l-text="task.title"></span>
   </template>
-
-  <!-- Error with retry -->
-  <template l-if="error">
-    <span data-ui="text" data-variant="destructive" l-text="error"></span>
-    <button data-ui="button" data-size="sm" @click="load()">Retry</button>
-  </template>
-
-  <!-- Data list -->
-  <template l-if="!loading && !error">
-    <template l-for="task in filtered">
-      <div data-ui="card" data-size="sm">
-        <div data-part="body">
-          <input data-ui="checkbox" type="checkbox"
-                 :checked="task.done"
-                 @change="update(task.id, { done: !task.done })">
-          <span l-text="task.title"></span>
-          <button data-ui="button" data-variant="ghost" data-size="sm"
-                  @click="remove(task.id)">Delete</button>
-        </div>
-      </div>
-    </template>
-  </template>
-
-  <!-- Create form -->
-  <form @submit.prevent="create({ title: newTitle, done: false }).then(() => newTitle = '')">
-    <input data-ui="input" l-model="newTitle" placeholder="New task..." required>
-    <button data-ui="button" data-variant="primary"
-            :data-state="submitting ? 'disabled' : ''"
-            l-text="submitting ? 'Adding...' : 'Add'"></button>
-  </form>
 </div>
 ```
 
+Options: `idKey` (default `"id"`), `pollInterval` (default `0`), `optimistic` (default `true`).
+Injected: `items`, `loading`, `submitting`, `error`, `load()`, `create()`, `update()`, `remove()`, `startPolling()`, `stopPolling()`.
+
 ### Boundary Rules
 
-- `apiSource()` is **application code** — not a Loom recipe controller
-- Recipe controllers still **never call fetch** — the `no-fetch` audit rule applies only to them
+- `l-source` and `apiSource()` are **data layers** — recipe controllers still **never call fetch**
 - Use standard Loom components for loading/error states (spinner, card, empty-state)
-- Multiple independent sources: spread separate `apiSource()` calls into separate `l-data` scopes
 
 ### Dev Server for Testing
 
 ```bash
 bun playground/server.js    # Port 5555 — serves API + static files
 ```
-
-See `playground/task-manager.html` for the full working example.
 
 ## Strict Rules
 
@@ -303,9 +325,9 @@ See `playground/task-manager.html` for the full working example.
 
 ## References
 
-- [references/primitives.md](references/primitives.md) — All 22 primitives with HTML anatomy
-- [references/recipes.md](references/recipes.md) — All 15 recipes with HTML anatomy, JS patterns
-- [references/patterns.md](references/patterns.md) — All 6 composition patterns
+- [references/primitives.md](references/primitives.md) — All 30 primitives with HTML anatomy
+- [references/recipes.md](references/recipes.md) — All 16 recipes with HTML anatomy, JS patterns
+- [references/patterns.md](references/patterns.md) — All 7 composition patterns
 - [references/tokens.md](references/tokens.md) — Design token reference
 - [references/manifest.md](references/manifest.md) — Manifest JSON schema and examples
 - [references/directives.md](references/directives.md) — loom-core reactive directives and API

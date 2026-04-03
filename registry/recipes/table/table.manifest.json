@@ -53,6 +53,18 @@
       "required": false,
       "tag_hint": "input",
       "description": "Checkbox for row selection"
+    },
+    "tfoot": {
+      "selector": "[data-part='tfoot']",
+      "required": false,
+      "tag_hint": "tfoot",
+      "description": "Table footer section for totals and summary rows"
+    },
+    "group-header": {
+      "selector": "[data-part='group-header']",
+      "required": false,
+      "tag_hint": "tr",
+      "description": "Category header row within grouped data"
     }
   },
 
@@ -84,7 +96,10 @@
   },
 
   "props": {
-    "selectable": { "type": "boolean", "default": false, "description": "Whether rows are selectable" }
+    "selectable": { "type": "boolean", "default": false, "description": "Whether rows are selectable" },
+    "align": { "type": "string", "default": "left", "description": "Cell alignment: left, center, right (data-align attribute)" },
+    "format": { "type": "string", "default": "", "description": "Number format: number, currency, percent (data-format attribute)" },
+    "print": { "type": "string", "default": "", "description": "Print mode: compact (data-print attribute)" }
   },
 
   "a11y": {
@@ -124,7 +139,14 @@
     "toggle-bordered",
     "add-sortable",
     "remove-sortable",
-    "restyle-header-background"
+    "restyle-header-background",
+    "add-footer-row",
+    "remove-footer-row",
+    "set-cell-alignment",
+    "set-cell-format",
+    "add-colspan",
+    "add-row-group",
+    "toggle-print-compact"
   ],
 
   "unsafe_transforms": [
@@ -161,6 +183,13 @@
     "shift-click-selects-range",
     "header-checkbox-shows-indeterminate",
     "striped-variant-alternates-bg",
-    "bordered-variant-has-borders"
+    "bordered-variant-has-borders",
+    "footer-renders-with-tfoot",
+    "footer-has-bold-weight",
+    "cell-align-right-sets-text-align",
+    "cell-format-currency-uses-tabular-nums",
+    "colspan-spans-columns",
+    "group-header-has-distinct-style",
+    "print-compact-reduces-padding"
   ]
 }

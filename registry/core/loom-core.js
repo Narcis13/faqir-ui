@@ -257,6 +257,16 @@
             modifiers: parts.slice(1),
             raw: name
           };
+        } else if (name.startsWith('l-source:')) {
+          var rest = name.slice(9);
+          var parts = rest.split('.');
+          directive = {
+            type: 'source',
+            arg: parts[0],
+            expression: attr.value,
+            modifiers: parts.slice(1),
+            raw: name
+          };
         } else {
           var rest = name.slice(2);
           var parts = rest.split('.');
@@ -299,6 +309,7 @@
 
   var PRIORITY = {
     'data': 1,
+    'source': 1,
     'for': 2,
     'if': 3,
     'bind': 10,
@@ -398,6 +409,9 @@
 
     // Set up bidirectional bridge for $state/$variant
     setupStateBridge(root, scope);
+
+    // Process l-source directives (inject data + controller into scope)
+    processSourceDirectives(root, scope);
 
     var initExpr = root.getAttribute('l-init');
     if (initExpr) {
@@ -526,7 +540,221 @@
     }
   }
 
-  // --- 3.5 Directive Dispatch ---
+  // --- 3.5 l-source Directive ---
+
+  function processSourceDirectives(root, scope) {
+    for (var i = 0; i < root.attributes.length; i++) {
+      var attr = root.attributes[i];
+      if (!attr.name.startsWith('l-source:')) continue;
+
+      var rest = attr.name.slice(9);
+      var parts = rest.split('.');
+      var sourceName = parts[0];
+      var modifiers = parts.slice(1);
+      var endpoint = attr.value;
+
+      var opts = parseSourceModifiers(modifiers);
+      setupSource(scope, root, sourceName, endpoint, opts);
+    }
+  }
+
+  function parseSourceModifiers(modifiers) {
+    var opts = { lazy: false, optimistic: false, idKey: 'id', pollInterval: 0 };
+
+    for (var i = 0; i < modifiers.length; i++) {
+      var mod = modifiers[i];
+      if (mod === 'lazy') {
+        opts.lazy = true;
+      } else if (mod === 'optimistic') {
+        opts.optimistic = true;
+      } else if (mod === 'poll') {
+        // Next modifier may be the interval in ms
+        var next = modifiers[i + 1];
+        if (next && /^\d+$/.test(next)) {
+          opts.pollInterval = parseInt(next, 10);
+          i++; // skip the number
+        } else {
+          opts.pollInterval = 30000; // default 30s
+        }
+      } else if (mod === 'key') {
+        // Next modifier is the key name
+        var next = modifiers[i + 1];
+        if (next && !/^\d+$/.test(next)) {
+          opts.idKey = next;
+          i++; // skip the key name
+        }
+      }
+    }
+
+    return opts;
+  }
+
+  function setupSource(scope, root, name, endpoint, opts) {
+    var pollTimer = null;
+    var idKey = opts.idKey;
+    var isOptimistic = opts.optimistic;
+
+    // Inject reactive data properties into scope
+    scope[name] = [];
+    scope[name + 'Loading'] = false;
+    scope[name + 'Error'] = null;
+
+    // CRUD controller
+    var ctrl = {
+      load: function() {
+        scope[name + 'Loading'] = true;
+        scope[name + 'Error'] = null;
+        return fetch(endpoint)
+          .then(function(res) {
+            if (!res.ok) throw new Error(res.status + ' ' + res.statusText);
+            return res.json();
+          })
+          .then(function(data) {
+            scope[name] = Array.isArray(data) ? data : [data];
+          })
+          .catch(function(e) {
+            scope[name + 'Error'] = e.message;
+          })
+          .then(function() {
+            scope[name + 'Loading'] = false;
+          });
+      },
+
+      create: function(payload) {
+        scope[name + 'Error'] = null;
+        var tempIndex = -1;
+
+        if (isOptimistic) {
+          var temp = Object.assign({}, payload, { _pending: true });
+          scope[name].push(temp);
+          tempIndex = scope[name].length - 1;
+        }
+
+        return fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        })
+        .then(function(res) {
+          if (!res.ok) throw new Error(res.status + ' ' + res.statusText);
+          return res.json();
+        })
+        .then(function(created) {
+          if (isOptimistic && tempIndex >= 0) {
+            scope[name][tempIndex] = created;
+          } else {
+            scope[name].push(created);
+          }
+          return created;
+        })
+        .catch(function(e) {
+          scope[name + 'Error'] = e.message;
+          if (isOptimistic && tempIndex >= 0) {
+            scope[name].splice(tempIndex, 1);
+          }
+          return null;
+        });
+      },
+
+      update: function(id, payload) {
+        scope[name + 'Error'] = null;
+        var items = scope[name];
+        var idx = -1;
+        for (var i = 0; i < items.length; i++) {
+          if (items[i][idKey] === id) { idx = i; break; }
+        }
+        var snapshot = null;
+
+        if (isOptimistic && idx >= 0) {
+          snapshot = Object.assign({}, items[idx]);
+          Object.assign(items[idx], payload);
+        }
+
+        return fetch(endpoint + '/' + id, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        })
+        .then(function(res) {
+          if (!res.ok) throw new Error(res.status + ' ' + res.statusText);
+          return res.json();
+        })
+        .then(function(updated) {
+          if (idx >= 0) scope[name][idx] = updated;
+          return updated;
+        })
+        .catch(function(e) {
+          scope[name + 'Error'] = e.message;
+          if (isOptimistic && snapshot && idx >= 0) {
+            scope[name][idx] = snapshot;
+          }
+          return null;
+        });
+      },
+
+      remove: function(id) {
+        scope[name + 'Error'] = null;
+        var items = scope[name];
+        var idx = -1;
+        for (var i = 0; i < items.length; i++) {
+          if (items[i][idKey] === id) { idx = i; break; }
+        }
+        var snapshot = null;
+
+        if (isOptimistic && idx >= 0) {
+          snapshot = items[idx];
+          items.splice(idx, 1);
+        }
+
+        return fetch(endpoint + '/' + id, { method: 'DELETE' })
+        .then(function(res) {
+          if (!res.ok) throw new Error(res.status + ' ' + res.statusText);
+          if (!isOptimistic && idx >= 0) {
+            scope[name].splice(idx, 1);
+          }
+        })
+        .catch(function(e) {
+          scope[name + 'Error'] = e.message;
+          if (isOptimistic && snapshot) {
+            scope[name].splice(idx, 0, snapshot);
+          }
+        });
+      },
+
+      refresh: function() { return ctrl.load(); },
+
+      startPolling: function(interval) {
+        ctrl.stopPolling();
+        var ms = interval || opts.pollInterval || 30000;
+        pollTimer = setInterval(function() { ctrl.load(); }, ms);
+      },
+
+      stopPolling: function() {
+        if (pollTimer) {
+          clearInterval(pollTimer);
+          pollTimer = null;
+        }
+      }
+    };
+
+    // Inject controller as $name
+    scope['$' + name] = ctrl;
+
+    // Auto-load unless .lazy
+    if (!opts.lazy) {
+      ctrl.load();
+    }
+
+    // Auto-poll if .poll modifier present
+    if (opts.pollInterval > 0) {
+      ctrl.startPolling();
+    }
+
+    // Cleanup polling on scope destruction
+    addCleanup(root, function() { ctrl.stopPolling(); });
+  }
+
+  // --- 3.6 Directive Dispatch ---
 
   function applyDirective(el, dir, scope) {
     switch (dir.type) {
@@ -539,6 +767,7 @@
       case 'ref':        return handleRef(el, dir, scope);
       case 'init':       return handleInit(el, dir, scope);
       case 'effect':     return handleEffect(el, dir, scope);
+      case 'source':     return; // Handled by initScope → processSourceDirectives
       case 'cloak':      return; // Handled by removeCloaks()
       case 'teleport':   return handleTeleport(el, dir, scope);
       case 'transition': return; // Handled by l-show and l-if

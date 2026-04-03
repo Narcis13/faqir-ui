@@ -1,5 +1,5 @@
 /* @ui:component table */
-/* @ui:tokens color-bg color-bg-subtle color-fg color-fg-muted color-border color-primary-subtle space-2 space-3 space-4 text-xs text-sm weight-semibold duration-fast ease-default */
+/* @ui:tokens color-bg color-bg-subtle color-fg color-fg-muted color-border color-primary-subtle space-1 space-2 space-3 space-4 text-xs text-sm weight-semibold weight-bold duration-fast ease-default doc-table-footer-bg doc-table-footer-weight doc-print-border-color */
 
 /* ── Root ── */
 [data-ui="table"] {
@@ -129,6 +129,87 @@
 [data-ui="table"][data-size="lg"] [data-part="td"] {
   padding: var(--space-4) var(--space-4);
   font-size: var(--text-sm);
+}
+
+/* ── Footer ── */
+[data-ui="table"] [data-part="tfoot"] [data-part="td"] {
+  font-weight: var(--doc-table-footer-weight, var(--weight-semibold));
+  border-top: 2px solid var(--color-border);
+  border-bottom: none;
+  background: var(--doc-table-footer-bg, var(--color-bg-subtle, oklch(0.97 0.004 260)));
+}
+
+/* ── Cell Alignment ── */
+[data-ui="table"] [data-align="left"] {
+  text-align: left;
+}
+
+[data-ui="table"] [data-align="center"] {
+  text-align: center;
+}
+
+[data-ui="table"] [data-align="right"] {
+  text-align: right;
+}
+
+/* ── Number Formatting ── */
+[data-ui="table"] [data-format="number"],
+[data-ui="table"] [data-format="currency"],
+[data-ui="table"] [data-format="percent"] {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* ── Grouped Rows ── */
+[data-ui="table"] [data-part="group-header"] td,
+[data-ui="table"] [data-part="group-header"] [data-part="td"] {
+  font-weight: var(--weight-semibold);
+  background: var(--color-bg-subtle, oklch(0.97 0.004 260));
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-fg-muted);
+}
+
+/* ── Colspan/Rowspan ── */
+[data-ui="table"] [data-part="td"][colspan],
+[data-ui="table"] [data-part="th"][colspan] {
+  text-align: inherit;
+}
+
+/* ── Print: Compact ── */
+@media print {
+  [data-ui="table"][data-print="compact"] [data-part="th"] {
+    padding: var(--space-1, 0.25rem) var(--space-2);
+    font-size: var(--doc-table-font-size, var(--text-xs));
+  }
+
+  [data-ui="table"][data-print="compact"] [data-part="td"] {
+    padding: var(--space-1, 0.25rem) var(--space-2);
+    font-size: var(--doc-table-font-size, var(--text-xs));
+  }
+
+  [data-ui="table"] [data-part="table"] {
+    break-inside: auto;
+  }
+
+  [data-ui="table"] [data-part="thead"] {
+    display: table-header-group;
+  }
+
+  [data-ui="table"] [data-part="tfoot"] {
+    display: table-footer-group;
+  }
+
+  [data-ui="table"] [data-part="tr"] {
+    break-inside: avoid;
+  }
+
+  [data-ui="table"] [data-part="th"],
+  [data-ui="table"] [data-part="td"] {
+    border-color: var(--doc-print-border-color, var(--color-border));
+  }
 }
 
 /* ── Motion ── */

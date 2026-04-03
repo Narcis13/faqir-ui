@@ -1,0 +1,109 @@
+{
+  "name": "image",
+  "version": "1.0.0",
+  "kind": "primitive",
+  "category": "data-display",
+  "description": "Responsive image with variants for different display modes and print optimization",
+
+  "anatomy": {
+    "tag": "figure",
+    "selector": "[data-ui='image']",
+    "content_model": "slots"
+  },
+
+  "slots": {
+    "img": {
+      "selector": "[data-part='img']",
+      "required": true,
+      "tag_hint": "img",
+      "description": "The image element"
+    },
+    "caption": {
+      "selector": "[data-part='caption']",
+      "required": false,
+      "tag_hint": "figcaption",
+      "description": "Optional image caption"
+    }
+  },
+
+  "variants": {
+    "variant": {
+      "values": ["responsive", "thumbnail", "cover", "contain"],
+      "default": "responsive",
+      "attr": "data-variant",
+      "applied_to": "root"
+    },
+    "size": {
+      "values": ["xs", "sm", "md", "lg", "full"],
+      "default": "md",
+      "attr": "data-size",
+      "applied_to": "root"
+    }
+  },
+
+  "states": {},
+
+  "props": {
+    "src": { "type": "string", "default": "", "description": "Image source URL" },
+    "alt": { "type": "string", "default": "", "description": "Image alt text (required for a11y)" },
+    "loading": { "type": "string", "default": "lazy", "description": "Loading strategy: lazy or eager" }
+  },
+
+  "a11y": {
+    "required_attrs": ["img must have non-empty alt attribute"],
+    "keyboard": {}
+  },
+
+  "tokens_used": [
+    "color-bg-muted", "color-fg-muted",
+    "radius-md", "space-2",
+    "text-xs", "font-sans"
+  ],
+
+  "templates": {
+    "html": "<figure data-ui=\"image\" data-variant=\"{variant}\" data-size=\"{size}\">\n  <img data-part=\"img\" src=\"{src}\" alt=\"{alt}\" loading=\"lazy\">\n</figure>",
+    "html_with_caption": "<figure data-ui=\"image\" data-variant=\"{variant}\" data-size=\"{size}\">\n  <img data-part=\"img\" src=\"{src}\" alt=\"{alt}\" loading=\"lazy\">\n  <figcaption data-part=\"caption\">{caption}</figcaption>\n</figure>"
+  },
+
+  "safe_transforms": [
+    "change-size",
+    "change-variant",
+    "swap-image-src",
+    "change-alt-text",
+    "add-caption",
+    "remove-caption"
+  ],
+
+  "unsafe_transforms": [
+    "remove-alt-attribute",
+    "remove-img-element"
+  ],
+
+  "composition": {
+    "contains": [],
+    "used_in": ["card", "document"]
+  },
+
+  "files": {
+    "html": "image.html",
+    "css": "image.css",
+    "manifest": "image.manifest.json"
+  },
+
+  "tests": [
+    "renders-as-figure-element",
+    "img-has-alt-attribute",
+    "default-variant-is-responsive",
+    "xs-size-sets-48px-max-width",
+    "sm-size-sets-96px-max-width",
+    "md-size-sets-192px-max-width",
+    "lg-size-sets-384px-max-width",
+    "full-size-sets-100-percent",
+    "thumbnail-variant-is-square",
+    "cover-variant-fills-container",
+    "contain-variant-fits-inside",
+    "lazy-loading-by-default",
+    "caption-slot-is-optional",
+    "print-max-width-applied"
+  ]
+}

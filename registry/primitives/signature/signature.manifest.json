@@ -1,0 +1,99 @@
+{
+  "name": "signature",
+  "version": "1.0.0",
+  "kind": "primitive",
+  "category": "data-display",
+  "description": "Signature line with label for printed document signing",
+
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='signature']",
+    "content_model": "slots"
+  },
+
+  "slots": {
+    "line": {
+      "selector": "[data-part='line']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "The horizontal signing line"
+    },
+    "label": {
+      "selector": "[data-part='label']",
+      "required": true,
+      "tag_hint": "span",
+      "description": "Name or title below the signing line"
+    }
+  },
+
+  "variants": {
+    "size": {
+      "values": ["sm", "md", "lg"],
+      "default": "md",
+      "attr": "data-size",
+      "applied_to": "root"
+    },
+    "align": {
+      "values": ["left", "center", "right"],
+      "default": "left",
+      "attr": "data-align",
+      "applied_to": "root"
+    }
+  },
+
+  "states": {},
+
+  "props": {},
+
+  "a11y": {
+    "required_attrs": ["role=\"img\" with aria-label describing the signature purpose"],
+    "keyboard": {}
+  },
+
+  "tokens_used": [
+    "color-fg", "color-fg-muted", "color-border",
+    "space-2", "space-3", "space-8", "space-12",
+    "text-xs", "text-sm",
+    "font-sans", "weight-medium"
+  ],
+
+  "templates": {
+    "html": "<div data-ui=\"signature\" data-size=\"{size}\" role=\"img\" aria-label=\"Signature: {name}\">\n  <div data-part=\"line\"></div>\n  <span data-part=\"label\">{name}</span>\n</div>"
+  },
+
+  "safe_transforms": [
+    "change-size",
+    "change-align",
+    "change-label-text"
+  ],
+
+  "unsafe_transforms": [
+    "remove-line",
+    "remove-label",
+    "remove-role-attribute"
+  ],
+
+  "composition": {
+    "contains": [],
+    "used_in": ["document"]
+  },
+
+  "files": {
+    "html": "signature.html",
+    "css": "signature.css",
+    "manifest": "signature.manifest.json"
+  },
+
+  "tests": [
+    "renders-as-div-element",
+    "line-slot-is-required",
+    "label-slot-is-required",
+    "sm-size-is-40-percent",
+    "md-size-is-60-percent",
+    "lg-size-is-80-percent",
+    "has-role-img",
+    "print-has-vertical-space",
+    "center-align-centers-block",
+    "right-align-right-aligns-block"
+  ]
+}

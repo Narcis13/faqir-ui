@@ -1,12 +1,12 @@
 # Recipes Reference
 
-All 15 interactive components (CSS + JS). Auto-initialize via `loom-core.js`.
+All 16 interactive components (CSS + JS). Auto-initialize via `loom-core.js`.
 
 ## Table of Contents
 - [Dialog](#dialog) | [Tabs](#tabs) | [Accordion](#accordion) | [Dropdown](#dropdown) | [Tooltip](#tooltip)
 - [Toast](#toast) | [Popover](#popover) | [Date Picker](#date-picker) | [Combobox](#combobox)
 - [Select Custom](#select-custom) | [Command Palette](#command-palette) | [Table](#table)
-- [Pagination](#pagination) | [Drawer](#drawer) | [Sheet](#sheet)
+- [Pagination](#pagination) | [Drawer](#drawer) | [Sheet](#sheet) | [QR Code](#qr-code)
 - [JS Controller Pattern](#js-controller-pattern) | [CSS Convention](#css-convention)
 
 ---
@@ -251,6 +251,43 @@ Opens with Cmd+K / Ctrl+K. API: `_loomCommandPalette.open()`, `.close()`, `.filt
 </div>
 ```
 
+### Table with footer, alignment, and number formatting
+
+```html
+<div data-ui="table" data-variant="bordered" data-size="md">
+  <table data-part="table">
+    <thead data-part="thead">
+      <tr data-part="tr">
+        <th data-part="th" scope="col">Item</th>
+        <th data-part="th" scope="col" data-align="right">Amount</th>
+      </tr>
+    </thead>
+    <tbody data-part="tbody">
+      <tr data-part="tr">
+        <td data-part="td">Service</td>
+        <td data-part="td" data-align="right" data-format="currency">1,500.00</td>
+      </tr>
+    </tbody>
+    <tfoot data-part="tfoot">
+      <tr data-part="tr">
+        <td data-part="td" data-align="right">Total</td>
+        <td data-part="td" data-align="right" data-format="currency">1,500.00</td>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+```
+
+### Grouped rows
+
+```html
+<tr data-part="group-header">
+  <td data-part="td" colspan="3">Category Name</td>
+</tr>
+```
+
+Cell attrs: `data-align="left|center|right"`, `data-format="number|currency|percent"`. Print: `data-print="compact"` on root. Footer via `tfoot data-part="tfoot"`. Group headers via `tr data-part="group-header"`.
+
 `data-sortable` on th enables sort. `aria-sort="none|ascending|descending"`. `data-selected` on tr. API: `_loomTable.sort(col)`, `.selectAll()`, `.deselectAll()`, `.getSelected()`, `.destroy()`.
 
 ## Pagination
@@ -310,6 +347,18 @@ States: `closed`, `open`, `closing`. API: `_loomDrawer.open()`, `.close()`, `.de
 ```
 
 States: `closed`, `open`, `closing`. API: `_loomSheet.open()`, `.close()`, `.destroy()`.
+
+## QR Code
+
+```html
+<div data-ui="qr-code" data-value="https://example.com"
+     data-size="sm|md|lg" data-ecl="L|M|Q|H"
+     role="img" aria-label="QR code: https://example.com">
+  <span data-part="caption">Scan me</span>
+</div>
+```
+
+Controller generates SVG from `data-value`. Sizes: sm=80px, md=128px, lg=200px. Error correction: L(7%), M(15%), Q(25%), H(30%). Updates on `data-value` change. `caption` slot is optional.
 
 ---
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Loom UI — Task Manager</title>
+  <title>Loom UI — Task Manager (l-source Demo)</title>
 
   <!-- Tokens -->
   <link rel="stylesheet" href="../registry/tokens/palette.css">
@@ -13,9 +13,12 @@
   <link rel="stylesheet" href="../registry/tokens/motion.css">
   <link rel="stylesheet" href="../registry/tokens/semantic.css">
   <link rel="stylesheet" href="../registry/tokens/aliases.css">
+  <link rel="stylesheet" href="../registry/tokens/document.css">
+  <link rel="stylesheet" href="../registry/tokens/doc-aliases.css">
 
   <!-- Base -->
   <link rel="stylesheet" href="../registry/base/reset.css">
+  <link rel="stylesheet" href="../registry/base/prose.css">
 
   <!-- Theme -->
   <link rel="stylesheet" href="../registry/themes/default.css">
@@ -23,89 +26,228 @@
   <!-- Primitives -->
   <link rel="stylesheet" href="../registry/primitives/button/button.css">
   <link rel="stylesheet" href="../registry/primitives/input/input.css">
-  <link rel="stylesheet" href="../registry/primitives/select/select.css">
-  <link rel="stylesheet" href="../registry/primitives/textarea/textarea.css">
   <link rel="stylesheet" href="../registry/primitives/checkbox/checkbox.css">
   <link rel="stylesheet" href="../registry/primitives/badge/badge.css">
   <link rel="stylesheet" href="../registry/primitives/card/card.css">
   <link rel="stylesheet" href="../registry/primitives/separator/separator.css">
-  <link rel="stylesheet" href="../registry/primitives/label/label.css">
   <link rel="stylesheet" href="../registry/primitives/stack/stack.css">
   <link rel="stylesheet" href="../registry/primitives/grid/grid.css">
   <link rel="stylesheet" href="../registry/primitives/surface/surface.css">
-  <link rel="stylesheet" href="../registry/primitives/switch/switch.css">
   <link rel="stylesheet" href="../registry/primitives/text/text.css">
+  <link rel="stylesheet" href="../registry/primitives/spinner/spinner.css">
   <link rel="stylesheet" href="../registry/primitives/empty-state/empty-state.css">
-  <link rel="stylesheet" href="../registry/primitives/progress/progress.css">
+  <link rel="stylesheet" href="../registry/primitives/field-group/field-group.css">
+  <link rel="stylesheet" href="../registry/primitives/callout/callout.css">
+  <link rel="stylesheet" href="../registry/primitives/stat/stat.css">
+  <link rel="stylesheet" href="../registry/primitives/select/select.css">
+  <link rel="stylesheet" href="../registry/primitives/label/label.css">
+  <link rel="stylesheet" href="../registry/primitives/switch/switch.css">
 
-  <!-- Loom Core + Data Source -->
-  <script src="../registry/core/api-source.js"></script>
+  <!-- Recipes -->
+  <link rel="stylesheet" href="../registry/recipes/table/table.css">
+  <link rel="stylesheet" href="../registry/recipes/toast/toast.css">
+
+  <!-- Mock fetch — intercepts /api/tasks and /api/categories before loom-core loads -->
+  <script>
+    (function() {
+      // --- Mock Data Store ---
+      var now = Date.now();
+      window.__mockTasks = [
+        { id: 1, title: 'Design landing page wireframes',   category: 'design',  done: false, createdAt: new Date(now - 86400000 * 4).toISOString() },
+        { id: 2, title: 'Set up CI/CD pipeline',            category: 'devops',  done: true,  createdAt: new Date(now - 86400000 * 3).toISOString() },
+        { id: 3, title: 'Write unit tests for auth module', category: 'dev',     done: false, createdAt: new Date(now - 86400000 * 2).toISOString() },
+        { id: 4, title: 'Review accessibility audit',       category: 'design',  done: false, createdAt: new Date(now - 86400000 * 1).toISOString() },
+        { id: 5, title: 'Deploy staging environment',       category: 'devops',  done: true,  createdAt: new Date(now - 3600000).toISOString() }
+      ];
+
+      window.__mockCategories = [
+        { id: 1, name: 'Design', color: 'primary' },
+        { id: 2, name: 'Dev',    color: 'success' },
+        { id: 3, name: 'DevOps', color: 'warning' }
+      ];
+
+      var nextTaskId = 6;
+      var LATENCY = 300;
+
+      function delay(ms) {
+        return new Promise(function(resolve) { setTimeout(resolve, ms); });
+      }
+
+      function jsonResponse(data, status) {
+        status = status || 200;
+        return new Response(JSON.stringify(data), {
+          status: status,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+
+      // --- Intercept fetch ---
+      var originalFetch = window.fetch;
+
+      window.fetch = function(url, options) {
+        options = options || {};
+        var method = (options.method || 'GET').toUpperCase();
+
+        // --- /api/tasks routes ---
+        if (typeof url === 'string' && url.match(/^\/api\/tasks(\/|$)/)) {
+          var idMatch = url.match(/^\/api\/tasks\/(\d+)$/);
+
+          // GET /api/tasks
+          if (method === 'GET' && !idMatch) {
+            return delay(LATENCY).then(function() {
+              return jsonResponse(window.__mockTasks);
+            });
+          }
+
+          // POST /api/tasks
+          if (method === 'POST' && !idMatch) {
+            return delay(LATENCY).then(function() {
+              var body = JSON.parse(options.body);
+              var task = {
+                id: nextTaskId++,
+                title: body.title || 'Untitled',
+                category: body.category || 'dev',
+                done: body.done || false,
+                createdAt: new Date().toISOString()
+              };
+              window.__mockTasks.push(task);
+              return jsonResponse(task, 201);
+            });
+          }
+
+          // PATCH /api/tasks/:id
+          if (method === 'PATCH' && idMatch) {
+            var patchId = parseInt(idMatch[1], 10);
+            return delay(LATENCY).then(function() {
+              var body = JSON.parse(options.body);
+              var task = null;
+              for (var i = 0; i < window.__mockTasks.length; i++) {
+                if (window.__mockTasks[i].id === patchId) {
+                  Object.assign(window.__mockTasks[i], body);
+                  task = window.__mockTasks[i];
+                  break;
+                }
+              }
+              if (!task) return jsonResponse({ error: 'Not found' }, 404);
+              return jsonResponse(task);
+            });
+          }
+
+          // DELETE /api/tasks/:id
+          if (method === 'DELETE' && idMatch) {
+            var deleteId = parseInt(idMatch[1], 10);
+            return delay(LATENCY).then(function() {
+              var idx = -1;
+              for (var i = 0; i < window.__mockTasks.length; i++) {
+                if (window.__mockTasks[i].id === deleteId) { idx = i; break; }
+              }
+              if (idx === -1) return jsonResponse({ error: 'Not found' }, 404);
+              window.__mockTasks.splice(idx, 1);
+              return jsonResponse({ ok: true });
+            });
+          }
+        }
+
+        // --- /api/categories routes ---
+        if (typeof url === 'string' && url.match(/^\/api\/categories(\/|$)/)) {
+          if (method === 'GET') {
+            return delay(LATENCY).then(function() {
+              return jsonResponse(window.__mockCategories);
+            });
+          }
+        }
+
+        // --- Pass through to real fetch for everything else ---
+        return originalFetch.apply(this, arguments);
+      };
+    })();
+  </script>
+
+  <!-- Loom Core -->
   <script src="../registry/core/loom-core.js" defer></script>
 </head>
 <body>
-  <div l-cloak l-data="{
-    ...apiSource('/api/tasks', { idKey: 'id', optimistic: true }),
-    newTitle: '',
-    newDescription: '',
-    newPriority: 'medium',
-    newCategory: 'development',
-    filter: 'all',
-    search: '',
-    darkMode: false,
 
+  <!-- ========================================================
+       Main reactive scope: uses l-source for declarative data
+       ======================================================== -->
+  <div l-cloak l-data="{
+    darkMode: false,
+    polling: false,
+    pollCount: 0,
+
+    /* ── Add-task form state ── */
+    newTitle: '',
+    newCategory: 'dev',
+
+    /* ── Optimistic demo flag ── */
+    optimisticMode: true,
+
+    /* ── Computed helpers ── */
+    get totalTasks() { return this.tasks.length; },
+    get completedTasks() { return this.tasks.filter(t => t.done).length; },
+    get pendingTasks()   { return this.totalTasks - this.completedTasks; },
+
+    /* ── Actions ── */
     async addTask() {
       if (!this.newTitle.trim()) return;
-      await this.create({
+      await this.$tasks.create({
         title: this.newTitle.trim(),
-        description: this.newDescription.trim(),
-        done: false,
-        priority: this.newPriority,
-        category: this.newCategory
+        category: this.newCategory,
+        done: false
       });
       this.newTitle = '';
-      this.newDescription = '';
-      this.newPriority = 'medium';
     },
 
-    async removeTask(id) {
-      await this.remove(id);
+    async toggleDone(task) {
+      await this.$tasks.update(task.id, { done: !task.done });
     },
 
-    async toggleTask(task) {
-      await this.update(task.id, { done: !task.done });
+    async deleteTask(id) {
+      await this.$tasks.remove(id);
     },
 
-    get filteredTasks() {
-      let result = this.items;
-      if (this.filter === 'active') result = result.filter(t => !t.done);
-      if (this.filter === 'done') result = result.filter(t => t.done);
-      if (this.search.trim()) {
-        const q = this.search.toLowerCase();
-        result = result.filter(t => t.title.toLowerCase().includes(q) || (t.description || '').toLowerCase().includes(q));
+    togglePolling() {
+      if (this.polling) {
+        this.$tasks.stopPolling();
+        this.polling = false;
+      } else {
+        this.$tasks.startPolling(3000);
+        this.polling = true;
       }
-      return result;
-    },
-
-    get stats() {
-      const total = this.items.length;
-      const done = this.items.filter(t => t.done).length;
-      return { total, done, active: total - done };
     },
 
     toggleDark() {
       this.darkMode = !this.darkMode;
       document.documentElement.setAttribute('data-theme', this.darkMode ? 'dark' : 'light');
+    },
+
+    categoryLabel(slug) {
+      if (!this.categories || !this.categories.length) return slug;
+      var cat = this.categories.find(c => c.name.toLowerCase() === slug);
+      return cat ? cat.name : slug;
+    },
+
+    categoryColor(slug) {
+      if (!this.categories || !this.categories.length) return 'secondary';
+      var cat = this.categories.find(c => c.name.toLowerCase() === slug);
+      return cat ? cat.color : 'secondary';
     }
-  }" l-init="load()">
+  }"
+       l-source:tasks.optimistic="/api/tasks"
+       l-source:categories="/api/categories"
+  >
 
     <div data-ui="surface" data-variant="flat" data-max="lg" data-size="md">
       <div data-ui="stack" data-gap="6">
 
-        <!-- Header -->
+        <!-- ═══════════════════════════════════════
+             Header
+             ═══════════════════════════════════════ -->
         <div data-ui="stack" data-variant="horizontal" data-gap="4" data-align="center" data-justify="between" data-responsive>
           <div data-ui="stack" data-gap="1">
-            <h1 data-ui="heading" data-size="3">Task Manager</h1>
-            <p data-ui="text" data-size="sm" data-variant="muted">Manage your work with zero CSS classes — powered by apiSource()</p>
+            <h1 data-ui="heading" data-size="3">Task Manager &mdash; l-source Demo</h1>
+            <p data-ui="text" data-size="sm" data-variant="muted">Declarative data-binding with zero boilerplate &mdash; powered by the <code>l-source</code> directive</p>
           </div>
           <label data-ui="switch-label">
             <input data-ui="switch" type="checkbox" role="switch" @change="toggleDark()">
@@ -113,173 +255,320 @@
           </label>
         </div>
 
-        <!-- Loading state -->
-        <template l-if="loading">
-          <div data-ui="empty-state">
-            <span data-part="icon">&#x23F3;</span>
-            <h3 data-part="title">Loading tasks...</h3>
-            <p data-part="description">Fetching from server</p>
-          </div>
-        </template>
-
-        <!-- Error state -->
-        <template l-if="error">
-          <div data-ui="card" data-variant="destructive" data-size="sm">
-            <div data-part="body">
-              <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center">
-                <span data-ui="text" data-variant="destructive" l-text="error"></span>
-                <button data-ui="button" data-variant="outline" data-size="sm" @click="load()">Retry</button>
-              </div>
-            </div>
-          </div>
-        </template>
-
-        <!-- Main content (only when loaded) -->
-        <template l-if="!loading && !error">
-
-        <!-- Stats -->
+        <!-- ═══════════════════════════════════════
+             Stat Row
+             ═══════════════════════════════════════ -->
         <div data-ui="grid" data-cols="3" data-gap="4">
-          <div data-ui="card" data-size="sm">
-            <div data-part="body">
-              <div data-ui="stack" data-gap="1" data-align="center" data-align-text="center">
-                <span data-ui="text" data-size="2xl" data-weight="bold" l-text="stats.total"></span>
-                <span data-ui="text" data-size="sm" data-variant="muted">Total</span>
-              </div>
-            </div>
+          <div data-ui="stat" data-variant="card">
+            <span data-part="label">Total Tasks</span>
+            <span data-part="value" l-text="totalTasks"></span>
           </div>
-          <div data-ui="card" data-size="sm">
-            <div data-part="body">
-              <div data-ui="stack" data-gap="1" data-align="center" data-align-text="center">
-                <span data-ui="text" data-size="2xl" data-weight="bold" data-variant="primary" l-text="stats.active"></span>
-                <span data-ui="text" data-size="sm" data-variant="muted">Active</span>
-              </div>
-            </div>
+          <div data-ui="stat" data-variant="card" data-trend="up">
+            <span data-part="label">Completed</span>
+            <span data-part="value" l-text="completedTasks"></span>
+            <span data-part="change" l-text="totalTasks ? Math.round(completedTasks / totalTasks * 100) + '%' : '0%'"></span>
           </div>
-          <div data-ui="card" data-size="sm">
-            <div data-part="body">
-              <div data-ui="stack" data-gap="1" data-align="center" data-align-text="center">
-                <span data-ui="text" data-size="2xl" data-weight="bold" data-variant="success" l-text="stats.done"></span>
-                <span data-ui="text" data-size="sm" data-variant="muted">Done</span>
-              </div>
-            </div>
+          <div data-ui="stat" data-variant="card" data-trend="neutral">
+            <span data-part="label">Pending</span>
+            <span data-part="value" l-text="pendingTasks"></span>
+            <span data-part="change" l-text="totalTasks ? Math.round(pendingTasks / totalTasks * 100) + '%' : '0%'"></span>
           </div>
         </div>
 
-        <!-- Add Task Form -->
+        <!-- ═══════════════════════════════════════
+             Info Callout
+             ═══════════════════════════════════════ -->
+        <div data-ui="callout" data-variant="info">
+          <span data-part="icon">&#x2139;&#xFE0F;</span>
+          <div data-part="content">
+            <span data-part="title">What is l-source?</span>
+            <p>
+              <code>l-source</code> is a declarative data-binding directive. Adding
+              <code>l-source:tasks="/api/tasks"</code> to an <code>l-data</code> element
+              auto-fetches data and injects <strong>tasks</strong> (array),
+              <strong>tasksLoading</strong> (boolean), <strong>tasksError</strong> (string|null),
+              and <strong>$tasks</strong> (controller with <code>load()</code>, <code>create()</code>,
+              <code>update()</code>, <code>remove()</code>, <code>refresh()</code>,
+              <code>startPolling()</code>, <code>stopPolling()</code>).
+              This page uses the <code>.optimistic</code> modifier for instant UI updates
+              and a second source (<code>l-source:categories</code>) for category data.
+            </p>
+          </div>
+        </div>
+
+        <div data-ui="separator"></div>
+
+        <!-- ═══════════════════════════════════════
+             Loading State
+             ═══════════════════════════════════════ -->
+        <template l-if="tasksLoading && tasks.length === 0">
+          <div data-ui="stack" data-gap="3" data-align="center" style="padding: var(--space-8) 0;">
+            <span data-ui="spinner" data-size="lg"></span>
+            <p data-ui="text" data-variant="muted">Loading tasks...</p>
+          </div>
+        </template>
+
+        <!-- ═══════════════════════════════════════
+             Error State
+             ═══════════════════════════════════════ -->
+        <template l-if="tasksError">
+          <div data-ui="callout" data-variant="destructive">
+            <span data-part="icon">&#x26A0;&#xFE0F;</span>
+            <div data-part="content">
+              <span data-part="title">Error loading tasks</span>
+              <p l-text="tasksError"></p>
+              <div style="margin-top: var(--space-3);">
+                <button data-ui="button" data-variant="outline" data-size="sm" @click="$tasks.load()">Retry</button>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <!-- ═══════════════════════════════════════
+             Add Task Form
+             ═══════════════════════════════════════ -->
         <div data-ui="card">
           <div data-part="header">
-            <h2 data-part="title">New Task</h2>
+            <h2 data-part="title">Add Task</h2>
           </div>
           <div data-part="body">
             <form @submit.prevent="addTask()">
               <div data-ui="stack" data-gap="4">
                 <div data-ui="grid" data-cols="2" data-gap="4">
-                  <div data-ui="stack" data-gap="2">
-                    <label data-ui="label">Title</label>
-                    <input data-ui="input" placeholder="Task title..." l-model="newTitle" required>
-                  </div>
-                  <div data-ui="stack" data-variant="horizontal" data-gap="4" data-responsive>
-                    <div data-ui="stack" data-gap="2" data-flex="1">
-                      <label data-ui="label">Priority</label>
-                      <select data-ui="select" l-model="newPriority">
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
-                      </select>
+                  <div data-ui="field-group" data-required>
+                    <label data-part="label">Title</label>
+                    <div data-part="input">
+                      <input data-ui="input" placeholder="What needs to be done?" l-model="newTitle" required>
                     </div>
-                    <div data-ui="stack" data-gap="2" data-flex="1">
-                      <label data-ui="label">Category</label>
+                  </div>
+                  <div data-ui="field-group">
+                    <label data-part="label">Category</label>
+                    <div data-part="input">
                       <select data-ui="select" l-model="newCategory">
-                        <option value="design">Design</option>
-                        <option value="development">Development</option>
-                        <option value="documentation">Documentation</option>
-                        <option value="testing">Testing</option>
+                        <template l-for="cat in categories">
+                          <option :value="cat.name.toLowerCase()" l-text="cat.name"></option>
+                        </template>
+                        <!-- Fallback if categories haven't loaded yet -->
+                        <template l-if="categories.length === 0">
+                          <option value="dev">Dev</option>
+                          <option value="design">Design</option>
+                          <option value="devops">DevOps</option>
+                        </template>
                       </select>
                     </div>
+                    <p data-part="description">Populated from <code>l-source:categories</code></p>
                   </div>
-                </div>
-                <div data-ui="stack" data-gap="2">
-                  <label data-ui="label">Description</label>
-                  <textarea data-ui="textarea" rows="2" placeholder="Optional description..." l-model="newDescription"></textarea>
                 </div>
                 <div>
-                  <button data-ui="button" data-variant="primary" type="submit"
-                          :data-state="submitting ? 'disabled' : ''"
-                          l-text="submitting ? 'Adding...' : 'Add Task'"></button>
+                  <button data-ui="button" data-variant="primary" type="submit">Add Task</button>
                 </div>
               </div>
             </form>
           </div>
         </div>
 
-        <!-- Toolbar -->
-        <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center" data-wrap data-responsive>
-          <input data-ui="input" data-size="sm" data-width="fixed" placeholder="Search tasks..." l-model="search">
-          <div data-ui="stack" data-variant="horizontal" data-gap="1">
-            <button data-ui="button" data-size="sm"
-                    :data-variant="filter === 'all' ? 'primary' : 'ghost'"
-                    @click="filter = 'all'">All</button>
-            <button data-ui="button" data-size="sm"
-                    :data-variant="filter === 'active' ? 'primary' : 'ghost'"
-                    @click="filter = 'active'">Active</button>
-            <button data-ui="button" data-size="sm"
-                    :data-variant="filter === 'done' ? 'primary' : 'ghost'"
-                    @click="filter = 'done'">Done</button>
-          </div>
-        </div>
-
-        <!-- Task List -->
-        <div data-ui="stack" data-gap="3">
-          <template l-for="task in filteredTasks">
-            <div data-ui="card" data-size="sm">
-              <div data-part="body">
-                <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="start">
-                  <!-- Checkbox -->
-                  <label data-ui="checkbox-label">
-                    <input data-ui="checkbox" type="checkbox" :checked="task.done" @change="toggleTask(task)">
-                  </label>
-
-                  <!-- Content -->
-                  <div data-ui="stack" data-gap="1" data-flex="1">
-                    <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center" data-wrap>
-                      <span data-ui="text" data-weight="medium" :data-state="task.done ? 'done' : ''" l-text="task.title"></span>
-                      <span data-ui="badge" data-size="sm"
-                            :data-variant="task.priority === 'high' ? 'destructive' : task.priority === 'medium' ? 'warning' : 'success'"
-                            l-text="task.priority"></span>
-                      <span data-ui="badge" data-size="sm" data-variant="secondary" l-text="task.category"></span>
-                    </div>
-                    <template l-if="task.description">
-                      <p data-ui="text" data-size="sm" data-variant="muted" l-text="task.description"></p>
-                    </template>
-                  </div>
-
-                  <!-- Delete -->
-                  <button data-ui="button" data-variant="ghost" data-size="sm" @click="removeTask(task.id)">&#x2715;</button>
+        <!-- ═══════════════════════════════════════
+             Task Table
+             ═══════════════════════════════════════ -->
+        <template l-if="!tasksLoading || tasks.length > 0">
+          <div data-ui="card">
+            <div data-part="header">
+              <div data-ui="stack" data-variant="horizontal" data-align="center" data-justify="between">
+                <h2 data-part="title">
+                  Tasks
+                  <span data-ui="badge" data-variant="secondary" data-size="sm" l-text="tasks.length"></span>
+                </h2>
+                <div data-ui="stack" data-variant="horizontal" data-gap="2">
+                  <span data-ui="spinner" data-size="sm" l-show="tasksLoading && tasks.length > 0"></span>
+                  <button data-ui="button" data-variant="ghost" data-size="sm" @click="$tasks.refresh()">Refresh</button>
                 </div>
               </div>
             </div>
-          </template>
+            <div data-part="body" style="padding: 0;">
 
-          <!-- Empty state — uses the empty-state component -->
-          <template l-if="filteredTasks.length === 0">
-            <div data-ui="empty-state">
-              <span data-part="icon">&#x2714;</span>
-              <h3 data-part="title">No tasks found</h3>
-              <p data-part="description" l-text="search ? 'Try a different search term' : filter === 'done' ? 'No completed tasks yet' : 'Add a task to get started'"></p>
+              <!-- Empty state -->
+              <template l-if="tasks.length === 0 && !tasksLoading">
+                <div data-ui="empty-state">
+                  <span data-part="icon">&#x1F4CB;</span>
+                  <h3 data-part="title">No tasks yet</h3>
+                  <p data-part="description">Add your first task using the form above.</p>
+                </div>
+              </template>
+
+              <!-- Table -->
+              <template l-if="tasks.length > 0">
+                <div data-ui="table">
+                  <table data-part="table">
+                    <thead data-part="thead">
+                      <tr data-part="tr">
+                        <th data-part="th" style="width: 40px;"></th>
+                        <th data-part="th">Title</th>
+                        <th data-part="th">Category</th>
+                        <th data-part="th">Created</th>
+                        <th data-part="th" data-align="right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody data-part="tbody">
+                      <template l-for="task in tasks">
+                        <tr data-part="tr" :data-state="task.done ? 'done' : ''">
+                          <td data-part="td">
+                            <label data-ui="checkbox-label">
+                              <input data-ui="checkbox" type="checkbox"
+                                     :checked="task.done"
+                                     @change="toggleDone(task)">
+                            </label>
+                          </td>
+                          <td data-part="td">
+                            <span :style="task.done ? 'text-decoration: line-through; opacity: 0.5;' : ''"
+                                  l-text="task.title"></span>
+                            <span data-ui="badge" data-size="sm" data-variant="muted"
+                                  l-show="task._pending"
+                                  style="margin-left: var(--space-2);">saving...</span>
+                          </td>
+                          <td data-part="td">
+                            <span data-ui="badge" data-size="sm"
+                                  :data-variant="categoryColor(task.category)"
+                                  l-text="categoryLabel(task.category)"></span>
+                          </td>
+                          <td data-part="td">
+                            <span data-ui="text" data-size="sm" data-variant="muted"
+                                  l-text="new Date(task.createdAt).toLocaleDateString()"></span>
+                          </td>
+                          <td data-part="td" data-align="right">
+                            <button data-ui="button" data-variant="ghost" data-size="sm"
+                                    @click="deleteTask(task.id)"
+                                    title="Delete task">&#x2715;</button>
+                          </td>
+                        </tr>
+                      </template>
+                    </tbody>
+                  </table>
+                </div>
+              </template>
+
             </div>
-          </template>
+          </div>
+        </template>
+
+        <!-- ═══════════════════════════════════════
+             Polling Controls
+             ═══════════════════════════════════════ -->
+        <div data-ui="card">
+          <div data-part="header">
+            <h2 data-part="title">Polling Controls</h2>
+          </div>
+          <div data-part="body">
+            <div data-ui="stack" data-gap="4">
+              <p data-ui="text" data-size="sm" data-variant="muted">
+                Use <code>$tasks.startPolling(3000)</code> to auto-refresh every 3 seconds.
+                The controller calls <code>load()</code> on the interval, keeping the UI in sync
+                with the mock data store.
+              </p>
+              <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center">
+                <button data-ui="button"
+                        :data-variant="polling ? 'destructive' : 'primary'"
+                        data-size="sm"
+                        @click="togglePolling()"
+                        l-text="polling ? 'Stop Polling' : 'Start Polling (3s)'"></button>
+                <span data-ui="badge"
+                      :data-variant="polling ? 'success' : 'secondary'"
+                      l-text="polling ? 'Polling active' : 'Polling stopped'"></span>
+                <span data-ui="spinner" data-size="sm" l-show="polling && tasksLoading"></span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        </template><!-- /l-if !loading && !error -->
+        <!-- ═══════════════════════════════════════
+             Categories — Multiple Sources Demo
+             ═══════════════════════════════════════ -->
+        <div data-ui="card">
+          <div data-part="header">
+            <div data-ui="stack" data-variant="horizontal" data-align="center" data-justify="between">
+              <h2 data-part="title">
+                Categories
+                <span data-ui="badge" data-variant="secondary" data-size="sm" l-text="categories.length"></span>
+              </h2>
+              <span data-ui="badge" data-variant="primary" data-size="sm">l-source:categories</span>
+            </div>
+          </div>
+          <div data-part="body">
+            <div data-ui="stack" data-gap="3">
+              <p data-ui="text" data-size="sm" data-variant="muted">
+                This section uses a second <code>l-source:categories="/api/categories"</code> on the same
+                <code>l-data</code> element, demonstrating multiple sources.
+                It injects <strong>categories</strong>, <strong>categoriesLoading</strong>,
+                <strong>categoriesError</strong>, and <strong>$categories</strong> into the scope.
+              </p>
+
+              <!-- Categories loading -->
+              <template l-if="categoriesLoading && categories.length === 0">
+                <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center">
+                  <span data-ui="spinner" data-size="sm"></span>
+                  <span data-ui="text" data-size="sm" data-variant="muted">Loading categories...</span>
+                </div>
+              </template>
+
+              <!-- Categories error -->
+              <template l-if="categoriesError">
+                <div data-ui="callout" data-variant="destructive">
+                  <span data-part="icon">&#x26A0;</span>
+                  <div data-part="content">
+                    <p l-text="categoriesError"></p>
+                  </div>
+                </div>
+              </template>
+
+              <!-- Categories list -->
+              <template l-if="categories.length > 0">
+                <div data-ui="grid" data-cols="3" data-gap="3">
+                  <template l-for="cat in categories">
+                    <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center"
+                         style="padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md);">
+                      <span data-ui="badge" :data-variant="cat.color" l-text="cat.name"></span>
+                      <span data-ui="text" data-size="sm" data-variant="muted">
+                        — <span l-text="tasks.filter(t => t.category === cat.name.toLowerCase()).length"></span> tasks
+                      </span>
+                    </div>
+                  </template>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════
+             Directive Reference
+             ═══════════════════════════════════════ -->
+        <div data-ui="callout" data-variant="muted">
+          <span data-part="icon">&#x1F4D6;</span>
+          <div data-part="content">
+            <span data-part="title">l-source Syntax Reference</span>
+            <p>
+              <code>l-source:name="endpoint"</code> &mdash; basic usage<br>
+              <code>l-source:name.lazy="endpoint"</code> &mdash; don't auto-load on init<br>
+              <code>l-source:name.poll.5000="endpoint"</code> &mdash; auto-poll every 5s<br>
+              <code>l-source:name.optimistic="endpoint"</code> &mdash; optimistic UI updates<br>
+              <code>l-source:name.key.uuid="endpoint"</code> &mdash; custom ID field name
+            </p>
+          </div>
+        </div>
 
         <!-- Footer -->
+        <div data-ui="separator"></div>
         <div data-ui="surface" data-variant="flat" data-size="md" data-align-text="center">
-          <p data-ui="text" data-size="xs" data-variant="subtle">Loom UI Task Manager — powered by apiSource() data service layer</p>
+          <p data-ui="text" data-size="xs" data-variant="subtle">
+            Loom UI Task Manager &mdash; powered by the <code>l-source</code> directive
+          </p>
         </div>
 
       </div>
     </div>
 
   </div>
+
+  <!-- Toast container for notifications -->
+  <div data-ui="toast" data-part="container" data-variant="bottom-right"></div>
+
 </body>
 </html>

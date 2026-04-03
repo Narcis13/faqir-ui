@@ -1,0 +1,62 @@
+/* @ui:tokens doc-aliases — component-level document tokens */
+/* Maps document-layer tokens to specific primitive/recipe attribute selectors.
+   These aliases are consumed by: key-value, callout, field-group, image,
+   page-break, signature, and the document pattern. */
+
+:root {
+  /* ── Key-Value ── */
+  --kv-label-color:         var(--doc-legal-color);
+  --kv-label-weight:        var(--weight-medium);
+  --kv-label-size:          var(--doc-legal-size);
+  --kv-value-color:         var(--color-fg);
+  --kv-value-size:          var(--doc-font-size);
+  --kv-value-weight:        var(--weight-normal);
+  --kv-gap:                 var(--doc-label-gap);
+  --kv-pair-gap:            var(--space-3);            /* between key-value pairs */
+  --kv-grid-gap:            var(--space-4);            /* between columns in grid mode */
+
+  /* ── Callout ── */
+  --callout-radius:         var(--radius-md);
+  --callout-padding-y:      var(--space-3);
+  --callout-padding-x:      var(--space-4);
+  --callout-border-width:   1px;
+  --callout-border-left-width: 3px;                    /* thick left accent border */
+  --callout-bg:             var(--color-bg-subtle);
+  --callout-fg:             var(--color-fg);
+  --callout-font-size:      var(--doc-font-size);
+  --callout-icon-size:      var(--text-lg);
+
+  /* ── Image ── */
+  --image-radius:           var(--radius-md);
+  --image-border:           var(--color-border);
+  --image-border-width:     0;                         /* no border by default */
+  --image-caption-size:     var(--doc-legal-size);
+  --image-caption-color:    var(--doc-legal-color);
+
+  /* ── Field Group ── */
+  --field-gap:              var(--space-1h);            /* 6px between parts */
+  --field-label-size:       var(--doc-font-size);
+  --field-label-weight:     var(--weight-medium);
+  --field-label-color:      var(--color-fg);
+  --field-description-size: var(--doc-legal-size);
+  --field-description-color: var(--color-fg-muted);
+  --field-error-size:       var(--doc-legal-size);
+  --field-error-color:      var(--color-destructive);
+  --field-required-color:   var(--color-destructive);
+  --field-required-marker:  ' *';                      /* appended to required labels */
+
+  /* ── Page Break ── */
+  --page-break-screen-color: var(--color-border);      /* dashed line on screen */
+  --page-break-screen-style: dashed;
+  --page-break-screen-label-color: var(--color-fg-subtle);
+  --page-break-screen-label-size: var(--text-xs);
+
+  /* ── Stat / Metric ── */
+  --stat-value-size:        var(--text-2xl);
+  --stat-value-weight:      var(--weight-bold);
+  --stat-value-num-font:    tabular-nums;
+  --stat-label-size:        var(--doc-legal-size);
+  --stat-label-color:       var(--color-fg-muted);
+  --stat-change-positive:   var(--color-success);
+  --stat-change-negative:   var(--color-destructive);
+}

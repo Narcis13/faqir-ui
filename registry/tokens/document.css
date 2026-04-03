@@ -1,0 +1,77 @@
+/* @ui:tokens document — structural tokens for document/print rendering */
+/* These tokens control page geometry, document typography, table density,
+   and print-specific behavior. They are consumed by document-oriented
+   primitives (page-break, key-value, signature, callout, field-group)
+   and the document pattern. Themes override these for visual customization. */
+
+:root {
+  /* ── Page Geometry ──
+     Used by the `document` pattern and @page CSS rules.
+     --page-format and --page-orientation are consumed as literal values
+     in @page { size: var(--page-format) var(--page-orientation) }.
+     Margins are used in both @page and the document pattern's padding. */
+  --page-format:            A4;
+  --page-orientation:       portrait;
+  --page-margin:            15mm;
+  --page-margin-top:        var(--page-margin);
+  --page-margin-bottom:     var(--page-margin);
+  --page-margin-left:       var(--page-margin);
+  --page-margin-right:      var(--page-margin);
+
+  /* ── Document Typography ──
+     Separate from the base typography tokens because documents have
+     different optimal sizes than screen UIs. 14px body + 12px legal
+     is standard for A4 business documents. */
+  --doc-font:               var(--font-sans);
+  --doc-font-size:          var(--text-sm);           /* 14px — optimal for A4 */
+  --doc-line-height:        var(--leading-normal);     /* 1.5 */
+  --doc-heading-font:       var(--font-sans);
+  --doc-heading-weight:     var(--weight-bold);
+  --doc-heading-size:       var(--text-xl);            /* 20px for doc titles */
+  --doc-subheading-size:    var(--text-lg);            /* 18px for section titles */
+  --doc-legal-size:         var(--text-xs);            /* 12px for fine print / legal text */
+  --doc-legal-color:        var(--color-fg-muted);
+
+  /* ── Document Spacing ──
+     Controls the vertical rhythm of rendered documents.
+     Section gap is the space between major document sections (header, body sections, footer).
+     Component gap is the space between items within a section.
+     Label gap is the tight spacing between a label and its associated value. */
+  --doc-section-gap:        var(--space-8);            /* 32px between sections */
+  --doc-component-gap:      var(--space-4);            /* 16px between components */
+  --doc-label-gap:          var(--space-1);            /* 4px label to value */
+
+  /* ── Document Table Tokens ──
+     Specialized table styling for data-dense document tables (invoices, reports).
+     These are separate from the table recipe's screen tokens because document
+     tables need tighter padding, tabular number alignment, and print-safe colors. */
+  --doc-table-header-bg:    var(--color-bg-subtle);
+  --doc-table-header-fg:    var(--color-fg);
+  --doc-table-header-weight: var(--weight-semibold);
+  --doc-table-border:       var(--color-border-strong);
+  --doc-table-cell-pad-y:   var(--space-2);            /* 8px vertical */
+  --doc-table-cell-pad-x:   var(--space-3);            /* 12px horizontal */
+  --doc-table-font-size:    var(--text-xs);             /* 12px — compact for data density */
+  --doc-table-num-font:     tabular-nums;               /* aligned decimal columns */
+  --doc-table-footer-bg:    var(--color-bg-muted);
+  --doc-table-footer-weight: var(--weight-bold);
+  --doc-table-stripe-bg:    var(--color-bg-subtle);
+
+  /* ── Signature Tokens ──
+     Physical signature area dimensions for printed documents.
+     The gap above the line must be large enough for a handwritten signature (~40px). */
+  --doc-signature-width:    60%;
+  --doc-signature-gap:      var(--space-10);           /* 40px above the signing line */
+  --doc-signature-line-color: var(--color-border-strong);
+  --doc-signature-label-size: var(--text-xs);
+  --doc-signature-label-color: var(--color-fg-muted);
+
+  /* ── Print Control ──
+     Overrides applied inside @media print to ensure clean PDF output.
+     --doc-max-width limits the content width on screen to simulate A4 proportions.
+     --doc-bg/--doc-fg force B&W for reliable printing regardless of theme. */
+  --doc-max-width:          210mm;                     /* A4 width for screen preview */
+  --doc-bg:                 white;                     /* always white for print */
+  --doc-fg:                 oklch(0.10 0 0);           /* near-black for print */
+  --doc-print-border-color: oklch(0.60 0 0);           /* medium gray borders in print */
+}

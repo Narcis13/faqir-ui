@@ -169,9 +169,9 @@ No specificity wars. No naming conventions to memorize. The selector **is** the 
 
 ## Component Library
 
-Loom ships 43 components across three layers, from simple CSS-only primitives to full interactive recipes and page-level patterns.
+Loom ships 53 components across three layers, from simple CSS-only primitives to full interactive recipes and page-level patterns.
 
-### Primitives (22 components) — CSS Only
+### Primitives (30 components) — CSS Only
 
 Pure CSS components. No JavaScript required. Drop in the HTML and it works.
 
@@ -188,7 +188,7 @@ Pure CSS components. No JavaScript required. Drop in the HTML and it works.
 | `card` | Container with slots | header, body, footer parts |
 | `badge` | Status indicator | primary, secondary, success, warning, destructive |
 | `avatar` | Profile image/initials | sm, md, lg sizes |
-| `separator` | Horizontal/vertical divider | horizontal (default), vertical |
+| `separator` | Horizontal/vertical divider | horizontal, vertical + solid, dashed, dotted, thick styles |
 | `spinner` | Loading animation | sm, md, lg sizes |
 | `kbd` | Keyboard key display | — |
 | `progress` | Progress bar | determinate, indeterminate |
@@ -199,8 +199,16 @@ Pure CSS components. No JavaScript required. Drop in the HTML and it works.
 | `stack` | Flexbox layout | vertical (default), horizontal |
 | `grid` | CSS Grid layout | 1–12 columns, responsive |
 | `surface` | Container with elevation | flat, raised, overlay |
+| `callout` | Notice/warning box | info, warning, destructive, success, muted |
+| `description-list` | Styled dl/dt/dd pairs | vertical, horizontal + sm/md/lg |
+| `field-group` | Form field wrapper (label + input + error) | vertical, horizontal + error/valid states |
+| `image` | Responsive image with caption | responsive, thumbnail, cover, contain + xs–full sizes |
+| `key-value` | Labeled data pair | horizontal, vertical, inline + grid columns |
+| `page-break` | Print page break | after (default), before |
+| `signature` | Signing line for documents | sm/md/lg + left/center/right alignment |
+| `stat` | Metric display with trend | default, card + up/down/neutral trend |
 
-### Recipes (15 components) — CSS + JavaScript
+### Recipes (16 components) — CSS + JavaScript
 
 Interactive components with JavaScript controllers. Auto-initialize when `loom-core.js` is loaded.
 
@@ -217,12 +225,13 @@ Interactive components with JavaScript controllers. Auto-initialize when `loom-c
 | `combobox` | Searchable select | Filtering, keyboard selection |
 | `select-custom` | Custom-styled select | Full keyboard support |
 | `command-palette` | Command menu (Cmd+K) | Fuzzy search, sections |
-| `table` | Data table | Sortable columns, row selection |
+| `table` | Data table | Sortable, row selection, footer, alignment, grouped rows, print compact |
 | `pagination` | Page navigation | Previous/next, page numbers |
 | `toast` | Notification messages | Auto-dismiss, stacking |
 | `date-picker` | Calendar date selection | Month navigation, range selection |
+| `qr-code` | SVG QR code generator | sm/md/lg sizes, error correction levels (L/M/Q/H) |
 
-### Patterns (6 compositions) — No Custom JS
+### Patterns (7 compositions) — No Custom JS
 
 Pre-built page-level compositions that combine primitives and recipes.
 
@@ -234,6 +243,7 @@ Pre-built page-level compositions that combine primitives and recipes.
 | `crud-table` | table, button, dropdown, dialog, pagination |
 | `empty-state` | button, card |
 | `search-results` | grid, input, button, badge, pagination |
+| `document` | Full-page print/PDF container (invoice, form, report) with A4/letter formats |
 
 ---
 
@@ -386,6 +396,8 @@ Optional overrides for fine-tuning individual components:
 | `typography.css` | `--font-sans`, `--font-mono`, `--text-xs` through `--text-4xl`, `--weight-*`, `--leading-*` |
 | `effects.css` | `--radius-sm` through `--radius-2xl`, `--shadow-xs` through `--shadow-xl`, `--z-*` |
 | `motion.css` | `--ease-default`, `--ease-in-out`, `--duration-fast` (150ms), `--duration-normal` (250ms), `--duration-slow` (350ms) |
+| `document.css` | `--page-format`, `--page-margin`, `--doc-font`, `--doc-heading-size`, `--doc-table-*`, `--doc-signature-*`, `--doc-max-width` |
+| `doc-aliases.css` | `--kv-*`, `--callout-*`, `--image-*`, `--field-*`, `--page-break-*`, `--stat-*` (component-level document aliases) |
 
 ---
 
@@ -397,8 +409,9 @@ Themes override Layer 2 semantic tokens. Four built-in themes ship with Loom:
 |-------|-------------|
 | `default` | Clean modern. Light mode + dark mode via `[data-theme="dark"]` |
 | `midnight` | Deep navy with cyan accents. High-contrast dark theme |
-| `paper` | Warm cream backgrounds, earthy brown accents |
+| `paper` | Warm cream backgrounds, earthy brown accents. Overrides document tokens for warmth |
 | `brutalist` | Black and white. No shadows. No border radius |
+| `document` | Clean, professional, PDF-optimized. No shadows, no radius, pt-based sizes |
 
 ### Using Themes
 
@@ -457,6 +470,7 @@ It provides Alpine.js-style reactive directives, automatic recipe controller ini
 | `l-init` | — | Run code once on initialization |
 | `l-effect` | — | Tracked reactive side effect |
 | `l-cloak` | — | Hide element until Loom initializes |
+| `l-source:name` | — | Declarative REST data binding (injects array + CRUD controller) |
 
 ### Event Modifiers
 
@@ -625,7 +639,68 @@ The engine scans for `[data-ui]` elements matching known recipes, calls their fa
 
 ## Data-Driven Rendering
 
-Loom ships with `apiSource()` — a thin data service layer that connects `l-data` scopes to REST endpoints. It's application-level code (not a Loom controller), so it lives outside the `no-fetch` audit boundary.
+Loom provides two approaches for connecting UI to REST APIs:
+
+1. **`l-source` directive** (built into loom-core.js) — declarative, attribute-based
+2. **`apiSource()` factory** (separate script) — imperative, spread into `l-data`
+
+### `l-source` Directive (Recommended)
+
+Declare a data source directly on any `l-data` element. Loom injects a reactive array and a CRUD controller into the scope.
+
+```html
+<div l-data="{ newTitle: '' }"
+     l-source:tasks="/api/tasks">
+
+  <!-- tasks (array), tasksLoading (bool), tasksError (string|null) are auto-injected -->
+  <!-- $tasks (controller) provides: load, create, update, remove, refresh, startPolling, stopPolling -->
+
+  <template l-if="tasksLoading">
+    <div data-ui="spinner" data-size="sm"></div>
+  </template>
+
+  <template l-for="task in tasks">
+    <div data-ui="card" data-size="sm">
+      <div data-part="body">
+        <span l-text="task.title"></span>
+        <button data-ui="button" data-variant="ghost" data-size="sm"
+                @click="$tasks.remove(task.id)">Delete</button>
+      </div>
+    </div>
+  </template>
+
+  <form @submit.prevent="$tasks.create({ title: newTitle }).then(() => newTitle = '')">
+    <input data-ui="input" l-model="newTitle" placeholder="New task...">
+    <button data-ui="button" data-variant="primary">Add</button>
+  </form>
+</div>
+```
+
+#### Modifiers
+
+| Modifier | Effect |
+|----------|--------|
+| `.lazy` | Don't auto-load on init (call `$name.load()` manually) |
+| `.optimistic` | Update UI before server confirms (rollback on error) |
+| `.poll.5000` | Auto-refresh every 5000ms (default 30000ms) |
+| `.key.uuid` | Use `uuid` as the ID key instead of `id` |
+
+Example with modifiers: `l-source:tasks.optimistic.poll.10000="/api/tasks"`
+
+#### Injected Into Scope
+
+| Name | Type | Description |
+|------|------|-------------|
+| `{name}` | `Array` | The data array |
+| `{name}Loading` | `boolean` | True during fetch |
+| `{name}Error` | `string\|null` | Error message |
+| `${name}` | `object` | CRUD controller |
+
+Controller methods: `load()`, `create(payload)`, `update(id, payload)`, `remove(id)`, `refresh()`, `startPolling(ms?)`, `stopPolling()`
+
+### `apiSource()` Factory (Legacy)
+
+Loom also ships with `apiSource()` — a thin data service layer that connects `l-data` scopes to REST endpoints. It's application-level code (not a Loom controller), so it lives outside the `no-fetch` audit boundary.
 
 ### Include
 
@@ -1110,13 +1185,13 @@ loom-ui/
 │       └── bundler.ts        CSS bundle generator
 │
 ├── registry/                 Component library (shipped with CLI)
-│   ├── tokens/               8 CSS token files
+│   ├── tokens/               10 CSS token files (incl. document.css, doc-aliases.css)
 │   ├── base/                 reset.css, prose.css
 │   ├── core/                 loom-core.js, api-source.js + utility modules
-│   ├── themes/               4 built-in themes
-│   ├── primitives/           22 CSS-only components
-│   ├── recipes/              15 CSS+JS interactive components
-│   └── patterns/             6 page-level compositions
+│   ├── themes/               5 built-in themes (incl. document.css)
+│   ├── primitives/           30 CSS-only components
+│   ├── recipes/              16 CSS+JS interactive components
+│   └── patterns/             7 page-level compositions
 │
 ├── tests/                    Bun test suite (462 tests)
 ├── playground/               6 example pages + dev server (server.js, db.json)

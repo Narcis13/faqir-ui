@@ -1,0 +1,111 @@
+{
+  "name": "callout",
+  "version": "1.0.0",
+  "kind": "primitive",
+  "category": "data-display",
+  "description": "Callout box for info notices, warnings, legal text, and disclaimers",
+
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='callout']",
+    "content_model": "slots"
+  },
+
+  "slots": {
+    "icon": {
+      "selector": "[data-part='icon']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Optional icon displayed before content"
+    },
+    "content": {
+      "selector": "[data-part='content']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "Callout body text"
+    },
+    "title": {
+      "selector": "[data-part='title']",
+      "required": false,
+      "tag_hint": "strong",
+      "description": "Optional callout title"
+    }
+  },
+
+  "variants": {
+    "variant": {
+      "values": ["info", "warning", "destructive", "success", "muted"],
+      "default": "info",
+      "attr": "data-variant",
+      "applied_to": "root"
+    }
+  },
+
+  "states": {},
+
+  "props": {},
+
+  "a11y": {
+    "required_attrs": [
+      "role=\"note\" or role=\"alert\" for destructive/warning variants",
+      "aria-label describing the callout purpose"
+    ],
+    "keyboard": {}
+  },
+
+  "tokens_used": [
+    "color-fg", "color-fg-muted",
+    "color-info", "color-info-subtle",
+    "color-warning", "color-warning-subtle",
+    "color-destructive", "color-destructive-subtle",
+    "color-success", "color-success-subtle",
+    "color-bg-muted", "color-border",
+    "space-3", "space-4",
+    "radius-md",
+    "text-sm", "text-xs",
+    "font-sans", "weight-semibold"
+  ],
+
+  "templates": {
+    "html": "<div data-ui=\"callout\" data-variant=\"{variant}\" role=\"note\">\n  <span data-part=\"icon\">{icon}</span>\n  <div data-part=\"content\">{content}</div>\n</div>",
+    "html_with_title": "<div data-ui=\"callout\" data-variant=\"{variant}\" role=\"note\">\n  <span data-part=\"icon\">{icon}</span>\n  <div data-part=\"content\">\n    <strong data-part=\"title\">{title}</strong>\n    <p>{body}</p>\n  </div>\n</div>"
+  },
+
+  "safe_transforms": [
+    "change-variant",
+    "add-icon",
+    "remove-icon",
+    "add-title",
+    "remove-title",
+    "change-content"
+  ],
+
+  "unsafe_transforms": [
+    "remove-content-slot",
+    "remove-role-attribute"
+  ],
+
+  "composition": {
+    "contains": ["text"],
+    "used_in": ["document"]
+  },
+
+  "files": {
+    "html": "callout.html",
+    "css": "callout.css",
+    "manifest": "callout.manifest.json"
+  },
+
+  "tests": [
+    "renders-as-div-element",
+    "content-slot-is-required",
+    "icon-slot-is-optional",
+    "info-variant-has-blue-accent",
+    "warning-variant-has-amber-accent",
+    "destructive-variant-has-red-accent",
+    "success-variant-has-green-accent",
+    "muted-variant-has-gray-accent",
+    "print-uses-border-only",
+    "has-role-note"
+  ]
+}

@@ -26,6 +26,12 @@
       "default": "horizontal",
       "attr": "data-variant",
       "applied_to": "root"
+    },
+    "style": {
+      "values": ["solid", "dashed", "dotted", "thick"],
+      "default": "solid",
+      "attr": "data-style",
+      "applied_to": "root"
     }
   },
 
@@ -51,7 +57,8 @@
 
   "safe_transforms": [
     "change-orientation",
-    "add-label"
+    "add-label",
+    "change-style"
   ],
 
   "unsafe_transforms": [
@@ -74,6 +81,10 @@
     "horizontal-by-default",
     "vertical-variant-sets-data-variant-vertical",
     "vertical-has-aria-orientation",
-    "label-slot-is-optional"
+    "label-slot-is-optional",
+    "dashed-style-sets-border-dashed",
+    "dotted-style-sets-border-dotted",
+    "thick-style-sets-2px-border",
+    "labeled-dashed-applies-to-pseudo-lines"
   ]
 }

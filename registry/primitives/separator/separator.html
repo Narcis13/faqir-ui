@@ -1,7 +1,7 @@
 <!-- @ui:component separator -->
 <!-- @ui:kind primitive -->
-<!-- @ui:slots -->
-<!-- @ui:variants orientation=horizontal|vertical -->
+<!-- @ui:slots label -->
+<!-- @ui:variants orientation=horizontal|vertical style=solid|dashed|dotted|thick -->
 
 <!-- Horizontal (default) -->
 <hr data-ui="separator">
@@ -13,3 +13,23 @@
 <div data-ui="separator" role="separator">
   <span data-part="label">OR</span>
 </div>
+
+<!-- Dashed -->
+<hr data-ui="separator" data-style="dashed">
+
+<!-- Dotted -->
+<hr data-ui="separator" data-style="dotted">
+
+<!-- Thick -->
+<hr data-ui="separator" data-style="thick">
+
+<!-- Dashed with label -->
+<div data-ui="separator" data-style="dashed" role="separator">
+  <span data-part="label">Section Break</span>
+</div>
+
+<!-- Vertical dashed (for use in horizontal stacks) -->
+<hr data-ui="separator" data-variant="vertical" data-style="dashed" data-size="md" aria-orientation="vertical">
+
+<!-- Vertical dotted -->
+<hr data-ui="separator" data-variant="vertical" data-style="dotted" data-size="lg" aria-orientation="vertical">

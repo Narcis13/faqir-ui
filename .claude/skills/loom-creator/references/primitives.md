@@ -1,6 +1,6 @@
 # Primitives Reference
 
-All 21 CSS-only primitives. No JavaScript required.
+All 30 CSS-only primitives. No JavaScript required.
 
 ## Table of Contents
 - [Stack](#stack) | [Grid](#grid) | [Surface](#surface)
@@ -9,6 +9,8 @@ All 21 CSS-only primitives. No JavaScript required.
 - [Card](#card) | [Badge](#badge) | [Avatar](#avatar) | [Separator](#separator)
 - [Spinner](#spinner) | [Kbd](#kbd) | [Progress](#progress) | [Empty State](#empty-state)
 - [Stepper](#stepper) | [Nav](#nav) | [Text & Heading](#text--heading)
+- [Callout](#callout) | [Description List](#description-list) | [Field Group](#field-group) | [Image](#image)
+- [Key-Value](#key-value) | [Page Break](#page-break) | [Signature](#signature) | [Stat](#stat)
 
 ---
 
@@ -179,9 +181,29 @@ Fallback shows when no image.
 ## Separator
 
 ```html
-<div data-ui="separator"></div>
-<div data-ui="separator" data-variant="vertical"></div>
-<div data-ui="separator" data-label="OR"></div>
+<!-- Horizontal (default) -->
+<hr data-ui="separator">
+
+<!-- Vertical -->
+<hr data-ui="separator" data-variant="vertical" data-size="sm|md|lg" aria-orientation="vertical">
+
+<!-- With label -->
+<div data-ui="separator" role="separator">
+  <span data-part="label">OR</span>
+</div>
+
+<!-- Styles: solid (default), dashed, dotted, thick -->
+<hr data-ui="separator" data-style="dashed">
+<hr data-ui="separator" data-style="dotted">
+<hr data-ui="separator" data-style="thick">
+
+<!-- Dashed with label -->
+<div data-ui="separator" data-style="dashed" role="separator">
+  <span data-part="label">Section Break</span>
+</div>
+
+<!-- Vertical dashed -->
+<hr data-ui="separator" data-variant="vertical" data-style="dashed" data-size="md" aria-orientation="vertical">
 ```
 
 ## Spinner
@@ -275,3 +297,123 @@ Step states: `completed`, `active`, (none = pending).
   Content
 </p>
 ```
+
+---
+
+## Callout
+
+```html
+<div data-ui="callout" data-variant="info|warning|destructive|success|muted" role="note">
+  <span data-part="icon">{icon}</span>
+  <div data-part="content">
+    <strong data-part="title">Note</strong>
+    <p>Callout body text</p>
+  </div>
+</div>
+```
+
+Slots: `icon` (optional), `content` (required), `title` (optional). Use `role="alert"` for destructive/warning variants.
+
+## Description List
+
+```html
+<dl data-ui="description-list" data-variant="vertical|horizontal" data-size="sm|md|lg" data-divided>
+  <dt data-part="term">Term</dt>
+  <dd data-part="details">Description</dd>
+  <dt data-part="term">Another Term</dt>
+  <dd data-part="details">Another description</dd>
+</dl>
+```
+
+Uses semantic `dl/dt/dd`. `data-divided` adds border between items.
+
+## Field Group
+
+```html
+<div data-ui="field-group" data-variant="vertical|horizontal" data-size="sm|md|lg" data-required>
+  <label data-part="label" for="email">Email</label>
+  <div data-part="input">
+    <input data-ui="input" id="email" name="email">
+  </div>
+  <p data-part="description">We'll never share your email</p>
+</div>
+
+<!-- Error state -->
+<div data-ui="field-group" data-state="error">
+  <label data-part="label" for="pw">Password</label>
+  <div data-part="input">
+    <input data-ui="input" id="pw" aria-invalid="true" aria-describedby="pw-error">
+  </div>
+  <p data-part="error" id="pw-error">Password too short</p>
+</div>
+```
+
+States: `default`, `error`, `valid`. `data-required` shows asterisk. Always use `for`/`id` pairing.
+
+## Image
+
+```html
+<figure data-ui="image" data-variant="responsive|thumbnail|cover|contain" data-size="xs|sm|md|lg|full">
+  <img data-part="img" src="photo.jpg" alt="Description" loading="lazy">
+  <figcaption data-part="caption">Optional caption</figcaption>
+</figure>
+```
+
+Sizes: xs=48px, sm=96px, md=192px, lg=384px, full=100%. `alt` is required.
+
+## Key-Value
+
+```html
+<!-- Single pair -->
+<dl data-ui="key-value" data-variant="horizontal|vertical|inline">
+  <dt data-part="label">Invoice</dt>
+  <dd data-part="value">#INV-001</dd>
+</dl>
+
+<!-- Grid of pairs -->
+<dl data-ui="key-value" data-variant="horizontal" data-cols="2|3">
+  <dt data-part="label">Date</dt>
+  <dd data-part="value">2026-01-15</dd>
+  <dt data-part="label">Due</dt>
+  <dd data-part="value">2026-02-15</dd>
+</dl>
+```
+
+Uses semantic `dl/dt/dd`. `data-cols` creates multi-column grid.
+
+## Page Break
+
+```html
+<!-- Page break after (default) -->
+<div data-ui="page-break" role="separator" aria-label="Page break"></div>
+
+<!-- Page break before -->
+<div data-ui="page-break" data-variant="before" role="separator" aria-label="Page break"></div>
+```
+
+Shows dashed line on screen, forces CSS `page-break-after`/`page-break-before` in print.
+
+## Signature
+
+```html
+<div data-ui="signature" data-size="sm|md|lg" data-align="left|center|right"
+     role="img" aria-label="Signature: John Doe">
+  <div data-part="line"></div>
+  <span data-part="label">John Doe</span>
+</div>
+```
+
+Sizes: sm=40%, md=60%, lg=80% width. The line provides space for handwritten signature in print.
+
+## Stat
+
+```html
+<div data-ui="stat" data-size="sm|md|lg" data-variant="default|card" data-trend="up|down|neutral"
+     aria-label="Revenue: $12,345, up 12%">
+  <span data-part="label">Revenue</span>
+  <span data-part="value">$12,345</span>
+  <span data-part="change" data-trend="up">+12%</span>
+</div>
+```
+
+Trend: `up` = green, `down` = red, `neutral` = gray. `card` variant adds border and padding.

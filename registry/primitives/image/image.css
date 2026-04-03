@@ -1,0 +1,119 @@
+/* @ui:component image */
+/* @ui:tokens image-radius image-border image-border-width image-caption-size image-caption-color color-bg-muted font-sans */
+
+/* ── Base ── */
+[data-ui="image"] {
+  display: inline-block;
+  margin: 0;
+  padding: 0;
+  line-height: 0;
+  max-width: 100%;
+}
+
+/* ── Image Element ── */
+[data-ui="image"] [data-part="img"] {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--image-radius);
+  border: var(--image-border-width) solid var(--image-border);
+}
+
+/* ── Caption ── */
+[data-ui="image"] [data-part="caption"] {
+  display: block;
+  margin-top: var(--space-2);
+  font-family: var(--doc-font, var(--font-sans, system-ui, sans-serif));
+  font-size: var(--image-caption-size);
+  color: var(--image-caption-color);
+  line-height: 1.4;
+  text-align: center;
+}
+
+/* ── Variant: Responsive (default) ── */
+[data-ui="image"][data-variant="responsive"] [data-part="img"],
+[data-ui="image"]:not([data-variant]) [data-part="img"] {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+/* ── Variant: Thumbnail ── */
+[data-ui="image"][data-variant="thumbnail"] {
+  border-radius: var(--image-radius);
+  overflow: hidden;
+}
+
+[data-ui="image"][data-variant="thumbnail"] [data-part="img"] {
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 0;
+}
+
+/* ── Variant: Cover ── */
+[data-ui="image"][data-variant="cover"] {
+  width: 100%;
+}
+
+[data-ui="image"][data-variant="cover"] [data-part="img"] {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0;
+}
+
+/* ── Variant: Contain ── */
+[data-ui="image"][data-variant="contain"] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-muted);
+  border-radius: var(--image-radius);
+  overflow: hidden;
+}
+
+[data-ui="image"][data-variant="contain"] [data-part="img"] {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 0;
+}
+
+/* ── Size: XS (48px) ── */
+[data-ui="image"][data-size="xs"] {
+  max-width: 48px;
+}
+
+/* ── Size: SM (96px) ── */
+[data-ui="image"][data-size="sm"] {
+  max-width: 96px;
+}
+
+/* ── Size: MD (192px) ── */
+[data-ui="image"][data-size="md"],
+[data-ui="image"]:not([data-size]) {
+  max-width: 192px;
+}
+
+/* ── Size: LG (384px) ── */
+[data-ui="image"][data-size="lg"] {
+  max-width: 384px;
+}
+
+/* ── Size: Full (100%) ── */
+[data-ui="image"][data-size="full"] {
+  max-width: 100%;
+  width: 100%;
+}
+
+/* ── Print ── */
+@media print {
+  [data-ui="image"] [data-part="img"] {
+    max-width: 100% !important;
+    break-inside: avoid;
+  }
+
+  [data-ui="image"][data-size="full"] {
+    max-width: 80% !important;
+  }
+}

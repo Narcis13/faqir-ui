@@ -1,6 +1,6 @@
 # Patterns Reference
 
-All 6 composition patterns. Patterns combine primitives and recipes — no custom JS.
+All 7 composition patterns. Patterns combine primitives and recipes — no custom JS.
 
 Each pattern has: `.html`, `.css`, `.manifest.json` (no `.js`).
 
@@ -187,3 +187,66 @@ Settings page with tabbed sections and form fields.
 ```
 
 Uses: tabs, input, switch, checkbox, button, label, card.
+
+## Document
+
+Full-page document container optimized for screen display and print/PDF output.
+
+```html
+<article data-ui="document" data-variant="invoice|form|report"
+         data-format="a4|letter" data-orientation="portrait|landscape"
+         aria-label="Invoice #001">
+  <header data-part="header">
+    <!-- Company logo, title — repeats on every printed page -->
+  </header>
+  <div data-part="body">
+    <!-- Use key-value, table, separator, callout, signature, image, stat, etc. -->
+    <dl data-ui="key-value" data-variant="horizontal" data-cols="2">
+      <dt data-part="label">Invoice No.</dt>
+      <dd data-part="value">#INV-001</dd>
+      <dt data-part="label">Date</dt>
+      <dd data-part="value">2026-01-15</dd>
+    </dl>
+
+    <hr data-ui="separator" data-style="dashed">
+
+    <div data-ui="table" data-variant="bordered" data-size="md">
+      <table data-part="table">
+        <thead data-part="thead">
+          <tr data-part="tr">
+            <th data-part="th" scope="col">Item</th>
+            <th data-part="th" scope="col" data-align="right">Amount</th>
+          </tr>
+        </thead>
+        <tbody data-part="tbody">
+          <tr data-part="tr">
+            <td data-part="td">Service</td>
+            <td data-part="td" data-align="right" data-format="currency">1,500.00</td>
+          </tr>
+        </tbody>
+        <tfoot data-part="tfoot">
+          <tr data-part="tr">
+            <td data-part="td" data-align="right">Total</td>
+            <td data-part="td" data-align="right" data-format="currency">1,500.00</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div data-ui="signature" data-size="md" role="img" aria-label="Signature: Client Name">
+      <div data-part="line"></div>
+      <span data-part="label">Client Name</span>
+    </div>
+  </div>
+  <footer data-part="footer">
+    <!-- Legal text, page numbers — repeats on every printed page -->
+  </footer>
+</article>
+```
+
+Composes: key-value, table, image, signature, callout, page-break, text, separator, field-group, stat, description-list, qr-code.
+
+Document tokens: `--doc-font`, `--doc-font-size`, `--doc-heading-size`, `--doc-section-gap`, `--doc-table-*`, `--doc-signature-*`.
+Page tokens: `--page-format`, `--page-orientation`, `--page-margin`.
+
+Use with `document` theme for clean PDF output, or `paper` theme for warm aesthetic.

@@ -136,3 +136,43 @@ Always wrap animations in reduced-motion media query:
   [data-ui="component"] { transition: none; animation: none; }
 }
 ```
+
+## Document Tokens
+
+Structural tokens for print/PDF documents. Override with themes.
+
+```
+--page-format            A4 (or letter)
+--page-orientation       portrait (or landscape)
+--page-margin            15mm
+--doc-font               var(--font-sans)
+--doc-font-size          var(--text-sm) / 14px
+--doc-heading-size       var(--text-xl)
+--doc-subheading-size    var(--text-lg)
+--doc-legal-size         var(--text-xs)
+--doc-legal-color        var(--color-fg-muted)
+--doc-section-gap        var(--space-8)
+--doc-component-gap      var(--space-4)
+--doc-label-gap          var(--space-1)
+--doc-table-header-bg    var(--color-bg-subtle)
+--doc-table-border       var(--color-border-strong)
+--doc-table-font-size    var(--text-xs)
+--doc-table-footer-bg    var(--color-bg-muted)
+--doc-table-stripe-bg    var(--color-bg-subtle)
+--doc-signature-width    60%
+--doc-signature-gap      var(--space-10)
+--doc-max-width          210mm
+```
+
+## Document Aliases
+
+Component-level mappings from `--doc-*` tokens to specific primitives.
+
+```
+--kv-label-color, --kv-value-size       key-value
+--callout-radius, --callout-padding-*   callout
+--image-radius, --image-caption-size    image
+--field-gap, --field-label-size         field-group
+--page-break-screen-color               page-break
+--stat-value-size, --stat-label-color   stat
+```

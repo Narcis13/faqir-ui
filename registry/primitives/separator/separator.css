@@ -40,6 +40,51 @@ div[data-ui="separator"]::after {
   white-space: nowrap;
 }
 
+/* ── Style: Dashed ── */
+[data-ui="separator"][data-style="dashed"] {
+  border-top-style: dashed;
+}
+
+[data-ui="separator"][data-style="dashed"][data-variant="vertical"] {
+  border-top-style: none;
+  border-left-style: dashed;
+}
+
+div[data-ui="separator"][data-style="dashed"]::before,
+div[data-ui="separator"][data-style="dashed"]::after {
+  border-top-style: dashed;
+}
+
+/* ── Style: Dotted ── */
+[data-ui="separator"][data-style="dotted"] {
+  border-top-style: dotted;
+}
+
+[data-ui="separator"][data-style="dotted"][data-variant="vertical"] {
+  border-top-style: none;
+  border-left-style: dotted;
+}
+
+div[data-ui="separator"][data-style="dotted"]::before,
+div[data-ui="separator"][data-style="dotted"]::after {
+  border-top-style: dotted;
+}
+
+/* ── Style: Thick ── */
+[data-ui="separator"][data-style="thick"] {
+  border-top-width: 2px;
+}
+
+[data-ui="separator"][data-style="thick"][data-variant="vertical"] {
+  border-top-width: 0;
+  border-left-width: 2px;
+}
+
+div[data-ui="separator"][data-style="thick"]::before,
+div[data-ui="separator"][data-style="thick"]::after {
+  border-top-width: 2px;
+}
+
 /* ── Vertical Sizes ── */
 [data-ui="separator"][data-variant="vertical"][data-size="sm"] {
   height: 1rem;

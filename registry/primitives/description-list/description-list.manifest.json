@@ -1,0 +1,104 @@
+{
+  "name": "description-list",
+  "version": "1.0.0",
+  "kind": "primitive",
+  "category": "data-display",
+  "description": "Styled description list (dl/dt/dd) for longer descriptive key-value content",
+
+  "anatomy": {
+    "tag": "dl",
+    "selector": "[data-ui='description-list']",
+    "content_model": "slots"
+  },
+
+  "slots": {
+    "term": {
+      "selector": "[data-part='term']",
+      "required": true,
+      "tag_hint": "dt",
+      "description": "The term or key (dt element)"
+    },
+    "details": {
+      "selector": "[data-part='details']",
+      "required": true,
+      "tag_hint": "dd",
+      "description": "The description or value (dd element)"
+    }
+  },
+
+  "variants": {
+    "variant": {
+      "values": ["vertical", "horizontal"],
+      "default": "vertical",
+      "attr": "data-variant",
+      "applied_to": "root"
+    },
+    "size": {
+      "values": ["sm", "md", "lg"],
+      "default": "md",
+      "attr": "data-size",
+      "applied_to": "root"
+    }
+  },
+
+  "states": {},
+
+  "props": {
+    "divided": { "type": "boolean", "default": false, "description": "Show divider lines between items (data-divided attribute)" }
+  },
+
+  "a11y": {
+    "required_attrs": ["Uses semantic dl/dt/dd elements for screen reader support"],
+    "keyboard": {}
+  },
+
+  "tokens_used": [
+    "color-fg", "color-fg-muted", "color-border",
+    "space-2", "space-3", "space-4", "space-6",
+    "text-xs", "text-sm", "text-base",
+    "font-sans", "weight-semibold"
+  ],
+
+  "templates": {
+    "html": "<dl data-ui=\"description-list\" data-variant=\"{variant}\">\n  <dt data-part=\"term\">{term}</dt>\n  <dd data-part=\"details\">{details}</dd>\n</dl>"
+  },
+
+  "safe_transforms": [
+    "change-variant",
+    "change-size",
+    "toggle-divided",
+    "add-item",
+    "remove-item",
+    "change-term-text",
+    "change-details-text"
+  ],
+
+  "unsafe_transforms": [
+    "remove-term",
+    "remove-details",
+    "remove-dl-semantics"
+  ],
+
+  "composition": {
+    "contains": [],
+    "used_in": ["document", "card"]
+  },
+
+  "files": {
+    "html": "description-list.html",
+    "css": "description-list.css",
+    "manifest": "description-list.manifest.json"
+  },
+
+  "tests": [
+    "renders-as-dl-element",
+    "term-uses-dt-element",
+    "details-uses-dd-element",
+    "default-variant-is-vertical",
+    "vertical-stacks-term-above-details",
+    "horizontal-places-term-beside-details",
+    "divided-shows-border-between-items",
+    "sm-size-reduces-spacing",
+    "lg-size-increases-spacing"
+  ]
+}

@@ -150,3 +150,24 @@
     --shadow-xl:  0 16px 40px oklch(0.10 0.03 50 / 0.4), 0 6px 12px oklch(0.10 0.03 50 / 0.25);
   }
 }
+
+/* ── Document Token Overrides: warm paper aesthetic ──
+   When paper theme is used for document rendering (invoices, reports),
+   these override the structural document tokens for a warmer feel. */
+
+:root {
+  --doc-font:               'Georgia', var(--font-serif);   /* serif body text for warmth */
+  --doc-heading-font:       var(--font-sans);                /* sans headings on serif body */
+  --doc-font-size:          var(--text-sm);                  /* 14px */
+  --doc-heading-size:       var(--text-xl);
+  --doc-subheading-size:    var(--text-lg);
+  --doc-legal-size:         var(--text-xs);
+  --doc-legal-color:        oklch(0.48 0.04 55);             /* warm brown, not gray */
+  --doc-section-gap:        var(--space-8);
+  --doc-component-gap:      var(--space-4);
+  --doc-table-header-bg:    oklch(0.94 0.02 75);             /* warm parchment headers */
+  --doc-table-border:       oklch(0.78 0.03 65);             /* warm tan border */
+  --doc-table-footer-bg:    oklch(0.94 0.02 75);
+  --doc-table-stripe-bg:    oklch(0.96 0.015 80);            /* subtle cream stripes */
+  --doc-signature-line-color: oklch(0.70 0.03 60);           /* warm gray signing line */
+}

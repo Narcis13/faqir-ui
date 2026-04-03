@@ -13,6 +13,8 @@
   <link rel="stylesheet" href="../registry/tokens/motion.css">
   <link rel="stylesheet" href="../registry/tokens/semantic.css">
   <link rel="stylesheet" href="../registry/tokens/aliases.css">
+  <link rel="stylesheet" href="../registry/tokens/document.css">
+  <link rel="stylesheet" href="../registry/tokens/doc-aliases.css">
 
   <!-- Base -->
   <link rel="stylesheet" href="../registry/base/reset.css">
@@ -23,6 +25,7 @@
   <link rel="stylesheet" href="../registry/themes/midnight.css" id="theme-midnight" disabled>
   <link rel="stylesheet" href="../registry/themes/paper.css" id="theme-paper" disabled>
   <link rel="stylesheet" href="../registry/themes/brutalist.css" id="theme-brutalist" disabled>
+  <link rel="stylesheet" href="../registry/themes/document.css" id="theme-document" disabled>
 
   <!-- Primitives -->
   <link rel="stylesheet" href="../registry/primitives/button/button.css">
@@ -47,6 +50,17 @@
   <link rel="stylesheet" href="../registry/primitives/empty-state/empty-state.css">
   <link rel="stylesheet" href="../registry/primitives/text/text.css">
   <link rel="stylesheet" href="../registry/primitives/nav/nav.css">
+  <link rel="stylesheet" href="../registry/primitives/callout/callout.css">
+  <link rel="stylesheet" href="../registry/primitives/key-value/key-value.css">
+  <link rel="stylesheet" href="../registry/primitives/field-group/field-group.css">
+  <link rel="stylesheet" href="../registry/primitives/image/image.css">
+  <link rel="stylesheet" href="../registry/primitives/page-break/page-break.css">
+  <link rel="stylesheet" href="../registry/primitives/signature/signature.css">
+  <link rel="stylesheet" href="../registry/primitives/stat/stat.css">
+  <link rel="stylesheet" href="../registry/primitives/description-list/description-list.css">
+
+  <!-- Patterns -->
+  <link rel="stylesheet" href="../registry/patterns/document/document.css">
 
   <!-- Recipes -->
   <link rel="stylesheet" href="../registry/recipes/dialog/dialog.css">
@@ -64,6 +78,7 @@
   <link rel="stylesheet" href="../registry/recipes/sheet/sheet.css">
   <link rel="stylesheet" href="../registry/recipes/drawer/drawer.css">
   <link rel="stylesheet" href="../registry/recipes/table/table.css">
+  <link rel="stylesheet" href="../registry/recipes/qr-code/qr-code.css">
 
   <!-- Loom Core -->
   <script src="../registry/core/loom-core.js" defer></script>
@@ -74,7 +89,7 @@
     darkMode: false,
 
     setTheme(name) {
-      ['default','midnight','paper','brutalist'].forEach(t => {
+      ['default','midnight','paper','brutalist','document'].forEach(t => {
         document.getElementById('theme-' + t).disabled = (t !== name);
       });
       this.currentTheme = name;
@@ -107,6 +122,7 @@
               <option value="midnight">Midnight</option>
               <option value="paper">Paper</option>
               <option value="brutalist">Brutalist</option>
+              <option value="document">Document</option>
             </select>
           </div>
           <div data-ui="separator" data-variant="vertical" data-size="md"></div>
@@ -454,11 +470,28 @@
         <!-- ════════════════════════════════════════ -->
         <div data-ui="stack" data-gap="4">
           <h2 data-ui="heading" data-size="3">Separator</h2>
-          <p data-ui="text" data-variant="muted">Horizontal divider with optional label.</p>
+          <p data-ui="text" data-variant="muted">Divider with styles, label, and vertical orientation.</p>
 
           <div data-ui="stack" data-gap="4">
-            <div data-ui="separator"></div>
-            <div data-ui="separator" data-label="OR"></div>
+            <hr data-ui="separator">
+            <div data-ui="separator"><span data-part="label">OR</span></div>
+            <hr data-ui="separator" data-style="dashed">
+            <hr data-ui="separator" data-style="dotted">
+            <hr data-ui="separator" data-style="thick">
+            <div data-ui="separator" data-style="dashed"><span data-part="label">Section</span></div>
+          </div>
+
+          <div data-ui="stack" data-gap="3">
+            <h3 data-ui="heading" data-size="5">Vertical</h3>
+            <div data-ui="stack" data-variant="horizontal" data-gap="4" data-align="center" style="height: 48px;">
+              <span data-ui="text">Left</span>
+              <hr data-ui="separator" data-variant="vertical" data-size="sm" aria-orientation="vertical">
+              <span data-ui="text">Center</span>
+              <hr data-ui="separator" data-variant="vertical" data-size="md" aria-orientation="vertical">
+              <span data-ui="text">Right</span>
+              <hr data-ui="separator" data-variant="vertical" data-size="lg" aria-orientation="vertical">
+              <span data-ui="text">End</span>
+            </div>
           </div>
         </div>
 
@@ -1002,6 +1035,81 @@
                     </tbody>
                   </table>
                 </div>
+              </div>
+            </div>
+
+            <!-- Footer, alignment, number formatting -->
+            <div data-ui="stack" data-gap="2">
+              <p data-ui="text" data-size="sm" data-weight="medium">Footer with number formatting &amp; alignment</p>
+              <div data-ui="table" data-size="sm">
+                <table data-part="table">
+                  <thead data-part="thead">
+                    <tr data-part="tr">
+                      <th data-part="th" scope="col">Description</th>
+                      <th data-part="th" scope="col" data-align="right">Qty</th>
+                      <th data-part="th" scope="col" data-align="right">Unit Price</th>
+                      <th data-part="th" scope="col" data-align="right">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody data-part="tbody">
+                    <tr data-part="tr">
+                      <td data-part="td">Web Development Services</td>
+                      <td data-part="td" data-align="right" data-format="number">40</td>
+                      <td data-part="td" data-align="right" data-format="currency">150.00</td>
+                      <td data-part="td" data-align="right" data-format="currency">6,000.00</td>
+                    </tr>
+                    <tr data-part="tr">
+                      <td data-part="td">UI/UX Design</td>
+                      <td data-part="td" data-align="right" data-format="number">20</td>
+                      <td data-part="td" data-align="right" data-format="currency">120.00</td>
+                      <td data-part="td" data-align="right" data-format="currency">2,400.00</td>
+                    </tr>
+                    <tr data-part="tr">
+                      <td data-part="td">Hosting (Annual)</td>
+                      <td data-part="td" data-align="right" data-format="number">1</td>
+                      <td data-part="td" data-align="right" data-format="currency">480.00</td>
+                      <td data-part="td" data-align="right" data-format="currency">480.00</td>
+                    </tr>
+                  </tbody>
+                  <tfoot data-part="tfoot">
+                    <tr data-part="tr">
+                      <td data-part="td" colspan="3" data-align="right">Subtotal</td>
+                      <td data-part="td" data-align="right" data-format="currency">8,880.00</td>
+                    </tr>
+                    <tr data-part="tr">
+                      <td data-part="td" colspan="3" data-align="right">VAT (19%)</td>
+                      <td data-part="td" data-align="right" data-format="currency">1,687.20</td>
+                    </tr>
+                    <tr data-part="tr">
+                      <td data-part="td" colspan="3" data-align="right">Total</td>
+                      <td data-part="td" data-align="right" data-format="currency">10,567.20</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+
+            <!-- Grouped rows -->
+            <div data-ui="stack" data-gap="2">
+              <p data-ui="text" data-size="sm" data-weight="medium">Grouped rows</p>
+              <div data-ui="table" data-size="sm">
+                <table data-part="table">
+                  <thead data-part="thead">
+                    <tr data-part="tr">
+                      <th data-part="th" scope="col">Name</th>
+                      <th data-part="th" scope="col">Role</th>
+                      <th data-part="th" scope="col">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody data-part="tbody">
+                    <tr data-part="group-header"><td data-part="td" colspan="3">Engineering</td></tr>
+                    <tr data-part="tr"><td data-part="td">Ana Ionescu</td><td data-part="td">Lead</td><td data-part="td"><span data-ui="badge" data-variant="success">Active</span></td></tr>
+                    <tr data-part="tr"><td data-part="td">Mihai Popa</td><td data-part="td">Senior</td><td data-part="td"><span data-ui="badge" data-variant="success">Active</span></td></tr>
+                    <tr data-part="group-header"><td data-part="td" colspan="3">Design</td></tr>
+                    <tr data-part="tr"><td data-part="td">Elena Radu</td><td data-part="td">Lead</td><td data-part="td"><span data-ui="badge" data-variant="success">Active</span></td></tr>
+                    <tr data-part="tr"><td data-part="td">Andrei Vasile</td><td data-part="td">Junior</td><td data-part="td"><span data-ui="badge" data-variant="warning">Onboarding</span></td></tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
@@ -1557,6 +1665,585 @@
               <p data-ui="text" data-size="xl" data-weight="bold">Extra large bold text</p>
             </div>
           </div>
+        </div>
+
+        <div data-ui="separator"></div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!-- DOCUMENT PRIMITIVES (New)                -->
+        <!-- ════════════════════════════════════════ -->
+
+        <div data-ui="stack" data-gap="2" data-align="center">
+          <h2 data-ui="heading" data-size="2" data-align="center">Document Primitives</h2>
+          <p data-ui="text" data-variant="muted" data-align="center">New components for document rendering, PDF output, and data-dense layouts.</p>
+        </div>
+
+        <div data-ui="separator"></div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!-- KEY-VALUE                                -->
+        <!-- ════════════════════════════════════════ -->
+        <div data-ui="stack" data-gap="4">
+          <h2 data-ui="heading" data-size="3">Key-Value</h2>
+          <p data-ui="text" data-variant="muted">Labeled data pairs for business documents. Horizontal, vertical, inline, and grid layouts.</p>
+
+          <div data-ui="grid" data-cols="2" data-gap="6">
+            <div data-ui="stack" data-gap="2">
+              <p data-ui="text" data-size="sm" data-weight="medium">Horizontal (default)</p>
+              <dl data-ui="key-value">
+                <dt data-part="label">Company</dt>
+                <dd data-part="value">SC ACME SRL</dd>
+                <dt data-part="label">CIF</dt>
+                <dd data-part="value">RO12345678</dd>
+                <dt data-part="label">Address</dt>
+                <dd data-part="value">Str. Exemplu 42, Bucharest</dd>
+              </dl>
+            </div>
+
+            <div data-ui="stack" data-gap="2">
+              <p data-ui="text" data-size="sm" data-weight="medium">Vertical</p>
+              <dl data-ui="key-value" data-variant="vertical">
+                <dt data-part="label">Invoice Number</dt>
+                <dd data-part="value">INV-2026-0042</dd>
+                <dt data-part="label">Issue Date</dt>
+                <dd data-part="value">April 3, 2026</dd>
+                <dt data-part="label">Due Date</dt>
+                <dd data-part="value">May 3, 2026</dd>
+              </dl>
+            </div>
+          </div>
+
+          <div data-ui="stack" data-gap="2">
+            <p data-ui="text" data-size="sm" data-weight="medium">Inline</p>
+            <dl data-ui="key-value" data-variant="inline">
+              <dt data-part="label">Status</dt>
+              <dd data-part="value">Paid</dd>
+              <dt data-part="label">Due</dt>
+              <dd data-part="value">May 3, 2026</dd>
+              <dt data-part="label">Amount</dt>
+              <dd data-part="value">10,567.20 RON</dd>
+            </dl>
+          </div>
+
+          <div data-ui="stack" data-gap="2">
+            <p data-ui="text" data-size="sm" data-weight="medium">Grid (2 columns)</p>
+            <dl data-ui="key-value" data-cols="2">
+              <dt data-part="label">Company</dt>
+              <dd data-part="value">SC ACME SRL</dd>
+              <dt data-part="label">CIF</dt>
+              <dd data-part="value">RO12345678</dd>
+              <dt data-part="label">IBAN</dt>
+              <dd data-part="value">RO49AAAA1B31007593840000</dd>
+              <dt data-part="label">Bank</dt>
+              <dd data-part="value">Banca Transilvania</dd>
+            </dl>
+          </div>
+
+          <div data-ui="stack" data-variant="horizontal" data-gap="6">
+            <div data-ui="stack" data-gap="2">
+              <p data-ui="text" data-size="sm" data-weight="medium">Small size</p>
+              <dl data-ui="key-value" data-size="sm">
+                <dt data-part="label">Ref</dt>
+                <dd data-part="value">#2026-042</dd>
+                <dt data-part="label">Type</dt>
+                <dd data-part="value">Invoice</dd>
+              </dl>
+            </div>
+            <div data-ui="stack" data-gap="2">
+              <p data-ui="text" data-size="sm" data-weight="medium">Large size</p>
+              <dl data-ui="key-value" data-size="lg">
+                <dt data-part="label">Total Amount</dt>
+                <dd data-part="value">10,567.20 RON</dd>
+                <dt data-part="label">Payment</dt>
+                <dd data-part="value">Bank Transfer</dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+
+        <div data-ui="separator"></div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!-- CALLOUT                                  -->
+        <!-- ════════════════════════════════════════ -->
+        <div data-ui="stack" data-gap="4">
+          <h2 data-ui="heading" data-size="3">Callout</h2>
+          <p data-ui="text" data-variant="muted">Info, warning, destructive, success, and muted variants for notices and legal text.</p>
+
+          <div data-ui="stack" data-gap="3">
+            <div data-ui="callout" data-variant="info" role="note">
+              <span data-part="icon">&#x2139;</span>
+              <div data-part="content">
+                <strong data-part="title">Information</strong>
+                <p>This is an informational callout. It draws attention to useful details without implying urgency.</p>
+              </div>
+            </div>
+
+            <div data-ui="callout" data-variant="warning" role="note">
+              <span data-part="icon">&#x26A0;</span>
+              <div data-part="content">
+                <strong data-part="title">Warning</strong>
+                <p>This is a warning callout. The operation may have unintended consequences.</p>
+              </div>
+            </div>
+
+            <div data-ui="callout" data-variant="destructive" role="alert">
+              <span data-part="icon">&#x2717;</span>
+              <div data-part="content">
+                <strong data-part="title">Error</strong>
+                <p>This is a destructive callout. Something went wrong and requires immediate attention.</p>
+              </div>
+            </div>
+
+            <div data-ui="callout" data-variant="success" role="note">
+              <span data-part="icon">&#x2713;</span>
+              <div data-part="content">
+                <strong data-part="title">Success</strong>
+                <p>Operation completed successfully. All changes have been saved.</p>
+              </div>
+            </div>
+
+            <div data-ui="callout" data-variant="muted" role="note">
+              <div data-part="content">
+                <p>This is a muted callout. Used for legal text, disclaimers, or low-priority notes. No icon, subdued styling.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div data-ui="separator"></div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!-- FIELD GROUP                              -->
+        <!-- ════════════════════════════════════════ -->
+        <div data-ui="stack" data-gap="4">
+          <h2 data-ui="heading" data-size="3">Field Group</h2>
+          <p data-ui="text" data-variant="muted">Label + input + description + error wrapper with validation states.</p>
+
+          <div data-ui="grid" data-cols="2" data-gap="4">
+            <div data-ui="field-group">
+              <label data-part="label" for="fg-email">Email Address</label>
+              <div data-part="input">
+                <input data-ui="input" id="fg-email" type="email" placeholder="you@example.com">
+              </div>
+              <p data-part="description">We'll never share your email with anyone.</p>
+            </div>
+
+            <div data-ui="field-group" data-required>
+              <label data-part="label" for="fg-company">Company Name</label>
+              <div data-part="input">
+                <input data-ui="input" id="fg-company" type="text" placeholder="SC Example SRL" aria-required="true">
+              </div>
+            </div>
+
+            <div data-ui="field-group" data-state="error">
+              <label data-part="label" for="fg-cif">CIF / CUI</label>
+              <div data-part="input">
+                <input data-ui="input" id="fg-cif" type="text" value="123" aria-invalid="true" aria-describedby="fg-cif-err">
+              </div>
+              <p data-part="description">8-digit fiscal code</p>
+              <p data-part="error" id="fg-cif-err">CIF must be exactly 8 digits.</p>
+            </div>
+
+            <div data-ui="field-group" data-state="valid">
+              <label data-part="label" for="fg-iban">IBAN</label>
+              <div data-part="input">
+                <input data-ui="input" id="fg-iban" type="text" value="RO49AAAA1B31007593840000">
+              </div>
+            </div>
+          </div>
+
+          <div data-ui="grid" data-cols="2" data-gap="4">
+            <div data-ui="field-group">
+              <label data-part="label" for="fg-notes">Notes</label>
+              <div data-part="input">
+                <textarea data-ui="textarea" id="fg-notes" rows="3" placeholder="Additional notes..."></textarea>
+              </div>
+            </div>
+
+            <div data-ui="field-group" data-variant="horizontal">
+              <label data-part="label" for="fg-addr">Address</label>
+              <div data-part="input">
+                <input data-ui="input" id="fg-addr" type="text" placeholder="Str. Exemplu 42">
+              </div>
+              <p data-part="description">Horizontal layout variant</p>
+            </div>
+          </div>
+        </div>
+
+        <div data-ui="separator"></div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!-- IMAGE                                    -->
+        <!-- ════════════════════════════════════════ -->
+        <div data-ui="stack" data-gap="4">
+          <h2 data-ui="heading" data-size="3">Image</h2>
+          <p data-ui="text" data-variant="muted">Responsive image with variants, sizes, and optional caption. Lazy-loaded by default.</p>
+
+          <div data-ui="stack" data-gap="3">
+            <h3 data-ui="heading" data-size="5">Sizes</h3>
+            <div data-ui="stack" data-variant="horizontal" data-gap="4" data-align="end" data-wrap>
+              <figure data-ui="image" data-size="xs">
+                <img data-part="img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' fill='%23ddd'%3E%3Crect width='48' height='48'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23888' font-size='10'%3EXS%3C/text%3E%3C/svg%3E" alt="XS placeholder" loading="lazy">
+              </figure>
+              <figure data-ui="image" data-size="sm">
+                <img data-part="img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' fill='%23ddd'%3E%3Crect width='96' height='96'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23888' font-size='14'%3ESM%3C/text%3E%3C/svg%3E" alt="SM placeholder" loading="lazy">
+              </figure>
+              <figure data-ui="image" data-size="md">
+                <img data-part="img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='192' height='128' fill='%23ddd'%3E%3Crect width='192' height='128'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23888' font-size='16'%3EMD%3C/text%3E%3C/svg%3E" alt="MD placeholder" loading="lazy">
+                <figcaption data-part="caption">Medium with caption</figcaption>
+              </figure>
+            </div>
+          </div>
+
+          <div data-ui="stack" data-gap="3">
+            <h3 data-ui="heading" data-size="5">Variants</h3>
+            <div data-ui="stack" data-variant="horizontal" data-gap="4" data-align="start" data-wrap>
+              <figure data-ui="image" data-variant="thumbnail" data-size="sm">
+                <img data-part="img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' fill='%23c8d6e5'%3E%3Crect width='96' height='96'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23576574' font-size='11'%3EThumbnail%3C/text%3E%3C/svg%3E" alt="Thumbnail" loading="lazy">
+              </figure>
+              <div style="width: 120px; height: 80px;">
+                <figure data-ui="image" data-variant="contain" style="width: 100%; height: 100%;">
+                  <img data-part="img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='40' fill='%23a29bfe'%3E%3Crect width='60' height='40'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23fff' font-size='9'%3EContain%3C/text%3E%3C/svg%3E" alt="Contain" loading="lazy">
+                </figure>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div data-ui="separator"></div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!-- PAGE BREAK                               -->
+        <!-- ════════════════════════════════════════ -->
+        <div data-ui="stack" data-gap="4">
+          <h2 data-ui="heading" data-size="3">Page Break</h2>
+          <p data-ui="text" data-variant="muted">Visual indicator on screen, forces new page in print. After (default) and before variants.</p>
+
+          <div data-ui="stack" data-gap="2">
+            <p data-ui="text" data-size="sm">Content above the page break</p>
+            <div data-ui="page-break" role="separator" aria-label="Page break">page break</div>
+            <p data-ui="text" data-size="sm">Content below the page break</p>
+          </div>
+        </div>
+
+        <div data-ui="separator"></div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!-- SIGNATURE                                -->
+        <!-- ════════════════════════════════════════ -->
+        <div data-ui="stack" data-gap="4">
+          <h2 data-ui="heading" data-size="3">Signature</h2>
+          <p data-ui="text" data-variant="muted">Signing line for printed documents. Three sizes and three alignments.</p>
+
+          <div data-ui="stack" data-gap="3">
+            <h3 data-ui="heading" data-size="5">Sizes</h3>
+            <div data-ui="stack" data-gap="4">
+              <div data-ui="signature" data-size="sm" role="img" aria-label="Signature: Director General">
+                <div data-part="line"></div>
+                <span data-part="label">Director General (SM)</span>
+              </div>
+              <div data-ui="signature" data-size="md" role="img" aria-label="Signature: Ion Popescu">
+                <div data-part="line"></div>
+                <span data-part="label">Ion Popescu (MD)</span>
+              </div>
+              <div data-ui="signature" data-size="lg" role="img" aria-label="Signature: Client Representative">
+                <div data-part="line"></div>
+                <span data-part="label">Client Representative (LG)</span>
+              </div>
+            </div>
+          </div>
+
+          <div data-ui="stack" data-gap="3">
+            <h3 data-ui="heading" data-size="5">Alignment</h3>
+            <div data-ui="stack" data-gap="4">
+              <div data-ui="signature" data-align="left" role="img" aria-label="Signature: Left-aligned">
+                <div data-part="line"></div>
+                <span data-part="label">Left (default)</span>
+              </div>
+              <div data-ui="signature" data-align="center" role="img" aria-label="Signature: Center-aligned">
+                <div data-part="line"></div>
+                <span data-part="label">Center</span>
+              </div>
+              <div data-ui="signature" data-align="right" role="img" aria-label="Signature: Right-aligned">
+                <div data-part="line"></div>
+                <span data-part="label">Right</span>
+              </div>
+            </div>
+          </div>
+
+          <div data-ui="stack" data-gap="3">
+            <h3 data-ui="heading" data-size="5">Side-by-side (common Romanian pattern)</h3>
+            <div data-ui="stack" data-variant="horizontal" data-gap="8">
+              <div data-ui="signature" data-size="sm" role="img" aria-label="Signature: Furnizor" style="flex: 1;">
+                <div data-part="line"></div>
+                <span data-part="label">Furnizor</span>
+              </div>
+              <div data-ui="signature" data-size="sm" role="img" aria-label="Signature: Client" style="flex: 1;">
+                <div data-part="line"></div>
+                <span data-part="label">Client</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div data-ui="separator"></div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!-- STAT                                     -->
+        <!-- ════════════════════════════════════════ -->
+        <div data-ui="stack" data-gap="4">
+          <h2 data-ui="heading" data-size="3">Stat</h2>
+          <p data-ui="text" data-variant="muted">Large metric display with label, value, and optional change indicator.</p>
+
+          <div data-ui="grid" data-cols="4" data-gap="4">
+            <div data-ui="stat" aria-label="Total Revenue: 45,231.89 RON">
+              <span data-part="value">45,231.89</span>
+              <span data-part="label">Total Revenue (RON)</span>
+            </div>
+            <div data-ui="stat" data-trend="up" aria-label="Monthly Revenue: 12,580 RON, up 15.3%">
+              <span data-part="value">12,580</span>
+              <span data-part="label">Monthly Revenue</span>
+              <span data-part="change">+15.3%</span>
+            </div>
+            <div data-ui="stat" data-trend="down" aria-label="Pending Invoices: 7, down 8%">
+              <span data-part="value">7</span>
+              <span data-part="label">Pending Invoices</span>
+              <span data-part="change">-8%</span>
+            </div>
+            <div data-ui="stat" data-trend="neutral" aria-label="Active Clients: 24, no change">
+              <span data-part="value">24</span>
+              <span data-part="label">Active Clients</span>
+              <span data-part="change">No change</span>
+            </div>
+          </div>
+
+          <div data-ui="stack" data-gap="3">
+            <h3 data-ui="heading" data-size="5">Card variant</h3>
+            <div data-ui="grid" data-cols="3" data-gap="4">
+              <div data-ui="stat" data-variant="card" data-trend="up" aria-label="Revenue: 8,750 RON, up 22.1%">
+                <span data-part="value">8,750</span>
+                <span data-part="label">Revenue</span>
+                <span data-part="change">+22.1%</span>
+              </div>
+              <div data-ui="stat" data-variant="card" data-trend="down" aria-label="Expenses: 3,200 RON, down 5.4%">
+                <span data-part="value">3,200</span>
+                <span data-part="label">Expenses</span>
+                <span data-part="change">-5.4%</span>
+              </div>
+              <div data-ui="stat" data-variant="card" data-trend="up" aria-label="Profit: 5,550 RON, up 38.7%">
+                <span data-part="value">5,550</span>
+                <span data-part="label">Net Profit</span>
+                <span data-part="change">+38.7%</span>
+              </div>
+            </div>
+          </div>
+
+          <div data-ui="stack" data-gap="3">
+            <h3 data-ui="heading" data-size="5">Sizes</h3>
+            <div data-ui="stack" data-variant="horizontal" data-gap="6" data-align="end">
+              <div data-ui="stat" data-size="sm" aria-label="Orders: 58">
+                <span data-part="value">58</span>
+                <span data-part="label">Orders (sm)</span>
+              </div>
+              <div data-ui="stat" aria-label="Orders: 58">
+                <span data-part="value">58</span>
+                <span data-part="label">Orders (md)</span>
+              </div>
+              <div data-ui="stat" data-size="lg" aria-label="Orders: 58">
+                <span data-part="value">58</span>
+                <span data-part="label">Orders (lg)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div data-ui="separator"></div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!-- DESCRIPTION LIST                         -->
+        <!-- ════════════════════════════════════════ -->
+        <div data-ui="stack" data-gap="4">
+          <h2 data-ui="heading" data-size="3">Description List</h2>
+          <p data-ui="text" data-variant="muted">Semantic dl/dt/dd with vertical and horizontal layouts. Optional dividers.</p>
+
+          <div data-ui="grid" data-cols="2" data-gap="6">
+            <div data-ui="stack" data-gap="2">
+              <p data-ui="text" data-size="sm" data-weight="medium">Vertical (default)</p>
+              <dl data-ui="description-list">
+                <dt data-part="term">Company Profile</dt>
+                <dd data-part="details">SC ACME SRL is a Romanian IT services company specializing in web development and digital transformation.</dd>
+                <dt data-part="term">Services</dt>
+                <dd data-part="details">Web development, UI/UX design, cloud infrastructure, and consulting.</dd>
+              </dl>
+            </div>
+
+            <div data-ui="stack" data-gap="2">
+              <p data-ui="text" data-size="sm" data-weight="medium">Horizontal</p>
+              <dl data-ui="description-list" data-variant="horizontal">
+                <dt data-part="term">Contract Type</dt>
+                <dd data-part="details">Fixed-price</dd>
+                <dt data-part="term">Duration</dt>
+                <dd data-part="details">6 months</dd>
+                <dt data-part="term">Payment Terms</dt>
+                <dd data-part="details">Net 30</dd>
+              </dl>
+            </div>
+          </div>
+
+          <div data-ui="stack" data-gap="2">
+            <p data-ui="text" data-size="sm" data-weight="medium">Divided</p>
+            <dl data-ui="description-list" data-divided>
+              <dt data-part="term">Scope of Work</dt>
+              <dd data-part="details">Full redesign and migration of the existing e-commerce platform to modern architecture.</dd>
+              <dt data-part="term">Deliverables</dt>
+              <dd data-part="details">Responsive website, admin dashboard, API documentation, and deployment scripts.</dd>
+              <dt data-part="term">Acceptance Criteria</dt>
+              <dd data-part="details">All functional requirements pass UAT. Lighthouse score above 90.</dd>
+            </dl>
+          </div>
+        </div>
+
+        <div data-ui="separator"></div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!-- QR CODE (Recipe)                         -->
+        <!-- ════════════════════════════════════════ -->
+        <div data-ui="stack" data-gap="4">
+          <h2 data-ui="heading" data-size="3">QR Code</h2>
+          <p data-ui="text" data-variant="muted">SVG QR code generation from text input. Three sizes and error correction levels. Recipe component.</p>
+
+          <div data-ui="stack" data-variant="horizontal" data-gap="6" data-align="end" data-wrap>
+            <div data-ui="stack" data-gap="2" data-align="center">
+              <p data-ui="text" data-size="sm" data-weight="medium">Small</p>
+              <div data-ui="qr-code" data-size="sm" data-value="https://example.com" role="img" aria-label="QR: example.com">
+                <!-- SVG auto-generated by controller -->
+                <svg viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg" style="width:80px;height:80px"><rect width="21" height="21" fill="white"/><rect x="0" y="0" width="7" height="7" fill="currentColor"/><rect x="14" y="0" width="7" height="7" fill="currentColor"/><rect x="0" y="14" width="7" height="7" fill="currentColor"/><rect x="2" y="2" width="3" height="3" fill="white"/><rect x="16" y="2" width="3" height="3" fill="white"/><rect x="2" y="16" width="3" height="3" fill="white"/><text x="10.5" y="11" text-anchor="middle" font-size="3" fill="currentColor">QR</text></svg>
+              </div>
+            </div>
+
+            <div data-ui="stack" data-gap="2" data-align="center">
+              <p data-ui="text" data-size="sm" data-weight="medium">Medium (default)</p>
+              <div data-ui="qr-code" data-size="md" data-value="https://loom-ui.dev" role="img" aria-label="QR: loom-ui.dev">
+                <svg viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg" style="width:128px;height:128px"><rect width="21" height="21" fill="white"/><rect x="0" y="0" width="7" height="7" fill="currentColor"/><rect x="14" y="0" width="7" height="7" fill="currentColor"/><rect x="0" y="14" width="7" height="7" fill="currentColor"/><rect x="2" y="2" width="3" height="3" fill="white"/><rect x="16" y="2" width="3" height="3" fill="white"/><rect x="2" y="16" width="3" height="3" fill="white"/><text x="10.5" y="11" text-anchor="middle" font-size="3" fill="currentColor">QR</text></svg>
+                <span data-part="caption">Scan to visit</span>
+              </div>
+            </div>
+
+            <div data-ui="stack" data-gap="2" data-align="center">
+              <p data-ui="text" data-size="sm" data-weight="medium">Large</p>
+              <div data-ui="qr-code" data-size="lg" data-value="RO49AAAA1B31007593840000" role="img" aria-label="QR: Payment details">
+                <svg viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg" style="width:200px;height:200px"><rect width="21" height="21" fill="white"/><rect x="0" y="0" width="7" height="7" fill="currentColor"/><rect x="14" y="0" width="7" height="7" fill="currentColor"/><rect x="0" y="14" width="7" height="7" fill="currentColor"/><rect x="2" y="2" width="3" height="3" fill="white"/><rect x="16" y="2" width="3" height="3" fill="white"/><rect x="2" y="16" width="3" height="3" fill="white"/><text x="10.5" y="11" text-anchor="middle" font-size="3" fill="currentColor">QR</text></svg>
+                <span data-part="caption">Date plata</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div data-ui="separator"></div>
+
+        <!-- ════════════════════════════════════════ -->
+        <!-- DOCUMENT PATTERN                         -->
+        <!-- ════════════════════════════════════════ -->
+        <div data-ui="stack" data-gap="4">
+          <h2 data-ui="heading" data-size="3">Document Pattern</h2>
+          <p data-ui="text" data-variant="muted">Full-page document container optimized for print. Invoice variant shown below with composition of document primitives.</p>
+
+          <article data-ui="document" data-variant="invoice" aria-label="Invoice INV-2026-0042">
+            <div data-part="header">
+              <div>
+                <h1 data-ui="heading" data-size="3">SC ACME SRL</h1>
+                <p data-ui="text" data-size="sm" data-variant="muted">Str. Exemplu 42, Bucharest</p>
+                <p data-ui="text" data-size="sm" data-variant="muted">CIF: RO12345678</p>
+              </div>
+              <div>
+                <h2 data-ui="heading" data-size="4">FACTURA</h2>
+                <dl data-ui="key-value" data-size="sm">
+                  <dt data-part="label">Nr.</dt>
+                  <dd data-part="value">INV-2026-0042</dd>
+                  <dt data-part="label">Data</dt>
+                  <dd data-part="value">03.04.2026</dd>
+                  <dt data-part="label">Scadenta</dt>
+                  <dd data-part="value">03.05.2026</dd>
+                </dl>
+              </div>
+            </div>
+
+            <div data-part="body">
+              <dl data-ui="key-value" data-cols="2">
+                <dt data-part="label">Client</dt>
+                <dd data-part="value">SC Client SRL</dd>
+                <dt data-part="label">CIF Client</dt>
+                <dd data-part="value">RO87654321</dd>
+                <dt data-part="label">Adresa</dt>
+                <dd data-part="value">Bd. Unirii 10, Cluj</dd>
+                <dt data-part="label">IBAN</dt>
+                <dd data-part="value">RO49BBBB1C42008694950000</dd>
+              </dl>
+
+              <div data-ui="table" data-size="sm">
+                <table data-part="table">
+                  <thead data-part="thead">
+                    <tr data-part="tr">
+                      <th data-part="th" scope="col">Descriere</th>
+                      <th data-part="th" scope="col" data-align="right">Cant.</th>
+                      <th data-part="th" scope="col" data-align="right">Pret unitar</th>
+                      <th data-part="th" scope="col" data-align="right">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody data-part="tbody">
+                    <tr data-part="tr">
+                      <td data-part="td">Servicii dezvoltare web</td>
+                      <td data-part="td" data-align="right" data-format="number">40</td>
+                      <td data-part="td" data-align="right" data-format="currency">150.00</td>
+                      <td data-part="td" data-align="right" data-format="currency">6,000.00</td>
+                    </tr>
+                    <tr data-part="tr">
+                      <td data-part="td">Design UI/UX</td>
+                      <td data-part="td" data-align="right" data-format="number">20</td>
+                      <td data-part="td" data-align="right" data-format="currency">120.00</td>
+                      <td data-part="td" data-align="right" data-format="currency">2,400.00</td>
+                    </tr>
+                  </tbody>
+                  <tfoot data-part="tfoot">
+                    <tr data-part="tr">
+                      <td data-part="td" colspan="3" data-align="right">Subtotal</td>
+                      <td data-part="td" data-align="right" data-format="currency">8,400.00</td>
+                    </tr>
+                    <tr data-part="tr">
+                      <td data-part="td" colspan="3" data-align="right">TVA (19%)</td>
+                      <td data-part="td" data-align="right" data-format="currency">1,596.00</td>
+                    </tr>
+                    <tr data-part="tr">
+                      <td data-part="td" colspan="3" data-align="right">Total</td>
+                      <td data-part="td" data-align="right" data-format="currency">9,996.00 RON</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+
+              <div data-ui="stack" data-variant="horizontal" data-gap="8">
+                <div data-ui="signature" data-size="sm" role="img" aria-label="Semnatura furnizor" style="flex:1">
+                  <div data-part="line"></div>
+                  <span data-part="label">Furnizor</span>
+                </div>
+                <div data-ui="signature" data-size="sm" role="img" aria-label="Semnatura client" style="flex:1">
+                  <div data-part="line"></div>
+                  <span data-part="label">Client</span>
+                </div>
+              </div>
+
+              <div data-ui="callout" data-variant="muted" role="note">
+                <div data-part="content">
+                  <p>Factura este valabila fara semnatura si stampila conform art. 319 alin. 29 din Legea 227/2015 privind Codul Fiscal.</p>
+                </div>
+              </div>
+            </div>
+
+            <div data-part="footer">
+              <p>SC ACME SRL &bull; CIF: RO12345678 &bull; J40/1234/2020 &bull; IBAN: RO49AAAA1B31007593840000</p>
+            </div>
+          </article>
         </div>
 
         <!-- Footer -->

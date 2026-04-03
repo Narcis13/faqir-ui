@@ -21,6 +21,7 @@ Include `<script src="loom-core.js" defer></script>` for Alpine-style reactivity
 | `l-init` | — | `l-init="setup()"` — run on init |
 | `l-effect` | — | `l-effect="document.title = name"` — side effect |
 | `l-cloak` | — | Hide element until initialized |
+| `l-source:name` | — | `l-source:tasks="/api/tasks"` — declarative REST data binding |
 
 ## l-model Modifiers
 
@@ -55,6 +56,30 @@ Include `<script src="loom-core.js" defer></script>` for Alpine-style reactivity
 | `$nextTick` | Run after DOM update: `$nextTick(() => ...)` |
 | `$watch` | Watch expression: `$watch('count', (val, old) => ...)` |
 | `$id` | Generate unique ID: `$id('prefix')` |
+
+## l-source Directive
+
+Declarative REST data binding. Place on any `l-data` element:
+
+```html
+<div l-data="{ newTitle: '' }" l-source:tasks="/api/tasks">
+```
+
+**Auto-injected into scope:**
+- `tasks` — reactive array of fetched items
+- `tasksLoading` — boolean, true during fetch
+- `tasksError` — string|null error message
+- `$tasks` — CRUD controller object
+
+**Controller methods:** `$tasks.load()`, `$tasks.create(payload)`, `$tasks.update(id, payload)`, `$tasks.remove(id)`, `$tasks.refresh()`, `$tasks.startPolling(ms?)`, `$tasks.stopPolling()`
+
+**Modifiers:**
+- `.lazy` — don't auto-load on init
+- `.optimistic` — update UI before server confirms (rollback on error)
+- `.poll.5000` — auto-refresh every N ms (default 30000)
+- `.key.uuid` — use custom ID key instead of `id`
+
+Example: `l-source:items.optimistic.poll.10000.key.uuid="/api/items"`
 
 ## Global API
 
