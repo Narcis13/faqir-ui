@@ -17,6 +17,8 @@ const TOKEN_FILES_ORDERED = [
   "motion.css",
   "semantic.css",
   "aliases.css",
+  "document.css",
+  "doc-aliases.css",
 ];
 
 export function minifyCSS(css: string): string {
