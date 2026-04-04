@@ -58,6 +58,10 @@
   align-items: stretch;
 }
 
+[data-ui="stack"][data-align="baseline"] {
+  align-items: baseline;
+}
+
 /* ── Justify ── */
 [data-ui="stack"][data-justify="start"] {
   justify-content: flex-start;
@@ -117,6 +121,13 @@
 
 [data-ui="stack"][data-align-text="right"] {
   text-align: right;
+}
+
+/* ── Label in horizontal stacks ── */
+[data-ui="stack"][data-variant="horizontal"] > [data-ui="label"] {
+  display: inline;
+  margin-bottom: 0;
+  white-space: nowrap;
 }
 
 /* ── Responsive Collapse ── */
