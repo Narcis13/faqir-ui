@@ -138,10 +138,21 @@
 
   function flushEffects() {
     flushScheduled = false;
-    const effects = [...pendingEffects];
-    pendingEffects.clear();
-    for (const eff of effects) {
-      eff();
+    var iterations = 0;
+    while (pendingEffects.size > 0) {
+      if (++iterations > 100) {
+        pendingEffects.clear();
+        break;
+      }
+      var effects = [...pendingEffects];
+      pendingEffects.clear();
+      for (var i = 0; i < effects.length; i++) {
+        try {
+          effects[i]();
+        } catch (e) {
+          console.warn('[Loom] Effect error:', e);
+        }
+      }
     }
   }
 

@@ -110,6 +110,52 @@ describe("Reactive Engine", () => {
       expect(a).toBe(5);
       expect(b).toBe(10);
     });
+
+    it("handles 5+ effects on same property", async () => {
+      const state = Loom.reactive({ v: 0 });
+      const results: number[] = [0, 0, 0, 0, 0];
+      for (let i = 0; i < 5; i++) {
+        const idx = i;
+        Loom.effect(() => { results[idx] = state.v + idx; });
+      }
+      expect(results).toEqual([0, 1, 2, 3, 4]);
+
+      state.v = 10;
+      await tick();
+      expect(results).toEqual([10, 11, 12, 13, 14]);
+    });
+
+    it("does not skip effects when one throws", async () => {
+      const state = Loom.reactive({ v: 0 });
+      let a = 0, b = 0;
+      Loom.effect(() => { a = state.v; });
+      Loom.effect(() => {
+        if (state.v === 5) throw new Error("boom");
+      });
+      Loom.effect(() => { b = state.v; });
+
+      state.v = 5;
+      await tick();
+      // Effect 2 throws, but effects 1 and 3 should still run
+      expect(a).toBe(5);
+      expect(b).toBe(5);
+    });
+
+    it("flushes cascading effects in the same cycle", async () => {
+      const state = Loom.reactive({ a: 0, b: 0 });
+      let observed = 0;
+      // Effect 1: when a changes, set b = a * 2
+      Loom.effect(() => { state.b = state.a * 2; });
+      // Effect 2: read b
+      Loom.effect(() => { observed = state.b; });
+      expect(observed).toBe(0);
+
+      state.a = 3;
+      await tick();
+      // b should be 6, and the observer should see it in the same flush
+      expect(state.b).toBe(6);
+      expect(observed).toBe(6);
+    });
   });
 
   describe("batch()", () => {
@@ -421,6 +467,97 @@ describe("Directives", () => {
       Loom.start();
       await tick();
       expect(document.querySelector("span")!.hasAttribute("data-info")).toBe(false);
+    });
+
+    it("re-evaluates all sibling l-bind effects sharing the same dependency", async () => {
+      document.body.innerHTML = `
+        <div l-data="{ rating: 0 }">
+          <span class="star" l-bind:data-state="rating >= 1 ? 'active' : ''">1</span>
+          <span class="star" l-bind:data-state="rating >= 2 ? 'active' : ''">2</span>
+          <span class="star" l-bind:data-state="rating >= 3 ? 'active' : ''">3</span>
+          <span class="star" l-bind:data-state="rating >= 4 ? 'active' : ''">4</span>
+          <span class="star" l-bind:data-state="rating >= 5 ? 'active' : ''">5</span>
+          <button @click="rating = 3">Rate 3</button>
+        </div>
+      `;
+      Loom.start();
+      await tick();
+
+      const stars = document.querySelectorAll(".star");
+      // Initially all should have empty data-state
+      for (let i = 0; i < 5; i++) {
+        expect(stars[i].getAttribute("data-state")).toBe("");
+      }
+
+      // Click to set rating = 3
+      document.querySelector("button")!.click();
+      await tick();
+
+      // Stars 1-3 should be active, 4-5 should be empty
+      expect(stars[0].getAttribute("data-state")).toBe("active");
+      expect(stars[1].getAttribute("data-state")).toBe("active");
+      expect(stars[2].getAttribute("data-state")).toBe("active");
+      expect(stars[3].getAttribute("data-state")).toBe("");
+      expect(stars[4].getAttribute("data-state")).toBe("");
+    });
+
+    it("re-evaluates sibling boolean attribute bindings on shared dependency", async () => {
+      document.body.innerHTML = `
+        <div l-data="{ level: 0 }">
+          <button class="b" l-bind:disabled="level < 1">A</button>
+          <button class="b" l-bind:disabled="level < 2">B</button>
+          <button class="b" l-bind:disabled="level < 3">C</button>
+          <button @click="level = 2">Set 2</button>
+        </div>
+      `;
+      Loom.start();
+      await tick();
+
+      const buttons = document.querySelectorAll(".b");
+      // Initially level=0, all should be disabled
+      expect(buttons[0].hasAttribute("disabled")).toBe(true);
+      expect(buttons[1].hasAttribute("disabled")).toBe(true);
+      expect(buttons[2].hasAttribute("disabled")).toBe(true);
+
+      // Click to set level = 2
+      document.querySelector("[\\@click]")!.click();
+      await tick();
+
+      // level=2: A (level<1=false) enabled, B (level<2=false) enabled, C (level<3=true) disabled
+      expect(buttons[0].hasAttribute("disabled")).toBe(false);
+      expect(buttons[1].hasAttribute("disabled")).toBe(false);
+      expect(buttons[2].hasAttribute("disabled")).toBe(true);
+    });
+
+    it("re-evaluates sibling class bindings (array mode) on shared dependency", async () => {
+      document.body.innerHTML = `
+        <div l-data="{ step: 0 }">
+          <div id="s1" l-bind:class="[step >= 1 ? 'done' : 'pending']">Step 1</div>
+          <div id="s2" l-bind:class="[step >= 2 ? 'done' : 'pending']">Step 2</div>
+          <div id="s3" l-bind:class="[step >= 3 ? 'done' : 'pending']">Step 3</div>
+          <button @click="step = 2">Advance</button>
+        </div>
+      `;
+      Loom.start();
+      await tick();
+
+      const s1 = document.querySelector("#s1")!;
+      const s2 = document.querySelector("#s2")!;
+      const s3 = document.querySelector("#s3")!;
+
+      // Initially step=0, all should be 'pending'
+      expect(s1.className).toBe("pending");
+      expect(s2.className).toBe("pending");
+      expect(s3.className).toBe("pending");
+
+      // Click to set step = 2
+      document.querySelector("button")!.click();
+      await tick();
+
+      // Items 1-2 should have 'done', item 3 should have 'pending'
+      expect(s1.className).toBe("done");
+      expect(s2.className).toBe("done");
+      expect(s3.className).toBe("pending");
     });
   });
 
