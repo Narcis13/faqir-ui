@@ -318,9 +318,14 @@ shipped modifiers: `.lazy`, `.optimistic`, `.poll`, `.key`.
 - Rapid re-trigger: last-write-wins documented behavior (even if teardown lands in 0.3-08, assert current semantics and mark the race test `todo` if unfixable without it).
 
 **Acceptance criteria**
-- [ ] ≥ 15 assertions-worth of coverage across all modifiers; `grep -r "l-source" tests/` is no longer empty.
-- [ ] Every discovered defect either fixed in-session (if small) or filed as a note in 0.3-08's entry.
-- [ ] Documented contract (states + modifier semantics) written into the test file header as the reference.
+- [x] ≥ 15 assertions-worth of coverage across all modifiers; `grep -r "l-source" tests/` is no longer empty. (`tests/core/l-source.test.ts` — 29 tests + 1 `todo`, **91 `expect()` calls**, covering the scope contract, success/loading lifecycle, error paths, and every shipped modifier: `.lazy`, `.poll`/`.poll.<n>`/default 30 s, `.optimistic` create/update/remove + rollback, `.key.<field>`, plus `l-for` integration.)
+- [x] Every discovered defect either fixed in-session (if small) or filed as a note in 0.3-08's entry. (Three defects — D1 docs/impl API mismatch, D2 no request sequencing, D3 no post-destroy write guard — filed under 0.3-08 above; the suite asserts current behavior for each so the fixes flip the guard tests. One in-session fix: the test's fake `setInterval` returns a truthy 1-based id because the engine's `stopPolling` guards with `if (pollTimer)` — no engine change needed.)
+- [x] Documented contract (states + modifier semantics) written into the test file header as the reference. (Full CONTRACT + DEFECTS block at the top of `tests/core/l-source.test.ts`: injected `items`/`itemsLoading`/`itemsError`/`$items`, controller API, state transitions, single-object wrap, and every modifier's semantics.)
+
+**Note:** the real contract diverges from the task's `{ data, loading, error }` guess —
+shipped state is flat scope vars `items` / `itemsLoading` / `itemsError` plus the `$items`
+controller (no `$items.loading`/`.error`/`.submitting`, no `.method`). The suite codifies
+what ships; reconciliation is D1 under 0.3-08.
 
 ---
 
@@ -344,6 +349,29 @@ markup is exempt — encode that in the rule, not in prose.
 - [ ] No fetch or timer survives scope destruction (asserted, not assumed).
 - [ ] Race test from 0.3-07 un-`todo`ed and green.
 - [ ] Audit exemption is code + test, and mentioned in the rule's description output.
+
+**Defects surfaced by 0.3-07** (filed here per that task's acceptance criteria; the
+new suite `tests/core/l-source.test.ts` asserts the *current* behavior for each, so
+fixing them will require updating those guard tests):
+
+- **D1 · Docs/impl API mismatch.** `docs/data-driven-rendering.md` and
+  `playground/task-manager.html` document `$items.loading`, `$items.error`,
+  `$items.submitting`, and a `.method` modifier. None are implemented — shipped state
+  lives on the flat scope vars `itemsLoading` / `itemsError` (there is no `submitting`
+  flag and no `.method` support; `parseSourceModifiers` silently ignores unknown
+  modifiers, so `l-source:x.method="…"` still auto-GETs). Decide the intended contract
+  and reconcile: either implement the controller-scoped `loading`/`error`/`submitting`
+  (+ `.method`) or correct the docs. The suite's `documented-vs-shipped divergences`
+  block pins current reality and should flip when this lands.
+- **D2 · No request sequencing (the 0.3-07 race `todo`).** Concurrent `load()`s race on
+  resolution order, not call order — the response that *resolves last* wins, so a slow
+  stale response clobbers a fresh one. This is the AbortController-supersede work above;
+  the `it.todo("the latest CALL wins …")` in the suite is the acceptance test to un-skip.
+- **D3 · No post-destroy write guard.** A `load()`/`create()`/… `fetch` that resolves
+  after its scope is destroyed still writes into the dead scope, and in-flight requests
+  are never aborted. `.poll` registers a scope cleanup that calls `stopPolling()`, but
+  there is no public destroy hook to exercise it from a test — the "abort on element
+  removal" test above will need one (or to drive teardown via `l-if`/`l-for` removal).
 
 ---
 
