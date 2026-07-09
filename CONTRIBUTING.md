@@ -2,7 +2,8 @@
 
 ## Prerequisites
 
-- [Bun](https://bun.sh) v1.0+
+- [Bun](https://bun.sh) v1.3+ — for development, tests, and building the CLI bundle
+- [Node.js](https://nodejs.org) ≥ 18 — the compiled CLI runs on plain Node (no Bun required at runtime)
 - Git
 
 ## Setup
@@ -140,6 +141,51 @@ Do not:
 bun run src/index.ts init
 bun run src/index.ts add button dialog
 bun run src/index.ts audit
+```
+
+## Building the Node-Compatible CLI
+
+The published package does **not** require Bun at runtime. `bun run build:cli`
+compiles the TypeScript CLI into a single-file ESM bundle at `dist/faqir.mjs`
+that runs on plain Node ≥ 18:
+
+```bash
+bun run build:cli          # → dist/faqir.mjs (bun build src/index.ts --target=node)
+node dist/faqir.mjs list   # runs with no Bun on PATH
+```
+
+The build is reproducible: same source in → identical bundle out. Bun runtime
+globals the CLI relies on (`Bun.file`, `Bun.write`, `Bun.Glob`, `Bun.serve`) are
+polyfilled at runtime by `src/utils/runtime-shim.ts`, which is a no-op under the
+Bun runtime.
+
+### How the launcher picks a runtime
+
+`bin/faqir` → `bin/launcher.mjs` chooses how to run:
+
+| Situation                                  | Runtime + entry            |
+| ------------------------------------------ | -------------------------- |
+| `dist/faqir.mjs` present, Bun on PATH      | `bun dist/faqir.mjs`       |
+| `dist/faqir.mjs` present, no Bun           | `node dist/faqir.mjs`      |
+| Source checkout, no build yet, Bun on PATH | `bun src/index.ts` (dev)   |
+
+Env overrides: `FAQIR_FORCE_NODE=1` forces the Node path; `FAQIR_BUN=/path/to/bun`
+selects a specific Bun binary.
+
+The published npm package ships `dist/` + `registry/` (not the raw `src/**`
+TypeScript). Verify the packed contents with:
+
+```bash
+bun run build:cli && npm pack --dry-run
+```
+
+### Smoke test
+
+`scripts/smoke-cli.sh` builds the bundle and drives it end-to-end with `node`
+(the no-Bun runtime path). Run it via:
+
+```bash
+bun run smoke
 ```
 
 ## Type Checking

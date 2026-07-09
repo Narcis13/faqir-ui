@@ -48,7 +48,7 @@ done in any order (or in parallel worktrees).
 
 | ID | Task | Status |
 |----|------|--------|
-| 0.3-01 | Compile CLI to Node-compatible `dist/faqir.mjs` | ⬜ |
+| 0.3-01 | Compile CLI to Node-compatible `dist/faqir.mjs` | ✅ |
 | 0.3-02 | `@faqir-ui/core` package + CDN artifacts + SRI | ⬜ |
 | 0.3-03 | `build:core` assembly script (engine + recipes → faqir-core.js) | ⬜ |
 | 0.3-04 | De-duplicate controllers; recipes become single source; register qr-code | ⬜ |
@@ -177,10 +177,10 @@ on plain Node ≥ 18 otherwise. `npm pack` must ship `dist/` + `registry/`, not 
 - CI-runnable smoke script `scripts/smoke-cli.sh` used later by 0.3-12.
 
 **Acceptance criteria**
-- [ ] `node dist/faqir.mjs <cmd>` works for every command on a machine with no Bun.
-- [ ] `bun run build:cli` is reproducible and documented in `CONTRIBUTING.md`.
-- [ ] `npm pack --dry-run` file list contains `dist/faqir.mjs` + registry, excludes `src/**` TS from the runtime path.
-- [ ] Existing `bun`-based dev flow unchanged for contributors.
+- [x] `node dist/faqir.mjs <cmd>` works for every command on a machine with no Bun.
+- [x] `bun run build:cli` is reproducible and documented in `CONTRIBUTING.md`.
+- [x] `npm pack --dry-run` file list contains `dist/faqir.mjs` + registry, excludes `src/**` TS from the runtime path.
+- [x] Existing `bun`-based dev flow unchanged for contributors.
 
 ---
 
