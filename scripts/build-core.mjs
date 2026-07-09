@@ -97,6 +97,37 @@ function parseController(source, label) {
   return { name, factory, body, label };
 }
 
+/**
+ * Drift guard (task 0.3-04): recipe controllers live ONLY in registry/recipes.
+ * Fail the build if the engine source still carries an inline copy — an inline
+ * factory definition, a static `controllerRegistry['name'] =` registration, or a
+ * `.controller('name', …)` call — for any recipe we just discovered on disk.
+ * Keeps the two from silently drifting apart; the marker is the sole seam.
+ */
+function assertSingleSourceOfTruth(engineSrc, engineRel, controllers) {
+  const esc = (s) => s.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
+  const offenders = [];
+  for (const c of controllers) {
+    if (new RegExp(`function\\s+${esc(c.factory)}\\s*\\(`).test(engineSrc)) {
+      offenders.push(`inline factory function ${c.factory}() for "${c.name}"`);
+    }
+    if (new RegExp(`controllerRegistry\\s*\\[\\s*['"]${esc(c.name)}['"]\\s*\\]\\s*=`).test(engineSrc)) {
+      offenders.push(`static controllerRegistry['${c.name}'] = … registration`);
+    }
+    if (new RegExp(`\\.controller\\s*\\(\\s*['"]${esc(c.name)}['"]`).test(engineSrc)) {
+      offenders.push(`Faqir.controller('${c.name}', …) call`);
+    }
+  }
+  if (offenders.length) {
+    throw new Error(
+      `single-source-of-truth violation (task 0.3-04): engine source ${engineRel} ` +
+        `duplicates controllers that live in registry/recipes:\n  - ` +
+        offenders.join("\n  - ") +
+        `\nDelete these from the engine — recipes are the only home for controllers.`,
+    );
+  }
+}
+
 /** Render one controller as a collision-safe, self-registering IIFE. */
 function renderController(c) {
   return (
@@ -180,6 +211,9 @@ export function buildCore(opts = {}) {
     }
     seen.set(c.name, c.label);
   }
+
+  // Controllers live only in registry/recipes — the engine must carry no inline copy.
+  assertSingleSourceOfTruth(engine, relative(ROOT, enginePath), found);
 
   const block = found.length
     ? found.map(renderController).join("\n\n")

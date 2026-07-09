@@ -247,10 +247,10 @@ like every other recipe.
 - All 16 recipe auto-init smoke tests (element present → controller attached).
 
 **Acceptance criteria**
-- [ ] Zero controller code duplicated between engine source and `registry/recipes/`.
-- [ ] Diff report of reconciled drift included in the commit message.
-- [ ] `qr-code` behaves identically to other recipes (bundled, auto-initialized).
-- [ ] Full test suite green against the built `faqir-core.js`.
+- [x] Zero controller code duplicated between engine source and `registry/recipes/`. (0.3-03 extracted the engine controller-free; `build:core` now hard-fails on any re-introduced inline copy, and `tests/build/controller-source-of-truth.test.ts` guards the source statically.)
+- [x] Diff report of reconciled drift included in the commit message. (15 inline copies audited against their standalone files — all ES5 transpilations of the ES6 originals; no fixes to port. Report in commit body.)
+- [x] `qr-code` behaves identically to other recipes (bundled, auto-initialized). (`tests/recipes/auto-init.test.ts` — attaches + renders its SVG + live re-render from the built core.)
+- [x] Full test suite green against the built `faqir-core.js`. (527 pass / 0 fail; 16 recipe auto-init smoke tests load the shipped artifact.)
 
 ---
 
