@@ -1261,6 +1261,53 @@
 
   // --- 3.18 l-for ---
 
+  // Reactive, parent-delegating scope for a single l-for item. The item/index
+  // slots are reactive so keyed reuse updates them with one property write
+  // (no re-processing); every other read/write passes through to the parent
+  // scope so mutations there still trigger reactivity.
+  function createForItemScope(own, parentScope) {
+    var deps = Object.create(null);
+    return new Proxy(own, {
+      get: function(target, key) {
+        if (key === '__isReactive') return true;
+        if (key === '__target') return target;
+        if (key === '__deps') return parentScope.__deps;
+        if (key in target) {
+          if (currentEffect && typeof key === 'string') {
+            if (!deps[key]) deps[key] = new Set();
+            deps[key].add(currentEffect);
+            currentEffect._deps.add(deps[key]);
+          }
+          var value = target[key];
+          if (value !== null && typeof value === 'object' && !value.__isReactive
+              && (Array.isArray(value) || Object.getPrototypeOf(value) === Object.prototype)) {
+            return reactive(value);
+          }
+          return value;
+        }
+        return parentScope[key];
+      },
+      set: function(target, key, value) {
+        if (key in target) {
+          var old = target[key];
+          if (old !== value) {
+            target[key] = value;
+            if (deps[key]) {
+              for (var eff of deps[key]) pendingEffects.add(eff);
+              scheduleFlush();
+            }
+          }
+          return true;
+        }
+        parentScope[key] = value;
+        return true;
+      },
+      has: function(target, key) {
+        return (key in target) || (key in parentScope);
+      }
+    });
+  }
+
   function handleFor(el, dir, scope) {
     if (el.tagName !== 'TEMPLATE') {
       console.warn('[Faqir] l-for must be used on a <template> element');
@@ -1279,12 +1326,46 @@
     var itemName = match[1] || 'item';
     var indexName = match[2] || 'index';
     var listExpr = match[3];
+    var keyExpr = el.getAttribute('l-key');
 
     var anchor = document.createComment('l-for');
     el.parentNode.insertBefore(anchor, el);
     el.remove();
 
-    var currentNodes = [];
+    // Reconciliation key for an item. Falls back to its position when there is
+    // no l-key. Untracked so key reads never subscribe the list effect to
+    // individual item properties.
+    function keyFor(item, i) {
+      if (!keyExpr) return i;
+      var ctx = Object.create(null);
+      ctx[itemName] = item;
+      ctx[indexName] = i;
+      var proxy = new Proxy(ctx, {
+        has: function(t, k) { return (k in t) || (k in scope); },
+        get: function(t, k) { return (k in t) ? t[k] : scope[k]; }
+      });
+      return untrack(function() { return evaluate(keyExpr, proxy, el); });
+    }
+
+    // Build one item's nodes + reactive scope from the template.
+    function createEntry(item, i, key) {
+      var clone = el.content.cloneNode(true);
+      var nodes = [].slice.call(clone.childNodes);
+      var own = Object.create(null);
+      own[itemName] = item;
+      own[indexName] = i;
+      var childScope = createForItemScope(own, scope);
+      for (var j = 0; j < nodes.length; j++) {
+        if (nodes[j].nodeType !== 1) continue;
+        nodes[j].__faqirScope = childScope;
+        nodes[j].__faqirCleanups = [];
+        processElement(nodes[j], childScope);
+        walkChildren(nodes[j], childScope);
+      }
+      return { key: key, scope: childScope, nodes: nodes };
+    }
+
+    var currentEntries = [];
 
     var cl = effect(function() {
       var list = evaluate(listExpr, scope, el);
@@ -1292,59 +1373,46 @@
                   typeof list === 'number' ? Array.from({ length: list }, function(_, i) { return i + 1; }) :
                   [];
 
-      // Clean up previous render
-      for (var i = 0; i < currentNodes.length; i++) {
-        destroyScope(currentNodes[i]);
-        currentNodes[i].remove();
+      // old key -> entry, consumed as we match so duplicate keys fall through
+      // to fresh nodes and leftovers are treated as stale.
+      var oldMap = new Map();
+      for (var i = 0; i < currentEntries.length; i++) {
+        oldMap.set(currentEntries[i].key, currentEntries[i]);
       }
-      currentNodes = [];
 
-      var fragment = document.createDocumentFragment();
+      var newEntries = [];
+      var prev = anchor; // last placed node; the next item's nodes go after it
 
       for (var i = 0; i < items.length; i++) {
-        var clone = el.content.cloneNode(true);
-        var nodes = [].slice.call(clone.childNodes).filter(function(n) { return n.nodeType === 1; });
-
-        for (var j = 0; j < nodes.length; j++) {
-          var childOwn = Object.create(null);
-          childOwn[itemName] = items[i];
-          childOwn[indexName] = i;
-
-          // Delegating child scope: reads/writes of parent properties go
-          // through the parent scope so that mutations trigger reactivity.
-          var childScope = (function(own, parentScope) {
-            return new Proxy(own, {
-              get: function(target, key) {
-                if (key === '__isReactive') return true;
-                if (key === '__target') return target;
-                if (key === '__deps') return parentScope.__deps;
-                return (key in target) ? target[key] : parentScope[key];
-              },
-              set: function(target, key, value) {
-                if (key in target) {
-                  target[key] = value;
-                } else {
-                  parentScope[key] = value;
-                }
-                return true;
-              },
-              has: function(target, key) {
-                return (key in target) || (key in parentScope);
-              }
-            });
-          })(childOwn, scope);
-          nodes[j].__faqirScope = childScope;
-          nodes[j].__faqirCleanups = [];
-
-          processElement(nodes[j], childScope);
-          walkChildren(nodes[j], childScope);
-          currentNodes.push(nodes[j]);
+        var key = keyFor(items[i], i);
+        var entry = oldMap.get(key);
+        if (entry !== undefined) {
+          oldMap.delete(key);
+          // Reuse in place: one write per slot, re-renders only on change.
+          entry.scope[itemName] = items[i];
+          entry.scope[indexName] = i;
+        } else {
+          entry = createEntry(items[i], i, key);
         }
-
-        fragment.appendChild(clone);
+        for (var j = 0; j < entry.nodes.length; j++) {
+          var node = entry.nodes[j];
+          if (prev.nextSibling !== node) {
+            anchor.parentNode.insertBefore(node, prev.nextSibling);
+          }
+          prev = node;
+        }
+        newEntries.push(entry);
       }
 
-      anchor.parentNode.insertBefore(fragment, anchor.nextSibling);
+      // Remove stale entries that were not reused this pass.
+      oldMap.forEach(function(stale) {
+        for (var j = 0; j < stale.nodes.length; j++) {
+          destroyScope(stale.nodes[j]);
+          stale.nodes[j].remove();
+        }
+      });
+
+      currentEntries = newEntries;
     });
 
     addCleanup(el, cl);

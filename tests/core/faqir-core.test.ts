@@ -1065,6 +1065,242 @@ describe("Directives", () => {
     });
   });
 
+  describe("l-for keyed reconciliation", () => {
+    const lis = () => Array.from(document.querySelectorAll("li"));
+
+    it("append reuses existing keyed nodes", async () => {
+      document.body.innerHTML = `
+        <div l-data="{ items: [{id:1,t:'a'},{id:2,t:'b'}] }">
+          <ul><template l-for="item in items" l-key="item.id"><li l-text="item.t"></li></template></ul>
+          <button @click="items.push({id:3,t:'c'})">add</button>
+        </div>
+      `;
+      Faqir.start();
+      await tick();
+      const before = lis();
+      expect(before.length).toBe(2);
+
+      document.querySelector("button")!.click();
+      await tick();
+      const after = lis();
+
+      expect(after.length).toBe(3);
+      expect(after[0]).toBe(before[0]);
+      expect(after[1]).toBe(before[1]);
+      expect(after[2].textContent).toBe("c");
+    });
+
+    it("prepend reuses existing keyed nodes, inserts new at front", async () => {
+      document.body.innerHTML = `
+        <div l-data="{ items: [{id:1,t:'a'},{id:2,t:'b'}] }">
+          <ul><template l-for="item in items" l-key="item.id"><li l-text="item.t"></li></template></ul>
+          <button @click="items.unshift({id:0,t:'z'})">prepend</button>
+        </div>
+      `;
+      Faqir.start();
+      await tick();
+      const before = lis();
+
+      document.querySelector("button")!.click();
+      await tick();
+      const after = lis();
+
+      expect(after.length).toBe(3);
+      expect(after[0].textContent).toBe("z");
+      expect(after[1]).toBe(before[0]);
+      expect(after[2]).toBe(before[1]);
+    });
+
+    it("remove-middle keeps surrounding nodes and drops the removed one", async () => {
+      document.body.innerHTML = `
+        <div l-data="{ items: [{id:1,t:'a'},{id:2,t:'b'},{id:3,t:'c'}] }">
+          <ul><template l-for="item in items" l-key="item.id"><li l-text="item.t"></li></template></ul>
+          <button @click="items.splice(1,1)">remove</button>
+        </div>
+      `;
+      Faqir.start();
+      await tick();
+      const before = lis();
+
+      document.querySelector("button")!.click();
+      await tick();
+      const after = lis();
+
+      expect(after.length).toBe(2);
+      expect(after[0]).toBe(before[0]);
+      expect(after[1]).toBe(before[2]);
+      expect(document.body.contains(before[1])).toBe(false);
+    });
+
+    it("replace-all with new keys creates fresh nodes and removes old ones", async () => {
+      document.body.innerHTML = `
+        <div l-data="{ items: [{id:1,t:'a'},{id:2,t:'b'}] }">
+          <ul><template l-for="item in items" l-key="item.id"><li l-text="item.t"></li></template></ul>
+          <button @click="items = [{id:9,t:'x'},{id:8,t:'y'}]">replace</button>
+        </div>
+      `;
+      Faqir.start();
+      await tick();
+      const before = lis();
+
+      document.querySelector("button")!.click();
+      await tick();
+      const after = lis();
+
+      expect(after.length).toBe(2);
+      expect(after[0]).not.toBe(before[0]);
+      expect(after[1]).not.toBe(before[1]);
+      expect(document.body.contains(before[0])).toBe(false);
+      expect(after.map((n) => n.textContent)).toEqual(["x", "y"]);
+    });
+
+    it("reorder preserves node identity by key", async () => {
+      document.body.innerHTML = `
+        <div l-data="{ items: [{id:1,t:'a'},{id:2,t:'b'},{id:3,t:'c'}] }">
+          <ul><template l-for="item in items" l-key="item.id"><li l-text="item.t"></li></template></ul>
+          <button @click="items = [items[2], items[0], items[1]]">reorder</button>
+        </div>
+      `;
+      Faqir.start();
+      await tick();
+      const before = lis();
+
+      document.querySelector("button")!.click();
+      await tick();
+      const after = lis();
+
+      expect(after[0]).toBe(before[2]);
+      expect(after[1]).toBe(before[0]);
+      expect(after[2]).toBe(before[1]);
+      expect(after.map((n) => n.textContent)).toEqual(["c", "a", "b"]);
+    });
+
+    it("supports nested l-key paths", async () => {
+      document.body.innerHTML = `
+        <div l-data="{ items: [{meta:{k:1},t:'a'},{meta:{k:2},t:'b'}] }">
+          <ul><template l-for="item in items" l-key="item.meta.k"><li l-text="item.t"></li></template></ul>
+          <button @click="items.unshift({meta:{k:0},t:'z'})">prepend</button>
+        </div>
+      `;
+      Faqir.start();
+      await tick();
+      const before = lis();
+
+      document.querySelector("button")!.click();
+      await tick();
+      const after = lis();
+
+      expect(after.length).toBe(3);
+      expect(after[0].textContent).toBe("z");
+      expect(after[1]).toBe(before[0]);
+      expect(after[2]).toBe(before[1]);
+    });
+
+    it("falls back to index when l-key is absent (reuses by position)", async () => {
+      document.body.innerHTML = `
+        <div l-data="{ items: ['a','b','c'] }">
+          <ul><template l-for="item in items"><li l-text="item"></li></template></ul>
+          <button @click="items = ['x','b','c']">swap</button>
+        </div>
+      `;
+      Faqir.start();
+      await tick();
+      const before = lis();
+
+      document.querySelector("button")!.click();
+      await tick();
+      const after = lis();
+
+      expect(after.length).toBe(3);
+      expect(after[0]).toBe(before[0]);
+      expect(after[1]).toBe(before[1]);
+      expect(after[2]).toBe(before[2]);
+      expect(after[0].textContent).toBe("x");
+    });
+
+    it("works for arrays of primitives keyed by value", async () => {
+      document.body.innerHTML = `
+        <div l-data="{ items: ['a','b','c'] }">
+          <ul><template l-for="item in items" l-key="item"><li l-text="item"></li></template></ul>
+          <button @click="items = ['c','a','b']">reorder</button>
+        </div>
+      `;
+      Faqir.start();
+      await tick();
+      const before = lis();
+
+      document.querySelector("button")!.click();
+      await tick();
+      const after = lis();
+
+      expect(after[0]).toBe(before[2]);
+      expect(after[1]).toBe(before[0]);
+      expect(after[2]).toBe(before[1]);
+      expect(after.map((n) => n.textContent)).toEqual(["c", "a", "b"]);
+    });
+
+    it("updates an item's data in place without re-creating its node", async () => {
+      document.body.innerHTML = `
+        <div l-data="{ items: [{id:1,name:'a'}] }">
+          <ul><template l-for="item in items" l-key="item.id"><li l-text="item.name"></li></template></ul>
+          <button @click="items[0].name = 'CHANGED'">rename</button>
+        </div>
+      `;
+      Faqir.start();
+      await tick();
+      const before = lis();
+      expect(before[0].textContent).toBe("a");
+
+      document.querySelector("button")!.click();
+      await tick();
+      const after = lis();
+
+      expect(after[0]).toBe(before[0]);
+      expect(after[0].textContent).toBe("CHANGED");
+    });
+
+    it("reused node reflects new data when the same key maps to a new object", async () => {
+      document.body.innerHTML = `
+        <div l-data="{ items: [{id:1,name:'a'}] }">
+          <ul><template l-for="item in items" l-key="item.id"><li l-text="item.name"></li></template></ul>
+          <button @click="items = [{id:1,name:'fresh'}]">replace</button>
+        </div>
+      `;
+      Faqir.start();
+      await tick();
+      const before = lis();
+
+      document.querySelector("button")!.click();
+      await tick();
+      const after = lis();
+
+      expect(after[0]).toBe(before[0]);
+      expect(after[0].textContent).toBe("fresh");
+    });
+
+    it("handles empty -> filled -> empty transitions", async () => {
+      document.body.innerHTML = `
+        <div l-data="{ items: [] }">
+          <ul><template l-for="item in items" l-key="item.id"><li l-text="item.t"></li></template></ul>
+          <button class="fill" @click="items = [{id:1,t:'a'},{id:2,t:'b'}]">fill</button>
+          <button class="empty" @click="items = []">empty</button>
+        </div>
+      `;
+      Faqir.start();
+      await tick();
+      expect(lis().length).toBe(0);
+
+      document.querySelector(".fill")!.dispatchEvent(new Event("click", { bubbles: true }));
+      await tick();
+      expect(lis().length).toBe(2);
+      expect(lis().map((n) => n.textContent)).toEqual(["a", "b"]);
+
+      document.querySelector(".empty")!.dispatchEvent(new Event("click", { bubbles: true }));
+      await tick();
+      expect(lis().length).toBe(0);
+    });
+  });
+
   describe("l-ref", () => {
     it("registers element reference in $refs", async () => {
       document.body.innerHTML = `

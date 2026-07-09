@@ -272,9 +272,9 @@ stays ≤ 150 lines added to core across both sessions.
 - Empty→filled and filled→empty transitions.
 
 **Acceptance criteria**
-- [ ] Node identity preserved for unchanged keys across any list mutation.
-- [ ] No behavior change for existing un-keyed `l-for` tests (all previously green tests stay green).
-- [ ] Works for arrays of objects and arrays of primitives.
+- [x] Node identity preserved for unchanged keys across any list mutation. (old-key→entry map reuses nodes; append/prepend/remove-middle/reorder/nested-key tests assert via node identity.)
+- [x] No behavior change for existing un-keyed `l-for` tests (all previously green tests stay green). (162 prior core tests + full 538-test suite green; index fallback preserves un-keyed semantics.)
+- [x] Works for arrays of objects and arrays of primitives. (keyed-by-`item.id`, nested `item.meta.k`, primitive keyed-by-value, and index-fallback all covered. +68 net lines to engine, within the ≤150 A1 budget.)
 
 ---
 
