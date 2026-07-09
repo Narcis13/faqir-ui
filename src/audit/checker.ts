@@ -6,7 +6,7 @@ import { extractComponents } from "../parser/html-parser";
 import { extractTokenReferences, collectDefinedTokens, hasReducedMotionQuery, hasAnimationProperties, findImportantDeclarations, findClassSelectors, findIdSelectors, findHardcodedColorValues } from "../parser/css-parser";
 import { findExternalImports, findDataFetching } from "../parser/js-parser";
 import { loadManifest, type Manifest } from "../manifest";
-import { type AuditResult, type Severity, ALL_RULES } from "./rules";
+import { type AuditResult, type Severity, ALL_RULES, NO_FETCH_RULE, NO_EXTERNAL_IMPORT_RULE } from "./rules";
 import { readConfig } from "../utils/config";
 import { getRegistryPath } from "../utils/fs";
 
@@ -347,6 +347,13 @@ async function checkCssAntiPatterns(
 /**
  * Check component JS controller files for anti-patterns:
  * no-external-import (#4), no-fetch (#7).
+ *
+ * Both rules are scoped, by construction, to recipe controller JS — we only
+ * ever open registry/recipes/<name>/<name>.js. That is where the `no-fetch`
+ * exemption lives as code (task 0.3-08): the `l-source` directive and
+ * `apiSource()` are page/application code, never a recipe controller, so they
+ * are structurally out of scope here and never scanned. See NO_FETCH_RULE for
+ * the encoded scope + exemptions.
  */
 async function checkJsAntiPatterns(
   outputDir: string,
@@ -355,7 +362,7 @@ async function checkJsAntiPatterns(
 ): Promise<AuditResult[]> {
   const results: AuditResult[] = [];
 
-  // Only recipes have JS controllers
+  // Only recipe controllers are in scope — see NO_FETCH_RULE.applies_to.
   for (const name of installed.recipes) {
     const jsPath = join(outputDir, "recipes", name, `${name}.js`);
     if (!existsSync(jsPath)) continue;
@@ -365,8 +372,8 @@ async function checkJsAntiPatterns(
 
     for (const v of findExternalImports(source)) {
       results.push({
-        rule_id: "no-external-import",
-        severity: "error",
+        rule_id: NO_EXTERNAL_IMPORT_RULE.id,
+        severity: NO_EXTERNAL_IMPORT_RULE.severity,
         component_name: name,
         file: relPath,
         line: v.line,
@@ -376,12 +383,12 @@ async function checkJsAntiPatterns(
 
     for (const v of findDataFetching(source)) {
       results.push({
-        rule_id: "no-fetch",
-        severity: "error",
+        rule_id: NO_FETCH_RULE.id,
+        severity: NO_FETCH_RULE.severity,
         component_name: name,
         file: relPath,
         line: v.line,
-        message: `Data fetching or routing pattern "${v.text}" in ${name}.js — controllers must not fetch data or manage routing`,
+        message: `Data fetching or routing pattern "${v.text}" in ${name}.js — controllers must not fetch data or manage routing (l-source in page markup is exempt)`,
       });
     }
   }

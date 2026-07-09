@@ -639,6 +639,83 @@ export const ALL_RULES: AuditRule[] = [
   tokenAwareStyleRule,
 ];
 
+// ── Anti-pattern rule metadata ──
+// The CSS/JS anti-pattern rules don't run against a parsed component + manifest
+// (they scan raw .css / .js source in the checker), so they aren't AuditRule
+// objects. Their metadata lives here so the audit can *describe* them — the
+// scope of each rule, and any exemptions, are encoded as data, not left to
+// prose in a doc that can drift from the code.
+
+/** Lightweight descriptor for a rule that scans source rather than a component. */
+export interface RuleInfo {
+  id: string;
+  severity: Severity;
+  description: string;
+  /** Which files/sources this rule scans — its scope. */
+  applies_to: string;
+  /** Sources explicitly exempt from this rule (never scanned, never flagged). */
+  exempt?: string[];
+}
+
+// The `no-fetch` stance, encoded (task 0.3-08). The rule is deliberately scoped
+// to recipe controller JS: page-level data loading via the `l-source` directive
+// (and the `apiSource()` service layer) is application code, NOT a component
+// controller, and is exempt. Because the check only ever scans
+// registry/recipes/<name>/<name>.js, `l-source` in page markup is structurally
+// out of scope — the exemption is enforced by where we scan, and documented by
+// the `exempt` field below, so it stays code rather than prose.
+export const NO_FETCH_RULE: RuleInfo = {
+  id: "no-fetch",
+  severity: "error",
+  applies_to: "recipe controller JS (registry/recipes/<name>/<name>.js)",
+  exempt: [
+    "l-source directives in page markup (declarative data loading)",
+    "apiSource() application/service-layer code",
+  ],
+  description:
+    "Recipe component controllers must not fetch data or manage routing " +
+    "(fetch/XHR/axios/history/router). Scoped to recipe controller JS only — " +
+    "the l-source directive in page markup and apiSource() service code are " +
+    "exempt, since data loading belongs in pages, not component controllers.",
+};
+
+export const NO_EXTERNAL_IMPORT_RULE: RuleInfo = {
+  id: "no-external-import",
+  severity: "error",
+  applies_to: "recipe controller JS (registry/recipes/<name>/<name>.js)",
+  description:
+    "Recipe controllers may only import from ../../core/ or relative paths — " +
+    "no external/bare package specifiers.",
+};
+
+/** Every source-scanning anti-pattern rule, for inventory/description output. */
+export const ANTIPATTERN_RULES: RuleInfo[] = [
+  { id: "no-important", severity: "error", applies_to: "component CSS",
+    description: "Component CSS must not use !important." },
+  { id: "no-class-selector", severity: "error", applies_to: "component CSS",
+    description: "Component CSS must not use class selectors — use data-ui/data-part/data-variant/data-state." },
+  { id: "no-id-selector", severity: "error", applies_to: "component CSS",
+    description: "Component CSS must not use ID selectors." },
+  { id: "no-hardcoded-values", severity: "error", applies_to: "component CSS",
+    description: "Component CSS must reference tokens via var(--token) instead of hardcoded color values." },
+  NO_EXTERNAL_IMPORT_RULE,
+  NO_FETCH_RULE,
+];
+
+/**
+ * Full rule inventory (manifest rules + source-scanning anti-pattern rules),
+ * as flat descriptors — powers `faqir audit --rules` and the JSON `rules` field.
+ */
+export function getRuleInventory(): RuleInfo[] {
+  const fromManifestRules: RuleInfo[] = ALL_RULES.map(r => ({
+    id: r.id,
+    severity: r.severity,
+    description: r.description,
+    applies_to: "component markup vs manifest",
+  }));
+  return [...fromManifestRules, ...ANTIPATTERN_RULES];
+}
+
 // Helper to estimate line number from element position
 function countLineFromEl(component: ParsedComponent, _el: ParsedElement): number {
   // Elements store their start offset — but we need the source to count lines

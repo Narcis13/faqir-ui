@@ -53,23 +53,26 @@
 // stopPolling().
 //
 // ───────────────────────────────────────────────────────────────────────────
-// DISCOVERED DEFECTS — filed for task 0.3-08 (`l-source` teardown + audit)
+// DEFECTS — surfaced by 0.3-07, RESOLVED in 0.3-08 (`l-source` teardown + audit)
 // ───────────────────────────────────────────────────────────────────────────
-// D1. Docs/impl API mismatch. docs/data-driven-rendering.md and
-//     playground/task-manager.html document `$items.loading`, `$items.error`,
-//     `$items.submitting`, and a `.method` modifier. NONE are implemented —
-//     shipped state is the flat `itemsLoading`/`itemsError` (no `submitting`,
-//     no `.method`). Either the docs or the impl must change; captured here by
-//     the "documented-vs-shipped" block so the fix flips these tests.
-// D2. No request sequencing. Concurrent load()s race: the response that RESOLVES
-//     last wins, regardless of which was CALLED last. A slow stale response
-//     clobbers a fresh one. The fix (AbortController supersede) is 0.3-08; the
-//     `it.todo` at the bottom is the acceptance test to un-skip there.
-// D3. No teardown of in-flight requests / no post-destroy write guard. A fetch
-//     that resolves after its scope is destroyed still writes into the dead
-//     scope. .poll timers are cleared via a registered cleanup, but there is no
-//     public destroy hook to exercise it, and pending fetches are never aborted.
-//     Owned by 0.3-08.
+// D1. Docs/impl API mismatch — RESOLVED (docs corrected). docs/data-driven-
+//     rendering.md promised `$items.loading`/`.error`/`.submitting` and a
+//     `.method` modifier that never shipped (the `.method="…"` syntax is even
+//     incompatible with the directive, whose value slot is the endpoint).
+//     Reconciled by correcting the docs to the shipped flat-var contract
+//     (`itemsLoading`/`itemsError` + a methods-only `$items` controller) —
+//     which is what the playground already used. Pinned by the "reconciled
+//     contract [D1]" block below.
+// D2. No request sequencing — RESOLVED (AbortController supersede). A newer
+//     load() now aborts the previous in-flight read and a monotonic seq guard
+//     discards any stale response, so the latest CALL wins regardless of
+//     resolution order. See the "rapid re-trigger" block.
+// D3. No teardown of in-flight requests / no post-destroy write guard —
+//     RESOLVED. Scope teardown (l-if hide, keyed l-for removal, or the new
+//     public `Faqir.destroy` hook) latches a `destroyed` flag, stops `.poll`
+//     timers, and aborts every in-flight AbortController; async write-backs are
+//     gated so a late resolution cannot touch a dead scope. See "teardown &
+//     abort [D3]".
 // ═══════════════════════════════════════════════════════════════════════════
 
 import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll } from "bun:test";
@@ -643,11 +646,15 @@ describe("l-source · l-for integration", () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Rapid re-trigger — CURRENT (racy) semantics + the fix, filed as todo [D2]
+// Rapid re-trigger — request sequencing via AbortController supersede [D2 · 0.3-08]
+// The 0.3-07 suite pinned the OLD racy semantics ("resolves last wins") and
+// filed the fix as a todo. 0.3-08 landed the AbortController supersede, so both
+// tests below now assert the FIXED contract: the latest CALL wins, regardless
+// of resolution order, and the superseded request is aborted.
 // ═══════════════════════════════════════════════════════════════════════════
 
 describe("l-source · rapid re-trigger", () => {
-  it("the response that RESOLVES last wins — there is no request sequencing yet [D2]", async () => {
+  it("aborts the superseded (older) request and ignores its late resolution [D2]", async () => {
     document.body.innerHTML = `<div l-data="{}" l-source:items.lazy="/api/items"></div>`;
     Faqir.start();
     await tick();
@@ -656,60 +663,229 @@ describe("l-source · rapid re-trigger", () => {
     const first = deferred();   // returned to call #1 (the older request)
     const second = deferred();  // returned to call #2 (the newer request)
     let n = 0;
-    (globalThis as any).fetch = () => (++n === 1 ? first.promise : second.promise);
+    const signals: any[] = [];
+    (globalThis as any).fetch = (_url: string, opts: any) => {
+      signals.push(opts && opts.signal);
+      return ++n === 1 ? first.promise : second.promise;
+    };
 
     const pOld = scope.$items.load();  // call #1
-    const pNew = scope.$items.load();  // call #2
+    const pNew = scope.$items.load();  // call #2 supersedes #1
+
+    // The newer call aborts the older request's signal at call time.
+    expect(signals[0].aborted).toBe(true);
+    expect(signals[1].aborted).toBe(false);
 
     // Settle the NEWER request first, then the OLDER one.
     second.resolve(jsonResponse([{ id: "new" }]));
     await tick();
     expect(scope.items).toEqual([{ id: "new" }]);
 
+    // The stale older response, resolving last, is discarded — it does not
+    // clobber the fresh data, nor does it re-arm the loading flag.
     first.resolve(jsonResponse([{ id: "old" }]));
     await Promise.all([pOld, pNew]);
     await tick();
 
-    // BUG (documented): the stale older response, resolving last, clobbers the
-    // newer one. Correct behavior (latest CALL wins) needs AbortController
-    // sequencing — see the todo below and task 0.3-08.
-    expect(scope.items).toEqual([{ id: "old" }]);
+    expect(scope.items).toEqual([{ id: "new" }]);
+    expect(scope.itemsLoading).toBe(false);
+    expect(unhandled).toHaveLength(0);
   });
 
-  // Un-skip in 0.3-08 once superseding requests abort the stale one. (Body is a
-  // stub — todo tests don't run without --todo; it sketches the target assertion.)
-  it.todo("the latest CALL wins even when an older request resolves later (needs AbortController — 0.3-08)", () => {
-    // 0.3-08: fire load() twice, resolve the OLDER request LAST, and assert the
-    // NEWER call's data is what lands — the stale response must be aborted/ignored.
+  it("the latest CALL wins even when an older request resolves later [D2]", async () => {
+    document.body.innerHTML = `<div l-data="{}" l-source:items.lazy="/api/items"></div>`;
+    Faqir.start();
+    await tick();
+    const scope = scopeOf();
+
+    const first = deferred();   // call #1
+    const second = deferred();  // call #2 (the latest)
+    let n = 0;
+    (globalThis as any).fetch = () => (++n === 1 ? first.promise : second.promise);
+
+    scope.$items.load();  // call #1 (older)
+    scope.$items.load();  // call #2 (newer)
+
+    // Resolve the OLDER request LAST — under the old racy semantics this would
+    // win; with supersede sequencing the NEWER call's data is what lands.
+    second.resolve(jsonResponse([{ id: "new" }]));
+    await tick();
+    first.resolve(jsonResponse([{ id: "old" }]));
+    await tick();
+
+    expect(scope.items).toEqual([{ id: "new" }]);
+    expect(scope.itemsLoading).toBe(false);
   });
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Documented-vs-shipped divergences — asserts CURRENT reality [D1].
-// When 0.3-08 reconciles docs and impl, these assertions are expected to flip.
+// Teardown & abort — no fetch or timer outlives its scope [D3 · 0.3-08]
+// Teardown is driven the realistic way (l-if toggle, keyed l-for removal) and
+// via the public Faqir.destroy hook. Each asserts the AbortController signal
+// fires and that a late resolution cannot write into the dead scope.
 // ═══════════════════════════════════════════════════════════════════════════
 
-describe("l-source · documented-vs-shipped divergences [D1]", () => {
-  it("controller does NOT expose loading/error/submitting (state is flat scope vars instead)", async () => {
+describe("l-source · teardown & abort [D3]", () => {
+  // Second [l-data] in the tree is the inner, l-source-bearing scope.
+  function innerScope(): any {
+    return (document.querySelectorAll("[l-data]")[1] as any).__faqirScope;
+  }
+  function outerScope(): any {
+    return (document.querySelectorAll("[l-data]")[0] as any).__faqirScope;
+  }
+
+  it("aborts an in-flight fetch on l-if hide and ignores its late resolution", async () => {
+    const d = deferred();
+    let signal: AbortSignal | undefined;
+    (globalThis as any).fetch = (_url: string, opts: any) => {
+      signal = opts && opts.signal;
+      return d.promise;
+    };
+    document.body.innerHTML = `
+      <div l-data="{ show: true }">
+        <template l-if="show">
+          <section><div l-data="{}" l-source:items="/api/items"></div></section>
+        </template>
+      </div>`;
+    Faqir.start();
+    await tick();
+
+    const inner = innerScope();
+    expect(inner.itemsLoading).toBe(true);      // auto-load is in flight
+    expect(signal).toBeDefined();
+    expect(signal!.aborted).toBe(false);
+
+    // Toggle the l-if false — destroys the inner scope, runs its cleanup.
+    outerScope().show = false;
+    await tick();
+
+    expect(signal!.aborted).toBe(true);         // the in-flight fetch is aborted
+
+    // A resolution that lands after destruction must not write into the scope.
+    d.resolve(jsonResponse([{ id: 1 }, { id: 2 }]));
+    await tick();
+    expect(inner.items).toEqual([]);            // dead scope never populated
+    expect(unhandled).toHaveLength(0);
+  });
+
+  it("aborts the removed row's in-flight fetch on keyed l-for removal", async () => {
+    const signals: (AbortSignal | undefined)[] = [];
+    (globalThis as any).fetch = (_url: string, opts: any) => {
+      signals.push(opts && opts.signal);
+      return new Promise(() => {});           // never settles — stays in flight
+    };
+    document.body.innerHTML = `
+      <div l-data="{ rows: [{ id: 1 }, { id: 2 }] }">
+        <template l-for="r in rows" l-key="r.id">
+          <section><div l-data="{}" l-source:items="/api/items"></div></section>
+        </template>
+      </div>`;
+    Faqir.start();
+    await tick();
+
+    expect(signals).toHaveLength(2);            // one in-flight fetch per row
+    expect(signals[0]!.aborted).toBe(false);
+    expect(signals[1]!.aborted).toBe(false);
+
+    // Remove the first keyed row — its scope is destroyed, the surviving row is reused.
+    outerScope().rows = [{ id: 2 }];
+    await tick();
+
+    expect(signals[0]!.aborted).toBe(true);     // removed row's fetch aborted
+    expect(signals[1]!.aborted).toBe(false);    // surviving row untouched
+    expect(signals).toHaveLength(2);            // reuse did not spawn a new fetch
+  });
+
+  it("clears the poll timer on teardown, and no fetch fires afterward", async () => {
+    installFakeTimers();
+    const calls = installFetch(() => okJson([]));
+    document.body.innerHTML = `
+      <div l-data="{ show: true }">
+        <template l-if="show">
+          <section><div l-data="{}" l-source:items.poll.1000="/api/items"></div></section>
+        </template>
+      </div>`;
+    Faqir.start();
+    await tick();
+
+    expect(calls).toHaveLength(1);              // initial auto-load
+    expect(fakeIntervals).toHaveLength(1);      // poll armed
+
+    outerScope().show = false;                  // teardown via l-if
+    await tick();
+    expect(fakeIntervals[0].cleared).toBe(true); // timer stopped
+
+    // Even if the (now-dead) timer callback fired, the destroyed source refuses
+    // to fetch — no request outlives the scope.
+    const before = calls.length;
+    fakeIntervals[0].fn();
+    await tick();
+    expect(calls.length).toBe(before);
+  });
+
+  it("Faqir.destroy(el) aborts in-flight requests and blocks post-destroy loads", async () => {
+    const d = deferred();
+    let signal: AbortSignal | undefined;
+    (globalThis as any).fetch = (_url: string, opts: any) => {
+      signal = opts && opts.signal;
+      return d.promise;
+    };
+    document.body.innerHTML = `<div l-data="{}" l-source:items="/api/items"></div>`;
+    Faqir.start();
+    await tick();
+
+    const root = document.querySelector("[l-data]") as any;
+    const scope = root.__faqirScope;
+    expect(scope.itemsLoading).toBe(true);
+
+    Faqir.destroy(root);                        // imperative teardown
+    expect(signal!.aborted).toBe(true);
+
+    // Late resolution is ignored, and a fresh load() is a no-op (no new fetch).
+    d.resolve(jsonResponse([{ id: 1 }]));
+    await scope.$items.load();
+    await tick();
+    expect(scope.items).toEqual([]);
+    expect(unhandled).toHaveLength(0);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Reconciled contract [D1] — docs corrected to match the shipped flat-var API.
+// The 0.3-07 suite flagged the divergence between docs (which promised
+// $items.loading/.error/.submitting and a `.method` modifier) and the shipped
+// impl (flat scope vars, no `.method`). 0.3-08 reconciled by correcting
+// docs/data-driven-rendering.md to the shipped contract — matching the
+// playground, which already used the flat vars. These tests pin that contract:
+// state is flat scope vars, the controller carries methods only, and unknown
+// modifiers are ignored.
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe("l-source · reconciled contract [D1]", () => {
+  it("controller carries methods only — no loading/error/submitting state", async () => {
     installFetch(() => okJson([]));
     document.body.innerHTML = `<div l-data="{}" l-source:items="/api/items"></div>`;
     Faqir.start();
     await tick();
 
     const ctrl = scopeOf().$items;
-    // Docs promise $items.loading / $items.error / $items.submitting — none ship.
+    // State lives on the flat scope vars (itemsLoading / itemsError), never on
+    // the controller. The removed docs promised $items.loading/.error/.submitting.
     expect(ctrl.loading).toBeUndefined();
     expect(ctrl.error).toBeUndefined();
     expect(ctrl.submitting).toBeUndefined();
+    expect(scopeOf()).toHaveProperty("itemsLoading");
+    expect(scopeOf()).toHaveProperty("itemsError");
   });
 
-  it("the documented `.method` modifier is inert — load() always GETs the endpoint", async () => {
+  it("unknown modifiers are ignored — the source still auto-loads via GET", async () => {
     const calls = installFetch(() => okJson([]));
     document.body.innerHTML = `<div l-data="{}" l-source:items.method="/api/items"></div>`;
     Faqir.start();
     await tick();
 
-    // `.method` is unrecognized by parseSourceModifiers; the source still auto-loads via GET.
+    // The former `.method` docs are corrected away; parseSourceModifiers ignores
+    // unrecognized modifiers, so the source auto-loads via GET as usual.
     expect(calls).toHaveLength(1);
     expect(calls[0].method).toBe("GET");
     expect(calls[0].url).toBe("/api/items");

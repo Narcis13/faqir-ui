@@ -2,6 +2,7 @@
 
 import type { AuditSummary } from "./checker";
 import type { AuditResult, Severity } from "./rules";
+import { getRuleInventory } from "./rules";
 import { log } from "../utils/logger";
 
 const SEVERITY_COLORS: Record<Severity, string> = {
@@ -109,4 +110,29 @@ export function printAuditJSON(summary: AuditSummary): void {
     })),
   };
   console.log(JSON.stringify(output, null, 2));
+}
+
+/**
+ * Print the audit rule inventory — id, severity, scope, description, and any
+ * exemptions. Powers `faqir audit --rules`; the description output is where a
+ * rule's exemptions (e.g. `no-fetch` exempting `l-source`) are surfaced.
+ */
+export function printRuleInventory(json = false): void {
+  const rules = getRuleInventory();
+  if (json) {
+    console.log(JSON.stringify({ rules }, null, 2));
+    return;
+  }
+
+  log.heading("Faqir Audit Rules");
+  log.blank();
+  for (const r of rules) {
+    const color = SEVERITY_COLORS[r.severity];
+    console.log(`${BOLD}${r.id}${RESET}  ${color}${r.severity}${RESET}  ${SEVERITY_COLORS.info}(${r.applies_to})${RESET}`);
+    console.log(`  ${r.description}`);
+    if (r.exempt && r.exempt.length > 0) {
+      console.log(`  ${SEVERITY_COLORS.info}exempt: ${r.exempt.join("; ")}${RESET}`);
+    }
+    log.blank();
+  }
 }

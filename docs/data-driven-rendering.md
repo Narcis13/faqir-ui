@@ -391,38 +391,55 @@ first-class concept. Declarative — no JavaScript needed in markup.
 l-source:<name>="<endpoint>"
 ```
 
-Modifiers:
+Modifiers (chained with dots; a value modifier takes the next dot-segment as
+its argument, matching `.poll.<ms>` / `.key.<field>`):
 
 ```
-l-source:<name>.method="GET|POST|PUT|PATCH|DELETE"  (default: GET)
-l-source:<name>.poll="<ms>"                          (0 = off)
-l-source:<name>.lazy                                 (don't load on init)
-l-source:<name>.optimistic                           (update UI before confirm)
-l-source:<name>.key="<field>"                        (id field, default: "id")
+l-source:<name>.lazy                 (don't load on init)
+l-source:<name>.optimistic           (update UI before the server confirms)
+l-source:<name>.poll                 (auto-poll; default 30000 ms)
+l-source:<name>.poll.<ms>            (auto-poll every <ms>)
+l-source:<name>.key.<field>          (id field for update/remove; default "id")
 ```
+
+Modifiers may be combined, e.g. `l-source:rows.optimistic.key.slug="/api/rows"`.
+Unrecognized modifiers are ignored. `load()` always issues a `GET`; the mutation
+methods use `POST`/`PATCH`/`DELETE` (there is no `.method` override — the value
+slot is the endpoint).
 
 ### What It Injects Into Scope
 
-For `l-source:items="/api/things"`, the directive injects:
+For `l-source:items="/api/things"`, the directive injects **flat scope variables**
+plus a controller. State lives on the scope (so bindings like
+`l-if="itemsLoading"` react to it), while `$items` carries the methods only:
 
-| Variable          | Type       | Description                                  |
-|-------------------|------------|----------------------------------------------|
-| `items`           | `Array`    | The fetched data                             |
-| `$items`          | `Object`   | Source controller (see API below)             |
-| `$items.loading`  | `boolean`  | True during initial fetch                    |
-| `$items.error`    | `string`   | Error message or null                        |
-| `$items.submitting` | `boolean` | True during a mutation (create/update/delete) |
+| Variable        | Type              | Description                                        |
+|-----------------|-------------------|---------------------------------------------------|
+| `items`         | `Array`           | The fetched rows (starts `[]`; a single object is wrapped to `[obj]`) |
+| `itemsLoading`  | `boolean`         | True while a `load()` is in flight                |
+| `itemsError`    | `string \| null`  | Error message (`"<status> <statusText>"` or the rejection message), else `null` |
+| `$items`        | `Object`          | Source controller — methods only (see API below)  |
+
+> The controller does **not** carry `loading`/`error` state — read the flat
+> `itemsLoading`/`itemsError` scope vars instead.
 
 ### Source Controller API (`$items`)
 
 ```js
-$items.load()                     // Re-fetch from endpoint
+$items.load()                     // GET endpoint, replace items (aliased as refresh())
+$items.refresh()                  // alias for load()
 $items.create(payload)            // POST payload, append result to items
-$items.update(id, payload)        // PATCH endpoint/id, merge result
+$items.update(id, payload)        // PATCH endpoint/id, replace matched row
 $items.remove(id)                 // DELETE endpoint/id, splice from items
 $items.startPolling(ms?)          // Start auto-refresh
 $items.stopPolling()              // Stop auto-refresh
 ```
+
+**Lifecycle:** a newer `load()` supersedes and aborts the previous in-flight
+read, so the latest call wins regardless of resolution order. When the owning
+scope is destroyed (an `l-if` toggle, a keyed `l-for` removal, or a call to
+`Faqir.destroy(el)`), in-flight requests are aborted, `.poll` timers are
+cleared, and late resolutions can no longer write into the dead scope.
 
 ### Usage: Menu from Server
 
@@ -431,14 +448,14 @@ $items.stopPolling()              // Stop auto-refresh
      l-source:items="/api/menu-items">
 
   <!-- Loading -->
-  <template l-if="$items.loading">
+  <template l-if="itemsLoading">
     <div data-ui="spinner" data-size="sm"></div>
   </template>
 
   <!-- Error -->
-  <template l-if="$items.error">
+  <template l-if="itemsError">
     <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center">
-      <span data-ui="text" data-variant="destructive" l-text="$items.error"></span>
+      <span data-ui="text" data-variant="destructive" l-text="itemsError"></span>
       <button data-ui="button" data-size="sm" @click="$items.load()">Retry</button>
     </div>
   </template>
@@ -464,8 +481,7 @@ $items.stopPolling()              // Stop auto-refresh
 
 ```html
 <div l-data="{ editingId: null, editName: '' }"
-     l-source:rows="/api/products"
-     l-source:rows.key="product_id">
+     l-source:rows.key.product_id="/api/products">
 
   <table data-ui="table">
     <thead data-part="thead">
@@ -544,10 +560,8 @@ $items.stopPolling()              // Stop auto-refresh
 ### Usage: Polling Dashboard
 
 ```html
-<div l-source:stats="/api/dashboard/stats"
-     l-source:stats.poll="10000"
-     l-source:alerts="/api/dashboard/alerts"
-     l-source:alerts.poll="5000">
+<div l-source:stats.poll.10000="/api/dashboard/stats"
+     l-source:alerts.poll.5000="/api/dashboard/alerts">
 
   <!-- Stats cards -->
   <div data-ui="grid" data-cols="3" data-gap="4">
@@ -575,8 +589,7 @@ $items.stopPolling()              // Stop auto-refresh
 
 ```html
 <div l-data="{ showComments: false }"
-     l-source:comments="/api/posts/42/comments"
-     l-source:comments.lazy>
+     l-source:comments.lazy="/api/posts/42/comments">
 
   <button data-ui="button" data-variant="outline"
           @click="showComments = true; $comments.load()">
@@ -584,7 +597,7 @@ $items.stopPolling()              // Stop auto-refresh
   </button>
 
   <template l-if="showComments">
-    <template l-if="$comments.loading">
+    <template l-if="commentsLoading">
       <div data-ui="spinner"></div>
     </template>
     <div data-ui="stack" data-gap="2">
@@ -601,126 +614,68 @@ $items.stopPolling()              // Stop auto-refresh
 </div>
 ```
 
-### Implementation Sketch for `faqir-core.js`
+### How It Works (shipped in `faqir-core.js`)
 
-The directive would be registered as a custom directive in the core:
+`l-source` is a built-in directive, processed by `setupSource()` in the engine
+(`src/core-src/engine.js` §3.5). For `l-source:items="/api/items"` it:
+
+- injects the flat scope vars `items` (starts `[]`), `itemsLoading` (`false`),
+  `itemsError` (`null`), and the `$items` controller;
+- unless `.lazy`, calls `load()` immediately; if a poll interval is set, arms a
+  `setInterval` that re-runs `load()`;
+- registers a scope cleanup that stops the poll timer, latches the source
+  destroyed, and aborts every in-flight request.
 
 ```js
-// Inside faqir-core.js — directive registration
-
-function handleSource(el, dir, scope) {
-  // dir.arg    = "items" (the name after l-source:)
-  // dir.expression = "/api/menu-items" (the endpoint)
-  // dir.modifiers  = { poll: "5000", lazy: true, ... }
-
-  const name = dir.arg;
-  const endpoint = evaluateExpression(dir.expression, scope, el);
-  const key = dir.modifiers.key || 'id';
-  const pollMs = parseInt(dir.modifiers.poll) || 0;
-  const lazy = 'lazy' in dir.modifiers;
-  const optimistic = 'optimistic' in dir.modifiers;
-
-  // Inject reactive array into scope
+// Shipped shape (abridged) — state is FLAT scope vars, not controller props.
+function setupSource(scope, root, name, endpoint, opts) {
   scope[name] = [];
+  scope[name + 'Loading'] = false;
+  scope[name + 'Error'] = null;
 
-  // Inject controller as $name
-  const controller = {
-    loading: !lazy,
-    error: null,
-    submitting: false,
+  let destroyed = false;
+  const inflight = new Set();   // live AbortControllers
+  let loadSeq = 0;              // supersede counter — latest load() wins
+  let currentLoadAc = null;
 
-    async load() {
-      controller.loading = true;
-      controller.error = null;
-      try {
-        const res = await fetch(endpoint);
-        if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-        scope[name] = await res.json();
-      } catch (e) {
-        controller.error = e.message;
-      } finally {
-        controller.loading = false;
-      }
+  const ctrl = {
+    load() {
+      if (destroyed) return Promise.resolve();
+      const mySeq = ++loadSeq;
+      if (currentLoadAc) currentLoadAc.abort();     // supersede the older read
+      const ac = new AbortController();
+      inflight.add(ac); currentLoadAc = ac;
+      scope[name + 'Loading'] = true;
+      scope[name + 'Error'] = null;
+      return fetch(endpoint, { signal: ac.signal })
+        .then(res => { if (!res.ok) throw new Error(`${res.status} ${res.statusText}`); return res.json(); })
+        .then(data => {                              // guard: dead scope / superseded
+          if (destroyed || mySeq !== loadSeq) return;
+          scope[name] = Array.isArray(data) ? data : [data];   // single object → [obj]
+        })
+        .catch(e => { if (!destroyed && mySeq === loadSeq) scope[name + 'Error'] = e.message; })
+        .then(() => { inflight.delete(ac); if (!destroyed && mySeq === loadSeq) scope[name + 'Loading'] = false; });
     },
-
-    async create(payload) {
-      controller.submitting = true;
-      controller.error = null;
-      let tempIdx = -1;
-
-      if (optimistic) {
-        scope[name].push({ ...payload, _pending: true });
-        tempIdx = scope[name].length - 1;
-      }
-
-      try {
-        const res = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-        if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-        const created = await res.json();
-        if (optimistic) {
-          scope[name][tempIdx] = created;
-        } else {
-          scope[name].push(created);
-        }
-        return created;
-      } catch (e) {
-        controller.error = e.message;
-        if (optimistic && tempIdx >= 0) scope[name].splice(tempIdx, 1);
-        return null;
-      } finally {
-        controller.submitting = false;
-      }
-    },
-
-    async update(id, payload) {
-      // ... similar to create with PATCH
-    },
-
-    async remove(id) {
-      // ... similar with DELETE
-    },
-
-    startPolling(ms) {
-      controller.stopPolling();
-      const interval = ms || pollMs;
-      if (interval > 0) {
-        controller._timer = setInterval(() => controller.load(), interval);
-      }
-    },
-
-    stopPolling() {
-      if (controller._timer) {
-        clearInterval(controller._timer);
-        controller._timer = null;
-      }
-    },
+    create(payload) { /* POST; .optimistic pushes a _pending row first, rolls back on failure */ },
+    update(id, payload) { /* PATCH endpoint/id, by opts.idKey */ },
+    remove(id) { /* DELETE endpoint/id */ },
+    refresh() { return ctrl.load(); },
+    startPolling(ms) { /* setInterval(load, ms || pollInterval || 30000) — no-op once destroyed */ },
+    stopPolling() { /* clearInterval */ },
   };
+  scope['$' + name] = ctrl;
 
-  // Make controller reactive
-  scope['$' + name] = reactive(controller);
+  if (!opts.lazy) ctrl.load();
+  if (opts.pollInterval > 0) ctrl.startPolling();
 
-  // Auto-load unless lazy
-  if (!lazy) {
-    controller.load();
-  }
-
-  // Auto-poll if configured
-  if (pollMs > 0 && !lazy) {
-    controller.startPolling();
-  }
-
-  // Cleanup on scope teardown
-  addCleanup(el, function () {
-    controller.stopPolling();
+  // Teardown: stop the timer, latch destroyed, abort in-flight requests.
+  addCleanup(root, () => {
+    destroyed = true;
+    ctrl.stopPolling();
+    inflight.forEach(ac => ac.abort());
+    inflight.clear();
   });
 }
-
-// Register it
-customDirectives.set('source', handleSource);
 ```
 
 ### Architecture Diagram
@@ -732,12 +687,13 @@ customDirectives.set('source', handleSource);
   l-source:items="/api/x"
         |
         v
-  handleSource() parses
-  directive, creates:
+  setupSource() injects:
     - scope.items = []           (reactive array)
-    - scope.$items = controller  (reactive object)
+    - scope.itemsLoading = false (reactive flag)
+    - scope.itemsError = null    (reactive flag)
+    - scope.$items = controller  (methods only)
         |
-        |--- auto load() -----> GET /api/x --------->  DB
+        |--- auto load() -----> GET /api/x --------->  DB   (aborts any older read)
         |<-- scope.items = data <--- JSON [...] -----  Response
         |
         v
@@ -756,6 +712,9 @@ customDirectives.set('source', handleSource);
         |--- POST /api/x --------------------------------> DB
         |<-- server confirms <--- JSON { created } ------  Response
         |--- replace temp item -> scope.items patched --> DOM patches
+        |
+  scope destroyed (l-if / l-for / Faqir.destroy)
+        |--- cleanup: stop poll timer, abort in-flight fetches, block late writes
 ```
 
 ### Comparison: B vs C
@@ -772,8 +731,8 @@ customDirectives.set('source', handleSource);
 | Optimistic updates    | Built into apiSource option    | `.optimistic` modifier          |
 | Testability           | Unit test apiSource directly   | Need to mock fetch globally     |
 | Non-REST APIs         | Easy — write custom methods    | Would need escape hatch         |
-| Error handling        | Customizable per source        | Standardized via $name.error    |
-| Audit rule impact     | None — app code, not controller| Need to exempt l-source from no-fetch |
+| Error handling        | Customizable per source        | Standardized via `<name>Error` scope var |
+| Audit rule impact     | None — app code, not controller| Exempt from no-fetch (scoped to recipe controllers; encoded in the rule) |
 | Reusability           | Import apiSource anywhere      | Copy l-source attr to any element |
 | Migration path        | Start here, evolve to C        | Destination                     |
 

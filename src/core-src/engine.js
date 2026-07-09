@@ -605,6 +605,34 @@
     var idKey = opts.idKey;
     var isOptimistic = opts.optimistic;
 
+    // ── 0.3-08 request lifecycle ────────────────────────────────────────────
+    // `destroyed` is latched true when the owning scope is torn down (an l-if
+    // toggle or keyed l-for removal runs the cleanup registered below). Once
+    // latched it (a) blocks new requests from starting and (b) gates every
+    // async write-back so a fetch that resolves into a dead scope is a no-op.
+    // `inflight` holds the AbortController of every live request so teardown
+    // can cancel the actual network work, not just ignore its result.
+    // `loadSeq`/`currentLoadAc` sequence read requests: a newer load() aborts
+    // the previous one and only the LATEST call is allowed to land — so a slow
+    // stale response can no longer clobber a fresh one (D2).
+    var destroyed = false;
+    var inflight = new Set();
+    var loadSeq = 0;
+    var currentLoadAc = null;
+    var HAS_ABORT = typeof AbortController !== 'undefined';
+
+    function beginRequest() {
+      var ac = HAS_ABORT ? new AbortController() : null;
+      if (ac) inflight.add(ac);
+      return ac;
+    }
+    function endRequest(ac) {
+      if (ac) inflight.delete(ac);
+    }
+    function signalOf(ac) {
+      return ac ? ac.signal : undefined;
+    }
+
     // Inject reactive data properties into scope
     scope[name] = [];
     scope[name + 'Loading'] = false;
@@ -613,25 +641,38 @@
     // CRUD controller
     var ctrl = {
       load: function() {
+        if (destroyed) return Promise.resolve();
+        var mySeq = ++loadSeq;
+        // Supersede the previous in-flight read: abort it so its network
+        // request is cancelled; the seq guard below discards any late result.
+        if (currentLoadAc) { try { currentLoadAc.abort(); } catch (e) {} }
+        var ac = beginRequest();
+        currentLoadAc = ac;
         scope[name + 'Loading'] = true;
         scope[name + 'Error'] = null;
-        return fetch(endpoint)
+        return fetch(endpoint, { signal: signalOf(ac) })
           .then(function(res) {
             if (!res.ok) throw new Error(res.status + ' ' + res.statusText);
             return res.json();
           })
           .then(function(data) {
+            if (destroyed || mySeq !== loadSeq) return;
             scope[name] = Array.isArray(data) ? data : [data];
           })
           .catch(function(e) {
+            if (destroyed || mySeq !== loadSeq) return;
             scope[name + 'Error'] = e.message;
           })
           .then(function() {
+            endRequest(ac);
+            if (currentLoadAc === ac) currentLoadAc = null;
+            if (destroyed || mySeq !== loadSeq) return;
             scope[name + 'Loading'] = false;
           });
       },
 
       create: function(payload) {
+        if (destroyed) return Promise.resolve(null);
         scope[name + 'Error'] = null;
         var tempIndex = -1;
 
@@ -641,16 +682,20 @@
           tempIndex = scope[name].length - 1;
         }
 
+        var ac = beginRequest();
         return fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(payload),
+          signal: signalOf(ac)
         })
         .then(function(res) {
           if (!res.ok) throw new Error(res.status + ' ' + res.statusText);
           return res.json();
         })
         .then(function(created) {
+          endRequest(ac);
+          if (destroyed) return null;
           if (isOptimistic && tempIndex >= 0) {
             scope[name][tempIndex] = created;
           } else {
@@ -659,6 +704,8 @@
           return created;
         })
         .catch(function(e) {
+          endRequest(ac);
+          if (destroyed) return null;
           scope[name + 'Error'] = e.message;
           if (isOptimistic && tempIndex >= 0) {
             scope[name].splice(tempIndex, 1);
@@ -668,6 +715,7 @@
       },
 
       update: function(id, payload) {
+        if (destroyed) return Promise.resolve(null);
         scope[name + 'Error'] = null;
         var items = scope[name];
         var idx = -1;
@@ -681,20 +729,26 @@
           Object.assign(items[idx], payload);
         }
 
+        var ac = beginRequest();
         return fetch(endpoint + '/' + id, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(payload),
+          signal: signalOf(ac)
         })
         .then(function(res) {
           if (!res.ok) throw new Error(res.status + ' ' + res.statusText);
           return res.json();
         })
         .then(function(updated) {
+          endRequest(ac);
+          if (destroyed) return null;
           if (idx >= 0) scope[name][idx] = updated;
           return updated;
         })
         .catch(function(e) {
+          endRequest(ac);
+          if (destroyed) return null;
           scope[name + 'Error'] = e.message;
           if (isOptimistic && snapshot && idx >= 0) {
             scope[name][idx] = snapshot;
@@ -704,6 +758,7 @@
       },
 
       remove: function(id) {
+        if (destroyed) return Promise.resolve();
         scope[name + 'Error'] = null;
         var items = scope[name];
         var idx = -1;
@@ -717,14 +772,19 @@
           items.splice(idx, 1);
         }
 
-        return fetch(endpoint + '/' + id, { method: 'DELETE' })
+        var ac = beginRequest();
+        return fetch(endpoint + '/' + id, { method: 'DELETE', signal: signalOf(ac) })
         .then(function(res) {
           if (!res.ok) throw new Error(res.status + ' ' + res.statusText);
+          endRequest(ac);
+          if (destroyed) return;
           if (!isOptimistic && idx >= 0) {
             scope[name].splice(idx, 1);
           }
         })
         .catch(function(e) {
+          endRequest(ac);
+          if (destroyed) return;
           scope[name + 'Error'] = e.message;
           if (isOptimistic && snapshot) {
             scope[name].splice(idx, 0, snapshot);
@@ -736,6 +796,7 @@
 
       startPolling: function(interval) {
         ctrl.stopPolling();
+        if (destroyed) return;
         var ms = interval || opts.pollInterval || 30000;
         pollTimer = setInterval(function() { ctrl.load(); }, ms);
       },
@@ -761,8 +822,15 @@
       ctrl.startPolling();
     }
 
-    // Cleanup polling on scope destruction
-    addCleanup(root, function() { ctrl.stopPolling(); });
+    // Teardown on scope destruction: stop polling, latch `destroyed` so no new
+    // work starts or writes back, and abort every in-flight request — no fetch
+    // or timer outlives the scope that owns it (D3).
+    addCleanup(root, function() {
+      destroyed = true;
+      ctrl.stopPolling();
+      inflight.forEach(function(ac) { try { ac.abort(); } catch (e) {} });
+      inflight.clear();
+    });
   }
 
   // --- 3.6 Directive Dispatch ---
@@ -1817,7 +1885,12 @@
     plugin: function(fn) { fn(Faqir); },
     controller: function(name, factory) { controllerRegistry[name] = factory; },
     start: bootstrap,
-    initTree: initTree
+    initTree: initTree,
+    // Run the cleanups registered on `el` and its descendants (l-source abort +
+    // poll teardown, effect disposers, …). Structural directives call this
+    // automatically on l-if hide / keyed l-for removal; exposed for imperative
+    // teardown of a subtree. [0.3-08]
+    destroy: destroyScope
   };
 
   return Faqir;

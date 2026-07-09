@@ -346,32 +346,38 @@ markup is exempt — encode that in the rule, not in prose.
 - Audit: fixture page using `l-source` produces zero `no-fetch` findings; a recipe controller calling `fetch` still flags.
 
 **Acceptance criteria**
-- [ ] No fetch or timer survives scope destruction (asserted, not assumed).
-- [ ] Race test from 0.3-07 un-`todo`ed and green.
-- [ ] Audit exemption is code + test, and mentioned in the rule's description output.
+- [x] No fetch or timer survives scope destruction (asserted, not assumed). (`setupSource`
+  latches a `destroyed` flag on teardown, stops the poll timer, and aborts every in-flight
+  `AbortController`; async write-backs are gated. Asserted in `tests/core/l-source.test.ts`
+  → "teardown & abort [D3]": l-if hide, keyed l-for removal, poll-timer-cleared + no
+  post-destroy fetch, and `Faqir.destroy(el)`.)
+- [x] Race test from 0.3-07 un-`todo`ed and green. (The `it.todo` is now a real test —
+  "the latest CALL wins even when an older request resolves later [D2]" — plus a sibling
+  asserting the superseded request's signal is aborted and its late resolution ignored.)
+- [x] Audit exemption is code + test, and mentioned in the rule's description output.
+  (`NO_FETCH_RULE` in `src/audit/rules.ts` encodes `applies_to` + `exempt: [l-source, …]`;
+  `faqir audit --rules` prints it (`printRuleInventory`); `tests/audit/no-fetch-exemption.test.ts`
+  proves a page using `l-source` yields zero findings while a recipe controller calling
+  `fetch` still flags.)
 
-**Defects surfaced by 0.3-07** (filed here per that task's acceptance criteria; the
-new suite `tests/core/l-source.test.ts` asserts the *current* behavior for each, so
-fixing them will require updating those guard tests):
+**Defects surfaced by 0.3-07** — all RESOLVED in this task:
 
-- **D1 · Docs/impl API mismatch.** `docs/data-driven-rendering.md` and
-  `playground/task-manager.html` document `$items.loading`, `$items.error`,
-  `$items.submitting`, and a `.method` modifier. None are implemented — shipped state
-  lives on the flat scope vars `itemsLoading` / `itemsError` (there is no `submitting`
-  flag and no `.method` support; `parseSourceModifiers` silently ignores unknown
-  modifiers, so `l-source:x.method="…"` still auto-GETs). Decide the intended contract
-  and reconcile: either implement the controller-scoped `loading`/`error`/`submitting`
-  (+ `.method`) or correct the docs. The suite's `documented-vs-shipped divergences`
-  block pins current reality and should flip when this lands.
-- **D2 · No request sequencing (the 0.3-07 race `todo`).** Concurrent `load()`s race on
-  resolution order, not call order — the response that *resolves last* wins, so a slow
-  stale response clobbers a fresh one. This is the AbortController-supersede work above;
-  the `it.todo("the latest CALL wins …")` in the suite is the acceptance test to un-skip.
-- **D3 · No post-destroy write guard.** A `load()`/`create()`/… `fetch` that resolves
-  after its scope is destroyed still writes into the dead scope, and in-flight requests
-  are never aborted. `.poll` registers a scope cleanup that calls `stopPolling()`, but
-  there is no public destroy hook to exercise it from a test — the "abort on element
-  removal" test above will need one (or to drive teardown via `l-if`/`l-for` removal).
+- **D1 · Docs/impl API mismatch — RESOLVED (docs corrected).**
+  `docs/data-driven-rendering.md` promised `$items.loading`/`.error`/`.submitting` and a
+  `.method` modifier that never shipped (and `.method="…"` is incompatible with the
+  directive anyway — the value slot is the endpoint). The playground already used the
+  shipped flat-var contract. Reconciled by correcting the docs to that contract (flat
+  `itemsLoading`/`itemsError` + a methods-only `$items`, `.poll.<ms>`/`.key.<field>`
+  syntax, `.method` removed). The suite's block is reframed as "reconciled contract [D1]",
+  pinning the flat-var reality. (`apiSource()` — a separate service-layer helper — keeps
+  its own `loading`/`submitting`/`error` state; unaffected.)
+- **D2 · No request sequencing — RESOLVED (AbortController supersede).** A newer `load()`
+  aborts the previous in-flight read; a monotonic `loadSeq` guard discards any stale
+  response, so the latest CALL wins regardless of resolution order.
+- **D3 · No post-destroy write guard — RESOLVED.** Scope teardown (l-if hide, keyed l-for
+  removal, or the new public `Faqir.destroy(el)` hook) latches `destroyed`, stops `.poll`
+  timers, and aborts in-flight `AbortController`s; every async write-back is gated so a
+  late resolution cannot touch a dead scope.
 
 ---
 
