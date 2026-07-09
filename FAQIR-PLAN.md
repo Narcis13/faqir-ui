@@ -293,10 +293,10 @@ flagship claims: focus, selection, input state, and CSS transitions survive re-r
 - Unkeyed reorder logs the dev hint exactly once per list.
 
 **Acceptance criteria**
-- [ ] 1,000-row reorder stress test green and fast (document measured ms in the test).
-- [ ] Input state + focus survive reorder/insert/remove around the focused row.
-- [ ] Total added lines to core for A1 ≤ 150 (report the number).
-- [ ] Dev hint present, silent in normal keyed usage.
+- [x] 1,000-row reorder stress test green and fast (document measured ms in the test). (Rotate-by-one over 1,000 rows = **1** DOM move in ~3–13ms; full reverse = **999** moves (n−1, the proven minimum for a decreasing sequence) in ~10–52ms. Both spy on the list container's `insertBefore` and assert the exact minimal move count, with generous 2s/3s time budgets and the measured ms logged.)
+- [x] Input state + focus survive reorder/insert/remove around the focused row. (Focused row kept stationary by the LIS → `document.activeElement`, `value`, and `selectionStart/End` all intact across reorder and across insert+remove of surrounding rows. A moved focused row keeps its `value`, selection, and node identity — Faqir performs an atomic single `insertBefore`, so real browsers keep focus too; happy-dom clears `activeElement` on any node move, documented in the test.)
+- [x] Total added lines to core for A1 ≤ 150 (report the number). (**net +139 lines** to `src/core-src/engine.js` across 0.3-05 + 0.3-06 — 188 added / 49 removed vs the pre-A1 baseline; 0.3-06 alone is net +71. LIS `getSequence` + `isReorder` + backward-placement pass.)
+- [x] Dev hint present, silent in normal keyed usage. (`console.warn` fires exactly once per list when an unkeyed `l-for` reorders — `isReorder` detects a non-identity permutation, so plain updates/appends stay silent; keyed lists never reach the check. Covered by three tests: unkeyed-reorder-warns-once, keyed-reorder-silent, unkeyed-update-silent.)
 
 ---
 

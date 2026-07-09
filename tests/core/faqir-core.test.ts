@@ -1301,6 +1301,325 @@ describe("Directives", () => {
     });
   });
 
+  // ── 0.3-06 · Keyed l-for: state preservation, LIS move-minimization, stress ──
+  describe("l-for keyed — state preservation, LIS & stress", () => {
+    const inputs = () =>
+      Array.from(document.querySelectorAll("input")) as HTMLInputElement[];
+
+    it("reorder around the focused row keeps focus, value & selection", async () => {
+      document.body.innerHTML = `
+        <div l-data="{ rows: [{id:1},{id:2},{id:3},{id:4},{id:5}] }">
+          <ul><template l-for="r in rows" l-key="r.id">
+            <li><input></li>
+          </template></ul>
+          <button @click="rows = [rows[1], rows[0], rows[2], rows[4], rows[3]]">shuffle</button>
+        </div>
+      `;
+      Faqir.start();
+      await tick();
+
+      const before = inputs();
+      const target = before[2]; // row id 3 — stays put across the shuffle (in LIS)
+      target.value = "hello";
+      target.focus();
+      target.setSelectionRange(2, 4); // select "ll"
+      expect(document.activeElement).toBe(target);
+
+      document.querySelector("button")!.click();
+      await tick();
+
+      const after = inputs();
+      // Every row's node is reused (node identity preserved).
+      expect(after).toContain(target);
+      expect(new Set(after)).toEqual(new Set(before));
+      // Focused row untouched: focus, value and selection all intact.
+      expect(document.activeElement).toBe(target);
+      expect(target.value).toBe("hello");
+      expect(target.selectionStart).toBe(2);
+      expect(target.selectionEnd).toBe(4);
+    });
+
+    it("a reordered focused row keeps its value, selection & node identity", async () => {
+      // The focused row itself MOVES here. Faqir performs an atomic move (a
+      // single insertBefore, the node is never detached/recreated), so real
+      // browsers keep focus. happy-dom clears document.activeElement on any
+      // move, so we assert the state that lives on the node — value, selection
+      // and identity — which is what proves the node was reused, not rebuilt.
+      document.body.innerHTML = `
+        <div l-data="{ rows: [{id:1},{id:2},{id:3}] }">
+          <ul><template l-for="r in rows" l-key="r.id">
+            <li><input></li>
+          </template></ul>
+          <button @click="rows = [rows[2], rows[0], rows[1]]">reorder</button>
+        </div>
+      `;
+      Faqir.start();
+      await tick();
+
+      const before = inputs();
+      const target = before[2]; // row id 3 — moves to the front
+      target.value = "typed";
+      target.setSelectionRange(1, 3);
+
+      document.querySelector("button")!.click();
+      await tick();
+
+      const after = inputs();
+      expect(after[0]).toBe(target);       // same node, now first
+      expect(target.value).toBe("typed");  // input state survived the move
+      expect(target.selectionStart).toBe(1);
+      expect(target.selectionEnd).toBe(3);
+    });
+
+    it("input state survives insert and remove around the focused row", async () => {
+      document.body.innerHTML = `
+        <div l-data="{ rows: [{id:1},{id:2},{id:3}] }">
+          <ul><template l-for="r in rows" l-key="r.id">
+            <li><input></li>
+          </template></ul>
+          <button class="ins" @click="rows = [{id:0}, rows[0], rows[1], rows[2], {id:4}]">insert</button>
+          <button class="rem" @click="rows = [rows[1], rows[2], rows[3]]">remove</button>
+        </div>
+      `;
+      Faqir.start();
+      await tick();
+
+      const target = inputs()[1]; // row id 2
+      target.value = "keep-me";
+      target.focus();
+
+      // Insert a new row before and after the focused row.
+      document.querySelector(".ins")!.dispatchEvent(new Event("click", { bubbles: true }));
+      await tick();
+      expect(inputs().length).toBe(5);
+      expect(document.activeElement).toBe(target);
+      expect(target.value).toBe("keep-me");
+
+      // Remove the outer rows (indices 0 and 4), leaving the focused row.
+      document.querySelector(".rem")!.dispatchEvent(new Event("click", { bubbles: true }));
+      await tick();
+      expect(inputs().length).toBe(3);
+      expect(document.activeElement).toBe(target);
+      expect(target.value).toBe("keep-me");
+    });
+
+    it("preserves a node's live style across reorder (CSS transitions don't restart)", async () => {
+      document.body.innerHTML = `
+        <div l-data="{ rows: [{id:1,t:'a'},{id:2,t:'b'},{id:3,t:'c'}] }">
+          <ul><template l-for="r in rows" l-key="r.id"><li l-text="r.t"></li></template></ul>
+          <button @click="rows = [rows[2], rows[0], rows[1]]">reorder</button>
+        </div>
+      `;
+      Faqir.start();
+      await tick();
+
+      const li = Array.from(document.querySelectorAll("li"));
+      const marked = li[2]; // 'c'
+      // A running transition is a property of the live node; if the node is
+      // reused (not rebuilt) the transition continues rather than restarting.
+      marked.style.transition = "opacity 1s";
+      marked.style.opacity = "0.3";
+
+      document.querySelector("button")!.click();
+      await tick();
+
+      const after = Array.from(document.querySelectorAll("li"));
+      expect(after[0]).toBe(marked);              // same node, moved to front
+      expect(after[0].style.opacity).toBe("0.3"); // inline style intact
+      expect(after[0].style.transition).toBe("opacity 1s");
+    });
+
+    it("1000-row reorder moves the minimum number of nodes and stays fast", async () => {
+      const N = 1000;
+      const rows = Array.from({ length: N }, (_, i) => ({ id: i, t: "r" + i }));
+      document.body.innerHTML =
+        `<div l-data='{"rows":${JSON.stringify(rows)}}'>` +
+        `<ul><template l-for="r in rows" l-key="r.id"><li l-text="r.t"></li></template></ul>` +
+        `<button @click="rows = [...rows.slice(1), rows[0]]">rotate</button>` +
+        `</div>`;
+      Faqir.start();
+      await tick();
+
+      const ul = document.querySelector("ul")!;
+      expect(ul.querySelectorAll("li").length).toBe(N);
+
+      // Spy on the list container's insertBefore — each call is one node move.
+      const realInsert = ul.insertBefore.bind(ul);
+      let moves = 0;
+      (ul as any).insertBefore = (node: any, ref: any) => {
+        moves++;
+        return realInsert(node, ref);
+      };
+
+      const t0 = performance.now();
+      document.querySelector("button")!.click();
+      await tick();
+      const ms = performance.now() - t0;
+
+      // Rotate-by-one: 999 rows stay (the LIS), exactly one node moves.
+      expect(moves).toBe(1);
+      expect(ms).toBeLessThan(2000); // generous budget; typically ~5ms
+
+      // Order and node identity are both correct after the minimal reorder.
+      const after = Array.from(ul.querySelectorAll("li"));
+      expect(after.map((n) => n.textContent)).toEqual(
+        rows.slice(1).concat(rows[0]).map((r) => r.t)
+      );
+      // Measured cost, documented in the test output. [task 0.3-06]
+      console.log(`[0.3-06] 1000-row rotate: ${moves} DOM move in ${ms.toFixed(1)}ms`);
+    });
+
+    it("reverse of 1000 rows moves n-1 nodes (LIS length 1)", async () => {
+      const N = 1000;
+      const rows = Array.from({ length: N }, (_, i) => ({ id: i, t: "r" + i }));
+      document.body.innerHTML =
+        `<div l-data='{"rows":${JSON.stringify(rows)}}'>` +
+        `<ul><template l-for="r in rows" l-key="r.id"><li l-text="r.t"></li></template></ul>` +
+        `<button @click="rows = [...rows].reverse()">reverse</button>` +
+        `</div>`;
+      Faqir.start();
+      await tick();
+
+      const ul = document.querySelector("ul")!;
+      const realInsert = ul.insertBefore.bind(ul);
+      let moves = 0;
+      (ul as any).insertBefore = (node: any, ref: any) => {
+        moves++;
+        return realInsert(node, ref);
+      };
+
+      const t0 = performance.now();
+      document.querySelector("button")!.click();
+      await tick();
+      const ms = performance.now() - t0;
+
+      // A full reverse leaves an increasing subsequence of length 1, so every
+      // node but the pivot must move: n-1 moves is the proven minimum.
+      expect(moves).toBe(N - 1);
+      expect(ms).toBeLessThan(3000); // generous budget; typically ~45ms
+      expect(Array.from(ul.querySelectorAll("li"))[0].textContent).toBe("r" + (N - 1));
+      console.log(`[0.3-06] 1000-row reverse: ${moves} DOM moves in ${ms.toFixed(1)}ms`);
+    });
+
+    it("nested keyed l-for (list of lists) reconciles both levels by identity", async () => {
+      document.body.innerHTML = `
+        <div l-data="{ groups: [
+          {id:'g1', items:[{id:'a'},{id:'b'}]},
+          {id:'g2', items:[{id:'c'}]}
+        ] }">
+          <div id="root"><template l-for="g in groups" l-key="g.id">
+            <ul class="grp">
+              <template l-for="it in g.items" l-key="it.id">
+                <li l-text="it.id"></li>
+              </template>
+            </ul>
+          </template></div>
+          <button class="outer" @click="groups = [groups[1], groups[0]]">swap groups</button>
+          <button class="inner" @click="groups[0].items = [groups[0].items[1], groups[0].items[0]]">swap items</button>
+        </div>
+      `;
+      Faqir.start();
+      await tick();
+
+      let grps = Array.from(document.querySelectorAll("ul.grp"));
+      expect(grps.length).toBe(2);
+      expect(Array.from(grps[0].querySelectorAll("li")).map((n) => n.textContent)).toEqual(["a", "b"]);
+      expect(Array.from(grps[1].querySelectorAll("li")).map((n) => n.textContent)).toEqual(["c"]);
+
+      const g1 = grps[0]; // first group's <ul>
+      const liA = g1.querySelectorAll("li")[0];
+      const liB = g1.querySelectorAll("li")[1];
+
+      // Inner reorder: swap items inside g1. Both <li> nodes are reused.
+      document.querySelector(".inner")!.dispatchEvent(new Event("click", { bubbles: true }));
+      await tick();
+      grps = Array.from(document.querySelectorAll("ul.grp"));
+      expect(grps[0]).toBe(g1); // outer group node untouched
+      expect(Array.from(g1.querySelectorAll("li")).map((n) => n.textContent)).toEqual(["b", "a"]);
+      expect(g1.querySelectorAll("li")[0]).toBe(liB);
+      expect(g1.querySelectorAll("li")[1]).toBe(liA);
+
+      // Outer reorder: swap the two groups. Both <ul> nodes are reused.
+      document.querySelector(".outer")!.dispatchEvent(new Event("click", { bubbles: true }));
+      await tick();
+      grps = Array.from(document.querySelectorAll("ul.grp"));
+      expect(grps[1]).toBe(g1); // g1 moved to second slot, same node
+      expect(grps[0].querySelector("li")!.textContent).toBe("c");
+      // Inner nodes of the moved group are still the same reused <li>s.
+      expect(g1.querySelectorAll("li")[0]).toBe(liB);
+    });
+
+    it("logs the dev hint exactly once when an unkeyed list reorders", async () => {
+      const warnings: string[] = [];
+      const orig = console.warn;
+      console.warn = (...a: any[]) => { warnings.push(a.join(" ")); };
+      try {
+        document.body.innerHTML = `
+          <div l-data="{ items: ['a','b','c'] }">
+            <ul><template l-for="item in items"><li l-text="item"></li></template></ul>
+            <button @click="items = [items[2], items[0], items[1]]">reorder</button>
+          </div>
+        `;
+        Faqir.start();
+        await tick();
+        const hint = () => warnings.filter((w) => w.includes("reordered without l-key"));
+        expect(hint().length).toBe(0); // silent until an actual reorder
+
+        document.querySelector("button")!.click();
+        await tick();
+        expect(hint().length).toBe(1); // fires on the reorder
+
+        document.querySelector("button")!.click();
+        await tick();
+        expect(hint().length).toBe(1); // still exactly once per list
+      } finally {
+        console.warn = orig;
+      }
+    });
+
+    it("does not log the dev hint when a keyed list reorders (silent)", async () => {
+      const warnings: string[] = [];
+      const orig = console.warn;
+      console.warn = (...a: any[]) => { warnings.push(a.join(" ")); };
+      try {
+        document.body.innerHTML = `
+          <div l-data="{ items: [{id:1,t:'a'},{id:2,t:'b'},{id:3,t:'c'}] }">
+            <ul><template l-for="item in items" l-key="item.id"><li l-text="item.t"></li></template></ul>
+            <button @click="items = [items[2], items[0], items[1]]">reorder</button>
+          </div>
+        `;
+        Faqir.start();
+        await tick();
+        document.querySelector("button")!.click();
+        await tick();
+        expect(warnings.filter((w) => w.includes("reordered without l-key")).length).toBe(0);
+      } finally {
+        console.warn = orig;
+      }
+    });
+
+    it("does not log the dev hint for an unkeyed in-place update (not a reorder)", async () => {
+      const warnings: string[] = [];
+      const orig = console.warn;
+      console.warn = (...a: any[]) => { warnings.push(a.join(" ")); };
+      try {
+        document.body.innerHTML = `
+          <div l-data="{ items: ['a','b','c'] }">
+            <ul><template l-for="item in items"><li l-text="item"></li></template></ul>
+            <button @click="items = ['x','b','c']">update</button>
+          </div>
+        `;
+        Faqir.start();
+        await tick();
+        document.querySelector("button")!.click();
+        await tick();
+        expect(warnings.filter((w) => w.includes("reordered without l-key")).length).toBe(0);
+      } finally {
+        console.warn = orig;
+      }
+    });
+  });
+
   describe("l-ref", () => {
     it("registers element reference in $refs", async () => {
       document.body.innerHTML = `

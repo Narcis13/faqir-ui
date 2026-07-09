@@ -1297,6 +1297,46 @@
     });
   }
 
+  // Longest increasing subsequence of old positions (0 = freshly created entry,
+  // skipped). Returns the indices of `arr` already in order — the nodes that
+  // stay put across a reorder, so only the rest move. O(n log n). [0.3-06 · §A1]
+  function getSequence(arr) {
+    var p = arr.slice();
+    var result = [0];
+    var i, j, u, v, c;
+    for (i = 0; i < arr.length; i++) {
+      var n = arr[i];
+      if (n !== 0) {
+        j = result[result.length - 1];
+        if (arr[j] < n) { p[i] = j; result.push(i); continue; }
+        u = 0; v = result.length - 1;
+        while (u < v) { c = (u + v) >> 1; if (arr[result[c]] < n) u = c + 1; else v = c; }
+        if (n < arr[result[u]]) { if (u > 0) p[i] = result[u - 1]; result[u] = i; }
+      }
+    }
+    u = result.length; v = result[u - 1];
+    while (u-- > 0) { result[u] = v; v = p[v]; }
+    return result;
+  }
+
+  // True when `b` is a non-identity permutation of `a` (same items, new order).
+  // Drives the dev hint for unkeyed lists that reorder. [task 0.3-06 · §A1]
+  function isReorder(a, b) {
+    var len = a.length;
+    if (len === 0 || len !== b.length) return false;
+    var moved = false;
+    for (var i = 0; i < len; i++) if (a[i] !== b[i]) { moved = true; break; }
+    if (!moved) return false;
+    var counts = new Map();
+    for (var i = 0; i < len; i++) counts.set(a[i], (counts.get(a[i]) || 0) + 1);
+    for (var i = 0; i < len; i++) {
+      var c = counts.get(b[i]);
+      if (!c) return false;
+      counts.set(b[i], c - 1);
+    }
+    return true;
+  }
+
   function handleFor(el, dir, scope) {
     if (el.tagName !== 'TEMPLATE') {
       console.warn('[Faqir] l-for must be used on a <template> element');
@@ -1355,6 +1395,8 @@
     }
 
     var currentEntries = [];
+    var prevItems = null;   // last list snapshot, for the unkeyed-reorder hint
+    var warnedReorder = false;
 
     var cl = effect(function() {
       var list = evaluate(listExpr, scope, el);
@@ -1362,17 +1404,31 @@
                   typeof list === 'number' ? Array.from({ length: list }, function(_, i) { return i + 1; }) :
                   [];
 
-      // old key -> entry, consumed as we match so duplicate keys fall through
-      // to fresh nodes and leftovers are treated as stale.
+      // Dev hint: an unkeyed list reconciles by position, so reordering it
+      // rebinds per-row DOM state to the wrong items. Once per list; keyed
+      // lists never reach here.
+      if (!keyExpr && !warnedReorder) {
+        if (prevItems && isReorder(prevItems, items)) {
+          console.warn('[Faqir] l-for reordered without l-key — DOM state ' +
+            '(focus, selection, input) is bound to position, not identity. ' +
+            'Add l-key="…" so nodes follow their items across reorders.');
+          warnedReorder = true;
+        }
+        prevItems = items.slice();
+      }
+
+      // old key -> entry, consumed as matched so duplicate keys fall through to
+      // fresh nodes and leftovers are stale. source[i] = reused entry's old
+      // position + 1, or 0 for a fresh entry (the getSequence sentinel).
       var oldMap = new Map();
       for (var i = 0; i < currentEntries.length; i++) {
         oldMap.set(currentEntries[i].key, currentEntries[i]);
       }
 
-      var newEntries = [];
-      var prev = anchor; // last placed node; the next item's nodes go after it
-
-      for (var i = 0; i < items.length; i++) {
+      var n = items.length;
+      var newEntries = new Array(n);
+      var source = new Array(n);
+      for (var i = 0; i < n; i++) {
         var key = keyFor(items[i], i);
         var entry = oldMap.get(key);
         if (entry !== undefined) {
@@ -1380,26 +1436,41 @@
           // Reuse in place: one write per slot, re-renders only on change.
           entry.scope[itemName] = items[i];
           entry.scope[indexName] = i;
+          source[i] = entry.__i + 1;
         } else {
           entry = createEntry(items[i], i, key);
+          source[i] = 0;
         }
-        for (var j = 0; j < entry.nodes.length; j++) {
-          var node = entry.nodes[j];
-          if (prev.nextSibling !== node) {
-            anchor.parentNode.insertBefore(node, prev.nextSibling);
-          }
-          prev = node;
-        }
-        newEntries.push(entry);
+        newEntries[i] = entry;
       }
 
-      // Remove stale entries that were not reused this pass.
+      // Remove stale entries first so the DOM holds only reused nodes.
       oldMap.forEach(function(stale) {
         for (var j = 0; j < stale.nodes.length; j++) {
           destroyScope(stale.nodes[j]);
           stale.nodes[j].remove();
         }
       });
+
+      // Place back-to-front, inserting before `anchor` (the trailing marker).
+      // Entries in the longest increasing subsequence of old positions are
+      // already ordered and never move; the rest insert before their placed
+      // successor — the minimum number of DOM moves.
+      var seq = getSequence(source);
+      var sj = seq.length - 1;
+      var nextNode = anchor;
+      for (var i = n - 1; i >= 0; i--) {
+        var entry = newEntries[i];
+        if (source[i] === 0 || sj < 0 || i !== seq[sj]) {
+          for (var j = 0; j < entry.nodes.length; j++) {
+            anchor.parentNode.insertBefore(entry.nodes[j], nextNode);
+          }
+        } else {
+          sj--;
+        }
+        entry.__i = i;
+        nextNode = entry.nodes[0];
+      }
 
       currentEntries = newEntries;
     });
