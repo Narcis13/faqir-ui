@@ -1,3 +1,14 @@
+// ============================================================================
+// registry/core/faqir-core.js
+//
+// GENERATED FILE — DO NOT EDIT BY HAND.
+// Assembled by scripts/build-core.mjs (task 0.3-03) from:
+//   engine:      src/core-src/engine.js
+//   controllers: 16 recipe factories → accordion, combobox, command-palette, date-picker, dialog, drawer, dropdown, pagination, popover, qr-code, select-custom, sheet, table, tabs, toast, tooltip
+// Regenerate with: bun run build:core
+// Package version: 0.2.4
+// ============================================================================
+
 /**
  * Faqir Core v0.1.0
  * Alpine-style reactivity for the Faqir UI component system.
@@ -1524,1606 +1535,2953 @@
 
   var controllerRegistry = {};
 
-  // --- dialog ---
-  function createDialog(root) {
-    if (root._faqirDialog) return root._faqirDialog;
+  // Recipe controller factories are assembled here by scripts/build-core.mjs
+  // from registry/recipes/<name>/<name>.js. Do NOT hand-edit the generated
+  // registry/core/faqir-core.js — edit the recipe files (or this engine
+  // source) and run `bun run build:core`. See CONTRIBUTING.md.
+  // ── accordion ── (registry/recipes/accordion/accordion.js)
+  controllerRegistry["accordion"] = (function() {
+// @ui:controller accordion
+// @ui:provides toggle expand collapse expandAll collapseAll destroy
 
-    var trigger = root.querySelector("[data-part='trigger']");
-    var overlay = root.querySelector("[data-part='overlay']");
-    var panel = root.querySelector("[data-part='panel']");
-    var closeButtons = root.querySelectorAll("[data-part='close']");
+function createAccordion(root) {
+  // Prevent double-init
+  if (root._faqirAccordion) return root._faqirAccordion;
 
-    var focusCleanup = null;
-    var previouslyFocused = null;
+  const getItems = () => [...root.querySelectorAll("[data-part='item']")];
+  const isSingle = () => root.dataset.variant === "single";
 
-    function open() {
-      previouslyFocused = document.activeElement;
-      root.dataset.state = 'open';
-      overlay.hidden = false;
-      panel.hidden = false;
-      focusCleanup = trapFocus(panel);
-      if (panel.focus) panel.focus();
-    }
+  function expand(index) {
+    const items = getItems();
+    if (index < 0 || index >= items.length) return;
 
-    function close() {
-      root.dataset.state = 'closing';
-
-      var onEnd = function() {
-        root.dataset.state = 'closed';
-        overlay.hidden = true;
-        panel.hidden = true;
-        if (focusCleanup) focusCleanup();
-        focusCleanup = null;
-        if (previouslyFocused) previouslyFocused.focus();
-        panel.removeEventListener('animationend', onEnd);
-        panel.removeEventListener('transitionend', onEnd);
-      };
-
-      var hasAnimation = false;
-      try {
-        var style = getComputedStyle(panel);
-        var animName = style.animationName || 'none';
-        var animDur = parseFloat(style.animationDuration) || 0;
-        var transDur = parseFloat(style.transitionDuration) || 0;
-        hasAnimation = (animName !== 'none' && animDur > 0) || transDur > 0;
-      } catch (e) {}
-
-      if (hasAnimation) {
-        panel.addEventListener('animationend', onEnd, { once: true });
-        panel.addEventListener('transitionend', onEnd, { once: true });
-      } else {
-        onEnd();
-      }
-    }
-
-    function toggle() {
-      root.dataset.state === 'open' ? close() : open();
-    }
-
-    function onTriggerClick() { open(); }
-    function onOverlayClick() { close(); }
-    function onCloseClick() { close(); }
-    function onKeyDown(e) {
-      if (e.key === 'Escape' && root.dataset.state === 'open') {
-        e.stopPropagation();
-        close();
-      }
-    }
-
-    if (trigger) trigger.addEventListener('click', onTriggerClick);
-    if (overlay) overlay.addEventListener('click', onOverlayClick);
-    closeButtons.forEach(function(btn) { btn.addEventListener('click', onCloseClick); });
-    root.addEventListener('keydown', onKeyDown);
-
-    var externalTriggers = root.id ? document.querySelectorAll('[data-open="' + root.id + '"]') : [];
-    if (externalTriggers.length) {
-      externalTriggers.forEach(function(el) { el.addEventListener('click', onTriggerClick); });
-    }
-
-    function destroy() {
-      if (trigger) trigger.removeEventListener('click', onTriggerClick);
-      if (overlay) overlay.removeEventListener('click', onOverlayClick);
-      closeButtons.forEach(function(btn) { btn.removeEventListener('click', onCloseClick); });
-      root.removeEventListener('keydown', onKeyDown);
-      if (externalTriggers.length) {
-        externalTriggers.forEach(function(el) { el.removeEventListener('click', onTriggerClick); });
-      }
-      if (focusCleanup) focusCleanup();
-      delete root._faqirDialog;
-    }
-
-    var api = { open: open, close: close, toggle: toggle, destroy: destroy };
-    root._faqirDialog = api;
-    return api;
-  }
-
-  // --- drawer ---
-  function createDrawer(root) {
-    if (root._faqirDrawer) return root._faqirDrawer;
-
-    var trigger = root.querySelector("[data-part='trigger']");
-    var overlay = root.querySelector("[data-part='overlay']");
-    var panel = root.querySelector("[data-part='panel']");
-    var closeButtons = root.querySelectorAll("[data-part='close']");
-
-    var focusCleanup = null;
-    var previouslyFocused = null;
-
-    function open() {
-      previouslyFocused = document.activeElement;
-      root.dataset.state = 'open';
-      overlay.hidden = false;
-      panel.hidden = false;
-      focusCleanup = trapFocus(panel);
-      if (panel.focus) panel.focus();
-    }
-
-    function close() {
-      root.dataset.state = 'closing';
-
-      var onEnd = function() {
-        root.dataset.state = 'closed';
-        overlay.hidden = true;
-        panel.hidden = true;
-        if (focusCleanup) focusCleanup();
-        focusCleanup = null;
-        if (previouslyFocused) previouslyFocused.focus();
-        panel.removeEventListener('transitionend', onTransEnd);
-      };
-
-      var hasTransition = false;
-      try {
-        var style = getComputedStyle(panel);
-        var transDur = parseFloat(style.transitionDuration) || 0;
-        hasTransition = transDur > 0;
-      } catch (e) {}
-
-      var onTransEnd = function(e) {
-        if (e.propertyName === 'transform') onEnd();
-      };
-
-      if (hasTransition) {
-        panel.addEventListener('transitionend', onTransEnd, { once: true });
-      } else {
-        onEnd();
-      }
-    }
-
-    function toggle() {
-      root.dataset.state === 'open' ? close() : open();
-    }
-
-    function onTriggerClick() { open(); }
-    function onOverlayClick() { close(); }
-    function onCloseClick() { close(); }
-    function onKeyDown(e) {
-      if (e.key === 'Escape' && root.dataset.state === 'open') {
-        e.stopPropagation();
-        close();
-      }
-    }
-
-    if (trigger) trigger.addEventListener('click', onTriggerClick);
-    if (overlay) overlay.addEventListener('click', onOverlayClick);
-    closeButtons.forEach(function(btn) { btn.addEventListener('click', onCloseClick); });
-    root.addEventListener('keydown', onKeyDown);
-
-    var externalTriggers = root.id ? document.querySelectorAll('[data-open="' + root.id + '"]') : [];
-    if (externalTriggers.length) {
-      externalTriggers.forEach(function(el) { el.addEventListener('click', onTriggerClick); });
-    }
-
-    function destroy() {
-      if (trigger) trigger.removeEventListener('click', onTriggerClick);
-      if (overlay) overlay.removeEventListener('click', onOverlayClick);
-      closeButtons.forEach(function(btn) { btn.removeEventListener('click', onCloseClick); });
-      root.removeEventListener('keydown', onKeyDown);
-      if (externalTriggers.length) {
-        externalTriggers.forEach(function(el) { el.removeEventListener('click', onTriggerClick); });
-      }
-      if (focusCleanup) focusCleanup();
-      delete root._faqirDrawer;
-    }
-
-    var api = { open: open, close: close, toggle: toggle, destroy: destroy };
-    root._faqirDrawer = api;
-    return api;
-  }
-
-  // --- tabs ---
-  function createTabs(root) {
-    if (root._faqirTabs) return root._faqirTabs;
-
-    var list = root.querySelector("[data-part='list']");
-    var triggers = function() { return [].slice.call(root.querySelectorAll("[data-part='trigger']")); };
-    var panels = function() { return [].slice.call(root.querySelectorAll("[data-part='panel']")); };
-
-    function activate(index) {
-      var allTriggers = triggers();
-      var allPanels = panels();
-      if (index < 0 || index >= allTriggers.length) return;
-
-      allTriggers.forEach(function(trigger, i) {
-        trigger.setAttribute('aria-selected', 'false');
-        trigger.setAttribute('tabindex', '-1');
-        if (allPanels[i]) allPanels[i].hidden = true;
-      });
-
-      allTriggers[index].setAttribute('aria-selected', 'true');
-      allTriggers[index].removeAttribute('tabindex');
-      if (allPanels[index]) allPanels[index].hidden = false;
-    }
-
-    function getActiveIndex() {
-      return triggers().findIndex(function(t) {
-        return t.getAttribute('aria-selected') === 'true';
+    // In single mode, collapse all others first
+    if (isSingle()) {
+      items.forEach((item, i) => {
+        if (i !== index) collapseItem(item);
       });
     }
 
-    function onTriggerClick(e) {
-      var trigger = e.target.closest("[data-part='trigger']");
-      if (!trigger) return;
-      var index = triggers().indexOf(trigger);
-      if (index >= 0) {
-        activate(index);
-        trigger.focus();
-      }
-    }
-
-    function onKeyDown(e) {
-      var allTriggers = triggers();
-      var current = getActiveIndex();
-      var next = -1;
-
-      switch (e.key) {
-        case 'ArrowRight': next = (current + 1) % allTriggers.length; break;
-        case 'ArrowLeft': next = (current - 1 + allTriggers.length) % allTriggers.length; break;
-        case 'Home': next = 0; break;
-        case 'End': next = allTriggers.length - 1; break;
-        default: return;
-      }
-
-      e.preventDefault();
-      activate(next);
-      allTriggers[next].focus();
-    }
-
-    if (list) list.addEventListener('click', onTriggerClick);
-    if (list) list.addEventListener('keydown', onKeyDown);
-
-    function destroy() {
-      if (list) list.removeEventListener('click', onTriggerClick);
-      if (list) list.removeEventListener('keydown', onKeyDown);
-      delete root._faqirTabs;
-    }
-
-    var api = { activate: activate, getActiveIndex: getActiveIndex, destroy: destroy };
-    root._faqirTabs = api;
-    return api;
+    expandItem(items[index]);
   }
 
-  // --- dropdown ---
-  function createDropdown(root) {
-    if (root._faqirDropdown) return root._faqirDropdown;
+  function collapse(index) {
+    const items = getItems();
+    if (index < 0 || index >= items.length) return;
+    collapseItem(items[index]);
+  }
 
-    var trigger = root.querySelector("[data-part='trigger']");
-    var menu = root.querySelector("[data-part='menu']");
-    var items = function() {
-      return [].slice.call(root.querySelectorAll("[data-part='item']:not(:disabled)"));
-    };
+  function toggle(index) {
+    const items = getItems();
+    if (index < 0 || index >= items.length) return;
 
-    var outsideClickCleanup = null;
-
-    function open() {
-      root.dataset.state = 'open';
-      menu.hidden = false;
-      trigger.setAttribute('aria-expanded', 'true');
-      var allItems = items();
-      if (allItems.length > 0) allItems[0].focus();
-      outsideClickCleanup = onOutsideClick(root, close);
+    if (items[index].dataset.state === "expanded") {
+      collapse(index);
+    } else {
+      expand(index);
     }
+  }
 
-    function close() {
-      root.dataset.state = 'closed';
-      menu.hidden = true;
-      trigger.setAttribute('aria-expanded', 'false');
-      if (outsideClickCleanup) { outsideClickCleanup(); outsideClickCleanup = null; }
-      trigger.focus();
-    }
+  function expandAll() {
+    const items = getItems();
+    items.forEach((item) => expandItem(item));
+  }
 
-    function toggle() {
-      root.dataset.state === 'open' ? close() : open();
-    }
+  function collapseAll() {
+    const items = getItems();
+    items.forEach((item) => collapseItem(item));
+  }
 
-    function focusItem(index) {
-      var allItems = items();
-      if (index < 0 || index >= allItems.length) return;
-      allItems[index].focus();
-    }
+  function expandItem(item) {
+    item.dataset.state = "expanded";
+    const trigger = item.querySelector("[data-part='trigger']");
+    const content = item.querySelector("[data-part='content']");
+    if (trigger) trigger.setAttribute("aria-expanded", "true");
+    if (content) content.hidden = false;
+  }
 
-    function getFocusedIndex() {
-      return items().indexOf(document.activeElement);
-    }
+  function collapseItem(item) {
+    item.dataset.state = "collapsed";
+    const trigger = item.querySelector("[data-part='trigger']");
+    const content = item.querySelector("[data-part='content']");
+    if (trigger) trigger.setAttribute("aria-expanded", "false");
+    if (content) content.hidden = true;
+  }
 
-    function onTriggerClick() { toggle(); }
+  function onTriggerClick(e) {
+    const trigger = e.target.closest("[data-part='trigger']");
+    if (!trigger) return;
+    const item = trigger.closest("[data-part='item']");
+    if (!item) return;
+    const items = getItems();
+    const index = items.indexOf(item);
+    if (index >= 0) toggle(index);
+  }
 
-    function onTriggerKeyDown(e) {
-      if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') {
-        if (root.dataset.state !== 'open') { e.preventDefault(); open(); }
+  function onKeyDown(e) {
+    if (e.key === "Enter" || e.key === " ") {
+      const trigger = e.target.closest("[data-part='trigger']");
+      if (trigger) {
+        e.preventDefault();
+        const item = trigger.closest("[data-part='item']");
+        if (!item) return;
+        const items = getItems();
+        const index = items.indexOf(item);
+        if (index >= 0) toggle(index);
       }
     }
+  }
 
-    function onMenuKeyDown(e) {
-      var allItems = items();
-      var current = getFocusedIndex();
-      switch (e.key) {
-        case 'ArrowDown': e.preventDefault(); focusItem((current + 1) % allItems.length); break;
-        case 'ArrowUp': e.preventDefault(); focusItem((current - 1 + allItems.length) % allItems.length); break;
-        case 'Home': e.preventDefault(); focusItem(0); break;
-        case 'End': e.preventDefault(); focusItem(allItems.length - 1); break;
-        case 'Escape': e.preventDefault(); close(); break;
-        case 'Tab': close(); break;
-      }
+  root.addEventListener("click", onTriggerClick);
+  root.addEventListener("keydown", onKeyDown);
+
+  function destroy() {
+    root.removeEventListener("click", onTriggerClick);
+    root.removeEventListener("keydown", onKeyDown);
+    delete root._faqirAccordion;
+  }
+
+  const api = { toggle, expand, collapse, expandAll, collapseAll, destroy };
+  root._faqirAccordion = api;
+  return api;
+}
+    return createAccordion;
+  })();
+
+  // ── combobox ── (registry/recipes/combobox/combobox.js)
+  controllerRegistry["combobox"] = (function() {
+// @ui:controller combobox
+// @ui:provides open close filter selectOption getValue setValue destroy
+
+function createCombobox(root) {
+  // Prevent double-init
+  if (root._faqirCombobox) return root._faqirCombobox;
+
+  const input = root.querySelector("[data-part='input']");
+  const listbox = root.querySelector("[data-part='listbox']");
+  const emptyEl = root.querySelector("[data-part='empty']");
+  const options = () =>
+    [...root.querySelectorAll("[data-part='option']")];
+
+  let highlightedIndex = -1;
+  let outsideClickCleanup = null;
+  let selectedValue = "";
+
+  function open() {
+    root.dataset.state = "open";
+    listbox.hidden = false;
+    input.setAttribute("aria-expanded", "true");
+
+    outsideClickCleanup = onOutsideClick(root, close);
+  }
+
+  function close() {
+    root.dataset.state = "closed";
+    listbox.hidden = true;
+    input.setAttribute("aria-expanded", "false");
+    clearHighlight();
+
+    if (outsideClickCleanup) {
+      outsideClickCleanup();
+      outsideClickCleanup = null;
     }
+  }
 
-    if (trigger) trigger.addEventListener('click', onTriggerClick);
-    if (trigger) trigger.addEventListener('keydown', onTriggerKeyDown);
-    if (menu) menu.addEventListener('keydown', onMenuKeyDown);
-    if (menu) menu.addEventListener('click', function(e) {
-      var item = e.target.closest("[data-part='item']");
-      if (item && !item.disabled) close();
+  function clearHighlight() {
+    const allOptions = options();
+    allOptions.forEach((opt) => {
+      opt.removeAttribute("data-highlighted");
+      opt.setAttribute("aria-selected", "false");
+    });
+    highlightedIndex = -1;
+  }
+
+  function highlightOption(index) {
+    const allOptions = visibleOptions();
+    if (allOptions.length === 0) return;
+
+    // Clamp index
+    if (index < 0) index = allOptions.length - 1;
+    if (index >= allOptions.length) index = 0;
+
+    // Clear previous
+    options().forEach((opt) => {
+      opt.removeAttribute("data-highlighted");
+      opt.setAttribute("aria-selected", "false");
     });
 
-    function destroy() {
-      if (trigger) trigger.removeEventListener('click', onTriggerClick);
-      if (trigger) trigger.removeEventListener('keydown', onTriggerKeyDown);
-      if (menu) menu.removeEventListener('keydown', onMenuKeyDown);
-      if (outsideClickCleanup) outsideClickCleanup();
-      delete root._faqirDropdown;
-    }
-
-    var api = { open: open, close: close, toggle: toggle, destroy: destroy };
-    root._faqirDropdown = api;
-    return api;
+    allOptions[index].setAttribute("data-highlighted", "");
+    allOptions[index].setAttribute("aria-selected", "true");
+    allOptions[index].scrollIntoView({ block: "nearest" });
+    highlightedIndex = index;
   }
 
-  // --- accordion ---
-  function createAccordion(root) {
-    if (root._faqirAccordion) return root._faqirAccordion;
-
-    var getItems = function() { return [].slice.call(root.querySelectorAll("[data-part='item']")); };
-    var isSingle = function() { return root.dataset.variant === 'single'; };
-
-    function expandItem(item) {
-      item.dataset.state = 'expanded';
-      var trig = item.querySelector("[data-part='trigger']");
-      var content = item.querySelector("[data-part='content']");
-      if (trig) trig.setAttribute('aria-expanded', 'true');
-      if (content) content.hidden = false;
-    }
-
-    function collapseItem(item) {
-      item.dataset.state = 'collapsed';
-      var trig = item.querySelector("[data-part='trigger']");
-      var content = item.querySelector("[data-part='content']");
-      if (trig) trig.setAttribute('aria-expanded', 'false');
-      if (content) content.hidden = true;
-    }
-
-    function expand(index) {
-      var allItems = getItems();
-      if (index < 0 || index >= allItems.length) return;
-      if (isSingle()) {
-        allItems.forEach(function(item, i) { if (i !== index) collapseItem(item); });
-      }
-      expandItem(allItems[index]);
-    }
-
-    function collapse(index) {
-      var allItems = getItems();
-      if (index < 0 || index >= allItems.length) return;
-      collapseItem(allItems[index]);
-    }
-
-    function toggleAccordion(index) {
-      var allItems = getItems();
-      if (index < 0 || index >= allItems.length) return;
-      allItems[index].dataset.state === 'expanded' ? collapse(index) : expand(index);
-    }
-
-    function expandAll() { getItems().forEach(function(item) { expandItem(item); }); }
-    function collapseAll() { getItems().forEach(function(item) { collapseItem(item); }); }
-
-    function onTriggerClick(e) {
-      var trig = e.target.closest("[data-part='trigger']");
-      if (!trig) return;
-      var item = trig.closest("[data-part='item']");
-      if (!item) return;
-      var index = getItems().indexOf(item);
-      if (index >= 0) toggleAccordion(index);
-    }
-
-    function onKeyDown(e) {
-      if (e.key === 'Enter' || e.key === ' ') {
-        var trig = e.target.closest("[data-part='trigger']");
-        if (trig) {
-          e.preventDefault();
-          var item = trig.closest("[data-part='item']");
-          if (!item) return;
-          var index = getItems().indexOf(item);
-          if (index >= 0) toggleAccordion(index);
-        }
-      }
-    }
-
-    root.addEventListener('click', onTriggerClick);
-    root.addEventListener('keydown', onKeyDown);
-
-    function destroy() {
-      root.removeEventListener('click', onTriggerClick);
-      root.removeEventListener('keydown', onKeyDown);
-      delete root._faqirAccordion;
-    }
-
-    var api = { toggle: toggleAccordion, expand: expand, collapse: collapse, expandAll: expandAll, collapseAll: collapseAll, destroy: destroy };
-    root._faqirAccordion = api;
-    return api;
+  function visibleOptions() {
+    return options().filter((opt) => !opt.hasAttribute("data-hidden"));
   }
 
-  // --- tooltip ---
-  function createTooltip(root) {
-    if (root._faqirTooltip) return root._faqirTooltip;
+  function filter(query) {
+    const allOptions = options();
+    const lowerQuery = query.toLowerCase();
+    let visibleCount = 0;
 
-    var trigger = root.querySelector("[data-part='trigger']");
-    var content = root.querySelector("[data-part='content']");
-    var showTimer = null;
-    var hideTimer = null;
-
-    function show() {
-      clearTimeout(hideTimer); hideTimer = null;
-      root.dataset.state = 'visible';
-      content.hidden = false;
-    }
-
-    function hide() {
-      clearTimeout(showTimer); showTimer = null;
-      root.dataset.state = 'hidden';
-      content.hidden = true;
-    }
-
-    function scheduleShow() { clearTimeout(hideTimer); hideTimer = null; showTimer = setTimeout(show, 200); }
-    function scheduleHide() { clearTimeout(showTimer); showTimer = null; hideTimer = setTimeout(hide, 100); }
-
-    function onMouseEnter() { scheduleShow(); }
-    function onMouseLeave() { scheduleHide(); }
-    function onFocusIn() { scheduleShow(); }
-    function onFocusOut() { scheduleHide(); }
-    function onKeyDown(e) {
-      if (e.key === 'Escape' && root.dataset.state === 'visible') { e.stopPropagation(); hide(); }
-    }
-
-    if (trigger) trigger.addEventListener('mouseenter', onMouseEnter);
-    if (trigger) trigger.addEventListener('mouseleave', onMouseLeave);
-    if (trigger) trigger.addEventListener('focusin', onFocusIn);
-    if (trigger) trigger.addEventListener('focusout', onFocusOut);
-    root.addEventListener('keydown', onKeyDown);
-
-    function destroy() {
-      clearTimeout(showTimer); clearTimeout(hideTimer);
-      if (trigger) trigger.removeEventListener('mouseenter', onMouseEnter);
-      if (trigger) trigger.removeEventListener('mouseleave', onMouseLeave);
-      if (trigger) trigger.removeEventListener('focusin', onFocusIn);
-      if (trigger) trigger.removeEventListener('focusout', onFocusOut);
-      root.removeEventListener('keydown', onKeyDown);
-      delete root._faqirTooltip;
-    }
-
-    var api = { show: show, hide: hide, destroy: destroy };
-    root._faqirTooltip = api;
-    return api;
-  }
-
-  // --- toast ---
-  function createToastContainer(root) {
-    if (root._faqirToast) return root._faqirToast;
-
-    var toasts = new Map();
-
-    function add(options) {
-      options = options || {};
-      var message = options.message || '';
-      var tone = options.tone || 'default';
-      var icon = options.icon || '';
-      var actionLabel = options.actionLabel || '';
-      var onAction = options.onAction || null;
-      var duration = options.duration !== undefined ? options.duration : 5000;
-
-      var id = uid('toast');
-      var el = document.createElement('div');
-      el.dataset.part = 'toast';
-      el.dataset.variant = tone;
-      el.dataset.state = 'entering';
-      el.dataset.toastId = id;
-      el.setAttribute('role', 'status');
-      el.setAttribute('aria-live', 'polite');
-
-      var html = '';
-      if (icon) html += '<span data-part="icon" aria-hidden="true">' + icon + '</span>';
-      html += '<span data-part="message">' + message + '</span>';
-      if (actionLabel) html += '<button data-part="action">' + actionLabel + '</button>';
-      html += '<button data-part="close" aria-label="Dismiss notification">&#x2715;</button>';
-      el.innerHTML = html;
-      root.appendChild(el);
-
-      requestAnimationFrame(function() {
-        requestAnimationFrame(function() {
-          if (el.dataset.state === 'entering') el.dataset.state = 'visible';
-        });
-      });
-
-      var closeBtn = el.querySelector("[data-part='close']");
-      var onCloseClick = function() { dismiss(id); };
-      if (closeBtn) closeBtn.addEventListener('click', onCloseClick);
-
-      var actionBtn = el.querySelector("[data-part='action']");
-      var onActionClick = function() { if (onAction) onAction(); dismiss(id); };
-      if (actionBtn) actionBtn.addEventListener('click', onActionClick);
-
-      var timer = null;
-      if (duration > 0) timer = setTimeout(function() { dismiss(id); }, duration);
-
-      toasts.set(id, { el: el, timer: timer, closeBtn: closeBtn, onCloseClick: onCloseClick, actionBtn: actionBtn, onActionClick: onActionClick });
-      return id;
-    }
-
-    function dismiss(id) {
-      var entry = toasts.get(id);
-      if (!entry) return;
-      if (entry.timer) clearTimeout(entry.timer);
-      entry.el.dataset.state = 'exiting';
-
-      var onEnd = function() {
-        if (entry.closeBtn) entry.closeBtn.removeEventListener('click', entry.onCloseClick);
-        if (entry.actionBtn) entry.actionBtn.removeEventListener('click', entry.onActionClick);
-        entry.el.removeEventListener('transitionend', onEnd);
-        entry.el.remove();
-        toasts.delete(id);
-      };
-
-      var hasTransition = false;
-      try {
-        var style = getComputedStyle(entry.el);
-        hasTransition = (parseFloat(style.transitionDuration) || 0) > 0;
-      } catch (e) {}
-
-      if (hasTransition) {
-        entry.el.addEventListener('transitionend', onEnd, { once: true });
+    allOptions.forEach((opt) => {
+      const text = opt.textContent.toLowerCase();
+      if (text.includes(lowerQuery)) {
+        opt.removeAttribute("data-hidden");
+        visibleCount++;
       } else {
-        onEnd();
+        opt.setAttribute("data-hidden", "");
+      }
+    });
+
+    // Show/hide empty state
+    if (emptyEl) {
+      emptyEl.hidden = visibleCount > 0;
+    }
+
+    clearHighlight();
+
+    return visibleCount;
+  }
+
+  function selectOption(index) {
+    const visible = visibleOptions();
+    if (index < 0 || index >= visible.length) return;
+
+    const opt = visible[index];
+    selectedValue = opt.textContent.trim();
+    input.value = selectedValue;
+
+    // Mark as selected
+    options().forEach((o) => o.setAttribute("aria-selected", "false"));
+    opt.setAttribute("aria-selected", "true");
+
+    close();
+  }
+
+  function getValue() {
+    return selectedValue;
+  }
+
+  function setValue(val) {
+    selectedValue = val;
+    input.value = val;
+  }
+
+  // ── Event Handlers ──
+
+  function onInput() {
+    const query = input.value;
+    if (root.dataset.state !== "open") {
+      open();
+    }
+    filter(query);
+  }
+
+  function onInputFocus() {
+    if (root.dataset.state !== "open") {
+      open();
+    }
+  }
+
+  function onInputKeyDown(e) {
+    const visible = visibleOptions();
+
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        if (root.dataset.state !== "open") open();
+        highlightOption(highlightedIndex + 1);
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        if (root.dataset.state !== "open") open();
+        highlightOption(highlightedIndex - 1);
+        break;
+      case "Enter":
+        e.preventDefault();
+        if (highlightedIndex >= 0 && highlightedIndex < visible.length) {
+          selectOption(highlightedIndex);
+        }
+        break;
+      case "Escape":
+        e.preventDefault();
+        close();
+        break;
+      case "Home":
+        if (root.dataset.state === "open" && visible.length > 0) {
+          e.preventDefault();
+          highlightOption(0);
+        }
+        break;
+      case "End":
+        if (root.dataset.state === "open" && visible.length > 0) {
+          e.preventDefault();
+          highlightOption(visible.length - 1);
+        }
+        break;
+    }
+  }
+
+  function onListboxClick(e) {
+    const opt = e.target.closest("[data-part='option']");
+    if (!opt) return;
+
+    const visible = visibleOptions();
+    const index = visible.indexOf(opt);
+    if (index >= 0) {
+      selectOption(index);
+    }
+  }
+
+  input?.addEventListener("input", onInput);
+  input?.addEventListener("focus", onInputFocus);
+  input?.addEventListener("keydown", onInputKeyDown);
+  listbox?.addEventListener("click", onListboxClick);
+
+  function destroy() {
+    input?.removeEventListener("input", onInput);
+    input?.removeEventListener("focus", onInputFocus);
+    input?.removeEventListener("keydown", onInputKeyDown);
+    listbox?.removeEventListener("click", onListboxClick);
+    if (outsideClickCleanup) outsideClickCleanup();
+    delete root._faqirCombobox;
+  }
+
+  const api = { open, close, filter, selectOption, getValue, setValue, destroy };
+  root._faqirCombobox = api;
+  return api;
+}
+    return createCombobox;
+  })();
+
+  // ── command-palette ── (registry/recipes/command-palette/command-palette.js)
+  controllerRegistry["command-palette"] = (function() {
+// @ui:controller command-palette
+// @ui:provides open close filter selectItem registerCommand destroy
+
+function createCommandPalette(root) {
+  // Prevent double-init
+  if (root._faqirCommandPalette) return root._faqirCommandPalette;
+
+  const overlay = root.querySelector("[data-part='overlay']");
+  const panel = root.querySelector("[data-part='panel']");
+  const searchInput = root.querySelector("[data-part='search']");
+  const list = root.querySelector("[data-part='list']");
+  const emptyEl = root.querySelector("[data-part='empty']");
+  const items = () =>
+    [...root.querySelectorAll("[data-part='item']")];
+  const groups = () =>
+    [...root.querySelectorAll("[data-part='group']")];
+
+  let highlightedIndex = -1;
+  let focusCleanup = null;
+  let previouslyFocused = null;
+  const registeredCommands = [];
+
+  function open() {
+    previouslyFocused = document.activeElement;
+    root.dataset.state = "open";
+    overlay.hidden = false;
+    panel.hidden = false;
+
+    // Reset search and highlights
+    searchInput.value = "";
+    filter("");
+    clearHighlight();
+
+    focusCleanup = trapFocus(panel);
+    searchInput.focus();
+  }
+
+  function close() {
+    root.dataset.state = "closed";
+    overlay.hidden = true;
+    panel.hidden = true;
+
+    if (focusCleanup) {
+      focusCleanup();
+      focusCleanup = null;
+    }
+
+    previouslyFocused?.focus();
+  }
+
+  function clearHighlight() {
+    items().forEach((item) => {
+      item.removeAttribute("data-highlighted");
+      item.setAttribute("aria-selected", "false");
+    });
+    highlightedIndex = -1;
+  }
+
+  function visibleItems() {
+    return items().filter((item) => !item.hasAttribute("data-hidden"));
+  }
+
+  function highlightItem(index) {
+    const visible = visibleItems();
+    if (visible.length === 0) return;
+
+    // Clamp index
+    if (index < 0) index = visible.length - 1;
+    if (index >= visible.length) index = 0;
+
+    // Clear previous
+    items().forEach((item) => {
+      item.removeAttribute("data-highlighted");
+      item.setAttribute("aria-selected", "false");
+    });
+
+    visible[index].setAttribute("data-highlighted", "");
+    visible[index].setAttribute("aria-selected", "true");
+    visible[index].scrollIntoView({ block: "nearest" });
+    highlightedIndex = index;
+  }
+
+  function filter(query) {
+    const allItems = items();
+    const allGroups = groups();
+    const lowerQuery = query.toLowerCase();
+    let totalVisible = 0;
+
+    // Track visible items per group
+    const groupVisibility = new Map();
+    allGroups.forEach((g) => groupVisibility.set(g, 0));
+
+    allItems.forEach((item) => {
+      const label = item.querySelector("[data-part='item-label']");
+      const text = (label || item).textContent.toLowerCase();
+
+      if (text.includes(lowerQuery)) {
+        item.removeAttribute("data-hidden");
+        totalVisible++;
+        // Find parent group
+        const parentGroup = item.closest("[data-part='group']");
+        if (parentGroup && groupVisibility.has(parentGroup)) {
+          groupVisibility.set(parentGroup, groupVisibility.get(parentGroup) + 1);
+        }
+      } else {
+        item.setAttribute("data-hidden", "");
+      }
+    });
+
+    // Hide groups with no visible items
+    allGroups.forEach((group) => {
+      if (groupVisibility.get(group) === 0) {
+        group.setAttribute("data-hidden", "");
+      } else {
+        group.removeAttribute("data-hidden");
+      }
+    });
+
+    // Show/hide empty state
+    if (emptyEl) {
+      emptyEl.hidden = totalVisible > 0;
+    }
+
+    clearHighlight();
+
+    return totalVisible;
+  }
+
+  function selectItem(index) {
+    const visible = visibleItems();
+    if (index < 0 || index >= visible.length) return;
+
+    const item = visible[index];
+
+    // Fire a custom event for the application to handle
+    const event = new CustomEvent("command-select", {
+      bubbles: true,
+      detail: {
+        item,
+        label: item.querySelector("[data-part='item-label']")?.textContent || item.textContent
+      }
+    });
+    root.dispatchEvent(event);
+
+    // Check registered commands
+    const label = (item.querySelector("[data-part='item-label']") || item).textContent.trim();
+    const cmd = registeredCommands.find((c) => c.label === label);
+    if (cmd?.action) cmd.action();
+
+    close();
+  }
+
+  function registerCommand(cmd) {
+    registeredCommands.push(cmd);
+  }
+
+  // ── Event Handlers ──
+
+  function onSearchInput() {
+    filter(searchInput.value);
+  }
+
+  function onSearchKeyDown(e) {
+    const visible = visibleItems();
+
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        highlightItem(highlightedIndex + 1);
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        highlightItem(highlightedIndex - 1);
+        break;
+      case "Enter":
+        e.preventDefault();
+        if (highlightedIndex >= 0 && highlightedIndex < visible.length) {
+          selectItem(highlightedIndex);
+        }
+        break;
+      case "Escape":
+        e.preventDefault();
+        close();
+        break;
+      case "Home":
+        if (visible.length > 0) {
+          e.preventDefault();
+          highlightItem(0);
+        }
+        break;
+      case "End":
+        if (visible.length > 0) {
+          e.preventDefault();
+          highlightItem(visible.length - 1);
+        }
+        break;
+    }
+  }
+
+  function onOverlayClick() {
+    close();
+  }
+
+  function onItemClick(e) {
+    const item = e.target.closest("[data-part='item']");
+    if (!item) return;
+
+    const visible = visibleItems();
+    const index = visible.indexOf(item);
+    if (index >= 0) {
+      selectItem(index);
+    }
+  }
+
+  function onGlobalKeyDown(e) {
+    if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+      e.preventDefault();
+      if (root.dataset.state === "open") {
+        close();
+      } else {
+        open();
+      }
+    }
+  }
+
+  searchInput?.addEventListener("input", onSearchInput);
+  searchInput?.addEventListener("keydown", onSearchKeyDown);
+  overlay?.addEventListener("click", onOverlayClick);
+  list?.addEventListener("click", onItemClick);
+  document.addEventListener("keydown", onGlobalKeyDown);
+
+  function destroy() {
+    searchInput?.removeEventListener("input", onSearchInput);
+    searchInput?.removeEventListener("keydown", onSearchKeyDown);
+    overlay?.removeEventListener("click", onOverlayClick);
+    list?.removeEventListener("click", onItemClick);
+    document.removeEventListener("keydown", onGlobalKeyDown);
+    if (focusCleanup) focusCleanup();
+    delete root._faqirCommandPalette;
+  }
+
+  const api = { open, close, filter, selectItem, registerCommand, destroy };
+  root._faqirCommandPalette = api;
+  return api;
+}
+    return createCommandPalette;
+  })();
+
+  // ── date-picker ── (registry/recipes/date-picker/date-picker.js)
+  controllerRegistry["date-picker"] = (function() {
+// @ui:controller date-picker
+// @ui:provides open close getValue setValue navigate selectDate destroy
+
+const MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
+const DAY_NAMES = [
+  "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
+];
+
+function createDatePicker(root) {
+  // Prevent double-init
+  if (root._faqirDatePicker) return root._faqirDatePicker;
+
+  const trigger = root.querySelector("[data-part='trigger']");
+  const input = root.querySelector("[data-part='input']");
+  const calendar = root.querySelector("[data-part='calendar']");
+  const navPrev = root.querySelector("[data-part='nav-prev']");
+  const navNext = root.querySelector("[data-part='nav-next']");
+  const monthLabel = root.querySelector("[data-part='month-label']");
+  const gridBody = root.querySelector("[data-part='grid-body']");
+
+  const today = new Date();
+  let viewMonth = today.getMonth();
+  let viewYear = today.getFullYear();
+  let selectedDate = null;
+  let focusedDate = null;
+  let outsideClickCleanup = null;
+
+  function formatDate(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }
+
+  function formatDisplay(date) {
+    return `${MONTH_NAMES[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+  }
+
+  function formatAriaLabel(date) {
+    return `${DAY_NAMES[date.getDay()]}, ${MONTH_NAMES[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+  }
+
+  function isSameDay(a, b) {
+    if (!a || !b) return false;
+    return (
+      a.getFullYear() === b.getFullYear() &&
+      a.getMonth() === b.getMonth() &&
+      a.getDate() === b.getDate()
+    );
+  }
+
+  function isToday(date) {
+    return isSameDay(date, today);
+  }
+
+  function buildCalendar() {
+    // First day of the displayed month
+    const firstDay = new Date(viewYear, viewMonth, 1);
+    const startDow = firstDay.getDay(); // 0=Sun
+
+    // Last day of the displayed month
+    const lastDay = new Date(viewYear, viewMonth + 1, 0);
+    const totalDays = lastDay.getDate();
+
+    // Previous month trailing days
+    const prevMonthLast = new Date(viewYear, viewMonth, 0);
+    const prevMonthDays = prevMonthLast.getDate();
+
+    // Update label
+    monthLabel.textContent = `${MONTH_NAMES[viewMonth]} ${viewYear}`;
+
+    // Clear existing
+    gridBody.innerHTML = "";
+
+    let dayCount = 1;
+    let nextMonthDay = 1;
+    const totalCells = Math.ceil((startDow + totalDays) / 7) * 7;
+
+    for (let i = 0; i < totalCells; i++) {
+      // Start a new row every 7 cells
+      if (i % 7 === 0) {
+        var row = document.createElement("tr");
+        gridBody.appendChild(row);
+      }
+
+      const td = document.createElement("td");
+      const btn = document.createElement("button");
+      btn.setAttribute("data-part", "day");
+      btn.type = "button";
+
+      let date;
+      let isOutside = false;
+
+      if (i < startDow) {
+        // Previous month
+        const day = prevMonthDays - startDow + 1 + i;
+        date = new Date(viewYear, viewMonth - 1, day);
+        btn.textContent = day;
+        isOutside = true;
+      } else if (dayCount <= totalDays) {
+        // Current month
+        date = new Date(viewYear, viewMonth, dayCount);
+        btn.textContent = dayCount;
+        dayCount++;
+      } else {
+        // Next month
+        date = new Date(viewYear, viewMonth + 1, nextMonthDay);
+        btn.textContent = nextMonthDay;
+        nextMonthDay++;
+        isOutside = true;
+      }
+
+      btn.dataset.date = formatDate(date);
+      btn.setAttribute("aria-label", formatAriaLabel(date));
+
+      if (isOutside) {
+        btn.dataset.outside = "true";
+      }
+
+      if (isToday(date)) {
+        btn.dataset.today = "true";
+      }
+
+      if (isSameDay(date, selectedDate)) {
+        btn.setAttribute("aria-selected", "true");
+      }
+
+      if (isSameDay(date, focusedDate)) {
+        btn.tabIndex = 0;
+      } else {
+        btn.tabIndex = -1;
+      }
+
+      td.appendChild(btn);
+      row.appendChild(td);
+    }
+
+    // If no focused date set, make the selected or first-of-month focusable
+    if (!focusedDate) {
+      const defaultFocusDate = selectedDate
+        ? (selectedDate.getMonth() === viewMonth && selectedDate.getFullYear() === viewYear ? selectedDate : new Date(viewYear, viewMonth, 1))
+        : new Date(viewYear, viewMonth, 1);
+      const defaultBtn = gridBody.querySelector(
+        `[data-date="${formatDate(defaultFocusDate)}"]`
+      );
+      if (defaultBtn) defaultBtn.tabIndex = 0;
+    }
+  }
+
+  function open() {
+    root.dataset.state = "open";
+    calendar.hidden = false;
+    input.setAttribute("aria-expanded", "true");
+
+    // Set view to selected date month or current month
+    if (selectedDate) {
+      viewMonth = selectedDate.getMonth();
+      viewYear = selectedDate.getFullYear();
+    } else {
+      viewMonth = today.getMonth();
+      viewYear = today.getFullYear();
+    }
+
+    focusedDate = selectedDate || new Date(viewYear, viewMonth, 1);
+    buildCalendar();
+
+    // Focus the current/selected day
+    const focusBtn = gridBody.querySelector(
+      `[data-date="${formatDate(focusedDate)}"]`
+    );
+    if (focusBtn) focusBtn.focus();
+
+    outsideClickCleanup = onOutsideClick(root, close);
+  }
+
+  function close() {
+    root.dataset.state = "closed";
+    calendar.hidden = true;
+    input.setAttribute("aria-expanded", "false");
+    focusedDate = null;
+
+    if (outsideClickCleanup) {
+      outsideClickCleanup();
+      outsideClickCleanup = null;
+    }
+  }
+
+  function selectDate(date) {
+    selectedDate = new Date(date);
+    input.value = formatDisplay(selectedDate);
+    input.dataset.value = formatDate(selectedDate);
+    buildCalendar();
+    close();
+    input.focus();
+
+    root.dispatchEvent(
+      new CustomEvent("faqir:date-change", {
+        detail: { date: formatDate(selectedDate), dateObj: selectedDate },
+        bubbles: true,
+      })
+    );
+  }
+
+  function getValue() {
+    return selectedDate ? formatDate(selectedDate) : null;
+  }
+
+  function setValue(dateStr) {
+    const parsed = new Date(dateStr + "T00:00:00");
+    if (!isNaN(parsed.getTime())) {
+      selectedDate = parsed;
+      input.value = formatDisplay(selectedDate);
+      input.dataset.value = formatDate(selectedDate);
+      viewMonth = selectedDate.getMonth();
+      viewYear = selectedDate.getFullYear();
+      if (root.dataset.state === "open") {
+        buildCalendar();
+      }
+    }
+  }
+
+  function navigate(month, year) {
+    viewMonth = month;
+    viewYear = year;
+    focusedDate = new Date(viewYear, viewMonth, 1);
+    buildCalendar();
+
+    const focusBtn = gridBody.querySelector(
+      `[data-date="${formatDate(focusedDate)}"]`
+    );
+    if (focusBtn) focusBtn.focus();
+  }
+
+  function moveFocus(days) {
+    if (!focusedDate) return;
+    const newDate = new Date(focusedDate);
+    newDate.setDate(newDate.getDate() + days);
+    focusedDate = newDate;
+
+    // Navigate month if needed
+    if (newDate.getMonth() !== viewMonth || newDate.getFullYear() !== viewYear) {
+      viewMonth = newDate.getMonth();
+      viewYear = newDate.getFullYear();
+      buildCalendar();
+    } else {
+      // Update tabindex in current grid
+      gridBody.querySelectorAll("[data-part='day']").forEach((btn) => {
+        btn.tabIndex = -1;
+      });
+      const targetBtn = gridBody.querySelector(
+        `[data-date="${formatDate(newDate)}"]`
+      );
+      if (targetBtn) {
+        targetBtn.tabIndex = 0;
+        targetBtn.focus();
       }
     }
 
-    function dismissAll() {
-      var ids = []; toasts.forEach(function(_, id) { ids.push(id); });
-      ids.forEach(function(id) { dismiss(id); });
-    }
-
-    function destroy() {
-      toasts.forEach(function(entry) {
-        if (entry.timer) clearTimeout(entry.timer);
-        if (entry.closeBtn) entry.closeBtn.removeEventListener('click', entry.onCloseClick);
-        if (entry.actionBtn) entry.actionBtn.removeEventListener('click', entry.onActionClick);
-        entry.el.remove();
-      });
-      toasts.clear();
-      delete root._faqirToast;
-    }
-
-    var api = { add: add, dismiss: dismiss, dismissAll: dismissAll, destroy: destroy };
-    root._faqirToast = api;
-    return api;
+    const targetBtn = gridBody.querySelector(
+      `[data-date="${formatDate(newDate)}"]`
+    );
+    if (targetBtn) targetBtn.focus();
   }
 
-  // --- combobox ---
-  function createCombobox(root) {
-    if (root._faqirCombobox) return root._faqirCombobox;
-
-    var input = root.querySelector("[data-part='input']");
-    var listbox = root.querySelector("[data-part='listbox']");
-    var emptyEl = root.querySelector("[data-part='empty']");
-    var getOptions = function() { return [].slice.call(root.querySelectorAll("[data-part='option']")); };
-
-    var highlightedIndex = -1;
-    var outsideClickCleanup = null;
-    var selectedValue = '';
-
-    function open() {
-      root.dataset.state = 'open';
-      listbox.hidden = false;
-      input.setAttribute('aria-expanded', 'true');
-      outsideClickCleanup = onOutsideClick(root, close);
+  // Event: trigger/input click
+  function onTriggerClick() {
+    if (root.dataset.state === "open") {
+      close();
+    } else {
+      open();
     }
+  }
 
-    function close() {
-      root.dataset.state = 'closed';
-      listbox.hidden = true;
-      input.setAttribute('aria-expanded', 'false');
-      clearHighlight();
-      if (outsideClickCleanup) { outsideClickCleanup(); outsideClickCleanup = null; }
+  // Event: day click
+  function onGridClick(e) {
+    const dayBtn = e.target.closest("[data-part='day']");
+    if (dayBtn && dayBtn.dataset.date) {
+      const date = new Date(dayBtn.dataset.date + "T00:00:00");
+      selectDate(date);
     }
+  }
 
-    function clearHighlight() {
-      getOptions().forEach(function(opt) {
-        opt.removeAttribute('data-highlighted');
-        opt.setAttribute('aria-selected', 'false');
-      });
-      highlightedIndex = -1;
+  // Event: nav prev
+  function onPrevClick() {
+    viewMonth--;
+    if (viewMonth < 0) {
+      viewMonth = 11;
+      viewYear--;
     }
+    focusedDate = new Date(viewYear, viewMonth, 1);
+    buildCalendar();
+  }
 
-    function visibleOptions() {
-      return getOptions().filter(function(opt) { return !opt.hasAttribute('data-hidden'); });
+  // Event: nav next
+  function onNextClick() {
+    viewMonth++;
+    if (viewMonth > 11) {
+      viewMonth = 0;
+      viewYear++;
     }
+    focusedDate = new Date(viewYear, viewMonth, 1);
+    buildCalendar();
+  }
 
-    function highlightOption(index) {
-      var visible = visibleOptions();
-      if (visible.length === 0) return;
-      if (index < 0) index = visible.length - 1;
-      if (index >= visible.length) index = 0;
-      getOptions().forEach(function(opt) {
-        opt.removeAttribute('data-highlighted');
-        opt.setAttribute('aria-selected', 'false');
-      });
-      visible[index].setAttribute('data-highlighted', '');
-      visible[index].setAttribute('aria-selected', 'true');
-      visible[index].scrollIntoView({ block: 'nearest' });
-      highlightedIndex = index;
-    }
-
-    function filter(query) {
-      var allOptions = getOptions();
-      var lowerQuery = query.toLowerCase();
-      var visibleCount = 0;
-      allOptions.forEach(function(opt) {
-        if (opt.textContent.toLowerCase().includes(lowerQuery)) {
-          opt.removeAttribute('data-hidden'); visibleCount++;
-        } else {
-          opt.setAttribute('data-hidden', '');
+  // Event: keyboard within calendar
+  function onCalendarKeyDown(e) {
+    switch (e.key) {
+      case "ArrowLeft":
+        e.preventDefault();
+        moveFocus(-1);
+        break;
+      case "ArrowRight":
+        e.preventDefault();
+        moveFocus(1);
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        moveFocus(-7);
+        break;
+      case "ArrowDown":
+        e.preventDefault();
+        moveFocus(7);
+        break;
+      case "Enter":
+      case " ":
+        e.preventDefault();
+        if (focusedDate) {
+          selectDate(focusedDate);
         }
-      });
-      if (emptyEl) emptyEl.hidden = visibleCount > 0;
-      clearHighlight();
-      return visibleCount;
+        break;
+      case "Escape":
+        e.preventDefault();
+        close();
+        input.focus();
+        break;
+    }
+  }
+
+  // Event: escape on root
+  function onRootKeyDown(e) {
+    if (e.key === "Escape" && root.dataset.state === "open") {
+      e.preventDefault();
+      close();
+      input.focus();
+    }
+  }
+
+  trigger?.addEventListener("click", onTriggerClick);
+  gridBody?.addEventListener("click", onGridClick);
+  navPrev?.addEventListener("click", onPrevClick);
+  navNext?.addEventListener("click", onNextClick);
+  calendar?.addEventListener("keydown", onCalendarKeyDown);
+  root.addEventListener("keydown", onRootKeyDown);
+
+  function destroy() {
+    trigger?.removeEventListener("click", onTriggerClick);
+    gridBody?.removeEventListener("click", onGridClick);
+    navPrev?.removeEventListener("click", onPrevClick);
+    navNext?.removeEventListener("click", onNextClick);
+    calendar?.removeEventListener("keydown", onCalendarKeyDown);
+    root.removeEventListener("keydown", onRootKeyDown);
+    if (outsideClickCleanup) outsideClickCleanup();
+    delete root._faqirDatePicker;
+  }
+
+  const api = { open, close, getValue, setValue, navigate, selectDate, destroy };
+  root._faqirDatePicker = api;
+  return api;
+}
+    return createDatePicker;
+  })();
+
+  // ── dialog ── (registry/recipes/dialog/dialog.js)
+  controllerRegistry["dialog"] = (function() {
+// @ui:controller dialog
+// @ui:provides open close toggle destroy
+
+function createDialog(root) {
+  // Prevent double-init
+  if (root._faqirDialog) return root._faqirDialog;
+
+  const trigger = root.querySelector("[data-part='trigger']");
+  const overlay = root.querySelector("[data-part='overlay']");
+  const panel = root.querySelector("[data-part='panel']");
+  const closeButtons = root.querySelectorAll("[data-part='close']");
+
+  let focusCleanup = null;
+  let previouslyFocused = null;
+
+  function open() {
+    previouslyFocused = document.activeElement;
+    root.dataset.state = "open";
+    overlay.hidden = false;
+    panel.hidden = false;
+    focusCleanup = trapFocus(panel);
+    panel.focus?.();
+  }
+
+  function close() {
+    root.dataset.state = "closing";
+
+    const onEnd = () => {
+      root.dataset.state = "closed";
+      overlay.hidden = true;
+      panel.hidden = true;
+      if (focusCleanup) focusCleanup();
+      focusCleanup = null;
+      previouslyFocused?.focus();
+      panel.removeEventListener("animationend", onEnd);
+      panel.removeEventListener("transitionend", onEnd);
+    };
+
+    // If no animation, close immediately
+    let hasAnimation = false;
+    try {
+      const style = getComputedStyle(panel);
+      const animName = style.animationName || "none";
+      const animDur = parseFloat(style.animationDuration) || 0;
+      const transDur = parseFloat(style.transitionDuration) || 0;
+      hasAnimation = (animName !== "none" && animDur > 0) || transDur > 0;
+    } catch {
+      // getComputedStyle may not be available in test environments
     }
 
-    function selectOption(index) {
-      var visible = visibleOptions();
-      if (index < 0 || index >= visible.length) return;
-      selectedValue = visible[index].textContent.trim();
-      input.value = selectedValue;
-      getOptions().forEach(function(o) { o.setAttribute('aria-selected', 'false'); });
-      visible[index].setAttribute('aria-selected', 'true');
+    if (hasAnimation) {
+      panel.addEventListener("animationend", onEnd, { once: true });
+      panel.addEventListener("transitionend", onEnd, { once: true });
+    } else {
+      onEnd();
+    }
+  }
+
+  function toggle() {
+    root.dataset.state === "open" ? close() : open();
+  }
+
+  // Event listeners
+  function onTriggerClick() {
+    open();
+  }
+  function onOverlayClick() {
+    close();
+  }
+  function onCloseClick() {
+    close();
+  }
+  function onKeyDown(e) {
+    if (e.key === "Escape" && root.dataset.state === "open") {
+      e.stopPropagation();
       close();
     }
-
-    function getValue() { return selectedValue; }
-    function setValue(val) { selectedValue = val; input.value = val; }
-
-    function onInput() {
-      if (root.dataset.state !== 'open') open();
-      filter(input.value);
-    }
-    function onInputFocus() { if (root.dataset.state !== 'open') open(); }
-    function onInputKeyDown(e) {
-      var visible = visibleOptions();
-      switch (e.key) {
-        case 'ArrowDown': e.preventDefault(); if (root.dataset.state !== 'open') open(); highlightOption(highlightedIndex + 1); break;
-        case 'ArrowUp': e.preventDefault(); if (root.dataset.state !== 'open') open(); highlightOption(highlightedIndex - 1); break;
-        case 'Enter': e.preventDefault(); if (highlightedIndex >= 0 && highlightedIndex < visible.length) selectOption(highlightedIndex); break;
-        case 'Escape': e.preventDefault(); close(); break;
-        case 'Home': if (root.dataset.state === 'open' && visible.length > 0) { e.preventDefault(); highlightOption(0); } break;
-        case 'End': if (root.dataset.state === 'open' && visible.length > 0) { e.preventDefault(); highlightOption(visible.length - 1); } break;
-      }
-    }
-    function onListboxClick(e) {
-      var opt = e.target.closest("[data-part='option']");
-      if (!opt) return;
-      var index = visibleOptions().indexOf(opt);
-      if (index >= 0) selectOption(index);
-    }
-
-    if (input) input.addEventListener('input', onInput);
-    if (input) input.addEventListener('focus', onInputFocus);
-    if (input) input.addEventListener('keydown', onInputKeyDown);
-    if (listbox) listbox.addEventListener('click', onListboxClick);
-
-    function destroy() {
-      if (input) input.removeEventListener('input', onInput);
-      if (input) input.removeEventListener('focus', onInputFocus);
-      if (input) input.removeEventListener('keydown', onInputKeyDown);
-      if (listbox) listbox.removeEventListener('click', onListboxClick);
-      if (outsideClickCleanup) outsideClickCleanup();
-      delete root._faqirCombobox;
-    }
-
-    var api = { open: open, close: close, filter: filter, selectOption: selectOption, getValue: getValue, setValue: setValue, destroy: destroy };
-    root._faqirCombobox = api;
-    return api;
   }
 
-  // --- command-palette ---
-  function createCommandPalette(root) {
-    if (root._faqirCommandPalette) return root._faqirCommandPalette;
+  trigger?.addEventListener("click", onTriggerClick);
+  overlay?.addEventListener("click", onOverlayClick);
+  closeButtons.forEach((btn) => btn.addEventListener("click", onCloseClick));
+  root.addEventListener("keydown", onKeyDown);
 
-    var overlay = root.querySelector("[data-part='overlay']");
-    var panel = root.querySelector("[data-part='panel']");
-    var searchInput = root.querySelector("[data-part='search']");
-    var list = root.querySelector("[data-part='list']");
-    var emptyEl = root.querySelector("[data-part='empty']");
-    var getItems = function() { return [].slice.call(root.querySelectorAll("[data-part='item']")); };
-    var getGroups = function() { return [].slice.call(root.querySelectorAll("[data-part='group']")); };
+  // Support external triggers: any element with [data-open="{dialog-id}"]
+  const externalTriggers = root.id
+    ? document.querySelectorAll(`[data-open="${root.id}"]`)
+    : [];
+  if (externalTriggers.length) {
+    externalTriggers.forEach((el) =>
+      el.addEventListener("click", onTriggerClick)
+    );
+  }
 
-    var highlightedIndex = -1;
-    var focusCleanup = null;
-    var previouslyFocused = null;
-    var registeredCommands = [];
+  function destroy() {
+    trigger?.removeEventListener("click", onTriggerClick);
+    overlay?.removeEventListener("click", onOverlayClick);
+    closeButtons.forEach((btn) =>
+      btn.removeEventListener("click", onCloseClick)
+    );
+    root.removeEventListener("keydown", onKeyDown);
+    if (externalTriggers.length) {
+      externalTriggers.forEach((el) =>
+        el.removeEventListener("click", onTriggerClick)
+      );
+    }
+    if (focusCleanup) focusCleanup();
+    delete root._faqirDialog;
+  }
 
-    function visibleItems() {
-      return getItems().filter(function(item) { return !item.hasAttribute('data-hidden'); });
+  const api = { open, close, toggle, destroy };
+  root._faqirDialog = api;
+  return api;
+}
+    return createDialog;
+  })();
+
+  // ── drawer ── (registry/recipes/drawer/drawer.js)
+  controllerRegistry["drawer"] = (function() {
+// @ui:controller drawer
+// @ui:provides open close toggle destroy
+
+function createDrawer(root) {
+  // Prevent double-init
+  if (root._faqirDrawer) return root._faqirDrawer;
+
+  const trigger = root.querySelector("[data-part='trigger']");
+  const overlay = root.querySelector("[data-part='overlay']");
+  const panel = root.querySelector("[data-part='panel']");
+  const closeButtons = root.querySelectorAll("[data-part='close']");
+
+  let focusCleanup = null;
+  let previouslyFocused = null;
+
+  function open() {
+    previouslyFocused = document.activeElement;
+    root.dataset.state = "open";
+    overlay.hidden = false;
+    panel.hidden = false;
+    focusCleanup = trapFocus(panel);
+    panel.focus?.();
+  }
+
+  function close() {
+    root.dataset.state = "closing";
+
+    const onEnd = () => {
+      root.dataset.state = "closed";
+      overlay.hidden = true;
+      panel.hidden = true;
+      if (focusCleanup) focusCleanup();
+      focusCleanup = null;
+      previouslyFocused?.focus();
+      panel.removeEventListener("transitionend", onTransEnd);
+    };
+
+    // Listen for transition end on the panel slide
+    let hasTransition = false;
+    try {
+      const style = getComputedStyle(panel);
+      const transDur = parseFloat(style.transitionDuration) || 0;
+      hasTransition = transDur > 0;
+    } catch {
+      // getComputedStyle may not be available in test environments
     }
 
-    function open() {
-      previouslyFocused = document.activeElement;
-      root.dataset.state = 'open';
-      overlay.hidden = false;
-      panel.hidden = false;
-      searchInput.value = '';
-      filter('');
-      clearHighlight();
-      focusCleanup = trapFocus(panel);
+    const onTransEnd = (e) => {
+      if (e.propertyName === "transform") onEnd();
+    };
+
+    if (hasTransition) {
+      panel.addEventListener("transitionend", onTransEnd, { once: true });
+    } else {
+      onEnd();
+    }
+  }
+
+  function toggle() {
+    root.dataset.state === "open" ? close() : open();
+  }
+
+  // Event listeners
+  function onTriggerClick() {
+    open();
+  }
+
+  function onOverlayClick() {
+    close();
+  }
+
+  function onCloseClick() {
+    close();
+  }
+
+  function onKeyDown(e) {
+    if (e.key === "Escape" && root.dataset.state === "open") {
+      e.stopPropagation();
+      close();
+    }
+  }
+
+  trigger?.addEventListener("click", onTriggerClick);
+  overlay?.addEventListener("click", onOverlayClick);
+  closeButtons.forEach((btn) => btn.addEventListener("click", onCloseClick));
+  root.addEventListener("keydown", onKeyDown);
+
+  // Support external triggers: any element with [data-open="{drawer-id}"]
+  const externalTriggers = root.id
+    ? document.querySelectorAll(`[data-open="${root.id}"]`)
+    : [];
+  if (externalTriggers.length) {
+    externalTriggers.forEach((el) =>
+      el.addEventListener("click", onTriggerClick)
+    );
+  }
+
+  function destroy() {
+    trigger?.removeEventListener("click", onTriggerClick);
+    overlay?.removeEventListener("click", onOverlayClick);
+    closeButtons.forEach((btn) =>
+      btn.removeEventListener("click", onCloseClick)
+    );
+    root.removeEventListener("keydown", onKeyDown);
+    if (externalTriggers.length) {
+      externalTriggers.forEach((el) =>
+        el.removeEventListener("click", onTriggerClick)
+      );
+    }
+    if (focusCleanup) focusCleanup();
+    delete root._faqirDrawer;
+  }
+
+  const api = { open, close, toggle, destroy };
+  root._faqirDrawer = api;
+  return api;
+}
+    return createDrawer;
+  })();
+
+  // ── dropdown ── (registry/recipes/dropdown/dropdown.js)
+  controllerRegistry["dropdown"] = (function() {
+// @ui:controller dropdown
+// @ui:provides open close toggle destroy
+
+function createDropdown(root) {
+  // Prevent double-init
+  if (root._faqirDropdown) return root._faqirDropdown;
+
+  const trigger = root.querySelector("[data-part='trigger']");
+  const menu = root.querySelector("[data-part='menu']");
+  const items = () =>
+    [...root.querySelectorAll("[data-part='item']:not(:disabled)")];
+
+  let outsideClickCleanup = null;
+
+  function open() {
+    root.dataset.state = "open";
+    menu.hidden = false;
+    trigger.setAttribute("aria-expanded", "true");
+
+    // Focus first item
+    const allItems = items();
+    if (allItems.length > 0) allItems[0].focus();
+
+    // Close on outside click
+    outsideClickCleanup = onOutsideClick(root, close);
+  }
+
+  function close() {
+    root.dataset.state = "closed";
+    menu.hidden = true;
+    trigger.setAttribute("aria-expanded", "false");
+
+    if (outsideClickCleanup) {
+      outsideClickCleanup();
+      outsideClickCleanup = null;
+    }
+
+    trigger.focus();
+  }
+
+  function toggle() {
+    root.dataset.state === "open" ? close() : open();
+  }
+
+  function focusItem(index) {
+    const allItems = items();
+    if (index < 0 || index >= allItems.length) return;
+    allItems[index].focus();
+  }
+
+  function getFocusedIndex() {
+    const allItems = items();
+    return allItems.indexOf(document.activeElement);
+  }
+
+  function onTriggerClick() {
+    toggle();
+  }
+
+  function onTriggerKeyDown(e) {
+    if (e.key === "ArrowDown" || e.key === "Enter" || e.key === " ") {
+      if (root.dataset.state !== "open") {
+        e.preventDefault();
+        open();
+      }
+    }
+  }
+
+  function onMenuKeyDown(e) {
+    const allItems = items();
+    const current = getFocusedIndex();
+
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        focusItem((current + 1) % allItems.length);
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        focusItem((current - 1 + allItems.length) % allItems.length);
+        break;
+      case "Home":
+        e.preventDefault();
+        focusItem(0);
+        break;
+      case "End":
+        e.preventDefault();
+        focusItem(allItems.length - 1);
+        break;
+      case "Escape":
+        e.preventDefault();
+        close();
+        break;
+      case "Tab":
+        close();
+        break;
+    }
+  }
+
+  function onItemClick() {
+    close();
+  }
+
+  trigger?.addEventListener("click", onTriggerClick);
+  trigger?.addEventListener("keydown", onTriggerKeyDown);
+  menu?.addEventListener("keydown", onMenuKeyDown);
+
+  // Delegate item clicks
+  menu?.addEventListener("click", (e) => {
+    const item = e.target.closest("[data-part='item']");
+    if (item && !item.disabled) onItemClick();
+  });
+
+  function destroy() {
+    trigger?.removeEventListener("click", onTriggerClick);
+    trigger?.removeEventListener("keydown", onTriggerKeyDown);
+    menu?.removeEventListener("keydown", onMenuKeyDown);
+    if (outsideClickCleanup) outsideClickCleanup();
+    delete root._faqirDropdown;
+  }
+
+  const api = { open, close, toggle, destroy };
+  root._faqirDropdown = api;
+  return api;
+}
+    return createDropdown;
+  })();
+
+  // ── pagination ── (registry/recipes/pagination/pagination.js)
+  controllerRegistry["pagination"] = (function() {
+// @ui:controller pagination
+// @ui:provides setPage getPage setTotal destroy
+
+function createPagination(root) {
+  // Prevent double-init
+  if (root._faqirPagination) return root._faqirPagination;
+
+  const nav = root.querySelector("[data-part='nav']");
+  const prevBtn = root.querySelector("[data-part='prev']");
+  const nextBtn = root.querySelector("[data-part='next']");
+
+  let currentPage = 1;
+  let totalPages = 1;
+
+  // Initialize from existing DOM
+  const activeBtn = root.querySelector("[data-part='page'][data-state='active']");
+  if (activeBtn) {
+    currentPage = parseInt(activeBtn.dataset.page, 10) || 1;
+  }
+
+  const allPageBtns = root.querySelectorAll("[data-part='page']");
+  if (allPageBtns.length > 0) {
+    const lastBtn = allPageBtns[allPageBtns.length - 1];
+    totalPages = parseInt(lastBtn.dataset.page, 10) || 1;
+  }
+
+  function getPageButtons() {
+    return [...root.querySelectorAll("[data-part='page']")];
+  }
+
+  function updateActiveState() {
+    getPageButtons().forEach((btn) => {
+      const page = parseInt(btn.dataset.page, 10);
+      if (page === currentPage) {
+        btn.dataset.state = "active";
+        btn.setAttribute("aria-current", "page");
+      } else {
+        delete btn.dataset.state;
+        btn.removeAttribute("aria-current");
+      }
+    });
+
+    // Update prev/next disabled state
+    if (prevBtn) {
+      prevBtn.disabled = currentPage <= 1;
+    }
+    if (nextBtn) {
+      nextBtn.disabled = currentPage >= totalPages;
+    }
+  }
+
+  function emitPageChange() {
+    root.dispatchEvent(
+      new CustomEvent("faqir:page-change", {
+        detail: { page: currentPage },
+        bubbles: true,
+      })
+    );
+  }
+
+  function setPage(n) {
+    const page = Math.max(1, Math.min(n, totalPages));
+    if (page === currentPage) return;
+    currentPage = page;
+    updateActiveState();
+    emitPageChange();
+  }
+
+  function getPage() {
+    return currentPage;
+  }
+
+  function setTotal(n) {
+    totalPages = Math.max(1, n);
+    if (currentPage > totalPages) {
+      currentPage = totalPages;
+    }
+    updateActiveState();
+  }
+
+  // Event: click on page button
+  function onNavClick(e) {
+    const pageBtn = e.target.closest("[data-part='page']");
+    if (pageBtn) {
+      const page = parseInt(pageBtn.dataset.page, 10);
+      if (!isNaN(page)) {
+        setPage(page);
+      }
+      return;
+    }
+  }
+
+  function onPrevClick() {
+    if (currentPage > 1) {
+      setPage(currentPage - 1);
+    }
+  }
+
+  function onNextClick() {
+    if (currentPage < totalPages) {
+      setPage(currentPage + 1);
+    }
+  }
+
+  nav?.addEventListener("click", onNavClick);
+  prevBtn?.addEventListener("click", onPrevClick);
+  nextBtn?.addEventListener("click", onNextClick);
+
+  // Initialize disabled states
+  updateActiveState();
+
+  function destroy() {
+    nav?.removeEventListener("click", onNavClick);
+    prevBtn?.removeEventListener("click", onPrevClick);
+    nextBtn?.removeEventListener("click", onNextClick);
+    delete root._faqirPagination;
+  }
+
+  const api = { setPage, getPage, setTotal, destroy };
+  root._faqirPagination = api;
+  return api;
+}
+    return createPagination;
+  })();
+
+  // ── popover ── (registry/recipes/popover/popover.js)
+  controllerRegistry["popover"] = (function() {
+// @ui:controller popover
+// @ui:provides open close toggle destroy
+
+function createPopover(root) {
+  // Prevent double-init
+  if (root._faqirPopover) return root._faqirPopover;
+
+  const trigger = root.querySelector("[data-part='trigger']");
+  const content = root.querySelector("[data-part='content']");
+  const closeBtn = root.querySelector("[data-part='close']");
+
+  let outsideClickCleanup = null;
+
+  function open() {
+    root.dataset.state = "open";
+    content.hidden = false;
+    trigger.setAttribute("aria-expanded", "true");
+
+    // Close on outside click
+    outsideClickCleanup = onOutsideClick(root, close);
+  }
+
+  function close() {
+    root.dataset.state = "closed";
+    content.hidden = true;
+    trigger.setAttribute("aria-expanded", "false");
+
+    if (outsideClickCleanup) {
+      outsideClickCleanup();
+      outsideClickCleanup = null;
+    }
+  }
+
+  function toggle() {
+    root.dataset.state === "open" ? close() : open();
+  }
+
+  // Event: trigger click toggles
+  function onTriggerClick() {
+    toggle();
+  }
+
+  // Event: close button
+  function onCloseClick(e) {
+    e.stopPropagation();
+    close();
+  }
+
+  // Event: escape closes
+  function onKeyDown(e) {
+    if (e.key === "Escape" && root.dataset.state === "open") {
+      e.preventDefault();
+      close();
+      trigger.focus();
+    }
+  }
+
+  trigger?.addEventListener("click", onTriggerClick);
+  closeBtn?.addEventListener("click", onCloseClick);
+  root.addEventListener("keydown", onKeyDown);
+
+  function destroy() {
+    trigger?.removeEventListener("click", onTriggerClick);
+    closeBtn?.removeEventListener("click", onCloseClick);
+    root.removeEventListener("keydown", onKeyDown);
+    if (outsideClickCleanup) outsideClickCleanup();
+    delete root._faqirPopover;
+  }
+
+  const api = { open, close, toggle, destroy };
+  root._faqirPopover = api;
+  return api;
+}
+    return createPopover;
+  })();
+
+  // ── qr-code ── (registry/recipes/qr-code/qr-code.js)
+  controllerRegistry["qr-code"] = (function() {
+// @ui:controller qr-code
+// @ui:provides render update destroy
+
+/**
+ * Minimal QR Code encoder (byte mode, versions 1–10).
+ * Produces a boolean matrix suitable for SVG rendering.
+ * Covers most practical use-cases (URLs, short text up to ~170 chars at ECL-M).
+ */
+
+// ── GF(256) arithmetic for Reed-Solomon ──
+
+const EXP = new Uint8Array(256);
+const LOG = new Uint8Array(256);
+(() => {
+  let v = 1;
+  for (let i = 0; i < 255; i++) {
+    EXP[i] = v;
+    LOG[v] = i;
+    v = (v << 1) ^ (v & 128 ? 0x11d : 0);
+  }
+  EXP[255] = EXP[0];
+})();
+
+function gfMul(a, b) {
+  return a === 0 || b === 0 ? 0 : EXP[(LOG[a] + LOG[b]) % 255];
+}
+
+function rsGenPoly(n) {
+  let poly = [1];
+  for (let i = 0; i < n; i++) {
+    const next = new Array(poly.length + 1).fill(0);
+    for (let j = 0; j < poly.length; j++) {
+      next[j] ^= poly[j];
+      next[j + 1] ^= gfMul(poly[j], EXP[i]);
+    }
+    poly = next;
+  }
+  return poly;
+}
+
+function rsEncode(data, ecLen) {
+  const gen = rsGenPoly(ecLen);
+  const msg = new Array(data.length + ecLen).fill(0);
+  data.forEach((v, i) => (msg[i] = v));
+  for (let i = 0; i < data.length; i++) {
+    const coef = msg[i];
+    if (coef !== 0) {
+      for (let j = 0; j < gen.length; j++) {
+        msg[i + j] ^= gfMul(gen[j], coef);
+      }
+    }
+  }
+  return msg.slice(data.length);
+}
+
+// ── QR constants ──
+
+const ECL_MAP = { L: 0, M: 1, Q: 2, H: 3 };
+
+// [version][ecl] → { totalBytes, ecPerBlock, blocks }
+const VERSION_TABLE = [
+  null, // index 0 unused
+  // v1
+  [{ dc: 19, ec: 7, b: 1 }, { dc: 16, ec: 10, b: 1 }, { dc: 13, ec: 13, b: 1 }, { dc: 9, ec: 17, b: 1 }],
+  // v2
+  [{ dc: 34, ec: 10, b: 1 }, { dc: 28, ec: 16, b: 1 }, { dc: 22, ec: 22, b: 1 }, { dc: 16, ec: 28, b: 1 }],
+  // v3
+  [{ dc: 55, ec: 15, b: 1 }, { dc: 44, ec: 26, b: 1 }, { dc: 34, ec: 18, b: 2 }, { dc: 26, ec: 22, b: 2 }],
+  // v4
+  [{ dc: 80, ec: 20, b: 1 }, { dc: 64, ec: 18, b: 2 }, { dc: 48, ec: 26, b: 2 }, { dc: 36, ec: 16, b: 4 }],
+  // v5
+  [{ dc: 108, ec: 26, b: 1 }, { dc: 86, ec: 24, b: 2 }, { dc: 62, ec: 18, b: 4 }, { dc: 46, ec: 22, b: 4 }],
+  // v6
+  [{ dc: 136, ec: 18, b: 2 }, { dc: 108, ec: 16, b: 4 }, { dc: 76, ec: 24, b: 4 }, { dc: 60, ec: 28, b: 4 }],
+  // v7
+  [{ dc: 156, ec: 20, b: 2 }, { dc: 124, ec: 18, b: 4 }, { dc: 88, ec: 18, b: 6 }, { dc: 66, ec: 26, b: 5 }],
+  // v8
+  [{ dc: 194, ec: 24, b: 2 }, { dc: 154, ec: 22, b: 4 }, { dc: 110, ec: 22, b: 6 }, { dc: 86, ec: 26, b: 6 }],
+  // v9
+  [{ dc: 232, ec: 30, b: 2 }, { dc: 182, ec: 22, b: 5 }, { dc: 132, ec: 20, b: 8 }, { dc: 98, ec: 24, b: 8 }],
+  // v10
+  [{ dc: 274, ec: 18, b: 4 }, { dc: 216, ec: 26, b: 5 }, { dc: 154, ec: 24, b: 8 }, { dc: 119, ec: 28, b: 8 }],
+];
+
+const ALIGNMENT_POSITIONS = [
+  null, [], [6, 18], [6, 22], [6, 26], [6, 30],
+  [6, 34], [6, 22, 38], [6, 24, 42], [6, 26, 46], [6, 28, 50],
+];
+
+function selectVersion(dataLen, ecl) {
+  const eclIdx = ECL_MAP[ecl] ?? 1;
+  for (let v = 1; v <= 10; v++) {
+    const info = VERSION_TABLE[v][eclIdx];
+    if (dataLen <= info.dc) return v;
+  }
+  return -1;
+}
+
+// ── Matrix operations ──
+
+function createMatrix(size) {
+  return Array.from({ length: size }, () => new Uint8Array(size));
+}
+
+function setModule(matrix, row, col, val, reserved) {
+  const s = matrix.length;
+  if (row >= 0 && row < s && col >= 0 && col < s) {
+    matrix[row][col] = val;
+    if (reserved) reserved[row][col] = 1;
+  }
+}
+
+function placeFinderPattern(matrix, reserved, row, col) {
+  for (let r = -1; r <= 7; r++) {
+    for (let c = -1; c <= 7; c++) {
+      const val =
+        (r >= 0 && r <= 6 && (c === 0 || c === 6)) ||
+        (c >= 0 && c <= 6 && (r === 0 || r === 6)) ||
+        (r >= 2 && r <= 4 && c >= 2 && c <= 4)
+          ? 1
+          : 0;
+      setModule(matrix, row + r, col + c, val, reserved);
+    }
+  }
+}
+
+function placeAlignmentPattern(matrix, reserved, row, col) {
+  for (let r = -2; r <= 2; r++) {
+    for (let c = -2; c <= 2; c++) {
+      const val =
+        Math.abs(r) === 2 || Math.abs(c) === 2 || (r === 0 && c === 0) ? 1 : 0;
+      setModule(matrix, row + r, col + c, val, reserved);
+    }
+  }
+}
+
+function placeTimingPatterns(matrix, reserved) {
+  const s = matrix.length;
+  for (let i = 8; i < s - 8; i++) {
+    const val = i % 2 === 0 ? 1 : 0;
+    setModule(matrix, 6, i, val, reserved);
+    setModule(matrix, i, 6, val, reserved);
+  }
+}
+
+function reserveFormatArea(matrix, reserved) {
+  const s = matrix.length;
+  for (let i = 0; i < 8; i++) {
+    setModule(reserved, 8, i, 1);
+    setModule(reserved, 8, s - 1 - i, 1);
+    setModule(reserved, i, 8, 1);
+    setModule(reserved, s - 1 - i, 8, 1);
+  }
+  setModule(reserved, 8, 8, 1);
+  setModule(matrix, s - 8, 8, 1, reserved); // dark module
+}
+
+function placeData(matrix, reserved, bits) {
+  const s = matrix.length;
+  let bitIdx = 0;
+  let upward = true;
+  for (let col = s - 1; col >= 1; col -= 2) {
+    if (col === 6) col = 5; // skip timing column
+    const rows = upward
+      ? Array.from({ length: s }, (_, i) => s - 1 - i)
+      : Array.from({ length: s }, (_, i) => i);
+    for (const row of rows) {
+      for (let c = 0; c < 2; c++) {
+        const cc = col - c;
+        if (reserved[row][cc]) continue;
+        matrix[row][cc] = bitIdx < bits.length ? bits[bitIdx++] : 0;
+      }
+    }
+    upward = !upward;
+  }
+}
+
+function applyMask(matrix, reserved, maskId) {
+  const s = matrix.length;
+  const fns = [
+    (r, c) => (r + c) % 2 === 0,
+    (r) => r % 2 === 0,
+    (_, c) => c % 3 === 0,
+    (r, c) => (r + c) % 3 === 0,
+    (r, c) => (Math.floor(r / 2) + Math.floor(c / 3)) % 2 === 0,
+    (r, c) => ((r * c) % 2) + ((r * c) % 3) === 0,
+    (r, c) => (((r * c) % 2) + ((r * c) % 3)) % 2 === 0,
+    (r, c) => (((r + c) % 2) + ((r * c) % 3)) % 2 === 0,
+  ];
+  const fn = fns[maskId];
+  for (let r = 0; r < s; r++) {
+    for (let c = 0; c < s; c++) {
+      if (!reserved[r][c] && fn(r, c)) {
+        matrix[r][c] ^= 1;
+      }
+    }
+  }
+}
+
+function placeFormatInfo(matrix, ecl, maskId) {
+  const s = matrix.length;
+  const eclBits = [1, 0, 3, 2][ECL_MAP[ecl] ?? 1];
+  let data = (eclBits << 3) | maskId;
+  let rem = data;
+  for (let i = 0; i < 10; i++) rem = (rem << 1) ^ ((rem >> 9) * 0x537);
+  const bits = ((data << 10) | rem) ^ 0x5412;
+
+  for (let i = 0; i < 15; i++) {
+    const bit = (bits >> (14 - i)) & 1;
+    // Around top-left finder
+    if (i < 6) matrix[8][i] = bit;
+    else if (i === 6) matrix[8][7] = bit;
+    else if (i === 7) matrix[8][8] = bit;
+    else if (i === 8) matrix[7][8] = bit;
+    else matrix[14 - i][8] = bit;
+    // Around other finders
+    if (i < 8) matrix[s - 1 - i][8] = bit;
+    else matrix[8][s - 15 + i] = bit;
+  }
+}
+
+// ── Penalty scoring (simplified) ──
+
+function penalty(matrix) {
+  const s = matrix.length;
+  let score = 0;
+  // Rule 1: runs of same color
+  for (let r = 0; r < s; r++) {
+    let count = 1;
+    for (let c = 1; c < s; c++) {
+      if (matrix[r][c] === matrix[r][c - 1]) {
+        count++;
+        if (count === 5) score += 3;
+        else if (count > 5) score++;
+      } else count = 1;
+    }
+  }
+  for (let c = 0; c < s; c++) {
+    let count = 1;
+    for (let r = 1; r < s; r++) {
+      if (matrix[r][c] === matrix[r - 1][c]) {
+        count++;
+        if (count === 5) score += 3;
+        else if (count > 5) score++;
+      } else count = 1;
+    }
+  }
+  return score;
+}
+
+// ── Encode ──
+
+function encodeQR(text, ecl = "M") {
+  const data = new TextEncoder().encode(text);
+  const version = selectVersion(data.length, ecl);
+  if (version < 0) throw new Error("Data too long for QR versions 1–10");
+
+  const eclIdx = ECL_MAP[ecl] ?? 1;
+  const info = VERSION_TABLE[version][eclIdx];
+  const size = version * 4 + 17;
+
+  // Build data codewords
+  const codewords = [];
+  // Mode indicator: byte mode = 0100
+  // Character count (8 bits for v1-9, 16 bits for v10+)
+  const ccBits = version <= 9 ? 8 : 16;
+  let bitBuf = 0;
+  let bitCount = 0;
+
+  function pushBits(val, len) {
+    for (let i = len - 1; i >= 0; i--) {
+      bitBuf = (bitBuf << 1) | ((val >> i) & 1);
+      bitCount++;
+      if (bitCount === 8) {
+        codewords.push(bitBuf);
+        bitBuf = 0;
+        bitCount = 0;
+      }
+    }
+  }
+
+  pushBits(0b0100, 4); // byte mode
+  pushBits(data.length, ccBits);
+  data.forEach((b) => pushBits(b, 8));
+  pushBits(0, 4); // terminator (up to 4 bits)
+
+  // Pad to byte boundary
+  if (bitCount > 0) pushBits(0, 8 - bitCount);
+
+  // Pad to capacity
+  while (codewords.length < info.dc) {
+    codewords.push(0xec);
+    if (codewords.length < info.dc) codewords.push(0x11);
+  }
+
+  // Split into blocks and compute EC
+  const blocks = [];
+  const ecBlocks = [];
+  const ecPerBlock = info.ec / info.b;
+  const dcPerBlock = Math.floor(info.dc / info.b);
+  const remainder = info.dc % info.b;
+  let offset = 0;
+
+  for (let i = 0; i < info.b; i++) {
+    const blockDc = dcPerBlock + (i >= info.b - remainder ? 1 : 0);
+    const blockData = codewords.slice(offset, offset + blockDc);
+    offset += blockDc;
+    blocks.push(blockData);
+    ecBlocks.push(rsEncode(blockData, ecPerBlock));
+  }
+
+  // Interleave
+  const interleaved = [];
+  const maxDc = Math.max(...blocks.map((b) => b.length));
+  for (let i = 0; i < maxDc; i++) {
+    for (const block of blocks) {
+      if (i < block.length) interleaved.push(block[i]);
+    }
+  }
+  for (let i = 0; i < ecPerBlock; i++) {
+    for (const ec of ecBlocks) {
+      if (i < ec.length) interleaved.push(ec[i]);
+    }
+  }
+
+  // Convert to bit array
+  const bits = [];
+  interleaved.forEach((byte) => {
+    for (let i = 7; i >= 0; i--) bits.push((byte >> i) & 1);
+  });
+
+  // Build matrix
+  const matrix = createMatrix(size);
+  const reserved = createMatrix(size);
+
+  placeFinderPattern(matrix, reserved, 0, 0);
+  placeFinderPattern(matrix, reserved, 0, size - 7);
+  placeFinderPattern(matrix, reserved, size - 7, 0);
+
+  const alignPos = ALIGNMENT_POSITIONS[version] || [];
+  for (const r of alignPos) {
+    for (const c of alignPos) {
+      if (reserved[r]?.[c]) continue;
+      placeAlignmentPattern(matrix, reserved, r, c);
+    }
+  }
+
+  placeTimingPatterns(matrix, reserved);
+  reserveFormatArea(matrix, reserved);
+
+  // Try all masks, pick lowest penalty
+  let bestMask = 0;
+  let bestScore = Infinity;
+  for (let m = 0; m < 8; m++) {
+    const test = matrix.map((row) => new Uint8Array(row));
+    placeData(test, reserved, bits);
+    applyMask(test, reserved, m);
+    placeFormatInfo(test, ecl, m);
+    const s = penalty(test);
+    if (s < bestScore) {
+      bestScore = s;
+      bestMask = m;
+    }
+  }
+
+  placeData(matrix, reserved, bits);
+  applyMask(matrix, reserved, bestMask);
+  placeFormatInfo(matrix, ecl, bestMask);
+
+  return matrix;
+}
+
+// ── SVG renderer ──
+
+function matrixToSVG(matrix) {
+  const size = matrix.length;
+  const quiet = 2; // quiet zone modules
+  const total = size + quiet * 2;
+
+  let paths = "";
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
+      if (matrix[r][c]) {
+        paths += `M${c + quiet},${r + quiet}h1v1h-1z`;
+      }
+    }
+  }
+
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", `0 0 ${total} ${total}`);
+  svg.setAttribute("shape-rendering", "crispEdges");
+  svg.setAttribute("data-part", "svg");
+
+  // Background
+  const bg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+  bg.setAttribute("width", total);
+  bg.setAttribute("height", total);
+  bg.setAttribute("fill", "var(--color-bg, #fff)");
+  svg.appendChild(bg);
+
+  // QR modules
+  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  path.setAttribute("d", paths);
+  path.setAttribute("fill", "var(--color-fg, #000)");
+  svg.appendChild(path);
+
+  return svg;
+}
+
+// ── Controller ──
+
+function createQRCode(root) {
+  if (root._faqirQR) return root._faqirQR;
+
+  function render() {
+    const value = root.getAttribute("data-value") || "";
+    const ecl = root.getAttribute("data-ecl") || "M";
+
+    // Remove old SVG
+    const old = root.querySelector("[data-part='svg']");
+    if (old) old.remove();
+
+    if (!value) return;
+
+    try {
+      const matrix = encodeQR(value, ecl);
+      const svg = matrixToSVG(matrix);
+      // Insert before caption if present
+      const caption = root.querySelector("[data-part='caption']");
+      if (caption) {
+        root.insertBefore(svg, caption);
+      } else {
+        root.appendChild(svg);
+      }
+    } catch (e) {
+      console.warn(`[qr-code] Failed to encode: ${e.message}`);
+    }
+  }
+
+  function update(newValue, newEcl) {
+    if (newValue !== undefined) root.setAttribute("data-value", newValue);
+    if (newEcl !== undefined) root.setAttribute("data-ecl", newEcl);
+    render();
+  }
+
+  // Observe attribute changes
+  const observer = new MutationObserver((mutations) => {
+    for (const m of mutations) {
+      if (m.attributeName === "data-value" || m.attributeName === "data-ecl") {
+        render();
+        break;
+      }
+    }
+  });
+  observer.observe(root, { attributes: true });
+
+  function destroy() {
+    observer.disconnect();
+    const svg = root.querySelector("[data-part='svg']");
+    if (svg) svg.remove();
+    delete root._faqirQR;
+  }
+
+  // Initial render
+  render();
+
+  const api = { render, update, destroy };
+  root._faqirQR = api;
+  return api;
+}
+    return createQRCode;
+  })();
+
+  // ── select-custom ── (registry/recipes/select-custom/select-custom.js)
+  controllerRegistry["select-custom"] = (function() {
+// @ui:controller select-custom
+// @ui:provides open close toggle select getValue destroy
+
+function createSelectCustom(root) {
+  // Prevent double-init
+  if (root._faqirSelectCustom) return root._faqirSelectCustom;
+
+  const trigger = root.querySelector("[data-part='trigger']");
+  const valueEl = root.querySelector("[data-part='value']");
+  const listbox = root.querySelector("[data-part='listbox']");
+  const searchInput = root.querySelector("[data-part='search']");
+  const emptyEl = root.querySelector("[data-part='empty']");
+  const options = () =>
+    [...root.querySelectorAll("[data-part='option']")];
+
+  let highlightedIndex = -1;
+  let outsideClickCleanup = null;
+  let selectedValue = "";
+  const placeholderText = valueEl?.textContent || "";
+
+  function open() {
+    root.dataset.state = "open";
+    listbox.hidden = false;
+    trigger.setAttribute("aria-expanded", "true");
+
+    // Reset search if present
+    if (searchInput) {
+      searchInput.value = "";
+      filterOptions("");
       searchInput.focus();
     }
 
-    function close() {
-      root.dataset.state = 'closed';
+    clearHighlight();
+    outsideClickCleanup = onOutsideClick(root, close);
+  }
+
+  function close() {
+    root.dataset.state = "closed";
+    listbox.hidden = true;
+    trigger.setAttribute("aria-expanded", "false");
+    clearHighlight();
+
+    if (outsideClickCleanup) {
+      outsideClickCleanup();
+      outsideClickCleanup = null;
+    }
+
+    trigger.focus();
+  }
+
+  function toggle() {
+    root.dataset.state === "open" ? close() : open();
+  }
+
+  function clearHighlight() {
+    options().forEach((opt) => {
+      opt.removeAttribute("data-highlighted");
+    });
+    highlightedIndex = -1;
+  }
+
+  function visibleOptions() {
+    return options().filter((opt) => !opt.hasAttribute("data-hidden"));
+  }
+
+  function highlightOption(index) {
+    const visible = visibleOptions();
+    if (visible.length === 0) return;
+
+    // Clamp index
+    if (index < 0) index = visible.length - 1;
+    if (index >= visible.length) index = 0;
+
+    // Clear previous
+    options().forEach((opt) => opt.removeAttribute("data-highlighted"));
+
+    visible[index].setAttribute("data-highlighted", "");
+    visible[index].scrollIntoView({ block: "nearest" });
+    highlightedIndex = index;
+  }
+
+  function filterOptions(query) {
+    const allOptions = options();
+    const lowerQuery = query.toLowerCase();
+    let visibleCount = 0;
+
+    allOptions.forEach((opt) => {
+      const text = opt.textContent.toLowerCase();
+      if (text.includes(lowerQuery)) {
+        opt.removeAttribute("data-hidden");
+        visibleCount++;
+      } else {
+        opt.setAttribute("data-hidden", "");
+      }
+    });
+
+    // Show/hide empty state
+    if (emptyEl) {
+      emptyEl.hidden = visibleCount > 0;
+    }
+
+    clearHighlight();
+    return visibleCount;
+  }
+
+  function select(value) {
+    const allOptions = options();
+    let targetOption = null;
+
+    // Find option by data-value attribute
+    allOptions.forEach((opt) => {
+      if (opt.dataset.value === value) {
+        targetOption = opt;
+      }
+    });
+
+    if (!targetOption) {
+      // Fallback: find by text content
+      allOptions.forEach((opt) => {
+        if (opt.textContent.trim() === value) {
+          targetOption = opt;
+        }
+      });
+    }
+
+    if (!targetOption) return;
+
+    // Deselect all
+    allOptions.forEach((opt) => opt.setAttribute("aria-selected", "false"));
+
+    // Select target
+    targetOption.setAttribute("aria-selected", "true");
+    selectedValue = targetOption.dataset.value || targetOption.textContent.trim();
+
+    // Update displayed value
+    if (valueEl) {
+      valueEl.textContent = targetOption.textContent.trim();
+      valueEl.removeAttribute("data-placeholder");
+    }
+
+    // Dispatch change event
+    const event = new CustomEvent("select-change", {
+      bubbles: true,
+      detail: {
+        value: selectedValue,
+        label: targetOption.textContent.trim()
+      }
+    });
+    root.dispatchEvent(event);
+
+    close();
+  }
+
+  function getValue() {
+    return selectedValue;
+  }
+
+  // ── Event Handlers ──
+
+  function onTriggerClick() {
+    toggle();
+  }
+
+  function onTriggerKeyDown(e) {
+    switch (e.key) {
+      case "ArrowDown":
+      case "Enter":
+      case " ":
+        e.preventDefault();
+        if (root.dataset.state !== "open") {
+          open();
+        }
+        break;
+      case "Escape":
+        if (root.dataset.state === "open") {
+          e.preventDefault();
+          close();
+        }
+        break;
+    }
+  }
+
+  function onListboxKeyDown(e) {
+    const visible = visibleOptions();
+
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        highlightOption(highlightedIndex + 1);
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        highlightOption(highlightedIndex - 1);
+        break;
+      case "Enter":
+        e.preventDefault();
+        if (highlightedIndex >= 0 && highlightedIndex < visible.length) {
+          const opt = visible[highlightedIndex];
+          select(opt.dataset.value || opt.textContent.trim());
+        }
+        break;
+      case "Escape":
+        e.preventDefault();
+        close();
+        break;
+      case "Home":
+        if (visible.length > 0) {
+          e.preventDefault();
+          highlightOption(0);
+        }
+        break;
+      case "End":
+        if (visible.length > 0) {
+          e.preventDefault();
+          highlightOption(visible.length - 1);
+        }
+        break;
+    }
+  }
+
+  function onOptionClick(e) {
+    const opt = e.target.closest("[data-part='option']");
+    if (!opt) return;
+    select(opt.dataset.value || opt.textContent.trim());
+  }
+
+  function onSearchInput() {
+    if (searchInput) {
+      filterOptions(searchInput.value);
+    }
+  }
+
+  trigger?.addEventListener("click", onTriggerClick);
+  trigger?.addEventListener("keydown", onTriggerKeyDown);
+  listbox?.addEventListener("keydown", onListboxKeyDown);
+  listbox?.addEventListener("click", onOptionClick);
+  searchInput?.addEventListener("input", onSearchInput);
+
+  function destroy() {
+    trigger?.removeEventListener("click", onTriggerClick);
+    trigger?.removeEventListener("keydown", onTriggerKeyDown);
+    listbox?.removeEventListener("keydown", onListboxKeyDown);
+    listbox?.removeEventListener("click", onOptionClick);
+    searchInput?.removeEventListener("input", onSearchInput);
+    if (outsideClickCleanup) outsideClickCleanup();
+    delete root._faqirSelectCustom;
+  }
+
+  const api = { open, close, toggle, select, getValue, destroy };
+  root._faqirSelectCustom = api;
+  return api;
+}
+    return createSelectCustom;
+  })();
+
+  // ── sheet ── (registry/recipes/sheet/sheet.js)
+  controllerRegistry["sheet"] = (function() {
+// @ui:controller sheet
+// @ui:provides open close toggle destroy
+
+function createSheet(root) {
+  // Prevent double-init
+  if (root._faqirSheet) return root._faqirSheet;
+
+  const trigger = root.querySelector("[data-part='trigger']");
+  const overlay = root.querySelector("[data-part='overlay']");
+  const panel = root.querySelector("[data-part='panel']");
+  const closeButtons = root.querySelectorAll("[data-part='close']");
+
+  let focusCleanup = null;
+  let previouslyFocused = null;
+
+  function open() {
+    previouslyFocused = document.activeElement;
+    root.dataset.state = "open";
+    overlay.hidden = false;
+    panel.hidden = false;
+    focusCleanup = trapFocus(panel);
+    panel.focus?.();
+  }
+
+  function close() {
+    root.dataset.state = "closing";
+
+    const onEnd = () => {
+      root.dataset.state = "closed";
       overlay.hidden = true;
       panel.hidden = true;
-      if (focusCleanup) { focusCleanup(); focusCleanup = null; }
-      if (previouslyFocused) previouslyFocused.focus();
+      if (focusCleanup) focusCleanup();
+      focusCleanup = null;
+      previouslyFocused?.focus();
+      panel.removeEventListener("transitionend", onTransEnd);
+    };
+
+    // Listen for transition end on the panel slide
+    let hasTransition = false;
+    try {
+      const style = getComputedStyle(panel);
+      const transDur = parseFloat(style.transitionDuration) || 0;
+      hasTransition = transDur > 0;
+    } catch {
+      // getComputedStyle may not be available in test environments
     }
 
-    function clearHighlight() {
-      getItems().forEach(function(item) {
-        item.removeAttribute('data-highlighted');
-        item.setAttribute('aria-selected', 'false');
-      });
-      highlightedIndex = -1;
+    const onTransEnd = (e) => {
+      if (e.propertyName === "transform") onEnd();
+    };
+
+    if (hasTransition) {
+      panel.addEventListener("transitionend", onTransEnd, { once: true });
+    } else {
+      onEnd();
     }
+  }
 
-    function highlightItem(index) {
-      var visible = visibleItems();
-      if (visible.length === 0) return;
-      if (index < 0) index = visible.length - 1;
-      if (index >= visible.length) index = 0;
-      getItems().forEach(function(item) {
-        item.removeAttribute('data-highlighted');
-        item.setAttribute('aria-selected', 'false');
-      });
-      visible[index].setAttribute('data-highlighted', '');
-      visible[index].setAttribute('aria-selected', 'true');
-      visible[index].scrollIntoView({ block: 'nearest' });
-      highlightedIndex = index;
-    }
+  function toggle() {
+    root.dataset.state === "open" ? close() : open();
+  }
 
-    function filter(query) {
-      var allItems = getItems();
-      var allGroups = getGroups();
-      var lowerQuery = query.toLowerCase();
-      var totalVisible = 0;
-      var groupVisibility = new Map();
-      allGroups.forEach(function(g) { groupVisibility.set(g, 0); });
+  // Event listeners
+  function onTriggerClick() {
+    open();
+  }
 
-      allItems.forEach(function(item) {
-        var label = item.querySelector("[data-part='item-label']");
-        var text = (label || item).textContent.toLowerCase();
-        if (text.includes(lowerQuery)) {
-          item.removeAttribute('data-hidden'); totalVisible++;
-          var parentGroup = item.closest("[data-part='group']");
-          if (parentGroup && groupVisibility.has(parentGroup)) {
-            groupVisibility.set(parentGroup, groupVisibility.get(parentGroup) + 1);
-          }
-        } else {
-          item.setAttribute('data-hidden', '');
-        }
-      });
+  function onOverlayClick() {
+    close();
+  }
 
-      allGroups.forEach(function(group) {
-        if (groupVisibility.get(group) === 0) group.setAttribute('data-hidden', '');
-        else group.removeAttribute('data-hidden');
-      });
-      if (emptyEl) emptyEl.hidden = totalVisible > 0;
-      clearHighlight();
-      return totalVisible;
-    }
+  function onCloseClick() {
+    close();
+  }
 
-    function selectItem(index) {
-      var visible = visibleItems();
-      if (index < 0 || index >= visible.length) return;
-      var item = visible[index];
-      root.dispatchEvent(new CustomEvent('command-select', {
-        bubbles: true,
-        detail: { item: item, label: (item.querySelector("[data-part='item-label']") || item).textContent }
-      }));
-      var label = (item.querySelector("[data-part='item-label']") || item).textContent.trim();
-      var cmd = registeredCommands.find(function(c) { return c.label === label; });
-      if (cmd && cmd.action) cmd.action();
+  function onKeyDown(e) {
+    if (e.key === "Escape" && root.dataset.state === "open") {
+      e.stopPropagation();
       close();
     }
-
-    function registerCommand(cmd) { registeredCommands.push(cmd); }
-
-    function onSearchInput() { filter(searchInput.value); }
-    function onSearchKeyDown(e) {
-      var visible = visibleItems();
-      switch (e.key) {
-        case 'ArrowDown': e.preventDefault(); highlightItem(highlightedIndex + 1); break;
-        case 'ArrowUp': e.preventDefault(); highlightItem(highlightedIndex - 1); break;
-        case 'Enter': e.preventDefault(); if (highlightedIndex >= 0 && highlightedIndex < visible.length) selectItem(highlightedIndex); break;
-        case 'Escape': e.preventDefault(); close(); break;
-        case 'Home': if (visible.length > 0) { e.preventDefault(); highlightItem(0); } break;
-        case 'End': if (visible.length > 0) { e.preventDefault(); highlightItem(visible.length - 1); } break;
-      }
-    }
-    function onOverlayClick() { close(); }
-    function onItemClick(e) {
-      var item = e.target.closest("[data-part='item']");
-      if (!item) return;
-      var index = visibleItems().indexOf(item);
-      if (index >= 0) selectItem(index);
-    }
-    function onGlobalKeyDown(e) {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        root.dataset.state === 'open' ? close() : open();
-      }
-    }
-
-    if (searchInput) searchInput.addEventListener('input', onSearchInput);
-    if (searchInput) searchInput.addEventListener('keydown', onSearchKeyDown);
-    if (overlay) overlay.addEventListener('click', onOverlayClick);
-    if (list) list.addEventListener('click', onItemClick);
-    document.addEventListener('keydown', onGlobalKeyDown);
-
-    function destroy() {
-      if (searchInput) searchInput.removeEventListener('input', onSearchInput);
-      if (searchInput) searchInput.removeEventListener('keydown', onSearchKeyDown);
-      if (overlay) overlay.removeEventListener('click', onOverlayClick);
-      if (list) list.removeEventListener('click', onItemClick);
-      document.removeEventListener('keydown', onGlobalKeyDown);
-      if (focusCleanup) focusCleanup();
-      delete root._faqirCommandPalette;
-    }
-
-    var api = { open: open, close: close, filter: filter, selectItem: selectItem, registerCommand: registerCommand, destroy: destroy };
-    root._faqirCommandPalette = api;
-    return api;
   }
 
-  // --- table ---
-  function createTable(root) {
-    if (root._faqirTable) return root._faqirTable;
+  trigger?.addEventListener("click", onTriggerClick);
+  overlay?.addEventListener("click", onOverlayClick);
+  closeButtons.forEach((btn) => btn.addEventListener("click", onCloseClick));
+  root.addEventListener("keydown", onKeyDown);
 
-    var thead = root.querySelector("[data-part='thead']");
-    var tbody = root.querySelector("[data-part='tbody']");
-    var headerCheckbox = thead ? thead.querySelector("[data-part='checkbox']") : null;
-    var sortableHeaders = function() { return [].slice.call(root.querySelectorAll("[data-part='th'][data-sortable]")); };
-    var bodyRows = function() { return [].slice.call(tbody ? tbody.querySelectorAll("[data-part='tr']") : []); };
+  function destroy() {
+    trigger?.removeEventListener("click", onTriggerClick);
+    overlay?.removeEventListener("click", onOverlayClick);
+    closeButtons.forEach((btn) =>
+      btn.removeEventListener("click", onCloseClick)
+    );
+    root.removeEventListener("keydown", onKeyDown);
+    if (focusCleanup) focusCleanup();
+    delete root._faqirSheet;
+  }
 
-    var lastSelectedIndex = -1;
+  const api = { open, close, toggle, destroy };
+  root._faqirSheet = api;
+  return api;
+}
+    return createSheet;
+  })();
 
-    function sort(columnIndex, direction) {
-      var rows = bodyRows();
-      if (rows.length === 0) return;
-      var allHeaders = [].slice.call(thead ? thead.querySelectorAll("[data-part='th']") : []);
-      sortableHeaders().forEach(function(th) { th.setAttribute('aria-sort', 'none'); });
-      if (allHeaders[columnIndex] && allHeaders[columnIndex].hasAttribute('data-sortable')) {
-        allHeaders[columnIndex].setAttribute('aria-sort', direction);
-      }
-      var sortedRows = rows.sort(function(a, b) {
-        var aCells = [].slice.call(a.querySelectorAll("[data-part='td']"));
-        var bCells = [].slice.call(b.querySelectorAll("[data-part='td']"));
-        var aVal = aCells[columnIndex] ? aCells[columnIndex].textContent.trim() : '';
-        var bVal = bCells[columnIndex] ? bCells[columnIndex].textContent.trim() : '';
-        var aNum = parseFloat(aVal.replace(/[^0-9.-]/g, ''));
-        var bNum = parseFloat(bVal.replace(/[^0-9.-]/g, ''));
-        var result;
-        if (!isNaN(aNum) && !isNaN(bNum)) result = aNum - bNum;
-        else result = aVal.localeCompare(bVal);
-        return direction === 'ascending' ? result : -result;
-      });
-      sortedRows.forEach(function(row) { tbody.appendChild(row); });
+  // ── table ── (registry/recipes/table/table.js)
+  controllerRegistry["table"] = (function() {
+// @ui:controller table
+// @ui:provides sort selectRow selectAll deselectAll getSelected destroy
+
+function createTable(root) {
+  // Prevent double-init
+  if (root._faqirTable) return root._faqirTable;
+
+  const table = root.querySelector("[data-part='table']");
+  const thead = root.querySelector("[data-part='thead']");
+  const tbody = root.querySelector("[data-part='tbody']");
+  const headerCheckbox = thead?.querySelector("[data-part='checkbox']");
+  const sortableHeaders = () =>
+    [...root.querySelectorAll("[data-part='th'][data-sortable]")];
+  const bodyRows = () =>
+    [...(tbody?.querySelectorAll("[data-part='tr']") || [])];
+
+  let lastSelectedIndex = -1;
+
+  function sort(columnIndex, direction) {
+    const rows = bodyRows();
+    if (rows.length === 0) return;
+
+    const allHeaders = [...(thead?.querySelectorAll("[data-part='th']") || [])];
+
+    // Reset all sort indicators
+    sortableHeaders().forEach((th) => {
+      th.setAttribute("aria-sort", "none");
+    });
+
+    // Set current sort indicator
+    if (allHeaders[columnIndex]?.hasAttribute("data-sortable")) {
+      allHeaders[columnIndex].setAttribute("aria-sort", direction);
     }
 
-    function updateHeaderCheckbox() {
-      if (!headerCheckbox) return;
-      var rows = bodyRows();
-      var selected = rows.filter(function(r) { return r.hasAttribute('data-selected'); });
-      if (selected.length === 0) { headerCheckbox.checked = false; headerCheckbox.indeterminate = false; }
-      else if (selected.length === rows.length) { headerCheckbox.checked = true; headerCheckbox.indeterminate = false; }
-      else { headerCheckbox.checked = false; headerCheckbox.indeterminate = true; }
-    }
+    // Sort the rows
+    const sortedRows = rows.sort((a, b) => {
+      const aCells = [...a.querySelectorAll("[data-part='td']")];
+      const bCells = [...b.querySelectorAll("[data-part='td']")];
+      const aVal = aCells[columnIndex]?.textContent.trim() || "";
+      const bVal = bCells[columnIndex]?.textContent.trim() || "";
 
-    function selectRow(index) {
-      var rows = bodyRows();
-      if (index < 0 || index >= rows.length) return;
-      var row = rows[index];
-      var isSelected = row.hasAttribute('data-selected');
-      if (isSelected) {
-        row.removeAttribute('data-selected');
-        var cb = row.querySelector("[data-part='checkbox']"); if (cb) cb.checked = false;
+      // Try numeric comparison first
+      const aNum = parseFloat(aVal.replace(/[^0-9.-]/g, ""));
+      const bNum = parseFloat(bVal.replace(/[^0-9.-]/g, ""));
+
+      let result;
+      if (!isNaN(aNum) && !isNaN(bNum)) {
+        result = aNum - bNum;
       } else {
-        row.setAttribute('data-selected', '');
-        var cb = row.querySelector("[data-part='checkbox']"); if (cb) cb.checked = true;
+        result = aVal.localeCompare(bVal);
       }
-      lastSelectedIndex = index;
-      updateHeaderCheckbox();
-    }
 
-    function selectAll() {
-      bodyRows().forEach(function(row) {
-        row.setAttribute('data-selected', '');
-        var cb = row.querySelector("[data-part='checkbox']"); if (cb) cb.checked = true;
-      });
-      updateHeaderCheckbox();
-    }
+      return direction === "ascending" ? result : -result;
+    });
 
-    function deselectAll() {
-      bodyRows().forEach(function(row) {
-        row.removeAttribute('data-selected');
-        var cb = row.querySelector("[data-part='checkbox']"); if (cb) cb.checked = false;
-      });
-      lastSelectedIndex = -1;
-      updateHeaderCheckbox();
-    }
-
-    function getSelected() {
-      return bodyRows().map(function(row, index) { return { row: row, index: index }; })
-        .filter(function(o) { return o.row.hasAttribute('data-selected'); })
-        .map(function(o) { return o.index; });
-    }
-
-    function selectRange(fromIndex, toIndex) {
-      var start = Math.min(fromIndex, toIndex);
-      var end = Math.max(fromIndex, toIndex);
-      var rows = bodyRows();
-      for (var i = start; i <= end; i++) {
-        if (i >= 0 && i < rows.length) {
-          rows[i].setAttribute('data-selected', '');
-          var cb = rows[i].querySelector("[data-part='checkbox']"); if (cb) cb.checked = true;
-        }
-      }
-      updateHeaderCheckbox();
-    }
-
-    function onHeaderClick(e) {
-      var th = e.target.closest("[data-part='th'][data-sortable]");
-      if (!th) return;
-      var allHeaders = [].slice.call(thead ? thead.querySelectorAll("[data-part='th']") : []);
-      var columnIndex = allHeaders.indexOf(th);
-      if (columnIndex < 0) return;
-      var currentSort = th.getAttribute('aria-sort');
-      sort(columnIndex, currentSort === 'ascending' ? 'descending' : 'ascending');
-    }
-
-    function onHeaderCheckboxChange() {
-      headerCheckbox.checked ? selectAll() : deselectAll();
-    }
-
-    function onRowCheckboxChange(e) {
-      var checkbox = e.target.closest("[data-part='checkbox']");
-      if (!checkbox || checkbox === headerCheckbox) return;
-      var row = checkbox.closest("[data-part='tr']");
-      if (!row || !(tbody && tbody.contains(row))) return;
-      var rows = bodyRows();
-      var index = rows.indexOf(row);
-      if (index < 0) return;
-      if (e.shiftKey && lastSelectedIndex >= 0) { e.preventDefault(); selectRange(lastSelectedIndex, index); return; }
-      if (checkbox.checked) row.setAttribute('data-selected', '');
-      else row.removeAttribute('data-selected');
-      lastSelectedIndex = index;
-      updateHeaderCheckbox();
-    }
-
-    function onRowClick(e) {
-      if (e.target.closest("[data-part='checkbox']")) return;
-      var row = e.target.closest("[data-part='tr']");
-      if (!row || !(tbody && tbody.contains(row))) return;
-      var rows = bodyRows();
-      var index = rows.indexOf(row);
-      if (index < 0) return;
-      if (e.shiftKey && lastSelectedIndex >= 0) selectRange(lastSelectedIndex, index);
-    }
-
-    if (thead) thead.addEventListener('click', onHeaderClick);
-    if (headerCheckbox) headerCheckbox.addEventListener('change', onHeaderCheckboxChange);
-    if (tbody) tbody.addEventListener('change', onRowCheckboxChange);
-    if (tbody) tbody.addEventListener('click', onRowClick);
-
-    function destroy() {
-      if (thead) thead.removeEventListener('click', onHeaderClick);
-      if (headerCheckbox) headerCheckbox.removeEventListener('change', onHeaderCheckboxChange);
-      if (tbody) tbody.removeEventListener('change', onRowCheckboxChange);
-      if (tbody) tbody.removeEventListener('click', onRowClick);
-      delete root._faqirTable;
-    }
-
-    var api = { sort: sort, selectRow: selectRow, selectAll: selectAll, deselectAll: deselectAll, getSelected: getSelected, destroy: destroy };
-    root._faqirTable = api;
-    return api;
+    // Re-append sorted rows
+    sortedRows.forEach((row) => tbody.appendChild(row));
   }
 
-  // --- select-custom ---
-  function createSelectCustom(root) {
-    if (root._faqirSelectCustom) return root._faqirSelectCustom;
+  function selectRow(index) {
+    const rows = bodyRows();
+    if (index < 0 || index >= rows.length) return;
 
-    var trigger = root.querySelector("[data-part='trigger']");
-    var valueEl = root.querySelector("[data-part='value']");
-    var listbox = root.querySelector("[data-part='listbox']");
-    var searchInput = root.querySelector("[data-part='search']");
-    var emptyEl = root.querySelector("[data-part='empty']");
-    var getOptions = function() { return [].slice.call(root.querySelectorAll("[data-part='option']")); };
+    const row = rows[index];
+    const isSelected = row.hasAttribute("data-selected");
 
-    var highlightedIndex = -1;
-    var outsideClickCleanup = null;
-    var selectedValue = '';
-
-    function open() {
-      root.dataset.state = 'open';
-      listbox.hidden = false;
-      trigger.setAttribute('aria-expanded', 'true');
-      if (searchInput) { searchInput.value = ''; filterOptions(''); searchInput.focus(); }
-      clearHighlight();
-      outsideClickCleanup = onOutsideClick(root, close);
+    if (isSelected) {
+      row.removeAttribute("data-selected");
+      const checkbox = row.querySelector("[data-part='checkbox']");
+      if (checkbox) checkbox.checked = false;
+    } else {
+      row.setAttribute("data-selected", "");
+      const checkbox = row.querySelector("[data-part='checkbox']");
+      if (checkbox) checkbox.checked = true;
     }
 
-    function close() {
-      root.dataset.state = 'closed';
-      listbox.hidden = true;
-      trigger.setAttribute('aria-expanded', 'false');
-      clearHighlight();
-      if (outsideClickCleanup) { outsideClickCleanup(); outsideClickCleanup = null; }
+    lastSelectedIndex = index;
+    updateHeaderCheckbox();
+  }
+
+  function selectAll() {
+    bodyRows().forEach((row) => {
+      row.setAttribute("data-selected", "");
+      const checkbox = row.querySelector("[data-part='checkbox']");
+      if (checkbox) checkbox.checked = true;
+    });
+    updateHeaderCheckbox();
+  }
+
+  function deselectAll() {
+    bodyRows().forEach((row) => {
+      row.removeAttribute("data-selected");
+      const checkbox = row.querySelector("[data-part='checkbox']");
+      if (checkbox) checkbox.checked = false;
+    });
+    lastSelectedIndex = -1;
+    updateHeaderCheckbox();
+  }
+
+  function getSelected() {
+    return bodyRows()
+      .map((row, index) => ({ row, index }))
+      .filter(({ row }) => row.hasAttribute("data-selected"))
+      .map(({ index }) => index);
+  }
+
+  function updateHeaderCheckbox() {
+    if (!headerCheckbox) return;
+    const rows = bodyRows();
+    const selected = rows.filter((r) => r.hasAttribute("data-selected"));
+
+    if (selected.length === 0) {
+      headerCheckbox.checked = false;
+      headerCheckbox.indeterminate = false;
+    } else if (selected.length === rows.length) {
+      headerCheckbox.checked = true;
+      headerCheckbox.indeterminate = false;
+    } else {
+      headerCheckbox.checked = false;
+      headerCheckbox.indeterminate = true;
+    }
+  }
+
+  function selectRange(fromIndex, toIndex) {
+    const start = Math.min(fromIndex, toIndex);
+    const end = Math.max(fromIndex, toIndex);
+    const rows = bodyRows();
+
+    for (let i = start; i <= end; i++) {
+      if (i >= 0 && i < rows.length) {
+        rows[i].setAttribute("data-selected", "");
+        const checkbox = rows[i].querySelector("[data-part='checkbox']");
+        if (checkbox) checkbox.checked = true;
+      }
+    }
+
+    updateHeaderCheckbox();
+  }
+
+  // ── Event Handlers ──
+
+  function onHeaderClick(e) {
+    const th = e.target.closest("[data-part='th'][data-sortable]");
+    if (!th) return;
+
+    const allHeaders = [...(thead?.querySelectorAll("[data-part='th']") || [])];
+    const columnIndex = allHeaders.indexOf(th);
+    if (columnIndex < 0) return;
+
+    const currentSort = th.getAttribute("aria-sort");
+    let nextDirection;
+
+    if (currentSort === "ascending") {
+      nextDirection = "descending";
+    } else {
+      nextDirection = "ascending";
+    }
+
+    sort(columnIndex, nextDirection);
+  }
+
+  function onHeaderCheckboxChange() {
+    if (headerCheckbox.checked) {
+      selectAll();
+    } else {
+      deselectAll();
+    }
+  }
+
+  function onRowCheckboxChange(e) {
+    const checkbox = e.target.closest("[data-part='checkbox']");
+    if (!checkbox || checkbox === headerCheckbox) return;
+
+    const row = checkbox.closest("[data-part='tr']");
+    if (!row || !tbody?.contains(row)) return;
+
+    const rows = bodyRows();
+    const index = rows.indexOf(row);
+    if (index < 0) return;
+
+    // Shift+click for range selection
+    if (e.shiftKey && lastSelectedIndex >= 0) {
+      e.preventDefault();
+      selectRange(lastSelectedIndex, index);
+      return;
+    }
+
+    if (checkbox.checked) {
+      row.setAttribute("data-selected", "");
+    } else {
+      row.removeAttribute("data-selected");
+    }
+
+    lastSelectedIndex = index;
+    updateHeaderCheckbox();
+  }
+
+  function onRowClick(e) {
+    // Don't handle if clicking on a checkbox (handled separately)
+    if (e.target.closest("[data-part='checkbox']")) return;
+
+    const row = e.target.closest("[data-part='tr']");
+    if (!row || !tbody?.contains(row)) return;
+
+    const rows = bodyRows();
+    const index = rows.indexOf(row);
+    if (index < 0) return;
+
+    // Shift+click for range selection
+    if (e.shiftKey && lastSelectedIndex >= 0) {
+      selectRange(lastSelectedIndex, index);
+      return;
+    }
+  }
+
+  thead?.addEventListener("click", onHeaderClick);
+  headerCheckbox?.addEventListener("change", onHeaderCheckboxChange);
+  tbody?.addEventListener("change", onRowCheckboxChange);
+  tbody?.addEventListener("click", onRowClick);
+
+  function destroy() {
+    thead?.removeEventListener("click", onHeaderClick);
+    headerCheckbox?.removeEventListener("change", onHeaderCheckboxChange);
+    tbody?.removeEventListener("change", onRowCheckboxChange);
+    tbody?.removeEventListener("click", onRowClick);
+    delete root._faqirTable;
+  }
+
+  const api = { sort, selectRow, selectAll, deselectAll, getSelected, destroy };
+  root._faqirTable = api;
+  return api;
+}
+    return createTable;
+  })();
+
+  // ── tabs ── (registry/recipes/tabs/tabs.js)
+  controllerRegistry["tabs"] = (function() {
+// @ui:controller tabs
+// @ui:provides activate destroy
+
+function createTabs(root) {
+  // Prevent double-init
+  if (root._faqirTabs) return root._faqirTabs;
+
+  const list = root.querySelector("[data-part='list']");
+  const triggers = () => [...root.querySelectorAll("[data-part='trigger']")];
+  const panels = () => [...root.querySelectorAll("[data-part='panel']")];
+
+  function activate(index) {
+    const allTriggers = triggers();
+    const allPanels = panels();
+
+    if (index < 0 || index >= allTriggers.length) return;
+
+    // Deactivate all
+    allTriggers.forEach((trigger, i) => {
+      trigger.setAttribute("aria-selected", "false");
+      trigger.setAttribute("tabindex", "-1");
+      if (allPanels[i]) allPanels[i].hidden = true;
+    });
+
+    // Activate target
+    allTriggers[index].setAttribute("aria-selected", "true");
+    allTriggers[index].removeAttribute("tabindex");
+    if (allPanels[index]) allPanels[index].hidden = false;
+  }
+
+  function getActiveIndex() {
+    return triggers().findIndex(
+      (t) => t.getAttribute("aria-selected") === "true"
+    );
+  }
+
+  function onTriggerClick(e) {
+    const trigger = e.target.closest("[data-part='trigger']");
+    if (!trigger) return;
+    const index = triggers().indexOf(trigger);
+    if (index >= 0) {
+      activate(index);
       trigger.focus();
     }
-
-    function toggle() { root.dataset.state === 'open' ? close() : open(); }
-
-    function clearHighlight() {
-      getOptions().forEach(function(opt) { opt.removeAttribute('data-highlighted'); });
-      highlightedIndex = -1;
-    }
-
-    function visibleOptions() {
-      return getOptions().filter(function(opt) { return !opt.hasAttribute('data-hidden'); });
-    }
-
-    function highlightOption(index) {
-      var visible = visibleOptions();
-      if (visible.length === 0) return;
-      if (index < 0) index = visible.length - 1;
-      if (index >= visible.length) index = 0;
-      getOptions().forEach(function(opt) { opt.removeAttribute('data-highlighted'); });
-      visible[index].setAttribute('data-highlighted', '');
-      visible[index].scrollIntoView({ block: 'nearest' });
-      highlightedIndex = index;
-    }
-
-    function filterOptions(query) {
-      var allOptions = getOptions();
-      var lowerQuery = query.toLowerCase();
-      var visibleCount = 0;
-      allOptions.forEach(function(opt) {
-        if (opt.textContent.toLowerCase().includes(lowerQuery)) { opt.removeAttribute('data-hidden'); visibleCount++; }
-        else opt.setAttribute('data-hidden', '');
-      });
-      if (emptyEl) emptyEl.hidden = visibleCount > 0;
-      clearHighlight();
-      return visibleCount;
-    }
-
-    function select(value) {
-      var allOptions = getOptions();
-      var targetOption = null;
-      allOptions.forEach(function(opt) { if (opt.dataset.value === value) targetOption = opt; });
-      if (!targetOption) allOptions.forEach(function(opt) { if (opt.textContent.trim() === value) targetOption = opt; });
-      if (!targetOption) return;
-      allOptions.forEach(function(opt) { opt.setAttribute('aria-selected', 'false'); });
-      targetOption.setAttribute('aria-selected', 'true');
-      selectedValue = targetOption.dataset.value || targetOption.textContent.trim();
-      if (valueEl) { valueEl.textContent = targetOption.textContent.trim(); valueEl.removeAttribute('data-placeholder'); }
-      root.dispatchEvent(new CustomEvent('select-change', { bubbles: true, detail: { value: selectedValue, label: targetOption.textContent.trim() } }));
-      close();
-    }
-
-    function getValue() { return selectedValue; }
-
-    function onTriggerClick() { toggle(); }
-    function onTriggerKeyDown(e) {
-      switch (e.key) {
-        case 'ArrowDown': case 'Enter': case ' ': e.preventDefault(); if (root.dataset.state !== 'open') open(); break;
-        case 'Escape': if (root.dataset.state === 'open') { e.preventDefault(); close(); } break;
-      }
-    }
-    function onListboxKeyDown(e) {
-      var visible = visibleOptions();
-      switch (e.key) {
-        case 'ArrowDown': e.preventDefault(); highlightOption(highlightedIndex + 1); break;
-        case 'ArrowUp': e.preventDefault(); highlightOption(highlightedIndex - 1); break;
-        case 'Enter': e.preventDefault(); if (highlightedIndex >= 0 && highlightedIndex < visible.length) { var opt = visible[highlightedIndex]; select(opt.dataset.value || opt.textContent.trim()); } break;
-        case 'Escape': e.preventDefault(); close(); break;
-        case 'Home': if (visible.length > 0) { e.preventDefault(); highlightOption(0); } break;
-        case 'End': if (visible.length > 0) { e.preventDefault(); highlightOption(visible.length - 1); } break;
-      }
-    }
-    function onOptionClick(e) {
-      var opt = e.target.closest("[data-part='option']");
-      if (opt) select(opt.dataset.value || opt.textContent.trim());
-    }
-    function onSearchInput() { if (searchInput) filterOptions(searchInput.value); }
-
-    if (trigger) trigger.addEventListener('click', onTriggerClick);
-    if (trigger) trigger.addEventListener('keydown', onTriggerKeyDown);
-    if (listbox) listbox.addEventListener('keydown', onListboxKeyDown);
-    if (listbox) listbox.addEventListener('click', onOptionClick);
-    if (searchInput) searchInput.addEventListener('input', onSearchInput);
-
-    function destroy() {
-      if (trigger) trigger.removeEventListener('click', onTriggerClick);
-      if (trigger) trigger.removeEventListener('keydown', onTriggerKeyDown);
-      if (listbox) listbox.removeEventListener('keydown', onListboxKeyDown);
-      if (listbox) listbox.removeEventListener('click', onOptionClick);
-      if (searchInput) searchInput.removeEventListener('input', onSearchInput);
-      if (outsideClickCleanup) outsideClickCleanup();
-      delete root._faqirSelectCustom;
-    }
-
-    var api = { open: open, close: close, toggle: toggle, select: select, getValue: getValue, destroy: destroy };
-    root._faqirSelectCustom = api;
-    return api;
   }
 
-  // --- popover ---
-  function createPopover(root) {
-    if (root._faqirPopover) return root._faqirPopover;
+  function onKeyDown(e) {
+    const allTriggers = triggers();
+    const current = getActiveIndex();
+    let next = -1;
 
-    var trigger = root.querySelector("[data-part='trigger']");
-    var content = root.querySelector("[data-part='content']");
-    var closeBtn = root.querySelector("[data-part='close']");
-    var outsideClickCleanup = null;
-
-    function open() {
-      root.dataset.state = 'open';
-      content.hidden = false;
-      trigger.setAttribute('aria-expanded', 'true');
-      outsideClickCleanup = onOutsideClick(root, close);
+    switch (e.key) {
+      case "ArrowRight":
+        next = (current + 1) % allTriggers.length;
+        break;
+      case "ArrowLeft":
+        next = (current - 1 + allTriggers.length) % allTriggers.length;
+        break;
+      case "Home":
+        next = 0;
+        break;
+      case "End":
+        next = allTriggers.length - 1;
+        break;
+      default:
+        return;
     }
 
-    function close() {
-      root.dataset.state = 'closed';
-      content.hidden = true;
-      trigger.setAttribute('aria-expanded', 'false');
-      if (outsideClickCleanup) { outsideClickCleanup(); outsideClickCleanup = null; }
-    }
-
-    function toggle() { root.dataset.state === 'open' ? close() : open(); }
-
-    function onTriggerClick() { toggle(); }
-    function onCloseClick(e) { e.stopPropagation(); close(); }
-    function onKeyDown(e) {
-      if (e.key === 'Escape' && root.dataset.state === 'open') { e.preventDefault(); close(); trigger.focus(); }
-    }
-
-    if (trigger) trigger.addEventListener('click', onTriggerClick);
-    if (closeBtn) closeBtn.addEventListener('click', onCloseClick);
-    root.addEventListener('keydown', onKeyDown);
-
-    function destroy() {
-      if (trigger) trigger.removeEventListener('click', onTriggerClick);
-      if (closeBtn) closeBtn.removeEventListener('click', onCloseClick);
-      root.removeEventListener('keydown', onKeyDown);
-      if (outsideClickCleanup) outsideClickCleanup();
-      delete root._faqirPopover;
-    }
-
-    var api = { open: open, close: close, toggle: toggle, destroy: destroy };
-    root._faqirPopover = api;
-    return api;
+    e.preventDefault();
+    activate(next);
+    allTriggers[next].focus();
   }
 
-  // --- pagination ---
-  function createPagination(root) {
-    if (root._faqirPagination) return root._faqirPagination;
+  list?.addEventListener("click", onTriggerClick);
+  list?.addEventListener("keydown", onKeyDown);
 
-    var nav = root.querySelector("[data-part='nav']");
-    var prevBtn = root.querySelector("[data-part='prev']");
-    var nextBtn = root.querySelector("[data-part='next']");
+  function destroy() {
+    list?.removeEventListener("click", onTriggerClick);
+    list?.removeEventListener("keydown", onKeyDown);
+    delete root._faqirTabs;
+  }
 
-    var currentPage = 1;
-    var totalPages = 1;
+  const api = { activate, getActiveIndex, destroy };
+  root._faqirTabs = api;
+  return api;
+}
+    return createTabs;
+  })();
 
-    var activeBtn = root.querySelector("[data-part='page'][data-state='active']");
-    if (activeBtn) currentPage = parseInt(activeBtn.dataset.page, 10) || 1;
-    var allPageBtns = root.querySelectorAll("[data-part='page']");
-    if (allPageBtns.length > 0) {
-      totalPages = parseInt(allPageBtns[allPageBtns.length - 1].dataset.page, 10) || 1;
+  // ── toast ── (registry/recipes/toast/toast.js)
+  controllerRegistry["toast"] = (function() {
+// @ui:controller toast
+// @ui:provides add dismiss dismissAll destroy
+
+function createToastContainer(root) {
+  // Prevent double-init
+  if (root._faqirToast) return root._faqirToast;
+
+  const toasts = new Map();
+
+  /**
+   * Add a new toast to the container.
+   * @param {Object} options
+   * @param {string} options.message - Toast message text
+   * @param {string} [options.tone="default"] - default|success|error|warning
+   * @param {string} [options.icon] - Icon HTML content
+   * @param {string} [options.actionLabel] - Action button label
+   * @param {Function} [options.onAction] - Action button callback
+   * @param {number} [options.duration=5000] - Auto-dismiss delay in ms (0 to disable)
+   * @returns {string} toast id
+   */
+  function add(options = {}) {
+    const {
+      message = "",
+      tone = "default",
+      icon = "",
+      actionLabel = "",
+      onAction = null,
+      duration = 5000,
+    } = options;
+
+    const id = uid("toast");
+    const el = document.createElement("div");
+    el.dataset.part = "toast";
+    el.dataset.variant = tone;
+    el.dataset.state = "entering";
+    el.dataset.toastId = id;
+    el.setAttribute("role", "status");
+    el.setAttribute("aria-live", "polite");
+
+    // Build inner content
+    let html = "";
+
+    if (icon) {
+      html += `<span data-part="icon" aria-hidden="true">${icon}</span>`;
     }
 
-    function getPageButtons() { return [].slice.call(root.querySelectorAll("[data-part='page']")); }
+    html += `<span data-part="message">${message}</span>`;
 
-    function updateActiveState() {
-      getPageButtons().forEach(function(btn) {
-        var page = parseInt(btn.dataset.page, 10);
-        if (page === currentPage) {
-          btn.dataset.state = 'active';
-          btn.setAttribute('aria-current', 'page');
-        } else {
-          delete btn.dataset.state;
-          btn.removeAttribute('aria-current');
+    if (actionLabel) {
+      html += `<button data-part="action">${actionLabel}</button>`;
+    }
+
+    html += `<button data-part="close" aria-label="Dismiss notification">&#x2715;</button>`;
+
+    el.innerHTML = html;
+    root.appendChild(el);
+
+    // Transition from entering to visible on next frame
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (el.dataset.state === "entering") {
+          el.dataset.state = "visible";
         }
       });
-      if (prevBtn) prevBtn.disabled = currentPage <= 1;
-      if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
+    });
+
+    // Wire up close button
+    const closeBtn = el.querySelector("[data-part='close']");
+    const onCloseClick = () => dismiss(id);
+    closeBtn?.addEventListener("click", onCloseClick);
+
+    // Wire up action button
+    const actionBtn = el.querySelector("[data-part='action']");
+    const onActionClick = () => {
+      if (onAction) onAction();
+      dismiss(id);
+    };
+    if (actionBtn) {
+      actionBtn.addEventListener("click", onActionClick);
     }
 
-    function emitPageChange() {
-      root.dispatchEvent(new CustomEvent('faqir:page-change', { detail: { page: currentPage }, bubbles: true }));
+    // Auto-dismiss timer
+    let timer = null;
+    if (duration > 0) {
+      timer = setTimeout(() => dismiss(id), duration);
     }
 
-    function setPage(n) {
-      var page = Math.max(1, Math.min(n, totalPages));
-      if (page === currentPage) return;
-      currentPage = page;
-      updateActiveState();
-      emitPageChange();
-    }
+    toasts.set(id, {
+      el,
+      timer,
+      closeBtn,
+      onCloseClick,
+      actionBtn,
+      onActionClick,
+    });
 
-    function getPage() { return currentPage; }
-
-    function setTotal(n) {
-      totalPages = Math.max(1, n);
-      if (currentPage > totalPages) currentPage = totalPages;
-      updateActiveState();
-    }
-
-    function onNavClick(e) {
-      var pageBtn = e.target.closest("[data-part='page']");
-      if (pageBtn) { var page = parseInt(pageBtn.dataset.page, 10); if (!isNaN(page)) setPage(page); }
-    }
-    function onPrevClick() { if (currentPage > 1) setPage(currentPage - 1); }
-    function onNextClick() { if (currentPage < totalPages) setPage(currentPage + 1); }
-
-    if (nav) nav.addEventListener('click', onNavClick);
-    if (prevBtn) prevBtn.addEventListener('click', onPrevClick);
-    if (nextBtn) nextBtn.addEventListener('click', onNextClick);
-    updateActiveState();
-
-    function destroy() {
-      if (nav) nav.removeEventListener('click', onNavClick);
-      if (prevBtn) prevBtn.removeEventListener('click', onPrevClick);
-      if (nextBtn) nextBtn.removeEventListener('click', onNextClick);
-      delete root._faqirPagination;
-    }
-
-    var api = { setPage: setPage, getPage: getPage, setTotal: setTotal, destroy: destroy };
-    root._faqirPagination = api;
-    return api;
+    return id;
   }
 
-  // --- sheet ---
-  function createSheet(root) {
-    if (root._faqirSheet) return root._faqirSheet;
+  /**
+   * Dismiss a toast by id with exit animation.
+   * @param {string} id
+   */
+  function dismiss(id) {
+    const entry = toasts.get(id);
+    if (!entry) return;
 
-    var trigger = root.querySelector("[data-part='trigger']");
-    var overlay = root.querySelector("[data-part='overlay']");
-    var panel = root.querySelector("[data-part='panel']");
-    var closeButtons = root.querySelectorAll("[data-part='close']");
+    const { el, timer, closeBtn, onCloseClick, actionBtn, onActionClick } = entry;
 
-    var focusCleanup = null;
-    var previouslyFocused = null;
+    if (timer) clearTimeout(timer);
 
-    function open() {
-      previouslyFocused = document.activeElement;
-      root.dataset.state = 'open';
-      overlay.hidden = false;
-      panel.hidden = false;
-      focusCleanup = trapFocus(panel);
-      if (panel.focus) panel.focus();
+    // Start exit animation
+    el.dataset.state = "exiting";
+
+    const onEnd = () => {
+      closeBtn?.removeEventListener("click", onCloseClick);
+      if (actionBtn) actionBtn.removeEventListener("click", onActionClick);
+      el.removeEventListener("transitionend", onEnd);
+      el.remove();
+      toasts.delete(id);
+    };
+
+    // Check if transitions are running
+    let hasTransition = false;
+    try {
+      const style = getComputedStyle(el);
+      const transDur = parseFloat(style.transitionDuration) || 0;
+      hasTransition = transDur > 0;
+    } catch {
+      // getComputedStyle may not be available in test environments
     }
 
-    function close() {
-      root.dataset.state = 'closing';
-      var onEnd = function() {
-        root.dataset.state = 'closed';
-        overlay.hidden = true;
-        panel.hidden = true;
-        if (focusCleanup) focusCleanup();
-        focusCleanup = null;
-        if (previouslyFocused) previouslyFocused.focus();
-        panel.removeEventListener('transitionend', onTransEnd);
-      };
-      var hasTransition = false;
-      try {
-        var style = getComputedStyle(panel);
-        hasTransition = (parseFloat(style.transitionDuration) || 0) > 0;
-      } catch (e) {}
-      var onTransEnd = function(e) { if (e.propertyName === 'transform') onEnd(); };
-      if (hasTransition) panel.addEventListener('transitionend', onTransEnd, { once: true });
-      else onEnd();
+    if (hasTransition) {
+      el.addEventListener("transitionend", onEnd, { once: true });
+    } else {
+      onEnd();
     }
-
-    function toggle() { root.dataset.state === 'open' ? close() : open(); }
-
-    function onTriggerClick() { open(); }
-    function onOverlayClick() { close(); }
-    function onCloseClick() { close(); }
-    function onKeyDown(e) {
-      if (e.key === 'Escape' && root.dataset.state === 'open') { e.stopPropagation(); close(); }
-    }
-
-    if (trigger) trigger.addEventListener('click', onTriggerClick);
-    if (overlay) overlay.addEventListener('click', onOverlayClick);
-    closeButtons.forEach(function(btn) { btn.addEventListener('click', onCloseClick); });
-    root.addEventListener('keydown', onKeyDown);
-
-    function destroy() {
-      if (trigger) trigger.removeEventListener('click', onTriggerClick);
-      if (overlay) overlay.removeEventListener('click', onOverlayClick);
-      closeButtons.forEach(function(btn) { btn.removeEventListener('click', onCloseClick); });
-      root.removeEventListener('keydown', onKeyDown);
-      if (focusCleanup) focusCleanup();
-      delete root._faqirSheet;
-    }
-
-    var api = { open: open, close: close, toggle: toggle, destroy: destroy };
-    root._faqirSheet = api;
-    return api;
   }
 
-  // --- date-picker ---
-  var MONTH_NAMES = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
-  ];
-  var DAY_NAMES = [
-    'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
-  ];
-
-  function createDatePicker(root) {
-    if (root._faqirDatePicker) return root._faqirDatePicker;
-
-    var trigger = root.querySelector("[data-part='trigger']");
-    var input = root.querySelector("[data-part='input']");
-    var calendar = root.querySelector("[data-part='calendar']");
-    var navPrev = root.querySelector("[data-part='nav-prev']");
-    var navNext = root.querySelector("[data-part='nav-next']");
-    var monthLabel = root.querySelector("[data-part='month-label']");
-    var gridBody = root.querySelector("[data-part='grid-body']");
-
-    var today = new Date();
-    var viewMonth = today.getMonth();
-    var viewYear = today.getFullYear();
-    var selectedDate = null;
-    var focusedDate = null;
-    var outsideClickCleanup = null;
-
-    function formatDate(date) {
-      var y = date.getFullYear();
-      var m = String(date.getMonth() + 1).padStart(2, '0');
-      var d = String(date.getDate()).padStart(2, '0');
-      return y + '-' + m + '-' + d;
-    }
-
-    function formatDisplay(date) {
-      return MONTH_NAMES[date.getMonth()] + ' ' + date.getDate() + ', ' + date.getFullYear();
-    }
-
-    function formatAriaLabel(date) {
-      return DAY_NAMES[date.getDay()] + ', ' + MONTH_NAMES[date.getMonth()] + ' ' + date.getDate() + ', ' + date.getFullYear();
-    }
-
-    function isSameDay(a, b) {
-      if (!a || !b) return false;
-      return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
-    }
-
-    function isToday(date) { return isSameDay(date, today); }
-
-    function buildCalendar() {
-      var firstDay = new Date(viewYear, viewMonth, 1);
-      var startDow = firstDay.getDay();
-      var lastDay = new Date(viewYear, viewMonth + 1, 0);
-      var totalDays = lastDay.getDate();
-      var prevMonthLast = new Date(viewYear, viewMonth, 0);
-      var prevMonthDays = prevMonthLast.getDate();
-
-      monthLabel.textContent = MONTH_NAMES[viewMonth] + ' ' + viewYear;
-      gridBody.innerHTML = '';
-
-      var dayCount = 1;
-      var nextMonthDay = 1;
-      var totalCells = Math.ceil((startDow + totalDays) / 7) * 7;
-      var row;
-
-      for (var i = 0; i < totalCells; i++) {
-        if (i % 7 === 0) {
-          row = document.createElement('tr');
-          gridBody.appendChild(row);
-        }
-
-        var td = document.createElement('td');
-        var btn = document.createElement('button');
-        btn.setAttribute('data-part', 'day');
-        btn.type = 'button';
-
-        var date;
-        var isOutside = false;
-
-        if (i < startDow) {
-          var day = prevMonthDays - startDow + 1 + i;
-          date = new Date(viewYear, viewMonth - 1, day);
-          btn.textContent = day;
-          isOutside = true;
-        } else if (dayCount <= totalDays) {
-          date = new Date(viewYear, viewMonth, dayCount);
-          btn.textContent = dayCount;
-          dayCount++;
-        } else {
-          date = new Date(viewYear, viewMonth + 1, nextMonthDay);
-          btn.textContent = nextMonthDay;
-          nextMonthDay++;
-          isOutside = true;
-        }
-
-        btn.dataset.date = formatDate(date);
-        btn.setAttribute('aria-label', formatAriaLabel(date));
-        if (isOutside) btn.dataset.outside = 'true';
-        if (isToday(date)) btn.dataset.today = 'true';
-        if (isSameDay(date, selectedDate)) btn.setAttribute('aria-selected', 'true');
-        btn.tabIndex = isSameDay(date, focusedDate) ? 0 : -1;
-
-        td.appendChild(btn);
-        row.appendChild(td);
-      }
-
-      if (!focusedDate) {
-        var defaultFocusDate = selectedDate
-          ? (selectedDate.getMonth() === viewMonth && selectedDate.getFullYear() === viewYear ? selectedDate : new Date(viewYear, viewMonth, 1))
-          : new Date(viewYear, viewMonth, 1);
-        var defaultBtn = gridBody.querySelector('[data-date="' + formatDate(defaultFocusDate) + '"]');
-        if (defaultBtn) defaultBtn.tabIndex = 0;
-      }
-    }
-
-    function dpOpen() {
-      root.dataset.state = 'open';
-      calendar.hidden = false;
-      input.setAttribute('aria-expanded', 'true');
-      if (selectedDate) { viewMonth = selectedDate.getMonth(); viewYear = selectedDate.getFullYear(); }
-      else { viewMonth = today.getMonth(); viewYear = today.getFullYear(); }
-      focusedDate = selectedDate || new Date(viewYear, viewMonth, 1);
-      buildCalendar();
-      var focusBtn = gridBody.querySelector('[data-date="' + formatDate(focusedDate) + '"]');
-      if (focusBtn) focusBtn.focus();
-      outsideClickCleanup = onOutsideClick(root, dpClose);
-    }
-
-    function dpClose() {
-      root.dataset.state = 'closed';
-      calendar.hidden = true;
-      input.setAttribute('aria-expanded', 'false');
-      focusedDate = null;
-      if (outsideClickCleanup) { outsideClickCleanup(); outsideClickCleanup = null; }
-    }
-
-    function dpSelectDate(date) {
-      selectedDate = new Date(date);
-      input.value = formatDisplay(selectedDate);
-      input.dataset.value = formatDate(selectedDate);
-      buildCalendar();
-      dpClose();
-      input.focus();
-      root.dispatchEvent(new CustomEvent('faqir:date-change', {
-        detail: { date: formatDate(selectedDate), dateObj: selectedDate }, bubbles: true
-      }));
-    }
-
-    function getValue() { return selectedDate ? formatDate(selectedDate) : null; }
-
-    function setValue(dateStr) {
-      var parsed = new Date(dateStr + 'T00:00:00');
-      if (!isNaN(parsed.getTime())) {
-        selectedDate = parsed;
-        input.value = formatDisplay(selectedDate);
-        input.dataset.value = formatDate(selectedDate);
-        viewMonth = selectedDate.getMonth();
-        viewYear = selectedDate.getFullYear();
-        if (root.dataset.state === 'open') buildCalendar();
-      }
-    }
-
-    function navigate(month, year) {
-      viewMonth = month; viewYear = year;
-      focusedDate = new Date(viewYear, viewMonth, 1);
-      buildCalendar();
-      var focusBtn = gridBody.querySelector('[data-date="' + formatDate(focusedDate) + '"]');
-      if (focusBtn) focusBtn.focus();
-    }
-
-    function moveFocus(days) {
-      if (!focusedDate) return;
-      var newDate = new Date(focusedDate);
-      newDate.setDate(newDate.getDate() + days);
-      focusedDate = newDate;
-      if (newDate.getMonth() !== viewMonth || newDate.getFullYear() !== viewYear) {
-        viewMonth = newDate.getMonth(); viewYear = newDate.getFullYear();
-        buildCalendar();
-      } else {
-        gridBody.querySelectorAll("[data-part='day']").forEach(function(btn) { btn.tabIndex = -1; });
-        var targetBtn = gridBody.querySelector('[data-date="' + formatDate(newDate) + '"]');
-        if (targetBtn) { targetBtn.tabIndex = 0; targetBtn.focus(); }
-      }
-      var targetBtn = gridBody.querySelector('[data-date="' + formatDate(newDate) + '"]');
-      if (targetBtn) targetBtn.focus();
-    }
-
-    function onTriggerClick() { root.dataset.state === 'open' ? dpClose() : dpOpen(); }
-    function onGridClick(e) {
-      var dayBtn = e.target.closest("[data-part='day']");
-      if (dayBtn && dayBtn.dataset.date) dpSelectDate(new Date(dayBtn.dataset.date + 'T00:00:00'));
-    }
-    function onPrevClick() {
-      viewMonth--;
-      if (viewMonth < 0) { viewMonth = 11; viewYear--; }
-      focusedDate = new Date(viewYear, viewMonth, 1);
-      buildCalendar();
-    }
-    function onNextClick() {
-      viewMonth++;
-      if (viewMonth > 11) { viewMonth = 0; viewYear++; }
-      focusedDate = new Date(viewYear, viewMonth, 1);
-      buildCalendar();
-    }
-    function onCalendarKeyDown(e) {
-      switch (e.key) {
-        case 'ArrowLeft': e.preventDefault(); moveFocus(-1); break;
-        case 'ArrowRight': e.preventDefault(); moveFocus(1); break;
-        case 'ArrowUp': e.preventDefault(); moveFocus(-7); break;
-        case 'ArrowDown': e.preventDefault(); moveFocus(7); break;
-        case 'Enter': case ' ': e.preventDefault(); if (focusedDate) dpSelectDate(focusedDate); break;
-        case 'Escape': e.preventDefault(); dpClose(); input.focus(); break;
-      }
-    }
-    function onRootKeyDown(e) {
-      if (e.key === 'Escape' && root.dataset.state === 'open') { e.preventDefault(); dpClose(); input.focus(); }
-    }
-
-    if (trigger) trigger.addEventListener('click', onTriggerClick);
-    if (gridBody) gridBody.addEventListener('click', onGridClick);
-    if (navPrev) navPrev.addEventListener('click', onPrevClick);
-    if (navNext) navNext.addEventListener('click', onNextClick);
-    if (calendar) calendar.addEventListener('keydown', onCalendarKeyDown);
-    root.addEventListener('keydown', onRootKeyDown);
-
-    function destroy() {
-      if (trigger) trigger.removeEventListener('click', onTriggerClick);
-      if (gridBody) gridBody.removeEventListener('click', onGridClick);
-      if (navPrev) navPrev.removeEventListener('click', onPrevClick);
-      if (navNext) navNext.removeEventListener('click', onNextClick);
-      if (calendar) calendar.removeEventListener('keydown', onCalendarKeyDown);
-      root.removeEventListener('keydown', onRootKeyDown);
-      if (outsideClickCleanup) outsideClickCleanup();
-      delete root._faqirDatePicker;
-    }
-
-    var api = { open: dpOpen, close: dpClose, getValue: getValue, setValue: setValue, navigate: navigate, selectDate: dpSelectDate, destroy: destroy };
-    root._faqirDatePicker = api;
-    return api;
+  /**
+   * Dismiss all toasts.
+   */
+  function dismissAll() {
+    const ids = [...toasts.keys()];
+    ids.forEach((id) => dismiss(id));
   }
 
-  // --- Controller Registration ---
-  controllerRegistry['dialog'] = createDialog;
-  controllerRegistry['drawer'] = createDrawer;
-  controllerRegistry['tabs'] = createTabs;
-  controllerRegistry['dropdown'] = createDropdown;
-  controllerRegistry['accordion'] = createAccordion;
-  controllerRegistry['tooltip'] = createTooltip;
-  controllerRegistry['toast'] = createToastContainer;
-  controllerRegistry['combobox'] = createCombobox;
-  controllerRegistry['command-palette'] = createCommandPalette;
-  controllerRegistry['table'] = createTable;
-  controllerRegistry['select-custom'] = createSelectCustom;
-  controllerRegistry['popover'] = createPopover;
-  controllerRegistry['pagination'] = createPagination;
-  controllerRegistry['sheet'] = createSheet;
-  controllerRegistry['date-picker'] = createDatePicker;
+  function destroy() {
+    // Clear all toasts immediately without animation
+    for (const [id, entry] of toasts) {
+      if (entry.timer) clearTimeout(entry.timer);
+      entry.closeBtn?.removeEventListener("click", entry.onCloseClick);
+      if (entry.actionBtn) entry.actionBtn.removeEventListener("click", entry.onActionClick);
+      entry.el.remove();
+    }
+    toasts.clear();
+    delete root._faqirToast;
+  }
+
+  const api = { add, dismiss, dismissAll, destroy };
+  root._faqirToast = api;
+  return api;
+}
+    return createToastContainer;
+  })();
+
+  // ── tooltip ── (registry/recipes/tooltip/tooltip.js)
+  controllerRegistry["tooltip"] = (function() {
+// @ui:controller tooltip
+// @ui:provides show hide destroy
+
+function createTooltip(root) {
+  // Prevent double-init
+  if (root._faqirTooltip) return root._faqirTooltip;
+
+  const trigger = root.querySelector("[data-part='trigger']");
+  const content = root.querySelector("[data-part='content']");
+
+  let showTimer = null;
+  let hideTimer = null;
+
+  function show() {
+    clearTimeout(hideTimer);
+    hideTimer = null;
+    root.dataset.state = "visible";
+    content.hidden = false;
+  }
+
+  function hide() {
+    clearTimeout(showTimer);
+    showTimer = null;
+    root.dataset.state = "hidden";
+    content.hidden = true;
+  }
+
+  function scheduleShow() {
+    clearTimeout(hideTimer);
+    hideTimer = null;
+    showTimer = setTimeout(show, 200);
+  }
+
+  function scheduleHide() {
+    clearTimeout(showTimer);
+    showTimer = null;
+    hideTimer = setTimeout(hide, 100);
+  }
+
+  function onMouseEnter() {
+    scheduleShow();
+  }
+
+  function onMouseLeave() {
+    scheduleHide();
+  }
+
+  function onFocusIn() {
+    scheduleShow();
+  }
+
+  function onFocusOut() {
+    scheduleHide();
+  }
+
+  function onKeyDown(e) {
+    if (e.key === "Escape" && root.dataset.state === "visible") {
+      e.stopPropagation();
+      hide();
+    }
+  }
+
+  trigger?.addEventListener("mouseenter", onMouseEnter);
+  trigger?.addEventListener("mouseleave", onMouseLeave);
+  trigger?.addEventListener("focusin", onFocusIn);
+  trigger?.addEventListener("focusout", onFocusOut);
+  root.addEventListener("keydown", onKeyDown);
+
+  function destroy() {
+    clearTimeout(showTimer);
+    clearTimeout(hideTimer);
+    trigger?.removeEventListener("mouseenter", onMouseEnter);
+    trigger?.removeEventListener("mouseleave", onMouseLeave);
+    trigger?.removeEventListener("focusin", onFocusIn);
+    trigger?.removeEventListener("focusout", onFocusOut);
+    root.removeEventListener("keydown", onKeyDown);
+    delete root._faqirTooltip;
+  }
+
+  const api = { show, hide, destroy };
+  root._faqirTooltip = api;
+  return api;
+}
+    return createTooltip;
+  })();
 
   // ═══════════════════════════════════════════════════════
   // Section 8: Global API

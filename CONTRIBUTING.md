@@ -35,15 +35,18 @@ src/                    CLI source code (TypeScript)
   parser/               HTML and CSS parsers
   generator/            Context and skill file generators
   utils/                File system, config, logger helpers
+  core-src/             Engine source (engine.js) — see "Assembling the engine"
 
 registry/               Component registry (shipped with CLI)
   tokens/               Design token CSS files
   base/                 Reset and prose styles
-  core/                 JS utility modules
+  core/                 faqir-core.js (GENERATED) + JS utility modules
   primitives/           CSS-only components
   recipes/              CSS + JS interactive components
   patterns/             Composition templates
   themes/               Theme CSS overrides
+
+scripts/                Build + release scripts (build-core.mjs, build-cli.mjs, …)
 
 tests/                  Test files mirroring src/ structure
   fixtures/             HTML fixtures for audit testing
@@ -73,7 +76,8 @@ tests/                  Test files mirroring src/ structure
 
 Same as primitives, plus:
 
-1. Add `{name}.js` — A controller module exporting `create{Name}(root)`.
+1. Add `{name}.js` — A controller module tagged `// @ui:controller {name}` and
+   exporting `create{Name}(root)`.
 2. Controllers must:
    - Prevent double-init with `root._faqir{Name}` check
    - Find parts with `[data-part="..."]` queries scoped to root
@@ -82,6 +86,10 @@ Same as primitives, plus:
    - Be idempotent — calling twice on the same element is safe
 
 3. Import only from `../../core/` modules. No external dependencies.
+
+4. Run `bun run build:core` — the controller is auto-discovered and assembled
+   into `registry/core/faqir-core.js`. You never register it or edit the engine
+   bundle by hand (see "Assembling the engine" below).
 
 ## CSS Conventions
 
@@ -187,6 +195,40 @@ bun run build:cli && npm pack --dry-run
 ```bash
 bun run smoke
 ```
+
+## Assembling the engine (`build:core`)
+
+`registry/core/faqir-core.js` is the shipped single-file engine. **It is a
+generated artifact — do not edit it by hand.** It is assembled from two sources:
+
+| Source | What it holds |
+| ------ | ------------- |
+| `src/core-src/engine.js` | The engine: reactivity, directives, expression evaluator, bridge, bootstrap, and the public plugin API. No recipe controllers. |
+| `registry/recipes/{name}/{name}.js` | One ES-module controller factory per recipe, tagged `// @ui:controller {name}` and exporting `create{Name}(root)`. |
+
+`bun run build:core` concatenates them:
+
+```bash
+bun run build:core          # → registry/core/faqir-core.js
+```
+
+Each controller is inlined into the engine's UMD closure as a self-contained
+IIFE that returns its factory and registers it on `controllerRegistry`. The
+`import { … } from "../../core/…"` lines are stripped during assembly — those
+helpers (`trapFocus`, `onOutsideClick`, `debounce`, `uid`) already live in the
+engine's scope. Wrapping each controller in its own IIFE keeps its local helpers
+private, so controllers can never collide with each other or with the engine.
+
+**To change engine behavior:** edit `src/core-src/engine.js`, then run
+`bun run build:core`. **To change a controller:** edit its recipe `.js`, then run
+`bun run build:core`. Adding a new recipe controller requires no wiring — it is
+auto-discovered from `registry/recipes/*/*.js` and registered automatically.
+
+The build is deterministic (controllers sorted by name, no timestamp in the
+generated header), so the same sources always produce byte-identical output. The
+generated file carries a provenance header listing the engine source, every
+controller, and the package version. CI treats the committed `faqir-core.js` as
+fresh — regenerate and commit it whenever you touch the engine or a controller.
 
 ## Building the `@faqir-ui/core` runtime package (CDN artifacts)
 
