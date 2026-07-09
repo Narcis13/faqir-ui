@@ -6,9 +6,9 @@
 > bindings (Vue, React), a schema-driven forms layer, and a print/PDF story —
 > without touching the pillars that make Loom what it is.
 
-**Status:** Proposal — July 2026
-**Baseline:** loom-ui-cli v0.1.1 (43 components, 20 CLI commands, ~470 tests, loom-core.js reactive engine)
-**Companion documents:** `LOOM-SPEC.md` (original spec), `docs/data-driven-rendering.md` (l-source design), `flickering-napping-bumblebee.md` (loom-core plan)
+**Status:** Proposal — July 2026, rev. 2 (updated after syncing v0.1.2→v0.2.4 from GitHub)
+**Baseline:** loom-ui-cli v0.2.4 — 53 components (30 primitives / 16 recipes / 7 patterns), 5 themes, 20 CLI commands, 470 tests, loom-core.js reactive engine **including `l-source`**
+**Companion documents:** `LOOM-SPEC.md` (original spec), `docs/data-driven-rendering.md` (l-source design), `docs/for_craft.md` (craft/reportcraft document requirements), `flickering-napping-bumblebee.md` (loom-core plan)
 
 ---
 
@@ -43,8 +43,8 @@ The v0.1 codebase is genuinely good: clean architecture, a working audit/repair 
 a real reactive engine, 470 tests. What it needs now is not a rewrite; it needs
 **depth, reach, and polish**:
 
-- **Depth**: keyed list rendering, ~20 missing components, complete theme coverage,
-  full controller test coverage, RTL correctness, a11y automation.
+- **Depth**: keyed list rendering, ~15 still-missing components, complete theme
+  coverage, full controller test coverage, RTL correctness, a11y automation.
 - **Reach**: a distribution story that doesn't require Bun (compiled CLI, CDN runtime,
   npm package family), an MCP server so *any* agent can drive Loom without a shell,
   and thin Vue/React bindings **generated from manifests**.
@@ -65,10 +65,14 @@ Three strategic moves elevate this beyond incremental improvement:
    is powerful enough to target any framework — the strongest possible validation of the
    architecture.
 
-3. **The forms + documents layer** (`@loom-ui/forms` + print CSS + document components).
-   A JSON-Schema-to-Loom renderer and a paged-media component layer turn Loom into the
-   exact substrate Formery needs: hosted forms rendered as tiny static HTML (white-label
-   themeable via theme tokens) and PDF templates rendered from the same design system.
+3. **The forms + documents layer** (`@loom-ui/forms` on top of the v0.2.x document
+   foundation). v0.2.x already shipped the paged-media substrate — document
+   pattern/theme/tokens, key-value, signature, page-break, callout, qr-code — driven by
+   the craft/reportcraft use case (`docs/for_craft.md`). What remains is the
+   JSON-Schema-to-Loom renderer, the validation contract, and running headers/footers,
+   turning Loom into the exact substrate Formery *and* craft need: hosted forms rendered
+   as tiny static HTML (white-label themeable via theme tokens) and PDF templates
+   rendered from the same design system.
 
 Everything below is organized as ten parallel workstreams and sequenced into six
 releases (v0.2 → v1.0) in §15.
@@ -90,26 +94,57 @@ releases (v0.2 → v1.0) in §15.
 | Tests | ~470 across engine, CLI, audit, parsers |
 | Agent surface | context.json, `--format md/cursorrules`, Claude Code skill + 6 reference docs |
 
-### Gaps (from the July 2026 code audit)
+### Shipped between rev. 1 of this proposal and now (v0.1.2 → v0.2.4)
+
+Thirteen commits landed on GitHub that rev. 1 hadn't seen. They matter — several
+proposed items already exist:
+
+- **The document/print foundation** (driven by `docs/for_craft.md` — the
+  craft/reportcraft-forma unification is a *second* internal consumer alongside
+  Formery): `document` pattern with `@page` geometry, a PDF-optimized `document` theme,
+  `tokens/document.css` + `doc-aliases.css` (page format/margins, document typography,
+  doc-table tokens), and **8 new primitives** — `callout`, `description-list`,
+  `field-group`, `image`, `key-value`, `page-break`, `signature`, `stat` — plus a
+  `qr-code` recipe (e-factura payment codes) and a substantially enhanced `table`
+  (tfoot, cell alignment, number/currency formats, compact print).
+- **`l-source` shipped in loom-core.js** — Approach C from
+  `docs/data-driven-rendering.md` is real (`l-source:name="/api/x"` with
+  `.lazy/.optimistic/.poll/.key` modifiers), alongside `api-source.js` (Approach B) as
+  the application-level escape hatch. Context and skill generators document both.
+- **Engine hardening**: effect-flush loop guard (100-iteration cap) + new engine tests.
+
+Inventory is now **53 components** (30 primitives, 16 recipes, 7 patterns) and
+**5 themes**. This validates the proposal's direction — the document layer and
+declarative data were its two boldest bets, and both were independently built before
+rev. 2 was written.
+
+### Gaps (July 2026 code audit, re-verified against v0.2.4)
 
 **Engine**
 - `l-for` is a naive full re-render: every list change destroys and rebuilds all nodes
   (loom-core.js `handleFor`). Loses focus, input state, scroll, animations. **Top engine defect.**
 - No `l-else`/`l-else-if`; transitions are single-stage class toggles (no staged
   enter/leave, no collapse); no persist/intersect/mask-style plugins.
-- The 15 recipe controllers exist **twice** — inline in loom-core.js *and* as standalone
-  `registry/recipes/*/*.js` files. Drift risk is real and untested.
+- The 15 original recipe controllers exist **twice** — inline in loom-core.js *and* as
+  standalone `registry/recipes/*/*.js` files — and the drift is no longer theoretical:
+  the new `qr-code` recipe exists **only** as a standalone file, so unlike every other
+  recipe it is never auto-initialized by loom-core.
+- `l-source` shipped with **zero tests** (`grep l-source tests/core/loom-core.test.ts`
+  → 0 hits), no AbortController/teardown semantics review, and no audit-rule awareness.
 - `l-for` child scopes use a hand-rolled delegating Proxy — a second, subtly different
   reactivity path.
 - No TypeScript declarations for the `Loom` global.
 
 **Components & CSS**
-- ~18 commonly expected components missing (alert, alert-dialog, slider, skeleton,
-  breadcrumb, context-menu, sidebar, input-otp, calendar, toggle-group, …).
+- ~15 commonly expected components still missing (alert-dialog, slider, skeleton,
+  breadcrumb, context-menu, sidebar, input-otp, calendar, toggle-group, tree-view, …).
+  `callout` and `stat` closed two of the gaps from rev. 1; the rest stand.
 - **No icon system at all** — `[data-part="icon"]` slots exist but nothing fills them.
 - RTL bugs: button-group uses physical `border-top-left-radius`/`margin-left`;
   table uses `text-align: left`. No logical-properties lint rule.
-- No form field wrapper (label + control + hint + error as one contract).
+- `field-group` now exists, but the validation contract is incomplete: no enforced
+  `aria-describedby`/`aria-invalid` wiring, no audit rule, no declarative validation
+  runtime (§7.1).
 - Literal value fallbacks leak into component CSS (e.g. `oklch(0 0 0 / 0.5)` in dialog.css)
   — violating the framework's own token rule.
 
@@ -185,8 +220,9 @@ Replace destroy-all-rebuild with keyed reconciliation:
 
 ### A2. Unify the controller source of truth
 
-Today the recipe controllers are duplicated (inline in loom-core.js + standalone files).
-Invert the relationship:
+Today the recipe controllers are duplicated (inline in loom-core.js + standalone files),
+and v0.2.x proved the failure mode: `qr-code` was added standalone-only, so it never
+auto-initializes like the other 15 recipes. Invert the relationship:
 
 - `registry/recipes/*/*.js` become the **only** source.
 - A repo build script (`bun run build:core`) assembles `loom-core.js` from
@@ -224,16 +260,19 @@ bundled by `loom bundle --js`:
 
 | Plugin | Directive(s) | Purpose |
 |--------|--------------|---------|
-| `loom-source.js` | `l-source:name="/api/x"` + modifiers | Declarative REST data (promotes Approach C from `docs/data-driven-rendering.md` verbatim: `.poll`, `.lazy`, `.optimistic`, `.key`, `$name.load/create/update/remove`) |
 | `loom-persist.js` | `l-persist` / `$persist()` | localStorage-backed reactive state |
 | `loom-intersect.js` | `l-intersect` | IntersectionObserver enter/leave hooks (lazy sections, infinite scroll) |
 | `loom-mask.js` | `l-mask` | Input masking (dates, phone, OTP — needed by input-otp recipe and Formery) |
 | `loom-collapse.js` | `l-collapse` | Animated expand/collapse |
+| `loom-validate.js` | `l-validate` | Declarative constraint validation for the `field-group` contract (§7.1) |
 
-`l-source` is the most consequential: it completes the story "an agent can build a full
-CRUD app with zero imperative JS." The audit `no-fetch` rule stays scoped to recipe
-controllers; `l-source` is engine-level and exempt by design (as the brainstorm doc
-already concluded).
+**`l-source` already landed in core in v0.2.x** — ahead of this proposal, which
+validates the direction (it completes the story "an agent can build a full CRUD app
+with zero imperative JS"). Remaining `l-source` work rather than net-new build: a test
+suite (it currently has none), AbortController-based teardown on scope destruction,
+a codified audit exemption (the `no-fetch` rule stays scoped to recipe controllers),
+and error-state conventions aligned with `field-group`. Recommend it stays in core —
+it is the flagship — with `api-source.js` kept as the documented escape hatch.
 
 ### A6. Developer experience & safety
 
@@ -257,22 +296,22 @@ already concluded).
 
 ## 5. Workstream B — Component Library Expansion
 
-Target: **43 → ~68 components**, closing the gap with the shadcn/Radix expectation set
-while staying zero-dependency.
+Target: **53 → ~80 components**, closing the gap with the shadcn/Radix expectation set
+while staying zero-dependency. (v0.2.x already contributed 8 primitives + qr-code from
+the rev. 1 wishlist: stat, callout, field-group, image, key-value, page-break,
+signature, description-list.)
 
-### B1. New primitives (12)
+### B1. New primitives (10)
 
 | Component | Notes |
 |-----------|-------|
-| `alert` | Callout box; variants info/success/warning/destructive; `[data-part="icon" title description]` |
+| `alert` | Manifest alias/refinement of the shipped `callout` — agents searching for the universal name "alert" must find it; add optional `[data-part="dismiss"]` |
 | `skeleton` | Loading placeholder; text/circle/rect variants; shimmer respects reduced-motion |
 | `breadcrumb` | `<nav aria-label="Breadcrumb">` + `[data-part="item" separator current]` |
 | `toggle` | Pressed-state button (`aria-pressed`); CSS-only |
 | `toggle-group` | Single/multi select group (roving tabindex needs 20 lines JS → may land as recipe) |
-| `field` | **The form field contract**: label + control + hint + error in one wrapper — see §7.1 |
 | `icon` | The icon system — see B4 |
 | `chip` | Tag/chip with optional dismiss part |
-| `stat` | KPI display: `[data-part="label" value delta]`; delta up/down variants |
 | `aspect-ratio` | `aspect-ratio` CSS wrapper |
 | `collapsible` | `<details>/<summary>` based — zero JS, animated via `::details-content` |
 | `link` | Styled anchor with external/muted variants (today text-links are unstyled) |
@@ -301,12 +340,12 @@ Explicitly deferred past 1.0: `resizable`, `virtual-list`/data-grid virtualizati
 
 | Pattern | Composes | Why |
 |---------|----------|-----|
-| `wizard` | stepper, card, field, button | Multi-step forms — Formery's bread and butter |
+| `wizard` | stepper, card, field-group, button | Multi-step forms — Formery's bread and butter |
 | `pricing` | grid, card, badge, button, separator | Every SaaS landing page |
 | `hero` + `feature-grid` + `site-footer` | text, stack, grid, button | Landing-page kit (today `loom scaffold landing-page` synthesizes ad-hoc) |
 | `stats-dashboard` | stat, grid, card, table | Reporting pages |
 | `inbox` | stack, avatar, badge, tabs, empty-state | List-detail split view |
-| `form-page` | field, all inputs, wizard | Canonical schema-rendered form (the `@loom-ui/forms` reference output) |
+| `form-page` | field-group, all inputs, wizard | Canonical schema-rendered form (the `@loom-ui/forms` reference output) |
 
 ### B4. The icon system
 
@@ -421,23 +460,27 @@ formalize and test it): a Loom page can render a "customer-themed" form inside a
 
 The workstream that makes Loom the substrate for Formery — and for every CRUD app.
 
-### 7.1 The `field` primitive — a validation contract
+### 7.1 Harden `field-group` into a validation contract
 
-Today Loom has inputs but no field-level contract. Add:
+v0.2.x shipped the `field-group` primitive (label + input slot + description + error,
+`data-state="error|valid"`, `data-required`). What's missing is the *contract* — the
+part agents and audits can rely on:
 
 ```html
-<div data-ui="field" data-state="invalid">
+<div data-ui="field-group" data-state="invalid">
   <label data-part="label" for="email">Email <span data-part="required">*</span></label>
   <input data-ui="input" id="email" aria-describedby="email-hint email-error" aria-invalid="true">
-  <p data-part="hint" id="email-hint">We never share it.</p>
+  <p data-part="description" id="email-hint">We never share it.</p>
   <p data-part="error" id="email-error">Enter a valid email address.</p>
 </div>
 ```
 
-Protocol rules (enforced by new audit rules):
-- Field state lives on the field root: `data-state="invalid|validating|disabled"`.
+Remaining work (enforced by new audit rules):
+- Normalize the state vocabulary (`invalid|validating|disabled` — align the shipped
+  `error` state with the rest of the framework's naming, with a manifest change note).
 - `error` part visible only when invalid (CSS handles it — no JS toggling classes).
-- `aria-describedby`/`aria-invalid` wiring is required and auto-repairable.
+- `aria-describedby`/`aria-invalid` wiring is required and auto-repairable
+  (`field-wiring` audit rule, §8.3).
 - A small `loom-validate.js` plugin adds declarative constraint validation:
   `l-validate` on a form reflects native `ValidityState` into `data-state` + error parts,
   with custom validators via expression: `l-validate:email="isCompanyEmail(value)"`.
@@ -453,7 +496,7 @@ const html = renderForm(jsonSchema, uiSchema?, { theme, density, i18n });
 
 - **Input**: standard JSON Schema (draft 2020-12 subset) + optional UI schema
   (widget choices, layout groups, wizard steps).
-- **Output**: valid Loom markup — `field` wrappers, correct widgets per type/format
+- **Output**: valid Loom markup — `field-group` wrappers, correct widgets per type/format
   (string+enum → select or radio-group by cardinality; string+format:date →
   date-picker; array of enum → checkbox group or tag-input; nested objects →
   fieldset cards; arrays of objects → repeatable groups), `wizard` pattern for
@@ -468,32 +511,39 @@ This module is the direct bridge to Formery's Form Definition Language: FDL ⊃ 
 Schema + UI schema, so Formery's hosted form renderer becomes a thin wrapper over
 `@loom-ui/forms` (§14).
 
-### 7.3 `l-source` — declarative data (recap)
+### 7.3 `l-source` — declarative data (status: shipped)
 
-Ships as the flagship plugin (§A5), exactly per the design already written in
-`docs/data-driven-rendering.md`. Together with 7.1/7.2, the full loop —
-*schema → form → validation → submission → refreshed list* — needs zero imperative JS.
+Landed in loom-core.js in v0.2.x, per the design in `docs/data-driven-rendering.md`.
+Remaining hardening lives in §A5 (tests, teardown, audit codification). Together with
+7.1/7.2, the full loop — *schema → form → validation → submission → refreshed list* —
+needs zero imperative JS.
 
-### 7.4 Documents & print — the PDF layer
+### 7.4 Documents & print — complete the shipped foundation
 
-New base stylesheet + component set for **paged media**:
+v0.2.x landed the core of this workstream: the `document` pattern with `@page`
+geometry, the PDF-optimized `document` theme, document tokens (`--page-format`,
+doc typography/table tokens), and the supporting primitives (page-break, signature,
+key-value, description-list, callout, image, enhanced doc tables, qr-code). What
+remains to make it a complete PDF-engine substrate:
 
-- `registry/base/print.css`: page-box setup (`@page` size/margins tokens:
-  `--page-size: A4`, `--page-margin`), print-safe color remapping (shadows off,
-  borders on), `break-inside: avoid` rules for cards/table rows, running
-  header/footer helpers.
-- New `document` component family (primitives, CSS-only):
-  `document` (root, `data-size="a4|letter"`), `doc-header` / `doc-footer`
-  (position: running / fixed for headless-Chromium rendering), `doc-section`,
-  `doc-table` (repeating `<thead>`, continuation-safe), `doc-signature`,
-  `doc-pagebreak`.
-- A `document` **theme axis**: document themes restyle for ink (serif body, tighter
-  ramp) while reusing the same semantic tokens — one brand theme drives both the
-  web form and the PDF.
-- `loom scaffold invoice` / `loom scaffold report` produce ready-to-print pages.
+- **Running headers/footers**: `doc-header`/`doc-footer` parts using
+  `position: running()` with fixed-position fallbacks, so multi-page PDFs repeat brand
+  headers and page numbers (CSS `@page` margin boxes where the renderer supports them).
+- **Scaffolds**: `loom scaffold invoice` / `loom scaffold report` producing
+  ready-to-print, audit-clean pages that exercise every document component.
+- **More document themes**: the shipped `document` theme is the neutral base; add
+  `document-serif` (contracts/legal) and teach `loom theme generate` (§C4) to emit a
+  brand-matched document theme — one accent color drives both web and PDF.
+- **`watermark` and `barcode`** (the remaining items from craft's wishlist in
+  `docs/for_craft.md`): watermark as a CSS-only primitive; barcode (Code128) as a
+  recipe following the qr-code pattern.
+- **Print visual regression**: render reference documents to PDF in CI (headless
+  Chromium) and image-diff them — the print layer needs the same regression safety as
+  the screen layer (§12).
 
 Rendered via any headless-Chromium PDF pipeline, a Loom document is deterministic,
-brandable-by-token, and auditable — precisely Formery's PDF engine requirement (§14).
+brandable-by-token, and auditable — precisely Formery's PDF engine requirement (§14),
+already proven by craft's document use case.
 
 ---
 
@@ -549,7 +599,7 @@ New rules (all deterministic, no network):
 | `logical-properties` | Flags physical `left/right` properties in component CSS (fixes the RTL class of bugs permanently) |
 | `heading-order` | No skipped heading levels inside patterns |
 | `landmark` | Pages have main/nav landmarks; dialogs aren't inside main flow |
-| `field-wiring` | `aria-describedby`/`aria-invalid` consistency on `field` (§7.1) |
+| `field-wiring` | `aria-describedby`/`aria-invalid` consistency on `field-group` (§7.1) |
 | `icon-name` | `data-icon` values exist in the icon manifest |
 
 Plus: stable, versioned JSON output schema (`audit_schema_version`) so agent loops can
@@ -727,9 +777,9 @@ frameworks.
 
 ## 12. Workstream I — Quality Engineering
 
-1. **Controller test completion.** Author behavior tests for the 12 untested recipe
+1. **Controller test completion.** Author behavior tests for the 13 untested recipe
    controllers (combobox, command-palette, date-picker, popover, sheet, table,
-   select-custom, toast, accordion, tooltip, drawer, pagination) — happy-dom where
+   select-custom, toast, accordion, tooltip, drawer, pagination, qr-code) — happy-dom where
    sufficient, Playwright where real focus/keyboard semantics matter (focus trap,
    roving tabindex, typeahead).
 2. **Visual regression.** Playwright screenshot suite: every component × every theme ×
@@ -776,44 +826,56 @@ How this overhaul maps onto the Formery PRD, point by point:
 | **Hosted/embeddable forms** — fast, white-label, no framework tax | Forms render as static Loom HTML + one CSS + one JS tag (~20KB total gzip). No React runtime on the public form. Embeds cleanly because attribute selectors can't collide with host-page classes — a genuinely better embed story than any class-based framework |
 | **Schema-first (FDL → UI)** | `@loom-ui/forms` renders JSON Schema + UI schema → audit-clean Loom markup (§7.2). FDL compiles down to this; versioned FDL = versioned static HTML artifacts, diffable and immutable |
 | **White-label theming per customer** | `loom theme generate --accent {brand-color}` produces a complete, contrast-verified customer theme from one input (§C4); scoped `data-theme` lets the Formery dashboard preview customer-themed forms inline (§C5) |
-| **PDF engine** | The `document` component family + print.css + document themes (§7.4): one schema, one brand theme → web form *and* pixel-deterministic PDF via headless Chromium. Loom becomes Formery's PDF template language |
+| **PDF engine** | The document layer **already shipped in v0.2.x** (document pattern/theme/tokens, key-value, signature, page-break, qr-code — built for the craft use case). §7.4 completes it: running headers/footers, invoice/report scaffolds, brand-matched document themes. One schema, one brand theme → web form *and* deterministic PDF via headless Chromium |
 | **MCP-native operations** | `@loom-ui/mcp` (`loom_render_form`, `loom_audit_html`) gives Formery's own MCP server a rendering backend; the agent flow "create a patient intake form" terminates in Loom markup validated by Loom audit |
 | **Vue 3 + Inertia dashboard** | `@loom-ui/vue` (§11.2) — the Formery admin uses the same design system as the forms it hosts; SSR-safe, Inertia-friendly |
-| **Validation UX** | `field` contract + `loom-validate.js` (§7.1): errors, hints, aria wiring standardized and machine-auditable — GDPR-consent blocks become a pattern |
+| **Validation UX** | `field-group` contract + `loom-validate.js` (§7.1): errors, hints, aria wiring standardized and machine-auditable — GDPR-consent blocks become a pattern |
 | **Wizard/multi-step intake** | `wizard` pattern (§B3) + stepper + `l-source` submission flow |
 | **EU/self-hosted, zero supply-chain surface** | Zero runtime dependencies means the public form pages have *no third-party code at all* — an honest GDPR/security selling point Formery can put on the pricing page |
 
-Sequencing note: the Formery-critical items are `field` + `@loom-ui/forms` + theme
-generator + `@loom-ui/vue` + document layer — all land by v0.5 in the roadmap below,
-ahead of a Formery build month.
+Formery is the *second* document-producing consumer: `docs/for_craft.md` documents the
+craft (reportcraft/forma) unification that drove the v0.2.x document layer, including
+Romanian specifics (e-factura QR codes, signature blocks, legal callouts). Two internal
+consumers pulling on the same layer is the best possible pressure test before Formery
+productizes it — and craft's "Recommendation: build l-source before unification" has
+already been executed.
+
+Sequencing note: the Formery-critical items are the `field-group` contract +
+`@loom-ui/forms` + theme generator + `@loom-ui/vue` + document-layer completion — all
+landing by the "Forms, Data & Documents" phase in the roadmap below, ahead of a Formery
+build month. The document foundation shipping early (v0.2.x) de-risks that phase
+substantially.
 
 ---
 
 ## 15. Phased Roadmap
 
 Each phase is a shippable npm release. Estimates assume agent-assisted development at
-the current pace of this repo.
+the current pace of this repo. (Numbering starts at v0.3 — v0.2.x is already released
+and, gratifyingly, delivered the document layer and `l-source` ahead of this plan.)
 
-### v0.2 — "Foundation" (~2 weeks)
+### v0.3 — "Foundation" (~2 weeks)
 The unblockers. No new features until distribution and drift are fixed.
 - Compiled CLI (`dist/loom.mjs`, Node ≥ 18, Bun optional) — kill the Bun requirement
 - `@loom-ui/core` package + CDN artifacts + SRI; reserve `@loom-ui` org
-- Controller de-duplication: recipes as single source, `build:core` assembly (§A2)
+- Controller de-duplication: recipes as single source, `build:core` assembly (§A2) —
+  and register `qr-code` in the core bundle (currently standalone-only)
 - Keyed `l-for` (§A1) + stress tests
+- `l-source` hardening: test suite, AbortController teardown, audit exemption codified
 - RTL sweep + `logical-properties` audit rule; fix button-group/table
 - Default theme dark-mode completeness + theme coverage test (§C2)
 - GitHub Actions CI: tests (Bun+Node matrix), typecheck, registry self-audit, size budgets
 
-### v0.3 — "Surface" (~3 weeks)
-- New primitives batch: alert, skeleton, breadcrumb, toggle, field, icon (+set), chip, stat, collapsible, link
+### v0.4 — "Surface" (~3 weeks)
+- New primitives batch: alert (callout alias), skeleton, breadcrumb, toggle, icon (+set), chip, collapsible, link
 - New recipes batch 1: alert-dialog, slider, sidebar, input-otp, calendar
-- Controller tests for all 15 existing + new recipes (§12.1)
+- Controller tests for all 16 existing + new recipes (§12.1)
 - Transitions 2.0 (`data-motion` presets) + `loom-collapse` plugin
-- Themes: manifests for all; ship `aurora`, `slate`, `contrast`
+- Themes: manifests for all 5; ship `aurora`, `slate`, `contrast`
 - Audit v2 rules: duplicate-id, contrast-tokens, heading-order, field-wiring
 - Visual regression + axe CI
 
-### v0.4 — "Agents" (~2–3 weeks)
+### v0.5 — "Agents" (~2–3 weeks)
 - `@loom-ui/mcp` server + directory listings
 - Remote registry protocol + integrity hashes (§9.2)
 - `loom upgrade` three-way merge + `loom diff` (§9.3)
@@ -821,16 +883,18 @@ The unblockers. No new features until distribution and drift are fixed.
 - Parser hardening + fuzz corpus (§9.1)
 - `loom audit --stdin`, guaranteed `--json` everywhere
 
-### v0.5 — "Forms, Data & Documents" (~3 weeks) ← *Formery enablement milestone*
-- `field` contract + `loom-validate.js`
+### v0.6 — "Forms, Data & Documents" (~2–3 weeks) ← *Formery enablement milestone*
+Lighter than rev. 1 planned — the document foundation and `l-source` already shipped.
+- `field-group` validation contract + `loom-validate.js` (§7.1)
 - `@loom-ui/forms` (JSON Schema renderer, audit-clean guarantee)
-- `l-source`, `loom-persist`, `loom-intersect`, `loom-mask` plugins
-- Document layer: print.css, `document` components, document themes, invoice/report scaffolds
-- `loom theme generate` (parametric oklch themes, contrast-verified)
+- `loom-persist`, `loom-intersect`, `loom-mask` plugins
+- Document completion: running headers/footers, invoice/report scaffolds,
+  `document-serif` theme, watermark + barcode, print visual regression (§7.4)
+- `loom theme generate` (parametric oklch themes, contrast-verified, incl. document variant)
 - `@loom-ui/vue` bindings via manifest codegen
 - `wizard` + `form-page` patterns
 
-### v0.6 — "Ecosystem" (~3 weeks)
+### v0.7 — "Ecosystem" (~3 weeks)
 - `@loom-ui/react` bindings
 - Recipes batch 2: context-menu, menubar, tree-view, file-upload, tag-input, carousel, toggle-group
 - Patterns: pricing, hero/feature-grid/site-footer, stats-dashboard, inbox
@@ -845,8 +909,9 @@ The unblockers. No new features until distribution and drift are fixed.
 - Migration notes v0.x → 1.0; `loom upgrade` handles the jump
 - Announcement: docs site, MCP directories, Show HN, awesome-mcp lists
 
-Total: roughly 15–16 focused weeks. Phases are independent enough that v0.5 can be
-pulled earlier if a Formery month demands it (its only hard dependencies are v0.2 items).
+Total: roughly 14–15 focused weeks. Phases are independent enough that v0.6 can be
+pulled earlier if a Formery month demands it (its only hard dependencies are v0.3 items
+— and the document foundation it builds on is already released).
 
 ---
 
@@ -858,7 +923,7 @@ pulled earlier if a Formery month demands it (its only hard dependencies are v0.
 | **Keyed l-for introduces regressions in the engine** | Land behind the existing test suite + new 1,000-row stress/focus tests; the naive path remains as fallback for un-keyed lists |
 | **Bindings drift from core** | Impossible by construction — they're generated from manifests in CI; a manifest change regenerates and re-tests bindings |
 | **Registry grows faster than quality** | Registry self-audit + axe + visual regression are merge gates, not suggestions (§12.4) |
-| **npm name/org squatting** | Reserve `@loom-ui` org and the docs domain in week 1 of v0.2 |
+| **npm name/org squatting** | Reserve `@loom-ui` org and the docs domain in week 1 of v0.3 |
 | **CSP-restricted environments reject `new Function`** | Documented limitation for 1.0; evaluator abstraction is isolated enough to add a CSP-safe interpreter post-1.0 if demand appears |
 | **Solo-maintainer bandwidth** | Phases are shippable increments; each release is useful alone. The MCP server + docs generation are themselves agent-force-multipliers for maintaining the rest |
 
@@ -877,8 +942,8 @@ pulled earlier if a Formery month demands it (its only hard dependencies are v0.
   100% recipe controller test coverage.
 - **Adoption**: npm weekly downloads across the family; MCP directory presence;
   ≥ 1 external registry published by someone else (the real platform signal).
-- **Dogfood**: Formery's hosted form renderer and PDF templates run on Loom in
-  production.
+- **Dogfood**: both craft (document generation) and Formery (hosted forms + PDF
+  templates) run on Loom in production.
 
 ---
 
@@ -887,25 +952,28 @@ pulled earlier if a Formery month demands it (its only hard dependencies are v0.
 The decisions this proposal asks you to ratify:
 
 1. **Fix distribution first** (compiled Node-compatible CLI + `@loom-ui/core` CDN
-   package) before any new features. *(v0.2)*
+   package) before any new features. *(v0.3)*
 2. **Adopt the package family** under a reserved `@loom-ui` npm org, keeping
-   `loom-ui-cli` as the CLI name. *(v0.2)*
+   `loom-ui-cli` as the CLI name. *(v0.3)*
 3. **Recipes become the single controller source**; `loom-core.js` becomes a built
-   artifact. *(v0.2)*
-4. **Keyed `l-for` via `l-key`** is the one engine-semantics change. *(v0.2)*
-5. **Icons via CSS mask + data-URI tokens**, curated Lucide subset. *(v0.3)*
-6. **Six new themes + theme manifests + parametric `theme generate`.** *(v0.3–0.6)*
-7. **MCP server as a first-class product surface.** *(v0.4)*
+   artifact (fixes the qr-code drift already visible in v0.2.x). *(v0.3)*
+4. **Keyed `l-for` via `l-key`** is the one engine-semantics change; harden the
+   already-shipped `l-source` (tests, teardown, audit exemption) rather than rebuild it.
+   *(v0.3)*
+5. **Icons via CSS mask + data-URI tokens**, curated Lucide subset. *(v0.4)*
+6. **Six new themes + theme manifests + parametric `theme generate`.** *(v0.4–0.7)*
+7. **MCP server as a first-class product surface.** *(v0.5)*
 8. **Remote-registry protocol + `loom upgrade` three-way merge** — Loom's answer to the
-   copy-paste orphan problem. *(v0.4)*
-9. **`field` contract, `@loom-ui/forms`, document/print layer** — the Formery substrate.
-   *(v0.5)*
+   copy-paste orphan problem. *(v0.5)*
+9. **`field-group` validation contract, `@loom-ui/forms`, and document-layer
+   completion** (running headers/footers, scaffolds, watermark/barcode) on top of the
+   v0.2.x foundation — the Formery + craft substrate. *(v0.6)*
 10. **Vue first, React second, both generated from manifests**; loom-core reactivity is
-    never used inside framework bindings. *(v0.5–0.6)*
+    never used inside framework bindings. *(v0.6–0.7)*
 11. **Density as a token mode (`data-density`), not a protocol attribute** — the
-    five-attribute protocol stays frozen. *(v0.6)*
+    five-attribute protocol stays frozen. *(v0.7)*
 12. **Docs site built with Loom, content generated from manifests, with an in-browser
-    audit playground.** *(v0.6)*
+    audit playground.** *(v0.7)*
 
 The pillars stay. The protocol stays. The simplicity stays. What changes is that Loom
 stops being a well-built prototype and becomes the thing its README already claims:
