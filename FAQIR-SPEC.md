@@ -1,4 +1,4 @@
-# Loom — Agent-Native UI Framework
+# Faqir — Agent-Native UI Framework
 
 ## Complete Specification & Implementation Plan
 
@@ -8,11 +8,11 @@
 
 ## 1. Project Overview
 
-### What Loom Is
+### What Faqir Is
 
-Loom is a CLI-distributed UI framework that generates and maintains plain HTML, CSS, and JavaScript components using machine-readable manifests. It is designed specifically for AI coding agents as the primary consumer and humans as the editor-reviewers.
+Faqir is a CLI-distributed UI framework that generates and maintains plain HTML, CSS, and JavaScript components using machine-readable manifests. It is designed specifically for AI coding agents as the primary consumer and humans as the editor-reviewers.
 
-### What Loom Is NOT
+### What Faqir Is NOT
 
 - Not a JavaScript framework (no virtual DOM, no reactivity system, no JSX)
 - Not a build tool (no webpack, no Vite, no compile step)
@@ -24,12 +24,12 @@ Loom is a CLI-distributed UI framework that generates and maintains plain HTML, 
 
 The CSS is the component. The JSON manifest is the documentation. The AI is the compiler. The CLI is the conductor. Audit and repair is the superpower.
 
-### Tech Stack (For Building Loom Itself)
+### Tech Stack (For Building Faqir Itself)
 
 - **Runtime**: Bun.js
 - **Language**: TypeScript (strict mode)
 - **Package Manager**: Bun
-- **Distribution**: npm (npx loom)
+- **Distribution**: npm (npx faqir)
 - **Output Format**: Pure HTML + CSS + vanilla JS (zero dependencies)
 - **Manifest Format**: JSON
 - **Testing**: Bun test runner
@@ -37,7 +37,7 @@ The CSS is the component. The JSON manifest is the documentation. The AI is the 
 ### Repository Structure
 
 ```
-loom/
+faqir/
 ├── package.json              # npm package config
 ├── tsconfig.json             # TypeScript config
 ├── bunfig.toml               # Bun config
@@ -70,7 +70,7 @@ loom/
 │   │   ├── html-parser.ts    # Lightweight HTML parser for audit
 │   │   └── css-parser.ts     # Token extraction from CSS
 │   ├── generator/
-│   │   ├── context.ts        # .loom/context.json generator
+│   │   ├── context.ts        # .faqir/context.json generator
 │   │   ├── manifest.ts       # Manifest aggregator
 │   │   └── skill.ts          # Claude Code skill generator
 │   └── utils/
@@ -141,7 +141,7 @@ loom/
 
 ## 2. Attribute Protocol
 
-All Loom components use a standardized set of data attributes. This is the DOM contract — the stable API between HTML and everything else.
+All Faqir components use a standardized set of data attributes. This is the DOM contract — the stable API between HTML and everything else.
 
 ### The Five Attributes
 
@@ -249,7 +249,7 @@ Every component has a `.manifest.json` file that serves as a machine-readable co
 
 ```json
 {
-  "$schema": "https://loom.dev/manifest.schema.json",
+  "$schema": "https://faqir.dev/manifest.schema.json",
 
   "name": "string (required) — component name, lowercase, kebab-case",
   "version": "string (required) — semver",
@@ -701,7 +701,7 @@ Each pattern has:
 
 ### Layer 4: Scaffolds (Full Page Templates via CLI)
 
-Generated via `loom scaffold {name}`. Not shipped as static files — generated dynamically by the CLI using patterns + primitives + recipes.
+Generated via `faqir scaffold {name}`. Not shipped as static files — generated dynamically by the CLI using patterns + primitives + recipes.
 
 MVP scaffolds: `landing-page`, `admin-dashboard`, `internal-tool`
 
@@ -949,7 +949,7 @@ Dark theme is activated by `data-theme="dark"` on the `<html>` element. Only sem
 
 Each theme is a single CSS file that overrides ONLY the semantic tokens and optionally palette tokens. Files are stored in `registry/themes/`.
 
-Custom themes can be created via `loom theme create {name}` which scaffolds a theme CSS file with all overridable tokens commented out.
+Custom themes can be created via `faqir theme create {name}` which scaffolds a theme CSS file with all overridable tokens commented out.
 
 ---
 
@@ -963,7 +963,7 @@ Custom themes can be created via `loom theme create {name}` which scaffolds a th
 
 3. **Low specificity.** Use single attribute selectors where possible. Avoid deep nesting. Avoid `!important`.
 
-4. **Token references only.** Component CSS must reference tokens via `var(--token-name)`. Hardcoded color, spacing, or shadow values in component CSS are forbidden and flagged by `loom audit`.
+4. **Token references only.** Component CSS must reference tokens via `var(--token-name)`. Hardcoded color, spacing, or shadow values in component CSS are forbidden and flagged by `faqir audit`.
 
 5. **State via data-state.** Never use classes for dynamic state. `[data-state="open"]` not `.is-open` or `.active`.
 
@@ -1102,7 +1102,7 @@ Custom themes can be created via `loom theme create {name}` which scaffolds a th
   border: 2px solid currentColor;
   border-right-color: transparent;
   border-radius: var(--radius-full);
-  animation: loom-spin 0.6s linear infinite;
+  animation: faqir-spin 0.6s linear infinite;
   color: var(--color-fg);
 }
 
@@ -1135,7 +1135,7 @@ Custom themes can be created via `loom theme create {name}` which scaffolds a th
   }
 }
 
-@keyframes loom-spin {
+@keyframes faqir-spin {
   to { transform: rotate(360deg); }
 }
 ```
@@ -1167,7 +1167,7 @@ import { trapFocus, releaseFocus } from "../core/focus.js";
 
 export function createDialog(root) {
   // Prevent double-init
-  if (root._loomDialog) return root._loomDialog;
+  if (root._faqirDialog) return root._faqirDialog;
 
   const trigger = root.querySelector("[data-part='trigger']");
   const overlay = root.querySelector("[data-part='overlay']");
@@ -1245,21 +1245,21 @@ export function createDialog(root) {
     root.removeEventListener("keydown", onKeyDown);
     externalTriggers.forEach(el => el.removeEventListener("click", onTriggerClick));
     if (focusCleanup) focusCleanup();
-    delete root._loomDialog;
+    delete root._faqirDialog;
   }
 
   const api = { open, close, toggle, destroy };
-  root._loomDialog = api;
+  root._faqirDialog = api;
   return api;
 }
 ```
 
 ### Auto-Initialization Script
 
-An optional bundled `loom.js` script auto-initializes all recipes found in the DOM:
+An optional bundled `faqir.js` script auto-initializes all recipes found in the DOM:
 
 ```js
-// loom.js — auto-init all recipe controllers
+// faqir.js — auto-init all recipe controllers
 import { createDialog } from "./recipes/dialog/dialog.js";
 import { createTabs } from "./recipes/tabs/tabs.js";
 import { createDropdown } from "./recipes/dropdown/dropdown.js";
@@ -1326,28 +1326,28 @@ These are tiny utility modules. Target: under 3KB total gzipped.
 ### Entry Point
 
 ```
-npx loom <command> [options]
+npx faqir <command> [options]
 ```
 
 Or install globally:
 
 ```
-npm install -g @loom-ui/cli
-bun add -g @loom-ui/cli
+npm install -g @faqir-ui/cli
+bun add -g @faqir-ui/cli
 ```
 
-### Command: `loom init`
+### Command: `faqir init`
 
-Initialize a new Loom project in the current directory.
+Initialize a new Faqir project in the current directory.
 
 **Behavior:**
 1. Create `ui/` directory structure
 2. Copy `tokens/index.css` (all token files concatenated or separate based on flag)
 3. Copy `base/reset.css` and `base/prose.css`
 4. Copy `core/` modules
-5. Create `loom.config.json`
-6. Create `.loom/context.json`
-7. Add `.loom/` to `.gitignore` (if git repo detected)
+5. Create `faqir.config.json`
+6. Create `.faqir/context.json`
+7. Add `.faqir/` to `.gitignore` (if git repo detected)
 
 **Options:**
 - `--theme {name}` — Apply a theme during init (default: "default")
@@ -1355,7 +1355,7 @@ Initialize a new Loom project in the current directory.
 - `--no-core` — Skip core JS modules (for static-only projects)
 - `--dir {path}` — Output to a custom directory (default: `./ui`)
 
-**Config file: `loom.config.json`**
+**Config file: `faqir.config.json`**
 
 ```json
 {
@@ -1372,19 +1372,19 @@ Initialize a new Loom project in the current directory.
 }
 ```
 
-### Command: `loom add <components...>`
+### Command: `faqir add <components...>`
 
 Add one or more components to the project.
 
 **Behavior:**
-1. Read `loom.config.json` to find output directory.
+1. Read `faqir.config.json` to find output directory.
 2. For each component:
    a. Determine its layer (primitive/recipe/pattern).
    b. Copy `.html`, `.css`, `.js` (if recipe), and `.manifest.json` into the appropriate layer folder.
    c. Check for dependencies (e.g., dialog depends on button, focus.js).
    d. Auto-add dependencies if missing (with notice).
-3. Update `loom.config.json` installed list.
-4. Regenerate `.loom/context.json`.
+3. Update `faqir.config.json` installed list.
+4. Regenerate `.faqir/context.json`.
 
 **Options:**
 - `--all` — Add all components
@@ -1395,7 +1395,7 @@ Add one or more components to the project.
 **Dependency Resolution:**
 Every manifest has a `composition.contains` field. When adding a recipe or pattern, check if its contained components are installed. If not, prompt or auto-add.
 
-### Command: `loom list`
+### Command: `faqir list`
 
 Show installed and available components.
 
@@ -1421,13 +1421,13 @@ Available (16 not installed):
   PATTERNS: settings-page, crud-table, empty-state, search-results
 ```
 
-### Command: `loom inspect <component>`
+### Command: `faqir inspect <component>`
 
 Show detailed information about a component from its manifest.
 
 **Output:** Pretty-printed manifest with syntax highlighting.
 
-### Command: `loom explain <component>`
+### Command: `faqir explain <component>`
 
 Human-and-agent-readable explanation of a component.
 
@@ -1470,13 +1470,13 @@ FILES:
   Spec → ui/recipes/dialog/dialog.manifest.json
 ```
 
-### Command: `loom trace <component>`
+### Command: `faqir trace <component>`
 
 Show complete dependency and file trace for a component.
 
 **Output:** All files, selectors, tokens used, controllers, tests, and what patterns/scaffolds use this component.
 
-### Command: `loom audit`
+### Command: `faqir audit`
 
 Validate all installed components against their manifests.
 
@@ -1493,7 +1493,7 @@ Validate all installed components against their manifests.
 3. Report results with severity levels: CRITICAL, ERROR, WARNING, INFO.
 
 **Options:**
-- `--fix` — Alias for `loom repair`
+- `--fix` — Alias for `faqir repair`
 - `--json` — Output as JSON for programmatic consumption
 - `--file {path}` — Audit a single HTML file
 
@@ -1503,7 +1503,7 @@ Validate all installed components against their manifests.
 - WARNING: Missing optional improvements (e.g., aria-describedby when description exists)
 - INFO: Style suggestions, unused tokens
 
-### Command: `loom repair`
+### Command: `faqir repair`
 
 Attempt deterministic fixes for audit issues.
 
@@ -1520,25 +1520,25 @@ Attempt deterministic fixes for audit issues.
 - Logic errors in custom JS
 - Missing content in slots
 
-### Command: `loom theme set <name>`
+### Command: `faqir theme set <name>`
 
 Switch the active theme.
 
 **Behavior:**
 1. Copy theme CSS file to `ui/tokens/` (or update import).
-2. Update `loom.config.json`.
-3. Regenerate `.loom/context.json`.
+2. Update `faqir.config.json`.
+3. Regenerate `.faqir/context.json`.
 
-### Command: `loom theme create <name>`
+### Command: `faqir theme create <name>`
 
 Scaffold a new custom theme.
 
 **Behavior:**
 Generate a CSS file with all overridable semantic tokens as comments, ready to customize.
 
-### Command: `loom context`
+### Command: `faqir context`
 
-Generate the `.loom/context.json` aggregated AI context file.
+Generate the `.faqir/context.json` aggregated AI context file.
 
 **Options:**
 - `--format json` (default)
@@ -1546,7 +1546,7 @@ Generate the `.loom/context.json` aggregated AI context file.
 - `--format mcp` — MCP tool schema
 - `--format cursorrules` — Cursor IDE rules format
 
-### Command: `loom conform`
+### Command: `faqir conform`
 
 Normalize all component instances to canonical structure.
 
@@ -1555,18 +1555,18 @@ Normalize all component instances to canonical structure.
 - Normalize whitespace and indentation in component markup
 - Ensure machine comments are present at top of component files
 
-### Command: `loom doctor`
+### Command: `faqir doctor`
 
 Check environment health.
 
 **Checks:**
-- loom.config.json exists and is valid
+- faqir.config.json exists and is valid
 - All installed components have their files
 - No manifest schema violations
 - Token files are present
 - Core modules are present (if configured)
 
-### Command: `loom variant add <component> <variant>=<value>`
+### Command: `faqir variant add <component> <variant>=<value>`
 
 Add a new variant value to a component.
 
@@ -1575,7 +1575,7 @@ Add a new variant value to a component.
 2. Add CSS rule stub for the new variant.
 3. Regenerate context.
 
-### Command: `loom scaffold <name>`
+### Command: `faqir scaffold <name>`
 
 Generate a full page template.
 
@@ -1658,9 +1658,9 @@ The repair engine takes `AuditResult` objects with `fix` fields and applies them
 
 ## 10. AI Context File Specification
 
-### .loom/context.json
+### .faqir/context.json
 
-This is generated by `loom context` and aggregates all installed manifests into one file optimized for LLM consumption.
+This is generated by `faqir context` and aggregates all installed manifests into one file optimized for LLM consumption.
 
 **Target size:** Under 3000 tokens for a full 30-component installation.
 
@@ -1669,7 +1669,7 @@ This is generated by `loom context` and aggregates all installed manifests into 
 ```json
 {
   "meta": {
-    "framework": "loom",
+    "framework": "faqir",
     "version": "1.0.0",
     "theme": "default",
     "generated_at": "ISO date",
@@ -1730,12 +1730,12 @@ This is generated by `loom context` and aggregates all installed manifests into 
 }
 ```
 
-### .loom/SKILL.md (Auto-generated Claude Code Skill)
+### .faqir/SKILL.md (Auto-generated Claude Code Skill)
 
 ```markdown
-# Loom UI Framework Skill
+# Faqir UI Framework Skill
 
-When building UI with Loom, always read `.loom/context.json` first.
+When building UI with Faqir, always read `.faqir/context.json` first.
 
 ## Quick Rules
 - Use `data-ui` for component identity
@@ -1747,10 +1747,10 @@ When building UI with Loom, always read `.loom/context.json` first.
 - Import recipe controllers: `import { createDialog } from "./ui/recipes/dialog/dialog.js"`
 
 ## Available Commands
-- `loom add <name>` — add components
-- `loom audit` — check for contract violations
-- `loom repair` — auto-fix issues
-- `loom explain <name>` — get component details
+- `faqir add <name>` — add components
+- `faqir audit` — check for contract violations
+- `faqir repair` — auto-fix issues
+- `faqir explain <name>` — get component details
 ```
 
 ---
@@ -1763,7 +1763,7 @@ When building UI with Loom, always read `.loom/context.json` first.
 
 **Tasks:**
 1. Initialize the repository with Bun + TypeScript
-2. Create `package.json` with bin entry for `loom` CLI
+2. Create `package.json` with bin entry for `faqir` CLI
 3. Write `registry/tokens/palette.css` — full oklch color palette
 4. Write `registry/tokens/semantic.css` — all semantic UI tokens
 5. Write `registry/tokens/aliases.css` — component alias tokens
@@ -1772,13 +1772,13 @@ When building UI with Loom, always read `.loom/context.json` first.
 8. Write `registry/base/reset.css` — modern CSS reset
 9. Write `registry/base/prose.css` — typography defaults
 10. Write dark theme: `registry/themes/default.css` (includes dark mode)
-11. Create `loom.config.json` schema
+11. Create `faqir.config.json` schema
 12. Implement CLI entry point with command routing (`src/index.ts`)
-13. Implement `loom init` command
-14. Implement `loom doctor` command
+13. Implement `faqir init` command
+14. Implement `faqir doctor` command
 15. Write tests for init and token generation
 
-**Deliverable:** `loom init` creates a working project with tokens and base styles.
+**Deliverable:** `faqir init` creates a working project with tokens and base styles.
 
 ### Phase 2: First Components + Manifest System (Days 6–10)
 
@@ -1793,13 +1793,13 @@ When building UI with Loom, always read `.loom/context.json` first.
 6. Build `avatar` — html, css, manifest
 7. Build `separator` — html, css, manifest
 8. Build `label` — html, css, manifest
-9. Implement `loom add` command with dependency resolution
-10. Implement `loom list` command
-11. Implement `loom inspect` command
-12. Implement manifest validation in `loom doctor`
+9. Implement `faqir add` command with dependency resolution
+10. Implement `faqir list` command
+11. Implement `faqir inspect` command
+12. Implement manifest validation in `faqir doctor`
 13. Write tests for add, list, inspect
 
-**Deliverable:** `loom add button card input` works. `loom list` shows installed. `loom inspect button` shows manifest.
+**Deliverable:** `faqir add button card input` works. `faqir list` shows installed. `faqir inspect button` shows manifest.
 
 ### Phase 3: Core JS Modules (Days 11–12)
 
@@ -1824,11 +1824,11 @@ When building UI with Loom, always read `.loom/context.json` first.
 1. Build `dialog` — html, css, js, manifest (reference recipe implementation)
 2. Build `tabs` — html, css, js, manifest
 3. Build `dropdown` — html, css, js, manifest
-4. Build auto-init `loom.js` script
-5. Update `loom add` to handle recipes (copies JS + adds to auto-init)
+4. Build auto-init `faqir.js` script
+5. Update `faqir add` to handle recipes (copies JS + adds to auto-init)
 6. Write integration tests (recipe behavior)
 
-**Deliverable:** `loom add dialog tabs dropdown` installs fully working interactive components.
+**Deliverable:** `faqir add dialog tabs dropdown` installs fully working interactive components.
 
 ### Phase 5: Audit & Repair (Days 19–24) — THE CORE PRODUCT
 
@@ -1853,12 +1853,12 @@ When building UI with Loom, always read `.loom/context.json` first.
    - `reduced-motion`
 5. Build audit reporter (terminal output + JSON mode)
 6. Build repair engine (string-based HTML patching)
-7. Implement `loom audit` command
-8. Implement `loom repair` command
+7. Implement `faqir audit` command
+8. Implement `faqir repair` command
 9. Write extensive tests with fixture HTML files containing various violations
 10. Test repair idempotency (repair → audit should pass)
 
-**Deliverable:** `loom audit` finds contract violations. `loom repair` fixes them deterministically.
+**Deliverable:** `faqir audit` finds contract violations. `faqir repair` fixes them deterministically.
 
 ### Phase 6: AI Context + Agent Commands (Days 25–27)
 
@@ -1868,13 +1868,13 @@ When building UI with Loom, always read `.loom/context.json` first.
 1. Build context.json generator (`src/generator/context.ts`)
 2. Build markdown context formatter
 3. Build Claude Code skill generator (`src/generator/skill.ts`)
-4. Implement `loom context` command (json, md, cursorrules formats)
-5. Implement `loom explain` command
-6. Implement `loom trace` command
-7. Implement `loom conform` command
+4. Implement `faqir context` command (json, md, cursorrules formats)
+5. Implement `faqir explain` command
+6. Implement `faqir trace` command
+7. Implement `faqir conform` command
 8. Write tests
 
-**Deliverable:** `loom context` generates the AI superpower file. `loom explain dialog` gives structured knowledge.
+**Deliverable:** `faqir context` generates the AI superpower file. `faqir explain dialog` gives structured knowledge.
 
 ### Phase 7: Remaining Components (Days 28–35)
 
@@ -1903,9 +1903,9 @@ When building UI with Loom, always read `.loom/context.json` first.
 7. Build `midnight` theme
 8. Build `paper` theme
 9. Build `brutalist` theme
-10. Implement `loom theme set`, `loom theme create`, `loom theme list`
-11. Implement `loom scaffold` command
-12. Implement `loom variant add/remove` commands
+10. Implement `faqir theme set`, `faqir theme create`, `faqir theme list`
+11. Implement `faqir scaffold` command
+12. Implement `faqir variant add/remove` commands
 
 **Deliverable:** Full MVP with patterns, themes, and scaffolding.
 
@@ -1916,18 +1916,18 @@ When building UI with Loom, always read `.loom/context.json` first.
 **Tasks:**
 1. Write README.md with examples
 2. Write CONTRIBUTING.md
-3. Write component gallery HTML page (self-hosted using Loom components)
+3. Write component gallery HTML page (self-hosted using Faqir components)
 4. Run full audit on all components
 5. Performance benchmarks (CLI speed, audit speed)
 6. Edge case testing
-7. Publish to npm as `@loom-ui/cli`
+7. Publish to npm as `@faqir-ui/cli`
 8. Create GitHub repository with CI
 
 ---
 
 ## 12. Anti-Patterns to Enforce
 
-These are things that must NEVER happen in Loom. Encode them as linting rules.
+These are things that must NEVER happen in Faqir. Encode them as linting rules.
 
 1. **Never use class names for component identity.** Use `data-ui` only.
 2. **Never use class names for state.** Use `data-state` only.
@@ -1953,9 +1953,9 @@ These are things that must NEVER happen in Loom. Encode them as linting rules.
 
 ### Integration Tests
 
-- `loom init` → `loom add button dialog` → `loom audit` → clean pass
-- `loom init` → `loom add dialog` → break the HTML → `loom audit` → find issues → `loom repair` → `loom audit` → clean pass
-- `loom context` generates valid JSON matching schema
+- `faqir init` → `faqir add button dialog` → `faqir audit` → clean pass
+- `faqir init` → `faqir add dialog` → break the HTML → `faqir audit` → find issues → `faqir repair` → `faqir audit` → clean pass
+- `faqir context` generates valid JSON matching schema
 - Theme switching applies correctly
 
 ### Fixture Files
@@ -1980,10 +1980,10 @@ bun test
 
 The MVP is successful if:
 
-1. **`loom init` + `loom add` creates a working project in under 2 seconds.**
-2. **An AI agent reading `.loom/context.json` can generate correct component HTML on first attempt.**
-3. **`loom audit` catches 100% of contract violations defined in manifests.**
-4. **`loom repair` fixes 80%+ of audit issues automatically.**
+1. **`faqir init` + `faqir add` creates a working project in under 2 seconds.**
+2. **An AI agent reading `.faqir/context.json` can generate correct component HTML on first attempt.**
+3. **`faqir audit` catches 100% of contract violations defined in manifests.**
+4. **`faqir repair` fixes 80%+ of audit issues automatically.**
 5. **The entire framework output (all CSS + JS) is under 30KB gzipped.**
 6. **Zero external runtime dependencies.**
 7. **All components pass WCAG 2.1 AA accessibility requirements.**

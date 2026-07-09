@@ -49,14 +49,14 @@ function parseArgs(args: string[]): { name: string | null; options: CreateOption
 }
 
 function printHelp() {
-  log.heading("loom create <name> --kind <primitive|recipe>");
+  log.heading("faqir create <name> --kind <primitive|recipe>");
   log.blank();
   console.log("Scaffold a new custom component with manifest, CSS, HTML, and optional JS.");
   log.blank();
   console.log("Usage:");
-  console.log("  loom create my-widget --kind primitive");
-  console.log("  loom create data-grid --kind recipe");
-  console.log("  loom create status-bar --kind primitive --category layout");
+  console.log("  faqir create my-widget --kind primitive");
+  console.log("  faqir create data-grid --kind recipe");
+  console.log("  faqir create status-bar --kind primitive --category layout");
   log.blank();
   console.log("Options:");
   log.table([
@@ -142,7 +142,7 @@ function generateHTML(name: string, kind: Kind): string {
     section { margin-bottom: 2rem; }
     h2 { font-size: 1.25rem; margin-bottom: 0.5rem; }
   </style>
-  <!-- Include your project's loom.bundle.css or individual token/base/component CSS -->
+  <!-- Include your project's faqir.bundle.css or individual token/base/component CSS -->
 </head>
 <body>
 
@@ -168,8 +168,8 @@ function generateController(name: string): string {
 
 export function ${factoryName}(root) {
   // Prevent double init
-  if (root._loom${factoryName.slice(6)}) return;
-  root._loom${factoryName.slice(6)} = true;
+  if (root._faqir${factoryName.slice(6)}) return;
+  root._faqir${factoryName.slice(6)} = true;
 
   // Query parts
   // const parts = root.querySelectorAll("[data-part]");
@@ -185,7 +185,7 @@ export function ${factoryName}(root) {
   // Return public API
   return {
     destroy() {
-      root._loom${factoryName.slice(6)} = false;
+      root._faqir${factoryName.slice(6)} = false;
     },
   };
 }
@@ -197,7 +197,7 @@ export async function create(args: string[]): Promise<void> {
   const cwd = process.cwd();
 
   if (!name) {
-    log.error("Component name required. Usage: loom create <name> --kind <primitive|recipe>");
+    log.error("Component name required. Usage: faqir create <name> --kind <primitive|recipe>");
     process.exit(1);
   }
 
@@ -213,7 +213,7 @@ export async function create(args: string[]): Promise<void> {
   }
 
   if (!configExists(cwd)) {
-    log.error("No loom.config.json found. Run 'loom init' first.");
+    log.error("No faqir.config.json found. Run 'faqir init' first.");
     process.exit(1);
   }
 
@@ -258,7 +258,7 @@ export async function create(args: string[]): Promise<void> {
   await regenerateContext(config, outputDir, cwd);
 
   // Regenerate bundle if exists
-  const bundlePath = join(outputDir, "loom.bundle.css");
+  const bundlePath = join(outputDir, "faqir.bundle.css");
   if (config.bundle?.auto !== false && existsSync(bundlePath)) {
     await generateBundle(cwd);
     log.step("Bundle regenerated.");

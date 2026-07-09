@@ -1,4 +1,4 @@
-// loom scaffold — generate full page templates
+// faqir scaffold — generate full page templates
 
 import { existsSync } from "node:fs";
 import { join } from "node:path";
@@ -49,7 +49,7 @@ const SCAFFOLDS: Record<string, ScaffoldDef> = {
 };
 
 function printHelp() {
-  log.heading("loom scaffold <name>");
+  log.heading("faqir scaffold <name>");
   log.blank();
   console.log("Generate a full page template.");
   log.blank();
@@ -121,7 +121,7 @@ async function ensureComponentsInstalled(
 
 function cssLinks(components: string[], hasBundle: boolean, outputDir: string): string {
   if (hasBundle) {
-    return `  <link rel="stylesheet" href="${outputDir}/loom.bundle.css">`;
+    return `  <link rel="stylesheet" href="${outputDir}/faqir.bundle.css">`;
   }
 
   const links: string[] = [];
@@ -361,7 +361,7 @@ ${cssLinks(components, hasBundle, outputDir)}
   </div>
 
   <script src="ui/core/api-source.js"></script>
-  <script type="module" src="ui/core/loom.js"></script>
+  <script type="module" src="ui/core/faqir.js"></script>
 </body>
 </html>`;
 }
@@ -518,7 +518,7 @@ ${cssLinks(components, hasBundle, outputDir)}
   </div>
 
   <script src="ui/core/api-source.js"></script>
-  <script type="module" src="ui/core/loom.js"></script>
+  <script type="module" src="ui/core/faqir.js"></script>
 </body>
 </html>`;
 }
@@ -541,7 +541,7 @@ export async function scaffold(args: string[]): Promise<void> {
   const cwd = process.cwd();
 
   if (!configExists(cwd)) {
-    log.error("No loom.config.json found. Run 'loom init' first.");
+    log.error("No faqir.config.json found. Run 'faqir init' first.");
     process.exit(1);
   }
 
@@ -563,7 +563,7 @@ export async function scaffold(args: string[]): Promise<void> {
 
   if (missing.length > 0) {
     log.warn(`Missing components: ${missing.join(", ")}`);
-    log.dim("Run 'loom add' to install them, or remove --no-add.");
+    log.dim("Run 'faqir add' to install them, or remove --no-add.");
     process.exit(1);
   }
 
@@ -572,7 +572,7 @@ export async function scaffold(args: string[]): Promise<void> {
   }
 
   // Detect if bundle exists
-  const hasBundle = existsSync(join(cwd, config.output_dir, "loom.bundle.css"));
+  const hasBundle = existsSync(join(cwd, config.output_dir, "faqir.bundle.css"));
 
   // Generate the page
   let html: string;

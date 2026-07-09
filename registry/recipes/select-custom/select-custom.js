@@ -5,7 +5,7 @@ import { onOutsideClick } from "../../core/events.js";
 
 export function createSelectCustom(root) {
   // Prevent double-init
-  if (root._loomSelectCustom) return root._loomSelectCustom;
+  if (root._faqirSelectCustom) return root._faqirSelectCustom;
 
   const trigger = root.querySelector("[data-part='trigger']");
   const valueEl = root.querySelector("[data-part='value']");
@@ -245,10 +245,10 @@ export function createSelectCustom(root) {
     listbox?.removeEventListener("click", onOptionClick);
     searchInput?.removeEventListener("input", onSearchInput);
     if (outsideClickCleanup) outsideClickCleanup();
-    delete root._loomSelectCustom;
+    delete root._faqirSelectCustom;
   }
 
   const api = { open, close, toggle, select, getValue, destroy };
-  root._loomSelectCustom = api;
+  root._faqirSelectCustom = api;
   return api;
 }

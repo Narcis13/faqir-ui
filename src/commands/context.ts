@@ -1,4 +1,4 @@
-// loom context — generate the .loom/context.json aggregated AI context file
+// faqir context — generate the .faqir/context.json aggregated AI context file
 
 import { log } from "../utils/logger";
 import { configExists } from "../utils/config";
@@ -7,16 +7,16 @@ import { writeSkillFile } from "../generator/skill";
 
 export async function context(args: string[]): Promise<void> {
   if (args.includes("--help") || args.includes("-h")) {
-    log.heading("loom context");
+    log.heading("faqir context");
     log.blank();
-    console.log("Generate the .loom/context.json aggregated AI context file.");
+    console.log("Generate the .faqir/context.json aggregated AI context file.");
     log.blank();
     console.log("Options:");
     log.table([
       ["--format json", "JSON format (default)"],
       ["--format md", "Markdown for LLM prompts"],
       ["--format cursorrules", "Cursor IDE rules format"],
-      ["--skill", "Also generate .loom/SKILL.md"],
+      ["--skill", "Also generate .faqir/SKILL.md"],
       ["--stdout", "Print to stdout instead of writing file"],
     ]);
     return;
@@ -25,7 +25,7 @@ export async function context(args: string[]): Promise<void> {
   const cwd = process.cwd();
 
   if (!configExists(cwd)) {
-    log.error("No loom.config.json found. Run 'loom init' first.");
+    log.error("No faqir.config.json found. Run 'faqir init' first.");
     process.exit(1);
   }
 

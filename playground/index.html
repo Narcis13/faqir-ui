@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Loom UI — Component Gallery</title>
+  <title>Faqir UI — Component Gallery</title>
 
   <!-- Tokens -->
   <link rel="stylesheet" href="../registry/tokens/palette.css">
@@ -80,8 +80,8 @@
   <link rel="stylesheet" href="../registry/recipes/table/table.css">
   <link rel="stylesheet" href="../registry/recipes/qr-code/qr-code.css">
 
-  <!-- Loom Core -->
-  <script src="../registry/core/loom-core.js" defer></script>
+  <!-- Faqir Core -->
+  <script src="../registry/core/faqir-core.js" defer></script>
 </head>
 <body>
   <div l-cloak l-data="{
@@ -108,7 +108,7 @@
         <!-- Header — uses data-ui="heading" and data-ui="text" primitives -->
         <div data-ui="surface" data-variant="flat" data-size="lg" data-align-text="center">
           <div data-ui="stack" data-gap="2" data-align="center">
-            <h1 data-ui="heading" data-size="1" data-align="center">Loom UI</h1>
+            <h1 data-ui="heading" data-size="1" data-align="center">Faqir UI</h1>
             <p data-ui="text" data-size="lg" data-variant="muted" data-align="center">Manifest-guided components. Zero classes. Pure data attributes and tokens.</p>
           </div>
         </div>
@@ -558,7 +558,7 @@
 
           <div data-ui="accordion">
             <div data-part="item">
-              <button data-part="trigger" aria-expanded="false">What is Loom UI?</button>
+              <button data-part="trigger" aria-expanded="false">What is Faqir UI?</button>
               <div data-part="content" hidden>
                 <div data-ui="surface" data-variant="flat" data-size="sm">
                   <p>A manifest-guided, zero-class UI framework built for AI agents to generate, inspect, and repair components.</p>
@@ -660,19 +660,19 @@
 
           <div data-ui="stack" data-variant="horizontal" data-gap="2" data-wrap>
             <button data-ui="button" data-variant="outline" data-size="sm"
-              onclick="document.getElementById('demo-toast-container')._loomToast.add({message:'This is a default toast', icon:'&#x2139;'})">
+              onclick="document.getElementById('demo-toast-container')._faqirToast.add({message:'This is a default toast', icon:'&#x2139;'})">
               Default Toast
             </button>
             <button data-ui="button" data-variant="primary" data-size="sm"
-              onclick="document.getElementById('demo-toast-container')._loomToast.add({message:'Action completed!', tone:'success', icon:'&#x2713;'})">
+              onclick="document.getElementById('demo-toast-container')._faqirToast.add({message:'Action completed!', tone:'success', icon:'&#x2713;'})">
               Success Toast
             </button>
             <button data-ui="button" data-variant="destructive" data-size="sm"
-              onclick="document.getElementById('demo-toast-container')._loomToast.add({message:'Something went wrong.', tone:'error', icon:'&#x2717;'})">
+              onclick="document.getElementById('demo-toast-container')._faqirToast.add({message:'Something went wrong.', tone:'error', icon:'&#x2717;'})">
               Error Toast
             </button>
             <button data-ui="button" data-variant="outline" data-size="sm"
-              onclick="document.getElementById('demo-toast-container')._loomToast.add({message:'Check your input.', tone:'warning', icon:'&#x26A0;'})">
+              onclick="document.getElementById('demo-toast-container')._faqirToast.add({message:'Check your input.', tone:'warning', icon:'&#x26A0;'})">
               Warning Toast
             </button>
           </div>
@@ -1372,11 +1372,11 @@
         <div data-ui="separator"></div>
 
         <!-- ════════════════════════════════════════ -->
-        <!-- REACTIVE DEMO (loom-core)                -->
+        <!-- REACTIVE DEMO (faqir-core)                -->
         <!-- ════════════════════════════════════════ -->
         <div data-ui="stack" data-gap="4">
           <h2 data-ui="heading" data-size="3">Reactive Directives</h2>
-          <p data-ui="text" data-variant="muted">loom-core.js provides Alpine-style reactivity with l-data, l-text, l-model, l-show, l-for, and more.</p>
+          <p data-ui="text" data-variant="muted">faqir-core.js provides Alpine-style reactivity with l-data, l-text, l-model, l-show, l-for, and more.</p>
 
           <div data-ui="grid" data-cols="2" data-gap="4">
             <!-- Counter -->
@@ -2124,7 +2124,7 @@
 
             <div data-ui="stack" data-gap="2" data-align="center">
               <p data-ui="text" data-size="sm" data-weight="medium">Medium (default)</p>
-              <div data-ui="qr-code" data-size="md" data-value="https://loom-ui.dev" role="img" aria-label="QR: loom-ui.dev">
+              <div data-ui="qr-code" data-size="md" data-value="https://faqir-ui.dev" role="img" aria-label="QR: faqir-ui.dev">
                 <svg viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg" style="width:128px;height:128px"><rect width="21" height="21" fill="white"/><rect x="0" y="0" width="7" height="7" fill="currentColor"/><rect x="14" y="0" width="7" height="7" fill="currentColor"/><rect x="0" y="14" width="7" height="7" fill="currentColor"/><rect x="2" y="2" width="3" height="3" fill="white"/><rect x="16" y="2" width="3" height="3" fill="white"/><rect x="2" y="16" width="3" height="3" fill="white"/><text x="10.5" y="11" text-anchor="middle" font-size="3" fill="currentColor">QR</text></svg>
                 <span data-part="caption">Scan to visit</span>
               </div>
@@ -2250,7 +2250,7 @@
         <div data-ui="separator"></div>
         <div data-ui="surface" data-variant="flat" data-size="lg" data-align-text="center">
           <p data-ui="text" data-size="sm" data-variant="muted">
-            Loom UI — Zero classes. Manifest-guided. Token-driven.
+            Faqir UI — Zero classes. Manifest-guided. Token-driven.
           </p>
         </div>
 

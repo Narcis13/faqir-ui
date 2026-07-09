@@ -14,7 +14,7 @@ const DAY_NAMES = [
 
 export function createDatePicker(root) {
   // Prevent double-init
-  if (root._loomDatePicker) return root._loomDatePicker;
+  if (root._faqirDatePicker) return root._faqirDatePicker;
 
   const trigger = root.querySelector("[data-part='trigger']");
   const input = root.querySelector("[data-part='input']");
@@ -200,7 +200,7 @@ export function createDatePicker(root) {
     input.focus();
 
     root.dispatchEvent(
-      new CustomEvent("loom:date-change", {
+      new CustomEvent("faqir:date-change", {
         detail: { date: formatDate(selectedDate), dateObj: selectedDate },
         bubbles: true,
       })
@@ -366,10 +366,10 @@ export function createDatePicker(root) {
     calendar?.removeEventListener("keydown", onCalendarKeyDown);
     root.removeEventListener("keydown", onRootKeyDown);
     if (outsideClickCleanup) outsideClickCleanup();
-    delete root._loomDatePicker;
+    delete root._faqirDatePicker;
   }
 
   const api = { open, close, getValue, setValue, navigate, selectDate, destroy };
-  root._loomDatePicker = api;
+  root._faqirDatePicker = api;
   return api;
 }

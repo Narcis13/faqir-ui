@@ -1,6 +1,6 @@
-# Loom-Core Reactive Directives Reference
+# Faqir-Core Reactive Directives Reference
 
-Include `<script src="loom-core.js" defer></script>` for Alpine-style reactivity.
+Include `<script src="faqir-core.js" defer></script>` for Alpine-style reactivity.
 
 ---
 
@@ -48,7 +48,7 @@ Include `<script src="loom-core.js" defer></script>` for Alpine-style reactivity
 |----------|-------------|
 | `$el` | Current element |
 | `$refs` | Object of `l-ref` elements |
-| `$store` | Global store (via `Loom.store()`) |
+| `$store` | Global store (via `Faqir.store()`) |
 | `$state` | Current `data-state` of closest `[data-ui]` |
 | `$variant` | Current `data-variant` of closest `[data-ui]` |
 | `$ui` | Controller API of closest `[data-ui]` (e.g., `$ui.open()`) |
@@ -84,13 +84,13 @@ Example: `l-source:items.optimistic.poll.10000.key.uuid="/api/items"`
 ## Global API
 
 ```js
-Loom.store('name', { count: 0 })       // Register global store
-Loom.data('name', () => ({ ... }))      // Register reusable data factory
-Loom.directive('name', handler)          // Register custom directive
-Loom.magic('name', callback)             // Register magic property
-Loom.plugin(fn)                          // Register plugin
-Loom.controller('name', factory)         // Register recipe controller
-Loom.initTree(el)                        // Manual init for dynamic content
+Faqir.store('name', { count: 0 })       // Register global store
+Faqir.data('name', () => ({ ... }))      // Register reusable data factory
+Faqir.directive('name', handler)          // Register custom directive
+Faqir.magic('name', callback)             // Register magic property
+Faqir.plugin(fn)                          // Register plugin
+Faqir.controller('name', factory)         // Register recipe controller
+Faqir.initTree(el)                        // Manual init for dynamic content
 ```
 
 ## Common Patterns
@@ -141,7 +141,7 @@ Loom.initTree(el)                        // Manual init for dynamic content
 ### Global store
 ```html
 <script>
-  Loom.store('user', { name: 'Alice', role: 'admin' });
+  Faqir.store('user', { name: 'Alice', role: 'admin' });
 </script>
 <div l-data>
   <p l-text="$store.user.name"></p>

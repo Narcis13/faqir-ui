@@ -5,7 +5,7 @@ import { trapFocus } from "../../core/focus.js";
 
 export function createDrawer(root) {
   // Prevent double-init
-  if (root._loomDrawer) return root._loomDrawer;
+  if (root._faqirDrawer) return root._faqirDrawer;
 
   const trigger = root.querySelector("[data-part='trigger']");
   const overlay = root.querySelector("[data-part='overlay']");
@@ -110,10 +110,10 @@ export function createDrawer(root) {
       );
     }
     if (focusCleanup) focusCleanup();
-    delete root._loomDrawer;
+    delete root._faqirDrawer;
   }
 
   const api = { open, close, toggle, destroy };
-  root._loomDrawer = api;
+  root._faqirDrawer = api;
   return api;
 }

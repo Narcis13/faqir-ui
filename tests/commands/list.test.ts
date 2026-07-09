@@ -7,7 +7,7 @@ import { list } from "../../src/commands/list";
 
 const TEST_DIR = join(import.meta.dir, "../.tmp-list-test");
 
-describe("loom list", () => {
+describe("faqir list", () => {
   beforeEach(() => {
     rmSync(TEST_DIR, { recursive: true, force: true });
     mkdirSync(TEST_DIR, { recursive: true });

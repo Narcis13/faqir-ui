@@ -5,7 +5,7 @@ import { uid } from "../../core/utils.js";
 
 export function createToastContainer(root) {
   // Prevent double-init
-  if (root._loomToast) return root._loomToast;
+  if (root._faqirToast) return root._faqirToast;
 
   const toasts = new Map();
 
@@ -156,10 +156,10 @@ export function createToastContainer(root) {
       entry.el.remove();
     }
     toasts.clear();
-    delete root._loomToast;
+    delete root._faqirToast;
   }
 
   const api = { add, dismiss, dismissAll, destroy };
-  root._loomToast = api;
+  root._faqirToast = api;
   return api;
 }

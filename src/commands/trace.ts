@@ -1,4 +1,4 @@
-// loom trace <component> — show complete dependency and file trace for a component
+// faqir trace <component> — show complete dependency and file trace for a component
 
 import { existsSync } from "node:fs";
 import { join, relative } from "node:path";
@@ -17,7 +17,7 @@ const YELLOW = "\x1b[33m";
 
 export async function trace(args: string[]): Promise<void> {
   if (args.includes("--help") || args.includes("-h")) {
-    log.heading("loom trace <component>");
+    log.heading("faqir trace <component>");
     log.blank();
     console.log("Show complete dependency and file trace for a component.");
     log.blank();
@@ -30,7 +30,7 @@ export async function trace(args: string[]): Promise<void> {
 
   const name = args.find((a) => !a.startsWith("-"));
   if (!name) {
-    log.error("No component specified. Usage: loom trace <component>");
+    log.error("No component specified. Usage: faqir trace <component>");
     process.exit(1);
   }
 
@@ -150,9 +150,9 @@ async function buildTrace(name: string, cwd: string): Promise<TraceData | null> 
   }
   // Check if it's part of auto-init
   if (manifest.kind === "recipe" && installed && outputDir) {
-    const loomJsPath = join(outputDir, "core", "loom.js");
-    if (existsSync(loomJsPath)) {
-      controllers.push("core/loom.js (auto-init)");
+    const faqirJsPath = join(outputDir, "core", "faqir.js");
+    if (existsSync(faqirJsPath)) {
+      controllers.push("core/faqir.js (auto-init)");
     }
   }
 

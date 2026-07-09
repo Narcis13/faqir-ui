@@ -9,7 +9,7 @@
   border: 2px solid var(--color-border);
   border-top-color: var(--color-primary);
   border-radius: var(--radius-full);
-  animation: loom-spin 0.75s linear infinite;
+  animation: faqir-spin 0.75s linear infinite;
   flex-shrink: 0;
 }
 
@@ -32,7 +32,7 @@
 }
 
 /* ── Motion ── */
-@keyframes loom-spin {
+@keyframes faqir-spin {
   to { transform: rotate(360deg); }
 }
 

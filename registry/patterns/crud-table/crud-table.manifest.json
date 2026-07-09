@@ -52,7 +52,7 @@
       "selector": "[data-part='table']",
       "required": true,
       "tag_hint": "div",
-      "description": "Nested Loom table component"
+      "description": "Nested Faqir table component"
     },
     "row-actions": {
       "selector": "[data-part='row-actions']",
@@ -76,7 +76,7 @@
       "selector": "[data-part='pagination']",
       "required": true,
       "tag_hint": "div",
-      "description": "Nested Loom pagination component"
+      "description": "Nested Faqir pagination component"
     },
     "empty-state": {
       "selector": "[data-part='empty-state']",

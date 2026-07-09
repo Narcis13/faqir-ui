@@ -1,5 +1,5 @@
 /**
- * Loom UI Dev Server — Bun HTTP on port 5555
+ * Faqir UI Dev Server — Bun HTTP on port 5555
  * JSON-file-backed CRUD API + static file serving for the playground.
  *
  * Run:  bun playground/server.js
@@ -139,6 +139,6 @@ Bun.serve({
   },
 });
 
-console.log(`\n  Loom UI Dev Server running at http://localhost:${PORT}`);
+console.log(`\n  Faqir UI Dev Server running at http://localhost:${PORT}`);
 console.log(`  Task Manager:  http://localhost:${PORT}/task-manager.html`);
 console.log(`  API endpoint:  http://localhost:${PORT}/api/tasks\n`);

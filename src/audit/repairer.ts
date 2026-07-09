@@ -145,7 +145,7 @@ function addScript(source: string, fix: RepairAction, _result: AuditResult): str
   if (!src) return null;
 
   // Check if the script is already referenced
-  if (source.includes(src) || source.includes("loom.js")) return null;
+  if (source.includes(src) || source.includes("faqir.js")) return null;
 
   // Find the closing </body> or end of file
   const bodyClose = source.lastIndexOf("</body>");

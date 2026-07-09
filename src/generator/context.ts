@@ -3,7 +3,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { loadManifest, type Manifest } from "../manifest";
-import { readConfig, type LoomConfig } from "../utils/config";
+import { readConfig, type FaqirConfig } from "../utils/config";
 import { ensureDir, getRegistryPath } from "../utils/fs";
 
 export interface ContextData {
@@ -44,7 +44,7 @@ export interface ContextData {
  * Load all installed manifests from a project.
  */
 async function loadInstalledManifests(
-  config: LoomConfig,
+  config: FaqirConfig,
   outputDir: string,
 ): Promise<Map<string, Manifest>> {
   const manifests = new Map<string, Manifest>();
@@ -152,7 +152,7 @@ export async function generateContext(cwd: string): Promise<ContextData> {
 
   return {
     meta: {
-      framework: "loom",
+      framework: "faqir",
       version: "1.0.0",
       theme: config.theme,
       generated_at: new Date().toISOString(),
@@ -205,7 +205,7 @@ export function formatContextJSON(data: ContextData): string {
 export function formatContextMarkdown(data: ContextData): string {
   const lines: string[] = [];
 
-  lines.push("# Loom UI Context");
+  lines.push("# Faqir UI Context");
   lines.push("");
   lines.push(`Theme: ${data.meta.theme} | Components: ${data.meta.component_count.primitives} primitives, ${data.meta.component_count.recipes} recipes, ${data.meta.component_count.patterns} patterns`);
   lines.push("");
@@ -236,7 +236,7 @@ export function formatContextMarkdown(data: ContextData): string {
   // Data Service
   lines.push("## Data-Driven Rendering");
   lines.push("");
-  lines.push("Include `core/api-source.js` before `core/loom-core.js` to use `apiSource()`.");
+  lines.push("Include `core/api-source.js` before `core/faqir-core.js` to use `apiSource()`.");
   lines.push("Spread into `l-data` for server-backed CRUD: `l-data=\"{ ...apiSource('/api/items'), newName: '' }\" l-init=\"load()\"`");
   lines.push("Methods: `load()`, `create(payload)`, `update(id, payload)`, `remove(id)`, `startPolling(ms)`, `stopPolling()`");
   lines.push("State: `items` (array), `loading`, `submitting`, `error`");
@@ -305,7 +305,7 @@ export function formatContextMarkdown(data: ContextData): string {
 export function formatContextCursorRules(data: ContextData): string {
   const lines: string[] = [];
 
-  lines.push("# Loom UI Framework Rules");
+  lines.push("# Faqir UI Framework Rules");
   lines.push("");
   lines.push("When building UI in this project, follow these conventions:");
   lines.push("");
@@ -323,7 +323,7 @@ export function formatContextCursorRules(data: ContextData): string {
 
   lines.push("## Data-Driven Rendering");
   lines.push("");
-  lines.push("- Include `<script src=\"ui/core/api-source.js\"></script>` before loom-core.js");
+  lines.push("- Include `<script src=\"ui/core/api-source.js\"></script>` before faqir-core.js");
   lines.push("- Use `apiSource(endpoint, options?)` to create server-backed data sources");
   lines.push("- Spread into `l-data`: `l-data=\"{ ...apiSource('/api/items') }\" l-init=\"load()\"`");
   lines.push("- CRUD methods: `load()`, `create(payload)`, `update(id, payload)`, `remove(id)`");
@@ -364,27 +364,27 @@ export function formatContextCursorRules(data: ContextData): string {
 
   lines.push("## CLI Commands");
   lines.push("");
-  lines.push("- `loom add <name>` — add components");
-  lines.push("- `loom audit` — check for contract violations");
-  lines.push("- `loom repair` — auto-fix issues");
-  lines.push("- `loom explain <name>` — get component details");
-  lines.push("- `loom trace <name>` — show dependency and file trace");
-  lines.push("- `loom context` — regenerate this context file");
+  lines.push("- `faqir add <name>` — add components");
+  lines.push("- `faqir audit` — check for contract violations");
+  lines.push("- `faqir repair` — auto-fix issues");
+  lines.push("- `faqir explain <name>` — get component details");
+  lines.push("- `faqir trace <name>` — show dependency and file trace");
+  lines.push("- `faqir context` — regenerate this context file");
   lines.push("");
 
   return lines.join("\n");
 }
 
 /**
- * Write the .loom/context.json file and optionally the skill file.
+ * Write the .faqir/context.json file and optionally the skill file.
  */
 export async function writeContextFiles(
   cwd: string,
   format: "json" | "md" | "cursorrules" = "json",
 ): Promise<{ path: string; content: string }> {
   const data = await generateContext(cwd);
-  const loomDir = join(cwd, ".loom");
-  ensureDir(loomDir);
+  const faqirDir = join(cwd, ".faqir");
+  ensureDir(faqirDir);
 
   let content: string;
   let filename: string;
@@ -405,7 +405,7 @@ export async function writeContextFiles(
       break;
   }
 
-  const outPath = format === "cursorrules" ? join(cwd, filename) : join(loomDir, filename);
+  const outPath = format === "cursorrules" ? join(cwd, filename) : join(faqirDir, filename);
   await Bun.write(outPath, content);
 
   return { path: outPath, content };

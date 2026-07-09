@@ -7,7 +7,7 @@ import { trace } from "../../src/commands/trace";
 
 const TEST_DIR = join(import.meta.dir, "../.tmp-trace-test");
 
-describe("loom trace", () => {
+describe("faqir trace", () => {
   beforeEach(() => {
     rmSync(TEST_DIR, { recursive: true, force: true });
     mkdirSync(TEST_DIR, { recursive: true });

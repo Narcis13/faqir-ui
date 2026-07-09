@@ -7,7 +7,7 @@ import { explain } from "../../src/commands/explain";
 
 const TEST_DIR = join(import.meta.dir, "../.tmp-explain-test");
 
-describe("loom explain", () => {
+describe("faqir explain", () => {
   beforeEach(() => {
     rmSync(TEST_DIR, { recursive: true, force: true });
     mkdirSync(TEST_DIR, { recursive: true });

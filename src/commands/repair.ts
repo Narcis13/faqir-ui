@@ -1,4 +1,4 @@
-// loom repair — attempt deterministic fixes for audit issues
+// faqir repair — attempt deterministic fixes for audit issues
 
 import { configExists } from "../utils/config";
 import { log } from "../utils/logger";
@@ -9,11 +9,11 @@ export async function repair(args: string[]): Promise<void> {
   const cwd = process.cwd();
 
   if (!configExists(cwd)) {
-    log.error("No loom.config.json found. Run 'loom init' first.");
+    log.error("No faqir.config.json found. Run 'faqir init' first.");
     process.exit(1);
   }
 
-  log.heading("Loom Repair");
+  log.heading("Faqir Repair");
   log.blank();
 
   // Run audit to find issues

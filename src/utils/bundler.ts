@@ -36,7 +36,7 @@ export async function generateBundle(
 ): Promise<{ output: string; fileCount: number; files: string[] }> {
   const config = await readConfig(cwd);
   const outputDir = join(cwd, config.output_dir);
-  const bundleOutput = options?.output ?? config.bundle?.output ?? join(outputDir, "loom.bundle.css");
+  const bundleOutput = options?.output ?? config.bundle?.output ?? join(outputDir, "faqir.bundle.css");
   const shouldMinify = options?.minify ?? config.bundle?.minify ?? false;
 
   const sections: string[] = [];
@@ -85,7 +85,7 @@ export async function generateBundle(
   }
 
   if (!isDryRun) {
-    let bundleContent = `/* Loom UI Bundle — generated ${new Date().toISOString()} */\n/* ${includedFiles.length} files */\n\n` + sections.join("\n\n");
+    let bundleContent = `/* Faqir UI Bundle — generated ${new Date().toISOString()} */\n/* ${includedFiles.length} files */\n\n` + sections.join("\n\n");
 
     if (shouldMinify) {
       bundleContent = minifyCSS(bundleContent);

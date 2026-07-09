@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 
-// Import loom-core.js — it's a UMD module that attaches Loom to globalThis
+// Import faqir-core.js — it's a UMD module that attaches Faqir to globalThis
 // We need to re-require it fresh for some tests
-const Loom = require("../../registry/core/loom-core.js");
+const Faqir = require("../../registry/core/faqir-core.js");
 
 // Helper to flush all pending microtasks — setTimeout(0) runs after the microtask queue drains
 function tick(): Promise<void> {
@@ -22,22 +22,22 @@ beforeEach(async () => {
 describe("Reactive Engine", () => {
   describe("reactive()", () => {
     it("creates a reactive proxy", () => {
-      const obj = Loom.reactive({ count: 0 });
+      const obj = Faqir.reactive({ count: 0 });
       expect(obj.count).toBe(0);
       obj.count = 5;
       expect(obj.count).toBe(5);
     });
 
     it("returns same proxy if already reactive", () => {
-      const obj = Loom.reactive({ x: 1 });
-      const obj2 = Loom.reactive(obj);
+      const obj = Faqir.reactive({ x: 1 });
+      const obj2 = Faqir.reactive(obj);
       expect(obj).toBe(obj2);
     });
 
     it("tracks nested property access", () => {
-      const obj = Loom.reactive({ a: 1, b: 2 });
+      const obj = Faqir.reactive({ a: 1, b: 2 });
       let sum = 0;
-      Loom.effect(() => {
+      Faqir.effect(() => {
         sum = obj.a + obj.b;
       });
       expect(sum).toBe(3);
@@ -47,16 +47,16 @@ describe("Reactive Engine", () => {
   describe("effect()", () => {
     it("runs immediately on creation", () => {
       let ran = false;
-      Loom.effect(() => {
+      Faqir.effect(() => {
         ran = true;
       });
       expect(ran).toBe(true);
     });
 
     it("re-runs when tracked reactive property changes", async () => {
-      const state = Loom.reactive({ count: 0 });
+      const state = Faqir.reactive({ count: 0 });
       let observed = 0;
-      Loom.effect(() => {
+      Faqir.effect(() => {
         observed = state.count;
       });
       expect(observed).toBe(0);
@@ -67,9 +67,9 @@ describe("Reactive Engine", () => {
     });
 
     it("does not re-run for untracked properties", async () => {
-      const state = Loom.reactive({ a: 1, b: 2 });
+      const state = Faqir.reactive({ a: 1, b: 2 });
       let runs = 0;
-      Loom.effect(() => {
+      Faqir.effect(() => {
         void state.a;
         runs++;
       });
@@ -81,9 +81,9 @@ describe("Reactive Engine", () => {
     });
 
     it("returns a cleanup function", async () => {
-      const state = Loom.reactive({ x: 0 });
+      const state = Faqir.reactive({ x: 0 });
       let observed = 0;
-      const cleanup = Loom.effect(() => {
+      const cleanup = Faqir.effect(() => {
         observed = state.x;
       });
 
@@ -98,10 +98,10 @@ describe("Reactive Engine", () => {
     });
 
     it("handles multiple effects on same property", async () => {
-      const state = Loom.reactive({ v: 0 });
+      const state = Faqir.reactive({ v: 0 });
       let a = 0, b = 0;
-      Loom.effect(() => { a = state.v; });
-      Loom.effect(() => { b = state.v * 2; });
+      Faqir.effect(() => { a = state.v; });
+      Faqir.effect(() => { b = state.v * 2; });
       expect(a).toBe(0);
       expect(b).toBe(0);
 
@@ -112,11 +112,11 @@ describe("Reactive Engine", () => {
     });
 
     it("handles 5+ effects on same property", async () => {
-      const state = Loom.reactive({ v: 0 });
+      const state = Faqir.reactive({ v: 0 });
       const results: number[] = [0, 0, 0, 0, 0];
       for (let i = 0; i < 5; i++) {
         const idx = i;
-        Loom.effect(() => { results[idx] = state.v + idx; });
+        Faqir.effect(() => { results[idx] = state.v + idx; });
       }
       expect(results).toEqual([0, 1, 2, 3, 4]);
 
@@ -126,13 +126,13 @@ describe("Reactive Engine", () => {
     });
 
     it("does not skip effects when one throws", async () => {
-      const state = Loom.reactive({ v: 0 });
+      const state = Faqir.reactive({ v: 0 });
       let a = 0, b = 0;
-      Loom.effect(() => { a = state.v; });
-      Loom.effect(() => {
+      Faqir.effect(() => { a = state.v; });
+      Faqir.effect(() => {
         if (state.v === 5) throw new Error("boom");
       });
-      Loom.effect(() => { b = state.v; });
+      Faqir.effect(() => { b = state.v; });
 
       state.v = 5;
       await tick();
@@ -142,12 +142,12 @@ describe("Reactive Engine", () => {
     });
 
     it("flushes cascading effects in the same cycle", async () => {
-      const state = Loom.reactive({ a: 0, b: 0 });
+      const state = Faqir.reactive({ a: 0, b: 0 });
       let observed = 0;
       // Effect 1: when a changes, set b = a * 2
-      Loom.effect(() => { state.b = state.a * 2; });
+      Faqir.effect(() => { state.b = state.a * 2; });
       // Effect 2: read b
-      Loom.effect(() => { observed = state.b; });
+      Faqir.effect(() => { observed = state.b; });
       expect(observed).toBe(0);
 
       state.a = 3;
@@ -160,16 +160,16 @@ describe("Reactive Engine", () => {
 
   describe("batch()", () => {
     it("defers effect execution until batch completes", () => {
-      const state = Loom.reactive({ a: 0, b: 0 });
+      const state = Faqir.reactive({ a: 0, b: 0 });
       let runs = 0;
-      Loom.effect(() => {
+      Faqir.effect(() => {
         void state.a;
         void state.b;
         runs++;
       });
       expect(runs).toBe(1);
 
-      Loom.batch(() => {
+      Faqir.batch(() => {
         state.a = 1;
         state.b = 2;
       });
@@ -180,11 +180,11 @@ describe("Reactive Engine", () => {
 
   describe("untrack()", () => {
     it("reads without creating dependency", async () => {
-      const state = Loom.reactive({ tracked: 1, untracked: 1 });
+      const state = Faqir.reactive({ tracked: 1, untracked: 1 });
       let runs = 0;
-      Loom.effect(() => {
+      Faqir.effect(() => {
         void state.tracked;
-        Loom.untrack(() => {
+        Faqir.untrack(() => {
           void state.untracked;
         });
         runs++;
@@ -208,57 +208,57 @@ describe("Reactive Engine", () => {
 
 describe("Expression Evaluator", () => {
   it("evaluates simple expressions", () => {
-    const result = Loom.evaluate("1 + 2", {}, document.createElement("div"));
+    const result = Faqir.evaluate("1 + 2", {}, document.createElement("div"));
     expect(result).toBe(3);
   });
 
   it("evaluates expressions with scope variables", () => {
-    const scope = Loom.reactive({ count: 10 });
-    const result = Loom.evaluate("count * 2", scope, document.createElement("div"));
+    const scope = Faqir.reactive({ count: 10 });
+    const result = Faqir.evaluate("count * 2", scope, document.createElement("div"));
     expect(result).toBe(20);
   });
 
   it("evaluates string expressions", () => {
-    const scope = Loom.reactive({ name: "World" });
-    const result = Loom.evaluate("'Hello ' + name", scope, document.createElement("div"));
+    const scope = Faqir.reactive({ name: "World" });
+    const result = Faqir.evaluate("'Hello ' + name", scope, document.createElement("div"));
     expect(result).toBe("Hello World");
   });
 
   it("evaluates ternary expressions", () => {
-    const scope = Loom.reactive({ isActive: true });
-    const result = Loom.evaluate("isActive ? 'yes' : 'no'", scope, document.createElement("div"));
+    const scope = Faqir.reactive({ isActive: true });
+    const result = Faqir.evaluate("isActive ? 'yes' : 'no'", scope, document.createElement("div"));
     expect(result).toBe("yes");
   });
 
   it("evaluates boolean expressions", () => {
-    const scope = Loom.reactive({ a: true, b: false });
-    expect(Loom.evaluate("a && b", scope, document.createElement("div"))).toBe(false);
-    expect(Loom.evaluate("a || b", scope, document.createElement("div"))).toBe(true);
+    const scope = Faqir.reactive({ a: true, b: false });
+    expect(Faqir.evaluate("a && b", scope, document.createElement("div"))).toBe(false);
+    expect(Faqir.evaluate("a || b", scope, document.createElement("div"))).toBe(true);
   });
 
   it("returns undefined on error", () => {
-    const result = Loom.evaluate("nonExistent.foo.bar", {}, document.createElement("div"));
+    const result = Faqir.evaluate("nonExistent.foo.bar", {}, document.createElement("div"));
     expect(result).toBeUndefined();
   });
 
   it("evaluates assignment statements", () => {
-    const scope = Loom.reactive({ count: 0 });
-    Loom.evaluateAssignment("count = 42", scope, document.createElement("div"));
+    const scope = Faqir.reactive({ count: 0 });
+    Faqir.evaluateAssignment("count = 42", scope, document.createElement("div"));
     expect(scope.count).toBe(42);
   });
 
   it("evaluates increment statements", () => {
-    const scope = Loom.reactive({ count: 5 });
-    Loom.evaluateAssignment("count++", scope, document.createElement("div"));
+    const scope = Faqir.reactive({ count: 5 });
+    Faqir.evaluateAssignment("count++", scope, document.createElement("div"));
     expect(scope.count).toBe(6);
   });
 
   it("caches compiled expressions", () => {
-    const scope = Loom.reactive({ x: 1 });
+    const scope = Faqir.reactive({ x: 1 });
     const el = document.createElement("div");
     // Call same expression twice — should use cache
-    expect(Loom.evaluate("x + 1", scope, el)).toBe(2);
-    expect(Loom.evaluate("x + 1", scope, el)).toBe(2);
+    expect(Faqir.evaluate("x + 1", scope, el)).toBe(2);
+    expect(Faqir.evaluate("x + 1", scope, el)).toBe(2);
   });
 });
 
@@ -274,7 +274,7 @@ describe("Directives", () => {
           <span l-text="count"></span>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       const span = document.querySelector("span")!;
@@ -287,21 +287,21 @@ describe("Directives", () => {
           <span l-text="greeting"></span>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       const span = document.querySelector("span")!;
       expect(span.textContent).toBe("hello");
     });
 
-    it("supports registered data factories via Loom.data()", async () => {
-      Loom.data("counter", () => ({ count: 99 }));
+    it("supports registered data factories via Faqir.data()", async () => {
+      Faqir.data("counter", () => ({ count: 99 }));
       document.body.innerHTML = `
         <div l-data="counter">
           <span l-text="count"></span>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       const span = document.querySelector("span")!;
@@ -316,7 +316,7 @@ describe("Directives", () => {
           <span l-text="msg"></span>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
       expect(document.querySelector("span")!.textContent).toBe("hello");
     });
@@ -328,7 +328,7 @@ describe("Directives", () => {
           <button @click="count++">Inc</button>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       const span = document.querySelector("span")!;
@@ -345,7 +345,7 @@ describe("Directives", () => {
           <span l-text="val"></span>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
       expect(document.querySelector("span")!.textContent).toBe("");
     });
@@ -358,7 +358,7 @@ describe("Directives", () => {
           <div l-html="content"></div>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
       const target = document.querySelector("[l-html]")!;
       expect(target.innerHTML).toBe("<b>bold</b>");
@@ -372,7 +372,7 @@ describe("Directives", () => {
           <a l-bind:href="url">Link</a>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
       expect(document.querySelector("a")!.getAttribute("href")).toBe("https://example.com");
     });
@@ -383,7 +383,7 @@ describe("Directives", () => {
           <span :title="title">text</span>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
       expect(document.querySelector("span")!.getAttribute("title")).toBe("Hello");
     });
@@ -394,7 +394,7 @@ describe("Directives", () => {
           <span :class="cls">text</span>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
       expect(document.querySelector("span")!.className).toBe("foo bar");
     });
@@ -405,7 +405,7 @@ describe("Directives", () => {
           <span :class="{ active: isActive, hidden: isHidden }">text</span>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
       const span = document.querySelector("span")!;
       expect(span.classList.contains("active")).toBe(true);
@@ -418,7 +418,7 @@ describe("Directives", () => {
           <span :class="classes">text</span>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
       expect(document.querySelector("span")!.className).toBe("foo bar");
     });
@@ -429,7 +429,7 @@ describe("Directives", () => {
           <span :style="styles">text</span>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
       const span = document.querySelector("span")!;
       expect(span.style.color).toBe("red");
@@ -442,7 +442,7 @@ describe("Directives", () => {
           <span :style="s">text</span>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
       expect(document.querySelector("span")!.style.cssText).toContain("color: blue");
     });
@@ -453,7 +453,7 @@ describe("Directives", () => {
           <button :disabled="isDisabled">btn</button>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
       expect(document.querySelector("button")!.hasAttribute("disabled")).toBe(true);
     });
@@ -464,7 +464,7 @@ describe("Directives", () => {
           <span :data-info="val">text</span>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
       expect(document.querySelector("span")!.hasAttribute("data-info")).toBe(false);
     });
@@ -480,7 +480,7 @@ describe("Directives", () => {
           <button @click="rating = 3">Rate 3</button>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       const stars = document.querySelectorAll(".star");
@@ -510,7 +510,7 @@ describe("Directives", () => {
           <button @click="level = 2">Set 2</button>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       const buttons = document.querySelectorAll(".b");
@@ -538,7 +538,7 @@ describe("Directives", () => {
           <button @click="step = 2">Advance</button>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       const s1 = document.querySelector("#s1")!;
@@ -569,7 +569,7 @@ describe("Directives", () => {
           <span l-text="count"></span>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       document.querySelector("button")!.click();
@@ -586,7 +586,7 @@ describe("Directives", () => {
           <span l-text="submitted"></span>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       const form = document.querySelector("form")!;
@@ -603,7 +603,7 @@ describe("Directives", () => {
           <span l-text="count"></span>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       const btn = document.querySelector("button")!;
@@ -625,7 +625,7 @@ describe("Directives", () => {
           <span l-text="clicked"></span>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       // Click on inner should NOT trigger
@@ -651,7 +651,7 @@ describe("Directives", () => {
           <span l-text="pressed"></span>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       const input = document.querySelector("input")!;
@@ -667,7 +667,7 @@ describe("Directives", () => {
           <span l-text="pressed"></span>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       const input = document.querySelector("input")!;
@@ -683,7 +683,7 @@ describe("Directives", () => {
           <span l-text="eventType"></span>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       document.querySelector("button")!.click();
@@ -700,7 +700,7 @@ describe("Directives", () => {
           <span l-text="name"></span>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       const input = document.querySelector("input")! as HTMLInputElement;
@@ -720,7 +720,7 @@ describe("Directives", () => {
           <span l-text="checked"></span>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       const input = document.querySelector("input")! as HTMLInputElement;
@@ -741,7 +741,7 @@ describe("Directives", () => {
           <span l-text="tags.join(',')"></span>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       const boxes = document.querySelectorAll("input[type='checkbox']") as NodeListOf<HTMLInputElement>;
@@ -776,7 +776,7 @@ describe("Directives", () => {
           <input type="checkbox" value="c" l-model="tags" />
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       const boxes = document.querySelectorAll("input[type='checkbox']") as NodeListOf<HTMLInputElement>;
@@ -795,7 +795,7 @@ describe("Directives", () => {
           <span l-text="color"></span>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       const select = document.querySelector("select")! as HTMLSelectElement;
@@ -814,7 +814,7 @@ describe("Directives", () => {
           <span l-text="typeof num"></span>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       const input = document.querySelector("input")! as HTMLInputElement;
@@ -831,7 +831,7 @@ describe("Directives", () => {
           <span l-text="text"></span>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       const input = document.querySelector("input")! as HTMLInputElement;
@@ -848,7 +848,7 @@ describe("Directives", () => {
           <span l-text="text"></span>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       const input = document.querySelector("input")! as HTMLInputElement;
@@ -873,7 +873,7 @@ describe("Directives", () => {
           <span l-text="color"></span>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       const radios = document.querySelectorAll("input[type='radio']") as NodeListOf<HTMLInputElement>;
@@ -894,7 +894,7 @@ describe("Directives", () => {
           <span l-show="visible">Hello</span>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       const span = document.querySelector("span")!;
@@ -907,7 +907,7 @@ describe("Directives", () => {
           <span l-show="visible">Hello</span>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       const span = document.querySelector("span")!;
@@ -921,7 +921,7 @@ describe("Directives", () => {
           <button @click="visible = !visible">Toggle</button>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       const span = document.querySelector("span")!;
@@ -940,7 +940,7 @@ describe("Directives", () => {
           <template l-if="show"><span class="content">Visible</span></template>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       expect(document.querySelector(".content")).not.toBeNull();
@@ -953,7 +953,7 @@ describe("Directives", () => {
           <template l-if="show"><span class="content">Hidden</span></template>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       expect(document.querySelector(".content")).toBeNull();
@@ -966,7 +966,7 @@ describe("Directives", () => {
           <button @click="show = !show">Toggle</button>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
       expect(document.querySelector(".content")).toBeNull();
 
@@ -989,7 +989,7 @@ describe("Directives", () => {
           <div l-if="true">Should warn</div>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       console.warn = origWarn;
@@ -1006,7 +1006,7 @@ describe("Directives", () => {
           </ul>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       const lis = document.querySelectorAll("li");
@@ -1022,7 +1022,7 @@ describe("Directives", () => {
           <template l-for="(item, i) in items"><span l-text="i + ':' + item"></span></template>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       const spans = document.querySelectorAll("span");
@@ -1037,7 +1037,7 @@ describe("Directives", () => {
           <template l-for="n in 3"><span l-text="n"></span></template>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       const spans = document.querySelectorAll("span");
@@ -1057,7 +1057,7 @@ describe("Directives", () => {
           <div l-for="item in [1,2,3]">nope</div>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       console.warn = origWarn;
@@ -1074,7 +1074,7 @@ describe("Directives", () => {
           <span l-text="label"></span>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       document.querySelector("button")!.click();
@@ -1091,7 +1091,7 @@ describe("Directives", () => {
           <span l-text="initialized"></span>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       expect(document.querySelector("span")!.textContent).toBe("true");
@@ -1107,7 +1107,7 @@ describe("Directives", () => {
           <span l-text="doubled"></span>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       expect(document.querySelector("span")!.textContent).toBe("0");
@@ -1125,7 +1125,7 @@ describe("Directives", () => {
           <span>Hidden until ready</span>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       expect(document.querySelector("[l-cloak]")).toBeNull();
@@ -1140,7 +1140,7 @@ describe("Directives", () => {
         </div>
         <div id="target"></div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       const target = document.querySelector("#target")!;
@@ -1163,7 +1163,7 @@ describe("Magic Properties", () => {
           <span l-text="tag"></span>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       document.querySelector("button")!.click();
@@ -1181,7 +1181,7 @@ describe("Magic Properties", () => {
           <span l-text="val"></span>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       document.querySelector("button")!.click();
@@ -1192,14 +1192,14 @@ describe("Magic Properties", () => {
 
   describe("$store", () => {
     it("provides access to global stores", async () => {
-      Loom.store("app", { theme: "dark" });
+      Faqir.store("app", { theme: "dark" });
 
       document.body.innerHTML = `
         <div l-data="{}">
           <span l-text="$store.app.theme"></span>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       expect(document.querySelector("span")!.textContent).toBe("dark");
@@ -1214,7 +1214,7 @@ describe("Magic Properties", () => {
           <span l-text="received"></span>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       // Dispatch directly for testing
@@ -1237,11 +1237,11 @@ describe("Magic Properties", () => {
           <span l-text="myId"></span>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       const text = document.querySelector("span")!.textContent!;
-      expect(text).toMatch(/^loom-\d+-panel$/);
+      expect(text).toMatch(/^faqir-\d+-panel$/);
     });
   });
 
@@ -1252,7 +1252,7 @@ describe("Magic Properties", () => {
           <span l-text="$state"></span>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       expect(document.querySelector("span")!.textContent).toBe("closed");
@@ -1264,7 +1264,7 @@ describe("Magic Properties", () => {
           <button @click="$state = 'open'">Open</button>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       document.querySelector("button")!.click();
@@ -1283,21 +1283,21 @@ describe("Magic Properties", () => {
           </div>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       const root = document.querySelector("[data-ui='accordion']")! as HTMLElement;
-      expect((root as any)._loomAccordion).toBeDefined();
-      expect(typeof (root as any)._loomAccordion.expand).toBe("function");
+      expect((root as any)._faqirAccordion).toBeDefined();
+      expect(typeof (root as any)._faqirAccordion.expand).toBe("function");
     });
   });
 });
 
 // ═══════════════════════════════════════════════════════
-// Section 5: Loom Bridge
+// Section 5: Faqir Bridge
 // ═══════════════════════════════════════════════════════
 
-describe("Loom Bridge", () => {
+describe("Faqir Bridge", () => {
   it("auto-initializes controllers for [data-ui] elements", async () => {
     document.body.innerHTML = `
       <div data-ui="dropdown">
@@ -1307,38 +1307,38 @@ describe("Loom Bridge", () => {
         </div>
       </div>
     `;
-    Loom.start();
+    Faqir.start();
     await tick();
 
     const root = document.querySelector("[data-ui='dropdown']")! as HTMLElement;
-    expect((root as any)._loomDropdown).toBeDefined();
-    expect(typeof (root as any)._loomDropdown.open).toBe("function");
+    expect((root as any)._faqirDropdown).toBeDefined();
+    expect(typeof (root as any)._faqirDropdown.open).toBe("function");
   });
 });
 
 // ═══════════════════════════════════════════════════════
-// Section 6: Core Utilities (bundled in loom-core)
+// Section 6: Core Utilities (bundled in faqir-core)
 // ═══════════════════════════════════════════════════════
 
-describe("Core Utilities (via Loom API)", () => {
-  describe("Loom.store()", () => {
+describe("Core Utilities (via Faqir API)", () => {
+  describe("Faqir.store()", () => {
     it("creates a global reactive store", async () => {
-      Loom.store("testStore", { count: 0 });
+      Faqir.store("testStore", { count: 0 });
 
       document.body.innerHTML = `
         <div l-data="{}">
           <span l-text="$store.testStore.count"></span>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
       expect(document.querySelector("span")!.textContent).toBe("0");
     });
   });
 
-  describe("Loom.data()", () => {
+  describe("Faqir.data()", () => {
     it("registers a named data factory", async () => {
-      Loom.data("myComponent", () => ({
+      Faqir.data("myComponent", () => ({
         label: "From Factory",
       }));
 
@@ -1347,17 +1347,17 @@ describe("Core Utilities (via Loom API)", () => {
           <span l-text="label"></span>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
       expect(document.querySelector("span")!.textContent).toBe("From Factory");
     });
   });
 
-  describe("Loom.directive()", () => {
+  describe("Faqir.directive()", () => {
     it("registers custom directives", async () => {
-      Loom.directive("uppercase", (el: Element, dir: any, scope: any) => {
-        Loom.effect(() => {
-          const val = Loom.evaluate(dir.expression, scope, el);
+      Faqir.directive("uppercase", (el: Element, dir: any, scope: any) => {
+        Faqir.effect(() => {
+          const val = Faqir.evaluate(dir.expression, scope, el);
           el.textContent = String(val).toUpperCase();
         });
       });
@@ -1367,42 +1367,42 @@ describe("Core Utilities (via Loom API)", () => {
           <span l-uppercase="msg"></span>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       await tick();
       expect(document.querySelector("span")!.textContent).toBe("HELLO");
     });
   });
 
-  describe("Loom.plugin()", () => {
-    it("executes plugin function with Loom instance", () => {
+  describe("Faqir.plugin()", () => {
+    it("executes plugin function with Faqir instance", () => {
       let received: any = null;
-      Loom.plugin((loom: any) => {
-        received = loom;
+      Faqir.plugin((faqir: any) => {
+        received = faqir;
       });
-      expect(received).toBe(Loom);
+      expect(received).toBe(Faqir);
     });
   });
 
-  describe("Loom.controller()", () => {
+  describe("Faqir.controller()", () => {
     it("registers custom controllers", async () => {
-      Loom.controller("my-widget", (root: HTMLElement) => {
+      Faqir.controller("my-widget", (root: HTMLElement) => {
         const api = { getValue: () => "custom-value" };
-        (root as any)._loomMyWidget = api;
+        (root as any)._faqirMyWidget = api;
         return api;
       });
 
       document.body.innerHTML = `<div data-ui="my-widget"></div>`;
-      Loom.start();
+      Faqir.start();
       await tick();
 
       const el = document.querySelector("[data-ui='my-widget']")!;
-      expect((el as any)._loomMyWidget.getValue()).toBe("custom-value");
+      expect((el as any)._faqirMyWidget.getValue()).toBe("custom-value");
     });
   });
 
-  describe("Loom.version", () => {
+  describe("Faqir.version", () => {
     it("exposes version string", () => {
-      expect(Loom.version).toBe("0.1.0");
+      expect(Faqir.version).toBe("0.1.0");
     });
   });
 });
@@ -1426,7 +1426,7 @@ describe("Recipe Controllers", () => {
           </div>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       root = document.querySelector("[data-ui='dialog']")! as HTMLElement;
     });
 
@@ -1438,7 +1438,7 @@ describe("Recipe Controllers", () => {
     });
 
     it("closes dialog on close button click", () => {
-      (root as any)._loomDialog.open();
+      (root as any)._faqirDialog.open();
       expect(root.dataset.state).toBe("open");
 
       root.querySelector("[data-part='close']")!.dispatchEvent(new Event("click"));
@@ -1447,19 +1447,19 @@ describe("Recipe Controllers", () => {
     });
 
     it("closes on Escape key", () => {
-      (root as any)._loomDialog.open();
+      (root as any)._faqirDialog.open();
       root.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
       expect(["closing", "closed"]).toContain(root.dataset.state);
     });
 
     it("closes on overlay click", () => {
-      (root as any)._loomDialog.open();
+      (root as any)._faqirDialog.open();
       root.querySelector("[data-part='overlay']")!.dispatchEvent(new Event("click"));
       expect(["closing", "closed"]).toContain(root.dataset.state);
     });
 
     it("has open/close/toggle/destroy API", () => {
-      const api = (root as any)._loomDialog;
+      const api = (root as any)._faqirDialog;
       expect(typeof api.open).toBe("function");
       expect(typeof api.close).toBe("function");
       expect(typeof api.toggle).toBe("function");
@@ -1467,7 +1467,7 @@ describe("Recipe Controllers", () => {
     });
 
     it("toggle switches state", () => {
-      const api = (root as any)._loomDialog;
+      const api = (root as any)._faqirDialog;
       api.toggle();
       expect(root.dataset.state).toBe("open");
       api.toggle();
@@ -1475,8 +1475,8 @@ describe("Recipe Controllers", () => {
     });
 
     it("destroy removes API reference", () => {
-      (root as any)._loomDialog.destroy();
-      expect((root as any)._loomDialog).toBeUndefined();
+      (root as any)._faqirDialog.destroy();
+      expect((root as any)._faqirDialog).toBeUndefined();
     });
   });
 
@@ -1493,12 +1493,12 @@ describe("Recipe Controllers", () => {
           </div>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       root = document.querySelector("[data-ui='drawer']")! as HTMLElement;
     });
 
     it("opens and closes via API", () => {
-      const api = (root as any)._loomDrawer;
+      const api = (root as any)._faqirDrawer;
       api.open();
       expect(root.dataset.state).toBe("open");
       api.close();
@@ -1506,7 +1506,7 @@ describe("Recipe Controllers", () => {
     });
 
     it("closes on Escape", () => {
-      (root as any)._loomDrawer.open();
+      (root as any)._faqirDrawer.open();
       root.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
       expect(["closing", "closed"]).toContain(root.dataset.state);
     });
@@ -1528,12 +1528,12 @@ describe("Recipe Controllers", () => {
           <div data-part="panel" role="tabpanel" hidden>Panel 3</div>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       root = document.querySelector("[data-ui='tabs']")! as HTMLElement;
     });
 
     it("activates tab by index", () => {
-      const api = (root as any)._loomTabs;
+      const api = (root as any)._faqirTabs;
       api.activate(1);
 
       const triggers = root.querySelectorAll("[data-part='trigger']");
@@ -1563,7 +1563,7 @@ describe("Recipe Controllers", () => {
     });
 
     it("Home/End keys jump to first/last tab", () => {
-      const api = (root as any)._loomTabs;
+      const api = (root as any)._faqirTabs;
       const list = root.querySelector("[data-part='list']")!;
 
       list.dispatchEvent(new KeyboardEvent("keydown", { key: "End", bubbles: true }));
@@ -1596,7 +1596,7 @@ describe("Recipe Controllers", () => {
           </div>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       root = document.querySelector("[data-ui='dropdown']")! as HTMLElement;
     });
 
@@ -1607,7 +1607,7 @@ describe("Recipe Controllers", () => {
     });
 
     it("closes on Escape in menu", () => {
-      (root as any)._loomDropdown.open();
+      (root as any)._faqirDropdown.open();
       root.querySelector("[data-part='menu']")!.dispatchEvent(
         new KeyboardEvent("keydown", { key: "Escape", bubbles: true })
       );
@@ -1615,7 +1615,7 @@ describe("Recipe Controllers", () => {
     });
 
     it("has full API", () => {
-      const api = (root as any)._loomDropdown;
+      const api = (root as any)._faqirDropdown;
       expect(typeof api.open).toBe("function");
       expect(typeof api.close).toBe("function");
       expect(typeof api.toggle).toBe("function");
@@ -1639,27 +1639,27 @@ describe("Recipe Controllers", () => {
           </div>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       root = document.querySelector("[data-ui='accordion']")! as HTMLElement;
     });
 
     it("expands item by index", () => {
-      (root as any)._loomAccordion.expand(0);
+      (root as any)._faqirAccordion.expand(0);
       const items = root.querySelectorAll("[data-part='item']");
       expect(items[0].getAttribute("data-state")).toBe("expanded");
       expect((items[0].querySelector("[data-part='content']") as HTMLElement).hidden).toBe(false);
     });
 
     it("collapses item by index", () => {
-      (root as any)._loomAccordion.expand(0);
-      (root as any)._loomAccordion.collapse(0);
+      (root as any)._faqirAccordion.expand(0);
+      (root as any)._faqirAccordion.collapse(0);
       const items = root.querySelectorAll("[data-part='item']");
       expect(items[0].getAttribute("data-state")).toBe("collapsed");
       expect((items[0].querySelector("[data-part='content']") as HTMLElement).hidden).toBe(true);
     });
 
     it("toggle switches state", () => {
-      const api = (root as any)._loomAccordion;
+      const api = (root as any)._faqirAccordion;
       api.toggle(0);
       expect(root.querySelectorAll("[data-part='item']")[0].getAttribute("data-state")).toBe("expanded");
       api.toggle(0);
@@ -1668,7 +1668,7 @@ describe("Recipe Controllers", () => {
 
     it("single mode collapses others", () => {
       root.dataset.variant = "single";
-      const api = (root as any)._loomAccordion;
+      const api = (root as any)._faqirAccordion;
       api.expand(0);
       api.expand(1);
       const items = root.querySelectorAll("[data-part='item']");
@@ -1677,7 +1677,7 @@ describe("Recipe Controllers", () => {
     });
 
     it("expandAll/collapseAll work", () => {
-      const api = (root as any)._loomAccordion;
+      const api = (root as any)._faqirAccordion;
       api.expandAll();
       const items = root.querySelectorAll("[data-part='item']");
       expect(items[0].getAttribute("data-state")).toBe("expanded");
@@ -1705,26 +1705,26 @@ describe("Recipe Controllers", () => {
           <div data-part="content" hidden>Tooltip text</div>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       root = document.querySelector("[data-ui='tooltip']")! as HTMLElement;
     });
 
     it("has show/hide/destroy API", () => {
-      const api = (root as any)._loomTooltip;
+      const api = (root as any)._faqirTooltip;
       expect(typeof api.show).toBe("function");
       expect(typeof api.hide).toBe("function");
       expect(typeof api.destroy).toBe("function");
     });
 
     it("show makes content visible", () => {
-      (root as any)._loomTooltip.show();
+      (root as any)._faqirTooltip.show();
       expect(root.dataset.state).toBe("visible");
       expect((root.querySelector("[data-part='content']") as HTMLElement).hidden).toBe(false);
     });
 
     it("hide makes content hidden", () => {
-      (root as any)._loomTooltip.show();
-      (root as any)._loomTooltip.hide();
+      (root as any)._faqirTooltip.show();
+      (root as any)._faqirTooltip.hide();
       expect(root.dataset.state).toBe("hidden");
       expect((root.querySelector("[data-part='content']") as HTMLElement).hidden).toBe(true);
     });
@@ -1735,12 +1735,12 @@ describe("Recipe Controllers", () => {
 
     beforeEach(() => {
       document.body.innerHTML = `<div data-ui="toast"></div>`;
-      Loom.start();
+      Faqir.start();
       root = document.querySelector("[data-ui='toast']")! as HTMLElement;
     });
 
     it("adds a toast notification", () => {
-      const api = (root as any)._loomToast;
+      const api = (root as any)._faqirToast;
       const id = api.add({ message: "Hello!", duration: 0 });
       expect(typeof id).toBe("string");
       expect(root.querySelector("[data-part='toast']")).not.toBeNull();
@@ -1748,7 +1748,7 @@ describe("Recipe Controllers", () => {
     });
 
     it("dismisses a toast by id", () => {
-      const api = (root as any)._loomToast;
+      const api = (root as any)._faqirToast;
       const id = api.add({ message: "Bye!", duration: 0 });
       expect(root.querySelectorAll("[data-part='toast']").length).toBe(1);
 
@@ -1757,7 +1757,7 @@ describe("Recipe Controllers", () => {
     });
 
     it("dismissAll removes all toasts", () => {
-      const api = (root as any)._loomToast;
+      const api = (root as any)._faqirToast;
       api.add({ message: "1", duration: 0 });
       api.add({ message: "2", duration: 0 });
       expect(root.querySelectorAll("[data-part='toast']").length).toBe(2);
@@ -1767,14 +1767,14 @@ describe("Recipe Controllers", () => {
     });
 
     it("toast includes close button", () => {
-      const api = (root as any)._loomToast;
+      const api = (root as any)._faqirToast;
       api.add({ message: "With close", duration: 0 });
       expect(root.querySelector("[data-part='close']")).not.toBeNull();
     });
 
     it("toast supports action button", () => {
       let actionCalled = false;
-      const api = (root as any)._loomToast;
+      const api = (root as any)._faqirToast;
       api.add({
         message: "Action",
         actionLabel: "Undo",
@@ -1786,7 +1786,7 @@ describe("Recipe Controllers", () => {
     });
 
     it("toast has correct ARIA attributes", () => {
-      const api = (root as any)._loomToast;
+      const api = (root as any)._faqirToast;
       api.add({ message: "Accessible", duration: 0 });
       const toast = root.querySelector("[data-part='toast']")!;
       expect(toast.getAttribute("role")).toBe("status");
@@ -1809,7 +1809,7 @@ describe("Recipe Controllers", () => {
           <div data-part="empty" hidden>No results</div>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       root = document.querySelector("[data-ui='combobox']")! as HTMLElement;
     });
 
@@ -1820,7 +1820,7 @@ describe("Recipe Controllers", () => {
     });
 
     it("filters options", () => {
-      const api = (root as any)._loomCombobox;
+      const api = (root as any)._faqirCombobox;
       api.open();
       const count = api.filter("ban");
       expect(count).toBe(1);
@@ -1831,14 +1831,14 @@ describe("Recipe Controllers", () => {
     });
 
     it("getValue/setValue work", () => {
-      const api = (root as any)._loomCombobox;
+      const api = (root as any)._faqirCombobox;
       api.setValue("test");
       expect(api.getValue()).toBe("test");
       expect((root.querySelector("[data-part='input']") as HTMLInputElement).value).toBe("test");
     });
 
     it("close hides listbox", () => {
-      const api = (root as any)._loomCombobox;
+      const api = (root as any)._faqirCombobox;
       api.open();
       api.close();
       expect(root.dataset.state).toBe("closed");
@@ -1880,19 +1880,19 @@ describe("Recipe Controllers", () => {
           </table>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       root = document.querySelector("[data-ui='table']")! as HTMLElement;
     });
 
     it("selects a row by index", () => {
-      const api = (root as any)._loomTable;
+      const api = (root as any)._faqirTable;
       api.selectRow(0);
       const rows = root.querySelectorAll("[data-part='tbody'] [data-part='tr']");
       expect(rows[0].hasAttribute("data-selected")).toBe(true);
     });
 
     it("selectAll selects all rows", () => {
-      const api = (root as any)._loomTable;
+      const api = (root as any)._faqirTable;
       api.selectAll();
       const rows = root.querySelectorAll("[data-part='tbody'] [data-part='tr']");
       rows.forEach((row) => {
@@ -1901,7 +1901,7 @@ describe("Recipe Controllers", () => {
     });
 
     it("deselectAll clears selection", () => {
-      const api = (root as any)._loomTable;
+      const api = (root as any)._faqirTable;
       api.selectAll();
       api.deselectAll();
       const rows = root.querySelectorAll("[data-part='tbody'] [data-part='tr']");
@@ -1911,14 +1911,14 @@ describe("Recipe Controllers", () => {
     });
 
     it("getSelected returns selected indices", () => {
-      const api = (root as any)._loomTable;
+      const api = (root as any)._faqirTable;
       api.selectRow(0);
       api.selectRow(2);
       expect(api.getSelected()).toEqual([0, 2]);
     });
 
     it("sorts by column ascending", () => {
-      const api = (root as any)._loomTable;
+      const api = (root as any)._faqirTable;
       api.sort(1, "ascending"); // Sort by Name
       const rows = root.querySelectorAll("[data-part='tbody'] [data-part='tr']");
       const names = Array.from(rows).map((r) =>
@@ -1928,7 +1928,7 @@ describe("Recipe Controllers", () => {
     });
 
     it("sorts by column descending", () => {
-      const api = (root as any)._loomTable;
+      const api = (root as any)._faqirTable;
       api.sort(1, "descending");
       const rows = root.querySelectorAll("[data-part='tbody'] [data-part='tr']");
       const names = Array.from(rows).map((r) =>
@@ -1938,7 +1938,7 @@ describe("Recipe Controllers", () => {
     });
 
     it("sorts numerically", () => {
-      const api = (root as any)._loomTable;
+      const api = (root as any)._faqirTable;
       api.sort(2, "ascending"); // Sort by Age
       const rows = root.querySelectorAll("[data-part='tbody'] [data-part='tr']");
       const ages = Array.from(rows).map((r) =>
@@ -1961,7 +1961,7 @@ describe("Recipe Controllers", () => {
           </div>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       root = document.querySelector("[data-ui='popover']")! as HTMLElement;
     });
 
@@ -1972,19 +1972,19 @@ describe("Recipe Controllers", () => {
     });
 
     it("closes on close button click", () => {
-      (root as any)._loomPopover.open();
+      (root as any)._faqirPopover.open();
       root.querySelector("[data-part='close']")!.dispatchEvent(new Event("click", { bubbles: true }));
       expect(root.dataset.state).toBe("closed");
     });
 
     it("closes on Escape", () => {
-      (root as any)._loomPopover.open();
+      (root as any)._faqirPopover.open();
       root.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
       expect(root.dataset.state).toBe("closed");
     });
 
     it("toggle works", () => {
-      const api = (root as any)._loomPopover;
+      const api = (root as any)._faqirPopover;
       api.toggle();
       expect(root.dataset.state).toBe("open");
       api.toggle();
@@ -2007,16 +2007,16 @@ describe("Recipe Controllers", () => {
           <button data-part="next">Next</button>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       root = document.querySelector("[data-ui='pagination']")! as HTMLElement;
     });
 
     it("starts on page 1", () => {
-      expect((root as any)._loomPagination.getPage()).toBe(1);
+      expect((root as any)._faqirPagination.getPage()).toBe(1);
     });
 
     it("setPage changes active page", () => {
-      const api = (root as any)._loomPagination;
+      const api = (root as any)._faqirPagination;
       api.setPage(2);
       expect(api.getPage()).toBe(2);
       const btns = root.querySelectorAll("[data-part='page']");
@@ -2025,7 +2025,7 @@ describe("Recipe Controllers", () => {
     });
 
     it("prev/next buttons work", () => {
-      const api = (root as any)._loomPagination;
+      const api = (root as any)._faqirPagination;
 
       root.querySelector("[data-part='next']")!.dispatchEvent(new Event("click"));
       expect(api.getPage()).toBe(2);
@@ -2035,7 +2035,7 @@ describe("Recipe Controllers", () => {
     });
 
     it("clamps page to valid range", () => {
-      const api = (root as any)._loomPagination;
+      const api = (root as any)._faqirPagination;
       api.setPage(100);
       expect(api.getPage()).toBe(3); // max is 3
 
@@ -2049,18 +2049,18 @@ describe("Recipe Controllers", () => {
     });
 
     it("disables next on last page", () => {
-      (root as any)._loomPagination.setPage(3);
+      (root as any)._faqirPagination.setPage(3);
       const next = root.querySelector("[data-part='next']")! as HTMLButtonElement;
       expect(next.disabled).toBe(true);
     });
 
     it("emits page-change event", () => {
       let detail: any = null;
-      root.addEventListener("loom:page-change", ((e: CustomEvent) => {
+      root.addEventListener("faqir:page-change", ((e: CustomEvent) => {
         detail = e.detail;
       }) as EventListener);
 
-      (root as any)._loomPagination.setPage(2);
+      (root as any)._faqirPagination.setPage(2);
       expect(detail).toEqual({ page: 2 });
     });
   });
@@ -2078,23 +2078,23 @@ describe("Recipe Controllers", () => {
           </div>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       root = document.querySelector("[data-ui='sheet']")! as HTMLElement;
     });
 
     it("opens via API", () => {
-      (root as any)._loomSheet.open();
+      (root as any)._faqirSheet.open();
       expect(root.dataset.state).toBe("open");
     });
 
     it("closes on Escape", () => {
-      (root as any)._loomSheet.open();
+      (root as any)._faqirSheet.open();
       root.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
       expect(["closing", "closed"]).toContain(root.dataset.state);
     });
 
     it("toggle works", () => {
-      const api = (root as any)._loomSheet;
+      const api = (root as any)._faqirSheet;
       api.toggle();
       expect(root.dataset.state).toBe("open");
       api.toggle();
@@ -2118,7 +2118,7 @@ describe("Recipe Controllers", () => {
           </div>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       root = document.querySelector("[data-ui='select-custom']")! as HTMLElement;
     });
 
@@ -2128,14 +2128,14 @@ describe("Recipe Controllers", () => {
     });
 
     it("selects an option by value", () => {
-      const api = (root as any)._loomSelectCustom;
+      const api = (root as any)._faqirSelectCustom;
       api.select("b");
       expect(api.getValue()).toBe("b");
       expect(root.querySelector("[data-part='value']")!.textContent).toBe("Banana");
     });
 
     it("closes after selection", () => {
-      const api = (root as any)._loomSelectCustom;
+      const api = (root as any)._faqirSelectCustom;
       api.open();
       api.select("a");
       expect(root.dataset.state).toBe("closed");
@@ -2147,7 +2147,7 @@ describe("Recipe Controllers", () => {
         detail = e.detail;
       }) as EventListener);
 
-      (root as any)._loomSelectCustom.select("c");
+      (root as any)._faqirSelectCustom.select("c");
       expect(detail).toEqual({ value: "c", label: "Cherry" });
     });
   });
@@ -2172,12 +2172,12 @@ describe("Recipe Controllers", () => {
           </div>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       root = document.querySelector("[data-ui='date-picker']")! as HTMLElement;
     });
 
     it("has full API", () => {
-      const api = (root as any)._loomDatePicker;
+      const api = (root as any)._faqirDatePicker;
       expect(typeof api.open).toBe("function");
       expect(typeof api.close).toBe("function");
       expect(typeof api.getValue).toBe("function");
@@ -2194,7 +2194,7 @@ describe("Recipe Controllers", () => {
     });
 
     it("setValue sets the date", () => {
-      const api = (root as any)._loomDatePicker;
+      const api = (root as any)._faqirDatePicker;
       api.setValue("2025-06-15");
       expect(api.getValue()).toBe("2025-06-15");
       const input = root.querySelector("[data-part='input']") as HTMLInputElement;
@@ -2204,14 +2204,14 @@ describe("Recipe Controllers", () => {
     });
 
     it("builds calendar grid with day buttons", () => {
-      const api = (root as any)._loomDatePicker;
+      const api = (root as any)._faqirDatePicker;
       api.open();
       const dayButtons = root.querySelectorAll("[data-part='day']");
       expect(dayButtons.length).toBeGreaterThan(0);
     });
 
     it("navigates months", () => {
-      const api = (root as any)._loomDatePicker;
+      const api = (root as any)._faqirDatePicker;
       api.open();
       const monthLabel = root.querySelector("[data-part='month-label']")!;
       const initialText = monthLabel.textContent;
@@ -2222,18 +2222,18 @@ describe("Recipe Controllers", () => {
 
     it("emits date-change event on selection", () => {
       let detail: any = null;
-      root.addEventListener("loom:date-change", ((e: CustomEvent) => {
+      root.addEventListener("faqir:date-change", ((e: CustomEvent) => {
         detail = e.detail;
       }) as EventListener);
 
-      const api = (root as any)._loomDatePicker;
+      const api = (root as any)._faqirDatePicker;
       api.selectDate(new Date(2025, 5, 15));
       expect(detail).not.toBeNull();
       expect(detail.date).toBe("2025-06-15");
     });
 
     it("closes after date selection", () => {
-      const api = (root as any)._loomDatePicker;
+      const api = (root as any)._faqirDatePicker;
       api.open();
       api.selectDate(new Date(2025, 0, 1));
       expect(root.dataset.state).toBe("closed");
@@ -2262,31 +2262,31 @@ describe("Recipe Controllers", () => {
           </div>
         </div>
       `;
-      Loom.start();
+      Faqir.start();
       root = document.querySelector("[data-ui='command-palette']")! as HTMLElement;
     });
 
     it("opens and shows panel", () => {
-      (root as any)._loomCommandPalette.open();
+      (root as any)._faqirCommandPalette.open();
       expect(root.dataset.state).toBe("open");
       expect((root.querySelector("[data-part='panel']") as HTMLElement).hidden).toBe(false);
     });
 
     it("closes on overlay click", () => {
-      (root as any)._loomCommandPalette.open();
+      (root as any)._faqirCommandPalette.open();
       root.querySelector("[data-part='overlay']")!.dispatchEvent(new Event("click"));
       expect(root.dataset.state).toBe("closed");
     });
 
     it("filters items by search", () => {
-      const api = (root as any)._loomCommandPalette;
+      const api = (root as any)._faqirCommandPalette;
       api.open();
       const count = api.filter("save");
       expect(count).toBe(1);
     });
 
     it("hides groups with no visible items", () => {
-      const api = (root as any)._loomCommandPalette;
+      const api = (root as any)._faqirCommandPalette;
       api.open();
       api.filter("settings");
       const groups = root.querySelectorAll("[data-part='group']");
@@ -2296,7 +2296,7 @@ describe("Recipe Controllers", () => {
     });
 
     it("has full API", () => {
-      const api = (root as any)._loomCommandPalette;
+      const api = (root as any)._faqirCommandPalette;
       expect(typeof api.open).toBe("function");
       expect(typeof api.close).toBe("function");
       expect(typeof api.filter).toBe("function");
@@ -2321,14 +2321,14 @@ describe("Backwards Compatibility", () => {
         </div>
       </div>
     `;
-    Loom.start();
+    Faqir.start();
     await tick();
 
     const root = document.querySelector("[data-ui='accordion']")! as HTMLElement;
-    expect((root as any)._loomAccordion).toBeDefined();
+    expect((root as any)._faqirAccordion).toBeDefined();
 
     // Can interact purely through controller API without any directives
-    (root as any)._loomAccordion.expand(0);
+    (root as any)._faqirAccordion.expand(0);
     expect(root.querySelector("[data-part='item']")!.getAttribute("data-state")).toBe("expanded");
   });
 });

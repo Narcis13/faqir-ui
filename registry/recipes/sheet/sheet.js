@@ -5,7 +5,7 @@ import { trapFocus } from "../../core/focus.js";
 
 export function createSheet(root) {
   // Prevent double-init
-  if (root._loomSheet) return root._loomSheet;
+  if (root._faqirSheet) return root._faqirSheet;
 
   const trigger = root.querySelector("[data-part='trigger']");
   const overlay = root.querySelector("[data-part='overlay']");
@@ -95,10 +95,10 @@ export function createSheet(root) {
     );
     root.removeEventListener("keydown", onKeyDown);
     if (focusCleanup) focusCleanup();
-    delete root._loomSheet;
+    delete root._faqirSheet;
   }
 
   const api = { open, close, toggle, destroy };
-  root._loomSheet = api;
+  root._faqirSheet = api;
   return api;
 }

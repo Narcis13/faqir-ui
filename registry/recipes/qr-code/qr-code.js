@@ -410,7 +410,7 @@ function matrixToSVG(matrix) {
 // ── Controller ──
 
 export function createQRCode(root) {
-  if (root._loomQR) return root._loomQR;
+  if (root._faqirQR) return root._faqirQR;
 
   function render() {
     const value = root.getAttribute("data-value") || "";
@@ -458,13 +458,13 @@ export function createQRCode(root) {
     observer.disconnect();
     const svg = root.querySelector("[data-part='svg']");
     if (svg) svg.remove();
-    delete root._loomQR;
+    delete root._faqirQR;
   }
 
   // Initial render
   render();
 
   const api = { render, update, destroy };
-  root._loomQR = api;
+  root._faqirQR = api;
   return api;
 }

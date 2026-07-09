@@ -1,5 +1,5 @@
 node_modules/
 dist/
-.loom/
+.faqir/
 bun.lock
 tests/.tmp-*

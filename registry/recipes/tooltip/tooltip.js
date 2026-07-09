@@ -5,7 +5,7 @@ import { debounce } from "../../core/utils.js";
 
 export function createTooltip(root) {
   // Prevent double-init
-  if (root._loomTooltip) return root._loomTooltip;
+  if (root._faqirTooltip) return root._faqirTooltip;
 
   const trigger = root.querySelector("[data-part='trigger']");
   const content = root.querySelector("[data-part='content']");
@@ -76,10 +76,10 @@ export function createTooltip(root) {
     trigger?.removeEventListener("focusin", onFocusIn);
     trigger?.removeEventListener("focusout", onFocusOut);
     root.removeEventListener("keydown", onKeyDown);
-    delete root._loomTooltip;
+    delete root._faqirTooltip;
   }
 
   const api = { show, hide, destroy };
-  root._loomTooltip = api;
+  root._faqirTooltip = api;
   return api;
 }

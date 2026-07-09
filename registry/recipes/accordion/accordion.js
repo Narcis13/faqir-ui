@@ -3,7 +3,7 @@
 
 export function createAccordion(root) {
   // Prevent double-init
-  if (root._loomAccordion) return root._loomAccordion;
+  if (root._faqirAccordion) return root._faqirAccordion;
 
   const getItems = () => [...root.querySelectorAll("[data-part='item']")];
   const isSingle = () => root.dataset.variant === "single";
@@ -95,10 +95,10 @@ export function createAccordion(root) {
   function destroy() {
     root.removeEventListener("click", onTriggerClick);
     root.removeEventListener("keydown", onKeyDown);
-    delete root._loomAccordion;
+    delete root._faqirAccordion;
   }
 
   const api = { toggle, expand, collapse, expandAll, collapseAll, destroy };
-  root._loomAccordion = api;
+  root._faqirAccordion = api;
   return api;
 }

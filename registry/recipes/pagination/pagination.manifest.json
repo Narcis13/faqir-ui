@@ -122,7 +122,7 @@
     "clicking-prev-goes-back",
     "prev-disabled-on-first-page",
     "next-disabled-on-last-page",
-    "emits-loom-page-change-event",
+    "emits-faqir-page-change-event",
     "active-page-has-aria-current",
     "nav-has-role-navigation",
     "nav-has-aria-label",

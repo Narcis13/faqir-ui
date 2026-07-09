@@ -5,7 +5,7 @@ import { onOutsideClick } from "../../core/events.js";
 
 export function createDropdown(root) {
   // Prevent double-init
-  if (root._loomDropdown) return root._loomDropdown;
+  if (root._faqirDropdown) return root._faqirDropdown;
 
   const trigger = root.querySelector("[data-part='trigger']");
   const menu = root.querySelector("[data-part='menu']");
@@ -118,10 +118,10 @@ export function createDropdown(root) {
     trigger?.removeEventListener("keydown", onTriggerKeyDown);
     menu?.removeEventListener("keydown", onMenuKeyDown);
     if (outsideClickCleanup) outsideClickCleanup();
-    delete root._loomDropdown;
+    delete root._faqirDropdown;
   }
 
   const api = { open, close, toggle, destroy };
-  root._loomDropdown = api;
+  root._faqirDropdown = api;
   return api;
 }

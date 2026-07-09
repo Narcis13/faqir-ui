@@ -7,7 +7,7 @@ import { conform } from "../../src/commands/conform";
 
 const TEST_DIR = join(import.meta.dir, "../.tmp-conform-test");
 
-describe("loom conform", () => {
+describe("faqir conform", () => {
   beforeEach(() => {
     rmSync(TEST_DIR, { recursive: true, force: true });
     mkdirSync(TEST_DIR, { recursive: true });
@@ -123,7 +123,7 @@ describe("loom conform", () => {
     expect(result).toBe(html);
   });
 
-  it("does not touch non-loom elements", async () => {
+  it("does not touch non-faqir elements", async () => {
     await init([]);
     await add(["button"]);
 

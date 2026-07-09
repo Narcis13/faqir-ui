@@ -5,7 +5,7 @@ import { configExists, readConfig, writeConfig } from "../utils/config";
 import { copyDir, getRegistryPath } from "../utils/fs";
 import { loadManifest, type Manifest } from "../manifest";
 import { findComponentInRegistry, listRegistryComponents, type Layer } from "../utils/components";
-import { regenerateLoomInit, regenerateContext } from "../utils/codegen";
+import { regenerateFaqirInit, regenerateContext } from "../utils/codegen";
 import { generateBundle } from "../utils/bundler";
 
 interface AddOptions {
@@ -61,14 +61,14 @@ function parseArgs(args: string[]): { components: string[]; options: AddOptions 
 }
 
 function printHelp() {
-  log.heading("loom add <components...>");
+  log.heading("faqir add <components...>");
   log.blank();
   console.log("Add one or more components to the project.");
   log.blank();
   console.log("Usage:");
-  console.log("  loom add button card input");
-  console.log("  loom add --all");
-  console.log("  loom add --layer primitives");
+  console.log("  faqir add button card input");
+  console.log("  faqir add --all");
+  console.log("  faqir add --layer primitives");
   log.blank();
   console.log("Options:");
   log.table([
@@ -88,7 +88,7 @@ export async function add(args: string[]): Promise<void> {
   const cwd = process.cwd();
 
   if (!configExists(cwd)) {
-    log.error("No loom.config.json found. Run 'loom init' first.");
+    log.error("No faqir.config.json found. Run 'faqir init' first.");
     process.exit(1);
   }
 
@@ -105,8 +105,8 @@ export async function add(args: string[]): Promise<void> {
     toAdd = listRegistryComponents(registryPath, options.layer);
   } else {
     if (components.length === 0) {
-      log.error("No components specified. Usage: loom add <component...>");
-      log.dim("Run 'loom add --help' for options.");
+      log.error("No components specified. Usage: faqir add <component...>");
+      log.dim("Run 'faqir add --help' for options.");
       process.exit(1);
     }
     toAdd = components;
@@ -118,7 +118,7 @@ export async function add(args: string[]): Promise<void> {
     const found = findComponentInRegistry(name, registryPath);
     if (!found) {
       log.error(`Component '${name}' not found in registry.`);
-      log.dim("Run 'loom list' to see available components.");
+      log.dim("Run 'faqir list' to see available components.");
       process.exit(1);
     }
     resolved.push({ name, ...found });
@@ -204,16 +204,16 @@ export async function add(args: string[]): Promise<void> {
 
   await writeConfig(config, cwd);
 
-  // Regenerate auto-init loom.js if any recipes are installed
+  // Regenerate auto-init faqir.js if any recipes are installed
   if (config.installed.recipes.length > 0 && config.include_core !== false) {
-    await regenerateLoomInit(config, outputDir);
+    await regenerateFaqirInit(config, outputDir);
   }
 
-  // Regenerate .loom/context.json
+  // Regenerate .faqir/context.json
   await regenerateContext(config, outputDir, cwd);
 
   // Auto-bundle if bundle file exists
-  const bundlePath = join(outputDir, "loom.bundle.css");
+  const bundlePath = join(outputDir, "faqir.bundle.css");
   if (config.bundle?.auto !== false && existsSync(bundlePath)) {
     await generateBundle(cwd);
     log.step("Bundle regenerated.");

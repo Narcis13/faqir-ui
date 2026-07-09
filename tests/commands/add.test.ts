@@ -7,7 +7,7 @@ import { readConfig } from "../../src/utils/config";
 
 const TEST_DIR = join(import.meta.dir, "../.tmp-add-test");
 
-describe("loom add", () => {
+describe("faqir add", () => {
   beforeEach(() => {
     rmSync(TEST_DIR, { recursive: true, force: true });
     mkdirSync(TEST_DIR, { recursive: true });
@@ -19,7 +19,7 @@ describe("loom add", () => {
     rmSync(TEST_DIR, { recursive: true, force: true });
   });
 
-  it("fails without loom.config.json", async () => {
+  it("fails without faqir.config.json", async () => {
     let exitCode = 0;
     const origExit = process.exit;
     process.exit = ((code: number) => { exitCode = code; throw new Error("exit"); }) as any;
@@ -92,11 +92,11 @@ describe("loom add", () => {
     expect(existsSync(join(TEST_DIR, "ui/primitives/button"))).toBe(false);
   });
 
-  it("updates .loom/context.json with component data", async () => {
+  it("updates .faqir/context.json with component data", async () => {
     await init([]);
     await add(["button"]);
 
-    const context = await Bun.file(join(TEST_DIR, ".loom/context.json")).json();
+    const context = await Bun.file(join(TEST_DIR, ".faqir/context.json")).json();
     expect(context.components.button).toBeDefined();
     expect(context.components.button.kind).toBe("primitive");
     expect(context.meta.component_count.primitives).toBe(1);

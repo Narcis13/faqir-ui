@@ -534,11 +534,11 @@ export const closeLabelRule: AuditRule = {
 };
 
 // ── Rule: no-class-attribute ──
-// Components should never use class attributes — data attributes are the Loom protocol
+// Components should never use class attributes — data attributes are the Faqir protocol
 export const noClassAttributeRule: AuditRule = {
   id: "no-class-attribute",
   severity: "warning",
-  description: "Element uses class attribute — Loom components use data-ui, data-variant, data-state instead",
+  description: "Element uses class attribute — Faqir components use data-ui, data-variant, data-state instead",
   check(component, _manifest) {
     const results: AuditResult[] = [];
 

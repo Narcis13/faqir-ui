@@ -126,7 +126,7 @@
   border: 2px solid currentColor;
   border-right-color: transparent;
   border-radius: var(--radius-full);
-  animation: loom-spin 0.6s linear infinite;
+  animation: faqir-spin 0.6s linear infinite;
   color: var(--color-fg);
 }
 
@@ -164,6 +164,6 @@
   }
 }
 
-@keyframes loom-spin {
+@keyframes faqir-spin {
   to { transform: rotate(360deg); }
 }

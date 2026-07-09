@@ -62,13 +62,13 @@ export async function runAudit(options: AuditOptions = {}): Promise<AuditSummary
   if (options.file) {
     htmlFiles.push(options.file);
   } else {
-    // Scan project for HTML files (excluding node_modules, .loom, ui/ component source)
+    // Scan project for HTML files (excluding node_modules, .faqir, ui/ component source)
     const glob = new Bun.Glob("**/*.html");
     for await (const path of glob.scan({ cwd, onlyFiles: true })) {
       // Skip node_modules
       if (path.includes("node_modules")) continue;
-      // Skip .loom directory
-      if (path.startsWith(".loom")) continue;
+      // Skip .faqir directory
+      if (path.startsWith(".faqir")) continue;
       // Include everything else (including ui/ component reference files)
       htmlFiles.push(join(cwd, path));
     }
@@ -189,8 +189,8 @@ function checkControllersInFile(
     const jsFile = manifest.files.js!;
     const controllerName = jsFile.replace(".js", "");
 
-    // Check for: <script src="...dialog.js">, import from "...dialog.js", or loom.js (auto-init)
-    const hasScript = sourceLower.includes(jsFile) || sourceLower.includes("loom.js") || sourceLower.includes("loom.min.js");
+    // Check for: <script src="...dialog.js">, import from "...dialog.js", or faqir.js (auto-init)
+    const hasScript = sourceLower.includes(jsFile) || sourceLower.includes("faqir.js") || sourceLower.includes("faqir.min.js");
 
     if (!hasScript) {
       results.push({

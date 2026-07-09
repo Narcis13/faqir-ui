@@ -1,10 +1,10 @@
-# loom-core.js — Complete Implementation Plan
+# faqir-core.js — Complete Implementation Plan
 
 ## 1. Context & Vision
 
-Loom UI has 17 CSS-only primitives, 15 interactive recipes, and a stable 5-attribute DOM protocol (`data-ui`, `data-part`, `data-state`, `data-variant`, `data-size`). But the JavaScript story is fragmented: 7 separate core modules, 15 separate controller files, and the playground wires everything up with inline `onclick` handlers and manual `<script type="module">` imports.
+Faqir UI has 17 CSS-only primitives, 15 interactive recipes, and a stable 5-attribute DOM protocol (`data-ui`, `data-part`, `data-state`, `data-variant`, `data-size`). But the JavaScript story is fragmented: 7 separate core modules, 15 separate controller files, and the playground wires everything up with inline `onclick` handlers and manual `<script type="module">` imports.
 
-**`loom-core.js` unifies all of this into a single CDN-ready file** that adds AlpineJS-style declarative reactivity on top of the existing Loom protocol. It replaces all the separate `core/*.js` files and recipe imports at runtime — one `<script>` tag gives you everything.
+**`faqir-core.js` unifies all of this into a single CDN-ready file** that adds AlpineJS-style declarative reactivity on top of the existing Faqir protocol. It replaces all the separate `core/*.js` files and recipe imports at runtime — one `<script>` tag gives you everything.
 
 ### What makes this more than "Alpine with `l-` prefix"
 
@@ -19,26 +19,26 @@ Loom UI has 17 CSS-only primitives, 15 interactive recipes, and a stable 5-attri
 - **Bundle:** All-in-one (~15KB minified, ~6KB gzip) — reactive engine + 15 controllers + utilities
 - **Prefix:** `l-` directives (`l-data`, `l-text`, `l-show`, `@click`, `:class`)
 - **Props:** Full typed props in every manifest + runtime `data-prop-*` resolution
-- **Replaces:** `loom-core.js` replaces all separate `core/*.js` files at runtime
+- **Replaces:** `faqir-core.js` replaces all separate `core/*.js` files at runtime
 
 ---
 
 ## 2. File Structure & UMD Wrapper
 
-### Output: `registry/core/loom-core.js`
+### Output: `registry/core/faqir-core.js`
 
 ```javascript
 /**
- * Loom Core v0.1.0
- * Alpine-style reactivity for the Loom UI component system.
+ * Faqir Core v0.1.0
+ * Alpine-style reactivity for the Faqir UI component system.
  * Zero dependencies. CDN-ready. Agent-native.
  * 
  * Usage:
- *   <script src="loom-core.js"></script>
+ *   <script src="faqir-core.js"></script>
  *   — or —
- *   <script src="loom-core.js" type="module"></script>
+ *   <script src="faqir-core.js" type="module"></script>
  *   — or —
- *   import Loom from './loom-core.js'
+ *   import Faqir from './faqir-core.js'
  */
 (function(global, factory) {
   // UMD: CommonJS / AMD / Browser global / ESM
@@ -47,10 +47,10 @@ Loom UI has 17 CSS-only primitives, 15 interactive recipes, and a stable 5-attri
   } else if (typeof define === 'function' && define.amd) {
     define(factory);
   } else {
-    var Loom = factory();
-    global.Loom = Loom;
+    var Faqir = factory();
+    global.Faqir = Faqir;
     // Auto-export for ESM <script type="module"> usage
-    if (typeof globalThis !== 'undefined') globalThis.Loom = Loom;
+    if (typeof globalThis !== 'undefined') globalThis.Faqir = Faqir;
   }
 })(typeof globalThis !== 'undefined' ? globalThis : typeof self !== 'undefined' ? self : this, function() {
   'use strict';
@@ -60,7 +60,7 @@ Loom UI has 17 CSS-only primitives, 15 interactive recipes, and a stable 5-attri
   // Section 2: Expression Evaluator
   // Section 3: Directive System
   // Section 4: Magic Properties
-  // Section 5: Loom Bridge ($state, $variant, $ui)
+  // Section 5: Faqir Bridge ($state, $variant, $ui)
   // Section 6: Core Utilities (dom, events, focus, motion, store, utils)
   // Section 7: Recipe Controllers (all 15)
   // Section 8: Global API
@@ -69,7 +69,7 @@ Loom UI has 17 CSS-only primitives, 15 interactive recipes, and a stable 5-attri
 
   // ... all sections ...
 
-  return Loom;
+  return Faqir;
 });
 ```
 
@@ -79,7 +79,7 @@ Loom UI has 17 CSS-only primitives, 15 interactive recipes, and a stable 5-attri
 
 ### Design: Shallow Proxy with effect tracking
 
-Loom components have flat reactive state (`{ open: false, count: 0, title: 'Hello' }`). No deep reactivity needed — this saves ~100 lines and complexity vs Vue 3's approach.
+Faqir components have flat reactive state (`{ open: false, count: 0, title: 'Hello' }`). No deep reactivity needed — this saves ~100 lines and complexity vs Vue 3's approach.
 
 ### Data structures
 
@@ -256,7 +256,7 @@ function evaluate(expression, scope, el) {
     const fn = compileExpression(expression);
     return fn.call(scope, scope, el);
   } catch (e) {
-    console.warn(`[Loom] Expression error: "${expression}"`, e);
+    console.warn(`[Faqir] Expression error: "${expression}"`, e);
     return undefined;
   }
 }
@@ -267,7 +267,7 @@ function evaluateAssignment(expression, scope, el) {
     const fn = compileStatement(expression);
     fn.call(scope, scope, el);
   } catch (e) {
-    console.warn(`[Loom] Statement error: "${expression}"`, e);
+    console.warn(`[Faqir] Statement error: "${expression}"`, e);
   }
 }
 
@@ -332,7 +332,7 @@ function createScopeWithMagics(data, el, root) {
     ), enumerable: false },
     $nextTick: { value: (fn) => queueMicrotask(fn || (() => {})), enumerable: false },
     $watch: { value: (key, cb) => watchProperty(data, key, cb), enumerable: false },
-    $id: { value: (name) => `loom-${root.__scopeId}-${name}`, enumerable: false }
+    $id: { value: (name) => `faqir-${root.__scopeId}-${name}`, enumerable: false }
   });
   
   // Spread user data ON TOP of magics (user can override if they want)
@@ -517,7 +517,7 @@ function initScope(root, parentScope) {
   
   if (expr) {
     if (dataRegistry.has(expr)) {
-      // Named data: l-data="counter" → look up Loom.data('counter')
+      // Named data: l-data="counter" → look up Faqir.data('counter')
       userData = dataRegistry.get(expr)();
     } else if (expr.trim()) {
       // Inline object: l-data="{ count: 0 }"
@@ -532,11 +532,11 @@ function initScope(root, parentScope) {
   // Create scope with magics
   const scopeId = ++scopeCounter;
   const scope = createScopeWithMagics(userData, root, root);
-  root.__loomScope = scope;
+  root.__faqirScope = scope;
   root.__scopeId = scopeId;
   
   // Store cleanup functions for this scope
-  root.__loomCleanups = [];
+  root.__faqirCleanups = [];
   
   // Process l-init if present
   const initExpr = root.getAttribute('l-init');
@@ -758,10 +758,10 @@ function handleModel(el, dir, scope) {
   
   const tag = el.tagName.toLowerCase();
   const type = el.getAttribute('type');
-  const isLoomSwitch = el.hasAttribute('data-ui') && el.dataset.ui === 'switch';
+  const isFaqirSwitch = el.hasAttribute('data-ui') && el.dataset.ui === 'switch';
   
-  if (isLoomSwitch) {
-    // Loom switch: bind to data-state="on"|"off" and aria-checked
+  if (isFaqirSwitch) {
+    // Faqir switch: bind to data-state="on"|"off" and aria-checked
     const cleanup = effect(() => {
       const value = evaluate(prop, scope, el);
       el.dataset.state = value ? 'on' : 'off';
@@ -867,7 +867,7 @@ function handleShow(el, dir, scope) {
 function handleIf(el, dir, scope) {
   // l-if MUST be on a <template> element
   if (el.tagName !== 'TEMPLATE') {
-    console.warn('[Loom] l-if must be used on a <template> element');
+    console.warn('[Faqir] l-if must be used on a <template> element');
     return;
   }
   
@@ -931,7 +931,7 @@ function handleIf(el, dir, scope) {
 ```javascript
 function handleFor(el, dir, scope) {
   if (el.tagName !== 'TEMPLATE') {
-    console.warn('[Loom] l-for must be used on a <template> element');
+    console.warn('[Faqir] l-for must be used on a <template> element');
     return;
   }
   
@@ -941,7 +941,7 @@ function handleFor(el, dir, scope) {
   );
   
   if (!match) {
-    console.warn(`[Loom] Invalid l-for expression: "${dir.expression}"`);
+    console.warn(`[Faqir] Invalid l-for expression: "${dir.expression}"`);
     return;
   }
   
@@ -984,8 +984,8 @@ function handleFor(el, dir, scope) {
         // Create a child scope that inherits from parent
         const childScope = reactive(Object.create(scope));
         Object.assign(childScope, childData);
-        node.__loomScope = childScope;
-        node.__loomCleanups = [];
+        node.__faqirScope = childScope;
+        node.__faqirCleanups = [];
         
         processElement(node, childScope);
         walkChildren(node, childScope);
@@ -1066,18 +1066,18 @@ function runLeaveTransition(el, name, done) {
 function handleRef(el, dir, scope) {
   const name = dir.expression;
   const root = findScopeRoot(el);
-  if (!root.__loomRefs) root.__loomRefs = {};
-  root.__loomRefs[name] = el;
+  if (!root.__faqirRefs) root.__faqirRefs = {};
+  root.__faqirRefs[name] = el;
   
   addCleanup(el, () => {
-    if (root.__loomRefs?.[name] === el) {
-      delete root.__loomRefs[name];
+    if (root.__faqirRefs?.[name] === el) {
+      delete root.__faqirRefs[name];
     }
   });
 }
 
 function getScopeRefs(root) {
-  return root.__loomRefs || {};
+  return root.__faqirRefs || {};
 }
 ```
 
@@ -1191,14 +1191,14 @@ function watchProperty(scope, key, callback) {
 
 ```javascript
 // Inside createScopeWithMagics:
-$id: { value: (name) => `loom-${root.__scopeId}-${name}`, enumerable: false }
+$id: { value: (name) => `faqir-${root.__scopeId}-${name}`, enumerable: false }
 ```
 
-Used for accessible IDs: `<input :id="$id('email')" />` produces `loom-3-email`.
+Used for accessible IDs: `<input :id="$id('email')" />` produces `faqir-3-email`.
 
 ---
 
-## 7. Section 5 — Loom Bridge (~80 lines)
+## 7. Section 5 — Faqir Bridge (~80 lines)
 
 ### `$state` and `$variant` — Bidirectional sync
 
@@ -1254,9 +1254,9 @@ function triggerStateDeps(scope) {
 function getControllerApi(uiEl) {
   if (!uiEl) return null;
   
-  // Find the _loom* property on the element
+  // Find the _faqir* property on the element
   for (const key of Object.keys(uiEl)) {
-    if (key.startsWith('_loom')) {
+    if (key.startsWith('_faqir')) {
       return uiEl[key];
     }
   }
@@ -1265,7 +1265,7 @@ function getControllerApi(uiEl) {
 }
 ```
 
-This works because every controller sets `root._loomDialog = api` (etc.), and the naming is consistent.
+This works because every controller sets `root._faqirDialog = api` (etc.), and the naming is consistent.
 
 ### `closestUI(el)` helper
 
@@ -1397,7 +1397,7 @@ function waitForTransition(el) {
 
 ```javascript
 let counter = 0;
-function uid(prefix = 'loom') { return `${prefix}-${++counter}`; }
+function uid(prefix = 'faqir') { return `${prefix}-${++counter}`; }
 function clamp(value, min, max) { return Math.min(Math.max(value, min), max); }
 
 function debounce(fn, ms) {
@@ -1419,7 +1419,7 @@ function throttle(fn, ms) {
 
 ### From `store.js`
 
-Replaced by the reactive engine — `Loom.store()` creates a `reactive()` object directly. The old pub/sub pattern is subsumed by effects.
+Replaced by the reactive engine — `Faqir.store()` creates a `reactive()` object directly. The old pub/sub pattern is subsumed by effects.
 
 ---
 
@@ -1432,23 +1432,23 @@ All 15 controllers are embedded directly, with their `import` statements removed
 ```javascript
 const controllerRegistry = {};
 
-// Map data-ui name → _loom* property name
+// Map data-ui name → _faqir* property name
 const CONTROLLER_PROP = {
-  'dialog': '_loomDialog',
-  'drawer': '_loomDrawer',
-  'tabs': '_loomTabs',
-  'dropdown': '_loomDropdown',
-  'accordion': '_loomAccordion',
-  'tooltip': '_loomTooltip',
-  'toast-container': '_loomToast',
-  'combobox': '_loomCombobox',
-  'command-palette': '_loomCommandPalette',
-  'table': '_loomTable',
-  'select-custom': '_loomSelectCustom',
-  'popover': '_loomPopover',
-  'pagination': '_loomPagination',
-  'sheet': '_loomSheet',
-  'date-picker': '_loomDatePicker',
+  'dialog': '_faqirDialog',
+  'drawer': '_faqirDrawer',
+  'tabs': '_faqirTabs',
+  'dropdown': '_faqirDropdown',
+  'accordion': '_faqirAccordion',
+  'tooltip': '_faqirTooltip',
+  'toast-container': '_faqirToast',
+  'combobox': '_faqirCombobox',
+  'command-palette': '_faqirCommandPalette',
+  'table': '_faqirTable',
+  'select-custom': '_faqirSelectCustom',
+  'popover': '_faqirPopover',
+  'pagination': '_faqirPagination',
+  'sheet': '_faqirSheet',
+  'date-picker': '_faqirDatePicker',
 };
 ```
 
@@ -1506,51 +1506,51 @@ const customDirectives = new Map();
 const customMagics = new Map();
 let scopeCounter = 0;
 
-const Loom = {
+const Faqir = {
   version: '0.1.0',
   
   // Register reusable data component
-  // Usage: Loom.data('counter', () => ({ count: 0, inc() { this.count++ } }))
+  // Usage: Faqir.data('counter', () => ({ count: 0, inc() { this.count++ } }))
   // In HTML: <div l-data="counter">
   data(name, fn) {
     dataRegistry.set(name, fn);
   },
   
   // Create global reactive store
-  // Usage: Loom.store('theme', { mode: 'light', name: 'default' })
+  // Usage: Faqir.store('theme', { mode: 'light', name: 'default' })
   // In HTML: l-text="$store.theme.mode"
   store(name, data) {
     globalStores[name] = reactive(data);
   },
   
   // Register custom directive
-  // Usage: Loom.directive('tooltip', (el, { expression, modifiers }, scope) => { ... })
+  // Usage: Faqir.directive('tooltip', (el, { expression, modifiers }, scope) => { ... })
   // In HTML: <span l-tooltip="'Hello'">Hover me</span>
   directive(name, callback) {
     customDirectives.set(name, callback);
   },
   
   // Register custom magic property
-  // Usage: Loom.magic('now', (el) => new Date())
+  // Usage: Faqir.magic('now', (el) => new Date())
   // In HTML: <span l-text="$now">
   magic(name, callback) {
     customMagics.set(name, callback);
   },
   
   // Register plugin
-  // Usage: Loom.plugin(myPlugin) where myPlugin = (Loom) => { ... }
+  // Usage: Faqir.plugin(myPlugin) where myPlugin = (Faqir) => { ... }
   plugin(fn) {
-    fn(Loom);
+    fn(Faqir);
   },
   
   // Register a recipe controller (for custom or external controllers)
-  // Usage: Loom.controller('my-widget', createMyWidget)
+  // Usage: Faqir.controller('my-widget', createMyWidget)
   controller(name, factory) {
     controllerRegistry[name] = factory;
   },
   
   // Manual initialization (by default, auto-start on DOMContentLoaded)
-  // To prevent auto-start: <script src="loom-core.js" data-manual></script>
+  // To prevent auto-start: <script src="faqir-core.js" data-manual></script>
   start() {
     bootstrap();
   },
@@ -1634,7 +1634,7 @@ function bootstrap() {
             node.querySelectorAll(`[data-ui="${name}"]`).forEach(factory);
           }
           node.querySelectorAll('[l-data], [data-ui]').forEach(el => {
-            if (!el.__loomScope) {
+            if (!el.__faqirScope) {
               initTree(el, findParentScope(el));
             }
           });
@@ -1649,7 +1649,7 @@ function bootstrap() {
 function findParentScope(el) {
   let parent = el.parentElement;
   while (parent) {
-    if (parent.__loomScope) return parent.__loomScope;
+    if (parent.__faqirScope) return parent.__faqirScope;
     parent = parent.parentElement;
   }
   return null;
@@ -1658,7 +1658,7 @@ function findParentScope(el) {
 function findScopeRoot(el) {
   let current = el;
   while (current) {
-    if (current.__loomScope) return current;
+    if (current.__faqirScope) return current;
     current = current.parentElement;
   }
   return null;
@@ -1667,14 +1667,14 @@ function findScopeRoot(el) {
 // Cleanup helper
 function addCleanup(el, fn) {
   const root = findScopeRoot(el) || el;
-  if (!root.__loomCleanups) root.__loomCleanups = [];
-  root.__loomCleanups.push(fn);
+  if (!root.__faqirCleanups) root.__faqirCleanups = [];
+  root.__faqirCleanups.push(fn);
 }
 
 function destroyScope(el) {
-  if (el.__loomCleanups) {
-    for (const fn of el.__loomCleanups) fn();
-    el.__loomCleanups = [];
+  if (el.__faqirCleanups) {
+    for (const fn of el.__faqirCleanups) fn();
+    el.__faqirCleanups = [];
   }
   // Also destroy child scopes
   if (el.querySelectorAll) {
@@ -1803,7 +1803,7 @@ And with directives:
 </script>
 ```
 
-**After (loom-core.js):**
+**After (faqir-core.js):**
 ```html
 <div l-data="{ theme: 'default', mode: 'light' }">
   <button data-ui="button" 
@@ -1835,7 +1835,7 @@ And with directives:
 
 **After (automatic + reactive):**
 ```html
-<script src="loom-core.js"></script>
+<script src="faqir-core.js"></script>
 
 <div data-ui="dialog" data-state="closed" l-data="{ title: 'Edit Profile' }">
   <button data-part="trigger" data-ui="button" data-variant="primary">Open Dialog</button>
@@ -1900,12 +1900,12 @@ And with directives:
 
 ```html
 <script>
-  Loom.store('notifications', { count: 0 });
+  Faqir.store('notifications', { count: 0 });
 </script>
 
 <div l-data>
   <button data-ui="button" @click="
-    document.getElementById('toast-container')._loomToast.add({
+    document.getElementById('toast-container')._faqirToast.add({
       message: 'Hello!', tone: 'success', duration: 3000
     });
     $store.notifications.count++
@@ -1927,7 +1927,7 @@ And with directives:
 | Expression Evaluator | ~80 | 0.6KB | 0.3KB |
 | Directive System | ~400 | 2.8KB | 1.2KB |
 | Magic Properties | ~100 | 0.7KB | 0.3KB |
-| Loom Bridge | ~80 | 0.6KB | 0.3KB |
+| Faqir Bridge | ~80 | 0.6KB | 0.3KB |
 | Core Utilities | ~380 | 1.5KB | 0.6KB |
 | Recipe Controllers | ~2,416 | 8.0KB | 3.0KB |
 | Global API | ~60 | 0.4KB | 0.2KB |
@@ -1941,7 +1941,7 @@ For comparison: AlpineJS is 15KB minified / 4.3KB gzipped.
 ## 15. Implementation Phases
 
 ### Phase 1: Reactive Engine + Expression Evaluator
-Create `registry/core/loom-core.js` with Sections 1-2. No DOM yet — pure reactive primitives.
+Create `registry/core/faqir-core.js` with Sections 1-2. No DOM yet — pure reactive primitives.
 
 ### Phase 2: Directive Infrastructure + l-data
 Add Section 3 scaffolding (parser, tree walker, priority sorting) + `l-data` directive.
@@ -1950,32 +1950,32 @@ Add Section 3 scaffolding (parser, tree walker, priority sorting) + `l-data` dir
 `l-text`, `l-html`, `l-bind`/`:`, `l-on`/`@` (with all modifiers), `l-ref`, `l-init`, `l-effect`, `l-cloak`.
 
 ### Phase 4: Complex Directives
-`l-model` (all input types + loom switch), `l-show` (with transitions), `l-if`, `l-for`, `l-transition`, `l-teleport`.
+`l-model` (all input types + faqir switch), `l-show` (with transitions), `l-if`, `l-for`, `l-transition`, `l-teleport`.
 
-### Phase 5: Magic + Loom Bridge
+### Phase 5: Magic + Faqir Bridge
 `$el`, `$refs`, `$store`, `$watch`, `$dispatch`, `$nextTick`, `$id`. Then `$state`, `$variant`, `$ui` with MutationObserver bridge.
 
 ### Phase 6: Embed Controllers + Global API + Bootstrap
-Inline all 15 controllers + core utilities. Add `Loom.*` API. UMD wrapper. Auto-start logic.
+Inline all 15 controllers + core utilities. Add `Faqir.*` API. UMD wrapper. Auto-start logic.
 
 ### Phase 7: Playground Migration + Manifest Props
-Update `playground/index.html` to use `<script src="loom-core.js">`. Add `props` to all 38 manifests.
+Update `playground/index.html` to use `<script src="faqir-core.js">`. Add `props` to all 38 manifests.
 
 ### Phase 8: Testing + Polish
-Write tests in `tests/core/loom-core.test.ts`. Size audit. Documentation.
+Write tests in `tests/core/faqir-core.test.ts`. Size audit. Documentation.
 
 ---
 
 ## 16. Verification Plan
 
-1. **Unit tests** (in `tests/core/loom-core.test.ts` using Bun + happy-dom):
+1. **Unit tests** (in `tests/core/faqir-core.test.ts` using Bun + happy-dom):
    - Reactive: proxy tracking, effect re-runs, batching, cleanup
    - Expressions: evaluation, caching, error handling
    - Each directive: l-text, l-bind, l-on, l-model, l-show, l-if, l-for, etc.
    - Magics: $el, $refs, $store, $state, $variant, $ui, $watch, $dispatch
    - Bridge: data-state sync, controller auto-init, $ui access
 
-2. **Integration test**: Load playground in browser with only `<script src="loom-core.js">`:
+2. **Integration test**: Load playground in browser with only `<script src="faqir-core.js">`:
    - All 15 recipes auto-initialize
    - Dialog opens/closes, tabs switch, accordion expands, dropdown works
    - Theme/mode switcher works via directives
@@ -1983,7 +1983,7 @@ Write tests in `tests/core/loom-core.test.ts`. Size audit. Documentation.
 
 3. **Backwards compatibility**: Existing HTML without `l-*` directives still works (controllers auto-init from `data-ui`)
 
-4. **Size check**: `wc -c loom-core.js` should be < 50KB raw. After `terser`: < 17KB. After gzip: < 7KB.
+4. **Size check**: `wc -c faqir-core.js` should be < 50KB raw. After `terser`: < 17KB. After gzip: < 7KB.
 
 5. **CDN test**: Serve from simple HTTP server (`python -m http.server`), load via `<script src>` (not module), verify everything works.
 
@@ -1993,8 +1993,8 @@ Write tests in `tests/core/loom-core.test.ts`. Size audit. Documentation.
 
 | Action | File | What |
 |--------|------|------|
-| **CREATE** | `registry/core/loom-core.js` | The single deliverable |
-| **UPDATE** | `playground/index.html` | Replace `<script type="module">` with `<script src="loom-core.js">`, convert inline onclick to directives |
+| **CREATE** | `registry/core/faqir-core.js` | The single deliverable |
+| **UPDATE** | `playground/index.html` | Replace `<script type="module">` with `<script src="faqir-core.js">`, convert inline onclick to directives |
 | **UPDATE** | `registry/primitives/button/button.manifest.json` | Add `props` |
 | **UPDATE** | `registry/primitives/input/input.manifest.json` | Add `props` |
 | **UPDATE** | `registry/primitives/textarea/textarea.manifest.json` | Add `props` |
@@ -2022,4 +2022,4 @@ Write tests in `tests/core/loom-core.test.ts`. Size audit. Documentation.
 | **UPDATE** | `registry/recipes/date-picker/date-picker.manifest.json` | Add `props` |
 | **UPDATE** | `registry/recipes/drawer/drawer.manifest.json` | Add `props` |
 | **UPDATE** | `registry/recipes/sheet/sheet.manifest.json` | Add `props` |
-| **CREATE** | `tests/core/loom-core.test.ts` | Test suite |
+| **CREATE** | `tests/core/faqir-core.test.ts` | Test suite |

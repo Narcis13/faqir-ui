@@ -1,11 +1,11 @@
-## Loom UI Enhancement Prerequisites
+## Faqir UI Enhancement Prerequisites
 
 > **This section must be completed BEFORE starting the craft unification.**
-> Loom UI in its current state is an excellent web UI framework, but it lacks several primitives and capabilities that reportcraft/forma need for document rendering, print output, and data-driven generation. Adding these to loom-ui first means craft can consume them cleanly rather than working around gaps.
+> Faqir UI in its current state is an excellent web UI framework, but it lacks several primitives and capabilities that reportcraft/forma need for document rendering, print output, and data-driven generation. Adding these to faqir-ui first means craft can consume them cleanly rather than working around gaps.
 
 ### Analysis: api-source.js and Data-Driven Rendering
 
-Loom UI recently added `api-source.js` (`registry/core/api-source.js`) — a thin CRUD service factory that creates reactive data sources consumable by `l-data` blocks. Two approaches are documented in `docs/data-driven-rendering.md`:
+Faqir UI recently added `api-source.js` (`registry/core/api-source.js`) — a thin CRUD service factory that creates reactive data sources consumable by `l-data` blocks. Two approaches are documented in `docs/data-driven-rendering.md`:
 
 **Approach B (available now):** Application-level service layer
 ```html
@@ -21,7 +21,7 @@ Loom UI recently added `api-source.js` (`registry/core/api-source.js`) — a thi
 - Polling support: `startPolling(ms)`, `stopPolling()`
 - Lives in a `<script>` tag — not a recipe controller, so it doesn't violate the `no-fetch` audit rule
 
-**Approach C (planned):** `l-source` directive built into loom-core.js
+**Approach C (planned):** `l-source` directive built into faqir-core.js
 ```html
 <div l-data="{ search: '' }" l-source:invoices="/api/invoices">
   <template l-for="inv in invoices">...</template>
@@ -42,21 +42,21 @@ Loom UI recently added `api-source.js` (`registry/core/api-source.js`) — a thi
 
 4. **Live preview in studio**: contzo-studio could use `apiSource('/api/craft/template/{slug}/preview')` to render templates with live data previews.
 
-**Recommendation**: Build Approach C (`l-source` directive) into loom-core.js before unification. This gives craft a first-class data binding mechanism that works at both the declarative template level and runtime. Approach B works as the migration path and escape hatch.
+**Recommendation**: Build Approach C (`l-source` directive) into faqir-core.js before unification. This gives craft a first-class data binding mechanism that works at both the declarative template level and runtime. Approach B works as the migration path and escape hatch.
 
 ---
 
 ### Missing Primitives and Recipes — Gap Analysis
 
-#### Current Loom UI Inventory
+#### Current Faqir UI Inventory
 - **22 Primitives** (CSS-only): avatar, badge, button, card, checkbox, empty-state, grid, input, kbd, label, nav, progress, radio, select, separator, spinner, stack, stepper, surface, switch, text, textarea
 - **15 Recipes** (CSS+JS): accordion, combobox, command-palette, date-picker, dialog, drawer, dropdown, pagination, popover, select-custom, sheet, table, tabs, toast, tooltip
 - **6 Patterns**: auth-form, crud-table, dashboard-shell, empty-state, search-results, settings-page
 - **4 Themes**: default, brutalist, midnight, paper
 
-#### Gap Map: What Craft Needs vs What Loom Has
+#### Gap Map: What Craft Needs vs What Faqir Has
 
-| Craft Component | Loom Equivalent | Gap | Priority |
+| Craft Component | Faqir Equivalent | Gap | Priority |
 |---|---|---|---|
 | `image` (reportcraft) | `avatar` (partial) | No general image primitive | **CRITICAL** |
 | `key-value` (reportcraft) | None | No labeled data pair component | **CRITICAL** |
@@ -75,7 +75,7 @@ Loom UI recently added `api-source.js` (`registry/core/api-source.js`) — a thi
 
 ---
 
-### Recommended Loom UI Additions (Ordered by Priority)
+### Recommended Faqir UI Additions (Ordered by Priority)
 
 #### TIER 1 — Critical (blocks unification without them)
 
@@ -90,7 +90,7 @@ registry/primitives/image/
 - Variants: `responsive` (default), `thumbnail`, `cover`, `contain`
 - Sizes: `xs` (48px), `sm` (96px), `md` (192px), `lg` (384px), `full` (100%)
 - Features: alt text enforcement (a11y), aspect-ratio container, lazy loading via `loading="lazy"`, print-optimized max-width
-- Why: reportcraft's `image` component renders inline-styled `<img>` tags. Craft needs a Loom-native equivalent with `data-ui` attributes.
+- Why: reportcraft's `image` component renders inline-styled `<img>` tags. Craft needs a Faqir-native equivalent with `data-ui` attributes.
 
 **2. `key-value` primitive**
 ```
@@ -143,7 +143,7 @@ registry/primitives/field-group/
 - Parts: `data-part="label"`, `data-part="description"`, `data-part="input"` (slot), `data-part="error"`
 - States: `data-state="error"` (red border + error message visible), `data-state="valid"` (green check)
 - Required indicator: `data-required` shows asterisk after label
-- Why: forma's React `FormaField.tsx` does exactly this. Craft needs it as Loom HTML. Without it, every interactive component must manually compose label + input + error markup.
+- Why: forma's React `FormaField.tsx` does exactly this. Craft needs it as Faqir HTML. Without it, every interactive component must manually compose label + input + error markup.
 
 **6. `signature` primitive**
 ```
@@ -156,7 +156,7 @@ registry/primitives/signature/
 - Parts: `data-part="line"` (the signing line), `data-part="label"` (name/title below)
 - Configurable width: `data-size="sm|md|lg"` (40%/60%/80% width)
 - Print-optimized: sufficient vertical space above the line for physical signing
-- Why: Every Romanian business document needs a signature block. reportcraft has `signature-block` — craft needs the Loom equivalent.
+- Why: Every Romanian business document needs a signature block. reportcraft has `signature-block` — craft needs the Faqir equivalent.
 
 **7. `callout` primitive**
 ```
@@ -184,7 +184,7 @@ registry/patterns/document/
 - Screen behavior: centered content with max-width, subtle paper shadow
 - Variants: `invoice`, `form`, `report` (adjust spacing/typography)
 - Theme integration: `data-theme` controls both screen and print appearance
-- Why: This is the outermost shell that craft's `assembleLoomDocument()` and `assembleLoomForm()` would generate. Currently the unification plan uses a hand-rolled HTML shell. A proper Loom pattern makes it consistent, themeable, and agent-readable.
+- Why: This is the outermost shell that craft's `assembleFaqirDocument()` and `assembleFaqirForm()` would generate. Currently the unification plan uses a hand-rolled HTML shell. A proper Faqir pattern makes it consistent, themeable, and agent-readable.
 
 #### TIER 3 — Medium Priority (nice to have)
 
@@ -192,7 +192,7 @@ registry/patterns/document/
 
 **10. `qr-code` recipe** — SVG QR code generation from text input. Uses a lightweight QR library embedded in the recipe controller. Essential for Romanian e-factura payment QR codes. Configurable size, error correction level.
 
-**11. `description-list` primitive** — HTML `<dl>/<dt>/<dd>` with Loom styling. Alternative to `key-value` for longer descriptive content. Horizontal and vertical layouts.
+**11. `description-list` primitive** — HTML `<dl>/<dt>/<dd>` with Faqir styling. Alternative to `key-value` for longer descriptive content. Horizontal and vertical layouts.
 
 **12. `divider` variants for `separator`** — Add to existing separator: labeled divider (`data-variant="labeled"`), dotted/dashed styles, vertical orientation for use in horizontal stacks.
 
@@ -239,5 +239,5 @@ This demonstrates why the `l-source` directive (Approach C) is even more powerfu
 </div>
 ```
 
-**Action item**: Implement `l-source` directive in loom-core.js. This is a 1-file change (~100 lines) that unlocks declarative data binding for all of craft's rendering modes.
+**Action item**: Implement `l-source` directive in faqir-core.js. This is a 1-file change (~100 lines) that unlocks declarative data binding for all of craft's rendering modes.
 

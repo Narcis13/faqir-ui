@@ -14,7 +14,7 @@ const YELLOW = "\x1b[33m";
 
 export async function inspect(args: string[]): Promise<void> {
   if (args.includes("--help") || args.includes("-h")) {
-    log.heading("loom inspect <component>");
+    log.heading("faqir inspect <component>");
     log.blank();
     console.log("Show detailed information about a component from its manifest.");
     log.blank();
@@ -27,7 +27,7 @@ export async function inspect(args: string[]): Promise<void> {
 
   const name = args.find((a) => !a.startsWith("-"));
   if (!name) {
-    log.error("No component specified. Usage: loom inspect <component>");
+    log.error("No component specified. Usage: faqir inspect <component>");
     process.exit(1);
   }
 

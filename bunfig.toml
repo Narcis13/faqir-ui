@@ -1,4 +1,4 @@
-# Bun configuration for Loom UI
+# Bun configuration for Faqir UI
 
 [test]
 preload = ["./tests/setup.ts"]

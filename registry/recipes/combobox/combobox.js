@@ -5,7 +5,7 @@ import { onOutsideClick } from "../../core/events.js";
 
 export function createCombobox(root) {
   // Prevent double-init
-  if (root._loomCombobox) return root._loomCombobox;
+  if (root._faqirCombobox) return root._faqirCombobox;
 
   const input = root.querySelector("[data-part='input']");
   const listbox = root.querySelector("[data-part='listbox']");
@@ -196,10 +196,10 @@ export function createCombobox(root) {
     input?.removeEventListener("keydown", onInputKeyDown);
     listbox?.removeEventListener("click", onListboxClick);
     if (outsideClickCleanup) outsideClickCleanup();
-    delete root._loomCombobox;
+    delete root._faqirCombobox;
   }
 
   const api = { open, close, filter, selectOption, getValue, setValue, destroy };
-  root._loomCombobox = api;
+  root._faqirCombobox = api;
   return api;
 }

@@ -8,7 +8,7 @@ import { applyRepairs } from "../../src/audit/repairer";
 
 const TEST_DIR = join(import.meta.dir, "../.tmp-audit-test");
 
-describe("loom audit", () => {
+describe("faqir audit", () => {
   beforeEach(() => {
     rmSync(TEST_DIR, { recursive: true, force: true });
     mkdirSync(TEST_DIR, { recursive: true });
@@ -48,7 +48,7 @@ describe("loom audit", () => {
     <p>Missing overlay, title, body, close slots</p>
   </div>
 </div>
-<script type="module" src="ui/core/loom.js"></script>`;
+<script type="module" src="ui/core/faqir.js"></script>`;
     await Bun.write(join(TEST_DIR, "index.html"), html);
 
     const summary = await runAudit({ cwd: TEST_DIR });
@@ -82,7 +82,7 @@ describe("loom audit", () => {
     <div data-part="body">C</div>
   </div>
 </div>
-<script type="module" src="ui/core/loom.js"></script>`;
+<script type="module" src="ui/core/faqir.js"></script>`;
     await Bun.write(join(TEST_DIR, "test.html"), html);
 
     const summary = await runAudit({ cwd: TEST_DIR });
@@ -104,7 +104,7 @@ describe("loom audit", () => {
     <div data-part="sidebar">Unknown slot</div>
   </div>
 </div>
-<script type="module" src="ui/core/loom.js"></script>`;
+<script type="module" src="ui/core/faqir.js"></script>`;
     await Bun.write(join(TEST_DIR, "test.html"), html);
 
     const summary = await runAudit({ cwd: TEST_DIR });
@@ -145,7 +145,7 @@ describe("loom audit", () => {
   });
 });
 
-describe("loom repair", () => {
+describe("faqir repair", () => {
   beforeEach(() => {
     rmSync(TEST_DIR, { recursive: true, force: true });
     mkdirSync(TEST_DIR, { recursive: true });
@@ -180,7 +180,7 @@ describe("loom repair", () => {
     <div data-part="body">Content</div>
   </div>
 </div>
-<script type="module" src="ui/core/loom.js"></script>`;
+<script type="module" src="ui/core/faqir.js"></script>`;
     const filePath = join(TEST_DIR, "test.html");
     await Bun.write(filePath, html);
 
@@ -210,7 +210,7 @@ describe("loom repair", () => {
     <div data-part="body">Content</div>
   </div>
 </div>
-<script type="module" src="ui/core/loom.js"></script>`;
+<script type="module" src="ui/core/faqir.js"></script>`;
     const filePath = join(TEST_DIR, "test.html");
     await Bun.write(filePath, html);
 

@@ -1,4 +1,4 @@
-// loom audit — validate all installed components against their manifests
+// faqir audit — validate all installed components against their manifests
 
 import { configExists } from "../utils/config";
 import { log } from "../utils/logger";
@@ -9,7 +9,7 @@ export async function audit(args: string[]): Promise<void> {
   const cwd = process.cwd();
 
   if (!configExists(cwd)) {
-    log.error("No loom.config.json found. Run 'loom init' first.");
+    log.error("No faqir.config.json found. Run 'faqir init' first.");
     process.exit(1);
   }
 
@@ -17,7 +17,7 @@ export async function audit(args: string[]): Promise<void> {
   const fileArg = args.indexOf("--file");
   const file = fileArg >= 0 ? args[fileArg + 1] : undefined;
 
-  // --fix is an alias for loom repair
+  // --fix is an alias for faqir repair
   if (args.includes("--fix")) {
     const { repair } = await import("./repair");
     return repair(args.filter(a => a !== "--fix"));

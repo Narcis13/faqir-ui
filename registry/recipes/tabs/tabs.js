@@ -3,7 +3,7 @@
 
 export function createTabs(root) {
   // Prevent double-init
-  if (root._loomTabs) return root._loomTabs;
+  if (root._faqirTabs) return root._faqirTabs;
 
   const list = root.querySelector("[data-part='list']");
   const triggers = () => [...root.querySelectorAll("[data-part='trigger']")];
@@ -77,10 +77,10 @@ export function createTabs(root) {
   function destroy() {
     list?.removeEventListener("click", onTriggerClick);
     list?.removeEventListener("keydown", onKeyDown);
-    delete root._loomTabs;
+    delete root._faqirTabs;
   }
 
   const api = { activate, getActiveIndex, destroy };
-  root._loomTabs = api;
+  root._faqirTabs = api;
   return api;
 }

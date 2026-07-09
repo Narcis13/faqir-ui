@@ -1,4 +1,4 @@
-# Loom UI
+# Faqir UI
 
 > Agent-native UI framework. Manifest-driven, zero-class, zero-dependency.
 > Built for AI agents to generate, inspect, and repair — and for developers to fully own.
@@ -17,14 +17,14 @@ The CLI is the conductor.
 
 ## Table of Contents
 
-- [Why Loom?](#why-loom)
+- [Why Faqir?](#why-faqir)
 - [Quick Start](#quick-start)
 - [The Attribute Protocol](#the-attribute-protocol)
 - [Component Library](#component-library)
 - [Layout System](#layout-system)
 - [Design Token System](#design-token-system)
 - [Theme System](#theme-system)
-- [Loom Core — Reactive Engine](#loom-core--reactive-engine)
+- [Faqir Core — Reactive Engine](#faqir-core--reactive-engine)
 - [The Manifest System](#the-manifest-system)
 - [JavaScript Controllers](#javascript-controllers)
 - [CLI Reference](#cli-reference)
@@ -40,25 +40,25 @@ The CLI is the conductor.
 
 ---
 
-## Why Loom?
+## Why Faqir?
 
 Traditional UI frameworks use class names: `.btn`, `.btn-primary`, `.card-header`. This creates naming collisions, specificity wars, and markup that no machine can reliably parse. A class name is ambiguous — is `.active` a state, a variant, or a layout helper?
 
-Loom replaces all of it with a five-attribute protocol where every attribute has a single, unambiguous purpose:
+Faqir replaces all of it with a five-attribute protocol where every attribute has a single, unambiguous purpose:
 
 ```html
 <!-- Traditional -->
 <button class="btn btn-primary btn-lg is-loading">Save</button>
 
-<!-- Loom -->
+<!-- Faqir -->
 <button data-ui="button" data-variant="primary" data-size="lg" data-state="loading">Save</button>
 ```
 
 Every component is machine-readable. Every variant is auditable. Every state change is traceable. The CSS targets data attributes — never classes.
 
-This makes Loom **agent-native**: AI coding agents can read manifests, generate valid markup, audit it against contracts, and auto-repair violations. But it's equally good for developers — you get a complete component library, a dev server, CSS bundling, and full ownership of every file.
+This makes Faqir **agent-native**: AI coding agents can read manifests, generate valid markup, audit it against contracts, and auto-repair violations. But it's equally good for developers — you get a complete component library, a dev server, CSS bundling, and full ownership of every file.
 
-### What Loom Is NOT
+### What Faqir Is NOT
 
 - Not a JavaScript framework (no virtual DOM, no JSX, no compile step)
 - Not a utility-first CSS library (not Tailwind)
@@ -77,19 +77,19 @@ This makes Loom **agent-native**: AI coding agents can read manifests, generate 
 
 ```bash
 # Install globally (or use npx)
-npm install -g loom-ui-cli
+npm install -g faqir-ui-cli
 
 # Initialize a new project
-loom init
+faqir init
 
 # Add components
-loom add button input card dialog tabs stack grid surface
+faqir add button input card dialog tabs stack grid surface
 
 # Start dev server
-loom dev
+faqir dev
 ```
 
-### What `loom init` Creates
+### What `faqir init` Creates
 
 ```
 your-project/
@@ -97,12 +97,12 @@ your-project/
 │   ├── tokens/          Design tokens (CSS custom properties)
 │   ├── base/            CSS reset and prose styles
 │   ├── core/            Reactive engine + recipe controllers
-│   ├── primitives/      (empty — add components with `loom add`)
-│   ├── recipes/         (empty — add components with `loom add`)
-│   ├── patterns/        (empty — add components with `loom add`)
-│   └── loom.bundle.css  Single CSS bundle (auto-generated)
-├── loom.config.json     Project configuration
-└── .loom/
+│   ├── primitives/      (empty — add components with `faqir add`)
+│   ├── recipes/         (empty — add components with `faqir add`)
+│   ├── patterns/        (empty — add components with `faqir add`)
+│   └── faqir.bundle.css  Single CSS bundle (auto-generated)
+├── faqir.config.json     Project configuration
+└── .faqir/
     └── context.json     AI agent context (auto-generated)
 ```
 
@@ -114,13 +114,13 @@ After adding components, include one CSS file and the reactive engine:
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="stylesheet" href="ui/loom.bundle.css">
-  <script src="ui/core/loom-core.js" defer></script>
+  <link rel="stylesheet" href="ui/faqir.bundle.css">
+  <script src="ui/core/faqir-core.js" defer></script>
 </head>
 <body>
   <div data-ui="surface" data-variant="flat" data-size="lg">
     <div data-ui="stack" data-gap="6">
-      <h1>Hello Loom</h1>
+      <h1>Hello Faqir</h1>
       <button data-ui="button" data-variant="primary">Get Started</button>
     </div>
   </div>
@@ -169,7 +169,7 @@ No specificity wars. No naming conventions to memorize. The selector **is** the 
 
 ## Component Library
 
-Loom ships 53 components across three layers, from simple CSS-only primitives to full interactive recipes and page-level patterns.
+Faqir ships 53 components across three layers, from simple CSS-only primitives to full interactive recipes and page-level patterns.
 
 ### Primitives (30 components) — CSS Only
 
@@ -210,7 +210,7 @@ Pure CSS components. No JavaScript required. Drop in the HTML and it works.
 
 ### Recipes (16 components) — CSS + JavaScript
 
-Interactive components with JavaScript controllers. Auto-initialize when `loom-core.js` is loaded.
+Interactive components with JavaScript controllers. Auto-initialize when `faqir-core.js` is loaded.
 
 | Component | Description | Key Features |
 |-----------|-------------|-------------|
@@ -403,7 +403,7 @@ Optional overrides for fine-tuning individual components:
 
 ## Theme System
 
-Themes override Layer 2 semantic tokens. Four built-in themes ship with Loom:
+Themes override Layer 2 semantic tokens. Four built-in themes ship with Faqir:
 
 | Theme | Description |
 |-------|-------------|
@@ -430,25 +430,25 @@ Themes override Layer 2 semantic tokens. Four built-in themes ship with Loom:
 
 ```bash
 # Switch active theme
-loom theme set midnight
+faqir theme set midnight
 
 # Create a custom theme (generates a CSS file with all tokens commented out)
-loom theme create my-brand
+faqir theme create my-brand
 
 # List available themes
-loom theme list
+faqir theme list
 ```
 
 Custom themes are scaffold files with every semantic token as a commented-out override. Uncomment and modify what you need.
 
 ---
 
-## Loom Core — Reactive Engine
+## Faqir Core — Reactive Engine
 
-`loom-core.js` is a zero-dependency reactive engine (~47KB min, ~12KB gzip). Drop it in with a single script tag — no build step required.
+`faqir-core.js` is a zero-dependency reactive engine (~47KB min, ~12KB gzip). Drop it in with a single script tag — no build step required.
 
 ```html
-<script src="ui/core/loom-core.js" defer></script>
+<script src="ui/core/faqir-core.js" defer></script>
 ```
 
 It provides Alpine.js-style reactive directives, automatic recipe controller initialization, and a global store.
@@ -469,7 +469,7 @@ It provides Alpine.js-style reactive directives, automatic recipe controller ini
 | `l-ref` | — | Named element reference |
 | `l-init` | — | Run code once on initialization |
 | `l-effect` | — | Tracked reactive side effect |
-| `l-cloak` | — | Hide element until Loom initializes |
+| `l-cloak` | — | Hide element until Faqir initializes |
 | `l-source:name` | — | Declarative REST data binding (injects array + CRUD controller) |
 
 ### Event Modifiers
@@ -524,7 +524,7 @@ It provides Alpine.js-style reactive directives, automatic recipe controller ini
 
 <!-- Global store -->
 <script>
-  Loom.store('app', { theme: 'light', user: 'Agent' });
+  Faqir.store('app', { theme: 'light', user: 'Agent' });
 </script>
 <div l-data="{}">
   <span l-text="$store.app.user"></span>
@@ -618,7 +618,7 @@ dialog.destroy();
 
 ### Controller Conventions
 
-1. **Prevent double-init** via `root._loom{Name}` guard
+1. **Prevent double-init** via `root._faqir{Name}` guard
 2. **Find parts** via `root.querySelector('[data-part="..."]')` selectors
 3. **Express state** through `data-state` only — never class names
 4. **Return API object** with at minimum a `destroy()` method
@@ -627,10 +627,10 @@ dialog.destroy();
 
 ### Auto-Initialization
 
-Include `loom-core.js` and all recipes auto-initialize:
+Include `faqir-core.js` and all recipes auto-initialize:
 
 ```html
-<script src="ui/core/loom-core.js" defer></script>
+<script src="ui/core/faqir-core.js" defer></script>
 ```
 
 The engine scans for `[data-ui]` elements matching known recipes, calls their factories, and watches for dynamically added elements via MutationObserver. You never need to call `createDialog()` manually unless you want the return API.
@@ -639,14 +639,14 @@ The engine scans for `[data-ui]` elements matching known recipes, calls their fa
 
 ## Data-Driven Rendering
 
-Loom provides two approaches for connecting UI to REST APIs:
+Faqir provides two approaches for connecting UI to REST APIs:
 
-1. **`l-source` directive** (built into loom-core.js) — declarative, attribute-based
+1. **`l-source` directive** (built into faqir-core.js) — declarative, attribute-based
 2. **`apiSource()` factory** (separate script) — imperative, spread into `l-data`
 
 ### `l-source` Directive (Recommended)
 
-Declare a data source directly on any `l-data` element. Loom injects a reactive array and a CRUD controller into the scope.
+Declare a data source directly on any `l-data` element. Faqir injects a reactive array and a CRUD controller into the scope.
 
 ```html
 <div l-data="{ newTitle: '' }"
@@ -700,13 +700,13 @@ Controller methods: `load()`, `create(payload)`, `update(id, payload)`, `remove(
 
 ### `apiSource()` Factory (Legacy)
 
-Loom also ships with `apiSource()` — a thin data service layer that connects `l-data` scopes to REST endpoints. It's application-level code (not a Loom controller), so it lives outside the `no-fetch` audit boundary.
+Faqir also ships with `apiSource()` — a thin data service layer that connects `l-data` scopes to REST endpoints. It's application-level code (not a Faqir controller), so it lives outside the `no-fetch` audit boundary.
 
 ### Include
 
 ```html
 <script src="ui/core/api-source.js"></script>
-<script src="ui/core/loom-core.js" defer></script>
+<script src="ui/core/faqir-core.js" defer></script>
 ```
 
 ### The `apiSource()` Factory
@@ -821,9 +821,9 @@ Each `apiSource()` call is independent — different endpoints, different state:
 ### Boundary Rules
 
 - `apiSource()` is **application code** — lives in a `<script>` tag or a shared `.js` file
-- Loom **recipe controllers** never call `fetch` — the `no-fetch` audit rule still applies to them
+- Faqir **recipe controllers** never call `fetch` — the `no-fetch` audit rule still applies to them
 - The `l-data` / `l-init` / `l-for` directives bridge data to DOM
-- Error and loading states use standard Loom components (spinner, card, empty-state)
+- Error and loading states use standard Faqir components (spinner, card, empty-state)
 
 ### Dev Server
 
@@ -842,96 +842,96 @@ See `playground/task-manager.html` for a full CRUD example using `apiSource()`.
 
 ## CLI Reference
 
-The CLI is organized into five categories. Run `loom help` for the full list or `loom <command> --help` for options.
+The CLI is organized into five categories. Run `faqir help` for the full list or `faqir <command> --help` for options.
 
 ### Project Setup
 
 ```bash
-loom init                        # Initialize new project (creates ui/, config, bundle)
-loom init --theme midnight       # Initialize with a specific theme
-loom init --tokens-split         # Keep token files separate (not merged)
-loom init --no-core              # Skip JS modules (static CSS-only projects)
-loom init --dir ./styles         # Custom output directory
+faqir init                        # Initialize new project (creates ui/, config, bundle)
+faqir init --theme midnight       # Initialize with a specific theme
+faqir init --tokens-split         # Keep token files separate (not merged)
+faqir init --no-core              # Skip JS modules (static CSS-only projects)
+faqir init --dir ./styles         # Custom output directory
 
-loom doctor                      # Health check (config, files, manifests)
+faqir doctor                      # Health check (config, files, manifests)
 ```
 
 ### Component Management
 
 ```bash
-loom add button card dialog      # Add components (auto-resolves dependencies)
-loom add --all                   # Add every component
-loom add --layer primitives      # Add all primitives
-loom add --dry-run               # Preview without writing
+faqir add button card dialog      # Add components (auto-resolves dependencies)
+faqir add --all                   # Add every component
+faqir add --layer primitives      # Add all primitives
+faqir add --dry-run               # Preview without writing
 
-loom remove dialog toast         # Remove components (checks dependencies)
-loom remove button --force       # Remove even if others depend on it
-loom remove card --dry-run       # Preview removal
+faqir remove dialog toast         # Remove components (checks dependencies)
+faqir remove button --force       # Remove even if others depend on it
+faqir remove card --dry-run       # Preview removal
 
-loom list                        # Show installed and available components
+faqir list                        # Show installed and available components
 
-loom create my-widget --kind primitive    # Scaffold a new custom component
-loom create data-grid --kind recipe       # Scaffold with JS controller
-loom create status --kind primitive --category layout
+faqir create my-widget --kind primitive    # Scaffold a new custom component
+faqir create data-grid --kind recipe       # Scaffold with JS controller
+faqir create status --kind primitive --category layout
 
-loom inspect button              # Show manifest details
-loom inspect dialog --json       # Raw JSON output
+faqir inspect button              # Show manifest details
+faqir inspect dialog --json       # Raw JSON output
 ```
 
 ### Development
 
 ```bash
-loom dev                         # Start dev server (default: port 3000)
-loom dev --port 8080             # Custom port
-loom dev --open                  # Open browser automatically
-loom dev --bundle                # Auto-rebuild CSS bundle on changes
+faqir dev                         # Start dev server (default: port 3000)
+faqir dev --port 8080             # Custom port
+faqir dev --open                  # Open browser automatically
+faqir dev --bundle                # Auto-rebuild CSS bundle on changes
 
-loom bundle                      # Generate/regenerate CSS bundle
-loom bundle --minify             # Strip comments and whitespace
-loom bundle --watch              # Watch and rebuild on changes
-loom bundle --output dist/s.css  # Custom output path
-loom bundle --dry-run            # Show what would be bundled
+faqir bundle                      # Generate/regenerate CSS bundle
+faqir bundle --minify             # Strip comments and whitespace
+faqir bundle --watch              # Watch and rebuild on changes
+faqir bundle --output dist/s.css  # Custom output path
+faqir bundle --dry-run            # Show what would be bundled
 
-loom theme set midnight          # Switch active theme
-loom theme create my-brand       # Scaffold custom theme
-loom theme list                  # Show available themes
+faqir theme set midnight          # Switch active theme
+faqir theme create my-brand       # Scaffold custom theme
+faqir theme list                  # Show available themes
 
-loom variant add button visual=accent     # Add variant value
-loom variant remove button visual=accent  # Remove variant value
+faqir variant add button visual=accent     # Add variant value
+faqir variant remove button visual=accent  # Remove variant value
 
-loom scaffold landing-page       # Generate landing page HTML
-loom scaffold admin-dashboard    # Generate dashboard layout
-loom scaffold internal-tool      # Generate settings/forms page
+faqir scaffold landing-page       # Generate landing page HTML
+faqir scaffold admin-dashboard    # Generate dashboard layout
+faqir scaffold internal-tool      # Generate settings/forms page
 ```
 
 ### Quality and Validation
 
 ```bash
-loom audit                       # Validate all HTML against manifests
-loom audit --file index.html     # Audit specific file
-loom audit --json                # JSON output for tooling
-loom audit --fix                 # Alias for repair
+faqir audit                       # Validate all HTML against manifests
+faqir audit --file index.html     # Audit specific file
+faqir audit --json                # JSON output for tooling
+faqir audit --fix                 # Alias for repair
 
-loom repair                      # Auto-fix audit issues
+faqir repair                      # Auto-fix audit issues
 
-loom conform                     # Normalize attribute order, add machine comments
-loom conform --dry-run           # Preview changes
+faqir conform                     # Normalize attribute order, add machine comments
+faqir conform --dry-run           # Preview changes
 
-loom trace dialog                # Show dependency graph, file tree, token usage
-loom trace dialog --json         # Machine-readable output
+faqir trace dialog                # Show dependency graph, file tree, token usage
+faqir trace dialog --json         # Machine-readable output
 ```
 
 ### AI / Agent
 
 ```bash
-loom context                     # Generate .loom/context.json
-loom context --format md         # Markdown format for LLM prompts
-loom context --format cursorrules # Cursor IDE format
-loom context --skill             # Also generate .loom/SKILL.md
-loom context --stdout            # Print to stdout
+faqir context                     # Generate .faqir/context.json
+faqir context --format md         # Markdown format for LLM prompts
+faqir context --format cursorrules # Cursor IDE format
+faqir context --skill             # Also generate .faqir/SKILL.md
+faqir context --stdout            # Print to stdout
 
-loom explain dialog              # Human/agent-readable component explanation
-loom explain dialog --json       # Structured output
+faqir explain dialog              # Human/agent-readable component explanation
+faqir explain dialog --json       # Structured output
 ```
 
 ---
@@ -942,7 +942,7 @@ The CSS bundle solves the multi-file problem. Without it, a page using all compo
 
 ### How It Works
 
-`loom bundle` reads your `loom.config.json`, finds all installed components, and concatenates their CSS in this order:
+`faqir bundle` reads your `faqir.config.json`, finds all installed components, and concatenates their CSS in this order:
 
 1. **Tokens** — design token custom properties
 2. **Theme** — active theme overrides
@@ -956,20 +956,20 @@ Each section is separated by a `/* === primitives/button.css === */` comment for
 ### Auto-Bundling
 
 The bundle regenerates automatically when you:
-- `loom add` — new components are included
-- `loom remove` — removed components are excluded
-- `loom theme set` — new theme CSS is swapped in
-- `loom create` — custom component CSS is included
-- `loom init` — initial bundle created on project setup
+- `faqir add` — new components are included
+- `faqir remove` — removed components are excluded
+- `faqir theme set` — new theme CSS is swapped in
+- `faqir create` — custom component CSS is included
+- `faqir init` — initial bundle created on project setup
 
 ### Configuration
 
-After first bundle generation, `loom.config.json` gains a `bundle` section:
+After first bundle generation, `faqir.config.json` gains a `bundle` section:
 
 ```json
 {
   "bundle": {
-    "output": "./ui/loom.bundle.css",
+    "output": "./ui/faqir.bundle.css",
     "auto": true,
     "minify": false
   }
@@ -985,8 +985,8 @@ Set `auto: false` to disable auto-regeneration on add/remove/theme changes.
 The audit system validates your HTML against component manifests. It catches structural errors, missing accessibility attributes, invalid variants, and anti-patterns.
 
 ```bash
-loom audit              # Run all checks
-loom repair             # Auto-fix what can be fixed
+faqir audit              # Run all checks
+faqir repair             # Auto-fix what can be fixed
 ```
 
 ### Audit Rules
@@ -1008,11 +1008,11 @@ loom repair             # Auto-fix what can be fixed
 
 ### Repair
 
-`loom repair` runs the audit, identifies auto-fixable issues, applies deterministic fixes, then re-audits to verify. Fixable issues include missing ARIA attributes, incorrect attribute order, and missing required slots with obvious defaults.
+`faqir repair` runs the audit, identifies auto-fixable issues, applies deterministic fixes, then re-audits to verify. Fixable issues include missing ARIA attributes, incorrect attribute order, and missing required slots with obvious defaults.
 
 ### Conform
 
-`loom conform` normalizes markup without fixing semantic issues:
+`faqir conform` normalizes markup without fixing semantic issues:
 - Reorders attributes to canonical order: `data-ui`, `data-part`, `data-state`, `data-variant`, `data-size`, ARIA, then others
 - Adds machine comments at the top of component CSS files
 - Ensures consistent formatting across all HTML files
@@ -1026,19 +1026,19 @@ loom repair             # Auto-fix what can be fixed
 Generate complete, working HTML pages with all required CSS and components:
 
 ```bash
-loom scaffold landing-page       # Hero + features + CTA sections
-loom scaffold admin-dashboard    # Sidebar + header + stats + data table
-loom scaffold internal-tool      # Tab-based settings with forms
+faqir scaffold landing-page       # Hero + features + CTA sections
+faqir scaffold admin-dashboard    # Sidebar + header + stats + data table
+faqir scaffold internal-tool      # Tab-based settings with forms
 ```
 
 Scaffolds auto-install any missing components and use the bundle when one exists (single `<link>` tag instead of per-component links).
 
 ### Custom Components
 
-Create your own components that integrate with the full Loom workflow:
+Create your own components that integrate with the full Faqir workflow:
 
 ```bash
-loom create sidebar --kind primitive
+faqir create sidebar --kind primitive
 ```
 
 This generates a complete component directory:
@@ -1052,28 +1052,28 @@ ui/primitives/sidebar/
 
 For recipes (`--kind recipe`), a JavaScript controller stub is also generated with the `create{Name}` pattern.
 
-Custom components are immediately registered in `loom.config.json`, included in the CSS bundle, and visible to `loom audit`, `loom context`, and all other CLI tools.
+Custom components are immediately registered in `faqir.config.json`, included in the CSS bundle, and visible to `faqir audit`, `faqir context`, and all other CLI tools.
 
 ---
 
 ## AI Agent Integration
 
-Loom is designed as an **agent-native** framework. Every design decision optimizes for AI agents being able to reliably generate, inspect, and repair UI code.
+Faqir is designed as an **agent-native** framework. Every design decision optimizes for AI agents being able to reliably generate, inspect, and repair UI code.
 
-### How Agents Use Loom
+### How Agents Use Faqir
 
 1. **Read manifests** — JSON contracts describe every component's anatomy, slots, variants, states, and ARIA requirements
 2. **Generate markup** — Use `templates.html` from manifests as starting points
-3. **Audit results** — Run `loom audit` to validate generated HTML
-4. **Auto-repair** — Run `loom repair` to fix common mistakes
+3. **Audit results** — Run `faqir audit` to validate generated HTML
+4. **Auto-repair** — Run `faqir repair` to fix common mistakes
 5. **Understand constraints** — `safe_transforms` and `unsafe_transforms` tell agents what they can and cannot modify
 
 ### Context Generation
 
 ```bash
-loom context                    # Generate .loom/context.json
-loom context --format md        # Markdown for LLM system prompts
-loom context --skill            # Generate Claude Code SKILL.md
+faqir context                    # Generate .faqir/context.json
+faqir context --format md        # Markdown for LLM system prompts
+faqir context --skill            # Generate Claude Code SKILL.md
 ```
 
 The context file aggregates all installed component manifests into a single JSON file that agents can read at the start of a session. It includes:
@@ -1086,7 +1086,7 @@ The context file aggregates all installed component manifests into a single JSON
 
 ### Claude Code Integration
 
-Loom ships with a [loom-creator skill](.claude/skills/loom-creator/) for Claude Code. When active, Claude can:
+Faqir ships with a [faqir-creator skill](.claude/skills/faqir-creator/) for Claude Code. When active, Claude can:
 
 - Generate pages using the correct attribute protocol
 - Read manifests to understand component contracts
@@ -1094,7 +1094,7 @@ Loom ships with a [loom-creator skill](.claude/skills/loom-creator/) for Claude 
 - Follow the strict rules (no classes, tokens only, ARIA compliance)
 - Use reactive directives (`l-data`, `l-model`, `l-for`, etc.)
 
-The skill references are in `.claude/skills/loom-creator/references/`:
+The skill references are in `.claude/skills/faqir-creator/references/`:
 - `primitives.md` — All 22 primitives with full HTML anatomy
 - `recipes.md` — All 15 recipes with HTML, JS controller patterns
 - `patterns.md` — All 6 composition patterns
@@ -1106,7 +1106,7 @@ The skill references are in `.claude/skills/loom-creator/references/`:
 
 ## CSS Conventions
 
-Seven rules govern all component CSS in Loom:
+Seven rules govern all component CSS in Faqir:
 
 1. **Semantic CSS, not utility-first.** Button styling belongs in `button.css`, not scattered across utility classes.
 2. **Attribute selectors only.** `[data-ui="button"]`, never `.btn`.
@@ -1140,7 +1140,7 @@ Seven rules govern all component CSS in Loom:
 ## Project Structure
 
 ```
-loom-ui/
+faqir-ui/
 ├── src/                      CLI source (TypeScript)
 │   ├── index.ts              Entry point — command router
 │   ├── manifest.ts           Manifest types and validation
@@ -1173,21 +1173,21 @@ loom-ui/
 │   │   ├── css-parser.ts     Token and selector extraction
 │   │   └── js-parser.ts      Import and pattern detection
 │   ├── generator/            Code generators
-│   │   ├── context.ts        .loom/context.json generator
+│   │   ├── context.ts        .faqir/context.json generator
 │   │   ├── manifest.ts       Manifest aggregator
 │   │   └── skill.ts          Claude Code skill generator
 │   └── utils/                Shared utilities
-│       ├── config.ts         loom.config.json reader/writer
+│       ├── config.ts         faqir.config.json reader/writer
 │       ├── fs.ts             File system helpers
 │       ├── logger.ts         Colored terminal output
 │       ├── components.ts     Component lookup and registry helpers
-│       ├── codegen.ts        Shared code generators (loom.js, context.json)
+│       ├── codegen.ts        Shared code generators (faqir.js, context.json)
 │       └── bundler.ts        CSS bundle generator
 │
 ├── registry/                 Component library (shipped with CLI)
 │   ├── tokens/               10 CSS token files (incl. document.css, doc-aliases.css)
 │   ├── base/                 reset.css, prose.css
-│   ├── core/                 loom-core.js, api-source.js + utility modules
+│   ├── core/                 faqir-core.js, api-source.js + utility modules
 │   ├── themes/               5 built-in themes (incl. document.css)
 │   ├── primitives/           30 CSS-only components
 │   ├── recipes/              16 CSS+JS interactive components
@@ -1197,7 +1197,7 @@ loom-ui/
 ├── playground/               6 example pages + dev server (server.js, db.json)
 ├── package.json
 ├── tsconfig.json
-└── loom.config.json          (generated per-project)
+└── faqir.config.json          (generated per-project)
 ```
 
 ---
@@ -1212,7 +1212,7 @@ loom-ui/
 
 ```bash
 git clone <repo-url>
-cd loom-ui
+cd faqir-ui
 bun install
 ```
 
@@ -1237,7 +1237,7 @@ tsc --noEmit                     # Type check
 Same as primitive, plus:
 1. Add a `.js` controller with `export function create{Name}(root) { ... }`
 2. Follow the controller conventions (double-init guard, data-state only, destroy API)
-3. The controller is auto-registered in `loom-core.js`
+3. The controller is auto-registered in `faqir-core.js`
 
 ### Tech Stack
 
@@ -1246,7 +1246,7 @@ Same as primitive, plus:
 | Runtime | Bun (TypeScript-first, ESM) |
 | Testing | Bun test + Happy-DOM |
 | Styling | Pure CSS with custom properties (oklch colors) |
-| Reactivity | Custom proxy-based engine (loom-core.js, ~3000 lines) |
+| Reactivity | Custom proxy-based engine (faqir-core.js, ~3000 lines) |
 | Dependencies | Zero at runtime. TypeScript + Happy-DOM for development |
 
 ---

@@ -8,7 +8,7 @@ import { readConfig } from "../../src/utils/config";
 
 const TEST_DIR = join(import.meta.dir, "../.tmp-add-recipes-test");
 
-describe("loom add (recipes)", () => {
+describe("faqir add (recipes)", () => {
   beforeEach(() => {
     rmSync(TEST_DIR, { recursive: true, force: true });
     mkdirSync(TEST_DIR, { recursive: true });
@@ -54,25 +54,25 @@ describe("loom add (recipes)", () => {
     expect(config.installed.primitives).toContain("button");
   });
 
-  it("generates loom.js auto-init when recipes are installed", async () => {
+  it("generates faqir.js auto-init when recipes are installed", async () => {
     await init([]);
     await add(["dialog"]);
 
-    const loomJs = join(TEST_DIR, "ui/core/loom.js");
-    expect(existsSync(loomJs)).toBe(true);
+    const faqirJs = join(TEST_DIR, "ui/core/faqir.js");
+    expect(existsSync(faqirJs)).toBe(true);
 
-    const content = await Bun.file(loomJs).text();
+    const content = await Bun.file(faqirJs).text();
     expect(content).toContain("createDialog");
     expect(content).toContain('import { createDialog } from "../recipes/dialog/dialog.js"');
   });
 
-  it("regenerates loom.js with all installed recipes", async () => {
+  it("regenerates faqir.js with all installed recipes", async () => {
     await init([]);
     await add(["dialog"]);
     await add(["tabs"]);
 
-    const loomJs = join(TEST_DIR, "ui/core/loom.js");
-    const content = await Bun.file(loomJs).text();
+    const faqirJs = join(TEST_DIR, "ui/core/faqir.js");
+    const content = await Bun.file(faqirJs).text();
     expect(content).toContain("createDialog");
     expect(content).toContain("createTabs");
   });
@@ -81,7 +81,7 @@ describe("loom add (recipes)", () => {
     await init([]);
     await add(["dialog"]);
 
-    const context = await Bun.file(join(TEST_DIR, ".loom/context.json")).json();
+    const context = await Bun.file(join(TEST_DIR, ".faqir/context.json")).json();
     expect(context.components.dialog).toBeDefined();
     expect(context.components.dialog.kind).toBe("recipe");
     expect(context.components.dialog.controller).toBe("dialog.js");

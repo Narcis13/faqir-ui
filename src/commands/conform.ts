@@ -1,4 +1,4 @@
-// loom conform — normalize all component instances to canonical structure
+// faqir conform — normalize all component instances to canonical structure
 
 import { existsSync } from "node:fs";
 import { join, relative } from "node:path";
@@ -6,7 +6,7 @@ import { log } from "../utils/logger";
 import { configExists, readConfig } from "../utils/config";
 import { loadManifest, type Manifest } from "../manifest";
 
-/** Canonical attribute order for Loom component elements. */
+/** Canonical attribute order for Faqir component elements. */
 const CANONICAL_ORDER = [
   "data-ui",
   "data-part",
@@ -123,11 +123,11 @@ function reorderAttributes(source: string): string {
     const attrs = parseAttrsFromString(attrString);
     if (attrs.length === 0) return fullMatch;
 
-    // Only process elements with loom attributes
-    const hasLoomAttr = attrs.some(
+    // Only process elements with faqir attributes
+    const hasFaqirAttr = attrs.some(
       (a) => a.name === "data-ui" || a.name === "data-part" || a.name === "data-state" || a.name === "data-variant" || a.name === "data-size"
     );
-    if (!hasLoomAttr) return fullMatch;
+    if (!hasFaqirAttr) return fullMatch;
 
     // Sort attributes
     const sorted = [...attrs].sort((a, b) => {
@@ -174,7 +174,7 @@ function ensureMachineCommentsCSS(source: string, manifest: Manifest): string {
 
 export async function conform(args: string[]): Promise<void> {
   if (args.includes("--help") || args.includes("-h")) {
-    log.heading("loom conform");
+    log.heading("faqir conform");
     log.blank();
     console.log("Normalize all component instances to canonical structure.");
     log.blank();
@@ -192,7 +192,7 @@ export async function conform(args: string[]): Promise<void> {
   const cwd = process.cwd();
 
   if (!configExists(cwd)) {
-    log.error("No loom.config.json found. Run 'loom init' first.");
+    log.error("No faqir.config.json found. Run 'faqir init' first.");
     process.exit(1);
   }
 
@@ -200,7 +200,7 @@ export async function conform(args: string[]): Promise<void> {
   const config = await readConfig(cwd);
   const outputDir = join(cwd, config.output_dir);
 
-  log.heading("Loom Conform");
+  log.heading("Faqir Conform");
   log.blank();
 
   let filesChanged = 0;
@@ -257,7 +257,7 @@ export async function conform(args: string[]): Promise<void> {
   const glob = new Bun.Glob("**/*.html");
   for await (const path of glob.scan({ cwd, onlyFiles: true })) {
     if (path.includes("node_modules")) continue;
-    if (path.startsWith(".loom")) continue;
+    if (path.startsWith(".faqir")) continue;
     // Skip component source files (already processed above)
     if (path.startsWith(config.output_dir + "/")) {
       const parts = path.split("/");

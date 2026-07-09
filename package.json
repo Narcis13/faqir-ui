@@ -1,5 +1,5 @@
 {
-  "name": "loom-ui-cli",
+  "name": "faqir-ui-cli",
   "version": "0.2.4",
   "description": "Agent-native UI framework — CLI-distributed, manifest-driven, zero-dependency components",
   "type": "module",
@@ -8,7 +8,7 @@
     ".": "./src/index.ts"
   },
   "bin": {
-    "loom": "./bin/loom"
+    "faqir": "./bin/faqir"
   },
   "scripts": {
     "dev": "bun run src/index.ts",
@@ -42,11 +42,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Narcis13/loom-ui.git"
+    "url": "git+https://github.com/Narcis13/faqir-ui.git"
   },
-  "homepage": "https://github.com/Narcis13/loom-ui#readme",
+  "homepage": "https://github.com/Narcis13/faqir-ui#readme",
   "bugs": {
-    "url": "https://github.com/Narcis13/loom-ui/issues"
+    "url": "https://github.com/Narcis13/faqir-ui/issues"
   },
   "engines": {
     "node": ">=18",

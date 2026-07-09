@@ -12,7 +12,7 @@ interface CheckResult {
 
 export async function doctor(args: string[]): Promise<void> {
   if (args.includes("--help") || args.includes("-h")) {
-    log.heading("loom doctor");
+    log.heading("faqir doctor");
     log.blank();
     console.log("Check environment and project health.");
     return;
@@ -21,18 +21,18 @@ export async function doctor(args: string[]): Promise<void> {
   const cwd = process.cwd();
   const results: CheckResult[] = [];
 
-  log.heading("Loom Doctor — checking project health");
+  log.heading("Faqir Doctor — checking project health");
   log.blank();
 
-  // 1. Check loom.config.json exists
+  // 1. Check faqir.config.json exists
   const configPath = getConfigPath(cwd);
   if (configExists(cwd)) {
-    results.push({ name: "loom.config.json", passed: true, message: "Found" });
+    results.push({ name: "faqir.config.json", passed: true, message: "Found" });
   } else {
     results.push({
-      name: "loom.config.json",
+      name: "faqir.config.json",
       passed: false,
-      message: `Not found at ${configPath}. Run 'loom init' first.`,
+      message: `Not found at ${configPath}. Run 'faqir init' first.`,
     });
     // Can't continue without config
     printResults(results);
@@ -62,7 +62,7 @@ export async function doctor(args: string[]): Promise<void> {
     results.push({
       name: "Config schema",
       passed: false,
-      message: "Failed to parse loom.config.json",
+      message: "Failed to parse faqir.config.json",
     });
     printResults(results);
     return;
@@ -151,17 +151,17 @@ export async function doctor(args: string[]): Promise<void> {
   if (config.include_core) {
     const coreDir = join(outputDir, "core");
     if (existsSync(coreDir)) {
-      const coreFiles = ["loom-core.js", "api-source.js"];
+      const coreFiles = ["faqir-core.js", "api-source.js"];
       const missingCore = coreFiles.filter(
         (f) => !existsSync(join(coreDir, f))
       );
       if (missingCore.length === 0) {
-        results.push({ name: "Core modules", passed: true, message: "loom-core.js + api-source.js present" });
+        results.push({ name: "Core modules", passed: true, message: "faqir-core.js + api-source.js present" });
       } else {
         results.push({
           name: "Core modules",
           passed: false,
-          message: `Missing: ${missingCore.join(", ")}. Run 'loom init' to restore.`,
+          message: `Missing: ${missingCore.join(", ")}. Run 'faqir init' to restore.`,
         });
       }
     } else {
@@ -244,15 +244,15 @@ export async function doctor(args: string[]): Promise<void> {
     }
   }
 
-  // 9. Check .loom/context.json
-  const contextPath = join(cwd, ".loom", "context.json");
+  // 9. Check .faqir/context.json
+  const contextPath = join(cwd, ".faqir", "context.json");
   if (existsSync(contextPath)) {
-    results.push({ name: "Context file", passed: true, message: ".loom/context.json" });
+    results.push({ name: "Context file", passed: true, message: ".faqir/context.json" });
   } else {
     results.push({
       name: "Context file",
       passed: false,
-      message: ".loom/context.json not found. Run 'loom context' to generate.",
+      message: ".faqir/context.json not found. Run 'faqir context' to generate.",
     });
   }
 

@@ -5,7 +5,7 @@ import { onOutsideClick } from "../../core/events.js";
 
 export function createPopover(root) {
   // Prevent double-init
-  if (root._loomPopover) return root._loomPopover;
+  if (root._faqirPopover) return root._faqirPopover;
 
   const trigger = root.querySelector("[data-part='trigger']");
   const content = root.querySelector("[data-part='content']");
@@ -66,10 +66,10 @@ export function createPopover(root) {
     closeBtn?.removeEventListener("click", onCloseClick);
     root.removeEventListener("keydown", onKeyDown);
     if (outsideClickCleanup) outsideClickCleanup();
-    delete root._loomPopover;
+    delete root._faqirPopover;
   }
 
   const api = { open, close, toggle, destroy };
-  root._loomPopover = api;
+  root._faqirPopover = api;
   return api;
 }

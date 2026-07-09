@@ -5,7 +5,7 @@ import { trapFocus } from "../../core/focus.js";
 
 export function createDialog(root) {
   // Prevent double-init
-  if (root._loomDialog) return root._loomDialog;
+  if (root._faqirDialog) return root._faqirDialog;
 
   const trigger = root.querySelector("[data-part='trigger']");
   const overlay = root.querySelector("[data-part='overlay']");
@@ -107,10 +107,10 @@ export function createDialog(root) {
       );
     }
     if (focusCleanup) focusCleanup();
-    delete root._loomDialog;
+    delete root._faqirDialog;
   }
 
   const api = { open, close, toggle, destroy };
-  root._loomDialog = api;
+  root._faqirDialog = api;
   return api;
 }

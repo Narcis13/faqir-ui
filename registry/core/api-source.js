@@ -1,8 +1,8 @@
 /**
- * Loom Data Source — Approach B: Service Layer
+ * Faqir Data Source — Approach B: Service Layer
  *
  * A thin JS service that l-data blocks consume via spread syntax.
- * Application-level utility — NOT a Loom recipe controller.
+ * Application-level utility — NOT a Faqir recipe controller.
  *
  * Usage:
  *   <div l-data="{ ...apiSource('/api/tasks'), newTitle: '' }" l-init="load()">

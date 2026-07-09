@@ -5,7 +5,7 @@ import { trapFocus } from "../../core/focus.js";
 
 export function createCommandPalette(root) {
   // Prevent double-init
-  if (root._loomCommandPalette) return root._loomCommandPalette;
+  if (root._faqirCommandPalette) return root._faqirCommandPalette;
 
   const overlay = root.querySelector("[data-part='overlay']");
   const panel = root.querySelector("[data-part='panel']");
@@ -238,10 +238,10 @@ export function createCommandPalette(root) {
     list?.removeEventListener("click", onItemClick);
     document.removeEventListener("keydown", onGlobalKeyDown);
     if (focusCleanup) focusCleanup();
-    delete root._loomCommandPalette;
+    delete root._faqirCommandPalette;
   }
 
   const api = { open, close, filter, selectItem, registerCommand, destroy };
-  root._loomCommandPalette = api;
+  root._faqirCommandPalette = api;
   return api;
 }

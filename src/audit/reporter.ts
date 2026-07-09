@@ -24,7 +24,7 @@ const SEVERITY_ICONS: Record<Severity, string> = {
  * Print audit results to the terminal with colors and formatting.
  */
 export function printAuditReport(summary: AuditSummary): void {
-  log.heading("Loom Audit Report");
+  log.heading("Faqir Audit Report");
   log.blank();
 
   // Summary line
@@ -84,7 +84,7 @@ export function printAuditReport(summary: AuditSummary): void {
     log.error("Audit failed — fix critical and error issues above.");
     const fixable = summary.results.filter(r => r.fix).length;
     if (fixable > 0) {
-      log.dim(`  ${fixable} issue(s) can be auto-fixed with 'loom repair'`);
+      log.dim(`  ${fixable} issue(s) can be auto-fixed with 'faqir repair'`);
     }
   }
 }

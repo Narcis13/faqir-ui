@@ -1,4 +1,4 @@
-// loom variant — add or remove variant values from components
+// faqir variant — add or remove variant values from components
 
 import { existsSync } from "node:fs";
 import { join } from "node:path";
@@ -7,7 +7,7 @@ import { configExists, readConfig } from "../utils/config";
 import { loadManifest } from "../manifest";
 
 function printHelp() {
-  log.heading("loom variant <subcommand>");
+  log.heading("faqir variant <subcommand>");
   log.blank();
   console.log("Add or remove variant values from a component.");
   log.blank();
@@ -18,8 +18,8 @@ function printHelp() {
   ]);
   log.blank();
   console.log("Examples:");
-  console.log("  loom variant add button visual=accent");
-  console.log("  loom variant remove button visual=accent");
+  console.log("  faqir variant add button visual=accent");
+  console.log("  faqir variant remove button visual=accent");
 }
 
 function parseVariantArg(arg: string): { group: string; value: string } | null {
@@ -45,7 +45,7 @@ async function variantAdd(componentName: string, variantStr: string): Promise<vo
   const cwd = process.cwd();
 
   if (!configExists(cwd)) {
-    log.error("No loom.config.json found. Run 'loom init' first.");
+    log.error("No faqir.config.json found. Run 'faqir init' first.");
     process.exit(1);
   }
 
@@ -63,7 +63,7 @@ async function variantAdd(componentName: string, variantStr: string): Promise<vo
   const found = findInstalledComponent(componentName, config, cwd);
   if (!found) {
     log.error(`Component '${componentName}' is not installed.`);
-    log.dim("Run 'loom list' to see installed components.");
+    log.dim("Run 'faqir list' to see installed components.");
     process.exit(1);
   }
 
@@ -121,7 +121,7 @@ async function variantRemove(componentName: string, variantStr: string): Promise
   const cwd = process.cwd();
 
   if (!configExists(cwd)) {
-    log.error("No loom.config.json found. Run 'loom init' first.");
+    log.error("No faqir.config.json found. Run 'faqir init' first.");
     process.exit(1);
   }
 
@@ -196,7 +196,7 @@ export async function variant(args: string[]): Promise<void> {
       const componentName = args[1];
       const variantStr = args[2];
       if (!componentName || !variantStr) {
-        log.error("Usage: loom variant add <component> <variant>=<value>");
+        log.error("Usage: faqir variant add <component> <variant>=<value>");
         process.exit(1);
       }
       await variantAdd(componentName, variantStr);
@@ -206,7 +206,7 @@ export async function variant(args: string[]): Promise<void> {
       const componentName = args[1];
       const variantStr = args[2];
       if (!componentName || !variantStr) {
-        log.error("Usage: loom variant remove <component> <variant>=<value>");
+        log.error("Usage: faqir variant remove <component> <variant>=<value>");
         process.exit(1);
       }
       await variantRemove(componentName, variantStr);
@@ -214,7 +214,7 @@ export async function variant(args: string[]): Promise<void> {
     }
     default:
       log.error(`Unknown subcommand: ${subcommand}`);
-      log.dim("Run 'loom variant --help' for available subcommands.");
+      log.dim("Run 'faqir variant --help' for available subcommands.");
       process.exit(1);
   }
 }

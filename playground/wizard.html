@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Loom UI — Setup Wizard</title>
+  <title>Faqir UI — Setup Wizard</title>
 
   <!-- Tokens -->
   <link rel="stylesheet" href="../registry/tokens/palette.css">
@@ -39,8 +39,8 @@
   <link rel="stylesheet" href="../registry/primitives/progress/progress.css">
   <link rel="stylesheet" href="../registry/primitives/text/text.css">
 
-  <!-- Loom Core -->
-  <script src="../registry/core/loom-core.js" defer></script>
+  <!-- Faqir Core -->
+  <script src="../registry/core/faqir-core.js" defer></script>
 </head>
 <body>
   <div l-cloak l-data="{
@@ -133,7 +133,7 @@
         <div data-ui="stack" data-variant="horizontal" data-gap="4" data-align="center" data-justify="between" data-responsive>
           <div data-ui="stack" data-gap="1">
             <h1 data-ui="heading" data-size="3">Setup Wizard</h1>
-            <p data-ui="text" data-size="sm" data-variant="muted">Configure your Loom UI project</p>
+            <p data-ui="text" data-size="sm" data-variant="muted">Configure your Faqir UI project</p>
           </div>
           <label data-ui="switch-label">
             <input data-ui="switch" type="checkbox" role="switch" @change="toggleDark()">
@@ -326,7 +326,7 @@
                 <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center" data-justify="between" data-responsive>
                   <div data-ui="stack" data-gap="0">
                     <span data-ui="text" data-weight="medium">Generate AI context</span>
-                    <span data-ui="text" data-size="sm" data-variant="muted">Create .loom/context.json for Claude and other agents</span>
+                    <span data-ui="text" data-size="sm" data-variant="muted">Create .faqir/context.json for Claude and other agents</span>
                   </div>
                   <label data-ui="switch-label">
                     <input data-ui="switch" type="checkbox" role="switch" l-model="generateContext">
@@ -402,7 +402,7 @@
 
         <!-- Footer -->
         <div data-ui="surface" data-variant="flat" data-size="md" data-align-text="center">
-          <p data-ui="text" data-size="xs" data-variant="subtle">Loom UI Wizard — built with zero CSS classes</p>
+          <p data-ui="text" data-size="xs" data-variant="subtle">Faqir UI Wizard — built with zero CSS classes</p>
         </div>
 
       </div>

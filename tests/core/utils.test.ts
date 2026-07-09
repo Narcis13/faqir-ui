@@ -11,7 +11,7 @@ describe("utils", () => {
 
     it("uses default prefix", () => {
       const id = uid();
-      expect(id.startsWith("loom-")).toBe(true);
+      expect(id.startsWith("faqir-")).toBe(true);
     });
 
     it("uses custom prefix", () => {

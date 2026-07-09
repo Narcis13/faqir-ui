@@ -5,10 +5,10 @@ let counter = 0;
 
 /**
  * Generate a unique ID string.
- * @param {string} [prefix="loom"]
+ * @param {string} [prefix="faqir"]
  * @returns {string}
  */
-export function uid(prefix = "loom") {
+export function uid(prefix = "faqir") {
   return `${prefix}-${++counter}`;
 }
 

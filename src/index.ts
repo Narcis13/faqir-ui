@@ -46,7 +46,7 @@ const HELP_CATEGORIES = [
   {
     name: "Project Setup",
     commands: [
-      ["init", "Initialize a new Loom project"],
+      ["init", "Initialize a new Faqir project"],
       ["doctor", "Check project health"],
     ],
   },
@@ -120,11 +120,11 @@ function suggestCommand(input: string): string | null {
 }
 
 function printHelp() {
-  log.heading("loom — Agent-Native UI Framework CLI");
+  log.heading("faqir — Agent-Native UI Framework CLI");
   log.blank();
   log.info(`Version ${VERSION}`);
   log.blank();
-  console.log("Usage: loom <command> [options]");
+  console.log("Usage: faqir <command> [options]");
 
   for (const category of HELP_CATEGORIES) {
     log.blank();
@@ -138,7 +138,7 @@ function printHelp() {
     ["version", "Show version"],
   ]);
   log.blank();
-  console.log("Run 'loom <command> --help' for command-specific options.");
+  console.log("Run 'faqir <command> --help' for command-specific options.");
 }
 
 async function main() {
@@ -160,9 +160,9 @@ async function main() {
     log.error(`Unknown command: ${command}`);
     const suggestion = suggestCommand(command);
     if (suggestion) {
-      log.dim(`Did you mean: loom ${suggestion}?`);
+      log.dim(`Did you mean: faqir ${suggestion}?`);
     } else {
-      log.dim("Run 'loom help' for available commands.");
+      log.dim("Run 'faqir help' for available commands.");
     }
     process.exit(1);
   }

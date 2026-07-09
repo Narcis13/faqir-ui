@@ -3,7 +3,7 @@
 
 export function createPagination(root) {
   // Prevent double-init
-  if (root._loomPagination) return root._loomPagination;
+  if (root._faqirPagination) return root._faqirPagination;
 
   const nav = root.querySelector("[data-part='nav']");
   const prevBtn = root.querySelector("[data-part='prev']");
@@ -51,7 +51,7 @@ export function createPagination(root) {
 
   function emitPageChange() {
     root.dispatchEvent(
-      new CustomEvent("loom:page-change", {
+      new CustomEvent("faqir:page-change", {
         detail: { page: currentPage },
         bubbles: true,
       })
@@ -113,10 +113,10 @@ export function createPagination(root) {
     nav?.removeEventListener("click", onNavClick);
     prevBtn?.removeEventListener("click", onPrevClick);
     nextBtn?.removeEventListener("click", onNextClick);
-    delete root._loomPagination;
+    delete root._faqirPagination;
   }
 
   const api = { setPage, getPage, setTotal, destroy };
-  root._loomPagination = api;
+  root._faqirPagination = api;
   return api;
 }

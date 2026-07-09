@@ -1,4 +1,4 @@
-// loom explain <component> — human-and-agent-readable explanation of a component
+// faqir explain <component> — human-and-agent-readable explanation of a component
 
 import { existsSync } from "node:fs";
 import { join } from "node:path";
@@ -17,7 +17,7 @@ const RED = "\x1b[31m";
 
 export async function explain(args: string[]): Promise<void> {
   if (args.includes("--help") || args.includes("-h")) {
-    log.heading("loom explain <component>");
+    log.heading("faqir explain <component>");
     log.blank();
     console.log("Human-and-agent-readable explanation of a component.");
     log.blank();
@@ -30,7 +30,7 @@ export async function explain(args: string[]): Promise<void> {
 
   const name = args.find((a) => !a.startsWith("-"));
   if (!name) {
-    log.error("No component specified. Usage: loom explain <component>");
+    log.error("No component specified. Usage: faqir explain <component>");
     process.exit(1);
   }
 

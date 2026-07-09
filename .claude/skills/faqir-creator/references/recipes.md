@@ -1,6 +1,6 @@
 # Recipes Reference
 
-All 16 interactive components (CSS + JS). Auto-initialize via `loom-core.js`.
+All 16 interactive components (CSS + JS). Auto-initialize via `faqir-core.js`.
 
 ## Table of Contents
 - [Dialog](#dialog) | [Tabs](#tabs) | [Accordion](#accordion) | [Dropdown](#dropdown) | [Tooltip](#tooltip)
@@ -32,7 +32,7 @@ All 16 interactive components (CSS + JS). Auto-initialize via `loom-core.js`.
 </div>
 ```
 
-Variants: `data-size="sm|md|lg|full"`, `data-variant="danger"` on panel. States: `closed`, `open`, `closing`. API: `_loomDialog.open()`, `.close()`, `.toggle()`, `.destroy()`.
+Variants: `data-size="sm|md|lg|full"`, `data-variant="danger"` on panel. States: `closed`, `open`, `closing`. API: `_faqirDialog.open()`, `.close()`, `.toggle()`, `.destroy()`.
 
 ## Tabs
 
@@ -47,7 +47,7 @@ Variants: `data-size="sm|md|lg|full"`, `data-variant="danger"` on panel. States:
 </div>
 ```
 
-API: `_loomTabs.select(index)`, `.destroy()`.
+API: `_faqirTabs.select(index)`, `.destroy()`.
 
 ## Accordion
 
@@ -62,7 +62,7 @@ API: `_loomTabs.select(index)`, `.destroy()`.
 </div>
 ```
 
-API: `_loomAccordion.expand(i)`, `.collapse(i)`, `.toggle(i)`, `.expandAll()`, `.collapseAll()`, `.destroy()`.
+API: `_faqirAccordion.expand(i)`, `.collapse(i)`, `.toggle(i)`, `.expandAll()`, `.collapseAll()`, `.destroy()`.
 
 ## Dropdown
 
@@ -77,7 +77,7 @@ API: `_loomAccordion.expand(i)`, `.collapse(i)`, `.toggle(i)`, `.expandAll()`, `
 </div>
 ```
 
-API: `_loomDropdown.open()`, `.close()`, `.destroy()`.
+API: `_faqirDropdown.open()`, `.close()`, `.destroy()`.
 
 ## Tooltip
 
@@ -88,7 +88,7 @@ API: `_loomDropdown.open()`, `.close()`, `.destroy()`.
 </div>
 ```
 
-API: `_loomTooltip.show()`, `.hide()`, `.destroy()`.
+API: `_faqirTooltip.show()`, `.hide()`, `.destroy()`.
 
 ## Toast
 
@@ -103,7 +103,7 @@ API: `_loomTooltip.show()`, `.hide()`, `.destroy()`.
 
 Trigger from JS:
 ```js
-document.getElementById('my-toast')._loomToast.add({
+document.getElementById('my-toast')._faqirToast.add({
   message: 'Saved!',
   tone: 'success',       // default|success|error|warning
   icon: '&#x2713;',      // optional
@@ -113,7 +113,7 @@ document.getElementById('my-toast')._loomToast.add({
 });
 ```
 
-Position variants: `top-right`, `top-left`, `bottom-right`, `bottom-left`. API: `_loomToast.add(opts)`, `.dismiss(id)`, `.dismissAll()`, `.destroy()`.
+Position variants: `top-right`, `top-left`, `bottom-right`, `bottom-left`. API: `_faqirToast.add(opts)`, `.dismiss(id)`, `.dismissAll()`, `.destroy()`.
 
 ## Popover
 
@@ -127,7 +127,7 @@ Position variants: `top-right`, `top-left`, `bottom-right`, `bottom-left`. API: 
 </div>
 ```
 
-API: `_loomPopover.open()`, `.close()`, `.toggle()`, `.destroy()`.
+API: `_faqirPopover.open()`, `.close()`, `.toggle()`, `.destroy()`.
 
 ## Date Picker
 
@@ -164,7 +164,7 @@ API: `_loomPopover.open()`, `.close()`, `.toggle()`, `.destroy()`.
 </div>
 ```
 
-API: `_loomDatePicker.open()`, `.close()`, `.getValue()`, `.setValue(dateStr)`, `.navigate(month, year)`, `.destroy()`.
+API: `_faqirDatePicker.open()`, `.close()`, `.getValue()`, `.setValue(dateStr)`, `.navigate(month, year)`, `.destroy()`.
 
 ## Combobox
 
@@ -180,7 +180,7 @@ API: `_loomDatePicker.open()`, `.close()`, `.getValue()`, `.setValue(dateStr)`, 
 </div>
 ```
 
-API: `_loomCombobox.open()`, `.close()`, `.filter(query)`, `.select(value)`, `.destroy()`.
+API: `_faqirCombobox.open()`, `.close()`, `.filter(query)`, `.select(value)`, `.destroy()`.
 
 ## Select Custom
 
@@ -199,7 +199,7 @@ API: `_loomCombobox.open()`, `.close()`, `.filter(query)`, `.select(value)`, `.d
 </div>
 ```
 
-API: `_loomSelectCustom.open()`, `.close()`, `.getValue()`, `.setValue(v)`, `.destroy()`.
+API: `_faqirSelectCustom.open()`, `.close()`, `.getValue()`, `.setValue(v)`, `.destroy()`.
 
 ## Command Palette
 
@@ -224,7 +224,7 @@ API: `_loomSelectCustom.open()`, `.close()`, `.getValue()`, `.setValue(v)`, `.de
 </div>
 ```
 
-Opens with Cmd+K / Ctrl+K. API: `_loomCommandPalette.open()`, `.close()`, `.filter(q)`, `.registerCommand(cmd)`, `.destroy()`.
+Opens with Cmd+K / Ctrl+K. API: `_faqirCommandPalette.open()`, `.close()`, `.filter(q)`, `.registerCommand(cmd)`, `.destroy()`.
 
 ## Table
 
@@ -288,7 +288,7 @@ Opens with Cmd+K / Ctrl+K. API: `_loomCommandPalette.open()`, `.close()`, `.filt
 
 Cell attrs: `data-align="left|center|right"`, `data-format="number|currency|percent"`. Print: `data-print="compact"` on root. Footer via `tfoot data-part="tfoot"`. Group headers via `tr data-part="group-header"`.
 
-`data-sortable` on th enables sort. `aria-sort="none|ascending|descending"`. `data-selected` on tr. API: `_loomTable.sort(col)`, `.selectAll()`, `.deselectAll()`, `.getSelected()`, `.destroy()`.
+`data-sortable` on th enables sort. `aria-sort="none|ascending|descending"`. `data-selected` on tr. API: `_faqirTable.sort(col)`, `.selectAll()`, `.deselectAll()`, `.getSelected()`, `.destroy()`.
 
 ## Pagination
 
@@ -305,7 +305,7 @@ Cell attrs: `data-align="left|center|right"`, `data-format="number|currency|perc
 </div>
 ```
 
-API: `_loomPagination.goTo(page)`, `.next()`, `.prev()`, `.destroy()`.
+API: `_faqirPagination.goTo(page)`, `.next()`, `.prev()`, `.destroy()`.
 
 ## Drawer
 
@@ -327,7 +327,7 @@ API: `_loomPagination.goTo(page)`, `.next()`, `.prev()`, `.destroy()`.
 </div>
 ```
 
-States: `closed`, `open`, `closing`. API: `_loomDrawer.open()`, `.close()`, `.destroy()`.
+States: `closed`, `open`, `closing`. API: `_faqirDrawer.open()`, `.close()`, `.destroy()`.
 
 ## Sheet
 
@@ -346,7 +346,7 @@ States: `closed`, `open`, `closing`. API: `_loomDrawer.open()`, `.close()`, `.de
 </div>
 ```
 
-States: `closed`, `open`, `closing`. API: `_loomSheet.open()`, `.close()`, `.destroy()`.
+States: `closed`, `open`, `closing`. API: `_faqirSheet.open()`, `.close()`, `.destroy()`.
 
 ## QR Code
 
@@ -374,7 +374,7 @@ import { trapFocus } from "../../core/focus.js";
 
 export function create{Name}(root) {
   // 1. Double-init guard
-  if (root._loom{Name}) return root._loom{Name};
+  if (root._faqir{Name}) return root._faqir{Name};
 
   // 2. Query parts
   const trigger = root.querySelector("[data-part='trigger']");
@@ -396,24 +396,24 @@ export function create{Name}(root) {
   // 5. Cleanup
   function destroy() {
     trigger?.removeEventListener("click", open);
-    delete root._loom{Name};
+    delete root._faqir{Name};
   }
 
   // 6. Return and store API
   const api = { open, close, destroy };
-  root._loom{Name} = api;
+  root._faqir{Name} = api;
   return api;
 }
 ```
 
 Key rules:
-- `root._loom{Name}` stores the API (idempotent)
+- `root._faqir{Name}` stores the API (idempotent)
 - Only `root.dataset.state = value` modifies state
 - Never use `classList` for state
 - Query parts scoped to `root`
 - Import only from `../../core/` (no external deps)
 - Always provide `destroy()` for cleanup
-- Register in `loom-core.js`: `controllerRegistry['name'] = createName;`
+- Register in `faqir-core.js`: `controllerRegistry['name'] = createName;`
 
 ## CSS Convention
 

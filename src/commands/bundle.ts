@@ -44,19 +44,19 @@ function parseArgs(args: string[]): BundleCmdOptions {
 }
 
 function printHelp() {
-  log.heading("loom bundle");
+  log.heading("faqir bundle");
   log.blank();
   console.log("Compose all installed CSS into a single bundle file.");
   console.log("Replaces 50+ <link> tags with one.");
   log.blank();
   console.log("Usage:");
-  console.log("  loom bundle");
-  console.log("  loom bundle --minify");
-  console.log("  loom bundle --output dist/styles.css");
+  console.log("  faqir bundle");
+  console.log("  faqir bundle --minify");
+  console.log("  faqir bundle --output dist/styles.css");
   log.blank();
   console.log("Options:");
   log.table([
-    ["--output <path>", "Output file path (default: {output_dir}/loom.bundle.css)"],
+    ["--output <path>", "Output file path (default: {output_dir}/faqir.bundle.css)"],
     ["--minify", "Strip comments and whitespace"],
     ["--watch", "Re-bundle on CSS file changes"],
     ["--dry-run", "Show what would be bundled without writing"],
@@ -68,7 +68,7 @@ export async function bundle(args: string[]): Promise<void> {
   const cwd = process.cwd();
 
   if (!configExists(cwd)) {
-    log.error("No loom.config.json found. Run 'loom init' first.");
+    log.error("No faqir.config.json found. Run 'faqir init' first.");
     process.exit(1);
   }
 
@@ -76,7 +76,7 @@ export async function bundle(args: string[]): Promise<void> {
   const outputDir = join(cwd, config.output_dir);
 
   if (!existsSync(outputDir)) {
-    log.error(`Output directory '${config.output_dir}' not found. Run 'loom init' first.`);
+    log.error(`Output directory '${config.output_dir}' not found. Run 'faqir init' first.`);
     process.exit(1);
   }
 
@@ -98,7 +98,7 @@ export async function bundle(args: string[]): Promise<void> {
   // Persist bundle config on first run
   if (!config.bundle) {
     config.bundle = {
-      output: opts.output ?? `${config.output_dir}/loom.bundle.css`,
+      output: opts.output ?? `${config.output_dir}/faqir.bundle.css`,
       auto: true,
       minify: opts.minify,
     };
@@ -112,7 +112,7 @@ export async function bundle(args: string[]): Promise<void> {
   log.success(result.output);
   log.blank();
   console.log("  Use in HTML:");
-  log.dim(`  <link rel="stylesheet" href="${config.output_dir}/loom.bundle.css">`);
+  log.dim(`  <link rel="stylesheet" href="${config.output_dir}/faqir.bundle.css">`);
 
   if (opts.watchMode) {
     log.blank();
@@ -122,7 +122,7 @@ export async function bundle(args: string[]): Promise<void> {
 
     watch(outputDir, { recursive: true }, (eventType, filename) => {
       if (!filename?.endsWith(".css")) return;
-      if (filename === "loom.bundle.css") return;
+      if (filename === "faqir.bundle.css") return;
 
       if (debounceTimer) clearTimeout(debounceTimer);
       debounceTimer = setTimeout(async () => {

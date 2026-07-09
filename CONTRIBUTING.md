@@ -1,4 +1,4 @@
-# Contributing to Loom UI
+# Contributing to Faqir UI
 
 ## Prerequisites
 
@@ -9,7 +9,7 @@
 
 ```bash
 git clone <repo-url>
-cd loom-ui
+cd faqir-ui
 bun install
 ```
 
@@ -74,7 +74,7 @@ Same as primitives, plus:
 
 1. Add `{name}.js` — A controller module exporting `create{Name}(root)`.
 2. Controllers must:
-   - Prevent double-init with `root._loom{Name}` check
+   - Prevent double-init with `root._faqir{Name}` check
    - Find parts with `[data-part="..."]` queries scoped to root
    - Express state changes by setting `root.dataset.state`
    - Return an API object with `destroy()` for cleanup

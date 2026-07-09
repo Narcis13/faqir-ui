@@ -160,7 +160,7 @@ function findDescendantsByAttr(root: ParsedElement, attr: string): ParsedElement
 }
 
 /**
- * Extract all Loom components from an HTML source file.
+ * Extract all Faqir components from an HTML source file.
  */
 export function extractComponents(source: string, filePath: string): ParsedComponent[] {
   const roots = parseHTML(source);

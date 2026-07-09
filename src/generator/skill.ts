@@ -1,4 +1,4 @@
-// Claude Code skill generator — produces .loom/SKILL.md for agent consumption
+// Claude Code skill generator — produces .faqir/SKILL.md for agent consumption
 
 import { join } from "node:path";
 import { readConfig } from "../utils/config";
@@ -18,9 +18,9 @@ export async function generateSkill(cwd: string): Promise<string> {
 
   const lines: string[] = [];
 
-  lines.push("# Loom UI Framework Skill");
+  lines.push("# Faqir UI Framework Skill");
   lines.push("");
-  lines.push("When building UI with Loom, always read `.loom/context.json` first.");
+  lines.push("When building UI with Faqir, always read `.faqir/context.json` first.");
   lines.push("");
 
   lines.push("## Quick Rules");
@@ -39,7 +39,7 @@ export async function generateSkill(cwd: string): Promise<string> {
   // Data-driven rendering
   lines.push("## Data-Driven Rendering");
   lines.push("");
-  lines.push("Include `<script src=\"" + config.output_dir + "/core/api-source.js\"></script>` before loom-core.js to use `apiSource()`.");
+  lines.push("Include `<script src=\"" + config.output_dir + "/core/api-source.js\"></script>` before faqir-core.js to use `apiSource()`.");
   lines.push("");
   lines.push("```html");
   lines.push("<div l-data=\"{ ...apiSource('/api/items', { idKey: 'id', optimistic: true }), newName: '' }\"");
@@ -67,7 +67,7 @@ export async function generateSkill(cwd: string): Promise<string> {
       lines.push(`- \`import { ${factoryName} } from "./${config.output_dir}/recipes/${recipe}/${recipe}.js"\``);
     }
     lines.push("");
-    lines.push("Or use the auto-init script: `<script type=\"module\" src=\"" + config.output_dir + "/core/loom.js\"></script>`");
+    lines.push("Or use the auto-init script: `<script type=\"module\" src=\"" + config.output_dir + "/core/faqir.js\"></script>`");
     lines.push("");
   }
 
@@ -86,14 +86,14 @@ export async function generateSkill(cwd: string): Promise<string> {
 
   lines.push("## Available Commands");
   lines.push("");
-  lines.push("- `loom add <name>` — add components");
-  lines.push("- `loom audit` — check for contract violations");
-  lines.push("- `loom repair` — auto-fix issues");
-  lines.push("- `loom explain <name>` — get component details");
-  lines.push("- `loom trace <name>` — show dependency and file trace");
-  lines.push("- `loom inspect <name>` — show full manifest");
-  lines.push("- `loom context` — regenerate context file");
-  lines.push("- `loom conform` — normalize component markup");
+  lines.push("- `faqir add <name>` — add components");
+  lines.push("- `faqir audit` — check for contract violations");
+  lines.push("- `faqir repair` — auto-fix issues");
+  lines.push("- `faqir explain <name>` — get component details");
+  lines.push("- `faqir trace <name>` — show dependency and file trace");
+  lines.push("- `faqir inspect <name>` — show full manifest");
+  lines.push("- `faqir context` — regenerate context file");
+  lines.push("- `faqir conform` — normalize component markup");
   lines.push("");
 
   const content = lines.join("\n");
@@ -101,13 +101,13 @@ export async function generateSkill(cwd: string): Promise<string> {
 }
 
 /**
- * Write the SKILL.md file to .loom/ directory.
+ * Write the SKILL.md file to .faqir/ directory.
  */
 export async function writeSkillFile(cwd: string): Promise<string> {
   const content = await generateSkill(cwd);
-  const loomDir = join(cwd, ".loom");
-  ensureDir(loomDir);
-  const outPath = join(loomDir, "SKILL.md");
+  const faqirDir = join(cwd, ".faqir");
+  ensureDir(faqirDir);
+  const outPath = join(faqirDir, "SKILL.md");
   await Bun.write(outPath, content);
   return outPath;
 }

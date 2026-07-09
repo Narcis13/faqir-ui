@@ -1,4 +1,4 @@
-// loom theme — manage themes (set, create, list)
+// faqir theme — manage themes (set, create, list)
 
 import { existsSync } from "node:fs";
 import { join } from "node:path";
@@ -8,9 +8,9 @@ import { copyFile, ensureDir, getRegistryPath } from "../utils/fs";
 import { generateBundle } from "../utils/bundler";
 
 function printHelp() {
-  log.heading("loom theme <subcommand>");
+  log.heading("faqir theme <subcommand>");
   log.blank();
-  console.log("Manage themes for the Loom project.");
+  console.log("Manage themes for the Faqir project.");
   log.blank();
   console.log("Subcommands:");
   log.table([
@@ -20,9 +20,9 @@ function printHelp() {
   ]);
   log.blank();
   console.log("Examples:");
-  console.log("  loom theme set midnight");
-  console.log("  loom theme create my-brand");
-  console.log("  loom theme list");
+  console.log("  faqir theme set midnight");
+  console.log("  faqir theme create my-brand");
+  console.log("  faqir theme list");
 }
 
 function listAvailableThemes(registryPath: string): string[] {
@@ -59,7 +59,7 @@ async function themeSet(name: string): Promise<void> {
   const cwd = process.cwd();
 
   if (!configExists(cwd)) {
-    log.error("No loom.config.json found. Run 'loom init' first.");
+    log.error("No faqir.config.json found. Run 'faqir init' first.");
     process.exit(1);
   }
 
@@ -75,7 +75,7 @@ async function themeSet(name: string): Promise<void> {
     themePath = join(outputDir, "tokens", `theme-${name}.css`);
     if (!existsSync(themePath)) {
       log.error(`Theme '${name}' not found.`);
-      log.dim("Run 'loom theme list' to see available themes.");
+      log.dim("Run 'faqir theme list' to see available themes.");
       process.exit(1);
     }
   }
@@ -88,7 +88,7 @@ async function themeSet(name: string): Promise<void> {
   await writeConfig(config, cwd);
 
   // Regenerate bundle if it exists
-  const bundlePath = join(outputDir, "loom.bundle.css");
+  const bundlePath = join(outputDir, "faqir.bundle.css");
   if (config.bundle?.auto !== false && existsSync(bundlePath)) {
     await generateBundle(cwd);
     log.step("Bundle regenerated.");
@@ -102,7 +102,7 @@ async function themeCreate(name: string): Promise<void> {
   const cwd = process.cwd();
 
   if (!configExists(cwd)) {
-    log.error("No loom.config.json found. Run 'loom init' first.");
+    log.error("No faqir.config.json found. Run 'faqir init' first.");
     process.exit(1);
   }
 
@@ -222,7 +222,7 @@ async function themeCreate(name: string): Promise<void> {
   log.step(`File: ${config.output_dir}/tokens/theme-${name}.css`);
   log.blank();
   log.dim("Edit the file and uncomment tokens to customize.");
-  log.dim(`Then run: loom theme set ${name}`);
+  log.dim(`Then run: faqir theme set ${name}`);
 }
 
 async function themeList(): Promise<void> {
@@ -262,11 +262,11 @@ async function themeList(): Promise<void> {
       console.log(`    ${t}`);
     }
     log.blank();
-    log.dim("Run 'loom init --theme <name>' to use a theme.");
+    log.dim("Run 'faqir init --theme <name>' to use a theme.");
   }
 
   log.blank();
-  log.dim("Run 'loom theme create <name>' to create a custom theme.");
+  log.dim("Run 'faqir theme create <name>' to create a custom theme.");
 }
 
 export async function theme(args: string[]): Promise<void> {
@@ -281,7 +281,7 @@ export async function theme(args: string[]): Promise<void> {
     case "set": {
       const name = args[1];
       if (!name) {
-        log.error("Theme name required. Usage: loom theme set <name>");
+        log.error("Theme name required. Usage: faqir theme set <name>");
         process.exit(1);
       }
       await themeSet(name);
@@ -290,7 +290,7 @@ export async function theme(args: string[]): Promise<void> {
     case "create": {
       const name = args[1];
       if (!name) {
-        log.error("Theme name required. Usage: loom theme create <name>");
+        log.error("Theme name required. Usage: faqir theme create <name>");
         process.exit(1);
       }
       // Validate name: kebab-case, no spaces
@@ -306,7 +306,7 @@ export async function theme(args: string[]): Promise<void> {
       break;
     default:
       log.error(`Unknown subcommand: ${subcommand}`);
-      log.dim("Run 'loom theme --help' for available subcommands.");
+      log.dim("Run 'faqir theme --help' for available subcommands.");
       process.exit(1);
   }
 }

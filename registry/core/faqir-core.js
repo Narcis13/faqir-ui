@@ -1,14 +1,14 @@
 /**
- * Loom Core v0.1.0
- * Alpine-style reactivity for the Loom UI component system.
+ * Faqir Core v0.1.0
+ * Alpine-style reactivity for the Faqir UI component system.
  * Zero dependencies. CDN-ready. Agent-native.
  *
  * Usage:
- *   <script src="loom-core.js"></script>
+ *   <script src="faqir-core.js"></script>
  *   — or —
- *   <script src="loom-core.js" type="module"></script>
+ *   <script src="faqir-core.js" type="module"></script>
  *   — or —
- *   import Loom from './loom-core.js'
+ *   import Faqir from './faqir-core.js'
  */
 (function(global, factory) {
   if (typeof exports === 'object' && typeof module !== 'undefined') {
@@ -16,9 +16,9 @@
   } else if (typeof define === 'function' && define.amd) {
     define(factory);
   } else {
-    var Loom = factory();
-    global.Loom = Loom;
-    if (typeof globalThis !== 'undefined') globalThis.Loom = Loom;
+    var Faqir = factory();
+    global.Faqir = Faqir;
+    if (typeof globalThis !== 'undefined') globalThis.Faqir = Faqir;
   }
 })(typeof globalThis !== 'undefined' ? globalThis : typeof self !== 'undefined' ? self : this, function() {
   'use strict';
@@ -150,7 +150,7 @@
         try {
           effects[i]();
         } catch (e) {
-          console.warn('[Loom] Effect error:', e);
+          console.warn('[Faqir] Effect error:', e);
         }
       }
     }
@@ -189,7 +189,7 @@
       const fn = compileExpression(expression);
       return fn.call(scope, scope, el);
     } catch (e) {
-      console.warn('[Loom] Expression error: "' + expression + '"', e);
+      console.warn('[Faqir] Expression error: "' + expression + '"', e);
       return undefined;
     }
   }
@@ -199,7 +199,7 @@
       const fn = compileStatement(expression);
       fn.call(scope, scope, el);
     } catch (e) {
-      console.warn('[Loom] Statement error: "' + expression + '"', e);
+      console.warn('[Faqir] Statement error: "' + expression + '"', e);
     }
   }
 
@@ -350,13 +350,13 @@
       var child = children[i];
 
       // Skip elements already initialized by l-for or l-if
-      if (child.__loomScope && !child.hasAttribute('l-data')) {
+      if (child.__faqirScope && !child.hasAttribute('l-data')) {
         continue;
       }
 
       // Only l-data creates a new scope boundary.
       // data-ui elements inherit the parent scope so directives
-      // inside Loom components can access the enclosing reactive data.
+      // inside Faqir components can access the enclosing reactive data.
       if (child.hasAttribute('l-data')) {
         initTree(child, scope);
         continue;
@@ -414,9 +414,9 @@
 
     var scopeId = ++scopeCounter;
     var scope = createScopeWithMagics(userData, root, root);
-    root.__loomScope = scope;
+    root.__faqirScope = scope;
     root.__scopeId = scopeId;
-    root.__loomCleanups = [];
+    root.__faqirCleanups = [];
 
     // Set up bidirectional bridge for $state/$variant
     setupStateBridge(root, scope);
@@ -483,7 +483,7 @@
         enumerable: false
       },
       $id: {
-        value: function(name) { return 'loom-' + root.__scopeId + '-' + name; },
+        value: function(name) { return 'faqir-' + root.__scopeId + '-' + name; },
         enumerable: false
       }
     });
@@ -514,13 +514,13 @@
   // --- Scope utilities ---
 
   function getScopeRefs(root) {
-    return root.__loomRefs || {};
+    return root.__faqirRefs || {};
   }
 
   function findScopeRoot(el) {
     var node = el;
     while (node) {
-      if (node.__loomScope) return node;
+      if (node.__faqirScope) return node;
       node = node.parentElement;
     }
     return el;
@@ -528,25 +528,25 @@
 
   function addCleanup(el, cleanupFn) {
     var root = findScopeRoot(el);
-    if (root && root.__loomCleanups) {
-      root.__loomCleanups.push(cleanupFn);
+    if (root && root.__faqirCleanups) {
+      root.__faqirCleanups.push(cleanupFn);
     }
   }
 
   function destroyScope(el) {
-    if (el.__loomCleanups) {
-      for (var i = 0; i < el.__loomCleanups.length; i++) {
-        el.__loomCleanups[i]();
+    if (el.__faqirCleanups) {
+      for (var i = 0; i < el.__faqirCleanups.length; i++) {
+        el.__faqirCleanups[i]();
       }
-      el.__loomCleanups = [];
+      el.__faqirCleanups = [];
     }
     var children = el.querySelectorAll ? el.querySelectorAll('*') : [];
     for (var i = 0; i < children.length; i++) {
-      if (children[i].__loomCleanups) {
-        for (var j = 0; j < children[i].__loomCleanups.length; j++) {
-          children[i].__loomCleanups[j]();
+      if (children[i].__faqirCleanups) {
+        for (var j = 0; j < children[i].__faqirCleanups.length; j++) {
+          children[i].__faqirCleanups[j]();
         }
-        children[i].__loomCleanups = [];
+        children[i].__faqirCleanups = [];
       }
     }
   }
@@ -977,12 +977,12 @@
   function handleRef(el, dir, scope) {
     var name = dir.expression;
     var root = findScopeRoot(el);
-    if (!root.__loomRefs) root.__loomRefs = {};
-    root.__loomRefs[name] = el;
+    if (!root.__faqirRefs) root.__faqirRefs = {};
+    root.__faqirRefs[name] = el;
 
     addCleanup(el, function() {
-      if (root.__loomRefs && root.__loomRefs[name] === el) {
-        delete root.__loomRefs[name];
+      if (root.__faqirRefs && root.__faqirRefs[name] === el) {
+        delete root.__faqirRefs[name];
       }
     });
   }
@@ -1074,9 +1074,9 @@
 
     var tag = el.tagName.toLowerCase();
     var type = el.getAttribute('type');
-    var isLoomSwitch = el.hasAttribute('data-ui') && el.dataset.ui === 'switch';
+    var isFaqirSwitch = el.hasAttribute('data-ui') && el.dataset.ui === 'switch';
 
-    if (isLoomSwitch) {
+    if (isFaqirSwitch) {
       var cl = effect(function() {
         var value = evaluate(prop, scope, el);
         el.checked = !!value;
@@ -1193,7 +1193,7 @@
 
   function handleIf(el, dir, scope) {
     if (el.tagName !== 'TEMPLATE') {
-      console.warn('[Loom] l-if must be used on a <template> element');
+      console.warn('[Faqir] l-if must be used on a <template> element');
       return;
     }
 
@@ -1252,7 +1252,7 @@
 
   function handleFor(el, dir, scope) {
     if (el.tagName !== 'TEMPLATE') {
-      console.warn('[Loom] l-for must be used on a <template> element');
+      console.warn('[Faqir] l-for must be used on a <template> element');
       return;
     }
 
@@ -1261,7 +1261,7 @@
     );
 
     if (!match) {
-      console.warn('[Loom] Invalid l-for expression: "' + dir.expression + '"');
+      console.warn('[Faqir] Invalid l-for expression: "' + dir.expression + '"');
       return;
     }
 
@@ -1322,8 +1322,8 @@
               }
             });
           })(childOwn, scope);
-          nodes[j].__loomScope = childScope;
-          nodes[j].__loomCleanups = [];
+          nodes[j].__faqirScope = childScope;
+          nodes[j].__faqirCleanups = [];
 
           processElement(nodes[j], childScope);
           walkChildren(nodes[j], childScope);
@@ -1352,7 +1352,7 @@
   }
 
   // ═══════════════════════════════════════════════════════
-  // Section 4-5: Loom Bridge ($state, $variant, $ui)
+  // Section 4-5: Faqir Bridge ($state, $variant, $ui)
   // ═══════════════════════════════════════════════════════
 
   function closestUI(el) {
@@ -1365,7 +1365,7 @@
     if (!uiEl) return null;
     var keys = Object.keys(uiEl);
     for (var i = 0; i < keys.length; i++) {
-      if (keys[i].startsWith('_loom')) {
+      if (keys[i].startsWith('_faqir')) {
         return uiEl[keys[i]];
       }
     }
@@ -1515,7 +1515,7 @@
 
   // --- From utils.js (debounce/throttle already defined in Section 3.9) ---
   var uidCounter = 0;
-  function uid(prefix) { return (prefix || 'loom') + '-' + (++uidCounter); }
+  function uid(prefix) { return (prefix || 'faqir') + '-' + (++uidCounter); }
   function clamp(value, min, max) { return Math.min(Math.max(value, min), max); }
 
   // ═══════════════════════════════════════════════════════
@@ -1526,7 +1526,7 @@
 
   // --- dialog ---
   function createDialog(root) {
-    if (root._loomDialog) return root._loomDialog;
+    if (root._faqirDialog) return root._faqirDialog;
 
     var trigger = root.querySelector("[data-part='trigger']");
     var overlay = root.querySelector("[data-part='overlay']");
@@ -1609,17 +1609,17 @@
         externalTriggers.forEach(function(el) { el.removeEventListener('click', onTriggerClick); });
       }
       if (focusCleanup) focusCleanup();
-      delete root._loomDialog;
+      delete root._faqirDialog;
     }
 
     var api = { open: open, close: close, toggle: toggle, destroy: destroy };
-    root._loomDialog = api;
+    root._faqirDialog = api;
     return api;
   }
 
   // --- drawer ---
   function createDrawer(root) {
-    if (root._loomDrawer) return root._loomDrawer;
+    if (root._faqirDrawer) return root._faqirDrawer;
 
     var trigger = root.querySelector("[data-part='trigger']");
     var overlay = root.querySelector("[data-part='overlay']");
@@ -1702,17 +1702,17 @@
         externalTriggers.forEach(function(el) { el.removeEventListener('click', onTriggerClick); });
       }
       if (focusCleanup) focusCleanup();
-      delete root._loomDrawer;
+      delete root._faqirDrawer;
     }
 
     var api = { open: open, close: close, toggle: toggle, destroy: destroy };
-    root._loomDrawer = api;
+    root._faqirDrawer = api;
     return api;
   }
 
   // --- tabs ---
   function createTabs(root) {
-    if (root._loomTabs) return root._loomTabs;
+    if (root._faqirTabs) return root._faqirTabs;
 
     var list = root.querySelector("[data-part='list']");
     var triggers = function() { return [].slice.call(root.querySelectorAll("[data-part='trigger']")); };
@@ -1774,17 +1774,17 @@
     function destroy() {
       if (list) list.removeEventListener('click', onTriggerClick);
       if (list) list.removeEventListener('keydown', onKeyDown);
-      delete root._loomTabs;
+      delete root._faqirTabs;
     }
 
     var api = { activate: activate, getActiveIndex: getActiveIndex, destroy: destroy };
-    root._loomTabs = api;
+    root._faqirTabs = api;
     return api;
   }
 
   // --- dropdown ---
   function createDropdown(root) {
-    if (root._loomDropdown) return root._loomDropdown;
+    if (root._faqirDropdown) return root._faqirDropdown;
 
     var trigger = root.querySelector("[data-part='trigger']");
     var menu = root.querySelector("[data-part='menu']");
@@ -1859,17 +1859,17 @@
       if (trigger) trigger.removeEventListener('keydown', onTriggerKeyDown);
       if (menu) menu.removeEventListener('keydown', onMenuKeyDown);
       if (outsideClickCleanup) outsideClickCleanup();
-      delete root._loomDropdown;
+      delete root._faqirDropdown;
     }
 
     var api = { open: open, close: close, toggle: toggle, destroy: destroy };
-    root._loomDropdown = api;
+    root._faqirDropdown = api;
     return api;
   }
 
   // --- accordion ---
   function createAccordion(root) {
-    if (root._loomAccordion) return root._loomAccordion;
+    if (root._faqirAccordion) return root._faqirAccordion;
 
     var getItems = function() { return [].slice.call(root.querySelectorAll("[data-part='item']")); };
     var isSingle = function() { return root.dataset.variant === 'single'; };
@@ -1942,17 +1942,17 @@
     function destroy() {
       root.removeEventListener('click', onTriggerClick);
       root.removeEventListener('keydown', onKeyDown);
-      delete root._loomAccordion;
+      delete root._faqirAccordion;
     }
 
     var api = { toggle: toggleAccordion, expand: expand, collapse: collapse, expandAll: expandAll, collapseAll: collapseAll, destroy: destroy };
-    root._loomAccordion = api;
+    root._faqirAccordion = api;
     return api;
   }
 
   // --- tooltip ---
   function createTooltip(root) {
-    if (root._loomTooltip) return root._loomTooltip;
+    if (root._faqirTooltip) return root._faqirTooltip;
 
     var trigger = root.querySelector("[data-part='trigger']");
     var content = root.querySelector("[data-part='content']");
@@ -1995,17 +1995,17 @@
       if (trigger) trigger.removeEventListener('focusin', onFocusIn);
       if (trigger) trigger.removeEventListener('focusout', onFocusOut);
       root.removeEventListener('keydown', onKeyDown);
-      delete root._loomTooltip;
+      delete root._faqirTooltip;
     }
 
     var api = { show: show, hide: hide, destroy: destroy };
-    root._loomTooltip = api;
+    root._faqirTooltip = api;
     return api;
   }
 
   // --- toast ---
   function createToastContainer(root) {
-    if (root._loomToast) return root._loomToast;
+    if (root._faqirToast) return root._faqirToast;
 
     var toasts = new Map();
 
@@ -2096,17 +2096,17 @@
         entry.el.remove();
       });
       toasts.clear();
-      delete root._loomToast;
+      delete root._faqirToast;
     }
 
     var api = { add: add, dismiss: dismiss, dismissAll: dismissAll, destroy: destroy };
-    root._loomToast = api;
+    root._faqirToast = api;
     return api;
   }
 
   // --- combobox ---
   function createCombobox(root) {
-    if (root._loomCombobox) return root._loomCombobox;
+    if (root._faqirCombobox) return root._faqirCombobox;
 
     var input = root.querySelector("[data-part='input']");
     var listbox = root.querySelector("[data-part='listbox']");
@@ -2222,17 +2222,17 @@
       if (input) input.removeEventListener('keydown', onInputKeyDown);
       if (listbox) listbox.removeEventListener('click', onListboxClick);
       if (outsideClickCleanup) outsideClickCleanup();
-      delete root._loomCombobox;
+      delete root._faqirCombobox;
     }
 
     var api = { open: open, close: close, filter: filter, selectOption: selectOption, getValue: getValue, setValue: setValue, destroy: destroy };
-    root._loomCombobox = api;
+    root._faqirCombobox = api;
     return api;
   }
 
   // --- command-palette ---
   function createCommandPalette(root) {
-    if (root._loomCommandPalette) return root._loomCommandPalette;
+    if (root._faqirCommandPalette) return root._faqirCommandPalette;
 
     var overlay = root.querySelector("[data-part='overlay']");
     var panel = root.querySelector("[data-part='panel']");
@@ -2380,17 +2380,17 @@
       if (list) list.removeEventListener('click', onItemClick);
       document.removeEventListener('keydown', onGlobalKeyDown);
       if (focusCleanup) focusCleanup();
-      delete root._loomCommandPalette;
+      delete root._faqirCommandPalette;
     }
 
     var api = { open: open, close: close, filter: filter, selectItem: selectItem, registerCommand: registerCommand, destroy: destroy };
-    root._loomCommandPalette = api;
+    root._faqirCommandPalette = api;
     return api;
   }
 
   // --- table ---
   function createTable(root) {
-    if (root._loomTable) return root._loomTable;
+    if (root._faqirTable) return root._faqirTable;
 
     var thead = root.querySelector("[data-part='thead']");
     var tbody = root.querySelector("[data-part='tbody']");
@@ -2533,17 +2533,17 @@
       if (headerCheckbox) headerCheckbox.removeEventListener('change', onHeaderCheckboxChange);
       if (tbody) tbody.removeEventListener('change', onRowCheckboxChange);
       if (tbody) tbody.removeEventListener('click', onRowClick);
-      delete root._loomTable;
+      delete root._faqirTable;
     }
 
     var api = { sort: sort, selectRow: selectRow, selectAll: selectAll, deselectAll: deselectAll, getSelected: getSelected, destroy: destroy };
-    root._loomTable = api;
+    root._faqirTable = api;
     return api;
   }
 
   // --- select-custom ---
   function createSelectCustom(root) {
-    if (root._loomSelectCustom) return root._loomSelectCustom;
+    if (root._faqirSelectCustom) return root._faqirSelectCustom;
 
     var trigger = root.querySelector("[data-part='trigger']");
     var valueEl = root.querySelector("[data-part='value']");
@@ -2662,17 +2662,17 @@
       if (listbox) listbox.removeEventListener('click', onOptionClick);
       if (searchInput) searchInput.removeEventListener('input', onSearchInput);
       if (outsideClickCleanup) outsideClickCleanup();
-      delete root._loomSelectCustom;
+      delete root._faqirSelectCustom;
     }
 
     var api = { open: open, close: close, toggle: toggle, select: select, getValue: getValue, destroy: destroy };
-    root._loomSelectCustom = api;
+    root._faqirSelectCustom = api;
     return api;
   }
 
   // --- popover ---
   function createPopover(root) {
-    if (root._loomPopover) return root._loomPopover;
+    if (root._faqirPopover) return root._faqirPopover;
 
     var trigger = root.querySelector("[data-part='trigger']");
     var content = root.querySelector("[data-part='content']");
@@ -2710,17 +2710,17 @@
       if (closeBtn) closeBtn.removeEventListener('click', onCloseClick);
       root.removeEventListener('keydown', onKeyDown);
       if (outsideClickCleanup) outsideClickCleanup();
-      delete root._loomPopover;
+      delete root._faqirPopover;
     }
 
     var api = { open: open, close: close, toggle: toggle, destroy: destroy };
-    root._loomPopover = api;
+    root._faqirPopover = api;
     return api;
   }
 
   // --- pagination ---
   function createPagination(root) {
-    if (root._loomPagination) return root._loomPagination;
+    if (root._faqirPagination) return root._faqirPagination;
 
     var nav = root.querySelector("[data-part='nav']");
     var prevBtn = root.querySelector("[data-part='prev']");
@@ -2754,7 +2754,7 @@
     }
 
     function emitPageChange() {
-      root.dispatchEvent(new CustomEvent('loom:page-change', { detail: { page: currentPage }, bubbles: true }));
+      root.dispatchEvent(new CustomEvent('faqir:page-change', { detail: { page: currentPage }, bubbles: true }));
     }
 
     function setPage(n) {
@@ -2789,17 +2789,17 @@
       if (nav) nav.removeEventListener('click', onNavClick);
       if (prevBtn) prevBtn.removeEventListener('click', onPrevClick);
       if (nextBtn) nextBtn.removeEventListener('click', onNextClick);
-      delete root._loomPagination;
+      delete root._faqirPagination;
     }
 
     var api = { setPage: setPage, getPage: getPage, setTotal: setTotal, destroy: destroy };
-    root._loomPagination = api;
+    root._faqirPagination = api;
     return api;
   }
 
   // --- sheet ---
   function createSheet(root) {
-    if (root._loomSheet) return root._loomSheet;
+    if (root._faqirSheet) return root._faqirSheet;
 
     var trigger = root.querySelector("[data-part='trigger']");
     var overlay = root.querySelector("[data-part='overlay']");
@@ -2859,11 +2859,11 @@
       closeButtons.forEach(function(btn) { btn.removeEventListener('click', onCloseClick); });
       root.removeEventListener('keydown', onKeyDown);
       if (focusCleanup) focusCleanup();
-      delete root._loomSheet;
+      delete root._faqirSheet;
     }
 
     var api = { open: open, close: close, toggle: toggle, destroy: destroy };
-    root._loomSheet = api;
+    root._faqirSheet = api;
     return api;
   }
 
@@ -2877,7 +2877,7 @@
   ];
 
   function createDatePicker(root) {
-    if (root._loomDatePicker) return root._loomDatePicker;
+    if (root._faqirDatePicker) return root._faqirDatePicker;
 
     var trigger = root.querySelector("[data-part='trigger']");
     var input = root.querySelector("[data-part='input']");
@@ -3010,7 +3010,7 @@
       buildCalendar();
       dpClose();
       input.focus();
-      root.dispatchEvent(new CustomEvent('loom:date-change', {
+      root.dispatchEvent(new CustomEvent('faqir:date-change', {
         detail: { date: formatDate(selectedDate), dateObj: selectedDate }, bubbles: true
       }));
     }
@@ -3100,11 +3100,11 @@
       if (calendar) calendar.removeEventListener('keydown', onCalendarKeyDown);
       root.removeEventListener('keydown', onRootKeyDown);
       if (outsideClickCleanup) outsideClickCleanup();
-      delete root._loomDatePicker;
+      delete root._faqirDatePicker;
     }
 
     var api = { open: dpOpen, close: dpClose, getValue: getValue, setValue: setValue, navigate: navigate, selectDate: dpSelectDate, destroy: destroy };
-    root._loomDatePicker = api;
+    root._faqirDatePicker = api;
     return api;
   }
 
@@ -3134,7 +3134,7 @@
   function findParentScope(el) {
     var parent = el.parentElement;
     while (parent) {
-      if (parent.__loomScope) return parent.__loomScope;
+      if (parent.__faqirScope) return parent.__faqirScope;
       parent = parent.parentElement;
     }
     return null;
@@ -3229,7 +3229,7 @@
             }
             var scopeEls = node.querySelectorAll('[l-data]');
             for (var se = 0; se < scopeEls.length; se++) {
-              if (!scopeEls[se].__loomScope) {
+              if (!scopeEls[se].__faqirScope) {
                 initTree(scopeEls[se], findParentScope(scopeEls[se]));
               }
             }
@@ -3257,7 +3257,7 @@
   // Public API
   // ═══════════════════════════════════════════════════════
 
-  var Loom = {
+  var Faqir = {
     version: '0.1.0',
     reactive: reactive,
     effect: effect,
@@ -3270,11 +3270,11 @@
     store: function(name, obj) { globalStores[name] = reactive(obj); },
     directive: function(name, handler) { customDirectives.set(name, handler); },
     magic: function(name, callback) { customMagics.set(name, callback); },
-    plugin: function(fn) { fn(Loom); },
+    plugin: function(fn) { fn(Faqir); },
     controller: function(name, factory) { controllerRegistry[name] = factory; },
     start: bootstrap,
     initTree: initTree
   };
 
-  return Loom;
+  return Faqir;
 });

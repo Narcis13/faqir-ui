@@ -1,4 +1,4 @@
-// JS anti-pattern detector for Loom recipe controllers
+// JS anti-pattern detector for Faqir recipe controllers
 
 /** A violation found in a JS source file */
 export interface JsViolation {

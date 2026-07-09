@@ -44,14 +44,14 @@ function parseArgs(args: string[]): DevOptions {
 }
 
 function printHelp() {
-  log.heading("loom dev");
+  log.heading("faqir dev");
   log.blank();
   console.log("Start a local development server.");
   log.blank();
   console.log("Usage:");
-  console.log("  loom dev");
-  console.log("  loom dev --port 8080");
-  console.log("  loom dev --bundle");
+  console.log("  faqir dev");
+  console.log("  faqir dev --port 8080");
+  console.log("  faqir dev --bundle");
   log.blank();
   console.log("Options:");
   log.table([
@@ -126,7 +126,7 @@ export async function dev(args: string[]): Promise<void> {
   });
 
   const url = `http://localhost:${server.port}`;
-  log.heading("Loom Dev Server");
+  log.heading("Faqir Dev Server");
   log.success(`Serving ${opts.dir}/ at ${url}`);
 
   if (opts.autoBundle && configExists(cwd)) {
@@ -138,7 +138,7 @@ export async function dev(args: string[]): Promise<void> {
 
       watch(outputDir, { recursive: true }, (eventType, filename) => {
         if (!filename?.endsWith(".css")) return;
-        if (filename === "loom.bundle.css") return;
+        if (filename === "faqir.bundle.css") return;
 
         if (debounceTimer) clearTimeout(debounceTimer);
         debounceTimer = setTimeout(async () => {

@@ -5,7 +5,7 @@ import { init } from "../../src/commands/init";
 
 const TEST_DIR = join(import.meta.dir, "../.tmp-init-test");
 
-describe("loom init", () => {
+describe("faqir init", () => {
   beforeEach(() => {
     rmSync(TEST_DIR, { recursive: true, force: true });
     mkdirSync(TEST_DIR, { recursive: true });
@@ -17,7 +17,7 @@ describe("loom init", () => {
     rmSync(TEST_DIR, { recursive: true, force: true });
   });
 
-  it("creates loom.config.json", async () => {
+  it("creates faqir.config.json", async () => {
     const origCwd = process.cwd();
     process.chdir(TEST_DIR);
     try {
@@ -26,9 +26,9 @@ describe("loom init", () => {
       process.chdir(origCwd);
     }
 
-    expect(existsSync(join(TEST_DIR, "loom.config.json"))).toBe(true);
+    expect(existsSync(join(TEST_DIR, "faqir.config.json"))).toBe(true);
 
-    const config = await Bun.file(join(TEST_DIR, "loom.config.json")).json();
+    const config = await Bun.file(join(TEST_DIR, "faqir.config.json")).json();
     expect(config.version).toBe("1.0.0");
     expect(config.theme).toBe("default");
     expect(config.output_dir).toBe("./ui");
@@ -142,7 +142,7 @@ describe("loom init", () => {
     expect(content).toContain("[data-theme=\"dark\"]");
   });
 
-  it("creates .loom/context.json", async () => {
+  it("creates .faqir/context.json", async () => {
     const origCwd = process.cwd();
     process.chdir(TEST_DIR);
     try {
@@ -151,15 +151,15 @@ describe("loom init", () => {
       process.chdir(origCwd);
     }
 
-    const contextPath = join(TEST_DIR, ".loom", "context.json");
+    const contextPath = join(TEST_DIR, ".faqir", "context.json");
     expect(existsSync(contextPath)).toBe(true);
 
     const context = await Bun.file(contextPath).json();
-    expect(context.meta.framework).toBe("loom");
+    expect(context.meta.framework).toBe("faqir");
     expect(context.protocol.identity).toBe("data-ui");
   });
 
-  it("adds .loom/ to .gitignore in git repos", async () => {
+  it("adds .faqir/ to .gitignore in git repos", async () => {
     const origCwd = process.cwd();
     process.chdir(TEST_DIR);
     try {
@@ -172,7 +172,7 @@ describe("loom init", () => {
     expect(existsSync(gitignorePath)).toBe(true);
 
     const content = await Bun.file(gitignorePath).text();
-    expect(content).toContain(".loom/");
+    expect(content).toContain(".faqir/");
   });
 
   it("skips core modules with --no-core", async () => {
@@ -186,7 +186,7 @@ describe("loom init", () => {
 
     expect(existsSync(join(TEST_DIR, "ui", "core"))).toBe(false);
 
-    const config = await Bun.file(join(TEST_DIR, "loom.config.json")).json();
+    const config = await Bun.file(join(TEST_DIR, "faqir.config.json")).json();
     expect(config.include_core).toBe(false);
   });
 
@@ -202,7 +202,7 @@ describe("loom init", () => {
     expect(existsSync(join(TEST_DIR, "components", "tokens"))).toBe(true);
     expect(existsSync(join(TEST_DIR, "components", "base"))).toBe(true);
 
-    const config = await Bun.file(join(TEST_DIR, "loom.config.json")).json();
+    const config = await Bun.file(join(TEST_DIR, "faqir.config.json")).json();
     expect(config.output_dir).toBe("./components");
   });
 });

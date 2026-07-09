@@ -7,7 +7,7 @@ import { inspect } from "../../src/commands/inspect";
 
 const TEST_DIR = join(import.meta.dir, "../.tmp-inspect-test");
 
-describe("loom inspect", () => {
+describe("faqir inspect", () => {
   beforeEach(() => {
     rmSync(TEST_DIR, { recursive: true, force: true });
     mkdirSync(TEST_DIR, { recursive: true });

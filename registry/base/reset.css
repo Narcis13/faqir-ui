@@ -1,4 +1,4 @@
-/* @ui:base reset — modern CSS reset for Loom projects */
+/* @ui:base reset — modern CSS reset for Faqir projects */
 
 *,
 *::before,
@@ -106,7 +106,7 @@ table {
   display: none !important;
 }
 
-/* Loom cloak — hide until reactive engine initializes */
+/* Faqir cloak — hide until reactive engine initializes */
 [l-cloak] {
   display: none !important;
 }

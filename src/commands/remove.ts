@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { log } from "../utils/logger";
 import { configExists, readConfig, writeConfig } from "../utils/config";
 import { findInstalledLayer, getInstalledDependents } from "../utils/components";
-import { regenerateLoomInit, regenerateContext } from "../utils/codegen";
+import { regenerateFaqirInit, regenerateContext } from "../utils/codegen";
 import { generateBundle } from "../utils/bundler";
 
 interface RemoveOptions {
@@ -39,13 +39,13 @@ function parseArgs(args: string[]): { components: string[]; options: RemoveOptio
 }
 
 function printHelp() {
-  log.heading("loom remove <components...>");
+  log.heading("faqir remove <components...>");
   log.blank();
   console.log("Remove installed components from the project.");
   log.blank();
   console.log("Usage:");
-  console.log("  loom remove dialog toast");
-  console.log("  loom remove button --force");
+  console.log("  faqir remove dialog toast");
+  console.log("  faqir remove button --force");
   log.blank();
   console.log("Options:");
   log.table([
@@ -59,13 +59,13 @@ export async function remove(args: string[]): Promise<void> {
   const cwd = process.cwd();
 
   if (!configExists(cwd)) {
-    log.error("No loom.config.json found. Run 'loom init' first.");
+    log.error("No faqir.config.json found. Run 'faqir init' first.");
     process.exit(1);
   }
 
   if (components.length === 0) {
-    log.error("No components specified. Usage: loom remove <component...>");
-    log.dim("Run 'loom remove --help' for options.");
+    log.error("No components specified. Usage: faqir remove <component...>");
+    log.dim("Run 'faqir remove --help' for options.");
     process.exit(1);
   }
 
@@ -130,16 +130,16 @@ export async function remove(args: string[]): Promise<void> {
 
   await writeConfig(config, cwd);
 
-  // Regenerate loom.js
+  // Regenerate faqir.js
   if (config.include_core !== false) {
-    await regenerateLoomInit(config, outputDir);
+    await regenerateFaqirInit(config, outputDir);
   }
 
   // Regenerate context
   await regenerateContext(config, outputDir, cwd);
 
   // Regenerate bundle if it exists
-  const bundlePath = join(outputDir, "loom.bundle.css");
+  const bundlePath = join(outputDir, "faqir.bundle.css");
   if (config.bundle?.auto !== false && existsSync(bundlePath)) {
     await generateBundle(cwd);
     log.step("Bundle regenerated.");

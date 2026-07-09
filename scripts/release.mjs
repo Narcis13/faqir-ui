@@ -46,7 +46,7 @@ try {
   run("git", ["push"])
   run("git", ["push", "--tags"])
 
-  process.stdout.write(`Released loom-ui-cli v${releasedVersion}\n`)
+  process.stdout.write(`Released faqir-ui-cli v${releasedVersion}\n`)
 } catch (error) {
   const message = error instanceof Error ? error.message : String(error)
   process.stderr.write(`Release failed: ${message}\n`)

@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 
-export interface LoomConfig {
+export interface FaqirConfig {
   version: string;
   theme: string;
   output_dir: string;
@@ -19,7 +19,7 @@ export interface LoomConfig {
   };
 }
 
-export const DEFAULT_CONFIG: LoomConfig = {
+export const DEFAULT_CONFIG: FaqirConfig = {
   version: "1.0.0",
   theme: "default",
   output_dir: "./ui",
@@ -33,21 +33,21 @@ export const DEFAULT_CONFIG: LoomConfig = {
 };
 
 export function getConfigPath(cwd: string = process.cwd()): string {
-  return join(cwd, "loom.config.json");
+  return join(cwd, "faqir.config.json");
 }
 
 export function configExists(cwd: string = process.cwd()): boolean {
   return existsSync(getConfigPath(cwd));
 }
 
-export async function readConfig(cwd: string = process.cwd()): Promise<LoomConfig> {
+export async function readConfig(cwd: string = process.cwd()): Promise<FaqirConfig> {
   const path = getConfigPath(cwd);
   const file = Bun.file(path);
   const json = await file.json();
-  return json as LoomConfig;
+  return json as FaqirConfig;
 }
 
-export async function writeConfig(config: LoomConfig, cwd: string = process.cwd()): Promise<void> {
+export async function writeConfig(config: FaqirConfig, cwd: string = process.cwd()): Promise<void> {
   const path = getConfigPath(cwd);
   await Bun.write(path, JSON.stringify(config, null, 2) + "\n");
 }

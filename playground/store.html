@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Loom UI — Component Store</title>
+  <title>Faqir UI — Component Store</title>
 
   <!-- Tokens -->
   <link rel="stylesheet" href="../registry/tokens/palette.css">
@@ -39,8 +39,8 @@
   <!-- Recipes -->
   <link rel="stylesheet" href="../registry/recipes/dialog/dialog.css">
 
-  <!-- Loom Core -->
-  <script src="../registry/core/loom-core.js" defer></script>
+  <!-- Faqir Core -->
+  <script src="../registry/core/faqir-core.js" defer></script>
 </head>
 <body>
   <div l-cloak l-data="{
@@ -117,7 +117,7 @@
         <div data-ui="stack" data-variant="horizontal" data-gap="4" data-align="center" data-justify="between" data-wrap data-responsive>
           <div data-ui="stack" data-gap="1">
             <h1 data-ui="heading" data-size="3">Component Store</h1>
-            <p data-ui="text" data-size="sm" data-variant="muted">Browse and install Loom UI components</p>
+            <p data-ui="text" data-size="sm" data-variant="muted">Browse and install Faqir UI components</p>
           </div>
           <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center">
             <button data-ui="button" data-variant="outline" data-size="sm" @click="cartOpen = !cartOpen">
@@ -162,7 +162,7 @@
                   <div data-ui="separator"></div>
                   <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center" data-justify="between" data-responsive>
                     <span data-ui="text" data-size="sm" data-variant="muted">
-                      loom add <span l-text="cart.map(c => c.name.toLowerCase()).join(' ')"></span>
+                      faqir add <span l-text="cart.map(c => c.name.toLowerCase()).join(' ')"></span>
                     </span>
                     <button data-ui="button" data-variant="primary" data-size="sm" @click="installAll()">Install All</button>
                   </div>
@@ -240,7 +240,7 @@
 
         <!-- Footer -->
         <div data-ui="surface" data-variant="flat" data-size="md" data-align-text="center">
-          <p data-ui="text" data-size="xs" data-variant="subtle">Loom UI Store — built with zero CSS classes</p>
+          <p data-ui="text" data-size="xs" data-variant="subtle">Faqir UI Store — built with zero CSS classes</p>
         </div>
 
       </div>

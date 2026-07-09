@@ -6,7 +6,7 @@ import { doctor } from "../../src/commands/doctor";
 
 const TEST_DIR = join(import.meta.dir, "../.tmp-doctor-test");
 
-describe("loom doctor", () => {
+describe("faqir doctor", () => {
   beforeEach(() => {
     rmSync(TEST_DIR, { recursive: true, force: true });
     mkdirSync(TEST_DIR, { recursive: true });
@@ -16,7 +16,7 @@ describe("loom doctor", () => {
     rmSync(TEST_DIR, { recursive: true, force: true });
   });
 
-  it("fails when loom.config.json is missing", async () => {
+  it("fails when faqir.config.json is missing", async () => {
     const origCwd = process.cwd();
     process.chdir(TEST_DIR);
     try {
@@ -26,10 +26,10 @@ describe("loom doctor", () => {
       process.chdir(origCwd);
     }
     // Doctor logs errors, doesn't throw — verify config is missing
-    expect(existsSync(join(TEST_DIR, "loom.config.json"))).toBe(false);
+    expect(existsSync(join(TEST_DIR, "faqir.config.json"))).toBe(false);
   });
 
-  it("passes all checks after loom init", async () => {
+  it("passes all checks after faqir init", async () => {
     const origCwd = process.cwd();
     process.chdir(TEST_DIR);
     try {
@@ -41,12 +41,12 @@ describe("loom doctor", () => {
     }
 
     // Verify the key files exist that doctor checks
-    expect(existsSync(join(TEST_DIR, "loom.config.json"))).toBe(true);
+    expect(existsSync(join(TEST_DIR, "faqir.config.json"))).toBe(true);
     expect(existsSync(join(TEST_DIR, "ui", "tokens", "index.css"))).toBe(true);
     expect(existsSync(join(TEST_DIR, "ui", "base", "reset.css"))).toBe(true);
     expect(existsSync(join(TEST_DIR, "ui", "base", "prose.css"))).toBe(true);
     expect(existsSync(join(TEST_DIR, "ui", "tokens", "theme.css"))).toBe(true);
-    expect(existsSync(join(TEST_DIR, ".loom", "context.json"))).toBe(true);
+    expect(existsSync(join(TEST_DIR, ".faqir", "context.json"))).toBe(true);
   });
 
   it("detects missing token files", async () => {

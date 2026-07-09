@@ -9,7 +9,7 @@ import { generateSkill, writeSkillFile } from "../../src/generator/skill";
 
 const TEST_DIR = join(import.meta.dir, "../.tmp-context-test");
 
-describe("loom context", () => {
+describe("faqir context", () => {
   beforeEach(() => {
     rmSync(TEST_DIR, { recursive: true, force: true });
     mkdirSync(TEST_DIR, { recursive: true });
@@ -27,7 +27,7 @@ describe("loom context", () => {
 
     const data = await generateContext(TEST_DIR);
 
-    expect(data.meta.framework).toBe("loom");
+    expect(data.meta.framework).toBe("faqir");
     expect(data.meta.component_count.primitives).toBe(1);
     expect(data.meta.component_count.recipes).toBe(1);
     expect(data.protocol.identity).toBe("data-ui");
@@ -57,7 +57,7 @@ describe("loom context", () => {
     const json = formatContextJSON(data);
     const parsed = JSON.parse(json);
 
-    expect(parsed.meta.framework).toBe("loom");
+    expect(parsed.meta.framework).toBe("faqir");
     expect(parsed.components.button).toBeDefined();
   });
 
@@ -68,7 +68,7 @@ describe("loom context", () => {
     const data = await generateContext(TEST_DIR);
     const md = formatContextMarkdown(data);
 
-    expect(md).toContain("# Loom UI Context");
+    expect(md).toContain("# Faqir UI Context");
     expect(md).toContain("## Attribute Protocol");
     expect(md).toContain("## Components");
     expect(md).toContain("### button");
@@ -83,7 +83,7 @@ describe("loom context", () => {
     const data = await generateContext(TEST_DIR);
     const rules = formatContextCursorRules(data);
 
-    expect(rules).toContain("# Loom UI Framework Rules");
+    expect(rules).toContain("# Faqir UI Framework Rules");
     expect(rules).toContain("data-ui");
     expect(rules).toContain("data-state");
     expect(rules).toContain("button");
@@ -95,11 +95,11 @@ describe("loom context", () => {
 
     await context([]);
 
-    const contextPath = join(TEST_DIR, ".loom", "context.json");
+    const contextPath = join(TEST_DIR, ".faqir", "context.json");
     expect(existsSync(contextPath)).toBe(true);
 
     const content = await Bun.file(contextPath).json();
-    expect(content.meta.framework).toBe("loom");
+    expect(content.meta.framework).toBe("faqir");
     expect(content.components.button).toBeDefined();
   });
 
@@ -109,11 +109,11 @@ describe("loom context", () => {
 
     await context(["--format", "md"]);
 
-    const mdPath = join(TEST_DIR, ".loom", "context.md");
+    const mdPath = join(TEST_DIR, ".faqir", "context.md");
     expect(existsSync(mdPath)).toBe(true);
 
     const content = await Bun.file(mdPath).text();
-    expect(content).toContain("# Loom UI Context");
+    expect(content).toContain("# Faqir UI Context");
   });
 
   it("writes .cursorrules with --format cursorrules", async () => {
@@ -126,7 +126,7 @@ describe("loom context", () => {
     expect(existsSync(rulesPath)).toBe(true);
 
     const content = await Bun.file(rulesPath).text();
-    expect(content).toContain("# Loom UI Framework Rules");
+    expect(content).toContain("# Faqir UI Framework Rules");
   });
 
   it("outputs to stdout with --stdout", async () => {
@@ -141,7 +141,7 @@ describe("loom context", () => {
 
     const text = output.join("\n");
     const parsed = JSON.parse(text);
-    expect(parsed.meta.framework).toBe("loom");
+    expect(parsed.meta.framework).toBe("faqir");
   });
 
   it("includes rules section", async () => {
@@ -186,10 +186,10 @@ describe("skill generator", () => {
 
     const content = await generateSkill(TEST_DIR);
 
-    expect(content).toContain("# Loom UI Framework Skill");
+    expect(content).toContain("# Faqir UI Framework Skill");
     expect(content).toContain("data-ui");
     expect(content).toContain("data-state");
-    expect(content).toContain("loom audit");
+    expect(content).toContain("faqir audit");
     expect(content).toContain("dialog");
     expect(content).toContain("button");
   });
@@ -200,7 +200,7 @@ describe("skill generator", () => {
 
     const content = await generateSkill(TEST_DIR);
     expect(content).toContain("createDialog");
-    expect(content).toContain("loom.js");
+    expect(content).toContain("faqir.js");
   });
 
   it("writes SKILL.md file", async () => {
@@ -211,7 +211,7 @@ describe("skill generator", () => {
     expect(existsSync(path)).toBe(true);
 
     const content = await Bun.file(path).text();
-    expect(content).toContain("# Loom UI Framework Skill");
+    expect(content).toContain("# Faqir UI Framework Skill");
   });
 
   it("context --skill generates both files", async () => {
@@ -220,7 +220,7 @@ describe("skill generator", () => {
 
     await context(["--skill"]);
 
-    expect(existsSync(join(TEST_DIR, ".loom", "context.json"))).toBe(true);
-    expect(existsSync(join(TEST_DIR, ".loom", "SKILL.md"))).toBe(true);
+    expect(existsSync(join(TEST_DIR, ".faqir", "context.json"))).toBe(true);
+    expect(existsSync(join(TEST_DIR, ".faqir", "SKILL.md"))).toBe(true);
   });
 });

@@ -45,7 +45,7 @@ function formatRow(names: string[], installed: Set<string>, cols: number = 4): s
 
 export async function list(args: string[]): Promise<void> {
   if (args.includes("--help") || args.includes("-h")) {
-    log.heading("loom list");
+    log.heading("faqir list");
     log.blank();
     console.log("Show installed and available components.");
     return;
@@ -72,7 +72,7 @@ export async function list(args: string[]): Promise<void> {
     available.primitives.length + available.recipes.length + available.patterns.length;
   const totalInstalled = installed.size;
 
-  log.heading(`Loom Components (${totalInstalled} installed / ${totalAvailable} available)`);
+  log.heading(`Faqir Components (${totalInstalled} installed / ${totalAvailable} available)`);
   log.blank();
 
   // Primitives
@@ -106,8 +106,8 @@ export async function list(args: string[]): Promise<void> {
   }
 
   if (!hasConfig) {
-    log.dim("No loom.config.json found. Run 'loom init' to start a project.");
+    log.dim("No faqir.config.json found. Run 'faqir init' to start a project.");
   } else if (totalInstalled === 0) {
-    log.dim("No components installed yet. Run 'loom add <name>' to add components.");
+    log.dim("No components installed yet. Run 'faqir add <name>' to add components.");
   }
 }

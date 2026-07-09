@@ -6,8 +6,8 @@ const BIN_DIR = dirname(fileURLToPath(import.meta.url))
 const CLI_ENTRY = resolve(BIN_DIR, "../src/index.ts")
 const DEFAULT_BUN_COMMAND = "bun"
 
-export function launchLoom() {
-  const bunCommand = process.env.LOOM_BUN || DEFAULT_BUN_COMMAND
+export function launchFaqir() {
+  const bunCommand = process.env.FAQIR_BUN || DEFAULT_BUN_COMMAND
   const result = spawnSync(bunCommand, [CLI_ENTRY, ...process.argv.slice(2)], {
     stdio: "inherit"
   })
@@ -15,12 +15,12 @@ export function launchLoom() {
   if (result.error) {
     if (result.error.code === "ENOENT") {
       process.stderr.write(
-        "loom requires Bun >= 1.3.0 on your PATH. Install Bun from https://bun.sh and rerun the command.\n"
+        "faqir requires Bun >= 1.3.0 on your PATH. Install Bun from https://bun.sh and rerun the command.\n"
       )
       process.exit(1)
     }
 
-    process.stderr.write(`Failed to start Loom with ${bunCommand}: ${result.error.message}\n`)
+    process.stderr.write(`Failed to start Faqir with ${bunCommand}: ${result.error.message}\n`)
     process.exit(1)
   }
 

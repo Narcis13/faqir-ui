@@ -3,7 +3,7 @@
 
 export function createTable(root) {
   // Prevent double-init
-  if (root._loomTable) return root._loomTable;
+  if (root._faqirTable) return root._faqirTable;
 
   const table = root.querySelector("[data-part='table']");
   const thead = root.querySelector("[data-part='thead']");
@@ -223,10 +223,10 @@ export function createTable(root) {
     headerCheckbox?.removeEventListener("change", onHeaderCheckboxChange);
     tbody?.removeEventListener("change", onRowCheckboxChange);
     tbody?.removeEventListener("click", onRowClick);
-    delete root._loomTable;
+    delete root._faqirTable;
   }
 
   const api = { sort, selectRow, selectAll, deselectAll, getSelected, destroy };
-  root._loomTable = api;
+  root._faqirTable = api;
   return api;
 }

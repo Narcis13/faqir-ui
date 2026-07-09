@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { loadManifest } from "../manifest";
-import type { LoomConfig } from "./config";
+import type { FaqirConfig } from "./config";
 
 export type Layer = "primitives" | "recipes" | "patterns";
 
@@ -42,7 +42,7 @@ export function controllerName(recipe: string): string {
   return "create" + recipe.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join("");
 }
 
-export function findInstalledLayer(name: string, config: LoomConfig): Layer | null {
+export function findInstalledLayer(name: string, config: FaqirConfig): Layer | null {
   if (config.installed.primitives.includes(name)) return "primitives";
   if (config.installed.recipes.includes(name)) return "recipes";
   if (config.installed.patterns.includes(name)) return "patterns";
@@ -51,7 +51,7 @@ export function findInstalledLayer(name: string, config: LoomConfig): Layer | nu
 
 export async function getInstalledDependents(
   name: string,
-  config: LoomConfig,
+  config: FaqirConfig,
   outputDir: string
 ): Promise<string[]> {
   const dependents: string[] = [];

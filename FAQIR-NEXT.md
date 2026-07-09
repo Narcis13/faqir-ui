@@ -1,23 +1,23 @@
-# LOOM-NEXT — The Loom UI 1.0 Overhaul Proposal
+# FAQIR-NEXT — The Faqir UI 1.0 Overhaul Proposal
 
-> A complete, staged plan to evolve Loom UI from a strong v0.1 prototype into the
+> A complete, staged plan to evolve Faqir UI from a strong v0.1 prototype into the
 > reference **agent-native UI framework**: broader component library, richer themes,
 > a hardened reactive engine, first-class distribution (npm + CDN + MCP), framework
 > bindings (Vue, React), a schema-driven forms layer, and a print/PDF story —
-> without touching the pillars that make Loom what it is.
+> without touching the pillars that make Faqir what it is.
 
 **Status:** Proposal — July 2026, rev. 2 (updated after syncing v0.1.2→v0.2.4 from GitHub)
-**Baseline:** loom-ui-cli v0.2.4 — 53 components (30 primitives / 16 recipes / 7 patterns), 5 themes, 20 CLI commands, 470 tests, loom-core.js reactive engine **including `l-source`**
-**Companion documents:** `LOOM-SPEC.md` (original spec), `docs/data-driven-rendering.md` (l-source design), `docs/for_craft.md` (craft/reportcraft document requirements), `flickering-napping-bumblebee.md` (loom-core plan)
+**Baseline:** faqir-ui-cli v0.2.4 — 53 components (30 primitives / 16 recipes / 7 patterns), 5 themes, 20 CLI commands, 470 tests, faqir-core.js reactive engine **including `l-source`**
+**Companion documents:** `FAQIR-SPEC.md` (original spec), `docs/data-driven-rendering.md` (l-source design), `docs/for_craft.md` (craft/reportcraft document requirements), `flickering-napping-bumblebee.md` (faqir-core plan)
 
 ---
 
 ## Table of Contents
 
 1. [Executive Summary](#1-executive-summary)
-2. [Where Loom Stands Today — Honest Assessment](#2-where-loom-stands-today)
+2. [Where Faqir Stands Today — Honest Assessment](#2-where-faqir-stands-today)
 3. [The Pillars — What Does NOT Change](#3-the-pillars)
-4. [Workstream A — Engine: loom-core 2.0](#4-workstream-a--engine-loom-core-20)
+4. [Workstream A — Engine: faqir-core 2.0](#4-workstream-a--engine-faqir-core-20)
 5. [Workstream B — Component Library Expansion](#5-workstream-b--component-library-expansion)
 6. [Workstream C — Theme System 2.0](#6-workstream-c--theme-system-20)
 7. [Workstream D — Forms, Data & Documents](#7-workstream-d--forms-data--documents)
@@ -27,7 +27,7 @@
 11. [Workstream H — Framework Bindings (Vue, React)](#11-workstream-h--framework-bindings)
 12. [Workstream I — Quality Engineering](#12-workstream-i--quality-engineering)
 13. [Workstream J — Docs Site & Showcase](#13-workstream-j--docs-site--showcase)
-14. [Formery Alignment — Loom as Formery's Rendering Substrate](#14-formery-alignment)
+14. [Formery Alignment — Faqir as Formery's Rendering Substrate](#14-formery-alignment)
 15. [Phased Roadmap](#15-phased-roadmap)
 16. [Risks & Mitigations](#16-risks--mitigations)
 17. [Success Metrics](#17-success-metrics)
@@ -37,7 +37,7 @@
 
 ## 1. Executive Summary
 
-Loom UI's core bet — **a five-attribute DOM protocol + machine-readable manifests + a
+Faqir UI's core bet — **a five-attribute DOM protocol + machine-readable manifests + a
 zero-dependency runtime, with AI agents as the primary consumer** — has been validated.
 The v0.1 codebase is genuinely good: clean architecture, a working audit/repair loop,
 a real reactive engine, 470 tests. What it needs now is not a rewrite; it needs
@@ -46,15 +46,15 @@ a real reactive engine, 470 tests. What it needs now is not a rewrite; it needs
 - **Depth**: keyed list rendering, ~15 still-missing components, complete theme
   coverage, full controller test coverage, RTL correctness, a11y automation.
 - **Reach**: a distribution story that doesn't require Bun (compiled CLI, CDN runtime,
-  npm package family), an MCP server so *any* agent can drive Loom without a shell,
+  npm package family), an MCP server so *any* agent can drive Faqir without a shell,
   and thin Vue/React bindings **generated from manifests**.
-- **Polish**: docs site built with Loom itself, visual regression testing, size
+- **Polish**: docs site built with Faqir itself, visual regression testing, size
   budgets, a stable 1.0 protocol and manifest schema.
 
 Three strategic moves elevate this beyond incremental improvement:
 
-1. **The MCP server** (`@loom-ui/mcp`). Loom claims to be agent-native; today that means
-   "agents can run a CLI." An MCP server makes Loom the first UI framework an agent can
+1. **The MCP server** (`@faqir-ui/mcp`). Faqir claims to be agent-native; today that means
+   "agents can run a CLI." An MCP server makes Faqir the first UI framework an agent can
    operate as a *tool* — list components, fetch manifests, generate validated markup,
    audit, repair — with zero shell access. This is the same bet Formery makes, and the
    MCP directory is nearly empty of UI infrastructure.
@@ -65,12 +65,12 @@ Three strategic moves elevate this beyond incremental improvement:
    is powerful enough to target any framework — the strongest possible validation of the
    architecture.
 
-3. **The forms + documents layer** (`@loom-ui/forms` on top of the v0.2.x document
+3. **The forms + documents layer** (`@faqir-ui/forms` on top of the v0.2.x document
    foundation). v0.2.x already shipped the paged-media substrate — document
    pattern/theme/tokens, key-value, signature, page-break, callout, qr-code — driven by
    the craft/reportcraft use case (`docs/for_craft.md`). What remains is the
-   JSON-Schema-to-Loom renderer, the validation contract, and running headers/footers,
-   turning Loom into the exact substrate Formery *and* craft need: hosted forms rendered
+   JSON-Schema-to-Faqir renderer, the validation contract, and running headers/footers,
+   turning Faqir into the exact substrate Formery *and* craft need: hosted forms rendered
    as tiny static HTML (white-label themeable via theme tokens) and PDF templates
    rendered from the same design system.
 
@@ -79,7 +79,7 @@ releases (v0.2 → v1.0) in §15.
 
 ---
 
-## 2. Where Loom Stands Today
+## 2. Where Faqir Stands Today
 
 ### Strengths (verified in code)
 
@@ -87,7 +87,7 @@ releases (v0.2 → v1.0) in §15.
 |------|----------|
 | Attribute protocol | Coherent, enforced end-to-end (CSS selectors, JS controllers, audit rules) |
 | Manifest system | Rich schema: anatomy, slots, variants, states, a11y, tokens, safe/unsafe transforms |
-| Reactive engine | Proxy reactivity, microtask-batched effects, expression cache, 154 tests; public API already has `Loom.data/store/directive/magic/plugin/controller` |
+| Reactive engine | Proxy reactivity, microtask-batched effects, expression cache, 154 tests; public API already has `Faqir.data/store/directive/magic/plugin/controller` |
 | Token system | 3-layer (palette → semantic → alias), oklch, consistent `@ui:tokens` headers |
 | CLI | 20 commands, typo suggestions, dependency resolution, auto-bundling |
 | Audit/repair | 12 rules, deterministic fixes, JSON output |
@@ -107,7 +107,7 @@ proposed items already exist:
   `field-group`, `image`, `key-value`, `page-break`, `signature`, `stat` — plus a
   `qr-code` recipe (e-factura payment codes) and a substantially enhanced `table`
   (tfoot, cell alignment, number/currency formats, compact print).
-- **`l-source` shipped in loom-core.js** — Approach C from
+- **`l-source` shipped in faqir-core.js** — Approach C from
   `docs/data-driven-rendering.md` is real (`l-source:name="/api/x"` with
   `.lazy/.optimistic/.poll/.key` modifiers), alongside `api-source.js` (Approach B) as
   the application-level escape hatch. Context and skill generators document both.
@@ -122,18 +122,18 @@ rev. 2 was written.
 
 **Engine**
 - `l-for` is a naive full re-render: every list change destroys and rebuilds all nodes
-  (loom-core.js `handleFor`). Loses focus, input state, scroll, animations. **Top engine defect.**
+  (faqir-core.js `handleFor`). Loses focus, input state, scroll, animations. **Top engine defect.**
 - No `l-else`/`l-else-if`; transitions are single-stage class toggles (no staged
   enter/leave, no collapse); no persist/intersect/mask-style plugins.
-- The 15 original recipe controllers exist **twice** — inline in loom-core.js *and* as
+- The 15 original recipe controllers exist **twice** — inline in faqir-core.js *and* as
   standalone `registry/recipes/*/*.js` files — and the drift is no longer theoretical:
   the new `qr-code` recipe exists **only** as a standalone file, so unlike every other
-  recipe it is never auto-initialized by loom-core.
-- `l-source` shipped with **zero tests** (`grep l-source tests/core/loom-core.test.ts`
+  recipe it is never auto-initialized by faqir-core.
+- `l-source` shipped with **zero tests** (`grep l-source tests/core/faqir-core.test.ts`
   → 0 hits), no AbortController/teardown semantics review, and no audit-rule awareness.
 - `l-for` child scopes use a hand-rolled delegating Proxy — a second, subtly different
   reactivity path.
-- No TypeScript declarations for the `Loom` global.
+- No TypeScript declarations for the `Faqir` global.
 
 **Components & CSS**
 - ~15 commonly expected components still missing (alert-dialog, slider, skeleton,
@@ -158,16 +158,16 @@ rev. 2 was written.
 - No visual regression, no automated a11y checks, no CI pipeline in the repo.
 
 **Distribution (most urgent)**
-- The npm package ships **raw TypeScript** and `bin/loom` spawns `bun` against
+- The npm package ships **raw TypeScript** and `bin/faqir` spawns `bun` against
   `src/index.ts`. Anyone without Bun on PATH gets an error message. This caps adoption
   at "people willing to install Bun first."
-- No CDN story: you cannot try Loom on CodePen with two tags today.
+- No CDN story: you cannot try Faqir on CodePen with two tags today.
 
 **Tooling**
 - HTML/CSS parsers are regex/state-machine based — fine for generated markup, fragile
   for arbitrary user HTML (comments, raw-text elements, `>` in attribute values).
 - Skill generator emits a thin static template, not manifest-derived guidance.
-- No `loom upgrade` — once a component is copied into a project, it is orphaned from
+- No `faqir upgrade` — once a component is copied into a project, it is orphaned from
   registry improvements forever.
 
 ---
@@ -180,7 +180,7 @@ These are constitutional. Every workstream below is constrained by them.
    `data-variant`, `data-size`. No sixth attribute without a spec amendment. (One
    candidate amendment is proposed in §5.6 for density — as a *token modifier*, not a
    new protocol attribute.)
-2. **Zero runtime dependencies.** Everything Loom ships to a user's page is plain HTML,
+2. **Zero runtime dependencies.** Everything Faqir ships to a user's page is plain HTML,
    CSS, and vanilla JS. The optional reactive engine stays a single `<script>` tag.
 3. **You own the files.** Components are copied into the project, never imported from
    `node_modules` at runtime. Upgrades are explicit and diffable (§9.3).
@@ -191,12 +191,12 @@ These are constitutional. Every workstream below is constrained by them.
 6. **Agent-first, human-owned.** Every capability is machine-invokable (CLI/MCP/JSON)
    before it gets a pretty human surface.
 7. **Simplicity survives.** Any feature that requires a build step in the *user's*
-   project is rejected. Build steps in the *loom repo* (to produce single-file
+   project is rejected. Build steps in the *faqir repo* (to produce single-file
    artifacts) are fine and encouraged.
 
 ---
 
-## 4. Workstream A — Engine: loom-core 2.0
+## 4. Workstream A — Engine: faqir-core 2.0
 
 ### A1. Keyed `l-for` (the flagship fix)
 
@@ -220,16 +220,16 @@ Replace destroy-all-rebuild with keyed reconciliation:
 
 ### A2. Unify the controller source of truth
 
-Today the recipe controllers are duplicated (inline in loom-core.js + standalone files),
+Today the recipe controllers are duplicated (inline in faqir-core.js + standalone files),
 and v0.2.x proved the failure mode: `qr-code` was added standalone-only, so it never
 auto-initializes like the other 15 recipes. Invert the relationship:
 
 - `registry/recipes/*/*.js` become the **only** source.
-- A repo build script (`bun run build:core`) assembles `loom-core.js` from
+- A repo build script (`bun run build:core`) assembles `faqir-core.js` from
   `src/core-src/engine.js` + all recipe controllers + plugins at release time.
 - The shipped artifact stays a single dependency-free file — pillar intact — but drift
   becomes impossible and each controller is testable in isolation.
-- Also emit `loom-core.min.js` + sourcemap, and per-file `dist/` copies for
+- Also emit `faqir-core.min.js` + sourcemap, and per-file `dist/` copies for
   the CDN (§10).
 
 ### A3. Structural directive completeness
@@ -238,9 +238,9 @@ auto-initializes like the other 15 recipes. Invert the relationship:
 - `l-for` over objects (`(value, key) in obj`) and integer ranges (already partially there).
 - `l-if` scope caching so toggling doesn't re-compile expressions.
 
-### A4. Transitions 2.0 — but Loom-flavored
+### A4. Transitions 2.0 — but Faqir-flavored
 
-Alpine solves transitions with per-stage classes; Loom's philosophy says **state lives
+Alpine solves transitions with per-stage classes; Faqir's philosophy says **state lives
 in attributes and CSS reacts**. So instead of copying `x-transition:enter-start`:
 
 - `l-transition` gains named presets resolved to data attributes:
@@ -255,16 +255,16 @@ in attributes and CSS reacts**. So instead of copying `x-transition:enter-start`
 
 ### A5. Official plugin set (`registry/core/plugins/`)
 
-Each ≤ 2KB, self-registering via `Loom.plugin`, loadable as separate `<script>` tags or
-bundled by `loom bundle --js`:
+Each ≤ 2KB, self-registering via `Faqir.plugin`, loadable as separate `<script>` tags or
+bundled by `faqir bundle --js`:
 
 | Plugin | Directive(s) | Purpose |
 |--------|--------------|---------|
-| `loom-persist.js` | `l-persist` / `$persist()` | localStorage-backed reactive state |
-| `loom-intersect.js` | `l-intersect` | IntersectionObserver enter/leave hooks (lazy sections, infinite scroll) |
-| `loom-mask.js` | `l-mask` | Input masking (dates, phone, OTP — needed by input-otp recipe and Formery) |
-| `loom-collapse.js` | `l-collapse` | Animated expand/collapse |
-| `loom-validate.js` | `l-validate` | Declarative constraint validation for the `field-group` contract (§7.1) |
+| `faqir-persist.js` | `l-persist` / `$persist()` | localStorage-backed reactive state |
+| `faqir-intersect.js` | `l-intersect` | IntersectionObserver enter/leave hooks (lazy sections, infinite scroll) |
+| `faqir-mask.js` | `l-mask` | Input masking (dates, phone, OTP — needed by input-otp recipe and Formery) |
+| `faqir-collapse.js` | `l-collapse` | Animated expand/collapse |
+| `faqir-validate.js` | `l-validate` | Declarative constraint validation for the `field-group` contract (§7.1) |
 
 **`l-source` already landed in core in v0.2.x** — ahead of this proposal, which
 validates the direction (it completes the story "an agent can build a full CRUD app
@@ -276,15 +276,15 @@ it is the flagship — with `api-source.js` kept as the documented escape hatch.
 
 ### A6. Developer experience & safety
 
-- **`loom-core.d.ts`** — TypeScript declarations for the `Loom` global, published with
+- **`faqir-core.d.ts`** — TypeScript declarations for the `Faqir` global, published with
   the runtime package.
-- **Dev diagnostics build** (`loom-core.dev.js`): expression error messages with the
+- **Dev diagnostics build** (`faqir-core.dev.js`): expression error messages with the
   offending element outerHTML, warnings for unkeyed reordering lists, unknown
   directives, `l-html` usage notices. The production file stays lean.
-- **`Loom.inspect(el)`** — returns `{ scope, directives, controller, state }` snapshot;
-  `loom dev` injects a small overlay panel (toggled with a keyboard shortcut) that
+- **`Faqir.inspect(el)`** — returns `{ scope, directives, controller, state }` snapshot;
+  `faqir dev` injects a small overlay panel (toggled with a keyboard shortcut) that
   visualizes scopes and `data-state` live. Agents get the same data via
-  `window.__LOOM_DEVTOOLS__`.
+  `window.__FAQIR_DEVTOOLS__`.
 - **Size budgets enforced in CI**: engine ≤ 14KB gzip, engine+controllers ≤ 22KB gzip,
   each plugin ≤ 2KB gzip. A failing budget fails the build.
 - Document the security posture explicitly: `new Function` evaluator ⇒ requires
@@ -325,7 +325,7 @@ signature, description-list.)
 | `context-menu` | Right-click menu reusing dropdown internals |
 | `menubar` | Horizontal menu with submenus (desktop-app pattern) |
 | `sidebar` | Collapsible app sidebar: rail/expanded/mobile-drawer states — highest-demand shadcn component |
-| `input-otp` | Segmented one-time-code input (pairs with `loom-mask.js`) |
+| `input-otp` | Segmented one-time-code input (pairs with `faqir-mask.js`) |
 | `calendar` | Extracted from date-picker so it's usable standalone (availability grids, range pickers) |
 | `tree-view` | Hierarchical list, `aria-expanded`, keyboard nav |
 | `file-upload` | Drag-drop zone + file list; **no fetch** (emits events; upload is app code) |
@@ -342,10 +342,10 @@ Explicitly deferred past 1.0: `resizable`, `virtual-list`/data-grid virtualizati
 |---------|----------|-----|
 | `wizard` | stepper, card, field-group, button | Multi-step forms — Formery's bread and butter |
 | `pricing` | grid, card, badge, button, separator | Every SaaS landing page |
-| `hero` + `feature-grid` + `site-footer` | text, stack, grid, button | Landing-page kit (today `loom scaffold landing-page` synthesizes ad-hoc) |
+| `hero` + `feature-grid` + `site-footer` | text, stack, grid, button | Landing-page kit (today `faqir scaffold landing-page` synthesizes ad-hoc) |
 | `stats-dashboard` | stat, grid, card, table | Reporting pages |
 | `inbox` | stack, avatar, badge, tabs, empty-state | List-detail split view |
-| `form-page` | field-group, all inputs, wizard | Canonical schema-rendered form (the `@loom-ui/forms` reference output) |
+| `form-page` | field-group, all inputs, wizard | Canonical schema-rendered form (the `@faqir-ui/forms` reference output) |
 
 ### B4. The icon system
 
@@ -368,7 +368,7 @@ Zero-dependency constraint rules out icon fonts and runtime SVG fetching. Design
   auditable (`data-icon` values validated against the icon manifest) and themeable
   (a theme can restyle or even swap the icon set).
 - Ship a curated ~120-icon set (MIT-licensed Lucide outlines, optimized, subsettable
-  via `loom add icons --only check,x,chevron-down,…` which generates a trimmed
+  via `faqir add icons --only check,x,chevron-down,…` which generates a trimmed
   `icons.css`).
 - Manifest: `registry/primitives/icon/icon.manifest.json` lists every name — agents can
   enumerate and validate icon usage like any variant.
@@ -376,7 +376,7 @@ Zero-dependency constraint rules out icon fonts and runtime SVG fetching. Design
 ### B5. Charts — exploration track (post-1.0 package)
 
 Dashboards need charts, but a charting engine violates the simplicity pillar if rushed.
-Proposal: `@loom-ui/charts` as a **separate optional package** later; in core, ship only
+Proposal: `@faqir-ui/charts` as a **separate optional package** later; in core, ship only
 CSS-only `sparkline` and `meter`/`progress` enhancements. Revisit after 1.0.
 
 ### B6. Density (the one protocol-adjacent addition)
@@ -411,7 +411,7 @@ Every theme gains `{name}.theme.json`:
 ```
 
 Agents can now *choose* a theme by mood, verify coverage, and the CI coverage matrix
-(§C2) is generated from these files. `loom context` embeds the active theme manifest.
+(§C2) is generated from these files. `faqir context` embeds the active theme manifest.
 
 ### C2. Coverage completeness — enforced
 
@@ -433,12 +433,12 @@ under-covers fails CI.
 
 Each ships light+dark (where meaningful), a manifest, and a preview page.
 
-### C4. `loom theme generate` — parametric themes
+### C4. `faqir theme generate` — parametric themes
 
 Because the palette is oklch, generating a coherent ramp from one accent is pure math:
 
 ```bash
-loom theme generate my-brand --accent "oklch(0.55 0.2 150)" --neutral cool --radius lg --scheme both
+faqir theme generate my-brand --accent "oklch(0.55 0.2 150)" --neutral cool --radius lg --scheme both
 ```
 
 - Generates the 11-step accent ramp (fixed lightness/chroma curve, brand hue), maps
@@ -451,14 +451,14 @@ loom theme generate my-brand --accent "oklch(0.55 0.2 150)" --neutral cool --rad
 ### C5. Scoped themes
 
 Support `data-theme` on any subtree (already implied by CSS custom property cascade —
-formalize and test it): a Loom page can render a "customer-themed" form inside a
+formalize and test it): a Faqir page can render a "customer-themed" form inside a
 "default-themed" dashboard. Required for Formery's form-preview-inside-admin case.
 
 ---
 
 ## 7. Workstream D — Forms, Data & Documents
 
-The workstream that makes Loom the substrate for Formery — and for every CRUD app.
+The workstream that makes Faqir the substrate for Formery — and for every CRUD app.
 
 ### 7.1 Harden `field-group` into a validation contract
 
@@ -481,39 +481,39 @@ Remaining work (enforced by new audit rules):
 - `error` part visible only when invalid (CSS handles it — no JS toggling classes).
 - `aria-describedby`/`aria-invalid` wiring is required and auto-repairable
   (`field-wiring` audit rule, §8.3).
-- A small `loom-validate.js` plugin adds declarative constraint validation:
+- A small `faqir-validate.js` plugin adds declarative constraint validation:
   `l-validate` on a form reflects native `ValidityState` into `data-state` + error parts,
   with custom validators via expression: `l-validate:email="isCompanyEmail(value)"`.
 
-### 7.2 `@loom-ui/forms` — schema-driven rendering
+### 7.2 `@faqir-ui/forms` — schema-driven rendering
 
 A standalone, zero-dependency module (usable in Node, browser, or agent context):
 
 ```js
-import { renderForm } from "@loom-ui/forms";
+import { renderForm } from "@faqir-ui/forms";
 const html = renderForm(jsonSchema, uiSchema?, { theme, density, i18n });
 ```
 
 - **Input**: standard JSON Schema (draft 2020-12 subset) + optional UI schema
   (widget choices, layout groups, wizard steps).
-- **Output**: valid Loom markup — `field-group` wrappers, correct widgets per type/format
+- **Output**: valid Faqir markup — `field-group` wrappers, correct widgets per type/format
   (string+enum → select or radio-group by cardinality; string+format:date →
   date-picker; array of enum → checkbox group or tag-input; nested objects →
   fieldset cards; arrays of objects → repeatable groups), `wizard` pattern for
   multi-step, all audit-clean by construction.
-- Client runtime: the rendered form works with `loom-core.js` + `loom-validate.js`
-  alone — no `@loom-ui/forms` needed in the browser (it can run there for dynamic
+- Client runtime: the rendered form works with `faqir-core.js` + `faqir-validate.js`
+  alone — no `@faqir-ui/forms` needed in the browser (it can run there for dynamic
   schemas, but the default is generate-then-serve static HTML).
-- The generator is *itself tested with `loom audit`*: every rendered form must pass
+- The generator is *itself tested with `faqir audit`*: every rendered form must pass
   with zero findings. That's the quality contract.
 
 This module is the direct bridge to Formery's Form Definition Language: FDL ⊃ JSON
 Schema + UI schema, so Formery's hosted form renderer becomes a thin wrapper over
-`@loom-ui/forms` (§14).
+`@faqir-ui/forms` (§14).
 
 ### 7.3 `l-source` — declarative data (status: shipped)
 
-Landed in loom-core.js in v0.2.x, per the design in `docs/data-driven-rendering.md`.
+Landed in faqir-core.js in v0.2.x, per the design in `docs/data-driven-rendering.md`.
 Remaining hardening lives in §A5 (tests, teardown, audit codification). Together with
 7.1/7.2, the full loop — *schema → form → validation → submission → refreshed list* —
 needs zero imperative JS.
@@ -529,10 +529,10 @@ remains to make it a complete PDF-engine substrate:
 - **Running headers/footers**: `doc-header`/`doc-footer` parts using
   `position: running()` with fixed-position fallbacks, so multi-page PDFs repeat brand
   headers and page numbers (CSS `@page` margin boxes where the renderer supports them).
-- **Scaffolds**: `loom scaffold invoice` / `loom scaffold report` producing
+- **Scaffolds**: `faqir scaffold invoice` / `faqir scaffold report` producing
   ready-to-print, audit-clean pages that exercise every document component.
 - **More document themes**: the shipped `document` theme is the neutral base; add
-  `document-serif` (contracts/legal) and teach `loom theme generate` (§C4) to emit a
+  `document-serif` (contracts/legal) and teach `faqir theme generate` (§C4) to emit a
   brand-matched document theme — one accent color drives both web and PDF.
 - **`watermark` and `barcode`** (the remaining items from craft's wishlist in
   `docs/for_craft.md`): watermark as a CSS-only primitive; barcode (Code128) as a
@@ -541,7 +541,7 @@ remains to make it a complete PDF-engine substrate:
   Chromium) and image-diff them — the print layer needs the same regression safety as
   the screen layer (§12).
 
-Rendered via any headless-Chromium PDF pipeline, a Loom document is deterministic,
+Rendered via any headless-Chromium PDF pipeline, a Faqir document is deterministic,
 brandable-by-token, and auditable — precisely Formery's PDF engine requirement (§14),
 already proven by craft's document use case.
 
@@ -549,22 +549,22 @@ already proven by craft's document use case.
 
 ## 8. Workstream E — Agent-Native Surface 2.0
 
-### 8.1 `@loom-ui/mcp` — the MCP server
+### 8.1 `@faqir-ui/mcp` — the MCP server
 
 The single highest-leverage addition for the "agent-native" claim. A stdio MCP server
 (so it works in Claude Code, Cursor, and any MCP host) exposing:
 
 | Tool | Behavior |
 |------|----------|
-| `loom_list_components` | Registry inventory with kind/category/description (filterable) |
-| `loom_get_manifest` | Full manifest for a component |
-| `loom_generate` | `{component, variant, size, slots, props}` → valid HTML (from templates, audit-verified before returning) |
-| `loom_scaffold_page` | `{layout, sections}` → complete page HTML |
-| `loom_render_form` | JSON Schema in → Loom form HTML out (wraps `@loom-ui/forms`) |
-| `loom_audit_html` | HTML string in → findings JSON (no filesystem needed) |
-| `loom_repair_html` | HTML in → repaired HTML + change log |
-| `loom_theme_info` / `loom_generate_theme` | Theme manifests; parametric theme from accent color |
-| `loom_project_context` | Reads the host project's `.loom/context.json` when run inside a project |
+| `faqir_list_components` | Registry inventory with kind/category/description (filterable) |
+| `faqir_get_manifest` | Full manifest for a component |
+| `faqir_generate` | `{component, variant, size, slots, props}` → valid HTML (from templates, audit-verified before returning) |
+| `faqir_scaffold_page` | `{layout, sections}` → complete page HTML |
+| `faqir_render_form` | JSON Schema in → Faqir form HTML out (wraps `@faqir-ui/forms`) |
+| `faqir_audit_html` | HTML string in → findings JSON (no filesystem needed) |
+| `faqir_repair_html` | HTML in → repaired HTML + change log |
+| `faqir_theme_info` / `faqir_generate_theme` | Theme manifests; parametric theme from accent color |
+| `faqir_project_context` | Reads the host project's `.faqir/context.json` when run inside a project |
 
 Resources: the protocol spec, token reference, and each manifest exposed as MCP
 resources so hosts can pin them into context.
@@ -572,18 +572,18 @@ resources so hosts can pin them into context.
 Design notes:
 - The server wraps the same TypeScript internals as the CLI (one core, two frontends);
   it ships compiled JS, runs on plain Node (§10).
-- `loom_audit_html`/`loom_repair_html` taking **strings** (not file paths) matters:
+- `faqir_audit_html`/`faqir_repair_html` taking **strings** (not file paths) matters:
   cloud agents without filesystem access can still validate their output.
 - Register in MCP directories at launch — the "forms/UI infrastructure" shelf is empty,
   same free-distribution wedge Formery is betting on.
 
 ### 8.2 Context & skill generation v2
 
-- `loom context --format llms` → emit `llms.txt` + `llms-full.txt` for the project's
+- `faqir context --format llms` → emit `llms.txt` + `llms-full.txt` for the project's
   installed set (the emerging convention agents actually look for).
 - Skill generator becomes **manifest-derived**: per-component anatomy trees, variant
   tables, safe/unsafe transforms, and 2–3 canonical compositions — generated, not
-  static boilerplate. The shipped `.claude/skills/loom-creator` skill is regenerated
+  static boilerplate. The shipped `.claude/skills/faqir-creator` skill is regenerated
   from the same pipeline (dogfooding rule §3.4).
 - Publish `manifest.schema.json` at a stable URL (docs site, §13) and reference it via
   `$schema` in every manifest — third-party components get editor validation for free.
@@ -603,7 +603,7 @@ New rules (all deterministic, no network):
 | `icon-name` | `data-icon` values exist in the icon manifest |
 
 Plus: stable, versioned JSON output schema (`audit_schema_version`) so agent loops can
-depend on it, and `loom audit --stdin` for pipe-based agent workflows.
+depend on it, and `faqir audit --stdin` for pipe-based agent workflows.
 
 ---
 
@@ -626,35 +626,35 @@ registry-index.json        # { components: [{ name, kind, version, files, hash, 
 {component}/…              # the files
 ```
 
-- `loom add button` resolves from the bundled registry (default, offline-first).
-- `loom add @acme/data-grid --registry https://ui.acme.dev/registry` fetches from any
+- `faqir add button` resolves from the bundled registry (default, offline-first).
+- `faqir add @acme/data-grid --registry https://ui.acme.dev/registry` fetches from any
   static host serving the index format; SHA-256 integrity hashes verified before write.
-- `loom.config.json` gains a `registries` map so teams pin private component registries.
-- This turns Loom into a platform: companies publish internal component sets, the
-  community publishes packs, and Formery can publish a `@formery/loom` pack of
+- `faqir.config.json` gains a `registries` map so teams pin private component registries.
+- This turns Faqir into a platform: companies publish internal component sets, the
+  community publishes packs, and Formery can publish a `@formery/faqir` pack of
   form-specialized components.
 
-### 9.3 `loom upgrade` — solving the copy-paste orphan problem
+### 9.3 `faqir upgrade` — solving the copy-paste orphan problem
 
 The known weakness of the copy-into-project model (shadcn included) is that upgrades
-are manual. Loom can do better because it *knows what it wrote*:
+are manual. Faqir can do better because it *knows what it wrote*:
 
-- On `add`, store the pristine copy + version under `.loom/pristine/{component}@{ver}/`.
-- `loom upgrade [component]` performs a **three-way merge**: pristine-old vs
+- On `add`, store the pristine copy + version under `.faqir/pristine/{component}@{ver}/`.
+- `faqir upgrade [component]` performs a **three-way merge**: pristine-old vs
   user-current vs registry-new. Clean hunks auto-apply; conflicts are written with
   conflict markers and reported (agents are excellent at resolving exactly these).
-- `loom diff button` shows user drift vs pristine at any time.
+- `faqir diff button` shows user drift vs pristine at any time.
 - Registry components adopt semver discipline + a per-component CHANGELOG section in
   the manifest (`"changes": [{version, note, breaking}]`) so `upgrade` can print what
   changed and *why*.
 
 ### 9.4 Smaller DX wins
 
-- `loom init --template {landing|dashboard|form-app|document}` — opinionated starting
+- `faqir init --template {landing|dashboard|form-app|document}` — opinionated starting
   projects (playground pages promoted to maintained templates).
-- `loom dev` gains live-reload on `.html`/`.css` change (it already serves; add SSE) and
+- `faqir dev` gains live-reload on `.html`/`.css` change (it already serves; add SSE) and
   the devtools overlay injection (§A6).
-- `loom bundle --js` — concatenate core + selected plugins into one `loom.bundle.js`
+- `faqir bundle --js` — concatenate core + selected plugins into one `faqir.bundle.js`
   mirroring the CSS bundle.
 - Machine-readable `--json` on **every** command (some already have it; make it a
   guarantee tested in CI).
@@ -665,7 +665,7 @@ are manual. Loom can do better because it *knows what it wrote*:
 
 ### 10.1 The problem, restated
 
-Today: `npm i -g loom-ui-cli` → `bin/loom` → spawns **Bun** against **shipped
+Today: `npm i -g faqir-ui-cli` → `bin/faqir` → spawns **Bun** against **shipped
 TypeScript source**. No Bun = hard failure. No CDN artifact exists. This is the single
 biggest adoption blocker and the first thing to fix.
 
@@ -673,14 +673,14 @@ biggest adoption blocker and the first thing to fix.
 
 | Package | Contents | Consumers |
 |---------|----------|-----------|
-| `loom-ui-cli` (keep the name — it's published and short) | **Compiled** single-file CLI (`dist/loom.mjs`, built with `bun build --target=node`), registry files, launcher that prefers Bun if present but **runs fine on Node ≥ 18** | Developers, agents with shell |
-| `@loom-ui/core` | `loom-core.js`, `.min.js`, `.dev.js`, plugins, `loom-core.d.ts`, prebuilt full CSS bundles per theme (`loom.{theme}.css`) | CDN users, bundler users, bindings |
-| `@loom-ui/mcp` | Compiled MCP server (`npx @loom-ui/mcp`) | Any MCP host |
-| `@loom-ui/forms` | Schema→Loom renderer (isomorphic) | Formery, form apps, MCP |
-| `@loom-ui/vue` / `@loom-ui/react` | Generated bindings (§11) | Framework apps |
-| `@loom-ui/registry` *(optional, later)* | Registry published standalone for the remote-registry protocol | Third-party tooling |
+| `faqir-ui-cli` (keep the name — it's published and short) | **Compiled** single-file CLI (`dist/faqir.mjs`, built with `bun build --target=node`), registry files, launcher that prefers Bun if present but **runs fine on Node ≥ 18** | Developers, agents with shell |
+| `@faqir-ui/core` | `faqir-core.js`, `.min.js`, `.dev.js`, plugins, `faqir-core.d.ts`, prebuilt full CSS bundles per theme (`faqir.{theme}.css`) | CDN users, bundler users, bindings |
+| `@faqir-ui/mcp` | Compiled MCP server (`npx @faqir-ui/mcp`) | Any MCP host |
+| `@faqir-ui/forms` | Schema→Faqir renderer (isomorphic) | Formery, form apps, MCP |
+| `@faqir-ui/vue` / `@faqir-ui/react` | Generated bindings (§11) | Framework apps |
+| `@faqir-ui/registry` *(optional, later)* | Registry published standalone for the remote-registry protocol | Third-party tooling |
 
-Action item: **reserve the `@loom-ui` npm org now** (and `loom-ui.dev` or similar
+Action item: **reserve the `@faqir-ui` npm org now** (and `faqir-ui.dev` or similar
 domain for the docs site + hosted registry/schema URLs).
 
 ### 10.3 The two-tag CDN story
@@ -688,12 +688,12 @@ domain for the docs site + hosted registry/schema URLs).
 The adoption funnel must start with zero installation:
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@loom-ui/core@0.2/dist/loom.default.css">
-<script src="https://cdn.jsdelivr.net/npm/@loom-ui/core@0.2/dist/loom-core.min.js" defer></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@faqir-ui/core@0.2/dist/faqir.default.css">
+<script src="https://cdn.jsdelivr.net/npm/@faqir-ui/core@0.2/dist/faqir-core.min.js" defer></script>
 ```
 
 Works on CodePen, in a Claude artifact, in any scratch HTML file. This is also how
-agents *without* a shell can still produce runnable Loom pages — pin the CDN URLs in
+agents *without* a shell can still produce runnable Faqir pages — pin the CDN URLs in
 the skill/context output. Publish SRI hashes alongside.
 
 The CLI remains the *ownership* path (copy files, audit, theme, upgrade); the CDN is the
@@ -714,26 +714,26 @@ The CLI remains the *ownership* path (copy files, audit, theme, upgrade); the CD
 
 ### 11.1 Philosophy: bindings are glue, not forks
 
-Loom's CSS already works in any framework — attributes are attributes. What frameworks
+Faqir's CSS already works in any framework — attributes are attributes. What frameworks
 need is: (a) lifecycle management for recipe controllers, (b) idiomatic typed
 components, (c) SSR safety. What they must **not** get is a parallel reimplementation
 that drifts. Therefore:
 
-> **All bindings are generated from manifests by `loom bindings <target>`.**
+> **All bindings are generated from manifests by `faqir bindings <target>`.**
 
 The manifest already knows the tag, slots, variants (with allowed values → union
 types), states, and controller API. Codegen emits one component per manifest + a small
 hand-written runtime (~150 lines per framework).
 
-Inside Vue/React, **loom-core's directives are not used** — the host framework owns
-reactivity; Loom contributes CSS, markup contracts, and controllers. Clean boundary,
+Inside Vue/React, **faqir-core's directives are not used** — the host framework owns
+reactivity; Faqir contributes CSS, markup contracts, and controllers. Clean boundary,
 no double-reactivity.
 
-### 11.2 `@loom-ui/vue` (first — Formery's stack is Vue 3 + Inertia)
+### 11.2 `@faqir-ui/vue` (first — Formery's stack is Vue 3 + Inertia)
 
 ```vue
 <script setup>
-import { LButton, LDialog, LField, LInput } from "@loom-ui/vue";
+import { LButton, LDialog, LField, LInput } from "@faqir-ui/vue";
 const dialog = ref();
 </script>
 
@@ -757,13 +757,13 @@ const dialog = ref();
   re-emitted as Vue events.
 - SSR/Inertia-safe: markup renders on the server as plain HTML (it *is* plain HTML);
   controllers attach on mount. `hidden` attributes in initial markup prevent FOUC.
-- Styling stays 100% in the Loom CSS bundle — the package ships **no CSS of its own**;
-  apps import `@loom-ui/core/dist/loom.{theme}.css` or their project bundle.
+- Styling stays 100% in the Faqir CSS bundle — the package ships **no CSS of its own**;
+  apps import `@faqir-ui/core/dist/faqir.{theme}.css` or their project bundle.
 
-### 11.3 `@loom-ui/react`
+### 11.3 `@faqir-ui/react`
 
 Same codegen, React target: components with `forwardRef` + `useImperativeHandle`
-exposing controller APIs, `useLoomController(ref, "dialog")` hook as the low-level
+exposing controller APIs, `useFaqirController(ref, "dialog")` hook as the low-level
 escape hatch, variant props as TS unions, RSC-compatible for primitives ("use client"
 only on recipe wrappers).
 
@@ -787,7 +787,7 @@ frameworks.
    maintenance). Run on PRs; diffs posted as artifacts.
 3. **Automated a11y.** axe-core pass on every reference page and every pattern in CI;
    zero-violation policy for the registry.
-4. **The registry audits itself.** `loom audit` runs against `registry/**` in CI with
+4. **The registry audits itself.** `faqir audit` runs against `registry/**` in CI with
    zero-finding policy — including the new `logical-properties` and token-literal rules
    (this catches the current dialog.css hardcoded oklch values and button-group RTL
    bugs, and prevents regressions forever).
@@ -801,13 +801,13 @@ frameworks.
 
 ## 13. Workstream J — Docs Site & Showcase
 
-- **Built with Loom itself, no build step** — the docs site is a Loom project generated
-  by the CLI (`loom scaffold docs` eventually). It *is* the proof of the framework.
+- **Built with Faqir itself, no build step** — the docs site is a Faqir project generated
+  by the CLI (`faqir scaffold docs` eventually). It *is* the proof of the framework.
   Static hosting (Cloudflare Pages).
 - Content generated from manifests: component pages (anatomy tree, variant matrix
   with live examples, state demos, a11y table, token list), token reference, theme
   gallery with instant switcher (one `data-theme` swap — the demo *is* the feature).
-- **Interactive playground**: textarea + iframe + live `loom_audit_html` (compiled
+- **Interactive playground**: textarea + iframe + live `faqir_audit_html` (compiled
   audit engine runs in the browser — it's zero-dep TS, it can) showing findings as you
   type. Nothing communicates "machine-checkable UI" better.
 - `llms.txt` + `llms-full.txt` at the site root; `manifest.schema.json` and the
@@ -821,15 +821,15 @@ frameworks.
 
 How this overhaul maps onto the Formery PRD, point by point:
 
-| Formery need | Loom deliverable |
+| Formery need | Faqir deliverable |
 |---|---|
-| **Hosted/embeddable forms** — fast, white-label, no framework tax | Forms render as static Loom HTML + one CSS + one JS tag (~20KB total gzip). No React runtime on the public form. Embeds cleanly because attribute selectors can't collide with host-page classes — a genuinely better embed story than any class-based framework |
-| **Schema-first (FDL → UI)** | `@loom-ui/forms` renders JSON Schema + UI schema → audit-clean Loom markup (§7.2). FDL compiles down to this; versioned FDL = versioned static HTML artifacts, diffable and immutable |
-| **White-label theming per customer** | `loom theme generate --accent {brand-color}` produces a complete, contrast-verified customer theme from one input (§C4); scoped `data-theme` lets the Formery dashboard preview customer-themed forms inline (§C5) |
+| **Hosted/embeddable forms** — fast, white-label, no framework tax | Forms render as static Faqir HTML + one CSS + one JS tag (~20KB total gzip). No React runtime on the public form. Embeds cleanly because attribute selectors can't collide with host-page classes — a genuinely better embed story than any class-based framework |
+| **Schema-first (FDL → UI)** | `@faqir-ui/forms` renders JSON Schema + UI schema → audit-clean Faqir markup (§7.2). FDL compiles down to this; versioned FDL = versioned static HTML artifacts, diffable and immutable |
+| **White-label theming per customer** | `faqir theme generate --accent {brand-color}` produces a complete, contrast-verified customer theme from one input (§C4); scoped `data-theme` lets the Formery dashboard preview customer-themed forms inline (§C5) |
 | **PDF engine** | The document layer **already shipped in v0.2.x** (document pattern/theme/tokens, key-value, signature, page-break, qr-code — built for the craft use case). §7.4 completes it: running headers/footers, invoice/report scaffolds, brand-matched document themes. One schema, one brand theme → web form *and* deterministic PDF via headless Chromium |
-| **MCP-native operations** | `@loom-ui/mcp` (`loom_render_form`, `loom_audit_html`) gives Formery's own MCP server a rendering backend; the agent flow "create a patient intake form" terminates in Loom markup validated by Loom audit |
-| **Vue 3 + Inertia dashboard** | `@loom-ui/vue` (§11.2) — the Formery admin uses the same design system as the forms it hosts; SSR-safe, Inertia-friendly |
-| **Validation UX** | `field-group` contract + `loom-validate.js` (§7.1): errors, hints, aria wiring standardized and machine-auditable — GDPR-consent blocks become a pattern |
+| **MCP-native operations** | `@faqir-ui/mcp` (`faqir_render_form`, `faqir_audit_html`) gives Formery's own MCP server a rendering backend; the agent flow "create a patient intake form" terminates in Faqir markup validated by Faqir audit |
+| **Vue 3 + Inertia dashboard** | `@faqir-ui/vue` (§11.2) — the Formery admin uses the same design system as the forms it hosts; SSR-safe, Inertia-friendly |
+| **Validation UX** | `field-group` contract + `faqir-validate.js` (§7.1): errors, hints, aria wiring standardized and machine-auditable — GDPR-consent blocks become a pattern |
 | **Wizard/multi-step intake** | `wizard` pattern (§B3) + stepper + `l-source` submission flow |
 | **EU/self-hosted, zero supply-chain surface** | Zero runtime dependencies means the public form pages have *no third-party code at all* — an honest GDPR/security selling point Formery can put on the pricing page |
 
@@ -841,7 +841,7 @@ productizes it — and craft's "Recommendation: build l-source before unificatio
 already been executed.
 
 Sequencing note: the Formery-critical items are the `field-group` contract +
-`@loom-ui/forms` + theme generator + `@loom-ui/vue` + document-layer completion — all
+`@faqir-ui/forms` + theme generator + `@faqir-ui/vue` + document-layer completion — all
 landing by the "Forms, Data & Documents" phase in the roadmap below, ahead of a Formery
 build month. The document foundation shipping early (v0.2.x) de-risks that phase
 substantially.
@@ -856,8 +856,8 @@ and, gratifyingly, delivered the document layer and `l-source` ahead of this pla
 
 ### v0.3 — "Foundation" (~2 weeks)
 The unblockers. No new features until distribution and drift are fixed.
-- Compiled CLI (`dist/loom.mjs`, Node ≥ 18, Bun optional) — kill the Bun requirement
-- `@loom-ui/core` package + CDN artifacts + SRI; reserve `@loom-ui` org
+- Compiled CLI (`dist/faqir.mjs`, Node ≥ 18, Bun optional) — kill the Bun requirement
+- `@faqir-ui/core` package + CDN artifacts + SRI; reserve `@faqir-ui` org
 - Controller de-duplication: recipes as single source, `build:core` assembly (§A2) —
   and register `qr-code` in the core bundle (currently standalone-only)
 - Keyed `l-for` (§A1) + stress tests
@@ -870,43 +870,43 @@ The unblockers. No new features until distribution and drift are fixed.
 - New primitives batch: alert (callout alias), skeleton, breadcrumb, toggle, icon (+set), chip, collapsible, link
 - New recipes batch 1: alert-dialog, slider, sidebar, input-otp, calendar
 - Controller tests for all 16 existing + new recipes (§12.1)
-- Transitions 2.0 (`data-motion` presets) + `loom-collapse` plugin
+- Transitions 2.0 (`data-motion` presets) + `faqir-collapse` plugin
 - Themes: manifests for all 5; ship `aurora`, `slate`, `contrast`
 - Audit v2 rules: duplicate-id, contrast-tokens, heading-order, field-wiring
 - Visual regression + axe CI
 
 ### v0.5 — "Agents" (~2–3 weeks)
-- `@loom-ui/mcp` server + directory listings
+- `@faqir-ui/mcp` server + directory listings
 - Remote registry protocol + integrity hashes (§9.2)
-- `loom upgrade` three-way merge + `loom diff` (§9.3)
+- `faqir upgrade` three-way merge + `faqir diff` (§9.3)
 - Context v2: `llms.txt`, manifest-derived skill generator, hosted `manifest.schema.json`
 - Parser hardening + fuzz corpus (§9.1)
-- `loom audit --stdin`, guaranteed `--json` everywhere
+- `faqir audit --stdin`, guaranteed `--json` everywhere
 
 ### v0.6 — "Forms, Data & Documents" (~2–3 weeks) ← *Formery enablement milestone*
 Lighter than rev. 1 planned — the document foundation and `l-source` already shipped.
-- `field-group` validation contract + `loom-validate.js` (§7.1)
-- `@loom-ui/forms` (JSON Schema renderer, audit-clean guarantee)
-- `loom-persist`, `loom-intersect`, `loom-mask` plugins
+- `field-group` validation contract + `faqir-validate.js` (§7.1)
+- `@faqir-ui/forms` (JSON Schema renderer, audit-clean guarantee)
+- `faqir-persist`, `faqir-intersect`, `faqir-mask` plugins
 - Document completion: running headers/footers, invoice/report scaffolds,
   `document-serif` theme, watermark + barcode, print visual regression (§7.4)
-- `loom theme generate` (parametric oklch themes, contrast-verified, incl. document variant)
-- `@loom-ui/vue` bindings via manifest codegen
+- `faqir theme generate` (parametric oklch themes, contrast-verified, incl. document variant)
+- `@faqir-ui/vue` bindings via manifest codegen
 - `wizard` + `form-page` patterns
 
 ### v0.7 — "Ecosystem" (~3 weeks)
-- `@loom-ui/react` bindings
+- `@faqir-ui/react` bindings
 - Recipes batch 2: context-menu, menubar, tree-view, file-upload, tag-input, carousel, toggle-group
 - Patterns: pricing, hero/feature-grid/site-footer, stats-dashboard, inbox
 - Docs site + in-browser audit playground (§13)
 - Themes: `terminal`, `glass`, `soft`; density mode (§B6)
-- Dev overlay / `Loom.inspect` devtools
+- Dev overlay / `Faqir.inspect` devtools
 
 ### v1.0 — "The Standard" (~2 weeks stabilization)
 - Protocol spec 1.0 + manifest schema 1.0 **frozen** (published, versioned)
 - All budgets green, zero audit findings in registry, zero axe violations, visual suite stable
-- `loom-core.d.ts` finalized; security guidance doc
-- Migration notes v0.x → 1.0; `loom upgrade` handles the jump
+- `faqir-core.d.ts` finalized; security guidance doc
+- Migration notes v0.x → 1.0; `faqir upgrade` handles the jump
 - Announcement: docs site, MCP directories, Show HN, awesome-mcp lists
 
 Total: roughly 14–15 focused weeks. Phases are independent enough that v0.6 can be
@@ -923,7 +923,7 @@ pulled earlier if a Formery month demands it (its only hard dependencies are v0.
 | **Keyed l-for introduces regressions in the engine** | Land behind the existing test suite + new 1,000-row stress/focus tests; the naive path remains as fallback for un-keyed lists |
 | **Bindings drift from core** | Impossible by construction — they're generated from manifests in CI; a manifest change regenerates and re-tests bindings |
 | **Registry grows faster than quality** | Registry self-audit + axe + visual regression are merge gates, not suggestions (§12.4) |
-| **npm name/org squatting** | Reserve `@loom-ui` org and the docs domain in week 1 of v0.3 |
+| **npm name/org squatting** | Reserve `@faqir-ui` org and the docs domain in week 1 of v0.3 |
 | **CSP-restricted environments reject `new Function`** | Documented limitation for 1.0; evaluator abstraction is isolated enough to add a CSP-safe interpreter post-1.0 if demand appears |
 | **Solo-maintainer bandwidth** | Phases are shippable increments; each release is useful alone. The MCP server + docs generation are themselves agent-force-multipliers for maintaining the rest |
 
@@ -943,7 +943,7 @@ pulled earlier if a Formery month demands it (its only hard dependencies are v0.
 - **Adoption**: npm weekly downloads across the family; MCP directory presence;
   ≥ 1 external registry published by someone else (the real platform signal).
 - **Dogfood**: both craft (document generation) and Formery (hosted forms + PDF
-  templates) run on Loom in production.
+  templates) run on Faqir in production.
 
 ---
 
@@ -951,11 +951,11 @@ pulled earlier if a Formery month demands it (its only hard dependencies are v0.
 
 The decisions this proposal asks you to ratify:
 
-1. **Fix distribution first** (compiled Node-compatible CLI + `@loom-ui/core` CDN
+1. **Fix distribution first** (compiled Node-compatible CLI + `@faqir-ui/core` CDN
    package) before any new features. *(v0.3)*
-2. **Adopt the package family** under a reserved `@loom-ui` npm org, keeping
-   `loom-ui-cli` as the CLI name. *(v0.3)*
-3. **Recipes become the single controller source**; `loom-core.js` becomes a built
+2. **Adopt the package family** under a reserved `@faqir-ui` npm org, keeping
+   `faqir-ui-cli` as the CLI name. *(v0.3)*
+3. **Recipes become the single controller source**; `faqir-core.js` becomes a built
    artifact (fixes the qr-code drift already visible in v0.2.x). *(v0.3)*
 4. **Keyed `l-for` via `l-key`** is the one engine-semantics change; harden the
    already-shipped `l-source` (tests, teardown, audit exemption) rather than rebuild it.
@@ -963,19 +963,19 @@ The decisions this proposal asks you to ratify:
 5. **Icons via CSS mask + data-URI tokens**, curated Lucide subset. *(v0.4)*
 6. **Six new themes + theme manifests + parametric `theme generate`.** *(v0.4–0.7)*
 7. **MCP server as a first-class product surface.** *(v0.5)*
-8. **Remote-registry protocol + `loom upgrade` three-way merge** — Loom's answer to the
+8. **Remote-registry protocol + `faqir upgrade` three-way merge** — Faqir's answer to the
    copy-paste orphan problem. *(v0.5)*
-9. **`field-group` validation contract, `@loom-ui/forms`, and document-layer
+9. **`field-group` validation contract, `@faqir-ui/forms`, and document-layer
    completion** (running headers/footers, scaffolds, watermark/barcode) on top of the
    v0.2.x foundation — the Formery + craft substrate. *(v0.6)*
-10. **Vue first, React second, both generated from manifests**; loom-core reactivity is
+10. **Vue first, React second, both generated from manifests**; faqir-core reactivity is
     never used inside framework bindings. *(v0.6–0.7)*
 11. **Density as a token mode (`data-density`), not a protocol attribute** — the
     five-attribute protocol stays frozen. *(v0.7)*
-12. **Docs site built with Loom, content generated from manifests, with an in-browser
+12. **Docs site built with Faqir, content generated from manifests, with an in-browser
     audit playground.** *(v0.7)*
 
-The pillars stay. The protocol stays. The simplicity stays. What changes is that Loom
+The pillars stay. The protocol stays. The simplicity stays. What changes is that Faqir
 stops being a well-built prototype and becomes the thing its README already claims:
 the framework AI agents reach for when they need to build a UI that a human is proud
 to own.

@@ -1,15 +1,15 @@
-# Data-Driven Rendering in Loom UI
+# Data-Driven Rendering in Faqir UI
 
-Two approaches for connecting Loom UI components to server-backed data.
+Two approaches for connecting Faqir UI components to server-backed data.
 Approach B is application-level and works today. Approach C is a framework-level
-directive that would require changes to `loom-core.js`.
+directive that would require changes to `faqir-core.js`.
 
 ---
 
 ## Approach B: Data Source Service Layer
 
-A thin JS service layer that `l-data` blocks consume. Not a Loom controller —
-an application-level utility. Loom's `no-fetch` audit rule only applies to
+A thin JS service layer that `l-data` blocks consume. Not a Faqir controller —
+an application-level utility. Faqir's `no-fetch` audit rule only applies to
 recipe controllers, so this layer lives outside that boundary.
 
 ### The Service Factory
@@ -374,15 +374,15 @@ recipe controllers, so this layer lives outside that boundary.
 ### Boundary Rules
 
 - `apiSource()` is **application code** — lives in a `<script>` tag or a shared `.js` file
-- Loom **recipe controllers** (dropdown.js, table.js) never call `fetch` — the audit rule still applies
+- Faqir **recipe controllers** (dropdown.js, table.js) never call `fetch` — the audit rule still applies
 - The `l-data` / `l-init` / `l-for` directives are the bridge between data and DOM
-- Error and loading states use standard Loom components (spinner, card, empty-state)
+- Error and loading states use standard Faqir components (spinner, card, empty-state)
 
 ---
 
 ## Approach C: `l-source` Directive (Framework-Level)
 
-A new directive built into `loom-core.js` that makes server-backed data a
+A new directive built into `faqir-core.js` that makes server-backed data a
 first-class concept. Declarative — no JavaScript needed in markup.
 
 ### Directive Syntax
@@ -601,12 +601,12 @@ $items.stopPolling()              // Stop auto-refresh
 </div>
 ```
 
-### Implementation Sketch for `loom-core.js`
+### Implementation Sketch for `faqir-core.js`
 
 The directive would be registered as a custom directive in the core:
 
 ```js
-// Inside loom-core.js — directive registration
+// Inside faqir-core.js — directive registration
 
 function handleSource(el, dir, scope) {
   // dir.arg    = "items" (the name after l-source:)
@@ -726,7 +726,7 @@ customDirectives.set('source', handleSource);
 ### Architecture Diagram
 
 ```
-  Markup                        loom-core.js                     Server
+  Markup                        faqir-core.js                     Server
   ------                        ------------                     ------
 
   l-source:items="/api/x"
@@ -762,9 +762,9 @@ customDirectives.set('source', handleSource);
 
 | Aspect                | B (Service Layer)              | C (l-source Directive)          |
 |-----------------------|--------------------------------|---------------------------------|
-| Framework changes     | None                           | New directive in loom-core.js   |
+| Framework changes     | None                           | New directive in faqir-core.js   |
 | JS required           | `<script>` with apiSource()    | None (purely declarative)       |
-| Learning curve        | Know JS + Loom                 | Know l-source syntax only       |
+| Learning curve        | Know JS + Faqir                 | Know l-source syntax only       |
 | Flexibility           | Full — it's just functions     | Constrained to REST conventions |
 | Multiple sources      | Manual setup per scope         | Multiple l-source attrs         |
 | Polling               | Manual startPolling() call     | Declarative modifier            |
