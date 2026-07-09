@@ -1,5 +1,9 @@
 #!/usr/bin/env bun
 
+// Must be first: installs a Bun→Node polyfill when running the compiled
+// bundle on plain Node. No-op under the Bun runtime.
+import "./utils/runtime-shim";
+
 import { init } from "./commands/init";
 import { doctor } from "./commands/doctor";
 import { add } from "./commands/add";

@@ -3,31 +3,31 @@
   "version": "0.2.4",
   "description": "Agent-native UI framework — CLI-distributed, manifest-driven, zero-dependency components",
   "type": "module",
-  "types": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./dist/faqir.mjs"
   },
   "bin": {
     "faqir": "./bin/faqir"
   },
   "scripts": {
     "dev": "bun run src/index.ts",
+    "build:cli": "node scripts/build-cli.mjs",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
+    "smoke": "bash scripts/smoke-cli.sh",
     "release": "node scripts/release.mjs",
     "release:patch": "node scripts/release.mjs patch",
     "release:minor": "node scripts/release.mjs minor",
     "release:major": "node scripts/release.mjs major",
     "check:package": "npm pack --dry-run",
-    "prepublishOnly": "npm run check:package"
+    "prepublishOnly": "npm run build:cli && npm run check:package"
   },
   "files": [
     "bin",
-    "src",
+    "dist",
     "registry",
     "README.md",
-    "LICENSE",
-    "bunfig.toml"
+    "LICENSE"
   ],
   "keywords": [
     "ui",
@@ -49,8 +49,7 @@
     "url": "https://github.com/Narcis13/faqir-ui/issues"
   },
   "engines": {
-    "node": ">=18",
-    "bun": ">=1.3.0"
+    "node": ">=18"
   },
   "devDependencies": {
     "@happy-dom/global-registrator": "^20.8.3",

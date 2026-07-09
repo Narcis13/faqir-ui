@@ -116,7 +116,9 @@ export async function dev(args: string[]): Promise<void> {
       const ext = extname(filePath).toLowerCase();
       const contentType = MIME_TYPES[ext] || "application/octet-stream";
 
-      return new Response(file, {
+      // Read bytes explicitly so the response body is a plain BodyInit that
+      // works under both the Bun runtime and the Node runtime shim.
+      return new Response(await file.arrayBuffer(), {
         headers: {
           "Content-Type": contentType,
           "Cache-Control": "no-cache",
