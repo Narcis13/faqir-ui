@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Faqir UI — two-tag CDN demo</title>
+
+  <!-- The two tags. Local dist paths (swap for the jsDelivr URLs in production). -->
+  <link rel="stylesheet" href="../dist/faqir.default.css">
+  <script src="../dist/faqir-core.min.js" defer></script>
+</head>
+<body>
+  <main l-data="{ count: 0 }" data-ui="stack" data-gap="lg"
+        style="max-width: 40rem; margin: 3rem auto; padding: 0 1rem;">
+
+    <div data-ui="card">
+      <div data-part="header">
+        <h1 data-part="title">Faqir UI is running</h1>
+        <p data-part="description">
+          Styled by <code>faqir.default.css</code>, made interactive by
+          <code>faqir-core.min.js</code> — no build step, no install.
+        </p>
+      </div>
+
+      <div data-part="body" data-ui="stack" data-gap="md">
+        <p>
+          Clicked <span data-ui="badge" data-variant="primary" l-text="count">0</span> times.
+        </p>
+        <div data-ui="button-group">
+          <button data-ui="button" data-variant="primary" l-on:click="count++">Increment</button>
+          <button data-ui="button" data-variant="outline" l-on:click="count = 0">Reset</button>
+        </div>
+        <p data-ui="callout" data-variant="success" l-show="count >= 5">
+          🎉 Reactivity works — this callout appears once you reach 5.
+        </p>
+      </div>
+
+      <div data-part="footer">
+        <button data-ui="button" data-variant="ghost"
+                l-on:click="document.documentElement.dataset.theme =
+                            document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'">
+          Toggle dark mode
+        </button>
+      </div>
+    </div>
+
+  </main>
+</body>
+</html>

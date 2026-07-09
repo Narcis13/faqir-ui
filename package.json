@@ -12,6 +12,7 @@
   "scripts": {
     "dev": "bun run src/index.ts",
     "build:cli": "node scripts/build-cli.mjs",
+    "build:core-package": "node scripts/build-core-package.mjs",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
     "smoke": "bash scripts/smoke-cli.sh",

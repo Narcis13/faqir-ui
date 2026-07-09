@@ -188,6 +188,36 @@ bun run build:cli && npm pack --dry-run
 bun run smoke
 ```
 
+## Building the `@faqir-ui/core` runtime package (CDN artifacts)
+
+`@faqir-ui/core` (in `packages/core/`) is the CDN/runtime package — the two-tag
+adoption path (`<link>` + `<script>`). `bun run build:core-package` regenerates its
+`dist/` from the registry:
+
+```bash
+bun run build:core-package   # → packages/core/dist/*
+```
+
+It emits:
+
+| Artifact | What it is |
+| -------- | ---------- |
+| `faqir-core.js` | Canonical UMD engine (copied from `registry/core/faqir-core.js`). |
+| `faqir-core.min.js` (+ `.map`) | Minified classic-script build. Bundled from `packages/core/src/cdn-entry.js` with `bun build --format=iife` so a plain `<script src>` sets `window.Faqir`. |
+| `faqir.{theme}.css` | One full CSS bundle per `registry/themes/*.css`: all tokens + theme + base + every component, fully inlined (no `@import`). |
+| `plugins/` | Official plugin drops (empty placeholder until the §A5 plugins land). |
+| `sri.json` | SHA-384 subresource-integrity hashes for every file above. |
+
+`packages/core/dist/` is a build output (gitignored, like the root `dist/`); tests and
+`prepublishOnly` rebuild it. A live demo lives at `packages/core/examples/cdn-two-tag.html`.
+
+**Size budget:** the build prints `faqir-core.min.js`'s gzip size. The §A6 engine budget
+is ≤ 14KB gzip; today it runs slightly over because recipe controllers are still inlined
+in the engine. The engine/controller split (0.3-03) and de-duplication (0.3-04) bring it
+under budget — the build prints an explicit NOTE meanwhile.
+
+Requires Bun to *build* the minified bundle (not to run the artifacts).
+
 ## Type Checking
 
 ```bash

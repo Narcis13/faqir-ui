@@ -49,7 +49,7 @@ done in any order (or in parallel worktrees).
 | ID | Task | Status |
 |----|------|--------|
 | 0.3-01 | Compile CLI to Node-compatible `dist/faqir.mjs` | ✅ |
-| 0.3-02 | `@faqir-ui/core` package + CDN artifacts + SRI | ⬜ |
+| 0.3-02 | `@faqir-ui/core` package + CDN artifacts + SRI | ✅ |
 | 0.3-03 | `build:core` assembly script (engine + recipes → faqir-core.js) | ⬜ |
 | 0.3-04 | De-duplicate controllers; recipes become single source; register qr-code | ⬜ |
 | 0.3-05 | Keyed `l-for` — reconciler core | ⬜ |
@@ -202,9 +202,9 @@ org — note it in the commit message; do not publish yet.)
 - SRI file matches recomputed hashes.
 
 **Acceptance criteria**
-- [ ] A scratch HTML file with the two `<link>`/`<script>` tags (local dist paths) renders a styled, interactive Faqir page.
-- [ ] `packages/core/package.json` valid for npm publish (exports map, files whitelist).
-- [ ] Size budget recorded: `faqir-core.min.js` gzip size printed by build; ≤ 14KB gzip or an explicit budget note.
+- [x] A scratch HTML file with the two `<link>`/`<script>` tags (local dist paths) renders a styled, interactive Faqir page. (`packages/core/examples/cdn-two-tag.html` — verified in a browser: styled card/button/badge/callout, reactive counter, `l-show`, dark-mode toggle.)
+- [x] `packages/core/package.json` valid for npm publish (exports map, files whitelist). (`npm pack --dry-run` ships `dist/` + `src/` + `examples/` + README; 13 files.)
+- [x] Size budget recorded: `faqir-core.min.js` gzip size printed by build; ≤ 14KB gzip or an explicit budget note. (14.58 KB gzip → explicit NOTE printed; under-budget after 0.3-03/0.3-04 dedup.)
 
 ---
 

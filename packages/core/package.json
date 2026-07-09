@@ -1,0 +1,64 @@
+{
+  "name": "@faqir-ui/core",
+  "version": "0.2.4",
+  "description": "Faqir UI runtime engine — the Alpine-style reactive core (faqir-core.js), minified CDN build, and prebuilt per-theme CSS bundles. Zero dependencies.",
+  "type": "module",
+  "main": "./dist/faqir-core.js",
+  "module": "./dist/faqir-core.js",
+  "unpkg": "./dist/faqir-core.min.js",
+  "jsdelivr": "./dist/faqir-core.min.js",
+  "exports": {
+    ".": {
+      "import": "./dist/faqir-core.js",
+      "require": "./dist/faqir-core.js",
+      "default": "./dist/faqir-core.js"
+    },
+    "./faqir-core.js": "./dist/faqir-core.js",
+    "./faqir-core.min.js": "./dist/faqir-core.min.js",
+    "./sri.json": "./dist/sri.json",
+    "./dist/*": "./dist/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "src",
+    "examples",
+    "README.md"
+  ],
+  "sideEffects": [
+    "./dist/faqir-core.js",
+    "./dist/faqir-core.min.js",
+    "./dist/*.css"
+  ],
+  "scripts": {
+    "build": "node ../../scripts/build-core-package.mjs",
+    "prepublishOnly": "node ../../scripts/build-core-package.mjs"
+  },
+  "keywords": [
+    "faqir",
+    "ui",
+    "reactive",
+    "cdn",
+    "runtime",
+    "zero-dependency",
+    "agent-native",
+    "html",
+    "css"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Narcis13/faqir-ui.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/Narcis13/faqir-ui/tree/main/packages/core#readme",
+  "bugs": {
+    "url": "https://github.com/Narcis13/faqir-ui/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
