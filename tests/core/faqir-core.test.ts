@@ -520,7 +520,7 @@ describe("Directives", () => {
       expect(buttons[2].hasAttribute("disabled")).toBe(true);
 
       // Click to set level = 2
-      document.querySelector("[\\@click]")!.click();
+      (document.querySelector("[\\@click]") as HTMLElement).click();
       await tick();
 
       // level=2: A (level<1=false) enabled, B (level<2=false) enabled, C (level<3=true) disabled
@@ -1998,19 +1998,19 @@ describe("Recipe Controllers", () => {
 
       root.querySelector("[data-part='close']")!.dispatchEvent(new Event("click"));
       // Should transition to closed (may go through closing state)
-      expect(["closing", "closed"]).toContain(root.dataset.state);
+      expect(["closing", "closed"]).toContain(root.dataset.state!);
     });
 
     it("closes on Escape key", () => {
       (root as any)._faqirDialog.open();
       root.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
-      expect(["closing", "closed"]).toContain(root.dataset.state);
+      expect(["closing", "closed"]).toContain(root.dataset.state!);
     });
 
     it("closes on overlay click", () => {
       (root as any)._faqirDialog.open();
       root.querySelector("[data-part='overlay']")!.dispatchEvent(new Event("click"));
-      expect(["closing", "closed"]).toContain(root.dataset.state);
+      expect(["closing", "closed"]).toContain(root.dataset.state!);
     });
 
     it("has open/close/toggle/destroy API", () => {
@@ -2026,7 +2026,7 @@ describe("Recipe Controllers", () => {
       api.toggle();
       expect(root.dataset.state).toBe("open");
       api.toggle();
-      expect(["closing", "closed"]).toContain(root.dataset.state);
+      expect(["closing", "closed"]).toContain(root.dataset.state!);
     });
 
     it("destroy removes API reference", () => {
@@ -2057,13 +2057,13 @@ describe("Recipe Controllers", () => {
       api.open();
       expect(root.dataset.state).toBe("open");
       api.close();
-      expect(["closing", "closed"]).toContain(root.dataset.state);
+      expect(["closing", "closed"]).toContain(root.dataset.state!);
     });
 
     it("closes on Escape", () => {
       (root as any)._faqirDrawer.open();
       root.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
-      expect(["closing", "closed"]).toContain(root.dataset.state);
+      expect(["closing", "closed"]).toContain(root.dataset.state!);
     });
   });
 
@@ -2645,7 +2645,7 @@ describe("Recipe Controllers", () => {
     it("closes on Escape", () => {
       (root as any)._faqirSheet.open();
       root.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
-      expect(["closing", "closed"]).toContain(root.dataset.state);
+      expect(["closing", "closed"]).toContain(root.dataset.state!);
     });
 
     it("toggle works", () => {
@@ -2653,7 +2653,7 @@ describe("Recipe Controllers", () => {
       api.toggle();
       expect(root.dataset.state).toBe("open");
       api.toggle();
-      expect(["closing", "closed"]).toContain(root.dataset.state);
+      expect(["closing", "closed"]).toContain(root.dataset.state!);
     });
   });
 

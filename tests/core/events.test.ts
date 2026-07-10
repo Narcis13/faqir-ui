@@ -18,7 +18,7 @@ describe("events", () => {
       let called = false;
       let targetEl: Element | null = null;
 
-      delegate(root, "click", "[data-part='trigger']", (_e, target) => {
+      delegate(root, "click", "[data-part='trigger']", (_e: Event, target: Element) => {
         called = true;
         targetEl = target;
       });
