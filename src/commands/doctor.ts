@@ -119,10 +119,10 @@ export async function doctor(args: string[]): Promise<void> {
 
   // 5. Check base files
   const baseDir = join(outputDir, "base");
-  const baseFiles = ["reset.css", "prose.css"];
+  const baseFiles = ["reset.css", "prose.css", "motion-presets.css"];
   const missingBase = baseFiles.filter((f) => !existsSync(join(baseDir, f)));
   if (missingBase.length === 0) {
-    results.push({ name: "Base styles", passed: true, message: "reset.css + prose.css" });
+    results.push({ name: "Base styles", passed: true, message: baseFiles.join(" + ") });
   } else {
     results.push({
       name: "Base styles",

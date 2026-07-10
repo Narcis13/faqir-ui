@@ -146,6 +146,10 @@ export async function init(args: string[]): Promise<void> {
     join(registryPath, "base", "prose.css"),
     join(outputDir, "base", "prose.css")
   );
+  await copyFile(
+    join(registryPath, "base", "motion-presets.css"),
+    join(outputDir, "base", "motion-presets.css")
+  );
 
   // 4. Copy core JS modules (if not --no-core)
   if (!opts.noCore) {
@@ -255,7 +259,7 @@ export async function init(args: string[]): Promise<void> {
   log.blank();
   console.log("  Project structure:");
   log.step(`${opts.dir}/tokens/   — design tokens`);
-  log.step(`${opts.dir}/base/     — CSS reset & prose`);
+  log.step(`${opts.dir}/base/     — CSS reset, prose & motion presets`);
   if (!opts.noCore) {
     log.step(`${opts.dir}/core/     — faqir-core.js, api-source.js, utility modules`);
   }

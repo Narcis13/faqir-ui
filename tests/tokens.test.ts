@@ -59,6 +59,20 @@ describe("token files", () => {
     expect(content).toContain("--duration-normal:");
   });
 
+  it("motion.css defines l-transition preset tokens (referencing base tokens)", async () => {
+    const content = await Bun.file(join(REGISTRY, "tokens/motion.css")).text();
+    // Semantic motion aliases consumed by base/motion-presets.css (0.4-11).
+    expect(content).toContain("--motion-enter-duration:");
+    expect(content).toContain("--motion-leave-duration:");
+    expect(content).toContain("--motion-enter-ease:");
+    expect(content).toContain("--motion-leave-ease:");
+    expect(content).toContain("--motion-slide-distance:");
+    expect(content).toContain("--motion-scale-from:");
+    // Preset durations/easings alias existing base tokens, never hardcode a value.
+    expect(content).toContain("var(--duration-normal)");
+    expect(content).toContain("var(--ease-out)");
+  });
+
   it("aliases.css references semantic tokens via var()", async () => {
     const content = await Bun.file(join(REGISTRY, "tokens/aliases.css")).text();
     expect(content).toContain("var(--radius-");

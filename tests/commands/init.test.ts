@@ -118,12 +118,16 @@ describe("faqir init", () => {
     const baseDir = join(TEST_DIR, "ui", "base");
     expect(existsSync(join(baseDir, "reset.css"))).toBe(true);
     expect(existsSync(join(baseDir, "prose.css"))).toBe(true);
+    expect(existsSync(join(baseDir, "motion-presets.css"))).toBe(true);
 
     const reset = await Bun.file(join(baseDir, "reset.css")).text();
     expect(reset).toContain("box-sizing: border-box");
 
     const prose = await Bun.file(join(baseDir, "prose.css")).text();
     expect(prose).toContain("[data-ui=\"prose\"]");
+
+    const motion = await Bun.file(join(baseDir, "motion-presets.css")).text();
+    expect(motion).toContain("[data-motion=\"enter\"]");
   });
 
   it("copies theme.css", async () => {

@@ -14,4 +14,17 @@
   --duration-normal:  200ms;
   --duration-slow:    300ms;
   --duration-slower:  500ms;
+
+  /* ── l-transition presets (Transitions 2.0 · 0.4-11) ── */
+  /* Semantic aliases consumed by base/motion-presets.css so preset CSS never
+     hardcodes a duration or easing. Enter is slower/eased-out (arriving),
+     leave is faster/eased-in (departing). */
+  --motion-enter-duration: var(--duration-normal);
+  --motion-leave-duration: var(--duration-fast);
+  --motion-enter-ease:     var(--ease-out);
+  --motion-leave-ease:     var(--ease-in);
+
+  /* Preset geometry */
+  --motion-slide-distance: 0.5rem;  /* slide-up travel */
+  --motion-scale-from:     0.95;    /* scale start/end factor */
 }

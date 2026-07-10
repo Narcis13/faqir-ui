@@ -1085,53 +1085,101 @@
     }
   }
 
-  // --- 3.14 l-transition helpers ---
+  // --- 3.14 l-transition helpers (Transitions 2.0 — attribute-visible) [0.4-11 · §A4] ---
+  //
+  // The whole lifecycle is driven through ONE attribute, `data-motion`:
+  //   show:  data-motion="enter"  → "enter-active" → (cleared)
+  //   hide:  data-motion="leave"  → "leave-active" → (cleared, then removed)
+  // registry/base/motion-presets.css styles each stage from motion tokens, so
+  // transitions are auditable straight from the DOM. There are NO per-stage CSS
+  // classes anywhere — state lives in an attribute and CSS reacts.
+
+  // Named presets shipped by motion-presets.css. Unknown names still animate
+  // (the attribute is stamped) but have no styling, so we warn to catch typos.
+  var MOTION_PRESETS = { fade: 1, 'slide-up': 1, scale: 1 };
 
   function prefersReducedMotion() {
     return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
 
-  function runEnterTransition(el, name) {
-    if (prefersReducedMotion()) return;
-    var prefix = name || 'l';
+  // Largest value in a computed CSS time list ("0.2s, 150ms" | "0s" | ""), in ms.
+  function maxCssTimeMs(list) {
+    var max = 0;
+    (list || '').split(',').forEach(function(s) {
+      var n = parseFloat(s);
+      if (!isNaN(n)) max = Math.max(max, s.indexOf('ms') >= 0 ? n : n * 1000);
+    });
+    return max;
+  }
 
-    el.classList.add(prefix + '-enter-from', prefix + '-enter-active');
-    el.offsetHeight; // force reflow
+  // How long to wait before force-completing a stage: the element's real
+  // transition/animation duration + delay plus a small buffer. transitionend
+  // wins when a transition actually runs; the timeout still settles us when the
+  // property does not change, no preset CSS is loaded, or the event is missed.
+  function motionTimeoutMs(el) {
+    var s = getComputedStyle(el);
+    return Math.max(
+      maxCssTimeMs(s.transitionDuration) + maxCssTimeMs(s.transitionDelay),
+      maxCssTimeMs(s.animationDuration) + maxCssTimeMs(s.animationDelay)
+    ) + 50;
+  }
 
-    requestAnimationFrame(function() {
-      el.classList.remove(prefix + '-enter-from');
-      el.classList.add(prefix + '-enter-to');
+  // Drive one enter/leave cycle purely through `data-motion` — no per-stage
+  // classes. `phase` is 'enter' | 'leave'; `done` fires once the active stage
+  // ends (transitionend/animationend) or the timeout fallback fires. The
+  // attribute is always cleared on completion — no residue.
+  function runMotion(el, phase, done) {
+    done = done || function() {};
 
-      var onEnd = function() {
-        el.classList.remove(prefix + '-enter-active', prefix + '-enter-to');
+    if (prefersReducedMotion()) {
+      el.removeAttribute('data-motion');
+      done();
+      return;
+    }
+
+    var preset = el.getAttribute('l-transition') || 'fade';
+    if (!MOTION_PRESETS[preset]) {
+      console.warn('[Faqir] l-transition: unknown preset "' + preset +
+        '" — expected one of: fade, slide-up, scale');
+    }
+
+    el.setAttribute('data-motion', phase); // from-state (no transition yet)
+    el.offsetHeight;                        // force reflow so the from-state commits
+
+    var raf = typeof requestAnimationFrame === 'function'
+      ? requestAnimationFrame
+      : function(cb) { return setTimeout(cb, 16); };
+
+    raf(function() {
+      el.setAttribute('data-motion', phase + '-active'); // to-state + transition
+
+      var finished = false;
+      var timer = null;
+      function finish() {
+        if (finished) return;
+        finished = true;
+        clearTimeout(timer);
         el.removeEventListener('transitionend', onEnd);
         el.removeEventListener('animationend', onEnd);
-      };
-      el.addEventListener('transitionend', onEnd, { once: true });
-      el.addEventListener('animationend', onEnd, { once: true });
+        el.removeAttribute('data-motion');
+        done();
+      }
+      function onEnd(e) {
+        if (e.target === el) finish(); // ignore transitions bubbling from children
+      }
+
+      el.addEventListener('transitionend', onEnd);
+      el.addEventListener('animationend', onEnd);
+      timer = setTimeout(finish, motionTimeoutMs(el));
     });
   }
 
-  function runLeaveTransition(el, name, done) {
-    if (prefersReducedMotion()) { done(); return; }
-    var prefix = name || 'l';
+  function runEnterTransition(el) {
+    runMotion(el, 'enter');
+  }
 
-    el.classList.add(prefix + '-leave-from', prefix + '-leave-active');
-    el.offsetHeight; // force reflow
-
-    requestAnimationFrame(function() {
-      el.classList.remove(prefix + '-leave-from');
-      el.classList.add(prefix + '-leave-to');
-
-      var onEnd = function() {
-        el.classList.remove(prefix + '-leave-active', prefix + '-leave-to');
-        el.removeEventListener('transitionend', onEnd);
-        el.removeEventListener('animationend', onEnd);
-        done();
-      };
-      el.addEventListener('transitionend', onEnd, { once: true });
-      el.addEventListener('animationend', onEnd, { once: true });
-    });
+  function runLeaveTransition(el, done) {
+    runMotion(el, 'leave', done);
   }
 
   // --- 3.15 l-model ---
@@ -1241,11 +1289,11 @@
       if (value) {
         el.style.display = originalDisplay;
         if (el.hasAttribute('l-transition')) {
-          runEnterTransition(el, el.getAttribute('l-transition'));
+          runEnterTransition(el);
         }
       } else {
         if (el.hasAttribute('l-transition')) {
-          runLeaveTransition(el, el.getAttribute('l-transition'), function() {
+          runLeaveTransition(el, function() {
             el.style.display = 'none';
           });
         } else {
@@ -1291,7 +1339,7 @@
 
           for (var i = 0; i < insertedNodes.length; i++) {
             if (insertedNodes[i].hasAttribute && insertedNodes[i].hasAttribute('l-transition')) {
-              runEnterTransition(insertedNodes[i], insertedNodes[i].getAttribute('l-transition'));
+              runEnterTransition(insertedNodes[i]);
             }
           }
         }
@@ -1300,7 +1348,7 @@
           var node = insertedNodes[i];
           if (node.hasAttribute && node.hasAttribute('l-transition')) {
             (function(n) {
-              runLeaveTransition(n, n.getAttribute('l-transition'), function() {
+              runLeaveTransition(n, function() {
                 n.remove();
               });
             })(node);
