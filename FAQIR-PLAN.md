@@ -71,7 +71,7 @@ done in any order (or in parallel worktrees).
 | 0.4-04 | Icon system: primitive, mask/data-URI runtime, ~120-icon set | ✅ |
 | 0.4-05 | `faqir add icons --only …` subsetting + `icon-name` audit rule | ✅ |
 | 0.4-06 | Recipe: `alert-dialog` | ⬜ |
-| 0.4-07 | Recipe: `slider` | ⬜ |
+| 0.4-07 | Recipe: `slider` | ✅ |
 | 0.4-08 | Recipe: `sidebar` | ⬜ |
 | 0.4-09 | Recipe: `input-otp` | ⬜ |
 | 0.4-10 | Recipe: `calendar` (extracted from date-picker) | ⬜ |
@@ -613,9 +613,9 @@ Emits change events; value reflected in `data-state`/CSS custom property for sty
 - Pointer-drag math unit-tested (pure function: pointer x + track rect → value), including RTL inversion.
 
 **Acceptance criteria**
-- [ ] Fully keyboard operable, screen-reader-correct ARIA.
-- [ ] Range + single variants in manifest with anatomy; reference page audit-clean.
-- [ ] Value math isolated in a pure, unit-tested function.
+- [x] Fully keyboard operable, screen-reader-correct ARIA.
+- [x] Range + single variants in manifest with anatomy; reference page audit-clean.
+- [x] Value math isolated in a pure, unit-tested function.
 
 ---
 
