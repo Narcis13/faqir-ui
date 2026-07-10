@@ -113,3 +113,136 @@ describe("contrast spot-checks · the gate fails low-contrast pairs", () => {
     expect(contrastRatio(c1, c2)).toBeLessThan(AA);
   });
 });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// The `contrast` theme — WCAG AAA gate  [task 0.4-14]
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// The accessibility-statement theme. Unlike the AA spot-checks above, this is a
+// full gate: every semantic text pair must clear AAA (≥ 7:1) in BOTH schemes,
+// derived-state (hover/active) pairs stay ≥ 4.5:1, and an opaque focus ring is
+// re-asserted for every interactive `data-ui` value. All ratios are computed
+// from the stylesheet itself with the oklch util — test-enforced, not eyeballed.
+
+const AAA = 7;
+
+const contrastCss = readFileSync(join(THEMES_DIR, "contrast.css"), "utf8");
+const contrastValues = parseThemeValues(contrastCss);
+
+// Foreground text tokens × surface tokens. Requiring AAA for the muted/subtle
+// weights on EVERY surface (not just on bg) is what "no low-contrast muted text"
+// means — muted is a lighter weight, never a lower contrast.
+const FG_TOKENS = ["color-fg", "color-fg-muted", "color-fg-subtle"] as const;
+const BG_TOKENS = ["color-bg", "color-bg-subtle", "color-bg-muted"] as const;
+
+// On-color text pairs — the label each solid action paints on itself.
+const ON_COLOR_PAIRS: Array<[fg: string, bg: string]> = [
+  ["color-primary-fg", "color-primary"],
+  ["color-secondary-fg", "color-secondary"],
+  ["color-destructive-fg", "color-destructive"],
+];
+
+// Body text on the tinted "subtle" callout/badge backgrounds.
+const SUBTLE_BG_PAIRS: Array<[fg: string, bg: string]> = [
+  ["color-fg", "color-primary-subtle"],
+  ["color-fg", "color-destructive-subtle"],
+  ["color-fg", "color-success-subtle"],
+  ["color-fg", "color-warning-subtle"],
+  ["color-fg", "color-info-subtle"],
+];
+
+// Derived interactive states — AA (≥ 4.5:1) per the plan (§0.4-14).
+const INTERACTIVE_PAIRS: Array<[fg: string, bg: string]> = [
+  ["color-primary-fg", "color-primary-hover"],
+  ["color-primary-fg", "color-primary-active"],
+  ["color-destructive-fg", "color-destructive-hover"],
+  ["color-secondary-fg", "color-secondary-hover"],
+];
+
+for (const scheme of ["light", "dark"] as const) {
+  describe(`contrast theme · AAA text pairs · ${scheme}`, () => {
+    const tokens = contrastValues[scheme];
+
+    const ratioOf = (fg: string, bg: string): number => {
+      const f = tokens.get(fg);
+      const b = tokens.get(bg);
+      // The theme overrides every token in every scheme — a missing one is a
+      // failure in itself (no silent fallthrough to the base light values).
+      expect(f, `${scheme}: ${fg} defined`).toBeDefined();
+      expect(b, `${scheme}: ${bg} defined`).toBeDefined();
+      return contrastOf(f!, b!);
+    };
+
+    // Every foreground weight on every surface ≥ 7:1.
+    for (const fg of FG_TOKENS) {
+      for (const bg of BG_TOKENS) {
+        it(`${fg} on ${bg} ≥ ${AAA}:1`, () => {
+          expect(ratioOf(fg, bg)).toBeGreaterThanOrEqual(AAA);
+        });
+      }
+    }
+
+    // On-color + subtle-bg text pairs ≥ 7:1.
+    for (const [fg, bg] of [...ON_COLOR_PAIRS, ...SUBTLE_BG_PAIRS]) {
+      it(`${fg} on ${bg} ≥ ${AAA}:1`, () => {
+        expect(ratioOf(fg, bg)).toBeGreaterThanOrEqual(AAA);
+      });
+    }
+
+    // Derived interactive states ≥ 4.5:1.
+    for (const [fg, bg] of INTERACTIVE_PAIRS) {
+      it(`${fg} on ${bg} ≥ ${AA}:1 (interactive state)`, () => {
+        expect(ratioOf(fg, bg)).toBeGreaterThanOrEqual(AA);
+      });
+    }
+  });
+}
+
+describe("contrast theme · auto scheme mirrors dark exactly", () => {
+  it("every token declared in dark has the identical value in auto", () => {
+    expect(contrastValues.dark.size).toBeGreaterThan(0);
+    for (const [name, value] of contrastValues.dark) {
+      expect(contrastValues.auto.get(name)).toBe(value);
+    }
+  });
+});
+
+// ── Focus visibility: an opaque :focus-visible ring for every interactive control ──
+//
+// A CSS-level presence assertion (per §0.4-14): the theme re-asserts `:focus-visible`
+// on every interactive `data-ui` value. The canonical interactive set is kept in
+// sync with the focus block in registry/themes/contrast.css. The match tolerates a
+// descendant part (e.g. `[data-ui="slider"] [data-part="thumb"]:focus-visible`) but
+// not crossing a comma/brace, so the ui and the pseudo-class share one selector.
+describe("contrast theme · :focus-visible present for every interactive data-ui", () => {
+  const INTERACTIVE_UI = [
+    "button", "link", "input", "textarea", "select", "checkbox", "radio",
+    "switch", "toggle", "slider", "tabs", "select-custom", "date-picker",
+  ] as const;
+
+  const stripped = contrastCss.replace(/\/\*[\s\S]*?\*\//g, "");
+
+  const hasFocusVisibleFor = (ui: string): boolean =>
+    new RegExp(`\\[data-ui="${ui}"\\][^{},]*:focus-visible`).test(stripped);
+
+  it("defines at least one :focus-visible rule", () => {
+    expect(stripped.includes(":focus-visible")).toBe(true);
+  });
+
+  for (const ui of INTERACTIVE_UI) {
+    it(`has a :focus-visible rule targeting data-ui="${ui}"`, () => {
+      expect(hasFocusVisibleFor(ui)).toBe(true);
+    });
+  }
+
+  it("the focus ring is opaque (references --color-ring, no inline alpha)", () => {
+    // The rule uses the themed ring color; --color-ring itself is opaque in the
+    // theme (no `/ <alpha>`), so the ring is never translucent.
+    const ringLight = contrastValues.light.get("color-ring");
+    const ringDark = contrastValues.dark.get("color-ring");
+    expect(ringLight).toBeDefined();
+    expect(ringDark).toBeDefined();
+    expect(ringLight).not.toContain("/");
+    expect(ringDark).not.toContain("/");
+  });
+});

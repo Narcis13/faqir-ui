@@ -78,7 +78,7 @@ done in any order (or in parallel worktrees).
 | 0.4-11 | Transitions 2.0: `data-motion` presets + `motion-presets.css` + `faqir-collapse` | ⬜ |
 | 0.4-12 | Theme manifests (`*.theme.json`) for all existing themes | ✅ |
 | 0.4-13 | New themes: `aurora`, `slate` | ✅ |
-| 0.4-14 | New theme: `contrast` (WCAG AAA) | ⬜ |
+| 0.4-14 | New theme: `contrast` (WCAG AAA) | ✅ |
 | 0.4-15 | Audit v2 rules: `duplicate-id`, `heading-order`, `landmark` | ⬜ |
 | 0.4-16 | Audit v2 rule: `contrast-tokens` (static oklch contrast) | ⬜ |
 | 0.4-17 | Audit v2 rule: `field-wiring` | ⬜ |
@@ -758,9 +758,9 @@ indicators everywhere, no low-contrast muted text, honest disabled states.
 - Focus visibility: `:focus-visible` rules present for all interactive `data-ui` values (CSS-level assertion).
 
 **Acceptance criteria**
-- [ ] Every semantic text pair computes ≥ 7:1 (test-enforced, not eyeballed).
-- [ ] Preview page demonstrates focus indicators on all interactive components.
-- [ ] Manifest `mood` includes an accessibility tag agents can select on.
+- [x] Every semantic text pair computes ≥ 7:1 (test-enforced, not eyeballed). (`tests/themes/contrast.test.ts` computes every fg×surface pair, on-color pair, and subtle-bg pair from `contrast.css` with the 0.4-13 oklch util in both schemes; interactive hover/active pairs gated at ≥ 4.5:1. All green.)
+- [x] Preview page demonstrates focus indicators on all interactive components. (`contrast.preview.html` — a "Focus & keyboard access" section paints the theme's opaque 3px ring persistently on button/link/input/textarea/select/checkbox/radio/switch/toggle/slider/tabs/select-custom/date-picker; browser-verified in light + dark.)
+- [x] Manifest `mood` includes an accessibility tag agents can select on. (`mood: ["accessible", "wcag-aaa", "high-contrast", "neutral"]`.)
 
 ---
 

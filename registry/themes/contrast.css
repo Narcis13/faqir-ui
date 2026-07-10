@@ -1,0 +1,203 @@
+/* @ui:theme contrast — WCAG AAA: 7:1 text everywhere, opaque focus rings, no low-contrast muted text; the accessibility-statement theme */
+
+/* ══════════════════════════════════════════════════════════════════════════
+   The accessibility-statement theme.
+
+   Every foreground text token (fg, fg-muted, fg-subtle) clears WCAG AAA (≥ 7:1)
+   against every surface (bg, bg-subtle, bg-muted) — "muted" here means a lighter
+   weight, never a lower contrast. Every on-color pair (primary-fg/primary,
+   secondary-fg/secondary, destructive-fg/destructive) is ≥ 7:1; hover/active
+   states stay ≥ 4.5:1. Focus is an opaque, oversized ring re-asserted on every
+   interactive control (below), and disabled states are honestly dimmed rather
+   than made invisible. All ratios are gate-enforced in tests/themes/contrast.test.ts,
+   not eyeballed. ── @ui:accessibility aaa
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Light Mode Overrides ── */
+/* Neutral grayscale surfaces (near-white → white), near-black text, deep accents. */
+:root {
+  /* ── Surfaces ── */
+  --color-bg:              oklch(1 0 0);          /* pure white */
+  --color-bg-subtle:       oklch(0.97 0 0);       /* faint gray */
+  --color-bg-muted:        oklch(0.93 0 0);       /* muted gray */
+  --color-fg:              oklch(0.18 0 0);       /* near-black */
+  --color-fg-muted:        oklch(0.34 0 0);       /* dark gray — still ≥ 7:1 on every surface */
+  --color-fg-subtle:       oklch(0.40 0 0);       /* dark gray — still ≥ 7:1 on every surface */
+
+  /* ── Interactive: Primary (deep accessible blue) ── */
+  --color-primary:         oklch(0.42 0.16 250);  /* white text on it ≥ 7:1 */
+  --color-primary-hover:   oklch(0.36 0.15 250);
+  --color-primary-active:  oklch(0.30 0.13 250);
+  --color-primary-fg:      white;
+  --color-primary-subtle:  oklch(0.94 0.03 250);  /* pale blue callout bg — fg text ≥ 7:1 */
+
+  /* ── Interactive: Secondary (light gray, near-black text) ── */
+  --color-secondary:       oklch(0.90 0 0);
+  --color-secondary-hover: oklch(0.85 0 0);
+  --color-secondary-fg:    oklch(0.22 0 0);
+
+  /* ── Interactive: Destructive (deep red) ── */
+  --color-destructive:        oklch(0.44 0.19 27);  /* white text on it ≥ 7:1 */
+  --color-destructive-hover:  oklch(0.38 0.18 27);
+  --color-destructive-fg:     white;
+  --color-destructive-subtle: oklch(0.94 0.04 27);
+
+  /* ── Feedback (dark enough to read as text/icons on bg) ── */
+  --color-success:         oklch(0.45 0.14 150);
+  --color-success-subtle:  oklch(0.94 0.05 150);
+  --color-warning:         oklch(0.50 0.12 70);    /* dark amber — a legible warning, not pale yellow */
+  --color-warning-subtle:  oklch(0.95 0.06 85);
+  --color-info:            oklch(0.45 0.15 250);
+  --color-info-subtle:     oklch(0.94 0.03 250);
+
+  /* ── Borders (visible, not hairline) ── */
+  --color-border:          oklch(0.80 0 0);
+  --color-border-strong:   oklch(0.55 0 0);
+  --color-ring:            oklch(0.42 0.16 250);   /* opaque — a focus ring must never be translucent */
+
+  /* ── Shadows (crisp, honest depth) ── */
+  --shadow-xs:  0 1px 2px oklch(0 0 0 / 0.10);
+  --shadow-sm:  0 1px 3px oklch(0 0 0 / 0.12), 0 1px 2px oklch(0 0 0 / 0.08);
+  --shadow-md:  0 4px 6px oklch(0 0 0 / 0.12), 0 2px 4px oklch(0 0 0 / 0.08);
+  --shadow-lg:  0 10px 15px oklch(0 0 0 / 0.14), 0 4px 6px oklch(0 0 0 / 0.08);
+  --shadow-xl:  0 20px 25px oklch(0 0 0 / 0.16), 0 8px 10px oklch(0 0 0 / 0.08);
+}
+
+/* ── Dark Mode ── */
+/* Near-black surfaces, near-white text, bright accents with dark on-color text. */
+[data-theme="dark"] {
+  /* ── Surfaces ── */
+  --color-bg:              oklch(0.16 0 0);        /* near-black */
+  --color-bg-subtle:       oklch(0.21 0 0);
+  --color-bg-muted:        oklch(0.25 0 0);
+  --color-fg:              oklch(0.97 0 0);        /* near-white */
+  --color-fg-muted:        oklch(0.84 0 0);        /* light gray — still ≥ 7:1 on every surface */
+  --color-fg-subtle:       oklch(0.77 0 0);        /* light gray — still ≥ 7:1 on every surface */
+
+  /* ── Interactive: Primary (bright blue, dark text) ── */
+  --color-primary:         oklch(0.72 0.15 250);   /* near-black text on it ≥ 7:1 */
+  --color-primary-hover:   oklch(0.78 0.13 250);
+  --color-primary-active:  oklch(0.84 0.11 250);
+  --color-primary-fg:      oklch(0.16 0.02 250);
+  --color-primary-subtle:  oklch(0.30 0.07 250);   /* dark blue callout bg — fg text ≥ 7:1 */
+
+  /* ── Interactive: Secondary (dark gray, near-white text) ── */
+  --color-secondary:       oklch(0.30 0 0);
+  --color-secondary-hover: oklch(0.36 0 0);
+  --color-secondary-fg:    oklch(0.96 0 0);
+
+  /* ── Interactive: Destructive (bright red, dark text) ── */
+  --color-destructive:        oklch(0.73 0.16 27);  /* near-black text on it ≥ 7:1 */
+  --color-destructive-hover:  oklch(0.79 0.14 27);
+  --color-destructive-fg:     oklch(0.15 0.02 27);
+  --color-destructive-subtle: oklch(0.32 0.09 27);
+
+  /* ── Feedback (bright on dark; subtle = deep tinted bg for fg text) ── */
+  --color-success:         oklch(0.75 0.16 150);
+  --color-success-subtle:  oklch(0.30 0.07 150);
+  --color-warning:         oklch(0.82 0.14 85);
+  --color-warning-subtle:  oklch(0.32 0.06 85);
+  --color-info:            oklch(0.72 0.14 250);
+  --color-info-subtle:     oklch(0.30 0.07 250);
+
+  /* ── Borders (visible on dark) ── */
+  --color-border:          oklch(0.40 0 0);
+  --color-border-strong:   oklch(0.60 0 0);
+  --color-ring:            oklch(0.80 0.13 250);   /* opaque, bright */
+
+  /* ── Shadows (deep, for dark surfaces) ── */
+  --shadow-xs:  0 1px 3px oklch(0 0 0 / 0.5);
+  --shadow-sm:  0 2px 6px oklch(0 0 0 / 0.55);
+  --shadow-md:  0 6px 12px oklch(0 0 0 / 0.55), 0 2px 4px oklch(0 0 0 / 0.35);
+  --shadow-lg:  0 12px 24px oklch(0 0 0 / 0.6), 0 4px 8px oklch(0 0 0 / 0.35);
+  --shadow-xl:  0 24px 48px oklch(0 0 0 / 0.65), 0 8px 16px oklch(0 0 0 / 0.4);
+}
+
+/* ── Auto Dark Mode (system preference) — mirrors [data-theme="dark"] exactly ── */
+@media (prefers-color-scheme: dark) {
+  [data-theme="auto"] {
+    /* ── Surfaces ── */
+    --color-bg:              oklch(0.16 0 0);
+    --color-bg-subtle:       oklch(0.21 0 0);
+    --color-bg-muted:        oklch(0.25 0 0);
+    --color-fg:              oklch(0.97 0 0);
+    --color-fg-muted:        oklch(0.84 0 0);
+    --color-fg-subtle:       oklch(0.77 0 0);
+
+    /* ── Interactive: Primary ── */
+    --color-primary:         oklch(0.72 0.15 250);
+    --color-primary-hover:   oklch(0.78 0.13 250);
+    --color-primary-active:  oklch(0.84 0.11 250);
+    --color-primary-fg:      oklch(0.16 0.02 250);
+    --color-primary-subtle:  oklch(0.30 0.07 250);
+
+    /* ── Interactive: Secondary ── */
+    --color-secondary:       oklch(0.30 0 0);
+    --color-secondary-hover: oklch(0.36 0 0);
+    --color-secondary-fg:    oklch(0.96 0 0);
+
+    /* ── Interactive: Destructive ── */
+    --color-destructive:        oklch(0.73 0.16 27);
+    --color-destructive-hover:  oklch(0.79 0.14 27);
+    --color-destructive-fg:     oklch(0.15 0.02 27);
+    --color-destructive-subtle: oklch(0.32 0.09 27);
+
+    /* ── Feedback ── */
+    --color-success:         oklch(0.75 0.16 150);
+    --color-success-subtle:  oklch(0.30 0.07 150);
+    --color-warning:         oklch(0.82 0.14 85);
+    --color-warning-subtle:  oklch(0.32 0.06 85);
+    --color-info:            oklch(0.72 0.14 250);
+    --color-info-subtle:     oklch(0.30 0.07 250);
+
+    /* ── Borders ── */
+    --color-border:          oklch(0.40 0 0);
+    --color-border-strong:   oklch(0.60 0 0);
+    --color-ring:            oklch(0.80 0.13 250);
+
+    /* ── Shadows ── */
+    --shadow-xs:  0 1px 3px oklch(0 0 0 / 0.5);
+    --shadow-sm:  0 2px 6px oklch(0 0 0 / 0.55);
+    --shadow-md:  0 6px 12px oklch(0 0 0 / 0.55), 0 2px 4px oklch(0 0 0 / 0.35);
+    --shadow-lg:  0 12px 24px oklch(0 0 0 / 0.6), 0 4px 8px oklch(0 0 0 / 0.35);
+    --shadow-xl:  0 24px 48px oklch(0 0 0 / 0.65), 0 8px 16px oklch(0 0 0 / 0.4);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Focus visibility — an opaque, oversized ring on EVERY interactive control.
+   ══════════════════════════════════════════════════════════════════════════
+   The base ships a 2px `:focus-visible` ring; this theme re-asserts a stronger
+   3px opaque ring (offset by a 2px gap) on every interactive `data-ui` value so
+   focus is unmistakable regardless of surface. The `:root` prefix raises
+   specificity above each primitive's own `[data-ui="…"]:focus-visible` rule, so
+   this ring wins no matter the stylesheet load order.
+
+   Interactive set (kept in sync with tests/themes/contrast.test.ts):
+   button, link, input, textarea, select, checkbox, radio, switch, toggle,
+   slider, tabs, select-custom, date-picker. */
+:root [data-ui="button"]:focus-visible,
+:root [data-ui="link"]:focus-visible,
+:root [data-ui="input"]:focus-visible,
+:root [data-ui="textarea"]:focus-visible,
+:root [data-ui="select"]:focus-visible,
+:root [data-ui="checkbox"]:focus-visible,
+:root [data-ui="radio"]:focus-visible,
+:root [data-ui="switch"]:focus-visible,
+:root [data-ui="toggle"]:focus-visible,
+:root [data-ui="slider"] [data-part="thumb"]:focus-visible,
+:root [data-ui="tabs"] [data-part="trigger"]:focus-visible,
+:root [data-ui="select-custom"] [data-part="trigger"]:focus-visible,
+:root [data-ui="date-picker"] [data-part="input"]:focus-visible {
+  outline: 3px solid var(--color-ring);
+  outline-offset: 2px;
+}
+
+/* ── Honest disabled states ── */
+/* Perceptibly dimmed and marked not-allowed — never faded to invisibility. */
+:root [data-ui]:disabled,
+:root [data-ui][aria-disabled="true"],
+:root [data-ui][data-state="disabled"] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

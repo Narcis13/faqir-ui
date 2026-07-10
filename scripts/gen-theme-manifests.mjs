@@ -42,6 +42,14 @@ const SEED = {
     dark_mode: "native",
     pairs_with: ["default", "document"],
   },
+  contrast: {
+    version: "1.0.0",
+    // "accessible" + "wcag-aaa" are the tags agents select on for an a11y-first theme.
+    mood: ["accessible", "wcag-aaa", "high-contrast", "neutral"],
+    scheme: "both",
+    dark_mode: "native",
+    pairs_with: ["default", "document"],
+  },
   default: {
     version: "1.0.0",
     mood: ["neutral", "professional", "versatile"],
