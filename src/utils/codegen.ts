@@ -20,7 +20,7 @@ export async function regenerateFaqirInit(
     .join("\n");
 
   const entries = recipes
-    .map((r) => `  ${r}: ${controllerName(r)},`)
+    .map((r) => `  ${JSON.stringify(r)}: ${controllerName(r)},`)
     .join("\n");
 
   const content = `// @ui:core faqir

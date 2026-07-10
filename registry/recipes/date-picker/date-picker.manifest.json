@@ -1,9 +1,9 @@
 {
   "name": "date-picker",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "kind": "recipe",
   "category": "forms",
-  "description": "Date input with calendar dropdown for date selection",
+  "description": "Date input with calendar dropdown for date selection — the month grid is the nested `calendar` recipe",
 
   "anatomy": {
     "tag": "div",
@@ -24,47 +24,17 @@
       "tag_hint": "input",
       "description": "Text input displaying the selected date"
     },
+    "icon": {
+      "selector": "[data-part='icon']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Decorative calendar glyph inside the trigger (aria-hidden)"
+    },
     "calendar": {
       "selector": "[data-part='calendar']",
       "required": true,
       "tag_hint": "div",
-      "description": "Calendar dropdown container"
-    },
-    "header": {
-      "selector": "[data-part='header']",
-      "required": true,
-      "tag_hint": "div",
-      "description": "Calendar header with navigation and month label"
-    },
-    "nav-prev": {
-      "selector": "[data-part='nav-prev']",
-      "required": true,
-      "tag_hint": "button",
-      "description": "Navigate to previous month"
-    },
-    "nav-next": {
-      "selector": "[data-part='nav-next']",
-      "required": true,
-      "tag_hint": "button",
-      "description": "Navigate to next month"
-    },
-    "month-label": {
-      "selector": "[data-part='month-label']",
-      "required": true,
-      "tag_hint": "span",
-      "description": "Displays current month and year"
-    },
-    "grid": {
-      "selector": "[data-part='grid']",
-      "required": true,
-      "tag_hint": "table",
-      "description": "Calendar grid with role=grid"
-    },
-    "day": {
-      "selector": "[data-part='day']",
-      "required": true,
-      "tag_hint": "button",
-      "description": "Individual day button within the grid"
+      "description": "Calendar dropdown container. Canonically nests a [data-ui='calendar'] recipe that owns the header, month navigation and day grid; legacy markup with those parts placed directly inside this container keeps working"
     }
   },
 
@@ -91,7 +61,8 @@
     "required_attrs": [
       "aria-haspopup=\"dialog\" on input",
       "aria-expanded on input",
-      "role=\"grid\" on calendar grid",
+      "role=\"dialog\" and aria-label on the calendar container",
+      "role=\"grid\" on the nested calendar grid",
       "aria-label on day buttons with full date",
       "aria-label on nav-prev and nav-next",
       "aria-selected=\"true\" on selected day"
@@ -102,22 +73,25 @@
       "ArrowLeft": "focus previous day",
       "ArrowRight": "focus next day",
       "ArrowUp": "focus same day previous week",
-      "ArrowDown": "focus same day next week"
+      "ArrowDown": "focus same day next week",
+      "Home": "focus first day of the week",
+      "End": "focus last day of the week",
+      "PageUp": "focus same day previous month",
+      "PageDown": "focus same day next month"
     }
   },
 
   "tokens_used": [
-    "color-bg", "color-fg", "color-fg-muted", "color-fg-subtle",
-    "color-border", "color-primary", "color-primary-fg",
-    "color-primary-subtle", "color-ring",
-    "shadow-lg", "radius-md", "radius-lg", "radius-full",
+    "color-bg", "color-fg", "color-fg-muted",
+    "color-border", "color-primary", "color-ring",
+    "shadow-lg", "radius-md", "radius-lg",
     "space-1", "space-2", "space-3", "space-4",
-    "text-xs", "text-sm", "weight-medium",
+    "text-xs", "text-sm",
     "z-dropdown", "duration-fast", "ease-default"
   ],
 
   "templates": {
-    "html": "<div data-ui=\"date-picker\" data-state=\"closed\" data-size=\"{size}\">\n  <div data-part=\"trigger\">\n    <input data-part=\"input\" type=\"text\" placeholder=\"Select a date\" readonly aria-haspopup=\"dialog\" aria-expanded=\"false\" aria-label=\"Choose date\">\n    <span data-part=\"icon\" aria-hidden=\"true\">&#x1F4C5;</span>\n  </div>\n  <div data-part=\"calendar\" role=\"dialog\" aria-label=\"Date picker\" hidden>\n    <div data-part=\"header\">\n      <button data-part=\"nav-prev\" aria-label=\"Previous month\">&lsaquo;</button>\n      <span data-part=\"month-label\"></span>\n      <button data-part=\"nav-next\" aria-label=\"Next month\">&rsaquo;</button>\n    </div>\n    <table data-part=\"grid\" role=\"grid\" aria-label=\"Calendar\">\n      <thead><tr><th>Su</th><th>Mo</th><th>Tu</th><th>We</th><th>Th</th><th>Fr</th><th>Sa</th></tr></thead>\n      <tbody data-part=\"grid-body\"></tbody>\n    </table>\n  </div>\n</div>"
+    "html": "<div data-ui=\"date-picker\" data-state=\"closed\" data-size=\"{size}\">\n  <div data-part=\"trigger\">\n    <input data-part=\"input\" type=\"text\" placeholder=\"Select a date\" readonly aria-haspopup=\"dialog\" aria-expanded=\"false\" aria-label=\"Choose date\">\n    <span data-part=\"icon\" aria-hidden=\"true\">&#x1F4C5;</span>\n  </div>\n  <div data-part=\"calendar\" role=\"dialog\" aria-label=\"Date picker\" hidden>\n    <div data-ui=\"calendar\" data-size=\"{size}\">\n      <div data-part=\"header\">\n        <button data-part=\"nav-prev\" type=\"button\" aria-label=\"Previous month\">&lsaquo;</button>\n        <span data-part=\"month-label\"></span>\n        <button data-part=\"nav-next\" type=\"button\" aria-label=\"Next month\">&rsaquo;</button>\n      </div>\n      <table data-part=\"grid\" role=\"grid\" aria-label=\"Calendar\">\n        <thead><tr><th>Su</th><th>Mo</th><th>Tu</th><th>We</th><th>Th</th><th>Fr</th><th>Sa</th></tr></thead>\n        <tbody data-part=\"grid-body\"></tbody>\n      </table>\n    </div>\n  </div>\n</div>"
   },
 
   "safe_transforms": [
@@ -134,11 +108,12 @@
     "remove-grid-role",
     "remove-day-aria-labels",
     "remove-keyboard-navigation",
-    "remove-outside-click-handler"
+    "remove-outside-click-handler",
+    "duplicate-grid-logic-outside-calendar-recipe"
   ],
 
   "composition": {
-    "contains": ["button"],
+    "contains": ["calendar", "button"],
     "used_in": []
   },
 
@@ -165,6 +140,8 @@
     "grid-has-role-grid",
     "day-buttons-have-aria-label",
     "arrow-keys-navigate-days",
-    "generates-correct-calendar-grid"
+    "generates-correct-calendar-grid",
+    "delegates-grid-to-calendar-recipe",
+    "legacy-flat-markup-still-works"
   ]
 }

@@ -1,5 +1,6 @@
 /* @ui:component date-picker */
-/* @ui:tokens color-bg color-fg color-fg-muted color-fg-subtle color-border color-primary color-primary-fg color-primary-subtle color-ring shadow-lg radius-md radius-lg radius-full space-1 space-2 space-3 space-4 text-xs text-sm weight-medium z-dropdown duration-fast ease-default */
+/* @ui:tokens color-bg color-fg color-fg-muted color-border color-primary color-ring shadow-lg radius-md radius-lg space-1 space-2 space-3 space-4 text-xs text-sm z-dropdown duration-fast ease-default */
+/* The month grid inside the popup is the `calendar` recipe — see calendar.css */
 
 /* ── Root ── */
 [data-ui="date-picker"] {
@@ -51,7 +52,7 @@
   font-size: var(--text-sm);
 }
 
-/* ── Calendar ── */
+/* ── Calendar popup ── */
 [data-ui="date-picker"] [data-part="calendar"] {
   position: absolute;
   top: 100%;
@@ -74,161 +75,10 @@
   transform: translateY(0);
 }
 
-/* ── Calendar Header ── */
-[data-ui="date-picker"] [data-part="header"] {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--space-2, 0.5rem);
-  padding: 0 var(--space-1);
-}
-
-/* ── Month Label ── */
-[data-ui="date-picker"] [data-part="month-label"] {
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  color: var(--color-fg);
-  user-select: none;
-}
-
-/* ── Nav Buttons ── */
-[data-ui="date-picker"] [data-part="nav-prev"],
-[data-ui="date-picker"] [data-part="nav-next"] {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-bg);
-  color: var(--color-fg);
-  font-size: var(--text-sm);
-  cursor: pointer;
-  transition: background var(--duration-fast) var(--ease-default);
-}
-
-[data-ui="date-picker"] [data-part="nav-prev"]:hover,
-[data-ui="date-picker"] [data-part="nav-next"]:hover {
-  background: var(--color-bg-muted, oklch(0.96 0.004 260));
-}
-
-[data-ui="date-picker"] [data-part="nav-prev"]:focus-visible,
-[data-ui="date-picker"] [data-part="nav-next"]:focus-visible {
-  outline: 2px solid var(--color-ring, oklch(0.55 0.22 264 / 0.4));
-  outline-offset: 2px;
-}
-
-/* ── Grid (Table) ── */
-[data-ui="date-picker"] [data-part="grid"] {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-}
-
-[data-ui="date-picker"] [data-part="grid"] thead th {
-  width: 36px;
-  height: 28px;
-  font-size: var(--text-xs, 0.75rem);
-  font-weight: var(--weight-medium);
-  color: var(--color-fg-muted);
-  text-align: center;
-  user-select: none;
-}
-
-/* ── Day Button ── */
-[data-ui="date-picker"] [data-part="day"] {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  border: 1px solid transparent;
-  border-radius: var(--radius-full);
-  background: transparent;
-  color: var(--color-fg);
-  font-family: var(--font-sans, system-ui, sans-serif);
-  font-size: var(--text-sm);
-  cursor: pointer;
-  transition: background var(--duration-fast) var(--ease-default),
-              color var(--duration-fast) var(--ease-default),
-              border-color var(--duration-fast) var(--ease-default);
-}
-
-[data-ui="date-picker"] [data-part="day"]:hover {
-  background: var(--color-bg-muted, oklch(0.96 0.004 260));
-}
-
-[data-ui="date-picker"] [data-part="day"]:focus-visible {
-  outline: 2px solid var(--color-ring, oklch(0.55 0.22 264 / 0.4));
-  outline-offset: 2px;
-}
-
-/* ── Today ── */
-[data-ui="date-picker"] [data-part="day"][data-today="true"] {
-  border-color: var(--color-primary);
-  font-weight: var(--weight-medium);
-}
-
-/* ── Selected ── */
-[data-ui="date-picker"] [data-part="day"][aria-selected="true"] {
-  background: var(--color-primary);
-  color: var(--color-primary-fg);
-  border-color: var(--color-primary);
-}
-
-[data-ui="date-picker"] [data-part="day"][aria-selected="true"]:hover {
-  background: var(--color-primary);
-  color: var(--color-primary-fg);
-}
-
-/* ── Other month days ── */
-[data-ui="date-picker"] [data-part="day"][data-outside="true"] {
-  color: var(--color-fg-subtle, oklch(0.7 0 0));
-}
-
-/* ── Disabled days ── */
-[data-ui="date-picker"] [data-part="day"]:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-/* ── Grid cell ── */
-[data-ui="date-picker"] [data-part="grid"] td {
-  text-align: center;
-  padding: var(--space-0, 1px);
-}
-
 /* ── Size: Small ── */
 [data-ui="date-picker"][data-size="sm"] [data-part="input"] {
   padding: var(--space-1) var(--space-2);
   padding-inline-end: var(--space-6, 2rem);
-  font-size: var(--text-xs, 0.75rem);
-}
-
-[data-ui="date-picker"][data-size="sm"] [data-part="day"] {
-  width: 28px;
-  height: 28px;
-  font-size: var(--text-xs, 0.75rem);
-}
-
-[data-ui="date-picker"][data-size="sm"] [data-part="grid"] thead th {
-  width: 28px;
-  height: 24px;
-  font-size: 0.625rem;
-}
-
-[data-ui="date-picker"][data-size="sm"] [data-part="nav-prev"],
-[data-ui="date-picker"][data-size="sm"] [data-part="nav-next"] {
-  width: 24px;
-  height: 24px;
-  font-size: var(--text-xs, 0.75rem);
-}
-
-[data-ui="date-picker"][data-size="sm"] [data-part="month-label"] {
   font-size: var(--text-xs, 0.75rem);
 }
 
@@ -239,36 +89,10 @@
   font-size: var(--text-base, 1rem);
 }
 
-[data-ui="date-picker"][data-size="lg"] [data-part="day"] {
-  width: 44px;
-  height: 44px;
-  font-size: var(--text-base, 1rem);
-}
-
-[data-ui="date-picker"][data-size="lg"] [data-part="grid"] thead th {
-  width: 44px;
-  height: 32px;
-  font-size: var(--text-sm);
-}
-
-[data-ui="date-picker"][data-size="lg"] [data-part="nav-prev"],
-[data-ui="date-picker"][data-size="lg"] [data-part="nav-next"] {
-  width: 36px;
-  height: 36px;
-  font-size: var(--text-base, 1rem);
-}
-
-[data-ui="date-picker"][data-size="lg"] [data-part="month-label"] {
-  font-size: var(--text-base, 1rem);
-}
-
 /* ── Motion ── */
 @media (prefers-reduced-motion: reduce) {
   [data-ui="date-picker"] [data-part="calendar"],
-  [data-ui="date-picker"] [data-part="input"],
-  [data-ui="date-picker"] [data-part="day"],
-  [data-ui="date-picker"] [data-part="nav-prev"],
-  [data-ui="date-picker"] [data-part="nav-next"] {
+  [data-ui="date-picker"] [data-part="input"] {
     transition: none;
   }
 }

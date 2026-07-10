@@ -4,7 +4,7 @@
 // GENERATED FILE — DO NOT EDIT BY HAND.
 // Assembled by scripts/build-core.mjs (task 0.3-03) from:
 //   engine:      src/core-src/engine.js
-//   controllers: 20 recipe factories → accordion, alert-dialog, combobox, command-palette, date-picker, dialog, drawer, dropdown, input-otp, pagination, popover, qr-code, select-custom, sheet, sidebar, slider, table, tabs, toast, tooltip
+//   controllers: 21 recipe factories → accordion, alert-dialog, calendar, combobox, command-palette, date-picker, dialog, drawer, dropdown, input-otp, pagination, popover, qr-code, select-custom, sheet, sidebar, slider, table, tabs, toast, tooltip
 // Regenerate with: bun run build:core
 // Package version: 0.2.4
 // ============================================================================
@@ -1747,7 +1747,7 @@
   // registry/core/faqir-core.js — edit the recipe files (or this engine
   // source) and run `bun run build:core`. See CONTRIBUTING.md.
   // ── accordion ── (registry/recipes/accordion/accordion.js)
-  controllerRegistry["accordion"] = (function() {
+  var createAccordion = controllerRegistry["accordion"] = (function() {
 // @ui:controller accordion
 // @ui:provides toggle expand collapse expandAll collapseAll destroy
 
@@ -1856,7 +1856,7 @@ function createAccordion(root) {
   })();
 
   // ── alert-dialog ── (registry/recipes/alert-dialog/alert-dialog.js)
-  controllerRegistry["alert-dialog"] = (function() {
+  var createAlertDialog = controllerRegistry["alert-dialog"] = (function() {
 // @ui:controller alert-dialog
 // @ui:provides open close toggle destroy
 
@@ -1890,8 +1890,501 @@ function createAlertDialog(root) {
     return createAlertDialog;
   })();
 
+  // ── calendar ── (registry/recipes/calendar/calendar.js)
+  var createCalendar = controllerRegistry["calendar"] = (function() {
+// @ui:controller calendar
+// @ui:provides getValue setValue clear navigate selectDate focusDate setMin setMax setDisabledDates destroy
+
+const MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
+const DAY_NAMES = [
+  "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
+];
+
+function parseISO(str) {
+  if (!str) return null;
+  const d = new Date(str + "T00:00:00");
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function createCalendar(root) {
+  // Prevent double-init
+  if (root._faqirCalendar) return root._faqirCalendar;
+
+  const navPrev = root.querySelector("[data-part='nav-prev']");
+  const navNext = root.querySelector("[data-part='nav-next']");
+  const monthLabel = root.querySelector("[data-part='month-label']");
+  const gridBody = root.querySelector("[data-part='grid-body']");
+
+  const today = new Date();
+  const mode = root.dataset.mode === "range" ? "range" : "single";
+
+  let minDate = parseISO(root.dataset.min);
+  let maxDate = parseISO(root.dataset.max);
+  let disabledDates = parseDateList(root.dataset.disabledDates);
+
+  let selectedDate = null;
+  let rangeStart = null;
+  let rangeEnd = null;
+  if (root.dataset.value) {
+    if (mode === "range") {
+      const parts = root.dataset.value.split(",");
+      rangeStart = parseISO(parts[0] && parts[0].trim());
+      rangeEnd = parseISO(parts[1] && parts[1].trim());
+    } else {
+      selectedDate = parseISO(root.dataset.value);
+    }
+  }
+
+  const initialView = selectedDate || rangeStart || today;
+  let viewMonth = initialView.getMonth();
+  let viewYear = initialView.getFullYear();
+  let focusedDate = null;
+
+  function parseDateList(str) {
+    const set = new Set();
+    if (str) {
+      for (const token of str.split(/[\s,]+/)) {
+        if (parseISO(token)) set.add(token);
+      }
+    }
+    return set;
+  }
+
+  function formatDate(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }
+
+  function formatAriaLabel(date) {
+    return `${DAY_NAMES[date.getDay()]}, ${MONTH_NAMES[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+  }
+
+  function isSameDay(a, b) {
+    if (!a || !b) return false;
+    return (
+      a.getFullYear() === b.getFullYear() &&
+      a.getMonth() === b.getMonth() &&
+      a.getDate() === b.getDate()
+    );
+  }
+
+  function isToday(date) {
+    return isSameDay(date, today);
+  }
+
+  function isDisabled(date) {
+    if (minDate && date.getTime() < minDate.getTime()) return true;
+    if (maxDate && date.getTime() > maxDate.getTime()) return true;
+    return disabledDates.has(formatDate(date));
+  }
+
+  function clampToRange(date) {
+    if (minDate && date.getTime() < minDate.getTime()) return new Date(minDate);
+    if (maxDate && date.getTime() > maxDate.getTime()) return new Date(maxDate);
+    return date;
+  }
+
+  function buildGrid() {
+    // First day of the displayed month
+    const firstDay = new Date(viewYear, viewMonth, 1);
+    const startDow = firstDay.getDay(); // 0=Sun
+
+    // Last day of the displayed month
+    const lastDay = new Date(viewYear, viewMonth + 1, 0);
+    const totalDays = lastDay.getDate();
+
+    // Previous month trailing days
+    const prevMonthLast = new Date(viewYear, viewMonth, 0);
+    const prevMonthDays = prevMonthLast.getDate();
+
+    // Update label
+    if (monthLabel) monthLabel.textContent = `${MONTH_NAMES[viewMonth]} ${viewYear}`;
+
+    // A whole adjacent month out of bounds means its nav button is a dead end
+    if (navPrev) navPrev.disabled = !!(minDate && prevMonthLast.getTime() < minDate.getTime());
+    if (navNext) navNext.disabled = !!(maxDate && new Date(viewYear, viewMonth + 1, 1).getTime() > maxDate.getTime());
+
+    // Clear existing
+    gridBody.innerHTML = "";
+
+    let dayCount = 1;
+    let nextMonthDay = 1;
+    const totalCells = Math.ceil((startDow + totalDays) / 7) * 7;
+    let row = null;
+
+    for (let i = 0; i < totalCells; i++) {
+      // Start a new row every 7 cells
+      if (i % 7 === 0) {
+        row = document.createElement("tr");
+        gridBody.appendChild(row);
+      }
+
+      const td = document.createElement("td");
+      const btn = document.createElement("button");
+      btn.setAttribute("data-part", "day");
+      btn.type = "button";
+
+      let date;
+      let isOutside = false;
+
+      if (i < startDow) {
+        // Previous month
+        const day = prevMonthDays - startDow + 1 + i;
+        date = new Date(viewYear, viewMonth - 1, day);
+        btn.textContent = day;
+        isOutside = true;
+      } else if (dayCount <= totalDays) {
+        // Current month
+        date = new Date(viewYear, viewMonth, dayCount);
+        btn.textContent = dayCount;
+        dayCount++;
+      } else {
+        // Next month
+        date = new Date(viewYear, viewMonth + 1, nextMonthDay);
+        btn.textContent = nextMonthDay;
+        nextMonthDay++;
+        isOutside = true;
+      }
+
+      btn.dataset.date = formatDate(date);
+      btn.setAttribute("aria-label", formatAriaLabel(date));
+
+      if (isOutside) {
+        btn.dataset.outside = "true";
+      }
+
+      if (isToday(date)) {
+        btn.dataset.today = "true";
+      }
+
+      if (isDisabled(date)) {
+        // aria-disabled (not the native attribute) keeps the cell reachable by
+        // the roving tabindex while blocking selection
+        btn.setAttribute("aria-disabled", "true");
+        btn.dataset.disabled = "true";
+      }
+
+      if (mode === "range") {
+        if (isSameDay(date, rangeStart)) {
+          btn.dataset.state = "range-start";
+          btn.setAttribute("aria-selected", "true");
+        } else if (isSameDay(date, rangeEnd)) {
+          btn.dataset.state = "range-end";
+          btn.setAttribute("aria-selected", "true");
+        } else if (
+          rangeStart && rangeEnd &&
+          date.getTime() > rangeStart.getTime() &&
+          date.getTime() < rangeEnd.getTime()
+        ) {
+          btn.dataset.state = "in-range";
+        }
+      } else if (isSameDay(date, selectedDate)) {
+        btn.setAttribute("aria-selected", "true");
+      }
+
+      if (isSameDay(date, focusedDate)) {
+        btn.tabIndex = 0;
+      } else {
+        btn.tabIndex = -1;
+      }
+
+      td.appendChild(btn);
+      row.appendChild(td);
+    }
+
+    // If no focused date set, make the selected or first-of-month focusable
+    if (!focusedDate) {
+      const anchor = mode === "range" ? rangeStart : selectedDate;
+      const defaultFocusDate = anchor &&
+        anchor.getMonth() === viewMonth && anchor.getFullYear() === viewYear
+        ? anchor
+        : new Date(viewYear, viewMonth, 1);
+      const defaultBtn = gridBody.querySelector(
+        `[data-date="${formatDate(defaultFocusDate)}"]`
+      );
+      if (defaultBtn) defaultBtn.tabIndex = 0;
+    }
+  }
+
+  function dayButton(date) {
+    return gridBody.querySelector(`[data-date="${formatDate(date)}"]`);
+  }
+
+  function focusDate(date) {
+    const target = clampToRange(new Date(date));
+    focusedDate = target;
+
+    if (target.getMonth() !== viewMonth || target.getFullYear() !== viewYear) {
+      viewMonth = target.getMonth();
+      viewYear = target.getFullYear();
+      buildGrid();
+    } else {
+      // Update roving tabindex in the current grid
+      gridBody.querySelectorAll("[data-part='day']").forEach((btn) => {
+        btn.tabIndex = -1;
+      });
+      const btn = dayButton(target);
+      if (btn) btn.tabIndex = 0;
+    }
+
+    const btn = dayButton(target);
+    if (btn) btn.focus();
+  }
+
+  function moveFocus(days) {
+    if (!focusedDate) return;
+    const next = new Date(focusedDate);
+    next.setDate(next.getDate() + days);
+    focusDate(next);
+  }
+
+  /** Move focus ±N months (PageUp/Down), clamping the day to the target month's length. */
+  function moveFocusMonths(months) {
+    if (!focusedDate) return;
+    const target = new Date(focusedDate.getFullYear(), focusedDate.getMonth() + months, 1);
+    const daysInTarget = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate();
+    target.setDate(Math.min(focusedDate.getDate(), daysInTarget));
+    focusDate(target);
+  }
+
+  function selectDate(date) {
+    const chosen = new Date(date);
+    if (isDisabled(chosen)) return;
+
+    // buildGrid() replaces the focused button — restore focus before emitting,
+    // so change listeners (e.g. date-picker closing the popup) keep the final
+    // word on where focus lands.
+    const hadFocus = root.contains(document.activeElement);
+    focusedDate = chosen;
+
+    let detail = null;
+
+    if (mode === "range") {
+      if (!rangeStart || rangeEnd || chosen.getTime() < rangeStart.getTime()) {
+        // First click, restart after a complete range, or backwards pick
+        rangeStart = chosen;
+        rangeEnd = null;
+      } else {
+        rangeEnd = chosen;
+        detail = {
+          start: formatDate(rangeStart),
+          end: formatDate(rangeEnd),
+          startObj: new Date(rangeStart),
+          endObj: new Date(rangeEnd),
+        };
+      }
+    } else {
+      selectedDate = chosen;
+      detail = { date: formatDate(selectedDate), dateObj: new Date(selectedDate) };
+    }
+
+    buildGrid();
+
+    if (hadFocus) {
+      const btn = dayButton(chosen);
+      if (btn) btn.focus();
+    }
+
+    if (detail) {
+      root.dispatchEvent(
+        new CustomEvent("faqir:calendar-change", { detail, bubbles: true })
+      );
+    }
+  }
+
+  function getValue() {
+    if (mode === "range") {
+      return {
+        start: rangeStart ? formatDate(rangeStart) : null,
+        end: rangeEnd ? formatDate(rangeEnd) : null,
+      };
+    }
+    return selectedDate ? formatDate(selectedDate) : null;
+  }
+
+  /** Silent set — updates selection and view without emitting a change event. */
+  function setValue(value) {
+    if (mode === "range") {
+      const parts = String(value).split(",");
+      const start = parseISO(parts[0] && parts[0].trim());
+      const end = parseISO(parts[1] && parts[1].trim());
+      if (!start) return;
+      rangeStart = start;
+      rangeEnd = end && end.getTime() >= start.getTime() ? end : null;
+      viewMonth = start.getMonth();
+      viewYear = start.getFullYear();
+      buildGrid();
+      return;
+    }
+
+    const parsed = parseISO(value);
+    if (!parsed) return;
+    selectedDate = parsed;
+    viewMonth = parsed.getMonth();
+    viewYear = parsed.getFullYear();
+    buildGrid();
+  }
+
+  function clear() {
+    selectedDate = null;
+    rangeStart = null;
+    rangeEnd = null;
+    buildGrid();
+  }
+
+  function navigate(month, year) {
+    viewMonth = month;
+    viewYear = year;
+    focusedDate = new Date(viewYear, viewMonth, 1);
+    buildGrid();
+
+    const btn = dayButton(focusedDate);
+    if (btn) btn.focus();
+  }
+
+  function setMin(value) {
+    minDate = parseISO(value);
+    buildGrid();
+  }
+
+  function setMax(value) {
+    maxDate = parseISO(value);
+    buildGrid();
+  }
+
+  function setDisabledDates(list) {
+    disabledDates = parseDateList(Array.isArray(list) ? list.join(",") : list);
+    buildGrid();
+  }
+
+  /** Show an adjacent month without moving DOM focus (nav-button clicks). */
+  function shiftView(delta) {
+    viewMonth += delta;
+    if (viewMonth < 0) {
+      viewMonth = 11;
+      viewYear--;
+    } else if (viewMonth > 11) {
+      viewMonth = 0;
+      viewYear++;
+    }
+    focusedDate = clampToRange(new Date(viewYear, viewMonth, 1));
+    buildGrid();
+  }
+
+  function onPrevClick() {
+    shiftView(-1);
+  }
+
+  function onNextClick() {
+    shiftView(1);
+  }
+
+  function onGridClick(e) {
+    const dayBtn = e.target.closest("[data-part='day']");
+    if (dayBtn && dayBtn.dataset.date && dayBtn.getAttribute("aria-disabled") !== "true") {
+      selectDate(parseISO(dayBtn.dataset.date));
+    }
+  }
+
+  function onKeyDown(e) {
+    // Grid navigation only applies while a day cell has focus
+    const dayBtn = e.target.closest ? e.target.closest("[data-part='day']") : null;
+    if (!dayBtn) return;
+
+    if (dayBtn.dataset.date && !isSameDay(focusedDate, parseISO(dayBtn.dataset.date))) {
+      focusedDate = parseISO(dayBtn.dataset.date);
+    }
+
+    switch (e.key) {
+      case "ArrowLeft":
+        e.preventDefault();
+        moveFocus(-1);
+        break;
+      case "ArrowRight":
+        e.preventDefault();
+        moveFocus(1);
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        moveFocus(-7);
+        break;
+      case "ArrowDown":
+        e.preventDefault();
+        moveFocus(7);
+        break;
+      case "Home":
+        e.preventDefault();
+        if (focusedDate) moveFocus(-focusedDate.getDay());
+        break;
+      case "End":
+        e.preventDefault();
+        if (focusedDate) moveFocus(6 - focusedDate.getDay());
+        break;
+      case "PageUp":
+        e.preventDefault();
+        if (e.shiftKey) {
+          moveFocusMonths(-12);
+        } else {
+          moveFocusMonths(-1);
+        }
+        break;
+      case "PageDown":
+        e.preventDefault();
+        if (e.shiftKey) {
+          moveFocusMonths(12);
+        } else {
+          moveFocusMonths(1);
+        }
+        break;
+      case "Enter":
+      case " ":
+        e.preventDefault();
+        if (focusedDate) selectDate(focusedDate);
+        break;
+    }
+  }
+
+  navPrev?.addEventListener("click", onPrevClick);
+  navNext?.addEventListener("click", onNextClick);
+  gridBody?.addEventListener("click", onGridClick);
+  root.addEventListener("keydown", onKeyDown);
+
+  buildGrid();
+
+  function destroy() {
+    navPrev?.removeEventListener("click", onPrevClick);
+    navNext?.removeEventListener("click", onNextClick);
+    gridBody?.removeEventListener("click", onGridClick);
+    root.removeEventListener("keydown", onKeyDown);
+    delete root._faqirCalendar;
+  }
+
+  const api = {
+    getValue,
+    setValue,
+    clear,
+    navigate,
+    selectDate,
+    focusDate,
+    setMin,
+    setMax,
+    setDisabledDates,
+    destroy,
+  };
+  root._faqirCalendar = api;
+  return api;
+}
+    return createCalendar;
+  })();
+
   // ── combobox ── (registry/recipes/combobox/combobox.js)
-  controllerRegistry["combobox"] = (function() {
+  var createCombobox = controllerRegistry["combobox"] = (function() {
 // @ui:controller combobox
 // @ui:provides open close filter selectOption getValue setValue destroy
 
@@ -2099,7 +2592,7 @@ function createCombobox(root) {
   })();
 
   // ── command-palette ── (registry/recipes/command-palette/command-palette.js)
-  controllerRegistry["command-palette"] = (function() {
+  var createCommandPalette = controllerRegistry["command-palette"] = (function() {
 // @ui:controller command-palette
 // @ui:provides open close filter selectItem registerCommand destroy
 
@@ -2349,7 +2842,7 @@ function createCommandPalette(root) {
   })();
 
   // ── date-picker ── (registry/recipes/date-picker/date-picker.js)
-  controllerRegistry["date-picker"] = (function() {
+  var createDatePicker = controllerRegistry["date-picker"] = (function() {
 // @ui:controller date-picker
 // @ui:provides open close getValue setValue navigate selectDate destroy
 
@@ -2358,182 +2851,52 @@ const MONTH_NAMES = [
   "July", "August", "September", "October", "November", "December",
 ];
 
-const DAY_NAMES = [
-  "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
-];
-
 function createDatePicker(root) {
   // Prevent double-init
   if (root._faqirDatePicker) return root._faqirDatePicker;
 
   const trigger = root.querySelector("[data-part='trigger']");
   const input = root.querySelector("[data-part='input']");
-  const calendar = root.querySelector("[data-part='calendar']");
-  const navPrev = root.querySelector("[data-part='nav-prev']");
-  const navNext = root.querySelector("[data-part='nav-next']");
-  const monthLabel = root.querySelector("[data-part='month-label']");
-  const gridBody = root.querySelector("[data-part='grid-body']");
+  const popup = root.querySelector("[data-part='calendar']");
+
+  // The month grid is the standalone `calendar` recipe. Canonical markup nests
+  // [data-ui="calendar"] inside the popup; legacy flat markup (grid parts
+  // directly inside the popup) still works — the popup itself then acts as the
+  // calendar root.
+  const calendarRoot = root.querySelector("[data-ui='calendar']") || popup;
+  const calendar = createCalendar(calendarRoot);
 
   const today = new Date();
-  let viewMonth = today.getMonth();
-  let viewYear = today.getFullYear();
-  let selectedDate = null;
-  let focusedDate = null;
   let outsideClickCleanup = null;
-
-  function formatDate(date) {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, "0");
-    const d = String(date.getDate()).padStart(2, "0");
-    return `${y}-${m}-${d}`;
-  }
 
   function formatDisplay(date) {
     return `${MONTH_NAMES[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
   }
 
-  function formatAriaLabel(date) {
-    return `${DAY_NAMES[date.getDay()]}, ${MONTH_NAMES[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
-  }
-
-  function isSameDay(a, b) {
-    if (!a || !b) return false;
-    return (
-      a.getFullYear() === b.getFullYear() &&
-      a.getMonth() === b.getMonth() &&
-      a.getDate() === b.getDate()
-    );
-  }
-
-  function isToday(date) {
-    return isSameDay(date, today);
-  }
-
-  function buildCalendar() {
-    // First day of the displayed month
-    const firstDay = new Date(viewYear, viewMonth, 1);
-    const startDow = firstDay.getDay(); // 0=Sun
-
-    // Last day of the displayed month
-    const lastDay = new Date(viewYear, viewMonth + 1, 0);
-    const totalDays = lastDay.getDate();
-
-    // Previous month trailing days
-    const prevMonthLast = new Date(viewYear, viewMonth, 0);
-    const prevMonthDays = prevMonthLast.getDate();
-
-    // Update label
-    monthLabel.textContent = `${MONTH_NAMES[viewMonth]} ${viewYear}`;
-
-    // Clear existing
-    gridBody.innerHTML = "";
-
-    let dayCount = 1;
-    let nextMonthDay = 1;
-    const totalCells = Math.ceil((startDow + totalDays) / 7) * 7;
-
-    for (let i = 0; i < totalCells; i++) {
-      // Start a new row every 7 cells
-      if (i % 7 === 0) {
-        var row = document.createElement("tr");
-        gridBody.appendChild(row);
-      }
-
-      const td = document.createElement("td");
-      const btn = document.createElement("button");
-      btn.setAttribute("data-part", "day");
-      btn.type = "button";
-
-      let date;
-      let isOutside = false;
-
-      if (i < startDow) {
-        // Previous month
-        const day = prevMonthDays - startDow + 1 + i;
-        date = new Date(viewYear, viewMonth - 1, day);
-        btn.textContent = day;
-        isOutside = true;
-      } else if (dayCount <= totalDays) {
-        // Current month
-        date = new Date(viewYear, viewMonth, dayCount);
-        btn.textContent = dayCount;
-        dayCount++;
-      } else {
-        // Next month
-        date = new Date(viewYear, viewMonth + 1, nextMonthDay);
-        btn.textContent = nextMonthDay;
-        nextMonthDay++;
-        isOutside = true;
-      }
-
-      btn.dataset.date = formatDate(date);
-      btn.setAttribute("aria-label", formatAriaLabel(date));
-
-      if (isOutside) {
-        btn.dataset.outside = "true";
-      }
-
-      if (isToday(date)) {
-        btn.dataset.today = "true";
-      }
-
-      if (isSameDay(date, selectedDate)) {
-        btn.setAttribute("aria-selected", "true");
-      }
-
-      if (isSameDay(date, focusedDate)) {
-        btn.tabIndex = 0;
-      } else {
-        btn.tabIndex = -1;
-      }
-
-      td.appendChild(btn);
-      row.appendChild(td);
-    }
-
-    // If no focused date set, make the selected or first-of-month focusable
-    if (!focusedDate) {
-      const defaultFocusDate = selectedDate
-        ? (selectedDate.getMonth() === viewMonth && selectedDate.getFullYear() === viewYear ? selectedDate : new Date(viewYear, viewMonth, 1))
-        : new Date(viewYear, viewMonth, 1);
-      const defaultBtn = gridBody.querySelector(
-        `[data-date="${formatDate(defaultFocusDate)}"]`
-      );
-      if (defaultBtn) defaultBtn.tabIndex = 0;
-    }
+  function syncInput(dateStr, dateObj) {
+    input.value = formatDisplay(dateObj);
+    input.dataset.value = dateStr;
   }
 
   function open() {
     root.dataset.state = "open";
-    calendar.hidden = false;
+    popup.hidden = false;
     input.setAttribute("aria-expanded", "true");
 
-    // Set view to selected date month or current month
-    if (selectedDate) {
-      viewMonth = selectedDate.getMonth();
-      viewYear = selectedDate.getFullYear();
-    } else {
-      viewMonth = today.getMonth();
-      viewYear = today.getFullYear();
-    }
-
-    focusedDate = selectedDate || new Date(viewYear, viewMonth, 1);
-    buildCalendar();
-
-    // Focus the current/selected day
-    const focusBtn = gridBody.querySelector(
-      `[data-date="${formatDate(focusedDate)}"]`
-    );
-    if (focusBtn) focusBtn.focus();
+    // Focus the selected day, or the first of the current month
+    const value = calendar.getValue();
+    const target = value
+      ? new Date(value + "T00:00:00")
+      : new Date(today.getFullYear(), today.getMonth(), 1);
+    calendar.focusDate(target);
 
     outsideClickCleanup = onOutsideClick(root, close);
   }
 
   function close() {
     root.dataset.state = "closed";
-    calendar.hidden = true;
+    popup.hidden = true;
     input.setAttribute("aria-expanded", "false");
-    focusedDate = null;
 
     if (outsideClickCleanup) {
       outsideClickCleanup();
@@ -2542,80 +2905,40 @@ function createDatePicker(root) {
   }
 
   function selectDate(date) {
-    selectedDate = new Date(date);
-    input.value = formatDisplay(selectedDate);
-    input.dataset.value = formatDate(selectedDate);
-    buildCalendar();
-    close();
-    input.focus();
-
-    root.dispatchEvent(
-      new CustomEvent("faqir:date-change", {
-        detail: { date: formatDate(selectedDate), dateObj: selectedDate },
-        bubbles: true,
-      })
-    );
+    // Delegates to the calendar; input update, close and the faqir:date-change
+    // re-emit all happen in onCalendarChange.
+    calendar.selectDate(date);
   }
 
   function getValue() {
-    return selectedDate ? formatDate(selectedDate) : null;
+    return calendar.getValue();
   }
 
   function setValue(dateStr) {
     const parsed = new Date(dateStr + "T00:00:00");
     if (!isNaN(parsed.getTime())) {
-      selectedDate = parsed;
-      input.value = formatDisplay(selectedDate);
-      input.dataset.value = formatDate(selectedDate);
-      viewMonth = selectedDate.getMonth();
-      viewYear = selectedDate.getFullYear();
-      if (root.dataset.state === "open") {
-        buildCalendar();
-      }
+      calendar.setValue(dateStr);
+      syncInput(dateStr, parsed);
     }
   }
 
   function navigate(month, year) {
-    viewMonth = month;
-    viewYear = year;
-    focusedDate = new Date(viewYear, viewMonth, 1);
-    buildCalendar();
-
-    const focusBtn = gridBody.querySelector(
-      `[data-date="${formatDate(focusedDate)}"]`
-    );
-    if (focusBtn) focusBtn.focus();
+    calendar.navigate(month, year);
   }
 
-  function moveFocus(days) {
-    if (!focusedDate) return;
-    const newDate = new Date(focusedDate);
-    newDate.setDate(newDate.getDate() + days);
-    focusedDate = newDate;
+  // Event: calendar selection committed
+  function onCalendarChange(e) {
+    if (!e.detail || !e.detail.date) return;
+    syncInput(e.detail.date, e.detail.dateObj);
+    close();
+    input.focus();
 
-    // Navigate month if needed
-    if (newDate.getMonth() !== viewMonth || newDate.getFullYear() !== viewYear) {
-      viewMonth = newDate.getMonth();
-      viewYear = newDate.getFullYear();
-      buildCalendar();
-    } else {
-      // Update tabindex in current grid
-      gridBody.querySelectorAll("[data-part='day']").forEach((btn) => {
-        btn.tabIndex = -1;
-      });
-      const targetBtn = gridBody.querySelector(
-        `[data-date="${formatDate(newDate)}"]`
-      );
-      if (targetBtn) {
-        targetBtn.tabIndex = 0;
-        targetBtn.focus();
-      }
-    }
-
-    const targetBtn = gridBody.querySelector(
-      `[data-date="${formatDate(newDate)}"]`
+    root.dispatchEvent(
+      new CustomEvent("faqir:date-change", {
+        detail: { date: e.detail.date, dateObj: e.detail.dateObj },
+        bubbles: true,
+      })
     );
-    if (targetBtn) targetBtn.focus();
   }
 
   // Event: trigger/input click
@@ -2627,72 +2950,7 @@ function createDatePicker(root) {
     }
   }
 
-  // Event: day click
-  function onGridClick(e) {
-    const dayBtn = e.target.closest("[data-part='day']");
-    if (dayBtn && dayBtn.dataset.date) {
-      const date = new Date(dayBtn.dataset.date + "T00:00:00");
-      selectDate(date);
-    }
-  }
-
-  // Event: nav prev
-  function onPrevClick() {
-    viewMonth--;
-    if (viewMonth < 0) {
-      viewMonth = 11;
-      viewYear--;
-    }
-    focusedDate = new Date(viewYear, viewMonth, 1);
-    buildCalendar();
-  }
-
-  // Event: nav next
-  function onNextClick() {
-    viewMonth++;
-    if (viewMonth > 11) {
-      viewMonth = 0;
-      viewYear++;
-    }
-    focusedDate = new Date(viewYear, viewMonth, 1);
-    buildCalendar();
-  }
-
-  // Event: keyboard within calendar
-  function onCalendarKeyDown(e) {
-    switch (e.key) {
-      case "ArrowLeft":
-        e.preventDefault();
-        moveFocus(-1);
-        break;
-      case "ArrowRight":
-        e.preventDefault();
-        moveFocus(1);
-        break;
-      case "ArrowUp":
-        e.preventDefault();
-        moveFocus(-7);
-        break;
-      case "ArrowDown":
-        e.preventDefault();
-        moveFocus(7);
-        break;
-      case "Enter":
-      case " ":
-        e.preventDefault();
-        if (focusedDate) {
-          selectDate(focusedDate);
-        }
-        break;
-      case "Escape":
-        e.preventDefault();
-        close();
-        input.focus();
-        break;
-    }
-  }
-
-  // Event: escape on root
+  // Event: escape on root (bubbles up from the calendar grid too)
   function onRootKeyDown(e) {
     if (e.key === "Escape" && root.dataset.state === "open") {
       e.preventDefault();
@@ -2702,20 +2960,15 @@ function createDatePicker(root) {
   }
 
   trigger?.addEventListener("click", onTriggerClick);
-  gridBody?.addEventListener("click", onGridClick);
-  navPrev?.addEventListener("click", onPrevClick);
-  navNext?.addEventListener("click", onNextClick);
-  calendar?.addEventListener("keydown", onCalendarKeyDown);
+  root.addEventListener("faqir:calendar-change", onCalendarChange);
   root.addEventListener("keydown", onRootKeyDown);
 
   function destroy() {
     trigger?.removeEventListener("click", onTriggerClick);
-    gridBody?.removeEventListener("click", onGridClick);
-    navPrev?.removeEventListener("click", onPrevClick);
-    navNext?.removeEventListener("click", onNextClick);
-    calendar?.removeEventListener("keydown", onCalendarKeyDown);
+    root.removeEventListener("faqir:calendar-change", onCalendarChange);
     root.removeEventListener("keydown", onRootKeyDown);
     if (outsideClickCleanup) outsideClickCleanup();
+    calendar.destroy();
     delete root._faqirDatePicker;
   }
 
@@ -2727,7 +2980,7 @@ function createDatePicker(root) {
   })();
 
   // ── dialog ── (registry/recipes/dialog/dialog.js)
-  controllerRegistry["dialog"] = (function() {
+  var createDialog = controllerRegistry["dialog"] = (function() {
 // @ui:controller dialog
 // @ui:provides open close toggle destroy
 
@@ -2931,7 +3184,7 @@ function createDialog(root) {
   })();
 
   // ── drawer ── (registry/recipes/drawer/drawer.js)
-  controllerRegistry["drawer"] = (function() {
+  var createDrawer = controllerRegistry["drawer"] = (function() {
 // @ui:controller drawer
 // @ui:provides open close toggle destroy
 
@@ -3053,7 +3306,7 @@ function createDrawer(root) {
   })();
 
   // ── dropdown ── (registry/recipes/dropdown/dropdown.js)
-  controllerRegistry["dropdown"] = (function() {
+  var createDropdown = controllerRegistry["dropdown"] = (function() {
 // @ui:controller dropdown
 // @ui:provides open close toggle destroy
 
@@ -3183,7 +3436,7 @@ function createDropdown(root) {
   })();
 
   // ── input-otp ── (registry/recipes/input-otp/input-otp.js)
-  controllerRegistry["input-otp"] = (function() {
+  var createInputOTP = controllerRegistry["input-otp"] = (function() {
 // @ui:controller input-otp
 // @ui:provides getValue setValue clear focus destroy
 
@@ -3565,7 +3818,7 @@ function clampInt(raw, fallback, lo, hi) {
   })();
 
   // ── pagination ── (registry/recipes/pagination/pagination.js)
-  controllerRegistry["pagination"] = (function() {
+  var createPagination = controllerRegistry["pagination"] = (function() {
 // @ui:controller pagination
 // @ui:provides setPage getPage setTotal destroy
 
@@ -3692,7 +3945,7 @@ function createPagination(root) {
   })();
 
   // ── popover ── (registry/recipes/popover/popover.js)
-  controllerRegistry["popover"] = (function() {
+  var createPopover = controllerRegistry["popover"] = (function() {
 // @ui:controller popover
 // @ui:provides open close toggle destroy
 
@@ -3770,7 +4023,7 @@ function createPopover(root) {
   })();
 
   // ── qr-code ── (registry/recipes/qr-code/qr-code.js)
-  controllerRegistry["qr-code"] = (function() {
+  var createQRCode = controllerRegistry["qr-code"] = (function() {
 // @ui:controller qr-code
 // @ui:provides render update destroy
 
@@ -4245,7 +4498,7 @@ function createQRCode(root) {
   })();
 
   // ── select-custom ── (registry/recipes/select-custom/select-custom.js)
-  controllerRegistry["select-custom"] = (function() {
+  var createSelectCustom = controllerRegistry["select-custom"] = (function() {
 // @ui:controller select-custom
 // @ui:provides open close toggle select getValue destroy
 
@@ -4502,7 +4755,7 @@ function createSelectCustom(root) {
   })();
 
   // ── sheet ── (registry/recipes/sheet/sheet.js)
-  controllerRegistry["sheet"] = (function() {
+  var createSheet = controllerRegistry["sheet"] = (function() {
 // @ui:controller sheet
 // @ui:provides open close toggle destroy
 
@@ -4609,7 +4862,7 @@ function createSheet(root) {
   })();
 
   // ── sidebar ── (registry/recipes/sidebar/sidebar.js)
-  controllerRegistry["sidebar"] = (function() {
+  var createSidebar = controllerRegistry["sidebar"] = (function() {
 // @ui:controller sidebar
 // @ui:provides toggle expand collapse open close isMobile getState destroy
 
@@ -4828,7 +5081,7 @@ function createSidebar(root) {
   })();
 
   // ── slider ── (registry/recipes/slider/slider.js)
-  controllerRegistry["slider"] = (function() {
+  var createSlider = controllerRegistry["slider"] = (function() {
 // @ui:controller slider
 // @ui:provides setValue getValue getValues setFormatter destroy
 
@@ -5199,7 +5452,7 @@ function numAttr(el, key, fallback) {
   })();
 
   // ── table ── (registry/recipes/table/table.js)
-  controllerRegistry["table"] = (function() {
+  var createTable = controllerRegistry["table"] = (function() {
 // @ui:controller table
 // @ui:provides sort selectRow selectAll deselectAll getSelected destroy
 
@@ -5436,7 +5689,7 @@ function createTable(root) {
   })();
 
   // ── tabs ── (registry/recipes/tabs/tabs.js)
-  controllerRegistry["tabs"] = (function() {
+  var createTabs = controllerRegistry["tabs"] = (function() {
 // @ui:controller tabs
 // @ui:provides activate destroy
 
@@ -5527,7 +5780,7 @@ function createTabs(root) {
   })();
 
   // ── toast ── (registry/recipes/toast/toast.js)
-  controllerRegistry["toast"] = (function() {
+  var createToastContainer = controllerRegistry["toast"] = (function() {
 // @ui:controller toast
 // @ui:provides add dismiss dismissAll destroy
 
@@ -5695,7 +5948,7 @@ function createToastContainer(root) {
   })();
 
   // ── tooltip ── (registry/recipes/tooltip/tooltip.js)
-  controllerRegistry["tooltip"] = (function() {
+  var createTooltip = controllerRegistry["tooltip"] = (function() {
 // @ui:controller tooltip
 // @ui:provides show hide destroy
 

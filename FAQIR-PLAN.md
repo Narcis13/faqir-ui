@@ -74,7 +74,7 @@ done in any order (or in parallel worktrees).
 | 0.4-07 | Recipe: `slider` | ✅ |
 | 0.4-08 | Recipe: `sidebar` | ✅ |
 | 0.4-09 | Recipe: `input-otp` | ✅ |
-| 0.4-10 | Recipe: `calendar` (extracted from date-picker) | ⬜ |
+| 0.4-10 | Recipe: `calendar` (extracted from date-picker) | ✅ |
 | 0.4-11 | Transitions 2.0: `data-motion` presets + `motion-presets.css` + `faqir-collapse` | ⬜ |
 | 0.4-12 | Theme manifests (`*.theme.json`) for all existing themes | ⬜ |
 | 0.4-13 | New themes: `aurora`, `slate` | ⬜ |
@@ -675,9 +675,9 @@ min/max/disabled dates), then make date-picker consume it. Must not regress date
 - Range-selection groundwork: selecting start then end sets `data-state` on in-between cells (even if date-picker only uses single).
 
 **Acceptance criteria**
-- [ ] `faqir add calendar` installs standalone; `faqir add date-picker` resolves the dependency automatically.
-- [ ] No duplicated grid logic between the two recipes.
-- [ ] Both reference pages audit-clean; date-picker behavior unchanged.
+- [x] `faqir add calendar` installs standalone; `faqir add date-picker` resolves the dependency automatically.
+- [x] No duplicated grid logic between the two recipes.
+- [x] Both reference pages audit-clean; date-picker behavior unchanged.
 
 ---
 

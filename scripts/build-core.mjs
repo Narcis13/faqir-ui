@@ -128,11 +128,19 @@ function assertSingleSourceOfTruth(engineSrc, engineRel, controllers) {
   }
 }
 
-/** Render one controller as a collision-safe, self-registering IIFE. */
+/**
+ * Render one controller as a collision-safe, self-registering IIFE.
+ *
+ * The factory is also bound to its exported name (`var createCalendar = …`) in
+ * the engine closure, so recipes that import another recipe's factory (e.g.
+ * date-picker importing createCalendar) still resolve after their import lines
+ * are stripped — the reference is only evaluated when the factory runs, well
+ * after every controller has been assigned.
+ */
 function renderController(c) {
   return (
     `  // ── ${c.name} ── (${c.label})\n` +
-    `  controllerRegistry[${JSON.stringify(c.name)}] = (function() {\n` +
+    `  var ${c.factory} = controllerRegistry[${JSON.stringify(c.name)}] = (function() {\n` +
     `${c.body}\n` +
     `    return ${c.factory};\n` +
     `  })();`
@@ -202,14 +210,21 @@ export function buildCore(opts = {}) {
     }
   }
 
-  // Stable order + duplicate detection, both keyed by controller name.
+  // Stable order + duplicate detection, keyed by controller name AND factory
+  // name (factories become closure-scoped `var` bindings — a duplicate would
+  // silently alias one recipe to another).
   found.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
   const seen = new Map();
+  const seenFactories = new Map();
   for (const c of found) {
     if (seen.has(c.name)) {
       throw new Error(`duplicate controller "${c.name}": ${seen.get(c.name)} and ${c.label}`);
     }
     seen.set(c.name, c.label);
+    if (seenFactories.has(c.factory)) {
+      throw new Error(`duplicate factory "${c.factory}": ${seenFactories.get(c.factory)} and ${c.label}`);
+    }
+    seenFactories.set(c.factory, c.label);
   }
 
   // Controllers live only in registry/recipes — the engine must carry no inline copy.
