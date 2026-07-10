@@ -28,7 +28,7 @@
   font-family: var(--font-sans, system-ui, sans-serif);
   font-size: var(--text-base);
   font-weight: var(--weight-medium);
-  text-align: left;
+  text-align: start;
   cursor: pointer;
   transition: color var(--duration-normal) var(--ease-default);
 }

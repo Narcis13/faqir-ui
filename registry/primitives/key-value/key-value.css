@@ -41,7 +41,7 @@
 
 [data-ui="key-value"][data-variant="horizontal"] [data-part="value"],
 [data-ui="key-value"]:not([data-variant]) [data-part="value"] {
-  text-align: right;
+  text-align: end;
 }
 
 /* ── Variant: Vertical ── */
@@ -69,7 +69,7 @@
 }
 
 [data-ui="key-value"][data-variant="inline"] [data-part="value"] {
-  margin-right: var(--kv-grid-gap);
+  margin-inline-end: var(--kv-grid-gap);
 }
 
 /* ── Grid Columns ── */
@@ -95,7 +95,7 @@
 }
 
 [data-ui="key-value"][data-cols] [data-part="value"] {
-  text-align: right;
+  text-align: end;
 }
 
 /* ── Size: Small ── */

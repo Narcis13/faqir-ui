@@ -18,7 +18,7 @@
 /* ── Header Cell ── */
 [data-ui="table"] [data-part="th"] {
   padding: var(--space-3) var(--space-4);
-  text-align: left;
+  text-align: start;
   font-size: var(--text-sm);
   font-weight: var(--weight-semibold);
   color: var(--color-fg-muted);
@@ -41,13 +41,13 @@
 [data-ui="table"] [data-part="th"][data-sortable]::after {
   content: "";
   display: inline-block;
-  margin-left: var(--space-2);
+  margin-inline-start: var(--space-2);
   width: 0;
   height: 0;
   vertical-align: middle;
   opacity: 0.3;
-  border-left: 4px solid transparent;
-  border-right: 4px solid transparent;
+  border-inline-start: 4px solid transparent;
+  border-inline-end: 4px solid transparent;
   border-bottom: 5px solid currentColor;
 }
 
@@ -141,7 +141,7 @@
 
 /* ── Cell Alignment ── */
 [data-ui="table"] [data-align="left"] {
-  text-align: left;
+  text-align: start;
 }
 
 [data-ui="table"] [data-align="center"] {
@@ -149,14 +149,14 @@
 }
 
 [data-ui="table"] [data-align="right"] {
-  text-align: right;
+  text-align: end;
 }
 
 /* ── Number Formatting ── */
 [data-ui="table"] [data-format="number"],
 [data-ui="table"] [data-format="currency"],
 [data-ui="table"] [data-format="percent"] {
-  text-align: right;
+  text-align: end;
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
 }

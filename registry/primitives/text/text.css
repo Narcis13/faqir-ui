@@ -77,7 +77,7 @@
 
 [data-ui="text"][data-align="right"],
 [data-ui="heading"][data-align="right"] {
-  text-align: right;
+  text-align: end;
 }
 
 /* Monospace variant */

@@ -246,8 +246,8 @@
     max-width: 100%;
     border-radius: 0;
     box-shadow: none;
-    border-left: none;
-    border-right: none;
+    border-inline-start: none;
+    border-inline-end: none;
   }
 
   [data-ui="auth-form"] [data-part="social"] {

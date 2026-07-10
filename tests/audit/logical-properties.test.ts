@@ -10,8 +10,9 @@
 // the escape hatch and is never flagged.
 
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
+import { Glob } from "bun";
 import { rmSync, mkdirSync, writeFileSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, basename } from "node:path";
 import {
   findLogicalPropertyViolations,
   PHYSICAL_TO_LOGICAL_PROPERTY,
@@ -215,25 +216,98 @@ describe("logical-properties · repair round-trip", () => {
   });
 });
 
-// ── Registry reproduction (acceptance criterion) ──
-// Running the rule on the registry reproduces the known button-group and table
-// findings. 0.3-10 fixes them; here we only assert they are surfaced.
-describe("logical-properties · registry reproduction", () => {
-  it("reproduces the button-group corner-radius / margin findings in button.css", () => {
-    const css = readFileSync(join(REGISTRY, "primitives/button/button.css"), "utf8");
-    const v = findLogicalPropertyViolations(css);
-    const tos = v.map(x => x.to);
-    expect(tos).toContain("border-start-start-radius"); // border-top-left-radius
-    expect(tos).toContain("border-end-start-radius");   // border-bottom-left-radius
-    expect(tos).toContain("border-start-end-radius");   // border-top-right-radius
-    expect(tos).toContain("border-end-end-radius");     // border-bottom-right-radius
-    expect(tos).toContain("margin-inline-start");        // margin-left: -1px
+// ═══════════════════════════════════════════════════════════════════════════
+// Registry self-audit — permanent CI gate  [task 0.3-10]
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// 0.3-09 shipped the rule; 0.3-10 remediated every registry offender (140 physical
+// declarations across 28 stylesheets → logical). This gate keeps the registry clean
+// forever: any physical, direction-bound property reintroduced into registry/**/*.css
+// (outside a [dir=…] escape hatch) fails CI. It scans the source registry directly —
+// buildLogicalPropertyResults is exactly what `faqir audit` runs per component CSS.
+describe("logical-properties · registry self-audit (permanent CI gate)", () => {
+  const cssFiles = [...new Glob("**/*.css").scanSync(REGISTRY)].sort();
+
+  it("scans the full registry stylesheet set", () => {
+    expect(cssFiles.length).toBeGreaterThan(20);
   });
 
-  it("reproduces the crud-table margin findings", () => {
-    const css = readFileSync(join(REGISTRY, "patterns/crud-table/crud-table.css"), "utf8");
-    const v = findLogicalPropertyViolations(css);
-    expect(v.length).toBeGreaterThan(0);
-    expect(v.map(x => x.from).every(p => p === "margin-left" || p === "margin-right")).toBe(true);
+  it("has ZERO logical-properties findings across registry/**/*.css", () => {
+    const offenders: string[] = [];
+    for (const rel of cssFiles) {
+      const css = readFileSync(join(REGISTRY, rel), "utf8");
+      for (const r of buildLogicalPropertyResults(css, basename(rel, ".css"), rel)) {
+        offenders.push(`${rel}:${r.line} — ${r.message}`);
+      }
+    }
+    // A non-empty list means a physical, direction-bound property was reintroduced.
+    // Fix it with `faqir repair`, or scope it under an explicit [dir="ltr"|"rtl"].
+    expect(offenders).toEqual([]);
+  });
+});
+
+// ── button-group renders correctly in RTL (acceptance criterion, task 0.3-10) ──
+// The classic offender: group corners and the -1px border overlap must follow the
+// writing direction. After 0.3-10 the group rules are fully logical, so the first
+// child rounds on its inline-start side and the last on its inline-end side — correct
+// in both LTR and RTL. (Manually verified: button.html under dir="rtl".)
+describe("logical-properties · button-group RTL correctness", () => {
+  const buttonCss = readFileSync(join(REGISTRY, "primitives/button/button.css"), "utf8");
+
+  it("button.css is free of physical, direction-bound properties", () => {
+    expect(findLogicalPropertyViolations(buttonCss)).toHaveLength(0);
+  });
+
+  it("the button-group rules use logical corner-radius / margin properties", () => {
+    // Slice from the button-group section so the assertions target the group rules.
+    const group = buttonCss.slice(buttonCss.indexOf('[data-ui="button-group"]'));
+    expect(group).toContain("border-start-start-radius: 0;");
+    expect(group).toContain("border-end-start-radius: 0;");
+    expect(group).toContain("margin-inline-start: -1px;");
+    expect(group).toContain("border-start-end-radius: 0;");
+    expect(group).toContain("border-end-end-radius: 0;");
+    // …and none of the physical originals survive.
+    expect(group).not.toContain("border-top-left-radius");
+    expect(group).not.toContain("border-bottom-left-radius");
+    expect(group).not.toContain("border-top-right-radius");
+    expect(group).not.toContain("border-bottom-right-radius");
+    expect(group).not.toContain("margin-left");
+  });
+});
+
+// ── dir="rtl" on the demo pages doesn't error (task 0.3-10) ──
+// Lightweight happy-dom smoke test: load every component demo fragment under an
+// rtl-scoped root and assert it parses without throwing and inherits the direction.
+// Full visual RTL coverage arrives with 0.4-23.
+describe("logical-properties · dir=rtl demo pages don't error", () => {
+  const demoHtml = [...new Glob("{primitives,recipes,patterns}/*/*.html").scanSync(REGISTRY)].sort();
+
+  it("finds the component demo fragments", () => {
+    expect(demoHtml.length).toBeGreaterThan(20);
+  });
+
+  it("parses every demo fragment under dir=rtl without throwing", () => {
+    for (const rel of demoHtml) {
+      const html = readFileSync(join(REGISTRY, rel), "utf8");
+      const root = document.createElement("div");
+      root.setAttribute("dir", "rtl");
+      expect(() => { root.innerHTML = html; }).not.toThrow();
+      document.body.appendChild(root);
+      // Every component root resolves the rtl direction from its rtl-scoped ancestor.
+      for (const el of root.querySelectorAll("[data-ui]")) {
+        expect(el.closest('[dir="rtl"]')).toBe(root);
+      }
+      document.body.removeChild(root);
+    }
+  });
+
+  it("button-group demo carries its three buttons under dir=rtl", () => {
+    const html = readFileSync(join(REGISTRY, "primitives/button/button.html"), "utf8");
+    const root = document.createElement("div");
+    root.setAttribute("dir", "rtl");
+    root.innerHTML = html;
+    const group = root.querySelector('[data-ui="button-group"]');
+    expect(group).not.toBeNull();
+    expect(group!.querySelectorAll('[data-ui="button"]').length).toBe(3);
   });
 });

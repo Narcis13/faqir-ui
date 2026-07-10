@@ -53,7 +53,7 @@
   font-size: var(--text-sm);
   color: var(--color-fg-muted);
   min-width: 3ch;
-  text-align: right;
+  text-align: end;
 }
 
 /* ── Reduced Motion ── */

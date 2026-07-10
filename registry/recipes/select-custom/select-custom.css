@@ -40,7 +40,7 @@
 /* ── Value ── */
 [data-ui="select-custom"] [data-part="value"] {
   flex: 1;
-  text-align: left;
+  text-align: start;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -65,8 +65,8 @@
 [data-ui="select-custom"] [data-part="listbox"] {
   position: absolute;
   top: 100%;
-  left: 0;
-  right: 0;
+  inset-inline-start: 0;
+  inset-inline-end: 0;
   z-index: var(--z-dropdown);
   margin-top: var(--space-1);
   padding: var(--space-1);

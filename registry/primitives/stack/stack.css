@@ -120,7 +120,7 @@
 }
 
 [data-ui="stack"][data-align-text="right"] {
-  text-align: right;
+  text-align: end;
 }
 
 /* ── Label in horizontal stacks ── */

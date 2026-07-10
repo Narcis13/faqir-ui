@@ -39,7 +39,7 @@
 [data-ui="dropdown"] [data-part="menu"] {
   position: absolute;
   top: 100%;
-  left: 0;
+  inset-inline-start: 0;
   z-index: var(--z-dropdown);
   min-width: 180px;
   margin-top: var(--space-1);
@@ -61,8 +61,8 @@
 
 /* ── Alignment ── */
 [data-ui="dropdown"] [data-part="menu"][data-variant="end"] {
-  left: auto;
-  right: 0;
+  inset-inline-start: auto;
+  inset-inline-end: 0;
 }
 
 /* ── Menu Item ── */
@@ -78,7 +78,7 @@
   color: var(--color-fg);
   font-family: var(--font-sans, system-ui, sans-serif);
   font-size: var(--text-sm);
-  text-align: left;
+  text-align: start;
   cursor: pointer;
   white-space: nowrap;
   transition: background var(--duration-fast) var(--ease-default);

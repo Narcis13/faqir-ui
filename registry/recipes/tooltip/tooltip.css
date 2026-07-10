@@ -29,7 +29,7 @@
 /* Default position (top) when no variant is specified */
 [data-ui="tooltip"]:not([data-variant]) [data-part="content"] {
   bottom: 100%;
-  left: 50%;
+  inset-inline-start: 50%;
   transform: translateX(-50%) translateY(-4px) scale(0.95);
   margin-bottom: 4px;
 }
@@ -56,14 +56,14 @@
 /* Default arrow (top) when no variant */
 [data-ui="tooltip"]:not([data-variant]) [data-part="content"]::before {
   bottom: -4px;
-  left: 50%;
-  margin-left: -4px;
+  inset-inline-start: 50%;
+  margin-inline-start: -4px;
 }
 
 /* ── Position: Top ── */
 [data-ui="tooltip"][data-variant="top"] [data-part="content"] {
   bottom: 100%;
-  left: 50%;
+  inset-inline-start: 50%;
   transform: translateX(-50%) translateY(-4px) scale(0.95);
   margin-bottom: 4px;
 }
@@ -74,14 +74,14 @@
 
 [data-ui="tooltip"][data-variant="top"] [data-part="content"]::before {
   bottom: -4px;
-  left: 50%;
-  margin-left: -4px;
+  inset-inline-start: 50%;
+  margin-inline-start: -4px;
 }
 
 /* ── Position: Bottom ── */
 [data-ui="tooltip"][data-variant="bottom"] [data-part="content"] {
   top: 100%;
-  left: 50%;
+  inset-inline-start: 50%;
   transform: translateX(-50%) translateY(4px) scale(0.95);
   margin-top: 4px;
 }
@@ -92,16 +92,16 @@
 
 [data-ui="tooltip"][data-variant="bottom"] [data-part="content"]::before {
   top: -4px;
-  left: 50%;
-  margin-left: -4px;
+  inset-inline-start: 50%;
+  margin-inline-start: -4px;
 }
 
 /* ── Position: Left ── */
 [data-ui="tooltip"][data-variant="left"] [data-part="content"] {
-  right: 100%;
+  inset-inline-end: 100%;
   top: 50%;
   transform: translateY(-50%) translateX(-4px) scale(0.95);
-  margin-right: 4px;
+  margin-inline-end: 4px;
 }
 
 [data-ui="tooltip"][data-variant="left"][data-state="visible"] [data-part="content"] {
@@ -109,17 +109,17 @@
 }
 
 [data-ui="tooltip"][data-variant="left"] [data-part="content"]::before {
-  right: -4px;
+  inset-inline-end: -4px;
   top: 50%;
   margin-top: -4px;
 }
 
 /* ── Position: Right ── */
 [data-ui="tooltip"][data-variant="right"] [data-part="content"] {
-  left: 100%;
+  inset-inline-start: 100%;
   top: 50%;
   transform: translateY(-50%) translateX(4px) scale(0.95);
-  margin-left: 4px;
+  margin-inline-start: 4px;
 }
 
 [data-ui="tooltip"][data-variant="right"][data-state="visible"] [data-part="content"] {
@@ -127,7 +127,7 @@
 }
 
 [data-ui="tooltip"][data-variant="right"] [data-part="content"]::before {
-  left: -4px;
+  inset-inline-start: -4px;
   top: 50%;
   margin-top: -4px;
 }

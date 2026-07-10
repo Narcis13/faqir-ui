@@ -33,15 +33,15 @@
   gap: var(--space-2);
   padding: var(--space-4);
   background: var(--color-bg-subtle);
-  border-right: 1px solid var(--color-border);
+  border-inline-end: 1px solid var(--color-border);
   overflow-y: auto;
   transition: width var(--duration-slow) var(--ease-out),
               padding var(--duration-slow) var(--ease-out);
 }
 
 [data-ui="dashboard-shell"][data-variant="right"] [data-part="sidebar"] {
-  border-right: none;
-  border-left: 1px solid var(--color-border);
+  border-inline-end: none;
+  border-inline-start: 1px solid var(--color-border);
 }
 
 /* ── Sidebar Collapsed ── */
@@ -132,7 +132,7 @@
 
 /* ── Nav Badge Positioning ── */
 [data-ui="dashboard-shell"] [data-part="nav-item"] [data-ui="badge"] {
-  margin-left: auto;
+  margin-inline-start: auto;
 }
 
 /* ── Sidebar User ── */
@@ -172,7 +172,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  margin-left: auto;
+  margin-inline-start: auto;
 }
 
 /* ── User Menu ── */
@@ -210,7 +210,7 @@
 }
 
 [data-ui="dashboard-shell"] [data-part="activity-item"] [data-ui="badge"] {
-  margin-left: auto;
+  margin-inline-start: auto;
 }
 
 /* ── Footer ── */
@@ -247,7 +247,7 @@
   [data-ui="dashboard-shell"] [data-part="sidebar"] {
     position: fixed;
     top: 0;
-    left: 0;
+    inset-inline-start: 0;
     bottom: 0;
     width: var(--shell-sidebar-width, 16rem);
     z-index: var(--z-overlay, 200);
@@ -257,10 +257,10 @@
   }
 
   [data-ui="dashboard-shell"][data-variant="right"] [data-part="sidebar"] {
-    left: auto;
-    right: 0;
-    border-left: 1px solid var(--color-border);
-    border-right: none;
+    inset-inline-start: auto;
+    inset-inline-end: 0;
+    border-inline-start: 1px solid var(--color-border);
+    border-inline-end: none;
     transform: translateX(100%);
   }
 

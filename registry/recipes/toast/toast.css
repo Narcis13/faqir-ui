@@ -16,26 +16,26 @@
 /* ── Position Variants ── */
 [data-ui="toast"][data-variant="top-right"] {
   top: 0;
-  right: 0;
+  inset-inline-end: 0;
   align-items: flex-end;
 }
 
 [data-ui="toast"][data-variant="top-left"] {
   top: 0;
-  left: 0;
+  inset-inline-start: 0;
   align-items: flex-start;
 }
 
 [data-ui="toast"][data-variant="bottom-right"] {
   bottom: 0;
-  right: 0;
+  inset-inline-end: 0;
   align-items: flex-end;
   flex-direction: column-reverse;
 }
 
 [data-ui="toast"][data-variant="bottom-left"] {
   bottom: 0;
-  left: 0;
+  inset-inline-start: 0;
   align-items: flex-start;
   flex-direction: column-reverse;
 }
@@ -98,7 +98,7 @@
 
 /* ── Tone Variants ── */
 [data-ui="toast"] [data-part="toast"][data-variant="success"] {
-  border-left: 3px solid var(--color-success, oklch(0.55 0.18 145));
+  border-inline-start: 3px solid var(--color-success, oklch(0.55 0.18 145));
 }
 
 [data-ui="toast"] [data-part="toast"][data-variant="success"] [data-part="icon"] {
@@ -106,7 +106,7 @@
 }
 
 [data-ui="toast"] [data-part="toast"][data-variant="error"] {
-  border-left: 3px solid var(--color-destructive, oklch(0.55 0.22 25));
+  border-inline-start: 3px solid var(--color-destructive, oklch(0.55 0.22 25));
 }
 
 [data-ui="toast"] [data-part="toast"][data-variant="error"] [data-part="icon"] {
@@ -114,7 +114,7 @@
 }
 
 [data-ui="toast"] [data-part="toast"][data-variant="warning"] {
-  border-left: 3px solid var(--color-warning, oklch(0.7 0.18 85));
+  border-inline-start: 3px solid var(--color-warning, oklch(0.7 0.18 85));
 }
 
 [data-ui="toast"] [data-part="toast"][data-variant="warning"] [data-part="icon"] {

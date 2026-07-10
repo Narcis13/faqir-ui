@@ -79,19 +79,19 @@
 }
 
 [data-ui="input-group"] [data-part="prefix"] {
-  left: 0;
+  inset-inline-start: 0;
 }
 
 [data-ui="input-group"] [data-part="suffix"] {
-  right: 0;
+  inset-inline-end: 0;
 }
 
 [data-ui="input-group"]:has([data-part="prefix"]) [data-ui="input"] {
-  padding-left: var(--space-10, 2.5rem);
+  padding-inline-start: var(--space-10, 2.5rem);
 }
 
 [data-ui="input-group"]:has([data-part="suffix"]) [data-ui="input"] {
-  padding-right: var(--space-10, 2.5rem);
+  padding-inline-end: var(--space-10, 2.5rem);
 }
 
 /* ── Width Variants ── */

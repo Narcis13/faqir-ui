@@ -18,7 +18,7 @@
 [data-ui="date-picker"] [data-part="input"] {
   width: 100%;
   padding: var(--space-2, 0.5rem) var(--space-3);
-  padding-right: var(--space-8, 2.5rem);
+  padding-inline-end: var(--space-8, 2.5rem);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-bg);
@@ -43,7 +43,7 @@
 /* ── Icon ── */
 [data-ui="date-picker"] [data-part="icon"] {
   position: absolute;
-  right: var(--space-3);
+  inset-inline-end: var(--space-3);
   top: 50%;
   transform: translateY(-50%);
   pointer-events: none;
@@ -55,7 +55,7 @@
 [data-ui="date-picker"] [data-part="calendar"] {
   position: absolute;
   top: 100%;
-  left: 0;
+  inset-inline-start: 0;
   z-index: var(--z-dropdown);
   margin-top: var(--space-1);
   padding: var(--space-3);
@@ -205,7 +205,7 @@
 /* ── Size: Small ── */
 [data-ui="date-picker"][data-size="sm"] [data-part="input"] {
   padding: var(--space-1) var(--space-2);
-  padding-right: var(--space-6, 2rem);
+  padding-inline-end: var(--space-6, 2rem);
   font-size: var(--text-xs, 0.75rem);
 }
 
@@ -235,7 +235,7 @@
 /* ── Size: Large ── */
 [data-ui="date-picker"][data-size="lg"] [data-part="input"] {
   padding: var(--space-3) var(--space-4);
-  padding-right: var(--space-10, 3rem);
+  padding-inline-end: var(--space-10, 3rem);
   font-size: var(--text-base, 1rem);
 }
 

@@ -7,7 +7,7 @@
   gap: var(--callout-padding-y);
   padding: var(--callout-padding-y) var(--callout-padding-x);
   border-radius: var(--callout-radius);
-  border-left: var(--callout-border-left-width) solid;
+  border-inline-start: var(--callout-border-left-width) solid;
   font-family: var(--doc-font, var(--font-sans, system-ui, sans-serif));
   font-size: var(--callout-font-size);
   line-height: var(--doc-line-height, 1.5);
@@ -46,7 +46,7 @@
 /* ── Variant: Info (default) ── */
 [data-ui="callout"][data-variant="info"],
 [data-ui="callout"]:not([data-variant]) {
-  border-left-color: var(--color-info, oklch(0.55 0.18 240));
+  border-inline-start-color: var(--color-info, oklch(0.55 0.18 240));
   background: var(--color-info-subtle, oklch(0.96 0.03 240));
   color: var(--callout-fg);
 }
@@ -58,7 +58,7 @@
 
 /* ── Variant: Warning ── */
 [data-ui="callout"][data-variant="warning"] {
-  border-left-color: var(--color-warning, oklch(0.72 0.17 70));
+  border-inline-start-color: var(--color-warning, oklch(0.72 0.17 70));
   background: var(--color-warning-subtle, oklch(0.97 0.04 85));
   color: var(--callout-fg);
 }
@@ -69,7 +69,7 @@
 
 /* ── Variant: Destructive ── */
 [data-ui="callout"][data-variant="destructive"] {
-  border-left-color: var(--color-destructive, oklch(0.58 0.22 27));
+  border-inline-start-color: var(--color-destructive, oklch(0.58 0.22 27));
   background: var(--color-destructive-subtle, oklch(0.97 0.03 25));
   color: var(--callout-fg);
 }
@@ -80,7 +80,7 @@
 
 /* ── Variant: Success ── */
 [data-ui="callout"][data-variant="success"] {
-  border-left-color: var(--color-success, oklch(0.62 0.19 145));
+  border-inline-start-color: var(--color-success, oklch(0.62 0.19 145));
   background: var(--color-success-subtle, oklch(0.97 0.03 150));
   color: var(--callout-fg);
 }
@@ -91,7 +91,7 @@
 
 /* ── Variant: Muted ── */
 [data-ui="callout"][data-variant="muted"] {
-  border-left-color: var(--color-border, oklch(0.87 0.006 260));
+  border-inline-start-color: var(--color-border, oklch(0.87 0.006 260));
   background: var(--callout-bg);
   color: var(--color-fg-muted);
 }
@@ -105,7 +105,7 @@
   [data-ui="callout"] {
     background: none !important;
     border: var(--callout-border-width) solid var(--doc-print-border-color, var(--color-border, #ccc));
-    border-left: var(--callout-border-left-width) solid;
+    border-inline-start: var(--callout-border-left-width) solid;
     break-inside: avoid;
   }
 }

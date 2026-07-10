@@ -72,5 +72,5 @@
 }
 
 [data-ui="surface"][data-align-text="right"] {
-  text-align: right;
+  text-align: end;
 }

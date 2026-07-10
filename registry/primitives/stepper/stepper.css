@@ -46,7 +46,7 @@
 [data-ui="stepper"] [data-part="label"] {
   font-size: var(--text-xs);
   color: var(--color-fg-muted);
-  margin-left: var(--space-1);
+  margin-inline-start: var(--space-1);
   white-space: nowrap;
 }
 
@@ -98,7 +98,7 @@
 }
 
 [data-ui="stepper"][data-size="sm"][data-variant="vertical"] [data-part="connector"] {
-  margin-left: calc(0.75rem - 1px);
+  margin-inline-start: calc(0.75rem - 1px);
 }
 
 /* ── Size: large ── */
@@ -109,7 +109,7 @@
 }
 
 [data-ui="stepper"][data-size="lg"][data-variant="vertical"] [data-part="connector"] {
-  margin-left: calc(1.25rem - 1px);
+  margin-inline-start: calc(1.25rem - 1px);
 }
 
 /* ── Responsive: hide labels on mobile ── */

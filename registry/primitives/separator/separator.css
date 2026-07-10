@@ -12,7 +12,7 @@
 /* ── Vertical ── */
 [data-ui="separator"][data-variant="vertical"] {
   border-top: none;
-  border-left: 1px solid var(--color-border);
+  border-inline-start: 1px solid var(--color-border);
   width: auto;
   height: 100%;
   align-self: stretch;
@@ -47,7 +47,7 @@ div[data-ui="separator"]::after {
 
 [data-ui="separator"][data-style="dashed"][data-variant="vertical"] {
   border-top-style: none;
-  border-left-style: dashed;
+  border-inline-start-style: dashed;
 }
 
 div[data-ui="separator"][data-style="dashed"]::before,
@@ -62,7 +62,7 @@ div[data-ui="separator"][data-style="dashed"]::after {
 
 [data-ui="separator"][data-style="dotted"][data-variant="vertical"] {
   border-top-style: none;
-  border-left-style: dotted;
+  border-inline-start-style: dotted;
 }
 
 div[data-ui="separator"][data-style="dotted"]::before,
@@ -77,7 +77,7 @@ div[data-ui="separator"][data-style="dotted"]::after {
 
 [data-ui="separator"][data-style="thick"][data-variant="vertical"] {
   border-top-width: 0;
-  border-left-width: 2px;
+  border-inline-start-width: 2px;
 }
 
 div[data-ui="separator"][data-style="thick"]::before,

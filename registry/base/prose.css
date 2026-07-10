@@ -80,21 +80,21 @@
 }
 
 [data-ui="prose"] blockquote {
-  border-left: 3px solid var(--color-border-strong);
-  padding-left: var(--space-4);
+  border-inline-start: 3px solid var(--color-border-strong);
+  padding-inline-start: var(--space-4);
   color: var(--color-fg-muted);
   margin-block: var(--space-4);
 }
 
 [data-ui="prose"] ul {
   list-style: disc;
-  padding-left: var(--space-6);
+  padding-inline-start: var(--space-6);
   margin-block: var(--space-4);
 }
 
 [data-ui="prose"] ol {
   list-style: decimal;
-  padding-left: var(--space-6);
+  padding-inline-start: var(--space-6);
   margin-block: var(--space-4);
 }
 
@@ -121,7 +121,7 @@
 
 [data-ui="prose"] th {
   font-weight: var(--weight-semibold);
-  text-align: left;
+  text-align: start;
   padding: var(--space-2) var(--space-3);
   border-bottom: 2px solid var(--color-border-strong);
 }
