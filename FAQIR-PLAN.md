@@ -799,9 +799,15 @@ browser.
 - Non-oklch or var-indirection values resolve through the token graph (alias → semantic → palette) before computing.
 
 **Acceptance criteria**
-- [ ] All shipped themes pass (or get fixed in-session with a note).
-- [ ] Ratio math unit-tested against published WCAG examples.
-- [ ] Token-graph resolution handles the 3-layer alias chain.
+- [x] All shipped themes pass (or get fixed in-session with a note).
+- [x] Ratio math unit-tested against published WCAG examples.
+- [x] Token-graph resolution handles the 3-layer alias chain.
+
+> Fixed in-session (3 dark-mode pairs the new gate caught below 4.5:1): `default`
+> dark primary label flipped to dark ink on the luminous accent (was white, 3.4:1);
+> `default`/`paper`/`midnight` dark `--color-destructive` darkened one step so white
+> stays legible (was 3.6/4.0/3.6:1). Interactive hover/active pairs are intentionally
+> out of scope for this general gate — they're covered by the AAA `contrast` theme (0.4-14).
 
 ---
 

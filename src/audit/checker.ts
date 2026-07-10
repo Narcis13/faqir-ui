@@ -7,6 +7,7 @@ import { extractTokenReferences, collectDefinedTokens, hasReducedMotionQuery, ha
 import { findExternalImports, findDataFetching } from "../parser/js-parser";
 import { loadManifest, type Manifest } from "../manifest";
 import { type AuditResult, type Severity, ALL_RULES, DOCUMENT_RULES, NO_FETCH_RULE, NO_EXTERNAL_IMPORT_RULE, LOGICAL_PROPERTIES_RULE } from "./rules";
+import { checkThemeContrast, CONTRAST_TOKENS_RULE } from "./contrast-tokens";
 import { readConfig } from "../utils/config";
 import { getRegistryPath } from "../utils/fs";
 
@@ -160,6 +161,12 @@ export async function runAudit(options: AuditOptions = {}): Promise<AuditSummary
     results.push(...jsApResults.filter(r => !skipRules.has(r.rule_id)));
   }
 
+  // Theme contrast check: the active theme's token pairs must clear WCAG AA.
+  if (!skipRules.has(CONTRAST_TOKENS_RULE.id)) {
+    const contrastResults = await checkContrastTokens(outputDir, config.theme, cwd);
+    results.push(...contrastResults);
+  }
+
   // Count severities
   const counts: Record<Severity, number> = { critical: 0, error: 0, warning: 0, info: 0 };
   for (const r of results) {
@@ -280,6 +287,42 @@ async function checkTokens(
   }
 
   return results;
+}
+
+/**
+ * Static WCAG-AA contrast gate over the active theme's token pairs (task 0.4-16).
+ *
+ * The active theme lands at `<output>/tokens/theme.css`; the base palette /
+ * semantic / aliases tokens live beside it. We hand both to `checkThemeContrast`,
+ * which resolves each declared pair through the token graph and computes the
+ * ratio from the oklch values — no browser. If the theme file isn't present
+ * (nothing installed yet), there's nothing to check.
+ */
+async function checkContrastTokens(
+  outputDir: string,
+  themeName: string,
+  cwd: string,
+): Promise<AuditResult[]> {
+  const tokenDir = join(outputDir, "tokens");
+  const themePath = join(tokenDir, "theme.css");
+  if (!existsSync(themePath)) return [];
+
+  // Base token layers the theme inherits from and resolves var() chains into.
+  const baseParts: string[] = [];
+  for (const name of ["palette.css", "semantic.css", "aliases.css"]) {
+    const p = join(tokenDir, name);
+    if (existsSync(p)) baseParts.push(await Bun.file(p).text());
+  }
+  // Without the palette/semantic base there's nothing to resolve against.
+  if (baseParts.length === 0) return [];
+
+  const themeCss = await Bun.file(themePath).text();
+  return checkThemeContrast({
+    themeName: themeName || "theme",
+    themeCss,
+    baseCss: baseParts.join("\n"),
+    file: relative(cwd, themePath),
+  });
 }
 
 /**

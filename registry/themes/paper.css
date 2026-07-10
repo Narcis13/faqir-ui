@@ -74,7 +74,7 @@
   --color-secondary-fg:    oklch(0.90 0.015 75);
 
   /* ── Interactive: Destructive ── */
-  --color-destructive:        oklch(0.62 0.18 22);
+  --color-destructive:        oklch(0.55 0.18 22); /* AA: darker red keeps white legible — 0.62 was 4.0:1 [0.4-16] */
   --color-destructive-hover:  oklch(0.68 0.16 22);
   --color-destructive-fg:     white;
   --color-destructive-subtle: oklch(0.62 0.18 22 / 0.15);
@@ -124,7 +124,7 @@
     --color-secondary-fg:    oklch(0.90 0.015 75);
 
     /* ── Interactive: Destructive ── */
-    --color-destructive:        oklch(0.62 0.18 22);
+    --color-destructive:        oklch(0.55 0.18 22); /* AA: darker red keeps white legible — 0.62 was 4.0:1 [0.4-16] */
     --color-destructive-hover:  oklch(0.68 0.16 22);
     --color-destructive-fg:     white;
     --color-destructive-subtle: oklch(0.62 0.18 22 / 0.15);

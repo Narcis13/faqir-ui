@@ -14,14 +14,14 @@
   --color-primary:         var(--palette-indigo-400);
   --color-primary-hover:   var(--palette-indigo-300);
   --color-primary-active:  var(--palette-indigo-200);
-  --color-primary-fg:      white;
+  --color-primary-fg:      var(--palette-gray-950); /* AA: dark ink on the luminous dark-mode accent — white was 3.4:1 [0.4-16] */
   --color-primary-subtle:  oklch(0.55 0.22 264 / 0.15);
 
   --color-secondary:       var(--palette-gray-800);
   --color-secondary-hover: var(--palette-gray-700);
   --color-secondary-fg:    var(--palette-gray-100);
 
-  --color-destructive:        var(--palette-red-400);
+  --color-destructive:        var(--palette-red-500); /* AA: darker red keeps white legible — red-400 was 3.6:1 [0.4-16] */
   --color-destructive-hover:  var(--palette-red-300);
   --color-destructive-fg:     white;
   --color-destructive-subtle: oklch(0.55 0.22 25 / 0.15);
@@ -57,14 +57,14 @@
     --color-primary:         var(--palette-indigo-400);
     --color-primary-hover:   var(--palette-indigo-300);
     --color-primary-active:  var(--palette-indigo-200);
-    --color-primary-fg:      white;
+    --color-primary-fg:      var(--palette-gray-950); /* AA: dark ink on the luminous dark-mode accent — white was 3.4:1 [0.4-16] */
     --color-primary-subtle:  oklch(0.55 0.22 264 / 0.15);
 
     --color-secondary:       var(--palette-gray-800);
     --color-secondary-hover: var(--palette-gray-700);
     --color-secondary-fg:    var(--palette-gray-100);
 
-    --color-destructive:        var(--palette-red-400);
+    --color-destructive:        var(--palette-red-500); /* AA: darker red keeps white legible — red-400 was 3.6:1 [0.4-16] */
     --color-destructive-hover:  var(--palette-red-300);
     --color-destructive-fg:     white;
     --color-destructive-subtle: oklch(0.55 0.22 25 / 0.15);

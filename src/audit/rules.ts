@@ -4,6 +4,7 @@ import type { ParsedComponent, ParsedElement, ParsedDocument } from "../parser/h
 import { offsetToPosition } from "../parser/html-parser";
 import type { Manifest } from "../manifest";
 import { suggestClosest } from "../utils/suggest";
+import { CONTRAST_TOKENS_RULE } from "./contrast-tokens";
 
 export type Severity = "critical" | "error" | "warning" | "info";
 
@@ -1091,7 +1092,7 @@ export function getRuleInventory(): RuleInfo[] {
     description: r.description,
     applies_to: "HTML document",
   }));
-  return [...fromManifestRules, ...fromDocumentRules, ...ANTIPATTERN_RULES];
+  return [...fromManifestRules, ...fromDocumentRules, ...ANTIPATTERN_RULES, CONTRAST_TOKENS_RULE];
 }
 
 // Helper to estimate line number from element position
