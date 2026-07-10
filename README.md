@@ -171,7 +171,7 @@ No specificity wars. No naming conventions to memorize. The selector **is** the 
 
 Faqir ships 53 components across three layers, from simple CSS-only primitives to full interactive recipes and page-level patterns.
 
-### Primitives (30 components) — CSS Only
+### Primitives (31 components) — CSS Only
 
 Pure CSS components. No JavaScript required. Drop in the HTML and it works.
 
@@ -207,6 +207,9 @@ Pure CSS components. No JavaScript required. Drop in the HTML and it works.
 | `page-break` | Print page break | after (default), before |
 | `signature` | Signing line for documents | sm/md/lg + left/center/right alignment |
 | `stat` | Metric display with trend | default, card + up/down/neutral trend |
+| `icon` | CSS-mask icon (120 Lucide glyphs) | any of 120 `data-icon` names; inherits `currentColor`, sizes with `font-size` |
+
+> **Icons** render from CSS alone — each glyph is a data-URI SVG applied as a `mask-image` on a `background-color: currentColor` box, so they inherit text color and size with `font-size` (`1em`). No icon fonts, no runtime SVG fetch, zero JavaScript. The full 120-glyph `icons.css` is **44.76 KB raw / 6.26 KB gzip**; `faqir add icons --only …` (coming in 0.4-05) trims it to just the icons a project uses. Glyphs are the MIT/ISC-licensed [Lucide](https://lucide.dev) set — attribution ships in `icon/LICENSE.lucide`. Usage: `<span data-ui="icon" data-icon="check" aria-hidden="true"></span>` (decorative) or add `role="img"` + `aria-label` when meaningful.
 
 ### Recipes (16 components) — CSS + JavaScript
 

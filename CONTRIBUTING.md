@@ -230,6 +230,33 @@ generated file carries a provenance header listing the engine source, every
 controller, and the package version. CI treats the committed `faqir-core.js` as
 fresh — regenerate and commit it whenever you touch the engine or a controller.
 
+## Building the icon set (`build:icons`)
+
+The `icon` primitive is generated, not hand-written. `bun run build:icons`
+(`scripts/build-icons.mjs`) reads the checked-in curation list and the vendored
+Lucide (ISC) SVGs, optimizes each glyph, and emits the primitive's three files:
+
+```bash
+bun run build:icons          # → registry/primitives/icon/{icons.css, icon.manifest.json, icon.html}
+```
+
+| Input | What it is |
+| ----- | ---------- |
+| `scripts/icons/curated-icons.txt` | The curated name list (one per line; `#` comments ignored). **The source of truth for which icons ship.** |
+| `scripts/icons/lucide/*.svg` | Vendored raw Lucide SVGs (pinned `lucide-static@1.24.0`), one per curated name. |
+| `registry/primitives/icon/LICENSE.lucide` | Upstream attribution (full ISC text; some glyphs also carry Feather's MIT). |
+
+Each glyph becomes a `[data-icon="{name}"] { --icon: url("data:image/svg+xml,…") }`
+rule; the base `[data-ui="icon"]` rule paints `currentColor` through that data-URI
+as a `mask`, so icons inherit color and size with `font-size` (`1em`) — no fonts,
+no fetch, zero JS. The build is deterministic (names sorted, SVGs normalized, no
+timestamp), so identical inputs produce byte-identical `icons.css`; CI treats the
+committed artifacts as fresh (`tests/build/build-icons.test.ts` fails if they drift).
+
+**To change the set:** edit `curated-icons.txt`, vendor any new SVG into
+`scripts/icons/lucide/` (`curl -sSL https://unpkg.com/lucide-static@1.24.0/icons/<name>.svg -o scripts/icons/lucide/<name>.svg`),
+then `bun run build:icons` and commit. Subsetting per-project (`faqir add icons --only …`) is task 0.4-05.
+
 ## Building the `@faqir-ui/core` runtime package (CDN artifacts)
 
 `@faqir-ui/core` (in `packages/core/`) is the CDN/runtime package — the two-tag

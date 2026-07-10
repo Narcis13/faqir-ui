@@ -68,7 +68,7 @@ done in any order (or in parallel worktrees).
 | 0.4-01 | Primitives batch 1: `skeleton`, `chip`, `link` | ✅ |
 | 0.4-02 | Primitives batch 2: `breadcrumb`, `toggle`, `collapsible`, `aspect-ratio` | ⬜ |
 | 0.4-03 | `alert` as manifest alias/refinement of `callout` | ✅ |
-| 0.4-04 | Icon system: primitive, mask/data-URI runtime, ~120-icon set | ⬜ |
+| 0.4-04 | Icon system: primitive, mask/data-URI runtime, ~120-icon set | ✅ |
 | 0.4-05 | `faqir add icons --only …` subsetting + `icon-name` audit rule | ⬜ |
 | 0.4-06 | Recipe: `alert-dialog` | ⬜ |
 | 0.4-07 | Recipe: `slider` | ⬜ |
@@ -545,9 +545,11 @@ curated ~120-icon Lucide (MIT) subset, optimizes each SVG, emits `icons.css` and
 - License attribution file present and referenced.
 
 **Acceptance criteria**
-- [ ] ~120 icons render from CSS alone — a reference page shows the full grid, colored by `currentColor`.
-- [ ] `icon.manifest.json` machine-enumerable (name list) and schema-valid.
-- [ ] Full `icons.css` size recorded; a note states the expected subsetted size (subsetting is 0.4-05).
+- [x] ~120 icons render from CSS alone — a reference page shows the full grid, colored by `currentColor`. (Exactly **120** curated Lucide glyphs. `registry/primitives/icon/icon.html` renders every icon as `<span data-ui="icon" data-icon="…" role="img" aria-label="…">`; browser-verified — icons render sharp and take their color from `currentColor` (black/red/blue/green demo row). Base rule: `[data-ui="icon"]` is a `1em` box with `background-color: currentColor` cut by `mask: var(--icon) center / contain no-repeat` (+ `-webkit-mask`). No fonts, no fetch, zero JS.)
+- [x] `icon.manifest.json` machine-enumerable (name list) and schema-valid. (`validateManifest` → `[]`; every name enumerated as `variants.icon.values` (attr `data-icon`, sorted, unique, 120 entries) — agents enumerate/validate icon usage "like any variant" per §B4. Provenance in `icon_set` (`lucide`, `ISC`, `lucide-static@1.24.0`, `count: 120`, `attribution_file`).)
+- [x] Full `icons.css` size recorded; a note states the expected subsetted size (subsetting is 0.4-05). (**Full `icons.css` = 45,833 bytes (44.76 KB) raw · 6.26 KB gzip** for all 120 glyphs — recorded here, in `README.md`, and guarded by `tests/build/build-icons.test.ts`. **Expected subsetted size:** roughly linear in icon count — the base rule is ~330 B and each glyph rule averages ~380 B, so a typical project using ~15 icons trims to **≈6 KB raw / ≈1.5 KB gzip**; `faqir add icons --only …` (0.4-05) emits that trimmed sheet.)
+
+**Delivered** — build script `scripts/build-icons.mjs` (pure, deterministic; exports unit-tested) ingests the checked-in curation list `scripts/icons/curated-icons.txt` + vendored SVGs `scripts/icons/lucide/*.svg` (pinned `lucide-static@1.24.0`), optimizes each SVG (strips bloat, keeps the Lucide stroke presentation + all drawing elements) and emits `registry/primitives/icon/{icons.css, icon.manifest.json, icon.html}`. Attribution: `registry/primitives/icon/LICENSE.lucide` (full upstream ISC text — Lucide is **ISC**, not MIT as the ref implies; some glyphs additionally carry Feather's MIT, also reproduced), referenced from `icons.css` and `manifest.icon_set`. Tests: `tests/build/build-icons.test.ts` (determinism, optimizer/encoder, committed-artifacts-in-sync, missing-SVG error, recorded size) + `tests/primitives/icon.test.ts` (schema, bijection, data-URI validity, base rule, license, reference grid, `faqir add icon` + audit-clean). Registry self-audit stays green. **Deferred to 0.4-05 (audit scope):** the `icon-name` audit rule and bundler/audit wiring for the non-`{name}.css` filename `icons.css` — 0.4-04 keeps to its stated Touches (`registry/primitives/icon/`, `scripts/`, vendored SVGs) and does not modify `src/`.
 
 ---
 
