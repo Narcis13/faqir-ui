@@ -1,9 +1,11 @@
 {
   "name": "callout",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "kind": "primitive",
   "category": "data-display",
-  "description": "Callout box for info notices, warnings, legal text, and disclaimers",
+  "description": "Callout box for info notices, warnings, alerts, legal text, and disclaimers",
+
+  "aliases": ["alert"],
 
   "anatomy": {
     "tag": "div",
@@ -29,6 +31,12 @@
       "required": false,
       "tag_hint": "strong",
       "description": "Optional callout title"
+    },
+    "dismiss": {
+      "selector": "[data-part='dismiss']",
+      "required": false,
+      "tag_hint": "button",
+      "description": "Optional dismiss/close button for dismissible callouts and alerts; needs type=\"button\" and an aria-label"
     }
   },
 
@@ -59,9 +67,9 @@
     "color-warning", "color-warning-subtle",
     "color-destructive", "color-destructive-subtle",
     "color-success", "color-success-subtle",
-    "color-bg-muted", "color-border",
-    "space-3", "space-4",
-    "radius-md",
+    "color-bg-muted", "color-border", "color-ring",
+    "space-1", "space-3", "space-4",
+    "radius-sm", "radius-md",
     "text-sm", "text-xs",
     "font-sans", "weight-semibold"
   ],
@@ -77,7 +85,9 @@
     "remove-icon",
     "add-title",
     "remove-title",
-    "change-content"
+    "change-content",
+    "add-dismiss",
+    "remove-dismiss"
   ],
 
   "unsafe_transforms": [
@@ -106,6 +116,9 @@
     "success-variant-has-green-accent",
     "muted-variant-has-gray-accent",
     "print-uses-border-only",
-    "has-role-note"
+    "has-role-note",
+    "dismiss-slot-is-optional",
+    "dismiss-hidden-in-print",
+    "alert-is-an-alias-of-callout"
   ]
 }

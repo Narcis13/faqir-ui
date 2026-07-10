@@ -1,8 +1,10 @@
 // Claude Code skill generator — produces .faqir/SKILL.md for agent consumption
 
+import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { readConfig } from "../utils/config";
 import { ensureDir } from "../utils/fs";
+import { loadManifest } from "../manifest";
 
 /**
  * Generate a Claude Code SKILL.md file for the project.
@@ -84,9 +86,34 @@ export async function generateSkill(cwd: string): Promise<string> {
   }
   lines.push("");
 
+  // Aliases — alternate names installed components answer to, so an agent
+  // searching e.g. "alert" discovers it maps to "callout".
+  const aliasLines: string[] = [];
+  for (const layer of ["primitives", "recipes", "patterns"] as const) {
+    for (const name of config.installed[layer]) {
+      const manifestPath = join(cwd, config.output_dir, layer, name, `${name}.manifest.json`);
+      if (!existsSync(manifestPath)) continue;
+      const manifest = await loadManifest(manifestPath);
+      if (manifest.aliases?.length) {
+        for (const alias of manifest.aliases) {
+          aliasLines.push(`- \`${alias}\` → \`${name}\``);
+        }
+      }
+    }
+  }
+  if (aliasLines.length > 0) {
+    lines.push("## Aliases");
+    lines.push("");
+    lines.push("These names resolve to the component on the right — use `faqir add <alias>` or the canonical `data-ui` value:");
+    lines.push("");
+    lines.push(...aliasLines);
+    lines.push("");
+  }
+
   lines.push("## Available Commands");
   lines.push("");
-  lines.push("- `faqir add <name>` — add components");
+  lines.push("- `faqir add <name>` — add components (accepts aliases)");
+  lines.push("- `faqir search <query>` — find components by name, alias, or description");
   lines.push("- `faqir audit` — check for contract violations");
   lines.push("- `faqir repair` — auto-fix issues");
   lines.push("- `faqir explain <name>` — get component details");

@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { log } from "../utils/logger";
 import { configExists, readConfig } from "../utils/config";
 import { getRegistryPath } from "../utils/fs";
+import { getRegistryAliases } from "../utils/components";
 
 type Layer = "primitives" | "recipes" | "patterns";
 
@@ -101,6 +102,17 @@ export async function list(args: string[]): Promise<void> {
     console.log(`  \x1b[1mPATTERNS\x1b[0m (${installedCount}/${available.patterns.length})`);
     for (const line of formatRow(available.patterns, installed)) {
       console.log(line);
+    }
+    log.blank();
+  }
+
+  // Aliases — alternate names that resolve to a canonical component.
+  const aliases = getRegistryAliases(registryPath);
+  if (aliases.size > 0) {
+    console.log(`  \x1b[1mALIASES\x1b[0m (${aliases.size})`);
+    for (const [alias, canonical] of [...aliases].sort((a, b) => a[0].localeCompare(b[0]))) {
+      const mark = installed.has(canonical) ? "\x1b[32m✓\x1b[0m" : "\x1b[2m·\x1b[0m";
+      console.log(`  ${mark} ${alias.padEnd(16)}\x1b[2m→ ${canonical}\x1b[0m`);
     }
     log.blank();
   }

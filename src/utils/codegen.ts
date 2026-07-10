@@ -87,6 +87,10 @@ export async function regenerateContext(
         kind: manifest.kind,
       };
 
+      if (manifest.aliases && manifest.aliases.length > 0) {
+        entry.aliases = manifest.aliases;
+      }
+
       if (manifest.variants) {
         const variants: Record<string, string[]> = {};
         for (const [key, v] of Object.entries(manifest.variants)) {

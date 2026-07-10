@@ -59,6 +59,21 @@ export interface Manifest {
   kind: "primitive" | "recipe" | "pattern" | "scaffold";
   category: string;
   description: string;
+  /**
+   * Alias mechanism (schema note).
+   *
+   * Optional list of alternate names that resolve to THIS component. An alias is
+   * a pure discovery/lookup affordance — it ships no files of its own, so there
+   * is never a duplicated CSS/JS payload. `faqir add <alias>` installs the
+   * canonical component; `faqir search`, `faqir list`, and the generated
+   * `.faqir/context.json` all surface the alias so agents searching the alias
+   * name find the real component.
+   *
+   * To add a future alias, list it here on the canonical manifest (e.g. callout
+   * declares `"aliases": ["alert"]`). Names must be unique across the registry;
+   * a real component directory always wins over an alias of the same name.
+   */
+  aliases?: string[];
   anatomy: ManifestAnatomy;
   slots: Record<string, ManifestSlot>;
   variants: Record<string, ManifestVariant>;
@@ -101,6 +116,13 @@ export function validateManifest(data: unknown): ManifestValidationError[] {
   // Validate kind
   if (typeof m.kind === "string" && !VALID_KINDS.includes(m.kind as any)) {
     errors.push({ field: "kind", message: `Invalid kind '${m.kind}'. Must be: ${VALID_KINDS.join(", ")}` });
+  }
+
+  // Validate aliases (optional) — must be an array of non-empty strings when present
+  if (m.aliases !== undefined) {
+    if (!Array.isArray(m.aliases) || !m.aliases.every((a) => typeof a === "string" && a.length > 0)) {
+      errors.push({ field: "aliases", message: "Optional field 'aliases' must be an array of non-empty strings" });
+    }
   }
 
   // Validate anatomy

@@ -67,6 +67,10 @@ function buildComponentEntry(manifest: Manifest): Record<string, unknown> {
     kind: manifest.kind,
   };
 
+  if (manifest.aliases && manifest.aliases.length > 0) {
+    entry.aliases = manifest.aliases;
+  }
+
   if (manifest.variants && Object.keys(manifest.variants).length > 0) {
     const variants: Record<string, string[]> = {};
     for (const [key, v] of Object.entries(manifest.variants)) {
@@ -261,6 +265,7 @@ export function formatContextMarkdown(data: ContextData): string {
     }
 
     const details: string[] = [];
+    if (c.aliases) details.push(`Aliases: ${(c.aliases as string[]).join(", ")} (agents can search these names)`);
     if (c.variants) details.push(`Variants: ${JSON.stringify(c.variants)}`);
     if (c.sizes) details.push(`Sizes: ${(c.sizes as string[]).join(", ")}`);
     if (c.slots) details.push(`Slots: ${(c.slots as string[]).join(", ")}`);
@@ -346,6 +351,15 @@ export function formatContextCursorRules(data: ContextData): string {
   if (Object.keys(data.patterns).length > 0) {
     lines.push(`Patterns: ${Object.keys(data.patterns).join(", ")}`);
   }
+
+  const aliasPairs: string[] = [];
+  for (const [name, comp] of Object.entries(data.components)) {
+    const a = (comp as Record<string, unknown>).aliases as string[] | undefined;
+    if (a?.length) for (const alias of a) aliasPairs.push(`${alias} → ${name}`);
+  }
+  if (aliasPairs.length > 0) {
+    lines.push(`Aliases (resolve to the component on the right): ${aliasPairs.join(", ")}`);
+  }
   lines.push("");
 
   // Component quick-reference
@@ -364,7 +378,8 @@ export function formatContextCursorRules(data: ContextData): string {
 
   lines.push("## CLI Commands");
   lines.push("");
-  lines.push("- `faqir add <name>` — add components");
+  lines.push("- `faqir add <name>` — add components (accepts aliases)");
+  lines.push("- `faqir search <query>` — find components by name, alias, or description");
   lines.push("- `faqir audit` — check for contract violations");
   lines.push("- `faqir repair` — auto-fix issues");
   lines.push("- `faqir explain <name>` — get component details");

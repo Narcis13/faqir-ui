@@ -67,7 +67,7 @@ done in any order (or in parallel worktrees).
 |----|------|--------|
 | 0.4-01 | Primitives batch 1: `skeleton`, `chip`, `link` | ✅ |
 | 0.4-02 | Primitives batch 2: `breadcrumb`, `toggle`, `collapsible`, `aspect-ratio` | ⬜ |
-| 0.4-03 | `alert` as manifest alias/refinement of `callout` | ⬜ |
+| 0.4-03 | `alert` as manifest alias/refinement of `callout` | ✅ |
 | 0.4-04 | Icon system: primitive, mask/data-URI runtime, ~120-icon set | ⬜ |
 | 0.4-05 | `faqir add icons --only …` subsetting + `icon-name` audit rule | ⬜ |
 | 0.4-06 | Recipe: `alert-dialog` | ⬜ |
@@ -523,9 +523,9 @@ to the callout/alert contract.
 - Context/skill output includes `alert` so agents can discover it.
 
 **Acceptance criteria**
-- [ ] `alert` discoverable via every discovery surface (list, search, context.json).
-- [ ] No duplicated CSS payload — alias references or thinly extends callout.
-- [ ] Alias mechanism documented in the manifest schema notes for future aliases.
+- [x] `alert` discoverable via every discovery surface (list, search, context.json). (First-class alias support: `aliases: ["alert"]` on the callout manifest, resolved by `getRegistryAliases`/`resolveAlias`/`findComponentInRegistry`. New `faqir search <query>` command matches name/alias/description/category/slot; `faqir list` gained an ALIASES section; `.faqir/context.json`, context markdown/cursorrules, and the SKILL.md all surface the alias. `faqir add alert` installs the canonical `callout`. `tests/primitives/alert-alias.test.ts`.)
+- [x] No duplicated CSS payload — alias references or thinly extends callout. (An alias ships no files: `add alert` → `callout`, no `ui/primitives/alert/` dir. Added optional `[data-part="dismiss"]` to the callout/alert contract — token-only, logical properties, hidden in print, audit-valid.)
+- [x] Alias mechanism documented in the manifest schema notes for future aliases. (JSDoc "Alias mechanism (schema note)" on `Manifest.aliases` in `src/manifest.ts`, with validation that `aliases` is an array of non-empty strings; a real component directory always wins over a colliding alias.)
 
 ---
 

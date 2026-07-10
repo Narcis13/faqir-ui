@@ -9,6 +9,7 @@ import { doctor } from "./commands/doctor";
 import { add } from "./commands/add";
 import { remove } from "./commands/remove";
 import { list } from "./commands/list";
+import { search } from "./commands/search";
 import { create } from "./commands/create";
 import { inspect } from "./commands/inspect";
 import { audit } from "./commands/audit";
@@ -31,6 +32,7 @@ const COMMANDS: Record<string, (args: string[]) => Promise<void>> = {
   add,
   remove,
   list,
+  search,
   create,
   inspect,
   audit,
@@ -60,6 +62,7 @@ const HELP_CATEGORIES = [
       ["add", "Add components from the registry"],
       ["remove", "Remove installed components"],
       ["list", "Show installed and available components"],
+      ["search", "Search components by name, alias, or description"],
       ["create", "Scaffold a new custom component"],
       ["inspect", "Show component manifest details"],
     ],

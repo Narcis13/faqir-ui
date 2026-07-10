@@ -868,7 +868,10 @@ faqir remove dialog toast         # Remove components (checks dependencies)
 faqir remove button --force       # Remove even if others depend on it
 faqir remove card --dry-run       # Preview removal
 
-faqir list                        # Show installed and available components
+faqir list                        # Show installed and available components (incl. aliases)
+
+faqir search alert                # Find components by name, alias, or description
+faqir add alert                   # Aliases resolve to their canonical component (callout)
 
 faqir create my-widget --kind primitive    # Scaffold a new custom component
 faqir create data-grid --kind recipe       # Scaffold with JS controller

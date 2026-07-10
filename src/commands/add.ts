@@ -121,7 +121,12 @@ export async function add(args: string[]): Promise<void> {
       log.dim("Run 'faqir list' to see available components.");
       process.exit(1);
     }
-    resolved.push({ name, ...found });
+    // `found.name` is the canonical component (aliases like `alert` resolve to
+    // `callout`), so components install and register under their real name.
+    if (found.name !== name) {
+      log.info(`'${name}' is an alias of '${found.name}' — adding '${found.name}'.`);
+    }
+    resolved.push(found);
   }
 
   // Resolve dependencies
@@ -146,8 +151,8 @@ export async function add(args: string[]): Promise<void> {
         if (!allInstalled.has(dep)) {
           const found = findComponentInRegistry(dep, registryPath);
           if (found) {
-            depsToAdd.push({ name: dep, ...found });
-            allInstalled.add(dep);
+            depsToAdd.push(found);
+            allInstalled.add(found.name);
           }
         }
       }
