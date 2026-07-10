@@ -69,7 +69,7 @@ done in any order (or in parallel worktrees).
 | 0.4-02 | Primitives batch 2: `breadcrumb`, `toggle`, `collapsible`, `aspect-ratio` | ⬜ |
 | 0.4-03 | `alert` as manifest alias/refinement of `callout` | ✅ |
 | 0.4-04 | Icon system: primitive, mask/data-URI runtime, ~120-icon set | ✅ |
-| 0.4-05 | `faqir add icons --only …` subsetting + `icon-name` audit rule | ⬜ |
+| 0.4-05 | `faqir add icons --only …` subsetting + `icon-name` audit rule | ✅ |
 | 0.4-06 | Recipe: `alert-dialog` | ⬜ |
 | 0.4-07 | Recipe: `slider` | ⬜ |
 | 0.4-08 | Recipe: `sidebar` | ⬜ |
@@ -568,9 +568,11 @@ nearest-match on typo (reuse the CLI's existing typo-suggestion util).
 - Subsetting an already-subsetted project (re-run with more icons) merges rather than clobbers, or fails loudly — pick one, test it.
 
 **Acceptance criteria**
-- [ ] Trimmed `icons.css` for 5 icons is ≤ ~2KB (record actual).
-- [ ] `icon-name` rule in the audit inventory with JSON output support.
-- [ ] Re-running `--only` with a different set has defined, tested behavior.
+- [x] Trimmed `icons.css` for 5 icons is ≤ ~2KB (record actual). (**5 common icons `check,x,chevron-down,plus,minus` = 1,883 B raw · 588 B gzip** — ≈1.84 KB, well under the 2 KB bar and <1/24 of the full 45,833 B sheet; pinned in `tests/utils/icons.test.ts`. Subsets swap the verbose generated banner for a lean 3-line header that keeps the `@ui:*` markers + Lucide/ISC attribution, and re-emit the verbatim base rule + only the requested glyph lines.)
+- [x] `icon-name` rule in the audit inventory with JSON output support. (Added to `ALL_RULES` → surfaces in `getRuleInventory()`, `faqir audit --rules`, and `faqir audit --rules --json` as `{id:"icon-name", severity:"error", applies_to:"component markup vs manifest"}`. Manifest-driven: fires for any component whose manifest declares a variant with attr `data-icon`; flags unknown values with a nearest-match "did you mean …" hint.)
+- [x] Re-running `--only` with a different set has defined, tested behavior. (**Merges** — a second `--only` unions its glyphs with those already installed and regenerates `icons.css` + the subset manifest + reference page from the authoritative full registry sheet. Re-adding an already-present glyph is an idempotent no-op. Tested in `tests/commands/add-icons.test.ts`.)
+
+**Delivered** — `faqir add icons --only check,x,chevron-down` (routed from `faqir add` when the target is the plural `icons`; the singular `icon` still installs the full set, as does `faqir add icons` with no `--only`) trims the shipped 120-glyph sheet to just the requested names, working purely from the registry artifacts the CLI ships (no SVG sources / build script needed at runtime). Writes `ui/primitives/icon/{icons.css, icon.manifest.json (subset, so `icon-name` validates against exactly what's installed), icon.html (subset grid), LICENSE.lucide}`, registers the primitive, regenerates `.faqir/context.json`. Unknown names abort with per-name "did you mean …" hints (or an "inspect icon" pointer when nothing is close). The reusable typo-suggestion util was extracted to `src/utils/suggest.ts` (`levenshtein` + `suggestClosest`) and now backs the CLI dispatcher, subsetting, and the audit rule. New `icon-name` audit rule + subsetting live in `src/utils/icons.ts` (pure, unit-tested), `src/commands/icons.ts`, `src/audit/rules.ts`. Tests: `tests/utils/{suggest,icons}.test.ts`, `tests/audit/icon-name.test.ts`, `tests/commands/add-icons.test.ts` (37 assertions); full suite 804 green, typecheck clean, registry self-audit green.
 
 ---
 

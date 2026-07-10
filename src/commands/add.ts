@@ -7,6 +7,7 @@ import { loadManifest, type Manifest } from "../manifest";
 import { findComponentInRegistry, listRegistryComponents, type Layer } from "../utils/components";
 import { regenerateFaqirInit, regenerateContext } from "../utils/codegen";
 import { generateBundle } from "../utils/bundler";
+import { addIcons } from "./icons";
 
 interface AddOptions {
   all: boolean;
@@ -69,6 +70,7 @@ function printHelp() {
   console.log("  faqir add button card input");
   console.log("  faqir add --all");
   console.log("  faqir add --layer primitives");
+  console.log("  faqir add icons --only check,x,chevron-down   # subset the icon set");
   log.blank();
   console.log("Options:");
   log.table([
@@ -77,6 +79,8 @@ function printHelp() {
     ["--dry-run", "Show what would be added without writing"],
     ["--no-deps", "Don't auto-install dependencies"],
   ]);
+  log.blank();
+  log.dim("Run 'faqir add icons --help' for icon-subsetting options.");
 }
 
 async function getDependencies(manifest: Manifest): Promise<string[]> {
@@ -84,6 +88,13 @@ async function getDependencies(manifest: Manifest): Promise<string[]> {
 }
 
 export async function add(args: string[]): Promise<void> {
+  // The plural `icons` target subsets the icon primitive (`--only …`); the
+  // singular `icon` is the ordinary registry component. Delegate before the
+  // generic component resolution below, which has no "icons" entry.
+  if (args[0] === "icons") {
+    return addIcons(args.slice(1));
+  }
+
   const { components, options } = parseArgs(args);
   const cwd = process.cwd();
 

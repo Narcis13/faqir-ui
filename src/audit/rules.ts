@@ -2,6 +2,7 @@
 
 import type { ParsedComponent, ParsedElement } from "../parser/html-parser";
 import type { Manifest } from "../manifest";
+import { suggestClosest } from "../utils/suggest";
 
 export type Severity = "critical" | "error" | "warning" | "info";
 
@@ -410,6 +411,57 @@ export const validSizeRule: AuditRule = {
   },
 };
 
+// ── Rule: icon-name ──
+// data-icon value must be a known glyph in the manifest's icon set. Manifest-
+// driven: any component whose manifest declares a variant with attr "data-icon"
+// (the icon primitive's `variants.icon`) has its data-icon values validated
+// against that variant's `values`. A typo gets a nearest-match suggestion via
+// the shared typo-suggestion util (same one that powers `faqir <typo>`).
+export const iconNameRule: AuditRule = {
+  id: "icon-name",
+  severity: "error",
+  description: "data-icon value must be a known icon name from the manifest's icon set",
+  check(component, manifest) {
+    const results: AuditResult[] = [];
+
+    // The variant that drives data-icon (icon primitive → variants.icon).
+    let validNames: string[] | null = null;
+    for (const variant of Object.values(manifest.variants)) {
+      if (variant.attr === "data-icon") {
+        validNames = variant.values;
+        break;
+      }
+    }
+    if (!validNames || validNames.length === 0) return results;
+    const valid = new Set(validNames);
+
+    const checkEl = (el: ParsedElement, where: string, line: number) => {
+      if (!("data-icon" in el.attrs)) return;
+      const value = el.attrs["data-icon"];
+      if (!value || valid.has(value)) return;
+      const suggestion = suggestClosest(value, validNames!, 3);
+      const hint = suggestion ? ` — did you mean "${suggestion}"?` : "";
+      results.push({
+        rule_id: "icon-name",
+        severity: "error",
+        component_name: component.name,
+        file: component.file,
+        line,
+        message: `Unknown icon "${value}" on ${where}${hint}`,
+      });
+    };
+
+    checkEl(component.root, `[data-ui="${component.name}"]`, component.line);
+    for (const [partName, elements] of Object.entries(component.parts)) {
+      for (const el of elements) {
+        checkEl(el, `[data-part="${partName}"]`, countLineFromEl(component, el));
+      }
+    }
+
+    return results;
+  },
+};
+
 // ── Rule: controller-loaded ──
 // Recipe components must have their JS controller referenced
 // (We check for script tags or module imports referencing the controller file)
@@ -631,6 +683,7 @@ export const ALL_RULES: AuditRule[] = [
   validVariantRule,
   validStateRule,
   validSizeRule,
+  iconNameRule,
   controllerLoadedRule,
   orphanPartRule,
   ariaDescribedbyRule,
