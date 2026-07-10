@@ -59,7 +59,7 @@ done in any order (or in parallel worktrees).
 | 0.3-09 | `logical-properties` audit rule | ✅ |
 | 0.3-10 | RTL remediation sweep across registry CSS | ⬜ |
 | 0.3-11 | Theme coverage test + default theme dark-mode completion | ⬜ |
-| 0.3-12 | GitHub Actions CI pipeline | ⬜ |
+| 0.3-12 | GitHub Actions CI pipeline | ✅ |
 
 ### Phase v0.4 — Surface
 
@@ -456,9 +456,9 @@ engine+controllers ≤ 22KB gzip, each plugin ≤ 2KB gzip — failing budget fa
 - The pipeline itself is the test. Additionally: `scripts/check-size.mjs` unit-tested for budget parsing/enforcement (over-budget fixture → non-zero exit).
 
 **Acceptance criteria**
-- [ ] CI green on a real push to a branch (link the run in the commit/PR).
-- [ ] All five jobs present; matrix covers Node 18/20/22 for the compiled CLI.
-- [ ] A deliberately oversized fixture or budget tweak demonstrably fails the size job (verified once, then reverted).
+- [x] CI green on a real push to a branch (link the run in the commit/PR). (Branch `ci/0.3-12-github-actions` → all 7 jobs green: https://github.com/Narcis13/faqir-ui/actions/runs/29073024843)
+- [x] All five jobs present; matrix covers Node 18/20/22 for the compiled CLI. (test · smoke [Node 18/20/22] · typecheck · registry-audit · size)
+- [x] A deliberately oversized fixture or budget tweak demonstrably fails the size job (verified once, then reverted). (Engine 8.21 KB gzip vs a tightened 4 KB budget → exit 1; `check-size.test.ts` also asserts over-budget fixture → non-zero exit.)
 
 ---
 
