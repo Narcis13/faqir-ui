@@ -72,7 +72,7 @@ done in any order (or in parallel worktrees).
 | 0.4-05 | `faqir add icons --only …` subsetting + `icon-name` audit rule | ✅ |
 | 0.4-06 | Recipe: `alert-dialog` | ⬜ |
 | 0.4-07 | Recipe: `slider` | ✅ |
-| 0.4-08 | Recipe: `sidebar` | ⬜ |
+| 0.4-08 | Recipe: `sidebar` | ✅ |
 | 0.4-09 | Recipe: `input-otp` | ⬜ |
 | 0.4-10 | Recipe: `calendar` (extracted from date-picker) | ⬜ |
 | 0.4-11 | Transitions 2.0: `data-motion` presets + `motion-presets.css` + `faqir-collapse` | ⬜ |
@@ -634,9 +634,9 @@ Escape closes mobile drawer, focus management on drawer open/close.
 - State persists across toggle (aria-expanded on the toggle button tracks).
 
 **Acceptance criteria**
-- [ ] All three states styled in every theme; layout uses logical properties (0.3-09 rule clean).
-- [ ] `data-state` values documented in manifest; agents can set initial state declaratively.
-- [ ] Reference page shows a full app-shell composition, audit-clean.
+- [x] All three states styled in every theme; layout uses logical properties (0.3-09 rule clean).
+- [x] `data-state` values documented in manifest; agents can set initial state declaratively.
+- [x] Reference page shows a full app-shell composition, audit-clean.
 
 ---
 
