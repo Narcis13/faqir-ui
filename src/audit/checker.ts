@@ -3,10 +3,10 @@
 import { existsSync } from "node:fs";
 import { join, relative } from "node:path";
 import { extractComponents } from "../parser/html-parser";
-import { extractTokenReferences, collectDefinedTokens, hasReducedMotionQuery, hasAnimationProperties, findImportantDeclarations, findClassSelectors, findIdSelectors, findHardcodedColorValues } from "../parser/css-parser";
+import { extractTokenReferences, collectDefinedTokens, hasReducedMotionQuery, hasAnimationProperties, findImportantDeclarations, findClassSelectors, findIdSelectors, findHardcodedColorValues, findLogicalPropertyViolations } from "../parser/css-parser";
 import { findExternalImports, findDataFetching } from "../parser/js-parser";
 import { loadManifest, type Manifest } from "../manifest";
-import { type AuditResult, type Severity, ALL_RULES, NO_FETCH_RULE, NO_EXTERNAL_IMPORT_RULE } from "./rules";
+import { type AuditResult, type Severity, ALL_RULES, NO_FETCH_RULE, NO_EXTERNAL_IMPORT_RULE, LOGICAL_PROPERTIES_RULE } from "./rules";
 import { readConfig } from "../utils/config";
 import { getRegistryPath } from "../utils/fs";
 
@@ -137,7 +137,7 @@ export async function runAudit(options: AuditOptions = {}): Promise<AuditSummary
   }
 
   // CSS anti-pattern checks
-  const CSS_AP_RULES = ["no-important", "no-class-selector", "no-id-selector", "no-hardcoded-values"];
+  const CSS_AP_RULES = ["no-important", "no-class-selector", "no-id-selector", "no-hardcoded-values", "logical-properties"];
   if (CSS_AP_RULES.some(id => !skipRules.has(id))) {
     const cssApResults = await checkCssAntiPatterns(outputDir, config.installed, cwd);
     results.push(...cssApResults.filter(r => !skipRules.has(r.rule_id)));
@@ -339,8 +339,38 @@ async function checkCssAntiPatterns(
         message: `Hardcoded color value "${v.text}" in ${name}.css — use a token via var(--token-name) instead`,
       });
     }
+
+    results.push(...buildLogicalPropertyResults(source, name, relPath));
   }
 
+  return results;
+}
+
+/**
+ * Build `logical-properties` findings for a single CSS source (task 0.3-09).
+ *
+ * Pure function of (source, component name, file path) so it can be exercised
+ * directly against the registry and repair fixtures. Every finding carries a 1:1
+ * `rewrite-css` fix, since every physical → logical mapping is deterministic.
+ */
+export function buildLogicalPropertyResults(source: string, name: string, relPath: string): AuditResult[] {
+  const results: AuditResult[] = [];
+  for (const v of findLogicalPropertyViolations(source)) {
+    const noun = v.kind === "property" ? "property" : "value";
+    results.push({
+      rule_id: LOGICAL_PROPERTIES_RULE.id,
+      severity: LOGICAL_PROPERTIES_RULE.severity,
+      component_name: name,
+      file: relPath,
+      line: v.line,
+      message: `Physical ${noun} "${v.from}" in ${name}.css — use logical equivalent: ${v.from} → ${v.to}`,
+      fix: {
+        type: "rewrite-css",
+        offset: 0,
+        details: { kind: v.kind, physical: v.physical, logical: v.logical, property: v.property },
+      },
+    });
+  }
   return results;
 }
 

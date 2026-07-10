@@ -56,7 +56,7 @@ done in any order (or in parallel worktrees).
 | 0.3-06 | Keyed `l-for` — state preservation, LIS moves, stress tests | ⬜ |
 | 0.3-07 | `l-source` test suite | ⬜ |
 | 0.3-08 | `l-source` AbortController teardown + audit exemption | ⬜ |
-| 0.3-09 | `logical-properties` audit rule | ⬜ |
+| 0.3-09 | `logical-properties` audit rule | ✅ |
 | 0.3-10 | RTL remediation sweep across registry CSS | ⬜ |
 | 0.3-11 | Theme coverage test + default theme dark-mode completion | ⬜ |
 | 0.3-12 | GitHub Actions CI pipeline | ⬜ |

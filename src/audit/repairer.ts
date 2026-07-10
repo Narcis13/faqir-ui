@@ -79,9 +79,49 @@ function applyFix(source: string, fix: RepairAction, result: AuditResult): strin
       return addAttribute(source, fix, result);
     case "add-script":
       return addScript(source, fix, result);
+    case "rewrite-css":
+      return rewriteCss(source, fix, result);
     default:
       return null;
   }
+}
+
+/** Escape a string for safe use inside a RegExp. */
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * Rewrite a physical, direction-bound CSS property (or text-align value) to its
+ * logical equivalent on the flagged line (task 0.3-09). Mappings are 1:1, so the
+ * rewrite is deterministic. Targets a single occurrence on `result.line`:
+ *
+ *   - kind "property": rename the property, e.g. `margin-left:` → `margin-inline-start:`.
+ *     A negative lookbehind for [\w-] keeps `left` from matching inside `margin-left`,
+ *     and a lookahead for `:` restricts the match to the property position.
+ *   - kind "value": swap a text-align value, e.g. `text-align: left` → `text-align: start`.
+ */
+function rewriteCss(source: string, fix: RepairAction, result: AuditResult): string | null {
+  const { kind, physical, logical } = fix.details;
+  if (!physical || !logical) return null;
+
+  const lines = source.split("\n");
+  const idx = result.line - 1;
+  if (idx < 0 || idx >= lines.length) return null;
+
+  const original = lines[idx];
+  let updated: string;
+  if (kind === "value") {
+    const re = new RegExp(`(?<![\\w-])text-align(\\s*:\\s*)${escapeRegExp(physical)}(?![\\w-])`, "i");
+    updated = original.replace(re, `text-align$1${logical}`);
+  } else {
+    const re = new RegExp(`(?<![\\w-])${escapeRegExp(physical)}(?=\\s*:)`, "i");
+    updated = original.replace(re, logical);
+  }
+
+  if (updated === original) return null;
+  lines[idx] = updated;
+  return lines.join("\n");
 }
 
 /**

@@ -236,3 +236,166 @@ export function findHardcodedColorValues(source: string): CssViolation[] {
   }
   return violations;
 }
+
+// ── Logical properties detection (task 0.3-09) ──
+//
+// Physical, direction-bound CSS properties (margin-left, padding-right,
+// left/right offsets, border-*-left/right*, corner radii, text-align: left|right)
+// break in right-to-left locales. Their logical equivalents (margin-inline-start,
+// inset-inline-end, border-start-end-radius, text-align: start, …) flip
+// automatically with the writing direction. Every mapping below is 1:1, so
+// `faqir repair` can rewrite them deterministically.
+
+/** 1:1 physical → logical CSS property renames. Keys are lowercase property names. */
+export const PHYSICAL_TO_LOGICAL_PROPERTY: Record<string, string> = {
+  "margin-left": "margin-inline-start",
+  "margin-right": "margin-inline-end",
+  "padding-left": "padding-inline-start",
+  "padding-right": "padding-inline-end",
+  "left": "inset-inline-start",
+  "right": "inset-inline-end",
+  "border-left": "border-inline-start",
+  "border-right": "border-inline-end",
+  "border-left-width": "border-inline-start-width",
+  "border-right-width": "border-inline-end-width",
+  "border-left-style": "border-inline-start-style",
+  "border-right-style": "border-inline-end-style",
+  "border-left-color": "border-inline-start-color",
+  "border-right-color": "border-inline-end-color",
+  "border-top-left-radius": "border-start-start-radius",
+  "border-top-right-radius": "border-start-end-radius",
+  "border-bottom-left-radius": "border-end-start-radius",
+  "border-bottom-right-radius": "border-end-end-radius",
+};
+
+/** 1:1 physical → logical values for `text-align`. */
+export const PHYSICAL_TO_LOGICAL_TEXT_ALIGN: Record<string, string> = {
+  left: "start",
+  right: "end",
+};
+
+/**
+ * Escape hatch: a rule scoped to an explicit writing direction — e.g.
+ * `[dir="ltr"]` or `[dir=rtl]` — has opted into physical directions on purpose,
+ * so declarations inside it are never flagged.
+ */
+const DIR_SCOPE_RE = /\[\s*dir\s*(?:[~|^$*]?=)\s*["']?(?:ltr|rtl)["']?\s*\]/i;
+
+/** A physical-direction property (or text-align value) that has a logical replacement. */
+export interface LogicalPropertyViolation {
+  line: number;
+  /** "property" = rename the property; "value" = swap a text-align value. */
+  kind: "property" | "value";
+  /** The CSS property, e.g. "margin-left" or "text-align". */
+  property: string;
+  /** The physical token to replace: the property (kind "property") or the value (kind "value"). */
+  physical: string;
+  /** The logical replacement token. */
+  logical: string;
+  /** Human-readable "from" / "to" for the finding message, e.g. "margin-left" → "margin-inline-start". */
+  from: string;
+  to: string;
+}
+
+/**
+ * Find physical, direction-bound properties in component CSS (task 0.3-09).
+ *
+ * Scans declaration-by-declaration, tracking the enclosing selector stack so the
+ * `[dir="ltr"|"rtl"]` escape hatch can be honored. Skips comments (stripped),
+ * strings, custom properties (`--foo`), at-rule preludes, and anything inside a
+ * direction-scoped block. Values inside `url()`/`calc()` are left intact.
+ */
+export function findLogicalPropertyViolations(source: string): LogicalPropertyViolation[] {
+  const violations: LogicalPropertyViolation[] = [];
+  const stripped = stripBlockComments(source);
+
+  const selectorStack: string[] = [];
+  const dirScoped = () => selectorStack.some(sel => DIR_SCOPE_RE.test(sel));
+
+  let buffer = "";
+  let declLine = 0; // line of the first non-whitespace char in the current buffer
+  let line = 1;
+  let inString: '"' | "'" | null = null;
+  let parenDepth = 0;
+
+  const flush = () => {
+    if (buffer.trim() && declLine > 0) processDeclaration(buffer, declLine);
+    buffer = "";
+    declLine = 0;
+  };
+
+  const processDeclaration = (decl: string, atLine: number) => {
+    const trimmed = decl.trim();
+    const colon = trimmed.indexOf(":");
+    if (colon < 0) return;
+    const prop = trimmed.slice(0, colon).trim().toLowerCase();
+    const value = trimmed.slice(colon + 1).trim();
+    // Ignore at-rules (@media …), custom properties (--foo), and nesting refs (&…).
+    if (!prop || prop.startsWith("@") || prop.startsWith("--") || prop.startsWith("&")) return;
+    if (dirScoped()) return; // escape hatch
+
+    if (prop in PHYSICAL_TO_LOGICAL_PROPERTY) {
+      const logical = PHYSICAL_TO_LOGICAL_PROPERTY[prop];
+      violations.push({ line: atLine, kind: "property", property: prop, physical: prop, logical, from: prop, to: logical });
+      return;
+    }
+
+    if (prop === "text-align") {
+      // First value token, minus any !important / trailing tokens.
+      const first = value.split(/[\s!]/)[0]?.toLowerCase() ?? "";
+      if (first in PHYSICAL_TO_LOGICAL_TEXT_ALIGN) {
+        const logical = PHYSICAL_TO_LOGICAL_TEXT_ALIGN[first];
+        violations.push({
+          line: atLine,
+          kind: "value",
+          property: "text-align",
+          physical: first,
+          logical,
+          from: `text-align: ${first}`,
+          to: `text-align: ${logical}`,
+        });
+      }
+    }
+  };
+
+  for (let i = 0; i < stripped.length; i++) {
+    const c = stripped[i];
+    if (c === "\n") line++;
+
+    if (inString) {
+      buffer += c;
+      if (c === inString && stripped[i - 1] !== "\\") inString = null;
+      continue;
+    }
+    if (c === '"' || c === "'") {
+      inString = c;
+      buffer += c;
+      if (declLine === 0) declLine = line;
+      continue;
+    }
+    if (c === "(") { parenDepth++; buffer += c; if (declLine === 0) declLine = line; continue; }
+    if (c === ")") { parenDepth = Math.max(0, parenDepth - 1); buffer += c; continue; }
+    if (parenDepth > 0) { buffer += c; continue; } // inside url()/calc() — ignore delimiters
+
+    if (c === "{") {
+      selectorStack.push(buffer.trim());
+      buffer = "";
+      declLine = 0;
+      continue;
+    }
+    if (c === "}") {
+      flush();
+      selectorStack.pop();
+      continue;
+    }
+    if (c === ";") {
+      flush();
+      continue;
+    }
+
+    buffer += c;
+    if (declLine === 0 && !/\s/.test(c)) declLine = line;
+  }
+
+  return violations;
+}

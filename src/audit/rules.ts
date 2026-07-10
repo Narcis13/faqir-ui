@@ -6,7 +6,7 @@ import type { Manifest } from "../manifest";
 export type Severity = "critical" | "error" | "warning" | "info";
 
 export interface RepairAction {
-  type: "add-attribute" | "rename-attribute" | "remove-element" | "add-element" | "add-script";
+  type: "add-attribute" | "rename-attribute" | "remove-element" | "add-element" | "add-script" | "rewrite-css";
   /** Byte offset in source where the fix applies */
   offset: number;
   details: Record<string, string>;
@@ -688,6 +688,31 @@ export const NO_EXTERNAL_IMPORT_RULE: RuleInfo = {
     "no external/bare package specifiers.",
 };
 
+// The `logical-properties` rule (task 0.3-09). Physical, direction-bound CSS
+// properties (margin-left, padding-right, left/right offsets, border-*-left/right*,
+// corner radii, text-align: left|right) break in right-to-left locales; their
+// logical equivalents flip with the writing direction. Every mapping is 1:1, so
+// `faqir repair` rewrites them deterministically. A rule scoped to an explicit
+// writing direction (e.g. `[dir="ltr"]`) is the escape hatch — it has opted into
+// physical directions on purpose and is never flagged. Severity is `warning`:
+// it's an i18n/RTL lint guiding toward logical properties, not a hard protocol
+// break, and it is auto-fixable.
+export const LOGICAL_PROPERTIES_RULE: RuleInfo = {
+  id: "logical-properties",
+  severity: "warning",
+  applies_to: "component CSS",
+  exempt: [
+    'physical properties inside a [dir="ltr"]/[dir="rtl"]-scoped block (explicit-direction escape hatch)',
+    "logical properties and direction-agnostic values (text-align: start/end/center)",
+  ],
+  description:
+    "Component CSS should use logical properties (margin-inline-start, " +
+    "inset-inline-end, border-start-end-radius, text-align: start, …) instead of " +
+    "physical, direction-bound ones (margin-left, right, border-top-left-radius, " +
+    "text-align: left, …) so layouts flip correctly in RTL locales. Auto-fixed by " +
+    "`faqir repair` (all mappings are 1:1); rules scoped to an explicit [dir=…] are exempt.",
+};
+
 /** Every source-scanning anti-pattern rule, for inventory/description output. */
 export const ANTIPATTERN_RULES: RuleInfo[] = [
   { id: "no-important", severity: "error", applies_to: "component CSS",
@@ -698,6 +723,7 @@ export const ANTIPATTERN_RULES: RuleInfo[] = [
     description: "Component CSS must not use ID selectors." },
   { id: "no-hardcoded-values", severity: "error", applies_to: "component CSS",
     description: "Component CSS must reference tokens via var(--token) instead of hardcoded color values." },
+  LOGICAL_PROPERTIES_RULE,
   NO_EXTERNAL_IMPORT_RULE,
   NO_FETCH_RULE,
 ];
