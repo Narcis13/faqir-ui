@@ -502,9 +502,9 @@ CSS-only. `collapsible`: `<details>/<summary>` based, zero JS, animated via
 - Toggle styles react to `aria-pressed="true"` (selector present in CSS).
 
 **Acceptance criteria**
-- [ ] All four installable via `faqir add`, present in `faqir list`.
-- [ ] `collapsible` opens/closes with **zero** JavaScript.
-- [ ] Zero audit findings across the four reference pages.
+- [x] All four installable via `faqir add`, present in `faqir list`. (`tests/primitives/batch2.test.ts`; real CLI: `faqir add breadcrumb toggle collapsible aspect-ratio` → all copied, marked ✓ in `faqir list`.)
+- [x] `collapsible` opens/closes with **zero** JavaScript. (Native `<details>`/`<summary>` — no `.js` file, `files.js` undefined, no `<script>` in the reference page; animated as progressive enhancement via `::details-content` under `@supports (interpolate-size: allow-keywords)`.)
+- [x] Zero audit findings across the four reference pages. (`faqir audit` over a fresh project with all four installed: 4 files, 21 components, "no issues found"; batch2 test asserts `runAudit().results === []`. Registry self-audit + logical-properties gate both green.)
 
 ---
 

@@ -1,0 +1,117 @@
+{
+  "name": "breadcrumb",
+  "version": "1.0.0",
+  "kind": "primitive",
+  "category": "navigation",
+  "description": "Breadcrumb trail — a <nav aria-label=\"Breadcrumb\"> with link items, presentational separators, and the current page marked aria-current=\"page\"",
+
+  "anatomy": {
+    "tag": "nav",
+    "selector": "[data-ui='breadcrumb']",
+    "content_model": "slots"
+  },
+
+  "slots": {
+    "list": {
+      "selector": "[data-part='list']",
+      "required": false,
+      "tag_hint": "ol",
+      "description": "Ordered list wrapping the crumbs"
+    },
+    "item": {
+      "selector": "[data-part='item']",
+      "required": false,
+      "tag_hint": "a",
+      "description": "A navigable crumb — an anchor with an href"
+    },
+    "separator": {
+      "selector": "[data-part='separator']",
+      "required": false,
+      "tag_hint": "li",
+      "description": "Presentational separator between crumbs — must be aria-hidden=\"true\"; a default glyph is supplied by CSS when left empty"
+    },
+    "current": {
+      "selector": "[data-part='current']",
+      "required": true,
+      "tag_hint": "span",
+      "description": "The current page — non-interactive, must carry aria-current=\"page\""
+    }
+  },
+
+  "variants": {
+    "size": {
+      "values": ["sm", "md", "lg"],
+      "default": "md",
+      "attr": "data-size",
+      "applied_to": "root"
+    }
+  },
+
+  "states": {},
+
+  "props": {
+    "--breadcrumb-separator": { "type": "string", "default": "\"/\"", "description": "Glyph rendered for empty separators (custom property)" },
+    "--breadcrumb-gap": { "type": "string", "default": "var(--space-2)", "description": "Gap between crumbs (custom property)" }
+  },
+
+  "a11y": {
+    "required_attrs": [
+      "aria-current=\"page\" on current"
+    ],
+    "keyboard": {
+      "Tab": "Moves focus between crumb links",
+      "Enter": "Follows the focused crumb link"
+    },
+    "notes": "The root must be a <nav> with aria-label=\"Breadcrumb\" (or aria-labelledby). Separators are decorative and must be aria-hidden=\"true\". Only the current page carries aria-current=\"page\", and it is not a link."
+  },
+
+  "tokens_used": [
+    "color-fg", "color-fg-muted", "color-fg-subtle",
+    "color-primary-hover", "color-ring",
+    "radius-sm", "space-2",
+    "text-xs", "text-sm", "text-base",
+    "font-sans", "weight-medium",
+    "duration-fast", "ease-default"
+  ],
+
+  "templates": {
+    "html": "<nav data-ui=\"breadcrumb\" aria-label=\"Breadcrumb\"><ol data-part=\"list\"><li><a data-part=\"item\" href=\"{href}\">{label}</a></li><li data-part=\"separator\" aria-hidden=\"true\"></li><li><span data-part=\"current\" aria-current=\"page\">{current}</span></li></ol></nav>"
+  },
+
+  "safe_transforms": [
+    "change-size",
+    "add-item",
+    "remove-item",
+    "change-item-text",
+    "change-item-href",
+    "change-separator-glyph"
+  ],
+
+  "unsafe_transforms": [
+    "remove-nav-aria-label",
+    "remove-aria-current-on-current",
+    "make-current-a-link",
+    "remove-aria-hidden-on-separator"
+  ],
+
+  "composition": {
+    "contains": [],
+    "used_in": []
+  },
+
+  "files": {
+    "html": "breadcrumb.html",
+    "css": "breadcrumb.css",
+    "manifest": "breadcrumb.manifest.json"
+  },
+
+  "tests": [
+    "renders-as-nav-element",
+    "nav-has-breadcrumb-aria-label",
+    "current-slot-is-required",
+    "current-has-aria-current-page",
+    "separators-are-aria-hidden",
+    "item-hover-uses-primary-hover",
+    "sm-size-sets-data-size-sm"
+  ]
+}

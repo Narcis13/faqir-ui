@@ -1,0 +1,96 @@
+{
+  "name": "toggle",
+  "version": "1.0.0",
+  "kind": "primitive",
+  "category": "actions",
+  "description": "Two-state toggle button whose pressed appearance is driven entirely by aria-pressed — CSS-only, no JavaScript",
+
+  "anatomy": {
+    "tag": "button",
+    "selector": "[data-ui='toggle']",
+    "content_model": "inline"
+  },
+
+  "slots": {},
+
+  "variants": {
+    "size": {
+      "values": ["sm", "md", "lg"],
+      "default": "md",
+      "attr": "data-size",
+      "applied_to": "root"
+    }
+  },
+
+  "states": {
+    "pressed": {
+      "attr": "aria-pressed",
+      "default": false
+    }
+  },
+
+  "props": {
+    "pressed": { "type": "boolean", "default": false, "description": "Whether the toggle is on (reflected as aria-pressed)" },
+    "label": { "type": "string", "default": "", "description": "Toggle label text" }
+  },
+
+  "a11y": {
+    "required_attrs": [
+      "type=\"button\" on root"
+    ],
+    "keyboard": {
+      "Enter/Space": "Toggles the pressed state (native button behavior)"
+    },
+    "notes": "The toggle MUST be a <button type=\"button\"> carrying aria-pressed=\"true|false\". aria-pressed is the source of truth for both state and styling — the CSS reacts to [aria-pressed=\"true\"]. Flipping the attribute (e.g. on click) is left to page/application code; the primitive itself ships no controller."
+  },
+
+  "tokens_used": [
+    "color-bg", "color-bg-muted", "color-fg", "color-fg-muted",
+    "color-border", "color-primary", "color-primary-subtle", "color-ring",
+    "radius-md",
+    "space-1", "space-1h", "space-2", "space-3", "space-4",
+    "text-xs", "text-sm", "text-base",
+    "font-sans", "weight-medium",
+    "duration-fast", "ease-default"
+  ],
+
+  "templates": {
+    "html": "<button data-ui=\"toggle\" type=\"button\" aria-pressed=\"false\">{label}</button>",
+    "html_pressed": "<button data-ui=\"toggle\" type=\"button\" aria-pressed=\"true\">{label}</button>"
+  },
+
+  "safe_transforms": [
+    "change-size",
+    "change-label-text",
+    "set-pressed-true",
+    "set-pressed-false",
+    "add-disabled",
+    "remove-disabled"
+  ],
+
+  "unsafe_transforms": [
+    "remove-aria-pressed",
+    "change-tag-from-button",
+    "remove-type-button"
+  ],
+
+  "composition": {
+    "contains": [],
+    "used_in": []
+  },
+
+  "files": {
+    "html": "toggle.html",
+    "css": "toggle.css",
+    "manifest": "toggle.manifest.json"
+  },
+
+  "tests": [
+    "renders-as-button-element",
+    "requires-type-button",
+    "pressed-styling-reacts-to-aria-pressed-true",
+    "unpressed-uses-muted-foreground",
+    "sm-size-sets-data-size-sm",
+    "disabled-lowers-opacity"
+  ]
+}

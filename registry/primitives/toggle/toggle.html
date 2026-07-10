@@ -1,0 +1,24 @@
+<!-- @ui:component toggle -->
+<!-- @ui:kind primitive -->
+<!-- @ui:slots -->
+<!-- @ui:variants size=sm|md|lg -->
+
+<!-- Off (default) — aria-pressed="false" -->
+<button data-ui="toggle" type="button" aria-pressed="false">Bold</button>
+
+<!-- On — aria-pressed="true"; the pressed styling is pure CSS -->
+<button data-ui="toggle" type="button" aria-pressed="true">Italic</button>
+
+<!-- Icon + label (the glyph is decorative) -->
+<button data-ui="toggle" type="button" aria-pressed="true">
+  <span aria-hidden="true">★</span>
+  Starred
+</button>
+
+<!-- Sizes -->
+<button data-ui="toggle" type="button" aria-pressed="false" data-size="sm">Small</button>
+<button data-ui="toggle" type="button" aria-pressed="false">Medium</button>
+<button data-ui="toggle" type="button" aria-pressed="true" data-size="lg">Large</button>
+
+<!-- Disabled -->
+<button data-ui="toggle" type="button" aria-pressed="false" disabled>Disabled</button>

@@ -1,0 +1,73 @@
+/* @ui:component breadcrumb */
+/* @ui:tokens color-fg color-fg-muted color-fg-subtle color-primary-hover color-ring radius-sm space-2 text-xs text-sm text-base font-sans weight-medium duration-fast ease-default */
+
+/* ── Root ── */
+[data-ui="breadcrumb"] {
+  font-family: var(--breadcrumb-font, var(--font-sans));
+  font-size: var(--breadcrumb-size, var(--text-sm));
+  color: var(--color-fg-muted);
+}
+
+/* ── List ── */
+[data-ui="breadcrumb"] [data-part="list"] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--breadcrumb-gap, var(--space-2));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* ── Item (a link crumb) ── */
+[data-ui="breadcrumb"] [data-part="item"] {
+  color: var(--color-fg-muted);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  transition: color var(--duration-fast) var(--ease-default);
+}
+
+[data-ui="breadcrumb"] [data-part="item"]:hover {
+  color: var(--color-primary-hover);
+  text-decoration: underline;
+}
+
+[data-ui="breadcrumb"] [data-part="item"]:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+}
+
+/* ── Separator (presentational) ── */
+[data-ui="breadcrumb"] [data-part="separator"] {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-fg-subtle);
+  user-select: none;
+}
+
+/* Default glyph when the separator is left empty */
+[data-ui="breadcrumb"] [data-part="separator"]:empty::before {
+  content: var(--breadcrumb-separator, "/");
+}
+
+/* ── Current page ── */
+[data-ui="breadcrumb"] [data-part="current"] {
+  color: var(--color-fg);
+  font-weight: var(--weight-medium);
+}
+
+/* ── Sizes ── */
+[data-ui="breadcrumb"][data-size="sm"] {
+  font-size: var(--text-xs);
+}
+
+[data-ui="breadcrumb"][data-size="lg"] {
+  font-size: var(--text-base);
+}
+
+/* ── Motion ── */
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="breadcrumb"] [data-part="item"] {
+    transition: none;
+  }
+}

@@ -1,0 +1,44 @@
+<!-- @ui:component breadcrumb -->
+<!-- @ui:kind primitive -->
+<!-- @ui:slots list item separator current -->
+<!-- @ui:variants size=sm|md|lg -->
+
+<!-- Default — three levels, current page marked with aria-current="page" -->
+<nav data-ui="breadcrumb" aria-label="Breadcrumb">
+  <ol data-part="list">
+    <li><a data-part="item" href="/">Home</a></li>
+    <li data-part="separator" aria-hidden="true"></li>
+    <li><a data-part="item" href="/components">Components</a></li>
+    <li data-part="separator" aria-hidden="true"></li>
+    <li><span data-part="current" aria-current="page">Breadcrumb</span></li>
+  </ol>
+</nav>
+
+<!-- Two levels -->
+<nav data-ui="breadcrumb" aria-label="Breadcrumb">
+  <ol data-part="list">
+    <li><a data-part="item" href="/">Home</a></li>
+    <li data-part="separator" aria-hidden="true"></li>
+    <li><span data-part="current" aria-current="page">Settings</span></li>
+  </ol>
+</nav>
+
+<!-- Custom separator glyph via the --breadcrumb-separator custom property -->
+<nav data-ui="breadcrumb" aria-label="Breadcrumb" style="--breadcrumb-separator: '›'">
+  <ol data-part="list">
+    <li><a data-part="item" href="/">Docs</a></li>
+    <li data-part="separator" aria-hidden="true"></li>
+    <li><a data-part="item" href="/docs/primitives">Primitives</a></li>
+    <li data-part="separator" aria-hidden="true"></li>
+    <li><span data-part="current" aria-current="page">Breadcrumb</span></li>
+  </ol>
+</nav>
+
+<!-- Small size -->
+<nav data-ui="breadcrumb" data-size="sm" aria-label="Breadcrumb">
+  <ol data-part="list">
+    <li><a data-part="item" href="/">Home</a></li>
+    <li data-part="separator" aria-hidden="true"></li>
+    <li><span data-part="current" aria-current="page">Compact trail</span></li>
+  </ol>
+</nav>
