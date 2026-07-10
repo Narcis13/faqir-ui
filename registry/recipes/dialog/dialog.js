@@ -3,6 +3,22 @@
 
 import { trapFocus } from "../../core/focus.js";
 
+/**
+ * Shared modal-dialog controller.
+ *
+ * It drives both the `dialog` recipe and the `alert-dialog` recipe — the two are
+ * one controller, distinguished only by the panel's ARIA role. When the panel
+ * declares `role="alertdialog"` the controller switches to the WAI-ARIA
+ * alertdialog contract:
+ *   - the overlay backdrop does NOT dismiss (only an explicit choice closes it);
+ *   - focus lands on the least-destructive action (cancel/close), not the panel;
+ *   - Escape still closes by default, but a `data-confirm-required` root traps it
+ *     so the user must pick confirm or cancel;
+ *   - the footer's `[data-part="confirm"]` / `[data-part="cancel"]` actions emit
+ *     cancelable `faqir:confirm` / `faqir:cancel` events (a prevented confirm
+ *     keeps the dialog open for async work).
+ * A plain `role="dialog"` panel behaves exactly as before.
+ */
 export function createDialog(root) {
   // Prevent double-init
   if (root._faqirDialog) return root._faqirDialog;
@@ -11,9 +27,44 @@ export function createDialog(root) {
   const overlay = root.querySelector("[data-part='overlay']");
   const panel = root.querySelector("[data-part='panel']");
   const closeButtons = root.querySelectorAll("[data-part='close']");
+  const confirmButtons = root.querySelectorAll("[data-part='confirm']");
+  const cancelButtons = root.querySelectorAll("[data-part='cancel']");
+
+  // The role is the seam between `dialog` and `alert-dialog` — read it from the
+  // markup so a single controller serves both recipes.
+  const isAlert = !!panel && panel.getAttribute("role") === "alertdialog";
 
   let focusCleanup = null;
   let previouslyFocused = null;
+
+  /** A confirm-required alertdialog traps Escape/overlay until an action is taken. */
+  function confirmRequired() {
+    return isAlert && root.hasAttribute("data-confirm-required");
+  }
+
+  /** Emit a cancelable, bubbling `faqir:<type>` event; returns the event. */
+  function emit(type, detail) {
+    const event = new CustomEvent("faqir:" + type, {
+      bubbles: true,
+      cancelable: true,
+      detail: detail || {},
+    });
+    root.dispatchEvent(event);
+    return event;
+  }
+
+  /** On open, focus the least-destructive action for an alert, else the panel. */
+  function focusInitial() {
+    if (isAlert) {
+      const target =
+        root.querySelector("[data-part='cancel']") ||
+        root.querySelector("[data-part='close']") ||
+        panel;
+      target?.focus?.();
+    } else {
+      panel?.focus?.();
+    }
+  }
 
   function open() {
     previouslyFocused = document.activeElement;
@@ -21,7 +72,7 @@ export function createDialog(root) {
     overlay.hidden = false;
     panel.hidden = false;
     focusCleanup = trapFocus(panel);
-    panel.focus?.();
+    focusInitial();
   }
 
   function close() {
@@ -69,19 +120,47 @@ export function createDialog(root) {
   function onOverlayClick() {
     close();
   }
+  // In alert mode, dismissing without confirming is a cancel; the plain dialog
+  // just closes.
   function onCloseClick() {
+    if (isAlert) emit("cancel", { reason: "close" });
     close();
+  }
+  function onCancelClick() {
+    emit("cancel", { reason: "cancel" });
+    close();
+  }
+  function onConfirmClick() {
+    const variant =
+      panel?.getAttribute("data-variant") ||
+      root.getAttribute("data-variant") ||
+      "default";
+    const event = emit("confirm", { variant });
+    // A handler may keep the dialog open (e.g. to await a destructive request)
+    // by calling preventDefault() on the confirm event.
+    if (!event.defaultPrevented) close();
   }
   function onKeyDown(e) {
     if (e.key === "Escape" && root.dataset.state === "open") {
+      // WAI-ARIA allows Escape to close an alertdialog, but a confirm-required
+      // variant traps it so the user must make an explicit choice.
+      if (confirmRequired()) {
+        e.stopPropagation();
+        return;
+      }
       e.stopPropagation();
+      if (isAlert) emit("cancel", { reason: "escape" });
       close();
     }
   }
 
   trigger?.addEventListener("click", onTriggerClick);
-  overlay?.addEventListener("click", onOverlayClick);
+  // An alertdialog must not dismiss on overlay click — only an explicit choice
+  // closes it — so the overlay handler is bound for plain dialogs only.
+  if (!isAlert) overlay?.addEventListener("click", onOverlayClick);
   closeButtons.forEach((btn) => btn.addEventListener("click", onCloseClick));
+  confirmButtons.forEach((btn) => btn.addEventListener("click", onConfirmClick));
+  cancelButtons.forEach((btn) => btn.addEventListener("click", onCancelClick));
   root.addEventListener("keydown", onKeyDown);
 
   // Support external triggers: any element with [data-open="{dialog-id}"]
@@ -96,9 +175,15 @@ export function createDialog(root) {
 
   function destroy() {
     trigger?.removeEventListener("click", onTriggerClick);
-    overlay?.removeEventListener("click", onOverlayClick);
+    if (!isAlert) overlay?.removeEventListener("click", onOverlayClick);
     closeButtons.forEach((btn) =>
       btn.removeEventListener("click", onCloseClick)
+    );
+    confirmButtons.forEach((btn) =>
+      btn.removeEventListener("click", onConfirmClick)
+    );
+    cancelButtons.forEach((btn) =>
+      btn.removeEventListener("click", onCancelClick)
     );
     root.removeEventListener("keydown", onKeyDown);
     if (externalTriggers.length) {
