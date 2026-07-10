@@ -1,0 +1,80 @@
+{
+  "name": "link",
+  "version": "1.0.0",
+  "kind": "primitive",
+  "category": "navigation",
+  "description": "Styled anchor with external/muted variants; external links get a CSS-only indicator",
+
+  "anatomy": {
+    "tag": "a",
+    "selector": "[data-ui='link']",
+    "content_model": "inline"
+  },
+
+  "slots": {},
+
+  "variants": {
+    "style": {
+      "values": ["default", "external", "muted"],
+      "default": "default",
+      "attr": "data-variant",
+      "applied_to": "root"
+    }
+  },
+
+  "states": {},
+
+  "props": {
+    "href": { "type": "string", "default": "", "description": "Link destination (required on every anchor)" },
+    "text": { "type": "string", "default": "", "description": "Link text content" }
+  },
+
+  "a11y": {
+    "required_attrs": [],
+    "keyboard": {
+      "Enter": "Follows the link"
+    },
+    "notes": "External links should set target=\"_blank\" with rel=\"noopener noreferrer\". Link text must be descriptive — never bare URLs or 'click here'."
+  },
+
+  "tokens_used": [
+    "color-primary", "color-primary-hover", "color-primary-active",
+    "color-fg", "color-fg-muted", "color-ring",
+    "radius-sm", "space-1"
+  ],
+
+  "templates": {
+    "html": "<a data-ui=\"link\" href=\"{href}\">{text}</a>",
+    "html_external": "<a data-ui=\"link\" data-variant=\"external\" href=\"{href}\" target=\"_blank\" rel=\"noopener noreferrer\">{text}</a>"
+  },
+
+  "safe_transforms": [
+    "change-variant",
+    "change-href",
+    "change-text-content"
+  ],
+
+  "unsafe_transforms": [
+    "remove-href",
+    "remove-rel-noopener-on-external"
+  ],
+
+  "composition": {
+    "contains": [],
+    "used_in": []
+  },
+
+  "files": {
+    "html": "link.html",
+    "css": "link.css",
+    "manifest": "link.manifest.json"
+  },
+
+  "tests": [
+    "renders-as-anchor-element",
+    "default-uses-primary-color",
+    "muted-variant-uses-fg-muted",
+    "external-variant-has-css-indicator",
+    "focus-visible-shows-ring"
+  ]
+}

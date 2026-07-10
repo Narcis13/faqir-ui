@@ -1,0 +1,45 @@
+/* @ui:component link */
+/* @ui:tokens color-primary color-primary-hover color-primary-active color-fg color-fg-muted color-ring radius-sm space-1 */
+
+/* ── Base ── */
+[data-ui="link"] {
+  color: var(--color-primary);
+  font-family: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+[data-ui="link"]:hover {
+  color: var(--color-primary-hover);
+}
+
+[data-ui="link"]:active {
+  color: var(--color-primary-active);
+}
+
+[data-ui="link"]:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+}
+
+/* ── Variants ── */
+[data-ui="link"][data-variant="muted"] {
+  color: var(--color-fg-muted);
+}
+
+[data-ui="link"][data-variant="muted"]:hover {
+  color: var(--color-fg);
+}
+
+/* External links get a CSS-only indicator */
+[data-ui="link"][data-variant="external"]::after {
+  content: "\2197";
+  display: inline-block;
+  margin-inline-start: var(--space-1);
+  font-size: 0.75em;
+  line-height: 1;
+  text-decoration: none;
+}

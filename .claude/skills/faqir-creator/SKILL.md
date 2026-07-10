@@ -51,7 +51,7 @@ Every Faqir component uses exactly five data attributes — this is the DOM cont
 
 ## Component Inventory
 
-**30 Primitives** (CSS-only): avatar, badge, button, callout, card, checkbox, description-list, empty-state, field-group, grid, image, input, kbd, key-value, label, nav, page-break, progress, radio, select, separator, signature, spinner, stack, stat, stepper, surface, switch, text, textarea
+**33 Primitives** (CSS-only): avatar, badge, button, callout, card, checkbox, chip, description-list, empty-state, field-group, grid, image, input, kbd, key-value, label, link, nav, page-break, progress, radio, select, separator, signature, skeleton, spinner, stack, stat, stepper, surface, switch, text, textarea
 
 **16 Recipes** (CSS + JS): accordion, combobox, command-palette, date-picker, dialog, drawer, dropdown, pagination, popover, qr-code, select-custom, sheet, table, tabs, toast, tooltip
 

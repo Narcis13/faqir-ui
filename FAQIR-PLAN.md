@@ -65,7 +65,7 @@ done in any order (or in parallel worktrees).
 
 | ID | Task | Status |
 |----|------|--------|
-| 0.4-01 | Primitives batch 1: `skeleton`, `chip`, `link` | ⬜ |
+| 0.4-01 | Primitives batch 1: `skeleton`, `chip`, `link` | ✅ |
 | 0.4-02 | Primitives batch 2: `breadcrumb`, `toggle`, `collapsible`, `aspect-ratio` | ⬜ |
 | 0.4-03 | `alert` as manifest alias/refinement of `callout` | ⬜ |
 | 0.4-04 | Icon system: primitive, mask/data-URI runtime, ~120-icon set | ⬜ |
@@ -481,9 +481,9 @@ variants (external gets an indicator via CSS).
 - CSS assertions: skeleton has a `@media (prefers-reduced-motion: reduce)` block; all colors/spacing reference tokens (no literal values — reuse/extend the token-literal check).
 
 **Acceptance criteria**
-- [ ] `faqir add skeleton|chip|link` works end-to-end (files copied, listed in inventory).
-- [ ] Reference pages render correctly in all themes, light+dark.
-- [ ] Zero audit findings; zero literal color values in the new CSS.
+- [x] `faqir add skeleton|chip|link` works end-to-end (files copied, listed in inventory). (`tests/primitives/batch1.test.ts`)
+- [x] Reference pages render correctly in all themes, light+dark. (Verified in-browser: default light+dark, midnight; components use only semantic tokens, which the 0.3-11 theme-coverage gate guarantees for every theme.)
+- [x] Zero audit findings; zero literal color values in the new CSS. (Audit of a fresh project with all three installed returns zero results; token-literal check extended to spacing properties.)
 
 ---
 

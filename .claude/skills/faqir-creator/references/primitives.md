@@ -1,6 +1,6 @@
 # Primitives Reference
 
-All 30 CSS-only primitives. No JavaScript required.
+All 33 CSS-only primitives. No JavaScript required.
 
 ## Table of Contents
 - [Stack](#stack) | [Grid](#grid) | [Surface](#surface)
@@ -11,6 +11,7 @@ All 30 CSS-only primitives. No JavaScript required.
 - [Stepper](#stepper) | [Nav](#nav) | [Text & Heading](#text--heading)
 - [Callout](#callout) | [Description List](#description-list) | [Field Group](#field-group) | [Image](#image)
 - [Key-Value](#key-value) | [Page Break](#page-break) | [Signature](#signature) | [Stat](#stat)
+- [Skeleton](#skeleton) | [Chip](#chip) | [Link](#link)
 
 ---
 
@@ -417,3 +418,39 @@ Sizes: sm=40%, md=60%, lg=80% width. The line provides space for handwritten sig
 ```
 
 Trend: `up` = green, `down` = red, `neutral` = gray. `card` variant adds border and padding.
+
+## Skeleton
+
+```html
+<div data-ui="skeleton" aria-hidden="true"></div>
+<div data-ui="skeleton" aria-hidden="true" style="--skeleton-width: 60%"></div>
+<div data-ui="skeleton" data-variant="circle" aria-hidden="true"></div>
+<div data-ui="skeleton" data-variant="rect" aria-hidden="true"></div>
+```
+
+Loading placeholder. Default variant is a text line (`--skeleton-width`/`--skeleton-height` custom
+properties size it); `circle` sizes via `--skeleton-size`; `rect` is an image/card block. Always set
+`aria-hidden="true"` (required by audit). Shimmer animation auto-disables under `prefers-reduced-motion`.
+
+## Chip
+
+```html
+<span data-ui="chip" data-variant="default|primary|outline|destructive" data-size="sm|lg">
+  <span data-part="label">Label</span>
+  <button data-part="dismiss" type="button" aria-label="Remove Label">&times;</button>
+</span>
+```
+
+Label slot is required; dismiss is optional. A dismiss button must be `type="button"` with an
+`aria-label` (both enforced by audit).
+
+## Link
+
+```html
+<a data-ui="link" href="/docs">Documentation</a>
+<a data-ui="link" data-variant="external" href="https://…" target="_blank" rel="noopener noreferrer">External</a>
+<a data-ui="link" data-variant="muted" href="/terms">Terms</a>
+```
+
+Styled anchor. `external` gets a CSS-only ↗ indicator — pair it with `target="_blank"` and
+`rel="noopener noreferrer"`. `muted` renders in the muted foreground color.
