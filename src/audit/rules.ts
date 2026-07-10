@@ -1,13 +1,14 @@
 // Audit rule definitions — each rule checks a parsed component against its manifest
 
-import type { ParsedComponent, ParsedElement } from "../parser/html-parser";
+import type { ParsedComponent, ParsedElement, ParsedDocument } from "../parser/html-parser";
+import { offsetToPosition } from "../parser/html-parser";
 import type { Manifest } from "../manifest";
 import { suggestClosest } from "../utils/suggest";
 
 export type Severity = "critical" | "error" | "warning" | "info";
 
 export interface RepairAction {
-  type: "add-attribute" | "rename-attribute" | "remove-element" | "add-element" | "add-script" | "rewrite-css";
+  type: "add-attribute" | "rename-attribute" | "remove-element" | "add-element" | "add-script" | "rewrite-css" | "rename-id";
   /** Byte offset in source where the fix applies */
   offset: number;
   details: Record<string, string>;
@@ -19,6 +20,8 @@ export interface AuditResult {
   component_name: string;
   file: string;
   line: number;
+  /** 1-based column, when a rule can pin the finding precisely (document rules). */
+  column?: number;
   message: string;
   fix?: RepairAction;
 }
@@ -692,6 +695,296 @@ export const ALL_RULES: AuditRule[] = [
   tokenAwareStyleRule,
 ];
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Document-level rules (task 0.4-15)
+//
+// These operate on a whole HTML file (`ParsedDocument`), not a single component
+// vs its manifest. They are deterministic, manifest-independent accessibility
+// checks and run on every scanned HTML file, in addition to the per-component
+// rules above. Each finding carries a 1-based line AND column, pinned to the
+// offending element via `offsetToPosition`.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface DocumentRule {
+  id: string;
+  severity: Severity;
+  description: string;
+  check(doc: ParsedDocument): AuditResult[];
+}
+
+const HEADING_TAGS = new Set(["h1", "h2", "h3", "h4", "h5", "h6"]);
+
+/** True if `el` has the given ARIA role (role attribute is a space-separated list). */
+function hasRole(el: ParsedElement, role: string): boolean {
+  const r = el.attrs["role"];
+  return !!r && r.split(/\s+/).includes(role);
+}
+
+/** 1-based line/column of an element's opening `<`, against the document source. */
+function elementPosition(doc: ParsedDocument, el: ParsedElement): { line: number; column: number } {
+  return offsetToPosition(doc.source, el.start);
+}
+
+// Attributes whose value is an IDREF (or a space-separated IDREF list). If a
+// duplicated id is the target of any of these, an automatic rename is unsafe —
+// the reference would become ambiguous (which element did it mean?) — so those
+// duplicates are report-only. See `duplicateIdRule`.
+const IDREF_ATTRS = [
+  "for", "form", "list", "headers", "aria-labelledby", "aria-describedby",
+  "aria-controls", "aria-owns", "aria-activedescendant", "aria-details",
+  "aria-errormessage", "aria-flowto", "popovertarget", "itemref", "contextmenu",
+];
+
+/** Every id value referenced anywhere in the document (IDREF attrs + `#frag` URLs). */
+function collectReferencedIds(doc: ParsedDocument): Set<string> {
+  const refs = new Set<string>();
+  for (const el of doc.elements) {
+    for (const attr of IDREF_ATTRS) {
+      const v = el.attrs[attr];
+      if (!v) continue;
+      for (const token of v.split(/\s+/)) if (token) refs.add(token);
+    }
+    for (const attr of ["href", "xlink:href"]) {
+      const v = el.attrs[attr];
+      if (v && v.length > 1 && v.startsWith("#")) refs.add(v.slice(1));
+    }
+  }
+  return refs;
+}
+
+// Ids inside a <template> live in a separate scope: template content is inert and
+// seeds declarative shadow DOM, so the same id there is NOT a document-level
+// duplicate. We key each id by its nearest ancestor <template> (light DOM = the
+// document scope). Duplicate IDs *across shadow boundaries* are therefore out of
+// scope by design — a static scan cannot see into a real shadow root, and the
+// <template> case is the one we can and do model here.
+function idScopeKey(el: ParsedElement): string {
+  let p = el.parent;
+  while (p) {
+    if (p.tag === "template") return `tpl@${p.start}`;
+    p = p.parent;
+  }
+  return "doc";
+}
+
+/** Next id not already present/assigned, e.g. `email` → `email-2` → `email-3`. */
+function uniqueIdName(base: string, used: Set<string>): string {
+  let n = 2;
+  let candidate = `${base}-${n}`;
+  while (used.has(candidate)) candidate = `${base}-${++n}`;
+  return candidate;
+}
+
+// ── Rule: duplicate-id ──
+// Every id must be unique within a document; duplicates break ARIA relationships
+// (aria-labelledby/for/aria-controls resolve to the first match, silently
+// mis-wiring the rest) and are invalid HTML. The first occurrence in a scope is
+// treated as canonical; each subsequent one is flagged.
+//
+// Auto-repair decision: a duplicate is marked auto-repairable ONLY when a *safe*
+// rename exists — i.e. the id is not referenced by any IDREF attribute or `#frag`
+// URL anywhere in the document. An unreferenced duplicate can be given a unique
+// suffix with no behavioral change. A *referenced* duplicate is report-only: we
+// can't know which element the reference intended, so renaming could break the
+// wiring — a human must resolve it.
+export const duplicateIdRule: DocumentRule = {
+  id: "duplicate-id",
+  severity: "error",
+  description: "Every id must be unique within a document — duplicates break ARIA references (aria-labelledby/for/aria-controls) and are invalid HTML.",
+  check(doc) {
+    const results: AuditResult[] = [];
+
+    // Group id-bearing elements by (scope, id value), preserving document order.
+    const groups = new Map<string, ParsedElement[]>();
+    const allIds = new Set<string>();
+    for (const el of doc.elements) {
+      const id = el.attrs["id"];
+      if (!id) continue; // skip missing/empty id
+      allIds.add(id);
+      const key = `${idScopeKey(el)} ${id}`;
+      const arr = groups.get(key);
+      if (arr) arr.push(el);
+      else groups.set(key, [el]);
+    }
+
+    const referenced = collectReferencedIds(doc);
+    const used = new Set(allIds); // pool for generating collision-free rename targets
+
+    for (const [key, els] of groups) {
+      if (els.length < 2) continue;
+      const id = key.slice(key.indexOf(" ") + 1);
+      const safe = !referenced.has(id);
+
+      // Keep the first occurrence as canonical; flag every later one.
+      for (let i = 1; i < els.length; i++) {
+        const el = els[i];
+        const { line, column } = elementPosition(doc, el);
+        const result: AuditResult = {
+          rule_id: "duplicate-id",
+          severity: "error",
+          component_name: el.attrs["data-ui"] || "",
+          file: doc.file,
+          line,
+          column,
+          message: "",
+        };
+        if (safe) {
+          const to = uniqueIdName(id, used);
+          used.add(to);
+          result.message =
+            `Duplicate id="${id}" on <${el.tag}> — ids must be unique per document (${els.length} elements share it). ` +
+            `Rename this one to id="${to}" (nothing references it, so the rename is safe), or remove the id.`;
+          result.fix = { type: "rename-id", offset: el.start, details: { from: id, to } };
+        } else {
+          result.message =
+            `Duplicate id="${id}" on <${el.tag}> — ids must be unique per document (${els.length} elements share it), ` +
+            `and this id is referenced (aria-*/for/href="#${id}"). Resolve manually and re-point the reference so the ARIA/label wiring stays correct.`;
+        }
+        results.push(result);
+      }
+    }
+
+    return results;
+  },
+};
+
+// ── Rule: heading-order ──
+// Heading levels must not skip when descending: after an h{n} the next heading
+// may be h{n+1} at deepest (or any shallower level — going back up is fine). A
+// jump like h2 → h4 is flagged. The first heading sets the baseline and is never
+// flagged, so a fragment/section that legitimately starts at h2 or h3 is fine;
+// h1 → h2 → h2 is fine (same level repeats). Native h1–h6 only.
+export const headingOrderRule: DocumentRule = {
+  id: "heading-order",
+  severity: "warning",
+  description: "Heading levels must not skip when going deeper (h2 → h4 is a skip) — jumping levels breaks the document outline for assistive tech. The first heading sets the baseline; going back up a level is allowed.",
+  check(doc) {
+    const results: AuditResult[] = [];
+    let prevLevel = 0;
+    let prevTag = "";
+
+    for (const el of doc.elements) {
+      if (!HEADING_TAGS.has(el.tag)) continue;
+      const level = Number(el.tag[1]);
+      if (prevLevel !== 0 && level > prevLevel + 1) {
+        const { line, column } = elementPosition(doc, el);
+        const expected = `h${prevLevel + 1}`;
+        results.push({
+          rule_id: "heading-order",
+          severity: "warning",
+          component_name: "",
+          file: doc.file,
+          line,
+          column,
+          message:
+            `Heading level skipped: <${el.tag}> follows <${prevTag}> (h${prevLevel} → h${level}). ` +
+            `Use <${expected}> here so levels increase one at a time, or add the missing intermediate heading(s).`,
+        });
+      }
+      prevLevel = level;
+      prevTag = el.tag;
+    }
+
+    return results;
+  },
+};
+
+// ── Rule: landmark ──
+// Three deterministic landmark checks:
+//   1. A full page must expose a main landmark (<main> or role="main"), so
+//      assistive tech and skip links can reach the primary content. Only applies
+//      to full documents — a component fragment is not a page. Multiple mains are
+//      intentionally NOT flagged here (reference pages demo several variants).
+//   2. A dialog (<dialog>, role="dialog"/"alertdialog", or data-ui="dialog") must
+//      not be nested inside <main> — overlays belong outside the content flow
+//      (typically a direct child of <body>).
+//   3. When 2+ navigation landmarks exist, each needs an accessible name
+//      (aria-label/aria-labelledby) so they can be told apart. A lone nav is fine.
+export const landmarkRule: DocumentRule = {
+  id: "landmark",
+  severity: "warning",
+  description: "Landmark hygiene: full pages must have a main landmark; dialogs must not be nested inside <main>; and when multiple navigation landmarks exist each must have an accessible name.",
+  check(doc) {
+    const results: AuditResult[] = [];
+    const isMain = (el: ParsedElement) => el.tag === "main" || hasRole(el, "main");
+    const isNav = (el: ParsedElement) => el.tag === "nav" || hasRole(el, "navigation");
+    const isDialog = (el: ParsedElement) =>
+      el.tag === "dialog" || hasRole(el, "dialog") || hasRole(el, "alertdialog") || el.attrs["data-ui"] === "dialog";
+
+    // 1) Full pages need a main landmark.
+    if (doc.isFullDocument && !doc.elements.some(isMain)) {
+      const body = doc.elements.find((e) => e.tag === "body");
+      const { line, column } = body ? elementPosition(doc, body) : { line: 1, column: 1 };
+      results.push({
+        rule_id: "landmark",
+        severity: "warning",
+        component_name: "",
+        file: doc.file,
+        line,
+        column,
+        message:
+          `Page has no main landmark — wrap the primary content in a <main> element (or add role="main"). ` +
+          `Assistive tech and "skip to content" links rely on it.`,
+      });
+    }
+
+    // 2) Dialogs must not live inside the main content flow.
+    for (const el of doc.elements) {
+      if (!isDialog(el)) continue;
+      let ancestor = el.parent;
+      let insideMain = false;
+      while (ancestor) {
+        if (isMain(ancestor)) { insideMain = true; break; }
+        ancestor = ancestor.parent;
+      }
+      if (insideMain) {
+        const { line, column } = elementPosition(doc, el);
+        results.push({
+          rule_id: "landmark",
+          severity: "warning",
+          component_name: el.attrs["data-ui"] || "",
+          file: doc.file,
+          line,
+          column,
+          message:
+            `Dialog <${el.tag}> is nested inside <main> — move it out of the main content flow ` +
+            `(typically a direct child of <body>) so it overlays the page instead of sitting in document order.`,
+        });
+      }
+    }
+
+    // 3) Multiple navigation landmarks each need an accessible name.
+    const navs = doc.elements.filter(isNav);
+    if (navs.length >= 2) {
+      for (const nav of navs) {
+        const labeled = !!(nav.attrs["aria-label"]?.trim() || nav.attrs["aria-labelledby"]?.trim());
+        if (labeled) continue;
+        const { line, column } = elementPosition(doc, nav);
+        results.push({
+          rule_id: "landmark",
+          severity: "warning",
+          component_name: nav.attrs["data-ui"] || "",
+          file: doc.file,
+          line,
+          column,
+          message:
+            `Multiple navigation landmarks present (${navs.length}), but this <${nav.tag}> has no accessible name — ` +
+            `add aria-label (or aria-labelledby) so each nav is distinguishable to assistive tech.`,
+        });
+      }
+    }
+
+    return results;
+  },
+};
+
+/** Every document-level rule, run on each scanned HTML file (task 0.4-15). */
+export const DOCUMENT_RULES: DocumentRule[] = [
+  duplicateIdRule,
+  headingOrderRule,
+  landmarkRule,
+];
+
 // ── Anti-pattern rule metadata ──
 // The CSS/JS anti-pattern rules don't run against a parsed component + manifest
 // (they scan raw .css / .js source in the checker), so they aren't AuditRule
@@ -792,7 +1085,13 @@ export function getRuleInventory(): RuleInfo[] {
     description: r.description,
     applies_to: "component markup vs manifest",
   }));
-  return [...fromManifestRules, ...ANTIPATTERN_RULES];
+  const fromDocumentRules: RuleInfo[] = DOCUMENT_RULES.map(r => ({
+    id: r.id,
+    severity: r.severity,
+    description: r.description,
+    applies_to: "HTML document",
+  }));
+  return [...fromManifestRules, ...fromDocumentRules, ...ANTIPATTERN_RULES];
 }
 
 // Helper to estimate line number from element position

@@ -2,11 +2,11 @@
 
 import { existsSync } from "node:fs";
 import { join, relative } from "node:path";
-import { extractComponents } from "../parser/html-parser";
+import { extractComponents, parseDocument } from "../parser/html-parser";
 import { extractTokenReferences, collectDefinedTokens, hasReducedMotionQuery, hasAnimationProperties, findImportantDeclarations, findClassSelectors, findIdSelectors, findHardcodedColorValues, findLogicalPropertyViolations } from "../parser/css-parser";
 import { findExternalImports, findDataFetching } from "../parser/js-parser";
 import { loadManifest, type Manifest } from "../manifest";
-import { type AuditResult, type Severity, ALL_RULES, NO_FETCH_RULE, NO_EXTERNAL_IMPORT_RULE, LOGICAL_PROPERTIES_RULE } from "./rules";
+import { type AuditResult, type Severity, ALL_RULES, DOCUMENT_RULES, NO_FETCH_RULE, NO_EXTERNAL_IMPORT_RULE, LOGICAL_PROPERTIES_RULE } from "./rules";
 import { readConfig } from "../utils/config";
 import { getRegistryPath } from "../utils/fs";
 
@@ -79,6 +79,7 @@ export async function runAudit(options: AuditOptions = {}): Promise<AuditSummary
 
   const skipRules = new Set(options.skipRules || []);
   const activeRules = ALL_RULES.filter(r => !skipRules.has(r.id));
+  const activeDocRules = DOCUMENT_RULES.filter(r => !skipRules.has(r.id));
 
   // Audit each HTML file
   for (const filePath of htmlFiles) {
@@ -98,6 +99,15 @@ export async function runAudit(options: AuditOptions = {}): Promise<AuditSummary
       for (const rule of activeRules) {
         const ruleResults = rule.check(component, manifest);
         results.push(...ruleResults);
+      }
+    }
+
+    // Document-level rules (duplicate-id, heading-order, landmark) — run once per
+    // HTML file over the whole document, independent of installed manifests.
+    if (activeDocRules.length > 0) {
+      const doc = parseDocument(source, relPath);
+      for (const rule of activeDocRules) {
+        results.push(...rule.check(doc));
       }
     }
 

@@ -60,7 +60,9 @@ export function printAuditReport(summary: AuditSummary): void {
       const color = SEVERITY_COLORS[result.severity];
       const icon = SEVERITY_ICONS[result.severity];
       const sev = result.severity.toUpperCase().padEnd(8);
-      console.log(`  ${color}${icon} ${sev}${RESET} ${result.message}`);
+      // Document rules pin a precise line:column — surface it so the fix is easy to find.
+      const loc = result.column !== undefined ? `${SEVERITY_COLORS.info}L${result.line}:${result.column}${RESET} ` : "";
+      console.log(`  ${color}${icon} ${sev}${RESET} ${loc}${result.message}`);
       if (result.fix) {
         console.log(`    ${SEVERITY_COLORS.info}↳ Auto-fixable${RESET}`);
       }
@@ -105,6 +107,7 @@ export function printAuditJSON(summary: AuditSummary): void {
       component_name: r.component_name,
       file: r.file,
       line: r.line,
+      ...(r.column !== undefined ? { column: r.column } : {}),
       message: r.message,
       fixable: !!r.fix,
     })),
