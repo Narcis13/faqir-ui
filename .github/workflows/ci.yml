@@ -1,0 +1,96 @@
+name: CI
+
+# Task 0.3-12 · FAQIR-PLAN §10.4
+# Five gates, every push and PR:
+#   1. test            — full suite on Bun latest
+#   2. smoke           — compiled CLI on plain Node 18/20/22 (no Bun runtime)
+#   3. typecheck       — tsc --noEmit
+#   4. registry-audit  — logical-properties over registry/**, zero findings
+#   5. size            — gzip budgets (engine ≤14KB, engine+controllers ≤22KB, plugins ≤2KB)
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # (1) Full test suite on the Bun runtime.
+  test:
+    name: Test (Bun latest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install
+      - run: bun test
+
+  # (3) TypeScript typecheck of src + tests.
+  typecheck:
+    name: Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install
+      - run: bun run typecheck
+
+  # (4) Registry self-audit — the framework's own rule engine over registry/**.
+  #     Any physical, direction-bound CSS reintroduced into the registry fails here.
+  registry-audit:
+    name: Registry self-audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun run audit:registry
+
+  # (5) Size budgets. Reassemble the engine from source first so the measurement
+  #     reflects the current registry, then enforce the gzip budgets.
+  size:
+    name: Size budgets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Reassemble engine (registry/core/faqir-core.js)
+        run: bun run build:core
+      - name: Enforce gzip budgets
+        run: bun run size
+
+  # (2) Compiled-CLI smoke test on plain Node, across the supported matrix.
+  #     Bun builds dist/faqir.mjs; Node (matrix version) runs it — exactly the
+  #     path taken on a machine with no Bun installed. See scripts/smoke-cli.sh.
+  smoke:
+    name: Smoke CLI (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [18, 20, 22]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node }}
+          package-manager-cache: false
+      - name: Build with Bun, run on Node ${{ matrix.node }}
+        run: bash scripts/smoke-cli.sh

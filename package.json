@@ -17,6 +17,8 @@
     "test": "bun test",
     "typecheck": "tsc --noEmit",
     "smoke": "bash scripts/smoke-cli.sh",
+    "size": "node scripts/check-size.mjs",
+    "audit:registry": "bun scripts/registry-audit.mjs",
     "release": "node scripts/release.mjs",
     "release:patch": "node scripts/release.mjs patch",
     "release:minor": "node scripts/release.mjs minor",
