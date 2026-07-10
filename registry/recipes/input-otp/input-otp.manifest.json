@@ -1,0 +1,160 @@
+{
+  "name": "input-otp",
+  "version": "1.0.0",
+  "kind": "recipe",
+  "category": "form",
+  "description": "Segmented one-time-code input — N visual segments over a single hidden real input, with paste distribution, auto-advance, backspace-back, and a fire-once complete event",
+
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='input-otp']",
+    "content_model": "slots"
+  },
+
+  "slots": {
+    "input": {
+      "selector": "[data-part='input']",
+      "required": true,
+      "tag_hint": "input",
+      "description": "The single real text input. Transparent and stretched over the segments, it owns focus, typing, paste, selection and mobile SMS autofill. Carries the accessible name, autocomplete=\"one-time-code\", inputmode and maxlength."
+    },
+    "segments": {
+      "selector": "[data-part='segments']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "Decorative row that visually mirrors the input's value. Marked aria-hidden because the real input is the accessible control."
+    },
+    "segment": {
+      "selector": "[data-part='segment']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "One visual cell per character. The controller reflects data-filled, data-active and data-caret onto these; count is reconciled to data-length at init."
+    }
+  },
+
+  "variants": {
+    "size": {
+      "values": ["sm", "md", "lg"],
+      "default": "md",
+      "attr": "data-size",
+      "applied_to": "root"
+    },
+    "mode": {
+      "values": ["numeric", "alphanumeric"],
+      "default": "numeric",
+      "attr": "data-mode",
+      "applied_to": "root",
+      "description": "numeric = digits only (inputmode=\"numeric\", pattern=\"[0-9]*\"); alphanumeric = letters + digits (inputmode=\"text\"). Illegal characters are silently dropped on type and paste."
+    }
+  },
+
+  "states": {
+    "complete": { "attr": "data-state=\"complete\"", "applied_to": "root", "transient": true },
+    "disabled": { "attr": "data-disabled", "applied_to": "root" }
+  },
+
+  "props": {
+    "length": { "type": "number", "default": 6, "attr": "data-length", "description": "Number of segments / code length (clamped 1–12). Authoritative: the controller rebuilds the segment row to match." },
+    "mode": { "type": "string", "default": "numeric", "attr": "data-mode", "description": "\"numeric\" or \"alphanumeric\" — the allowed character set" },
+    "value": { "type": "string", "attr": "data-value", "description": "Initial code; seeded silently (no complete event) at init" }
+  },
+
+  "a11y": {
+    "required_attrs": [
+      "autocomplete=\"one-time-code\" on input",
+      "aria-label on input"
+    ],
+    "keyboard": {
+      "0-9 / a-z": "type a character into the caret segment; focus auto-advances",
+      "Backspace": "delete the character before the caret; on an empty trailing segment the caret moves to the previous (filled) segment",
+      "Delete": "delete the character at the caret",
+      "ArrowLeft": "move the caret one segment toward the start",
+      "ArrowRight": "move the caret one segment toward the end",
+      "Home": "move the caret to the first segment",
+      "End": "move the caret to the last filled segment",
+      "Paste": "distribute the pasted characters from the caret, dropping any that don't fit the mode"
+    },
+    "notes": [
+      "Single real input, not one input per segment: a single labelled field announces cleanly to screen readers, lets the browser handle paste at the caret, and lets iOS/Android surface SMS codes via autocomplete=\"one-time-code\".",
+      "The segment row is aria-hidden — it is purely presentational.",
+      "aria-invalid=\"true\" on the root reflects an error state onto the segments."
+    ]
+  },
+
+  "events": {
+    "faqir:change": { "detail": "{ value }", "description": "Fires on every value change with the current (possibly partial) code" },
+    "faqir:complete": { "detail": "{ value }", "description": "Fires exactly once when the code becomes full; re-armed only after the value drops below full again" }
+  },
+
+  "api": {
+    "getValue": "() => string — current value",
+    "setValue": "(str) => void — set the value silently (no change/complete event)",
+    "clear": "() => void — reset to empty",
+    "focus": "() => void — focus the real input",
+    "destroy": "() => void — remove listeners and the private handle"
+  },
+
+  "tokens_used": [
+    "color-bg", "color-fg", "color-fg-muted", "color-border", "color-border-strong",
+    "color-ring", "color-primary", "color-destructive",
+    "radius-md", "space-2", "space-3", "text-base", "text-lg",
+    "font-sans", "duration-fast", "ease-default"
+  ],
+
+  "templates": {
+    "html": "<div data-ui=\"input-otp\" data-length=\"6\" data-mode=\"numeric\">\n  <input data-part=\"input\" type=\"text\" inputmode=\"numeric\" autocomplete=\"one-time-code\" pattern=\"[0-9]*\" maxlength=\"6\" autocapitalize=\"off\" autocorrect=\"off\" spellcheck=\"false\" aria-label=\"One-time code\" />\n  <div data-part=\"segments\" aria-hidden=\"true\">\n    <div data-part=\"segment\"></div>\n    <div data-part=\"segment\"></div>\n    <div data-part=\"segment\"></div>\n    <div data-part=\"segment\"></div>\n    <div data-part=\"segment\"></div>\n    <div data-part=\"segment\"></div>\n  </div>\n</div>"
+  },
+
+  "safe_transforms": [
+    "change-length",
+    "change-mode",
+    "change-initial-value",
+    "change-size",
+    "toggle-disabled",
+    "relabel-input",
+    "restyle-segment"
+  ],
+
+  "unsafe_transforms": [
+    "remove-real-input",
+    "split-into-per-segment-inputs",
+    "remove-autocomplete-one-time-code",
+    "remove-input-accessible-name",
+    "make-segments-focusable",
+    "remove-aria-hidden-from-segments"
+  ],
+
+  "composition": {
+    "contains": [],
+    "used_in": ["auth-form"]
+  },
+
+  "files": {
+    "html": "input-otp.html",
+    "css": "input-otp.css",
+    "js": "input-otp.js",
+    "manifest": "input-otp.manifest.json"
+  },
+
+  "tests": [
+    "typing-fills-segments-and-auto-advances",
+    "invalid-characters-are-ignored-in-numeric-mode",
+    "alphanumeric-mode-accepts-letters-and-digits",
+    "backspace-on-empty-segment-focuses-previous",
+    "backspace-deletes-the-previous-character",
+    "paste-of-full-code-fills-all-segments",
+    "paste-of-partial-code-fills-from-cursor",
+    "paste-sanitizes-and-caps-to-length",
+    "complete-event-fires-exactly-once-when-filled",
+    "complete-re-arms-after-dropping-below-full",
+    "no-complete-event-on-init-even-when-prefilled",
+    "change-event-carries-the-current-value",
+    "segments-are-rebuilt-to-match-data-length",
+    "input-has-one-time-code-autocomplete-and-inputmode",
+    "input-has-an-accessible-name",
+    "segments-container-is-aria-hidden",
+    "getValue-setValue-clear-round-trip",
+    "prevents-double-initialization",
+    "destroy-removes-listeners"
+  ]
+}

@@ -1,0 +1,377 @@
+// @ui:controller input-otp
+// @ui:provides getValue setValue clear focus destroy
+
+/**
+ * input-otp — segmented one-time-code entry.
+ *
+ * ── Approach: ONE real input, N presentational segments ─────────────────────
+ * The widget is a single, real `<input data-part="input">` stretched over a row
+ * of decorative `[data-part="segment"]` boxes. The input is transparent (text,
+ * caret and background) and sits on top, so every keystroke, paste, selection,
+ * IME composition and — crucially — mobile SMS autofill goes through native form
+ * machinery. The segments are `aria-hidden` and merely mirror the input's value.
+ *
+ * Why not one `<input>` per segment? Because the single-input design wins on the
+ * exact axes this recipe is judged on:
+ *
+ *   • Paste — the browser inserts pasted text at the caret for free; we only have
+ *     to strip characters that don't fit the mode. N separate inputs would each
+ *     have to re-split and redistribute a paste by hand, and browsers deliver a
+ *     multi-character paste inconsistently across split fields.
+ *   • Screen readers — one labelled field announces as "One-time code, edit text"
+ *     instead of N adjacent "1 of 6 … 2 of 6" edit boxes, which is far less
+ *     confusing. WAI has no dedicated OTP pattern; an OTP field IS a text input,
+ *     so we keep it a text input and give it a name + autocomplete.
+ *   • Mobile autofill — iOS/Android surface the SMS code for `inputmode` +
+ *     `autocomplete="one-time-code"` on a SINGLE field; across N fields only the
+ *     first is offered the value and the rest are never populated.
+ *
+ * ── What the controller owns ────────────────────────────────────────────────
+ * Runtime state only. It never fetches, never routes, never touches classes. It
+ * reflects the input's value onto the segments (`data-filled`), marks the caret
+ * segment (`data-active` / `data-caret`), and sets `data-state="complete"` on the
+ * root when full. Typing/backspace/paste are handled explicitly so behaviour is
+ * identical across browsers (and unit-testable without native text editing), while
+ * a catch-all `input` listener still absorbs autofill / IME that arrives whole.
+ *
+ * Events (bubbling): `faqir:change` on every value change (`detail.value`), and
+ * `faqir:complete` exactly once per completion — fired on the not-full → full
+ * transition, re-armed only after the value drops below full again.
+ */
+export function createInputOTP(root) {
+  // Idempotent: a second init returns the existing API.
+  if (root._faqirInputOTP) return root._faqirInputOTP;
+
+  const N = clampInt(root.getAttribute("data-length"), 6, 1, 12);
+  const mode = root.getAttribute("data-mode") === "alphanumeric" ? "alphanumeric" : "numeric";
+
+  // ── Resolve / normalize the real input ─────────────────────────────────────
+  let input = root.querySelector("[data-part='input']");
+  if (!input) {
+    input = document.createElement("input");
+    input.setAttribute("data-part", "input");
+    input.setAttribute("type", "text");
+    root.insertBefore(input, root.firstChild);
+  }
+  input.setAttribute("maxlength", String(N));
+  try {
+    input.maxLength = N;
+  } catch {
+    /* some environments make maxLength read-only on detached nodes — attribute suffices */
+  }
+  // Mobile-friendly defaults — authors may override in markup.
+  if (!input.getAttribute("inputmode")) {
+    input.setAttribute("inputmode", mode === "numeric" ? "numeric" : "text");
+  }
+  if (!input.getAttribute("autocomplete")) input.setAttribute("autocomplete", "one-time-code");
+  if (!input.hasAttribute("aria-label") && !input.hasAttribute("aria-labelledby")) {
+    input.setAttribute("aria-label", "One-time code");
+  }
+  input.setAttribute("autocapitalize", "off");
+  input.setAttribute("autocorrect", "off");
+  input.setAttribute("spellcheck", "false");
+  if (mode === "numeric" && !input.hasAttribute("pattern")) input.setAttribute("pattern", "[0-9]*");
+  if (isDisabled()) input.disabled = true;
+
+  // ── Resolve / normalize the segment row ────────────────────────────────────
+  let container = root.querySelector("[data-part='segments']");
+  if (!container) {
+    container = document.createElement("div");
+    container.setAttribute("data-part", "segments");
+    root.appendChild(container);
+  }
+  // Segments are decorative — the real input is the accessible control.
+  container.setAttribute("aria-hidden", "true");
+
+  let segments = [...container.querySelectorAll("[data-part='segment']")];
+  if (segments.length !== N) {
+    // data-length is authoritative: rebuild the row to match it exactly.
+    container.textContent = "";
+    segments = [];
+    for (let i = 0; i < N; i++) {
+      const seg = document.createElement("div");
+      seg.setAttribute("data-part", "segment");
+      container.appendChild(seg);
+      segments.push(seg);
+    }
+  }
+
+  // ── Value plumbing ──────────────────────────────────────────────────────────
+  let focused = false;
+  let wasComplete = false;
+  let lastValue = "";
+
+  function isDisabled() {
+    return root.hasAttribute("data-disabled");
+  }
+
+  function charOk(ch) {
+    return mode === "alphanumeric" ? /[a-z0-9]/i.test(ch) : /[0-9]/.test(ch);
+  }
+
+  /** Keep only mode-legal characters (no length cap — callers cap to N). */
+  function filter(str) {
+    let out = "";
+    for (const ch of String(str == null ? "" : str)) if (charOk(ch)) out += ch;
+    return out;
+  }
+
+  /** Paint segments + caret from the input's current value. No events. */
+  function refresh() {
+    const val = input.value;
+    for (let i = 0; i < N; i++) {
+      const ch = val[i];
+      const seg = segments[i];
+      if (ch != null) {
+        seg.textContent = ch;
+        seg.setAttribute("data-filled", "");
+      } else {
+        seg.textContent = "";
+        seg.removeAttribute("data-filled");
+      }
+    }
+    if (val.length === N) root.setAttribute("data-state", "complete");
+    else root.removeAttribute("data-state");
+    updateActive();
+  }
+
+  /** Mark the caret segment (collapsed) or the selected span (range). */
+  function updateActive() {
+    for (const seg of segments) {
+      seg.removeAttribute("data-active");
+      seg.removeAttribute("data-caret");
+    }
+    if (!focused || isDisabled()) return;
+
+    const len = input.value.length;
+    let start = input.selectionStart;
+    let end = input.selectionEnd;
+    if (start == null) start = len;
+    if (end == null) end = start;
+
+    if (start !== end) {
+      for (let i = start; i < end && i < N; i++) segments[i]?.setAttribute("data-active", "");
+      return;
+    }
+    const idx = Math.min(start, N - 1);
+    const seg = segments[idx];
+    if (!seg) return;
+    seg.setAttribute("data-active", "");
+    // Blink a caret only in the next-to-fill empty slot — the crisp OTP look.
+    if (start === len && len < N) seg.setAttribute("data-caret", "");
+  }
+
+  function emit(type, detail) {
+    root.dispatchEvent(new CustomEvent("faqir:" + type, { bubbles: true, detail }));
+  }
+
+  /** Repaint, then fire change / complete based on the transition. */
+  function syncAndEmit() {
+    refresh();
+    const val = input.value;
+    if (val !== lastValue) {
+      lastValue = val;
+      emit("change", { value: val });
+    }
+    const complete = val.length === N;
+    if (complete && !wasComplete) {
+      wasComplete = true;
+      emit("complete", { value: val });
+    } else if (!complete) {
+      wasComplete = false;
+    }
+  }
+
+  /** The single write seam: set value + caret, then sync/emit. */
+  function commit(next, caret) {
+    input.value = next;
+    const c = caret == null ? next.length : Math.max(0, Math.min(caret, next.length));
+    try {
+      input.setSelectionRange(c, c);
+    } catch {
+      /* selection API unavailable on this input type/env — value is still correct */
+    }
+    syncAndEmit();
+  }
+
+  /** Insert mode-legal text at the caret, replacing any selection, capped at N. */
+  function insertText(text) {
+    const clean = filter(text);
+    if (!clean) return;
+    const val = input.value;
+    let start = input.selectionStart;
+    let end = input.selectionEnd;
+    if (start == null) start = val.length;
+    if (end == null) end = start;
+    const next = (val.slice(0, start) + clean + val.slice(end)).slice(0, N);
+    commit(next, start + clean.length);
+  }
+
+  function setCaret(pos) {
+    const c = Math.max(0, Math.min(pos, input.value.length));
+    try {
+      input.setSelectionRange(c, c);
+    } catch {
+      /* ignore */
+    }
+    updateActive();
+  }
+
+  // ── Keyboard: explicit, deterministic editing ──────────────────────────────
+  function onKeyDown(e) {
+    if (isDisabled()) return;
+    // Copy / paste / select-all / undo — let the browser + paste handler run.
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+    focused = true;
+    const val = input.value;
+    let start = input.selectionStart;
+    let end = input.selectionEnd;
+    if (start == null) start = val.length;
+    if (end == null) end = start;
+
+    switch (e.key) {
+      case "Backspace":
+        e.preventDefault();
+        if (start !== end) commit(val.slice(0, start) + val.slice(end), start);
+        else if (start > 0) commit(val.slice(0, start - 1) + val.slice(start), start - 1);
+        else updateActive();
+        return;
+      case "Delete":
+        e.preventDefault();
+        if (start !== end) commit(val.slice(0, start) + val.slice(end), start);
+        else commit(val.slice(0, start) + val.slice(start + 1), start);
+        return;
+      case "ArrowLeft":
+        e.preventDefault();
+        // Collapsed caret steps left; a selection collapses to its start.
+        setCaret(start === end ? start - 1 : start);
+        return;
+      case "ArrowRight":
+        e.preventDefault();
+        // Collapsed caret steps right; a selection collapses to its end.
+        setCaret(start === end ? end + 1 : end);
+        return;
+      case "Home":
+        e.preventDefault();
+        setCaret(0);
+        return;
+      case "End":
+        e.preventDefault();
+        setCaret(val.length);
+        return;
+      default:
+        // A single printable character — insert it (invalid chars are dropped).
+        if (e.key.length === 1) {
+          e.preventDefault();
+          insertText(e.key);
+        }
+        // Everything else (Tab, Shift, arrows with modifiers, F-keys) passes through.
+    }
+  }
+
+  // ── Paste: native cursor semantics, we only sanitize ───────────────────────
+  function onPaste(e) {
+    if (isDisabled()) return;
+    e.preventDefault();
+    focused = true;
+    const data = e.clipboardData || (typeof window !== "undefined" && window.clipboardData);
+    const text = data && typeof data.getData === "function" ? data.getData("text") : "";
+    insertText(text);
+  }
+
+  // ── Catch-all: autofill / IME / anything not intercepted above ─────────────
+  function onInput() {
+    if (isDisabled()) return;
+    focused = true;
+    const clean = filter(input.value).slice(0, N);
+    if (clean !== input.value) {
+      const pos = Math.min(input.selectionStart == null ? clean.length : input.selectionStart, clean.length);
+      commit(clean, pos);
+    } else {
+      syncAndEmit();
+    }
+  }
+
+  function onFocus() {
+    focused = true;
+    // Predictable caret: land on the next-to-fill slot unless mid-editing.
+    if (input.selectionStart === input.selectionEnd) setCaret(input.value.length);
+    else updateActive();
+  }
+  function onBlur() {
+    focused = false;
+    updateActive();
+  }
+  function onClick() {
+    focused = true;
+    // Segments are pointer-events:none, so the click already hit the input;
+    // snap the caret to the end for a consistent active segment.
+    setCaret(input.value.length);
+  }
+  function onSelectionChange() {
+    if (typeof document !== "undefined" && document.activeElement === input) updateActive();
+  }
+
+  input.addEventListener("keydown", onKeyDown);
+  input.addEventListener("paste", onPaste);
+  input.addEventListener("input", onInput);
+  input.addEventListener("focus", onFocus);
+  input.addEventListener("blur", onBlur);
+  input.addEventListener("click", onClick);
+  if (typeof document !== "undefined") document.addEventListener("selectionchange", onSelectionChange);
+
+  // ── Seed from data-value / existing input value, silently (no events) ───────
+  {
+    const seed = filter(input.value || root.getAttribute("data-value") || "").slice(0, N);
+    input.value = seed;
+    lastValue = seed;
+    wasComplete = seed.length === N;
+    refresh();
+  }
+
+  // ── Public API ──────────────────────────────────────────────────────────────
+  function getValue() {
+    return input.value;
+  }
+  /** Programmatic set — silent (does not fire change/complete). */
+  function setValue(str) {
+    const clean = filter(str).slice(0, N);
+    input.value = clean;
+    lastValue = clean;
+    wasComplete = clean.length === N;
+    refresh();
+  }
+  function clear() {
+    setValue("");
+  }
+  function focus() {
+    try {
+      input.focus();
+    } catch {
+      /* ignore */
+    }
+  }
+
+  function destroy() {
+    input.removeEventListener("keydown", onKeyDown);
+    input.removeEventListener("paste", onPaste);
+    input.removeEventListener("input", onInput);
+    input.removeEventListener("focus", onFocus);
+    input.removeEventListener("blur", onBlur);
+    input.removeEventListener("click", onClick);
+    if (typeof document !== "undefined") document.removeEventListener("selectionchange", onSelectionChange);
+    delete root._faqirInputOTP;
+  }
+
+  const api = { getValue, setValue, clear, focus, destroy };
+  root._faqirInputOTP = api;
+  return api;
+}
+
+// Parse an integer attribute, clamped to [lo, hi], with a fallback.
+function clampInt(raw, fallback, lo, hi) {
+  const n = parseInt(raw, 10);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.max(lo, Math.min(hi, n));
+}

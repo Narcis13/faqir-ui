@@ -1,0 +1,98 @@
+<!-- @ui:component input-otp -->
+<!-- @ui:kind recipe -->
+<!-- @ui:slots input segments segment -->
+<!-- @ui:variants size=sm|md|lg mode=numeric|alphanumeric -->
+<!-- @ui:controller input-otp.js -->
+
+<!-- Numeric, 6 digits (default) — the real input carries the mobile OTP hints -->
+<div data-ui="input-otp" data-length="6" data-mode="numeric">
+  <input
+    data-part="input"
+    type="text"
+    inputmode="numeric"
+    autocomplete="one-time-code"
+    pattern="[0-9]*"
+    maxlength="6"
+    autocapitalize="off"
+    autocorrect="off"
+    spellcheck="false"
+    aria-label="One-time code"
+  />
+  <div data-part="segments" aria-hidden="true">
+    <div data-part="segment"></div>
+    <div data-part="segment"></div>
+    <div data-part="segment"></div>
+    <div data-part="segment"></div>
+    <div data-part="segment"></div>
+    <div data-part="segment"></div>
+  </div>
+</div>
+
+<!-- Alphanumeric, 5 characters — inputmode="text" so the code can contain letters -->
+<div data-ui="input-otp" data-length="5" data-mode="alphanumeric">
+  <input
+    data-part="input"
+    type="text"
+    inputmode="text"
+    autocomplete="one-time-code"
+    maxlength="5"
+    autocapitalize="off"
+    autocorrect="off"
+    spellcheck="false"
+    aria-label="Verification code"
+  />
+  <div data-part="segments" aria-hidden="true">
+    <div data-part="segment"></div>
+    <div data-part="segment"></div>
+    <div data-part="segment"></div>
+    <div data-part="segment"></div>
+    <div data-part="segment"></div>
+  </div>
+</div>
+
+<!-- Small, 4 digits -->
+<div data-ui="input-otp" data-length="4" data-mode="numeric" data-size="sm">
+  <input
+    data-part="input"
+    type="text"
+    inputmode="numeric"
+    autocomplete="one-time-code"
+    pattern="[0-9]*"
+    maxlength="4"
+    autocapitalize="off"
+    autocorrect="off"
+    spellcheck="false"
+    aria-label="PIN"
+  />
+  <div data-part="segments" aria-hidden="true">
+    <div data-part="segment"></div>
+    <div data-part="segment"></div>
+    <div data-part="segment"></div>
+    <div data-part="segment"></div>
+  </div>
+</div>
+
+<!-- Pre-filled (large) — value carried on the input; segments echo it without JS -->
+<div data-ui="input-otp" data-length="6" data-mode="numeric" data-size="lg" data-value="482913">
+  <input
+    data-part="input"
+    type="text"
+    inputmode="numeric"
+    autocomplete="one-time-code"
+    pattern="[0-9]*"
+    maxlength="6"
+    value="482913"
+    autocapitalize="off"
+    autocorrect="off"
+    spellcheck="false"
+    aria-label="One-time code"
+  />
+  <div data-part="segments" aria-hidden="true">
+    <div data-part="segment" data-filled>4</div>
+    <div data-part="segment" data-filled>8</div>
+    <div data-part="segment" data-filled>2</div>
+    <div data-part="segment" data-filled>9</div>
+    <div data-part="segment" data-filled>1</div>
+    <div data-part="segment" data-filled>3</div>
+  </div>
+</div>

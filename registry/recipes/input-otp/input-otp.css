@@ -1,0 +1,141 @@
+/* @ui:component input-otp */
+/* @ui:tokens color-bg color-fg color-fg-muted color-border color-border-strong color-ring color-primary color-destructive radius-md space-2 space-3 text-base text-lg font-sans duration-fast ease-default */
+
+/* ── Root ── */
+[data-ui="input-otp"] {
+  --input-otp-segment-size: 2.75rem;
+  --input-otp-gap: var(--space-2);
+
+  position: relative;
+  display: inline-flex;
+  inline-size: fit-content;
+  font-family: var(--font-sans, system-ui, sans-serif);
+}
+
+/* ── Real input ──
+   Stretched over the whole widget and made invisible: it owns focus, typing,
+   paste, selection and mobile autofill while the segments show through. */
+[data-ui="input-otp"] [data-part="input"] {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: transparent;
+  caret-color: transparent;
+  font: inherit;
+  text-align: start;
+  cursor: text;
+  outline: none;
+}
+
+/* Keep the transparent text from painting a selection band over the segments. */
+[data-ui="input-otp"] [data-part="input"]::selection {
+  background: transparent;
+  color: transparent;
+}
+
+/* ── Segment row (decorative) ── */
+[data-ui="input-otp"] [data-part="segments"] {
+  display: flex;
+  gap: var(--input-otp-gap);
+  pointer-events: none;
+}
+
+[data-ui="input-otp"] [data-part="segment"] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--input-otp-segment-size);
+  block-size: var(--input-otp-segment-size);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-size: var(--text-lg, 1.125rem);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  transition: border-color var(--duration-fast, 120ms) var(--ease-default, ease),
+              box-shadow var(--duration-fast, 120ms) var(--ease-default, ease);
+}
+
+/* Filled segment */
+[data-ui="input-otp"] [data-part="segment"][data-filled] {
+  border-color: var(--color-border-strong);
+}
+
+/* Active (caret / selected) segment while focused */
+[data-ui="input-otp"] [data-part="segment"][data-active] {
+  border-color: var(--color-ring);
+  box-shadow: 0 0 0 1px var(--color-ring);
+}
+
+/* Blinking caret in the next-to-fill empty slot */
+[data-ui="input-otp"] [data-part="segment"][data-caret]::after {
+  content: "";
+  display: block;
+  inline-size: 1px;
+  block-size: 1.25em;
+  background: var(--color-fg);
+  animation: faqir-otp-caret 1s step-end infinite;
+}
+
+@keyframes faqir-otp-caret {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+/* ── Sizes ── */
+[data-ui="input-otp"][data-size="sm"] {
+  --input-otp-segment-size: 2.25rem;
+  --input-otp-gap: var(--space-2);
+}
+[data-ui="input-otp"][data-size="sm"] [data-part="segment"] {
+  font-size: var(--text-base);
+}
+[data-ui="input-otp"][data-size="lg"] {
+  --input-otp-segment-size: 3.25rem;
+  --input-otp-gap: var(--space-3);
+}
+
+/* ── Complete ── */
+[data-ui="input-otp"][data-state="complete"] [data-part="segment"][data-filled] {
+  border-color: var(--color-primary);
+}
+
+/* ── Invalid ── */
+[data-ui="input-otp"][aria-invalid="true"] [data-part="segment"] {
+  border-color: var(--color-destructive);
+}
+
+/* ── Disabled ── */
+[data-ui="input-otp"][data-disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+[data-ui="input-otp"][data-disabled] [data-part="input"] {
+  cursor: not-allowed;
+}
+
+/* ── Placeholder foreground (empty segments) ── */
+[data-ui="input-otp"] [data-part="segment"]:empty {
+  color: var(--color-fg-muted);
+}
+
+/* ── Motion ── */
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="input-otp"] [data-part="segment"] {
+    transition: none;
+  }
+  [data-ui="input-otp"] [data-part="segment"][data-caret]::after {
+    animation: none;
+  }
+}

@@ -73,7 +73,7 @@ done in any order (or in parallel worktrees).
 | 0.4-06 | Recipe: `alert-dialog` | ⬜ |
 | 0.4-07 | Recipe: `slider` | ✅ |
 | 0.4-08 | Recipe: `sidebar` | ✅ |
-| 0.4-09 | Recipe: `input-otp` | ⬜ |
+| 0.4-09 | Recipe: `input-otp` | ✅ |
 | 0.4-10 | Recipe: `calendar` (extracted from date-picker) | ⬜ |
 | 0.4-11 | Transitions 2.0: `data-motion` presets + `motion-presets.css` + `faqir-collapse` | ⬜ |
 | 0.4-12 | Theme manifests (`*.theme.json`) for all existing themes | ⬜ |
@@ -655,9 +655,9 @@ event when filled. `l-mask` integration lands later (0.6-06) — build self-cont
 - Complete event fires exactly once with the full value; `aria` per WAI patterns (label, autocomplete="one-time-code").
 
 **Acceptance criteria**
-- [ ] Works with numeric and alphanumeric codes (variant or attribute).
-- [ ] Mobile-friendly: `inputmode`/`autocomplete` attributes correct in reference markup.
-- [ ] Manifest documents the events + parts; audit-clean.
+- [x] Works with numeric and alphanumeric codes (variant or attribute).
+- [x] Mobile-friendly: `inputmode`/`autocomplete` attributes correct in reference markup.
+- [x] Manifest documents the events + parts; audit-clean.
 
 ---
 
