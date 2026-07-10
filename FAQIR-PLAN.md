@@ -77,7 +77,7 @@ done in any order (or in parallel worktrees).
 | 0.4-10 | Recipe: `calendar` (extracted from date-picker) | ✅ |
 | 0.4-11 | Transitions 2.0: `data-motion` presets + `motion-presets.css` + `faqir-collapse` | ⬜ |
 | 0.4-12 | Theme manifests (`*.theme.json`) for all existing themes | ✅ |
-| 0.4-13 | New themes: `aurora`, `slate` | ⬜ |
+| 0.4-13 | New themes: `aurora`, `slate` | ✅ |
 | 0.4-14 | New theme: `contrast` (WCAG AAA) | ⬜ |
 | 0.4-15 | Audit v2 rules: `duplicate-id`, `heading-order`, `landmark` | ⬜ |
 | 0.4-16 | Audit v2 rule: `contrast-tokens` (static oklch contrast) | ⬜ |

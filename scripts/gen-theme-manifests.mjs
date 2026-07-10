@@ -28,6 +28,20 @@ const TOKENS_DIR = join(ROOT, "registry", "tokens");
 // One entry per registry/themes/*.css. `scheme: "light"` pairs with
 // `dark_mode: "none"`; every other theme ships an explicit dark block ("native").
 const SEED = {
+  aurora: {
+    version: "1.0.0",
+    mood: ["dark", "vibrant", "modern", "saas", "gradient"],
+    scheme: "both",
+    dark_mode: "native",
+    pairs_with: ["midnight"],
+  },
+  slate: {
+    version: "1.0.0",
+    mood: ["conservative", "enterprise", "professional", "cool"],
+    scheme: "both",
+    dark_mode: "native",
+    pairs_with: ["default", "document"],
+  },
   default: {
     version: "1.0.0",
     mood: ["neutral", "professional", "versatile"],

@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Faqir UI — aurora theme preview</title>
+
+  <!-- Tokens -->
+  <link rel="stylesheet" href="../tokens/palette.css">
+  <link rel="stylesheet" href="../tokens/spacing.css">
+  <link rel="stylesheet" href="../tokens/typography.css">
+  <link rel="stylesheet" href="../tokens/effects.css">
+  <link rel="stylesheet" href="../tokens/motion.css">
+  <link rel="stylesheet" href="../tokens/semantic.css">
+  <link rel="stylesheet" href="../tokens/aliases.css">
+
+  <!-- Base -->
+  <link rel="stylesheet" href="../base/reset.css">
+
+  <!-- Theme under preview -->
+  <link rel="stylesheet" href="aurora.css">
+
+  <!-- Primitives -->
+  <link rel="stylesheet" href="../primitives/button/button.css">
+  <link rel="stylesheet" href="../primitives/input/input.css">
+  <link rel="stylesheet" href="../primitives/textarea/textarea.css">
+  <link rel="stylesheet" href="../primitives/select/select.css">
+  <link rel="stylesheet" href="../primitives/checkbox/checkbox.css">
+  <link rel="stylesheet" href="../primitives/radio/radio.css">
+  <link rel="stylesheet" href="../primitives/switch/switch.css">
+  <link rel="stylesheet" href="../primitives/label/label.css">
+  <link rel="stylesheet" href="../primitives/badge/badge.css">
+  <link rel="stylesheet" href="../primitives/card/card.css">
+  <link rel="stylesheet" href="../primitives/separator/separator.css">
+  <link rel="stylesheet" href="../primitives/avatar/avatar.css">
+  <link rel="stylesheet" href="../primitives/spinner/spinner.css">
+  <link rel="stylesheet" href="../primitives/kbd/kbd.css">
+  <link rel="stylesheet" href="../primitives/stack/stack.css">
+  <link rel="stylesheet" href="../primitives/grid/grid.css">
+  <link rel="stylesheet" href="../primitives/surface/surface.css">
+  <link rel="stylesheet" href="../primitives/progress/progress.css">
+  <link rel="stylesheet" href="../primitives/empty-state/empty-state.css">
+  <link rel="stylesheet" href="../primitives/text/text.css">
+  <link rel="stylesheet" href="../primitives/callout/callout.css">
+  <link rel="stylesheet" href="../primitives/field-group/field-group.css">
+  <link rel="stylesheet" href="../primitives/stat/stat.css">
+
+  <!-- Recipes -->
+  <link rel="stylesheet" href="../recipes/tabs/tabs.css">
+  <link rel="stylesheet" href="../recipes/table/table.css">
+
+  <style>
+    /* Preview scaffolding only — everything inside the panel is pure Faqir. */
+    body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
+    /* Split view (no ?scheme= param): each scheme renders in its own iframe so
+       data-theme sits on that document's root — alias tokens (--card-bg etc.)
+       resolve against :root, so a scoped wrapper div would not re-theme them. */
+    .schemes { display: grid; grid-template-columns: 1fr 1fr; height: 100vh; }
+    @media (max-width: 1100px) { .schemes { grid-template-columns: 1fr; grid-auto-rows: 100vh; height: auto; } }
+    .schemes iframe { border: 0; inline-size: 100%; block-size: 100%; }
+    .scheme-panel { padding: var(--space-8) var(--space-6); max-inline-size: 52rem; margin-inline: auto; }
+    .scheme-tag { position: sticky; top: var(--space-3); z-index: var(--z-sticky); }
+  </style>
+</head>
+<body>
+
+  <!-- The gallery is authored once and cloned into each scheme panel below. -->
+  <template id="gallery">
+    <div data-ui="stack" data-gap="8">
+
+      <!-- Theme signature: the aurora gradient accent -->
+      <div data-ui="stack" data-gap="2">
+        <h1 data-ui="heading" data-size="2">aurora</h1>
+        <p data-ui="text" data-variant="muted">Vibrant gradient accents on deep neutral dark — modern SaaS.</p>
+        <div style="height: var(--space-2); border-radius: var(--radius-full); background: var(--gradient-accent);" aria-hidden="true"></div>
+      </div>
+
+      <!-- Buttons -->
+      <div data-ui="stack" data-gap="3">
+        <h2 data-ui="heading" data-size="4">Buttons</h2>
+        <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center" data-wrap>
+          <button data-ui="button" data-variant="primary">Primary</button>
+          <button data-ui="button" data-variant="secondary">Secondary</button>
+          <button data-ui="button" data-variant="destructive">Destructive</button>
+          <button data-ui="button" data-variant="ghost">Ghost</button>
+          <button data-ui="button" data-variant="outline">Outline</button>
+          <button data-ui="button" data-variant="link">Link</button>
+        </div>
+        <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center" data-wrap>
+          <button data-ui="button" data-variant="primary" data-size="sm">Small</button>
+          <button data-ui="button" data-variant="primary" data-size="md">Medium</button>
+          <button data-ui="button" data-variant="primary" data-size="lg">Large</button>
+          <button data-ui="button" data-variant="primary" disabled>Disabled</button>
+          <button data-ui="button" data-variant="primary" data-state="loading">Loading</button>
+        </div>
+      </div>
+
+      <div data-ui="separator"></div>
+
+      <!-- Form controls -->
+      <div data-ui="stack" data-gap="3">
+        <h2 data-ui="heading" data-size="4">Form controls</h2>
+        <div data-ui="grid" data-cols="2" data-gap="4">
+          <div data-ui="field-group">
+            <label data-part="label">Email address</label>
+            <div data-part="input"><input data-ui="input" type="email" placeholder="you@example.com"></div>
+            <p data-part="description">We'll never share your email.</p>
+          </div>
+          <div data-ui="field-group" data-invalid>
+            <label data-part="label">Password</label>
+            <div data-part="input"><input data-ui="input" type="password" value="123" aria-invalid="true"></div>
+            <p data-part="error">Password must be at least 8 characters.</p>
+          </div>
+        </div>
+        <div data-ui="grid" data-cols="2" data-gap="4">
+          <select data-ui="select"><option>Production</option><option>Staging</option></select>
+          <textarea data-ui="textarea" rows="2" placeholder="Leave a comment…"></textarea>
+        </div>
+        <div data-ui="stack" data-variant="horizontal" data-gap="5" data-align="center" data-wrap>
+          <label data-ui="checkbox-label"><input data-ui="checkbox" type="checkbox" checked> Remember me</label>
+          <div data-ui="radio-group" data-variant="horizontal">
+            <label data-ui="radio-label"><input data-ui="radio" type="radio" name="plan" checked> Monthly</label>
+            <label data-ui="radio-label"><input data-ui="radio" type="radio" name="plan"> Yearly</label>
+          </div>
+          <label data-ui="switch-label"><input data-ui="switch" type="checkbox" role="switch" checked> Notifications</label>
+        </div>
+      </div>
+
+      <div data-ui="separator"></div>
+
+      <!-- Badges + misc -->
+      <div data-ui="stack" data-gap="3">
+        <h2 data-ui="heading" data-size="4">Badges &amp; misc</h2>
+        <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center" data-wrap>
+          <span data-ui="badge">Default</span>
+          <span data-ui="badge" data-variant="primary">Primary</span>
+          <span data-ui="badge" data-variant="secondary">Secondary</span>
+          <span data-ui="badge" data-variant="destructive">Destructive</span>
+          <span data-ui="badge" data-variant="success">Success</span>
+          <span data-ui="badge" data-variant="warning">Warning</span>
+        </div>
+        <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center" data-wrap>
+          <div data-ui="avatar"><span data-part="fallback">AU</span></div>
+          <div data-ui="spinner"></div>
+          <span><kbd data-ui="kbd">⌘</kbd> <kbd data-ui="kbd">K</kbd></span>
+          <div data-ui="progress" role="progressbar" aria-valuenow="64" aria-valuemin="0" aria-valuemax="100" style="flex: 1; min-width: 10rem;">
+            <div data-part="track"><div data-part="fill" style="width: 64%;"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div data-ui="separator"></div>
+
+      <!-- Feedback callouts -->
+      <div data-ui="stack" data-gap="3">
+        <h2 data-ui="heading" data-size="4">Feedback</h2>
+        <div data-ui="grid" data-cols="2" data-gap="3">
+          <div data-ui="callout" data-variant="info" role="note">
+            <span data-part="icon">&#x2139;</span>
+            <div data-part="content"><strong data-part="title">Information</strong><p>Deploys are paused during maintenance.</p></div>
+          </div>
+          <div data-ui="callout" data-variant="success" role="note">
+            <span data-part="icon">&#x2713;</span>
+            <div data-part="content"><strong data-part="title">Success</strong><p>Your workspace has been created.</p></div>
+          </div>
+          <div data-ui="callout" data-variant="warning" role="note">
+            <span data-part="icon">&#x26A0;</span>
+            <div data-part="content"><strong data-part="title">Warning</strong><p>Your trial ends in 3 days.</p></div>
+          </div>
+          <div data-ui="callout" data-variant="destructive" role="alert">
+            <span data-part="icon">&#x2717;</span>
+            <div data-part="content"><strong data-part="title">Error</strong><p>Payment failed — card declined.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div data-ui="separator"></div>
+
+      <!-- Cards + stats -->
+      <div data-ui="stack" data-gap="3">
+        <h2 data-ui="heading" data-size="4">Cards &amp; stats</h2>
+        <div data-ui="grid" data-cols="3" data-gap="4">
+          <div data-ui="stat" data-trend="up"><span data-part="value">12,580</span><span data-part="label">Monthly revenue</span><span data-part="change">+15.3%</span></div>
+          <div data-ui="stat" data-trend="down"><span data-part="value">7</span><span data-part="label">Open incidents</span><span data-part="change">-8%</span></div>
+          <div data-ui="stat" data-trend="neutral"><span data-part="value">24</span><span data-part="label">Active seats</span><span data-part="change">No change</span></div>
+        </div>
+        <div data-ui="card">
+          <div data-part="header"><h3 data-part="title">Project settings</h3><p data-part="description">Manage how this project builds and deploys.</p></div>
+          <div data-part="body"><p>Card body content styled entirely by theme tokens.</p></div>
+          <div data-part="footer">
+            <button data-ui="button" data-variant="primary" data-size="sm">Save</button>
+            <button data-ui="button" data-variant="ghost" data-size="sm">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+      <div data-ui="separator"></div>
+
+      <!-- Tabs + table -->
+      <div data-ui="stack" data-gap="3">
+        <h2 data-ui="heading" data-size="4">Tabs &amp; table</h2>
+        <div data-ui="tabs">
+          <div data-part="list" role="tablist">
+            <button data-part="trigger" role="tab" aria-selected="true">Members</button>
+            <button data-part="trigger" role="tab" aria-selected="false" tabindex="-1">Invitations</button>
+            <button data-part="trigger" role="tab" aria-selected="false" tabindex="-1">Roles</button>
+          </div>
+          <div data-part="panel" role="tabpanel">
+            <div data-ui="table" data-variant="striped" data-size="sm">
+              <table data-part="table">
+                <thead data-part="thead">
+                  <tr data-part="tr">
+                    <th data-part="th" scope="col">Name</th>
+                    <th data-part="th" scope="col">Role</th>
+                    <th data-part="th" scope="col">Status</th>
+                  </tr>
+                </thead>
+                <tbody data-part="tbody">
+                  <tr data-part="tr"><td data-part="td">Alice Johnson</td><td data-part="td">Admin</td><td data-part="td"><span data-ui="badge" data-variant="success">Active</span></td></tr>
+                  <tr data-part="tr"><td data-part="td">Bogdan Pop</td><td data-part="td">Editor</td><td data-part="td"><span data-ui="badge" data-variant="warning">Pending</span></td></tr>
+                  <tr data-part="tr"><td data-part="td">Carmen Ionescu</td><td data-part="td">Viewer</td><td data-part="td"><span data-ui="badge">Invited</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div data-ui="separator"></div>
+
+      <!-- Empty state -->
+      <div data-ui="empty-state" data-size="sm">
+        <span data-part="icon">&#x1F4E6;</span>
+        <h3 data-part="title">No deployments yet</h3>
+        <p data-part="description">Push to your default branch to create the first one.</p>
+        <div data-part="actions"><button data-ui="button" data-variant="primary" data-size="sm">Read the docs</button></div>
+      </div>
+
+    </div>
+  </template>
+
+  <script>
+    // ?scheme=light|dark → render the gallery under that scheme (data-theme on
+    // the document root, exactly as a real project applies it). No param →
+    // both schemes side by side, each in its own iframe of this same file.
+    const scheme = new URLSearchParams(location.search).get("scheme");
+    if (scheme === "light" || scheme === "dark") {
+      document.documentElement.setAttribute("data-theme", scheme);
+      document.addEventListener("DOMContentLoaded", () => {
+        const panel = document.createElement("main");
+        panel.className = "scheme-panel";
+        panel.innerHTML = `<div class="scheme-tag"><span data-ui="badge" data-variant="secondary">${scheme}</span></div>`;
+        panel.appendChild(document.getElementById("gallery").content.cloneNode(true));
+        document.body.appendChild(panel);
+      });
+    } else {
+      document.addEventListener("DOMContentLoaded", () => {
+        const split = document.createElement("div");
+        split.className = "schemes";
+        for (const s of ["light", "dark"]) {
+          const frame = document.createElement("iframe");
+          frame.src = `${location.pathname}?scheme=${s}`;
+          frame.title = `${s} scheme`;
+          split.appendChild(frame);
+        }
+        document.body.appendChild(split);
+      });
+    }
+  </script>
+</body>
+</html>

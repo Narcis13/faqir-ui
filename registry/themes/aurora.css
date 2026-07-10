@@ -1,0 +1,161 @@
+/* @ui:theme aurora — vibrant gradient accents on deep neutral dark; modern SaaS */
+
+/* ── Light Mode Overrides ── */
+/* Clean violet-tinted neutrals with a vivid violet primary */
+:root {
+  /* ── Surfaces ── */
+  --color-bg:              oklch(0.98 0.004 300);    /* violet-tinted white */
+  --color-bg-subtle:       oklch(0.955 0.007 300);   /* subtle violet-gray */
+  --color-bg-muted:        oklch(0.93 0.01 300);     /* muted violet surface */
+  --color-fg:              oklch(0.17 0.02 300);     /* deep violet-black */
+  --color-fg-muted:        oklch(0.45 0.02 300);     /* muted violet-gray */
+  --color-fg-subtle:       oklch(0.57 0.018 300);    /* subtle violet-gray */
+
+  /* ── Interactive: Primary (vivid violet) ── */
+  --color-primary:         oklch(0.51 0.24 300);     /* vivid violet */
+  --color-primary-hover:   oklch(0.46 0.25 300);
+  --color-primary-active:  oklch(0.41 0.23 300);
+  --color-primary-fg:      white;
+  --color-primary-subtle:  oklch(0.93 0.05 300);
+
+  /* ── Interactive: Secondary ── */
+  --color-secondary:       oklch(0.93 0.012 300);
+  --color-secondary-hover: oklch(0.89 0.016 300);
+  --color-secondary-fg:    oklch(0.20 0.02 300);
+
+  /* ── Interactive: Destructive ── */
+  --color-destructive:        oklch(0.55 0.22 20);
+  --color-destructive-hover:  oklch(0.50 0.23 20);
+  --color-destructive-fg:     white;
+  --color-destructive-subtle: oklch(0.94 0.04 20);
+
+  /* ── Feedback ── */
+  --color-success:         oklch(0.58 0.17 155);
+  --color-success-subtle:  oklch(0.94 0.05 155);
+  --color-warning:         oklch(0.72 0.15 80);
+  --color-warning-subtle:  oklch(0.94 0.05 80);
+  --color-info:            oklch(0.55 0.19 260);
+  --color-info-subtle:     oklch(0.94 0.04 260);
+
+  /* ── Borders ── */
+  --color-border:          oklch(0.89 0.01 300);
+  --color-border-strong:   oklch(0.81 0.015 300);
+  --color-ring:            oklch(0.51 0.24 300 / 0.4);
+
+  /* ── Signature gradient accent (decorative; violet → cyan) ── */
+  --gradient-accent:       linear-gradient(135deg, oklch(0.51 0.24 300), oklch(0.60 0.14 220));
+
+  /* ── Shadows (violet-tinted) ── */
+  --shadow-xs:  0 1px 2px oklch(0.25 0.05 300 / 0.08);
+  --shadow-sm:  0 1px 3px oklch(0.25 0.05 300 / 0.10), 0 1px 2px oklch(0.25 0.05 300 / 0.06);
+  --shadow-md:  0 4px 6px oklch(0.25 0.05 300 / 0.08), 0 2px 4px oklch(0.25 0.05 300 / 0.06);
+  --shadow-lg:  0 10px 15px oklch(0.25 0.05 300 / 0.10), 0 4px 6px oklch(0.25 0.05 300 / 0.06);
+  --shadow-xl:  0 20px 25px oklch(0.25 0.05 300 / 0.12), 0 8px 10px oklch(0.25 0.05 300 / 0.06);
+}
+
+/* ── Dark Mode (primary design target) ── */
+/* Deep neutral charcoal, luminous violet primary, aurora gradient accents */
+[data-theme="dark"] {
+  /* ── Surfaces (deep neutral charcoal) ── */
+  --color-bg:              oklch(0.13 0.008 290);    /* near-black neutral */
+  --color-bg-subtle:       oklch(0.17 0.01 290);     /* dark charcoal */
+  --color-bg-muted:        oklch(0.22 0.012 290);    /* muted charcoal */
+  --color-fg:              oklch(0.96 0.005 290);    /* near-white */
+  --color-fg-muted:        oklch(0.66 0.02 290);     /* muted gray */
+  --color-fg-subtle:       oklch(0.51 0.02 290);     /* subtle gray */
+
+  /* ── Interactive: Primary (luminous violet) ── */
+  --color-primary:         oklch(0.72 0.18 307);     /* luminous violet */
+  --color-primary-hover:   oklch(0.78 0.15 307);     /* lighter violet */
+  --color-primary-active:  oklch(0.84 0.12 307);     /* lightest violet */
+  --color-primary-fg:      oklch(0.13 0.008 290);    /* charcoal for contrast */
+  --color-primary-subtle:  oklch(0.72 0.18 307 / 0.14);
+
+  /* ── Interactive: Secondary ── */
+  --color-secondary:       oklch(0.25 0.02 290);
+  --color-secondary-hover: oklch(0.31 0.022 290);
+  --color-secondary-fg:    oklch(0.92 0.008 290);
+
+  /* ── Interactive: Destructive ── */
+  --color-destructive:        oklch(0.58 0.21 20);
+  --color-destructive-hover:  oklch(0.63 0.20 20);
+  --color-destructive-fg:     white;
+  --color-destructive-subtle: oklch(0.58 0.21 20 / 0.16);
+
+  /* ── Feedback ── */
+  --color-success:         oklch(0.75 0.17 160);
+  --color-success-subtle:  oklch(0.75 0.17 160 / 0.15);
+  --color-warning:         oklch(0.82 0.15 85);
+  --color-warning-subtle:  oklch(0.82 0.15 85 / 0.15);
+  --color-info:            oklch(0.72 0.15 250);
+  --color-info-subtle:     oklch(0.72 0.15 250 / 0.15);
+
+  /* ── Borders ── */
+  --color-border:          oklch(0.27 0.015 290);
+  --color-border-strong:   oklch(0.35 0.02 290);
+  --color-ring:            oklch(0.72 0.18 307 / 0.45);
+
+  /* ── Signature gradient accent (decorative; violet → cyan aurora) ── */
+  --gradient-accent:       linear-gradient(135deg, oklch(0.72 0.18 307), oklch(0.78 0.14 195));
+
+  /* ── Shadows (deep, near-black violet) ── */
+  --shadow-xs:  0 1px 3px oklch(0.06 0.02 300 / 0.4);
+  --shadow-sm:  0 2px 6px oklch(0.06 0.02 300 / 0.5);
+  --shadow-md:  0 6px 12px oklch(0.06 0.02 300 / 0.5), 0 2px 4px oklch(0.06 0.02 300 / 0.3);
+  --shadow-lg:  0 12px 24px oklch(0.06 0.02 300 / 0.6), 0 4px 8px oklch(0.06 0.02 300 / 0.3);
+  --shadow-xl:  0 24px 48px oklch(0.06 0.02 300 / 0.7), 0 8px 16px oklch(0.06 0.02 300 / 0.4);
+}
+
+/* ── Auto Dark Mode (system preference) ── */
+@media (prefers-color-scheme: dark) {
+  [data-theme="auto"] {
+    /* ── Surfaces (deep neutral charcoal) ── */
+    --color-bg:              oklch(0.13 0.008 290);
+    --color-bg-subtle:       oklch(0.17 0.01 290);
+    --color-bg-muted:        oklch(0.22 0.012 290);
+    --color-fg:              oklch(0.96 0.005 290);
+    --color-fg-muted:        oklch(0.66 0.02 290);
+    --color-fg-subtle:       oklch(0.51 0.02 290);
+
+    /* ── Interactive: Primary (luminous violet) ── */
+    --color-primary:         oklch(0.72 0.18 307);
+    --color-primary-hover:   oklch(0.78 0.15 307);
+    --color-primary-active:  oklch(0.84 0.12 307);
+    --color-primary-fg:      oklch(0.13 0.008 290);
+    --color-primary-subtle:  oklch(0.72 0.18 307 / 0.14);
+
+    /* ── Interactive: Secondary ── */
+    --color-secondary:       oklch(0.25 0.02 290);
+    --color-secondary-hover: oklch(0.31 0.022 290);
+    --color-secondary-fg:    oklch(0.92 0.008 290);
+
+    /* ── Interactive: Destructive ── */
+    --color-destructive:        oklch(0.58 0.21 20);
+    --color-destructive-hover:  oklch(0.63 0.20 20);
+    --color-destructive-fg:     white;
+    --color-destructive-subtle: oklch(0.58 0.21 20 / 0.16);
+
+    /* ── Feedback ── */
+    --color-success:         oklch(0.75 0.17 160);
+    --color-success-subtle:  oklch(0.75 0.17 160 / 0.15);
+    --color-warning:         oklch(0.82 0.15 85);
+    --color-warning-subtle:  oklch(0.82 0.15 85 / 0.15);
+    --color-info:            oklch(0.72 0.15 250);
+    --color-info-subtle:     oklch(0.72 0.15 250 / 0.15);
+
+    /* ── Borders ── */
+    --color-border:          oklch(0.27 0.015 290);
+    --color-border-strong:   oklch(0.35 0.02 290);
+    --color-ring:            oklch(0.72 0.18 307 / 0.45);
+
+    /* ── Signature gradient accent (decorative; violet → cyan aurora) ── */
+    --gradient-accent:       linear-gradient(135deg, oklch(0.72 0.18 307), oklch(0.78 0.14 195));
+
+    /* ── Shadows (deep, near-black violet) ── */
+    --shadow-xs:  0 1px 3px oklch(0.06 0.02 300 / 0.4);
+    --shadow-sm:  0 2px 6px oklch(0.06 0.02 300 / 0.5);
+    --shadow-md:  0 6px 12px oklch(0.06 0.02 300 / 0.5), 0 2px 4px oklch(0.06 0.02 300 / 0.3);
+    --shadow-lg:  0 12px 24px oklch(0.06 0.02 300 / 0.6), 0 4px 8px oklch(0.06 0.02 300 / 0.3);
+    --shadow-xl:  0 24px 48px oklch(0.06 0.02 300 / 0.7), 0 8px 16px oklch(0.06 0.02 300 / 0.4);
+  }
+}
