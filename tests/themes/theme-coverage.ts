@@ -128,6 +128,17 @@ export function declaredSchemes(rawCss: string): Scheme[] {
   return parsed.length ? parsed : ["light", "dark"];
 }
 
+/**
+ * The coverage-relevant schemes a theme ships, derived from its manifest's
+ * `scheme` field (task 0.4-12) — the source of truth for the matrix, replacing
+ * the `@ui:schemes` CSS heuristic. `light` → light-only (no dark block allowed);
+ * `dark`/`both` → dark (+ auto) required. Light always resolves through the base,
+ * so every non-`light` value maps to a light+dark requirement.
+ */
+export function schemesFromManifest(scheme: "light" | "dark" | "both"): Scheme[] {
+  return scheme === "light" ? ["light"] : ["light", "dark"];
+}
+
 /** Per-scheme coverage result: which required tokens are missing from a block. */
 export interface Coverage {
   scheme: Scheme;
@@ -154,9 +165,12 @@ export function computeCoverage(
   themeCss: string,
   required: string[],
   baseTokens: Set<string>,
+  declaredSchemesList?: Scheme[],
 ): Coverage[] {
   const schemes = parseThemeSchemes(themeCss);
-  const declared = new Set(declaredSchemes(themeCss));
+  // Prefer explicitly declared schemes (from the theme manifest, task 0.4-12);
+  // fall back to the `@ui:schemes` CSS heuristic when none are supplied.
+  const declared = new Set(declaredSchemesList ?? declaredSchemes(themeCss));
   const results: Coverage[] = [];
 
   // Light: base ∪ theme :root overrides.

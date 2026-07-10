@@ -153,6 +153,38 @@ describe("faqir context", () => {
     expect(data.rules.tokens_only_no_hardcoded_values).toBe(true);
   });
 
+  it("embeds the active theme manifest block", async () => {
+    await init([]);
+    await add(["button"]);
+
+    const data = await generateContext(TEST_DIR);
+    const theme = data.theme as any;
+
+    // Active theme is `default`, which ships a registry manifest.
+    expect(theme.name).toBe("default");
+    expect(theme.scheme).toBe("both");
+    expect(theme.dark_mode).toBe("native");
+    expect(theme.mood).toBeInstanceOf(Array);
+    expect(theme.mood.length).toBeGreaterThan(0);
+    expect(theme.tokens_overridden).toContain("color-primary");
+  });
+
+  it("renders the active theme block in JSON and markdown output", async () => {
+    await init([]);
+    await add(["button"]);
+
+    const data = await generateContext(TEST_DIR);
+
+    const parsed = JSON.parse(formatContextJSON(data));
+    expect(parsed.theme.name).toBe("default");
+    expect(parsed.theme.mood).toContain("neutral");
+
+    const md = formatContextMarkdown(data);
+    expect(md).toContain("## Active Theme");
+    expect(md).toContain("Name: default");
+    expect(md).toContain("Scheme: both");
+  });
+
   it("context includes recipe a11y info", async () => {
     await init([]);
     await add(["dialog"]);

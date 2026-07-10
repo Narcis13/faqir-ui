@@ -3,8 +3,16 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { loadManifest, type Manifest } from "../manifest";
+import { loadThemeManifest, type ThemeManifest } from "../theme-manifest";
 import { readConfig, type FaqirConfig } from "../utils/config";
 import { ensureDir, getRegistryPath } from "../utils/fs";
+
+/**
+ * The active theme, as embedded in context. Either the full theme manifest (when
+ * the active theme ships one — every registry theme does) or a minimal fallback
+ * for a custom project theme that has no manifest yet.
+ */
+export type ContextTheme = ThemeManifest | { name: string; manifest_found: false };
 
 export interface ContextData {
   meta: {
@@ -18,6 +26,7 @@ export interface ContextData {
       patterns: number;
     };
   };
+  theme: ContextTheme;
   protocol: {
     identity: string;
     part: string;
@@ -57,6 +66,19 @@ async function loadInstalledManifests(
     }
   }
   return manifests;
+}
+
+/**
+ * Load the active theme's manifest for embedding into context. Registry themes
+ * ship `registry/themes/{name}.theme.json`; a custom project theme without a
+ * manifest falls back to a minimal `{ name, manifest_found: false }` block.
+ */
+export async function loadActiveTheme(config: FaqirConfig): Promise<ContextTheme> {
+  const manifestPath = join(getRegistryPath(), "themes", `${config.theme}.theme.json`);
+  if (existsSync(manifestPath)) {
+    return await loadThemeManifest(manifestPath);
+  }
+  return { name: config.theme, manifest_found: false };
 }
 
 /**
@@ -137,6 +159,7 @@ export async function generateContext(cwd: string): Promise<ContextData> {
   const config = await readConfig(cwd);
   const outputDir = join(cwd, config.output_dir);
   const manifests = await loadInstalledManifests(config, outputDir);
+  const theme = await loadActiveTheme(config);
 
   const components: Record<string, unknown> = {};
   const patterns: Record<string, unknown> = {};
@@ -166,6 +189,7 @@ export async function generateContext(cwd: string): Promise<ContextData> {
         patterns: config.installed.patterns.length,
       },
     },
+    theme,
     protocol: {
       identity: "data-ui",
       part: "data-part",
@@ -212,6 +236,21 @@ export function formatContextMarkdown(data: ContextData): string {
   lines.push("# Faqir UI Context");
   lines.push("");
   lines.push(`Theme: ${data.meta.theme} | Components: ${data.meta.component_count.primitives} primitives, ${data.meta.component_count.recipes} recipes, ${data.meta.component_count.patterns} patterns`);
+  lines.push("");
+
+  // Active theme
+  const t = data.theme;
+  lines.push("## Active Theme");
+  lines.push("");
+  if ("mood" in t) {
+    lines.push(`- Name: ${t.name} v${t.version}`);
+    lines.push(`- Mood: ${t.mood.join(", ")}`);
+    lines.push(`- Scheme: ${t.scheme} (dark mode: ${t.dark_mode})`);
+    lines.push(`- Overrides ${t.tokens_overridden.length} tokens, inherits ${t.tokens_inherited.length} from base`);
+    if (t.pairs_with.length > 0) lines.push(`- Pairs with: ${t.pairs_with.join(", ")}`);
+  } else {
+    lines.push(`- Name: ${t.name} (custom theme — no manifest)`);
+  }
   lines.push("");
 
   // Protocol
@@ -313,6 +352,14 @@ export function formatContextCursorRules(data: ContextData): string {
   lines.push("# Faqir UI Framework Rules");
   lines.push("");
   lines.push("When building UI in this project, follow these conventions:");
+  lines.push("");
+
+  const t = data.theme;
+  if ("mood" in t) {
+    lines.push(`Active theme: \`${t.name}\` — ${t.mood.join(", ")} (${t.scheme} scheme, dark mode: ${t.dark_mode}).`);
+  } else {
+    lines.push(`Active theme: \`${t.name}\` (custom).`);
+  }
   lines.push("");
   lines.push("## Component Authoring");
   lines.push("");

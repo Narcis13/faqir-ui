@@ -24,7 +24,15 @@ import {
   computeCoverage,
   parseThemeSchemes,
   declaredSchemes,
+  schemesFromManifest,
 } from "./theme-coverage";
+import type { ThemeManifest } from "../../src/theme-manifest";
+
+/** Read a theme's sibling `{name}.theme.json` — the source of truth for its scheme. */
+function readThemeManifest(cssFile: string): ThemeManifest {
+  const path = join(THEMES_DIR, cssFile.replace(/\.css$/, ".theme.json"));
+  return JSON.parse(readFileSync(path, "utf8")) as ThemeManifest;
+}
 
 const REGISTRY = join(import.meta.dir, "../../registry");
 const THEMES_DIR = join(REGISTRY, "themes");
@@ -63,14 +71,32 @@ describe("theme coverage · every shipped theme covers its declared schemes", ()
 
   for (const file of THEME_FILES) {
     const css = readFileSync(join(THEMES_DIR, file), "utf8");
-    const schemeLabel = declaredSchemes(css).join("+");
+    // Declared scheme now comes from the theme manifest (0.4-12), not a heuristic.
+    const manifest = readThemeManifest(file);
+    const declared = schemesFromManifest(manifest.scheme);
+    const schemeLabel = declared.join("+");
     it(`${file} (${schemeLabel}) covers all ${REQUIRED.all.length} tokens in every scheme`, () => {
-      const coverage = computeCoverage(css, REQUIRED.all, BASE);
+      const coverage = computeCoverage(css, REQUIRED.all, BASE, declared);
       const failures = coverage
         .filter(c => !c.covered)
         .map(c => `${c.scheme} [${c.block}] → missing: ${c.missing.join(", ")}`);
       // Empty string == full coverage. A regression prints theme/scheme/tokens.
       expect(failures.join("\n")).toBe("");
+    });
+  }
+
+  // The manifest's declared scheme must not lie about the CSS: a theme that
+  // declares dark (scheme "dark"/"both") must actually ship dark blocks, and a
+  // light-only theme (scheme "light") must ship none. This is what makes the
+  // manifest a trustworthy source of truth for the matrix above.
+  for (const file of THEME_FILES) {
+    it(`${file} manifest scheme is consistent with its CSS dark blocks`, () => {
+      const css = readFileSync(join(THEMES_DIR, file), "utf8");
+      const manifest = readThemeManifest(file);
+      const schemes = parseThemeSchemes(css);
+      const hasDarkBlocks = schemes.dark.size > 0 || schemes.auto.size > 0;
+      const declaresDark = manifest.scheme !== "light";
+      expect(hasDarkBlocks).toBe(declaresDark);
     });
   }
 });

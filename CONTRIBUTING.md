@@ -119,6 +119,40 @@ Every manifest must include:
 - `safe_transforms` / `unsafe_transforms` — what agents can and cannot modify
 - `files` — relative paths to component files
 
+## Theme Manifests
+
+Every theme in `registry/themes/{name}.css` ships a sibling
+`registry/themes/{name}.theme.json` — a machine-readable card that lets agents
+choose a theme by mood/scheme, drives the CI coverage matrix, and is embedded
+into `faqir context` as the active-theme block. Schema (validated by
+`validateThemeManifest` in `src/theme-manifest.ts`, published as part of
+`manifest.schema.json` in 0.5-07):
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `name` | string | Matches the stylesheet filename. |
+| `version` | string | Semver. |
+| `mood` | string[] | ≥ 1 agent-selectable descriptor (`dark`, `warm`, `high-contrast`, …). |
+| `scheme` | `"light"` \| `"dark"` \| `"both"` | Which color schemes ship. Source of truth for the coverage matrix. |
+| `dark_mode` | `"native"` \| `"none"` | `native` = explicit `[data-theme="dark"]` block; `none` requires `scheme: "light"`. |
+| `tokens_overridden` | string[] | **Generated** — every custom property the CSS defines. |
+| `tokens_inherited` | string[] | **Generated** — base surface tokens the theme leaves untouched. |
+| `pairs_with` | string[] | Themes that compose/read well together (may be empty). |
+| `preview` | string | A `{name}.preview.html` reference. |
+
+`tokens_overridden` and `tokens_inherited` are **derived from the CSS — never
+hand-write them.** Edit the editorial metadata seed in
+`scripts/gen-theme-manifests.mjs`, then regenerate:
+
+```
+bun run gen:theme-manifests
+```
+
+The registry self-audit (`bun run audit:registry`) and the manifest consistency
+test fail if a theme is missing a manifest, has a schema-invalid one, or if its
+token fields drift from the stylesheet. To add a new theme: drop the `.css` in
+`registry/themes/`, add a seed entry to the generator, and run it.
+
 ## Commit Messages
 
 Use imperative mood. Be concise. Focus on why, not what.
