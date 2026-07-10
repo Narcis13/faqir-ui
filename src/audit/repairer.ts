@@ -47,7 +47,19 @@ export async function applyRepairs(
     let source = await Bun.file(filePath).text();
     let modified = false;
 
-    for (const result of fileResults) {
+    // Apply `rename-id` fixes first, in descending byte-offset order: each rename
+    // edits text at one offset, so processing higher offsets first keeps every
+    // lower offset valid (no re-parsing needed). Other fix types don't rely on
+    // absolute offsets (they search or use line numbers) and are unaffected.
+    const ordered = [...fileResults].sort((a, b) => {
+      const ar = a.fix!.type === "rename-id" ? 0 : 1;
+      const br = b.fix!.type === "rename-id" ? 0 : 1;
+      if (ar !== br) return ar - br;
+      if (ar === 0) return b.fix!.offset - a.fix!.offset;
+      return 0;
+    });
+
+    for (const result of ordered) {
       const fix = result.fix!;
       const newSource = applyFix(source, fix, result);
       if (newSource !== null && newSource !== source) {
@@ -81,9 +93,35 @@ function applyFix(source: string, fix: RepairAction, result: AuditResult): strin
       return addScript(source, fix, result);
     case "rewrite-css":
       return rewriteCss(source, fix, result);
+    case "rename-id":
+      return renameId(source, fix);
     default:
       return null;
   }
+}
+
+/**
+ * Rename a single duplicate id occurrence to a unique value (task 0.4-15). Only
+ * emitted by `duplicate-id` when the rename is safe — the id is not referenced by
+ * any IDREF attribute or `#frag` URL — so changing it has no behavioral effect.
+ * Targets the exact element at `fix.offset` (its opening `<`) and rewrites just
+ * that element's `id` attribute, leaving other occurrences untouched.
+ */
+function renameId(source: string, fix: RepairAction): string | null {
+  const { from, to } = fix.details;
+  const start = fix.offset;
+  if (!from || !to) return null;
+  if (start < 0 || start >= source.length || source[start] !== "<") return null;
+
+  const gt = source.indexOf(">", start);
+  if (gt === -1) return null;
+
+  const tag = source.slice(start, gt + 1);
+  const re = new RegExp(`(\\bid\\s*=\\s*)(["'])${escapeRegExp(from)}\\2`);
+  const newTag = tag.replace(re, `$1"${to}"`);
+  if (newTag === tag) return null;
+
+  return source.slice(0, start) + newTag + source.slice(gt + 1);
 }
 
 /** Escape a string for safe use inside a RegExp. */

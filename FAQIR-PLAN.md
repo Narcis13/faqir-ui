@@ -79,7 +79,7 @@ done in any order (or in parallel worktrees).
 | 0.4-12 | Theme manifests (`*.theme.json`) for all existing themes | ✅ |
 | 0.4-13 | New themes: `aurora`, `slate` | ✅ |
 | 0.4-14 | New theme: `contrast` (WCAG AAA) | ✅ |
-| 0.4-15 | Audit v2 rules: `duplicate-id`, `heading-order`, `landmark` | ⬜ |
+| 0.4-15 | Audit v2 rules: `duplicate-id`, `heading-order`, `landmark` | ✅ |
 | 0.4-16 | Audit v2 rule: `contrast-tokens` (static oklch contrast) | ⬜ |
 | 0.4-17 | Audit v2 rule: `field-wiring` | ⬜ |
 | 0.4-18 | Controller tests A: toast, tooltip, accordion | ⬜ |
@@ -778,9 +778,9 @@ have `main`, dialogs not nested in main flow, nav landmarks labeled when multipl
 - JSON output includes the three rules with stable codes.
 
 **Acceptance criteria**
-- [ ] Rules enabled by default; registry self-audit still zero findings (fix registry if any surface).
-- [ ] Each finding message actionable (says what to change).
-- [ ] `duplicate-id` findings marked auto-repairable only if a safe rename exists — otherwise report-only (decide + test).
+- [x] Rules enabled by default; registry self-audit still zero findings (fix registry if any surface). (All three run per HTML file in `runAudit` via `DOCUMENT_RULES`. Added a 3rd gate to `scripts/registry-audit.mjs` over `registry/{primitives,recipes,patterns}/**/*.html` — 66 pages, zero findings. The only pre-existing surface was the three `themes/*.preview.html` full-doc harnesses flagging "no main"; they inject `<main>` at runtime from a `<template>`, so a static scan false-positives — deliberately scoped out with a documented reason rather than adding dead markup.)
+- [x] Each finding message actionable (says what to change). (e.g. `Rename this one to id="note-2" … or remove the id`, `Use <h2> here …`, `wrap the primary content in a <main> …`, `add aria-label …`. Findings also carry precise `line:column`, surfaced as `L{line}:{col}` in the terminal and `line`/`column` in `--json`.)
+- [x] `duplicate-id` findings marked auto-repairable only if a safe rename exists — otherwise report-only (decide + test). (**Decision:** safe = the duplicated id is *unreferenced* by any IDREF attr — `for`/`aria-*`/`headers`/… — or `#fragment` URL; then a `rename-id` fix suffixes later occurrences uniquely (`dup` → `dup-2`/`dup-3`, first kept canonical). A *referenced* duplicate is report-only — the intended target is ambiguous, so a human must resolve it. Tested both ways plus a repair round-trip. Also documented: ids inside a `<template>` are a separate scope, so cross-shadow-boundary duplicates are out of scope by design.)
 
 ---
 

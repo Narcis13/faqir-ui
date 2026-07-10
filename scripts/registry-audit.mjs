@@ -1,10 +1,10 @@
 #!/usr/bin/env bun
 /**
  * Registry self-audit — permanent CI gate (task 0.3-12; rule shipped in 0.3-09,
- * registry remediated in 0.3-10; theme-manifest gate added in 0.4-12). See
- * FAQIR-PLAN §10.4.
+ * registry remediated in 0.3-10; theme-manifest gate added in 0.4-12;
+ * document-rule gate added in 0.4-15). See FAQIR-PLAN §10.4.
  *
- * Two gates, both fatal on a single finding:
+ * Three gates, all fatal on a single finding:
  *
  *  1. **logical-properties** — runs the framework's own audit rule engine
  *     (`buildLogicalPropertyResults`, the same one `faqir audit` runs per
@@ -19,6 +19,16 @@
  *     schema-invalid manifest, or whose derived token fields drift from the CSS
  *     fails the build. Regenerate with `bun run gen:theme-manifests`.
  *
+ *  3. **document-rules** — runs the framework's document-level a11y rules
+ *     (`duplicate-id`, `heading-order`, `landmark`; task 0.4-15) over the
+ *     canonical component markup in `registry/{primitives,recipes,patterns}/`.
+ *     These are the HTML contracts that ship and that projects clone, so a
+ *     duplicate id, a skipped heading level, or a landmark slip must be zero.
+ *     Scope note: the `registry/themes/*.preview.html` dev harnesses are
+ *     deliberately excluded — they build their DOM at runtime (the gallery is a
+ *     `<template>` a `<script>` clones into a `<main>`), so a *static* scan can't
+ *     see their main landmark and would false-positive. They ship to no project.
+ *
  * Bun-only: imports the TypeScript rule engine from `src/`. Run via
  * `bun run audit:registry` (or `bun scripts/registry-audit.mjs`).
  */
@@ -27,6 +37,8 @@ import { readFileSync, existsSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildLogicalPropertyResults } from "../src/audit/checker";
+import { parseDocument } from "../src/parser/html-parser";
+import { DOCUMENT_RULES } from "../src/audit/rules";
 import {
   validateThemeManifest,
   overriddenTokens,
@@ -121,6 +133,34 @@ if (themeOffenders.length > 0) {
   failed = true;
 } else {
   console.log(`✓ Every theme has a valid, CSS-consistent manifest.`);
+}
+
+// ── Gate 3: document a11y rules over canonical component markup ───────────────
+// duplicate-id / heading-order / landmark over the shipped component HTML.
+const htmlFiles = ["primitives", "recipes", "patterns"].flatMap((dir) =>
+  [...new Glob(`${dir}/**/*.html`).scanSync(REGISTRY)].sort(),
+);
+
+const docOffenders = [];
+for (const rel of htmlFiles) {
+  const src = readFileSync(join(REGISTRY, rel), "utf8");
+  const doc = parseDocument(src, rel);
+  for (const rule of DOCUMENT_RULES) {
+    for (const r of rule.check(doc)) {
+      docOffenders.push(`  ${rel}:${r.line}:${r.column} — [${r.rule_id}] ${r.message}`);
+    }
+  }
+}
+
+console.log(`\n▶ Registry self-audit — document rules over registry/{primitives,recipes,patterns}/**/*.html`);
+console.log(`  scanned ${htmlFiles.length} component page(s)`);
+
+if (docOffenders.length > 0) {
+  console.error(`\n✗ ${docOffenders.length} finding(s) — document a11y problems in registry markup:`);
+  console.error(docOffenders.join("\n"));
+  failed = true;
+} else {
+  console.log(`✓ Zero findings — registry markup has unique ids, ordered headings, and clean landmarks.`);
 }
 
 process.exit(failed ? 1 : 0);

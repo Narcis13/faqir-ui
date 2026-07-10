@@ -31,6 +31,31 @@ export interface ParsedComponent {
   line: number;
 }
 
+/**
+ * A whole HTML file parsed for document-level audit rules (task 0.4-15) —
+ * `duplicate-id`, `heading-order`, `landmark`. Unlike `ParsedComponent` (one
+ * `data-ui` subtree vs its manifest), these rules reason about the entire
+ * document: every element in source order, plus whether the file is a full page
+ * or a component fragment.
+ */
+export interface ParsedDocument {
+  /** Source file path */
+  file: string;
+  /** Original, unmodified source (offsets in `elements` index into this). */
+  source: string;
+  /** Top-level elements. */
+  roots: ParsedElement[];
+  /** Every element in document (pre-order) order. */
+  elements: ParsedElement[];
+  /**
+   * True when the source is a full HTML document (has a doctype, `<html>`, or
+   * `<body>`) rather than a bare component fragment. Rules like "page must have
+   * a main landmark" only apply to full pages — a reference fragment such as
+   * `<button data-ui="button">` is not a page and must never be flagged.
+   */
+  isFullDocument: boolean;
+}
+
 const SELF_CLOSING_TAGS = new Set([
   "area", "base", "br", "col", "embed", "hr", "img", "input",
   "link", "meta", "param", "source", "track", "wbr",
@@ -52,12 +77,42 @@ function parseAttributes(attrString: string): Record<string, string> {
   return attrs;
 }
 
-function countLines(source: string, offset: number): number {
-  let lines = 1;
-  for (let i = 0; i < offset && i < source.length; i++) {
-    if (source[i] === "\n") lines++;
+/**
+ * Convert a byte offset into 1-based line and column. Column counts characters
+ * from the start of the line (the offset itself → column 1 at line start).
+ */
+export function offsetToPosition(source: string, offset: number): { line: number; column: number } {
+  const end = Math.max(0, Math.min(offset, source.length));
+  let line = 1;
+  let lineStart = 0;
+  for (let i = 0; i < end; i++) {
+    if (source[i] === "\n") {
+      line++;
+      lineStart = i + 1;
+    }
   }
-  return lines;
+  return { line, column: end - lineStart + 1 };
+}
+
+function countLines(source: string, offset: number): number {
+  return offsetToPosition(source, offset).line;
+}
+
+/**
+ * Blank out the *contents* of HTML comments, `<script>` blocks, and `<style>`
+ * blocks while preserving every byte's position — newlines are kept and all
+ * other characters become spaces, so the string stays the same length. This lets
+ * the tag scanner ignore markup-looking text inside comments/scripts/styles
+ * (e.g. `<!-- <div id="x"> -->` or an `id="…"` inside a JS string) without
+ * shifting any offset, so line/column reported against the ORIGINAL source stay
+ * exact.
+ */
+export function maskNonMarkup(source: string): string {
+  const blank = (m: string) => m.replace(/[^\n]/g, " ");
+  return source
+    .replace(/<!--[\s\S]*?-->/g, blank)
+    .replace(/<script\b[\s\S]*?<\/script\s*>/gi, blank)
+    .replace(/<style\b[\s\S]*?<\/style\s*>/gi, blank);
 }
 
 /**
@@ -203,6 +258,36 @@ export function extractComponents(source: string, filePath: string): ParsedCompo
   }
 
   return components;
+}
+
+const FULL_DOCUMENT_RE = /<!doctype\s+html|<html[\s>]|<body[\s>]/i;
+
+/**
+ * Parse a whole HTML file for document-level audit rules (task 0.4-15).
+ *
+ * Comments and `<script>`/`<style>` bodies are masked (see `maskNonMarkup`)
+ * before tag scanning, so an `id`/`<nav>`/heading that only appears inside a
+ * comment or script string is never mistaken for real markup. Masking preserves
+ * offsets, so `elements[*].start` still indexes into the returned `source`
+ * (the original text) and `offsetToPosition` yields exact line/column.
+ */
+export function parseDocument(source: string, filePath: string): ParsedDocument {
+  const masked = maskNonMarkup(source);
+  const roots = parseHTML(masked);
+  const elements: ParsedElement[] = [];
+  const walk = (el: ParsedElement) => {
+    elements.push(el);
+    for (const child of el.children) walk(child);
+  };
+  for (const root of roots) walk(root);
+
+  return {
+    file: filePath,
+    source,
+    roots,
+    elements,
+    isFullDocument: FULL_DOCUMENT_RE.test(masked),
+  };
 }
 
 /**
