@@ -14,6 +14,7 @@
   --color-primary:         var(--palette-indigo-400);
   --color-primary-hover:   var(--palette-indigo-300);
   --color-primary-active:  var(--palette-indigo-200);
+  --color-primary-fg:      white;
   --color-primary-subtle:  oklch(0.55 0.22 264 / 0.15);
 
   --color-secondary:       var(--palette-gray-800);
@@ -22,6 +23,7 @@
 
   --color-destructive:        var(--palette-red-400);
   --color-destructive-hover:  var(--palette-red-300);
+  --color-destructive-fg:     white;
   --color-destructive-subtle: oklch(0.55 0.22 25 / 0.15);
 
   --color-success:         var(--palette-green-400);
@@ -55,6 +57,7 @@
     --color-primary:         var(--palette-indigo-400);
     --color-primary-hover:   var(--palette-indigo-300);
     --color-primary-active:  var(--palette-indigo-200);
+    --color-primary-fg:      white;
     --color-primary-subtle:  oklch(0.55 0.22 264 / 0.15);
 
     --color-secondary:       var(--palette-gray-800);
@@ -63,6 +66,7 @@
 
     --color-destructive:        var(--palette-red-400);
     --color-destructive-hover:  var(--palette-red-300);
+    --color-destructive-fg:     white;
     --color-destructive-subtle: oklch(0.55 0.22 25 / 0.15);
 
     --color-success:         var(--palette-green-400);
