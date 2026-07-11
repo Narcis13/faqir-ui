@@ -86,7 +86,7 @@ done in any order (or in parallel worktrees).
 | 0.4-19 | Controller tests B: popover, sheet, drawer | ⬜ |
 | 0.4-20 | Controller tests C: pagination, select-custom, qr-code | ⬜ |
 | 0.4-21 | Controller tests D: combobox, command-palette | ✅ |
-| 0.4-22 | Controller tests E: date-picker, table | ⬜ |
+| 0.4-22 | Controller tests E: date-picker, table | ✅ |
 | 0.4-23 | Visual regression suite (Playwright screenshots) | ⬜ |
 | 0.4-24 | Automated a11y (axe-core) in CI | ⬜ |
 
@@ -934,9 +934,9 @@ it tiny, it grows in 0.4-23).
 - table: sort toggling (asc/desc/none) with `aria-sort`, number/currency format rendering, tfoot behavior, row-selection events if implemented, empty state.
 
 **Acceptance criteria**
-- [ ] 100% of recipe controllers now have behavior tests (the §12.1 goal) — assert by listing recipes vs test files in a meta-test.
-- [ ] Date parsing/formatting covered including invalid input.
-- [ ] Sorting covered for string/number/date columns.
+- [x] 100% of recipe controllers now have behavior tests (the §12.1 goal) — assert by listing recipes vs test files in a meta-test. → `tests/recipes/controller-coverage.test.ts` discovers every `@ui:controller` recipe on disk and asserts a matching `tests/recipes/<name>.test.ts` (fails, naming the recipe, if one is missing).
+- [x] Date parsing/formatting covered including invalid input. → date-picker "input parsing & formatting round-trip" block: ISO→display formatting, dataset.value round-trip, and rejection of `not-a-date` / `2026-13-01` / `2026-00-10` / empty.
+- [x] Sorting covered for string/number/date columns. → table "sorting columns by type": string (alpha), number, currency (numeric not lexical), and cross-year ISO date, plus a pinned known-limitation test for same-year ISO dates.
 
 ---
 

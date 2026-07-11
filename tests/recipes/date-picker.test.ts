@@ -284,6 +284,123 @@ describe("date-picker · calendar recipe integration", () => {
   });
 });
 
+// ── Input parsing & formatting round-trip (0.4-22) ────────────────────────────
+
+describe("date-picker · input parsing & formatting round-trip", () => {
+  it("setValue parses ISO and formats the display, with dataset.value round-tripping", () => {
+    const { api, input } = setup();
+    api.setValue("2026-07-04");
+    expect(input.value).toBe("July 4, 2026");
+    expect(input.dataset.value).toBe("2026-07-04");
+    expect(api.getValue()).toBe("2026-07-04");
+
+    // Feeding the stored ISO back in reproduces the identical display.
+    api.setValue(input.dataset.value!);
+    expect(input.value).toBe("July 4, 2026");
+    expect(api.getValue()).toBe("2026-07-04");
+  });
+
+  it("a grid selection formats the display and stores ISO in dataset.value", () => {
+    const { root, api, input } = setup();
+    api.setValue("2026-03-10");
+    api.open();
+    day(root, "2026-03-20")!.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    expect(input.value).toBe("March 20, 2026");
+    expect(input.dataset.value).toBe("2026-03-20");
+  });
+
+  it("invalid input strings are rejected, leaving the current value intact", () => {
+    const { api, input } = setup();
+    api.setValue("2026-03-10");
+    for (const bad of ["not-a-date", "2026-13-01", "2026-00-10", ""]) {
+      api.setValue(bad);
+      expect(api.getValue()).toBe("2026-03-10");
+      expect(input.value).toBe("March 10, 2026");
+    }
+  });
+});
+
+// ── Min / max enforcement (0.4-22) ────────────────────────────────────────────
+
+describe("date-picker · min/max enforcement", () => {
+  it("days beyond min/max are disabled and refuse selection (click)", () => {
+    const { root, api } = setup(`data-min="2026-03-05" data-max="2026-03-25"`);
+    api.setValue("2026-03-10");
+    api.open();
+
+    const before = day(root, "2026-03-04")!;
+    const after = day(root, "2026-03-26")!;
+    expect(before.getAttribute("aria-disabled")).toBe("true");
+    expect(after.getAttribute("aria-disabled")).toBe("true");
+
+    before.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    after.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    expect(api.getValue()).toBe("2026-03-10");
+    expect(root.dataset.state).toBe("open");
+  });
+
+  it("a keyboard Enter on a disabled day does not select and keeps the popup open", () => {
+    const { root, api } = setup(`data-disabled-dates="2026-03-12"`);
+    api.setValue("2026-03-10");
+    api.open();
+
+    const blocked = day(root, "2026-03-12")!;
+    expect(blocked.getAttribute("aria-disabled")).toBe("true");
+    blocked.focus();
+    key(blocked, "Enter");
+    expect(api.getValue()).toBe("2026-03-10");
+    expect(root.dataset.state).toBe("open");
+  });
+
+  it("nav buttons disable at the min/max month boundaries", () => {
+    const { root, api } = setup(`data-min="2026-03-05" data-max="2026-03-25"`);
+    api.setValue("2026-03-10");
+    api.open();
+    const navPrev = root.querySelector("[data-part='nav-prev']") as HTMLButtonElement;
+    const navNext = root.querySelector("[data-part='nav-next']") as HTMLButtonElement;
+    // The whole previous/next month lies outside [min,max], so both are dead ends.
+    expect(navPrev.disabled).toBe(true);
+    expect(navNext.disabled).toBe(true);
+  });
+});
+
+// ── Keyboard entry vs grid selection agreement (0.4-22) ────────────────────────
+
+describe("date-picker · keyboard entry vs grid selection agreement", () => {
+  type Outcome = { value: string | null; display: string; date: string; state: string };
+
+  function pick(act: (root: HTMLElement, input: HTMLInputElement) => void): Outcome {
+    const { root, api, input } = setup();
+    api.setValue("2026-03-10");
+    api.open();
+    let detail: any = null;
+    root.addEventListener("faqir:date-change", ((e: CustomEvent) => {
+      detail = e.detail;
+    }) as EventListener);
+    act(root, input);
+    return { value: api.getValue(), display: input.value, date: detail?.date, state: root.dataset.state! };
+  }
+
+  it("selecting a day by keyboard yields the identical outcome to clicking it", () => {
+    // Target 2026-03-11: one cell right of the 2026-03-10 focus anchor.
+    const byClick = pick((root) =>
+      day(root, "2026-03-11")!.dispatchEvent(new MouseEvent("click", { bubbles: true }))
+    );
+    const byKeyboard = pick(() => {
+      key(document.activeElement!, "ArrowRight");
+      key(document.activeElement!, "Enter");
+    });
+
+    expect(byKeyboard).toEqual(byClick);
+    expect(byKeyboard).toEqual({
+      value: "2026-03-11",
+      display: "March 11, 2026",
+      date: "2026-03-11",
+      state: "closed",
+    });
+  });
+});
+
 // ── Lifecycle ────────────────────────────────────────────────────────────────
 
 describe("date-picker · lifecycle", () => {
