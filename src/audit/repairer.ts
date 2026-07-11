@@ -17,6 +17,62 @@ export interface RepairSummary {
   fixes_skipped: number;
 }
 
+/** One applied repair, for a machine-readable change log. */
+export interface SourceRepairChange {
+  rule_id: string;
+  type: RepairAction["type"];
+  message: string;
+}
+
+/** Result of applying repairs to a single source string. */
+export interface SourceRepairResult {
+  /** The repaired source (unchanged if no fix applied). */
+  source: string;
+  applied: number;
+  skipped: number;
+  changes: SourceRepairChange[];
+}
+
+/**
+ * Apply every fixable audit result to a single HTML source **string** and return
+ * the repaired string plus a change log — the shared, **filesystem-free** core
+ * behind both `faqir repair` (per file) and the MCP `faqir_repair_html` tool
+ * (per string). Pure: no reads, no writes, no logging.
+ *
+ * Offset-sensitive fixes (`rename-id`, `wire-field-group`) index into the source
+ * and are applied high-offset-first so earlier edits never invalidate later
+ * offsets; other fix types search/use line numbers and are order-independent.
+ */
+export function applyRepairsToSource(source: string, results: AuditResult[]): SourceRepairResult {
+  const fixable = results.filter((r) => r.fix);
+  const ordered = [...fixable].sort((a, b) => {
+    const ar = OFFSET_SENSITIVE.has(a.fix!.type) ? 0 : 1;
+    const br = OFFSET_SENSITIVE.has(b.fix!.type) ? 0 : 1;
+    if (ar !== br) return ar - br;
+    if (ar === 0) return b.fix!.offset - a.fix!.offset;
+    return 0;
+  });
+
+  let current = source;
+  let applied = 0;
+  let skipped = 0;
+  const changes: SourceRepairChange[] = [];
+
+  for (const result of ordered) {
+    const fix = result.fix!;
+    const next = applyFix(current, fix, result);
+    if (next !== null && next !== current) {
+      current = next;
+      applied++;
+      changes.push({ rule_id: result.rule_id, type: fix.type, message: result.message });
+    } else {
+      skipped++;
+    }
+  }
+
+  return { source: current, applied, skipped, changes };
+}
+
 /**
  * Apply all fixable audit results to their source files.
  * Returns a summary of what was changed.
@@ -49,37 +105,15 @@ export async function applyRepairs(
       continue;
     }
 
-    let source = await Bun.file(filePath).text();
-    let modified = false;
+    const source = await Bun.file(filePath).text();
+    const repaired = applyRepairsToSource(source, fileResults);
 
-    // Apply offset-sensitive fixes first (`rename-id`, `wire-field-group`), in
-    // descending byte-offset order: each edits text at a known offset, so
-    // processing higher offsets first keeps every lower offset valid (no
-    // re-parsing needed). Other fix types don't rely on absolute offsets (they
-    // search or use line numbers) and are unaffected.
-    const ordered = [...fileResults].sort((a, b) => {
-      const ar = OFFSET_SENSITIVE.has(a.fix!.type) ? 0 : 1;
-      const br = OFFSET_SENSITIVE.has(b.fix!.type) ? 0 : 1;
-      if (ar !== br) return ar - br;
-      if (ar === 0) return b.fix!.offset - a.fix!.offset;
-      return 0;
-    });
+    fixesApplied += repaired.applied;
+    fixesSkipped += repaired.skipped;
+    for (const change of repaired.changes) log.step(`Fixed: ${change.message}`);
 
-    for (const result of ordered) {
-      const fix = result.fix!;
-      const newSource = applyFix(source, fix, result);
-      if (newSource !== null && newSource !== source) {
-        source = newSource;
-        modified = true;
-        fixesApplied++;
-        log.step(`Fixed: ${result.message}`);
-      } else {
-        fixesSkipped++;
-      }
-    }
-
-    if (modified) {
-      await Bun.write(filePath, source);
+    if (repaired.source !== source) {
+      await Bun.write(filePath, repaired.source);
       filesModified++;
     }
   }

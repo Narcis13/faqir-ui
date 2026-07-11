@@ -54,17 +54,20 @@ afterAll(() => {
 });
 
 describe("faqir MCP server — boot & registration", () => {
-  it("registers exactly the four read tools with input and output schemas", async () => {
+  it("registers the read tools with input and output schemas", async () => {
     const { client } = await makeClient();
     const { tools } = await client.listTools();
 
-    const names = tools.map((t) => t.name).sort();
-    expect(names).toEqual([
+    const names = tools.map((t) => t.name);
+    // The four read tools (0.5-01) — write/verify tools are covered in write-tools.test.ts.
+    for (const name of [
       "faqir_get_manifest",
       "faqir_list_components",
       "faqir_project_context",
       "faqir_theme_info",
-    ]);
+    ]) {
+      expect(names).toContain(name);
+    }
 
     for (const tool of tools) {
       // Input/output schemas are declared MCP tool schemas, not free-form.

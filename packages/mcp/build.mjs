@@ -10,16 +10,40 @@
  * Runnable via `bun run build` (from packages/mcp) or `node build.mjs`.
  */
 import { spawnSync } from "node:child_process";
-import { chmodSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { chmodSync, cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const PKG = resolve(dirname(fileURLToPath(import.meta.url)));
+const REPO_ROOT = resolve(PKG, "..", "..");
 const ENTRY = join(PKG, "src", "index.ts");
 const OUTFILE = join(PKG, "dist", "index.mjs");
 const NODE_SHEBANG = "#!/usr/bin/env node\n";
 
 mkdirSync(dirname(OUTFILE), { recursive: true });
+
+// Vendor the registry into the package so `npx @faqir-ui/mcp` is self-contained.
+// The bundle resolves the registry by walking up from dist/ to the nearest
+// `registry/` sibling (see src/utils/fs.ts); in the published package only
+// packages/mcp/ ships, so the registry must live here. Copied fresh each build.
+const REGISTRY_SRC = join(REPO_ROOT, "registry");
+const REGISTRY_DEST = join(PKG, "registry");
+if (existsSync(REGISTRY_SRC)) {
+  rmSync(REGISTRY_DEST, { recursive: true, force: true });
+  cpSync(REGISTRY_SRC, REGISTRY_DEST, { recursive: true });
+  const files = countFiles(REGISTRY_DEST);
+  console.log(`✓ Vendored registry → ${relative(PKG, REGISTRY_DEST)}/ (${files} files)`);
+} else {
+  console.warn(`⚠ registry not found at ${REGISTRY_SRC}; the packaged server will not resolve components.`);
+}
+
+function countFiles(dir) {
+  let n = 0;
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    n += entry.isDirectory() ? countFiles(join(dir, entry.name)) : 1;
+  }
+  return n;
+}
 
 const bun = process.env.FAQIR_BUN || "bun";
 const result = spawnSync(

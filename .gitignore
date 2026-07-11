@@ -4,6 +4,8 @@ dist/
 bun.lock
 tests/.tmp-*
 packages/mcp/tests/.tmp-*
+# Registry vendored into the MCP package at build time (copy of ./registry).
+packages/mcp/registry/
 
 # Playwright visual-regression suite (task 0.4-23).
 # Baselines are produced/consumed in the pinned Linux container via the CI cache

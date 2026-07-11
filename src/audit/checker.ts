@@ -28,6 +28,73 @@ export interface AuditSummary {
   passed: boolean;
 }
 
+export interface HtmlAuditInput {
+  /** Raw HTML source to audit. */
+  source: string;
+  /** File label used in findings (offsets index into `source`, not this path). */
+  file?: string;
+  /** Manifests keyed by their `data-ui` name (canonical + aliases). */
+  manifests: Map<string, Manifest>;
+  /** Rule IDs to skip. */
+  skipRules?: string[];
+}
+
+/**
+ * Audit one HTML source string against in-memory manifests — the shared,
+ * **filesystem-free** core behind both `faqir audit` (per file) and the MCP
+ * `faqir_audit_html` tool (per string). Runs every HTML-derived rule: the
+ * per-component manifest rules ({@link ALL_RULES}), the document-level rules
+ * ({@link DOCUMENT_RULES}), and the file-level `controller-loaded` reconciliation.
+ * CSS/JS/token/contrast checks are NOT here — they scan on-disk component sources
+ * and stay in {@link runAudit}.
+ *
+ * Pure: it reads nothing and writes nothing. Unknown `data-ui` names (no manifest
+ * in the map) are skipped for per-component rules, exactly as `runAudit` skips
+ * not-installed components; document rules still run over the whole source.
+ */
+export function auditHtmlSource(input: HtmlAuditInput): AuditResult[] {
+  const { source, manifests } = input;
+  const file = input.file ?? "input.html";
+  const skipRules = new Set(input.skipRules ?? []);
+  const activeRules = ALL_RULES.filter((r) => !skipRules.has(r.id));
+  const activeDocRules = DOCUMENT_RULES.filter((r) => !skipRules.has(r.id));
+
+  const results: AuditResult[] = [];
+  const components = extractComponents(source, file);
+
+  for (const component of components) {
+    const manifest = manifests.get(component.name);
+    if (!manifest) continue; // unknown/not-installed component — skip per-component rules
+    for (const rule of activeRules) {
+      results.push(...rule.check(component, manifest));
+    }
+  }
+
+  if (activeDocRules.length > 0) {
+    const doc = parseDocument(source, file);
+    for (const rule of activeDocRules) {
+      results.push(...rule.check(doc));
+    }
+  }
+
+  // File-level controller-loaded: replace the generic per-component reminders
+  // (emitted by controllerLoadedRule) with the precise "is the script actually
+  // referenced?" findings. When every controller is referenced, the generics are
+  // simply dropped. Mirrors the reconciliation in runAudit.
+  if (!skipRules.has("controller-loaded")) {
+    const fileControllerResults = checkControllersInFile(source, file, components, manifests);
+    const hasGeneric = results.some((r) => r.rule_id === "controller-loaded");
+    if (hasGeneric) {
+      for (let i = results.length - 1; i >= 0; i--) {
+        if (results[i].rule_id === "controller-loaded") results.splice(i, 1);
+      }
+      results.push(...fileControllerResults);
+    }
+  }
+
+  return results;
+}
+
 /**
  * Run a full audit on the project.
  */
@@ -79,61 +146,14 @@ export async function runAudit(options: AuditOptions = {}): Promise<AuditSummary
   let componentsFound = 0;
 
   const skipRules = new Set(options.skipRules || []);
-  const activeRules = ALL_RULES.filter(r => !skipRules.has(r.id));
-  const activeDocRules = DOCUMENT_RULES.filter(r => !skipRules.has(r.id));
 
-  // Audit each HTML file
+  // Audit each HTML file through the shared, filesystem-free source auditor —
+  // the same engine the MCP `faqir_audit_html` tool drives on a bare string.
   for (const filePath of htmlFiles) {
     const source = await Bun.file(filePath).text();
     const relPath = relative(cwd, filePath);
-    const components = extractComponents(source, relPath);
-    componentsFound += components.length;
-
-    for (const component of components) {
-      const manifest = manifests.get(component.name);
-      if (!manifest) {
-        // Component not installed — skip or warn
-        continue;
-      }
-
-      // Run all active rules
-      for (const rule of activeRules) {
-        const ruleResults = rule.check(component, manifest);
-        results.push(...ruleResults);
-      }
-    }
-
-    // Document-level rules (duplicate-id, heading-order, landmark) — run once per
-    // HTML file over the whole document, independent of installed manifests.
-    if (activeDocRules.length > 0) {
-      const doc = parseDocument(source, relPath);
-      for (const rule of activeDocRules) {
-        results.push(...rule.check(doc));
-      }
-    }
-
-    // File-level checks: controller-loaded
-    if (!skipRules.has("controller-loaded")) {
-      const fileControllerResults = checkControllersInFile(source, relPath, components, manifests);
-      // Replace generic controller-loaded results with file-level ones
-      const genericControllerIdx = results.findIndex(r => r.rule_id === "controller-loaded" && r.file === relPath);
-      if (genericControllerIdx >= 0 && fileControllerResults.length > 0) {
-        // Remove all generic controller-loaded results for this file
-        for (let i = results.length - 1; i >= 0; i--) {
-          if (results[i].rule_id === "controller-loaded" && results[i].file === relPath) {
-            results.splice(i, 1);
-          }
-        }
-        results.push(...fileControllerResults);
-      } else if (genericControllerIdx >= 0) {
-        // All controllers found — remove the generic warnings
-        for (let i = results.length - 1; i >= 0; i--) {
-          if (results[i].rule_id === "controller-loaded" && results[i].file === relPath) {
-            results.splice(i, 1);
-          }
-        }
-      }
-    }
+    componentsFound += extractComponents(source, relPath).length;
+    results.push(...auditHtmlSource({ source, file: relPath, manifests, skipRules: options.skipRules }));
   }
 
   // CSS-level checks: token-exists and reduced-motion

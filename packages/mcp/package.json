@@ -13,11 +13,13 @@
   },
   "files": [
     "dist",
+    "registry",
     "README.md"
   ],
   "scripts": {
     "dev": "bun run src/index.ts",
     "build": "node build.mjs",
+    "test": "bun test",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "prepublishOnly": "node build.mjs"
   },

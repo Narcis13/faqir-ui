@@ -95,7 +95,7 @@ done in any order (or in parallel worktrees).
 | ID | Task | Status |
 |----|------|--------|
 | 0.5-01 | `@faqir-ui/mcp` server skeleton + read tools | ✅ |
-| 0.5-02 | MCP write/verify tools + resources + packaging | ⬜ |
+| 0.5-02 | MCP write/verify tools + resources + packaging | ✅ |
 | 0.5-03 | Remote registry protocol: index generation + `--registry` fetch + hashes | ⬜ |
 | 0.5-04 | `faqir upgrade` groundwork: pristine store + `faqir diff` | ⬜ |
 | 0.5-05 | `faqir upgrade` three-way merge | ⬜ |
@@ -1050,9 +1050,33 @@ reference, and manifests as MCP resources. Compile + package for `npx @faqir-ui/
 - End-to-end: real stdio spawn of the compiled server, one full tool call.
 
 **Acceptance criteria**
-- [ ] An agent with only this MCP server can produce and self-validate a page (scripted end-to-end test proves it).
-- [ ] Audit/repair tools require zero filesystem access.
-- [ ] `npx`-ready package.json (bin entry, compiled dist); README with Claude Code/Cursor config snippets.
+- [x] An agent with only this MCP server can produce and self-validate a page (scripted end-to-end test proves it).
+  Test "an agent with only this server can produce AND self-validate a page" drives
+  `faqir_scaffold_page` → `faqir_audit_html` through the client, tools only, and asserts `passed`.
+- [x] Audit/repair tools require zero filesystem access.
+  The engines (`auditHtmlSource`, `applyRepairsToSource` in `src/audit/`) are pure functions over
+  an in-memory manifest map; the server pre-loads that map once at boot. The "zero filesystem
+  access" test drives both directly with a hand-built synthetic manifest — no registry, no disk.
+- [x] `npx`-ready package.json (bin entry, compiled dist); README with Claude Code/Cursor config snippets.
+  `bin.faqir-mcp → dist/index.mjs`; `build.mjs` vendors `registry/` into the package and
+  `files` ships it, so `npx -y @faqir-ui/mcp` is self-contained. README has both host snippets.
+
+**Delivered** — Five write/verify tools on the 0.5-01 server: `faqir_generate` (renders a
+component from its manifest template, then audits the fragment before returning — valid
+variant/size, required slots/ARIA; recipes report `requires_controller`), `faqir_scaffold_page`
+(composes sections into a `<main>`-wrapped, controller-wired, audited page), `faqir_audit_html`
+and `faqir_repair_html` (string in/out, no filesystem — findings JSON and deterministic
+auto-fixes + before/after audits), and `faqir_generate_theme` (clean not-implemented stub for
+0.6-11). Resources: `faqir://protocol` (markdown), `faqir://tokens` (assembled token CSS),
+`faqir://manifests` + `faqir://manifest/{name}`. **One core, two frontends:** the string
+audit/repair engines were extracted into `src/audit/checker.ts` (`auditHtmlSource`) and
+`src/audit/repairer.ts` (`applyRepairsToSource`) and `runAudit`/`applyRepairs` refactored onto
+them, so CLI and MCP share exactly one auditor. Packaging: `build.mjs` vendors the registry into
+the package; the compiled bundle resolves it by walking up from `dist/`. Tests: `write-tools.test.ts`
+(18 — property matrix of 240+ generate→audit combos, known-bad findings, repair round-trip,
+scaffold, resources, zero-filesystem proof, theme stub) and `e2e.test.ts` (real `node dist/index.mjs`
+stdio spawn, full tool call + resource read). 35 MCP tests green; root suite green (pre-existing
+toast/tooltip timer failures unrelated).
 
 ---
 
