@@ -48,6 +48,23 @@ export interface ManifestFiles {
   manifest: string;
 }
 
+/**
+ * One entry of a component's changelog (task 0.5-04, FAQIR-PLAN §9.3).
+ *
+ * The `changes` array records what changed between component versions. It is
+ * consumed by `faqir upgrade` (0.5-05), which prints the entries between the
+ * user's installed version and the target version and surfaces any `breaking`
+ * one prominently before applying a merge.
+ */
+export interface ManifestChange {
+  /** Component version this entry describes (matches a `version` value). */
+  version: string;
+  /** Human/agent-readable summary of what changed in this version. */
+  note: string;
+  /** Whether upgrading across this version can break existing usage. */
+  breaking: boolean;
+}
+
 export interface ManifestTemplates {
   html: string;
   [key: string]: string;
@@ -74,6 +91,14 @@ export interface Manifest {
    * a real component directory always wins over an alias of the same name.
    */
   aliases?: string[];
+  /**
+   * Version changelog (schema in place from 0.5-04; populated going forward).
+   *
+   * Optional, ordered oldest-to-newest. `faqir upgrade` reads it to tell the
+   * user what changed between their version and the target, flagging breaking
+   * entries. Absent or empty on components that have not yet recorded history.
+   */
+  changes?: ManifestChange[];
   anatomy: ManifestAnatomy;
   slots: Record<string, ManifestSlot>;
   variants: Record<string, ManifestVariant>;
@@ -122,6 +147,30 @@ export function validateManifest(data: unknown): ManifestValidationError[] {
   if (m.aliases !== undefined) {
     if (!Array.isArray(m.aliases) || !m.aliases.every((a) => typeof a === "string" && a.length > 0)) {
       errors.push({ field: "aliases", message: "Optional field 'aliases' must be an array of non-empty strings" });
+    }
+  }
+
+  // Validate changes (optional changelog) — array of { version, note, breaking }
+  if (m.changes !== undefined) {
+    if (!Array.isArray(m.changes)) {
+      errors.push({ field: "changes", message: "Optional field 'changes' must be an array" });
+    } else {
+      m.changes.forEach((entry, i) => {
+        if (typeof entry !== "object" || entry === null) {
+          errors.push({ field: `changes[${i}]`, message: "Changelog entry must be an object" });
+          return;
+        }
+        const c = entry as Record<string, unknown>;
+        if (typeof c.version !== "string" || c.version.length === 0) {
+          errors.push({ field: `changes[${i}].version`, message: "Required non-empty string" });
+        }
+        if (typeof c.note !== "string" || c.note.length === 0) {
+          errors.push({ field: `changes[${i}].note`, message: "Required non-empty string" });
+        }
+        if (typeof c.breaking !== "boolean") {
+          errors.push({ field: `changes[${i}].breaking`, message: "Required boolean" });
+        }
+      });
     }
   }
 

@@ -8,6 +8,7 @@ import { init } from "./commands/init";
 import { doctor } from "./commands/doctor";
 import { add } from "./commands/add";
 import { remove } from "./commands/remove";
+import { diff } from "./commands/diff";
 import { list } from "./commands/list";
 import { search } from "./commands/search";
 import { create } from "./commands/create";
@@ -32,6 +33,7 @@ const COMMANDS: Record<string, (args: string[]) => Promise<void>> = {
   doctor,
   add,
   remove,
+  diff,
   list,
   search,
   create,
@@ -84,6 +86,7 @@ const HELP_CATEGORIES = [
       ["audit", "Validate components against manifests"],
       ["repair", "Auto-fix audit issues"],
       ["conform", "Normalize component markup"],
+      ["diff", "Show component drift vs the pristine copy"],
       ["trace", "Show dependency and file trace"],
     ],
   },

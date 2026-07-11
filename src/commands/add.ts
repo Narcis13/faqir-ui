@@ -7,6 +7,7 @@ import { loadManifest, type Manifest } from "../manifest";
 import { findComponentInRegistry, listRegistryComponents, type Layer } from "../utils/components";
 import { regenerateFaqirInit, regenerateContext } from "../utils/codegen";
 import { generateBundle } from "../utils/bundler";
+import { readPristineIndex, savePristine, readComponentFiles } from "../utils/pristine";
 import { addIcons } from "./icons";
 import {
   parseScopedName,
@@ -112,6 +113,57 @@ function printHelp() {
 
 async function getDependencies(manifest: Manifest): Promise<string[]> {
   return manifest.composition?.contains || [];
+}
+
+/** Read a component's manifest version, defaulting to `0.0.0` (mirrors registry-index). */
+async function readManifestVersion(manifestPath: string): Promise<string> {
+  if (!existsSync(manifestPath)) return "0.0.0";
+  try {
+    const m = await loadManifest(manifestPath);
+    return typeof m.version === "string" && m.version.length > 0 ? m.version : "0.0.0";
+  } catch {
+    return "0.0.0";
+  }
+}
+
+/**
+ * Snapshot a component's pristine copy from its local registry source, so
+ * `faqir diff`/`faqir upgrade` have a byte-exact baseline. Used both for fresh
+ * installs and for backfilling components that predate the pristine store.
+ */
+async function snapshotFromRegistry(
+  comp: { name: string; layer: Layer; path: string },
+  cwd: string,
+  backfilled = false
+): Promise<void> {
+  const version = await readManifestVersion(join(comp.path, `${comp.name}.manifest.json`));
+  const files = await readComponentFiles(comp.path);
+  await savePristine(cwd, { name: comp.name, version, layer: comp.layer, files, backfilled });
+}
+
+/**
+ * Backfill story: components installed before the pristine store existed get a
+ * snapshot on their next `add` — captured from the *current* registry source
+ * and flagged `backfilled` (it may not match the exact bytes they first
+ * installed). Each backfill warns, so the approximate baseline is never silent.
+ */
+async function backfillLocalPristine(
+  resolved: { name: string; layer: Layer; path: string }[],
+  alreadyInstalled: Set<string>,
+  cwd: string
+): Promise<void> {
+  const index = await readPristineIndex(cwd);
+  const done = new Set<string>();
+  for (const comp of resolved) {
+    if (!alreadyInstalled.has(comp.name)) continue; // fresh installs snapshot elsewhere
+    if (index.components[comp.name] || done.has(comp.name)) continue;
+    done.add(comp.name);
+    await snapshotFromRegistry(comp, cwd, true);
+    log.warn(
+      `No pristine snapshot for '${comp.name}' — captured one from the registry as the upgrade baseline ` +
+        `(it may differ from your original install; run 'faqir diff ${comp.name}' to review).`
+    );
+  }
 }
 
 /**
@@ -258,17 +310,25 @@ async function addLocal(
 
   const toInstall = resolved.filter((r) => !alreadyInstalled.has(r.name));
 
-  if (toInstall.length === 0) {
-    log.info("All requested components are already installed.");
-    return;
-  }
-
-  // Dry run
+  // Dry run — never writes, so no pristine snapshot or backfill either.
   if (options.dryRun) {
+    if (toInstall.length === 0) {
+      log.info("All requested components are already installed.");
+      return;
+    }
     log.heading("Dry run — would add:");
     for (const comp of toInstall) {
       log.step(`${comp.layer}/${comp.name}`);
     }
+    return;
+  }
+
+  // Backfill pristine snapshots for already-installed components that predate
+  // the store, so `faqir diff`/`faqir upgrade` have a baseline going forward.
+  await backfillLocalPristine(resolved, alreadyInstalled, cwd);
+
+  if (toInstall.length === 0) {
+    log.info("All requested components are already installed.");
     return;
   }
 
@@ -283,6 +343,9 @@ async function addLocal(
     if (!config.installed[comp.layer].includes(comp.name)) {
       config.installed[comp.layer].push(comp.name);
     }
+
+    // Snapshot the pristine copy (byte-exact from the registry source).
+    await snapshotFromRegistry(comp, cwd);
 
     log.success(`${comp.name} → ${comp.layer}/${comp.name}/`);
   }
@@ -445,6 +508,15 @@ async function addRemote(
     if (!config.installed[entry.layer].includes(entry.name)) {
       config.installed[entry.layer].push(entry.name);
     }
+
+    // Snapshot the pristine copy from the already-verified bytes — the same
+    // buffer that was just committed to disk, so it is byte-exact to the host.
+    const prefix = `${entry.layer}/${entry.name}/`;
+    const files = plannedWrites
+      .filter((w) => w.destRel.startsWith(prefix))
+      .map((w) => ({ path: w.destRel.slice(prefix.length), bytes: w.bytes }));
+    await savePristine(cwd, { name: entry.name, version: entry.version, layer: entry.layer, files });
+
     log.success(`${entry.name} → ${entry.layer}/${entry.name}/`);
   }
 

@@ -97,7 +97,7 @@ done in any order (or in parallel worktrees).
 | 0.5-01 | `@faqir-ui/mcp` server skeleton + read tools | ✅ |
 | 0.5-02 | MCP write/verify tools + resources + packaging | ✅ |
 | 0.5-03 | Remote registry protocol: index generation + `--registry` fetch + hashes | ✅ |
-| 0.5-04 | `faqir upgrade` groundwork: pristine store + `faqir diff` | ⬜ |
+| 0.5-04 | `faqir upgrade` groundwork: pristine store + `faqir diff` | ✅ |
 | 0.5-05 | `faqir upgrade` three-way merge | ⬜ |
 | 0.5-06 | Context v2: `--format llms` (`llms.txt` / `llms-full.txt`) | ⬜ |
 | 0.5-07 | Manifest-derived skill generator + hosted `manifest.schema.json` | ⬜ |
@@ -1118,9 +1118,35 @@ next `add`/`upgrade` with a warning. Manifests gain the `changes` changelog arra
 - Missing-pristine path warns and degrades gracefully.
 
 **Acceptance criteria**
-- [ ] `.faqir/pristine/` layout documented and versioned (survives future format changes).
-- [ ] `diff` output usable by an agent (`--json`) and a human (unified).
-- [ ] Manifest schema extended with `changes: [{version, note, breaking}]`.
+- [x] `.faqir/pristine/` layout documented and versioned (survives future format changes).
+  `pristine.json` carries a `schema` id (`faqir-pristine@1`); a reader that sees an
+  unrecognized schema (or a missing/corrupt store) degrades to "empty" instead of
+  crashing (`readPristineIndex`). Layout + contract documented in `docs/pristine-store.md`.
+- [x] `diff` output usable by an agent (`--json`) and a human (unified).
+  Human: standard unified diff (`--- / +++`, `@@` hunks) via a zero-dep LCS differ
+  (`src/utils/diff.ts`). Agent: stable `{ schema: "faqir-diff@1", components: [...] }`
+  envelope with per-file `status`/`added`/`removed`/`hunks` and a component `summary`.
+- [x] Manifest schema extended with `changes: [{version, note, breaking}]`.
+  Added `ManifestChange` type + optional `changes?` field on `Manifest`, validated in
+  `validateManifest` (schema only; populated going forward, consumed by 0.5-05).
+
+**Delivered** — On `add` (both the local and hash-verified remote paths) `faqir` now
+snapshots a **byte-exact pristine copy** of every installed component under
+`.faqir/pristine/{name}@{version}/`, indexed by a schema-versioned `pristine.json`
+(`src/utils/pristine.ts`). New `faqir diff [component…]` reports user drift against that
+baseline — a copy-pasteable unified diff for humans and a stable JSON envelope for agents
+(`src/commands/diff.ts`, backed by the zero-dep differ in `src/utils/diff.ts`). Backfill
+story: a component installed before the store existed gets a baseline (flagged
+`backfilled`) on its next `add`, with a warning that it may not match the original bytes;
+`diff` on a still-missing baseline warns and exits 0 rather than erroring. The manifest
+schema gains the optional `changes` changelog array (type + validation). Layout, schema
+versioning, the `--json` shape, and the changelog are documented in `docs/pristine-store.md`.
+Tests: `tests/utils/diff.test.ts` (differ: identity, hunks, add/remove counts, hunk
+splitting/merging, `/dev/null` labels), `tests/commands/diff.test.ts` (pristine byte-equality,
+dep snapshots, dry-run writes nothing, clean/edited/added-file drift, stable `--json`,
+missing-pristine degradation, backfill flag), a remote-path pristine byte-equality case in
+`add-remote.test.ts`, and `changes` validation cases in `manifest.test.ts`. Full suite green
+(pre-existing toast/tooltip timer failures unrelated).
 
 ---
 

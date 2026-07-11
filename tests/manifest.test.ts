@@ -150,4 +150,55 @@ describe("manifest validation", () => {
     expect(errors.some((e) => e.field === "variants.bad.default")).toBe(true);
     expect(errors.some((e) => e.field === "variants.bad.attr")).toBe(true);
   });
+
+  const base = {
+    name: "test",
+    version: "1.0.0",
+    kind: "primitive" as const,
+    category: "test",
+    description: "test",
+    anatomy: { tag: "div", selector: "[data-ui='test']", content_model: "block" },
+    slots: {},
+    variants: {},
+    states: {},
+    a11y: {},
+    tokens_used: [],
+    templates: { html: "<div></div>" },
+    safe_transforms: [],
+    unsafe_transforms: [],
+    composition: { contains: [], used_in: [] },
+    files: { html: "test.html", css: "test.css", manifest: "test.manifest.json" },
+    tests: [],
+  };
+
+  it("accepts an absent changes changelog (optional)", () => {
+    expect(validateManifest(base)).toEqual([]);
+  });
+
+  it("accepts a well-formed changes changelog", () => {
+    const errors = validateManifest({
+      ...base,
+      changes: [
+        { version: "1.1.0", note: "Added ghost variant.", breaking: false },
+        { version: "2.0.0", note: "Renamed attr.", breaking: true },
+      ],
+    });
+    expect(errors).toEqual([]);
+  });
+
+  it("rejects a non-array changes field", () => {
+    const errors = validateManifest({ ...base, changes: "nope" });
+    expect(errors.some((e) => e.field === "changes")).toBe(true);
+  });
+
+  it("rejects changelog entries missing required fields", () => {
+    const errors = validateManifest({
+      ...base,
+      changes: [{ version: "1.1.0" }, { note: "x", breaking: "yes" }],
+    });
+    expect(errors.some((e) => e.field === "changes[0].note")).toBe(true);
+    expect(errors.some((e) => e.field === "changes[0].breaking")).toBe(true);
+    expect(errors.some((e) => e.field === "changes[1].version")).toBe(true);
+    expect(errors.some((e) => e.field === "changes[1].breaking")).toBe(true);
+  });
 });

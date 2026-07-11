@@ -7,6 +7,7 @@ import { readConfig, writeConfig } from "../../src/utils/config";
 import { copyDir, getRegistryPath } from "../../src/utils/fs";
 import { buildRegistryIndex, serializeRegistryIndex } from "../../src/utils/registry-index";
 import { __setFetchImpl } from "../../src/utils/remote-registry";
+import { readPristineIndex, pristineComponentDir } from "../../src/utils/pristine";
 
 const ROOT = join(import.meta.dir, "../..");
 const TEST_DIR = join(import.meta.dir, "../.tmp-add-remote-test");
@@ -182,6 +183,22 @@ describe("faqir add --registry (remote)", () => {
     const config = await readConfig(TEST_DIR);
     expect(config.installed.primitives).toContain("button");
     expect(config.installed.primitives).toContain("card");
+  });
+
+  it("snapshots a pristine copy byte-equal to the verified remote bytes", async () => {
+    await init([]);
+    await runAdd(["button", "--registry", BASE]);
+
+    const index = await readPristineIndex(TEST_DIR);
+    const entry = index.components.button;
+    expect(entry).toBeDefined();
+
+    const snapshotDir = pristineComponentDir(TEST_DIR, "button", entry.version);
+    for (const rel of entry.files) {
+      const got = readFileSync(join(snapshotDir, rel));
+      const want = readFileSync(join(REMOTE_DIR, "primitives/button", rel));
+      expect(Buffer.compare(got, want)).toBe(0);
+    }
   });
 });
 
