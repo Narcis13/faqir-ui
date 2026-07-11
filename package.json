@@ -17,6 +17,8 @@
     "build:cli": "node scripts/build-cli.mjs",
     "build:core": "node scripts/build-core.mjs",
     "build:icons": "node scripts/build-icons.mjs",
+    "build:registry-index": "bun scripts/build-registry-index.mjs",
+    "check:registry-index": "bun scripts/build-registry-index.mjs --check",
     "build:core-package": "node scripts/build-core-package.mjs",
     "test": "bun test",
     "typecheck": "tsc --noEmit && tsc --noEmit -p packages/mcp/tsconfig.json",

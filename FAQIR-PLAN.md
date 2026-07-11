@@ -96,7 +96,7 @@ done in any order (or in parallel worktrees).
 |----|------|--------|
 | 0.5-01 | `@faqir-ui/mcp` server skeleton + read tools | ✅ |
 | 0.5-02 | MCP write/verify tools + resources + packaging | ✅ |
-| 0.5-03 | Remote registry protocol: index generation + `--registry` fetch + hashes | ⬜ |
+| 0.5-03 | Remote registry protocol: index generation + `--registry` fetch + hashes | ✅ |
 | 0.5-04 | `faqir upgrade` groundwork: pristine store + `faqir diff` | ⬜ |
 | 0.5-05 | `faqir upgrade` three-way merge | ⬜ |
 | 0.5-06 | Context v2: `--format llms` (`llms.txt` / `llms-full.txt`) | ⬜ |
@@ -1096,9 +1096,9 @@ leaves no half-installed component. `faqir.config.json` gains a `registries` map
 - Config resolution: scoped name → registry URL; unknown scope → helpful error.
 
 **Acceptance criteria**
-- [ ] Third parties can host a registry with **only static files** (documented format, no server logic).
-- [ ] Integrity failure can never write files (test-proven).
-- [ ] Offline `faqir add button` behavior byte-identical to before.
+- [x] Third parties can host a registry with **only static files** (documented format, no server logic). — `docs/remote-registry.md`; `registry-index.json` + files mirror the registry layout.
+- [x] Integrity failure can never write files (test-proven). — buffer-then-commit; `add-remote.test.ts` "partial failure … writes NOTHING".
+- [x] Offline `faqir add button` behavior byte-identical to before. — offline path untouched; verified byte-identical via compiled bundle.
 
 ---
 

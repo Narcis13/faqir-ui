@@ -17,6 +17,14 @@ export interface FaqirConfig {
     auto: boolean;
     minify: boolean;
   };
+  /**
+   * Remote registries, keyed by scope. A scoped component name `@scope/name`
+   * resolves through this map to a base URL, from which `faqir add` fetches
+   * `registry-index.json` and the component's files (see remote-registry.ts).
+   * Keys may be written with or without the leading `@` (`"@acme"` or `"acme"`).
+   * Absent by default — the bundled registry stays the offline-first source.
+   */
+  registries?: Record<string, string>;
 }
 
 export const DEFAULT_CONFIG: FaqirConfig = {

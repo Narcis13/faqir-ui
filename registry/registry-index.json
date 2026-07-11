@@ -1,0 +1,1638 @@
+{
+  "schema": "faqir-registry-index@1",
+  "count": 66,
+  "components": [
+    {
+      "name": "aspect-ratio",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "aspect-ratio.css",
+          "sha256": "8eca30834acc5fe88ce9f8956661d0d69bd7e14b6d2e93ae10897963ab31fd6a"
+        },
+        {
+          "path": "aspect-ratio.html",
+          "sha256": "3c04eab7901f9ba1b29b670540093cd26342c6eb002b2d0eeb9ab202f37dfcd5"
+        },
+        {
+          "path": "aspect-ratio.manifest.json",
+          "sha256": "823aaaad5bd1d10fe0e47f0d679fbaf1d676c89dda3c107b07aadd1c80d14781"
+        }
+      ],
+      "hash": "b064332bbfd58eb96fd3e1864132efaee5f2d2031c75099191d73077b85d7790",
+      "deps": []
+    },
+    {
+      "name": "avatar",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "avatar.css",
+          "sha256": "13765311dfa2b495c2b38bbf36a67262c39fd29c9bfaa2fa332b06f72c943693"
+        },
+        {
+          "path": "avatar.html",
+          "sha256": "7c65d65062000170c768bed2557cabe558f22a883c76f986eeca965d2f403ea4"
+        },
+        {
+          "path": "avatar.manifest.json",
+          "sha256": "0983fb91611233c813d3039d24718efc7c4559eaa3dbc993d9be26a71bc36784"
+        }
+      ],
+      "hash": "cec15cbac9b8915da7505f6019c45f2264e9b60aa09291d04388601974c5ff34",
+      "deps": []
+    },
+    {
+      "name": "badge",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "badge.css",
+          "sha256": "790d495ae24522ea3161b97c4cb1c645be752e4ac83353c29c18be07e92370b9"
+        },
+        {
+          "path": "badge.html",
+          "sha256": "334e72a9cf1dde2b4a6cf010be538dc3d7956242b70736a41ccdf3092f92b136"
+        },
+        {
+          "path": "badge.manifest.json",
+          "sha256": "4f081a89c05b6a15e38cd2774189dc4dfdacbf53d4a25dac7441ea701d02fd84"
+        }
+      ],
+      "hash": "c21ceaaf2d6229a813c5568d92e4be8c870c40f637f6ca41f7e98699bf81f17b",
+      "deps": []
+    },
+    {
+      "name": "breadcrumb",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "breadcrumb.css",
+          "sha256": "787822ff3cc1cb2226681dfcc0494b784dfc7a03540d0280b650d8788ef70dd7"
+        },
+        {
+          "path": "breadcrumb.html",
+          "sha256": "eec7a1b871a917869eb8e2473327f0cc262a66926b446fe0ba120e097a518790"
+        },
+        {
+          "path": "breadcrumb.manifest.json",
+          "sha256": "46d7174d3de2c34ddc1099bb271b66c3a4f735a7e935ff490b17ffbbbdac4c67"
+        }
+      ],
+      "hash": "5421cf1de2d1effff680a42d70e17eea65853f11d10aede6f2903dd0b3569838",
+      "deps": []
+    },
+    {
+      "name": "button",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "button.css",
+          "sha256": "0da7ecb027eecb2e947cf4bfa524e470905541b0c3e89afa096dca608080120c"
+        },
+        {
+          "path": "button.html",
+          "sha256": "fbedc6b47693d7413b30a9404d4d157f1d7e946b5207f408dae8c17453620067"
+        },
+        {
+          "path": "button.manifest.json",
+          "sha256": "98fb785802d469b8faa955c46e5e6af60a7a3b12ad23c1da9a72ae0d9c866fce"
+        }
+      ],
+      "hash": "afc55e28f1b67f18f7edfb68b2e2c1c8de3f6e99e624bae238ec8f57f314d4d3",
+      "deps": []
+    },
+    {
+      "name": "callout",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.1.0",
+      "files": [
+        {
+          "path": "callout.css",
+          "sha256": "27a42f4fdd74662301f08fa7c1816b8e6e2d20f6a5a7f7d13f3698b85557f23a"
+        },
+        {
+          "path": "callout.html",
+          "sha256": "7949baffc46c8a1e0c1779decd089d235ecad20d243706f630bdac863ac8bbcd"
+        },
+        {
+          "path": "callout.manifest.json",
+          "sha256": "ac9b823cf0d2dedbe7dbb2ab78729a3fa094ad29ed37fb874703bc27af384f54"
+        }
+      ],
+      "hash": "3ba31e0404625ec9d839db4d5df33d653b85ec5f9bc05bb222df06c1decc8515",
+      "deps": [
+        "text"
+      ]
+    },
+    {
+      "name": "card",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "card.css",
+          "sha256": "b27a21613a9d26f8d0cd7ca0d61590e9f6b7989c63b16cf3d5b261b16c9e0999"
+        },
+        {
+          "path": "card.html",
+          "sha256": "a5feae14f71ff82896f091546e7d5c9eae830e36cffd762eb8ffad2cf8a11822"
+        },
+        {
+          "path": "card.manifest.json",
+          "sha256": "7482fadf3521e4b11cd04f003fe3aa029e6dff7c80aab93a8994c64f82a4db5d"
+        }
+      ],
+      "hash": "553c75d78e0de4aa4ba0fa77a0a9d4ae8758ce4f1f42660c7c21e5a22a2c6175",
+      "deps": [
+        "button"
+      ]
+    },
+    {
+      "name": "checkbox",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "checkbox.css",
+          "sha256": "0771c6c3223e5f200344a5b3146f46971fcabd619e13f694930eb6d091994205"
+        },
+        {
+          "path": "checkbox.html",
+          "sha256": "e94399c34297d5ab6d2a1591bec5f682f5ca947598119b3c5abb85fba431950b"
+        },
+        {
+          "path": "checkbox.manifest.json",
+          "sha256": "783433d7dab84ab3c1c09a4d7e3c3d9daab3f79b0fd9fc321bf254152d6d234d"
+        }
+      ],
+      "hash": "49fc01436f31d4cd7eec8f6a27ea056cf3519df07f71cdd10b14aec8cf46b915",
+      "deps": []
+    },
+    {
+      "name": "chip",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "chip.css",
+          "sha256": "c78037729da14553b483ce023dc3945c80ff48256f418c164adecd7b0cd144f5"
+        },
+        {
+          "path": "chip.html",
+          "sha256": "3596760f85052a36724f737aad5217e34dd5bfc2a9fee69188893e5315bca970"
+        },
+        {
+          "path": "chip.manifest.json",
+          "sha256": "67e829f96e20fddfde988c6d9b9d4f333a3f9bcb297846f6c2f9f510d6b69a08"
+        }
+      ],
+      "hash": "d0ee646a6c462adfd14bff3df2c14c0458fc2ae5f8eca0b30ac9316dce074293",
+      "deps": []
+    },
+    {
+      "name": "collapsible",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "collapsible.css",
+          "sha256": "f4c82e062044a83dd1a908e25797198d855687e50db3f7b63e802db408923245"
+        },
+        {
+          "path": "collapsible.html",
+          "sha256": "4ec29663b55a9e25ca4172e44c50d628f1a8ce5f39d74c91c8c8394f49e1978f"
+        },
+        {
+          "path": "collapsible.manifest.json",
+          "sha256": "115b33670e25893f557d5e45c7e0fb5d58f719ce1a2af845ff074e77fb7520d8"
+        }
+      ],
+      "hash": "151bb892460d756eaf0279497547593efded2542ce9f1cbbff776b47c7b412a1",
+      "deps": []
+    },
+    {
+      "name": "description-list",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "description-list.css",
+          "sha256": "fdf8df535e3e125a3fcbbc7b5ed5c1936b9a4001e364b77e2e249c70e0dd5039"
+        },
+        {
+          "path": "description-list.html",
+          "sha256": "a137bcc55f7b5b1a1c478f303d8a6877d614cb788369d58c1a2a3605996726f2"
+        },
+        {
+          "path": "description-list.manifest.json",
+          "sha256": "79faace2b1d0263e7ac48ae4189533cb0ee5c7362923917e992b28a073c1948f"
+        }
+      ],
+      "hash": "6b7cf3227306bfef7c5fe92ff1ab935f307e8be5284d33c8076269828a82309a",
+      "deps": []
+    },
+    {
+      "name": "empty-state",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "empty-state.css",
+          "sha256": "07510f8f163d0c5cb6586f5f07fb01f8152e1db449a23e833ffb258abc1904d6"
+        },
+        {
+          "path": "empty-state.html",
+          "sha256": "942324bac566849fb72de86d37ac927e199ed9afe60b547180960faf14caf4e7"
+        },
+        {
+          "path": "empty-state.manifest.json",
+          "sha256": "6cc789d5477813242a472d7b828df348168b6610f9002402fd6461636994efea"
+        }
+      ],
+      "hash": "be56f3c41b7892cc7a4e3b969bd1bb98403faef51302b7504a2510481e41da9a",
+      "deps": [
+        "button"
+      ]
+    },
+    {
+      "name": "field-group",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "field-group.css",
+          "sha256": "d286d0476a22e4f9bf6018daafd8288032511eb667b2351ad9671500592e48bf"
+        },
+        {
+          "path": "field-group.html",
+          "sha256": "62577cd54edc80edee653ae701a6d576d29cd7fb35dcaf998f18c069b254a9dc"
+        },
+        {
+          "path": "field-group.manifest.json",
+          "sha256": "ee4d7e452cb37a67dc0ca6bad7be42bc06e6547b4b99fd1b0a94a9cc5573f23a"
+        }
+      ],
+      "hash": "6205a9244e9f670d0d1673b8c460cd90f99db2b62c2d3f7ce956951adc61efbc",
+      "deps": [
+        "input",
+        "select",
+        "textarea",
+        "checkbox",
+        "radio",
+        "switch"
+      ]
+    },
+    {
+      "name": "grid",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "grid.css",
+          "sha256": "d532d15d733dfdaa6098eecce94411542dd337ddf071807c7decbb70099df249"
+        },
+        {
+          "path": "grid.html",
+          "sha256": "30bc0f353c62e7c94c99bbeee1ee57afae61b7ce043770daef1e0793bd67d182"
+        },
+        {
+          "path": "grid.manifest.json",
+          "sha256": "ed1048c3016b6dd10abaa52860fa345247f02820eaddd492df86e68e2c8a9c4b"
+        }
+      ],
+      "hash": "3b63271d26e42f21edf0484dc14abe60f543cfa63f46dca059d76d3ae212bfa1",
+      "deps": []
+    },
+    {
+      "name": "icon",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "LICENSE.lucide",
+          "sha256": "79edfab0ad2c844edcef0ea983c40a3783a76365812264dd67b86ecc65201d74"
+        },
+        {
+          "path": "icon.html",
+          "sha256": "dc647772d27fef9992455202efa14cc54116a46934bdaa7ddca15bf2eec15cc3"
+        },
+        {
+          "path": "icon.manifest.json",
+          "sha256": "4fa515118ef3d32ef348ad3fb78e11282fc8a06648bb8cda671b43d37c2b6e0e"
+        },
+        {
+          "path": "icons.css",
+          "sha256": "a830c61198ac5d646a9b729bb012ada69e8650e8b49717056d194647f9031307"
+        }
+      ],
+      "hash": "8e64c81716bd66ed6428bea4e0ab546dca1e44dec1dd53032f441ceebcecc61a",
+      "deps": []
+    },
+    {
+      "name": "image",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "image.css",
+          "sha256": "b88b639e2c13fc61a49a1a8f6312e67068e0a6d3a7bc1eedc8ed78259193cb27"
+        },
+        {
+          "path": "image.html",
+          "sha256": "d14917214d5453eec4193231f785fa5f5e9336c14a451b61ac898315a4221c09"
+        },
+        {
+          "path": "image.manifest.json",
+          "sha256": "71b88ea1540a80bc130d3307c3786bc742493f81f03f331c971a0c9c38d1e138"
+        }
+      ],
+      "hash": "a9369792e4aefa327bb72820250a1ea04763bcb2f6cc94d02f8faa294c04852e",
+      "deps": []
+    },
+    {
+      "name": "input",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "input.css",
+          "sha256": "8517fb7b1385a35756f688264c4dbcf590efdc33a24d3c7b3ef779cd27ebfbd4"
+        },
+        {
+          "path": "input.html",
+          "sha256": "8125a3462c0febeb19a88173600563bda4d724d9ee564a95088937f1a7fe771e"
+        },
+        {
+          "path": "input.manifest.json",
+          "sha256": "80b08a00892947d5bcba5c812bc1f1b547bf9fc8641dc23046dbd06e18b0994d"
+        }
+      ],
+      "hash": "12d1edf25caa21a5700993b6047331a5f990886de047b094dc1556043908c438",
+      "deps": []
+    },
+    {
+      "name": "kbd",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "kbd.css",
+          "sha256": "ccb32b6f13eb56cbcb3ab42fbc9e280a2b3bfa0ee9afbeabd6d83cb6b55e4a1d"
+        },
+        {
+          "path": "kbd.html",
+          "sha256": "a4640b346e76c9c6f55b0dbf72c93df8c9e649331510704c8a2b69a5d2c8dd84"
+        },
+        {
+          "path": "kbd.manifest.json",
+          "sha256": "efbee68af25462ee78eb840eea5ce9d2a595393a5c2b622d9228fbca45f66f1f"
+        }
+      ],
+      "hash": "d9a8abb2ad2d07884706c4a5ea0197f73c8c48103afe92aaac28ddf9ff0aee4d",
+      "deps": []
+    },
+    {
+      "name": "key-value",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "key-value.css",
+          "sha256": "9f6cb669ec3bbfd5456e4c2bfc8543721d3a797d408dc809fb07a6f6562323ad"
+        },
+        {
+          "path": "key-value.html",
+          "sha256": "02930f52a28c1ad6b47c2967eeb562a06b485ca1cca8b38cd21b7dba53b71d27"
+        },
+        {
+          "path": "key-value.manifest.json",
+          "sha256": "1e2af1057d2f278546f8ba54457f5461dc3b008d657f725a08b5ae70c4843780"
+        }
+      ],
+      "hash": "d7c5fb751b117e63469e4d438221206af75ae9976ccd7eae903aaa60d072db19",
+      "deps": []
+    },
+    {
+      "name": "label",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "label.css",
+          "sha256": "02de49f2cc9f7a227efd26aaa93c02e5d71e978b3f62fa999f9c1c80b5f2fd29"
+        },
+        {
+          "path": "label.html",
+          "sha256": "4017c0e3beb07b049106da320417e108fb249934867810b5966a8887535e98c6"
+        },
+        {
+          "path": "label.manifest.json",
+          "sha256": "fdb2b0b8a35b29401e48662081cec28168db98f40159db5591ed1862e459a166"
+        }
+      ],
+      "hash": "d499cc5f6e8728c9166091433cb4637f3bd096b1c637d71fed660955868e1320",
+      "deps": []
+    },
+    {
+      "name": "link",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "link.css",
+          "sha256": "7a0afb6a854d89e78ab1e3af7a3b00581ebaa931af346d0a2b05f91c0d5e8712"
+        },
+        {
+          "path": "link.html",
+          "sha256": "6ab771c85e1ef34a66e42875904cd20d36e51f421c174aa4912163a8a90ca01a"
+        },
+        {
+          "path": "link.manifest.json",
+          "sha256": "1f7e60869a457d7d9501a3313324fe4052f92af469d9d31a0d53c6c80208ddb6"
+        }
+      ],
+      "hash": "9e08fc770194d95b9f62a7d95afc3b350a9e232ae63bd3e6e21ae6c64cb58f0a",
+      "deps": []
+    },
+    {
+      "name": "nav",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "nav.css",
+          "sha256": "07509db862845cfd826dbabe4985f8ec6fd23d17b87276059052e4d2f5f1a6d3"
+        },
+        {
+          "path": "nav.html",
+          "sha256": "3254d0570301ba6e98e3a43e373abd1f17efbc91807175634c706ed793ffe5ed"
+        },
+        {
+          "path": "nav.manifest.json",
+          "sha256": "748047736f01bcfb8d7de6de04c4c6da3e71e6030d86a1f7404386fc3be1cf35"
+        }
+      ],
+      "hash": "5eb01403d594ec09b4b430b2221f043406315af07b95a14775a07b2eb8354116",
+      "deps": []
+    },
+    {
+      "name": "page-break",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "page-break.css",
+          "sha256": "c5b5b9fef50e9eb0138691844a93e2cea022e402d697e52730f27e90b4c748d5"
+        },
+        {
+          "path": "page-break.html",
+          "sha256": "eaf0925e687e1945ae324d428ea3264ccf191f829692efede29f1659d341f3a8"
+        },
+        {
+          "path": "page-break.manifest.json",
+          "sha256": "dc3f4b0c017509255bbc75fc346b46c916135921f3384edffd2261d482867c56"
+        }
+      ],
+      "hash": "64daef490984dc228b3d7a8d9b923a836611f37e3cca2a2a1fa4383dd7cb2744",
+      "deps": []
+    },
+    {
+      "name": "progress",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "progress.css",
+          "sha256": "364b7e6f20de7c262c7c9fe46daea597c33f90f8e583787a2056c1e9e489af72"
+        },
+        {
+          "path": "progress.html",
+          "sha256": "02d361d3131077b838645a45ee974021ffbfab85458e93d4a0ce9b1687ef46d3"
+        },
+        {
+          "path": "progress.manifest.json",
+          "sha256": "97e2db81abf5510a1a576d5d770b2e3f1c5c0237d7575e508752f1fde723f3b0"
+        }
+      ],
+      "hash": "ae72697693f872e3435f7f6ab7c739d9fdee9ae6e1d9aa452927f902384f24e9",
+      "deps": []
+    },
+    {
+      "name": "radio",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "radio.css",
+          "sha256": "830ed67207aa713e66019c6af6ce54fab9d8472c13104fad6e177ebf07122832"
+        },
+        {
+          "path": "radio.html",
+          "sha256": "d41cf132c4eee6c95eea9da357464ee3086eb4ddf4e710093fac1506ba58c8a2"
+        },
+        {
+          "path": "radio.manifest.json",
+          "sha256": "26164d40599a13e080364aced7316323d6eaf439993b83564aec736b2a9c6878"
+        }
+      ],
+      "hash": "989b427a5d8a7ea9104f196c9920d7c5255e2f05531faef3cf92107a46fd789a",
+      "deps": []
+    },
+    {
+      "name": "select",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "select.css",
+          "sha256": "25627e0724c4088ad660d466a569bc9ab98a150aa83f043f285046400bd1624b"
+        },
+        {
+          "path": "select.html",
+          "sha256": "208d342ab6fbc3bc6e86073ca003e7d224c6f015948ecf3ec534b01323f8224b"
+        },
+        {
+          "path": "select.manifest.json",
+          "sha256": "be297215d5bdef5fe658a14518c6e16cb9d0cafa0e7acb4ebf50dbb07d349ee5"
+        }
+      ],
+      "hash": "d198c91d64963588ab1da32d69cfc94296f34944e9e512369d32d578cb9c2d6c",
+      "deps": []
+    },
+    {
+      "name": "separator",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "separator.css",
+          "sha256": "74f718d2dff98f04a4fb624df9cbd2725a4e5a239290c7bb4ff963926b5ad57c"
+        },
+        {
+          "path": "separator.html",
+          "sha256": "aa995aeeaf5477ec87ce1819e59a20871e88bc035e34fc40e57f544c7d750d77"
+        },
+        {
+          "path": "separator.manifest.json",
+          "sha256": "fa2654adc145507b1e10cbfb4e48a8aa9161ed4749aa11fcfa38e791174d57e7"
+        }
+      ],
+      "hash": "d668a0ff85013fd5bebe1b2f1ce37e037769cc7200956733519fedc40bb16a80",
+      "deps": []
+    },
+    {
+      "name": "signature",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "signature.css",
+          "sha256": "e879d94b37a709d3f773bb1b7b205626844deb9eb64f0c8d170953808b4b9134"
+        },
+        {
+          "path": "signature.html",
+          "sha256": "9c2bcc78476be50e7beb4350111147acf50cce905172da405db92e40756a4ef5"
+        },
+        {
+          "path": "signature.manifest.json",
+          "sha256": "a5ff6f6630416d5b6abc9f61f0afe97a3c1af0d3bcdca05e21e0aa8bea1e6791"
+        }
+      ],
+      "hash": "04f012d26af7fca347b5a3337249093493345dac5efa846fea9650b671c8f72a",
+      "deps": []
+    },
+    {
+      "name": "skeleton",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "skeleton.css",
+          "sha256": "2fbf75d7a54ba335ab0c335a9e15d1cf2eac9ae088ada614187eb27af395c3a1"
+        },
+        {
+          "path": "skeleton.html",
+          "sha256": "6b20a2b1cff944a6b824568c2b458a8a1369477256f4182e4bd98b2460a5be5d"
+        },
+        {
+          "path": "skeleton.manifest.json",
+          "sha256": "2ab50b8449edabec96324a48c6bd451fb6eb490c25e4bf1ab8c9b07fc05fb07d"
+        }
+      ],
+      "hash": "801eb642855fa7cefdc1463dd801d3711d65ccdc508551c37b70d6f052ea6c49",
+      "deps": []
+    },
+    {
+      "name": "spinner",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "spinner.css",
+          "sha256": "f191106eb996666af9ddcc0194464e8458e72dff0c624646f5bca833bd8dd2b9"
+        },
+        {
+          "path": "spinner.html",
+          "sha256": "29907332bcea03053cf46c576fa379f54e6da2d1bd8cc1b43ed9862356164825"
+        },
+        {
+          "path": "spinner.manifest.json",
+          "sha256": "ef9ae78e3d99586b8aa7fb2b5298cd3d62251881c91d40996909b82515e6234b"
+        }
+      ],
+      "hash": "f7c8c861d2c5c68d504bec565a06c228b04b88f6b63e6c14fa359cdb92bdb74d",
+      "deps": []
+    },
+    {
+      "name": "stack",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "stack.css",
+          "sha256": "dec34bbd016dc3d8c01a77550fcf18ed22b9824d6cd64cf1a276f969c9dbc9fa"
+        },
+        {
+          "path": "stack.html",
+          "sha256": "36e3eb942fd09e11ee196ed7480c87daf11733d0e92f3f8e58b34103f9a2ff0a"
+        },
+        {
+          "path": "stack.manifest.json",
+          "sha256": "cd811c57816c7601f18f4b6f5c935bf7262ce6f5b7ed4fd1c2c4baef40d5a955"
+        }
+      ],
+      "hash": "dfe1556e8eba1345b1e612f35a5de947b2e5566fc5521344885aaeb6493a26ec",
+      "deps": []
+    },
+    {
+      "name": "stat",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "stat.css",
+          "sha256": "35d08c0fe646c717a5945355af4be67d8ee3d8b92db6adff6620ee391aec3666"
+        },
+        {
+          "path": "stat.html",
+          "sha256": "8b7ae9ca725e71c616c980ae93a6dd5c7e0244650764f488b9506ad8022be5b5"
+        },
+        {
+          "path": "stat.manifest.json",
+          "sha256": "8c6c092f832978cc8f35f8be57ed4df2ab6f61d95b292e6c8590f5d1a73d1f48"
+        }
+      ],
+      "hash": "65702a375b84431f86748f26c6dbc0ba250f089a42d219af53db06cee0df403b",
+      "deps": [
+        "badge"
+      ]
+    },
+    {
+      "name": "stepper",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "stepper.css",
+          "sha256": "41dfca55e2ff3d90184c7f01eb0bad8aca661a99ef4582ad088e1fbe6cb4a482"
+        },
+        {
+          "path": "stepper.html",
+          "sha256": "7736b45d69a53f703c6852c46681bb40e4c6d0e2e346a4a3da30d2ae5d25bb4d"
+        },
+        {
+          "path": "stepper.manifest.json",
+          "sha256": "44851f67b9c28f69bfc6e1b5a61091a29222ece1ad3f226a7f313c2b4fa22324"
+        }
+      ],
+      "hash": "c83eeda153cd26e9a732fd1e7410dcc83dceeff1e38e19a2fd84a6a91c93744f",
+      "deps": []
+    },
+    {
+      "name": "surface",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "surface.css",
+          "sha256": "1b9eb3cca358c1cae85e3440920fdf0b159c4505703c259dc65d9e9d32dd408d"
+        },
+        {
+          "path": "surface.html",
+          "sha256": "8884c774d2f7b56c1dc1af0460b39c25a666afac0aefe01b3309b16b693eb862"
+        },
+        {
+          "path": "surface.manifest.json",
+          "sha256": "16c9f53e8ab78ab79a858f780ed690a8f4dae208d0c2e14cd4041b05064f02bb"
+        }
+      ],
+      "hash": "bd9a0e2cf886910eb5ff0b1163b2795d0653bb9b6f8d1865ee74efeca7cad1fe",
+      "deps": []
+    },
+    {
+      "name": "switch",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "switch.css",
+          "sha256": "cc72646364645d62fafcd10019f0361757038e54db88717df4ffb2728699cc44"
+        },
+        {
+          "path": "switch.html",
+          "sha256": "9ab17c20cb212cae729e7a8721bcec9f896fa961cc51e06317fe6367f839b751"
+        },
+        {
+          "path": "switch.manifest.json",
+          "sha256": "653e78621cea36de00c36437e87c5dd0660e5998a246035ab8d9994b85bad7d7"
+        }
+      ],
+      "hash": "c29bd53fc705ce674dd771a96dfb5251d3fcb4001e2604f6b63ebce320d0d256",
+      "deps": []
+    },
+    {
+      "name": "text",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "text.css",
+          "sha256": "11cd55aa3b26bd12279da82ac2d061b3fbcb0abe6a1acd3bd9af17916de35269"
+        },
+        {
+          "path": "text.html",
+          "sha256": "a937efd05118c1480a02f58e5ab6d8903acfa55123cfff09b01dc278e6f5e9e1"
+        },
+        {
+          "path": "text.manifest.json",
+          "sha256": "fbbc7344a4b9c59f67c43d5e69f36700a96838ffd14cde6d4bf49961b20c7c08"
+        }
+      ],
+      "hash": "17241f1549ced2313d3499589cefd65bfef75ecc799d7db975fd283f9fe76df6",
+      "deps": []
+    },
+    {
+      "name": "textarea",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "textarea.css",
+          "sha256": "5af85d3c879cbd285d2f206abb4b22d7d9759059f121795940046db0e842437a"
+        },
+        {
+          "path": "textarea.html",
+          "sha256": "c91ee5b58c38e5afa7747a4357194ed62c75411d8c62e4bff1f64e49d2a4220c"
+        },
+        {
+          "path": "textarea.manifest.json",
+          "sha256": "838b4263d6cd6a998136f7ef9f242681a634f5dc905246bd512bbd15360b9436"
+        }
+      ],
+      "hash": "f0e087aeca493eda43240c752dfcd6afb4bfb5ffb3ad95ae4aff081c8abdfce4",
+      "deps": []
+    },
+    {
+      "name": "toggle",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "toggle.css",
+          "sha256": "32e030efc4cd966930379019d56c193c75608c1a67d694e4a719f2d3ae3529f1"
+        },
+        {
+          "path": "toggle.html",
+          "sha256": "84c1a47659d0382eb33da3d838d4a014447b0e53eac7977f5b3bcb6e25cdb19c"
+        },
+        {
+          "path": "toggle.manifest.json",
+          "sha256": "eebe5f4703e7b4017f2c1f76dd32b4f5f4cb4007dfd4c16ed2870ed83fb3497c"
+        }
+      ],
+      "hash": "f3e7aefeadecae26d70b5f63dede3bffaba87f87083fd05736fcba82feadd182",
+      "deps": []
+    },
+    {
+      "name": "accordion",
+      "kind": "recipe",
+      "layer": "recipes",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "accordion.css",
+          "sha256": "f7cb94749f3b02610d9a882f3221779fc89b6d9fff8185fed2c7a45c523cdb4d"
+        },
+        {
+          "path": "accordion.html",
+          "sha256": "545691a819b3ee216197b9d0e5254f129f0b6622bebd21ec4bc77713f87e9fdc"
+        },
+        {
+          "path": "accordion.js",
+          "sha256": "4ba894ff464626e11d46172c023a096151ddcb79b80bc99f2878d7e07086bc3e"
+        },
+        {
+          "path": "accordion.manifest.json",
+          "sha256": "c0f0462ce8167d8fba4db5478a362d9c9c277eb9023d6c17fb5f82dea52ed20f"
+        }
+      ],
+      "hash": "407c0dfead39e6bfa9a816a7b71d1f69de2ba6597d02fa9974e22ec91c7d6a98",
+      "deps": []
+    },
+    {
+      "name": "alert-dialog",
+      "kind": "recipe",
+      "layer": "recipes",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "alert-dialog.css",
+          "sha256": "0be3df74eadad12e1cc70e5bda95cfdf3a694b1548f4cde2f791b61d50299677"
+        },
+        {
+          "path": "alert-dialog.html",
+          "sha256": "19564071884ca4c9277506fe48b1a80e401c9f708bc672aaaa1bc0391decfcb1"
+        },
+        {
+          "path": "alert-dialog.js",
+          "sha256": "91c1c84f0cda7cce5ffe80b82ada9d6b61d2e19284754b5edaf3479832c36da1"
+        },
+        {
+          "path": "alert-dialog.manifest.json",
+          "sha256": "5d92fce458d06d1d01a3feebce07a1832f08acc4912f82140a28a0e9359e68fb"
+        }
+      ],
+      "hash": "ed5f9c709d8788bfca1a99eed807020e7a3afae09f2821f0353ffecf874ca049",
+      "deps": [
+        "button"
+      ]
+    },
+    {
+      "name": "calendar",
+      "kind": "recipe",
+      "layer": "recipes",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "calendar.css",
+          "sha256": "bc48bce9f63cc3638ac6bb6915c128a22d19096b8c019f94c473089ce28eefb7"
+        },
+        {
+          "path": "calendar.html",
+          "sha256": "5e1abef4067ea4933a30c5d822e276317f773f8e9ec1188b58e3aab60a630bb2"
+        },
+        {
+          "path": "calendar.js",
+          "sha256": "2e1a3eb11016c91feec2cee4cfb9f5fd85fa5a529fbf58a7cc9b1065141c5c94"
+        },
+        {
+          "path": "calendar.manifest.json",
+          "sha256": "3a0ee69092b1e47226dc767b6e02103cf9be007412687867068df0b0d1eae923"
+        }
+      ],
+      "hash": "1fb91c30b01b34b48a7af1980b3f4ad40609966dd9f57e9cb740ad7162a9fdf4",
+      "deps": []
+    },
+    {
+      "name": "combobox",
+      "kind": "recipe",
+      "layer": "recipes",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "combobox.css",
+          "sha256": "61b9e476199769cb91174a710267197fb6c7069eb40f65cb9674a054ab219e4a"
+        },
+        {
+          "path": "combobox.html",
+          "sha256": "96691533c72d025a4a301d8fa287cf06571d40985265f5e09e5136eea76909e0"
+        },
+        {
+          "path": "combobox.js",
+          "sha256": "fbbd772e498ffedba2ac37f9b0c4ad16a707da2c31cc13b3e0780fddf381bbb4"
+        },
+        {
+          "path": "combobox.manifest.json",
+          "sha256": "f7b12f8bd4a593e14c2869a04bd282eb5adb83adf27af14303de79c3c58f3828"
+        }
+      ],
+      "hash": "18f10a352a39324def863d7432893fd18ce0bb26d586e07c82d23a0c291ac2f1",
+      "deps": []
+    },
+    {
+      "name": "command-palette",
+      "kind": "recipe",
+      "layer": "recipes",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "command-palette.css",
+          "sha256": "83837c5e569812498778c4a14171639d90259e6b49af31bbb5096acf96a446a1"
+        },
+        {
+          "path": "command-palette.html",
+          "sha256": "0893288db7444ff8099f257b233cb949925a08f9fdb46e348dd4b3a4832b8801"
+        },
+        {
+          "path": "command-palette.js",
+          "sha256": "ed08b9ee5126602aa13f7317b07b90e0d69cbc00a35245039d82924f2b91656f"
+        },
+        {
+          "path": "command-palette.manifest.json",
+          "sha256": "4adca82b209b69f136096223c7981fcb64869ba0881eb1f42bea2d71d9075a48"
+        }
+      ],
+      "hash": "ebcdc41842c0982667dee7d92c21662c13b5a13efeca1ae10d65162754d4f628",
+      "deps": [
+        "kbd"
+      ]
+    },
+    {
+      "name": "date-picker",
+      "kind": "recipe",
+      "layer": "recipes",
+      "version": "1.1.0",
+      "files": [
+        {
+          "path": "date-picker.css",
+          "sha256": "099fd588a2253e970fabba4525ce0440d73dc2a0c1fefeb1ab7eedbe70bf0465"
+        },
+        {
+          "path": "date-picker.html",
+          "sha256": "3549d774a11b550dc9f5acedba96d316d0fb69a176e81486f8af602f14907a5f"
+        },
+        {
+          "path": "date-picker.js",
+          "sha256": "3e979f7e226ff4eb9e05375daea9bdd6729acea64446ae1f4eb948c597e004f8"
+        },
+        {
+          "path": "date-picker.manifest.json",
+          "sha256": "7b1527dc37ff5459a5070c88b9683252210a6f80e23b205fcbf043d6aec7976d"
+        }
+      ],
+      "hash": "6a7f5f9a2e3d2fa239999dfd2c3c7440dc25874c9fbd70e4752beff272200643",
+      "deps": [
+        "calendar",
+        "button"
+      ]
+    },
+    {
+      "name": "dialog",
+      "kind": "recipe",
+      "layer": "recipes",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "dialog.css",
+          "sha256": "30ae90426be3ec51871bce3025a1c71e2cc7b1bc1c9ef9ea9219ad08935ce51b"
+        },
+        {
+          "path": "dialog.html",
+          "sha256": "2d337fd8c6d565bd650552cfe8bb73cd475976c5467924ebd0b8a8972c11d52f"
+        },
+        {
+          "path": "dialog.js",
+          "sha256": "3d67dbe0a78abc4a297e5f3445666ef74a8be0558ddacdb1fa0c518c8066afb6"
+        },
+        {
+          "path": "dialog.manifest.json",
+          "sha256": "c0d3c7d78e7103e54bab8e4d6717e9da8b66d63b62b725a6fb10bf91071fc1ed"
+        }
+      ],
+      "hash": "4efa4f406831d13e2b4234be4bef0ac3ef7083d095749619bc65cd9bca05f2d0",
+      "deps": [
+        "button"
+      ]
+    },
+    {
+      "name": "drawer",
+      "kind": "recipe",
+      "layer": "recipes",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "drawer.css",
+          "sha256": "7f5e5cfd37c819334cc76ee9c483d44825effefed4f1b2397c1e789b1ccf7da8"
+        },
+        {
+          "path": "drawer.html",
+          "sha256": "0302be43388d175dbb445aec6b123ccdce6b053039cd5e5fa8198050480df924"
+        },
+        {
+          "path": "drawer.js",
+          "sha256": "07e9692d66b95788ec6f76155fe698923987ce4a6e6bf909b17463aa97860937"
+        },
+        {
+          "path": "drawer.manifest.json",
+          "sha256": "73eec5db6059fd72c17427c580b046760943bb1922afc758c1856d66f5b86724"
+        }
+      ],
+      "hash": "064ea6f8b5092b851b16db7013d04f9023d67df46a32cb828039fde29a2fb658",
+      "deps": [
+        "button"
+      ]
+    },
+    {
+      "name": "dropdown",
+      "kind": "recipe",
+      "layer": "recipes",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "dropdown.css",
+          "sha256": "3de50c2e18a50b42cc0c00c1e713e891007d11cb21434d03101ea58aa0eac3fa"
+        },
+        {
+          "path": "dropdown.html",
+          "sha256": "dbef7f186a90cf982f5e3e7e559ba85bc834c499d9f7b589638917ac24f02c57"
+        },
+        {
+          "path": "dropdown.js",
+          "sha256": "7f61753891fb28a8055fcd39d27bba7d5ac73076d108c130f2a3869c824b13b2"
+        },
+        {
+          "path": "dropdown.manifest.json",
+          "sha256": "fc3168ec111a1cb300f740873cf855deb0b32803950dead5e4caa25b338342b5"
+        }
+      ],
+      "hash": "febb29a8a5189db99463e78173902f7f0a683949a288d9ac3c7d723be00916dc",
+      "deps": []
+    },
+    {
+      "name": "input-otp",
+      "kind": "recipe",
+      "layer": "recipes",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "input-otp.css",
+          "sha256": "d6ee56776143c62886fede489e061df8412c9011ceec5687b73b71f3f9e12c29"
+        },
+        {
+          "path": "input-otp.html",
+          "sha256": "b8f452f44c238fdfa25d174725c826e37461e9549be9ea6fdf0a0d3b9b29f6cd"
+        },
+        {
+          "path": "input-otp.js",
+          "sha256": "f0dea35286f4341c6eb1914b9cb3c86a40ed5e34e9aed419daa2cdb60d3b64cd"
+        },
+        {
+          "path": "input-otp.manifest.json",
+          "sha256": "6546e4d04262df26aebe358412c6075dca51e1a64ca4ca206a86190e3ac41988"
+        }
+      ],
+      "hash": "e569c5d63856383e493571400011a7d6094a6307d6a7934ac1c163798cd38e03",
+      "deps": []
+    },
+    {
+      "name": "pagination",
+      "kind": "recipe",
+      "layer": "recipes",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "pagination.css",
+          "sha256": "40c4ccf08e18cce3b2b04ca18a486a8acfefcf2d6e6acc2c2b979c697477fb3d"
+        },
+        {
+          "path": "pagination.html",
+          "sha256": "501b56c50e96cb55b2234140e85a6c24cf9d7562c7cb1bb07580f4ff0a5abcb7"
+        },
+        {
+          "path": "pagination.js",
+          "sha256": "9624c4a116596c06a7cfc01d26de3b9973468eef30217b95f0a4d3298bd03e38"
+        },
+        {
+          "path": "pagination.manifest.json",
+          "sha256": "d1d87b75cca3f6595a9aea4736f579a979d784b7f503a052d5017a548eca5171"
+        }
+      ],
+      "hash": "14856783804e042f5871d2424a240bb9d0566db0480323aab30cea350615b47a",
+      "deps": [
+        "button"
+      ]
+    },
+    {
+      "name": "popover",
+      "kind": "recipe",
+      "layer": "recipes",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "popover.css",
+          "sha256": "f59ba1b55f245526c9c867161ee6994cb22f66bf7cccfe487a19b1e1d8f31f28"
+        },
+        {
+          "path": "popover.html",
+          "sha256": "09ebb9ea2d9d9370204c76e83c45dc1ff392172b757f926cab7cecb7457e5429"
+        },
+        {
+          "path": "popover.js",
+          "sha256": "694998527793d02080a050af31329b749cfbb65d8c78661387ab6cdee07b200d"
+        },
+        {
+          "path": "popover.manifest.json",
+          "sha256": "cbfbdc412e42c7be518663bb8db80a161841a4bed043da869c0dc8b77037d190"
+        }
+      ],
+      "hash": "72dcec8b7fc7ceeca04f31d43a6b6078e127cd4a4f6c507ba2b0bd2d3d4ef0c0",
+      "deps": [
+        "button"
+      ]
+    },
+    {
+      "name": "qr-code",
+      "kind": "recipe",
+      "layer": "recipes",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "qr-code.css",
+          "sha256": "55f7b7e6abd0b1656abe9c50e02e259739d692d405db1a40314d63d09b95afe0"
+        },
+        {
+          "path": "qr-code.html",
+          "sha256": "625f1bee5068f0fc068cb358f55dc53cb329a3be9db647b60302663af6c60ba7"
+        },
+        {
+          "path": "qr-code.js",
+          "sha256": "3481a02559b2074f45df9b70efc0f3ef3aa86a55da271c8877b57a7407641030"
+        },
+        {
+          "path": "qr-code.manifest.json",
+          "sha256": "d9f7d296295ea35de9f7d3765a409bced3d4e69fa5c069c6d88ff8906354297e"
+        }
+      ],
+      "hash": "34e4e8affdd2c3b46c25ffa15d36581a4607bf7dd78af62afe4b84e6aef52fd1",
+      "deps": []
+    },
+    {
+      "name": "select-custom",
+      "kind": "recipe",
+      "layer": "recipes",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "select-custom.css",
+          "sha256": "dfc0147518693af227d6d072ae9b5be2397ce6ae3d906d6912f005ca13b1c200"
+        },
+        {
+          "path": "select-custom.html",
+          "sha256": "a3041cd216d4c3e47041acb15b634e5d27272c156296107ad2641c20f9ca2486"
+        },
+        {
+          "path": "select-custom.js",
+          "sha256": "25ae3230104216fa96581e99d17e7871b3ca3f6eb0f81cbdc45edce501ca5358"
+        },
+        {
+          "path": "select-custom.manifest.json",
+          "sha256": "ff82a8aaf4c6cd59782fdc324a38c7338a89a19686fa90450ffb5506641208e1"
+        }
+      ],
+      "hash": "37c0bf7d5c423616fafbd12658da92f9002bfed7dd1dd6ec742e67f0c0116762",
+      "deps": []
+    },
+    {
+      "name": "sheet",
+      "kind": "recipe",
+      "layer": "recipes",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "sheet.css",
+          "sha256": "5fb273fd5cc2708bc3b2e250de043c6e95d23473c05652affb2ce93a14982075"
+        },
+        {
+          "path": "sheet.html",
+          "sha256": "6fc69255f483947da70ba79484787227819c32cc47ff188394f96ea7cbc62e32"
+        },
+        {
+          "path": "sheet.js",
+          "sha256": "91c4d8f051fe2b93023c5ba207c52f43d41e69a3970beda707f9524f9d668016"
+        },
+        {
+          "path": "sheet.manifest.json",
+          "sha256": "14fe4ae05fb0d9dea7c81f4f4b32dbaf2826c4dbfa44fcabaaaeb7ab50b45969"
+        }
+      ],
+      "hash": "5e9a09a0f20f1d243ed70ddc5c7063d8a5f579f703ec57aab036a952b5d60800",
+      "deps": [
+        "button"
+      ]
+    },
+    {
+      "name": "sidebar",
+      "kind": "recipe",
+      "layer": "recipes",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "sidebar.css",
+          "sha256": "d9c0e4a87dbc8cdbe0f556b46480d9f278959ca9bde9dcb3a3c261effe40770b"
+        },
+        {
+          "path": "sidebar.html",
+          "sha256": "7431e6efa2568bb095df5ab0a27add21fdab7880d5b1c452b1a54ea795155d93"
+        },
+        {
+          "path": "sidebar.js",
+          "sha256": "e2bcbdceeb8041b2f80d09f7fd7181e0e7b6055ecebb95eadf34959ff74a5b7d"
+        },
+        {
+          "path": "sidebar.manifest.json",
+          "sha256": "2010035576435a0326dd8b787ccdbad27841f467456974b0f826ac803efe45a2"
+        }
+      ],
+      "hash": "5a000fb87713a0c87dc16a75c355992c7aab2cb8adaed6ea0cf43bf9be9326cc",
+      "deps": [
+        "button",
+        "badge",
+        "avatar",
+        "separator"
+      ]
+    },
+    {
+      "name": "slider",
+      "kind": "recipe",
+      "layer": "recipes",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "slider.css",
+          "sha256": "e2ae543662f746ebdabf59e68226da29948909f5c615b4c5af8447fcc1f74640"
+        },
+        {
+          "path": "slider.html",
+          "sha256": "90453d48140e18dc1808890b6512b95ed83b4732a99c139d980a4d832bc31d01"
+        },
+        {
+          "path": "slider.js",
+          "sha256": "35dda625af974b3cbe78e8b7848b9fd4a9b572be2a2f5d0e051bf00368b79d69"
+        },
+        {
+          "path": "slider.manifest.json",
+          "sha256": "9d8c8b889ecdfad332ae96381e6f2c52632d2744d57cc977eb6db0d9d5b4b44d"
+        }
+      ],
+      "hash": "e27e5ea596cf78cff07cd9d4fc78f1660c376297d9b51baaef0363e2ed54b955",
+      "deps": []
+    },
+    {
+      "name": "table",
+      "kind": "recipe",
+      "layer": "recipes",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "table.css",
+          "sha256": "085ca5886a48f6fea6e5d9aa565e8e89a2025260200bf8ff2fdd52472e6dd999"
+        },
+        {
+          "path": "table.html",
+          "sha256": "1a9683e3660b5dcb157f61f596e7c7fba09d47e2a467ceb79b026172c1c0aaae"
+        },
+        {
+          "path": "table.js",
+          "sha256": "18c16492fb2d415ff38992be8d5cf64b74e9fb9991a3c44bb23429e8a5b8975c"
+        },
+        {
+          "path": "table.manifest.json",
+          "sha256": "47e08c97fb1231bdbe48dca2741943b0962018d48dab440223f2db64f8adc1fd"
+        }
+      ],
+      "hash": "cbe50ef080995c5129897c4de45e2dd1b85874bfbb99db40f976ae2d74c0513e",
+      "deps": [
+        "checkbox",
+        "badge",
+        "button"
+      ]
+    },
+    {
+      "name": "tabs",
+      "kind": "recipe",
+      "layer": "recipes",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "tabs.css",
+          "sha256": "14b487c71f2f43e662c28a1a4a34fa8c40b935b4247e4e5d93f789aaf24e27cc"
+        },
+        {
+          "path": "tabs.html",
+          "sha256": "625adfe7ddc7e1bbea9c269199a8799b17dcf978dab331db405f2d2118ccf755"
+        },
+        {
+          "path": "tabs.js",
+          "sha256": "06440a032279979d36671beb6e7c13c44421d0e421c810a6835c2cdc5a99def3"
+        },
+        {
+          "path": "tabs.manifest.json",
+          "sha256": "5440da2d648d1108fe4b7f220e856577641bb55e914c6f66ce38e73957d718d4"
+        }
+      ],
+      "hash": "5b0c42134e00d6a2001035ae46bf5a04bd652bb5ad970f808e8fbf1ef205611f",
+      "deps": []
+    },
+    {
+      "name": "toast",
+      "kind": "recipe",
+      "layer": "recipes",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "toast.css",
+          "sha256": "cc030b281f68f9235bf732a890d1b0d91ff68fcfc0d3545fd681b32b4c3c5fcb"
+        },
+        {
+          "path": "toast.html",
+          "sha256": "678704f4e036126bf7aaecb1bb126b321027253c28d9fb91f63dce26a16b11bd"
+        },
+        {
+          "path": "toast.js",
+          "sha256": "736b8ee8a78330145234beea0178b70f7e668c58ecd2611aa813b447557bc4fa"
+        },
+        {
+          "path": "toast.manifest.json",
+          "sha256": "35394a249c0f5afaf13dec9b76b578a3bf90c3fbbcf33a709608234a008a24a6"
+        }
+      ],
+      "hash": "e90888ff326420e3eac20e5863cb36b7820107d117a9278038f1ad0813842cbf",
+      "deps": [
+        "button"
+      ]
+    },
+    {
+      "name": "tooltip",
+      "kind": "recipe",
+      "layer": "recipes",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "tooltip.css",
+          "sha256": "3161f9d70a5a3861bc8eb4c0bd7a2ce6f08f83a45ec6623875e7eac071f32a76"
+        },
+        {
+          "path": "tooltip.html",
+          "sha256": "421b7306f075becfcb32a016f34fbb986d71c3d38adadf206bd2e2fb3670eaa5"
+        },
+        {
+          "path": "tooltip.js",
+          "sha256": "d0a79d2addc65a202536b6817dd4adfb16cc8fb3b65d116b829cabd4d4719837"
+        },
+        {
+          "path": "tooltip.manifest.json",
+          "sha256": "3275b502bb5932eb9484edb808c04b2ceca4fa89703f1ea7feb1dbddbd5cfafb"
+        }
+      ],
+      "hash": "d5206bc491bb6ebd1a01841c1992ec4bf445626a00818146788f9bfc5228de96",
+      "deps": []
+    },
+    {
+      "name": "auth-form",
+      "kind": "pattern",
+      "layer": "patterns",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "auth-form.css",
+          "sha256": "c25370b91e7270bb51c381acb2da009c81f279dcd8ce0ad4153f318931bdc736"
+        },
+        {
+          "path": "auth-form.html",
+          "sha256": "b8d749cfb2067c85a2c1e2050f4116c4a40672fb7e0ae6246ecb3b0742bd24dc"
+        },
+        {
+          "path": "auth-form.manifest.json",
+          "sha256": "199cd20441b43721fc4ef3100093577d66d5063620142a71b966de36c5719c3c"
+        }
+      ],
+      "hash": "a7df5d0b12eafb55a1be95ab396683f92ee80cefff340abbd459976957fc3e42",
+      "deps": [
+        "card",
+        "input",
+        "button",
+        "separator",
+        "label"
+      ]
+    },
+    {
+      "name": "crud-table",
+      "kind": "pattern",
+      "layer": "patterns",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "crud-table.css",
+          "sha256": "913c2cad64bfbba9d8446f9cab463179ea0d58bca765c6b863f86d9faac9749c"
+        },
+        {
+          "path": "crud-table.html",
+          "sha256": "c2cd186e16027bfbfc3874063367e3b569a330d9fd2c01971a7255fb51ffc66f"
+        },
+        {
+          "path": "crud-table.manifest.json",
+          "sha256": "27e0976162b09d000be17fce01e80ac16863952bf8693e4a7e3ec16eb535f96d"
+        }
+      ],
+      "hash": "c5a94a3058576b13358759287f1d313e037bc4274e20904d8b03408abbcc2f5f",
+      "deps": [
+        "table",
+        "button",
+        "dialog",
+        "pagination",
+        "input",
+        "badge"
+      ]
+    },
+    {
+      "name": "dashboard-shell",
+      "kind": "pattern",
+      "layer": "patterns",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "dashboard-shell.css",
+          "sha256": "49dbed4c32908ec7b3d503b4a41472d27206fd29c31190973761f8ad43beef95"
+        },
+        {
+          "path": "dashboard-shell.html",
+          "sha256": "e1175d312cbc9a361088794bab97a83d322677d633a3fb81bd36295b925230f9"
+        },
+        {
+          "path": "dashboard-shell.manifest.json",
+          "sha256": "2cb6514f6cfd9727de047d68499dc2728c76c079d4ec2dc9156bc9e31fdfbc8b"
+        }
+      ],
+      "hash": "2887b2bdb748fcec19aa62a55a171b27340f97afdecef874e64011b19b520089",
+      "deps": [
+        "card",
+        "grid",
+        "avatar",
+        "dropdown",
+        "button",
+        "separator",
+        "badge"
+      ]
+    },
+    {
+      "name": "document",
+      "kind": "pattern",
+      "layer": "patterns",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "document.css",
+          "sha256": "f879e0d931f9d58ed8fd3707018d756da7f3d9352a39be29f59c79938271dafc"
+        },
+        {
+          "path": "document.html",
+          "sha256": "0e55a5e2e7c7531d6e20a88ef0c2bdfe13c720ea38b4e48fd75c8eca0adf215a"
+        },
+        {
+          "path": "document.manifest.json",
+          "sha256": "41ce07ef2464fe1f3865e4c5b11ef16757aa2a1fc824b089eea74dd13330e1ea"
+        }
+      ],
+      "hash": "2b82578602f1a42613aea8a7d68ecc3fedcb07f5c24cabf99bdad8a57af64a39",
+      "deps": [
+        "key-value",
+        "table",
+        "image",
+        "signature",
+        "callout",
+        "page-break",
+        "text",
+        "separator",
+        "field-group"
+      ]
+    },
+    {
+      "name": "empty-state",
+      "kind": "pattern",
+      "layer": "patterns",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "empty-state.css",
+          "sha256": "9a53c78b6b956921f249c2ed5935b679d5f7d5d94aebd7b0d4b4509805894b4a"
+        },
+        {
+          "path": "empty-state.html",
+          "sha256": "85261f99c511573edf6eaeaa8d8294e1bf2586bb196135032a3c52d5f9d671b2"
+        },
+        {
+          "path": "empty-state.manifest.json",
+          "sha256": "af6978e14319ec65d6881894ab986e3645d75b069403afdc432f57b6e2765d26"
+        }
+      ],
+      "hash": "e8d2912b667dc283c37e4f9e57b34f191be895017ccde2d02797673f180c6b26",
+      "deps": [
+        "card",
+        "button",
+        "surface"
+      ]
+    },
+    {
+      "name": "search-results",
+      "kind": "pattern",
+      "layer": "patterns",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "search-results.css",
+          "sha256": "a1727462304629704ee6427a03f4d403322fbd66e7124ef85b1951b80f5121b3"
+        },
+        {
+          "path": "search-results.html",
+          "sha256": "fed8af8248a7b61db077825fd60b6f11c37813eea84f91debf7e33b72b1af2dd"
+        },
+        {
+          "path": "search-results.manifest.json",
+          "sha256": "d8437f3649f39ece3b6e136756bca8109365900558422cea243fe1656b57463d"
+        }
+      ],
+      "hash": "81d45bb54109a05244a6234ed061e679fd09fc79173a5b4c2bd686ac486195a2",
+      "deps": [
+        "input",
+        "card",
+        "badge",
+        "pagination",
+        "spinner"
+      ]
+    },
+    {
+      "name": "settings-page",
+      "kind": "pattern",
+      "layer": "patterns",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "settings-page.css",
+          "sha256": "7044697657238b79e33025c65c80130fbc59cee0e3efced253a334c72d6e7952"
+        },
+        {
+          "path": "settings-page.html",
+          "sha256": "6feef9918f4c8cfb43c4dc06f7c92a9b8dfbcf0697f84143220bcddc67140237"
+        },
+        {
+          "path": "settings-page.manifest.json",
+          "sha256": "5e4c1f0251a35770e8a5b7e47b019958f2b2cde1a07d2919cf6c63c58d80bcbe"
+        }
+      ],
+      "hash": "b99d570ba546927ba9d4c41fe7a3d821444fb218ecf98301de15085a9f4f76e7",
+      "deps": [
+        "tabs",
+        "card",
+        "input",
+        "select",
+        "switch",
+        "button",
+        "dialog"
+      ]
+    }
+  ]
+}
