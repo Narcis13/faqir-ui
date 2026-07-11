@@ -1,0 +1,117 @@
+name: Visual regression
+
+# Task 0.4-23 · FAQIR-PLAN §12.2
+#
+# Playwright screenshot matrix, generated from the registry at runtime
+# (tests/visual/matrix.ts): every component × every theme × light/dark × LTR/RTL.
+# Everything runs inside the pinned Playwright Linux container so font
+# rasterisation — and therefore every captured pixel — is byte-stable between the
+# machine that produced a baseline and the one that diffs it.
+#
+# Baseline strategy (the "CI artifact strategy" of §12.2 — no thousands of PNGs in
+# git): the default branch produces the baseline set and persists it to the
+# GitHub Actions cache; pull requests restore that set, diff against it (sharded),
+# and upload a single merged HTML diff report. Intended visual changes surface as
+# diffs to approve, then regenerate on merge. See tests/visual/README.md.
+#
+# The container tag MUST match @playwright/test in package.json (pinned exact).
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: visual-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── Baselines ──────────────────────────────────────────────────────────────
+  # Default branch (and manual dispatch): regenerate the baseline set and seed
+  # the cache that PR runs restore from. Keyed by the registry + the harness, so
+  # any change that alters rendering yields a fresh baseline set on merge.
+  baselines:
+    if: github.event_name != 'pull_request'
+    name: Seed baselines (Linux container)
+    runs-on: ubuntu-latest
+    container: mcr.microsoft.com/playwright:v1.61.1-noble
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install deps
+        run: npm install --no-audit --no-fund
+      - name: Restore / seed baseline cache
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: tests/visual/__screenshots__
+          key: visual-baselines-linux-pw1.61.1-${{ hashFiles('registry/**/*.css', 'registry/**/*.html', 'tests/visual/matrix.ts', 'playwright.config.ts') }}
+      - name: Generate baselines (on cache miss)
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: npx playwright test --update-snapshots --reporter=line
+
+  # ── PR gate ────────────────────────────────────────────────────────────────
+  # Restore the default-branch baselines and diff, sharded four ways for headroom
+  # (full suite is ~2-3 min unsharded; sharding keeps each runner ~1 min and
+  # parallelises the diff artifacts). One viewport, per playwright.config.ts.
+  visual:
+    if: github.event_name == 'pull_request'
+    name: Diff shard ${{ matrix.shard }}/4
+    runs-on: ubuntu-latest
+    container: mcr.microsoft.com/playwright:v1.61.1-noble
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install deps
+        run: npm install --no-audit --no-fund
+      - name: Restore baseline cache
+        uses: actions/cache/restore@v4
+        with:
+          path: tests/visual/__screenshots__
+          key: visual-baselines-linux-pw1.61.1-${{ hashFiles('registry/**/*.css', 'registry/**/*.html', 'tests/visual/matrix.ts', 'playwright.config.ts') }}
+          # Fall back to the newest baseline set from the default branch when the
+          # registry changed in this PR — changed/added components then show up as
+          # diffs (or missing-baseline failures) to review, which is the point.
+          restore-keys: |
+            visual-baselines-linux-pw1.61.1-
+      - name: Run shard ${{ matrix.shard }}/4
+        run: npx playwright test --shard=${{ matrix.shard }}/4 --reporter=blob
+      - name: Upload blob report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-blob-${{ matrix.shard }}
+          path: blob-report/
+          retention-days: 7
+
+  # ── Merge shard reports into one HTML diff report (the PR artifact) ─────────
+  merge-report:
+    if: ${{ github.event_name == 'pull_request' && !cancelled() }}
+    name: Merge diff report
+    needs: visual
+    runs-on: ubuntu-latest
+    container: mcr.microsoft.com/playwright:v1.61.1-noble
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install deps
+        run: npm install --no-audit --no-fund
+      - name: Download shard reports
+        uses: actions/download-artifact@v4
+        with:
+          path: all-blob-reports
+          pattern: visual-blob-*
+          merge-multiple: true
+      - name: Merge into a single HTML report
+        run: npx playwright merge-reports --reporter=html ./all-blob-reports
+      - name: Upload diff report
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-diff-report
+          path: playwright-report/
+          retention-days: 14

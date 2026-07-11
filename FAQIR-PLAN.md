@@ -87,7 +87,7 @@ done in any order (or in parallel worktrees).
 | 0.4-20 | Controller tests C: pagination, select-custom, qr-code | ⬜ |
 | 0.4-21 | Controller tests D: combobox, command-palette | ✅ |
 | 0.4-22 | Controller tests E: date-picker, table | ✅ |
-| 0.4-23 | Visual regression suite (Playwright screenshots) | ⬜ |
+| 0.4-23 | Visual regression suite (Playwright screenshots) | ✅ |
 | 0.4-24 | Automated a11y (axe-core) in CI | ⬜ |
 
 ### Phase v0.5 — Agents
@@ -950,14 +950,14 @@ Baselines committed (or stored per CI artifact strategy); diffs posted as PR art
 Keep runtime sane: shard in CI, one viewport.
 
 **Tests**
-- The suite itself + a meta-test: every component with a reference page appears in the generated matrix (nothing silently skipped).
-- Deliberate 1px CSS change produces a diff failure (verified once, reverted).
+- The suite itself + a meta-test: every component with a reference page appears in the generated matrix (nothing silently skipped). → `tests/visual/visual.pw.ts` is the suite (one `toHaveScreenshot` per case + a non-empty tripwire); `tests/visual/matrix.test.ts` is the `bun test` meta-test that scans the registry directly and asserts every `@ui:component` reference page is in the generated matrix, that the matrix is the exact cross-product with unique ids, and that RTL+dark cases exist.
+- Deliberate 1px CSS change produces a diff failure (verified once, reverted). → `button.css` border `1px → 2px` failed all four `button__default` captures with expected/actual/diff artifacts, then reverted (see `tests/visual/README.md`).
 
 **Acceptance criteria**
-- [ ] Matrix generated from the registry at runtime — adding a component requires zero suite edits.
-- [ ] CI job runs on PRs, uploads diff artifacts on failure.
-- [ ] RTL captures included (this locks in 0.3-10).
-- [ ] Full-suite runtime documented; sharded if > ~10 min.
+- [x] Matrix generated from the registry at runtime — adding a component requires zero suite edits. → `tests/visual/matrix.ts` discovers components (`registry/{primitives,recipes,patterns}/**/*.html` with an `@ui:component` header) and themes (`registry/themes/*.css`) at runtime; the current matrix is 66 × 8 × 2 × 2 = 2112 cases. The meta-test enforces "nothing skipped."
+- [x] CI job runs on PRs, uploads diff artifacts on failure. → `.github/workflows/visual.yml`: PRs run in the pinned Playwright Linux container, sharded ×4, and `merge-report` publishes a single `visual-diff-report` HTML artifact (expected/actual/diff). Baselines use the §12.2 CI-cache strategy (default branch seeds the Actions cache; PRs restore + diff) so ~2000 PNGs stay out of git.
+- [x] RTL captures included (this locks in 0.3-10). → `dir` axis = `{ltr, rtl}` (`data-theme` + `dir` set on `<html>`); every component × theme has an `rtl` case (half the matrix), asserted by the meta-test.
+- [x] Full-suite runtime documented; sharded if > ~10 min. → `tests/visual/README.md`: full suite ≈ ~2 min diff / ~2.5 min generate (measured), under the ~10-min budget; still sharded ×4 in CI (~1 min/shard) for headroom + parallel artifacts. One viewport.
 
 ---
 

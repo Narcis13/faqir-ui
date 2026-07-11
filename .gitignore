@@ -3,3 +3,13 @@ dist/
 .faqir/
 bun.lock
 tests/.tmp-*
+
+# Playwright visual-regression suite (task 0.4-23).
+# Baselines are produced/consumed in the pinned Linux container via the CI cache
+# strategy — never committed from a developer machine (local renders won't match
+# the container's font rasterisation). See tests/visual/README.md.
+tests/visual/__screenshots__/
+playwright-report/
+test-results/
+blob-report/
+playwright/.cache/
