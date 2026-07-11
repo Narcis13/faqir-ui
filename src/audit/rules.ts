@@ -1097,9 +1097,9 @@ export function getRuleInventory(): RuleInfo[] {
   return [...fromManifestRules, ...fromDocumentRules, ...ANTIPATTERN_RULES, CONTRAST_TOKENS_RULE];
 }
 
-// Helper to estimate line number from element position
-function countLineFromEl(component: ParsedComponent, _el: ParsedElement): number {
-  // Elements store their start offset — but we need the source to count lines
-  // We'll use the component's line as a baseline
-  return component.line;
+// Line number of a specific element. The parser (task 0.5-08) records each
+// element's 1-based line at its opening `<`; fall back to the component root's
+// line only if an element predates that field.
+function countLineFromEl(component: ParsedComponent, el: ParsedElement): number {
+  return el.line ?? component.line;
 }

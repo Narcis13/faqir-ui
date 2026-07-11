@@ -220,6 +220,26 @@ describe("Audit Rules", () => {
       expect(results[0].severity).toBe("error");
       expect(results[0].message).toContain("neon");
     });
+
+    // Spot-check that findings on a NESTED element report that element's own
+    // line, not the component root's (task 0.5-08: the parser now tracks each
+    // element's line/column, so countLineFromEl is no longer a root-line stub).
+    it("reports the offending nested part's own line, not the root's", () => {
+      const html = [
+        "<div data-ui=\"dialog\" data-state=\"closed\">", // root on line 1
+        "  <button data-part=\"trigger\">Open</button>",
+        "  <div data-part=\"panel\" data-variant=\"bogus\">", // offender on line 3
+        "    <h2 data-part=\"title\">T</h2>",
+        "    <div data-part=\"body\">B</div>",
+        "  </div>",
+        "</div>",
+      ].join("\n");
+      const comps = getComponents(html);
+      const results = validVariantRule.check(comps[0], DIALOG_MANIFEST);
+      expect(results.length).toBe(1);
+      expect(results[0].message).toContain("bogus");
+      expect(results[0].line).toBe(3); // the panel, not the line-1 root
+    });
   });
 
   describe("valid-state", () => {

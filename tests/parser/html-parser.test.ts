@@ -1,5 +1,5 @@
 import { describe, it, expect } from "bun:test";
-import { parseHTML, extractComponents, findAllUIElements } from "../../src/parser/html-parser";
+import { parseHTML, extractComponents, findAllUIElements, offsetToPosition } from "../../src/parser/html-parser";
 
 describe("HTML Parser", () => {
   describe("parseHTML", () => {
@@ -148,6 +148,146 @@ line4`;
       expect(elements[0].name).toBe("button");
       expect(elements[1].name).toBe("dialog");
       expect(elements[2].name).toBe("button");
+    });
+  });
+
+  // ── Spec-informed tokenizer edge cases (task 0.5-08) ──────────────────────
+  describe("tokenizer edge cases", () => {
+    it("treats <script> body as raw text — <div> inside is not an element", () => {
+      const html = `<section><script>var t = "<div data-ui='button'>x</div>";</script><p data-part="body">real</p></section>`;
+      const roots = parseHTML(html);
+      expect(roots.length).toBe(1);
+      const section = roots[0];
+      // Only <script> and <p> are real children — the <div> lives in JS text.
+      expect(section.children.map((c) => c.tag)).toEqual(["script", "p"]);
+      expect(section.children[0].children.length).toBe(0); // script has no element children
+      // The bogus data-ui inside the script string must not surface as a component.
+      expect(findAllUIElements(html).length).toBe(0);
+    });
+
+    it("treats <style> body as raw text (a '>' in a selector is not a tag close)", () => {
+      const html = `<style>.a > .b { color: red }</style><span data-part="x">hi</span>`;
+      const roots = parseHTML(html);
+      expect(roots.map((r) => r.tag)).toEqual(["style", "span"]);
+      expect(roots[0].children.length).toBe(0);
+    });
+
+    it("closes a comment at the first --> and keeps trailing markup", () => {
+      // Comment body then a real element; the div must be parsed, not swallowed.
+      const html = `<!-- a <div id="ghost"> b --><div id="real"></div>`;
+      const roots = parseHTML(html);
+      expect(roots.length).toBe(1);
+      expect(roots[0].tag).toBe("div");
+      expect(roots[0].attrs.id).toBe("real");
+    });
+
+    it("handles a comment whose body contains a stray --> edge", () => {
+      // First `-->` closes the comment; `after` is then ordinary text, and the
+      // following <b> is a real element (the `-->` did not desync the scanner).
+      const html = `<!-- x --> after --><b data-part="y">z</b>`;
+      const roots = parseHTML(html);
+      expect(roots.length).toBe(1);
+      expect(roots[0].tag).toBe("b");
+      expect(roots[0].attrs["data-part"]).toBe("y");
+    });
+
+    it("keeps a quoted attribute value that contains > intact", () => {
+      const roots = parseHTML(`<div data-x="a>b" id="ok"><span>c</span></div>`);
+      expect(roots.length).toBe(1);
+      expect(roots[0].attrs["data-x"]).toBe("a>b");
+      expect(roots[0].attrs.id).toBe("ok");
+      // The `>` inside the value must not have ended the tag early.
+      expect(roots[0].children.map((c) => c.tag)).toEqual(["span"]);
+    });
+
+    it("keeps a single-quoted attribute value that contains > intact", () => {
+      const roots = parseHTML(`<div data-x='p>q'></div>`);
+      expect(roots[0].attrs["data-x"]).toBe("p>q");
+    });
+
+    it("parses an unclosed tag as an open element (no closing >)", () => {
+      const roots = parseHTML(`<div class="x"`);
+      expect(roots.length).toBe(1);
+      expect(roots[0].tag).toBe("div");
+      expect(roots[0].attrs.class).toBe("x");
+    });
+
+    it("nests unclosed elements by document order", () => {
+      const roots = parseHTML(`<section><p>one<p>two`);
+      // No closes at all — everything nests under the last-opened element.
+      expect(roots.length).toBe(1);
+      expect(roots[0].tag).toBe("section");
+      const p1 = roots[0].children[0];
+      expect(p1.tag).toBe("p");
+      expect(p1.children[0].tag).toBe("p"); // second <p> nests inside the first
+    });
+
+    it("treats void elements as self-closing with or without a trailing slash", () => {
+      const roots = parseHTML(`<img src="a.png"><br/><hr /><input type="text">`);
+      expect(roots.map((r) => r.tag)).toEqual(["img", "br", "hr", "input"]);
+      for (const r of roots) expect(r.selfClosing).toBe(true);
+      // None of them opened a scope, so a following element stays a sibling.
+      const withChild = parseHTML(`<br><span>after</span>`);
+      expect(withChild.map((r) => r.tag)).toEqual(["br", "span"]);
+    });
+
+    it("marks an explicit self-closing non-void element and does not nest into it", () => {
+      const roots = parseHTML(`<div/><span>sibling</span>`);
+      expect(roots.map((r) => r.tag)).toEqual(["div", "span"]);
+      expect(roots[0].selfClosing).toBe(true);
+    });
+
+    it("handles CRLF input for tree shape and line tracking", () => {
+      const html = "<div data-ui=\"card\">\r\n  <p data-part=\"body\">hi</p>\r\n</div>";
+      const roots = parseHTML(html);
+      expect(roots.length).toBe(1);
+      expect(roots[0].tag).toBe("div");
+      const p = roots[0].children[0];
+      expect(p.tag).toBe("p");
+      // <div> on line 1, <p> on line 2 despite CRLF terminators.
+      expect(roots[0].line).toBe(1);
+      expect(p.line).toBe(2);
+      expect(p.column).toBe(3); // two spaces of indentation → column 3
+    });
+
+    it("does not treat `<` in text as a tag when not followed by a letter", () => {
+      const roots = parseHTML(`<p data-part="body">a < b && c > d</p>`);
+      expect(roots.length).toBe(1);
+      expect(roots[0].tag).toBe("p");
+      expect(roots[0].children.length).toBe(0); // the lone `<` is text, not a tag
+    });
+  });
+
+  describe("line/column tracking", () => {
+    it("records accurate line and column for nested elements", () => {
+      const html = [
+        "<div data-ui=\"dialog\">",       // line 1
+        "  <div data-part=\"panel\">",    // line 2, col 3
+        "    <button data-part=\"close\">X</button>", // line 3, col 5
+        "  </div>",
+        "</div>",
+      ].join("\n");
+      const roots = parseHTML(html);
+      const dialog = roots[0];
+      expect(dialog.line).toBe(1);
+      expect(dialog.column).toBe(1);
+      const panel = dialog.children[0];
+      expect(panel.line).toBe(2);
+      expect(panel.column).toBe(3);
+      const close = panel.children[0];
+      expect(close.line).toBe(3);
+      expect(close.column).toBe(5);
+    });
+
+    it("component line/column agree with offsetToPosition for every element", () => {
+      const html = "line1\nline2\n  <button data-ui=\"button\">Click</button>\n";
+      const roots = parseHTML(html);
+      const btn = roots[0];
+      const pos = offsetToPosition(html, btn.start);
+      expect(btn.line).toBe(pos.line);
+      expect(btn.column).toBe(pos.column);
+      expect(btn.line).toBe(3);
+      expect(btn.column).toBe(3);
     });
   });
 });

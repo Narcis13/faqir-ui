@@ -1,5 +1,12 @@
-// Lightweight HTML parser for audit — extracts data-ui components and their structure
-// No jsdom, no heavy dependencies — simple regex/state-machine parser
+// Lightweight HTML parser for audit — extracts data-ui components and their
+// structure. No jsdom, no heavy dependencies. The tag scan is a small,
+// spec-informed tokenizer (see ./html-tokenizer.ts, task 0.5-08) that correctly
+// handles comments, raw-text elements (`<script>`/`<style>`), quoted attribute
+// values containing `>`, void elements, unclosed tags, and CRLF input, and
+// tracks the line/column of every node. This module builds the element tree and
+// exposes the stable audit/generator API; the tokenizer stays private to it.
+
+import { tokenizeHTML } from "./html-tokenizer";
 
 export interface ParsedAttribute {
   name: string;
@@ -14,6 +21,10 @@ export interface ParsedElement {
   start: number;
   /** Byte offset after the closing '>' of the opening tag */
   tagEnd: number;
+  /** 1-based line of the opening '<' (equal to offsetToPosition(source, start).line) */
+  line: number;
+  /** 1-based column of the opening '<' (equal to offsetToPosition(source, start).column) */
+  column: number;
   children: ParsedElement[];
   parent: ParsedElement | null;
 }
@@ -61,22 +72,6 @@ const SELF_CLOSING_TAGS = new Set([
   "link", "meta", "param", "source", "track", "wbr",
 ]);
 
-// Match opening tags, closing tags, and self-closing tags
-const TAG_RE = /<\/?([a-zA-Z][a-zA-Z0-9-]*)((?:\s+[^>]*?)?)?\s*\/?>/g;
-const ATTR_RE = /([a-zA-Z_][\w.:-]*)\s*(?:=\s*(?:"([^"]*)"|'([^']*)'|(\S+)))?/g;
-
-function parseAttributes(attrString: string): Record<string, string> {
-  const attrs: Record<string, string> = {};
-  let match: RegExpExecArray | null;
-  ATTR_RE.lastIndex = 0;
-  while ((match = ATTR_RE.exec(attrString)) !== null) {
-    const name = match[1];
-    const value = match[2] ?? match[3] ?? match[4] ?? "";
-    attrs[name] = value;
-  }
-  return attrs;
-}
-
 /**
  * Convert a byte offset into 1-based line and column. Column counts characters
  * from the start of the line (the offset itself → column 1 at line start).
@@ -116,58 +111,46 @@ export function maskNonMarkup(source: string): string {
 }
 
 /**
- * Parse HTML source into a flat list of elements with parent/child relationships.
- * Only tracks elements that have data-ui or data-part attributes, plus their ancestors.
+ * Parse HTML source into a tree of elements with parent/child relationships.
+ * Returns the top-level (root) elements; every element carries its byte offsets
+ * (`start`/`tagEnd`) and 1-based `line`/`column`.
+ *
+ * Tree shape matches the previous scanner: void/self-closing elements are never
+ * pushed onto the open-element stack, and a close tag pops back to its nearest
+ * matching ancestor (unmatched close tags are ignored). Comments, doctypes, and
+ * raw-text bodies (`<script>`/`<style>`) never contribute elements.
  */
 export function parseHTML(source: string): ParsedElement[] {
-  const elements: ParsedElement[] = [];
   const stack: ParsedElement[] = [];
   const roots: ParsedElement[] = [];
 
-  // Use a more robust approach: find all tags and build a tree
-  let match: RegExpExecArray | null;
-  TAG_RE.lastIndex = 0;
+  for (const token of tokenizeHTML(source)) {
+    if (token.type === "startTag") {
+      const selfClosing = token.selfClosing || SELF_CLOSING_TAGS.has(token.name);
+      const element: ParsedElement = {
+        tag: token.name,
+        attrs: token.attrs,
+        selfClosing,
+        start: token.start,
+        tagEnd: token.end,
+        line: token.line,
+        column: token.column,
+        children: [],
+        parent: stack.length > 0 ? stack[stack.length - 1] : null,
+      };
 
-  while ((match = TAG_RE.exec(source)) !== null) {
-    const fullMatch = match[0];
-    const tagName = match[1].toLowerCase();
-    const attrString = match[2] || "";
-    const isClosing = fullMatch.startsWith("</");
-    const isSelfClosing = fullMatch.endsWith("/>") || SELF_CLOSING_TAGS.has(tagName);
+      if (element.parent) element.parent.children.push(element);
+      else roots.push(element);
 
-    if (isClosing) {
-      // Pop from stack until we find the matching tag
+      if (!selfClosing) stack.push(element);
+    } else if (token.type === "endTag") {
+      // Pop back to the nearest matching open element; ignore if none.
       for (let i = stack.length - 1; i >= 0; i--) {
-        if (stack[i].tag === tagName) {
-          stack.splice(i);
+        if (stack[i].tag === token.name) {
+          stack.length = i;
           break;
         }
       }
-      continue;
-    }
-
-    // Opening tag
-    const attrs = parseAttributes(attrString);
-    const element: ParsedElement = {
-      tag: tagName,
-      attrs,
-      selfClosing: isSelfClosing,
-      start: match.index,
-      tagEnd: match.index + fullMatch.length,
-      children: [],
-      parent: stack.length > 0 ? stack[stack.length - 1] : null,
-    };
-
-    if (element.parent) {
-      element.parent.children.push(element);
-    } else {
-      roots.push(element);
-    }
-
-    elements.push(element);
-
-    if (!isSelfClosing) {
-      stack.push(element);
     }
   }
 
@@ -265,15 +248,17 @@ const FULL_DOCUMENT_RE = /<!doctype\s+html|<html[\s>]|<body[\s>]/i;
 /**
  * Parse a whole HTML file for document-level audit rules (task 0.4-15).
  *
- * Comments and `<script>`/`<style>` bodies are masked (see `maskNonMarkup`)
- * before tag scanning, so an `id`/`<nav>`/heading that only appears inside a
- * comment or script string is never mistaken for real markup. Masking preserves
- * offsets, so `elements[*].start` still indexes into the returned `source`
- * (the original text) and `offsetToPosition` yields exact line/column.
+ * The tokenizer natively skips comment and `<script>`/`<style>` bodies, so an
+ * `id`/`<nav>`/heading that only appears inside a comment or script string never
+ * becomes an element. `elements[*].start` indexes into the returned `source`
+ * (the original text), so `offsetToPosition` yields exact line/column.
+ *
+ * `isFullDocument` is still computed from a masked copy so a `<html>`/`<body>`/
+ * doctype that appears only inside a comment does not flip a fragment into a
+ * "page" — matching the long-standing behavior of the document rules.
  */
 export function parseDocument(source: string, filePath: string): ParsedDocument {
-  const masked = maskNonMarkup(source);
-  const roots = parseHTML(masked);
+  const roots = parseHTML(source);
   const elements: ParsedElement[] = [];
   const walk = (el: ParsedElement) => {
     elements.push(el);
@@ -286,7 +271,7 @@ export function parseDocument(source: string, filePath: string): ParsedDocument 
     source,
     roots,
     elements,
-    isFullDocument: FULL_DOCUMENT_RE.test(masked),
+    isFullDocument: FULL_DOCUMENT_RE.test(maskNonMarkup(source)),
   };
 }
 
