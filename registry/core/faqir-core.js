@@ -3247,12 +3247,28 @@ function createDrawer(root) {
 
   let focusCleanup = null;
   let previouslyFocused = null;
+  let prevBodyOverflow = null;
+
+  // Scroll lock: an open modal drawer freezes the page behind it. The guard makes
+  // lock/unlock idempotent so overlapping open/close sequences (or a double
+  // open) can never leave the body stuck at `overflow: hidden`.
+  function lockScroll() {
+    if (prevBodyOverflow !== null) return;
+    prevBodyOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+  }
+  function unlockScroll() {
+    if (prevBodyOverflow === null) return;
+    document.body.style.overflow = prevBodyOverflow;
+    prevBodyOverflow = null;
+  }
 
   function open() {
     previouslyFocused = document.activeElement;
     root.dataset.state = "open";
     overlay.hidden = false;
     panel.hidden = false;
+    lockScroll();
     focusCleanup = trapFocus(panel);
     panel.focus?.();
   }
@@ -3264,6 +3280,7 @@ function createDrawer(root) {
       root.dataset.state = "closed";
       overlay.hidden = true;
       panel.hidden = true;
+      unlockScroll();
       if (focusCleanup) focusCleanup();
       focusCleanup = null;
       previouslyFocused?.focus();
@@ -3343,6 +3360,7 @@ function createDrawer(root) {
       );
     }
     if (focusCleanup) focusCleanup();
+    unlockScroll();
     delete root._faqirDrawer;
   }
 
@@ -4818,12 +4836,28 @@ function createSheet(root) {
 
   let focusCleanup = null;
   let previouslyFocused = null;
+  let prevBodyOverflow = null;
+
+  // Scroll lock: an open modal sheet freezes the page behind it. The guard makes
+  // lock/unlock idempotent so overlapping open/close sequences (or a double
+  // open) can never leave the body stuck at `overflow: hidden`.
+  function lockScroll() {
+    if (prevBodyOverflow !== null) return;
+    prevBodyOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+  }
+  function unlockScroll() {
+    if (prevBodyOverflow === null) return;
+    document.body.style.overflow = prevBodyOverflow;
+    prevBodyOverflow = null;
+  }
 
   function open() {
     previouslyFocused = document.activeElement;
     root.dataset.state = "open";
     overlay.hidden = false;
     panel.hidden = false;
+    lockScroll();
     focusCleanup = trapFocus(panel);
     panel.focus?.();
   }
@@ -4835,6 +4869,7 @@ function createSheet(root) {
       root.dataset.state = "closed";
       overlay.hidden = true;
       panel.hidden = true;
+      unlockScroll();
       if (focusCleanup) focusCleanup();
       focusCleanup = null;
       previouslyFocused?.focus();
@@ -4899,6 +4934,7 @@ function createSheet(root) {
     );
     root.removeEventListener("keydown", onKeyDown);
     if (focusCleanup) focusCleanup();
+    unlockScroll();
     delete root._faqirSheet;
   }
 
