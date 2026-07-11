@@ -81,7 +81,7 @@ done in any order (or in parallel worktrees).
 | 0.4-14 | New theme: `contrast` (WCAG AAA) | ✅ |
 | 0.4-15 | Audit v2 rules: `duplicate-id`, `heading-order`, `landmark` | ✅ |
 | 0.4-16 | Audit v2 rule: `contrast-tokens` (static oklch contrast) | ⬜ |
-| 0.4-17 | Audit v2 rule: `field-wiring` | ⬜ |
+| 0.4-17 | Audit v2 rule: `field-wiring` | ✅ |
 | 0.4-18 | Controller tests A: toast, tooltip, accordion | ⬜ |
 | 0.4-19 | Controller tests B: popover, sheet, drawer | ⬜ |
 | 0.4-20 | Controller tests C: pagination, select-custom, qr-code | ⬜ |
@@ -826,9 +826,9 @@ wire them (deterministic ID derivation from the field name/label).
 - Valid field-group (per §7.1 example) passes untouched.
 
 **Acceptance criteria**
-- [ ] Repair produces the exact §7.1 canonical wiring.
-- [ ] Rule tolerates the current shipped `error` state naming AND the normalized naming (forward-compatible with 0.6-01).
-- [ ] Registry field-group reference page passes.
+- [x] Repair produces the exact §7.1 canonical wiring.
+- [x] Rule tolerates the current shipped `error` state naming AND the normalized naming (forward-compatible with 0.6-01).
+- [x] Registry field-group reference page passes.
 
 ---
 

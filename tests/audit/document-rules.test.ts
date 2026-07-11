@@ -321,9 +321,10 @@ describe("landmark", () => {
 // ───────────────────── rule inventory + JSON output ─────────────────────
 
 describe("document rules · inventory & JSON", () => {
-  it("registers all three in DOCUMENT_RULES", () => {
+  it("registers every document rule in DOCUMENT_RULES", () => {
     expect(DOCUMENT_RULES.map((r) => r.id).sort()).toEqual([
       "duplicate-id",
+      "field-wiring",
       "heading-order",
       "landmark",
     ]);

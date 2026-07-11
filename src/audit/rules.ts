@@ -5,11 +5,12 @@ import { offsetToPosition } from "../parser/html-parser";
 import type { Manifest } from "../manifest";
 import { suggestClosest } from "../utils/suggest";
 import { CONTRAST_TOKENS_RULE } from "./contrast-tokens";
+import { fieldWiringRule } from "./field-wiring";
 
 export type Severity = "critical" | "error" | "warning" | "info";
 
 export interface RepairAction {
-  type: "add-attribute" | "rename-attribute" | "remove-element" | "add-element" | "add-script" | "rewrite-css" | "rename-id";
+  type: "add-attribute" | "rename-attribute" | "remove-element" | "add-element" | "add-script" | "rewrite-css" | "rename-id" | "wire-field-group";
   /** Byte offset in source where the fix applies */
   offset: number;
   details: Record<string, string>;
@@ -979,11 +980,12 @@ export const landmarkRule: DocumentRule = {
   },
 };
 
-/** Every document-level rule, run on each scanned HTML file (task 0.4-15). */
+/** Every document-level rule, run on each scanned HTML file (tasks 0.4-15, 0.4-17). */
 export const DOCUMENT_RULES: DocumentRule[] = [
   duplicateIdRule,
   headingOrderRule,
   landmarkRule,
+  fieldWiringRule,
 ];
 
 // ── Anti-pattern rule metadata ──
