@@ -1,0 +1,54 @@
+{
+  "name": "@faqir-ui/mcp",
+  "version": "0.1.0",
+  "description": "Faqir UI MCP server — a stdio Model Context Protocol server exposing the Faqir registry, manifests, themes, and project context to any MCP host (Claude Code, Cursor, …). Wraps the same TypeScript internals as the CLI.",
+  "type": "module",
+  "bin": {
+    "faqir-mcp": "./dist/index.mjs"
+  },
+  "main": "./dist/index.mjs",
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "dev": "bun run src/index.ts",
+    "build": "node build.mjs",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "prepublishOnly": "node build.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.20.0",
+    "zod": "^3.25.76"
+  },
+  "keywords": [
+    "faqir",
+    "ui",
+    "mcp",
+    "model-context-protocol",
+    "agent-native",
+    "stdio",
+    "claude",
+    "cursor"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Narcis13/faqir-ui.git",
+    "directory": "packages/mcp"
+  },
+  "homepage": "https://github.com/Narcis13/faqir-ui/tree/main/packages/mcp#readme",
+  "bugs": {
+    "url": "https://github.com/Narcis13/faqir-ui/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

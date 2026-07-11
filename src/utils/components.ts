@@ -1,9 +1,23 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { loadManifest } from "../manifest";
+import { loadManifest, type Manifest } from "../manifest";
 import type { FaqirConfig } from "./config";
 
 export type Layer = "primitives" | "recipes" | "patterns";
+
+/**
+ * A compact, discovery-oriented view of a registry component — the fields an
+ * agent needs to browse the inventory without loading every full manifest.
+ * Produced by {@link listRegistryComponentsWithMeta}.
+ */
+export interface ComponentSummary {
+  name: string;
+  kind: Manifest["kind"];
+  category: string;
+  description: string;
+  layer: Layer;
+  aliases: string[];
+}
 
 /**
  * Build a map of `alias → canonical component name` by scanning registry
@@ -102,6 +116,75 @@ export function listRegistryComponents(registryPath: string, layer?: Layer): str
   }
 
   return components;
+}
+
+/**
+ * Registry inventory with per-component metadata (kind, category, description,
+ * layer, aliases), optionally filtered by `kind` and/or `category`. Loads each
+ * component's manifest, so it is async and heavier than {@link listRegistryComponents};
+ * use it when the metadata is needed (discovery surfaces, the MCP server), and
+ * the name-only variant otherwise.
+ *
+ * Results are sorted by name within their natural layer order (primitives,
+ * recipes, patterns). Components whose manifest fails to parse are skipped.
+ */
+export async function listRegistryComponentsWithMeta(
+  registryPath: string,
+  filter?: { kind?: string; category?: string }
+): Promise<ComponentSummary[]> {
+  const summaries: ComponentSummary[] = [];
+
+  for (const layer of ["primitives", "recipes", "patterns"] as Layer[]) {
+    const layerPath = join(registryPath, layer);
+    if (!existsSync(layerPath)) continue;
+
+    const names: string[] = [];
+    const glob = new Bun.Glob("*/");
+    for (const dir of glob.scanSync({ cwd: layerPath, onlyFiles: false })) {
+      const name = dir.replace(/\/$/, "");
+      if (existsSync(join(layerPath, name, `${name}.manifest.json`))) {
+        names.push(name);
+      }
+    }
+    names.sort();
+
+    for (const name of names) {
+      let manifest: Manifest;
+      try {
+        manifest = await loadManifest(join(layerPath, name, `${name}.manifest.json`));
+      } catch {
+        continue;
+      }
+      if (filter?.kind && manifest.kind !== filter.kind) continue;
+      if (filter?.category && manifest.category !== filter.category) continue;
+
+      summaries.push({
+        name,
+        kind: manifest.kind,
+        category: manifest.category,
+        description: manifest.description,
+        layer,
+        aliases: Array.isArray(manifest.aliases) ? manifest.aliases : [],
+      });
+    }
+  }
+
+  return summaries;
+}
+
+/**
+ * Load a single component's manifest from the registry, resolving aliases to
+ * their canonical component. Returns `null` when no component (or alias) with
+ * that name exists — callers turn that into a clean "unknown component" error
+ * rather than a thrown exception.
+ */
+export async function loadRegistryManifest(
+  name: string,
+  registryPath: string
+): Promise<Manifest | null> {
+  const found = findComponentInRegistry(name, registryPath);
+  if (!found) return null;
+  return loadManifest(join(found.path, `${found.name}.manifest.json`));
 }
 
 export function controllerName(recipe: string): string {

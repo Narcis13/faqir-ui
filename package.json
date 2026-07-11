@@ -3,6 +3,9 @@
   "version": "0.2.4",
   "description": "Agent-native UI framework — CLI-distributed, manifest-driven, zero-dependency components",
   "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
   "exports": {
     ".": "./dist/faqir.mjs"
   },
@@ -16,7 +19,8 @@
     "build:icons": "node scripts/build-icons.mjs",
     "build:core-package": "node scripts/build-core-package.mjs",
     "test": "bun test",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p packages/mcp/tsconfig.json",
+    "build:mcp": "node packages/mcp/build.mjs",
     "smoke": "bash scripts/smoke-cli.sh",
     "size": "node scripts/check-size.mjs",
     "audit:registry": "bun scripts/registry-audit.mjs",

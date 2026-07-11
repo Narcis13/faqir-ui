@@ -3,6 +3,7 @@ dist/
 .faqir/
 bun.lock
 tests/.tmp-*
+packages/mcp/tests/.tmp-*
 
 # Playwright visual-regression suite (task 0.4-23).
 # Baselines are produced/consumed in the pinned Linux container via the CI cache

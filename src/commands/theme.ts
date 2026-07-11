@@ -6,6 +6,7 @@ import { log } from "../utils/logger";
 import { configExists, readConfig, writeConfig } from "../utils/config";
 import { copyFile, ensureDir, getRegistryPath } from "../utils/fs";
 import { generateBundle } from "../utils/bundler";
+import { listRegistryThemes } from "../theme-manifest";
 
 function printHelp() {
   log.heading("faqir theme <subcommand>");
@@ -23,18 +24,6 @@ function printHelp() {
   console.log("  faqir theme set midnight");
   console.log("  faqir theme create my-brand");
   console.log("  faqir theme list");
-}
-
-function listAvailableThemes(registryPath: string): string[] {
-  const themesDir = join(registryPath, "themes");
-  if (!existsSync(themesDir)) return [];
-
-  const themes: string[] = [];
-  const glob = new Bun.Glob("*.css");
-  for (const file of glob.scanSync({ cwd: themesDir })) {
-    themes.push(file.replace(/\.css$/, ""));
-  }
-  return themes.sort();
 }
 
 function listProjectThemes(outputDir: string): string[] {
@@ -229,7 +218,7 @@ async function themeList(): Promise<void> {
   const cwd = process.cwd();
   const registryPath = getRegistryPath();
 
-  const registryThemes = listAvailableThemes(registryPath);
+  const registryThemes = listRegistryThemes(registryPath);
   let activeTheme = "default";
 
   if (configExists(cwd)) {

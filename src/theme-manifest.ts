@@ -25,6 +25,8 @@
 // `scripts/gen-theme-manifests.mjs` and re-derived + asserted by the manifest
 // consistency test, so a hand-edit that drifts from the CSS fails CI.
 
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { extractTokenDefinitions } from "./parser/css-parser";
 
 /** The color schemes a theme declares it ships. */
@@ -175,4 +177,24 @@ export async function loadThemeManifest(path: string): Promise<ThemeManifest> {
   const file = Bun.file(path);
   const json = await file.json();
   return json as ThemeManifest;
+}
+
+/**
+ * The names of every theme shipped in the registry, sorted. A theme is any
+ * `registry/themes/{name}.css` stylesheet (each ships an adjacent
+ * `{name}.theme.json` manifest). Shared by `faqir theme list` and the MCP
+ * server's `faqir_theme_info` tool.
+ */
+export function listRegistryThemes(registryPath: string): string[] {
+  const themesDir = join(registryPath, "themes");
+  if (!existsSync(themesDir)) return [];
+
+  const themes: string[] = [];
+  const glob = new Bun.Glob("*.css");
+  for (const file of glob.scanSync({ cwd: themesDir })) {
+    // Skip preview/support stylesheets — a theme is `{name}.css` with no dot in `name`.
+    if (file.endsWith(".preview.css")) continue;
+    themes.push(file.replace(/\.css$/, ""));
+  }
+  return themes.sort();
 }

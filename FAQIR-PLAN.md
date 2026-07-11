@@ -94,7 +94,7 @@ done in any order (or in parallel worktrees).
 
 | ID | Task | Status |
 |----|------|--------|
-| 0.5-01 | `@faqir-ui/mcp` server skeleton + read tools | ⬜ |
+| 0.5-01 | `@faqir-ui/mcp` server skeleton + read tools | ✅ |
 | 0.5-02 | MCP write/verify tools + resources + packaging | ⬜ |
 | 0.5-03 | Remote registry protocol: index generation + `--registry` fetch + hashes | ⬜ |
 | 0.5-04 | `faqir upgrade` groundwork: pristine store + `faqir diff` | ⬜ |
@@ -1007,9 +1007,29 @@ This session: server boot, tool registration, and the read tools —
 - `faqir_project_context` inside vs outside a Faqir project (fixture dirs).
 
 **Acceptance criteria**
-- [ ] Server runs via `bun run` and via compiled `node packages/mcp/dist/index.mjs`.
-- [ ] Tool input/output schemas declared (MCP tool schema), not free-form.
-- [ ] Shared internals imported from the CLI core — no logic copy-pasted.
+- [x] Server runs via `bun run` and via compiled `node packages/mcp/dist/index.mjs`.
+  `packages/mcp/src/index.ts` (stdio entry, runtime-shim first) + `packages/mcp/build.mjs`
+  (`bun build --target=node` → `dist/index.mjs`); both boot paths verified, and a real
+  stdio spawn of the compiled bundle serves `tools/list` + tool calls.
+- [x] Tool input/output schemas declared (MCP tool schema), not free-form.
+  Every tool registered via `McpServer.registerTool` with Zod `inputSchema`/`outputSchema`
+  (→ JSON Schema); the SDK validates structured content on both ends. Enforced enum on
+  `kind`; unknown component/theme return clean `isError` results with "did you mean …?".
+- [x] Shared internals imported from the CLI core — no logic copy-pasted.
+  `packages/mcp/src/core.ts` wraps `src/…` only. Extracted `listRegistryComponentsWithMeta` +
+  `loadRegistryManifest` (`src/utils/components.ts`) and `listRegistryThemes`
+  (`src/theme-manifest.ts`, now also backing `faqir theme list`).
+
+**Delivered** — New `@faqir-ui/mcp` workspace package: a stdio MCP server exposing the four
+read tools (`faqir_list_components` (filterable by kind/category), `faqir_get_manifest`
+(alias-aware, clean unknown-component error), `faqir_theme_info` (summaries vs. full
+manifest; reflects the project's active theme), `faqir_project_context` (reads the host
+`.faqir/context.json`, in/out of a project)). Boots under Bun and compiles to a self-contained
+Node bundle. `packages/*` registered as workspaces; SDK `@modelcontextprotocol/sdk` + `zod`
+added. Tests: `packages/mcp/tests/tools.test.ts` (16, in-process SDK client via
+`InMemoryTransport`) — each tool callable, schema-valid JSON, kind/category filters, alias
+resolution, unknown-name errors, and in/out-of-project fixtures. Root `typecheck` now also
+covers the MCP package; full suite green (pre-existing toast/tooltip timer failures unrelated).
 
 ---
 
