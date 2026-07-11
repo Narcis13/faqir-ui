@@ -85,7 +85,7 @@ done in any order (or in parallel worktrees).
 | 0.4-18 | Controller tests A: toast, tooltip, accordion | ✅ |
 | 0.4-19 | Controller tests B: popover, sheet, drawer | ⬜ |
 | 0.4-20 | Controller tests C: pagination, select-custom, qr-code | ⬜ |
-| 0.4-21 | Controller tests D: combobox, command-palette | ⬜ |
+| 0.4-21 | Controller tests D: combobox, command-palette | ✅ |
 | 0.4-22 | Controller tests E: date-picker, table | ⬜ |
 | 0.4-23 | Visual regression suite (Playwright screenshots) | ⬜ |
 | 0.4-24 | Automated a11y (axe-core) in CI | ⬜ |
@@ -914,9 +914,14 @@ it tiny, it grows in 0.4-23).
 - command-palette: open shortcut, fuzzy filter, grouped results nav, Enter executes + closes, Escape layers (clear filter → close), recent/empty states.
 
 **Acceptance criteria**
-- [ ] ARIA combobox pattern attributes asserted at every interaction step.
-- [ ] Both controllers' contracts documented; defects fixed or filed.
-- [ ] If Playwright was needed, the harness is reusable and CI-wired.
+- [x] ARIA combobox pattern attributes asserted at every interaction step. (Both files carry an `assertComboboxAria`/`assertSearchAria` helper — role="combobox", aria-autocomplete="list", aria-controls, and the dynamic aria-expanded — invoked at open/close/type/nav/select/escape/outside-click steps.)
+- [x] Both controllers' contracts documented; defects fixed or filed. (Block-comment `CONTRACT` header on each file; 5 defects codified as current behavior via GAP tests and filed as **0.4-30 … 0.4-34**.)
+- [x] If Playwright was needed, the harness is reusable and CI-wired. (Not needed — happy-dom carries `.focus()`/`document.activeElement`, so the command-palette focus-into-panel and focus-restore-on-close contracts are asserted directly in happy-dom, same as the 0.4-19 overlay focus-trap tests. No Playwright spec was added; the browser harness still first appears in 0.4-23.)
+
+**Session notes (0.4-21)** — 60 tests added (`tests/recipes/{combobox,command-palette}.test.ts` — 29 + 31), full suite 1427 → 1487 green, typecheck clean. Each file opens with a block-comment CONTRACT header. Playwright was **not** required: happy-dom supports `.focus()`/`activeElement` (proven already by the 0.4-19 focus-trap tests), so command-palette's focus-into-panel-on-open and focus-restore-to-opener-on-close are asserted inline. No controller source was changed (this task's surface is `tests/recipes/`); every defect found is codified as-is and filed so a future fix flips the guard test.
+- **combobox defects filed:** (a) **0.4-30** — no APG `aria-activedescendant` (active option tracked only via `data-highlighted`, options have no id, and the highlight is *mirrored onto* `aria-selected`, conflating active with selected); (b) **0.4-31** — a committed selection leaves **no** option marked `aria-selected`, because `selectOption` sets it `"true"` and then `close()`→`clearHighlight()` immediately resets every option to `"false"` (differs from select-custom, which persists it); (c) **0.4-32** — there is no `blur` handler, so outside-click closes but the typed text is neither committed nor reverted (the task bullet's "blur commits/reverts per contract" is aspirational).
+- **command-palette defects filed:** (a) **0.4-33** — Escape does not layer: it closes immediately regardless of filter text instead of clearing a non-empty filter first (the task bullet's "Escape layers (clear filter → close)" is aspirational); (b) **0.4-34** — same `aria-activedescendant`/id/`aria-selected`-conflation gap as combobox, on the search input + items.
+- **command-palette clarifications:** the filter is case-insensitive **substring** matching, **not** fuzzy subsequence (asserted: `"gd"` does not match "Go to Dashboard"); "recent" is **presentation-only** static markup with no controller logic (asserted a Recent group filters/navigates like any other). The document-level Cmd/Ctrl+K listener is torn down by `destroy()`; tests destroy every mounted instance in `afterEach` so the global shortcut can't leak across tests.
 
 ---
 
@@ -1926,3 +1931,8 @@ submissions, Show HN, awesome lists) as a doc — execution is human.
 | 0.4-27 | select-custom APG combobox `aria-activedescendant`: keyboard highlight is tracked only via `data-highlighted`, and options have no `id`. Assign option ids, set `aria-activedescendant` on the focused control (trigger/search) during nav, and flip the codified GAP test in `tests/recipes/select-custom.test.ts`. | 0.4-20 | ⬜ |
 | 0.4-28 | select-custom hidden input: selection updates only the visible value span + in-memory state, so the widget can't submit inside a native `<form>`. Add a hidden `<input>` (name/value) synced on select, and flip the codified GAP test in `tests/recipes/select-custom.test.ts`. | 0.4-20 | ⬜ |
 | 0.4-29 | Restore the `engine+controllers` gzip size budget: already **over at 22.90 KB on main** before 0.4-20, nudged to 23.28 KB by pagination's windowing helper (budget is 22 KB; `bun run size` exits non-zero). Trim the assembled core (dedupe shared controller idioms / shrink hot helpers) back under 22 KB. | 0.4-20 | ⬜ |
+| 0.4-30 | combobox APG combobox `aria-activedescendant`: the active option is tracked only via `data-highlighted`, options carry no `id`, the input never gets `aria-activedescendant`, and the highlight is mirrored onto the option's `aria-selected` (active vs selected conflated). Assign option ids, set `aria-activedescendant` on the input during nav, stop overloading `aria-selected`, and flip the codified GAP test in `tests/recipes/combobox.test.ts`. | 0.4-21 | ⬜ |
+| 0.4-31 | combobox selection marker lost: `selectOption` sets `aria-selected="true"` then `close()`→`clearHighlight()` immediately resets every option to `"false"`, so after a commit NO option carries `aria-selected` (unlike select-custom). Persist the selected option's `aria-selected` across close, and flip the codified GAP test in `tests/recipes/combobox.test.ts`. | 0.4-21 | ⬜ |
+| 0.4-32 | combobox has no blur / outside-click commit-or-revert: there is no `blur` handler, so outside-click closes the popup but leaves the typed text as-is — neither committed as a selection nor reverted to the last committed value. Add blur-commit-or-revert semantics and flip the codified GAP test in `tests/recipes/combobox.test.ts`. | 0.4-21 | ⬜ |
+| 0.4-33 | command-palette Escape does not layer: it closes immediately regardless of filter text, instead of first clearing a non-empty filter and only closing on a second press (APG). Make Escape clear a non-empty filter first, then close, and flip the codified GAP test in `tests/recipes/command-palette.test.ts`. | 0.4-21 | ⬜ |
+| 0.4-34 | command-palette APG combobox `aria-activedescendant`: the active item is tracked only via `data-highlighted`, items carry no `id`, the search input never gets `aria-activedescendant`, and the highlight is mirrored onto the item's `aria-selected` (active vs selected conflated). Assign item ids, set `aria-activedescendant` on the search input during nav, stop overloading `aria-selected`, and flip the codified GAP test in `tests/recipes/command-palette.test.ts`. | 0.4-21 | ⬜ |
