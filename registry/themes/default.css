@@ -1,6 +1,18 @@
 /* @ui:theme default — light + dark mode overrides */
 
-/* Light mode is defined by the semantic tokens in semantic.css (the defaults). */
+/* ── Light Mode ── */
+/* Light mode otherwise inherits the semantic-token defaults from semantic.css.
+   These overrides raise the handful of default-theme tokens that fell below the
+   WCAG 2 AA 4.5:1 text threshold (task 0.4-24 · §12.3), each verified by the axe
+   gate (tests/a11y). Darkening is contrast-safe: every *solid* use of these
+   semantic colours (button, progress, stepper marker) carries light text or no
+   text, so a deeper tone only raises its contrast. */
+:root {
+  --color-fg-muted:  var(--palette-gray-600); /* AA: gray-500 was 4.31:1 on muted surfaces (avatar/tabs) */
+  --color-fg-subtle: var(--palette-gray-500); /* AA: gray-400 was 2.61:1 (subtle text, footers, page-break) */
+  --color-success:   var(--palette-green-700); /* AA: green-500 as soft-badge/stat/stepper text was 3.19:1 */
+  --color-warning:   var(--palette-amber-800); /* AA: amber-500 as soft-badge text was 2.02:1 */
+}
 
 /* ── Dark Mode ── */
 [data-theme="dark"] {
@@ -8,8 +20,8 @@
   --color-bg-subtle:       var(--palette-gray-900);
   --color-bg-muted:        var(--palette-gray-800);
   --color-fg:              var(--palette-gray-50);
-  --color-fg-muted:        var(--palette-gray-400);
-  --color-fg-subtle:       var(--palette-gray-500);
+  --color-fg-muted:        var(--palette-gray-300); /* AA: gray-400 kept subtle above 4.5:1, so muted moves up */
+  --color-fg-subtle:       var(--palette-gray-400); /* AA: gray-500 subtle text was 4.11:1 on bg */
 
   --color-primary:         var(--palette-indigo-400);
   --color-primary-hover:   var(--palette-indigo-300);
@@ -21,9 +33,9 @@
   --color-secondary-hover: var(--palette-gray-700);
   --color-secondary-fg:    var(--palette-gray-100);
 
-  --color-destructive:        var(--palette-red-500); /* AA: darker red keeps white legible — red-400 was 3.6:1 [0.4-16] */
+  --color-destructive:        var(--palette-red-400); /* AA: luminous red so it reads as text on subtle/dark bg (badge/chip/field/stat); red-500 was 3.42:1 [0.4-24] */
   --color-destructive-hover:  var(--palette-red-300);
-  --color-destructive-fg:     white;
+  --color-destructive-fg:     var(--palette-gray-950); /* AA: dark ink on the luminous red for solid surfaces (button) — mirrors --color-primary-fg [0.4-24] */
   --color-destructive-subtle: oklch(0.55 0.22 25 / 0.15);
 
   --color-success:         var(--palette-green-400);
@@ -45,14 +57,15 @@
 }
 
 /* ── Auto Dark Mode (system preference) ── */
+/* Mirror of the [data-theme="dark"] block above — keep the two in sync. */
 @media (prefers-color-scheme: dark) {
   [data-theme="auto"] {
     --color-bg:              var(--palette-gray-950);
     --color-bg-subtle:       var(--palette-gray-900);
     --color-bg-muted:        var(--palette-gray-800);
     --color-fg:              var(--palette-gray-50);
-    --color-fg-muted:        var(--palette-gray-400);
-    --color-fg-subtle:       var(--palette-gray-500);
+    --color-fg-muted:        var(--palette-gray-300); /* AA — see [data-theme="dark"] */
+    --color-fg-subtle:       var(--palette-gray-400); /* AA — see [data-theme="dark"] */
 
     --color-primary:         var(--palette-indigo-400);
     --color-primary-hover:   var(--palette-indigo-300);
@@ -64,9 +77,9 @@
     --color-secondary-hover: var(--palette-gray-700);
     --color-secondary-fg:    var(--palette-gray-100);
 
-    --color-destructive:        var(--palette-red-500); /* AA: darker red keeps white legible — red-400 was 3.6:1 [0.4-16] */
+    --color-destructive:        var(--palette-red-400); /* AA — see [data-theme="dark"] [0.4-24] */
     --color-destructive-hover:  var(--palette-red-300);
-    --color-destructive-fg:     white;
+    --color-destructive-fg:     var(--palette-gray-950); /* AA — see [data-theme="dark"] [0.4-24] */
     --color-destructive-subtle: oklch(0.55 0.22 25 / 0.15);
 
     --color-success:         var(--palette-green-400);

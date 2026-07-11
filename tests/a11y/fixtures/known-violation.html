@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<!--
+  Deliberately-inaccessible fixture (task 0.4-24 · FAQIR-PLAN §12.3).
+
+  This page is the proof that the axe gate actually bites: if the scan pipeline
+  ever silently stopped detecting violations (a broken AxeBuilder wiring, wrong
+  tags, a swallowed result), the "gate bites" test in a11y.pw.ts would go green on
+  a page that is plainly broken. The document is otherwise well-formed (lang,
+  title, one <main>) so ONLY the two intended, rock-stable WCAG 2.0 Level A rules
+  fire — no incidental noise:
+
+    - image-alt   : the <img> has no alt text / role.
+    - button-name : the <button> has no accessible name.
+
+  Do NOT "fix" this file — its brokenness is the test.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>a11y gate self-test fixture</title>
+</head>
+<body>
+  <main>
+    <h1>Known accessibility violations</h1>
+    <!-- image-alt: no alt attribute -->
+    <img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" width="24" height="24" />
+    <!-- button-name: empty, no aria-label, no text -->
+    <button type="button"></button>
+  </main>
+</body>
+</html>

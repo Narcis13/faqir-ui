@@ -1,0 +1,41 @@
+name: Accessibility (axe-core)
+
+# Task 0.4-24 · FAQIR-PLAN §12.3
+#
+# axe-core scan of every registry reference page (tests/a11y/a11y.pw.ts), across
+# the default + high-contrast themes in light and dark, generated from the same
+# registry-discovery util the visual suite uses. Zero-violation policy: any
+# non-exempt WCAG 2.0/2.1 A/AA violation fails the job, and the log names the
+# component (case id), the rule, and the offending selector(s).
+#
+# Runs in the pinned Playwright container so chromium is present and matches
+# @playwright/test — axe evaluates the DOM/CSS (not pixels), so results are
+# platform-independent and need no baselines or sharding.
+#
+# The matrix-generation + exemption + reporting meta-tests (a11y-matrix.test.ts)
+# run in the fast bun `test` job of ci.yml — this job is only the browser scan.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: a11y-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  axe:
+    name: axe scan (WCAG 2 A/AA)
+    runs-on: ubuntu-latest
+    container: mcr.microsoft.com/playwright:v1.61.1-noble
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install deps
+        run: npm install --no-audit --no-fund
+      - name: Run axe suite
+        run: npx playwright test --config=playwright.a11y.config.ts --reporter=list

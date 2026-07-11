@@ -23,6 +23,7 @@
     "gen:theme-manifests": "bun scripts/gen-theme-manifests.mjs",
     "test:visual": "playwright test",
     "test:visual:update": "playwright test --update-snapshots",
+    "test:a11y": "playwright test --config=playwright.a11y.config.ts",
     "release": "node scripts/release.mjs",
     "release:patch": "node scripts/release.mjs patch",
     "release:minor": "node scripts/release.mjs minor",
@@ -60,9 +61,11 @@
     "node": ">=18"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
     "@happy-dom/global-registrator": "^20.8.3",
     "@playwright/test": "1.61.1",
     "@types/bun": "latest",
+    "axe-core": "^4.12.1",
     "happy-dom": "^20.8.3",
     "typescript": "^5.7.0"
   }
