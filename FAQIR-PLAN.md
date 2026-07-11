@@ -867,9 +867,15 @@ rows.
 - drawer: same contract as sheet where shared + side variants; assert `data-state` transitions exactly.
 
 **Acceptance criteria**
-- [ ] Focus-trap behavior asserted for both overlay components (tab cycles, shift-tab reverses).
-- [ ] Scroll-lock verified to always unlock (including double-open/close sequences).
-- [ ] Contracts documented in test headers.
+- [x] Focus-trap behavior asserted for both overlay components (tab cycles, shift-tab reverses). (`sheet.test.ts` + `drawer.test.ts` each assert "cycles Tab from the last focusable to the first" AND "reverses Shift+Tab from the first focusable to the last", plus a trap-release-after-close negative test.)
+- [x] Scroll-lock verified to always unlock (including double-open/close sequences). (Both overlays: "ALWAYS unlocks across a double open/close sequence", "a redundant open (double open) still leaves a single, releasable lock", "destroy releases a held scroll lock".)
+- [x] Contracts documented in test headers. (Block-comment `CONTRACT —` header at the top of `popover.test.ts`, `sheet.test.ts`, `drawer.test.ts`.)
+
+**Session notes (0.4-19)** — 71 tests added (`tests/recipes/{popover,sheet,drawer}.test.ts`), full suite 1276 → 1347 green, typecheck clean. One real defect fixed in-session while codifying the overlay contract:
+- **Sheet and drawer had no scroll lock at all** — an open modal did not freeze the page behind it, violating the §12.1 overlay contract shared with dialog. Added an idempotent `lockScroll()`/`unlockScroll()` pair (guarded by a saved `prevBodyOverflow`) to `registry/recipes/sheet/sheet.js`, `registry/recipes/drawer/drawer.js`, and the assembled `registry/core/faqir-core.js`; the guard makes a double-open a no-op and guarantees `destroy()` and every close path release the lock. Source-of-truth sync test stays green.
+- popover needed no controller change — its tests codify existing behavior (non-modal, no focus trap / no scroll lock, outside-`pointerdown` close, Escape restores focus to the trigger, declarative `data-variant`/`data-align` positioning, nested-popover independence).
+- drawer state machine asserted exactly: `closed → open → closing → (transitionend:transform) → closed`, with the "closing" leg held live via a patched `getComputedStyle` and a hand-fired `transitionend`.
+- Note: the implementation landed in commit `1a4bfb9` (message mislabeled "0.4-18"); this session verified it against the full suite/typecheck and recorded it here as 0.4-19.
 
 ---
 
