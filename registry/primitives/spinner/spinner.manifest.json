@@ -1,4 +1,5 @@
 {
+  "$schema": "../../../manifest.schema.json",
   "name": "spinner",
   "version": "1.0.0",
   "kind": "primitive",

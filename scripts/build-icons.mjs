@@ -181,6 +181,7 @@ export function buildIconsCss(entries) {
  */
 export function buildIconManifest(names) {
   return {
+    $schema: "../../../manifest.schema.json",
     name: "icon",
     version: "1.0.0",
     kind: "primitive",

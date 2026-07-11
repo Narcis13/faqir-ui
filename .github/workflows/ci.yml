@@ -57,6 +57,11 @@ jobs:
         with:
           bun-version: latest
       - run: bun run audit:registry
+      # Manifest schema + generated-skill drift gates (task 0.5-07): every
+      # manifest carries an up-to-date $schema, and the shipped faqir-creator
+      # skill matches a fresh manifest-derived generation.
+      - run: bun run check:schema-refs
+      - run: bun run check:skill
 
   # (5) Size budgets. Reassemble the engine from source first so the measurement
   #     reflects the current registry, then enforce the gzip budgets.

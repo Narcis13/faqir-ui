@@ -1,4 +1,5 @@
 {
+  "$schema": "../../../manifest.schema.json",
   "name": "popover",
   "version": "1.0.0",
   "kind": "recipe",

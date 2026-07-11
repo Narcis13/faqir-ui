@@ -1,4 +1,5 @@
 {
+  "$schema": "../../manifest.schema.json",
   "name": "paper",
   "version": "1.0.0",
   "mood": [

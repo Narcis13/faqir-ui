@@ -1,4 +1,5 @@
 {
+  "$schema": "../../manifest.schema.json",
   "name": "brutalist",
   "version": "1.0.0",
   "mood": [
