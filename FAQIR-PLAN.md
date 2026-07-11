@@ -82,7 +82,7 @@ done in any order (or in parallel worktrees).
 | 0.4-15 | Audit v2 rules: `duplicate-id`, `heading-order`, `landmark` | ✅ |
 | 0.4-16 | Audit v2 rule: `contrast-tokens` (static oklch contrast) | ⬜ |
 | 0.4-17 | Audit v2 rule: `field-wiring` | ✅ |
-| 0.4-18 | Controller tests A: toast, tooltip, accordion | ⬜ |
+| 0.4-18 | Controller tests A: toast, tooltip, accordion | ✅ |
 | 0.4-19 | Controller tests B: popover, sheet, drawer | ⬜ |
 | 0.4-20 | Controller tests C: pagination, select-custom, qr-code | ⬜ |
 | 0.4-21 | Controller tests D: combobox, command-palette | ⬜ |
@@ -846,9 +846,14 @@ rows.
 - accordion: single/multiple expand modes, `aria-expanded`/`aria-controls`, keyboard (Up/Down/Home/End per WAI), collapse animation hooks don't break state.
 
 **Acceptance criteria**
-- [ ] Each controller has a documented contract at the top of its test file.
-- [ ] Timer-based behavior tested with fake timers (no real waits).
-- [ ] Any discovered defect fixed or filed as an indexed follow-up task.
+- [x] Each controller has a documented contract at the top of its test file. (Block-comment contract header at the top of `toast.test.ts`, `tooltip.test.ts`, `accordion.test.ts`.)
+- [x] Timer-based behavior tested with fake timers (no real waits). (`jest.useFakeTimers()` for toast auto-dismiss and tooltip show/hide delays; the one frame-based toast enter→visible test uses real rAF with `duration: 0`, no `setTimeout` wait.)
+- [x] Any discovered defect fixed or filed as an indexed follow-up task. (No small in-session fixes needed — the three controllers are clean. Two documented gaps filed as follow-ups **0.4-25** and **0.4-26**; tests codify current behavior so a future fix flips the guard tests.)
+
+**Session notes (0.4-18)** — 61 tests added (`tests/recipes/{toast,tooltip,accordion}.test.ts`), full suite 1215 → 1276 green, typecheck clean. Documented gaps, all codified as current-behavior tests:
+- Toast has **no pause-on-hover** — the auto-dismiss timer keeps running while hovered (task said "if implemented"; it isn't). → filed **0.4-25**.
+- Accordion has **no WAI-APG roving-focus arrow keys** (Down/Up/Home/End move focus between headers — OPTIONAL in the APG, absent here). Arrow keys assert as no-ops. → filed **0.4-25**.
+- Accordion's keydown Enter/Space handler runs *in addition to* the native `<button>` click, a double-activation risk in real browsers (happy-dom doesn't synthesize the click, so it's invisible in unit tests). → filed **0.4-26**.
 
 ---
 
@@ -1904,4 +1909,5 @@ submissions, Show HN, awesome lists) as a doc — execution is human.
 
 | ID | Task | Origin | Status |
 |----|------|--------|--------|
-| — | *(none yet)* | | |
+| 0.4-25 | Toast pause-on-hover + accordion WAI roving-focus arrow keys (Down/Up/Home/End move focus between headers, per APG). Add to controllers + flip the codified no-op/gap tests in `tests/recipes/{toast,accordion}.test.ts`. | 0.4-18 | ⬜ |
+| 0.4-26 | Accordion keyboard double-activation: the keydown Enter/Space handler fires *alongside* the native `<button>` click, double-toggling in real browsers. Rely on native click (or suppress the synthetic click) and add a browser-level regression test. | 0.4-18 | ⬜ |
