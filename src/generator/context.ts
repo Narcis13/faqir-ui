@@ -89,6 +89,14 @@ function buildComponentEntry(manifest: Manifest): Record<string, unknown> {
     kind: manifest.kind,
   };
 
+  if (manifest.category) {
+    entry.category = manifest.category;
+  }
+
+  if (manifest.description) {
+    entry.description = manifest.description;
+  }
+
   if (manifest.aliases && manifest.aliases.length > 0) {
     entry.aliases = manifest.aliases;
   }
@@ -435,6 +443,268 @@ export function formatContextCursorRules(data: ContextData): string {
   lines.push("");
 
   return lines.join("\n");
+}
+
+/**
+ * The one-line project blurb embedded in both llms.txt and llms-full.txt.
+ * Purely derived from the installed set + active theme — no hand-maintained prose.
+ */
+function llmsBlurb(data: ContextData): string {
+  const c = data.meta.component_count;
+  const t = data.theme;
+  const themeDesc = "mood" in t ? `${t.name} (${t.mood.join(", ")})` : `${t.name}`;
+  return (
+    `Zero-class, manifest-driven UI framework. This project installs ` +
+    `${c.primitives} primitive${c.primitives === 1 ? "" : "s"}, ` +
+    `${c.recipes} recipe${c.recipes === 1 ? "" : "s"}, and ` +
+    `${c.patterns} pattern${c.patterns === 1 ? "" : "s"} on the ${themeDesc} theme. ` +
+    `Components are identified by \`data-ui\` attributes and styled entirely with design tokens — no CSS classes.`
+  );
+}
+
+/** Split installed components into primitives and recipes, preserving insertion order. */
+function partitionComponents(data: ContextData): {
+  primitives: [string, Record<string, unknown>][];
+  recipes: [string, Record<string, unknown>][];
+} {
+  const primitives: [string, Record<string, unknown>][] = [];
+  const recipes: [string, Record<string, unknown>][] = [];
+  for (const [name, comp] of Object.entries(data.components)) {
+    const c = comp as Record<string, unknown>;
+    if (c.kind === "recipe") recipes.push([name, c]);
+    else primitives.push([name, c]);
+  }
+  return { primitives, recipes };
+}
+
+/**
+ * Format the concise `llms.txt` index following the llmstxt.org convention:
+ * an H1 project title, a blockquote summary, an optional detail paragraph, and
+ * H2 sections whose bodies are markdown link lists (`[name](url): notes`).
+ *
+ * Every link points to an anchor inside the companion `llms-full.txt`, so the
+ * index is a genuine table of contents into the expanded reference. All content
+ * is derived from installed manifests and design tokens — no hand-written prose.
+ */
+export function formatContextLlms(data: ContextData): string {
+  const lines: string[] = [];
+  const { primitives, recipes } = partitionComponents(data);
+
+  lines.push(`# Faqir UI (${data.meta.theme} theme)`);
+  lines.push("");
+  lines.push(`> ${llmsBlurb(data)}`);
+  lines.push("");
+  lines.push(
+    "Components carry their contract in `data-ui`/`data-part`/`data-state` attributes; " +
+      "CSS targets those attributes (`[data-ui=\"button\"]`) and every value comes from a " +
+      "`--token`. The full expanded reference — templates, variants, slots, states, and " +
+      "accessibility contracts — lives in llms-full.txt.",
+  );
+  lines.push("");
+
+  const linkItem = (name: string, c: Record<string, unknown>): string => {
+    const desc = c.description ? `: ${c.description}` : "";
+    return `- [${name}](llms-full.txt#${name})${desc}`;
+  };
+
+  if (primitives.length > 0) {
+    lines.push("## Primitives");
+    lines.push("");
+    for (const [name, c] of primitives) lines.push(linkItem(name, c));
+    lines.push("");
+  }
+
+  if (recipes.length > 0) {
+    lines.push("## Recipes");
+    lines.push("");
+    for (const [name, c] of recipes) lines.push(linkItem(name, c));
+    lines.push("");
+  }
+
+  const patternEntries = Object.entries(data.patterns);
+  if (patternEntries.length > 0) {
+    lines.push("## Patterns");
+    lines.push("");
+    for (const [name, pat] of patternEntries) {
+      const p = pat as Record<string, unknown>;
+      const desc = p.description ? `: ${p.description}` : "";
+      lines.push(`- [${name}](llms-full.txt#${name})${desc}`);
+    }
+    lines.push("");
+  }
+
+  lines.push("## Optional");
+  lines.push("");
+  lines.push("- [Attribute protocol](llms-full.txt#attribute-protocol): the data-ui / data-part / data-state contract");
+  lines.push("- [Design tokens](llms-full.txt#design-tokens): spacing, radius, shadow, and z-index scales");
+  lines.push("- [Data-driven rendering](llms-full.txt#data-driven-rendering): apiSource() for server-backed CRUD");
+  lines.push("- [Rules](llms-full.txt#rules): authoring constraints agents must follow");
+  lines.push("");
+
+  return lines.join("\n");
+}
+
+/** Render one component's full reference block (used by llms-full.txt). */
+function llmsFullComponentBlock(name: string, c: Record<string, unknown>): string[] {
+  const lines: string[] = [];
+  lines.push(`### ${name}`);
+  lines.push("");
+
+  const meta: string[] = [];
+  meta.push(`kind: ${c.kind}`);
+  if (c.category) meta.push(`category: ${c.category}`);
+  lines.push(`_${meta.join(" · ")}_`);
+  lines.push("");
+
+  if (c.description) {
+    lines.push(String(c.description));
+    lines.push("");
+  }
+
+  if (c.template) {
+    lines.push("```html");
+    lines.push(String(c.template));
+    lines.push("```");
+    lines.push("");
+  }
+
+  const details: string[] = [];
+  if (c.aliases) details.push(`Aliases: ${(c.aliases as string[]).join(", ")}`);
+  if (c.variants) details.push(`Variants: ${JSON.stringify(c.variants)}`);
+  if (c.sizes) details.push(`Sizes: ${(c.sizes as string[]).join(", ")}`);
+  if (c.slots) details.push(`Slots: ${(c.slots as string[]).join(", ")}`);
+  if (c.states) details.push(`States: ${(c.states as string[]).join(" → ")}`);
+  if (c.a11y) details.push(`A11y: ${c.a11y}`);
+  if (c.controller) details.push(`Controller: ${c.controller}`);
+  if (c.safe_transforms) details.push(`Safe transforms: ${(c.safe_transforms as string[]).join(", ")}`);
+  if (c.uses) details.push(`Composes: ${(c.uses as string[]).join(", ")}`);
+  for (const d of details) lines.push(`- ${d}`);
+  if (details.length > 0) lines.push("");
+
+  return lines;
+}
+
+/**
+ * Format the full `llms-full.txt` expanded reference: a self-contained document
+ * with an anchor for every link emitted by {@link formatContextLlms}. Sections
+ * cover the attribute protocol, design tokens, data-driven rendering, every
+ * installed component and pattern, and the authoring rules. Fully manifest- and
+ * token-derived; contains no timestamp so output is deterministic.
+ */
+export function formatContextLlmsFull(data: ContextData): string {
+  const lines: string[] = [];
+  const { primitives, recipes } = partitionComponents(data);
+
+  lines.push("# Faqir UI — Full Reference");
+  lines.push("");
+  lines.push(`> ${llmsBlurb(data)}`);
+  lines.push("");
+
+  // Active theme
+  const t = data.theme;
+  lines.push("## Active theme");
+  lines.push("");
+  if ("mood" in t) {
+    lines.push(`- Name: ${t.name} v${t.version}`);
+    lines.push(`- Mood: ${t.mood.join(", ")}`);
+    lines.push(`- Scheme: ${t.scheme} (dark mode: ${t.dark_mode})`);
+    lines.push(`- Overrides ${t.tokens_overridden.length} tokens, inherits ${t.tokens_inherited.length} from base`);
+    if (t.pairs_with.length > 0) lines.push(`- Pairs with: ${t.pairs_with.join(", ")}`);
+  } else {
+    lines.push(`- Name: ${t.name} (custom theme — no manifest)`);
+  }
+  lines.push("");
+
+  // Attribute protocol
+  lines.push("## Attribute protocol");
+  lines.push("");
+  lines.push("| Attribute | Purpose |");
+  lines.push("|-----------|---------|");
+  lines.push(`| \`${data.protocol.identity}\` | Component identity — what this element IS |`);
+  lines.push(`| \`${data.protocol.part}\` | Slot role within a parent component |`);
+  lines.push(`| \`${data.protocol.state}\` | Runtime state (changed by JS) |`);
+  lines.push(`| \`${data.protocol.variant}\` | Visual variant |`);
+  lines.push(`| \`${data.protocol.size}\` | Size variant |`);
+  lines.push("");
+  lines.push(`CSS targeting: \`${data.protocol.css_target}\` · State: \`${data.protocol.state_css}\` · Theme: \`${data.protocol.theme_attr}\``);
+  lines.push("");
+
+  // Design tokens
+  lines.push("## Design tokens");
+  lines.push("");
+  lines.push(`- Prefix: \`${data.tokens.prefix}\``);
+  lines.push(`- Spacing: ${data.tokens.spacing}`);
+  lines.push(`- Radius: ${Object.entries(data.tokens.radius).map(([k, v]) => `${k}=${v}`).join(", ")}`);
+  lines.push(`- Shadows: ${data.tokens.shadows}`);
+  lines.push(`- Z-index: ${data.tokens.z_index}`);
+  lines.push("");
+
+  // Data-driven rendering
+  lines.push("## Data-driven rendering");
+  lines.push("");
+  lines.push("Include `core/api-source.js` before `core/faqir-core.js` to use `apiSource()`.");
+  lines.push("Spread into `l-data` for server-backed CRUD: `l-data=\"{ ...apiSource('/api/items'), newName: '' }\" l-init=\"load()\"`");
+  lines.push("Methods: `load()`, `create(payload)`, `update(id, payload)`, `remove(id)`, `startPolling(ms)`, `stopPolling()`");
+  lines.push("State: `items` (array), `loading`, `submitting`, `error`");
+  lines.push("Options: `apiSource(url, { idKey: 'id', pollInterval: 0, optimistic: true })`");
+  lines.push("Note: `apiSource()` is application code — recipe controllers still never call fetch.");
+  lines.push("");
+
+  // Primitives
+  if (primitives.length > 0) {
+    lines.push("## Primitives");
+    lines.push("");
+    for (const [name, c] of primitives) lines.push(...llmsFullComponentBlock(name, c));
+  }
+
+  // Recipes
+  if (recipes.length > 0) {
+    lines.push("## Recipes");
+    lines.push("");
+    for (const [name, c] of recipes) lines.push(...llmsFullComponentBlock(name, c));
+  }
+
+  // Patterns
+  const patternEntries = Object.entries(data.patterns);
+  if (patternEntries.length > 0) {
+    lines.push("## Patterns");
+    lines.push("");
+    for (const [name, pat] of patternEntries) {
+      lines.push(...llmsFullComponentBlock(name, pat as Record<string, unknown>));
+    }
+  }
+
+  // Rules
+  lines.push("## Rules");
+  lines.push("");
+  for (const [rule, enabled] of Object.entries(data.rules)) {
+    if (enabled) lines.push(`- ${rule.replace(/_/g, " ")}`);
+  }
+  lines.push("");
+
+  return lines.join("\n");
+}
+
+/**
+ * Generate and write the `llms.txt` + `llms-full.txt` pair at the project root,
+ * following the llmstxt.org convention. Returns the paths and contents written.
+ */
+export async function writeLlmsFiles(
+  cwd: string,
+): Promise<{ paths: string[]; contents: Record<string, string> }> {
+  const data = await generateContext(cwd);
+  const index = formatContextLlms(data);
+  const full = formatContextLlmsFull(data);
+
+  const indexPath = join(cwd, "llms.txt");
+  const fullPath = join(cwd, "llms-full.txt");
+  await Bun.write(indexPath, index);
+  await Bun.write(fullPath, full);
+
+  return {
+    paths: [indexPath, fullPath],
+    contents: { "llms.txt": index, "llms-full.txt": full },
+  };
 }
 
 /**

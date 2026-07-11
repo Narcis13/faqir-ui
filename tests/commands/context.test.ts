@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { init } from "../../src/commands/init";
 import { add } from "../../src/commands/add";
 import { context } from "../../src/commands/context";
-import { generateContext, formatContextJSON, formatContextMarkdown, formatContextCursorRules } from "../../src/generator/context";
+import { generateContext, formatContextJSON, formatContextMarkdown, formatContextCursorRules, formatContextLlms, formatContextLlmsFull } from "../../src/generator/context";
 import { generateSkill, writeSkillFile } from "../../src/generator/skill";
 
 const TEST_DIR = join(import.meta.dir, "../.tmp-context-test");
@@ -183,6 +183,105 @@ describe("faqir context", () => {
     expect(md).toContain("## Active Theme");
     expect(md).toContain("Name: default");
     expect(md).toContain("Scheme: both");
+  });
+
+  it("llms output is derived only from the installed set", async () => {
+    await init([]);
+    await add(["button", "dialog", "card"]);
+
+    const data = await generateContext(TEST_DIR);
+    const index = formatContextLlms(data);
+    const full = formatContextLlmsFull(data);
+
+    // Only the three installed components are documented.
+    expect(index).toContain("[button](llms-full.txt#button)");
+    expect(index).toContain("[dialog](llms-full.txt#dialog)");
+    expect(index).toContain("[card](llms-full.txt#card)");
+    expect(full).toContain("### button");
+    expect(full).toContain("### dialog");
+    expect(full).toContain("### card");
+
+    // A component that was never installed must not appear.
+    expect(index).not.toContain("accordion");
+    expect(full).not.toContain("### accordion");
+  });
+
+  it("llms.txt conforms to the llmstxt.org structure", async () => {
+    await init([]);
+    await add(["button", "dialog"]);
+
+    const data = await generateContext(TEST_DIR);
+    const index = formatContextLlms(data);
+    const lines = index.split("\n");
+
+    // Exactly one H1 project title as the first content line.
+    const h1s = lines.filter((l) => /^# \S/.test(l));
+    expect(h1s.length).toBe(1);
+    expect(lines[0]).toMatch(/^# /);
+
+    // A blockquote summary follows.
+    expect(lines.some((l) => l.startsWith("> "))).toBe(true);
+
+    // Sections are H2 with markdown link-list bodies.
+    expect(index).toContain("## Primitives");
+    expect(index).toContain("## Recipes");
+    expect(lines.some((l) => /^- \[[^\]]+\]\([^)]+\)/.test(l))).toBe(true);
+  });
+
+  it("llms output is deterministic (no timestamp)", async () => {
+    await init([]);
+    await add(["button"]);
+
+    const a = await generateContext(TEST_DIR);
+    const b = await generateContext(TEST_DIR);
+    expect(formatContextLlms(a)).toBe(formatContextLlms(b));
+    expect(formatContextLlmsFull(a)).toBe(formatContextLlmsFull(b));
+    expect(formatContextLlms(a)).not.toContain("generated_at");
+    expect(formatContextLlmsFull(a)).not.toContain("generated_at");
+  });
+
+  it("writes llms.txt and llms-full.txt via --format llms", async () => {
+    await init([]);
+    await add(["button"]);
+
+    await context(["--format", "llms"]);
+
+    expect(existsSync(join(TEST_DIR, "llms.txt"))).toBe(true);
+    expect(existsSync(join(TEST_DIR, "llms-full.txt"))).toBe(true);
+
+    const index = await Bun.file(join(TEST_DIR, "llms.txt")).text();
+    expect(index).toMatch(/^# /);
+    expect(index).toContain("[button](llms-full.txt#button)");
+  });
+
+  it("regenerating llms after faqir add includes the new component", async () => {
+    await init([]);
+    await add(["button"]);
+
+    let index = formatContextLlms(await generateContext(TEST_DIR));
+    expect(index).not.toContain("[dialog]");
+
+    await add(["dialog"]);
+
+    index = formatContextLlms(await generateContext(TEST_DIR));
+    expect(index).toContain("[dialog](llms-full.txt#dialog)");
+  });
+
+  it("lists the llms format in --json metadata", async () => {
+    await init([]);
+
+    const origLog = console.log;
+    const output: string[] = [];
+    console.log = (...args: any[]) => output.push(args.join(" "));
+    await context(["--json"]);
+    console.log = origLog;
+
+    const parsed = JSON.parse(output.join("\n"));
+    expect(parsed.command).toBe("context");
+    const llms = parsed.formats.find((f: any) => f.format === "llms");
+    expect(llms).toBeDefined();
+    expect(llms.outputs).toContain("llms.txt");
+    expect(llms.outputs).toContain("llms-full.txt");
   });
 
   it("context includes recipe a11y info", async () => {

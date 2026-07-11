@@ -1211,9 +1211,9 @@ project actually uses.
 - Regenerating after `faqir add` includes the new component.
 
 **Acceptance criteria**
-- [ ] Both files generated, deterministic, and current with manifests.
-- [ ] Format listed in `faqir context --help` and the command's `--json` metadata.
-- [ ] No hand-maintained prose — 100% manifest/token-derived.
+- [x] Both files generated, deterministic, and current with manifests.
+- [x] Format listed in `faqir context --help` and the command's `--json` metadata.
+- [x] No hand-maintained prose — 100% manifest/token-derived.
 
 ---
 

@@ -2,8 +2,34 @@
 
 import { log } from "../utils/logger";
 import { configExists } from "../utils/config";
-import { writeContextFiles, generateContext, formatContextJSON, formatContextMarkdown, formatContextCursorRules } from "../generator/context";
+import {
+  writeContextFiles,
+  writeLlmsFiles,
+  generateContext,
+  formatContextJSON,
+  formatContextMarkdown,
+  formatContextCursorRules,
+  formatContextLlms,
+} from "../generator/context";
 import { writeSkillFile } from "../generator/skill";
+
+type ContextFormat = "json" | "md" | "cursorrules" | "llms";
+
+/**
+ * Machine-readable description of every output format `faqir context` can emit.
+ * Surfaced via `--json` so agents can discover the `llms` format (and the files
+ * it produces) without scraping `--help`.
+ */
+const FORMATS: { format: ContextFormat; outputs: string[]; description: string }[] = [
+  { format: "json", outputs: [".faqir/context.json"], description: "JSON format (default)" },
+  { format: "md", outputs: [".faqir/context.md"], description: "Markdown for LLM prompts" },
+  { format: "cursorrules", outputs: [".cursorrules"], description: "Cursor IDE rules format" },
+  {
+    format: "llms",
+    outputs: ["llms.txt", "llms-full.txt"],
+    description: "llms.txt convention: concise linked index + full expanded reference",
+  },
+];
 
 export async function context(args: string[]): Promise<void> {
   if (args.includes("--help") || args.includes("-h")) {
@@ -16,9 +42,17 @@ export async function context(args: string[]): Promise<void> {
       ["--format json", "JSON format (default)"],
       ["--format md", "Markdown for LLM prompts"],
       ["--format cursorrules", "Cursor IDE rules format"],
+      ["--format llms", "llms.txt + llms-full.txt (llmstxt.org convention)"],
       ["--skill", "Also generate .faqir/SKILL.md"],
       ["--stdout", "Print to stdout instead of writing file"],
+      ["--json", "Print command metadata (formats + outputs) as JSON"],
     ]);
+    return;
+  }
+
+  // Machine-readable metadata: available formats and the files each produces.
+  if (args.includes("--json")) {
+    console.log(JSON.stringify({ command: "context", formats: FORMATS }, null, 2));
     return;
   }
 
@@ -30,14 +64,14 @@ export async function context(args: string[]): Promise<void> {
   }
 
   // Parse format
-  let format: "json" | "md" | "cursorrules" = "json";
+  let format: ContextFormat = "json";
   const fmtIdx = args.indexOf("--format");
   if (fmtIdx >= 0 && args[fmtIdx + 1]) {
     const val = args[fmtIdx + 1];
-    if (val === "json" || val === "md" || val === "cursorrules") {
-      format = val;
+    if (FORMATS.some((f) => f.format === val)) {
+      format = val as ContextFormat;
     } else {
-      log.error(`Invalid format '${val}'. Must be: json, md, cursorrules`);
+      log.error(`Invalid format '${val}'. Must be: ${FORMATS.map((f) => f.format).join(", ")}`);
       process.exit(1);
     }
   }
@@ -54,14 +88,23 @@ export async function context(args: string[]): Promise<void> {
       case "cursorrules":
         console.log(formatContextCursorRules(data));
         break;
+      case "llms":
+        // Print the concise index; the full reference is only useful as a file.
+        console.log(formatContextLlms(data));
+        break;
       default:
         console.log(formatContextJSON(data));
     }
     return;
   }
 
-  const result = await writeContextFiles(cwd, format);
-  log.success(`Context written to ${result.path}`);
+  if (format === "llms") {
+    const { paths } = await writeLlmsFiles(cwd);
+    for (const p of paths) log.success(`Context written to ${p}`);
+  } else {
+    const result = await writeContextFiles(cwd, format);
+    log.success(`Context written to ${result.path}`);
+  }
 
   if (withSkill) {
     const skillPath = await writeSkillFile(cwd);
