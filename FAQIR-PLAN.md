@@ -98,7 +98,7 @@ done in any order (or in parallel worktrees).
 | 0.5-02 | MCP write/verify tools + resources + packaging | ✅ |
 | 0.5-03 | Remote registry protocol: index generation + `--registry` fetch + hashes | ✅ |
 | 0.5-04 | `faqir upgrade` groundwork: pristine store + `faqir diff` | ✅ |
-| 0.5-05 | `faqir upgrade` three-way merge | ⬜ |
+| 0.5-05 | `faqir upgrade` three-way merge | ✅ |
 | 0.5-06 | Context v2: `--format llms` (`llms.txt` / `llms-full.txt`) | ⬜ |
 | 0.5-07 | Manifest-derived skill generator + hosted `manifest.schema.json` | ⬜ |
 | 0.5-08 | Spec-informed HTML tokenizer replacing regex scanner | ⬜ |
@@ -1166,9 +1166,33 @@ the new version on success.
 - `--dry-run` reports without writing; `--json` output schema.
 
 **Acceptance criteria**
-- [ ] Conflict markers are standard git-style (agents resolve these well — that's the design bet).
-- [ ] No data loss in any merge-matrix case (user content always recoverable).
-- [ ] Changelog entries printed with breaking-change flag surfaced prominently.
+- [x] Conflict markers are standard git-style (agents resolve these well — that's the design bet).
+  Git `diff3` style: `<<<<<<< ours` / `||||||| base` / `=======` / `>>>>>>> theirs`
+  (`src/utils/merge.ts`), the base section giving the resolver the common ancestor.
+- [x] No data loss in any merge-matrix case (user content always recoverable).
+  Every branch of `mergeFile` keeps, merges, or wraps content in markers — the
+  modify/delete case keeps ours verbatim, delete/modify restores theirs with markers.
+- [x] Changelog entries printed with breaking-change flag surfaced prominently.
+  `selectChanges` prints entries between old→new; breaking ones get a bold red
+  "⚠ BREAKING CHANGES" block before the merge summary, and a `[breaking]` tag inline.
+
+**Delivered** — New `faqir upgrade [component…]` (`src/commands/upgrade.ts`) runs a
+zero-dep three-way merge of the pristine baseline (base), the user's working copy
+(ours), and the registry's current version (theirs). The engine
+(`src/utils/merge.ts`) reuses the 0.5-04 LCS differ: base↔ours and base↔theirs are
+aligned on jointly-matched "sync points" and the slices between them merged — one-sided
+edits apply cleanly, overlaps become git `diff3`-style conflict blocks. The file-level
+matrix (`mergeFile`) is loss-free by construction across add/add, modify/delete, and
+delete/modify. The command prints the `changes` changelog between versions (breaking
+flagged prominently), applies writes + conflict markers, advances the pristine store to
+the new version (removing the superseded snapshot), and exits **2** when conflicts remain
+(**1** on usage error, **0** clean). `--dry-run` reports the identical plan and exit code
+without writing; `--json` emits a stable `faqir-upgrade@1` envelope listing every file and
+conflict. Docs in `docs/pristine-store.md`. Tests: `tests/utils/merge.test.ts` (full merge
+matrix + marker/newline correctness) and `tests/commands/upgrade.test.ts` (fast-forward +
+pristine advancement, non-overlapping, conflict/exit-2, `--dry-run`, `--json` schema,
+up-to-date, uninstalled, no-baseline degradation). Full suite green (pre-existing
+toast/tooltip timer failures unrelated).
 
 ---
 

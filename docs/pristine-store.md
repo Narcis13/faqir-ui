@@ -1,4 +1,4 @@
-# The pristine store & `faqir diff`
+# The pristine store, `faqir diff` & `faqir upgrade`
 
 When `faqir add` installs a component it also keeps a **pristine copy** — a
 byte-exact snapshot of the component exactly as it was installed. That snapshot
@@ -121,3 +121,98 @@ Component manifests may carry a `changes` array — the per-version changelog
 
 The schema is in place as of task 0.5-04; entries are populated going forward.
 `breaking` entries are surfaced prominently before an upgrade applies any merge.
+
+## `faqir upgrade`
+
+```
+faqir upgrade button           # upgrade one component
+faqir upgrade                  # upgrade every installed component
+faqir upgrade button --dry-run # preview the merge without writing
+faqir upgrade button --json    # machine-readable merge report
+```
+
+`upgrade` runs a **three-way merge** over three copies of each component:
+
+| Side       | Where it comes from                                   |
+| ---------- | ----------------------------------------------------- |
+| **base**   | the pristine snapshot (`.faqir/pristine/`)            |
+| **ours**   | your working copy under `output_dir/<layer>/<name>/`  |
+| **theirs** | the component as it exists in the registry now        |
+
+For each file, edits only one side made apply cleanly (a file you never touched
+fast-forwards to the new version; a change the registry didn't touch keeps your
+edits). When both sides changed the **same** lines differently, `upgrade` writes
+standard git conflict markers and reports the file. The file-level matrix —
+including the tricky delete cases — is loss-free by construction:
+
+| base | ours | theirs | outcome                                                        |
+| ---- | ---- | ------ | ------------------------------------------------------------- |
+| ✓    | =base | changed | fast-forward to theirs (`updated`)                          |
+| ✓    | changed | =base | keep your edits (`unchanged`)                             |
+| ✓    | changed | changed | line-merge; overlaps → conflict markers                  |
+| ✗    | —    | new    | add the new file (`added`)                                    |
+| ✓    | =base | removed | apply the deletion (`deleted`)                             |
+| ✓    | changed | removed | **modify/delete** — your version is kept, reported       |
+| ✓    | removed | =base | your deletion is respected (`deleted`)                     |
+| ✓    | removed | changed | **delete/modify** — restored with conflict markers       |
+
+### Conflict markers
+
+Conflicts use git's `diff3` style — the same markers `git merge` writes, plus
+the common-ancestor section, which gives a resolver (human or agent) the context
+that makes a conflict resolvable:
+
+```
+<<<<<<< ours
+your line
+||||||| base (button@1.0.0)
+the original line
+=======
+the registry's new line
+>>>>>>> theirs (button@1.1.0)
+```
+
+Every side is present in the markers, so **no upgrade ever loses content** —
+resolve by editing the file down to the version you want.
+
+### `--json`
+
+```jsonc
+{
+  "schema": "faqir-upgrade@1",
+  "dryRun": false,
+  "components": [
+    {
+      "component": "button",
+      "layer": "primitives",
+      "fromVersion": "1.0.0",
+      "toVersion": "1.1.0",
+      "status": "conflicted",         // upgraded | conflicted | up-to-date | no-baseline | not-in-registry
+      "changes": [
+        { "version": "1.1.0", "note": "Renamed data-tone → data-variant.", "breaking": true }
+      ],
+      "breaking": true,
+      "files": [
+        { "path": "button.css",  "status": "updated",  "conflicts": 0 },
+        { "path": "button.html", "status": "conflict", "conflicts": 2, "note": "overlapping edits" }
+      ],
+      "conflictedFiles": ["button.html"],
+      "summary": { "updated": 1, "added": 0, "deleted": 0, "unchanged": 1, "conflicts": 1 }
+    }
+  ],
+  "hasConflicts": true
+}
+```
+
+### Exit codes & the pristine store
+
+- **0** — clean upgrade (or nothing to do).
+- **2** — the upgrade completed but wrote conflict markers you need to resolve.
+- **1** — a usage/setup error (no `faqir.config.json`, unknown component, …).
+
+On a real (non-`--dry-run`) apply the pristine store **advances to the new
+version** — the new snapshot becomes the baseline, and the superseded
+`{name}@{oldVersion}` directory is removed. Any conflict markers you haven't
+resolved yet simply read as drift the next time you run `faqir diff`. A
+`--dry-run` reports the identical plan (and the same exit code) without touching
+a single file.
