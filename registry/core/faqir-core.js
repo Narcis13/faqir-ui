@@ -1340,6 +1340,12 @@
 
           for (var i = 0; i < nodes.length; i++) {
             if (nodes[i].nodeType === 1) {
+              // Mark as initialized (mirrors handleFor) so a later
+              // walkChildren pass over an ancestor doesn't re-process these
+              // nodes — re-processing would re-bind handlers and evaluate
+              // expressions outside the scope they were rendered with.
+              nodes[i].__faqirScope = scope;
+              nodes[i].__faqirCleanups = nodes[i].__faqirCleanups || [];
               processElement(nodes[i], scope);
               walkChildren(nodes[i], scope);
             }
@@ -1518,7 +1524,12 @@
         processElement(nodes[j], childScope);
         walkChildren(nodes[j], childScope);
       }
-      return { key: key, scope: childScope, nodes: nodes };
+      // Re-capture the fragment's children: a top-level structural directive
+      // (l-if / nested l-for) replaces its <template> with an anchor comment
+      // plus rendered content INSIDE the fragment. The pre-processing `nodes`
+      // snapshot would re-insert the detached template and orphan the anchor,
+      // so the entry must own what the fragment actually holds now.
+      return { key: key, scope: childScope, nodes: [].slice.call(clone.childNodes) };
     }
 
     var currentEntries = [];
@@ -6285,6 +6296,18 @@ function createTooltip(root) {
         var descendants = rootEl.querySelectorAll('[l-data]');
         for (var d = 0; d < descendants.length; d++) processed.add(descendants[d]);
         processed.add(rootEl);
+      }
+    }
+
+    // Second controller sweep: structural directives (l-for / l-if) may have
+    // rendered recipe markup synchronously during the initTree pass above —
+    // after the first sweep ran and before the MutationObserver below starts.
+    // Controllers are double-init guarded, so re-invoking is a no-op for
+    // elements initialized by the first sweep.
+    for (var n2 = 0; n2 < names.length; n2++) {
+      var els2 = document.querySelectorAll('[data-ui="' + names[n2] + '"]');
+      for (var e2 = 0; e2 < els2.length; e2++) {
+        controllerRegistry[names[n2]](els2[e2]);
       }
     }
 

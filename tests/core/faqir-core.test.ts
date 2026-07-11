@@ -1063,6 +1063,100 @@ describe("Directives", () => {
       console.warn = origWarn;
       expect(warnings.some((w) => w.includes("l-for must be used on a <template>"))).toBe(true);
     });
+
+    // Regression: a structural directive as a TOP-LEVEL child of an l-for
+    // template replaces itself with an anchor comment inside the detached
+    // clone fragment. The entry must own the fragment's post-processing
+    // children, or the raw <template> gets re-inserted and never renders.
+    it("renders l-if as a top-level child of an l-for template", async () => {
+      document.body.innerHTML = `
+        <div l-data="{ items: [{ id: 1, ok: true }, { id: 2, ok: false }, { id: 3, ok: true }] }">
+          <template l-for="item in items">
+            <template l-if="item.ok">
+              <li l-text="'yes-' + item.id"></li>
+            </template>
+          </template>
+        </div>
+      `;
+      Faqir.start();
+      await tick();
+
+      const lis = Array.from(document.querySelectorAll("li"));
+      expect(lis.map((li) => li.textContent)).toEqual(["yes-1", "yes-3"]);
+      expect(document.querySelectorAll("template[l-if]").length).toBe(0);
+    });
+
+    it("reactively toggles a top-level l-if inside an l-for entry", async () => {
+      document.body.innerHTML = `
+        <div l-data="{ items: [{ id: 1, ok: false }] }">
+          <template l-for="item in items">
+            <template l-if="item.ok">
+              <li l-text="'on-' + item.id"></li>
+            </template>
+          </template>
+          <button @click="items[0].ok = !items[0].ok">toggle</button>
+        </div>
+      `;
+      Faqir.start();
+      await tick();
+      expect(document.querySelectorAll("li").length).toBe(0);
+
+      document.querySelector("button")!.click();
+      await tick();
+      expect(document.querySelector("li")?.textContent).toBe("on-1");
+
+      document.querySelector("button")!.click();
+      await tick();
+      expect(document.querySelectorAll("li").length).toBe(0);
+    });
+
+    it("renders nested l-for + l-if with cross-scope access", async () => {
+      document.body.innerHTML = `
+        <div l-data="{ cols: [{ id: 'a' }, { id: 'b' }] }">
+          <template l-for="col in cols">
+            <div>
+              <template l-for="tc in cols">
+                <template l-if="tc.id !== col.id">
+                  <em l-text="'move ' + col.id + ' to ' + tc.id"></em>
+                </template>
+              </template>
+            </div>
+          </template>
+        </div>
+      `;
+      Faqir.start();
+      await tick();
+
+      const ems = Array.from(document.querySelectorAll("em"));
+      expect(ems.map((e) => e.textContent)).toEqual(["move a to b", "move b to a"]);
+      expect(document.querySelectorAll("template[l-if], template[l-for]").length).toBe(0);
+    });
+
+    // Regression: recipes rendered synchronously by l-for during bootstrap's
+    // initTree pass appear after the first controller sweep and before the
+    // MutationObserver starts — the second sweep must pick them up.
+    it("initializes controllers on data-ui elements rendered by l-for at bootstrap", async () => {
+      const seen: Element[] = [];
+      Faqir.controller("test-widget", (el: Element) => {
+        if ((el as any)._testWidget) return (el as any)._testWidget;
+        (el as any)._testWidget = true;
+        seen.push(el);
+        return {};
+      });
+
+      document.body.innerHTML = `
+        <div l-data="{ items: ['x', 'y'] }">
+          <template l-for="item in items">
+            <div data-ui="test-widget" l-text="item"></div>
+          </template>
+        </div>
+      `;
+      Faqir.start();
+      await tick();
+
+      expect(seen.length).toBe(2);
+      expect(seen.map((el) => el.textContent)).toEqual(["x", "y"]);
+    });
   });
 
   describe("l-for keyed reconciliation", () => {

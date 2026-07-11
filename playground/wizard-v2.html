@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Faqir UI — Project Setup Wizard (v2)</title>
+
+  <!-- Tokens -->
+  <link rel="stylesheet" href="../registry/tokens/palette.css">
+  <link rel="stylesheet" href="../registry/tokens/spacing.css">
+  <link rel="stylesheet" href="../registry/tokens/typography.css">
+  <link rel="stylesheet" href="../registry/tokens/effects.css">
+  <link rel="stylesheet" href="../registry/tokens/motion.css">
+  <link rel="stylesheet" href="../registry/tokens/semantic.css">
+  <link rel="stylesheet" href="../registry/tokens/aliases.css">
+
+  <!-- Base -->
+  <link rel="stylesheet" href="../registry/base/reset.css">
+
+  <!-- Themes (all seven; JS toggles the `disabled` attribute) -->
+  <link rel="stylesheet" href="../registry/themes/default.css"   id="theme-default">
+  <link rel="stylesheet" href="../registry/themes/midnight.css"  id="theme-midnight"  disabled>
+  <link rel="stylesheet" href="../registry/themes/paper.css"     id="theme-paper"     disabled>
+  <link rel="stylesheet" href="../registry/themes/brutalist.css" id="theme-brutalist" disabled>
+  <link rel="stylesheet" href="../registry/themes/aurora.css"    id="theme-aurora"    disabled>
+  <link rel="stylesheet" href="../registry/themes/slate.css"     id="theme-slate"     disabled>
+  <link rel="stylesheet" href="../registry/themes/contrast.css"  id="theme-contrast"  disabled>
+
+  <!-- Primitives -->
+  <link rel="stylesheet" href="../registry/primitives/surface/surface.css">
+  <link rel="stylesheet" href="../registry/primitives/stack/stack.css">
+  <link rel="stylesheet" href="../registry/primitives/grid/grid.css">
+  <link rel="stylesheet" href="../registry/primitives/text/text.css">
+  <link rel="stylesheet" href="../registry/primitives/card/card.css">
+  <link rel="stylesheet" href="../registry/primitives/button/button.css">
+  <link rel="stylesheet" href="../registry/primitives/input/input.css">
+  <link rel="stylesheet" href="../registry/primitives/textarea/textarea.css">
+  <link rel="stylesheet" href="../registry/primitives/select/select.css">
+  <link rel="stylesheet" href="../registry/primitives/label/label.css">
+  <link rel="stylesheet" href="../registry/primitives/switch/switch.css">
+  <link rel="stylesheet" href="../registry/primitives/radio/radio.css">
+  <link rel="stylesheet" href="../registry/primitives/badge/badge.css">
+  <link rel="stylesheet" href="../registry/primitives/chip/chip.css">
+  <link rel="stylesheet" href="../registry/primitives/separator/separator.css">
+  <link rel="stylesheet" href="../registry/primitives/stepper/stepper.css">
+  <link rel="stylesheet" href="../registry/primitives/progress/progress.css">
+  <link rel="stylesheet" href="../registry/primitives/avatar/avatar.css">
+  <link rel="stylesheet" href="../registry/primitives/key-value/key-value.css">
+  <link rel="stylesheet" href="../registry/primitives/description-list/description-list.css">
+  <link rel="stylesheet" href="../registry/primitives/callout/callout.css">
+  <link rel="stylesheet" href="../registry/primitives/empty-state/empty-state.css">
+  <link rel="stylesheet" href="../registry/primitives/toggle/toggle.css">
+  <link rel="stylesheet" href="../registry/primitives/collapsible/collapsible.css">
+  <link rel="stylesheet" href="../registry/primitives/kbd/kbd.css">
+  <link rel="stylesheet" href="../registry/primitives/icon/icons.css">
+
+  <!-- Recipes -->
+  <link rel="stylesheet" href="../registry/recipes/alert-dialog/alert-dialog.css">
+  <link rel="stylesheet" href="../registry/recipes/slider/slider.css">
+  <link rel="stylesheet" href="../registry/recipes/input-otp/input-otp.css">
+  <link rel="stylesheet" href="../registry/recipes/calendar/calendar.css">
+  <link rel="stylesheet" href="../registry/recipes/qr-code/qr-code.css">
+  <link rel="stylesheet" href="../registry/recipes/tooltip/tooltip.css">
+  <link rel="stylesheet" href="../registry/recipes/toast/toast.css">
+
+  <!-- Faqir Core -->
+  <script src="../registry/core/faqir-core.js" defer></script>
+</head>
+<body>
+  <div l-cloak l-data="{
+    /* ── theme + chrome ─────────────────────────────────────── */
+    theme: 'default',
+    themes: ['default', 'midnight', 'paper', 'brutalist', 'aurora', 'slate', 'contrast'],
+    themeMeta: {
+      default:   { label: 'Default',  tagline: 'Clean, neutral, product-ready', icon: 'circle' },
+      midnight:  { label: 'Midnight', tagline: 'Deep blues for focus', icon: 'moon' },
+      paper:     { label: 'Paper',    tagline: 'Warm, editorial, calm', icon: 'file-text' },
+      brutalist: { label: 'Brutalist',tagline: 'Hard edges, high energy', icon: 'bold' },
+      aurora:    { label: 'Aurora',   tagline: 'Vivid gradients, playful', icon: 'sparkles' },
+      slate:     { label: 'Slate',    tagline: 'Muted, professional grey', icon: 'layers' },
+      contrast:  { label: 'Contrast', tagline: 'WCAG AAA, maximum legibility', icon: 'eye' }
+    },
+    darkMode: false,
+    setTheme(name) {
+      this.theme = name;
+      this.themes.forEach(t => { document.getElementById('theme-' + t).disabled = (t !== name); });
+    },
+    toggleDark() {
+      this.darkMode = !this.darkMode;
+      document.documentElement.setAttribute('data-theme', this.darkMode ? 'dark' : 'light');
+    },
+
+    /* ── wizard flow ────────────────────────────────────────── */
+    step: 1,
+    totalSteps: 6,
+    launched: false,
+    stepLabels: ['Profile', 'Project', 'Appearance', 'Components', 'Verify', 'Review'],
+
+    /* Step 1 — Profile */
+    name: '',
+    email: '',
+    role: 'developer',
+
+    /* Step 2 — Project */
+    projectName: '',
+    projectType: 'web',
+    description: '',
+
+    /* Step 3 — Appearance */
+    density: 'comfortable',
+
+    /* Step 4 — Components */
+    allComponents: [
+      { id: 'input',       name: 'Input',        cat: 'forms',    size: 1.1 },
+      { id: 'textarea',    name: 'Textarea',     cat: 'forms',    size: 1.0 },
+      { id: 'select',      name: 'Select',       cat: 'forms',    size: 1.3 },
+      { id: 'switch',      name: 'Switch',       cat: 'forms',    size: 0.9 },
+      { id: 'radio',       name: 'Radio',        cat: 'forms',    size: 0.8 },
+      { id: 'slider',      name: 'Slider',       cat: 'forms',    size: 2.4 },
+      { id: 'dialog',      name: 'Dialog',       cat: 'overlays', size: 2.1 },
+      { id: 'drawer',      name: 'Drawer',       cat: 'overlays', size: 2.0 },
+      { id: 'popover',     name: 'Popover',      cat: 'overlays', size: 1.8 },
+      { id: 'tooltip',     name: 'Tooltip',      cat: 'overlays', size: 1.5 },
+      { id: 'alert-dialog',name: 'Alert dialog', cat: 'overlays', size: 2.2 },
+      { id: 'table',       name: 'Table',        cat: 'data',     size: 3.1 },
+      { id: 'pagination',  name: 'Pagination',   cat: 'data',     size: 1.4 },
+      { id: 'stat',        name: 'Stat',         cat: 'data',     size: 0.9 },
+      { id: 'key-value',   name: 'Key-value',    cat: 'data',     size: 0.7 },
+      { id: 'calendar',    name: 'Calendar',     cat: 'data',     size: 3.6 }
+    ],
+    picks: {
+      input: true, textarea: false, select: true, switch: false, radio: false, slider: false,
+      dialog: true, drawer: false, popover: false, tooltip: true, 'alert-dialog': false,
+      table: true, pagination: false, stat: true, 'key-value': false, calendar: false
+    },
+    iconCount: 60,
+    catLabels: { forms: 'Forms', overlays: 'Overlays', data: 'Data display' },
+    catBlurb: {
+      forms: 'Text inputs, selects, switches, radios and the range slider — everything a data-entry screen needs.',
+      overlays: 'Dialogs, drawers, popovers and tooltips. Each ships focus-trapping, Escape handling and ARIA roles.',
+      data: 'Tables, pagination, stats and calendars for read-heavy dashboards and reports.'
+    },
+    catComponents(cat) { return this.allComponents.filter(c => c.cat === cat); },
+    get selectedComponents() { return this.allComponents.filter(c => this.picks[c.id]); },
+    get bundleCount() { return this.selectedComponents.length; },
+    get bundleSize() {
+      const comp = this.selectedComponents.reduce((s, c) => s + c.size, 0);
+      const icons = this.iconCount * 0.08;
+      return (comp + icons).toFixed(1);
+    },
+
+    /* Step 5 — Verify */
+    otp: '',
+    otpVerified: false,
+    kickoffDate: null,
+    onOtpChange(e) {
+      this.otp = e.detail.value;
+      if (this.otp.length < 6) this.otpVerified = false;
+    },
+    onOtpComplete() { this.otpVerified = true; },
+    onKickoff(e) { this.kickoffDate = e.detail.date; },
+    get kickoffLabel() {
+      if (!this.kickoffDate) return 'No date selected';
+      const d = new Date(this.kickoffDate + 'T00:00:00');
+      return d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    },
+
+    /* ── derived ────────────────────────────────────────────── */
+    get initials() {
+      const parts = this.name.trim().split(/\s+/).filter(Boolean);
+      if (!parts.length) return '?';
+      return (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+    },
+    get emailValid() { return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(this.email.trim()); },
+    get slug() {
+      const s = this.projectName.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+      return s || 'my-project';
+    },
+    get descCount() { return this.description.length; },
+    get roleLabel() {
+      return ({ developer: 'Developer', designer: 'Designer', pm: 'Product Manager', founder: 'Founder' })[this.role] || this.role;
+    },
+    get typeLabel() {
+      return ({ web: 'Web app', api: 'API service', cli: 'CLI tool', lib: 'Component library' })[this.projectType] || this.projectType;
+    },
+    get progressPct() { return Math.round(this.step / this.totalSteps * 100); },
+    get contentGap() { return this.density === 'compact' ? '3' : '5'; },
+
+    stepValid(n) {
+      if (n === 1) return this.name.trim().length > 0 && this.emailValid;
+      if (n === 2) return this.projectName.trim().length > 0 && this.description.length <= 200;
+      if (n === 4) return this.bundleCount > 0;
+      if (n === 5) return this.otpVerified && !!this.kickoffDate;
+      return true;
+    },
+    get canNext() { return this.stepValid(this.step); },
+    get nextHint() {
+      if (this.canNext) return '';
+      if (this.step === 1) return 'Enter your name and a valid email to continue.';
+      if (this.step === 2) return 'Give the project a name (and keep the description under 200 characters).';
+      if (this.step === 4) return 'Select at least one starter component.';
+      if (this.step === 5) return 'Verify the 6-digit code and pick a kickoff date.';
+      return '';
+    },
+
+    /* ── review / launch ────────────────────────────────────── */
+    get launchCommand() {
+      const comps = this.selectedComponents.map(c => c.id).join(' ') || 'button';
+      const dark = this.darkMode ? ' --dark' : '';
+      return 'faqir init ' + this.slug + ' --theme ' + this.theme + ' --density ' + this.density + dark +
+             ' \\\n  && faqir add ' + comps + ' \\\n  && faqir icons --subset ' + this.iconCount;
+    },
+    get qrValue() {
+      return 'https://faqir.dev/init?p=' + this.slug + '&theme=' + this.theme + '&dark=' + (this.darkMode ? 1 : 0);
+    },
+    copyCommand() {
+      const cmd = this.launchCommand.replace(/\\\n\s*/g, '');
+      const done = () => this.notify('Command copied to clipboard', 'success', '&#x2713;');
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(cmd).then(done, () => this.notify('Copy failed — select the text manually', 'error', '&#x2717;'));
+      } else { done(); }
+    },
+    notify(message, tone, icon) {
+      const c = document.getElementById('wizard-toasts');
+      if (c && c._faqirToast) c._faqirToast.add({ message, tone: tone || 'default', icon: icon || '&#x2139;' });
+    },
+    launch() {
+      this.launched = true;
+      this.notify('Project ' + this.slug + ' created', 'success', '&#x2713;');
+    },
+
+    /* ── navigation ─────────────────────────────────────────── */
+    next() {
+      if (!this.canNext) return;
+      if (this.step < this.totalSteps) this.step++;
+    },
+    back() { if (this.step > 1) this.step--; },
+    goToStep(n) { if (n < this.step) this.step = n; },
+    startOver() {
+      this.step = 1;
+      this.launched = false;
+      this.name = ''; this.email = ''; this.role = 'developer';
+      this.projectName = ''; this.projectType = 'web'; this.description = '';
+      this.density = 'comfortable';
+      this.iconCount = 60;
+      this.otp = ''; this.otpVerified = false; this.kickoffDate = null;
+      this.notify('Wizard reset — starting fresh', 'default', '&#x21BA;');
+    }
+  }">
+
+  <div data-ui="surface" data-variant="flat" data-max="md" data-size="lg">
+    <div data-ui="stack" data-gap="6">
+
+      <!-- ── Header ───────────────────────────────────────────── -->
+      <header role="banner" data-ui="stack" data-variant="horizontal" data-gap="4" data-align="center" data-justify="between" data-wrap data-responsive>
+        <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center">
+          <span data-ui="icon" data-icon="sparkles" role="img" aria-label="Faqir" style="font-size:1.75rem; color:var(--color-primary)"></span>
+          <div data-ui="stack" data-gap="1">
+            <h1 data-ui="heading" data-size="3">Project Setup Wizard</h1>
+            <p data-ui="text" data-size="sm" data-variant="muted">Spin up a new Faqir UI project in six guided steps.</p>
+          </div>
+        </div>
+        <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center" data-wrap>
+          <label data-ui="label" for="theme-select" style="white-space:nowrap">Theme</label>
+          <select id="theme-select" data-ui="select" data-size="sm" l-model="theme" @change="setTheme(theme)" aria-label="Page theme">
+            <option value="default">Default</option>
+            <option value="midnight">Midnight</option>
+            <option value="paper">Paper</option>
+            <option value="brutalist">Brutalist</option>
+            <option value="aurora">Aurora</option>
+            <option value="slate">Slate</option>
+            <option value="contrast">Contrast (WCAG AAA)</option>
+          </select>
+          <label data-ui="switch-label">
+            <input data-ui="switch" type="checkbox" role="switch" @change="toggleDark()" :checked="darkMode">
+            <span data-ui="text" data-size="sm" l-text="darkMode ? 'Dark' : 'Light'"></span>
+          </label>
+        </div>
+      </header>
+
+      <!-- ── Progress: stepper + bar ──────────────────────────── -->
+      <template l-if="!launched">
+        <div data-ui="stack" data-gap="3">
+          <nav data-ui="stepper" aria-label="Setup progress">
+            <template l-for="(label, i) in stepLabels">
+              <div data-part="step"
+                   :data-state="step > (i + 1) ? 'completed' : (step === (i + 1) ? 'active' : '')"
+                   :role="step > (i + 1) ? 'button' : null"
+                   :tabindex="step > (i + 1) ? '0' : null"
+                   :aria-label="step > (i + 1) ? ('Go back to step ' + (i + 1) + ': ' + label) : null"
+                   :style="step > (i + 1) ? 'cursor:pointer' : ''"
+                   @click="goToStep(i + 1)"
+                   @keydown.enter="goToStep(i + 1)">
+                <span data-part="indicator" l-text="step > (i + 1) ? '✓' : (i + 1)"></span>
+                <span data-part="label" l-text="label"></span>
+              </div>
+              <template l-if="i < stepLabels.length - 1">
+                <div data-part="connector" :data-state="step > (i + 1) ? 'completed' : ''"></div>
+              </template>
+            </template>
+          </nav>
+
+          <div data-ui="progress" data-size="sm" role="progressbar" :aria-valuenow="progressPct" aria-valuemin="0" aria-valuemax="100" aria-label="Overall progress">
+            <div data-part="track">
+              <div data-part="fill" :style="'width:' + progressPct + '%'"></div>
+            </div>
+            <span data-part="label" l-text="progressPct + '%'"></span>
+          </div>
+
+          <p data-ui="text" data-size="sm" data-variant="muted" data-align="center">
+            Step <span l-text="step"></span> of <span l-text="totalSteps"></span> — <span l-text="stepLabels[step - 1]"></span>
+          </p>
+        </div>
+      </template>
+
+      <!-- ══════════════ STEP 1 — PROFILE ══════════════ -->
+      <div data-ui="card" l-show="!launched && step === 1">
+        <div data-part="header">
+          <h2 data-part="title">Your profile</h2>
+          <p data-part="description">Tell us who is setting up this project.</p>
+        </div>
+        <div data-part="body">
+          <div data-ui="stack" :data-gap="contentGap">
+            <div data-ui="stack" data-variant="horizontal" data-gap="4" data-align="center">
+              <span data-ui="avatar" data-size="lg" aria-hidden="true">
+                <span data-part="fallback" l-text="initials"></span>
+              </span>
+              <div data-ui="stack" data-gap="0">
+                <span data-ui="text" data-weight="medium" l-text="name.trim() || 'Your name'"></span>
+                <span data-ui="text" data-size="sm" data-variant="muted" l-text="roleLabel"></span>
+              </div>
+            </div>
+
+            <div data-ui="grid" data-cols="2" data-cols-sm="1" data-gap="4">
+              <div data-ui="stack" data-gap="2">
+                <label data-ui="label" for="p-name">Full name</label>
+                <input id="p-name" data-ui="input" placeholder="Ada Lovelace" l-model="name" autocomplete="name">
+              </div>
+              <div data-ui="stack" data-gap="2">
+                <label data-ui="label" for="p-email">Email</label>
+                <input id="p-email" data-ui="input" type="email" placeholder="ada@example.com" l-model="email"
+                       autocomplete="email" :data-state="email && !emailValid ? 'error' : ''"
+                       :aria-invalid="email && !emailValid ? 'true' : 'false'">
+                <template l-if="email && !emailValid">
+                  <span data-ui="text" data-size="sm" data-variant="destructive">Enter a valid email address.</span>
+                </template>
+              </div>
+            </div>
+
+            <div data-ui="stack" data-gap="2">
+              <label data-ui="label" for="p-role">Role</label>
+              <select id="p-role" data-ui="select" l-model="role">
+                <option value="developer">Developer</option>
+                <option value="designer">Designer</option>
+                <option value="pm">Product Manager</option>
+                <option value="founder">Founder</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════ STEP 2 — PROJECT ══════════════ -->
+      <div data-ui="card" l-show="!launched && step === 2">
+        <div data-part="header">
+          <h2 data-part="title">Project details</h2>
+          <p data-part="description">Name it, pick a type, and describe what you are building.</p>
+        </div>
+        <div data-part="body">
+          <div data-ui="stack" :data-gap="contentGap">
+            <div data-ui="stack" data-gap="2">
+              <label data-ui="label" for="pr-name">Project name</label>
+              <input id="pr-name" data-ui="input" placeholder="Acme Dashboard" l-model="projectName">
+              <dl data-ui="key-value" data-variant="inline" data-size="sm" aria-label="Generated slug">
+                <dt data-part="label">URL preview</dt>
+                <dd data-part="value"><span style="font-family:var(--font-mono)">faqir.dev/p/<span l-text="slug"></span></span></dd>
+              </dl>
+            </div>
+
+            <fieldset data-ui="radio-group">
+              <legend data-ui="label">Project type</legend>
+              <div data-ui="grid" data-cols="2" data-cols-sm="1" data-gap="3">
+                <label data-ui="radio-label">
+                  <input data-ui="radio" type="radio" name="ptype" value="web" l-model="projectType">
+                  <span data-part="label">Web app — pages, dashboards, forms</span>
+                </label>
+                <label data-ui="radio-label">
+                  <input data-ui="radio" type="radio" name="ptype" value="api" l-model="projectType">
+                  <span data-part="label">API service — headless backend</span>
+                </label>
+                <label data-ui="radio-label">
+                  <input data-ui="radio" type="radio" name="ptype" value="cli" l-model="projectType">
+                  <span data-part="label">CLI tool — terminal-first</span>
+                </label>
+                <label data-ui="radio-label">
+                  <input data-ui="radio" type="radio" name="ptype" value="lib" l-model="projectType">
+                  <span data-part="label">Component library — reusable UI</span>
+                </label>
+              </div>
+            </fieldset>
+
+            <div data-ui="stack" data-gap="2">
+              <label data-ui="label" for="pr-desc">Description</label>
+              <textarea id="pr-desc" data-ui="textarea" rows="3" placeholder="A short summary of the project…"
+                        l-model="description" maxlength="200" :data-state="descCount > 200 ? 'error' : ''"></textarea>
+              <div data-ui="stack" data-variant="horizontal" data-gap="2" data-justify="between">
+                <span data-ui="text" data-size="xs" data-variant="muted">Appears in your project's README.</span>
+                <span data-ui="text" data-size="xs" :data-variant="descCount > 180 ? 'destructive' : 'muted'" data-tabular>
+                  <span l-text="descCount"></span>/200
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════ STEP 3 — APPEARANCE ══════════════ -->
+      <div data-ui="card" l-show="!launched && step === 3">
+        <div data-part="header">
+          <h2 data-part="title">Appearance</h2>
+          <p data-part="description">Pick a theme — the whole page switches live so you see exactly what ships.</p>
+        </div>
+        <div data-part="body">
+          <div data-ui="stack" :data-gap="contentGap">
+            <div data-ui="grid" data-cols="3" data-cols-md="2" data-cols-sm="1" data-gap="3" role="group" aria-label="Theme">
+              <template l-for="t in themes">
+                <button data-ui="toggle" type="button" :aria-pressed="theme === t ? 'true' : 'false'"
+                        @click="setTheme(t)"
+                        style="justify-content:flex-start; height:auto; padding:var(--space-3); text-align:left">
+                  <span data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center" style="width:100%">
+                    <span data-ui="icon" :data-icon="themeMeta[t].icon" aria-hidden="true" style="font-size:1.25rem"></span>
+                    <span data-ui="stack" data-gap="0">
+                      <span data-ui="text" data-size="sm" data-weight="medium" l-text="themeMeta[t].label"></span>
+                      <span data-ui="text" data-size="xs" data-variant="muted" l-text="themeMeta[t].tagline"></span>
+                    </span>
+                    <template l-if="theme === t">
+                      <span data-ui="icon" data-icon="check" role="img" aria-label="Selected" style="font-size:1rem; margin-left:auto; color:var(--color-primary)"></span>
+                    </template>
+                  </span>
+                </button>
+              </template>
+            </div>
+
+            <div data-ui="separator"></div>
+
+            <div data-ui="grid" data-cols="2" data-cols-sm="1" data-gap="4">
+              <div data-ui="stack" data-gap="2">
+                <label data-ui="label" for="ap-density">Density</label>
+                <select id="ap-density" data-ui="select" l-model="density">
+                  <option value="comfortable">Comfortable</option>
+                  <option value="compact">Compact</option>
+                </select>
+                <span data-ui="text" data-size="xs" data-variant="muted">Controls the spacing of step content — try it, the gaps update instantly.</span>
+              </div>
+              <div data-ui="stack" data-gap="2">
+                <span data-ui="label">Dark mode</span>
+                <label data-ui="switch-label">
+                  <input data-ui="switch" type="checkbox" role="switch" @change="toggleDark()" :checked="darkMode">
+                  <span data-ui="text" data-size="sm" l-text="darkMode ? 'On' : 'Off'"></span>
+                </label>
+                <span data-ui="text" data-size="xs" data-variant="muted">Every theme is defined for both light and dark.</span>
+              </div>
+            </div>
+
+            <div data-ui="stack" data-gap="2">
+              <span data-ui="label">Accent preview</span>
+              <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center" data-wrap>
+                <button data-ui="button" data-variant="primary" type="button">Primary</button>
+                <button data-ui="button" data-variant="secondary" type="button">Secondary</button>
+                <button data-ui="button" data-variant="outline" type="button">Outline</button>
+                <span data-ui="badge" data-variant="primary">Primary</span>
+                <span data-ui="badge" data-variant="success">Success</span>
+                <span data-ui="badge" data-variant="warning">Warning</span>
+                <span data-ui="badge" data-variant="destructive">Destructive</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════ STEP 4 — COMPONENTS ══════════════ -->
+      <div data-ui="card" l-show="!launched && step === 4">
+        <div data-part="header">
+          <h2 data-part="title">Starter components</h2>
+          <p data-part="description">Toggle the components to scaffold. The bundle estimate updates live.</p>
+        </div>
+        <div data-part="body">
+          <div data-ui="stack" :data-gap="contentGap">
+
+            <div data-ui="callout" data-variant="info" role="status" aria-live="polite">
+              <span data-part="icon">
+                <span data-ui="icon" data-icon="package" aria-hidden="true" style="font-size:1rem"></span>
+              </span>
+              <div data-part="content">
+                <p>
+                  <span data-ui="badge" data-variant="primary"><span l-text="bundleCount"></span> components</span>
+                  &nbsp;·&nbsp; <strong><span l-text="bundleSize"></span> KB</strong> gzip · including
+                  <span l-text="iconCount"></span> icons
+                </p>
+              </div>
+            </div>
+
+            <template l-for="cat in ['forms', 'overlays', 'data']">
+              <div data-ui="stack" data-gap="2">
+                <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center">
+                  <span data-ui="text" data-size="sm" data-weight="medium" l-text="catLabels[cat]"></span>
+                  <div data-ui="separator" style="flex:1"></div>
+                </div>
+                <div data-ui="stack" data-variant="horizontal" data-gap="2" data-wrap>
+                  <template l-for="c in catComponents(cat)">
+                    <button data-ui="toggle" data-size="sm" type="button"
+                            :aria-pressed="picks[c.id] ? 'true' : 'false'"
+                            @click="picks[c.id] = !picks[c.id]">
+                      <span aria-hidden="true" l-text="picks[c.id] ? '✓' : '+'"></span>
+                      <span l-text="c.name"></span>
+                    </button>
+                  </template>
+                </div>
+                <details data-ui="collapsible" data-variant="bordered">
+                  <summary data-part="trigger">What's included?</summary>
+                  <div data-part="content" l-text="catBlurb[cat]"></div>
+                </details>
+              </div>
+            </template>
+
+            <div data-ui="separator"></div>
+
+            <div data-ui="stack" data-gap="2">
+              <div data-ui="stack" data-variant="horizontal" data-gap="2" data-justify="between" data-align="center">
+                <label data-ui="label" for="icon-slider">Icon subset</label>
+                <span data-ui="text" data-size="sm" data-variant="muted" data-tabular><span l-text="iconCount"></span> of 120 icons</span>
+              </div>
+              <div id="icon-slider" data-ui="slider" data-variant="single" data-min="0" data-max="120" data-step="10"
+                   data-value="60" style="--slider-start: 0%; --slider-end: 50%"
+                   @faqir:change="iconCount = $event.detail.value">
+                <div data-part="track">
+                  <div data-part="range"></div>
+                  <div data-part="thumb" role="slider" tabindex="0" aria-label="Number of icons to bundle"
+                       aria-valuemin="0" aria-valuemax="120" aria-valuenow="60" style="--pos: 50%"></div>
+                </div>
+                <output data-part="output" l-text="iconCount">60</output>
+              </div>
+              <span data-ui="text" data-size="xs" data-variant="muted">Ship only the glyphs you use — each icon is a tiny CSS mask (~0.08 KB).</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════ STEP 5 — VERIFY ══════════════ -->
+      <div data-ui="card" l-show="!launched && step === 5">
+        <div data-part="header">
+          <h2 data-part="title">Verify &amp; schedule</h2>
+          <p data-part="description">Confirm the workspace code and choose a kickoff date.</p>
+        </div>
+        <div data-part="body">
+          <div data-ui="stack" :data-gap="contentGap">
+
+            <div data-ui="stack" data-gap="3" data-align="center">
+              <div data-ui="stack" data-gap="1" data-align="center">
+                <span data-ui="label">Workspace verification code</span>
+                <span data-ui="text" data-size="sm" data-variant="muted">
+                  Enter the 6-digit code — for this demo, use <kbd data-ui="kbd">482913</kbd>
+                </span>
+              </div>
+              <div data-ui="input-otp" data-length="6" data-mode="numeric"
+                   @faqir:change="onOtpChange($event)" @faqir:complete="onOtpComplete()">
+                <input data-part="input" type="text" inputmode="numeric" autocomplete="one-time-code"
+                       pattern="[0-9]*" maxlength="6" autocapitalize="off" autocorrect="off" spellcheck="false"
+                       aria-label="Workspace verification code">
+                <div data-part="segments" aria-hidden="true">
+                  <div data-part="segment"></div>
+                  <div data-part="segment"></div>
+                  <div data-part="segment"></div>
+                  <div data-part="segment"></div>
+                  <div data-part="segment"></div>
+                  <div data-part="segment"></div>
+                </div>
+              </div>
+              <template l-if="otpVerified">
+                <div data-ui="callout" data-variant="success" role="status" aria-live="polite" style="width:100%">
+                  <span data-part="icon"><span data-ui="icon" data-icon="shield-check" aria-hidden="true" style="font-size:1rem"></span></span>
+                  <div data-part="content"><p>Workspace verified. You're cleared to launch.</p></div>
+                </div>
+              </template>
+            </div>
+
+            <div data-ui="separator"></div>
+
+            <div data-ui="stack" data-gap="3">
+              <span data-ui="label">Project kickoff date</span>
+              <div data-ui="stack" data-variant="horizontal" data-gap="4" data-wrap data-justify="center">
+                <div data-ui="calendar" data-size="md" data-min="2026-07-11"
+                     @faqir:calendar-change="onKickoff($event)">
+                  <div data-part="header">
+                    <button data-part="nav-prev" type="button" aria-label="Previous month">&lsaquo;</button>
+                    <span data-part="month-label"></span>
+                    <button data-part="nav-next" type="button" aria-label="Next month">&rsaquo;</button>
+                  </div>
+                  <table data-part="grid" role="grid" aria-label="Kickoff date">
+                    <thead>
+                      <tr>
+                        <th scope="col" abbr="Sunday">Su</th>
+                        <th scope="col" abbr="Monday">Mo</th>
+                        <th scope="col" abbr="Tuesday">Tu</th>
+                        <th scope="col" abbr="Wednesday">We</th>
+                        <th scope="col" abbr="Thursday">Th</th>
+                        <th scope="col" abbr="Friday">Fr</th>
+                        <th scope="col" abbr="Saturday">Sa</th>
+                      </tr>
+                    </thead>
+                    <tbody data-part="grid-body"></tbody>
+                  </table>
+                </div>
+              </div>
+              <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center" data-justify="center">
+                <span data-ui="icon" data-icon="calendar" aria-hidden="true" style="font-size:1rem; color:var(--color-fg-muted)"></span>
+                <span data-ui="text" data-size="sm" :data-variant="kickoffDate ? 'default' : 'muted'" l-text="kickoffLabel"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════ STEP 6 — REVIEW ══════════════ -->
+      <div data-ui="card" l-show="!launched && step === 6">
+        <div data-part="header">
+          <h2 data-part="title">Review &amp; launch</h2>
+          <p data-part="description">Everything checks out? Ship it.</p>
+        </div>
+        <div data-part="body">
+          <div data-ui="stack" :data-gap="contentGap">
+
+            <dl data-ui="key-value">
+              <dt data-part="label">Owner</dt>
+              <dd data-part="value"><span l-text="name.trim() || '—'"></span> · <span l-text="roleLabel"></span></dd>
+              <dt data-part="label">Email</dt>
+              <dd data-part="value" l-text="email.trim() || '—'"></dd>
+              <dt data-part="label">Project</dt>
+              <dd data-part="value"><span l-text="projectName.trim() || '—'"></span> (<span l-text="typeLabel"></span>)</dd>
+              <dt data-part="label">Slug</dt>
+              <dd data-part="value"><span style="font-family:var(--font-mono)" l-text="slug"></span></dd>
+              <dt data-part="label">Theme</dt>
+              <dd data-part="value"><span l-text="themeMeta[theme].label"></span> · <span l-text="darkMode ? 'Dark' : 'Light'"></span> · <span l-text="density"></span></dd>
+              <dt data-part="label">Kickoff</dt>
+              <dd data-part="value" l-text="kickoffLabel"></dd>
+              <dt data-part="label">Bundle</dt>
+              <dd data-part="value"><span l-text="bundleCount"></span> components · <span l-text="iconCount"></span> icons · ~<span l-text="bundleSize"></span> KB</dd>
+            </dl>
+
+            <div data-ui="stack" data-gap="1">
+              <span data-ui="label">Components</span>
+              <div data-ui="stack" data-variant="horizontal" data-gap="1" data-wrap>
+                <template l-for="c in selectedComponents">
+                  <span data-ui="chip" data-size="sm"><span data-part="label" l-text="c.name"></span></span>
+                </template>
+              </div>
+            </div>
+
+            <div data-ui="stack" data-gap="2">
+              <div data-ui="stack" data-variant="horizontal" data-gap="2" data-justify="between" data-align="center">
+                <span data-ui="label">Generated command</span>
+                <button data-ui="button" data-variant="outline" data-size="sm" type="button" @click="copyCommand()">
+                  <span data-ui="icon" data-icon="copy" aria-hidden="true" style="font-size:0.9rem"></span>
+                  Copy
+                </button>
+              </div>
+              <pre style="margin:0; overflow-x:auto; padding:var(--space-4); background:var(--color-bg-muted); border:1px solid var(--color-border); border-radius:var(--radius-md)"><code style="font-family:var(--font-mono); color:var(--color-fg); white-space:pre-wrap; word-break:break-word" l-text="launchCommand"></code></pre>
+            </div>
+
+            <div data-ui="stack" data-gap="3" data-align="center">
+              <div data-ui="qr-code" :data-value="qrValue" data-size="md" role="img" aria-label="QR code linking to this project setup">
+                <span data-part="caption">Scan to open this setup on another device</span>
+              </div>
+            </div>
+
+            <button data-ui="button" data-variant="primary" data-size="lg" type="button" @click="launch()" style="width:100%">
+              <span data-ui="icon" data-icon="zap" aria-hidden="true" style="font-size:1rem"></span>
+              Launch project
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════ SUCCESS ══════════════ -->
+      <template l-if="launched">
+        <div data-ui="card">
+          <div data-part="body">
+            <div data-ui="empty-state">
+              <span data-part="icon">
+                <span data-ui="icon" data-icon="sparkles" role="img" aria-label="Success" style="font-size:2.5rem; color:var(--color-primary)"></span>
+              </span>
+              <h2 data-part="title">You're ready</h2>
+              <p data-part="description">
+                <strong l-text="projectName.trim() || 'Your project'"></strong> is scaffolded with
+                <span l-text="bundleCount"></span> components and the <span l-text="themeMeta[theme].label"></span> theme.
+                Open it in your editor and start building.
+              </p>
+              <div data-part="actions">
+                <div data-ui="stack" data-gap="4" data-align="center">
+                  <div data-ui="stack" data-variant="horizontal" data-gap="1" data-wrap data-justify="center">
+                    <template l-for="c in selectedComponents">
+                      <span data-ui="badge" data-size="sm" data-variant="secondary" l-text="c.name"></span>
+                    </template>
+                  </div>
+                  <div data-ui="stack" data-variant="horizontal" data-gap="3" data-wrap data-justify="center">
+                    <button data-ui="button" data-variant="outline" type="button" @click="startOver()">
+                      <span data-ui="icon" data-icon="refresh-cw" aria-hidden="true" style="font-size:0.9rem"></span>
+                      Set up another
+                    </button>
+                    <a data-ui="button" data-variant="primary" href="dashboard-v2.html">Open dashboard demo</a>
+                  </div>
+                  <div data-ui="stack" data-variant="horizontal" data-gap="3" data-wrap data-justify="center" data-align="center">
+                    <span data-ui="text" data-size="sm" data-variant="muted">More v2 demos:</span>
+                    <a data-ui="link" href="index-v2.html">Gallery</a>
+                    <a data-ui="link" href="kanban-v2.html">Kanban</a>
+                    <a data-ui="link" href="store-v2.html">Store</a>
+                    <a data-ui="link" href="task-manager-v2.html">Task manager</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- ── Navigation + guard rails ─────────────────────────── -->
+      <!-- l-show (not l-if): keeps the alert-dialog recipe in the DOM so it initializes on load -->
+      <div l-show="!launched">
+        <div data-ui="stack" data-gap="2">
+          <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center" data-justify="between" data-wrap>
+            <!-- Start over → alert-dialog confirm (destructive) -->
+            <div data-ui="alert-dialog" data-state="closed" id="startover-alert" @faqir:confirm="startOver()">
+              <button data-part="trigger" data-ui="button" data-variant="ghost">
+                <span data-ui="icon" data-icon="trash-2" aria-hidden="true" style="font-size:0.9rem"></span>
+                Start over
+              </button>
+              <div data-part="overlay" hidden></div>
+              <div data-part="panel" role="alertdialog" aria-modal="true"
+                   aria-labelledby="startover-title" aria-describedby="startover-desc"
+                   data-variant="destructive" data-size="sm" hidden>
+                <div data-part="header">
+                  <h2 id="startover-title" data-part="title">Start over?</h2>
+                </div>
+                <div data-part="body">
+                  <p id="startover-desc" data-part="description">
+                    This clears every answer and returns you to step one. This cannot be undone.
+                  </p>
+                </div>
+                <div data-part="footer">
+                  <button data-ui="button" data-part="cancel" data-variant="outline">Keep my answers</button>
+                  <button data-ui="button" data-part="confirm" data-variant="destructive">Start over</button>
+                </div>
+              </div>
+            </div>
+
+            <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center">
+              <button data-ui="button" data-variant="outline" type="button" @click="back()" :disabled="step === 1">
+                <span data-ui="icon" data-icon="chevron-left" aria-hidden="true" style="font-size:0.9rem"></span>
+                Back
+              </button>
+              <template l-if="step < totalSteps">
+                <button data-ui="button" data-variant="primary" type="button" @click="next()" :disabled="!canNext"
+                        :aria-describedby="!canNext ? 'next-hint' : null">
+                  Continue
+                  <span data-ui="icon" data-icon="arrow-right" aria-hidden="true" style="font-size:0.9rem"></span>
+                </button>
+              </template>
+              <template l-if="step === totalSteps">
+                <span data-ui="text" data-size="sm" data-variant="muted">Review below, then launch.</span>
+              </template>
+            </div>
+          </div>
+
+          <template l-if="nextHint">
+            <p id="next-hint" data-ui="text" data-size="sm" data-variant="muted" data-align="right">
+              <span data-ui="icon" data-icon="info" aria-hidden="true" style="font-size:0.85rem"></span>
+              <span l-text="nextHint"></span>
+            </p>
+          </template>
+        </div>
+      </div>
+
+      <!-- ── Footer ───────────────────────────────────────────── -->
+      <footer data-ui="surface" data-variant="flat" data-size="sm" data-align-text="center">
+        <p data-ui="text" data-size="xs" data-variant="subtle">
+          Faqir UI — 58 components · 8 themes · 0 CSS classes. View source: every element is data-attributes + tokens.
+        </p>
+      </footer>
+
+    </div>
+  </div>
+
+  <!-- Toast host -->
+  <div data-ui="toast" data-part="container" data-variant="bottom-right" role="region" aria-label="Notifications" id="wizard-toasts"></div>
+
+  </div>
+</body>
+</html>

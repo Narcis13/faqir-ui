@@ -24,7 +24,7 @@
 }
 
 /* ── Parts ── */
-[data-ui="card"] [data-part="header"] {
+[data-ui="card"] > [data-part="header"] {
   display: flex;
   flex-direction: column;
   gap: var(--space-1, 0.25rem);
@@ -32,7 +32,7 @@
   padding-bottom: 0;
 }
 
-[data-ui="card"] [data-part="title"] {
+[data-ui="card"] > [data-part="header"] > [data-part="title"] {
   font-family: var(--font-sans);
   font-size: var(--text-lg);
   font-weight: var(--weight-semibold);
@@ -41,18 +41,18 @@
   margin: 0;
 }
 
-[data-ui="card"] [data-part="description"] {
+[data-ui="card"] > [data-part="header"] > [data-part="description"] {
   font-size: var(--text-sm);
   color: var(--color-fg-muted);
   margin: 0;
 }
 
-[data-ui="card"] [data-part="body"] {
+[data-ui="card"] > [data-part="body"] {
   padding: var(--card-padding, var(--space-6));
   flex: 1;
 }
 
-[data-ui="card"] [data-part="footer"] {
+[data-ui="card"] > [data-part="footer"] {
   display: flex;
   align-items: center;
   gap: var(--space-2, 0.5rem);
@@ -62,14 +62,14 @@
 }
 
 /* ── Sizes ── */
-[data-ui="card"][data-size="sm"] [data-part="header"],
-[data-ui="card"][data-size="sm"] [data-part="body"],
-[data-ui="card"][data-size="sm"] [data-part="footer"] {
+[data-ui="card"][data-size="sm"] > [data-part="header"],
+[data-ui="card"][data-size="sm"] > [data-part="body"],
+[data-ui="card"][data-size="sm"] > [data-part="footer"] {
   padding: var(--space-4);
 }
-[data-ui="card"][data-size="sm"] [data-part="header"] {
+[data-ui="card"][data-size="sm"] > [data-part="header"] {
   padding-bottom: 0;
 }
-[data-ui="card"][data-size="sm"] [data-part="footer"] {
+[data-ui="card"][data-size="sm"] > [data-part="footer"] {
   padding-top: 0;
 }

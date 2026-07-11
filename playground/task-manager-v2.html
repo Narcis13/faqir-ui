@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Faqir UI — Task Manager (v2)</title>
+
+  <!-- Tokens -->
+  <link rel="stylesheet" href="../registry/tokens/palette.css">
+  <link rel="stylesheet" href="../registry/tokens/spacing.css">
+  <link rel="stylesheet" href="../registry/tokens/typography.css">
+  <link rel="stylesheet" href="../registry/tokens/effects.css">
+  <link rel="stylesheet" href="../registry/tokens/motion.css">
+  <link rel="stylesheet" href="../registry/tokens/semantic.css">
+  <link rel="stylesheet" href="../registry/tokens/aliases.css">
+
+  <!-- Base -->
+  <link rel="stylesheet" href="../registry/base/reset.css">
+
+  <!-- Themes (all seven; JS toggles the `disabled` attribute) -->
+  <link rel="stylesheet" href="../registry/themes/default.css"   id="theme-default">
+  <link rel="stylesheet" href="../registry/themes/midnight.css"  id="theme-midnight"  disabled>
+  <link rel="stylesheet" href="../registry/themes/paper.css"     id="theme-paper"     disabled>
+  <link rel="stylesheet" href="../registry/themes/brutalist.css" id="theme-brutalist" disabled>
+  <link rel="stylesheet" href="../registry/themes/aurora.css"    id="theme-aurora"    disabled>
+  <link rel="stylesheet" href="../registry/themes/slate.css"     id="theme-slate"     disabled>
+  <link rel="stylesheet" href="../registry/themes/contrast.css"  id="theme-contrast"  disabled>
+
+  <!-- Primitives -->
+  <link rel="stylesheet" href="../registry/primitives/button/button.css">
+  <link rel="stylesheet" href="../registry/primitives/input/input.css">
+  <link rel="stylesheet" href="../registry/primitives/textarea/textarea.css">
+  <link rel="stylesheet" href="../registry/primitives/checkbox/checkbox.css">
+  <link rel="stylesheet" href="../registry/primitives/badge/badge.css">
+  <link rel="stylesheet" href="../registry/primitives/chip/chip.css">
+  <link rel="stylesheet" href="../registry/primitives/card/card.css">
+  <link rel="stylesheet" href="../registry/primitives/separator/separator.css">
+  <link rel="stylesheet" href="../registry/primitives/stack/stack.css">
+  <link rel="stylesheet" href="../registry/primitives/grid/grid.css">
+  <link rel="stylesheet" href="../registry/primitives/surface/surface.css">
+  <link rel="stylesheet" href="../registry/primitives/text/text.css">
+  <link rel="stylesheet" href="../registry/primitives/spinner/spinner.css">
+  <link rel="stylesheet" href="../registry/primitives/empty-state/empty-state.css">
+  <link rel="stylesheet" href="../registry/primitives/field-group/field-group.css">
+  <link rel="stylesheet" href="../registry/primitives/callout/callout.css">
+  <link rel="stylesheet" href="../registry/primitives/stat/stat.css">
+  <link rel="stylesheet" href="../registry/primitives/select/select.css">
+  <link rel="stylesheet" href="../registry/primitives/label/label.css">
+  <link rel="stylesheet" href="../registry/primitives/switch/switch.css">
+  <link rel="stylesheet" href="../registry/primitives/progress/progress.css">
+  <link rel="stylesheet" href="../registry/primitives/skeleton/skeleton.css">
+  <link rel="stylesheet" href="../registry/primitives/breadcrumb/breadcrumb.css">
+  <link rel="stylesheet" href="../registry/primitives/kbd/kbd.css">
+  <link rel="stylesheet" href="../registry/primitives/icon/icons.css">
+
+  <!-- Recipes -->
+  <link rel="stylesheet" href="../registry/recipes/table/table.css">
+  <link rel="stylesheet" href="../registry/recipes/dropdown/dropdown.css">
+  <link rel="stylesheet" href="../registry/recipes/dialog/dialog.css">
+  <link rel="stylesheet" href="../registry/recipes/alert-dialog/alert-dialog.css">
+  <link rel="stylesheet" href="../registry/recipes/toast/toast.css">
+
+  <!-- ============================================================
+       Mock fetch — a full standalone REST backend for /api/tasks and
+       /api/categories, installed BEFORE faqir-core so l-source binds
+       to it. Flip window.__faqirOffline to make every MUTATION fail
+       (503) — this is what drives the optimistic-rollback demo. Reads
+       (GET) keep working so the table never blanks out.
+       ============================================================ -->
+  <script>
+    (function () {
+      window.__faqirOffline = false;
+
+      window.__mockTasks = [
+        { id: 1, title: 'Design the landing-page hero',        description: 'Figma mockups for the new marketing hero with two A/B variants.',      done: false, priority: 'high',   category: 'design' },
+        { id: 2, title: 'Ship the CI/CD pipeline',             description: 'GitHub Actions with preview deploys on every pull request.',           done: true,  priority: 'high',   category: 'devops' },
+        { id: 3, title: 'Write auth integration tests',        description: 'Cover OAuth, magic-link, and the session-refresh paths.',              done: false, priority: 'medium', category: 'dev'    },
+        { id: 4, title: 'Fix accessibility audit findings',    description: 'Resolve the 12 WCAG AA issues flagged in last week’s audit.',      done: false, priority: 'medium', category: 'design' },
+        { id: 5, title: 'Provision the staging cluster',       description: 'Terraform module for the staging Kubernetes namespace.',               done: true,  priority: 'low',    category: 'devops' },
+        { id: 6, title: 'Draft the Q3 launch email',           description: 'Announcement copy plus a segmented send plan for the newsletter.',     done: false, priority: 'low',    category: 'marketing' },
+        { id: 7, title: 'Refactor the data layer to l-source', description: 'Replace ~400 lines of hand-written fetch glue with one attribute.',    done: false, priority: 'high',   category: 'dev'    },
+        { id: 8, title: 'Synthesize user-interview notes',     description: 'Cluster findings from the eight onboarding interviews.',               done: true,  priority: 'medium', category: 'research' }
+      ];
+
+      window.__mockCategories = [
+        { id: 1, slug: 'design',    name: 'Design',    chip: 'primary'     },
+        { id: 2, slug: 'dev',       name: 'Dev',       chip: 'outline'     },
+        { id: 3, slug: 'devops',    name: 'DevOps',    chip: 'default'     },
+        { id: 4, slug: 'marketing', name: 'Marketing', chip: 'destructive' },
+        { id: 5, slug: 'research',  name: 'Research',  chip: 'primary'     }
+      ];
+
+      var nextId = 9;
+      var LATENCY = 320;
+
+      function delay(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+      function json(data, status) {
+        return new Response(JSON.stringify(data), {
+          status: status || 200,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+      function offlineFail() {
+        return json({ error: 'Network unreachable (offline mode)' }, 503);
+      }
+
+      var real = window.fetch;
+
+      window.fetch = function (url, options) {
+        options = options || {};
+        var method = (options.method || 'GET').toUpperCase();
+
+        if (typeof url === 'string' && /^\/api\/tasks(\/|$)/.test(url)) {
+          var idMatch = url.match(/^\/api\/tasks\/(\d+)$/);
+          var writing = method !== 'GET';
+
+          // Offline mode: reject writes so l-source rolls the optimistic edit back.
+          if (writing && window.__faqirOffline) {
+            return delay(LATENCY).then(offlineFail);
+          }
+
+          if (method === 'GET' && !idMatch) {
+            return delay(LATENCY).then(function () { return json(window.__mockTasks); });
+          }
+          if (method === 'POST' && !idMatch) {
+            return delay(LATENCY).then(function () {
+              var b = JSON.parse(options.body || '{}');
+              var task = {
+                id: nextId++,
+                title: b.title || 'Untitled',
+                description: b.description || '',
+                done: !!b.done,
+                priority: b.priority || 'medium',
+                category: b.category || 'dev'
+              };
+              window.__mockTasks.push(task);
+              return json(task, 201);
+            });
+          }
+          if (method === 'PATCH' && idMatch) {
+            var pid = parseInt(idMatch[1], 10);
+            return delay(LATENCY).then(function () {
+              var b = JSON.parse(options.body || '{}');
+              var found = null;
+              for (var i = 0; i < window.__mockTasks.length; i++) {
+                if (window.__mockTasks[i].id === pid) { Object.assign(window.__mockTasks[i], b); found = window.__mockTasks[i]; break; }
+              }
+              return found ? json(found) : json({ error: 'Not found' }, 404);
+            });
+          }
+          if (method === 'DELETE' && idMatch) {
+            var did = parseInt(idMatch[1], 10);
+            return delay(LATENCY).then(function () {
+              var idx = -1;
+              for (var i = 0; i < window.__mockTasks.length; i++) { if (window.__mockTasks[i].id === did) { idx = i; break; } }
+              if (idx === -1) return json({ error: 'Not found' }, 404);
+              window.__mockTasks.splice(idx, 1);
+              return json({ ok: true });
+            });
+          }
+        }
+
+        if (typeof url === 'string' && /^\/api\/categories(\/|$)/.test(url)) {
+          if (method === 'GET') {
+            return delay(LATENCY).then(function () { return json(window.__mockCategories); });
+          }
+        }
+
+        return real.apply(this, arguments);
+      };
+    })();
+  </script>
+
+  <!-- Faqir Core -->
+  <script src="../registry/core/faqir-core.js" defer></script>
+</head>
+<body>
+
+  <div l-cloak l-data="{
+    /* ── Theme + appearance ── */
+    theme: 'default',
+    themes: ['default', 'midnight', 'paper', 'brutalist', 'aurora', 'slate', 'contrast'],
+    darkMode: false,
+    setTheme(name) {
+      this.theme = name;
+      this.themes.forEach(t => { document.getElementById('theme-' + t).disabled = (t !== name); });
+    },
+    toggleDark() {
+      this.darkMode = !this.darkMode;
+      document.documentElement.setAttribute('data-theme', this.darkMode ? 'dark' : 'light');
+    },
+
+    /* ── Reference data (static; categories also arrive via l-source) ── */
+    priorities: [
+      { v: 'high',   label: 'High',   badge: 'destructive' },
+      { v: 'medium', label: 'Medium', badge: 'warning' },
+      { v: 'low',    label: 'Low',    badge: 'secondary' }
+    ],
+
+    /* ── Filter / sort state ── */
+    search: '',
+    categoryFilter: 'all',
+    priorityFilter: 'all',
+    statusFilter: 'all',
+    sort: 'newest',
+
+    /* ── Offline simulation ── */
+    offline: false,
+    toggleOffline(on) {
+      this.offline = on;
+      window.__faqirOffline = on;
+      this.notify(
+        on ? 'Offline mode on — mutations now fail and roll back.' : 'Back online — mutations will persist.',
+        on ? 'warning' : 'success',
+        on ? '&#x26A0;' : '&#x2713;'
+      );
+    },
+
+    /* ── Live polling ── */
+    live: false,
+    toggleLive(on) {
+      this.live = on;
+      if (on) { this.$tasks.startPolling(4000); this.notify('Live sync on — refreshing every 4s.', 'default', '&#x21BB;'); }
+      else    { this.$tasks.stopPolling(); }
+    },
+
+    /* ── Create-form fields ── */
+    form: { title: '', description: '', priority: 'medium', category: 'dev' },
+    async addTask() {
+      if (!this.form.title.trim()) return;
+      await this.$tasks.create({
+        title: this.form.title.trim(),
+        description: this.form.description.trim(),
+        priority: this.form.priority,
+        category: this.form.category,
+        done: false
+      });
+      if (!this.tasksError) this.notify('Task created.', 'success', '&#x2713;');
+      this.form = { title: '', description: '', priority: 'medium', category: 'dev' };
+    },
+
+    /* ── Row actions ── */
+    async toggleDone(task) {
+      await this.$tasks.update(task.id, { done: !task.done });
+    },
+
+    /* ── Edit dialog ── */
+    edit: { id: null, title: '', description: '', priority: 'medium', category: 'dev' },
+    startEdit(task) {
+      this.edit = { id: task.id, title: task.title, description: task.description || '', priority: task.priority, category: task.category };
+      document.getElementById('edit-task-dialog')._faqirDialog.open();
+    },
+    async saveEdit() {
+      if (!this.edit.title.trim()) return;
+      var id = this.edit.id;
+      document.getElementById('edit-task-dialog')._faqirDialog.close();
+      await this.$tasks.update(id, {
+        title: this.edit.title.trim(),
+        description: this.edit.description.trim(),
+        priority: this.edit.priority,
+        category: this.edit.category
+      });
+      if (!this.tasksError) this.notify('Task updated.', 'success', '&#x2713;');
+    },
+
+    /* ── Delete confirm (alert-dialog) ── */
+    pendingDelete: { id: null, title: '' },
+    askDelete(task) {
+      this.pendingDelete = { id: task.id, title: task.title };
+      document.getElementById('delete-task-alert')._faqirDialog.open();
+    },
+    async confirmDelete() {
+      var title = this.pendingDelete.title;
+      await this.$tasks.remove(this.pendingDelete.id);
+      if (!this.tasksError) this.notify('Deleted “' + title + '”.', 'default', '&#x1F5D1;');
+    },
+
+    /* ── Toast helper ── */
+    notify(message, tone, icon) {
+      var box = document.getElementById('toast-box');
+      if (box && box._faqirToast) box._faqirToast.add({ message, tone: tone || 'default', icon: icon || '', duration: 3200 });
+    },
+
+    /* ── Derived stats ── */
+    get total()      { return this.tasks.length; },
+    get doneCount()  { return this.tasks.filter(t => t.done).length; },
+    get openCount()  { return this.total - this.doneCount; },
+    get completion() { return this.total ? Math.round(this.doneCount / this.total * 100) : 0; },
+
+    /* ── Filtering + sorting ── */
+    get hasFilters() {
+      return !!this.search || this.categoryFilter !== 'all' || this.priorityFilter !== 'all' || this.statusFilter !== 'all';
+    },
+    clearFilters() {
+      this.search = ''; this.categoryFilter = 'all'; this.priorityFilter = 'all'; this.statusFilter = 'all'; this.sort = 'newest';
+    },
+    get filteredTasks() {
+      var q = (this.search || '').trim().toLowerCase();
+      var list = this.tasks.filter(t => {
+        if (this.categoryFilter !== 'all' && t.category !== this.categoryFilter) return false;
+        if (this.priorityFilter !== 'all' && t.priority !== this.priorityFilter) return false;
+        if (this.statusFilter === 'open' && t.done) return false;
+        if (this.statusFilter === 'done' && !t.done) return false;
+        if (q) {
+          var hay = (t.title + ' ' + (t.description || '')).toLowerCase();
+          if (hay.indexOf(q) === -1) return false;
+        }
+        return true;
+      });
+      var rank = { high: 0, medium: 1, low: 2 };
+      var out = list.slice();
+      if (this.sort === 'priority')   out.sort((a, b) => rank[a.priority] - rank[b.priority]);
+      else if (this.sort === 'title') out.sort((a, b) => a.title.localeCompare(b.title));
+      else                            out.sort((a, b) => b.id - a.id);
+      return out;
+    },
+
+    /* ── Lookups ── */
+    priorityLabel(v) { var p = this.priorities.find(x => x.v === v); return p ? p.label : v; },
+    priorityBadge(v) { var p = this.priorities.find(x => x.v === v); return p ? p.badge : 'secondary'; },
+    categoryLabel(slug) { var c = (this.categories || []).find(x => x.slug === slug); return c ? c.name : slug; },
+    categoryChip(slug)  { var c = (this.categories || []).find(x => x.slug === slug); return c ? c.chip : 'default'; }
+  }"
+       l-source:tasks.optimistic="/api/tasks"
+       l-source:categories="/api/categories">
+
+  <div data-ui="surface" data-variant="flat" data-max="xl" data-size="md">
+    <div data-ui="stack" data-gap="6">
+
+      <!-- ═══════════════ Header ═══════════════ -->
+      <header role="banner">
+        <nav data-ui="breadcrumb" data-size="sm" aria-label="Breadcrumb" style="margin-bottom: var(--space-3);">
+          <ol data-part="list">
+            <li><a data-part="item" href="#">Workspace</a></li>
+            <li data-part="separator" aria-hidden="true"></li>
+            <li><a data-part="item" href="#">Q3 Sprint</a></li>
+            <li data-part="separator" aria-hidden="true"></li>
+            <li><span data-part="current" aria-current="page">Task board</span></li>
+          </ol>
+        </nav>
+
+        <div data-ui="stack" data-variant="horizontal" data-gap="4" data-align="center" data-justify="between" data-wrap data-responsive>
+          <div data-ui="stack" data-gap="1">
+            <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center">
+              <span data-ui="icon" data-icon="list" aria-hidden="true" style="font-size: 1.5rem; color: var(--color-primary);"></span>
+              <h1 data-ui="heading" data-size="3">Task Manager <span data-ui="badge" data-variant="primary" data-size="sm">v2</span></h1>
+            </div>
+            <p data-ui="text" data-size="sm" data-variant="muted">
+              Declarative REST binding — <code>l-source:tasks.optimistic</code> on one attribute replaces an entire data layer.
+            </p>
+          </div>
+
+          <div data-ui="stack" data-variant="horizontal" data-gap="4" data-align="center" data-wrap>
+            <label data-ui="label" for="theme-select" style="display: flex; align-items: center; gap: var(--space-2);">
+              <span data-ui="icon" data-icon="sparkles" aria-hidden="true"></span>
+              <span>Theme</span>
+              <select id="theme-select" data-ui="select" data-size="sm" l-model="theme" @change="setTheme(theme)" aria-label="Color theme">
+                <option value="default">Default</option>
+                <option value="midnight">Midnight</option>
+                <option value="paper">Paper</option>
+                <option value="brutalist">Brutalist</option>
+                <option value="aurora">Aurora</option>
+                <option value="slate">Slate</option>
+                <option value="contrast">Contrast (WCAG AAA)</option>
+              </select>
+            </label>
+            <label data-ui="switch-label">
+              <input data-ui="switch" type="checkbox" role="switch" @change="toggleDark()">
+              <span data-part="label" data-ui="text" data-size="sm" l-text="darkMode ? 'Dark' : 'Light'"></span>
+            </label>
+          </div>
+        </div>
+      </header>
+
+      <div data-ui="separator"></div>
+
+      <main>
+        <div data-ui="stack" data-gap="6">
+
+          <!-- ═══════════════ Explainer callout ═══════════════ -->
+          <div data-ui="callout" data-variant="info" role="note">
+            <span data-part="icon">
+              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16"><path fill="currentColor" d="M8 1a7 7 0 100 14A7 7 0 008 1zm1 4.5a1 1 0 11-2 0 1 1 0 012 0zM7 7h2v5H7V7z"/></svg>
+            </span>
+            <div data-part="content">
+              <strong data-part="title">Zero imperative fetch code</strong>
+              <p>
+                Everything below — loading, error, create, update, delete, optimistic rollback and polling — is driven by a
+                single attribute on the root element. No <code>fetch()</code>, no <code>useEffect</code>, no store.
+              </p>
+              <pre style="margin: var(--space-3) 0 0; padding: var(--space-4); background: var(--color-bg-muted); border: 1px solid var(--color-border); border-radius: var(--radius-md); font-family: var(--font-mono); font-size: 0.8125rem; line-height: 1.6; overflow-x: auto; color: var(--color-fg);"><code>&lt;div l-data="{ ... }"
+     <span style="color: var(--color-primary);">l-source:tasks.optimistic</span>="/api/tasks"&gt;</code></pre>
+              <p style="margin-top: var(--space-3);">
+                That one line injects four reactive members into scope:
+                <code>tasks</code> (the array),
+                <code>tasksLoading</code> (boolean),
+                <code>tasksError</code> (string or null), and
+                <code>$tasks</code> — the controller exposing
+                <code>create()</code>, <code>update()</code>, <code>remove()</code>, <code>refresh()</code> and
+                <code>startPolling()</code>. Press <kbd data-ui="kbd">Tab</kbd> to walk the whole board by keyboard.
+              </p>
+            </div>
+          </div>
+
+          <!-- ═══════════════ KPI row ═══════════════ -->
+          <div data-ui="grid" data-cols="4" data-cols-md="2" data-gap="4">
+            <div data-ui="stat" data-variant="card">
+              <span data-part="label">Total tasks</span>
+              <span data-part="value" l-text="total"></span>
+              <span data-part="change">across 5 categories</span>
+            </div>
+            <div data-ui="stat" data-variant="card" data-trend="neutral">
+              <span data-part="label">Open</span>
+              <span data-part="value" l-text="openCount"></span>
+              <span data-part="change">still to do</span>
+            </div>
+            <div data-ui="stat" data-variant="card" data-trend="up">
+              <span data-part="label">Done</span>
+              <span data-part="value" l-text="doneCount"></span>
+              <span data-part="change">completed</span>
+            </div>
+            <div data-ui="stat" data-variant="card" data-trend="up">
+              <span data-part="label">Completion</span>
+              <span data-part="value" l-text="completion + '%'"></span>
+              <div data-ui="progress" :data-variant="completion === 100 ? 'success' : 'default'" data-size="sm" style="margin-top: var(--space-2);">
+                <div data-part="track">
+                  <div data-part="fill" :style="'width: ' + completion + '%'"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══════════════ Error state (drives optimistic-rollback story) ═══════════════ -->
+          <template l-if="tasksError">
+            <div data-ui="callout" data-variant="destructive" role="alert">
+              <span data-part="icon">
+                <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16"><path fill="currentColor" d="M8 1l7 14H1L8 1zm-1 5h2v4H7V6zm0 5h2v2H7v-2z"/></svg>
+              </span>
+              <div data-part="content">
+                <strong data-part="title">Last write failed — the optimistic change was rolled back</strong>
+                <p l-text="tasksError"></p>
+                <div data-ui="stack" data-variant="horizontal" data-gap="2" style="margin-top: var(--space-3);">
+                  <button data-ui="button" data-variant="outline" data-size="sm" @click="$tasks.refresh()">Refresh from server</button>
+                  <button data-ui="button" data-variant="ghost" data-size="sm" @click="tasksError = null">Dismiss</button>
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <!-- ═══════════════ Create form ═══════════════ -->
+          <section data-ui="card" aria-label="Create task">
+            <div data-part="header">
+              <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center">
+                <span data-ui="icon" data-icon="plus" aria-hidden="true" style="color: var(--color-primary);"></span>
+                <h2 data-part="title">New task</h2>
+              </div>
+              <p data-part="description">Submitting calls <code>$tasks.create({ ... })</code> — the row appears instantly, then reconciles with the server response.</p>
+            </div>
+            <div data-part="body">
+              <form @submit.prevent="addTask()">
+                <div data-ui="stack" data-gap="4">
+                  <div data-ui="field-group" data-required>
+                    <label data-part="label" for="new-title">Title</label>
+                    <div data-part="input">
+                      <input id="new-title" data-ui="input" placeholder="What needs to get done?" l-model="form.title" required>
+                    </div>
+                  </div>
+                  <div data-ui="field-group">
+                    <label data-part="label" for="new-desc">Description</label>
+                    <div data-part="input">
+                      <textarea id="new-desc" data-ui="textarea" rows="2" placeholder="Add a little context (optional)" l-model="form.description"></textarea>
+                    </div>
+                  </div>
+                  <div data-ui="grid" data-cols="2" data-cols-sm="1" data-gap="4">
+                    <div data-ui="field-group">
+                      <label data-part="label" for="new-priority">Priority</label>
+                      <div data-part="input">
+                        <select id="new-priority" data-ui="select" l-model="form.priority">
+                          <template l-for="p in priorities">
+                            <option :value="p.v" l-text="p.label"></option>
+                          </template>
+                        </select>
+                      </div>
+                    </div>
+                    <div data-ui="field-group">
+                      <label data-part="label" for="new-category">Category</label>
+                      <div data-part="input">
+                        <select id="new-category" data-ui="select" l-model="form.category">
+                          <template l-for="c in categories">
+                            <option :value="c.slug" l-text="c.name"></option>
+                          </template>
+                        </select>
+                      </div>
+                      <p data-part="description">Options come from <code>l-source:categories</code>.</p>
+                    </div>
+                  </div>
+                  <div>
+                    <button data-ui="button" data-variant="primary" type="submit">
+                      <span data-ui="icon" data-icon="plus" aria-hidden="true"></span>
+                      Add task
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </section>
+
+          <!-- ═══════════════ Task list ═══════════════ -->
+          <section data-ui="card" aria-label="Tasks">
+            <div data-part="header">
+              <div data-ui="stack" data-variant="horizontal" data-align="center" data-justify="between" data-wrap data-gap="3">
+                <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center">
+                  <h2 data-part="title">Tasks</h2>
+                  <span data-ui="badge" data-variant="secondary" data-size="sm" l-text="filteredTasks.length + ' of ' + total"></span>
+                  <span data-ui="spinner" data-size="sm" l-show="tasksLoading && tasks.length > 0" aria-label="Syncing"></span>
+                </div>
+                <div data-ui="stack" data-variant="horizontal" data-gap="4" data-align="center" data-wrap>
+                  <label data-ui="switch-label">
+                    <input data-ui="switch" type="checkbox" role="switch" :checked="offline" @change="toggleOffline($event.target.checked)">
+                    <span data-part="label" data-ui="text" data-size="sm">
+                      <span data-ui="icon" data-icon="wifi" aria-hidden="true" :style="offline ? 'color: var(--color-destructive)' : ''"></span>
+                      Simulate offline
+                    </span>
+                  </label>
+                  <label data-ui="switch-label">
+                    <input data-ui="switch" type="checkbox" role="switch" :checked="live" @change="toggleLive($event.target.checked)">
+                    <span data-part="label" data-ui="text" data-size="sm">
+                      <span data-ui="icon" data-icon="activity" aria-hidden="true" :style="live ? 'color: var(--color-success)' : ''"></span>
+                      Live
+                    </span>
+                  </label>
+                  <button data-ui="button" data-variant="ghost" data-size="sm" @click="$tasks.refresh()" aria-label="Refresh tasks">
+                    <span data-ui="icon" data-icon="refresh-cw" aria-hidden="true"></span>
+                    Refresh
+                  </button>
+                </div>
+              </div>
+
+              <!-- Toolbar: search + filters + sort -->
+              <div data-ui="stack" data-gap="3" style="margin-top: var(--space-4);">
+                <div data-ui="grid" data-cols="2" data-cols-sm="1" data-gap="3">
+                  <div data-ui="field-group">
+                    <label data-part="label" for="search" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0);">Search tasks</label>
+                    <div data-part="input">
+                      <input id="search" data-ui="input" type="search" placeholder="Search tasks…" l-model.debounce="search">
+                    </div>
+                  </div>
+                  <div data-ui="field-group">
+                    <label data-part="label" for="sort" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0);">Sort tasks</label>
+                    <div data-part="input">
+                      <select id="sort" data-ui="select" l-model="sort" aria-label="Sort tasks">
+                        <option value="newest">Sort: Newest first</option>
+                        <option value="priority">Sort: Priority (high → low)</option>
+                        <option value="title">Sort: Title (A → Z)</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Status toggles -->
+                <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center" data-wrap>
+                  <span data-ui="text" data-size="xs" data-variant="muted" style="min-width: 4.5rem;">Status</span>
+                  <button data-ui="button" data-size="sm" :data-variant="statusFilter === 'all' ? 'primary' : 'outline'" @click="statusFilter = 'all'">All</button>
+                  <button data-ui="button" data-size="sm" :data-variant="statusFilter === 'open' ? 'primary' : 'outline'" @click="statusFilter = 'open'">Open</button>
+                  <button data-ui="button" data-size="sm" :data-variant="statusFilter === 'done' ? 'primary' : 'outline'" @click="statusFilter = 'done'">Done</button>
+                </div>
+
+                <!-- Priority toggles -->
+                <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center" data-wrap>
+                  <span data-ui="text" data-size="xs" data-variant="muted" style="min-width: 4.5rem;">Priority</span>
+                  <button data-ui="button" data-size="sm" :data-variant="priorityFilter === 'all' ? 'primary' : 'outline'" @click="priorityFilter = 'all'">Any</button>
+                  <template l-for="p in priorities">
+                    <button data-ui="button" data-size="sm" :data-variant="priorityFilter === p.v ? 'primary' : 'outline'" @click="priorityFilter = p.v" l-text="p.label"></button>
+                  </template>
+                </div>
+
+                <!-- Category toggles (chip-style) -->
+                <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center" data-wrap>
+                  <span data-ui="text" data-size="xs" data-variant="muted" style="min-width: 4.5rem;">Category</span>
+                  <button data-ui="button" data-size="sm" :data-variant="categoryFilter === 'all' ? 'primary' : 'outline'" @click="categoryFilter = 'all'">All</button>
+                  <template l-for="c in categories">
+                    <button data-ui="button" data-size="sm" :data-variant="categoryFilter === c.slug ? 'primary' : 'outline'" @click="categoryFilter = c.slug" l-text="c.name"></button>
+                  </template>
+                </div>
+              </div>
+            </div>
+
+            <div data-part="body" style="padding: 0;">
+
+              <!-- Loading skeletons (first load only) -->
+              <template l-if="tasksLoading && tasks.length === 0">
+                <div data-ui="stack" data-gap="4" style="padding: var(--space-5);" aria-hidden="true">
+                  <template l-for="n in [1,2,3,4]">
+                    <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center">
+                      <div data-ui="skeleton" data-variant="circle" aria-hidden="true" style="--skeleton-size: 1.25rem;"></div>
+                      <div data-ui="stack" data-gap="2" style="flex: 1;">
+                        <div data-ui="skeleton" aria-hidden="true" style="--skeleton-width: 45%;"></div>
+                        <div data-ui="skeleton" aria-hidden="true" style="--skeleton-width: 75%;"></div>
+                      </div>
+                      <div data-ui="skeleton" data-variant="rect" aria-hidden="true" style="width: 4rem; height: 1.5rem;"></div>
+                    </div>
+                  </template>
+                </div>
+              </template>
+
+              <!-- Empty: nothing at all -->
+              <template l-if="!tasksLoading && total === 0">
+                <div data-ui="empty-state">
+                  <span data-part="icon">
+                    <span data-ui="icon" data-icon="list" aria-hidden="true" style="font-size: 2rem;"></span>
+                  </span>
+                  <h3 data-part="title">No tasks yet</h3>
+                  <p data-part="description">Create your first task with the form above.</p>
+                </div>
+              </template>
+
+              <!-- Empty: filters exclude everything -->
+              <template l-if="!tasksLoading && total > 0 && filteredTasks.length === 0">
+                <div data-ui="empty-state" data-size="sm">
+                  <span data-part="icon">
+                    <span data-ui="icon" data-icon="search" aria-hidden="true" style="font-size: 2rem;"></span>
+                  </span>
+                  <h3 data-part="title">No matching tasks</h3>
+                  <p data-part="description">No task matches your current search and filters.</p>
+                  <div data-part="actions">
+                    <button data-ui="button" data-variant="outline" data-size="sm" @click="clearFilters()">Clear filters</button>
+                  </div>
+                </div>
+              </template>
+
+              <!-- The table -->
+              <template l-if="filteredTasks.length > 0">
+                <div data-ui="table" data-size="md">
+                  <table data-part="table">
+                    <thead data-part="thead">
+                      <tr data-part="tr">
+                        <th data-part="th" scope="col" style="width: 2.5rem;"><span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">Done</span></th>
+                        <th data-part="th" scope="col">Task</th>
+                        <th data-part="th" scope="col">Priority</th>
+                        <th data-part="th" scope="col">Category</th>
+                        <th data-part="th" scope="col" data-align="right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody data-part="tbody">
+                      <template l-for="task in filteredTasks">
+                        <tr data-part="tr" :data-state="task._pending ? 'loading' : ''">
+                          <td data-part="td">
+                            <label data-ui="checkbox-label" :aria-label="'Mark ' + task.title + (task.done ? ' as open' : ' as done')">
+                              <input data-ui="checkbox" type="checkbox" :checked="task.done" @change="toggleDone(task)">
+                            </label>
+                          </td>
+                          <td data-part="td">
+                            <div data-ui="stack" data-gap="1">
+                              <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center" data-wrap>
+                                <span data-ui="text" :style="task.done ? 'text-decoration: line-through; color: var(--color-fg-muted);' : 'font-weight: 500;'" l-text="task.title"></span>
+                                <span data-ui="badge" data-variant="secondary" data-size="sm" l-show="task._pending">saving…</span>
+                              </div>
+                              <span data-ui="text" data-size="sm" data-variant="muted" l-show="task.description" l-text="task.description"></span>
+                            </div>
+                          </td>
+                          <td data-part="td">
+                            <span data-ui="badge" data-size="sm" :data-variant="priorityBadge(task.priority)" l-text="priorityLabel(task.priority)"></span>
+                          </td>
+                          <td data-part="td">
+                            <span data-ui="chip" data-size="sm" :data-variant="categoryChip(task.category)">
+                              <span data-part="label" l-text="categoryLabel(task.category)"></span>
+                            </span>
+                          </td>
+                          <td data-part="td" data-align="right">
+                            <div data-ui="dropdown" data-state="closed" style="display: inline-block;">
+                              <button data-part="trigger" data-ui="button" data-variant="ghost" data-size="sm" aria-haspopup="true" aria-expanded="false" aria-label="Task actions">
+                                <span data-ui="icon" data-icon="ellipsis" aria-hidden="true"></span>
+                              </button>
+                              <div data-part="menu" data-variant="end" role="menu" hidden>
+                                <button data-part="item" role="menuitem" @click="startEdit(task)">Edit</button>
+                                <hr data-part="separator">
+                                <button data-part="item" role="menuitem" @click="askDelete(task)">Delete</button>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      </template>
+                    </tbody>
+                  </table>
+                </div>
+              </template>
+
+            </div>
+          </section>
+
+        </div>
+      </main>
+
+      <!-- ═══════════════ Footer ═══════════════ -->
+      <footer>
+        <div data-ui="separator"></div>
+        <div data-ui="stack" data-gap="1" style="text-align: center; padding-top: var(--space-4);">
+          <p data-ui="text" data-size="xs" data-variant="subtle">
+            Faqir UI — 58 components · 8 themes · 0 CSS classes. Every element here is data-attributes + tokens.
+          </p>
+          <p data-ui="text" data-size="xs" data-variant="subtle">
+            The entire data layer is one attribute: <code>l-source:tasks.optimistic="/api/tasks"</code>.
+          </p>
+        </div>
+      </footer>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════ Edit dialog (opened programmatically) ═══════════════ -->
+  <div data-ui="dialog" data-state="closed" id="edit-task-dialog">
+    <div data-part="overlay" hidden></div>
+    <div data-part="panel" role="dialog" aria-modal="true" aria-labelledby="edit-task-title" data-size="md" hidden>
+      <form @submit.prevent="saveEdit()">
+        <div data-part="header">
+          <h2 id="edit-task-title" data-part="title">Edit task</h2>
+          <button type="button" data-part="close" aria-label="Close dialog">&#x2715;</button>
+        </div>
+        <div data-part="body">
+          <div data-ui="stack" data-gap="4">
+            <div data-ui="field-group" data-required>
+              <label data-part="label" for="edit-title">Title</label>
+              <div data-part="input">
+                <input id="edit-title" data-ui="input" l-model="edit.title" required>
+              </div>
+            </div>
+            <div data-ui="field-group">
+              <label data-part="label" for="edit-desc">Description</label>
+              <div data-part="input">
+                <textarea id="edit-desc" data-ui="textarea" rows="3" l-model="edit.description"></textarea>
+              </div>
+            </div>
+            <div data-ui="grid" data-cols="2" data-cols-sm="1" data-gap="4">
+              <div data-ui="field-group">
+                <label data-part="label" for="edit-priority">Priority</label>
+                <div data-part="input">
+                  <select id="edit-priority" data-ui="select" l-model="edit.priority">
+                    <template l-for="p in priorities">
+                      <option :value="p.v" l-text="p.label"></option>
+                    </template>
+                  </select>
+                </div>
+              </div>
+              <div data-ui="field-group">
+                <label data-part="label" for="edit-category">Category</label>
+                <div data-part="input">
+                  <select id="edit-category" data-ui="select" l-model="edit.category">
+                    <template l-for="c in categories">
+                      <option :value="c.slug" l-text="c.name"></option>
+                    </template>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div data-part="footer">
+          <button type="button" data-ui="button" data-part="close" data-variant="outline">Cancel</button>
+          <button type="submit" data-ui="button" data-variant="primary">Save changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ═══════════════ Delete confirm (alert-dialog, opened programmatically) ═══════════════ -->
+  <div data-ui="alert-dialog" data-state="closed" id="delete-task-alert" @faqir:confirm="confirmDelete()">
+    <div data-part="overlay" hidden></div>
+    <div data-part="panel" role="alertdialog" aria-modal="true" aria-labelledby="delete-task-alert-title" aria-describedby="delete-task-alert-desc" data-variant="destructive" data-size="sm" hidden>
+      <div data-part="header">
+        <h2 id="delete-task-alert-title" data-part="title">Delete this task?</h2>
+      </div>
+      <div data-part="body">
+        <p id="delete-task-alert-desc" data-part="description">
+          You’re about to delete <strong l-text="pendingDelete.title"></strong>. This can’t be undone.
+        </p>
+      </div>
+      <div data-part="footer">
+        <button data-ui="button" data-part="cancel" data-variant="outline">Cancel</button>
+        <button data-ui="button" data-part="confirm" data-variant="destructive">Delete task</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ Toast container ═══════════════ -->
+  <div data-ui="toast" data-variant="bottom-right" data-part="container" role="region" aria-label="Notifications" id="toast-box"></div>
+
+  </div>
+</body>
+</html>

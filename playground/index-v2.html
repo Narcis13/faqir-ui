@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Faqir UI — The Showcase (v2)</title>
+
+  <!-- Tokens -->
+  <link rel="stylesheet" href="../registry/tokens/palette.css">
+  <link rel="stylesheet" href="../registry/tokens/spacing.css">
+  <link rel="stylesheet" href="../registry/tokens/typography.css">
+  <link rel="stylesheet" href="../registry/tokens/effects.css">
+  <link rel="stylesheet" href="../registry/tokens/motion.css">
+  <link rel="stylesheet" href="../registry/tokens/semantic.css">
+  <link rel="stylesheet" href="../registry/tokens/aliases.css">
+
+  <!-- Base -->
+  <link rel="stylesheet" href="../registry/base/reset.css">
+
+  <!-- Themes (all seven; JS toggles the `disabled` attribute) -->
+  <link rel="stylesheet" href="../registry/themes/default.css"   id="theme-default">
+  <link rel="stylesheet" href="../registry/themes/midnight.css"  id="theme-midnight"  disabled>
+  <link rel="stylesheet" href="../registry/themes/paper.css"     id="theme-paper"     disabled>
+  <link rel="stylesheet" href="../registry/themes/brutalist.css" id="theme-brutalist" disabled>
+  <link rel="stylesheet" href="../registry/themes/aurora.css"    id="theme-aurora"    disabled>
+  <link rel="stylesheet" href="../registry/themes/slate.css"     id="theme-slate"     disabled>
+  <link rel="stylesheet" href="../registry/themes/contrast.css"  id="theme-contrast"  disabled>
+
+  <!-- Primitives -->
+  <link rel="stylesheet" href="../registry/primitives/surface/surface.css">
+  <link rel="stylesheet" href="../registry/primitives/stack/stack.css">
+  <link rel="stylesheet" href="../registry/primitives/grid/grid.css">
+  <link rel="stylesheet" href="../registry/primitives/text/text.css">
+  <link rel="stylesheet" href="../registry/primitives/card/card.css">
+  <link rel="stylesheet" href="../registry/primitives/button/button.css">
+  <link rel="stylesheet" href="../registry/primitives/input/input.css">
+  <link rel="stylesheet" href="../registry/primitives/textarea/textarea.css">
+  <link rel="stylesheet" href="../registry/primitives/select/select.css">
+  <link rel="stylesheet" href="../registry/primitives/label/label.css">
+  <link rel="stylesheet" href="../registry/primitives/checkbox/checkbox.css">
+  <link rel="stylesheet" href="../registry/primitives/radio/radio.css">
+  <link rel="stylesheet" href="../registry/primitives/switch/switch.css">
+  <link rel="stylesheet" href="../registry/primitives/field-group/field-group.css">
+  <link rel="stylesheet" href="../registry/primitives/badge/badge.css">
+  <link rel="stylesheet" href="../registry/primitives/chip/chip.css">
+  <link rel="stylesheet" href="../registry/primitives/avatar/avatar.css">
+  <link rel="stylesheet" href="../registry/primitives/stat/stat.css">
+  <link rel="stylesheet" href="../registry/primitives/progress/progress.css">
+  <link rel="stylesheet" href="../registry/primitives/skeleton/skeleton.css">
+  <link rel="stylesheet" href="../registry/primitives/kbd/kbd.css">
+  <link rel="stylesheet" href="../registry/primitives/key-value/key-value.css">
+  <link rel="stylesheet" href="../registry/primitives/description-list/description-list.css">
+  <link rel="stylesheet" href="../registry/primitives/separator/separator.css">
+  <link rel="stylesheet" href="../registry/primitives/spinner/spinner.css">
+  <link rel="stylesheet" href="../registry/primitives/callout/callout.css">
+  <link rel="stylesheet" href="../registry/primitives/empty-state/empty-state.css">
+  <link rel="stylesheet" href="../registry/primitives/nav/nav.css">
+  <link rel="stylesheet" href="../registry/primitives/link/link.css">
+  <link rel="stylesheet" href="../registry/primitives/stepper/stepper.css">
+  <link rel="stylesheet" href="../registry/primitives/breadcrumb/breadcrumb.css">
+  <link rel="stylesheet" href="../registry/primitives/toggle/toggle.css">
+  <link rel="stylesheet" href="../registry/primitives/collapsible/collapsible.css">
+  <link rel="stylesheet" href="../registry/primitives/aspect-ratio/aspect-ratio.css">
+  <link rel="stylesheet" href="../registry/primitives/icon/icons.css">
+
+  <!-- Recipes -->
+  <link rel="stylesheet" href="../registry/recipes/table/table.css">
+  <link rel="stylesheet" href="../registry/recipes/command-palette/command-palette.css">
+  <link rel="stylesheet" href="../registry/recipes/toast/toast.css">
+  <link rel="stylesheet" href="../registry/recipes/dialog/dialog.css">
+  <link rel="stylesheet" href="../registry/recipes/sheet/sheet.css">
+  <link rel="stylesheet" href="../registry/recipes/drawer/drawer.css">
+  <link rel="stylesheet" href="../registry/recipes/popover/popover.css">
+  <link rel="stylesheet" href="../registry/recipes/tooltip/tooltip.css">
+  <link rel="stylesheet" href="../registry/recipes/dropdown/dropdown.css">
+  <link rel="stylesheet" href="../registry/recipes/accordion/accordion.css">
+  <link rel="stylesheet" href="../registry/recipes/pagination/pagination.css">
+  <link rel="stylesheet" href="../registry/recipes/combobox/combobox.css">
+  <link rel="stylesheet" href="../registry/recipes/select-custom/select-custom.css">
+  <link rel="stylesheet" href="../registry/recipes/date-picker/date-picker.css">
+  <link rel="stylesheet" href="../registry/recipes/calendar/calendar.css">
+  <link rel="stylesheet" href="../registry/recipes/slider/slider.css">
+  <link rel="stylesheet" href="../registry/recipes/sidebar/sidebar.css">
+  <link rel="stylesheet" href="../registry/recipes/input-otp/input-otp.css">
+  <link rel="stylesheet" href="../registry/recipes/alert-dialog/alert-dialog.css">
+
+  <!-- Faqir Core -->
+  <script src="../registry/core/faqir-core.js" defer></script>
+</head>
+<body>
+  <div l-cloak l-data="{
+    theme: 'default',
+    themes: ['default', 'midnight', 'paper', 'brutalist', 'aurora', 'slate', 'contrast'],
+    darkMode: false,
+    activeGroup: 'forms',
+    fmt: { bold: true, italic: false, underline: false },
+    align: 'left',
+
+    setTheme(name) {
+      this.theme = name;
+      this.themes.forEach(t => { document.getElementById('theme-' + t).disabled = (t !== name); });
+    },
+    toggleDark() {
+      this.darkMode = !this.darkMode;
+      document.documentElement.setAttribute('data-theme', this.darkMode ? 'dark' : 'light');
+    },
+    toast(message, tone, icon) {
+      const c = document.getElementById('v2-toast');
+      if (c && c._faqirToast) c._faqirToast.add({ message: message, tone: tone || 'default', icon: icon || '', duration: 4000 });
+    },
+    openPalette() {
+      const p = document.getElementById('v2-cmdk');
+      if (p && p._faqirCommandPalette) p._faqirCommandPalette.open();
+    },
+    openRecipe(id, ctrl) {
+      const el = document.getElementById(id);
+      if (el && el[ctrl]) el[ctrl].open();
+    },
+    goTo(id) {
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    },
+    onCommand(label) {
+      switch (label) {
+        case 'Jump to component gallery': this.goTo('gallery'); break;
+        case 'Jump to why Faqir wins': this.goTo('why'); break;
+        case 'Jump to the theming model': this.goTo('themes'); break;
+        case 'Theme — Default': this.setTheme('default'); break;
+        case 'Theme — Midnight': this.setTheme('midnight'); break;
+        case 'Theme — Aurora': this.setTheme('aurora'); break;
+        case 'Theme — Slate': this.setTheme('slate'); break;
+        case 'Theme — Contrast (AAA)': this.setTheme('contrast'); break;
+        case 'Toggle dark mode': this.toggleDark(); break;
+        case 'Fire a sample toast': this.toast('Executed from the command palette.', 'success', '&#x2713;'); break;
+      }
+    }
+  }">
+
+    <!-- ══════════════════════ HEADER ══════════════════════ -->
+    <header role="banner" style="position: sticky; inset-block-start: 0; z-index: 20; background: var(--color-bg); border-block-end: 1px solid var(--color-border)">
+      <div data-ui="surface" data-variant="flat" data-max="xl" data-size="sm">
+        <div data-ui="stack" data-variant="horizontal" data-gap="4" data-align="center" data-justify="between" data-wrap data-responsive>
+          <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center">
+            <span data-ui="icon" data-icon="sparkles" aria-hidden="true" style="font-size: 1.5rem; color: var(--color-primary)"></span>
+            <span data-ui="text" data-weight="bold" data-size="lg">Faqir UI</span>
+            <span data-ui="badge" data-variant="primary" data-size="sm">v0.4</span>
+          </div>
+          <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center" data-wrap>
+            <button data-ui="button" data-variant="outline" data-size="sm" @click="openPalette()" aria-label="Open command palette">
+              <span data-ui="icon" data-icon="search" aria-hidden="true" style="font-size: 1rem"></span>
+              <span data-ui="text" data-size="sm">Search</span>
+              <kbd data-ui="kbd">&#x2318;K</kbd>
+            </button>
+            <label data-ui="label" for="theme-select" style="position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip: rect(0 0 0 0)">Theme</label>
+            <select data-ui="select" data-size="sm" id="theme-select" l-model="theme" @change="setTheme(theme)" aria-label="Select theme" style="width: auto">
+              <option value="default">Default</option>
+              <option value="midnight">Midnight</option>
+              <option value="paper">Paper</option>
+              <option value="brutalist">Brutalist</option>
+              <option value="aurora">Aurora</option>
+              <option value="slate">Slate</option>
+              <option value="contrast">Contrast (WCAG AAA)</option>
+            </select>
+            <label data-ui="switch-label">
+              <input data-ui="switch" type="checkbox" role="switch" @change="toggleDark()">
+              <span data-ui="text" data-size="sm" l-text="darkMode ? 'Dark' : 'Light'"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main role="main">
+      <div data-ui="surface" data-variant="flat" data-max="xl" data-size="md">
+        <div data-ui="stack" data-gap="8">
+
+          <!-- ══════════════════════ HERO ══════════════════════ -->
+          <section aria-labelledby="hero-title">
+            <div data-ui="stack" data-gap="6" data-align="center" style="text-align: center; padding-block: var(--space-6)">
+              <span data-ui="chip" data-variant="primary">
+                <span data-part="label">Manifest-driven · Agent-native · Zero-class</span>
+              </span>
+              <h1 id="hero-title" data-ui="heading" data-size="1" style="max-inline-size: 24ch">The UI framework AI agents speak natively</h1>
+              <p data-ui="text" data-size="lg" data-variant="muted" style="max-inline-size: 60ch">
+                Every component is plain HTML described by five data attributes, styled entirely by design tokens,
+                and verifiable from a machine-readable manifest. No classes. No build step. No lock-in — just markup
+                an agent can generate, audit, and re-theme on demand.
+              </p>
+
+              <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center" data-wrap data-justify="center">
+                <button data-ui="button" data-variant="primary" data-size="lg" @click="goTo('gallery')">
+                  <span data-ui="icon" data-icon="layers" aria-hidden="true" style="font-size: 1.1rem"></span>
+                  Explore the gallery
+                </button>
+                <button data-ui="button" data-variant="outline" data-size="lg" @click="openPalette()">
+                  Open command palette
+                  <kbd data-ui="kbd">&#x2318;K</kbd>
+                </button>
+              </div>
+
+              <!-- Hero stats -->
+              <div data-ui="grid" data-cols="6" data-cols-md="3" data-cols-sm="2" data-gap="4" style="inline-size: 100%; margin-block-start: var(--space-4)">
+                <div data-ui="stat" data-variant="card">
+                  <span data-part="label">Primitives</span>
+                  <span data-part="value">37</span>
+                </div>
+                <div data-ui="stat" data-variant="card">
+                  <span data-part="label">Recipes</span>
+                  <span data-part="value">21</span>
+                </div>
+                <div data-ui="stat" data-variant="card">
+                  <span data-part="label">Themes</span>
+                  <span data-part="value">8</span>
+                </div>
+                <div data-ui="stat" data-variant="card">
+                  <span data-part="label">Icons</span>
+                  <span data-part="value">120</span>
+                </div>
+                <div data-ui="stat" data-variant="card" data-trend="up">
+                  <span data-part="label">CSS classes</span>
+                  <span data-part="value">0</span>
+                  <span data-part="change">zero-class</span>
+                </div>
+                <div data-ui="stat" data-variant="card" data-trend="up">
+                  <span data-part="label">Build steps</span>
+                  <span data-part="value">0</span>
+                  <span data-part="change">ship the HTML</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <div data-ui="separator"></div>
+
+          <!-- ══════════════════════ WHY IT WINS ══════════════════════ -->
+          <section id="why" aria-labelledby="why-title">
+            <div data-ui="stack" data-gap="5">
+              <div data-ui="stack" data-gap="1">
+                <h2 id="why-title" data-ui="heading" data-size="3">Why Faqir wins</h2>
+                <p data-ui="text" data-variant="muted">Four properties that make it the natural substrate for agent-built interfaces.</p>
+              </div>
+
+              <div data-ui="grid" data-cols="4" data-cols-md="2" data-cols-sm="1" data-gap="4">
+                <div data-ui="card">
+                  <div data-part="body">
+                    <div data-ui="stack" data-gap="3">
+                      <span data-ui="icon" data-icon="cpu" aria-hidden="true" style="font-size: 1.75rem; color: var(--color-primary)"></span>
+                      <h3 data-ui="heading" data-size="5">Agent-native</h3>
+                      <p data-ui="text" data-size="sm" data-variant="muted">
+                        Five data attributes are the entire DOM contract. Every component ships a manifest, so an agent can
+                        generate markup and machine-verify it against the spec — no screenshots, no guesswork.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div data-ui="card">
+                  <div data-part="body">
+                    <div data-ui="stack" data-gap="3">
+                      <span data-ui="icon" data-icon="lock-open" aria-hidden="true" style="font-size: 1.75rem; color: var(--color-primary)"></span>
+                      <h3 data-ui="heading" data-size="5">Zero lock-in</h3>
+                      <p data-ui="text" data-size="sm" data-variant="muted">
+                        Plain HTML and CSS. No virtual DOM, no bundler, no framework runtime beyond a tiny optional core.
+                        Paste the markup anywhere and it renders — today and in ten years.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div data-ui="card">
+                  <div data-part="body">
+                    <div data-ui="stack" data-gap="3">
+                      <span data-ui="icon" data-icon="sliders-horizontal" aria-hidden="true" style="font-size: 1.75rem; color: var(--color-primary)"></span>
+                      <h3 data-ui="heading" data-size="5">Themeable to the bone</h3>
+                      <p data-ui="text" data-size="sm" data-variant="muted">
+                        Every colour, radius and space is a token. Switch among seven themes across light and dark by
+                        swapping one stylesheet — try it live in the header right now.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div data-ui="card">
+                  <div data-part="body">
+                    <div data-ui="stack" data-gap="3">
+                      <span data-ui="icon" data-icon="shield-check" aria-hidden="true" style="font-size: 1.75rem; color: var(--color-primary)"></span>
+                      <h3 data-ui="heading" data-size="5">Accessible by default</h3>
+                      <p data-ui="text" data-size="sm" data-variant="muted">
+                        WAI-ARIA anatomy baked into every recipe, focus rings from tokens, keyboard support for free,
+                        and a WCAG-AAA contrast theme in the box. The audit rules ship with the registry.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <div data-ui="separator"></div>
+
+          <!-- ══════════════════════ GALLERY ══════════════════════ -->
+          <section id="gallery" aria-labelledby="gallery-title">
+            <div data-ui="stack" data-gap="5">
+              <div data-ui="stack" data-gap="1">
+                <h2 id="gallery-title" data-ui="heading" data-size="3">Live component gallery</h2>
+                <p data-ui="text" data-variant="muted">Real, working components — every control does something. Switch tabs to browse by category.</p>
+              </div>
+
+              <div data-ui="stack" data-gap="5">
+                <nav data-ui="nav" data-variant="pill" role="tablist" aria-label="Component categories">
+                  <button data-part="link" type="button" role="tab" id="gtab-forms" aria-controls="gpanel-forms" :aria-selected="activeGroup === 'forms'" :data-state="activeGroup === 'forms' ? 'active' : false" @click="activeGroup = 'forms'">Forms</button>
+                  <button data-part="link" type="button" role="tab" id="gtab-data" aria-controls="gpanel-data" :aria-selected="activeGroup === 'data'" :data-state="activeGroup === 'data' ? 'active' : false" @click="activeGroup = 'data'">Data display</button>
+                  <button data-part="link" type="button" role="tab" id="gtab-feedback" aria-controls="gpanel-feedback" :aria-selected="activeGroup === 'feedback'" :data-state="activeGroup === 'feedback' ? 'active' : false" @click="activeGroup = 'feedback'">Feedback &amp; overlays</button>
+                  <button data-part="link" type="button" role="tab" id="gtab-nav" aria-controls="gpanel-nav" :aria-selected="activeGroup === 'nav'" :data-state="activeGroup === 'nav' ? 'active' : false" @click="activeGroup = 'nav'">Navigation</button>
+                  <button data-part="link" type="button" role="tab" id="gtab-new" aria-controls="gpanel-new" :aria-selected="activeGroup === 'new'" :data-state="activeGroup === 'new' ? 'active' : false" @click="activeGroup = 'new'">New in v0.4</button>
+                </nav>
+
+                <!-- ─────────── FORMS ─────────── -->
+                <div role="tabpanel" id="gpanel-forms" aria-labelledby="gtab-forms" tabindex="0" l-show="activeGroup === 'forms'">
+                  <div data-ui="grid" data-cols="2" data-cols-md="1" data-gap="4">
+
+                    <div data-ui="card">
+                      <div data-part="header">
+                        <h3 data-part="title">Text inputs</h3>
+                        <p data-part="description">Field groups with labels, help text, and validation states.</p>
+                      </div>
+                      <div data-part="body">
+                        <div data-ui="stack" data-gap="4">
+                          <div data-ui="field-group">
+                            <label data-part="label" for="f-email">Work email</label>
+                            <div data-part="input">
+                              <input data-ui="input" id="f-email" type="email" placeholder="you@company.com">
+                            </div>
+                            <p data-part="description">We only use this to send your API key.</p>
+                          </div>
+                          <div data-ui="field-group" data-state="error" data-required>
+                            <label data-part="label" for="f-slug">Project slug</label>
+                            <div data-part="input">
+                              <input data-ui="input" id="f-slug" value="My Project" aria-invalid="true" aria-describedby="f-slug-err">
+                            </div>
+                            <p data-part="error" id="f-slug-err">Use lowercase letters and hyphens only.</p>
+                          </div>
+                          <div data-ui="field-group">
+                            <label data-part="label" for="f-bio">Description</label>
+                            <div data-part="input">
+                              <textarea data-ui="textarea" id="f-bio" rows="3" placeholder="What does this project do?"></textarea>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div data-ui="card">
+                      <div data-part="header">
+                        <h3 data-part="title">Choices</h3>
+                        <p data-part="description">Native select, checkbox, radio group and switch.</p>
+                      </div>
+                      <div data-part="body">
+                        <div data-ui="stack" data-gap="4">
+                          <div data-ui="field-group">
+                            <label data-part="label" for="f-region">Region</label>
+                            <div data-part="input">
+                              <select data-ui="select" id="f-region">
+                                <option>us-east-1</option>
+                                <option>eu-west-1</option>
+                                <option>ap-southeast-2</option>
+                              </select>
+                            </div>
+                          </div>
+                          <fieldset data-ui="radio-group">
+                            <legend data-ui="label">Plan</legend>
+                            <label data-ui="radio-label">
+                              <input data-ui="radio" type="radio" name="v2-plan" value="hobby" checked>
+                              <span data-part="label">Hobby</span>
+                            </label>
+                            <label data-ui="radio-label">
+                              <input data-ui="radio" type="radio" name="v2-plan" value="pro">
+                              <span data-part="label">Pro</span>
+                            </label>
+                            <label data-ui="radio-label">
+                              <input data-ui="radio" type="radio" name="v2-plan" value="team">
+                              <span data-part="label">Team</span>
+                            </label>
+                          </fieldset>
+                          <label data-ui="checkbox-label">
+                            <input data-ui="checkbox" type="checkbox" checked>
+                            <span data-part="label">Email me deploy notifications</span>
+                          </label>
+                          <label data-ui="switch-label">
+                            <input data-ui="switch" type="checkbox" role="switch" checked>
+                            <span data-ui="text" data-size="sm">Enable preview branches</span>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div data-ui="card">
+                      <div data-part="header">
+                        <h3 data-part="title">Custom select</h3>
+                        <p data-part="description">Listbox with in-menu search — keyboard driven.</p>
+                      </div>
+                      <div data-part="body">
+                        <div data-ui="select-custom" data-state="closed" data-size="md">
+                          <button data-part="trigger" role="combobox" aria-expanded="false" aria-haspopup="listbox" aria-controls="v2-selc-list" aria-label="Framework">
+                            <span data-part="value">Choose a framework</span>
+                            <span data-part="chevron" aria-hidden="true">&#x25BE;</span>
+                          </button>
+                          <div data-part="listbox" role="listbox" id="v2-selc-list" hidden>
+                            <input data-part="search" type="text" placeholder="Search..." aria-label="Filter frameworks">
+                            <div data-part="option" role="option" aria-selected="false" data-value="react">React</div>
+                            <div data-part="option" role="option" aria-selected="false" data-value="vue">Vue</div>
+                            <div data-part="option" role="option" aria-selected="false" data-value="svelte">Svelte</div>
+                            <div data-part="option" role="option" aria-selected="false" data-value="solid">Solid</div>
+                            <div data-part="option" role="option" aria-selected="false" data-value="astro">Astro</div>
+                            <div data-part="empty" hidden>No options found</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div data-ui="card">
+                      <div data-part="header">
+                        <h3 data-part="title">Combobox &amp; date picker</h3>
+                        <p data-part="description">Autocomplete input and a pop-up calendar.</p>
+                      </div>
+                      <div data-part="body">
+                        <div data-ui="stack" data-gap="4">
+                          <div data-ui="combobox" data-state="closed" data-size="md">
+                            <input data-part="input" type="text" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="v2-cb-list" placeholder="Search a language...">
+                            <ul data-part="listbox" role="listbox" id="v2-cb-list" hidden>
+                              <li data-part="option" role="option" aria-selected="false">TypeScript</li>
+                              <li data-part="option" role="option" aria-selected="false">Python</li>
+                              <li data-part="option" role="option" aria-selected="false">Rust</li>
+                              <li data-part="option" role="option" aria-selected="false">Go</li>
+                              <li data-part="option" role="option" aria-selected="false">Elixir</li>
+                              <li data-part="empty" role="option" aria-disabled="true" hidden>No results found</li>
+                            </ul>
+                          </div>
+                          <div data-ui="date-picker" data-state="closed" data-size="md">
+                            <div data-part="trigger">
+                              <input data-part="input" type="text" role="combobox" placeholder="Select a date" readonly aria-haspopup="dialog" aria-expanded="false" aria-label="Choose date">
+                              <span data-part="icon" aria-hidden="true">&#x1F4C5;</span>
+                            </div>
+                            <div data-part="calendar" role="dialog" aria-label="Date picker" hidden>
+                              <div data-ui="calendar" data-size="md" data-value="2026-07-11">
+                                <div data-part="header">
+                                  <button data-part="nav-prev" type="button" aria-label="Previous month">&lsaquo;</button>
+                                  <span data-part="month-label"></span>
+                                  <button data-part="nav-next" type="button" aria-label="Next month">&rsaquo;</button>
+                                </div>
+                                <table data-part="grid" role="grid" aria-label="Calendar">
+                                  <thead>
+                                    <tr>
+                                      <th scope="col" abbr="Sunday">Su</th>
+                                      <th scope="col" abbr="Monday">Mo</th>
+                                      <th scope="col" abbr="Tuesday">Tu</th>
+                                      <th scope="col" abbr="Wednesday">We</th>
+                                      <th scope="col" abbr="Thursday">Th</th>
+                                      <th scope="col" abbr="Friday">Fr</th>
+                                      <th scope="col" abbr="Saturday">Sa</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody data-part="grid-body"></tbody>
+                                </table>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+
+                <!-- ─────────── DATA DISPLAY ─────────── -->
+                <div role="tabpanel" id="gpanel-data" aria-labelledby="gtab-data" tabindex="0" l-show="activeGroup === 'data'">
+                  <div data-ui="stack" data-gap="4">
+
+                    <div data-ui="card">
+                      <div data-part="header">
+                        <h3 data-part="title">Deployments</h3>
+                        <p data-part="description">Sortable table — click a column header to sort.</p>
+                      </div>
+                      <div data-part="body">
+                        <div data-ui="table" data-variant="striped" data-size="md">
+                          <table data-part="table">
+                            <thead data-part="thead">
+                              <tr data-part="tr">
+                                <th data-part="th" scope="col" data-sortable aria-sort="none">Service</th>
+                                <th data-part="th" scope="col" data-sortable aria-sort="none">Environment</th>
+                                <th data-part="th" scope="col" data-sortable aria-sort="none">Status</th>
+                                <th data-part="th" scope="col" data-align="right" data-sortable aria-sort="none">Latency</th>
+                              </tr>
+                            </thead>
+                            <tbody data-part="tbody">
+                              <tr data-part="tr">
+                                <td data-part="td">api-gateway</td>
+                                <td data-part="td">production</td>
+                                <td data-part="td"><span data-ui="badge" data-variant="success">Healthy</span></td>
+                                <td data-part="td" data-align="right">42 ms</td>
+                              </tr>
+                              <tr data-part="tr">
+                                <td data-part="td">auth-service</td>
+                                <td data-part="td">production</td>
+                                <td data-part="td"><span data-ui="badge" data-variant="warning">Degraded</span></td>
+                                <td data-part="td" data-align="right">318 ms</td>
+                              </tr>
+                              <tr data-part="tr">
+                                <td data-part="td">billing-worker</td>
+                                <td data-part="td">staging</td>
+                                <td data-part="td"><span data-ui="badge" data-variant="success">Healthy</span></td>
+                                <td data-part="td" data-align="right">88 ms</td>
+                              </tr>
+                              <tr data-part="tr">
+                                <td data-part="td">search-index</td>
+                                <td data-part="td">production</td>
+                                <td data-part="td"><span data-ui="badge" data-variant="destructive">Down</span></td>
+                                <td data-part="td" data-align="right">—</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div data-ui="grid" data-cols="3" data-cols-md="1" data-gap="4">
+                      <div data-ui="card">
+                        <div data-part="header"><h3 data-part="title">Team</h3></div>
+                        <div data-part="body">
+                          <div data-ui="stack" data-gap="4">
+                            <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center">
+                              <span data-ui="avatar"><span data-part="fallback">CL</span></span>
+                              <div data-ui="stack" data-gap="0" data-flex="1">
+                                <span data-ui="text" data-size="sm" data-weight="medium">Claude</span>
+                                <span data-ui="text" data-size="xs" data-variant="subtle">Maintainer</span>
+                              </div>
+                              <span data-ui="badge" data-variant="primary" data-size="sm">Owner</span>
+                            </div>
+                            <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center">
+                              <span data-ui="avatar"><span data-part="fallback">SH</span></span>
+                              <div data-ui="stack" data-gap="0" data-flex="1">
+                                <span data-ui="text" data-size="sm" data-weight="medium">Sarah</span>
+                                <span data-ui="text" data-size="xs" data-variant="subtle">Reviewer</span>
+                              </div>
+                              <span data-ui="badge" data-size="sm">Member</span>
+                            </div>
+                            <div data-ui="stack" data-variant="horizontal" data-gap="2" data-wrap>
+                              <span data-ui="chip" data-size="sm"><span data-part="label">frontend</span></span>
+                              <span data-ui="chip" data-size="sm" data-variant="primary"><span data-part="label">design-system</span></span>
+                              <span data-ui="chip" data-size="sm" data-variant="outline"><span data-part="label">a11y</span></span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div data-ui="card">
+                        <div data-part="header"><h3 data-part="title">Quota</h3></div>
+                        <div data-part="body">
+                          <div data-ui="stack" data-gap="4">
+                            <div data-ui="stat" data-trend="up">
+                              <span data-part="label">Build minutes</span>
+                              <span data-part="value">2,140</span>
+                              <span data-part="change">+18% this week</span>
+                            </div>
+                            <div data-ui="stack" data-gap="1">
+                              <span data-ui="text" data-size="xs" data-variant="muted">Bandwidth</span>
+                              <div data-ui="progress" data-variant="success">
+                                <div data-part="track"><div data-part="fill" style="width: 64%"></div></div>
+                                <span data-part="label">64%</span>
+                              </div>
+                            </div>
+                            <div data-ui="stack" data-gap="1">
+                              <span data-ui="text" data-size="xs" data-variant="muted">Storage</span>
+                              <div data-ui="progress" data-variant="warning">
+                                <div data-part="track"><div data-part="fill" style="width: 88%"></div></div>
+                                <span data-part="label">88%</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div data-ui="card">
+                        <div data-part="header"><h3 data-part="title">Loading</h3></div>
+                        <div data-part="body">
+                          <div data-ui="stack" data-gap="3">
+                            <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center">
+                              <div data-ui="skeleton" data-variant="circle" aria-hidden="true"></div>
+                              <div data-ui="stack" data-gap="2" style="flex: 1">
+                                <div data-ui="skeleton" aria-hidden="true" style="--skeleton-width: 50%"></div>
+                                <div data-ui="skeleton" aria-hidden="true" style="--skeleton-width: 80%"></div>
+                              </div>
+                            </div>
+                            <div data-ui="skeleton" data-variant="rect" aria-hidden="true"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div data-ui="grid" data-cols="2" data-cols-md="1" data-gap="4">
+                      <div data-ui="card">
+                        <div data-part="header"><h3 data-part="title">Invoice details</h3></div>
+                        <div data-part="body">
+                          <dl data-ui="key-value" data-cols="2">
+                            <dt data-part="label">Invoice</dt>
+                            <dd data-part="value">INV-2026-0042</dd>
+                            <dt data-part="label">Issued</dt>
+                            <dd data-part="value">11 Jul 2026</dd>
+                            <dt data-part="label">Plan</dt>
+                            <dd data-part="value">Team (annual)</dd>
+                            <dt data-part="label">Amount</dt>
+                            <dd data-part="value">$1,188.00</dd>
+                          </dl>
+                        </div>
+                      </div>
+                      <div data-ui="card">
+                        <div data-part="header"><h3 data-part="title">Release notes</h3></div>
+                        <div data-part="body">
+                          <div data-ui="stack" data-gap="3">
+                            <dl data-ui="description-list" data-size="sm">
+                              <dt data-part="term">What changed</dt>
+                              <dd data-part="details">Added ten new v0.4 components including sidebar, slider, calendar and input-otp.</dd>
+                            </dl>
+                            <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center" data-wrap>
+                              <span data-ui="text" data-size="xs" data-variant="muted">Shortcut</span>
+                              <kbd data-ui="kbd">&#x2318;</kbd>
+                              <kbd data-ui="kbd">K</kbd>
+                              <span data-ui="text" data-size="xs" data-variant="muted">opens the palette</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+
+                <!-- ─────────── FEEDBACK & OVERLAYS ─────────── -->
+                <div role="tabpanel" id="gpanel-feedback" aria-labelledby="gtab-feedback" tabindex="0" l-show="activeGroup === 'feedback'">
+                  <div data-ui="stack" data-gap="4">
+
+                    <div data-ui="card">
+                      <div data-part="header">
+                        <h3 data-part="title">Overlays</h3>
+                        <p data-part="description">Dialog, sheet, drawer, popover and tooltip — all keyboard and focus-trap ready.</p>
+                      </div>
+                      <div data-part="body">
+                        <div data-ui="stack" data-variant="horizontal" data-gap="3" data-wrap data-align="center">
+
+                          <button data-ui="button" data-variant="primary" @click="openRecipe('v2-dialog', '_faqirDialog')">Open dialog</button>
+                          <button data-ui="button" data-variant="outline" @click="openRecipe('v2-sheet', '_faqirSheet')">Bottom sheet</button>
+                          <button data-ui="button" data-variant="outline" @click="openRecipe('v2-drawer', '_faqirDrawer')">Right drawer</button>
+
+                          <div data-ui="popover" data-state="closed">
+                            <button data-part="trigger" data-ui="button" data-variant="ghost" aria-haspopup="true" aria-expanded="false">Popover</button>
+                            <div data-part="content" data-variant="bottom" data-align="start" hidden>
+                              <p data-ui="text" data-size="sm">Anchored, dismissible content positioned around its trigger.</p>
+                              <button data-part="close" aria-label="Close popover">&#x2715;</button>
+                            </div>
+                          </div>
+
+                          <div data-ui="tooltip" data-variant="top" data-state="hidden">
+                            <button data-part="trigger" data-ui="button" data-variant="ghost" aria-describedby="v2-tip">Hover for tooltip</button>
+                            <div data-part="content" id="v2-tip" role="tooltip" hidden>Tokens give the focus ring for free.</div>
+                          </div>
+
+                        </div>
+                      </div>
+                    </div>
+
+                    <div data-ui="grid" data-cols="2" data-cols-md="1" data-gap="4">
+                      <div data-ui="card">
+                        <div data-part="header"><h3 data-part="title">Toasts</h3></div>
+                        <div data-part="body">
+                          <div data-ui="stack" data-variant="horizontal" data-gap="3" data-wrap>
+                            <button data-ui="button" data-variant="outline" @click="toast('Saved to your workspace.', 'default', '&#x2139;')">Default</button>
+                            <button data-ui="button" data-variant="outline" @click="toast('Deployment succeeded.', 'success', '&#x2713;')">Success</button>
+                            <button data-ui="button" data-variant="outline" @click="toast('Rate limit approaching.', 'warning', '&#x26A0;')">Warning</button>
+                            <button data-ui="button" data-variant="outline" @click="toast('Build failed on step 3.', 'error', '&#x2717;')">Error</button>
+                          </div>
+                        </div>
+                      </div>
+                      <div data-ui="card">
+                        <div data-part="header"><h3 data-part="title">Inline status</h3></div>
+                        <div data-part="body">
+                          <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center">
+                            <span data-ui="spinner" aria-label="Loading"></span>
+                            <span data-ui="text" data-size="sm" data-variant="muted">Provisioning your environment…</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div data-ui="stack" data-gap="3">
+                      <div data-ui="callout" data-variant="info" role="note">
+                        <span data-part="icon"><span data-ui="icon" data-icon="info" aria-hidden="true"></span></span>
+                        <div data-part="content">
+                          <strong data-part="title">Heads up</strong>
+                          <p>Callouts share one anatomy across five semantic tones.</p>
+                        </div>
+                      </div>
+                      <div data-ui="callout" data-variant="success" role="note">
+                        <span data-part="icon"><span data-ui="icon" data-icon="circle-check" aria-hidden="true"></span></span>
+                        <div data-part="content"><p>Your last audit passed with zero contrast violations.</p></div>
+                      </div>
+                      <div data-ui="callout" data-variant="warning" role="note">
+                        <span data-part="icon"><span data-ui="icon" data-icon="triangle-alert" aria-hidden="true"></span></span>
+                        <div data-part="content"><p>Two dependencies have newer major versions available.</p></div>
+                      </div>
+                      <div data-ui="callout" data-variant="destructive" role="alert">
+                        <span data-part="icon"><span data-ui="icon" data-icon="circle-alert" aria-hidden="true"></span></span>
+                        <div data-part="content"><p>Production database backups are disabled.</p></div>
+                      </div>
+                    </div>
+
+                    <div data-ui="card">
+                      <div data-part="body">
+                        <div data-ui="empty-state">
+                          <span data-part="icon"><span data-ui="icon" data-icon="folder-open" aria-hidden="true" style="font-size: 2rem; color: var(--color-fg-muted)"></span></span>
+                          <h3 data-part="title">No projects yet</h3>
+                          <p data-part="description">Create your first project to start deploying in seconds.</p>
+                          <div data-part="actions">
+                            <button data-ui="button" data-variant="primary" @click="toast('New project created.', 'success', '&#x2713;')">Create project</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+
+                <!-- ─────────── NAVIGATION ─────────── -->
+                <div role="tabpanel" id="gpanel-nav" aria-labelledby="gtab-nav" tabindex="0" l-show="activeGroup === 'nav'">
+                  <div data-ui="stack" data-gap="4">
+
+                    <div data-ui="grid" data-cols="2" data-cols-md="1" data-gap="4">
+                      <div data-ui="card">
+                        <div data-part="header"><h3 data-part="title">Primary nav</h3></div>
+                        <div data-part="body">
+                          <div data-ui="stack" data-gap="4">
+                            <nav data-ui="nav" aria-label="Sections">
+                              <a data-part="link" data-state="active" href="#gallery">Overview</a>
+                              <a data-part="link" href="#why">Features</a>
+                              <a data-part="link" href="#themes">Themes</a>
+                            </nav>
+                            <nav data-ui="breadcrumb" aria-label="Breadcrumb">
+                              <ol data-part="list">
+                                <li><a data-part="item" href="#gallery">Home</a></li>
+                                <li data-part="separator" aria-hidden="true"></li>
+                                <li><a data-part="item" href="#gallery">Components</a></li>
+                                <li data-part="separator" aria-hidden="true"></li>
+                                <li><span data-part="current" aria-current="page">Navigation</span></li>
+                              </ol>
+                            </nav>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div data-ui="card">
+                        <div data-part="header"><h3 data-part="title">Menus</h3></div>
+                        <div data-part="body">
+                          <div data-ui="stack" data-variant="horizontal" data-gap="3" data-wrap data-align="center">
+                            <div data-ui="dropdown" data-state="closed">
+                              <button data-part="trigger" data-ui="button" data-variant="outline" aria-haspopup="true" aria-expanded="false">Actions</button>
+                              <div data-part="menu" role="menu" hidden>
+                                <button data-part="item" role="menuitem">Rename</button>
+                                <button data-part="item" role="menuitem">Duplicate</button>
+                                <hr data-part="separator">
+                                <button data-part="item" role="menuitem">Delete</button>
+                              </div>
+                            </div>
+                            <button data-ui="button" data-variant="ghost" @click="openPalette()">
+                              <span data-ui="icon" data-icon="search" aria-hidden="true" style="font-size: 1rem"></span>
+                              Command palette
+                              <kbd data-ui="kbd">&#x2318;K</kbd>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div data-ui="card">
+                      <div data-part="header"><h3 data-part="title">Wizard progress</h3></div>
+                      <div data-part="body">
+                        <div data-ui="stepper">
+                          <div data-part="step" data-state="completed">
+                            <span data-part="indicator">&#x2713;</span>
+                            <span data-part="label">Account</span>
+                          </div>
+                          <div data-part="connector" data-state="completed"></div>
+                          <div data-part="step" data-state="active">
+                            <span data-part="indicator">2</span>
+                            <span data-part="label">Project</span>
+                          </div>
+                          <div data-part="connector"></div>
+                          <div data-part="step">
+                            <span data-part="indicator">3</span>
+                            <span data-part="label">Deploy</span>
+                          </div>
+                          <div data-part="connector"></div>
+                          <div data-part="step">
+                            <span data-part="indicator">4</span>
+                            <span data-part="label">Review</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div data-ui="card">
+                      <div data-part="header"><h3 data-part="title">Pagination &amp; FAQ</h3></div>
+                      <div data-part="body">
+                        <div data-ui="stack" data-gap="4">
+                          <div data-ui="pagination" data-size="md">
+                            <nav data-part="nav" role="navigation" aria-label="Pagination">
+                              <button data-part="prev" aria-label="Previous page" disabled>&laquo; Prev</button>
+                              <button data-part="page" data-page="1" data-state="active" aria-current="page">1</button>
+                              <button data-part="page" data-page="2">2</button>
+                              <button data-part="page" data-page="3">3</button>
+                              <span data-part="ellipsis">&hellip;</span>
+                              <button data-part="page" data-page="12">12</button>
+                              <button data-part="next" aria-label="Next page">Next &raquo;</button>
+                            </nav>
+                          </div>
+                          <div data-ui="accordion" data-variant="single" id="v2-accordion">
+                            <div data-part="item" data-state="collapsed">
+                              <button data-part="trigger" id="v2-acc-t1" aria-expanded="false" aria-controls="v2-acc-c1">
+                                <span>Do I need a build step?</span>
+                                <span data-part="icon" aria-hidden="true">&#x25BE;</span>
+                              </button>
+                              <div data-part="content" id="v2-acc-c1" role="region" aria-labelledby="v2-acc-t1" hidden>
+                                <p>No. Link the token and component CSS, drop in the markup, and it renders.</p>
+                              </div>
+                            </div>
+                            <div data-part="item" data-state="collapsed">
+                              <button data-part="trigger" id="v2-acc-t2" aria-expanded="false" aria-controls="v2-acc-c2">
+                                <span>How do recipes initialise?</span>
+                                <span data-part="icon" aria-hidden="true">&#x25BE;</span>
+                              </button>
+                              <div data-part="content" id="v2-acc-c2" role="region" aria-labelledby="v2-acc-t2" hidden>
+                                <p>Include faqir-core.js and correct markup — recipes auto-wire on load.</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+
+                <!-- ─────────── NEW IN v0.4 (star) ─────────── -->
+                <div role="tabpanel" id="gpanel-new" aria-labelledby="gtab-new" tabindex="0" l-show="activeGroup === 'new'">
+                  <div data-ui="stack" data-gap="4">
+
+                    <div data-ui="callout" data-variant="info" role="note">
+                      <span data-part="icon"><span data-ui="icon" data-icon="sparkles" aria-hidden="true"></span></span>
+                      <div data-part="content">
+                        <strong data-part="title">Fresh in v0.4</strong>
+                        <p>Ten new components plus the aurora, slate and AAA-contrast themes. Everything below is fully interactive.</p>
+                      </div>
+                    </div>
+
+                    <!-- Icon grid + breadcrumb -->
+                    <div data-ui="grid" data-cols="2" data-cols-md="1" data-gap="4">
+                      <div data-ui="card">
+                        <div data-part="header">
+                          <h3 data-part="title">Icon set</h3>
+                          <p data-part="description">120 CSS-mask glyphs, coloured by currentColor.</p>
+                        </div>
+                        <div data-part="body">
+                          <div style="display: grid; grid-template-columns: repeat(8, 1fr); gap: var(--space-3); color: var(--color-fg)">
+                            <span data-ui="icon" data-icon="activity" role="img" aria-label="activity" style="font-size: 1.25rem"></span>
+                            <span data-ui="icon" data-icon="award" role="img" aria-label="award" style="font-size: 1.25rem"></span>
+                            <span data-ui="icon" data-icon="bell" role="img" aria-label="bell" style="font-size: 1.25rem"></span>
+                            <span data-ui="icon" data-icon="chart-pie" role="img" aria-label="chart-pie" style="font-size: 1.25rem"></span>
+                            <span data-ui="icon" data-icon="cloud" role="img" aria-label="cloud" style="font-size: 1.25rem"></span>
+                            <span data-ui="icon" data-icon="code" role="img" aria-label="code" style="font-size: 1.25rem"></span>
+                            <span data-ui="icon" data-icon="cpu" role="img" aria-label="cpu" style="font-size: 1.25rem"></span>
+                            <span data-ui="icon" data-icon="database" role="img" aria-label="database" style="font-size: 1.25rem"></span>
+                            <span data-ui="icon" data-icon="git-branch" role="img" aria-label="git-branch" style="font-size: 1.25rem"></span>
+                            <span data-ui="icon" data-icon="globe" role="img" aria-label="globe" style="font-size: 1.25rem"></span>
+                            <span data-ui="icon" data-icon="heart" role="img" aria-label="heart" style="font-size: 1.25rem"></span>
+                            <span data-ui="icon" data-icon="key" role="img" aria-label="key" style="font-size: 1.25rem"></span>
+                            <span data-ui="icon" data-icon="layers" role="img" aria-label="layers" style="font-size: 1.25rem"></span>
+                            <span data-ui="icon" data-icon="lock" role="img" aria-label="lock" style="font-size: 1.25rem"></span>
+                            <span data-ui="icon" data-icon="package" role="img" aria-label="package" style="font-size: 1.25rem"></span>
+                            <span data-ui="icon" data-icon="server" role="img" aria-label="server" style="font-size: 1.25rem"></span>
+                            <span data-ui="icon" data-icon="shield" role="img" aria-label="shield" style="font-size: 1.25rem"></span>
+                            <span data-ui="icon" data-icon="sparkles" role="img" aria-label="sparkles" style="font-size: 1.25rem"></span>
+                            <span data-ui="icon" data-icon="star" role="img" aria-label="star" style="font-size: 1.25rem"></span>
+                            <span data-ui="icon" data-icon="target" role="img" aria-label="target" style="font-size: 1.25rem"></span>
+                            <span data-ui="icon" data-icon="terminal" role="img" aria-label="terminal" style="font-size: 1.25rem"></span>
+                            <span data-ui="icon" data-icon="zap" role="img" aria-label="zap" style="font-size: 1.25rem"></span>
+                            <span data-ui="icon" data-icon="users" role="img" aria-label="users" style="font-size: 1.25rem"></span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div data-ui="card">
+                        <div data-part="header">
+                          <h3 data-part="title">Text formatting</h3>
+                          <p data-part="description">Toggle primitives as a multi-select group and a single-select group.</p>
+                        </div>
+                        <div data-part="body">
+                          <div data-ui="stack" data-gap="4">
+                            <div data-ui="stack" data-variant="horizontal" data-gap="2" role="group" aria-label="Text style">
+                              <button data-ui="toggle" type="button" :aria-pressed="fmt.bold" @click="fmt.bold = !fmt.bold" aria-label="Bold">
+                                <span data-ui="icon" data-icon="bold" aria-hidden="true"></span>
+                              </button>
+                              <button data-ui="toggle" type="button" :aria-pressed="fmt.italic" @click="fmt.italic = !fmt.italic" aria-label="Italic">
+                                <span data-ui="icon" data-icon="italic" aria-hidden="true"></span>
+                              </button>
+                              <button data-ui="toggle" type="button" :aria-pressed="fmt.underline" @click="fmt.underline = !fmt.underline" aria-label="Underline">
+                                <span data-ui="icon" data-icon="underline" aria-hidden="true"></span>
+                              </button>
+                            </div>
+                            <div data-ui="stack" data-variant="horizontal" data-gap="2" role="group" aria-label="Text alignment">
+                              <button data-ui="toggle" type="button" :aria-pressed="align === 'left'" @click="align = 'left'" aria-label="Align left">
+                                <span data-ui="icon" data-icon="text-align-start" aria-hidden="true"></span>
+                              </button>
+                              <button data-ui="toggle" type="button" :aria-pressed="align === 'list'" @click="align = 'list'" aria-label="List">
+                                <span data-ui="icon" data-icon="list" aria-hidden="true"></span>
+                              </button>
+                            </div>
+                            <p data-ui="text" data-size="sm" data-variant="muted">
+                              State:
+                              <span l-text="fmt.bold ? 'bold ' : ''"></span><span l-text="fmt.italic ? 'italic ' : ''"></span><span l-text="fmt.underline ? 'underline ' : ''"></span><span l-text="'· ' + align"></span>
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Sliders + aspect ratio -->
+                    <div data-ui="grid" data-cols="2" data-cols-md="1" data-gap="4">
+                      <div data-ui="card">
+                        <div data-part="header">
+                          <h3 data-part="title">Sliders</h3>
+                          <p data-part="description">Single thumb and a non-crossing range — drag or arrow-key them.</p>
+                        </div>
+                        <div data-part="body">
+                          <div data-ui="stack" data-gap="6">
+                            <div data-ui="slider" data-variant="single" data-min="0" data-max="100" data-step="1" data-value="40" data-value-suffix="%" style="--slider-start: 0%; --slider-end: 40%">
+                              <div data-part="track">
+                                <div data-part="range"></div>
+                                <div data-part="thumb" role="slider" tabindex="0" aria-label="Volume" aria-valuemin="0" aria-valuemax="100" aria-valuenow="40" aria-valuetext="40%" style="--pos: 40%"></div>
+                              </div>
+                              <output data-part="output">40%</output>
+                            </div>
+                            <div data-ui="slider" data-variant="range" data-min="0" data-max="1000" data-step="10" data-value="200,800" style="--slider-start: 20%; --slider-end: 80%">
+                              <div data-part="track">
+                                <div data-part="range"></div>
+                                <div data-part="thumb" role="slider" tabindex="0" aria-label="Minimum price" aria-valuemin="0" aria-valuemax="800" aria-valuenow="200" style="--pos: 20%"></div>
+                                <div data-part="thumb" role="slider" tabindex="0" aria-label="Maximum price" aria-valuemin="200" aria-valuemax="1000" aria-valuenow="800" style="--pos: 80%"></div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div data-ui="card">
+                        <div data-part="header">
+                          <h3 data-part="title">Aspect ratio</h3>
+                          <p data-part="description">A token-styled 16:9 frame with rounded corners.</p>
+                        </div>
+                        <div data-part="body">
+                          <div data-ui="aspect-ratio" data-variant="16-9" style="--aspect-ratio-radius: var(--radius-lg)">
+                            <div style="display: grid; place-items: center; background: var(--color-primary-subtle); color: var(--color-primary)">
+                              <div data-ui="stack" data-gap="2" data-align="center">
+                                <span data-ui="icon" data-icon="play" aria-hidden="true" style="font-size: 2rem"></span>
+                                <span data-ui="text" data-size="sm" data-weight="medium">16 / 9</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- OTP + calendar -->
+                    <div data-ui="grid" data-cols="2" data-cols-md="1" data-gap="4">
+                      <div data-ui="card">
+                        <div data-part="header">
+                          <h3 data-part="title">One-time code</h3>
+                          <p data-part="description">Six segmented digits with paste and auto-advance.</p>
+                        </div>
+                        <div data-part="body">
+                          <div data-ui="input-otp" data-length="6" data-mode="numeric">
+                            <input data-part="input" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]*" maxlength="6" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="One-time code">
+                            <div data-part="segments" aria-hidden="true">
+                              <div data-part="segment"></div>
+                              <div data-part="segment"></div>
+                              <div data-part="segment"></div>
+                              <div data-part="segment"></div>
+                              <div data-part="segment"></div>
+                              <div data-part="segment"></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div data-ui="card">
+                        <div data-part="header">
+                          <h3 data-part="title">Calendar</h3>
+                          <p data-part="description">A fully interactive month grid — navigate and select.</p>
+                        </div>
+                        <div data-part="body">
+                          <div data-ui="calendar" data-size="md" data-value="2026-07-11">
+                            <div data-part="header">
+                              <button data-part="nav-prev" type="button" aria-label="Previous month">&lsaquo;</button>
+                              <span data-part="month-label"></span>
+                              <button data-part="nav-next" type="button" aria-label="Next month">&rsaquo;</button>
+                            </div>
+                            <table data-part="grid" role="grid" aria-label="Calendar">
+                              <thead>
+                                <tr>
+                                  <th scope="col" abbr="Sunday">Su</th>
+                                  <th scope="col" abbr="Monday">Mo</th>
+                                  <th scope="col" abbr="Tuesday">Tu</th>
+                                  <th scope="col" abbr="Wednesday">We</th>
+                                  <th scope="col" abbr="Thursday">Th</th>
+                                  <th scope="col" abbr="Friday">Fr</th>
+                                  <th scope="col" abbr="Saturday">Sa</th>
+                                </tr>
+                              </thead>
+                              <tbody data-part="grid-body"></tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Alert dialog + collapsible FAQ -->
+                    <div data-ui="grid" data-cols="2" data-cols-md="1" data-gap="4">
+                      <div data-ui="card">
+                        <div data-part="header">
+                          <h3 data-part="title">Alert dialog</h3>
+                          <p data-part="description">A modal that demands a deliberate choice.</p>
+                        </div>
+                        <div data-part="body">
+                          <div data-ui="alert-dialog" data-state="closed" id="v2-alert">
+                            <button data-part="trigger" data-ui="button" data-variant="destructive">Delete project</button>
+                            <div data-part="overlay" hidden></div>
+                            <div data-part="panel" role="alertdialog" aria-modal="true" aria-labelledby="v2-alert-title" aria-describedby="v2-alert-desc" data-variant="destructive" data-size="sm" hidden>
+                              <div data-part="header">
+                                <h2 id="v2-alert-title" data-part="title">Delete this project?</h2>
+                              </div>
+                              <div data-part="body">
+                                <p id="v2-alert-desc" data-part="description">This permanently removes the project and all of its deployments. This action cannot be undone.</p>
+                              </div>
+                              <div data-part="footer">
+                                <button data-ui="button" data-part="cancel" data-variant="outline">Cancel</button>
+                                <button data-ui="button" data-part="confirm" data-variant="destructive" @click="toast('Project deleted.', 'error', '&#x2717;')">Delete</button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div data-ui="card">
+                        <div data-part="header">
+                          <h3 data-part="title">Collapsible FAQ</h3>
+                          <p data-part="description">Native &lt;details&gt; — zero JavaScript.</p>
+                        </div>
+                        <div data-part="body">
+                          <div data-ui="stack" data-gap="2">
+                            <details data-ui="collapsible" data-variant="bordered">
+                              <summary data-part="trigger">Is Faqir really zero-class?</summary>
+                              <div data-part="content">Yes — every selector targets data attributes, so there are no class names to collide or memorise.</div>
+                            </details>
+                            <details data-ui="collapsible" data-variant="bordered" open>
+                              <summary data-part="trigger">Can agents verify their output?</summary>
+                              <div data-part="content">Each component ships a manifest listing its parts, variants and ARIA — machine-checkable without a browser.</div>
+                            </details>
+                            <details data-ui="collapsible" data-variant="bordered">
+                              <summary data-part="trigger">How many themes are included?</summary>
+                              <div data-part="content">Eight, each working in light and dark, including a WCAG-AAA contrast theme.</div>
+                            </details>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Sidebar app-shell mock -->
+                    <div data-ui="card">
+                      <div data-part="header">
+                        <h3 data-part="title">Sidebar app shell</h3>
+                        <p data-part="description">A miniature application frame — click the chevron or the header button to flip between full and rail.</p>
+                      </div>
+                      <div data-part="body">
+                        <div style="display: flex; block-size: 20rem; overflow: hidden; border: 1px solid var(--color-border); border-radius: var(--radius-lg)">
+                          <div data-ui="sidebar" data-state="expanded" data-breakpoint="1" id="v2-sidebar">
+                            <div data-part="overlay" hidden></div>
+                            <aside data-part="panel" aria-label="Primary navigation" style="block-size: 100%">
+                              <div data-part="header">
+                                <a data-part="brand" href="#gallery" aria-label="Faqir home">
+                                  <span data-part="brand-icon" aria-hidden="true"><span data-ui="icon" data-icon="sparkles" style="font-size: 1.25rem"></span></span>
+                                  <span data-part="brand-label">Faqir</span>
+                                </a>
+                                <button data-part="trigger" aria-label="Collapse sidebar" aria-expanded="true" aria-controls="v2-sidebar">
+                                  <span data-ui="icon" data-icon="chevron-left" aria-hidden="true"></span>
+                                </button>
+                              </div>
+                              <nav data-part="nav" aria-label="Main">
+                                <a data-part="item" href="#gallery" aria-current="page">
+                                  <span data-part="icon" aria-hidden="true"><span data-ui="icon" data-icon="house"></span></span>
+                                  <span data-part="label">Dashboard</span>
+                                </a>
+                                <a data-part="item" href="#gallery">
+                                  <span data-part="icon" aria-hidden="true"><span data-ui="icon" data-icon="layers"></span></span>
+                                  <span data-part="label">Projects</span>
+                                </a>
+                                <a data-part="item" href="#gallery">
+                                  <span data-part="icon" aria-hidden="true"><span data-ui="icon" data-icon="chart-column"></span></span>
+                                  <span data-part="label">Analytics</span>
+                                </a>
+                                <a data-part="item" href="#gallery">
+                                  <span data-part="icon" aria-hidden="true"><span data-ui="icon" data-icon="users"></span></span>
+                                  <span data-part="label">Team</span>
+                                </a>
+                              </nav>
+                              <div data-part="footer">
+                                <a data-part="item" href="#gallery">
+                                  <span data-part="icon" aria-hidden="true"><span data-ui="icon" data-icon="settings"></span></span>
+                                  <span data-part="label">Settings</span>
+                                </a>
+                              </div>
+                            </aside>
+                          </div>
+                          <div style="flex: 1 1 auto; display: flex; flex-direction: column; min-inline-size: 0">
+                            <header style="display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-block-end: 1px solid var(--color-border)">
+                              <button data-ui="button" data-variant="ghost" data-size="sm" data-sidebar-toggle="v2-sidebar" aria-controls="v2-sidebar" aria-expanded="true" aria-label="Toggle sidebar">
+                                <span data-ui="icon" data-icon="menu" aria-hidden="true"></span>
+                              </button>
+                              <strong data-ui="text" data-weight="semibold">Dashboard</strong>
+                            </header>
+                            <div style="flex: 1 1 auto; padding: var(--space-4); overflow: auto">
+                              <div data-ui="stack" data-gap="3">
+                                <div data-ui="grid" data-cols="2" data-gap="3">
+                                  <div data-ui="stat" data-variant="card" data-trend="up">
+                                    <span data-part="label">Requests</span>
+                                    <span data-part="value">1.2M</span>
+                                    <span data-part="change">+9%</span>
+                                  </div>
+                                  <div data-ui="stat" data-variant="card" data-trend="down">
+                                    <span data-part="label">Errors</span>
+                                    <span data-part="value">0.4%</span>
+                                    <span data-part="change">-2%</span>
+                                  </div>
+                                </div>
+                                <p data-ui="text" data-size="sm" data-variant="muted">The whole shell is Faqir markup — sidebar, header and content share the same tokens as the page around it.</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </section>
+
+          <div data-ui="separator"></div>
+
+          <!-- ══════════════════════ THEME STRIP ══════════════════════ -->
+          <section id="themes" aria-labelledby="themes-title">
+            <div data-ui="card" data-variant="filled">
+              <div data-part="header">
+                <h2 id="themes-title" data-part="title">Themeable to the bone</h2>
+                <p data-part="description">Every value is a token. A theme is just a stylesheet that redefines them — pick one to switch the whole page live.</p>
+              </div>
+              <div data-part="body">
+                <div data-ui="stack" data-variant="horizontal" data-gap="2" data-wrap role="group" aria-label="Theme picker">
+                  <button data-ui="chip" type="button" @click="setTheme('default')" :data-variant="theme === 'default' ? 'primary' : 'outline'"><span data-part="label">Default</span></button>
+                  <button data-ui="chip" type="button" @click="setTheme('midnight')" :data-variant="theme === 'midnight' ? 'primary' : 'outline'"><span data-part="label">Midnight</span></button>
+                  <button data-ui="chip" type="button" @click="setTheme('paper')" :data-variant="theme === 'paper' ? 'primary' : 'outline'"><span data-part="label">Paper</span></button>
+                  <button data-ui="chip" type="button" @click="setTheme('brutalist')" :data-variant="theme === 'brutalist' ? 'primary' : 'outline'"><span data-part="label">Brutalist</span></button>
+                  <button data-ui="chip" type="button" @click="setTheme('aurora')" :data-variant="theme === 'aurora' ? 'primary' : 'outline'"><span data-part="label">Aurora</span></button>
+                  <button data-ui="chip" type="button" @click="setTheme('slate')" :data-variant="theme === 'slate' ? 'primary' : 'outline'"><span data-part="label">Slate</span></button>
+                  <button data-ui="chip" type="button" @click="setTheme('contrast')" :data-variant="theme === 'contrast' ? 'primary' : 'outline'"><span data-part="label">Contrast (AAA)</span></button>
+                </div>
+                <div data-ui="stack" data-gap="2" style="margin-block-start: var(--space-4)">
+                  <p data-ui="text" data-size="sm" data-variant="muted">
+                    Active theme: <strong l-text="theme"></strong> · <span l-text="darkMode ? 'dark' : 'light'"></span>.
+                    Every component on this page re-themed without a single markup change.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ══════════════════════ FOOTER ══════════════════════ -->
+          <footer role="contentinfo">
+            <div data-ui="separator"></div>
+            <div data-ui="stack" data-gap="4" style="padding-block: var(--space-6)">
+              <div data-ui="stack" data-variant="horizontal" data-gap="4" data-wrap data-justify="between" data-responsive>
+                <div data-ui="stack" data-gap="1">
+                  <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center">
+                    <span data-ui="icon" data-icon="sparkles" aria-hidden="true" style="color: var(--color-primary)"></span>
+                    <span data-ui="text" data-weight="bold">Faqir UI</span>
+                  </div>
+                  <p data-ui="text" data-size="sm" data-variant="muted">The UI framework AI agents speak natively.</p>
+                </div>
+                <div data-ui="stack" data-gap="2">
+                  <span data-ui="text" data-size="xs" data-variant="subtle" data-weight="medium">More v2 demos</span>
+                  <div data-ui="stack" data-variant="horizontal" data-gap="4" data-wrap>
+                    <a data-ui="link" href="dashboard-v2.html">Dashboard</a>
+                    <a data-ui="link" href="task-manager-v2.html">Task manager</a>
+                    <a data-ui="link" href="kanban-v2.html">Kanban</a>
+                    <a data-ui="link" href="store-v2.html">Store</a>
+                    <a data-ui="link" href="wizard-v2.html">Wizard</a>
+                  </div>
+                </div>
+              </div>
+              <p data-ui="text" data-size="xs" data-variant="subtle">
+                Faqir UI — 58 components · 8 themes · 0 CSS classes. View source: every element is data-attributes + tokens.
+              </p>
+            </div>
+          </footer>
+
+        </div>
+      </div>
+    </main>
+
+    <!-- ══════════════════════ MODAL OVERLAYS (kept outside the tabs subtree) ══════════════════════ -->
+    <!-- These recipes own a [data-part="panel"]; the tabs controller pairs triggers with panels by
+         DOM order, so nesting them inside a tab panel would misalign it. They are opened by the
+         Feedback tab buttons via each recipe's controller open() method. -->
+    <div data-ui="dialog" data-state="closed" id="v2-dialog">
+      <div data-part="overlay" hidden></div>
+      <div data-part="panel" role="dialog" aria-modal="true" aria-labelledby="v2-dialog-title" data-size="md" hidden>
+        <div data-part="header">
+          <h2 id="v2-dialog-title" data-part="title">Invite a teammate</h2>
+          <button data-part="close" aria-label="Close dialog">&#x2715;</button>
+        </div>
+        <div data-part="body">
+          <div data-ui="field-group">
+            <label data-part="label" for="v2-invite">Email address</label>
+            <div data-part="input">
+              <input data-ui="input" id="v2-invite" type="email" placeholder="teammate@company.com">
+            </div>
+          </div>
+        </div>
+        <div data-part="footer">
+          <button data-ui="button" data-part="close" data-variant="outline">Cancel</button>
+          <button data-ui="button" data-variant="primary" data-part="close" @click="toast('Invitation sent.', 'success', '&#x2713;')">Send invite</button>
+        </div>
+      </div>
+    </div>
+
+    <div data-ui="sheet" data-state="closed" id="v2-sheet">
+      <div data-part="overlay" hidden></div>
+      <div data-part="panel" data-variant="bottom" data-size="md" role="dialog" aria-modal="true" aria-labelledby="v2-sheet-title" hidden>
+        <div data-part="header">
+          <h2 id="v2-sheet-title" data-part="title">Quick filters</h2>
+          <button data-part="close" aria-label="Close sheet">&#x2715;</button>
+        </div>
+        <div data-part="body">
+          <p data-ui="text" data-size="sm" data-variant="muted">A bottom sheet is ideal for mobile filter panels and short forms.</p>
+        </div>
+      </div>
+    </div>
+
+    <div data-ui="drawer" data-state="closed" id="v2-drawer">
+      <div data-part="overlay" hidden></div>
+      <div data-part="panel" data-variant="right" data-size="sm" role="dialog" aria-modal="true" aria-labelledby="v2-drawer-title" hidden>
+        <div data-part="header">
+          <h2 id="v2-drawer-title" data-part="title">Settings</h2>
+          <button data-part="close" aria-label="Close drawer">&#x2715;</button>
+        </div>
+        <div data-part="body">
+          <p data-ui="text" data-size="sm" data-variant="muted">Slide-in panels keep context while editing secondary options.</p>
+        </div>
+        <div data-part="footer">
+          <button data-ui="button" data-part="close" data-variant="outline">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════ COMMAND PALETTE ══════════════════════ -->
+    <div data-ui="command-palette" data-state="closed" id="v2-cmdk" @command-select="onCommand($event.detail.label)">
+      <div data-part="overlay" hidden></div>
+      <div data-part="panel" role="dialog" aria-modal="true" aria-label="Command palette" data-size="md" hidden>
+        <div data-part="search-wrapper">
+          <input data-part="search" type="text" role="combobox" aria-expanded="true" aria-autocomplete="list" aria-controls="v2-cmdk-list" placeholder="Type a command or search...">
+        </div>
+        <div data-part="list" role="listbox" id="v2-cmdk-list">
+          <div data-part="group">
+            <div data-part="group-label">Navigation</div>
+            <div data-part="item" role="option" aria-selected="false">
+              <span data-part="item-label">Jump to component gallery</span>
+              <kbd data-part="kbd">G G</kbd>
+            </div>
+            <div data-part="item" role="option" aria-selected="false">
+              <span data-part="item-label">Jump to why Faqir wins</span>
+              <kbd data-part="kbd">G W</kbd>
+            </div>
+            <div data-part="item" role="option" aria-selected="false">
+              <span data-part="item-label">Jump to the theming model</span>
+              <kbd data-part="kbd">G T</kbd>
+            </div>
+          </div>
+          <div data-part="group">
+            <div data-part="group-label">Themes</div>
+            <div data-part="item" role="option" aria-selected="false"><span data-part="item-label">Theme — Default</span></div>
+            <div data-part="item" role="option" aria-selected="false"><span data-part="item-label">Theme — Midnight</span></div>
+            <div data-part="item" role="option" aria-selected="false"><span data-part="item-label">Theme — Aurora</span></div>
+            <div data-part="item" role="option" aria-selected="false"><span data-part="item-label">Theme — Slate</span></div>
+            <div data-part="item" role="option" aria-selected="false"><span data-part="item-label">Theme — Contrast (AAA)</span></div>
+          </div>
+          <div data-part="group">
+            <div data-part="group-label">Actions</div>
+            <div data-part="item" role="option" aria-selected="false">
+              <span data-part="item-label">Toggle dark mode</span>
+              <kbd data-part="kbd">T D</kbd>
+            </div>
+            <div data-part="item" role="option" aria-selected="false">
+              <span data-part="item-label">Fire a sample toast</span>
+            </div>
+          </div>
+          <div data-part="empty" hidden>No commands found</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════ TOAST CONTAINER ══════════════════════ -->
+    <div data-ui="toast" data-variant="bottom-right" data-part="container" role="region" aria-label="Notifications" id="v2-toast"></div>
+
+  </div>
+</body>
+</html>

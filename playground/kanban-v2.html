@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Faqir UI — Sprint Board (v2)</title>
+
+  <!-- Tokens -->
+  <link rel="stylesheet" href="../registry/tokens/palette.css">
+  <link rel="stylesheet" href="../registry/tokens/spacing.css">
+  <link rel="stylesheet" href="../registry/tokens/typography.css">
+  <link rel="stylesheet" href="../registry/tokens/effects.css">
+  <link rel="stylesheet" href="../registry/tokens/motion.css">
+  <link rel="stylesheet" href="../registry/tokens/semantic.css">
+  <link rel="stylesheet" href="../registry/tokens/aliases.css">
+
+  <!-- Base -->
+  <link rel="stylesheet" href="../registry/base/reset.css">
+
+  <!-- Themes (all seven; JS toggles the `disabled` attribute) -->
+  <link rel="stylesheet" href="../registry/themes/default.css"   id="theme-default">
+  <link rel="stylesheet" href="../registry/themes/midnight.css"  id="theme-midnight"  disabled>
+  <link rel="stylesheet" href="../registry/themes/paper.css"     id="theme-paper"     disabled>
+  <link rel="stylesheet" href="../registry/themes/brutalist.css" id="theme-brutalist" disabled>
+  <link rel="stylesheet" href="../registry/themes/aurora.css"    id="theme-aurora"    disabled>
+  <link rel="stylesheet" href="../registry/themes/slate.css"     id="theme-slate"     disabled>
+  <link rel="stylesheet" href="../registry/themes/contrast.css"  id="theme-contrast"  disabled>
+
+  <!-- Primitives -->
+  <link rel="stylesheet" href="../registry/primitives/surface/surface.css">
+  <link rel="stylesheet" href="../registry/primitives/stack/stack.css">
+  <link rel="stylesheet" href="../registry/primitives/grid/grid.css">
+  <link rel="stylesheet" href="../registry/primitives/text/text.css">
+  <link rel="stylesheet" href="../registry/primitives/button/button.css">
+  <link rel="stylesheet" href="../registry/primitives/input/input.css">
+  <link rel="stylesheet" href="../registry/primitives/textarea/textarea.css">
+  <link rel="stylesheet" href="../registry/primitives/select/select.css">
+  <link rel="stylesheet" href="../registry/primitives/label/label.css">
+  <link rel="stylesheet" href="../registry/primitives/field-group/field-group.css">
+  <link rel="stylesheet" href="../registry/primitives/badge/badge.css">
+  <link rel="stylesheet" href="../registry/primitives/chip/chip.css">
+  <link rel="stylesheet" href="../registry/primitives/card/card.css">
+  <link rel="stylesheet" href="../registry/primitives/separator/separator.css">
+  <link rel="stylesheet" href="../registry/primitives/avatar/avatar.css">
+  <link rel="stylesheet" href="../registry/primitives/switch/switch.css">
+  <link rel="stylesheet" href="../registry/primitives/breadcrumb/breadcrumb.css">
+  <link rel="stylesheet" href="../registry/primitives/icon/icons.css">
+  <link rel="stylesheet" href="../registry/primitives/progress/progress.css">
+  <link rel="stylesheet" href="../registry/primitives/stat/stat.css">
+  <link rel="stylesheet" href="../registry/primitives/toggle/toggle.css">
+  <link rel="stylesheet" href="../registry/primitives/collapsible/collapsible.css">
+  <link rel="stylesheet" href="../registry/primitives/checkbox/checkbox.css">
+
+  <!-- Recipes -->
+  <link rel="stylesheet" href="../registry/recipes/dropdown/dropdown.css">
+  <link rel="stylesheet" href="../registry/recipes/dialog/dialog.css">
+  <link rel="stylesheet" href="../registry/recipes/alert-dialog/alert-dialog.css">
+  <link rel="stylesheet" href="../registry/recipes/sheet/sheet.css">
+  <link rel="stylesheet" href="../registry/recipes/popover/popover.css">
+  <link rel="stylesheet" href="../registry/recipes/slider/slider.css">
+  <link rel="stylesheet" href="../registry/recipes/toast/toast.css">
+
+  <!-- Faqir Core -->
+  <script src="../registry/core/faqir-core.js" defer></script>
+</head>
+<body>
+
+  <div l-cloak l-data="{
+    /* ── Theme ── */
+    theme: 'default',
+    themes: ['default', 'midnight', 'paper', 'brutalist', 'aurora', 'slate', 'contrast'],
+    darkMode: false,
+    setTheme(name) {
+      this.theme = name;
+      this.themes.forEach(t => { document.getElementById('theme-' + t).disabled = (t !== name); });
+    },
+    toggleDark() {
+      this.darkMode = !this.darkMode;
+      document.documentElement.setAttribute('data-theme', this.darkMode ? 'dark' : 'light');
+    },
+
+    /* ── People ── */
+    people: {
+      sarah:  { name: 'Sarah Chen',   initials: 'SC' },
+      mike:   { name: 'Mike Rivera',  initials: 'MR' },
+      alice:  { name: 'Alice Novak',  initials: 'AN' },
+      james:  { name: 'James Okoro',  initials: 'JO' },
+      claude: { name: 'Claude',       initials: 'CL' }
+    },
+    personName(key) { return this.people[key] ? this.people[key].name : 'Unassigned'; },
+    personInitials(key) { return this.people[key] ? this.people[key].initials : '?'; },
+
+    /* ── Label + priority vocab ── */
+    allLabels: ['design', 'frontend', 'backend', 'a11y', 'bug', 'research', 'docs', 'perf', 'infra'],
+    labelVariant(label) {
+      const map = { design:'primary', frontend:'secondary', backend:'warning', a11y:'primary', bug:'destructive', research:'success', docs:'secondary', perf:'warning', infra:'secondary' };
+      return map[label] || 'secondary';
+    },
+    priorityIcon(p) { return p === 'high' ? 'zap' : p === 'medium' ? 'activity' : 'arrow-down'; },
+    priorityColor(p) { return p === 'high' ? 'var(--color-destructive)' : p === 'medium' ? 'var(--color-warning)' : 'var(--color-fg-muted)'; },
+    priorityLabel(p) { return p.charAt(0).toUpperCase() + p.slice(1); },
+    priorityRank(p) { return p === 'high' ? 0 : p === 'medium' ? 1 : 2; },
+
+    /* ── Due dates (offset in days from today) ── */
+    relDue(off) {
+      if (off === null || off === undefined) return 'No due date';
+      if (off < 0) return Math.abs(off) + 'd overdue';
+      if (off === 0) return 'Due today';
+      if (off === 1) return 'Due tomorrow';
+      return 'Due in ' + off + 'd';
+    },
+    isOverdue(off) { return off !== null && off !== undefined && off < 0; },
+
+    /* ── Board state ── */
+    nextId: 15,
+    columns: [
+      { id: 'backlog', title: 'Backlog', wip: null, cards: [
+        { id: 1, title: 'Combobox async option loading', description: 'Debounced remote fetch for large option sets, with loading and empty states wired through the listbox.', labels: ['frontend','research'], assignee: 'sarah', priority: 'medium', dueOffset: 9, progress: 0 },
+        { id: 2, title: 'Audit color contrast across 7 themes', description: 'Run every token pair through WCAG AA in light and dark for all seven themes.', labels: ['a11y','design'], assignee: 'alice', priority: 'high', dueOffset: 3, progress: 10 },
+        { id: 3, title: 'Document l-source polling modifiers', description: 'Reference page for .poll, .lazy, .optimistic and .key with copy-paste snippets.', labels: ['docs'], assignee: 'james', priority: 'low', dueOffset: 14, progress: 0 },
+        { id: 4, title: 'Reduce icon CSS mask payload', description: 'Ship only the glyphs a page references instead of the full 120-icon sheet.', labels: ['perf','infra'], assignee: 'mike', priority: 'medium', dueOffset: null, progress: 0 }
+      ]},
+      { id: 'progress', title: 'In Progress', wip: 4, cards: [
+        { id: 5, title: 'Ship calendar range-select mode', description: 'Two-date selection with keyboard range extension and an aria-live announcement.', labels: ['frontend'], assignee: 'sarah', priority: 'high', dueOffset: 1, progress: 65 },
+        { id: 6, title: 'Fix focus trap in nested dialogs', description: 'A dialog opened from inside another dialog steals the trap and never restores focus.', labels: ['bug','a11y'], assignee: 'claude', priority: 'high', dueOffset: -1, progress: 40 },
+        { id: 7, title: 'Slider vertical orientation', description: 'Add data-orientation=vertical with correct arrow-key mapping.', labels: ['frontend'], assignee: 'mike', priority: 'medium', dueOffset: 4, progress: 30 },
+        { id: 8, title: 'Token migration script v0.4', description: 'Codemod that renames deprecated aliases to the semantic token names.', labels: ['infra','backend'], assignee: 'james', priority: 'medium', dueOffset: 2, progress: 55 },
+        { id: 9, title: 'Rewrite dropdown keyboard nav', description: 'Type-ahead, Home/End, and roving tabindex per the WAI-ARIA menu pattern.', labels: ['frontend','a11y'], assignee: 'alice', priority: 'low', dueOffset: 6, progress: 20 }
+      ]},
+      { id: 'review', title: 'In Review', wip: 3, cards: [
+        { id: 10, title: 'Sheet drag-to-dismiss gesture', description: 'Pointer-drag the panel past a threshold to dismiss, with a spring settle.', labels: ['frontend'], assignee: 'sarah', priority: 'medium', dueOffset: 0, progress: 90 },
+        { id: 11, title: 'Table server-side sort binding', description: 'Emit faqir:sort so l-source can request an ordered page from the API.', labels: ['backend'], assignee: 'claude', priority: 'high', dueOffset: 2, progress: 85 }
+      ]},
+      { id: 'done', title: 'Done', wip: null, cards: [
+        { id: 12, title: 'Breadcrumb primitive', description: 'Shipped with custom separator glyph via a CSS custom property.', labels: ['frontend'], assignee: 'mike', priority: 'low', dueOffset: null, progress: 100 },
+        { id: 13, title: 'Aurora + Slate theme pass', description: 'Two new themes with dark variants and audited contrast.', labels: ['design'], assignee: 'alice', priority: 'medium', dueOffset: null, progress: 100 },
+        { id: 14, title: 'Input-OTP recipe', description: 'Six-cell one-time-code input with paste distribution and auto-advance.', labels: ['frontend','a11y'], assignee: 'james', priority: 'medium', dueOffset: null, progress: 100 }
+      ]}
+    ],
+
+    /* ── Search + filter ── */
+    search: '',
+    filterType: null,
+    filterValue: null,
+    setFilter(type, value) { this.filterType = type; this.filterValue = value; },
+    clearFilter() { this.filterType = null; this.filterValue = null; },
+    get filterLabel() {
+      if (this.filterType === 'assignee') return this.personName(this.filterValue);
+      if (this.filterType === 'label') return this.filterValue;
+      return '';
+    },
+    cardVisible(c) {
+      const q = this.search.trim().toLowerCase();
+      if (q && !(c.title.toLowerCase().includes(q) || (c.description || '').toLowerCase().includes(q))) return false;
+      if (this.filterType === 'assignee' && c.assignee !== this.filterValue) return false;
+      if (this.filterType === 'label' && !c.labels.includes(this.filterValue)) return false;
+      return true;
+    },
+    get filteredColumns() {
+      return this.columns.map(col => ({ id: col.id, title: col.title, wip: col.wip, cards: col.cards.filter(c => this.cardVisible(c)) }));
+    },
+
+    /* ── Derived board stats ── */
+    get totalCards() { return this.columns.reduce((s, c) => s + c.cards.length, 0); },
+    colById(id) { return this.columns.find(c => c.id === id); },
+    doneCount() { const d = this.colById('done'); return d ? d.cards.length : 0; },
+    get sprintProgress() { return this.totalCards ? Math.round(this.doneCount() / this.totalCards * 100) : 0; },
+    wipPct(col) { if (!col.wip) return 0; return Math.min(100, Math.round(col.cards.length / col.wip * 100)); },
+    wipVariant(col) {
+      if (!col.wip) return 'primary';
+      if (col.cards.length > col.wip) return 'destructive';
+      if (col.cards.length === col.wip) return 'warning';
+      return 'success';
+    },
+    isOverWip(col) { return col.wip && col.cards.length > col.wip; },
+
+    /* ── Card operations ── */
+    moveCard(cardId, fromId, toId) {
+      const from = this.colById(fromId), to = this.colById(toId);
+      if (!from || !to) return;
+      const i = from.cards.findIndex(c => c.id === cardId);
+      if (i === -1) return;
+      const [card] = from.cards.splice(i, 1);
+      to.cards.push(card);
+      this.toast(card.title + ' → ' + to.title, 'default', 'arrow-right');
+    },
+    sortByPriority(colId) {
+      const col = this.colById(colId);
+      if (!col) return;
+      col.cards.sort((a, b) => this.priorityRank(a.priority) - this.priorityRank(b.priority));
+      this.toast(col.title + ' sorted by priority', 'default', 'sliders-horizontal');
+    },
+
+    /* ── Add card (per-column popover) ── */
+    newCardTitle: '',
+    addCard(colId, ev) {
+      const title = this.newCardTitle.trim();
+      if (!title) return;
+      const col = this.colById(colId);
+      if (!col) return;
+      col.cards.push({ id: this.nextId++, title, description: '', labels: [], assignee: '', priority: 'medium', dueOffset: null, progress: 0 });
+      this.newCardTitle = '';
+      this.toast('Card added to ' + col.title, 'success', 'plus');
+      if (ev && ev.target) {
+        const pop = ev.target.closest('[data-ui=\'popover\']');
+        if (pop && pop._faqirPopover) pop._faqirPopover.close();
+      }
+    },
+
+    /* ── Delete (shared alert-dialog) ── */
+    pendingDelete: null,
+    askDelete(card, colId) {
+      this.pendingDelete = { id: card.id, colId, title: card.title };
+      const d = this.$refs.deleteAlert;
+      if (d && d._faqirDialog) d._faqirDialog.open();
+    },
+    confirmDelete() {
+      if (!this.pendingDelete) return;
+      const col = this.colById(this.pendingDelete.colId);
+      if (col) {
+        const i = col.cards.findIndex(c => c.id === this.pendingDelete.id);
+        if (i !== -1) col.cards.splice(i, 1);
+      }
+      this.toast('Deleted “' + this.pendingDelete.title + '”', 'error', 'trash-2');
+      this.pendingDelete = null;
+    },
+
+    /* ── Clear done (shared alert-dialog) ── */
+    askClearDone() {
+      const d = this.$refs.clearDoneAlert;
+      if (d && d._faqirDialog) d._faqirDialog.open();
+    },
+    confirmClearDone() {
+      const done = this.colById('done');
+      const n = done ? done.cards.length : 0;
+      if (done) done.cards = [];
+      this.toast('Cleared ' + n + ' completed card' + (n === 1 ? '' : 's'), 'default', 'check-check');
+    },
+
+    /* ── Card detail dialog ── */
+    detail: { id: null, title: '', description: '', labels: [], assignee: '', priority: 'medium', dueOffset: null, progress: 0 },
+    detailCol: null,
+    openDetail(card, colId) {
+      this.detail = {
+        id: card.id, title: card.title, description: card.description || '',
+        labels: [...card.labels], assignee: card.assignee || '',
+        priority: card.priority, dueOffset: card.dueOffset, progress: card.progress || 0
+      };
+      this.detailCol = colId;
+      this.$nextTick(() => {
+        const d = this.$refs.cardDialog;
+        if (d && d._faqirDialog) d._faqirDialog.open();
+        const s = this.$refs.progressSlider;
+        if (s && s._faqirSlider) s._faqirSlider.setValue(0, this.detail.progress);
+      });
+    },
+    detailHasLabel(label) { return this.detail.labels.includes(label); },
+    toggleDetailLabel(label) {
+      const i = this.detail.labels.indexOf(label);
+      if (i === -1) this.detail.labels.push(label); else this.detail.labels.splice(i, 1);
+    },
+    saveDetail() {
+      for (const col of this.columns) {
+        const t = col.cards.find(c => c.id === this.detail.id);
+        if (t) {
+          t.title = this.detail.title.trim() || t.title;
+          t.description = this.detail.description;
+          t.labels = [...this.detail.labels];
+          t.assignee = this.detail.assignee;
+          t.priority = this.detail.priority;
+          t.progress = this.detail.progress;
+          break;
+        }
+      }
+      const d = this.$refs.cardDialog;
+      if (d && d._faqirDialog) d._faqirDialog.close();
+      this.toast('Changes saved', 'success', 'check');
+    },
+    get detailColTitle() { const c = this.colById(this.detailCol); return c ? c.title : ''; },
+
+    /* ── Toast helper ── */
+    toast(message, tone, icon) {
+      const box = this.$refs.toastBox;
+      if (!box || !box._faqirToast) return;
+      const iconHtml = icon ? '<span data-ui=\'icon\' data-icon=\'' + icon + '\' aria-hidden=\'true\' style=\'font-size:1rem\'></span>' : '';
+      box._faqirToast.add({ message, tone: tone || 'default', icon: iconHtml, duration: 3200 });
+    },
+
+    /* ── Keyboard: `/` focuses search ── */
+    onKey(e) {
+      if (e.key === '/' && document.activeElement !== this.$refs.searchInput) {
+        e.preventDefault();
+        if (this.$refs.searchInput) this.$refs.searchInput.focus();
+      }
+    }
+  }" @keydown.window="onKey($event)">
+
+    <div data-ui="surface" data-variant="flat" data-max="2xl" data-size="md">
+      <div data-ui="stack" data-gap="5">
+
+        <!-- ═══════════════ Header ═══════════════ -->
+        <header role="banner">
+          <div data-ui="stack" data-gap="3">
+
+            <!-- Breadcrumb -->
+            <nav data-ui="breadcrumb" data-size="sm" aria-label="Breadcrumb">
+              <ol data-part="list">
+                <li><a data-part="item" href="#">Faqir</a></li>
+                <li data-part="separator" aria-hidden="true"></li>
+                <li><a data-part="item" href="#">Projects</a></li>
+                <li data-part="separator" aria-hidden="true"></li>
+                <li><span data-part="current" aria-current="page">Sprint 24</span></li>
+              </ol>
+            </nav>
+
+            <!-- Title row -->
+            <div data-ui="stack" data-variant="horizontal" data-gap="4" data-align="center" data-justify="between" data-wrap data-responsive>
+              <div data-ui="stack" data-gap="1">
+                <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center">
+                  <span data-ui="icon" data-icon="layers" aria-hidden="true" style="font-size:1.5rem; color:var(--color-primary)"></span>
+                  <h1 data-ui="heading" data-size="3">Sprint Board</h1>
+                  <span data-ui="badge" data-variant="primary" data-size="sm">Sprint 24</span>
+                </div>
+                <p data-ui="text" data-size="sm" data-variant="muted">
+                  <span l-text="totalCards"></span> cards &middot; <span l-text="doneCount()"></span> done &middot; ends in 4 days
+                </p>
+              </div>
+
+              <!-- Team avatar group -->
+              <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center" data-wrap>
+                <div style="display:flex; align-items:center;" aria-label="Team: Sarah Chen, Mike Rivera, Alice Novak, James Okoro">
+                  <span data-ui="avatar" data-size="sm" title="Sarah Chen" style="box-shadow:0 0 0 2px var(--color-bg)"><span data-part="fallback">SC</span></span>
+                  <span data-ui="avatar" data-size="sm" title="Mike Rivera" style="margin-left:calc(-1 * var(--space-2)); box-shadow:0 0 0 2px var(--color-bg)"><span data-part="fallback">MR</span></span>
+                  <span data-ui="avatar" data-size="sm" title="Alice Novak" style="margin-left:calc(-1 * var(--space-2)); box-shadow:0 0 0 2px var(--color-bg)"><span data-part="fallback">AN</span></span>
+                  <span data-ui="avatar" data-size="sm" title="James Okoro" style="margin-left:calc(-1 * var(--space-2)); box-shadow:0 0 0 2px var(--color-bg)"><span data-part="fallback">JO</span></span>
+                </div>
+
+                <!-- Insights sheet (trigger lives here, panel is fixed-position) -->
+                <div data-ui="sheet" data-state="closed" id="insights-sheet">
+                  <button data-part="trigger" data-ui="button" data-variant="outline" data-size="sm">
+                    <span data-ui="icon" data-icon="chart-column" aria-hidden="true"></span>
+                    Insights
+                  </button>
+
+                  <div data-part="overlay" hidden></div>
+
+                  <div data-part="panel" data-variant="right" data-size="md" role="dialog" aria-modal="true" aria-labelledby="insights-title" hidden>
+                    <div data-part="header">
+                      <h2 id="insights-title" data-part="title">Board insights</h2>
+                      <button data-part="close" aria-label="Close insights">&#x2715;</button>
+                    </div>
+                    <div data-part="body">
+                      <div data-ui="stack" data-gap="5">
+
+                        <div data-ui="grid" data-cols="3" data-cols-sm="1" data-gap="3">
+                          <div data-ui="stat" data-variant="card">
+                            <span data-part="label">Cards total</span>
+                            <span data-part="value" l-text="totalCards"></span>
+                          </div>
+                          <div data-ui="stat" data-variant="card" data-trend="up">
+                            <span data-part="label">Done this sprint</span>
+                            <span data-part="value" l-text="doneCount()"></span>
+                            <span data-part="change" l-text="sprintProgress + '%'"></span>
+                          </div>
+                          <div data-ui="stat" data-variant="card" data-trend="down">
+                            <span data-part="label">Avg cycle time</span>
+                            <span data-part="value">3.4d</span>
+                            <span data-part="change">-0.6d</span>
+                          </div>
+                        </div>
+
+                        <div data-ui="stack" data-gap="2">
+                          <span data-ui="text" data-size="sm" data-weight="semibold">Sprint progress</span>
+                          <div data-ui="progress" data-variant="success">
+                            <div data-part="track"><div data-part="fill" :style="'width:' + sprintProgress + '%'"></div></div>
+                            <span data-part="label" l-text="sprintProgress + '%'"></span>
+                          </div>
+                        </div>
+
+                        <div data-ui="separator"></div>
+
+                        <!-- Per-column distribution -->
+                        <div data-ui="stack" data-gap="3">
+                          <span data-ui="text" data-size="sm" data-weight="semibold">Distribution by column</span>
+                          <template l-for="col in columns">
+                            <div data-ui="stack" data-gap="1">
+                              <div data-ui="stack" data-variant="horizontal" data-justify="between" data-align="center">
+                                <span data-ui="text" data-size="sm" l-text="col.title"></span>
+                                <span data-ui="text" data-size="sm" data-variant="muted" l-text="col.cards.length + ' cards'"></span>
+                              </div>
+                              <div data-ui="progress" data-size="sm">
+                                <div data-part="track"><div data-part="fill" :style="'width:' + (totalCards ? Math.round(col.cards.length / totalCards * 100) : 0) + '%'"></div></div>
+                              </div>
+                            </div>
+                          </template>
+                        </div>
+
+                        <div data-ui="separator"></div>
+
+                        <!-- Definition of done -->
+                        <details data-ui="collapsible" data-variant="bordered" open>
+                          <summary data-part="trigger">Definition of done</summary>
+                          <div data-part="content">
+                            <div data-ui="stack" data-gap="2">
+                              <label data-ui="checkbox-label"><input data-ui="checkbox" type="checkbox" checked> <span>Code reviewed by two peers</span></label>
+                              <label data-ui="checkbox-label"><input data-ui="checkbox" type="checkbox" checked> <span>Tests pass in CI</span></label>
+                              <label data-ui="checkbox-label"><input data-ui="checkbox" type="checkbox" checked> <span>Accessibility audit clean (AA)</span></label>
+                              <label data-ui="checkbox-label"><input data-ui="checkbox" type="checkbox"> <span>Docs and changelog updated</span></label>
+                              <label data-ui="checkbox-label"><input data-ui="checkbox" type="checkbox"> <span>Deployed to staging</span></label>
+                            </div>
+                          </div>
+                        </details>
+
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Toolbar row -->
+            <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center" data-justify="between" data-wrap data-responsive>
+              <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center" data-wrap>
+                <input data-ui="input" data-size="sm" type="search" placeholder="Search cards  (press /)" aria-label="Search cards" l-model="search" l-ref="searchInput">
+
+                <!-- Filter dropdown -->
+                <div data-ui="dropdown" data-state="closed" data-size="sm">
+                  <button data-part="trigger" data-ui="button" data-variant="outline" data-size="sm" aria-haspopup="true" aria-expanded="false">
+                    <span data-ui="icon" data-icon="funnel" aria-hidden="true"></span>
+                    Filter
+                  </button>
+                  <div data-part="menu" role="menu" hidden>
+                    <button data-part="item" role="menuitem" @click="clearFilter()">All cards</button>
+                    <hr data-part="separator">
+                    <button data-part="item" role="menuitem" @click="setFilter('assignee', 'sarah')">Sarah Chen</button>
+                    <button data-part="item" role="menuitem" @click="setFilter('assignee', 'mike')">Mike Rivera</button>
+                    <button data-part="item" role="menuitem" @click="setFilter('assignee', 'alice')">Alice Novak</button>
+                    <button data-part="item" role="menuitem" @click="setFilter('assignee', 'james')">James Okoro</button>
+                    <button data-part="item" role="menuitem" @click="setFilter('assignee', 'claude')">Claude</button>
+                    <hr data-part="separator">
+                    <button data-part="item" role="menuitem" @click="setFilter('label', 'bug')">Label: bug</button>
+                    <button data-part="item" role="menuitem" @click="setFilter('label', 'a11y')">Label: a11y</button>
+                    <button data-part="item" role="menuitem" @click="setFilter('label', 'frontend')">Label: frontend</button>
+                    <button data-part="item" role="menuitem" @click="setFilter('label', 'design')">Label: design</button>
+                  </div>
+                </div>
+
+                <!-- Active filter chip -->
+                <template l-if="filterType">
+                  <span data-ui="chip" data-variant="primary">
+                    <span data-part="label" l-text="filterLabel"></span>
+                    <button data-part="dismiss" type="button" aria-label="Clear filter" @click="clearFilter()">&times;</button>
+                  </span>
+                </template>
+              </div>
+
+              <!-- Theme + dark -->
+              <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center" data-wrap>
+                <label data-ui="label" data-size="sm" for="theme-select" style="margin:0">Theme</label>
+                <select data-ui="select" data-size="sm" id="theme-select" l-model="theme" @change="setTheme(theme)" aria-label="Theme">
+                  <option value="default">Default</option>
+                  <option value="midnight">Midnight</option>
+                  <option value="paper">Paper</option>
+                  <option value="brutalist">Brutalist</option>
+                  <option value="aurora">Aurora</option>
+                  <option value="slate">Slate</option>
+                  <option value="contrast">Contrast (WCAG AAA)</option>
+                </select>
+                <label data-ui="switch-label">
+                  <input data-ui="switch" type="checkbox" role="switch" @change="toggleDark()">
+                  <span data-ui="text" data-size="sm" l-text="darkMode ? 'Dark' : 'Light'"></span>
+                </label>
+              </div>
+            </div>
+
+          </div>
+        </header>
+
+        <div data-ui="separator"></div>
+
+        <!-- ═══════════════ Board ═══════════════ -->
+        <main>
+          <div data-ui="grid" data-cols="4" data-gap="4" data-scroll>
+            <template l-for="col in filteredColumns">
+              <section data-ui="surface" data-size="sm" :aria-label="col.title + ' column'">
+                <div data-ui="stack" data-gap="3">
+
+                  <!-- Column header -->
+                  <div data-ui="stack" data-gap="2">
+                    <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center" data-justify="between">
+                      <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center">
+                        <span data-ui="text" data-size="sm" data-weight="semibold" l-text="col.title"></span>
+                        <span data-ui="badge" data-size="sm" data-variant="secondary" l-text="col.cards.length"></span>
+                        <template l-if="isOverWip(col)">
+                          <span data-ui="badge" data-size="sm" data-variant="warning">
+                            <span data-ui="icon" data-icon="triangle-alert" aria-hidden="true" style="font-size:0.75rem"></span>
+                            Over WIP
+                          </span>
+                        </template>
+                      </div>
+
+                      <!-- Column dropdown -->
+                      <div data-ui="dropdown" data-state="closed" data-size="sm">
+                        <button data-part="trigger" data-ui="button" data-variant="ghost" data-size="sm" aria-haspopup="true" aria-expanded="false" aria-label="Column options">
+                          <span data-ui="icon" data-icon="ellipsis" aria-hidden="true"></span>
+                        </button>
+                        <div data-part="menu" data-variant="end" role="menu" hidden>
+                          <button data-part="item" role="menuitem" @click="sortByPriority(col.id)">Sort by priority</button>
+                          <template l-if="col.id === 'done'">
+                            <button data-part="item" role="menuitem" @click="askClearDone()">Clear done</button>
+                          </template>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- WIP-limit indicator -->
+                    <template l-if="col.wip">
+                      <div data-ui="stack" data-gap="1">
+                        <div data-ui="progress" data-size="sm" :data-variant="wipVariant(col)">
+                          <div data-part="track"><div data-part="fill" :style="'width:' + wipPct(col) + '%'"></div></div>
+                        </div>
+                        <span data-ui="text" data-size="xs" data-variant="subtle" l-text="col.cards.length + ' / ' + col.wip + ' WIP limit'"></span>
+                      </div>
+                    </template>
+                  </div>
+
+                  <div data-ui="separator"></div>
+
+                  <!-- Cards -->
+                  <div data-ui="stack" data-gap="2">
+                    <template l-for="card in col.cards">
+                      <article data-ui="card" data-size="sm">
+                        <div data-part="body">
+                          <div data-ui="stack" data-gap="2">
+
+                            <!-- Labels -->
+                            <template l-if="card.labels.length > 0">
+                              <div data-ui="stack" data-variant="horizontal" data-gap="1" data-wrap>
+                                <template l-for="label in card.labels">
+                                  <span data-ui="badge" data-size="sm" :data-variant="labelVariant(label)" l-text="label"></span>
+                                </template>
+                              </div>
+                            </template>
+
+                            <!-- Title + card dropdown -->
+                            <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="start" data-justify="between">
+                              <button data-ui="button" data-variant="ghost" data-size="sm" style="text-align:left; padding:0; height:auto; font-weight:var(--font-weight-medium); white-space:normal" @click="openDetail(card, col.id)" l-text="card.title"></button>
+
+                              <div data-ui="dropdown" data-state="closed" data-size="sm">
+                                <button data-part="trigger" data-ui="button" data-variant="ghost" data-size="sm" aria-haspopup="true" aria-expanded="false" aria-label="Card actions">
+                                  <span data-ui="icon" data-icon="ellipsis" aria-hidden="true"></span>
+                                </button>
+                                <div data-part="menu" data-variant="end" role="menu" hidden>
+                                  <template l-for="tc in columns">
+                                    <template l-if="tc.id !== col.id">
+                                      <button data-part="item" role="menuitem" @click="moveCard(card.id, col.id, tc.id)">Move to <span l-text="tc.title"></span></button>
+                                    </template>
+                                  </template>
+                                  <hr data-part="separator">
+                                  <button data-part="item" role="menuitem" @click="openDetail(card, col.id)">Edit</button>
+                                  <button data-part="item" role="menuitem" @click="askDelete(card, col.id)">Delete</button>
+                                </div>
+                              </div>
+                            </div>
+
+                            <!-- Description (truncated) -->
+                            <template l-if="card.description">
+                              <p data-ui="text" data-size="xs" data-variant="muted" style="overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical" l-text="card.description"></p>
+                            </template>
+
+                            <div data-ui="separator"></div>
+
+                            <!-- Footer: assignee + due + priority -->
+                            <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center" data-justify="between">
+                              <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center">
+                                <template l-if="card.assignee">
+                                  <span data-ui="avatar" data-size="sm" :title="personName(card.assignee)"><span data-part="fallback" l-text="personInitials(card.assignee)"></span></span>
+                                </template>
+                                <template l-if="!card.assignee">
+                                  <span data-ui="text" data-size="xs" data-variant="subtle" style="display:inline-flex; align-items:center; gap:var(--space-1)"><span data-ui="icon" data-icon="user-plus" aria-hidden="true" style="font-size:0.85rem"></span>Unassigned</span>
+                                </template>
+                              </div>
+
+                              <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center">
+                                <span data-ui="text" data-size="xs" style="display:inline-flex; align-items:center; gap:var(--space-1)" :style="isOverdue(card.dueOffset) ? 'color:var(--color-destructive); display:inline-flex; align-items:center; gap:var(--space-1)' : 'color:var(--color-fg-muted); display:inline-flex; align-items:center; gap:var(--space-1)'">
+                                  <span data-ui="icon" data-icon="calendar" aria-hidden="true" style="font-size:0.85rem"></span>
+                                  <span l-text="relDue(card.dueOffset)"></span>
+                                </span>
+                                <span data-ui="icon" :data-icon="priorityIcon(card.priority)" role="img" :aria-label="priorityLabel(card.priority) + ' priority'" :style="'font-size:0.95rem; color:' + priorityColor(card.priority)"></span>
+                              </div>
+                            </div>
+
+                          </div>
+                        </div>
+                      </article>
+                    </template>
+
+                    <!-- Empty column -->
+                    <template l-if="col.cards.length === 0">
+                      <p data-ui="text" data-size="xs" data-variant="subtle" style="padding:var(--space-4) 0; text-align:center">No cards</p>
+                    </template>
+                  </div>
+
+                  <!-- Add card popover -->
+                  <div data-ui="popover" data-state="closed">
+                    <button data-part="trigger" data-ui="button" data-variant="ghost" data-size="sm" data-full aria-haspopup="true" aria-expanded="false">
+                      <span data-ui="icon" data-icon="plus" aria-hidden="true"></span>
+                      Add card
+                    </button>
+                    <div data-part="content" data-variant="top" data-align="start" hidden>
+                      <div data-ui="stack" data-gap="2" style="min-width:220px">
+                        <input data-ui="input" data-size="sm" placeholder="Card title…" aria-label="New card title" l-model="newCardTitle" @keydown.enter="addCard(col.id, $event)">
+                        <div data-ui="stack" data-variant="horizontal" data-gap="2" data-justify="between">
+                          <button data-ui="button" data-variant="primary" data-size="sm" @click="addCard(col.id, $event)">Add</button>
+                          <button data-ui="button" data-variant="ghost" data-size="sm" data-part="close">Cancel</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </section>
+            </template>
+          </div>
+        </main>
+
+        <!-- Footer -->
+        <div data-ui="separator"></div>
+        <div data-ui="surface" data-variant="flat" data-size="md" data-align-text="center">
+          <p data-ui="text" data-size="xs" data-variant="subtle">Faqir UI — 58 components &middot; 8 themes &middot; 0 CSS classes. View source: every element is data-attributes + tokens.</p>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ═══════════════ Card detail dialog (shared) ═══════════════ -->
+    <div data-ui="dialog" data-state="closed" id="card-dialog" l-ref="cardDialog">
+      <button data-part="trigger" hidden aria-hidden="true">Open card</button>
+      <div data-part="overlay" hidden></div>
+      <div data-part="panel" data-size="lg" role="dialog" aria-modal="true" aria-labelledby="card-dialog-title" hidden>
+        <div data-part="header">
+          <div data-ui="stack" data-gap="1">
+            <span data-ui="text" data-size="xs" data-variant="subtle" l-text="'In ' + detailColTitle"></span>
+            <h2 id="card-dialog-title" data-part="title" l-text="detail.title"></h2>
+          </div>
+          <button data-part="close" aria-label="Close dialog">&#x2715;</button>
+        </div>
+        <div data-part="body">
+          <div data-ui="stack" data-gap="4">
+
+            <div data-ui="field-group">
+              <label data-part="label" for="detail-title">Title</label>
+              <div data-part="input"><input data-ui="input" id="detail-title" l-model="detail.title"></div>
+            </div>
+
+            <div data-ui="field-group">
+              <label data-part="label" for="detail-desc">Description</label>
+              <div data-part="input"><textarea data-ui="textarea" id="detail-desc" rows="3" l-model="detail.description" placeholder="Add more detail…"></textarea></div>
+            </div>
+
+            <div data-ui="grid" data-cols="2" data-cols-sm="1" data-gap="4">
+              <div data-ui="field-group">
+                <label data-part="label" for="detail-priority">Priority</label>
+                <div data-part="input">
+                  <select data-ui="select" id="detail-priority" l-model="detail.priority">
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                  </select>
+                </div>
+              </div>
+              <div data-ui="field-group">
+                <label data-part="label" for="detail-assignee">Assignee</label>
+                <div data-part="input">
+                  <select data-ui="select" id="detail-assignee" l-model="detail.assignee">
+                    <option value="">Unassigned</option>
+                    <option value="sarah">Sarah Chen</option>
+                    <option value="mike">Mike Rivera</option>
+                    <option value="alice">Alice Novak</option>
+                    <option value="james">James Okoro</option>
+                    <option value="claude">Claude</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Label toggles -->
+            <div data-ui="stack" data-gap="2">
+              <span data-ui="text" data-size="sm" data-weight="semibold">Labels</span>
+              <div data-ui="stack" data-variant="horizontal" data-gap="2" data-wrap>
+                <template l-for="label in allLabels">
+                  <button data-ui="toggle" data-size="sm" type="button" :aria-pressed="detailHasLabel(label) ? 'true' : 'false'" @click="toggleDetailLabel(label)" l-text="label"></button>
+                </template>
+              </div>
+            </div>
+
+            <!-- Progress slider -->
+            <div data-ui="stack" data-gap="2">
+              <div data-ui="stack" data-variant="horizontal" data-justify="between" data-align="center">
+                <span data-ui="text" data-size="sm" data-weight="semibold">Progress</span>
+                <span data-ui="badge" data-size="sm" data-variant="secondary" l-text="detail.progress + '%'"></span>
+              </div>
+              <div data-ui="slider" data-variant="single" data-min="0" data-max="100" data-step="5" data-value="0" data-value-suffix="%" l-ref="progressSlider" style="--slider-start:0%; --slider-end:0%" @faqir:change="detail.progress = $event.detail.value">
+                <div data-part="track">
+                  <div data-part="range"></div>
+                  <div data-part="thumb" role="slider" tabindex="0" aria-label="Progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="0%" style="--pos:0%"></div>
+                </div>
+                <output data-part="output">0%</output>
+              </div>
+            </div>
+
+            <div data-ui="separator"></div>
+
+            <!-- Activity -->
+            <div data-ui="stack" data-gap="2">
+              <span data-ui="text" data-size="sm" data-weight="semibold">Activity</span>
+              <div data-ui="stack" data-gap="2">
+                <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center">
+                  <span data-ui="icon" data-icon="git-branch" aria-hidden="true" style="font-size:0.9rem; color:var(--color-fg-muted)"></span>
+                  <span data-ui="text" data-size="xs" data-variant="muted"><span l-text="detail.assignee ? personName(detail.assignee) : 'Someone'"></span> linked a branch &middot; 2h ago</span>
+                </div>
+                <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center">
+                  <span data-ui="icon" data-icon="message-square" aria-hidden="true" style="font-size:0.9rem; color:var(--color-fg-muted)"></span>
+                  <span data-ui="text" data-size="xs" data-variant="muted">Alice Novak commented &middot; yesterday</span>
+                </div>
+                <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center">
+                  <span data-ui="icon" data-icon="plus" aria-hidden="true" style="font-size:0.9rem; color:var(--color-fg-muted)"></span>
+                  <span data-ui="text" data-size="xs" data-variant="muted">Card created &middot; 3 days ago</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+        <div data-part="footer">
+          <button data-ui="button" data-part="close" data-variant="outline">Cancel</button>
+          <button data-ui="button" data-variant="primary" @click="saveDetail()">
+            <span data-ui="icon" data-icon="save" aria-hidden="true"></span>
+            Save changes
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════ Delete card alert-dialog (shared) ═══════════════ -->
+    <div data-ui="alert-dialog" data-state="closed" id="delete-card-alert" l-ref="deleteAlert" @faqir:confirm="confirmDelete()">
+      <button data-part="trigger" hidden aria-hidden="true">Delete</button>
+      <div data-part="overlay" hidden></div>
+      <div data-part="panel" role="alertdialog" aria-modal="true" aria-labelledby="delete-card-title" aria-describedby="delete-card-desc" data-variant="destructive" data-size="sm" hidden>
+        <div data-part="header">
+          <h2 id="delete-card-title" data-part="title">Delete this card?</h2>
+        </div>
+        <div data-part="body">
+          <p id="delete-card-desc" data-part="description">
+            <span l-text="pendingDelete ? ('“' + pendingDelete.title + '”') : 'This card'"></span> will be permanently removed. This action cannot be undone.
+          </p>
+        </div>
+        <div data-part="footer">
+          <button data-ui="button" data-part="cancel" data-variant="outline">Cancel</button>
+          <button data-ui="button" data-part="confirm" data-variant="destructive">Delete card</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════ Clear done alert-dialog (shared) ═══════════════ -->
+    <div data-ui="alert-dialog" data-state="closed" id="clear-done-alert" l-ref="clearDoneAlert" @faqir:confirm="confirmClearDone()">
+      <button data-part="trigger" hidden aria-hidden="true">Clear done</button>
+      <div data-part="overlay" hidden></div>
+      <div data-part="panel" role="alertdialog" aria-modal="true" aria-labelledby="clear-done-title" aria-describedby="clear-done-desc" data-variant="destructive" data-size="sm" hidden>
+        <div data-part="header">
+          <h2 id="clear-done-title" data-part="title">Clear completed cards?</h2>
+        </div>
+        <div data-part="body">
+          <p id="clear-done-desc" data-part="description">
+            This archives all <span l-text="doneCount()"></span> cards in the Done column. This action cannot be undone.
+          </p>
+        </div>
+        <div data-part="footer">
+          <button data-ui="button" data-part="cancel" data-variant="outline">Cancel</button>
+          <button data-ui="button" data-part="confirm" data-variant="destructive">Clear all</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast container -->
+    <div data-ui="toast" data-part="container" data-variant="bottom-right" role="region" aria-label="Notifications" l-ref="toastBox"></div>
+
+  </div>
+</body>
+</html>
