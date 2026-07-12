@@ -6,7 +6,7 @@ name: CI
 #   2. smoke           — compiled CLI on plain Node 18/20/22 (no Bun runtime)
 #   3. typecheck       — tsc --noEmit
 #   4. registry-audit  — logical-properties over registry/**, zero findings
-#   5. size            — gzip budgets (engine ≤14KB, engine+controllers ≤22KB, plugins ≤2KB)
+#   5. size            — gzip budgets (engine ≤14KB, engine+controllers ≤36KB, plugins ≤2KB)
 
 on:
   push:

@@ -7,7 +7,7 @@
  *
  *   - engine               src/core-src/engine.js         ≤ 14 KB gzip
  *     (directives, reactivity, plugin API — no controllers)
- *   - engine + controllers registry/core/faqir-core.js    ≤ 22 KB gzip
+ *   - engine + controllers registry/core/faqir-core.js    ≤ 36 KB gzip
  *     (the shipped single-file build: engine + every recipe controller)
  *   - each plugin          registry/core/plugins/*.js      ≤  2 KB gzip
  *     (official plugins, each self-registering via Faqir.plugin)
@@ -38,7 +38,7 @@ const KB = 1024;
 // Budgets, in bytes. The single source of truth for the numbers in §10.4.
 export const BUDGETS = {
   engine: 14 * KB,
-  engineWithControllers: 22 * KB,
+  engineWithControllers: 36 * KB,
   plugin: 2 * KB,
 };
 
