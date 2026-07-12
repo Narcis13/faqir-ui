@@ -3,6 +3,7 @@
 import { existsSync } from "node:fs";
 import { join, relative } from "node:path";
 import { log } from "../utils/logger";
+import { emitJSON } from "../utils/json-output";
 import { configExists, readConfig } from "../utils/config";
 import { getRegistryPath } from "../utils/fs";
 import { loadManifest, type Manifest } from "../manifest";
@@ -44,7 +45,7 @@ export async function trace(args: string[]): Promise<void> {
   }
 
   if (jsonMode) {
-    console.log(JSON.stringify(traceData, null, 2));
+    emitJSON(traceData);
     return;
   }
 

@@ -3,6 +3,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { log } from "../utils/logger";
+import { emitJSON } from "../utils/json-output";
 import { configExists, readConfig } from "../utils/config";
 import { getRegistryPath } from "../utils/fs";
 import { loadManifest, type Manifest } from "../manifest";
@@ -43,7 +44,7 @@ export async function explain(args: string[]): Promise<void> {
   }
 
   if (jsonMode) {
-    console.log(JSON.stringify(buildExplanation(manifest), null, 2));
+    emitJSON(buildExplanation(manifest));
     return;
   }
 

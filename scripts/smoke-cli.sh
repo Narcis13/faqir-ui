@@ -51,4 +51,13 @@ if [ ! -f "$TMP/ui/primitives/button/button.css" ]; then
   exit 1
 fi
 
+echo "▶ echo '<button data-ui=\"button\" data-variant=\"neon\">…</button>' | node dist/faqir.mjs audit --stdin --json"
+# Piped HTML → audit against the registry, machine-readable output. The bad
+# variant must be reported (exit 1) and the payload must carry the schema version.
+STDIN_OUT="$(printf '%s' '<button data-ui="button" data-variant="neon">x</button>' | node "$DIST" audit --stdin --json || true)"
+if ! printf '%s' "$STDIN_OUT" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const r=JSON.parse(s);if(r.audit_schema_version!==1){console.error("bad schema version");process.exit(1)}if(r.passed!==false){console.error("expected findings");process.exit(1)}})'; then
+  echo "✗ audit --stdin --json did not emit the expected versioned JSON" >&2
+  exit 1
+fi
+
 echo "✓ Smoke test passed — the CLI runs on plain Node with no Bun runtime."

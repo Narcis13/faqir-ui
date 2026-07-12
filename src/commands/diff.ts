@@ -16,6 +16,7 @@
 import { existsSync } from "node:fs";
 import { join, sep } from "node:path";
 import { log } from "../utils/logger";
+import { emitJSON } from "../utils/json-output";
 import { configExists, readConfig } from "../utils/config";
 import { findInstalledLayer, type Layer } from "../utils/components";
 import {
@@ -191,7 +192,7 @@ export async function diff(args: string[]): Promise<void> {
 
   if (targets.length === 0) {
     if (json) {
-      console.log(JSON.stringify({ schema: DIFF_JSON_SCHEMA, components: [] }, null, 2));
+      emitJSON({ schema: DIFF_JSON_SCHEMA, components: [] });
     } else {
       log.info("No components installed — nothing to diff.");
     }
@@ -216,7 +217,7 @@ export async function diff(args: string[]): Promise<void> {
   }
 
   if (json) {
-    console.log(JSON.stringify({ schema: DIFF_JSON_SCHEMA, components: drifts }, null, 2));
+    emitJSON({ schema: DIFF_JSON_SCHEMA, components: drifts });
     return;
   }
 

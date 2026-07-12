@@ -1,6 +1,7 @@
 // faqir context — generate the .faqir/context.json aggregated AI context file
 
 import { log } from "../utils/logger";
+import { emitJSON } from "../utils/json-output";
 import { configExists } from "../utils/config";
 import {
   writeContextFiles,
@@ -52,7 +53,7 @@ export async function context(args: string[]): Promise<void> {
 
   // Machine-readable metadata: available formats and the files each produces.
   if (args.includes("--json")) {
-    console.log(JSON.stringify({ command: "context", formats: FORMATS }, null, 2));
+    emitJSON({ command: "context", formats: FORMATS });
     return;
   }
 

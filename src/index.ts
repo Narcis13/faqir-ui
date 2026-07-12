@@ -4,54 +4,11 @@
 // bundle on plain Node. No-op under the Bun runtime.
 import "./utils/runtime-shim";
 
-import { init } from "./commands/init";
-import { doctor } from "./commands/doctor";
-import { add } from "./commands/add";
-import { remove } from "./commands/remove";
-import { diff } from "./commands/diff";
-import { upgrade } from "./commands/upgrade";
-import { list } from "./commands/list";
-import { search } from "./commands/search";
-import { create } from "./commands/create";
-import { inspect } from "./commands/inspect";
-import { audit } from "./commands/audit";
-import { repair } from "./commands/repair";
-import { context } from "./commands/context";
-import { explain } from "./commands/explain";
-import { trace } from "./commands/trace";
-import { conform } from "./commands/conform";
-import { theme } from "./commands/theme";
-import { variant } from "./commands/variant";
-import { scaffold } from "./commands/scaffold";
-import { bundle } from "./commands/bundle";
-import { dev } from "./commands/dev";
+import { COMMANDS } from "./command-registry";
 import { log } from "./utils/logger";
 import { suggestClosest } from "./utils/suggest";
+import { initJSONMode, recordJSONError } from "./utils/json-output";
 import { VERSION } from "./version";
-
-const COMMANDS: Record<string, (args: string[]) => Promise<void>> = {
-  init,
-  doctor,
-  add,
-  remove,
-  diff,
-  upgrade,
-  list,
-  search,
-  create,
-  inspect,
-  audit,
-  repair,
-  context,
-  explain,
-  trace,
-  conform,
-  theme,
-  variant,
-  scaffold,
-  bundle,
-  dev,
-};
 
 const HELP_CATEGORIES = [
   {
@@ -154,9 +111,15 @@ async function main() {
     process.exit(1);
   }
 
+  // Arm the universal `--json` guarantee before dispatch: in JSON mode all human
+  // console output is captured and a single JSON document is emitted (bespoke for
+  // commands with their own schema, else a generic envelope flushed on exit).
+  initJSONMode(command, args.slice(1));
+
   try {
     await handler(args.slice(1));
   } catch (err) {
+    recordJSONError(err);
     log.error(err instanceof Error ? err.message : String(err));
     process.exit(1);
   }

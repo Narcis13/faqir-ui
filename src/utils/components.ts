@@ -187,6 +187,29 @@ export async function loadRegistryManifest(
   return loadManifest(join(found.path, `${found.name}.manifest.json`));
 }
 
+/**
+ * Load every registry component manifest into a single map, keyed by both its
+ * canonical `data-ui` name and each alias (an alias points at the same manifest
+ * object). This is the manifest source the filesystem-free audit engine
+ * ({@link auditHtmlSource}) indexes `data-ui` names into — it backs
+ * `faqir audit --stdin`, mirroring how the MCP server pre-loads its manifest map.
+ */
+export async function loadRegistryManifestMap(registryPath: string): Promise<Map<string, Manifest>> {
+  const map = new Map<string, Manifest>();
+
+  for (const name of listRegistryComponents(registryPath)) {
+    const manifest = await loadRegistryManifest(name, registryPath);
+    if (manifest) map.set(name, manifest);
+  }
+
+  for (const [alias, canonical] of getRegistryAliases(registryPath)) {
+    const manifest = map.get(canonical);
+    if (manifest && !map.has(alias)) map.set(alias, manifest);
+  }
+
+  return map;
+}
+
 export function controllerName(recipe: string): string {
   return "create" + recipe.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join("");
 }

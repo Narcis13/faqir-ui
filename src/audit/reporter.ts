@@ -4,6 +4,7 @@ import type { AuditSummary } from "./checker";
 import type { AuditResult, Severity } from "./rules";
 import { getRuleInventory } from "./rules";
 import { log } from "../utils/logger";
+import { emitJSON } from "../utils/json-output";
 
 const SEVERITY_COLORS: Record<Severity, string> = {
   critical: "\x1b[31m", // red
@@ -93,15 +94,46 @@ export function printAuditReport(summary: AuditSummary): void {
 }
 
 /**
- * Output audit results as JSON.
+ * Version of the `faqir audit --json` payload schema. Bumped only on a
+ * breaking change to the shape below — additive fields do not bump it. The
+ * emitted document always carries this as `audit_schema_version`, which is the
+ * stable contract the MCP tools and the 1.0 freeze depend on.
  */
-export function printAuditJSON(summary: AuditSummary): void {
-  const output = {
+export const AUDIT_SCHEMA_VERSION = 1 as const;
+
+export interface AuditFindingJSON {
+  rule_id: string;
+  severity: Severity;
+  component_name: string;
+  file: string;
+  line: number;
+  column?: number;
+  message: string;
+  fixable: boolean;
+}
+
+export interface AuditReportJSON {
+  audit_schema_version: typeof AUDIT_SCHEMA_VERSION;
+  passed: boolean;
+  files_scanned: number;
+  components_found: number;
+  counts: Record<Severity, number>;
+  results: AuditFindingJSON[];
+}
+
+/**
+ * Build the stable, versioned JSON payload for an audit summary. Shared by
+ * `faqir audit --json` (project scan) and `faqir audit --stdin --json` (piped
+ * HTML) so both speak the identical schema.
+ */
+export function buildAuditReport(summary: AuditSummary): AuditReportJSON {
+  return {
+    audit_schema_version: AUDIT_SCHEMA_VERSION,
     passed: summary.passed,
     files_scanned: summary.files_scanned,
     components_found: summary.components_found,
     counts: summary.counts,
-    results: summary.results.map(r => ({
+    results: summary.results.map((r) => ({
       rule_id: r.rule_id,
       severity: r.severity,
       component_name: r.component_name,
@@ -112,7 +144,13 @@ export function printAuditJSON(summary: AuditSummary): void {
       fixable: !!r.fix,
     })),
   };
-  console.log(JSON.stringify(output, null, 2));
+}
+
+/**
+ * Output audit results as JSON via the universal `--json` channel.
+ */
+export function printAuditJSON(summary: AuditSummary): void {
+  emitJSON(buildAuditReport(summary));
 }
 
 /**
@@ -123,7 +161,7 @@ export function printAuditJSON(summary: AuditSummary): void {
 export function printRuleInventory(json = false): void {
   const rules = getRuleInventory();
   if (json) {
-    console.log(JSON.stringify({ rules }, null, 2));
+    emitJSON({ rules });
     return;
   }
 

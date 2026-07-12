@@ -103,7 +103,7 @@ done in any order (or in parallel worktrees).
 | 0.5-07 | Manifest-derived skill generator + hosted `manifest.schema.json` | ⬜ |
 | 0.5-08 | Spec-informed HTML tokenizer replacing regex scanner | ⬜ |
 | 0.5-09 | Parser fuzz corpus + property tests | ⬜ |
-| 0.5-10 | `faqir audit --stdin` + guaranteed `--json` on every command | ⬜ |
+| 0.5-10 | `faqir audit --stdin` + guaranteed `--json` on every command | ✅ |
 
 ### Phase v0.6 — Forms, Data & Documents (Formery enablement)
 
@@ -1330,9 +1330,9 @@ enumerates registered commands and runs each with `--json`.
 - Meta-test: every command × `--json` → parseable JSON, non-zero exit codes still emit JSON errors.
 
 **Acceptance criteria**
-- [ ] `echo '<div>…</div>' | faqir audit --stdin --json` works on compiled Node CLI.
-- [ ] JSON guarantee CI-tested for all 20+ commands, including error paths.
-- [ ] Audit JSON schema documented (feeds the MCP tools and 1.0 freeze).
+- [x] `echo '<div>…</div>' | faqir audit --stdin --json` works on compiled Node CLI. (`src/commands/audit.ts` `--stdin` path reads stdin via `readStdin()`, loads registry manifests with `loadRegistryManifestMap()`, and runs the filesystem-free `auditHtmlSource` engine — no project/config needed. Verified end-to-end on `node dist/faqir.mjs` and pinned in `scripts/smoke-cli.sh`.)
+- [x] JSON guarantee CI-tested for all 20+ commands, including error paths. (`src/utils/json-output.ts`: `initJSONMode` arms console capture + a single-envelope exit flush; commands with a stable schema call `emitJSON`, the rest fall back to a `json_schema_version`-stamped envelope carrying messages + `ok`/`exit_code`/`error`. Meta-test in `tests/commands/json-output.test.ts` enumerates `COMMAND_NAMES` from the new side-effect-free `src/command-registry.ts` and asserts parseable JSON for all 21 commands, including non-zero exit / error paths.)
+- [x] Audit JSON schema documented (feeds the MCP tools and 1.0 freeze). (`AUDIT_SCHEMA_VERSION` + `buildAuditReport()` in `src/audit/reporter.ts`; the versioned shape is documented in `README.md` → "Audit and Repair › JSON Output", and its shape is snapshot-tested.)
 
 ---
 

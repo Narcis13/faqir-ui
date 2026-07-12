@@ -21,6 +21,7 @@
 import { existsSync, rmSync } from "node:fs";
 import { dirname, join, sep } from "node:path";
 import { log } from "../utils/logger";
+import { emitJSON } from "../utils/json-output";
 import { configExists, readConfig, type FaqirConfig } from "../utils/config";
 import { ensureDir, getRegistryPath } from "../utils/fs";
 import { findComponentInRegistry, findInstalledLayer, type Layer } from "../utils/components";
@@ -407,9 +408,7 @@ export async function upgrade(args: string[], internal?: { registryPath?: string
 
   if (targets.length === 0) {
     if (options.json) {
-      console.log(
-        JSON.stringify({ schema: UPGRADE_JSON_SCHEMA, dryRun: options.dryRun, components: [], hasConflicts: false }, null, 2)
-      );
+      emitJSON({ schema: UPGRADE_JSON_SCHEMA, dryRun: options.dryRun, components: [], hasConflicts: false });
     } else {
       log.info("No components installed — nothing to upgrade.");
     }
@@ -433,13 +432,7 @@ export async function upgrade(args: string[], internal?: { registryPath?: string
   }
 
   if (options.json) {
-    console.log(
-      JSON.stringify(
-        { schema: UPGRADE_JSON_SCHEMA, dryRun: options.dryRun, components: reports, hasConflicts },
-        null,
-        2
-      )
-    );
+    emitJSON({ schema: UPGRADE_JSON_SCHEMA, dryRun: options.dryRun, components: reports, hasConflicts });
   } else {
     for (const r of reports) printComponentHuman(r);
     log.blank();

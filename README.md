@@ -915,7 +915,8 @@ faqir scaffold internal-tool      # Generate settings/forms page
 ```bash
 faqir audit                       # Validate all HTML against manifests
 faqir audit --file index.html     # Audit specific file
-faqir audit --json                # JSON output for tooling
+faqir audit --stdin               # Audit HTML piped on stdin (no project)
+faqir audit --json                # JSON output for tooling (any command accepts --json)
 faqir audit --fix                 # Alias for repair
 
 faqir repair                      # Auto-fix audit issues
@@ -993,6 +994,45 @@ The audit system validates your HTML against component manifests. It catches str
 ```bash
 faqir audit              # Run all checks
 faqir repair             # Auto-fix what can be fixed
+
+# Audit HTML piped on stdin against the registry — no project required:
+echo '<button data-ui="button" data-variant="neon">x</button>' \
+  | faqir audit --stdin --json
+```
+
+### JSON Output
+
+Every CLI command accepts `--json` and, in that mode, stdout is guaranteed to be
+a single machine-readable JSON document — including on error (a failing command
+still emits parseable JSON and a non-zero exit code). Commands with a stable,
+documented schema (`audit`, `diff`, `upgrade`, `inspect`, `explain`, `trace`,
+`context`) emit that schema directly; every other command emits a generic
+envelope carrying its captured messages, the resolved exit code, and any error.
+
+The `faqir audit --json` (and `--stdin --json`) payload is versioned via
+`audit_schema_version` — the stable contract the MCP audit tools and the 1.0
+freeze depend on:
+
+```jsonc
+{
+  "audit_schema_version": 1,       // bumped only on a breaking shape change
+  "passed": false,                 // no critical/error findings
+  "files_scanned": 1,
+  "components_found": 1,
+  "counts": { "critical": 0, "error": 1, "warning": 0, "info": 0 },
+  "results": [
+    {
+      "rule_id": "valid-variant",
+      "severity": "error",         // critical | error | warning | info
+      "component_name": "button",
+      "file": "<stdin>",           // "<stdin>" for --stdin, else the scanned path
+      "line": 1,
+      "column": 9,                 // present only when a rule pins an exact column
+      "message": "Invalid variant \"neon\" on [data-ui=\"button\"]. …",
+      "fixable": false             // true when `faqir repair` can auto-fix it
+    }
+  ]
+}
 ```
 
 ### Audit Rules

@@ -1,6 +1,7 @@
 import { existsSync, watch } from "node:fs";
 import { join, extname } from "node:path";
 import { log } from "../utils/logger";
+import { emitJSON } from "../utils/json-output";
 import { configExists, readConfig } from "../utils/config";
 import { generateBundle } from "../utils/bundler";
 
@@ -87,6 +88,20 @@ export async function dev(args: string[]): Promise<void> {
   const opts = parseArgs(args);
   const cwd = process.cwd();
   const rootDir = join(cwd, opts.dir);
+
+  // `--json` describes the server it *would* start (a blocking server can't
+  // satisfy the single-document JSON contract) and returns without listening.
+  if (args.includes("--json")) {
+    emitJSON({
+      command: "dev",
+      port: opts.port,
+      dir: opts.dir,
+      url: `http://localhost:${opts.port}`,
+      auto_bundle: opts.autoBundle,
+      serves: existsSync(rootDir),
+    });
+    return;
+  }
 
   if (!existsSync(rootDir)) {
     log.error(`Directory '${opts.dir}' not found.`);
