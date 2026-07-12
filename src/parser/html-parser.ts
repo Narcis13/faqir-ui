@@ -89,10 +89,6 @@ export function offsetToPosition(source: string, offset: number): { line: number
   return { line, column: end - lineStart + 1 };
 }
 
-function countLines(source: string, offset: number): number {
-  return offsetToPosition(source, offset).line;
-}
-
 /**
  * Blank out the *contents* of HTML comments, `<script>` blocks, and `<style>`
  * blocks while preserving every byte's position — newlines are kept and all
@@ -157,87 +153,84 @@ export function parseHTML(source: string): ParsedElement[] {
   return roots;
 }
 
+// Pre-order traversal is iterative (an explicit stack, children pushed in
+// reverse so they pop in document order). A recursive walk overflows the call
+// stack on pathologically deep input (thousands of unclosed tags); parseHTML
+// itself is already iterative, and these walkers must be too so the whole
+// pipeline stays crash-free on adversarial HTML (task 0.5-09).
+
 /**
- * Find all elements in the tree with a specific attribute.
+ * Find all elements in the tree with a specific attribute (pre-order).
  */
 function findByAttr(roots: ParsedElement[], attr: string): ParsedElement[] {
   const results: ParsedElement[] = [];
+  const stack: ParsedElement[] = [];
+  for (let i = roots.length - 1; i >= 0; i--) stack.push(roots[i]);
 
-  function walk(el: ParsedElement) {
-    if (attr in el.attrs) {
-      results.push(el);
-    }
-    for (const child of el.children) {
-      walk(child);
-    }
+  while (stack.length > 0) {
+    const el = stack.pop()!;
+    if (attr in el.attrs) results.push(el);
+    for (let i = el.children.length - 1; i >= 0; i--) stack.push(el.children[i]);
   }
-
-  for (const root of roots) {
-    walk(root);
-  }
-  return results;
-}
-
-/**
- * Find all descendant elements with a given attribute within a subtree.
- */
-function findDescendantsByAttr(root: ParsedElement, attr: string): ParsedElement[] {
-  const results: ParsedElement[] = [];
-
-  function walk(el: ParsedElement) {
-    for (const child of el.children) {
-      if (attr in child.attrs) {
-        results.push(child);
-      }
-      walk(child);
-    }
-  }
-
-  walk(root);
   return results;
 }
 
 /**
  * Extract all Faqir components from an HTML source file.
+ *
+ * A single iterative pre-order pass over the tree (O(n)). Each element carries
+ * the nearest enclosing `data-ui` component down to its children, so a
+ * `data-part` is attributed to its closest ancestor component and never to an
+ * outer one. The earlier version re-scanned each component's whole subtree,
+ * which is O(n²) in nesting depth and hangs on deeply nested components — the
+ * fuzz suite (task 0.5-09) requires this to stay time-bounded.
+ *
+ * Boundary semantics preserved exactly: an element whose `data-ui` value is
+ * empty starts no component but still ends the parent component's scope, so its
+ * descendants' parts attach to nothing (an empty `data-ui` is a nesting
+ * boundary). A component root's own `data-part` counts toward its *parent*
+ * component, matching the descendant-only collection it replaces.
  */
 export function extractComponents(source: string, filePath: string): ParsedComponent[] {
   const roots = parseHTML(source);
-  const uiElements = findByAttr(roots, "data-ui");
   const components: ParsedComponent[] = [];
 
-  for (const el of uiElements) {
-    const name = el.attrs["data-ui"];
-    if (!name) continue;
+  // Each stack frame pairs an element with the component that owns its parts
+  // (its nearest ancestor `data-ui`, or null when none / past a boundary).
+  const stack: Array<{ el: ParsedElement; owner: ParsedComponent | null }> = [];
+  for (let i = roots.length - 1; i >= 0; i--) stack.push({ el: roots[i], owner: null });
 
-    // Collect parts
-    const partElements = findDescendantsByAttr(el, "data-part");
-    const parts: Record<string, ParsedElement[]> = {};
-    for (const partEl of partElements) {
-      // Skip parts that belong to a nested data-ui component
-      let belongsToNested = false;
-      let parent = partEl.parent;
-      while (parent && parent !== el) {
-        if ("data-ui" in parent.attrs && parent !== el) {
-          belongsToNested = true;
-          break;
-        }
-        parent = parent.parent;
+  while (stack.length > 0) {
+    const { el, owner } = stack.pop()!;
+
+    // A data-part belongs to the nearest ancestor component (independent of
+    // whether this element itself opens a new one).
+    if (owner && "data-part" in el.attrs) {
+      const partName = el.attrs["data-part"];
+      if (partName) {
+        if (!owner.parts[partName]) owner.parts[partName] = [];
+        owner.parts[partName].push(el);
       }
-      if (belongsToNested) continue;
-
-      const partName = partEl.attrs["data-part"];
-      if (!partName) continue;
-      if (!parts[partName]) parts[partName] = [];
-      parts[partName].push(partEl);
     }
 
-    components.push({
-      name,
-      root: el,
-      parts,
-      file: filePath,
-      line: countLines(source, el.start),
-    });
+    // Determine the owner passed down to this element's children.
+    let childOwner = owner;
+    if ("data-ui" in el.attrs) {
+      const name = el.attrs["data-ui"];
+      if (name) {
+        // el.line is already computed once by the tokenizer (binary search) and
+        // equals countLines(source, el.start); reusing it keeps this O(1) rather
+        // than O(offset), so a document with many components stays linear.
+        childOwner = { name, root: el, parts: {}, file: filePath, line: el.line };
+        components.push(childOwner);
+      } else {
+        childOwner = null; // empty data-ui: a boundary that opens no component
+      }
+    }
+
+    for (let i = el.children.length - 1; i >= 0; i--) {
+      stack.push({ el: el.children[i], owner: childOwner });
+    }
   }
 
   return components;
@@ -259,12 +252,16 @@ const FULL_DOCUMENT_RE = /<!doctype\s+html|<html[\s>]|<body[\s>]/i;
  */
 export function parseDocument(source: string, filePath: string): ParsedDocument {
   const roots = parseHTML(source);
+  // Iterative pre-order (see findByAttr) — deeply nested input would overflow a
+  // recursive walk here even though parseHTML built the tree without recursing.
   const elements: ParsedElement[] = [];
-  const walk = (el: ParsedElement) => {
+  const stack: ParsedElement[] = [];
+  for (let i = roots.length - 1; i >= 0; i--) stack.push(roots[i]);
+  while (stack.length > 0) {
+    const el = stack.pop()!;
     elements.push(el);
-    for (const child of el.children) walk(child);
-  };
-  for (const root of roots) walk(root);
+    for (let i = el.children.length - 1; i >= 0; i--) stack.push(el.children[i]);
+  }
 
   return {
     file: filePath,
@@ -284,7 +281,7 @@ export function findAllUIElements(source: string): Array<{ name: string; line: n
   const uiElements = findByAttr(roots, "data-ui");
   return uiElements.map(el => ({
     name: el.attrs["data-ui"],
-    line: countLines(source, el.start),
+    line: el.line, // == countLines(source, el.start), precomputed by the tokenizer
     attrs: el.attrs,
   }));
 }

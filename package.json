@@ -21,6 +21,7 @@
     "check:registry-index": "bun scripts/build-registry-index.mjs --check",
     "build:core-package": "node scripts/build-core-package.mjs",
     "test": "bun test",
+    "fuzz:parser": "bun scripts/fuzz-parser.ts",
     "typecheck": "tsc --noEmit && tsc --noEmit -p packages/mcp/tsconfig.json",
     "build:mcp": "node packages/mcp/build.mjs",
     "smoke": "bash scripts/smoke-cli.sh",
