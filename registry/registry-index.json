@@ -1325,30 +1325,31 @@
       "name": "table",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "files": [
         {
           "path": "table.css",
-          "sha256": "085ca5886a48f6fea6e5d9aa565e8e89a2025260200bf8ff2fdd52472e6dd999"
+          "sha256": "fd0597f51f1a8ae5c4f308fc43af0e9467b5830410836a4eb35f65cfabd33cab"
         },
         {
           "path": "table.html",
-          "sha256": "1a9683e3660b5dcb157f61f596e7c7fba09d47e2a467ceb79b026172c1c0aaae"
+          "sha256": "cabbf3b2454a2bc9c9c7c934a71a387f1f80ae570e44c411a598dad11bff4d8e"
         },
         {
           "path": "table.js",
-          "sha256": "18c16492fb2d415ff38992be8d5cf64b74e9fb9991a3c44bb23429e8a5b8975c"
+          "sha256": "aae459d5461cf72ebe820a4ccf2277ba8f683609cc894396900fc863929c0f6b"
         },
         {
           "path": "table.manifest.json",
-          "sha256": "d0060031be8574719a415c00e4b0afa1dcce8818df766974a1714386d1f935d8"
+          "sha256": "660e4ebbbb1787d67b63cb3cb3ed968cda05130142297598f15369be6a36706a"
         }
       ],
-      "hash": "16a058a7a5205d5f4a50301a3fbdc640b8b324c6131c8e20541ddebf21deefeb",
+      "hash": "be2f38379735f60e2966796d5987608875d4ab272d8b9ef6e8b54a73e7524959",
       "deps": [
         "checkbox",
         "badge",
-        "button"
+        "button",
+        "input"
       ]
     },
     {

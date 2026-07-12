@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Faqir UI — Table Lab (advanced data table)</title>
+
+  <!-- Tokens -->
+  <link rel="stylesheet" href="../registry/tokens/palette.css">
+  <link rel="stylesheet" href="../registry/tokens/spacing.css">
+  <link rel="stylesheet" href="../registry/tokens/typography.css">
+  <link rel="stylesheet" href="../registry/tokens/effects.css">
+  <link rel="stylesheet" href="../registry/tokens/motion.css">
+  <link rel="stylesheet" href="../registry/tokens/semantic.css">
+  <link rel="stylesheet" href="../registry/tokens/aliases.css">
+
+  <!-- Base -->
+  <link rel="stylesheet" href="../registry/base/reset.css">
+
+  <!-- Primitives -->
+  <link rel="stylesheet" href="../registry/primitives/button/button.css">
+  <link rel="stylesheet" href="../registry/primitives/input/input.css">
+  <link rel="stylesheet" href="../registry/primitives/badge/badge.css">
+  <link rel="stylesheet" href="../registry/primitives/card/card.css">
+  <link rel="stylesheet" href="../registry/primitives/stack/stack.css">
+  <link rel="stylesheet" href="../registry/primitives/text/text.css">
+  <link rel="stylesheet" href="../registry/primitives/kbd/kbd.css">
+
+  <!-- Recipes -->
+  <link rel="stylesheet" href="../registry/recipes/table/table.css">
+
+  <!-- Faqir Core (auto-initializes every [data-ui="table"]) -->
+  <script src="../registry/core/faqir-core.js" defer></script>
+
+  <style>
+    body { background: var(--color-bg-subtle); color: var(--color-fg); font-family: var(--font-sans, system-ui); margin: 0; padding: var(--space-8); }
+    main { max-width: 1100px; margin-inline: auto; display: flex; flex-direction: column; gap: var(--space-8); }
+    section { background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: var(--space-6); }
+    section > h2 { margin: 0 0 var(--space-1); font-size: var(--text-lg); }
+    section > p { margin: 0 0 var(--space-4); color: var(--color-fg-muted); font-size: var(--text-sm); }
+    .toolbar { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; margin-block-end: var(--space-3); }
+    .toolbar input[data-part="filter"] { max-inline-size: 240px; }
+    .squeeze { resize: horizontal; overflow: auto; border: 1px dashed var(--color-border-strong); border-radius: var(--radius-md); padding: var(--space-3); max-width: 100%; width: 520px; min-width: 280px; }
+    #event-log { position: fixed; inset-block-end: var(--space-4); inset-inline-end: var(--space-4); width: 330px; max-height: 220px; overflow-y: auto; background: var(--color-fg); color: var(--color-bg); font-family: var(--font-mono, monospace); font-size: var(--text-xs); border-radius: var(--radius-md); padding: var(--space-3); opacity: 0.92; }
+    #event-log div { border-block-end: 1px solid oklch(1 0 0 / 0.15); padding-block: 2px; }
+    h1 { font-size: var(--text-2xl); margin: 0; }
+    .page-head p { color: var(--color-fg-muted); margin: var(--space-1) 0 0; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="page-head">
+      <h1>Table Lab</h1>
+      <p>Every advanced feature of the Faqir table recipe, on live financial data. Events stream into the log at the bottom-right.</p>
+    </div>
+
+    <!-- ═══ 1 · Journal ledger — editing, filtering, multi-sort, sticky, aggregates ═══ -->
+    <section>
+      <h2>1 · General ledger</h2>
+      <p>
+        Multi-sort (shift+click headers) · tristate (3rd click clears) · inline edit (double-click a Debit/Credit cell, or focus + Enter)
+        · column filters with <code>&gt;=</code>/<code>..</code> ranges · global quick filter · sticky header · live totals · accounting negatives
+        · selection · keyboard grid nav · state persisted to localStorage.
+      </p>
+      <div class="toolbar">
+        <input data-ui="input" data-part="filter" type="search" aria-label="Quick filter" placeholder="Quick filter…">
+        <button data-ui="button" data-variant="secondary" data-size="sm" id="btn-csv">Export CSV</button>
+        <button data-ui="button" data-variant="secondary" data-size="sm" id="btn-clear-filters">Clear filters</button>
+        <button data-ui="button" data-variant="secondary" data-size="sm" id="btn-toggle-date">Hide/show Date</button>
+        <span data-ui="badge" data-variant="secondary" id="sel-count">0 selected</span>
+      </div>
+      <div data-ui="table" id="ledger" data-variant="bordered" data-size="md"
+           data-editable data-multi-sort data-sort-cycle="tristate" data-selectable data-navigable
+           data-sticky-header data-negatives="both" data-locale="en-US" data-currency="USD"
+           data-persist="table-lab-ledger" data-responsive="scroll"
+           style="--table-max-height: 320px">
+        <table data-part="table">
+          <thead data-part="thead">
+            <tr data-part="tr">
+              <th data-part="th" scope="col"><input data-part="checkbox" type="checkbox" aria-label="Select all rows"></th>
+              <th data-part="th" scope="col" data-sortable aria-sort="none" data-readonly>Account</th>
+              <th data-part="th" scope="col" data-sortable aria-sort="none" data-readonly data-type="date">Date</th>
+              <th data-part="th" scope="col" data-sortable aria-sort="none" data-align="right" data-format="currency" data-editable>Debit</th>
+              <th data-part="th" scope="col" data-sortable aria-sort="none" data-align="right" data-format="currency" data-editable>Credit</th>
+            </tr>
+            <tr data-part="filter-row">
+              <td data-part="td"></td>
+              <td data-part="td"><input data-part="filter-input" type="text" aria-label="Filter Account" placeholder="contains…"></td>
+              <td data-part="td"><input data-part="filter-input" type="text" aria-label="Filter Date" placeholder="2026-06-05"></td>
+              <td data-part="td"><input data-part="filter-input" type="text" aria-label="Filter Debit" placeholder="&gt;=1000, 10..99"></td>
+              <td data-part="td"><input data-part="filter-input" type="text" aria-label="Filter Credit" placeholder="&gt;0"></td>
+            </tr>
+          </thead>
+          <tbody data-part="tbody">
+            <tr data-part="tr" data-row-id="je-101">
+              <td data-part="td"><input data-part="checkbox" type="checkbox" aria-label="Select row"></td>
+              <td data-part="td">4010 · Consulting revenue</td>
+              <td data-part="td">2026-06-05</td>
+              <td data-part="td" data-format="currency" data-value=""></td>
+              <td data-part="td" data-format="currency" data-value="8400"></td>
+            </tr>
+            <tr data-part="tr" data-row-id="je-102">
+              <td data-part="td"><input data-part="checkbox" type="checkbox" aria-label="Select row"></td>
+              <td data-part="td">1200 · Accounts receivable</td>
+              <td data-part="td">2026-06-05</td>
+              <td data-part="td" data-format="currency" data-value="8400"></td>
+              <td data-part="td" data-format="currency" data-value=""></td>
+            </tr>
+            <tr data-part="tr" data-row-id="je-103">
+              <td data-part="td"><input data-part="checkbox" type="checkbox" aria-label="Select row"></td>
+              <td data-part="td">6100 · Office rent</td>
+              <td data-part="td">2026-06-12</td>
+              <td data-part="td" data-format="currency" data-value="2150"></td>
+              <td data-part="td" data-format="currency" data-value=""></td>
+            </tr>
+            <tr data-part="tr" data-row-id="je-104">
+              <td data-part="td"><input data-part="checkbox" type="checkbox" aria-label="Select row"></td>
+              <td data-part="td">6200 · Cloud hosting</td>
+              <td data-part="td">2026-06-01</td>
+              <td data-part="td" data-format="currency" data-value="1240"></td>
+              <td data-part="td" data-format="currency" data-value=""></td>
+            </tr>
+            <tr data-part="tr" data-row-id="je-105">
+              <td data-part="td"><input data-part="checkbox" type="checkbox" aria-label="Select row"></td>
+              <td data-part="td">2050 · Credit note adjustment</td>
+              <td data-part="td">2026-06-18</td>
+              <td data-part="td" data-format="currency" data-value="-350"></td>
+              <td data-part="td" data-format="currency" data-value=""></td>
+            </tr>
+            <tr data-part="empty" hidden>
+              <td data-part="td" colspan="5">No matching journal entries</td>
+            </tr>
+          </tbody>
+          <tfoot data-part="tfoot">
+            <tr data-part="tr">
+              <td data-part="td" colspan="2" data-align="right">Totals</td>
+              <td data-part="td" data-aggregate="count" data-col="1" data-align="right"></td>
+              <td data-part="td" data-align="right" data-format="currency" data-aggregate="sum" data-col="3"></td>
+              <td data-part="td" data-align="right" data-format="currency" data-aggregate="sum" data-col="4"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </section>
+
+    <!-- ═══ 2 · Chart of accounts — tree table with roll-ups ═══ -->
+    <section>
+      <h2>2 · Chart of accounts (tree)</h2>
+      <p>Tree rows via <code>data-level</code> · parents roll up descendant balances · sorting stays inside siblings · chevrons collapse subtrees.</p>
+      <div class="toolbar">
+        <button data-ui="button" data-variant="secondary" data-size="sm" id="btn-expand-all">Expand all</button>
+        <button data-ui="button" data-variant="secondary" data-size="sm" id="btn-collapse-all">Collapse all</button>
+      </div>
+      <div data-ui="table" id="coa" data-tree data-size="md" data-locale="en-US" data-currency="USD">
+        <table data-part="table">
+          <thead data-part="thead">
+            <tr data-part="tr">
+              <th data-part="th" scope="col" data-sortable aria-sort="none">Account</th>
+              <th data-part="th" scope="col" data-align="right" data-format="currency" data-sortable aria-sort="none">Balance</th>
+            </tr>
+          </thead>
+          <tbody data-part="tbody">
+            <tr data-part="tr" data-level="0"><td data-part="td">Assets</td><td data-part="td" data-format="currency" data-aggregate="sum"></td></tr>
+            <tr data-part="tr" data-level="1"><td data-part="td">Cash and equivalents</td><td data-part="td" data-format="currency" data-aggregate="sum"></td></tr>
+            <tr data-part="tr" data-level="2"><td data-part="td">Operating checking</td><td data-part="td" data-format="currency" data-value="21980"></td></tr>
+            <tr data-part="tr" data-level="2"><td data-part="td">Reserve savings</td><td data-part="td" data-format="currency" data-value="5500"></td></tr>
+            <tr data-part="tr" data-level="1"><td data-part="td">Accounts receivable</td><td data-part="td" data-format="currency" data-value="34250"></td></tr>
+            <tr data-part="tr" data-level="0"><td data-part="td">Liabilities</td><td data-part="td" data-format="currency" data-aggregate="sum"></td></tr>
+            <tr data-part="tr" data-level="1"><td data-part="td">Accounts payable</td><td data-part="td" data-format="currency" data-value="9400"></td></tr>
+            <tr data-part="tr" data-level="1"><td data-part="td">VAT payable</td><td data-part="td" data-format="currency" data-value="3500"></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ═══ 3 · Cost centers — collapsible groups ═══ -->
+    <section>
+      <h2>3 · Cost centers (collapsible groups)</h2>
+      <p>Click a group header to fold its section · per-group sums recompute live (try editing after enabling edit in section 1's pattern).</p>
+      <div data-ui="table" id="groups" data-groupable data-size="md" data-locale="en-US" data-currency="USD">
+        <table data-part="table">
+          <thead data-part="thead">
+            <tr data-part="tr">
+              <th data-part="th" scope="col">Cost center</th>
+              <th data-part="th" scope="col" data-align="right" data-format="number">Hours</th>
+              <th data-part="th" scope="col" data-align="right" data-format="currency">Spend</th>
+            </tr>
+          </thead>
+          <tbody data-part="tbody">
+            <tr data-part="group-header">
+              <td data-part="td" colspan="2">Engineering</td>
+              <td data-part="td" data-align="right" data-format="currency" data-aggregate="sum" data-col="2"></td>
+            </tr>
+            <tr data-part="tr"><td data-part="td">Platform team</td><td data-part="td" data-align="right" data-format="number" data-value="40"></td><td data-part="td" data-align="right" data-format="currency" data-value="3400"></td></tr>
+            <tr data-part="tr"><td data-part="td">Mobile team</td><td data-part="td" data-align="right" data-format="number" data-value="38"></td><td data-part="td" data-align="right" data-format="currency" data-value="3420"></td></tr>
+            <tr data-part="group-header">
+              <td data-part="td" colspan="2">Design</td>
+              <td data-part="td" data-align="right" data-format="currency" data-aggregate="sum" data-col="2"></td>
+            </tr>
+            <tr data-part="tr"><td data-part="td">Brand studio</td><td data-part="td" data-align="right" data-format="number" data-value="35"></td><td data-part="td" data-align="right" data-format="currency" data-value="2625"></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ═══ 4 · Invoices — DnD rows, resizable/reorderable/pinned columns, details ═══ -->
+    <section>
+      <h2>4 · Invoices (drag &amp; drop, columns, master–detail)</h2>
+      <p>
+        Drag the ⠿ handle to reorder rows (or focus it and press ↑/↓) · drag header edges to resize · drag headers to reorder columns
+        · Invoice column pinned while scrolling · “Issued” hides on narrow containers · chevron opens line-item details.
+      </p>
+      <div data-ui="table" id="invoices" data-variant="striped" data-size="md"
+           data-reorderable data-resizable data-col-reorderable data-responsive="scroll"
+           data-locale="en-US" data-currency="USD">
+        <table data-part="table">
+          <thead data-part="thead">
+            <tr data-part="tr">
+              <th data-part="th" scope="col" data-no-resize data-csv-skip aria-label="Row order"></th>
+              <th data-part="th" scope="col" data-sortable aria-sort="none" data-pin="start">Invoice</th>
+              <th data-part="th" scope="col" data-sortable aria-sort="none">Customer</th>
+              <th data-part="th" scope="col" data-sortable aria-sort="none" data-hide-below="md" data-type="date">Issued</th>
+              <th data-part="th" scope="col" data-sortable aria-sort="none" data-align="right" data-format="currency">Amount</th>
+              <th data-part="th" scope="col" data-no-resize>Details</th>
+            </tr>
+          </thead>
+          <tbody data-part="tbody">
+            <tr data-part="tr" data-row-id="inv-2041">
+              <td data-part="td"><button type="button" data-part="drag-handle" aria-label="Reorder row"></button></td>
+              <td data-part="td">INV-2041</td>
+              <td data-part="td">Deltacorp SRL</td>
+              <td data-part="td">2026-06-01</td>
+              <td data-part="td" data-format="currency" data-value="4200"></td>
+              <td data-part="td"><button type="button" data-part="row-toggle" aria-expanded="false" aria-label="Toggle details"></button></td>
+            </tr>
+            <tr data-part="detail-row" hidden>
+              <td data-part="td" colspan="6">3 line items · Net 30 · Sent 2026-06-01, viewed 2026-06-03</td>
+            </tr>
+            <tr data-part="tr" data-row-id="inv-2042">
+              <td data-part="td"><button type="button" data-part="drag-handle" aria-label="Reorder row"></button></td>
+              <td data-part="td">INV-2042</td>
+              <td data-part="td">Novatek Industries</td>
+              <td data-part="td">2026-06-04</td>
+              <td data-part="td" data-format="currency" data-value="1875.5"></td>
+              <td data-part="td"><button type="button" data-part="row-toggle" aria-expanded="false" aria-label="Toggle details"></button></td>
+            </tr>
+            <tr data-part="detail-row" hidden>
+              <td data-part="td" colspan="6">1 line item · Net 15 · Sent 2026-06-04</td>
+            </tr>
+            <tr data-part="tr" data-row-id="inv-2043">
+              <td data-part="td"><button type="button" data-part="drag-handle" aria-label="Reorder row"></button></td>
+              <td data-part="td">INV-2043</td>
+              <td data-part="td">Anthos Partners</td>
+              <td data-part="td">2026-06-09</td>
+              <td data-part="td" data-format="currency" data-value="960"></td>
+              <td data-part="td"><button type="button" data-part="row-toggle" aria-expanded="false" aria-label="Toggle details"></button></td>
+            </tr>
+            <tr data-part="detail-row" hidden>
+              <td data-part="td" colspan="6">2 line items · Net 30 · Draft</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ═══ 5 · Responsive stack mode ═══ -->
+    <section>
+      <h2>5 · Expenses (responsive stack)</h2>
+      <p>Drag the dashed container's corner narrower than 768px — rows re-render as labelled cards (<code>data-responsive="stack"</code>).</p>
+      <div class="squeeze">
+        <div data-ui="table" id="expenses" data-responsive="stack" data-stack-below="md" data-size="md" data-locale="en-US" data-currency="USD">
+          <table data-part="table">
+            <thead data-part="thead">
+              <tr data-part="tr">
+                <th data-part="th" scope="col">Expense</th>
+                <th data-part="th" scope="col" data-align="right" data-format="currency">Amount</th>
+                <th data-part="th" scope="col">Status</th>
+              </tr>
+            </thead>
+            <tbody data-part="tbody">
+              <tr data-part="tr"><td data-part="td">Team offsite catering</td><td data-part="td" data-format="currency" data-value="482.9"></td><td data-part="td">Approved</td></tr>
+              <tr data-part="tr"><td data-part="td">Cloud hosting June</td><td data-part="td" data-format="currency" data-value="1240"></td><td data-part="td">Pending</td></tr>
+              <tr data-part="tr"><td data-part="td">Accounting software</td><td data-part="td" data-format="currency" data-value="89"></td><td data-part="td">Approved</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="event-log" aria-live="off"><div>— faqir:* event log —</div></div>
+
+  <script>
+    // Demo chrome: wire toolbar buttons to the table API and stream events.
+    window.addEventListener("DOMContentLoaded", () => {
+      const log = document.getElementById("event-log");
+      const EVENTS = ["sort","selection-change","filter","cell-edit","edit-start","edit-cancel",
+                      "row-reorder","col-reorder","col-resize","group-toggle","tree-toggle",
+                      "row-expand","col-visibility"];
+      for (const name of EVENTS) {
+        document.addEventListener("faqir:" + name, (e) => {
+          const line = document.createElement("div");
+          const detail = { ...e.detail };
+          for (const k of Object.keys(detail)) if (detail[k] instanceof Node) detail[k] = "<node>";
+          line.textContent = name + " " + JSON.stringify(detail);
+          log.prepend(line);
+          while (log.children.length > 40) log.lastChild.remove();
+        });
+      }
+
+      // Controllers self-register on the root element after auto-init.
+      const api = (id) => document.getElementById(id)?._faqirTable;
+      let dateHidden = false;
+      document.getElementById("btn-csv").addEventListener("click", () => {
+        api("ledger")?.exportCsv({ filename: "ledger.csv" });
+      });
+      document.getElementById("btn-clear-filters").addEventListener("click", () => api("ledger")?.clearFilters());
+      document.getElementById("btn-toggle-date").addEventListener("click", () => {
+        dateHidden = !dateHidden;
+        api("ledger")?.[dateHidden ? "hideColumn" : "showColumn"](2);
+      });
+      document.getElementById("btn-expand-all").addEventListener("click", () => api("coa")?.expandAll());
+      document.getElementById("btn-collapse-all").addEventListener("click", () => api("coa")?.collapseAll());
+      document.addEventListener("faqir:selection-change", (e) => {
+        document.getElementById("sel-count").textContent = (e.detail.selected?.length ?? 0) + " selected";
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,10 +1,23 @@
 /* @ui:component table */
-/* @ui:tokens color-bg color-bg-subtle color-fg color-fg-muted color-border color-primary-subtle space-1 space-2 space-3 space-4 text-xs text-sm weight-semibold weight-bold duration-fast ease-default doc-table-footer-bg doc-table-footer-weight doc-print-border-color */
+/* @ui:tokens color-bg color-bg-subtle color-bg-muted color-fg color-fg-muted color-fg-subtle color-border color-border-strong color-primary color-primary-subtle color-ring color-destructive color-destructive-subtle space-0h space-1 space-2 space-3 space-4 space-5 space-8 text-xs text-sm weight-semibold weight-bold radius-sm radius-md radius-full duration-fast ease-default doc-table-footer-bg doc-table-footer-weight doc-print-border-color */
 
 /* ── Root ── */
 [data-ui="table"] {
   width: 100%;
   overflow-x: auto;
+}
+
+/* Responsive tables measure themselves (data-hide-below container queries). */
+[data-ui="table"][data-responsive] {
+  container-type: inline-size;
+  container-name: faqir-table;
+}
+
+/* Scrolling roots for sticky header/footer. Cap height via --table-max-height. */
+[data-ui="table"][data-sticky-header],
+[data-ui="table"][data-sticky-footer] {
+  overflow: auto;
+  max-block-size: var(--table-max-height, none);
 }
 
 /* ── Table ── */
@@ -15,8 +28,19 @@
   font-family: var(--font-sans, system-ui, sans-serif);
 }
 
+/* Once any column is resized the layout freezes so widths are exact. */
+[data-ui="table"][data-resized] [data-part="table"] {
+  table-layout: fixed;
+}
+
+[data-ui="table"][data-resized] [data-part="th"],
+[data-ui="table"][data-resized] [data-part="td"] {
+  overflow-wrap: break-word;
+}
+
 /* ── Header Cell ── */
 [data-ui="table"] [data-part="th"] {
+  position: relative; /* anchors the injected resize handle */
   padding: var(--space-3) var(--space-4);
   text-align: start;
   font-size: var(--text-sm);
@@ -63,6 +87,28 @@
   border-top: 5px solid currentColor;
 }
 
+/* Multi-sort order badge (data-sort-order is set by the controller). */
+[data-ui="table"] [data-part="th"][data-sort-order]::before {
+  content: attr(data-sort-order);
+  display: inline-block;
+  margin-inline-end: var(--space-1);
+  min-inline-size: 1.5em;
+  padding: var(--space-0h);
+  font-size: 0.65em;
+  line-height: 1;
+  text-align: center;
+  border-radius: var(--radius-full);
+  background: var(--color-primary-subtle, oklch(0.96 0.04 264));
+  color: var(--color-primary);
+}
+
+/* Keyboard focus on cells (sortable headers + navigable grids). */
+[data-ui="table"] [data-part="th"]:focus-visible,
+[data-ui="table"] [data-part="td"]:focus-visible {
+  outline: 2px solid var(--color-ring, oklch(0.55 0.22 264 / 0.4));
+  outline-offset: -2px;
+}
+
 /* ── Data Cell ── */
 [data-ui="table"] [data-part="td"] {
   padding: var(--space-3) var(--space-4);
@@ -88,12 +134,27 @@
   background: var(--color-primary-subtle, oklch(0.96 0.04 264));
 }
 
-/* ── Striped Variant ── */
-[data-ui="table"][data-variant="striped"] [data-part="tbody"] [data-part="tr"]:nth-child(even) [data-part="td"] {
+/* Row-click selection affordance. */
+[data-ui="table"][data-selectable] [data-part="tbody"] [data-part="tr"] {
+  cursor: pointer;
+}
+
+/* ── Striped Variant ──
+   Static fallback via nth-child; once the controller stamps data-stripe on the
+   visible rows (so hidden rows never break the pattern), the stamped rules win. */
+[data-ui="table"][data-variant="striped"] [data-part="tbody"] [data-part="tr"]:not([data-stripe]):nth-child(even):not([data-selected]) [data-part="td"] {
   background: var(--color-bg-subtle, oklch(0.97 0.004 260));
 }
 
-[data-ui="table"][data-variant="striped"] [data-part="tbody"] [data-part="tr"]:nth-child(even):hover [data-part="td"] {
+[data-ui="table"][data-variant="striped"] [data-part="tbody"] [data-part="tr"]:not([data-stripe]):nth-child(even):not([data-selected]):hover [data-part="td"] {
+  background: var(--color-bg-subtle, oklch(0.95 0.006 260));
+}
+
+[data-ui="table"][data-variant="striped"] [data-part="tbody"] [data-part="tr"][data-stripe="even"]:not([data-selected]) [data-part="td"] {
+  background: var(--color-bg-subtle, oklch(0.97 0.004 260));
+}
+
+[data-ui="table"][data-variant="striped"] [data-part="tbody"] [data-part="tr"][data-stripe="even"]:not([data-selected]):hover [data-part="td"] {
   background: var(--color-bg-subtle, oklch(0.95 0.006 260));
 }
 
@@ -161,6 +222,12 @@
   font-feature-settings: "tnum";
 }
 
+/* Accounting negatives (controller stamps data-negative on numeric cells). */
+[data-ui="table"][data-negatives="red"] [data-negative],
+[data-ui="table"][data-negatives="both"] [data-negative] {
+  color: var(--color-destructive);
+}
+
 /* ── Grouped Rows ── */
 [data-ui="table"] [data-part="group-header"] td,
 [data-ui="table"] [data-part="group-header"] [data-part="td"] {
@@ -172,10 +239,370 @@
   color: var(--color-fg-muted);
 }
 
-/* ── Colspan/Rowspan ── */
-[data-ui="table"] [data-part="td"][colspan],
-[data-ui="table"] [data-part="th"][colspan] {
+[data-ui="table"][data-groupable] [data-part="group-header"] {
+  cursor: pointer;
+  user-select: none;
+}
+
+/* ── Expanders (tree rows, group headers) & detail-row toggles ── */
+[data-ui="table"] [data-part="expander"],
+[data-ui="table"] [data-part="row-toggle"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--space-5);
+  block-size: var(--space-5);
+  margin-inline-end: var(--space-1);
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-fg-muted);
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+[data-ui="table"] button[data-part="expander"]:hover,
+[data-ui="table"] [data-part="row-toggle"]:hover {
+  background: var(--color-bg-muted, oklch(0.94 0.004 260));
+  color: var(--color-fg);
+}
+
+[data-ui="table"] [data-part="expander"]::before,
+[data-ui="table"] [data-part="row-toggle"]::before {
+  content: "";
+  width: 0;
+  height: 0;
+  border-block-start: 4px solid transparent;
+  border-block-end: 4px solid transparent;
+  border-inline-start: 5px solid currentColor;
+  transition: transform var(--duration-fast) var(--ease-default);
+}
+
+[data-ui="table"] [data-part="expander"][aria-expanded="true"]::before,
+[data-ui="table"] [data-part="row-toggle"][aria-expanded="true"]::before {
+  transform: rotate(90deg);
+}
+
+[dir="rtl"] [data-ui="table"] [data-part="expander"][aria-expanded="true"]::before,
+[dir="rtl"] [data-ui="table"] [data-part="row-toggle"][aria-expanded="true"]::before {
+  transform: rotate(-90deg);
+}
+
+/* Leaf placeholder keeps tree columns aligned without a control. */
+[data-ui="table"] [data-part="expander"][data-leaf] {
+  visibility: hidden;
+  cursor: default;
+}
+
+/* ── Tree Indentation ── */
+[data-ui="table"] [data-part="td"][data-tree-cell] {
+  padding-inline-start: calc(var(--space-4) + var(--level, 0) * var(--table-indent, var(--space-5)));
+}
+
+/* ── Detail Rows (master/detail) ── */
+[data-ui="table"] [data-part="detail-row"] [data-part="td"],
+[data-ui="table"] [data-part="detail-row"] td {
+  background: var(--color-bg-subtle, oklch(0.97 0.004 260));
+  font-size: var(--text-xs);
+  color: var(--color-fg-muted);
+}
+
+/* ── Empty State Row ── */
+[data-ui="table"] [data-part="empty"] [data-part="td"],
+[data-ui="table"] [data-part="empty"] td {
+  padding: var(--space-8) var(--space-4);
+  text-align: center;
+  color: var(--color-fg-muted);
+}
+
+/* ── Filter Row & Filter Inputs ── */
+[data-ui="table"] [data-part="filter-row"] [data-part="td"],
+[data-ui="table"] [data-part="filter-row"] [data-part="th"] {
+  padding: var(--space-1) var(--space-2);
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+[data-ui="table"] [data-part="filter-input"],
+[data-ui="table"] [data-part="filter"] {
+  inline-size: 100%;
+  box-sizing: border-box;
+  padding: var(--space-1) var(--space-2);
+  font-family: inherit;
+  font-size: var(--text-xs);
+  color: var(--color-fg);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+[data-ui="table"] [data-part="filter-input"]:focus,
+[data-ui="table"] [data-part="filter"]:focus {
+  outline: 2px solid var(--color-ring, oklch(0.55 0.22 264 / 0.4));
+  outline-offset: -1px;
+  border-color: var(--color-primary);
+}
+
+/* ── Inline Editing ── */
+[data-ui="table"][data-editable] [data-part="tbody"] [data-part="td"]:not([data-readonly]):hover {
+  cursor: cell;
+}
+
+[data-ui="table"] [data-part="td"][data-editing] {
+  padding: var(--space-1) var(--space-1);
+}
+
+[data-ui="table"] [data-part="cell-input"] {
+  inline-size: 100%;
+  box-sizing: border-box;
+  padding: var(--space-1) var(--space-2);
+  font: inherit;
   text-align: inherit;
+  color: var(--color-fg);
+  background: var(--color-bg);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  outline: none;
+}
+
+[data-ui="table"] [data-part="cell-input"][data-invalid] {
+  border-color: var(--color-destructive);
+  background: var(--color-destructive-subtle, oklch(0.97 0.02 25));
+}
+
+/* ── Drag & Drop: rows and columns ── */
+[data-ui="table"] [data-part="drag-handle"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--space-5);
+  block-size: var(--space-5);
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-fg-subtle);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  vertical-align: middle;
+}
+
+[data-ui="table"] [data-part="drag-handle"]::before {
+  content: "⠿";
+  font-size: var(--text-sm);
+  line-height: 1;
+}
+
+[data-ui="table"] [data-part="drag-handle"]:hover {
+  background: var(--color-bg-muted, oklch(0.94 0.004 260));
+  color: var(--color-fg);
+}
+
+[data-ui="table"] [data-part="drag-handle"]:active {
+  cursor: grabbing;
+}
+
+[data-ui="table"]:has([data-dragging]) {
+  user-select: none;
+}
+
+[data-ui="table"] [data-part="tr"][data-dragging] [data-part="td"] {
+  opacity: 0.5;
+  background: var(--color-bg-muted, oklch(0.94 0.004 260));
+}
+
+[data-ui="table"] [data-part="tr"][data-drop-target][data-drop-pos="before"] [data-part="td"] {
+  border-block-start: 2px solid var(--color-primary);
+}
+
+[data-ui="table"] [data-part="tr"][data-drop-target][data-drop-pos="after"] [data-part="td"] {
+  border-block-end: 2px solid var(--color-primary);
+}
+
+[data-ui="table"] [data-part="th"][data-dragging] {
+  opacity: 0.5;
+}
+
+[data-ui="table"] [data-part="th"][data-drop-target][data-drop-pos="before"] {
+  border-inline-start: 2px solid var(--color-primary);
+}
+
+[data-ui="table"] [data-part="th"][data-drop-target][data-drop-pos="after"] {
+  border-inline-end: 2px solid var(--color-primary);
+}
+
+/* ── Column Resize Handles (injected by the controller) ── */
+[data-ui="table"] [data-part="resize-handle"] {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  inline-size: var(--space-2);
+  cursor: col-resize;
+  touch-action: none;
+  user-select: none;
+  z-index: 1;
+}
+
+[data-ui="table"] [data-part="resize-handle"]::before {
+  content: "";
+  position: absolute;
+  inset-block: var(--space-1);
+  inset-inline-end: var(--space-0h);
+  inline-size: var(--space-0h);
+  border-radius: var(--radius-full);
+  background: transparent;
+  transition: background var(--duration-fast) var(--ease-default);
+}
+
+[data-ui="table"] [data-part="resize-handle"]:hover::before {
+  background: var(--color-primary);
+}
+
+/* ── Sticky Header / Footer ── */
+[data-ui="table"][data-sticky-header] [data-part="thead"] {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 3;
+  background: var(--color-bg);
+}
+
+[data-ui="table"][data-sticky-footer] [data-part="tfoot"] {
+  position: sticky;
+  inset-block-end: 0;
+  z-index: 3;
+  background: var(--doc-table-footer-bg, var(--color-bg-subtle, oklch(0.97 0.004 260)));
+}
+
+/* Pinned rows stick just below the (sticky) header; --thead-h is measured by the controller. */
+[data-ui="table"] [data-part="tbody"] [data-part="tr"][data-pin="top"] [data-part="td"] {
+  position: sticky;
+  inset-block-start: var(--thead-h, 0px);
+  z-index: 2;
+  background: var(--color-bg-subtle, oklch(0.97 0.004 260));
+}
+
+/* ── Pinned (sticky) Columns ── */
+[data-ui="table"] [data-part="td"][data-pin="start"],
+[data-ui="table"] [data-part="th"][data-pin="start"] {
+  position: sticky;
+  inset-inline-start: var(--pin-offset, 0px);
+  z-index: 1;
+}
+
+[data-ui="table"] [data-part="td"][data-pin="end"],
+[data-ui="table"] [data-part="th"][data-pin="end"] {
+  position: sticky;
+  inset-inline-end: var(--pin-offset, 0px);
+  z-index: 1;
+}
+
+[data-ui="table"] [data-part="th"][data-pin] {
+  z-index: 4;
+}
+
+[data-ui="table"] [data-pin="start"][data-pin-edge] {
+  border-inline-end: 1px solid var(--color-border-strong, oklch(0.85 0.006 260));
+}
+
+[data-ui="table"] [data-pin="end"][data-pin-edge] {
+  border-inline-start: 1px solid var(--color-border-strong, oklch(0.85 0.006 260));
+}
+
+/* ── Column Visibility ── */
+[data-ui="table"] [data-col-hidden] {
+  display: none;
+}
+
+/* ── Responsive: priority column hiding (needs data-responsive on the root) ── */
+@container faqir-table (max-width: 30rem) {
+  [data-ui="table"] [data-hide-below="sm"] {
+    display: none;
+  }
+}
+
+@container faqir-table (max-width: 48rem) {
+  [data-ui="table"] [data-hide-below="md"] {
+    display: none;
+  }
+}
+
+@container faqir-table (max-width: 64rem) {
+  [data-ui="table"] [data-hide-below="lg"] {
+    display: none;
+  }
+}
+
+/* ── Responsive: stacked card mode ──
+   The controller toggles data-stacked below the data-stack-below breakpoint;
+   authors can also set data-stacked directly to force the layout. */
+[data-ui="table"][data-stacked] [data-part="table"],
+[data-ui="table"][data-stacked] [data-part="tbody"],
+[data-ui="table"][data-stacked] [data-part="tfoot"] {
+  display: block;
+}
+
+[data-ui="table"][data-stacked] [data-part="thead"] {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+[data-ui="table"][data-stacked] [data-part="tbody"] [data-part="tr"],
+[data-ui="table"][data-stacked] [data-part="tbody"] [data-part="group-header"],
+[data-ui="table"][data-stacked] [data-part="tbody"] [data-part="detail-row"],
+[data-ui="table"][data-stacked] [data-part="tbody"] [data-part="empty"],
+[data-ui="table"][data-stacked] [data-part="tfoot"] [data-part="tr"] {
+  display: block;
+  margin-block-end: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  overflow: hidden;
+}
+
+[data-ui="table"][data-stacked] [data-part="td"],
+[data-ui="table"][data-stacked] [data-part="group-header"] td {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-4);
+  text-align: end;
+  border-bottom: none;
+  border-block-end: 1px solid var(--color-border);
+}
+
+[data-ui="table"][data-stacked] [data-part="tr"] [data-part="td"]:last-child,
+[data-ui="table"][data-stacked] [data-part="tfoot"] [data-part="td"]:last-child {
+  border-block-end: none;
+}
+
+[data-ui="table"][data-stacked] [data-part="td"]::before {
+  content: attr(data-label);
+  flex-shrink: 0;
+  font-weight: var(--weight-semibold);
+  color: var(--color-fg-muted);
+  text-align: start;
+}
+
+[data-ui="table"][data-stacked] [data-part="td"][data-tree-cell] {
+  padding-inline-start: calc(var(--space-4) + var(--level, 0) * var(--table-indent, var(--space-5)));
+}
+
+[data-ui="table"][data-stacked] [data-pin] {
+  position: static;
+}
+
+/* ── Hidden rows (collapse, filter, [hidden]) — last so they beat layout modes ── */
+[data-ui="table"] [data-part="tbody"] tr[data-part][data-collapsed],
+[data-ui="table"] [data-part="tbody"] tr[data-part][data-filtered],
+[data-ui="table"] [data-part] tr[data-part][hidden],
+[data-ui="table"] tr[data-part][hidden] {
+  display: none;
 }
 
 /* ── Print: Compact ── */
@@ -196,10 +623,12 @@
 
   [data-ui="table"] [data-part="thead"] {
     display: table-header-group;
+    position: static;
   }
 
   [data-ui="table"] [data-part="tfoot"] {
     display: table-footer-group;
+    position: static;
   }
 
   [data-ui="table"] [data-part="tr"] {
@@ -209,13 +638,32 @@
   [data-ui="table"] [data-part="th"],
   [data-ui="table"] [data-part="td"] {
     border-color: var(--doc-print-border-color, var(--color-border));
+    position: static;
+  }
+
+  [data-ui="table"][data-sticky-header],
+  [data-ui="table"][data-sticky-footer] {
+    overflow: visible;
+    max-block-size: none;
+  }
+
+  [data-ui="table"] [data-part="drag-handle"],
+  [data-ui="table"] [data-part="resize-handle"],
+  [data-ui="table"] [data-part="filter-row"],
+  [data-ui="table"] [data-part="filter"],
+  [data-ui="table"] [data-part="expander"],
+  [data-ui="table"] [data-part="row-toggle"] {
+    display: none;
   }
 }
 
 /* ── Motion ── */
 @media (prefers-reduced-motion: reduce) {
   [data-ui="table"] [data-part="th"],
-  [data-ui="table"] [data-part="td"] {
+  [data-ui="table"] [data-part="td"],
+  [data-ui="table"] [data-part="expander"]::before,
+  [data-ui="table"] [data-part="row-toggle"]::before,
+  [data-ui="table"] [data-part="resize-handle"]::before {
     transition: none;
   }
 }

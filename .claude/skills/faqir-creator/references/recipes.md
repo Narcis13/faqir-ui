@@ -749,7 +749,7 @@ Draggable range input with single-thumb and two-thumb (range) modes, full keyboa
 
 _kind: recipe · category: data-display · controller: createTable()_
 
-Enhanced data table with sortable columns and selectable rows
+Advanced data table: multi-column type-aware sorting, global + per-column filtering, tree data and collapsible row groups with live aggregates, inline cell editing with Intl number/currency formatting, drag-and-drop row and column reordering, column resize/hide/pin, sticky header/footer/rows, grid keyboard navigation, CSV export, responsive stacked mode, and state persistence — every feature opt-in via data attributes
 
 ```html
 <div data-ui="table" data-size="{size}">
@@ -779,12 +779,22 @@ Enhanced data table with sortable columns and selectable rows
 ├─ [data-part='table']  <table>  required  — The table element
 ├─ [data-part='thead']  <thead>  required  — Table header section
 ├─ [data-part='tbody']  <tbody>  required  — Table body section
-├─ [data-part='tr']  <tr>  required  — Table row
-├─ [data-part='th']  <th>  required  — Table header cell with scope=col
-├─ [data-part='td']  <td>  required  — Table data cell
+├─ [data-part='tr']  <tr>  required  — Table row. Optional: data-level (tree depth), data-row-id, data-pin='top' (sticky row)
+├─ [data-part='th']  <th>  required  — Header cell with scope=col. Optional: data-sortable, data-type, data-format, data-align, data-editable, data-readonly, data-pin='start|end', data-hide-below='sm|md|lg', data-key, data-min-width, data-max-width, data-no-resize, data-csv-skip
+├─ [data-part='td']  <td>  required  — Data cell. Optional: data-value (raw value), data-sort-value, data-format, data-align, data-editable, data-readonly, data-aggregate='sum|avg|min|max|count', data-col (aggregate column override), data-label (stack-mode label)
 ├─ [data-part='checkbox']  <input>  optional  — Checkbox for row selection
-├─ [data-part='tfoot']  <tfoot>  optional  — Table footer section for totals and summary rows
-└─ [data-part='group-header']  <tr>  optional  — Category header row within grouped data
+├─ [data-part='tfoot']  <tfoot>  optional  — Table footer for totals; cells with data-aggregate recompute live over visible rows
+├─ [data-part='group-header']  <tr>  optional  — Category header row within grouped data; collapsible when the root has data-groupable, cells with data-aggregate + data-col show per-group totals
+├─ [data-part='filter-row']  <tr>  optional  — Second thead row holding per-column filter inputs
+├─ [data-part='filter-input']  <input>  optional  — Per-column filter input inside the filter row (auto-bound, debounced; numeric columns accept >, >=, <, <=, =, !=, and a..b ranges)
+├─ [data-part='filter']  <input>  optional  — Global quick-filter input anywhere inside the root (auto-bound, debounced)
+├─ [data-part='expander']  <button>  optional  — Expand/collapse control for tree parents and group headers (auto-injected; leaf rows get an aligned placeholder span)
+├─ [data-part='drag-handle']  <button>  optional  — Row drag handle for pointer reordering; ArrowUp/ArrowDown on the focused handle moves the row
+├─ [data-part='detail-row']  <tr>  optional  — Master/detail expansion row placed immediately after its data row; it moves with the row through sorts and drags
+├─ [data-part='row-toggle']  <button>  optional  — Button inside a data row that shows/hides its detail-row (aria-expanded reflects state)
+├─ [data-part='empty']  <tr>  optional  — Empty-state row, shown automatically when no rows are visible (e.g. all filtered out)
+├─ [data-part='cell-input']  <input>  optional  — Inline cell editor input (created by the controller during editing)
+└─ [data-part='resize-handle']  <span>  optional  — Column resize grip (injected by the controller when the root has data-resizable)
 ```
 
 **Variants**
@@ -795,10 +805,10 @@ Enhanced data table with sortable columns and selectable rows
 | bordered | `true`, `false` | `false` | `data-variant` | root |
 | size | `sm`, `md`, `lg` | `md` | `data-size` | root |
 
-- **Safe transforms:** `add-column`, `remove-column`, `add-row`, `remove-row`, `change-size`, `toggle-striped`, `toggle-bordered`, `add-sortable`, `remove-sortable`, `restyle-header-background`, `add-footer-row`, `remove-footer-row`, `set-cell-alignment`, `set-cell-format`, `add-colspan`, `add-row-group`, `toggle-print-compact`
-- **Unsafe (never do):** `remove-table-semantics`, `remove-scope-col`, `remove-aria-sort`, `remove-checkbox-labels`, `remove-selection-checkboxes`
-- **A11y:** keys: Click header, Click checkbox, Shift+Click checkbox
-- **Required ARIA:** `Proper table semantics (table, thead, tbody, tr, th, td)`; `scope="col" on th elements`; `aria-sort on sortable th elements`; `aria-label on selection checkboxes`
+- **Safe transforms:** `add-column`, `remove-column`, `add-row`, `remove-row`, `change-size`, `toggle-striped`, `toggle-bordered`, `add-sortable`, `remove-sortable`, `restyle-header-background`, `add-footer-row`, `remove-footer-row`, `set-cell-alignment`, `set-cell-format`, `add-colspan`, `add-row-group`, `toggle-print-compact`, `add-filter-row`, `remove-filter-row`, `add-tree-levels`, `add-aggregate-cells`, `add-drag-handles`, `add-detail-rows`, `add-empty-state-row`, `toggle-multi-sort`, `toggle-editable`, `toggle-sticky-header`, `toggle-sticky-footer`, `pin-column`, `set-hide-below`, `set-persist-key`, `set-locale-currency`, `toggle-responsive-stack`
+- **Unsafe (never do):** `remove-table-semantics`, `remove-scope-col`, `remove-aria-sort`, `remove-checkbox-labels`, `remove-selection-checkboxes`, `remove-aria-level-from-tree-rows`, `remove-filter-input-labels`, `nest-detail-row-away-from-its-row`, `mix-tree-and-groupable-modes`, `put-data-level-on-group-headers`
+- **A11y:** keys: Click header / Enter / Space on focused header, Click checkbox, Shift+Click checkbox or row, Arrow keys / Home / End / PageUp / PageDown, Enter / F2 on a cell, Enter / Escape / Tab in the editor, Space on a row cell, Ctrl/Cmd+A, ArrowUp / ArrowDown on a drag handle, Alt+ArrowLeft/Right on a header, Ctrl+Shift+ArrowLeft/Right on a header
+- **Required ARIA:** `Proper table semantics (table, thead, tbody, tr, th, td)`; `scope="col" on th elements`; `aria-sort on sortable th elements (controller-managed)`; `aria-label on selection checkboxes`; `Tree mode adds role="treegrid" to the table element plus aria-level/aria-expanded to rows (controller-managed)`; `Expander and row-toggle buttons carry aria-expanded (controller-managed)`; `aria-label on filter inputs, drag handles, and expander buttons`
 
 ## tabs
 

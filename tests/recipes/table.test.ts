@@ -169,10 +169,10 @@ describe("table · sorting columns by type", () => {
     expect(col(root, 2)).toEqual(["2024-05-01", "2023-08-20", "2022-11-15"]);
   });
 
-  it("known limitation: same-year ISO dates are left in place (numeric year parse)", () => {
-    // The comparator parses cells with parseFloat, so an ISO date collapses to
-    // its year — same-year rows compare equal and keep their original order.
-    // This test pins that behavior; a future proper date parser should flip it.
+  it("same-year ISO dates sort chronologically (proper date parsing)", () => {
+    // Historical note: the old comparator collapsed ISO dates to their year via
+    // parseFloat, leaving same-year rows unsorted. The controller now parses
+    // full ISO dates, so month/day ordering is exact.
     const { root, api } = setup(`
       <div data-ui="table">
         <table data-part="table">
@@ -187,7 +187,7 @@ describe("table · sorting columns by type", () => {
         </table>
       </div>`);
     api.sort(0, "ascending");
-    expect(col(root, 0)).toEqual(["2026-03-10", "2026-01-05", "2026-11-20"]);
+    expect(col(root, 0)).toEqual(["2026-01-05", "2026-03-10", "2026-11-20"]);
   });
 });
 
