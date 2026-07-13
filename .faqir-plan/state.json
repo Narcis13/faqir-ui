@@ -2,7 +2,7 @@
   "$schema": "./state.schema.md",
   "plan": "FAQIR-PLAN.md",
   "current": null,
-  "last_completed": "0.6-02",
+  "last_completed": "0.6-03",
   "history": [
     {
       "id": "phases v0.3–v0.5",
@@ -21,6 +21,12 @@
       "completed": "2026-07-13",
       "commit": null,
       "summary": "faqir-validate.js plugin: bare l-validate reflects native ValidityState + custom l-validate:<name> validators into the field-group contract (data-state=invalid, error part, aria-invalid/describedby); submit gating + on-valid hook + validate-on-submit-then-live policy. 1.26KB gzip, 16 tests."
+    },
+    {
+      "id": "0.6-03",
+      "completed": "2026-07-13",
+      "commit": "683ba6e",
+      "summary": "Added the zero-dependency @faqir-ui/forms scalar renderer with strict JSON Schema/UI schema validation; string, textarea, enum radio/select (four-option threshold), number/integer, boolean checkbox/switch, date-picker, email, and URI mappings; deterministic field-group wiring and required/description propagation. Eleven golden schemas are audit-clean, with Bun, Node, browser-target, typecheck, registry audit, package dry-run, and the full 1891-test suite green."
     }
   ],
   "note": "Pointer file for the /faqir-plan slash command. FAQIR-PLAN.md status cells (⬜/✅) are the source of truth; this file records the cross-session cursor and a per-task log. Do not hand-edit `current` while a session is running."

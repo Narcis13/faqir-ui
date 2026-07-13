@@ -1403,9 +1403,9 @@ contract with required markers and description from schema `description`.
 - Enum cardinality threshold behavior; required propagation; title/description mapping.
 
 **Acceptance criteria**
-- [ ] Runs in Bun, Node, and browser (no fs/DOM dependency in render path — string building only).
-- [ ] 100% of emitted forms audit-clean by construction (test-enforced).
-- [ ] Unsupported schema features fail loudly with a clear message (no silent skips).
+- [x] Runs in Bun, Node, and browser (no fs/DOM dependency in render path — string building only).
+- [x] 100% of emitted forms audit-clean by construction (test-enforced).
+- [x] Unsupported schema features fail loudly with a clear message (no silent skips).
 
 ---
 
