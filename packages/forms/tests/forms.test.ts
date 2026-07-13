@@ -5,6 +5,7 @@ import { auditHtmlSource } from "../../../src/audit/checker";
 import { loadRegistryManifestMap } from "../../../src/utils/components";
 import { getRegistryPath } from "../../../src/utils/fs";
 import { DEFAULT_RADIO_THRESHOLD, renderForm } from "../src/index.js";
+import type { ObjectSchema, RenderFormOptions, UISchema } from "../src/index.js";
 import { GOLDEN_CASES } from "./cases";
 
 const GOLDEN_DIR = join(import.meta.dir, "golden");
@@ -28,7 +29,7 @@ describe("renderForm scalar contracts", () => {
   it("uses a documented four-option radio threshold", () => {
     expect(DEFAULT_RADIO_THRESHOLD).toBe(4);
 
-    const schema = (count: number) => ({
+    const schema = (count: number): ObjectSchema => ({
       type: "object",
       properties: { choice: { type: "string", enum: Array.from({ length: count }, (_, index) => `v${index}`) } },
     });
@@ -39,8 +40,8 @@ describe("renderForm scalar contracts", () => {
   });
 
   it("allows explicit enum widgets to override cardinality", () => {
-    const small = { type: "object", properties: { choice: { type: "string", enum: ["a", "b"] } } };
-    const large = { type: "object", properties: { choice: { type: "string", enum: ["a", "b", "c", "d", "e"] } } };
+    const small: ObjectSchema = { type: "object", properties: { choice: { type: "string", enum: ["a", "b"] } } };
+    const large: ObjectSchema = { type: "object", properties: { choice: { type: "string", enum: ["a", "b", "c", "d", "e"] } } };
     expect(renderForm(small, { choice: { widget: "select" } })).toContain('data-ui="select"');
     expect(renderForm(large, { choice: { "ui:widget": "radio" } })).toContain('data-ui="radio-group"');
   });
@@ -63,7 +64,7 @@ describe("renderForm scalar contracts", () => {
   });
 
   it("is deterministic, collision-safe, and escapes schema-controlled HTML", () => {
-    const schema = {
+    const schema: ObjectSchema = {
       type: "object",
       properties: {
         "a b": { type: "string", title: "<b>Unsafe</b>" },
@@ -80,28 +81,30 @@ describe("renderForm scalar contracts", () => {
 });
 
 describe("renderForm strict failures", () => {
-  const base = () => ({ type: "object", properties: { value: { type: "string" } } });
+  const base = (): ObjectSchema => ({ type: "object", properties: { value: { type: "string" } } });
+  const renderUnchecked = (schema: unknown, uiSchema: unknown = {}, opts: unknown = {}) =>
+    renderForm(schema as ObjectSchema, uiSchema as UISchema, opts as RenderFormOptions);
 
   it("rejects unsupported schema features instead of skipping them", () => {
-    expect(() => renderForm({ ...base(), oneOf: [] })).toThrow('unsupported keyword "oneOf" at jsonSchema');
-    expect(() => renderForm({ type: "object", properties: { nested: { type: "object", properties: {} } } })).toThrow('unsupported keyword "properties" at jsonSchema.properties.nested');
-    expect(() => renderForm({ type: "object", properties: { values: { type: "array", items: {} } } })).toThrow('unsupported keyword "items" at jsonSchema.properties.values');
-    expect(() => renderForm({ type: "object", properties: { value: { type: "string", format: "password" } } })).toThrow('unsupported format "password"');
+    expect(() => renderUnchecked({ ...base(), oneOf: [] })).toThrow('unsupported keyword "oneOf" at jsonSchema');
+    expect(() => renderUnchecked({ type: "object", properties: { nested: { type: "object", properties: {} } } })).toThrow('unsupported keyword "properties" at jsonSchema.properties.nested');
+    expect(() => renderUnchecked({ type: "object", properties: { values: { type: "array", items: {} } } })).toThrow('unsupported keyword "items" at jsonSchema.properties.values');
+    expect(() => renderUnchecked({ type: "object", properties: { value: { type: "string", format: "password" } } })).toThrow('unsupported format "password"');
   });
 
   it("rejects unknown or incompatible UI schema", () => {
-    expect(() => renderForm(base(), { missing: { widget: "input" } })).toThrow('uiSchema references unknown property "missing"');
-    expect(() => renderForm(base(), { value: { widget: "slider" } })).toThrow('unsupported widget "slider"');
-    expect(() => renderForm(base(), { value: { widget: "switch" } })).toThrow('widget "switch" is incompatible');
-    expect(() => renderForm(base(), { value: { widget: "textarea", "ui:widget": "input" } })).toThrow("conflicts");
-    expect(() => renderForm(base(), { value: { rows: 3 } })).toThrow("rows is supported only with the textarea widget");
+    expect(() => renderUnchecked(base(), { missing: { widget: "input" } })).toThrow('uiSchema references unknown property "missing"');
+    expect(() => renderUnchecked(base(), { value: { widget: "slider" } })).toThrow('unsupported widget "slider"');
+    expect(() => renderUnchecked(base(), { value: { widget: "switch" } })).toThrow('widget "switch" is incompatible');
+    expect(() => renderUnchecked(base(), { value: { widget: "textarea", "ui:widget": "input" } })).toThrow("conflicts");
+    expect(() => renderUnchecked(base(), { value: { rows: 3 } })).toThrow("rows is supported only with the textarea widget");
   });
 
   it("rejects malformed constraints and dangling required names", () => {
-    expect(() => renderForm({ ...base(), required: ["missing"] })).toThrow('required references unknown property "missing"');
-    expect(() => renderForm({ type: "object", properties: { count: { type: "integer", default: 1.5 } } })).toThrow('default must match type "integer"');
-    expect(() => renderForm({ type: "object", properties: { count: { type: "number", multipleOf: 0 } } })).toThrow("multipleOf must be greater than zero");
-    expect(() => renderForm({ type: "object", properties: { value: { type: "string", minLength: 5, maxLength: 2 } } })).toThrow("minLength cannot exceed maxLength");
+    expect(() => renderUnchecked({ ...base(), required: ["missing"] })).toThrow('required references unknown property "missing"');
+    expect(() => renderUnchecked({ type: "object", properties: { count: { type: "integer", default: 1.5 } } })).toThrow('default must match type "integer"');
+    expect(() => renderUnchecked({ type: "object", properties: { count: { type: "number", multipleOf: 0 } } })).toThrow("multipleOf must be greater than zero");
+    expect(() => renderUnchecked({ type: "object", properties: { value: { type: "string", minLength: 5, maxLength: 2 } } })).toThrow("minLength cannot exceed maxLength");
   });
 });
 

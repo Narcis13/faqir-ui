@@ -1,8 +1,10 @@
+import type { ObjectSchema, RenderFormOptions, UISchema } from "../src/index.js";
+
 export interface GoldenCase {
   name: string;
-  schema: Record<string, unknown>;
-  uiSchema?: Record<string, unknown>;
-  opts?: Record<string, unknown>;
+  schema: ObjectSchema;
+  uiSchema?: UISchema;
+  opts?: RenderFormOptions;
 }
 
 export const GOLDEN_CASES: GoldenCase[] = [

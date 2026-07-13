@@ -4,9 +4,10 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { spawnSync } from "node:child_process";
 import { renderForm } from "../src/index.js";
+import type { ObjectSchema } from "../src/index.js";
 
 const ENTRY = join(import.meta.dir, "../src/index.js");
-const SCHEMA = { type: "object", properties: { name: { type: "string" } } };
+const SCHEMA: ObjectSchema = { type: "object", properties: { name: { type: "string" } } };
 
 describe("@faqir-ui/forms runtimes", () => {
   it("renders directly under Bun", () => {
@@ -28,7 +29,7 @@ describe("@faqir-ui/forms runtimes", () => {
     expect(executableSource).not.toMatch(/(?:from|require\()\s*["'](?:node:|fs(?:\/|["'])|path(?:\/|["']))/);
     expect(executableSource).not.toMatch(/\b(?:document|window|HTMLElement|Node)\b/);
 
-    const build = await Bun.build({ entrypoints: [ENTRY], target: "browser", write: false });
+    const build = await Bun.build({ entrypoints: [ENTRY], target: "browser" });
     expect(build.success, build.logs.map(String).join("\n")).toBe(true);
     expect(build.outputs).toHaveLength(1);
     expect(await build.outputs[0].text()).toContain("function renderForm");
