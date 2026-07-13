@@ -1,5 +1,5 @@
 /* @ui:component field-group */
-/* @ui:tokens field-gap field-label-size field-label-weight field-label-color field-description-size field-description-color field-error-size field-error-color field-required-color field-required-marker color-destructive color-success space-2 space-4 text-xs text-sm font-sans */
+/* @ui:tokens field-gap field-label-size field-label-weight field-label-color field-description-size field-description-color field-error-size field-error-color field-required-color field-required-marker field-validating-color field-disabled-opacity color-destructive color-success space-2 space-4 text-xs text-sm font-sans */
 
 /* ── Base ── */
 [data-ui="field-group"] {
@@ -17,7 +17,17 @@
   line-height: 1.4;
 }
 
-/* ── Required Indicator ── */
+/* ── Required Indicator ──
+   Standardized required marker (§7.1): the canonical form is an explicit
+   [data-part="required"] element inside the label — e.g.
+   `<label data-part="label">Email <span data-part="required">*</span></label>`.
+   It carries the marker's color and is announced/hidden as one unit. The legacy
+   [data-required] attribute still renders a CSS ::after marker for backward
+   compatibility; author pages should prefer the part. */
+[data-ui="field-group"] [data-part="required"] {
+  color: var(--field-required-color);
+}
+
 [data-ui="field-group"][data-required] [data-part="label"]::after {
   content: var(--field-required-marker);
   color: var(--field-required-color);
@@ -46,24 +56,49 @@
   display: none;
 }
 
-/* ── State: Error ── */
-[data-ui="field-group"][data-state="error"] [data-part="label"] {
+/* ── State: Invalid ──
+   Normalized validation vocabulary (§7.1): invalid | validating | disabled.
+   Renamed from the shipped `error` state in v2.0.0 (breaking — see manifest
+   `changes`). The error part is revealed purely by state, no JS class toggling. */
+[data-ui="field-group"][data-state="invalid"] [data-part="label"] {
   color: var(--field-error-color);
 }
 
-[data-ui="field-group"][data-state="error"] [data-part="error"] {
+[data-ui="field-group"][data-state="invalid"] [data-part="error"] {
   display: block;
 }
 
-[data-ui="field-group"][data-state="error"] [data-part="description"] {
+[data-ui="field-group"][data-state="invalid"] [data-part="description"] {
   display: none;
 }
 
-[data-ui="field-group"][data-state="error"] [data-ui="input"],
-[data-ui="field-group"][data-state="error"] [data-ui="textarea"],
-[data-ui="field-group"][data-state="error"] [data-ui="select"] {
+[data-ui="field-group"][data-state="invalid"] [data-ui="input"],
+[data-ui="field-group"][data-state="invalid"] [data-ui="textarea"],
+[data-ui="field-group"][data-state="invalid"] [data-ui="select"] {
   border-color: var(--field-error-color);
   box-shadow: 0 0 0 1px var(--field-error-color);
+}
+
+/* ── State: Validating ──
+   Async constraint in flight (e.g. server-side uniqueness check). Neutral,
+   muted affordance — not an error yet. Pair with aria-busy="true" on the control. */
+[data-ui="field-group"][data-state="validating"] [data-ui="input"],
+[data-ui="field-group"][data-state="validating"] [data-ui="textarea"],
+[data-ui="field-group"][data-state="validating"] [data-ui="select"] {
+  border-color: var(--field-validating-color);
+  box-shadow: 0 0 0 1px var(--field-validating-color);
+}
+
+/* ── State: Disabled ──
+   Honest disabled affordance for the whole group. The control itself is also
+   [disabled] for interaction/focus; this dims the surrounding parts to match. */
+[data-ui="field-group"][data-state="disabled"] {
+  opacity: var(--field-disabled-opacity);
+  cursor: not-allowed;
+}
+
+[data-ui="field-group"][data-state="disabled"] [data-part="label"] {
+  color: var(--field-description-color);
 }
 
 /* ── State: Valid ── */

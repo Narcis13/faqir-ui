@@ -50,15 +50,15 @@ done in any order (or in parallel worktrees).
 |----|------|--------|
 | 0.3-01 | Compile CLI to Node-compatible `dist/faqir.mjs` | ✅ |
 | 0.3-02 | `@faqir-ui/core` package + CDN artifacts + SRI | ✅ |
-| 0.3-03 | `build:core` assembly script (engine + recipes → faqir-core.js) | ⬜ |
-| 0.3-04 | De-duplicate controllers; recipes become single source; register qr-code | ⬜ |
-| 0.3-05 | Keyed `l-for` — reconciler core | ⬜ |
-| 0.3-06 | Keyed `l-for` — state preservation, LIS moves, stress tests | ⬜ |
-| 0.3-07 | `l-source` test suite | ⬜ |
-| 0.3-08 | `l-source` AbortController teardown + audit exemption | ⬜ |
+| 0.3-03 | `build:core` assembly script (engine + recipes → faqir-core.js) | ✅ |
+| 0.3-04 | De-duplicate controllers; recipes become single source; register qr-code | ✅ |
+| 0.3-05 | Keyed `l-for` — reconciler core | ✅ |
+| 0.3-06 | Keyed `l-for` — state preservation, LIS moves, stress tests | ✅ |
+| 0.3-07 | `l-source` test suite | ✅ |
+| 0.3-08 | `l-source` AbortController teardown + audit exemption | ✅ |
 | 0.3-09 | `logical-properties` audit rule | ✅ |
-| 0.3-10 | RTL remediation sweep across registry CSS | ⬜ |
-| 0.3-11 | Theme coverage test + default theme dark-mode completion | ⬜ |
+| 0.3-10 | RTL remediation sweep across registry CSS | ✅ |
+| 0.3-11 | Theme coverage test + default theme dark-mode completion | ✅ |
 | 0.3-12 | GitHub Actions CI pipeline | ✅ |
 
 ### Phase v0.4 — Surface
@@ -66,25 +66,25 @@ done in any order (or in parallel worktrees).
 | ID | Task | Status |
 |----|------|--------|
 | 0.4-01 | Primitives batch 1: `skeleton`, `chip`, `link` | ✅ |
-| 0.4-02 | Primitives batch 2: `breadcrumb`, `toggle`, `collapsible`, `aspect-ratio` | ⬜ |
+| 0.4-02 | Primitives batch 2: `breadcrumb`, `toggle`, `collapsible`, `aspect-ratio` | ✅ |
 | 0.4-03 | `alert` as manifest alias/refinement of `callout` | ✅ |
 | 0.4-04 | Icon system: primitive, mask/data-URI runtime, ~120-icon set | ✅ |
 | 0.4-05 | `faqir add icons --only …` subsetting + `icon-name` audit rule | ✅ |
-| 0.4-06 | Recipe: `alert-dialog` | ⬜ |
+| 0.4-06 | Recipe: `alert-dialog` | ✅ |
 | 0.4-07 | Recipe: `slider` | ✅ |
 | 0.4-08 | Recipe: `sidebar` | ✅ |
 | 0.4-09 | Recipe: `input-otp` | ✅ |
 | 0.4-10 | Recipe: `calendar` (extracted from date-picker) | ✅ |
-| 0.4-11 | Transitions 2.0: `data-motion` presets + `motion-presets.css` + `faqir-collapse` | ⬜ |
+| 0.4-11 | Transitions 2.0: `data-motion` presets + `motion-presets.css` + `faqir-collapse` | ✅ |
 | 0.4-12 | Theme manifests (`*.theme.json`) for all existing themes | ✅ |
 | 0.4-13 | New themes: `aurora`, `slate` | ✅ |
 | 0.4-14 | New theme: `contrast` (WCAG AAA) | ✅ |
 | 0.4-15 | Audit v2 rules: `duplicate-id`, `heading-order`, `landmark` | ✅ |
-| 0.4-16 | Audit v2 rule: `contrast-tokens` (static oklch contrast) | ⬜ |
+| 0.4-16 | Audit v2 rule: `contrast-tokens` (static oklch contrast) | ✅ |
 | 0.4-17 | Audit v2 rule: `field-wiring` | ✅ |
 | 0.4-18 | Controller tests A: toast, tooltip, accordion | ✅ |
-| 0.4-19 | Controller tests B: popover, sheet, drawer | ⬜ |
-| 0.4-20 | Controller tests C: pagination, select-custom, qr-code | ⬜ |
+| 0.4-19 | Controller tests B: popover, sheet, drawer | ✅ |
+| 0.4-20 | Controller tests C: pagination, select-custom, qr-code | ✅ |
 | 0.4-21 | Controller tests D: combobox, command-palette | ✅ |
 | 0.4-22 | Controller tests E: date-picker, table | ✅ |
 | 0.4-23 | Visual regression suite (Playwright screenshots) | ✅ |
@@ -99,17 +99,17 @@ done in any order (or in parallel worktrees).
 | 0.5-03 | Remote registry protocol: index generation + `--registry` fetch + hashes | ✅ |
 | 0.5-04 | `faqir upgrade` groundwork: pristine store + `faqir diff` | ✅ |
 | 0.5-05 | `faqir upgrade` three-way merge | ✅ |
-| 0.5-06 | Context v2: `--format llms` (`llms.txt` / `llms-full.txt`) | ⬜ |
-| 0.5-07 | Manifest-derived skill generator + hosted `manifest.schema.json` | ⬜ |
-| 0.5-08 | Spec-informed HTML tokenizer replacing regex scanner | ⬜ |
-| 0.5-09 | Parser fuzz corpus + property tests | ⬜ |
+| 0.5-06 | Context v2: `--format llms` (`llms.txt` / `llms-full.txt`) | ✅ |
+| 0.5-07 | Manifest-derived skill generator + hosted `manifest.schema.json` | ✅ |
+| 0.5-08 | Spec-informed HTML tokenizer replacing regex scanner | ✅ |
+| 0.5-09 | Parser fuzz corpus + property tests | ✅ |
 | 0.5-10 | `faqir audit --stdin` + guaranteed `--json` on every command | ✅ |
 
 ### Phase v0.6 — Forms, Data & Documents (Formery enablement)
 
 | ID | Task | Status |
 |----|------|--------|
-| 0.6-01 | `field-group` validation contract normalization | ⬜ |
+| 0.6-01 | `field-group` validation contract normalization | ✅ |
 | 0.6-02 | `faqir-validate.js` plugin | ⬜ |
 | 0.6-03 | `@faqir-ui/forms` core: package + scalar widget mapping | ⬜ |
 | 0.6-04 | `@faqir-ui/forms` composite: nested objects, arrays, wizard, audit-clean gate | ⬜ |
@@ -1357,9 +1357,9 @@ part standardized. Update every registry consumer of the old state name.
 - Registry-wide grep-test: zero remaining `data-state="error"` on field-groups.
 
 **Acceptance criteria**
-- [ ] Manifest documents the full contract (§7.1 markup is the canonical example) + a breaking `changes` entry.
-- [ ] `faqir upgrade` path from old vocabulary works (merge test with a fixture project).
-- [ ] All registry consumers migrated; audit + visual suites green.
+- [x] Manifest documents the full contract (§7.1 markup is the canonical example) + a breaking `changes` entry. (`field-group.manifest.json` v2.0.0: states normalized to `invalid | validating | disabled` — each with a description — plus a `required` slot/part and a `breaking: true` 2.0.0 `changes` entry spelling out the `error → invalid` rename + migration. `field-group.html` is the §7.1 canonical example: `data-state="invalid"` with `<span data-part="required">*</span>` and the full `aria-describedby`/`aria-invalid` wiring. Pinned by `tests/primitives/field-group.test.ts` — manifest schema-valid, states present/`error` gone, required part documented, breaking-change entry asserted.)
+- [x] `faqir upgrade` path from old vocabulary works (merge test with a fixture project). (`tests/primitives/field-group.test.ts` → "faqir upgrade migrates a project off the old vocabulary": installs field-group, rewinds the working copy + pristine snapshot to the old `data-state="error"` / v1.0.0 vocabulary, then runs `faqir upgrade`. Clean fast-forward (exit 0), output shows `1.0.0 → 2.0.0` and surfaces the breaking change; the migrated CSS now carries `[data-state="invalid"]` and no `[data-state="error"]`.)
+- [x] All registry consumers migrated; audit + visual suites green. (Registry-wide grep-test asserts **zero** `data-state="error"` on any `[data-ui="field-group"]` — the only offender was the reference page itself, now on `invalid`. Full suite **1853 pass / 0 fail**; registry self-audit green on all three gates — logical-properties, theme manifests, document rules; `field-wiring` (the §7.1 contract rule, 0.4-17) clean on the new-vocabulary reference page; registry-index + skill regenerated. NOTE: the legacy heuristic `required-aria` rule — *not* a CI self-audit gate — still emits its pre-existing false positives on field-group's `[data-part="input"]` wrapper (16 at HEAD; reconciling it with `field-wiring` is out of 0.6-01's scope, which touches only the field-group registry files).)
 
 ---
 

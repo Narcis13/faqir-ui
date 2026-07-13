@@ -369,7 +369,7 @@ _No variants._
 
 _kind: primitive · category: forms_
 
-Form field wrapper combining label, input slot, description, and error message
+Form field wrapper combining label, input slot, description, and error message, with a normalized validation contract (§7.1): states invalid | validating | disabled, a standardized required marker, and CSS-driven error visibility (no JS class toggling)
 
 ```html
 <div data-ui="field-group">
@@ -386,6 +386,7 @@ Form field wrapper combining label, input slot, description, and error message
 ```text
 [data-ui='field-group']  ·  <div> · content: slots
 ├─ [data-part='label']  <label>  required  — Field label text
+├─ [data-part='required']  <span>  optional  — Standardized required marker (§7.1). Placed inside the label, e.g. <span data-part="required">*</span>; carries the marker color and is announced/hidden with the label. Canonical alternative to the legacy [data-required] attribute.
 ├─ [data-part='input']  <div>  required  — Slot for the input element (input, select, textarea, etc.)
 ├─ [data-part='description']  <p>  optional  — Helper text below the input
 └─ [data-part='error']  <p>  optional  — Error message shown in error state
@@ -398,7 +399,7 @@ Form field wrapper combining label, input slot, description, and error message
 | layout | `vertical`, `horizontal` | `vertical` | `data-variant` | root |
 | size | `sm`, `md`, `lg` | `md` | `data-size` | root |
 
-- **Safe transforms:** `change-label-text`, `add-description`, `remove-description`, `set-error-state`, `set-valid-state`, `toggle-required`, `change-size`, `change-layout`, `swap-input-type`
+- **Safe transforms:** `change-label-text`, `add-description`, `remove-description`, `set-invalid-state`, `set-validating-state`, `set-valid-state`, `set-disabled-state`, `toggle-required`, `change-size`, `change-layout`, `swap-input-type`
 - **Unsafe (never do):** `remove-label`, `remove-for-attribute`, `remove-aria-describedby`
 - **Required ARIA:** `label must have for attribute matching input id`; `aria-describedby on input pointing to description/error id`; `aria-invalid="true" on input in error state`; `aria-required="true" on required inputs`
 

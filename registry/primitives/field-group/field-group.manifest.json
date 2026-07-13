@@ -1,10 +1,18 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "field-group",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "kind": "primitive",
   "category": "forms",
-  "description": "Form field wrapper combining label, input slot, description, and error message",
+  "description": "Form field wrapper combining label, input slot, description, and error message, with a normalized validation contract (§7.1): states invalid | validating | disabled, a standardized required marker, and CSS-driven error visibility (no JS class toggling)",
+
+  "changes": [
+    {
+      "version": "2.0.0",
+      "note": "BREAKING: validation state vocabulary normalized to invalid | validating | disabled — the shipped data-state=\"error\" is renamed to data-state=\"invalid\" to align with the framework's naming; new validating and disabled states added. The required marker is standardized as a [data-part=\"required\"] element inside the label (the legacy [data-required] attribute still renders a marker for backward compatibility). Migration: replace data-state=\"error\" with data-state=\"invalid\" on every field-group (faqir upgrade three-way merges the CSS; page markup using the old state must be updated by hand — the field-wiring audit rule accepts both names during the transition).",
+      "breaking": true
+    }
+  ],
 
   "anatomy": {
     "tag": "div",
@@ -18,6 +26,12 @@
       "required": true,
       "tag_hint": "label",
       "description": "Field label text"
+    },
+    "required": {
+      "selector": "[data-part='required']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Standardized required marker (§7.1). Placed inside the label, e.g. <span data-part=\"required\">*</span>; carries the marker color and is announced/hidden with the label. Canonical alternative to the legacy [data-required] attribute."
     },
     "input": {
       "selector": "[data-part='input']",
@@ -56,8 +70,10 @@
 
   "states": {
     "default": { "attr": "data-state=\"default\"", "default": true },
-    "error": { "attr": "data-state=\"error\"", "description": "Red border and visible error message" },
-    "valid": { "attr": "data-state=\"valid\"", "description": "Green accent indicating valid input" }
+    "invalid": { "attr": "data-state=\"invalid\"", "description": "Constraint failed: destructive border, label recolored, and the [data-part=\"error\"] message revealed by CSS (no JS). Control must carry aria-invalid=\"true\" (field-wiring audit). Renamed from the pre-2.0.0 \"error\" state." },
+    "validating": { "attr": "data-state=\"validating\"", "description": "Async constraint in flight (e.g. server-side uniqueness): neutral muted border, error not shown yet. Pair with aria-busy=\"true\" on the control." },
+    "valid": { "attr": "data-state=\"valid\"", "description": "Green accent indicating valid input" },
+    "disabled": { "attr": "data-state=\"disabled\"", "description": "Whole group non-interactive: dimmed via --field-disabled-opacity, not-allowed cursor. The control itself is also [disabled]." }
   },
 
   "props": {
@@ -77,6 +93,7 @@
   "tokens_used": [
     "color-fg", "color-fg-muted",
     "color-destructive", "color-success",
+    "field-validating-color", "field-disabled-opacity",
     "space-1", "space-2", "space-3", "space-4",
     "text-xs", "text-sm",
     "font-sans", "weight-medium"
@@ -84,16 +101,18 @@
 
   "templates": {
     "html": "<div data-ui=\"field-group\">\n  <label data-part=\"label\" for=\"{id}\">{label}</label>\n  <div data-part=\"input\">\n    <input data-ui=\"input\" id=\"{id}\" name=\"{name}\">\n  </div>\n  <p data-part=\"description\">{description}</p>\n</div>",
-    "html_with_error": "<div data-ui=\"field-group\" data-state=\"error\">\n  <label data-part=\"label\" for=\"{id}\">{label}</label>\n  <div data-part=\"input\">\n    <input data-ui=\"input\" id=\"{id}\" name=\"{name}\" aria-invalid=\"true\" aria-describedby=\"{id}-error\">\n  </div>\n  <p data-part=\"error\" id=\"{id}-error\">{error}</p>\n</div>",
-    "html_required": "<div data-ui=\"field-group\" data-required>\n  <label data-part=\"label\" for=\"{id}\">{label}</label>\n  <div data-part=\"input\">\n    <input data-ui=\"input\" id=\"{id}\" name=\"{name}\" required aria-required=\"true\">\n  </div>\n</div>"
+    "html_with_error": "<div data-ui=\"field-group\" data-state=\"invalid\">\n  <label data-part=\"label\" for=\"{id}\">{label}</label>\n  <div data-part=\"input\">\n    <input data-ui=\"input\" id=\"{id}\" name=\"{name}\" aria-invalid=\"true\" aria-describedby=\"{id}-error\">\n  </div>\n  <p data-part=\"error\" id=\"{id}-error\">{error}</p>\n</div>",
+    "html_required": "<div data-ui=\"field-group\">\n  <label data-part=\"label\" for=\"{id}\">{label} <span data-part=\"required\">*</span></label>\n  <div data-part=\"input\">\n    <input data-ui=\"input\" id=\"{id}\" name=\"{name}\" required aria-required=\"true\">\n  </div>\n</div>"
   },
 
   "safe_transforms": [
     "change-label-text",
     "add-description",
     "remove-description",
-    "set-error-state",
+    "set-invalid-state",
+    "set-validating-state",
     "set-valid-state",
+    "set-disabled-state",
     "toggle-required",
     "change-size",
     "change-layout",
@@ -123,9 +142,13 @@
     "input-slot-is-required",
     "description-slot-is-optional",
     "error-slot-is-optional",
-    "error-state-shows-red-border",
-    "error-state-shows-error-message",
+    "invalid-state-shows-red-border",
+    "invalid-state-shows-error-message",
+    "error-part-hidden-by-default",
+    "validating-state-shows-muted-border",
+    "disabled-state-dims-group",
     "valid-state-shows-green-accent",
+    "required-part-standardized",
     "required-shows-asterisk-after-label",
     "label-has-for-attribute",
     "horizontal-layout-side-by-side",

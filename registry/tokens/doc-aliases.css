@@ -42,6 +42,8 @@
   --field-description-color: var(--color-fg-muted);
   --field-error-size:       var(--doc-legal-size);
   --field-error-color:      var(--color-destructive);
+  --field-validating-color: var(--color-fg-muted);     /* async validation in flight */
+  --field-disabled-opacity: 0.55;                       /* honest disabled affordance */
   --field-required-color:   var(--color-destructive);
   --field-required-marker:  ' *';                      /* appended to required labels */
 

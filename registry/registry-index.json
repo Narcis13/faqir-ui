@@ -276,22 +276,22 @@
       "name": "field-group",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "files": [
         {
           "path": "field-group.css",
-          "sha256": "d286d0476a22e4f9bf6018daafd8288032511eb667b2351ad9671500592e48bf"
+          "sha256": "3c81b732ec58e2f9293c3a9e611d6c6b4bdc0df93f4e9ee93148858b0d7162c8"
         },
         {
           "path": "field-group.html",
-          "sha256": "62577cd54edc80edee653ae701a6d576d29cd7fb35dcaf998f18c069b254a9dc"
+          "sha256": "9dba059c0401b77cd437aed233c2696ae730c5219ce980b762b01f49c34b2423"
         },
         {
           "path": "field-group.manifest.json",
-          "sha256": "c389da2aabd771665d5c6e84e706aa1d95358fe55f177ee5021c9c32585d418e"
+          "sha256": "816d0f9dbb87b93a756c5b13c9be21d6e19eea4b01e99933422bc2d6a5df670d"
         }
       ],
-      "hash": "d9dfdd91382d7dc37b50b1f50b336d90765640fdca66ee1166400ba76ba8c708",
+      "hash": "ade8788cdc4f109f8e13a6a4a2a1feab7c489b3172a08b748138dd4ca770007c",
       "deps": [
         "input",
         "select",
