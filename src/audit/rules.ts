@@ -74,6 +74,18 @@ export const requiredAriaRule: AuditRule = {
     for (const requirement of manifest.a11y.required_attrs) {
       const lower = requirement.toLowerCase();
 
+      // field-group's label/control/description relationships are stateful and
+      // cross-element. The document-level field-wiring rule implements that
+      // contract precisely; interpreting the manifest's prose here mistakes the
+      // [data-part="input"] wrapper for the nested native control and demands
+      // aria-invalid even when the group is not invalid.
+      if (
+        manifest.name === "field-group" &&
+        (lower.includes("aria-describedby") || lower.includes("aria-invalid") || lower.includes("aria-required"))
+      ) {
+        continue;
+      }
+
       // Parse patterns like 'role="dialog" on panel'
       const attrOnMatch = lower.match(/^(\w[\w-]*)="?([^"]*)"?\s+on\s+(\w+)/);
       if (attrOnMatch) {

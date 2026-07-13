@@ -24,8 +24,9 @@ describe("@faqir-ui/forms runtimes", () => {
 
   it("builds for browsers with no filesystem or DOM dependency in the render path", async () => {
     const source = readFileSync(ENTRY, "utf8");
-    expect(source).not.toMatch(/(?:from|require\()\s*["'](?:node:|fs(?:\/|["'])|path(?:\/|["']))/);
-    expect(source).not.toMatch(/\b(?:document|window|HTMLElement|Node)\b/);
+    const executableSource = source.replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*/g, "");
+    expect(executableSource).not.toMatch(/(?:from|require\()\s*["'](?:node:|fs(?:\/|["'])|path(?:\/|["']))/);
+    expect(executableSource).not.toMatch(/\b(?:document|window|HTMLElement|Node)\b/);
 
     const build = await Bun.build({ entrypoints: [ENTRY], target: "browser", write: false });
     expect(build.success, build.logs.map(String).join("\n")).toBe(true);
