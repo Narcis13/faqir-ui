@@ -2,7 +2,7 @@
   "$schema": "./state.schema.md",
   "plan": "FAQIR-PLAN.md",
   "current": null,
-  "last_completed": "0.6-01",
+  "last_completed": "0.6-02",
   "history": [
     {
       "id": "phases v0.3–v0.5",
@@ -15,6 +15,12 @@
       "completed": "2026-07-13",
       "commit": null,
       "summary": "Normalized field-group validation vocabulary to invalid|validating|disabled (breaking rename of error→invalid), standardized the [data-part=required] marker, bumped manifest to 2.0.0 with a breaking changes entry, and proved the faqir upgrade migration path. 1853 tests green."
+    },
+    {
+      "id": "0.6-02",
+      "completed": "2026-07-13",
+      "commit": null,
+      "summary": "faqir-validate.js plugin: bare l-validate reflects native ValidityState + custom l-validate:<name> validators into the field-group contract (data-state=invalid, error part, aria-invalid/describedby); submit gating + on-valid hook + validate-on-submit-then-live policy. 1.26KB gzip, 16 tests."
     }
   ],
   "note": "Pointer file for the /faqir-plan slash command. FAQIR-PLAN.md status cells (⬜/✅) are the source of truth; this file records the cross-session cursor and a per-task log. Do not hand-edit `current` while a session is running."

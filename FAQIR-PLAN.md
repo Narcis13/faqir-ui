@@ -110,7 +110,7 @@ done in any order (or in parallel worktrees).
 | ID | Task | Status |
 |----|------|--------|
 | 0.6-01 | `field-group` validation contract normalization | ✅ |
-| 0.6-02 | `faqir-validate.js` plugin | ⬜ |
+| 0.6-02 | `faqir-validate.js` plugin | ✅ |
 | 0.6-03 | `@faqir-ui/forms` core: package + scalar widget mapping | ⬜ |
 | 0.6-04 | `@faqir-ui/forms` composite: nested objects, arrays, wizard, audit-clean gate | ⬜ |
 | 0.6-05 | Plugins: `faqir-persist` + `faqir-intersect` | ⬜ |
@@ -1380,9 +1380,9 @@ expression: `l-validate:email="isCompanyEmail(value)"`. ≤ 2KB gzip.
 - Submit blocked while invalid; fires when clean. Revalidation policy asserted.
 
 **Acceptance criteria**
-- [ ] Zero imperative JS needed by the page author for full validation UX.
-- [ ] Plugin ≤ 2KB gzip (size test), self-registers via `Faqir.plugin`.
-- [ ] Works against the exact markup `@faqir-ui/forms` will emit (shared fixture with 0.6-03).
+- [x] Zero imperative JS needed by the page author for full validation UX. (A bare `l-validate` on the `<form>` drives the entire lifecycle from the DOM: it reflects each control's native `ValidityState` — plus any `l-validate:<name>` custom validators — into the field-group contract, setting `data-state="invalid"`, filling `[data-part="error"]`, and wiring `aria-invalid` + `aria-describedby`. Submit is blocked while dirty (focus jumps to the first offender) and, after the first attempt, fields revalidate live on `blur`/`input`. `tests/core/faqir-validate.test.ts` — 16 tests / 35 expects — exercises required/email/pattern, author `data-error[-constraint]` overrides, clear-on-fix, custom `isCompanyEmail(value)` validators, submit gating, the on-valid SPA hook, the revalidation policy, aria wiring, and the disabled/`data-validate-ignore` skips, with no page-author JS beyond the validator predicates.)
+- [x] Plugin ≤ 2KB gzip (size test), self-registers via `Faqir.plugin`. (**1.26 KB minified+gzip** via `scripts/check-size.mjs`, which auto-discovers `registry/core/plugins/*.js` at the 2 KB budget — CI enforces it. The plugin IIFE self-registers through the global `Faqir.plugin` when loaded after core and also `module.exports` the installer; the registration test asserts `pluginCalls === 1` and `typeof install === "function"`.)
+- [x] Works against the exact markup `@faqir-ui/forms` will emit (shared fixture with 0.6-03). (The test's `group()` fixture is the canonical `[data-ui="field-group"]` anatomy from 0.6-01 — `[data-part="label"]` / `[data-part="input"]` / `[data-part="error"]` with `data-state="invalid"` as the reveal — which is exactly what `@faqir-ui/forms` will emit in 0.6-03. The plugin locates each control's group via `closest('[data-ui="field-group"]')` and owns only that group's error part + the control's aria attributes, so it binds to the contract, not to a specific serializer. The shared fixture is promoted to a real cross-package fixture when 0.6-03 lands.)
 
 ---
 
