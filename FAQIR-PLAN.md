@@ -225,9 +225,9 @@ controllers into the shipped single-file `faqir-core.js`. Output must be byte-st
 - A controller present only as a standalone file ends up auto-initialized in the built artifact (fixture recipe).
 
 **Acceptance criteria**
-- [ ] `bun run build:core` produces `faqir-core.js` functionally identical to the hand-maintained current file (engine tests green against it).
-- [ ] Engine source no longer requires editing `faqir-core.js` directly (documented in `CONTRIBUTING.md`).
-- [ ] Built artifact has a generated header comment (version, build inputs) for provenance.
+- [x] `bun run build:core` produces `faqir-core.js` functionally identical to the hand-maintained current file (engine tests green against it).
+- [x] Engine source no longer requires editing `faqir-core.js` directly (documented in `CONTRIBUTING.md`).
+- [x] Built artifact has a generated header comment (version, build inputs) for provenance.
 
 ---
 
@@ -397,9 +397,9 @@ Auto-fix via `faqir repair` where the mapping is 1:1.
 - Repair round-trip: fixture CSS → repaired output → zero findings.
 
 **Acceptance criteria**
-- [ ] Rule ships enabled, listed in audit rule inventory / JSON output.
-- [ ] Running it on `registry/**` reproduces the known button-group and table findings (don't fix them here — that's 0.3-10).
-- [ ] Deterministic fixes applied by `repair` for all 1:1 mappings.
+- [x] Rule ships enabled, listed in audit rule inventory / JSON output.
+- [x] Running it on `registry/**` reproduces the known button-group and table findings (don't fix them here — that's 0.3-10).
+- [x] Deterministic fixes applied by `repair` for all 1:1 mappings.
 
 ---
 
@@ -418,9 +418,9 @@ dropdown, sheet, drawer, pagination).
 - Happy-dom or reference-page checks that `dir="rtl"` on the demo pages doesn't error; full visual RTL coverage arrives with 0.4-23.
 
 **Acceptance criteria**
-- [ ] Zero `logical-properties` findings across the registry.
-- [ ] button-group renders correctly in `dir="rtl"` (manually verified via `faqir dev` or reference page; note the check in the commit).
-- [ ] No visual change in LTR (spot-check reference pages; visual-diff safety net lands in 0.4-23).
+- [x] Zero `logical-properties` findings across the registry.
+- [x] button-group renders correctly in `dir="rtl"` (manually verified via `faqir dev` or reference page; note the check in the commit).
+- [x] No visual change in LTR (spot-check reference pages; visual-diff safety net lands in 0.4-23).
 
 ---
 
@@ -437,9 +437,9 @@ fail on `default.css`, then complete default's dark mode until the matrix is gre
 - Failing-theme fixture proves the test actually catches under-coverage.
 
 **Acceptance criteria**
-- [ ] Coverage test green for all 5 shipped themes; fails loudly for an under-covering fixture.
-- [ ] `default.css` dark mode covers all 27 semantic color tokens + shadows.
-- [ ] Test is data-driven — adding a 6th theme requires no test edits.
+- [x] Coverage test green for all 5 shipped themes; fails loudly for an under-covering fixture.
+- [x] `default.css` dark mode covers all 27 semantic color tokens + shadows.
+- [x] Test is data-driven — adding a 6th theme requires no test edits.
 
 ---
 
@@ -591,9 +591,9 @@ Reuse dialog controller internals where possible rather than forking.
 - Focus trap cycles; focus returns to invoker on close; confirm/cancel events fire.
 
 **Acceptance criteria**
-- [ ] Auto-initializes from built core (drift guard from 0.3-04 still green).
-- [ ] Shares code with `dialog` where practical — no wholesale duplicate controller.
-- [ ] Reference page audit-clean; manifest documents the differences from `dialog`.
+- [x] Auto-initializes from built core (drift guard from 0.3-04 still green).
+- [x] Shares code with `dialog` where practical — no wholesale duplicate controller.
+- [x] Reference page audit-clean; manifest documents the differences from `dialog`.
 
 ---
 
@@ -697,9 +697,9 @@ transition end (with timeout fallback) before removal. `faqir-collapse.js` plugi
 - Collapse: height animates open/closed; reduced-motion skips animation; final state has no inline height residue.
 
 **Acceptance criteria**
-- [ ] Transitions are attribute-visible (auditable) — no per-stage classes anywhere.
-- [ ] `faqir-collapse.js` ≤ 2KB gzip (size test) and self-registers via `Faqir.plugin`.
-- [ ] Motion tokens added to the token layer, not hardcoded durations in preset CSS.
+- [x] Transitions are attribute-visible (auditable) — no per-stage classes anywhere.
+- [x] `faqir-collapse.js` ≤ 2KB gzip (size test) and self-registers via `Faqir.plugin`.
+- [x] Motion tokens added to the token layer, not hardcoded durations in preset CSS.
 
 ---
 
@@ -719,9 +719,9 @@ the manifest instead of heuristics.
 - `faqir context` output includes the active theme block.
 
 **Acceptance criteria**
-- [ ] All shipped themes have valid, CSS-consistent manifests.
-- [ ] A theme without a manifest fails the registry self-audit/CI.
-- [ ] Manifest format documented (it becomes part of the schema published in 0.5-07).
+- [x] All shipped themes have valid, CSS-consistent manifests.
+- [x] A theme without a manifest fails the registry self-audit/CI.
+- [x] Manifest format documented (it becomes part of the schema published in 0.5-07).
 
 ---
 
@@ -739,9 +739,9 @@ coverage, manifest + preview page each.
 - Contrast spot-checks: primary/primary-fg and fg/bg pairs ≥ 4.5:1 in both schemes (manual oklch computation util — becomes the seed for 0.4-16).
 
 **Acceptance criteria**
-- [ ] `faqir theme aurora|slate` (or equivalent command) applies cleanly to an existing project.
-- [ ] Preview pages render every major component group in both schemes.
-- [ ] Zero coverage or consistency failures.
+- [x] `faqir theme aurora|slate` (or equivalent command) applies cleanly to an existing project.
+- [x] Preview pages render every major component group in both schemes.
+- [x] Zero coverage or consistency failures.
 
 ---
 
@@ -1289,9 +1289,9 @@ generator callers don't change.
 - Line/column correctness asserted for nested structures.
 
 **Acceptance criteria**
-- [ ] All existing parser + audit tests green with zero call-site changes.
-- [ ] Audit findings now report accurate line/column (spot-assert in audit tests).
-- [ ] Parser remains dependency-free; size/complexity noted in module header.
+- [x] All existing parser + audit tests green with zero call-site changes.
+- [x] Audit findings now report accurate line/column (spot-assert in audit tests).
+- [x] Parser remains dependency-free; size/complexity noted in module header.
 
 ---
 
@@ -1309,9 +1309,9 @@ parse(serialize(parse(x))) is stable where serialization exists.
 - Seeded property runs (fixed seeds in CI for determinism; document how to run extended fuzzing locally).
 
 **Acceptance criteria**
-- [ ] Zero crashes/hangs across corpus + N seeded generations (N documented).
-- [ ] Any crasher found is fixed and pinned as a fixture in the same session.
-- [ ] Fuzzer runnable standalone (`bun run fuzz:parser`) with a seed argument.
+- [x] Zero crashes/hangs across corpus + N seeded generations (N documented).
+- [x] Any crasher found is fixed and pinned as a fixture in the same session.
+- [x] Fuzzer runnable standalone (`bun run fuzz:parser`) with a seed argument.
 
 ---
 
