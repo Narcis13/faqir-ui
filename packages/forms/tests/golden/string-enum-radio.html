@@ -1,0 +1,28 @@
+<!-- @ui:requires faqir-core.js faqir-validate.js -->
+<form id="faqir-form" l-validate>
+  <div data-ui="field-group">
+    <label data-part="label" id="faqir-field-plan-label" for="faqir-field-plan-option-1">Plan <span data-part="required">*</span></label>
+    <div data-part="input">
+      <div data-ui="radio-group" role="radiogroup" aria-labelledby="faqir-field-plan-label" aria-describedby="faqir-field-plan-hint faqir-field-plan-error">
+        <label data-ui="radio-label">
+          <input data-ui="radio" type="radio" id="faqir-field-plan-option-1" name="plan" value="free" required aria-required="true" aria-describedby="faqir-field-plan-hint faqir-field-plan-error">
+          <span data-part="label">Free</span>
+        </label>
+        <label data-ui="radio-label">
+          <input data-ui="radio" type="radio" id="faqir-field-plan-option-2" name="plan" value="team" required aria-required="true" aria-describedby="faqir-field-plan-hint faqir-field-plan-error" checked>
+          <span data-part="label">Team</span>
+        </label>
+        <label data-ui="radio-label">
+          <input data-ui="radio" type="radio" id="faqir-field-plan-option-3" name="plan" value="business" required aria-required="true" aria-describedby="faqir-field-plan-hint faqir-field-plan-error">
+          <span data-part="label">Business</span>
+        </label>
+        <label data-ui="radio-label">
+          <input data-ui="radio" type="radio" id="faqir-field-plan-option-4" name="plan" value="enterprise" required aria-required="true" aria-describedby="faqir-field-plan-hint faqir-field-plan-error">
+          <span data-part="label">Enterprise</span>
+        </label>
+      </div>
+    </div>
+    <p data-part="description" id="faqir-field-plan-hint">Choose one billing plan.</p>
+    <p data-part="error" id="faqir-field-plan-error" aria-live="polite"></p>
+  </div>
+</form>

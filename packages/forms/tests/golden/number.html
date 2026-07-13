@@ -1,0 +1,11 @@
+<!-- @ui:requires faqir-core.js faqir-validate.js -->
+<form id="faqir-form" l-validate>
+  <div data-ui="field-group">
+    <label data-part="label" for="faqir-field-temperature">Temperature</label>
+    <div data-part="input">
+      <input data-ui="input" id="faqir-field-temperature" name="temperature" aria-describedby="faqir-field-temperature-hint faqir-field-temperature-error" type="number" value="21.5" min="-20" max="50" step="0.5">
+    </div>
+    <p data-part="description" id="faqir-field-temperature-hint">Target temperature in degrees Celsius.</p>
+    <p data-part="error" id="faqir-field-temperature-error" aria-live="polite"></p>
+  </div>
+</form>

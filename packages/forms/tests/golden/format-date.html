@@ -1,0 +1,39 @@
+<!-- @ui:requires faqir-core.js faqir-validate.js date-picker.js calendar.js -->
+<form id="faqir-form" l-validate>
+  <div data-ui="field-group">
+    <label data-part="label" for="faqir-field-startdate">Start date <span data-part="required">*</span></label>
+    <div data-part="input">
+      <div data-ui="date-picker" data-state="closed" data-size="md">
+        <div data-part="trigger">
+          <input data-part="input" id="faqir-field-startdate" name="startDate" required aria-required="true" aria-describedby="faqir-field-startdate-hint faqir-field-startdate-error" type="text" role="combobox" readonly aria-haspopup="dialog" aria-expanded="false" aria-label="Choose Start date" placeholder="Pick a date" value="2026-07-13">
+          <span data-part="icon" aria-hidden="true">&#x1F4C5;</span>
+        </div>
+        <div data-part="calendar" role="dialog" aria-label="Calendar" hidden>
+          <div data-ui="calendar" data-size="md" data-value="2026-07-13">
+            <div data-part="header">
+              <button data-part="nav-prev" type="button" aria-label="Previous month">&lsaquo;</button>
+              <span data-part="month-label"></span>
+              <button data-part="nav-next" type="button" aria-label="Next month">&rsaquo;</button>
+            </div>
+            <table data-part="grid" role="grid" aria-label="Calendar">
+              <thead>
+                <tr>
+                  <th scope="col" abbr="Sunday">Su</th>
+                  <th scope="col" abbr="Monday">Mo</th>
+                  <th scope="col" abbr="Tuesday">Tu</th>
+                  <th scope="col" abbr="Wednesday">We</th>
+                  <th scope="col" abbr="Thursday">Th</th>
+                  <th scope="col" abbr="Friday">Fr</th>
+                  <th scope="col" abbr="Saturday">Sa</th>
+                </tr>
+              </thead>
+              <tbody data-part="grid-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p data-part="description" id="faqir-field-startdate-hint">The first active day.</p>
+    <p data-part="error" id="faqir-field-startdate-error" aria-live="polite"></p>
+  </div>
+</form>

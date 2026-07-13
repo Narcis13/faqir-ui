@@ -16,3 +16,6 @@ playwright-report/
 test-results/
 blob-report/
 playwright/.cache/
+
+# Local codex_autoresearch iteration log.
+autoresearch-results.tsv

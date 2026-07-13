@@ -1,0 +1,12 @@
+<!-- @ui:requires faqir-core.js faqir-validate.js -->
+<form id="faqir-form" l-validate>
+  <div data-ui="field-group">
+    <label data-part="label" for="faqir-field-biography">Biography</label>
+    <div data-part="input">
+      <textarea data-ui="textarea" id="faqir-field-biography" name="biography" aria-describedby="faqir-field-biography-hint faqir-field-biography-error" rows="6" placeholder="About you">Mathematician
+Programmer</textarea>
+    </div>
+    <p data-part="description" id="faqir-field-biography-hint">A short public introduction.</p>
+    <p data-part="error" id="faqir-field-biography-error" aria-live="polite"></p>
+  </div>
+</form>

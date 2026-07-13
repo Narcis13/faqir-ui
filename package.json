@@ -22,7 +22,7 @@
     "build:core-package": "node scripts/build-core-package.mjs",
     "test": "bun test",
     "fuzz:parser": "bun scripts/fuzz-parser.ts",
-    "typecheck": "tsc --noEmit && tsc --noEmit -p packages/mcp/tsconfig.json",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p packages/mcp/tsconfig.json && tsc --noEmit -p packages/forms/tsconfig.json",
     "build:mcp": "node packages/mcp/build.mjs",
     "smoke": "bash scripts/smoke-cli.sh",
     "size": "node scripts/check-size.mjs",

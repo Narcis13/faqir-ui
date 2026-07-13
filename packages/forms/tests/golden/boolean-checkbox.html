@@ -1,0 +1,11 @@
+<!-- @ui:requires faqir-core.js faqir-validate.js -->
+<form id="faqir-form" l-validate>
+  <div data-ui="field-group">
+    <label data-part="label" for="faqir-field-acceptterms">Accept terms <span data-part="required">*</span></label>
+    <div data-part="input">
+      <input data-ui="checkbox" type="checkbox" id="faqir-field-acceptterms" name="acceptTerms" required aria-required="true" aria-describedby="faqir-field-acceptterms-hint faqir-field-acceptterms-error" checked>
+    </div>
+    <p data-part="description" id="faqir-field-acceptterms-hint">Required to continue.</p>
+    <p data-part="error" id="faqir-field-acceptterms-error" aria-live="polite"></p>
+  </div>
+</form>

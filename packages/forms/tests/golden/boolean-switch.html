@@ -1,0 +1,11 @@
+<!-- @ui:requires faqir-core.js faqir-validate.js -->
+<form id="faqir-form" l-validate>
+  <div data-ui="field-group">
+    <label data-part="label" for="faqir-field-notifications">Notifications</label>
+    <div data-part="input">
+      <input data-ui="switch" type="checkbox" role="switch" id="faqir-field-notifications" name="notifications" aria-describedby="faqir-field-notifications-hint faqir-field-notifications-error">
+    </div>
+    <p data-part="description" id="faqir-field-notifications-hint">Receive product updates.</p>
+    <p data-part="error" id="faqir-field-notifications-error" aria-live="polite"></p>
+  </div>
+</form>

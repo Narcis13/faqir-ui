@@ -1,0 +1,13 @@
+<!-- @ui:requires faqir-core.js faqir-validate.js -->
+<form id="contact-form" l-validate aria-label="Contact &amp; profile" aria-describedby="contact-form-description" data-theme="paper" data-density="compact">
+  <h1>Contact &amp; profile</h1>
+  <p id="contact-form-description">Tell us &lt;only&gt; what you want to share.</p>
+  <div data-ui="field-group">
+    <label data-part="label" for="contact-field-displayname">Display &lt;name&gt; <span data-part="required">*</span></label>
+    <div data-part="input">
+      <input data-ui="input" id="contact-field-displayname" name="displayName" required aria-required="true" aria-describedby="contact-field-displayname-hint contact-field-displayname-error" type="text" placeholder="Ada &quot;Lovelace&quot;" value="Ada &amp; Co." minlength="2" maxlength="40" pattern="[A-Za-z ]+">
+    </div>
+    <p data-part="description" id="contact-field-displayname-hint">Shown to other people &amp; agents.</p>
+    <p data-part="error" id="contact-field-displayname-error" aria-live="polite"></p>
+  </div>
+</form>

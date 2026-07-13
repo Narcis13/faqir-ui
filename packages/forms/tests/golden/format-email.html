@@ -1,0 +1,11 @@
+<!-- @ui:requires faqir-core.js faqir-validate.js -->
+<form id="faqir-form" l-validate>
+  <div data-ui="field-group">
+    <label data-part="label" for="faqir-field-workemail">Work email <span data-part="required">*</span></label>
+    <div data-part="input">
+      <input data-ui="input" id="faqir-field-workemail" name="workEmail" required aria-required="true" aria-describedby="faqir-field-workemail-hint faqir-field-workemail-error" type="email" placeholder="ada@example.com">
+    </div>
+    <p data-part="description" id="faqir-field-workemail-hint">Use your company address.</p>
+    <p data-part="error" id="faqir-field-workemail-error" aria-live="polite"></p>
+  </div>
+</form>

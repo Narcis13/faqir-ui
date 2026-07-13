@@ -1,0 +1,10 @@
+<!-- @ui:requires faqir-core.js faqir-validate.js -->
+<form id="faqir-form" l-validate>
+  <div data-ui="field-group">
+    <label data-part="label" for="faqir-field-website">Website</label>
+    <div data-part="input">
+      <input data-ui="input" id="faqir-field-website" name="website" aria-describedby="faqir-field-website-error" type="url" value="https://example.com/?a=1&amp;b=2">
+    </div>
+    <p data-part="error" id="faqir-field-website-error" aria-live="polite"></p>
+  </div>
+</form>
