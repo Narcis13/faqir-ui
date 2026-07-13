@@ -1,0 +1,8 @@
+{
+  "$schema": "./state.schema.md",
+  "plan": "FAQIR-PLAN.md",
+  "current": null,
+  "last_completed": null,
+  "history": [],
+  "note": "Pointer file for the /faqir-plan slash command. FAQIR-PLAN.md status cells (⬜/✅) are the source of truth; this file records the cross-session cursor and a per-task log. Do not hand-edit `current` while a session is running."
+}
