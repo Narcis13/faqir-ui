@@ -111,7 +111,7 @@ done in any order (or in parallel worktrees).
 |----|------|--------|
 | 0.6-01 | `field-group` validation contract normalization | ✅ |
 | 0.6-02 | `faqir-validate.js` plugin | ✅ |
-| 0.6-03 | `@faqir-ui/forms` core: package + scalar widget mapping | ⬜ |
+| 0.6-03 | `@faqir-ui/forms` core: package + scalar widget mapping | ✅ |
 | 0.6-04 | `@faqir-ui/forms` composite: nested objects, arrays, wizard, audit-clean gate | ⬜ |
 | 0.6-05 | Plugins: `faqir-persist` + `faqir-intersect` | ⬜ |
 | 0.6-06 | Plugin: `faqir-mask` (wire into input-otp) | ⬜ |
