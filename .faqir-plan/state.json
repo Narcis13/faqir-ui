@@ -37,7 +37,7 @@
     {
       "id": "0.6-06",
       "completed": "2026-07-15",
-      "commit": null,
+      "commit": "07a860d",
       "summary": "Added the zero-dependency faqir-mask plugin with pure caret-safe 9/a/* masking, paste normalization, masked-display/raw-model binding, teardown cleanup, and optional input-otp integration. The plugin is 1.96 KB gzip and the full 1917-test suite is green."
     }
   ],
