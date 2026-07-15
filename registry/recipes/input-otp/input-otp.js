@@ -37,6 +37,11 @@
  * Events (bubbling): `faqir:change` on every value change (`detail.value`), and
  * `faqir:complete` exactly once per completion — fired on the not-full → full
  * transition, re-armed only after the value drops below full again.
+ *
+ * When the real input also carries `l-mask="999999"`, the optional faqir-mask
+ * plugin owns edit normalization and emits `faqir:mask`; this controller mirrors
+ * the event's raw value into its segments. Without the plugin, the self-contained
+ * keyboard/paste path below remains the byte-for-byte behavioral fallback.
  */
 export function createInputOTP(root) {
   // Idempotent: a second init returns the existing API.
@@ -116,9 +121,21 @@ export function createInputOTP(root) {
     return out;
   }
 
+  /** Optional faqir-mask bridge installed by the l-mask plugin. */
+  function maskApi() {
+    return input._faqirMask && typeof input._faqirMask.getRaw === "function"
+      ? input._faqirMask
+      : null;
+  }
+
+  function currentValue() {
+    const mask = maskApi();
+    return mask ? mask.getRaw() : input.value;
+  }
+
   /** Paint segments + caret from the input's current value. No events. */
   function refresh() {
-    const val = input.value;
+    const val = currentValue();
     for (let i = 0; i < N; i++) {
       const ch = val[i];
       const seg = segments[i];
@@ -168,7 +185,7 @@ export function createInputOTP(root) {
   /** Repaint, then fire change / complete based on the transition. */
   function syncAndEmit() {
     refresh();
-    const val = input.value;
+    const val = currentValue();
     if (val !== lastValue) {
       lastValue = val;
       emit("change", { value: val });
@@ -184,6 +201,11 @@ export function createInputOTP(root) {
 
   /** The single write seam: set value + caret, then sync/emit. */
   function commit(next, caret) {
+    const mask = maskApi();
+    if (mask && typeof mask.setRaw === "function") {
+      mask.setRaw(next, caret == null ? next.length : caret, true);
+      return;
+    }
     input.value = next;
     const c = caret == null ? next.length : Math.max(0, Math.min(caret, next.length));
     try {
@@ -229,6 +251,13 @@ export function createInputOTP(root) {
     let end = input.selectionEnd;
     if (start == null) start = val.length;
     if (end == null) end = start;
+
+    // faqir-mask consumes the browser's beforeinput/paste path and reports its
+    // raw result through faqir:mask. Leave text edits to it; keep only explicit
+    // caret navigation here. The standalone fallback below remains unchanged.
+    if (maskApi() && (e.key === "Backspace" || e.key === "Delete" || e.key.length === 1)) {
+      return;
+    }
 
     switch (e.key) {
       case "Backspace":
@@ -293,6 +322,12 @@ export function createInputOTP(root) {
     }
   }
 
+  function onMask() {
+    if (isDisabled()) return;
+    focused = typeof document === "undefined" || document.activeElement === input;
+    syncAndEmit();
+  }
+
   function onFocus() {
     focused = true;
     // Predictable caret: land on the next-to-fill slot unless mid-editing.
@@ -316,6 +351,7 @@ export function createInputOTP(root) {
   input.addEventListener("keydown", onKeyDown);
   input.addEventListener("paste", onPaste);
   input.addEventListener("input", onInput);
+  input.addEventListener("faqir:mask", onMask);
   input.addEventListener("focus", onFocus);
   input.addEventListener("blur", onBlur);
   input.addEventListener("click", onClick);
@@ -332,12 +368,14 @@ export function createInputOTP(root) {
 
   // ── Public API ──────────────────────────────────────────────────────────────
   function getValue() {
-    return input.value;
+    return currentValue();
   }
   /** Programmatic set — silent (does not fire change/complete). */
   function setValue(str) {
     const clean = filter(str).slice(0, N);
-    input.value = clean;
+    const mask = maskApi();
+    if (mask && typeof mask.setRaw === "function") mask.setRaw(clean, clean.length, false);
+    else input.value = clean;
     lastValue = clean;
     wasComplete = clean.length === N;
     refresh();
@@ -357,6 +395,7 @@ export function createInputOTP(root) {
     input.removeEventListener("keydown", onKeyDown);
     input.removeEventListener("paste", onPaste);
     input.removeEventListener("input", onInput);
+    input.removeEventListener("faqir:mask", onMask);
     input.removeEventListener("focus", onFocus);
     input.removeEventListener("blur", onBlur);
     input.removeEventListener("click", onClick);

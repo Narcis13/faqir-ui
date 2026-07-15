@@ -1106,7 +1106,7 @@
       "name": "input-otp",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "files": [
         {
           "path": "input-otp.css",
@@ -1114,18 +1114,18 @@
         },
         {
           "path": "input-otp.html",
-          "sha256": "b8f452f44c238fdfa25d174725c826e37461e9549be9ea6fdf0a0d3b9b29f6cd"
+          "sha256": "8fc63c528c9c0da732774a6bbb2ced84fed8a837b67ac1efeb853a0ec49559af"
         },
         {
           "path": "input-otp.js",
-          "sha256": "f0dea35286f4341c6eb1914b9cb3c86a40ed5e34e9aed419daa2cdb60d3b64cd"
+          "sha256": "4ebc77da6c93bae1944195ad011fcc30c3710ee4882cbe2efad2c0d0addaead2"
         },
         {
           "path": "input-otp.manifest.json",
-          "sha256": "664c422a7850a33db4679a4de8028e3716783fa87f66de294349f73ad25fff53"
+          "sha256": "db93ea7f7f85ea75da8307a6caf14e335ce41cbc8df5834b4b5a93ec178e2d10"
         }
       ],
-      "hash": "91f3dc28fcd35af74fd8939dff39e1c959952b96f292add7ac6e68c37c5ebbe0",
+      "hash": "43fb32985d30dc87d3c0edf515eccb86c88d98faf2210226e38522dec47ca992",
       "deps": []
     },
     {

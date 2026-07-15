@@ -21,12 +21,14 @@ describe("official plugin distribution + discovery", () => {
     rmSync(TEST_DIR, { recursive: true, force: true });
   });
 
-  it("ships both plugins as separate scripts and through faqir bundle --js", async () => {
+  it("ships official plugins as separate scripts and through faqir bundle --js", async () => {
     await init([]);
     const persist = join(TEST_DIR, "ui/core/plugins/faqir-persist.js");
     const intersect = join(TEST_DIR, "ui/core/plugins/faqir-intersect.js");
+    const mask = join(TEST_DIR, "ui/core/plugins/faqir-mask.js");
     expect(existsSync(persist)).toBe(true);
     expect(existsSync(intersect)).toBe(true);
+    expect(existsSync(mask)).toBe(true);
 
     await bundle(["--js"]);
     const output = join(TEST_DIR, "ui/faqir.bundle.js");
@@ -34,6 +36,7 @@ describe("official plugin distribution + discovery", () => {
     expect(first).toContain("core/faqir-core.js");
     expect(first).toContain("@ui:plugin faqir-persist");
     expect(first).toContain("@ui:plugin faqir-intersect");
+    expect(first).toContain("@ui:plugin faqir-mask");
     expect(first.indexOf("core/faqir-core.js")).toBeLessThan(first.indexOf("@ui:plugin faqir-persist"));
 
     await bundle(["--js"]);
@@ -53,11 +56,16 @@ describe("official plugin distribution + discovery", () => {
       file: "core/plugins/faqir-intersect.js",
       provides: ["l-intersect"],
     }));
+    expect(context.plugins["faqir-mask"]).toEqual(expect.objectContaining({
+      file: "core/plugins/faqir-mask.js",
+      provides: ["l-mask"],
+    }));
 
     const skill = await generateSkill(TEST_DIR);
     expect(skill).toContain("## Official Plugins");
     expect(skill).toContain("faqir-persist");
     expect(skill).toContain("faqir-intersect");
+    expect(skill).toContain("faqir-mask");
     expect(skill).toContain("faqir bundle --js");
   });
 });

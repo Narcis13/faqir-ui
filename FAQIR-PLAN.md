@@ -114,7 +114,7 @@ done in any order (or in parallel worktrees).
 | 0.6-03 | `@faqir-ui/forms` core: package + scalar widget mapping | ✅ |
 | 0.6-04 | `@faqir-ui/forms` composite: nested objects, arrays, wizard, audit-clean gate | ⬜ |
 | 0.6-05 | Plugins: `faqir-persist` + `faqir-intersect` | ✅ |
-| 0.6-06 | Plugin: `faqir-mask` (wire into input-otp) | ⬜ |
+| 0.6-06 | Plugin: `faqir-mask` (wire into input-otp) | ✅ |
 | 0.6-07 | Documents: running headers/footers (`doc-header`/`doc-footer`) | ⬜ |
 | 0.6-08 | `faqir scaffold invoice` + `faqir scaffold report` | ⬜ |
 | 0.6-09 | Documents: `watermark` primitive + `barcode` recipe + `document-serif` theme | ⬜ |
@@ -1466,9 +1466,9 @@ use it. ≤ 2KB gzip.
 - input-otp with mask: numeric enforcement via mask path.
 
 **Acceptance criteria**
-- [ ] Caret never jumps to end on mid-string edits (explicitly tested).
-- [ ] Pure mask engine 100% unit-covered; DOM layer thin.
-- [ ] ≤ 2KB gzip; self-registers.
+- [x] Caret never jumps to end on mid-string edits (explicitly tested). (`tests/core/faqir-mask.test.ts` pins exact caret positions for mid-string selection replacement, backward delete, forward delete, and range deletion; the DOM integration asserts the live caret remains at position 4 rather than jumping to the 9-character value's end.)
+- [x] Pure mask engine 100% unit-covered; DOM layer thin. (`maskEdit(mask, priorValue, edit)` owns every token/literal/edit/caret decision and is table-tested across `9`/`a`/`*`, insert, formatted paste, selection replacement, backward/forward/range deletion, boundary no-ops, capacity, and invalid patterns; the directive layer only bridges `beforeinput`/paste, masked display, raw `l-model`, events, and teardown.)
+- [x] ≤ 2KB gzip; self-registers. (`bun run size` measures **1.96 KB minified+gzip**; the registration test proves `Faqir.plugin(install)` + CommonJS export, distribution tests prove separate-script/`faqir bundle --js` delivery and generated context/skill discovery, and the full suite is **1917 pass / 0 fail**.)
 
 ---
 

@@ -1,10 +1,18 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "input-otp",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "kind": "recipe",
   "category": "form",
-  "description": "Segmented one-time-code input — N visual segments over a single hidden real input, with paste distribution, auto-advance, backspace-back, and a fire-once complete event",
+  "description": "Segmented one-time-code input — N visual segments over a single hidden real input, with paste distribution, auto-advance, optional l-mask enforcement, and a fire-once complete event",
+
+  "changes": [
+    {
+      "version": "1.1.0",
+      "note": "Added optional faqir-mask integration: l-mask on the real input now supplies the raw code through faqir:mask while the controller retains its standalone fallback.",
+      "breaking": false
+    }
+  ],
 
   "anatomy": {
     "tag": "div",
@@ -17,7 +25,7 @@
       "selector": "[data-part='input']",
       "required": true,
       "tag_hint": "input",
-      "description": "The single real text input. Transparent and stretched over the segments, it owns focus, typing, paste, selection and mobile SMS autofill. Carries the accessible name, autocomplete=\"one-time-code\", inputmode and maxlength."
+      "description": "The single real text input. Transparent and stretched over the segments, it owns focus, typing, paste, selection and mobile SMS autofill. Carries the accessible name, autocomplete=\"one-time-code\", inputmode and maxlength. May carry l-mask (for example 999999) when the optional faqir-mask plugin is loaded."
     },
     "segments": {
       "selector": "[data-part='segments']",
@@ -57,7 +65,8 @@
   "props": {
     "length": { "type": "number", "default": 6, "attr": "data-length", "description": "Number of segments / code length (clamped 1–12). Authoritative: the controller rebuilds the segment row to match." },
     "mode": { "type": "string", "default": "numeric", "attr": "data-mode", "description": "\"numeric\" or \"alphanumeric\" — the allowed character set" },
-    "value": { "type": "string", "attr": "data-value", "description": "Initial code; seeded silently (no complete event) at init" }
+    "value": { "type": "string", "attr": "data-value", "description": "Initial code; seeded silently (no complete event) at init" },
+    "mask": { "type": "string", "attr": "l-mask on [data-part='input']", "description": "Optional faqir-mask pattern. Numeric OTPs use one 9 token per segment; the controller consumes the plugin's raw faqir:mask result and still works when the plugin is absent." }
   },
 
   "a11y": {
@@ -103,13 +112,14 @@
   ],
 
   "templates": {
-    "html": "<div data-ui=\"input-otp\" data-length=\"6\" data-mode=\"numeric\">\n  <input data-part=\"input\" type=\"text\" inputmode=\"numeric\" autocomplete=\"one-time-code\" pattern=\"[0-9]*\" maxlength=\"6\" autocapitalize=\"off\" autocorrect=\"off\" spellcheck=\"false\" aria-label=\"One-time code\" />\n  <div data-part=\"segments\" aria-hidden=\"true\">\n    <div data-part=\"segment\"></div>\n    <div data-part=\"segment\"></div>\n    <div data-part=\"segment\"></div>\n    <div data-part=\"segment\"></div>\n    <div data-part=\"segment\"></div>\n    <div data-part=\"segment\"></div>\n  </div>\n</div>"
+    "html": "<div data-ui=\"input-otp\" data-length=\"6\" data-mode=\"numeric\">\n  <input data-part=\"input\" type=\"text\" inputmode=\"numeric\" autocomplete=\"one-time-code\" pattern=\"[0-9]*\" maxlength=\"6\" autocapitalize=\"off\" autocorrect=\"off\" spellcheck=\"false\" aria-label=\"One-time code\" l-mask=\"999999\" />\n  <div data-part=\"segments\" aria-hidden=\"true\">\n    <div data-part=\"segment\"></div>\n    <div data-part=\"segment\"></div>\n    <div data-part=\"segment\"></div>\n    <div data-part=\"segment\"></div>\n    <div data-part=\"segment\"></div>\n    <div data-part=\"segment\"></div>\n  </div>\n</div>"
   },
 
   "safe_transforms": [
     "change-length",
     "change-mode",
     "change-initial-value",
+    "add-or-change-l-mask-pattern",
     "change-size",
     "toggle-disabled",
     "relabel-input",
@@ -156,6 +166,7 @@
     "segments-container-is-aria-hidden",
     "getValue-setValue-clear-round-trip",
     "prevents-double-initialization",
-    "destroy-removes-listeners"
+    "destroy-removes-listeners",
+    "numeric-enforcement-can-run-through-faqir-mask"
   ]
 }

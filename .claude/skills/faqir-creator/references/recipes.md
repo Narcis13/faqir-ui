@@ -427,11 +427,11 @@ Dropdown menu with keyboard navigation and click-outside-to-close
 
 _kind: recipe · category: form · controller: createInputOtp()_
 
-Segmented one-time-code input — N visual segments over a single hidden real input, with paste distribution, auto-advance, backspace-back, and a fire-once complete event
+Segmented one-time-code input — N visual segments over a single hidden real input, with paste distribution, auto-advance, optional l-mask enforcement, and a fire-once complete event
 
 ```html
 <div data-ui="input-otp" data-length="6" data-mode="numeric">
-  <input data-part="input" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]*" maxlength="6" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="One-time code" />
+  <input data-part="input" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]*" maxlength="6" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="One-time code" l-mask="999999" />
   <div data-part="segments" aria-hidden="true">
     <div data-part="segment"></div>
     <div data-part="segment"></div>
@@ -447,7 +447,7 @@ Segmented one-time-code input — N visual segments over a single hidden real in
 
 ```text
 [data-ui='input-otp']  ·  <div> · content: slots
-├─ [data-part='input']  <input>  required  — The single real text input. Transparent and stretched over the segments, it owns focus, typing, paste, selection and mobile SMS autofill. Carries the accessible name, autocomplete="one-time-code", inputmode and maxlength.
+├─ [data-part='input']  <input>  required  — The single real text input. Transparent and stretched over the segments, it owns focus, typing, paste, selection and mobile SMS autofill. Carries the accessible name, autocomplete="one-time-code", inputmode and maxlength. May carry l-mask (for example 999999) when the optional faqir-mask plugin is loaded.
 ├─ [data-part='segments']  <div>  required  — Decorative row that visually mirrors the input's value. Marked aria-hidden because the real input is the accessible control.
 └─ [data-part='segment']  <div>  required  — One visual cell per character. The controller reflects data-filled, data-active and data-caret onto these; count is reconciled to data-length at init.
 ```
@@ -459,7 +459,7 @@ Segmented one-time-code input — N visual segments over a single hidden real in
 | size | `sm`, `md`, `lg` | `md` | `data-size` | root |
 | mode | `numeric`, `alphanumeric` | `numeric` | `data-mode` | root |
 
-- **Safe transforms:** `change-length`, `change-mode`, `change-initial-value`, `change-size`, `toggle-disabled`, `relabel-input`, `restyle-segment`
+- **Safe transforms:** `change-length`, `change-mode`, `change-initial-value`, `add-or-change-l-mask-pattern`, `change-size`, `toggle-disabled`, `relabel-input`, `restyle-segment`
 - **Unsafe (never do):** `remove-real-input`, `split-into-per-segment-inputs`, `remove-autocomplete-one-time-code`, `remove-input-accessible-name`, `make-segments-focusable`, `remove-aria-hidden-from-segments`
 - **A11y:** keys: 0-9 / a-z, Backspace, Delete, ArrowLeft, ArrowRight, Home, End, Paste
 - **Required ARIA:** `autocomplete="one-time-code" on input`; `aria-label on input`
