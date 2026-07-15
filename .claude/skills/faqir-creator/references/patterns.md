@@ -171,13 +171,13 @@ Application dashboard layout with sidebar navigation, header, and content area
 
 _kind: pattern · category: composite_
 
-Full-page document container optimized for screen display and print output
+Full-page document container with repeatable print headers, footers, and page counters
 
 ```html
 <article data-ui="document" data-format="a4" aria-label="{title}">
-  <header data-part="header">{header}</header>
+  <header data-part="doc-header">{header}</header>
   <div data-part="body">{body}</div>
-  <footer data-part="footer">{footer}</footer>
+  <footer data-part="doc-footer">{footer}</footer>
 </article>
 ```
 
@@ -185,9 +185,11 @@ Full-page document container optimized for screen display and print output
 
 ```text
 [data-ui='document']  ·  <article> · content: slots
-├─ [data-part='header']  <header>  optional  — Document header — repeats on every printed page
+├─ [data-part='doc-header']  <header>  optional  — Canonical running document header; repeats on every printed page
 ├─ [data-part='body']  <div>  required  — Main document content area
-└─ [data-part='footer']  <footer>  optional  — Document footer — repeats on every printed page
+├─ [data-part='doc-footer']  <footer>  optional  — Canonical running document footer; repeats on every printed page
+├─ [data-part='header']  <header>  optional  — Legacy alias for doc-header; supported for non-breaking upgrades
+└─ [data-part='footer']  <footer>  optional  — Legacy alias for doc-footer; supported for non-breaking upgrades
 ```
 
 **Variants**
@@ -198,7 +200,7 @@ Full-page document container optimized for screen display and print output
 | format | `a4`, `letter` | `a4` | `data-format` | root |
 | orientation | `portrait`, `landscape` | `portrait` | `data-orientation` | root |
 
-- **Safe transforms:** `change-variant`, `change-format`, `change-orientation`, `add-header`, `remove-header`, `add-footer`, `remove-footer`, `change-theme`
+- **Safe transforms:** `change-variant`, `change-format`, `change-orientation`, `add-doc-header`, `remove-doc-header`, `add-doc-footer`, `remove-doc-footer`, `change-theme`
 - **Unsafe (never do):** `remove-body`, `remove-article-semantics`, `remove-aria-label`
 - **Required ARIA:** `article element for document semantics`; `aria-label describing the document type and title`
 

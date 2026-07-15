@@ -1,13 +1,33 @@
 /* @ui:component document */
-/* @ui:tokens doc-max-width doc-font doc-font-size doc-line-height doc-heading-font doc-heading-weight doc-heading-size doc-subheading-size doc-legal-size doc-legal-color doc-section-gap doc-component-gap doc-bg doc-fg doc-print-border-color doc-table-header-bg doc-table-header-fg doc-table-header-weight doc-table-border doc-table-cell-pad-y doc-table-cell-pad-x doc-table-font-size doc-table-num-font doc-table-footer-bg doc-table-footer-weight doc-table-stripe-bg page-format page-orientation page-margin page-margin-top page-margin-bottom page-margin-left page-margin-right color-bg color-fg color-fg-muted color-border space-4 space-6 space-8 space-12 shadow-lg radius-md font-serif */
+/* @ui:tokens doc-max-width doc-font doc-font-size doc-line-height doc-heading-font doc-heading-weight doc-heading-size doc-subheading-size doc-legal-size doc-legal-color doc-section-gap doc-component-gap doc-running-header-height doc-running-footer-height doc-running-gap doc-bg doc-fg doc-print-border-color doc-table-header-bg doc-table-header-fg doc-table-header-weight doc-table-border doc-table-cell-pad-y doc-table-cell-pad-x doc-table-font-size doc-table-num-font doc-table-footer-bg doc-table-footer-weight doc-table-stripe-bg page-format page-orientation page-margin page-margin-top page-margin-bottom page-margin-left page-margin-right color-bg color-fg color-fg-muted color-border space-4 space-6 space-8 space-12 shadow-lg radius-md font-serif z-raised */
 
 /* ── Page Rules ── */
 @page {
-  size: A4 portrait;
-  margin: var(--page-margin-top, 15mm)
-          var(--page-margin-right, 15mm)
-          var(--page-margin-bottom, 15mm)
-          var(--page-margin-left, 15mm);
+  size: var(--page-format) var(--page-orientation);
+  margin: var(--page-margin-top)
+          var(--page-margin-right)
+          var(--page-margin-bottom)
+          var(--page-margin-left);
+
+  /* Paged-media engines (Prince, WeasyPrint, Vivliostyle) consume the running
+     elements. Browser engines that do not support element() keep the fixed
+     fallback declared under @media print below. */
+  @top-center {
+    content: element(faqir-doc-header);
+  }
+
+  @bottom-center {
+    content: element(faqir-doc-footer);
+  }
+
+  /* Chromium 131+ and dedicated paged-media engines support page counters in
+     margin boxes. Browser-generated headers/footers should stay disabled. */
+  @bottom-right {
+    content: "Page " counter(page) " / " counter(pages);
+    font-family: var(--doc-font);
+    font-size: var(--doc-legal-size);
+    color: var(--doc-legal-color);
+  }
 }
 
 /* ── Base (Screen) ── */
@@ -32,11 +52,13 @@
   max-width: 8.5in;
 }
 
-/* ── Header ── */
-[data-ui="document"] [data-part="header"] {
-  margin-bottom: var(--doc-section-gap);
-  padding-bottom: var(--doc-component-gap);
-  border-bottom: 1px solid var(--color-border);
+/* ── Running header ──
+   header remains a non-breaking selector alias for pre-1.1.0 documents. */
+[data-ui="document"] > [data-part="doc-header"],
+[data-ui="document"] > [data-part="header"] {
+  margin-block-end: var(--doc-section-gap);
+  padding-block-end: var(--doc-component-gap);
+  border-block-end: 1px solid var(--color-border);
 }
 
 /* ── Body ── */
@@ -46,11 +68,13 @@
   gap: var(--doc-section-gap);
 }
 
-/* ── Footer ── */
-[data-ui="document"] [data-part="footer"] {
-  margin-top: var(--doc-section-gap);
-  padding-top: var(--doc-component-gap);
-  border-top: 1px solid var(--color-border);
+/* ── Running footer ──
+   footer remains a non-breaking selector alias for pre-1.1.0 documents. */
+[data-ui="document"] > [data-part="doc-footer"],
+[data-ui="document"] > [data-part="footer"] {
+  margin-block-start: var(--doc-section-gap);
+  padding-block-start: var(--doc-component-gap);
+  border-block-start: 1px solid var(--color-border);
   font-size: var(--doc-legal-size);
   color: var(--doc-legal-color);
 }
@@ -60,7 +84,8 @@
   font-size: var(--doc-font-size);
 }
 
-[data-ui="document"][data-variant="invoice"] [data-part="header"] {
+[data-ui="document"][data-variant="invoice"] > [data-part="doc-header"],
+[data-ui="document"][data-variant="invoice"] > [data-part="header"] {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -77,7 +102,8 @@
   gap: var(--doc-component-gap);
 }
 
-[data-ui="document"][data-variant="form"] [data-part="header"] {
+[data-ui="document"][data-variant="form"] > [data-part="doc-header"],
+[data-ui="document"][data-variant="form"] > [data-part="header"] {
   text-align: center;
   display: flex;
   flex-direction: column;
@@ -90,7 +116,8 @@
   line-height: 1.6;
 }
 
-[data-ui="document"][data-variant="report"] [data-part="header"] {
+[data-ui="document"][data-variant="report"] > [data-part="doc-header"],
+[data-ui="document"][data-variant="report"] > [data-part="header"] {
   text-align: center;
 }
 
@@ -148,38 +175,60 @@
     color: var(--doc-fg, black);
   }
 
-  /* Header repeats on every page */
-  [data-ui="document"] [data-part="header"] {
-    position: running(document-header);
-    margin-bottom: 0;
-    padding-bottom: var(--space-4);
-    border-bottom: 1px solid var(--doc-print-border-color, var(--color-border, #ccc));
+  /* Browser fallback first; supporting paged-media engines override it with
+     running(). Unsupported declarations are discarded, leaving position:fixed
+     to repeat the same DOM element on every printed page. */
+  [data-ui="document"] > [data-part="doc-header"],
+  [data-ui="document"] > [data-part="header"] {
+    position: fixed;
+    position: running(faqir-doc-header);
+    inset-block-start: 0;
+    inset-inline: 0;
+    block-size: var(--doc-running-header-height);
+    box-sizing: border-box;
+    z-index: var(--z-raised);
+    margin-block-end: 0;
+    padding-block-end: var(--doc-running-gap);
+    border-block-end: 1px solid var(--doc-print-border-color);
+    background: var(--doc-bg);
+    transform: translateZ(0);
   }
 
-  /* Footer repeats on every page */
-  [data-ui="document"] [data-part="footer"] {
-    position: running(document-footer);
-    margin-top: 0;
-    padding-top: var(--space-4);
-    border-top: 1px solid var(--doc-print-border-color, var(--color-border, #ccc));
+  [data-ui="document"] > [data-part="doc-footer"],
+  [data-ui="document"] > [data-part="footer"] {
+    position: fixed;
+    position: running(faqir-doc-footer);
+    inset-block-end: 0;
+    inset-inline: 0;
+    block-size: var(--doc-running-footer-height);
+    box-sizing: border-box;
+    z-index: var(--z-raised);
+    margin-block-start: 0;
+    padding-block-start: var(--doc-running-gap);
+    border-block-start: 1px solid var(--doc-print-border-color);
+    background: var(--doc-bg);
+    transform: translateZ(0);
   }
 
-  @page {
-    @top-center {
-      content: element(document-header);
-    }
-    @bottom-center {
-      content: element(document-footer);
+  /* Chromium keeps fixed elements out of flow. Clone the body decoration at
+     each page fragment so content never enters the repeated header/footer
+     areas. Engines with native running() support use their margin boxes. */
+  @supports not (position: running(faqir-doc-header)) {
+    [data-ui="document"] > [data-part="body"] {
+      padding-block-start: calc(var(--doc-running-header-height) + var(--doc-running-gap));
+      padding-block-end: calc(var(--doc-running-footer-height) + var(--doc-running-gap));
+      -webkit-box-decoration-break: clone;
+      box-decoration-break: clone;
     }
   }
 
   /* Print border color for nested tables */
   [data-ui="document"] [data-ui="table"] [data-part="th"] {
-    border-bottom-color: var(--doc-print-border-color, var(--doc-table-border));
+    border-bottom-color: var(--doc-print-border-color);
   }
 
   [data-ui="document"] [data-ui="table"] [data-part="td"] {
-    border-bottom-color: var(--doc-print-border-color, var(--color-border));
+    border-bottom-color: var(--doc-print-border-color);
   }
 }
 

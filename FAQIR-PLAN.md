@@ -115,7 +115,7 @@ done in any order (or in parallel worktrees).
 | 0.6-04 | `@faqir-ui/forms` composite: nested objects, arrays, wizard, audit-clean gate | ⬜ |
 | 0.6-05 | Plugins: `faqir-persist` + `faqir-intersect` | ✅ |
 | 0.6-06 | Plugin: `faqir-mask` (wire into input-otp) | ✅ |
-| 0.6-07 | Documents: running headers/footers (`doc-header`/`doc-footer`) | ⬜ |
+| 0.6-07 | Documents: running headers/footers (`doc-header`/`doc-footer`) | ✅ |
 | 0.6-08 | `faqir scaffold invoice` + `faqir scaffold report` | ⬜ |
 | 0.6-09 | Documents: `watermark` primitive + `barcode` recipe + `document-serif` theme | ⬜ |
 | 0.6-10 | Print visual regression (PDF render + image diff) | ⬜ |
@@ -1487,9 +1487,9 @@ which path.
 - Actual PDF verification deferred to 0.6-10 (note the dependency), but a headless-Chromium manual check performed and recorded in the commit.
 
 **Acceptance criteria**
-- [ ] A 3+ page reference document repeats header/footer with correct page numbers when printed from Chromium (manually verified this session; automated in 0.6-10).
-- [ ] Manifest documents the parts + renderer-support matrix.
-- [ ] No regression to single-page document rendering (visual suite).
+- [x] A 3+ page reference document repeats header/footer with correct page numbers when printed from Chromium (manually verified in Chrome 150 against `document-print.html`: a 3-page A4 PDF rendered cleanly; extracted text contains the authored header and footer exactly three times plus `Page 1 / 3` through `Page 3 / 3`; automated PDF verification remains assigned to 0.6-10).
+- [x] Manifest documents the parts + renderer-support matrix. (`document.manifest.json` 1.1.0 defines canonical `doc-header`/`doc-footer` slots, legacy aliases, and explicit Chromium/Prince/WeasyPrint paths; `tests/patterns/document.test.ts` validates the manifest and support matrix.)
+- [x] No regression to single-page document rendering (visual suite). (`pattern__document__default__light__ltr` matches its existing Playwright snapshot after the canonical preview's part-only migration; the full suite is **1928 pass / 0 fail**.)
 
 ---
 

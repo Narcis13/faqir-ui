@@ -1,12 +1,12 @@
 <!-- @ui:component document -->
 <!-- @ui:kind pattern -->
-<!-- @ui:slots header body footer -->
+<!-- @ui:slots doc-header body doc-footer -->
 <!-- @ui:variants variant=invoice|form|report format=a4|letter orientation=portrait|landscape -->
 <!-- @ui:composition key-value table image signature callout page-break text separator field-group -->
 
 <!-- Default document -->
 <article data-ui="document" data-format="a4" aria-label="Sample Document">
-  <header data-part="header">
+  <header data-part="doc-header">
     <h1 data-ui="text" data-variant="heading" data-size="xl">Document Title</h1>
     <p data-ui="text" data-variant="muted">Generated on 2024-03-15</p>
   </header>
@@ -15,14 +15,14 @@
     <p>Document body content goes here.</p>
   </div>
 
-  <footer data-part="footer">
+  <footer data-part="doc-footer">
     <p>Page footer with legal text or page numbers.</p>
   </footer>
 </article>
 
 <!-- Invoice variant -->
 <article data-ui="document" data-variant="invoice" data-format="a4" aria-label="Invoice INV-2024-0042">
-  <header data-part="header">
+  <header data-part="doc-header">
     <!-- Supplier info (left) -->
     <div>
       <h2 data-ui="text" data-variant="heading" data-size="lg">SC ACME SRL</h2>
@@ -126,7 +126,7 @@
     </div>
   </div>
 
-  <footer data-part="footer">
+  <footer data-part="doc-footer">
     <div data-ui="callout" data-variant="muted" role="note">
       <div data-part="content">
         <p>Factura este valabila fara semnatura si stampila conform art. 319 alin. 29 din Legea 227/2015.</p>
@@ -137,7 +137,7 @@
 
 <!-- Form variant -->
 <article data-ui="document" data-variant="form" data-format="a4" aria-label="Client Registration Form">
-  <header data-part="header">
+  <header data-part="doc-header">
     <h1 data-ui="text" data-variant="heading" data-size="xl">Formular Inregistrare Client</h1>
     <p data-ui="text" data-variant="muted">Completati toate campurile obligatorii</p>
   </header>
@@ -171,14 +171,14 @@
     </div>
   </div>
 
-  <footer data-part="footer">
+  <footer data-part="doc-footer">
     <p>Datele personale sunt prelucrate conform GDPR (Regulamentul UE 2016/679).</p>
   </footer>
 </article>
 
 <!-- Report variant -->
 <article data-ui="document" data-variant="report" data-format="a4" aria-label="Monthly Report - March 2024">
-  <header data-part="header">
+  <header data-part="doc-header">
     <h1 data-ui="text" data-variant="heading" data-size="2xl">Raport Lunar</h1>
     <p data-ui="text" data-variant="muted">Martie 2024</p>
   </header>
@@ -200,7 +200,7 @@
     <p>Continuare raport pe pagina urmatoare...</p>
   </div>
 
-  <footer data-part="footer">
+  <footer data-part="doc-footer">
     <p>Document confidential. Distributia neautorizata este interzisa.</p>
   </footer>
 </article>

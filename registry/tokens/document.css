@@ -18,6 +18,12 @@
   --page-margin-left:       var(--page-margin);
   --page-margin-right:      var(--page-margin);
 
+  /* Running header/footer geometry. The heights fit inside the default page
+     margins and are shared by running-element engines and the fixed fallback. */
+  --doc-running-header-height: 10mm;
+  --doc-running-footer-height: 8mm;
+  --doc-running-gap:        var(--space-2);
+
   /* ── Document Typography ──
      Separate from the base typography tokens because documents have
      different optimal sizes than screen UIs. 14px body + 12px legal

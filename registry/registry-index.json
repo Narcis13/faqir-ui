@@ -1523,22 +1523,26 @@
       "name": "document",
       "kind": "pattern",
       "layer": "patterns",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "files": [
         {
+          "path": "document-print.html",
+          "sha256": "36a316dee8bdceca6bc23b9b4ad83f2b891726e617c6b51ba48655645cc10672"
+        },
+        {
           "path": "document.css",
-          "sha256": "f879e0d931f9d58ed8fd3707018d756da7f3d9352a39be29f59c79938271dafc"
+          "sha256": "6abc803428ae9905e24314671817e797b30f2fe49bc653b13493cc0652c435b3"
         },
         {
           "path": "document.html",
-          "sha256": "0e55a5e2e7c7531d6e20a88ef0c2bdfe13c720ea38b4e48fd75c8eca0adf215a"
+          "sha256": "bc574e885e1710e24928a72cacb1bfcbac65665a35a761d987b06fe424fd284a"
         },
         {
           "path": "document.manifest.json",
-          "sha256": "0826a74f1aacb76fb7beaa2c6a1c1af06e2b379df483a636f6566a31f27533ad"
+          "sha256": "08c58576202adf89f8d571c5b1b32abc08058759cebb3ce490f83710a491cb26"
         }
       ],
-      "hash": "eb25900ab6a42d0a24ddca09781c6fd9ed29b15096c9ae2ce1ee369ae3a84e9a",
+      "hash": "d748c8fe3c9dafe266f2f7bc33e4287f46dfa31d5997213420072701f12fb9c6",
       "deps": [
         "key-value",
         "table",

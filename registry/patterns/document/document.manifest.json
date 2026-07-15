@@ -1,10 +1,18 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "document",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "kind": "pattern",
   "category": "composite",
-  "description": "Full-page document container optimized for screen display and print output",
+  "description": "Full-page document container with repeatable print headers, footers, and page counters",
+
+  "changes": [
+    {
+      "version": "1.1.0",
+      "note": "Added canonical doc-header and doc-footer parts, fixed-position browser fallbacks, running-element margin boxes, page counters, and a three-page print reference; legacy header/footer parts remain styled as aliases.",
+      "breaking": false
+    }
+  ],
 
   "anatomy": {
     "tag": "article",
@@ -13,11 +21,11 @@
   },
 
   "slots": {
-    "header": {
-      "selector": "[data-part='header']",
+    "doc-header": {
+      "selector": "[data-part='doc-header']",
       "required": false,
       "tag_hint": "header",
-      "description": "Document header — repeats on every printed page"
+      "description": "Canonical running document header; repeats on every printed page"
     },
     "body": {
       "selector": "[data-part='body']",
@@ -25,11 +33,23 @@
       "tag_hint": "div",
       "description": "Main document content area"
     },
+    "doc-footer": {
+      "selector": "[data-part='doc-footer']",
+      "required": false,
+      "tag_hint": "footer",
+      "description": "Canonical running document footer; repeats on every printed page"
+    },
+    "header": {
+      "selector": "[data-part='header']",
+      "required": false,
+      "tag_hint": "header",
+      "description": "Legacy alias for doc-header; supported for non-breaking upgrades"
+    },
     "footer": {
       "selector": "[data-part='footer']",
       "required": false,
       "tag_hint": "footer",
-      "description": "Document footer — repeats on every printed page"
+      "description": "Legacy alias for doc-footer; supported for non-breaking upgrades"
     }
   },
 
@@ -60,6 +80,24 @@
     "theme": { "type": "string", "default": "", "description": "Theme name applied via data-theme attribute" }
   },
 
+  "renderer_support": {
+    "chromium": {
+      "mechanism": "position: fixed repetition for full DOM header/footer plus @page margin-box page counters",
+      "notes": "Chrome 131+ supports page-margin generated content and page counters; unsupported running()/element() declarations fall back to fixed positioning. Disable browser-supplied print headers and footers.",
+      "documentation": "https://developer.chrome.com/blog/print-margins"
+    },
+    "prince": {
+      "mechanism": "position: running() with content: element() in @page margin boxes",
+      "notes": "Native running elements preserve the authored header/footer markup; page and pages counters render in the bottom-right margin box.",
+      "documentation": "https://www.princexml.com/doc/styling/"
+    },
+    "weasyprint": {
+      "mechanism": "position: running() with content: element() in @page margin boxes",
+      "notes": "Native running elements, page-margin boxes, and page counters are supported; the optional element() start parameter is not used.",
+      "documentation": "https://doc.courtbouillon.org/weasyprint/stable/api_reference.html"
+    }
+  },
+
   "a11y": {
     "required_attrs": [
       "article element for document semantics",
@@ -70,28 +108,32 @@
 
   "tokens_used": [
     "color-bg", "color-fg", "color-fg-muted", "color-border",
-    "space-4", "space-6", "space-8", "space-12",
+    "space-2", "space-4", "space-6", "space-8", "space-12",
     "shadow-md", "shadow-lg",
     "radius-md",
     "font-sans", "font-serif",
     "text-xs", "text-sm", "text-base", "text-lg", "text-xl", "text-2xl",
     "weight-medium", "weight-semibold", "weight-bold",
-    "leading-tight", "leading-normal"
+    "leading-tight", "leading-normal",
+    "page-format", "page-orientation", "page-margin-top", "page-margin-right",
+    "page-margin-bottom", "page-margin-left", "doc-running-header-height",
+    "doc-running-footer-height", "doc-running-gap", "doc-print-border-color",
+    "z-raised"
   ],
 
   "templates": {
-    "html": "<article data-ui=\"document\" data-format=\"a4\" aria-label=\"{title}\">\n  <header data-part=\"header\">{header}</header>\n  <div data-part=\"body\">{body}</div>\n  <footer data-part=\"footer\">{footer}</footer>\n</article>",
-    "html_invoice": "<article data-ui=\"document\" data-variant=\"invoice\" data-format=\"a4\" aria-label=\"Invoice {number}\">\n  <header data-part=\"header\">{company_info}</header>\n  <div data-part=\"body\">{invoice_content}</div>\n  <footer data-part=\"footer\">{legal_text}</footer>\n</article>"
+    "html": "<article data-ui=\"document\" data-format=\"a4\" aria-label=\"{title}\">\n  <header data-part=\"doc-header\">{header}</header>\n  <div data-part=\"body\">{body}</div>\n  <footer data-part=\"doc-footer\">{footer}</footer>\n</article>",
+    "html_invoice": "<article data-ui=\"document\" data-variant=\"invoice\" data-format=\"a4\" aria-label=\"Invoice {number}\">\n  <header data-part=\"doc-header\">{company_info}</header>\n  <div data-part=\"body\">{invoice_content}</div>\n  <footer data-part=\"doc-footer\">{legal_text}</footer>\n</article>"
   },
 
   "safe_transforms": [
     "change-variant",
     "change-format",
     "change-orientation",
-    "add-header",
-    "remove-header",
-    "add-footer",
-    "remove-footer",
+    "add-doc-header",
+    "remove-doc-header",
+    "add-doc-footer",
+    "remove-doc-footer",
     "change-theme"
   ],
 
@@ -109,22 +151,25 @@
   "files": {
     "html": "document.html",
     "css": "document.css",
-    "manifest": "document.manifest.json"
+    "manifest": "document.manifest.json",
+    "print_reference": "document-print.html"
   },
 
   "tests": [
     "renders-as-article-element",
     "body-slot-is-required",
-    "header-slot-is-optional",
-    "footer-slot-is-optional",
+    "doc-header-slot-is-optional",
+    "doc-footer-slot-is-optional",
     "screen-has-paper-shadow",
     "screen-has-max-width",
     "screen-is-centered",
     "a4-format-sets-210mm-width",
     "letter-format-sets-8-5in-width",
     "print-page-rules-applied",
-    "print-header-repeats",
-    "print-footer-repeats",
+    "print-header-repeats-via-running-or-fixed",
+    "print-footer-repeats-via-running-or-fixed",
+    "print-page-counter-uses-page-and-pages",
+    "three-page-print-reference-is-audit-clean",
     "invoice-variant-adjusts-spacing",
     "form-variant-adjusts-spacing",
     "report-variant-adjusts-typography"

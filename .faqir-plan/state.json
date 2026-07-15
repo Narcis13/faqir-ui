@@ -2,7 +2,7 @@
   "$schema": "./state.schema.md",
   "plan": "FAQIR-PLAN.md",
   "current": null,
-  "last_completed": "0.6-06",
+  "last_completed": "0.6-07",
   "history": [
     {
       "id": "phases v0.3–v0.5",
@@ -39,6 +39,12 @@
       "completed": "2026-07-15",
       "commit": "07a860d",
       "summary": "Added the zero-dependency faqir-mask plugin with pure caret-safe 9/a/* masking, paste normalization, masked-display/raw-model binding, teardown cleanup, and optional input-otp integration. The plugin is 1.96 KB gzip and the full 1917-test suite is green."
+    },
+    {
+      "id": "0.6-07",
+      "completed": "2026-07-15",
+      "commit": null,
+      "summary": "Added canonical document header/footer parts with native running-element margin boxes, Chromium fixed-position fallbacks, CSS page counters, tokenized print geometry, a three-page audit-clean reference, renderer support metadata, and regression coverage. The full 1928-test suite, typecheck, registry audit, generated checks, and targeted visual snapshot are green."
     }
   ],
   "note": "Pointer file for the /faqir-plan slash command. FAQIR-PLAN.md status cells (⬜/✅) are the source of truth; this file records the cross-session cursor and a per-task log. Do not hand-edit `current` while a session is running."
