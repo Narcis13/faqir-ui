@@ -43,7 +43,7 @@
     {
       "id": "0.6-07",
       "completed": "2026-07-15",
-      "commit": null,
+      "commit": "43ab335",
       "summary": "Added canonical document header/footer parts with native running-element margin boxes, Chromium fixed-position fallbacks, CSS page counters, tokenized print geometry, a three-page audit-clean reference, renderer support metadata, and regression coverage. The full 1928-test suite, typecheck, registry audit, generated checks, and targeted visual snapshot are green."
     }
   ],
