@@ -42,6 +42,15 @@ CSS targets attributes (`[data-ui="button"]`), state via `[data-state="open"]`, 
 
 **7 Patterns (composition, no JS):** auth-form, crud-table, dashboard-shell, document, empty-state, search-results, settings-page
 
+## Official Plugins
+
+Load a plugin after `faqir-core.js`, or combine core plus every plugin with `faqir bundle --js`:
+
+- `faqir-collapse` (`l-collapse`): `registry/core/plugins/faqir-collapse.js` — height auto-animation for a boolean expression. [0.4-11 · §A5]
+- `faqir-intersect` (`l-intersect`): `registry/core/plugins/faqir-intersect.js` — declarative IntersectionObserver hooks. [0.6-05 · §A5]
+- `faqir-persist` (`l-persist`, `$persist()`): `registry/core/plugins/faqir-persist.js` — localStorage-backed reactive state. [0.6-05 · §A5]
+- `faqir-validate` (`l-validate`): `registry/core/plugins/faqir-validate.js` — declarative form validation for the field-group contract. [0.6-02 · §7.1, §A5]
+
 ## Canonical Compositions
 
 Real component compositions, taken verbatim from pattern manifests. Each shows how primitives and recipes assemble into a working unit.

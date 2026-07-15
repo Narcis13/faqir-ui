@@ -2,7 +2,7 @@
   "$schema": "./state.schema.md",
   "plan": "FAQIR-PLAN.md",
   "current": null,
-  "last_completed": "0.6-03",
+  "last_completed": "0.6-05",
   "history": [
     {
       "id": "phases v0.3–v0.5",
@@ -27,6 +27,12 @@
       "completed": "2026-07-13",
       "commit": "683ba6e",
       "summary": "Added the zero-dependency @faqir-ui/forms scalar renderer with strict JSON Schema/UI schema validation; string, textarea, enum radio/select (four-option threshold), number/integer, boolean checkbox/switch, date-picker, email, and URI mappings; deterministic field-group wiring and required/description propagation. Eleven golden schemas are audit-clean, with Bun, Node, browser-target, typecheck, registry audit, package dry-run, and the full 1891-test suite green."
+    },
+    {
+      "id": "0.6-05",
+      "completed": "2026-07-15",
+      "commit": null,
+      "summary": "Added the zero-dependency faqir-persist and faqir-intersect plugins with reactive JSON persistence, private-mode fallback, namespaced magic access, enter/leave/once hooks, teardown cleanup, deterministic faqir bundle --js distribution, and generated context/skill discovery. Both plugins are under 1 KB gzip and the full 1905-test suite is green."
     }
   ],
   "note": "Pointer file for the /faqir-plan slash command. FAQIR-PLAN.md status cells (⬜/✅) are the source of truth; this file records the cross-session cursor and a per-task log. Do not hand-edit `current` while a session is running."

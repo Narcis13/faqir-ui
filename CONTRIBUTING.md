@@ -308,7 +308,7 @@ It emits:
 | `faqir-core.js` | Canonical UMD engine (copied from `registry/core/faqir-core.js`). |
 | `faqir-core.min.js` (+ `.map`) | Minified classic-script build. Bundled from `packages/core/src/cdn-entry.js` with `bun build --format=iife` so a plain `<script src>` sets `window.Faqir`. |
 | `faqir.{theme}.css` | One full CSS bundle per `registry/themes/*.css`: all tokens + theme + base + every component, fully inlined (no `@import`). |
-| `plugins/` | Official plugin drops (empty placeholder until the §A5 plugins land). |
+| `plugins/` | Official self-registering plugin drops, including `faqir-persist`, `faqir-intersect`, `faqir-collapse`, and `faqir-validate`. |
 | `sri.json` | SHA-384 subresource-integrity hashes for every file above. |
 
 `packages/core/dist/` is a build output (gitignored, like the root `dist/`); tests and

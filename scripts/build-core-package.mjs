@@ -6,7 +6,7 @@
  *   - `faqir-core.js`        — canonical UMD engine (copied from registry/core)
  *   - `faqir-core.min.js`    — minified classic-script build (+ `.map` sourcemap)
  *   - `faqir.{theme}.css`    — one prebuilt full CSS bundle per registry theme
- *   - `plugins/`             — official plugin drops (empty for now; see §A5)
+ *   - `plugins/`             — official self-registering plugin drops (§A5)
  *   - `sri.json`             — SHA-384 subresource-integrity hashes for every file
  *
  * The minified engine is bundled from `packages/core/src/cdn-entry.js` with

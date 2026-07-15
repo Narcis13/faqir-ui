@@ -985,6 +985,31 @@ After first bundle generation, `faqir.config.json` gains a `bundle` section:
 
 Set `auto: false` to disable auto-regeneration on add/remove/theme changes.
 
+### JavaScript Bundle and Official Plugins
+
+`faqir bundle --js` writes `ui/faqir.bundle.js` with the assembled core first,
+followed by every official plugin in deterministic filename order. Use it when
+you prefer one classic script:
+
+```html
+<script src="ui/faqir.bundle.js"></script>
+```
+
+Plugins can also be loaded individually after the core script from
+`ui/core/plugins/`. `faqir-persist` provides `l-persist` and `$persist()` for
+namespaced, JSON-serialized reactive state; `faqir-intersect` provides enter,
+leave, and once-only IntersectionObserver hooks:
+
+```html
+<script src="ui/core/faqir-core.js"></script>
+<script src="ui/core/plugins/faqir-persist.js"></script>
+<script src="ui/core/plugins/faqir-intersect.js"></script>
+
+<div l-data="{ count: 0 }" l-persist="count">…</div>
+<section l-intersect="visible = true" l-intersect.leave="visible = false">…</section>
+<div l-intersect.once="loadMore()">…</div>
+```
+
 ---
 
 ## Audit and Repair

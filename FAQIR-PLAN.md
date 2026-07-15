@@ -113,7 +113,7 @@ done in any order (or in parallel worktrees).
 | 0.6-02 | `faqir-validate.js` plugin | ✅ |
 | 0.6-03 | `@faqir-ui/forms` core: package + scalar widget mapping | ✅ |
 | 0.6-04 | `@faqir-ui/forms` composite: nested objects, arrays, wizard, audit-clean gate | ⬜ |
-| 0.6-05 | Plugins: `faqir-persist` + `faqir-intersect` | ⬜ |
+| 0.6-05 | Plugins: `faqir-persist` + `faqir-intersect` | ✅ |
 | 0.6-06 | Plugin: `faqir-mask` (wire into input-otp) | ⬜ |
 | 0.6-07 | Documents: running headers/footers (`doc-header`/`doc-footer`) | ⬜ |
 | 0.6-08 | `faqir scaffold invoice` + `faqir scaffold report` | ⬜ |
@@ -1445,9 +1445,9 @@ serialization, per-key namespacing, graceful behavior when storage is unavailabl
 - intersect: mocked IntersectionObserver → enter/leave expressions fire; `.once` disconnects after first enter; observer disconnected on scope teardown.
 
 **Acceptance criteria**
-- [ ] Both ≤ 2KB gzip (size tests) and loadable as separate script tags or via `faqir bundle --js`.
-- [ ] Teardown-clean: no observers/listeners survive scope destruction.
-- [ ] Documented in generated context/skill output (plugin discovery).
+- [x] Both ≤ 2KB gzip (size tests) and loadable as separate script tags or via `faqir bundle --js`. (`bun run size`: `faqir-persist` **790 B gzip**, `faqir-intersect` **437 B gzip**; `tests/core/official-plugins.test.ts` proves `faqir init` copies both classic-script drops and `faqir bundle --js` deterministically composes core first + all four official plugins; `build:core-package` copies them into the CDN package and hashes all 15 artifacts in `sri.json`.)
+- [x] Teardown-clean: no observers/listeners survive scope destruction. (Custom directives can now return cleanup into the core scope lifecycle; `tests/core/faqir-intersect.test.ts` asserts observer disconnect + no post-destroy expression, while `tests/core/faqir-persist.test.ts` asserts its reactive storage writer is disposed and cannot write after `Faqir.destroy`.)
+- [x] Documented in generated context/skill output (plugin discovery). (`src/generator/plugins.ts` derives plugin name/provides/description from the self-registering file headers; every context format and project/shipped skill now lists installed official plugins + paths + `faqir bundle --js`; regenerated `.claude/skills/faqir-creator/SKILL.md` passes `bun run check:skill`.)
 
 ---
 

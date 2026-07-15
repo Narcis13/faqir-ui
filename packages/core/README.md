@@ -53,7 +53,7 @@ for tamper-proof loads:
 | `faqir-core.js` | Canonical UMD engine — use for `import` / `require` / bundlers. |
 | `faqir-core.min.js` (+ `.map`) | Minified classic-script build; a plain `<script src>` sets `window.Faqir`. |
 | `faqir.{theme}.css` | Full CSS bundle per theme: all tokens + theme + base + every component. Self-contained (no `@import`). |
-| `plugins/` | Official plugin drops (`faqir-persist`, `faqir-intersect`, … — landing per milestone). |
+| `plugins/` | Official self-registering drops: `faqir-persist`, `faqir-intersect`, `faqir-collapse`, and `faqir-validate`. |
 | `sri.json` | SHA-384 integrity hashes for every file above. |
 
 ## Module usage

@@ -6,6 +6,7 @@ import { loadManifest, type Manifest } from "../manifest";
 import { loadThemeManifest, type ThemeManifest } from "../theme-manifest";
 import { readConfig, type FaqirConfig } from "../utils/config";
 import { ensureDir, getRegistryPath } from "../utils/fs";
+import { loadPluginMetadata } from "./plugins";
 
 /**
  * The active theme, as embedded in context. Either the full theme manifest (when
@@ -25,6 +26,7 @@ export interface ContextData {
       recipes: number;
       patterns: number;
     };
+    plugin_count: number;
   };
   theme: ContextTheme;
   protocol: {
@@ -46,6 +48,11 @@ export interface ContextData {
   };
   components: Record<string, unknown>;
   patterns: Record<string, unknown>;
+  plugins: Record<string, {
+    file: string;
+    provides: string[];
+    description?: string;
+  }>;
   rules: Record<string, boolean>;
 }
 
@@ -168,9 +175,11 @@ export async function generateContext(cwd: string): Promise<ContextData> {
   const outputDir = join(cwd, config.output_dir);
   const manifests = await loadInstalledManifests(config, outputDir);
   const theme = await loadActiveTheme(config);
+  const pluginMetadata = loadPluginMetadata(join(outputDir, "core", "plugins"));
 
   const components: Record<string, unknown> = {};
   const patterns: Record<string, unknown> = {};
+  const plugins: ContextData["plugins"] = {};
 
   for (const [name, manifest] of manifests) {
     const entry = buildComponentEntry(manifest);
@@ -185,6 +194,14 @@ export async function generateContext(cwd: string): Promise<ContextData> {
     }
   }
 
+  for (const plugin of pluginMetadata) {
+    plugins[plugin.name] = {
+      file: `core/plugins/${plugin.file}`,
+      provides: plugin.provides,
+      ...(plugin.description ? { description: plugin.description } : {}),
+    };
+  }
+
   return {
     meta: {
       framework: "faqir",
@@ -196,6 +213,7 @@ export async function generateContext(cwd: string): Promise<ContextData> {
         recipes: config.installed.recipes.length,
         patterns: config.installed.patterns.length,
       },
+      plugin_count: pluginMetadata.length,
     },
     theme,
     protocol: {
@@ -217,6 +235,7 @@ export async function generateContext(cwd: string): Promise<ContextData> {
     },
     components,
     patterns,
+    plugins,
     rules: {
       use_data_state_not_classes: true,
       always_aria_label_on_icon_buttons: true,
@@ -294,6 +313,18 @@ export function formatContextMarkdown(data: ContextData): string {
   lines.push("Options: `apiSource(url, { idKey: 'id', pollInterval: 0, optimistic: true })`");
   lines.push("Note: `apiSource()` is application code — recipe controllers still never call fetch.");
   lines.push("");
+
+  if (Object.keys(data.plugins).length > 0) {
+    lines.push("## Official Plugins");
+    lines.push("");
+    lines.push("Load individual files after `core/faqir-core.js`, or run `faqir bundle --js`.");
+    lines.push("");
+    for (const [name, plugin] of Object.entries(data.plugins)) {
+      const summary = plugin.description ? ` — ${plugin.description}` : "";
+      lines.push(`- **${name}** (${plugin.provides.join(", ")}): \`${plugin.file}\`${summary}`);
+    }
+    lines.push("");
+  }
 
   // Components
   lines.push("## Components");
@@ -390,6 +421,16 @@ export function formatContextCursorRules(data: ContextData): string {
   lines.push("- State: `items`, `loading`, `submitting`, `error`");
   lines.push("- `apiSource()` is application code, NOT a recipe controller — no-fetch rule doesn't apply");
   lines.push("");
+
+  if (Object.keys(data.plugins).length > 0) {
+    lines.push("## Official Plugins");
+    lines.push("");
+    lines.push("- Load a plugin after `core/faqir-core.js`, or use `faqir bundle --js`");
+    for (const [name, plugin] of Object.entries(data.plugins)) {
+      lines.push(`- ${name}: ${plugin.provides.join(", ")} (${plugin.file})`);
+    }
+    lines.push("");
+  }
 
   lines.push("## Available Components");
   lines.push("");
@@ -533,6 +574,13 @@ export function formatContextLlms(data: ContextData): string {
     lines.push("");
   }
 
+  if (Object.keys(data.plugins).length > 0) {
+    lines.push("## Plugins");
+    lines.push("");
+    lines.push("- [Official plugins](llms-full.txt#official-plugins): directives and magics loadable separately or through `faqir bundle --js`");
+    lines.push("");
+  }
+
   lines.push("## Optional");
   lines.push("");
   lines.push("- [Attribute protocol](llms-full.txt#attribute-protocol): the data-ui / data-part / data-state contract");
@@ -649,6 +697,18 @@ export function formatContextLlmsFull(data: ContextData): string {
   lines.push("Options: `apiSource(url, { idKey: 'id', pollInterval: 0, optimistic: true })`");
   lines.push("Note: `apiSource()` is application code — recipe controllers still never call fetch.");
   lines.push("");
+
+  if (Object.keys(data.plugins).length > 0) {
+    lines.push("## Official plugins");
+    lines.push("");
+    lines.push("Load individual files after `core/faqir-core.js`, or run `faqir bundle --js`.");
+    lines.push("");
+    for (const [name, plugin] of Object.entries(data.plugins)) {
+      const summary = plugin.description ? ` — ${plugin.description}` : "";
+      lines.push(`- **${name}** (${plugin.provides.join(", ")}): \`${plugin.file}\`${summary}`);
+    }
+    lines.push("");
+  }
 
   // Primitives
   if (primitives.length > 0) {

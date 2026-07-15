@@ -7,6 +7,7 @@ import { generateBundle, type BundleOptions } from "../utils/bundler";
 interface BundleCmdOptions {
   output: string | null;
   minify: boolean;
+  js: boolean;
   watchMode: boolean;
   dryRun: boolean;
 }
@@ -15,6 +16,7 @@ function parseArgs(args: string[]): BundleCmdOptions {
   const opts: BundleCmdOptions = {
     output: null,
     minify: false,
+    js: false,
     watchMode: false,
     dryRun: false,
   };
@@ -26,6 +28,9 @@ function parseArgs(args: string[]): BundleCmdOptions {
         break;
       case "--minify":
         opts.minify = true;
+        break;
+      case "--js":
+        opts.js = true;
         break;
       case "--watch":
         opts.watchMode = true;
@@ -52,12 +57,14 @@ function printHelp() {
   console.log("Usage:");
   console.log("  faqir bundle");
   console.log("  faqir bundle --minify");
+  console.log("  faqir bundle --js");
   console.log("  faqir bundle --output dist/styles.css");
   log.blank();
   console.log("Options:");
   log.table([
     ["--output <path>", "Output file path (default: {output_dir}/faqir.bundle.css)"],
-    ["--minify", "Strip comments and whitespace"],
+    ["--js", "Bundle faqir-core plus official plugins into faqir.bundle.js"],
+    ["--minify", "Strip comments and whitespace (CSS only)"],
     ["--watch", "Re-bundle on CSS file changes"],
     ["--dry-run", "Show what would be bundled without writing"],
   ]);
@@ -83,6 +90,7 @@ export async function bundle(args: string[]): Promise<void> {
   const bundleOpts: BundleOptions = {};
   if (opts.output) bundleOpts.output = join(cwd, opts.output);
   if (opts.minify) bundleOpts.minify = true;
+  if (opts.js) bundleOpts.js = true;
 
   if (opts.dryRun) {
     log.heading("Dry run — would bundle:");
@@ -96,7 +104,7 @@ export async function bundle(args: string[]): Promise<void> {
   }
 
   // Persist bundle config on first run
-  if (!config.bundle) {
+  if (!opts.js && !config.bundle) {
     config.bundle = {
       output: opts.output ?? `${config.output_dir}/faqir.bundle.css`,
       auto: true,
@@ -107,12 +115,16 @@ export async function bundle(args: string[]): Promise<void> {
 
   const result = await generateBundle(cwd, bundleOpts);
 
-  log.heading("Bundle generated");
-  log.step(`${result.fileCount} CSS files composed`);
+  log.heading(`${opts.js ? "JavaScript bundle" : "Bundle"} generated`);
+  log.step(`${result.fileCount} ${opts.js ? "JavaScript" : "CSS"} files composed`);
   log.success(result.output);
   log.blank();
   console.log("  Use in HTML:");
-  log.dim(`  <link rel="stylesheet" href="${config.output_dir}/faqir.bundle.css">`);
+  if (opts.js) {
+    log.dim(`  <script src="${config.output_dir}/faqir.bundle.js"></script>`);
+  } else {
+    log.dim(`  <link rel="stylesheet" href="${config.output_dir}/faqir.bundle.css">`);
+  }
 
   if (opts.watchMode) {
     log.blank();
@@ -121,8 +133,9 @@ export async function bundle(args: string[]): Promise<void> {
     let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
     watch(outputDir, { recursive: true }, (eventType, filename) => {
-      if (!filename?.endsWith(".css")) return;
-      if (filename === "faqir.bundle.css") return;
+      const extension = opts.js ? ".js" : ".css";
+      if (!filename?.endsWith(extension)) return;
+      if (filename === `faqir.bundle${extension}`) return;
 
       if (debounceTimer) clearTimeout(debounceTimer);
       debounceTimer = setTimeout(async () => {

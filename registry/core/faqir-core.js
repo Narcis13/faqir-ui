@@ -352,6 +352,21 @@
 
   function initTree(root, parentScope) {
     var scope = initScope(root, parentScope);
+
+    // `initScope` owns the built-in root-only directives (`l-data`, `l-source`,
+    // `l-init`). Run plugin directives declared on the same scope root here so
+    // plugins such as l-persist can bind the scope they initialize. Descendant
+    // plugin directives continue through the normal tree walk below.
+    var rootDirectives = parseDirectives(root);
+    rootDirectives.sort(function(a, b) {
+      return (PRIORITY[a.type] || 10) - (PRIORITY[b.type] || 10);
+    });
+    for (var i = 0; i < rootDirectives.length; i++) {
+      if (customDirectives.has(rootDirectives[i].type)) {
+        applyDirective(root, rootDirectives[i], scope);
+      }
+    }
+
     walkChildren(root, scope);
   }
 
@@ -497,6 +512,18 @@
         value: function(name) { return 'faqir-' + root.__scopeId + '-' + name; },
         enumerable: false
       }
+    });
+
+    // Plugins register a magic without reaching into scope internals. Resolve
+    // it lazily so the callback receives the final reactive scope, not the
+    // pre-proxy target that exists while this object is being assembled.
+    customMagics.forEach(function(callback, name) {
+      var key = '$' + name;
+      if (Object.prototype.hasOwnProperty.call(magics, key)) return;
+      Object.defineProperty(magics, key, {
+        get: function() { return callback(el, scope); },
+        enumerable: false
+      });
     });
 
     // Use defineProperties instead of Object.assign to preserve getters/setters
@@ -863,7 +890,8 @@
       case 'transition': return; // Handled by l-show and l-if
       default:
         if (customDirectives.has(dir.type)) {
-          customDirectives.get(dir.type)(el, dir, scope);
+          var cleanupFn = customDirectives.get(dir.type)(el, dir, scope);
+          if (typeof cleanupFn === 'function') addCleanup(el, cleanupFn);
         }
     }
   }
