@@ -31,7 +31,7 @@
     {
       "id": "0.6-05",
       "completed": "2026-07-15",
-      "commit": null,
+      "commit": "5a19569",
       "summary": "Added the zero-dependency faqir-persist and faqir-intersect plugins with reactive JSON persistence, private-mode fallback, namespaced magic access, enter/leave/once hooks, teardown cleanup, deterministic faqir bundle --js distribution, and generated context/skill discovery. Both plugins are under 1 KB gzip and the full 1905-test suite is green."
     }
   ],
