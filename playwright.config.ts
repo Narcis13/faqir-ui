@@ -18,6 +18,9 @@ export default defineConfig({
   testDir: "./tests/visual",
   // Only Playwright specs — keep `bun test` and this runner from colliding.
   testMatch: "**/*.pw.ts",
+  // Printed PDFs have their own runner, rasterizer, and small baseline
+  // set. Keep them out of the 2k+ screen matrix and its four-way sharding.
+  testIgnore: "print/**/*.pw.ts",
 
   // One baseline set, keyed only by the snapshot name (the matrix case id).
   snapshotPathTemplate: "{testDir}/__screenshots__/{arg}{ext}",

@@ -242,3 +242,33 @@ ${fragment}
 </body>
 </html>`;
 }
+
+/**
+ * Assemble a registry reference fragment for paged-media tests. Unlike
+ * `buildPageHtml`, this intentionally adds no screen-preview padding or flex
+ * layout: Chromium must hand the authored document and its `@page` rules to the
+ * PDF renderer without test-harness geometry affecting pagination.
+ */
+export function buildPrintReferencePageHtml(
+  fragment: string,
+  title: string,
+): string {
+  const theme = "document";
+  const themeCss = read(`themes/${theme}.css`);
+  const css = `${foundationCss()}\n/* theme: ${theme} */\n${themeCss}\n/* components */\n${componentCss()}`;
+  return `<!DOCTYPE html>
+<html lang="en" data-theme="light" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<title>${title}</title>
+<style>${css}</style>
+</head>
+<body>
+<main>
+${sanitizeFragment(fragment)}
+</main>
+</body>
+</html>`;
+}

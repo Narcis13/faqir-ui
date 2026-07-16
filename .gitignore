@@ -12,6 +12,9 @@ packages/mcp/registry/
 # strategy — never committed from a developer machine (local renders won't match
 # the container's font rasterisation). See tests/visual/README.md.
 tests/visual/__screenshots__/
+# The small print baseline set is also generated in the pinned Linux container,
+# but lives in its own cache so the path-filtered print job stays independent.
+tests/visual/print/__screenshots__/
 playwright-report/
 test-results/
 blob-report/

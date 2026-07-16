@@ -34,6 +34,8 @@
     "check:schema-refs": "bun scripts/add-schema-refs.mjs --check",
     "test:visual": "playwright test",
     "test:visual:update": "playwright test --update-snapshots",
+    "test:visual:print": "playwright test --config=playwright.print.config.ts",
+    "test:visual:print:update": "playwright test --config=playwright.print.config.ts --update-snapshots",
     "test:a11y": "playwright test --config=playwright.a11y.config.ts",
     "release": "node scripts/release.mjs",
     "release:patch": "node scripts/release.mjs patch",

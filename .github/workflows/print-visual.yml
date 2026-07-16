@@ -1,0 +1,152 @@
+name: Print visual regression
+
+# Task 0.6-10 · FAQIR-PLAN §7.4 / §12
+#
+# This job is intentionally separate from the large screen matrix. It runs only
+# when a PR can affect the document layer, renders each reference through
+# Chromium's PDF path, rasterizes every page with Poppler, and image-diffs the
+# result in Playwright. See tests/visual/print/README.md for baseline blessing.
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/print-visual.yml"
+      - ".gitignore"
+      - "package.json"
+      - "playwright.print.config.ts"
+      - "src/commands/scaffold.ts"
+      - "src/scaffolds/documents.ts"
+      - "src/core-src/**"
+      - "scripts/build-core.mjs"
+      - "registry/base/**"
+      - "registry/tokens/**"
+      - "registry/themes/document.css"
+      - "registry/themes/document-serif.css"
+      - "registry/core/**"
+      - "registry/patterns/document/**"
+      - "registry/primitives/callout/**"
+      - "registry/primitives/description-list/**"
+      - "registry/primitives/grid/**"
+      - "registry/primitives/image/**"
+      - "registry/primitives/key-value/**"
+      - "registry/primitives/page-break/**"
+      - "registry/primitives/signature/**"
+      - "registry/primitives/stack/**"
+      - "registry/primitives/stat/**"
+      - "registry/primitives/text/**"
+      - "registry/primitives/watermark/**"
+      - "registry/recipes/barcode/**"
+      - "registry/recipes/qr-code/**"
+      - "registry/recipes/table/**"
+      - "tests/scaffolds/document-pages.ts"
+      - "tests/visual/matrix.ts"
+      - "tests/visual/print/**"
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/print-visual.yml"
+      - ".gitignore"
+      - "package.json"
+      - "playwright.print.config.ts"
+      - "src/commands/scaffold.ts"
+      - "src/scaffolds/documents.ts"
+      - "src/core-src/**"
+      - "scripts/build-core.mjs"
+      - "registry/base/**"
+      - "registry/tokens/**"
+      - "registry/themes/document.css"
+      - "registry/themes/document-serif.css"
+      - "registry/core/**"
+      - "registry/patterns/document/**"
+      - "registry/primitives/callout/**"
+      - "registry/primitives/description-list/**"
+      - "registry/primitives/grid/**"
+      - "registry/primitives/image/**"
+      - "registry/primitives/key-value/**"
+      - "registry/primitives/page-break/**"
+      - "registry/primitives/signature/**"
+      - "registry/primitives/stack/**"
+      - "registry/primitives/stat/**"
+      - "registry/primitives/text/**"
+      - "registry/primitives/watermark/**"
+      - "registry/recipes/barcode/**"
+      - "registry/recipes/qr-code/**"
+      - "registry/recipes/table/**"
+      - "tests/scaffolds/document-pages.ts"
+      - "tests/visual/matrix.ts"
+      - "tests/visual/print/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: print-visual-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PRINT_BASELINE_KEY: print-baselines-linux-pw1.61.1-poppler-noble
+
+jobs:
+  # A main-branch push produces the authoritative Linux baseline set. A manual
+  # dispatch on a feature branch is the explicit "bless" operation for an
+  # intentional print change; its PR can then restore the exact branch cache.
+  baselines:
+    if: github.event_name != 'pull_request'
+    name: Seed print baselines
+    runs-on: ubuntu-latest
+    container: mcr.microsoft.com/playwright:v1.61.1-noble
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install dependencies and rasterizer
+        run: |
+          npm install --no-audit --no-fund
+          apt-get update
+          apt-get install -y --no-install-recommends poppler-utils
+      - name: Restore / seed print baseline cache
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: tests/visual/print/__screenshots__
+          key: ${{ env.PRINT_BASELINE_KEY }}-${{ hashFiles('package.json', 'playwright.print.config.ts', 'src/scaffolds/documents.ts', 'registry/**/*', 'tests/scaffolds/document-pages.ts', 'tests/visual/matrix.ts', 'tests/visual/print/**/*.ts') }}
+      - name: Generate baselines on cache miss
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: npm run test:visual:print:update
+
+  print-visual:
+    if: github.event_name == 'pull_request'
+    name: PDF page diff
+    runs-on: ubuntu-latest
+    container: mcr.microsoft.com/playwright:v1.61.1-noble
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install dependencies and rasterizer
+        run: |
+          npm install --no-audit --no-fund
+          apt-get update
+          apt-get install -y --no-install-recommends poppler-utils
+      - name: Restore print baselines
+        id: cache
+        uses: actions/cache/restore@v4
+        with:
+          path: tests/visual/print/__screenshots__
+          key: ${{ env.PRINT_BASELINE_KEY }}-${{ hashFiles('package.json', 'playwright.print.config.ts', 'src/scaffolds/documents.ts', 'registry/**/*', 'tests/scaffolds/document-pages.ts', 'tests/visual/matrix.ts', 'tests/visual/print/**/*.ts') }}
+          restore-keys: |
+            ${{ env.PRINT_BASELINE_KEY }}-
+      - name: Require a blessed baseline set
+        run: |
+          test -n "$(find tests/visual/print/__screenshots__ -name '*.png' -print -quit 2>/dev/null)" || {
+            echo "No print baselines found. Dispatch this workflow on the PR branch to bless the reviewed renders."
+            exit 1
+          }
+      - name: Render PDFs, rasterize pages, and diff
+        run: npm run test:visual:print
+      - name: Upload print diff report
+        if: ${{ failure() && !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: print-visual-diffs
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14

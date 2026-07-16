@@ -118,7 +118,7 @@ done in any order (or in parallel worktrees).
 | 0.6-07 | Documents: running headers/footers (`doc-header`/`doc-footer`) | ✅ |
 | 0.6-08 | `faqir scaffold invoice` + `faqir scaffold report` | ✅ |
 | 0.6-09 | Documents: `watermark` primitive + `barcode` recipe + `document-serif` theme | ⬜ |
-| 0.6-10 | Print visual regression (PDF render + image diff) | ⬜ |
+| 0.6-10 | Print visual regression (PDF render + image diff) | ✅ |
 | 0.6-11 | `faqir theme generate` — parametric oklch themes | ⬜ |
 | 0.6-12 | `@faqir-ui/vue`: codegen + runtime for primitives | ⬜ |
 | 0.6-13 | `@faqir-ui/vue`: recipe controllers, SSR safety, events | ⬜ |
@@ -1544,14 +1544,29 @@ via headless Chromium in CI, rasterize pages, image-diff against baselines. This
 print layer's equivalent of 0.4-23.
 
 **Tests**
-- The pipeline + a meta-test that all document-kind reference pages are included.
-- Deliberate margin change produces a diff failure (verified once, reverted).
-- Page-count assertions (invoice = N pages) to catch pagination regressions cheaply.
+- The pipeline + a meta-test that all document-kind reference pages are included. →
+  `tests/visual/print/matrix.test.ts` independently scans `DOCUMENT_SCAFFOLDS` and
+  every manifest `files.print_reference`, then compares that ground truth with the
+  generated print matrix.
+- Deliberate margin change produces a diff failure (verified once, reverted). →
+  `--page-margin: 15mm → 16mm` failed all three cases with 12,031–31,642 changed
+  pixels and expected/actual/diff artifacts; the token was reverted and the suite
+  passed again.
+- Page-count assertions (invoice = N pages) to catch pagination regressions cheaply. →
+  Chromium + Poppler output is locked to invoice = 2, report = 2, and document
+  pattern = 3 pages before any PNG comparison runs.
 
 **Acceptance criteria**
-- [ ] PDF diffs run in CI on PRs touching document-layer files (path-filtered for speed).
-- [ ] Header/footer repetition and page numbers locked in by baseline images.
-- [ ] Baseline update workflow documented (how to bless intentional changes).
+- [x] PDF diffs run in CI on PRs touching document-layer files (path-filtered for speed). →
+  `.github/workflows/print-visual.yml` runs the dedicated Chromium/Poppler job only
+  for document-layer, harness, and workflow paths and uploads diff/PDF artifacts on failure.
+- [x] Header/footer repetition and page numbers locked in by baseline images. → Seven
+  full-page 96-DPI PNGs use a 25-pixel maximum diff; extracted PDFs contain the
+  authored header/footer on every page plus `Page 1 / 3` through `Page 3 / 3` and
+  both scaffold `Page 1 / 2` / `Page 2 / 2` counters.
+- [x] Baseline update workflow documented (how to bless intentional changes). →
+  `tests/visual/print/README.md` documents local reproduction, artifact review,
+  explicit branch workflow dispatch, re-diff, and post-merge baseline seeding.
 
 ---
 
