@@ -24,7 +24,7 @@ async function makeClient() {
 }
 
 describe("write/verify tools — registration", () => {
-  it("registers generate, scaffold, audit, repair, and the theme stub with schemas", async () => {
+  it("registers generate, scaffold, audit, repair, and theme generation with schemas", async () => {
     const { client } = await makeClient();
     const { tools } = await client.listTools();
     const names = tools.map((t) => t.name);
@@ -225,17 +225,41 @@ describe("faqir_scaffold_page", () => {
   });
 });
 
-describe("faqir_generate_theme (stub until 0.6-11)", () => {
-  it("returns not-implemented cleanly, without erroring", async () => {
+describe("faqir_generate_theme", () => {
+  it("returns a contrast-verified web + document theme without filesystem writes", async () => {
     const { client } = await makeClient();
     const res = await client.callTool({
       name: "faqir_generate_theme",
-      arguments: { accent: "oklch(0.6 0.2 250)" },
+      arguments: {
+        name: "agent-brand",
+        accent: "oklch(0.9 0.16 85)",
+        neutral: "warm",
+        radius: "lg",
+        scheme: "both",
+        document: true,
+      },
     });
     expect(res.isError).toBeFalsy();
     const data = res.structuredContent as any;
-    expect(data.implemented).toBe(false);
-    expect(data.planned_in).toBe("0.6-11");
+    expect(data.name).toBe("agent-brand");
+    expect(data.generated.map((file: any) => file.kind)).toEqual(["theme", "document"]);
+    expect(data.generated[0].css).toContain("--palette-agent-brand-950");
+    expect(data.generated[0].manifest.name).toBe("agent-brand");
+    expect(data.generated[1].manifest.scheme).toBe("light");
+    const ratios = data.generated.flatMap((file: any) => file.contrast);
+    expect(ratios.length).toBe(24);
+    expect(ratios.every((pair: any) => pair.passes && pair.ratio >= 4.5)).toBe(true);
+    expect(ratios.some((pair: any) => pair.auto_adjusted)).toBe(true);
+  });
+
+  it("rejects an invalid accent as a clean tool error", async () => {
+    const { client } = await makeClient();
+    const res = await client.callTool({
+      name: "faqir_generate_theme",
+      arguments: { name: "bad-brand", accent: "garbage" },
+    });
+    expect(res.isError).toBe(true);
+    expect((res.content as any[])[0].text).toMatch(/Invalid accent.*oklch.*#rrggbb/s);
   });
 });
 

@@ -37,7 +37,7 @@ Read-only; each returns structured JSON validated against a declared MCP output 
 | `faqir_scaffold_page` | `{ title?, layout?, stylesheet?, sections }` | A complete, landmark-correct HTML document. `sections` is an ordered list of components (`{ component, variant?, size?, props?, slots? }`), headings (`{ heading, level? }`), or raw HTML (`{ html }`). Content is wrapped in `<main>`; recipe controllers are auto-included; the whole page is audited. |
 | `faqir_audit_html` | `{ html, skip_rules? }` | Findings JSON — `{ passed, counts, findings[] }` (rule id, severity, line, message, `fixable`). **String in, no filesystem** — a cloud agent with no disk can validate its own output. |
 | `faqir_repair_html` | `{ html, skip_rules? }` | `{ html, applied, skipped, changes[], before, after }` — deterministic auto-fixes applied to the string (missing ARIA, safe duplicate-id renames, field-group wiring) plus before/after audits. **String in, string out, no filesystem.** |
-| `faqir_generate_theme` | `{ accent?, name? }` | Parametric theme from an accent color. **Not yet implemented** (lands in task 0.6-11) — returns `{ implemented: false, planned_in }` cleanly instead of erroring. |
+| `faqir_generate_theme` | `{ accent?, name?, neutral?, radius?, scheme?, document? }` | Deterministic 11-step OKLCH theme generation. Returns contrast-verified CSS, a derived manifest, and computed ratios entirely in memory; `document: true` adds a matching print variant. |
 
 ## Resources
 

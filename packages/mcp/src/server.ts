@@ -36,6 +36,7 @@ import {
 } from "./generate";
 import { applyRepairsToSource } from "../../../src/audit/repairer";
 import { auditHtmlSource } from "../../../src/audit/checker";
+import { generateThemeBundle } from "../../../src/commands/theme-generate";
 import {
   PROTOCOL_URI,
   TOKENS_URI,
@@ -102,6 +103,19 @@ const themeEntrySchema = z
     tokens_inherited: z.array(z.string()).optional(),
   })
   .passthrough();
+
+const generatedContrastSchema = z.object({
+  theme: z.string(),
+  scheme: z.enum(["light", "dark"]),
+  foreground: z.string(),
+  background: z.string(),
+  foreground_value: z.string(),
+  background_value: z.string(),
+  ratio: z.number(),
+  threshold: z.number(),
+  passes: z.boolean(),
+  auto_adjusted: z.boolean(),
+});
 
 // ── Audit / repair schema fragments ────────────────────────────────────────
 const severitySchema = z.enum(["critical", "error", "warning", "info"]);
@@ -481,34 +495,77 @@ export function createFaqirMcpServer(options: FaqirMcpServerOptions = {}): McpSe
     }
   );
 
-  // ── faqir_generate_theme (stub until 0.6-11) ─────────────────────────────
+  // ── faqir_generate_theme ─────────────────────────────────────────────────
   server.registerTool(
     "faqir_generate_theme",
     {
-      title: "Generate a theme (not yet implemented)",
+      title: "Generate a contrast-verified theme",
       description:
-        "Generate a parametric theme from an accent color. Not yet implemented — " +
-        "parametric theme generation lands in task 0.6-11. Returns cleanly with " +
-        "`implemented: false` rather than erroring; use `faqir_theme_info` to browse " +
-        "the ready-made registry themes in the meantime.",
+        "Generate a deterministic 11-step OKLCH theme from one accent color. Returns " +
+        "the CSS, derived manifest, and audited contrast ratios entirely in memory. " +
+        "Optionally includes a matching print/document variant.",
       inputSchema: {
-        accent: z.string().optional().describe("Accent color (oklch/hex) to derive the theme from."),
-        name: z.string().optional().describe("Name for the generated theme."),
+        accent: z
+          .string()
+          .default("oklch(0.55 0.2 250)")
+          .describe("Opaque oklch(), #rgb, or #rrggbb accent color."),
+        name: z
+          .string()
+          .regex(/^[a-z][a-z0-9-]*$/)
+          .default("generated-theme")
+          .describe("Lowercase kebab-case theme name."),
+        neutral: z.enum(["cool", "warm", "gray"]).default("cool"),
+        radius: z.enum(["sm", "md", "lg"]).default("md"),
+        scheme: z.enum(["light", "dark", "both"]).default("both"),
+        document: z.boolean().default(false),
       },
       outputSchema: {
-        implemented: z.boolean(),
-        planned_in: z.string(),
-        message: z.string(),
+        name: z.string(),
+        accent: z.object({
+          input: z.string(),
+          oklch: z.string(),
+          lightness: z.number(),
+          chroma: z.number(),
+          hue: z.number(),
+        }),
+        neutral: z.enum(["cool", "warm", "gray"]),
+        radius: z.enum(["sm", "md", "lg"]),
+        scheme: z.enum(["light", "dark", "both"]),
+        document: z.boolean(),
+        generated: z.array(z.object({
+          kind: z.enum(["theme", "document"]),
+          name: z.string(),
+          css: z.string(),
+          manifest: themeEntrySchema,
+          contrast: z.array(generatedContrastSchema),
+        })),
       },
     },
-    async () =>
-      ok({
-        implemented: false,
-        planned_in: "0.6-11",
-        message:
-          "Parametric theme generation is not implemented yet (planned for task 0.6-11). " +
-          "Use faqir_theme_info to browse the built-in registry themes.",
-      })
+    async ({ accent, name, neutral, radius, scheme, document }) => {
+      try {
+        const generated = generateThemeBundle(
+          { accent, name, neutral, radius, scheme, document },
+          [readTokenReference(registryPath)],
+        );
+        return ok({
+          name: generated.name,
+          accent: generated.accent,
+          neutral: generated.neutral,
+          radius: generated.radius,
+          scheme: generated.scheme,
+          document: generated.document,
+          generated: generated.generated.map((file) => ({
+            kind: file.kind,
+            name: file.name,
+            css: file.css,
+            manifest: file.manifest,
+            contrast: file.contrast,
+          })),
+        });
+      } catch (error) {
+        return fail(error instanceof Error ? error.message : String(error));
+      }
+    }
   );
 
   // ── Resources: protocol spec, token reference, manifests ──────────────────
