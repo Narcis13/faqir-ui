@@ -1529,9 +1529,9 @@ coverage + manifest + preview.
 - document-serif: theme coverage matrix + manifest consistency green.
 
 **Acceptance criteria**
-- [ ] Barcode scannable in practice (verified once with a phone/scanner app; noted in commit).
-- [ ] Watermark works under both screen and print media.
-- [ ] The `docs/for_craft.md` wishlist is now fully closed — state it in the commit.
+- [x] Barcode scannable in practice (verified once with a phone/scanner app; noted in commit).
+- [x] Watermark works under both screen and print media.
+- [x] The `docs/for_craft.md` wishlist is now fully closed — state it in the commit.
 
 ---
 
