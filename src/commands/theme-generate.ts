@@ -87,6 +87,8 @@ interface AccentStep {
 
 interface PrimarySelection {
   index: number;
+  hoverIndex: number;
+  activeIndex: number;
   primary: string;
   hover: string;
   active: string;
@@ -182,6 +184,8 @@ function pickPrimary(
     const activeIndex = clamp(index + direction * 2, 0, ramp.length - 1);
     return {
       index,
+      hoverIndex,
+      activeIndex,
       primary: ramp[index].css,
       hover: ramp[hoverIndex].css,
       active: ramp[activeIndex].css,
@@ -200,11 +204,12 @@ function pickPrimary(
 type Declaration = readonly [name: string, value: string];
 
 function lightDeclarations(
+  name: string,
   neutral: ThemeNeutral,
   ramp: AccentStep[],
   primary: PrimarySelection,
 ): Declaration[] {
-  const brand = (index: number) => ramp[index].css;
+  const brand = (index: number) => `var(--palette-${name}-${ramp[index].step})`;
   return [
     ["color-bg", neutralColor(neutral, 0.995, 0.1)],
     ["color-bg-subtle", neutralColor(neutral, 0.975, 0.25)],
@@ -212,9 +217,9 @@ function lightDeclarations(
     ["color-fg", neutralColor(neutral, 0.14)],
     ["color-fg-muted", neutralColor(neutral, 0.4)],
     ["color-fg-subtle", neutralColor(neutral, 0.53)],
-    ["color-primary", primary.primary],
-    ["color-primary-hover", primary.hover],
-    ["color-primary-active", primary.active],
+    ["color-primary", brand(primary.index)],
+    ["color-primary-hover", brand(primary.hoverIndex)],
+    ["color-primary-active", brand(primary.activeIndex)],
     ["color-primary-fg", primary.foreground],
     ["color-primary-subtle", brand(0)],
     ["color-secondary", neutralColor(neutral, 0.94, 0.4)],
@@ -242,11 +247,12 @@ function lightDeclarations(
 }
 
 function darkDeclarations(
+  name: string,
   neutral: ThemeNeutral,
   ramp: AccentStep[],
   primary: PrimarySelection,
 ): Declaration[] {
-  const brand = (index: number) => ramp[index].css;
+  const brand = (index: number) => `var(--palette-${name}-${ramp[index].step})`;
   return [
     ["color-bg", neutralColor(neutral, 0.13)],
     ["color-bg-subtle", neutralColor(neutral, 0.18)],
@@ -254,9 +260,9 @@ function darkDeclarations(
     ["color-fg", neutralColor(neutral, 0.97, 0.25)],
     ["color-fg-muted", neutralColor(neutral, 0.74, 0.7)],
     ["color-fg-subtle", neutralColor(neutral, 0.64, 0.8)],
-    ["color-primary", primary.primary],
-    ["color-primary-hover", primary.hover],
-    ["color-primary-active", primary.active],
+    ["color-primary", brand(primary.index)],
+    ["color-primary-hover", brand(primary.hoverIndex)],
+    ["color-primary-active", brand(primary.activeIndex)],
     ["color-primary-fg", primary.foreground],
     ["color-primary-subtle", oklch(ramp[5].color, 0.16)],
     ["color-secondary", neutralColor(neutral, 0.27)],
@@ -284,16 +290,17 @@ function darkDeclarations(
 }
 
 function documentDeclarations(
+  name: string,
   neutral: ThemeNeutral,
   ramp: AccentStep[],
   primary: PrimarySelection,
 ): Declaration[] {
-  const base = lightDeclarations(neutral, ramp, primary).map(([name, value]) => {
-    if (name === "color-bg") return [name, "white"] as const;
-    if (name === "color-bg-subtle") return [name, neutralColor(neutral, 0.97, 0.2)] as const;
-    if (name === "color-bg-muted") return [name, neutralColor(neutral, 0.94, 0.35)] as const;
-    if (name.startsWith("shadow-")) return [name, "none"] as const;
-    return [name, value] as const;
+  const base = lightDeclarations(name, neutral, ramp, primary).map(([token, value]) => {
+    if (token === "color-bg") return [token, "white"] as const;
+    if (token === "color-bg-subtle") return [token, neutralColor(neutral, 0.97, 0.2)] as const;
+    if (token === "color-bg-muted") return [token, neutralColor(neutral, 0.94, 0.35)] as const;
+    if (token.startsWith("shadow-")) return [token, "none"] as const;
+    return [token, value] as const;
   });
   return base;
 }
@@ -560,8 +567,8 @@ export function generateThemeBundle(
   const darkForeground = neutralColor(input.neutral, 0.13);
   const lightPrimary = pickPrimary(ramp, "light", darkForeground);
   const darkPrimary = pickPrimary(ramp, "dark", darkForeground);
-  const light = lightDeclarations(input.neutral, ramp, lightPrimary);
-  const dark = darkDeclarations(input.neutral, ramp, darkPrimary);
+  const light = lightDeclarations(input.name, input.neutral, ramp, lightPrimary);
+  const dark = darkDeclarations(input.name, input.neutral, ramp, darkPrimary);
   const baseCss = baseCssSources.join("\n");
   const surface = surfaceTokens(baseCssSources);
   const css = renderThemeCss(input, ramp, light, dark);
@@ -591,7 +598,7 @@ export function generateThemeBundle(
       input.name,
       input.accent,
       ramp,
-      documentDeclarations(input.neutral, ramp, lightPrimary),
+      documentDeclarations(input.name, input.neutral, ramp, lightPrimary),
     );
     const documentManifest = manifestFor(
       documentName,

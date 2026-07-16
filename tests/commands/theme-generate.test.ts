@@ -95,6 +95,7 @@ describe("theme generate · pure deterministic generator", () => {
     expect(file.css).toContain("--color-primary-hover");
     expect(file.css).toContain("--color-primary-active");
     expect(file.css).toContain("--color-primary-subtle");
+    expect(file.css).toMatch(/--color-primary\s*: var\(--palette-sample-brand-\d+\);/);
   });
 
   const HUE_SAMPLES = [
