@@ -120,7 +120,7 @@ done in any order (or in parallel worktrees).
 | 0.6-09 | Documents: `watermark` primitive + `barcode` recipe + `document-serif` theme | ⬜ |
 | 0.6-10 | Print visual regression (PDF render + image diff) | ✅ |
 | 0.6-11 | `faqir theme generate` — parametric oklch themes | ✅ |
-| 0.6-12 | `@faqir-ui/vue`: codegen + runtime for primitives | ⬜ |
+| 0.6-12 | `@faqir-ui/vue`: codegen + runtime for primitives | ✅ |
 | 0.6-13 | `@faqir-ui/vue`: recipe controllers, SSR safety, events | ⬜ |
 | 0.6-14 | Patterns: `wizard` + `form-page` | ⬜ |
 
@@ -1621,9 +1621,26 @@ owns reactivity. Package ships no CSS.
 - Manifest-drift guard: regenerating in CI produces zero diff (bindings can't drift — the §11.1 promise, made literal).
 
 **Acceptance criteria**
-- [ ] All primitives generated with typed props (unions from manifests).
-- [ ] Zero hand-written per-component code; runtime ≤ ~150 lines (report count).
-- [ ] CI regeneration-drift check wired.
+- [x] All primitives generated with typed props (unions from manifests). (All **39** registry primitives → `packages/vue/src/components/*.ts`, each exporting per-group literal-union types (`LButtonVariant`, `LIconIcon` with its 120 names, …) + a `Props` interface; a data-driven test asserts every primitive in the registry has a generated module, and a negative vue-tsc fixture proves a wrong literal fails to compile.)
+- [x] Zero hand-written per-component code; runtime ≤ ~150 lines (report count). (**`runtime.ts` = 128 lines** — the only hand-written file in the package; every `components/*.ts` is AUTO-GENERATED spec-only code, guarded by a test that rejects any `defineComponent`/`h` import in generated modules.)
+- [x] CI regeneration-drift check wired. (`faqir bindings vue --check` → `bun run check:bindings` step in the registry-audit CI job, plus an always-on bun-test drift guard: committed files must byte-match a fresh regeneration, with stale-file detection; exercised for in-sync/drifted/stale exit codes.)
+
+**Delivered** — new `faqir bindings <target>` command (`src/commands/bindings.ts`) over a
+target-agnostic manifest→IR walker (`src/bindings/ir.ts`, the single manifest-walking
+logic 0.7-01's React target will reuse) and a Vue emitter (`src/bindings/vue.ts`).
+Generation contract (documented in the IR header + package README): variant groups →
+literal-union props named from the attr (`data-style` → `styleVariant` for reserved
+names), root-applied states → boolean props (value/presence/aria kinds; part-applied
+states like stepper's `active` stay slot territory; default states skipped), manifest
+slots → named Vue slots in `<tag_hint data-part>` wrappers (void hints render caller
+content as-is), void roots render no children, `inline`/`text`/`block` models get a
+default slot. Package ships no CSS, uses no faqir-core directives. Tests: 29 new
+(40 codegen snapshots; data-driven @vue/test-utils matrix over every variant value and
+state prop of all 39 primitives; slot projection incl. required/optional/void; vue-tsc
+positive + negative compile), plus the `--json` meta-test auto-covers the new command.
+Dev-only workspace deps added to `packages/vue`: `vue` 3.5, `@vue/test-utils`, `vue-tsc`
+(`vue` is a peerDependency for consumers; CLI runtime stays zero-dependency). Node dist
+CLI verified: `node dist/faqir.mjs bindings vue --check` green.
 
 ---
 

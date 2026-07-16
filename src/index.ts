@@ -38,6 +38,7 @@ const HELP_CATEGORIES = [
       ["theme", "Manage or generate contrast-verified themes"],
       ["variant", "Add or remove component variants"],
       ["scaffold", "Generate full page templates"],
+      ["bindings", "Generate framework bindings from manifests (vue)"],
     ],
   },
   {

@@ -1,8 +1,8 @@
 {
   "$schema": "./state.schema.md",
   "plan": "FAQIR-PLAN.md",
-  "current": "0.6-04",
-  "last_completed": "0.6-07",
+  "current": null,
+  "last_completed": "0.6-12",
   "history": [
     {
       "id": "phases v0.3–v0.5",
@@ -45,6 +45,12 @@
       "completed": "2026-07-15",
       "commit": "43ab335",
       "summary": "Added canonical document header/footer parts with native running-element margin boxes, Chromium fixed-position fallbacks, CSS page counters, tokenized print geometry, a three-page audit-clean reference, renderer support metadata, and regression coverage. The full 1928-test suite, typecheck, registry audit, generated checks, and targeted visual snapshot are green."
+    },
+    {
+      "id": "0.6-12",
+      "completed": "2026-07-16",
+      "commit": "f152251",
+      "summary": "User-requested out-of-order task: new `faqir bindings vue` command (target-agnostic manifest→IR walker + Vue emitter) generating all 39 primitives as typed Vue 3 components over a 128-line hand-written runtime; typed literal-union props, data-part slot projection, boolean state props; drift guard in bun test + CI check:bindings. Full 2014-test suite green. NOTE: state.current was 0.6-04 (started, unfinished in a prior session) when this session began — 0.6-04 remains ⬜ and is the next pending task in document order."
     }
   ],
   "note": "Pointer file for the /faqir-plan slash command. FAQIR-PLAN.md status cells (⬜/✅) are the source of truth; this file records the cross-session cursor and a per-task log. Do not hand-edit `current` while a session is running."

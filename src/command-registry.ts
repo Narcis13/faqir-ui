@@ -24,6 +24,7 @@ import { variant } from "./commands/variant";
 import { scaffold } from "./commands/scaffold";
 import { bundle } from "./commands/bundle";
 import { dev } from "./commands/dev";
+import { bindings } from "./commands/bindings";
 
 export const COMMANDS: Record<string, (args: string[]) => Promise<void>> = {
   init,
@@ -47,6 +48,7 @@ export const COMMANDS: Record<string, (args: string[]) => Promise<void>> = {
   scaffold,
   bundle,
   dev,
+  bindings,
 };
 
 /** Names of every registered command, in registration order. */
