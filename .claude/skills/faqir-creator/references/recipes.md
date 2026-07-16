@@ -2,7 +2,7 @@
 
 # Faqir Recipes Reference
 
-21 recipes, each with its anatomy tree, variant table, and safe/unsafe transforms — all derived from the component manifest.
+22 recipes, each with its anatomy tree, variant table, and safe/unsafe transforms — all derived from the component manifest.
 
 ## accordion
 
@@ -104,6 +104,34 @@ Interruptive confirmation dialog (role=alertdialog) for destructive or irreversi
 - **Unsafe (never do):** `remove-focus-trap`, `change-panel-role`, `remove-aria-modal`, `remove-aria-labelledby`, `remove-aria-describedby`, `remove-confirm-action`, `enable-overlay-dismiss`, `remove-overlay`
 - **A11y:** role=alertdialog · aria-modal · focus-trap · escape-closes · return-focus→trigger · keys: Escape, Tab, Shift+Tab
 - **Required ARIA:** `role="alertdialog" on panel`; `aria-modal="true" on panel`; `aria-labelledby pointing to title id`; `aria-describedby pointing to description id`
+
+## barcode
+
+_kind: recipe · category: data-display · controller: createBarcode()_
+
+Print-safe Code 128-B barcode generator for printable ASCII identifiers
+
+```html
+<div data-ui="barcode" data-value="{value}" data-size="{size}" role="img" aria-label="Barcode: {value}"></div>
+```
+
+**Anatomy**
+
+```text
+[data-ui='barcode']  ·  <div> · content: slots
+├─ [data-part='svg']  <svg>  optional  — Generated Code 128 SVG created by the controller
+└─ [data-part='caption']  <span>  optional  — Optional human-readable value below the bars
+```
+
+**Variants**
+
+| Variant | Values | Default | Attribute | Applied to |
+|---------|--------|---------|-----------|------------|
+| size | `sm`, `md`, `lg` | `md` | `data-size` | root |
+
+- **Safe transforms:** `change-value`, `change-size`, `add-caption`, `remove-caption`
+- **Unsafe (never do):** `remove-aria-label`, `remove-role`, `encode-non-printable-or-non-ascii-input`
+- **Required ARIA:** `role="img" on the container`; `aria-label describing the encoded value`
 
 ## calendar
 

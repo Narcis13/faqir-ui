@@ -2,7 +2,7 @@
 
 # Faqir Primitives Reference
 
-38 primitives, each with its anatomy tree, variant table, and safe/unsafe transforms — all derived from the component manifest.
+39 primitives, each with its anatomy tree, variant table, and safe/unsafe transforms — all derived from the component manifest.
 
 ## aspect-ratio
 
@@ -1119,3 +1119,35 @@ Two-state toggle button whose pressed appearance is driven entirely by aria-pres
 - **Unsafe (never do):** `remove-aria-pressed`, `change-tag-from-button`, `remove-type-button`
 - **A11y:** keys: Enter/Space
 - **Required ARIA:** `type="button" on root`
+
+## watermark
+
+_kind: primitive · category: data-display_
+
+Non-interactive diagonal text overlay with single or repeated print-safe layouts
+
+```html
+<div data-ui="watermark" data-pattern="single" data-size="md" aria-hidden="true">
+  <span data-part="mark" data-text="{text}"></span>
+</div>
+```
+
+**Anatomy**
+
+```text
+[data-ui='watermark']  ·  <div> · content: slots
+└─ [data-part='mark']  <span>  required  — Decorative mark whose data-text value is rendered through CSS; repeat nine times for the repeated pattern
+```
+
+**Variants**
+
+| Variant | Values | Default | Attribute | Applied to |
+|---------|--------|---------|-----------|------------|
+| position | `fixed`, `absolute` | `fixed` | `data-variant` | root |
+| pattern | `single`, `repeated` | `single` | `data-pattern` | root |
+| size | `sm`, `md`, `lg` | `md` | `data-size` | root |
+| orientation | `diagonal`, `horizontal` | `diagonal` | `data-orientation` | root |
+
+- **Safe transforms:** `change-mark-text`, `change-position`, `change-pattern`, `change-size`, `change-orientation`
+- **Unsafe (never do):** `remove-aria-hidden`, `enable-pointer-events`, `remove-data-text-from-mark`, `remove-all-mark-parts`
+- **Required ARIA:** `aria-hidden="true" because watermark text is decorative and repeated`

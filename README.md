@@ -169,9 +169,9 @@ No specificity wars. No naming conventions to memorize. The selector **is** the 
 
 ## Component Library
 
-Faqir ships 53 components across three layers, from simple CSS-only primitives to full interactive recipes and page-level patterns.
+Faqir ships 68 components across three layers, from simple CSS-only primitives to full interactive recipes and page-level patterns.
 
-### Primitives (31 components) — CSS Only
+### Primitives (39 components) — CSS Only
 
 Pure CSS components. No JavaScript required. Drop in the HTML and it works.
 
@@ -208,10 +208,18 @@ Pure CSS components. No JavaScript required. Drop in the HTML and it works.
 | `signature` | Signing line for documents | sm/md/lg + left/center/right alignment |
 | `stat` | Metric display with trend | default, card + up/down/neutral trend |
 | `icon` | CSS-mask icon (120 Lucide glyphs) | any of 120 `data-icon` names; inherits `currentColor`, sizes with `font-size` |
+| `skeleton` | Loading placeholder | text, circle, rect |
+| `chip` | Compact label with optional dismissal | default, primary, success, warning, destructive |
+| `link` | Styled anchor | default, external, muted |
+| `breadcrumb` | Hierarchical navigation trail | sm/md/lg sizes |
+| `toggle` | Native two-state button | pressed state + sm/md/lg sizes |
+| `collapsible` | Native disclosure container | default, bordered |
+| `aspect-ratio` | Media ratio wrapper | square, 16:9, 4:3, 3:2, 21:9, portrait |
+| `watermark` | Non-interactive document overlay | fixed/absolute + single/repeated + diagonal/horizontal |
 
 > **Icons** render from CSS alone — each glyph is a data-URI SVG applied as a `mask-image` on a `background-color: currentColor` box, so they inherit text color and size with `font-size` (`1em`). No icon fonts, no runtime SVG fetch, zero JavaScript. The full 120-glyph `icons.css` is **44.76 KB raw / 6.26 KB gzip**; `faqir add icons --only check,x,chevron-down` trims it to just the icons a project uses (e.g. 5 common glyphs → **≈1.84 KB**). Re-running `--only` with more names merges rather than clobbers, and the `icon-name` audit rule flags any unknown `data-icon` value with a nearest-match "did you mean …" hint. Glyphs are the MIT/ISC-licensed [Lucide](https://lucide.dev) set — attribution ships in `icon/LICENSE.lucide`. Usage: `<span data-ui="icon" data-icon="check" aria-hidden="true"></span>` (decorative) or add `role="img"` + `aria-label` when meaningful.
 
-### Recipes (16 components) — CSS + JavaScript
+### Recipes (22 components) — CSS + JavaScript
 
 Interactive components with JavaScript controllers. Auto-initialize when `faqir-core.js` is loaded.
 
@@ -233,6 +241,12 @@ Interactive components with JavaScript controllers. Auto-initialize when `faqir-
 | `toast` | Notification messages | Auto-dismiss, stacking |
 | `date-picker` | Calendar date selection | Month navigation, range selection |
 | `qr-code` | SVG QR code generator | sm/md/lg sizes, error correction levels (L/M/Q/H) |
+| `alert-dialog` | Destructive action confirmation | Focus trap, escape-to-close, return focus |
+| `slider` | Range input with custom track/thumb | Keyboard control, orientation, value updates |
+| `sidebar` | Responsive application navigation | Collapsible groups, mobile state |
+| `input-otp` | One-time-code input group | Focus movement, paste distribution, masking |
+| `calendar` | Standalone date grid | Month navigation, single/range selection |
+| `barcode` | SVG Code 128-B generator | Printable ASCII, modulo-103 checksum, print-safe quiet zones |
 
 ### Patterns (7 compositions) — No Custom JS
 
@@ -406,7 +420,7 @@ Optional overrides for fine-tuning individual components:
 
 ## Theme System
 
-Themes override Layer 2 semantic tokens. Four built-in themes ship with Faqir:
+Themes override Layer 2 semantic tokens. Nine built-in themes ship with Faqir:
 
 | Theme | Description |
 |-------|-------------|
@@ -415,6 +429,10 @@ Themes override Layer 2 semantic tokens. Four built-in themes ship with Faqir:
 | `paper` | Warm cream backgrounds, earthy brown accents. Overrides document tokens for warmth |
 | `brutalist` | Black and white. No shadows. No border radius |
 | `document` | Clean, professional, PDF-optimized. No shadows, no radius, pt-based sizes |
+| `document-serif` | Formal contracts/legal theme with serif typography and print-safe oxblood accents |
+| `aurora` | Vibrant modern gradients for SaaS interfaces |
+| `slate` | Conservative cool-gray enterprise surfaces |
+| `contrast` | WCAG AAA-oriented high-contrast neutral theme |
 
 ### Using Themes
 

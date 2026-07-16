@@ -65,8 +65,8 @@ describe("recipe auto-init from built faqir-core.js", () => {
     expect(Faqir.version).toMatch(/^\d+\.\d+\.\d+$/);
   });
 
-  test("exactly 21 recipe controllers are present", () => {
-    expect(RECIPES.length).toBe(21);
+  test("exactly 22 recipe controllers are present", () => {
+    expect(RECIPES.length).toBe(22);
   });
 
   // One smoke test per recipe: canonical markup in → controller attached.
@@ -84,6 +84,19 @@ describe("recipe auto-init from built faqir-core.js", () => {
       if (prop) expect((el as any)[prop]).toBeDefined();
     });
   }
+});
+
+describe("barcode auto-init (built core)", () => {
+  test('data-ui="barcode" initializes and renders Code 128 bars from the built core', () => {
+    document.body.innerHTML = `<div data-ui="barcode" data-value="INV-0042" role="img" aria-label="Barcode"></div>`;
+    Faqir.start();
+
+    const el = document.querySelector('[data-ui="barcode"]')!;
+    expect(controllerAttached(el)).toBe(true);
+    expect((el as any)._faqirBarcode).toBeDefined();
+    expect(el.getAttribute("data-state")).toBe("ready");
+    expect(el.querySelector("[data-part='svg'] path")).not.toBeNull();
+  });
 });
 
 describe("qr-code auto-init (built core)", () => {

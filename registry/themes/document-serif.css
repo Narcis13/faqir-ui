@@ -1,0 +1,99 @@
+/* @ui:theme document-serif — formal serif theme for contracts, deeds, and legal documents */
+/* @ui:schemes light — legal documents remain light for deterministic print output. */
+
+:root {
+  /* Paper and ink */
+  --color-bg:               white;
+  --color-bg-subtle:        oklch(0.97 0.006 75);
+  --color-bg-muted:         oklch(0.93 0.010 75);
+  --color-fg:               oklch(0.15 0.012 55);
+  --color-fg-muted:         oklch(0.37 0.018 55);
+  --color-fg-subtle:        oklch(0.52 0.018 55);
+
+  /* Formal oxblood accent */
+  --color-primary:          oklch(0.32 0.10 25);
+  --color-primary-hover:    oklch(0.27 0.11 25);
+  --color-primary-active:   oklch(0.22 0.10 25);
+  --color-primary-fg:       white;
+  --color-primary-subtle:   oklch(0.95 0.025 25);
+
+  /* Neutral controls */
+  --color-secondary:        oklch(0.92 0.010 75);
+  --color-secondary-hover:  oklch(0.87 0.014 75);
+  --color-secondary-fg:     oklch(0.18 0.012 55);
+
+  /* Destructive and feedback colors stay distinct in print */
+  --color-destructive:        oklch(0.40 0.16 25);
+  --color-destructive-hover:  oklch(0.34 0.17 25);
+  --color-destructive-fg:     white;
+  --color-destructive-subtle: oklch(0.95 0.035 25);
+  --color-success:             oklch(0.40 0.10 145);
+  --color-success-subtle:      oklch(0.95 0.025 145);
+  --color-warning:             oklch(0.48 0.11 75);
+  --color-warning-subtle:      oklch(0.95 0.030 75);
+  --color-info:                oklch(0.38 0.08 245);
+  --color-info-subtle:         oklch(0.95 0.020 245);
+
+  /* Rules and focus */
+  --color-border:           oklch(0.72 0.015 65);
+  --color-border-strong:    oklch(0.40 0.020 55);
+  --color-ring:             oklch(0.32 0.10 25 / 0.45);
+
+  /* Flat, formal surfaces */
+  --shadow-xs:              none;
+  --shadow-sm:              none;
+  --shadow-md:              none;
+  --shadow-lg:              none;
+  --shadow-xl:              none;
+  --radius-sm:              0;
+  --radius-md:              0;
+  --radius-lg:              0;
+  --radius-xl:              0;
+  --radius-2xl:             0;
+  --radius-full:            0;
+  --card-radius:            0;
+  --card-shadow:            none;
+  --card-border:            var(--color-border-strong);
+  --button-radius:          0;
+  --input-radius:           0;
+  --badge-radius:           0;
+
+  /* Legal-document typography */
+  --font-serif:             'Georgia', 'Times New Roman', serif;
+  --font-sans:              'Arial', 'Helvetica Neue', sans-serif;
+  --font-mono:              'Courier New', ui-monospace, monospace;
+  --doc-font:               'Georgia', 'Times New Roman', var(--font-serif);
+  --doc-font-size:          11pt;
+  --doc-line-height:        1.55;
+  --doc-heading-font:       'Times New Roman', 'Georgia', var(--font-serif);
+  --doc-heading-weight:     var(--weight-bold);
+  --doc-heading-size:       16pt;
+  --doc-subheading-size:    13pt;
+  --doc-legal-size:         8.5pt;
+  --doc-legal-color:        var(--color-fg-muted);
+  --doc-section-gap:        var(--space-8);
+  --doc-component-gap:      var(--space-4);
+  --doc-table-font-size:    9pt;
+  --doc-table-header-bg:    var(--color-bg-muted);
+  --doc-table-header-fg:    var(--color-fg);
+  --doc-table-border:       var(--color-border-strong);
+  --doc-table-footer-bg:    var(--color-bg-muted);
+  --doc-table-stripe-bg:    var(--color-bg-subtle);
+  --doc-signature-line-color: var(--color-border-strong);
+  --doc-max-width:          210mm;
+  --doc-bg:                 white;
+  --doc-fg:                 oklch(0.10 0.008 55);
+  --doc-print-border-color: oklch(0.42 0.015 55);
+}
+
+@media print {
+  :root {
+    --color-bg:             white;
+    --color-fg:             black;
+    --color-fg-muted:       oklch(0.30 0.012 55);
+    --color-border:         oklch(0.58 0.012 55);
+    --color-border-strong:  oklch(0.28 0.012 55);
+    --color-primary:        oklch(0.24 0.07 25);
+    --color-destructive:    oklch(0.28 0.12 25);
+  }
+}

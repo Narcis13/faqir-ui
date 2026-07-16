@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Faqir UI — document-serif theme preview</title>
+
+  <link rel="stylesheet" href="../tokens/palette.css">
+  <link rel="stylesheet" href="../tokens/spacing.css">
+  <link rel="stylesheet" href="../tokens/typography.css">
+  <link rel="stylesheet" href="../tokens/effects.css">
+  <link rel="stylesheet" href="../tokens/motion.css">
+  <link rel="stylesheet" href="../tokens/semantic.css">
+  <link rel="stylesheet" href="../tokens/aliases.css">
+  <link rel="stylesheet" href="../tokens/document.css">
+  <link rel="stylesheet" href="../tokens/doc-aliases.css">
+  <link rel="stylesheet" href="../base/reset.css">
+  <link rel="stylesheet" href="document-serif.css">
+
+  <link rel="stylesheet" href="../patterns/document/document.css">
+  <link rel="stylesheet" href="../primitives/key-value/key-value.css">
+  <link rel="stylesheet" href="../primitives/separator/separator.css">
+  <link rel="stylesheet" href="../primitives/signature/signature.css">
+  <link rel="stylesheet" href="../primitives/watermark/watermark.css">
+  <link rel="stylesheet" href="../recipes/barcode/barcode.css">
+  <script src="../core/faqir-core.js" defer></script>
+
+  <style>
+    body { margin: 0; background: var(--color-bg-muted); color: var(--color-fg); }
+    [data-part="contract-title"] { text-align: center; text-transform: uppercase; letter-spacing: 0.08em; }
+    [data-part="contract-meta"] { text-align: center; color: var(--color-fg-muted); }
+    [data-part="clause"] { margin: 0; }
+    [data-part="signature-grid"] { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-12); margin-block-start: var(--space-12); }
+  </style>
+</head>
+<body>
+  <article data-ui="document" data-format="a4" aria-label="Mutual confidentiality agreement preview">
+    <div data-ui="watermark" data-variant="absolute" data-pattern="single" data-size="lg" aria-hidden="true">
+      <span data-part="mark" data-text="Draft"></span>
+    </div>
+
+    <header data-part="doc-header">
+      <h1 data-part="contract-title">Mutual Confidentiality Agreement</h1>
+      <p data-part="contract-meta">Effective 16 July 2026 · Agreement no. NDA-2026-0716</p>
+    </header>
+
+    <div data-part="body">
+      <p>This Agreement is entered into by and between the parties identified below for the limited purpose of evaluating a prospective commercial relationship.</p>
+
+      <dl data-ui="key-value" data-cols="2" data-size="sm">
+        <dt data-part="label">Disclosing Party</dt>
+        <dd data-part="value">Northbridge Holdings S.A.</dd>
+        <dt data-part="label">Receiving Party</dt>
+        <dd data-part="value">Example Legal Services S.R.L.</dd>
+        <dt data-part="label">Governing Law</dt>
+        <dd data-part="value">Romania</dd>
+        <dt data-part="label">Term</dt>
+        <dd data-part="value">Five years</dd>
+      </dl>
+
+      <div data-ui="separator"></div>
+
+      <section>
+        <h2>1. Definition of Confidential Information</h2>
+        <p data-part="clause">“Confidential Information” means all non-public commercial, technical, financial, and legal information disclosed in written, oral, electronic, or other form.</p>
+      </section>
+
+      <section>
+        <h2>2. Duty of Confidence</h2>
+        <p data-part="clause">The Receiving Party shall use reasonable safeguards, disclose information only to authorised representatives, and use it solely for the stated purpose.</p>
+      </section>
+
+      <section>
+        <h2>3. Entire Agreement</h2>
+        <p data-part="clause">This instrument constitutes the entire agreement concerning its subject matter and may be amended only by a writing signed by both parties.</p>
+      </section>
+
+      <div data-part="signature-grid">
+        <div data-ui="signature" role="img" aria-label="Signature: Disclosing Party">
+          <div data-part="line"></div>
+          <span data-part="label">Disclosing Party</span>
+        </div>
+        <div data-ui="signature" role="img" aria-label="Signature: Receiving Party">
+          <div data-part="line"></div>
+          <span data-part="label">Receiving Party</span>
+        </div>
+      </div>
+    </div>
+
+    <footer data-part="doc-footer">
+      <div data-ui="barcode" data-value="NDA-2026-0716" data-size="sm" role="img" aria-label="Barcode: agreement NDA-2026-0716">
+        <span data-part="caption">NDA-2026-0716</span>
+      </div>
+    </footer>
+  </article>
+</body>
+</html>

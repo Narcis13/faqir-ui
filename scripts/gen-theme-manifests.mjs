@@ -85,6 +85,13 @@ const SEED = {
     dark_mode: "none",
     pairs_with: ["paper"],
   },
+  "document-serif": {
+    version: "1.0.0",
+    mood: ["print", "legal", "formal", "serif", "traditional"],
+    scheme: "light",
+    dark_mode: "none",
+    pairs_with: ["document", "paper"],
+  },
 };
 
 // Base token surface — every base stylesheet minus raw palette primitives.

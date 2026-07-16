@@ -58,20 +58,23 @@ Faqir UI recently added `api-source.js` (`registry/core/api-source.js`) — a th
 
 | Craft Component | Faqir Equivalent | Gap | Priority |
 |---|---|---|---|
-| `image` (reportcraft) | `avatar` (partial) | No general image primitive | **CRITICAL** |
-| `key-value` (reportcraft) | None | No labeled data pair component | **CRITICAL** |
-| `page-break` (reportcraft) | None | No print page break | **CRITICAL** |
-| `table` with totals/footer (reportcraft) | `table` recipe (basic) | Missing footer rows, colspan, cell alignment, auto-calculations | **CRITICAL** |
-| `signature-block` (reportcraft) | None | No signature line primitive | **HIGH** |
-| `field-group` (forma React) | None | No label+input+error wrapper | **HIGH** |
-| `alert` / `callout` | None | No info/warning/legal callout | **HIGH** |
-| `document-surface` (print container) | `surface` (screen only) | No @page rules, print margins, A4 format | **HIGH** |
-| `company-block` (Romanian) | `card` (generic) | No dedicated business info layout | MEDIUM |
-| `document-meta` (Romanian) | None | No centered document header | MEDIUM |
-| `totals-block` (financial) | None | No summary/totals component | MEDIUM |
-| `qr-code` | None | No QR generation | MEDIUM |
-| `barcode` | None | No barcode generation | LOW |
-| `watermark` | None | No overlay text/image | LOW |
+| `image` (reportcraft) | `image` primitive | Closed | **COMPLETE** |
+| `key-value` (reportcraft) | `key-value` primitive | Closed | **COMPLETE** |
+| `page-break` (reportcraft) | `page-break` primitive | Closed | **COMPLETE** |
+| `table` with totals/footer (reportcraft) | Enhanced `table` recipe | Closed — footer rows, colspan, alignment, and document formatting ship | **COMPLETE** |
+| `signature-block` (reportcraft) | `signature` primitive | Closed | **COMPLETE** |
+| `field-group` (forma React) | `field-group` primitive | Closed | **COMPLETE** |
+| `alert` / `callout` | `callout` primitive + `alert` alias | Closed | **COMPLETE** |
+| `document-surface` (print container) | `document` pattern + theme | Closed — @page geometry, A4/letter, and running regions ship | **COMPLETE** |
+| `company-block` (Romanian) | `key-value`/`card` composition in the invoice scaffold | Closed | **COMPLETE** |
+| `document-meta` (Romanian) | `document` `doc-header` composition | Closed | **COMPLETE** |
+| `totals-block` (financial) | `table` `tfoot` composition in the invoice scaffold | Closed | **COMPLETE** |
+| `qr-code` | `qr-code` recipe | Closed | **COMPLETE** |
+| `barcode` | `barcode` recipe | Closed — Code 128-B SVG generation | **COMPLETE** |
+| `watermark` | `watermark` primitive | Closed — fixed/absolute single or repeated overlays | **COMPLETE** |
+
+> **0.6-09 status:** the Craft component wishlist is fully closed. The final two
+> gaps, `barcode` and `watermark`, now ship as first-class registry components.
 
 ---
 
@@ -240,4 +243,3 @@ This demonstrates why the `l-source` directive (Approach C) is even more powerfu
 ```
 
 **Action item**: Implement `l-source` directive in faqir-core.js. This is a 1-file change (~100 lines) that unlocks declarative data binding for all of craft's rendering modes.
-

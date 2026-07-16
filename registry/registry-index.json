@@ -1,6 +1,6 @@
 {
   "schema": "faqir-registry-index@1",
-  "count": 66,
+  "count": 68,
   "components": [
     {
       "name": "aspect-ratio",
@@ -858,6 +858,28 @@
       "deps": []
     },
     {
+      "name": "watermark",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "watermark.css",
+          "sha256": "d2daba99f0320104f4cdd2a9566c20dda44e9003087e0fd71616dd0e8c9e287d"
+        },
+        {
+          "path": "watermark.html",
+          "sha256": "9f1327ba63148c6687e5357888daa049cd6d0f9cf1653f79fabd7a0fa63f85d8"
+        },
+        {
+          "path": "watermark.manifest.json",
+          "sha256": "a72f0428f54956b0c9749cdbeb1923889819e6ced9bbdaef001762737f8eda06"
+        }
+      ],
+      "hash": "4a0904720c8cc9db335ffb7246a44f4cc32ed260afef0f0f072ba4aa85aecdc4",
+      "deps": []
+    },
+    {
       "name": "accordion",
       "kind": "recipe",
       "layer": "recipes",
@@ -910,6 +932,32 @@
       "deps": [
         "button"
       ]
+    },
+    {
+      "name": "barcode",
+      "kind": "recipe",
+      "layer": "recipes",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "barcode.css",
+          "sha256": "95f8ed05a38358899663000063096be4b1d2bfbe9887e9b1835d98877e1e4a15"
+        },
+        {
+          "path": "barcode.html",
+          "sha256": "c0ed333fe1a00c3ccfc6f810379e59fd77c8bca95bea0fa3e22819a5e07a94ff"
+        },
+        {
+          "path": "barcode.js",
+          "sha256": "841b4546e6117d780c6cf0a338629e0d052b43dc19fc0c4c93f804c020584bec"
+        },
+        {
+          "path": "barcode.manifest.json",
+          "sha256": "32b597d5e413cda11acdb2a8545566b105fd7091c7128e52a8886bfd85185a8f"
+        }
+      ],
+      "hash": "f446befb336f7066a30a8d4fa05d1dca559e4161f2f3b7bbb31423fd64d21009",
+      "deps": []
     },
     {
       "name": "calendar",
