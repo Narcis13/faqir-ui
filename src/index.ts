@@ -35,7 +35,7 @@ const HELP_CATEGORIES = [
     commands: [
       ["dev", "Start a local dev server"],
       ["bundle", "Compose CSS into a single bundle file"],
-      ["theme", "Manage themes (set, create, list)"],
+      ["theme", "Manage or generate contrast-verified themes"],
       ["variant", "Add or remove component variants"],
       ["scaffold", "Generate full page templates"],
     ],

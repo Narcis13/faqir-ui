@@ -17,6 +17,7 @@ import {
   cssColorToOklch,
   isOpaqueColor,
   parseCssColor,
+  parseThemeValues,
   resolveColorString,
   contrastRatio,
   type OklchColor,
@@ -529,6 +530,25 @@ function verifiedFile(
 ): GeneratedThemeFile {
   if (manifest.tokens_overridden.join("\0") !== overriddenTokens(css).join("\0")) {
     throw new Error(`Generated theme '${name}' has a CSS/manifest token mismatch.`);
+  }
+
+  const baseValues = parseThemeValues(baseCss);
+  const themeValues = parseThemeValues(css);
+  const required = [...baseValues.light.keys()]
+    .filter((token) => token.startsWith("color-") || token.startsWith("shadow-"));
+  const coverageMaps = manifest.scheme === "light"
+    ? [["light", new Set([...baseValues.light.keys(), ...themeValues.light.keys()])]] as const
+    : [
+        ["dark", new Set(themeValues.dark.keys())],
+        ["auto", new Set(themeValues.auto.keys())],
+      ] as const;
+  for (const [scheme, tokens] of coverageMaps) {
+    const missing = required.filter((token) => !tokens.has(token));
+    if (missing.length > 0) {
+      throw new Error(
+        `Generated theme '${name}' is missing required ${scheme} tokens: ${missing.join(", ")}.`,
+      );
+    }
   }
 
   const findings = checkThemeContrast({ themeName: name, themeCss: css, baseCss });

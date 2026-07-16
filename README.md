@@ -456,11 +456,31 @@ faqir theme set midnight
 # Create a custom theme (generates a CSS file with all tokens commented out)
 faqir theme create my-brand
 
+# Generate a complete theme from one brand color
+faqir theme generate my-brand --accent "oklch(0.55 0.2 150)" --neutral cool --radius lg --scheme both
+
+# Also generate a matching, print-optimized document theme
+faqir theme generate my-brand --accent "#168c5b" --document
+
 # List available themes
 faqir theme list
 ```
 
-Custom themes are scaffold files with every semantic token as a commented-out override. Uncomment and modify what you need.
+`theme create` emits a scaffold with commented semantic-token overrides. `theme
+generate` instead writes a complete `themes/<name>.css` and adjacent
+`<name>.theme.json`. Its deterministic 11-step OKLCH ramp accepts opaque
+`oklch()`, `#rgb`, or `#rrggbb` accents; `--neutral` chooses `cool`, `warm`, or
+`gray`, `--radius` chooses `sm`, `md`, or `lg`, and `--scheme` chooses `light`,
+`dark`, or `both`.
+
+Before either file is written, the generator derives the manifest, checks every
+theme coverage token, and verifies the same foreground/background pairs used by
+the `contrast-tokens` audit. Light-mode primary actions use white text and move
+to a darker ramp step when needed; dark mode uses dark text on an inverted,
+lighter accent step. `--document` additionally writes
+`themes/<name>-document.css` and its light-only print manifest. Add `--json` to
+receive the generated paths, normalized accent, and every computed contrast
+ratio for automation.
 
 ---
 
@@ -918,6 +938,7 @@ faqir bundle --dry-run            # Show what would be bundled
 
 faqir theme set midnight          # Switch active theme
 faqir theme create my-brand       # Scaffold custom theme
+faqir theme generate my-brand --accent "#168c5b" --document
 faqir theme list                  # Show available themes
 
 faqir variant add button visual=accent     # Add variant value

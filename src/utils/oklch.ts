@@ -141,10 +141,10 @@ export function cssColorToOklch(value: string): OklchColor | null {
 
 /**
  * Parse a CSS color value into linear sRGB. Supports the forms theme
- * stylesheets actually use: `oklch(L C H)`, `oklch(L C H / A)` (alpha is
- * ignored — contrast is defined over opaque colors, and themes must not put
- * translucent colors in fg/bg pairs), plus the `white`/`black` keywords.
- * Returns null for anything else (var() refs, gradients, shadow lists).
+ * stylesheets and brand inputs use: `oklch(L C H)`, `oklch(L C H / A)` (alpha
+ * is ignored here — callers can inspect it with `colorAlpha`), `#rgb`,
+ * `#rrggbb`, and the `white`/`black` keywords. Returns null for anything else
+ * (var() refs, gradients, shadow lists).
  */
 export function parseCssColor(value: string): LinearRgb | null {
   const v = value.trim().toLowerCase();
