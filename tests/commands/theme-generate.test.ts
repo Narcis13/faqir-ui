@@ -156,6 +156,25 @@ describe("theme generate · pure deterministic generator", () => {
     expectFullGauntlet({ ...DEFAULT_INPUT, scheme: "light" });
   });
 
+  it("honors dark-only output with complete explicit and automatic dark blocks", () => {
+    const input: ThemeGenerateInput = {
+      ...DEFAULT_INPUT,
+      neutral: "gray",
+      radius: "sm",
+      scheme: "dark",
+    };
+    const [file] = generateThemeBundle(input, BASE_SOURCES).generated;
+    const schemes = parseThemeSchemes(file.css);
+    expect(file.manifest.scheme).toBe("dark");
+    expect(file.manifest.dark_mode).toBe("native");
+    expect(schemes.dark.size).toBe(REQUIRED.all.length);
+    expect(schemes.auto.size).toBe(REQUIRED.all.length);
+    expect(file.contrast.map((pair) => pair.scheme)).toEqual(
+      Array(file.contrast.length).fill("dark"),
+    );
+    expectFullGauntlet(input);
+  });
+
   it("emits a light-only, flat, print-ready brand document variant", () => {
     const bundle = generateThemeBundle({ ...DEFAULT_INPUT, document: true }, BASE_SOURCES);
     const document = bundle.generated.find((file) => file.kind === "document");
