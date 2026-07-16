@@ -49,7 +49,7 @@
     {
       "id": "0.6-12",
       "completed": "2026-07-16",
-      "commit": "f152251",
+      "commit": "7b7cade",
       "summary": "User-requested out-of-order task: new `faqir bindings vue` command (target-agnostic manifest→IR walker + Vue emitter) generating all 39 primitives as typed Vue 3 components over a 128-line hand-written runtime; typed literal-union props, data-part slot projection, boolean state props; drift guard in bun test + CI check:bindings. Full 2014-test suite green. NOTE: state.current was 0.6-04 (started, unfinished in a prior session) when this session began — 0.6-04 remains ⬜ and is the next pending task in document order."
     }
   ],
