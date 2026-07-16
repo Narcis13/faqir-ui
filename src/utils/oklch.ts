@@ -25,6 +25,13 @@ export interface LinearRgb {
   b: number;
 }
 
+/** A normalized OKLCH color. Lightness is [0, 1], chroma is non-negative, hue is [0, 360). */
+export interface OklchColor {
+  l: number;
+  c: number;
+  h: number;
+}
+
 /** oklch(L C H) → linear sRGB, channels clamped to [0, 1]. H in degrees. */
 export function oklchToLinearRgb(L: number, C: number, H: number): LinearRgb {
   const hRad = (H * Math.PI) / 180;
@@ -53,8 +60,84 @@ export function relativeLuminance(rgb: LinearRgb): number {
 // Matches `oklch(L C H)` / `oklch(L C H / A)`, L as a number or percentage,
 // an optional `deg` on the hue, and an optional alpha. Shared by the parse and
 // alpha helpers so both agree on exactly which forms count as an oklch color.
-const OKLCH_RE =
-  /^oklch\(\s*([\d.]+%?)\s+([\d.]+)\s+([\d.]+)(?:deg)?\s*(?:\/\s*([\d.]+%?)\s*)?\)$/;
+const NUMBER = "[+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)";
+const OKLCH_RE = new RegExp(
+  `^oklch\\(\\s*(${NUMBER}%?)\\s+(${NUMBER})\\s+(${NUMBER})(?:deg)?\\s*` +
+    `(?:\\/\\s*(${NUMBER}%?)\\s*)?\\)$`,
+);
+const HEX_RE = /^#([\da-f]{3}|[\da-f]{6})$/i;
+
+function normalizeHue(hue: number): number {
+  return ((hue % 360) + 360) % 360;
+}
+
+/** Parse an `oklch()` string without converting it through clamped sRGB. */
+export function parseOklch(value: string): OklchColor | null {
+  const m = OKLCH_RE.exec(value.trim().toLowerCase());
+  if (!m) return null;
+
+  const l = m[1].endsWith("%") ? parseFloat(m[1]) / 100 : parseFloat(m[1]);
+  const c = parseFloat(m[2]);
+  const h = parseFloat(m[3]);
+  const alpha = m[4] == null
+    ? 1
+    : m[4].endsWith("%")
+      ? parseFloat(m[4]) / 100
+      : parseFloat(m[4]);
+
+  if (![l, c, h, alpha].every(Number.isFinite)) return null;
+  if (l < 0 || l > 1 || c < 0 || alpha < 0 || alpha > 1) return null;
+  return { l, c, h: normalizeHue(h) };
+}
+
+/** Parse `#rgb` / `#rrggbb` into linear-light sRGB. */
+export function parseHexColor(value: string): LinearRgb | null {
+  const m = HEX_RE.exec(value.trim());
+  if (!m) return null;
+  const full = m[1].length === 3
+    ? [...m[1]].map((digit) => digit + digit).join("")
+    : m[1];
+  const decode = (offset: number) => {
+    const encoded = parseInt(full.slice(offset, offset + 2), 16) / 255;
+    return encoded <= 0.04045
+      ? encoded / 12.92
+      : ((encoded + 0.055) / 1.055) ** 2.4;
+  };
+  return { r: decode(0), g: decode(2), b: decode(4) };
+}
+
+/** Linear-light sRGB → OKLCH. Useful for turning hex brand colors into ramp seeds. */
+export function linearRgbToOklch(rgb: LinearRgb): OklchColor {
+  const l = Math.cbrt(0.4122214708 * rgb.r + 0.5363325363 * rgb.g + 0.0514459929 * rgb.b);
+  const m = Math.cbrt(0.2119034982 * rgb.r + 0.6806995451 * rgb.g + 0.1073969566 * rgb.b);
+  const s = Math.cbrt(0.0883024619 * rgb.r + 0.2817188376 * rgb.g + 0.6299787005 * rgb.b);
+
+  const lightness = 0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s;
+  const a = 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s;
+  const b = 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s;
+  const chroma = Math.sqrt(a * a + b * b);
+  const hue = chroma < 1e-7 ? 0 : normalizeHue((Math.atan2(b, a) * 180) / Math.PI);
+
+  return { l: lightness, c: chroma, h: hue };
+}
+
+/**
+ * Parse a supported brand-color input into OKLCH. The generator deliberately
+ * accepts portable, deterministic syntaxes only: `oklch()`, `#rgb`, `#rrggbb`,
+ * plus black/white. Browser-dependent named-color tables are not consulted.
+ */
+export function cssColorToOklch(value: string): OklchColor | null {
+  const v = value.trim().toLowerCase();
+  const parsed = parseOklch(v);
+  if (parsed) {
+    if (colorAlpha(v) !== 1) return null;
+    return parsed;
+  }
+  if (v === "white") return { l: 1, c: 0, h: 0 };
+  if (v === "black") return { l: 0, c: 0, h: 0 };
+  const hex = parseHexColor(v);
+  return hex ? linearRgbToOklch(hex) : null;
+}
 
 /**
  * Parse a CSS color value into linear sRGB. Supports the forms theme
@@ -68,10 +151,12 @@ export function parseCssColor(value: string): LinearRgb | null {
   if (v === "white") return { r: 1, g: 1, b: 1 };
   if (v === "black") return { r: 0, g: 0, b: 0 };
 
-  const m = OKLCH_RE.exec(v);
-  if (!m) return null;
-  const L = m[1].endsWith("%") ? parseFloat(m[1]) / 100 : parseFloat(m[1]);
-  return oklchToLinearRgb(L, parseFloat(m[2]), parseFloat(m[3]));
+  const hex = parseHexColor(v);
+  if (hex) return hex;
+
+  const parsed = parseOklch(v);
+  if (!parsed) return null;
+  return oklchToLinearRgb(parsed.l, parsed.c, parsed.h);
 }
 
 /**
@@ -82,7 +167,7 @@ export function parseCssColor(value: string): LinearRgb | null {
  */
 export function colorAlpha(value: string): number | null {
   const v = value.trim().toLowerCase();
-  if (v === "white" || v === "black") return 1;
+  if (v === "white" || v === "black" || HEX_RE.test(v)) return 1;
   const m = OKLCH_RE.exec(v);
   if (!m) return null;
   if (m[4] == null) return 1;

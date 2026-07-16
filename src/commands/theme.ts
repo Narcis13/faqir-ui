@@ -1,4 +1,4 @@
-// faqir theme — manage themes (set, create, list)
+// faqir theme — manage themes (set, create, generate, list)
 
 import { existsSync } from "node:fs";
 import { join } from "node:path";
@@ -6,7 +6,16 @@ import { log } from "../utils/logger";
 import { configExists, readConfig, writeConfig } from "../utils/config";
 import { copyFile, ensureDir, getRegistryPath } from "../utils/fs";
 import { generateBundle } from "../utils/bundler";
+import { emitJSON, isJSONMode } from "../utils/json-output";
 import { listRegistryThemes } from "../theme-manifest";
+import {
+  generateThemeBundle,
+  type ThemeGenerateInput,
+  type ThemeNeutral,
+  type ThemeRadius,
+} from "./theme-generate";
+
+export const THEME_GENERATE_JSON_VERSION = 1;
 
 function printHelp() {
   log.heading("faqir theme <subcommand>");
@@ -17,13 +26,188 @@ function printHelp() {
   log.table([
     ["set <name>", "Switch the active theme"],
     ["create <name>", "Scaffold a new custom theme"],
+    ["generate <name>", "Generate a complete theme from one brand color"],
     ["list", "Show available and active themes"],
   ]);
   log.blank();
   console.log("Examples:");
   console.log("  faqir theme set midnight");
   console.log("  faqir theme create my-brand");
+  console.log('  faqir theme generate my-brand --accent "oklch(0.55 0.2 150)"');
   console.log("  faqir theme list");
+}
+
+function printGenerateHelp() {
+  log.heading("faqir theme generate <name>");
+  log.blank();
+  console.log("Generate a complete, contrast-verified theme from one brand color.");
+  log.blank();
+  console.log("Usage:");
+  console.log('  faqir theme generate my-brand --accent "oklch(0.55 0.2 150)" [options]');
+  log.blank();
+  console.log("Options:");
+  log.table([
+    ["--accent <color>", "Opaque oklch(), #rgb, or #rrggbb brand color (required)"],
+    ["--neutral <tone>", "Neutral palette: cool, warm, or gray (default: cool)"],
+    ["--radius <size>", "Radius scale: sm, md, or lg (default: md)"],
+    ["--scheme <mode>", "Color scheme: light, dark, or both (default: both)"],
+    ["--document", "Also emit a brand-matched print/document variant"],
+    ["--json", "Report generated files and all computed contrast ratios"],
+  ]);
+  log.blank();
+  log.dim("Outputs: themes/<name>.css + themes/<name>.theme.json");
+  log.dim("Contrast policy: white ink in light mode, dark ink in dark mode; the primary ramp step is adjusted automatically.");
+}
+
+function optionValue(args: string[], index: number, flag: string): { value: string; next: number } {
+  const equal = args[index].indexOf("=");
+  if (equal !== -1) {
+    const value = args[index].slice(equal + 1);
+    if (!value) throw new Error(`${flag} requires a value.`);
+    return { value, next: index };
+  }
+  const value = args[index + 1];
+  if (!value || value.startsWith("--")) throw new Error(`${flag} requires a value.`);
+  return { value, next: index + 1 };
+}
+
+function parseThemeGenerateArgs(args: string[]): ThemeGenerateInput | null {
+  if (args.includes("--help") || args.includes("-h")) return null;
+
+  let name: string | null = null;
+  let accent: string | null = null;
+  let neutral: ThemeNeutral = "cool";
+  let radius: ThemeRadius = "md";
+  let scheme: ThemeGenerateInput["scheme"] = "both";
+  let document = false;
+
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    const flag = arg.split("=", 1)[0];
+    switch (flag) {
+      case "--accent": {
+        const parsed = optionValue(args, i, "--accent");
+        accent = parsed.value;
+        i = parsed.next;
+        break;
+      }
+      case "--neutral": {
+        const parsed = optionValue(args, i, "--neutral");
+        if (!(["cool", "warm", "gray"] as string[]).includes(parsed.value)) {
+          throw new Error(`Invalid --neutral '${parsed.value}'. Choose: cool, warm, or gray.`);
+        }
+        neutral = parsed.value as ThemeNeutral;
+        i = parsed.next;
+        break;
+      }
+      case "--radius": {
+        const parsed = optionValue(args, i, "--radius");
+        if (!(["sm", "md", "lg"] as string[]).includes(parsed.value)) {
+          throw new Error(`Invalid --radius '${parsed.value}'. Choose: sm, md, or lg.`);
+        }
+        radius = parsed.value as ThemeRadius;
+        i = parsed.next;
+        break;
+      }
+      case "--scheme": {
+        const parsed = optionValue(args, i, "--scheme");
+        if (!(["light", "dark", "both"] as string[]).includes(parsed.value)) {
+          throw new Error(`Invalid --scheme '${parsed.value}'. Choose: light, dark, or both.`);
+        }
+        scheme = parsed.value as ThemeGenerateInput["scheme"];
+        i = parsed.next;
+        break;
+      }
+      case "--document":
+        document = true;
+        break;
+      case "--json":
+        break;
+      default:
+        if (arg.startsWith("-")) throw new Error(`Unknown option '${arg}'. Run 'faqir theme generate --help'.`);
+        if (name) throw new Error(`Unexpected argument '${arg}'. Usage: faqir theme generate <name> --accent <color>`);
+        name = arg;
+    }
+  }
+
+  if (!name) throw new Error("Theme name required. Usage: faqir theme generate <name> --accent <color>");
+  if (!/^[a-z][a-z0-9-]*$/.test(name)) {
+    throw new Error("Theme name must be lowercase kebab-case (e.g., 'my-brand').");
+  }
+  if (!accent) {
+    throw new Error(
+      '--accent is required. Use an opaque oklch() or hex brand color, for example --accent "oklch(0.55 0.2 150)".',
+    );
+  }
+
+  return { name, accent, neutral, radius, scheme, document };
+}
+
+async function themeGenerate(args: string[]): Promise<void> {
+  const input = parseThemeGenerateArgs(args);
+  if (!input) {
+    printGenerateHelp();
+    return;
+  }
+
+  const tokensDir = join(getRegistryPath(), "tokens");
+  const tokenFiles = [...new Bun.Glob("*.css").scanSync(tokensDir)]
+    .filter((file) => file !== "index.css")
+    .sort();
+  const baseCssSources = await Promise.all(
+    tokenFiles.map((file) => Bun.file(join(tokensDir, file)).text()),
+  );
+
+  // Generation, manifest derivation, and every contrast check happen before
+  // this point. No output directory exists yet if any verification throws.
+  const result = generateThemeBundle(input, baseCssSources);
+  const outputDir = join(process.cwd(), "themes");
+  ensureDir(outputDir);
+  for (const file of result.generated) {
+    await Bun.write(join(process.cwd(), file.css_path), file.css);
+    await Bun.write(
+      join(process.cwd(), file.manifest_path),
+      JSON.stringify(file.manifest, null, 2) + "\n",
+    );
+  }
+
+  const report = {
+    theme_generate_schema_version: THEME_GENERATE_JSON_VERSION,
+    command: "theme generate",
+    name: result.name,
+    accent: result.accent,
+    options: {
+      neutral: result.neutral,
+      radius: result.radius,
+      scheme: result.scheme,
+      document: result.document,
+    },
+    generated: result.generated.map((file) => ({
+      kind: file.kind,
+      name: file.name,
+      css: file.css_path,
+      manifest: file.manifest_path,
+    })),
+    contrast: result.generated.flatMap((file) => file.contrast),
+  };
+
+  if (isJSONMode()) {
+    emitJSON(report);
+    return;
+  }
+
+  log.success(`Generated contrast-verified theme '${input.name}'.`);
+  for (const file of result.generated) {
+    log.step(`${file.css_path}`);
+    log.step(`${file.manifest_path}`);
+  }
+  const primaryRatios = report.contrast.filter(
+    (pair) => pair.foreground === "color-primary-fg" && pair.background === "color-primary",
+  );
+  for (const pair of primaryRatios) {
+    const adjusted = pair.auto_adjusted ? " (lightness auto-adjusted)" : "";
+    log.dim(`${pair.theme} ${pair.scheme}: primary contrast ${pair.ratio.toFixed(2)}:1${adjusted}`);
+  }
 }
 
 function listProjectThemes(outputDir: string): string[] {
@@ -290,6 +474,9 @@ export async function theme(args: string[]): Promise<void> {
       await themeCreate(name);
       break;
     }
+    case "generate":
+      await themeGenerate(args.slice(1));
+      break;
     case "list":
       await themeList();
       break;
