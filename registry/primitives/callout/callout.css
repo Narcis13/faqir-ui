@@ -130,10 +130,16 @@
 /* ── Print ── */
 @media print {
   [data-ui="callout"] {
-    background: none !important;
+    background: none;
     border: var(--callout-border-width) solid var(--doc-print-border-color, var(--color-border, #ccc));
     border-inline-start: var(--callout-border-left-width) solid;
     break-inside: avoid;
+  }
+
+  /* Match the variant selectors' specificity without relying on !important. */
+  [data-ui="callout"][data-variant],
+  [data-ui="callout"]:not([data-variant]) {
+    background: none;
   }
 
   /* Interactive dismiss control is meaningless on paper. */

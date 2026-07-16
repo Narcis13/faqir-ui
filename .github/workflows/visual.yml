@@ -48,7 +48,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: tests/visual/__screenshots__
-          key: visual-baselines-linux-pw1.61.1-${{ hashFiles('registry/**/*.css', 'registry/**/*.html', 'tests/visual/matrix.ts', 'playwright.config.ts') }}
+          key: visual-baselines-linux-pw1.61.1-${{ hashFiles('registry/**/*.css', 'registry/**/*.html', 'src/scaffolds/**/*.ts', 'tests/scaffolds/**/*.ts', 'tests/visual/**/*.ts', 'playwright.config.ts') }}
       - name: Generate baselines (on cache miss)
         if: steps.cache.outputs.cache-hit != 'true'
         run: npx playwright test --update-snapshots --reporter=line
@@ -74,7 +74,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: tests/visual/__screenshots__
-          key: visual-baselines-linux-pw1.61.1-${{ hashFiles('registry/**/*.css', 'registry/**/*.html', 'tests/visual/matrix.ts', 'playwright.config.ts') }}
+          key: visual-baselines-linux-pw1.61.1-${{ hashFiles('registry/**/*.css', 'registry/**/*.html', 'src/scaffolds/**/*.ts', 'tests/scaffolds/**/*.ts', 'tests/visual/**/*.ts', 'playwright.config.ts') }}
           # Fall back to the newest baseline set from the default branch when the
           # registry changed in this PR — changed/added components then show up as
           # diffs (or missing-baseline failures) to review, which is the point.

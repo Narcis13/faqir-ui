@@ -32,7 +32,8 @@
  * Runtime state the controller manages: data-selected, data-collapsed,
  * data-filtered, data-editing, data-dragging, data-drop-target/-pos,
  * data-col-hidden, data-negative, data-stripe, data-resized, aria-sort,
- * aria-expanded, aria-level plus the --level / --pin-offset / --thead-h
+ * aria-expanded, aria-level plus the --table-level / --table-pin-offset /
+ * --table-thead-h
  * private custom properties.
  *
  * Events (CustomEvent, bubbling): faqir:sort, faqir:selection-change,
@@ -1150,7 +1151,7 @@ export function createTable(root) {
     const setPin = (i, side, offset, isEdge) => {
       forEachColumnCell(i, (cell) => {
         cell.setAttribute("data-pin", side);
-        cell.style.setProperty("--pin-offset", offset + "px");
+        cell.style.setProperty("--table-pin-offset", offset + "px");
         toggleAttr(cell, "data-pin-edge", isEdge);
       });
     };
@@ -1586,7 +1587,7 @@ export function createTable(root) {
       const cell = treeCellOf(row);
       if (!cell) continue;
       cell.setAttribute("data-tree-cell", "");
-      cell.style.setProperty("--level", String(level));
+      cell.style.setProperty("--table-level", String(level));
       const parent = isTreeParent(row);
       const expander = injectExpander(cell, parent);
       if (parent) {
@@ -2019,7 +2020,7 @@ export function createTable(root) {
     const needsHeaderVar =
       root.hasAttribute("data-sticky-header") || !!tbody?.querySelector("[data-part='tr'][data-pin='top']");
     if (needsHeaderVar && thead && thead.offsetHeight) {
-      root.style.setProperty("--thead-h", thead.offsetHeight + "px");
+      root.style.setProperty("--table-thead-h", thead.offsetHeight + "px");
     }
     refreshPins();
     updateStackMode();

@@ -120,7 +120,7 @@
       "files": [
         {
           "path": "callout.css",
-          "sha256": "27a42f4fdd74662301f08fa7c1816b8e6e2d20f6a5a7f7d13f3698b85557f23a"
+          "sha256": "48f4da77b05d0f372be9c287abed6358295090f78cfb9ccb4f1782fd155a26e5"
         },
         {
           "path": "callout.html",
@@ -131,7 +131,7 @@
           "sha256": "dd1eae6f85c52d91c19b4759364484ce8f5f9635492b965de2763b95b5de8b5e"
         }
       ],
-      "hash": "d26adadb41b2d0d66a5a328fb250fab12d51400a9c82b76e96d9b493ce4a705b",
+      "hash": "8b53bd08d0dfa8a877283ec8d16a9a7aff856da78b72b1c7faa99f9e622a4abc",
       "deps": [
         "text"
       ]
@@ -357,7 +357,7 @@
       "files": [
         {
           "path": "image.css",
-          "sha256": "b88b639e2c13fc61a49a1a8f6312e67068e0a6d3a7bc1eedc8ed78259193cb27"
+          "sha256": "79a7a18617bc3bb2b96f50894a551dd9b745f5a5f8911a23b4d09d27dd61aa24"
         },
         {
           "path": "image.html",
@@ -368,7 +368,7 @@
           "sha256": "28622922e076e9d3079f63b7c6e58d2540bb9bdc2283a17402119d5368936bde"
         }
       ],
-      "hash": "e86ae8b4ad2e8d1810be7ce278ad651937f1ab6325eda120dda3e6e2281a908c",
+      "hash": "97c015d149a6533f48dc20d8dff815c548ae8b76b07700654fb5af633f872c62",
       "deps": []
     },
     {
@@ -1329,22 +1329,22 @@
       "files": [
         {
           "path": "table.css",
-          "sha256": "fd0597f51f1a8ae5c4f308fc43af0e9467b5830410836a4eb35f65cfabd33cab"
+          "sha256": "43740955aa2c31ccf3f3f569c3c4d5972d62a66746f0cdfaab41e4a944054d4a"
         },
         {
           "path": "table.html",
-          "sha256": "cabbf3b2454a2bc9c9c7c934a71a387f1f80ae570e44c411a598dad11bff4d8e"
+          "sha256": "0d9064abe246aa32d8871ca47974a3320c981b84c9764071a45c084f2070ee94"
         },
         {
           "path": "table.js",
-          "sha256": "aae459d5461cf72ebe820a4ccf2277ba8f683609cc894396900fc863929c0f6b"
+          "sha256": "927632cf26f03b46f9388dee495eb0d4d0c37c39a650a426a0c3355071fde3ae"
         },
         {
           "path": "table.manifest.json",
           "sha256": "660e4ebbbb1787d67b63cb3cb3ed968cda05130142297598f15369be6a36706a"
         }
       ],
-      "hash": "be2f38379735f60e2966796d5987608875d4ab272d8b9ef6e8b54a73e7524959",
+      "hash": "06dae103bbd68aa8bfa17407560e1b5536700e120b4b46aeda1107164182946c",
       "deps": [
         "checkbox",
         "badge",

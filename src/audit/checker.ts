@@ -226,8 +226,11 @@ function checkControllersInFile(
     const jsFile = manifest.files.js!;
     const controllerName = jsFile.replace(".js", "");
 
-    // Check for: <script src="...dialog.js">, import from "...dialog.js", or faqir.js (auto-init)
-    const hasScript = sourceLower.includes(jsFile) || sourceLower.includes("faqir.js") || sourceLower.includes("faqir.min.js");
+    // Check for a direct controller import or either assembled auto-init runtime.
+    const hasScript = sourceLower.includes(jsFile)
+      || sourceLower.includes("faqir-core.js")
+      || sourceLower.includes("faqir.js")
+      || sourceLower.includes("faqir.min.js");
 
     if (!hasScript) {
       results.push({

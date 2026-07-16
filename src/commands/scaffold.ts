@@ -4,9 +4,13 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { log } from "../utils/logger";
 import { configExists, readConfig, writeConfig } from "../utils/config";
-import { ensureDir, getRegistryPath } from "../utils/fs";
-import { loadManifest } from "../manifest";
+import { copyFile, ensureDir, getRegistryPath } from "../utils/fs";
 import { generateBundle } from "../utils/bundler";
+import {
+  DOCUMENT_SCAFFOLDS,
+  generateDocumentScaffold,
+  type DocumentScaffoldName,
+} from "../scaffolds/documents";
 
 interface ScaffoldDef {
   name: string;
@@ -14,6 +18,7 @@ interface ScaffoldDef {
   description: string;
   patterns: string[];
   components: string[];
+  defaultTheme?: string;
 }
 
 const SCAFFOLDS: Record<string, ScaffoldDef> = {
@@ -46,6 +51,7 @@ const SCAFFOLDS: Record<string, ScaffoldDef> = {
       "tabs", "dialog", "dropdown", "toast", "table", "pagination",
     ],
   },
+  ...DOCUMENT_SCAFFOLDS,
 };
 
 function printHelp() {
@@ -61,6 +67,7 @@ function printHelp() {
   console.log("Options:");
   log.table([
     ["--output <path>", "Output file path (default: ./<name>.html)"],
+    ["--theme <name>", "Theme to apply (invoice/report default: 'document')"],
     ["--no-add", "Don't auto-install missing components"],
   ]);
 }
@@ -130,18 +137,37 @@ function cssLinks(components: string[], hasBundle: boolean, outputDir: string): 
   links.push(`  <link rel="stylesheet" href="${outputDir}/base/reset.css">`);
   links.push(`  <link rel="stylesheet" href="${outputDir}/base/prose.css">`);
 
+  const registryPath = getRegistryPath();
   for (const comp of components) {
-    // Determine layer by checking common primitives
-    const primitives = [
-      "button", "card", "input", "textarea", "select", "checkbox", "radio",
-      "switch", "label", "badge", "separator", "avatar", "spinner", "kbd",
-      "stack", "grid", "surface", "progress", "stepper", "empty-state", "text", "nav",
-    ];
-    const layer = primitives.includes(comp) ? "primitives" : "recipes";
+    const layer = (["primitives", "recipes", "patterns"] as const).find((candidate) =>
+      existsSync(join(registryPath, candidate, comp)),
+    );
+    if (!layer) continue;
     links.push(`  <link rel="stylesheet" href="${outputDir}/${layer}/${comp}/${comp}.css">`);
   }
 
   return links.join("\n");
+}
+
+async function applyTheme(
+  name: string,
+  config: Awaited<ReturnType<typeof readConfig>>,
+  cwd: string,
+): Promise<void> {
+  const outputDir = join(cwd, config.output_dir);
+  const registryTheme = join(getRegistryPath(), "themes", `${name}.css`);
+  const customTheme = join(outputDir, "tokens", `theme-${name}.css`);
+  const source = existsSync(registryTheme) ? registryTheme : customTheme;
+
+  if (!existsSync(source)) {
+    log.error(`Theme '${name}' not found.`);
+    log.dim("Run 'faqir theme list' to see available themes.");
+    process.exit(1);
+  }
+
+  await copyFile(source, join(outputDir, "tokens", "theme.css"));
+  config.theme = name;
+  await writeConfig(config, cwd);
 }
 
 function generateLandingPage(title: string, hasBundle: boolean, outputDir: string): string {
@@ -548,6 +574,13 @@ export async function scaffold(args: string[]): Promise<void> {
   const config = await readConfig(cwd);
   const noAdd = args.includes("--no-add");
 
+  const themeIdx = args.indexOf("--theme");
+  if (themeIdx >= 0 && !args[themeIdx + 1]) {
+    log.error("Missing value for --theme.");
+    process.exit(1);
+  }
+  const requestedTheme = themeIdx >= 0 ? args[themeIdx + 1] : scaffoldDef.defaultTheme;
+
   // Parse output path
   let outputPath = join(cwd, `${name}.html`);
   const outputIdx = args.indexOf("--output");
@@ -571,8 +604,17 @@ export async function scaffold(args: string[]): Promise<void> {
     log.step("Ensured all required components are installed.");
   }
 
+  if (requestedTheme) {
+    await applyTheme(requestedTheme, config, cwd);
+    log.step(`Applied theme: ${requestedTheme}.`);
+  }
+
   // Detect if bundle exists
   const hasBundle = existsSync(join(cwd, config.output_dir, "faqir.bundle.css"));
+  if (hasBundle && config.bundle?.auto !== false) {
+    await generateBundle(cwd);
+    log.step("Bundle regenerated.");
+  }
 
   // Generate the page
   let html: string;
@@ -585,6 +627,16 @@ export async function scaffold(args: string[]): Promise<void> {
       break;
     case "internal-tool":
       html = generateInternalTool(scaffoldDef.title, hasBundle, config.output_dir);
+      break;
+    case "invoice":
+    case "report":
+      html = generateDocumentScaffold(name as DocumentScaffoldName, {
+        title: scaffoldDef.title,
+        stylesheets: cssLinks(allNeeded, hasBundle, config.output_dir),
+        coreScriptSrc: config.include_core
+          ? `${config.output_dir}/core/faqir-core.js`
+          : undefined,
+      });
       break;
     default:
       log.error(`No generator for scaffold '${name}'.`);

@@ -370,7 +370,7 @@ describe("table 2.0 · tree data", () => {
     expect(rows[2].querySelector("span[data-part='expander'][data-leaf]")).toBeTruthy();
     expect(rows[2].hasAttribute("aria-expanded")).toBe(false);
     const treeCell = rows[2].querySelector("[data-tree-cell]") as HTMLElement;
-    expect(treeCell.style.getPropertyValue("--level")).toBe("2");
+    expect(treeCell.style.getPropertyValue("--table-level")).toBe("2");
   });
 
   it("collapse hides all descendants; expand restores nested collapsed state", () => {
@@ -674,7 +674,7 @@ describe("table 2.0 · column operations", () => {
       </div>`);
     const cell = bodyRows(root)[0].querySelector("[data-part='td']") as HTMLElement;
     expect(cell.getAttribute("data-pin")).toBe("start");
-    expect(cell.style.getPropertyValue("--pin-offset")).toBe("0px");
+    expect(cell.style.getPropertyValue("--table-pin-offset")).toBe("0px");
     expect(cell.hasAttribute("data-pin-edge")).toBe(true);
   });
 });

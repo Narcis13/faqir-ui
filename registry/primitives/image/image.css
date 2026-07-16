@@ -109,11 +109,11 @@
 /* ── Print ── */
 @media print {
   [data-ui="image"] [data-part="img"] {
-    max-width: 100% !important;
+    max-width: 100%;
     break-inside: avoid;
   }
 
   [data-ui="image"][data-size="full"] {
-    max-width: 80% !important;
+    max-width: 80%;
   }
 }

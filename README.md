@@ -908,6 +908,8 @@ faqir variant remove button visual=accent  # Remove variant value
 faqir scaffold landing-page       # Generate landing page HTML
 faqir scaffold admin-dashboard    # Generate dashboard layout
 faqir scaffold internal-tool      # Generate settings/forms page
+faqir scaffold invoice            # Generate a print-ready invoice
+faqir scaffold report             # Generate a print-ready business report
 ```
 
 ### Quality and Validation
@@ -1100,9 +1102,20 @@ Generate complete, working HTML pages with all required CSS and components:
 faqir scaffold landing-page       # Hero + features + CTA sections
 faqir scaffold admin-dashboard    # Sidebar + header + stats + data table
 faqir scaffold internal-tool      # Tab-based settings with forms
+faqir scaffold invoice            # Invoice, totals, payment QR, signatures
+faqir scaffold report             # Summary, metrics, details, and imagery
 ```
 
 Scaffolds auto-install any missing components and use the bundle when one exists (single `<link>` tag instead of per-component links).
+
+The `invoice` and `report` scaffolds default to the print-optimized `document`
+theme. Pass `--theme <name>` while scaffolding, or run `faqir theme set <name>`
+later, to apply another installed or registry theme. Their sample content is
+marked with `<!-- FAQIR_REPLACE: path.to.value -->` comments: replace the value
+immediately following each marker while preserving the `data-ui` and `data-part`
+attributes. Both templates include canonical `doc-header` and `doc-footer` parts
+for repeating print furniture and use only theme/component tokens, so switching
+themes does not require changing their markup.
 
 ### Custom Components
 

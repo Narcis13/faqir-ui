@@ -297,7 +297,7 @@
 
 /* ── Tree Indentation ── */
 [data-ui="table"] [data-part="td"][data-tree-cell] {
-  padding-inline-start: calc(var(--space-4) + var(--level, 0) * var(--table-indent, var(--space-5)));
+  padding-inline-start: calc(var(--space-4) + var(--table-level, 0) * var(--table-indent, var(--space-5)));
 }
 
 /* ── Detail Rows (master/detail) ── */
@@ -475,10 +475,10 @@
   background: var(--doc-table-footer-bg, var(--color-bg-subtle, oklch(0.97 0.004 260)));
 }
 
-/* Pinned rows stick just below the (sticky) header; --thead-h is measured by the controller. */
+/* Pinned rows stick just below the header; --table-thead-h is measured by the controller. */
 [data-ui="table"] [data-part="tbody"] [data-part="tr"][data-pin="top"] [data-part="td"] {
   position: sticky;
-  inset-block-start: var(--thead-h, 0px);
+  inset-block-start: var(--table-thead-h, 0px);
   z-index: 2;
   background: var(--color-bg-subtle, oklch(0.97 0.004 260));
 }
@@ -487,14 +487,14 @@
 [data-ui="table"] [data-part="td"][data-pin="start"],
 [data-ui="table"] [data-part="th"][data-pin="start"] {
   position: sticky;
-  inset-inline-start: var(--pin-offset, 0px);
+  inset-inline-start: var(--table-pin-offset, 0px);
   z-index: 1;
 }
 
 [data-ui="table"] [data-part="td"][data-pin="end"],
 [data-ui="table"] [data-part="th"][data-pin="end"] {
   position: sticky;
-  inset-inline-end: var(--pin-offset, 0px);
+  inset-inline-end: var(--table-pin-offset, 0px);
   z-index: 1;
 }
 
@@ -590,7 +590,7 @@
 }
 
 [data-ui="table"][data-stacked] [data-part="td"][data-tree-cell] {
-  padding-inline-start: calc(var(--space-4) + var(--level, 0) * var(--table-indent, var(--space-5)));
+  padding-inline-start: calc(var(--space-4) + var(--table-level, 0) * var(--table-indent, var(--space-5)));
 }
 
 [data-ui="table"][data-stacked] [data-pin] {

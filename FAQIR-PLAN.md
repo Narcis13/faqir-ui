@@ -116,7 +116,7 @@ done in any order (or in parallel worktrees).
 | 0.6-05 | Plugins: `faqir-persist` + `faqir-intersect` | ✅ |
 | 0.6-06 | Plugin: `faqir-mask` (wire into input-otp) | ✅ |
 | 0.6-07 | Documents: running headers/footers (`doc-header`/`doc-footer`) | ✅ |
-| 0.6-08 | `faqir scaffold invoice` + `faqir scaffold report` | ⬜ |
+| 0.6-08 | `faqir scaffold invoice` + `faqir scaffold report` | ✅ |
 | 0.6-09 | Documents: `watermark` primitive + `barcode` recipe + `document-serif` theme | ⬜ |
 | 0.6-10 | Print visual regression (PDF render + image diff) | ⬜ |
 | 0.6-11 | `faqir theme generate` — parametric oklch themes | ⬜ |
@@ -1508,9 +1508,9 @@ lists, image). Placeholder data clearly marked for agent replacement.
 - Generated pages parse + render in the visual suite (add them as reference pages).
 
 **Acceptance criteria**
-- [ ] `faqir scaffold invoice` → a file that prints correctly from headless Chromium with repeating header/footer.
-- [ ] Both scaffolds theme-switchable (`document` theme default, others apply cleanly).
-- [ ] Placeholder convention documented so agents know what to replace.
+- [x] `faqir scaffold invoice` → a file that prints correctly from headless Chromium with repeating header/footer. (The generated invoice and report each render as two A4 pages; authored headers/footers and `Page 1 / 2`–`Page 2 / 2` counters repeat in Chromium PDF output.)
+- [x] Both scaffolds theme-switchable (`document` theme default, others apply cleanly). (`--theme <name>` overrides the default; `faqir theme set` remains compatible, and bundle regeneration keeps the selected theme/components in sync.)
+- [x] Placeholder convention documented so agents know what to replace. (`FAQIR_REPLACE: path.to.value` markers ship in both templates and are documented in the scaffold plus README; command tests prove deterministic generation, zero full-project audit findings, and full document-layer component coverage, while the dedicated Playwright pages pass axe and the visual render gate.)
 
 ---
 

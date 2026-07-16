@@ -152,12 +152,9 @@ describe("0.4-03 · dismiss part CSS is contract-clean", () => {
     expect(findLogicalPropertyViolations(css)).toEqual([]);
   });
 
-  it("introduces no new !important (only the pre-existing print override remains)", async () => {
+  it("uses no !important overrides", async () => {
     const css = await calloutCss();
-    const importants = findImportantDeclarations(css);
-    // Exactly one — the print background override that predates this task.
-    expect(importants.length).toBe(1);
-    expect(importants[0].text.toLowerCase()).toContain("background");
+    expect(findImportantDeclarations(css)).toEqual([]);
   });
 });
 
@@ -208,15 +205,12 @@ describe("0.4-03 · alert resolves across every discovery surface", () => {
     expect(existsSync(join(TEST_DIR, "ui/primitives/alert"))).toBe(false);
   });
 
-  it("the dismiss part is audit-valid (adds no findings beyond the pre-existing print !important)", async () => {
+  it("the dismiss part is audit-valid", async () => {
     await init([]);
     await add(["alert"]);
 
     const summary = await runAudit({ cwd: TEST_DIR });
-    // Every finding, if any, is the pre-existing no-important print override.
-    expect(summary.results.every((r) => r.rule_id === "no-important")).toBe(true);
-    // Nothing the dismiss part introduced is flagged.
-    expect(summary.results.some((r) => r.message.toLowerCase().includes("dismiss"))).toBe(false);
+    expect(summary.results).toEqual([]);
   });
 
   it("`faqir list` shows the alert alias", async () => {
