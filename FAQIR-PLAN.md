@@ -119,7 +119,7 @@ done in any order (or in parallel worktrees).
 | 0.6-08 | `faqir scaffold invoice` + `faqir scaffold report` | ✅ |
 | 0.6-09 | Documents: `watermark` primitive + `barcode` recipe + `document-serif` theme | ⬜ |
 | 0.6-10 | Print visual regression (PDF render + image diff) | ✅ |
-| 0.6-11 | `faqir theme generate` — parametric oklch themes | ⬜ |
+| 0.6-11 | `faqir theme generate` — parametric oklch themes | ✅ |
 | 0.6-12 | `@faqir-ui/vue`: codegen + runtime for primitives | ⬜ |
 | 0.6-13 | `@faqir-ui/vue`: recipe controllers, SSR safety, events | ⬜ |
 | 0.6-14 | Patterns: `wizard` + `form-page` | ⬜ |
@@ -1588,9 +1588,20 @@ brand-matched document theme variant (`--document` flag) per §7.4.
 - CSS + hex accent inputs accepted; garbage input errors helpfully.
 
 **Acceptance criteria**
-- [ ] One brand color in → complete valid theme out, passing every theme gate the shipped themes pass.
-- [ ] `--document` emits a print-appropriate variant.
-- [ ] `--json` reports what was generated + computed contrast ratios (Formery automation hook).
+- [x] One brand color in → complete valid theme out, passing every theme gate the shipped themes pass. → The pure generator derives an 11-step OKLCH palette and manifest, validates coverage + manifest consistency + all `contrast-tokens` pairs before writes, and the five-hue test matrix runs those same gates programmatically.
+- [x] `--document` emits a print-appropriate variant. → `<name>-document.css` is light-only, A4-aware, flat/zero-shadow, crisp-radius, pt-sized, brand-matched, and ships its own derived manifest.
+- [x] `--json` reports what was generated + computed contrast ratios (Formery automation hook). → Schema v1 reports normalized accent/options, every CSS/manifest path, all declared-scheme token pairs, ratios, pass state, and whether primary lightness was auto-adjusted.
+
+**Delivered** — `faqir theme generate` accepts opaque OKLCH and short/full hex
+accents with deterministic cool/warm/gray neutrals, sm/md/lg radii, and
+light/dark/both schemes. Semantic primary/hover/active/subtle tokens map through
+the generated palette; light and dark choose contrast-safe inverted steps before
+any filesystem write. The existing MCP placeholder now exposes the same pure
+generator in memory, returning CSS, manifests, and ratios without filesystem
+access. Verification: 1,984 Bun tests, root/MCP/forms typecheck, Node CLI and MCP
+builds, plain-Node CLI generation, CLI smoke, registry self-audit, and package
+dry-run all green. One transition timing test flaked in the first full run, then
+passed in isolation and in the clean 1,984-test rerun.
 
 ---
 
