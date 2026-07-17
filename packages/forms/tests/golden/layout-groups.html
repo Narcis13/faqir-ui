@@ -1,0 +1,36 @@
+<!-- @ui:requires faqir-core.js faqir-validate.js -->
+<form id="faqir-form" l-data l-validate aria-label="Account">
+  <h1>Account</h1>
+  <fieldset data-ui="card" data-variant="outlined">
+    <legend data-part="title">Identity</legend>
+    <p data-part="description">Who you are.</p>
+    <div data-part="body">
+      <div data-ui="field-group">
+        <label data-part="label" for="faqir-field-fullname">Full name <span data-part="required">*</span></label>
+        <div data-part="input">
+          <input data-ui="input" id="faqir-field-fullname" name="fullName" required aria-required="true" aria-describedby="faqir-field-fullname-error" type="text">
+        </div>
+        <p data-part="error" id="faqir-field-fullname-error" aria-live="polite"></p>
+      </div>
+      <div data-ui="field-group">
+        <label data-part="label" for="faqir-field-email">Email <span data-part="required">*</span></label>
+        <div data-part="input">
+          <input data-ui="input" id="faqir-field-email" name="email" required aria-required="true" aria-describedby="faqir-field-email-error" type="email">
+        </div>
+        <p data-part="error" id="faqir-field-email-error" aria-live="polite"></p>
+      </div>
+    </div>
+  </fieldset>
+  <fieldset data-ui="card" data-variant="outlined">
+    <legend data-part="title">Preferences</legend>
+    <div data-part="body">
+      <div data-ui="field-group">
+        <label data-part="label" for="faqir-field-newsletter">Newsletter</label>
+        <div data-part="input">
+          <input data-ui="checkbox" type="checkbox" id="faqir-field-newsletter" name="newsletter" aria-describedby="faqir-field-newsletter-error">
+        </div>
+        <p data-part="error" id="faqir-field-newsletter-error" aria-live="polite"></p>
+      </div>
+    </div>
+  </fieldset>
+</form>

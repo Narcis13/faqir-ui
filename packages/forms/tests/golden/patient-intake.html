@@ -1,0 +1,203 @@
+<!-- @ui:requires faqir-core.js faqir-validate.js date-picker.js calendar.js -->
+<form id="intake-form" l-data="{ step: 0, rowsMedications: [{ __key: 1 }], seqMedications: 1 }" l-validate="step &lt; 2 ? (step = step + 1) : ($el.dataset.state = &#39;submitted&#39;)" aria-label="Patient intake" aria-describedby="intake-form-description">
+  <h1>Patient intake</h1>
+  <p id="intake-form-description">Pre-visit information for your first appointment.</p>
+  <div data-ui="stepper" role="navigation" aria-label="Intake steps">
+    <div data-part="step" data-state="active" :data-state="step &gt; 0 ? &#39;completed&#39; : (step === 0 ? &#39;active&#39; : null)">
+      <span data-part="indicator">1</span>
+      <span data-part="label">Patient</span>
+    </div>
+    <div data-part="connector"></div>
+    <div data-part="step" :data-state="step &gt; 1 ? &#39;completed&#39; : (step === 1 ? &#39;active&#39; : null)">
+      <span data-part="indicator">2</span>
+      <span data-part="label">History</span>
+    </div>
+    <div data-part="connector"></div>
+    <div data-part="step" :data-state="step &gt; 2 ? &#39;completed&#39; : (step === 2 ? &#39;active&#39; : null)">
+      <span data-part="indicator">3</span>
+      <span data-part="label">Consent</span>
+    </div>
+  </div>
+  <section data-ui="card" data-variant="outlined" :hidden="step !== 0" :data-state="step === 0 ? &#39;active&#39; : null">
+    <h2 data-part="title">Patient</h2>
+    <p data-part="description">Basic identity.</p>
+    <div data-part="body">
+      <div data-ui="field-group">
+        <label data-part="label" for="intake-field-fullname">Full name <span data-part="required">*</span></label>
+        <div data-part="input">
+          <input data-ui="input" id="intake-field-fullname" name="fullName" required aria-required="true" aria-describedby="intake-field-fullname-error" :disabled="step !== 0" type="text" minlength="2">
+        </div>
+        <p data-part="error" id="intake-field-fullname-error" aria-live="polite"></p>
+      </div>
+      <div data-ui="field-group">
+        <label data-part="label" for="intake-field-dateofbirth">Date of birth</label>
+        <div data-part="input">
+          <div data-ui="date-picker" data-state="closed" data-size="md">
+            <div data-part="trigger">
+              <input data-part="input" id="intake-field-dateofbirth" name="dateOfBirth" aria-describedby="intake-field-dateofbirth-error" :disabled="step !== 0" type="text" role="combobox" readonly aria-haspopup="dialog" aria-expanded="false" aria-label="Choose Date of birth">
+              <span data-part="icon" aria-hidden="true">&#x1F4C5;</span>
+            </div>
+            <div data-part="calendar" role="dialog" aria-label="Calendar" hidden>
+              <div data-ui="calendar" data-size="md">
+                <div data-part="header">
+                  <button data-part="nav-prev" type="button" aria-label="Previous month">&lsaquo;</button>
+                  <span data-part="month-label"></span>
+                  <button data-part="nav-next" type="button" aria-label="Next month">&rsaquo;</button>
+                </div>
+                <table data-part="grid" role="grid" aria-label="Calendar">
+                  <thead>
+                    <tr>
+                      <th scope="col" abbr="Sunday">Su</th>
+                      <th scope="col" abbr="Monday">Mo</th>
+                      <th scope="col" abbr="Tuesday">Tu</th>
+                      <th scope="col" abbr="Wednesday">We</th>
+                      <th scope="col" abbr="Thursday">Th</th>
+                      <th scope="col" abbr="Friday">Fr</th>
+                      <th scope="col" abbr="Saturday">Sa</th>
+                    </tr>
+                  </thead>
+                  <tbody data-part="grid-body"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p data-part="error" id="intake-field-dateofbirth-error" aria-live="polite"></p>
+      </div>
+      <div data-ui="field-group">
+        <label data-part="label" id="intake-field-sex-label" for="intake-field-sex-option-1">Sex at birth</label>
+        <div data-part="input">
+          <div data-ui="radio-group" role="radiogroup" aria-labelledby="intake-field-sex-label" aria-describedby="intake-field-sex-error">
+            <label data-ui="radio-label">
+              <input data-ui="radio" type="radio" id="intake-field-sex-option-1" name="sex" value="female" aria-describedby="intake-field-sex-error" :disabled="step !== 0">
+              <span data-part="label">female</span>
+            </label>
+            <label data-ui="radio-label">
+              <input data-ui="radio" type="radio" id="intake-field-sex-option-2" name="sex" value="male" aria-describedby="intake-field-sex-error" :disabled="step !== 0">
+              <span data-part="label">male</span>
+            </label>
+            <label data-ui="radio-label">
+              <input data-ui="radio" type="radio" id="intake-field-sex-option-3" name="sex" value="intersex" aria-describedby="intake-field-sex-error" :disabled="step !== 0">
+              <span data-part="label">intersex</span>
+            </label>
+          </div>
+        </div>
+        <p data-part="error" id="intake-field-sex-error" aria-live="polite"></p>
+      </div>
+      <fieldset data-ui="card" data-variant="outlined">
+        <legend data-part="title">Home address</legend>
+        <div data-part="body">
+          <div data-ui="field-group">
+            <label data-part="label" for="intake-field-address-street">Street</label>
+            <div data-part="input">
+              <input data-ui="input" id="intake-field-address-street" name="address.street" aria-describedby="intake-field-address-street-error" :disabled="step !== 0" type="text">
+            </div>
+            <p data-part="error" id="intake-field-address-street-error" aria-live="polite"></p>
+          </div>
+          <div data-ui="field-group">
+            <label data-part="label" for="intake-field-address-city">City <span data-part="required">*</span></label>
+            <div data-part="input">
+              <input data-ui="input" id="intake-field-address-city" name="address.city" required aria-required="true" aria-describedby="intake-field-address-city-error" :disabled="step !== 0" type="text">
+            </div>
+            <p data-part="error" id="intake-field-address-city-error" aria-live="polite"></p>
+          </div>
+        </div>
+      </fieldset>
+    </div>
+  </section>
+  <section data-ui="card" data-variant="outlined" :hidden="step !== 1" :data-state="step === 1 ? &#39;active&#39; : null">
+    <h2 data-part="title">History</h2>
+    <div data-part="body">
+      <div data-ui="field-group">
+        <label data-part="label" id="intake-field-symptoms-label" for="intake-field-symptoms-option-1">Current symptoms</label>
+        <div data-part="input">
+          <div data-ui="checkbox-group" role="group" aria-labelledby="intake-field-symptoms-label" aria-describedby="intake-field-symptoms-error">
+            <label data-ui="checkbox-label">
+              <input data-ui="checkbox" type="checkbox" id="intake-field-symptoms-option-1" name="symptoms" value="fever" aria-describedby="intake-field-symptoms-error" :disabled="step !== 1">
+              <span data-part="label">fever</span>
+            </label>
+            <label data-ui="checkbox-label">
+              <input data-ui="checkbox" type="checkbox" id="intake-field-symptoms-option-2" name="symptoms" value="cough" aria-describedby="intake-field-symptoms-error" :disabled="step !== 1">
+              <span data-part="label">cough</span>
+            </label>
+            <label data-ui="checkbox-label">
+              <input data-ui="checkbox" type="checkbox" id="intake-field-symptoms-option-3" name="symptoms" value="fatigue" aria-describedby="intake-field-symptoms-error" :disabled="step !== 1">
+              <span data-part="label">fatigue</span>
+            </label>
+            <label data-ui="checkbox-label">
+              <input data-ui="checkbox" type="checkbox" id="intake-field-symptoms-option-4" name="symptoms" value="headache" aria-describedby="intake-field-symptoms-error" :disabled="step !== 1">
+              <span data-part="label">headache</span>
+            </label>
+          </div>
+        </div>
+        <p data-part="error" id="intake-field-symptoms-error" aria-live="polite"></p>
+      </div>
+      <div data-ui="field-group">
+        <label data-part="label" for="intake-field-conditions">Diagnosed conditions</label>
+        <div data-part="input">
+          <select data-ui="select" multiple id="intake-field-conditions" name="conditions" aria-describedby="intake-field-conditions-error" :disabled="step !== 1">
+            <option value="asthma">asthma</option>
+            <option value="diabetes">diabetes</option>
+            <option value="hypertension">hypertension</option>
+            <option value="arthritis">arthritis</option>
+            <option value="migraine">migraine</option>
+            <option value="none">none</option>
+          </select>
+        </div>
+        <p data-part="error" id="intake-field-conditions-error" aria-live="polite"></p>
+      </div>
+      <fieldset data-ui="card" data-variant="outlined">
+        <legend data-part="title">Current medications</legend>
+        <p data-part="description">Everything you take regularly.</p>
+        <div data-part="body">
+          <template l-for="(row, rowIndex) in rowsMedications" l-key="row.__key">
+            <div data-ui="card" data-variant="filled" data-size="sm">
+              <div data-part="body">
+                <div data-ui="field-group">
+                  <label data-part="label" for="intake-field-medications-item-name" :for="&#39;intake-field-medications-&#39; + row.__key + &#39;-name&#39;">Medication <span data-part="required">*</span></label>
+                  <div data-part="input">
+                    <input data-ui="input" id="intake-field-medications-item-name" :id="&#39;intake-field-medications-&#39; + row.__key + &#39;-name&#39;" name="medications[].name" :name="&#39;medications[&#39; + rowIndex + &#39;].name&#39;" required aria-required="true" aria-describedby="intake-field-medications-item-name-error" :aria-describedby="&#39;intake-field-medications-&#39; + row.__key + &#39;-name-error&#39;" :disabled="step !== 1" type="text">
+                  </div>
+                  <p data-part="error" id="intake-field-medications-item-name-error" :id="&#39;intake-field-medications-&#39; + row.__key + &#39;-name-error&#39;" aria-live="polite"></p>
+                </div>
+                <div data-ui="field-group">
+                  <label data-part="label" for="intake-field-medications-item-dose" :for="&#39;intake-field-medications-&#39; + row.__key + &#39;-dose&#39;">Dose</label>
+                  <div data-part="input">
+                    <input data-ui="input" id="intake-field-medications-item-dose" :id="&#39;intake-field-medications-&#39; + row.__key + &#39;-dose&#39;" name="medications[].dose" :name="&#39;medications[&#39; + rowIndex + &#39;].dose&#39;" aria-describedby="intake-field-medications-item-dose-error" :aria-describedby="&#39;intake-field-medications-&#39; + row.__key + &#39;-dose-error&#39;" :disabled="step !== 1" type="text">
+                  </div>
+                  <p data-part="error" id="intake-field-medications-item-dose-error" :id="&#39;intake-field-medications-&#39; + row.__key + &#39;-dose-error&#39;" aria-live="polite"></p>
+                </div>
+                <button type="button" data-ui="button" data-variant="ghost" data-size="sm" @click="rowsMedications.splice(rowIndex, 1)" :disabled="step !== 1">Remove Current medications</button>
+              </div>
+            </div>
+          </template>
+          <button type="button" data-ui="button" data-variant="outline" data-size="sm" @click="rowsMedications.push({ __key: (seqMedications = seqMedications + 1) })" :disabled="rowsMedications.length &gt;= 10 || step !== 1">Add medication</button>
+        </div>
+      </fieldset>
+    </div>
+  </section>
+  <section data-ui="card" data-variant="outlined" :hidden="step !== 2" :data-state="step === 2 ? &#39;active&#39; : null">
+    <h2 data-part="title">Consent</h2>
+    <div data-part="body">
+      <div data-ui="field-group">
+        <label data-part="label" for="intake-field-email">Contact email <span data-part="required">*</span></label>
+        <div data-part="input">
+          <input data-ui="input" id="intake-field-email" name="email" required aria-required="true" aria-describedby="intake-field-email-error" :disabled="step !== 2" type="email">
+        </div>
+        <p data-part="error" id="intake-field-email-error" aria-live="polite"></p>
+      </div>
+      <div data-ui="field-group">
+        <label data-part="label" for="intake-field-consent">I consent to treatment <span data-part="required">*</span></label>
+        <div data-part="input">
+          <input data-ui="checkbox" type="checkbox" id="intake-field-consent" name="consent" required aria-required="true" aria-describedby="intake-field-consent-error" :disabled="step !== 2">
+        </div>
+        <p data-part="error" id="intake-field-consent-error" aria-live="polite"></p>
+      </div>
+    </div>
+  </section>
+  <div>
+    <button type="button" data-ui="button" data-variant="outline" :disabled="step === 0" @click="step = step - 1">Back</button>
+    <button type="submit" data-ui="button" data-variant="primary" :hidden="step === 2">Next</button>
+    <button type="submit" data-ui="button" data-variant="primary" :hidden="step !== 2">Submit</button>
+  </div>
+</form>

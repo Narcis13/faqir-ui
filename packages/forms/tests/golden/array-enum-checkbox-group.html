@@ -1,0 +1,28 @@
+<!-- @ui:requires faqir-core.js faqir-validate.js -->
+<form id="faqir-form" l-data l-validate>
+  <div data-ui="field-group">
+    <label data-part="label" id="faqir-field-channels-label" for="faqir-field-channels-option-1">Notification channels <span data-part="required">*</span></label>
+    <div data-part="input">
+      <div data-ui="checkbox-group" role="group" aria-labelledby="faqir-field-channels-label" aria-describedby="faqir-field-channels-hint faqir-field-channels-error">
+        <label data-ui="checkbox-label">
+          <input data-ui="checkbox" type="checkbox" id="faqir-field-channels-option-1" name="channels" value="email" aria-describedby="faqir-field-channels-hint faqir-field-channels-error" checked>
+          <span data-part="label">Email</span>
+        </label>
+        <label data-ui="checkbox-label">
+          <input data-ui="checkbox" type="checkbox" id="faqir-field-channels-option-2" name="channels" value="sms" aria-describedby="faqir-field-channels-hint faqir-field-channels-error">
+          <span data-part="label">SMS</span>
+        </label>
+        <label data-ui="checkbox-label">
+          <input data-ui="checkbox" type="checkbox" id="faqir-field-channels-option-3" name="channels" value="push" aria-describedby="faqir-field-channels-hint faqir-field-channels-error" checked>
+          <span data-part="label">Push</span>
+        </label>
+        <label data-ui="checkbox-label">
+          <input data-ui="checkbox" type="checkbox" id="faqir-field-channels-option-4" name="channels" value="post" aria-describedby="faqir-field-channels-hint faqir-field-channels-error">
+          <span data-part="label">Postal mail</span>
+        </label>
+      </div>
+    </div>
+    <p data-part="description" id="faqir-field-channels-hint">Pick any that apply.</p>
+    <p data-part="error" id="faqir-field-channels-error" aria-live="polite"></p>
+  </div>
+</form>

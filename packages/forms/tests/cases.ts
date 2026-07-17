@@ -7,6 +7,73 @@ export interface GoldenCase {
   opts?: RenderFormOptions;
 }
 
+/**
+ * The realistic end-to-end schema used by both the golden/audit gate and the
+ * happy-dom integration test: a patient-intake wizard exercising every §7.2
+ * composite — scalars, formats, enum radio, nested object, enum arrays at both
+ * cardinalities, a repeatable group, and per-step validation.
+ */
+export const PATIENT_INTAKE_SCHEMA: ObjectSchema = {
+  type: "object",
+  title: "Patient intake",
+  description: "Pre-visit information for your first appointment.",
+  properties: {
+    fullName: { type: "string", title: "Full name", minLength: 2 },
+    dateOfBirth: { type: "string", format: "date", title: "Date of birth" },
+    sex: { type: "string", title: "Sex at birth", enum: ["female", "male", "intersex"] },
+    address: {
+      type: "object",
+      title: "Home address",
+      properties: {
+        street: { type: "string", title: "Street" },
+        city: { type: "string", title: "City" },
+      },
+      required: ["city"],
+    },
+    symptoms: {
+      type: "array",
+      title: "Current symptoms",
+      items: { type: "string", enum: ["fever", "cough", "fatigue", "headache"] },
+      uniqueItems: true,
+    },
+    conditions: {
+      type: "array",
+      title: "Diagnosed conditions",
+      items: { type: "string", enum: ["asthma", "diabetes", "hypertension", "arthritis", "migraine", "none"] },
+      uniqueItems: true,
+    },
+    medications: {
+      type: "array",
+      title: "Current medications",
+      description: "Everything you take regularly.",
+      maxItems: 10,
+      items: {
+        type: "object",
+        properties: {
+          name: { type: "string", title: "Medication" },
+          dose: { type: "string", title: "Dose" },
+        },
+        required: ["name"],
+      },
+    },
+    email: { type: "string", format: "email", title: "Contact email" },
+    consent: { type: "boolean", title: "I consent to treatment" },
+  },
+  required: ["fullName", "email", "consent"],
+};
+
+export const PATIENT_INTAKE_UI: UISchema = {
+  "ui:wizard": {
+    label: "Intake steps",
+    steps: [
+      { title: "Patient", description: "Basic identity.", fields: ["fullName", "dateOfBirth", "sex", "address"] },
+      { title: "History", fields: ["symptoms", "conditions", "medications"] },
+      { title: "Consent", fields: ["email", "consent"] },
+    ],
+  },
+  medications: { addLabel: "Add medication" },
+};
+
 export const GOLDEN_CASES: GoldenCase[] = [
   {
     name: "string-input",
@@ -200,5 +267,147 @@ export const GOLDEN_CASES: GoldenCase[] = [
         },
       },
     },
+  },
+  {
+    name: "nested-object",
+    schema: {
+      type: "object",
+      title: "Shipping",
+      properties: {
+        recipient: { type: "string", title: "Recipient" },
+        address: {
+          type: "object",
+          title: "Address",
+          description: "Where the parcel goes.",
+          properties: {
+            street: { type: "string", title: "Street" },
+            city: { type: "string", title: "City" },
+            geo: {
+              type: "object",
+              title: "Coordinates",
+              properties: {
+                lat: { type: "number", title: "Latitude", minimum: -90, maximum: 90 },
+                lng: { type: "number", title: "Longitude", minimum: -180, maximum: 180 },
+              },
+            },
+          },
+          required: ["street", "city"],
+        },
+      },
+      required: ["recipient"],
+    },
+  },
+  {
+    name: "array-enum-checkbox-group",
+    schema: {
+      type: "object",
+      properties: {
+        channels: {
+          type: "array",
+          title: "Notification channels",
+          description: "Pick any that apply.",
+          items: { type: "string", enum: ["email", "sms", "push", "post"] },
+          uniqueItems: true,
+          default: ["email", "push"],
+        },
+      },
+      required: ["channels"],
+    },
+    uiSchema: {
+      channels: { enumLabels: ["Email", "SMS", "Push", "Postal mail"] },
+    },
+  },
+  {
+    name: "array-enum-multi-select",
+    schema: {
+      type: "object",
+      properties: {
+        regions: {
+          type: "array",
+          title: "Regions served",
+          items: { type: "string", enum: ["africa", "americas", "asia", "europe", "middle-east", "oceania"] },
+          uniqueItems: true,
+          default: ["europe"],
+        },
+      },
+    },
+  },
+  {
+    name: "array-of-objects",
+    schema: {
+      type: "object",
+      properties: {
+        contacts: {
+          type: "array",
+          title: "Emergency contacts",
+          description: "People we may call.",
+          minItems: 1,
+          maxItems: 3,
+          items: {
+            type: "object",
+            properties: {
+              name: { type: "string", title: "Name" },
+              phone: { type: "string", title: "Phone" },
+              relation: {
+                type: "string",
+                title: "Relation",
+                enum: ["parent", "partner", "sibling", "friend", "other"],
+              },
+            },
+            required: ["name", "phone"],
+          },
+        },
+      },
+    },
+    uiSchema: {
+      contacts: { addLabel: "Add contact", removeLabel: "Remove contact" },
+    },
+  },
+  {
+    name: "layout-groups",
+    schema: {
+      type: "object",
+      title: "Account",
+      properties: {
+        fullName: { type: "string", title: "Full name" },
+        email: { type: "string", format: "email", title: "Email" },
+        newsletter: { type: "boolean", title: "Newsletter" },
+      },
+      required: ["fullName", "email"],
+    },
+    uiSchema: {
+      "ui:groups": [
+        { title: "Identity", description: "Who you are.", fields: ["fullName", "email"] },
+        { title: "Preferences", fields: ["newsletter"] },
+      ],
+    },
+  },
+  {
+    name: "wizard",
+    schema: {
+      type: "object",
+      title: "Signup",
+      properties: {
+        fullName: { type: "string", title: "Full name" },
+        email: { type: "string", format: "email", title: "Email" },
+        plan: { type: "string", title: "Plan", enum: ["free", "team", "business"] },
+      },
+      required: ["fullName", "email"],
+    },
+    uiSchema: {
+      "ui:wizard": {
+        label: "Signup steps",
+        steps: [
+          { title: "Profile", description: "Tell us who you are.", fields: ["fullName", "email"] },
+          { title: "Plan", fields: ["plan"] },
+        ],
+      },
+    },
+  },
+  {
+    name: "patient-intake",
+    schema: PATIENT_INTAKE_SCHEMA,
+    uiSchema: PATIENT_INTAKE_UI,
+    opts: { idPrefix: "intake" },
   },
 ];

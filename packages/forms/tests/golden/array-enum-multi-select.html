@@ -1,0 +1,17 @@
+<!-- @ui:requires faqir-core.js faqir-validate.js -->
+<form id="faqir-form" l-data l-validate>
+  <div data-ui="field-group">
+    <label data-part="label" for="faqir-field-regions">Regions served</label>
+    <div data-part="input">
+      <select data-ui="select" multiple id="faqir-field-regions" name="regions" aria-describedby="faqir-field-regions-error">
+        <option value="africa">africa</option>
+        <option value="americas">americas</option>
+        <option value="asia">asia</option>
+        <option value="europe" selected>europe</option>
+        <option value="middle-east">middle-east</option>
+        <option value="oceania">oceania</option>
+      </select>
+    </div>
+    <p data-part="error" id="faqir-field-regions-error" aria-live="polite"></p>
+  </div>
+</form>

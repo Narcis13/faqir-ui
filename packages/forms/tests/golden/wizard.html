@@ -1,0 +1,65 @@
+<!-- @ui:requires faqir-core.js faqir-validate.js -->
+<form id="faqir-form" l-data="{ step: 0 }" l-validate="step &lt; 1 ? (step = step + 1) : ($el.dataset.state = &#39;submitted&#39;)" aria-label="Signup">
+  <h1>Signup</h1>
+  <div data-ui="stepper" role="navigation" aria-label="Signup steps">
+    <div data-part="step" data-state="active" :data-state="step &gt; 0 ? &#39;completed&#39; : (step === 0 ? &#39;active&#39; : null)">
+      <span data-part="indicator">1</span>
+      <span data-part="label">Profile</span>
+    </div>
+    <div data-part="connector"></div>
+    <div data-part="step" :data-state="step &gt; 1 ? &#39;completed&#39; : (step === 1 ? &#39;active&#39; : null)">
+      <span data-part="indicator">2</span>
+      <span data-part="label">Plan</span>
+    </div>
+  </div>
+  <section data-ui="card" data-variant="outlined" :hidden="step !== 0" :data-state="step === 0 ? &#39;active&#39; : null">
+    <h2 data-part="title">Profile</h2>
+    <p data-part="description">Tell us who you are.</p>
+    <div data-part="body">
+      <div data-ui="field-group">
+        <label data-part="label" for="faqir-field-fullname">Full name <span data-part="required">*</span></label>
+        <div data-part="input">
+          <input data-ui="input" id="faqir-field-fullname" name="fullName" required aria-required="true" aria-describedby="faqir-field-fullname-error" :disabled="step !== 0" type="text">
+        </div>
+        <p data-part="error" id="faqir-field-fullname-error" aria-live="polite"></p>
+      </div>
+      <div data-ui="field-group">
+        <label data-part="label" for="faqir-field-email">Email <span data-part="required">*</span></label>
+        <div data-part="input">
+          <input data-ui="input" id="faqir-field-email" name="email" required aria-required="true" aria-describedby="faqir-field-email-error" :disabled="step !== 0" type="email">
+        </div>
+        <p data-part="error" id="faqir-field-email-error" aria-live="polite"></p>
+      </div>
+    </div>
+  </section>
+  <section data-ui="card" data-variant="outlined" :hidden="step !== 1" :data-state="step === 1 ? &#39;active&#39; : null">
+    <h2 data-part="title">Plan</h2>
+    <div data-part="body">
+      <div data-ui="field-group">
+        <label data-part="label" id="faqir-field-plan-label" for="faqir-field-plan-option-1">Plan</label>
+        <div data-part="input">
+          <div data-ui="radio-group" role="radiogroup" aria-labelledby="faqir-field-plan-label" aria-describedby="faqir-field-plan-error">
+            <label data-ui="radio-label">
+              <input data-ui="radio" type="radio" id="faqir-field-plan-option-1" name="plan" value="free" aria-describedby="faqir-field-plan-error" :disabled="step !== 1">
+              <span data-part="label">free</span>
+            </label>
+            <label data-ui="radio-label">
+              <input data-ui="radio" type="radio" id="faqir-field-plan-option-2" name="plan" value="team" aria-describedby="faqir-field-plan-error" :disabled="step !== 1">
+              <span data-part="label">team</span>
+            </label>
+            <label data-ui="radio-label">
+              <input data-ui="radio" type="radio" id="faqir-field-plan-option-3" name="plan" value="business" aria-describedby="faqir-field-plan-error" :disabled="step !== 1">
+              <span data-part="label">business</span>
+            </label>
+          </div>
+        </div>
+        <p data-part="error" id="faqir-field-plan-error" aria-live="polite"></p>
+      </div>
+    </div>
+  </section>
+  <div>
+    <button type="button" data-ui="button" data-variant="outline" :disabled="step === 0" @click="step = step - 1">Back</button>
+    <button type="submit" data-ui="button" data-variant="primary" :hidden="step === 1">Next</button>
+    <button type="submit" data-ui="button" data-variant="primary" :hidden="step !== 1">Submit</button>
+  </div>
+</form>

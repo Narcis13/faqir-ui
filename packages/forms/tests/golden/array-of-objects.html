@@ -1,0 +1,45 @@
+<!-- @ui:requires faqir-core.js faqir-validate.js -->
+<form id="faqir-form" l-data="{ rowsContacts: [{ __key: 1 }], seqContacts: 1 }" l-validate>
+  <fieldset data-ui="card" data-variant="outlined">
+    <legend data-part="title">Emergency contacts</legend>
+    <p data-part="description">People we may call.</p>
+    <div data-part="body">
+      <template l-for="(row, rowIndex) in rowsContacts" l-key="row.__key">
+        <div data-ui="card" data-variant="filled" data-size="sm">
+          <div data-part="body">
+            <div data-ui="field-group">
+              <label data-part="label" for="faqir-field-contacts-item-name" :for="&#39;faqir-field-contacts-&#39; + row.__key + &#39;-name&#39;">Name <span data-part="required">*</span></label>
+              <div data-part="input">
+                <input data-ui="input" id="faqir-field-contacts-item-name" :id="&#39;faqir-field-contacts-&#39; + row.__key + &#39;-name&#39;" name="contacts[].name" :name="&#39;contacts[&#39; + rowIndex + &#39;].name&#39;" required aria-required="true" aria-describedby="faqir-field-contacts-item-name-error" :aria-describedby="&#39;faqir-field-contacts-&#39; + row.__key + &#39;-name-error&#39;" type="text">
+              </div>
+              <p data-part="error" id="faqir-field-contacts-item-name-error" :id="&#39;faqir-field-contacts-&#39; + row.__key + &#39;-name-error&#39;" aria-live="polite"></p>
+            </div>
+            <div data-ui="field-group">
+              <label data-part="label" for="faqir-field-contacts-item-phone" :for="&#39;faqir-field-contacts-&#39; + row.__key + &#39;-phone&#39;">Phone <span data-part="required">*</span></label>
+              <div data-part="input">
+                <input data-ui="input" id="faqir-field-contacts-item-phone" :id="&#39;faqir-field-contacts-&#39; + row.__key + &#39;-phone&#39;" name="contacts[].phone" :name="&#39;contacts[&#39; + rowIndex + &#39;].phone&#39;" required aria-required="true" aria-describedby="faqir-field-contacts-item-phone-error" :aria-describedby="&#39;faqir-field-contacts-&#39; + row.__key + &#39;-phone-error&#39;" type="text">
+              </div>
+              <p data-part="error" id="faqir-field-contacts-item-phone-error" :id="&#39;faqir-field-contacts-&#39; + row.__key + &#39;-phone-error&#39;" aria-live="polite"></p>
+            </div>
+            <div data-ui="field-group">
+              <label data-part="label" for="faqir-field-contacts-item-relation" :for="&#39;faqir-field-contacts-&#39; + row.__key + &#39;-relation&#39;">Relation</label>
+              <div data-part="input">
+                <select data-ui="select" id="faqir-field-contacts-item-relation" :id="&#39;faqir-field-contacts-&#39; + row.__key + &#39;-relation&#39;" name="contacts[].relation" :name="&#39;contacts[&#39; + rowIndex + &#39;].relation&#39;" aria-describedby="faqir-field-contacts-item-relation-error" :aria-describedby="&#39;faqir-field-contacts-&#39; + row.__key + &#39;-relation-error&#39;">
+                  <option value="" selected>Select Relation</option>
+                  <option value="parent">parent</option>
+                  <option value="partner">partner</option>
+                  <option value="sibling">sibling</option>
+                  <option value="friend">friend</option>
+                  <option value="other">other</option>
+                </select>
+              </div>
+              <p data-part="error" id="faqir-field-contacts-item-relation-error" :id="&#39;faqir-field-contacts-&#39; + row.__key + &#39;-relation-error&#39;" aria-live="polite"></p>
+            </div>
+            <button type="button" data-ui="button" data-variant="ghost" data-size="sm" @click="rowsContacts.splice(rowIndex, 1)" :disabled="rowsContacts.length &lt;= 1">Remove contact</button>
+          </div>
+        </div>
+      </template>
+      <button type="button" data-ui="button" data-variant="outline" data-size="sm" @click="rowsContacts.push({ __key: (seqContacts = seqContacts + 1) })" :disabled="rowsContacts.length &gt;= 3">Add contact</button>
+    </div>
+  </fieldset>
+</form>

@@ -2,7 +2,7 @@
   "$schema": "./state.schema.md",
   "plan": "FAQIR-PLAN.md",
   "current": null,
-  "last_completed": "0.6-12",
+  "last_completed": "0.6-04",
   "history": [
     {
       "id": "phases v0.3–v0.5",
@@ -51,6 +51,12 @@
       "completed": "2026-07-16",
       "commit": "7b7cade",
       "summary": "User-requested out-of-order task: new `faqir bindings vue` command (target-agnostic manifest→IR walker + Vue emitter) generating all 39 primitives as typed Vue 3 components over a 128-line hand-written runtime; typed literal-union props, data-part slot projection, boolean state props; drift guard in bun test + CI check:bindings. Full 2014-test suite green. NOTE: state.current was 0.6-04 (started, unfinished in a prior session) when this session began — 0.6-04 remains ⬜ and is the next pending task in document order."
+    },
+    {
+      "id": "0.6-04",
+      "completed": "2026-07-17",
+      "commit": "PENDING",
+      "summary": "@faqir-ui/forms composites: nested objects → fieldset cards (recursive), enum arrays → checkbox-group/multi-select on the shared 4-value threshold, arrays of objects → repeatable groups (form-scope l-data + keyed l-for, static+bound row wiring, min/max gates), ui:groups layout groups, and a ui:wizard multi-step stub of the unlanded 0.6-14 pattern (stepper + card panels + per-step faqir-validate gate). All 18 golden schemas audit-clean; §7.2 mapping checklist mirrored in tests; patient-intake e2e (render→validate→submit, zero custom JS) green under happy-dom. Forms now always emit l-data (bare forms were never walked by bootstrap); core scope-root findings filed as follow-up 0.6-15. Deviation: multi-select instead of tag-input (no tag-input in registry)."
     }
   ],
   "note": "Pointer file for the /faqir-plan slash command. FAQIR-PLAN.md status cells (⬜/✅) are the source of truth; this file records the cross-session cursor and a per-task log. Do not hand-edit `current` while a session is running."

@@ -1,0 +1,50 @@
+<!-- @ui:requires faqir-core.js faqir-validate.js -->
+<form id="faqir-form" l-data l-validate aria-label="Shipping">
+  <h1>Shipping</h1>
+  <div data-ui="field-group">
+    <label data-part="label" for="faqir-field-recipient">Recipient <span data-part="required">*</span></label>
+    <div data-part="input">
+      <input data-ui="input" id="faqir-field-recipient" name="recipient" required aria-required="true" aria-describedby="faqir-field-recipient-error" type="text">
+    </div>
+    <p data-part="error" id="faqir-field-recipient-error" aria-live="polite"></p>
+  </div>
+  <fieldset data-ui="card" data-variant="outlined">
+    <legend data-part="title">Address</legend>
+    <p data-part="description">Where the parcel goes.</p>
+    <div data-part="body">
+      <div data-ui="field-group">
+        <label data-part="label" for="faqir-field-address-street">Street <span data-part="required">*</span></label>
+        <div data-part="input">
+          <input data-ui="input" id="faqir-field-address-street" name="address.street" required aria-required="true" aria-describedby="faqir-field-address-street-error" type="text">
+        </div>
+        <p data-part="error" id="faqir-field-address-street-error" aria-live="polite"></p>
+      </div>
+      <div data-ui="field-group">
+        <label data-part="label" for="faqir-field-address-city">City <span data-part="required">*</span></label>
+        <div data-part="input">
+          <input data-ui="input" id="faqir-field-address-city" name="address.city" required aria-required="true" aria-describedby="faqir-field-address-city-error" type="text">
+        </div>
+        <p data-part="error" id="faqir-field-address-city-error" aria-live="polite"></p>
+      </div>
+      <fieldset data-ui="card" data-variant="outlined">
+        <legend data-part="title">Coordinates</legend>
+        <div data-part="body">
+          <div data-ui="field-group">
+            <label data-part="label" for="faqir-field-address-geo-lat">Latitude</label>
+            <div data-part="input">
+              <input data-ui="input" id="faqir-field-address-geo-lat" name="address.geo.lat" aria-describedby="faqir-field-address-geo-lat-error" type="number" min="-90" max="90">
+            </div>
+            <p data-part="error" id="faqir-field-address-geo-lat-error" aria-live="polite"></p>
+          </div>
+          <div data-ui="field-group">
+            <label data-part="label" for="faqir-field-address-geo-lng">Longitude</label>
+            <div data-part="input">
+              <input data-ui="input" id="faqir-field-address-geo-lng" name="address.geo.lng" aria-describedby="faqir-field-address-geo-lng-error" type="number" min="-180" max="180">
+            </div>
+            <p data-part="error" id="faqir-field-address-geo-lng-error" aria-live="polite"></p>
+          </div>
+        </div>
+      </fieldset>
+    </div>
+  </fieldset>
+</form>

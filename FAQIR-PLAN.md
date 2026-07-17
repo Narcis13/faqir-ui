@@ -112,7 +112,7 @@ done in any order (or in parallel worktrees).
 | 0.6-01 | `field-group` validation contract normalization | ✅ |
 | 0.6-02 | `faqir-validate.js` plugin | ✅ |
 | 0.6-03 | `@faqir-ui/forms` core: package + scalar widget mapping | ✅ |
-| 0.6-04 | `@faqir-ui/forms` composite: nested objects, arrays, wizard, audit-clean gate | ⬜ |
+| 0.6-04 | `@faqir-ui/forms` composite: nested objects, arrays, wizard, audit-clean gate | ✅ |
 | 0.6-05 | Plugins: `faqir-persist` + `faqir-intersect` | ✅ |
 | 0.6-06 | Plugin: `faqir-mask` (wire into input-otp) | ✅ |
 | 0.6-07 | Documents: running headers/footers (`doc-header`/`doc-footer`) | ✅ |
@@ -1425,9 +1425,11 @@ pattern. Client runtime remains faqir-core + faqir-validate only.
 - Audit gate extended over all composite outputs — still zero findings.
 
 **Acceptance criteria**
-- [ ] The §7.2 widget-mapping table fully implemented (checklist in test file mirrors it).
-- [ ] A realistic end-to-end schema (patient intake-style) renders, validates, and submits in a happy-dom integration test with zero custom JS.
-- [ ] Package publishable: exports map, `.d.ts`, README with the 3-line usage example.
+- [x] The §7.2 widget-mapping table fully implemented (checklist in test file mirrors it). (The "§7.2 widget-mapping table" describe block in `packages/forms/tests/forms.test.ts` mirrors the README table row-for-row — 17 mappings from scalar inputs through nested fieldset cards, enum-array checkbox-group/multi-select on the shared 4-value threshold, keyed-`l-for` repeatable groups, `ui:groups`, and `ui:wizard` — each asserting its documented widget, and the audit gate holds every golden case (scalar + composite, 18 schemas) at exactly zero findings. Deviation: high-cardinality enum arrays render as native `select[multiple]` — the registry has no tag-input component yet, so tag-input is a future upgrade once one exists.)
+- [x] A realistic end-to-end schema (patient intake-style) renders, validates, and submits in a happy-dom integration test with zero custom JS. (`packages/forms/tests/composites.test.ts` walks a three-step patient-intake wizard against faqir-core + faqir-validate only: required scalars + nested address gate step 1, a required repeatable-medication field blocks step 2 until filled and a keyed row is added live, email format + required consent gate step 3, completion flips the form to `data-state="submitted"`, the stepper reads completed/completed/active, and the output contains no `<script>`. The same file proves keyed add/remove with DOM-state preservation and per-row validation.)
+- [x] Package publishable: exports map, `.d.ts`, README with the 3-line usage example. (Exports map unchanged and valid; `src/index.d.ts` extended with the composite schema/UI types — `ObjectFieldSchema`, `EnumArraySchema`, `ObjectArraySchema`, `UILayoutGroup`, `UIWizard`; README keeps the 3-line usage example and documents the full mapping table, composite uiSchema, wizard contract, and strict-subset rules; `tsc --noEmit` (checkJs) green.)
+
+**Dependency note (0.6-14):** the wizard pattern was NOT landed; this task renders a stub of its documented contract — stepper + card + field-group + button, `l-data`-driven `{ step }`, visibility/state via `:hidden`/`:data-state` bindings, per-step gate via disabled inactive-step controls + the `l-validate` on-valid hook. When 0.6-14 lands, its `form-page`/`wizard` golden should be pinned against this generator's output (0.6-14 already plans that shared fixture).
 
 ---
 
@@ -2114,3 +2116,4 @@ submissions, Show HN, awesome lists) as a doc — execution is human.
 | 0.4-32 | combobox has no blur / outside-click commit-or-revert: there is no `blur` handler, so outside-click closes the popup but leaves the typed text as-is — neither committed as a selection nor reverted to the last committed value. Add blur-commit-or-revert semantics and flip the codified GAP test in `tests/recipes/combobox.test.ts`. | 0.4-21 | ⬜ |
 | 0.4-33 | command-palette Escape does not layer: it closes immediately regardless of filter text, instead of first clearing a non-empty filter and only closing on a second press (APG). Make Escape clear a non-empty filter first, then close, and flip the codified GAP test in `tests/recipes/command-palette.test.ts`. | 0.4-21 | ⬜ |
 | 0.4-34 | command-palette APG combobox `aria-activedescendant`: the active item is tracked only via `data-highlighted`, items carry no `id`, the search input never gets `aria-activedescendant`, and the highlight is mirrored onto the item's `aria-selected` (active vs selected conflated). Assign item ids, set `aria-activedescendant` on the search input during nav, stop overloading `aria-selected`, and flip the codified GAP test in `tests/recipes/command-palette.test.ts`. | 0.4-21 | ⬜ |
+| 0.6-15 | faqir-core scope-root ergonomics found by 0.6-04: (1) bind (`:attr`) directives declared ON an `l-data` scope root are never applied — `initTree` runs only *plugin* directives on the root element itself; (2) nested `l-data` scopes do not chain to their parent scope (`createScopeWithMagics` gets no parentScope), so descendant expressions cannot see ancestor scope vars; (3) a bare `<form l-validate>` with no `l-data`/`data-ui` is never walked by bootstrap at all. Decide intended semantics, implement (apply built-in directives on scope roots; prototype-chain nested scopes), and add core tests. `@faqir-ui/forms` works around all three today: forms always emit `l-data`, repeatable-row state is hoisted onto the form's scope, and wizard completion is reflected via `$el.dataset.state` instead of a root binding. | 0.6-04 | ⬜ |
