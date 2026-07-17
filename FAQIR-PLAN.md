@@ -128,7 +128,7 @@ done in any order (or in parallel worktrees).
 
 | ID | Task | Status |
 |----|------|--------|
-| 0.7-01 | `@faqir-ui/react`: codegen + runtime for primitives | ⬜ |
+| 0.7-01 | `@faqir-ui/react`: codegen + runtime for primitives | ✅ |
 | 0.7-02 | `@faqir-ui/react`: recipe wrappers, hooks, RSC boundaries | ⬜ |
 | 0.7-03 | Recipes: `context-menu` + `menubar` | ⬜ |
 | 0.7-04 | Recipe: `tree-view` | ⬜ |
@@ -1726,9 +1726,31 @@ Same drift guard as Vue.
 - CI regeneration-drift check.
 
 **Acceptance criteria**
-- [ ] All primitives generated, typed, RSC-safe.
-- [ ] Shared codegen core between Vue/React targets (no forked manifest-walking logic).
-- [ ] Drift check wired in CI.
+- [x] All primitives generated, typed, RSC-safe. (All **39** registry primitives → `packages/react/src/components/*.ts`, each exporting per-group literal-union types (`LButtonVariant`, `LIconIcon`, …) + a `Props` interface that extends `ComponentPropsWithoutRef<tag>` with the Faqir-declared names Omitted first — `size` is `number` on `<input>`, `title` is `string` everywhere, so the Omit is what lets the interface `extend` at all. Interpreted by the one hand-written file `runtime.ts` (**130 lines**) via `React.createElement` inside a `forwardRef`. RSC-safe by construction: `rsc.test.tsx` asserts no `"use client"` directive and no `use[State|Effect|Ref|Context|Reducer|LayoutEffect|Id]` in any generated module or the runtime, and `renderToStaticMarkup`s every primitive server-side without a client bailout. `@testing-library/react` matrix (`components.test.tsx`) drives every variant value + every state prop of all 39 primitives, slot→`data-part` projection, and ref-forwards-to-root for all 39; `tsc --noEmit` compiles the package and a negative fixture proves the unions reject a wrong literal.)
+- [x] Shared codegen core between Vue/React targets (no forked manifest-walking logic). (Both emitters consume the identical `ComponentIR` from `src/bindings/ir.ts` — the single manifest→IR walker. `src/bindings/react.ts` is a pure emitter (types + spec strings) with zero manifest reads; `loadPrimitiveIRs` is shared verbatim, and `codegen.test.ts` builds its matrix from the same `loadPrimitiveIRs` the Vue suite uses.)
+- [x] Drift check wired in CI. (`faqir bindings react --check` → `check:bindings` now runs `vue --check && react --check`; the CI registry-audit job's `bun run check:bindings` step covers both. Plus an always-on bun-test drift guard in `codegen.test.ts`: committed files must byte-match a fresh regeneration, with stale-file detection. Node dist CLI verified: `node dist/faqir.mjs bindings react --check` green.)
+
+**Delivered** — new `react` target on the existing `faqir bindings <target>`
+command, sharing the target-agnostic IR (`src/bindings/ir.ts`) with Vue — no
+forked manifest-walking. `src/bindings/react.ts` emits one spec-only TS module
+per primitive (literal-union variant types, boolean state props, named slots as
+`ReactNode` props, `Props` extending `ComponentPropsWithoutRef<tag>` with all
+Faqir-declared names Omitted from the base). The only hand-written file,
+`packages/react/src/runtime.ts` (130 lines), builds a `forwardRef` component
+with `React.createElement`: `data-ui`/variant attrs, first-truthy `data-state`,
+presence/aria states, named-slot `data-part` wrappers (void wrappers pass
+content through), positional-spread children, ref → root, and non-Faqir prop
+fall-through. RSC-safe: no `"use client"`, no hooks, no `react-dom` import — the
+runtime is server-renderable and so is every generated module. 38 new tests
+(40 codegen snapshots; `@testing-library/react` DOM matrix over every variant
+value + state prop of all 39 primitives; slot projection incl. void/required;
+ref-forwarding for all 39; RSC smoke via `renderToStaticMarkup`; positive `tsc`
+compile + negative union fixture; drift + stale guards). Dev-only workspace deps
+added to `packages/react`: `react`/`react-dom` 19, `@types/react(-dom)`,
+`@testing-library/react`+`/dom` (`react`/`react-dom` are peers for consumers —
+`^18.2 || ^19`; CLI runtime stays zero-dependency). Root `typecheck` now runs
+`tsc -p packages/react/tsconfig.json`; `check:bindings`/`gen:bindings` cover both
+targets. Ships no CSS, uses no faqir-core directives.
 
 ---
 

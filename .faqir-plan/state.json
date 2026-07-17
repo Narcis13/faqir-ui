@@ -2,7 +2,7 @@
   "$schema": "./state.schema.md",
   "plan": "FAQIR-PLAN.md",
   "current": null,
-  "last_completed": "0.6-14",
+  "last_completed": "0.7-01",
   "history": [
     {
       "id": "phases v0.3–v0.5",
@@ -63,6 +63,12 @@
       "completed": "2026-07-17",
       "commit": "8bca7a4",
       "summary": "@faqir-ui/vue recipes + SSR: `faqir bindings vue` now generates all 22 recipes — recipe IR (src/bindings/recipe-ir.ts) parses each manifest reference template into a static render tree (contract attrs + hidden FOUC guards verbatim, l-* stripped, unique parts → named slots, variants → union props on their applied_to part, placeholders → string/boolean props, id via Vue 3.5 useId) and scans controllers for @ui:provides methods + dispatched faqir:* events (cross-recipe imports followed); controllers vendored into packages/vue/src/controllers with rewritten imports under the drift guard. Hand-written recipe-runtime.ts (149 lines): onMounted create / onBeforeUnmount destroy, events re-emitted as Vue events (detail, event), controller API exposed (dialogRef.open()). 30 new tests incl. per-recipe lifecycle/leak spies, SSR renderToString in a zero-DOM subprocess, warning-free hydration for every recipe. Demo SFC (5 recipes + 3 primitives) verified in Chrome against the real CSS bundle; README covers recipes + Inertia/SSR. vue peer bumped to ^3.5.0. 2082 tests green."
+    },
+    {
+      "id": "0.7-01",
+      "completed": "2026-07-18",
+      "commit": "386161c",
+      "summary": "@faqir-ui/react codegen + primitives. New `react` target on `faqir bindings <target>`, sharing the target-agnostic IR (src/bindings/ir.ts) with Vue — no forked manifest-walking. src/bindings/react.ts emits one spec-only TS module per primitive (literal-union variant types, boolean state props, named slots as ReactNode props, Props extending ComponentPropsWithoutRef<tag> with all Faqir-declared names Omitted from the base — size/title collide with DOM attrs). Hand-written packages/react/src/runtime.ts (130 lines) builds a forwardRef component via React.createElement: data-ui/variant attrs, first-truthy data-state, presence/aria states, data-part slot wrappers, ref→root, non-Faqir prop fall-through. RSC-safe: no `use client`, no hooks, no react-dom import; renderToStaticMarkup renders every primitive server-side. 38 new tests (40 codegen snapshots; @testing-library/react DOM matrix + ref-forwarding over all 39 primitives; RSC smoke; positive tsc + negative union fixture; drift/stale guards). Dev deps react/react-dom 19 + @testing-library/react in packages/react (react/react-dom are peers ^18.2||^19; CLI stays zero-dep). check:bindings/gen:bindings/typecheck now cover both targets; CI drift gate extended. 2136 tests green (+38). Node dist CLI verified."
     },
     {
       "id": "0.6-14",

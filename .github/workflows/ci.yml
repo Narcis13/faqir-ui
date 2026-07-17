@@ -62,8 +62,9 @@ jobs:
       # skill matches a fresh manifest-derived generation.
       - run: bun run check:schema-refs
       - run: bun run check:skill
-      # Bindings drift gate (task 0.6-12, §11.1): the committed @faqir-ui/vue
-      # components must byte-match a fresh `faqir bindings vue` regeneration.
+      # Bindings drift gate (tasks 0.6-12/0.7-01, §11.1): the committed
+      # @faqir-ui/vue and @faqir-ui/react components must byte-match a fresh
+      # `faqir bindings <target>` regeneration.
       - run: bun run check:bindings
 
   # (5) Size budgets. Reassemble the engine from source first so the measurement
