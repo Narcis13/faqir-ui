@@ -67,7 +67,7 @@
     {
       "id": "0.6-14",
       "completed": "2026-07-17",
-      "commit": null,
+      "commit": "4a7b2ce",
       "summary": "Patterns wizard + form-page. `wizard`: fully-declarative multi-step form (stepper + card panels + field-group + buttons) driven by one l-data `{ step }` — :hidden/:data-state bindings for visibility+indicators, @click/submit nav, and faqir-validate's l-validate on-valid hook to advance/block-while-invalid (inactive-step controls :disabled so excluded from validation) and, on the final step, set data-state=submitted + dispatch faqir:wizard-complete. Zero custom JS; verified end-to-end in Chrome (next/back, completed states, gating, completion event detail.steps=2) and by 11 happy-dom tests. `form-page`: the canonical schema-rendered form page, pinned byte-for-byte to @faqir-ui/forms output — shared FORM_PAGE_SCHEMA fixture in cases.ts, pattern HTML generated from it, drift-guarded by packages/forms/tests/form-page-golden.test.ts (generator↔pattern can't diverge). Both manifests validate + document composition; both pages faqir-audit-clean and auto-discovered by the visual/a11y matrix. Regenerated registry-index + faqir-creator skill. 2098 tests green (+16)."
     }
   ],
