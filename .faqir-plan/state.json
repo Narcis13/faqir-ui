@@ -55,7 +55,7 @@
     {
       "id": "0.6-04",
       "completed": "2026-07-17",
-      "commit": "PENDING",
+      "commit": "0317fa9",
       "summary": "@faqir-ui/forms composites: nested objects → fieldset cards (recursive), enum arrays → checkbox-group/multi-select on the shared 4-value threshold, arrays of objects → repeatable groups (form-scope l-data + keyed l-for, static+bound row wiring, min/max gates), ui:groups layout groups, and a ui:wizard multi-step stub of the unlanded 0.6-14 pattern (stepper + card panels + per-step faqir-validate gate). All 18 golden schemas audit-clean; §7.2 mapping checklist mirrored in tests; patient-intake e2e (render→validate→submit, zero custom JS) green under happy-dom. Forms now always emit l-data (bare forms were never walked by bootstrap); core scope-root findings filed as follow-up 0.6-15. Deviation: multi-select instead of tag-input (no tag-input in registry)."
     }
   ],
