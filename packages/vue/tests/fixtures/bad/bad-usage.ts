@@ -3,8 +3,13 @@
 // tsconfig; only tests/fixtures/bad/tsconfig.json includes it.
 
 import type { LButtonProps } from "../../../src/components/button";
+import type { LDialogProps } from "../../../src/recipes/dialog";
 
 export const bad: LButtonProps = {
   variant: "not-a-real-variant", // this MUST be a type error for the test to pass
   size: "sm",
+};
+
+export const badRecipe: LDialogProps = {
+  size: "xl", // this MUST be a type error too — recipe unions are enforced
 };

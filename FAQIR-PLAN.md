@@ -121,7 +121,7 @@ done in any order (or in parallel worktrees).
 | 0.6-10 | Print visual regression (PDF render + image diff) | ✅ |
 | 0.6-11 | `faqir theme generate` — parametric oklch themes | ✅ |
 | 0.6-12 | `@faqir-ui/vue`: codegen + runtime for primitives | ✅ |
-| 0.6-13 | `@faqir-ui/vue`: recipe controllers, SSR safety, events | ⬜ |
+| 0.6-13 | `@faqir-ui/vue`: recipe controllers, SSR safety, events | ✅ |
 | 0.6-14 | Patterns: `wizard` + `form-page` | ⬜ |
 
 ### Phase v0.7 — Ecosystem
@@ -1662,9 +1662,26 @@ render).
 - SSR: `renderToString` succeeds for every recipe component (no DOM access at render time); hydration-safe markup (client mount over SSR output doesn't warn).
 
 **Acceptance criteria**
-- [ ] Every recipe wrapped, typed, SSR-tested.
-- [ ] A demo Vue SFC page (in package examples) uses ≥ 5 components against the real CSS bundle — manually verified, committed.
-- [ ] README covers Inertia/SSR usage (Formery's stack).
+- [x] Every recipe wrapped, typed, SSR-tested. (All **22** registry recipes → generated `packages/vue/src/recipes/*.ts` specs + vendored `src/controllers/*.ts`, interpreted by the hand-written `recipe-runtime.ts` (149 lines). Data-driven tests cover every recipe: controller created once on mount / destroyed on unmount via the exported `__activeControllers` registry, zero leaked listeners via EventTarget.prototype spies, `wrapper.vm.open()` + template-ref API, events re-emitted with `(detail, event)` payloads (alert-dialog cancel/confirm incl. preventDefault-keeps-open, pagination page-change). SSR: a `bun run` subprocess with **zero DOM globals** renderToStrings all 22 recipes (tests/ssr/render-all.ts), and client mount over the SSR output hydrates warning-free for every recipe. `LDialogProps` negative vue-tsc fixture proves recipe unions reject `size: "xl"`.)
+- [x] A demo Vue SFC page (in package examples) uses ≥ 5 components against the real CSS bundle — manually verified, committed. (`packages/vue/examples/demo/App.vue` — 5 recipes (dialog, alert-dialog, tabs, accordion, toast) + 3 primitives (button, card, badge) served by `examples/demo/serve.ts` (vue/compiler-sfc + Bun.build, no new deps) against `@faqir-ui/core/dist/faqir.default.css`; verified in Chrome: dialog open via exposed ref API and native trigger, alert-dialog confirm → `@confirm` badge update + success toast, tab switch, accordion expand.)
+- [x] README covers Inertia/SSR usage (Formery's stack). (README "Recipes" section documents the generation contract, exposed API, events, slots; "SSR, Inertia, Nuxt" section covers createSSRApp/Inertia entries, explicit-id guidance, client-only events, and navigation unmount/destroy behavior.)
+
+**Delivered** — `faqir bindings vue` now also generates the recipe layer: a new
+recipe IR (`src/bindings/recipe-ir.ts`) parses each manifest's reference
+template into a static render tree (contract attrs, `hidden` FOUC guards, and
+a11y wiring verbatim; `l-*` directives stripped; sample content demoted to slot
+fallback) and scans the controller for `@ui:provides` methods and dispatched
+`faqir:*` events (following cross-recipe imports: alert-dialog re-emits
+dialog's confirm/cancel, date-picker re-emits calendar-change). Controllers are
+vendored verbatim into `packages/vue/src/controllers/` with imports rewritten
+(registry stays the single source; drift guard covers the copies). Generation
+contract: unique manifest parts → named slots (template children as fallback),
+root default slot replaces the whole anatomy, variant groups → literal-union
+props written on root or their `applied_to` part, template placeholders backed
+by manifest props → string props, attribute-position placeholders → boolean
+props, `id` prop everywhere (Vue 3.5 `useId` when unset — peer bumped to
+^3.5.0). 30 new tests (2082 total green); `--check` covers
+components+recipes+controllers incl. stale files; Node dist CLI re-verified.
 
 ---
 

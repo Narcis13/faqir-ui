@@ -9,6 +9,7 @@ import { log } from "../utils/logger";
 import { ensureDir, getRegistryPath, getPackageRoot } from "../utils/fs";
 import { isJSONMode, emitJSON } from "../utils/json-output";
 import { loadPrimitiveIRs } from "../bindings/ir";
+import { loadRecipeBundle } from "../bindings/recipe-ir";
 import { emitVuePackage } from "../bindings/vue";
 
 const TARGETS = ["vue"] as const;
@@ -34,12 +35,18 @@ function defaultOutDir(target: Target): string {
 
 /** Files a previous generation wrote that a fresh one no longer produces. */
 function staleFiles(outDir: string, fresh: Map<string, string>): string[] {
-  const componentsDir = join(outDir, "components");
-  if (!existsSync(componentsDir)) return [];
-  return readdirSync(componentsDir)
-    .filter((f) => f.endsWith(".ts") && statSync(join(componentsDir, f)).isFile())
-    .map((f) => `components/${f}`)
-    .filter((rel) => !fresh.has(rel));
+  const stale: string[] = [];
+  for (const sub of ["components", "recipes", "controllers"]) {
+    const dir = join(outDir, sub);
+    if (!existsSync(dir)) continue;
+    stale.push(
+      ...readdirSync(dir)
+        .filter((f) => f.endsWith(".ts") && statSync(join(dir, f)).isFile())
+        .map((f) => `${sub}/${f}`)
+        .filter((rel) => !fresh.has(rel))
+    );
+  }
+  return stale;
 }
 
 export async function bindings(args: string[]): Promise<void> {
@@ -64,7 +71,8 @@ export async function bindings(args: string[]): Promise<void> {
 
   const outDir = outArg ?? defaultOutDir(target);
   const irs = await loadPrimitiveIRs(getRegistryPath());
-  const files = emitVuePackage(irs);
+  const recipes = await loadRecipeBundle(getRegistryPath());
+  const files = emitVuePackage(irs, recipes);
 
   if (check) {
     const drifted: string[] = [];
@@ -75,13 +83,13 @@ export async function bindings(args: string[]): Promise<void> {
     drifted.push(...staleFiles(outDir, files));
 
     if (isJSONMode()) {
-      emitJSON({ target, out: outDir, components: irs.length, drifted, ok: drifted.length === 0 });
+      emitJSON({ target, out: outDir, components: irs.length, recipes: recipes.irs.length, drifted, ok: drifted.length === 0 });
     } else if (drifted.length > 0) {
       log.error(`Bindings drift: ${drifted.length} file(s) differ from regeneration.`);
       for (const rel of drifted) console.log(`  ${rel}`);
       log.dim(`Run 'faqir bindings ${target}' to regenerate.`);
     } else {
-      log.success(`Bindings in sync: ${irs.length} components, zero drift.`);
+      log.success(`Bindings in sync: ${irs.length} primitives + ${recipes.irs.length} recipes, zero drift.`);
     }
     if (drifted.length > 0) process.exit(1);
     return;
@@ -98,11 +106,12 @@ export async function bindings(args: string[]): Promise<void> {
       target,
       out: outDir,
       components: irs.length,
+      recipes: recipes.irs.length,
       files: [...files.keys()],
       ok: true,
     });
     return;
   }
-  log.success(`Generated ${irs.length} ${target} components into ${outDir}`);
-  log.dim("Runtime is hand-written (src/runtime.ts); everything else regenerates.");
+  log.success(`Generated ${irs.length} primitives + ${recipes.irs.length} recipes into ${outDir}`);
+  log.dim("Runtimes are hand-written (src/runtime.ts, src/recipe-runtime.ts); everything else regenerates.");
 }

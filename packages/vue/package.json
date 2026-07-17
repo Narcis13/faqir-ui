@@ -16,6 +16,7 @@
   },
   "files": [
     "src",
+    "examples",
     "README.md"
   ],
   "sideEffects": false,
@@ -24,7 +25,7 @@
     "typecheck": "vue-tsc --noEmit -p tsconfig.json"
   },
   "peerDependencies": {
-    "vue": "^3.3.0"
+    "vue": "^3.5.0"
   },
   "devDependencies": {
     "@vue/test-utils": "^2.4.6",

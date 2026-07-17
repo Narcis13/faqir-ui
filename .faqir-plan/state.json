@@ -2,7 +2,7 @@
   "$schema": "./state.schema.md",
   "plan": "FAQIR-PLAN.md",
   "current": null,
-  "last_completed": "0.6-04",
+  "last_completed": "0.6-13",
   "history": [
     {
       "id": "phases v0.3–v0.5",
@@ -57,6 +57,12 @@
       "completed": "2026-07-17",
       "commit": "0317fa9",
       "summary": "@faqir-ui/forms composites: nested objects → fieldset cards (recursive), enum arrays → checkbox-group/multi-select on the shared 4-value threshold, arrays of objects → repeatable groups (form-scope l-data + keyed l-for, static+bound row wiring, min/max gates), ui:groups layout groups, and a ui:wizard multi-step stub of the unlanded 0.6-14 pattern (stepper + card panels + per-step faqir-validate gate). All 18 golden schemas audit-clean; §7.2 mapping checklist mirrored in tests; patient-intake e2e (render→validate→submit, zero custom JS) green under happy-dom. Forms now always emit l-data (bare forms were never walked by bootstrap); core scope-root findings filed as follow-up 0.6-15. Deviation: multi-select instead of tag-input (no tag-input in registry)."
+    },
+    {
+      "id": "0.6-13",
+      "completed": "2026-07-17",
+      "commit": null,
+      "summary": "@faqir-ui/vue recipes + SSR: `faqir bindings vue` now generates all 22 recipes — recipe IR (src/bindings/recipe-ir.ts) parses each manifest reference template into a static render tree (contract attrs + hidden FOUC guards verbatim, l-* stripped, unique parts → named slots, variants → union props on their applied_to part, placeholders → string/boolean props, id via Vue 3.5 useId) and scans controllers for @ui:provides methods + dispatched faqir:* events (cross-recipe imports followed); controllers vendored into packages/vue/src/controllers with rewritten imports under the drift guard. Hand-written recipe-runtime.ts (149 lines): onMounted create / onBeforeUnmount destroy, events re-emitted as Vue events (detail, event), controller API exposed (dialogRef.open()). 30 new tests incl. per-recipe lifecycle/leak spies, SSR renderToString in a zero-DOM subprocess, warning-free hydration for every recipe. Demo SFC (5 recipes + 3 primitives) verified in Chrome against the real CSS bundle; README covers recipes + Inertia/SSR. vue peer bumped to ^3.5.0. 2082 tests green."
     }
   ],
   "note": "Pointer file for the /faqir-plan slash command. FAQIR-PLAN.md status cells (⬜/✅) are the source of truth; this file records the cross-session cursor and a per-task log. Do not hand-edit `current` while a session is running."
