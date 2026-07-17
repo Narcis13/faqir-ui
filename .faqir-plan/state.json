@@ -2,7 +2,7 @@
   "$schema": "./state.schema.md",
   "plan": "FAQIR-PLAN.md",
   "current": null,
-  "last_completed": "0.6-13",
+  "last_completed": "0.6-14",
   "history": [
     {
       "id": "phases v0.3–v0.5",
@@ -63,6 +63,12 @@
       "completed": "2026-07-17",
       "commit": "8bca7a4",
       "summary": "@faqir-ui/vue recipes + SSR: `faqir bindings vue` now generates all 22 recipes — recipe IR (src/bindings/recipe-ir.ts) parses each manifest reference template into a static render tree (contract attrs + hidden FOUC guards verbatim, l-* stripped, unique parts → named slots, variants → union props on their applied_to part, placeholders → string/boolean props, id via Vue 3.5 useId) and scans controllers for @ui:provides methods + dispatched faqir:* events (cross-recipe imports followed); controllers vendored into packages/vue/src/controllers with rewritten imports under the drift guard. Hand-written recipe-runtime.ts (149 lines): onMounted create / onBeforeUnmount destroy, events re-emitted as Vue events (detail, event), controller API exposed (dialogRef.open()). 30 new tests incl. per-recipe lifecycle/leak spies, SSR renderToString in a zero-DOM subprocess, warning-free hydration for every recipe. Demo SFC (5 recipes + 3 primitives) verified in Chrome against the real CSS bundle; README covers recipes + Inertia/SSR. vue peer bumped to ^3.5.0. 2082 tests green."
+    },
+    {
+      "id": "0.6-14",
+      "completed": "2026-07-17",
+      "commit": null,
+      "summary": "Patterns wizard + form-page. `wizard`: fully-declarative multi-step form (stepper + card panels + field-group + buttons) driven by one l-data `{ step }` — :hidden/:data-state bindings for visibility+indicators, @click/submit nav, and faqir-validate's l-validate on-valid hook to advance/block-while-invalid (inactive-step controls :disabled so excluded from validation) and, on the final step, set data-state=submitted + dispatch faqir:wizard-complete. Zero custom JS; verified end-to-end in Chrome (next/back, completed states, gating, completion event detail.steps=2) and by 11 happy-dom tests. `form-page`: the canonical schema-rendered form page, pinned byte-for-byte to @faqir-ui/forms output — shared FORM_PAGE_SCHEMA fixture in cases.ts, pattern HTML generated from it, drift-guarded by packages/forms/tests/form-page-golden.test.ts (generator↔pattern can't diverge). Both manifests validate + document composition; both pages faqir-audit-clean and auto-discovered by the visual/a11y matrix. Regenerated registry-index + faqir-creator skill. 2098 tests green (+16)."
     }
   ],
   "note": "Pointer file for the /faqir-plan slash command. FAQIR-PLAN.md status cells (⬜/✅) are the source of truth; this file records the cross-session cursor and a per-task log. Do not hand-edit `current` while a session is running."

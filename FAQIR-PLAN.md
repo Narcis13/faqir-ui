@@ -122,7 +122,7 @@ done in any order (or in parallel worktrees).
 | 0.6-11 | `faqir theme generate` — parametric oklch themes | ✅ |
 | 0.6-12 | `@faqir-ui/vue`: codegen + runtime for primitives | ✅ |
 | 0.6-13 | `@faqir-ui/vue`: recipe controllers, SSR safety, events | ✅ |
-| 0.6-14 | Patterns: `wizard` + `form-page` | ⬜ |
+| 0.6-14 | Patterns: `wizard` + `form-page` | ✅ |
 
 ### Phase v0.7 — Ecosystem
 
@@ -1700,9 +1700,9 @@ schema-rendered form page — the reference output shape for `@faqir-ui/forms`.
 - `form-page` markup exactly matches what `@faqir-ui/forms` emits for its reference schema (shared golden fixture — drift between pattern and generator fails).
 
 **Acceptance criteria**
-- [ ] Wizard fully declarative: zero custom JS in the reference page.
-- [ ] `form-page` is the pinned golden target for `@faqir-ui/forms` output.
-- [ ] Manifests document composition (which components each pattern uses).
+- [x] Wizard fully declarative: zero custom JS in the reference page. (`registry/patterns/wizard/wizard.html` — a single `l-data="{ step: 0 }"` drives everything; step visibility/indicator state are pure `:hidden`/`:data-state` bindings, navigation is `@click`/submit buttons, and faqir-validate's `l-validate` on-valid hook advances the step, blocks advancing while the active step is invalid (inactive-step controls are `:disabled` so they're excluded from validation), and on the final step sets `data-state="submitted"` + dispatches `faqir:wizard-complete`. `tests/patterns/wizard.test.ts` asserts the page contains no `<script`/`onclick` and drives all 11 behaviors under faqir-core + faqir-validate in happy-dom; end-to-end browser run confirmed next/back, step-indicator states, validation gating, and the completion event `detail.steps=2`.)
+- [x] `form-page` is the pinned golden target for `@faqir-ui/forms` output. (`registry/patterns/form-page/form-page.html` body is byte-for-byte `renderForm(FORM_PAGE_SCHEMA, FORM_PAGE_UI, FORM_PAGE_OPTS)` — the shared fixture lives in `packages/forms/tests/cases.ts`, and `packages/forms/tests/form-page-golden.test.ts` re-renders from it and fails on any drift between generator and pattern; the pattern is generated from the fixture, so they cannot diverge. The pattern additionally carries the `@ui:component/kind/composition` discovery header the generator never emits.)
+- [x] Manifests document composition (which components each pattern uses). (`wizard.manifest.json` → `composition.contains: [stepper, card, field-group, input, radio-group, button]`; `form-page.manifest.json` → `[field-group, input, radio-group, textarea, checkbox]`. Both also declare the composition in their `@ui:composition` HTML header and enumerate their slots. Both manifests validate against `manifest.schema.json`; both reference pages are `faqir audit`-clean and are auto-discovered by the visual/a11y matrix.)
 
 ---
 

@@ -74,6 +74,39 @@ export const PATIENT_INTAKE_UI: UISchema = {
   medications: { addLabel: "Add medication" },
 };
 
+/**
+ * The canonical schema-rendered form page (task 0.6-14). This is the *shared
+ * golden fixture* pinning the `form-page` registry pattern to the generator:
+ * `registry/patterns/form-page/form-page.html` is exactly this schema's
+ * `renderForm()` output (plus the pattern's `@ui:component/kind/composition`
+ * discovery header). The drift guard in `form-page-golden.test.ts` re-renders
+ * from here and fails if the pattern and the generator ever diverge.
+ *
+ * It deliberately spans the common scalar widgets a real form page needs —
+ * required text with a hint + constraint, an email format, an enum radio group
+ * (under the four-option threshold), a textarea, and a boolean checkbox — so the
+ * pinned reference exercises the generator's whole scalar surface.
+ */
+export const FORM_PAGE_SCHEMA: ObjectSchema = {
+  type: "object",
+  title: "Create your account",
+  description: "Join the workspace. You can change any of this later in settings.",
+  properties: {
+    fullName: { type: "string", title: "Full name", description: "Shown on your profile.", minLength: 2 },
+    email: { type: "string", format: "email", title: "Work email" },
+    role: { type: "string", title: "Role", enum: ["developer", "designer", "manager"], default: "developer" },
+    bio: { type: "string", title: "About you" },
+    newsletter: { type: "boolean", title: "Send me product updates" },
+  },
+  required: ["fullName", "email"],
+};
+
+export const FORM_PAGE_UI: UISchema = {
+  bio: { "ui:widget": "textarea", "ui:rows": 4, "ui:placeholder": "A sentence or two." },
+};
+
+export const FORM_PAGE_OPTS: RenderFormOptions = { idPrefix: "form-page" };
+
 export const GOLDEN_CASES: GoldenCase[] = [
   {
     name: "string-input",

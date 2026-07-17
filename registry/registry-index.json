@@ -1,6 +1,6 @@
 {
   "schema": "faqir-registry-index@1",
-  "count": 68,
+  "count": 70,
   "components": [
     {
       "name": "aspect-ratio",
@@ -1630,6 +1630,34 @@
       ]
     },
     {
+      "name": "form-page",
+      "kind": "pattern",
+      "layer": "patterns",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "form-page.css",
+          "sha256": "fe72919e62a81c330e83d734b6c3ca75f51e4239d6d731d29696b86d671df475"
+        },
+        {
+          "path": "form-page.html",
+          "sha256": "7d1beb8f7263171b3e2f875f681861f0ea2a83db3d25136c35c5aa4e9d5af9f6"
+        },
+        {
+          "path": "form-page.manifest.json",
+          "sha256": "3ba2b5292094dd7d74c5e5b776348b252f55e53fae85d4bd9700469e54410ddc"
+        }
+      ],
+      "hash": "250560c12977b28a50c8412178a663b4c8fa8b879975e7178d4b3f56b722ede1",
+      "deps": [
+        "field-group",
+        "input",
+        "radio-group",
+        "textarea",
+        "checkbox"
+      ]
+    },
+    {
       "name": "search-results",
       "kind": "pattern",
       "layer": "patterns",
@@ -1685,6 +1713,35 @@
         "switch",
         "button",
         "dialog"
+      ]
+    },
+    {
+      "name": "wizard",
+      "kind": "pattern",
+      "layer": "patterns",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "wizard.css",
+          "sha256": "891434481b9537d84904b89853483f8d89c5fb1a0414d60fa89bf4844f7ae012"
+        },
+        {
+          "path": "wizard.html",
+          "sha256": "0c32937f4b1abc916738f2c854aa194097fff24fd6e330795236c60b413d1e8a"
+        },
+        {
+          "path": "wizard.manifest.json",
+          "sha256": "d83276aac681f1e81e96f343ffe01c40f5ba746838afe120fb54b1c06eaf9469"
+        }
+      ],
+      "hash": "dc8b2706ff2a569ac7f45a5e3d7d5fb943b5effb24491cf7c54bb41b6092bc46",
+      "deps": [
+        "stepper",
+        "card",
+        "field-group",
+        "input",
+        "radio-group",
+        "button"
       ]
     }
   ]

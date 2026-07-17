@@ -2,7 +2,7 @@
 
 # Faqir Patterns Reference
 
-7 patterns, each with its anatomy tree, variant table, and safe/unsafe transforms — all derived from the component manifest.
+9 patterns, each with its anatomy tree, variant table, and safe/unsafe transforms — all derived from the component manifest.
 
 ## auth-form
 
@@ -245,6 +245,42 @@ Placeholder display for empty content areas with icon, message, and action
 - **Unsafe (never do):** `remove-title-slot`, `flatten-to-single-div`, `remove-action-without-alternative`
 - **Required ARIA:** `role="status" on root when content changes dynamically`
 
+## form-page
+
+_kind: pattern · category: composite_
+
+The canonical schema-rendered form page — the pinned reference output shape for @faqir-ui/forms. A single form with a heading, description, and a field-group per property (text, email, enum radio, textarea, checkbox), driven by faqir-core (l-data) and validated by faqir-validate (l-validate). This markup is emitted verbatim by @faqir-ui/forms for its reference schema; the forms package drift-tests that the generator output still matches this page byte-for-byte.
+
+```html
+<form id="{id}-form" l-data l-validate aria-label="{title}" aria-describedby="{id}-form-description">
+  <h1>{title}</h1>
+  <p id="{id}-form-description">{description}</p>
+  <div data-ui="field-group">
+    <label data-part="label" for="{id}-field-name">{field_label} <span data-part="required">*</span></label>
+    <div data-part="input"><input data-ui="input" id="{id}-field-name" name="{field_name}" required aria-required="true" aria-describedby="{id}-field-name-error" type="text"></div>
+    <p data-part="error" id="{id}-field-name-error" aria-live="polite"></p>
+  </div>
+</form>
+```
+
+**Anatomy**
+
+```text
+form[l-data]:not([data-ui])  ·  <form> · content: slots
+├─ > h1  <h1>  required  — Form title, from the schema's `title`
+├─ > p  <p>  optional  — Form description, from the schema's `description`; wired to the form via aria-describedby
+└─ [data-ui='field-group']  <div>  required  — One field-group per schema property, carrying label, control, optional hint, and error slot
+```
+
+**Variants**
+
+_No variants._
+
+- **Safe transforms:** `add-field`, `remove-field`, `reorder-fields`, `change-field-label`, `change-title-text`, `change-description-text`
+- **Unsafe (never do):** `remove-l-data`, `remove-l-validate`, `remove-form-element`, `remove-labels-from-inputs`, `remove-aria-describedby-wiring`, `add-custom-script`
+- **A11y:** role=form · keys: Tab, Enter, Shift+Tab
+- **Required ARIA:** `aria-label or aria-labelledby on the form element`; `aria-describedby on the form pointing to the description when present`; `label[for] matching each control id inside every field-group`; `aria-required="true" on required controls`; `aria-describedby pointing to the field-group hint and/or error`; `aria-live="polite" on each field-group error slot`
+
 ## search-results
 
 _kind: pattern · category: composite_
@@ -359,3 +395,48 @@ Settings page with tabbed sections, form fields, and save/discard actions
 - **Unsafe (never do):** `remove-actions-bar`, `remove-tabs`, `remove-confirm-dialog`, `remove-form-labels`, `remove-aria-labelledby`, `flatten-sections`
 - **A11y:** keys: Tab, Enter, Escape, ArrowLeft, ArrowRight
 - **Required ARIA:** `aria-labelledby on root pointing to title id`; `role="tablist" on tabs list`; `role="tab" on each tab trigger`; `role="tabpanel" on each tab panel`; `for attribute on labels pointing to input ids`; `aria-invalid on fields with errors`; `role="switch" on switch toggles`; `aria-checked on switch toggles`; `role="dialog" on confirm-dialog panel`; `aria-modal="true" on confirm-dialog panel`
+
+## wizard
+
+_kind: pattern · category: composite_
+
+Multi-step form wizard composing stepper + card panels + field-group + buttons. Fully declarative: a single l-data `{ step }` drives step visibility and indicator state, and faqir-validate's on-valid hook advances the step, blocks advancing while the active step is invalid, and dispatches a completion event on the final step. Zero custom JS.
+
+```html
+<form data-ui="wizard" data-state="active" aria-label="{label}" l-data="{ step: 0 }" l-validate="step &lt; {last} ? (step = step + 1) : ($el.dataset.state = 'submitted', $el.dispatchEvent(new CustomEvent('faqir:wizard-complete', { bubbles: true })))">
+  <div data-ui="stepper" data-part="steps" role="navigation" aria-label="Progress">
+    <div data-part="step" :data-state="step > {i} ? 'completed' : (step === {i} ? 'active' : null)"><span data-part="indicator">1</span><span data-part="label">{step_label}</span></div>
+  </div>
+  <section data-ui="card" data-variant="outlined" data-part="panel" :hidden="step !== {i}">{fields}</section>
+  <div data-part="actions">
+    <button type="button" data-ui="button" data-variant="outline" data-part="back" :disabled="step === 0" @click="step = step - 1">Back</button>
+    <button type="submit" data-ui="button" data-variant="primary" data-part="next" :hidden="step === {last}">Next</button>
+    <button type="submit" data-ui="button" data-variant="primary" data-part="submit" :hidden="step !== {last}">Submit</button>
+  </div>
+</form>
+```
+
+**Anatomy**
+
+```text
+[data-ui='wizard']  ·  <form> · content: slots
+├─ [data-part='heading']  <h1>  optional  — Page-level heading above the stepper
+├─ [data-part='steps']  <div>  required  — The stepper progress indicator (a nested data-ui='stepper')
+├─ [data-part='panel']  <section>  required  — One step's content, a nested data-ui='card'; shown only when its step is active via :hidden binding
+├─ [data-part='actions']  <div>  required  — Navigation button row (back / next / submit)
+├─ [data-part='back']  <button>  required  — Go to the previous step; disabled on the first step
+├─ [data-part='next']  <button>  required  — Submit-typed button that triggers per-step validation then advances; hidden on the final step
+├─ [data-part='submit']  <button>  required  — Submit-typed button shown only on the final step; completes the wizard
+└─ [data-part='complete']  <p>  optional  — Completion message, revealed by CSS when the form reaches data-state='submitted'
+```
+
+**Variants**
+
+| Variant | Values | Default | Attribute | Applied to |
+|---------|--------|---------|-----------|------------|
+| size | `sm`, `md`, `lg` | `md` | `data-size` | root |
+
+- **Safe transforms:** `add-step`, `remove-step`, `change-step-fields`, `change-step-labels`, `change-size-variant`, `customize-button-text`, `add-completion-message`
+- **Unsafe (never do):** `remove-l-data`, `remove-l-validate`, `remove-disabled-binding-from-inactive-steps`, `remove-form-element`, `remove-labels-from-inputs`, `add-custom-script`
+- **A11y:** role=form · keys: Tab, Enter, Shift+Tab
+- **Required ARIA:** `aria-label or aria-labelledby on the form element`; `role="navigation" + aria-label on the stepper`; `label[for] matching each input id inside every step`; `aria-required="true" on required controls`; `aria-describedby pointing to the field-group error message`; `role="status" on the completion message so its reveal is announced`
