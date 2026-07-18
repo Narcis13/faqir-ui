@@ -79,7 +79,7 @@
     {
       "id": "0.7-02",
       "completed": "2026-07-18",
-      "commit": "PENDING",
+      "commit": "2449572",
       "summary": "@faqir-ui/react recipes + hooks. faqir bindings react now emits per-recipe use-client wrappers over the shared recipe IR: typed props (variant unions, string/bool props, named-part ReactNodes, on<Event> callbacks) + parsed render tree passed to the one new hand-written recipe-runtime.ts (createFaqirRecipe + useFaqirController). Runtime renders the static tree via createElement (SSR-safe; camelCased DOM attrs + slider inline-style string normalized), attaches the vendored controller in useEffect (StrictMode-safe via the controllers double-init guard cleared on destroy), forwards faqir:* events to on<Event> props (latest read at dispatch), exposes the API via useImperativeHandle. Controllers vendored verbatim under the drift guard. useFaqirController takes the controller factory (tree-shakeable) not a name string. 39 tests (22 recipe behaviors + codegen client-boundary/spec-only/vendor/drift). Browser-verified demo (7 recipes + 8 primitives) against the real CSS bundle, zero console errors. 2158 tests green (+22)."
     }
   ],
