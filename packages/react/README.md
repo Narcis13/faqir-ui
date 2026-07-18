@@ -1,18 +1,22 @@
 # @faqir-ui/react
 
 React bindings for [Faqir UI](https://github.com/Narcis13/faqir-ui). Every
-component in `src/components/` is **generated from its registry manifest** by
-`faqir bindings react`. The only hand-written code is `src/runtime.ts`
-(~130 lines). Bindings are glue, not forks (FAQIR-NEXT §11.1): a CI drift gate
-regenerates on every push and fails on any byte of difference, so the components
-cannot drift from the manifests. The React and Vue targets share one
-manifest-walking core (`src/bindings/ir.ts` in the CLI repo) — there is no
-forked generation logic.
+component in `src/components/` (primitives) and `src/recipes/` (interactive
+recipes with controllers) is **generated from its registry manifest** by
+`faqir bindings react`; recipe controllers in `src/controllers/` are vendored
+verbatim from the registry. The only hand-written code is `src/runtime.ts`
+(primitives, ~130 lines) and `src/recipe-runtime.ts` (recipes). Bindings are
+glue, not forks (FAQIR-NEXT §11.1): a CI drift gate regenerates on every push
+and fails on any byte of difference, so the components cannot drift from the
+manifests. The React and Vue targets share one manifest-walking core
+(`src/bindings/ir.ts` + `recipe-ir.ts` in the CLI repo) — there is no forked
+generation logic.
 
-Requires React **18.2+ or 19**. Primitives are **RSC-safe**: no `"use client"`
-directive, no hooks, no client-only APIs — import and render them directly in a
-Server Component. (Interactive recipes with client controllers land in a
-separate layer.)
+Requires React **18.2+ or 19** (recipe wrappers use `useId` for SSR-stable ids).
+Primitives are **RSC-safe**: no `"use client"` directive, no hooks, no
+client-only APIs — import and render them directly in a Server Component. Recipe
+wrappers are the client boundary — each carries `"use client"` because it uses
+hooks to attach its controller.
 
 This package ships **no CSS**. Style with the Faqir bundle your project already
 uses — either your project's `faqir bundle` output or
@@ -51,6 +55,78 @@ Every component is a `forwardRef` — a `ref` forwards to the root element:
 const ref = useRef<HTMLButtonElement>(null);
 <LButton ref={ref}>Save</LButton>;
 ```
+
+## Recipes (dialog, tabs, toast, …)
+
+Every registry recipe is wrapped as a typed `forwardRef` component that renders
+the manifest's reference markup and attaches the recipe's own controller on
+mount (in a `useEffect`), destroys it on unmount, and forwards its `faqir:*`
+events to `on<Event>` callback props:
+
+```tsx
+"use client";
+import { useRef } from "react";
+import { LDialog, type RecipeHandle } from "@faqir-ui/react";
+
+function Example() {
+  const dialog = useRef<RecipeHandle & { open: () => void }>(null);
+  return (
+    <>
+      <button onClick={() => dialog.current?.open()}>Edit</button>
+      <LDialog
+        ref={dialog}
+        title="Edit profile"
+        body={<p>…</p>}
+        footer={<button data-part="close">Done</button>}
+        onConfirm={(detail, event) => { /* event.preventDefault() to stay open */ }}
+      />
+    </>
+  );
+}
+```
+
+- **Named parts are props** (`title`, `body`, `footer`, …) typed as `ReactNode`
+  — the React analogue of Vue slots. A "bring-your-own" recipe (tabs, accordion,
+  table) instead takes `children` that replace the whole anatomy.
+- **The imperative handle** exposes the controller API on the ref
+  (`dialog.current.open()`) plus `controller()` for the live instance. React
+  nulls `ref.current` on unmount; the exposed methods then no-op.
+- **Events → callbacks.** A `faqir:confirm` CustomEvent becomes `onConfirm`,
+  called `(detail, event)`. The raw event rides along, so `event.preventDefault()`
+  keeps its native semantics (e.g. an alert-dialog stays open for async work).
+  Swapping a callback never re-creates the controller — the latest is read at
+  dispatch time.
+- **`id`** — pass `id` to pin the root/ARIA ids; otherwise `useId` generates a
+  stable, SSR-safe one per instance.
+
+**StrictMode-safe** by construction: the dev create→destroy→create effect
+double-invoke re-attaches cleanly (the controller's own double-init guard is
+cleared by `destroy()`), so nothing leaks or breaks.
+
+### Low-level escape hatch: `useFaqirController`
+
+Attach any recipe controller to an element ref you own — the same lifecycle
+(StrictMode-safe create/destroy, event forwarding) without the generated wrapper.
+Pass the controller factory (each is re-exported: `createDialog`, `createTabs`, …):
+
+```tsx
+"use client";
+import { useRef } from "react";
+import { useFaqirController, createDialog } from "@faqir-ui/react";
+
+function Custom() {
+  const ref = useRef<HTMLDivElement>(null);
+  const dialog = useFaqirController(ref, createDialog, {
+    on: { confirm: (detail) => console.log(detail) },
+  });
+  return <div ref={ref} data-ui="dialog" data-state="closed">{/* your markup */}</div>;
+  // dialog.current?.open()
+}
+```
+
+> The plan sketched this as `useFaqirController(ref, "dialog")`; it takes the
+> factory instead of a name string so the hook stays tree-shakeable and zero-
+> coupled (a name registry would pull every controller into any consumer).
 
 ## Generation contract
 

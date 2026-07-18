@@ -2,6 +2,17 @@
 
 export { createFaqirPrimitive } from "./runtime";
 export type { FaqirPrimitiveSpec, SpecVariant, SpecState, SpecSlot } from "./runtime";
+export { createFaqirRecipe, useFaqirController, __activeControllers } from "./recipe-runtime";
+export type {
+  FaqirRecipeSpec,
+  RecipeNode,
+  RecipeSeg,
+  RecipeAttrVal,
+  RecipeController,
+  RecipeHandle,
+  FaqirEventHandler,
+  UseFaqirControllerOptions,
+} from "./recipe-runtime";
 
 export { LAspectRatio } from "./components/aspect-ratio";
 export type { LAspectRatioProps, LAspectRatioVariant } from "./components/aspect-ratio";
@@ -81,3 +92,71 @@ export { LToggle } from "./components/toggle";
 export type { LToggleProps, LToggleSize } from "./components/toggle";
 export { LWatermark } from "./components/watermark";
 export type { LWatermarkProps, LWatermarkVariant, LWatermarkPattern, LWatermarkSize, LWatermarkOrientation } from "./components/watermark";
+
+export { LAccordion } from "./recipes/accordion";
+export type { LAccordionProps, LAccordionBordered, LAccordionType } from "./recipes/accordion";
+export { LAlertDialog } from "./recipes/alert-dialog";
+export type { LAlertDialogProps, LAlertDialogSize, LAlertDialogTone } from "./recipes/alert-dialog";
+export { LBarcode } from "./recipes/barcode";
+export type { LBarcodeProps, LBarcodeSize } from "./recipes/barcode";
+export { LCalendar } from "./recipes/calendar";
+export type { LCalendarProps, LCalendarSize } from "./recipes/calendar";
+export { LCombobox } from "./recipes/combobox";
+export type { LComboboxProps, LComboboxSize } from "./recipes/combobox";
+export { LCommandPalette } from "./recipes/command-palette";
+export type { LCommandPaletteProps, LCommandPaletteSize } from "./recipes/command-palette";
+export { LDatePicker } from "./recipes/date-picker";
+export type { LDatePickerProps, LDatePickerSize } from "./recipes/date-picker";
+export { LDialog } from "./recipes/dialog";
+export type { LDialogProps, LDialogSize, LDialogTone } from "./recipes/dialog";
+export { LDrawer } from "./recipes/drawer";
+export type { LDrawerProps, LDrawerSide, LDrawerSize } from "./recipes/drawer";
+export { LDropdown } from "./recipes/dropdown";
+export type { LDropdownProps, LDropdownAlign, LDropdownSize } from "./recipes/dropdown";
+export { LInputOtp } from "./recipes/input-otp";
+export type { LInputOtpProps, LInputOtpMode, LInputOtpSize } from "./recipes/input-otp";
+export { LPagination } from "./recipes/pagination";
+export type { LPaginationProps, LPaginationSize } from "./recipes/pagination";
+export { LPopover } from "./recipes/popover";
+export type { LPopoverProps, LPopoverAlign, LPopoverPosition } from "./recipes/popover";
+export { LQrCode } from "./recipes/qr-code";
+export type { LQrCodeProps, LQrCodeEcl, LQrCodeSize } from "./recipes/qr-code";
+export { LSelectCustom } from "./recipes/select-custom";
+export type { LSelectCustomProps, LSelectCustomSize } from "./recipes/select-custom";
+export { LSheet } from "./recipes/sheet";
+export type { LSheetProps, LSheetSide, LSheetSize } from "./recipes/sheet";
+export { LSidebar } from "./recipes/sidebar";
+export type { LSidebarProps } from "./recipes/sidebar";
+export { LSlider } from "./recipes/slider";
+export type { LSliderProps, LSliderSize, LSliderType } from "./recipes/slider";
+export { LTable } from "./recipes/table";
+export type { LTableProps, LTableBordered, LTableSize, LTableStriped } from "./recipes/table";
+export { LTabs } from "./recipes/tabs";
+export type { LTabsProps, LTabsSize, LTabsStyleVariant } from "./recipes/tabs";
+export { LToast } from "./recipes/toast";
+export type { LToastProps, LToastPosition } from "./recipes/toast";
+export { LTooltip } from "./recipes/tooltip";
+export type { LTooltipProps, LTooltipPosition } from "./recipes/tooltip";
+
+export { createAccordion } from "./controllers/accordion";
+export { createAlertDialog } from "./controllers/alert-dialog";
+export { createBarcode } from "./controllers/barcode";
+export { createCalendar } from "./controllers/calendar";
+export { createCombobox } from "./controllers/combobox";
+export { createCommandPalette } from "./controllers/command-palette";
+export { createDatePicker } from "./controllers/date-picker";
+export { createDialog } from "./controllers/dialog";
+export { createDrawer } from "./controllers/drawer";
+export { createDropdown } from "./controllers/dropdown";
+export { createInputOTP } from "./controllers/input-otp";
+export { createPagination } from "./controllers/pagination";
+export { createPopover } from "./controllers/popover";
+export { createQRCode } from "./controllers/qr-code";
+export { createSelectCustom } from "./controllers/select-custom";
+export { createSheet } from "./controllers/sheet";
+export { createSidebar } from "./controllers/sidebar";
+export { createSlider } from "./controllers/slider";
+export { createTable } from "./controllers/table";
+export { createTabs } from "./controllers/tabs";
+export { createToastContainer } from "./controllers/toast";
+export { createTooltip } from "./controllers/tooltip";

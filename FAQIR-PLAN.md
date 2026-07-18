@@ -129,7 +129,7 @@ done in any order (or in parallel worktrees).
 | ID | Task | Status |
 |----|------|--------|
 | 0.7-01 | `@faqir-ui/react`: codegen + runtime for primitives | ✅ |
-| 0.7-02 | `@faqir-ui/react`: recipe wrappers, hooks, RSC boundaries | ⬜ |
+| 0.7-02 | `@faqir-ui/react`: recipe wrappers, hooks, RSC boundaries | ✅ |
 | 0.7-03 | Recipes: `context-menu` + `menubar` | ⬜ |
 | 0.7-04 | Recipe: `tree-view` | ⬜ |
 | 0.7-05 | Recipe: `file-upload` | ⬜ |
@@ -1769,9 +1769,42 @@ props. `useFaqirController(ref, "dialog")` as the low-level escape hatch.
 - SSR: `renderToString` clean for all recipe wrappers.
 
 **Acceptance criteria**
-- [ ] StrictMode-safe (explicitly tested — the classic pitfall).
-- [ ] `"use client"` only on recipe wrappers, never primitives.
-- [ ] Example page with ≥ 5 components verified against the real CSS bundle.
+- [x] StrictMode-safe (explicitly tested — the classic pitfall). (`packages/react/tests/recipes.test.tsx` → "StrictMode double-effect safety": an instrumented factory under `<StrictMode>` records `create→destroy→create` — 2 creates / 1 destroy, `destroys === creates − 1`, exactly one live controller; and a real `LDialog` under `<StrictMode>` is still fully functional after the remount (`ref.current.open()` opens it, no leak). The recipe runtime relies on the vendored controllers' own double-init guard, which `destroy()` clears, so the second create re-attaches cleanly.)
+- [x] `"use client"` only on recipe wrappers, never primitives. (`emitReactRecipe` emits `"use client";` as the first statement of every `recipes/*.ts` module; the shared `recipe-runtime.ts` and all `components/*.ts` + `runtime.ts` carry none. Guarded both ways in `codegen.test.ts`: "recipe client boundary" asserts every recipe module's first statement is the directive and that primitives/the primitive runtime never carry it; the RSC-safety block skips `recipes/` when asserting no directive elsewhere.)
+- [x] Example page with ≥ 5 components verified against the real CSS bundle. (`packages/react/examples/{demo/App.tsx,demo/serve.ts}` — seven recipes (dialog, alert-dialog, tabs, tooltip, pagination, slider, accordion) + eight primitives, bundled with `Bun.build` and served against `@faqir-ui/core/dist/faqir.default.css`, mounted under `<StrictMode>`. Verified in Chrome: all components render styled by the real bundle, **zero console errors/warnings on load**, the dialog opens as a styled modal via both the imperative handle (`ref.current.open()` through the external button's `onClick`) and its own trigger, and the slider's inline-`style` custom-property string is parsed into a CSS object (40% fill renders). The seven-recipe demo doubles as a real-browser StrictMode check.)
+
+**Delivered** — recipe layer for `@faqir-ui/react`, mirroring the Vue recipes
+(0.6-13) over the shared target-agnostic recipe IR (`src/bindings/recipe-ir.ts`,
+no forked manifest-walking). `faqir bindings react` now emits, per recipe, a
+`"use client"` module (`recipes/*.ts`): typed props (variant unions, template
+string props, boolean toggles, named-part `ReactNode`s, `on<Event>` callbacks),
+the vendored controller import, and the render tree parsed from the manifest
+reference template — passed to the one new hand-written file
+`packages/react/src/recipe-runtime.ts` (`createFaqirRecipe` + `useFaqirController`).
+That runtime renders the static tree via `React.createElement` (SSR-safe:
+`hidden` FOUC guards, `data-*`/`aria-*` verbatim; the few camelCased DOM attrs
+and slider's inline-`style` string are normalized), attaches the controller in a
+`useEffect` on mount and destroys it on unmount (StrictMode-safe), forwards
+`faqir:*` events to `on<Event>` props (latest read at dispatch — swapping a
+callback never re-creates the controller), and exposes the controller API via
+`useImperativeHandle`. Registry recipe controllers are vendored verbatim into
+`controllers/` (imports rewritten, `@ts-nocheck`) under the same drift guard as
+Vue. `useFaqirController(ref, factory, { on })` is the low-level escape hatch —
+takes the controller **factory** (each re-exported: `createDialog`, …) rather
+than the plan's illustrative `"dialog"` string, so it stays tree-shakeable and
+zero-coupled (a name registry would pull every controller into any consumer);
+noted in the README. React slot convention: named parts are `ReactNode` props
+(`<LCard title={…} body={…} />`); a name that is both a manifest string prop and
+a slot (dialog's `title`) collapses to one `ReactNode` member (superset of
+`string`); kebab parts (`nav-prev`) are quoted keys (valid JSX prop names).
+39 tests added (22 recipe behaviors incl. lifecycle/leak, StrictMode, imperative
+handle, event callbacks, `useFaqirController`, warning-free SSR for all 22
+recipes; codegen extended for the client boundary + spec-only recipes + vendored
+controllers + drift over recipes/controllers). `check:bindings`/`gen:bindings`
+already cover both targets; the CI drift gate now spans recipes + controllers.
+Node dist CLI verified (`node dist/faqir.mjs bindings react --check`). No new npm
+deps (react/react-dom already peers `^18.2 || ^19`; CLI stays zero-dep). 2158
+tests green (+22).
 
 ---
 

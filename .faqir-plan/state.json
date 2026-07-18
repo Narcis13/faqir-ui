@@ -2,7 +2,7 @@
   "$schema": "./state.schema.md",
   "plan": "FAQIR-PLAN.md",
   "current": null,
-  "last_completed": "0.7-01",
+  "last_completed": "0.7-02",
   "history": [
     {
       "id": "phases v0.3–v0.5",
@@ -75,6 +75,12 @@
       "completed": "2026-07-17",
       "commit": "4a7b2ce",
       "summary": "Patterns wizard + form-page. `wizard`: fully-declarative multi-step form (stepper + card panels + field-group + buttons) driven by one l-data `{ step }` — :hidden/:data-state bindings for visibility+indicators, @click/submit nav, and faqir-validate's l-validate on-valid hook to advance/block-while-invalid (inactive-step controls :disabled so excluded from validation) and, on the final step, set data-state=submitted + dispatch faqir:wizard-complete. Zero custom JS; verified end-to-end in Chrome (next/back, completed states, gating, completion event detail.steps=2) and by 11 happy-dom tests. `form-page`: the canonical schema-rendered form page, pinned byte-for-byte to @faqir-ui/forms output — shared FORM_PAGE_SCHEMA fixture in cases.ts, pattern HTML generated from it, drift-guarded by packages/forms/tests/form-page-golden.test.ts (generator↔pattern can't diverge). Both manifests validate + document composition; both pages faqir-audit-clean and auto-discovered by the visual/a11y matrix. Regenerated registry-index + faqir-creator skill. 2098 tests green (+16)."
+    },
+    {
+      "id": "0.7-02",
+      "completed": "2026-07-18",
+      "commit": "PENDING",
+      "summary": "@faqir-ui/react recipes + hooks. faqir bindings react now emits per-recipe use-client wrappers over the shared recipe IR: typed props (variant unions, string/bool props, named-part ReactNodes, on<Event> callbacks) + parsed render tree passed to the one new hand-written recipe-runtime.ts (createFaqirRecipe + useFaqirController). Runtime renders the static tree via createElement (SSR-safe; camelCased DOM attrs + slider inline-style string normalized), attaches the vendored controller in useEffect (StrictMode-safe via the controllers double-init guard cleared on destroy), forwards faqir:* events to on<Event> props (latest read at dispatch), exposes the API via useImperativeHandle. Controllers vendored verbatim under the drift guard. useFaqirController takes the controller factory (tree-shakeable) not a name string. 39 tests (22 recipe behaviors + codegen client-boundary/spec-only/vendor/drift). Browser-verified demo (7 recipes + 8 primitives) against the real CSS bundle, zero console errors. 2158 tests green (+22)."
     }
   ],
   "note": "Pointer file for the /faqir-plan slash command. FAQIR-PLAN.md status cells (⬜/✅) are the source of truth; this file records the cross-session cursor and a per-task log. Do not hand-edit `current` while a session is running."

@@ -1,7 +1,7 @@
 // `faqir bindings <target>` — generate framework bindings from the registry
-// manifests (tasks 0.6-12/0.7-01, FAQIR-NEXT §11). Targets: `vue` (primitives +
-// recipes) and `react` (primitives; recipes land in 0.7-02). Every target
-// consumes the same manifest→IR walker (src/bindings/ir.ts). Generation is
+// manifests (tasks 0.6-12/0.7-01/0.7-02, FAQIR-NEXT §11). Targets: `vue` and
+// `react`, both emitting primitives + recipes (+ vendored controllers). Every
+// target consumes the same manifest→IR walker (src/bindings/ir.ts). Generation is
 // deterministic; `--check` verifies the output on disk matches a fresh
 // regeneration byte-for-byte (the CI drift guard).
 
@@ -76,16 +76,11 @@ export async function bindings(args: string[]): Promise<void> {
   const outDir = outArg ?? defaultOutDir(target);
   const irs = await loadPrimitiveIRs(getRegistryPath());
 
-  // Recipes are a Vue-only layer today (React recipes land in 0.7-02).
-  let files: Map<string, string>;
-  let recipeCount = 0;
-  if (target === "vue") {
-    const recipes = await loadRecipeBundle(getRegistryPath());
-    files = emitVuePackage(irs, recipes);
-    recipeCount = recipes.irs.length;
-  } else {
-    files = emitReactPackage(irs);
-  }
+  // Both targets ship primitives + recipes (recipes carry the controllers).
+  const recipes = await loadRecipeBundle(getRegistryPath());
+  const recipeCount = recipes.irs.length;
+  const files: Map<string, string> =
+    target === "vue" ? emitVuePackage(irs, recipes) : emitReactPackage(irs, recipes);
 
   const scope = recipeCount > 0 ? `${irs.length} primitives + ${recipeCount} recipes` : `${irs.length} primitives`;
 

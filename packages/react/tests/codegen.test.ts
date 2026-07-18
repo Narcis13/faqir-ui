@@ -9,6 +9,7 @@ import { describe, it, expect } from "bun:test";
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { loadPrimitiveIRs, pascalCase } from "../../../src/bindings/ir";
+import { loadRecipeBundle } from "../../../src/bindings/recipe-ir";
 import { emitReactPackage } from "../../../src/bindings/react";
 import { getRegistryPath } from "../../../src/utils/fs";
 import { listRegistryComponents } from "../../../src/utils/components";
@@ -17,7 +18,8 @@ const PKG = join(import.meta.dir, "..");
 const SRC = join(PKG, "src");
 
 const irs = await loadPrimitiveIRs(getRegistryPath());
-const generated = emitReactPackage(irs);
+const recipes = await loadRecipeBundle(getRegistryPath());
+const generated = emitReactPackage(irs, recipes);
 
 describe("bindings react codegen", () => {
   it("generates a component for every registry primitive", () => {
@@ -89,11 +91,13 @@ describe("manifest-drift guard (§11.1: bindings can't drift)", () => {
   });
 
   it("no stale generated files linger", () => {
-    const committed = readdirSync(join(SRC, "components")).filter((f) => f.endsWith(".ts"));
-    const fresh = [...generated.keys()]
-      .filter((k) => k.startsWith("components/"))
-      .map((k) => k.slice("components/".length));
-    expect(committed.sort()).toEqual(fresh.sort());
+    for (const sub of ["components", "recipes", "controllers"]) {
+      const committed = readdirSync(join(SRC, sub)).filter((f) => f.endsWith(".ts"));
+      const fresh = [...generated.keys()]
+        .filter((k) => k.startsWith(`${sub}/`))
+        .map((k) => k.slice(`${sub}/`.length));
+      expect({ sub, committed: committed.sort() }).toEqual({ sub, committed: fresh.sort() });
+    }
   });
 });
 
@@ -108,16 +112,18 @@ describe("zero hand-written per-component code", () => {
     }
   });
 
-  it("runtime.ts is the only hand-written module and stays within budget", () => {
+  it("only the two runtimes are hand-written; runtime.ts stays within budget", () => {
     const files = readdirSync(SRC).filter((f) => f.endsWith(".ts") && f !== "index.ts");
-    const handWritten = files.filter((f) => {
-      if (f === "runtime.ts") return true;
-      return !readFileSync(join(SRC, f), "utf8").startsWith("// AUTO-GENERATED");
-    });
-    expect(handWritten).toEqual(["runtime.ts"]);
-    const total = readFileSync(join(SRC, "runtime.ts"), "utf8").trimEnd().split("\n").length;
-    console.log(`runtime.ts: ${total} lines`);
-    expect(total).toBeLessThanOrEqual(150);
+    const handWritten = files
+      .filter((f) => !readFileSync(join(SRC, f), "utf8").startsWith("// AUTO-GENERATED"))
+      .sort();
+    // The primitive runtime (0.7-01) and the recipe runtime (0.7-02) — nothing else.
+    expect(handWritten).toEqual(["recipe-runtime.ts", "runtime.ts"]);
+    const runtime = readFileSync(join(SRC, "runtime.ts"), "utf8").trimEnd().split("\n").length;
+    const recipeRuntime = readFileSync(join(SRC, "recipe-runtime.ts"), "utf8").trimEnd().split("\n").length;
+    console.log(`runtime.ts: ${runtime} lines · recipe-runtime.ts: ${recipeRuntime} lines`);
+    expect(runtime).toBeLessThanOrEqual(150);
+    expect(recipeRuntime).toBeLessThanOrEqual(340);
   });
 });
 
@@ -126,16 +132,48 @@ describe("zero hand-written per-component code", () => {
 const USE_CLIENT_DIRECTIVE = /^\s*["']use client["'];?\s*$/m;
 
 describe("RSC safety (task 0.7-01)", () => {
-  it('no primitive module or the runtime carries a "use client" directive', () => {
-    for (const [, content] of generated) {
+  it('no primitive module or the primitive runtime carries a "use client" directive', () => {
+    for (const [rel, content] of generated) {
+      if (rel.startsWith("recipes/")) continue; // recipes are the client boundary (0.7-02)
       expect(content).not.toMatch(USE_CLIENT_DIRECTIVE);
     }
     expect(readFileSync(join(SRC, "runtime.ts"), "utf8")).not.toMatch(USE_CLIENT_DIRECTIVE);
   });
 
-  it("the runtime imports no client-only React APIs (no hooks, no react-dom)", () => {
+  it("the primitive runtime imports no client-only React APIs (no hooks, no react-dom)", () => {
     const runtime = readFileSync(join(SRC, "runtime.ts"), "utf8");
     expect(runtime).not.toContain("react-dom");
     expect(runtime).not.toMatch(/\buse[A-Z]\w*/); // useState/useEffect/useRef/…
+  });
+});
+
+// The `"use client"` boundary belongs on the recipe wrappers (they use hooks),
+// and NOWHERE else — never on a primitive, never on the primitive runtime.
+describe("recipe client boundary (task 0.7-02)", () => {
+  it("every generated recipe module starts with a `use client` directive", () => {
+    for (const [rel, content] of generated) {
+      if (!rel.startsWith("recipes/")) continue;
+      // First statement after the banner comment must be the directive.
+      const firstStmt = content
+        .split("\n")
+        .find((l) => l.trim() && !l.trim().startsWith("//"));
+      expect({ rel, firstStmt }).toEqual({ rel, firstStmt: '"use client";' });
+    }
+  });
+
+  it("recipe modules are spec-only — no render logic, no hooks (the runtime owns both)", () => {
+    for (const file of readdirSync(join(SRC, "recipes"))) {
+      const source = readFileSync(join(SRC, "recipes", file), "utf8");
+      expect(source.startsWith("// AUTO-GENERATED by `faqir bindings react`")).toBe(true);
+      expect(source).not.toContain("createElement");
+      expect(source).not.toContain("useEffect");
+    }
+  });
+
+  it("controllers are vendored verbatim, not hand-authored", () => {
+    for (const file of readdirSync(join(SRC, "controllers"))) {
+      const source = readFileSync(join(SRC, "controllers", file), "utf8");
+      expect(source.startsWith("// AUTO-GENERATED by `faqir bindings react`")).toBe(true);
+    }
   });
 });
