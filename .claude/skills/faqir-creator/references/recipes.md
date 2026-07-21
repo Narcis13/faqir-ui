@@ -2,7 +2,7 @@
 
 # Faqir Recipes Reference
 
-25 recipes, each with its anatomy tree, variant table, and safe/unsafe transforms — all derived from the component manifest.
+26 recipes, each with its anatomy tree, variant table, and safe/unsafe transforms — all derived from the component manifest.
 
 ## accordion
 
@@ -487,6 +487,53 @@ Dropdown menu with keyboard navigation and click-outside-to-close
 - **Unsafe (never do):** `remove-menu-role`, `remove-menuitem-role`, `remove-aria-expanded`, `remove-keyboard-navigation`, `remove-click-outside-handler`
 - **A11y:** keys: Enter, Space, Escape, ArrowDown, ArrowUp, Home, End
 - **Required ARIA:** `role="menu" on menu`; `role="menuitem" on each item`; `aria-expanded on trigger`; `aria-haspopup="true" on trigger`
+
+## file-upload
+
+_kind: recipe · category: form · controller: createFileUpload()_
+
+Native file selection plus drag-and-drop, local accept/size validation, removable file list, and event-only app upload handoff
+
+```html
+<div data-ui="file-upload" data-state="idle" data-max-size="{max_size}">
+  <label data-part="dropzone">
+    <input data-part="input" type="file" accept="{accept}" multiple aria-describedby="{id}-help">
+    <span data-part="prompt">Choose files or drag them here</span>
+    <span data-part="description" id="{id}-help">Accepted file types and maximum size.</span>
+  </label>
+  <ul data-part="list" aria-label="Selected files">
+    <li data-part="empty">No files selected</li>
+  </ul>
+  <span data-part="status" role="status" aria-live="polite"></span>
+</div>
+```
+
+**Anatomy**
+
+```text
+[data-ui='file-upload']  ·  <div> · content: slots
+├─ [data-part='dropzone']  <label>  required  — Native label activation target and pointer drop surface; contains or references the real file input
+├─ [data-part='input']  <input>  required  — Real type=file control for keyboard, screen-reader, picker, form, and change-event access; never replace with a scripted div
+├─ [data-part='prompt']  <span>  required  — Visible label text describing picker and drag-and-drop activation
+├─ [data-part='description']  <span>  required  — Visible accept and size guidance referenced by the input through aria-describedby
+├─ [data-part='list']  <ul>  required  — Retained accepted files; the controller renders one file row per File object
+├─ [data-part='empty']  <li>  optional  — Empty-list message rendered while no files are retained
+├─ [data-part='file']  <li>  optional  — Generated row associated with one retained File object
+├─ [data-part='details']  <span>  optional  — Generated wrapper for file name and metadata
+├─ [data-part='name']  <span>  optional  — Generated file name, inserted with textContent
+├─ [data-part='metadata']  <span>  optional  — Generated MIME type and formatted file size
+├─ [data-part='remove']  <button>  optional  — Generated native button with a per-file accessible name; removes its File from the retained list
+└─ [data-part='status']  <span>  required  — Polite live region announcing rejection and removal results
+```
+
+**Variants**
+
+_No variants._
+
+- **Safe transforms:** `change-accept-filter`, `change-max-size`, `toggle-multiple`, `change-prompt-and-description`, `relabel-file-list`, `restyle-dropzone-and-file-rows`, `handle-documented-events-in-app-code`
+- **Unsafe (never do):** `remove-real-file-input`, `make-file-input-display-none-or-hidden`, `replace-native-label-activation-with-drag-only-ui`, `remove-input-description-relationship`, `remove-status-live-region`, `remove-per-file-remove-buttons`, `perform-network-requests-in-controller`, `upload-rejected-files`
+- **A11y:** keys: Tab, Enter, Space, Tab on remove, Enter or Space on remove
+- **Required ARIA:** `type="file" on input`; `aria-describedby on input`; `aria-live="polite" on status`
 
 ## input-otp
 

@@ -1,0 +1,349 @@
+// @ui:controller file-upload
+// @ui:provides getFiles open remove clear destroy
+
+import { uid } from "../../core/utils.js";
+
+/**
+ * Drag-and-drop file collection with a native file-input fallback.
+ *
+ * The controller only validates and retains local File objects. Application
+ * code owns every upload operation through the bubbling events documented in
+ * the manifest.
+ */
+export function createFileUpload(root) {
+  if (root._faqirFileUpload) return root._faqirFileUpload;
+
+  let dropzone = root.querySelector("[data-part='dropzone']");
+  if (!dropzone) {
+    dropzone = document.createElement("label");
+    dropzone.setAttribute("data-part", "dropzone");
+    root.prepend(dropzone);
+  }
+
+  let input = root.querySelector("[data-part='input']");
+  if (!input) {
+    input = document.createElement("input");
+    input.setAttribute("data-part", "input");
+    dropzone.prepend(input);
+  }
+  input.setAttribute("type", "file");
+
+  let description = root.querySelector("[data-part='description']");
+  if (description) {
+    if (!description.id) description.id = uid("faqir-file-upload-help");
+    if (!input.hasAttribute("aria-describedby")) {
+      input.setAttribute("aria-describedby", description.id);
+    }
+  }
+
+  if (dropzone.tagName === "LABEL" && !dropzone.contains(input)) {
+    if (!input.id) input.id = uid("faqir-file-upload-input");
+    dropzone.htmlFor = input.id;
+  }
+
+  let list = root.querySelector("[data-part='list']");
+  if (!list) {
+    list = document.createElement("ul");
+    list.setAttribute("data-part", "list");
+    list.setAttribute("aria-label", "Selected files");
+    root.appendChild(list);
+  }
+
+  let status = root.querySelector("[data-part='status']");
+  if (!status) {
+    status = document.createElement("span");
+    status.setAttribute("data-part", "status");
+    status.setAttribute("role", "status");
+    status.setAttribute("aria-live", "polite");
+    root.appendChild(status);
+  }
+
+  if (root.hasAttribute("data-disabled")) input.disabled = true;
+
+  let selected = [];
+  let dragging = false;
+  let fileByRow = new WeakMap();
+
+  function isDisabled() {
+    return root.hasAttribute("data-disabled") || input.disabled;
+  }
+
+  function toFileList(files) {
+    const transfer = new DataTransfer();
+    for (const file of files) transfer.items.add(file);
+    const list = transfer.files;
+    if (list instanceof FileList) return list;
+
+    // Happy DOM currently returns File[] from DataTransfer.files. Preserve the
+    // browser contract in that harness without changing the real-browser path.
+    try {
+      const fallback = new FileList();
+      fallback.push(...files);
+      return fallback;
+    } catch {
+      return list;
+    }
+  }
+
+  function syncState() {
+    root.dataset.state = dragging
+      ? "dragging"
+      : selected.length > 0
+        ? "has-files"
+        : "idle";
+  }
+
+  function syncInput() {
+    try {
+      input.files = toFileList(selected);
+    } catch {
+      // Some browsers intentionally expose FileList as read-only. The event
+      // payload and controller's retained list remain authoritative.
+    }
+  }
+
+  function formatSize(bytes) {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${Math.ceil(bytes / 1024)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  function render() {
+    fileByRow = new WeakMap();
+    list.replaceChildren();
+
+    if (selected.length === 0) {
+      const empty = document.createElement("li");
+      empty.setAttribute("data-part", "empty");
+      empty.textContent = "No files selected";
+      list.appendChild(empty);
+      syncState();
+      return;
+    }
+
+    for (const file of selected) {
+      const row = document.createElement("li");
+      row.setAttribute("data-part", "file");
+      fileByRow.set(row, file);
+
+      const details = document.createElement("span");
+      details.setAttribute("data-part", "details");
+
+      const name = document.createElement("span");
+      name.setAttribute("data-part", "name");
+      name.textContent = file.name;
+
+      const metadata = document.createElement("span");
+      metadata.setAttribute("data-part", "metadata");
+      metadata.textContent = `${file.type || "Unknown type"} · ${formatSize(file.size)}`;
+
+      const remove = document.createElement("button");
+      remove.setAttribute("data-part", "remove");
+      remove.setAttribute("type", "button");
+      remove.setAttribute("aria-label", `Remove ${file.name}`);
+      remove.textContent = "Remove";
+      remove.disabled = isDisabled();
+
+      details.append(name, metadata);
+      row.append(details, remove);
+      list.appendChild(row);
+    }
+    syncState();
+  }
+
+  function emit(type, detail) {
+    root.dispatchEvent(
+      new CustomEvent("faqir:" + type, { bubbles: true, detail }),
+    );
+  }
+
+  function acceptTokens() {
+    return input.accept
+      .split(",")
+      .map((token) => token.trim().toLowerCase())
+      .filter(Boolean);
+  }
+
+  function matchesAccept(file) {
+    const tokens = acceptTokens();
+    if (tokens.length === 0) return true;
+
+    const name = file.name.toLowerCase();
+    const type = file.type.toLowerCase();
+    return tokens.some((token) => {
+      if (token.startsWith(".")) return name.endsWith(token);
+      if (token.endsWith("/*")) {
+        return type.startsWith(token.slice(0, -1));
+      }
+      return type === token;
+    });
+  }
+
+  function maxSize() {
+    const raw = root.getAttribute("data-max-size");
+    if (raw == null || raw.trim() === "") return null;
+    const value = Number(raw);
+    return Number.isFinite(value) && value >= 0 ? value : null;
+  }
+
+  function rejectionReason(file) {
+    if (!matchesAccept(file)) return "accept";
+    const limit = maxSize();
+    if (limit != null && file.size > limit) return "max-size";
+    return null;
+  }
+
+  function rejectionMessage(file, reason) {
+    if (reason === "max-size") return `${file.name} exceeds the maximum file size.`;
+    return `${file.name} is not an accepted file type.`;
+  }
+
+  function addFiles(fileList, source) {
+    if (isDisabled()) return toFileList([]);
+
+    const accepted = [];
+    const limit = maxSize();
+    for (const file of Array.from(fileList || [])) {
+      const reason = rejectionReason(file);
+      if (reason) {
+        status.textContent = rejectionMessage(file, reason);
+        emit("file-reject", {
+          file,
+          reason,
+          accept: input.accept,
+          maxSize: limit,
+          source,
+        });
+      } else {
+        accepted.push(file);
+      }
+    }
+
+    selected.push(...accepted);
+    syncInput();
+    render();
+
+    const files = toFileList(accepted);
+    emit("files", {
+      files,
+      allFiles: toFileList(selected),
+      source,
+    });
+    return files;
+  }
+
+  function remove(target) {
+    const index = typeof target === "number"
+      ? target
+      : selected.indexOf(target);
+    if (index < 0 || index >= selected.length || isDisabled()) return false;
+
+    const [file] = selected.splice(index, 1);
+    syncInput();
+    render();
+    status.textContent = `${file.name} removed.`;
+    emit("file-remove", {
+      file,
+      index,
+      files: toFileList(selected),
+    });
+    return true;
+  }
+
+  function clear() {
+    if (isDisabled()) return false;
+    while (selected.length > 0) remove(0);
+    return true;
+  }
+
+  function getFiles() {
+    return toFileList(selected);
+  }
+
+  function open() {
+    if (!isDisabled()) input.click();
+  }
+
+  function onDragEnter(event) {
+    event.preventDefault();
+    if (isDisabled()) return;
+    dragging = true;
+    syncState();
+  }
+
+  function onDragOver(event) {
+    event.preventDefault();
+    if (isDisabled()) return;
+    dragging = true;
+    if (event.dataTransfer) {
+      try {
+        event.dataTransfer.dropEffect = "copy";
+      } catch {
+        /* read-only in some DOM implementations */
+      }
+    }
+    syncState();
+  }
+
+  function onDragLeave(event) {
+    const next = event.relatedTarget;
+    if (next && root.contains(next)) return;
+    dragging = false;
+    syncState();
+  }
+
+  function onDrop(event) {
+    event.preventDefault();
+    dragging = false;
+    if (isDisabled()) {
+      syncState();
+      return;
+    }
+    addFiles(event.dataTransfer?.files, "drop");
+  }
+
+  function onChange() {
+    addFiles(input.files, "input");
+  }
+
+  function onClick(event) {
+    const removeButton = event.target?.closest?.("[data-part='remove']");
+    if (
+      !removeButton ||
+      removeButton.closest("[data-ui='file-upload']") !== root
+    ) return;
+    const row = removeButton.closest("[data-part='file']");
+    const file = row && fileByRow.get(row);
+    if (file) remove(file);
+  }
+
+  dropzone.addEventListener("dragenter", onDragEnter);
+  dropzone.addEventListener("dragover", onDragOver);
+  dropzone.addEventListener("dragleave", onDragLeave);
+  dropzone.addEventListener("drop", onDrop);
+  input.addEventListener("change", onChange);
+  root.addEventListener("click", onClick);
+
+  render();
+
+  const api = {
+    getFiles,
+    open,
+    remove,
+    clear,
+    destroy() {
+      dropzone.removeEventListener("dragenter", onDragEnter);
+      dropzone.removeEventListener("dragover", onDragOver);
+      dropzone.removeEventListener("dragleave", onDragLeave);
+      dropzone.removeEventListener("drop", onDrop);
+      input.removeEventListener("change", onChange);
+      root.removeEventListener("click", onClick);
+      dragging = false;
+      syncState();
+      delete root._faqirFileUpload;
+    },
+  };
+
+  root._faqirFileUpload = api;
+  return api;
+}

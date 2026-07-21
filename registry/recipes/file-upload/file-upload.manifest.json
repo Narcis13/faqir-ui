@@ -1,0 +1,223 @@
+{
+  "$schema": "../../../manifest.schema.json",
+  "name": "file-upload",
+  "version": "1.0.0",
+  "kind": "recipe",
+  "category": "form",
+  "description": "Native file selection plus drag-and-drop, local accept/size validation, removable file list, and event-only app upload handoff",
+
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='file-upload']",
+    "content_model": "slots"
+  },
+
+  "slots": {
+    "dropzone": {
+      "selector": "[data-part='dropzone']",
+      "required": true,
+      "tag_hint": "label",
+      "description": "Native label activation target and pointer drop surface; contains or references the real file input"
+    },
+    "input": {
+      "selector": "[data-part='input']",
+      "required": true,
+      "tag_hint": "input",
+      "description": "Real type=file control for keyboard, screen-reader, picker, form, and change-event access; never replace with a scripted div"
+    },
+    "prompt": {
+      "selector": "[data-part='prompt']",
+      "required": true,
+      "tag_hint": "span",
+      "description": "Visible label text describing picker and drag-and-drop activation"
+    },
+    "description": {
+      "selector": "[data-part='description']",
+      "required": true,
+      "tag_hint": "span",
+      "description": "Visible accept and size guidance referenced by the input through aria-describedby"
+    },
+    "list": {
+      "selector": "[data-part='list']",
+      "required": true,
+      "tag_hint": "ul",
+      "description": "Retained accepted files; the controller renders one file row per File object"
+    },
+    "empty": {
+      "selector": "[data-part='empty']",
+      "required": false,
+      "tag_hint": "li",
+      "description": "Empty-list message rendered while no files are retained"
+    },
+    "file": {
+      "selector": "[data-part='file']",
+      "required": false,
+      "tag_hint": "li",
+      "description": "Generated row associated with one retained File object"
+    },
+    "details": {
+      "selector": "[data-part='details']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Generated wrapper for file name and metadata"
+    },
+    "name": {
+      "selector": "[data-part='name']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Generated file name, inserted with textContent"
+    },
+    "metadata": {
+      "selector": "[data-part='metadata']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Generated MIME type and formatted file size"
+    },
+    "remove": {
+      "selector": "[data-part='remove']",
+      "required": false,
+      "tag_hint": "button",
+      "description": "Generated native button with a per-file accessible name; removes its File from the retained list"
+    },
+    "status": {
+      "selector": "[data-part='status']",
+      "required": true,
+      "tag_hint": "span",
+      "description": "Polite live region announcing rejection and removal results"
+    }
+  },
+
+  "variants": {},
+
+  "states": {
+    "idle": { "attr": "data-state=\"idle\"", "default": true, "applied_to": "root" },
+    "dragging": { "attr": "data-state=\"dragging\"", "transient": true, "applied_to": "root" },
+    "has-files": { "attr": "data-state=\"has-files\"", "applied_to": "root" },
+    "disabled": { "attr": "data-disabled", "applied_to": "root" }
+  },
+
+  "props": {
+    "accept": {
+      "type": "string",
+      "default": "image/png,image/jpeg",
+      "attr": "accept on [data-part='input']",
+      "description": "Comma-separated native accept filter: extensions, exact MIME types, and type/* wildcards are validated again after selection or drop"
+    },
+    "maxSize": {
+      "type": "number",
+      "default": 5242880,
+      "attr": "data-max-size",
+      "description": "Maximum bytes per file; absent or invalid means no controller-level size limit"
+    },
+    "multiple": {
+      "type": "boolean",
+      "default": true,
+      "attr": "multiple on [data-part='input']",
+      "description": "Native picker hint; the canonical multi-file recipe retains every accepted file from each batch"
+    }
+  },
+
+  "a11y": {
+    "required_attrs": [
+      "type=\"file\" on input",
+      "aria-describedby on input",
+      "aria-live=\"polite\" on status"
+    ],
+    "keyboard": {
+      "Tab": "focus the real file input in normal document order",
+      "Enter": "open the platform file picker from the focused file input",
+      "Space": "open the platform file picker from the focused file input",
+      "Tab on remove": "focus a generated native remove button",
+      "Enter or Space on remove": "remove that file from the retained list"
+    },
+    "notes": [
+      "The visually hidden input remains the real, focusable type=file control; the dropzone is its native label, not a scripted button replacement.",
+      "The input accept attribute constrains the picker and is also validated by the controller because drag-and-drop bypasses picker filtering.",
+      "Rejections and removals are announced through the polite status live region."
+    ]
+  },
+
+  "events": {
+    "faqir:files": {
+      "detail": "{ files: FileList, allFiles: FileList, source: 'drop'|'input' }",
+      "description": "Fires once after every drop or input change. files contains only accepted files from that batch; allFiles contains every currently retained file. Application code performs any upload."
+    },
+    "faqir:file-reject": {
+      "detail": "{ file: File, reason: 'accept'|'max-size', accept: string, maxSize: number|null, source: 'drop'|'input' }",
+      "description": "Fires once per rejected file. accept means no accept token matched; max-size means file.size exceeded data-max-size."
+    },
+    "faqir:file-remove": {
+      "detail": "{ file: File, index: number, files: FileList }",
+      "description": "Fires after a remove button or remove() deletes one retained file; files is the remaining FileList."
+    }
+  },
+
+  "api": {
+    "getFiles": "() => FileList — snapshot of all retained accepted files",
+    "open": "() => void — activate the real file input unless disabled",
+    "remove": "(fileOrIndex) => boolean — remove one retained file and emit faqir:file-remove",
+    "clear": "() => boolean — remove every retained file through the same removal path unless disabled",
+    "destroy": "() => void — remove drag, input, and delegated remove listeners plus the private handle"
+  },
+
+  "tokens_used": [
+    "color-bg", "color-bg-subtle", "color-fg", "color-fg-muted",
+    "color-border", "color-border-strong", "color-primary", "color-primary-subtle",
+    "color-ring", "color-destructive", "color-destructive-subtle",
+    "space-px", "space-1", "space-2", "space-3", "space-4", "space-8",
+    "radius-md", "radius-lg", "text-xs", "text-sm", "text-base",
+    "weight-semibold", "font-sans", "duration-fast", "ease-default"
+  ],
+
+  "templates": {
+    "html": "<div data-ui=\"file-upload\" data-state=\"idle\" data-max-size=\"{max_size}\">\n  <label data-part=\"dropzone\">\n    <input data-part=\"input\" type=\"file\" accept=\"{accept}\" multiple aria-describedby=\"{id}-help\">\n    <span data-part=\"prompt\">Choose files or drag them here</span>\n    <span data-part=\"description\" id=\"{id}-help\">Accepted file types and maximum size.</span>\n  </label>\n  <ul data-part=\"list\" aria-label=\"Selected files\">\n    <li data-part=\"empty\">No files selected</li>\n  </ul>\n  <span data-part=\"status\" role=\"status\" aria-live=\"polite\"></span>\n</div>"
+  },
+
+  "safe_transforms": [
+    "change-accept-filter",
+    "change-max-size",
+    "toggle-multiple",
+    "change-prompt-and-description",
+    "relabel-file-list",
+    "restyle-dropzone-and-file-rows",
+    "handle-documented-events-in-app-code"
+  ],
+
+  "unsafe_transforms": [
+    "remove-real-file-input",
+    "make-file-input-display-none-or-hidden",
+    "replace-native-label-activation-with-drag-only-ui",
+    "remove-input-description-relationship",
+    "remove-status-live-region",
+    "remove-per-file-remove-buttons",
+    "perform-network-requests-in-controller",
+    "upload-rejected-files"
+  ],
+
+  "composition": {
+    "contains": [],
+    "used_in": ["attachment-form", "message-composer"]
+  },
+
+  "files": {
+    "html": "file-upload.html",
+    "css": "file-upload.css",
+    "js": "file-upload.js",
+    "manifest": "file-upload.manifest.json"
+  },
+
+  "tests": [
+    "drop-emits-filelist-payload",
+    "dragover-and-dragleave-transition-root-state",
+    "accept-rejection-emits-per-file-reason",
+    "max-size-rejection-emits-per-file-reason",
+    "input-change-matches-drop-processing",
+    "native-label-activates-real-input",
+    "remove-button-updates-list-and-emits-remaining-filelist",
+    "extension-and-mime-wildcard-accept-filters",
+    "prevents-double-initialization",
+    "destroy-removes-listeners",
+    "canonical-reference-is-audit-clean",
+    "controller-explicitly-passes-no-fetch-audit"
+  ]
+}

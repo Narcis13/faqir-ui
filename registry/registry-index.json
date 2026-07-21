@@ -1,6 +1,6 @@
 {
   "schema": "faqir-registry-index@1",
-  "count": 73,
+  "count": 74,
   "components": [
     {
       "name": "aspect-ratio",
@@ -1174,6 +1174,32 @@
         }
       ],
       "hash": "21ef2ae72772a777528f5a6bd78db9acf1a98b1b28ba62c1d28677b334d794bf",
+      "deps": []
+    },
+    {
+      "name": "file-upload",
+      "kind": "recipe",
+      "layer": "recipes",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "file-upload.css",
+          "sha256": "988fc5eb48b9697d02212203d77f731f5cdb1bf6d244ebc7374cee187b1ba20e"
+        },
+        {
+          "path": "file-upload.html",
+          "sha256": "b21d77967471f0f6b6d948cc45f8166fa75065e6a2d649c9006dec2d0d4f8d0e"
+        },
+        {
+          "path": "file-upload.js",
+          "sha256": "de5a3ac844c058a22edd40b2aa3d85e2a95e7c2ad9f5aa35e7ccfc570beb6a5a"
+        },
+        {
+          "path": "file-upload.manifest.json",
+          "sha256": "2bdb7dcdd8d0ab4ecbb6118f594fbaac859714a59447fc1df72aaefc7adf6bc6"
+        }
+      ],
+      "hash": "8887c81408b1845054274eaf468cabe7f752518328955fc904e33916c394e5e9",
       "deps": []
     },
     {

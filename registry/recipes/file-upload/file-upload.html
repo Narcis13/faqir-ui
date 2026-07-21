@@ -1,0 +1,22 @@
+<!-- @ui:component file-upload -->
+<!-- @ui:kind recipe -->
+<!-- @ui:slots dropzone input prompt description list empty file details name metadata remove status -->
+<!-- @ui:controller file-upload.js -->
+
+<div data-ui="file-upload" data-state="idle" data-max-size="5242880">
+  <label data-part="dropzone">
+    <input
+      data-part="input"
+      type="file"
+      accept="image/png,image/jpeg"
+      multiple
+      aria-describedby="faqir-file-upload-help"
+    >
+    <span data-part="prompt">Choose files or drag them here</span>
+    <span data-part="description" id="faqir-file-upload-help">PNG or JPEG, up to 5 MB each.</span>
+  </label>
+  <ul data-part="list" aria-label="Selected files">
+    <li data-part="empty">No files selected</li>
+  </ul>
+  <span data-part="status" role="status" aria-live="polite"></span>
+</div>

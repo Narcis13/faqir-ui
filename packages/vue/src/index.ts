@@ -106,6 +106,8 @@ export { LDrawer } from "./recipes/drawer";
 export type { LDrawerProps, LDrawerSide, LDrawerSize } from "./recipes/drawer";
 export { LDropdown } from "./recipes/dropdown";
 export type { LDropdownProps, LDropdownAlign, LDropdownSize } from "./recipes/dropdown";
+export { LFileUpload } from "./recipes/file-upload";
+export type { LFileUploadProps } from "./recipes/file-upload";
 export { LInputOtp } from "./recipes/input-otp";
 export type { LInputOtpProps, LInputOtpMode, LInputOtpSize } from "./recipes/input-otp";
 export { LMenubar } from "./recipes/menubar";

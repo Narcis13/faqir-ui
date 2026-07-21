@@ -1,0 +1,160 @@
+/* @ui:component file-upload */
+/* @ui:tokens color-bg color-bg-subtle color-fg color-fg-muted color-border color-border-strong color-primary color-primary-subtle color-ring color-destructive color-destructive-subtle space-px space-1 space-2 space-3 space-4 space-8 radius-md radius-lg text-xs text-sm text-base weight-semibold font-sans duration-fast ease-default */
+
+[data-ui="file-upload"] {
+  display: grid;
+  gap: var(--space-4);
+  inline-size: 100%;
+  color: var(--color-fg);
+  font-family: var(--font-sans);
+}
+
+[data-ui="file-upload"] [data-part="dropzone"] {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-block-size: calc(var(--space-8) * 4);
+  padding: var(--space-8);
+  border: var(--space-px) dashed var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-subtle);
+  text-align: center;
+  cursor: pointer;
+  transition:
+    border-color var(--duration-fast) var(--ease-default),
+    background-color var(--duration-fast) var(--ease-default),
+    box-shadow var(--duration-fast) var(--ease-default);
+}
+
+[data-ui="file-upload"] [data-part="input"] {
+  position: absolute;
+  inline-size: var(--space-px);
+  block-size: var(--space-px);
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+[data-ui="file-upload"]:has([data-part="input"]:focus-visible) [data-part="dropzone"] {
+  outline: var(--space-px) solid var(--color-ring);
+  outline-offset: var(--space-1);
+}
+
+[data-ui="file-upload"][data-state="dragging"] [data-part="dropzone"] {
+  border-color: var(--color-primary);
+  background: var(--color-primary-subtle);
+  box-shadow: 0 0 0 var(--space-px) var(--color-primary);
+}
+
+[data-ui="file-upload"] [data-part="prompt"] {
+  color: var(--color-fg);
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+}
+
+[data-ui="file-upload"] [data-part="description"] {
+  color: var(--color-fg-muted);
+  font-size: var(--text-sm);
+}
+
+[data-ui="file-upload"] [data-part="list"] {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+[data-ui="file-upload"] [data-part="file"] {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: var(--space-px) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+}
+
+[data-ui="file-upload"] [data-part="details"] {
+  min-inline-size: 0;
+}
+
+[data-ui="file-upload"] [data-part="name"],
+[data-ui="file-upload"] [data-part="metadata"] {
+  display: block;
+}
+
+[data-ui="file-upload"] [data-part="name"] {
+  overflow: hidden;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+[data-ui="file-upload"] [data-part="metadata"] {
+  margin-block-start: var(--space-1);
+  color: var(--color-fg-muted);
+  font-size: var(--text-xs);
+}
+
+[data-ui="file-upload"] [data-part="remove"] {
+  padding-block: var(--space-2);
+  padding-inline: var(--space-3);
+  border: var(--space-px) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  color: var(--color-destructive);
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+[data-ui="file-upload"] [data-part="remove"]:hover {
+  border-color: var(--color-destructive);
+  background: var(--color-destructive-subtle);
+}
+
+[data-ui="file-upload"] [data-part="remove"]:focus-visible {
+  outline: var(--space-px) solid var(--color-ring);
+  outline-offset: var(--space-1);
+}
+
+[data-ui="file-upload"] [data-part="empty"] {
+  padding: var(--space-3) var(--space-4);
+  color: var(--color-fg-muted);
+  font-size: var(--text-sm);
+  text-align: center;
+}
+
+[data-ui="file-upload"] [data-part="status"] {
+  position: absolute;
+  inline-size: var(--space-px);
+  block-size: var(--space-px);
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+[data-ui="file-upload"][data-disabled] {
+  opacity: 0.5;
+}
+
+[data-ui="file-upload"][data-disabled] [data-part="dropzone"],
+[data-ui="file-upload"][data-disabled] [data-part="remove"] {
+  cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="file-upload"] [data-part="dropzone"] {
+    transition: none;
+  }
+}
