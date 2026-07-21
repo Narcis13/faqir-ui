@@ -2,7 +2,7 @@
 
 # Faqir Recipes Reference
 
-24 recipes, each with its anatomy tree, variant table, and safe/unsafe transforms — all derived from the component manifest.
+25 recipes, each with its anatomy tree, variant table, and safe/unsafe transforms — all derived from the component manifest.
 
 ## accordion
 
@@ -1026,3 +1026,41 @@ Informational popup shown on hover or focus of trigger element
 - **Unsafe (never do):** `remove-role-tooltip`, `remove-aria-describedby`, `remove-escape-handler`, `remove-focus-trigger`
 - **A11y:** keys: Escape
 - **Required ARIA:** `role="tooltip" on content`; `aria-describedby on trigger pointing to content id`
+
+## tree-view
+
+_kind: recipe · category: navigation · controller: createTreeView()_
+
+Single-select hierarchical tree with complete WAI keyboard navigation, explicit positional ARIA, keyed-rendering support, and lazy expansion events
+
+```html
+<ul data-ui="tree-view" data-state="idle" role="tree" aria-label="Items" aria-multiselectable="false">
+  <li data-part="item" data-state="expanded" data-value="parent" role="treeitem" tabindex="0" aria-selected="false" aria-expanded="true" aria-level="1" aria-setsize="1" aria-posinset="1">
+    <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span>Parent</span>
+    <ul data-part="group" role="group">
+      <li data-part="item" data-value="child" role="treeitem" tabindex="-1" aria-selected="false" aria-level="2" aria-setsize="1" aria-posinset="1">
+        <span data-part="label"><span data-part="toggle" aria-hidden="true">&#x203A;</span>Child</span>
+      </li>
+    </ul>
+  </li>
+</ul>
+```
+
+**Anatomy**
+
+```text
+[data-ui='tree-view']  ·  <ul> · content: slots
+├─ [data-part='item']  <li>  required  — Tree node with role=treeitem, roving tabindex, selection state, and explicit aria-level/setsize/posinset
+├─ [data-part='label']  <span>  required  — Visible accessible label and pointer-selection target for an item
+├─ [data-part='toggle']  <span>  optional  — Decorative disclosure indicator; clicking it toggles a parent item
+└─ [data-part='group']  <ul>  optional  — Nested role=group owned by a parent treeitem; hidden while the parent is collapsed
+```
+
+**Variants**
+
+_No variants._
+
+- **Safe transforms:** `add-item`, `remove-item`, `reorder-keyed-items`, `add-nested-group`, `mark-item-disabled`, `mark-parent-lazy`, `change-tree-label`, `restyle-label-and-toggle`
+- **Unsafe (never do):** `remove-tree-role`, `remove-tree-accessible-name`, `remove-treeitem-role`, `place-children-outside-group`, `put-aria-expanded-on-leaf`, `remove-roving-tabindex`, `remove-positional-aria`, `remove-keyboard-navigation`, `allow-multiple-selected-items`
+- **A11y:** keys: ArrowDown, ArrowUp, ArrowRight, ArrowLeft, Home, End, Enter, Space, Printable characters, *
+- **Required ARIA:** `role="tree" on root`; `aria-label on root`; `aria-multiselectable="false" on root`; `role="treeitem" on item`; `tabindex on item`; `aria-selected on selectable item`; `aria-level on item`; `aria-setsize on item`; `aria-posinset on item`; `role="group" on group`

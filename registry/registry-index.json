@@ -1,6 +1,6 @@
 {
   "schema": "faqir-registry-index@1",
-  "count": 72,
+  "count": 73,
   "components": [
     {
       "name": "aspect-ratio",
@@ -1530,6 +1530,32 @@
         }
       ],
       "hash": "9cf1a80aa62f6f8c9e39e5fba92c931f1e041d6f759715100cacb854a1a8c46e",
+      "deps": []
+    },
+    {
+      "name": "tree-view",
+      "kind": "recipe",
+      "layer": "recipes",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "tree-view.css",
+          "sha256": "858ab462d97ffc871404a03186848df19ce31b4078e6e5b8480e1e89848dd73b"
+        },
+        {
+          "path": "tree-view.html",
+          "sha256": "820c938b411d0c921a5797b6bbed78bf424e329912e82242f3ce09b83799c684"
+        },
+        {
+          "path": "tree-view.js",
+          "sha256": "a3af36a2f76b3ac528a82ed91e8d989604cd234b13b995c9c69ab678aa6c172d"
+        },
+        {
+          "path": "tree-view.manifest.json",
+          "sha256": "849c6406471a843fb8451f95df7c59a10848e56dcc42f0665c86cf35284512f2"
+        }
+      ],
+      "hash": "37c51473f8def91700e43526abb37f28f10edbc7ce5c24e146061f041c7b0b25",
       "deps": []
     },
     {

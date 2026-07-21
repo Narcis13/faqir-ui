@@ -141,6 +141,8 @@ export { LToast } from "./recipes/toast";
 export type { LToastProps, LToastPosition } from "./recipes/toast";
 export { LTooltip } from "./recipes/tooltip";
 export type { LTooltipProps, LTooltipPosition } from "./recipes/tooltip";
+export { LTreeView } from "./recipes/tree-view";
+export type { LTreeViewProps } from "./recipes/tree-view";
 
 export { createAccordion } from "./controllers/accordion";
 export { createAlertDialog } from "./controllers/alert-dialog";
@@ -166,3 +168,4 @@ export { createTable } from "./controllers/table";
 export { createTabs } from "./controllers/tabs";
 export { createToastContainer } from "./controllers/toast";
 export { createTooltip } from "./controllers/tooltip";
+export { createTreeView } from "./controllers/tree-view";

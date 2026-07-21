@@ -169,7 +169,7 @@ No specificity wars. No naming conventions to memorize. The selector **is** the 
 
 ## Component Library
 
-Faqir ships 72 components across three layers, from simple CSS-only primitives to full interactive recipes and page-level patterns.
+Faqir ships 73 components across three layers, from simple CSS-only primitives to full interactive recipes and page-level patterns.
 
 ### Primitives (39 components) — CSS Only
 
@@ -219,7 +219,7 @@ Pure CSS components. No JavaScript required. Drop in the HTML and it works.
 
 > **Icons** render from CSS alone — each glyph is a data-URI SVG applied as a `mask-image` on a `background-color: currentColor` box, so they inherit text color and size with `font-size` (`1em`). No icon fonts, no runtime SVG fetch, zero JavaScript. The full 120-glyph `icons.css` is **44.76 KB raw / 6.26 KB gzip**; `faqir add icons --only check,x,chevron-down` trims it to just the icons a project uses (e.g. 5 common glyphs → **≈1.84 KB**). Re-running `--only` with more names merges rather than clobbers, and the `icon-name` audit rule flags any unknown `data-icon` value with a nearest-match "did you mean …" hint. Glyphs are the MIT/ISC-licensed [Lucide](https://lucide.dev) set — attribution ships in `icon/LICENSE.lucide`. Usage: `<span data-ui="icon" data-icon="check" aria-hidden="true"></span>` (decorative) or add `role="img"` + `aria-label` when meaningful.
 
-### Recipes (24 components) — CSS + JavaScript
+### Recipes (25 components) — CSS + JavaScript
 
 Interactive components with JavaScript controllers. Auto-initialize when `faqir-core.js` is loaded.
 
@@ -231,6 +231,7 @@ Interactive components with JavaScript controllers. Auto-initialize when `faqir-
 | `dropdown` | Action menu | Keyboard navigation, click-outside-close |
 | `context-menu` | Pointer-invoked action menu | Right-click positioning, keyboard navigation, outside-click close |
 | `menubar` | Desktop-style application menu | Roving tabindex, horizontal navigation, accessible submenus |
+| `tree-view` | Hierarchical single-select tree | WAI keyboard navigation, keyed rendering, lazy children |
 | `popover` | Floating content | Positioned relative to trigger |
 | `tooltip` | Hover information | Delay, positioning |
 | `tabs` | Tab panel switcher | Arrow key navigation, ARIA tabs |

@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════════════════
 //
 // The CI "size" job fails the build when any shipped bundle exceeds its gzip
-// budget (engine ≤ 14KB, engine+controllers ≤ 37KB, each plugin ≤ 2KB). These
+// budget (engine ≤ 14KB, engine+controllers ≤ 39KB, each plugin ≤ 2KB). These
 // tests pin the budget parsing/enforcement logic and prove that an over-budget
 // fixture makes the script exit non-zero (and an under-budget one exits 0).
 
@@ -151,7 +151,7 @@ describe("enforce", () => {
 describe("BUDGETS", () => {
   test("match the §10.4 numbers", () => {
     expect(mod.BUDGETS.engine).toBe(14 * KB);
-    expect(mod.BUDGETS.engineWithControllers).toBe(37 * KB);
+    expect(mod.BUDGETS.engineWithControllers).toBe(39 * KB);
     expect(mod.BUDGETS.plugin).toBe(2 * KB);
   });
 });

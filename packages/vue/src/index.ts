@@ -132,3 +132,5 @@ export { LToast } from "./recipes/toast";
 export type { LToastProps, LToastPosition } from "./recipes/toast";
 export { LTooltip } from "./recipes/tooltip";
 export type { LTooltipProps, LTooltipPosition } from "./recipes/tooltip";
+export { LTreeView } from "./recipes/tree-view";
+export type { LTreeViewProps } from "./recipes/tree-view";

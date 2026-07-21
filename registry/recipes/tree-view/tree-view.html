@@ -1,0 +1,69 @@
+<!-- @ui:component tree-view -->
+<!-- @ui:kind recipe -->
+<!-- @ui:slots item label toggle group -->
+<!-- @ui:controller tree-view.js -->
+
+<ul data-ui="tree-view" data-state="selected" role="tree" aria-label="Project files" aria-multiselectable="false">
+  <li data-part="item" data-state="expanded" data-value="projects" role="treeitem" tabindex="-1" aria-selected="false" aria-expanded="true" aria-level="1" aria-setsize="3" aria-posinset="1">
+    <span data-part="label">
+      <span data-part="toggle" aria-hidden="true">&#x203A;</span>
+      Projects
+    </span>
+    <ul data-part="group" role="group">
+      <li data-part="item" data-state="expanded" data-value="faqir" role="treeitem" tabindex="0" aria-selected="true" aria-expanded="true" aria-level="2" aria-setsize="2" aria-posinset="1">
+        <span data-part="label">
+          <span data-part="toggle" aria-hidden="true">&#x203A;</span>
+          Faqir UI
+        </span>
+        <ul data-part="group" role="group">
+          <li data-part="item" data-value="readme" role="treeitem" tabindex="-1" aria-selected="false" aria-level="3" aria-setsize="2" aria-posinset="1">
+            <span data-part="label">
+              <span data-part="toggle" aria-hidden="true">&#x203A;</span>
+              README.md
+            </span>
+          </li>
+          <li data-part="item" data-value="package" role="treeitem" tabindex="-1" aria-disabled="true" aria-level="3" aria-setsize="2" aria-posinset="2">
+            <span data-part="label">
+              <span data-part="toggle" aria-hidden="true">&#x203A;</span>
+              package.json (locked)
+            </span>
+          </li>
+        </ul>
+      </li>
+      <li data-part="item" data-value="playground" role="treeitem" tabindex="-1" aria-selected="false" aria-level="2" aria-setsize="2" aria-posinset="2">
+        <span data-part="label">
+          <span data-part="toggle" aria-hidden="true">&#x203A;</span>
+          Playground
+        </span>
+      </li>
+    </ul>
+  </li>
+
+  <li data-part="item" data-state="collapsed" data-value="archive" role="treeitem" tabindex="-1" aria-selected="false" aria-expanded="false" aria-level="1" aria-setsize="3" aria-posinset="2">
+    <span data-part="label">
+      <span data-part="toggle" aria-hidden="true">&#x203A;</span>
+      Archive
+    </span>
+    <ul data-part="group" role="group" hidden>
+      <li data-part="item" data-value="archive-2025" role="treeitem" tabindex="-1" aria-selected="false" aria-level="2" aria-setsize="2" aria-posinset="1">
+        <span data-part="label">
+          <span data-part="toggle" aria-hidden="true">&#x203A;</span>
+          2025
+        </span>
+      </li>
+      <li data-part="item" data-value="invoices" role="treeitem" tabindex="-1" aria-selected="false" aria-level="2" aria-setsize="2" aria-posinset="2">
+        <span data-part="label">
+          <span data-part="toggle" aria-hidden="true">&#x203A;</span>
+          Invoices
+        </span>
+      </li>
+    </ul>
+  </li>
+
+  <li data-part="item" data-state="collapsed" data-value="shared" data-lazy="true" role="treeitem" tabindex="-1" aria-selected="false" aria-expanded="false" aria-level="1" aria-setsize="3" aria-posinset="3">
+    <span data-part="label">
+      <span data-part="toggle" aria-hidden="true">&#x203A;</span>
+      Shared with me
+    </span>
+  </li>
+</ul>

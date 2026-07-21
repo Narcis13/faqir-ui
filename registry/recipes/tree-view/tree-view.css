@@ -1,0 +1,79 @@
+/* @ui:component tree-view */
+/* @ui:tokens color-bg-muted color-fg color-fg-muted color-fg-subtle color-primary color-primary-subtle color-ring space-px space-1 space-2 space-5 radius-md text-sm font-sans weight-medium duration-fast ease-default */
+
+[data-ui="tree-view"],
+[data-ui="tree-view"] [data-part="group"] {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+[data-ui="tree-view"] {
+  inline-size: 100%;
+  padding: var(--space-1);
+  color: var(--color-fg);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+}
+
+[data-ui="tree-view"] [data-part="group"] {
+  margin-inline-start: var(--space-5);
+}
+
+[data-ui="tree-view"] [data-part="item"] {
+  outline: none;
+}
+
+[data-ui="tree-view"] [data-part="label"] {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-block-size: var(--space-5);
+  padding-block: var(--space-1);
+  padding-inline: var(--space-2);
+  border-radius: var(--radius-md);
+  cursor: default;
+}
+
+[data-ui="tree-view"] [data-part="item"]:not([aria-disabled="true"]) > [data-part="label"]:hover {
+  background: var(--color-bg-muted);
+}
+
+[data-ui="tree-view"] [data-part="item"]:focus-visible > [data-part="label"] {
+  outline: var(--space-px) solid var(--color-ring);
+  outline-offset: var(--space-px);
+}
+
+[data-ui="tree-view"] [data-part="item"][aria-selected="true"] > [data-part="label"] {
+  background: var(--color-primary-subtle);
+  color: var(--color-primary);
+  font-weight: var(--weight-medium);
+}
+
+[data-ui="tree-view"] [data-part="item"][aria-disabled="true"] > [data-part="label"] {
+  color: var(--color-fg-subtle);
+}
+
+[data-ui="tree-view"] [data-part="toggle"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 var(--space-5);
+  color: var(--color-fg-muted);
+  transform: rotate(0deg);
+  transition: transform var(--duration-fast) var(--ease-default);
+}
+
+[data-ui="tree-view"] [data-part="item"]:not([aria-expanded]) > [data-part="label"] [data-part="toggle"] {
+  visibility: hidden;
+}
+
+[data-ui="tree-view"] [data-part="item"][aria-expanded="true"] > [data-part="label"] [data-part="toggle"] {
+  transform: rotate(90deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="tree-view"] [data-part="toggle"] {
+    transition: none;
+  }
+}

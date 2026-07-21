@@ -1,0 +1,173 @@
+{
+  "$schema": "../../../manifest.schema.json",
+  "name": "tree-view",
+  "version": "1.0.0",
+  "kind": "recipe",
+  "category": "navigation",
+  "description": "Single-select hierarchical tree with complete WAI keyboard navigation, explicit positional ARIA, keyed-rendering support, and lazy expansion events",
+
+  "anatomy": {
+    "tag": "ul",
+    "selector": "[data-ui='tree-view']",
+    "content_model": "slots"
+  },
+
+  "slots": {
+    "item": {
+      "selector": "[data-part='item']",
+      "required": true,
+      "tag_hint": "li",
+      "description": "Tree node with role=treeitem, roving tabindex, selection state, and explicit aria-level/setsize/posinset"
+    },
+    "label": {
+      "selector": "[data-part='label']",
+      "required": true,
+      "tag_hint": "span",
+      "description": "Visible accessible label and pointer-selection target for an item"
+    },
+    "toggle": {
+      "selector": "[data-part='toggle']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Decorative disclosure indicator; clicking it toggles a parent item"
+    },
+    "group": {
+      "selector": "[data-part='group']",
+      "required": false,
+      "tag_hint": "ul",
+      "description": "Nested role=group owned by a parent treeitem; hidden while the parent is collapsed"
+    }
+  },
+
+  "variants": {},
+
+  "states": {
+    "idle": { "attr": "data-state=\"idle\"", "default": true, "applied_to": "root" },
+    "selected": { "attr": "data-state=\"selected\"", "applied_to": "root" },
+    "collapsed": { "attr": "data-state=\"collapsed\"", "applied_to": "item" },
+    "expanded": { "attr": "data-state=\"expanded\"", "applied_to": "item" }
+  },
+
+  "props": {},
+
+  "a11y": {
+    "required_attrs": [
+      "role=\"tree\" on root",
+      "aria-label on root",
+      "aria-multiselectable=\"false\" on root",
+      "role=\"treeitem\" on item",
+      "tabindex on item",
+      "aria-selected on selectable item",
+      "aria-level on item",
+      "aria-setsize on item",
+      "aria-posinset on item",
+      "role=\"group\" on group"
+    ],
+    "keyboard": {
+      "ArrowDown": "move focus to the next visible enabled item without wrapping",
+      "ArrowUp": "move focus to the previous visible enabled item without wrapping",
+      "ArrowRight": "expand a collapsed parent, or move from an expanded parent to its first enabled child",
+      "ArrowLeft": "collapse an expanded parent, or move from a collapsed/leaf child to its enabled parent",
+      "Home": "move focus to the first visible enabled item",
+      "End": "move focus to the last visible enabled item",
+      "Enter": "select the focused item",
+      "Space": "select the focused item",
+      "Printable characters": "move focus by case-insensitive typeahead with a 500ms buffer",
+      "*": "expand every enabled parent at the focused item's sibling level"
+    },
+    "notes": [
+      "Only parent and data-lazy items expose aria-expanded; leaf items must not carry it.",
+      "The controller computes aria-level, aria-setsize, and aria-posinset after every keyed DOM reconciliation.",
+      "DOM focus and aria-selected remain distinct until Enter, Space, or pointer selection.",
+      "Items with aria-disabled=true are omitted from the roving focus order and cannot be selected."
+    ]
+  },
+
+  "events": {
+    "faqir:select": {
+      "detail": "{ item, value, label, previousItem, previousValue }",
+      "description": "Fires after click, Enter, Space, or select() establishes the single selected item"
+    },
+    "faqir:expand": {
+      "detail": "{ item, value, label, expanded, lazy }",
+      "description": "Fires whenever a parent opens or closes; an app or l-source listener can provide children when expanded and lazy are true"
+    }
+  },
+
+  "api": {
+    "select": "(itemOrValue) => boolean — establish the single selection",
+    "expand": "(itemOrValue) => boolean — reveal a parent or request lazy children",
+    "collapse": "(itemOrValue) => boolean — hide a parent's group",
+    "toggle": "(itemOrValue) => boolean — toggle a parent",
+    "refresh": "() => Element[] — recompute hierarchy, positional ARIA, selection, and roving tabindex",
+    "getSelected": "() => Element|null — return the selected item",
+    "destroy": "() => void — remove listeners, observer, timer, and private handle"
+  },
+
+  "tokens_used": [
+    "color-bg-muted", "color-fg", "color-fg-muted", "color-fg-subtle",
+    "color-primary", "color-primary-subtle", "color-ring",
+    "space-px", "space-1", "space-2", "space-5",
+    "radius-md", "text-sm", "font-sans", "weight-medium",
+    "duration-fast", "ease-default"
+  ],
+
+  "templates": {
+    "html": "<ul data-ui=\"tree-view\" data-state=\"idle\" role=\"tree\" aria-label=\"Items\" aria-multiselectable=\"false\">\n  <li data-part=\"item\" data-state=\"expanded\" data-value=\"parent\" role=\"treeitem\" tabindex=\"0\" aria-selected=\"false\" aria-expanded=\"true\" aria-level=\"1\" aria-setsize=\"1\" aria-posinset=\"1\">\n    <span data-part=\"label\"><span data-part=\"toggle\" aria-hidden=\"true\">&#x203A;</span>Parent</span>\n    <ul data-part=\"group\" role=\"group\">\n      <li data-part=\"item\" data-value=\"child\" role=\"treeitem\" tabindex=\"-1\" aria-selected=\"false\" aria-level=\"2\" aria-setsize=\"1\" aria-posinset=\"1\">\n        <span data-part=\"label\"><span data-part=\"toggle\" aria-hidden=\"true\">&#x203A;</span>Child</span>\n      </li>\n    </ul>\n  </li>\n</ul>"
+  },
+
+  "safe_transforms": [
+    "add-item",
+    "remove-item",
+    "reorder-keyed-items",
+    "add-nested-group",
+    "mark-item-disabled",
+    "mark-parent-lazy",
+    "change-tree-label",
+    "restyle-label-and-toggle"
+  ],
+
+  "unsafe_transforms": [
+    "remove-tree-role",
+    "remove-tree-accessible-name",
+    "remove-treeitem-role",
+    "place-children-outside-group",
+    "put-aria-expanded-on-leaf",
+    "remove-roving-tabindex",
+    "remove-positional-aria",
+    "remove-keyboard-navigation",
+    "allow-multiple-selected-items"
+  ],
+
+  "composition": {
+    "contains": [],
+    "used_in": ["sidebar", "file-browser"]
+  },
+
+  "files": {
+    "html": "tree-view.html",
+    "css": "tree-view.css",
+    "js": "tree-view.js",
+    "manifest": "tree-view.manifest.json"
+  },
+
+  "tests": [
+    "full-three-level-keyboard-traversal",
+    "right-arrow-expands-then-enters-child",
+    "left-arrow-collapses-then-enters-parent",
+    "home-end-do-not-change-expansion",
+    "navigation-does-not-wrap",
+    "typeahead-wraps-and-matches-prefix",
+    "star-expands-sibling-parents",
+    "single-selection-emits-faqir-select",
+    "disabled-items-are-skipped-and-not-selectable",
+    "explicit-positional-aria-at-every-level",
+    "expanded-state-round-trips",
+    "lazy-expand-event-allows-child-insertion",
+    "keyed-l-for-reorder-preserves-node-state",
+    "dynamic-reconciliation-refreshes-positional-aria",
+    "prevents-double-initialization",
+    "destroy-removes-listeners-observer-and-timer",
+    "canonical-reference-is-audit-clean"
+  ]
+}
