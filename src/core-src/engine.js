@@ -1812,6 +1812,11 @@
   function uid(prefix) { return (prefix || 'faqir') + '-' + (++uidCounter); }
   function clamp(value, min, max) { return Math.min(Math.max(value, min), max); }
 
+  // Shared menu navigation is injected from registry/core/menu-navigation.js.
+  // Keeping the module as the authored source lets standalone recipe imports
+  // and the assembled browser runtime execute the exact same implementation.
+  // @faqir:menu-navigation
+
   // ═══════════════════════════════════════════════════════
   // Section 7: Recipe Controllers
   // ═══════════════════════════════════════════════════════

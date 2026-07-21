@@ -2,7 +2,7 @@
 
 # Faqir Recipes Reference
 
-22 recipes, each with its anatomy tree, variant table, and safe/unsafe transforms — all derived from the component manifest.
+24 recipes, each with its anatomy tree, variant table, and safe/unsafe transforms — all derived from the component manifest.
 
 ## accordion
 
@@ -267,6 +267,43 @@ Cmd+K style modal command interface with search and keyboard navigation
 - **A11y:** role=dialog · aria-modal · focus-trap · escape-closes · keys: Cmd+K / Ctrl+K, Escape, ArrowDown, ArrowUp, Enter, Home, End
 - **Required ARIA:** `role="dialog" on panel`; `aria-modal="true" on panel`; `aria-label on panel`; `role="combobox" on search input`; `role="listbox" on list`; `role="option" on each item`
 
+## context-menu
+
+_kind: recipe · category: navigation · controller: createContextMenu()_
+
+Context menu opened at the pointer or from the keyboard with complete menu navigation
+
+```html
+<div data-ui="context-menu" data-state="closed">
+  <div data-part="target" role="button" tabindex="0" aria-haspopup="menu" aria-expanded="false" aria-controls="{id}-menu">{target_text}</div>
+  <div data-part="menu" id="{id}-menu" role="menu" aria-label="Context actions" hidden>
+    <button data-part="item" type="button" role="menuitem" tabindex="-1">{item1}</button>
+    <button data-part="item" type="button" role="menuitem" tabindex="-1">{item2}</button>
+    <hr data-part="separator" role="separator" aria-orientation="horizontal">
+    <button data-part="item" type="button" role="menuitem" tabindex="-1">{item3}</button>
+  </div>
+</div>
+```
+
+**Anatomy**
+
+```text
+[data-ui='context-menu']  ·  <div> · content: slots
+├─ [data-part='target']  <div>  required  — Focusable region whose context-menu action opens the menu
+├─ [data-part='menu']  <div>  required  — Fixed-position popup with role=menu and an accessible name
+├─ [data-part='item']  <button>  required  — Context action with role=menuitem
+└─ [data-part='separator']  <hr>  optional  — Non-interactive separator between groups of context actions
+```
+
+**Variants**
+
+_No variants._
+
+- **Safe transforms:** `change-target-content`, `add-menu-item`, `remove-menu-item`, `add-separator`, `change-menu-label`, `restyle-menu-surface`
+- **Unsafe (never do):** `remove-target-tabindex`, `remove-target-button-role`, `remove-menu-role`, `remove-menu-accessible-name`, `remove-menuitem-role`, `remove-keyboard-navigation`, `remove-native-contextmenu-prevention`, `remove-outside-click-handler`
+- **A11y:** keys: ContextMenu, Shift+F10, Enter, Space, Escape, ArrowDown, ArrowUp, Home, End, Tab
+- **Required ARIA:** `tabindex="0" on target`; `role="button" on target`; `aria-haspopup="menu" on target`; `aria-expanded on target`; `aria-controls on target`; `role="menu" on menu`; `aria-label on menu`; `role="menuitem" on item`; `tabindex="-1" on item`
+
 ## date-picker
 
 _kind: recipe · category: forms · controller: createDatePicker()_
@@ -491,6 +528,55 @@ Segmented one-time-code input — N visual segments over a single hidden real in
 - **Unsafe (never do):** `remove-real-input`, `split-into-per-segment-inputs`, `remove-autocomplete-one-time-code`, `remove-input-accessible-name`, `make-segments-focusable`, `remove-aria-hidden-from-segments`
 - **A11y:** keys: 0-9 / a-z, Backspace, Delete, ArrowLeft, ArrowRight, Home, End, Paste
 - **Required ARIA:** `autocomplete="one-time-code" on input`; `aria-label on input`
+
+## menubar
+
+_kind: recipe · category: navigation · controller: createMenubar()_
+
+Horizontal application menubar with roving focus and keyboard-operated submenus
+
+```html
+<div data-ui="menubar" data-state="closed" data-size="{size}" role="menubar" aria-label="{label}">
+  <div data-part="group" role="none">
+    <button type="button" data-part="trigger" id="{id}-file" role="menuitem" tabindex="0" aria-haspopup="menu" aria-expanded="false" aria-controls="{id}-file-menu">{menu1}</button>
+    <div data-part="submenu" id="{id}-file-menu" role="menu" aria-labelledby="{id}-file" hidden>
+      <button type="button" data-part="item" role="menuitem" tabindex="-1">{item1}</button>
+      <button type="button" data-part="item" role="menuitem" tabindex="-1">{item2}</button>
+      <hr data-part="separator" role="separator">
+      <button type="button" data-part="item" role="menuitem" tabindex="-1">{item3}</button>
+    </div>
+  </div>
+  <div data-part="group" role="none">
+    <button type="button" data-part="trigger" id="{id}-edit" role="menuitem" tabindex="-1" aria-haspopup="menu" aria-expanded="false" aria-controls="{id}-edit-menu">{menu2}</button>
+    <div data-part="submenu" id="{id}-edit-menu" role="menu" aria-labelledby="{id}-edit" hidden>
+      <button type="button" data-part="item" role="menuitem" tabindex="-1">{item4}</button>
+      <button type="button" data-part="item" role="menuitem" tabindex="-1">{item5}</button>
+    </div>
+  </div>
+</div>
+```
+
+**Anatomy**
+
+```text
+[data-ui='menubar']  ·  <div> · content: slots
+├─ [data-part='group']  <div>  optional  — Role-none structural wrapper pairing a parent menuitem with its submenu
+├─ [data-part='trigger']  <button>  required  — Top-level menuitem participating in the horizontal roving tabindex
+├─ [data-part='submenu']  <div>  required  — Vertical popup menu controlled by a top-level menuitem
+├─ [data-part='item']  <button>  required  — Action inside a vertical submenu
+└─ [data-part='separator']  <hr>  optional  — Non-interactive separator between groups of submenu actions
+```
+
+**Variants**
+
+| Variant | Values | Default | Attribute | Applied to |
+|---------|--------|---------|-----------|------------|
+| size | `sm`, `md`, `lg` | `md` | `data-size` | root |
+
+- **Safe transforms:** `add-top-level-menu`, `add-submenu-item`, `add-separator`, `change-size`, `change-accessible-label`, `restyle-menu-surfaces`
+- **Unsafe (never do):** `remove-menubar-role`, `remove-menu-or-menuitem-roles`, `remove-aria-expanded-or-aria-controls`, `make-submenu-items-page-tab-stops`, `remove-roving-tabindex`, `remove-keyboard-navigation`
+- **A11y:** role=menubar · keys: ArrowRight, ArrowLeft, ArrowDown, ArrowUp, Home, End, Enter, Space, Escape, Tab
+- **Required ARIA:** `role="menubar" on root`; `aria-label on root`; `role="menuitem" on trigger`; `tabindex on trigger`; `submenu parents expose aria-haspopup="menu", aria-controls, and aria-expanded`; `role="menu" on submenu`; `aria-labelledby on submenu`; `role="menuitem" on item`; `tabindex="-1" on item`
 
 ## pagination
 

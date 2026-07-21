@@ -1,0 +1,137 @@
+{
+  "$schema": "../../../manifest.schema.json",
+  "name": "context-menu",
+  "version": "1.0.0",
+  "kind": "recipe",
+  "category": "navigation",
+  "description": "Context menu opened at the pointer or from the keyboard with complete menu navigation",
+
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='context-menu']",
+    "content_model": "slots"
+  },
+
+  "slots": {
+    "target": {
+      "selector": "[data-part='target']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "Focusable region whose context-menu action opens the menu"
+    },
+    "menu": {
+      "selector": "[data-part='menu']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "Fixed-position popup with role=menu and an accessible name"
+    },
+    "item": {
+      "selector": "[data-part='item']",
+      "required": true,
+      "tag_hint": "button",
+      "description": "Context action with role=menuitem"
+    },
+    "separator": {
+      "selector": "[data-part='separator']",
+      "required": false,
+      "tag_hint": "hr",
+      "description": "Non-interactive separator between groups of context actions"
+    }
+  },
+
+  "variants": {},
+
+  "states": {
+    "closed": { "attr": "data-state=\"closed\"", "default": true },
+    "open": { "attr": "data-state=\"open\"" }
+  },
+
+  "props": {},
+
+  "a11y": {
+    "required_attrs": [
+      "tabindex=\"0\" on target",
+      "role=\"button\" on target",
+      "aria-haspopup=\"menu\" on target",
+      "aria-expanded on target",
+      "aria-controls on target",
+      "role=\"menu\" on menu",
+      "aria-label on menu",
+      "role=\"menuitem\" on item",
+      "tabindex=\"-1\" on item"
+    ],
+    "keyboard": {
+      "ContextMenu": "open the menu near the target",
+      "Shift+F10": "open the menu near the target",
+      "Enter": "activate the focused item",
+      "Space": "activate the focused item",
+      "Escape": "close the menu and return focus to the target",
+      "ArrowDown": "focus the next item",
+      "ArrowUp": "focus the previous item",
+      "Home": "focus the first item",
+      "End": "focus the last item",
+      "Tab": "close the menu and continue normal tab navigation"
+    }
+  },
+
+  "tokens_used": [
+    "color-bg", "color-bg-muted", "color-fg", "color-fg-muted",
+    "color-border", "color-primary", "color-primary-subtle", "color-ring",
+    "space-px", "space-1", "space-2", "space-3", "space-4", "space-20",
+    "radius-md", "radius-lg", "shadow-md", "text-sm", "weight-medium",
+    "font-sans", "duration-fast", "ease-out", "z-dropdown"
+  ],
+
+  "templates": {
+    "html": "<div data-ui=\"context-menu\" data-state=\"closed\">\n  <div data-part=\"target\" role=\"button\" tabindex=\"0\" aria-haspopup=\"menu\" aria-expanded=\"false\" aria-controls=\"{id}-menu\">{target_text}</div>\n  <div data-part=\"menu\" id=\"{id}-menu\" role=\"menu\" aria-label=\"Context actions\" hidden>\n    <button data-part=\"item\" type=\"button\" role=\"menuitem\" tabindex=\"-1\">{item1}</button>\n    <button data-part=\"item\" type=\"button\" role=\"menuitem\" tabindex=\"-1\">{item2}</button>\n    <hr data-part=\"separator\" role=\"separator\" aria-orientation=\"horizontal\">\n    <button data-part=\"item\" type=\"button\" role=\"menuitem\" tabindex=\"-1\">{item3}</button>\n  </div>\n</div>"
+  },
+
+  "safe_transforms": [
+    "change-target-content",
+    "add-menu-item",
+    "remove-menu-item",
+    "add-separator",
+    "change-menu-label",
+    "restyle-menu-surface"
+  ],
+
+  "unsafe_transforms": [
+    "remove-target-tabindex",
+    "remove-target-button-role",
+    "remove-menu-role",
+    "remove-menu-accessible-name",
+    "remove-menuitem-role",
+    "remove-keyboard-navigation",
+    "remove-native-contextmenu-prevention",
+    "remove-outside-click-handler"
+  ],
+
+  "composition": {
+    "contains": [],
+    "used_in": []
+  },
+
+  "files": {
+    "html": "context-menu.html",
+    "css": "context-menu.css",
+    "js": "context-menu.js",
+    "manifest": "context-menu.manifest.json"
+  },
+
+  "tests": [
+    "opens-at-pointer-coordinates",
+    "prevents-native-context-menu",
+    "opens-from-context-menu-key",
+    "opens-from-shift-f10",
+    "focuses-first-item-on-open",
+    "navigates-items-with-arrow-keys",
+    "supports-home-and-end",
+    "does-not-activate-disabled-items",
+    "closes-on-escape",
+    "closes-on-tab-without-restoring-focus",
+    "closes-on-outside-pointerdown",
+    "closes-on-item-activation",
+    "prevents-double-initialization",
+    "destroy-removes-listeners"
+  ]
+}

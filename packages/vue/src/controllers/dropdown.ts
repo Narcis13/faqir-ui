@@ -7,6 +7,7 @@
 // @ui:provides open close toggle destroy
 
 import { onOutsideClick } from "./_core-events";
+import { createMenuNavigation } from "./_core-menu-navigation";
 
 export function createDropdown(root) {
   // Prevent double-init
@@ -14,25 +15,34 @@ export function createDropdown(root) {
 
   const trigger = root.querySelector("[data-part='trigger']");
   const menu = root.querySelector("[data-part='menu']");
-  const items = () =>
-    [...root.querySelectorAll("[data-part='item']:not(:disabled)")];
 
   let outsideClickCleanup = null;
 
-  function open() {
+  const navigation = createMenuNavigation(menu, {
+    onEscape() {
+      close();
+    },
+    onTab() {
+      close({ restoreFocus: false });
+    },
+  });
+
+  function open(options = {}) {
+    const focus = options.focus || "first";
     root.dataset.state = "open";
     menu.hidden = false;
     trigger.setAttribute("aria-expanded", "true");
 
-    // Focus first item
-    const allItems = items();
-    if (allItems.length > 0) allItems[0].focus();
+    if (focus === "last") navigation.focusLast();
+    else navigation.focusFirst();
 
     // Close on outside click
-    outsideClickCleanup = onOutsideClick(root, close);
+    if (outsideClickCleanup) outsideClickCleanup();
+    outsideClickCleanup = onOutsideClick(root, () => close({ restoreFocus: false }));
   }
 
-  function close() {
+  function close(options = {}) {
+    const restoreFocus = options.restoreFocus !== false;
     root.dataset.state = "closed";
     menu.hidden = true;
     trigger.setAttribute("aria-expanded", "false");
@@ -42,22 +52,11 @@ export function createDropdown(root) {
       outsideClickCleanup = null;
     }
 
-    trigger.focus();
+    if (restoreFocus) trigger.focus();
   }
 
   function toggle() {
     root.dataset.state === "open" ? close() : open();
-  }
-
-  function focusItem(index) {
-    const allItems = items();
-    if (index < 0 || index >= allItems.length) return;
-    allItems[index].focus();
-  }
-
-  function getFocusedIndex() {
-    const allItems = items();
-    return allItems.indexOf(document.activeElement);
   }
 
   function onTriggerClick() {
@@ -65,63 +64,34 @@ export function createDropdown(root) {
   }
 
   function onTriggerKeyDown(e) {
-    if (e.key === "ArrowDown" || e.key === "Enter" || e.key === " ") {
-      if (root.dataset.state !== "open") {
-        e.preventDefault();
-        open();
-      }
+    if (e.key === "ArrowDown" || e.key === "ArrowUp" || e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      if (root.dataset.state !== "open") open({ focus: e.key === "ArrowUp" ? "last" : "first" });
+      else if (e.key === "ArrowUp") navigation.focusLast();
+      else navigation.focusFirst();
     }
-  }
-
-  function onMenuKeyDown(e) {
-    const allItems = items();
-    const current = getFocusedIndex();
-
-    switch (e.key) {
-      case "ArrowDown":
-        e.preventDefault();
-        focusItem((current + 1) % allItems.length);
-        break;
-      case "ArrowUp":
-        e.preventDefault();
-        focusItem((current - 1 + allItems.length) % allItems.length);
-        break;
-      case "Home":
-        e.preventDefault();
-        focusItem(0);
-        break;
-      case "End":
-        e.preventDefault();
-        focusItem(allItems.length - 1);
-        break;
-      case "Escape":
-        e.preventDefault();
-        close();
-        break;
-      case "Tab":
-        close();
-        break;
-    }
-  }
-
-  function onItemClick() {
-    close();
   }
 
   trigger?.addEventListener("click", onTriggerClick);
   trigger?.addEventListener("keydown", onTriggerKeyDown);
-  menu?.addEventListener("keydown", onMenuKeyDown);
 
   // Delegate item clicks
-  menu?.addEventListener("click", (e) => {
+  function onMenuClick(e) {
     const item = e.target.closest("[data-part='item']");
-    if (item && !item.disabled) onItemClick();
-  });
+    if (
+      item &&
+      item.closest('[role="menu"]') === menu &&
+      !item.disabled &&
+      item.getAttribute("aria-disabled") !== "true"
+    ) close();
+  }
+  menu?.addEventListener("click", onMenuClick);
 
   function destroy() {
     trigger?.removeEventListener("click", onTriggerClick);
     trigger?.removeEventListener("keydown", onTriggerKeyDown);
-    menu?.removeEventListener("keydown", onMenuKeyDown);
+    menu?.removeEventListener("click", onMenuClick);
+    navigation.destroy();
     if (outsideClickCleanup) outsideClickCleanup();
     delete root._faqirDropdown;
   }

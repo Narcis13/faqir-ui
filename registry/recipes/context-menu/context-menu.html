@@ -1,0 +1,16 @@
+<!-- @ui:component context-menu -->
+<!-- @ui:kind recipe -->
+<!-- @ui:slots target menu item separator -->
+<!-- @ui:controller context-menu.js -->
+
+<div data-ui="context-menu" data-state="closed">
+  <div data-part="target" role="button" tabindex="0" aria-haspopup="menu" aria-expanded="false" aria-controls="context-menu-actions">
+    Right-click this area for document actions.
+  </div>
+  <div data-part="menu" id="context-menu-actions" role="menu" aria-label="Document actions" hidden>
+    <button data-part="item" type="button" role="menuitem" tabindex="-1">Edit</button>
+    <button data-part="item" type="button" role="menuitem" tabindex="-1">Duplicate</button>
+    <hr data-part="separator" role="separator" aria-orientation="horizontal">
+    <button data-part="item" type="button" role="menuitem" tabindex="-1">Delete</button>
+  </div>
+</div>

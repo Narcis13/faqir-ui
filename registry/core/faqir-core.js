@@ -4,7 +4,8 @@
 // GENERATED FILE — DO NOT EDIT BY HAND.
 // Assembled by scripts/build-core.mjs (task 0.3-03) from:
 //   engine:      src/core-src/engine.js
-//   controllers: 22 recipe factories → accordion, alert-dialog, barcode, calendar, combobox, command-palette, date-picker, dialog, drawer, dropdown, input-otp, pagination, popover, qr-code, select-custom, sheet, sidebar, slider, table, tabs, toast, tooltip
+//   core helper: registry/core/menu-navigation.js
+//   controllers: 24 recipe factories → accordion, alert-dialog, barcode, calendar, combobox, command-palette, context-menu, date-picker, dialog, drawer, dropdown, input-otp, menubar, pagination, popover, qr-code, select-custom, sheet, sidebar, slider, table, tabs, toast, tooltip
 // Regenerate with: bun run build:core
 // Package version: 0.2.4
 // ============================================================================
@@ -1823,6 +1824,183 @@
   function uid(prefix) { return (prefix || 'faqir') + '-' + (++uidCounter); }
   function clamp(value, min, max) { return Math.min(Math.max(value, min), max); }
 
+  // Shared menu navigation is injected from registry/core/menu-navigation.js.
+  // Keeping the module as the authored source lets standalone recipe imports
+  // and the assembled browser runtime execute the exact same implementation.
+  // ── shared menu navigation ── (registry/core/menu-navigation.js)
+  // @ui:core menu-navigation
+  // @ui:provides createMenuNavigation
+
+  const MENU_ITEM_SELECTOR =
+    '[role="menuitem"], [role="menuitemcheckbox"], [role="menuitemradio"]';
+  const MENU_OWNER_SELECTOR = '[role="menu"], [role="menubar"]';
+
+  /**
+   * Shared keyboard and focus navigation for menus and menubars.
+   *
+   * The helper deliberately owns movement only. Controllers remain responsible
+   * for opening/closing popups and reflecting component state.
+   *
+   * @param {Element} container element carrying role=menu or role=menubar
+   * @param {object} [options]
+   * @param {"vertical"|"horizontal"} [options.orientation="vertical"]
+   * @param {boolean} [options.roving=false] maintain one tabindex=0 item
+   * @param {(item: Element, event: KeyboardEvent) => void} [options.onActivate]
+   * @param {(event: KeyboardEvent) => void} [options.onEscape]
+   * @param {(event: KeyboardEvent) => void} [options.onTab]
+   */
+  function createMenuNavigation(container, options = {}) {
+    const horizontal = options.orientation === "horizontal";
+    const roving = options.roving === true;
+    const forwardKey = horizontal ? "ArrowRight" : "ArrowDown";
+    const backwardKey = horizontal ? "ArrowLeft" : "ArrowUp";
+
+    function candidates() {
+      return [...container.querySelectorAll(MENU_ITEM_SELECTOR)].filter(
+        (item) => item.closest(MENU_OWNER_SELECTOR) === container,
+      );
+    }
+
+    // Native disabled controls cannot receive focus. aria-disabled menuitems stay
+    // in the arrow sequence per the WAI-ARIA menu pattern; activation is blocked
+    // separately below.
+    function items() {
+      return candidates().filter((item) => !item.disabled);
+    }
+
+    function current() {
+      const all = items();
+      const active = document.activeElement;
+      if (all.includes(active)) return active;
+      return roving ? all.find((item) => item.tabIndex === 0) || null : null;
+    }
+
+    function sync(preferred) {
+      if (!roving) return preferred || current();
+
+      const all = items();
+      let active = all.includes(preferred) ? preferred : null;
+      if (!active && all.includes(document.activeElement)) active = document.activeElement;
+      if (!active) active = all.find((item) => item.tabIndex === 0) || all[0] || null;
+
+      for (const item of candidates()) item.tabIndex = item === active ? 0 : -1;
+      return active;
+    }
+
+    function focus(index) {
+      const all = items();
+      if (all.length === 0) return null;
+
+      const item = all[((index % all.length) + all.length) % all.length];
+      sync(item);
+      item.focus();
+      return item;
+    }
+
+    function currentIndex() {
+      return items().indexOf(current());
+    }
+
+    function focusFirst() {
+      return focus(0);
+    }
+
+    function focusLast() {
+      return focus(items().length - 1);
+    }
+
+    function focusNext() {
+      const index = currentIndex();
+      return focus(index < 0 ? 0 : index + 1);
+    }
+
+    function focusPrevious() {
+      const index = currentIndex();
+      return focus(index < 0 ? items().length - 1 : index - 1);
+    }
+
+    function eventItem(event) {
+      const item = event.target.closest?.(MENU_ITEM_SELECTOR);
+      if (item?.closest(MENU_OWNER_SELECTOR) === container) return item;
+      return event.target === container ? current() : null;
+    }
+
+    function onKeyDown(event) {
+      // Nested menu events bubble through their parent menubar. Only the nearest
+      // menu/menubar owns a menuitem's key handling. Escape and Tab still belong
+      // to an empty menu, including legacy markup where the container lacks a role.
+      const owner = event.target.closest?.(MENU_OWNER_SELECTOR);
+      if (owner ? owner !== container : event.target !== container) return;
+
+      if (event.key === "Escape" && options.onEscape) {
+        event.preventDefault();
+        options.onEscape(event);
+        return;
+      }
+      if (event.key === "Tab" && options.onTab) {
+        options.onTab(event);
+        return;
+      }
+
+      const targetItem = eventItem(event);
+      if (!targetItem) return;
+
+      if (event.key === forwardKey) {
+        event.preventDefault();
+        focusNext();
+        return;
+      }
+      if (event.key === backwardKey) {
+        event.preventDefault();
+        focusPrevious();
+        return;
+      }
+      if (event.key === "Home") {
+        event.preventDefault();
+        focusFirst();
+        return;
+      }
+      if (event.key === "End") {
+        event.preventDefault();
+        focusLast();
+        return;
+      }
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        if (targetItem.getAttribute("aria-disabled") !== "true") {
+          if (options.onActivate) options.onActivate(targetItem, event);
+          else targetItem.click();
+        }
+      }
+    }
+
+    function onFocusIn(event) {
+      const item = eventItem(event);
+      if (item) sync(item);
+    }
+
+    container.addEventListener("keydown", onKeyDown);
+    if (roving) container.addEventListener("focusin", onFocusIn);
+    sync();
+
+    function destroy() {
+      container.removeEventListener("keydown", onKeyDown);
+      if (roving) container.removeEventListener("focusin", onFocusIn);
+    }
+
+    return {
+      items,
+      current,
+      sync,
+      focus,
+      focusFirst,
+      focusLast,
+      focusNext,
+      focusPrevious,
+      destroy,
+    };
+  }
+
   // ═══════════════════════════════════════════════════════
   // Section 7: Recipe Controllers
   // ═══════════════════════════════════════════════════════
@@ -3089,6 +3267,112 @@ function createCommandPalette(root) {
     return createCommandPalette;
   })();
 
+  // ── context-menu ── (registry/recipes/context-menu/context-menu.js)
+  var createContextMenu = controllerRegistry["context-menu"] = (function() {
+// @ui:controller context-menu
+// @ui:provides open close destroy
+
+function createContextMenu(root) {
+  if (root._faqirContextMenu) return root._faqirContextMenu;
+
+  const target = root.querySelector("[data-part='target']");
+  const menu = root.querySelector("[data-part='menu']");
+
+  let outsideClickCleanup = null;
+
+  function clearOutsideClick() {
+    if (!outsideClickCleanup) return;
+    outsideClickCleanup();
+    outsideClickCleanup = null;
+  }
+
+  function close(options = {}) {
+    const { restoreFocus = true } = options;
+
+    root.dataset.state = "closed";
+    menu.hidden = true;
+    target.setAttribute("aria-expanded", "false");
+    clearOutsideClick();
+
+    if (restoreFocus && target.isConnected) target.focus();
+  }
+
+  const navigation = createMenuNavigation(menu, {
+    onEscape() {
+      close({ restoreFocus: true });
+    },
+    onTab() {
+      close({ restoreFocus: false });
+    },
+  });
+
+  function open(x = 0, y = 0) {
+    clearOutsideClick();
+
+    menu.style.left = `${x}px`;
+    menu.style.top = `${y}px`;
+    menu.hidden = false;
+    root.dataset.state = "open";
+    target.setAttribute("aria-expanded", "true");
+
+    navigation.focusFirst();
+
+    outsideClickCleanup = onOutsideClick(menu, () => {
+      close({ restoreFocus: false });
+    });
+  }
+
+  function onContextMenu(event) {
+    event.preventDefault();
+    open(event.clientX, event.clientY);
+  }
+
+  function onTargetKeyDown(event) {
+    const isContextMenuKey = event.key === "ContextMenu";
+    const isShiftF10 = event.key === "F10" && event.shiftKey;
+    if (!isContextMenuKey && !isShiftF10) return;
+
+    event.preventDefault();
+    const rect = target.getBoundingClientRect();
+    open(rect.left, rect.bottom);
+  }
+
+  function onMenuClick(event) {
+    const item = event.target.closest("[data-part='item']");
+    if (!item || !menu.contains(item)) return;
+
+    if (item.disabled || item.getAttribute("aria-disabled") === "true") {
+      event.preventDefault();
+      return;
+    }
+
+    close({ restoreFocus: true });
+  }
+
+  target?.addEventListener("contextmenu", onContextMenu);
+  target?.addEventListener("keydown", onTargetKeyDown);
+  menu?.addEventListener("click", onMenuClick);
+
+  function destroy() {
+    target?.removeEventListener("contextmenu", onContextMenu);
+    target?.removeEventListener("keydown", onTargetKeyDown);
+    menu?.removeEventListener("click", onMenuClick);
+    navigation.destroy();
+    clearOutsideClick();
+
+    root.dataset.state = "closed";
+    menu.hidden = true;
+    target.setAttribute("aria-expanded", "false");
+    delete root._faqirContextMenu;
+  }
+
+  const api = { open, close, destroy };
+  root._faqirContextMenu = api;
+  return api;
+}
+    return createContextMenu;
+  })();
+
   // ── date-picker ── (registry/recipes/date-picker/date-picker.js)
   var createDatePicker = controllerRegistry["date-picker"] = (function() {
 // @ui:controller date-picker
@@ -3582,25 +3866,34 @@ function createDropdown(root) {
 
   const trigger = root.querySelector("[data-part='trigger']");
   const menu = root.querySelector("[data-part='menu']");
-  const items = () =>
-    [...root.querySelectorAll("[data-part='item']:not(:disabled)")];
 
   let outsideClickCleanup = null;
 
-  function open() {
+  const navigation = createMenuNavigation(menu, {
+    onEscape() {
+      close();
+    },
+    onTab() {
+      close({ restoreFocus: false });
+    },
+  });
+
+  function open(options = {}) {
+    const focus = options.focus || "first";
     root.dataset.state = "open";
     menu.hidden = false;
     trigger.setAttribute("aria-expanded", "true");
 
-    // Focus first item
-    const allItems = items();
-    if (allItems.length > 0) allItems[0].focus();
+    if (focus === "last") navigation.focusLast();
+    else navigation.focusFirst();
 
     // Close on outside click
-    outsideClickCleanup = onOutsideClick(root, close);
+    if (outsideClickCleanup) outsideClickCleanup();
+    outsideClickCleanup = onOutsideClick(root, () => close({ restoreFocus: false }));
   }
 
-  function close() {
+  function close(options = {}) {
+    const restoreFocus = options.restoreFocus !== false;
     root.dataset.state = "closed";
     menu.hidden = true;
     trigger.setAttribute("aria-expanded", "false");
@@ -3610,22 +3903,11 @@ function createDropdown(root) {
       outsideClickCleanup = null;
     }
 
-    trigger.focus();
+    if (restoreFocus) trigger.focus();
   }
 
   function toggle() {
     root.dataset.state === "open" ? close() : open();
-  }
-
-  function focusItem(index) {
-    const allItems = items();
-    if (index < 0 || index >= allItems.length) return;
-    allItems[index].focus();
-  }
-
-  function getFocusedIndex() {
-    const allItems = items();
-    return allItems.indexOf(document.activeElement);
   }
 
   function onTriggerClick() {
@@ -3633,63 +3915,34 @@ function createDropdown(root) {
   }
 
   function onTriggerKeyDown(e) {
-    if (e.key === "ArrowDown" || e.key === "Enter" || e.key === " ") {
-      if (root.dataset.state !== "open") {
-        e.preventDefault();
-        open();
-      }
+    if (e.key === "ArrowDown" || e.key === "ArrowUp" || e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      if (root.dataset.state !== "open") open({ focus: e.key === "ArrowUp" ? "last" : "first" });
+      else if (e.key === "ArrowUp") navigation.focusLast();
+      else navigation.focusFirst();
     }
-  }
-
-  function onMenuKeyDown(e) {
-    const allItems = items();
-    const current = getFocusedIndex();
-
-    switch (e.key) {
-      case "ArrowDown":
-        e.preventDefault();
-        focusItem((current + 1) % allItems.length);
-        break;
-      case "ArrowUp":
-        e.preventDefault();
-        focusItem((current - 1 + allItems.length) % allItems.length);
-        break;
-      case "Home":
-        e.preventDefault();
-        focusItem(0);
-        break;
-      case "End":
-        e.preventDefault();
-        focusItem(allItems.length - 1);
-        break;
-      case "Escape":
-        e.preventDefault();
-        close();
-        break;
-      case "Tab":
-        close();
-        break;
-    }
-  }
-
-  function onItemClick() {
-    close();
   }
 
   trigger?.addEventListener("click", onTriggerClick);
   trigger?.addEventListener("keydown", onTriggerKeyDown);
-  menu?.addEventListener("keydown", onMenuKeyDown);
 
   // Delegate item clicks
-  menu?.addEventListener("click", (e) => {
+  function onMenuClick(e) {
     const item = e.target.closest("[data-part='item']");
-    if (item && !item.disabled) onItemClick();
-  });
+    if (
+      item &&
+      item.closest('[role="menu"]') === menu &&
+      !item.disabled &&
+      item.getAttribute("aria-disabled") !== "true"
+    ) close();
+  }
+  menu?.addEventListener("click", onMenuClick);
 
   function destroy() {
     trigger?.removeEventListener("click", onTriggerClick);
     trigger?.removeEventListener("keydown", onTriggerKeyDown);
-    menu?.removeEventListener("keydown", onMenuKeyDown);
+    menu?.removeEventListener("click", onMenuClick);
+    navigation.destroy();
     if (outsideClickCleanup) outsideClickCleanup();
     delete root._faqirDropdown;
   }
@@ -4120,6 +4373,257 @@ function clampInt(raw, fallback, lo, hi) {
   return Math.max(lo, Math.min(hi, n));
 }
     return createInputOTP;
+  })();
+
+  // ── menubar ── (registry/recipes/menubar/menubar.js)
+  var createMenubar = controllerRegistry["menubar"] = (function() {
+// @ui:controller menubar
+// @ui:provides open close destroy
+
+function createMenubar(root) {
+  if (root._faqirMenubar) return root._faqirMenubar;
+
+  const submenus = [...root.querySelectorAll("[data-part='submenu'][role='menu']")]
+    .filter((menu) => menu.closest("[data-ui='menubar']") === root);
+  const submenuNavigations = new Map();
+
+  let topNavigation;
+
+  function ownerOf(item) {
+    return item?.closest("[role='menu'], [role='menubar']");
+  }
+
+  function topItems() {
+    return topNavigation?.items() ?? [];
+  }
+
+  function submenuFor(item) {
+    const controls = item?.getAttribute("aria-controls");
+    if (controls) {
+      const controlled = submenus.find((menu) => menu.id === controls);
+      if (controlled) return controlled;
+    }
+
+    const sibling = item?.nextElementSibling;
+    return sibling?.matches("[data-part='submenu'][role='menu']")
+      ? sibling
+      : null;
+  }
+
+  function parentFor(menu) {
+    return topItems().find((item) => submenuFor(item) === menu) ?? null;
+  }
+
+  function isAriaDisabled(item) {
+    return item?.getAttribute("aria-disabled") === "true";
+  }
+
+  function collapseAll() {
+    let previousParent = null;
+
+    for (const menu of submenus) {
+      const parent = parentFor(menu);
+      if (!menu.hidden && parent) previousParent = parent;
+      menu.hidden = true;
+      parent?.setAttribute("aria-expanded", "false");
+    }
+
+    root.dataset.state = "closed";
+    return previousParent;
+  }
+
+  function openFor(item, focus = "first") {
+    const menu = submenuFor(item);
+    if (!menu || isAriaDisabled(item)) return false;
+
+    collapseAll();
+    topNavigation.sync(item);
+    menu.hidden = false;
+    item.setAttribute("aria-expanded", "true");
+    root.dataset.state = "open";
+
+    const navigation = submenuNavigations.get(menu);
+    if (focus === "last") navigation?.focusLast();
+    else if (focus === "first") navigation?.focusFirst();
+    else item.focus();
+
+    return true;
+  }
+
+  function open(index = 0, focus = "first") {
+    const allItems = topItems();
+    const item = typeof index === "number" ? allItems[index] : index;
+    return item ? openFor(item, focus) : false;
+  }
+
+  function close(restoreFocus = true) {
+    const parent = collapseAll();
+    if (restoreFocus && parent) {
+      topNavigation.sync(parent);
+      parent.focus();
+    }
+  }
+
+  function activateTopItem(item) {
+    if (submenuFor(item)) {
+      openFor(item, "first");
+      return;
+    }
+
+    item.click();
+  }
+
+  const authoredTopItems = [...root.querySelectorAll("[role='menuitem']")]
+    .filter((item) => ownerOf(item) === root);
+  const preferredTopItem =
+    authoredTopItems.find(
+      (item) => item.getAttribute("tabindex") === "0" && !isAriaDisabled(item),
+    ) ??
+    authoredTopItems.find((item) => !isAriaDisabled(item)) ??
+    authoredTopItems[0];
+
+  topNavigation = createMenuNavigation(root, {
+    orientation: "horizontal",
+    roving: true,
+    onActivate: activateTopItem,
+    onEscape() {
+      close(false);
+    },
+    onTab() {
+      close(false);
+    },
+  });
+  topNavigation.sync(preferredTopItem);
+
+  for (const menu of submenus) {
+    const navigation = createMenuNavigation(menu, {
+      onEscape() {
+        const parent = parentFor(menu);
+        collapseAll();
+        if (parent) {
+          topNavigation.sync(parent);
+          parent.focus();
+        }
+      },
+      onTab() {
+        collapseAll();
+      },
+    });
+    submenuNavigations.set(menu, navigation);
+    navigation.items().forEach((item) => {
+      item.tabIndex = -1;
+    });
+  }
+
+  // A menubar is persistent; only its popup submenus have open/closed state.
+  collapseAll();
+
+  function moveAcrossMenubar(menu, direction) {
+    const parent = parentFor(menu);
+    if (!parent) return;
+
+    collapseAll();
+    topNavigation.sync(parent);
+    const nextItem = direction > 0
+      ? topNavigation.focusNext()
+      : topNavigation.focusPrevious();
+
+    if (nextItem && submenuFor(nextItem) && !isAriaDisabled(nextItem)) {
+      openFor(nextItem, "parent");
+    }
+  }
+
+  function onKeyDown(event) {
+    if (!(event.target instanceof Element)) return;
+    const item = event.target.closest("[role='menuitem']");
+    if (!item || !root.contains(item)) return;
+
+    const owner = ownerOf(item);
+    if (owner === root) {
+      if ((event.key === "ArrowDown" || event.key === "ArrowUp") && submenuFor(item)) {
+        if (isAriaDisabled(item)) return;
+        event.preventDefault();
+        openFor(item, event.key === "ArrowUp" ? "last" : "first");
+        return;
+      }
+
+      // The shared horizontal navigation has already moved focus by the time
+      // this listener runs. In open-menu mode, switch the visible submenu too.
+      if (
+        root.dataset.state === "open" &&
+        (event.key === "ArrowLeft" || event.key === "ArrowRight")
+      ) {
+        const nextItem = topNavigation.current();
+        collapseAll();
+        if (nextItem && submenuFor(nextItem) && !isAriaDisabled(nextItem)) {
+          openFor(nextItem, "parent");
+        }
+      }
+      return;
+    }
+
+    if (!submenus.includes(owner)) return;
+    if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
+      event.preventDefault();
+      moveAcrossMenubar(owner, event.key === "ArrowRight" ? 1 : -1);
+    }
+  }
+
+  function onClick(event) {
+    if (!(event.target instanceof Element)) return;
+    const item = event.target.closest("[role='menuitem']");
+    if (!item || !root.contains(item)) return;
+
+    if (isAriaDisabled(item)) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+
+    const owner = ownerOf(item);
+    if (owner === root) {
+      topNavigation.sync(item);
+      item.focus();
+      const menu = submenuFor(item);
+
+      if (!menu) {
+        collapseAll();
+        return;
+      }
+
+      event.preventDefault();
+      if (!menu.hidden) close(false);
+      else openFor(item, "parent");
+      return;
+    }
+
+    if (submenus.includes(owner)) {
+      const parent = parentFor(owner);
+      collapseAll();
+      if (parent) {
+        topNavigation.sync(parent);
+        parent.focus();
+      }
+    }
+  }
+
+  root.addEventListener("keydown", onKeyDown);
+  root.addEventListener("click", onClick, true);
+
+  function destroy() {
+    root.removeEventListener("keydown", onKeyDown);
+    root.removeEventListener("click", onClick, true);
+    topNavigation.destroy();
+    submenuNavigations.forEach((navigation) => navigation.destroy());
+    submenuNavigations.clear();
+    delete root._faqirMenubar;
+  }
+
+  const api = { open, close, destroy };
+  root._faqirMenubar = api;
+  return api;
+}
+    return createMenubar;
   })();
 
   // ── pagination ── (registry/recipes/pagination/pagination.js)

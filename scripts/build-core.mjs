@@ -6,8 +6,11 @@
  * Inputs:
  *   - `src/core-src/engine.js`               — directives, reactivity, plugin API
  *                                              (no controllers). Carries a lone
- *                                              `// @faqir:controllers` marker line
- *                                              where controllers are injected.
+ *                                              marker for shared menu navigation
+ *                                              and `// @faqir:controllers` where
+ *                                              controllers are injected.
+ *   - `registry/core/menu-navigation.js`     — shared menu focus/key navigation,
+ *                                              injected once into the UMD scope.
  *   - `registry/recipes/<name>/<name>.js`    — one ES-module controller factory per
  *                                              recipe (`export function create…`),
  *                                              tagged `// @ui:controller <name>`.
@@ -49,11 +52,13 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const ENGINE_SRC = join(ROOT, "src", "core-src", "engine.js");
 const RECIPES_DIR = join(ROOT, "registry", "recipes");
+const MENU_NAV_SRC = join(ROOT, "registry", "core", "menu-navigation.js");
 const OUT = join(ROOT, "registry", "core", "faqir-core.js");
 
 // The injection point in the engine source: a lone comment line, matched by its
 // trimmed text so the engine's surrounding indentation is irrelevant.
 const MARKER = "// @faqir:controllers";
+const MENU_NAV_MARKER = "// @faqir:menu-navigation";
 
 function pkgVersion() {
   try {
@@ -147,6 +152,19 @@ function renderController(c) {
   );
 }
 
+/** Render an ESM core helper as engine-scoped source from its sole module. */
+function renderCoreHelper(source, label) {
+  const body = source
+    .replace(/^\s*import\b[^\n]*?\bfrom\s+["'][^"']+["'];?[^\n]*\n/gm, "")
+    .replace(/^\s*import\s+["'][^"']+["'];?[^\n]*\n/gm, "")
+    .replace(/^(\s*)export\s+(function|const|let|var|class)\b/gm, "$1$2")
+    .trim();
+  return `  // ── shared menu navigation ── (${label})\n${body
+    .split("\n")
+    .map((line) => (line ? `  ${line}` : ""))
+    .join("\n")}`;
+}
+
 function renderHeader(controllers, engineRel) {
   const names = controllers.map((c) => c.name);
   const rule = "// " + "=".repeat(76);
@@ -158,6 +176,7 @@ function renderHeader(controllers, engineRel) {
       "// GENERATED FILE — DO NOT EDIT BY HAND.",
       "// Assembled by scripts/build-core.mjs (task 0.3-03) from:",
       `//   engine:      ${engineRel}`,
+      "//   core helper: registry/core/menu-navigation.js",
       `//   controllers: ${controllers.length} recipe ${controllers.length === 1 ? "factory" : "factories"}` +
         ` → ${names.length ? names.join(", ") : "(none)"}`,
       "// Regenerate with: bun run build:core",
@@ -177,6 +196,7 @@ function renderHeader(controllers, engineRel) {
  * @param {string[]} [opts.recipeDirs] Dirs holding `<name>/<name>.js` recipes
  *                                     (default [registry/recipes]). Multiple dirs
  *                                     are merged (used by tests to inject fixtures).
+ * @param {string} [opts.menuNavigationPath] Shared menu helper module.
  * @param {string} [opts.outPath]      Where to write (default registry/core/faqir-core.js).
  * @param {boolean} [opts.write]       Set false to assemble without writing.
  * @returns {{ code: string, controllers: {name,factory,label}[], outPath: string }}
@@ -184,6 +204,7 @@ function renderHeader(controllers, engineRel) {
 export function buildCore(opts = {}) {
   const enginePath = opts.enginePath || ENGINE_SRC;
   const recipeDirs = opts.recipeDirs || [RECIPES_DIR];
+  const menuNavigationPath = opts.menuNavigationPath || MENU_NAV_SRC;
   const outPath = opts.outPath || OUT;
   const write = opts.write !== false;
 
@@ -193,6 +214,18 @@ export function buildCore(opts = {}) {
   if (markerIdx === -1) {
     throw new Error(`engine source ${relative(ROOT, enginePath)} is missing the "${MARKER}" marker`);
   }
+  const menuNavMarkerIdx = lines.findIndex((l) => l.trim() === MENU_NAV_MARKER);
+  if (menuNavMarkerIdx === -1) {
+    throw new Error(
+      `engine source ${relative(ROOT, enginePath)} is missing the "${MENU_NAV_MARKER}" marker`,
+    );
+  }
+
+  const menuNavigationSource = readFileSync(menuNavigationPath, "utf8");
+  lines[menuNavMarkerIdx] = renderCoreHelper(
+    menuNavigationSource,
+    labelFor(menuNavigationPath),
+  );
 
   // Discover controllers across every recipe dir, deterministically.
   const found = [];

@@ -1,0 +1,106 @@
+<!-- @ui:component menubar -->
+<!-- @ui:kind recipe -->
+<!-- @ui:slots group trigger submenu item separator -->
+<!-- @ui:variants size=sm|md|lg -->
+<!-- @ui:controller menubar.js -->
+
+<div
+  data-ui="menubar"
+  data-state="closed"
+  data-size="md"
+  role="menubar"
+  aria-label="Application menu"
+>
+  <div data-part="group" role="none">
+    <button
+      type="button"
+      data-part="trigger"
+      id="app-menu-file"
+      role="menuitem"
+      tabindex="0"
+      aria-haspopup="menu"
+      aria-expanded="false"
+      aria-controls="app-menu-file-items"
+    >
+      File
+    </button>
+    <div
+      data-part="submenu"
+      id="app-menu-file-items"
+      role="menu"
+      aria-labelledby="app-menu-file"
+      hidden
+    >
+      <button type="button" data-part="item" role="menuitem" tabindex="-1">New</button>
+      <button type="button" data-part="item" role="menuitem" tabindex="-1">Open</button>
+      <button
+        type="button"
+        data-part="item"
+        role="menuitem"
+        tabindex="-1"
+        aria-disabled="true"
+      >
+        Save
+      </button>
+      <hr data-part="separator" role="separator">
+      <button type="button" data-part="item" role="menuitem" tabindex="-1">Exit</button>
+    </div>
+  </div>
+
+  <div data-part="group" role="none">
+    <button
+      type="button"
+      data-part="trigger"
+      id="app-menu-edit"
+      role="menuitem"
+      tabindex="-1"
+      aria-haspopup="menu"
+      aria-expanded="false"
+      aria-controls="app-menu-edit-items"
+    >
+      Edit
+    </button>
+    <div
+      data-part="submenu"
+      id="app-menu-edit-items"
+      role="menu"
+      aria-labelledby="app-menu-edit"
+      hidden
+    >
+      <button type="button" data-part="item" role="menuitem" tabindex="-1">Undo</button>
+      <button type="button" data-part="item" role="menuitem" tabindex="-1">Redo</button>
+      <hr data-part="separator" role="separator">
+      <button type="button" data-part="item" role="menuitem" tabindex="-1">Cut</button>
+      <button type="button" data-part="item" role="menuitem" tabindex="-1">Copy</button>
+      <button type="button" data-part="item" role="menuitem" tabindex="-1">Paste</button>
+    </div>
+  </div>
+
+  <div data-part="group" role="none">
+    <button
+      type="button"
+      data-part="trigger"
+      id="app-menu-view"
+      role="menuitem"
+      tabindex="-1"
+      aria-haspopup="menu"
+      aria-expanded="false"
+      aria-controls="app-menu-view-items"
+    >
+      View
+    </button>
+    <div
+      data-part="submenu"
+      id="app-menu-view-items"
+      role="menu"
+      aria-labelledby="app-menu-view"
+      hidden
+    >
+      <button type="button" data-part="item" role="menuitem" tabindex="-1">Zoom In</button>
+      <button type="button" data-part="item" role="menuitem" tabindex="-1">Zoom Out</button>
+      <button type="button" data-part="item" role="menuitem" tabindex="-1">Reset Zoom</button>
+    </div>
+  </div>
+
+  <button type="button" data-part="trigger" role="menuitem" tabindex="-1">Help</button>
+</div>

@@ -1,0 +1,154 @@
+{
+  "$schema": "../../../manifest.schema.json",
+  "name": "menubar",
+  "version": "1.0.0",
+  "kind": "recipe",
+  "category": "navigation",
+  "description": "Horizontal application menubar with roving focus and keyboard-operated submenus",
+
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='menubar']",
+    "content_model": "slots"
+  },
+
+  "slots": {
+    "group": {
+      "selector": "[data-part='group']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Role-none structural wrapper pairing a parent menuitem with its submenu"
+    },
+    "trigger": {
+      "selector": "[data-part='trigger']",
+      "required": true,
+      "tag_hint": "button",
+      "description": "Top-level menuitem participating in the horizontal roving tabindex"
+    },
+    "submenu": {
+      "selector": "[data-part='submenu']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "Vertical popup menu controlled by a top-level menuitem"
+    },
+    "item": {
+      "selector": "[data-part='item']",
+      "required": true,
+      "tag_hint": "button",
+      "description": "Action inside a vertical submenu"
+    },
+    "separator": {
+      "selector": "[data-part='separator']",
+      "required": false,
+      "tag_hint": "hr",
+      "description": "Non-interactive separator between groups of submenu actions"
+    }
+  },
+
+  "variants": {
+    "size": {
+      "values": ["sm", "md", "lg"],
+      "default": "md",
+      "attr": "data-size",
+      "applied_to": "root"
+    }
+  },
+
+  "states": {
+    "closed": { "attr": "data-state=\"closed\"", "default": true },
+    "open": { "attr": "data-state=\"open\"" }
+  },
+
+  "props": {
+    "label": {
+      "type": "string",
+      "default": "Application menu",
+      "description": "Accessible label for the menubar"
+    }
+  },
+
+  "a11y": {
+    "role": "menubar",
+    "required_attrs": [
+      "role=\"menubar\" on root",
+      "aria-label on root",
+      "role=\"menuitem\" on trigger",
+      "tabindex on trigger",
+      "submenu parents expose aria-haspopup=\"menu\", aria-controls, and aria-expanded",
+      "role=\"menu\" on submenu",
+      "aria-labelledby on submenu",
+      "role=\"menuitem\" on item",
+      "tabindex=\"-1\" on item"
+    ],
+    "keyboard": {
+      "ArrowRight": "move to the next top-level item; from a submenu, switch to the next top-level menu",
+      "ArrowLeft": "move to the previous top-level item; from a submenu, switch to the previous top-level menu",
+      "ArrowDown": "open a top-level submenu at its first item or move to the next submenu item",
+      "ArrowUp": "open a top-level submenu at its last item or move to the previous submenu item",
+      "Home": "focus the first item in the current menubar or submenu",
+      "End": "focus the last item in the current menubar or submenu",
+      "Enter": "open a submenu or activate an enabled item",
+      "Space": "open a submenu or activate an enabled item",
+      "Escape": "close the submenu containing focus and return focus to its parent menuitem",
+      "Tab": "close all submenus and move focus out of the menubar"
+    }
+  },
+
+  "tokens_used": [
+    "color-bg", "color-border", "color-fg", "color-fg-muted",
+    "color-primary", "color-primary-subtle", "color-ring",
+    "space-px", "space-1", "space-2", "space-3", "space-4", "space-20",
+    "radius-md", "radius-lg", "shadow-md",
+    "text-xs", "text-sm", "text-base", "weight-medium",
+    "duration-fast", "ease-out", "z-dropdown", "font-sans"
+  ],
+
+  "templates": {
+    "html": "<div data-ui=\"menubar\" data-state=\"closed\" data-size=\"{size}\" role=\"menubar\" aria-label=\"{label}\">\n  <div data-part=\"group\" role=\"none\">\n    <button type=\"button\" data-part=\"trigger\" id=\"{id}-file\" role=\"menuitem\" tabindex=\"0\" aria-haspopup=\"menu\" aria-expanded=\"false\" aria-controls=\"{id}-file-menu\">{menu1}</button>\n    <div data-part=\"submenu\" id=\"{id}-file-menu\" role=\"menu\" aria-labelledby=\"{id}-file\" hidden>\n      <button type=\"button\" data-part=\"item\" role=\"menuitem\" tabindex=\"-1\">{item1}</button>\n      <button type=\"button\" data-part=\"item\" role=\"menuitem\" tabindex=\"-1\">{item2}</button>\n      <hr data-part=\"separator\" role=\"separator\">\n      <button type=\"button\" data-part=\"item\" role=\"menuitem\" tabindex=\"-1\">{item3}</button>\n    </div>\n  </div>\n  <div data-part=\"group\" role=\"none\">\n    <button type=\"button\" data-part=\"trigger\" id=\"{id}-edit\" role=\"menuitem\" tabindex=\"-1\" aria-haspopup=\"menu\" aria-expanded=\"false\" aria-controls=\"{id}-edit-menu\">{menu2}</button>\n    <div data-part=\"submenu\" id=\"{id}-edit-menu\" role=\"menu\" aria-labelledby=\"{id}-edit\" hidden>\n      <button type=\"button\" data-part=\"item\" role=\"menuitem\" tabindex=\"-1\">{item4}</button>\n      <button type=\"button\" data-part=\"item\" role=\"menuitem\" tabindex=\"-1\">{item5}</button>\n    </div>\n  </div>\n</div>"
+  },
+
+  "safe_transforms": [
+    "add-top-level-menu",
+    "add-submenu-item",
+    "add-separator",
+    "change-size",
+    "change-accessible-label",
+    "restyle-menu-surfaces"
+  ],
+
+  "unsafe_transforms": [
+    "remove-menubar-role",
+    "remove-menu-or-menuitem-roles",
+    "remove-aria-expanded-or-aria-controls",
+    "make-submenu-items-page-tab-stops",
+    "remove-roving-tabindex",
+    "remove-keyboard-navigation"
+  ],
+
+  "composition": {
+    "contains": [],
+    "used_in": []
+  },
+
+  "files": {
+    "html": "menubar.html",
+    "css": "menubar.css",
+    "js": "menubar.js",
+    "manifest": "menubar.manifest.json"
+  },
+
+  "tests": [
+    "initial-roving-tabindex-is-valid",
+    "horizontal-arrows-move-and-wrap-top-level-focus",
+    "arrow-down-and-enter-open-submenu-at-first-item",
+    "arrow-up-opens-submenu-at-last-item",
+    "vertical-arrows-move-and-wrap-submenu-focus",
+    "home-and-end-move-within-current-menu",
+    "escape-closes-submenu-and-restores-parent-focus",
+    "submenu-left-and-right-switch-top-level-menus",
+    "tab-closes-submenus-without-preventing-default",
+    "aria-disabled-items-remain-focusable-but-do-not-activate",
+    "submenu-items-remain-out-of-page-tab-order",
+    "controller-is-idempotent-and-destroy-cleans-up"
+  ]
+}

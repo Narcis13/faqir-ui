@@ -273,7 +273,7 @@ const VENDOR_NOTE = (from: string) =>
 /** Vendor one recipe controller: rewrite imports to package-local modules. */
 export function emitReactController(name: string, source: string): string {
   const rewritten = source
-    .replace(/from\s+"\.\.\/\.\.\/core\/(\w+)\.js"/g, 'from "./_core-$1"')
+    .replace(/from\s+"\.\.\/\.\.\/core\/([\w-]+)\.js"/g, 'from "./_core-$1"')
     .replace(/from\s+"\.\.\/([\w-]+)\/[\w-]+\.js"/g, 'from "./$1"');
   return VENDOR_NOTE(`registry/recipes/${name}/${name}.js`) + rewritten;
 }

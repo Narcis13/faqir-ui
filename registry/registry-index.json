@@ -1,6 +1,6 @@
 {
   "schema": "faqir-registry-index@1",
-  "count": 70,
+  "count": 72,
   "components": [
     {
       "name": "aspect-ratio",
@@ -1040,6 +1040,32 @@
       ]
     },
     {
+      "name": "context-menu",
+      "kind": "recipe",
+      "layer": "recipes",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "context-menu.css",
+          "sha256": "19de4f2044d2480456ed48abff7ff794b323c03038ea23bcf9063fed941bbb7a"
+        },
+        {
+          "path": "context-menu.html",
+          "sha256": "fc7c64a1720068e0ce1b0edf0797959517c548dd68c6b716a222efdea9a6dd60"
+        },
+        {
+          "path": "context-menu.js",
+          "sha256": "7c329def644a1470b516a1a07c4aebdcf94f6d47ee2be358077bbdf1d57a8b16"
+        },
+        {
+          "path": "context-menu.manifest.json",
+          "sha256": "bbf0ff8fcd54f225dfb640a1cdc301cf6bd7b5a1d16b14fac73a780cd004534c"
+        }
+      ],
+      "hash": "94de7b4f01bf1ec0769cefa3ae7ba4134acda77de41876f725a9e0bb8ff5b180",
+      "deps": []
+    },
+    {
       "name": "date-picker",
       "kind": "recipe",
       "layer": "recipes",
@@ -1140,14 +1166,14 @@
         },
         {
           "path": "dropdown.js",
-          "sha256": "7f61753891fb28a8055fcd39d27bba7d5ac73076d108c130f2a3869c824b13b2"
+          "sha256": "6870113b0737b31aac639e3d5ca7c6a4ead462cdad86051c36d5043eb2afff49"
         },
         {
           "path": "dropdown.manifest.json",
           "sha256": "0de615d8095883764499b2d123935ff852e48327159f1507c9945ffa6f9f6bd0"
         }
       ],
-      "hash": "eaa048456da2da49f129cddb8fbd7a2092f4e85d4df8c2be4fb312434d0b1027",
+      "hash": "21ef2ae72772a777528f5a6bd78db9acf1a98b1b28ba62c1d28677b334d794bf",
       "deps": []
     },
     {
@@ -1174,6 +1200,32 @@
         }
       ],
       "hash": "43fb32985d30dc87d3c0edf515eccb86c88d98faf2210226e38522dec47ca992",
+      "deps": []
+    },
+    {
+      "name": "menubar",
+      "kind": "recipe",
+      "layer": "recipes",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "menubar.css",
+          "sha256": "a0b467aa694945f839700dd698eca2a5ee84be7aa8be84bb73195b03fe37cc21"
+        },
+        {
+          "path": "menubar.html",
+          "sha256": "4f87e377e642867ca90d44c61f5c8d9c1ee387bfc771b65137813819aa7ef655"
+        },
+        {
+          "path": "menubar.js",
+          "sha256": "5d0be78e9fbfd68e161ab2ad7fb9ae6e5f7beccc0aa8393973010b9b68a20d5e"
+        },
+        {
+          "path": "menubar.manifest.json",
+          "sha256": "5ba76892d94389607216cc109e5723bb0f37feda4a0e21ace9cb0370efe58f1a"
+        }
+      ],
+      "hash": "0ad661b5fb6643d9a8af92123984bb0560791c36ac3b603baca4a2aeacd8bcf7",
       "deps": []
     },
     {

@@ -383,7 +383,7 @@ export function scanController(source: string, label: string) {
   }
 
   const recipeImports = [...source.matchAll(/from\s+["']\.\.\/([\w-]+)\/[\w-]+\.js["']/g)].map((m) => m[1]);
-  const coreImports = [...source.matchAll(/from\s+["']\.\.\/\.\.\/core\/(\w+)\.js["']/g)].map((m) => m[1]);
+  const coreImports = [...source.matchAll(/from\s+["']\.\.\/\.\.\/core\/([\w-]+)\.js["']/g)].map((m) => m[1]);
 
   return { factory, methods, events: [...events], recipeImports, coreImports };
 }

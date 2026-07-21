@@ -65,8 +65,8 @@ describe("recipe auto-init from built faqir-core.js", () => {
     expect(Faqir.version).toMatch(/^\d+\.\d+\.\d+$/);
   });
 
-  test("exactly 22 recipe controllers are present", () => {
-    expect(RECIPES.length).toBe(22);
+  test("exactly 24 recipe controllers are present", () => {
+    expect(RECIPES.length).toBe(24);
   });
 
   // One smoke test per recipe: canonical markup in → controller attached.

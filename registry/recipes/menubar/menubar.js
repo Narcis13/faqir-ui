@@ -1,0 +1,248 @@
+// @ui:controller menubar
+// @ui:provides open close destroy
+
+import { createMenuNavigation } from "../../core/menu-navigation.js";
+
+export function createMenubar(root) {
+  if (root._faqirMenubar) return root._faqirMenubar;
+
+  const submenus = [...root.querySelectorAll("[data-part='submenu'][role='menu']")]
+    .filter((menu) => menu.closest("[data-ui='menubar']") === root);
+  const submenuNavigations = new Map();
+
+  let topNavigation;
+
+  function ownerOf(item) {
+    return item?.closest("[role='menu'], [role='menubar']");
+  }
+
+  function topItems() {
+    return topNavigation?.items() ?? [];
+  }
+
+  function submenuFor(item) {
+    const controls = item?.getAttribute("aria-controls");
+    if (controls) {
+      const controlled = submenus.find((menu) => menu.id === controls);
+      if (controlled) return controlled;
+    }
+
+    const sibling = item?.nextElementSibling;
+    return sibling?.matches("[data-part='submenu'][role='menu']")
+      ? sibling
+      : null;
+  }
+
+  function parentFor(menu) {
+    return topItems().find((item) => submenuFor(item) === menu) ?? null;
+  }
+
+  function isAriaDisabled(item) {
+    return item?.getAttribute("aria-disabled") === "true";
+  }
+
+  function collapseAll() {
+    let previousParent = null;
+
+    for (const menu of submenus) {
+      const parent = parentFor(menu);
+      if (!menu.hidden && parent) previousParent = parent;
+      menu.hidden = true;
+      parent?.setAttribute("aria-expanded", "false");
+    }
+
+    root.dataset.state = "closed";
+    return previousParent;
+  }
+
+  function openFor(item, focus = "first") {
+    const menu = submenuFor(item);
+    if (!menu || isAriaDisabled(item)) return false;
+
+    collapseAll();
+    topNavigation.sync(item);
+    menu.hidden = false;
+    item.setAttribute("aria-expanded", "true");
+    root.dataset.state = "open";
+
+    const navigation = submenuNavigations.get(menu);
+    if (focus === "last") navigation?.focusLast();
+    else if (focus === "first") navigation?.focusFirst();
+    else item.focus();
+
+    return true;
+  }
+
+  function open(index = 0, focus = "first") {
+    const allItems = topItems();
+    const item = typeof index === "number" ? allItems[index] : index;
+    return item ? openFor(item, focus) : false;
+  }
+
+  function close(restoreFocus = true) {
+    const parent = collapseAll();
+    if (restoreFocus && parent) {
+      topNavigation.sync(parent);
+      parent.focus();
+    }
+  }
+
+  function activateTopItem(item) {
+    if (submenuFor(item)) {
+      openFor(item, "first");
+      return;
+    }
+
+    item.click();
+  }
+
+  const authoredTopItems = [...root.querySelectorAll("[role='menuitem']")]
+    .filter((item) => ownerOf(item) === root);
+  const preferredTopItem =
+    authoredTopItems.find(
+      (item) => item.getAttribute("tabindex") === "0" && !isAriaDisabled(item),
+    ) ??
+    authoredTopItems.find((item) => !isAriaDisabled(item)) ??
+    authoredTopItems[0];
+
+  topNavigation = createMenuNavigation(root, {
+    orientation: "horizontal",
+    roving: true,
+    onActivate: activateTopItem,
+    onEscape() {
+      close(false);
+    },
+    onTab() {
+      close(false);
+    },
+  });
+  topNavigation.sync(preferredTopItem);
+
+  for (const menu of submenus) {
+    const navigation = createMenuNavigation(menu, {
+      onEscape() {
+        const parent = parentFor(menu);
+        collapseAll();
+        if (parent) {
+          topNavigation.sync(parent);
+          parent.focus();
+        }
+      },
+      onTab() {
+        collapseAll();
+      },
+    });
+    submenuNavigations.set(menu, navigation);
+    navigation.items().forEach((item) => {
+      item.tabIndex = -1;
+    });
+  }
+
+  // A menubar is persistent; only its popup submenus have open/closed state.
+  collapseAll();
+
+  function moveAcrossMenubar(menu, direction) {
+    const parent = parentFor(menu);
+    if (!parent) return;
+
+    collapseAll();
+    topNavigation.sync(parent);
+    const nextItem = direction > 0
+      ? topNavigation.focusNext()
+      : topNavigation.focusPrevious();
+
+    if (nextItem && submenuFor(nextItem) && !isAriaDisabled(nextItem)) {
+      openFor(nextItem, "parent");
+    }
+  }
+
+  function onKeyDown(event) {
+    if (!(event.target instanceof Element)) return;
+    const item = event.target.closest("[role='menuitem']");
+    if (!item || !root.contains(item)) return;
+
+    const owner = ownerOf(item);
+    if (owner === root) {
+      if ((event.key === "ArrowDown" || event.key === "ArrowUp") && submenuFor(item)) {
+        if (isAriaDisabled(item)) return;
+        event.preventDefault();
+        openFor(item, event.key === "ArrowUp" ? "last" : "first");
+        return;
+      }
+
+      // The shared horizontal navigation has already moved focus by the time
+      // this listener runs. In open-menu mode, switch the visible submenu too.
+      if (
+        root.dataset.state === "open" &&
+        (event.key === "ArrowLeft" || event.key === "ArrowRight")
+      ) {
+        const nextItem = topNavigation.current();
+        collapseAll();
+        if (nextItem && submenuFor(nextItem) && !isAriaDisabled(nextItem)) {
+          openFor(nextItem, "parent");
+        }
+      }
+      return;
+    }
+
+    if (!submenus.includes(owner)) return;
+    if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
+      event.preventDefault();
+      moveAcrossMenubar(owner, event.key === "ArrowRight" ? 1 : -1);
+    }
+  }
+
+  function onClick(event) {
+    if (!(event.target instanceof Element)) return;
+    const item = event.target.closest("[role='menuitem']");
+    if (!item || !root.contains(item)) return;
+
+    if (isAriaDisabled(item)) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+
+    const owner = ownerOf(item);
+    if (owner === root) {
+      topNavigation.sync(item);
+      item.focus();
+      const menu = submenuFor(item);
+
+      if (!menu) {
+        collapseAll();
+        return;
+      }
+
+      event.preventDefault();
+      if (!menu.hidden) close(false);
+      else openFor(item, "parent");
+      return;
+    }
+
+    if (submenus.includes(owner)) {
+      const parent = parentFor(owner);
+      collapseAll();
+      if (parent) {
+        topNavigation.sync(parent);
+        parent.focus();
+      }
+    }
+  }
+
+  root.addEventListener("keydown", onKeyDown);
+  root.addEventListener("click", onClick, true);
+
+  function destroy() {
+    root.removeEventListener("keydown", onKeyDown);
+    root.removeEventListener("click", onClick, true);
+    topNavigation.destroy();
+    submenuNavigations.forEach((navigation) => navigation.destroy());
+    submenuNavigations.clear();
+    delete root._faqirMenubar;
+  }
+
+  const api = { open, close, destroy };
+  root._faqirMenubar = api;
+  return api;
+}
