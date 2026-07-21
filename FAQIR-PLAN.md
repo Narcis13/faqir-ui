@@ -1824,9 +1824,9 @@ dropdown — no third copy of arrow-key logic.
 - Shared-core unit tests; dropdown regression suite still green.
 
 **Acceptance criteria**
-- [ ] One shared menu-nav implementation across dropdown/context-menu/menubar (assert by module structure, not vibes).
-- [ ] WAI-ARIA menubar pattern keyboard contract fully asserted.
-- [ ] Both audit-clean with manifests.
+- [x] One shared menu-nav implementation across dropdown/context-menu/menubar (assert by module structure, not vibes).
+- [x] WAI-ARIA menubar pattern keyboard contract fully asserted.
+- [x] Both audit-clean with manifests.
 
 ---
 
