@@ -7,8 +7,10 @@
  *
  *   - engine               src/core-src/engine.js         ≤ 14 KB gzip
  *     (directives, reactivity, plugin API — no controllers)
- *   - engine + controllers registry/core/faqir-core.js    ≤ 43 KB gzip
+ *   - engine + controllers registry/core/faqir-core.js    ≤ 44 KB gzip
  *     (the shipped single-file build: engine + every recipe controller)
+ *   - dev engine           registry/core/faqir-core.dev.js  no budget
+ *     (development build — measured and printed, never enforced; task 0.7-12)
  *   - each plugin          registry/core/plugins/*.js      ≤  2 KB gzip
  *     (official plugins, each self-registering via Faqir.plugin)
  *
@@ -38,7 +40,7 @@ const KB = 1024;
 // Budgets, in bytes. The single source of truth for the numbers in §10.4.
 export const BUDGETS = {
   engine: 14 * KB,
-  engineWithControllers: 43 * KB,
+  engineWithControllers: 44 * KB,
   plugin: 2 * KB,
 };
 
@@ -75,13 +77,19 @@ export function formatBytes(n) {
  * @returns {{label,gzipBytes,budgetBytes,ok,overBy}}
  */
 export function checkBudget(target) {
-  const budgetBytes = parseBudget(target.budgetBytes);
   const gzipBytes = target.gzipBytes;
   if (typeof gzipBytes !== "number" || !Number.isFinite(gzipBytes)) {
     throw new Error(`${target.label}: gzipBytes must be a number, got ${JSON.stringify(gzipBytes)}`);
   }
+  // A null budget means report-only: the number is measured and printed but can
+  // never fail the gate. The development engine is the one such target — it
+  // trades size for diagnostics on purpose. [task 0.7-12]
+  if (target.budgetBytes == null) {
+    return { label: target.label, gzipBytes, budgetBytes: null, ok: true, overBy: 0, reportOnly: true };
+  }
+  const budgetBytes = parseBudget(target.budgetBytes);
   const overBy = gzipBytes - budgetBytes;
-  return { label: target.label, gzipBytes, budgetBytes, ok: overBy <= 0, overBy };
+  return { label: target.label, gzipBytes, budgetBytes, ok: overBy <= 0, overBy, reportOnly: false };
 }
 
 /**
@@ -158,6 +166,14 @@ export function collectDefaultTargets(root = ROOT) {
       entry: "registry/core/faqir-core.js",
       budgetBytes: BUDGETS.engineWithControllers,
     },
+    // The development engine is deliberately unbudgeted (task 0.7-12): it buys
+    // diagnostics with bytes and never ships. Measured and printed all the same,
+    // so a regression in it is at least visible.
+    {
+      label: "dev engine (report only)",
+      entry: "registry/core/faqir-core.dev.js",
+      budgetBytes: null,
+    },
   ];
 
   const pluginsDir = join(root, "registry", "core", "plugins");
@@ -183,6 +199,7 @@ export function runSizeCheck({ targets, log = console.log, err = console.error }
   const rows = [];
   let hadError = false;
 
+
   for (const t of list) {
     try {
       const gzipBytes = measureGzip(t);
@@ -196,6 +213,13 @@ export function runSizeCheck({ targets, log = console.log, err = console.error }
   log("Size budgets (minified + gzip):");
   const pad = Math.max(4, ...rows.map((r) => r.label.length));
   for (const r of rows) {
+    if (r.reportOnly) {
+      log(
+        `  · ${r.label.padEnd(pad)}  ${formatBytes(r.gzipBytes).padStart(9)} ` +
+          `  ${"no budget".padStart(9)} gzip  (reported, not enforced)`,
+      );
+      continue;
+    }
     const mark = r.ok ? "✓" : "✗";
     const cmp = r.ok ? "≤" : ">";
     const over = r.ok ? "" : `  (over by ${formatBytes(r.overBy)})`;

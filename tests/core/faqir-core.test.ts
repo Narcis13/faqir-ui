@@ -1643,74 +1643,56 @@ describe("Directives", () => {
       expect(g1.querySelectorAll("li")[0]).toBe(liB);
     });
 
-    it("logs the dev hint exactly once when an unkeyed list reorders", async () => {
-      const warnings: string[] = [];
-      const orig = console.warn;
-      console.warn = (...a: any[]) => { warnings.push(a.join(" ")); };
-      try {
-        document.body.innerHTML = `
+    // The unkeyed-reorder hint moved to the DEVELOPMENT engine in task 0.7-12 —
+    // production neither warns nor snapshots the list to detect a reorder at
+    // all. These are the production halves of the parallel assertions in
+    // tests/core/dev-build.test.ts, which runs the same three fixtures against
+    // faqir-core.dev.js and expects exactly one hint on the first.
+    describe("unkeyed-reorder hint (dev build only)", () => {
+      async function warningsFor(html: string) {
+        const captured: string[] = [];
+        const orig = console.warn;
+        console.warn = (...a: any[]) => { captured.push(a.join(" ")); };
+        try {
+          document.body.innerHTML = html;
+          Faqir.start();
+          await tick();
+          document.querySelector("button")!.click();
+          await tick();
+          document.querySelector("button")!.click();
+          await tick();
+        } finally {
+          console.warn = orig;
+        }
+        return captured.filter((w) => w.includes("reordered without l-key"));
+      }
+
+      it("stays silent in production when an unkeyed list reorders", async () => {
+        expect(await warningsFor(`
           <div l-data="{ items: ['a','b','c'] }">
             <ul><template l-for="item in items"><li l-text="item"></li></template></ul>
             <button @click="items = [items[2], items[0], items[1]]">reorder</button>
           </div>
-        `;
-        Faqir.start();
-        await tick();
-        const hint = () => warnings.filter((w) => w.includes("reordered without l-key"));
-        expect(hint().length).toBe(0); // silent until an actual reorder
+        `)).toEqual([]);
+      });
 
-        document.querySelector("button")!.click();
-        await tick();
-        expect(hint().length).toBe(1); // fires on the reorder
-
-        document.querySelector("button")!.click();
-        await tick();
-        expect(hint().length).toBe(1); // still exactly once per list
-      } finally {
-        console.warn = orig;
-      }
-    });
-
-    it("does not log the dev hint when a keyed list reorders (silent)", async () => {
-      const warnings: string[] = [];
-      const orig = console.warn;
-      console.warn = (...a: any[]) => { warnings.push(a.join(" ")); };
-      try {
-        document.body.innerHTML = `
+      it("stays silent in production when a keyed list reorders", async () => {
+        expect(await warningsFor(`
           <div l-data="{ items: [{id:1,t:'a'},{id:2,t:'b'},{id:3,t:'c'}] }">
             <ul><template l-for="item in items" l-key="item.id"><li l-text="item.t"></li></template></ul>
             <button @click="items = [items[2], items[0], items[1]]">reorder</button>
           </div>
-        `;
-        Faqir.start();
-        await tick();
-        document.querySelector("button")!.click();
-        await tick();
-        expect(warnings.filter((w) => w.includes("reordered without l-key")).length).toBe(0);
-      } finally {
-        console.warn = orig;
-      }
-    });
+        `)).toEqual([]);
+      });
 
-    it("does not log the dev hint for an unkeyed in-place update (not a reorder)", async () => {
-      const warnings: string[] = [];
-      const orig = console.warn;
-      console.warn = (...a: any[]) => { warnings.push(a.join(" ")); };
-      try {
-        document.body.innerHTML = `
+      it("stays silent in production for an unkeyed in-place update", async () => {
+        expect(await warningsFor(`
           <div l-data="{ items: ['a','b','c'] }">
             <ul><template l-for="item in items"><li l-text="item"></li></template></ul>
             <button @click="items = ['x','b','c']">update</button>
           </div>
-        `;
-        Faqir.start();
-        await tick();
-        document.querySelector("button")!.click();
-        await tick();
-        expect(warnings.filter((w) => w.includes("reordered without l-key")).length).toBe(0);
-      } finally {
-        console.warn = orig;
-      }
+        `)).toEqual([]);
+      });
     });
   });
 
@@ -2979,5 +2961,76 @@ describe("Backwards Compatibility", () => {
     // Can interact purely through controller API without any directives
     (root as any)._faqirAccordion.expand(0);
     expect(root.querySelector("[data-part='item']")!.getAttribute("data-state")).toBe("expanded");
+  });
+});
+
+// ═══════════════════════════════════════════════════════
+// Dev-only diagnostics never reach production  [task 0.7-12]
+// ═══════════════════════════════════════════════════════
+//
+// The production halves of the parallel assertions in tests/core/dev-build.test.ts:
+// the same fixtures run against faqir-core.dev.js there and each records one
+// diagnostic. Here the production engine must record nothing, and the two
+// warnings it does keep (expression / statement errors are genuine runtime
+// faults, not advisories) must stay terse — no "[Faqir dev]" prefix, no
+// element outerHTML.
+describe("dev-only diagnostics are absent from the production engine", () => {
+  async function capture(html: string, after?: () => void) {
+    const warnings: string[] = [];
+    const orig = console.warn;
+    console.warn = (...a: any[]) => { warnings.push(a.join(" ")); };
+    try {
+      document.body.innerHTML = html;
+      Faqir.start();
+      await tick();
+      if (after) { after(); await tick(); }
+    } finally {
+      console.warn = orig;
+    }
+    return warnings;
+  }
+
+  it("records nothing in __FAQIR_DEVTOOLS__.warnings(), whatever happens", async () => {
+    await capture(`
+      <div l-data="{ body: '<b>x</b>' }">
+        <p l-text="a.b.c"></p>
+        <p l-nope="1"></p>
+        <p l-html="body"></p>
+      </div>
+    `);
+    expect(Faqir.devtools.warnings()).toEqual([]);
+    expect(Faqir.devtools.dev).toBe(false);
+  });
+
+  it("warns tersely on a failed expression — no dev prefix, no outerHTML", async () => {
+    const warnings = await capture(`
+      <div l-data="{}"><p id="boom" l-text="user.name.first"></p></div>
+    `);
+    expect(warnings.some((w) => w.includes('Expression error: "user.name.first"'))).toBe(true);
+    expect(warnings.some((w) => w.includes("[Faqir dev]"))).toBe(false);
+    expect(warnings.some((w) => w.includes('<p id="boom"'))).toBe(false);
+  });
+
+  it("warns tersely on a failed statement — no dev prefix, no outerHTML", async () => {
+    const warnings = await capture(
+      `<div l-data="{}"><button id="go" @click="missingFn()">go</button></div>`,
+      () => (document.querySelector("#go") as HTMLElement).click(),
+    );
+    expect(warnings.some((w) => w.includes('Statement error: "missingFn()"'))).toBe(true);
+    expect(warnings.some((w) => w.includes("[Faqir dev]"))).toBe(false);
+    expect(warnings.some((w) => w.includes('id="go"'))).toBe(false);
+  });
+
+  it("says nothing at all about an unknown directive", async () => {
+    const warnings = await capture(`<div l-data="{ n: 1 }"><p l-txet="n"></p></div>`);
+    expect(warnings.filter((w) => w.toLowerCase().includes("directive"))).toEqual([]);
+  });
+
+  it("says nothing at all about l-html being unsanitized", async () => {
+    const warnings = await capture(
+      `<div l-data="{ body: '<b>hi</b>' }"><article l-html="body"></article></div>`,
+    );
+    expect(document.querySelector("article")!.innerHTML).toBe("<b>hi</b>"); // still works
+    expect(warnings.filter((w) => w.includes("unsanitized"))).toEqual([]);
   });
 });

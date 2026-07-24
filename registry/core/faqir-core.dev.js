@@ -1,14 +1,15 @@
 // ============================================================================
-// registry/core/faqir-core.js
+// registry/core/faqir-core.dev.js
 //
 // GENERATED FILE — DO NOT EDIT BY HAND.
 // Assembled by scripts/build-core.mjs (task 0.3-03) from:
 //   engine:      src/core-src/engine.js
 //   core helper: registry/core/menu-navigation.js
+//   dev build:   src/core-src/dev-diagnostics.js (task 0.7-12)
 //   controllers: 29 recipe factories → accordion, alert-dialog, barcode, calendar, carousel, combobox, command-palette, context-menu, date-picker, dialog, drawer, dropdown, file-upload, input-otp, menubar, pagination, popover, qr-code, select-custom, sheet, sidebar, slider, table, tabs, tag-input, toast, toggle-group, tooltip, tree-view
 //
-// PRODUCTION BUILD — dev-only diagnostics stripped at assembly time.
-// Load faqir-core.dev.js instead while developing for full warnings.
+// DEVELOPMENT BUILD — verbose diagnostics, no size budget. Never ship this;
+// point <script src> at faqir-core.js for production.
 // Regenerate with: bun run build:core
 // Package version: 0.2.4
 // ============================================================================
@@ -46,6 +47,7 @@
   // one source by scripts/build-core.mjs. Three markers decide what each build
   // keeps:
   //
+  //   <code>    — the marker is stripped for the dev build and
   //                                the WHOLE LINE is dropped for production.
   //   // @faqir:dev-start … end  — the same, for a multi-line region.
   //   // @faqir:dev-diagnostics  — replaced by src/core-src/dev-diagnostics.js
@@ -225,6 +227,7 @@
       const fn = compileExpression(expression);
       return fn.call(scope, scope, el);
     } catch (e) {
+      if (devHooks) { devHooks.expressionError('expression', expression, el, e); return undefined; }
       console.warn('[Faqir] Expression error: "' + expression + '"', e);
       return undefined;
     }
@@ -235,6 +238,7 @@
       const fn = compileStatement(expression);
       fn.call(scope, scope, el);
     } catch (e) {
+      if (devHooks) { devHooks.expressionError('statement', expression, el, e); return; }
       console.warn('[Faqir] Statement error: "' + expression + '"', e);
     }
   }
@@ -918,6 +922,7 @@
           var cleanupFn = customDirectives.get(dir.type)(el, dir, scope);
           if (typeof cleanupFn === 'function') addCleanup(el, cleanupFn);
         }
+        else if (devHooks) devHooks.unknownDirective(el, dir);
     }
   }
 
@@ -934,6 +939,7 @@
   // --- 3.7 l-html ---
 
   function handleHtml(el, dir, scope) {
+    if (devHooks) devHooks.htmlNotice(el, dir.expression);
     var cl = effect(function() {
       var value = evaluate(dir.expression, scope, el);
       el.innerHTML = value == null ? '' : String(value);
@@ -1508,6 +1514,21 @@
   // True when `b` is a non-identity permutation of `a` (same items, new order).
   // Drives the dev hint for unkeyed lists that reorder. [task 0.3-06 · §A1]
   // Dev-build only — production never detects the reorder. [task 0.7-12]
+  function isReorder(a, b) {
+    var len = a.length;
+    if (len === 0 || len !== b.length) return false;
+    var moved = false;
+    for (var i = 0; i < len; i++) if (a[i] !== b[i]) { moved = true; break; }
+    if (!moved) return false;
+    var counts = new Map();
+    for (var i = 0; i < len; i++) counts.set(a[i], (counts.get(a[i]) || 0) + 1);
+    for (var i = 0; i < len; i++) {
+      var c = counts.get(b[i]);
+      if (!c) return false;
+      counts.set(b[i], c - 1);
+    }
+    return true;
+  }
 
   function handleFor(el, dir, scope) {
     if (el.tagName !== 'TEMPLATE') {
@@ -1572,6 +1593,8 @@
     }
 
     var currentEntries = [];
+    var prevItems = null;   // last list snapshot, for the unkeyed-reorder hint
+    var warnedReorder = false;
 
     var cl = effect(function() {
       var list = evaluate(listExpr, scope, el);
@@ -1582,6 +1605,13 @@
       // Dev-build hint: an unkeyed list reconciles by position, so reordering it
       // rebinds per-row DOM state to the wrong items. Once per list; keyed lists
       // never reach here. Production neither warns nor snapshots the list.
+      if (!keyExpr && !warnedReorder && devHooks) {
+        if (prevItems && isReorder(prevItems, items)) {
+          devHooks.unkeyedReorder(el, dir.expression);
+          warnedReorder = true;
+        }
+        prevItems = items.slice();
+      }
 
       // old key -> entry, consumed as matched so duplicate keys fall through to
       // fresh nodes and leftovers are stale. source[i] = reused entry's old
@@ -10671,7 +10701,157 @@ function createTreeView(root) {
     warnings: function() { return devHooks ? devHooks.warnings() : []; }
   };
 
+  // ── dev diagnostics ── (src/core-src/dev-diagnostics.js)
+  // @ui:core dev-diagnostics
+  // @faqir:dev-only
 
+  /**
+   * Development-build diagnostics for the Faqir engine.  [task 0.7-12 · §A6]
+   *
+   * This file is injected into `registry/core/faqir-core.dev.js` at the engine's
+   * `// @faqir:dev-diagnostics` marker and is NEVER part of the production
+   * `registry/core/faqir-core.js` — the marker line is simply dropped there. That
+   * is what keeps the shipped engine byte-free of every message below.
+   *
+   * It is not a standalone module: it runs inside the engine's UMD closure, where
+   * `devHooks`, `devtools` and `describeElement` already exist. Assigning
+   * `devHooks` is what arms the guarded call sites in the engine — until then
+   * every one of them is a dead `if (devHooks)`.
+   *
+   * Four warning classes, all routed through `devReport` so each is both printed
+   * once and retained for `window.__FAQIR_DEVTOOLS__.warnings()`:
+   *
+   *   expression   — an l-* expression threw; prints the offending element's
+   *                  outerHTML so the failure is locatable in a big page.
+   *   directive    — `l-something` nobody registered (typo, or a plugin that was
+   *                  never loaded).
+   *   reorder      — an unkeyed l-for list was reordered.
+   *   html         — `l-html` writes unsanitized markup, once per element.
+   *
+   * Repeats are collapsed by a dedupe token so a diagnostic inside an effect that
+   * re-runs 500 times still prints once.
+   */
+
+  // Retained diagnostics, oldest first. Capped so a pathological page cannot grow
+  // the log without bound; the counter keeps the true total honest.
+  var DEV_LOG_LIMIT = 200;
+  var devLog = [];
+  var devLogDropped = 0;
+  var devSeen = new Set();
+
+  // outerHTML is the whole point of the dev build ("which element?"), but a
+  // container's outerHTML can be the entire page. Head + tail keeps the opening
+  // tag (the identifying part) and stays readable in a console.
+  var DEV_HTML_LIMIT = 400;
+
+  function devSnippet(el) {
+    if (!el || !el.outerHTML) return '(no element)';
+    var html = el.outerHTML;
+    if (html.length <= DEV_HTML_LIMIT) return html;
+    return html.slice(0, DEV_HTML_LIMIT - 40) + ' … ' + html.slice(-30);
+  }
+
+  /** Record + print one diagnostic. `token` collapses repeats; null never dedupes. */
+  function devReport(kind, token, message, el, extra) {
+    if (token !== null) {
+      if (devSeen.has(token)) return false;
+      devSeen.add(token);
+    }
+
+    var entry = {
+      kind: kind,
+      message: message,
+      element: describeElement(el),
+      html: devSnippet(el)
+    };
+    if (extra) {
+      var keys = Object.keys(extra);
+      for (var i = 0; i < keys.length; i++) entry[keys[i]] = extra[keys[i]];
+    }
+
+    if (devLog.length >= DEV_LOG_LIMIT) {
+      devLog.shift();
+      devLogDropped++;
+    }
+    devLog.push(entry);
+
+    console.warn('[Faqir dev] ' + message + '\n  at ' + entry.element + '\n  ' + entry.html);
+    return true;
+  }
+
+  devtools.dev = true;
+
+  devHooks = {
+    /** Every diagnostic recorded so far, oldest first (copy — safe to mutate). */
+    warnings: function() { return devLog.slice(); },
+
+    /** How many entries fell off the front of the capped log. */
+    dropped: function() { return devLogDropped; },
+
+    /** Forget everything, including the dedupe memory. Used by the overlay + tests. */
+    clear: function() {
+      devLog.length = 0;
+      devLogDropped = 0;
+      devSeen.clear();
+    },
+
+    /**
+     * An `l-*` expression threw. `kind` is 'expression' (a read) or 'statement'
+     * (an assignment/handler body). Not deduped: the same expression can fail for
+     * different reasons, and the error is the payload.
+     */
+    expressionError: function(kind, expression, el, error) {
+      devReport(
+        'expression',
+        null,
+        (kind === 'statement' ? 'Statement' : 'Expression') +
+          ' error in "' + expression + '": ' + (error && error.message ? error.message : String(error)),
+        el,
+        { expression: expression, error: String(error && error.stack ? error.stack : error) }
+      );
+    },
+
+    /**
+     * An `l-`/`:`/`@` attribute whose type matches no built-in and no registered
+     * custom directive — silently inert in production. Once per element+attribute.
+     */
+    unknownDirective: function(el, dir) {
+      devReport(
+        'directive',
+        'directive:' + dir.raw + ':' + describeElement(el),
+        'Unknown directive "' + dir.raw + '" — no built-in handler and no plugin ' +
+          'registered Faqir.directive("' + dir.type + '", …). It does nothing.',
+        el,
+        { directive: dir.raw, expression: dir.expression }
+      );
+    },
+
+    /** An unkeyed `l-for` list was reordered. Once per list. */
+    unkeyedReorder: function(el, expression) {
+      devReport(
+        'reorder',
+        null,
+        'l-for reordered without l-key — DOM state (focus, selection, input) is ' +
+          'bound to position, not identity. Add l-key="…" so nodes follow their ' +
+          'items across reorders.',
+        el,
+        { expression: expression }
+      );
+    },
+
+    /** `l-html` assigns unsanitized markup. Once per element. */
+    htmlNotice: function(el, expression) {
+      devReport(
+        'html',
+        'html:' + expression + ':' + describeElement(el),
+        'l-html="' + expression + '" writes unsanitized HTML. Faqir never ' +
+          'sanitizes it — bind only markup you generated. Use l-text for values ' +
+          'that came from a user or an API.',
+        el,
+        { expression: expression }
+      );
+    }
+  };
 
   // ═══════════════════════════════════════════════════════
   // Section 9: Bootstrap & Auto-init

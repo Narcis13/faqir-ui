@@ -239,11 +239,13 @@ generated artifact — do not edit it by hand.** It is assembled from two source
 | ------ | ------------- |
 | `src/core-src/engine.js` | The engine: reactivity, directives, expression evaluator, bridge, bootstrap, and the public plugin API. No recipe controllers. |
 | `registry/recipes/{name}/{name}.js` | One ES-module controller factory per recipe, tagged `// @ui:controller {name}` and exporting `create{Name}(root)`. |
+| `src/core-src/dev-diagnostics.js` | Dev-build-only warning reporters, injected at the engine's `// @faqir:dev-diagnostics` marker. |
 
-`bun run build:core` concatenates them:
+`bun run build:core` concatenates them into **two** artifacts:
 
 ```bash
-bun run build:core          # → registry/core/faqir-core.js
+bun run build:core          # → registry/core/faqir-core.js      (production)
+                            # → registry/core/faqir-core.dev.js  (development)
 ```
 
 Each controller is inlined into the engine's UMD closure as a self-contained
@@ -252,6 +254,25 @@ IIFE that returns its factory and registers it on `controllerRegistry`. The
 helpers (`trapFocus`, `onOutsideClick`, `debounce`, `uid`) already live in the
 engine's scope. Wrapping each controller in its own IIFE keeps its local helpers
 private, so controllers can never collide with each other or with the engine.
+
+### The dev-build seam (task 0.7-12)
+
+Both artifacts come from the one engine source. Three markers decide what each
+build keeps, resolved by `applyDevMarkers` in `scripts/build-core.mjs`:
+
+| Marker | Production | Development |
+| ------ | ---------- | ----------- |
+| `/* @faqir:dev */ code` | whole line dropped | marker stripped, code kept |
+| `// @faqir:dev-start` … `// @faqir:dev-end` | region dropped | region kept |
+| `// @faqir:dev-diagnostics` | line dropped | `src/core-src/dev-diagnostics.js` injected |
+
+So every dev-only message string lives in `dev-diagnostics.js` and cannot reach
+the production file — `tests/build/dev-build.test.ts` derives the string list
+from that module and asserts each one's absence, and
+`tests/build/core-package.test.ts` repeats the check against the minified CDN
+artifact. Diagnostics reach the engine only through the `devHooks` seam
+(`null` in production). The dev build has no size budget; `bun run size` reports
+its number without enforcing one. See [docs/devtools.md](docs/devtools.md).
 
 **To change engine behavior:** edit `src/core-src/engine.js`, then run
 `bun run build:core`. **To change a controller:** edit its recipe `.js`, then run

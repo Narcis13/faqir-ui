@@ -606,6 +606,37 @@ It provides Alpine.js-style reactive directives, automatic recipe controller ini
 </div>
 ```
 
+### Inspecting a Live Page
+
+`Faqir.inspect(elementOrSelector)` returns one plain object describing what the
+engine is doing to an element — its scope, its directives, its controller and
+its protocol attributes:
+
+```js
+Faqir.inspect('#total')
+// {
+//   el, scopeRoot, scopeId,
+//   scope:       { total: 42, currency: 'EUR' },   // a copy; magics excluded
+//   directives:  [{ type: 'text', arg: null, expression: 'total', modifiers: [], raw: 'l-text' }],
+//   controller:  { ui: 'tabs', el, api, methods: ['activate', 'destroy', 'getActiveIndex'] },
+//   state:       { ui: 'tabs', part: 'panel', variant: 'underline', size: null, state: 'ready' }
+// }
+```
+
+The same function — plus `scopes()`, `components()`, `stores()` and
+`warnings()` — is on `window.__FAQIR_DEVTOOLS__`, which both engine builds
+install. Two development aids build on it:
+
+- **`core/faqir-core.dev.js`** — the development engine. Same behaviour, plus
+  warnings for failed expressions (with the offending element's `outerHTML`),
+  unknown directives, unkeyed `l-for` reorders and unsanitized `l-html`. The
+  production engine carries none of those strings.
+- **The `faqir dev` overlay** — a live panel of scopes, components and
+  diagnostics, toggled with `Ctrl/Cmd + Shift + F`. It is injected by the dev
+  server only and never written into your project (`--no-overlay` to disable).
+
+Full reference: [docs/devtools.md](docs/devtools.md).
+
 ---
 
 ## The Manifest System
@@ -960,6 +991,7 @@ faqir dev                         # Start dev server (default: port 3000)
 faqir dev --port 8080             # Custom port
 faqir dev --open                  # Open browser automatically
 faqir dev --bundle                # Auto-rebuild CSS bundle on changes
+faqir dev --no-overlay            # Skip the injected inspector overlay
 
 faqir bundle                      # Generate/regenerate CSS bundle
 faqir bundle --minify             # Strip comments and whitespace

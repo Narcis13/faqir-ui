@@ -60,6 +60,20 @@ export interface ContextData {
     example: string;
     notes: string[];
   };
+  /**
+   * The in-page inspection surface (task 0.7-12). Embedded so an agent driving
+   * a browser knows what to read without loading the engine source.
+   */
+  devtools: {
+    global: string;
+    version: number;
+    inspect: string;
+    keys: Record<string, string>;
+    snapshot_keys: Record<string, string>;
+    dev_build: string;
+    overlay: string;
+    notes: string[];
+  };
   components: Record<string, unknown>;
   patterns: Record<string, unknown>;
   plugins: Record<string, {
@@ -266,6 +280,42 @@ export async function generateContext(cwd: string): Promise<ContextData> {
         "Paged-media tokens (--doc-*, --page-*) are deliberately not remapped — print density belongs to the theme.",
       ],
     },
+    devtools: {
+      global: "window.__FAQIR_DEVTOOLS__",
+      version: 1,
+      inspect: "Faqir.inspect(elementOrSelector)",
+      keys: {
+        version: "number — handle schema version, bumped only on a breaking shape change",
+        dev: "boolean — true when the page loaded core/faqir-core.dev.js",
+        faqir: "object — the Faqir global itself",
+        "inspect(el|selector)":
+          "object|null — full snapshot for one element (see snapshot_keys)",
+        "scopes(within?)":
+          "array — declared scope roots: { el, id, label, scope } in document order",
+        "components(within?)":
+          "array — mounted components: { el, label, ui, variant, size, state, parts[], controller }",
+        "stores()": "object — snapshot of every Faqir.store() on the page",
+        "warnings()":
+          "array — recorded diagnostics, oldest first; always empty in the production engine",
+      },
+      snapshot_keys: {
+        el: "Element — the element inspected",
+        scopeRoot: "Element|null — nearest ancestor-or-self owning a scope",
+        scopeId: "number|null — that scope's id",
+        scope: "object|null — plain deep copy of the scope's data (magics excluded)",
+        directives: "array — { type, arg, expression, modifiers[], raw } per l-*/:/@ attribute",
+        controller: "object|null — { ui, el, api, methods[] } of the owning [data-ui]",
+        state: "object — { ui, part, variant, size, state } protocol attributes",
+      },
+      dev_build: "core/faqir-core.dev.js",
+      overlay: "injected by `faqir dev`; toggle with Ctrl/Cmd+Shift+F",
+      notes: [
+        "Both engine builds install the handle, so the keys are readable on any Faqir page.",
+        "Snapshots are copies: mutating them does not touch the live scope, and reading them registers no reactive dependency.",
+        "The development engine (core/faqir-core.dev.js) adds four diagnostic classes — expression, directive, reorder, html — readable via warnings(). The production engine records none.",
+        "The `faqir dev` overlay is served by the dev server only; it is never written into a project.",
+      ],
+    },
     components,
     patterns,
     plugins,
@@ -349,6 +399,23 @@ export function formatContextMarkdown(data: ContextData): string {
   lines.push("Remaps:");
   for (const r of data.density.remaps) lines.push(`- ${r}`);
   for (const n of data.density.notes) lines.push(`- ${n}`);
+  lines.push("");
+
+  // Devtools
+  lines.push("## Inspecting a Live Page");
+  lines.push("");
+  lines.push(`\`${data.devtools.inspect}\` returns what Faqir knows about one element. The same functions hang off \`${data.devtools.global}\` (v${data.devtools.version}) on every Faqir page.`);
+  lines.push("");
+  for (const [key, meaning] of Object.entries(data.devtools.keys)) {
+    lines.push(`- \`${data.devtools.global}.${key}\` — ${meaning}`);
+  }
+  lines.push("");
+  lines.push("`inspect()` returns:");
+  for (const [key, meaning] of Object.entries(data.devtools.snapshot_keys)) {
+    lines.push(`- \`${key}\` — ${meaning}`);
+  }
+  lines.push("");
+  for (const n of data.devtools.notes) lines.push(`- ${n}`);
   lines.push("");
 
   // Data Service
@@ -634,6 +701,7 @@ export function formatContextLlms(data: ContextData): string {
   lines.push("- [Attribute protocol](llms-full.txt#attribute-protocol): the data-ui / data-part / data-state contract");
   lines.push("- [Design tokens](llms-full.txt#design-tokens): spacing, radius, shadow, and z-index scales");
   lines.push("- [Density mode](llms-full.txt#density-mode): data-density, a pure-CSS token modifier for dense subtrees");
+  lines.push("- [Inspecting a live page](llms-full.txt#inspecting-a-live-page): window.__FAQIR_DEVTOOLS__ and Faqir.inspect()");
   lines.push("- [Data-driven rendering](llms-full.txt#data-driven-rendering): apiSource() for server-backed CRUD");
   lines.push("- [Rules](llms-full.txt#rules): authoring constraints agents must follow");
   lines.push("");
@@ -750,6 +818,30 @@ export function formatContextLlmsFull(data: ContextData): string {
   for (const r of data.density.remaps) lines.push(`- ${r}`);
   lines.push("");
   for (const n of data.density.notes) lines.push(`- ${n}`);
+  lines.push("");
+
+  // Devtools
+  lines.push("## Inspecting a live page");
+  lines.push("");
+  lines.push(`\`${data.devtools.global}\` (v${data.devtools.version}) is installed by both engine builds. \`${data.devtools.inspect}\` is the same function.`);
+  lines.push("");
+  lines.push("| Key | Returns |");
+  lines.push("|-----|---------|");
+  for (const [key, meaning] of Object.entries(data.devtools.keys)) {
+    lines.push(`| \`${key}\` | ${meaning} |`);
+  }
+  lines.push("");
+  lines.push("`inspect(el)` snapshot:");
+  lines.push("");
+  lines.push("| Key | Value |");
+  lines.push("|-----|-------|");
+  for (const [key, meaning] of Object.entries(data.devtools.snapshot_keys)) {
+    lines.push(`| \`${key}\` | ${meaning} |`);
+  }
+  lines.push("");
+  lines.push(`Development engine: \`${data.devtools.dev_build}\` · Overlay: ${data.devtools.overlay}`);
+  lines.push("");
+  for (const n of data.devtools.notes) lines.push(`- ${n}`);
   lines.push("");
 
   // Data-driven rendering

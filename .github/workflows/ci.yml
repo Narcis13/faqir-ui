@@ -77,7 +77,7 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
-      - name: Reassemble engine (registry/core/faqir-core.js)
+      - name: Reassemble engine (faqir-core.js + faqir-core.dev.js)
         run: bun run build:core
       - name: Enforce gzip budgets
         run: bun run size

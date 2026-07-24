@@ -151,7 +151,7 @@ describe("enforce", () => {
 describe("BUDGETS", () => {
   test("match the §10.4 numbers", () => {
     expect(mod.BUDGETS.engine).toBe(14 * KB);
-    expect(mod.BUDGETS.engineWithControllers).toBe(43 * KB);
+    expect(mod.BUDGETS.engineWithControllers).toBe(44 * KB);
     expect(mod.BUDGETS.plugin).toBe(2 * KB);
   });
 });

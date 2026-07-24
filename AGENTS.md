@@ -118,6 +118,9 @@ Do not hand-edit generated outputs. Change their source and regenerate them:
 
 - `registry/core/faqir-core.js`: edit `src/core-src/engine.js` or a recipe
   controller, then run `bun run build:core`. This generated engine is committed.
+  The same command also writes `registry/core/faqir-core.dev.js`, the
+  development build (extra diagnostics; every dev-only string is stripped from
+  the production file). See `docs/devtools.md`.
 - `registry/primitives/icon/{icons.css,icon.manifest.json,icon.html}`: edit
   `scripts/icons/curated-icons.txt` and the pinned SVG inputs, then run
   `bun run build:icons`.

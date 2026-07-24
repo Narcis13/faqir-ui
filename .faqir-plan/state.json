@@ -2,8 +2,14 @@
   "$schema": "./state.schema.md",
   "plan": "FAQIR-PLAN.md",
   "current": null,
-  "last_completed": "0.7-11",
+  "last_completed": "0.7-12",
   "history": [
+    {
+      "id": "0.7-12",
+      "completed": "2026-07-25",
+      "commit": "PENDING",
+      "summary": "PENDING"
+    },
     {
       "id": "0.7-11",
       "completed": "2026-07-25",

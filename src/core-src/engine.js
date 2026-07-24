@@ -24,6 +24,28 @@
   'use strict';
 
   // ═══════════════════════════════════════════════════════
+  // Section 0: Dev-build seam  [task 0.7-12]
+  // ═══════════════════════════════════════════════════════
+  //
+  // `faqir-core.js` (production) and `faqir-core.dev.js` are assembled from THIS
+  // one source by scripts/build-core.mjs. Three markers decide what each build
+  // keeps:
+  //
+  //   /* @faqir:dev */ <code>    — the marker is stripped for the dev build and
+  //                                the WHOLE LINE is dropped for production.
+  //   // @faqir:dev-start … end  — the same, for a multi-line region.
+  //   // @faqir:dev-diagnostics  — replaced by src/core-src/dev-diagnostics.js
+  //                                in the dev build, dropped in production.
+  //
+  // Every dev-only message string therefore lives in dev-diagnostics.js and
+  // never reaches the production file (proved by tests/build/dev-build.test.ts).
+  //
+  // `devHooks` is the only seam: null in production, an object of reporters in
+  // the dev build. Call sites read `if (devHooks)` on a dev-marked line, so
+  // production carries neither the guard nor the message.
+  var devHooks = null;
+
+  // ═══════════════════════════════════════════════════════
   // Section 1: Reactive Engine
   // ═══════════════════════════════════════════════════════
 
@@ -189,6 +211,7 @@
       const fn = compileExpression(expression);
       return fn.call(scope, scope, el);
     } catch (e) {
+      /* @faqir:dev */ if (devHooks) { devHooks.expressionError('expression', expression, el, e); return undefined; }
       console.warn('[Faqir] Expression error: "' + expression + '"', e);
       return undefined;
     }
@@ -199,6 +222,7 @@
       const fn = compileStatement(expression);
       fn.call(scope, scope, el);
     } catch (e) {
+      /* @faqir:dev */ if (devHooks) { devHooks.expressionError('statement', expression, el, e); return; }
       console.warn('[Faqir] Statement error: "' + expression + '"', e);
     }
   }
@@ -882,6 +906,7 @@
           var cleanupFn = customDirectives.get(dir.type)(el, dir, scope);
           if (typeof cleanupFn === 'function') addCleanup(el, cleanupFn);
         }
+        /* @faqir:dev */ else if (devHooks) devHooks.unknownDirective(el, dir);
     }
   }
 
@@ -898,6 +923,7 @@
   // --- 3.7 l-html ---
 
   function handleHtml(el, dir, scope) {
+    /* @faqir:dev */ if (devHooks) devHooks.htmlNotice(el, dir.expression);
     var cl = effect(function() {
       var value = evaluate(dir.expression, scope, el);
       el.innerHTML = value == null ? '' : String(value);
@@ -1471,6 +1497,8 @@
 
   // True when `b` is a non-identity permutation of `a` (same items, new order).
   // Drives the dev hint for unkeyed lists that reorder. [task 0.3-06 · §A1]
+  // Dev-build only — production never detects the reorder. [task 0.7-12]
+  // @faqir:dev-start
   function isReorder(a, b) {
     var len = a.length;
     if (len === 0 || len !== b.length) return false;
@@ -1486,6 +1514,7 @@
     }
     return true;
   }
+  // @faqir:dev-end
 
   function handleFor(el, dir, scope) {
     if (el.tagName !== 'TEMPLATE') {
@@ -1550,8 +1579,10 @@
     }
 
     var currentEntries = [];
+    // @faqir:dev-start
     var prevItems = null;   // last list snapshot, for the unkeyed-reorder hint
     var warnedReorder = false;
+    // @faqir:dev-end
 
     var cl = effect(function() {
       var list = evaluate(listExpr, scope, el);
@@ -1559,18 +1590,18 @@
                   typeof list === 'number' ? Array.from({ length: list }, function(_, i) { return i + 1; }) :
                   [];
 
-      // Dev hint: an unkeyed list reconciles by position, so reordering it
-      // rebinds per-row DOM state to the wrong items. Once per list; keyed
-      // lists never reach here.
-      if (!keyExpr && !warnedReorder) {
+      // Dev-build hint: an unkeyed list reconciles by position, so reordering it
+      // rebinds per-row DOM state to the wrong items. Once per list; keyed lists
+      // never reach here. Production neither warns nor snapshots the list.
+      // @faqir:dev-start
+      if (!keyExpr && !warnedReorder && devHooks) {
         if (prevItems && isReorder(prevItems, items)) {
-          console.warn('[Faqir] l-for reordered without l-key — DOM state ' +
-            '(focus, selection, input) is bound to position, not identity. ' +
-            'Add l-key="…" so nodes follow their items across reorders.');
+          devHooks.unkeyedReorder(el, dir.expression);
           warnedReorder = true;
         }
         prevItems = items.slice();
       }
+      // @faqir:dev-end
 
       // old key -> entry, consumed as matched so duplicate keys fall through to
       // fresh nodes and leftovers are stale. source[i] = reused entry's old
@@ -1845,6 +1876,233 @@
   }
 
   // ═══════════════════════════════════════════════════════
+  // Section 8.5: Inspection & Devtools  [task 0.7-12]
+  // ═══════════════════════════════════════════════════════
+  //
+  // `Faqir.inspect(el)` answers "what is Faqir doing to this element?" in one
+  // plain object. It ships in BOTH builds — it is the documented surface an
+  // agent (or the `faqir dev` overlay) reads, not a debug-only extra. The same
+  // functions hang off `window.__FAQIR_DEVTOOLS__`; see docs/devtools.md for the
+  // stable shape.
+
+  // Depth cap for scope snapshots — deeper values collapse to a marker rather
+  // than walking an unbounded object graph.
+  var SNAPSHOT_MAX_DEPTH = 4;
+
+  /** One value, deep-copied into something plain, finite and printable. */
+  function snapshotValue(value, stack, depth) {
+    if (typeof value === 'function') {
+      return '[Function' + (value.name ? ' ' + value.name : '') + ']';
+    }
+    if (value === null || typeof value !== 'object') return value;
+    if (value.nodeType === 1 && value.tagName) {
+      return '[Element <' + value.tagName.toLowerCase() + '>]';
+    }
+    if (value instanceof Date) return value.toISOString();
+    if (stack.indexOf(value) !== -1) return '[Circular]';
+    if (depth >= SNAPSHOT_MAX_DEPTH) return '[Depth]';
+
+    stack.push(value);
+    var out;
+    if (Array.isArray(value)) {
+      out = [];
+      for (var i = 0; i < value.length; i++) out.push(snapshotValue(value[i], stack, depth + 1));
+    } else {
+      out = {};
+      var keys = Object.keys(value);
+      for (var k = 0; k < keys.length; k++) {
+        out[keys[k]] = snapshotValue(value[keys[k]], stack, depth + 1);
+      }
+    }
+    stack.pop();
+    return out;
+  }
+
+  /**
+   * Plain snapshot of a scope's DATA. Magics ($el, $refs, $store, …) are
+   * non-enumerable by construction, so they never appear — a snapshot is what
+   * the author put in `l-data` plus `data-prop-*`, as it stands right now.
+   * Reading happens outside any effect, so it registers no dependencies.
+   */
+  function snapshotScope(scope) {
+    if (!scope) return null;
+    var out = {};
+    var keys = Object.keys(scope);
+    for (var i = 0; i < keys.length; i++) {
+      out[keys[i]] = snapshotValue(scope[keys[i]], [], 0);
+    }
+    return out;
+  }
+
+  /** Short human label for an element: `div#cart[data-ui="card"]`. */
+  function describeElement(el) {
+    if (!el) return null;
+    var label = el.tagName ? el.tagName.toLowerCase() : String(el);
+    if (el.id) label += '#' + el.id;
+    var ui = el.getAttribute ? el.getAttribute('data-ui') : null;
+    if (ui) label += '[data-ui="' + ui + '"]';
+    var part = el.getAttribute ? el.getAttribute('data-part') : null;
+    if (part) label += '[data-part="' + part + '"]';
+    return label;
+  }
+
+  /** The nearest ancestor-or-self carrying a live scope, or null. */
+  function ownScopeRoot(el) {
+    for (var node = el; node; node = node.parentElement) {
+      if (node.__faqirScope) return node;
+    }
+    return null;
+  }
+
+  /** The five protocol attributes as they read from `el` / its `[data-ui]`. */
+  function protocolState(el, uiEl) {
+    var attr = function(node, name) {
+      return node && node.getAttribute ? node.getAttribute(name) : null;
+    };
+    return {
+      ui: attr(uiEl, 'data-ui'),
+      part: attr(el, 'data-part'),
+      variant: attr(uiEl, 'data-variant'),
+      size: attr(uiEl, 'data-size'),
+      state: attr(uiEl, 'data-state')
+    };
+  }
+
+  /**
+   * Everything Faqir knows about one element.  [task 0.7-12 · §A6]
+   *
+   * @param {Element|string} target element, or a selector resolved against document
+   * @returns {null|{
+   *   el: Element,
+   *   scopeRoot: Element|null,
+   *   scopeId: number|null,
+   *   scope: object|null,
+   *   directives: {type,arg,expression,modifiers,raw}[],
+   *   controller: {ui,el,api,methods}|null,
+   *   state: {ui,part,variant,size,state}
+   * }}
+   */
+  function inspect(target) {
+    var el = target;
+    if (typeof target === 'string') {
+      el = typeof document !== 'undefined' ? document.querySelector(target) : null;
+    }
+    if (!el || el.nodeType !== 1) return null;
+
+    var root = ownScopeRoot(el);
+    var uiEl = closestUI(el);
+    var api = uiEl ? getControllerApi(uiEl) : null;
+
+    var directives = parseDirectives(el).map(function(d) {
+      return {
+        type: d.type,
+        arg: d.arg == null ? null : d.arg,
+        expression: d.expression,
+        modifiers: d.modifiers ? d.modifiers.slice() : [],
+        raw: d.raw
+      };
+    });
+
+    return {
+      el: el,
+      scopeRoot: root,
+      scopeId: root && root.__scopeId != null ? root.__scopeId : null,
+      scope: root ? snapshotScope(root.__faqirScope) : null,
+      directives: directives,
+      controller: uiEl && api
+        ? {
+            ui: uiEl.getAttribute('data-ui'),
+            el: uiEl,
+            api: api,
+            methods: Object.keys(api).filter(function(k) {
+              return typeof api[k] === 'function';
+            }).sort()
+          }
+        : null,
+      state: protocolState(el, uiEl)
+    };
+  }
+
+  /**
+   * `window.__FAQIR_DEVTOOLS__` — the stable handle agents and the `faqir dev`
+   * overlay read. Keys never change shape between builds; only `dev` flips.
+   */
+  var devtools = {
+    /** Handle schema version. Bumped only on a breaking shape change. */
+    version: 1,
+    /** true in `faqir-core.dev.js`, false in the production engine. */
+    dev: false,
+    /** The Faqir global itself (assigned once the public API is built). */
+    faqir: null,
+    inspect: inspect,
+    /**
+     * Declared scope roots in document order: elements with `l-data` (or a
+     * standalone `[data-ui]`) that carry a live scope. Per-item scopes made by
+     * `l-for`/`l-if` are reachable with `inspect()` on any node inside them.
+     */
+    scopes: function(within) {
+      var host = within || (typeof document !== 'undefined' ? document : null);
+      if (!host) return [];
+      var els = [].slice.call(host.querySelectorAll('[l-data], [data-ui]'));
+      var out = [];
+      for (var i = 0; i < els.length; i++) {
+        if (!els[i].__faqirScope) continue;
+        out.push({
+          el: els[i],
+          id: els[i].__scopeId != null ? els[i].__scopeId : null,
+          label: describeElement(els[i]),
+          scope: snapshotScope(els[i].__faqirScope)
+        });
+      }
+      return out;
+    },
+    /** Every mounted component, with its protocol attributes and its parts. */
+    components: function(within) {
+      var host = within || (typeof document !== 'undefined' ? document : null);
+      if (!host) return [];
+      var els = [].slice.call(host.querySelectorAll('[data-ui]'));
+      var out = [];
+      for (var i = 0; i < els.length; i++) {
+        var el = els[i];
+        var partEls = [].slice.call(el.querySelectorAll('[data-part]'));
+        var parts = [];
+        for (var p = 0; p < partEls.length; p++) {
+          if (partEls[p].closest('[data-ui]') !== el) continue;
+          var name = partEls[p].getAttribute('data-part');
+          if (parts.indexOf(name) === -1) parts.push(name);
+        }
+        out.push({
+          el: el,
+          label: describeElement(el),
+          ui: el.getAttribute('data-ui'),
+          variant: el.getAttribute('data-variant'),
+          size: el.getAttribute('data-size'),
+          state: el.getAttribute('data-state'),
+          parts: parts.sort(),
+          controller: !!getControllerApi(el)
+        });
+      }
+      return out;
+    },
+    /** Snapshot of every `Faqir.store()` registered on the page. */
+    stores: function() {
+      var out = {};
+      var names = Object.keys(globalStores);
+      for (var i = 0; i < names.length; i++) {
+        out[names[i]] = snapshotValue(globalStores[names[i]], [], 0);
+      }
+      return out;
+    },
+    /**
+     * Diagnostics recorded so far, oldest first. Always an array: the
+     * production engine records nothing, so it is always empty there.
+     */
+    warnings: function() { return devHooks ? devHooks.warnings() : []; }
+  };
+
+  // @faqir:dev-diagnostics
+
+  // ═══════════════════════════════════════════════════════
   // Section 9: Bootstrap & Auto-init
   // ═══════════════════════════════════════════════════════
 
@@ -1990,12 +2248,27 @@
     controller: function(name, factory) { controllerRegistry[name] = factory; },
     start: bootstrap,
     initTree: initTree,
+    // Snapshot of Faqir's view of one element — scope, directives, controller,
+    // protocol attributes. [0.7-12]
+    inspect: inspect,
+    // The same object installed at window.__FAQIR_DEVTOOLS__. Exposed here too
+    // so code holding a specific engine instance (a bundler import, a test
+    // loading one build) reaches ITS handle rather than whichever engine
+    // touched the global last. [0.7-12]
+    devtools: devtools,
     // Run the cleanups registered on `el` and its descendants (l-source abort +
     // poll teardown, effect disposers, …). Structural directives call this
     // automatically on l-if hide / keyed l-for removal; exposed for imperative
     // teardown of a subtree. [0.3-08]
     destroy: destroyScope
   };
+
+  // The devtools handle is installed on every page that loads either build —
+  // agents read it without knowing how Faqir was bundled. [0.7-12]
+  devtools.faqir = Faqir;
+  if (typeof window !== 'undefined') {
+    window.__FAQIR_DEVTOOLS__ = devtools;
+  }
 
   return Faqir;
 });

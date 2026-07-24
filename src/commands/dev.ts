@@ -4,12 +4,19 @@ import { log } from "../utils/logger";
 import { emitJSON } from "../utils/json-output";
 import { configExists, readConfig } from "../utils/config";
 import { generateBundle } from "../utils/bundler";
+import {
+  OVERLAY_ROUTE,
+  OVERLAY_SHORTCUT,
+  OVERLAY_SOURCE,
+  injectOverlay,
+} from "../dev/overlay";
 
 interface DevOptions {
   port: number;
   dir: string;
   open: boolean;
   autoBundle: boolean;
+  overlay: boolean;
 }
 
 function parseArgs(args: string[]): DevOptions {
@@ -18,6 +25,7 @@ function parseArgs(args: string[]): DevOptions {
     dir: ".",
     open: false,
     autoBundle: false,
+    overlay: true,
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -33,6 +41,9 @@ function parseArgs(args: string[]): DevOptions {
         break;
       case "--bundle":
         opts.autoBundle = true;
+        break;
+      case "--no-overlay":
+        opts.overlay = false;
         break;
       case "--help":
       case "-h":
@@ -60,7 +71,13 @@ function printHelp() {
     ["--dir <path>", "Directory to serve (default: '.')"],
     ["--open", "Open browser automatically"],
     ["--bundle", "Auto-rebuild CSS bundle on file changes"],
+    ["--no-overlay", "Do not inject the inspector overlay into served HTML"],
   ]);
+  log.blank();
+  console.log(
+    `Served HTML gets the Faqir inspector overlay — press ${OVERLAY_SHORTCUT} to toggle it.\n` +
+      "It is injected by this server only and is never written into your project.",
+  );
 }
 
 const MIME_TYPES: Record<string, string> = {
@@ -98,6 +115,9 @@ export async function dev(args: string[]): Promise<void> {
       dir: opts.dir,
       url: `http://localhost:${opts.port}`,
       auto_bundle: opts.autoBundle,
+      overlay: opts.overlay,
+      overlay_route: opts.overlay ? OVERLAY_ROUTE : null,
+      overlay_shortcut: opts.overlay ? OVERLAY_SHORTCUT : null,
       serves: existsSync(rootDir),
     });
     return;
@@ -112,6 +132,18 @@ export async function dev(args: string[]): Promise<void> {
     port: opts.port,
     async fetch(req) {
       const url = new URL(req.url);
+
+      // The inspector overlay is served from the dev server itself — it is not
+      // a file in the user's project and never becomes one. [task 0.7-12]
+      if (opts.overlay && url.pathname === OVERLAY_ROUTE) {
+        return new Response(OVERLAY_SOURCE, {
+          headers: {
+            "Content-Type": "application/javascript",
+            "Cache-Control": "no-cache",
+          },
+        });
+      }
+
       let filePath = join(rootDir, decodeURIComponent(url.pathname));
 
       // Directory → index.html
@@ -131,6 +163,17 @@ export async function dev(args: string[]): Promise<void> {
       const ext = extname(filePath).toLowerCase();
       const contentType = MIME_TYPES[ext] || "application/octet-stream";
 
+      // HTML is rewritten on the way out to carry the overlay script tag. The
+      // file on disk is never touched.
+      if (opts.overlay && contentType === "text/html") {
+        return new Response(injectOverlay(await file.text()), {
+          headers: {
+            "Content-Type": contentType,
+            "Cache-Control": "no-cache",
+          },
+        });
+      }
+
       // Read bytes explicitly so the response body is a plain BodyInit that
       // works under both the Bun runtime and the Node runtime shim.
       return new Response(await file.arrayBuffer(), {
@@ -145,6 +188,10 @@ export async function dev(args: string[]): Promise<void> {
   const url = `http://localhost:${server.port}`;
   log.heading("Faqir Dev Server");
   log.success(`Serving ${opts.dir}/ at ${url}`);
+
+  if (opts.overlay) {
+    log.step(`Inspector overlay injected — press ${OVERLAY_SHORTCUT} in the page to toggle.`);
+  }
 
   if (opts.autoBundle && configExists(cwd)) {
     const config = await readConfig(cwd);

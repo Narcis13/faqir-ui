@@ -147,3 +147,47 @@ Faqir.initTree(el)                        // Manual init for dynamic content
   <p l-text="$store.user.name"></p>
 </div>
 ```
+
+---
+
+## Inspecting a live page
+
+Both engine builds install `window.__FAQIR_DEVTOOLS__` (handle `version: 1`).
+Use it when driving a browser to check what the engine actually bound.
+
+| Key | Returns |
+|-----|---------|
+| `inspect(el\|selector)` | full snapshot for one element (below) |
+| `scopes(within?)` | `{ el, id, label, scope }[]` — declared scope roots |
+| `components(within?)` | `{ el, label, ui, variant, size, state, parts[], controller }[]` |
+| `stores()` | snapshot of every `Faqir.store()` |
+| `warnings()` | recorded diagnostics; **always empty in the production engine** |
+| `dev` | `true` only when the page loaded `core/faqir-core.dev.js` |
+
+`Faqir.inspect(el)` (same function) returns:
+
+```js
+{
+  el, scopeRoot, scopeId,
+  scope:      { /* plain copy of the scope's data; magics excluded */ },
+  directives: [{ type, arg, expression, modifiers, raw }],
+  controller: { ui, el, api, methods } | null,
+  state:      { ui, part, variant, size, state }
+}
+```
+
+`scope` is a copy — mutating it does not touch the page, and inspecting
+registers no reactive dependency.
+
+### The development engine
+
+`core/faqir-core.dev.js` behaves identically and adds four diagnostic classes,
+each printed once with the offending element's `outerHTML` and readable via
+`warnings()`: `expression` (a failed `l-*` expression), `directive` (an `l-…`
+attribute nothing handles), `reorder` (an unkeyed `l-for` that reordered), and
+`html` (`l-html` writes unsanitized markup). Swap the script tag while
+developing; ship `core/faqir-core.js`.
+
+`faqir dev` also injects an inspector overlay into every page it serves —
+toggle it with `Ctrl/Cmd + Shift + F` (`--no-overlay` to disable). It is served
+by the dev server only and is never written into the project.

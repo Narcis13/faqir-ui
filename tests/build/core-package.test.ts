@@ -4,6 +4,7 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { gzipSync } from "node:zlib";
 
 const ROOT = resolve(fileURLToPath(new URL(".", import.meta.url)), "../..");
 const REGISTRY = join(ROOT, "registry");
@@ -99,6 +100,18 @@ describe("minified engine artifact", () => {
     Faqir.start();
     await tick();
 
+    // Freshly evaluated in this realm, so the devtools handle it installs on
+    // window is unambiguously this engine's. [task 0.7-12]
+    const tools = (globalThis as any).window.__FAQIR_DEVTOOLS__;
+    expect(tools).toBeDefined();
+    expect(tools).toBe(Faqir.devtools);
+    expect(tools.version).toBe(1);
+    expect(tools.dev).toBe(false);
+    expect(tools.faqir).toBe(Faqir);
+    expect(Object.keys(tools).sort()).toEqual([
+      "components", "dev", "faqir", "inspect", "scopes", "stores", "version", "warnings",
+    ]);
+
     const span = document.querySelector("span")!;
     expect(span.textContent).toBe("3");
 
@@ -106,7 +119,44 @@ describe("minified engine artifact", () => {
     await tick();
     expect(span.textContent).toBe("4");
 
+    // …and inspect() works off the minified artifact.
+    expect(tools.inspect("span").scope).toEqual({ count: 4 });
+    expect(tools.scopes().length).toBe(1);
+    expect(tools.warnings()).toEqual([]);
+
     document.body.innerHTML = "";
+  });
+
+  // Acceptance criterion of task 0.7-12. The dev-only string list is derived
+  // from src/core-src/dev-diagnostics.js (see tests/build/dev-build.test.ts) so
+  // a diagnostic added later is covered here without touching this test.
+  test("is byte-free of every dev-only string, and carries no dev build", () => {
+    const min = readFileSync(join(DIST, "faqir-core.min.js"), "utf8");
+    const diagnostics = readFileSync(join(ROOT, "src", "core-src", "dev-diagnostics.js"), "utf8")
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/^\s*\/\/.*$/gm, "");
+    const literals = new Set<string>();
+    for (const m of diagnostics.matchAll(/'((?:[^'\\]|\\.)*)'/g)) {
+      if (m[1].length >= 12) literals.add(m[1]);
+    }
+    expect(literals.size).toBeGreaterThanOrEqual(8);
+    for (const literal of literals) {
+      expect(min.includes(literal)).toBe(false);
+    }
+    expect(min).not.toContain("[Faqir dev]");
+    expect(min).not.toContain("devReport");
+    // The dev engine is a registry file, not a CDN artifact.
+    expect(existsSync(join(DIST, "faqir-core.dev.js"))).toBe(false);
+  });
+
+  test("still exposes the devtools surface agents read", () => {
+    const min = readFileSync(join(DIST, "faqir-core.min.js"), "utf8");
+    expect(min).toContain("__FAQIR_DEVTOOLS__");
+  });
+
+  test("is within the engine + controllers gzip budget", () => {
+    const gzip = gzipSync(readFileSync(join(DIST, "faqir-core.min.js"))).length;
+    expect(gzip).toBeLessThanOrEqual(44 * 1024);
   });
 });
 
