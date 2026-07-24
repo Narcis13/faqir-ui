@@ -2,7 +2,7 @@
 
 # Faqir Recipes Reference
 
-28 recipes, each with its anatomy tree, variant table, and safe/unsafe transforms — all derived from the component manifest.
+29 recipes, each with its anatomy tree, variant table, and safe/unsafe transforms — all derived from the component manifest.
 
 ## accordion
 
@@ -176,6 +176,53 @@ Standalone month-grid calendar with roving-tabindex keyboard navigation, min/max
 - **Unsafe (never do):** `remove-grid-role`, `remove-day-aria-labels`, `remove-keyboard-navigation`, `remove-roving-tabindex`, `hand-author-day-cells`
 - **A11y:** keys: ArrowLeft, ArrowRight, ArrowUp, ArrowDown, Home, End, PageUp, PageDown, Shift+PageUp, Shift+PageDown, Enter/Space
 - **Required ARIA:** `role="grid" on grid`; `aria-label on grid`; `aria-label on day buttons with full date`; `aria-label on nav-prev and nav-next`; `aria-selected="true" on selected day(s)`; `aria-disabled="true" on out-of-range or disabled days (kept focusable for the roving tabindex)`
+
+## carousel
+
+_kind: recipe · category: layout · controller: createCarousel()_
+
+Horizontally scrolling slide strip built on CSS scroll-snap, progressively enhanced with prev/next buttons, dot indicators and a polite live region
+
+```html
+<div data-ui="carousel" role="group" aria-roledescription="carousel" aria-label="{label}">
+  <div data-part="viewport" tabindex="0" role="group" aria-label="Slides">
+    <div data-part="slide" role="group" aria-roledescription="slide" aria-label="1 of 2">{slide1}</div>
+    <div data-part="slide" role="group" aria-roledescription="slide" aria-label="2 of 2">{slide2}</div>
+  </div>
+  <div data-part="controls" hidden>
+    <button data-part="prev" type="button" aria-label="Previous slide">&laquo;</button>
+    <button data-part="next" type="button" aria-label="Next slide">&raquo;</button>
+  </div>
+  <div data-part="dots" role="group" aria-label="Choose slide" hidden>
+    <button data-part="dot" type="button" aria-label="Slide 1"></button>
+    <button data-part="dot" type="button" aria-label="Slide 2"></button>
+  </div>
+  <p data-part="status" role="status" aria-live="polite"></p>
+</div>
+```
+
+**Anatomy**
+
+```text
+[data-ui='carousel']  ·  <div> · content: slots
+├─ [data-part='viewport']  <div>  required  — The scroll-snap strip itself: an inline-axis scroll container holding the slides. Focusable (tabindex="0") so it is keyboard-scrollable with no JavaScript
+├─ [data-part='slide']  <div>  required  — One snap target; repeated per slide. Carries role="group" + aria-roledescription="slide" and a positional aria-label
+├─ [data-part='controls']  <div>  optional  — Wrapper for the prev/next buttons. Ships `hidden` — inert without the controller, which un-hides it on init
+├─ [data-part='prev']  <button>  optional  — Scrolls to the previous slide; disabled on the first slide unless the root carries data-loop
+├─ [data-part='next']  <button>  optional  — Scrolls to the next slide; disabled on the last slide unless the root carries data-loop
+├─ [data-part='dots']  <div>  optional  — Wrapper for the dot indicators. Ships `hidden` alongside the controls
+├─ [data-part='dot']  <button>  optional  — Reflects the current slide (data-state="active" + aria-current="true") and jumps to its slide when activated; one per slide
+└─ [data-part='status']  <p>  optional  — Polite live region (role="status") the controller updates with "Slide N of M" on every slide change
+```
+
+**Variants**
+
+_No variants._
+
+- **Safe transforms:** `add-slide`, `remove-slide`, `add-loop`, `remove-loop`, `remove-dots`, `remove-controls`, `change-slide-content`, `restyle-slide-background`, `change-slide-size`
+- **Unsafe (never do):** `remove-scroll-snap-css`, `remove-viewport-overflow`, `remove-viewport-tabindex`, `unhide-controls-in-markup`, `aria-hidden-offscreen-slides`, `remove-aria-roledescription`, `add-autoplay`
+- **A11y:** keys: Tab, ArrowLeft/ArrowRight, Home/End, Enter/Space
+- **Required ARIA:** `role="group" on root`; `aria-roledescription="carousel" on root`; `aria-label (or aria-labelledby) naming the carousel on root`; `role="group" on slide`; `aria-roledescription="slide" on slide`; `aria-label on slide giving its position ("2 of 5")`; `tabindex="0" on viewport so the scroll region is keyboard-reachable`; `aria-label on prev`; `aria-label on next`; `role="status" on status`
 
 ## combobox
 

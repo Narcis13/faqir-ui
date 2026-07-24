@@ -1,0 +1,74 @@
+<!-- @ui:component carousel -->
+<!-- @ui:kind recipe -->
+<!-- @ui:slots viewport slide controls prev next dots dot status -->
+<!-- @ui:controller carousel.js -->
+
+<!-- PROGRESSIVE ENHANCEMENT — this page is the proof.
+     The carousel is a CSS scroll-snap strip: `[data-part="viewport"]` is an
+     `overflow-x: auto` flex row with `scroll-snap-type: inline mandatory`, and
+     every `[data-part="slide"]` is a full-width snap target. With JavaScript
+     disabled the strip still works completely — swipe, trackpad, shift+wheel,
+     and (because the viewport is `tabindex="0"`) the arrow keys, Home and End
+     all scroll it, one snapped slide at a time.
+
+     The prev/next buttons, the dots and the live region are inert without a
+     controller, so they ship `hidden` and the controller un-hides them on init
+     (and re-hides them on destroy()). Nothing that only works with JS is ever
+     shown to a reader who has none. -->
+
+<div data-ui="carousel" role="group" aria-roledescription="carousel" aria-label="Recent releases">
+  <div data-part="viewport" tabindex="0" role="group" aria-label="Slides">
+    <div data-part="slide" role="group" aria-roledescription="slide" aria-label="1 of 3">
+      <p data-ui="text" data-size="lg">Ship the strip first</p>
+      <p data-ui="text" data-variant="muted">CSS scroll-snap does the sliding — no JavaScript required.</p>
+    </div>
+    <div data-part="slide" role="group" aria-roledescription="slide" aria-label="2 of 3">
+      <p data-ui="text" data-size="lg">Enhance with buttons</p>
+      <p data-ui="text" data-variant="muted">The controller adds prev/next, dots and announcements.</p>
+    </div>
+    <div data-part="slide" role="group" aria-roledescription="slide" aria-label="3 of 3">
+      <p data-ui="text" data-size="lg">Respect motion preferences</p>
+      <p data-ui="text" data-variant="muted">Reduced motion jumps instantly instead of animating.</p>
+    </div>
+  </div>
+
+  <div data-part="controls" hidden>
+    <button data-part="prev" type="button" aria-label="Previous slide">&laquo;</button>
+    <button data-part="next" type="button" aria-label="Next slide">&raquo;</button>
+  </div>
+
+  <div data-part="dots" role="group" aria-label="Choose slide" hidden>
+    <button data-part="dot" type="button" aria-label="Slide 1"></button>
+    <button data-part="dot" type="button" aria-label="Slide 2"></button>
+    <button data-part="dot" type="button" aria-label="Slide 3"></button>
+  </div>
+
+  <p data-part="status" role="status" aria-live="polite"></p>
+</div>
+
+<!-- Looping variant — `data-loop` makes next past the last slide wrap to the
+     first (and prev past the first wrap to the last). Without it the boundary
+     contract is "stop": the controller disables the button at each end. -->
+
+<div data-ui="carousel" data-loop role="group" aria-roledescription="carousel" aria-label="Team photos">
+  <div data-part="viewport" tabindex="0" role="group" aria-label="Slides">
+    <div data-part="slide" role="group" aria-roledescription="slide" aria-label="1 of 2">
+      <p data-ui="text" data-size="lg">Wrap around</p>
+    </div>
+    <div data-part="slide" role="group" aria-roledescription="slide" aria-label="2 of 2">
+      <p data-ui="text" data-size="lg">Never dead-ends</p>
+    </div>
+  </div>
+
+  <div data-part="controls" hidden>
+    <button data-part="prev" type="button" aria-label="Previous slide">&laquo;</button>
+    <button data-part="next" type="button" aria-label="Next slide">&raquo;</button>
+  </div>
+
+  <div data-part="dots" role="group" aria-label="Choose slide" hidden>
+    <button data-part="dot" type="button" aria-label="Slide 1"></button>
+    <button data-part="dot" type="button" aria-label="Slide 2"></button>
+  </div>
+
+  <p data-part="status" role="status" aria-live="polite"></p>
+</div>

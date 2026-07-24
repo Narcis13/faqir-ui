@@ -1,0 +1,142 @@
+/* @ui:component carousel */
+/* @ui:tokens color-bg color-bg-muted color-fg color-fg-muted color-border color-primary color-ring radius-md radius-lg space-1 space-2 space-3 space-4 text-sm font-sans duration-fast ease-default */
+
+/* The sliding is CSS, not JavaScript: the viewport is a scroll-snap strip and
+   every slide is a snap target. Everything below works with no controller
+   attached — the controller only un-hides the buttons and dots. */
+
+/* ── Root ── */
+[data-ui="carousel"] {
+  position: relative;
+  display: grid;
+  gap: var(--space-2);
+  inline-size: 100%;
+  font-family: var(--carousel-font, var(--font-sans));
+}
+
+/* ── Viewport: the scroll-snap strip ── */
+[data-ui="carousel"] [data-part="viewport"] {
+  display: flex;
+  gap: var(--space-3);
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-inline: contain;
+  scroll-snap-type: inline mandatory;
+  scroll-behavior: smooth;
+  border-radius: var(--radius-lg);
+  /* The snap points, dots and buttons are the affordance; the native bar would
+     double up on them (and shift layout on overlay-scrollbar platforms). */
+  scrollbar-width: none;
+}
+
+[data-ui="carousel"] [data-part="viewport"]::-webkit-scrollbar {
+  display: none;
+}
+
+[data-ui="carousel"] [data-part="viewport"]:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+}
+
+/* ── Slide: one full-width snap target ── */
+[data-ui="carousel"] [data-part="slide"] {
+  flex: 0 0 var(--carousel-slide-size, 100%);
+  min-inline-size: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg);
+  color: var(--color-fg);
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+/* ── Controls + dots: enhancement-only, `hidden` until the controller runs ── */
+[data-ui="carousel"] [data-part="controls"]:not([hidden]),
+[data-ui="carousel"] [data-part="dots"]:not([hidden]) {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+[data-ui="carousel"] [data-part="dots"]:not([hidden]) {
+  justify-content: center;
+  gap: var(--space-1);
+}
+
+[data-ui="carousel"] [data-part="prev"],
+[data-ui="carousel"] [data-part="next"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-inline-size: 2rem;
+  min-block-size: 2rem;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-size: var(--text-sm);
+  line-height: 1;
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-default),
+              color var(--duration-fast) var(--ease-default);
+}
+
+[data-ui="carousel"] [data-part="prev"]:hover:not(:disabled),
+[data-ui="carousel"] [data-part="next"]:hover:not(:disabled) {
+  background: var(--color-bg-muted);
+}
+
+[data-ui="carousel"] [data-part="prev"]:focus-visible,
+[data-ui="carousel"] [data-part="next"]:focus-visible,
+[data-ui="carousel"] [data-part="dot"]:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+}
+
+/* Boundary contract "stop" — the controller disables the end button. */
+[data-ui="carousel"] [data-part="prev"]:disabled,
+[data-ui="carousel"] [data-part="next"]:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Dot: current-slide indicator and jump target ── */
+[data-ui="carousel"] [data-part="dot"] {
+  inline-size: 0.625rem;
+  block-size: 0.625rem;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: var(--color-bg-muted);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-default);
+}
+
+[data-ui="carousel"] [data-part="dot"][data-state="active"] {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+}
+
+/* ── Status: the polite live region announcing "Slide 2 of 3" ── */
+[data-ui="carousel"] [data-part="status"] {
+  margin: 0;
+  color: var(--color-fg-muted);
+  font-size: var(--text-sm);
+  text-align: center;
+}
+
+/* ── Motion: reduced motion stops the animated snap-scroll; the controller
+      additionally passes an explicit `behavior: "instant"`. ── */
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="carousel"] [data-part="viewport"] {
+    scroll-behavior: auto;
+  }
+
+  [data-ui="carousel"] [data-part="prev"],
+  [data-ui="carousel"] [data-part="next"],
+  [data-ui="carousel"] [data-part="dot"] {
+    transition: none;
+  }
+}

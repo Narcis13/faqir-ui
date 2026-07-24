@@ -92,6 +92,8 @@ export { LBarcode } from "./recipes/barcode";
 export type { LBarcodeProps, LBarcodeSize } from "./recipes/barcode";
 export { LCalendar } from "./recipes/calendar";
 export type { LCalendarProps, LCalendarSize } from "./recipes/calendar";
+export { LCarousel } from "./recipes/carousel";
+export type { LCarouselProps } from "./recipes/carousel";
 export { LCombobox } from "./recipes/combobox";
 export type { LComboboxProps, LComboboxSize } from "./recipes/combobox";
 export { LCommandPalette } from "./recipes/command-palette";

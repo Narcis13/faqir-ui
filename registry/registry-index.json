@@ -1,6 +1,6 @@
 {
   "schema": "faqir-registry-index@1",
-  "count": 76,
+  "count": 77,
   "components": [
     {
       "name": "aspect-ratio",
@@ -983,6 +983,32 @@
         }
       ],
       "hash": "3483b6ac3d32e66e1623469c79ff569997c2b61eebb8a0bc05c0617584f9ee20",
+      "deps": []
+    },
+    {
+      "name": "carousel",
+      "kind": "recipe",
+      "layer": "recipes",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "carousel.css",
+          "sha256": "45734c1ae60996fb29339f994d1451c6b91832f9b3a9fac82ffab5c6f74ca5dd"
+        },
+        {
+          "path": "carousel.html",
+          "sha256": "c761fae6fc2994cf8bbe0fd315851428e9f16de88abc2bea7bebae57dc6871f6"
+        },
+        {
+          "path": "carousel.js",
+          "sha256": "62498327849a3f274daa410538a78d841c03b0da10500fc131ff51cd3ab4bb96"
+        },
+        {
+          "path": "carousel.manifest.json",
+          "sha256": "5b595a5783bbed99f03e03bea99bf40eb7f085927ad498718e3cf5d3d86aeec7"
+        }
+      ],
+      "hash": "341a312bf41cc4987f258d78e87b5101785afa892bf61b1fab0c8c5304ce5056",
       "deps": []
     },
     {
