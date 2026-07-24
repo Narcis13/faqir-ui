@@ -62,6 +62,24 @@ export interface ThemeManifestValidationError {
 const VALID_SCHEMES: ThemeSchemeDecl[] = ["light", "dark", "both"];
 const VALID_DARK_MODES: ThemeDarkMode[] = ["native", "none"];
 
+/**
+ * `registry/tokens/*.css` files that contribute NO themeable surface, and so are
+ * excluded everywhere the surface is derived (the generator, the registry audit
+ * and their tests must agree — hence one shared list).
+ *
+ * - `index.css` is only `@import`s.
+ * - `density.css` introduces nothing new: it re-declares tokens the surface
+ *   already owns inside `[data-density]` subtree scopes. A theme's `:root` block
+ *   cannot override a subtree scope, so listing those as theme-inheritable would
+ *   be a lie.
+ */
+export const NON_SURFACE_TOKEN_FILES = ["index.css", "density.css"] as const;
+
+/** Whether a `registry/tokens/<file>` contributes to the themeable surface. */
+export function isSurfaceTokenFile(file: string): boolean {
+  return !(NON_SURFACE_TOKEN_FILES as readonly string[]).includes(file);
+}
+
 /** Strip `/* … *\/` block comments so commented-out declarations are never parsed. */
 export function stripCssComments(css: string): string {
   return css.replace(/\/\*[\s\S]*?\*\//g, "");

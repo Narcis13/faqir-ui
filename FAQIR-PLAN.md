@@ -138,7 +138,7 @@ done in any order (or in parallel worktrees).
 | 0.7-08 | Patterns: `pricing` + landing kit (`hero`, `feature-grid`, `site-footer`) | ✅ |
 | 0.7-09 | Patterns: `stats-dashboard` + `inbox` | ✅ |
 | 0.7-10 | Themes: `terminal`, `glass`, `soft` | ✅ |
-| 0.7-11 | Density mode (`data-density` token modifier) | ⬜ |
+| 0.7-11 | Density mode (`data-density` token modifier) | ✅ |
 | 0.7-12 | Dev overlay + `Faqir.inspect` + `faqir-core.dev.js` diagnostics | ⬜ |
 | 0.7-13 | Docs site scaffold (built with Faqir, manifest-generated content) | ⬜ |
 | 0.7-14 | Docs site: in-browser audit playground + theme switcher gallery | ⬜ |
@@ -2001,9 +2001,39 @@ new protocol attribute. Documented in context.json so agents discover it.
 - Visual suite: one dense reference page added; context.json includes the density documentation block.
 
 **Acceptance criteria**
-- [ ] Implemented 100% in `tokens/density.css` — grep-proof no JS touches it.
-- [ ] The five-attribute protocol untouched (no audit rule changes for a sixth attribute).
-- [ ] Dense forms/tables visually verified in ≥ 2 themes.
+- [x] Implemented 100% in `tokens/density.css` — grep-proof no JS touches it. (The whole feature is two rule blocks in `registry/tokens/density.css`; a test greps every stylesheet in the registry and asserts no other sheet selects on `[data-density]`, and greps `registry/core` + `registry/recipes` + `src` for a DOM API *acting* on it — `dataset.density`, `(get|set|remove|has)Attribute("data-density")`, a `querySelector`/`closest`/`matches` on it, `setProperty("--density-scale")` — all zero. Naming it in prose is allowed and used: the context generator documents it, `theme-manifest.ts` explains the surface exclusion. `build:core` is untouched at 29 controllers.)
+- [x] The five-attribute protocol untouched (no audit rule changes for a sixth attribute). (`src/audit/**` contains the string "density" zero times — asserted; no manifest declares `data-density` — asserted over all 95 (`crud-table` has a variant it *calls* density, but that is a plain `data-variant` on one pattern, a different mechanism). The reference page is audit-clean under both rule sets — component rules via `auditHtmlSource` with the full registry manifest map, and `DOCUMENT_RULES` — with no rule taught about the attribute.)
+- [x] Dense forms/tables visually verified in ≥ 2 themes. (Browser-verified in **three** themes × both schemes: `registry/tokens/density.html` — the same form + table authored twice, comfortable and compact, plus a nesting block — captured by `tests/visual/density.pw.ts` over `default`/`slate`/`soft` × {light, dark}; each capture first asserts *in the page* that the compact submit button resolved shorter than the comfortable one, so a screenshot can never go green on an inert attribute. `soft` is in the set on purpose: pill controls and 1rem+ radii are where a shorter ramp would look wrong, and they survive. Also axe-scanned on the component gate's own axes — `{default, contrast} × {light, dark}`, 4 scans, zero violations, zero exemptions — because a compact mode is exactly where a target-size or contrast regression would hide.)
+
+**Why every token is re-declared rather than scaled from one variable:** a `var()`
+inside a custom property is substituted on the element that *declares* it, so
+`--space-4: calc(1rem * var(--density-scale))` sitting in `:root` would freeze at
+`:root`'s scale and a nested override would do nothing. Each density block therefore
+re-declares the tokens itself. The consequence — every `:root` alias whose value
+*reads* a remapped token must be re-declared too, or it silently keeps the base
+value — is not left to vigilance: a test derives that dependent set from
+`aliases.css` + `doc-aliases.css` and asserts each one appears in both blocks with
+identical value text, so adding a spacing step or a control alias fails here.
+`document.css` (`--doc-*`, `--page-*`) is deliberately excluded — print density is a
+theme concern.
+
+**Extension (the task named a token that did not exist):** `--control-height-{sm,md,lg}`
+is now the canonical control ramp in `aliases.css` (32/40/48px), with
+`--button-height-*` and `--input-height` aliasing it, so density has one ramp to
+remap instead of three. Cascade: the themeable surface grew by 3, so all 12 theme
+manifests were regenerated (`gen:theme-manifests` + `gen:schema-refs`) — no theme
+overrides any remapped token, asserted. `density.css` itself is excluded from that
+surface through a new shared `isSurfaceTokenFile`, which replaced the same
+`!== "index.css"` filter that had been copy-pasted across the generator, the registry
+audit and two tests: a theme's `:root` block cannot reach a subtree scope, so listing
+those tokens as theme-inheritable would be a lie.
+
+**Found en route:** `@faqir-ui/forms` has emitted `data-density` on the `<form>` from
+`opts.density` since 0.6-03 — the attribute was inert, with no CSS behind it. It now
+resolves, pinned by two tests (the generator emits it; a generated compact form's
+input and field gap both resolve tighter than the same form at default density). The
+generator stays outside the "no JavaScript" grep on purpose: it writes markup a human
+could have typed, which is not an implementation of density.
 
 ---
 

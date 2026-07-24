@@ -9,3 +9,6 @@
 @import './aliases.css';
 @import './document.css';
 @import './doc-aliases.css';
+/* density.css re-declares alias tokens under [data-density] — same specificity as
+   :root, so it must stay last. */
+@import './density.css';

@@ -22,7 +22,8 @@ import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import AxeBuilder from "@axe-core/playwright";
-import { buildA11yMatrix, buildPageHtml } from "./a11y-matrix";
+import { buildA11yMatrix, buildPageHtml, A11Y_THEMES } from "./a11y-matrix";
+import { buildDensityPageHtml, SCHEMES } from "../visual/matrix";
 import { WCAG_TAGS } from "./axe-config";
 import { partitionViolations } from "./exemptions";
 import { formatViolations } from "./report";
@@ -88,4 +89,24 @@ for (const c of matrix) {
     const report = blocking.length ? formatViolations(c.id, blocking) : "";
     expect(report, `Accessibility violations on ${c.id}`).toBe("");
   });
+}
+
+// ── density mode (task 0.7-11) ───────────────────────────────────────────────
+// The density reference page is not a component, so it is not in `matrix` — but a
+// compact mode is exactly where an accessibility regression would hide (shorter
+// controls, tighter targets, smaller gaps). Scanned on the same axes as every
+// component page: { default, contrast } × { light, dark }.
+for (const theme of A11Y_THEMES) {
+  for (const scheme of SCHEMES) {
+    const id = `density__${theme}__${scheme}__ltr`;
+    test(id, async ({ page }) => {
+      await mount(page, buildDensityPageHtml(theme, scheme));
+
+      const violations = await scan(page);
+      const { blocking } = partitionViolations(violations, "density");
+
+      const report = blocking.length ? formatViolations(id, blocking) : "";
+      expect(report, `Accessibility violations on ${id}`).toBe("");
+    });
+  }
 }

@@ -411,6 +411,30 @@ Optional overrides for fine-tuning individual components:
 --dialog-radius         --dialog-shadow
 ```
 
+Interactive controls size from one shared ramp — `--control-height-sm|md|lg`
+(32/40/48px) — so buttons, inputs and selects line up in a row and density mode
+has a single ramp to remap.
+
+### Density Mode
+
+Put `data-density="compact"` on any container and its whole subtree renders
+tighter — spacing steps shrink by `--density-scale` (0.75) and controls drop to a
+28/32/40px ramp. `data-density="comfortable"` restores the base scale, so an inner
+subtree can reset out of a compact ancestor.
+
+```html
+<section data-density="compact">
+  <!-- dense form / table / toolbar -->
+</section>
+```
+
+It is 100% CSS (`tokens/density.css`) and **not** a sixth protocol attribute: no
+component contract, manifest, controller or audit rule knows about it — it only
+re-declares tokens. Components need no changes to support it; keep authoring
+against `var(--space-*)` and `var(--control-height-*)`. Paged-media tokens
+(`--doc-*`, `--page-*`) are deliberately left alone — print density belongs to the
+theme.
+
 ### Other Token Categories
 
 | File | Key Tokens |
@@ -421,6 +445,7 @@ Optional overrides for fine-tuning individual components:
 | `motion.css` | `--ease-default`, `--ease-in-out`, `--duration-fast` (150ms), `--duration-normal` (250ms), `--duration-slow` (350ms) |
 | `document.css` | `--page-format`, `--page-margin`, `--doc-font`, `--doc-heading-size`, `--doc-table-*`, `--doc-signature-*`, `--doc-max-width` |
 | `doc-aliases.css` | `--kv-*`, `--callout-*`, `--image-*`, `--field-*`, `--page-break-*`, `--stat-*` (component-level document aliases) |
+| `density.css` | `[data-density="compact"\|"comfortable"]` subtree remap of `--space-*` and `--control-height-*` (see above) |
 
 ---
 

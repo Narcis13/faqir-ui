@@ -1,0 +1,153 @@
+<!-- @ui:reference density -->
+<!-- @ui:kind token-mode -->
+<!-- @ui:tokens density.css -->
+
+<!-- Density mode reference (task 0.7-11).
+
+     Deliberately NOT an `@ui:component` page: `data-density` is a token modifier,
+     not a component, so this file must stay out of the component × theme visual
+     matrix. It is captured by its own spec, tests/visual/density.pw.ts.
+
+     Every block below is the SAME markup — only the wrapper's data-density
+     differs — so a screenshot diff shows the token remap and nothing else.
+
+     The tables are authored static: density needs no JavaScript, and this page
+     loads none. Adding faqir-core.js (which bundles table.js) would make their
+     columns sortable, and would change nothing about the density remap. -->
+
+<section data-ui="stack" data-gap="6">
+
+  <!-- ── Comfortable: the base scale (no attribute needed) ── -->
+  <section data-ui="stack" data-gap="3">
+    <h2>Comfortable — the default scale</h2>
+
+    <form data-ui="stack" data-gap="4">
+      <div data-ui="field-group">
+        <label data-part="label" for="cy-name">Full name <span data-part="required">*</span></label>
+        <div data-part="input">
+          <input data-ui="input" id="cy-name" name="name" required aria-required="true">
+        </div>
+        <p data-part="description">As it appears on the invoice.</p>
+      </div>
+      <div data-ui="field-group">
+        <label data-part="label" for="cy-email">Email</label>
+        <div data-part="input">
+          <input data-ui="input" id="cy-email" name="email" type="email" placeholder="you@example.com">
+        </div>
+      </div>
+      <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="start">
+        <button data-ui="button" data-variant="primary" type="submit">Save</button>
+        <button data-ui="button" data-variant="ghost" type="button">Cancel</button>
+      </div>
+    </form>
+
+    <div data-ui="table" data-size="md">
+      <table data-part="table">
+        <thead data-part="thead">
+          <tr data-part="tr">
+            <th data-part="th" scope="col">Name</th>
+            <th data-part="th" scope="col">Role</th>
+            <th data-part="th" scope="col">Status</th>
+          </tr>
+        </thead>
+        <tbody data-part="tbody">
+          <tr data-part="tr">
+            <td data-part="td">Alice Johnson</td>
+            <td data-part="td">Admin</td>
+            <td data-part="td"><span data-ui="badge" data-variant="success">Active</span></td>
+          </tr>
+          <tr data-part="tr">
+            <td data-part="td">Bob Smith</td>
+            <td data-part="td">Editor</td>
+            <td data-part="td"><span data-ui="badge" data-variant="warning">Invited</span></td>
+          </tr>
+          <tr data-part="tr">
+            <td data-part="td">Carol White</td>
+            <td data-part="td">Viewer</td>
+            <td data-part="td"><span data-ui="badge">Archived</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── Compact: identical markup, one attribute on the wrapper ── -->
+  <section data-ui="stack" data-gap="3" data-density="compact">
+    <h2>Compact — <code>data-density="compact"</code></h2>
+
+    <form data-ui="stack" data-gap="4">
+      <div data-ui="field-group">
+        <label data-part="label" for="ct-name">Full name <span data-part="required">*</span></label>
+        <div data-part="input">
+          <input data-ui="input" id="ct-name" name="name" required aria-required="true">
+        </div>
+        <p data-part="description">As it appears on the invoice.</p>
+      </div>
+      <div data-ui="field-group">
+        <label data-part="label" for="ct-email">Email</label>
+        <div data-part="input">
+          <input data-ui="input" id="ct-email" name="email" type="email" placeholder="you@example.com">
+        </div>
+      </div>
+      <div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="start">
+        <button data-ui="button" data-variant="primary" type="submit">Save</button>
+        <button data-ui="button" data-variant="ghost" type="button">Cancel</button>
+      </div>
+    </form>
+
+    <div data-ui="table" data-size="md">
+      <table data-part="table">
+        <thead data-part="thead">
+          <tr data-part="tr">
+            <th data-part="th" scope="col">Name</th>
+            <th data-part="th" scope="col">Role</th>
+            <th data-part="th" scope="col">Status</th>
+          </tr>
+        </thead>
+        <tbody data-part="tbody">
+          <tr data-part="tr">
+            <td data-part="td">Alice Johnson</td>
+            <td data-part="td">Admin</td>
+            <td data-part="td"><span data-ui="badge" data-variant="success">Active</span></td>
+          </tr>
+          <tr data-part="tr">
+            <td data-part="td">Bob Smith</td>
+            <td data-part="td">Editor</td>
+            <td data-part="td"><span data-ui="badge" data-variant="warning">Invited</span></td>
+          </tr>
+          <tr data-part="tr">
+            <td data-part="td">Carol White</td>
+            <td data-part="td">Viewer</td>
+            <td data-part="td"><span data-ui="badge">Archived</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── Nesting: an inner subtree resets out of a compact ancestor ── -->
+  <section data-ui="stack" data-gap="3" data-density="compact">
+    <h2>Nesting — inner <code>comfortable</code> resets the subtree</h2>
+
+    <div data-ui="card">
+      <div data-part="header">
+        <h3 data-part="title">Compact card</h3>
+      </div>
+      <div data-part="body">
+        <p>This card inherits the compact scale from its ancestor.</p>
+        <button data-ui="button" data-variant="secondary" type="button">Compact control</button>
+      </div>
+    </div>
+
+    <div data-ui="card" data-density="comfortable">
+      <div data-part="header">
+        <h3 data-part="title">Comfortable card</h3>
+      </div>
+      <div data-part="body">
+        <p>Same compact ancestor — this subtree opted back out.</p>
+        <button data-ui="button" data-variant="secondary" type="button">Comfortable control</button>
+      </div>
+    </div>
+  </section>
+
+</section>

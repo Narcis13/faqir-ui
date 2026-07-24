@@ -20,6 +20,7 @@ const TOKEN_FILES_ORDERED = [
   "aliases.css",
   "document.css",
   "doc-aliases.css",
+  "density.css",
 ];
 
 export function minifyCSS(css: string): string {

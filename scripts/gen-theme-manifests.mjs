@@ -18,7 +18,12 @@ import { Glob } from "bun";
 import { readFileSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { overriddenTokens, inheritedTokens, surfaceTokens } from "../src/theme-manifest";
+import {
+  overriddenTokens,
+  inheritedTokens,
+  surfaceTokens,
+  isSurfaceTokenFile,
+} from "../src/theme-manifest";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const THEMES_DIR = join(ROOT, "registry", "themes");
@@ -117,9 +122,10 @@ const SEED = {
   },
 };
 
-// Base token surface — every base stylesheet minus raw palette primitives.
+// Base token surface — every surface-bearing stylesheet minus raw palette
+// primitives (see `isSurfaceTokenFile` for what is excluded and why).
 const baseSources = [...new Glob("*.css").scanSync(TOKENS_DIR)]
-  .filter((f) => f !== "index.css")
+  .filter(isSurfaceTokenFile)
   .map((f) => readFileSync(join(TOKENS_DIR, f), "utf8"));
 const SURFACE = surfaceTokens(baseSources);
 

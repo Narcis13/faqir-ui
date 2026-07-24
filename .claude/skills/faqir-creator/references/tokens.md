@@ -56,6 +56,33 @@ Always use `var(--token-name)` — never hardcode values.
 --space-20    80px     --space-24    96px
 ```
 
+## Density Mode
+
+`data-density` on any container remaps the spacing scale and the control height
+ramp for that subtree. Pure CSS (`tokens/density.css`) — no JavaScript, and **not**
+part of the five-attribute protocol: it never identifies a component, it only
+re-declares tokens.
+
+```html
+<section data-density="compact">
+  <!-- dense form / table / toolbar — every descendant tightens -->
+</section>
+```
+
+```
+data-density="compact"       spacing × 0.75, controls 28/32/40px
+data-density="comfortable"   the base scale (default; use it to reset a nested subtree)
+```
+
+Remapped: `--space-1` … `--space-24` (`--space-0` / `--space-px` are invariant),
+`--control-height-{sm,md,lg}`, and the aliases that read them (`--button-height-*`,
+`--input-height`, `--card-padding`, `--field-gap`, `--callout-padding-*`, `--kv-*-gap`).
+Paged-media tokens (`--doc-*`, `--page-*`) are not remapped — print density is a
+theme concern.
+
+Components need no changes to support it: keep authoring against
+`var(--space-*)` and `var(--control-height-*)`.
+
 ## Typography
 
 ```

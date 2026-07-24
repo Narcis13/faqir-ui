@@ -1,0 +1,125 @@
+/* @ui:tokens density — [data-density] subtree modifier (task 0.7-11, FAQIR-NEXT §B6)
+
+   Put `data-density="compact"` on ANY container and its whole subtree renders
+   tighter: spacing steps shrink by --density-scale and interactive controls drop
+   to a shorter height ramp. `data-density="comfortable"` restores the base scale,
+   so density can be reset on an inner subtree.
+
+     <section data-density="compact">   … dense form / table / toolbar …   </section>
+
+   This is 100% CSS. `data-density` is NOT a sixth protocol attribute: no
+   component contract, manifest, controller or audit rule knows about it — CSS
+   never selects a component *through* it, it only re-declares tokens. Components
+   stay written against `var(--space-*)` / `var(--control-height-*)` and inherit
+   whatever the nearest density scope resolved them to.
+
+   ── Why every token is re-declared instead of just setting a multiplier ──
+   A `var()` inside a custom property is substituted on the element that DECLARES
+   the property, not where it is used. `--space-4: calc(1rem * var(--density-scale))`
+   declared in :root would therefore freeze at the :root value of --density-scale
+   and a nested override would do nothing. Each density block re-declares the
+   tokens itself, so substitution happens on the density element and descendants
+   inherit the already-resolved value. That is also what makes nesting honest.
+
+   ── Scope of the remap ──
+   • --space-1 … --space-24  × --density-scale.
+     --space-0 and --space-px are invariant: 0 stays 0 and a 1px hairline is a
+     hairline at any density.
+   • --control-height-{sm,md,lg} → an explicit shorter ramp, NOT the spacing
+     multiplier: 40px × 0.75 = 30px is below a usable hit target. Dense UIs tighten
+     padding faster than they shrink controls.
+   • Every :root alias in tokens/aliases.css and tokens/doc-aliases.css whose value
+     references one of the above is re-declared verbatim here (same value text), so
+     it re-substitutes against this scope. A drift test enforces that list.
+   • tokens/document.css (--doc-*, --page-*) is deliberately NOT remapped: paged
+     media geometry — page margins, running-header gaps, signature space — is a
+     print concern that themes own, not a screen density mode.
+
+   ── Cascade ──
+   `[data-density]` and `:root` have identical specificity (0,1,0), so this file
+   must load AFTER aliases.css/doc-aliases.css — it is last in tokens/index.css.
+   A theme stylesheet loads after the tokens layer; no shipped theme overrides
+   --space-* or the control ramp, and in practice `data-density` sits on a
+   container rather than <html>, where a theme's :root block cannot reach it. */
+
+[data-density="compact"] {
+  --density-scale: 0.75;
+
+  /* ── Spacing scale (× --density-scale) ── */
+  --space-0h:  calc(0.125rem * var(--density-scale));
+  --space-1:   calc(0.25rem  * var(--density-scale));
+  --space-1h:  calc(0.375rem * var(--density-scale));
+  --space-2:   calc(0.5rem   * var(--density-scale));
+  --space-2h:  calc(0.625rem * var(--density-scale));
+  --space-3:   calc(0.75rem  * var(--density-scale));
+  --space-3h:  calc(0.875rem * var(--density-scale));
+  --space-4:   calc(1rem     * var(--density-scale));
+  --space-5:   calc(1.25rem  * var(--density-scale));
+  --space-6:   calc(1.5rem   * var(--density-scale));
+  --space-7:   calc(1.75rem  * var(--density-scale));
+  --space-8:   calc(2rem     * var(--density-scale));
+  --space-10:  calc(2.5rem   * var(--density-scale));
+  --space-12:  calc(3rem     * var(--density-scale));
+  --space-16:  calc(4rem     * var(--density-scale));
+  --space-20:  calc(5rem     * var(--density-scale));
+  --space-24:  calc(6rem     * var(--density-scale));
+
+  /* ── Control height ramp ── */
+  --control-height-sm: 28px;
+  --control-height-md: 32px;
+  --control-height-lg: 40px;
+
+  /* ── Aliases re-substituted in this scope (values identical to the base) ── */
+  --button-height-sm:  var(--control-height-sm);
+  --button-height-md:  var(--control-height-md);
+  --button-height-lg:  var(--control-height-lg);
+  --input-height:      var(--control-height-md);
+  --card-padding:      var(--space-6);
+  --kv-pair-gap:       var(--space-3);
+  --kv-grid-gap:       var(--space-4);
+  --callout-padding-y: var(--space-3);
+  --callout-padding-x: var(--space-4);
+  --field-gap:         var(--space-1h);
+}
+
+/* The default density, declared explicitly so an inner subtree can reset out of
+   a compact ancestor. Values are the base scale verbatim (drift-tested). */
+[data-density="comfortable"] {
+  --density-scale: 1;
+
+  /* ── Spacing scale ── */
+  --space-0h:  0.125rem;
+  --space-1:   0.25rem;
+  --space-1h:  0.375rem;
+  --space-2:   0.5rem;
+  --space-2h:  0.625rem;
+  --space-3:   0.75rem;
+  --space-3h:  0.875rem;
+  --space-4:   1rem;
+  --space-5:   1.25rem;
+  --space-6:   1.5rem;
+  --space-7:   1.75rem;
+  --space-8:   2rem;
+  --space-10:  2.5rem;
+  --space-12:  3rem;
+  --space-16:  4rem;
+  --space-20:  5rem;
+  --space-24:  6rem;
+
+  /* ── Control height ramp ── */
+  --control-height-sm: 32px;
+  --control-height-md: 40px;
+  --control-height-lg: 48px;
+
+  /* ── Aliases re-substituted in this scope (values identical to the base) ── */
+  --button-height-sm:  var(--control-height-sm);
+  --button-height-md:  var(--control-height-md);
+  --button-height-lg:  var(--control-height-lg);
+  --input-height:      var(--control-height-md);
+  --card-padding:      var(--space-6);
+  --kv-pair-gap:       var(--space-3);
+  --kv-grid-gap:       var(--space-4);
+  --callout-padding-y: var(--space-3);
+  --callout-padding-x: var(--space-4);
+  --field-gap:         var(--space-1h);
+}

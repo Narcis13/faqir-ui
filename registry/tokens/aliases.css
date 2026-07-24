@@ -1,11 +1,19 @@
 /* @ui:tokens aliases — per-component overrides mapping to semantic tokens */
 
 :root {
+  /* ── Controls ── */
+  /* The shared interactive-control height ramp. Every control that must line up
+     in a row (button, input, select, …) sizes from these, so density mode has a
+     single ramp to remap — see tokens/density.css. */
+  --control-height-sm: 32px;
+  --control-height-md: 40px;
+  --control-height-lg: 48px;
+
   /* ── Button ── */
   --button-radius:     var(--radius-md);
-  --button-height-sm:  32px;
-  --button-height-md:  40px;
-  --button-height-lg:  48px;
+  --button-height-sm:  var(--control-height-sm);
+  --button-height-md:  var(--control-height-md);
+  --button-height-lg:  var(--control-height-lg);
   --button-font:       var(--font-sans);
   --button-weight:     var(--weight-medium);
 
@@ -18,7 +26,7 @@
 
   /* ── Input ── */
   --input-radius:      var(--radius-md);
-  --input-height:      40px;
+  --input-height:      var(--control-height-md);
   --input-border:      var(--color-border);
   --input-bg:          var(--color-bg);
   --input-font:        var(--font-sans);

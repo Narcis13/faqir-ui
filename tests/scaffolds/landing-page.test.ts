@@ -34,7 +34,7 @@ async function writeProject(): Promise<void> {
 
   const tokenFiles = [
     "palette.css", "spacing.css", "typography.css", "effects.css", "motion.css",
-    "semantic.css", "aliases.css", "document.css", "doc-aliases.css",
+    "semantic.css", "aliases.css", "document.css", "doc-aliases.css", "density.css",
   ];
   const tokens = await Promise.all(
     tokenFiles.map((file) => Bun.file(join(REGISTRY, "tokens", file)).text()),

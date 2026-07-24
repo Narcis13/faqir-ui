@@ -153,6 +153,7 @@ const TOKEN_ORDER = [
   "aliases",
   "document",
   "doc-aliases",
+  "density",
 ];
 const BASE_ORDER = ["reset", "prose", "motion-presets"];
 
@@ -219,15 +220,25 @@ export function sanitizeFragment(html: string): string {
  * what makes the screenshot deterministic.
  */
 export function buildPageHtml(c: Case): string {
-  const fragment = sanitizeFragment(readFileSync(c.component.htmlPath, "utf8"));
-  const themeCss = read(`themes/${c.theme}.css`);
-  const css = `${foundationCss()}\n/* theme: ${c.theme} */\n${themeCss}\n/* components */\n${componentCss()}`;
+  return screenPage(readFileSync(c.component.htmlPath, "utf8"), c.theme, c.scheme, c.dir, c.id);
+}
+
+/** The shared screen-capture document — one theme, one scheme, one direction. */
+function screenPage(
+  fragment: string,
+  theme: string,
+  scheme: Scheme,
+  dir: Direction,
+  title: string,
+): string {
+  const themeCss = read(`themes/${theme}.css`);
+  const css = `${foundationCss()}\n/* theme: ${theme} */\n${themeCss}\n/* components */\n${componentCss()}`;
   return `<!DOCTYPE html>
-<html lang="en" data-theme="${c.scheme}" dir="${c.dir}">
+<html lang="en" data-theme="${scheme}" dir="${dir}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>${c.id}</title>
+<title>${title}</title>
 <style>${css}</style>
 <style>
   html, body { margin: 0; }
@@ -237,10 +248,36 @@ export function buildPageHtml(c: Case): string {
 </head>
 <body>
 <main class="vr-root">
-${fragment}
+${sanitizeFragment(fragment)}
 </main>
 </body>
 </html>`;
+}
+
+// ── density reference page (task 0.7-11) ─────────────────────────────────────
+
+/** Registry-relative path to the density-mode reference page. */
+export const DENSITY_REFERENCE_REL = "tokens/density.html";
+
+/**
+ * Themes the density page is captured in. `data-density` is theme-independent
+ * (it remaps spacing/height tokens, which no theme overrides), so a handful of
+ * characterful themes is the useful proof, not the full theme axis: `default`
+ * (the baseline), `slate` (a second colour system with the same geometry) and
+ * `soft` (large radii + pill controls — where a shorter control ramp is most
+ * likely to look wrong).
+ */
+export const DENSITY_THEMES = ["default", "slate", "soft"] as const;
+
+/**
+ * The density reference page for one theme/scheme, assembled exactly like a
+ * component capture. It is deliberately not an `@ui:component` page — density is
+ * a token modifier, not a component — so it never enters the component matrix
+ * and gets this small dedicated sweep instead.
+ */
+export function buildDensityPageHtml(theme: string, scheme: Scheme): string {
+  const fragment = readFileSync(join(REGISTRY, DENSITY_REFERENCE_REL), "utf8");
+  return screenPage(fragment, theme, scheme, "ltr", `density__${theme}__${scheme}`);
 }
 
 /**

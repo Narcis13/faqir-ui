@@ -44,6 +44,7 @@ import {
   overriddenTokens,
   inheritedTokens,
   surfaceTokens,
+  isSurfaceTokenFile,
 } from "../src/theme-manifest";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -80,7 +81,7 @@ if (logicalOffenders.length > 0) {
 
 // ── Gate 2: theme manifests — valid, present, and CSS-consistent ─────────────
 const BASE_SOURCES = [...new Glob("*.css").scanSync(TOKENS_DIR)]
-  .filter((f) => f !== "index.css")
+  .filter(isSurfaceTokenFile)
   .map((f) => readFileSync(join(TOKENS_DIR, f), "utf8"));
 const SURFACE = surfaceTokens(BASE_SOURCES);
 

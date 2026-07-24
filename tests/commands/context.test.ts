@@ -228,6 +228,36 @@ describe("faqir context", () => {
     expect(lines.some((l) => /^- \[[^\]]+\]\([^)]+\)/.test(l))).toBe(true);
   });
 
+  it("documents density mode so agents discover it (task 0.7-11)", async () => {
+    await init([]);
+    await add(["button"]);
+
+    const data = await generateContext(TEST_DIR);
+
+    // The structured block — what an agent reads out of context.json.
+    expect(data.density.attribute).toBe("data-density");
+    expect(data.density.values).toEqual(["comfortable", "compact"]);
+    expect(data.density.default).toBe("comfortable");
+    expect(data.density.stylesheet).toBe("tokens/density.css");
+    expect(data.density.example).toContain('data-density="compact"');
+    expect(data.density.remaps.join(" ")).toContain("--control-height-");
+    expect(data.density.remaps.join(" ")).toContain("--space-");
+    // It must be described as what it is: not a sixth protocol attribute.
+    expect(data.density.notes.join(" ")).toContain("five-attribute protocol");
+    expect(Object.keys(data.protocol).filter((k) => k.startsWith("data-")).length).toBe(0);
+
+    // It survives into context.json and both prose renderings.
+    const parsed = JSON.parse(formatContextJSON(data));
+    expect(parsed.density.attribute).toBe("data-density");
+    // Each renderer keeps its own heading case ("Density Mode" / "Density mode").
+    for (const text of [formatContextMarkdown(data), formatContextLlmsFull(data)]) {
+      expect(text).toMatch(/^## Density [Mm]ode$/m);
+      expect(text).toContain('data-density="compact"');
+      expect(text).toContain("tokens/density.css");
+    }
+    expect(formatContextLlms(data)).toContain("llms-full.txt#density-mode");
+  });
+
   it("llms output is deterministic (no timestamp)", async () => {
     await init([]);
     await add(["button"]);

@@ -20,6 +20,7 @@ const TOKEN_ORDER = [
   "aliases",
   "document",
   "doc-aliases",
+  "density",
 ] as const;
 const BASE_ORDER = ["reset", "prose", "motion-presets"] as const;
 

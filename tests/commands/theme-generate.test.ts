@@ -14,6 +14,7 @@ import {
 import { checkThemeContrast, CONTRAST_AA } from "../../src/audit/contrast-tokens";
 import {
   inheritedTokens,
+  isSurfaceTokenFile,
   overriddenTokens,
   surfaceTokens,
   validateThemeManifest,
@@ -31,7 +32,7 @@ const TOKENS_DIR = join(REGISTRY, "tokens");
 const SRC_INDEX = join(ROOT, "src/index.ts");
 
 const TOKEN_FILES = [...new Glob("*.css").scanSync(TOKENS_DIR)]
-  .filter((file) => file !== "index.css")
+  .filter(isSurfaceTokenFile)
   .sort();
 const BASE_SOURCES = TOKEN_FILES.map((file) => readFileSync(join(TOKENS_DIR, file), "utf8"));
 const BASE_CSS = BASE_SOURCES.join("\n");

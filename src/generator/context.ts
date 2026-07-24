@@ -46,6 +46,20 @@ export interface ContextData {
     shadows: string;
     z_index: string;
   };
+  /**
+   * Density mode — a pure-CSS token modifier, NOT a sixth protocol attribute.
+   * Embedded so agents discover it without reading the stylesheet.
+   */
+  density: {
+    attribute: string;
+    values: string[];
+    default: string;
+    scope: string;
+    remaps: string[];
+    stylesheet: string;
+    example: string;
+    notes: string[];
+  };
   components: Record<string, unknown>;
   patterns: Record<string, unknown>;
   plugins: Record<string, {
@@ -233,6 +247,25 @@ export async function generateContext(cwd: string): Promise<ContextData> {
       shadows: "xs, sm, md, lg, xl",
       z_index: "dropdown:50, sticky:100, overlay:200, modal:300, toast:400",
     },
+    density: {
+      attribute: "data-density",
+      values: ["comfortable", "compact"],
+      default: "comfortable",
+      scope: "subtree — the element it is set on and every descendant, until an inner data-density resets it",
+      remaps: [
+        "--space-1 … --space-24 (× --density-scale; --space-0 and --space-px are invariant)",
+        "--control-height-sm|md|lg (explicit shorter ramp: 28/32/40px compact vs 32/40/48px comfortable)",
+        "the component aliases that read them: --button-height-*, --input-height, --card-padding, --field-gap, --callout-padding-*, --kv-*-gap",
+      ],
+      stylesheet: "tokens/density.css",
+      example: '<section data-density="compact"> … dense form / table / toolbar … </section>',
+      notes: [
+        "Pure CSS — no JavaScript reads or writes data-density, and no component contract, manifest or audit rule knows about it.",
+        "It is not part of the five-attribute protocol (data-ui/data-part/data-state/data-variant/data-size); it only re-declares tokens.",
+        "Components need no changes to support it: keep authoring against var(--space-*) and var(--control-height-*).",
+        "Paged-media tokens (--doc-*, --page-*) are deliberately not remapped — print density belongs to the theme.",
+      ],
+    },
     components,
     patterns,
     plugins,
@@ -301,6 +334,21 @@ export function formatContextMarkdown(data: ContextData): string {
   lines.push(`- Radius: ${Object.entries(data.tokens.radius).map(([k, v]) => `${k}=${v}`).join(", ")}`);
   lines.push(`- Shadows: ${data.tokens.shadows}`);
   lines.push(`- Z-index: ${data.tokens.z_index}`);
+  lines.push("");
+
+  // Density
+  lines.push("## Density Mode");
+  lines.push("");
+  lines.push(`\`${data.density.attribute}="${data.density.values.filter((v) => v !== data.density.default).join("|")}"\` on any container tightens its subtree. Default: \`${data.density.default}\`.`);
+  lines.push("");
+  lines.push("```html");
+  lines.push(data.density.example);
+  lines.push("```");
+  lines.push("");
+  lines.push(`Scope: ${data.density.scope}. Defined in \`${data.density.stylesheet}\`.`);
+  lines.push("Remaps:");
+  for (const r of data.density.remaps) lines.push(`- ${r}`);
+  for (const n of data.density.notes) lines.push(`- ${n}`);
   lines.push("");
 
   // Data Service
@@ -585,6 +633,7 @@ export function formatContextLlms(data: ContextData): string {
   lines.push("");
   lines.push("- [Attribute protocol](llms-full.txt#attribute-protocol): the data-ui / data-part / data-state contract");
   lines.push("- [Design tokens](llms-full.txt#design-tokens): spacing, radius, shadow, and z-index scales");
+  lines.push("- [Density mode](llms-full.txt#density-mode): data-density, a pure-CSS token modifier for dense subtrees");
   lines.push("- [Data-driven rendering](llms-full.txt#data-driven-rendering): apiSource() for server-backed CRUD");
   lines.push("- [Rules](llms-full.txt#rules): authoring constraints agents must follow");
   lines.push("");
@@ -685,6 +734,22 @@ export function formatContextLlmsFull(data: ContextData): string {
   lines.push(`- Radius: ${Object.entries(data.tokens.radius).map(([k, v]) => `${k}=${v}`).join(", ")}`);
   lines.push(`- Shadows: ${data.tokens.shadows}`);
   lines.push(`- Z-index: ${data.tokens.z_index}`);
+  lines.push("");
+
+  // Density mode
+  lines.push("## Density mode");
+  lines.push("");
+  lines.push(`\`${data.density.attribute}\` — values: ${data.density.values.map((v) => `\`${v}\``).join(", ")} (default \`${data.density.default}\`), defined in \`${data.density.stylesheet}\`.`);
+  lines.push(`Scope: ${data.density.scope}.`);
+  lines.push("");
+  lines.push("```html");
+  lines.push(data.density.example);
+  lines.push("```");
+  lines.push("");
+  lines.push("Remaps:");
+  for (const r of data.density.remaps) lines.push(`- ${r}`);
+  lines.push("");
+  for (const n of data.density.notes) lines.push(`- ${n}`);
   lines.push("");
 
   // Data-driven rendering

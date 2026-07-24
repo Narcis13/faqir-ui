@@ -21,6 +21,7 @@ import {
   overriddenTokens,
   inheritedTokens,
   surfaceTokens,
+  isSurfaceTokenFile,
   type ThemeManifest,
 } from "../../src/theme-manifest";
 
@@ -30,7 +31,7 @@ const TOKENS_DIR = join(REGISTRY, "tokens");
 
 // The base token surface — every base stylesheet minus raw palette primitives.
 const BASE_SOURCES = [...new Glob("*.css").scanSync(TOKENS_DIR)]
-  .filter((f) => f !== "index.css")
+  .filter(isSurfaceTokenFile)
   .map((f) => readFileSync(join(TOKENS_DIR, f), "utf8"));
 const SURFACE = surfaceTokens(BASE_SOURCES);
 
