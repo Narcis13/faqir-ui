@@ -1,0 +1,138 @@
+{
+  "$schema": "../../../manifest.schema.json",
+  "name": "pricing",
+  "version": "1.0.0",
+  "kind": "pattern",
+  "category": "marketing",
+  "description": "Pricing table composing card tiers with the stat primitive for the price, a badge for the highlight, separators, icon-ticked feature lists, and one call-to-action per tier. Composition only: zero JavaScript, no controller, no reactive directives. A highlighted tier is data-state='featured' on the tier card.",
+
+  "anatomy": {
+    "tag": "section",
+    "selector": "[data-ui='pricing']",
+    "content_model": "slots"
+  },
+
+  "slots": {
+    "heading": {
+      "selector": "[data-part='heading']",
+      "required": true,
+      "tag_hint": "h2",
+      "description": "Section heading. Give it an id and point the section's aria-labelledby at it"
+    },
+    "description": {
+      "selector": "[data-part='description']",
+      "required": false,
+      "tag_hint": "p",
+      "description": "Optional intro paragraph. Must be a direct child of the section — the tiers' own card descriptions are card slots, not this one"
+    },
+    "tiers": {
+      "selector": "[data-part='tiers']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "The tier grid. Column count comes from data-cols on the root, not from a nested grid component"
+    },
+    "tier": {
+      "selector": "[data-part='tier']",
+      "required": true,
+      "tag_hint": "article",
+      "description": "One plan — a nested data-ui='card'. Inside a tier you address the CARD's slots (header, title, description, body, footer), never pricing's: the nearest data-ui ancestor owns a data-part"
+    },
+    "footnote": {
+      "selector": "[data-part='footnote']",
+      "required": false,
+      "tag_hint": "p",
+      "description": "Fine print under the tiers (taxes, cancellation, currency)"
+    }
+  },
+
+  "variants": {
+    "columns": {
+      "values": ["2", "3"],
+      "default": "3",
+      "attr": "data-cols",
+      "applied_to": "root"
+    }
+  },
+
+  "states": {
+    "default": { "attr": "", "default": true },
+    "featured": {
+      "attr": "data-state=\"featured\"",
+      "applied_to": "tier",
+      "description": "Highlights one tier with a primary ring. Pair it with an in-content badge ('Most popular') so the emphasis is not colour-only"
+    }
+  },
+
+  "a11y": {
+    "required_attrs": [
+      "aria-labelledby on the section pointing at the heading id",
+      "aria-labelledby on each tier pointing at that tier's title id",
+      "aria-hidden='true' on the decorative feature tick icons",
+      "the featured tier states its emphasis in text, not only with colour"
+    ],
+    "keyboard": {
+      "Tab": "move through the tier call-to-action links in source order"
+    }
+  },
+
+  "tokens_used": [
+    "color-bg", "color-fg", "color-fg-muted", "color-border",
+    "color-primary", "color-primary-subtle", "color-primary-fg",
+    "space-1", "space-2", "space-3", "space-4", "space-6", "space-8", "space-10", "space-12", "space-16",
+    "font-sans", "text-sm", "text-base", "text-lg", "text-3xl",
+    "weight-semibold", "weight-bold", "leading-tight", "leading-normal", "leading-relaxed",
+    "radius-lg", "shadow-md"
+  ],
+
+  "templates": {
+    "html": "<section data-ui=\"pricing\" data-cols=\"{columns}\" aria-labelledby=\"{id}-heading\">\n  <h2 data-part=\"heading\" id=\"{id}-heading\">{heading}</h2>\n  <p data-part=\"description\">{description}</p>\n  <div data-part=\"tiers\">\n    <article data-ui=\"card\" data-part=\"tier\" aria-labelledby=\"{id}-tier\">\n      <div data-part=\"header\">\n        <h3 data-part=\"title\" id=\"{id}-tier\">{tier_name}</h3>\n        <p data-part=\"description\">{tier_blurb}</p>\n        <div data-ui=\"stat\" data-size=\"lg\">\n          <div data-part=\"value\">{price}</div>\n          <div data-part=\"label\">{period}</div>\n        </div>\n      </div>\n      <hr data-ui=\"separator\">\n      <div data-part=\"body\">\n        <ul>\n          <li><span data-ui=\"icon\" data-icon=\"check\" aria-hidden=\"true\"></span>{feature}</li>\n        </ul>\n      </div>\n      <div data-part=\"footer\">\n        <a data-ui=\"button\" data-variant=\"outline\" href=\"{href}\">{cta}</a>\n      </div>\n    </article>\n  </div>\n  <p data-part=\"footnote\">{footnote}</p>\n</section>"
+  },
+
+  "safe_transforms": [
+    "add-tier",
+    "remove-tier",
+    "change-column-count",
+    "move-featured-state-to-another-tier",
+    "change-prices-and-periods",
+    "add-feature-to-a-tier",
+    "change-tier-call-to-action",
+    "add-footnote"
+  ],
+
+  "unsafe_transforms": [
+    "add-pricing-data-parts-inside-a-tier-card",
+    "remove-aria-labelledby",
+    "signal-the-featured-tier-with-colour-only",
+    "replace-feature-lists-with-divs",
+    "add-custom-script"
+  ],
+
+  "composition": {
+    "contains": ["card", "badge", "stat", "separator", "button", "icon"],
+    "used_in": ["landing-page"],
+    "notes": [
+      "Slot ownership: a data-part belongs to its nearest data-ui ancestor. Inside a tier that ancestor is the card, so the price/features live in the card's header and body slots and pricing addresses them contextually in CSS. Adding a pricing-specific data-part inside a tier makes it an orphan part of the card and `faqir audit` flags it.",
+      "The price is a nested data-ui='stat' (value = amount, label = period). Pricing re-orders the stat label so the amount leads.",
+      "`faqir scaffold landing-page` copies the block between the <!-- @ui:scaffold landing-page --> markers in pricing.html verbatim."
+    ]
+  },
+
+  "files": {
+    "html": "pricing.html",
+    "css": "pricing.css",
+    "manifest": "pricing.manifest.json"
+  },
+
+  "tests": [
+    "renders-as-section-with-data-ui-pricing",
+    "heading-and-tiers-slots-are-required",
+    "every-tier-is-a-card",
+    "the-price-is-a-stat-primitive",
+    "featured-tier-carries-data-state-featured",
+    "featured-emphasis-is-also-stated-in-content",
+    "feature-ticks-are-aria-hidden-icons",
+    "ships-zero-javascript",
+    "collapses-to-two-columns-under-1024px-and-one-under-640px",
+    "reference-page-is-audit-clean"
+  ]
+}

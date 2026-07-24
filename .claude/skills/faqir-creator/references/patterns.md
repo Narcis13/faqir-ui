@@ -2,7 +2,7 @@
 
 # Faqir Patterns Reference
 
-9 patterns, each with its anatomy tree, variant table, and safe/unsafe transforms — all derived from the component manifest.
+13 patterns, each with its anatomy tree, variant table, and safe/unsafe transforms — all derived from the component manifest.
 
 ## auth-form
 
@@ -245,6 +245,51 @@ Placeholder display for empty content areas with icon, message, and action
 - **Unsafe (never do):** `remove-title-slot`, `flatten-to-single-div`, `remove-action-without-alternative`
 - **Required ARIA:** `role="status" on root when content changes dynamically`
 
+## feature-grid
+
+_kind: pattern · category: marketing_
+
+Responsive feature list for a marketing page: a section heading plus a real <ul> of icon + title + description items. Composition only: zero JavaScript, no controller, no reactive directives. Column count is data-cols on the root (2|3|4), collapsing 4→2→1 in pure CSS.
+
+```html
+<section data-ui="feature-grid" data-cols="{columns}" aria-labelledby="{id}-heading">
+  <h2 data-part="heading" id="{id}-heading">{heading}</h2>
+  <p data-part="description">{description}</p>
+  <ul data-part="items">
+    <li data-part="item">
+      <span data-ui="icon" data-icon="{icon}" data-part="icon" aria-hidden="true"></span>
+      <h3 data-part="item-title">{item_title}</h3>
+      <p data-part="item-description">{item_description}</p>
+    </li>
+  </ul>
+</section>
+```
+
+**Anatomy**
+
+```text
+[data-ui='feature-grid']  ·  <section> · content: slots
+├─ [data-part='heading']  <h2>  required  — Section heading. Give it an id and point the section's aria-labelledby at it
+├─ [data-part='description']  <p>  optional  — Optional intro paragraph under the heading
+├─ [data-part='items']  <ul>  required  — The grid container. Keep it a <ul> so the features are announced as a list; the marker is removed in CSS, not the semantics
+├─ [data-part='item']  <li>  required  — One feature — repeat this element once per feature. Direct child of items
+├─ [data-part='icon']  <span>  optional  — Tinted plate WRAPPING a nested data-ui='icon' (the plate is never the icon itself). Mark the plate aria-hidden='true' — it is decoration; the meaning is carried by item-title
+├─ [data-part='item-title']  <h3>  required  — Feature name. One level below the section heading so the outline never skips
+├─ [data-part='item-description']  <p>  optional  — One or two sentences describing the feature
+└─ [data-part='footer']  <div>  optional  — Closing action row under the grid. Nested buttons/links go directly inside and must not carry a data-part
+```
+
+**Variants**
+
+| Variant | Values | Default | Attribute | Applied to |
+|---------|--------|---------|-----------|------------|
+| columns | `2`, `3`, `4` | `3` | `data-cols` | root |
+
+- **Safe transforms:** `add-item`, `remove-item`, `change-column-count`, `change-item-icons`, `add-section-description`, `remove-section-description`, `add-footer-action`
+- **Unsafe (never do):** `replace-items-list-with-divs`, `remove-aria-labelledby`, `remove-aria-hidden-from-decorative-icons`, `promote-item-titles-to-h2`, `add-custom-script`
+- **A11y:** keys: Tab
+- **Required ARIA:** `aria-labelledby on the section pointing at the heading id`; `aria-hidden='true' on every decorative item icon`; `item titles are real headings one level below the section heading`
+
 ## form-page
 
 _kind: pattern · category: composite_
@@ -280,6 +325,106 @@ _No variants._
 - **Unsafe (never do):** `remove-l-data`, `remove-l-validate`, `remove-form-element`, `remove-labels-from-inputs`, `remove-aria-describedby-wiring`, `add-custom-script`
 - **A11y:** role=form · keys: Tab, Enter, Shift+Tab
 - **Required ARIA:** `aria-label or aria-labelledby on the form element`; `aria-describedby on the form pointing to the description when present`; `label[for] matching each control id inside every field-group`; `aria-required="true" on required controls`; `aria-describedby pointing to the field-group hint and/or error`; `aria-live="polite" on each field-group error slot`
+
+## hero
+
+_kind: pattern · category: marketing_
+
+Landing-page hero section composing badge + heading + description + call-to-action buttons, with an optional media column. Composition only: zero JavaScript, no controller, no reactive directives — the two layout variants are pure CSS grid.
+
+```html
+<section data-ui="hero" data-variant="{layout}" aria-labelledby="{id}-headline">
+  <span data-ui="badge" data-part="eyebrow">{eyebrow}</span>
+  <h1 data-part="headline" id="{id}-headline">{headline}</h1>
+  <p data-part="description">{description}</p>
+  <div data-part="actions">
+    <a data-ui="button" data-variant="primary" data-size="lg" href="{primary_href}">{primary_label}</a>
+    <a data-ui="button" data-variant="outline" data-size="lg" href="{secondary_href}">{secondary_label}</a>
+  </div>
+  <p data-part="note">{note}</p>
+</section>
+```
+
+**Anatomy**
+
+```text
+[data-ui='hero']  ·  <section> · content: slots
+├─ [data-part='eyebrow']  <span>  optional  — Short kicker above the headline — typically a nested data-ui='badge'
+├─ [data-part='headline']  <h1>  required  — The hero headline. Give it an id and point the section's aria-labelledby at it so the landmark is named
+├─ [data-part='description']  <p>  optional  — Supporting paragraph under the headline; capped at 42rem for readability
+├─ [data-part='actions']  <div>  optional  — Call-to-action row. Put nested data-ui='button' elements (or <a data-ui='button'>) directly inside; they keep their own data-variant/data-size and must NOT carry a data-part
+├─ [data-part='note']  <p>  optional  — Fine print under the actions (pricing caveat, trust line)
+├─ [data-part='content']  <div>  optional  — Text column wrapper — required by the split layout, omitted by the centered one
+└─ [data-part='media']  <figure>  optional  — Media column of the split layout — typically a nested data-ui='image'
+```
+
+**Variants**
+
+| Variant | Values | Default | Attribute | Applied to |
+|---------|--------|---------|-----------|------------|
+| layout | `center`, `split` | `center` | `data-variant` | root |
+
+- **Safe transforms:** `change-layout-variant`, `change-headline-text`, `add-eyebrow`, `remove-eyebrow`, `add-secondary-action`, `remove-note`, `swap-media-image`
+- **Unsafe (never do):** `remove-headline`, `remove-aria-labelledby`, `demote-headline-below-h2`, `add-data-part-to-action-buttons`, `add-custom-script`
+- **A11y:** keys: Tab
+- **Required ARIA:** `aria-labelledby on the section pointing at the headline id`; `alt text on any image inside the media slot`; `descriptive link text on every action (never 'click here')`
+
+## pricing
+
+_kind: pattern · category: marketing_
+
+Pricing table composing card tiers with the stat primitive for the price, a badge for the highlight, separators, icon-ticked feature lists, and one call-to-action per tier. Composition only: zero JavaScript, no controller, no reactive directives. A highlighted tier is data-state='featured' on the tier card.
+
+```html
+<section data-ui="pricing" data-cols="{columns}" aria-labelledby="{id}-heading">
+  <h2 data-part="heading" id="{id}-heading">{heading}</h2>
+  <p data-part="description">{description}</p>
+  <div data-part="tiers">
+    <article data-ui="card" data-part="tier" aria-labelledby="{id}-tier">
+      <div data-part="header">
+        <h3 data-part="title" id="{id}-tier">{tier_name}</h3>
+        <p data-part="description">{tier_blurb}</p>
+        <div data-ui="stat" data-size="lg">
+          <div data-part="value">{price}</div>
+          <div data-part="label">{period}</div>
+        </div>
+      </div>
+      <hr data-ui="separator">
+      <div data-part="body">
+        <ul>
+          <li><span data-ui="icon" data-icon="check" aria-hidden="true"></span>{feature}</li>
+        </ul>
+      </div>
+      <div data-part="footer">
+        <a data-ui="button" data-variant="outline" href="{href}">{cta}</a>
+      </div>
+    </article>
+  </div>
+  <p data-part="footnote">{footnote}</p>
+</section>
+```
+
+**Anatomy**
+
+```text
+[data-ui='pricing']  ·  <section> · content: slots
+├─ [data-part='heading']  <h2>  required  — Section heading. Give it an id and point the section's aria-labelledby at it
+├─ [data-part='description']  <p>  optional  — Optional intro paragraph. Must be a direct child of the section — the tiers' own card descriptions are card slots, not this one
+├─ [data-part='tiers']  <div>  required  — The tier grid. Column count comes from data-cols on the root, not from a nested grid component
+├─ [data-part='tier']  <article>  required  — One plan — a nested data-ui='card'. Inside a tier you address the CARD's slots (header, title, description, body, footer), never pricing's: the nearest data-ui ancestor owns a data-part
+└─ [data-part='footnote']  <p>  optional  — Fine print under the tiers (taxes, cancellation, currency)
+```
+
+**Variants**
+
+| Variant | Values | Default | Attribute | Applied to |
+|---------|--------|---------|-----------|------------|
+| columns | `2`, `3` | `3` | `data-cols` | root |
+
+- **Safe transforms:** `add-tier`, `remove-tier`, `change-column-count`, `move-featured-state-to-another-tier`, `change-prices-and-periods`, `add-feature-to-a-tier`, `change-tier-call-to-action`, `add-footnote`
+- **Unsafe (never do):** `add-pricing-data-parts-inside-a-tier-card`, `remove-aria-labelledby`, `signal-the-featured-tier-with-colour-only`, `replace-feature-lists-with-divs`, `add-custom-script`
+- **A11y:** keys: Tab
+- **Required ARIA:** `aria-labelledby on the section pointing at the heading id`; `aria-labelledby on each tier pointing at that tier's title id`; `aria-hidden='true' on the decorative feature tick icons`; `the featured tier states its emphasis in text, not only with colour`
 
 ## search-results
 
@@ -395,6 +540,68 @@ Settings page with tabbed sections, form fields, and save/discard actions
 - **Unsafe (never do):** `remove-actions-bar`, `remove-tabs`, `remove-confirm-dialog`, `remove-form-labels`, `remove-aria-labelledby`, `flatten-sections`
 - **A11y:** keys: Tab, Enter, Escape, ArrowLeft, ArrowRight
 - **Required ARIA:** `aria-labelledby on root pointing to title id`; `role="tablist" on tabs list`; `role="tab" on each tab trigger`; `role="tabpanel" on each tab panel`; `for attribute on labels pointing to input ids`; `aria-invalid on fields with errors`; `role="switch" on switch toggles`; `aria-checked on switch toggles`; `role="dialog" on confirm-dialog panel`; `aria-modal="true" on confirm-dialog panel`
+
+## site-footer
+
+_kind: pattern · category: marketing_
+
+Marketing site footer: brand block with social links, titled link columns built from the nav primitive, and a bottom bar with copyright and legal links. Composition only: zero JavaScript, no controller, no reactive directives. The root is a real <footer>, so it is the page's contentinfo landmark.
+
+```html
+<footer data-ui="site-footer" data-variant="{layout}">
+  <div data-part="brand">
+    <p data-part="logo">{brand}</p>
+    <p data-part="tagline">{tagline}</p>
+    <div data-part="social">
+      <a data-ui="link" data-variant="muted" href="{social_href}" aria-label="{social_label}"><span data-ui="icon" data-icon="{social_icon}" aria-hidden="true"></span></a>
+    </div>
+  </div>
+  <div data-part="columns">
+    <div data-part="column">
+      <h2 data-part="column-title" id="{id}-group">{group_title}</h2>
+      <nav data-ui="nav" data-variant="vertical" aria-labelledby="{id}-group">
+        <a data-part="link" href="{link_href}">{link_label}</a>
+      </nav>
+    </div>
+  </div>
+  <hr data-ui="separator">
+  <div data-part="bottom">
+    <p data-part="copyright">&copy; {company}. All rights reserved.</p>
+    <div data-part="legal">
+      <nav data-ui="nav" aria-label="Legal">
+        <a data-part="link" href="{legal_href}">{legal_label}</a>
+      </nav>
+    </div>
+  </div>
+</footer>
+```
+
+**Anatomy**
+
+```text
+[data-ui='site-footer']  ·  <footer> · content: slots
+├─ [data-part='brand']  <div>  optional  — Brand column: wordmark, tagline, and social links
+├─ [data-part='logo']  <p>  optional  — Wordmark or logo. Keep it a paragraph or a link — not a heading, so the footer never enters the document outline
+├─ [data-part='tagline']  <p>  optional  — One-line positioning statement under the wordmark
+├─ [data-part='social']  <div>  optional  — Row of icon-only links. Each link needs its own aria-label; the icon inside is aria-hidden
+├─ [data-part='columns']  <div>  optional  — Grid of link columns (3 across, halving at 1024px, stacking at 640px)
+├─ [data-part='column']  <div>  optional  — One titled link group — a column-title plus a nested data-ui='nav'
+├─ [data-part='column-title']  <h2>  optional  — Group heading. Give it an id and point the sibling nav's aria-labelledby at it, so each navigation landmark has a name
+├─ [data-part='bottom']  <div>  optional  — Bottom bar: copyright on one side, legal links on the other
+├─ [data-part='copyright']  <p>  optional  — Copyright line. Leave the year out — a template with a hardcoded year is wrong every January
+└─ [data-part='legal']  <div>  optional  — Wrapper for the legal nav (privacy, terms, cookies)
+```
+
+**Variants**
+
+| Variant | Values | Default | Attribute | Applied to |
+|---------|--------|---------|-----------|------------|
+| layout | `columns`, `compact` | `columns` | `data-variant` | root |
+
+- **Safe transforms:** `change-layout-variant`, `add-link-column`, `remove-link-column`, `add-link-to-a-column`, `change-social-links`, `remove-tagline`, `change-copyright-text`
+- **Unsafe (never do):** `replace-footer-element-with-div`, `remove-accessible-name-from-a-nav`, `remove-aria-label-from-icon-only-links`, `promote-column-titles-into-the-page-outline`, `hardcode-a-copyright-year`, `add-custom-script`
+- **A11y:** keys: Tab
+- **Required ARIA:** `the root is a <footer> element (contentinfo landmark)`; `every nested nav has an accessible name via aria-labelledby (column title) or aria-label`; `icon-only social links carry aria-label; their icons carry aria-hidden='true'`
 
 ## wizard
 

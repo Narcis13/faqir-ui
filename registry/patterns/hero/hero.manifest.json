@@ -1,0 +1,140 @@
+{
+  "$schema": "../../../manifest.schema.json",
+  "name": "hero",
+  "version": "1.0.0",
+  "kind": "pattern",
+  "category": "marketing",
+  "description": "Landing-page hero section composing badge + heading + description + call-to-action buttons, with an optional media column. Composition only: zero JavaScript, no controller, no reactive directives — the two layout variants are pure CSS grid.",
+
+  "anatomy": {
+    "tag": "section",
+    "selector": "[data-ui='hero']",
+    "content_model": "slots"
+  },
+
+  "slots": {
+    "eyebrow": {
+      "selector": "[data-part='eyebrow']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Short kicker above the headline — typically a nested data-ui='badge'"
+    },
+    "headline": {
+      "selector": "[data-part='headline']",
+      "required": true,
+      "tag_hint": "h1",
+      "description": "The hero headline. Give it an id and point the section's aria-labelledby at it so the landmark is named"
+    },
+    "description": {
+      "selector": "[data-part='description']",
+      "required": false,
+      "tag_hint": "p",
+      "description": "Supporting paragraph under the headline; capped at 42rem for readability"
+    },
+    "actions": {
+      "selector": "[data-part='actions']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Call-to-action row. Put nested data-ui='button' elements (or <a data-ui='button'>) directly inside; they keep their own data-variant/data-size and must NOT carry a data-part"
+    },
+    "note": {
+      "selector": "[data-part='note']",
+      "required": false,
+      "tag_hint": "p",
+      "description": "Fine print under the actions (pricing caveat, trust line)"
+    },
+    "content": {
+      "selector": "[data-part='content']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Text column wrapper — required by the split layout, omitted by the centered one"
+    },
+    "media": {
+      "selector": "[data-part='media']",
+      "required": false,
+      "tag_hint": "figure",
+      "description": "Media column of the split layout — typically a nested data-ui='image'"
+    }
+  },
+
+  "variants": {
+    "layout": {
+      "values": ["center", "split"],
+      "default": "center",
+      "attr": "data-variant",
+      "applied_to": "root"
+    }
+  },
+
+  "states": {
+    "default": { "attr": "", "default": true }
+  },
+
+  "a11y": {
+    "required_attrs": [
+      "aria-labelledby on the section pointing at the headline id",
+      "alt text on any image inside the media slot",
+      "descriptive link text on every action (never 'click here')"
+    ],
+    "keyboard": {
+      "Tab": "move through the call-to-action links in source order"
+    }
+  },
+
+  "tokens_used": [
+    "color-bg", "color-fg", "color-fg-muted",
+    "space-3", "space-4", "space-6", "space-8", "space-12", "space-16", "space-20",
+    "font-sans", "text-sm", "text-base", "text-lg", "text-xl", "text-3xl", "text-4xl",
+    "weight-bold", "weight-normal", "leading-tight", "leading-relaxed",
+    "radius-lg"
+  ],
+
+  "templates": {
+    "html": "<section data-ui=\"hero\" data-variant=\"{layout}\" aria-labelledby=\"{id}-headline\">\n  <span data-ui=\"badge\" data-part=\"eyebrow\">{eyebrow}</span>\n  <h1 data-part=\"headline\" id=\"{id}-headline\">{headline}</h1>\n  <p data-part=\"description\">{description}</p>\n  <div data-part=\"actions\">\n    <a data-ui=\"button\" data-variant=\"primary\" data-size=\"lg\" href=\"{primary_href}\">{primary_label}</a>\n    <a data-ui=\"button\" data-variant=\"outline\" data-size=\"lg\" href=\"{secondary_href}\">{secondary_label}</a>\n  </div>\n  <p data-part=\"note\">{note}</p>\n</section>"
+  },
+
+  "safe_transforms": [
+    "change-layout-variant",
+    "change-headline-text",
+    "add-eyebrow",
+    "remove-eyebrow",
+    "add-secondary-action",
+    "remove-note",
+    "swap-media-image"
+  ],
+
+  "unsafe_transforms": [
+    "remove-headline",
+    "remove-aria-labelledby",
+    "demote-headline-below-h2",
+    "add-data-part-to-action-buttons",
+    "add-custom-script"
+  ],
+
+  "composition": {
+    "contains": ["badge", "button", "image"],
+    "used_in": ["landing-page"],
+    "notes": [
+      "Nested primitives inside a slot keep their own five-attribute contract. A nested element must not carry both data-part and data-variant: the pattern validates a part's data-variant against the *pattern's* variant values (center|split), so a button's data-variant=\"primary\" on a part would be a false mismatch. Put buttons inside [data-part=\"actions\"] instead.",
+      "The centered layout is what `faqir scaffold landing-page` emits; the block between the <!-- @ui:scaffold landing-page --> markers in hero.html is copied into the generated page verbatim."
+    ]
+  },
+
+  "files": {
+    "html": "hero.html",
+    "css": "hero.css",
+    "manifest": "hero.manifest.json"
+  },
+
+  "tests": [
+    "renders-as-section-with-data-ui-hero",
+    "headline-slot-is-required",
+    "section-is-labelled-by-its-headline",
+    "center-is-the-default-layout",
+    "split-variant-lays-copy-beside-media",
+    "actions-hold-nested-buttons-without-a-data-part",
+    "ships-zero-javascript",
+    "collapses-to-one-column-under-1024px",
+    "reference-page-is-audit-clean"
+  ]
+}

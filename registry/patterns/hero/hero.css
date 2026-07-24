@@ -1,0 +1,132 @@
+/* @ui:component hero */
+/* @ui:tokens color-bg color-fg color-fg-muted space-3 space-4 space-6 space-8 space-12 space-16 space-20 text-sm text-base text-lg text-xl text-3xl text-4xl font-sans weight-bold weight-normal leading-tight leading-relaxed radius-lg */
+
+/* ── Root ──
+   A one-column grid by default; the layout variants only change how that grid
+   flows, so the same markup works centred or split. */
+[data-ui="hero"] {
+  display: grid;
+  gap: var(--space-4);
+  padding-block: var(--space-20);
+  padding-inline: var(--space-6);
+  font-family: var(--font-sans, system-ui, sans-serif);
+  color: var(--color-fg);
+  background: var(--color-bg);
+}
+
+/* ── Eyebrow ── */
+[data-ui="hero"] [data-part="eyebrow"] {
+  justify-self: start;
+  margin-block-end: var(--space-3);
+}
+
+/* ── Headline ── */
+[data-ui="hero"] [data-part="headline"] {
+  margin: 0;
+  font-size: var(--text-4xl);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+  color: var(--color-fg);
+  text-wrap: balance;
+}
+
+/* ── Description ── */
+[data-ui="hero"] [data-part="description"] {
+  margin: 0;
+  max-inline-size: 42rem;
+  font-size: var(--text-lg);
+  line-height: var(--leading-relaxed);
+  color: var(--color-fg-muted);
+}
+
+/* ── Actions ── */
+[data-ui="hero"] [data-part="actions"] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-block-start: var(--space-4);
+}
+
+/* ── Note ── */
+[data-ui="hero"] [data-part="note"] {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-fg-muted);
+}
+
+/* ── Media ── */
+[data-ui="hero"] [data-part="media"] {
+  margin: 0;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+/* ── Layout: center (default) ── */
+[data-ui="hero"][data-variant="center"] {
+  justify-items: center;
+  text-align: center;
+  padding-block: var(--space-20);
+}
+
+[data-ui="hero"][data-variant="center"] [data-part="eyebrow"] {
+  justify-self: center;
+}
+
+[data-ui="hero"][data-variant="center"] [data-part="actions"] {
+  justify-content: center;
+}
+
+/* ── Layout: split ──
+   Copy and media share the row; [data-part="content"] keeps the text column a
+   grid of its own so the inner rhythm matches the centred variant. */
+[data-ui="hero"][data-variant="split"] {
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: var(--space-12);
+  padding-block: var(--space-16);
+}
+
+[data-ui="hero"][data-variant="split"] [data-part="content"] {
+  display: grid;
+  gap: var(--space-4);
+  justify-items: start;
+}
+
+[data-ui="hero"][data-variant="split"] [data-part="headline"] {
+  font-size: var(--text-3xl);
+}
+
+/* ── Responsive ──
+   The split column collapses first; below the small breakpoint the whole hero
+   tightens its block padding so it never dominates a phone viewport. */
+@media (max-width: 1024px) {
+  [data-ui="hero"][data-variant="split"] {
+    grid-template-columns: 1fr;
+    gap: var(--space-8);
+  }
+}
+
+@media (max-width: 640px) {
+  [data-ui="hero"] {
+    padding-block: var(--space-12);
+    padding-inline: var(--space-4);
+  }
+
+  [data-ui="hero"][data-variant="center"] {
+    padding-block: var(--space-12);
+  }
+
+  [data-ui="hero"] [data-part="headline"] {
+    font-size: var(--text-3xl);
+  }
+
+  [data-ui="hero"] [data-part="description"] {
+    font-size: var(--text-base);
+  }
+
+  [data-ui="hero"] [data-part="actions"] {
+    inline-size: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

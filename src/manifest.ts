@@ -18,6 +18,10 @@ export interface ManifestState {
   attr: string;
   default?: boolean;
   transient?: boolean;
+  /** Part the state is set on when it is not the root (e.g. pricing's featured tier). */
+  applied_to?: string;
+  /** Why the state exists / when to set it — read by agents, not by the runtime. */
+  description?: string;
 }
 
 export interface ManifestA11y {

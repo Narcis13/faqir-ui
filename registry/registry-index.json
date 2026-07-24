@@ -1,6 +1,6 @@
 {
   "schema": "faqir-registry-index@1",
-  "count": 77,
+  "count": 81,
   "components": [
     {
       "name": "aspect-ratio",
@@ -1814,6 +1814,31 @@
       ]
     },
     {
+      "name": "feature-grid",
+      "kind": "pattern",
+      "layer": "patterns",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "feature-grid.css",
+          "sha256": "288bc995501791a501cde9d28f9f37a56be1072f3be0ddb706846a72bff2d84a"
+        },
+        {
+          "path": "feature-grid.html",
+          "sha256": "411518ffa7e3b7d588cae8ecba26c0fd8b20d2deb804757eb86320e434544757"
+        },
+        {
+          "path": "feature-grid.manifest.json",
+          "sha256": "984fe9bc7e570dd1e17fe806747587419dca72fc7115db94da065f73ae08ed46"
+        }
+      ],
+      "hash": "1943335c7e35b471f125d238bd2554ca6dd6c6c5066b599ac8ed3665f1ed5f1d",
+      "deps": [
+        "icon",
+        "button"
+      ]
+    },
+    {
       "name": "form-page",
       "kind": "pattern",
       "layer": "patterns",
@@ -1839,6 +1864,61 @@
         "radio-group",
         "textarea",
         "checkbox"
+      ]
+    },
+    {
+      "name": "hero",
+      "kind": "pattern",
+      "layer": "patterns",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "hero.css",
+          "sha256": "b54e15591776d0dc1d663b7b2e76f433ec911f6be86060bc74e6a7c660dc4a9a"
+        },
+        {
+          "path": "hero.html",
+          "sha256": "1ff4cdd01c23aaf77eb3290585c6239f443885790378d701b444a42b11276bb0"
+        },
+        {
+          "path": "hero.manifest.json",
+          "sha256": "4f59f710420b210fd5175812e8290154a8723b8df3d9dfd919bfc6b4ea8e7553"
+        }
+      ],
+      "hash": "f3d0dc5b98fe54322b9186a9e175a301a5a86d9d3c4bd6b3924de237e52a2a1d",
+      "deps": [
+        "badge",
+        "button",
+        "image"
+      ]
+    },
+    {
+      "name": "pricing",
+      "kind": "pattern",
+      "layer": "patterns",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "pricing.css",
+          "sha256": "fb9fa1e1bf6051f6450986149199907ad695d29643641e3ffe40a904974f0280"
+        },
+        {
+          "path": "pricing.html",
+          "sha256": "4a8b2c4b6c65a8c809be95b4eb03470cd676a1d34c80eda5b2de9d757fac3be7"
+        },
+        {
+          "path": "pricing.manifest.json",
+          "sha256": "7558a66b9b603c9bd4d064436f734098da076756dcc7fe9efd704cefffa67cdd"
+        }
+      ],
+      "hash": "d85c7b9f32b8a9278c770b78b90715e082f287d2595f99644afefbd28d78b353",
+      "deps": [
+        "card",
+        "badge",
+        "stat",
+        "separator",
+        "button",
+        "icon"
       ]
     },
     {
@@ -1897,6 +1977,33 @@
         "switch",
         "button",
         "dialog"
+      ]
+    },
+    {
+      "name": "site-footer",
+      "kind": "pattern",
+      "layer": "patterns",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "site-footer.css",
+          "sha256": "7bb8539230538f74ba29fd550978e5d19eb5e8965b894d39d749ebe0193e6834"
+        },
+        {
+          "path": "site-footer.html",
+          "sha256": "78acad491da916a45ec2ec041909db2ff5aa5980d4b303c48ec22f86674b0b79"
+        },
+        {
+          "path": "site-footer.manifest.json",
+          "sha256": "1e61dda46c84bc5b14622e85e184132f62d2b956fd926b4e34acfb8658fabe0e"
+        }
+      ],
+      "hash": "5b69eea189924e743ae82d583f93c871bb272b1e06cb99c6175752447d61ecda",
+      "deps": [
+        "nav",
+        "link",
+        "icon",
+        "separator"
       ]
     },
     {

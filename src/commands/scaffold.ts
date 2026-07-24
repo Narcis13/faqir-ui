@@ -1,6 +1,6 @@
 // faqir scaffold — generate full page templates
 
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { log } from "../utils/logger";
 import { configExists, readConfig, writeConfig } from "../utils/config";
@@ -11,6 +11,11 @@ import {
   generateDocumentScaffold,
   type DocumentScaffoldName,
 } from "../scaffolds/documents";
+import {
+  LANDING_COMPONENTS,
+  LANDING_PATTERNS,
+  generateLandingPage,
+} from "../scaffolds/landing";
 
 interface ScaffoldDef {
   name: string;
@@ -25,9 +30,9 @@ const SCAFFOLDS: Record<string, ScaffoldDef> = {
   "landing-page": {
     name: "landing-page",
     title: "Landing Page",
-    description: "Marketing landing page with hero, features, and CTA sections",
-    patterns: [],
-    components: ["button", "card", "separator", "grid", "stack", "surface", "badge"],
+    description: "Marketing landing page composed from the hero, feature-grid, pricing, and site-footer patterns",
+    patterns: [...LANDING_PATTERNS],
+    components: [...LANDING_COMPONENTS],
   },
   "admin-dashboard": {
     name: "admin-dashboard",
@@ -126,6 +131,26 @@ async function ensureComponentsInstalled(
   return [];
 }
 
+/**
+ * The stylesheet a component actually ships, from its manifest (`files.css`),
+ * falling back to `<name>.css` when a manifest is unreadable. Returns null when
+ * the component has no stylesheet at all.
+ */
+function stylesheetName(componentDir: string, name: string): string | null {
+  const manifestPath = join(componentDir, `${name}.manifest.json`);
+  if (existsSync(manifestPath)) {
+    try {
+      const files = JSON.parse(readFileSync(manifestPath, "utf8")).files as
+        | { css?: string }
+        | undefined;
+      if (files?.css) return existsSync(join(componentDir, files.css)) ? files.css : null;
+    } catch {
+      // Fall through to the conventional name.
+    }
+  }
+  return existsSync(join(componentDir, `${name}.css`)) ? `${name}.css` : null;
+}
+
 function cssLinks(components: string[], hasBundle: boolean, outputDir: string): string {
   if (hasBundle) {
     return `  <link rel="stylesheet" href="${outputDir}/faqir.bundle.css">`;
@@ -143,7 +168,11 @@ function cssLinks(components: string[], hasBundle: boolean, outputDir: string): 
       existsSync(join(registryPath, candidate, comp)),
     );
     if (!layer) continue;
-    links.push(`  <link rel="stylesheet" href="${outputDir}/${layer}/${comp}/${comp}.css">`);
+    // The stylesheet is not always `<name>.css` — the icon primitive ships the
+    // generated `icons.css`, and the manifest is the source of truth for it.
+    const sheet = stylesheetName(join(registryPath, layer, comp), comp);
+    if (!sheet) continue;
+    links.push(`  <link rel="stylesheet" href="${outputDir}/${layer}/${comp}/${sheet}">`);
   }
 
   return links.join("\n");
@@ -168,81 +197,6 @@ async function applyTheme(
   await copyFile(source, join(outputDir, "tokens", "theme.css"));
   config.theme = name;
   await writeConfig(config, cwd);
-}
-
-function generateLandingPage(title: string, hasBundle: boolean, outputDir: string): string {
-  const components = ["button", "card", "separator", "grid", "stack", "surface", "badge"];
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title}</title>
-${cssLinks(components, hasBundle, outputDir)}
-  <style>
-    body { font-family: var(--font-sans); color: var(--color-fg); background: var(--color-bg); }
-    [data-part="hero"] { text-align: center; padding: var(--space-20) var(--space-6); }
-    [data-part="hero"] h1 { font-size: var(--text-4xl); font-weight: var(--weight-bold); margin-bottom: var(--space-4); }
-    [data-part="hero"] p { font-size: var(--text-lg); color: var(--color-fg-muted); max-width: 40rem; margin: 0 auto var(--space-8); }
-    [data-part="hero-actions"] { display: flex; gap: var(--space-3); justify-content: center; }
-    [data-part="features"] { padding: var(--space-16) var(--space-6); max-width: 72rem; margin: 0 auto; }
-    [data-part="features"] h2 { text-align: center; font-size: var(--text-3xl); font-weight: var(--weight-bold); margin-bottom: var(--space-12); }
-    [data-part="cta"] { text-align: center; padding: var(--space-16) var(--space-6); background: var(--color-bg-subtle); }
-    [data-part="cta"] h2 { font-size: var(--text-2xl); font-weight: var(--weight-bold); margin-bottom: var(--space-4); }
-    [data-part="cta"] p { color: var(--color-fg-muted); margin-bottom: var(--space-6); }
-    [data-part="footer"] { text-align: center; padding: var(--space-8) var(--space-6); color: var(--color-fg-muted); font-size: var(--text-sm); }
-  </style>
-</head>
-<body>
-
-  <!-- Hero Section -->
-  <section data-part="hero">
-    <span data-ui="badge" data-variant="secondary">New Release</span>
-    <h1>Build something amazing</h1>
-    <p>A modern solution for your business needs. Fast, reliable, and built for scale.</p>
-    <div data-part="hero-actions">
-      <button data-ui="button" data-variant="primary" data-size="lg">Get Started</button>
-      <button data-ui="button" data-variant="outline" data-size="lg">Learn More</button>
-    </div>
-  </section>
-
-  <hr data-ui="separator">
-
-  <!-- Features -->
-  <section data-part="features">
-    <h2>Features</h2>
-    <div data-ui="grid" data-variant="3col" style="gap: var(--space-6);">
-      <div data-ui="card">
-        <div data-part="header"><h3 data-part="title">Fast Performance</h3></div>
-        <div data-part="body"><p>Built for speed with optimized delivery and minimal overhead.</p></div>
-      </div>
-      <div data-ui="card">
-        <div data-part="header"><h3 data-part="title">Secure by Default</h3></div>
-        <div data-part="body"><p>Enterprise-grade security with encryption and access controls.</p></div>
-      </div>
-      <div data-ui="card">
-        <div data-part="header"><h3 data-part="title">Easy Integration</h3></div>
-        <div data-part="body"><p>Plug in to your existing workflow with our flexible API.</p></div>
-      </div>
-    </div>
-  </section>
-
-  <hr data-ui="separator">
-
-  <!-- CTA -->
-  <section data-part="cta">
-    <h2>Ready to get started?</h2>
-    <p>Join thousands of teams already using our platform.</p>
-    <button data-ui="button" data-variant="primary" data-size="lg">Start Free Trial</button>
-  </section>
-
-  <!-- Footer -->
-  <footer data-part="footer">
-    <p>&copy; 2025 Your Company. All rights reserved.</p>
-  </footer>
-
-</body>
-</html>`;
 }
 
 function generateAdminDashboard(title: string, hasBundle: boolean, outputDir: string): string {
@@ -620,7 +574,11 @@ export async function scaffold(args: string[]): Promise<void> {
   let html: string;
   switch (name) {
     case "landing-page":
-      html = generateLandingPage(scaffoldDef.title, hasBundle, config.output_dir);
+      html = generateLandingPage({
+        title: scaffoldDef.title,
+        stylesheets: cssLinks(allNeeded, hasBundle, config.output_dir),
+        registryPath: getRegistryPath(),
+      });
       break;
     case "admin-dashboard":
       html = generateAdminDashboard(scaffoldDef.title, hasBundle, config.output_dir);
