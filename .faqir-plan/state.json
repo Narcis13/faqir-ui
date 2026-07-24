@@ -7,7 +7,7 @@
     {
       "id": "0.7-07",
       "completed": "2026-07-24",
-      "commit": "PENDING",
+      "commit": "f3dfa08",
       "summary": "Recipe carousel — a CSS scroll-snap strip with a deliberately tiny enhancement layer. CSS does all the sliding (overflow-x:auto + scroll-snap-type:inline mandatory, slides scroll-snap-align:start, viewport tabindex=0), so the component is complete with JS disabled; every inert control ([data-part=controls], [data-part=dots]) ships `hidden` and is un-hidden on init and re-hidden by destroy(). The 1.40 KB gzip controller (stated budget 1.5 KB in the manifest's js_budget block, pinned by a test that reads the number from the manifest) adds only: prev/next + dot navigation, current-slide tracking by rAF-throttled scroll math (no IntersectionObserver), the loop-or-stop boundary contract (data-loop wraps; default disables the end button), a role=status live region announcing 'Slide N of M', faqir:change, and reduced-motion honoring via an explicit behavior:'instant'. Scrolling uses the physical delta slide.left-viewport.left added to scrollLeft (RTL-safe); only current-slide detection is direction-aware. 24 new tests. Verified in real Chrome against a faqir init+add project: button/dot targets land exactly on 604/1208 px, tracking follows user scrolls and mandatory-snap re-snapping, and the script-less page is a fully working focusable snap strip with no controls rendered. Cascade regenerated: build-core (29 controllers), registry-index (77 components), faqir-creator skill, vue+react bindings + snapshots; guard counts 28→29; engine+controllers budget 42→43 KB (measured 42.35). Full suite 2306 pass / 0 fail (+26); typecheck, audit, size and all drift gates green."
     },
     {
