@@ -2,7 +2,7 @@
 
 # Faqir Patterns Reference
 
-13 patterns, each with its anatomy tree, variant table, and safe/unsafe transforms — all derived from the component manifest.
+15 patterns, each with its anatomy tree, variant table, and safe/unsafe transforms — all derived from the component manifest.
 
 ## auth-form
 
@@ -369,6 +369,91 @@ Landing-page hero section composing badge + heading + description + call-to-acti
 - **A11y:** keys: Tab
 - **Required ARIA:** `aria-labelledby on the section pointing at the headline id`; `alt text on any image inside the media slot`; `descriptive link text on every action (never 'click here')`
 
+## inbox
+
+_kind: pattern · category: composite_
+
+List-detail split view (messages, tickets, conversations) driven entirely by declarative directives: one l-data holds the selected id, ':hidden' bindings swap the detail pane, ':data-state' marks which pane is active, and the list is l-for-shaped so it can be bound to an l-source collection without changing the markup. Below the small breakpoint it collapses to the active pane with back navigation. Zero custom JavaScript — it needs faqir-core.js, nothing else.
+
+```html
+<div data-ui="inbox" data-state="detail" l-data="{ selected: '{first_id}' }" :data-state="selected === null ? 'list' : 'detail'">
+  <section data-part="list-pane" aria-labelledby="{id}-list-heading">
+    <div data-part="list-header">
+      <h2 data-part="list-heading" id="{id}-list-heading">{mailbox}</h2>
+      <span data-ui="badge" data-variant="primary">{unread}</span>
+    </div>
+    <ul data-part="list">
+      <li>
+        <button type="button" data-part="item" data-state="selected" aria-current="true" :data-state="selected === '{first_id}' ? 'selected' : null" :aria-current="selected === '{first_id}' ? 'true' : null" @click="selected = '{first_id}'">
+          <span data-ui="avatar" data-size="sm"><span data-part="fallback">{initials}</span></span>
+          <span data-part="item-sender">{sender}</span>
+          <span data-part="item-time">{time}</span>
+          <span data-part="item-subject">{subject}</span>
+          <span data-part="item-preview">{preview}</span>
+        </button>
+      </li>
+    </ul>
+  </section>
+  <div data-part="detail-pane">
+    <button type="button" data-ui="button" data-part="back" @click="selected = null">{back_label}</button>
+    <article data-part="detail" aria-labelledby="{first_id}-subject" :hidden="selected !== '{first_id}'">
+      <h3 data-part="detail-subject" id="{first_id}-subject">{subject}</h3>
+      <div data-part="detail-meta">
+        <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center">
+          <span data-ui="avatar" data-size="sm"><span data-part="fallback">{initials}</span></span>
+          <span>{meta}</span>
+        </div>
+      </div>
+      <div data-part="detail-body">{body}</div>
+      <div data-part="detail-actions">
+        <button data-ui="button" data-variant="primary">{primary_action}</button>
+      </div>
+    </article>
+    <div data-part="empty" hidden :hidden="selected !== null">
+      <div data-ui="empty-state" data-size="sm" role="status">
+        <h3 data-part="title">{empty_title}</h3>
+        <p data-part="description">{empty_description}</p>
+      </div>
+    </div>
+  </div>
+</div>
+```
+
+**Anatomy**
+
+```text
+[data-ui='inbox']  ·  <div> · content: slots
+├─ [data-part='list-pane']  <section>  required  — The message column. Label it with aria-labelledby pointing at the list heading, and bind :data-state to active/inactive — below 640px the inactive pane is hidden
+├─ [data-part='list-header']  <div>  required  — Row above the list holding the heading and a count badge or filter control
+├─ [data-part='list-heading']  <h2>  required  — Name of the mailbox or queue. Give it an id and point the list pane's aria-labelledby at it
+├─ [data-part='search']  <input>  optional  — Optional search field over the list. A bare input primitive with its own aria-label — the pattern does no filtering itself
+├─ [data-part='status']  <p>  optional  — Loading line for a server-bound list — bind :hidden to the source's <name>Loading flag and give it role='status'
+├─ [data-part='error']  <p>  optional  — Error line for a server-bound list — bind :hidden and l-text to the source's <name>Error string and give it role='alert'
+├─ [data-part='list']  <ul>  required  — The message list. A real <ul>; each <li> holds one item button, authored or produced by an l-for template
+├─ [data-part='item']  <button>  required  — One message row, and a real <button>: selecting is @click='selected = <id>'. The open row carries data-state='selected' AND aria-current='true' so the selection is not colour-only
+├─ [data-part='item-sender']  <span>  required  — Who the message is from, in the row
+├─ [data-part='item-time']  <span>  required  — When it arrived, already formatted for display (the pattern never formats dates)
+├─ [data-part='item-subject']  <span>  required  — Subject line of the row, truncated to one line
+├─ [data-part='item-preview']  <span>  optional  — First lines of the body, clamped to two lines
+├─ [data-part='detail-pane']  <div>  required  — The reading column: the back button, one detail per message, and the empty state. Bind :data-state to active/inactive like the list pane. Not a landmark — each detail names itself
+├─ [data-part='back']  <button>  required  — Clears the selection ('@click=selected = null'), which makes the list pane active again. Hidden by CSS above 640px, where both panes are visible and there is nothing to go back to
+├─ [data-part='detail']  <article>  required  — One message, shown only when it is the selected one (':hidden=selected !== <id>'). Authored details also carry a static hidden attribute as the pre-boot guard
+├─ [data-part='detail-subject']  <h3>  required  — Subject of the open message. Give it an id and point the detail's aria-labelledby at it
+├─ [data-part='detail-meta']  <div>  required  — Sender, address and timestamp of the open message. It WRAPS the horizontal stack that lines the avatar up with the text — put the part on the wrapper, because a data-part inside the stack would belong to the stack
+├─ [data-part='detail-body']  <div>  optional  — The message body. Omit it when the body lives in a nested tabs panel instead — a data-part inside tabs would belong to tabs, not to the inbox
+├─ [data-part='detail-actions']  <div>  required  — Reply/archive row, pinned to the bottom of the detail
+└─ [data-part='empty']  <div>  required  — Shown when nothing is selected (':hidden=selected !== null'). Wraps the empty-state pattern; it is the wrapper, not the empty-state itself, that carries the part
+```
+
+**Variants**
+
+_No variants._
+
+- **Safe transforms:** `add-message`, `remove-message`, `change-the-initially-selected-message`, `start-with-nothing-selected`, `swap-the-authored-rows-for-an-l-for-template`, `bind-the-list-to-an-l-source-collection`, `add-a-search-field`, `add-tabs-inside-a-detail`, `change-the-detail-actions`
+- **Unsafe (never do):** `replace-the-item-buttons-with-clickable-divs`, `signal-the-selected-row-with-colour-only`, `add-inbox-data-parts-inside-a-nested-tabs-or-empty-state`, `remove-the-back-button`, `drop-the-static-hidden-guard-from-an-authored-detail`, `add-custom-script`
+- **A11y:** keys: Tab, Enter / Space on a row, Enter / Space on the back button
+- **Required ARIA:** `aria-labelledby on the list pane pointing at the list heading id`; `each message row is a real button, so it is one tab stop with Enter/Space activation`; `aria-current='true' on the selected row, alongside data-state='selected'`; `aria-labelledby on each authored detail pointing at its own subject id`; `role='status' on the loading line and role='alert' on the error line of a server-bound list`; `an aria-label on the search input — the pattern ships no visible label for it`
+
 ## pricing
 
 _kind: pattern · category: marketing_
@@ -602,6 +687,82 @@ Marketing site footer: brand block with social links, titled link columns built 
 - **Unsafe (never do):** `replace-footer-element-with-div`, `remove-accessible-name-from-a-nav`, `remove-aria-label-from-icon-only-links`, `promote-column-titles-into-the-page-outline`, `hardcode-a-copyright-year`, `add-custom-script`
 - **A11y:** keys: Tab
 - **Required ARIA:** `the root is a <footer> element (contentinfo landmark)`; `every nested nav has an accessible name via aria-labelledby (column title) or aria-label`; `icon-only social links carry aria-label; their icons carry aria-hidden='true'`
+
+## stats-dashboard
+
+_kind: pattern · category: composite_
+
+Reporting page composing a KPI row (the grid primitive filled with stats) and card panels, one of which holds the table recipe with its formatting contract — data-format columns, data-value cells and a live-aggregating tfoot. Composition only: this pattern ships no JavaScript of its own; loading faqir-core.js (which bundles table.js) makes the table sortable and its totals live.
+
+```html
+<section data-ui="stats-dashboard" aria-labelledby="{id}-heading">
+  <h2 data-part="heading" id="{id}-heading">{heading}</h2>
+  <p data-part="description">{description}</p>
+  <p data-part="period">{period}</p>
+  <div data-ui="grid" data-part="metrics" data-cols="4" data-cols-md="2" data-gap="6">
+    <div data-ui="stat" data-variant="card" data-trend="{trend}">
+      <span data-part="label">{metric_label}</span>
+      <span data-part="value">{metric_value}</span>
+      <span data-part="change">{metric_change}</span>
+    </div>
+  </div>
+  <div data-part="reports">
+    <section data-ui="card" data-part="report" aria-labelledby="{id}-panel">
+      <div data-part="header">
+        <h3 data-part="title" id="{id}-panel">{panel_title}</h3>
+      </div>
+      <div data-part="body">
+        <div data-ui="table" data-size="sm" data-currency="{currency}">
+          <table data-part="table">
+            <caption>{table_caption}</caption>
+            <thead data-part="thead">
+              <tr data-part="tr">
+                <th data-part="th" scope="col" data-sortable aria-sort="none">{column}</th>
+                <th data-part="th" scope="col" data-align="right" data-format="currency">{amount_column}</th>
+              </tr>
+            </thead>
+            <tbody data-part="tbody">
+              <tr data-part="tr">
+                <td data-part="td">{row_label}</td>
+                <td data-part="td" data-align="right" data-format="currency" data-value="{row_amount}" data-aggregate="sum">{row_amount_formatted}</td>
+              </tr>
+            </tbody>
+            <tfoot data-part="tfoot">
+              <tr data-part="tr">
+                <td data-part="td">{total_label}</td>
+                <td data-part="td" data-align="right" data-format="currency" data-aggregate="sum" data-col="1">{total}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+  <p data-part="footnote">{footnote}</p>
+</section>
+```
+
+**Anatomy**
+
+```text
+[data-ui='stats-dashboard']  ·  <section> · content: slots
+├─ [data-part='heading']  <h2>  required  — Report title. Give it an id and point the section's aria-labelledby at it
+├─ [data-part='description']  <p>  optional  — Optional intro paragraph. Must be a direct child of the section — the panels' own card descriptions are card slots, not this one
+├─ [data-part='period']  <p>  optional  — The reporting period and its comparison basis, e.g. '1–30 June 2026 · compared with May'. Rendered as muted metadata, not prose
+├─ [data-part='metrics']  <div>  required  — The KPI row. It is itself a data-ui='grid', so column count and the responsive collapse come from grid's data-cols/data-cols-md; the stats inside carry no data-part
+├─ [data-part='reports']  <div>  required  — Region holding the report panels. Two sit side by side (2fr 1fr); a single one spans the full width
+├─ [data-part='report']  <section>  required  — One report panel — a nested data-ui='card'. Inside it you address the CARD's slots (header, title, description, body, footer), never this pattern's: the nearest data-ui ancestor owns a data-part. Named `report` rather than `panel` because the audit's aria-describedby rule treats a [data-part='panel'] as a dialog's describable surface
+└─ [data-part='footnote']  <p>  optional  — Fine print under the report panels (what the numbers exclude, how they are counted)
+```
+
+**Variants**
+
+_No variants._
+
+- **Safe transforms:** `add-metric`, `remove-metric`, `change-metric-column-count-on-the-grid`, `add-panel`, `remove-panel`, `add-table-column`, `add-table-row`, `change-number-formats-and-currency`, `add-footnote`
+- **Unsafe (never do):** `add-stats-dashboard-data-parts-inside-a-panel-card`, `add-a-data-part-to-a-metric-stat`, `remove-the-table-caption`, `remove-aria-labelledby`, `format-a-cell-differently-from-its-column-header`, `add-custom-script`
+- **A11y:** keys: Tab, Enter / Space on a sortable header
+- **Required ARIA:** `aria-labelledby on the section pointing at the heading id`; `aria-labelledby on each report panel pointing at its own title id`; `a <caption> on every report table saying what it counts and over which period`; `scope='col' on every table header cell`; `the trend of a stat is stated in its change text, not only by the data-trend colour`
 
 ## wizard
 

@@ -1,0 +1,253 @@
+/* @ui:component inbox */
+/* @ui:tokens color-bg color-bg-subtle color-bg-muted color-fg color-fg-muted color-border color-destructive color-primary color-primary-subtle color-ring space-1 space-2 space-3 space-4 space-6 space-px font-sans text-xs text-sm text-base text-xl weight-medium weight-semibold leading-tight leading-normal leading-relaxed radius-md radius-lg */
+
+/* ── Root ──
+   Two panes side by side. Each pane's `data-state` mirrors the selection
+   (active = this is the pane worth showing); above the small breakpoint it
+   changes nothing, below it decides which single pane is on screen. */
+[data-ui="inbox"] {
+  display: grid;
+  grid-template-columns: 22rem 1fr;
+  align-items: stretch;
+  inline-size: 100%;
+  block-size: 32rem;
+  overflow: hidden;
+  border: var(--space-px, 1px) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  font-family: var(--font-sans, system-ui, sans-serif);
+  color: var(--color-fg);
+  background: var(--color-bg);
+}
+
+/* ── List pane ── */
+[data-ui="inbox"] [data-part="list-pane"] {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-inline-size: 0;
+  padding: var(--space-4);
+  overflow-y: auto;
+  border-inline-end: var(--space-px, 1px) solid var(--color-border);
+  background: var(--color-bg-subtle);
+}
+
+[data-ui="inbox"] [data-part="list-header"] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+[data-ui="inbox"] [data-part="list-heading"] {
+  margin: 0;
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tight);
+}
+
+[data-ui="inbox"] [data-part="search"] {
+  inline-size: 100%;
+}
+
+/* Loading and error lines above the list — both live in the flow, so the list
+   never jumps when one appears. */
+[data-ui="inbox"] [data-part="status"],
+[data-ui="inbox"] [data-part="error"] {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  color: var(--color-fg-muted);
+}
+
+[data-ui="inbox"] [data-part="error"] {
+  color: var(--color-destructive);
+}
+
+/* Scoped to the list pane on purpose: the nested tabs in a detail own a
+   [data-part="list"] too, and an unscoped rule here would restyle its tablist. */
+[data-ui="inbox"] [data-part="list-pane"] [data-part="list"] {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* ── Message row ──
+   A real <button>: one tab stop per message, Enter/Space for free, and the
+   selected row is marked with aria-current as well as a colour. */
+[data-ui="inbox"] [data-part="item"] {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: var(--space-1) var(--space-3);
+  inline-size: 100%;
+  padding-block: var(--space-2);
+  padding-inline: var(--space-3);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+[data-ui="inbox"] [data-part="item"]:hover {
+  background: var(--color-bg-muted);
+}
+
+[data-ui="inbox"] [data-part="item"]:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+}
+
+[data-ui="inbox"] [data-part="item"][data-state="selected"] {
+  background: var(--color-primary-subtle);
+}
+
+[data-ui="inbox"] [data-part="item"] [data-ui="avatar"] {
+  grid-row: 1 / 3;
+}
+
+[data-ui="inbox"] [data-part="item-sender"] {
+  min-inline-size: 0;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-tight);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+[data-ui="inbox"] [data-part="item-time"] {
+  font-size: var(--text-xs);
+  line-height: var(--leading-tight);
+  color: var(--color-fg-muted);
+  white-space: nowrap;
+}
+
+[data-ui="inbox"] [data-part="item-subject"] {
+  grid-column: 2 / -1;
+  min-inline-size: 0;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tight);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+[data-ui="inbox"] [data-part="item-preview"] {
+  grid-column: 2 / -1;
+  min-inline-size: 0;
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  color: var(--color-fg-muted);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+/* ── Detail pane ── */
+[data-ui="inbox"] [data-part="detail-pane"] {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-inline-size: 0;
+  padding: var(--space-6);
+  overflow-y: auto;
+}
+
+/* Back navigation exists only in the collapsed, single-pane layout: with both
+   panes on screen there is nothing to go back to. */
+[data-ui="inbox"] [data-part="back"] {
+  display: none;
+  align-self: start;
+}
+
+[data-ui="inbox"] [data-part="detail"] {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-inline-size: 0;
+}
+
+[data-ui="inbox"] [data-part="detail-subject"] {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tight);
+  text-wrap: balance;
+}
+
+[data-ui="inbox"] [data-part="detail-meta"] {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  color: var(--color-fg-muted);
+}
+
+[data-ui="inbox"] [data-part="detail-body"] {
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+}
+
+[data-ui="inbox"] [data-part="detail-body"] p,
+[data-ui="inbox"] [data-part="detail"] [data-part="panel"] p {
+  margin: 0;
+  margin-block-end: var(--space-3);
+}
+
+[data-ui="inbox"] [data-part="detail-actions"] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-block-start: auto;
+  padding-block-start: var(--space-2);
+}
+
+/* ── Empty state ──
+   Nothing selected: the pane says so instead of going blank. */
+[data-ui="inbox"] [data-part="empty"] {
+  display: grid;
+  place-items: center;
+  block-size: 100%;
+}
+
+/* ── Responsive ──
+   The list narrows at the medium breakpoint, then the layout collapses to a
+   single pane: the list while nothing is selected, the message once one is —
+   with [data-part="back"] as the way out. */
+@media (max-width: 1024px) {
+  [data-ui="inbox"] {
+    grid-template-columns: 17rem 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  [data-ui="inbox"] {
+    grid-template-columns: 1fr;
+    block-size: auto;
+    min-block-size: 24rem;
+  }
+
+  [data-ui="inbox"] [data-part="list-pane"] {
+    border-inline-end: 0;
+  }
+
+  /* One pane fits, so the inactive one steps aside: the list while a message
+     is open, the reading pane while none is. */
+  [data-ui="inbox"] [data-part="list-pane"][data-state="inactive"],
+  [data-ui="inbox"] [data-part="detail-pane"][data-state="inactive"] {
+    display: none;
+  }
+
+  [data-ui="inbox"] [data-part="back"] {
+    display: inline-flex;
+  }
+
+  [data-ui="inbox"] [data-part="detail-pane"] {
+    padding: var(--space-4);
+  }
+}

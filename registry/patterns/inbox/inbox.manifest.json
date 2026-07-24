@@ -1,0 +1,266 @@
+{
+  "$schema": "../../../manifest.schema.json",
+  "name": "inbox",
+  "version": "1.0.0",
+  "kind": "pattern",
+  "category": "composite",
+  "description": "List-detail split view (messages, tickets, conversations) driven entirely by declarative directives: one l-data holds the selected id, ':hidden' bindings swap the detail pane, ':data-state' marks which pane is active, and the list is l-for-shaped so it can be bound to an l-source collection without changing the markup. Below the small breakpoint it collapses to the active pane with back navigation. Zero custom JavaScript — it needs faqir-core.js, nothing else.",
+
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='inbox']",
+    "content_model": "slots"
+  },
+
+  "slots": {
+    "list-pane": {
+      "selector": "[data-part='list-pane']",
+      "required": true,
+      "tag_hint": "section",
+      "description": "The message column. Label it with aria-labelledby pointing at the list heading, and bind :data-state to active/inactive — below 640px the inactive pane is hidden"
+    },
+    "list-header": {
+      "selector": "[data-part='list-header']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "Row above the list holding the heading and a count badge or filter control"
+    },
+    "list-heading": {
+      "selector": "[data-part='list-heading']",
+      "required": true,
+      "tag_hint": "h2",
+      "description": "Name of the mailbox or queue. Give it an id and point the list pane's aria-labelledby at it"
+    },
+    "search": {
+      "selector": "[data-part='search']",
+      "required": false,
+      "tag_hint": "input",
+      "description": "Optional search field over the list. A bare input primitive with its own aria-label — the pattern does no filtering itself"
+    },
+    "status": {
+      "selector": "[data-part='status']",
+      "required": false,
+      "tag_hint": "p",
+      "description": "Loading line for a server-bound list — bind :hidden to the source's <name>Loading flag and give it role='status'"
+    },
+    "error": {
+      "selector": "[data-part='error']",
+      "required": false,
+      "tag_hint": "p",
+      "description": "Error line for a server-bound list — bind :hidden and l-text to the source's <name>Error string and give it role='alert'"
+    },
+    "list": {
+      "selector": "[data-part='list']",
+      "required": true,
+      "tag_hint": "ul",
+      "description": "The message list. A real <ul>; each <li> holds one item button, authored or produced by an l-for template"
+    },
+    "item": {
+      "selector": "[data-part='item']",
+      "required": true,
+      "tag_hint": "button",
+      "description": "One message row, and a real <button>: selecting is @click='selected = <id>'. The open row carries data-state='selected' AND aria-current='true' so the selection is not colour-only"
+    },
+    "item-sender": {
+      "selector": "[data-part='item-sender']",
+      "required": true,
+      "tag_hint": "span",
+      "description": "Who the message is from, in the row"
+    },
+    "item-time": {
+      "selector": "[data-part='item-time']",
+      "required": true,
+      "tag_hint": "span",
+      "description": "When it arrived, already formatted for display (the pattern never formats dates)"
+    },
+    "item-subject": {
+      "selector": "[data-part='item-subject']",
+      "required": true,
+      "tag_hint": "span",
+      "description": "Subject line of the row, truncated to one line"
+    },
+    "item-preview": {
+      "selector": "[data-part='item-preview']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "First lines of the body, clamped to two lines"
+    },
+    "detail-pane": {
+      "selector": "[data-part='detail-pane']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "The reading column: the back button, one detail per message, and the empty state. Bind :data-state to active/inactive like the list pane. Not a landmark — each detail names itself"
+    },
+    "back": {
+      "selector": "[data-part='back']",
+      "required": true,
+      "tag_hint": "button",
+      "description": "Clears the selection ('@click=selected = null'), which makes the list pane active again. Hidden by CSS above 640px, where both panes are visible and there is nothing to go back to"
+    },
+    "detail": {
+      "selector": "[data-part='detail']",
+      "required": true,
+      "tag_hint": "article",
+      "description": "One message, shown only when it is the selected one (':hidden=selected !== <id>'). Authored details also carry a static hidden attribute as the pre-boot guard"
+    },
+    "detail-subject": {
+      "selector": "[data-part='detail-subject']",
+      "required": true,
+      "tag_hint": "h3",
+      "description": "Subject of the open message. Give it an id and point the detail's aria-labelledby at it"
+    },
+    "detail-meta": {
+      "selector": "[data-part='detail-meta']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "Sender, address and timestamp of the open message. It WRAPS the horizontal stack that lines the avatar up with the text — put the part on the wrapper, because a data-part inside the stack would belong to the stack"
+    },
+    "detail-body": {
+      "selector": "[data-part='detail-body']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "The message body. Omit it when the body lives in a nested tabs panel instead — a data-part inside tabs would belong to tabs, not to the inbox"
+    },
+    "detail-actions": {
+      "selector": "[data-part='detail-actions']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "Reply/archive row, pinned to the bottom of the detail"
+    },
+    "empty": {
+      "selector": "[data-part='empty']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "Shown when nothing is selected (':hidden=selected !== null'). Wraps the empty-state pattern; it is the wrapper, not the empty-state itself, that carries the part"
+    }
+  },
+
+  "variants": {},
+
+  "states": {
+    "active": {
+      "attr": "data-state=\"active\"",
+      "applied_to": "list-pane, detail-pane",
+      "description": "This pane is the one worth showing: the list while nothing is selected, the reading pane once something is. Above 640px it changes nothing — both panes are visible"
+    },
+    "inactive": {
+      "attr": "data-state=\"inactive\"",
+      "applied_to": "list-pane, detail-pane",
+      "description": "The other pane. Below 640px, where there is room for one, the inactive pane is display:none — that IS the responsive collapse"
+    },
+    "selected": {
+      "attr": "data-state=\"selected\"",
+      "applied_to": "item",
+      "description": "The open message's row. Pair it with aria-current='true' so the selection is not signalled by colour alone"
+    }
+  },
+
+  "a11y": {
+    "required_attrs": [
+      "aria-labelledby on the list pane pointing at the list heading id",
+      "each message row is a real button, so it is one tab stop with Enter/Space activation",
+      "aria-current='true' on the selected row, alongside data-state='selected'",
+      "aria-labelledby on each authored detail pointing at its own subject id",
+      "role='status' on the loading line and role='alert' on the error line of a server-bound list",
+      "an aria-label on the search input — the pattern ships no visible label for it"
+    ],
+    "keyboard": {
+      "Tab": "move through the search field, the message rows, and the actions of the open message",
+      "Enter / Space on a row": "open that message (native button activation)",
+      "Enter / Space on the back button": "clear the selection and, in the collapsed layout, return to the list"
+    }
+  },
+
+  "tokens_used": [
+    "color-bg", "color-bg-subtle", "color-bg-muted", "color-fg", "color-fg-muted",
+    "color-border", "color-destructive", "color-primary-subtle", "color-ring",
+    "space-1", "space-2", "space-3", "space-4", "space-6", "space-px",
+    "font-sans", "text-xs", "text-sm", "text-base", "text-xl",
+    "weight-medium", "weight-semibold", "leading-tight", "leading-normal", "leading-relaxed",
+    "radius-md", "radius-lg"
+  ],
+
+  "templates": {
+    "html": "<div data-ui=\"inbox\" data-state=\"detail\" l-data=\"{ selected: '{first_id}' }\" :data-state=\"selected === null ? 'list' : 'detail'\">\n  <section data-part=\"list-pane\" aria-labelledby=\"{id}-list-heading\">\n    <div data-part=\"list-header\">\n      <h2 data-part=\"list-heading\" id=\"{id}-list-heading\">{mailbox}</h2>\n      <span data-ui=\"badge\" data-variant=\"primary\">{unread}</span>\n    </div>\n    <ul data-part=\"list\">\n      <li>\n        <button type=\"button\" data-part=\"item\" data-state=\"selected\" aria-current=\"true\" :data-state=\"selected === '{first_id}' ? 'selected' : null\" :aria-current=\"selected === '{first_id}' ? 'true' : null\" @click=\"selected = '{first_id}'\">\n          <span data-ui=\"avatar\" data-size=\"sm\"><span data-part=\"fallback\">{initials}</span></span>\n          <span data-part=\"item-sender\">{sender}</span>\n          <span data-part=\"item-time\">{time}</span>\n          <span data-part=\"item-subject\">{subject}</span>\n          <span data-part=\"item-preview\">{preview}</span>\n        </button>\n      </li>\n    </ul>\n  </section>\n  <div data-part=\"detail-pane\">\n    <button type=\"button\" data-ui=\"button\" data-part=\"back\" @click=\"selected = null\">{back_label}</button>\n    <article data-part=\"detail\" aria-labelledby=\"{first_id}-subject\" :hidden=\"selected !== '{first_id}'\">\n      <h3 data-part=\"detail-subject\" id=\"{first_id}-subject\">{subject}</h3>\n      <div data-part=\"detail-meta\">\n        <div data-ui=\"stack\" data-variant=\"horizontal\" data-gap=\"3\" data-align=\"center\">\n          <span data-ui=\"avatar\" data-size=\"sm\"><span data-part=\"fallback\">{initials}</span></span>\n          <span>{meta}</span>\n        </div>\n      </div>\n      <div data-part=\"detail-body\">{body}</div>\n      <div data-part=\"detail-actions\">\n        <button data-ui=\"button\" data-variant=\"primary\">{primary_action}</button>\n      </div>\n    </article>\n    <div data-part=\"empty\" hidden :hidden=\"selected !== null\">\n      <div data-ui=\"empty-state\" data-size=\"sm\" role=\"status\">\n        <h3 data-part=\"title\">{empty_title}</h3>\n        <p data-part=\"description\">{empty_description}</p>\n      </div>\n    </div>\n  </div>\n</div>",
+    "html_source": "<div data-ui=\"inbox\" data-state=\"list\" l-data=\"{ selected: null }\" l-source:messages=\"{endpoint}\" :data-state=\"selected === null ? 'list' : 'detail'\">\n  <section data-part=\"list-pane\" aria-labelledby=\"{id}-list-heading\">\n    <div data-part=\"list-header\">\n      <h2 data-part=\"list-heading\" id=\"{id}-list-heading\">{mailbox}</h2>\n      <span data-ui=\"badge\" data-variant=\"secondary\" l-text=\"messages.length + ' messages'\">0 messages</span>\n    </div>\n    <p data-part=\"status\" role=\"status\" hidden :hidden=\"!messagesLoading\">Loading messages…</p>\n    <p data-part=\"error\" role=\"alert\" hidden :hidden=\"!messagesError\" l-text=\"messagesError\"></p>\n    <ul data-part=\"list\">\n      <template l-for=\"message in messages\" l-key=\"message.id\">\n        <li>\n          <button type=\"button\" data-part=\"item\" :data-state=\"selected === message.id ? 'selected' : null\" :aria-current=\"selected === message.id ? 'true' : null\" @click=\"selected = message.id\">\n            <span data-ui=\"avatar\" data-size=\"sm\"><span data-part=\"fallback\" l-text=\"message.initials\"></span></span>\n            <span data-part=\"item-sender\" l-text=\"message.sender\"></span>\n            <span data-part=\"item-time\" l-text=\"message.time\"></span>\n            <span data-part=\"item-subject\" l-text=\"message.subject\"></span>\n            <span data-part=\"item-preview\" l-text=\"message.preview\"></span>\n          </button>\n        </li>\n      </template>\n    </ul>\n  </section>\n  <div data-part=\"detail-pane\">\n    <button type=\"button\" data-ui=\"button\" data-part=\"back\" @click=\"selected = null\">{back_label}</button>\n    <template l-for=\"message in messages\" l-key=\"message.id\">\n      <article data-part=\"detail\" :hidden=\"selected !== message.id\">\n        <h3 data-part=\"detail-subject\" l-text=\"message.subject\"></h3>\n        <div data-part=\"detail-meta\">\n          <div data-ui=\"stack\" data-variant=\"horizontal\" data-gap=\"3\" data-align=\"center\">\n            <span data-ui=\"avatar\" data-size=\"sm\"><span data-part=\"fallback\" l-text=\"message.initials\"></span></span>\n            <span l-text=\"message.sender + ' · ' + message.time\"></span>\n          </div>\n        </div>\n        <div data-part=\"detail-body\" l-text=\"message.body\"></div>\n        <div data-part=\"detail-actions\">\n          <button data-ui=\"button\" data-variant=\"primary\">{primary_action}</button>\n        </div>\n      </article>\n    </template>\n    <div data-part=\"empty\" :hidden=\"selected !== null\">\n      <div data-ui=\"empty-state\" data-size=\"sm\" role=\"status\">\n        <h3 data-part=\"title\">{empty_title}</h3>\n        <p data-part=\"description\">{empty_description}</p>\n      </div>\n    </div>\n  </div>\n</div>"
+  },
+
+  "data_shape": {
+    "note": "What an agent binds where. The pattern owns exactly one piece of state — `selected` — and reads a collection of messages. Both templates render the same markup; `html_source` is `html` with the authored rows replaced by l-for templates over an l-source collection.",
+    "scope": {
+      "selected": "string | null — the id of the open message. null renders the empty state and makes the list pane the active one. It is the ONLY state the pattern owns; everything else is derived by bindings"
+    },
+    "message": {
+      "target": "one [data-part='item'] in the list and one [data-part='detail'] in the pane, both keyed by the same id",
+      "item": {
+        "id": "string — the value written into `selected`; must be unique within the inbox",
+        "sender": "string — [data-part='item-sender'] and the detail meta line",
+        "initials": "string — the avatar fallback, 1–2 characters",
+        "time": "string — already formatted for display; the pattern never formats dates",
+        "subject": "string — [data-part='item-subject'] and [data-part='detail-subject']",
+        "preview": "string — [data-part='item-preview'], clamped to two lines by CSS",
+        "body": "string — [data-part='detail-body'] via l-text. Bind rich bodies server-side instead: the pattern never sets innerHTML"
+      }
+    },
+    "source": {
+      "directive": "l-source:messages=\"/api/messages\" on the root, beside l-data",
+      "injects": "`messages` (the array), `messagesLoading` (boolean) and `messagesError` (string | null) into the same scope the bindings read, plus the `$messages` controller for load/create/update/remove",
+      "binds": "[data-part='status'] to :hidden=\"!messagesLoading\", [data-part='error'] to :hidden=\"!messagesError\" + l-text=\"messagesError\", and both l-for templates to `messages`",
+      "note": "Selection survives a refresh only if the ids do: key the l-for with l-key=\"message.id\" so rows follow their message, and the open detail stays open"
+    }
+  },
+
+  "safe_transforms": [
+    "add-message",
+    "remove-message",
+    "change-the-initially-selected-message",
+    "start-with-nothing-selected",
+    "swap-the-authored-rows-for-an-l-for-template",
+    "bind-the-list-to-an-l-source-collection",
+    "add-a-search-field",
+    "add-tabs-inside-a-detail",
+    "change-the-detail-actions"
+  ],
+
+  "unsafe_transforms": [
+    "replace-the-item-buttons-with-clickable-divs",
+    "signal-the-selected-row-with-colour-only",
+    "add-inbox-data-parts-inside-a-nested-tabs-or-empty-state",
+    "remove-the-back-button",
+    "drop-the-static-hidden-guard-from-an-authored-detail",
+    "add-custom-script"
+  ],
+
+  "composition": {
+    "contains": ["avatar", "badge", "stack", "tabs", "empty-state", "button", "input"],
+    "used_in": [],
+    "notes": [
+      "Slot ownership: a data-part belongs to its nearest data-ui ancestor. Inside the nested tabs the parts (list, trigger, panel) are TABS' parts, and inside [data-part='empty'] they are the empty-state's — which is why the empty wrapper carries the part rather than the empty-state itself, and why a detail whose body lives in a tabs panel simply omits [data-part='detail-body'].",
+      "A nested primitive must not carry both data-part and data-variant: a part's data-variant is validated against the INBOX's variant values. That is why the back button is a data-ui='button' with no data-variant, and why the horizontal stack sits INSIDE [data-part='detail-meta'] rather than being it.",
+      "Every authored element a binding hides also ships the static `hidden` attribute as a pre-boot guard: without it the whole thread would flash before faqir-core boots. The elements that are visible in the authored state (the first detail, the empty state of a source-bound inbox) must NOT carry it.",
+      "The responsive collapse is pure CSS keyed on each pane's data-state, which a :data-state binding derives from `selected`. There is no matchMedia, no resize listener and no JavaScript of any kind in this pattern.",
+      "The state lives on the PANES rather than on the [data-ui=\"inbox\"] root for a concrete reason: faqir-core does not yet apply bind directives declared on an l-data scope root (FAQIR-PLAN follow-up 0.6-15), so a :data-state on the root would render once and then never update. Anything reactive must sit below the element that carries l-data."
+    ]
+  },
+
+  "files": {
+    "html": "inbox.html",
+    "css": "inbox.css",
+    "manifest": "inbox.manifest.json"
+  },
+
+  "tests": [
+    "renders-as-div-with-data-ui-inbox",
+    "list-pane-list-item-detail-pane-detail-back-and-empty-slots-are-required",
+    "every-message-row-is-a-native-button",
+    "selection-swaps-the-detail-pane",
+    "selected-row-carries-aria-current-and-data-state",
+    "empty-state-renders-when-nothing-is-selected",
+    "root-data-state-mirrors-the-selection",
+    "back-clears-the-selection",
+    "collapses-to-a-single-pane-below-640px",
+    "the-source-bound-instance-renders-from-l-for-over-l-source",
+    "ships-zero-javascript",
+    "reference-page-is-audit-clean"
+  ]
+}

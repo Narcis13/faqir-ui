@@ -1,0 +1,263 @@
+<!-- @ui:component inbox -->
+<!-- @ui:kind pattern -->
+<!-- @ui:slots list-pane list-header list-heading search status error list item item-sender item-time item-subject item-preview detail-pane back detail detail-subject detail-meta detail-body detail-actions empty -->
+<!-- @ui:states active inactive selected -->
+<!-- @ui:composition avatar badge stack tabs empty-state button input -->
+<!-- @ui:requires faqir-core.js -->
+<!--
+  List-detail inbox — fully declarative, zero custom JavaScript.
+    · One l-data holds the whole UI state: { selected }, the id of the open
+      message (null = nothing open).
+    · Selecting swaps the detail pane with `:hidden` bindings — every message's
+      detail is authored, and only the selected one is shown. No classes, no
+      controller, no innerHTML.
+    · Each pane mirrors the selection into :data-state="active|inactive" — the
+      hook the responsive collapse uses. Below 640px there is room for one pane,
+      so the inactive one steps aside: the list while a message is open, the
+      reading pane while none is, with [data-part="back"] (hidden on wide
+      screens) to clear the selection and go back. Above the breakpoint both
+      panes are visible and the state changes nothing.
+      The state sits on the PANES, not on the root, because faqir-core does not
+      yet apply bind directives declared on an l-data scope root (FAQIR-PLAN
+      0.6-15) — and the panes are what the CSS has to address anyway.
+    · The list is `l-for`-shaped: the second example below binds it to a server
+      collection with l-source and renders the same markup from data. Swapping
+      the authored rows for a template is the only difference between them.
+-->
+
+<!-- Authored messages: the inbox as it ships, complete without a runtime. -->
+<div data-ui="inbox" l-data="{ selected: 'inbox-m-1' }">
+  <section
+    data-part="list-pane"
+    data-state="inactive"
+    :data-state="selected === null ? &#39;active&#39; : &#39;inactive&#39;"
+    aria-labelledby="inbox-list-heading"
+  >
+    <div data-part="list-header">
+      <h2 data-part="list-heading" id="inbox-list-heading">Inbox</h2>
+      <span data-ui="badge" data-variant="primary">2 unread</span>
+    </div>
+
+    <input data-ui="input" data-part="search" type="search" aria-label="Search messages" placeholder="Search messages">
+
+    <ul data-part="list">
+      <li>
+        <button
+          type="button"
+          data-part="item"
+          data-state="selected"
+          aria-current="true"
+          :data-state="selected === &#39;inbox-m-1&#39; ? &#39;selected&#39; : null"
+          :aria-current="selected === &#39;inbox-m-1&#39; ? &#39;true&#39; : null"
+          @click="selected = &#39;inbox-m-1&#39;"
+        >
+          <span data-ui="avatar" data-size="sm">
+            <span data-part="fallback">AK</span>
+          </span>
+          <span data-part="item-sender">Alex Kim</span>
+          <span data-part="item-time">09:42</span>
+          <span data-part="item-subject">Q3 roadmap review</span>
+          <span data-part="item-preview">I went through the draft and left notes on the second half.</span>
+        </button>
+      </li>
+      <li>
+        <button
+          type="button"
+          data-part="item"
+          :data-state="selected === &#39;inbox-m-2&#39; ? &#39;selected&#39; : null"
+          :aria-current="selected === &#39;inbox-m-2&#39; ? &#39;true&#39; : null"
+          @click="selected = &#39;inbox-m-2&#39;"
+        >
+          <span data-ui="avatar" data-size="sm">
+            <span data-part="fallback">ML</span>
+          </span>
+          <span data-part="item-sender">Morgan Lee</span>
+          <span data-part="item-time">08:15</span>
+          <span data-part="item-subject">Invoice 2026-0412 is overdue</span>
+          <span data-part="item-preview">The reminder went out on Friday and is still unanswered.</span>
+        </button>
+      </li>
+      <li>
+        <button
+          type="button"
+          data-part="item"
+          :data-state="selected === &#39;inbox-m-3&#39; ? &#39;selected&#39; : null"
+          :aria-current="selected === &#39;inbox-m-3&#39; ? &#39;true&#39; : null"
+          @click="selected = &#39;inbox-m-3&#39;"
+        >
+          <span data-ui="avatar" data-size="sm">
+            <span data-part="fallback">RP</span>
+          </span>
+          <span data-part="item-sender">Riley Park</span>
+          <span data-part="item-time">Yesterday</span>
+          <span data-part="item-subject">Welcome to the team</span>
+          <span data-part="item-preview">Everything you need for your first week is in the handbook.</span>
+        </button>
+      </li>
+    </ul>
+  </section>
+
+  <div data-part="detail-pane" data-state="active" :data-state="selected === null ? &#39;inactive&#39; : &#39;active&#39;">
+    <button type="button" data-ui="button" data-part="back" @click="selected = null">Back to inbox</button>
+
+    <article data-part="detail" aria-labelledby="inbox-m-1-subject" :hidden="selected !== &#39;inbox-m-1&#39;">
+      <h3 data-part="detail-subject" id="inbox-m-1-subject">Q3 roadmap review</h3>
+      <div data-part="detail-meta">
+        <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center">
+          <span data-ui="avatar" data-size="sm">
+            <span data-part="fallback">AK</span>
+          </span>
+          <span>Alex Kim &lt;alex@example.com&gt; · Today at 09:42</span>
+        </div>
+      </div>
+
+      <div data-ui="tabs" data-variant="underline">
+        <div data-part="list" role="tablist">
+          <button data-part="trigger" role="tab" id="inbox-m-1-tab-message" aria-controls="inbox-m-1-panel-message" aria-selected="true">Message</button>
+          <button data-part="trigger" role="tab" id="inbox-m-1-tab-activity" aria-controls="inbox-m-1-panel-activity" aria-selected="false" tabindex="-1">Activity</button>
+        </div>
+        <div data-part="panel" role="tabpanel" id="inbox-m-1-panel-message" aria-labelledby="inbox-m-1-tab-message">
+          <p>I went through the draft and left notes on the second half. The sequencing after the migration still worries me — everything else reads well.</p>
+          <p>Happy to walk through it before Thursday if that helps.</p>
+        </div>
+        <div data-part="panel" role="tabpanel" id="inbox-m-1-panel-activity" aria-labelledby="inbox-m-1-tab-activity" hidden>
+          <p>Opened by you at 09:44 · Forwarded to Morgan Lee at 09:51.</p>
+        </div>
+      </div>
+
+      <div data-part="detail-actions">
+        <button data-ui="button" data-variant="primary">Reply</button>
+        <button data-ui="button" data-variant="outline">Archive</button>
+      </div>
+    </article>
+
+    <article data-part="detail" aria-labelledby="inbox-m-2-subject" hidden :hidden="selected !== &#39;inbox-m-2&#39;">
+      <h3 data-part="detail-subject" id="inbox-m-2-subject">Invoice 2026-0412 is overdue</h3>
+      <div data-part="detail-meta">
+        <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center">
+          <span data-ui="avatar" data-size="sm">
+            <span data-part="fallback">ML</span>
+          </span>
+          <span>Morgan Lee &lt;morgan@example.com&gt; · Today at 08:15</span>
+        </div>
+      </div>
+      <div data-part="detail-body">
+        <p>The reminder went out on Friday and is still unanswered. Shall I put the account on hold, or give it one more week?</p>
+      </div>
+      <div data-part="detail-actions">
+        <button data-ui="button" data-variant="primary">Reply</button>
+        <button data-ui="button" data-variant="outline">Archive</button>
+      </div>
+    </article>
+
+    <article data-part="detail" aria-labelledby="inbox-m-3-subject" hidden :hidden="selected !== &#39;inbox-m-3&#39;">
+      <h3 data-part="detail-subject" id="inbox-m-3-subject">Welcome to the team</h3>
+      <div data-part="detail-meta">
+        <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center">
+          <span data-ui="avatar" data-size="sm">
+            <span data-part="fallback">RP</span>
+          </span>
+          <span>Riley Park &lt;riley@example.com&gt; · Yesterday at 16:30</span>
+        </div>
+      </div>
+      <div data-part="detail-body">
+        <p>Everything you need for your first week is in the handbook. Ping me if a link is stale — half of them are older than the product.</p>
+      </div>
+      <div data-part="detail-actions">
+        <button data-ui="button" data-variant="primary">Reply</button>
+        <button data-ui="button" data-variant="outline">Archive</button>
+      </div>
+    </article>
+
+    <div data-part="empty" hidden :hidden="selected !== null">
+      <div data-ui="empty-state" data-size="sm" role="status">
+        <div data-part="icon">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+            <rect x="3" y="7" width="26" height="18" rx="3" stroke="currentColor" stroke-width="2"/>
+            <path d="M4 9l12 9 12-9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <h3 data-part="title">No message selected</h3>
+        <p data-part="description">Pick a message from the list to read it here.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- The same markup bound to a server collection: l-source loads it, l-for
+     renders it, and the selection still lives in l-data. Nothing is selected
+     to begin with, so this instance ships in its empty state. -->
+<div data-ui="inbox" l-data="{ selected: null }" l-source:messages="/api/messages">
+  <section
+    data-part="list-pane"
+    data-state="active"
+    :data-state="selected === null ? &#39;active&#39; : &#39;inactive&#39;"
+    aria-labelledby="inbox-live-heading"
+  >
+    <div data-part="list-header">
+      <h2 data-part="list-heading" id="inbox-live-heading">Team inbox</h2>
+      <span data-ui="badge" data-variant="secondary" l-text="messages.length + &#39; messages&#39;">0 messages</span>
+    </div>
+
+    <p data-part="status" role="status" hidden :hidden="!messagesLoading">Loading messages…</p>
+    <p data-part="error" role="alert" hidden :hidden="!messagesError" l-text="messagesError"></p>
+
+    <ul data-part="list">
+      <template l-for="message in messages" l-key="message.id">
+        <li>
+          <button
+            type="button"
+            data-part="item"
+            :data-state="selected === message.id ? &#39;selected&#39; : null"
+            :aria-current="selected === message.id ? &#39;true&#39; : null"
+            @click="selected = message.id"
+          >
+            <span data-ui="avatar" data-size="sm">
+              <span data-part="fallback" l-text="message.initials"></span>
+            </span>
+            <span data-part="item-sender" l-text="message.sender"></span>
+            <span data-part="item-time" l-text="message.time"></span>
+            <span data-part="item-subject" l-text="message.subject"></span>
+            <span data-part="item-preview" l-text="message.preview"></span>
+          </button>
+        </li>
+      </template>
+    </ul>
+  </section>
+
+  <div data-part="detail-pane" data-state="inactive" :data-state="selected === null ? &#39;inactive&#39; : &#39;active&#39;">
+    <button type="button" data-ui="button" data-part="back" @click="selected = null">Back to inbox</button>
+
+    <template l-for="message in messages" l-key="message.id">
+      <article data-part="detail" :hidden="selected !== message.id">
+        <h3 data-part="detail-subject" l-text="message.subject"></h3>
+        <div data-part="detail-meta">
+          <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center">
+            <span data-ui="avatar" data-size="sm">
+              <span data-part="fallback" l-text="message.initials"></span>
+            </span>
+            <span l-text="message.sender + &#39; · &#39; + message.time"></span>
+          </div>
+        </div>
+        <div data-part="detail-body" l-text="message.body"></div>
+        <div data-part="detail-actions">
+          <button data-ui="button" data-variant="primary">Reply</button>
+          <button data-ui="button" data-variant="outline">Archive</button>
+        </div>
+      </article>
+    </template>
+
+    <div data-part="empty" :hidden="selected !== null">
+      <div data-ui="empty-state" data-size="sm" role="status">
+        <div data-part="icon">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+            <rect x="3" y="7" width="26" height="18" rx="3" stroke="currentColor" stroke-width="2"/>
+            <path d="M4 9l12 9 12-9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <h3 data-part="title">Nothing open</h3>
+        <p data-part="description">Messages load from the server; choose one to read it here.</p>
+      </div>
+    </div>
+  </div>
+</div>

@@ -40,7 +40,7 @@ CSS targets attributes (`[data-ui="button"]`), state via `[data-state="open"]`, 
 
 **29 Recipes (CSS + JS controller):** accordion, alert-dialog, barcode, calendar, carousel, combobox, command-palette, context-menu, date-picker, dialog, drawer, dropdown, file-upload, input-otp, menubar, pagination, popover, qr-code, select-custom, sheet, sidebar, slider, table, tabs, tag-input, toast, toggle-group, tooltip, tree-view
 
-**13 Patterns (composition, no JS):** auth-form, crud-table, dashboard-shell, document, empty-state, feature-grid, form-page, hero, pricing, search-results, settings-page, site-footer, wizard
+**15 Patterns (composition, no JS):** auth-form, crud-table, dashboard-shell, document, empty-state, feature-grid, form-page, hero, inbox, pricing, search-results, settings-page, site-footer, stats-dashboard, wizard
 
 ## Official Plugins
 
@@ -179,7 +179,7 @@ Full anatomy trees, variant tables, and safe/unsafe transforms for every compone
 
 - [references/primitives.md](references/primitives.md) — 39 primitives
 - [references/recipes.md](references/recipes.md) — 29 recipes
-- [references/patterns.md](references/patterns.md) — 13 patterns
+- [references/patterns.md](references/patterns.md) — 15 patterns
 - [references/tokens.md](references/tokens.md) — design token reference
 - [references/directives.md](references/directives.md) — faqir-core reactive directives
 - [references/manifest.md](references/manifest.md) — manifest schema and examples

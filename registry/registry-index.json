@@ -1,6 +1,6 @@
 {
   "schema": "faqir-registry-index@1",
-  "count": 81,
+  "count": 83,
   "components": [
     {
       "name": "aspect-ratio",
@@ -1893,6 +1893,36 @@
       ]
     },
     {
+      "name": "inbox",
+      "kind": "pattern",
+      "layer": "patterns",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "inbox.css",
+          "sha256": "c53b51e08325cb7117224ed7d0638be0b027d305ee18633649eeee754519f633"
+        },
+        {
+          "path": "inbox.html",
+          "sha256": "cb9ffce0e90d5a6d72879ff7a911a01cbc5c6c2f05dd5d4020c0f887832a1c1a"
+        },
+        {
+          "path": "inbox.manifest.json",
+          "sha256": "3b5db8b79dbb21c38eeb87f08723f71ceac5971e9f52015410ef28c2cae9f06f"
+        }
+      ],
+      "hash": "77f55f46bebfc9153011ff4e7a6cb2bb8da438b4a9bd76fae9b7435c9ca994d0",
+      "deps": [
+        "avatar",
+        "badge",
+        "stack",
+        "tabs",
+        "empty-state",
+        "button",
+        "input"
+      ]
+    },
+    {
       "name": "pricing",
       "kind": "pattern",
       "layer": "patterns",
@@ -2004,6 +2034,35 @@
         "link",
         "icon",
         "separator"
+      ]
+    },
+    {
+      "name": "stats-dashboard",
+      "kind": "pattern",
+      "layer": "patterns",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "stats-dashboard.css",
+          "sha256": "175929d498e48ec0fe923f2ab9be94b166ce3d69aea90b2cd58af25de7b1d834"
+        },
+        {
+          "path": "stats-dashboard.html",
+          "sha256": "ed8a98417e35080eb61e89ffb7e850ebe3c5661984764a4568c538caba3b7309"
+        },
+        {
+          "path": "stats-dashboard.manifest.json",
+          "sha256": "31188efb7b37aecb697f80917b59009318a93212cd5e8b574c1e2204002414b5"
+        }
+      ],
+      "hash": "1a681632a1d181168fdadc5c2d82c4fceb3409ec7387e2697bfbdd357807fab8",
+      "deps": [
+        "grid",
+        "stat",
+        "card",
+        "table",
+        "badge",
+        "button"
       ]
     },
     {
