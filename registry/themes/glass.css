@@ -1,0 +1,210 @@
+/* @ui:theme glass — frosted translucent surfaces over cool neutrals; indigo accent, layered and airy */
+
+/* ══════════════════════════════════════════════════════════════════════════
+   The frosted-glass theme, built fallback-first:
+
+   1. Every token below (both schemes) is a SOLID color — a complete theme on
+      its own. This is what a browser without backdrop-filter renders.
+   2. The `@supports ((-webkit-backdrop-filter: …) or (backdrop-filter: …))`
+      block at the end is the only place translucency exists: it re-points the
+      elevated-surface tokens at `color-mix(… , transparent)` values and frosts
+      the floating panels with `backdrop-filter`. No color-mix or
+      backdrop-filter appears outside that block, so degradation is the solid
+      theme above, not a half-transparent one.
+
+   Contrast is gated twice (tests/themes/glass.test.ts): the solid fallbacks
+   through the standard `contrast-tokens` maths, and the translucent surfaces
+   on their RESOLVED backgrounds — each frosted color composited over every
+   opaque surface it can float above, in gamma-encoded sRGB exactly as a
+   browser composites element backgrounds.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Light Mode Overrides ── */
+/* Cool blue-tinted neutrals, vivid indigo primary, soft floating shadows */
+:root {
+  /* ── Surfaces ── */
+  --color-bg:              oklch(0.975 0.008 250);    /* cool white */
+  --color-bg-subtle:       oklch(0.945 0.01 250);     /* subtle blue-gray */
+  --color-bg-muted:        oklch(0.905 0.012 250);    /* muted blue-gray */
+  --color-fg:              oklch(0.21 0.02 260);      /* deep blue-black */
+  --color-fg-muted:        oklch(0.45 0.02 260);      /* muted blue-gray */
+  --color-fg-subtle:       oklch(0.58 0.018 260);     /* subtle blue-gray */
+
+  /* ── Interactive: Primary (vivid indigo) ── */
+  --color-primary:         oklch(0.50 0.20 275);      /* vivid indigo */
+  --color-primary-hover:   oklch(0.45 0.20 275);
+  --color-primary-active:  oklch(0.40 0.18 275);
+  --color-primary-fg:      white;
+  --color-primary-subtle:  oklch(0.93 0.04 275);
+
+  /* ── Interactive: Secondary ── */
+  --color-secondary:       oklch(0.93 0.015 250);
+  --color-secondary-hover: oklch(0.89 0.02 250);
+  --color-secondary-fg:    oklch(0.24 0.02 260);
+
+  /* ── Interactive: Destructive ── */
+  --color-destructive:        oklch(0.55 0.22 20);
+  --color-destructive-hover:  oklch(0.50 0.23 20);
+  --color-destructive-fg:     white;
+  --color-destructive-subtle: oklch(0.94 0.04 20);
+
+  /* ── Feedback ── */
+  --color-success:         oklch(0.58 0.17 155);
+  --color-success-subtle:  oklch(0.94 0.05 155);
+  --color-warning:         oklch(0.72 0.15 80);
+  --color-warning-subtle:  oklch(0.94 0.05 80);
+  --color-info:            oklch(0.55 0.19 260);
+  --color-info-subtle:     oklch(0.94 0.04 260);
+
+  /* ── Borders (hairline, glass-edge) ── */
+  --color-border:          oklch(0.88 0.012 250);
+  --color-border-strong:   oklch(0.79 0.016 250);
+  --color-ring:            oklch(0.50 0.20 275 / 0.4);
+
+  /* ── Shadows (large, soft — surfaces float) ── */
+  --shadow-xs:  0 1px 3px oklch(0.30 0.04 260 / 0.08);
+  --shadow-sm:  0 2px 8px oklch(0.30 0.04 260 / 0.10);
+  --shadow-md:  0 6px 16px oklch(0.30 0.04 260 / 0.12), 0 2px 4px oklch(0.30 0.04 260 / 0.06);
+  --shadow-lg:  0 12px 32px oklch(0.30 0.04 260 / 0.14), 0 4px 8px oklch(0.30 0.04 260 / 0.06);
+  --shadow-xl:  0 24px 56px oklch(0.30 0.04 260 / 0.18), 0 8px 16px oklch(0.30 0.04 260 / 0.08);
+}
+
+/* ── Dark Mode ── */
+/* Deep blue-gray glass, luminous periwinkle primary */
+[data-theme="dark"] {
+  /* ── Surfaces ── */
+  --color-bg:              oklch(0.17 0.02 260);      /* deep blue-black */
+  --color-bg-subtle:       oklch(0.21 0.022 260);     /* dark blue-gray */
+  --color-bg-muted:        oklch(0.26 0.024 260);     /* muted blue-gray */
+  --color-fg:              oklch(0.955 0.008 260);    /* near-white */
+  --color-fg-muted:        oklch(0.72 0.02 260);      /* muted gray */
+  --color-fg-subtle:       oklch(0.55 0.02 260);      /* subtle gray */
+
+  /* ── Interactive: Primary (luminous periwinkle) ── */
+  --color-primary:         oklch(0.70 0.16 280);      /* luminous periwinkle */
+  --color-primary-hover:   oklch(0.76 0.14 280);
+  --color-primary-active:  oklch(0.82 0.12 280);
+  --color-primary-fg:      oklch(0.16 0.02 280);      /* glassy dark for contrast */
+  --color-primary-subtle:  oklch(0.70 0.16 280 / 0.15);
+
+  /* ── Interactive: Secondary ── */
+  --color-secondary:       oklch(0.28 0.02 260);
+  --color-secondary-hover: oklch(0.34 0.022 260);
+  --color-secondary-fg:    oklch(0.93 0.008 260);
+
+  /* ── Interactive: Destructive ── */
+  --color-destructive:        oklch(0.58 0.21 20);
+  --color-destructive-hover:  oklch(0.64 0.20 20);
+  --color-destructive-fg:     white;
+  --color-destructive-subtle: oklch(0.58 0.21 20 / 0.16);
+
+  /* ── Feedback ── */
+  --color-success:         oklch(0.75 0.17 160);
+  --color-success-subtle:  oklch(0.75 0.17 160 / 0.15);
+  --color-warning:         oklch(0.82 0.15 85);
+  --color-warning-subtle:  oklch(0.82 0.15 85 / 0.15);
+  --color-info:            oklch(0.72 0.15 250);
+  --color-info-subtle:     oklch(0.72 0.15 250 / 0.15);
+
+  /* ── Borders ── */
+  --color-border:          oklch(0.31 0.02 260);
+  --color-border-strong:   oklch(0.40 0.024 260);
+  --color-ring:            oklch(0.70 0.16 280 / 0.45);
+
+  /* ── Shadows (deep, diffuse) ── */
+  --shadow-xs:  0 1px 3px oklch(0.05 0.02 260 / 0.4);
+  --shadow-sm:  0 2px 8px oklch(0.05 0.02 260 / 0.5);
+  --shadow-md:  0 6px 16px oklch(0.05 0.02 260 / 0.5), 0 2px 4px oklch(0.05 0.02 260 / 0.3);
+  --shadow-lg:  0 12px 32px oklch(0.05 0.02 260 / 0.6), 0 4px 8px oklch(0.05 0.02 260 / 0.3);
+  --shadow-xl:  0 24px 56px oklch(0.05 0.02 260 / 0.7), 0 8px 16px oklch(0.05 0.02 260 / 0.4);
+}
+
+/* ── Auto Dark Mode (system preference) — mirrors [data-theme="dark"] exactly ── */
+@media (prefers-color-scheme: dark) {
+  [data-theme="auto"] {
+    /* ── Surfaces ── */
+    --color-bg:              oklch(0.17 0.02 260);
+    --color-bg-subtle:       oklch(0.21 0.022 260);
+    --color-bg-muted:        oklch(0.26 0.024 260);
+    --color-fg:              oklch(0.955 0.008 260);
+    --color-fg-muted:        oklch(0.72 0.02 260);
+    --color-fg-subtle:       oklch(0.55 0.02 260);
+
+    /* ── Interactive: Primary ── */
+    --color-primary:         oklch(0.70 0.16 280);
+    --color-primary-hover:   oklch(0.76 0.14 280);
+    --color-primary-active:  oklch(0.82 0.12 280);
+    --color-primary-fg:      oklch(0.16 0.02 280);
+    --color-primary-subtle:  oklch(0.70 0.16 280 / 0.15);
+
+    /* ── Interactive: Secondary ── */
+    --color-secondary:       oklch(0.28 0.02 260);
+    --color-secondary-hover: oklch(0.34 0.022 260);
+    --color-secondary-fg:    oklch(0.93 0.008 260);
+
+    /* ── Interactive: Destructive ── */
+    --color-destructive:        oklch(0.58 0.21 20);
+    --color-destructive-hover:  oklch(0.64 0.20 20);
+    --color-destructive-fg:     white;
+    --color-destructive-subtle: oklch(0.58 0.21 20 / 0.16);
+
+    /* ── Feedback ── */
+    --color-success:         oklch(0.75 0.17 160);
+    --color-success-subtle:  oklch(0.75 0.17 160 / 0.15);
+    --color-warning:         oklch(0.82 0.15 85);
+    --color-warning-subtle:  oklch(0.82 0.15 85 / 0.15);
+    --color-info:            oklch(0.72 0.15 250);
+    --color-info-subtle:     oklch(0.72 0.15 250 / 0.15);
+
+    /* ── Borders ── */
+    --color-border:          oklch(0.31 0.02 260);
+    --color-border-strong:   oklch(0.40 0.024 260);
+    --color-ring:            oklch(0.70 0.16 280 / 0.45);
+
+    /* ── Shadows ── */
+    --shadow-xs:  0 1px 3px oklch(0.05 0.02 260 / 0.4);
+    --shadow-sm:  0 2px 8px oklch(0.05 0.02 260 / 0.5);
+    --shadow-md:  0 6px 16px oklch(0.05 0.02 260 / 0.5), 0 2px 4px oklch(0.05 0.02 260 / 0.3);
+    --shadow-lg:  0 12px 32px oklch(0.05 0.02 260 / 0.6), 0 4px 8px oklch(0.05 0.02 260 / 0.3);
+    --shadow-xl:  0 24px 56px oklch(0.05 0.02 260 / 0.7), 0 8px 16px oklch(0.05 0.02 260 / 0.4);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   The glass layer — everything translucent lives inside this @supports block.
+   ══════════════════════════════════════════════════════════════════════════
+   Only browsers that can frost the backdrop get translucent surfaces; everyone
+   else keeps the complete solid theme above. `color-mix(in oklch, C p%,
+   transparent)` premultiplies to C at alpha p/100, and the tokens mix from
+   `var(--color-bg…)`, so one declaration follows both schemes.
+
+   Frosted targets: the card surface (via its `--card-bg` alias) and the four
+   floating panels that hardcode `background: var(--color-bg)` in their recipe
+   CSS — dialog/sheet panels, popover content, toast. Those need an element
+   rule to go translucent; the `:root` prefix lifts specificity above the
+   recipe's own `[data-ui] [data-part]` rule regardless of load order (same
+   trick as the contrast theme's focus rings). ── */
+@supports ((-webkit-backdrop-filter: blur(1rem)) or (backdrop-filter: blur(1rem))) {
+  :root {
+    --glass-blur:   16px;
+    /* Elevated surfaces: solid → frosted (scheme-aware via var()). */
+    --card-bg:      color-mix(in oklch, var(--color-bg-subtle) 82%, transparent);
+    --glass-panel:  color-mix(in oklch, var(--color-bg) 78%, transparent);
+  }
+
+  :root [data-ui="card"],
+  :root [data-ui="dialog"] [data-part="panel"],
+  :root [data-ui="sheet"] [data-part="panel"],
+  :root [data-ui="popover"] [data-part="content"],
+  :root [data-ui="toast"] [data-part="toast"] {
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+    backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+  }
+
+  :root [data-ui="dialog"] [data-part="panel"],
+  :root [data-ui="sheet"] [data-part="panel"],
+  :root [data-ui="popover"] [data-part="content"],
+  :root [data-ui="toast"] [data-part="toast"] {
+    background: var(--glass-panel);
+  }
+}

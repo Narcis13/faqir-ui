@@ -1,0 +1,180 @@
+/* @ui:theme terminal — phosphor green/amber on near-black; mono type, sharp corners; dark-primary CRT aesthetic */
+
+/* ══════════════════════════════════════════════════════════════════════════
+   The CRT theme. Dark is the primary design target: phosphor green text on
+   near-black glass, amber for warnings, glow shadows instead of drop shadows.
+   Light is a real, honestly-shipped scheme — dark green ink on green-tinted
+   paper (a "paper terminal" printout) — so the manifest declares `both` and
+   means it. Everything is monospaced (--font-sans aliases --font-mono) and
+   every corner is sharp (all radii zeroed, brutalist-style).
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Light Mode Overrides ── */
+/* Paper terminal: dark green ink on faint green-tinted paper */
+:root {
+  /* ── Surfaces ── */
+  --color-bg:              oklch(0.97 0.01 145);      /* green-tinted paper */
+  --color-bg-subtle:       oklch(0.94 0.015 145);     /* faint green wash */
+  --color-bg-muted:        oklch(0.90 0.02 145);      /* muted green wash */
+  --color-fg:              oklch(0.28 0.06 145);      /* dark green ink */
+  --color-fg-muted:        oklch(0.44 0.07 145);      /* muted green ink */
+  --color-fg-subtle:       oklch(0.55 0.06 145);      /* subtle green ink */
+
+  /* ── Interactive: Primary (deep terminal green) ── */
+  --color-primary:         oklch(0.44 0.12 145);      /* deep green */
+  --color-primary-hover:   oklch(0.39 0.11 145);
+  --color-primary-active:  oklch(0.35 0.10 145);
+  --color-primary-fg:      white;
+  --color-primary-subtle:  oklch(0.93 0.05 145);
+
+  /* ── Interactive: Secondary ── */
+  --color-secondary:       oklch(0.92 0.03 145);
+  --color-secondary-hover: oklch(0.88 0.035 145);
+  --color-secondary-fg:    oklch(0.25 0.05 145);
+
+  /* ── Interactive: Destructive ── */
+  --color-destructive:        oklch(0.50 0.19 30);    /* alarm red */
+  --color-destructive-hover:  oklch(0.45 0.19 30);
+  --color-destructive-fg:     white;
+  --color-destructive-subtle: oklch(0.94 0.05 30);
+
+  /* ── Feedback (amber carries warnings, per the CRT palette) ── */
+  --color-success:         oklch(0.45 0.14 150);
+  --color-success-subtle:  oklch(0.93 0.05 150);
+  --color-warning:         oklch(0.55 0.12 80);       /* printed amber */
+  --color-warning-subtle:  oklch(0.94 0.06 80);
+  --color-info:            oklch(0.48 0.10 200);
+  --color-info-subtle:     oklch(0.93 0.04 200);
+
+  /* ── Borders ── */
+  --color-border:          oklch(0.84 0.03 145);
+  --color-border-strong:   oklch(0.68 0.05 145);
+  --color-ring:            oklch(0.44 0.12 145 / 0.5);
+
+  /* ── Shadows (crisp print, no glow on paper) ── */
+  --shadow-xs:  0 1px 2px oklch(0.25 0.05 145 / 0.10);
+  --shadow-sm:  0 1px 3px oklch(0.25 0.05 145 / 0.12);
+  --shadow-md:  0 2px 6px oklch(0.25 0.05 145 / 0.12);
+  --shadow-lg:  0 4px 10px oklch(0.25 0.05 145 / 0.14);
+  --shadow-xl:  0 8px 16px oklch(0.25 0.05 145 / 0.16);
+
+  /* ── Mono type everywhere: the UI face IS the code face ── */
+  --font-sans:   var(--font-mono);
+
+  /* ── Radii (none — a terminal has sharp cells) ── */
+  --radius-sm:   0;
+  --radius-md:   0;
+  --radius-lg:   0;
+  --radius-xl:   0;
+  --radius-2xl:  0;
+  --radius-full: 0;
+
+  /* ── Component Aliases (enforce the sharp-cornered cells) ── */
+  --button-radius:  0;
+  --card-radius:    0;
+  --input-radius:   0;
+  --dialog-radius:  0;
+  --badge-radius:   0;
+  --avatar-radius:  0;
+}
+
+/* ── Dark Mode (primary design target) ── */
+/* Phosphor: luminous green on near-black glass, amber warnings, glow shadows */
+[data-theme="dark"] {
+  /* ── Surfaces (near-black glass, faint green cast) ── */
+  --color-bg:              oklch(0.14 0.015 145);     /* near-black glass */
+  --color-bg-subtle:       oklch(0.18 0.02 145);      /* dark glass */
+  --color-bg-muted:        oklch(0.23 0.025 145);     /* muted glass */
+  --color-fg:              oklch(0.87 0.21 145);      /* phosphor green */
+  --color-fg-muted:        oklch(0.68 0.13 145);      /* dimmed phosphor */
+  --color-fg-subtle:       oklch(0.52 0.09 145);      /* faded phosphor */
+
+  /* ── Interactive: Primary (full-brightness phosphor) ── */
+  --color-primary:         oklch(0.85 0.23 145);      /* luminous green */
+  --color-primary-hover:   oklch(0.90 0.22 145);
+  --color-primary-active:  oklch(0.94 0.18 145);
+  --color-primary-fg:      oklch(0.14 0.015 145);     /* glass for contrast */
+  --color-primary-subtle:  oklch(0.85 0.23 145 / 0.14);
+
+  /* ── Interactive: Secondary ── */
+  --color-secondary:       oklch(0.25 0.04 145);
+  --color-secondary-hover: oklch(0.31 0.045 145);
+  --color-secondary-fg:    oklch(0.85 0.15 145);
+
+  /* ── Interactive: Destructive ── */
+  --color-destructive:        oklch(0.68 0.21 30);    /* alarm red */
+  --color-destructive-hover:  oklch(0.74 0.19 30);
+  --color-destructive-fg:     oklch(0.14 0.01 30);
+  --color-destructive-subtle: oklch(0.68 0.21 30 / 0.15);
+
+  /* ── Feedback (phosphor amber carries warnings) ── */
+  --color-success:         oklch(0.80 0.19 150);
+  --color-success-subtle:  oklch(0.80 0.19 150 / 0.15);
+  --color-warning:         oklch(0.82 0.16 85);       /* phosphor amber */
+  --color-warning-subtle:  oklch(0.82 0.16 85 / 0.15);
+  --color-info:            oklch(0.75 0.12 200);
+  --color-info-subtle:     oklch(0.75 0.12 200 / 0.15);
+
+  /* ── Borders ── */
+  --color-border:          oklch(0.30 0.05 145);
+  --color-border-strong:   oklch(0.42 0.07 145);
+  --color-ring:            oklch(0.85 0.23 145 / 0.5);
+
+  /* ── Shadows (phosphor glow, not depth) ── */
+  --shadow-xs:  0 0 4px oklch(0.85 0.23 145 / 0.15);
+  --shadow-sm:  0 0 8px oklch(0.85 0.23 145 / 0.18);
+  --shadow-md:  0 0 12px oklch(0.85 0.23 145 / 0.20);
+  --shadow-lg:  0 0 20px oklch(0.85 0.23 145 / 0.22);
+  --shadow-xl:  0 0 32px oklch(0.85 0.23 145 / 0.25);
+}
+
+/* ── Auto Dark Mode (system preference) — mirrors [data-theme="dark"] exactly ── */
+@media (prefers-color-scheme: dark) {
+  [data-theme="auto"] {
+    /* ── Surfaces ── */
+    --color-bg:              oklch(0.14 0.015 145);
+    --color-bg-subtle:       oklch(0.18 0.02 145);
+    --color-bg-muted:        oklch(0.23 0.025 145);
+    --color-fg:              oklch(0.87 0.21 145);
+    --color-fg-muted:        oklch(0.68 0.13 145);
+    --color-fg-subtle:       oklch(0.52 0.09 145);
+
+    /* ── Interactive: Primary ── */
+    --color-primary:         oklch(0.85 0.23 145);
+    --color-primary-hover:   oklch(0.90 0.22 145);
+    --color-primary-active:  oklch(0.94 0.18 145);
+    --color-primary-fg:      oklch(0.14 0.015 145);
+    --color-primary-subtle:  oklch(0.85 0.23 145 / 0.14);
+
+    /* ── Interactive: Secondary ── */
+    --color-secondary:       oklch(0.25 0.04 145);
+    --color-secondary-hover: oklch(0.31 0.045 145);
+    --color-secondary-fg:    oklch(0.85 0.15 145);
+
+    /* ── Interactive: Destructive ── */
+    --color-destructive:        oklch(0.68 0.21 30);
+    --color-destructive-hover:  oklch(0.74 0.19 30);
+    --color-destructive-fg:     oklch(0.14 0.01 30);
+    --color-destructive-subtle: oklch(0.68 0.21 30 / 0.15);
+
+    /* ── Feedback ── */
+    --color-success:         oklch(0.80 0.19 150);
+    --color-success-subtle:  oklch(0.80 0.19 150 / 0.15);
+    --color-warning:         oklch(0.82 0.16 85);
+    --color-warning-subtle:  oklch(0.82 0.16 85 / 0.15);
+    --color-info:            oklch(0.75 0.12 200);
+    --color-info-subtle:     oklch(0.75 0.12 200 / 0.15);
+
+    /* ── Borders ── */
+    --color-border:          oklch(0.30 0.05 145);
+    --color-border-strong:   oklch(0.42 0.07 145);
+    --color-ring:            oklch(0.85 0.23 145 / 0.5);
+
+    /* ── Shadows (phosphor glow) ── */
+    --shadow-xs:  0 0 4px oklch(0.85 0.23 145 / 0.15);
+    --shadow-sm:  0 0 8px oklch(0.85 0.23 145 / 0.18);
+    --shadow-md:  0 0 12px oklch(0.85 0.23 145 / 0.20);
+    --shadow-lg:  0 0 20px oklch(0.85 0.23 145 / 0.22);
+    --shadow-xl:  0 0 32px oklch(0.85 0.23 145 / 0.25);
+  }
+}

@@ -92,6 +92,29 @@ const SEED = {
     dark_mode: "none",
     pairs_with: ["document", "paper"],
   },
+  terminal: {
+    version: "1.0.0",
+    // Dark-primary CRT: "dark" + "terminal"/"mono" are the selection tags;
+    // deliberately disjoint from soft's consumer/pastel vocabulary.
+    mood: ["dark", "terminal", "technical", "mono", "retro"],
+    scheme: "both",
+    dark_mode: "native",
+    pairs_with: ["brutalist", "midnight"],
+  },
+  glass: {
+    version: "1.0.0",
+    mood: ["translucent", "glass", "modern", "layered", "airy"],
+    scheme: "both",
+    dark_mode: "native",
+    pairs_with: ["aurora", "slate"],
+  },
+  soft: {
+    version: "1.0.0",
+    mood: ["pastel", "friendly", "consumer", "health", "calm", "rounded"],
+    scheme: "both",
+    dark_mode: "native",
+    pairs_with: ["default", "paper"],
+  },
 };
 
 // Base token surface — every base stylesheet minus raw palette primitives.

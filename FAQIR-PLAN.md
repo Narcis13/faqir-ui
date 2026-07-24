@@ -137,7 +137,7 @@ done in any order (or in parallel worktrees).
 | 0.7-07 | Recipe: `carousel` | ✅ |
 | 0.7-08 | Patterns: `pricing` + landing kit (`hero`, `feature-grid`, `site-footer`) | ✅ |
 | 0.7-09 | Patterns: `stats-dashboard` + `inbox` | ✅ |
-| 0.7-10 | Themes: `terminal`, `glass`, `soft` | ⬜ |
+| 0.7-10 | Themes: `terminal`, `glass`, `soft` | ✅ |
 | 0.7-11 | Density mode (`data-density` token modifier) | ⬜ |
 | 0.7-12 | Dev overlay + `Faqir.inspect` + `faqir-core.dev.js` diagnostics | ⬜ |
 | 0.7-13 | Docs site scaffold (built with Faqir, manifest-generated content) | ⬜ |
@@ -1981,9 +1981,9 @@ consumer/health. Full coverage + manifests + previews; theme count reaches 10.
 - Visual suite extended (automatic via 0.4-23 matrix).
 
 **Acceptance criteria**
-- [ ] All three pass every theme gate; visual baselines added.
-- [ ] Glass degrades gracefully without backdrop-filter (fallback tested).
-- [ ] Mood tags meaningful for agent selection (`terminal` ≠ `soft` in manifest moods).
+- [x] All three pass every theme gate; visual baselines added. (Coverage matrix, manifest consistency, and the `contrast-tokens` AA gate are all glob-driven and now sweep 12 themes — zero edits, all green. The three enter the 0.4-23 visual matrix automatically (84 components × 12 themes; meta-test asserts inclusion); a 12-capture Playwright smoke (`button__{terminal,glass,soft}` × scheme × dir) rendered clean, and CI regenerates the authoritative Linux baseline cache on merge to `main` per the suite's baseline strategy. All three previews browser-verified in both schemes.)
+- [x] Glass degrades gracefully without backdrop-filter (fallback tested). (`glass.css` is authored fallback-first: every token is solid; `color-mix` + `backdrop-filter` exist ONLY inside the `@supports ((-webkit-backdrop-filter…) or (backdrop-filter…))` block, which frosts `--card-bg`/`--glass-panel` and the dialog/sheet/popover/toast panels via `:root`-boosted selectors. `tests/themes/glass.test.ts` strips the block and asserts: no color-mix/backdrop-filter outside it, the stripped theme clears the full standard pair list with every pair actually computed, and the frosted tokens clear AA composited over every opaque surface (gamma-sRGB source-over, per scheme — the computation approach is documented in the test header).)
+- [x] Mood tags meaningful for agent selection (`terminal` ≠ `soft` in manifest moods). (`terminal`: dark/terminal/technical/mono/retro; `soft`: pastel/friendly/consumer/health/calm/rounded — fully disjoint, test-enforced in `soft.test.ts`; `glass`: translucent/glass/modern/layered/airy. Terminal's dark-primary claim is honest: `scheme: both` is backed by a real paper-terminal light scheme, asserted via 32-token light/dark/auto blocks in `terminal.test.ts`.)
 
 ---
 
