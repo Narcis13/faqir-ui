@@ -5,7 +5,7 @@
 // Assembled by scripts/build-core.mjs (task 0.3-03) from:
 //   engine:      src/core-src/engine.js
 //   core helper: registry/core/menu-navigation.js
-//   controllers: 26 recipe factories → accordion, alert-dialog, barcode, calendar, combobox, command-palette, context-menu, date-picker, dialog, drawer, dropdown, file-upload, input-otp, menubar, pagination, popover, qr-code, select-custom, sheet, sidebar, slider, table, tabs, toast, tooltip, tree-view
+//   controllers: 28 recipe factories → accordion, alert-dialog, barcode, calendar, combobox, command-palette, context-menu, date-picker, dialog, drawer, dropdown, file-upload, input-otp, menubar, pagination, popover, qr-code, select-custom, sheet, sidebar, slider, table, tabs, tag-input, toast, toggle-group, tooltip, tree-view
 // Regenerate with: bun run build:core
 // Package version: 0.2.4
 // ============================================================================
@@ -8968,6 +8968,335 @@ function createTabs(root) {
     return createTabs;
   })();
 
+  // ── tag-input ── (registry/recipes/tag-input/tag-input.js)
+  var createTagInput = controllerRegistry["tag-input"] = (function() {
+// @ui:controller tag-input
+// @ui:provides getValue setValue addTag removeTag clear destroy
+
+/**
+ * tag-input — a multi-value text input that composes two existing recipes:
+ *
+ *   • CHIP (primitive) for each committed value — the tags are real
+ *     `data-ui="chip"` elements, so they inherit chip.css verbatim (no
+ *     duplicated styling) including the dismiss button.
+ *   • COMBOBOX behaviour for the optional suggestions listbox — filter-as-you-
+ *     type, Arrow/Enter selection, an empty state — mirroring the combobox
+ *     recipe's listbox contract.
+ *
+ * Interaction contract:
+ *   • Type + Enter commits the trimmed draft as a tag (unless it duplicates an
+ *     existing tag and duplicates are disallowed, the default).
+ *   • Backspace on an empty input removes the last tag.
+ *   • The chip dismiss button (or the removeTag API) removes a specific tag.
+ *   • With a suggestions listbox present, typing filters it; ArrowDown/ArrowUp
+ *     highlight; Enter/click commits the highlighted/clicked suggestion.
+ *
+ * Value exposure:
+ *   • getValue() returns the live tag array; setValue(arr) rebuilds the chips.
+ *   • Every mutation dispatches `faqir:change` (detail.value = the array) and
+ *     mirrors the array as JSON onto the hidden `[data-part="value"]` input,
+ *     firing a native `input` event so `l-model` on that input stays in sync
+ *     (parse it for the array; getValue()/the event carry the array directly).
+ */
+function createTagInput(root) {
+  // Prevent double-init.
+  if (root._faqirTagInput) return root._faqirTagInput;
+
+  const taglist = root.querySelector("[data-part='taglist']");
+  const input = root.querySelector("[data-part='input']");
+  const listbox = root.querySelector("[data-part='listbox']");
+  const emptyEl = root.querySelector("[data-part='empty']");
+  const valueEl = root.querySelector("[data-part='value']");
+  const allowDuplicates = root.hasAttribute("data-allow-duplicates");
+
+  const options = () =>
+    listbox ? [...listbox.querySelectorAll("[data-part='option']")] : [];
+  const visibleOptions = () => options().filter((o) => !o.hasAttribute("data-hidden"));
+
+  let values = [];
+  let highlightedIndex = -1;
+  let outsideClickCleanup = null;
+
+  // ── Chip rendering (reuses the chip primitive markup) ────────────────────────
+  function makeChip(value) {
+    const chip = document.createElement("span");
+    chip.dataset.ui = "chip";
+    chip.dataset.part = "tag";
+    chip.setAttribute("role", "listitem");
+
+    const label = document.createElement("span");
+    label.dataset.part = "label";
+    label.textContent = value;
+
+    const dismiss = document.createElement("button");
+    dismiss.dataset.part = "dismiss";
+    dismiss.type = "button";
+    dismiss.setAttribute("aria-label", `Remove ${value}`);
+    dismiss.textContent = "×";
+
+    chip.append(label, dismiss);
+    return chip;
+  }
+
+  function readInitialTags() {
+    if (!taglist) return [];
+    return [...taglist.querySelectorAll("[data-part='tag'] [data-part='label']")].map(
+      (l) => l.textContent.trim(),
+    );
+  }
+
+  function isDuplicate(value) {
+    const needle = value.toLowerCase();
+    return values.some((v) => v.toLowerCase() === needle);
+  }
+
+  // ── value sync ───────────────────────────────────────────────────────────────
+  function syncValueSeam() {
+    if (!valueEl) return;
+    const next = JSON.stringify(values);
+    if (valueEl.value !== next) {
+      valueEl.value = next;
+      valueEl.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+  }
+
+  function emit(name, detail) {
+    root.dispatchEvent(new CustomEvent(name, { bubbles: true, detail }));
+  }
+
+  function commitMutation(extraDetail) {
+    syncValueSeam();
+    emit("faqir:change", { value: values.slice(), ...extraDetail });
+  }
+
+  // ── add / remove ─────────────────────────────────────────────────────────────
+  function addTag(raw) {
+    const value = String(raw == null ? "" : raw).trim();
+    if (!value) return false;
+    if (!allowDuplicates && isDuplicate(value)) return false;
+
+    values.push(value);
+    if (taglist) {
+      const chip = makeChip(value);
+      if (input && input.parentNode === taglist) {
+        taglist.insertBefore(chip, input);
+      } else {
+        taglist.appendChild(chip);
+      }
+    }
+    commitMutation({ added: value });
+    return true;
+  }
+
+  function removeTag(value) {
+    const index = values.findIndex((v) => v === value);
+    if (index < 0) return false;
+    values.splice(index, 1);
+    if (taglist) {
+      const chip = [...taglist.querySelectorAll("[data-part='tag']")].find(
+        (c) => c.querySelector("[data-part='label']")?.textContent.trim() === value,
+      );
+      chip?.remove();
+    }
+    commitMutation({ removed: value });
+    return true;
+  }
+
+  function removeLast() {
+    if (!values.length) return false;
+    return removeTag(values[values.length - 1]);
+  }
+
+  function clear() {
+    if (!values.length) return;
+    values = [];
+    if (taglist) {
+      taglist.querySelectorAll("[data-part='tag']").forEach((c) => c.remove());
+    }
+    commitMutation({ cleared: true });
+  }
+
+  function getValue() {
+    return values.slice();
+  }
+
+  function setValue(next) {
+    const arr = Array.isArray(next) ? next : [];
+    // Rebuild chips from scratch to mirror the requested value exactly.
+    if (taglist) {
+      taglist.querySelectorAll("[data-part='tag']").forEach((c) => c.remove());
+    }
+    values = [];
+    for (const v of arr) {
+      const value = String(v).trim();
+      if (!value) continue;
+      if (!allowDuplicates && isDuplicate(value)) continue;
+      values.push(value);
+      if (taglist) {
+        const chip = makeChip(value);
+        if (input && input.parentNode === taglist) taglist.insertBefore(chip, input);
+        else taglist.appendChild(chip);
+      }
+    }
+    commitMutation({ set: true });
+  }
+
+  // ── suggestions listbox (combobox behaviour) ─────────────────────────────────
+  function openList() {
+    if (!listbox) return;
+    root.dataset.state = "open";
+    listbox.hidden = false;
+    input?.setAttribute("aria-expanded", "true");
+    outsideClickCleanup = onOutsideClick(root, closeList);
+  }
+
+  function closeList() {
+    if (!listbox) return;
+    root.dataset.state = "closed";
+    listbox.hidden = true;
+    input?.setAttribute("aria-expanded", "false");
+    clearHighlight();
+    if (outsideClickCleanup) {
+      outsideClickCleanup();
+      outsideClickCleanup = null;
+    }
+  }
+
+  function clearHighlight() {
+    options().forEach((o) => o.removeAttribute("data-highlighted"));
+    highlightedIndex = -1;
+  }
+
+  function highlight(index) {
+    const vis = visibleOptions();
+    if (!vis.length) return;
+    if (index < 0) index = vis.length - 1;
+    if (index >= vis.length) index = 0;
+    options().forEach((o) => o.removeAttribute("data-highlighted"));
+    vis[index].setAttribute("data-highlighted", "");
+    vis[index].scrollIntoView?.({ block: "nearest" });
+    highlightedIndex = index;
+  }
+
+  function filterSuggestions(query) {
+    const q = query.toLowerCase();
+    let count = 0;
+    options().forEach((o) => {
+      const text = o.textContent.toLowerCase();
+      const alreadyChosen = !allowDuplicates && isDuplicate(o.textContent.trim());
+      if (text.includes(q) && !alreadyChosen) {
+        o.removeAttribute("data-hidden");
+        count++;
+      } else {
+        o.setAttribute("data-hidden", "");
+      }
+    });
+    if (emptyEl) emptyEl.hidden = count > 0;
+    clearHighlight();
+    return count;
+  }
+
+  // ── event handlers ───────────────────────────────────────────────────────────
+  function onInput() {
+    if (!listbox) return;
+    if (root.dataset.state !== "open") openList();
+    filterSuggestions(input.value);
+  }
+
+  function onInputKeyDown(e) {
+    switch (e.key) {
+      case "Enter": {
+        e.preventDefault();
+        const vis = visibleOptions();
+        if (listbox && highlightedIndex >= 0 && highlightedIndex < vis.length) {
+          if (addTag(vis[highlightedIndex].textContent.trim())) {
+            input.value = "";
+            filterSuggestions("");
+          }
+        } else if (input.value.trim()) {
+          if (addTag(input.value)) {
+            input.value = "";
+            if (listbox) filterSuggestions("");
+          }
+        }
+        break;
+      }
+      case "Backspace":
+        if (input.value === "") {
+          e.preventDefault();
+          removeLast();
+          if (listbox) filterSuggestions("");
+        }
+        break;
+      case "ArrowDown":
+        if (listbox) {
+          e.preventDefault();
+          if (root.dataset.state !== "open") openList();
+          highlight(highlightedIndex + 1);
+        }
+        break;
+      case "ArrowUp":
+        if (listbox) {
+          e.preventDefault();
+          if (root.dataset.state !== "open") openList();
+          highlight(highlightedIndex - 1);
+        }
+        break;
+      case "Escape":
+        if (listbox && root.dataset.state === "open") {
+          e.preventDefault();
+          closeList();
+        }
+        break;
+    }
+  }
+
+  function onTaglistClick(e) {
+    const dismiss = e.target.closest("[data-part='dismiss']");
+    if (!dismiss) return;
+    const chip = dismiss.closest("[data-part='tag']");
+    const value = chip?.querySelector("[data-part='label']")?.textContent.trim();
+    if (value != null) {
+      removeTag(value);
+      input?.focus();
+    }
+  }
+
+  function onListboxClick(e) {
+    const opt = e.target.closest("[data-part='option']");
+    if (!opt || opt.hasAttribute("data-hidden")) return;
+    if (addTag(opt.textContent.trim())) {
+      if (input) input.value = "";
+      filterSuggestions("");
+      input?.focus();
+    }
+  }
+
+  // ── wire up ──────────────────────────────────────────────────────────────────
+  values = readInitialTags();
+  syncValueSeam();
+
+  input?.addEventListener("input", onInput);
+  input?.addEventListener("keydown", onInputKeyDown);
+  taglist?.addEventListener("click", onTaglistClick);
+  listbox?.addEventListener("click", onListboxClick);
+
+  function destroy() {
+    input?.removeEventListener("input", onInput);
+    input?.removeEventListener("keydown", onInputKeyDown);
+    taglist?.removeEventListener("click", onTaglistClick);
+    listbox?.removeEventListener("click", onListboxClick);
+    if (outsideClickCleanup) outsideClickCleanup();
+    delete root._faqirTagInput;
+  }
+
+  const api = { getValue, setValue, addTag, removeTag, clear, destroy };
+  root._faqirTagInput = api;
+  return api;
+}
+    return createTagInput;
+  })();
+
   // ── toast ── (registry/recipes/toast/toast.js)
   var createToastContainer = controllerRegistry["toast"] = (function() {
 // @ui:controller toast
@@ -9134,6 +9463,212 @@ function createToastContainer(root) {
   return api;
 }
     return createToastContainer;
+  })();
+
+  // ── toggle-group ── (registry/recipes/toggle-group/toggle-group.js)
+  var createToggleGroup = controllerRegistry["toggle-group"] = (function() {
+// @ui:controller toggle-group
+// @ui:provides getValue setValue toggle destroy
+
+/**
+ * toggle-group — a single- or multi-select group of toggle buttons built on
+ * NATIVE form controls so `l-model` works with zero engine changes:
+ *
+ *   • single mode → `[data-part="control"]` are `<input type="radio">`; the
+ *     committed value is the checked radio's `value` (a string). `l-model` on
+ *     the radios two-way-binds a string through the engine's native radio path.
+ *   • multi mode → the controls are `<input type="checkbox">`; the value is the
+ *     array of checked `value`s. `l-model` binds an array through the engine's
+ *     native checkbox-array path.
+ *
+ * The visible "buttons" are the `[data-part="item"]` labels; the native input
+ * is visually hidden (see the CSS) but remains the accessible, focusable
+ * control, so the ARIA is the real radio/checkbox semantics of the platform.
+ *
+ * The controller owns only what CSS and the platform cannot: **roving
+ * tabindex** (Arrow/Home/End move a single tab-stop across the group, with
+ * focus-follows-selection in single mode per the radiogroup convention),
+ * keyboard toggling that is synthetic-event-safe (Space/Enter), single-mode
+ * exclusivity when the controls are used standalone (no `l-model`), the
+ * `[data-state]` styling hook, and a `faqir:change` notification.
+ *
+ * Every state mutation funnels through a native `change` event on the affected
+ * input, so the engine's `l-model` listener and this controller stay in lockstep.
+ */
+function createToggleGroup(root) {
+  // Prevent double-init.
+  if (root._faqirToggleGroup) return root._faqirToggleGroup;
+
+  const mode = root.dataset.mode === "multi" ? "multi" : "single";
+  const controls = () => [...root.querySelectorAll("[data-part='control']")];
+  const enabled = () => controls().filter((el) => !el.disabled);
+
+  // ── value ──────────────────────────────────────────────────────────────────
+  function getValue() {
+    const checked = controls()
+      .filter((el) => el.checked)
+      .map((el) => el.value);
+    return mode === "multi" ? checked : (checked.length ? checked[0] : null);
+  }
+
+  function setValue(val) {
+    const cs = controls();
+    if (mode === "multi") {
+      const set = new Set(Array.isArray(val) ? val : val == null ? [] : [val]);
+      cs.forEach((el) => {
+        el.checked = set.has(el.value);
+      });
+    } else {
+      cs.forEach((el) => {
+        el.checked = el.value === val;
+      });
+    }
+    syncState();
+  }
+
+  // ── state reflection + roving tabindex ───────────────────────────────────────
+  function checkedIndex() {
+    return controls().findIndex((el) => el.checked);
+  }
+
+  function tabStopIndex() {
+    // The tab-stop follows the checked control; falling back to the first
+    // enabled one so the group is always reachable by Tab.
+    const checked = checkedIndex();
+    if (checked >= 0 && !controls()[checked].disabled) return checked;
+    const first = controls().findIndex((el) => !el.disabled);
+    return first >= 0 ? first : 0;
+  }
+
+  function syncState() {
+    const stop = tabStopIndex();
+    controls().forEach((el, i) => {
+      el.tabIndex = i === stop ? 0 : -1;
+      const item = el.closest("[data-part='item']") || el;
+      item.dataset.state = el.checked ? "on" : "off";
+    });
+  }
+
+  function emitChange() {
+    root.dispatchEvent(
+      new CustomEvent("faqir:change", {
+        bubbles: true,
+        detail: { value: getValue(), mode },
+      }),
+    );
+  }
+
+  // The single mutation seam: enforce single-mode exclusivity (needed when the
+  // group is used without l-model), reflect state, then notify.
+  function onChange(e) {
+    const el = e.target.closest("[data-part='control']");
+    if (!el || !root.contains(el)) return;
+    if (mode === "single" && el.checked) {
+      controls().forEach((o) => {
+        if (o !== el) o.checked = false;
+      });
+    }
+    syncState();
+    emitChange();
+  }
+
+  // ── keyboard ─────────────────────────────────────────────────────────────────
+  function moveFocus(fromIndex, delta) {
+    const list = enabled();
+    if (!list.length) return;
+    const all = controls();
+    // Map the absolute index onto the enabled subset, then step.
+    let pos = list.indexOf(all[fromIndex]);
+    if (pos < 0) pos = 0;
+    const next = ((pos + delta) % list.length + list.length) % list.length;
+    focusControl(all.indexOf(list[next]));
+  }
+
+  function focusControl(index) {
+    const cs = controls();
+    const el = cs[index];
+    if (!el) return;
+    cs.forEach((o, i) => {
+      o.tabIndex = i === index ? 0 : -1;
+    });
+    el.focus();
+    // radiogroup convention: in single mode, moving focus selects.
+    if (mode === "single") select(el);
+  }
+
+  function jumpFocus(edge) {
+    const list = enabled();
+    if (!list.length) return;
+    focusControl(controls().indexOf(edge === "first" ? list[0] : list[list.length - 1]));
+  }
+
+  // Toggle/select via a dispatched native change, so l-model and onChange run.
+  function select(el) {
+    if (el.disabled) return;
+    if (mode === "multi") {
+      el.checked = !el.checked;
+    } else {
+      el.checked = true;
+    }
+    el.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
+  function onKeyDown(e) {
+    const cs = controls();
+    const active = cs.indexOf(document.activeElement);
+    const from = active >= 0 ? active : tabStopIndex();
+    switch (e.key) {
+      case "ArrowRight":
+      case "ArrowDown":
+        e.preventDefault();
+        moveFocus(from, 1);
+        break;
+      case "ArrowLeft":
+      case "ArrowUp":
+        e.preventDefault();
+        moveFocus(from, -1);
+        break;
+      case "Home":
+        e.preventDefault();
+        jumpFocus("first");
+        break;
+      case "End":
+        e.preventDefault();
+        jumpFocus("last");
+        break;
+      case " ":
+      case "Enter":
+        // Drive the toggle ourselves so synthetic events (tests) behave like
+        // real ones and l-model always sees a change event.
+        if (active >= 0) {
+          e.preventDefault();
+          select(cs[active]);
+        }
+        break;
+    }
+  }
+
+  // Public toggle by value (imperative API).
+  function toggle(value) {
+    const el = controls().find((c) => c.value === value);
+    if (el) select(el);
+  }
+
+  root.addEventListener("change", onChange);
+  root.addEventListener("keydown", onKeyDown);
+  syncState();
+
+  function destroy() {
+    root.removeEventListener("change", onChange);
+    root.removeEventListener("keydown", onKeyDown);
+    delete root._faqirToggleGroup;
+  }
+
+  const api = { getValue, setValue, toggle, destroy };
+  root._faqirToggleGroup = api;
+  return api;
+}
+    return createToggleGroup;
   })();
 
   // ── tooltip ── (registry/recipes/tooltip/tooltip.js)

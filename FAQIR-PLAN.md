@@ -133,7 +133,7 @@ done in any order (or in parallel worktrees).
 | 0.7-03 | Recipes: `context-menu` + `menubar` | ⬜ |
 | 0.7-04 | Recipe: `tree-view` | ✅ |
 | 0.7-05 | Recipe: `file-upload` | ✅ |
-| 0.7-06 | Recipes: `tag-input` + `toggle-group` | ⬜ |
+| 0.7-06 | Recipes: `tag-input` + `toggle-group` | ✅ |
 | 0.7-07 | Recipe: `carousel` | ⬜ |
 | 0.7-08 | Patterns: `pricing` + landing kit (`hero`, `feature-grid`, `site-footer`) | ⬜ |
 | 0.7-09 | Patterns: `stats-dashboard` + `inbox` | ⬜ |
@@ -1887,9 +1887,9 @@ duplicates policy. `toggle-group`: single/multi select with roving tabindex,
 - toggle-group: roving tabindex arrows, single mode enforces exclusivity, multi mode toggles independently, correct ARIA per mode.
 
 **Acceptance criteria**
-- [ ] tag-input reuses chip CSS (no duplicated styles) and combobox listbox behavior where sane.
-- [ ] Both keyboard-complete and audit-clean.
-- [ ] `l-model` binding works for both (array value / selection value).
+- [x] tag-input reuses chip CSS (no duplicated styles) and combobox listbox behavior where sane. (Committed tags are real `data-ui="chip"` elements — `tag-input.css` defines zero chip rules, only the field wrapper/input/listbox; `tests/recipes/tag-input.test.ts` "new tags reuse the chip primitive markup" asserts `data-ui=chip`, `role=listitem`, and the `<button type=button aria-label>` dismiss. The optional suggestions listbox mirrors the combobox contract — filter-as-you-type + `data-hidden`, ArrowUp/Down `data-highlighted`, Enter/click commit, `[data-part=empty]` toggle — proven by the suggestion tests.)
+- [x] Both keyboard-complete and audit-clean. (toggle-group: Arrow/Home/End roving tabindex + Space/Enter, exclusivity/independence per mode; tag-input: Enter-adds / Backspace-removes-last / Arrow+Enter suggestion / Escape — all covered across 37 new tests. `faqir audit` clean over all 77 registry pages, 0 findings.)
+- [x] `l-model` binding works for both (array value / selection value). (toggle-group binds **natively, zero engine changes**: single mode = `<input type=radio>` → string via the engine's radio path; multi mode = `<input type=checkbox>` → array via the checkbox-array path — both proven by real-engine `Faqir.start()` tests. tag-input exposes its array through `getValue()`/`faqir:change` and mirrors it as JSON onto the hidden `[data-part=value]` input, firing native `input` so `l-model` stays in sync; the real-engine test round-trips `JSON.parse(model)` to the tag array. Design note: toggle-group multi mode uses native checkbox `aria-checked` rather than button `aria-pressed` specifically to make array `l-model` work without touching core.)
 
 ---
 

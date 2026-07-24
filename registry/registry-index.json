@@ -1,6 +1,6 @@
 {
   "schema": "faqir-registry-index@1",
-  "count": 74,
+  "count": 76,
   "components": [
     {
       "name": "aspect-ratio",
@@ -1505,6 +1505,34 @@
       "deps": []
     },
     {
+      "name": "tag-input",
+      "kind": "recipe",
+      "layer": "recipes",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "tag-input.css",
+          "sha256": "e834129e347cadb51b3a2dc1672b030d435fcb894f3281610a1dab0d7ed0c850"
+        },
+        {
+          "path": "tag-input.html",
+          "sha256": "1c8d93aff6af31fc21edc69c3e52aadcc6f48075fdc11fa7106abb1881c60cd8"
+        },
+        {
+          "path": "tag-input.js",
+          "sha256": "068f0975d17184caa377b935a089c68feb96015957e5813b5d8893eff5b2f4df"
+        },
+        {
+          "path": "tag-input.manifest.json",
+          "sha256": "589174a2f81930e535d225930f1441dd111d9173ab22b965196eb1f581581dbf"
+        }
+      ],
+      "hash": "c3365528f68ba40f9cf9db7f6d7c0fe444a1d223b82f212cd46e510481bb9f8c",
+      "deps": [
+        "chip"
+      ]
+    },
+    {
       "name": "toast",
       "kind": "recipe",
       "layer": "recipes",
@@ -1531,6 +1559,32 @@
       "deps": [
         "button"
       ]
+    },
+    {
+      "name": "toggle-group",
+      "kind": "recipe",
+      "layer": "recipes",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "toggle-group.css",
+          "sha256": "c8931ba004f85f8cae9a6a4acd8134fbcfaedafe7d0c892ffa4b7d1ff58e69a9"
+        },
+        {
+          "path": "toggle-group.html",
+          "sha256": "1c14023379a32ab2c1a7286a16973ad975dfdb4fee58141c035eae105e2f10db"
+        },
+        {
+          "path": "toggle-group.js",
+          "sha256": "8725a7b13a089d1b00d28d856af0e1db9f050a9f3bffd718a688e26fa0ad56b8"
+        },
+        {
+          "path": "toggle-group.manifest.json",
+          "sha256": "9a94431571a28076c21fd958df324f9426371e24d3c893efccc004ce5583959a"
+        }
+      ],
+      "hash": "e07e287d9317652009d0fe785cadc598965cb3b03ea3e51765fad811d352533d",
+      "deps": []
     },
     {
       "name": "tooltip",

@@ -2,7 +2,7 @@
 
 # Faqir Recipes Reference
 
-26 recipes, each with its anatomy tree, variant table, and safe/unsafe transforms — all derived from the component manifest.
+28 recipes, each with its anatomy tree, variant table, and safe/unsafe transforms — all derived from the component manifest.
 
 ## accordion
 
@@ -1009,6 +1009,43 @@ Accessible tabbed interface with keyboard navigation and panel switching
 - **A11y:** role=tablist · keys: ArrowLeft, ArrowRight, Home, End
 - **Required ARIA:** `role="tablist" on list`; `role="tab" on each trigger`; `role="tabpanel" on each panel`; `aria-selected on active trigger`; `aria-controls on trigger pointing to panel id`; `aria-labelledby on panel pointing to trigger id`
 
+## tag-input
+
+_kind: recipe · category: forms · controller: createTagInput()_
+
+Multi-value input composing the chip primitive and combobox listbox behaviour — type + Enter to add tags, Backspace to remove the last, dismiss buttons per tag, optional filtered suggestions, and a configurable duplicates policy
+
+```html
+<div data-ui="tag-input" data-state="closed">
+  <span data-part="taglist" role="list" aria-label="{label}">
+    <input data-part="input" type="text" role="combobox" aria-expanded="false" aria-autocomplete="list" placeholder="{placeholder}">
+  </span>
+  <input data-part="value" type="hidden">
+</div>
+```
+
+**Anatomy**
+
+```text
+[data-ui='tag-input']  ·  <div> · content: slots
+├─ [data-part='taglist']  <span>  required  — The field box holding the committed tag chips and the text input
+├─ [data-part='tag']  <span>  optional  — A committed tag — a data-ui="chip" element (styled by chip.css) with a label and dismiss button; created and removed by the controller
+├─ [data-part='input']  <input>  required  — The text input for typing new tags; role=combobox when a suggestions listbox is present
+├─ [data-part='listbox']  <ul>  optional  — Optional suggestions dropdown with role=listbox (combobox listbox contract)
+├─ [data-part='option']  <li>  optional  — A suggestion with role=option
+├─ [data-part='empty']  <li>  optional  — Empty state shown when no suggestion matches the filter
+└─ [data-part='value']  <input>  optional  — Hidden input mirroring the tag array as JSON; the controller fires native input events on it so l-model stays in sync
+```
+
+**Variants**
+
+_No variants._
+
+- **Safe transforms:** `add-suggestion-option`, `remove-suggestion-option`, `change-placeholder`, `toggle-allow-duplicates`, `seed-initial-tags`, `restyle-listbox-background`
+- **Unsafe (never do):** `remove-taglist-role-list`, `remove-dismiss-aria-label`, `remove-combobox-role-when-suggestions-present`, `remove-keyboard-handling`
+- **A11y:** keys: Enter, Backspace, ArrowDown/ArrowUp, Escape
+- **Required ARIA:** `role="list" on taglist with an accessible name`; `role="listitem" on each tag chip`; `type="button" and aria-label on each chip dismiss button`; `role="combobox", aria-autocomplete="list", aria-expanded on the input when suggestions are present`; `role="listbox" on listbox, role="option" on each option, aria-controls linking input to listbox`
+
 ## toast
 
 _kind: recipe · category: feedback · controller: createToast()_
@@ -1041,6 +1078,39 @@ Auto-dismissing notification messages with stack management
 - **Safe transforms:** `change-position`, `change-auto-dismiss-duration`, `restyle-toast-background`, `customize-tone-colors`, `add-progress-bar`, `change-max-width`, `modify-enter-exit-animations`
 - **Unsafe (never do):** `remove-role-region`, `remove-aria-label`, `remove-role-status`, `remove-aria-live`, `remove-close-button`, `remove-auto-dismiss`
 - **Required ARIA:** `role="region" on container`; `aria-label="Notifications" on container`; `role="status" on individual toasts`; `aria-live="polite" on individual toasts`; `aria-label on close button`
+
+## toggle-group
+
+_kind: recipe · category: forms · controller: createToggleGroup()_
+
+Single- or multi-select group of toggle buttons over native radio/checkbox controls, with roving-tabindex keyboard navigation and native l-model binding
+
+```html
+<div data-ui="toggle-group" data-mode="{mode}" role="radiogroup" aria-label="{label}">
+  <label data-part="item" data-state="off"><input data-part="control" type="radio" name="{id}" value="{value1}"><span data-part="label">{option1}</span></label>
+  <label data-part="item" data-state="off"><input data-part="control" type="radio" name="{id}" value="{value2}"><span data-part="label">{option2}</span></label>
+</div>
+```
+
+**Anatomy**
+
+```text
+[data-ui='toggle-group']  ·  <div> · content: slots
+├─ [data-part='item']  <label>  required  — One toggle button — a <label> wrapping a native control and its text; repeated per option
+├─ [data-part='control']  <input>  required  — The native radio (single mode) or checkbox (multi mode) input carrying the option's value; visually hidden but the accessible, focusable, l-model-bindable control
+└─ [data-part='label']  <span>  required  — Visible option text; provides the control's accessible name via the wrapping label
+```
+
+**Variants**
+
+| Variant | Values | Default | Attribute | Applied to |
+|---------|--------|---------|-----------|------------|
+| mode | `single`, `multi` | `single` | `data-mode` | root |
+
+- **Safe transforms:** `add-item`, `remove-item`, `change-mode`, `change-label-text`, `add-disabled`, `remove-disabled`, `restyle-item-background`
+- **Unsafe (never do):** `remove-control-input`, `change-control-from-native-input`, `remove-role-radiogroup-or-group`, `remove-accessible-name`, `remove-keyboard-navigation`
+- **A11y:** keys: Tab, ArrowRight/ArrowDown, ArrowLeft/ArrowUp, Home/End, Space/Enter
+- **Required ARIA:** `role="radiogroup" on root in single mode; role="group" in multi mode`; `aria-label (or aria-labelledby) on root`; `type="radio" on each control in single mode; type="checkbox" in multi mode`; `a wrapping <label> (or aria-label) giving every control an accessible name`
 
 ## tooltip
 

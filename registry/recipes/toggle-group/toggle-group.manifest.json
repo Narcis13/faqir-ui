@@ -1,0 +1,124 @@
+{
+  "$schema": "../../../manifest.schema.json",
+  "name": "toggle-group",
+  "version": "1.0.0",
+  "kind": "recipe",
+  "category": "forms",
+  "description": "Single- or multi-select group of toggle buttons over native radio/checkbox controls, with roving-tabindex keyboard navigation and native l-model binding",
+
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='toggle-group']",
+    "content_model": "slots"
+  },
+
+  "slots": {
+    "item": {
+      "selector": "[data-part='item']",
+      "required": true,
+      "tag_hint": "label",
+      "description": "One toggle button — a <label> wrapping a native control and its text; repeated per option"
+    },
+    "control": {
+      "selector": "[data-part='control']",
+      "required": true,
+      "tag_hint": "input",
+      "description": "The native radio (single mode) or checkbox (multi mode) input carrying the option's value; visually hidden but the accessible, focusable, l-model-bindable control"
+    },
+    "label": {
+      "selector": "[data-part='label']",
+      "required": true,
+      "tag_hint": "span",
+      "description": "Visible option text; provides the control's accessible name via the wrapping label"
+    }
+  },
+
+  "variants": {
+    "mode": {
+      "values": ["single", "multi"],
+      "default": "single",
+      "attr": "data-mode",
+      "applied_to": "root"
+    }
+  },
+
+  "states": {},
+
+  "props": {
+    "mode": { "type": "string", "default": "single", "description": "single (radiogroup, one value) or multi (independent toggles, array value)" }
+  },
+
+  "a11y": {
+    "required_attrs": [
+      "role=\"radiogroup\" on root in single mode; role=\"group\" in multi mode",
+      "aria-label (or aria-labelledby) on root",
+      "type=\"radio\" on each control in single mode; type=\"checkbox\" in multi mode",
+      "a wrapping <label> (or aria-label) giving every control an accessible name"
+    ],
+    "keyboard": {
+      "Tab": "moves into the group to the single roving tab-stop (the checked control, else the first enabled one)",
+      "ArrowRight/ArrowDown": "move focus to the next enabled control (wrapping); in single mode focus-follows-selection",
+      "ArrowLeft/ArrowUp": "move focus to the previous enabled control (wrapping); in single mode focus-follows-selection",
+      "Home/End": "focus the first/last enabled control",
+      "Space/Enter": "toggle the focused control (select in single mode)"
+    },
+    "notes": "The controls are REAL <input type=\"radio\"|\"checkbox\"> elements, so the platform provides the pressed/checked semantics and l-model binds through the engine's native radio (string) / checkbox-array (array) paths with no engine changes. The controller adds only roving tabindex, single-mode exclusivity for uncontrolled use, the [data-state] styling hook, and a faqir:change notification. Design note: multi mode uses native checkbox aria-checked rather than button aria-pressed specifically so array l-model works natively."
+  },
+
+  "tokens_used": [
+    "color-bg", "color-bg-muted", "color-fg", "color-fg-muted",
+    "color-border", "color-primary", "color-primary-subtle", "color-ring",
+    "radius-md",
+    "space-1", "space-1h", "space-2", "space-3",
+    "text-sm", "font-sans", "weight-medium",
+    "duration-fast", "ease-default"
+  ],
+
+  "templates": {
+    "html": "<div data-ui=\"toggle-group\" data-mode=\"{mode}\" role=\"radiogroup\" aria-label=\"{label}\">\n  <label data-part=\"item\" data-state=\"off\"><input data-part=\"control\" type=\"radio\" name=\"{id}\" value=\"{value1}\"><span data-part=\"label\">{option1}</span></label>\n  <label data-part=\"item\" data-state=\"off\"><input data-part=\"control\" type=\"radio\" name=\"{id}\" value=\"{value2}\"><span data-part=\"label\">{option2}</span></label>\n</div>"
+  },
+
+  "safe_transforms": [
+    "add-item",
+    "remove-item",
+    "change-mode",
+    "change-label-text",
+    "add-disabled",
+    "remove-disabled",
+    "restyle-item-background"
+  ],
+
+  "unsafe_transforms": [
+    "remove-control-input",
+    "change-control-from-native-input",
+    "remove-role-radiogroup-or-group",
+    "remove-accessible-name",
+    "remove-keyboard-navigation"
+  ],
+
+  "composition": {
+    "contains": [],
+    "used_in": []
+  },
+
+  "files": {
+    "html": "toggle-group.html",
+    "css": "toggle-group.css",
+    "js": "toggle-group.js",
+    "manifest": "toggle-group.manifest.json"
+  },
+
+  "tests": [
+    "roving-tabindex-single-tab-stop",
+    "arrow-keys-move-focus-and-wrap",
+    "home-end-jump-to-edges",
+    "single-mode-enforces-exclusivity",
+    "multi-mode-toggles-independently",
+    "single-value-is-a-string",
+    "multi-value-is-an-array",
+    "l-model-binds-string-in-single-mode",
+    "l-model-binds-array-in-multi-mode",
+    "disabled-controls-are-skipped",
+    "emits-faqir-change-on-selection"
+  ]
+}

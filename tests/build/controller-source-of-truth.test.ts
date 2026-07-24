@@ -59,7 +59,7 @@ function tmp(): string {
 }
 
 describe("controllers: single source of truth", () => {
-  test("all 26 recipes are discoverable and tagged @ui:controller", () => {
+  test("all 28 recipes are discoverable and tagged @ui:controller", () => {
     expect(RECIPES.map((r) => r.name).sort()).toEqual([
       "accordion",
       "alert-dialog",
@@ -84,7 +84,9 @@ describe("controllers: single source of truth", () => {
       "slider",
       "table",
       "tabs",
+      "tag-input",
       "toast",
+      "toggle-group",
       "tooltip",
       "tree-view",
     ]);

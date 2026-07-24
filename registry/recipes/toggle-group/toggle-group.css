@@ -1,0 +1,80 @@
+/* @ui:component toggle-group */
+/* @ui:tokens color-bg color-bg-muted color-fg color-fg-muted color-border color-primary color-primary-subtle color-ring radius-md space-1 space-1h space-2 space-3 text-sm font-sans weight-medium duration-fast ease-default */
+
+/* ── Root: a segmented row of toggle buttons ── */
+[data-ui="toggle-group"] {
+  display: inline-flex;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+}
+
+/* ── Item: the visible "button" (a <label> wrapping the native control) ── */
+[data-ui="toggle-group"] [data-part="item"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1h);
+  padding: var(--toggle-group-pad-y, var(--space-1h)) var(--toggle-group-pad-x, var(--space-3));
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-fg-muted);
+  font-family: var(--toggle-group-font, var(--font-sans));
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  line-height: 1;
+  cursor: pointer;
+  user-select: none;
+  transition: background var(--duration-fast) var(--ease-default),
+              color var(--duration-fast) var(--ease-default);
+}
+
+[data-ui="toggle-group"] [data-part="item"]:hover {
+  background: var(--color-bg-muted);
+  color: var(--color-fg);
+}
+
+/* ── The native control is the accessible, focusable element; hide it visually
+      but keep it operable (no display:none, which would drop it from the a11y
+      tree and disable focus). ── */
+[data-ui="toggle-group"] [data-part="control"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ── Checked / on — driven off the native control's state (and the mirrored
+      data-state for engines/tools that key on it) ── */
+[data-ui="toggle-group"] [data-part="item"]:has([data-part="control"]:checked),
+[data-ui="toggle-group"] [data-part="item"][data-state="on"] {
+  background: var(--color-primary-subtle);
+  color: var(--color-primary);
+}
+
+/* ── Keyboard focus ring on the item (focus lives on the hidden control) ── */
+[data-ui="toggle-group"] [data-part="item"]:has([data-part="control"]:focus-visible) {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+}
+
+/* ── Disabled control ── */
+[data-ui="toggle-group"] [data-part="item"]:has([data-part="control"]:disabled) {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Motion ── */
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="toggle-group"] [data-part="item"] {
+    transition: none;
+  }
+}
