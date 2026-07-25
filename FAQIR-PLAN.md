@@ -117,7 +117,7 @@ done in any order (or in parallel worktrees).
 | 0.6-06 | Plugin: `faqir-mask` (wire into input-otp) | ✅ |
 | 0.6-07 | Documents: running headers/footers (`doc-header`/`doc-footer`) | ✅ |
 | 0.6-08 | `faqir scaffold invoice` + `faqir scaffold report` | ✅ |
-| 0.6-09 | Documents: `watermark` primitive + `barcode` recipe + `document-serif` theme | ⬜ |
+| 0.6-09 | Documents: `watermark` primitive + `barcode` recipe + `document-serif` theme | ✅ |
 | 0.6-10 | Print visual regression (PDF render + image diff) | ✅ |
 | 0.6-11 | `faqir theme generate` — parametric oklch themes | ✅ |
 | 0.6-12 | `@faqir-ui/vue`: codegen + runtime for primitives | ✅ |
@@ -130,7 +130,7 @@ done in any order (or in parallel worktrees).
 |----|------|--------|
 | 0.7-01 | `@faqir-ui/react`: codegen + runtime for primitives | ✅ |
 | 0.7-02 | `@faqir-ui/react`: recipe wrappers, hooks, RSC boundaries | ✅ |
-| 0.7-03 | Recipes: `context-menu` + `menubar` | ⬜ |
+| 0.7-03 | Recipes: `context-menu` + `menubar` | ✅ |
 | 0.7-04 | Recipe: `tree-view` | ✅ |
 | 0.7-05 | Recipe: `file-upload` | ✅ |
 | 0.7-06 | Recipes: `tag-input` + `toggle-group` | ✅ |
