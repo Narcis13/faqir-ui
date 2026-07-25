@@ -1,0 +1,19 @@
+# Cloudflare Pages deployment for the documentation site — task 0.7-15 (§13).
+#
+# The site is a directory of static files: no build step at serve time, no
+# functions, no bindings, no runtime. This file exists so that publishing it is
+# one command with no arguments to remember:
+#
+#     bun run deploy:site        # = build:docs, then `wrangler pages deploy`
+#
+# Deployment itself is a human step — it needs a Cloudflare account and an
+# interactive `wrangler login` (or a CLOUDFLARE_API_TOKEN in the environment).
+# See docs/docs-site.md § Hosting.
+#
+# Any static host works: the output has relative URLs throughout and no server
+# rules beyond `_headers`, which Netlify reads in the same format. `_headers` is
+# generated into the output directory by the site build, not written by hand.
+
+name = "faqir-ui"
+pages_build_output_dir = "./site/dist"
+compatibility_date = "2026-07-25"

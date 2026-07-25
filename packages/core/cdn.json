@@ -1,0 +1,27 @@
+{
+  "package": "@faqir-ui/core",
+  "version": "0.2.4",
+  "base": "https://cdn.jsdelivr.net/npm/@faqir-ui/core@0.2.4/dist/",
+  "integrity": {
+    "faqir-core.js": "sha384-El4d/u9/cO1sxqwl2DQiqk6sCNb10gGmgzSVrTpXxEE9JOGiU7i98LDptjVIviR4",
+    "faqir-core.min.js": "sha384-Z/IfhQQfGrJ1mnAFA4HJHc7yWI92DinlVZpk9DU9Pg6/IGy+joWxGmaEZBq1698d",
+    "faqir-core.min.js.map": "sha384-0VUjv801cKLfi9tEyN8FdyNYVTzrXXKgKDjPLI0ceepH7dFkg5zLOAbfL7sTYzno",
+    "faqir.aurora.css": "sha384-t3b5W0CdJyIK/XDIllp9VApTyTA54F5JP1OgA3NtJ5uSZSjWNKj56piYn0qtuhq/",
+    "faqir.brutalist.css": "sha384-uPgOoDEhHy11Ht6HHShkEGwJDz4NRyzfmvWTZv4cU6pc60brSTqtrOB/wRcISZyt",
+    "faqir.contrast.css": "sha384-s0pLd+oJhq1+jARndFIQFeJ0AldoOpzeYNPAMI4FdOp5fUHXtUFqVMEKBjhtNrR6",
+    "faqir.default.css": "sha384-g/DhEQNjh7cFdVNNWU0HMuKNsantPpCk66YsTfKuOyf+gwaGnAwF2id1veRHeDSJ",
+    "faqir.document-serif.css": "sha384-VvPbWCYzN0kCgtbMF3S9uiWN/EOyy8/3N9A3DJRkvwl+29g7cnYnA4PPP6Bnqgdh",
+    "faqir.document.css": "sha384-NzXcRfMAYK/hp3ranc7l35Akvi9aZ4tHBbbbpgJW+qmvvQFjfUKpn5vHdoaDJwsO",
+    "faqir.glass.css": "sha384-qJtn7YqM3xHz9TIF9zdTsY7K+WG0pufuHdGvCiBaFGuwBIaD5/T1UXWaPD4hz5u6",
+    "faqir.midnight.css": "sha384-kPLIuRLdYwJCKlFL687tuhN5z3XrUumnDHI8fFgCMxf/R32IkFokwnrd9N16ON18",
+    "faqir.paper.css": "sha384-uTmKEcCUo9bfbVAiGI/1Nb59vofuIlEM3zEfFPX8+2ZmubFirECIP8bH5vv72EKc",
+    "faqir.slate.css": "sha384-E2Qz4l3waeuI3dueA/l22qN2iaZSMcKWmJ0GJ8uzIJJPiioYg4ClNIwOLZudsuUg",
+    "faqir.soft.css": "sha384-/S/YjfGGxUqfy6mCfftnj2+EoD6GU+DrquZrOjGXXyOQo61/7HahobylQ9SwBF08",
+    "faqir.terminal.css": "sha384-XYV/647KtYi9xDHV9UTpYsSZmwZexQ7r3gChTHDwil+FxM2bSvpyrH3L/EKQ7lrS",
+    "plugins/faqir-collapse.js": "sha384-y16PnFkcJiJLQIxuQMtdS+QalrC6lJ0EsPT/oceZWpLMGdqASXq3HhVHebfUWktm",
+    "plugins/faqir-intersect.js": "sha384-4b3ALB+gKRY2yrfxF09KDmMcOsAma1X+y1q7sIY7u24jt3D2bT0RTxA/xr8kDfsb",
+    "plugins/faqir-mask.js": "sha384-cSq2DpUnoJCxEDAQjsbzAa+jSuHf4WsOaKT8t7b9p8pA7MaaRhA1DLzjMNChSa/I",
+    "plugins/faqir-persist.js": "sha384-o0jfddebC8QZ3S26VXUlOme723BNMlb/N7vqpn+fWpSeEFXzpq+3MoeXhVL/0PSv",
+    "plugins/faqir-validate.js": "sha384-DSzQ7I94Qm+VKjpgBo3qgALyuU3zgQZ+jXOIqgRHkJ6utr8nqF7tQMKWnOv1/YH2"
+  }
+}

@@ -27,7 +27,8 @@ registry copy with one extra component in it.
 | `site/content/home.html` | you | Hand-written page content: the home page. |
 | `site/content/playground.html` | you | Hand-written: the playground's sample markup. |
 | `site/lib/playground.js` | you | The playground's wiring (the only site JS, with…) |
-| `site/lib/gallery.js` | you | …the theme switcher's wiring. |
+| `site/lib/gallery.js` | you | …the theme switcher's wiring, and… |
+| `site/lib/copy-snippet.js` | you | …the copy-for-agents button. |
 | `site/lib/faqir-audit.js` | generated | The audit engine, compiled for the browser. **Committed** — `bun run build:audit-browser`. |
 | `scripts/build-docs.mjs` | — | The writer: builds in memory, clears `site/dist`, writes. |
 | `scripts/build-audit-browser.mjs` | — | The bundler for `site/lib/faqir-audit.js`. |
@@ -43,8 +44,14 @@ components/<layer>/<name>.html    one page per component
 tokens/index.html                 token reference, grouped by token file
 playground/index.html             in-browser audit playground
 themes/index.html                 theme gallery + instant switcher
+agents/index.html                 the machine surfaces, documented
 examples/<layer>/<name>.html      one standalone live example per component
 frames/theme-preview-<name>.html  the demo document each gallery frame renders
+llms.txt · llms-full.txt          full-registry agent context (llmstxt.org)
+manifest.schema.json              the manifest contract, at its own `$id` path
+registry-index.json               the remote-registry index
+snippets/<layer>/<name>.html.txt  copy-for-agents payload: markup + CDN preamble
+_headers                          content types + CORS for the files above
 styles/faqir.css                  tokens + base + every component CSS
 styles/themes/<name>.css          one per registry theme — the swappable link
 scripts/faqir-core.js             the registry engine
@@ -52,6 +59,7 @@ scripts/faqir-audit.js            the audit engine, compiled for the browser
 scripts/faqir-manifests.js        every manifest as one global
 scripts/playground.js             playground wiring
 scripts/gallery.js                theme-switcher wiring
+scripts/copy-snippet.js           the copy-for-agents button
 ```
 
 Every URL in the site is relative, so the output works at a domain root, in a
@@ -196,6 +204,102 @@ on the site stays a plain relative path the link checker can resolve.
 
 ---
 
+## Agent surfaces (the machine half of the site)
+
+Four files describe the framework to a machine. Their **paths are a contract** —
+an llms.txt URL that has been pasted into a prompt is an API — so they are
+asserted as literal strings in `tests/generator/docs-agents.test.ts`, and moving
+one fails CI rather than 404-ing in production.
+
+| URL | What it is | Served as |
+|---|---|---|
+| `/llms.txt` | llmstxt.org index: every component in one line, linked into the full reference. | `text/plain` |
+| `/llms-full.txt` | The expanded reference: template, variants, slots, states, a11y contract per component, plus the protocol and token scales. | `text/plain` |
+| `/manifest.schema.json` | The manifest contract. At the root because that *is* its `$id`. | `application/schema+json` |
+| `/registry-index.json` | The remote-registry index (SHA-256 per file) that `faqir add --registry <url>` fetches. | `application/json` |
+
+The llms.txt pair is **the CLI's own generator pointed at the registry** — the
+same `formatContextLlms` / `formatContextLlmsFull` that `faqir context --format
+llms` calls, over a `ContextData` built from every registry manifest instead of
+from one project's `ui/` directory (`src/generator/registry-context.ts`). The
+only thing that differs is `meta.scope`, which switches the summary sentence: a
+hosted file must not claim "this project installs…".
+
+The schema and the index are copied **byte-identical** from the repository, and
+the schema is re-validated against every registry manifest through the hosted
+copy — the served bytes are the contract, not a rendering of it.
+
+`_headers` (Cloudflare Pages / Netlify format) is generated from the same list
+that emits those files, so a machine file cannot be served without a content type
+and a permissive `Access-Control-Allow-Origin` — a browser-based agent that
+cannot read the file cross-origin cannot use it at all.
+
+### Copy for agents
+
+Every component page carries a **Copy for agents** button. What it copies is a
+complete, standalone document — the component's registry reference markup under
+the two-tag CDN preamble, version-pinned with subresource integrity:
+
+```html
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@faqir-ui/core@0.2.4/dist/faqir.default.css"
+      integrity="sha384-…" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/@faqir-ui/core@0.2.4/dist/faqir-core.min.js"
+        integrity="sha384-…" crossorigin="anonymous" defer></script>
+```
+
+Paste it into an empty file, open the file, done — no install, no build step.
+The same bytes are three things at once, from one source: the escaped
+`<pre><code>` block visible on the page (so it works with JavaScript off, and on
+`file://` where there is no clipboard API), the file at
+`snippets/<layer>/<name>.html.txt`, and what the button writes to the clipboard.
+The tests assert that identity, then assert the payload as a document — it parses
+into a real DOM, it depends on nothing relative, and it is clean under the same
+document rules the live-example pages are.
+
+`.html.txt`, not `.html`, is deliberate: this is a payload, not a page of the
+site. It is the one artifact here that points at a CDN, and keeping it out of the
+page classes keeps the site's own claim absolute — **no page the site serves
+reaches the network.**
+
+One caveat, stated plainly: `@faqir-ui/core` is **not published to npm yet**
+(0.3-02 deliberately built the artifacts without publishing; the publish is
+1.0-04). Until it is, those URLs resolve to nothing — the preamble is correct in
+form and pinned to the version this repository declares, and it goes live the
+moment the package is. The tests assert what can be asserted offline: the URLs,
+the exact version pin, and integrity hashes that match the artifacts this
+repository builds.
+
+The version and the hashes come from `packages/core/cdn.json`, written by
+`bun run build:core-package` beside the `dist/sri.json` it already produced.
+It is committed because `packages/core/dist/` is not: the docs build has to emit
+`integrity="…"` from a bare checkout, and a hash only means something next to the
+exact version it was computed for. **Bump `packages/core/package.json` and you
+must rerun that build** — the contract test fails while the two disagree, because
+pinning the URL to one release and the integrity to another ships a page the
+browser refuses to load.
+
+---
+
+## Hosting
+
+The output is a directory of static files with relative URLs throughout, so any
+host works. The repository is configured for Cloudflare Pages:
+
+```bash
+bun run deploy:site      # build:docs, then `wrangler pages deploy`
+```
+
+`wrangler.toml` supplies the project name and `pages_build_output_dir`, so the
+deploy command takes no arguments. Deployment itself is a **human step**: it
+needs a Cloudflare account and an interactive `wrangler login` (or a
+`CLOUDFLARE_API_TOKEN` in the environment). Wrangler is invoked through `bunx` —
+it is not a dependency of this repository.
+
+For any other host, publish `site/dist` and honour `_headers` (Netlify reads the
+same file; on other hosts, translate the four content types and the CORS header).
+
+---
+
 ## Determinism
 
 The generator has no timestamps and sorts every traversal, so two builds are
@@ -207,16 +311,18 @@ is stale — the drift gate a deployment pipeline wants.
 
 ## Notes for the next session
 
-- `llms.txt`, hosted schema/registry artifacts and copy-for-agents are task
-  0.7-15.
-- Three findings the site surfaced are recorded as follow-ups in `FAQIR-PLAN.md`,
+- Four findings the site surfaced are recorded as follow-ups in `FAQIR-PLAN.md`,
   none a site defect: **0.7-17** (the registry's own reference pages are not clean
   under the per-component audit rules — 365 findings, which also hits `faqir
   audit` in user projects), **0.7-18** (`--color-primary` on `--color-bg-muted` is
   4.41:1 in the default dark scheme, just under AA) and **0.7-19** (`--color-<sem>`
   text on `--color-<sem>-subtle` — what every soft `badge`/`callout` variant
   renders — is below AA in 10 of the 12 themes; found by the gallery frame, the
-  first thing in the project to render a component in *every* theme).
+  first thing in the project to render a component in *every* theme), and
+  **0.7-21** (`empty-state` ships in two layers, so `llms-full.txt` has two
+  `### empty-state` blocks and the index's `#empty-state` anchor only ever
+  reaches the first — a property of the llms format from 0.5-06, which the
+  hosted, registry-wide variant made visible).
 - The gallery frame shows solid component colour and bare token swatches, not text
   on a tinted `-subtle` surface. That is 0.7-19's doing, not a design preference:
   the badge-variant row belongs in the frame the moment those pairs clear AA.

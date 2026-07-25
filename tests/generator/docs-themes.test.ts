@@ -206,7 +206,7 @@ describe("site JavaScript", () => {
     );
   }
 
-  it("runs on exactly the pages that need it, from exactly five files", () => {
+  it("runs on exactly the pages that need it, from exactly six files", () => {
     const shipped = files
       .filter((f) => f.path.startsWith("scripts/"))
       .map((f) => f.path)
@@ -223,6 +223,12 @@ describe("site JavaScript", () => {
       THEMES_PAGE,
       ...themes.map((t) => themePreviewPath(t.name)),
       ...files.filter((f) => f.path.startsWith("examples/")).map((f) => f.path),
+      // A component page carries the copy-for-agents wiring (task 0.7-15) — and
+      // only when it has a payload to copy, which is exactly the set of
+      // components that ship reference markup, i.e. the set with an example.
+      ...files
+        .filter((f) => f.path.startsWith("examples/"))
+        .map((f) => f.path.replace(/^examples\//, "components/")),
     ];
     expect(withScripts.sort()).toEqual(expected.sort());
   });
@@ -234,6 +240,7 @@ describe("site JavaScript", () => {
       "scripts/playground.js",
     ]);
     expect(scriptsOf(THEMES_PAGE)).toEqual(["scripts/gallery.js"]);
+    expect(scriptsOf("components/primitives/button.html")).toEqual(["scripts/copy-snippet.js"]);
     for (const theme of themes) {
       expect(scriptsOf(themePreviewPath(theme.name))).toEqual(["scripts/gallery.js"]);
     }
@@ -245,18 +252,25 @@ describe("site JavaScript", () => {
     }
   });
 
-  it("keeps the documentation pages script-free", () => {
-    // 83 component pages, the index, the token reference and the home page are
-    // still static HTML: the site did not become an application.
+  it("keeps the documentation pages script-free apart from the copy button", () => {
+    // The index, the token reference, the agents page and the home page are pure
+    // static HTML; a component page's only script is the copy-for-agents wiring,
+    // and it is one `<script src>` — no inline script anywhere. The site did not
+    // become an application.
     const documentation = files.filter(
       (f) =>
         isShellPage(f.path) &&
         f.path !== PLAYGROUND_PAGE &&
         f.path !== THEMES_PAGE,
     );
-    expect(documentation.length).toBe(components.length + 3);
+    expect(documentation.length).toBe(components.length + 4);
     for (const f of documentation) {
-      expect(f.content, `${f.path} ships JavaScript`).not.toMatch(/<script/);
+      const scripts = [...f.content.matchAll(/<script\b[^>]*>/g)].map((m) => m[0]);
+      const isComponentPage = components.some((c) => c.pagePath === f.path);
+      const allowed = isComponentPage
+        ? [`<script src="${relUrl(f.path, "scripts/copy-snippet.js")}" defer>`]
+        : [];
+      expect(scripts, `${f.path} ships unexpected JavaScript`).toEqual(allowed);
     }
   });
 

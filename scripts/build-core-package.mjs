@@ -9,6 +9,13 @@
  *   - `plugins/`             — official self-registering plugin drops (§A5)
  *   - `sri.json`             — SHA-384 subresource-integrity hashes for every file
  *
+ * …and, one level up (committed, since `dist/` is not):
+ *   - `cdn.json`             — the CDN pin manifest: package, version, base URL and
+ *                              the same integrity hashes. Read by the docs-site
+ *                              generator so every copy-for-agents snippet can pin
+ *                              a version and an integrity without this build
+ *                              having run (task 0.7-15).
+ *
  * The minified engine is bundled from `packages/core/src/cdn-entry.js` with
  * `bun build --format=iife` so a plain `<script src>` sets `window.Faqir`.
  * Requires Bun to *build* the min bundle — but the artifacts run anywhere.
@@ -37,6 +44,8 @@ const PKG = join(ROOT, "packages", "core");
 const DIST = join(PKG, "dist");
 const ENGINE_SRC = join(REGISTRY, "core", "faqir-core.js");
 const CDN_ENTRY = join(PKG, "src", "cdn-entry.js");
+/** The package's own name + version — what a CDN URL pins to. */
+const pkg = JSON.parse(readFileSync(join(PKG, "package.json"), "utf8"));
 
 // Engine gzip budget (§A6). Over-budget is a printed note today, not a failure:
 // recipe controllers are still inlined in the engine (dedup lands in 0.3-04) and
@@ -205,6 +214,23 @@ for (const rel of walk(DIST)) {
   sri[rel] = sriHash(readFileSync(join(DIST, rel)));
 }
 writeFileSync(join(DIST, "sri.json"), JSON.stringify(sri, null, 2) + "\n");
+
+// 5b. The CDN pin manifest — the same hashes, plus the version they belong to and
+//     the URL prefix they are valid for, written OUTSIDE `dist/` so it is
+//     committed (task 0.7-15). `dist/` is git-ignored and rebuilt on demand, but
+//     the docs site has to emit `integrity="…"` in every copy-for-agents snippet
+//     without running this build first — and a hash is only meaningful next to
+//     the exact version it was computed for, which is what this file records.
+//     Regenerate it whenever `packages/core/package.json` changes version: the
+//     site contract test fails while the two disagree, because pinning a URL to
+//     one version and its integrity to another ships a page that cannot load.
+const cdnPin = {
+  package: pkg.name,
+  version: pkg.version,
+  base: `https://cdn.jsdelivr.net/npm/${pkg.name}@${pkg.version}/dist/`,
+  integrity: sri,
+};
+writeFileSync(join(PKG, "cdn.json"), JSON.stringify(cdnPin, null, 2) + "\n");
 
 // 6. Report + size budget.
 const minPath = join(DIST, "faqir-core.min.js");

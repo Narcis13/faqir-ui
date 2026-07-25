@@ -16,8 +16,14 @@
 //   tokens/index.html                 token reference, grouped by token file
 //   playground/index.html             live in-browser audit playground (task 0.7-14)
 //   themes/index.html                 theme gallery + instant switcher (task 0.7-14)
+//   agents/index.html                 the machine surfaces, documented (task 0.7-15)
 //   examples/<layer>/<name>.html      one standalone live example per component
 //   frames/theme-preview.html         the demo document each gallery frame renders
+//   llms.txt · llms-full.txt          full-registry agent context (llmstxt.org)
+//   manifest.schema.json              the manifest contract, at its own `$id` path
+//   registry-index.json               the remote-registry index (`faqir add --registry`)
+//   snippets/<layer>/<name>.html.txt  copy-for-agents payload: markup + CDN preamble
+//   _headers                          content types + CORS for the files above
 //   styles/faqir.css                  tokens + base + every component CSS
 //   styles/themes/<name>.css          one file per registry theme — the swappable link
 //   scripts/faqir-core.js             the registry engine
@@ -62,6 +68,10 @@ import type { ThemeManifest } from "../theme-manifest";
 // The playground's rule legend is derived from the engine's own rule lists, so it
 // cannot describe a rule the shipped browser bundle does not run.
 import { ALL_RULES, DOCUMENT_RULES } from "../audit/rules";
+// The hosted llms.txt pair is the CLI's own `--format llms` generator pointed at
+// the whole registry instead of at one project (task 0.7-15).
+import { formatContextLlms, formatContextLlmsFull } from "./context";
+import { buildRegistryContext } from "./registry-context";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 /** Repository root — `src/generator/` is two levels down. */
@@ -77,6 +87,48 @@ export const THEMES_PAGE = "themes/index.html";
 
 /** Site-relative path prefix for generator-authored documents rendered in a frame. */
 export const FRAME_PREFIX = "frames/";
+
+/** The page documenting the agent-facing URLs below (task 0.7-15). */
+export const AGENTS_PAGE = "agents/index.html";
+
+/**
+ * The site's **machine contract**: four files an agent or a tool fetches by URL
+ * rather than reads as a page (task 0.7-15, §8.2/§9.2). These paths are stable —
+ * `tests/generator/docs-agents.test.ts` hard-codes them, so moving one fails CI
+ * rather than silently 404-ing something already published in a prompt.
+ *
+ * `manifest.schema.json` sits at the root because that is literally its `$id`
+ * (`https://faqir.dev/manifest.schema.json`); a `$ref` in any manifest resolves
+ * to it, which is the one path here that is not a convention but an identifier.
+ */
+export const LLMS_INDEX_FILE = "llms.txt";
+export const LLMS_FULL_FILE = "llms-full.txt";
+export const SCHEMA_FILE = "manifest.schema.json";
+export const REGISTRY_INDEX_FILE = "registry-index.json";
+
+/**
+ * Cloudflare-Pages-style `_headers`, emitted next to the files it describes so
+ * the served content types and CORS headers are generated from the same list as
+ * the files themselves (task 0.7-15). Netlify reads the same format.
+ */
+export const HEADERS_FILE = "_headers";
+
+/** Site-relative path prefix for copy-for-agents payloads. */
+export const SNIPPET_PREFIX = "snippets/";
+
+/**
+ * The standalone, paste-and-run document for one component — the exact bytes the
+ * copy-for-agents button puts on the clipboard, also written to disk so it has a
+ * URL of its own.
+ *
+ * `.html.txt`, not `.html`, and that is deliberate: this is a *payload*, not a
+ * page of the site. It is the one artifact here that points at a CDN, and the
+ * site's own claim — that no page it serves reaches the network — stays absolute
+ * because a browser opening this URL is shown its source, not asked to run it.
+ */
+export function snippetPath(layer: Layer, name: string): string {
+  return `${SNIPPET_PREFIX}${layer}/${name}.html.txt`;
+}
 
 /**
  * The gallery's demo document for one theme. One file per theme rather than one
@@ -108,7 +160,12 @@ export const MANIFESTS_GLOBAL = "__FAQIR_MANIFESTS__";
  * `scripts/build-audit-browser.mjs` (drift-gated by `bun run check:audit-browser`);
  * the other two are hand-written wiring.
  */
-export const SITE_SCRIPTS = ["faqir-audit.js", "playground.js", "gallery.js"] as const;
+export const SITE_SCRIPTS = [
+  "faqir-audit.js",
+  "playground.js",
+  "gallery.js",
+  "copy-snippet.js",
+] as const;
 
 /** Registry directories that ship documentable components. */
 export const LAYERS = ["primitives", "recipes", "patterns"] as const;
@@ -206,6 +263,11 @@ export interface DocsSiteOptions {
   siteRoot?: string;
   /** Theme stylesheet baked into the site bundle. Defaults to the site config's theme. */
   theme?: string;
+  /**
+   * Repository root holding `manifest.schema.json` and `packages/core/cdn.json`
+   * (the CDN pin the copy-for-agents snippets carry). Defaults to `<package>`.
+   */
+  packageRoot?: string;
 }
 
 export interface SiteConfig {
@@ -372,6 +434,75 @@ function hasDialog(fragment: string): boolean {
 }
 
 // ---------------------------------------------------------------------------
+// The CDN preamble (task 0.7-15)
+// ---------------------------------------------------------------------------
+
+/**
+ * `packages/core/cdn.json` — the published runtime's version and the SHA-384
+ * integrity of every file in it, written by `scripts/build-core-package.mjs`.
+ *
+ * It is committed while `packages/core/dist/` is not, precisely so this
+ * generator can emit `integrity="…"` without a package build having run: `bun
+ * test` and the CI docs build both work from a bare checkout. A hash is only
+ * meaningful beside the version it was computed for, so the two travel together
+ * in one file, and the contract test fails while that version disagrees with
+ * `packages/core/package.json` — pinning the URL to one release and the
+ * integrity to another ships a page the browser refuses to load.
+ */
+export interface CdnPin {
+  package: string;
+  version: string;
+  /** Absolute URL prefix, version-pinned, with a trailing slash. */
+  base: string;
+  /** File name (relative to `base`) → `sha384-…` token. */
+  integrity: Record<string, string>;
+}
+
+export function readCdnPin(packageRoot: string = PACKAGE_ROOT): CdnPin {
+  const path = join(packageRoot, "packages", "core", "cdn.json");
+  if (!existsSync(path)) {
+    throw new Error(
+      `Missing CDN pin manifest at ${path} — run \`bun run build:core-package\` to write it.`,
+    );
+  }
+  return JSON.parse(readText(path)) as CdnPin;
+}
+
+/** One `<link>`/`<script>` tag, version-pinned and integrity-checked. */
+function cdnTag(pin: CdnPin, file: string, kind: "css" | "js"): string {
+  const integrity = pin.integrity[file];
+  if (!integrity) {
+    throw new Error(
+      `${file} has no integrity hash in packages/core/cdn.json — ` +
+        `rerun \`bun run build:core-package\` so the docs site can pin it.`,
+    );
+  }
+  const href = `${pin.base}${file}`;
+  return kind === "css"
+    ? `<link rel="stylesheet" href="${escAttr(href)}" integrity="${escAttr(
+        integrity,
+      )}" crossorigin="anonymous">`
+    : `<script src="${escAttr(href)}" integrity="${escAttr(
+        integrity,
+      )}" crossorigin="anonymous" defer></script>`;
+}
+
+/**
+ * The two-tag CDN preamble from `packages/core/README.md`, rendered with a real
+ * version and real hashes instead of a `…paste from sri.json…` placeholder: one
+ * prebuilt theme bundle and the minified engine. Everything a Faqir page needs,
+ * and nothing else — there is no third tag.
+ */
+export function renderCdnPreamble(pin: CdnPin, theme: string): string {
+  return (
+    `<!-- Faqir UI — two tags, no build step. Pinned to ${pin.package}@${pin.version} with SRI. -->\n` +
+    cdnTag(pin, `faqir.${theme}.css`, "css") +
+    "\n" +
+    cdnTag(pin, "faqir-core.min.js", "js")
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Token reference
 // ---------------------------------------------------------------------------
 
@@ -531,6 +662,7 @@ ${(input.scripts ?? []).map((src) => `<script src="${u(src)}" defer></script>`).
       <a data-part="nav-item" href="${u(PLAYGROUND_PAGE)}"${currentAttr(
         PLAYGROUND_PAGE,
       )}>Audit playground</a>
+      <a data-part="nav-item" href="${u(AGENTS_PAGE)}"${currentAttr(AGENTS_PAGE)}>For agents</a>
       <hr data-ui="separator">
 ${navGroups}
     </nav>
@@ -543,6 +675,7 @@ ${navGroups}
       <a data-part="link" href="${u("tokens/index.html")}">Tokens</a>
       <a data-part="link" href="${u(THEMES_PAGE)}">Themes</a>
       <a data-part="link" href="${u(PLAYGROUND_PAGE)}">Playground</a>
+      <a data-part="link" href="${u(AGENTS_PAGE)}">Agents</a>
     </nav>
   </header>
 
@@ -772,6 +905,9 @@ function renderComponentPage(
     byName: Map<string, DocsComponent>;
     tokens: Map<string, TokenEntry>;
     hasExample: boolean;
+    /** The copy-for-agents payload, when this component ships reference markup. */
+    snippet: string | null;
+    pin: CdnPin;
   },
 ): SiteFile {
   const m = c.manifest;
@@ -794,6 +930,9 @@ function renderComponentPage(
       ? `      <p>Also available as ${m.aliases.map((a) => code(a)).join(", ")}.</p>`
       : "",
     section("live-example", "Live example", live),
+    ctx.snippet
+      ? section("copy-for-agents", "Copy for agents", renderCopyForAgents(c, ctx.snippet, ctx.pin))
+      : "",
     section("anatomy", "Anatomy", renderAnatomyTree(m) + "\n" + renderSlotTable(m)),
     section("variants", "Variant matrix", renderVariantTable(m)),
     section("states", "States", renderStateTable(m)),
@@ -816,6 +955,9 @@ function renderComponentPage(
       config: ctx.config,
       components: ctx.components,
       current: c.pagePath,
+      // Only the copy button needs scripting, and only where there is a payload
+      // to copy: a component with no reference markup stays a static page.
+      scripts: ctx.snippet ? ["scripts/copy-snippet.js"] : undefined,
     }),
   };
 }
@@ -986,21 +1128,22 @@ function renderHomePage(ctx: {
  * a fragment carrying dialog-class markup is mounted beside `<main>` (overlays
  * belong outside the content flow), and everything else is wrapped in `<main>`.
  */
+function mountFragment(fragment: string, name: string): string {
+  if (hasOwnMain(fragment)) return fragment;
+  if (hasDialog(fragment)) {
+    return (
+      `<main>\n<p>Live reference example: <code>${esc(name)}</code>. ` +
+      `Overlay markup is mounted outside the main landmark, where it belongs.</p>\n</main>\n${fragment}`
+    );
+  }
+  return `<main>\n${fragment}\n</main>`;
+}
+
 function renderExamplePage(c: DocsComponent, config: SiteConfig): SiteFile | null {
   if (!existsSync(c.referencePath)) return null;
   const fragment = sanitizeReferenceFragment(readText(c.referencePath));
   const u = (to: string) => escAttr(relUrl(c.examplePath, to));
-
-  let mounted: string;
-  if (hasOwnMain(fragment)) {
-    mounted = fragment;
-  } else if (hasDialog(fragment)) {
-    mounted =
-      `<main>\n<p>Live reference example: <code>${esc(c.name)}</code>. ` +
-      `Overlay markup is mounted outside the main landmark, where it belongs.</p>\n</main>\n${fragment}`;
-  } else {
-    mounted = `<main>\n${fragment}\n</main>`;
-  }
+  const mounted = mountFragment(fragment, c.name);
 
   return {
     path: c.examplePath,
@@ -1020,6 +1163,78 @@ ${mounted}
 </html>
 `,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Copy for agents (task 0.7-15)
+// ---------------------------------------------------------------------------
+
+/**
+ * A component's copy-for-agents payload: a complete, standalone HTML document
+ * that renders that component with **no repository, no install and no build
+ * step** — the registry's own reference markup under the two-tag CDN preamble.
+ *
+ * Everything below the preamble is the same mounted fragment the live-example
+ * page carries ({@link mountFragment}), which is what keeps the payload clean
+ * under the document rules: the landmark decision is made once, from the
+ * fragment's own content, for both surfaces.
+ *
+ * Paste it into an empty file, open the file, and it works. That claim is the
+ * whole point of the button, so the tests assert it as a document — it parses,
+ * it has one `<main>`, and every URL in it is pinned and integrity-checked.
+ */
+export function renderAgentSnippet(input: {
+  name: string;
+  fragment: string;
+  pin: CdnPin;
+  theme: string;
+  siteTitle: string;
+}): string {
+  return `<!DOCTYPE html>
+<html lang="en" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${escAttr(`${input.name} · ${input.siteTitle}`)}</title>
+${renderCdnPreamble(input.pin, input.theme)}
+</head>
+<body>
+${mountFragment(input.fragment, input.name)}
+</body>
+</html>
+`;
+}
+
+/**
+ * The copy-for-agents block on a component page: the payload as visible source,
+ * a button that copies it, and a link to the same bytes as a file.
+ *
+ * The payload is rendered as ESCAPED TEXT inside `<pre><code>`, which is what
+ * makes all three work from one source. `textContent` on that element is the
+ * payload byte for byte, so the button copies what the page shows and the file
+ * serves; the audit gate over this page sees text rather than markup (the same
+ * reason the playground's dirty sample is escaped into its textarea); and with
+ * JavaScript off — or on `file://`, where the clipboard API is unavailable —
+ * the snippet is still right there to select, and the link still resolves.
+ */
+function renderCopyForAgents(c: DocsComponent, snippet: string, pin: CdnPin): string {
+  const sourceId = "agent-snippet";
+  const statusId = "agent-snippet-status";
+  const fileUrl = escAttr(relUrl(c.pagePath, snippetPath(c.layer, c.name)));
+
+  return (
+    `      <p>A standalone document: this component's reference markup under the ` +
+    `two-tag CDN preamble, pinned to <code>${esc(`${pin.package}@${pin.version}`)}</code> with ` +
+    `subresource integrity. Paste it into an empty file and open it — no install, no build step.</p>\n` +
+    `      <p>\n` +
+    `        <button data-ui="button" data-variant="primary" data-size="sm" type="button" ` +
+    `data-copy-snippet="${sourceId}" data-copy-status="${statusId}">Copy for agents</button>\n` +
+    `        <a data-ui="link" href="${fileUrl}">Open the raw file</a>\n` +
+    `        <span data-ui="text" data-size="sm" data-variant="muted" id="${statusId}" ` +
+    `role="status" aria-live="polite"></span>\n` +
+    `      </p>\n` +
+    `      <pre tabindex="0"><code id="${sourceId}">${esc(snippet)}</code></pre>`
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -1403,6 +1618,187 @@ function renderThemeGalleryPage(ctx: {
 }
 
 // ---------------------------------------------------------------------------
+// Agent surfaces (task 0.7-15)
+// ---------------------------------------------------------------------------
+
+/** One machine-readable file the site serves at a stable URL. */
+export interface MachineFile extends SiteFile {
+  /** `Content-Type` the host must serve it as (drives {@link HEADERS_FILE}). */
+  contentType: string;
+  /** One line for the agents page — what it is and what it is for. */
+  description: string;
+}
+
+/**
+ * The four machine files, built once and used three times: written to the
+ * output, listed on the agents page, and turned into `_headers`. One list, so a
+ * file cannot be served without being documented, or documented without being
+ * served.
+ */
+function buildMachineFiles(ctx: {
+  registryRoot: string;
+  packageRoot: string;
+  components: DocsComponent[];
+  config: SiteConfig;
+}): MachineFile[] {
+  const context = buildRegistryContext({
+    registryRoot: ctx.registryRoot,
+    components: ctx.components,
+    theme: ctx.config.theme,
+  });
+
+  const files: MachineFile[] = [
+    {
+      path: LLMS_INDEX_FILE,
+      content: formatContextLlms(context),
+      contentType: "text/plain; charset=utf-8",
+      description:
+        "llmstxt.org index — every component in one line each, linked into the full reference.",
+    },
+    {
+      path: LLMS_FULL_FILE,
+      content: formatContextLlmsFull(context),
+      contentType: "text/plain; charset=utf-8",
+      description:
+        "The expanded reference: template, variants, slots, states and accessibility contract " +
+        "for every component, plus the attribute protocol and the token scales.",
+    },
+  ];
+
+  // The schema is served at the path its own `$id` claims, so a `$schema` link
+  // in any manifest resolves here.
+  const schemaPath = join(ctx.packageRoot, SCHEMA_FILE);
+  if (existsSync(schemaPath)) {
+    files.push({
+      path: SCHEMA_FILE,
+      content: readText(schemaPath),
+      contentType: "application/schema+json; charset=utf-8",
+      description:
+        "JSON Schema for component and theme manifests — the contract every manifest validates against.",
+    });
+  }
+
+  // The remote-registry index (task 0.5-03): what `faqir add --registry <url>`
+  // fetches, with a hash per file.
+  const indexPath = join(ctx.registryRoot, REGISTRY_INDEX_FILE);
+  if (existsSync(indexPath)) {
+    files.push({
+      path: REGISTRY_INDEX_FILE,
+      content: readText(indexPath),
+      contentType: "application/json; charset=utf-8",
+      description:
+        "Remote-registry index — every component with a SHA-256 per file, fetched by faqir add --registry.",
+    });
+  }
+
+  return files;
+}
+
+/**
+ * Cloudflare Pages / Netlify `_headers`. Generated from {@link MachineFile}, so
+ * the served content type of an agent surface is decided in the same place the
+ * file is: `llms.txt` must arrive as text an agent can read, and every machine
+ * file must be readable cross-origin or a browser-based agent cannot fetch it
+ * at all.
+ */
+function renderHeadersFile(machine: MachineFile[]): SiteFile {
+  const lines = [
+    `# ${DOCS_GENERATION_MARKER} — do not edit by hand`,
+    "#",
+    "# Cloudflare Pages (and Netlify) read this file from the root of the published",
+    "# directory. It exists for the machine surfaces: an agent fetching llms.txt or",
+    "# the manifest schema needs the right content type and a permissive CORS header.",
+    "",
+  ];
+  for (const f of machine) {
+    lines.push(`/${f.path}`);
+    lines.push(`  Content-Type: ${f.contentType}`);
+    lines.push(`  Access-Control-Allow-Origin: *`);
+    lines.push("");
+  }
+  lines.push(`/${SNIPPET_PREFIX}*`);
+  lines.push(`  Content-Type: text/plain; charset=utf-8`);
+  lines.push(`  Access-Control-Allow-Origin: *`);
+  lines.push("");
+  return { path: HEADERS_FILE, content: lines.join("\n") };
+}
+
+/**
+ * The agents page: the stable URLs, in prose, for the human who is wiring an
+ * agent up. Every row is generated from the same list that emits the files, and
+ * the preamble shown is the same string the snippets carry — the page cannot
+ * document a URL the site does not serve, or a preamble it does not ship.
+ */
+function renderAgentsPage(ctx: {
+  config: SiteConfig;
+  components: DocsComponent[];
+  machine: MachineFile[];
+  pin: CdnPin;
+  exampleSnippet: string | null;
+}): SiteFile {
+  const pagePath = AGENTS_PAGE;
+  const u = (to: string) => escAttr(relUrl(pagePath, to));
+
+  const rows = ctx.machine.map((f) => [
+    monoLink(u(f.path), `/${f.path}`),
+    esc(f.description),
+    code(f.contentType.split(";")[0]),
+  ]);
+
+  const body = [
+    `      <h1>For agents</h1>`,
+    `      <p>Four files describe this framework to a machine, each at a URL that does not move. ` +
+      `They are generated from the registry manifests by the same build that generates these pages, ` +
+      `so they cannot describe a component that does not exist.</p>`,
+    section(
+      "files",
+      "Stable URLs",
+      table(["URL", "What it is", "Type"], rows, "No machine files in this build."),
+    ),
+    section(
+      "preamble",
+      "The two-tag preamble",
+      `      <p>Every component page carries a <strong>Copy for agents</strong> button. What it ` +
+        `copies is a complete HTML document: the component's reference markup under these two tags, ` +
+        `version-pinned with subresource integrity. Nothing to install, nothing to build.</p>\n` +
+        `      <pre tabindex="0"><code>${esc(
+          renderCdnPreamble(ctx.pin, ctx.config.theme),
+        )}</code></pre>\n` +
+        `      <p>The same payloads are files: ` +
+        `<code>${esc(`${SNIPPET_PREFIX}<layer>/<component>.html.txt`)}</code> — for example ` +
+        (ctx.exampleSnippet
+          ? `${monoLink(u(ctx.exampleSnippet), `/${ctx.exampleSnippet}`)}.</p>`
+          : `none in this build.</p>`),
+    ),
+    section(
+      "cli",
+      "The same files, locally",
+      `      <p>A project generates its own, describing what it actually installed ` +
+        `rather than the whole registry:</p>\n` +
+        `      <pre tabindex="0"><code>${esc(
+          "faqir context --format llms   # llms.txt + llms-full.txt for this project\n" +
+            "faqir context --skill         # a manifest-derived agent skill\n" +
+            "faqir audit --json            # the audit findings, machine-readable",
+        )}</code></pre>`,
+    ),
+  ].join("\n");
+
+  return {
+    path: pagePath,
+    content: renderShell({
+      pagePath,
+      title: `For agents · ${ctx.config.title}`,
+      description:
+        "Stable, machine-readable URLs for Faqir UI: llms.txt, llms-full.txt, the manifest schema and the registry index.",
+      body,
+      config: ctx.config,
+      components: ctx.components,
+      current: pagePath,
+    }),
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Stylesheet
 // ---------------------------------------------------------------------------
 
@@ -1481,6 +1877,8 @@ export function readSiteConfig(siteRoot: string): SiteConfig {
 export function buildDocsSite(options: DocsSiteOptions = {}): SiteFile[] {
   const registryRoot = options.registryRoot ?? join(PACKAGE_ROOT, "registry");
   const siteRoot = options.siteRoot ?? join(PACKAGE_ROOT, "site");
+  const packageRoot = options.packageRoot ?? PACKAGE_ROOT;
+  const pin = readCdnPin(packageRoot);
   const authoredConfig = readSiteConfig(siteRoot);
   const themes = discoverThemes(registryRoot);
   // The active theme must be one the site actually ships, or its `<link>` would be
@@ -1505,11 +1903,25 @@ export function buildDocsSite(options: DocsSiteOptions = {}): SiteFile[] {
   const files: SiteFile[] = [];
 
   // Example pages first — a component page links its example, and only emits the
-  // frame when one was actually produced.
+  // frame when one was actually produced. The copy-for-agents payload comes from
+  // the same reference fragment, so the two are produced together: a component
+  // with no reference markup gets neither.
   const examples = new Map<string, SiteFile>();
+  const snippets = new Map<string, string>();
   for (const c of components) {
     const example = renderExamplePage(c, config);
-    if (example) examples.set(c.examplePath, example);
+    if (!example) continue;
+    examples.set(c.examplePath, example);
+    snippets.set(
+      c.pagePath,
+      renderAgentSnippet({
+        name: c.name,
+        fragment: sanitizeReferenceFragment(readText(c.referencePath)),
+        pin,
+        theme: config.theme,
+        siteTitle: config.title,
+      }),
+    );
   }
 
   const authoredHome = join(siteRoot, "content", "home.html");
@@ -1549,10 +1961,33 @@ export function buildDocsSite(options: DocsSiteOptions = {}): SiteFile[] {
         byName,
         tokens,
         hasExample: examples.has(c.examplePath),
+        snippet: snippets.get(c.pagePath) ?? null,
+        pin,
       }),
     );
   }
   files.push(...examples.values());
+
+  // Agent surfaces (task 0.7-15): the machine files at their stable URLs, the
+  // page that documents them, the copy-for-agents payloads as files, and the
+  // static-host header rules generated from that same list.
+  const machine = buildMachineFiles({ registryRoot, packageRoot, components, config });
+  files.push(...machine.map(({ path, content }) => ({ path, content })));
+  for (const c of components) {
+    const snippet = snippets.get(c.pagePath);
+    if (snippet) files.push({ path: snippetPath(c.layer, c.name), content: snippet });
+  }
+  const firstSnippet = components.find((c) => snippets.has(c.pagePath));
+  files.push(
+    renderAgentsPage({
+      config,
+      components,
+      machine,
+      pin,
+      exampleSnippet: firstSnippet ? snippetPath(firstSnippet.layer, firstSnippet.name) : null,
+    }),
+  );
+  files.push(renderHeadersFile(machine));
 
   files.push({ path: "styles/faqir.css", content: buildSiteStylesheet(registryRoot) });
   for (const t of themes) {

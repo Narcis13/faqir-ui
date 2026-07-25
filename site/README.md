@@ -6,12 +6,14 @@ everything else is generated from the registry manifests.
 ```bash
 bun run build:docs          # → site/dist  (git-ignored)
 bunx serve site/dist        # any static server will do
+bun run deploy:site         # build, then `wrangler pages deploy` (needs a login)
 ```
 
 | File | What it is |
 |---|---|
 | `site.config.json` | Title, tagline, description, theme, footer. |
 | `content/home.html` | The only hand-written page content on the site. Audited like every generated page: registry components and design tokens only, no `class` attributes, no hardcoded values. |
+| `lib/*.js` | The site's only JavaScript: the playground, the theme switcher, the copy-for-agents button. A closed, named list — a stray file here does not become a script tag. |
 
 Adding a component to `registry/` adds its documentation page, its navigation
 entry, its live example and its CSS **without touching anything in this

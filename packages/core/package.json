@@ -23,6 +23,7 @@
     "dist",
     "src",
     "examples",
+    "cdn.json",
     "README.md"
   ],
   "sideEffects": [

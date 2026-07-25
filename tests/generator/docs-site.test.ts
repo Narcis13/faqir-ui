@@ -115,13 +115,19 @@ describe("docs site coverage", () => {
     const html = files.filter((f) => f.path.endsWith(".html"));
     expect(html.length).toBe(sitePages.length + examplePages.length);
     expect(shellPages.length + framePages.length).toBe(sitePages.length);
-    // home, component index, tokens, the playground and the theme gallery
-    expect(shellPages.length).toBe(components.length + 5);
+    // home, component index, tokens, the playground, the theme gallery, agents
+    expect(shellPages.length).toBe(components.length + 6);
     // one gallery frame per theme
     expect(framePages.length).toBe(themes.length);
     const assets = files.filter((f) => !f.path.endsWith(".html")).map((f) => f.path);
     expect(assets.sort()).toEqual(
       [
+        "_headers",
+        "llms-full.txt",
+        "llms.txt",
+        "manifest.schema.json",
+        "registry-index.json",
+        "scripts/copy-snippet.js",
         "scripts/faqir-audit.js",
         "scripts/faqir-core.js",
         "scripts/faqir-manifests.js",
@@ -129,6 +135,11 @@ describe("docs site coverage", () => {
         "scripts/playground.js",
         "styles/faqir.css",
         ...themes.map((t) => t.stylePath),
+        // One copy-for-agents payload per component that ships reference markup
+        // — a text payload, deliberately not a page (see `snippetPath`).
+        ...examplePages.map((f) =>
+          f.path.replace(/^examples\//, "snippets/").replace(/\.html$/, ".html.txt"),
+        ),
       ].sort(),
     );
   });
@@ -549,6 +560,9 @@ describe("adding a component to the registry", () => {
 
     expect(grownByPath.has("components/primitives/zz-probe.html")).toBe(true);
     expect(grownByPath.has("examples/primitives/zz-probe.html")).toBe(true);
+    // …and its copy-for-agents payload (task 0.7-15), which is derived from the
+    // same reference fragment and therefore appears for free.
+    expect(grownByPath.has("snippets/primitives/zz-probe.html.txt")).toBe(true);
 
     // Nav: present on every page, including the ones that existed before.
     expect(grownByPath.get("index.html")).toContain(
@@ -567,8 +581,9 @@ describe("adding a component to the registry", () => {
     // And its stylesheet is in the bundle.
     expect(grownByPath.get("styles/faqir.css")).toContain('[data-ui="zz-probe"]');
 
-    // The site grew by exactly one component's worth of files.
-    expect(grown.length).toBe(files.length + 2);
+    // The site grew by exactly one component's worth of files: page, live
+    // example, agent snippet.
+    expect(grown.length).toBe(files.length + 3);
   });
 
   it("keeps the new page audit-clean without any site-side special casing", () => {

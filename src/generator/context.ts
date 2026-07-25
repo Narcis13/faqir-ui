@@ -6,7 +6,7 @@ import { loadManifest, type Manifest } from "../manifest";
 import { loadThemeManifest, type ThemeManifest } from "../theme-manifest";
 import { readConfig, type FaqirConfig } from "../utils/config";
 import { ensureDir, getRegistryPath } from "../utils/fs";
-import { loadPluginMetadata } from "./plugins";
+import { loadPluginMetadata, type PluginMetadata } from "./plugins";
 
 /**
  * The active theme, as embedded in context. Either the full theme manifest (when
@@ -21,6 +21,13 @@ export interface ContextData {
     version: string;
     theme: string;
     generated_at: string;
+    /**
+     * What the component set describes: the components a project installed
+     * (the default), or a whole registry — which is what the documentation
+     * site hosts (task 0.7-15). The only thing it changes is the summary
+     * sentence: "this project installs …" is false on a hosted llms.txt.
+     */
+    scope?: "project" | "registry";
     component_count: {
       primitives: number;
       recipes: number;
@@ -119,7 +126,7 @@ export async function loadActiveTheme(config: FaqirConfig): Promise<ContextTheme
 /**
  * Build the compact component entry for context.json.
  */
-function buildComponentEntry(manifest: Manifest): Record<string, unknown> {
+export function buildComponentEntry(manifest: Manifest): Record<string, unknown> {
   const entry: Record<string, unknown> = {
     kind: manifest.kind,
   };
@@ -196,20 +203,43 @@ function buildComponentEntry(manifest: Manifest): Record<string, unknown> {
 }
 
 /**
- * Generate the full context data structure.
+ * Everything {@link composeContextData} needs that depends on *where* the
+ * components came from. A project reads them out of its `ui/` directory; the
+ * documentation site reads them straight out of the registry (task 0.7-15), and
+ * both then produce identical prose through the same formatters — the llms.txt
+ * pair a site serves is the same generator a project runs, not a second one.
  */
-export async function generateContext(cwd: string): Promise<ContextData> {
-  const config = await readConfig(cwd);
-  const outputDir = join(cwd, config.output_dir);
-  const manifests = await loadInstalledManifests(config, outputDir);
-  const theme = await loadActiveTheme(config);
-  const pluginMetadata = loadPluginMetadata(join(outputDir, "core", "plugins"));
+export interface ContextComposition {
+  /**
+   * `[name, manifest]` pairs in the order they should appear. Deliberately an
+   * iterable of pairs rather than a `Map`: a name can exist in two layers
+   * (`empty-state` is both a primitive and a pattern) and both must survive —
+   * they land in different records, since the split is by `kind`.
+   */
+  entries: Iterable<[string, Manifest]>;
+  theme: ContextTheme;
+  themeName: string;
+  pluginMetadata: PluginMetadata[];
+  /** Where the plugin files live, relative to whatever loads them. */
+  pluginDir?: string;
+  componentCount: ContextData["meta"]["component_count"];
+  /** ISO timestamp for `meta.generated_at`. */
+  generatedAt: string;
+  /** What the component set is — see {@link ContextData.meta.scope}. */
+  scope?: "project" | "registry";
+}
 
+/**
+ * Assemble {@link ContextData} from already-loaded manifests. Pure — no file
+ * system, no configuration — so the one description of the framework (protocol,
+ * tokens, density, devtools, rules) has exactly one source.
+ */
+export function composeContextData(input: ContextComposition): ContextData {
   const components: Record<string, unknown> = {};
   const patterns: Record<string, unknown> = {};
   const plugins: ContextData["plugins"] = {};
 
-  for (const [name, manifest] of manifests) {
+  for (const [name, manifest] of input.entries) {
     const entry = buildComponentEntry(manifest);
 
     if (manifest.kind === "pattern") {
@@ -222,9 +252,9 @@ export async function generateContext(cwd: string): Promise<ContextData> {
     }
   }
 
-  for (const plugin of pluginMetadata) {
+  for (const plugin of input.pluginMetadata) {
     plugins[plugin.name] = {
-      file: `core/plugins/${plugin.file}`,
+      file: `${input.pluginDir ?? "core/plugins"}/${plugin.file}`,
       provides: plugin.provides,
       ...(plugin.description ? { description: plugin.description } : {}),
     };
@@ -234,16 +264,13 @@ export async function generateContext(cwd: string): Promise<ContextData> {
     meta: {
       framework: "faqir",
       version: "1.0.0",
-      theme: config.theme,
-      generated_at: new Date().toISOString(),
-      component_count: {
-        primitives: config.installed.primitives.length,
-        recipes: config.installed.recipes.length,
-        patterns: config.installed.patterns.length,
-      },
-      plugin_count: pluginMetadata.length,
+      theme: input.themeName,
+      generated_at: input.generatedAt,
+      ...(input.scope ? { scope: input.scope } : {}),
+      component_count: input.componentCount,
+      plugin_count: input.pluginMetadata.length,
     },
-    theme,
+    theme: input.theme,
     protocol: {
       identity: "data-ui",
       part: "data-part",
@@ -328,6 +355,31 @@ export async function generateContext(cwd: string): Promise<ContextData> {
       api_source_is_app_code_not_controller: true,
     },
   };
+}
+
+/**
+ * Generate the full context data structure for an installed project.
+ */
+export async function generateContext(cwd: string): Promise<ContextData> {
+  const config = await readConfig(cwd);
+  const outputDir = join(cwd, config.output_dir);
+  const manifests = await loadInstalledManifests(config, outputDir);
+
+  return composeContextData({
+    entries: manifests,
+    theme: await loadActiveTheme(config),
+    themeName: config.theme,
+    pluginMetadata: loadPluginMetadata(join(outputDir, "core", "plugins")),
+    // Counted from the config, not from the loaded manifests: the config is what
+    // the project declares it installed, and a manifest that failed to load is a
+    // problem to see rather than to silently subtract.
+    componentCount: {
+      primitives: config.installed.primitives.length,
+      recipes: config.installed.recipes.length,
+      patterns: config.installed.patterns.length,
+    },
+    generatedAt: new Date().toISOString(),
+  });
 }
 
 /**
@@ -609,11 +661,17 @@ function llmsBlurb(data: ContextData): string {
   const c = data.meta.component_count;
   const t = data.theme;
   const themeDesc = "mood" in t ? `${t.name} (${t.mood.join(", ")})` : `${t.name}`;
-  return (
-    `Zero-class, manifest-driven UI framework. This project installs ` +
+  const counted =
     `${c.primitives} primitive${c.primitives === 1 ? "" : "s"}, ` +
     `${c.recipes} recipe${c.recipes === 1 ? "" : "s"}, and ` +
-    `${c.patterns} pattern${c.patterns === 1 ? "" : "s"} on the ${themeDesc} theme. ` +
+    `${c.patterns} pattern${c.patterns === 1 ? "" : "s"}`;
+  // A hosted, registry-wide file has no project to speak of — see `meta.scope`.
+  const subject =
+    data.meta.scope === "registry"
+      ? `The registry ships ${counted}, documented against the ${themeDesc} theme. `
+      : `This project installs ${counted} on the ${themeDesc} theme. `;
+  return (
+    `Zero-class, manifest-driven UI framework. ${subject}` +
     `Components are identified by \`data-ui\` attributes and styled entirely with design tokens — no CSS classes.`
   );
 }
