@@ -1,0 +1,40 @@
+<!--
+  Authored home-page fragment (task 0.7-13).
+
+  This is the ONLY hand-written page content on the site — everything else is
+  derived from the registry manifests. It is inserted into the generated shell's
+  <article data-ui="prose"> and audited exactly like the generated pages, so it
+  may use registry components and design tokens only: no class attributes, no
+  hardcoded colours or spacing, no markup outside the protocol.
+-->
+      <h1>Faqir UI</h1>
+      <p>
+        A UI framework an agent can write correctly on the first try. Five attributes
+        (<code>data-ui</code>, <code>data-part</code>, <code>data-state</code>,
+        <code>data-variant</code>, <code>data-size</code>), one manifest per component,
+        zero runtime dependencies, and no build step in your project.
+      </p>
+
+      <div data-ui="callout" data-variant="info" role="note">
+        <div data-part="content">
+          <p>
+            <strong data-part="title">This site is the proof.</strong>
+            It is built from registry components and design tokens only, its content is
+            generated from component manifests, and every page it ships is held to
+            <code>faqir audit</code> and axe in CI.
+          </p>
+        </div>
+      </div>
+
+      <h2 id="how-it-works">How it works</h2>
+      <p>
+        A component is a contract, not a class name. The contract lives in a manifest —
+        anatomy, slots, variants, states, accessibility, and the design tokens it
+        consumes — and the CSS targets those attributes. Read the manifest and you know
+        the component; write the attributes and you have used it correctly.
+      </p>
+      <pre><code>&lt;button data-ui="button" data-variant="primary" data-size="md"&gt;Save&lt;/button&gt;</code></pre>
+      <p>
+        No class names to memorise, no import graph to satisfy, nothing to compile. The
+        same markup works in a static file, a template engine, React, or Vue.
+      </p>

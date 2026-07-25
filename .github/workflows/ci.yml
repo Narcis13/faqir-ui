@@ -66,6 +66,12 @@ jobs:
       # @faqir-ui/vue and @faqir-ui/react components must byte-match a fresh
       # `faqir bindings <target>` regeneration.
       - run: bun run check:bindings
+      # Docs site (task 0.7-13, §13): the site is generated from the manifests,
+      # so a manifest or registry change that the generator cannot render must
+      # fail here rather than at deploy time. The output is git-ignored, so this
+      # builds it rather than diffing it; the page-level audit/axe gates live in
+      # `bun test` and the a11y workflow.
+      - run: bun run build:docs
 
   # (5) Size budgets. Reassemble the engine from source first so the measurement
   #     reflects the current registry, then enforce the gzip budgets.

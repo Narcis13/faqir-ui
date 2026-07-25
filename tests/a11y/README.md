@@ -44,6 +44,7 @@ there is no RTL axis. Widen `A11Y_THEMES` in `a11y-matrix.ts` to sweep more.
 | `report.ts` | Formats violations as `component + rule + selector`. |
 | `axe-types.ts` | Minimal structural types for axe results (keeps the pure logic browser-free). |
 | `a11y.pw.ts` | Playwright spec: one axe scan per case + the gate-bites fixture test. |
+| `docs-site.pw.ts` | Playwright spec (task 0.7-13): the generated documentation site, served over plain HTTP, one scan per site page per scheme. Scans only the pages the generator authors — `examples/**` wrap registry reference markup that `a11y.pw.ts` already scans. See `docs/docs-site.md`. |
 | `a11y-matrix.test.ts` | `bun test` meta-tests: discovery parity with the visual suite, matrix shape, exemption + report contracts. |
 | `fixtures/known-violation.html` | Deliberately-broken page proving the gate actually fails. |
 | `../../playwright.a11y.config.ts` | Separate config (pass/fail, no snapshot machinery). |
