@@ -20,6 +20,8 @@
     "build:registry-index": "bun scripts/build-registry-index.mjs",
     "check:registry-index": "bun scripts/build-registry-index.mjs --check",
     "build:core-package": "node scripts/build-core-package.mjs",
+    "build:audit-browser": "node scripts/build-audit-browser.mjs",
+    "check:audit-browser": "node scripts/build-audit-browser.mjs --check",
     "build:docs": "bun scripts/build-docs.mjs",
     "check:docs": "bun scripts/build-docs.mjs --check",
     "test": "bun test",

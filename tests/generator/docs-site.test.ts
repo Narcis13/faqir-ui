@@ -25,9 +25,11 @@ import { createServer, request } from "node:http";
 import { dirname, join } from "node:path";
 import {
   buildDocsSite,
-  buildSiteStylesheet,
   discoverDocsComponents,
+  discoverThemes,
   isExamplePage,
+  isFramePage,
+  isShellPage,
   isSitePage,
   parseTokenReference,
   relUrl,
@@ -48,10 +50,16 @@ const REGISTRY = join(REPO, "registry");
 const TMP = join(import.meta.dir, "../.tmp-docs-site");
 
 const components = discoverDocsComponents(REGISTRY);
+const themes = discoverThemes(REGISTRY);
 const files = buildDocsSite();
 const byPath = new Map(files.map((f) => [f.path, f.content]));
 const sitePages = files.filter((f) => isSitePage(f.path));
 const examplePages = files.filter((f) => isExamplePage(f.path));
+// Site pages split into two layouts: the navigable ones carry the dashboard-shell,
+// `frames/**` are rendered inside an <iframe> and carry no navigation. Both are held
+// to the same audit + axe gate — the split is about layout, not about rigour.
+const shellPages = files.filter((f) => isShellPage(f.path));
+const framePages = files.filter((f) => isFramePage(f.path));
 
 /** Manifests keyed the way `faqir audit` keys them: canonical names + aliases. */
 function auditManifests(): Map<string, Manifest> {
@@ -106,9 +114,23 @@ describe("docs site coverage", () => {
   it("emits exactly one page class per file and nothing unclassified", () => {
     const html = files.filter((f) => f.path.endsWith(".html"));
     expect(html.length).toBe(sitePages.length + examplePages.length);
-    expect(sitePages.length).toBe(components.length + 3); // + home, component index, tokens
+    expect(shellPages.length + framePages.length).toBe(sitePages.length);
+    // home, component index, tokens, the playground and the theme gallery
+    expect(shellPages.length).toBe(components.length + 5);
+    // one gallery frame per theme
+    expect(framePages.length).toBe(themes.length);
     const assets = files.filter((f) => !f.path.endsWith(".html")).map((f) => f.path);
-    expect(assets.sort()).toEqual(["scripts/faqir-core.js", "styles/faqir.css"]);
+    expect(assets.sort()).toEqual(
+      [
+        "scripts/faqir-audit.js",
+        "scripts/faqir-core.js",
+        "scripts/faqir-manifests.js",
+        "scripts/gallery.js",
+        "scripts/playground.js",
+        "styles/faqir.css",
+        ...themes.map((t) => t.stylePath),
+      ].sort(),
+    );
   });
 
   it("stamps every generated page with the generation marker", () => {
@@ -319,8 +341,8 @@ describe("the site dogfoods faqir audit", () => {
 // ── navigation shell ────────────────────────────────────────────────────────
 
 describe("navigation shell", () => {
-  it("wraps every site page in the dashboard-shell landmarks", () => {
-    for (const f of sitePages) {
+  it("wraps every navigable site page in the dashboard-shell landmarks", () => {
+    for (const f of shellPages) {
       expect(f.content, `${f.path} has no shell`).toContain('data-ui="dashboard-shell"');
       expect(f.content).toContain('data-part="sidebar"');
       expect(f.content).toContain('role="banner"');
@@ -330,7 +352,7 @@ describe("navigation shell", () => {
   });
 
   it("marks exactly one nav entry as the current page", () => {
-    for (const f of sitePages) {
+    for (const f of shellPages) {
       // Counted on parsed ELEMENTS, not on the source text: `data-part="nav-item"`
       // and `aria-current="page"` also appear as *documentation* on the pages that
       // document dashboard-shell or breadcrumb, escaped inside a <code> block.
@@ -428,10 +450,9 @@ describe("link integrity", () => {
 describe("site stylesheet", () => {
   const css = page("styles/faqir.css");
 
-  it("carries tokens, base, the theme and every component stylesheet", () => {
+  it("carries tokens, base and every component stylesheet", () => {
     expect(css).toContain("--space-4");           // spacing tokens
     expect(css).toContain('[data-ui="prose"]');   // base
-    expect(css).toContain('[data-theme="dark"]'); // theme (both schemes)
     // Every component's CSS verbatim — asserted on the file bytes, not on a
     // selector, because a composition-only pattern (form-page) styles its parts
     // through the components it composes and declares no root selector at all.

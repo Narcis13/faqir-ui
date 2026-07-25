@@ -1,0 +1,294 @@
+// Browser audit bundle — parity with the CLI (task 0.7-14, FAQIR-PLAN §13).
+//
+// `site/lib/faqir-audit.js` is the audit engine compiled for the browser, and the
+// docs-site playground runs it with no server at all. That is only worth shipping
+// if it reports what `faqir audit` reports, so this suite:
+//
+//  • evaluates the COMMITTED bundle in a bare `node:vm` context — no DOM, no
+//    `require`, no module loader — which is itself the proof that it is
+//    self-contained and browser-loadable;
+//  • runs it against a large shared fixture set (every page of the docs site,
+//    every registry reference fragment, hand-written dirty snippets and samples
+//    from the parser fuzz corpus) and asserts the findings are DEEP-EQUAL to
+//    `auditHtmlSource` called in-process;
+//  • holds the committed bytes honest with the build script's own `--check` gate,
+//    and reports the size.
+//
+// Parity is structural, not coincidental: the bundle's entry re-exports the same
+// `auditHtmlSource`. What the fixtures actually test is the thin browser-shaped
+// seam around it — manifest keying from a plain object, and the promise that the
+// engine never throws at a page.
+
+import { describe, it, expect } from "bun:test";
+import { spawnSync } from "node:child_process";
+import { readFileSync, existsSync } from "node:fs";
+import { join } from "node:path";
+import { createContext, runInContext } from "node:vm";
+import { gzipSync } from "node:zlib";
+import {
+  buildDocsSite,
+  discoverDocsComponents,
+  sanitizeReferenceFragment,
+  MANIFESTS_GLOBAL,
+} from "../../src/generator/docs";
+import { auditHtmlSource } from "../../src/audit/checker";
+import { ALL_RULES, DOCUMENT_RULES, type AuditResult } from "../../src/audit/rules";
+import { VERSION } from "../../src/version";
+import { generateAt } from "../parser/fuzz/fuzz-core";
+import type { Manifest } from "../../src/manifest";
+
+const REPO = join(import.meta.dir, "../..");
+const BUNDLE = join(REPO, "site", "lib", "faqir-audit.js");
+const REGISTRY = join(REPO, "registry");
+
+const components = discoverDocsComponents(REGISTRY);
+const bundleSource = readFileSync(BUNDLE, "utf8");
+
+// ── the bundle, evaluated the way a page would ───────────────────────────────
+
+interface BundleApi {
+  version: string;
+  rules: Array<{ id: string; severity: string; description: string; scope: string }>;
+  severities: string[];
+  createAuditor(manifests: Record<string, Manifest>): {
+    audit(source: string, options?: { file?: string; skipRules?: string[] }): AuditResult[];
+    components: string[];
+  };
+}
+
+/** Evaluate the committed bundle in an empty context and hand back its global. */
+function loadBundle(): BundleApi {
+  const context = createContext({}) as { FaqirAudit?: BundleApi };
+  runInContext(bundleSource, context as object, { filename: "faqir-audit.js" });
+  if (!context.FaqirAudit) throw new Error("the bundle installed no FaqirAudit global");
+  return context.FaqirAudit;
+}
+
+/**
+ * The manifests exactly as the site ships them: the payload
+ * `scripts/faqir-manifests.js` assigns, read back out of the generated file so the
+ * fixture is the deployed bytes and not a second construction of them.
+ */
+function shippedManifests(): Record<string, Manifest> {
+  const script = buildDocsSite().find((f) => f.path === "scripts/faqir-manifests.js");
+  expect(script, "the site does not ship scripts/faqir-manifests.js").toBeDefined();
+  const context = createContext({ window: {} }) as { window: Record<string, unknown> };
+  runInContext(script!.content, context as object, { filename: "faqir-manifests.js" });
+  return context.window[MANIFESTS_GLOBAL] as Record<string, Manifest>;
+}
+
+/** The same map `faqir audit` builds: canonical names then aliases, in load order. */
+function cliManifests(): Map<string, Manifest> {
+  const map = new Map<string, Manifest>();
+  for (const c of components) {
+    map.set(c.name, c.manifest);
+    for (const alias of c.manifest.aliases ?? []) map.set(alias, c.manifest);
+  }
+  return map;
+}
+
+// ── fixtures ────────────────────────────────────────────────────────────────
+
+interface Fixture {
+  label: string;
+  source: string;
+}
+
+/** Markup written to trip specific rules, including the alias and skip paths. */
+const HAND_WRITTEN: Fixture[] = [
+  { label: "empty", source: "" },
+  { label: "text only", source: "hello" },
+  { label: "unknown component", source: '<div data-ui="not-a-component">x</div>' },
+  { label: "invalid variant", source: '<button data-ui="button" data-variant="nope">Go</button>' },
+  { label: "invalid size", source: '<button data-ui="button" data-size="enormous">Go</button>' },
+  {
+    label: "missing required slot",
+    source: '<div data-ui="card"><div data-part="header">h</div></div>',
+  },
+  {
+    label: "duplicate id across components",
+    source: '<span data-ui="badge" id="x">a</span><span data-ui="badge" id="x">b</span>',
+  },
+  { label: "heading order", source: "<h1>a</h1><h4>b</h4>" },
+  {
+    label: "recipe without its controller",
+    source: '<div data-ui="accordion"><div data-part="item"><button data-part="trigger">t</button><div data-part="content">c</div></div></div>',
+  },
+  {
+    label: "alias name resolves to the aliased manifest",
+    source: '<div data-ui="alert" data-variant="not-a-variant"><div data-part="content">c</div></div>',
+  },
+  { label: "unclosed tag", source: '<div data-ui="card"><div data-part="body">' },
+  { label: "attribute soup", source: '<div data-ui = card data-part=body <<>' },
+  { label: "html comment only", source: "<!-- nothing to see -->" },
+  { label: "script and style", source: "<script>var a = 1 < 2;</script><style>a{}</style>" },
+];
+
+/** Every page the site ships — real, large, generated documents. */
+function sitePageFixtures(): Fixture[] {
+  return buildDocsSite()
+    .filter((f) => f.path.endsWith(".html"))
+    .map((f) => ({ label: `site:${f.path}`, source: f.content }));
+}
+
+/** Every registry reference fragment, raw and sanitized. */
+function referenceFixtures(): Fixture[] {
+  const out: Fixture[] = [];
+  for (const c of components) {
+    if (!existsSync(c.referencePath)) continue;
+    const raw = readFileSync(c.referencePath, "utf8");
+    out.push({ label: `reference:${c.layer}/${c.name}`, source: raw });
+    out.push({ label: `sanitized:${c.layer}/${c.name}`, source: sanitizeReferenceFragment(raw) });
+  }
+  return out;
+}
+
+/**
+ * Samples from the parser fuzz corpus (task 0.5-09) — the same generator that
+ * hardened the tokenizer, reused here so "malformed input" is not a handful of
+ * snippets someone imagined.
+ */
+function fuzzFixtures(count: number): Fixture[] {
+  return Array.from({ length: count }, (_, i) => ({
+    label: `fuzz:${i}`,
+    source: generateAt(0x7014, i),
+  }));
+}
+
+const fixtures: Fixture[] = [
+  ...HAND_WRITTEN,
+  ...sitePageFixtures(),
+  ...referenceFixtures(),
+  ...fuzzFixtures(150),
+];
+
+// ── the bundle loads and describes itself ───────────────────────────────────
+
+describe("the browser audit bundle", () => {
+  it("installs one global in a context with no DOM and no module loader", () => {
+    const api = loadBundle();
+    expect(typeof api.createAuditor).toBe("function");
+    expect(api.version).toBe(VERSION);
+    expect(api.severities).toEqual(["critical", "error", "warning", "info"]);
+  });
+
+  it("references no node builtin, no bundler runtime and no network", () => {
+    expect(bundleSource).not.toMatch(/\bnode:[a-z_]+/);
+    expect(bundleSource).not.toMatch(/\brequire\s*\(/);
+    expect(bundleSource).not.toMatch(/\bprocess\.(?:cwd|env|argv)\b/);
+    expect(bundleSource).not.toMatch(/\bfetch\s*\(|XMLHttpRequest|import\s*\(/);
+    expect(bundleSource).not.toMatch(/https?:\/\//);
+  });
+
+  it("advertises exactly the HTML rules the engine runs", () => {
+    const api = loadBundle();
+    const expected = [
+      ...ALL_RULES.map((r) => ({ id: r.id, severity: r.severity, scope: "component" })),
+      ...DOCUMENT_RULES.map((r) => ({ id: r.id, severity: r.severity, scope: "document" })),
+    ];
+    expect(api.rules.map((r) => ({ id: r.id, severity: r.severity, scope: r.scope }))).toEqual(
+      expected,
+    );
+  });
+
+  it("reports its size", () => {
+    const raw = Buffer.byteLength(bundleSource);
+    const gzip = gzipSync(bundleSource).length;
+    console.log(
+      `browser audit bundle: ${(raw / 1024).toFixed(2)} KB raw · ${(gzip / 1024).toFixed(2)} KB gzip`,
+    );
+    // A tripwire, not a budget: a bundle this size cannot have pulled in a
+    // filesystem shim or a second copy of the rules.
+    expect(raw).toBeLessThan(64 * 1024);
+  });
+
+  it("is the current build of src/audit/browser.ts", () => {
+    const result = spawnSync("node", [join(REPO, "scripts", "build-audit-browser.mjs"), "--check"], {
+      cwd: REPO,
+      encoding: "utf8",
+    });
+    expect(`${result.stdout ?? ""}${result.stderr ?? ""}`.trim()).toContain("up to date");
+    expect(result.status).toBe(0);
+  });
+});
+
+// ── parity ──────────────────────────────────────────────────────────────────
+
+describe("CLI ↔ browser finding parity", () => {
+  const api = loadBundle();
+  const shipped = shippedManifests();
+  const auditor = api.createAuditor(shipped);
+  const cli = cliManifests();
+
+  it("ships every registry component to the browser", () => {
+    expect(Object.keys(shipped).length).toBe(components.length);
+    expect(auditor.components).toEqual([...new Set(components.map((c) => c.name))].sort());
+  });
+
+  it("keys a duplicated name the way runAudit does — last layer loaded wins", () => {
+    // `empty-state` is both a primitive and a pattern. `faqir audit` loads
+    // primitives → recipes → patterns, so the pattern's manifest is the one in
+    // force; a browser that sorted the payload would silently use the other.
+    const dupes = components.filter((c) => c.name === "empty-state");
+    expect(dupes.length).toBe(2);
+    const winner = dupes[dupes.length - 1];
+    expect(winner.layer).toBe("patterns");
+    expect(cli.get("empty-state")).toBe(winner.manifest);
+    const keys = Object.keys(shipped);
+    expect(keys.indexOf("primitives/empty-state")).toBeLessThan(keys.indexOf("patterns/empty-state"));
+  });
+
+  it(`agrees with auditHtmlSource on all ${fixtures.length} shared fixtures`, () => {
+    const disagreements: string[] = [];
+    for (const fixture of fixtures) {
+      const expected = auditHtmlSource({
+        source: fixture.source,
+        file: "fixture.html",
+        manifests: cli,
+      });
+      const actual = auditor.audit(fixture.source, { file: "fixture.html" });
+      if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+        disagreements.push(
+          `${fixture.label}: browser ${actual.length} vs cli ${expected.length}\n` +
+            `  browser: ${JSON.stringify(actual.slice(0, 3))}\n` +
+            `  cli:     ${JSON.stringify(expected.slice(0, 3))}`,
+        );
+      }
+    }
+    expect(disagreements.join("\n")).toBe("");
+  });
+
+  it("never falls back to its own error finding — the engine survives every fixture", () => {
+    // `createAuditor` converts an unexpected engine failure into a synthetic
+    // `audit-error` finding so a page cannot be taken down by one string. If that
+    // ever fires, parity above would be comparing an excuse to a result.
+    const errored = fixtures.filter((f) =>
+      auditor.audit(f.source).some((r) => r.rule_id === "audit-error"),
+    );
+    expect(errored.map((f) => f.label)).toEqual([]);
+  });
+
+  it("honours skipRules identically", () => {
+    const source = '<button data-ui="button" data-variant="nope" data-size="enormous">Go</button>';
+    const skipRules = ["valid-variant"];
+    expect(auditor.audit(source, { file: "f.html", skipRules })).toEqual(
+      auditHtmlSource({ source, file: "f.html", manifests: cli, skipRules }),
+    );
+    expect(auditor.audit(source, { file: "f.html", skipRules }).map((r) => r.rule_id)).toEqual([
+      "valid-size",
+    ]);
+  });
+
+  it("finds the playground's own sample dirty — the demo demonstrates something", () => {
+    const seed = readFileSync(join(REPO, "site", "content", "playground.html"), "utf8");
+    const findings = auditor.audit(seed, { file: "playground.html" });
+    const rules = new Set(findings.map((r) => r.rule_id));
+    expect(rules.has("required-slot")).toBe(true);
+    expect(rules.has("valid-variant")).toBe(true);
+    expect(rules.has("valid-size")).toBe(true);
+    expect(rules.has("duplicate-id")).toBe(true);
+    expect(findings).toEqual(
+      auditHtmlSource({ source: seed, file: "playground.html", manifests: cli }),
+    );
+  });
+});

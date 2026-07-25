@@ -72,6 +72,11 @@ jobs:
       # builds it rather than diffing it; the page-level audit/axe gates live in
       # `bun test` and the a11y workflow.
       - run: bun run build:docs
+      # Browser audit bundle (task 0.7-14, §13): the playground's engine is
+      # committed at site/lib/faqir-audit.js because the site generator only
+      # copies files. This is its drift gate — a change to the audit rules that
+      # was never recompiled fails here, next to the other generated artifacts.
+      - run: bun run check:audit-browser
 
   # (5) Size budgets. Reassemble the engine from source first so the measurement
   #     reflects the current registry, then enforce the gzip budgets.
