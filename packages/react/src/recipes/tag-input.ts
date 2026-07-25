@@ -32,7 +32,7 @@ export const LTagInput = createFaqirRecipe<LTagInputProps>({
   boolProps: [],
   variantProps: [
   ],
-  tree: {"tag":"div","attrs":[["data-ui",["tag-input"]],["data-state",["closed"]]],"children":[{"tag":"span","attrs":[["data-part",["taglist"]],["role",["list"]]],"children":[{"tag":"input","attrs":[["data-part",["input"]],["type",["text"]],["role",["combobox"]],["aria-expanded",["false"]],["aria-autocomplete",["list"]],["placeholder",[{"p":"placeholder"}]]],"children":[],"slot":"input"}],"slot":"taglist"},{"tag":"input","attrs":[["data-part",["value"]],["type",["hidden"]]],"children":[],"slot":"value"}]} as unknown as RecipeNode,
+  tree: {"tag":"div","attrs":[["data-ui",["tag-input"]],["data-state",["closed"]]],"children":[{"tag":"span","attrs":[["data-part",["taglist"]],["role",["group"]]],"children":[{"tag":"input","attrs":[["data-part",["input"]],["type",["text"]],["role",["combobox"]],["aria-expanded",["false"]],["aria-autocomplete",["list"]],["placeholder",[{"p":"placeholder"}]]],"children":[],"slot":"input"}],"slot":"taglist"},{"tag":"input","attrs":[["data-part",["value"]],["type",["hidden"]]],"children":[],"slot":"value"}]} as unknown as RecipeNode,
 }, "LTagInput");
 
 export default LTagInput;

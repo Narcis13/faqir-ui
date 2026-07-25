@@ -20,7 +20,7 @@ function setup(opts: { suggestions?: boolean; allowDuplicates?: boolean; seed?: 
   const chips = seed
     .map(
       (t) =>
-        `<span data-ui="chip" data-part="tag" role="listitem"><span data-part="label">${t}</span><button data-part="dismiss" type="button" aria-label="Remove ${t}">&times;</button></span>`,
+        `<span data-ui="chip" data-part="tag"><span data-part="label">${t}</span><button data-part="dismiss" type="button" aria-label="Remove ${t}">&times;</button></span>`,
     )
     .join("");
   const list = opts.suggestions
@@ -33,7 +33,7 @@ function setup(opts: { suggestions?: boolean; allowDuplicates?: boolean; seed?: 
     : "";
   document.body.innerHTML = `
     <div data-ui="tag-input" data-state="closed"${opts.allowDuplicates ? " data-allow-duplicates" : ""}>
-      <span data-part="taglist" role="list" aria-label="Tags">
+      <span data-part="taglist" role="group" aria-label="Tags">
         ${chips}
         <input data-part="input" type="text" role="combobox" aria-expanded="false" aria-autocomplete="list"${opts.suggestions ? ' aria-controls="s1"' : ""} placeholder="Add…">
       </span>
@@ -84,7 +84,9 @@ describe("tag-input controller", () => {
     key("Enter");
     const chip = root.querySelector("[data-part='tag']") as HTMLElement;
     expect(chip.dataset.ui).toBe("chip");
-    expect(chip.getAttribute("role")).toBe("listitem");
+    // No role: the taglist is a role="group", and a bare `listitem` outside a
+    // `list` is itself invalid ARIA. The chip is reached via its dismiss button.
+    expect(chip.getAttribute("role")).toBe(null);
     const dismiss = chip.querySelector("[data-part='dismiss']") as HTMLButtonElement;
     expect(dismiss.type).toBe("button");
     expect(dismiss.getAttribute("aria-label")).toBe("Remove Design");
@@ -217,7 +219,7 @@ describe("tag-input controller", () => {
     document.body.innerHTML = `
       <div l-data='{ "tags": "[]" }'>
         <div data-ui="tag-input" data-state="closed">
-          <span data-part="taglist" role="list" aria-label="Tags">
+          <span data-part="taglist" role="group" aria-label="Tags">
             <input data-part="input" type="text" role="combobox" aria-expanded="false" aria-autocomplete="list" placeholder="Add…">
           </span>
           <input data-part="value" type="hidden" l-model="tags">

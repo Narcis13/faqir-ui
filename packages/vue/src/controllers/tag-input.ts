@@ -57,7 +57,6 @@ export function createTagInput(root) {
     const chip = document.createElement("span");
     chip.dataset.ui = "chip";
     chip.dataset.part = "tag";
-    chip.setAttribute("role", "listitem");
 
     const label = document.createElement("span");
     label.dataset.part = "label";

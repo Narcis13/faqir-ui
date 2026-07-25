@@ -1542,18 +1542,18 @@
         },
         {
           "path": "tag-input.html",
-          "sha256": "1c8d93aff6af31fc21edc69c3e52aadcc6f48075fdc11fa7106abb1881c60cd8"
+          "sha256": "f2bf235fd9307a5ff793df01f8be7cb45e7c858c13e95ec49707ba8ffb92b335"
         },
         {
           "path": "tag-input.js",
-          "sha256": "068f0975d17184caa377b935a089c68feb96015957e5813b5d8893eff5b2f4df"
+          "sha256": "2297c76eca400feba2849e306a790ea74cf6fbce596c34ba3843a5bba84fd7e8"
         },
         {
           "path": "tag-input.manifest.json",
-          "sha256": "589174a2f81930e535d225930f1441dd111d9173ab22b965196eb1f581581dbf"
+          "sha256": "8af995fdcfb811060016a5e952dc701c8be097d16d4af6407e8378b4f4038473"
         }
       ],
-      "hash": "c3365528f68ba40f9cf9db7f6d7c0fe444a1d223b82f212cd46e510481bb9f8c",
+      "hash": "dadff751bd5daf56edd981e85285acd5714171f1d69d95c4f5e59991e7543f9c",
       "deps": [
         "chip"
       ]

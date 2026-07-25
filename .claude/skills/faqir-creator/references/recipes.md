@@ -1064,7 +1064,7 @@ Multi-value input composing the chip primitive and combobox listbox behaviour â€
 
 ```html
 <div data-ui="tag-input" data-state="closed">
-  <span data-part="taglist" role="list" aria-label="{label}">
+  <span data-part="taglist" role="group" aria-label="{label}">
     <input data-part="input" type="text" role="combobox" aria-expanded="false" aria-autocomplete="list" placeholder="{placeholder}">
   </span>
   <input data-part="value" type="hidden">
@@ -1089,9 +1089,9 @@ Multi-value input composing the chip primitive and combobox listbox behaviour â€
 _No variants._
 
 - **Safe transforms:** `add-suggestion-option`, `remove-suggestion-option`, `change-placeholder`, `toggle-allow-duplicates`, `seed-initial-tags`, `restyle-listbox-background`
-- **Unsafe (never do):** `remove-taglist-role-list`, `remove-dismiss-aria-label`, `remove-combobox-role-when-suggestions-present`, `remove-keyboard-handling`
+- **Unsafe (never do):** `remove-taglist-role-group`, `remove-dismiss-aria-label`, `remove-combobox-role-when-suggestions-present`, `remove-keyboard-handling`
 - **A11y:** keys: Enter, Backspace, ArrowDown/ArrowUp, Escape
-- **Required ARIA:** `role="list" on taglist with an accessible name`; `role="listitem" on each tag chip`; `type="button" and aria-label on each chip dismiss button`; `role="combobox", aria-autocomplete="list", aria-expanded on the input when suggestions are present`; `role="listbox" on listbox, role="option" on each option, aria-controls linking input to listbox`
+- **Required ARIA:** `role="group" on taglist with an accessible name`; `type="button" and aria-label on each chip dismiss button`; `role="combobox", aria-autocomplete="list", aria-expanded on the input when suggestions are present`; `role="listbox" on listbox, role="option" on each option, aria-controls linking input to listbox`
 
 ## toast
 
