@@ -39,6 +39,7 @@ function memberName(name: string): string {
 }
 
 function stateDoc(s: IRState): string {
+  if (s.doc) return s.doc.replace(/\*\//g, "*\\/");
   if (s.kind === "aria") return `Reflected as \`${s.attr}="true"|"false"\`.`;
   if (s.kind === "presence") return `Sets the \`${s.attr}\` attribute.`;
   return `Sets \`${s.attr}="${s.value}"\`.`;

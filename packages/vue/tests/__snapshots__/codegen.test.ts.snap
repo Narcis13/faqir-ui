@@ -1088,34 +1088,101 @@ exports[`bindings vue codegen snapshot per primitive: vue:stack 1`] = `
 
 import { defineFaqirPrimitive } from "../runtime";
 
-/** Allowed \`variant\` values (manifest variant group "direction", attr \`data-variant\`). */
+/** Allowed \`direction\` values (manifest variant group "direction", attr \`data-direction\`). */
+export type LStackDirection = "vertical" | "horizontal";
+
+/** Allowed \`variant\` values (manifest variant group "direction-legacy", attr \`data-variant\`). */
 export type LStackVariant = "vertical" | "horizontal";
 
 /** Allowed \`gap\` values (manifest variant group "gap", attr \`data-gap\`). */
-export type LStackGap = "0" | "1" | "2" | "3" | "4" | "6" | "8";
+export type LStackGap = "0" | "1" | "2" | "3" | "4" | "6" | "8" | "10" | "12" | "16";
 
 /** Allowed \`align\` values (manifest variant group "align", attr \`data-align\`). */
-export type LStackAlign = "start" | "center" | "end" | "stretch";
+export type LStackAlign = "start" | "center" | "end" | "stretch" | "baseline";
+
+/** Allowed \`justify\` values (manifest variant group "justify", attr \`data-justify\`). */
+export type LStackJustify = "start" | "center" | "end" | "between" | "around";
 
 export interface LStackProps {
+  /** \`data-direction\`; omitted when unset (manifest default: "vertical"). */
+  direction?: LStackDirection;
+  /** \`data-direction-sm\` — the \`direction\` value from the \`sm\` breakpoint up; omitted when unset. */
+  directionSm?: LStackDirection;
+  /** \`data-direction-md\` — the \`direction\` value from the \`md\` breakpoint up; omitted when unset. */
+  directionMd?: LStackDirection;
+  /** \`data-direction-lg\` — the \`direction\` value from the \`lg\` breakpoint up; omitted when unset. */
+  directionLg?: LStackDirection;
+  /** \`data-direction-xl\` — the \`direction\` value from the \`xl\` breakpoint up; omitted when unset. */
+  directionXl?: LStackDirection;
   /** \`data-variant\`; omitted when unset (manifest default: "vertical"). */
   variant?: LStackVariant;
   /** \`data-gap\`; omitted when unset (manifest default: "0"). */
   gap?: LStackGap;
+  /** \`data-gap-sm\` — the \`gap\` value from the \`sm\` breakpoint up; omitted when unset. */
+  gapSm?: LStackGap;
+  /** \`data-gap-md\` — the \`gap\` value from the \`md\` breakpoint up; omitted when unset. */
+  gapMd?: LStackGap;
+  /** \`data-gap-lg\` — the \`gap\` value from the \`lg\` breakpoint up; omitted when unset. */
+  gapLg?: LStackGap;
+  /** \`data-gap-xl\` — the \`gap\` value from the \`xl\` breakpoint up; omitted when unset. */
+  gapXl?: LStackGap;
   /** \`data-align\`; omitted when unset (manifest default: "stretch"). */
   align?: LStackAlign;
+  /** \`data-align-sm\` — the \`align\` value from the \`sm\` breakpoint up; omitted when unset. */
+  alignSm?: LStackAlign;
+  /** \`data-align-md\` — the \`align\` value from the \`md\` breakpoint up; omitted when unset. */
+  alignMd?: LStackAlign;
+  /** \`data-align-lg\` — the \`align\` value from the \`lg\` breakpoint up; omitted when unset. */
+  alignLg?: LStackAlign;
+  /** \`data-align-xl\` — the \`align\` value from the \`xl\` breakpoint up; omitted when unset. */
+  alignXl?: LStackAlign;
+  /** \`data-justify\`; omitted when unset (manifest default: "start"). */
+  justify?: LStackJustify;
+  /** \`data-justify-sm\` — the \`justify\` value from the \`sm\` breakpoint up; omitted when unset. */
+  justifySm?: LStackJustify;
+  /** \`data-justify-md\` — the \`justify\` value from the \`md\` breakpoint up; omitted when unset. */
+  justifyMd?: LStackJustify;
+  /** \`data-justify-lg\` — the \`justify\` value from the \`lg\` breakpoint up; omitted when unset. */
+  justifyLg?: LStackJustify;
+  /** \`data-justify-xl\` — the \`justify\` value from the \`xl\` breakpoint up; omitted when unset. */
+  justifyXl?: LStackJustify;
+  /** Bare \`data-wrap\` lets children reflow onto new lines (flex-wrap: wrap). Intrinsic — prefer it to a breakpoint whenever a row only needs to fit. */
+  wrap?: boolean;
+  /** Deprecated 0.x collapse: a horizontal stack stays a column below the sm tier. Superseded by data-direction="vertical" data-direction-sm="horizontal"; removed in 1.0. */
+  responsive?: boolean;
 }
 
-/** \`stack\` — Flexbox layout container for vertical or horizontal stacking with configurable gap and alignment */
+/** \`stack\` — Flexbox layout container for vertical or horizontal stacking with configurable gap, alignment, justification and wrapping — every group responsive on the canon breakpoint tiers */
 export const LStack = defineFaqirPrimitive<LStackProps>({
   name: "stack",
   tag: "div",
   variants: [
+    { prop: "direction", attr: "data-direction", values: ["vertical", "horizontal"] },
+    { prop: "directionSm", attr: "data-direction-sm", values: ["vertical", "horizontal"] },
+    { prop: "directionMd", attr: "data-direction-md", values: ["vertical", "horizontal"] },
+    { prop: "directionLg", attr: "data-direction-lg", values: ["vertical", "horizontal"] },
+    { prop: "directionXl", attr: "data-direction-xl", values: ["vertical", "horizontal"] },
     { prop: "variant", attr: "data-variant", values: ["vertical", "horizontal"] },
-    { prop: "gap", attr: "data-gap", values: ["0", "1", "2", "3", "4", "6", "8"] },
-    { prop: "align", attr: "data-align", values: ["start", "center", "end", "stretch"] },
+    { prop: "gap", attr: "data-gap", values: ["0", "1", "2", "3", "4", "6", "8", "10", "12", "16"] },
+    { prop: "gapSm", attr: "data-gap-sm", values: ["0", "1", "2", "3", "4", "6", "8", "10", "12", "16"] },
+    { prop: "gapMd", attr: "data-gap-md", values: ["0", "1", "2", "3", "4", "6", "8", "10", "12", "16"] },
+    { prop: "gapLg", attr: "data-gap-lg", values: ["0", "1", "2", "3", "4", "6", "8", "10", "12", "16"] },
+    { prop: "gapXl", attr: "data-gap-xl", values: ["0", "1", "2", "3", "4", "6", "8", "10", "12", "16"] },
+    { prop: "align", attr: "data-align", values: ["start", "center", "end", "stretch", "baseline"] },
+    { prop: "alignSm", attr: "data-align-sm", values: ["start", "center", "end", "stretch", "baseline"] },
+    { prop: "alignMd", attr: "data-align-md", values: ["start", "center", "end", "stretch", "baseline"] },
+    { prop: "alignLg", attr: "data-align-lg", values: ["start", "center", "end", "stretch", "baseline"] },
+    { prop: "alignXl", attr: "data-align-xl", values: ["start", "center", "end", "stretch", "baseline"] },
+    { prop: "justify", attr: "data-justify", values: ["start", "center", "end", "between", "around"] },
+    { prop: "justifySm", attr: "data-justify-sm", values: ["start", "center", "end", "between", "around"] },
+    { prop: "justifyMd", attr: "data-justify-md", values: ["start", "center", "end", "between", "around"] },
+    { prop: "justifyLg", attr: "data-justify-lg", values: ["start", "center", "end", "between", "around"] },
+    { prop: "justifyXl", attr: "data-justify-xl", values: ["start", "center", "end", "between", "around"] },
   ],
-  states: [],
+  states: [
+    { prop: "wrap", attr: "data-wrap", value: null, kind: "presence" },
+    { prop: "responsive", attr: "data-responsive", value: null, kind: "presence" },
+  ],
   slots: [],
   defaultSlot: true,
 });
@@ -1531,7 +1598,7 @@ export type { LSkeletonProps, LSkeletonVariant } from "./components/skeleton";
 export { LSpinner } from "./components/spinner";
 export type { LSpinnerProps, LSpinnerSize } from "./components/spinner";
 export { LStack } from "./components/stack";
-export type { LStackProps, LStackVariant, LStackGap, LStackAlign } from "./components/stack";
+export type { LStackProps, LStackDirection, LStackVariant, LStackGap, LStackAlign, LStackJustify } from "./components/stack";
 export { LStat } from "./components/stat";
 export type { LStatProps, LStatSize, LStatVariant, LStatTrend } from "./components/stat";
 export { LStepper } from "./components/stepper";

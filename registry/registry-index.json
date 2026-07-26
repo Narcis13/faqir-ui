@@ -683,22 +683,22 @@
       "name": "stack",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "files": [
         {
           "path": "stack.css",
-          "sha256": "dec34bbd016dc3d8c01a77550fcf18ed22b9824d6cd64cf1a276f969c9dbc9fa"
+          "sha256": "345608929ed6b00c851eaccdaa1a2a11ba2f0a1b5711809402e5521f2e86f135"
         },
         {
           "path": "stack.html",
-          "sha256": "36e3eb942fd09e11ee196ed7480c87daf11733d0e92f3f8e58b34103f9a2ff0a"
+          "sha256": "2b300ed4fb1e2189fc3fd310502720a398e9e91868dc71b02547826802830ccb"
         },
         {
           "path": "stack.manifest.json",
-          "sha256": "60b635969b397fa6fbee0bc95dd4a79484a6e15832c001e03d46146e348129a1"
+          "sha256": "b5604ba5973a4c404e66e0f54bab6590e3bfb241c7dabd037f71a6ef1fad0939"
         }
       ],
-      "hash": "9c23e7a85309092ca1ce7b922182cf970783ed2adbd453ff2a0f4a53ada7c023",
+      "hash": "860ef6739ef41ba7e56e355bd335477aca6f49af43b9357e548acdb6de9b9be8",
       "deps": []
     },
     {

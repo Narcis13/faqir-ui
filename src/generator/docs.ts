@@ -1376,11 +1376,10 @@ function variantValues(c: DocsComponent | undefined, attr: string): string[] {
  * theme re-declares. Add a variant to `button.manifest.json` and every theme
  * preview grows it.
  *
- * The two rows wrap through an inline `flex-wrap`, not through `stack`'s
- * `data-wrap`: that attribute exists in `stack.css` but its manifest does not
- * declare it, and the site may only use what the manifests describe (filed as
- * 0.7-20). Inline *layout* is what the generator already does elsewhere — the
- * prose max-width, the example frames, the token swatches — and carries no colour.
+ * The two rows wrap through `stack`'s own `data-wrap`. They used to carry an
+ * inline `flex-wrap` escape, because the attribute existed in `stack.css` while
+ * the manifest did not declare it and the site may only use what the manifests
+ * describe (0.7-20). Task 0.8-03 declared it; the escape is gone.
  *
  * It deliberately shows **solid** component colour and bare token swatches, not
  * text on a tinted `-subtle` surface. That is not a layout preference: the
@@ -1472,10 +1471,10 @@ function renderThemePreviewPage(ctx: {
 <main style="padding: var(--space-4); display: grid; gap: var(--space-4);">
 ${card}
 ${callout}
-    <div data-ui="stack" data-variant="horizontal" data-gap="2" style="flex-wrap: wrap;">
+    <div data-ui="stack" data-direction="horizontal" data-gap="2" data-wrap>
 ${buttons}
     </div>
-    <div data-ui="stack" data-variant="horizontal" data-gap="1" style="flex-wrap: wrap;">
+    <div data-ui="stack" data-direction="horizontal" data-gap="1" data-wrap>
 ${swatches}
     </div>
 </main>

@@ -1,7 +1,13 @@
 <!-- @ui:component stack -->
 <!-- @ui:kind primitive -->
 <!-- @ui:slots -->
-<!-- @ui:variants direction=vertical|horizontal gap=0|1|2|3|4|6|8 align=start|center|end|stretch -->
+<!-- @ui:variants direction=vertical|horizontal direction-legacy=vertical|horizontal gap=0|1|2|3|4|6|8|10|12|16 align=start|center|end|stretch|baseline justify=start|center|end|between|around -->
+<!-- Props: data-wrap (bare), data-align-text=start|center|right,
+     data-responsive (deprecated), and data-flex=1|auto|none on a CHILD.
+     direction, gap, align and justify are responsive: every value is also
+     accepted as data-ATTR-TIER for sm|md|lg|xl — data-direction="vertical"
+     data-direction-md="horizontal" reads mobile-first. data-variant and
+     data-responsive are deprecated 0.x aliases, removed in 1.0. -->
 
 <!-- Vertical Stack (default) -->
 <div data-ui="stack" data-gap="4">
@@ -11,14 +17,14 @@
 </div>
 
 <!-- Horizontal Stack -->
-<div data-ui="stack" data-variant="horizontal" data-gap="4">
+<div data-ui="stack" data-direction="horizontal" data-gap="4">
   <div>Item 1</div>
   <div>Item 2</div>
   <div>Item 3</div>
 </div>
 
 <!-- Horizontal Stack, Center Aligned -->
-<div data-ui="stack" data-variant="horizontal" data-gap="2" data-align="center">
+<div data-ui="stack" data-direction="horizontal" data-gap="2" data-align="center">
   <div>Short</div>
   <div>Taller<br>Item</div>
   <div>Short</div>
@@ -44,13 +50,13 @@
 </div>
 
 <!-- Horizontal Stack, End Aligned -->
-<div data-ui="stack" data-variant="horizontal" data-gap="4" data-align="end">
+<div data-ui="stack" data-direction="horizontal" data-gap="4" data-align="end">
   <div>End 1</div>
   <div>End 2</div>
 </div>
 
 <!-- Horizontal Stack, Stretch Aligned -->
-<div data-ui="stack" data-variant="horizontal" data-gap="4" data-align="stretch">
+<div data-ui="stack" data-direction="horizontal" data-gap="4" data-align="stretch">
   <div>Stretch 1</div>
   <div>Stretch 2</div>
 </div>

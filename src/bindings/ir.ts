@@ -15,7 +15,12 @@
 //   per canon breakpoint tier (`cols` → `colsSm`/`colsMd`/`colsLg`/`colsXl`,
 //   writing `data-cols-sm`…), typed with the SAME value union as the base prop.
 // - States applied to the root become boolean props (the manifest's default
-//   state is the absence of every state prop and is skipped). The state attr
+//   state is the absence of every state prop and is skipped). A manifest `prop`
+//   of type boolean that declares an explicit `attr` is the same thing by
+//   another name — a boolean that writes an attribute on the root — and joins
+//   them (task 0.8-03: stack's `data-wrap`). Boolean props WITHOUT an `attr`
+//   stay out: they are template/documentation entries (`disabled`, `checked`)
+//   that the manifest already declares as states. The state attr
 //   string is parsed into one of three kinds:
 //     `data-state="x"` / bare `data-state` → value kind (first truthy wins),
 //     bare `aria-*`                        → aria kind (always "true"/"false"),
@@ -56,6 +61,12 @@ export interface IRState {
   attr: string;
   value: string | null;
   kind: "value" | "presence" | "aria";
+  /**
+   * Prose for the generated doc comment, when the manifest supplies one — a
+   * boolean `prop` carries a required `description`, a `state` does not. Absent
+   * ⇒ the emitters fall back to describing the attribute they write.
+   */
+  doc?: string;
 }
 
 export interface IRSlot {
@@ -202,6 +213,23 @@ export function manifestToIR(manifest: Manifest, manifestPath: string): Componen
     }
     usedProps.add(stateName);
     states.push({ prop: stateName, ...parseStateAttr(stateName, s.attr) });
+  }
+
+  // Boolean props carrying an explicit attribute (task 0.8-03). Same emitted
+  // shape as a state — a boolean that writes an attribute — so they ride the
+  // same IR channel rather than growing a fourth spec array in every runtime.
+  for (const [propName, p] of Object.entries(manifest.props ?? {})) {
+    if (p.type !== "boolean" || !p.attr) continue;
+    if (!/^[a-z][A-Za-z0-9]*$/.test(propName)) {
+      throw new Error(
+        `${manifest.name}: boolean prop "${propName}" declares an attr but is not a valid prop name`
+      );
+    }
+    if (usedProps.has(propName)) {
+      throw new Error(`${manifest.name}: prop "${propName}" collides with an existing prop`);
+    }
+    usedProps.add(propName);
+    states.push({ prop: propName, ...parseStateAttr(propName, p.attr), doc: p.description });
   }
 
   const slots: IRSlot[] = [];

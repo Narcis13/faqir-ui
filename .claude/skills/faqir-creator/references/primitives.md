@@ -890,7 +890,7 @@ Circular loading spinner with multiple sizes
 
 _kind: primitive · category: layout_
 
-Flexbox layout container for vertical or horizontal stacking with configurable gap and alignment
+Flexbox layout container for vertical or horizontal stacking with configurable gap, alignment, justification and wrapping — every group responsive on the canon breakpoint tiers
 
 ```html
 <div data-ui="stack" data-gap="{gap}">{children}</div>
@@ -904,13 +904,17 @@ Flexbox layout container for vertical or horizontal stacking with configurable g
 
 **Variants**
 
-| Variant | Values | Default | Attribute | Applied to |
-|---------|--------|---------|-----------|------------|
-| direction | `vertical`, `horizontal` | `vertical` | `data-variant` | root |
-| gap | `0`, `1`, `2`, `3`, `4`, `6`, `8` | `0` | `data-gap` | root |
-| align | `start`, `center`, `end`, `stretch` | `stretch` | `data-align` | root |
+| Variant | Values | Default | Attribute | Applied to | Responsive |
+|---------|--------|---------|-----------|------------|------------|
+| direction | `vertical`, `horizontal` | `vertical` | `data-direction` | root | `data-direction-sm`, `data-direction-md`, `data-direction-lg`, `data-direction-xl` |
+| direction-legacy | `vertical`, `horizontal` | `vertical` | `data-variant` | root | — |
+| gap | `0`, `1`, `2`, `3`, `4`, `6`, `8`, `10`, `12`, `16` | `0` | `data-gap` | root | `data-gap-sm`, `data-gap-md`, `data-gap-lg`, `data-gap-xl` |
+| align | `start`, `center`, `end`, `stretch`, `baseline` | `stretch` | `data-align` | root | `data-align-sm`, `data-align-md`, `data-align-lg`, `data-align-xl` |
+| justify | `start`, `center`, `end`, `between`, `around` | `start` | `data-justify` | root | `data-justify-sm`, `data-justify-md`, `data-justify-lg`, `data-justify-xl` |
 
-- **Safe transforms:** `change-direction`, `change-gap`, `change-alignment`, `add-children`, `remove-children`
+- **Responsive:** the marked groups accept `<attr>-<tier>` for the canon tiers `sm` (40rem), `md` (48rem), `lg` (64rem), `xl` (80rem) — `data-direction-md="horizontal"` applies that value from `md` up. Mobile-first: the unsuffixed attribute is the base.
+
+- **Safe transforms:** `change-direction`, `change-gap`, `change-alignment`, `change-justification`, `toggle-wrap`, `add-responsive-tier`, `add-children`, `remove-children`
 - **Unsafe (never do):** `change-display-property`, `replace-with-non-flex-container`
 
 ## stat

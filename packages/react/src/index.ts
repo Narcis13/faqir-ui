@@ -75,7 +75,7 @@ export type { LSkeletonProps, LSkeletonVariant } from "./components/skeleton";
 export { LSpinner } from "./components/spinner";
 export type { LSpinnerProps, LSpinnerSize } from "./components/spinner";
 export { LStack } from "./components/stack";
-export type { LStackProps, LStackVariant, LStackGap, LStackAlign } from "./components/stack";
+export type { LStackProps, LStackDirection, LStackVariant, LStackGap, LStackAlign, LStackJustify } from "./components/stack";
 export { LStat } from "./components/stat";
 export type { LStatProps, LStatSize, LStatVariant, LStatTrend } from "./components/stat";
 export { LStepper } from "./components/stepper";
