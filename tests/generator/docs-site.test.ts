@@ -525,6 +525,9 @@ describe("adding a component to the registry", () => {
           slots: {},
           variants: {
             visual: { values: ["default", "loud"], default: "default", attr: "data-variant", applied_to: "root" },
+            // A responsive group (task 0.8-02): the page must grow a tier
+            // column from the declaration alone, with no site-side edit.
+            cols: { values: ["1", "2", "3"], default: "1", attr: "data-cols", applied_to: "root", responsive: true },
           },
           states: { default: { attr: 'data-state="default"', default: true } },
           a11y: { keyboard: {} },
@@ -577,6 +580,19 @@ describe("adding a component to the registry", () => {
     expect(probe).toContain("A probe component that exists only to prove the site needs no edits.");
     expect(probe).toContain('<code>data-variant="loud"</code>');
     expect(probe).toContain(`#${tokenAnchor("color-primary")}`);
+
+    // A responsive group renders the tier grammar in the variant matrix —
+    // generic, derived from `"responsive": true` plus the breakpoint canon.
+    expect(probe).toContain('<th scope="col">Responsive</th>');
+    for (const tier of ["sm", "md", "lg", "xl"]) {
+      expect(probe).toContain(`<code>data-cols-${tier}="…"</code>`);
+    }
+    // …and the non-responsive group in the same table stays dashed, so the
+    // column reads as a per-group declaration rather than a page-wide claim.
+    expect(probe).toMatch(/data-variant="loud"<\/code>[\s\S]*?<td>—<\/td>/);
+
+    // A component with no responsive group grows no column at all.
+    expect(grownByPath.get("components/primitives/button.html")).not.toContain("Responsive</th>");
 
     // And its stylesheet is in the bundle.
     expect(grownByPath.get("styles/faqir.css")).toContain('[data-ui="zz-probe"]');

@@ -26,6 +26,9 @@
 //   writes its attr onto the root or onto the unique element carrying the
 //   `applied_to` part. Groups whose target part is absent or repeated in the
 //   template are skipped — that markup is caller/controller territory.
+//   A group declaring `"responsive": true` additionally yields one prop per
+//   canon tier (`cols` → `colsSm`…`colsXl`, writing `data-cols-sm`…), typed
+//   with the base group's union and written onto the same element.
 // - Named slots: every manifest slot whose part appears on exactly ONE
 //   template element (and not the root) becomes a Vue slot; caller content
 //   replaces that element's template children (the element itself, with its
@@ -44,6 +47,7 @@ import { join } from "node:path";
 import { loadManifest, type Manifest } from "../manifest";
 import { listRegistryComponents } from "../utils/components";
 import { pascalCase } from "./ir";
+import { TIERS, responsiveAttribute, type Tier } from "../utils/breakpoints";
 
 /** One segment of a substituted attribute value or text node. */
 export type RecipeSeg = string | { p: string };
@@ -68,6 +72,18 @@ export interface RecipeVariantProp {
   group: string;
   /** "root" or the data-part the attr lands on. */
   part: string;
+  /** Canon tier — set only on the per-tier siblings of a responsive group. */
+  tier?: Tier;
+  /** For a tier prop, the base prop whose value union it reuses. */
+  basedOn?: string;
+}
+
+/** Doc-comment body for a recipe variant prop in a generated props interface. */
+export function recipeVariantPropDoc(v: RecipeVariantProp): string {
+  if (v.tier) {
+    return `\`${v.attr}\` on ${v.part} — the \`${v.basedOn}\` value from the \`${v.tier}\` breakpoint up; omitted when unset.`;
+  }
+  return `\`${v.attr}\` on ${v.part}; omitted when unset (manifest default: ${JSON.stringify(v.default)}).`;
 }
 
 export interface RecipeIR {
@@ -193,13 +209,9 @@ function partOf(node: TNode): string | undefined {
   return typeof entry?.[1] === "string" ? entry[1] : undefined;
 }
 
-interface ManifestProps {
-  props?: Record<string, { default?: unknown }>;
-}
-
 /** Build the RecipeNode tree + prop registrations from manifest + template. */
 function extractTree(manifest: Manifest, template: TNode, label: string) {
-  const props = (manifest as unknown as ManifestProps).props ?? {};
+  const props = manifest.props ?? {};
   const stringProps = new Map<string, string>();
   const boolProps: string[] = [];
   const variantProps: RecipeVariantProp[] = [];
@@ -355,6 +367,38 @@ function extractTree(manifest: Manifest, template: TNode, label: string) {
         if (typeof c === "object" && "tag" in c && attach(c, false)) return true;
       return false;
     })(tree, true);
+  }
+
+  // Responsive groups (task 0.8-02): every registered variant prop whose
+  // manifest group declares `"responsive": true` gains one sibling per canon
+  // tier, written onto the same element. Runs as a post-pass over the finished
+  // tree so both registration paths (placeholder-consumed and attached) are
+  // covered by one piece of code — no group, and no recipe, is special-cased.
+  for (const vp of [...variantProps]) {
+    if (vp.tier || manifest.variants[vp.group]?.responsive !== true) continue;
+    for (const tier of TIERS) {
+      const tierProp: RecipeVariantProp = {
+        ...vp,
+        prop: `${vp.prop}${pascalCase(tier)}`,
+        attr: responsiveAttribute(vp.attr, tier),
+        values: [...vp.values],
+        tier,
+        basedOn: vp.prop,
+      };
+      if (variantProps.some((x) => x.prop === tierProp.prop)) {
+        throw new Error(`${label}: responsive group "${vp.group}" collides on prop "${tierProp.prop}"`);
+      }
+      variantProps.push(tierProp);
+      (function attach(node: RecipeNode): boolean {
+        if (node.dyn?.some(([p]) => p === vp.prop)) {
+          node.dyn.push([tierProp.prop, tierProp.attr]);
+          return true;
+        }
+        for (const c of node.children)
+          if (typeof c === "object" && "tag" in c && attach(c)) return true;
+        return false;
+      })(tree);
+    }
   }
 
   return {

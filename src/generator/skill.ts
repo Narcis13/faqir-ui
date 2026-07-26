@@ -20,6 +20,7 @@ import { join } from "node:path";
 import { readConfig } from "../utils/config";
 import { ensureDir, getPackageRoot, getRegistryPath } from "../utils/fs";
 import { loadManifest, type Manifest } from "../manifest";
+import { BREAKPOINTS, TIERS, responsiveAttribute } from "../utils/breakpoints";
 import { getSchemaVersion } from "../utils/schema";
 import { loadPluginMetadata, type PluginMetadata } from "./plugins";
 
@@ -73,19 +74,49 @@ function renderAnatomyTree(m: Manifest): string[] {
   return lines;
 }
 
-/** Render a markdown variant table from `variants` (empty → a single note). */
+/**
+ * Render a markdown variant table from `variants` (empty → a single note).
+ *
+ * A component declaring a responsive group (task 0.8-02) gains a Responsive
+ * column plus one grammar line below the table, so an agent reading the skill
+ * learns `data-cols-md="6"` from the manifest rather than from prose someone
+ * remembered to write. Emitted only when a group declares it — the column is
+ * absent, not dashed, everywhere else.
+ */
 function renderVariantTable(m: Manifest): string[] {
   const entries = Object.entries(m.variants ?? {});
   if (entries.length === 0) return ["_No variants._"];
 
-  const lines: string[] = [
-    "| Variant | Values | Default | Attribute | Applied to |",
-    "|---------|--------|---------|-----------|------------|",
-  ];
+  const responsiveGroups = entries.filter(([, v]) => v.responsive === true);
+  const responsive = responsiveGroups.length > 0;
+  const lines: string[] = responsive
+    ? [
+        "| Variant | Values | Default | Attribute | Applied to | Responsive |",
+        "|---------|--------|---------|-----------|------------|------------|",
+      ]
+    : [
+        "| Variant | Values | Default | Attribute | Applied to |",
+        "|---------|--------|---------|-----------|------------|",
+      ];
   for (const [name, v] of entries) {
     const values = v.values.map((x) => `\`${x}\``).join(", ");
+    const row = `| ${name} | ${values} | \`${v.default}\` | \`${v.attr}\` | ${v.applied_to ?? "root"} |`;
+    if (!responsive) {
+      lines.push(row);
+      continue;
+    }
+    const tiers =
+      v.responsive === true ? TIERS.map((t) => `\`${responsiveAttribute(v.attr, t)}\``).join(", ") : "—";
+    lines.push(`${row} ${tiers} |`);
+  }
+  if (responsive) {
+    const example = responsiveGroups[0][1];
+    lines.push("");
     lines.push(
-      `| ${name} | ${values} | \`${v.default}\` | \`${v.attr}\` | ${v.applied_to ?? "root"} |`,
+      `- **Responsive:** the marked groups accept \`<attr>-<tier>\` for the canon tiers ` +
+        `${TIERS.map((t) => `\`${t}\` (${BREAKPOINTS[t].rem}rem)`).join(", ")} — ` +
+        `\`${responsiveAttribute(example.attr, "md")}="${example.values[example.values.length - 1]}"\` ` +
+        `applies that value from \`md\` up. Mobile-first: the unsuffixed attribute is the base.`,
     );
   }
   return lines;
@@ -137,7 +168,7 @@ function primaryTemplate(m: Manifest): string | undefined {
  * canonical template, anatomy tree, variant table, transforms, and a11y.
  * `headingLevel` lets the caller nest it (### in references, #### inline).
  */
-function renderComponentSection(m: Manifest, headingLevel = 3): string[] {
+export function renderComponentSection(m: Manifest, headingLevel = 3): string[] {
   const h = "#".repeat(headingLevel);
   const lines: string[] = [];
   lines.push(`${h} ${m.name}`);

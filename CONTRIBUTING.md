@@ -124,11 +124,15 @@ Every manifest must include:
 - `name` — lowercase kebab-case
 - `version` — semver
 - `kind` — primitive, recipe, pattern, or scaffold
-- `category` — actions, forms, layout, navigation, data-display, feedback, overlay, typography, or composite
+- `category` — one of `actions`, `composite`, `custom`, `data-display`, `feedback`, `forms`, `layout`, `marketing`, `navigation`, `overlay`, `typography` (a closed vocabulary — the schema enforces it; `custom` is what `faqir create` scaffolds outside the registry)
 - `description` — one-line description
 - `anatomy` — tag, selector, content_model
 - `slots` — named insertion points with selector and required flag
-- `variants` — grouped variant definitions with valid values
+- `variants` — grouped variant definitions with valid values; add `"responsive": true` to a group to
+  declare that every value is also accepted as `<attr>-<tier>` for the canon tiers `sm`/`md`/`lg`/`xl`
+  (`data-cols-md="6"` = "6 from md up"). Generators expand it; never mark a protocol attribute responsive.
+- `props` — attributes that are not variant groups: boolean toggles, free-form strings/numbers and
+  small enums, each with `type` + `description` (and optionally `default`, `attr`, `values`)
 - `states` — component states with data-state mappings
 - `a11y` — ARIA requirements, keyboard shortcuts, focus trap info
 - `tokens_used` — token names referenced in CSS

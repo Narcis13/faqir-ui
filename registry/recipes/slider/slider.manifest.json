@@ -3,7 +3,7 @@
   "name": "slider",
   "version": "1.0.0",
   "kind": "recipe",
-  "category": "form",
+  "category": "forms",
   "description": "Draggable range input with single-thumb and two-thumb (range) modes, full keyboard control, and screen-reader-correct ARIA",
 
   "anatomy": {

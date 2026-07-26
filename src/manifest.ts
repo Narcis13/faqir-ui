@@ -1,5 +1,7 @@
 // Manifest JSON schema — TypeScript types + validation
 
+import { isProtocolAttribute } from "./utils/breakpoints";
+
 export interface ManifestSlot {
   selector: string;
   required: boolean;
@@ -12,6 +14,39 @@ export interface ManifestVariant {
   default: string;
   attr: string;
   applied_to?: string;
+  /**
+   * Declared responsiveness (task 0.8-02, FAQIR-SPEC §15).
+   *
+   * `true` means every value in `values` is ALSO accepted as `<attr>-<tier>`
+   * for each canon tier — `data-cols-md="6"` is "6 columns from the md tier up".
+   * One declaration, consumed generically everywhere: the bindings emit typed
+   * per-tier props, the docs/skill/context surfaces render the grammar, and the
+   * audit validates suffixed attributes. Never applies to the five protocol
+   * attributes (`src/utils/breakpoints.ts` makes that unreachable, not merely
+   * discouraged).
+   */
+  responsive?: boolean;
+}
+
+/**
+ * One entry of a manifest's `props` map (task 0.8-02).
+ *
+ * `props` is where an attribute lives when it is not a visual variant group:
+ * boolean toggles (`data-editable`), free-form strings and numbers read by a
+ * controller (`data-locale`), and small enums whose values are listed but which
+ * are not a `data-variant` axis. It predates the published schema by 59
+ * manifests — this type and the schema's `prop` definition formalize what was
+ * already the de-facto contract, and the bindings codegen reads it for
+ * framework prop names and defaults.
+ */
+export interface ManifestProp {
+  type: "string" | "boolean" | "number" | "enum";
+  description: string;
+  default?: string | boolean | number | null;
+  /** Attribute the prop writes, when it is not `data-<name>`. */
+  attr?: string;
+  /** Permitted values, for `type: "enum"` (and for subsettable sets like icons). */
+  values?: string[];
 }
 
 export interface ManifestState {
@@ -106,6 +141,8 @@ export interface Manifest {
   anatomy: ManifestAnatomy;
   slots: Record<string, ManifestSlot>;
   variants: Record<string, ManifestVariant>;
+  /** Non-variant attributes — see {@link ManifestProp}. */
+  props?: Record<string, ManifestProp>;
   states: Record<string, ManifestState>;
   a11y: ManifestA11y;
   tokens_used: string[];
@@ -124,6 +161,34 @@ export interface ManifestValidationError {
 
 const VALID_KINDS = ["primitive", "recipe", "pattern", "scaffold"] as const;
 const VALID_CONTENT_MODELS = ["inline", "block", "slots", "text"] as const;
+
+/**
+ * The closed category vocabulary (task 0.8-02).
+ *
+ * One spelling per shelf: the registry used to carry both `form` (3) and
+ * `forms` (14) plus an undocumented `marketing`, so agents filtering by
+ * category silently missed components. This list, `manifest.schema.json`'s
+ * `category` enum and CONTRIBUTING.md's documented list are asserted equal by
+ * tests/schema/manifest-schema.test.ts. `custom` is the value `faqir create`
+ * scaffolds with and is never used inside the registry.
+ */
+export const MANIFEST_CATEGORIES = [
+  "actions",
+  "composite",
+  "custom",
+  "data-display",
+  "feedback",
+  "forms",
+  "layout",
+  "marketing",
+  "navigation",
+  "overlay",
+  "typography",
+] as const;
+
+export type ManifestCategory = (typeof MANIFEST_CATEGORIES)[number];
+
+const VALID_PROP_TYPES = ["string", "boolean", "number", "enum"] as const;
 
 export function validateManifest(data: unknown): ManifestValidationError[] {
   const errors: ManifestValidationError[] = [];
@@ -145,6 +210,14 @@ export function validateManifest(data: unknown): ManifestValidationError[] {
   // Validate kind
   if (typeof m.kind === "string" && !VALID_KINDS.includes(m.kind as any)) {
     errors.push({ field: "kind", message: `Invalid kind '${m.kind}'. Must be: ${VALID_KINDS.join(", ")}` });
+  }
+
+  // Validate category against the closed vocabulary
+  if (typeof m.category === "string" && !MANIFEST_CATEGORIES.includes(m.category as any)) {
+    errors.push({
+      field: "category",
+      message: `Invalid category '${m.category}'. Must be: ${MANIFEST_CATEGORIES.join(", ")}`,
+    });
   }
 
   // Validate aliases (optional) — must be an array of non-empty strings when present
@@ -229,6 +302,39 @@ export function validateManifest(data: unknown): ManifestValidationError[] {
       }
       if (typeof v.attr !== "string") {
         errors.push({ field: `variants.${name}.attr`, message: "Required string" });
+      }
+      if (v.responsive !== undefined && typeof v.responsive !== "boolean") {
+        errors.push({ field: `variants.${name}.responsive`, message: "Optional field 'responsive' must be a boolean" });
+      }
+      if (v.responsive === true && typeof v.attr === "string" && isProtocolAttribute(v.attr)) {
+        errors.push({
+          field: `variants.${name}.responsive`,
+          message: `'${v.attr}' is a protocol attribute; the responsive grammar applies to component attributes only`,
+        });
+      }
+    }
+  }
+
+  // Validate props (optional) — the non-variant attribute surface
+  if (m.props !== undefined) {
+    if (typeof m.props !== "object" || m.props === null || Array.isArray(m.props)) {
+      errors.push({ field: "props", message: "Optional field 'props' must be an object" });
+    } else {
+      for (const [name, prop] of Object.entries(m.props as Record<string, unknown>)) {
+        if (typeof prop !== "object" || prop === null) {
+          errors.push({ field: `props.${name}`, message: "Prop must be an object" });
+          continue;
+        }
+        const p = prop as Record<string, unknown>;
+        if (typeof p.type !== "string" || !VALID_PROP_TYPES.includes(p.type as any)) {
+          errors.push({ field: `props.${name}.type`, message: `Must be: ${VALID_PROP_TYPES.join(", ")}` });
+        }
+        if (typeof p.description !== "string" || p.description.length === 0) {
+          errors.push({ field: `props.${name}.description`, message: "Required non-empty string" });
+        }
+        if (p.values !== undefined && !Array.isArray(p.values)) {
+          errors.push({ field: `props.${name}.values`, message: "Optional field 'values' must be an array" });
+        }
       }
     }
   }

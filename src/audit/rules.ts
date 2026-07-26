@@ -2,7 +2,8 @@
 
 import type { ParsedComponent, ParsedElement, ParsedDocument } from "../parser/html-parser";
 import { offsetToPosition } from "../parser/html-parser";
-import type { Manifest } from "../manifest";
+import type { Manifest, ManifestVariant } from "../manifest";
+import { TIERS, isTier } from "../utils/breakpoints";
 import { suggestClosest } from "../utils/suggest";
 import { CONTRAST_TOKENS_RULE } from "./contrast-tokens";
 import { fieldWiringRule } from "./field-wiring";
@@ -283,7 +284,46 @@ export const focusTrapRule: AuditRule = {
 };
 
 // ── Rule: valid-variant ──
-// data-variant value must exist in manifest variants
+// data-variant value must exist in manifest variants; a variant group declaring
+// `"responsive": true` additionally accepts `<attr>-<tier>` (task 0.8-02).
+
+/**
+ * Check one element's attributes against the responsive groups that apply to
+ * it. Two ways to be wrong, both findings: the suffix is not a canon tier
+ * (`data-cols-xx` — a typo that CSS would silently ignore forever), or the tier
+ * is right but the value is outside the group's declared set (`data-cols-md="7"`
+ * on a 1–6 group). Manifest-driven and attribute-agnostic: the rule never names
+ * a component or an attribute of its own.
+ */
+function responsiveMessages(
+  attrs: Record<string, string>,
+  groups: [string, ManifestVariant][],
+  target: string,
+): string[] {
+  const messages: string[] = [];
+  for (const [group, v] of groups) {
+    if (v.responsive !== true) continue;
+    const prefix = `${v.attr}-`;
+    for (const [name, value] of Object.entries(attrs)) {
+      if (!name.startsWith(prefix)) continue;
+      const tier = name.slice(prefix.length);
+      if (!isTier(tier)) {
+        messages.push(
+          `Unknown breakpoint tier "${tier}" in ${name} on ${target}. Canon tiers: ${TIERS.join(", ")}`,
+        );
+        continue;
+      }
+      if (value && !v.values.includes(value)) {
+        messages.push(
+          `Invalid responsive value "${value}" in ${name} on ${target} (variant group "${group}"). ` +
+            `Valid values: ${v.values.join(", ")}`,
+        );
+      }
+    }
+  }
+  return messages;
+}
+
 export const validVariantRule: AuditRule = {
   id: "valid-variant",
   severity: "error",
@@ -316,6 +356,25 @@ export const validVariantRule: AuditRule = {
       }
     }
 
+    // Responsive suffixes on the root
+    const rootGroups = Object.entries(manifest.variants ?? {}).filter(
+      ([, v]) => !v.applied_to || v.applied_to === "root",
+    );
+    for (const message of responsiveMessages(
+      component.root.attrs,
+      rootGroups,
+      `[data-ui="${component.name}"]`,
+    )) {
+      results.push({
+        rule_id: "valid-variant",
+        severity: "error",
+        component_name: component.name,
+        file: component.file,
+        line: component.line,
+        message,
+      });
+    }
+
     // Check parts with data-variant
     for (const [partName, elements] of Object.entries(component.parts)) {
       for (const el of elements) {
@@ -340,6 +399,26 @@ export const validVariantRule: AuditRule = {
               message: `Invalid variant "${value}" on [data-part="${partName}"]. Valid values: ${[...partValidValues].join(", ")}`,
             });
           }
+        }
+      }
+    }
+
+    // Responsive suffixes on parts — a group applies to the part it declares.
+    for (const [partName, elements] of Object.entries(component.parts)) {
+      const partGroups = Object.entries(manifest.variants ?? {}).filter(
+        ([, v]) => v.applied_to === partName,
+      );
+      if (partGroups.length === 0) continue;
+      for (const el of elements) {
+        for (const message of responsiveMessages(el.attrs, partGroups, `[data-part="${partName}"]`)) {
+          results.push({
+            rule_id: "valid-variant",
+            severity: "error",
+            component_name: component.name,
+            file: component.file,
+            line: countLineFromEl(component, el),
+            message,
+          });
         }
       }
     }

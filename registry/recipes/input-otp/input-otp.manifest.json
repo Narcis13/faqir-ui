@@ -3,7 +3,7 @@
   "name": "input-otp",
   "version": "1.1.0",
   "kind": "recipe",
-  "category": "form",
+  "category": "forms",
   "description": "Segmented one-time-code input — N visual segments over a single hidden real input, with paste distribution, auto-advance, optional l-mask enforcement, and a fire-once complete event",
 
   "changes": [

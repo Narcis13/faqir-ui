@@ -2,8 +2,14 @@
   "$schema": "./state.schema.md",
   "plan": "FAQIR-PLAN.md",
   "current": null,
-  "last_completed": "0.8-01",
+  "last_completed": "0.8-02",
   "history": [
+    {
+      "id": "0.8-02",
+      "completed": "2026-07-27",
+      "commit": "PENDING",
+      "summary": "Manifest schema gains `props` and `responsive`, and the category vocabulary closes. `props` was de-facto \u2014 134 entries across 59 manifests, read by recipe-ir/icons, absent from the published schema; it is now a `prop` definition (type \u2208 string|boolean|number|enum + description required; default/attr/values optional) derived from the shapes actually shipped, plus `ManifestProp`/`Manifest.props` in TS, which let recipe-ir.ts delete the local cast it used to reach a field the type system didn't know. `variant.responsive: true` means every declared value is also accepted as `data-<attr>-<tier>` for the 0.8-01 canon tiers, and FOUR surfaces consume that one declaration generically: bindings expand `cols` \u2192 `colsSm/colsMd/colsLg/colsXl` (ir.ts for primitives; a post-pass over the finished render tree in recipe-ir.ts for recipes, so both registration paths share one implementation), with tier props REUSING the base group's union \u2014 one exported type per group, not one per prop; the docs variant matrix grows a Responsive column; the skill grows the column plus a canon-quoting grammar line; context gains `responsive: {attr:[tiers]}` and the markdown/llms-full surfaces a `Responsive:` line from one formatter. Every surface is tested in both directions \u2014 a component declaring nothing gains no column/key/line \u2014 which is why 82 docs pages, the committed skill and the bindings stayed byte-identical (check:bindings zero drift) even though the generators changed. `valid-variant` learns the suffix grammar: wrong value and unknown tier are separate findings, reported independently, and a suffixed attribute of a NON-responsive group is deliberately ignored (0.8-10's rule, not this one's). No registry component declares a responsive group yet \u2014 0.8-03/0.8-04 are first \u2014 so the contract is proven against probe manifests and a scratch-registry probe recipe BEFORE the CSS lands, not after. Category: `form`(3)\u2192`forms`(17), `marketing`(4) documented, closed 11-value enum shared by schema + MANIFEST_CATEGORIES + CONTRIBUTING, with a drift test that parses the vocabulary back out of CONTRIBUTING's prose; `custom` is in the enum for `faqir create` and excluded from the registry by test. bun run test 2784 pass / 0 fail (+33); typecheck, check:bindings, check:skill, check:registry-index, check:audit-browser, check:schema-refs (95), check:docs (291 files), audit:registry all green."
+    },
     {
       "id": "0.7-15",
       "completed": "2026-07-25",

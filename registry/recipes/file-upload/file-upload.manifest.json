@@ -3,7 +3,7 @@
   "name": "file-upload",
   "version": "1.0.0",
   "kind": "recipe",
-  "category": "form",
+  "category": "forms",
   "description": "Native file selection plus drag-and-drop, local accept/size validation, removable file list, and event-only app upload handoff",
 
   "anatomy": {

@@ -39,7 +39,7 @@
           "type": "string",
           "enum": ["primitive", "recipe", "pattern", "scaffold"]
         },
-        "category": { "type": "string", "minLength": 1 },
+        "category": { "$ref": "#/definitions/category" },
         "description": { "type": "string", "minLength": 1 },
         "aliases": {
           "type": "array",
@@ -57,6 +57,11 @@
         "variants": {
           "type": "object",
           "additionalProperties": { "$ref": "#/definitions/variant" }
+        },
+        "props": {
+          "type": "object",
+          "description": "Attributes that are not variant groups: booleans, free-form strings and numbers read by a controller or by CSS. Consumed by the bindings codegen (framework props + defaults) and by the generated agent surfaces.",
+          "additionalProperties": { "$ref": "#/definitions/prop" }
         },
         "states": {
           "type": "object",
@@ -117,8 +122,48 @@
         },
         "default": { "type": "string" },
         "attr": { "type": "string" },
-        "applied_to": { "type": "string" }
+        "applied_to": { "type": "string" },
+        "responsive": {
+          "type": "boolean",
+          "description": "When true, every declared value is ALSO accepted as `<attr>-<tier>` for each canon breakpoint tier (sm, md, lg, xl) — `data-cols-md=\"6\"` means \"6 from the md tier up\" (FAQIR-SPEC §15). Generators expand the group into per-tier props/columns automatically; the responsive grammar never applies to the five frozen protocol attributes."
+        }
       }
+    },
+    "prop": {
+      "type": "object",
+      "description": "One non-variant attribute of a component: a boolean toggle, a free-form string/number, or a small enum whose values are listed but which is not a visual variant group.",
+      "required": ["type", "description"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["string", "boolean", "number", "enum"]
+        },
+        "description": { "type": "string", "minLength": 1 },
+        "default": { "type": ["string", "boolean", "number", "null"] },
+        "attr": { "type": "string", "minLength": 1 },
+        "values": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "category": {
+      "type": "string",
+      "description": "The component's shelf in the registry. A closed vocabulary — the same list CONTRIBUTING.md documents. `custom` is reserved for components scaffolded by `faqir create` outside the registry.",
+      "enum": [
+        "actions",
+        "composite",
+        "custom",
+        "data-display",
+        "feedback",
+        "forms",
+        "layout",
+        "marketing",
+        "navigation",
+        "overlay",
+        "typography"
+      ]
     },
     "change": {
       "type": "object",

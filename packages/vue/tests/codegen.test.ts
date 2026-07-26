@@ -35,7 +35,9 @@ describe("bindings vue codegen", () => {
     for (const ir of irs) {
       const source = generated.get(`components/${ir.name}.ts`)!;
       for (const v of ir.variants) {
-        const typeName = `${ir.componentName}${pascalCase(v.prop)}`;
+        // Per-tier props of a responsive group (0.8-02) reuse the base group's
+        // union — one exported type per group, not one per prop.
+        const typeName = `${ir.componentName}${pascalCase(v.basedOn ?? v.prop)}`;
         expect(source).toContain(`export type ${typeName} = `);
         for (const value of v.values) expect(source).toContain(JSON.stringify(value));
       }

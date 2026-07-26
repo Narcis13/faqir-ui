@@ -95,6 +95,33 @@ const BUTTON_MANIFEST: Manifest = {
   tests: [],
 };
 
+// A grid-shaped manifest declaring a RESPONSIVE variant group (task 0.8-02).
+// `cols` is responsive, `gap` is not — so the rule must accept `data-cols-md`
+// and still know nothing about `data-gap-md`, which belongs to 0.8-10's layout
+// rules rather than to this one.
+const GRID_MANIFEST: Manifest = {
+  name: "grid",
+  version: "1.0.0",
+  kind: "primitive",
+  category: "layout",
+  description: "Grid",
+  anatomy: { tag: "div", selector: "[data-ui='grid']", content_model: "block" },
+  slots: {},
+  variants: {
+    cols: { values: ["1", "2", "3", "4", "6", "12"], default: "1", attr: "data-cols", applied_to: "root", responsive: true },
+    gap: { values: ["0", "2", "4"], default: "4", attr: "data-gap", applied_to: "root" },
+  },
+  states: {},
+  a11y: {},
+  tokens_used: [],
+  templates: { html: "" },
+  safe_transforms: [],
+  unsafe_transforms: [],
+  composition: { contains: [], used_in: [] },
+  files: { html: "grid.html", css: "grid.css", manifest: "grid.manifest.json" },
+  tests: [],
+};
+
 function getComponents(html: string) {
   return extractComponents(html, "test.html");
 }
@@ -239,6 +266,53 @@ describe("Audit Rules", () => {
       expect(results.length).toBe(1);
       expect(results[0].message).toContain("bogus");
       expect(results[0].line).toBe(3); // the panel, not the line-1 root
+    });
+  });
+
+  // ── responsive variant groups (task 0.8-02) ──────────────────────────────
+  describe("valid-variant · responsive suffixes", () => {
+    it("accepts every canon tier carrying a declared value", () => {
+      const html =
+        '<div data-ui="grid" data-cols="1" data-cols-sm="2" data-cols-md="3" data-cols-lg="6" data-cols-xl="12"></div>';
+      const results = validVariantRule.check(getComponents(html)[0], GRID_MANIFEST);
+      expect(results).toEqual([]);
+    });
+
+    it("flags a value outside the group's declared set (data-cols-md=\"7\")", () => {
+      const html = '<div data-ui="grid" data-cols-md="7"></div>';
+      const results = validVariantRule.check(getComponents(html)[0], GRID_MANIFEST);
+      expect(results.length).toBe(1);
+      expect(results[0].rule_id).toBe("valid-variant");
+      expect(results[0].severity).toBe("error");
+      expect(results[0].message).toContain("data-cols-md");
+      expect(results[0].message).toContain("7");
+      expect(results[0].message).toContain("1, 2, 3, 4, 6, 12");
+    });
+
+    it("flags an unknown tier suffix (data-cols-xx=\"2\")", () => {
+      const html = '<div data-ui="grid" data-cols-xx="2"></div>';
+      const results = validVariantRule.check(getComponents(html)[0], GRID_MANIFEST);
+      expect(results.length).toBe(1);
+      expect(results[0].message).toContain('Unknown breakpoint tier "xx"');
+      expect(results[0].message).toContain("sm, md, lg, xl");
+    });
+
+    it("reports both halves independently on one element", () => {
+      const html = '<div data-ui="grid" data-cols-md="7" data-cols-xx="2"></div>';
+      const results = validVariantRule.check(getComponents(html)[0], GRID_MANIFEST);
+      expect(results.length).toBe(2);
+    });
+
+    it("says nothing about a suffixed attribute of a NON-responsive group", () => {
+      // `gap` never declared itself responsive — this is 0.8-10's territory
+      // (an undeclared attribute), not a wrong value in a declared grammar.
+      const html = '<div data-ui="grid" data-gap-md="99"></div>';
+      expect(validVariantRule.check(getComponents(html)[0], GRID_MANIFEST)).toEqual([]);
+    });
+
+    it("leaves components with no responsive group untouched", () => {
+      const html = '<button data-ui="button" data-variant="primary" data-size="lg">OK</button>';
+      expect(validVariantRule.check(getComponents(html)[0], BUTTON_MANIFEST)).toEqual([]);
     });
   });
 

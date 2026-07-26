@@ -11,6 +11,9 @@
 //   `key`, `ref`, `is`) get a `Variant` suffix (`data-style` → `styleVariant`).
 //   The attr is written only when the prop is explicitly set — registry
 //   convention keeps default values attribute-free.
+// - A variant group declaring `"responsive": true` additionally yields one prop
+//   per canon breakpoint tier (`cols` → `colsSm`/`colsMd`/`colsLg`/`colsXl`,
+//   writing `data-cols-sm`…), typed with the SAME value union as the base prop.
 // - States applied to the root become boolean props (the manifest's default
 //   state is the absence of every state prop and is skipped). The state attr
 //   string is parsed into one of three kinds:
@@ -27,8 +30,9 @@
 //   `slots`/`empty` do not. A void root tag renders no children at all.
 
 import { join } from "node:path";
-import { loadManifest, type Manifest } from "../manifest";
+import { loadManifest, type Manifest, type ManifestVariant } from "../manifest";
 import { listRegistryComponents } from "../utils/components";
+import { TIERS, responsiveAttribute, type Tier } from "../utils/breakpoints";
 
 export interface IRVariant {
   prop: string;
@@ -37,6 +41,14 @@ export interface IRVariant {
   default: string;
   /** Manifest variant group key (e.g. button's `visual`), for docs. */
   group: string;
+  /**
+   * Canon breakpoint tier this prop applies from — set ONLY on the per-tier
+   * siblings a `"responsive": true` variant group expands into. The base prop
+   * (tier `undefined`) owns the value-union type; tier props reuse it.
+   */
+  tier?: Tier;
+  /** For a tier prop, the base prop whose type it reuses (`colsMd` → `cols`). */
+  basedOn?: string;
 }
 
 export interface IRState {
@@ -90,6 +102,50 @@ function variantPropName(attr: string): string {
 }
 
 /**
+ * Expand one `"responsive": true` variant group into its per-tier props
+ * (task 0.8-02): `cols` → `colsSm`/`colsMd`/`colsLg`/`colsXl`, writing
+ * `data-cols-sm`… . One declaration in the manifest, four typed props in every
+ * binding target — no emitter and no component is special-cased.
+ *
+ * The tier props reuse the base group's value union (`basedOn`), so a
+ * responsive group costs one exported type, not five. `responsiveAttribute`
+ * throws on a protocol attribute, so a manifest that marks `data-size`
+ * responsive fails generation rather than emitting a sixth protocol attribute.
+ */
+export function responsiveTierVariants(base: IRVariant): IRVariant[] {
+  return TIERS.map((tier: Tier) => ({
+    ...base,
+    prop: `${base.prop}${pascalCase(tier)}`,
+    attr: responsiveAttribute(base.attr, tier),
+    values: [...base.values],
+    tier,
+    basedOn: base.prop,
+  }));
+}
+
+/**
+ * Name of the exported value-union type backing a variant prop. Per-tier props
+ * point at their base group's type, so `colsMd?: LGridCols` — one type, four
+ * extra props.
+ */
+export function variantTypeName(componentName: string, v: IRVariant): string {
+  return `${componentName}${pascalCase(v.basedOn ?? v.prop)}`;
+}
+
+/** Doc-comment body for a variant prop in a generated props interface. */
+export function variantPropDoc(v: IRVariant): string {
+  if (v.tier) {
+    return `\`${v.attr}\` — the \`${v.basedOn}\` value from the \`${v.tier}\` breakpoint up; omitted when unset.`;
+  }
+  return `\`${v.attr}\`; omitted when unset (manifest default: ${JSON.stringify(v.default)}).`;
+}
+
+/** `true` when a manifest variant group declares itself responsive. */
+export function isResponsiveGroup(v: ManifestVariant): boolean {
+  return v.responsive === true;
+}
+
+/**
  * Parse a manifest state attr string into (attr, value, kind).
  * Forms seen in the registry: `disabled`, `open`, `checked` (presence),
  * `aria-pressed` (aria), `data-state="loading"` / `aria-checked="false"`
@@ -122,7 +178,18 @@ export function manifestToIR(manifest: Manifest, manifestPath: string): Componen
       );
     }
     usedProps.add(prop);
-    variants.push({ prop, attr: v.attr, values: [...v.values], default: v.default, group });
+    const base: IRVariant = { prop, attr: v.attr, values: [...v.values], default: v.default, group };
+    variants.push(base);
+    if (!isResponsiveGroup(v)) continue;
+    for (const tierVariant of responsiveTierVariants(base)) {
+      if (usedProps.has(tierVariant.prop)) {
+        throw new Error(
+          `${manifest.name}: responsive group "${group}" maps to duplicate prop "${tierVariant.prop}"`
+        );
+      }
+      usedProps.add(tierVariant.prop);
+      variants.push(tierVariant);
+    }
   }
 
   const states: IRState[] = [];

@@ -1222,10 +1222,10 @@
         },
         {
           "path": "file-upload.manifest.json",
-          "sha256": "2bdb7dcdd8d0ab4ecbb6118f594fbaac859714a59447fc1df72aaefc7adf6bc6"
+          "sha256": "a32ecfc6f2ef11aa96d64f79c9e0d078d42a0d64e4e5cae46fefc7fe2d884ee3"
         }
       ],
-      "hash": "8887c81408b1845054274eaf468cabe7f752518328955fc904e33916c394e5e9",
+      "hash": "50fdcfe4d230d99512f212bf2a1ad65bc1a33000ffac7b42794f433f43caab1d",
       "deps": []
     },
     {
@@ -1248,10 +1248,10 @@
         },
         {
           "path": "input-otp.manifest.json",
-          "sha256": "db93ea7f7f85ea75da8307a6caf14e335ce41cbc8df5834b4b5a93ec178e2d10"
+          "sha256": "2ad700e38e9061d6941904dcf52591797118f206f3686763cfcb49f4ee28cbf2"
         }
       ],
-      "hash": "43fb32985d30dc87d3c0edf515eccb86c88d98faf2210226e38522dec47ca992",
+      "hash": "942bdf374888f0857a463368db4dc8f19e849326184995296ebcc73a28efebdf",
       "deps": []
     },
     {
@@ -1467,10 +1467,10 @@
         },
         {
           "path": "slider.manifest.json",
-          "sha256": "61567b835ef2556bdb9db240bca2e383dd927379181b1aed6633ab918ec5050e"
+          "sha256": "89dc9bf3e4a695ef626c5ca66dbbe25e282aeba250eccb305dbb789bb31f2753"
         }
       ],
-      "hash": "9e3b15fc4861637ce50afe5eef2a6dd3e8fa7b6d8562ee786b6bb9417d7d1326",
+      "hash": "ff36efba9057e91e4afd29bdea0602c47736c754ad8e8f69bab569a8fd80215b",
       "deps": []
     },
     {

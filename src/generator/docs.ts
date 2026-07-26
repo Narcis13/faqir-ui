@@ -64,6 +64,7 @@ import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Manifest } from "../manifest";
+import { TIERS, responsiveAttribute } from "../utils/breakpoints";
 import type { ThemeManifest } from "../theme-manifest";
 // The playground's rule legend is derived from the engine's own rule lists, so it
 // cannot describe a rule the shipped browser bundle does not run.
@@ -763,18 +764,31 @@ function renderSlotTable(m: Manifest): string {
 }
 
 function renderVariantTable(m: Manifest): string {
-  const rows = Object.entries(m.variants ?? {}).map(([name, v]) => [
-    esc(name),
-    code(v.attr),
-    v.values.map((value) => code(`${v.attr}="${value}"`)).join(" "),
-    code(v.default),
-    code(v.applied_to ?? "root"),
-  ]);
-  return table(
-    ["Variant", "Attribute", "Values", "Default", "Applied to"],
-    rows,
-    "This component has no variants.",
-  );
+  const entries = Object.entries(m.variants ?? {});
+  // The responsive column only appears when the component declares at least one
+  // responsive group — a column of dashes on the other 80-odd pages teaches
+  // nothing. Generic: every tier comes from the canon, no component is named.
+  const anyResponsive = entries.some(([, v]) => v.responsive === true);
+  const rows = entries.map(([name, v]) => {
+    const row = [
+      esc(name),
+      code(v.attr),
+      v.values.map((value) => code(`${v.attr}="${value}"`)).join(" "),
+      code(v.default),
+      code(v.applied_to ?? "root"),
+    ];
+    if (anyResponsive) {
+      row.push(
+        v.responsive === true
+          ? TIERS.map((tier) => code(`${responsiveAttribute(v.attr, tier)}="…"`)).join(" ")
+          : "—",
+      );
+    }
+    return row;
+  });
+  const headers = ["Variant", "Attribute", "Values", "Default", "Applied to"];
+  if (anyResponsive) headers.push("Responsive");
+  return table(headers, rows, "This component has no variants.");
 }
 
 function renderStateTable(m: Manifest): string {

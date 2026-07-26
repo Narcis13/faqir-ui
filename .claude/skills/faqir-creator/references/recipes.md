@@ -537,7 +537,7 @@ Dropdown menu with keyboard navigation and click-outside-to-close
 
 ## file-upload
 
-_kind: recipe · category: form · controller: createFileUpload()_
+_kind: recipe · category: forms · controller: createFileUpload()_
 
 Native file selection plus drag-and-drop, local accept/size validation, removable file list, and event-only app upload handoff
 
@@ -584,7 +584,7 @@ _No variants._
 
 ## input-otp
 
-_kind: recipe · category: form · controller: createInputOtp()_
+_kind: recipe · category: forms · controller: createInputOtp()_
 
 Segmented one-time-code input — N visual segments over a single hidden real input, with paste distribution, auto-advance, optional l-mask enforcement, and a fire-once complete event
 
@@ -917,7 +917,7 @@ _No variants._
 
 ## slider
 
-_kind: recipe · category: form · controller: createSlider()_
+_kind: recipe · category: forms · controller: createSlider()_
 
 Draggable range input with single-thumb and two-thumb (range) modes, full keyboard control, and screen-reader-correct ARIA
 

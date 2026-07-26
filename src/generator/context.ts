@@ -3,6 +3,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { loadManifest, type Manifest } from "../manifest";
+import { TIERS } from "../utils/breakpoints";
 import { loadThemeManifest, type ThemeManifest } from "../theme-manifest";
 import { readConfig, type FaqirConfig } from "../utils/config";
 import { ensureDir, getRegistryPath } from "../utils/fs";
@@ -158,6 +159,17 @@ export function buildComponentEntry(manifest: Manifest): Record<string, unknown>
 
   if (manifest.variants?.size) {
     entry.sizes = manifest.variants.size.values;
+  }
+
+  // Declared responsiveness (task 0.8-02): attr → the tiers its values may be
+  // suffixed with. Derived from `"responsive": true`, so a component that never
+  // declares it carries no key at all and no component is named here.
+  const responsive: Record<string, string[]> = {};
+  for (const v of Object.values(manifest.variants ?? {})) {
+    if (v.responsive === true) responsive[v.attr] = [...TIERS];
+  }
+  if (Object.keys(responsive).length > 0) {
+    entry.responsive = responsive;
   }
 
   if (manifest.slots && Object.keys(manifest.slots).length > 0) {
@@ -513,6 +525,7 @@ export function formatContextMarkdown(data: ContextData): string {
     if (c.aliases) details.push(`Aliases: ${(c.aliases as string[]).join(", ")} (agents can search these names)`);
     if (c.variants) details.push(`Variants: ${JSON.stringify(c.variants)}`);
     if (c.sizes) details.push(`Sizes: ${(c.sizes as string[]).join(", ")}`);
+    if (c.responsive) details.push(`Responsive: ${formatResponsive(c.responsive as Record<string, string[]>)}`);
     if (c.slots) details.push(`Slots: ${(c.slots as string[]).join(", ")}`);
     if (c.states) details.push(`States: ${(c.states as string[]).join(" → ")}`);
     if (c.a11y) details.push(`A11y: ${c.a11y}`);
@@ -767,6 +780,18 @@ export function formatContextLlms(data: ContextData): string {
   return lines.join("\n");
 }
 
+/**
+ * Render a component's declared responsiveness for the llms surfaces:
+ * `data-cols-{sm|md|lg|xl} (value applies from that tier up)`. One formatter,
+ * both files — the grammar is stated per component, never as global prose.
+ */
+function formatResponsive(responsive: Record<string, string[]>): string {
+  const grammar = Object.entries(responsive)
+    .map(([attr, tiers]) => `${attr}-{${tiers.join("|")}}`)
+    .join(", ");
+  return `${grammar} (value applies from that tier up; mobile-first)`;
+}
+
 /** Render one component's full reference block (used by llms-full.txt). */
 function llmsFullComponentBlock(name: string, c: Record<string, unknown>): string[] {
   const lines: string[] = [];
@@ -795,6 +820,7 @@ function llmsFullComponentBlock(name: string, c: Record<string, unknown>): strin
   if (c.aliases) details.push(`Aliases: ${(c.aliases as string[]).join(", ")}`);
   if (c.variants) details.push(`Variants: ${JSON.stringify(c.variants)}`);
   if (c.sizes) details.push(`Sizes: ${(c.sizes as string[]).join(", ")}`);
+  if (c.responsive) details.push(`Responsive: ${formatResponsive(c.responsive as Record<string, string[]>)}`);
   if (c.slots) details.push(`Slots: ${(c.slots as string[]).join(", ")}`);
   if (c.states) details.push(`States: ${(c.states as string[]).join(" → ")}`);
   if (c.a11y) details.push(`A11y: ${c.a11y}`);
