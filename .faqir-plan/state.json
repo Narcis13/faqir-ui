@@ -194,7 +194,7 @@
     {
       "id": "0.8-01",
       "completed": "2026-07-26",
-      "commit": "ffef7be",
+      "commit": "c250967",
       "summary": "Breakpoint canon + responsive doctrine. ONE ladder (sm 40rem/640 \u00b7 md 48rem/768 \u00b7 lg 64rem/1024 \u00b7 xl 80rem/1280), min-width-only, replacing three incompatible ones (grid's 640/641-1024 viewport ranges with a real 640.5px dead zone, table's 480/768/1024 container thresholds where sm meant a different number, surface's 640-1400 max-widths). Canon lives in src/utils/breakpoints.ts because media queries cannot read custom properties, so the numbers must be literal in CSS and can only be kept honest by one module that generators, tests and (0.8-10) the audit all read; it is node:*-free so the browser audit bundle can import it. Frozen exports + helpers that structurally cannot emit max-width, and a data-<attr>-<tier> grammar that refuses the five protocol attributes in BOTH directions (responsiveAttribute throws, parseResponsiveAttribute returns null) so data-size-md is unreachable rather than discouraged. FAQIR-SPEC.md gains \u00a715 (ladder table, five rules, grammar, doctrine) and FAQIR-NEXT.md \u00a719 (why layout is agent-critical: ten layout attributes no manifest declares; the intrinsic -> container -> viewport hierarchy; what v0.8 ships) + Decision Summary item 13. The spec is executable documentation: a drift test re-parses the canon table and compares rem and px to the module, \u00a715's CSS fences must use canon min-width only, and its HTML fences pass auditHtmlSource against every registry manifest. The 0.7-08/0.7-09 pattern guards now source 640/1024 from BREAKPOINTS instead of inline literals, keeping the legacy max-width form until 0.8-09 flips it. No registry file touched."
     }
   ],
