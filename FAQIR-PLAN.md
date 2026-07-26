@@ -144,6 +144,23 @@ done in any order (or in parallel worktrees).
 | 0.7-14 | Docs site: in-browser audit playground + theme switcher gallery | ✅ |
 | 0.7-15 | Docs site: `llms.txt`, schema/registry hosting, copy-for-agents | ✅ |
 
+### Phase v0.8 — Layout & Responsiveness
+
+| ID | Task | Status |
+|----|------|--------|
+| 0.8-01 | Breakpoint canon + responsive doctrine (spec §19 + constants module) | ⬜ |
+| 0.8-02 | Manifest schema: `props` + responsive variants + generator plumbing | ⬜ |
+| 0.8-03 | `stack` 2.0: full flexbox surface declared + responsive tiers | ⬜ |
+| 0.8-04 | `grid` 2.0: mobile-first rewrite + intrinsic `auto` mode + spans | ⬜ |
+| 0.8-05 | New primitives: `cluster` + `switcher` | ⬜ |
+| 0.8-06 | New primitive: `container` + measure tokens + docs-site de-escape | ⬜ |
+| 0.8-07 | Spacing scale expansion + rhythm tokens + density extension | ⬜ |
+| 0.8-08 | Responsive sweep A: primitives & recipes onto the canon | ⬜ |
+| 0.8-09 | Responsive sweep B: patterns onto the canon | ⬜ |
+| 0.8-10 | Audit rules: `undeclared-attribute` + `breakpoint-canon` | ⬜ |
+| 0.8-11 | Responsive visual + a11y coverage (viewport axis) | ⬜ |
+| 0.8-12 | Layout docs + agent surfaces + spec alignment | ⬜ |
+
 ### Phase v1.0 — The Standard
 
 | ID | Task | Status |
@@ -2124,6 +2141,372 @@ human step).
 
 ---
 
+# Phase v0.8 — Layout & Responsiveness
+
+Layout graduates from undeclared CSS convention to a first-class, manifest-declared,
+responsive system — the last new surface area before the 1.0 freeze. The evidence base:
+three incompatible breakpoint ladders (grid 640/1024 viewport, table 480/768/1024
+container, surface 640–1400 max-widths), ten layout attributes CSS ships but no manifest
+declares, and a docs site that escapes its own framework with inline styles on every page.
+
+---
+
+### 0.8-01 · Breakpoint canon + responsive doctrine
+
+**Depends:** — · **Ref:** §3 P1/P4/P5 · new §19 (written by this task) · **Touches:** `FAQIR-NEXT.md`, `FAQIR-SPEC.md`, new `src/utils/breakpoints.ts`, `docs/`
+
+The registry ships three incompatible ladders today: grid uses viewport ranges
+640/641–1024 (with a real dead zone — at a fractional 640.5px width neither
+`max-width: 640px` nor `min-width: 641px` matches and a 12-column grid lands on a
+phone), table uses 480/768/1024 container thresholds where `sm`/`md` mean different
+numbers than grid's, and surface hardcodes 640/768/1024/1280/1400 max-widths. Canonize
+ONE ladder — tiers `sm 40rem (640px) · md 48rem (768px) · lg 64rem (1024px) ·
+xl 80rem (1280px)` — with min-width/mobile-first semantics only (ranges and `max-width`
+queries are what created the dead zone). Define the responsive attribute grammar:
+`data-<attr>-<tier>` means "this value from that tier up", applicable to component
+attributes only, never to the five protocol attributes. Write the doctrine hierarchy
+agents follow: intrinsic first (auto-fit/minmax/wrap — no query at all), container
+queries second (a component responds to its own inline size — table's proven mechanism),
+viewport media queries last (page-level patterns only). Media queries cannot read custom
+properties, so the canon lives as an exported constants module that generators, tests
+and (0.8-10) the audit all read. Add §19 "Layout & Responsiveness" to FAQIR-NEXT.md so
+this phase has the vision anchor every task's **Ref** points at.
+
+**Tests**
+- `src/utils/breakpoints.ts` exports the tier map (rem + px); a drift test parses the numbers out of FAQIR-SPEC.md's new section and asserts docs and constants agree.
+- The 0.7-08/0.7-09 "no third breakpoint" pattern guards re-pointed at the canon module instead of inline 640/1024 literals (behavior unchanged — patterns migrate in 0.8-09).
+- Spec examples in the new section pass `faqir audit` (executable documentation — the 1.0-01 discipline applied early).
+
+**Acceptance criteria**
+- [ ] One documented ladder with named tiers, min-width-only idiom, and the protocol-attribute exclusion written into FAQIR-SPEC.md.
+- [ ] FAQIR-NEXT.md §19 covers why layout is agent-critical, the doctrine hierarchy, and what v0.8 ships.
+- [ ] No registry CSS changed by this task — canon + doctrine only; sweeps land in 0.8-03…0.8-09.
+
+---
+
+### 0.8-02 · Manifest schema: `props` + responsive variants + generator plumbing
+
+**Depends:** 0.8-01 · **Ref:** §19, §3 P4 · **Touches:** `manifest.schema.json`, `src/manifest.ts`, `src/bindings/ir.ts`, `src/bindings/recipe-ir.ts`, `src/generator/docs.ts`, skill/context generators, `src/audit/rules.ts`
+
+Two schema gaps block declared responsiveness. First, `props` — the de-facto home for
+boolean and free-form attributes, used by 59 of 83 manifests and read by
+`recipe-ir.ts`/`icons.ts` — is not in `manifest.schema.json` at all. Formalize it.
+Second, nothing can declare responsive behavior: add `"responsive": true` to the variant
+definition, meaning every declared value is also accepted as `data-<attr>-<tier>` for
+each canon tier. Then make every generator consume it ONCE, generically: vue/react
+bindings emit typed per-tier props (`cols` → `colsSm`/`colsMd`/…), the docs site renders
+a responsive column in the variant matrix, and the skill + context/llms surfaces
+document the grammar per component. The `valid-variant` value-rule family learns to
+validate suffixed attributes of responsive groups (wrong value or unknown tier =
+finding). While the schema is open, normalize the category vocabulary (`form` 3 vs
+`forms` 14, plus undocumented `marketing`) against CONTRIBUTING's documented list. Must
+land before 1.0-01 freezes schema 1.0 — this ordering is the reason v0.8 sits where it
+does.
+
+**Tests**
+- Schema: a probe manifest with a responsive group + props validates; all 83 existing manifests still validate (table's `props` becomes schema-legal rather than tolerated).
+- Bindings: the probe responsive group produces typed per-tier props in both vue and react output; `check:bindings` + `typecheck` green after regeneration.
+- Docs generator: a responsive group renders tier columns on the component page; the `zz-probe` "adding a component" test still grows the site by exactly three files.
+- Audit: `data-cols-md="7"` and `data-cols-xx="2"` both produce findings on a responsive group; valid tier/value pairs pass.
+
+**Acceptance criteria**
+- [ ] `props` and `responsive` are in `manifest.schema.json`; zero manifest validation failures.
+- [ ] Bindings/docs/skill/context all render responsive declarations generically — no per-component special casing anywhere.
+- [ ] Category vocabulary normalized and schema-checked (one spelling, documented list updated).
+
+---
+
+### 0.8-03 · `stack` 2.0 — the full flexbox surface, declared
+
+**Depends:** 0.8-02 · **Ref:** §19 · **Touches:** `registry/primitives/stack/*`, regenerated bindings/skill/registry-index, `src/generator/docs.ts` (drop the inline `flex-wrap` escapes)
+
+stack's CSS ships six attributes and three value sets its manifest never declares:
+`data-justify`, `data-wrap` (follow-up 0.7-20), `data-align-text`, `data-responsive`,
+child `data-flex`, plus gaps `10|12|16` and `baseline` alignment. Declare the full
+flexbox surface. Direction is the one design decision: it currently rides
+`data-variant`, which the tier grammar may not suffix — so introduce `data-direction`
+(values `vertical|horizontal`, responsive) as the canonical attribute, keep
+`data-variant="horizontal"` selecting the same rules as a deprecated 0.x alias, and
+record a `breaking: true` changelog entry for 1.0-03. `gap`, `align`, `justify` become
+responsive variant groups; `wrap` and child `flex` land under `props`. The bespoke
+`[data-responsive]` collapse is retired in favor of the grammar it predates —
+`data-direction="vertical" data-direction-md="horizontal"` reads mobile-first, which is
+the point. Rewrite the component's media block min-width on the canon. The docs site
+then swaps its two `style="flex-wrap: wrap"` escapes (`docs.ts:1461,1464`) for the real
+attribute — the measurable cost of 0.7-20 finally paid off.
+
+**Tests**
+- Manifest-completeness: every `data-*` attribute `stack.css` selects on is declared (variant attr, props, or states) — the per-component forerunner of 0.8-10's general rule.
+- Responsive resolution via matchMedia-mock reading the real rules (the inbox precedent): direction flips at md, gap tiers override mobile-first, the deprecated `data-variant`/`data-responsive` aliases still resolve.
+- Bindings regenerated: `LStack` gains typed `justify`/`wrap`/`direction` (+ per-tier) props; the docs page variant matrix shows the responsive column.
+
+**Acceptance criteria**
+- [ ] Zero undeclared attributes on stack; `tokens_used` matches the CSS (space 10/12/16 included).
+- [ ] Follow-up 0.7-20 resolved (edit its row in place per house rule) with the boolean-switch decision documented.
+- [ ] Docs site contains no inline `flex-wrap` styles; changelog records the direction migration.
+
+---
+
+### 0.8-04 · `grid` 2.0 — mobile-first, intrinsic `auto` mode, spans declared
+
+**Depends:** 0.8-02 · **Ref:** §19 · **Touches:** `registry/primitives/grid/*`, `registry/patterns/stats-dashboard/*` (delegated collapse), regenerated bindings/skill/registry-index
+
+Three defects, one feature. Defects: the responsive overrides resolve purely by source
+order at equal (0,2,0) specificity — any bundler that reorders or splits blocks silently
+breaks them, untested today; the 640/641 range pair has the fractional-width dead zone;
+and the blanket `[data-cols] { grid-template-columns: 1fr }` at ≤640 makes collapse
+mandatory — two columns on a phone requires `data-cols-sm`, and `data-span` children are
+crushed to `span 1`. Rewrite mobile-first on the canon: `data-cols` is the base at every
+width, `data-cols-{sm,md,lg,xl}` override from that tier up — a semantic inversion of
+today's desktop-first `data-cols`, recorded as `breaking: true` (the suffixed attributes
+were never in the manifest or docs, so the blast radius is the registry's own patterns).
+Feature: `data-cols="auto"` + `data-min="<step>"` compiles to
+`repeat(auto-fit, minmax(min(100%, var(--grid-min)), 1fr))` — the zero-media-query
+intrinsic grid the doctrine says agents should reach for first. Declare everything:
+`cols` (responsive, full tier ladder), `gap` (responsive, values through 16), child
+`span` and `scroll` under props. stats-dashboard's KPI row markup updates to the new
+semantics (`data-cols="1" data-cols-md="2" data-cols-lg="4"`).
+
+**Tests**
+- Dead-zone regression: at a mocked 640.5px viewport the intended tier's rules apply (min-width semantics leave no gap).
+- Source-order independence: tier overrides win against a deliberately re-ordered stylesheet (specificity or cascade-layer based, not concatenation-order based).
+- Intrinsic mode: `data-cols="auto"` yields the auto-fit template, the item floor honors `data-min`, and the file's auto path contains no media query.
+- stats-dashboard's 4→2→1 collapse still resolves correctly through the rewritten grid (existing matchMedia tests updated, coverage not shrunk).
+
+**Acceptance criteria**
+- [ ] Zero undeclared attributes on grid; forced collapse gone (unsuffixed `data-cols` holds at all widths; collapsing is an explicit authoring choice).
+- [ ] `auto` mode shipped, in the manifest, on the reference page.
+- [ ] Changelog records the mobile-first inversion; every pattern consuming grid vocabulary updated in the same commit.
+
+---
+
+### 0.8-05 · New primitives: `cluster` + `switcher`
+
+**Depends:** 0.8-02 · **Ref:** §19 · **Touches:** new `registry/primitives/cluster/*`, new `registry/primitives/switcher/*`, regenerated bindings/skill/registry-index, new `tests/primitives/{cluster,switcher}.test.ts`
+
+Two CSS-only flexbox primitives that close observed gaps. `cluster`: a wrapping inline
+row — gap/align/justify variants (responsive) — the tag-row/button-row/meta-row
+workhorse the docs site currently fakes with stack + inline `flex-wrap` and hero fakes
+with bespoke actions CSS. `switcher`: flips row→column when its OWN inline size drops
+below a threshold (`data-threshold` over named steps; decide in-session whether the
+steps alias the 0.8-06 measure tokens) via `container-type: inline-size` +
+`@container` — the second container-query precedent after table, and the first layout
+component responsive with zero viewport coupling: the doctrine's middle rung made
+concrete. Full three-file anatomy each (the `<!-- @ui:component -->` header is what
+enters them into both matrices), manifests with category `layout`, dedicated test files
+(nothing forces one for primitives, so they are named here); 48 visual + 4 axe cases
+each enter automatically.
+
+**Tests**
+- Manifest-completeness for both (no CSS-selected attribute undeclared — born clean under the coming 0.8-10 rule).
+- cluster: wrap + gap + justify resolution; logical-property compliance (`margin-inline`, `text-align: start|end` only).
+- switcher: the flip asserted by resolving the real `@container` rules at mocked container widths; the file contains zero `@media` width preludes.
+- Both appear in bindings (`LCluster`, `LSwitcher`), docs pages, and the skill after regeneration.
+
+**Acceptance criteria**
+- [ ] Both primitives audit-clean, axe-clean, in the visual matrix, installable via `faqir add`.
+- [ ] switcher is container-driven only — no viewport media query in the file.
+- [ ] Docs site's wrap use cases migrate to cluster where semantically right (else stack `data-wrap`).
+
+---
+
+### 0.8-06 · New primitive: `container` + measure tokens; docs-site de-escape
+
+**Depends:** 0.8-02 · **Ref:** §19 · **Touches:** new `registry/primitives/container/*`, `registry/tokens/aliases.css`, `registry/primitives/surface/*`, `registry/patterns/{form-page,wizard}/*`, `src/generator/docs.ts`
+
+Three call sites hand-roll the same missing primitive: the docs generator puts
+`style="max-width: 72rem"` on prose on ~80 pages (the single most-repeated framework
+escape in the codebase), form-page and wizard independently hand-roll identical
+`max-inline-size: 32rem; margin-inline: auto` columns, and surface hardcodes five
+`data-max` px values. Ship `container`: a centered measure column —
+`max-inline-size: var(--measure-*)`, `margin-inline: auto`, gutter padding. Attributes:
+`data-measure="narrow|content|wide|prose|full"` (responsive) and `data-gutter` over
+spacing steps. New tokens in `aliases.css`: `--measure-narrow: 32rem`,
+`--measure-content: 48rem`, `--measure-wide: 72rem`, `--measure-prose: 65ch`. surface's
+`data-max` ladder re-expressed over the same tokens (values preserved or reconciled —
+changelog either way), form-page/wizard re-based on the tokens (markup unchanged), and
+the docs generator swaps both inline-style escapes (`docs.ts:683`, `:1458`) for the real
+component. Naming note: `container` the component vs `container-type` the CSS feature is
+an accepted collision (every framework has one); the manifest description
+disambiguates.
+
+**Tests**
+- Measure resolution per `data-measure` value; a responsive override (`data-measure-lg="wide"`) resolves from lg up.
+- Token drift: surface + form-page + wizard reference the measure tokens — no hardcoded measure px left in those files; `token-exists` clean.
+- Docs generator emits zero inline `max-width` styles; the site build asserts the prose measure now comes from `container`.
+
+**Acceptance criteria**
+- [ ] `container` shipped with full anatomy, manifest, tests, docs page — enters all matrices.
+- [ ] Measure ladder tokenized once; surface/form-page/wizard consume it.
+- [ ] The 72rem inline-style escape is gone from every generated page.
+
+---
+
+### 0.8-07 · Spacing scale expansion + rhythm tokens + density extension
+
+**Depends:** — · **Ref:** §19, §B6 · **Touches:** `registry/tokens/spacing.css`, `registry/tokens/aliases.css`, `registry/tokens/density.css`, `registry/patterns/settings-page/settings-page.css`
+
+The scale tops out at `--space-24` (6rem) — page-section rhythm needs more headroom, and
+`settings-page.css:137` already references `--space-48`, the registry's only dangling
+token. Extend the scale: `--space-32: 8rem`, `--space-40: 10rem`, `--space-48: 12rem`,
+`--space-64: 16rem`. Add the rhythm aliases agents compose section layouts from:
+`--section-gap-{sm,md,lg}` (vertical rhythm between page sections) and
+`--content-gutter` (horizontal page padding), defined over the scale. Density: both
+blocks re-declare the new steps × `--density-scale` — the file's own doctrine
+(re-declare per scope, never multiply at the root) — and the drift test that DERIVES the
+dependent alias list from aliases.css must pick the new aliases up automatically; verify
+that rather than hand-extending it. Investigate why `token-exists` never flagged the
+settings-page reference (it matches no documented skip), pin the answer with a test,
+then fix the reference.
+
+**Tests**
+- New steps resolve at base and under `[data-density="compact"]` (probe-rule computed-style, the 0.7-11 method); `--space-0`/`--space-px` stay invariant.
+- The density drift test proves `--section-gap-*`/`--content-gutter` are covered without hand-editing its list.
+- A registry-wide `token-exists` sweep at zero findings — regression-pinning the settings-page fix and whatever the rule gap was.
+
+**Acceptance criteria**
+- [ ] Scale extended and rhythm aliases shipped, documented in the token reference page (docs site regenerates).
+- [ ] Density remaps the new steps; nesting/reset proven at the new sizes.
+- [ ] Zero dangling `var(--…)` references registry-wide, enforced by a test that stays.
+
+---
+
+### 0.8-08 · Responsive sweep A: primitives & recipes onto the canon
+
+**Depends:** 0.8-01, 0.8-02 · **Ref:** §19 · **Touches:** `registry/primitives/{input,stepper,surface}/*`, `registry/recipes/table/*` (CSS + JS + manifest), `registry/core/` (rebuilt), regenerated bindings
+
+Move every primitive/recipe media block onto the canon, mobile-first: input's
+fixed-width fallback and stepper's label-hiding (both 640/max-width today), surface (if
+anything remains after 0.8-06), and table — the big one. Table's container thresholds
+(30/48/64rem) move to the canon rem values, its `STACK_BREAKPOINTS` map in the
+controller moves to the canon px values (imported truth, not re-typed), and
+`data-stack-below`/`data-hide-below` tiers are declared against canon names in the
+manifest — where thresholds shift, changelog `breaking: true` feeds 1.0-03.
+`build:core` rebuilds (a controller changed), so the size gate re-runs — a constants
+swap should be byte-neutral ± noise; state the measured number either way.
+
+**Tests**
+- matchMedia/container mocks read the REAL rules per component: input/stepper flip at canon sm; table stack mode engages at the canon value of its declared tier.
+- A prelude sweep over `registry/primitives/**` + `registry/recipes/**`: every `@media`/`@container` width prelude uses canon values in min-width form (reduced-motion/print/scheme exempt) — the test 0.8-10 later promotes to an audit rule.
+- Table's JS thresholds asserted equal to the canon module — no second source of truth inside the engine.
+
+**Acceptance criteria**
+- [ ] Zero non-canon width preludes under primitives/recipes; all min-width form.
+- [ ] Table CSS + JS + manifest agree on one ladder; changelog records any threshold shifts.
+- [ ] Size gate green with the number stated; visual matrix unchanged elsewhere.
+
+---
+
+### 0.8-09 · Responsive sweep B: patterns onto the canon
+
+**Depends:** 0.8-01, 0.8-04 · **Ref:** §19 · **Touches:** `registry/patterns/{hero,pricing,feature-grid,site-footer,stats-dashboard,inbox,dashboard-shell,auth-form,document}/*`
+
+Patterns hold sixteen media blocks over four ad-hoc values (480/640/768/1024). Rewrite
+all of them mobile-first on canon tiers: the 3→2→1 collapses (pricing, feature-grid,
+site-footer, hero) become base-1 with md/lg overrides; inbox's pane collapse and
+dashboard-shell's off-canvas drawer land on md; document's margin tightening on md;
+auth-form's 480px full-bleed moves to sm — the plan's position is that there is no `xs`
+tier, and if full-bleed at 640 reads wrong in a real browser that is a design review in
+the session, not a fifth tier. Patterns that borrowed grid's vocabulary in markup
+(`data-cols-md`) update to 0.8-04's mobile-first semantics. The "no third breakpoint"
+guard graduates: patterns may use canon tiers only, read from the constants module.
+
+**Tests**
+- Per-pattern matchMedia assertions updated to canon values — existing inbox/dashboard-shell suites keep their structure; assertions move, coverage does not shrink.
+- The canon-tiers-only guard over `registry/patterns/**` (min-width form, canon values, same exemptions as sweep A).
+- Playwright spot-check at 390/768/1280 for the two structural patterns (dashboard-shell drawer, inbox pane swap) — the interim proof 0.8-11 systematizes.
+
+**Acceptance criteria**
+- [ ] Sixteen blocks rewritten; zero non-canon width preludes under patterns.
+- [ ] auth-form verified at sm in a real browser in both schemes (the one aesthetic risk of dropping 480).
+- [ ] The guard reads the canon module — a rogue breakpoint anywhere in patterns fails CI.
+
+---
+
+### 0.8-10 · Audit rules: `undeclared-attribute` + `breakpoint-canon`
+
+**Depends:** 0.8-03, 0.8-04, 0.8-08, 0.8-09 · **Ref:** §19 · **Touches:** `src/audit/`, `src/parser/css-parser.ts`, `scripts/registry-audit.mjs`, `site/lib/faqir-audit.js` (rebuilt), parity fixtures
+
+The two systemic holes, closed as rules now that the registry is clean enough to gate.
+`undeclared-attribute` — 0.7-20's proposed general rule: any `data-*` attribute a
+component's CSS selects on (including tier-suffixed forms and child-element attributes)
+must be declared in its manifest as a variant attr, prop, or state. Layout shipped ten
+undeclared attributes before 0.8-03/04; this rule is what makes that class of drift
+impossible rather than merely fixed. `breakpoint-canon`: width preludes in registry
+`@media`/`@container` may only use canon tier values in min-width form
+(reduced-motion/print/scheme/hover preludes exempt) — promoting the sweep tests of
+0.8-08/09 from convention to enforcement. Both enter `ALL_RULES`, so the browser bundle
+rebuilds (`check:audit-browser` will bite — it did twice during 0.7-14) and the
+513-fixture parity suite extends to cover both rules.
+
+**Tests**
+- Rule units: positives and negatives for bareword booleans (`[data-wrap]`), child selectors (`> [data-span]`), suffixed tiers, `[dir]`-scoped exemptions; the canon rule catches max-width form and off-canon values, passes exempt preludes.
+- Registry sweep: both rules at ZERO findings across all components — the acceptance bar, not a baseline file.
+- Browser parity: shared fixtures extended; node vm + Chromium agreement per 0.7-14's method.
+
+**Acceptance criteria**
+- [ ] Both rules shipped in CLI + browser bundles with parity proven.
+- [ ] `audit:registry` includes them at zero findings; a seeded violation of each fails CI.
+- [ ] Follow-up 0.7-20's "general gap" clause resolved (edit the row per house rule).
+
+---
+
+### 0.8-11 · Responsive visual + a11y coverage
+
+**Depends:** 0.8-04, 0.8-09 · **Ref:** §19 · **Touches:** `tests/visual/`, `tests/a11y/`, `.github/workflows/{visual,a11y}.yml`
+
+The visual matrix captures one viewport, so every responsive behavior shipped this phase
+is proven only at CSS-resolution level. Add a viewport axis for the layout-bearing set —
+category `layout` components plus all patterns — at 390/768/1280, default theme, light,
+ltr only (~78 snapshots; deliberately NOT ×12 themes ×schemes ×dir, which would 12× the
+suite for information the single-viewport matrix already carries). Baselines are
+container-generated in CI as ever, never locally. Each responsive capture asserts IN
+PAGE before screenshotting (the 0.7-11 rule: a screenshot cannot go green on an inert
+attribute) — computed column count for grids, drawer position for dashboard-shell, pane
+visibility for inbox. Axe runs at 390 for the same set: mobile layouts create their own
+failure classes (tap-target spacing, off-canvas focus) the desktop scan cannot see.
+
+**Tests**
+- The viewport matrix is discovered from manifests (category + pattern layer), not hand-listed — a new layout component enters with zero suite edits, same property as the main matrix.
+- In-page pre-assertions per archetype; a deliberately broken responsive rule fails the pre-assertion, not just the pixel diff.
+- Axe at 390: zero violations for the set; the exemptions file rules unchanged (non-empty justification still enforced).
+
+**Acceptance criteria**
+- [ ] Viewport axis live in CI with the snapshot count stated; sharding updated if needed.
+- [ ] Every pattern's structural collapse is pixel-proven at all three widths.
+- [ ] Mobile axe sweep green with zero new exemptions.
+
+---
+
+### 0.8-12 · Layout docs + agent surfaces + spec alignment
+
+**Depends:** 0.8-01…0.8-11 substantially complete · **Ref:** §19 · **Touches:** `README.md`, new `docs/layout.md`, skill references, context generators, `site/` token reference, `FAQIR-SPEC.md`
+
+The system exists; now every surface an agent reads must teach it. Rewrite README's
+Layout System section (it currently documents two attributes the manifests do not
+declare and misses six that exist). Write `docs/layout.md`: the doctrine, the ladder,
+and canonical page archetypes — dashboard, landing, prose/document, split view, centered
+form — each expressed in stack/cluster/grid/container/switcher with responsive
+attributes, each example audit-clean (executable documentation). `faqir context` /
+context.json gain a `layout` + `responsive` block (the density precedent: documented so
+agents discover it), flowing into llms.txt/llms-full.txt automatically. The docs site's
+token reference gains breakpoints, measure, and rhythm sections. Regenerate the skill
+and hand-update its layout guidance. Confirm 1.0-01's frozen-surface list names the
+tier grammar and the `props`/`responsive` schema fields (its prose was amended when
+v0.8 was planned — verify it survived).
+
+**Tests**
+- Every code block in `docs/layout.md` and the README layout section passes `faqir audit` — the 1.0-01 spec-example harness pointed at these files early.
+- context.json contains the layout/responsive block; llms surfaces include it (the 0.7-15 byte-equality harness extends naturally).
+- README's documented attribute set asserted against the stack/grid manifests — no undeclared documentation, the inverse of 0.8-10; skill drift gate green after regeneration.
+
+**Acceptance criteria**
+- [ ] README, docs/layout.md, skill, context, and the token reference teach the same system — cross-checked by test, not by care.
+- [ ] Five archetype examples ship audit-clean and appear on the docs site.
+- [ ] An agent reading only llms.txt can discover the ladder, the grammar, and all five layout primitives.
+
+---
+
 # Phase v1.0 — The Standard
 
 ---
@@ -2133,9 +2516,11 @@ human step).
 **Depends:** all prior phases substantially complete · **Ref:** §15 · **Touches:** `FAQIR-SPEC.md` (or new `SPEC-1.0.md`), `manifest.schema.json`, `site/`
 
 Publish the frozen protocol spec (five attributes, their value grammars, `data-motion`,
-`data-theme`, `data-density` as sanctioned token modifiers) and manifest schema 1.0
-(explicit `schema_version: "1.0"`, changelog from 0.x). Freeze means: additive changes
-only until 2.0, documented amendment process.
+`data-theme`, `data-density` as sanctioned token modifiers, and the v0.8 responsive
+tier suffix grammar `data-<attr>-<tier>`) and manifest schema 1.0 (explicit
+`schema_version: "1.0"`, the `props` + `responsive` fields from 0.8-02 included,
+changelog from 0.x). Freeze means: additive changes only until 2.0, documented
+amendment process.
 
 **Tests**
 - Every registry manifest validates against schema 1.0.
