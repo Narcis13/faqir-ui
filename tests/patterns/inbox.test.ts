@@ -22,6 +22,7 @@ import { loadRegistryManifestMap } from "../../src/utils/components";
 import { validateManifest, type Manifest } from "../../src/manifest";
 import { extractComponents, parseDocument } from "../../src/parser/html-parser";
 import { DOCUMENT_RULES } from "../../src/audit/rules";
+import { BREAKPOINTS } from "../../src/utils/breakpoints";
 import { buildMatrix, discoverComponents, SCHEMES } from "../visual/matrix";
 import { buildA11yMatrix, A11Y_THEMES } from "../a11y/a11y-matrix";
 
@@ -471,8 +472,11 @@ function mockViewport(width: number): void {
 }
 
 describe("inbox — collapses to a single pane on a phone", () => {
-  const SMALL = "max-width: 640px";
-  const MEDIUM = "max-width: 1024px";
+  // Thresholds from the canon (task 0.8-01), not repeated literals. The
+  // `max-width` form is this sheet's pre-canon idiom — 0.8-09 flips the
+  // direction to mobile-first `min-width`.
+  const SMALL = `max-width: ${BREAKPOINTS.sm.px}px`;
+  const MEDIUM = `max-width: ${BREAKPOINTS.lg.px}px`;
 
   it("the collapse breakpoint is the registry's small one", () => {
     mockViewport(390);

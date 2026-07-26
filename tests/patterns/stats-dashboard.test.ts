@@ -25,6 +25,7 @@ import { loadRegistryManifestMap } from "../../src/utils/components";
 import { validateManifest, type Manifest } from "../../src/manifest";
 import { extractComponents, parseDocument } from "../../src/parser/html-parser";
 import { DOCUMENT_RULES } from "../../src/audit/rules";
+import { BREAKPOINTS } from "../../src/utils/breakpoints";
 import { buildMatrix, discoverComponents, SCHEMES } from "../visual/matrix";
 import { buildA11yMatrix, A11Y_THEMES } from "../a11y/a11y-matrix";
 
@@ -335,8 +336,11 @@ describe("stats-dashboard — composes the enhanced table", () => {
 });
 
 describe("stats-dashboard — responsive behaviour", () => {
-  const MEDIUM = "max-width: 1024px";
-  const SMALL = "max-width: 640px";
+  // Thresholds from the canon (task 0.8-01), not repeated literals. The
+  // `max-width` form is this sheet's pre-canon idiom — 0.8-09 flips the
+  // direction to mobile-first `min-width`.
+  const MEDIUM = `max-width: ${BREAKPOINTS.lg.px}px`;
+  const SMALL = `max-width: ${BREAKPOINTS.sm.px}px`;
 
   it("delegates the KPI columns to the grid primitive", () => {
     // No column rule for the metrics row anywhere in this sheet: the 4 → 2 → 1

@@ -1988,3 +1988,152 @@ The MVP is successful if:
 6. **Zero external runtime dependencies.**
 7. **All components pass WCAG 2.1 AA accessibility requirements.**
 8. **The CLI has under 3 dependencies (Bun built-ins + maybe a CLI arg parser).**
+
+---
+
+## 15. Layout & Responsiveness
+
+Responsiveness is part of the contract, not a styling afterthought. An agent that
+knows every component's variants but has to guess a breakpoint produces markup that
+is correct on a laptop and broken on a phone — and neither the manifest nor the audit
+can tell it so. This section is the canon that removes the guess. It amends §6 (CSS
+Strategy) and is binding on registry CSS, generated bindings, and authored pages alike.
+
+### The canon
+
+**One ladder. Four tiers. Every responsive threshold in Faqir is one of these numbers.**
+
+| Tier | Min-width (authored) | Equivalent px (16px root) | Reads as |
+|------|----------------------|---------------------------|----------|
+| `sm` | `40rem` | 640px | large phone and up |
+| `md` | `48rem` | 768px | tablet and up |
+| `lg` | `64rem` | 1024px | laptop and up |
+| `xl` | `80rem` | 1280px | desktop and up |
+
+The authored unit is `rem`, so the ladder scales with a reader's browser font-size
+preference. The px column is the equivalent at the browser default and exists for
+documentation and tooling only — it never appears in CSS.
+
+### Rules
+
+1. **`min-width` only.** A tier names the *floor* of a range that never ends. Never
+   write `max-width`, and never write a range with both ends.
+
+2. **Mobile-first.** The unqueried rule is the small-screen layout; each tier block
+   progressively enhances it. A component with no query at all is already correct on
+   a phone.
+
+3. **No fifth number.** A threshold that is not one of the four tiers is off-canon.
+   If a component seems to need one, it almost certainly needs an intrinsic layout
+   instead (rule 6).
+
+4. **Ascending source order.** Tier blocks appear `sm` → `md` → `lg` → `xl`, so the
+   later, larger tier wins by document order rather than by specificity.
+
+5. **The ladder is a constant, not a token.** Media and container queries cannot read
+   custom properties — `@media (min-width: var(--bp-md))` is invalid CSS in every
+   engine. The numbers are therefore literal in CSS and canonical in exactly one
+   place: `src/utils/breakpoints.ts`, which the generators, the tests and the audit
+   all read. The table above is re-parsed by a drift test, so this section and that
+   module cannot disagree.
+
+**Why `min-width` only is a rule and not a preference.** The ranges this canon
+replaces had a real dead zone. `grid.css` shipped `@media (max-width: 640px)` beside
+`@media (min-width: 641px) and (max-width: 1024px)`; at a viewport of 640.5px —
+ordinary on a fractional-DPR device or a zoomed page — *neither* matched, and a
+`data-cols="12"` grid rendered twelve columns on a phone. Floors cannot leave a gap
+between them, so the whole class of bug disappears by construction.
+
+### The responsive attribute grammar
+
+A responsive value is expressed as a suffixed attribute:
+
+```
+data-<attr>-<tier>      →   "this value, from that tier up"
+```
+
+`data-cols-md="2"` means *two columns from 48rem up*, leaving `data-cols` as the
+mobile-first base. Suffixes are the canon tier names and nothing else — `data-cols-xs`
+is not a Faqir attribute.
+
+**Component attributes only. The five protocol attributes are excluded**
+(`data-ui`, `data-part`, `data-state`, `data-variant`, `data-size`). The protocol is
+frozen: `data-variant-md` would be a sixth attribute in all but name, `data-ui` names
+the component and cannot vary by viewport, and `data-state` is owned by controllers at
+runtime rather than by a CSS threshold. When a *layout* must change by tier, the
+component exposes a layout attribute (`data-cols`, `data-gap`) and that attribute
+takes the suffix.
+
+```html
+<!-- One column on a phone, two from 48rem, three from 64rem. -->
+<div data-ui="grid" data-cols="1" data-cols-md="2" data-cols-lg="3" data-gap="4">
+  <div data-ui="card" data-variant="outlined">
+    <div data-part="body">Reads one column on a phone.</div>
+  </div>
+  <div data-ui="card" data-variant="outlined">
+    <div data-part="body">Two columns from 48rem.</div>
+  </div>
+  <div data-ui="card" data-variant="outlined">
+    <div data-part="body">Three from 64rem.</div>
+  </div>
+</div>
+```
+
+### The doctrine — three mechanisms, in order
+
+Reach for the *first* one that solves the problem. Most layouts never get past step 1.
+
+**1. Intrinsic first — no query at all.** `auto-fit`/`minmax()`, `flex-wrap`, `clamp()`
+and logical properties adapt to any width without naming one. This is the only
+mechanism that is correct at every size, including sizes nobody tested.
+
+```css
+[data-ui="feature-grid"] [data-part="items"] {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: var(--space-4);
+}
+```
+
+**2. Container queries second — a component responds to its own inline size.** A
+component does not know whether it was placed full-bleed or inside a sidebar; the
+viewport cannot tell it. A container query can, which makes the component correct in
+both placements — the mechanism `table` already proves in production.
+
+```css
+[data-ui="table"] {
+  container-type: inline-size;
+  container-name: faqir-table;
+}
+
+@container faqir-table (min-width: 48rem) {
+  [data-ui="table"] [data-part="meta"] {
+    display: table-cell;
+  }
+}
+```
+
+**3. Viewport media queries last — page-level only.** Only patterns and scaffolds,
+which own the whole page, may ask about the viewport. A primitive or recipe that
+consults the viewport is asserting something it cannot know about its own placement.
+
+```css
+@media (min-width: 64rem) {
+  [data-ui="dashboard-shell"] {
+    grid-template-columns: 16rem 1fr;
+  }
+}
+```
+
+`@media (prefers-reduced-motion: reduce)`, `@media print` and the other feature
+queries are unaffected by this hierarchy — they ask about a user preference or an
+output medium, not about available space.
+
+### What this binds
+
+- Registry CSS: every threshold is a canon tier, expressed as `min-width`.
+- Manifests: responsive layout attributes are *declared*, so the audit and every
+  generated surface (context, skill, bindings, docs) describe them without
+  hand-maintenance.
+- Audit: an off-canon threshold, a `max-width` breakpoint, an unknown tier suffix, or
+  a suffixed protocol attribute is a finding, not a style opinion.

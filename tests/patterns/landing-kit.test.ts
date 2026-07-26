@@ -25,6 +25,7 @@ import { loadRegistryManifestMap } from "../../src/utils/components";
 import { validateManifest, type Manifest } from "../../src/manifest";
 import { extractComponents, parseDocument } from "../../src/parser/html-parser";
 import { DOCUMENT_RULES } from "../../src/audit/rules";
+import { BREAKPOINTS } from "../../src/utils/breakpoints";
 import { buildMatrix, discoverComponents, SCHEMES } from "../visual/matrix";
 import { buildA11yMatrix, A11Y_THEMES } from "../a11y/a11y-matrix";
 
@@ -199,9 +200,12 @@ describe("landing kit — swept by the visual and a11y matrices", () => {
 });
 
 describe("landing kit — responsive column behaviour", () => {
-  // The registry's two breakpoints (see registry/primitives/grid/grid.css).
-  const MEDIUM = "max-width: 1024px";
-  const SMALL = "max-width: 640px";
+  // The two thresholds these patterns use, sourced from the canon (task 0.8-01)
+  // rather than repeated as literals. The `max-width` *form* is the pre-canon
+  // idiom these sheets still ship; 0.8-09 flips them to the canon's mobile-first
+  // `min-width` direction, and only these two lines change when it does.
+  const MEDIUM = `max-width: ${BREAKPOINTS.lg.px}px`;
+  const SMALL = `max-width: ${BREAKPOINTS.sm.px}px`;
 
   it("feature-grid goes 4/3 → 2 → 1 column", () => {
     const sheet = css("feature-grid");

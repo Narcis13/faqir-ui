@@ -148,7 +148,7 @@ done in any order (or in parallel worktrees).
 
 | ID | Task | Status |
 |----|------|--------|
-| 0.8-01 | Breakpoint canon + responsive doctrine (spec §19 + constants module) | ⬜ |
+| 0.8-01 | Breakpoint canon + responsive doctrine (spec §19 + constants module) | ✅ |
 | 0.8-02 | Manifest schema: `props` + responsive variants + generator plumbing | ⬜ |
 | 0.8-03 | `stack` 2.0: full flexbox surface declared + responsive tiers | ⬜ |
 | 0.8-04 | `grid` 2.0: mobile-first rewrite + intrinsic `auto` mode + spans | ⬜ |
@@ -2178,9 +2178,9 @@ this phase has the vision anchor every task's **Ref** points at.
 - Spec examples in the new section pass `faqir audit` (executable documentation — the 1.0-01 discipline applied early).
 
 **Acceptance criteria**
-- [ ] One documented ladder with named tiers, min-width-only idiom, and the protocol-attribute exclusion written into FAQIR-SPEC.md.
-- [ ] FAQIR-NEXT.md §19 covers why layout is agent-critical, the doctrine hierarchy, and what v0.8 ships.
-- [ ] No registry CSS changed by this task — canon + doctrine only; sweeps land in 0.8-03…0.8-09.
+- [x] One documented ladder with named tiers, min-width-only idiom, and the protocol-attribute exclusion written into FAQIR-SPEC.md. (New **§15 "Layout & Responsiveness"** — `sm 40rem/640px · md 48rem/768px · lg 64rem/1024px · xl 80rem/1280px`, five numbered rules, the `data-<attr>-<tier>` grammar with all five protocol attributes named in the exclusion, and the three-step doctrine shown in CSS. `src/utils/breakpoints.ts` is the executable copy: frozen `BREAKPOINTS`/`TIERS`, `minWidth`/`mediaQuery`/`containerQuery` that *cannot* emit `max-width`, and `responsiveAttribute`/`parseResponsiveAttribute` which throw on / return `null` for a protocol attribute — so `data-size-md` is unreachable through the grammar rather than merely discouraged. `node:*`-free on purpose: the audit bundles for the browser and 0.8-10 reads this canon. **The drift test is the point**: `tests/utils/breakpoints.test.ts` re-parses the spec's canon table row-by-row and compares rem *and* px against the module, asserts px is exactly `rem × 16` rather than an independent number, and checks tier order in both. §15 also obeys itself — its CSS fences are parsed and every `@media`/`@container` condition must be a canon `min-width` (no `max-width` anywhere in the canon's own examples), and its HTML fences run through `auditHtmlSource` against all registry manifests for **zero findings** at any severity. 16 new tests / 126 assertions.)
+- [x] FAQIR-NEXT.md §19 covers why layout is agent-critical, the doctrine hierarchy, and what v0.8 ships. (§19.1 states the gap in the framework's own terms — ten layout attributes that no manifest declares, so an agent cannot discover them and `data-col="3"` fails silently — and tabulates the three ladders with their mechanisms; the 640.5px dead zone is written down as evidence, not anecdote. §19.2 is the doctrine: intrinsic → container → viewport, with the reason each step exists (a component cannot know it was placed in a 20rem sidebar; the viewport cannot tell it; its container can), plus why the ladder is a constant and not a token — `@media (min-width: var(--bp-md))` is invalid CSS in every engine. §19.3 maps all twelve v0.8 tasks onto four deliverables. Decision Summary gains item 13 so the section is reachable from the ratification list.)
+- [x] No registry CSS changed by this task — canon + doctrine only; sweeps land in 0.8-03…0.8-09. (`git status` for the commit: two spec docs, three pattern test files, two new files. Zero files under `registry/`; `audit:registry` and `check:docs` (291 files) re-run clean regardless. The 0.7-08/0.7-09 guards in `landing-kit`/`stats-dashboard`/`inbox` now build their thresholds from `BREAKPOINTS.sm.px`/`BREAKPOINTS.lg.px` instead of inline `640`/`1024` — the `max-width` *form* stays, because the CSS still ships it, so behaviour is provably unchanged (121 pattern tests unchanged and green) and 0.8-09 flips two lines per file when the direction inverts. `docs/` is deliberately untouched: `docs/layout.md` is 0.8-12's deliverable and writing it here would collide.)
 
 ---
 

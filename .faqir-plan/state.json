@@ -2,7 +2,7 @@
   "$schema": "./state.schema.md",
   "plan": "FAQIR-PLAN.md",
   "current": null,
-  "last_completed": "0.7-15",
+  "last_completed": "0.8-01",
   "history": [
     {
       "id": "0.7-15",
@@ -190,6 +190,12 @@
       "commit": "cf6a17a",
       "summary": "Recipe `file-upload` \u2014 drag-drop zone + file list with ZERO network code, which is what keeps the `no-fetch` audit rule honest: the 349-line controller emits events carrying the FileList and uploading is app code. The keyboard/SR path is the real `<input type=\"file\">` (change equivalent to drop, label/click activation), drag states live in data-state, and accept/size validation produces per-file rejection events with reasons; the 223-line manifest documents every event for agent consumption. tests/recipes/file-upload.test.ts (267 lines) simulates drop/dragover/dragleave and the rejection matrix; file-upload-audit.test.ts explicitly asserts the recipe passes `no-fetch`. Mirrored into vue and react (354-line controller each + recipe wrappers); registry-index, skill references, README and ci.yml updated. The 26-controller core reached 39.88 KB gzip, so the size ceiling moved 39 \u2192 41 KB. Follow-up commit 1337bf6 (2026-07-24) regenerated the stale react/vue index snapshots for these bindings. 23 files, +2326/\u221221. Reconstructed from git after the fact (the session that shipped it did not append a history entry); details taken from the commit diff and the acceptance-criteria annotations in FAQIR-PLAN.md, not from the original session.",
       "reconstructed": true
+    },
+    {
+      "id": "0.8-01",
+      "completed": "2026-07-26",
+      "commit": "ffef7be",
+      "summary": "Breakpoint canon + responsive doctrine. ONE ladder (sm 40rem/640 \u00b7 md 48rem/768 \u00b7 lg 64rem/1024 \u00b7 xl 80rem/1280), min-width-only, replacing three incompatible ones (grid's 640/641-1024 viewport ranges with a real 640.5px dead zone, table's 480/768/1024 container thresholds where sm meant a different number, surface's 640-1400 max-widths). Canon lives in src/utils/breakpoints.ts because media queries cannot read custom properties, so the numbers must be literal in CSS and can only be kept honest by one module that generators, tests and (0.8-10) the audit all read; it is node:*-free so the browser audit bundle can import it. Frozen exports + helpers that structurally cannot emit max-width, and a data-<attr>-<tier> grammar that refuses the five protocol attributes in BOTH directions (responsiveAttribute throws, parseResponsiveAttribute returns null) so data-size-md is unreachable rather than discouraged. FAQIR-SPEC.md gains \u00a715 (ladder table, five rules, grammar, doctrine) and FAQIR-NEXT.md \u00a719 (why layout is agent-critical: ten layout attributes no manifest declares; the intrinsic -> container -> viewport hierarchy; what v0.8 ships) + Decision Summary item 13. The spec is executable documentation: a drift test re-parses the canon table and compares rem and px to the module, \u00a715's CSS fences must use canon min-width only, and its HTML fences pass auditHtmlSource against every registry manifest. The 0.7-08/0.7-09 pattern guards now source 640/1024 from BREAKPOINTS instead of inline literals, keeping the legacy max-width form until 0.8-09 flips it. No registry file touched."
     }
   ],
   "note": "Pointer file for the /faqir-plan slash command. FAQIR-PLAN.md status cells (\u2b1c/\u2705) are the source of truth; this file records the cross-session cursor and a per-task log. Do not hand-edit `current` while a session is running. History is not a complete ledger of every task (phases v0.3\u2013v0.5 are collapsed into one entry); entries flagged `reconstructed: true` were back-filled from git and FAQIR-PLAN.md on 2026-07-25, not written by the session that shipped them."

@@ -975,7 +975,102 @@ The decisions this proposal asks you to ratify:
 12. **Docs site built with Faqir, content generated from manifests, with an in-browser
     audit playground.** *(v0.7)*
 
+13. **Layout becomes a declared, canon-governed system** — one breakpoint ladder, the
+    intrinsic → container → viewport doctrine, layout attributes in manifests, and an
+    audit that enforces both. *(v0.8, §19)*
+
 The pillars stay. The protocol stays. The simplicity stays. What changes is that Faqir
 stops being a well-built prototype and becomes the thing its README already claims:
 the framework AI agents reach for when they need to build a UI that a human is proud
 to own.
+
+---
+
+## 19. Layout & Responsiveness
+
+*The last new surface area before the 1.0 freeze. Normative canon lives in
+`FAQIR-SPEC.md` §15; this section is the why and the scope.*
+
+### 19.1 Why layout is agent-critical
+
+Every other contract in Faqir is declared and checkable. A manifest says which variants
+exist, the audit says whether the markup used them correctly, and an agent that reads
+the context file can produce a correct `data-variant` on the first attempt without ever
+seeing the CSS. Layout is the one surface where none of that is true. The registry ships
+ten layout attributes — `data-cols`, `data-gap`, `data-span`, `data-max`,
+`data-align`, `data-scroll` and friends — that **no manifest declares**. They work, they
+are load-bearing in patterns, and they are invisible to every generated surface. An
+agent cannot discover them, the audit cannot check them, and a typo in one fails
+silently: `data-col="3"` produces no error and no columns.
+
+Responsiveness is worse, because it fails *conditionally*. An agent that emits
+`data-cols="12"` gets a result that looks right on the machine it was generated on and
+is unusable on a phone — and nothing in the pipeline says so. Worse, the framework did
+not agree with itself about what a breakpoint is. Three incompatible ladders shipped
+simultaneously:
+
+| Where | Ladder | Mechanism |
+|-------|--------|-----------|
+| `grid.css` | 640 / 641–1024 | viewport ranges (`max-width` + bounded range) |
+| `table.css` | 480 / 768 / 1024 | container queries (`max-width`) |
+| `surface.css` | 640 / 768 / 1024 / 1280 / 1400 | hardcoded `max-width` sizing |
+
+`sm` meant 640px in one file and 480px in another. And grid's pair of ranges left a
+genuine dead zone: at a viewport of 640.5px neither `max-width: 640px` nor
+`min-width: 641px` matched, so a twelve-column grid rendered twelve columns on a phone.
+That is not a rounding curiosity — fractional viewport widths are routine on
+fractional-DPR devices and zoomed pages.
+
+An agent is not able to reason its way out of any of this. It cannot infer a convention
+that three files contradict. So layout gets the same treatment every other Faqir
+contract already has: one canon, declared in manifests, generated into every agent
+surface, and enforced by the audit.
+
+### 19.2 The doctrine
+
+Three mechanisms, tried in order. Most layouts never get past the first.
+
+1. **Intrinsic first — no query at all.** `repeat(auto-fit, minmax(…, 1fr))`,
+   `flex-wrap`, `clamp()`. Correct at every width, including widths nobody tested. A
+   breakpoint is an admission that the intrinsic version was not attempted.
+2. **Container queries second — the component responds to its own inline size.** A
+   component cannot know whether it was placed full-bleed or inside a 20rem sidebar,
+   and the viewport cannot tell it. Its container can. `table` already proves this in
+   production; v0.8 generalizes it.
+3. **Viewport media queries last — page-level only.** Patterns and scaffolds own the
+   page and may ask about it. A primitive or recipe that consults the viewport is
+   asserting something it cannot know about its own placement.
+
+The canon ladder is `sm 40rem · md 48rem · lg 64rem · xl 80rem`, **`min-width` only**.
+Floors cannot leave gaps between them, which is what makes the dead-zone class of bug
+structurally impossible rather than merely fixed. Because media queries cannot read
+custom properties, the ladder cannot be a token: it lives in `src/utils/breakpoints.ts`
+and a drift test re-parses the spec table so prose and constants cannot diverge.
+
+Responsive values use the `data-<attr>-<tier>` grammar — "this value from that tier up".
+It applies to **component attributes only**. The five-attribute protocol stays frozen
+(§3 P1): `data-variant-md` would be a sixth attribute wearing a suffix, and `data-state`
+belongs to controllers at runtime, not to a threshold.
+
+### 19.3 What v0.8 ships
+
+- **Canon + doctrine** (0.8-01): the ladder, the grammar, the hierarchy, as spec §15 and
+  an exported constants module every consumer reads.
+- **Declared layout** (0.8-02, 0.8-10): `props` formalized in `manifest.schema.json`,
+  `"responsive": true` on variant definitions, and generic generator plumbing so
+  bindings, docs, skill and context all describe responsiveness without hand-maintenance
+  — then `undeclared-attribute` and `breakpoint-canon` audit rules to enforce it.
+- **The layout primitives** (0.8-03…0.8-07): `stack` 2.0 with its full flexbox surface
+  declared, `grid` 2.0 rewritten mobile-first with an intrinsic `auto` mode, new
+  `cluster`, `switcher` and `container` primitives, and an expanded spacing/rhythm
+  scale. Together these are the intrinsic-first toolkit — the layouts an agent should
+  reach for *instead of* a breakpoint.
+- **The sweeps** (0.8-08, 0.8-09): every primitive, recipe and pattern moved onto the
+  canon. Three ladders become one.
+- **Proof** (0.8-11, 0.8-12): a viewport axis added to the visual and a11y matrices, so
+  "responsive" is a screenshot at four widths rather than a claim; then layout docs and
+  agent surfaces aligned with the shipped reality.
+
+The docs site is the first dogfood target: it currently escapes its own framework with
+inline styles on nearly every page, for the simple reason that Faqir had no `container`
+primitive and no declared responsive grammar to escape *to* (0.8-06).
