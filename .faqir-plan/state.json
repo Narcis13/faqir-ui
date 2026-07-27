@@ -7,7 +7,7 @@
     {
       "id": "0.8-07",
       "completed": "2026-07-27",
-      "commit": "PENDING",
+      "commit": "295c133",
       "summary": "spacing scale extended to --space-64 with four page-rhythm steps (32/40/48/64) and four composed rhythm aliases (--section-gap-{sm,md,lg} over --space-{12,20,32}, --content-gutter over --space-6); density re-declares all of them in both blocks and the drift test's DERIVED dependent list picked the aliases up with zero edits - verified by a new assertion rather than hand-extended. Proven with the 0.7-11 probe-rule method at base and compact, invariants held in computed text. THE RULE GAP, ANSWERED: token-exists is a PROJECT rule (checkTokens walks <outputDir> from .faqir/config.json's installed list) and scripts/registry-audit.mjs ran three gates, none about tokens - the registry was never an input, so a project installing settings-page would have been warned and the framework's own source of truth never was. All three hypotheses pinned as tests (extractor does see var(--x, fallback); no documented skip matches space-48; checkTokens' source has installed.primitives + join(outputDir, and 'registry' nowhere). Fixed by findDanglingTokenReferences + Gate 4 sweeping 101 stylesheets against 298 tokens, predicate fully derived with no allowlist: token, OR knob declared in the same sheet, OR author knob with a fallback outside the token vocabulary - a fallback deliberately does NOT excuse a name inside a defined family. Found two more of the species beyond the one the task named: --text-tabular-width and --z-tooltip, both now declared on their component root (behaviour-identical). 2952 pass / 0 fail (+29); typecheck and all seven check:* gates green."
     },
     {
