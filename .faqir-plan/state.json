@@ -7,7 +7,7 @@
     {
       "id": "0.8-09",
       "completed": "2026-07-27",
-      "commit": "PENDING",
+      "commit": "3c4e190",
       "summary": "patterns onto the breakpoint canon, mobile-first: fifteen max-width media blocks over four ad-hoc values (480/640/768/1024) became fifteen canon min-width floors over three (40/48/64rem), and every unconditional rule in the nine sheets is now the phone case. Two floors move, so both are breaking: inbox's pane collapse 640 -> md (2.0.0) and auth-form's full bleed 480 -> sm (2.0.0, the plan's 'no xs tier' position, verified in Chromium at 600/640 x light/dark); the other seven keep their values and are minor. dashboard-shell inverts hardest \u2014 the drawer is now the base and md carries four transform resets, one per specificity the base declares at \u2014 and its two :has(sidebar collapsed) rules moved into the md block, fixing a pre-canon bug where (0,3,0) outranked the single-column rule at (0,1,0) and a collapsed sidebar on a phone produced a 4rem column no grid area was placed in. document's tier block sits BEFORE @media print because a min-width query is true on paper. Equivalence proved by pixel: all 18 pattern x scheme renders at the matrix viewport are byte-identical before and after, so no committed visual baseline moves. The canon guard in tests/responsive-canon.test.ts widened from primitives+recipes to the whole registry; new tests/visual/responsive.pw.ts spot-checks the drawer and pane swap in Chromium at 390/768/1280. 2999 pass / 0 fail (+19), plus 8 Playwright."
     },
     {
