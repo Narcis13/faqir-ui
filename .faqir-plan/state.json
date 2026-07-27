@@ -7,7 +7,7 @@
     {
       "id": "0.8-08",
       "completed": "2026-07-27",
-      "commit": "PENDING",
+      "commit": "525e6e7",
       "summary": "input, stepper and table moved onto the breakpoint canon mobile-first: three max-width blocks became canon min-width floors, and table's hide-below inverted from hide-below-X to hidden-by-default-revealed-from-X with the three specificity facts (base scoped to [data-responsive], reveals before the stacked block, :not([data-col-hidden])) that keep it behaviour-identical. Only sm shifts (30rem/480px to 40rem/640px) so table is 3.0.0 breaking:true; stack-below/hide-below are now declared enum props over canon tier names. STACK_BREAKPOINTS is a literal because build-core strips controller imports, so equality is enforced from outside against five files. New tests/responsive-canon.test.ts (28 tests) sweeps 71 sheets / 78 preludes / 25 width preludes; css-cascade gained resolveDeep for descendant selectors without touching existing paths. Size gate byte-identical: 146676 min / 43992 gzip before and after, 43.07 KB of a 44 KB budget. Visual: six failures found, all reproduced on a clean tree, filed as 0.8-14. 2980 pass / 0 fail (+28)."
     },
     {
