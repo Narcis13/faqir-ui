@@ -17,7 +17,7 @@ export interface LSurfaceProps extends Omit<ComponentPropsWithoutRef<"div">, "va
   size?: LSurfaceSize;
 }
 
-/** `surface` — Generic container with visual elevation and configurable padding */
+/** `surface` — Generic visual box with elevation and configurable padding, optionally capped at one of the shared measure widths */
 export const LSurface = createFaqirPrimitive<LSurfaceProps>({
   name: "surface",
   tag: "div",

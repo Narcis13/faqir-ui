@@ -2,7 +2,7 @@
 
 # Faqir Primitives Reference
 
-41 primitives, each with its anatomy tree, variant table, and safe/unsafe transforms — all derived from the component manifest.
+42 primitives, each with its anatomy tree, variant table, and safe/unsafe transforms — all derived from the component manifest.
 
 ## aspect-ratio
 
@@ -334,6 +334,33 @@ Disclosure widget built on native <details>/<summary> — opens and closes with 
 - **Safe transforms:** `change-variant`, `change-trigger-text`, `change-content`, `set-open`, `remove-open`
 - **Unsafe (never do):** `change-root-from-details`, `change-trigger-from-summary`, `remove-trigger-slot`, `remove-content-slot`, `add-js-controller`
 - **A11y:** keys: Enter/Space
+
+## container
+
+_kind: primitive · category: layout_
+
+A centred measure column: caps the line length at one of the shared measure tokens and centres what is left, with optional inline gutter padding. Not to be confused with the CSS `container-type` feature — a container establishes no containment context and queries nothing; the component that measures its own inline size is `switcher`
+
+```html
+<div data-ui="container" data-measure="{measure}">{children}</div>
+```
+
+**Anatomy**
+
+```text
+[data-ui='container']  ·  <div> · content: block
+```
+
+**Variants**
+
+| Variant | Values | Default | Attribute | Applied to | Responsive |
+|---------|--------|---------|-----------|------------|------------|
+| measure | `narrow`, `content`, `wide`, `prose`, `full` | `content` | `data-measure` | root | `data-measure-sm`, `data-measure-md`, `data-measure-lg`, `data-measure-xl` |
+
+- **Responsive:** the marked groups accept `<attr>-<tier>` for the canon tiers `sm` (40rem), `md` (48rem), `lg` (64rem), `xl` (80rem) — `data-measure-md="full"` applies that value from `md` up. Mobile-first: the unsuffixed attribute is the base.
+
+- **Safe transforms:** `change-measure`, `change-gutter`, `add-responsive-tier`, `add-children`, `remove-children`
+- **Unsafe (never do):** `remove-margin-inline-auto`, `replace-max-inline-size-with-max-width`
 
 ## description-list
 
@@ -1020,7 +1047,7 @@ Step indicator with numbered circles, connectors, and labels for multi-step flow
 
 _kind: primitive · category: layout_
 
-Generic container with visual elevation and configurable padding
+Generic visual box with elevation and configurable padding, optionally capped at one of the shared measure widths
 
 ```html
 <div data-ui="surface" data-variant="{elevation}" data-size="{padding}">{children}</div>

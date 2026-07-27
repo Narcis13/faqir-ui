@@ -1,5 +1,5 @@
 /* @ui:component surface */
-/* @ui:tokens color-bg color-border radius-lg shadow-sm shadow-md shadow-lg space-3 space-4 space-6 */
+/* @ui:tokens color-bg color-border measure-content measure-narrow measure-prose measure-wide radius-lg shadow-sm shadow-md shadow-lg space-3 space-4 space-6 */
 
 /* ── Base ── */
 [data-ui="surface"] {
@@ -36,34 +36,35 @@
   padding: var(--space-6);
 }
 
-/* ── Max-Width Containers ── */
-[data-ui="surface"][data-max="sm"] {
-  max-width: 640px;
+/* ── Measure ──
+ * Re-expressed over the shared measure tokens in task 0.8-06 (surface 2.0.0).
+ * The 1.x ladder was five hardcoded pixel values named sm|md|lg|xl|2xl — the
+ * breakpoint canon's own names used for max-widths, so `data-max="lg"` read as
+ * "at the lg tier" when it meant "1024px wide". It is now the same vocabulary
+ * the `container` primitive speaks, resolving to the same tokens, and logical:
+ * `max-inline-size`, not `max-width`. */
+[data-ui="surface"][data-max="narrow"] {
+  max-inline-size: var(--measure-narrow);
   margin-inline: auto;
 }
 
-[data-ui="surface"][data-max="md"] {
-  max-width: 768px;
+[data-ui="surface"][data-max="content"] {
+  max-inline-size: var(--measure-content);
   margin-inline: auto;
 }
 
-[data-ui="surface"][data-max="lg"] {
-  max-width: 1024px;
+[data-ui="surface"][data-max="wide"] {
+  max-inline-size: var(--measure-wide);
   margin-inline: auto;
 }
 
-[data-ui="surface"][data-max="xl"] {
-  max-width: 1280px;
-  margin-inline: auto;
-}
-
-[data-ui="surface"][data-max="2xl"] {
-  max-width: 1400px;
+[data-ui="surface"][data-max="prose"] {
+  max-inline-size: var(--measure-prose);
   margin-inline: auto;
 }
 
 [data-ui="surface"][data-max="full"] {
-  max-width: 100%;
+  max-inline-size: 100%;
 }
 
 /* ── Text Alignment ── */

@@ -9,6 +9,21 @@
   --control-height-md: 40px;
   --control-height-lg: 48px;
 
+  /* ── Measure ── */
+  /* The one ladder of reading-column widths (task 0.8-06). Every centred column
+     in the framework resolves to one of these: the `container` primitive's
+     data-measure, surface's data-max, and the form-page / wizard columns that
+     used to hardcode 32rem apiece. Deliberately NOT named sm|md|lg|xl — those
+     names belong to the breakpoint canon (src/utils/breakpoints.ts), and a
+     ladder that reuses them invites `data-max="lg"` to be read as "at the lg
+     tier" when it means "1152px wide". Measure names describe the CONTENT the
+     column is cut for, not the viewport it sits in. */
+  --measure-narrow:  32rem;  /* a single form column, a login card */
+  --measure-content: 48rem;  /* an article body, a settings panel */
+  --measure-wide:    72rem;  /* a page shell — the widest thing still centred */
+  --measure-prose:   65ch;   /* optimal line length, sized in characters, so it
+                                tracks the reader's font rather than the layout */
+
   /* ── Button ── */
   --button-radius:     var(--radius-md);
   --button-height-sm:  var(--control-height-sm);

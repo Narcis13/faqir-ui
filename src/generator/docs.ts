@@ -681,9 +681,11 @@ ${navGroups}
   </header>
 
   <main data-part="content" role="main">
-    <article data-ui="prose" style="max-width: 72rem;">
+    <div data-ui="container" data-measure="wide">
+      <article data-ui="prose">
 ${input.body}
-    </article>
+      </article>
+    </div>
   </main>
 
   <footer data-part="footer">

@@ -97,6 +97,7 @@
   "tokens_used": [
     "color-bg", "color-fg", "color-fg-muted", "color-border",
     "color-primary", "color-primary-fg", "color-success",
+    "measure-narrow",
     "radius-lg", "radius-full",
     "space-2", "space-3", "space-4", "space-5", "space-6", "space-8",
     "font-sans", "text-sm", "text-base", "text-lg", "text-xl", "text-2xl",

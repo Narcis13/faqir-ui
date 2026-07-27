@@ -1,6 +1,6 @@
 {
   "schema": "faqir-registry-index@1",
-  "count": 85,
+  "count": 86,
   "components": [
     {
       "name": "aspect-ratio",
@@ -246,6 +246,28 @@
         }
       ],
       "hash": "2cdb2806f9c1c1e5c095b7b691e354cb465c6d4f6472e10ae6c78a47973705d7",
+      "deps": []
+    },
+    {
+      "name": "container",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "container.css",
+          "sha256": "88ad433bcb0b1e8809697a7dbaf4a071ebdcabb9b9fce2cf37554d318a830aa7"
+        },
+        {
+          "path": "container.html",
+          "sha256": "bad633b7867f2be57783f3ff8516a79a4e4d6dbe7f5ffbfc335c227e1637de53"
+        },
+        {
+          "path": "container.manifest.json",
+          "sha256": "336380333591787c3deb94bb0ca520ea598c30f60065dec87c1b3f623ad1e214"
+        }
+      ],
+      "hash": "7c2818b93a063efb1a99d97a626db6751b83f9e404ec662f22cd76449befaa2e",
       "deps": []
     },
     {
@@ -773,11 +795,11 @@
       "name": "surface",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "files": [
         {
           "path": "surface.css",
-          "sha256": "1b9eb3cca358c1cae85e3440920fdf0b159c4505703c259dc65d9e9d32dd408d"
+          "sha256": "fceea71e8833935422f310b12082970bb6a384015f0df5da51a84b4a00881933"
         },
         {
           "path": "surface.html",
@@ -785,10 +807,10 @@
         },
         {
           "path": "surface.manifest.json",
-          "sha256": "80bf50c351588e9388ef0bad3074bf285b5f4c89981f1513534596100c87e622"
+          "sha256": "9805ad01111b584a891de3e3466a4e1562623da53829de608837dd298306492e"
         }
       ],
-      "hash": "51fef04edcd8a40b45da40fed5ef615a7208c75f20391b8d2fc3473e6c158950",
+      "hash": "9fecdb17060d3cc7fd6f6988cc896a93736167a564913d3ded378cf9a6848977",
       "deps": []
     },
     {
@@ -1890,7 +1912,7 @@
       "files": [
         {
           "path": "form-page.css",
-          "sha256": "fe72919e62a81c330e83d734b6c3ca75f51e4239d6d731d29696b86d671df475"
+          "sha256": "7c860003380f0f4b4ad6a236526430d3316ca41b79d983b063e62f1346bfde7a"
         },
         {
           "path": "form-page.html",
@@ -1898,10 +1920,10 @@
         },
         {
           "path": "form-page.manifest.json",
-          "sha256": "3ba2b5292094dd7d74c5e5b776348b252f55e53fae85d4bd9700469e54410ddc"
+          "sha256": "fd3f5aaed67a007bc8fdbc7eeb2290605df0fb76dec0c1ebab885a8f152b1bb4"
         }
       ],
-      "hash": "250560c12977b28a50c8412178a663b4c8fa8b879975e7178d4b3f56b722ede1",
+      "hash": "45c3135863732100fdec7e69a109ed66122086f3ee016a78dd0a4cf3fadbc6ff",
       "deps": [
         "field-group",
         "input",
@@ -2117,7 +2139,7 @@
       "files": [
         {
           "path": "wizard.css",
-          "sha256": "891434481b9537d84904b89853483f8d89c5fb1a0414d60fa89bf4844f7ae012"
+          "sha256": "171bbe4320cac1163edf1e1c92184fdee6d8b2b38bfc81e0559ef473618b6ee2"
         },
         {
           "path": "wizard.html",
@@ -2125,10 +2147,10 @@
         },
         {
           "path": "wizard.manifest.json",
-          "sha256": "d83276aac681f1e81e96f343ffe01c40f5ba746838afe120fb54b1c06eaf9469"
+          "sha256": "3afdaadff3332e03c899ae9e64c5917a074749d50cdbb8ada804511bfc909778"
         }
       ],
-      "hash": "dc8b2706ff2a569ac7f45a5e3d7d5fb943b5effb24491cf7c54bb41b6092bc46",
+      "hash": "754a4ef30b545796d6e68ec72fc492646374ee5cde3fe6fab27319df2f632f42",
       "deps": [
         "stepper",
         "card",

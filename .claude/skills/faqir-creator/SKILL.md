@@ -36,7 +36,7 @@ CSS targets attributes (`[data-ui="button"]`), state via `[data-state="open"]`, 
 
 ## Component Inventory
 
-**41 Primitives (CSS-only):** aspect-ratio, avatar, badge, breadcrumb, button, callout, card, checkbox, chip, cluster, collapsible, description-list, empty-state, field-group, grid, icon, image, input, kbd, key-value, label, link, nav, page-break, progress, radio, select, separator, signature, skeleton, spinner, stack, stat, stepper, surface, switch, switcher, text, textarea, toggle, watermark
+**42 Primitives (CSS-only):** aspect-ratio, avatar, badge, breadcrumb, button, callout, card, checkbox, chip, cluster, collapsible, container, description-list, empty-state, field-group, grid, icon, image, input, kbd, key-value, label, link, nav, page-break, progress, radio, select, separator, signature, skeleton, spinner, stack, stat, stepper, surface, switch, switcher, text, textarea, toggle, watermark
 
 **29 Recipes (CSS + JS controller):** accordion, alert-dialog, barcode, calendar, carousel, combobox, command-palette, context-menu, date-picker, dialog, drawer, dropdown, file-upload, input-otp, menubar, pagination, popover, qr-code, select-custom, sheet, sidebar, slider, table, tabs, tag-input, toast, toggle-group, tooltip, tree-view
 
@@ -177,7 +177,7 @@ faqir context [--format json|md|cursorrules|llms] [--skill]
 
 Full anatomy trees, variant tables, and safe/unsafe transforms for every component:
 
-- [references/primitives.md](references/primitives.md) — 41 primitives
+- [references/primitives.md](references/primitives.md) — 42 primitives
 - [references/recipes.md](references/recipes.md) — 29 recipes
 - [references/patterns.md](references/patterns.md) — 15 patterns
 - [references/tokens.md](references/tokens.md) — design token reference

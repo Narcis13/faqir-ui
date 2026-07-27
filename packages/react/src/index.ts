@@ -36,6 +36,8 @@ export { LCluster } from "./components/cluster";
 export type { LClusterProps, LClusterGap, LClusterAlign, LClusterJustify } from "./components/cluster";
 export { LCollapsible } from "./components/collapsible";
 export type { LCollapsibleProps, LCollapsibleVariant } from "./components/collapsible";
+export { LContainer } from "./components/container";
+export type { LContainerProps, LContainerMeasure } from "./components/container";
 export { LDescriptionList } from "./components/description-list";
 export type { LDescriptionListProps, LDescriptionListVariant, LDescriptionListSize } from "./components/description-list";
 export { LEmptyState } from "./components/empty-state";

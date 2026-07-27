@@ -56,6 +56,7 @@
 
   "tokens_used": [
     "color-fg", "color-fg-muted",
+    "measure-narrow",
     "space-5", "space-8",
     "font-sans", "text-sm", "text-2xl",
     "weight-semibold", "leading-tight", "leading-normal"
