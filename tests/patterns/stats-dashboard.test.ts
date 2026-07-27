@@ -28,6 +28,7 @@ import { DOCUMENT_RULES } from "../../src/audit/rules";
 import { BREAKPOINTS } from "../../src/utils/breakpoints";
 import { buildMatrix, discoverComponents, SCHEMES } from "../visual/matrix";
 import { buildA11yMatrix, A11Y_THEMES } from "../a11y/a11y-matrix";
+import { collectRules, resolve } from "../helpers/css-cascade";
 
 const ROOT = join(import.meta.dir, "../..");
 const REGISTRY = join(ROOT, "registry");
@@ -193,12 +194,13 @@ describe("stats-dashboard — structure", () => {
     }
   });
 
-  it("builds the KPI row out of the grid primitive", () => {
+  it("builds the KPI row out of the grid primitive, mobile-first", () => {
     for (const page of componentsNamed("stats-dashboard")) {
       const metrics = page.parts["metrics"][0];
       expect(metrics.attrs["data-ui"]).toBe("grid");
-      // Column count is the grid's vocabulary, not this pattern's.
-      expect(metrics.attrs["data-cols"]).toBeTruthy();
+      // Column count is the grid's vocabulary, not this pattern's — and since
+      // grid 2.0 it reads mobile-first: one column is the base, the tiers widen.
+      expect(metrics.attrs["data-cols"]).toBe("1");
       expect(metrics.attrs["data-cols-md"]).toBeTruthy();
       expect(MANIFEST.variants).toEqual({});
     }
@@ -344,10 +346,43 @@ describe("stats-dashboard — responsive behaviour", () => {
 
   it("delegates the KPI columns to the grid primitive", () => {
     // No column rule for the metrics row anywhere in this sheet: the 4 → 2 → 1
-    // collapse is grid.css reacting to data-cols/data-cols-md.
+    // collapse is grid.css reacting to data-cols/data-cols-md/data-cols-lg.
     expect(CSS).not.toMatch(/\[data-part="metrics"\][^{]*\{[^}]*grid-template-columns/);
     const gridCss = readFileSync(join(REGISTRY, "primitives", "grid", "grid.css"), "utf8");
-    expect(gridCss).toContain('[data-ui="grid"][data-cols-md="2"]');
+    expect(gridCss).toContain('[data-cols-md="2"]');
+  });
+
+  it("resolves the KPI collapse 4 → 2 → 1 through the rewritten grid", () => {
+    // The authored attributes of the revenue page's metrics row, resolved
+    // against grid.css itself — the mobile-first inversion of task 0.8-04 read
+    // top-down: 1 on a phone, 2 from md, the full 4 from lg.
+    const rules = collectRules(
+      readFileSync(join(REGISTRY, "primitives", "grid", "grid.css"), "utf8"),
+    );
+    const metrics = componentsNamed("stats-dashboard")[0].parts["metrics"][0];
+    const attrs = Object.fromEntries(
+      Object.entries(metrics.attrs).filter(([name]) => name.startsWith("data-cols")),
+    );
+    const columnsAt = (width: number) =>
+      resolve(rules, "grid", attrs, "grid-template-columns", width);
+
+    expect(columnsAt(390)).toBe("repeat(1, 1fr)");
+    // The 1.x range pair (max-width: 640px / min-width: 641px) matched neither
+    // at 640.5px; the min-width canon leaves no such dead zone.
+    expect(columnsAt(640.5)).toBe("repeat(1, 1fr)");
+    expect(columnsAt(BREAKPOINTS.md.px)).toBe("repeat(2, 1fr)");
+    expect(columnsAt(BREAKPOINTS.lg.px)).toBe("repeat(4, 1fr)");
+    expect(columnsAt(1440)).toBe("repeat(4, 1fr)");
+
+    // The support page's shorter ladder: 1 on a phone, 3 from md up.
+    const support = componentsNamed("stats-dashboard")[1].parts["metrics"][0];
+    const supportAttrs = Object.fromEntries(
+      Object.entries(support.attrs).filter(([name]) => name.startsWith("data-cols")),
+    );
+    expect(resolve(rules, "grid", supportAttrs, "grid-template-columns", 390)).toBe("repeat(1, 1fr)");
+    expect(resolve(rules, "grid", supportAttrs, "grid-template-columns", BREAKPOINTS.md.px)).toBe(
+      "repeat(3, 1fr)",
+    );
   });
 
   it("lays the report panels out side by side, then stacks them", () => {

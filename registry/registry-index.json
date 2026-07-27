@@ -305,22 +305,22 @@
       "name": "grid",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "files": [
         {
           "path": "grid.css",
-          "sha256": "d532d15d733dfdaa6098eecce94411542dd337ddf071807c7decbb70099df249"
+          "sha256": "37bb6edda1008419329b2546fae622473b8d17e9158872731312044637d420f4"
         },
         {
           "path": "grid.html",
-          "sha256": "30bc0f353c62e7c94c99bbeee1ee57afae61b7ce043770daef1e0793bd67d182"
+          "sha256": "c4a9e8b7eee637b3e83e3d772a32d1cc19939f0f954739f6b1af008fa64993b9"
         },
         {
           "path": "grid.manifest.json",
-          "sha256": "9e19c8d6ce84e81e6a48c492684683792297183cf0c812dd1398069d012adefc"
+          "sha256": "1d1e9e94793ae7ebb488dc2dfce9f4c7ee85ed6580e08020142f81c9d4c7a65b"
         }
       ],
-      "hash": "8bb4900858ecaaef5b0e7858ec8718e47942ded476b8103dc738fd38540dc2d6",
+      "hash": "03ce9391a911c1ccd7548477adc95ed315a8b5d6611c1a92fa86f61f04eee9a2",
       "deps": []
     },
     {
@@ -713,14 +713,14 @@
         },
         {
           "path": "stat.html",
-          "sha256": "8b7ae9ca725e71c616c980ae93a6dd5c7e0244650764f488b9506ad8022be5b5"
+          "sha256": "6780b4c7227751fcfe259dbbc3ac24044426f742e43d0ec24bbbd9a9be182592"
         },
         {
           "path": "stat.manifest.json",
           "sha256": "5a20636407af856114bbe5c2783fda9847b25bf6741fdc0b32e686e065d52c47"
         }
       ],
-      "hash": "076c5ef257d39b27022bd619743bb51fefd27da7dea62e5419faad91769c47d1",
+      "hash": "a72d58b72a759c03c78f57586f34b73bf47a7b7ba8a6ad53d8919780ffda0b9b",
       "deps": [
         "badge"
       ]
@@ -1733,14 +1733,14 @@
         },
         {
           "path": "dashboard-shell.html",
-          "sha256": "e1175d312cbc9a361088794bab97a83d322677d633a3fb81bd36295b925230f9"
+          "sha256": "93276d9e827c629169279d3640de7f012d23be4251ec668a37a9d4f2708b4310"
         },
         {
           "path": "dashboard-shell.manifest.json",
           "sha256": "42e50549a8dd716cffee1a0508446e8b44989c3ddd7df1cbdfcc0b8858449afc"
         }
       ],
-      "hash": "b24623e1fa039e5bc9c945bf896ef1a35bfdc701da51b6c24f79fdaa48794370",
+      "hash": "a365b5e211671e89287decce66ad48f62aee9be7f26e8fd4b11f2caa1c5f96a1",
       "deps": [
         "card",
         "grid",
@@ -2044,18 +2044,18 @@
       "files": [
         {
           "path": "stats-dashboard.css",
-          "sha256": "175929d498e48ec0fe923f2ab9be94b166ce3d69aea90b2cd58af25de7b1d834"
+          "sha256": "4ca8a0781095b2aff222f3a656379ef446b72352586d3d5ac354e8f5fdf21e4b"
         },
         {
           "path": "stats-dashboard.html",
-          "sha256": "ed8a98417e35080eb61e89ffb7e850ebe3c5661984764a4568c538caba3b7309"
+          "sha256": "727a227a6a022f5a6b0323d3d43302de94702103bfc843a411ad56c4d2cbc189"
         },
         {
           "path": "stats-dashboard.manifest.json",
-          "sha256": "31188efb7b37aecb697f80917b59009318a93212cd5e8b574c1e2204002414b5"
+          "sha256": "03b1b18a66b5c5cef07f0e2b91f5286e2ecf81a7de57471112361a2409d393b7"
         }
       ],
-      "hash": "1a681632a1d181168fdadc5c2d82c4fceb3409ec7387e2697bfbdd357807fab8",
+      "hash": "37dd3533be7e9256f1af5b9704e31a55c9a7717f7ea5530c5fd05cce7321b55c",
       "deps": [
         "grid",
         "stat",

@@ -41,8 +41,8 @@
 }
 
 /* ── KPI row ──
-   [data-part="metrics"] is itself data-ui="grid": columns and the 4 → 2 → 1
-   collapse live in grid.css. Only the vertical rhythm is ours. */
+   [data-part="metrics"] is itself data-ui="grid": the mobile-first 1 → 2 → 4
+   column ladder lives in grid.css. Only the vertical rhythm is ours. */
 [data-ui="stats-dashboard"] [data-part="metrics"] {
   margin-block-start: var(--space-4);
 }

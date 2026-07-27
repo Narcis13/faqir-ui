@@ -5,27 +5,55 @@ import { createFaqirPrimitive } from "../runtime";
 import type { ComponentPropsWithoutRef } from "react";
 
 /** Allowed `cols` values (manifest variant group "cols", attr `data-cols`). */
-export type LGridCols = "1" | "2" | "3" | "4" | "6" | "12";
+export type LGridCols = "1" | "2" | "3" | "4" | "6" | "12" | "auto";
 
 /** Allowed `gap` values (manifest variant group "gap", attr `data-gap`). */
-export type LGridGap = "2" | "4" | "6" | "8";
+export type LGridGap = "0" | "1" | "2" | "3" | "4" | "6" | "8" | "10" | "12" | "16";
 
-export interface LGridProps extends Omit<ComponentPropsWithoutRef<"div">, "cols" | "gap"> {
+export interface LGridProps extends Omit<ComponentPropsWithoutRef<"div">, "cols" | "colsSm" | "colsMd" | "colsLg" | "colsXl" | "gap" | "gapSm" | "gapMd" | "gapLg" | "gapXl" | "scroll"> {
   /** `data-cols`; omitted when unset (manifest default: "1"). */
   cols?: LGridCols;
-  /** `data-gap`; omitted when unset (manifest default: "4"). */
+  /** `data-cols-sm` — the `cols` value from the `sm` breakpoint up; omitted when unset. */
+  colsSm?: LGridCols;
+  /** `data-cols-md` — the `cols` value from the `md` breakpoint up; omitted when unset. */
+  colsMd?: LGridCols;
+  /** `data-cols-lg` — the `cols` value from the `lg` breakpoint up; omitted when unset. */
+  colsLg?: LGridCols;
+  /** `data-cols-xl` — the `cols` value from the `xl` breakpoint up; omitted when unset. */
+  colsXl?: LGridCols;
+  /** `data-gap`; omitted when unset (manifest default: "0"). */
   gap?: LGridGap;
+  /** `data-gap-sm` — the `gap` value from the `sm` breakpoint up; omitted when unset. */
+  gapSm?: LGridGap;
+  /** `data-gap-md` — the `gap` value from the `md` breakpoint up; omitted when unset. */
+  gapMd?: LGridGap;
+  /** `data-gap-lg` — the `gap` value from the `lg` breakpoint up; omitted when unset. */
+  gapLg?: LGridGap;
+  /** `data-gap-xl` — the `gap` value from the `xl` breakpoint up; omitted when unset. */
+  gapXl?: LGridGap;
+  /** Below the sm tier the grid becomes a horizontal snap-scroll strip (each child at least 280px, snap-aligned to start); from sm up it lays out as a normal grid again. An explicit alternative to collapsing dense card rows on phones. */
+  scroll?: boolean;
 }
 
-/** `grid` — CSS Grid container with configurable columns and gap */
+/** `grid` — CSS Grid container with configurable columns and gap — mobile-first responsive column tiers on the canon breakpoints, plus an intrinsic auto mode that needs no media query at all */
 export const LGrid = createFaqirPrimitive<LGridProps>({
   name: "grid",
   tag: "div",
   variants: [
-    { prop: "cols", attr: "data-cols", values: ["1", "2", "3", "4", "6", "12"] },
-    { prop: "gap", attr: "data-gap", values: ["2", "4", "6", "8"] },
+    { prop: "cols", attr: "data-cols", values: ["1", "2", "3", "4", "6", "12", "auto"] },
+    { prop: "colsSm", attr: "data-cols-sm", values: ["1", "2", "3", "4", "6", "12", "auto"] },
+    { prop: "colsMd", attr: "data-cols-md", values: ["1", "2", "3", "4", "6", "12", "auto"] },
+    { prop: "colsLg", attr: "data-cols-lg", values: ["1", "2", "3", "4", "6", "12", "auto"] },
+    { prop: "colsXl", attr: "data-cols-xl", values: ["1", "2", "3", "4", "6", "12", "auto"] },
+    { prop: "gap", attr: "data-gap", values: ["0", "1", "2", "3", "4", "6", "8", "10", "12", "16"] },
+    { prop: "gapSm", attr: "data-gap-sm", values: ["0", "1", "2", "3", "4", "6", "8", "10", "12", "16"] },
+    { prop: "gapMd", attr: "data-gap-md", values: ["0", "1", "2", "3", "4", "6", "8", "10", "12", "16"] },
+    { prop: "gapLg", attr: "data-gap-lg", values: ["0", "1", "2", "3", "4", "6", "8", "10", "12", "16"] },
+    { prop: "gapXl", attr: "data-gap-xl", values: ["0", "1", "2", "3", "4", "6", "8", "10", "12", "16"] },
   ],
-  states: [],
+  states: [
+    { prop: "scroll", attr: "data-scroll", value: null, kind: "presence" },
+  ],
   slots: [],
   defaultSlot: true,
 }, "LGrid");

@@ -407,7 +407,7 @@ Form field wrapper combining label, input slot, description, and error message, 
 
 _kind: primitive · category: layout_
 
-CSS Grid container with configurable columns and gap
+CSS Grid container with configurable columns and gap — mobile-first responsive column tiers on the canon breakpoints, plus an intrinsic auto mode that needs no media query at all
 
 ```html
 <div data-ui="grid" data-cols="{cols}" data-gap="{gap}">{children}</div>
@@ -421,12 +421,14 @@ CSS Grid container with configurable columns and gap
 
 **Variants**
 
-| Variant | Values | Default | Attribute | Applied to |
-|---------|--------|---------|-----------|------------|
-| cols | `1`, `2`, `3`, `4`, `6`, `12` | `1` | `data-cols` | root |
-| gap | `2`, `4`, `6`, `8` | `4` | `data-gap` | root |
+| Variant | Values | Default | Attribute | Applied to | Responsive |
+|---------|--------|---------|-----------|------------|------------|
+| cols | `1`, `2`, `3`, `4`, `6`, `12`, `auto` | `1` | `data-cols` | root | `data-cols-sm`, `data-cols-md`, `data-cols-lg`, `data-cols-xl` |
+| gap | `0`, `1`, `2`, `3`, `4`, `6`, `8`, `10`, `12`, `16` | `0` | `data-gap` | root | `data-gap-sm`, `data-gap-md`, `data-gap-lg`, `data-gap-xl` |
 
-- **Safe transforms:** `change-cols`, `change-gap`, `add-children`, `remove-children`
+- **Responsive:** the marked groups accept `<attr>-<tier>` for the canon tiers `sm` (40rem), `md` (48rem), `lg` (64rem), `xl` (80rem) — `data-cols-md="auto"` applies that value from `md` up. Mobile-first: the unsuffixed attribute is the base.
+
+- **Safe transforms:** `change-cols`, `change-gap`, `add-responsive-tier`, `switch-to-auto-mode`, `change-min`, `add-children`, `remove-children`
 - **Unsafe (never do):** `change-display-property`, `replace-with-non-grid-container`
 
 ## icon

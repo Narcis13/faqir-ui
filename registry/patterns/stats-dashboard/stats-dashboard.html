@@ -6,9 +6,11 @@
 <!--
   Reporting page — composition only, zero JavaScript of its own.
     · The KPI row IS the grid primitive: [data-part="metrics"] carries
-      data-ui="grid", so the responsive column behaviour (4 → 2 → 1) comes from
-      grid.css rather than from this pattern. The consequence is that the stats
-      inside it carry NO data-part: a data-part there would belong to the grid,
+      data-ui="grid", so the responsive column behaviour comes from grid.css
+      rather than from this pattern — mobile-first since grid 2.0: one column
+      is the base and the md/lg tiers widen it (1 → 2 → 4). The consequence is
+      that the stats inside it carry NO data-part: a data-part there would
+      belong to the grid,
       which declares no slots. Address one KPI as
       [data-part="metrics"] > [data-ui="stat"].
     · Every report panel is a real data-ui="card". Inside one you address the
@@ -29,7 +31,7 @@
   <p data-part="description">How the store performed this period, by product and by channel.</p>
   <p data-part="period">1–30 June 2026 · compared with May</p>
 
-  <div data-ui="grid" data-part="metrics" data-cols="4" data-cols-md="2" data-gap="6">
+  <div data-ui="grid" data-part="metrics" data-cols="1" data-cols-md="2" data-cols-lg="4" data-gap="6">
     <div data-ui="stat" data-variant="card" data-trend="up">
       <span data-part="label">Revenue</span>
       <span data-part="value">$45,231</span>
@@ -155,7 +157,7 @@
   <h2 data-part="heading" id="stats-support-heading">Support desk</h2>
   <p data-part="period">Last 7 days</p>
 
-  <div data-ui="grid" data-part="metrics" data-cols="3" data-cols-md="3" data-gap="6">
+  <div data-ui="grid" data-part="metrics" data-cols="1" data-cols-md="3" data-gap="6">
     <div data-ui="stat" data-variant="card" data-trend="down">
       <span data-part="label">Open tickets</span>
       <span data-part="value">37</span>

@@ -1,9 +1,42 @@
 <!-- @ui:component grid -->
 <!-- @ui:kind primitive -->
 <!-- @ui:slots -->
-<!-- @ui:variants cols=1|2|3|4|6|12 gap=2|4|6|8 -->
+<!-- @ui:variants cols=1|2|3|4|6|12|auto gap=0|1|2|3|4|6|8|10|12|16 -->
+<!--
+  Mobile-first (task 0.8-04): data-cols is the base at every width and
+  data-cols-{sm,md,lg,xl} override from that tier up. Nothing collapses
+  implicitly — a grid that should stack on a phone says data-cols="1" and
+  widens per tier. Prefer data-cols="auto" + data-min when the requirement is
+  just "as many columns as fit": it needs no breakpoint at all.
+-->
 
-<!-- 2-Column Grid -->
+<!-- Intrinsic: as many 16rem columns as fit, at any width -->
+<div data-ui="grid" data-cols="auto" data-min="16" data-gap="4">
+  <div>Card 1</div>
+  <div>Card 2</div>
+  <div>Card 3</div>
+  <div>Card 4</div>
+</div>
+
+<!-- Intrinsic with a narrower floor: 12rem items pack tighter -->
+<div data-ui="grid" data-cols="auto" data-min="12" data-gap="4">
+  <div>Tag 1</div>
+  <div>Tag 2</div>
+  <div>Tag 3</div>
+  <div>Tag 4</div>
+  <div>Tag 5</div>
+  <div>Tag 6</div>
+</div>
+
+<!-- Mobile-first KPI row: 1 column on a phone, 2 from md, 4 from lg -->
+<div data-ui="grid" data-cols="1" data-cols-md="2" data-cols-lg="4" data-gap="6">
+  <div>Card 1</div>
+  <div>Card 2</div>
+  <div>Card 3</div>
+  <div>Card 4</div>
+</div>
+
+<!-- Fixed 2-Column Grid — holds at every width -->
 <div data-ui="grid" data-cols="2" data-gap="4">
   <div>Card 1</div>
   <div>Card 2</div>
@@ -21,14 +54,6 @@
   <div>Card 6</div>
 </div>
 
-<!-- 4-Column Grid -->
-<div data-ui="grid" data-cols="4" data-gap="6">
-  <div>Card 1</div>
-  <div>Card 2</div>
-  <div>Card 3</div>
-  <div>Card 4</div>
-</div>
-
 <!-- 6-Column Grid, Tight Gap -->
 <div data-ui="grid" data-cols="6" data-gap="2">
   <div>1</div>
@@ -39,20 +64,23 @@
   <div>6</div>
 </div>
 
-<!-- 12-Column Grid -->
+<!-- 12-Column Grid with spanning children -->
 <div data-ui="grid" data-cols="12" data-gap="4">
-  <div>1</div>
-  <div>2</div>
-  <div>3</div>
-  <div>4</div>
-  <div>5</div>
-  <div>6</div>
-  <div>7</div>
-  <div>8</div>
-  <div>9</div>
-  <div>10</div>
-  <div>11</div>
-  <div>12</div>
+  <div data-span="6">Span 6</div>
+  <div data-span="3">Span 3</div>
+  <div data-span="3">Span 3</div>
+  <div data-span="4">Span 4</div>
+  <div data-span="4">Span 4</div>
+  <div data-span="4">Span 4</div>
+  <div data-span="full">Full row</div>
+</div>
+
+<!-- Scroll strip: a snap-scrolling row below sm, a 4-column grid from sm up -->
+<div data-ui="grid" data-cols="4" data-gap="4" data-scroll>
+  <div>Card 1</div>
+  <div>Card 2</div>
+  <div>Card 3</div>
+  <div>Card 4</div>
 </div>
 
 <!-- Single Column (stacked) -->

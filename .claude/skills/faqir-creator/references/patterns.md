@@ -699,7 +699,7 @@ Reporting page composing a KPI row (the grid primitive filled with stats) and ca
   <h2 data-part="heading" id="{id}-heading">{heading}</h2>
   <p data-part="description">{description}</p>
   <p data-part="period">{period}</p>
-  <div data-ui="grid" data-part="metrics" data-cols="4" data-cols-md="2" data-gap="6">
+  <div data-ui="grid" data-part="metrics" data-cols="1" data-cols-md="2" data-cols-lg="4" data-gap="6">
     <div data-ui="stat" data-variant="card" data-trend="{trend}">
       <span data-part="label">{metric_label}</span>
       <span data-part="value">{metric_value}</span>
@@ -749,7 +749,7 @@ Reporting page composing a KPI row (the grid primitive filled with stats) and ca
 ├─ [data-part='heading']  <h2>  required  — Report title. Give it an id and point the section's aria-labelledby at it
 ├─ [data-part='description']  <p>  optional  — Optional intro paragraph. Must be a direct child of the section — the panels' own card descriptions are card slots, not this one
 ├─ [data-part='period']  <p>  optional  — The reporting period and its comparison basis, e.g. '1–30 June 2026 · compared with May'. Rendered as muted metadata, not prose
-├─ [data-part='metrics']  <div>  required  — The KPI row. It is itself a data-ui='grid', so column count and the responsive collapse come from grid's data-cols/data-cols-md; the stats inside carry no data-part
+├─ [data-part='metrics']  <div>  required  — The KPI row. It is itself a data-ui='grid', so the column count comes from grid's mobile-first vocabulary — data-cols='1' is the phone base and data-cols-md/data-cols-lg widen it (1 → 2 → 4); the stats inside carry no data-part
 ├─ [data-part='reports']  <div>  required  — Region holding the report panels. Two sit side by side (2fr 1fr); a single one spans the full width
 ├─ [data-part='report']  <section>  required  — One report panel — a nested data-ui='card'. Inside it you address the CARD's slots (header, title, description, body, footer), never this pattern's: the nearest data-ui ancestor owns a data-part. Named `report` rather than `panel` because the audit's aria-describedby rule treats a [data-part='panel'] as a dialog's describable surface
 └─ [data-part='footnote']  <p>  optional  — Fine print under the report panels (what the numbers exclude, how they are counted)
