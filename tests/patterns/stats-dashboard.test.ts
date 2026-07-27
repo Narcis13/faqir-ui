@@ -15,7 +15,9 @@
 //     headers and repeated on the cells, raw data-value on numeric cells, and a
 //     tfoot whose authored totals equal the sum of the column they aggregate;
 //   · the responsive behaviour is real CSS — the KPI row delegates to grid.css
-//     and the panel region stacks at the registry's medium breakpoint.
+//     and the panel region splits at the canon lg floor (task 0.8-09 put this
+//     sheet on the canon mobile-first: the stack is now the base, the split the
+//     override, and both claims are resolved through the cascade helper).
 
 import { describe, it, expect } from "bun:test";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
@@ -25,10 +27,10 @@ import { loadRegistryManifestMap } from "../../src/utils/components";
 import { validateManifest, type Manifest } from "../../src/manifest";
 import { extractComponents, parseDocument } from "../../src/parser/html-parser";
 import { DOCUMENT_RULES } from "../../src/audit/rules";
-import { BREAKPOINTS } from "../../src/utils/breakpoints";
+import { BREAKPOINTS, TIERS, minWidth } from "../../src/utils/breakpoints";
 import { buildMatrix, discoverComponents, SCHEMES } from "../visual/matrix";
 import { buildA11yMatrix, A11Y_THEMES } from "../a11y/a11y-matrix";
-import { collectRules, resolve } from "../helpers/css-cascade";
+import { collectRules, resolve, resolveDeepValue } from "../helpers/css-cascade";
 
 const ROOT = join(import.meta.dir, "../..");
 const REGISTRY = join(ROOT, "registry");
@@ -41,22 +43,6 @@ const MANIFEST = JSON.parse(
 ) as Manifest;
 
 const manifests = await loadRegistryManifestMap(REGISTRY);
-
-/** Body of the first `@media (<query>)` block, via brace matching. */
-function mediaBlock(source: string, query: string): string {
-  const at = source.indexOf(`@media (${query})`);
-  expect(at, `no @media (${query}) block`).toBeGreaterThan(-1);
-  const open = source.indexOf("{", at);
-  let depth = 0;
-  for (let i = open; i < source.length; i++) {
-    if (source[i] === "{") depth++;
-    else if (source[i] === "}") {
-      depth--;
-      if (depth === 0) return source.slice(open + 1, i);
-    }
-  }
-  throw new Error(`unbalanced @media (${query}) block`);
-}
 
 const componentsNamed = (name: string) =>
   extractComponents(HTML, "stats-dashboard.html").filter((c) => c.name === name);
@@ -338,12 +324,6 @@ describe("stats-dashboard — composes the enhanced table", () => {
 });
 
 describe("stats-dashboard — responsive behaviour", () => {
-  // Thresholds from the canon (task 0.8-01), not repeated literals. The
-  // `max-width` form is this sheet's pre-canon idiom — 0.8-09 flips the
-  // direction to mobile-first `min-width`.
-  const MEDIUM = `max-width: ${BREAKPOINTS.lg.px}px`;
-  const SMALL = `max-width: ${BREAKPOINTS.sm.px}px`;
-
   it("delegates the KPI columns to the grid primitive", () => {
     // No column rule for the metrics row anywhere in this sheet: the 4 → 2 → 1
     // collapse is grid.css reacting to data-cols/data-cols-md/data-cols-lg.
@@ -385,17 +365,50 @@ describe("stats-dashboard — responsive behaviour", () => {
     );
   });
 
-  it("lays the report panels out side by side, then stacks them", () => {
-    expect(CSS).toMatch(/\[data-part="reports"\] \{[^}]*grid-template-columns: 2fr 1fr/);
-    expect(mediaBlock(CSS, MEDIUM)).toContain("grid-template-columns: 1fr");
-    expect(mediaBlock(CSS, SMALL)).toContain("grid-template-columns: 1fr");
+  it("stacks the report panels until lg, then splits them 2fr 1fr", () => {
+    const rules = collectRules(CSS);
+    const columns = (widthPx: number) =>
+      resolveDeepValue(rules, "stats-dashboard", "grid-template-columns", {
+        subject: { "data-part": "reports" },
+        widthPx,
+      });
+    // Mobile-first (0.8-09): the stack is the base rule, the split is the lg
+    // override — a report table needs the width long before a KPI card does,
+    // which is why this region gains its second column a tier later than the
+    // metrics row above it.
+    expect(columns(390)).toBe("1fr");
+    expect(columns(BREAKPOINTS.md.px)).toBe("1fr");
+    expect(columns(BREAKPOINTS.lg.px - 1)).toBe("1fr");
+    expect(columns(BREAKPOINTS.lg.px)).toBe("2fr 1fr");
+
+    const base = rules.find(
+      (r) =>
+        r.media === null && r.selectors.some((s) => s.endsWith('[data-part="reports"]')),
+    );
+    expect(base?.decls["grid-template-columns"]).toBe("1fr");
   });
 
-  it("stays inside the two registry breakpoints", () => {
-    const queries = [...CSS.matchAll(/@media \(([^)]+)\)/g)].map((m) => m[1]);
+  it("opens up the page frame at sm", () => {
+    const rules = collectRules(CSS);
+    const padding = (widthPx: number) =>
+      resolve(rules, "stats-dashboard", {}, "padding-inline", widthPx);
+    expect(padding(390)).toBe("var(--space-4)");
+    expect(padding(BREAKPOINTS.sm.px - 1)).toBe("var(--space-4)");
+    expect(padding(BREAKPOINTS.sm.px)).toBe("var(--space-6)");
+  });
+
+  it("stays on the canon, in mobile-first form", () => {
+    const canon = new Set(TIERS.map((t) => minWidth(t)));
+    const queries = [...CSS.replace(/\/\*[^]*?\*\//g, "").matchAll(/@media \(([^)]+)\)/g)].map(
+      (m) => m[1],
+    );
     expect(queries.length).toBeGreaterThan(0);
     for (const query of queries) {
-      expect([MEDIUM, SMALL, "prefers-reduced-motion: reduce"], `stats-dashboard: ${query}`).toContain(query);
+      if (!/width/.test(query)) {
+        expect(query, `stats-dashboard: ${query}`).toBe("prefers-reduced-motion: reduce");
+        continue;
+      }
+      expect([...canon], `stats-dashboard: ${query}`).toContain(query);
     }
   });
 

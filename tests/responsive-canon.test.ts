@@ -1,14 +1,19 @@
 // ═══════════════════════════════════════════════════════════════════════════
-// Responsive sweep A — primitives & recipes on the breakpoint canon  [0.8-08]
+// Responsive sweeps — the whole registry on the breakpoint canon  [0.8-08/09]
 // ═══════════════════════════════════════════════════════════════════════════
 //
 // 0.8-01 wrote the canon down; this suite is what makes the registry obey it.
-// Three kinds of assertion, in the order the task asks for them:
+// Sweep A (0.8-08) moved primitives and recipes; sweep B (0.8-09) moved the
+// patterns, and widened the guard below to cover all three trees rather than
+// standing up a second copy of it — a rogue breakpoint anywhere in the registry
+// now fails here, which is exactly the shape 0.8-10 promotes into an audit rule.
 //
-//   1. A SWEEP over every stylesheet under registry/primitives and
-//      registry/recipes: no width prelude may say anything but a canon
-//      `min-width`. Feature queries (reduced motion, colour scheme, forced
-//      colours) and the print media type are exempt because they carry no
+// Three kinds of assertion, in the order the tasks ask for them:
+//
+//   1. A SWEEP over every stylesheet under registry/primitives,
+//      registry/recipes and registry/patterns: no width prelude may say anything
+//      but a canon `min-width`. Feature queries (reduced motion, colour scheme,
+//      forced colours) and the print media type are exempt because they carry no
 //      width at all — the rule is about the ladder, not about `@media`. This is
 //      the test 0.8-10 promotes into the `breakpoint-canon` audit rule, so it is
 //      deliberately written as a predicate over parsed preludes rather than as a
@@ -44,6 +49,7 @@ import { createTable } from "../registry/recipes/table/table.js";
 const ROOT = join(import.meta.dir, "..");
 const PRIMITIVES = join(ROOT, "registry", "primitives");
 const RECIPES = join(ROOT, "registry", "recipes");
+const PATTERNS = join(ROOT, "registry", "patterns");
 
 const sheet = (path: string) => readFileSync(path, "utf8");
 const rulesOf = (path: string) => collectRules(sheet(path));
@@ -83,8 +89,8 @@ const CANON_CONDITIONS = new Set(TIERS.map((t) => minWidth(t)));
 
 // ── 1 · The sweep ────────────────────────────────────────────────────────────
 
-describe("canon sweep · registry/primitives + registry/recipes", () => {
-  const files = [...stylesheets(PRIMITIVES), ...stylesheets(RECIPES)];
+describe("canon sweep · registry/primitives + registry/recipes + registry/patterns", () => {
+  const files = [...stylesheets(PRIMITIVES), ...stylesheets(RECIPES), ...stylesheets(PATTERNS)];
   const all = files.flatMap(preludes);
   // A prelude is about width if it mentions one at all; everything else
   // (prefers-reduced-motion, prefers-color-scheme, forced-colors, print) is a
@@ -93,8 +99,31 @@ describe("canon sweep · registry/primitives + registry/recipes", () => {
 
   it("sweeps a non-trivial number of sheets and preludes", () => {
     // Guards the whole section against passing vacuously if the walk breaks.
-    expect(files.length).toBeGreaterThan(60);
-    expect(widthPreludes.length).toBeGreaterThan(15);
+    expect(files.length).toBeGreaterThan(75);
+    expect(widthPreludes.length).toBeGreaterThan(30);
+  });
+
+  it("covers every pattern stylesheet — the sweep-B tree is really in the walk", () => {
+    const patternSheets = stylesheets(PATTERNS);
+    expect(patternSheets.length).toBeGreaterThanOrEqual(15);
+    // The nine sheets 0.8-09 rewrote all still carry width preludes; if one lost
+    // its responsive behaviour entirely the sweep would pass by saying nothing.
+    const rewritten = [
+      "hero",
+      "pricing",
+      "feature-grid",
+      "site-footer",
+      "stats-dashboard",
+      "inbox",
+      "dashboard-shell",
+      "auth-form",
+      "document",
+    ];
+    for (const pattern of rewritten) {
+      const file = join(PATTERNS, pattern, `${pattern}.css`);
+      const widths = preludes(file).filter((p) => /width/.test(p.text));
+      expect(widths.length, `${pattern} has width preludes`).toBeGreaterThan(0);
+    }
   });
 
   it("no width prelude uses max-width — the canon is min-width only", () => {
@@ -134,6 +163,224 @@ describe("canon sweep · registry/primitives + registry/recipes", () => {
       const name = /^([a-z][\w-]*)\s*\(/.exec(p.text)?.[1];
       expect(name).toBe("faqir-table");
       expect(sheet(p.file)).toContain(`container-name: ${name}`);
+    }
+  });
+});
+
+// ── 1b · sweep B's own guards over registry/patterns ────────────────────────
+
+describe("canon sweep · patterns are page-level, mobile-first and ascending", () => {
+  const files = stylesheets(PATTERNS);
+
+  it("every tier block in a pattern is declared in ascending order", () => {
+    // A sheet that reads sm → lg → md is still canon-legal and still correct
+    // CSS, but it is no longer readable as a ladder — and 0.8-09's whole claim
+    // is that these sheets read mobile-first top to bottom.
+    for (const file of files) {
+      const floors = preludes(file)
+        .filter((p) => /width/.test(p.text))
+        .map((p) => Number(/([\d.]+)rem/.exec(p.text)![1]));
+      expect(floors, `${rel(file)} tier blocks ascend`).toEqual([...floors].sort((a, b) => a - b));
+    }
+  });
+
+  it("patterns ask about the viewport, not about a container", () => {
+    // The doctrine's third rung (FAQIR-NEXT §19) is reserved for whoever owns
+    // the page. Patterns do; components do not, which is why table's ladder is
+    // `@container` and every pattern's is `@media`.
+    const containers = files
+      .flatMap(preludes)
+      .filter((p) => p.kind === "container")
+      .map((p) => `${rel(p.file)}: @container ${p.text}`);
+    expect(containers).toEqual([]);
+  });
+
+  it("no pattern reaches for a fifth tier — 480 and 641 are gone", () => {
+    // The two ad-hoc numbers 0.8-09 retired: auth-form's 480px full bleed (the
+    // `xs` that §19 declines to create) and grid's old off-by-one range floor.
+    for (const file of files) {
+      const css = sheet(file).replace(/\/\*[^]*?\*\//g, "");
+      for (const m of css.matchAll(/@(?:media|container)([^{]*)\{/g)) {
+        expect(m[1], `${rel(file)}: @media ${m[1].trim()}`).not.toMatch(/480px|641px|30rem/);
+      }
+    }
+  });
+});
+
+// ── 2 · dashboard-shell — the off-canvas drawer, inverted onto md ───────────
+
+describe("dashboard-shell · the sidebar is a drawer below md and a column above", () => {
+  const rules = rulesOf(join(PATTERNS, "dashboard-shell", "dashboard-shell.css"));
+  const MD = BREAKPOINTS.md.px;
+
+  /** A property of the sidebar, for a shell carrying `root`, at `widthPx`. */
+  const sidebar = (
+    property: string,
+    widthPx: number,
+    subject: Record<string, string> = {},
+    root: Record<string, string> = {},
+  ) =>
+    resolveDeepValue(rules, "dashboard-shell", property, {
+      root,
+      subject: { "data-part": "sidebar", ...subject },
+      widthPx,
+    });
+
+  it("is fixed and off-canvas on a phone, static and in-flow from md", () => {
+    expect(sidebar("position", 390)).toBe("fixed");
+    expect(sidebar("position", MD - 1)).toBe("fixed");
+    expect(sidebar("position", MD)).toBe("static");
+    expect(sidebar("position", 1280)).toBe("static");
+  });
+
+  it("slides in on data-state=expanded, and only while it is a drawer", () => {
+    expect(sidebar("transform", 390)).toBe("translateX(-100%)");
+    expect(sidebar("transform", 390, { "data-state": "expanded" })).toBe("translateX(0)");
+    // From md up the drawer machinery is off at EVERY specificity the base
+    // declares it at — including the expanded state and the right variant.
+    expect(sidebar("transform", MD)).toBe("none");
+    expect(sidebar("transform", MD, { "data-state": "expanded" })).toBe("none");
+    expect(sidebar("transform", MD, {}, { "data-variant": "right" })).toBe("none");
+    expect(
+      sidebar("transform", MD, { "data-state": "expanded" }, { "data-variant": "right" }),
+    ).toBe("none");
+  });
+
+  it("the right variant slides in from the other edge, below md", () => {
+    const right = { "data-variant": "right" };
+    expect(sidebar("transform", 390, {}, right)).toBe("translateX(100%)");
+    expect(sidebar("inset-inline-end", 390, {}, right)).toBe("0");
+    expect(sidebar("inset", MD, {}, right)).toBe("auto");
+  });
+
+  it("the shell is one column on a phone and two from md — collapsed or not", () => {
+    const columns = (widthPx: number, attrs: Record<string, string> = {}) =>
+      resolve(rules, "dashboard-shell", attrs, "grid-template-columns", widthPx);
+    expect(columns(390)).toBe("1fr");
+    expect(columns(390, { "data-variant": "right" })).toBe("1fr");
+    expect(columns(MD)).toBe("var(--shell-sidebar-width, 16rem) 1fr");
+
+    // The two `:has(sidebar collapsed)` rules used to sit unconditionally, at
+    // (0,3,0) against the single-column rule's (0,1,0) — so a collapsed sidebar
+    // on a phone produced a 4rem column no grid area was ever placed in. They
+    // now live in the md block, where the column they narrow actually exists.
+    const collapsed = rules.filter((r) => r.selectors.some((s) => s.includes(":has(")));
+    expect(collapsed.length).toBe(2);
+    for (const rule of collapsed) expect(rule.media).toBe(`(${minWidth("md")})`);
+  });
+});
+
+// ── 2 · auth-form — full bleed to the canon sm floor, with no `xs` ──────────
+
+describe("auth-form · the card is the page below sm and a card above it", () => {
+  const rules = rulesOf(join(PATTERNS, "auth-form", "auth-form.css"));
+  const card = (property: string, widthPx: number) =>
+    resolveDeepValue(rules, "auth-form", property, {
+      subject: { "data-ui": "card" },
+      widthPx,
+    });
+
+  it("goes full bleed on a phone and boxed from the sm floor up", () => {
+    expect(card("max-width", 390)).toBe("100%");
+    expect(card("border-radius", 390)).toBe("0");
+    expect(card("box-shadow", 390)).toBe("none");
+    expect(card("border-inline-start", 390)).toBe("none");
+
+    const sm = BREAKPOINTS.sm.px;
+    expect(card("max-width", sm)).toBe("var(--auth-form-max-width, 400px)");
+    expect(card("border-radius", sm)).toBe("var(--card-radius, var(--radius-lg))");
+    expect(card("box-shadow", sm)).toBe("var(--card-shadow, var(--shadow-sm))");
+    expect(card("border-inline-start", sm)).toBe("1px solid var(--card-border, var(--color-border))");
+  });
+
+  it("the retired 480px floor is inside the sm tier, not below a fifth one", () => {
+    // The plan's position (§19): there is no `xs`. Everything the old 480px
+    // block did now runs to 640px, which is the same phones plus the large ones
+    // in landscape — where full bleed is the better answer anyway.
+    expect(card("max-width", 480)).toBe("100%");
+    expect(card("max-width", BREAKPOINTS.sm.px - 1)).toBe("100%");
+    expect(TIERS[0]).toBe("sm");
+  });
+
+  it("restates card.css's box rather than reverting to the user agent", () => {
+    // `revert` would drop to the UA origin and take the card primitive's own
+    // author rules with it. The sm block therefore names the values — through
+    // card's own custom properties, so a theme override still reaches them.
+    const declarations = sheet(join(PATTERNS, "auth-form", "auth-form.css")).replace(
+      /\/\*[^]*?\*\//g,
+      "",
+    );
+    expect(declarations).not.toContain("revert");
+    for (const property of ["border-radius", "box-shadow", "border-inline-start"]) {
+      expect(card(property, BREAKPOINTS.sm.px)).toContain("var(--card-");
+    }
+  });
+});
+
+// ── 2 · document — paper margins from md, and print still wins ──────────────
+
+describe("document · the sheet fills a phone and gets its margins back at md", () => {
+  const file = join(PATTERNS, "document", "document.css");
+  const rules = rulesOf(file);
+  const at = (property: string, widthPx: number) =>
+    resolve(rules, "document", {}, property, widthPx);
+
+  it("tightens margin, padding and corners below md", () => {
+    expect(at("margin", 390)).toBe("var(--space-4) auto");
+    expect(at("padding", 390)).toBe("var(--space-6) var(--space-4)");
+    expect(at("border-radius", 390)).toBe("0");
+
+    const md = BREAKPOINTS.md.px;
+    expect(at("margin", md)).toBe("var(--space-8) auto");
+    expect(at("padding", md)).toBe("var(--space-12) var(--space-8)");
+    expect(at("border-radius", md)).toBe("var(--radius-md, 0.375rem)");
+  });
+
+  it("declares the tier block BEFORE @media print, so paper still wins", () => {
+    // A `min-width` query is true on paper: a Letter page box is 8.5in ≈ 816px,
+    // past the md floor. The pre-canon `max-width: 768px` form never matched a
+    // page and could sit anywhere; the mobile-first form has to be outranked by
+    // the print block, which at equal specificity means declared earlier.
+    const css = sheet(file).replace(/\/\*[^]*?\*\//g, "");
+    const tier = css.indexOf(`@media (${minWidth("md")})`);
+    const print = css.indexOf("@media print");
+    expect(tier).toBeGreaterThan(-1);
+    expect(print).toBeGreaterThan(-1);
+    expect(tier).toBeLessThan(print);
+    expect(BREAKPOINTS.md.px).toBeLessThan(8.5 * 96);
+  });
+});
+
+// ── 2 · hero — the page frame and the type scale open up at sm ──────────────
+
+describe("hero · the phone case is the base rule", () => {
+  const rules = rulesOf(join(PATTERNS, "hero", "hero.css"));
+  const sm = BREAKPOINTS.sm.px;
+
+  it("pads tightly and sets smaller type below sm", () => {
+    expect(resolve(rules, "hero", {}, "padding-inline", 390)).toBe("var(--space-4)");
+    expect(resolve(rules, "hero", {}, "padding-inline", sm)).toBe("var(--space-6)");
+
+    const headline = (widthPx: number) =>
+      resolveDeepValue(rules, "hero", "font-size", {
+        subject: { "data-part": "headline" },
+        widthPx,
+      });
+    expect(headline(390)).toBe("var(--text-3xl)");
+    expect(headline(sm)).toBe("var(--text-4xl)");
+  });
+
+  it("the split variant keeps its own headline size on both sides of sm", () => {
+    // The variant rule is (0,3,0) and the sm reveal (0,2,0), so the split hero
+    // is unaffected by the tier — the pre-canon behaviour, preserved.
+    for (const widthPx of [390, sm, 1280]) {
+      expect(
+        resolveDeepValue(rules, "hero", "font-size", {
+          root: { "data-variant": "split" },
+          subject: { "data-part": "headline" },
+          widthPx,
+        }),
+      ).toBe("var(--text-3xl)");
     }
   });
 });

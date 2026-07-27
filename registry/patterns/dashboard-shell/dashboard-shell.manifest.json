@@ -1,7 +1,7 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "dashboard-shell",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "kind": "pattern",
   "category": "composite",
   "description": "Application dashboard layout with sidebar navigation, header, and content area",
@@ -160,10 +160,18 @@
     "sidebar-position-right-variant-moves-sidebar",
     "nav-has-aria-label",
     "active-nav-item-has-aria-current",
-    "sidebar-collapses-on-small-screens",
+    "sidebar-is-an-off-canvas-drawer-below-md-and-a-grid-column-from-it",
     "contains-card-components",
     "contains-grid-layout",
     "contains-avatar-component",
     "contains-dropdown-component"
+  ],
+
+  "changes": [
+    {
+      "version": "1.1.0",
+      "note": "The responsive ladder moves onto the breakpoint canon, mobile-first (task 0.8-09). The sheet's max-width media blocks became min-width floors on canon tiers (sm 40rem/640px, md 48rem/768px, lg 64rem/1024px), so every unconditional rule is now the PHONE case and a tier block only ever widens it. The off-canvas drawer is now the base and the sidebar rejoins the grid at md — the same 768px floor as before. The two :has(sidebar collapsed) rules moved into the md block, fixing a pre-canon bug: at (0,3,0) they outranked the single-column rule at (0,1,0), so a collapsed sidebar on a phone produced a 4rem column no grid area was ever placed in. The floors keep their values, so the only behavioural shift is at exactly a floor: 1024px now gets the wide layout rather than the narrow one.",
+      "breaking": false
+    }
   ]
 }

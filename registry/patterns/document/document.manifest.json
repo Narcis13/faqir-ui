@@ -1,12 +1,17 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "document",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "kind": "pattern",
   "category": "composite",
   "description": "Full-page document container with repeatable print headers, footers, and page counters",
 
   "changes": [
+    {
+      "version": "1.2.0",
+      "note": "The responsive ladder moves onto the breakpoint canon, mobile-first (task 0.8-09). The sheet's max-width media blocks became min-width floors on canon tiers (sm 40rem/640px, md 48rem/768px, lg 64rem/1024px), so every unconditional rule is now the PHONE case and a tier block only ever widens it. The sheet fills a phone edge to edge and gets its margin, padding and rounded corners back at md — the same 768px floor as before. The tier block is declared BEFORE @media print, because a min-width query is true on paper (a Letter page box is 8.5in ≈ 816px) and print must still win. The floors keep their values, so the only behavioural shift is at exactly a floor: 1024px now gets the wide layout rather than the narrow one.",
+      "breaking": false
+    },
     {
       "version": "1.1.0",
       "note": "Added canonical doc-header and doc-footer parts, fixed-position browser fallbacks, running-element margin boxes, page counters, and a three-page print reference; legacy header/footer parts remain styled as aliases.",

@@ -1,12 +1,14 @@
 /* @ui:component pricing */
 /* @ui:tokens color-bg color-fg color-fg-muted color-border color-primary color-primary-subtle color-primary-fg space-1 space-2 space-3 space-4 space-6 space-8 space-10 space-12 space-16 text-sm text-base text-lg text-3xl font-sans weight-semibold weight-bold leading-tight leading-normal leading-relaxed radius-lg shadow-md */
 
-/* ── Root ── */
+/* ── Root ──
+   Mobile-first (task 0.8-09): everything outside the two `@media` blocks at the
+   foot of the sheet is the phone case, and the canon floors widen it. */
 [data-ui="pricing"] {
   display: grid;
   gap: var(--space-4);
-  padding-block: var(--space-16);
-  padding-inline: var(--space-6);
+  padding-block: var(--space-12);
+  padding-inline: var(--space-4);
   font-family: var(--font-sans, system-ui, sans-serif);
   color: var(--color-fg);
   background: var(--color-bg);
@@ -31,21 +33,16 @@
 
 /* ── Tiers ──
    Pattern CSS rather than a nested data-ui="grid": a nested component would own
-   the data-part on its children, and [data-part="tier"] must stay pricing's. */
+   the data-part on its children, and [data-part="tier"] must stay pricing's.
+   The column count follows grid's mobile-first semantics (0.8-04): `data-cols`
+   names the WIDEST count, reached at lg; one tier per row is the phone base, so
+   a price line never has to wrap. */
 [data-ui="pricing"] [data-part="tiers"] {
   display: grid;
   gap: var(--space-6);
   margin-block-start: var(--space-8);
   align-items: stretch;
-  grid-template-columns: repeat(3, 1fr);
-}
-
-[data-ui="pricing"][data-cols="2"] [data-part="tiers"] {
-  grid-template-columns: repeat(2, 1fr);
-}
-
-[data-ui="pricing"][data-cols="3"] [data-part="tiers"] {
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 1fr;
 }
 
 /* ── Tier ──
@@ -141,24 +138,31 @@
 }
 
 /* ── Responsive ──
-   Three tiers become two at the medium breakpoint and stack on phones, so a
-   tier never gets narrower than its price line. */
-@media (max-width: 1024px) {
-  [data-ui="pricing"] [data-part="tiers"],
-  [data-ui="pricing"][data-cols="3"] [data-part="tiers"] {
+   Canon tiers only, min-width only, ascending (FAQIR-NEXT §19). One tier per row
+   on a phone, two from sm, the declared count from lg — the same 640/1024 steps
+   as before, now expressed as floors. `data-cols="2"` needs no sm rule (two is
+   already the sm default) but does need an lg one, or it would inherit three. */
+@media (min-width: 40rem) {
+  [data-ui="pricing"] {
+    padding-block: var(--space-16);
+    padding-inline: var(--space-6);
+  }
+
+  [data-ui="pricing"] [data-part="tiers"] {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
-@media (max-width: 640px) {
-  [data-ui="pricing"] {
-    padding-block: var(--space-12);
-    padding-inline: var(--space-4);
+@media (min-width: 64rem) {
+  [data-ui="pricing"] [data-part="tiers"] {
+    grid-template-columns: repeat(3, 1fr);
   }
 
-  [data-ui="pricing"] [data-part="tiers"],
-  [data-ui="pricing"][data-cols="2"] [data-part="tiers"],
+  [data-ui="pricing"][data-cols="2"] [data-part="tiers"] {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
   [data-ui="pricing"][data-cols="3"] [data-part="tiers"] {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, 1fr);
   }
 }

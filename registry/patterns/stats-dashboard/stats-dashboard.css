@@ -3,12 +3,15 @@
 
 /* ── Root ──
    A reporting page: title block, KPI row, then the panel region. The KPI row
-   is the grid primitive, so this sheet never sets its columns. */
+   is the grid primitive, so this sheet never sets its columns.
+
+   Mobile-first (task 0.8-09): everything outside the two `@media` blocks at the
+   foot of the sheet is the phone case, and the canon floors widen it. */
 [data-ui="stats-dashboard"] {
   display: grid;
   gap: var(--space-3);
-  padding-block: var(--space-12);
-  padding-inline: var(--space-6);
+  padding-block: var(--space-8);
+  padding-inline: var(--space-4);
   font-family: var(--font-sans, system-ui, sans-serif);
   color: var(--color-fg);
   background: var(--color-bg);
@@ -54,13 +57,16 @@
 /* ── Panel region ──
    Report panel + a narrower companion panel. Pattern CSS rather than a nested
    data-ui="grid" here, because [data-part="report"] must stay this pattern's
-   part: a grid between them would own it. */
+   part: a grid between them would own it.
+
+   Stacked until lg: a report table needs the width long before a KPI card does,
+   which is why this region collapses a tier earlier than the metrics row. */
 [data-ui="stats-dashboard"] [data-part="reports"] {
   display: grid;
   gap: var(--space-6);
   margin-block-start: var(--space-4);
   align-items: start;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: 1fr;
 }
 
 /* A lone panel spans the full width instead of leaving a hole. */
@@ -143,21 +149,19 @@
 }
 
 /* ── Responsive ──
-   The panel region stacks at the medium breakpoint (a report table needs the
-   width long before a KPI card does); the KPI row's own collapse is grid.css. */
-@media (max-width: 1024px) {
-  [data-ui="stats-dashboard"] [data-part="reports"] {
-    grid-template-columns: 1fr;
+   Canon tiers only, min-width only, ascending (FAQIR-NEXT §19). Two of the three
+   things this page can reflow are elsewhere: the KPI row is data-ui="grid" and
+   collapses in grid.css, each report table stacks against its own container in
+   table.css. Only the page frame and the panel split are this sheet's. */
+@media (min-width: 40rem) {
+  [data-ui="stats-dashboard"] {
+    padding-block: var(--space-12);
+    padding-inline: var(--space-6);
   }
 }
 
-@media (max-width: 640px) {
-  [data-ui="stats-dashboard"] {
-    padding-block: var(--space-8);
-    padding-inline: var(--space-4);
-  }
-
+@media (min-width: 64rem) {
   [data-ui="stats-dashboard"] [data-part="reports"] {
-    grid-template-columns: 1fr;
+    grid-template-columns: 2fr 1fr;
   }
 }

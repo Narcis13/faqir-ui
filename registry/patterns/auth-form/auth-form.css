@@ -10,9 +10,21 @@
   font-family: var(--font-sans);
 }
 
+/* Mobile-first (task 0.8-09): on a phone the card IS the page — edge to edge,
+   square, no shadow, no side rules. The canon sm block at the foot of the sheet
+   turns it back into a card.
+
+   It has to RESTATE card.css's box there rather than unset anything: `revert`
+   drops to the user-agent origin, which would take the card primitive's own
+   author rules with it. The values below go through card's own custom
+   properties, so a theme that retunes `--card-radius` still reaches them. */
 [data-ui="auth-form"] > [data-ui="card"] {
   width: 100%;
-  max-width: var(--auth-form-max-width, 400px);
+  max-width: 100%;
+  border-radius: 0;
+  box-shadow: none;
+  border-inline-start: none;
+  border-inline-end: none;
 }
 
 /* ── Header ── */
@@ -240,18 +252,26 @@
   margin: var(--space-5) var(--space-8) 0;
 }
 
-/* ── Responsive ── */
-@media (max-width: 480px) {
-  [data-ui="auth-form"] > [data-ui="card"] {
-    max-width: 100%;
-    border-radius: 0;
-    box-shadow: none;
-    border-inline-start: none;
-    border-inline-end: none;
-  }
+/* ── Responsive ──
+   Canon tiers only, min-width only (FAQIR-NEXT §19). One step, at sm.
 
-  [data-ui="auth-form"] [data-part="social"] {
-    flex-direction: column;
+   The pre-canon floor was an ad-hoc 480px — the one value in the registry that
+   had no canon tier under it. There is no `xs` (§19): a fifth tier would exist
+   to serve a single declaration in a single pattern, and the canon's whole point
+   is that four numbers describe the framework. So full bleed now runs to 640px,
+   which is a larger phone in landscape rather than a smaller one in portrait —
+   and full bleed is the *better* answer at that width anyway, since a 400px card
+   floating in 600px of viewport reads as a dialog that failed to centre.
+
+   The old `flex-direction: column` on [data-part="social"] is gone rather than
+   flipped: the base rule already declares it, so that line never did anything. */
+@media (min-width: 40rem) {
+  [data-ui="auth-form"] > [data-ui="card"] {
+    max-width: var(--auth-form-max-width, 400px);
+    border-radius: var(--card-radius, var(--radius-lg));
+    box-shadow: var(--card-shadow, var(--shadow-sm));
+    border-inline-start: 1px solid var(--card-border, var(--color-border));
+    border-inline-end: 1px solid var(--card-border, var(--color-border));
   }
 }
 

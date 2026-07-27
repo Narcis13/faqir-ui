@@ -156,7 +156,7 @@ done in any order (or in parallel worktrees).
 | 0.8-06 | New primitive: `container` + measure tokens + docs-site de-escape | ✅ |
 | 0.8-07 | Spacing scale expansion + rhythm tokens + density extension | ✅ |
 | 0.8-08 | Responsive sweep A: primitives & recipes onto the canon | ✅ |
-| 0.8-09 | Responsive sweep B: patterns onto the canon | ⬜ |
+| 0.8-09 | Responsive sweep B: patterns onto the canon | ✅ |
 | 0.8-10 | Audit rules: `undeclared-attribute` + `breakpoint-canon` | ⬜ |
 | 0.8-11 | Responsive visual + a11y coverage (viewport axis) | ⬜ |
 | 0.8-12 | Layout docs + agent surfaces + spec alignment | ⬜ |
@@ -2417,9 +2417,9 @@ guard graduates: patterns may use canon tiers only, read from the constants modu
 - Playwright spot-check at 390/768/1280 for the two structural patterns (dashboard-shell drawer, inbox pane swap) — the interim proof 0.8-11 systematizes.
 
 **Acceptance criteria**
-- [ ] Sixteen blocks rewritten; zero non-canon width preludes under patterns.
-- [ ] auth-form verified at sm in a real browser in both schemes (the one aesthetic risk of dropping 480).
-- [ ] The guard reads the canon module — a rogue breakpoint anywhere in patterns fails CI.
+- [x] Sixteen blocks rewritten; zero non-canon width preludes under patterns. (Fifteen, not sixteen — the plan's count was one high; the tree held 15 width media blocks over 480/640/768/1024 and now holds 15 canon `min-width` blocks over 40rem/48rem/64rem, enumerated per pattern in the commit body. Zero `max-width`, zero non-canon values, zero `@container` — asserted by the widened sweep in `tests/responsive-canon.test.ts` and a per-pattern guard in `tests/patterns/landing-kit.test.ts`.)
+- [x] auth-form verified at sm in a real browser in both schemes (the one aesthetic risk of dropping 480). (Chromium at 390/600/640 × light/dark. At 600 — inside the band 1.x gave a floating card — the full-bleed panel reads as deliberate: rules top and bottom, a 552px measure, and in dark the card surface stays a shade above the page. At 640 it is a card again in both schemes. Design review says no `xs` tier. Pinned by `tests/visual/responsive.pw.ts`.)
+- [x] The guard reads the canon module — a rogue breakpoint anywhere in patterns fails CI. (`tests/responsive-canon.test.ts` now sweeps primitives + recipes + patterns from one predicate built out of `BREAKPOINTS`/`TIERS`/`minWidth`, with sweep-B guards for ascending tier order, no `@container` in a pattern, and no 480/641/30rem anywhere.)
 
 ---
 

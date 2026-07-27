@@ -144,7 +144,9 @@ describe("document · canonical and print reference markup", () => {
 describe("document · manifest contract and renderer support", () => {
   it("is schema-valid and documents the new parts plus print reference", () => {
     expect(validateManifest(MANIFEST)).toEqual([]);
-    expect(MANIFEST.version).toBe("1.1.0");
+    // 1.1.0 added the running header/footer; 1.2.0 (task 0.8-09) put the sheet
+    // on the breakpoint canon. Pinned so a version bump has to be deliberate.
+    expect(MANIFEST.version).toBe("1.2.0");
     expect(MANIFEST.slots["doc-header"]?.selector).toBe("[data-part='doc-header']");
     expect(MANIFEST.slots["doc-footer"]?.selector).toBe("[data-part='doc-footer']");
     expect(MANIFEST.files.print_reference).toBe("document-print.html");

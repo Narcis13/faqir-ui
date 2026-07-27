@@ -1734,11 +1734,11 @@
       "name": "auth-form",
       "kind": "pattern",
       "layer": "patterns",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "files": [
         {
           "path": "auth-form.css",
-          "sha256": "c25370b91e7270bb51c381acb2da009c81f279dcd8ce0ad4153f318931bdc736"
+          "sha256": "177f2572f78b1f087306ef3de00665df20362a6a26796eec5598522e97c12fe7"
         },
         {
           "path": "auth-form.html",
@@ -1746,10 +1746,10 @@
         },
         {
           "path": "auth-form.manifest.json",
-          "sha256": "86bf2dffe2245900dc19c3421887cef83cf772a52b6e835bd248ed1837a4d175"
+          "sha256": "657c2462154dcda615a5834776f1683561571a40aed594715ddbcaa1cc7d0094"
         }
       ],
-      "hash": "0ef55b390385375f150cbb8d34782b106a12a10c1a7e984f78d66230f1b5ca86",
+      "hash": "ec9286fc867a2413810b13fa8c52ca7cb24fdb606f0ab6d9f526c635bd9a7a28",
       "deps": [
         "card",
         "input",
@@ -1791,11 +1791,11 @@
       "name": "dashboard-shell",
       "kind": "pattern",
       "layer": "patterns",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "files": [
         {
           "path": "dashboard-shell.css",
-          "sha256": "49dbed4c32908ec7b3d503b4a41472d27206fd29c31190973761f8ad43beef95"
+          "sha256": "d6aa0635d4888a5b96912d6e82e364974dfe08bcde1373c99838c23a8483253a"
         },
         {
           "path": "dashboard-shell.html",
@@ -1803,10 +1803,10 @@
         },
         {
           "path": "dashboard-shell.manifest.json",
-          "sha256": "42e50549a8dd716cffee1a0508446e8b44989c3ddd7df1cbdfcc0b8858449afc"
+          "sha256": "fc7f4ac466fd2d8482d0868efa8b471b1ded840150cef74426792896158def60"
         }
       ],
-      "hash": "a365b5e211671e89287decce66ad48f62aee9be7f26e8fd4b11f2caa1c5f96a1",
+      "hash": "f66e5d3d14ebb6ddb0593f8f0d1a9c02e54ac7f937670f0d6e91c001f66dc2b2",
       "deps": [
         "card",
         "grid",
@@ -1821,7 +1821,7 @@
       "name": "document",
       "kind": "pattern",
       "layer": "patterns",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "files": [
         {
           "path": "document-print.html",
@@ -1829,7 +1829,7 @@
         },
         {
           "path": "document.css",
-          "sha256": "6abc803428ae9905e24314671817e797b30f2fe49bc653b13493cc0652c435b3"
+          "sha256": "7f29a87e233694ffcdf2e3ee30b0cf6f82f2d5be10cd4e485c3adc19f79d503a"
         },
         {
           "path": "document.html",
@@ -1837,10 +1837,10 @@
         },
         {
           "path": "document.manifest.json",
-          "sha256": "08c58576202adf89f8d571c5b1b32abc08058759cebb3ce490f83710a491cb26"
+          "sha256": "e99578f71e6e156fdf8a3cd509d634fee481c0083f6dcfaf5b4ea3643a608e3f"
         }
       ],
-      "hash": "d748c8fe3c9dafe266f2f7bc33e4287f46dfa31d5997213420072701f12fb9c6",
+      "hash": "d56983d965b3bed057617267c51e53d5f969303c8f625b5ec2810f2021990a1d",
       "deps": [
         "key-value",
         "table",
@@ -1883,11 +1883,11 @@
       "name": "feature-grid",
       "kind": "pattern",
       "layer": "patterns",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "files": [
         {
           "path": "feature-grid.css",
-          "sha256": "288bc995501791a501cde9d28f9f37a56be1072f3be0ddb706846a72bff2d84a"
+          "sha256": "c9283b28eebbe9d601d30afe54ee3d9b6b9d49dedec5fda8c248496fc99c7e48"
         },
         {
           "path": "feature-grid.html",
@@ -1895,10 +1895,10 @@
         },
         {
           "path": "feature-grid.manifest.json",
-          "sha256": "984fe9bc7e570dd1e17fe806747587419dca72fc7115db94da065f73ae08ed46"
+          "sha256": "52c18cd5500f732c3d2ea9b875043636255e013b8e9c31343c03d7f0b7942cfe"
         }
       ],
-      "hash": "1943335c7e35b471f125d238bd2554ca6dd6c6c5066b599ac8ed3665f1ed5f1d",
+      "hash": "fcd775ef7801d9a5caab43764092ff48af6e305101c38776dce9d617290c0783",
       "deps": [
         "icon",
         "button"
@@ -1936,11 +1936,11 @@
       "name": "hero",
       "kind": "pattern",
       "layer": "patterns",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "files": [
         {
           "path": "hero.css",
-          "sha256": "b54e15591776d0dc1d663b7b2e76f433ec911f6be86060bc74e6a7c660dc4a9a"
+          "sha256": "76bd7c47d5291a04dabab34ad3b352d26cee4fde83fc33ae83d108d16c96bf94"
         },
         {
           "path": "hero.html",
@@ -1948,10 +1948,10 @@
         },
         {
           "path": "hero.manifest.json",
-          "sha256": "4f59f710420b210fd5175812e8290154a8723b8df3d9dfd919bfc6b4ea8e7553"
+          "sha256": "d202364e2562bc6e9c9701c084fa86708f4afa634abe31dd638f3933a3af51db"
         }
       ],
-      "hash": "f3d0dc5b98fe54322b9186a9e175a301a5a86d9d3c4bd6b3924de237e52a2a1d",
+      "hash": "798741353ea6561aeb5c717234521e6816a57c2a988e09480270d7bf5c19bcda",
       "deps": [
         "badge",
         "button",
@@ -1962,11 +1962,11 @@
       "name": "inbox",
       "kind": "pattern",
       "layer": "patterns",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "files": [
         {
           "path": "inbox.css",
-          "sha256": "c53b51e08325cb7117224ed7d0638be0b027d305ee18633649eeee754519f633"
+          "sha256": "e7d343b04c9abbb6b6340a281e6f821ed4166bd9fd54be2cee78e35f924833ba"
         },
         {
           "path": "inbox.html",
@@ -1974,10 +1974,10 @@
         },
         {
           "path": "inbox.manifest.json",
-          "sha256": "3b5db8b79dbb21c38eeb87f08723f71ceac5971e9f52015410ef28c2cae9f06f"
+          "sha256": "cf091229c3e957d4e7de80b0fa4c8229f8f79b6220303a13ec1978507e46644f"
         }
       ],
-      "hash": "77f55f46bebfc9153011ff4e7a6cb2bb8da438b4a9bd76fae9b7435c9ca994d0",
+      "hash": "b8fc7da14b34992123287a13a87c2bd451161f3a5f3363eaf15d6372c00648d2",
       "deps": [
         "avatar",
         "badge",
@@ -1992,11 +1992,11 @@
       "name": "pricing",
       "kind": "pattern",
       "layer": "patterns",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "files": [
         {
           "path": "pricing.css",
-          "sha256": "fb9fa1e1bf6051f6450986149199907ad695d29643641e3ffe40a904974f0280"
+          "sha256": "5aaff0cd910fe72fda1cf4b3ae7c3eab78513319f413ca7d9da1fd1f865ff954"
         },
         {
           "path": "pricing.html",
@@ -2004,10 +2004,10 @@
         },
         {
           "path": "pricing.manifest.json",
-          "sha256": "7558a66b9b603c9bd4d064436f734098da076756dcc7fe9efd704cefffa67cdd"
+          "sha256": "a8f05b7d6399cf9296349cc7038f1be35fa67b281fe11b556a3fe1484a0eba34"
         }
       ],
-      "hash": "d85c7b9f32b8a9278c770b78b90715e082f287d2595f99644afefbd28d78b353",
+      "hash": "80fd2c1f9c4c083d5c1f9d225d552e3d8f7d00df1f2b6c9861b344091ced2767",
       "deps": [
         "card",
         "badge",
@@ -2079,11 +2079,11 @@
       "name": "site-footer",
       "kind": "pattern",
       "layer": "patterns",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "files": [
         {
           "path": "site-footer.css",
-          "sha256": "7bb8539230538f74ba29fd550978e5d19eb5e8965b894d39d749ebe0193e6834"
+          "sha256": "371e1e1c7dbb6c53eaa8a9389c4886f7f43ca33c920c567225b60bfb3444ca88"
         },
         {
           "path": "site-footer.html",
@@ -2091,10 +2091,10 @@
         },
         {
           "path": "site-footer.manifest.json",
-          "sha256": "1e61dda46c84bc5b14622e85e184132f62d2b956fd926b4e34acfb8658fabe0e"
+          "sha256": "adb443464fe012eb96e728d3c4bbd11ecebb038cb1a9cfa87c7f14950f2c1a83"
         }
       ],
-      "hash": "5b69eea189924e743ae82d583f93c871bb272b1e06cb99c6175752447d61ecda",
+      "hash": "b64e6c6dd782f07abf532aa9fa27ef887f964bad3a639740cfb40e310bfc05c2",
       "deps": [
         "nav",
         "link",
@@ -2106,11 +2106,11 @@
       "name": "stats-dashboard",
       "kind": "pattern",
       "layer": "patterns",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "files": [
         {
           "path": "stats-dashboard.css",
-          "sha256": "4ca8a0781095b2aff222f3a656379ef446b72352586d3d5ac354e8f5fdf21e4b"
+          "sha256": "58d0f93b41ab27fcb824539c2dc0182ee1c8b2464015eae4b9447e7a8d76ee15"
         },
         {
           "path": "stats-dashboard.html",
@@ -2118,10 +2118,10 @@
         },
         {
           "path": "stats-dashboard.manifest.json",
-          "sha256": "03b1b18a66b5c5cef07f0e2b91f5286e2ecf81a7de57471112361a2409d393b7"
+          "sha256": "e7c4b3cdab2715953deb21e3e32813cda53909d2cee77438b89aa76edb90d3d1"
         }
       ],
-      "hash": "37dd3533be7e9256f1af5b9704e31a55c9a7717f7ea5530c5fd05cce7321b55c",
+      "hash": "c2137b5f285832c11d4dbc6552a6e0c5d8c89d6cc426cab05452c0aa1f589cf4",
       "deps": [
         "grid",
         "stat",

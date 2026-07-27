@@ -1,31 +1,43 @@
 /* @ui:component dashboard-shell */
 /* @ui:tokens color-bg color-bg-subtle color-bg-muted color-fg color-fg-muted color-fg-subtle color-border color-border-strong color-primary color-primary-subtle color-primary-fg space-2 space-3 space-4 space-5 space-6 space-8 space-12 space-16 radius-md radius-lg shadow-sm shadow-md font-sans text-xs text-sm text-base text-lg weight-medium weight-semibold leading-tight leading-normal duration-normal duration-slow ease-default ease-out z-sticky */
 
-/* ── Shell Grid Layout ── */
+/* ── Shell Grid Layout ──
+   Mobile-first (task 0.8-09): the base is the PHONE shell — one column, header
+   over content over footer, and the sidebar off-canvas as a drawer. The single
+   `@media (min-width: 48rem)` block at the foot of the sheet puts the sidebar
+   back in the flow.
+
+   This is the one pattern where the narrow case is the *more* decorated one, so
+   the md block has real resets in it. That is a consequence of the canon being
+   min-width-only (FAQIR-NEXT §19): "position: fixed below md" can only be said
+   as "position: fixed always, static from md up". */
 [data-ui="dashboard-shell"] {
   display: grid;
-  grid-template-columns: var(--shell-sidebar-width, 16rem) 1fr;
+  grid-template-columns: 1fr;
   grid-template-rows: var(--shell-header-height, 3.5rem) 1fr auto;
   grid-template-areas:
-    "sidebar header"
-    "sidebar content"
-    "sidebar footer";
+    "header"
+    "content"
+    "footer";
   min-height: 100vh;
   background: var(--color-bg);
   font-family: var(--font-sans);
   color: var(--color-fg);
 }
 
-/* ── Sidebar-Right Variant ── */
+/* ── Sidebar-Right Variant ──
+   Same single column below md; only the drawer's side and the md grid differ. */
 [data-ui="dashboard-shell"][data-variant="right"] {
-  grid-template-columns: 1fr var(--shell-sidebar-width, 16rem);
+  grid-template-columns: 1fr;
   grid-template-areas:
-    "header  sidebar"
-    "content sidebar"
-    "footer  sidebar";
+    "header"
+    "content"
+    "footer";
 }
 
-/* ── Sidebar ── */
+/* ── Sidebar ──
+   Off-canvas by default; `data-state="expanded"` slides it in. `grid-area` is
+   harmless while it is `position: fixed` and is what places it from md up. */
 [data-ui="dashboard-shell"] [data-part="sidebar"] {
   grid-area: sidebar;
   display: flex;
@@ -35,24 +47,39 @@
   background: var(--color-bg-subtle);
   border-inline-end: 1px solid var(--color-border);
   overflow-y: auto;
-  transition: width var(--duration-slow) var(--ease-out),
-              padding var(--duration-slow) var(--ease-out);
+  position: fixed;
+  top: 0;
+  inset-inline-start: 0;
+  bottom: 0;
+  width: var(--shell-sidebar-width, 16rem);
+  z-index: var(--z-overlay, 200);
+  box-shadow: var(--shadow-md);
+  transform: translateX(-100%);
+  transition: transform var(--duration-slow) var(--ease-out);
 }
 
 [data-ui="dashboard-shell"][data-variant="right"] [data-part="sidebar"] {
   border-inline-end: none;
   border-inline-start: 1px solid var(--color-border);
+  inset-inline-start: auto;
+  inset-inline-end: 0;
+  transform: translateX(100%);
 }
 
-/* ── Sidebar Collapsed ── */
-[data-ui="dashboard-shell"]:has([data-part="sidebar"][data-state="collapsed"]) {
-  grid-template-columns: var(--shell-sidebar-collapsed-width, 4rem) 1fr;
+[data-ui="dashboard-shell"] [data-part="sidebar"][data-state="expanded"] {
+  transform: translateX(0);
 }
 
-[data-ui="dashboard-shell"][data-variant="right"]:has([data-part="sidebar"][data-state="collapsed"]) {
-  grid-template-columns: 1fr var(--shell-sidebar-collapsed-width, 4rem);
+[data-ui="dashboard-shell"][data-variant="right"] [data-part="sidebar"][data-state="expanded"] {
+  transform: translateX(0);
 }
 
+/* ── Sidebar Collapsed ──
+   Only the rail's own metrics live here; the two `:has()` rules that narrow the
+   shell's first column moved into the md block, because below md there is no
+   sidebar column to narrow. (They used to sit out here and outrank the
+   single-column rule at (0,3,0) vs (0,1,0), so a collapsed sidebar on a phone
+   produced a 4rem column no grid area was ever placed in.) */
 [data-ui="dashboard-shell"] [data-part="sidebar"][data-state="collapsed"] {
   padding: var(--space-4) var(--space-2);
   align-items: center;
@@ -225,51 +252,60 @@
   color: var(--color-fg-subtle);
 }
 
-/* ── Responsive: Sidebar Collapses on Small Screens ── */
-@media (max-width: 768px) {
+/* ── Responsive: the sidebar rejoins the flow at the canon md floor ──
+   Canon tiers only, min-width only (FAQIR-NEXT §19). Four `transform: none`
+   declarations rather than one, because the base states them at four different
+   specificities ((0,2,0) through (0,4,0)) and an override has to meet each; the
+   md block is later in the sheet, so equal specificity is enough to win. */
+@media (min-width: 48rem) {
   [data-ui="dashboard-shell"] {
-    grid-template-columns: 1fr;
-    grid-template-rows: var(--shell-header-height, 3.5rem) 1fr auto;
+    grid-template-columns: var(--shell-sidebar-width, 16rem) 1fr;
     grid-template-areas:
-      "header"
-      "content"
-      "footer";
+      "sidebar header"
+      "sidebar content"
+      "sidebar footer";
   }
 
   [data-ui="dashboard-shell"][data-variant="right"] {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr var(--shell-sidebar-width, 16rem);
     grid-template-areas:
-      "header"
-      "content"
-      "footer";
+      "header  sidebar"
+      "content sidebar"
+      "footer  sidebar";
+  }
+
+  /* A collapsed sidebar narrows the column it actually occupies — which only
+     exists from here up. */
+  [data-ui="dashboard-shell"]:has([data-part="sidebar"][data-state="collapsed"]) {
+    grid-template-columns: var(--shell-sidebar-collapsed-width, 4rem) 1fr;
+  }
+
+  [data-ui="dashboard-shell"][data-variant="right"]:has([data-part="sidebar"][data-state="collapsed"]) {
+    grid-template-columns: 1fr var(--shell-sidebar-collapsed-width, 4rem);
   }
 
   [data-ui="dashboard-shell"] [data-part="sidebar"] {
-    position: fixed;
-    top: 0;
-    inset-inline-start: 0;
-    bottom: 0;
-    width: var(--shell-sidebar-width, 16rem);
-    z-index: var(--z-overlay, 200);
-    box-shadow: var(--shadow-md);
-    transform: translateX(-100%);
-    transition: transform var(--duration-slow) var(--ease-out);
+    position: static;
+    inset: auto;
+    width: auto;
+    z-index: auto;
+    box-shadow: none;
+    transform: none;
+    transition: width var(--duration-slow) var(--ease-out),
+                padding var(--duration-slow) var(--ease-out);
   }
 
   [data-ui="dashboard-shell"][data-variant="right"] [data-part="sidebar"] {
-    inset-inline-start: auto;
-    inset-inline-end: 0;
-    border-inline-start: 1px solid var(--color-border);
-    border-inline-end: none;
-    transform: translateX(100%);
+    inset: auto;
+    transform: none;
   }
 
   [data-ui="dashboard-shell"] [data-part="sidebar"][data-state="expanded"] {
-    transform: translateX(0);
+    transform: none;
   }
 
   [data-ui="dashboard-shell"][data-variant="right"] [data-part="sidebar"][data-state="expanded"] {
-    transform: translateX(0);
+    transform: none;
   }
 }
 

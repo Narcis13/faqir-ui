@@ -2,15 +2,20 @@
 /* @ui:tokens color-bg color-bg-subtle color-bg-muted color-fg color-fg-muted color-border color-destructive color-primary color-primary-subtle color-ring space-1 space-2 space-3 space-4 space-6 space-px font-sans text-xs text-sm text-base text-xl weight-medium weight-semibold leading-tight leading-normal leading-relaxed radius-md radius-lg */
 
 /* ── Root ──
-   Two panes side by side. Each pane's `data-state` mirrors the selection
-   (active = this is the pane worth showing); above the small breakpoint it
-   changes nothing, below it decides which single pane is on screen. */
+   ONE pane, because that is what a phone has room for. Each pane's `data-state`
+   mirrors the selection (active = this is the pane worth showing): below the md
+   floor it decides which single pane is on screen, from md up it changes nothing.
+
+   Mobile-first (task 0.8-09): the single-pane layout is the base and the two
+   `@media` blocks at the foot of the sheet widen it. Its height is intrinsic
+   too — a phone scrolls the page, so a fixed 32rem box would strand content. */
 [data-ui="inbox"] {
   display: grid;
-  grid-template-columns: 22rem 1fr;
+  grid-template-columns: 1fr;
   align-items: stretch;
   inline-size: 100%;
-  block-size: 32rem;
+  block-size: auto;
+  min-block-size: 24rem;
   overflow: hidden;
   border: var(--space-px, 1px) solid var(--color-border);
   border-radius: var(--radius-lg);
@@ -19,7 +24,9 @@
   background: var(--color-bg);
 }
 
-/* ── List pane ── */
+/* ── List pane ──
+   No inline end border in the single-pane base: there is nothing beside it to
+   separate from. The md block adds the rule once the second pane arrives. */
 [data-ui="inbox"] [data-part="list-pane"] {
   display: flex;
   flex-direction: column;
@@ -27,8 +34,15 @@
   min-inline-size: 0;
   padding: var(--space-4);
   overflow-y: auto;
-  border-inline-end: var(--space-px, 1px) solid var(--color-border);
   background: var(--color-bg-subtle);
+}
+
+/* The pane the selection is NOT about steps aside while only one fits. The md
+   block puts both back — `display: flex` there is not a reset but the value
+   both panes declare for themselves, restated once the grid has two columns. */
+[data-ui="inbox"] [data-part="list-pane"][data-state="inactive"],
+[data-ui="inbox"] [data-part="detail-pane"][data-state="inactive"] {
+  display: none;
 }
 
 [data-ui="inbox"] [data-part="list-header"] {
@@ -155,14 +169,15 @@
   flex-direction: column;
   gap: var(--space-4);
   min-inline-size: 0;
-  padding: var(--space-6);
+  padding: var(--space-4);
   overflow-y: auto;
 }
 
-/* Back navigation exists only in the collapsed, single-pane layout: with both
-   panes on screen there is nothing to go back to. */
+/* Back navigation exists only in the collapsed, single-pane layout — which is
+   the base. From md up both panes are on screen and there is nothing to go back
+   to, so the md block hides it. */
 [data-ui="inbox"] [data-part="back"] {
-  display: none;
+  display: inline-flex;
   align-self: start;
 }
 
@@ -216,38 +231,40 @@
 }
 
 /* ── Responsive ──
-   The list narrows at the medium breakpoint, then the layout collapses to a
-   single pane: the list while nothing is selected, the message once one is —
-   with [data-part="back"] as the way out. */
-@media (max-width: 1024px) {
+   Canon tiers only, min-width only, ascending (FAQIR-NEXT §19). Two steps: at md
+   the second pane arrives and the single-pane machinery (the back link, the
+   inactive-pane hide) switches off; at lg the list column gets its full width.
+
+   Task 0.8-09 moved the collapse floor from an ad-hoc 640px to the canon md
+   (768px), so the layout a small tablet in portrait gets is now the single-pane
+   one — which is the right answer for 22rem of list plus a message body. */
+@media (min-width: 48rem) {
   [data-ui="inbox"] {
     grid-template-columns: 17rem 1fr;
-  }
-}
-
-@media (max-width: 640px) {
-  [data-ui="inbox"] {
-    grid-template-columns: 1fr;
-    block-size: auto;
-    min-block-size: 24rem;
+    block-size: 32rem;
+    min-block-size: 0;
   }
 
   [data-ui="inbox"] [data-part="list-pane"] {
-    border-inline-end: 0;
+    border-inline-end: var(--space-px, 1px) solid var(--color-border);
   }
 
-  /* One pane fits, so the inactive one steps aside: the list while a message
-     is open, the reading pane while none is. */
   [data-ui="inbox"] [data-part="list-pane"][data-state="inactive"],
   [data-ui="inbox"] [data-part="detail-pane"][data-state="inactive"] {
-    display: none;
+    display: flex;
   }
 
   [data-ui="inbox"] [data-part="back"] {
-    display: inline-flex;
+    display: none;
   }
 
   [data-ui="inbox"] [data-part="detail-pane"] {
-    padding: var(--space-4);
+    padding: var(--space-6);
+  }
+}
+
+@media (min-width: 64rem) {
+  [data-ui="inbox"] {
+    grid-template-columns: 22rem 1fr;
   }
 }

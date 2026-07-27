@@ -1,7 +1,7 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "hero",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "kind": "pattern",
   "category": "marketing",
   "description": "Landing-page hero section composing badge + heading + description + call-to-action buttons, with an optional media column. Composition only: zero JavaScript, no controller, no reactive directives — the two layout variants are pure CSS grid.",
@@ -134,7 +134,15 @@
     "split-variant-lays-copy-beside-media",
     "actions-hold-nested-buttons-without-a-data-part",
     "ships-zero-javascript",
-    "collapses-to-one-column-under-1024px",
+    "split-variant-gains-its-second-column-at-the-lg-floor",
     "reference-page-is-audit-clean"
+  ],
+
+  "changes": [
+    {
+      "version": "1.1.0",
+      "note": "The responsive ladder moves onto the breakpoint canon, mobile-first (task 0.8-09). The sheet's max-width media blocks became min-width floors on canon tiers (sm 40rem/640px, md 48rem/768px, lg 64rem/1024px), so every unconditional rule is now the PHONE case and a tier block only ever widens it. The split variant gains its second column at lg and the action row becomes a row at sm. The floors keep their values, so the only behavioural shift is at exactly a floor: 1024px now gets the wide layout rather than the narrow one.",
+      "breaking": false
+    }
   ]
 }

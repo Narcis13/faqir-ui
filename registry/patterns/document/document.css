@@ -30,11 +30,15 @@
   }
 }
 
-/* ── Base (Screen) ── */
+/* ── Base (Screen) ──
+   Mobile-first (task 0.8-09): a phone gives the page no room for a paper margin,
+   so the sheet fills the viewport and squares its corners here; the canon md
+   block at the foot restores the page-on-a-desk framing. `max-width` is not a
+   media query — it is the paper's own measure and applies at every width. */
 [data-ui="document"] {
   max-width: var(--doc-max-width);
-  margin: var(--space-8) auto;
-  padding: var(--space-12) var(--space-8);
+  margin: var(--space-4) auto;
+  padding: var(--space-6) var(--space-4);
   background: var(--color-bg, #fff);
   color: var(--color-fg);
   font-family: var(--doc-font, var(--font-sans, system-ui, sans-serif));
@@ -43,7 +47,7 @@
   box-shadow: var(--shadow-lg,
     0 10px 15px -3px rgba(0, 0, 0, 0.1),
     0 4px 6px -4px rgba(0, 0, 0, 0.1));
-  border-radius: var(--radius-md, 0.375rem);
+  border-radius: 0;
   position: relative;
 }
 
@@ -163,6 +167,24 @@
   border-top-color: var(--color-border);
 }
 
+/* ── Responsive ──
+   Canon tiers only, min-width only (FAQIR-NEXT §19). One step: from md up there
+   is room around the sheet, so it gets its margin, its printer's margins and its
+   rounded corners back.
+
+   Deliberately BEFORE the print block. A `min-width` query is true on paper too
+   — a Letter page box is 8.5in ≈ 816px, comfortably past the md floor — so if
+   this sat last it would hand a printed document a 2rem margin and a rounded
+   corner. The pre-canon `max-width: 768px` form never matched a page and could
+   sit anywhere; the mobile-first form has to be outranked by print. */
+@media (min-width: 48rem) {
+  [data-ui="document"] {
+    margin: var(--space-8) auto;
+    padding: var(--space-12) var(--space-8);
+    border-radius: var(--radius-md, 0.375rem);
+  }
+}
+
 /* ── Print ── */
 @media print {
   [data-ui="document"] {
@@ -232,11 +254,3 @@
   }
 }
 
-/* ── Responsive ── */
-@media (max-width: 768px) {
-  [data-ui="document"] {
-    margin: var(--space-4) auto;
-    padding: var(--space-6) var(--space-4);
-    border-radius: 0;
-  }
-}

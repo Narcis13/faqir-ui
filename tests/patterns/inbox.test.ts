@@ -13,6 +13,13 @@
 // below therefore mock `window.matchMedia` to stand in for the viewport, read
 // the real rules out of inbox.css at the breakpoint the mock reports, and assert
 // which pane survives for each selection state.
+//
+// Task 0.8-09 put this sheet on the canon and inverted it: the single-pane
+// layout is now the unconditional BASE and `@media (min-width: 48rem)` adds the
+// second pane, so the collapse floor moved from an ad-hoc 640px to the canon md.
+// The assertions moved with it — same structure, canon numbers, and the hide/
+// reveal claims now resolve through the shared cascade helper so they hold as
+// facts about the cascade rather than about which block a line was typed in.
 
 import { describe, it, expect, beforeEach, afterAll } from "bun:test";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
@@ -22,7 +29,8 @@ import { loadRegistryManifestMap } from "../../src/utils/components";
 import { validateManifest, type Manifest } from "../../src/manifest";
 import { extractComponents, parseDocument } from "../../src/parser/html-parser";
 import { DOCUMENT_RULES } from "../../src/audit/rules";
-import { BREAKPOINTS } from "../../src/utils/breakpoints";
+import { BREAKPOINTS, ROOT_FONT_SIZE_PX, TIERS, minWidth } from "../../src/utils/breakpoints";
+import { collectRules, resolve, resolveDeepValue } from "../helpers/css-cascade";
 import { buildMatrix, discoverComponents, SCHEMES } from "../visual/matrix";
 import { buildA11yMatrix, A11Y_THEMES } from "../a11y/a11y-matrix";
 
@@ -460,52 +468,73 @@ function mediaRules(query: string): Map<string, string> {
   return rules;
 }
 
-/** A viewport of `width` px, seen through window.matchMedia. */
+/**
+ * A viewport of `width` px, seen through window.matchMedia. Understands `rem` as
+ * well as `px`: the canon is authored in rem (0.8-01), so the queries this sheet
+ * actually ships say `48rem`, not `768px`.
+ */
 function mockViewport(width: number): void {
+  const bound = (query: string, kind: "min" | "max"): number | null => {
+    const m = new RegExp(`${kind}-width:\\s*([\\d.]+)(rem|px)`).exec(query);
+    if (!m) return null;
+    return m[2] === "rem" ? Number(m[1]) * ROOT_FONT_SIZE_PX : Number(m[1]);
+  };
   window.matchMedia = ((query: string) => {
-    const max = /max-width:\s*(\d+)px/.exec(query);
-    const min = /min-width:\s*(\d+)px/.exec(query);
+    const max = bound(query, "max");
+    const min = bound(query, "min");
     const matches =
-      (!max || width <= Number(max[1])) && (!min || width >= Number(min[1])) && !!(max || min);
+      (max === null || width <= max) && (min === null || width >= min) && (max !== null || min !== null);
     return { matches, media: query, addEventListener() {}, removeEventListener() {} } as unknown as MediaQueryList;
   }) as typeof window.matchMedia;
 }
 
 describe("inbox — collapses to a single pane on a phone", () => {
-  // Thresholds from the canon (task 0.8-01), not repeated literals. The
-  // `max-width` form is this sheet's pre-canon idiom — 0.8-09 flips the
-  // direction to mobile-first `min-width`.
-  const SMALL = `max-width: ${BREAKPOINTS.sm.px}px`;
-  const MEDIUM = `max-width: ${BREAKPOINTS.lg.px}px`;
+  // Canon floors (task 0.8-01) in the mobile-first `min-width` form task 0.8-09
+  // put this sheet in: the second pane arrives at md, the wide list at lg.
+  const MD = minWidth("md");
+  const LG = minWidth("lg");
+  const RULES = collectRules(CSS);
 
-  it("the collapse breakpoint is the registry's small one", () => {
+  /** `display` for one pane in a given selection state, at a viewport width. */
+  const paneDisplay = (part: string, state: string | null, widthPx: number) =>
+    resolveDeepValue(RULES, "inbox", "display", {
+      subject: state ? { "data-part": part, "data-state": state } : { "data-part": part },
+      widthPx,
+    });
+
+  it("the collapse floor is the canon md tier", () => {
     mockViewport(390);
-    expect(window.matchMedia(`(${SMALL})`).matches).toBe(true);
+    expect(window.matchMedia(`(${MD})`).matches).toBe(false);
+    mockViewport(BREAKPOINTS.md.px);
+    expect(window.matchMedia(`(${MD})`).matches).toBe(true);
     mockViewport(1280);
-    expect(window.matchMedia(`(${SMALL})`).matches).toBe(false);
+    expect(window.matchMedia(`(${MD})`).matches).toBe(true);
+    // 0.8-09 moved this floor: 640px used to be the two-pane layout and is now
+    // the single-pane one. There is no tier between sm and md to land on.
+    mockViewport(BREAKPOINTS.sm.px);
+    expect(window.matchMedia(`(${MD})`).matches).toBe(false);
   });
 
-  it("hides exactly one pane per selection state below the breakpoint", async () => {
+  it("hides exactly one pane per selection state below the floor", async () => {
     mockViewport(390);
-    expect(window.matchMedia(`(${SMALL})`).matches, "the mocked viewport is a phone").toBe(true);
+    expect(window.matchMedia(`(${MD})`).matches, "the mocked viewport is a phone").toBe(false);
 
-    const rules = mediaRules(SMALL);
-    const hidden = (selector: string) => rules.get(selector)?.includes("display: none") ?? false;
-
-    // Only the inactive pane steps aside — and only inside this block.
-    expect(
-      hidden(
-        '[data-ui="inbox"] [data-part="list-pane"][data-state="inactive"], [data-ui="inbox"] [data-part="detail-pane"][data-state="inactive"]',
-      ),
-    ).toBe(true);
-    // Never a pane unconditionally: that would blank the collapsed layout.
-    expect(hidden('[data-ui="inbox"] [data-part="list-pane"]')).toBe(false);
-    expect(hidden('[data-ui="inbox"] [data-part="detail-pane"]')).toBe(false);
-    expect(CSS.slice(0, CSS.indexOf("@media"))).not.toMatch(
-      /\[data-part="(list|detail)-pane"\][^{]*\{[^}]*display: none/,
+    // Only the INACTIVE pane steps aside, and only below md.
+    for (const part of ["list-pane", "detail-pane"]) {
+      expect(paneDisplay(part, "inactive", 390), `${part} inactive @390`).toBe("none");
+      expect(paneDisplay(part, "inactive", BREAKPOINTS.md.px - 1)).toBe("none");
+      expect(paneDisplay(part, "inactive", BREAKPOINTS.md.px)).toBe("flex");
+      expect(paneDisplay(part, "inactive", 1280)).toBe("flex");
+      // Never a pane unconditionally: that would blank the collapsed layout.
+      expect(paneDisplay(part, null, 390), `${part} active @390`).toBe("flex");
+      expect(paneDisplay(part, "active", 390)).toBe("flex");
+    }
+    // And the phone gets one column, from the base rule rather than an override.
+    expect(resolve(RULES, "inbox", {}, "grid-template-columns", 390)).toBe("1fr");
+    const base = RULES.find(
+      (r) => r.media === null && r.decls["grid-template-columns"] !== undefined,
     );
-    // And the two columns become one.
-    expect(rules.get('[data-ui="inbox"]')).toContain("grid-template-columns: 1fr");
+    expect(base?.decls["grid-template-columns"]).toBe("1fr");
 
     // The live page supplies the state half of those selectors: exactly one
     // pane is active at any moment, so exactly one survives the collapse.
@@ -520,26 +549,46 @@ describe("inbox — collapses to a single pane on a phone", () => {
   });
 
   it("reveals the back button only in the collapsed layout", () => {
-    mockViewport(1280);
-    expect(window.matchMedia(`(${SMALL})`).matches).toBe(false);
-    expect(CSS).toMatch(/\[data-ui="inbox"\] \[data-part="back"\] \{[^}]*display: none/);
-
+    const back = (widthPx: number) =>
+      resolveDeepValue(RULES, "inbox", "display", { subject: { "data-part": "back" }, widthPx });
     mockViewport(390);
-    expect(mediaRules(SMALL).get('[data-ui="inbox"] [data-part="back"]')).toContain(
-      "display: inline-flex",
+    expect(back(390)).toBe("inline-flex");
+    mockViewport(1280);
+    expect(back(BREAKPOINTS.md.px)).toBe("none");
+    expect(back(1280)).toBe("none");
+  });
+
+  it("widens the list column at lg, having gained it at md", () => {
+    const columns = (widthPx: number) =>
+      resolve(RULES, "inbox", {}, "grid-template-columns", widthPx);
+    expect(columns(390)).toBe("1fr");
+    expect(columns(BREAKPOINTS.md.px)).toBe("17rem 1fr");
+    expect(columns(BREAKPOINTS.lg.px - 1)).toBe("17rem 1fr");
+    expect(columns(BREAKPOINTS.lg.px)).toBe("22rem 1fr");
+  });
+
+  it("gives the phone an intrinsic height and the desk a fixed one", () => {
+    // A phone scrolls the page; a 32rem box would strand the message body.
+    expect(resolve(RULES, "inbox", {}, "block-size", 390)).toBe("auto");
+    expect(resolve(RULES, "inbox", {}, "min-block-size", 390)).toBe("24rem");
+    expect(resolve(RULES, "inbox", {}, "block-size", BREAKPOINTS.md.px)).toBe("32rem");
+  });
+
+  it("stays on the canon, in mobile-first form", () => {
+    const canon = new Set(TIERS.map((t) => minWidth(t)));
+    const queries = [...CSS.replace(/\/\*[^]*?\*\//g, "").matchAll(/@media \(([^)]+)\)/g)].map(
+      (m) => m[1],
     );
-  });
-
-  it("narrows the list column at the medium breakpoint before collapsing", () => {
-    expect(mediaRules(MEDIUM).get('[data-ui="inbox"]')).toContain("grid-template-columns: 17rem 1fr");
-  });
-
-  it("stays inside the two registry breakpoints", () => {
-    const queries = [...CSS.matchAll(/@media \(([^)]+)\)/g)].map((m) => m[1]);
     expect(queries.length).toBeGreaterThan(0);
     for (const query of queries) {
-      expect([MEDIUM, SMALL, "prefers-reduced-motion: reduce"], `inbox: ${query}`).toContain(query);
+      if (!/width/.test(query)) {
+        expect(query, `inbox: ${query}`).toBe("prefers-reduced-motion: reduce");
+        continue;
+      }
+      expect([...canon], `inbox: ${query}`).toContain(query);
     }
+    expect(queries).toContain(MD);
+    expect(queries).toContain(LG);
   });
 
   it("keeps its own [data-part] rules out of the components it nests", () => {

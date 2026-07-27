@@ -1,7 +1,7 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "site-footer",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "kind": "pattern",
   "category": "marketing",
   "description": "Marketing site footer: brand block with social links, titled link columns built from the nav primitive, and a bottom bar with copyright and legal links. Composition only: zero JavaScript, no controller, no reactive directives. The root is a real <footer>, so it is the page's contentinfo landmark.",
@@ -41,7 +41,7 @@
       "selector": "[data-part='columns']",
       "required": false,
       "tag_hint": "div",
-      "description": "Grid of link columns (3 across, halving at 1024px, stacking at 640px)"
+      "description": "Grid of link columns, mobile-first: stacked on a phone, paired from the sm floor, three across from lg"
     },
     "column": {
       "selector": "[data-part='column']",
@@ -155,5 +155,13 @@
     "ships-zero-javascript",
     "columns-halve-under-1024px-and-stack-under-640px",
     "reference-page-is-audit-clean"
+  ],
+
+  "changes": [
+    {
+      "version": "1.1.0",
+      "note": "The responsive ladder moves onto the breakpoint canon, mobile-first (task 0.8-09). The sheet's max-width media blocks became min-width floors on canon tiers (sm 40rem/640px, md 48rem/768px, lg 64rem/1024px), so every unconditional rule is now the PHONE case and a tier block only ever widens it. The link columns stack on a phone, pair at sm and reach three at lg; the brand column joins them at lg. The floors keep their values, so the only behavioural shift is at exactly a floor: 1024px now gets the wide layout rather than the narrow one.",
+      "breaking": false
+    }
   ]
 }

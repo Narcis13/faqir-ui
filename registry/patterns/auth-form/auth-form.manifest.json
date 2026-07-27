@@ -1,7 +1,7 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "auth-form",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "kind": "pattern",
   "category": "composite",
   "description": "Authentication form with login, register, and social auth options",
@@ -190,5 +190,13 @@
     "social-buttons-are-type-button",
     "sm-size-reduces-padding",
     "lg-size-increases-padding"
+  ],
+
+  "changes": [
+    {
+      "version": "2.0.0",
+      "note": "The full-bleed treatment moves onto the breakpoint canon, mobile-first (task 0.8-09). The card is edge-to-edge, square and shadowless by default and becomes a card again at @media (min-width: 40rem), which moves the floor from an ad-hoc 480px to the canon sm tier (640px). MIGRATION: viewports from 480px to 639px now render the form full bleed where 1.x gave them a 400px card — deliberately, since FAQIR-NEXT §19 declines to create an 'xs' tier for a single declaration in a single pattern, and a 400px card floating in 600px of viewport reads as a dialog that failed to centre. The sm block restates card.css's border-radius, box-shadow and inline borders through card's own custom properties (--card-radius/--card-shadow/--card-border) because 'revert' would drop to the user-agent origin and discard the primitive's author rules. The dead 'flex-direction: column' on [data-part='social'] is removed: the base rule already declares it.",
+      "breaking": true
+    }
   ]
 }

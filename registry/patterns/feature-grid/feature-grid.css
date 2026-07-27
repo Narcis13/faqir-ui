@@ -1,12 +1,14 @@
 /* @ui:component feature-grid */
 /* @ui:tokens color-bg color-fg color-fg-muted color-primary color-primary-subtle space-2 space-3 space-4 space-6 space-8 space-10 space-12 space-16 text-base text-lg text-xl text-3xl font-sans weight-semibold weight-bold leading-tight leading-normal leading-relaxed radius-md radius-lg */
 
-/* ── Root ── */
+/* ── Root ──
+   Mobile-first (task 0.8-09): everything outside the two `@media` blocks at the
+   foot of the sheet is the phone case, and the canon floors widen it. */
 [data-ui="feature-grid"] {
   display: grid;
   gap: var(--space-4);
-  padding-block: var(--space-16);
-  padding-inline: var(--space-6);
+  padding-block: var(--space-12);
+  padding-inline: var(--space-4);
   font-family: var(--font-sans, system-ui, sans-serif);
   color: var(--color-fg);
   background: var(--color-bg);
@@ -15,7 +17,7 @@
 /* ── Section heading ── */
 [data-ui="feature-grid"] [data-part="heading"] {
   margin: 0;
-  font-size: var(--text-3xl);
+  font-size: var(--text-xl);
   font-weight: var(--weight-bold);
   line-height: var(--leading-tight);
   text-wrap: balance;
@@ -31,27 +33,18 @@
 
 /* ── Items ──
    A real <ul>; the marker is removed rather than the semantics. Column count
-   comes from data-cols on the root, mirroring the grid primitive's vocabulary. */
+   comes from data-cols on the root, mirroring the grid primitive's vocabulary —
+   and, since 0.8-04, its mobile-first SEMANTICS too: `data-cols` is the widest
+   count, reached at the lg floor, and one column is the phone base. The per-count
+   rules therefore live in the tier blocks, not here. */
 [data-ui="feature-grid"] [data-part="items"] {
   display: grid;
-  gap: var(--space-8);
+  gap: var(--space-6);
   margin: 0;
   margin-block-start: var(--space-8);
   padding: 0;
   list-style: none;
-  grid-template-columns: repeat(3, 1fr);
-}
-
-[data-ui="feature-grid"][data-cols="2"] [data-part="items"] {
-  grid-template-columns: repeat(2, 1fr);
-}
-
-[data-ui="feature-grid"][data-cols="3"] [data-part="items"] {
-  grid-template-columns: repeat(3, 1fr);
-}
-
-[data-ui="feature-grid"][data-cols="4"] [data-part="items"] {
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: 1fr;
 }
 
 /* ── Item ── */
@@ -102,31 +95,41 @@
 }
 
 /* ── Responsive ──
-   Four columns halve at the medium breakpoint, everything is single-column on
-   phones — the same 1024/640 steps the grid primitive uses. */
-@media (max-width: 1024px) {
-  [data-ui="feature-grid"] [data-part="items"],
-  [data-ui="feature-grid"][data-cols="3"] [data-part="items"],
-  [data-ui="feature-grid"][data-cols="4"] [data-part="items"] {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 640px) {
+   Canon tiers only, min-width only, ascending (FAQIR-NEXT §19). One column on a
+   phone, two from sm, the declared count from lg — the same 640/1024 steps as
+   before, now expressed as floors, so the boundary belongs to the wider layout.
+   `data-cols="2"` needs no sm rule (two is already the sm default) but does need
+   an lg one, or it would inherit lg's three. */
+@media (min-width: 40rem) {
   [data-ui="feature-grid"] {
-    padding-block: var(--space-12);
-    padding-inline: var(--space-4);
-  }
-
-  [data-ui="feature-grid"] [data-part="items"],
-  [data-ui="feature-grid"][data-cols="2"] [data-part="items"],
-  [data-ui="feature-grid"][data-cols="3"] [data-part="items"],
-  [data-ui="feature-grid"][data-cols="4"] [data-part="items"] {
-    grid-template-columns: 1fr;
-    gap: var(--space-6);
+    padding-block: var(--space-16);
+    padding-inline: var(--space-6);
   }
 
   [data-ui="feature-grid"] [data-part="heading"] {
-    font-size: var(--text-xl);
+    font-size: var(--text-3xl);
+  }
+
+  [data-ui="feature-grid"] [data-part="items"] {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-8);
+  }
+}
+
+@media (min-width: 64rem) {
+  [data-ui="feature-grid"] [data-part="items"] {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  [data-ui="feature-grid"][data-cols="2"] [data-part="items"] {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  [data-ui="feature-grid"][data-cols="3"] [data-part="items"] {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  [data-ui="feature-grid"][data-cols="4"] [data-part="items"] {
+    grid-template-columns: repeat(4, 1fr);
   }
 }

@@ -249,7 +249,7 @@ Placeholder display for empty content areas with icon, message, and action
 
 _kind: pattern · category: marketing_
 
-Responsive feature list for a marketing page: a section heading plus a real <ul> of icon + title + description items. Composition only: zero JavaScript, no controller, no reactive directives. Column count is data-cols on the root (2|3|4), collapsing 4→2→1 in pure CSS.
+Responsive feature list for a marketing page: a section heading plus a real <ul> of icon + title + description items. Composition only: zero JavaScript, no controller, no reactive directives. Column count is data-cols on the root (2|3|4) and follows grid's mobile-first semantics: it names the WIDEST count, reached at the lg floor, with two columns from sm and one on a phone — all in pure CSS.
 
 ```html
 <section data-ui="feature-grid" data-cols="{columns}" aria-labelledby="{id}-heading">
@@ -669,7 +669,7 @@ Marketing site footer: brand block with social links, titled link columns built 
 ├─ [data-part='logo']  <p>  optional  — Wordmark or logo. Keep it a paragraph or a link — not a heading, so the footer never enters the document outline
 ├─ [data-part='tagline']  <p>  optional  — One-line positioning statement under the wordmark
 ├─ [data-part='social']  <div>  optional  — Row of icon-only links. Each link needs its own aria-label; the icon inside is aria-hidden
-├─ [data-part='columns']  <div>  optional  — Grid of link columns (3 across, halving at 1024px, stacking at 640px)
+├─ [data-part='columns']  <div>  optional  — Grid of link columns, mobile-first: stacked on a phone, paired from the sm floor, three across from lg
 ├─ [data-part='column']  <div>  optional  — One titled link group — a column-title plus a nested data-ui='nav'
 ├─ [data-part='column-title']  <h2>  optional  — Group heading. Give it an id and point the sibling nav's aria-labelledby at it, so each navigation landmark has a name
 ├─ [data-part='bottom']  <div>  optional  — Bottom bar: copyright on one side, legal links on the other

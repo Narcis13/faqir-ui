@@ -14,8 +14,13 @@
 //     across at least two themes (both matrices discover the registry at
 //     runtime, so this asserts the discovery really picked them up rather than
 //     duplicating the suites);
-//   · the responsive column behaviour is real CSS at the registry's two
-//     breakpoints, not a claim in prose.
+//   · the responsive column behaviour is real CSS on the breakpoint canon, not a
+//     claim in prose — and since task 0.8-09 it is asserted by RESOLVING each
+//     sheet at concrete viewport widths through the shared cascade helper rather
+//     than by looking for strings inside a media block. That is what makes the
+//     mobile-first inversion checkable: "one column at 390px" is a fact about
+//     the cascade, whereas "the small block contains 1fr" was a fact about where
+//     somebody typed a declaration.
 
 import { describe, it, expect } from "bun:test";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
@@ -25,7 +30,8 @@ import { loadRegistryManifestMap } from "../../src/utils/components";
 import { validateManifest, type Manifest } from "../../src/manifest";
 import { extractComponents, parseDocument } from "../../src/parser/html-parser";
 import { DOCUMENT_RULES } from "../../src/audit/rules";
-import { BREAKPOINTS } from "../../src/utils/breakpoints";
+import { BREAKPOINTS, TIERS, minWidth } from "../../src/utils/breakpoints";
+import { collectRules, resolve, resolveDeepValue } from "../helpers/css-cascade";
 import { buildMatrix, discoverComponents, SCHEMES } from "../visual/matrix";
 import { buildA11yMatrix, A11Y_THEMES } from "../a11y/a11y-matrix";
 
@@ -54,23 +60,35 @@ function manifest(pattern: string): Manifest {
   ) as Manifest;
 }
 
+/** The sheet's rules, flattened, with their media scope attached. */
+function rules(pattern: string) {
+  return collectRules(css(pattern));
+}
+
 /**
- * Body of the first `@media (<query>)` block, via brace matching — enough to
- * assert what a breakpoint actually declares without pulling in a CSS parser.
+ * The sheet with comments stripped — the sheets explain their own tier blocks in
+ * prose, and a comment saying `@media (min-width: …)` is not a media query.
  */
-function mediaBlock(source: string, query: string): string {
-  const at = source.indexOf(`@media (${query})`);
-  expect(at, `no @media (${query}) block`).toBeGreaterThan(-1);
-  const open = source.indexOf("{", at);
-  let depth = 0;
-  for (let i = open; i < source.length; i++) {
-    if (source[i] === "{") depth++;
-    else if (source[i] === "}") {
-      depth--;
-      if (depth === 0) return source.slice(open + 1, i);
-    }
-  }
-  throw new Error(`unbalanced @media (${query}) block`);
+function uncommented(pattern: string): string {
+  return css(pattern).replace(/\/\*[^]*?\*\//g, "");
+}
+
+/**
+ * `grid-template-columns` for a `[data-part]` of `pattern` at a viewport of
+ * `widthPx`, resolved through the real cascade — specificity first, document
+ * order to break ties, media rules only above their floor.
+ */
+function columnsAt(
+  pattern: string,
+  part: string,
+  root: Record<string, string>,
+  widthPx: number,
+): string | undefined {
+  return resolveDeepValue(rules(pattern), pattern, "grid-template-columns", {
+    root,
+    subject: { "data-part": part },
+    widthPx,
+  });
 }
 
 /** Elements of one component in a reference page, by data-ui name. */
@@ -200,59 +218,114 @@ describe("landing kit — swept by the visual and a11y matrices", () => {
 });
 
 describe("landing kit — responsive column behaviour", () => {
-  // The two thresholds these patterns use, sourced from the canon (task 0.8-01)
-  // rather than repeated as literals. The `max-width` *form* is the pre-canon
-  // idiom these sheets still ship; 0.8-09 flips them to the canon's mobile-first
-  // `min-width` direction, and only these two lines change when it does.
-  const MEDIUM = `max-width: ${BREAKPOINTS.lg.px}px`;
-  const SMALL = `max-width: ${BREAKPOINTS.sm.px}px`;
+  // A phone, the sm floor, the lg floor — the three widths every claim below is
+  // made at. 390 is an iPhone 14; the other two come from the canon (0.8-01), so
+  // if the ladder ever moves these move with it.
+  const PHONE = 390;
+  const SM = BREAKPOINTS.sm.px;
+  const LG = BREAKPOINTS.lg.px;
 
-  it("feature-grid goes 4/3 → 2 → 1 column", () => {
-    const sheet = css("feature-grid");
-    expect(sheet).toContain('[data-ui="feature-grid"][data-cols="4"] [data-part="items"]');
-    expect(sheet).toMatch(/\[data-cols="4"\] \[data-part="items"\] \{\s*grid-template-columns: repeat\(4, 1fr\)/);
-
-    const medium = mediaBlock(sheet, MEDIUM);
-    expect(medium).toContain("grid-template-columns: repeat(2, 1fr)");
-    expect(medium).toContain('[data-ui="feature-grid"][data-cols="4"] [data-part="items"]');
-
-    const small = mediaBlock(sheet, SMALL);
-    expect(small).toContain("grid-template-columns: 1fr");
-    expect(small).toContain('[data-ui="feature-grid"][data-cols="2"] [data-part="items"]');
+  it("feature-grid goes 1 → 2 → its declared count", () => {
+    // Mobile-first (0.8-09): data-cols names the WIDEST count, reached at lg —
+    // grid's own semantics since 0.8-04, now shared by the pattern that borrowed
+    // its vocabulary. One column on a phone regardless of what was declared.
+    for (const cols of ["2", "3", "4"]) {
+      const root = { "data-cols": cols };
+      expect(columnsAt("feature-grid", "items", root, PHONE), `cols=${cols} @${PHONE}`).toBe("1fr");
+      expect(columnsAt("feature-grid", "items", root, SM - 1)).toBe("1fr");
+      expect(columnsAt("feature-grid", "items", root, SM)).toBe("repeat(2, 1fr)");
+      expect(columnsAt("feature-grid", "items", root, LG)).toBe(`repeat(${cols}, 1fr)`);
+      expect(columnsAt("feature-grid", "items", root, 1440)).toBe(`repeat(${cols}, 1fr)`);
+    }
+    // No data-cols at all: the manifest's default of three, from lg up.
+    expect(columnsAt("feature-grid", "items", {}, PHONE)).toBe("1fr");
+    expect(columnsAt("feature-grid", "items", {}, LG)).toBe("repeat(3, 1fr)");
   });
 
-  it("pricing goes 3 → 2 → 1 tier column", () => {
-    const sheet = css("pricing");
-    expect(sheet).toMatch(/\[data-cols="3"\] \[data-part="tiers"\] \{\s*grid-template-columns: repeat\(3, 1fr\)/);
-    expect(mediaBlock(sheet, MEDIUM)).toContain("grid-template-columns: repeat(2, 1fr)");
-    expect(mediaBlock(sheet, SMALL)).toContain("grid-template-columns: 1fr");
+  it("pricing goes 1 → 2 → its declared count of tier columns", () => {
+    for (const cols of ["2", "3"]) {
+      const root = { "data-cols": cols };
+      expect(columnsAt("pricing", "tiers", root, PHONE), `cols=${cols} @${PHONE}`).toBe("1fr");
+      expect(columnsAt("pricing", "tiers", root, SM)).toBe("repeat(2, 1fr)");
+      expect(columnsAt("pricing", "tiers", root, LG)).toBe(`repeat(${cols}, 1fr)`);
+    }
+    expect(columnsAt("pricing", "tiers", {}, LG)).toBe("repeat(3, 1fr)");
   });
 
-  it("site-footer halves its link columns then stacks them", () => {
-    const sheet = css("site-footer");
-    expect(sheet).toMatch(/\[data-part="columns"\] \{[^}]*grid-template-columns: repeat\(3, 1fr\)/);
+  it("site-footer stacks its link columns, then pairs them, then makes three", () => {
+    expect(columnsAt("site-footer", "columns", {}, PHONE)).toBe("1fr");
+    expect(columnsAt("site-footer", "columns", {}, SM)).toBe("repeat(2, 1fr)");
+    expect(columnsAt("site-footer", "columns", {}, LG)).toBe("repeat(3, 1fr)");
 
-    const medium = mediaBlock(sheet, MEDIUM);
-    // The brand/link split collapses first, then the link columns halve.
-    expect(medium).toContain("grid-template-columns: 1fr");
-    expect(medium).toContain("grid-template-columns: repeat(2, 1fr)");
-
-    expect(mediaBlock(sheet, SMALL)).toContain("grid-template-columns: 1fr");
+    // The brand column joins the link columns only at lg — a root-level rule, so
+    // this one resolves against the component root rather than a part.
+    const columnsVariant = { "data-variant": "columns" };
+    const split = (widthPx: number) =>
+      resolve(rules("site-footer"), "site-footer", columnsVariant, "grid-template-columns", widthPx);
+    expect(split(PHONE)).toBe("1fr");
+    expect(split(SM)).toBe("1fr");
+    expect(split(LG)).toBe("minmax(16rem, 1fr) 2fr");
   });
 
-  it("hero collapses its split layout before the small breakpoint", () => {
-    const sheet = css("hero");
-    expect(sheet).toMatch(/\[data-variant="split"\] \{[^}]*grid-template-columns: 1fr 1fr/);
-    expect(mediaBlock(sheet, MEDIUM)).toContain("grid-template-columns: 1fr");
-    expect(mediaBlock(sheet, SMALL)).toContain("flex-direction: column");
+  it("hero splits only at lg, and stacks its actions below sm", () => {
+    const split = { "data-variant": "split" };
+    const columns = (widthPx: number) =>
+      resolve(rules("hero"), "hero", split, "grid-template-columns", widthPx);
+    expect(columns(PHONE)).toBe("1fr");
+    expect(columns(LG - 1)).toBe("1fr");
+    expect(columns(LG)).toBe("1fr 1fr");
+
+    const direction = (widthPx: number) =>
+      resolveDeepValue(rules("hero"), "hero", "flex-direction", {
+        subject: { "data-part": "actions" },
+        widthPx,
+      });
+    expect(direction(PHONE)).toBe("column");
+    expect(direction(SM - 1)).toBe("column");
+    expect(direction(SM)).toBe("row");
   });
 
-  it("every landing-kit stylesheet stays inside the two registry breakpoints", () => {
+  it("the phone case is the base rule — nothing is undone by an override", () => {
+    // The inversion, stated directly: at 390px no media rule has fired at all,
+    // so every value above must come from an unconditional rule.
+    const pairs: Array<[string, string, string]> = [
+      ["feature-grid", "items", "grid-template-columns"],
+      ["pricing", "tiers", "grid-template-columns"],
+      ["site-footer", "columns", "grid-template-columns"],
+      ["hero", "actions", "flex-direction"],
+    ];
+    for (const [pattern, part, property] of pairs) {
+      const winner = rules(pattern).find(
+        (r) =>
+          r.media === null &&
+          r.decls[property] !== undefined &&
+          r.selectors.some((s) => s.endsWith(`[data-part="${part}"]`)),
+      );
+      expect(winner, `${pattern} declares ${property} for ${part} unconditionally`).toBeDefined();
+    }
+  });
+
+  it("every landing-kit stylesheet stays on the canon, in mobile-first form", () => {
+    const canon = new Set(TIERS.map((t) => minWidth(t)));
     for (const pattern of LANDING_KIT) {
-      const queries = [...css(pattern).matchAll(/@media \(([^)]+)\)/g)].map((m) => m[1]);
+      const queries = [...uncommented(pattern).matchAll(/@media \(([^)]+)\)/g)].map((m) => m[1]);
+      expect(queries.length, `${pattern} has media queries`).toBeGreaterThan(0);
       for (const query of queries) {
-        expect([MEDIUM, SMALL, "prefers-reduced-motion: reduce"], `${pattern}: ${query}`).toContain(query);
+        if (!/width/.test(query)) {
+          expect(query, `${pattern}: ${query}`).toBe("prefers-reduced-motion: reduce");
+          continue;
+        }
+        expect([...canon], `${pattern}: ${query}`).toContain(query);
       }
+    }
+  });
+
+  it("tier blocks are declared in ascending order — the sheets read mobile-first", () => {
+    for (const pattern of LANDING_KIT) {
+      const floors = [...uncommented(pattern).matchAll(/@media \(min-width:\s*([\d.]+)rem\)/g)].map(
+        (m) => Number(m[1]),
+      );
+      expect(floors, `${pattern} tier blocks ascend`).toEqual([...floors].sort((a, b) => a - b));
     }
   });
 });

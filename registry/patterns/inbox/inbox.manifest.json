@@ -1,7 +1,7 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "inbox",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "kind": "pattern",
   "category": "composite",
   "description": "List-detail split view (messages, tickets, conversations) driven entirely by declarative directives: one l-data holds the selected id, ':hidden' bindings swap the detail pane, ':data-state' marks which pane is active, and the list is l-for-shaped so it can be bound to an l-source collection without changing the markup. Below the small breakpoint it collapses to the active pane with back navigation. Zero custom JavaScript — it needs faqir-core.js, nothing else.",
@@ -146,7 +146,7 @@
     "inactive": {
       "attr": "data-state=\"inactive\"",
       "applied_to": "list-pane, detail-pane",
-      "description": "The other pane. Below 640px, where there is room for one, the inactive pane is display:none — that IS the responsive collapse"
+      "description": "The other pane. Below the canon md floor (768px), where there is room for one, the inactive pane is display:none — that IS the responsive collapse"
     },
     "selected": {
       "attr": "data-state=\"selected\"",
@@ -258,9 +258,17 @@
     "empty-state-renders-when-nothing-is-selected",
     "root-data-state-mirrors-the-selection",
     "back-clears-the-selection",
-    "collapses-to-a-single-pane-below-640px",
+    "collapses-to-a-single-pane-below-the-canon-md-floor",
     "the-source-bound-instance-renders-from-l-for-over-l-source",
     "ships-zero-javascript",
     "reference-page-is-audit-clean"
+  ],
+
+  "changes": [
+    {
+      "version": "2.0.0",
+      "note": "The pane collapse moves onto the breakpoint canon, mobile-first (task 0.8-09). The single-pane layout is now the unconditional base and @media (min-width: 48rem) adds the second pane, which moves the collapse floor from an ad-hoc 640px to the canon md tier (768px). MIGRATION: viewports from 640px to 767px — a small tablet in portrait — now get the single-pane layout with [data-part='back'] visible, where 1.x gave them two panes; there is no tier between sm and md to land on, and 22rem of list plus a message body does not fit in 700px. The list column still widens to 22rem at lg. The pattern also gains an intrinsic height below md (block-size: auto with a 24rem floor) instead of a fixed 32rem box, so a phone scrolls the page rather than the pane.",
+      "breaking": true
+    }
   ]
 }
