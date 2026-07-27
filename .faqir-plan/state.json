@@ -7,7 +7,7 @@
     {
       "id": "0.8-10",
       "completed": "2026-07-27",
-      "commit": "PENDING",
+      "commit": "87e6342",
       "summary": "undeclared-attribute + breakpoint-canon shipped as CSS_RULES (src/audit/css-rules.ts) — not ALL_RULES, which is typed over parsed markup: these read a stylesheet against a manifest, the same input pair the logical-properties family uses. One export feeds four consumers (rule inventory, faqir audit, registry gates 5+6, and FaqirAudit.auditComponentCss in the rebuilt browser bundle), so parity is structural; it is proven on 92 stylesheet fixtures — all 86 registry sheets paired with their own manifests plus six seeded/degenerate ones — through the committed bundle in node:vm. Getting the registry to zero was the real work: the rule found 40 undeclared attributes across 12 components (four times the ten layout had shipped), including two protocol data-size attributes and twenty on table alone, all now declared by 0.7-20's rule — controller-written becomes a state, authored becomes a prop. Twelve minor bumps, all breaking:false; no CSS or markup moved, so no visual baseline did either, and the bindings gained LButton.full, LText.done/truncate/tabular and size unions on LEmptyState/LSeparator. breakpoint-canon was already at zero — 0.8-08/09 had done that work — so its proof is the seeded violation: grid's md floor flipped to max-width and its lg floor nudged to 65rem each report exactly once. Follow-up 0.7-20 resolved; the value-level sibling gap (21 selected values outside their group across 4 components, three of them two axes sharing one attribute) filed as 0.8-15 rather than guessed at. 3037 pass / 0 fail (+38)."
     },
     {
