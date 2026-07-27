@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, test } from "bun:test";
+import { beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
@@ -18,6 +18,12 @@ const themeNames = readdirSync(join(REGISTRY, "themes"))
 function tick(): Promise<void> {
   return new Promise((r) => setTimeout(r, 0));
 }
+
+// The beforeAll below shells out to a full package build on a cold checkout,
+// which blows past bun's 5s default hook timeout on CI (the runner SIGTERMs
+// the child build mid-flight). Hooks take no timeout argument, so raise the
+// file-wide default instead.
+setDefaultTimeout(120_000);
 
 /**
  * Ensure the `@faqir-ui/core` dist exists. It's a gitignored build output, so on a

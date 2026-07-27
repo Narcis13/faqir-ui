@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -17,6 +17,10 @@ function runNode(args: string[], cwd: string) {
 }
 
 let tmp: string;
+
+// Same rationale as tests/build/core-package.test.ts: the cold-checkout build
+// in beforeAll can outlive bun's 5s default hook timeout on CI.
+setDefaultTimeout(120_000);
 
 beforeAll(() => {
   if (!existsSync(DIST)) {
