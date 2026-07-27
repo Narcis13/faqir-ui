@@ -289,6 +289,25 @@ export const focusTrapRule: AuditRule = {
 // `"responsive": true` additionally accepts `<attr>-<tier>` (task 0.8-02).
 
 /**
+ * Every attribute the manifest declares under its own name — variant groups,
+ * props and states alike. An attribute in this set is *itself*, never a tier
+ * suffix of something shorter: `stack` declares the responsive group `align`
+ * (`data-align`) AND the prop `align-text` (`data-align-text`), and without
+ * this the suffix reader would parse the prop as `data-align` at a tier called
+ * "text" and report a canon violation on markup that is exactly right.
+ */
+function declaredAttributes(manifest: Manifest): Set<string> {
+  const names = new Set<string>();
+  for (const v of Object.values(manifest.variants ?? {})) if (v.attr) names.add(v.attr);
+  for (const p of Object.values(manifest.props ?? {})) if (p.attr) names.add(p.attr);
+  for (const s of Object.values(manifest.states ?? {})) {
+    const attr = (s as { attr?: string })?.attr;
+    if (attr) names.add(attr);
+  }
+  return names;
+}
+
+/**
  * Check one element's attributes against the responsive groups that apply to
  * it. Two ways to be wrong, both findings: the suffix is not a canon tier
  * (`data-cols-xx` — a typo that CSS would silently ignore forever), or the tier
@@ -300,6 +319,7 @@ function responsiveMessages(
   attrs: Record<string, string>,
   groups: [string, ManifestVariant][],
   target: string,
+  declared: Set<string>,
 ): string[] {
   const messages: string[] = [];
   for (const [group, v] of groups) {
@@ -307,6 +327,8 @@ function responsiveMessages(
     const prefix = `${v.attr}-`;
     for (const [name, value] of Object.entries(attrs)) {
       if (!name.startsWith(prefix)) continue;
+      // A declared attribute is itself, not a suffixed form of a shorter one.
+      if (declared.has(name)) continue;
       const tier = name.slice(prefix.length);
       if (!isTier(tier)) {
         messages.push(
@@ -361,10 +383,12 @@ export const validVariantRule: AuditRule = {
     const rootGroups = Object.entries(manifest.variants ?? {}).filter(
       ([, v]) => !v.applied_to || v.applied_to === "root",
     );
+    const declaredAttrs = declaredAttributes(manifest);
     for (const message of responsiveMessages(
       component.root.attrs,
       rootGroups,
       `[data-ui="${component.name}"]`,
+      declaredAttrs,
     )) {
       results.push({
         rule_id: "valid-variant",
@@ -411,7 +435,12 @@ export const validVariantRule: AuditRule = {
       );
       if (partGroups.length === 0) continue;
       for (const el of elements) {
-        for (const message of responsiveMessages(el.attrs, partGroups, `[data-part="${partName}"]`)) {
+        for (const message of responsiveMessages(
+          el.attrs,
+          partGroups,
+          `[data-part="${partName}"]`,
+          declaredAttrs,
+        )) {
           results.push({
             rule_id: "valid-variant",
             severity: "error",

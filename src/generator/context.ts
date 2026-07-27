@@ -3,7 +3,16 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { loadManifest, type Manifest } from "../manifest";
-import { TIERS } from "../utils/breakpoints";
+import { BREAKPOINT_LIST, PROTOCOL_ATTRIBUTES, TIERS } from "../utils/breakpoints";
+import {
+  ARCHETYPES,
+  LAYOUT_MECHANISMS,
+  LAYOUT_PRIMITIVES,
+  LAYOUT_RULES,
+  MEASURE_TOKENS,
+  RESPONSIVE_GRAMMAR,
+  RHYTHM_TOKENS,
+} from "../utils/layout";
 import { loadThemeManifest, type ThemeManifest } from "../theme-manifest";
 import { readConfig, type FaqirConfig } from "../utils/config";
 import { ensureDir, getRegistryPath } from "../utils/fs";
@@ -67,6 +76,36 @@ export interface ContextData {
     stylesheet: string;
     example: string;
     notes: string[];
+  };
+  /**
+   * The breakpoint canon and the responsive attribute grammar (task 0.8-12).
+   * Embedded for the same reason density is: an agent that knows every variant
+   * but has to *guess* a breakpoint writes markup that is right on a laptop and
+   * broken on a phone. Derived from `src/utils/breakpoints.ts` — the numbers are
+   * never retyped here.
+   */
+  responsive: {
+    grammar: string;
+    reads_as: string;
+    tiers: { tier: string; min_width: string; px: number }[];
+    rules: string[];
+    excluded_attributes: string[];
+    example: string;
+    note: string;
+  };
+  /**
+   * The layout doctrine (task 0.8-12): the three mechanisms in order, the five
+   * primitives that express them, the measure and rhythm ladders, and the page
+   * archetypes. Derived from `src/utils/layout.ts`; the per-component attribute
+   * lists stay where they belong — in `components`.
+   */
+  layout: {
+    doctrine: { step: number; mechanism: string; title: string; summary: string }[];
+    primitives: { name: string; mechanism: string; use: string }[];
+    measure: Record<string, string>;
+    rhythm: Record<string, string>;
+    archetypes: string[];
+    reference: string;
   };
   /**
    * The in-page inspection surface (task 0.7-12). Embedded so an agent driving
@@ -319,6 +358,38 @@ export function composeContextData(input: ContextComposition): ContextData {
         "Paged-media tokens (--doc-*, --page-*) are deliberately not remapped — print density belongs to the theme.",
       ],
     },
+    responsive: {
+      grammar: RESPONSIVE_GRAMMAR,
+      reads_as: "this value, from that tier up",
+      tiers: BREAKPOINT_LIST.map((b) => ({
+        tier: b.tier,
+        min_width: `${b.rem}rem`,
+        px: b.px,
+      })),
+      rules: [...LAYOUT_RULES],
+      excluded_attributes: [...PROTOCOL_ATTRIBUTES],
+      example:
+        '<div data-ui="grid" data-cols="1" data-cols-md="2" data-cols-lg="4" data-gap="4"> … </div>',
+      note:
+        "Only a variant group a manifest declares `\"responsive\": true` takes a suffix — every component's set is in `components.<name>.responsive`. `faqir audit` reports an unknown tier and an out-of-set value separately.",
+    },
+    layout: {
+      doctrine: LAYOUT_MECHANISMS.map((m) => ({
+        step: m.step,
+        mechanism: m.key,
+        title: m.title,
+        summary: m.summary,
+      })),
+      primitives: LAYOUT_PRIMITIVES.map((p) => ({
+        name: p.name,
+        mechanism: p.mechanism,
+        use: p.use,
+      })),
+      measure: Object.fromEntries(MEASURE_TOKENS.map((m) => [`--${m.token}`, m.role])),
+      rhythm: Object.fromEntries(RHYTHM_TOKENS.map((r) => [`--${r.token}`, r.role])),
+      archetypes: ARCHETYPES.map((a) => a.title),
+      reference: "docs/layout.md",
+    },
     devtools: {
       global: "window.__FAQIR_DEVTOOLS__",
       version: 1,
@@ -448,6 +519,40 @@ export function formatContextMarkdown(data: ContextData): string {
   lines.push(`- Radius: ${Object.entries(data.tokens.radius).map(([k, v]) => `${k}=${v}`).join(", ")}`);
   lines.push(`- Shadows: ${data.tokens.shadows}`);
   lines.push(`- Z-index: ${data.tokens.z_index}`);
+  lines.push("");
+
+  // Layout & responsiveness
+  lines.push("## Layout System");
+  lines.push("");
+  lines.push("Reach for the first mechanism that solves the problem:");
+  for (const d of data.layout.doctrine) lines.push(`${d.step}. **${d.title}.** ${d.summary}`);
+  lines.push("");
+  lines.push("| Primitive | Mechanism | Reach for it when |");
+  lines.push("|-----------|-----------|-------------------|");
+  for (const p of data.layout.primitives) {
+    lines.push(`| \`${p.name}\` | ${p.mechanism} | ${p.use} |`);
+  }
+  lines.push("");
+  lines.push(`Measure (centred column widths): ${Object.entries(data.layout.measure).map(([t, role]) => `\`${t}\` — ${role}`).join("; ")}.`);
+  lines.push(`Rhythm (page air): ${Object.entries(data.layout.rhythm).map(([t, role]) => `\`${t}\` — ${role}`).join("; ")}.`);
+  lines.push(`Page archetypes with copy-ready markup: ${data.layout.archetypes.join(", ")} — see \`${data.layout.reference}\`.`);
+  lines.push("");
+
+  lines.push("## Responsive Tiers");
+  lines.push("");
+  lines.push(`\`${data.responsive.grammar}\` — "${data.responsive.reads_as}".`);
+  lines.push("");
+  lines.push("| Tier | Min-width | px |");
+  lines.push("|------|-----------|----|");
+  for (const t of data.responsive.tiers) lines.push(`| \`${t.tier}\` | \`${t.min_width}\` | ${t.px} |`);
+  lines.push("");
+  lines.push("```html");
+  lines.push(data.responsive.example);
+  lines.push("```");
+  lines.push("");
+  for (const r of data.responsive.rules) lines.push(`- ${r}`);
+  lines.push(`- Never suffixed: ${data.responsive.excluded_attributes.map((a) => `\`${a}\``).join(", ")}.`);
+  lines.push(`- ${data.responsive.note}`);
   lines.push("");
 
   // Density
@@ -592,6 +697,14 @@ export function formatContextCursorRules(data: ContextData): string {
   lines.push("- Dark theme: `data-theme=\"dark\"` on `<html>` element");
   lines.push("");
 
+  lines.push("## Layout");
+  lines.push("");
+  for (const p of data.layout.primitives) lines.push(`- \`${p.name}\` (${p.mechanism}): ${p.use}`);
+  lines.push(`- Responsive values are suffixed attributes — \`${data.responsive.grammar}\`, tiers ${data.responsive.tiers.map((t) => `${t.tier} ${t.min_width}`).join(", ")}`);
+  for (const r of data.responsive.rules) lines.push(`- ${r}`);
+  lines.push(`- Page archetypes (dashboard, landing, document, split view, form): \`${data.layout.reference}\``);
+  lines.push("");
+
   lines.push("## Data-Driven Rendering");
   lines.push("");
   lines.push("- Include `<script src=\"ui/core/api-source.js\"></script>` before faqir-core.js");
@@ -728,6 +841,18 @@ export function formatContextLlms(data: ContextData): string {
       "accessibility contracts — lives in llms-full.txt.",
   );
   lines.push("");
+  // Layout is stated here, not only linked: an agent that reads the index and
+  // stops must still know the ladder and the grammar, because guessing a
+  // breakpoint is the one thing the component list cannot teach it.
+  lines.push(
+    `Layout is ${data.layout.primitives.length} primitives — ` +
+      `${data.layout.primitives.map((p) => `\`${p.name}\``).join(", ")} — and one breakpoint ladder: ` +
+      `${data.responsive.tiers.map((t) => `${t.tier} ${t.min_width}`).join(", ")}. ` +
+      `A responsive value is a suffixed attribute, \`${data.responsive.grammar}\` ("${data.responsive.reads_as}"), ` +
+      `mobile-first and min-width only; the five protocol attributes never take one. ` +
+      `Page archetypes: ${data.layout.archetypes.join(", ")}.`,
+  );
+  lines.push("");
 
   const linkItem = (name: string, c: Record<string, unknown>): string => {
     const desc = c.description ? `: ${c.description}` : "";
@@ -771,6 +896,8 @@ export function formatContextLlms(data: ContextData): string {
   lines.push("");
   lines.push("- [Attribute protocol](llms-full.txt#attribute-protocol): the data-ui / data-part / data-state contract");
   lines.push("- [Design tokens](llms-full.txt#design-tokens): spacing, radius, shadow, and z-index scales");
+  lines.push("- [Layout system](llms-full.txt#layout-system): the doctrine, the five layout primitives, measure and rhythm tokens");
+  lines.push("- [Responsive tiers](llms-full.txt#responsive-tiers): the breakpoint canon and the data-<attr>-<tier> grammar");
   lines.push("- [Density mode](llms-full.txt#density-mode): data-density, a pure-CSS token modifier for dense subtrees");
   lines.push("- [Inspecting a live page](llms-full.txt#inspecting-a-live-page): window.__FAQIR_DEVTOOLS__ and Faqir.inspect()");
   lines.push("- [Data-driven rendering](llms-full.txt#data-driven-rendering): apiSource() for server-backed CRUD");
@@ -886,6 +1013,46 @@ export function formatContextLlmsFull(data: ContextData): string {
   lines.push(`- Radius: ${Object.entries(data.tokens.radius).map(([k, v]) => `${k}=${v}`).join(", ")}`);
   lines.push(`- Shadows: ${data.tokens.shadows}`);
   lines.push(`- Z-index: ${data.tokens.z_index}`);
+  lines.push("");
+
+  // Layout system
+  lines.push("## Layout system");
+  lines.push("");
+  lines.push("Reach for the first mechanism that solves the problem:");
+  lines.push("");
+  for (const d of data.layout.doctrine) lines.push(`${d.step}. **${d.title}.** ${d.summary}`);
+  lines.push("");
+  lines.push("| Primitive | Mechanism | Reach for it when |");
+  lines.push("|-----------|-----------|-------------------|");
+  for (const p of data.layout.primitives) {
+    lines.push(`| \`${p.name}\` | ${p.mechanism} | ${p.use} |`);
+  }
+  lines.push("");
+  lines.push("Measure — the width of a centred column, `container`'s `data-measure`:");
+  for (const [token, role] of Object.entries(data.layout.measure)) lines.push(`- \`${token}\` — ${role}`);
+  lines.push("");
+  lines.push("Rhythm — the air between page sections:");
+  for (const [token, role] of Object.entries(data.layout.rhythm)) lines.push(`- \`${token}\` — ${role}`);
+  lines.push("");
+  lines.push(`Page archetypes with copy-ready markup — ${data.layout.archetypes.join(", ")} — are documented in \`${data.layout.reference}\`.`);
+  lines.push("");
+
+  // Responsive tiers
+  lines.push("## Responsive tiers");
+  lines.push("");
+  lines.push(`\`${data.responsive.grammar}\` — "${data.responsive.reads_as}".`);
+  lines.push("");
+  lines.push("| Tier | Min-width | px |");
+  lines.push("|------|-----------|----|");
+  for (const t of data.responsive.tiers) lines.push(`| \`${t.tier}\` | \`${t.min_width}\` | ${t.px} |`);
+  lines.push("");
+  lines.push("```html");
+  lines.push(data.responsive.example);
+  lines.push("```");
+  lines.push("");
+  for (const r of data.responsive.rules) lines.push(`- ${r}`);
+  lines.push(`- Never suffixed: ${data.responsive.excluded_attributes.map((a) => `\`${a}\``).join(", ")}.`);
+  lines.push(`- ${data.responsive.note}`);
   lines.push("");
 
   // Density mode

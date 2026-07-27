@@ -115,8 +115,8 @@ describe("docs site coverage", () => {
     const html = files.filter((f) => f.path.endsWith(".html"));
     expect(html.length).toBe(sitePages.length + examplePages.length);
     expect(shellPages.length + framePages.length).toBe(sitePages.length);
-    // home, component index, tokens, the playground, the theme gallery, agents
-    expect(shellPages.length).toBe(components.length + 6);
+    // home, component index, tokens, layout, the playground, the theme gallery, agents
+    expect(shellPages.length).toBe(components.length + 7);
     // one gallery frame per theme
     expect(framePages.length).toBe(themes.length);
     const assets = files.filter((f) => !f.path.endsWith(".html")).map((f) => f.path);

@@ -34,6 +34,50 @@ CSS targets attributes (`[data-ui="button"]`), state via `[data-state="open"]`, 
 7. Always add the ARIA attributes each manifest requires.
 8. Recipes auto-initialize — include `faqir-core.js` and emit the full inner structure.
 
+## Layout System
+
+Page structure is five primitives, one token ladder and one breakpoint canon — never a utility class, never a hand-written `max-width`. Reach for the FIRST mechanism that solves the problem:
+
+1. **Intrinsic first — no query at all.** auto-fit/minmax(), flex-wrap, clamp() and logical properties adapt to any width without naming one — the only mechanism that is correct at sizes nobody tested.
+2. **Container queries second — a component responds to its own inline size.** A component cannot know whether it was placed full-bleed or in a sidebar, and the viewport cannot tell it; its own inline size can.
+3. **Viewport media queries last — page-level only.** Only patterns and scaffolds, which own the whole page, may ask about the viewport; a primitive that consults it is asserting something it cannot know about its own placement.
+
+| Primitive | Mechanism | Reach for it when |
+|-----------|-----------|-------------------|
+| `stack` | intrinsic | One direction, one gap — the vertical rhythm of a page and the horizontal row of a toolbar. Make the direction responsive (`data-direction-md`) rather than nesting two stacks. |
+| `cluster` | intrinsic | A row that wraps by itself — tags, chips, meta rows, button groups. No breakpoint involved; `data-push` on a child sends it (and everything after) to the far end. |
+| `grid` | intrinsic | Columns. `data-cols="auto"` with `data-min` needs no query at all; the `data-cols-<tier>` ladder is for when the column count is a deliberate editorial choice. |
+| `container` | intrinsic | The centred measure column: caps line length at a `--measure-*` token and centres what is left. Every page-level width in Faqir is one of these, never a hand-written max-width. |
+| `switcher` | container | Equal peers side by side that become one column when the switcher itself is narrower than `data-threshold` — correct full-bleed, in a sidebar and in a dialog, from the same markup. |
+
+**The ladder** — every responsive threshold in Faqir is one of these four:
+
+| Tier | Min-width | px |
+|------|-----------|----|
+| `sm` | `40rem` | 640 |
+| `md` | `48rem` | 768 |
+| `lg` | `64rem` | 1024 |
+| `xl` | `80rem` | 1280 |
+
+**The grammar** — `data-<attr>-<tier>` — `data-cols-md="2"` means *two columns from 48rem up*, leaving `data-cols` as the mobile-first base. Tiers: sm, md, lg, xl. The five protocol attributes (`data-ui`, `data-part`, `data-state`, `data-variant`, `data-size`) never take a suffix.
+
+```html
+<div data-ui="grid" data-cols="1" data-cols-md="2" data-cols-lg="4" data-gap="4">
+  <div data-ui="card"><div data-part="body">One up on a phone, four from 64rem.</div></div>
+</div>
+```
+
+- Mobile-first: the unsuffixed value is the phone layout, and each tier enhances it.
+- `min-width` only — a tier is the floor of a range that never ends, so tiers cannot leave a gap between them.
+- No fifth number: a threshold that is not a canon tier is off-canon, and usually means an intrinsic layout was the right answer.
+- Reach for a viewport query last — intrinsic first, then the component's own inline size.
+- Never hand-write a max-width for a page column; use `container` and a `--measure-*` token.
+
+**Measure** (centred column widths): `--measure-narrow` (a single form column, a login card), `--measure-content` (an article body, a settings panel), `--measure-wide` (a page shell — the widest thing still centred), `--measure-prose` (optimal line length in characters, so it tracks the reader's font rather than the layout).
+**Rhythm** (page air): `--section-gap-sm` (dense pages — docs, dashboards), `--section-gap-md` (the default marketing rhythm), `--section-gap-lg` (spacious — one idea per screen), `--content-gutter` (the page's own padding-inline).
+
+Copy-ready page archetypes — Dashboard, Landing page, Prose / document, Split view, Centred form — are in `docs/layout.md`, and each one is audited on every test run.
+
 ## Component Inventory
 
 **42 Primitives (CSS-only):** aspect-ratio, avatar, badge, breadcrumb, button, callout, card, checkbox, chip, cluster, collapsible, container, description-list, empty-state, field-group, grid, icon, image, input, kbd, key-value, label, link, nav, page-break, progress, radio, select, separator, signature, skeleton, spinner, stack, stat, stepper, surface, switch, switcher, text, textarea, toggle, watermark

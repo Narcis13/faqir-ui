@@ -2137,3 +2137,9 @@ output medium, not about available space.
   hand-maintenance.
 - Audit: an off-canon threshold, a `max-width` breakpoint, an unknown tier suffix, or
   a suffixed protocol attribute is a finding, not a style opinion.
+
+**The practical guide is `docs/layout.md`**: the same doctrine with the five layout
+primitives, the measure and rhythm ladders, and five copy-ready page archetypes
+(dashboard, landing, prose/document, split view, centred form). Every code block in
+it is audited against the registry manifests on every test run, so it documents what
+the framework does rather than what it intended to do.

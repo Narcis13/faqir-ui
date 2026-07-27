@@ -314,6 +314,38 @@ describe("Audit Rules", () => {
       const html = '<button data-ui="button" data-variant="primary" data-size="lg">OK</button>';
       expect(validVariantRule.check(getComponents(html)[0], BUTTON_MANIFEST)).toEqual([]);
     });
+
+    it("does not read a DECLARED attribute as a tier of a shorter one (task 0.8-12)", () => {
+      // `stack` really ships this collision: the responsive group `align`
+      // (`data-align`) beside the prop `align-text` (`data-align-text`). Reading
+      // the prop as `data-align` at a tier called "text" reported a canon
+      // violation on markup that is exactly right — and it fired on the layout
+      // guide's own examples, which is how it was found.
+      const withProp: Manifest = {
+        ...GRID_MANIFEST,
+        variants: {
+          ...GRID_MANIFEST.variants,
+          align: { values: ["start", "center"], default: "start", attr: "data-align", applied_to: "root", responsive: true },
+        },
+        props: {
+          "align-text": {
+            type: "enum",
+            values: ["start", "center", "right"],
+            default: "start",
+            attr: "data-align-text",
+            description: "Text alignment for the whole box.",
+          },
+        },
+      };
+      const html = '<div data-ui="grid" data-align="center" data-align-text="center"></div>';
+      expect(validVariantRule.check(getComponents(html)[0], withProp)).toEqual([]);
+
+      // …and the suffix reader still works on the same group.
+      const bad = '<div data-ui="grid" data-align-xx="center"></div>';
+      const results = validVariantRule.check(getComponents(bad)[0], withProp);
+      expect(results.length).toBe(1);
+      expect(results[0].message).toContain('Unknown breakpoint tier "xx"');
+    });
   });
 
   describe("valid-state", () => {

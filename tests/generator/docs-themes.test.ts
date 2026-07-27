@@ -253,17 +253,17 @@ describe("site JavaScript", () => {
   });
 
   it("keeps the documentation pages script-free apart from the copy button", () => {
-    // The index, the token reference, the agents page and the home page are pure
-    // static HTML; a component page's only script is the copy-for-agents wiring,
-    // and it is one `<script src>` — no inline script anywhere. The site did not
-    // become an application.
+    // The index, the token reference, the layout guide, the agents page and the
+    // home page are pure static HTML; a component page's only script is the
+    // copy-for-agents wiring, and it is one `<script src>` — no inline script
+    // anywhere. The site did not become an application.
     const documentation = files.filter(
       (f) =>
         isShellPage(f.path) &&
         f.path !== PLAYGROUND_PAGE &&
         f.path !== THEMES_PAGE,
     );
-    expect(documentation.length).toBe(components.length + 4);
+    expect(documentation.length).toBe(components.length + 5);
     for (const f of documentation) {
       const scripts = [...f.content.matchAll(/<script\b[^>]*>/g)].map((m) => m[0]);
       const isComponentPage = components.some((c) => c.pagePath === f.path);

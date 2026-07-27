@@ -64,7 +64,18 @@ import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Manifest } from "../manifest";
-import { TIERS, responsiveAttribute } from "../utils/breakpoints";
+import { BREAKPOINT_LIST, TIERS, responsiveAttribute } from "../utils/breakpoints";
+import {
+  ARCHETYPES,
+  LAYOUT_MECHANISMS,
+  LAYOUT_PRIMITIVES,
+  LAYOUT_RULES,
+  MEASURE_TOKENS,
+  RESPONSIVE_GRAMMAR,
+  RHYTHM_TOKENS,
+  parseArchetypes,
+  type ParsedArchetype,
+} from "../utils/layout";
 import type { ThemeManifest } from "../theme-manifest";
 // The playground's rule legend is derived from the engine's own rule lists, so it
 // cannot describe a rule the shipped browser bundle does not run.
@@ -91,6 +102,9 @@ export const FRAME_PREFIX = "frames/";
 
 /** The page documenting the agent-facing URLs below (task 0.7-15). */
 export const AGENTS_PAGE = "agents/index.html";
+
+/** The layout guide: the doctrine, the ladder and the archetypes (task 0.8-12). */
+export const LAYOUT_PAGE = "layout/index.html";
 
 /**
  * The site's **machine contract**: four files an agent or a tool fetches by URL
@@ -659,6 +673,7 @@ ${(input.scripts ?? []).map((src) => `<script src="${u(src)}" defer></script>`).
       <a data-part="nav-item" href="${u("tokens/index.html")}"${currentAttr(
         "tokens/index.html",
       )}>Design tokens</a>
+      <a data-part="nav-item" href="${u(LAYOUT_PAGE)}"${currentAttr(LAYOUT_PAGE)}>Layout</a>
       <a data-part="nav-item" href="${u(THEMES_PAGE)}"${currentAttr(THEMES_PAGE)}>Theme gallery</a>
       <a data-part="nav-item" href="${u(PLAYGROUND_PAGE)}"${currentAttr(
         PLAYGROUND_PAGE,
@@ -674,6 +689,7 @@ ${navGroups}
     <nav data-ui="nav" aria-label="Site sections">
       <a data-part="link" href="${u("components/index.html")}">Components</a>
       <a data-part="link" href="${u("tokens/index.html")}">Tokens</a>
+      <a data-part="link" href="${u(LAYOUT_PAGE)}">Layout</a>
       <a data-part="link" href="${u(THEMES_PAGE)}">Themes</a>
       <a data-part="link" href="${u(PLAYGROUND_PAGE)}">Playground</a>
       <a data-part="link" href="${u(AGENTS_PAGE)}">Agents</a>
@@ -1041,6 +1057,63 @@ function renderTokenPage(ctx: {
     )}</p>`,
   ];
 
+  // Three ladders that a reader looking for "how wide" or "how far apart" needs
+  // before the alphabet of tokens is useful (task 0.8-12). The breakpoints are
+  // deliberately NOT tokens — media queries cannot read custom properties — so
+  // this is the one place on the site that says so next to the numbers.
+  parts.push(
+    section(
+      "breakpoints",
+      "Breakpoints",
+      `      <p>The one responsive ladder. These four numbers are <strong>not</strong> tokens: ` +
+        `a media query cannot read a custom property, so they are literal in CSS and canonical in ` +
+        `<code>src/utils/breakpoints.ts</code>. A responsive value is a suffixed attribute — ` +
+        `<code>${esc(RESPONSIVE_GRAMMAR)}</code>, read as “this value, from that tier up”.</p>\n` +
+        table(
+          ["Tier", "Min-width", "Equivalent px", "Example"],
+          BREAKPOINT_LIST.map((b) => [
+            `<code id="${escAttr(`tier-${b.tier}`)}">${esc(b.tier)}</code>`,
+            code(`min-width: ${b.rem}rem`),
+            esc(String(b.px)),
+            code(`${responsiveAttribute("cols", b.tier)}="2"`),
+          ]),
+          "No breakpoints in this build.",
+        ),
+    ),
+  );
+
+  const tokenRows = (names: readonly { token: string; role: string }[]) =>
+    names.map((entry) => {
+      const t = ctx.tokenList.find((x) => x.name === entry.token);
+      return [
+        `<code id="${escAttr(`ladder-${entry.token}`)}">--${esc(entry.token)}</code>`,
+        t ? code(t.value) : "<em>not declared</em>",
+        esc(entry.role),
+      ];
+    });
+
+  parts.push(
+    section(
+      "measure",
+      "Measure",
+      `      <p>Every centred column in the framework resolves to one of these — ` +
+        `<code>container</code>’s <code>data-measure</code> and <code>surface</code>’s max-width alike. ` +
+        `Named for the content they are cut for, never <code>sm|md|lg|xl</code>: those names belong to ` +
+        `the breakpoints above and describe a viewport, not a column.</p>\n` +
+        table(["Token", "Value", "Cut for"], tokenRows(MEASURE_TOKENS), "No measure tokens."),
+    ),
+  );
+
+  parts.push(
+    section(
+      "rhythm",
+      "Rhythm",
+      `      <p>The vertical air between page sections and the page’s own inset. Composed from ` +
+        `<code>--space-*</code> rather than declared as new numbers, so density mode remaps them for free.</p>\n` +
+        table(["Token", "Value", "Feels like"], tokenRows(RHYTHM_TOKENS), "No rhythm tokens."),
+    ),
+  );
+
   const groups = [...new Set(ctx.tokenList.map((t) => t.group))];
   for (const group of groups) {
     const entries = ctx.tokenList.filter((t) => t.group === group);
@@ -1068,6 +1141,103 @@ function renderTokenPage(ctx: {
       pagePath,
       title: `Design tokens · ${ctx.config.title}`,
       description: "Every design token the Faqir registry declares, with its default value.",
+      body: parts.join("\n"),
+      config: ctx.config,
+      components: ctx.components,
+      current: pagePath,
+    }),
+  };
+}
+
+/**
+ * The layout guide (task 0.8-12): the doctrine and the ladder from
+ * `src/utils/layout.ts`, and the five page archetypes lifted verbatim out of
+ * `docs/layout.md`. The markdown is the source — the site renders what
+ * `parseArchetypes` returns and the test suite audits the same function's
+ * output, so the page that ships and the markup that is proven clean are the
+ * same bytes. A build with no `docs/layout.md` emits the page without
+ * archetypes rather than failing: the doctrine is still worth serving.
+ */
+function renderLayoutPage(ctx: {
+  config: SiteConfig;
+  components: DocsComponent[];
+  archetypes: ParsedArchetype[];
+}): SiteFile {
+  const pagePath = LAYOUT_PAGE;
+  const u = (to: string) => escAttr(relUrl(pagePath, to));
+
+  const parts: string[] = [
+    `      <h1>Layout</h1>`,
+    `      <p>Page structure is five primitives, one measure ladder and one breakpoint canon — ` +
+      `no utility classes, no hand-written <code>max-width</code>. Reach for the first mechanism ` +
+      `that solves the problem; most layouts never get past the first.</p>`,
+    section(
+      "doctrine",
+      "The doctrine",
+      table(
+        ["Step", "Mechanism", "Why here"],
+        LAYOUT_MECHANISMS.map((m) => [esc(String(m.step)), `<strong>${esc(m.title)}</strong>`, esc(m.summary)]),
+        "No doctrine in this build.",
+      ),
+    ),
+    section(
+      "primitives",
+      "The five primitives",
+      table(
+        ["Primitive", "Mechanism", "Reach for it when"],
+        LAYOUT_PRIMITIVES.map((p) => {
+          const c = ctx.components.find((x) => x.name === p.name);
+          return [
+            c ? `<a data-ui="link" href="${u(c.pagePath)}">${esc(p.name)}</a>` : code(p.name),
+            esc(p.mechanism),
+            esc(p.use),
+          ];
+        }),
+        "No layout primitives in this registry.",
+      ),
+    ),
+    section(
+      "ladder",
+      "The ladder and the grammar",
+      `      <p>A responsive value is a suffixed attribute — <code>${esc(RESPONSIVE_GRAMMAR)}</code>, ` +
+        `read as “this value, from that tier up”. Mobile-first: the unsuffixed attribute is the phone ` +
+        `layout. The four tiers are documented with their values in the ` +
+        `<a data-ui="link" href="${u("tokens/index.html")}#breakpoints">token reference</a>.</p>\n` +
+        `      <pre tabindex="0"><code>${esc(
+          `<div data-ui="grid" data-cols="1" ${responsiveAttribute("cols", "md")}="2" ${responsiveAttribute("cols", "lg")}="4" data-gap="4">`,
+        )}</code></pre>\n` +
+        `      <ul>\n` +
+        LAYOUT_RULES.map((r) => `        <li>${esc(r.replace(/`/g, ""))}</li>`).join("\n") +
+        `\n      </ul>`,
+    ),
+  ];
+
+  if (ctx.archetypes.length > 0) {
+    parts.push(
+      section(
+        "archetypes",
+        "Page archetypes",
+        `      <p>Five pages, each structured by those primitives. Every block is audited against ` +
+          `the registry manifests on every test run, so it is safe to copy verbatim. The prose ` +
+          `version lives in <code>docs/layout.md</code>.</p>`,
+      ),
+    );
+    for (const a of ctx.archetypes) {
+      parts.push(
+        `      <h3 id="${escAttr(a.id)}">${esc(a.title)}</h3>`,
+        `      <p>${esc(a.summary.replace(/[`*]/g, ""))}</p>`,
+        `      <pre tabindex="0"><code>${esc(a.html)}</code></pre>`,
+      );
+    }
+  }
+
+  return {
+    path: pagePath,
+    content: renderShell({
+      pagePath,
+      title: `Layout · ${ctx.config.title}`,
+      description:
+        "The Faqir layout system: the doctrine, the five layout primitives, the breakpoint ladder, and five copy-ready page archetypes.",
       body: parts.join("\n"),
       config: ctx.config,
       components: ctx.components,
@@ -1953,6 +2123,17 @@ export function buildDocsSite(options: DocsSiteOptions = {}): SiteFile[] {
   );
   files.push(renderComponentIndex({ config, components }));
   files.push(renderTokenPage({ config, components, tokenList }));
+
+  // The layout guide reads its archetypes out of `docs/layout.md` — the doc is
+  // the source, this page is a rendering of it (task 0.8-12).
+  const layoutDoc = join(packageRoot, "docs", "layout.md");
+  files.push(
+    renderLayoutPage({
+      config,
+      components,
+      archetypes: existsSync(layoutDoc) ? parseArchetypes(readText(layoutDoc)) : [],
+    }),
+  );
 
   const authoredSeed = join(siteRoot, "content", "playground.html");
   files.push(

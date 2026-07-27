@@ -20,7 +20,16 @@ import { join } from "node:path";
 import { readConfig } from "../utils/config";
 import { ensureDir, getPackageRoot, getRegistryPath } from "../utils/fs";
 import { loadManifest, type Manifest } from "../manifest";
-import { BREAKPOINTS, TIERS, responsiveAttribute } from "../utils/breakpoints";
+import { BREAKPOINTS, BREAKPOINT_LIST, TIERS, responsiveAttribute } from "../utils/breakpoints";
+import {
+  ARCHETYPES,
+  LAYOUT_MECHANISMS,
+  LAYOUT_PRIMITIVES,
+  LAYOUT_RULES,
+  MEASURE_TOKENS,
+  RHYTHM_TOKENS,
+  grammarLine,
+} from "../utils/layout";
 import { getSchemaVersion } from "../utils/schema";
 import { loadPluginMetadata, type PluginMetadata } from "./plugins";
 
@@ -289,6 +298,58 @@ function renderStrictRules(): string[] {
   ];
 }
 
+/**
+ * The layout system (task 0.8-12): the doctrine, the five primitives, the
+ * ladder and the grammar. Authored prose lives in `src/utils/layout.ts` and the
+ * numbers in `src/utils/breakpoints.ts` — this renderer only arranges them, so
+ * the skill cannot drift from README, `docs/layout.md` or `faqir context`.
+ */
+function renderLayoutSystem(): string[] {
+  const lines: string[] = ["## Layout System", ""];
+  lines.push(
+    "Page structure is five primitives, one token ladder and one breakpoint canon — never a utility class, never a hand-written `max-width`. Reach for the FIRST mechanism that solves the problem:",
+  );
+  lines.push("");
+  for (const m of LAYOUT_MECHANISMS) lines.push(`${m.step}. **${m.title}.** ${m.summary}`);
+  lines.push("");
+  lines.push("| Primitive | Mechanism | Reach for it when |");
+  lines.push("|-----------|-----------|-------------------|");
+  for (const p of LAYOUT_PRIMITIVES) {
+    lines.push(`| \`${p.name}\` | ${p.mechanism} | ${p.use} |`);
+  }
+  lines.push("");
+  lines.push("**The ladder** — every responsive threshold in Faqir is one of these four:");
+  lines.push("");
+  lines.push("| Tier | Min-width | px |");
+  lines.push("|------|-----------|----|");
+  for (const b of BREAKPOINT_LIST) lines.push(`| \`${b.tier}\` | \`${b.rem}rem\` | ${b.px} |`);
+  lines.push("");
+  lines.push(`**The grammar** — ${grammarLine()}`);
+  lines.push("");
+  lines.push("```html");
+  lines.push(
+    `<div data-ui="grid" data-cols="1" ${responsiveAttribute("cols", "md")}="2" ${responsiveAttribute("cols", "lg")}="4" data-gap="4">`,
+  );
+  lines.push('  <div data-ui="card"><div data-part="body">One up on a phone, four from 64rem.</div></div>');
+  lines.push("</div>");
+  lines.push("```");
+  lines.push("");
+  for (const r of LAYOUT_RULES) lines.push(`- ${r}`);
+  lines.push("");
+  lines.push(
+    `**Measure** (centred column widths): ${MEASURE_TOKENS.map((m) => `\`--${m.token}\` (${m.role})`).join(", ")}.`,
+  );
+  lines.push(
+    `**Rhythm** (page air): ${RHYTHM_TOKENS.map((r) => `\`--${r.token}\` (${r.role})`).join(", ")}.`,
+  );
+  lines.push("");
+  lines.push(
+    `Copy-ready page archetypes — ${ARCHETYPES.map((a) => a.title).join(", ")} — are in \`docs/layout.md\`, and each one is audited on every test run.`,
+  );
+  lines.push("");
+  return lines;
+}
+
 function renderDataDriven(): string[] {
   return [
     "## Data-Driven Rendering",
@@ -433,6 +494,7 @@ export async function generateSkill(cwd: string): Promise<string> {
 
   lines.push(...renderAttributeProtocol());
   lines.push(...renderStrictRules());
+  lines.push(...renderLayoutSystem());
   lines.push(...renderInventory(byLayer));
   lines.push(...renderPlugins(plugins, corePrefix));
 
@@ -564,6 +626,7 @@ function renderShippedSkill(
 
   lines.push(...renderAttributeProtocol());
   lines.push(...renderStrictRules());
+  lines.push(...renderLayoutSystem());
   lines.push(...renderInventory(byLayer));
   lines.push(...renderPlugins(plugins, "registry/core"));
   lines.push(...renderCompositions(byLayer.patterns));

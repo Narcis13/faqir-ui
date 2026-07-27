@@ -272,94 +272,175 @@ Pre-built page-level compositions that combine primitives and recipes.
 
 ## Layout System
 
-Three layout primitives replace CSS utility classes for page structure. No `.container`, `.row`, `.col-6` — just components.
+Five primitives replace CSS utility classes for page structure. No `.container`, no
+`.row`, no `col-md-6` — just components, one token ladder, and one breakpoint canon.
+The full guide, with five copy-ready page archetypes, is [`docs/layout.md`](docs/layout.md);
+the normative rules are FAQIR-SPEC §15.
 
-### Stack — Flex Container
+| Primitive | Mechanism | Reach for it when |
+|-----------|-----------|-------------------|
+| `stack` | intrinsic | One direction, one gap — page rhythm, toolbars, form columns. |
+| `cluster` | intrinsic | A row that wraps by itself — tags, meta rows, button rows. |
+| `grid` | intrinsic | Columns, intrinsic (`data-cols="auto"`) or an editorial ladder. |
+| `container` | intrinsic | A centred measure column — the only way to cap a page width. |
+| `switcher` | container query | Equal peers that fold to one column by *their own* width. |
 
-```html
-<!-- Vertical stack with gap -->
-<div data-ui="stack" data-gap="4">
-  <p>First</p>
-  <p>Second</p>
-</div>
+Reach for the first mechanism that solves the problem: intrinsic layout first, the
+component's own inline size second, a viewport tier last.
 
-<!-- Horizontal stack, centered -->
-<div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center">
-  <button data-ui="button">Cancel</button>
-  <button data-ui="button" data-variant="primary">Save</button>
-</div>
-```
+### Responsive attributes
 
-| Attribute | Values |
-|-----------|--------|
-| `data-gap` | `0`, `1`, `2`, `3`, `4`, `6`, `8` |
-| `data-align` | `start`, `center`, `end`, `stretch` |
-| `data-justify` | `start`, `center`, `end`, `between` |
-| `data-variant` | `horizontal` |
-| `data-wrap` | (boolean attribute) |
+A responsive value is a suffixed attribute — `data-<attr>-<tier>`, read as *"this
+value, from that tier up"*:
 
-### Grid — Column Layout
-
-```html
-<!-- Three-column grid, responsive -->
-<div data-ui="grid" data-cols="3" data-gap="4">
-  <div data-ui="card">...</div>
-  <div data-ui="card">...</div>
-  <div data-ui="card">...</div>
-</div>
-```
-
-| Attribute | Values |
-|-----------|--------|
-| `data-cols` | `1`, `2`, `3`, `4`, `6`, `12` |
-| `data-cols-sm` | Override columns below 640px |
-| `data-gap` | `2`, `4`, `6`, `8` |
-
-Auto-stacks to 1 column on screens under 640px by default.
-
-### Surface — Container
+| Tier | Min-width | Equivalent px |
+|------|-----------|---------------|
+| `sm` | `40rem` | 640px |
+| `md` | `48rem` | 768px |
+| `lg` | `64rem` | 1024px |
+| `xl` | `80rem` | 1280px |
 
 ```html
-<div data-ui="surface" data-variant="raised" data-size="lg">
-  Content with padding and shadow
+<!-- One column on a phone, two from 48rem, four from 64rem. -->
+<div data-ui="grid" data-cols="1" data-cols-md="2" data-cols-lg="4" data-gap="4">
+  <div data-ui="card"><div data-part="body">One</div></div>
+  <div data-ui="card"><div data-part="body">Two</div></div>
+  <div data-ui="card"><div data-part="body">Three</div></div>
+  <div data-ui="card"><div data-part="body">Four</div></div>
 </div>
 ```
 
-| Attribute | Values |
-|-----------|--------|
-| `data-variant` | `flat`, `raised`, `overlay` |
-| `data-size` | `sm`, `md`, `lg` |
-| `data-max` | `sm`, `md`, `lg`, `xl` (max-width) |
+Mobile-first and `min-width` only: the unsuffixed value is the phone layout, tiers
+are floors, and there is no `xs` or `2xl`. Only groups a manifest marks
+`"responsive": true` take a suffix (marked **Responsive** below), and the five
+protocol attributes never do — `data-variant-md` would be a sixth attribute in all
+but name, which is why `stack` moved its direction onto `data-direction` in v2.0.
 
-### Composing Layouts
+### Stack — one direction, one gap
 
 ```html
-<div data-ui="surface" data-size="lg" data-max="xl" style="margin: 0 auto">
+<!-- A column on a phone, a row from 48rem up -->
+<div data-ui="stack" data-direction="vertical" data-direction-md="horizontal" data-gap="4" data-justify="between">
+  <p data-ui="text">Left</p>
+  <p data-ui="text">Right</p>
+</div>
+```
+
+| Attribute | Values | Default | Responsive |
+|-----------|--------|---------|------------|
+| `data-direction` | `vertical`, `horizontal` | `vertical` | ✓ |
+| `data-gap` | `0`–`16` on the spacing scale (`0 1 2 3 4 6 8 10 12 16`) | `0` | ✓ |
+| `data-align` | `start`, `center`, `end`, `stretch`, `baseline` | `stretch` | ✓ |
+| `data-justify` | `start`, `center`, `end`, `between`, `around` | `start` | ✓ |
+| `data-wrap` | boolean — children reflow onto new lines | off | — |
+| `data-align-text` | `start`, `center`, `right` (logical — flips in RTL) | `start` | — |
+| `data-flex` | `1`, `auto`, `none` — **on a child**, not the root | `none` | — |
+
+Deprecated in 0.x, removed in 1.0: `data-variant` carrying the direction (use
+`data-direction`) and `data-responsive`, the old below-`sm` collapse (use
+`data-direction="vertical" data-direction-sm="horizontal"`, which reads mobile-first).
+
+### Cluster — a row that wraps
+
+```html
+<div data-ui="cluster" data-gap="2">
+  <span data-ui="badge">design</span>
+  <span data-ui="badge" data-variant="secondary">layout</span>
+  <div data-push><button data-ui="button" data-variant="outline">Edit</button></div>
+</div>
+```
+
+| Attribute | Values | Default | Responsive |
+|-----------|--------|---------|------------|
+| `data-gap` | `0`–`16` on the spacing scale | `2` | ✓ |
+| `data-align` | `start`, `center`, `end`, `stretch`, `baseline` | `center` | ✓ |
+| `data-justify` | `start`, `center`, `end`, `between`, `around` | `start` | ✓ |
+| `data-push` | boolean — **on a child**: it and everything after go to the far end | off | — |
+
+No breakpoint is involved: a cluster reflows when it runs out of room, at any width.
+
+### Grid — columns
+
+```html
+<!-- Intrinsic: as many columns as fit, no query anywhere -->
+<div data-ui="grid" data-cols="auto" data-min="16" data-gap="4">
+  <div data-ui="card"><div data-part="body">Fits itself</div></div>
+  <div data-ui="card"><div data-part="body">And itself</div></div>
+</div>
+```
+
+| Attribute | Values | Default | Responsive |
+|-----------|--------|---------|------------|
+| `data-cols` | `1`, `2`, `3`, `4`, `6`, `12`, `auto` | `1` | ✓ |
+| `data-gap` | `0`–`16` on the spacing scale | `0` | ✓ |
+| `data-min` | `8`, `12`, `16`, `20`, `24` — item floor in **rem** for `auto` mode | `16` | — |
+| `data-span` | `2`, `3`, `4`, `6`, `full` — **on a child** | — | — |
+| `data-scroll` | boolean — a snap-scroll strip below `sm`, a grid from `sm` up | off | — |
+
+`data-span` holds at every width, so pair a span with a base column count that can
+hold it; under a `data-cols="1"` base the only safe span is `full`.
+
+### Container — the measure column
+
+```html
+<div data-ui="container" data-measure="content" data-measure-lg="wide" data-gutter="4">
+  <p data-ui="text">Centred, capped, and never a hand-written max-width.</p>
+</div>
+```
+
+| Attribute | Values | Default | Responsive |
+|-----------|--------|---------|------------|
+| `data-measure` | `narrow`, `content`, `wide`, `prose`, `full` | `content` | ✓ |
+| `data-gutter` | `0`–`16` on the spacing scale — inline padding | `0` | — |
+
+The measure values resolve to the `--measure-*` tokens (`32rem`, `48rem`, `72rem`,
+`65ch`), the one ladder every centred column in the framework shares — `surface`'s
+max-width included. Measure names are deliberately not `sm|md|lg|xl`: those names
+belong to the breakpoint ladder and describe a viewport, not a column.
+
+### Switcher — peers that fold on their own width
+
+```html
+<div data-ui="switcher" data-threshold="md" data-gap="4">
+  <div data-ui="surface" data-variant="raised">Pane one</div>
+  <div data-ui="surface" data-variant="raised">Pane two</div>
+</div>
+```
+
+| Attribute | Values | Default | Responsive |
+|-----------|--------|---------|------------|
+| `data-threshold` | `sm`, `md`, `lg`, `xl` — the width the switcher folds below | `sm` | — |
+| `data-gap` | `0`–`16` on the spacing scale | `4` | — |
+
+A switcher measures **itself**, not the viewport (a container query), so the same
+markup is right full-bleed, inside a sidebar, and inside a dialog. Its attributes take
+no tier suffix on purpose — a viewport tier would undo exactly that property.
+
+### Composing a page
+
+```html
+<div data-ui="container" data-measure="wide" data-gutter="6">
   <div data-ui="stack" data-gap="8">
 
-    <!-- Header -->
-    <div data-ui="stack" data-variant="horizontal" data-align="center" data-justify="between">
-      <h1>Dashboard</h1>
-      <button data-ui="button" data-variant="primary">New Item</button>
-    </div>
-
-    <!-- Card grid -->
-    <div data-ui="grid" data-cols="3" data-gap="4" data-cols-sm="1">
-      <div data-ui="card">
-        <div data-part="body">Card one</div>
-      </div>
-      <div data-ui="card">
-        <div data-part="body">Card two</div>
-      </div>
-      <div data-ui="card">
-        <div data-part="body">Card three</div>
+    <!-- Title row: actions pushed to the far end -->
+    <div data-ui="cluster" data-gap="3">
+      <h1 data-ui="text" data-size="1" data-weight="bold">Dashboard</h1>
+      <div data-push>
+        <button data-ui="button" data-variant="primary">New item</button>
       </div>
     </div>
 
-    <!-- Actions -->
-    <div data-ui="stack" data-variant="horizontal" data-gap="3" data-align="center">
-      <button data-ui="button" data-variant="outline">Cancel</button>
-      <button data-ui="button" data-variant="primary">Save</button>
+    <!-- Card grid: 1 → 2 → 3 up the ladder -->
+    <div data-ui="grid" data-cols="1" data-cols-sm="2" data-cols-lg="3" data-gap="4">
+      <div data-ui="card"><div data-part="body">Card one</div></div>
+      <div data-ui="card"><div data-part="body">Card two</div></div>
+      <div data-ui="card"><div data-part="body">Card three</div></div>
+    </div>
+
+    <!-- Two panes that fold on their own width -->
+    <div data-ui="switcher" data-threshold="md" data-gap="4">
+      <div data-ui="surface" data-variant="raised">List</div>
+      <div data-ui="surface" data-variant="raised">Detail</div>
     </div>
 
   </div>

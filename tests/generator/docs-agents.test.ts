@@ -39,6 +39,8 @@ import {
 } from "../../src/generator/docs";
 import { buildRegistryContext } from "../../src/generator/registry-context";
 import { formatContextLlms, formatContextLlmsFull } from "../../src/generator/context";
+import { BREAKPOINT_LIST } from "../../src/utils/breakpoints";
+import { LAYOUT_PRIMITIVES, RESPONSIVE_GRAMMAR } from "../../src/utils/layout";
 import { DOCUMENT_RULES } from "../../src/audit/rules";
 import { parseDocument } from "../../src/parser/html-parser";
 import { validateAgainstSchema } from "../../src/utils/json-schema";
@@ -190,6 +192,22 @@ describe("the hosted llms.txt pair describes the whole registry", () => {
     expect(index()).toContain(
       `${counts.primitives} primitives, ${counts.recipes} recipes, and ${counts.patterns} patterns`,
     );
+  });
+
+  it("teaches layout to a crawler that reads only the index (task 0.8-12)", () => {
+    // The component list can describe every variant and still leave an agent
+    // guessing a breakpoint, so the ladder and the grammar are stated in
+    // llms.txt itself rather than only linked into the full reference.
+    const idx = index();
+    for (const b of BREAKPOINT_LIST) expect(idx).toContain(`${b.tier} ${b.rem}rem`);
+    expect(idx).toContain(RESPONSIVE_GRAMMAR);
+    for (const p of LAYOUT_PRIMITIVES) {
+      expect(idx, `llms.txt omits the ${p.name} primitive`).toContain(`\`${p.name}\``);
+      // …and each one is a component of the registry it indexes.
+      expect(idx).toContain(`[${p.name}](llms-full.txt#${p.name})`);
+    }
+    expect(full()).toContain("## Layout system");
+    expect(full()).toContain("## Responsive tiers");
   });
 
   it("carries no timestamp, so the drift gate stays meaningful", () => {
