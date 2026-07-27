@@ -306,6 +306,109 @@ export function resolveRule(
   return resolveIn(rules, ui, property, { attrs, widthPx });
 }
 
+/**
+ * What a DESCENDANT resolution is asked about (task 0.8-08). `resolve`/
+ * `resolveIn` model the component root and one `>` child step, which is all the
+ * layout primitives need; `table` styles cells several levels down
+ * (`[data-ui="table"][data-responsive] [data-hide-below]`), so this second entry
+ * point takes an explicit ancestor chain instead.
+ */
+export interface DeepContext {
+  /** Attributes on the component root; `data-ui` is filled in from `ui`. */
+  root?: ElementAttrs;
+  /** Ancestors strictly between the root and the subject, outermost first. */
+  between?: ElementAttrs[];
+  /** The element the property is resolved for — the selector's last compound. */
+  subject: ElementAttrs;
+  /** Viewport width in px, for `@media` rules. */
+  widthPx?: number;
+  /**
+   * The component's own inline size in px, for `@container` rules. Leave unset
+   * to model an element that is not inside the named container at all — which
+   * is exactly what a table without `data-responsive` is, since nothing gives it
+   * a `container-name`.
+   */
+  containerPx?: number;
+}
+
+/**
+ * Resolve one property for an element nested under the component root, over
+ * selectors of any depth.
+ *
+ * Deliberately loose about the combinator: `>` and descendant are both treated
+ * as "an ancestor further out", matched as a SUBSEQUENCE of the supplied chain.
+ * That over-matches CSS in principle, but the registry sheets this serves never
+ * pair a child combinator with a descendant one at the same depth, and the
+ * suites that use it supply the full chain. Specificity is the sum over every
+ * compound, so `[data-ui="table"][data-stacked] [data-part="td"]` is (0,3,0)
+ * exactly as CSS counts it; element-type compounds (`td`) contribute 0, one
+ * weight class below anything the cascade here decides.
+ */
+export function resolveDeep(
+  rules: CascadeRule[],
+  ui: string,
+  property: string,
+  ctx: DeepContext,
+): CascadeRule | undefined {
+  const chain: ElementAttrs[] = [
+    { "data-ui": ui, ...(ctx.root ?? {}) },
+    ...(ctx.between ?? []),
+  ];
+  const applyCtx: ResolveContext = { widthPx: ctx.widthPx, containerPx: ctx.containerPx };
+
+  let best: { spec: number; order: number; rule: CascadeRule } | undefined;
+  for (const rule of rules) {
+    if (!applies(rule, applyCtx)) continue;
+    if (rule.decls[property] === undefined) continue;
+    for (const selector of rule.selectors) {
+      const spec = deepSpecificity(selector, chain, ctx.subject);
+      if (spec === null) continue;
+      if (!best || spec > best.spec || (spec === best.spec && rule.order >= best.order)) {
+        best = { spec, order: rule.order, rule };
+      }
+    }
+  }
+  return best?.rule;
+}
+
+/** {@link resolveDeep}, returning the declared value rather than the rule. */
+export function resolveDeepValue(
+  rules: CascadeRule[],
+  ui: string,
+  property: string,
+  ctx: DeepContext,
+): string | undefined {
+  return resolveDeep(rules, ui, property, ctx)?.decls[property];
+}
+
+/** Specificity of a multi-compound selector against a chain + subject, or null. */
+function deepSpecificity(
+  selector: string,
+  chain: ElementAttrs[],
+  subject: ElementAttrs,
+): number | null {
+  const parts = selector.split(/\s*>\s*|\s+/).filter(Boolean);
+  if (parts.length < 2) return null; // root-only rules do not style descendants
+
+  const compounds = parts.map(compoundConditions);
+  if (compounds.some((c) => c === null)) return null;
+
+  const last = compounds[compounds.length - 1]!;
+  if (!satisfied(last, subject)) return null;
+
+  // The ancestor compounds must appear in order somewhere in the chain.
+  let at = 0;
+  for (const conds of compounds.slice(0, -1) as AttrCondition[][]) {
+    while (at < chain.length && !satisfied(conds, chain[at])) at++;
+    if (at === chain.length) return null;
+    at++;
+  }
+  return (compounds as AttrCondition[][]).reduce(
+    (n, conds) => n + conds.reduce((m, c) => m + c.weight, 0),
+    0,
+  );
+}
+
 /** Every `data-*` attribute the rules select on, anywhere in any selector. */
 export function selectedAttributes(rules: CascadeRule[]): Set<string> {
   const found = new Set<string>();

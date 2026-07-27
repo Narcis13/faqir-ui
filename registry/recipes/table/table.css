@@ -515,22 +515,42 @@
   display: none;
 }
 
-/* ── Responsive: priority column hiding (needs data-responsive on the root) ── */
-@container faqir-table (max-width: 30rem) {
-  [data-ui="table"] [data-hide-below="sm"] {
-    display: none;
+/* ── Responsive: priority column hiding (needs data-responsive on the root) ──
+   Mobile-first on the breakpoint canon (task 0.8-08, src/utils/breakpoints.ts).
+   A prioritised column is hidden by default and *revealed* from its tier up, so
+   every prelude is a `min-width` floor — the 1.x sheet used three `max-width`
+   ceilings on a private ladder where `sm` meant 30rem, half a tier below the
+   canon's 40rem.
+
+   Three specificity facts hold this together, and the suite pins all three:
+     · the base hide carries `[data-responsive]` (0,3,0) because nothing scopes
+       it otherwise — the reveals do not need it, since `faqir-table` is only a
+       container on a responsive root, so an unnamed-container miss already
+       makes them inert;
+     · each reveal is (0,3,0) too and sits *before* the stacked-mode block, so
+       stacked mode still wins and card rows keep every column — the 1.x
+       behaviour, preserved deliberately;
+     · `:not([data-col-hidden])` keeps a column the controller hid from being
+       revealed by a widening container. */
+[data-ui="table"][data-responsive] [data-hide-below] {
+  display: none;
+}
+
+@container faqir-table (min-width: 40rem) {
+  [data-ui="table"] [data-hide-below="sm"]:not([data-col-hidden]) {
+    display: revert;
   }
 }
 
-@container faqir-table (max-width: 48rem) {
-  [data-ui="table"] [data-hide-below="md"] {
-    display: none;
+@container faqir-table (min-width: 48rem) {
+  [data-ui="table"] [data-hide-below="md"]:not([data-col-hidden]) {
+    display: revert;
   }
 }
 
-@container faqir-table (max-width: 64rem) {
-  [data-ui="table"] [data-hide-below="lg"] {
-    display: none;
+@container faqir-table (min-width: 64rem) {
+  [data-ui="table"] [data-hide-below="lg"]:not([data-col-hidden]) {
+    display: revert;
   }
 }
 

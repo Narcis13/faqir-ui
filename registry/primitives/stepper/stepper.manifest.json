@@ -1,10 +1,18 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "stepper",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "kind": "primitive",
   "category": "navigation",
   "description": "Step indicator with numbered circles, connectors, and labels for multi-step flows",
+
+  "changes": [
+    {
+      "version": "1.1.0",
+      "note": "The label/connector responsive rule is mobile-first on the breakpoint canon: labels are hidden in the base and revealed from sm (40rem) up, and the connector's tight phone metrics are the base rather than an override. Identical design at the identical threshold; the boundary moves to the wide side, so at exactly 640px labels now show.",
+      "breaking": false
+    }
+  ],
 
   "anatomy": {
     "tag": "div",

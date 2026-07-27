@@ -42,8 +42,14 @@
   color: white;
 }
 
-/* ── Step label ── */
+/* ── Step label ──
+   Mobile-first (task 0.8-08): the label is hidden on a phone, where a row of
+   indicators is all that fits, and revealed from the canon `sm` tier up by the
+   responsive block at the foot of this sheet. `revert` rather than a literal
+   `inline` so the element's own tag decides — the CSS does not have to know
+   that the slot ships as a `<span>`. */
 [data-ui="stepper"] [data-part="label"] {
+  display: none;
   font-size: var(--text-xs);
   color: var(--color-fg-muted);
   margin-inline-start: var(--space-1);
@@ -59,13 +65,14 @@
   color: var(--color-success);
 }
 
-/* ── Connector ── */
+/* ── Connector ──
+   The tight phone metrics are the base; the roomier ones arrive at `sm`. */
 [data-ui="stepper"] [data-part="connector"] {
   flex: 1;
   height: 2px;
   background: var(--color-border);
-  margin: 0 var(--space-2);
-  min-width: var(--space-4);
+  margin: 0 var(--space-1);
+  min-width: var(--space-2);
 }
 
 [data-ui="stepper"] [data-part="connector"][data-state="completed"] {
@@ -112,14 +119,18 @@
   margin-inline-start: calc(1.25rem - 1px);
 }
 
-/* ── Responsive: hide labels on mobile ── */
-@media (max-width: 640px) {
+/* ── Responsive: labels and connector breathing room, from `sm` up ──
+   The canon's `sm` floor (40rem / 640px). The 1.x sheet expressed the identical
+   design as `@media (max-width: 640px)` overriding a desktop base; the only
+   observable difference is the boundary itself, which now belongs to the wide
+   side (at exactly 640px labels show rather than hide). */
+@media (min-width: 40rem) {
   [data-ui="stepper"] [data-part="label"] {
-    display: none;
+    display: revert;
   }
 
   [data-ui="stepper"] [data-part="connector"] {
-    min-width: var(--space-2);
-    margin: 0 var(--space-1);
+    min-width: var(--space-4);
+    margin: 0 var(--space-2);
   }
 }

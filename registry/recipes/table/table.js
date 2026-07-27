@@ -2003,7 +2003,16 @@ export function createTable(root) {
   }
 
   // ── Sticky + responsive measurements ──
-  const STACK_BREAKPOINTS = { sm: 480, md: 768, lg: 1024 };
+  // The breakpoint canon (src/utils/breakpoints.ts, task 0.8-01) in px, the unit
+  // clientWidth speaks. It is a literal here and not an import because the build
+  // inlines every controller into one UMD closure and strips its import lines
+  // (scripts/build-core.mjs) — so the equality is enforced from the outside
+  // instead: tests/responsive-canon.test.ts parses this very object out of the
+  // shipped controller and compares it to BREAKPOINTS, and would fail on any
+  // edit that made the engine a second source of truth. `sm` was 480 in 1.x —
+  // its own ladder, half a tier below the canon; the CSS ceilings it paired with
+  // are now min-width floors.
+  const STACK_BREAKPOINTS = { sm: 640, md: 768, lg: 1024 };
   function stackBreakpoint() {
     const v = root.getAttribute("data-stack-below") || "md";
     return STACK_BREAKPOINTS[v] || parseFloat(v) || STACK_BREAKPOINTS.md;

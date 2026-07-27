@@ -94,15 +94,19 @@
   padding-inline-end: var(--space-10, 2.5rem);
 }
 
-/* ── Width Variants ── */
+/* ── Width Variants ──
+   Mobile-first (task 0.8-08): a fixed-width input is full-bleed on a phone and
+   only takes its fixed cap from the canon `sm` tier up. The 1.x form said the
+   same thing backwards — a 250px base undone by `@media (max-width: 640px)` —
+   which put the narrow case behind an override and the wide case in the base. */
 [data-ui="input"][data-width="fixed"] {
-  max-width: 250px;
+  max-width: 100%;
   width: 100%;
 }
 
-@media (max-width: 640px) {
+@media (min-width: 40rem) {
   [data-ui="input"][data-width="fixed"] {
-    max-width: 100%;
+    max-width: 250px;
   }
 }
 

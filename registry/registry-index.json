@@ -419,11 +419,11 @@
       "name": "input",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "files": [
         {
           "path": "input.css",
-          "sha256": "8517fb7b1385a35756f688264c4dbcf590efdc33a24d3c7b3ef779cd27ebfbd4"
+          "sha256": "607e97c1465aec1d193efed6f074838044a06d9c1abc91f2e91475ec7372e6bf"
         },
         {
           "path": "input.html",
@@ -431,10 +431,10 @@
         },
         {
           "path": "input.manifest.json",
-          "sha256": "52e4a46962ec6d9f6352c7dee638460820b174612db1121e74aea57b0399d4fc"
+          "sha256": "e67dd23ac6d75d3f7927f2f85bfa6c793f48441e064a89c869d203ccee7315a3"
         }
       ],
-      "hash": "888ec49d84c4e0fcf28e40f7e55c69433dd020ab14f762981e223ca19cbca7ed",
+      "hash": "30ad5927b762ac04878a09e80abe036a7dfbf4f12f27c9dc412ee5af7c925eb9",
       "deps": []
     },
     {
@@ -773,11 +773,11 @@
       "name": "stepper",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "files": [
         {
           "path": "stepper.css",
-          "sha256": "41dfca55e2ff3d90184c7f01eb0bad8aca661a99ef4582ad088e1fbe6cb4a482"
+          "sha256": "0d96973169a62037d38ab7dd2b828a026d5714fce4e4bec897b4a1f507d013a9"
         },
         {
           "path": "stepper.html",
@@ -785,10 +785,10 @@
         },
         {
           "path": "stepper.manifest.json",
-          "sha256": "0c72beca82dce8967f41d5aef48f0d791f26ba62f08ca9a7aa94ab441ad74dd4"
+          "sha256": "d1b90300a57b4fda89368cb90f0ad76dbb2551fd8e2d2a0f6d1cc17b45633de6"
         }
       ],
-      "hash": "d0ac105732f234aa0e414e7f00955540c368ab40e824dd8906e33a97332437dc",
+      "hash": "e003ed11ef26bdc6f9ba3ecfa6c867ba458325f319cb761ca5b87ce1cff35d0d",
       "deps": []
     },
     {
@@ -1543,11 +1543,11 @@
       "name": "table",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "2.0.0",
+      "version": "3.0.0",
       "files": [
         {
           "path": "table.css",
-          "sha256": "43740955aa2c31ccf3f3f569c3c4d5972d62a66746f0cdfaab41e4a944054d4a"
+          "sha256": "47c54b1d8dad836fb161cf902c4831ea64533f48219b8bbbc284ed67c31257a0"
         },
         {
           "path": "table.html",
@@ -1555,14 +1555,14 @@
         },
         {
           "path": "table.js",
-          "sha256": "927632cf26f03b46f9388dee495eb0d4d0c37c39a650a426a0c3355071fde3ae"
+          "sha256": "c29df1bf579b1da78c46426a7182b918e4d796453cd647fceab5c57348e24533"
         },
         {
           "path": "table.manifest.json",
-          "sha256": "660e4ebbbb1787d67b63cb3cb3ed968cda05130142297598f15369be6a36706a"
+          "sha256": "f7da307c3f921e224369843c6404e401e6e8af60eb7c4b3db40de085122319ad"
         }
       ],
-      "hash": "06dae103bbd68aa8bfa17407560e1b5536700e120b4b46aeda1107164182946c",
+      "hash": "27783b0ac2cde285cf834a07466484be537ebd656178a0ade8388ca957f237b7",
       "deps": [
         "checkbox",
         "badge",
