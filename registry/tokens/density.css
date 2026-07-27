@@ -22,7 +22,9 @@
    inherit the already-resolved value. That is also what makes nesting honest.
 
    ── Scope of the remap ──
-   • --space-1 … --space-24  × --density-scale.
+   • --space-1 … --space-64  × --density-scale (the page-rhythm steps 32/40/48/64
+     added in 0.8-07 scale with the rest: a compact page tightens the air between
+     its sections exactly as it tightens the padding inside them).
      --space-0 and --space-px are invariant: 0 stays 0 and a 1px hairline is a
      hairline at any density.
    • --control-height-{sm,md,lg} → an explicit shorter ramp, NOT the spacing
@@ -63,6 +65,10 @@
   --space-16:  calc(4rem     * var(--density-scale));
   --space-20:  calc(5rem     * var(--density-scale));
   --space-24:  calc(6rem     * var(--density-scale));
+  --space-32:  calc(8rem     * var(--density-scale));
+  --space-40:  calc(10rem    * var(--density-scale));
+  --space-48:  calc(12rem    * var(--density-scale));
+  --space-64:  calc(16rem    * var(--density-scale));
 
   /* ── Control height ramp ── */
   --control-height-sm: 28px;
@@ -80,6 +86,10 @@
   --callout-padding-y: var(--space-3);
   --callout-padding-x: var(--space-4);
   --field-gap:         var(--space-1h);
+  --section-gap-sm:    var(--space-12);
+  --section-gap-md:    var(--space-20);
+  --section-gap-lg:    var(--space-32);
+  --content-gutter:    var(--space-6);
 }
 
 /* The default density, declared explicitly so an inner subtree can reset out of
@@ -105,6 +115,10 @@
   --space-16:  4rem;
   --space-20:  5rem;
   --space-24:  6rem;
+  --space-32:  8rem;
+  --space-40:  10rem;
+  --space-48:  12rem;
+  --space-64:  16rem;
 
   /* ── Control height ramp ── */
   --control-height-sm: 32px;
@@ -122,4 +136,8 @@
   --callout-padding-y: var(--space-3);
   --callout-padding-x: var(--space-4);
   --field-gap:         var(--space-1h);
+  --section-gap-sm:    var(--space-12);
+  --section-gap-md:    var(--space-20);
+  --section-gap-lg:    var(--space-32);
+  --content-gutter:    var(--space-6);
 }

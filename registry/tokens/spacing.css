@@ -20,4 +20,15 @@
   --space-16:  4rem;       /* 64px */
   --space-20:  5rem;       /* 80px */
   --space-24:  6rem;       /* 96px */
+
+  /* ── Page rhythm (task 0.8-07) ──
+     Above --space-24 the scale stops being component padding and becomes
+     page-section rhythm: the vertical air between the hero and the feature
+     grid, the gap a landing page breathes at. Same 4px base, same harmonic
+     doubling, so a section gap is a scale member and not a magic number.
+     Composed through the --section-gap-* aliases in tokens/aliases.css. */
+  --space-32:  8rem;       /* 128px */
+  --space-40:  10rem;      /* 160px */
+  --space-48:  12rem;      /* 192px */
+  --space-64:  16rem;      /* 256px */
 }

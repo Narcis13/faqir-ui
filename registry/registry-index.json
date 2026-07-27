@@ -865,7 +865,7 @@
       "files": [
         {
           "path": "text.css",
-          "sha256": "11cd55aa3b26bd12279da82ac2d061b3fbcb0abe6a1acd3bd9af17916de35269"
+          "sha256": "3b1f10b7c81c150cf74c4caaaf7d9302ee07d7486139b2cf43f87682f90796cd"
         },
         {
           "path": "text.html",
@@ -876,7 +876,7 @@
           "sha256": "96203de2ea681997b804063d08706e647648397004bcc50577ebec5be5fac589"
         }
       ],
-      "hash": "bd81b4d2a9217035eef3ae8d65353bfaa5be778c4d2396398baa0632e4afc308",
+      "hash": "a9c6066b1d8fd78989c681f6f19e0ce97919181073ce073b23112d8317f65e3a",
       "deps": []
     },
     {
@@ -1686,7 +1686,7 @@
       "files": [
         {
           "path": "tooltip.css",
-          "sha256": "3161f9d70a5a3861bc8eb4c0bd7a2ce6f08f83a45ec6623875e7eac071f32a76"
+          "sha256": "f04ad3480b4114472df2ba05a1e27cc9968a6e183e7d07a5d628f943d7017b79"
         },
         {
           "path": "tooltip.html",
@@ -1701,7 +1701,7 @@
           "sha256": "36f0635c40a78569a7ff0c32aa897ddd6df6ba4fc52e4f33472ae648cb522e99"
         }
       ],
-      "hash": "9cf1a80aa62f6f8c9e39e5fba92c931f1e041d6f759715100cacb854a1a8c46e",
+      "hash": "d5fc46559138912ccdba7fa10d6755a10823e865f2e45bc3e0f20c40a39a5878",
       "deps": []
     },
     {
@@ -2053,7 +2053,7 @@
       "files": [
         {
           "path": "settings-page.css",
-          "sha256": "7044697657238b79e33025c65c80130fbc59cee0e3efced253a334c72d6e7952"
+          "sha256": "9eb417dbb6debf965d08232ffe3f7a7d75deb711803f33ee27e116ef6f78ffc7"
         },
         {
           "path": "settings-page.html",
@@ -2061,10 +2061,10 @@
         },
         {
           "path": "settings-page.manifest.json",
-          "sha256": "e0bf15a829d96b9c8206d95270185be62a262886389f1e1f4bdd9afc102b76ae"
+          "sha256": "dfcc73f5ea013bc436fabd781cfbd6037306de5b9e10464dabe53d244682f7c5"
         }
       ],
-      "hash": "d51b3c28e4db1088f56be2a5b9e5988bc260fb9effb788412cf83013a5a49c38",
+      "hash": "785697c3742d323025225dc9971c3120442f648f9458897b91aa57fc00fe7e3f",
       "deps": [
         "tabs",
         "card",

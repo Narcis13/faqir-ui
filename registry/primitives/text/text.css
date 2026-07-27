@@ -108,6 +108,11 @@
 
 /* Tabular — inline-block with min-width for aligned label/value lists */
 [data-ui="text"][data-tabular] {
+  /* A component knob, not a design token — declared here so it always resolves
+     and an author can see what to override (inline, or on this rule). It is NOT
+     a member of the --text-* type scale despite the name it inherited. */
+  --text-tabular-width: 8ch;
+
   display: inline-block;
-  min-width: var(--text-tabular-width, 8ch);
+  min-width: var(--text-tabular-width);
 }

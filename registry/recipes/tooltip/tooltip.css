@@ -3,6 +3,11 @@
 
 /* ── Root ── */
 [data-ui="tooltip"] {
+  /* A component knob, not a member of the --z-* ladder: a tooltip sits on the
+     dropdown layer by default and an author raises just this one by overriding
+     here. Declared rather than left to a var() fallback so it always resolves. */
+  --z-tooltip: var(--z-dropdown);
+
   position: relative;
   display: inline-block;
 }
@@ -10,7 +15,7 @@
 /* ── Content ── */
 [data-ui="tooltip"] [data-part="content"] {
   position: absolute;
-  z-index: var(--z-tooltip, var(--z-dropdown));
+  z-index: var(--z-tooltip);
   background: var(--color-fg);
   color: var(--color-bg);
   border-radius: var(--radius-md);

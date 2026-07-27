@@ -283,6 +283,48 @@ describe("density · the remap is complete and derived", () => {
     }
   });
 
+  it("picks up the 0.8-07 rhythm aliases without anyone extending the list", () => {
+    // The point of deriving `dependents` above rather than listing it: a new
+    // alias composed over the spacing scale must be covered automatically. This
+    // asserts the derivation DID catch the four aliases task 0.8-07 added — if
+    // someone ever replaces the derivation with a literal list, the assertion
+    // above still passes for the old tokens and this one fails for the new ones.
+    const readsScaled = (value: string) =>
+      /var\(--space-(?!0\b|px\b)/.test(value) || /var\(--control-height-/.test(value);
+    const derived = new Set(
+      [...Object.entries(BASE_ALIASES), ...Object.entries(BASE_DOC_ALIASES)]
+        .filter(([, value]) => readsScaled(value))
+        .map(([token]) => token),
+    );
+
+    for (const token of [
+      "--section-gap-sm",
+      "--section-gap-md",
+      "--section-gap-lg",
+      "--content-gutter",
+    ]) {
+      expect(BASE_ALIASES[token], `${token} must be declared in aliases.css`).toBeDefined();
+      expect(derived.has(token), `${token} must be derived as density-dependent`).toBe(true);
+      expect(COMPACT[token]).toBe(BASE_ALIASES[token]);
+      expect(COMFORTABLE[token]).toBe(BASE_ALIASES[token]);
+    }
+  });
+
+  it("remaps the page-rhythm steps 0.8-07 added to the top of the scale", () => {
+    // SCALED_SPACE is itself derived from spacing.css, so the completeness test
+    // above already covers these. Named explicitly because the scale's ceiling
+    // moving from --space-24 to --space-64 is the change worth regression-pinning.
+    for (const token of ["--space-32", "--space-40", "--space-48", "--space-64"]) {
+      expect(SCALED_SPACE).toContain(token);
+      expect(BASE_SPACING[token]).toBeDefined();
+      expect(px(COMPACT[token].replace("var(--density-scale)", String(SCALE)))).toBeCloseTo(
+        px(BASE_SPACING[token]) * SCALE,
+        6,
+      );
+      expect(COMFORTABLE[token]).toBe(BASE_SPACING[token]);
+    }
+  });
+
   it("does not remap paged-media tokens — print density belongs to the theme", () => {
     const paged = Object.keys(block(read("tokens/document.css"), ":root"));
     expect(paged.length).toBeGreaterThan(0);

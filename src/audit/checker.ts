@@ -3,7 +3,7 @@
 import { existsSync } from "node:fs";
 import { join, relative } from "node:path";
 import { extractComponents, parseDocument } from "../parser/html-parser";
-import { extractTokenReferences, collectDefinedTokens, hasReducedMotionQuery, hasAnimationProperties, findImportantDeclarations, findClassSelectors, findIdSelectors, findHardcodedColorValues, findLogicalPropertyViolations } from "../parser/css-parser";
+import { extractTokenReferences, extractTokenDefinitions, collectDefinedTokens, hasReducedMotionQuery, hasAnimationProperties, findImportantDeclarations, findClassSelectors, findIdSelectors, findHardcodedColorValues, findLogicalPropertyViolations } from "../parser/css-parser";
 import { findExternalImports, findDataFetching } from "../parser/js-parser";
 import { loadManifest, type Manifest } from "../manifest";
 import { type AuditResult, type Severity, ALL_RULES, DOCUMENT_RULES, NO_FETCH_RULE, NO_EXTERNAL_IMPORT_RULE, LOGICAL_PROPERTIES_RULE } from "./rules";
@@ -310,6 +310,92 @@ async function checkCssAntiPatterns(
   }
 
   return results;
+}
+
+/**
+ * Every `var()` reference in a stylesheet that cannot be proven to resolve
+ * (task 0.8-07). A pure function of (source, token layer) so the registry gate
+ * and its test drive the identical logic.
+ *
+ * ── Why this exists next to `token-exists` rather than inside it ──
+ * `token-exists` is a *project* rule: `checkTokens` walks `<project>/ui/**`
+ * driven by `.faqir/config.json`'s installed list. Nothing ever pointed it at
+ * `registry/` — `scripts/registry-audit.mjs` ran logical-properties, theme
+ * manifests and document rules and no CSS-token gate at all. That, and not a
+ * skip or a blind spot in the extractor, is why `settings-page.css` shipped
+ * `var(--space-48, 12rem)` against an undefined token: the sweep never ran.
+ *
+ * ── Why the predicate is not simply "defined in tokens/" ──
+ * Registry CSS legitimately reads three kinds of custom property:
+ *
+ *  1. **design tokens** — declared in `registry/tokens/*.css`. Always fine.
+ *  2. **component knobs** — `--sidebar-width`, `--grid-min`, `--icon`: declared
+ *     by the component's own stylesheet, on its own root. Fine, and the
+ *     declaration is right there to prove it.
+ *  3. **author/runtime knobs** — `--shell-sidebar-width`, `--pos`: nothing in
+ *     the registry declares them; a page or a controller sets them. Fine ONLY
+ *     with a fallback, which is what makes the component render regardless.
+ *
+ * Anything else is dangling. In particular a fallback does NOT excuse a name
+ * that lives in a token FAMILY the token layer defines (`--space-*`, `--z-*`,
+ * `--color-*`, …): such a name reads as a token to every agent and human, so an
+ * undefined one is a typo or a missing scale step wearing a fallback as a
+ * disguise. The family list is derived from the token layer, never listed here.
+ */
+export interface DanglingTokenFinding {
+  /** Referenced token name, without the `--` prefix. */
+  token: string;
+  line: number;
+  /** `family` — reads as a token but the token layer never defines it.
+   *  `unresolved` — not a token, not declared locally, and no fallback. */
+  kind: "family" | "unresolved";
+  message: string;
+}
+
+/** Namespace of a custom property: the segment before its first `-`. */
+function tokenFamily(name: string): string {
+  return name.split("-")[0];
+}
+
+export function findDanglingTokenReferences(
+  source: string,
+  definedTokens: Set<string>,
+): DanglingTokenFinding[] {
+  const families = new Set([...definedTokens].map(tokenFamily));
+  const local = new Set(extractTokenDefinitions(source).map(d => d.name));
+  const findings: DanglingTokenFinding[] = [];
+
+  for (const ref of extractTokenReferences(source)) {
+    if (definedTokens.has(ref.name)) continue;
+    if (local.has(ref.name)) continue;
+
+    // `var(--x, …)` — a fallback is present when the expression carries a comma.
+    const hasFallback = ref.expression.includes(",");
+    const family = tokenFamily(ref.name);
+
+    if (families.has(family)) {
+      findings.push({
+        token: ref.name,
+        line: ref.line,
+        kind: "family",
+        message:
+          `"--${ref.name}" is not defined in the token layer, but "--${family}-*" is a token ` +
+          `family — either add the token or give the knob a name outside the token vocabulary` +
+          (hasFallback ? " (the fallback hides it at runtime, not from a reader)" : ""),
+      });
+    } else if (!hasFallback) {
+      findings.push({
+        token: ref.name,
+        line: ref.line,
+        kind: "unresolved",
+        message:
+          `"--${ref.name}" is neither a design token nor declared in this stylesheet — ` +
+          `declare it on the component root, or give the reference a fallback`,
+      });
+    }
+  }
+
+  return findings;
 }
 
 /**

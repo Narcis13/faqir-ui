@@ -24,6 +24,18 @@
   --measure-prose:   65ch;   /* optimal line length, sized in characters, so it
                                 tracks the reader's font rather than the layout */
 
+  /* ── Rhythm (task 0.8-07) ── */
+  /* The vertical air between page sections and the horizontal inset of the page
+     itself. Both are composed from the spacing scale rather than declared as new
+     numbers, so density remaps them for free (a var() in an alias re-substitutes
+     in whatever scope re-declares --space-*; see tokens/density.css). Named by
+     ROLE, not by size — a page picks `--section-gap-lg` because the sections
+     should feel far apart, not because it wants 8rem. */
+  --section-gap-sm:  var(--space-12);  /* 3rem  — dense pages, docs, dashboards */
+  --section-gap-md:  var(--space-20);  /* 5rem  — the default marketing rhythm */
+  --section-gap-lg:  var(--space-32);  /* 8rem  — spacious, one idea per screen */
+  --content-gutter:  var(--space-6);   /* 1.5rem — page padding-inline */
+
   /* ── Button ── */
   --button-radius:     var(--radius-md);
   --button-height-sm:  var(--control-height-sm);

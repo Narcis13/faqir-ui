@@ -128,7 +128,7 @@
   "tokens_used": [
     "color-bg", "color-bg-subtle", "color-fg", "color-fg-muted", "color-border",
     "color-primary", "color-primary-fg",
-    "space-1", "space-2", "space-3", "space-4", "space-6", "space-8", "space-10", "space-12",
+    "space-1", "space-2", "space-3", "space-4", "space-6", "space-8", "space-10", "space-12", "space-48",
     "radius-md", "radius-lg",
     "shadow-sm", "shadow-md",
     "font-sans", "text-sm", "text-base", "text-lg", "text-xl",

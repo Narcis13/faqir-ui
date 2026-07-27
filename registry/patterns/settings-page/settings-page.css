@@ -1,5 +1,5 @@
 /* @ui:component settings-page */
-/* @ui:tokens color-bg color-bg-subtle color-fg color-fg-muted color-border color-primary color-primary-fg space-1 space-2 space-3 space-4 space-6 space-8 space-10 space-12 radius-md radius-lg shadow-sm shadow-md font-sans text-sm text-base text-lg text-xl weight-medium weight-semibold leading-tight leading-normal duration-fast duration-normal ease-default z-sticky */
+/* @ui:tokens color-bg color-bg-subtle color-fg color-fg-muted color-border color-primary color-primary-fg space-1 space-2 space-3 space-4 space-6 space-8 space-10 space-12 space-48 radius-md radius-lg shadow-sm shadow-md font-sans text-sm text-base text-lg text-xl weight-medium weight-semibold leading-tight leading-normal duration-fast duration-normal ease-default z-sticky */
 
 /* ── Root ── */
 [data-ui="settings-page"] {
@@ -134,7 +134,7 @@
 
 [data-ui="settings-page"][data-variant="horizontal"] [data-ui="tabs"] {
   display: grid;
-  grid-template-columns: var(--space-48, 12rem) 1fr;
+  grid-template-columns: var(--space-48) 1fr;
   gap: var(--space-8);
   align-items: start;
 }

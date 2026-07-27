@@ -4,7 +4,7 @@
  * registry remediated in 0.3-10; theme-manifest gate added in 0.4-12;
  * document-rule gate added in 0.4-15). See FAQIR-PLAN §10.4.
  *
- * Three gates, all fatal on a single finding:
+ * Four gates, all fatal on a single finding:
  *
  *  1. **logical-properties** — runs the framework's own audit rule engine
  *     (`buildLogicalPropertyResults`, the same one `faqir audit` runs per
@@ -29,6 +29,13 @@
  *     `<template>` a `<script>` clones into a `<main>`), so a *static* scan can't
  *     see their main landmark and would false-positive. They ship to no project.
  *
+ *  4. **var() resolution** (task 0.8-07) — every `var(--x)` in `registry/**`
+ *     outside `tokens/` must provably resolve: `--x` is a design token, or a
+ *     knob the same stylesheet declares, or an author/runtime knob with a
+ *     fallback whose name sits outside the token vocabulary. This is the sweep
+ *     `token-exists` never performed — that rule is project-scoped, driven by
+ *     `.faqir/config.json`, and the registry itself was never its input.
+ *
  * Bun-only: imports the TypeScript rule engine from `src/`. Run via
  * `bun run audit:registry` (or `bun scripts/registry-audit.mjs`).
  */
@@ -36,7 +43,8 @@ import { Glob } from "bun";
 import { readFileSync, existsSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { buildLogicalPropertyResults } from "../src/audit/checker";
+import { buildLogicalPropertyResults, findDanglingTokenReferences } from "../src/audit/checker";
+import { collectDefinedTokens } from "../src/parser/css-parser";
 import { parseDocument } from "../src/parser/html-parser";
 import { DOCUMENT_RULES } from "../src/audit/rules";
 import {
@@ -162,6 +170,38 @@ if (docOffenders.length > 0) {
   failed = true;
 } else {
   console.log(`✓ Zero findings — registry markup has unique ids, ordered headings, and clean landmarks.`);
+}
+
+// ── Gate 4: every var() in registry CSS resolves (task 0.8-07) ───────────────
+// The gap this closes: `token-exists` is a PROJECT rule — `faqir audit` runs it
+// over `<project>/ui/**` from the installed list — so nothing ever pointed it at
+// `registry/`, and `settings-page.css` shipped `var(--space-48, 12rem)` against
+// a token that did not exist. A reference is fine if it names a design token, or
+// a knob the same stylesheet declares, or an author/runtime knob that carries a
+// fallback and sits outside the token vocabulary. Anything else is dangling.
+const tokenDefSources = [...new Glob("*.css").scanSync(TOKENS_DIR)].map((f) =>
+  readFileSync(join(TOKENS_DIR, f), "utf8"),
+);
+const DEFINED_TOKENS = collectDefinedTokens(tokenDefSources);
+
+const sweptCss = cssFiles.filter((rel) => !rel.startsWith("tokens/"));
+const danglingOffenders = [];
+for (const rel of sweptCss) {
+  const css = readFileSync(join(REGISTRY, rel), "utf8");
+  for (const f of findDanglingTokenReferences(css, DEFINED_TOKENS)) {
+    danglingOffenders.push(`  ${rel}:${f.line} — [${f.kind}] ${f.message}`);
+  }
+}
+
+console.log(`\n▶ Registry self-audit — var() resolution over registry/**/*.css (tokens/ excluded)`);
+console.log(`  scanned ${sweptCss.length} stylesheet(s) against ${DEFINED_TOKENS.size} defined token(s)`);
+
+if (danglingOffenders.length > 0) {
+  console.error(`\n✗ ${danglingOffenders.length} finding(s) — dangling var() references:`);
+  console.error(danglingOffenders.join("\n"));
+  failed = true;
+} else {
+  console.log(`✓ Zero findings — every var() in the registry provably resolves.`);
 }
 
 process.exit(failed ? 1 : 0);
