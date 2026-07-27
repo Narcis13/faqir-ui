@@ -4,7 +4,12 @@
 import { createFaqirPrimitive } from "../runtime";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 
-export interface LEmptyStateProps extends Omit<ComponentPropsWithoutRef<"div">, "icon" | "title" | "description" | "actions"> {
+/** Allowed `size` values (manifest variant group "size", attr `data-size`). */
+export type LEmptyStateSize = "sm";
+
+export interface LEmptyStateProps extends Omit<ComponentPropsWithoutRef<"div">, "size" | "icon" | "title" | "description" | "actions"> {
+  /** `data-size`; omitted when unset (manifest default: ""). */
+  size?: LEmptyStateSize;
   /** Projected into `<span data-part="icon">`. */
   icon?: ReactNode;
   /** Projected into `<h3 data-part="title">` (required part — always rendered). */
@@ -19,7 +24,9 @@ export interface LEmptyStateProps extends Omit<ComponentPropsWithoutRef<"div">, 
 export const LEmptyState = createFaqirPrimitive<LEmptyStateProps>({
   name: "empty-state",
   tag: "div",
-  variants: [],
+  variants: [
+    { prop: "size", attr: "data-size", values: ["sm"] },
+  ],
   states: [],
   slots: [
     { name: "icon", tag: "span", required: false, isVoid: false },

@@ -1,7 +1,7 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "input-otp",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "kind": "recipe",
   "category": "forms",
   "description": "Segmented one-time-code input — N visual segments over a single hidden real input, with paste distribution, auto-advance, optional l-mask enforcement, and a fire-once complete event",
@@ -59,7 +59,22 @@
 
   "states": {
     "complete": { "attr": "data-state=\"complete\"", "applied_to": "root", "transient": true },
-    "disabled": { "attr": "data-disabled", "applied_to": "root" }
+    "disabled": { "attr": "data-disabled", "applied_to": "root" },
+    "filled": {
+      "attr": "data-filled",
+      "applied_to": "segment",
+      "description": "A segment that has a character. The controller writes it as it reflects the hidden input's value onto the segment row"
+    },
+    "active": {
+      "attr": "data-active",
+      "applied_to": "segment",
+      "description": "The segment the next character will land in — the focus ring the user sees, since the real input is visually hidden"
+    },
+    "caret": {
+      "attr": "data-caret",
+      "applied_to": "segment",
+      "description": "The active segment while it is still empty: renders the blinking caret pseudo-element (suppressed under prefers-reduced-motion)"
+    }
   },
 
   "props": {

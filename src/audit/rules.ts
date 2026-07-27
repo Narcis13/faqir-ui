@@ -6,6 +6,7 @@ import type { Manifest, ManifestVariant } from "../manifest";
 import { TIERS, isTier } from "../utils/breakpoints";
 import { suggestClosest } from "../utils/suggest";
 import { CONTRAST_TOKENS_RULE } from "./contrast-tokens";
+import { CSS_RULES } from "./css-rules";
 import { fieldWiringRule } from "./field-wiring";
 
 export type Severity = "critical" | "error" | "warning" | "info";
@@ -1185,7 +1186,13 @@ export function getRuleInventory(): RuleInfo[] {
     description: r.description,
     applies_to: "HTML document",
   }));
-  return [...fromManifestRules, ...fromDocumentRules, ...ANTIPATTERN_RULES, CONTRAST_TOKENS_RULE];
+  return [
+    ...fromManifestRules,
+    ...fromDocumentRules,
+    ...ANTIPATTERN_RULES,
+    ...CSS_RULES,
+    CONTRAST_TOKENS_RULE,
+  ];
 }
 
 // Line number of a specific element. The parser (task 0.5-08) records each

@@ -56,12 +56,17 @@ describe("bindings vue codegen", () => {
     const sw = irs.find((ir) => ir.name === "switch")!;
     expect(sw.states.map((s) => s.prop)).toEqual(["on", "disabled"]);
     const button = irs.find((ir) => ir.name === "button")!;
-    expect(button.states.map((s) => s.prop)).toEqual(["loading", "disabled"]);
+    // `full` rides the state channel because it is a boolean prop with an explicit
+    // attr (0.8-03's mechanism); it was declared in 0.8-10, when the
+    // undeclared-attribute rule found data-full in button.css and in no manifest.
+    expect(button.states.map((s) => s.prop)).toEqual(["loading", "disabled", "full"]);
   });
 
   it("reserved attr names get the Variant suffix (separator data-style)", () => {
     const sep = irs.find((ir) => ir.name === "separator")!;
-    expect(sep.variants.map((v) => v.prop)).toEqual(["variant", "styleVariant"]);
+    // `size` joined the group in 0.8-10 — separator.css sized vertical rules by
+    // data-size long before any manifest said so.
+    expect(sep.variants.map((v) => v.prop)).toEqual(["variant", "styleVariant", "size"]);
   });
 
   it("void roots render no slots or default slot (input, separator)", () => {

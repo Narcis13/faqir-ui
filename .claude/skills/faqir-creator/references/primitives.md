@@ -416,7 +416,9 @@ Placeholder for empty content sections with icon, title, description, and action
 
 **Variants**
 
-_No variants._
+| Variant | Values | Default | Attribute | Applied to |
+|---------|--------|---------|-----------|------------|
+| size | `sm` | `` | `data-size` | root |
 
 - **Safe transforms:** `Change icon content`, `Change title and description text`, `Add or remove actions slot`, `Add or remove icon slot`
 - **Unsafe (never do):** `Remove data-ui attribute`, `Remove title slot`
@@ -853,6 +855,7 @@ Horizontal or vertical divider line
 |---------|--------|---------|-----------|------------|
 | orientation | `horizontal`, `vertical` | `horizontal` | `data-variant` | root |
 | style | `solid`, `dashed`, `dotted`, `thick` | `solid` | `data-style` | root |
+| size | `sm`, `md`, `lg` | `` | `data-size` | root |
 
 - **Safe transforms:** `change-orientation`, `add-label`, `change-style`
 - **Unsafe (never do):** `remove-separator-element`

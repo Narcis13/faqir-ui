@@ -122,9 +122,11 @@ describe("token resolution · why token-exists missed it", () => {
   it("and the registry's own gate ran three rules, none of them about tokens", () => {
     // The gate file is the evidence: before 0.8-07 its header said "Three
     // gates" and named logical-properties, theme-manifests and document-rules.
-    // It now says four and names var() resolution — which is the fix.
+    // It gained var() resolution here — which is the fix — and two more in
+    // 0.8-10 (undeclared-attribute, breakpoint-canon), so the count is read out
+    // of the header rather than pinned to the number this task left it at.
     const gate = readFileSync(join(ROOT, "scripts/registry-audit.mjs"), "utf8");
-    expect(gate).toContain("Four gates");
+    expect(gate).toMatch(/^ \* (Four|Five|Six|Seven|Eight) gates, all fatal on a single finding:$/m);
     expect(gate).toContain("var() resolution");
     for (const older of ["logical-properties", "theme-manifests", "document-rules"]) {
       expect(gate).toContain(older);

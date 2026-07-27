@@ -237,6 +237,173 @@ export function findHardcodedColorValues(source: string): CssViolation[] {
   return violations;
 }
 
+// ── Selector + at-rule structure (task 0.8-10) ──
+//
+// Two rules need to read a stylesheet's *shape* rather than its declarations:
+// `undeclared-attribute` needs every attribute a selector matches on, and
+// `breakpoint-canon` needs every `@media`/`@container` prelude. Both live here,
+// beside the other source scanners, and both are pure string→data functions with
+// no `node:*` reachable from them — the audit bundles for the browser.
+
+/** One attribute condition found in a selector. */
+export interface SelectedAttribute {
+  /** Attribute name as written, e.g. `data-cols-md`. */
+  attr: string;
+  /** Value the selector matches, or `null` for a bareword `[data-wrap]`. */
+  value: string | null;
+  /** 1-based line of the attribute's own `[`. */
+  line: number;
+  /** The single selector (one comma-separated branch) it appeared in. */
+  selector: string;
+}
+
+/** An `@media` / `@container` prelude, whitespace-normalized. */
+export interface AtRulePrelude {
+  kind: "media" | "container";
+  /** Everything between the at-keyword and the `{`, e.g. `(min-width: 48rem)`. */
+  text: string;
+  /** 1-based line of the `@`. */
+  line: number;
+}
+
+// `[name]`, `[name="v"]`, `[name='v']`, `[name=v]`, and the `~= |= ^= $= *=`
+// matchers. Deliberately tolerant of whitespace: `[ data-wrap ]` is legal CSS.
+const ATTR_SELECTOR_RE =
+  /\[\s*([A-Za-z_][\w:.-]*)\s*(?:([~|^$*]?=)\s*(?:"([^"]*)"|'([^']*)'|([^\]\s]+))\s*)?[is]?\s*\]/g;
+
+/** Offsets of every newline, for O(log n) offset → 1-based line lookups. */
+function lineIndex(source: string): number[] {
+  const offsets: number[] = [];
+  for (let i = 0; i < source.length; i++) if (source[i] === "\n") offsets.push(i);
+  return offsets;
+}
+
+function lineAt(newlines: number[], offset: number): number {
+  let lo = 0;
+  let hi = newlines.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (newlines[mid] < offset) lo = mid + 1;
+    else hi = mid;
+  }
+  return lo + 1;
+}
+
+/**
+ * Walk a stylesheet's rule preludes, handing each one to `visit`.
+ *
+ * A "prelude" is the text between the previous block delimiter and a `{` — a
+ * selector list for a style rule, or the condition of an at-rule. Declaration
+ * bodies are skipped (the buffer resets at `;` and `}`), quoted strings are
+ * passed through intact so a `content: "}"` cannot desynchronize the walk, and
+ * nesting is handled by construction: an at-rule's children are ordinary
+ * preludes one level down.
+ */
+function eachPrelude(
+  source: string,
+  visit: (text: string, start: number, lineOf: (offset: number) => number) => void,
+): void {
+  // `stripBlockComments` replaces each comment with its own newlines, so a line
+  // number measured on the stripped source is the line number in the original —
+  // but a byte OFFSET is not, which is why the index is built from the stripped
+  // text and never from `source`.
+  const css = stripBlockComments(source);
+  const newlines = lineIndex(css);
+  const lineOf = (offset: number) => lineAt(newlines, offset);
+  let buffer = "";
+  let start = -1;
+  let quote: '"' | "'" | null = null;
+
+  for (let i = 0; i < css.length; i++) {
+    const c = css[i];
+    if (quote) {
+      buffer += c;
+      if (c === quote && css[i - 1] !== "\\") quote = null;
+      continue;
+    }
+    if (c === '"' || c === "'") {
+      quote = c;
+      if (start < 0) start = i;
+      buffer += c;
+      continue;
+    }
+    if (c === "{") {
+      if (buffer.trim()) visit(buffer, start < 0 ? i : start, lineOf);
+      buffer = "";
+      start = -1;
+      continue;
+    }
+    if (c === "}" || c === ";") {
+      buffer = "";
+      start = -1;
+      continue;
+    }
+    if (start < 0 && !/\s/.test(c)) start = i;
+    buffer += c;
+  }
+}
+
+/**
+ * Every attribute condition every selector in the sheet matches on (task 0.8-10).
+ *
+ * Includes attributes on descendants and children (`[data-ui="x"] > [data-span]`)
+ * and inside functional pseudo-classes (`:not([data-col-hidden])`,
+ * `:has([data-dragging])`) — a component styles what it selects, wherever in the
+ * subtree that is, so the `undeclared-attribute` contract has to see all of it.
+ * At-rule preludes are not selectors and are never scanned.
+ */
+export function findSelectedAttributes(source: string): SelectedAttribute[] {
+  const found: SelectedAttribute[] = [];
+
+  eachPrelude(source, (text, start, lineOf) => {
+    if (text.trimStart().startsWith("@")) return; // at-rule condition, not a selector
+    // Split into comma-separated branches, keeping each branch's own offset so a
+    // multi-line selector list reports the line the attribute is really on.
+    let branchStart = 0;
+    const branches: Array<{ text: string; offset: number }> = [];
+    for (let i = 0; i <= text.length; i++) {
+      if (i === text.length || text[i] === ",") {
+        branches.push({ text: text.slice(branchStart, i), offset: branchStart });
+        branchStart = i + 1;
+      }
+    }
+    for (const branch of branches) {
+      const selector = branch.text.trim().replace(/\s+/g, " ");
+      if (!selector) continue;
+      ATTR_SELECTOR_RE.lastIndex = 0;
+      let match: RegExpExecArray | null;
+      while ((match = ATTR_SELECTOR_RE.exec(branch.text)) !== null) {
+        const value = match[2] ? (match[3] ?? match[4] ?? match[5] ?? "") : null;
+        found.push({
+          attr: match[1],
+          value,
+          line: lineOf(start + branch.offset + match.index),
+          selector,
+        });
+      }
+    }
+  });
+
+  return found;
+}
+
+/** Every `@media` / `@container` prelude in the sheet, in document order. */
+export function findAtRulePreludes(source: string): AtRulePrelude[] {
+  const found: AtRulePrelude[] = [];
+
+  eachPrelude(source, (text, start, lineOf) => {
+    const m = /^@(media|container)\b([^]*)$/.exec(text.trim());
+    if (!m) return;
+    found.push({
+      kind: m[1] as "media" | "container",
+      text: m[2].trim().replace(/\s+/g, " "),
+      line: lineOf(start),
+    });
+  });
+
+  return found;
+}
+
 // ── Logical properties detection (task 0.3-09) ──
 //
 // Physical, direction-bound CSS properties (margin-left, padding-right,

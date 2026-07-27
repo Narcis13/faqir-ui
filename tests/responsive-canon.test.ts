@@ -582,7 +582,10 @@ describe("table controller · STACK_BREAKPOINTS is the canon", () => {
     const manifest = JSON.parse(
       readFileSync(join(RECIPES, "table", "table.manifest.json"), "utf8"),
     );
-    const entry = manifest.changes.find((c: { version: string }) => c.version === manifest.version);
+    // Pinned to 3.0.0 rather than to `manifest.version`: 0.8-10 added a 3.1.0
+    // entry (twenty attributes declared) and the entry that carries the canon
+    // migration is the major one, wherever the version ends up.
+    const entry = manifest.changes.find((c: { version: string }) => c.version === "3.0.0");
     expect(entry.breaking).toBe(true);
     expect(entry.note).toContain("data-stack-below");
     expect(entry.note).toContain("data-hide-below");

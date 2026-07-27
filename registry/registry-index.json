@@ -94,7 +94,7 @@
       "name": "button",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "files": [
         {
           "path": "button.css",
@@ -106,10 +106,10 @@
         },
         {
           "path": "button.manifest.json",
-          "sha256": "43eb71cd07eeca8405c554101979ff3d3ec169f40864f7b84533c84886e340f7"
+          "sha256": "56192d578839e62d996fdbd33f1526568a8ef8c512e3dc448c1164b46d74d73f"
         }
       ],
-      "hash": "c980d8420e82e8674514385863801b699f8daff25a4e5b41b9a5dc039b4ea163",
+      "hash": "91c6dc494fc41c112c27d8e0d3299e23b1e7ab987402ebc70c0b4666538aaee0",
       "deps": []
     },
     {
@@ -296,7 +296,7 @@
       "name": "empty-state",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "files": [
         {
           "path": "empty-state.css",
@@ -308,10 +308,10 @@
         },
         {
           "path": "empty-state.manifest.json",
-          "sha256": "b7a59de8cf1cc606cc864a0ed2dd7ebca3ab144b1ce966a6669121c9b3d60e80"
+          "sha256": "950cf7faa6376fc50dc4dec319bb010242ea68bd02b111fea5d7f72799b1ce46"
         }
       ],
-      "hash": "33c88297688fe711b7b5bde6d854f2e569f679db7984ba4babdba3208cab9519",
+      "hash": "19caffa9bf9c474e8cd92ea526cf4df4f4ca9e5a23e9d2efa9ee278a2486df3a",
       "deps": [
         "button"
       ]
@@ -639,7 +639,7 @@
       "name": "separator",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "files": [
         {
           "path": "separator.css",
@@ -651,10 +651,10 @@
         },
         {
           "path": "separator.manifest.json",
-          "sha256": "7bbb9805171a53d4397bafa6ce7ef8fb8b6ceb9fa20ac9bf2dc43e90f663c622"
+          "sha256": "44e280c64d080e86f5d7b5dc19d9aa4a607ba60c68a944a5b81c2c7a309d07ff"
         }
       ],
-      "hash": "9cbd03e33cc032c00faddd5d5b5fb140d8af463abdc2bf64a48b3616e60ec39c",
+      "hash": "7274e7ade63df0431728c8915d47d9e5f344a11862505573aa0335fc5c5272f8",
       "deps": []
     },
     {
@@ -861,7 +861,7 @@
       "name": "text",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "files": [
         {
           "path": "text.css",
@@ -873,10 +873,10 @@
         },
         {
           "path": "text.manifest.json",
-          "sha256": "96203de2ea681997b804063d08706e647648397004bcc50577ebec5be5fac589"
+          "sha256": "afce354a57563a17e6dcfcf49e0634446b2b28f59b3653f1c6d799e9078d5c32"
         }
       ],
-      "hash": "a9c6066b1d8fd78989c681f6f19e0ce97919181073ce073b23112d8317f65e3a",
+      "hash": "4ef44f83d19f614d2ac6483b10c39ebad8f014905ea6e4b201f98a99854c1192",
       "deps": []
     },
     {
@@ -1029,7 +1029,7 @@
       "name": "calendar",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "files": [
         {
           "path": "calendar.css",
@@ -1045,10 +1045,10 @@
         },
         {
           "path": "calendar.manifest.json",
-          "sha256": "c9192a753508aa5ac84d6d88898929e622513ca3cab6ffedc9651bf5f6dd6ece"
+          "sha256": "48cade3afdeffe3350dbc37f9f65293e9c1a074443494110c8cedffdc39a1330"
         }
       ],
-      "hash": "3483b6ac3d32e66e1623469c79ff569997c2b61eebb8a0bc05c0617584f9ee20",
+      "hash": "569ef8f04e6597c2725dc0174d7548d282fc4c62436f400c3715cf541c6eb56a",
       "deps": []
     },
     {
@@ -1081,7 +1081,7 @@
       "name": "combobox",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "files": [
         {
           "path": "combobox.css",
@@ -1097,17 +1097,17 @@
         },
         {
           "path": "combobox.manifest.json",
-          "sha256": "6ef39b41b07d40732fb1bbe4660f198747f232ce1939b56d4308530274c82a44"
+          "sha256": "2a396b4a89e460f8f357a37ccb2c39a8c80a669a1c3436a8f852128994660ab6"
         }
       ],
-      "hash": "45fb60619fbae8f04464933415609c62fa0bc2649516da7fca0eac79daaab377",
+      "hash": "e13bd8fa8f22861c8fdaaee79c64a355b658125dd45085a620361d2e02c721a7",
       "deps": []
     },
     {
       "name": "command-palette",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "files": [
         {
           "path": "command-palette.css",
@@ -1123,10 +1123,10 @@
         },
         {
           "path": "command-palette.manifest.json",
-          "sha256": "23b8c16ba752b7d5ec4abfc49699a0f38ed65dda9967e1656cc83d511bc5626f"
+          "sha256": "f33f8904bef067b95838f3183c0b986262363f7daeeba0afb9f3e6ac4a65f39f"
         }
       ],
-      "hash": "72ece2697b4e1390f4fb002d75b99c4fd74b6d76900ef75154c7a4fd87f6075c",
+      "hash": "24197ec662eff123d9a1a85e2baded8162ee6d8a7f6dfd2a6d96cf2f57942800",
       "deps": [
         "kbd"
       ]
@@ -1298,7 +1298,7 @@
       "name": "input-otp",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "files": [
         {
           "path": "input-otp.css",
@@ -1314,10 +1314,10 @@
         },
         {
           "path": "input-otp.manifest.json",
-          "sha256": "2ad700e38e9061d6941904dcf52591797118f206f3686763cfcb49f4ee28cbf2"
+          "sha256": "537bfe6be6febb55e7a47315531579daedf2dde31471d14e17432fe82bcd20fd"
         }
       ],
-      "hash": "942bdf374888f0857a463368db4dc8f19e849326184995296ebcc73a28efebdf",
+      "hash": "90714671a2bfc39ff5409c6d74f52c8a87220bcbd247641fb27e2f579712a705",
       "deps": []
     },
     {
@@ -1432,7 +1432,7 @@
       "name": "select-custom",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "files": [
         {
           "path": "select-custom.css",
@@ -1448,10 +1448,10 @@
         },
         {
           "path": "select-custom.manifest.json",
-          "sha256": "43fb6a6ba0d194f2499fdc820a5278922b2850ef139c1b5e9b26b5e064da261a"
+          "sha256": "b2290ef9464f01056eed27465fd305f460849bb8660bdbbddbf7a112211ce6f0"
         }
       ],
-      "hash": "81714768ecdb43eafe53a7761f7217fa3291b820ad4f4af30a20eb68a252b7c6",
+      "hash": "0e357bfebf3f3af6a94a8c261e2b4e1121e06755a0ebe4ac823017f1c1b118ef",
       "deps": []
     },
     {
@@ -1543,7 +1543,7 @@
       "name": "table",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "3.0.0",
+      "version": "3.1.0",
       "files": [
         {
           "path": "table.css",
@@ -1559,10 +1559,10 @@
         },
         {
           "path": "table.manifest.json",
-          "sha256": "f7da307c3f921e224369843c6404e401e6e8af60eb7c4b3db40de085122319ad"
+          "sha256": "8a113c1510dd2177fa4c8eef45fb5d4fe49c9c4a0a54c7851a988f22fbf99a8f"
         }
       ],
-      "hash": "27783b0ac2cde285cf834a07466484be537ebd656178a0ade8388ca957f237b7",
+      "hash": "43efe22db9a1f833691514b1bb961e2cec960631e7a4a0115b5ef74ec17eef51",
       "deps": [
         "checkbox",
         "badge",
@@ -1600,7 +1600,7 @@
       "name": "tag-input",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "files": [
         {
           "path": "tag-input.css",
@@ -1616,10 +1616,10 @@
         },
         {
           "path": "tag-input.manifest.json",
-          "sha256": "8af995fdcfb811060016a5e952dc701c8be097d16d4af6407e8378b4f4038473"
+          "sha256": "c680ca3b89536bc65716f513e84926e8e9e7b6852d610497ec9befae53a35862"
         }
       ],
-      "hash": "dadff751bd5daf56edd981e85285acd5714171f1d69d95c4f5e59991e7543f9c",
+      "hash": "2723ff36e7934cf1ba53abd5c7f4a066eba545e8316785b6b0c0f3973a1686ee",
       "deps": [
         "chip"
       ]
@@ -1656,7 +1656,7 @@
       "name": "toggle-group",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "files": [
         {
           "path": "toggle-group.css",
@@ -1672,10 +1672,10 @@
         },
         {
           "path": "toggle-group.manifest.json",
-          "sha256": "9a94431571a28076c21fd958df324f9426371e24d3c893efccc004ce5583959a"
+          "sha256": "73a063ef79afdd460c80f5ec737cfc07084be82ffd0b5f0eec8122d0256bc192"
         }
       ],
-      "hash": "e07e287d9317652009d0fe785cadc598965cb3b03ea3e51765fad811d352533d",
+      "hash": "9eefa3ff766eecf073e397463b9964ad0a40d8d46233a591ccff3f3495453907",
       "deps": []
     },
     {

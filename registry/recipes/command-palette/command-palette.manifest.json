@@ -1,10 +1,18 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "command-palette",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "kind": "recipe",
   "category": "navigation",
   "description": "Cmd+K style modal command interface with search and keyboard navigation",
+
+  "changes": [
+    {
+      "version": "1.1.0",
+      "note": "data-highlighted and data-hidden are now declared. The controller has always written both onto the options (active descendant and filtered-out respectively) and the CSS has always styled them, but no manifest named them. They are states rather than props because a controller writes them: a state is the runtime's vocabulary, a prop is what an author types. 0.8-10's undeclared-attribute rule now makes this class of drift impossible: an attribute a component's CSS selects on that its manifest never declares fails the registry gate.",
+      "breaking": false
+    }
+  ],
 
   "anatomy": {
     "tag": "div",
@@ -74,7 +82,17 @@
 
   "states": {
     "closed": { "attr": "data-state=\"closed\"", "default": true },
-    "open": { "attr": "data-state=\"open\"" }
+    "open": { "attr": "data-state=\"open\"" },
+    "highlighted": {
+      "attr": "data-highlighted",
+      "applied_to": "item",
+      "description": "The active descendant of the command list — the item arrow keys have moved to, mirrored in aria-activedescendant. The controller writes it; only one item carries it at a time"
+    },
+    "hidden": {
+      "attr": "data-hidden",
+      "applied_to": "item",
+      "description": "An item filtered out by the search query — and, on a group, a group whose every item is filtered out. The controller writes both; hidden items are skipped by keyboard navigation and by the empty-state check"
+    }
   },
 
   "props": {

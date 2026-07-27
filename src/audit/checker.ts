@@ -8,6 +8,12 @@ import { findExternalImports, findDataFetching } from "../parser/js-parser";
 import { loadManifest, type Manifest } from "../manifest";
 import { type AuditResult, type Severity, ALL_RULES, DOCUMENT_RULES, NO_FETCH_RULE, NO_EXTERNAL_IMPORT_RULE, LOGICAL_PROPERTIES_RULE } from "./rules";
 import { checkThemeContrast, CONTRAST_TOKENS_RULE } from "./contrast-tokens";
+import {
+  BREAKPOINT_CANON_RULE,
+  UNDECLARED_ATTRIBUTE_RULE,
+  buildBreakpointCanonResults,
+  buildUndeclaredAttributeResults,
+} from "./css-rules";
 import { readConfig } from "../utils/config";
 import { getRegistryPath } from "../utils/fs";
 import { auditHtmlSource, type HtmlAuditInput } from "./html-audit";
@@ -107,10 +113,14 @@ export async function runAudit(options: AuditOptions = {}): Promise<AuditSummary
     results.push(...motionResults);
   }
 
-  // CSS anti-pattern checks
-  const CSS_AP_RULES = ["no-important", "no-class-selector", "no-id-selector", "no-hardcoded-values", "logical-properties"];
+  // CSS anti-pattern checks (+ the stylesheet-contract rules of task 0.8-10,
+  // which need the manifests `runAudit` already loaded above).
+  const CSS_AP_RULES = [
+    "no-important", "no-class-selector", "no-id-selector", "no-hardcoded-values", "logical-properties",
+    UNDECLARED_ATTRIBUTE_RULE.id, BREAKPOINT_CANON_RULE.id,
+  ];
   if (CSS_AP_RULES.some(id => !skipRules.has(id))) {
-    const cssApResults = await checkCssAntiPatterns(outputDir, config.installed, cwd);
+    const cssApResults = await checkCssAntiPatterns(outputDir, config.installed, cwd, manifests);
     results.push(...cssApResults.filter(r => !skipRules.has(r.rule_id)));
   }
 
@@ -246,6 +256,7 @@ async function checkCssAntiPatterns(
   outputDir: string,
   installed: { primitives: string[]; recipes: string[]; patterns: string[] },
   cwd: string,
+  manifests: Map<string, Manifest>,
 ): Promise<AuditResult[]> {
   const results: AuditResult[] = [];
 
@@ -307,6 +318,16 @@ async function checkCssAntiPatterns(
     }
 
     results.push(...buildLogicalPropertyResults(source, name, relPath));
+
+    // Stylesheet contract vs the manifest (task 0.8-10). `breakpoint-canon`
+    // needs only the sheet; `undeclared-attribute` needs the manifest that is
+    // supposed to declare what the sheet selects on, so a component whose
+    // manifest is missing from the project is skipped rather than guessed at.
+    results.push(...buildBreakpointCanonResults(source, name, relPath));
+    const manifest = manifests.get(name);
+    if (manifest) {
+      results.push(...buildUndeclaredAttributeResults(source, manifest, relPath));
+    }
   }
 
   return results;

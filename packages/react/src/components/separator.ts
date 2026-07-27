@@ -10,11 +10,16 @@ export type LSeparatorVariant = "horizontal" | "vertical";
 /** Allowed `styleVariant` values (manifest variant group "style", attr `data-style`). */
 export type LSeparatorStyleVariant = "solid" | "dashed" | "dotted" | "thick";
 
-export interface LSeparatorProps extends Omit<ComponentPropsWithoutRef<"hr">, "variant" | "styleVariant"> {
+/** Allowed `size` values (manifest variant group "size", attr `data-size`). */
+export type LSeparatorSize = "sm" | "md" | "lg";
+
+export interface LSeparatorProps extends Omit<ComponentPropsWithoutRef<"hr">, "variant" | "styleVariant" | "size"> {
   /** `data-variant`; omitted when unset (manifest default: "horizontal"). */
   variant?: LSeparatorVariant;
   /** `data-style`; omitted when unset (manifest default: "solid"). */
   styleVariant?: LSeparatorStyleVariant;
+  /** `data-size`; omitted when unset (manifest default: ""). */
+  size?: LSeparatorSize;
 }
 
 /** `separator` — Horizontal or vertical divider line */
@@ -24,6 +29,7 @@ export const LSeparator = createFaqirPrimitive<LSeparatorProps>({
   variants: [
     { prop: "variant", attr: "data-variant", values: ["horizontal", "vertical"] },
     { prop: "styleVariant", attr: "data-style", values: ["solid", "dashed", "dotted", "thick"] },
+    { prop: "size", attr: "data-size", values: ["sm", "md", "lg"] },
   ],
   states: [],
   slots: [],

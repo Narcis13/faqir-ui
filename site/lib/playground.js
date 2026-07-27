@@ -172,8 +172,15 @@
     };
 
     if (status) {
+      // Count what this page RUNS, not what the engine ships: since 0.8-10 the
+      // bundle also carries the stylesheet rules (undeclared-attribute,
+      // breakpoint-canon), and those audit a component's CSS against its
+      // manifest — there is no CSS in this textarea to run them on.
+      var markupRules = window.FaqirAudit.rules.filter(function (rule) {
+        return rule.scope !== "css";
+      });
       status.textContent =
-        window.FaqirAudit.rules.length +
+        markupRules.length +
         " rules · " +
         auditor.components.length +
         " components · engine v" +

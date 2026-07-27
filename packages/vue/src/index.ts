@@ -32,7 +32,7 @@ export type { LContainerProps, LContainerMeasure } from "./components/container"
 export { LDescriptionList } from "./components/description-list";
 export type { LDescriptionListProps, LDescriptionListVariant, LDescriptionListSize } from "./components/description-list";
 export { LEmptyState } from "./components/empty-state";
-export type { LEmptyStateProps } from "./components/empty-state";
+export type { LEmptyStateProps, LEmptyStateSize } from "./components/empty-state";
 export { LFieldGroup } from "./components/field-group";
 export type { LFieldGroupProps, LFieldGroupVariant, LFieldGroupSize } from "./components/field-group";
 export { LGrid } from "./components/grid";
@@ -62,7 +62,7 @@ export type { LRadioProps, LRadioSize } from "./components/radio";
 export { LSelect } from "./components/select";
 export type { LSelectProps, LSelectSize } from "./components/select";
 export { LSeparator } from "./components/separator";
-export type { LSeparatorProps, LSeparatorVariant, LSeparatorStyleVariant } from "./components/separator";
+export type { LSeparatorProps, LSeparatorVariant, LSeparatorStyleVariant, LSeparatorSize } from "./components/separator";
 export { LSignature } from "./components/signature";
 export type { LSignatureProps, LSignatureSize, LSignatureAlign } from "./components/signature";
 export { LSkeleton } from "./components/skeleton";

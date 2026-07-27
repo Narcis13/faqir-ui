@@ -4,7 +4,7 @@
  * registry remediated in 0.3-10; theme-manifest gate added in 0.4-12;
  * document-rule gate added in 0.4-15). See FAQIR-PLAN §10.4.
  *
- * Four gates, all fatal on a single finding:
+ * Six gates, all fatal on a single finding:
  *
  *  1. **logical-properties** — runs the framework's own audit rule engine
  *     (`buildLogicalPropertyResults`, the same one `faqir audit` runs per
@@ -36,6 +36,20 @@
  *     `token-exists` never performed — that rule is project-scoped, driven by
  *     `.faqir/config.json`, and the registry itself was never its input.
  *
+ *  5. **undeclared-attribute** (task 0.8-10) — every `data-*` attribute a
+ *     component's CSS selects on is declared in its manifest as a variant attr,
+ *     a prop or a state. Manifests are the source of truth (FAQIR-NEXT §3): an
+ *     attribute the manifest never names is invisible to the docs site, the
+ *     skill, `faqir context` and the vue/react bindings, so it cannot be
+ *     discovered or typed — the drift follow-up 0.7-20 found on `stack` and
+ *     0.8-03/0.8-04 found ten more of in layout.
+ *
+ *  6. **breakpoint-canon** (task 0.8-10) — every `@media`/`@container` width
+ *     prelude is one canon `min-width` floor (40/48/64/80rem). Promotes the
+ *     sweep tests of 0.8-08/0.8-09 from convention to enforcement; preludes with
+ *     no width at all (reduced motion, colour scheme, forced colours, print) are
+ *     exempt by construction.
+ *
  * Bun-only: imports the TypeScript rule engine from `src/`. Run via
  * `bun run audit:registry` (or `bun scripts/registry-audit.mjs`).
  */
@@ -47,6 +61,10 @@ import { buildLogicalPropertyResults, findDanglingTokenReferences } from "../src
 import { collectDefinedTokens } from "../src/parser/css-parser";
 import { parseDocument } from "../src/parser/html-parser";
 import { DOCUMENT_RULES } from "../src/audit/rules";
+import {
+  buildBreakpointCanonResults,
+  buildUndeclaredAttributeResults,
+} from "../src/audit/css-rules";
 import {
   validateThemeManifest,
   overriddenTokens,
@@ -202,6 +220,67 @@ if (danglingOffenders.length > 0) {
   failed = true;
 } else {
   console.log(`✓ Zero findings — every var() in the registry provably resolves.`);
+}
+
+// ── Gates 5 & 6: the stylesheet contract rules (task 0.8-10) ─────────────────
+// `undeclared-attribute` — every data-* attribute a component's CSS selects on
+// is declared in its manifest as a variant attr, a prop or a state. This is the
+// class of drift follow-up 0.7-20 found by hand on `stack` (one attribute), that
+// 0.8-03/0.8-04 found ten of in layout, and that no value rule can see: rules
+// like `valid-variant` validate the values of attributes the manifest already
+// declares, so one it never declares is invisible to all of them.
+//
+// `breakpoint-canon` — every `@media`/`@container` width prelude in the registry
+// is one canon min-width floor. The sweeps of 0.8-08/0.8-09 proved that as a
+// test over this tree; as a rule it also travels into user projects and the docs
+// playground. Preludes with no width (reduced motion, colour scheme, print) are
+// exempt by construction.
+//
+// The unit is a *component*: manifest + the stylesheet its `files.css` names, so
+// `icon`, whose sheet is `icons.css`, is paired correctly rather than skipped.
+const componentDirs = ["primitives", "recipes", "patterns"].flatMap((layer) =>
+  [...new Glob(`${layer}/*/*.manifest.json`).scanSync(REGISTRY)].sort().map((rel) => ({ layer, rel })),
+);
+
+const cssRuleOffenders = { "undeclared-attribute": [], "breakpoint-canon": [] };
+let componentsChecked = 0;
+let sheetsMissing = 0;
+
+for (const { rel } of componentDirs) {
+  const manifest = JSON.parse(readFileSync(join(REGISTRY, rel), "utf8"));
+  const cssRel = join(dirname(rel), manifest.files?.css ?? `${manifest.name}.css`);
+  if (!existsSync(join(REGISTRY, cssRel))) {
+    sheetsMissing++;
+    continue;
+  }
+  const css = readFileSync(join(REGISTRY, cssRel), "utf8");
+  componentsChecked++;
+  for (const r of buildUndeclaredAttributeResults(css, manifest, cssRel)) {
+    cssRuleOffenders["undeclared-attribute"].push(`  ${cssRel}:${r.line} — ${r.message}`);
+  }
+  for (const r of buildBreakpointCanonResults(css, manifest.name, cssRel)) {
+    cssRuleOffenders["breakpoint-canon"].push(`  ${cssRel}:${r.line} — ${r.message}`);
+  }
+}
+
+console.log(
+  `\n▶ Registry self-audit — undeclared-attribute + breakpoint-canon over registry component CSS`,
+);
+console.log(
+  `  scanned ${componentsChecked} component(s) (${sheetsMissing} manifest(s) declare no stylesheet)`,
+);
+
+for (const [ruleId, offenders] of Object.entries(cssRuleOffenders)) {
+  if (offenders.length > 0) {
+    console.error(`\n✗ ${offenders.length} finding(s) — [${ruleId}]:`);
+    console.error(offenders.join("\n"));
+    failed = true;
+  }
+}
+if (cssRuleOffenders["undeclared-attribute"].length === 0 && cssRuleOffenders["breakpoint-canon"].length === 0) {
+  console.log(
+    `✓ Zero findings — every selected data-* attribute is declared, every width prelude is canon.`,
+  );
 }
 
 process.exit(failed ? 1 : 0);

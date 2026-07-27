@@ -3,14 +3,21 @@
 
 import { defineFaqirPrimitive } from "../runtime";
 
+/** Allowed `size` values (manifest variant group "size", attr `data-size`). */
+export type LEmptyStateSize = "sm";
+
 export interface LEmptyStateProps {
+  /** `data-size`; omitted when unset (manifest default: ""). */
+  size?: LEmptyStateSize;
 }
 
 /** `empty-state` — Placeholder for empty content sections with icon, title, description, and action slots */
 export const LEmptyState = defineFaqirPrimitive<LEmptyStateProps>({
   name: "empty-state",
   tag: "div",
-  variants: [],
+  variants: [
+    { prop: "size", attr: "data-size", values: ["sm"] },
+  ],
   states: [],
   slots: [
     { name: "icon", tag: "span", required: false, isVoid: false },

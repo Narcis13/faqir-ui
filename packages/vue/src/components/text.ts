@@ -29,6 +29,12 @@ export interface LTextProps {
   align?: LTextAlign;
   /** `data-leading`; omitted when unset (manifest default: "normal"). */
   leading?: LTextLeading;
+  /** Sets `data-state="done"`. */
+  done?: boolean;
+  /** Clip overflowing text to a single line with an ellipsis */
+  truncate?: boolean;
+  /** Lay the text out as an aligned column at least --text-tabular-width wide (8ch by default) with tabular figures — for label/value lists */
+  tabular?: boolean;
 }
 
 /** `text` — Text and heading primitives with size, color, weight, alignment, and truncation via data attributes */
@@ -42,7 +48,11 @@ export const LText = defineFaqirPrimitive<LTextProps>({
     { prop: "align", attr: "data-align", values: ["left", "center", "right"] },
     { prop: "leading", attr: "data-leading", values: ["tight", "snug", "normal", "relaxed"] },
   ],
-  states: [],
+  states: [
+    { prop: "done", attr: "data-state", value: "done", kind: "value" },
+    { prop: "truncate", attr: "data-truncate", value: null, kind: "presence" },
+    { prop: "tabular", attr: "data-tabular", value: null, kind: "presence" },
+  ],
   slots: [],
   defaultSlot: true,
 });

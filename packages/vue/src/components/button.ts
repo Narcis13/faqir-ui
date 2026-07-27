@@ -18,6 +18,8 @@ export interface LButtonProps {
   loading?: boolean;
   /** Sets the `disabled` attribute. */
   disabled?: boolean;
+  /** Stretch the button to the full inline size of its container (display: flex; width: 100%) */
+  full?: boolean;
 }
 
 /** `button` — Interactive button with multiple visual variants and sizes */
@@ -31,6 +33,7 @@ export const LButton = defineFaqirPrimitive<LButtonProps>({
   states: [
     { prop: "loading", attr: "data-state", value: "loading", kind: "value" },
     { prop: "disabled", attr: "disabled", value: null, kind: "presence" },
+    { prop: "full", attr: "data-full", value: null, kind: "presence" },
   ],
   slots: [
     { name: "icon", tag: "span", required: false, isVoid: false },

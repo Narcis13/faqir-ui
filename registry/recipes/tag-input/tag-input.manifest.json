@@ -1,10 +1,18 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "tag-input",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "kind": "recipe",
   "category": "forms",
   "description": "Multi-value input composing the chip primitive and combobox listbox behaviour — type + Enter to add tags, Backspace to remove the last, dismiss buttons per tag, optional filtered suggestions, and a configurable duplicates policy",
+
+  "changes": [
+    {
+      "version": "1.1.0",
+      "note": "data-highlighted and data-hidden are now declared. The controller has always written both onto the options (active descendant and filtered-out respectively) and the CSS has always styled them, but no manifest named them. They are states rather than props because a controller writes them: a state is the runtime's vocabulary, a prop is what an author types. 0.8-10's undeclared-attribute rule now makes this class of drift impossible: an attribute a component's CSS selects on that its manifest never declares fails the registry gate.",
+      "breaking": false
+    }
+  ],
 
   "anatomy": {
     "tag": "div",
@@ -61,7 +69,17 @@
 
   "states": {
     "closed": { "attr": "data-state=\"closed\"", "default": true },
-    "open": { "attr": "data-state=\"open\"" }
+    "open": { "attr": "data-state=\"open\"" },
+    "highlighted": {
+      "attr": "data-highlighted",
+      "applied_to": "option",
+      "description": "The active descendant of the suggestion listbox — the option arrow keys have moved to. The controller writes it; only one option carries it at a time"
+    },
+    "hidden": {
+      "attr": "data-hidden",
+      "applied_to": "option",
+      "description": "A suggestion filtered out by the current input, or already added as a tag. The controller writes it; hidden options are skipped by keyboard navigation"
+    }
   },
 
   "props": {

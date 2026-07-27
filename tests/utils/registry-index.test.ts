@@ -31,7 +31,14 @@ describe("buildRegistryIndex", () => {
     expect(button).toBeDefined();
     expect(button!.kind).toBe("primitive");
     expect(button!.layer).toBe("primitives");
-    expect(button!.version).toBe("1.0.0");
+    // The version comes from the manifest, so the assertion reads it from there
+    // rather than pinning a literal that every component release has to chase
+    // (button went to 1.1.0 in 0.8-10 when data-full was finally declared).
+    expect(button!.version).toBe(
+      JSON.parse(
+        readFileSync(join(REGISTRY, "primitives", "button", "button.manifest.json"), "utf8"),
+      ).version,
+    );
     expect(button!.deps).toEqual([]);
 
     // card composes button → recorded as a dependency

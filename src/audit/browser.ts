@@ -18,6 +18,11 @@
 
 import { auditHtmlSource } from "./html-audit";
 import { ALL_RULES, DOCUMENT_RULES, type AuditResult, type Severity } from "./rules";
+import {
+  CSS_RULES,
+  buildBreakpointCanonResults,
+  buildUndeclaredAttributeResults,
+} from "./css-rules";
 import type { Manifest } from "../manifest";
 import { VERSION } from "../version";
 
@@ -37,7 +42,19 @@ export interface BrowserRuleInfo {
   severity: Severity;
   description: string;
   /** Which contract the rule enforces. */
-  scope: "component" | "document";
+  scope: "component" | "document" | "css";
+}
+
+/** Input for {@link auditComponentCss} — one stylesheet and the manifest it belongs to. */
+export interface BrowserCssAuditInput {
+  /** The stylesheet source. */
+  css: string;
+  /** The component's manifest — the declaration `undeclared-attribute` checks against. */
+  manifest: Manifest;
+  /** File label used in findings. Defaults to `<name>.css`. */
+  file?: string;
+  /** Rule IDs to skip. */
+  skipRules?: string[];
 }
 
 export interface Auditor {
@@ -117,7 +134,45 @@ export function createAuditor(manifests: ManifestRecord): Auditor {
   };
 }
 
-/** Every HTML-source rule the browser bundle runs, for the page's legend. */
+/**
+ * Audit one stylesheet against its manifest (task 0.8-10) — the CSS half of the
+ * engine, in the browser.
+ *
+ * Same shape of promise as {@link createAuditor}: it never throws, because the
+ * playground's next keystroke may leave the sheet mid-token. Same functions the
+ * CLI and the registry gate call, so the parity claim covers these rules too.
+ */
+export function auditComponentCss(input: BrowserCssAuditInput): AuditResult[] {
+  const file = input.file ?? `${input.manifest?.name ?? "component"}.css`;
+  const skip = new Set(input.skipRules ?? []);
+  try {
+    const results: AuditResult[] = [];
+    if (!skip.has("undeclared-attribute")) {
+      results.push(...buildUndeclaredAttributeResults(input.css, input.manifest, file));
+    }
+    if (!skip.has("breakpoint-canon")) {
+      results.push(
+        ...buildBreakpointCanonResults(input.css, input.manifest?.name ?? "component", file),
+      );
+    }
+    return results;
+  } catch (error) {
+    return [
+      {
+        rule_id: "audit-error",
+        severity: "info",
+        component_name: input.manifest?.name ?? "",
+        file,
+        line: 1,
+        message: `The audit engine could not finish on this stylesheet: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      },
+    ];
+  }
+}
+
+/** Every rule the browser bundle runs — HTML, document and stylesheet alike. */
 export function ruleInventory(): BrowserRuleInfo[] {
   return [
     ...ALL_RULES.map((r) => ({
@@ -132,6 +187,12 @@ export function ruleInventory(): BrowserRuleInfo[] {
       description: r.description,
       scope: "document" as const,
     })),
+    ...CSS_RULES.map((r) => ({
+      id: r.id,
+      severity: r.severity,
+      description: r.description,
+      scope: "css" as const,
+    })),
   ];
 }
 
@@ -144,6 +205,7 @@ export interface FaqirAuditGlobal {
   version: string;
   createAuditor: typeof createAuditor;
   manifestMap: typeof manifestMap;
+  auditComponentCss: typeof auditComponentCss;
   rules: BrowserRuleInfo[];
   severities: Severity[];
 }
@@ -152,6 +214,7 @@ const api: FaqirAuditGlobal = {
   version: VERSION,
   createAuditor,
   manifestMap,
+  auditComponentCss,
   rules: ruleInventory(),
   severities: SEVERITY_ORDER,
 };

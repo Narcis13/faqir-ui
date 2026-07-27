@@ -1,12 +1,17 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "table",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "kind": "recipe",
   "category": "data-display",
   "description": "Advanced data table: multi-column type-aware sorting, global + per-column filtering, tree data and collapsible row groups with live aggregates, inline cell editing with Intl number/currency formatting, drag-and-drop row and column reordering, column resize/hide/pin, sticky header/footer/rows, grid keyboard navigation, CSV export, responsive stacked mode, and state persistence — every feature opt-in via data attributes",
 
   "changes": [
+    {
+      "version": "3.1.0",
+      "note": "Twenty attributes table.css has always selected on are now declared. Seventeen are runtime states the controller writes — the set its own header comment lists (data-selected, data-collapsed, data-filtered, data-editing, data-dragging, data-drop-target/-pos, data-col-hidden, data-negative, data-stripe, data-resized, plus data-sort-order, data-pin-edge, data-leaf, data-tree-cell, data-invalid and data-stacked) — and three are authored column configuration, so they are props: data-sortable, data-readonly and data-pin. data-collapsed is declared as the state \"row-collapsed\" because the group-header's data-state=\"collapsed\" already holds that name. No CSS, controller or behaviour change; the table's surface is now visible to the docs site, the skill, faqir context and the bindings. 0.8-10's undeclared-attribute rule now makes this class of drift impossible: an attribute a component's CSS selects on that its manifest never declares fails the registry gate.",
+      "breaking": false
+    },
     {
       "version": "3.0.0",
       "note": "The responsive ladder moves onto the breakpoint canon (task 0.8-08). data-hide-below and data-stack-below now name the SAME thresholds the rest of the framework uses — sm 40rem/640px, md 48rem/768px, lg 64rem/1024px — where 1.x carried a private ladder whose sm was 30rem/480px in the CSS and 480px in the controller. Only sm moves; md and lg are unchanged. MIGRATION: a column marked data-hide-below='sm' now hides up to 640px instead of 480px, and data-stack-below='sm' stacks up to 640px instead of 480px — pass an explicit pixel number (data-stack-below='480') to keep the old behaviour, for which data-hide-below has no equivalent by design. The CSS is also mobile-first: the three max-width container ceilings became min-width floors that reveal a hidden column from its tier up, so the boundary belongs to the wide side (at exactly 48rem an md column now shows). Stacked mode still overrides column hiding, and a controller-hidden column (data-col-hidden) is no longer revealed by a widening container.",
@@ -168,7 +173,92 @@
   "states": {
     "default": { "attr": "data-state=\"default\"", "default": true },
     "expanded": { "attr": "data-state=\"expanded\"", "applied_to": "group-header" },
-    "collapsed": { "attr": "data-state=\"collapsed\"", "applied_to": "group-header" }
+    "collapsed": { "attr": "data-state=\"collapsed\"", "applied_to": "group-header" },
+    "selected": {
+      "attr": "data-selected",
+      "applied_to": "tr",
+      "description": "A selected row (checkbox, click, shift-range or select-all). The controller writes it and reads it back for getSelected()"
+    },
+    "row-collapsed": {
+      "attr": "data-collapsed",
+      "applied_to": "tr",
+      "description": "A row hidden because its group header or its tree parent is collapsed. Named for its attribute because the group-header's own collapsed state already owns the name"
+    },
+    "filtered": {
+      "attr": "data-filtered",
+      "applied_to": "tr",
+      "description": "A row hidden by the active filters. Kept in the DOM (and in the export) rather than removed, so filtering is reversible without a re-render"
+    },
+    "editing": {
+      "attr": "data-editing",
+      "applied_to": "td",
+      "description": "The cell currently in inline edit mode — its [data-part=\"cell-input\"] is mounted and focused"
+    },
+    "invalid": {
+      "attr": "data-invalid",
+      "applied_to": "cell-input",
+      "description": "The edit input holds a value the column's type rejects; the commit is refused until it parses"
+    },
+    "dragging": {
+      "attr": "data-dragging",
+      "applied_to": "tr",
+      "description": "The row or header being dragged (data-reorderable / data-col-reorderable). Also matched on the root via :has() to suppress text selection for the duration"
+    },
+    "drop-target": {
+      "attr": "data-drop-target",
+      "applied_to": "tr",
+      "description": "The row or header the pointer is currently over during a drag — carries the drop indicator together with data-drop-pos"
+    },
+    "drop-pos": {
+      "attr": "data-drop-pos=\"before\"",
+      "applied_to": "tr",
+      "description": "Which edge of the drop target the dragged row/column would land on: \"before\" or \"after\". Written alongside data-drop-target and cleared with it"
+    },
+    "sort-order": {
+      "attr": "data-sort-order",
+      "applied_to": "th",
+      "description": "The 1-based rank of this column in a multi-sort (data-multi-sort). The controller writes it only when more than one sort is active; the badge renders from it"
+    },
+    "col-hidden": {
+      "attr": "data-col-hidden",
+      "applied_to": "th",
+      "description": "A column hidden through hideColumn()/toggleColumn() or the persisted visibility state. Also suppresses the responsive reveal, so a widening container cannot un-hide it"
+    },
+    "pin-edge": {
+      "attr": "data-pin-edge",
+      "applied_to": "th",
+      "description": "The last pinned column on its side — carries the shadow that separates the frozen block from the scrolling one"
+    },
+    "negative": {
+      "attr": "data-negative",
+      "applied_to": "td",
+      "description": "A numeric cell the controller formatted as negative; data-negatives on the root decides whether that renders red, in accounting parentheses, or both"
+    },
+    "stripe": {
+      "attr": "data-stripe=\"even\"",
+      "applied_to": "tr",
+      "description": "The zebra parity the controller computed over the VISIBLE rows, so striping stays alternating after filtering or sorting. Overrides the plain :nth-child() striping of data-variant=\"striped\""
+    },
+    "resized": {
+      "attr": "data-resized",
+      "applied_to": "root",
+      "description": "At least one column has an explicit width (drag-resized or restored from data-persist), which switches the table to a fixed layout so the widths hold"
+    },
+    "stacked": {
+      "attr": "data-stacked",
+      "applied_to": "root",
+      "description": "The responsive stack mode is engaged: below data-stack-below the rows re-render as labelled cards. The controller measures and writes it; every column shows in this mode"
+    },
+    "leaf": {
+      "attr": "data-leaf",
+      "applied_to": "expander",
+      "description": "A tree row with no children — the expander renders as an inert spacer so the label column stays aligned"
+    },
+    "tree-cell": {
+      "attr": "data-tree-cell",
+      "applied_to": "td",
+      "description": "The cell that carries the tree indentation (--table-level) and the expander, in a data-tree table"
+    }
   },
 
   "props": {
@@ -205,7 +295,10 @@
     "persist": { "type": "string", "default": "", "description": "data-persist='key' on root: sorts, filters, column widths and visibility survive reloads via localStorage" },
     "locale": { "type": "string", "default": "", "description": "data-locale on root for Intl formatting (defaults to the document language)" },
     "currency": { "type": "string", "default": "USD", "description": "data-currency on root for currency-formatted cells" },
-    "negatives": { "type": "string", "default": "", "description": "data-negatives='red|parens|both' on root: negative numbers render red and/or in accounting parentheses" }
+    "negatives": { "type": "string", "default": "", "description": "data-negatives='red|parens|both' on root: negative numbers render red and/or in accounting parentheses" },
+    "sortable": { "type": "boolean", "default": false, "attr": "data-sortable", "description": "On a th: this column can be sorted — the controller makes the header interactive, mirrors aria-sort, and draws the direction indicator" },
+    "readonly": { "type": "boolean", "default": false, "attr": "data-readonly", "description": "On a th or td: exempt from inline editing even when the table is data-editable" },
+    "pin": { "type": "enum", "values": ["start", "end", "top"], "default": "", "attr": "data-pin", "description": "Freeze a column against the inline-start or inline-end edge (on a th; the controller mirrors it onto that column's cells), or a row against the top of the scroll area (on a tr)" }
   },
 
   "a11y": {

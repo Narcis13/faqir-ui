@@ -73,6 +73,21 @@ async function buildFakeButton(opts: {
   writeFileSync(join(fakeButton, "button.manifest.json"), JSON.stringify(manifest, null, 2) + "\n");
 }
 
+/**
+ * The version `faqir add button` installs — read from the registry rather than
+ * pinned, because a component release (button went to 1.1.0 in 0.8-10, when
+ * data-full was finally declared) must not have to be chased through a dozen
+ * literals in this file. TARGET is the next minor above it: the version the
+ * fake registry publishes so there is always something to upgrade to.
+ */
+const INSTALLED: string = JSON.parse(
+  readFileSync(join(getRegistryPath(), "primitives/button/button.manifest.json"), "utf8"),
+).version;
+const TARGET: string = (() => {
+  const [major, minor] = INSTALLED.split(".").map(Number);
+  return `${major}.${minor + 1}.0`;
+})();
+
 const upgradeButton = (args: string[]) => upgrade(args, { registryPath: FAKE_REGISTRY });
 
 describe("faqir upgrade — three-way merge", () => {
@@ -81,7 +96,7 @@ describe("faqir upgrade — three-way merge", () => {
     mkdirSync(TEST_DIR, { recursive: true });
     process.chdir(TEST_DIR);
     await init([]);
-    await add(["button"]); // pristine + working copy == registry button@1.0.0
+    await add(["button"]); // pristine + working copy == the registry's button@INSTALLED
   });
 
   afterEach(() => {
@@ -91,11 +106,11 @@ describe("faqir upgrade — three-way merge", () => {
   });
 
   it("fast-forwards an unmodified component and advances the pristine store", async () => {
-    await buildFakeButton({ version: "1.1.0", cssTransform: (css) => css + "\n/* registry v1.1 */\n" });
+    await buildFakeButton({ version: TARGET, cssTransform: (css) => css + "\n/* registry v1.1 */\n" });
 
     const { output, code } = await runUpgrade(() => upgradeButton(["button"]));
     expect(code).toBe(0);
-    expect(output).toContain("1.0.0 → 1.1.0");
+    expect(output).toContain(`${INSTALLED} → ${TARGET}`);
     expect(output.toLowerCase()).toContain("upgrade complete");
 
     // Working copy received the registry change.
@@ -103,15 +118,15 @@ describe("faqir upgrade — three-way merge", () => {
 
     // Pristine store now reflects the new version; the old snapshot is gone.
     const index = await readPristineIndex(TEST_DIR);
-    expect(index.components.button.version).toBe("1.1.0");
-    expect(index.components.button.dir).toBe("button@1.1.0");
-    expect(existsSync(join(TEST_DIR, ".faqir/pristine/button@1.0.0"))).toBe(false);
-    expect(existsSync(join(TEST_DIR, ".faqir/pristine/button@1.1.0/button.css"))).toBe(true);
+    expect(index.components.button.version).toBe(TARGET);
+    expect(index.components.button.dir).toBe(`button@${TARGET}`);
+    expect(existsSync(join(TEST_DIR, `.faqir/pristine/button@${INSTALLED}`))).toBe(false);
+    expect(existsSync(join(TEST_DIR, `.faqir/pristine/button@${TARGET}/button.css`))).toBe(true);
   });
 
   it("applies non-overlapping edits from both sides", async () => {
     // Registry appends at the bottom.
-    await buildFakeButton({ version: "1.1.0", cssTransform: (css) => css + "\n/* registry footer */\n" });
+    await buildFakeButton({ version: TARGET, cssTransform: (css) => css + "\n/* registry footer */\n" });
     // User prepends at the top.
     const original = readFileSync(BUTTON_CSS, "utf8");
     writeFileSync(BUTTON_CSS, "/* user header */\n" + original);
@@ -128,7 +143,7 @@ describe("faqir upgrade — three-way merge", () => {
     const firstLine = "/* @ui:component button */";
     // Registry rewrites the first line...
     await buildFakeButton({
-      version: "1.1.0",
+      version: TARGET,
       breaking: true,
       cssTransform: (css) => css.replace(firstLine, "/* @ui:component button v1.1 */"),
     });
@@ -154,7 +169,7 @@ describe("faqir upgrade — three-way merge", () => {
   it("--dry-run reports without writing and predicts the conflict exit code", async () => {
     const firstLine = "/* @ui:component button */";
     await buildFakeButton({
-      version: "1.1.0",
+      version: TARGET,
       cssTransform: (css) => css.replace(firstLine, "/* registry rewrite */"),
     });
     const original = readFileSync(BUTTON_CSS, "utf8");
@@ -169,12 +184,12 @@ describe("faqir upgrade — three-way merge", () => {
     expect(readFileSync(BUTTON_CSS, "utf8")).toBe(before); // no markers written
     // Pristine store untouched.
     const index = await readPristineIndex(TEST_DIR);
-    expect(index.components.button.version).toBe("1.0.0");
+    expect(index.components.button.version).toBe(INSTALLED);
   });
 
   it("--json emits the stable faqir-upgrade@1 envelope", async () => {
     await buildFakeButton({
-      version: "1.1.0",
+      version: TARGET,
       breaking: true,
       cssTransform: (css) => css + "\n/* registry v1.1 */\n",
     });
@@ -188,19 +203,19 @@ describe("faqir upgrade — three-way merge", () => {
     expect(comp).toMatchObject({
       component: "button",
       layer: "primitives",
-      fromVersion: "1.0.0",
-      toVersion: "1.1.0",
+      fromVersion: INSTALLED,
+      toVersion: TARGET,
       status: "upgraded",
       breaking: true,
     });
-    expect(comp.changes[0]).toMatchObject({ version: "1.1.0", breaking: true });
+    expect(comp.changes[0]).toMatchObject({ version: TARGET, breaking: true });
     expect(comp.summary).toHaveProperty("conflicts");
     expect(Array.isArray(comp.files)).toBe(true);
     expect(parsed.hasConflicts).toBe(false);
   });
 
   it("reports up-to-date when the registry version matches", async () => {
-    await buildFakeButton({ version: "1.0.0", cssTransform: (css) => css }); // same version
+    await buildFakeButton({ version: INSTALLED, cssTransform: (css) => css }); // same version
 
     const { output, code } = await runUpgrade(() => upgradeButton(["button"]));
     expect(code).toBe(0);
@@ -208,7 +223,7 @@ describe("faqir upgrade — three-way merge", () => {
 
     // Nothing changed on disk.
     const index = await readPristineIndex(TEST_DIR);
-    expect(index.components.button.version).toBe("1.0.0");
+    expect(index.components.button.version).toBe(INSTALLED);
   });
 
   it("errors on an uninstalled component", async () => {
@@ -218,7 +233,7 @@ describe("faqir upgrade — three-way merge", () => {
 
   it("warns and skips a component with no pristine baseline", async () => {
     rmSync(join(TEST_DIR, ".faqir/pristine"), { recursive: true, force: true });
-    await buildFakeButton({ version: "1.1.0", cssTransform: (css) => css + "\n/* x */\n" });
+    await buildFakeButton({ version: TARGET, cssTransform: (css) => css + "\n/* x */\n" });
 
     const { output, code } = await runUpgrade(() => upgradeButton(["button"]));
     expect(code).toBe(0); // degrades gracefully, not an error

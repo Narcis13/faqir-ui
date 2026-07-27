@@ -18,11 +18,17 @@
 // `auditHtmlSource`. What the fixtures actually test is the thin browser-shaped
 // seam around it — manifest keying from a plain object, and the promise that the
 // engine never throws at a page.
+//
+// Task 0.8-10 added a second seam through the same bundle: `auditComponentCss`,
+// which runs the stylesheet rules (`undeclared-attribute`, `breakpoint-canon`)
+// over a component's CSS and its manifest. Its fixtures are every registry
+// stylesheet paired with its own manifest, plus seeded-broken sheets — see the
+// "stylesheet rules" block below.
 
 import { describe, it, expect } from "bun:test";
 import { spawnSync } from "node:child_process";
 import { readFileSync, existsSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { createContext, runInContext } from "node:vm";
 import { gzipSync } from "node:zlib";
 import {
@@ -33,6 +39,11 @@ import {
 } from "../../src/generator/docs";
 import { auditHtmlSource } from "../../src/audit/checker";
 import { ALL_RULES, DOCUMENT_RULES, type AuditResult } from "../../src/audit/rules";
+import {
+  CSS_RULES,
+  buildBreakpointCanonResults,
+  buildUndeclaredAttributeResults,
+} from "../../src/audit/css-rules";
 import { VERSION } from "../../src/version";
 import { generateAt } from "../parser/fuzz/fuzz-core";
 import type { Manifest } from "../../src/manifest";
@@ -54,6 +65,12 @@ interface BundleApi {
     audit(source: string, options?: { file?: string; skipRules?: string[] }): AuditResult[];
     components: string[];
   };
+  auditComponentCss(input: {
+    css: string;
+    manifest: Manifest;
+    file?: string;
+    skipRules?: string[];
+  }): AuditResult[];
 }
 
 /** Evaluate the committed bundle in an empty context and hand back its global. */
@@ -180,15 +197,22 @@ describe("the browser audit bundle", () => {
     expect(bundleSource).not.toMatch(/https?:\/\//);
   });
 
-  it("advertises exactly the HTML rules the engine runs", () => {
+  it("advertises exactly the rules the engine runs, in all three scopes", () => {
     const api = loadBundle();
     const expected = [
       ...ALL_RULES.map((r) => ({ id: r.id, severity: r.severity, scope: "component" })),
       ...DOCUMENT_RULES.map((r) => ({ id: r.id, severity: r.severity, scope: "document" })),
+      ...CSS_RULES.map((r) => ({ id: r.id, severity: r.severity, scope: "css" })),
     ];
     expect(api.rules.map((r) => ({ id: r.id, severity: r.severity, scope: r.scope }))).toEqual(
       expected,
     );
+    // The stylesheet rules of 0.8-10 are a scope of their own, not markup rules
+    // wearing a different hat: the playground counts only what it can run.
+    expect(api.rules.filter((r) => r.scope === "css").map((r) => r.id)).toEqual([
+      "undeclared-attribute",
+      "breakpoint-canon",
+    ]);
   });
 
   it("reports its size", () => {
@@ -277,6 +301,106 @@ describe("CLI ↔ browser finding parity", () => {
     expect(auditor.audit(source, { file: "f.html", skipRules }).map((r) => r.rule_id)).toEqual([
       "valid-size",
     ]);
+  });
+
+  // ── the stylesheet rules, in the browser (task 0.8-10) ────────────────────
+  //
+  // `undeclared-attribute` and `breakpoint-canon` read a *stylesheet* against a
+  // manifest, so they are a second seam through the same bundle. The fixtures
+  // are every registry stylesheet paired with its own manifest — the pairs the
+  // registry gate checks — plus deliberately broken sheets, because a parity
+  // suite over 86 clean inputs would agree on the empty array 86 times and
+  // prove nothing about the finding path.
+  describe("stylesheet rules", () => {
+    /** The sheet a component's manifest names, beside its reference fragment. */
+    const stylesheetOf = (c: (typeof components)[number]) =>
+      join(dirname(c.referencePath), c.manifest.files?.css ?? `${c.name}.css`);
+
+    const registryPairs = components
+      .filter((c) => existsSync(stylesheetOf(c)))
+      .map((c) => ({
+        label: `css:${c.layer}/${c.name}`,
+        css: readFileSync(stylesheetOf(c), "utf8"),
+        manifest: c.manifest,
+      }));
+
+    const button = components.find((c) => c.name === "button")!;
+    const buttonCss = readFileSync(stylesheetOf(button), "utf8");
+
+    const brokenPairs = [
+      {
+        label: "css:seeded undeclared attribute",
+        css: buttonCss + '\n[data-ui="button"][data-elevated] { box-shadow: none; }\n',
+        manifest: button.manifest,
+      },
+      {
+        label: "css:seeded max-width prelude",
+        css: buttonCss + "\n@media (max-width: 40rem) {\n  [data-ui=\"button\"] { width: 100%; }\n}\n",
+        manifest: button.manifest,
+      },
+      {
+        label: "css:seeded off-canon floor",
+        css: "@media (min-width: 37.5rem) { [data-ui=\"button\"] { gap: 0; } }",
+        manifest: button.manifest,
+      },
+      { label: "css:empty", css: "", manifest: button.manifest },
+      { label: "css:garbage", css: "}}} [data-x { @media ( { ", manifest: button.manifest },
+      { label: "css:comment only", css: "/* nothing here */", manifest: button.manifest },
+    ];
+
+    const cssFixtures = [...registryPairs, ...brokenPairs];
+
+    it(`agrees with the CLI rules on all ${cssFixtures.length} stylesheet fixtures`, () => {
+      const disagreements: string[] = [];
+      for (const fixture of cssFixtures) {
+        const file = "fixture.css";
+        const expected = [
+          ...buildUndeclaredAttributeResults(fixture.css, fixture.manifest, file),
+          ...buildBreakpointCanonResults(fixture.css, fixture.manifest.name, file),
+        ];
+        const actual = api.auditComponentCss({ css: fixture.css, manifest: fixture.manifest, file });
+        if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+          disagreements.push(
+            `${fixture.label}: browser ${actual.length} vs cli ${expected.length}\n` +
+              `  browser: ${JSON.stringify(actual.slice(0, 2))}\n` +
+              `  cli:     ${JSON.stringify(expected.slice(0, 2))}`,
+          );
+        }
+      }
+      expect(disagreements.join("\n")).toBe("");
+    });
+
+    it("the fixture set is not all-clean — the seeded sheets really report", () => {
+      const found = brokenPairs.flatMap((f) =>
+        api.auditComponentCss({ css: f.css, manifest: f.manifest }).map((r) => r.rule_id),
+      );
+      expect(found).toEqual(["undeclared-attribute", "breakpoint-canon", "breakpoint-canon"]);
+      // …and every real registry pair is silent, in the browser as on the CLI.
+      expect(
+        registryPairs.flatMap((f) =>
+          api.auditComponentCss({ css: f.css, manifest: f.manifest }).map((r) => r.message),
+        ),
+      ).toEqual([]);
+      expect(registryPairs.length).toBe(86);
+    });
+
+    it("honours skipRules and defaults the file label to the component's sheet", () => {
+      const dirty = brokenPairs[0];
+      expect(
+        api.auditComponentCss({ css: dirty.css, manifest: dirty.manifest, skipRules: ["undeclared-attribute"] }),
+      ).toEqual([]);
+      expect(api.auditComponentCss({ css: dirty.css, manifest: dirty.manifest })[0].file).toBe(
+        "button.css",
+      );
+    });
+
+    it("never throws at a page — a broken sheet reports rather than crashes", () => {
+      for (const css of ["", "@media", "[", " ", "a".repeat(10_000)]) {
+        const results = api.auditComponentCss({ css, manifest: button.manifest });
+        expect(Array.isArray(results)).toBe(true);
+        expect(results.some((r) => r.rule_id === "audit-error")).toBe(false);
+      }
+    });
   });
 
   it("finds the playground's own sample dirty — the demo demonstrates something", () => {
