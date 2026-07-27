@@ -2114,14 +2114,14 @@
         },
         {
           "path": "stats-dashboard.html",
-          "sha256": "727a227a6a022f5a6b0323d3d43302de94702103bfc843a411ad56c4d2cbc189"
+          "sha256": "faebfcb5673a92be6f4a92085f1c0a7c571a0c15463b7bb194b8eeb2df2cf830"
         },
         {
           "path": "stats-dashboard.manifest.json",
           "sha256": "e7c4b3cdab2715953deb21e3e32813cda53909d2cee77438b89aa76edb90d3d1"
         }
       ],
-      "hash": "c2137b5f285832c11d4dbc6552a6e0c5d8c89d6cc426cab05452c0aa1f589cf4",
+      "hash": "07521d96c73facc6391fbedf6e2ea8ab4f20e3b3d3ef5d54fbf73acabd2f1a70",
       "deps": [
         "grid",
         "stat",

@@ -1,12 +1,33 @@
 name: Visual regression
 
-# Task 0.4-23 · FAQIR-PLAN §12.2
+# Task 0.4-23 · FAQIR-PLAN §12.2 · viewport axis added by 0.8-11 (§19)
 #
 # Playwright screenshot matrix, generated from the registry at runtime
 # (tests/visual/matrix.ts): every component × every theme × light/dark × LTR/RTL.
 # Everything runs inside the pinned Playwright Linux container so font
 # rasterisation — and therefore every captured pixel — is byte-stable between the
 # machine that produced a baseline and the one that diffs it.
+#
+# Snapshot count at the current registry (86 components, 12 themes):
+#
+#   main matrix   86 × 12 × 2 × 2                        = 4 128
+#   viewport axis 26 layout-bearing × 3 widths           =    78   (0.8-11)
+#   density       3 themes × 2 schemes                   =     6
+#   scaffolds     invoice + report                       =     2
+#                                                          ─────
+#                                                          4 214 screenshots
+#                                                                (4 235 tests)
+#
+# The viewport axis (tests/visual/responsive.pw.ts) sweeps only category-`layout`
+# components and patterns, at 390/768/1280, in the default theme, light, LTR —
+# 78 captures. The full cross-product would have been 26 × 3 × 12 × 2 × 2 = 3 744,
+# i.e. +90% on the whole suite, for information the single-viewport matrix already
+# carries: a theme changes colours, a direction mirrors the axis, and neither
+# changes which `@media (min-width: …)` block matched.
+#
+# Sharding is unchanged at ×4: the axis adds 90 tests (78 captures + a tripwire,
+# three pre-assertion negatives and eight archetype cases) to a 4 145-test suite —
+# ≈+2%, roughly 23 per shard. Reshard when a shard stops finishing in ~1 min.
 #
 # Baseline strategy (the "CI artifact strategy" of §12.2 — no thousands of PNGs in
 # git): the default branch produces the baseline set and persists it to the
@@ -48,7 +69,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: tests/visual/__screenshots__
-          key: visual-baselines-linux-pw1.61.1-${{ hashFiles('registry/**/*.css', 'registry/**/*.html', 'src/scaffolds/**/*.ts', 'tests/scaffolds/**/*.ts', 'tests/visual/**/*.ts', 'playwright.config.ts') }}
+          key: visual-baselines-linux-pw1.61.1-${{ hashFiles('registry/**/*.css', 'registry/**/*.html', 'src/scaffolds/**/*.ts', 'src/utils/breakpoints.ts', 'tests/scaffolds/**/*.ts', 'tests/visual/**/*.ts', 'playwright.config.ts') }}
       - name: Generate baselines (on cache miss)
         if: steps.cache.outputs.cache-hit != 'true'
         run: npx playwright test --update-snapshots --reporter=line
@@ -74,7 +95,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: tests/visual/__screenshots__
-          key: visual-baselines-linux-pw1.61.1-${{ hashFiles('registry/**/*.css', 'registry/**/*.html', 'src/scaffolds/**/*.ts', 'tests/scaffolds/**/*.ts', 'tests/visual/**/*.ts', 'playwright.config.ts') }}
+          key: visual-baselines-linux-pw1.61.1-${{ hashFiles('registry/**/*.css', 'registry/**/*.html', 'src/scaffolds/**/*.ts', 'src/utils/breakpoints.ts', 'tests/scaffolds/**/*.ts', 'tests/visual/**/*.ts', 'playwright.config.ts') }}
           # Fall back to the newest baseline set from the default branch when the
           # registry changed in this PR — changed/added components then show up as
           # diffs (or missing-baseline failures) to review, which is the point.

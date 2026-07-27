@@ -249,6 +249,20 @@ describe("stats-dashboard — composes the enhanced table", () => {
     }
   });
 
+  it("gives every table's scroll container keyboard access (task 0.8-11)", () => {
+    // `[data-ui="table"] { overflow-x: auto }` makes the root a scroll container
+    // at ANY width; whether it actually scrolls depends on the viewport. At 390px
+    // the five-column sales table does, and axe's `scrollable-region-focusable`
+    // (WCAG 2.1 A) then requires the region to be reachable by keyboard — a
+    // violation the 1280px scan structurally cannot see, and the first thing the
+    // mobile sweep found. `tabindex="0"` is the documented remedy and is
+    // deliberately on BOTH tables: the second one passes today only because its
+    // content happens to fit, which is content luck, not a guarantee.
+    for (const table of tables) {
+      expect(table.getAttribute("tabindex"), "table scroll container is focusable").toBe("0");
+    }
+  });
+
   it("captions every report table and scopes every header cell", () => {
     for (const table of tables) {
       const caption = table.querySelector("caption");

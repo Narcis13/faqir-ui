@@ -19,10 +19,18 @@
 import { describe, test, expect } from "bun:test";
 import {
   buildA11yMatrix,
+  buildMobileA11yMatrix,
   A11Y_THEMES,
+  MOBILE_VIEWPORT,
   buildPageHtml as a11yBuildPageHtml,
   discoverComponents as a11yDiscoverComponents,
+  discoverLayoutBearing as a11yDiscoverLayoutBearing,
 } from "./a11y-matrix";
+import {
+  buildResponsiveMatrix,
+  discoverLayoutBearing,
+  RESPONSIVE_WIDTHS,
+} from "../visual/responsive-matrix";
 import {
   discoverComponents,
   discoverThemes,
@@ -101,6 +109,56 @@ describe("a11y matrix generation", () => {
   test("scan targets the WCAG 2 A/AA success criteria (no best-practice noise)", () => {
     expect([...WCAG_TAGS].sort()).toEqual(["wcag21a", "wcag21aa", "wcag2a", "wcag2aa"]);
     expect(WCAG_TAGS).not.toContain("best-practice");
+  });
+});
+
+describe("mobile sweep ↔ viewport-axis parity (task 0.8-11)", () => {
+  test("the mobile scan and the responsive captures cover the exact same pages", () => {
+    // One discovery function, imported by both — not a copy that can drift.
+    expect(a11yDiscoverLayoutBearing).toBe(discoverLayoutBearing);
+
+    const scanned = new Set(buildMobileA11yMatrix().map((c) => c.component.htmlRel));
+    const captured = new Set(buildResponsiveMatrix().map((c) => c.component.htmlRel));
+    expect([...scanned].sort()).toEqual([...captured].sort());
+    expect(scanned.size).toBeGreaterThan(0);
+  });
+
+  test("the sweep scans at the same 390px the viewport axis captures at", () => {
+    expect(MOBILE_VIEWPORT.width).toBe(390);
+    expect(RESPONSIVE_WIDTHS[0]).toBe(MOBILE_VIEWPORT.width);
+    for (const c of buildMobileA11yMatrix()) expect(c.width).toBe(390);
+  });
+
+  test("mobile matrix is the layout-bearing set × a11y themes × schemes, unique ids", () => {
+    const matrix = buildMobileA11yMatrix();
+    expect(matrix.length).toBe(
+      discoverLayoutBearing().length * A11Y_THEMES.length * SCHEMES.length,
+    );
+    const ids = new Set(matrix.map((c) => c.id));
+    expect(ids.size).toBe(matrix.length);
+    for (const id of ids) expect(id.startsWith("mobile__")).toBe(true);
+    // Ids never collide with the desktop scan's, so a failure names which gate.
+    const desktop = new Set(buildA11yMatrix().map((c) => c.id));
+    for (const id of ids) expect(desktop.has(id)).toBe(false);
+  });
+
+  test("it is a strict subset of the desktop scan's pages — no page scanned only on mobile", () => {
+    const desktop = new Set(buildA11yMatrix().map((c) => c.component.htmlRel));
+    const mobile = new Set(buildMobileA11yMatrix().map((c) => c.component.htmlRel));
+    for (const page of mobile) expect(desktop.has(page)).toBe(true);
+    expect(mobile.size).toBeLessThan(desktop.size);
+  });
+
+  test("the mobile sweep adds NO exemptions — it shares the one list", () => {
+    // The acceptance criterion for 0.8-11 is "zero new exemptions". There is
+    // exactly one list, keyed by component name with no viewport dimension, so a
+    // mobile-only waiver is unrepresentable rather than merely absent.
+    expect(A11Y_EXEMPTIONS.length).toBe(3);
+    for (const e of A11Y_EXEMPTIONS) {
+      expect(Object.keys(e).sort()).toEqual(["component", "justification", "rule"]);
+      // None of the waived components is even in the mobile set.
+      expect(discoverLayoutBearing().some((c) => c.name === e.component)).toBe(false);
+    }
   });
 });
 

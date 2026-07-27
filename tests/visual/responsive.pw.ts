@@ -1,29 +1,52 @@
 /**
- * Responsive spot-check across the viewport axis (task 0.8-09).
+ * The viewport axis of the visual suite — task 0.8-11 (FAQIR-NEXT §19).
  *
- * The `bun test` suites resolve the registry's sheets through a miniature
- * cascade — good enough to pin specificity and tier order, but it is still a
- * model of CSS, not CSS. This spec runs the two STRUCTURAL patterns through a
- * real engine at three widths and asks the browser what it actually computed.
+ * The main matrix (`visual.pw.ts`) captures every component at one width, so the
+ * whole of phase 0.8's responsive work — grid 2.0's mobile-first ladder, the
+ * dashboard-shell drawer, the inbox pane swap, auth-form's full bleed — is
+ * proven only at CSS-resolution level by the `bun test` cascade models. This
+ * spec adds the missing axis for the layout-bearing set:
  *
- * Deliberately assertions, not screenshots. Baselines for this suite are
- * produced in one pinned Linux container (see playwright.config.ts), so a new
- * `toHaveScreenshot` here would either ship images from a developer's laptop or
- * fail CI until someone regenerated them. Computed-style facts — "the drawer is
- * `position: fixed` and translated off-canvas at 390px, `static` at 768px" — are
- * platform-independent, and they are the claims that would actually regress.
- * Task 0.8-11 systematizes the viewport axis into the screenshot matrix; this is
- * the interim proof that the sheets behave, in a browser, right now.
+ *     category `layout` + every pattern  ×  { 390, 768, 1280 }
+ *     default theme · light · ltr
  *
- * 390 / 768 / 1280 = an iPhone 14, the canon md floor exactly, and a laptop. The
- * middle width is the interesting one: it is the boundary, and mobile-first
- * min-width semantics mean it belongs to the WIDE side.
+ * The set is discovered from manifests (`./responsive-matrix`), never listed
+ * here: a new layout primitive or a new pattern enters this suite with zero
+ * edits, the same property the main matrix has.
+ *
+ * **Every capture pre-asserts in the page first** (the 0.7-11 rule: a screenshot
+ * cannot go green on an inert attribute). Before the shutter, the browser is
+ * asked what it actually computed — the track count of every `[data-ui="grid"]`,
+ * the drawer's position and the shell's column count, the panes' visibility —
+ * and `checkLayoutFacts` compares it against the ladder the markup authored and
+ * the canon. A broken responsive rule fails there, with a sentence naming the
+ * element and the expected column count, instead of surfacing as an unexplained
+ * pixel diff (or worse, no diff at all when nothing visible moved). The
+ * "pre-assertion actually bites" test below proves that in the browser.
+ *
+ * The three widths: 390 is an iPhone 14, below every canon floor; 768 is the
+ * `md` floor *exactly* — mobile-first `min-width` semantics put a boundary width
+ * on the WIDE side, the off-by-one a `max-width` ladder gets wrong; 1280 is the
+ * `xl` floor and a laptop.
+ *
+ * Baselines are produced in the pinned Linux container by CI, never locally —
+ * see tests/visual/README.md.
  */
 import { expect, test, type Page } from "@playwright/test";
 import { buildMatrix, buildPageHtml, type Case } from "./matrix";
+import {
+  buildResponsiveMatrix,
+  checkLayoutFacts,
+  gatherLayoutFacts,
+  RESPONSIVE_HEIGHT,
+  RESPONSIVE_WIDTHS,
+  type ResponsiveCase,
+} from "./responsive-matrix";
 
-/** Viewport widths every pattern below is measured at. */
+/** Viewport widths every archetype below is measured at. */
 const WIDTHS = { phone: 390, floor: 768, laptop: 1280 } as const;
+
+const responsiveMatrix = buildResponsiveMatrix();
 
 /** The default-theme, light, LTR capture case for one component. */
 function caseFor(name: string): Case {
@@ -34,12 +57,17 @@ function caseFor(name: string): Case {
   return found;
 }
 
-/** Mount a reference page at `width`, offline, with fonts settled. */
-async function mount(page: Page, name: string, width: number): Promise<void> {
-  await page.setViewportSize({ width, height: 900 });
+/** Mount an assembled document at `width`, offline, with fonts settled. */
+async function mountHtml(page: Page, html: string, width: number): Promise<void> {
+  await page.setViewportSize({ width, height: RESPONSIVE_HEIGHT });
   await page.route(/^https?:\/\//, (route) => route.abort());
-  await page.setContent(buildPageHtml(caseFor(name)), { waitUntil: "load" });
+  await page.setContent(html, { waitUntil: "load" });
   await page.evaluate(() => document.fonts.ready);
+}
+
+/** Mount a reference page by component name at `width`. */
+async function mount(page: Page, name: string, width: number): Promise<void> {
+  await mountHtml(page, buildPageHtml(caseFor(name)), width);
 }
 
 /** Computed values of `properties` for the first element matching `selector`. */
@@ -59,7 +87,97 @@ async function computed(
   );
 }
 
+/** Ask the page what it computed, then check it against the canon + the markup. */
+async function preAssert(page: Page, width: number): Promise<string[]> {
+  const facts = await page.evaluate(gatherLayoutFacts, width);
+  return checkLayoutFacts(facts);
+}
+
+// ── the generated viewport matrix ───────────────────────────────────────────
+
+// Tripwire, not a real capture: if manifest-driven discovery ever stops yielding
+// cases, fail loudly instead of "0 tests, all pass".
+test("responsive matrix is non-empty", () => {
+  expect(responsiveMatrix.length).toBeGreaterThan(0);
+  // Every discovered component contributes exactly one case per width.
+  expect(responsiveMatrix.length % RESPONSIVE_WIDTHS.length).toBe(0);
+  for (const width of RESPONSIVE_WIDTHS) {
+    expect(responsiveMatrix.filter((c) => c.width === width).length).toBe(
+      responsiveMatrix.length / RESPONSIVE_WIDTHS.length,
+    );
+  }
+});
+
+for (const c of responsiveMatrix as ResponsiveCase[]) {
+  test(c.id, async ({ page }) => {
+    await mountHtml(page, buildPageHtml(c), c.width);
+
+    const problems = await preAssert(page, c.width);
+    expect(
+      problems.join("\n"),
+      `${c.component.name} did not compute the layout its markup authored at ${c.width}px`,
+    ).toBe("");
+
+    await expect(page).toHaveScreenshot(`${c.id}.png`, { fullPage: true });
+  });
+}
+
+// ── the pre-assertion must bite ─────────────────────────────────────────────
+
+test.describe("the pre-assertion catches a broken responsive rule", () => {
+  // Each case breaks ONE rule with a stylesheet override injected after the
+  // framework CSS — a faithful stand-in for a regression in the registry sheet,
+  // without touching the registry. If any of these went green, the viewport axis
+  // would be a screenshot suite with no claim behind it.
+  const CASES = [
+    {
+      what: "grid ignores its md override",
+      component: "stats-dashboard",
+      width: WIDTHS.floor,
+      // Beat every tier's specificity ladder so the base 1-column rule wins again.
+      css: `[data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-cols="1"] { grid-template-columns: repeat(1, 1fr) !important; }`,
+      expect: /expected 2 columns|expected 4 columns/,
+    },
+    {
+      what: "the dashboard-shell drawer never leaves the flow on a phone",
+      component: "dashboard-shell",
+      width: WIDTHS.phone,
+      css: `[data-ui="dashboard-shell"] [data-part="sidebar"] { position: static !important; }`,
+      expect: /expected an off-canvas drawer/,
+    },
+    {
+      what: "the inbox shows both panes on a phone",
+      component: "inbox",
+      width: WIDTHS.phone,
+      css: `[data-ui="inbox"] [data-part="detail-pane"] { display: block !important; }`,
+      expect: /expected exactly the active pane/,
+    },
+  ] as const;
+
+  for (const c of CASES) {
+    test(c.what, async ({ page }) => {
+      const html = buildPageHtml(caseFor(c.component)).replace(
+        "</head>",
+        `<style>${c.css}</style></head>`,
+      );
+      await mountHtml(page, html, c.width);
+
+      const problems = await preAssert(page, c.width);
+      expect(problems.join("\n"), "the broken rule should have been caught").toMatch(c.expect);
+
+      // …and the same page, unbroken, is silent — so the check is not just
+      // failing on everything.
+      await mount(page, c.component, c.width);
+      expect(await preAssert(page, c.width)).toEqual([]);
+    });
+  }
+});
+
 // ── dashboard-shell — the off-canvas drawer ─────────────────────────────────
+//
+// The generated matrix pre-asserts the drawer's position and the shell's column
+// count at all three widths. These cases cover what a static fact cannot: the
+// *transition* between the two states, which is the behaviour a user meets.
 
 test.describe("dashboard-shell · the sidebar drawer", () => {
   const SHELL = '[data-ui="dashboard-shell"]';
@@ -203,11 +321,8 @@ test.describe("auth-form · full bleed on the canon sm floor", () => {
     // 640px is the width the retired 480px block used to leave as a floating
     // card; the acceptance criterion for 0.8-09 is that it reads as a card here.
     for (const scheme of ["light", "dark"] as const) {
-      await page.setViewportSize({ width: 640, height: 900 });
-      await page.route(/^https?:\/\//, (route) => route.abort());
       const base = caseFor("auth-form");
-      await page.setContent(buildPageHtml({ ...base, scheme }), { waitUntil: "load" });
-      await page.evaluate(() => document.fonts.ready);
+      await mountHtml(page, buildPageHtml({ ...base, scheme }), 640);
 
       const style = await computed(page, CARD, ["border-radius", "box-shadow", "max-width"]);
       expect(style["border-radius"], scheme).not.toBe("0px");

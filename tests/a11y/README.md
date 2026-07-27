@@ -10,10 +10,38 @@ which pages exist. The a11y matrix is:
 every component  ×  { default, contrast } themes  ×  { light, dark }
 ```
 
-At the current registry that is **66 components × 2 themes × 2 schemes = 264
-scans** (plus a non-empty tripwire and the gate-bites fixture test). Adding a
-component (`registry/{primitives,recipes,patterns}/<name>/<name>.html` with an
+At the current registry that is **86 components × 2 themes × 2 schemes = 344
+scans** (plus a non-empty tripwire, the gate-bites fixture test and the density
+reference page). Adding a component
+(`registry/{primitives,recipes,patterns}/<name>/<name>.html` with an
 `@ui:component` header) grows the suite automatically — **zero edits** here.
+
+## The mobile sweep (task 0.8-11)
+
+The matrix above scans at 1280px. A phone is a *different DOM rendering of the
+same markup*, with failure classes the desktop scan structurally cannot see: an
+off-canvas drawer that is `position: fixed` and translated out of view but still
+in the tab order, a pane hidden by a media query, a table that becomes a
+scrollable region only once it is narrower than its content, text that lands on a
+different background once two columns stack.
+
+`mobile.pw.ts` re-scans at **390px** — the same width the visual suite's viewport
+axis captures at — over the **layout-bearing set**: manifest `category: "layout"`
+or `kind: "pattern"`, discovered by the *same imported function*
+(`discoverLayoutBearing`) the visual axis uses, so the two gates cannot disagree
+about which pages have responsive behaviour worth re-checking. That is
+**26 components × 2 themes × 2 schemes = 104 scans**. Components with no
+responsive behaviour render identically at both widths and are deliberately not
+re-scanned.
+
+It shares the **one** exemption list. There is no viewport dimension in an
+exemption entry, so a mobile-only waiver is unrepresentable rather than merely
+absent — a mobile-only violation is a mobile-only accessibility bug, and gets
+fixed. The first run found exactly one: `scrollable-region-focusable` on
+stats-dashboard's five-column sales table, whose `[data-ui="table"]` root is a
+scroll container at any width but only actually scrolls below ~700px. Fixed at
+the source with `tabindex="0"` on both of that pattern's table roots (the second
+passes today only because its content happens to fit).
 
 **Zero-violation policy.** Any non-exempt WCAG 2.0/2.1 Level A or AA violation
 fails the case, and the failure message names the **component** (via the case
@@ -44,6 +72,7 @@ there is no RTL axis. Widen `A11Y_THEMES` in `a11y-matrix.ts` to sweep more.
 | `report.ts` | Formats violations as `component + rule + selector`. |
 | `axe-types.ts` | Minimal structural types for axe results (keeps the pure logic browser-free). |
 | `a11y.pw.ts` | Playwright spec: one axe scan per case + the gate-bites fixture test. |
+| `mobile.pw.ts` | Playwright spec (task 0.8-11): the same pipeline at 390px over the layout-bearing set, discovered via `../visual/responsive-matrix.ts`. |
 | `docs-site.pw.ts` | Playwright spec (task 0.7-13): the generated documentation site, served over plain HTTP, one scan per site page per scheme. Scans only the pages the generator authors — `examples/**` wrap registry reference markup that `a11y.pw.ts` already scans. See `docs/docs-site.md`. |
 | `a11y-matrix.test.ts` | `bun test` meta-tests: discovery parity with the visual suite, matrix shape, exemption + report contracts. |
 | `fixtures/known-violation.html` | Deliberately-broken page proving the gate actually fails. |
@@ -53,8 +82,9 @@ there is no RTL axis. Widen `A11Y_THEMES` in `a11y-matrix.ts` to sweep more.
 ## Running locally
 
 ```bash
-npm run test:a11y                                        # scan every page
-npx playwright test --config=playwright.a11y.config.ts -g "badge"   # one component
+npm run test:a11y                                                      # scan everything
+npx playwright test --config=playwright.a11y.config.ts -g "badge"      # one component
+npx playwright test --config=playwright.a11y.config.ts -g "^mobile__"  # the 390px sweep
 ```
 
 Each page is the identical self-contained, network-free document the visual suite

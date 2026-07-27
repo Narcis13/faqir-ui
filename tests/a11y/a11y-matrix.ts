@@ -21,6 +21,10 @@
  * would only double the runtime without covering a new failure mode. Widen
  * `A11Y_THEMES` to sweep more themes at any time — it stays a subset of the
  * registry's themes, guarded by the meta-test.
+ *
+ * Task 0.8-11 adds a second, narrower matrix below — `buildMobileA11yMatrix` —
+ * which re-scans only the layout-bearing set at 390px, where mobile layouts have
+ * failure classes the desktop scan cannot see.
  */
 
 import {
@@ -31,6 +35,7 @@ import {
   type Case,
   type Component,
 } from "../visual/matrix";
+import { discoverLayoutBearing } from "../visual/responsive-matrix";
 
 /**
  * Themes the a11y gate sweeps. `default` is the neutral baseline; `contrast` is
@@ -83,6 +88,58 @@ export function buildA11yMatrix(components: Component[] = discoverComponents()):
   return cases;
 }
 
+// ── the mobile sweep (task 0.8-11) ───────────────────────────────────────────
+
+/**
+ * The phone viewport the mobile sweep scans at — the same 390px the viewport
+ * axis of the visual suite captures at, so the two gates look at the identical
+ * rendering. 844 is the iPhone 14's height; axe evaluates the whole document,
+ * not the fold, so it matters only for what `position: fixed` overlays cover.
+ */
+export const MOBILE_VIEWPORT = Object.freeze({ width: 390, height: 844 });
+
+/** One mobile scan: a layout-bearing page at the phone width. */
+export interface MobileA11yCase extends A11yCase {
+  width: number;
+}
+
+/**
+ * The mobile a11y sweep: the **layout-bearing set** (manifest `category: layout`
+ * or `kind: pattern` — the same discovery the viewport axis of the visual suite
+ * uses, imported, not re-implemented) × the a11y themes × both schemes, all at
+ * 390px.
+ *
+ * Why only that set, and why at all when the desktop scan is already green: a
+ * mobile layout is a *different DOM rendering* of the same markup, and it has
+ * failure classes the 1280px scan structurally cannot see — an off-canvas drawer
+ * that is `position: fixed` and translated out of view but still focusable, a
+ * pane hidden by a media query, controls that reflow into overlapping targets, a
+ * heading order that only holds while two columns sit side by side. Components
+ * with no responsive behaviour render identically at both widths, so scanning
+ * them again would double the job for zero new information — which is exactly
+ * the set this filter excludes.
+ */
+export function buildMobileA11yMatrix(
+  components: Component[] = discoverLayoutBearing(),
+): MobileA11yCase[] {
+  const cases: MobileA11yCase[] = [];
+  for (const component of components) {
+    for (const theme of A11Y_THEMES) {
+      for (const scheme of SCHEMES) {
+        cases.push({
+          component,
+          theme,
+          scheme,
+          dir: A11Y_DIRECTION,
+          width: MOBILE_VIEWPORT.width,
+          id: `mobile__${component.kind}__${component.name}__${theme}__${scheme}`,
+        });
+      }
+    }
+  }
+  return cases;
+}
+
 // Re-exported so the spec assembles pages through the exact same builder the
 // visual suite uses — one code path, no divergence.
-export { buildPageHtml, discoverComponents };
+export { buildPageHtml, discoverComponents, discoverLayoutBearing };
