@@ -2,7 +2,7 @@
 
 # Faqir Primitives Reference
 
-39 primitives, each with its anatomy tree, variant table, and safe/unsafe transforms — all derived from the component manifest.
+41 primitives, each with its anatomy tree, variant table, and safe/unsafe transforms — all derived from the component manifest.
 
 ## aspect-ratio
 
@@ -277,6 +277,35 @@ Tag/chip with a label and an optional dismiss button
 - **Unsafe (never do):** `remove-label-slot`, `remove-dismiss-aria-label`
 - **A11y:** keys: Enter/Space
 - **Required ARIA:** `aria-label on dismiss`; `type="button" on dismiss`
+
+## cluster
+
+_kind: primitive · category: layout_
+
+A wrapping inline row — tag rows, button rows, meta rows. Children flow along one line and reflow onto the next when they run out of room, with no breakpoint involved; gap, alignment and justification are responsive on the canon tiers
+
+```html
+<div data-ui="cluster" data-gap="{gap}">{children}</div>
+```
+
+**Anatomy**
+
+```text
+[data-ui='cluster']  ·  <div> · content: block
+```
+
+**Variants**
+
+| Variant | Values | Default | Attribute | Applied to | Responsive |
+|---------|--------|---------|-----------|------------|------------|
+| gap | `0`, `1`, `2`, `3`, `4`, `6`, `8`, `10`, `12`, `16` | `2` | `data-gap` | root | `data-gap-sm`, `data-gap-md`, `data-gap-lg`, `data-gap-xl` |
+| align | `start`, `center`, `end`, `stretch`, `baseline` | `center` | `data-align` | root | `data-align-sm`, `data-align-md`, `data-align-lg`, `data-align-xl` |
+| justify | `start`, `center`, `end`, `between`, `around` | `start` | `data-justify` | root | `data-justify-sm`, `data-justify-md`, `data-justify-lg`, `data-justify-xl` |
+
+- **Responsive:** the marked groups accept `<attr>-<tier>` for the canon tiers `sm` (40rem), `md` (48rem), `lg` (64rem), `xl` (80rem) — `data-gap-md="16"` applies that value from `md` up. Mobile-first: the unsuffixed attribute is the base.
+
+- **Safe transforms:** `change-gap`, `change-align`, `change-justify`, `add-responsive-tier`, `add-children`, `remove-children`, `add-push`, `remove-push`
+- **Unsafe (never do):** `change-display-property`, `remove-flex-wrap`
 
 ## collapsible
 
@@ -1042,6 +1071,32 @@ Toggle switch with on/off states, disabled state, and size variants
 - **Unsafe (never do):** `remove-button-element`, `remove-role-switch`, `remove-aria-checked`
 - **A11y:** keys: Tab, Space, Enter
 - **Required ARIA:** `role="switch" on the button element`; `aria-checked="true" or aria-checked="false"`; `aria-label or associated label for context`
+
+## switcher
+
+_kind: primitive · category: layout_
+
+A row of equal-width peers that becomes a single column when the switcher itself is narrower than its threshold — driven by a container query on its own inline size, never by the viewport, so the same markup is correct full-bleed, in a sidebar and in a dialog
+
+```html
+<div data-ui="switcher" data-threshold="{threshold}" data-gap="{gap}">{children}</div>
+```
+
+**Anatomy**
+
+```text
+[data-ui='switcher']  ·  <div> · content: block
+```
+
+**Variants**
+
+| Variant | Values | Default | Attribute | Applied to |
+|---------|--------|---------|-----------|------------|
+| threshold | `sm`, `md`, `lg`, `xl` | `sm` | `data-threshold` | root |
+| gap | `0`, `1`, `2`, `3`, `4`, `6`, `8`, `10`, `12`, `16` | `4` | `data-gap` | root |
+
+- **Safe transforms:** `change-threshold`, `change-gap`, `add-children`, `remove-children`
+- **Unsafe (never do):** `change-display-property`, `remove-container-type`, `add-viewport-media-query`
 
 ## text
 

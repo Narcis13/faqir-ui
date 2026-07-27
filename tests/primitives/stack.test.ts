@@ -513,13 +513,17 @@ describe("stack — one declaration, every generated surface", () => {
     }
   });
 
-  it("uses the real attribute in the theme-preview frames — no inline flex-wrap", () => {
+  it("leaves no inline flex-wrap escape in the theme-preview frames", () => {
+    // 0.7-20's debt, paid here in 0.8-03 by declaring `data-wrap`. The frames
+    // themselves moved on again in 0.8-05: a button row and a swatch row are
+    // `cluster`s now (asserted in tests/primitives/cluster.test.ts), whose wrap
+    // is intrinsic rather than opted into. What must never come back, whichever
+    // component holds those rows, is the escape.
     const frames = buildDocsSite().filter((f) => f.path.startsWith("frames/theme-preview-"));
     expect(frames.length).toBeGreaterThan(0);
     for (const frame of frames) {
       expect(frame.content, frame.path).not.toContain("flex-wrap");
-      expect(frame.content, frame.path).toContain('data-ui="stack" data-direction="horizontal"');
-      expect(frame.content, frame.path).toContain("data-wrap>");
+      expect(frame.content, frame.path).not.toContain("style=\"display: flex");
     }
   });
 

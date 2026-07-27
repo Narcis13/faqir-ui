@@ -1,6 +1,6 @@
 {
   "schema": "faqir-registry-index@1",
-  "count": 83,
+  "count": 85,
   "components": [
     {
       "name": "aspect-ratio",
@@ -202,6 +202,28 @@
         }
       ],
       "hash": "83c99d35a6b5c77d8c0d5516f8ccf1758224a473e881047c5ee88f05ff0a14cd",
+      "deps": []
+    },
+    {
+      "name": "cluster",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "cluster.css",
+          "sha256": "6229a16a2a76ecd10e561dcb0e8827e11dc6c6b383ca43452d2283e68129519d"
+        },
+        {
+          "path": "cluster.html",
+          "sha256": "123641fb8471ae0f6018dcca2bca3570b46a50595744fd9e93bbb0828e72f782"
+        },
+        {
+          "path": "cluster.manifest.json",
+          "sha256": "20c50ab34787df4ba70eeb66234fa003623e2ff012e7fd35f5a180bf9f7d2446"
+        }
+      ],
+      "hash": "192d940006c78c6ea42a841ca72b6e0b9c591844bb690dfc99fd549951b97781",
       "deps": []
     },
     {
@@ -789,6 +811,28 @@
         }
       ],
       "hash": "b3e7544994591cecfedc742ed42f6e486ede0c1008bd453a2339f2a78fb57045",
+      "deps": []
+    },
+    {
+      "name": "switcher",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "switcher.css",
+          "sha256": "30817d2a44a0bf6b5b767e96a74bcdee56c462d82b87a1974c6713b693f62007"
+        },
+        {
+          "path": "switcher.html",
+          "sha256": "5656baa99baeaf504bbf648a186a8df87b3c83b6b11e2da830f3c51c4e8ed037"
+        },
+        {
+          "path": "switcher.manifest.json",
+          "sha256": "a7e1d91a4e25ec37e05d397f443b994f07c09c2f2e32b24e1b0c942fe8b44698"
+        }
+      ],
+      "hash": "c038b23b0d193f13770115ed9c2d3909c4a45e4122bee51a03b57e417b8e6414",
       "deps": []
     },
     {

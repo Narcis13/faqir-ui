@@ -1376,10 +1376,12 @@ function variantValues(c: DocsComponent | undefined, attr: string): string[] {
  * theme re-declares. Add a variant to `button.manifest.json` and every theme
  * preview grows it.
  *
- * The two rows wrap through `stack`'s own `data-wrap`. They used to carry an
- * inline `flex-wrap` escape, because the attribute existed in `stack.css` while
- * the manifest did not declare it and the site may only use what the manifests
- * describe (0.7-20). Task 0.8-03 declared it; the escape is gone.
+ * The two rows are `cluster`s — a button row and a swatch row are the primitive's
+ * literal use case (task 0.8-05). They have been through the whole argument: an
+ * inline `flex-wrap` escape while the attribute existed in `stack.css` but no
+ * manifest declared it and the site may only use what the manifests describe
+ * (0.7-20); then `stack` + `data-wrap` once 0.8-03 declared it; now the component
+ * whose wrap is intrinsic rather than opted into.
  *
  * It deliberately shows **solid** component colour and bare token swatches, not
  * text on a tinted `-subtle` surface. That is not a layout preference: the
@@ -1471,10 +1473,10 @@ function renderThemePreviewPage(ctx: {
 <main style="padding: var(--space-4); display: grid; gap: var(--space-4);">
 ${card}
 ${callout}
-    <div data-ui="stack" data-direction="horizontal" data-gap="2" data-wrap>
+    <div data-ui="cluster" data-gap="2">
 ${buttons}
     </div>
-    <div data-ui="stack" data-direction="horizontal" data-gap="1" data-wrap>
+    <div data-ui="cluster" data-gap="1">
 ${swatches}
     </div>
 </main>
@@ -1581,9 +1583,9 @@ function renderThemeGalleryPage(ctx: {
         `<code>href</code> of one <code>&lt;link&gt;</code>, and picking a scheme rewrites ` +
         `<code>data-theme</code> on <code>&lt;html&gt;</code> here and in every frame below. No reload, ` +
         `no rebuild, no flash of unstyled content.</p>\n` +
-        `      <div data-ui="stack" data-variant="horizontal" data-gap="2" role="group" aria-label="Theme">\n` +
+        `      <div data-ui="cluster" data-gap="2" role="group" aria-label="Theme">\n` +
         `${themeButtons}\n      </div>\n` +
-        `      <div data-ui="stack" data-variant="horizontal" data-gap="2" role="group" aria-label="Colour scheme">\n` +
+        `      <div data-ui="cluster" data-gap="2" role="group" aria-label="Colour scheme">\n` +
         `${schemeButtons}\n      </div>`,
     ),
     section(
