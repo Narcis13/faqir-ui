@@ -161,6 +161,23 @@ done in any order (or in parallel worktrees).
 | 0.8-11 | Responsive visual + a11y coverage (viewport axis) | ✅ |
 | 0.8-12 | Layout docs + agent surfaces + spec alignment | ✅ |
 
+### Phase v0.9 — Rhythm & Polish
+
+| ID | Task | Status |
+|----|------|--------|
+| 0.9-01 | Layout-lint gate + harness/artifact parity (the measurement) | ⬜ |
+| 0.9-02 | Default rhythm: the `flow` decision + spacing doctrine | ⬜ |
+| 0.9-03 | Example-page shell: gutter, measure, visible demo captions | ⬜ |
+| 0.9-04 | Reference-fragment recomposition sweep (86 fragments) | ⬜ |
+| 0.9-05 | `dialog` trigger contract + overlay preview state | ⬜ |
+| 0.9-06 | `toast` container contract + `single-fixed-region` audit rule | ⬜ |
+| 0.9-07 | Form proximity: intra- vs inter-group spacing | ⬜ |
+| 0.9-08 | Inline control rows: `checkbox`/`radio`/`switch` groups | ⬜ |
+| 0.9-09 | Cross-card row alignment (subgrid) | ⬜ |
+| 0.9-10 | Surface elevation ramp + the `-subtle` contrast debt | ⬜ |
+| 0.9-11 | Variant consistency sweep + `carousel` viewport bleed | ⬜ |
+| 0.9-12 | Spacing, rhythm & density documentation surfaces | ⬜ |
+
 ### Phase v1.0 — The Standard
 
 | ID | Task | Status |
@@ -2504,6 +2521,498 @@ v0.8 was planned — verify it survived).
 - [x] README, docs/layout.md, skill, context, and the token reference teach the same system — cross-checked by test, not by care. (The cross-check has a shape: **one module, five surfaces, 28 tests**. `src/utils/layout.ts` is the doctrine *as data* — three mechanisms, five primitives, the measure/rhythm token names, the archetype list — holding nothing a manifest, a token file or `breakpoints.ts` already knows, so the README table, `docs/layout.md`, `renderLayoutSystem()` in the skill, the `layout`+`responsive` blocks in context and the site's Layout page all read one source rather than four copies. `tests/generator/layout-docs.test.ts` then asserts the module's names *resolve*: each of the five is a registry primitive with `category: "layout"`, each `--measure-*`/`--section-gap-*`/`--content-gutter` is a token `parseTokenReference` finds in `registry/tokens`, and the doctrine is ordered intrinsic → container → viewport. The README half is the **inverse of 0.8-10** and runs in both directions per primitive: nothing documented that its manifest does not declare (tier suffixes resolved through `parseResponsiveAttribute`), and nothing declared that the subsection does not document — the second direction is what caught `data-variant` going unmentioned after the v2.0 direction move, and the README's ladder rows are compared against `BREAKPOINT_LIST` rather than eyeballed. `check:skill` is green after `gen:skill` (the 44-line Layout System section is generated, not pasted), `check:docs` green at 301 files, `audit:registry` zero findings.)
 - [x] Five archetype examples ship audit-clean and appear on the docs site. (`docs/layout.md` is the source and the site is a rendering of it: `parseArchetypes()` lifts `### <Title> {#id}` → summary → first ```html fence, `buildDocsSite` feeds that into the new `layout/index.html`, and the test asserts the page contains `esc(a.html)` for each — the markup that is proven clean and the markup that ships are the same bytes, not two copies that agree. All five (dashboard, landing, prose/document, split view, centred form) return **zero findings at every severity** from `auditHtmlSource` against all registry manifests, and collectively use all five primitives plus at least one tier attribute — asserted as properties, so a sixth archetype is admitted with no suite edit. Two defects were found by writing them, and both are fixed rather than worked around: (1) **`valid-variant` misread a declared attribute as a tier** — `stack` ships the responsive group `align` beside the prop `align-text`, so `data-align-text="center"` was reported as "unknown breakpoint tier text"; `declaredAttributes()` now short-circuits the suffix reader and `tests/audit/rules.test.ts` pins both directions. (2) The audit cannot see an attribute *nobody* declared in HTML (its value rules only check declared ones), so the suite carries its own scope-aware checker — an attribute must be declared by the element's own component, or by the nearest enclosing one when the element is a bare wrapper or the prop is child-applied — which is what caught `data-align-text` sitting inertly on a `container`. That check also proved `data-span` is a prop, not a responsive group: `data-span-lg` audits clean and does nothing, so the dashboard archetype uses `data-span="full"` (safe at any column count) and the gap is documented in the doc, in the README, and filed as **0.8-17**. The page is axe-clean in both schemes (`docs__layout_index_html__{light,dark}`), as is the token reference after its three new sections.)
 - [x] An agent reading only llms.txt can discover the ladder, the grammar, and all five layout primitives. (Stated in the index, not merely linked from it — the component list can describe every variant and still leave a breakpoint to guess. One generated paragraph after the intro names the five primitives, the four tiers with their rem values, `data-<attr>-<tier>` with its reading, the min-width/mobile-first rule, the protocol exclusion, and the five archetypes; the Optional section gains `#layout-system` and `#responsive-tiers`, whose anchors exist in llms-full.txt (the pre-existing link-resolution test proves that, unchanged). Asserted twice over: once on the project-scoped generator in `layout-docs.test.ts`, and once on the **hosted** file in `tests/generator/docs-agents.test.ts` — the 0.7-15 byte-equality harness extended exactly as the task predicted, so the same paragraph is proven on faqir.dev/llms.txt and each primitive named there also resolves to a `[name](llms-full.txt#name)` entry. `context.json` carries the same facts as data (`responsive.tiers` derived from `BREAKPOINT_LIST`, `responsive.rules`, `layout.doctrine|primitives|measure|rhythm|archetypes`), and the markdown + `.cursorrules` formats carry them as prose — verified end-to-end through the CLI on a scratch project, not only through the formatters.)
+
+---
+
+# Phase v0.9 — Rhythm & Polish
+
+v0.8 gave layout a declared, responsive *vocabulary*. This phase gives it a **default**.
+The evidence base is a measured sweep of the built docs site (`site/dist`, 86 components,
+headless Chromium at 1280×900, 2026-07-28):
+
+| Measurement, all 86 example pages | Count |
+|---|---|
+| Zero page gutter (no padding/margin on `body`/`main`) | **84 / 86** |
+| Pages with ≥1 seam where two stacked demos touch (<1px apart) | **44 / 86** |
+| Total zero-gap seams | **187** |
+| Content clipped outside the viewport | 1 (`carousel`, 8 elements) |
+| Overlapping fixed-position boxes | 1 (`toast`, 3 pairs) |
+| **Pages with no defect at all** | **2 / 86** |
+
+The two clean pages are `sidebar` and `dashboard-shell`, and only because those components
+bring their own padding.
+
+**The diagnosis.** Faqir ships a complete spacing vocabulary — `--space-0…64` with
+half-steps, `--section-gap-{sm,md,lg}`, `--content-gutter`, `--measure-*`, and `data-gap`
+on all five layout primitives — but **every gap is opt-in**, so a bare sequence of
+siblings gets zero rhythm. That is why quality splits by layer: patterns look excellent
+(`dashboard-shell`, `pricing`, `document`, `inbox` were composed inside stacks with
+explicit gaps) while primitives and recipes render the raw default.
+
+**This is not a docs bug.** `registry/<layer>/<name>/<name>.html` is the canonical template
+an agent reads, the source of the manifests' `templates`, *and* the byte-for-byte payload of
+the Copy-for-agents button (0.7-15) — verified: the `cluster` snippet ships all nine
+clusters with no wrapper and no spacing. What a user pastes into an empty file is the
+crammed version. The docs site is not misrepresenting the framework; it is representing it
+accurately, which is the problem.
+
+**Why no gate caught it.** `tests/visual/matrix.ts:245` sets `body { padding: 24px }` on
+the visual-regression harness page; the shipped site sets none (`site/styles/docs.css:24`
+declares only `background`). The matrix is otherwise exhaustive — every component × every
+theme × light/dark × ltr/rtl — but it renders each fragment in a padded container the real
+artifact does not have, and it baselined the cramped composition as correct. It gates
+*change*, never *quality*. The a11y suite scopes `examples/**` out by design (0.7-13), and
+`faqir audit` checks contract conformance, not visual composition. Every gate is green and
+the showcase still looks unfinished.
+
+**Why this phase sits here.** 0.9-02 may add a primitive, a prop or a base rule to the
+protocol surface, so it must land before 1.0-01 freezes spec + schema — the same ordering
+argument that put v0.8 ahead of v1.0. Four existing follow-ups fall inside this phase's
+blast radius and are resolved by it rather than separately: **0.7-17** (365 findings on the
+reference fragments) by 0.9-04, **0.8-13** (the theme-frame inline layout escape) by 0.9-03,
+**0.8-14** (six stale visual baselines) by 0.9-01, and **0.7-19** (sub-AA `-subtle` pairs in
+10 of 12 themes) by 0.9-10.
+
+---
+
+### 0.9-01 · Layout-lint gate + harness/artifact parity
+
+**Depends:** — · **Ref:** §15, §19 · **Touches:** `tests/visual/matrix.ts`, new `tests/visual/layout-lint.pw.ts`, new `src/utils/layout-lint.ts`, `site/styles/docs.css`
+
+Build the measurement before the fix, so 187 seams is a countdown rather than an opinion.
+The gate loads every generated page of the built site in a real browser and reports four
+objectively checkable conditions per page: page gutter, zero-gap seams between stacked
+top-level demos, elements bleeding past the viewport, and overlapping fixed-position boxes.
+No aesthetic judgement is encoded — each is a number a diff can argue with.
+
+Ship it as a **ratchet, not a wall**: a committed budget file records today's counts and CI
+fails when any count *rises*, so the gate is green on day one and every later task in this
+phase mechanically lowers a number it cannot raise. A permanently-red suite teaches the
+team to ignore it; a monotonically-decreasing budget cannot be ignored.
+
+Then close the parity hole that hid all of this: delete `body { padding: 24px }` from
+`tests/visual/matrix.ts:245` (or move it into the artifact under test) so screenshot
+baselines are of shipped bytes. That moves baselines, which is why **0.8-14** — six already
+stale captures on `main`, including a `recipe__table` page-height mismatch of 1449 → 3042 px
+— is resolved here: the re-baseline is happening anyway, and the suite must be green on a
+clean tree before it can gate anything. Decide in the same sitting whether the
+non-`default` theme cells are meant to be committed or filtered out of the run; today they
+report "a snapshot doesn't exist" and `test:visual` has never been green as a whole.
+
+Keep the checker pure and `node:*`-free (the 0.8-01 discipline) so `bun test` can drive it
+over literal rectangles and Playwright can drive it over real pages.
+
+**Tests**
+- `src/utils/layout-lint.ts` is pure: every condition proven from literal box lists under `bun test`, both directions (a clean page reports nothing; a seeded 0px seam / bled element / overlapping pair reports exactly one).
+- The Playwright pass measures all 86 example pages plus the shell pages and writes the budget file; a meta-test asserts the budget file matches a fresh run (the `check:docs` determinism shape).
+- Ratchet direction: a synthetic page worse than the budget fails; better than the budget passes and is reported as slack.
+- `test:visual` green on a clean tree after re-baselining — asserted by running it, with the six 0.8-14 captures named individually so the regression has a dedicated failure.
+
+**Acceptance criteria**
+- [ ] Layout-lint runs over the built site and its committed budget reproduces the measured baseline (84 zero-gutter, 44 seam-bearing pages, 187 seams, 1 bleed, 1 overlap).
+- [ ] The budget can only decrease; a rise in any of the four counts fails CI.
+- [ ] No padding exists in the visual harness that the shipped artifact lacks; `bun run test:visual` is green on a clean tree and follow-up 0.8-14 is resolved (edit its row in place per house rule).
+
+---
+
+### 0.9-02 · Default rhythm: the `flow` decision + spacing doctrine
+
+**Depends:** 0.9-01 · **Ref:** §15 §19, new §20 · **Touches:** `FAQIR-SPEC.md`, `registry/base/*`, possibly new `registry/primitives/flow/*`, `src/utils/layout.ts`, `manifest.schema.json`
+
+The one design decision of this phase, and everything after it depends on the answer:
+**what does a bare sequence of block-level Faqir elements do vertically?** Today: nothing,
+because nobody asked. The tokens to answer with already exist (0.8-07 shipped
+`--section-gap-{sm,md,lg}` and `--content-gutter`); what is missing is a rule that spends
+them without an explicit `data-gap` on every wrapper.
+
+Three candidates, in the order to try them:
+
+1. A **`flow` primitive** — the owl selector `> * + *` with a `data-gap` ladder, taking the
+   five layout primitives to six. Most explicit, most discoverable through the manifest,
+   costs a new component before a schema freeze.
+2. A **`data-flow` prop** on `stack`/`surface`/`container` — no new component, but three
+   manifests grow an attribute that means the same thing in three places.
+3. A **base rule** giving block-level `[data-ui]` a default `margin-block-end`, opted out
+   with `data-gap="0"` — smallest markup, but it makes every component's vertical margin a
+   thing an author must know about, and margin collapsing through `surface` is a trap.
+
+Whichever wins must satisfy one test: **an agent can be told the rule once, in one sentence,
+and produce spaced output without wrapping anything.** Write it into FAQIR-SPEC.md as §20
+"Rhythm" beside §15's layout doctrine, add it to `src/utils/layout.ts` as data (the 0.8-12
+one-module-five-surfaces shape) so README, `docs/layout.md`, the skill, context and the site
+inherit it, and record a `breaking: true` changelog entry if an existing component's default
+margin moves. Do **not** touch the 86 fragments here — that is 0.9-04, and doing it in this
+session would hide whether the default alone fixed them.
+
+**Tests**
+- Doctrine drift: §20's stated rule is parsed back out and compared against the implementation the same way `tests/utils/breakpoints.test.ts` compares the canon table.
+- The chosen mechanism is proven in a browser on all three shapes it must survive: nested scopes, a `surface` boundary (margin collapsing), and a `data-gap="0"` opt-out.
+- Layout-lint (0.9-01) re-run: the seam count drops without any fragment being edited, and the delta is asserted, not eyeballed.
+- Spec examples in §20 pass `faqir audit` at zero findings, every severity (the 1.0-01 discipline applied early).
+
+**Acceptance criteria**
+- [ ] One rule, written in FAQIR-SPEC.md §20, that produces vertical rhythm with no per-element opt-in — with the two rejected candidates and *why* recorded, because the next spacing question will ask again.
+- [ ] The rule is data in `src/utils/layout.ts`; README, `docs/layout.md`, skill, context and llms.txt all teach it from that one source, cross-checked by test.
+- [ ] Layout-lint's seam count falls measurably from fragment-free changes alone; no registry reference fragment edited in this task.
+
+---
+
+### 0.9-03 · Example-page shell: gutter, measure, visible demo captions
+
+**Depends:** 0.9-02 · **Ref:** §15, §19 · **Touches:** `src/generator/docs.ts`, `site/styles/docs.css`, `tests/generator/docs-site.test.ts`
+
+Three generator-side defects, all in the page frame rather than the fragments, so one change
+fixes 86 pages.
+
+**Gutter and measure.** 84 example pages render flush to x=0: `avatar` and `skeleton` have
+circles clipped by the left edge, `progress` labels are cut off at the right, and a text
+input stretched to 1568px is not a demonstration of a form control. Mount the fragment
+inside the framework's own `container` with `--content-gutter` and a `--measure-*` — the
+site must not reach for an inline style to fix its own showcase.
+
+**Captions.** Every fragment labels its demos in HTML comments (`<!-- Tag row — the
+canonical cluster -->`), which are invisible in a browser, so a reader cannot tell where one
+demo ends and the next begins: `accordion`'s three accordions read as one seven-item
+accordion, `table`'s five tables as one table, `pagination`'s three controls run together on
+a single line. Teach the generator to lift those comments into visible captions and wrap
+each demo in a labelled block. The labels already exist in all 86 files — this is a
+rendering change, not an authoring one, which is what keeps 0.9-04 mechanical.
+
+**0.8-13 resolved here.** `docs.ts` still emits
+`<main style="padding: var(--space-4); display: grid; gap: var(--space-4);">` for each of
+the twelve theme-preview frames — a padding + grid escape that survived 0.8-06's measure
+sweep. It is the same two concerns this task is solving for example pages (rhythm and
+inset), so solve both with the same primitives and re-baseline the twelve frames in the same
+change.
+
+**Tests**
+- The `zz-probe` "adding a component" test still grows the site by exactly three files, now with a caption block and a gutter.
+- Every example page has a non-zero gutter and a bounded measure — asserted as a property over all 86, not on a sample.
+- Comment-to-caption lifting is proven in both directions: a fragment with labels renders them; a fragment without stays uncaptioned rather than emitting an empty block.
+- No `style="` attribute survives anywhere in the generated site (extends 0.8-03's `flex-wrap` assertion to the general case).
+- Example pages stay outside the per-component audit gate (the 0.7-13 split is deliberate and must not silently change).
+
+**Acceptance criteria**
+- [ ] All 86 example pages carry a gutter and a measure from registry primitives; layout-lint's zero-gutter count reaches 0.
+- [ ] Demo captions render from the fragments' existing comment labels; no fragment edited in this task.
+- [ ] Follow-up 0.8-13 resolved (edit its row in place); the twelve theme frames carry no inline style and their baselines are re-captured in this commit.
+
+---
+
+### 0.9-04 · Reference-fragment recomposition sweep
+
+**Depends:** 0.9-03 · **Ref:** §15, §19 · **Touches:** all 86 `registry/{primitives,recipes,patterns}/*/<name>.html`, regenerated manifests/skill/registry-index/docs
+
+The mechanical half, deliberately last of the four: with the default rhythm (0.9-02) and the
+page shell (0.9-03) landed, whatever seams remain are genuinely the fragments' fault, and
+the diff is small enough to review. Recompose each fragment to the demo-block convention
+0.9-03 renders — one labelled block per demo, separated, wrapped where a demo needs its own
+context.
+
+Two classes need judgement rather than a rewrite:
+
+- **Layout primitives cannot be demoed with bare text.** `grid`'s nine demos are floating
+  words with no cell background, border or visible gap — you cannot see the grid at all.
+  `stack`, `switcher` and `container` have the same problem in milder form. Give layout
+  demos a visible cell surface (or a docs-only bounds toggle) and decide which, once, for
+  all five.
+- **The payload is the point.** Whatever lands here is what Copy-for-agents emits and what
+  the manifests' `templates` carry, so the composed fragment must still be a *correct
+  minimal example* — recomposition must not turn a two-line template into a page.
+
+**0.7-17 resolved here.** Running the full rule set over these fragments yields **365
+findings** (`required-slot` ×80, `orphan-part` ×164, `valid-variant` ×35, `required-aria`
+×34, `focus-trap` ×23, `controller-loaded` ×16, …), and it reaches users: `faqir audit` in a
+project scans `ui/**` including copied reference pages, so a fresh `init` + `add crud-table`
+reports a wall of findings from Faqir's own markup. This is the session that has all 86
+files open. Triage each class per that row — complete the reference, declare the missing
+slot, or scope the rule out of reference pages and teach `faqir audit` to skip them — and
+record the contract decision, because it is the same question 0.9-05 asks about overlays.
+
+**Tests**
+- Layout-lint: zero-gap seams reach 0 across all 86 pages; the budget file ratchets to zero and the ratchet is what proves it.
+- Every fragment still parses to the same component root set it had before (recomposition adds wrappers, never changes what is being demonstrated) — asserted per file.
+- Copy-for-agents payload identity holds (0.7-15): page `<pre><code>`, `snippets/*.html.txt` and clipboard bytes stay one source, and each payload is still a valid standalone document.
+- The 0.7-17 triage is enforced: whatever contract is chosen, the registry reaches zero findings under it, in `audit:registry` and in the browser bundle alike.
+
+**Acceptance criteria**
+- [ ] Layout-lint reports 0 seams and 0 zero-gutter pages across the library; the ratchet floor is set to 0 so it cannot regress.
+- [ ] Layout primitives demo with visible bounds; the mechanism is chosen once and applied to all five.
+- [ ] Follow-up 0.7-17 resolved (edit its row in place) with the reference-page audit contract written down and the registry at zero under it.
+
+---
+
+### 0.9-05 · `dialog` trigger contract + overlay preview state
+
+**Depends:** 0.9-04 · **Ref:** §15 · **Touches:** `registry/recipes/{dialog,drawer,sheet,alert-dialog,command-palette,context-menu,menubar,popover,tooltip}/*`, `src/audit/rules.ts`, `src/generator/docs.ts`
+
+`registry/recipes/dialog/dialog.css` has **no rule at all for `[data-part="trigger"]`**, so
+all four triggers render as unstyled plain text flattened by the reset and the dialog
+example demonstrates nothing. The same file uses `data-ui="button"` correctly in its footer,
+so it is internally inconsistent — which is the tell that this is a missing contract, not a
+missing declaration. Decide where the obligation lives (a trigger part carries
+`data-ui="button"`, or its recipe styles the part) and apply it across every recipe with a
+trigger, then encode the decision as an audit rule so the next recipe cannot omit it.
+
+Pair it with the reason the defect went unnoticed: **eight overlay recipes cannot be demoed
+statically.** `dialog`, `drawer`, `sheet`, `command-palette`, `context-menu`, `menubar`,
+`tree-view` and `file-upload` render as a lone trigger with nothing to see, because the
+panel is `hidden` until a controller opens it. Ship a docs-only forced-open preview state so
+the contract page shows the panel. It is the same "partial demo" question 0.9-04 answered
+for the audit contract, applied to rendering — and note the constraint that shaped 0.7-13:
+overlay markup is mounted *beside* `<main>`, so a forced-open panel must not break the
+document rules or the landmark placement.
+
+**Tests**
+- Audit: a trigger part with neither `data-ui="button"` nor a recipe rule is a finding; both satisfying forms are silent. Parity through the committed browser bundle.
+- Every trigger part in the registry satisfies the contract — asserted over all recipes, so a new one inherits the gate.
+- The forced-open state is docs-only: registry fragments and Copy-for-agents payloads are byte-identical with and without it.
+- The eight overlay contract pages render a visible panel; each stays axe-clean in both schemes and inside the existing landmark placement rules.
+
+**Acceptance criteria**
+- [ ] Trigger parts have one documented contract, applied registry-wide and enforced by a rule rather than by review.
+- [ ] All eight overlay recipes show their panel on the docs site without shipping an open state to users.
+- [ ] No Copy-for-agents payload changes as a side effect.
+
+---
+
+### 0.9-06 · `toast` container contract + `single-fixed-region` audit rule
+
+**Depends:** 0.9-04 · **Ref:** §15 · **Touches:** `registry/recipes/toast/*`, `src/audit/css-rules.ts` or `rules.ts`, browser bundle
+
+`toast.html` declares four `data-part="container"` elements, **two of them `top-right`**.
+Both resolve to `position: fixed; top: 0; inset-inline-end: 0`, so they occupy identical
+coordinates and one toast renders on top of another — the only overlapping-box page in the
+library. The container CSS is correct (`display: flex; flex-direction: column;
+gap: var(--space-3)`); the *markup contract* is not, and nothing states that a position is
+singular.
+
+Fix the reference to one container per position, then generalize: a rule that flags two
+same-component fixed regions resolving to the same corner. It is a small rule with a real
+blast radius — the failure is invisible in source review, invisible to every value rule
+(both containers are perfectly valid in isolation), and only appears when both are on the
+page at once, which is exactly the class of defect an audit is for. Check whether `drawer`,
+`sheet` and `command-palette` can express the same collision before scoping the rule to
+`toast`.
+
+**Tests**
+- Seeded collision: two `top-right` containers report exactly one finding naming both; one container per position is silent; four containers at four distinct positions are silent.
+- Layout-lint's overlap count reaches 0.
+- Parity across CLI and the committed browser bundle on the shared fixture set.
+- A browser test asserting two toasts inside *one* container stack with a real gap — the behaviour the reference was accidentally claiming was broken.
+
+**Acceptance criteria**
+- [ ] `toast.html` ships one container per position and the four positions are demonstrated without overlap.
+- [ ] A rule catches same-position fixed-region collisions; its scope (toast-only vs any fixed region) is decided with the other overlay recipes checked, not assumed.
+- [ ] Layout-lint reports 0 overlapping fixed boxes.
+
+---
+
+### 0.9-07 · Form proximity: intra- vs inter-group spacing
+
+**Depends:** 0.9-02 · **Ref:** §15 · **Touches:** `registry/primitives/{field-group,input,select,textarea,label}/*`, regenerated manifests/bindings/skill
+
+On `field-group`, `input` and `select`, a field's help text sits closer to the **next**
+field's label than to its own control — measured on the built site: `input`'s help text at
+y=65, the following label at y=80. Proximity is the strongest grouping signal a form has,
+and it currently points at the wrong neighbour. It is not a docs artifact: the spacing comes
+from the components, so every generated form inherits it.
+
+The fix is a spacing *pair*, not a single value — a tight intra-group step binding label →
+control → help text, and a looser inter-group step between fields — expressed in the
+existing scale (`--space-*` for the inner step, `--section-gap-sm` or a new sibling for the
+outer). Whether the outer step belongs to `field-group` or to 0.9-02's default rhythm is the
+decision to make and record: if the default already spaces siblings correctly, `field-group`
+should own only the inner step and nothing else.
+
+While the manifests are open, fix the inline-layout inconsistency the same sweep exposes:
+`field-group`'s `Address` row lays out label-beside-control at x=120 while every sibling is
+full-width, with no attribute distinguishing them.
+
+**Tests**
+- Computed-geometry assertions in a browser: for every field in the reference, the distance to its own control is strictly less than the distance to the next group. Asserted as an inequality over all fields, so it holds for shapes nobody wrote a case for.
+- The inner step is unaffected by 0.9-02's default rhythm (proven by toggling the default off in a fixture) — otherwise the two systems are fighting.
+- Density parity: both steps remap under `data-density="compact"` and the inequality still holds.
+- Bindings/skill/manifest regeneration clean; the inline-layout variant is declared rather than incidental.
+
+**Acceptance criteria**
+- [ ] Label, control and help text are measurably closer to each other than to the adjacent field, asserted as a property across the whole reference.
+- [ ] Ownership of the outer step is decided between `field-group` and the default rhythm and written down.
+- [ ] The inline label-beside-control layout is a declared variant or removed; no undeclared attribute remains (0.8-10's rule stays green).
+
+---
+
+### 0.9-08 · Inline control rows: `checkbox` / `radio` / `switch` groups
+
+**Depends:** 0.9-02 · **Ref:** §15 · **Touches:** `registry/primitives/{checkbox,radio,switch,toggle}/*`, regenerated manifests/bindings/skill
+
+`checkbox` renders all eight demos on one line, so each label butts directly against the
+next checkbox's box — "Accept terms and conditions ☑ Subscribe to newsletter" reads as one
+string. The visual grouping contradicts the `for`/`id` association the markup declares,
+which makes it an accessibility problem and not only an aesthetic one: sighted users parse
+proximity, and proximity is lying.
+
+These primitives are inline-level by nature, so unlike 0.9-07 the answer is not a vertical
+step — it is an owning wrapper with an enforced gap, and a decision about whether a lone
+control is allowed outside one. `cluster` (0.8-05) may already be the right wrapper, in
+which case this task is a documentation and reference change plus a rule; if the label↔box
+gap needs to differ from the control↔control gap, it is a component concern instead. Resolve
+that before writing CSS.
+
+**Tests**
+- Geometry property over every control in the four references: label-to-own-box distance < box-to-next-control distance.
+- Whichever wrapper is chosen, a bare control outside one either still renders correctly or is a finding — decided, then asserted, not left ambiguous.
+- Existing keyboard/`aria` behaviour unchanged (the 0.4-x suites stay green untouched).
+- Layout-lint seam count for the four pages reaches 0.
+
+**Acceptance criteria**
+- [ ] Inline controls carry a documented row wrapper with an enforced gap; visual grouping matches `for`/`id` association.
+- [ ] The lone-control case has a defined answer.
+- [ ] No new undeclared attributes; bindings and skill regenerated.
+
+---
+
+### 0.9-09 · Cross-card row alignment (subgrid)
+
+**Depends:** 0.9-02 · **Ref:** §15, §19 · **Touches:** `registry/primitives/{card,grid}/*`, `registry/patterns/pricing/*`, regenerated manifests/bindings/skill
+
+On `pricing`, the three plan cards do not align: the "Most popular" badge pushes the Team
+card's price, divider, feature list and CTA down relative to its siblings — dividers land at
+y=289 / 330 / 289. Card-to-card row alignment is the one alignment problem in the library
+that per-instance padding genuinely cannot fix, because the misalignment is caused by
+content the sibling cards do not have.
+
+The mechanism is `grid-template-rows: subgrid` on a `card`-in-`grid` composition: the cards
+share the grid's row track set, so header, price, body and footer align across siblings
+regardless of what each contains. It needs a declared attribute (a `card` opt-in, or a
+`grid` mode that makes children subgrid participants), a stated fallback for engines without
+subgrid — the doctrine's intrinsic-first rule (§19) means the fallback must be *correct*,
+not merely non-crashing — and a decision about how many rows the contract fixes.
+
+This is also the honest place to state the general rule the layout guide is missing: **equal
+heights are not alignment.** `switcher` already gives equal-height peers and does not solve
+this; that distinction belongs in `docs/layout.md`.
+
+**Tests**
+- Geometry across siblings: for a card row where one card carries an extra element, corresponding parts share a y-coordinate — asserted per part, so a fourth row added later is covered.
+- Fallback path proven with subgrid disabled: layout stays correct and the failure mode is documented, not merely absent.
+- Responsive: alignment holds through the canon ladder as the row wraps to fewer columns.
+- `pricing` re-baselined; the visual diff is the fix and is reviewed as such.
+
+**Acceptance criteria**
+- [ ] Card rows align part-for-part across siblings with unequal content, via a declared attribute rather than per-instance padding.
+- [ ] A correct non-subgrid fallback exists and is tested.
+- [ ] `docs/layout.md` states the equal-height vs alignment distinction and names the mechanism for each.
+
+---
+
+### 0.9-10 · Surface elevation ramp + the `-subtle` contrast debt
+
+**Depends:** — · **Ref:** §15 · **Touches:** `registry/tokens/{semantic,palette}.css`, all 12 `registry/themes/*.css`, `src/audit/rules.ts` (`contrast-tokens`), `tests/a11y/*`
+
+Two token-layer defects that are the same defect: **adjacent surfaces are not guaranteed to
+differ.** In dark mode the `card` `filled` variant is nearly indistinguishable from the page
+background and card borders are barely visible — with cards adjacent, the boundary between
+"Outlined" and "Filled" disappears entirely. Nothing in the token system promises that two
+neighbouring elevation steps are separable, so no theme can be checked for it.
+
+Define an elevation ramp (`bg` → `surface-1` → `surface-2`, borders included) with a
+guaranteed minimum perceptual delta between adjacent steps, and assert it per theme the way
+`checkThemeContrast` already asserts text pairs. Twelve themes × two schemes makes this a
+generated check, not a review.
+
+**0.7-19 resolved here**, because it is the same missing guarantee on the text axis:
+`--color-<sem>` on `--color-<sem>-subtle` is below AA in **10 of 12 themes** (`brutalist`
+warning 1.96:1, `aurora`/`glass`/`midnight` 2.11–2.12:1, `default` primary at exactly
+4.50:1), reaching users through `badge`'s soft variants and unchecked because
+`CONTRAST_TOKENS_RULE` explicitly exempts tinted `-subtle` backgrounds as decorative — a
+premise that is false for every component rendering text on them. Fix the pairs, add
+`<sem>` × `<sem>-subtle` to `CONTRAST_PAIRS`, widen `A11Y_THEMES` beyond `default`+`contrast`
+(the two that pass, which is why the matrix never saw it), and restore the badge-variant row
+in `renderThemePreviewPage` that was removed because of it. Token changes move visual
+baselines; budget for the regeneration.
+
+**Tests**
+- Elevation: adjacent ramp steps differ by ≥ the stated threshold in all 12 themes × both schemes, generated from the theme list so a 13th theme is covered on arrival.
+- `contrast-tokens` reports the `<sem>`/`<sem>-subtle` pairs before the fix and is silent after; the exemption's removal is asserted, not just its effect.
+- Widened `A11Y_THEMES` axe sweep green with **zero new exemptions**.
+- Baseline regeneration in the pinned container; the badge-variant row is back in the theme frames.
+
+**Acceptance criteria**
+- [ ] A documented elevation ramp with a minimum adjacent delta, enforced across every theme and scheme.
+- [ ] Follow-up 0.7-19 resolved (edit its row in place); no `<sem>`/`<sem>-subtle` pair below AA in any theme.
+- [ ] Dark-mode `card` variants are visually separable — asserted by the ramp check, not by eye.
+
+---
+
+### 0.9-11 · Variant consistency sweep + `carousel` viewport bleed
+
+**Depends:** 0.9-04 · **Ref:** §15 · **Touches:** `registry/primitives/{callout,avatar,badge,progress}/*`, `registry/recipes/carousel/*`, regenerated manifests/skill
+
+The residue — small, individually trivial, collectively the difference between "works" and
+"finished". Each is a variant that behaves unlike its siblings for no declared reason:
+
+- **`callout`**: the `Legal Disclaimer` variant has no left accent bar; the other six do.
+- **`avatar`**: sizes do not share a baseline.
+- **`badge`**: `sm`/`md`/`lg` do not sit on a common baseline.
+- **`progress`**: one of four bars has no percentage label and the `100%` label is clipped
+  at the right edge — a label that cannot be read is worse than no label.
+- **`carousel`**: 8 elements bleed outside the viewport, the only page in the library that
+  does. Diagnose before assuming it is a demo problem; a track that overflows its own
+  container is a component bug.
+
+The value of doing these together is the test shape, not the fixes: each is "a variant that
+differs from its siblings on an axis nobody declared", which is one property assertable
+across a whole variant group. Write that assertion once and point it at four components —
+it will find the fifth before a human does.
+
+**Tests**
+- Per variant group, structural parity: every value renders the same part set, so a missing accent bar or label is a failure rather than a judgement call.
+- Baseline alignment asserted by computed geometry across sizes for `avatar` and `badge`.
+- No element extends past its container in any reference page (the layout-lint bleed count reaches 0).
+- `progress` labels are present and fully within bounds at every declared value including 100%.
+
+**Acceptance criteria**
+- [ ] Every variant in the four groups renders its group's full part set; exceptions are declared, not incidental.
+- [ ] Layout-lint reports 0 viewport bleed; the `carousel` cause is diagnosed as component or demo and fixed at the source.
+- [ ] The parity assertion is generic — pointed at a fifth component it runs without edits.
+
+---
+
+### 0.9-12 · Spacing, rhythm & density documentation surfaces
+
+**Depends:** 0.9-02, 0.9-09, 0.9-10 · **Ref:** §15 §19 §20 · **Touches:** `site/content/*`, `src/generator/docs.ts`, `docs/layout.md`, README, skill/context generators
+
+Last, so it documents what shipped rather than what was planned. Two gaps, both about
+agents guessing:
+
+**Rhythm has no page.** The token reference lists 297 custom properties and never says which
+to reach for. An agent choosing between `--space-4`, `--space-6` and `--section-gap-sm` has
+no guidance, which is how the library got 187 seams in the first place. Ship a spacing page
+that states the ladder, 0.9-02's default rule, when to override it, and the intra-/inter-
+group pair from 0.9-07 — with live, audit-clean examples in the `docs/layout.md` shape
+(0.8-12's `parseArchetypes()` discipline: the markup that is proven clean and the markup that
+ships are the same bytes).
+
+**Density is invisible.** `data-density` exists, is a sanctioned protocol modifier headed
+for the 1.0-01 freeze, and is screenshot-tested (`tests/visual/density.pw.ts`) — but has no
+page on the docs site and no entry in the layout guide. It is a first-class axis documented
+like an internal detail. Give it a page and a nesting-reset explanation, and make the
+density remap of the new rhythm tokens explicit.
+
+Then run 0.8-12's cross-check backwards over both: nothing documented that the tokens do not
+declare, nothing declared that the pages omit.
+
+**Tests**
+- Every example on both pages audits to zero findings at every severity, and the site renders the same bytes the test audited.
+- Bidirectional cross-check: each spacing/rhythm/density token is documented, and each documented token exists — the 0.8-12 shape, which is what caught `data-variant` going unmentioned.
+- llms.txt/llms-full.txt state the rhythm rule and the density axis; asserted on the **hosted** files through 0.7-15's byte-equality harness.
+- Both new pages axe-clean in light and dark; `check:docs`, `check:skill` green.
+
+**Acceptance criteria**
+- [ ] A spacing/rhythm page and a density page exist, with live audit-clean examples generated from one source.
+- [ ] An agent reading only llms.txt can discover the default rhythm rule, the spacing ladder and the density axis.
+- [ ] Cross-check green in both directions; every gate (`check:docs`, `check:skill`, `audit:registry`, axe, visual, layout-lint) green at phase close.
 
 ---
 
