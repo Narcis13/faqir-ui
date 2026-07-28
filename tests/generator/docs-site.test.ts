@@ -115,8 +115,9 @@ describe("docs site coverage", () => {
     const html = files.filter((f) => f.path.endsWith(".html"));
     expect(html.length).toBe(sitePages.length + examplePages.length);
     expect(shellPages.length + framePages.length).toBe(sitePages.length);
-    // home, component index, tokens, layout, the playground, the theme gallery, agents
-    expect(shellPages.length).toBe(components.length + 7);
+    // home, component index, layout guide, responsive lab, tokens, playground,
+    // theme gallery, and agents
+    expect(shellPages.length).toBe(components.length + 8);
     // one gallery frame per theme
     expect(framePages.length).toBe(themes.length);
     const assets = files.filter((f) => !f.path.endsWith(".html")).map((f) => f.path);
@@ -150,6 +151,15 @@ describe("docs site coverage", () => {
         DOCS_GENERATION_MARKER,
       );
     }
+  });
+
+  it("publishes a dedicated responsive layout lab", () => {
+    const layouts = page("layouts/index.html");
+    expect(layouts).toContain("Live layout lab");
+    expect(layouts).toContain('data-ui="cluster"');
+    expect(layouts).toContain('data-ui="switcher"');
+    expect(layouts).toContain('data-cols-lg="4"');
+    expect(layouts).toContain('scripts/faqir-core.js');
   });
 });
 
@@ -656,7 +666,7 @@ describe("the built directory is static-hostable", () => {
   it("serves the home page, a component page, an example, the stylesheet and the engine", async () => {
     const home = await get(port, "/");
     expect(home.status).toBe(200);
-    expect(home.body).toContain("<h1>Faqir UI</h1>");
+    expect(home.body).toContain("The interface is the contract.");
 
     const button = await get(port, "/components/primitives/button.html");
     expect(button.status).toBe(200);

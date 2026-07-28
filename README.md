@@ -169,9 +169,9 @@ No specificity wars. No naming conventions to memorize. The selector **is** the 
 
 ## Component Library
 
-Faqir ships 74 components across three layers, from simple CSS-only primitives to full interactive recipes and page-level patterns.
+Faqir ships 86 components across three layers, from simple CSS-only primitives to full interactive recipes and page-level patterns.
 
-### Primitives (39 components) — CSS Only
+### Primitives (42 components) — CSS Only
 
 Pure CSS components. No JavaScript required. Drop in the HTML and it works.
 
@@ -198,6 +198,9 @@ Pure CSS components. No JavaScript required. Drop in the HTML and it works.
 | `text` | Text with semantic styles | muted, sm/lg/xl sizes |
 | `stack` | Flexbox layout | vertical (default), horizontal |
 | `grid` | CSS Grid layout | 1–12 columns, responsive |
+| `cluster` | Intrinsic wrapping row | responsive gap, alignment and justification; no breakpoint required |
+| `switcher` | Container-aware peer layout | equal-width row → single column at sm/md/lg/xl container thresholds |
+| `container` | Centred measure column | narrow, content, wide, prose and full measures with responsive overrides |
 | `surface` | Container with elevation | flat, raised, overlay |
 | `callout` | Notice/warning box | info, warning, destructive, success, muted |
 | `description-list` | Styled dl/dt/dd pairs | vertical, horizontal + sm/md/lg |
@@ -219,7 +222,7 @@ Pure CSS components. No JavaScript required. Drop in the HTML and it works.
 
 > **Icons** render from CSS alone — each glyph is a data-URI SVG applied as a `mask-image` on a `background-color: currentColor` box, so they inherit text color and size with `font-size` (`1em`). No icon fonts, no runtime SVG fetch, zero JavaScript. The full 120-glyph `icons.css` is **44.76 KB raw / 6.26 KB gzip**; `faqir add icons --only check,x,chevron-down` trims it to just the icons a project uses (e.g. 5 common glyphs → **≈1.84 KB**). Re-running `--only` with more names merges rather than clobbers, and the `icon-name` audit rule flags any unknown `data-icon` value with a nearest-match "did you mean …" hint. Glyphs are the MIT/ISC-licensed [Lucide](https://lucide.dev) set — attribution ships in `icon/LICENSE.lucide`. Usage: `<span data-ui="icon" data-icon="check" aria-hidden="true"></span>` (decorative) or add `role="img"` + `aria-label` when meaningful.
 
-### Recipes (26 components) — CSS + JavaScript
+### Recipes (29 components) — CSS + JavaScript
 
 Interactive components with JavaScript controllers. Auto-initialize when `faqir-core.js` is loaded.
 
@@ -251,8 +254,11 @@ Interactive components with JavaScript controllers. Auto-initialize when `faqir-
 | `input-otp` | One-time-code input group | Focus movement, paste distribution, masking |
 | `calendar` | Standalone date grid | Month navigation, single/range selection |
 | `barcode` | SVG Code 128-B generator | Printable ASCII, modulo-103 checksum, print-safe quiet zones |
+| `carousel` | Slide carousel | Previous/next controls, indicators, keyboard navigation |
+| `tag-input` | Multi-value text input | Token creation/removal, keyboard control, accessible announcements |
+| `toggle-group` | Coordinated toggle set | Single/multiple selection and roving keyboard focus |
 
-### Patterns (9 compositions) — No Custom JS
+### Patterns (15 compositions) — No Custom JS
 
 Pre-built page-level compositions that combine primitives and recipes.
 
@@ -267,6 +273,12 @@ Pre-built page-level compositions that combine primitives and recipes.
 | `document` | Full-page print/PDF container (invoice, form, report) with A4/letter formats |
 | `form-page` | field-group, input, radio-group, textarea, checkbox |
 | `wizard` | stepper, card, field-group, input, radio-group, button |
+| `feature-grid` | icon, heading, description in responsive feature collections |
+| `hero` | headline, description, actions, media and trust content |
+| `inbox` | declarative list-detail view with responsive pane switching |
+| `pricing` | tier cards, stats, badges, separators and calls to action |
+| `site-footer` | responsive navigation groups, brand, legal links and social actions |
+| `stats-dashboard` | KPI grid, cards and a live sortable/aggregating table |
 
 ---
 
@@ -532,7 +544,7 @@ theme.
 
 ## Theme System
 
-Themes override Layer 2 semantic tokens. Nine built-in themes ship with Faqir:
+Themes override Layer 2 semantic tokens. Twelve built-in themes ship with Faqir:
 
 | Theme | Description |
 |-------|-------------|
@@ -545,6 +557,9 @@ Themes override Layer 2 semantic tokens. Nine built-in themes ship with Faqir:
 | `aurora` | Vibrant modern gradients for SaaS interfaces |
 | `slate` | Conservative cool-gray enterprise surfaces |
 | `contrast` | WCAG AAA-oriented high-contrast neutral theme |
+| `glass` | Translucent, layered surfaces with an airy modern character |
+| `soft` | Calm pastel surfaces, generous radius, friendly consumer tone |
+| `terminal` | Technical monospaced interface with a dark retro-console voice |
 
 ### Using Themes
 
@@ -1455,10 +1470,10 @@ faqir-ui/
 │   ├── tokens/               10 CSS token files (incl. document.css, doc-aliases.css)
 │   ├── base/                 reset.css, prose.css
 │   ├── core/                 faqir-core.js, api-source.js + utility modules
-│   ├── themes/               5 built-in themes (incl. document.css)
-│   ├── primitives/           30 CSS-only components
-│   ├── recipes/              16 CSS+JS interactive components
-│   └── patterns/             7 page-level compositions
+│   ├── themes/               12 built-in themes
+│   ├── primitives/           41 CSS-only components
+│   ├── recipes/              29 CSS+JS interactive components
+│   └── patterns/             15 page-level compositions
 │
 ├── tests/                    Bun test suite (462 tests)
 ├── playground/               6 example pages + dev server (server.js, db.json)

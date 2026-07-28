@@ -23,6 +23,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import {
   buildDocsSite,
+  discoverDocsComponents,
   discoverThemes,
   themePreviewPath,
   PACKAGE_ROOT,
@@ -32,6 +33,7 @@ import {
 } from "../../src/generator/docs";
 
 const files = buildDocsSite();
+const components = discoverDocsComponents(join(PACKAGE_ROOT, "registry"));
 const themes = discoverThemes(join(PACKAGE_ROOT, "registry"));
 
 let root = "";
@@ -194,6 +196,97 @@ test.describe("theme gallery", () => {
       colours.push((await page.evaluate(readColours)).bg);
     }
     expect(colours[0]).not.toBe(colours[1]);
+  });
+});
+
+test.describe("documentation showroom", () => {
+  test("persists appearance across navigation and synchronizes component frames", async ({
+    page,
+  }) => {
+    await page.goto(`${origin}/index.html`, { waitUntil: "load" });
+    await page.locator("[data-theme-select]").selectOption("terminal");
+    await page.locator("[data-scheme-select]").selectOption("dark");
+    await expect(page.locator(`#${THEME_LINK_ID}`)).toHaveAttribute(
+      "href",
+      /styles\/themes\/terminal\.css$/,
+    );
+
+    await page.goto(`${origin}/components/primitives/button.html`, { waitUntil: "load" });
+    await expect(page.locator(`#${THEME_LINK_ID}`)).toHaveAttribute(
+      "href",
+      /styles\/themes\/terminal\.css$/,
+    );
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+    await expect(page.locator("[data-theme-select]")).toHaveValue("terminal");
+    await expect(page.locator("[data-scheme-select]")).toHaveValue("dark");
+
+    const preview = page.frameLocator("iframe[data-component-frame]");
+    await expect(preview.locator(`#${THEME_LINK_ID}`)).toHaveAttribute(
+      "href",
+      /styles\/themes\/terminal\.css$/,
+    );
+    await expect(preview.locator("html")).toHaveAttribute("data-theme", "dark");
+  });
+
+  test("filters the full component catalogue by text and layer", async ({ page }) => {
+    await page.goto(`${origin}/components/index.html`, { waitUntil: "load" });
+    await page.locator("[data-component-search]").fill("carousel");
+    await expect(page.locator("[data-component-card]:visible")).toHaveCount(1);
+    await expect(page.locator("[data-component-card]:visible")).toContainText("carousel");
+    await expect(page.locator("#component-result-count")).toHaveText(
+      `1 of ${components.length} components`,
+    );
+
+    await page.locator("[data-component-search]").fill("");
+    await page.locator("[data-component-layer-filter]").selectOption("patterns");
+    const patterns = components.filter((component) => component.layer === "patterns").length;
+    await expect(page.locator("[data-component-card]:visible")).toHaveCount(patterns);
+    await expect(page.locator("#component-result-count")).toHaveText(
+      `${patterns} of ${components.length} components`,
+    );
+  });
+
+  test("opens and dismisses the mobile navigation without horizontal overflow", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(`${origin}/index.html`, { waitUntil: "load" });
+    const toggle = page.locator("[data-docs-sidebar-toggle]");
+    const sidebar = page.locator("#docs-sidebar");
+
+    await expect(toggle).toBeVisible();
+    await expect(toggle).toHaveAttribute("aria-expanded", "false");
+    await toggle.click();
+    await expect(sidebar).toHaveAttribute("data-state", "expanded");
+    await expect(toggle).toHaveAttribute("aria-expanded", "true");
+
+    await page.keyboard.press("Escape");
+    await expect(sidebar).not.toHaveAttribute("data-state", "expanded");
+    await expect(toggle).toBeFocused();
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+      ),
+    ).toBe(true);
+  });
+
+  test("lets readers inspect component examples at phone, tablet, and full widths", async ({
+    page,
+  }) => {
+    await page.goto(`${origin}/components/primitives/button.html`, { waitUntil: "load" });
+    const frame = page.locator("iframe[data-component-frame]");
+
+    await page.locator('[data-preview-size="phone"]').click();
+    await expect(frame).toHaveAttribute("data-preview-size", "phone");
+    await expect(frame).toHaveCSS("width", "376px");
+
+    await page.locator('[data-preview-size="tablet"]').click();
+    await expect(frame).toHaveAttribute("data-preview-size", "tablet");
+    await expect(frame).toHaveCSS("width", "768px");
+
+    await page.locator('[data-preview-size="full"]').click();
+    await expect(frame).toHaveAttribute("data-preview-size", "full");
+    await expect(frame).toHaveAttribute("style", /inline-size:\s*100%/);
   });
 });
 

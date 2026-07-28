@@ -1,40 +1,296 @@
 <!--
-  Authored home-page fragment (task 0.7-13).
+  Authored home-page fragment.
 
-  This is the ONLY hand-written page content on the site — everything else is
-  derived from the registry manifests. It is inserted into the generated shell's
-  <article data-ui="prose"> and audited exactly like the generated pages, so it
-  may use registry components and design tokens only: no class attributes, no
-  hardcoded colours or spacing, no markup outside the protocol.
+  The generator replaces the three @faqir:home-* markers with registry-derived
+  blocks. Everything else is audited like every generated page: no classes,
+  no hardcoded colours, and no component contract invented on the site.
 -->
-      <h1>Faqir UI</h1>
-      <p>
-        A UI framework an agent can write correctly on the first try. Five attributes
-        (<code>data-ui</code>, <code>data-part</code>, <code>data-state</code>,
-        <code>data-variant</code>, <code>data-size</code>), one manifest per component,
-        zero runtime dependencies, and no build step in your project.
-      </p>
+      <div data-docs-home>
+        <section data-ui="hero" data-variant="split" aria-labelledby="home-headline" data-docs-hero>
+          <div data-part="content">
+            <div data-part="eyebrow">
+              <span data-ui="badge" data-variant="primary">Agent-native UI</span>
+            </div>
+            <h1 data-part="headline" id="home-headline">The interface is the contract.</h1>
+            <p data-part="description">
+              Faqir UI gives humans a polished component system and gives agents the
+              manifests, protocols, and repair tools to use it correctly. Plain HTML,
+              semantic attributes, zero runtime dependencies.
+            </p>
+            <div data-part="actions">
+              <a data-ui="button" data-variant="primary" data-size="lg" href="components/index.html">
+                Explore every component
+                <span data-ui="icon" data-icon="arrow-right" aria-hidden="true"></span>
+              </a>
+              <a data-ui="button" data-variant="outline" data-size="lg" href="agents/index.html">
+                Give Faqir to an agent
+              </a>
+            </div>
+            <p data-part="note">
+              No classes. No framework lock-in. No build step required in your project.
+            </p>
+          </div>
 
-      <div data-ui="callout" data-variant="info" role="note">
-        <div data-part="content">
-          <p>
-            <strong data-part="title">This site is the proof.</strong>
-            It is built from registry components and design tokens only, its content is
-            generated from component manifests, and every page it ships is held to
-            <code>faqir audit</code> and axe in CI.
+          <figure data-part="media" data-docs-contract-demo aria-label="A Faqir component contract becoming a rendered interface">
+            <div data-ui="card" data-docs-glow>
+              <div data-part="header">
+                <div data-ui="cluster" data-gap="2" data-align="center" data-justify="between">
+                  <span data-ui="badge" data-variant="secondary">
+                    <span data-ui="icon" data-icon="circle-check" aria-hidden="true"></span>
+                    audit clean
+                  </span>
+                  <span data-ui="text" data-size="xs" data-variant="mono">button.manifest.json</span>
+                </div>
+                <h2 data-part="title">One contract. Every surface.</h2>
+                <p data-part="description">The same five attributes connect markup, CSS, JavaScript, and AI.</p>
+              </div>
+              <div data-part="body">
+                <div data-ui="stack" data-gap="4">
+                  <div data-docs-code-window>
+                    <div data-docs-code-bar aria-hidden="true">
+                      <span></span><span></span><span></span>
+                    </div>
+                    <pre tabindex="0"><code>&lt;button
+  data-ui="button"
+  data-variant="primary"
+  data-size="lg"&gt;
+  Ship interface
+&lt;/button&gt;</code></pre>
+                  </div>
+                  <div data-ui="surface" data-variant="raised" data-size="lg" data-docs-rendered>
+                    <span data-ui="text" data-size="xs" data-variant="subtle" data-weight="semibold">LIVE OUTPUT</span>
+                    <button data-ui="button" data-variant="primary" data-size="lg" type="button">
+                      Ship interface
+                      <span data-ui="icon" data-icon="sparkles" aria-hidden="true"></span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </figure>
+        </section>
+
+        <!-- @faqir:home-stats -->
+
+        <section data-ui="feature-grid" data-cols="3" aria-labelledby="agent-native-heading" data-docs-section>
+          <h2 data-part="heading" id="agent-native-heading">A design system that explains itself.</h2>
+          <p data-part="description">
+            Every choice in Faqir reduces ambiguity for the next human or machine that
+            touches the interface.
           </p>
-        </div>
-      </div>
+          <ul data-part="items">
+            <li data-part="item">
+              <span data-part="icon"><span data-ui="icon" data-icon="code" aria-hidden="true"></span></span>
+              <h3 data-part="item-title">Manifest-driven</h3>
+              <p data-part="item-description">
+                Anatomy, slots, variants, states, accessibility, tokens, and safe transforms
+                live beside every component.
+              </p>
+            </li>
+            <li data-part="item">
+              <span data-part="icon"><span data-ui="icon" data-icon="shield-check" aria-hidden="true"></span></span>
+              <h3 data-part="item-title">Auditable by design</h3>
+              <p data-part="item-description">
+                The CLI, browser playground, and MCP server run the same deterministic rules
+                and can repair safe violations.
+              </p>
+            </li>
+            <li data-part="item">
+              <span data-part="icon"><span data-ui="icon" data-icon="zap" aria-hidden="true"></span></span>
+              <h3 data-part="item-title">Framework optional</h3>
+              <p data-part="item-description">
+                Use plain HTML, the reactive engine, React, Vue, or server templates. The DOM
+                contract stays exactly the same.
+              </p>
+            </li>
+          </ul>
+        </section>
 
-      <h2 id="how-it-works">How it works</h2>
-      <p>
-        A component is a contract, not a class name. The contract lives in a manifest —
-        anatomy, slots, variants, states, accessibility, and the design tokens it
-        consumes — and the CSS targets those attributes. Read the manifest and you know
-        the component; write the attributes and you have used it correctly.
-      </p>
-      <pre><code>&lt;button data-ui="button" data-variant="primary" data-size="md"&gt;Save&lt;/button&gt;</code></pre>
-      <p>
-        No class names to memorise, no import graph to satisfy, nothing to compile. The
-        same markup works in a static file, a template engine, React, or Vue.
-      </p>
+        <section aria-labelledby="workflow-heading" data-docs-section data-docs-workflow>
+          <div data-docs-section-heading>
+            <span data-ui="badge" data-variant="secondary">For agents</span>
+            <h2 id="workflow-heading">From intent to verified interface.</h2>
+            <p>
+              Faqir turns UI generation into a closed loop with explicit inputs and
+              machine-checkable output.
+            </p>
+          </div>
+          <ol data-ui="grid" data-cols="1" data-cols-sm="2" data-cols-lg="4" data-gap="4">
+            <li data-ui="card" data-variant="outlined" data-size="sm">
+              <div data-part="header">
+                <span data-ui="badge" data-size="sm">01 · Read</span>
+                <h3 data-part="title">Inspect the manifest</h3>
+              </div>
+              <div data-part="body">
+                The agent learns the component’s exact vocabulary before writing markup.
+              </div>
+            </li>
+            <li data-ui="card" data-variant="outlined" data-size="sm">
+              <div data-part="header">
+                <span data-ui="badge" data-size="sm">02 · Compose</span>
+                <h3 data-part="title">Generate from contracts</h3>
+              </div>
+              <div data-part="body">
+                Templates and composition links turn intent into valid, accessible HTML.
+              </div>
+            </li>
+            <li data-ui="card" data-variant="outlined" data-size="sm">
+              <div data-part="header">
+                <span data-ui="badge" data-size="sm">03 · Verify</span>
+                <h3 data-part="title">Audit the result</h3>
+              </div>
+              <div data-part="body">
+                Structure, ARIA, variants, tokens, and document rules are checked together.
+              </div>
+            </li>
+            <li data-ui="card" data-variant="outlined" data-size="sm">
+              <div data-part="header">
+                <span data-ui="badge" data-size="sm">04 · Repair</span>
+                <h3 data-part="title">Fix what is safe</h3>
+              </div>
+              <div data-part="body">
+                Deterministic repairs resolve known mistakes and report anything needing judgment.
+              </div>
+            </li>
+          </ol>
+          <p>
+            <a data-ui="button" data-variant="outline" href="playground/index.html">
+              Try the audit loop
+              <span data-ui="icon" data-icon="arrow-right" aria-hidden="true"></span>
+            </a>
+          </p>
+        </section>
+
+        <!-- @faqir:home-components -->
+
+        <section aria-labelledby="layout-teaser-heading" data-docs-section data-docs-layout-teaser>
+          <div data-docs-section-heading>
+            <span data-ui="badge" data-variant="primary">Responsive by contract</span>
+            <h2 id="layout-teaser-heading">Layouts that answer the right container.</h2>
+            <p>
+              Use intrinsic wrapping first, container queries when a component owns the
+              decision, and the canonical viewport ladder only when the page owns it.
+            </p>
+          </div>
+          <div data-ui="switcher" data-threshold="md" data-gap="4">
+            <div data-ui="card" data-variant="filled">
+              <div data-part="header">
+                <span data-ui="icon" data-icon="move" aria-hidden="true"></span>
+                <h3 data-part="title">Resize this component</h3>
+                <p data-part="description">The switcher measures itself—not your screen.</p>
+              </div>
+              <div data-part="body">
+                <div data-docs-resizer>
+                  <div data-ui="switcher" data-threshold="sm" data-gap="2">
+                    <div data-ui="surface" data-variant="raised" data-size="md">Manifest</div>
+                    <div data-ui="surface" data-variant="raised" data-size="md">Rendered UI</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div data-ui="card" data-variant="outlined">
+              <div data-part="header">
+                <span data-ui="icon" data-icon="layers" aria-hidden="true"></span>
+                <h3 data-part="title">One responsive grammar</h3>
+                <p data-part="description">sm · md · lg · xl, mobile-first and manifest-declared.</p>
+              </div>
+              <div data-part="body">
+                <pre tabindex="0"><code>&lt;div data-ui="grid"
+  data-cols="1"
+  data-cols-md="2"
+  data-cols-lg="4"&gt;</code></pre>
+              </div>
+              <div data-part="footer">
+                <a data-ui="link" href="layouts/index.html">Open the layout lab</a>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- @faqir:home-themes -->
+
+        <section aria-labelledby="ecosystem-heading" data-docs-section>
+          <div data-docs-section-heading>
+            <span data-ui="badge" data-variant="secondary">Use it your way</span>
+            <h2 id="ecosystem-heading">A small protocol with a wide reach.</h2>
+            <p>
+              The registry remains the source of truth while each surface gets the form it needs.
+            </p>
+          </div>
+          <div data-ui="grid" data-cols="1" data-cols-md="2" data-cols-lg="3" data-gap="4">
+            <div data-ui="card" data-variant="outlined">
+              <div data-part="header">
+                <span data-ui="icon" data-icon="terminal" aria-hidden="true"></span>
+                <h3 data-part="title">CLI + owned source</h3>
+              </div>
+              <div data-part="body">Add, inspect, diff, upgrade, bundle, audit, repair, and scaffold locally.</div>
+            </div>
+            <div data-ui="card" data-variant="outlined">
+              <div data-part="header">
+                <span data-ui="icon" data-icon="cpu" aria-hidden="true"></span>
+                <h3 data-part="title">MCP for agents</h3>
+              </div>
+              <div data-part="body">List, inspect, generate, audit, repair, and scaffold without shell access.</div>
+            </div>
+            <div data-ui="card" data-variant="outlined">
+              <div data-part="header">
+                <span data-ui="icon" data-icon="code" aria-hidden="true"></span>
+                <h3 data-part="title">React + Vue bindings</h3>
+              </div>
+              <div data-part="body">Generated typed bindings keep framework APIs aligned with the same manifests.</div>
+            </div>
+            <div data-ui="card" data-variant="outlined">
+              <div data-part="header">
+                <span data-ui="icon" data-icon="file-text" aria-hidden="true"></span>
+                <h3 data-part="title">Schema-driven forms</h3>
+              </div>
+              <div data-part="body">Render JSON Schema to deterministic, validated Faqir markup with no browser dependency.</div>
+            </div>
+            <div data-ui="card" data-variant="outlined">
+              <div data-part="header">
+                <span data-ui="icon" data-icon="database" aria-hidden="true"></span>
+                <h3 data-part="title">Declarative data</h3>
+              </div>
+              <div data-part="body"><code>l-source</code> connects REST data to reactive scopes with CRUD and optimistic modes.</div>
+            </div>
+            <div data-ui="card" data-variant="outlined">
+              <div data-part="header">
+                <span data-ui="icon" data-icon="printer" aria-hidden="true"></span>
+                <h3 data-part="title">Screen to print</h3>
+              </div>
+              <div data-part="body">Document patterns, invoices, reports, signatures, watermarks, QR codes, and barcodes.</div>
+            </div>
+          </div>
+        </section>
+
+        <section aria-labelledby="quick-start-heading" data-docs-section data-docs-quick-start>
+          <div data-ui="card" data-docs-glow>
+            <div data-part="header">
+              <span data-ui="badge" data-variant="secondary">Two-minute start</span>
+              <h2 data-part="title" id="quick-start-heading">Own the code. Keep the contract.</h2>
+              <p data-part="description">Install the CLI, choose a theme, and add only what the interface needs.</p>
+            </div>
+            <div data-part="body">
+              <div data-ui="switcher" data-threshold="md" data-gap="6">
+                <pre tabindex="0"><code>npm install -g faqir-ui-cli
+faqir init --theme aurora
+faqir add button card dialog grid
+faqir dev</code></pre>
+                <div data-ui="stack" data-gap="4" data-align="start">
+                  <p>
+                    Your project receives plain HTML, CSS, manifests, controllers, and a
+                    generated context file for the next agent.
+                  </p>
+                  <div data-ui="cluster" data-gap="3">
+                    <a data-ui="button" data-variant="primary" href="components/index.html">Browse components</a>
+                    <a data-ui="button" data-variant="ghost" href="https://github.com/Narcis13/faqir-ui" target="_blank" rel="noopener noreferrer">
+                      View on GitHub
+                      <span data-ui="icon" data-icon="external-link" aria-hidden="true"></span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>

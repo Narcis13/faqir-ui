@@ -52,6 +52,9 @@ const components = discoverDocsComponents(REGISTRY);
 const files = buildDocsSite();
 const byPath = new Map(files.map((f) => [f.path, f.content]));
 const pin = readCdnPin(REPO);
+const siteTheme = (
+  JSON.parse(readFileSync(join(REPO, "site", "site.config.json"), "utf8")) as { theme: string }
+).theme;
 /** Components that ship reference markup — the ones with an example and a snippet. */
 const withReference = components.filter((c) => byPath.has(c.examplePath));
 
@@ -150,7 +153,7 @@ describe("the hosted llms.txt pair describes the whole registry", () => {
     const context = buildRegistryContext({
       registryRoot: REGISTRY,
       components,
-      theme: "default",
+      theme: siteTheme,
     });
     expect(index()).toBe(formatContextLlms(context));
     expect(full()).toBe(formatContextLlmsFull(context));
@@ -354,8 +357,9 @@ describe("copy-for-agents payloads are standalone documents", () => {
       expect(scripts.length, `${c.name} script tags`).toBe(1);
 
       const css = links[0];
-      expect(css.getAttribute("href")).toBe(`${pin.base}faqir.default.css`);
-      expect(css.getAttribute("integrity")).toBe(pin.integrity["faqir.default.css"]);
+      const themeFile = `faqir.${siteTheme}.css`;
+      expect(css.getAttribute("href")).toBe(`${pin.base}${themeFile}`);
+      expect(css.getAttribute("integrity")).toBe(pin.integrity[themeFile]);
       expect(css.getAttribute("crossorigin")).toBe("anonymous");
 
       const js = scripts[0];

@@ -30,6 +30,7 @@ import {
   relUrl,
   themePreviewPath,
   PLAYGROUND_PAGE,
+  LAYOUTS_PAGE,
   THEMES_PAGE,
   THEME_LINK_ID,
   SITE_SCRIPTS,
@@ -86,7 +87,9 @@ describe("theme coverage", () => {
     );
     expect(pressed.length).toBe(1);
     expect(pressed[0].attrs["data-scheme-pick"]).toBe("auto");
-    expect(gallery).toContain('<html lang="en" data-theme="auto">');
+    const html = doc.elements.find((el) => el.tag === "html");
+    expect(html?.attrs.lang).toBe("en");
+    expect(html?.attrs["data-theme"]).toBe("auto");
   });
 
   it("describes every theme from its own manifest, not from prose", () => {
@@ -206,7 +209,7 @@ describe("site JavaScript", () => {
     );
   }
 
-  it("runs on exactly the pages that need it, from exactly six files", () => {
+  it("runs the shared appearance wiring on every HTML page, from exactly six files", () => {
     const shipped = files
       .filter((f) => f.path.startsWith("scripts/"))
       .map((f) => f.path)
@@ -218,31 +221,38 @@ describe("site JavaScript", () => {
     const withScripts = files
       .filter((f) => f.path.endsWith(".html") && /<script src=/.test(f.content))
       .map((f) => f.path);
-    const expected = [
-      PLAYGROUND_PAGE,
-      THEMES_PAGE,
-      ...themes.map((t) => themePreviewPath(t.name)),
-      ...files.filter((f) => f.path.startsWith("examples/")).map((f) => f.path),
-      // A component page carries the copy-for-agents wiring (task 0.7-15) — and
-      // only when it has a payload to copy, which is exactly the set of
-      // components that ship reference markup, i.e. the set with an example.
-      ...files
-        .filter((f) => f.path.startsWith("examples/"))
-        .map((f) => f.path.replace(/^examples\//, "components/")),
-    ];
+    // gallery.js is the progressive-enhancement layer for both hosts and frames:
+    // it persists appearance in the shell and receives appearance broadcasts in
+    // live examples. Therefore every generated HTML document intentionally has
+    // a script; machine-readable snippets remain plain `.txt` payloads.
+    const expected = files.filter((f) => f.path.endsWith(".html")).map((f) => f.path);
     expect(withScripts.sort()).toEqual(expected.sort());
   });
 
   it("gives each page only the scripts it needs, and every one exists", () => {
     expect(scriptsOf(PLAYGROUND_PAGE)).toEqual([
+      "scripts/gallery.js",
       "scripts/faqir-audit.js",
       "scripts/faqir-manifests.js",
       "scripts/playground.js",
     ]);
     expect(scriptsOf(THEMES_PAGE)).toEqual(["scripts/gallery.js"]);
-    expect(scriptsOf("components/primitives/button.html")).toEqual(["scripts/copy-snippet.js"]);
+    expect(scriptsOf(LAYOUTS_PAGE)).toEqual([
+      "scripts/gallery.js",
+      "scripts/faqir-core.js",
+    ]);
+    expect(scriptsOf("components/primitives/button.html")).toEqual([
+      "scripts/gallery.js",
+      "scripts/copy-snippet.js",
+    ]);
     for (const theme of themes) {
       expect(scriptsOf(themePreviewPath(theme.name))).toEqual(["scripts/gallery.js"]);
+    }
+    for (const f of files.filter((candidate) => candidate.path.startsWith("examples/"))) {
+      expect(scriptsOf(f.path)).toEqual([
+        "scripts/gallery.js",
+        "scripts/faqir-core.js",
+      ]);
     }
     for (const f of files) {
       if (!f.path.endsWith(".html")) continue;
@@ -252,24 +262,31 @@ describe("site JavaScript", () => {
     }
   });
 
-  it("keeps the documentation pages script-free apart from the copy button", () => {
-    // The index, the token reference, the layout guide, the agents page and the
-    // home page are pure static HTML; a component page's only script is the
-    // copy-for-agents wiring, and it is one `<script src>` — no inline script
-    // anywhere. The site did not become an application.
+  it("keeps documentation progressive: shared wiring plus only page-specific scripts", () => {
+    // Every shell page has the small shared appearance/navigation layer. A
+    // component page adds only copy wiring, while the layout lab adds the core
+    // engine for its live table recipe. There is still no inline script.
     const documentation = files.filter(
       (f) =>
         isShellPage(f.path) &&
         f.path !== PLAYGROUND_PAGE &&
         f.path !== THEMES_PAGE,
     );
-    expect(documentation.length).toBe(components.length + 5);
+    expect(documentation.length).toBe(components.length + 6);
     for (const f of documentation) {
       const scripts = [...f.content.matchAll(/<script\b[^>]*>/g)].map((m) => m[0]);
       const isComponentPage = components.some((c) => c.pagePath === f.path);
       const allowed = isComponentPage
-        ? [`<script src="${relUrl(f.path, "scripts/copy-snippet.js")}" defer>`]
-        : [];
+        ? [
+            `<script src="${relUrl(f.path, "scripts/gallery.js")}" defer>`,
+            `<script src="${relUrl(f.path, "scripts/copy-snippet.js")}" defer>`,
+          ]
+        : f.path === LAYOUTS_PAGE
+          ? [
+              `<script src="${relUrl(f.path, "scripts/gallery.js")}" defer>`,
+              `<script src="${relUrl(f.path, "scripts/faqir-core.js")}" defer>`,
+            ]
+          : [`<script src="${relUrl(f.path, "scripts/gallery.js")}" defer>`];
       expect(scripts, `${f.path} ships unexpected JavaScript`).toEqual(allowed);
     }
   });
@@ -285,8 +302,12 @@ describe("site JavaScript", () => {
   it("wires the gallery to both switch axes and nothing else", () => {
     const gallery = readFileSync(join(REPO, "site", "lib", "gallery.js"), "utf8");
     // The theme axis is an href swap; the scheme axis is a data-theme swap.
-    expect(gallery).toContain('replace(/[^/]+\\.css$/');
-    expect(gallery).toContain('setAttribute("data-theme", scheme)');
+    expect(gallery).toContain('href.replace(/[^/]+\\.css(?=[?#]|$)/');
+    expect(gallery).toContain('document.documentElement.setAttribute("data-theme", scheme)');
+    // Choices persist across navigations and are synchronized to live frames.
+    expect(gallery).toContain("localStorage.setItem");
+    expect(gallery).toContain("faqir-docs-theme");
+    expect(gallery).toContain("faqir-docs-scheme");
     // Frames are told, never reached into: a docs site opened from file:// has no
     // usable same-origin access to its own frames.
     expect(gallery).toContain("postMessage");

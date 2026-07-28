@@ -1,9 +1,9 @@
 # The documentation site
 
-The Faqir docs site is a Faqir project. It has **no build step at runtime**: the
-whole site is plain HTML written at authoring time, styled by one stylesheet
-assembled from the registry, servable by any static file server (or straight off
-`file://`).
+The Faqir docs site is a Faqir project and a live proof of the framework. It has
+**no build step at runtime**: the whole site is plain HTML written at authoring
+time, styled by the assembled registry bundle plus one swappable theme
+stylesheet, and servable by any static file server (or straight off `file://`).
 
 ```bash
 bun run build:docs                 # → site/dist
@@ -24,11 +24,13 @@ registry copy with one extra component in it.
 | Path | Written by | What it is |
 |---|---|---|
 | `site/site.config.json` | you | Title, tagline, description, theme, footer. |
-| `site/content/home.html` | you | Hand-written page content: the home page. |
+| `site/content/home.html` | you | Hand-written homepage narrative; generated stats, patterns, and theme controls are inserted at markers. |
+| `site/content/layouts.html` | you | Hand-written responsive layout lab. |
 | `site/content/playground.html` | you | Hand-written: the playground's sample markup. |
-| `site/lib/playground.js` | you | The playground's wiring (the only site JS, with…) |
-| `site/lib/gallery.js` | you | …the theme switcher's wiring, and… |
-| `site/lib/copy-snippet.js` | you | …the copy-for-agents button. |
+| `site/styles/docs.css` | you | Documentation presentation layer: attribute selectors, tokens, responsive rules, reduced-motion fallback. |
+| `site/lib/playground.js` | you | The playground and live-preview wiring. |
+| `site/lib/gallery.js` | you | Shared theme persistence, frame sync, mobile navigation, filters, and preview controls. |
+| `site/lib/copy-snippet.js` | you | The copy-for-agents button. |
 | `site/lib/faqir-audit.js` | generated | The audit engine, compiled for the browser. **Committed** — `bun run build:audit-browser`. |
 | `scripts/build-docs.mjs` | — | The writer: builds in memory, clears `site/dist`, writes. |
 | `scripts/build-audit-browser.mjs` | — | The bundler for `site/lib/faqir-audit.js`. |
@@ -41,6 +43,7 @@ Output shape:
 index.html                        home (authored fragment + registry stats)
 components/index.html             every component, grouped by layer
 components/<layer>/<name>.html    one page per component
+layouts/index.html                responsive layout doctrine + live lab
 tokens/index.html                 token reference, grouped by token file
 playground/index.html             in-browser audit playground
 themes/index.html                 theme gallery + instant switcher
@@ -58,7 +61,7 @@ scripts/faqir-core.js             the registry engine
 scripts/faqir-audit.js            the audit engine, compiled for the browser
 scripts/faqir-manifests.js        every manifest as one global
 scripts/playground.js             playground wiring
-scripts/gallery.js                theme-switcher wiring
+scripts/gallery.js                shared docs-shell + appearance wiring
 scripts/copy-snippet.js           the copy-for-agents button
 ```
 
@@ -89,10 +92,12 @@ All of it derived from `<name>.manifest.json`:
 
 The site ships two kinds of page, and the distinction is load-bearing:
 
-**Site pages** (home, component index, component pages, token reference,
-playground, theme gallery, gallery frames) are authored by the generator out of
-registry components and design tokens only. They carry **no `class` attribute, no
-hardcoded colour, and no CSS of their own**, and they are held to:
+**Site pages** (home, component index, component pages, layout lab, token
+reference, playground, theme gallery, gallery frames) are authored by the
+generator out of registry components and design tokens only. They carry **no
+`class` attribute and no hardcoded colour**. Their presentation stylesheet
+follows the registry's own attribute-selector, token, responsive, and
+reduced-motion rules. They are held to:
 
 - `faqir audit` — **zero findings at every severity**, using the real registry
   manifests. Not "no errors": zero.
@@ -135,20 +140,26 @@ about rigour.
 
 ## JavaScript on the site
 
-The site ships JavaScript on **three pages** — the playground, the theme gallery
-and the gallery frame. Every other page (the home page, the component index, all
-83 component pages, the token reference) is still static HTML plus one stylesheet,
-and a test holds them that way.
+Every HTML page loads the small `gallery.js` progressive-enhancement layer. In a
+shell page it persists theme and colour scheme, synchronizes controls and live
+frames, opens the mobile navigation, filters the catalogue/sidebar, and changes
+component preview widths. In a frame it only receives appearance updates through
+`postMessage`. All pages remain complete, navigable static documents without it.
+
+Page-specific JavaScript is kept explicit:
 
 | File | What it is |
 |---|---|
+| `scripts/gallery.js` | Shared host/frame appearance wiring plus documentation-shell progressive enhancement. |
 | `scripts/faqir-audit.js` | `src/audit/browser.ts` compiled to an IIFE that installs one global, `FaqirAudit`. Zero dependencies, no DOM required. |
 | `scripts/faqir-manifests.js` | Every registry manifest, verbatim, as `window.__FAQIR_MANIFESTS__`. A script, not JSON + `fetch`, so it works from `file://`. |
 | `scripts/playground.js` | Textarea → findings list → preview frame. |
-| `scripts/gallery.js` | The switcher. One file, two roles (host / frame). |
+| `scripts/faqir-core.js` | Reactive engine for live examples and the table recipe in the layout lab. |
+| `scripts/copy-snippet.js` | Clipboard enhancement on component contract pages. |
 
-Nothing on the site fetches. **The audit runs in the page**, which is why the
-playground needs no server, no API and nothing deployed but files.
+Nothing on the site fetches application data. **The audit runs in the page**,
+which is why the playground needs no server, no API, and nothing deployed but
+static files.
 
 ### Why the browser engine is committed
 
@@ -179,16 +190,19 @@ against the other contract.
 A theme is a stylesheet of design-token declarations, and a colour scheme is one
 attribute. The site is built so that both are exactly that:
 
-- `styles/faqir.css` carries tokens, base and every component stylesheet;
+- `styles/faqir.css` carries tokens, base, every component stylesheet, and the
+  docs presentation layer;
 - `styles/themes/<name>.css` is the theme, on a **second `<link>`** that every
   page of the site carries under the id `faqir-theme`;
 - `data-theme` on `<html>` selects the scheme (`light` / `dark` / `auto`).
 
-So the gallery's switcher is not a special mechanism: picking a theme rewrites
-that link's `href`, picking a scheme rewrites `data-theme`, and the page you are
-reading restyles with no reload and no flash. The frames are told about a scheme
-change by `postMessage` rather than reached into, because a site opened from
-`file://` has no same-origin access to its own frames.
+The same theme and mode controls appear on every shell page. Picking a theme
+rewrites that link's `href`; picking a scheme rewrites `data-theme`; both choices
+are persisted in local storage and the page restyles with no reload or rebuild.
+Component frames receive both axes, while the 12 side-by-side theme frames keep
+their own theme and receive only the scheme. Frames are told with `postMessage`
+rather than reached into, because a site opened from `file://` has no same-origin
+access to its own frames.
 
 The theme therefore loads **after** the component CSS, one step later than
 `faqir init` concatenates it. That is safe in both directions and asserted: no
@@ -241,7 +255,7 @@ complete, standalone document — the component's registry reference markup unde
 the two-tag CDN preamble, version-pinned with subresource integrity:
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@faqir-ui/core@0.2.4/dist/faqir.default.css"
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@faqir-ui/core@0.2.4/dist/faqir.aurora.css"
       integrity="sha384-…" crossorigin="anonymous">
 <script src="https://cdn.jsdelivr.net/npm/@faqir-ui/core@0.2.4/dist/faqir-core.min.js"
         integrity="sha384-…" crossorigin="anonymous" defer></script>
@@ -261,13 +275,12 @@ site. It is the one artifact here that points at a CDN, and keeping it out of th
 page classes keeps the site's own claim absolute — **no page the site serves
 reaches the network.**
 
-One caveat, stated plainly: `@faqir-ui/core` is **not published to npm yet**
-(0.3-02 deliberately built the artifacts without publishing; the publish is
-1.0-04). Until it is, those URLs resolve to nothing — the preamble is correct in
-form and pinned to the version this repository declares, and it goes live the
-moment the package is. The tests assert what can be asserted offline: the URLs,
-the exact version pin, and integrity hashes that match the artifacts this
-repository builds.
+One release prerequisite is stated plainly: `@faqir-ui/core@0.2.4` must be
+published to npm before jsDelivr can resolve these URLs. Until then, the preamble
+is correct in form and pinned to the version this repository declares, but the
+standalone document cannot load its assets. The tests assert what can be
+asserted offline: the URLs, exact version pin, and integrity hashes matching the
+artifacts this repository builds.
 
 The version and the hashes come from `packages/core/cdn.json`, written by
 `bun run build:core-package` beside the `dist/sri.json` it already produced.
@@ -306,23 +319,3 @@ The generator has no timestamps and sorts every traversal, so two builds are
 byte-identical (asserted). `bun scripts/build-docs.mjs --check` compares an
 existing output directory against a fresh generation and exits non-zero when it
 is stale — the drift gate a deployment pipeline wants.
-
----
-
-## Notes for the next session
-
-- Four findings the site surfaced are recorded as follow-ups in `FAQIR-PLAN.md`,
-  none a site defect: **0.7-17** (the registry's own reference pages are not clean
-  under the per-component audit rules — 365 findings, which also hits `faqir
-  audit` in user projects), **0.7-18** (`--color-primary` on `--color-bg-muted` is
-  4.41:1 in the default dark scheme, just under AA) and **0.7-19** (`--color-<sem>`
-  text on `--color-<sem>-subtle` — what every soft `badge`/`callout` variant
-  renders — is below AA in 10 of the 12 themes; found by the gallery frame, the
-  first thing in the project to render a component in *every* theme), and
-  **0.7-21** (`empty-state` ships in two layers, so `llms-full.txt` has two
-  `### empty-state` blocks and the index's `#empty-state` anchor only ever
-  reaches the first — a property of the llms format from 0.5-06, which the
-  hosted, registry-wide variant made visible).
-- The gallery frame shows solid component colour and bare token swatches, not text
-  on a tinted `-subtle` surface. That is 0.7-19's doing, not a design preference:
-  the badge-variant row belongs in the frame the moment those pairs clear AA.

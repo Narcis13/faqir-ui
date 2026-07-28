@@ -1795,7 +1795,7 @@
       "files": [
         {
           "path": "dashboard-shell.css",
-          "sha256": "d6aa0635d4888a5b96912d6e82e364974dfe08bcde1373c99838c23a8483253a"
+          "sha256": "d26a4bc49bf6fae3c48061652e8c12ef5b4b414752251e78995d2f85947c505d"
         },
         {
           "path": "dashboard-shell.html",
@@ -1806,7 +1806,7 @@
           "sha256": "fc7f4ac466fd2d8482d0868efa8b471b1ded840150cef74426792896158def60"
         }
       ],
-      "hash": "f66e5d3d14ebb6ddb0593f8f0d1a9c02e54ac7f937670f0d6e91c001f66dc2b2",
+      "hash": "7aa9b04f2ca5a45f93a67ebe688cefb9f237c7a6b8d324dc1c07a21f8afd72a6",
       "deps": [
         "card",
         "grid",

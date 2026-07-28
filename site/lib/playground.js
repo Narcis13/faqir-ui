@@ -25,11 +25,15 @@
   var PREVIEW_ID = "playground-preview";
   var STATUS_ID = "playground-status";
 
-  /** Severity → badge variant. The engine names the severities; this only paints them. */
+  /**
+   * Severity → badge variant. Semantic soft badges are intentionally avoided
+   * here: the severity word already carries the meaning, while a neutral/solid
+   * badge keeps the findings legible across every swappable theme.
+   */
   var BADGE = {
-    critical: "destructive",
-    error: "destructive",
-    warning: "warning",
+    critical: "secondary",
+    error: "secondary",
+    warning: "default",
     info: "secondary",
   };
 
@@ -95,7 +99,7 @@
       );
       container.appendChild(ok);
       count.textContent = "0";
-      count.setAttribute("data-variant", "success");
+      count.setAttribute("data-variant", "secondary");
       return;
     }
 
@@ -204,6 +208,9 @@
     }
 
     source.addEventListener("input", schedule);
+    // The global documentation switcher changes the stylesheet link and scheme
+    // in place. Rebuild the srcdoc so the preview follows both axes immediately.
+    window.addEventListener("faqir:appearance", run);
     // Expose the debounced pass for tests and for anything that changes the
     // textarea programmatically (no `input` event fires for that).
     window.FaqirPlayground = { run: run, auditor: auditor };

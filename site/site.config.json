@@ -1,7 +1,7 @@
 {
   "title": "Faqir UI",
-  "tagline": "The agent-native UI framework",
-  "description": "Zero-dependency, manifest-driven UI components. Every page of this site is generated from the same manifests an agent reads.",
-  "theme": "default",
-  "footer": "Faqir UI — every page on this site is generated from the registry manifests."
+  "tagline": "Interfaces agents can understand",
+  "description": "An agent-native, manifest-driven UI framework with 86 accessible components, a zero-dependency reactive engine, and machine-readable contracts.",
+  "theme": "aurora",
+  "footer": "Faqir UI — the interface is the contract."
 }

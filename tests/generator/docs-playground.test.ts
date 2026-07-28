@@ -33,8 +33,9 @@ function file(path: string): string {
   return content;
 }
 
-/** The three scripts the playground page loads, in the order it loads them. */
+/** The four scripts the playground page loads, in the order it loads them. */
 const SCRIPT_ORDER = [
+  "scripts/gallery.js",
   "scripts/faqir-audit.js",
   "scripts/faqir-manifests.js",
   "scripts/playground.js",
@@ -74,7 +75,7 @@ function newWindow(): Window {
  *
  * happy-dom does not evaluate script elements, so each file is compiled once and
  * called with the window's globals bound — `window`, `document`, `globalThis` and
- * the timer pair, which is every global these three files touch. The *sources* are
+ * the timer pair, which is every global these files touch. The *sources* are
  * the shipped bytes and the *order* is the page's order, so what is being tested
  * is still the real wiring; only the loader is the test's.
  */
@@ -99,8 +100,9 @@ function loadScript(window: Window, path: string): void {
 /**
  * Load the generated page into happy-dom and execute its scripts in order.
  *
- * The page goes in verbatim and its three scripts are then run in the page's own
- * order — the engine, the manifests, the wiring. That order is part of what is
+ * The page goes in verbatim and its four scripts are then run in the page's own
+ * order — shared appearance, the engine, the manifests, and playground wiring.
+ * That order is part of what is
  * under test: `playground.js` refuses to run without the first two, which the
  * "degrades to an explanation" case exercises from the other side.
  */
@@ -158,9 +160,10 @@ afterAll(async () => {
 describe("the playground page", () => {
   const page = file(PLAYGROUND_PAGE);
 
-  it("loads the engine, the manifests and the wiring, in that order, from this site", () => {
+  it("loads shared appearance, the engine, manifests and wiring in order from this site", () => {
     const srcs = [...page.matchAll(/<script src="([^"]+)"([^>]*)><\/script>/g)];
     expect(srcs.map((m) => m[1])).toEqual([
+      "../scripts/gallery.js",
       "../scripts/faqir-audit.js",
       "../scripts/faqir-manifests.js",
       "../scripts/playground.js",
@@ -193,11 +196,19 @@ describe("the playground page", () => {
     }
   });
 
-  it("reaches the network for nothing — the audit runs in the page", () => {
+  it("loads no external subresources — the audit runs in the page", () => {
     // The manifests payload is excluded: it is registry *data*, and manifests
     // quote URLs (schema refs, example image sources) inside JSON strings. It is
-    // held to being a single assignment instead, below.
-    for (const path of [PLAYGROUND_PAGE, "scripts/faqir-audit.js", "scripts/playground.js"]) {
+    // held to being a single assignment instead, below. The shell may link to
+    // GitHub as navigation; only fetched subresources are relevant here.
+    expect(page).not.toMatch(
+      /<(?:script|iframe)\b[^>]*\bsrc="https?:\/\/|<link\b[^>]*\bhref="https?:\/\//i,
+    );
+    for (const path of [
+      "scripts/gallery.js",
+      "scripts/faqir-audit.js",
+      "scripts/playground.js",
+    ]) {
       expect(file(path), `${path} names an external origin`).not.toMatch(/https?:\/\//);
     }
     expect(file("scripts/playground.js")).not.toMatch(/\bfetch\s*\(|XMLHttpRequest|import\s*\(/);
