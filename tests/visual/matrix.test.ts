@@ -94,6 +94,24 @@ describe("visual matrix generation", () => {
     }
   });
 
+  test("the harness adds no geometry the shipped artifact lacks", () => {
+    // Task 0.9-01. The capture must be of shipped bytes: the copy-for-agents
+    // payload is `<body><main>` + the fragment under the framework's own CSS, so
+    // a padded body or a flex column with a gap in *this* document baselines a
+    // page nobody has — and hides exactly the cramping v0.9 exists to fix.
+    const c = buildMatrix().find((x) => x.component.name === "badge")!;
+    const html = buildPageHtml(c);
+    // One <style>, and it is the framework's — no second harness sheet.
+    expect(html.match(/<style>/g) ?? []).toHaveLength(1);
+    const head = html.slice(html.indexOf("<head>"), html.indexOf("</head>"));
+    const harness = head.slice(head.lastIndexOf("</style>"));
+    expect(harness).not.toContain("padding");
+    expect(harness).not.toContain("gap");
+    // …and the mount point itself is unstyled: no inline style, no rule for it.
+    expect(html).not.toContain("main.vr-root {");
+    expect(/<main[^>]*style=/.test(html)).toBe(false);
+  });
+
   test("page carries the case's data-theme and dir on <html>", () => {
     const c = buildMatrix().find((x) => x.scheme === "dark" && x.dir === "rtl")!;
     const html = buildPageHtml(c);

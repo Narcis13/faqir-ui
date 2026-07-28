@@ -16,7 +16,12 @@ name: Visual regression
 #   scaffolds     invoice + report                       =     2
 #                                                          ─────
 #                                                          4 214 screenshots
-#                                                                (4 235 tests)
+#                                                                (4 243 tests)
+#
+# The layout gate (tests/visual/layout-lint.pw.ts, task 0.9-01) rides in the same
+# run and takes no screenshots: it loads all 180 generated docs pages once and
+# compares four measured counts against the committed tests/visual/layout-budget.json.
+# It is a serial file, so sharding keeps its four tests together in one shard.
 #
 # The viewport axis (tests/visual/responsive.pw.ts) sweeps only category-`layout`
 # components and patterns, at 390/768/1280, in the default theme, light, LTR —

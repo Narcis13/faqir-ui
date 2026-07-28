@@ -42,6 +42,8 @@
     "check:schema-refs": "bun scripts/add-schema-refs.mjs --check",
     "test:visual": "playwright test",
     "test:visual:update": "playwright test --update-snapshots",
+    "lint:layout": "playwright test tests/visual/layout-lint.pw.ts",
+    "lint:layout:update": "UPDATE_LAYOUT_BUDGET=1 playwright test tests/visual/layout-lint.pw.ts",
     "test:visual:print": "playwright test --config=playwright.print.config.ts",
     "test:visual:print:update": "playwright test --config=playwright.print.config.ts --update-snapshots",
     "test:a11y": "playwright test --config=playwright.a11y.config.ts",

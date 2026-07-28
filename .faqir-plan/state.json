@@ -2,8 +2,14 @@
   "$schema": "./state.schema.md",
   "plan": "FAQIR-PLAN.md",
   "current": null,
-  "last_completed": "0.8-12",
+  "last_completed": "0.9-01",
   "history": [
+    {
+      "id": "0.9-01",
+      "completed": "2026-07-28",
+      "commit": "PENDING",
+      "summary": "The measurement, and the parity hole that hid it. `src/utils/layout-lint.ts` reduces \"cramped\" to four conditions over rectangles — gutter, seam, bleed, overlap — pure and `node:*`-free so 28 `bun test` cases drive it from literal boxes in both directions while `tests/visual/layout-lint.pw.ts` drives the same code over all 180 generated docs pages at 1280×900. Committed budget: 79 zero-gutter, 42 seam-bearing pages, 183 seams, 7 bleeds, 3 overlaps. It disagrees with the phase header's estimate in three places and each is argued rather than reconciled: a centred measure column IS a gutter (so `document`/`form-page`/`wizard` count, 79 not 84); only stacked BLOCK demos can seam (a row of badges is 0.9-08's problem, 183 not 187); and bleed asks reachability, not clipping — 122 long `<code>` lines behind a live scrollbar are not findings (counting them would put a floor under a number 0.9-11 must drive to zero), which also means `carousel`'s eight slides are a gutter finding rather than a bleed one, while seven boxes at x=−4 inside `sidebar`/`dashboard-shell` are genuinely unreachable and are. A ratchet, not a wall: `compareBudget` fails a rise naming the pages responsible, passes a fall as printed slack, and `lint:layout:update` refuses to record a rise, so the file can only ever describe a better site. Then the parity fix: the visual harness's `body { padding: 24px }` AND its `main.vr-root` flex column with `gap: 16px` are gone — the second was the same lie in a more damaging form, since a 16px gap between demos is exactly what a seam hunter must not add — leaving a document that injects no CSS at all, pinned by a new `matrix.test.ts` case. Everything re-baselined: `test:visual` green as a whole at 4 243 tests, which resolves 0.8-14; its \"non-default theme cells\" half turned out to be a partial LOCAL set (the baselines are git-ignored, CI seeds them per §12.2), documented in tests/visual/README.md. Telling the truth cost two real defects: with `align-items: flex-start` gone the scroll containers finally scroll, so the 390px axe sweep went red on `document`'s table root and `grid`'s `[data-scroll]` strip — both fixed at source with `tabindex=\"0\"`, the systemic remainder appended to 0.8-16, which had predicted it as \"content luck\"."
+    },
     {
       "id": "0.8-12",
       "completed": "2026-07-27",

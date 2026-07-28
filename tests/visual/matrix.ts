@@ -223,7 +223,21 @@ export function buildPageHtml(c: Case): string {
   return screenPage(readFileSync(c.component.htmlPath, "utf8"), c.theme, c.scheme, c.dir, c.id);
 }
 
-/** The shared screen-capture document — one theme, one scheme, one direction. */
+/**
+ * The shared screen-capture document — one theme, one scheme, one direction.
+ *
+ * **No harness geometry** (task 0.9-01). Until v0.9 this document injected
+ * `body { padding: 24px }` and laid the fragment out in a flex column with
+ * `gap: 16px`. Neither exists in anything Faqir ships: the copy-for-agents
+ * payload (`renderAgentSnippet`) is `<body><main>` + the fragment under the CDN
+ * preamble, and the docs site's `styles/docs.css` sets `background` on `body`
+ * and nothing else. The harness was therefore baselining a page nobody has —
+ * padded and rhythmically spaced — which is precisely why every gate stayed green
+ * while 84 of 86 example pages rendered flush to the window edge with 183 zero-gap
+ * seams between demos. The only remaining declarations would be redundant with
+ * `registry/base/reset.css` (`* { margin: 0; padding: 0 }`, `html { color; background }`),
+ * so the block is gone entirely: a capture is now of shipped bytes.
+ */
 function screenPage(
   fragment: string,
   theme: string,
@@ -240,11 +254,6 @@ function screenPage(
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${title}</title>
 <style>${css}</style>
-<style>
-  html, body { margin: 0; }
-  body { padding: 24px; background: var(--color-bg); color: var(--color-fg); }
-  main.vr-root { display: flex; flex-direction: column; align-items: flex-start; gap: 16px; }
-</style>
 </head>
 <body>
 <main class="vr-root">
@@ -281,10 +290,10 @@ export function buildDensityPageHtml(theme: string, scheme: Scheme): string {
 }
 
 /**
- * Assemble a registry reference fragment for paged-media tests. Unlike
- * `buildPageHtml`, this intentionally adds no screen-preview padding or flex
- * layout: Chromium must hand the authored document and its `@page` rules to the
- * PDF renderer without test-harness geometry affecting pagination.
+ * Assemble a registry reference fragment for paged-media tests. Like
+ * `buildPageHtml` since 0.9-01, this adds no harness geometry at all — here it
+ * never did, because Chromium must hand the authored document and its `@page`
+ * rules to the PDF renderer without test-harness geometry affecting pagination.
  */
 export function buildPrintReferencePageHtml(
   fragment: string,

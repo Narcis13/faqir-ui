@@ -1,0 +1,1096 @@
+{
+  "viewport": {
+    "width": 1280,
+    "height": 900
+  },
+  "totals": {
+    "pages": 180,
+    "zeroGutterPages": 79,
+    "seamPages": 42,
+    "seams": 183,
+    "bleeds": 7,
+    "overlaps": 3
+  },
+  "pages": {
+    "agents/index.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/index.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/patterns/auth-form.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/patterns/crud-table.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/patterns/dashboard-shell.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/patterns/document.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/patterns/empty-state.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/patterns/feature-grid.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/patterns/form-page.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/patterns/hero.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/patterns/inbox.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/patterns/pricing.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/patterns/search-results.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/patterns/settings-page.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/patterns/site-footer.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/patterns/stats-dashboard.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/patterns/wizard.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/primitives/aspect-ratio.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/primitives/avatar.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/primitives/badge.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/primitives/breadcrumb.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/primitives/button.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/primitives/callout.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/primitives/card.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/primitives/checkbox.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/primitives/chip.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/primitives/cluster.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/primitives/collapsible.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/primitives/container.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/primitives/description-list.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/primitives/empty-state.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/primitives/field-group.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/primitives/grid.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/primitives/icon.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/primitives/image.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/primitives/input.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/primitives/kbd.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/primitives/key-value.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/primitives/label.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/primitives/link.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/primitives/nav.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/primitives/page-break.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/primitives/progress.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/primitives/radio.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/primitives/select.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/primitives/separator.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/primitives/signature.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/primitives/skeleton.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/primitives/spinner.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/primitives/stack.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/primitives/stat.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/primitives/stepper.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/primitives/surface.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/primitives/switch.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/primitives/switcher.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/primitives/text.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/primitives/textarea.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/primitives/toggle.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/primitives/watermark.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/recipes/accordion.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/recipes/alert-dialog.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/recipes/barcode.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/recipes/calendar.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/recipes/carousel.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/recipes/combobox.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/recipes/command-palette.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/recipes/context-menu.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/recipes/date-picker.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/recipes/dialog.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/recipes/drawer.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/recipes/dropdown.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/recipes/file-upload.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/recipes/input-otp.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/recipes/menubar.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/recipes/pagination.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/recipes/popover.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/recipes/qr-code.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/recipes/select-custom.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/recipes/sheet.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/recipes/sidebar.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/recipes/slider.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/recipes/table.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/recipes/tabs.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/recipes/tag-input.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/recipes/toast.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/recipes/toggle-group.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/recipes/tooltip.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "components/recipes/tree-view.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/patterns/auth-form.html": {
+      "zeroGutter": true,
+      "seams": 6,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/patterns/crud-table.html": {
+      "zeroGutter": true,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/patterns/dashboard-shell.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 4,
+      "overlaps": 0
+    },
+    "examples/patterns/document.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/patterns/empty-state.html": {
+      "zeroGutter": true,
+      "seams": 3,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/patterns/feature-grid.html": {
+      "zeroGutter": true,
+      "seams": 2,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/patterns/form-page.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/patterns/hero.html": {
+      "zeroGutter": true,
+      "seams": 1,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/patterns/inbox.html": {
+      "zeroGutter": true,
+      "seams": 1,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/patterns/pricing.html": {
+      "zeroGutter": true,
+      "seams": 1,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/patterns/search-results.html": {
+      "zeroGutter": true,
+      "seams": 3,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/patterns/settings-page.html": {
+      "zeroGutter": true,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/patterns/site-footer.html": {
+      "zeroGutter": true,
+      "seams": 1,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/patterns/stats-dashboard.html": {
+      "zeroGutter": true,
+      "seams": 1,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/patterns/wizard.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/primitives/aspect-ratio.html": {
+      "zeroGutter": true,
+      "seams": 6,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/primitives/avatar.html": {
+      "zeroGutter": true,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/primitives/badge.html": {
+      "zeroGutter": true,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/primitives/breadcrumb.html": {
+      "zeroGutter": true,
+      "seams": 3,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/primitives/button.html": {
+      "zeroGutter": true,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/primitives/callout.html": {
+      "zeroGutter": true,
+      "seams": 7,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/primitives/card.html": {
+      "zeroGutter": true,
+      "seams": 3,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/primitives/checkbox.html": {
+      "zeroGutter": true,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/primitives/chip.html": {
+      "zeroGutter": true,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/primitives/cluster.html": {
+      "zeroGutter": true,
+      "seams": 8,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/primitives/collapsible.html": {
+      "zeroGutter": true,
+      "seams": 2,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/primitives/container.html": {
+      "zeroGutter": true,
+      "seams": 6,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/primitives/description-list.html": {
+      "zeroGutter": true,
+      "seams": 4,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/primitives/empty-state.html": {
+      "zeroGutter": true,
+      "seams": 1,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/primitives/field-group.html": {
+      "zeroGutter": true,
+      "seams": 9,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/primitives/grid.html": {
+      "zeroGutter": true,
+      "seams": 8,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/primitives/icon.html": {
+      "zeroGutter": true,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/primitives/image.html": {
+      "zeroGutter": true,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/primitives/input.html": {
+      "zeroGutter": true,
+      "seams": 8,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/primitives/kbd.html": {
+      "zeroGutter": true,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/primitives/key-value.html": {
+      "zeroGutter": true,
+      "seams": 5,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/primitives/label.html": {
+      "zeroGutter": true,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/primitives/link.html": {
+      "zeroGutter": true,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/primitives/nav.html": {
+      "zeroGutter": true,
+      "seams": 3,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/primitives/page-break.html": {
+      "zeroGutter": true,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/primitives/progress.html": {
+      "zeroGutter": true,
+      "seams": 3,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/primitives/radio.html": {
+      "zeroGutter": true,
+      "seams": 2,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/primitives/select.html": {
+      "zeroGutter": true,
+      "seams": 5,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/primitives/separator.html": {
+      "zeroGutter": true,
+      "seams": 7,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/primitives/signature.html": {
+      "zeroGutter": true,
+      "seams": 1,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/primitives/skeleton.html": {
+      "zeroGutter": true,
+      "seams": 5,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/primitives/spinner.html": {
+      "zeroGutter": true,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/primitives/stack.html": {
+      "zeroGutter": true,
+      "seams": 7,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/primitives/stat.html": {
+      "zeroGutter": true,
+      "seams": 7,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/primitives/stepper.html": {
+      "zeroGutter": true,
+      "seams": 1,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/primitives/surface.html": {
+      "zeroGutter": true,
+      "seams": 6,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/primitives/switch.html": {
+      "zeroGutter": true,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/primitives/switcher.html": {
+      "zeroGutter": true,
+      "seams": 5,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/primitives/text.html": {
+      "zeroGutter": true,
+      "seams": 15,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/primitives/textarea.html": {
+      "zeroGutter": true,
+      "seams": 6,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/primitives/toggle.html": {
+      "zeroGutter": true,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/primitives/watermark.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/recipes/accordion.html": {
+      "zeroGutter": true,
+      "seams": 2,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/recipes/alert-dialog.html": {
+      "zeroGutter": true,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/recipes/barcode.html": {
+      "zeroGutter": true,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/recipes/calendar.html": {
+      "zeroGutter": true,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/recipes/carousel.html": {
+      "zeroGutter": true,
+      "seams": 1,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/recipes/combobox.html": {
+      "zeroGutter": true,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/recipes/command-palette.html": {
+      "zeroGutter": true,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/recipes/context-menu.html": {
+      "zeroGutter": true,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/recipes/date-picker.html": {
+      "zeroGutter": true,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/recipes/dialog.html": {
+      "zeroGutter": true,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/recipes/drawer.html": {
+      "zeroGutter": true,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/recipes/dropdown.html": {
+      "zeroGutter": true,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/recipes/file-upload.html": {
+      "zeroGutter": true,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/recipes/input-otp.html": {
+      "zeroGutter": true,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/recipes/menubar.html": {
+      "zeroGutter": true,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/recipes/pagination.html": {
+      "zeroGutter": true,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/recipes/popover.html": {
+      "zeroGutter": true,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/recipes/qr-code.html": {
+      "zeroGutter": true,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/recipes/select-custom.html": {
+      "zeroGutter": true,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/recipes/sheet.html": {
+      "zeroGutter": true,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/recipes/sidebar.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 3,
+      "overlaps": 0
+    },
+    "examples/recipes/slider.html": {
+      "zeroGutter": true,
+      "seams": 3,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/recipes/table.html": {
+      "zeroGutter": true,
+      "seams": 11,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/recipes/tabs.html": {
+      "zeroGutter": true,
+      "seams": 3,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/recipes/tag-input.html": {
+      "zeroGutter": true,
+      "seams": 1,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/recipes/toast.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 3
+    },
+    "examples/recipes/toggle-group.html": {
+      "zeroGutter": true,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/recipes/tooltip.html": {
+      "zeroGutter": true,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "examples/recipes/tree-view.html": {
+      "zeroGutter": true,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "index.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "layout/index.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "layouts/index.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "playground/index.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "themes/index.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "tokens/index.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    }
+  }
+}

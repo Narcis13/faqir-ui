@@ -62,7 +62,10 @@ rule with an injected override and prove the check bites in the browser too.
 | `responsive-matrix.ts` | The viewport axis: manifest-driven discovery of the layout-bearing set, the widths, the in-page fact gatherer and the pure pre-assertion. |
 | `responsive.pw.ts` | Playwright spec: the 78 responsive captures (each pre-asserted), the "pre-assertion bites" negatives, and the archetype behaviour cases (drawer transition, pane swap, auth-form bleed). |
 | `responsive-matrix.test.ts` | `bun test` meta-test. Guards the discovery property and every failure mode of the pre-assertion. |
-| `../../playwright.config.ts` | One default viewport, chromium, single platform-agnostic baseline set, `testMatch: **/*.pw.ts`. The responsive spec sets its own viewport per case. |
+| `layout-lint.pw.ts` | The layout gate (0.9-01): loads every generated docs page and measures four conditions against a committed budget. No screenshots. |
+| `layout-budget.json` | The ratchet. Committed, unlike the baselines — it is five integers and a per-page table, not pixels. |
+| `../../src/utils/layout-lint.ts` | The four conditions as pure geometry, proven from literal rectangles in `tests/utils/layout-lint.test.ts`. |
+| `../../playwright.config.ts` | One default viewport, chromium, single platform-agnostic baseline set, `testMatch: **/*.pw.ts`. The responsive and layout-lint specs set their own viewport. |
 | `../../.github/workflows/visual.yml` | CI: seed baselines on `main`, diff PRs (sharded ×4), upload a merged HTML diff report. |
 | `__screenshots__/` | Baselines. Git-ignored — see the baseline strategy below. |
 
@@ -81,9 +84,49 @@ For each case, `buildPageHtml` produces a standalone document:
 - **No network** — the reference pages point `<img>` at `example.com`; those are
   swapped for an inline grey `data:` placeholder, and the spec aborts any stray
   `http(s)` request as a backstop. A capture never touches the network.
+- **No harness geometry** (0.9-01) — the document adds *no* CSS of its own. Until
+  v0.9 it injected `body { padding: 24px }` and a flex column with `gap: 16px`;
+  nothing Faqir ships has either (`renderAgentSnippet`, the copy-for-agents
+  payload, is `<body><main>` + the fragment; `site/styles/docs.css` sets only
+  `background` on `body`). The harness was baselining a page nobody has — which is
+  how every gate stayed green while 79 of 86 example pages rendered flush to the
+  window edge with 183 zero-gap seams. `matrix.test.ts` now asserts the parity.
 
 Animations/transitions are frozen and the caret hidden (`playwright.config.ts →
 expect.toHaveScreenshot`), so nothing time-dependent leaks into a screenshot.
+
+## The layout gate (task 0.9-01)
+
+The screenshot matrix gates *change*, never *quality*: a page that has always been
+cramped is baselined as correct. `layout-lint.pw.ts` measures quality instead —
+it loads all 180 generated docs pages (86 examples + the shell pages) at 1280×900
+and reduces each to four numbers a diff can argue with:
+
+| Condition | What it asks |
+| --- | --- |
+| gutter | How far the content root's outer boxes sit from the nearer window edge. `< 1px` is no gutter. |
+| seam | Two consecutive stacked top-level demos less than 1px apart. |
+| bleed | A painted box past a window edge that no scroll container can bring into view. |
+| overlap | Two `position: fixed` boxes sharing viewport space. |
+
+The rules are pure geometry in `src/utils/layout-lint.ts` (`node:*`-free, driven by
+literal rectangles under `bun test`); the spec only supplies boxes from a real
+browser and one synthetic page per direction proves the *collector* hands over the
+right ones.
+
+**It is a ratchet, not a wall.** `layout-budget.json` records today's counts; a
+count that rises fails, a count that falls passes and prints its slack. Update
+mode refuses to record a rise, so the committed file can only ever describe a
+better site:
+
+```bash
+npm run lint:layout          # measure + compare (also runs inside test:visual)
+npm run lint:layout:update   # re-record after an improvement
+```
+
+Unlike the screenshots, the budget is **committed**: it is five integers and a
+per-page table of counts, all of them derived from gaps and insets rather than
+rasterised pixels, so it does not vary with the platform's fonts.
 
 ## Running locally
 
@@ -92,6 +135,7 @@ npm run test:visual            # diff against your local baselines
 npm run test:visual:update     # (re)generate your local baselines
 npx playwright test --grep "button__default"    # one component/theme
 npx playwright test --grep "^responsive__"      # the viewport axis only
+npm run lint:layout                             # the layout gate only
 ```
 
 > **Baselines are platform-specific.** Font rasterisation differs across OSes, so
@@ -99,6 +143,15 @@ npx playwright test --grep "^responsive__"      # the viewport axis only
 > `__screenshots__/` are for local iteration only and are git-ignored — **do not
 > commit them.** The authoritative baselines are produced in the Linux container
 > (below).
+
+> **"A snapshot doesn't exist" is a partial local set, not a filtered suite.** The
+> run is the whole cross-product — all 12 themes, both schemes, both directions —
+> and every cell is baselined by `test:visual:update`. If most theme cells report a
+> missing snapshot, a previous local update was scoped with `--grep` and only wrote
+> the cells it ran. Regenerate the set once, unscoped, and the suite is green as a
+> whole (4 243 tests · ≈164 MB · ~7 min to generate, ~5 min to diff, on an 8-core
+> laptop). This is what 0.8-14 turned out to be, alongside six genuinely stale
+> captures; nothing is excluded from the matrix on purpose.
 
 To reproduce CI's exact renders locally, run inside the pinned container:
 

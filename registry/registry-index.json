@@ -357,14 +357,14 @@
         },
         {
           "path": "grid.html",
-          "sha256": "c4a9e8b7eee637b3e83e3d772a32d1cc19939f0f954739f6b1af008fa64993b9"
+          "sha256": "16bc8ad1c7955830e3fa655edc4f449bfea1bba62c555ace4d5abc77a4bd60c7"
         },
         {
           "path": "grid.manifest.json",
           "sha256": "1d1e9e94793ae7ebb488dc2dfce9f4c7ee85ed6580e08020142f81c9d4c7a65b"
         }
       ],
-      "hash": "03ce9391a911c1ccd7548477adc95ed315a8b5d6611c1a92fa86f61f04eee9a2",
+      "hash": "403e4b130cc699f307196aacbd9f30be9f68db05fd78fc83b7685291ebca762b",
       "deps": []
     },
     {
@@ -1833,14 +1833,14 @@
         },
         {
           "path": "document.html",
-          "sha256": "bc574e885e1710e24928a72cacb1bfcbac65665a35a761d987b06fe424fd284a"
+          "sha256": "6481b73d156f31c82431f24591853690e0b09d557f759495abe00b5eb28b9827"
         },
         {
           "path": "document.manifest.json",
           "sha256": "e99578f71e6e156fdf8a3cd509d634fee481c0083f6dcfaf5b4ea3643a608e3f"
         }
       ],
-      "hash": "d56983d965b3bed057617267c51e53d5f969303c8f625b5ec2810f2021990a1d",
+      "hash": "4b3677532e4fab58164f083d3f1a097f6372be6331f2ef78214ecbe77960cf10",
       "deps": [
         "key-value",
         "table",
