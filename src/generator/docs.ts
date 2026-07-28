@@ -784,9 +784,9 @@ ${navGroups}
     </div>
   </header>
 
-  <main data-part="content" role="main" id="main-content" tabindex="0">
+  <main data-part="content" role="main" id="main-content" tabindex="0" data-docs-page="${input.layout ?? "reference"}">
     <div data-ui="container" data-measure="wide">
-      <article data-ui="prose" data-docs-page="${input.layout ?? "reference"}">
+      <article data-ui="prose">
 ${input.body}
       </article>
     </div>
