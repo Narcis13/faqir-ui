@@ -30,7 +30,7 @@ const TOKEN_ORDER = [
   "doc-aliases",
   "density",
 ] as const;
-const BASE_ORDER = ["reset", "prose", "motion-presets"] as const;
+const BASE_ORDER = ["reset", "prose", "rhythm", "motion-presets"] as const;
 
 function read(relativePath: string): string {
   return readFileSync(join(REGISTRY, relativePath), "utf8");

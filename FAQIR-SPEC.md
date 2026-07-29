@@ -2143,3 +2143,152 @@ primitives, the measure and rhythm ladders, and five copy-ready page archetypes
 (dashboard, landing, prose/document, split view, centred form). Every code block in
 it is audited against the registry manifests on every test run, so it documents what
 the framework does rather than what it intended to do.
+
+---
+
+## 20. Rhythm
+
+§15 gave layout a *vocabulary*. This section gives it a **default**. It amends §6
+(CSS Strategy) and §15, and is binding on `registry/base/rhythm.css`, on generated
+pages, and on authored pages alike.
+
+The question it answers is the one nobody had asked: **what does a bare sequence of
+block-level Faqir elements do vertically?** Until v0.9 the answer was *nothing*. Faqir
+shipped `--space-0…64`, `--section-gap-{sm,md,lg}`, `--content-gutter` and `data-gap`
+on all five layout primitives, and every one of those gaps was opt-in — so markup
+pasted into an empty file rendered flush. That is not a documentation defect: the
+reference fragment in `registry/<layer>/<name>/<name>.html` is the canonical template,
+the source of the manifest's `templates`, and the byte-for-byte payload of the
+Copy-for-agents button. The measured cost, at 1280×900 over the built site: 183
+zero-gap seams across 42 of 86 example pages, with every gate green.
+
+### The rule
+
+> **Inside a flow root, consecutive block-level Faqir components and nested flow roots are separated by `--flow-space` of vertical space.**
+
+One sentence, no wrapper, no attribute. An agent told only that produces spaced output.
+
+`--flow-space` defaults to `--section-gap-sm` — the rhythm token §15's ladder describes
+as "dense pages — docs, dashboards", which is exactly the shape a bare sequence makes.
+
+```html
+<main>
+  <div data-ui="card" data-variant="outlined">
+    <div data-part="body">First. The first child carries no margin, so nothing collapses out of the top of the page.</div>
+  </div>
+  <div data-ui="card" data-variant="outlined">
+    <div data-part="body">Second. Spaced from the first without a stack, a gap attribute or a wrapper.</div>
+  </div>
+</main>
+```
+
+### Flow roots
+
+A **flow root** is the page's own structure, never a component that lays out its own
+children. `stack`, `cluster`, `grid` and `switcher` already space their children with
+`gap`; a margin on top of that would silently double it, so an element carrying any
+other `data-ui` is excluded by construction.
+
+Flow roots: `body`, `main`, `article`, `section`, `aside`, `header`, `footer`, `form`,
+`fieldset`, `dialog`, `blockquote`, `figure`, `[data-ui="container"]`,
+`[data-ui="surface"]`.
+
+The rule nests: a `section` inside a `main` is a flow root in its own right, and a
+`surface` boundary does not leak, because the owl form (no margin on the first child,
+none on the last) means there is never a margin at a box edge to collapse through.
+
+A nested flow root is also *spaced*, not only spacing — the participant set is
+`[data-ui]` plus the flow-root tags. A page written as a run of bare `<section>`s is
+the commonest shape there is, and a rule that spaced `[data-ui]` children only would
+leave exactly that page flush. It is deliberately not "any child": 3rem between a
+heading and its own paragraph is a different defect from the one this fixes.
+
+**"Consecutive" is load-bearing.** The margin goes on the second of two
+*participants*, so a non-participant between them suppresses it — an `h2` followed by
+a table is a label and the thing it labels, and a rule that pushed them apart would
+be a worse defect than the one it fixes. This is measured, not assumed: the first
+draft of §20 spaced every non-first child, and the printed `invoice` scaffold came
+back with every heading floating 48px above its own section. Prose headings keep
+their own margins from `registry/base/prose.css`, where that decision belongs.
+
+```html
+<section>
+  <div data-ui="surface" data-variant="raised" data-size="lg">
+    <div data-ui="card" data-variant="outlined">
+      <div data-part="body">Inside a surface, the sequence has its own rhythm.</div>
+    </div>
+    <div data-ui="card" data-variant="outlined">
+      <div data-part="body">The surface's own edges stay where its padding put them.</div>
+    </div>
+  </div>
+  <div data-ui="card" data-variant="outlined">
+    <div data-part="body">And the surface is itself in the outer rhythm.</div>
+  </div>
+</section>
+```
+
+### Block-level only
+
+Vertical margins on an atomic inline box (`inline-flex`, `inline-block`) do not stack
+it — they shift it inside its line box and break the baseline it shares with its
+neighbours. A row of badges is a row; its spacing is a separate question. CSS cannot
+select on computed display, so the inline-level components are named in
+`registry/base/rhythm.css`, but the list is *derived*, not hand-kept:
+`tests/utils/rhythm.test.ts` recomputes it from every component's root `display`
+declaration — falling back to the root tag's UA default, which is what puts `link`
+there — and fails if the CSS, `src/utils/layout.ts` and the registry disagree.
+
+Inline-level components the rule skips (26): `avatar`, `badge`, `barcode`, `button`,
+`calendar`, `checkbox`, `chip`, `combobox`, `date-picker`, `dropdown`, `icon`, `image`,
+`input-otp`, `kbd`, `link`, `menubar`, `pagination`, `popover`, `qr-code`, `radio`,
+`select-custom`, `spinner`, `switch`, `toggle`, `toggle-group`, `tooltip`.
+
+### Re-tuning and opting out
+
+`data-gap` on the flow root sets `--flow-space` from the same spacing ladder the five
+layout primitives take (`0 1 2 3 4 6 8 10 12 16`), and `data-gap="0"` turns the rhythm
+off. It is one attribute, one spelling, and it inherits: set once on a page, it applies
+until another flow root says otherwise.
+
+```html
+<main data-gap="0">
+  <div data-ui="card" data-variant="outlined">
+    <div data-part="body">Deliberately flush.</div>
+  </div>
+  <div data-ui="card" data-variant="outlined">
+    <div data-part="body">A welded stack, because this page asked for one.</div>
+  </div>
+</main>
+```
+
+The whole selector weighs (0,0,0) — `:where()` around the flow-root list and a
+`:where()` argument inside every negation — so any component rule, any authored rule
+and any `data-gap` beats it. A default that cannot be overridden is not a default.
+
+### Rejected candidates
+
+Recorded because a rejected design comes back, and the next spacing question will ask
+the same thing. Both failed the one test this decision had to pass: *an agent can be
+told the rule once, in one sentence, and produce spaced output without wrapping
+anything.*
+
+**Rejected — a `flow` primitive.** It is a wrapper, and a rule whose answer is “wrap
+it” fails the one test this decision had to pass — an agent must produce spaced output
+without wrapping anything. It would also spend a sixth layout primitive immediately
+before the 1.0 schema freeze.
+
+**Rejected — a `data-flow` prop on `stack`/`surface`/`container`.** Still opt-in and
+still per-element, so it fails the same test — and three manifests would grow an
+attribute meaning the same thing in three places, which is the drift the manifest
+system exists to prevent.
+
+### What this binds
+
+- `registry/base/rhythm.css` is the only implementation; no component ships a default
+  vertical margin of its own, so nothing here changes a component's own box.
+- `src/utils/layout.ts` is the one source of the rule, the flow-root list, the inline
+  exclusions and the rejected candidates. README, `docs/layout.md`, the generated
+  skill, `faqir context` (including `llms.txt`) and the docs site all quote it, and
+  `tests/utils/rhythm.test.ts` re-parses this section and compares it to that module.
+- The gate is `tests/visual/layout-lint.pw.ts` and its committed budget: the seam
+  count is a number this rule may only lower.

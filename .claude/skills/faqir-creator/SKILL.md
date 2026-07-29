@@ -72,9 +72,14 @@ Page structure is five primitives, one token ladder and one breakpoint canon —
 - No fifth number: a threshold that is not a canon tier is off-canon, and usually means an intrinsic layout was the right answer.
 - Reach for a viewport query last — intrinsic first, then the component's own inline size.
 - Never hand-write a max-width for a page column; use `container` and a `--measure-*` token.
+- Vertical rhythm is the default, not an opt-in: block-level components stacked inside a flow root are already spaced, so do not wrap a sequence in a `stack` merely to separate it.
 
 **Measure** (centred column widths): `--measure-narrow` (a single form column, a login card), `--measure-content` (an article body, a settings panel), `--measure-wide` (a page shell — the widest thing still centred), `--measure-prose` (optimal line length in characters, so it tracks the reader's font rather than the layout).
 **Rhythm** (page air): `--section-gap-sm` (dense pages — docs, dashboards), `--section-gap-md` (the default marketing rhythm), `--section-gap-lg` (spacious — one idea per screen), `--content-gutter` (the page's own padding-inline).
+
+**The default rhythm** (FAQIR-SPEC §20) — the one thing that means you do NOT have to wrap a sequence to space it:
+
+Inside a flow root, consecutive block-level Faqir components and nested flow roots are separated by `--flow-space` of vertical space. `--flow-space` defaults to `--section-gap-sm`; `data-gap` on the flow root re-tunes it and `data-gap="0"` turns it off. A flow root is `body`, `main`, `article`, `section`, `aside`, `header`, `footer`, `form`, `fieldset`, `dialog`, `blockquote`, `figure`, `[data-ui="container"]`, `[data-ui="surface"]` — never a component that lays out its own children.
 
 Copy-ready page archetypes — Dashboard, Landing page, Prose / document, Split view, Centred form — are in `docs/layout.md`, and each one is audited on every test run.
 

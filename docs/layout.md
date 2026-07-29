@@ -157,6 +157,53 @@ tier" when it means "1152px wide".
 Both are composed from `--space-*`, so density mode (`data-density="compact"`)
 remaps them for free.
 
+## The default rhythm
+
+Every gap above is one you *ask* for. One is not — **FAQIR-SPEC §20**:
+
+> **Inside a flow root, consecutive block-level Faqir components and nested flow roots are separated by `--flow-space` of vertical space.**
+
+`--flow-space` defaults to `--section-gap-sm`. A **flow root** is the page's own
+structure — `body`, `main`, `article`, `section`, `aside`, `header`, `footer`, `form`,
+`fieldset`, `dialog`, `blockquote`, `figure`, `[data-ui="container"]`,
+`[data-ui="surface"]` — never a component that lays out its own children, because
+`stack`, `cluster`, `grid` and `switcher` already space theirs with `gap` and a margin
+on top of that would double it.
+
+So this is spaced, with no wrapper, no `stack` and no attribute:
+
+```html
+<section>
+  <div data-ui="card" data-variant="outlined">
+    <div data-part="body">First. The first child carries no margin.</div>
+  </div>
+  <div data-ui="card" data-variant="outlined">
+    <div data-part="body">Second. Already separated — nothing was asked for.</div>
+  </div>
+</section>
+```
+
+Three things worth knowing and nothing else:
+
+- **It nests.** A `section` inside a `main` is a flow root in its own right — and is
+  itself spaced, because the participants are `[data-ui]` *plus* the flow-root tags.
+  A `surface` boundary does not leak: the first child carries no margin and the last
+  carries none either, so there is never a margin at a box edge to collapse through.
+- **"Consecutive" is load-bearing.** The margin goes on the second of two
+  participants, so anything else between them suppresses it — an `<h2>` stays welded
+  to the table it labels rather than floating 3rem above it.
+- **It skips inline-level components.** A vertical margin on an `inline-flex` box
+  shifts it inside its line box instead of stacking it, so a row of badges stays a
+  row. The 26 inline-level components are listed in `registry/base/rhythm.css`, and
+  the list is derived from the registry by test rather than kept by hand.
+- **`data-gap` on the flow root re-tunes it**, on the same `0 1 2 3 4 6 8 10 12 16`
+  ladder the layout primitives take, and `data-gap="0"` turns it off. It inherits, so
+  it is written once per page. The rule weighs (0,0,0), so any component rule and any
+  authored rule beats it.
+
+Reach for a `stack` when you want a *different* rhythm, a direction, or alignment —
+not merely to separate a sequence.
+
 ## Page archetypes
 
 Five pages, each *structured* by the five primitives and filled with ordinary

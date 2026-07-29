@@ -29,6 +29,7 @@ import {
   MEASURE_TOKENS,
   RHYTHM_TOKENS,
   grammarLine,
+  rhythmLine,
 } from "../utils/layout";
 import { getSchemaVersion } from "../utils/schema";
 import { loadPluginMetadata, type PluginMetadata } from "./plugins";
@@ -342,6 +343,10 @@ function renderLayoutSystem(): string[] {
   lines.push(
     `**Rhythm** (page air): ${RHYTHM_TOKENS.map((r) => `\`--${r.token}\` (${r.role})`).join(", ")}.`,
   );
+  lines.push("");
+  lines.push("**The default rhythm** (FAQIR-SPEC §20) — the one thing that means you do NOT have to wrap a sequence to space it:");
+  lines.push("");
+  lines.push(rhythmLine());
   lines.push("");
   lines.push(
     `Copy-ready page archetypes — ${ARCHETYPES.map((a) => a.title).join(", ")} — are in \`docs/layout.md\`, and each one is audited on every test run.`,

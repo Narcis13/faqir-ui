@@ -6,10 +6,10 @@
   "totals": {
     "pages": 180,
     "zeroGutterPages": 79,
-    "seamPages": 42,
-    "seams": 183,
+    "seamPages": 5,
+    "seams": 19,
     "bleeds": 7,
-    "overlaps": 3
+    "overlaps": 1
   },
   "pages": {
     "agents/index.html": {
@@ -542,7 +542,7 @@
     },
     "examples/patterns/auth-form.html": {
       "zeroGutter": true,
-      "seams": 6,
+      "seams": 0,
       "bleeds": 0,
       "overlaps": 0
     },
@@ -566,13 +566,13 @@
     },
     "examples/patterns/empty-state.html": {
       "zeroGutter": true,
-      "seams": 3,
+      "seams": 0,
       "bleeds": 0,
       "overlaps": 0
     },
     "examples/patterns/feature-grid.html": {
       "zeroGutter": true,
-      "seams": 2,
+      "seams": 0,
       "bleeds": 0,
       "overlaps": 0
     },
@@ -584,25 +584,25 @@
     },
     "examples/patterns/hero.html": {
       "zeroGutter": true,
-      "seams": 1,
+      "seams": 0,
       "bleeds": 0,
       "overlaps": 0
     },
     "examples/patterns/inbox.html": {
       "zeroGutter": true,
-      "seams": 1,
+      "seams": 0,
       "bleeds": 0,
       "overlaps": 0
     },
     "examples/patterns/pricing.html": {
       "zeroGutter": true,
-      "seams": 1,
+      "seams": 0,
       "bleeds": 0,
       "overlaps": 0
     },
     "examples/patterns/search-results.html": {
       "zeroGutter": true,
-      "seams": 3,
+      "seams": 0,
       "bleeds": 0,
       "overlaps": 0
     },
@@ -614,13 +614,13 @@
     },
     "examples/patterns/site-footer.html": {
       "zeroGutter": true,
-      "seams": 1,
+      "seams": 0,
       "bleeds": 0,
       "overlaps": 0
     },
     "examples/patterns/stats-dashboard.html": {
       "zeroGutter": true,
-      "seams": 1,
+      "seams": 0,
       "bleeds": 0,
       "overlaps": 0
     },
@@ -632,7 +632,7 @@
     },
     "examples/primitives/aspect-ratio.html": {
       "zeroGutter": true,
-      "seams": 6,
+      "seams": 0,
       "bleeds": 0,
       "overlaps": 0
     },
@@ -650,7 +650,7 @@
     },
     "examples/primitives/breadcrumb.html": {
       "zeroGutter": true,
-      "seams": 3,
+      "seams": 0,
       "bleeds": 0,
       "overlaps": 0
     },
@@ -662,13 +662,13 @@
     },
     "examples/primitives/callout.html": {
       "zeroGutter": true,
-      "seams": 7,
+      "seams": 0,
       "bleeds": 0,
       "overlaps": 0
     },
     "examples/primitives/card.html": {
       "zeroGutter": true,
-      "seams": 3,
+      "seams": 0,
       "bleeds": 0,
       "overlaps": 0
     },
@@ -686,19 +686,19 @@
     },
     "examples/primitives/cluster.html": {
       "zeroGutter": true,
-      "seams": 8,
+      "seams": 0,
       "bleeds": 0,
       "overlaps": 0
     },
     "examples/primitives/collapsible.html": {
       "zeroGutter": true,
-      "seams": 2,
+      "seams": 0,
       "bleeds": 0,
       "overlaps": 0
     },
     "examples/primitives/container.html": {
       "zeroGutter": true,
-      "seams": 6,
+      "seams": 0,
       "bleeds": 0,
       "overlaps": 0
     },
@@ -710,19 +710,19 @@
     },
     "examples/primitives/empty-state.html": {
       "zeroGutter": true,
-      "seams": 1,
+      "seams": 0,
       "bleeds": 0,
       "overlaps": 0
     },
     "examples/primitives/field-group.html": {
       "zeroGutter": true,
-      "seams": 9,
+      "seams": 0,
       "bleeds": 0,
       "overlaps": 0
     },
     "examples/primitives/grid.html": {
       "zeroGutter": true,
-      "seams": 8,
+      "seams": 0,
       "bleeds": 0,
       "overlaps": 0
     },
@@ -740,7 +740,7 @@
     },
     "examples/primitives/input.html": {
       "zeroGutter": true,
-      "seams": 8,
+      "seams": 0,
       "bleeds": 0,
       "overlaps": 0
     },
@@ -770,7 +770,7 @@
     },
     "examples/primitives/nav.html": {
       "zeroGutter": true,
-      "seams": 3,
+      "seams": 0,
       "bleeds": 0,
       "overlaps": 0
     },
@@ -782,7 +782,7 @@
     },
     "examples/primitives/progress.html": {
       "zeroGutter": true,
-      "seams": 3,
+      "seams": 0,
       "bleeds": 0,
       "overlaps": 0
     },
@@ -794,7 +794,7 @@
     },
     "examples/primitives/select.html": {
       "zeroGutter": true,
-      "seams": 5,
+      "seams": 0,
       "bleeds": 0,
       "overlaps": 0
     },
@@ -812,7 +812,7 @@
     },
     "examples/primitives/skeleton.html": {
       "zeroGutter": true,
-      "seams": 5,
+      "seams": 0,
       "bleeds": 0,
       "overlaps": 0
     },
@@ -824,25 +824,25 @@
     },
     "examples/primitives/stack.html": {
       "zeroGutter": true,
-      "seams": 7,
+      "seams": 0,
       "bleeds": 0,
       "overlaps": 0
     },
     "examples/primitives/stat.html": {
       "zeroGutter": true,
-      "seams": 7,
+      "seams": 0,
       "bleeds": 0,
       "overlaps": 0
     },
     "examples/primitives/stepper.html": {
       "zeroGutter": true,
-      "seams": 1,
+      "seams": 0,
       "bleeds": 0,
       "overlaps": 0
     },
     "examples/primitives/surface.html": {
       "zeroGutter": true,
-      "seams": 6,
+      "seams": 0,
       "bleeds": 0,
       "overlaps": 0
     },
@@ -854,19 +854,19 @@
     },
     "examples/primitives/switcher.html": {
       "zeroGutter": true,
-      "seams": 5,
+      "seams": 0,
       "bleeds": 0,
       "overlaps": 0
     },
     "examples/primitives/text.html": {
       "zeroGutter": true,
-      "seams": 15,
+      "seams": 0,
       "bleeds": 0,
       "overlaps": 0
     },
     "examples/primitives/textarea.html": {
       "zeroGutter": true,
-      "seams": 6,
+      "seams": 0,
       "bleeds": 0,
       "overlaps": 0
     },
@@ -884,7 +884,7 @@
     },
     "examples/recipes/accordion.html": {
       "zeroGutter": true,
-      "seams": 2,
+      "seams": 0,
       "bleeds": 0,
       "overlaps": 0
     },
@@ -908,7 +908,7 @@
     },
     "examples/recipes/carousel.html": {
       "zeroGutter": true,
-      "seams": 1,
+      "seams": 0,
       "bleeds": 0,
       "overlaps": 0
     },
@@ -1010,25 +1010,25 @@
     },
     "examples/recipes/slider.html": {
       "zeroGutter": true,
-      "seams": 3,
+      "seams": 0,
       "bleeds": 0,
       "overlaps": 0
     },
     "examples/recipes/table.html": {
       "zeroGutter": true,
-      "seams": 11,
+      "seams": 0,
       "bleeds": 0,
       "overlaps": 0
     },
     "examples/recipes/tabs.html": {
       "zeroGutter": true,
-      "seams": 3,
+      "seams": 0,
       "bleeds": 0,
       "overlaps": 0
     },
     "examples/recipes/tag-input.html": {
       "zeroGutter": true,
-      "seams": 1,
+      "seams": 0,
       "bleeds": 0,
       "overlaps": 0
     },
@@ -1036,7 +1036,7 @@
       "zeroGutter": false,
       "seams": 0,
       "bleeds": 0,
-      "overlaps": 3
+      "overlaps": 1
     },
     "examples/recipes/toggle-group.html": {
       "zeroGutter": true,

@@ -328,6 +328,31 @@ are floors, and there is no `xs` or `2xl`. Only groups a manifest marks
 protocol attributes never do — `data-variant-md` would be a sixth attribute in all
 but name, which is why `stack` moved its direction onto `data-direction` in v2.0.
 
+### Default rhythm
+
+Every gap a primitive gives you is one you asked for. One is not — FAQIR-SPEC §20:
+
+> **Inside a flow root, consecutive block-level Faqir components and nested flow roots are separated by `--flow-space` of vertical space.**
+
+`--flow-space` defaults to `--section-gap-sm`. A **flow root** is the page's own
+structure (`body`, `main`, `article`, `section`, `aside`, `header`, `footer`, `form`,
+`fieldset`, `dialog`, `blockquote`, `figure`, `[data-ui="container"]`,
+`[data-ui="surface"]`) — never a component that lays out its own children. So a bare
+sequence is already spaced, with no wrapper and no attribute:
+
+```html
+<section>
+  <div data-ui="card"><div data-part="body">First — no margin, it is the first child.</div></div>
+  <div data-ui="card"><div data-part="body">Second — spaced without a stack.</div></div>
+</section>
+```
+
+It nests, it skips inline-level components (a row of badges stays a row), and
+`data-gap` on the flow root re-tunes it — `data-gap="0"` turns it off. *Consecutive*
+is load-bearing: the margin goes on the second of two participants, so an `<h2>`
+stays welded to the table it labels. Reach for a `stack` when you want a *different*
+rhythm, a direction or alignment, not merely to separate a sequence.
+
 ### Stack — one direction, one gap
 
 ```html

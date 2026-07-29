@@ -155,7 +155,7 @@ const TOKEN_ORDER = [
   "doc-aliases",
   "density",
 ];
-const BASE_ORDER = ["reset", "prose", "motion-presets"];
+const BASE_ORDER = ["reset", "prose", "rhythm", "motion-presets"];
 
 function read(rel: string): string {
   return readFileSync(join(REGISTRY, rel), "utf8");

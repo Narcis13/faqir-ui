@@ -12,6 +12,14 @@ import {
   MEASURE_TOKENS,
   RESPONSIVE_GRAMMAR,
   RHYTHM_TOKENS,
+  FLOW_GAP_ATTRIBUTE,
+  FLOW_ROOTS,
+  FLOW_SPACE_DEFAULT_TOKEN,
+  FLOW_SPACE_PROPERTY,
+  INLINE_LEVEL_COMPONENTS,
+  RHYTHM_REJECTED,
+  RHYTHM_RULE,
+  rhythmLine,
 } from "../utils/layout";
 import { loadThemeManifest, type ThemeManifest } from "../theme-manifest";
 import { readConfig, type FaqirConfig } from "../utils/config";
@@ -104,6 +112,19 @@ export interface ContextData {
     primitives: { name: string; mechanism: string; use: string }[];
     measure: Record<string, string>;
     rhythm: Record<string, string>;
+    /**
+     * The default vertical rhythm — FAQIR-SPEC §20, task 0.9-02. The one thing
+     * an agent must know to produce spaced output without wrapping anything.
+     */
+    flow: {
+      rule: string;
+      space: string;
+      default_token: string;
+      roots: string[];
+      skips_inline: string[];
+      opt_out: string;
+      rejected: { candidate: string; why: string }[];
+    };
     archetypes: string[];
     reference: string;
   };
@@ -387,6 +408,15 @@ export function composeContextData(input: ContextComposition): ContextData {
       })),
       measure: Object.fromEntries(MEASURE_TOKENS.map((m) => [`--${m.token}`, m.role])),
       rhythm: Object.fromEntries(RHYTHM_TOKENS.map((r) => [`--${r.token}`, r.role])),
+      flow: {
+        rule: RHYTHM_RULE,
+        space: FLOW_SPACE_PROPERTY,
+        default_token: `--${FLOW_SPACE_DEFAULT_TOKEN}`,
+        roots: [...FLOW_ROOTS],
+        skips_inline: [...INLINE_LEVEL_COMPONENTS],
+        opt_out: `${FLOW_GAP_ATTRIBUTE}="0"`,
+        rejected: RHYTHM_REJECTED.map((r) => ({ candidate: r.candidate, why: r.why })),
+      },
       archetypes: ARCHETYPES.map((a) => a.title),
       reference: "docs/layout.md",
     },
@@ -535,6 +565,7 @@ export function formatContextMarkdown(data: ContextData): string {
   lines.push("");
   lines.push(`Measure (centred column widths): ${Object.entries(data.layout.measure).map(([t, role]) => `\`${t}\` — ${role}`).join("; ")}.`);
   lines.push(`Rhythm (page air): ${Object.entries(data.layout.rhythm).map(([t, role]) => `\`${t}\` — ${role}`).join("; ")}.`);
+  lines.push(`Default rhythm (FAQIR-SPEC §20): ${rhythmLine()}`);
   lines.push(`Page archetypes with copy-ready markup: ${data.layout.archetypes.join(", ")} — see \`${data.layout.reference}\`.`);
   lines.push("");
 
@@ -702,6 +733,7 @@ export function formatContextCursorRules(data: ContextData): string {
   for (const p of data.layout.primitives) lines.push(`- \`${p.name}\` (${p.mechanism}): ${p.use}`);
   lines.push(`- Responsive values are suffixed attributes — \`${data.responsive.grammar}\`, tiers ${data.responsive.tiers.map((t) => `${t.tier} ${t.min_width}`).join(", ")}`);
   for (const r of data.responsive.rules) lines.push(`- ${r}`);
+  lines.push(`- Default rhythm: ${rhythmLine()}`);
   lines.push(`- Page archetypes (dashboard, landing, document, split view, form): \`${data.layout.reference}\``);
   lines.push("");
 
@@ -852,6 +884,8 @@ export function formatContextLlms(data: ContextData): string {
       `mobile-first and min-width only; the five protocol attributes never take one. ` +
       `Page archetypes: ${data.layout.archetypes.join(", ")}.`,
   );
+  lines.push("");
+  lines.push(`Vertical rhythm is a default, not an opt-in: ${rhythmLine()}`);
   lines.push("");
 
   const linkItem = (name: string, c: Record<string, unknown>): string => {
@@ -1033,6 +1067,12 @@ export function formatContextLlmsFull(data: ContextData): string {
   lines.push("");
   lines.push("Rhythm — the air between page sections:");
   for (const [token, role] of Object.entries(data.layout.rhythm)) lines.push(`- \`${token}\` — ${role}`);
+  lines.push("");
+  lines.push("**Default rhythm** (FAQIR-SPEC §20)");
+  lines.push("");
+  lines.push(rhythmLine());
+  lines.push("");
+  for (const r of data.layout.flow.rejected) lines.push(`- Rejected — ${r.candidate}: ${r.why}`);
   lines.push("");
   lines.push(`Page archetypes with copy-ready markup — ${data.layout.archetypes.join(", ")} — are documented in \`${data.layout.reference}\`.`);
   lines.push("");

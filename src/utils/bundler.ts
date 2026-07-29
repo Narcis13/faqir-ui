@@ -83,6 +83,7 @@ export async function generateBundle(
     // 3. Base
     await addFile(join(outputDir, "base", "reset.css"), "base/reset.css");
     await addFile(join(outputDir, "base", "prose.css"), "base/prose.css");
+    await addFile(join(outputDir, "base", "rhythm.css"), "base/rhythm.css");
     await addFile(join(outputDir, "base", "motion-presets.css"), "base/motion-presets.css");
 
     // 4. Primitives (alphabetical)

@@ -68,7 +68,7 @@ const TOKEN_FILES_ORDERED = [
   "density.css",
 ];
 
-const BASE_FILES_ORDERED = ["reset.css", "prose.css"];
+const BASE_FILES_ORDERED = ["reset.css", "prose.css", "rhythm.css"];
 
 function listCss(dir) {
   if (!existsSync(dir)) return [];

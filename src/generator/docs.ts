@@ -76,6 +76,8 @@ import {
   MEASURE_TOKENS,
   RESPONSIVE_GRAMMAR,
   RHYTHM_TOKENS,
+  RHYTHM_REJECTED,
+  rhythmLine,
   parseArchetypes,
   type ParsedArchetype,
 } from "../utils/layout";
@@ -225,7 +227,7 @@ const TOKEN_FILES = [
 ] as const;
 
 /** Base stylesheets, in cascade order. */
-const BASE_FILES = ["reset", "prose", "motion-presets"] as const;
+const BASE_FILES = ["reset", "prose", "rhythm", "motion-presets"] as const;
 
 /** Prose labels for the token groups on the token-reference page. */
 const TOKEN_GROUP_LABEL: Record<string, string> = {
@@ -1389,6 +1391,18 @@ function renderLayoutPage(ctx: {
         )}</code></pre>\n` +
         `      <ul>\n` +
         LAYOUT_RULES.map((r) => `        <li>${esc(r.replace(/`/g, ""))}</li>`).join("\n") +
+        `\n      </ul>`,
+    ),
+    section(
+      "rhythm",
+      "The default rhythm",
+      `      <p>${esc(rhythmLine().replace(/`/g, ""))}</p>\n` +
+        `      <p>Two mechanisms were considered and rejected, recorded here because the next ` +
+        `spacing question will ask again:</p>\n` +
+        `      <ul>\n` +
+        RHYTHM_REJECTED.map(
+          (r) => `        <li><strong>${esc(r.candidate.replace(/`/g, ""))}</strong> — ${esc(r.why)}</li>`,
+        ).join("\n") +
         `\n      </ul>`,
     ),
   ];

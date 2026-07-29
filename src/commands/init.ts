@@ -148,6 +148,10 @@ export async function init(args: string[]): Promise<void> {
     join(outputDir, "base", "prose.css")
   );
   await copyFile(
+    join(registryPath, "base", "rhythm.css"),
+    join(outputDir, "base", "rhythm.css")
+  );
+  await copyFile(
     join(registryPath, "base", "motion-presets.css"),
     join(outputDir, "base", "motion-presets.css")
   );

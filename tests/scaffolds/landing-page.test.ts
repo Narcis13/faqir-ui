@@ -43,6 +43,7 @@ async function writeProject(): Promise<void> {
   await Bun.write(join(UI_DIR, "tokens/theme.css"), "/* initial theme */\n");
   await Bun.write(join(UI_DIR, "base/reset.css"), "/* reset */\n");
   await Bun.write(join(UI_DIR, "base/prose.css"), "/* prose */\n");
+  await Bun.write(join(UI_DIR, "base/rhythm.css"), "/* rhythm */\n");
   await Bun.write(join(UI_DIR, "core/faqir-core.js"), "/* core */\n");
   await Bun.write(
     join(TEST_DIR, "faqir.config.json"),

@@ -161,6 +161,7 @@ function cssLinks(components: string[], hasBundle: boolean, outputDir: string): 
   links.push(`  <link rel="stylesheet" href="${outputDir}/tokens/theme.css">`);
   links.push(`  <link rel="stylesheet" href="${outputDir}/base/reset.css">`);
   links.push(`  <link rel="stylesheet" href="${outputDir}/base/prose.css">`);
+  links.push(`  <link rel="stylesheet" href="${outputDir}/base/rhythm.css">`);
 
   const registryPath = getRegistryPath();
   for (const comp of components) {
