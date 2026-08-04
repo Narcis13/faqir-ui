@@ -284,7 +284,7 @@
     {
       "id": "0.9-04",
       "completed": "2026-08-04",
-      "commit": "PENDING",
+      "commit": "e60fb96",
       "summary": "Reference-fragment sweep: 367 audit findings over 87 fragments driven to 0 and 0.7-17 resolved — part attribution follows composition, five rules that flagged correct markup fixed, runtime-presence rules scoped to documents by content; layout primitives demo in surface cells; layout-lint floor pinned at 0 seams / 0 zero-gutter."
     }
   ],
