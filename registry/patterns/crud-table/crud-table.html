@@ -1,6 +1,6 @@
 <!-- @ui:component crud-table -->
 <!-- @ui:kind pattern -->
-<!-- @ui:slots toolbar search filters actions create-button table-wrapper table row-actions edit-dialog delete-dialog pagination empty-state bulk-actions -->
+<!-- @ui:slots toolbar search filters actions create-button table-wrapper table row-actions edit-dialog delete-dialog pagination empty-state bulk-actions field selection-count empty-icon empty-title empty-description -->
 <!-- @ui:variants density=compact|default|comfortable -->
 <!-- @ui:contains table button dialog pagination input badge -->
 
@@ -20,13 +20,13 @@
 
     <!-- Active Filters -->
     <div data-part="filters">
-      <span data-ui="badge" data-variant="secondary">
-        Status: Active
-        <button data-part="dismiss" aria-label="Remove filter: Status Active">&#x2715;</button>
+      <span data-ui="chip" data-variant="outline">
+        <span data-part="label">Status: Active</span>
+        <button data-part="dismiss" type="button" aria-label="Remove filter: Status Active">&#x2715;</button>
       </span>
-      <span data-ui="badge" data-variant="secondary">
-        Role: Admin
-        <button data-part="dismiss" aria-label="Remove filter: Role Admin">&#x2715;</button>
+      <span data-ui="chip" data-variant="outline">
+        <span data-part="label">Role: Admin</span>
+        <button data-part="dismiss" type="button" aria-label="Remove filter: Role Admin">&#x2715;</button>
       </span>
     </div>
 
@@ -132,7 +132,7 @@
   <!-- ── Pagination ── -->
   <div data-part="pagination">
     <div data-ui="pagination" data-size="md">
-      <nav data-part="nav" role="navigation" aria-label="Table pagination">
+      <nav data-part="nav" role="navigation" aria-label="Pagination">
         <button data-part="prev" aria-label="Previous page" disabled>&laquo; Prev</button>
         <button data-part="page" data-page="1" data-state="active" aria-current="page">1</button>
         <button data-part="page" data-page="2">2</button>
@@ -332,7 +332,7 @@
 
   <div data-part="pagination">
     <div data-ui="pagination" data-size="sm">
-      <nav data-part="nav" role="navigation" aria-label="Table pagination">
+      <nav data-part="nav" role="navigation" aria-label="Pagination">
         <button data-part="prev" aria-label="Previous page" disabled>&laquo; Prev</button>
         <button data-part="page" data-page="1" data-state="active" aria-current="page">1</button>
         <button data-part="page" data-page="2">2</button>
@@ -397,7 +397,7 @@
 
   <div data-part="pagination">
     <div data-ui="pagination" data-size="lg">
-      <nav data-part="nav" role="navigation" aria-label="Table pagination">
+      <nav data-part="nav" role="navigation" aria-label="Pagination">
         <button data-part="prev" aria-label="Previous page" disabled>&laquo; Prev</button>
         <button data-part="page" data-page="1" data-state="active" aria-current="page">1</button>
         <button data-part="page" data-page="2">2</button>

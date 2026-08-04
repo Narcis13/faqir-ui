@@ -300,7 +300,10 @@ Cmd+K style modal command interface with search and keyboard navigation
 ├─ [data-part='group']  <div>  optional  — Group container with label and items
 ├─ [data-part='item']  <div>  required  — Individual command item with role=option
 ├─ [data-part='empty']  <div>  optional  — Empty state shown when no commands match
-└─ [data-part='kbd']  <kbd>  optional  — Keyboard shortcut hint displayed in items
+├─ [data-part='kbd']  <kbd>  optional  — Keyboard shortcut hint displayed in items
+├─ [data-part='search-wrapper']  <div>  optional  — Row holding the search input and its leading icon
+├─ [data-part='group-label']  <div>  optional  — Heading naming a group of commands
+└─ [data-part='item-label']  <span>  optional  — The command text inside an item, beside its icon and kbd hint
 ```
 
 **Variants**
@@ -425,7 +428,7 @@ Modal dialog with focus trap, escape-to-close, and overlay backdrop
 
 ```text
 [data-ui='dialog']  ·  <div> · content: slots
-├─ [data-part='trigger']  <button>  required  — Button that opens the dialog
+├─ [data-part='trigger']  <button>  optional  — Button that opens the dialog. A dialog is opened by whatever the application decides — a row button in a table, a menu item, a route change — so the trigger is not always inside the dialog. Optional since 0.9-04.
 ├─ [data-part='overlay']  <div>  required  — Backdrop overlay, click to close
 ├─ [data-part='panel']  <div>  required  — The dialog box container
 ├─ [data-part='header']  <div>  optional
@@ -807,7 +810,8 @@ Custom styled select dropdown with search filtering and keyboard navigation
 ├─ [data-part='listbox']  <div>  required  — Dropdown container with role=listbox
 ├─ [data-part='option']  <div>  required  — Individual option with role=option and data-value
 ├─ [data-part='search']  <input>  optional  — Optional search input to filter options
-└─ [data-part='empty']  <div>  optional  — Empty state message when no options match the filter
+├─ [data-part='empty']  <div>  optional  — Empty state message when no options match the filter
+└─ [data-part='chevron']  <span>  optional  — Disclosure caret inside the trigger, rotated by [data-state="open"]
 ```
 
 **Variants**
@@ -1009,8 +1013,7 @@ Advanced data table: multi-column type-aware sorting, global + per-column filter
 
 | Variant | Values | Default | Attribute | Applied to |
 |---------|--------|---------|-----------|------------|
-| striped | `true`, `false` | `false` | `data-variant` | root |
-| bordered | `true`, `false` | `false` | `data-variant` | root |
+| variant | `default`, `striped`, `bordered` | `default` | `data-variant` | root |
 | size | `sm`, `md`, `lg` | `md` | `data-size` | root |
 
 - **Safe transforms:** `add-column`, `remove-column`, `add-row`, `remove-row`, `change-size`, `toggle-striped`, `toggle-bordered`, `add-sortable`, `remove-sortable`, `restyle-header-background`, `add-footer-row`, `remove-footer-row`, `set-cell-alignment`, `set-cell-format`, `add-colspan`, `add-row-group`, `toggle-print-compact`, `add-filter-row`, `remove-filter-row`, `add-tree-levels`, `add-aggregate-cells`, `add-drag-handles`, `add-detail-rows`, `add-empty-state-row`, `toggle-multi-sort`, `toggle-editable`, `toggle-sticky-header`, `toggle-sticky-footer`, `pin-column`, `set-hide-below`, `set-persist-key`, `set-locale-currency`, `toggle-responsive-stack`
@@ -1110,9 +1113,9 @@ Auto-dismissing notification messages with stack management
 ├─ [data-part='container']  <div>  required  — Fixed-position toast stack container with role=region
 ├─ [data-part='toast']  <div>  optional  — Individual toast notification with role=status
 ├─ [data-part='icon']  <span>  optional  — Visual indicator icon for the toast tone
-├─ [data-part='message']  <span>  required  — Toast message text content
+├─ [data-part='message']  <span>  optional  — Toast message text content. Required of an individual toast, not of the container: the resting state of a toast region is empty, and the controller appends toasts into it. Optional since 0.9-04.
 ├─ [data-part='action']  <button>  optional  — Optional action button with custom callback
-└─ [data-part='close']  <button>  required  — Dismiss button, must have aria-label
+└─ [data-part='close']  <button>  optional  — Dismiss button, must have aria-label. Required of a dismissible toast, not of the container. Optional since 0.9-04.
 ```
 
 **Variants**

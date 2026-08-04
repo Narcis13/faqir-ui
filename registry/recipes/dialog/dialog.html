@@ -45,6 +45,7 @@
     role="dialog"
     aria-modal="true"
     aria-labelledby="danger-dialog-title"
+    aria-describedby="danger-dialog-description"
     hidden
   >
     <div data-part="header">
@@ -52,7 +53,7 @@
       <button data-part="close" aria-label="Close dialog">&#x2715;</button>
     </div>
     <div data-part="body">
-      <p data-part="description">This action cannot be undone.</p>
+      <p id="danger-dialog-description" data-part="description">This action cannot be undone.</p>
     </div>
     <div data-part="footer">
       <button data-ui="button" data-part="close" data-variant="outline">Cancel</button>

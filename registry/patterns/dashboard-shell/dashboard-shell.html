@@ -1,6 +1,6 @@
 <!-- @ui:component dashboard-shell -->
 <!-- @ui:kind pattern -->
-<!-- @ui:slots sidebar nav nav-item header logo search user-menu content footer -->
+<!-- @ui:slots sidebar nav nav-item header logo search user-menu content footer sidebar-toggle nav-icon nav-label sidebar-user sidebar-user-name header-actions metric activity-item -->
 <!-- @ui:variants sidebar-position=left|right sidebar-state=expanded|collapsed -->
 <!-- @ui:composition card grid avatar dropdown button separator badge -->
 
@@ -19,7 +19,7 @@
     <hr data-ui="separator">
 
     <!-- Navigation -->
-    <nav data-part="nav" aria-label="Main navigation">
+    <nav data-part="nav" role="navigation" aria-label="Main navigation">
       <a data-part="nav-item" href="#" aria-current="page">
         <svg data-part="nav-icon" aria-hidden="true" width="16" height="16" viewBox="0 0 16 16"><path fill="currentColor" d="M8 1L1 6v9h5v-5h4v5h5V6L8 1z"/></svg>
         <span data-part="nav-label">Dashboard</span>
@@ -224,7 +224,7 @@
     <div data-part="logo">
       <span>Acme</span>
     </div>
-    <nav data-part="nav" aria-label="Main navigation">
+    <nav data-part="nav" role="navigation" aria-label="Main navigation">
       <a data-part="nav-item" href="#" aria-current="page">
         <span data-part="nav-label">Dashboard</span>
       </a>
@@ -249,7 +249,7 @@
     <div data-part="logo">
       <svg aria-hidden="true" width="32" height="32" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="currentColor"/></svg>
     </div>
-    <nav data-part="nav" aria-label="Main navigation">
+    <nav data-part="nav" role="navigation" aria-label="Main navigation">
       <a data-part="nav-item" href="#" aria-current="page" aria-label="Dashboard">
         <svg data-part="nav-icon" aria-hidden="true" width="16" height="16" viewBox="0 0 16 16"><path fill="currentColor" d="M8 1L1 6v9h5v-5h4v5h5V6L8 1z"/></svg>
       </a>

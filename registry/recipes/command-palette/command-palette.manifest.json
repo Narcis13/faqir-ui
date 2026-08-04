@@ -5,7 +5,6 @@
   "kind": "recipe",
   "category": "navigation",
   "description": "Cmd+K style modal command interface with search and keyboard navigation",
-
   "changes": [
     {
       "version": "1.1.0",
@@ -13,13 +12,11 @@
       "breaking": false
     }
   ],
-
   "anatomy": {
     "tag": "div",
     "selector": "[data-ui='command-palette']",
     "content_model": "slots"
   },
-
   "slots": {
     "overlay": {
       "selector": "[data-part='overlay']",
@@ -68,21 +65,46 @@
       "required": false,
       "tag_hint": "kbd",
       "description": "Keyboard shortcut hint displayed in items"
+    },
+    "search-wrapper": {
+      "selector": "[data-part='search-wrapper']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Row holding the search input and its leading icon"
+    },
+    "group-label": {
+      "selector": "[data-part='group-label']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Heading naming a group of commands"
+    },
+    "item-label": {
+      "selector": "[data-part='item-label']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "The command text inside an item, beside its icon and kbd hint"
     }
   },
-
   "variants": {
     "size": {
-      "values": ["sm", "md", "lg"],
+      "values": [
+        "sm",
+        "md",
+        "lg"
+      ],
       "default": "md",
       "attr": "data-size",
       "applied_to": "panel"
     }
   },
-
   "states": {
-    "closed": { "attr": "data-state=\"closed\"", "default": true },
-    "open": { "attr": "data-state=\"open\"" },
+    "closed": {
+      "attr": "data-state=\"closed\"",
+      "default": true
+    },
+    "open": {
+      "attr": "data-state=\"open\""
+    },
     "highlighted": {
       "attr": "data-highlighted",
       "applied_to": "item",
@@ -94,11 +116,13 @@
       "description": "An item filtered out by the search query — and, on a group, a group whose every item is filtered out. The controller writes both; hidden items are skipped by keyboard navigation and by the empty-state check"
     }
   },
-
   "props": {
-    "placeholder": { "type": "string", "default": "Type a command...", "description": "Search input placeholder" }
+    "placeholder": {
+      "type": "string",
+      "default": "Type a command...",
+      "description": "Search input placeholder"
+    }
   },
-
   "a11y": {
     "role": "dialog",
     "aria-modal": true,
@@ -122,22 +146,33 @@
       "End": "highlight last item"
     }
   },
-
   "tokens_used": [
-    "color-bg", "color-fg", "color-fg-muted", "color-fg-subtle",
-    "color-border", "color-primary-subtle", "color-bg-muted",
-    "shadow-xl", "radius-xl",
-    "space-2", "space-3", "space-4",
-    "text-sm", "text-xs", "text-base",
-    "weight-medium", "font-mono",
-    "z-overlay", "z-modal",
-    "duration-fast", "duration-normal", "ease-out"
+    "color-bg",
+    "color-fg",
+    "color-fg-muted",
+    "color-fg-subtle",
+    "color-border",
+    "color-primary-subtle",
+    "color-bg-muted",
+    "shadow-xl",
+    "radius-xl",
+    "space-2",
+    "space-3",
+    "space-4",
+    "text-sm",
+    "text-xs",
+    "text-base",
+    "weight-medium",
+    "font-mono",
+    "z-overlay",
+    "z-modal",
+    "duration-fast",
+    "duration-normal",
+    "ease-out"
   ],
-
   "templates": {
     "html": "<div data-ui=\"command-palette\" data-state=\"closed\">\n  <div data-part=\"overlay\" hidden></div>\n  <div data-part=\"panel\" role=\"dialog\" aria-modal=\"true\" aria-label=\"Command palette\" data-size=\"{size}\" hidden>\n    <div data-part=\"search-wrapper\">\n      <input data-part=\"search\" type=\"text\" role=\"combobox\" aria-expanded=\"true\" aria-autocomplete=\"list\" aria-controls=\"{id}-list\" placeholder=\"Type a command or search...\">\n    </div>\n    <div data-part=\"list\" role=\"listbox\" id=\"{id}-list\">\n      <div data-part=\"group\">\n        <div data-part=\"group-label\">{group_label}</div>\n        <div data-part=\"item\" role=\"option\" aria-selected=\"false\">\n          <span data-part=\"item-label\">{item_label}</span>\n          <kbd data-part=\"kbd\">{shortcut}</kbd>\n        </div>\n      </div>\n      <div data-part=\"empty\" hidden>No commands found</div>\n    </div>\n  </div>\n</div>"
   },
-
   "safe_transforms": [
     "add-command-item",
     "remove-command-item",
@@ -148,7 +183,6 @@
     "restyle-panel-background",
     "customize-empty-message"
   ],
-
   "unsafe_transforms": [
     "remove-dialog-role",
     "remove-aria-modal",
@@ -157,19 +191,18 @@
     "remove-keyboard-navigation",
     "remove-global-shortcut"
   ],
-
   "composition": {
-    "contains": ["kbd"],
+    "contains": [
+      "kbd"
+    ],
     "used_in": []
   },
-
   "files": {
     "html": "command-palette.html",
     "css": "command-palette.css",
     "js": "command-palette.js",
     "manifest": "command-palette.manifest.json"
   },
-
   "tests": [
     "opens-on-cmd-k",
     "opens-on-ctrl-k",

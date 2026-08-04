@@ -1,7 +1,7 @@
 // Audit rule definitions — each rule checks a parsed component against its manifest
 
 import type { ParsedComponent, ParsedElement, ParsedDocument } from "../parser/html-parser";
-import { offsetToPosition } from "../parser/html-parser";
+import { offsetToPosition, textInSubtree } from "../parser/html-parser";
 import type { Manifest, ManifestVariant } from "../manifest";
 import { TIERS, isTier } from "../utils/breakpoints";
 import { suggestClosest } from "../utils/suggest";
@@ -45,10 +45,29 @@ export const requiredSlotRule: AuditRule = {
   description: "Required slot is missing from component",
   check(component, manifest) {
     const results: AuditResult[] = [];
+
+    // `required` describes the component in its DEFAULT state (task 0.9-04).
+    // A `crud-table` needs a table — but `data-state="empty"` is the state in
+    // which it deliberately has none, and `data-state="loading"` shows skeletons
+    // instead. The reference fragments demonstrate exactly those states, and so
+    // does a real server-rendered page, so this is not a docs carve-out: a
+    // component announcing a declared, non-default state is demonstrating that
+    // state and is not asked to be structurally complete. Anything else forces
+    // a choice between deleting the state demos and deleting the contract.
+    const state = component.root.attrs["data-state"];
+    if (state) {
+      const declared = (manifest.states ?? {}) as Record<string, { attr?: string; default?: boolean }>;
+      for (const def of Object.values(declared)) {
+        if (def?.attr === `data-state="${state}"` && def.default !== true) return results;
+      }
+    }
+
     for (const [slotName, slotDef] of Object.entries(manifest.slots)) {
       if (!slotDef.required) continue;
-      const found = component.parts[slotName];
-      if (!found || found.length === 0) {
+      // "Filled", not "claimed" (task 0.9-04): a required slot is satisfied by a
+      // `data-part` anywhere in the subtree, even one a nested component claims
+      // for styling — `auth-form`'s title lives inside the `card` it composes.
+      if (!component.filledSlots.has(slotName)) {
         results.push({
           rule_id: "required-slot",
           severity: "critical",
@@ -63,6 +82,21 @@ export const requiredSlotRule: AuditRule = {
   },
 };
 
+/**
+ * True when `el` or any element inside it carries `attr` (task 0.9-04).
+ * Iterative for the same reason every other walker here is: adversarial input
+ * can nest thousands deep and a recursive walk would blow the stack.
+ */
+function hasAttrInSubtree(el: ParsedElement, attr: string): boolean {
+  const stack: ParsedElement[] = [el];
+  while (stack.length > 0) {
+    const cur = stack.pop()!;
+    if (attr in cur.attrs) return true;
+    for (const child of cur.children) stack.push(child);
+  }
+  return false;
+}
+
 // ── Rule: required-aria ──
 // Check ARIA attributes from manifest a11y.required_attrs
 export const requiredAriaRule: AuditRule = {
@@ -76,6 +110,17 @@ export const requiredAriaRule: AuditRule = {
     for (const requirement of manifest.a11y.required_attrs) {
       const lower = requirement.toLowerCase();
 
+      // A *conditional* requirement is not statically checkable (task 0.9-04).
+      // `required_attrs` is prose, and some of it describes an attribute that
+      // belongs to a state the markup is not in: auth-form's `aria-busy="true"
+      // on form when in loading state`, toggle-group's `role="radiogroup" on
+      // root in single mode; role="group" in multi mode`. Pattern-matching the
+      // prose and demanding the attribute unconditionally reported six correct
+      // idle forms and one correct multi-select group as critical failures. This
+      // is the general form of the field-group carve-out below, which was the
+      // first instance of the same mistake.
+      if (/\b(when|unless|if)\b|\bin \w+ mode\b|;/.test(lower)) continue;
+
       // field-group's label/control/description relationships are stateful and
       // cross-element. The document-level field-wiring rule implements that
       // contract precisely; interpreting the manifest's prose here mistakes the
@@ -88,10 +133,15 @@ export const requiredAriaRule: AuditRule = {
         continue;
       }
 
-      // Parse patterns like 'role="dialog" on panel'
+      // Parse patterns like 'role="dialog" on panel'. The NAME is matched
+      // case-insensitively but the VALUE is read out of the original prose
+      // (task 0.9-04): reading it out of `lower` turned pagination's declared
+      // `aria-label="Pagination"` into a demand for lowercase "pagination" and
+      // reported seven correctly-labelled navs as critical failures.
       const attrOnMatch = lower.match(/^(\w[\w-]*)="?([^"]*)"?\s+on\s+(\w+)/);
       if (attrOnMatch) {
-        const [, attrName, attrValue, partName] = attrOnMatch;
+        const [, attrName, , partName] = attrOnMatch;
+        const attrValue = requirement.match(/^\w[\w-]*="?([^"]*)"?\s+on\s+\w+/)?.[1] ?? attrOnMatch[2];
         const target = partName === "root" ? [component.root] : (component.parts[partName] || []);
         for (const el of target) {
           if (!(attrName in el.attrs)) {
@@ -149,14 +199,14 @@ export const requiredAriaRule: AuditRule = {
       if (lower.includes("aria-label") && lower.includes("close")) {
         const closeButtons = component.parts["close"] || [];
         for (const btn of closeButtons) {
-          if (!("aria-label" in btn.attrs)) {
+          if (!hasAccessibleName(btn)) {
             results.push({
               rule_id: "required-aria",
               severity: "critical",
               component_name: component.name,
               file: component.file,
               line: countLineFromEl(component, btn),
-              message: `Missing aria-label on [data-part="close"] button`,
+              message: `[data-part="close"] button has no accessible name`,
               fix: {
                 type: "add-attribute",
                 offset: btn.tagEnd - 1,
@@ -239,13 +289,20 @@ export const requiredAriaRule: AuditRule = {
         continue;
       }
 
-      // aria-selected, aria-controls, aria-labelledby on specific parts
+      // aria-selected, aria-controls, aria-labelledby on specific parts.
+      //
+      // Satisfied by the part element OR anything inside it (task 0.9-04). The
+      // prose names a slot and then the thing in it — crud-table's `aria-label
+      // on search input` — and `data-part="search"` is the wrapper around an
+      // `input-group`, so demanding the label on the wrapper both misses the
+      // label the control actually carries and would be wrong to satisfy (the
+      // accessible name belongs to the control, not the box around it).
       const ariaOnMatch = lower.match(/(aria-[\w-]+)\s+on\s+(\w+)/);
       if (ariaOnMatch) {
         const [, attrName, partName] = ariaOnMatch;
         const elements = component.parts[partName] || [];
         for (const el of elements) {
-          if (!(attrName in el.attrs)) {
+          if (!hasAttrInSubtree(el, attrName)) {
             results.push({
               rule_id: "required-aria",
               severity: "critical",
@@ -400,9 +457,18 @@ export const validVariantRule: AuditRule = {
       });
     }
 
-    // Check parts with data-variant
+    // Check parts with data-variant.
+    //
+    // A part that carries its OWN `data-ui` is skipped here (task 0.9-04): a
+    // `<button data-ui="button" data-part="submit" data-variant="primary">`
+    // filling a pattern's `submit` slot is a button, and `primary` is read out
+    // of *button's* manifest when that element is audited as its own component.
+    // Judging it against the enclosing component's vocabulary reported
+    // `auth-form`'s buttons as invalid `login|register|forgot-password`, which
+    // is the parent's mode, not the child's appearance.
     for (const [partName, elements] of Object.entries(component.parts)) {
       for (const el of elements) {
+        if ("data-ui" in el.attrs && el.attrs["data-ui"]) continue;
         if ("data-variant" in el.attrs) {
           const value = el.attrs["data-variant"];
           // Check if this part has variant rules
@@ -679,25 +745,44 @@ export const ariaDescribedbyRule: AuditRule = {
   },
 };
 
+/**
+ * True when `el` has an accessible name a screen reader can announce: an
+ * explicit `aria-label`/`aria-labelledby`, or visible text inside it
+ * (task 0.9-04).
+ *
+ * The dialog and drawer references pair an icon-only "✕" that carries
+ * `aria-label` with a footer `<button data-part="close">Cancel</button>` that
+ * carries none — and needs none, because "Cancel" *is* the name. Demanding
+ * `aria-label` on both reported eleven correct buttons, and satisfying that
+ * demand would have been the worse outcome: an `aria-label` on a button with
+ * visible text overrides the text, so "Cancel" would be announced as "Close"
+ * and voice-control users could no longer say what they can read.
+ */
+function hasAccessibleName(el: ParsedElement): boolean {
+  if (el.attrs["aria-label"]?.trim()) return true;
+  if (el.attrs["aria-labelledby"]?.trim()) return true;
+  return textInSubtree(el).length > 0;
+}
+
 // ── Rule: close-label ──
-// Close buttons must have aria-label
+// Close buttons must have an accessible name
 export const closeLabelRule: AuditRule = {
   id: "close-label",
   severity: "warning",
-  description: "Close button is missing aria-label",
+  description: "Close button has no accessible name",
   check(component, _manifest) {
     const results: AuditResult[] = [];
 
     const closeButtons = component.parts["close"] || [];
     for (const btn of closeButtons) {
-      if (!("aria-label" in btn.attrs)) {
+      if (!hasAccessibleName(btn)) {
         results.push({
           rule_id: "close-label",
           severity: "warning",
           component_name: component.name,
           file: component.file,
           line: countLineFromEl(component, btn),
-          message: `[data-part="close"] button is missing aria-label`,
+          message: `[data-part="close"] button has no accessible name — give it text content or aria-label`,
           fix: {
             type: "add-attribute",
             offset: btn.tagEnd - 1,

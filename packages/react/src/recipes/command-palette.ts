@@ -11,7 +11,7 @@ import { createCommandPalette } from "../controllers/command-palette";
 /** Allowed `size` values (manifest variant group "size", attr `data-size` on panel). */
 export type LCommandPaletteSize = "sm" | "md" | "lg";
 
-export interface LCommandPaletteProps extends Omit<ComponentPropsWithoutRef<"div">, "id" | "size" | "overlay" | "panel" | "search" | "list" | "group" | "item" | "empty" | "kbd"> {
+export interface LCommandPaletteProps extends Omit<ComponentPropsWithoutRef<"div">, "id" | "size" | "overlay" | "panel" | "search" | "list" | "group" | "item" | "empty" | "kbd" | "search-wrapper" | "group-label" | "item-label"> {
   /** Root/ARIA id base; auto-generated per instance when unset. */
   id?: string;
   /** `data-size` on panel; omitted when unset (manifest default: "md"). */
@@ -32,6 +32,12 @@ export interface LCommandPaletteProps extends Omit<ComponentPropsWithoutRef<"div
   empty?: ReactNode;
   /** Content projected into the `[data-part="kbd"]` element. */
   kbd?: ReactNode;
+  /** Content projected into the `[data-part="search-wrapper"]` element. */
+  "search-wrapper"?: ReactNode;
+  /** Content projected into the `[data-part="group-label"]` element. */
+  "group-label"?: ReactNode;
+  /** Content projected into the `[data-part="item-label"]` element. */
+  "item-label"?: ReactNode;
 }
 
 /** `command-palette` — Cmd+K style modal command interface with search and keyboard navigation Exposes via ref: `open()`, `close()`, `filter()`, `selectItem()`, `registerCommand()`. */
@@ -40,13 +46,13 @@ export const LCommandPalette = createFaqirRecipe<LCommandPaletteProps>({
   create: createCommandPalette,
   methods: ["open", "close", "filter", "selectItem", "registerCommand"],
   events: [],
-  slots: ["overlay", "panel", "search", "list", "group", "item", "empty", "kbd"],
+  slots: ["overlay", "panel", "search", "list", "group", "item", "empty", "kbd", "search-wrapper", "group-label", "item-label"],
   stringProps: [],
   boolProps: [],
   variantProps: [
     { prop: "size", values: ["sm", "md", "lg"] },
   ],
-  tree: {"tag":"div","attrs":[["data-ui",["command-palette"]],["data-state",["closed"]]],"children":[{"tag":"div","attrs":[["data-part",["overlay"]],["hidden",true]],"children":[],"slot":"overlay"},{"tag":"div","attrs":[["data-part",["panel"]],["role",["dialog"]],["aria-modal",["true"]],["aria-label",["Command palette"]],["hidden",true]],"children":[{"tag":"div","attrs":[["data-part",["search-wrapper"]]],"children":[{"tag":"input","attrs":[["data-part",["search"]],["type",["text"]],["role",["combobox"]],["aria-expanded",["true"]],["aria-autocomplete",["list"]],["aria-controls",[{"p":"id"},"-list"]],["placeholder",["Type a command or search..."]]],"children":[],"slot":"search"}]},{"tag":"div","attrs":[["data-part",["list"]],["role",["listbox"]],["id",[{"p":"id"},"-list"]]],"children":[{"tag":"div","attrs":[["data-part",["group"]]],"children":[{"tag":"div","attrs":[["data-part",["group-label"]]],"children":[]},{"tag":"div","attrs":[["data-part",["item"]],["role",["option"]],["aria-selected",["false"]]],"children":[{"tag":"span","attrs":[["data-part",["item-label"]]],"children":[]},{"tag":"kbd","attrs":[["data-part",["kbd"]]],"children":[],"slot":"kbd"}],"slot":"item"}],"slot":"group"},{"tag":"div","attrs":[["data-part",["empty"]],["hidden",true]],"children":["No commands found"],"slot":"empty"}],"slot":"list"}],"slot":"panel","dyn":[["size","data-size"]]}]} as unknown as RecipeNode,
+  tree: {"tag":"div","attrs":[["data-ui",["command-palette"]],["data-state",["closed"]]],"children":[{"tag":"div","attrs":[["data-part",["overlay"]],["hidden",true]],"children":[],"slot":"overlay"},{"tag":"div","attrs":[["data-part",["panel"]],["role",["dialog"]],["aria-modal",["true"]],["aria-label",["Command palette"]],["hidden",true]],"children":[{"tag":"div","attrs":[["data-part",["search-wrapper"]]],"children":[{"tag":"input","attrs":[["data-part",["search"]],["type",["text"]],["role",["combobox"]],["aria-expanded",["true"]],["aria-autocomplete",["list"]],["aria-controls",[{"p":"id"},"-list"]],["placeholder",["Type a command or search..."]]],"children":[],"slot":"search"}],"slot":"search-wrapper"},{"tag":"div","attrs":[["data-part",["list"]],["role",["listbox"]],["id",[{"p":"id"},"-list"]]],"children":[{"tag":"div","attrs":[["data-part",["group"]]],"children":[{"tag":"div","attrs":[["data-part",["group-label"]]],"children":[],"slot":"group-label"},{"tag":"div","attrs":[["data-part",["item"]],["role",["option"]],["aria-selected",["false"]]],"children":[{"tag":"span","attrs":[["data-part",["item-label"]]],"children":[],"slot":"item-label"},{"tag":"kbd","attrs":[["data-part",["kbd"]]],"children":[],"slot":"kbd"}],"slot":"item"}],"slot":"group"},{"tag":"div","attrs":[["data-part",["empty"]],["hidden",true]],"children":["No commands found"],"slot":"empty"}],"slot":"list"}],"slot":"panel","dyn":[["size","data-size"]]}]} as unknown as RecipeNode,
 }, "LCommandPalette");
 
 export default LCommandPalette;

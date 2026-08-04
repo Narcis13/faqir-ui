@@ -7,7 +7,7 @@ import type { ComponentPropsWithoutRef, ReactNode } from "react";
 /** Allowed `size` values (manifest variant group "size", attr `data-size`). */
 export type LSwitchSize = "sm" | "md" | "lg";
 
-export interface LSwitchProps extends Omit<ComponentPropsWithoutRef<"button">, "size" | "on" | "disabled" | "label"> {
+export interface LSwitchProps extends Omit<ComponentPropsWithoutRef<"button">, "size" | "on" | "disabled" | "label" | "thumb"> {
   /** `data-size`; omitted when unset (manifest default: "md"). */
   size?: LSwitchSize;
   /** Sets `data-state="on"`. */
@@ -16,6 +16,8 @@ export interface LSwitchProps extends Omit<ComponentPropsWithoutRef<"button">, "
   disabled?: boolean;
   /** Projected into `<span data-part="label">`. */
   label?: ReactNode;
+  /** Projected into `<span data-part="thumb">`. */
+  thumb?: ReactNode;
 }
 
 /** `switch` — Toggle switch with on/off states, disabled state, and size variants */
@@ -31,6 +33,7 @@ export const LSwitch = createFaqirPrimitive<LSwitchProps>({
   ],
   slots: [
     { name: "label", tag: "span", required: false, isVoid: false },
+    { name: "thumb", tag: "span", required: false, isVoid: false },
   ],
   defaultSlot: true,
 }, "LSwitch");

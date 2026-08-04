@@ -1088,7 +1088,8 @@ Toggle switch with on/off states, disabled state, and size variants
 
 ```text
 [data-ui='switch']  ·  <button> · content: inline
-└─ [data-part='label']  <span>  optional  — Text label displayed next to the switch
+├─ [data-part='label']  <span>  optional  — Text label displayed next to the switch
+└─ [data-part='thumb']  <span>  optional  — The sliding knob the track moves; styled by switch.css, never authored empty
 ```
 
 **Variants**
@@ -1149,7 +1150,7 @@ Text and heading primitives with size, color, weight, alignment, and truncation 
 | Variant | Values | Default | Attribute | Applied to |
 |---------|--------|---------|-----------|------------|
 | variant | `default`, `muted`, `subtle`, `primary`, `mono` | `default` | `data-variant` | root |
-| size | `xs`, `sm`, `base`, `lg`, `xl`, `1`, `2`, `3`, `4`, `5`, `6` | `base` | `data-size` | root |
+| size | `xs`, `sm`, `base`, `lg`, `xl`, `2xl`, `3xl`, `4xl`, `1`, `2`, `3`, `4`, `5`, `6` | `base` | `data-size` | root |
 | weight | `normal`, `medium`, `semibold`, `bold` | `normal` | `data-weight` | root |
 | align | `left`, `center`, `right` | `left` | `data-align` | root |
 | leading | `tight`, `snug`, `normal`, `relaxed` | `normal` | `data-leading` | root |

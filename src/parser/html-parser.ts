@@ -27,6 +27,26 @@ export interface ParsedElement {
   column: number;
   children: ParsedElement[];
   parent: ParsedElement | null;
+  /**
+   * This element's own direct text (task 0.9-04) — the text nodes between its
+   * opening tag and its closing tag that belong to no child element, joined in
+   * source order and not trimmed. Descendant text lives on the descendants; use
+   * {@link textInSubtree} for the accessible-name question. Raw-text bodies
+   * (`<script>`/`<style>`) never reach here — the tokenizer masks them.
+   */
+  text: string;
+}
+
+/** Concatenated text of `el` and everything inside it, trimmed. */
+export function textInSubtree(el: ParsedElement): string {
+  let out = el.text;
+  const stack: ParsedElement[] = [...el.children];
+  while (stack.length > 0) {
+    const cur = stack.pop()!;
+    out += cur.text;
+    for (const child of cur.children) stack.push(child);
+  }
+  return out.trim();
 }
 
 export interface ParsedComponent {
@@ -36,6 +56,17 @@ export interface ParsedComponent {
   root: ParsedElement;
   /** All descendant elements with data-part attributes, keyed by part name */
   parts: Record<string, ParsedElement[]>;
+  /**
+   * Every `data-part` name that appears **anywhere** in this component's
+   * subtree, including parts another (nested) component claims — the answer to
+   * "is this slot filled?", which is a different question from "whose part is
+   * it?" (task 0.9-04). `auth-form` composes a `card` and puts its title in the
+   * card's header: the card *claims* that element (see `extractComponents`),
+   * but the auth-form's `title` slot is unambiguously filled all the same.
+   * Populated only when `extractComponents` is given a `declaresSlot`
+   * predicate; otherwise it mirrors `Object.keys(parts)`.
+   */
+  filledSlots: Set<string>;
   /** Source file path */
   file: string;
   /** Line number of the component root */
@@ -133,12 +164,18 @@ export function parseHTML(source: string): ParsedElement[] {
         column: token.column,
         children: [],
         parent: stack.length > 0 ? stack[stack.length - 1] : null,
+        text: "",
       };
 
       if (element.parent) element.parent.children.push(element);
       else roots.push(element);
 
       if (!selfClosing) stack.push(element);
+    } else if (token.type === "text") {
+      // Direct text of whatever element is currently open (task 0.9-04). Text
+      // outside every element is nobody's and is dropped, exactly as before.
+      const open = stack[stack.length - 1];
+      if (open) open.text += source.slice(token.start, token.end);
     } else if (token.type === "endTag") {
       // Pop back to the nearest matching open element; ignore if none.
       for (let i = stack.length - 1; i >= 0; i--) {
@@ -190,46 +227,119 @@ function findByAttr(roots: ParsedElement[], attr: string): ParsedElement[] {
  * descendants' parts attach to nothing (an empty `data-ui` is a nesting
  * boundary). A component root's own `data-part` counts toward its *parent*
  * component, matching the descendant-only collection it replaces.
+ *
+ * **Composition (`declaresSlot`, task 0.9-04).** "Nearest ancestor" is the right
+ * default but the wrong answer as soon as a component is *composed* out of
+ * another one: `auth-form` nests a `card` and puts its own `data-part="form"`
+ * inside it, so a nearest-ancestor read attributes `form` to the card (orphan)
+ * and reports `auth-form` as missing it (required-slot) — one authoring shape,
+ * two findings, neither of them a defect. Pass `declaresSlot` and the manifests
+ * decide, answering the two questions separately because they *are* two:
+ *
+ * - **Whose part is it?** (`parts`, and with it `orphan-part`, `required-aria`,
+ *   `valid-variant`, …) — the **nearest enclosing component that declares the
+ *   slot**, falling back to the nearest enclosing component when nobody declares
+ *   it, so an invented name still produces exactly one finding at the closest
+ *   owner. Nearest-*declaring* rather than nearest is the whole fix, and the
+ *   "nearest" half is what keeps it honest: `dashboard-shell` and `card` both
+ *   declare `header`, and a card's own header must stay the card's or the shell
+ *   demands `role="banner"` on every card in the page.
+ * - **Is the slot filled?** (`filledSlots`, used by `required-slot`) — is there a
+ *   `data-part` of that name **anywhere** in the subtree, claimed or not. The
+ *   `<h2 data-part="title">` in auth-form's card is the card's to style and the
+ *   auth-form's title all the same; both statements are true and neither rule
+ *   needs the other's answer.
+ *
+ * Without the predicate the function is byte-for-byte its old self, and
+ * `filledSlots` is just the key set of `parts`.
  */
-export function extractComponents(source: string, filePath: string): ParsedComponent[] {
+export function extractComponents(
+  source: string,
+  filePath: string,
+  declaresSlot?: (componentName: string, slotName: string) => boolean,
+): ParsedComponent[] {
   const roots = parseHTML(source);
   const components: ParsedComponent[] = [];
 
-  // Each stack frame pairs an element with the component that owns its parts
-  // (its nearest ancestor `data-ui`, or null when none / past a boundary).
-  const stack: Array<{ el: ParsedElement; owner: ParsedComponent | null }> = [];
-  for (let i = roots.length - 1; i >= 0; i--) stack.push({ el: roots[i], owner: null });
+  // Each stack frame pairs an element with the chain of components that may own
+  // its parts, innermost first. The chain is a cons list, not an array: pushing
+  // a component is O(1), so nesting depth costs nothing until a `data-part`
+  // actually walks it — and without `declaresSlot` only the head is ever read,
+  // which is the historical "nearest ancestor" rule at the historical cost.
+  type Chain = { component: ParsedComponent; outer: Chain | null };
+  const stack: Array<{ el: ParsedElement; owners: Chain | null }> = [];
+  for (let i = roots.length - 1; i >= 0; i--) stack.push({ el: roots[i], owners: null });
 
   while (stack.length > 0) {
-    const { el, owner } = stack.pop()!;
+    const { el, owners } = stack.pop()!;
 
-    // A data-part belongs to the nearest ancestor component (independent of
-    // whether this element itself opens a new one).
-    if (owner && "data-part" in el.attrs) {
+    // A data-part belongs to its owning component(s) — independent of whether
+    // this element itself opens a new one.
+    if (owners && "data-part" in el.attrs) {
       const partName = el.attrs["data-part"];
       if (partName) {
-        if (!owner.parts[partName]) owner.parts[partName] = [];
-        owner.parts[partName].push(el);
+        // Claim: nearest declaring owner, else the nearest owner outright.
+        let claimant = owners.component;
+        if (declaresSlot) {
+          for (let link: Chain | null = owners; link; link = link.outer) {
+            if (declaresSlot(link.component.name, partName)) {
+              claimant = link.component;
+              break;
+            }
+          }
+        }
+        if (!claimant.parts[partName]) claimant.parts[partName] = [];
+        claimant.parts[partName].push(el);
+
+        // Fill: every enclosing component, claim or no claim. Only walked when
+        // the caller asked for manifest-aware attribution; otherwise the head is
+        // the claimant and `filledSlots` stays the key set of `parts`.
+        if (declaresSlot) {
+          for (let link: Chain | null = owners; link; link = link.outer) {
+            link.component.filledSlots.add(partName);
+          }
+        } else {
+          owners.component.filledSlots.add(partName);
+        }
       }
     }
 
-    // Determine the owner passed down to this element's children.
-    let childOwner = owner;
+    // Determine the owner chain passed down to this element's children.
+    let childOwners = owners;
     if ("data-ui" in el.attrs) {
       const name = el.attrs["data-ui"];
       if (name) {
         // el.line is already computed once by the tokenizer (binary search) and
         // equals countLines(source, el.start); reusing it keeps this O(1) rather
         // than O(offset), so a document with many components stays linear.
-        childOwner = { name, root: el, parts: {}, file: filePath, line: el.line };
-        components.push(childOwner);
+        const component: ParsedComponent = {
+          name,
+          root: el,
+          parts: {},
+          filledSlots: new Set<string>(),
+          file: filePath,
+          line: el.line,
+        };
+        components.push(component);
+        // A root that carries a `data-part` its OWN manifest declares fills that
+        // slot for itself (task 0.9-04). `toast`'s reference is
+        // `<div data-ui="toast" data-part="container">` — the element is both the
+        // component and the region it declares — while `<div data-ui="dialog"
+        // data-part="edit-dialog">` inside a crud-table is unaffected, because
+        // `dialog` declares no `edit-dialog`. The part still counts toward the
+        // parent, as it always has; this only adds the self-answer.
+        if (declaresSlot) {
+          const own = el.attrs["data-part"];
+          if (own && declaresSlot(name, own)) component.filledSlots.add(own);
+        }
+        childOwners = { component, outer: owners };
       } else {
-        childOwner = null; // empty data-ui: a boundary that opens no component
+        childOwners = null; // empty data-ui: a boundary that opens no component
       }
     }
 
     for (let i = el.children.length - 1; i >= 0; i--) {
-      stack.push({ el: el.children[i], owner: childOwner });
+      stack.push({ el: el.children[i], owners: childOwners });
     }
   }
 

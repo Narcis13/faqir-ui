@@ -202,15 +202,33 @@ describe("Audit Rules", () => {
   <button data-part="trigger">Open</button>
   <div data-part="panel" role="dialog" aria-modal="true" aria-labelledby="t">
     <h2 data-part="title" id="t">Title</h2>
-    <button data-part="close">X</button>
+    <button data-part="close"><svg aria-hidden="true"></svg></button>
     <div data-part="body">Content</div>
   </div>
   <div data-part="overlay"></div>
 </div>`;
       const comps = getComponents(html);
       const results = requiredAriaRule.check(comps[0], DIALOG_MANIFEST);
-      const closeResult = results.find(r => r.message.includes("aria-label") && r.message.includes("close"));
+      const closeResult = results.find(r => r.message.includes("close") && r.message.includes("accessible name"));
       expect(closeResult).toBeDefined();
+    });
+
+    // Task 0.9-04: the requirement is an accessible NAME, not the aria-label
+    // attribute. Eleven of the registry's own close buttons are footer buttons
+    // reading "Cancel"/"Close", and adding aria-label to those would override
+    // the visible text — the announced name would stop matching the readable
+    // one, which is worse than the finding it silences.
+    it("accepts a close button whose visible text names it", () => {
+      const html = `
+<div data-ui="dialog" data-state="closed">
+  <div data-part="panel" role="dialog" aria-modal="true" aria-labelledby="t">
+    <h2 data-part="title" id="t">Title</h2>
+    <button data-part="close">Cancel</button>
+  </div>
+</div>`;
+      const comps = getComponents(html);
+      const results = requiredAriaRule.check(comps[0], DIALOG_MANIFEST);
+      expect(results.filter(r => r.message.includes("close"))).toHaveLength(0);
     });
 
     it("detects missing aria-labelledby on panel", () => {
@@ -436,16 +454,26 @@ describe("Audit Rules", () => {
       expect(results.length).toBe(0);
     });
 
-    it("warns when close button lacks aria-label", () => {
+    it("warns when a close button has no accessible name", () => {
       const html = `
 <div data-ui="dialog" data-state="closed">
-  <button data-part="close">X</button>
+  <button data-part="close"><svg aria-hidden="true"></svg></button>
 </div>`;
       const comps = getComponents(html);
       const results = closeLabelRule.check(comps[0], DIALOG_MANIFEST);
       expect(results.length).toBe(1);
       expect(results[0].severity).toBe("warning");
       expect(results[0].fix).toBeDefined();
+    });
+
+    it.each([
+      ["visible text", `<button data-part="close">Cancel</button>`],
+      ["aria-label", `<button data-part="close" aria-label="Close"></button>`],
+      ["aria-labelledby", `<button data-part="close" aria-labelledby="t"></button>`],
+      ["text nested in a child", `<button data-part="close"><span>Done</span></button>`],
+    ])("accepts a close button named by %s", (_label, button) => {
+      const comps = getComponents(`<div data-ui="dialog" data-state="closed">${button}</div>`);
+      expect(closeLabelRule.check(comps[0], DIALOG_MANIFEST)).toHaveLength(0);
     });
   });
 

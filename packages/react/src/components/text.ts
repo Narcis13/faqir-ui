@@ -8,7 +8,7 @@ import type { ComponentPropsWithoutRef } from "react";
 export type LTextVariant = "default" | "muted" | "subtle" | "primary" | "mono";
 
 /** Allowed `size` values (manifest variant group "size", attr `data-size`). */
-export type LTextSize = "xs" | "sm" | "base" | "lg" | "xl" | "1" | "2" | "3" | "4" | "5" | "6";
+export type LTextSize = "xs" | "sm" | "base" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "1" | "2" | "3" | "4" | "5" | "6";
 
 /** Allowed `weight` values (manifest variant group "weight", attr `data-weight`). */
 export type LTextWeight = "normal" | "medium" | "semibold" | "bold";
@@ -44,7 +44,7 @@ export const LText = createFaqirPrimitive<LTextProps>({
   tag: "p",
   variants: [
     { prop: "variant", attr: "data-variant", values: ["default", "muted", "subtle", "primary", "mono"] },
-    { prop: "size", attr: "data-size", values: ["xs", "sm", "base", "lg", "xl", "1", "2", "3", "4", "5", "6"] },
+    { prop: "size", attr: "data-size", values: ["xs", "sm", "base", "lg", "xl", "2xl", "3xl", "4xl", "1", "2", "3", "4", "5", "6"] },
     { prop: "weight", attr: "data-weight", values: ["normal", "medium", "semibold", "bold"] },
     { prop: "align", attr: "data-align", values: ["left", "center", "right"] },
     { prop: "leading", attr: "data-leading", values: ["tight", "snug", "normal", "relaxed"] },

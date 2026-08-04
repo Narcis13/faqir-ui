@@ -8,24 +8,19 @@ import type { FaqirEventHandler, RecipeNode } from "../recipe-runtime";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { createTable } from "../controllers/table";
 
-/** Allowed `bordered` values (manifest variant group "bordered", attr `data-variant` on root). */
-export type LTableBordered = "true" | "false";
-
 /** Allowed `size` values (manifest variant group "size", attr `data-size` on root). */
 export type LTableSize = "sm" | "md" | "lg";
 
-/** Allowed `striped` values (manifest variant group "striped", attr `data-variant` on root). */
-export type LTableStriped = "true" | "false";
+/** Allowed `variant` values (manifest variant group "variant", attr `data-variant` on root). */
+export type LTableVariant = "default" | "striped" | "bordered";
 
-export interface LTableProps extends Omit<ComponentPropsWithoutRef<"div">, "id" | "bordered" | "size" | "striped" | "table" | "thead" | "tbody" | "onCellEdit" | "onColReorder" | "onColResize" | "onColVisibility" | "onEditCancel" | "onEditStart" | "onFilter" | "onGroupToggle" | "onRowExpand" | "onRowReorder" | "onSelectionChange" | "onSort" | "onTreeToggle"> {
+export interface LTableProps extends Omit<ComponentPropsWithoutRef<"div">, "id" | "size" | "variant" | "table" | "thead" | "tbody" | "onCellEdit" | "onColReorder" | "onColResize" | "onColVisibility" | "onEditCancel" | "onEditStart" | "onFilter" | "onGroupToggle" | "onRowExpand" | "onRowReorder" | "onSelectionChange" | "onSort" | "onTreeToggle"> {
   /** Root/ARIA id base; auto-generated per instance when unset. */
   id?: string;
-  /** `data-variant` on root; omitted when unset (manifest default: "false"). */
-  bordered?: LTableBordered;
   /** `data-size` on root; omitted when unset (manifest default: "md"). */
   size?: LTableSize;
-  /** `data-variant` on root; omitted when unset (manifest default: "false"). */
-  striped?: LTableStriped;
+  /** `data-variant` on root; omitted when unset (manifest default: "default"). */
+  variant?: LTableVariant;
   /** Content projected into the `[data-part="table"]` element. */
   table?: ReactNode;
   /** Content projected into the `[data-part="thead"]` element. */
@@ -70,11 +65,10 @@ export const LTable = createFaqirRecipe<LTableProps>({
   stringProps: [],
   boolProps: [],
   variantProps: [
-    { prop: "bordered", values: ["true", "false"] },
     { prop: "size", values: ["sm", "md", "lg"] },
-    { prop: "striped", values: ["true", "false"] },
+    { prop: "variant", values: ["default", "striped", "bordered"] },
   ],
-  tree: {"tag":"div","attrs":[["data-ui",["table"]]],"children":[{"tag":"table","attrs":[["data-part",["table"]]],"children":[{"tag":"thead","attrs":[["data-part",["thead"]]],"children":[{"tag":"tr","attrs":[["data-part",["tr"]]],"children":[{"tag":"th","attrs":[["data-part",["th"]],["scope",["col"]]],"children":[{"tag":"input","attrs":[["data-part",["checkbox"]],["type",["checkbox"]],["aria-label",["Select all rows"]]],"children":[]}]},{"tag":"th","attrs":[["data-part",["th"]],["scope",["col"]],["data-sortable",true],["aria-sort",["none"]]],"children":[]},{"tag":"th","attrs":[["data-part",["th"]],["scope",["col"]],["data-sortable",true],["aria-sort",["none"]]],"children":[]}]}],"slot":"thead"},{"tag":"tbody","attrs":[["data-part",["tbody"]]],"children":[{"tag":"tr","attrs":[["data-part",["tr"]]],"children":[{"tag":"td","attrs":[["data-part",["td"]]],"children":[{"tag":"input","attrs":[["data-part",["checkbox"]],["type",["checkbox"]],["aria-label",["Select row"]]],"children":[]}]},{"tag":"td","attrs":[["data-part",["td"]]],"children":[]},{"tag":"td","attrs":[["data-part",["td"]]],"children":[]}]}],"slot":"tbody"}],"slot":"table"}],"dyn":[["size","data-size"],["striped","data-variant"],["bordered","data-variant"]]} as unknown as RecipeNode,
+  tree: {"tag":"div","attrs":[["data-ui",["table"]]],"children":[{"tag":"table","attrs":[["data-part",["table"]]],"children":[{"tag":"thead","attrs":[["data-part",["thead"]]],"children":[{"tag":"tr","attrs":[["data-part",["tr"]]],"children":[{"tag":"th","attrs":[["data-part",["th"]],["scope",["col"]]],"children":[{"tag":"input","attrs":[["data-part",["checkbox"]],["type",["checkbox"]],["aria-label",["Select all rows"]]],"children":[]}]},{"tag":"th","attrs":[["data-part",["th"]],["scope",["col"]],["data-sortable",true],["aria-sort",["none"]]],"children":[]},{"tag":"th","attrs":[["data-part",["th"]],["scope",["col"]],["data-sortable",true],["aria-sort",["none"]]],"children":[]}]}],"slot":"thead"},{"tag":"tbody","attrs":[["data-part",["tbody"]]],"children":[{"tag":"tr","attrs":[["data-part",["tr"]]],"children":[{"tag":"td","attrs":[["data-part",["td"]]],"children":[{"tag":"input","attrs":[["data-part",["checkbox"]],["type",["checkbox"]],["aria-label",["Select row"]]],"children":[]}]},{"tag":"td","attrs":[["data-part",["td"]]],"children":[]},{"tag":"td","attrs":[["data-part",["td"]]],"children":[]}]}],"slot":"tbody"}],"slot":"table"}],"dyn":[["size","data-size"],["variant","data-variant"]]} as unknown as RecipeNode,
 }, "LTable");
 
 export default LTable;

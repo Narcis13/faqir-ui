@@ -28,6 +28,7 @@ export const LSwitch = defineFaqirPrimitive<LSwitchProps>({
   ],
   slots: [
     { name: "label", tag: "span", required: false, isVoid: false },
+    { name: "thumb", tag: "span", required: false, isVoid: false },
   ],
   defaultSlot: true,
 });

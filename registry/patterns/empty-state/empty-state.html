@@ -1,6 +1,6 @@
 <!-- @ui:component empty-state -->
 <!-- @ui:kind pattern -->
-<!-- @ui:slots icon title description action secondary-action -->
+<!-- @ui:slots icon title description actions -->
 <!-- @ui:variants size=sm|md|lg -->
 
 <!-- Default (medium) -->
@@ -13,10 +13,8 @@
   </div>
   <h3 data-part="title">No items yet</h3>
   <p data-part="description">Get started by creating your first item. It only takes a moment.</p>
-  <div data-part="action">
+  <div data-part="actions">
     <button data-ui="button" data-variant="primary">Create Item</button>
-  </div>
-  <div data-part="secondary-action">
     <button data-ui="button" data-variant="ghost">Learn more</button>
   </div>
 </div>
@@ -30,13 +28,13 @@
   </div>
   <h3 data-part="title">No results</h3>
   <p data-part="description">Try adjusting your search or filters.</p>
-  <div data-part="action">
+  <div data-part="actions">
     <button data-ui="button" data-variant="outline" data-size="sm">Clear filters</button>
   </div>
 </div>
 
-<!-- Full (large) for page-level empty state -->
-<div data-ui="empty-state" data-size="lg">
+<!-- Full (default size) for page-level empty state -->
+<div data-ui="empty-state">
   <div data-part="icon">
     <svg width="64" height="64" viewBox="0 0 64 64" fill="none" aria-hidden="true">
       <circle cx="32" cy="32" r="30" stroke="currentColor" stroke-width="2" stroke-dasharray="4 4"/>
@@ -45,10 +43,8 @@
   </div>
   <h3 data-part="title">Welcome to your workspace</h3>
   <p data-part="description">This is where your projects will appear. Create your first project to get started, or explore the documentation to learn more.</p>
-  <div data-part="action">
+  <div data-part="actions">
     <button data-ui="button" data-variant="primary" data-size="lg">Create your first project</button>
-  </div>
-  <div data-part="secondary-action">
     <button data-ui="button" data-variant="ghost">Read documentation</button>
   </div>
 </div>

@@ -42,6 +42,8 @@ import { formatContextLlms, formatContextLlmsFull } from "../../src/generator/co
 import { BREAKPOINT_LIST } from "../../src/utils/breakpoints";
 import { LAYOUT_PRIMITIVES, RESPONSIVE_GRAMMAR } from "../../src/utils/layout";
 import { DOCUMENT_RULES } from "../../src/audit/rules";
+import { auditHtmlSource } from "../../src/audit/html-audit";
+import { loadRegistryManifestMap } from "../../src/utils/components";
 import { parseDocument } from "../../src/parser/html-parser";
 import { validateAgainstSchema } from "../../src/utils/json-schema";
 
@@ -409,6 +411,24 @@ describe("copy-for-agents payloads are standalone documents", () => {
         fragment,
       );
     }
+  });
+
+  // Task 0.9-04, the other half of the 0.7-17 contract. The fragment is exempt
+  // from the runtime-presence rules because it cannot carry a runtime; the
+  // payload is a real page that *does* carry one, so nothing is exempt here and
+  // the whole rule set has to pass. That is what makes the fragment exemption a
+  // scoping decision rather than a hole: the same markup, one step later, is
+  // held to everything.
+  it("is clean under the FULL rule set — nothing is exempt once it is a page", async () => {
+    const manifests = await loadRegistryManifestMap(join(import.meta.dir, "../../registry"));
+    const findings: string[] = [];
+    for (const c of withReference) {
+      const path = snippetPath(c.layer, c.name);
+      for (const r of auditHtmlSource({ source: file(path), file: path, manifests })) {
+        findings.push(`${path}:${r.line} [${r.severity}/${r.rule_id}] ${r.message}`);
+      }
+    }
+    expect(findings.join("\n")).toBe("");
   });
 
   it("is clean under the document rules, like the example pages it mirrors", () => {

@@ -5,13 +5,11 @@
   "kind": "pattern",
   "category": "composite",
   "description": "Application dashboard layout with sidebar navigation, header, and content area",
-
   "anatomy": {
     "tag": "div",
     "selector": "[data-ui='dashboard-shell']",
     "content_model": "slots"
   },
-
   "slots": {
     "sidebar": {
       "selector": "[data-part='sidebar']",
@@ -66,28 +64,81 @@
       "required": false,
       "tag_hint": "footer",
       "description": "Optional footer at the bottom of the content area"
+    },
+    "sidebar-toggle": {
+      "selector": "[data-part='sidebar-toggle']",
+      "required": false,
+      "tag_hint": "button",
+      "description": "Button collapsing the sidebar on narrow viewports"
+    },
+    "nav-icon": {
+      "selector": "[data-part='nav-icon']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Leading glyph of a nav-item"
+    },
+    "nav-label": {
+      "selector": "[data-part='nav-label']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Text of a nav-item, hidden when the sidebar is collapsed"
+    },
+    "sidebar-user": {
+      "selector": "[data-part='sidebar-user']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Account block pinned to the foot of the sidebar"
+    },
+    "sidebar-user-name": {
+      "selector": "[data-part='sidebar-user-name']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Display name inside sidebar-user"
+    },
+    "header-actions": {
+      "selector": "[data-part='header-actions']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Trailing cluster of header controls"
+    },
+    "metric": {
+      "selector": "[data-part='metric']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "A single KPI figure inside a content card"
+    },
+    "activity-item": {
+      "selector": "[data-part='activity-item']",
+      "required": false,
+      "tag_hint": "li",
+      "description": "One entry of the activity feed inside a content card"
     }
   },
-
   "variants": {
     "sidebar-position": {
-      "values": ["left", "right"],
+      "values": [
+        "left",
+        "right"
+      ],
       "default": "left",
       "attr": "data-variant",
       "applied_to": "root"
     },
     "sidebar-state": {
-      "values": ["expanded", "collapsed"],
+      "values": [
+        "expanded",
+        "collapsed"
+      ],
       "default": "expanded",
       "attr": "data-state",
       "applied_to": "sidebar"
     }
   },
-
   "states": {
-    "default": { "description": "Standard dashboard view with expanded sidebar" }
+    "default": {
+      "description": "Standard dashboard view with expanded sidebar"
+    }
   },
-
   "a11y": {
     "required_attrs": [
       "role=\"navigation\" on nav",
@@ -101,25 +152,48 @@
       "Escape": "close open dropdown menus"
     }
   },
-
   "tokens_used": [
-    "color-bg", "color-bg-subtle", "color-bg-muted", "color-fg", "color-fg-muted", "color-fg-subtle",
-    "color-border", "color-border-strong",
-    "color-primary", "color-primary-subtle", "color-primary-fg",
-    "space-2", "space-3", "space-4", "space-5", "space-6", "space-8", "space-12", "space-16",
-    "radius-md", "radius-lg",
-    "shadow-sm", "shadow-md",
-    "font-sans", "text-xs", "text-sm", "text-base", "text-lg",
-    "weight-medium", "weight-semibold",
-    "leading-tight", "leading-normal",
-    "duration-normal", "duration-slow", "ease-default", "ease-out",
+    "color-bg",
+    "color-bg-subtle",
+    "color-bg-muted",
+    "color-fg",
+    "color-fg-muted",
+    "color-fg-subtle",
+    "color-border",
+    "color-border-strong",
+    "color-primary",
+    "color-primary-subtle",
+    "color-primary-fg",
+    "space-2",
+    "space-3",
+    "space-4",
+    "space-5",
+    "space-6",
+    "space-8",
+    "space-12",
+    "space-16",
+    "radius-md",
+    "radius-lg",
+    "shadow-sm",
+    "shadow-md",
+    "font-sans",
+    "text-xs",
+    "text-sm",
+    "text-base",
+    "text-lg",
+    "weight-medium",
+    "weight-semibold",
+    "leading-tight",
+    "leading-normal",
+    "duration-normal",
+    "duration-slow",
+    "ease-default",
+    "ease-out",
     "z-sticky"
   ],
-
   "templates": {
     "html": "<div data-ui=\"dashboard-shell\">\n  <aside data-part=\"sidebar\" data-state=\"expanded\">\n    <div data-part=\"logo\">{logo}</div>\n    <nav data-part=\"nav\" aria-label=\"Main navigation\">\n      <a data-part=\"nav-item\" aria-current=\"page\">{item}</a>\n    </nav>\n  </aside>\n  <header data-part=\"header\">{header}</header>\n  <main data-part=\"content\">{content}</main>\n  <footer data-part=\"footer\">{footer}</footer>\n</div>"
   },
-
   "safe_transforms": [
     "toggle-sidebar-state",
     "change-sidebar-position",
@@ -130,7 +204,6 @@
     "change-logo",
     "restyle-sidebar-background"
   ],
-
   "unsafe_transforms": [
     "remove-sidebar",
     "remove-header",
@@ -138,18 +211,23 @@
     "remove-nav-role",
     "flatten-layout"
   ],
-
   "composition": {
-    "contains": ["card", "grid", "avatar", "dropdown", "button", "separator", "badge"],
+    "contains": [
+      "card",
+      "grid",
+      "avatar",
+      "dropdown",
+      "button",
+      "separator",
+      "badge"
+    ],
     "used_in": []
   },
-
   "files": {
     "html": "dashboard-shell.html",
     "css": "dashboard-shell.css",
     "manifest": "dashboard-shell.manifest.json"
   },
-
   "tests": [
     "renders-as-div-with-data-ui-dashboard-shell",
     "sidebar-slot-is-required",
@@ -166,7 +244,6 @@
     "contains-avatar-component",
     "contains-dropdown-component"
   ],
-
   "changes": [
     {
       "version": "1.1.0",

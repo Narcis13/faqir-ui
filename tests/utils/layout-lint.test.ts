@@ -314,6 +314,53 @@ describe("the ratchet", () => {
     expect(cmp.regressions[0].pages).toEqual(["c.html (new)"]);
   });
 
+  // Task 0.9-04's first acceptance criterion. 0.9-02 and 0.9-03 drove seams and
+  // zero-gutter pages to zero; what makes that permanent is that the committed
+  // floor IS zero and the ratchet fails a single seam appearing anywhere — a
+  // budget of 0 is not a special case in `compareBudget`, and this pins that.
+  it("holds a floor of zero: one new seam on one page fails", () => {
+    const floor = budgetOf(
+      { pages: 2, zeroGutterPages: 0, seamPages: 0, seams: 0, bleeds: 7, overlaps: 3 },
+      {
+        "a.html": { zeroGutter: false, seams: 0, bleeds: 7, overlaps: 3 },
+        "b.html": { zeroGutter: false, seams: 0, bleeds: 0, overlaps: 0 },
+      },
+    );
+    expect(compareBudget(floor, floor).ok).toBe(true);
+
+    const oneSeam = budgetOf(
+      { pages: 2, zeroGutterPages: 0, seamPages: 1, seams: 1, bleeds: 7, overlaps: 3 },
+      {
+        "a.html": { zeroGutter: false, seams: 0, bleeds: 7, overlaps: 3 },
+        "b.html": { zeroGutter: false, seams: 1, bleeds: 0, overlaps: 0 },
+      },
+    );
+    const cmp = compareBudget(oneSeam, floor);
+    expect(cmp.ok).toBe(false);
+    expect(cmp.regressions.map((r) => r.count)).toEqual(["seamPages", "seams"]);
+    for (const r of cmp.regressions) expect(r.pages).toEqual(["b.html"]);
+
+    const oneGutter = budgetOf(
+      { pages: 2, zeroGutterPages: 1, seamPages: 0, seams: 0, bleeds: 7, overlaps: 3 },
+      {
+        "a.html": { zeroGutter: true, seams: 0, bleeds: 7, overlaps: 3 },
+        "b.html": { zeroGutter: false, seams: 0, bleeds: 0, overlaps: 0 },
+      },
+    );
+    expect(compareBudget(oneGutter, floor).ok).toBe(false);
+  });
+
+  // The committed file, not a fixture: the library's own floor is zero today.
+  it("has zero as the committed floor for seams and zero-gutter pages", async () => {
+    const committed = (await import("../visual/layout-budget.json")).default as unknown as {
+      totals: Record<string, number>;
+    };
+    expect(committed.totals.seams).toBe(0);
+    expect(committed.totals.seamPages).toBe(0);
+    expect(committed.totals.zeroGutterPages).toBe(0);
+    expect(committed.totals.pages).toBeGreaterThanOrEqual(180);
+  });
+
   it("never ratchets the page count — adding a clean page is not a regression", () => {
     expect(RATCHETED).not.toContain("pages");
     const grown = budgetOf(

@@ -5,7 +5,6 @@
   "kind": "recipe",
   "category": "data-display",
   "description": "Advanced data table: multi-column type-aware sorting, global + per-column filtering, tree data and collapsible row groups with live aggregates, inline cell editing with Intl number/currency formatting, drag-and-drop row and column reordering, column resize/hide/pin, sticky header/footer/rows, grid keyboard navigation, CSV export, responsive stacked mode, and state persistence — every feature opt-in via data attributes",
-
   "changes": [
     {
       "version": "3.1.0",
@@ -23,13 +22,11 @@
       "breaking": false
     }
   ],
-
   "anatomy": {
     "tag": "div",
     "selector": "[data-ui='table']",
     "content_model": "slots"
   },
-
   "slots": {
     "table": {
       "selector": "[data-part='table']",
@@ -146,34 +143,41 @@
       "description": "Column resize grip (injected by the controller when the root has data-resizable)"
     }
   },
-
   "variants": {
-    "striped": {
-      "values": ["true", "false"],
-      "default": "false",
+    "variant": {
+      "values": [
+        "default",
+        "striped",
+        "bordered"
+      ],
+      "default": "default",
       "attr": "data-variant",
-      "value": "striped",
-      "applied_to": "root"
-    },
-    "bordered": {
-      "values": ["true", "false"],
-      "default": "false",
-      "attr": "data-variant",
-      "value": "bordered",
       "applied_to": "root"
     },
     "size": {
-      "values": ["sm", "md", "lg"],
+      "values": [
+        "sm",
+        "md",
+        "lg"
+      ],
       "default": "md",
       "attr": "data-size",
       "applied_to": "root"
     }
   },
-
   "states": {
-    "default": { "attr": "data-state=\"default\"", "default": true },
-    "expanded": { "attr": "data-state=\"expanded\"", "applied_to": "group-header" },
-    "collapsed": { "attr": "data-state=\"collapsed\"", "applied_to": "group-header" },
+    "default": {
+      "attr": "data-state=\"default\"",
+      "default": true
+    },
+    "expanded": {
+      "attr": "data-state=\"expanded\"",
+      "applied_to": "group-header"
+    },
+    "collapsed": {
+      "attr": "data-state=\"collapsed\"",
+      "applied_to": "group-header"
+    },
     "selected": {
       "attr": "data-selected",
       "applied_to": "tr",
@@ -260,47 +264,153 @@
       "description": "The cell that carries the tree indentation (--table-level) and the expander, in a data-tree table"
     }
   },
-
   "props": {
-    "selectable": { "type": "string", "default": "", "description": "data-selectable[='single|multi'] on root: row click (de)selects; checkboxes, shift-ranges and the header select-all work regardless" },
-    "align": { "type": "string", "default": "left", "description": "Cell alignment: left, center, right (data-align attribute; th values are mirrored to their column)" },
-    "format": { "type": "string", "default": "", "description": "Number format: number, currency, percent, date (data-format). Cells with data-value are rendered via Intl using data-locale/data-currency on the root" },
-    "print": { "type": "string", "default": "", "description": "Print mode: compact (data-print attribute)" },
-    "multi-sort": { "type": "boolean", "default": false, "description": "data-multi-sort on root: shift+click accumulates secondary sorts (numbered badges on headers)" },
-    "sort-cycle": { "type": "string", "default": "toggle", "description": "data-sort-cycle='tristate' on root: third header click clears the sort and restores original order" },
-    "editable": { "type": "boolean", "default": false, "description": "data-editable on root enables inline editing (dblclick / Enter / F2). Restrict columns by marking th data-editable, exclude with data-readonly" },
-    "tree": { "type": "boolean", "default": false, "description": "data-tree on root: rows with data-level form a treegrid; parents get expanders, sorting stays within siblings, aggregates roll up descendants" },
-    "groupable": { "type": "boolean", "default": false, "description": "data-groupable on root: group-header rows toggle their section collapsed/expanded" },
-    "reorderable": { "type": "boolean", "default": false, "description": "data-reorderable on root: rows drag via [data-part='drag-handle'] (pointer or arrow keys); tree rows reorder among siblings with subtrees attached" },
-    "col-reorderable": { "type": "boolean", "default": false, "description": "data-col-reorderable on root: drag column headers to rearrange columns (Alt+Arrow with keyboard focus)" },
-    "resizable": { "type": "boolean", "default": false, "description": "data-resizable on root: drag the injected header handles (Ctrl+Shift+Arrow with keyboard focus); th data-min-width/data-max-width clamp in px" },
-    "sticky-header": { "type": "boolean", "default": false, "description": "data-sticky-header on root: thead sticks while the root scrolls (cap height with --table-max-height)" },
-    "sticky-footer": { "type": "boolean", "default": false, "description": "data-sticky-footer on root: tfoot sticks to the bottom of the scrolling root" },
-    "navigable": { "type": "boolean", "default": false, "description": "data-navigable on root (implied by data-editable): roving-focus grid keyboard navigation (arrows, Home/End, PageUp/Down, Space selects, Enter/F2 edits or toggles)" },
-    "responsive": { "type": "string", "default": "", "description": "data-responsive='stack' re-renders rows as labelled cards below the data-stack-below breakpoint (default md); any data-responsive value makes the root a container query root and enables data-hide-below column hiding" },
+    "selectable": {
+      "type": "string",
+      "default": "",
+      "description": "data-selectable[='single|multi'] on root: row click (de)selects; checkboxes, shift-ranges and the header select-all work regardless"
+    },
+    "align": {
+      "type": "string",
+      "default": "left",
+      "description": "Cell alignment: left, center, right (data-align attribute; th values are mirrored to their column)"
+    },
+    "format": {
+      "type": "string",
+      "default": "",
+      "description": "Number format: number, currency, percent, date (data-format). Cells with data-value are rendered via Intl using data-locale/data-currency on the root"
+    },
+    "print": {
+      "type": "string",
+      "default": "",
+      "description": "Print mode: compact (data-print attribute)"
+    },
+    "multi-sort": {
+      "type": "boolean",
+      "default": false,
+      "description": "data-multi-sort on root: shift+click accumulates secondary sorts (numbered badges on headers)"
+    },
+    "sort-cycle": {
+      "type": "string",
+      "default": "toggle",
+      "description": "data-sort-cycle='tristate' on root: third header click clears the sort and restores original order"
+    },
+    "editable": {
+      "type": "boolean",
+      "default": false,
+      "description": "data-editable on root enables inline editing (dblclick / Enter / F2). Restrict columns by marking th data-editable, exclude with data-readonly"
+    },
+    "tree": {
+      "type": "boolean",
+      "default": false,
+      "description": "data-tree on root: rows with data-level form a treegrid; parents get expanders, sorting stays within siblings, aggregates roll up descendants"
+    },
+    "groupable": {
+      "type": "boolean",
+      "default": false,
+      "description": "data-groupable on root: group-header rows toggle their section collapsed/expanded"
+    },
+    "reorderable": {
+      "type": "boolean",
+      "default": false,
+      "description": "data-reorderable on root: rows drag via [data-part='drag-handle'] (pointer or arrow keys); tree rows reorder among siblings with subtrees attached"
+    },
+    "col-reorderable": {
+      "type": "boolean",
+      "default": false,
+      "description": "data-col-reorderable on root: drag column headers to rearrange columns (Alt+Arrow with keyboard focus)"
+    },
+    "resizable": {
+      "type": "boolean",
+      "default": false,
+      "description": "data-resizable on root: drag the injected header handles (Ctrl+Shift+Arrow with keyboard focus); th data-min-width/data-max-width clamp in px"
+    },
+    "sticky-header": {
+      "type": "boolean",
+      "default": false,
+      "description": "data-sticky-header on root: thead sticks while the root scrolls (cap height with --table-max-height)"
+    },
+    "sticky-footer": {
+      "type": "boolean",
+      "default": false,
+      "description": "data-sticky-footer on root: tfoot sticks to the bottom of the scrolling root"
+    },
+    "navigable": {
+      "type": "boolean",
+      "default": false,
+      "description": "data-navigable on root (implied by data-editable): roving-focus grid keyboard navigation (arrows, Home/End, PageUp/Down, Space selects, Enter/F2 edits or toggles)"
+    },
+    "responsive": {
+      "type": "string",
+      "default": "",
+      "description": "data-responsive='stack' re-renders rows as labelled cards below the data-stack-below breakpoint (default md); any data-responsive value makes the root a container query root and enables data-hide-below column hiding"
+    },
     "stack-below": {
       "type": "enum",
-      "values": ["sm", "md", "lg"],
+      "values": [
+        "sm",
+        "md",
+        "lg"
+      ],
       "default": "md",
       "attr": "data-stack-below",
       "description": "data-stack-below on root (with data-responsive='stack'): the canon tier under which rows re-render as labelled cards — sm 640px, md 768px, lg 1024px, measured on the table's own width, not the viewport. A raw pixel number is still accepted as an escape hatch (data-stack-below='480')."
     },
     "hide-below": {
       "type": "enum",
-      "values": ["sm", "md", "lg"],
+      "values": [
+        "sm",
+        "md",
+        "lg"
+      ],
       "default": "",
       "attr": "data-hide-below",
       "description": "data-hide-below on a th (mirrored onto that column's cells): the column is hidden until the table's own inline size reaches that canon tier — sm 40rem, md 48rem, lg 64rem. Requires data-responsive on the root; stacked mode shows every column regardless."
     },
-    "persist": { "type": "string", "default": "", "description": "data-persist='key' on root: sorts, filters, column widths and visibility survive reloads via localStorage" },
-    "locale": { "type": "string", "default": "", "description": "data-locale on root for Intl formatting (defaults to the document language)" },
-    "currency": { "type": "string", "default": "USD", "description": "data-currency on root for currency-formatted cells" },
-    "negatives": { "type": "string", "default": "", "description": "data-negatives='red|parens|both' on root: negative numbers render red and/or in accounting parentheses" },
-    "sortable": { "type": "boolean", "default": false, "attr": "data-sortable", "description": "On a th: this column can be sorted — the controller makes the header interactive, mirrors aria-sort, and draws the direction indicator" },
-    "readonly": { "type": "boolean", "default": false, "attr": "data-readonly", "description": "On a th or td: exempt from inline editing even when the table is data-editable" },
-    "pin": { "type": "enum", "values": ["start", "end", "top"], "default": "", "attr": "data-pin", "description": "Freeze a column against the inline-start or inline-end edge (on a th; the controller mirrors it onto that column's cells), or a row against the top of the scroll area (on a tr)" }
+    "persist": {
+      "type": "string",
+      "default": "",
+      "description": "data-persist='key' on root: sorts, filters, column widths and visibility survive reloads via localStorage"
+    },
+    "locale": {
+      "type": "string",
+      "default": "",
+      "description": "data-locale on root for Intl formatting (defaults to the document language)"
+    },
+    "currency": {
+      "type": "string",
+      "default": "USD",
+      "description": "data-currency on root for currency-formatted cells"
+    },
+    "negatives": {
+      "type": "string",
+      "default": "",
+      "description": "data-negatives='red|parens|both' on root: negative numbers render red and/or in accounting parentheses"
+    },
+    "sortable": {
+      "type": "boolean",
+      "default": false,
+      "attr": "data-sortable",
+      "description": "On a th: this column can be sorted — the controller makes the header interactive, mirrors aria-sort, and draws the direction indicator"
+    },
+    "readonly": {
+      "type": "boolean",
+      "default": false,
+      "attr": "data-readonly",
+      "description": "On a th or td: exempt from inline editing even when the table is data-editable"
+    },
+    "pin": {
+      "type": "enum",
+      "values": [
+        "start",
+        "end",
+        "top"
+      ],
+      "default": "",
+      "attr": "data-pin",
+      "description": "Freeze a column against the inline-start or inline-end edge (on a th; the controller mirrors it onto that column's cells), or a row against the top of the scroll area (on a tr)"
+    }
   },
-
   "a11y": {
     "required_attrs": [
       "Proper table semantics (table, thead, tbody, tr, th, td)",
@@ -325,25 +435,45 @@
       "Ctrl+Shift+ArrowLeft/Right on a header": "resize the column (data-resizable)"
     }
   },
-
   "tokens_used": [
-    "color-bg", "color-bg-subtle", "color-bg-muted", "color-fg", "color-fg-muted", "color-fg-subtle",
-    "color-border", "color-border-strong", "color-primary", "color-primary-subtle", "color-ring",
-    "color-destructive", "color-destructive-subtle",
-    "space-0h", "space-1", "space-2", "space-3", "space-4", "space-5", "space-8",
-    "text-xs", "text-sm",
-    "weight-semibold", "weight-bold",
-    "radius-sm", "radius-md", "radius-full",
-    "duration-fast", "ease-default",
-    "doc-table-footer-bg", "doc-table-footer-weight", "doc-print-border-color"
+    "color-bg",
+    "color-bg-subtle",
+    "color-bg-muted",
+    "color-fg",
+    "color-fg-muted",
+    "color-fg-subtle",
+    "color-border",
+    "color-border-strong",
+    "color-primary",
+    "color-primary-subtle",
+    "color-ring",
+    "color-destructive",
+    "color-destructive-subtle",
+    "space-0h",
+    "space-1",
+    "space-2",
+    "space-3",
+    "space-4",
+    "space-5",
+    "space-8",
+    "text-xs",
+    "text-sm",
+    "weight-semibold",
+    "weight-bold",
+    "radius-sm",
+    "radius-md",
+    "radius-full",
+    "duration-fast",
+    "ease-default",
+    "doc-table-footer-bg",
+    "doc-table-footer-weight",
+    "doc-print-border-color"
   ],
-
   "templates": {
     "html": "<div data-ui=\"table\" data-size=\"{size}\">\n  <table data-part=\"table\">\n    <thead data-part=\"thead\">\n      <tr data-part=\"tr\">\n        <th data-part=\"th\" scope=\"col\"><input data-part=\"checkbox\" type=\"checkbox\" aria-label=\"Select all rows\"></th>\n        <th data-part=\"th\" scope=\"col\" data-sortable aria-sort=\"none\">{col1}</th>\n        <th data-part=\"th\" scope=\"col\" data-sortable aria-sort=\"none\">{col2}</th>\n      </tr>\n    </thead>\n    <tbody data-part=\"tbody\">\n      <tr data-part=\"tr\">\n        <td data-part=\"td\"><input data-part=\"checkbox\" type=\"checkbox\" aria-label=\"Select row\"></td>\n        <td data-part=\"td\">{val1}</td>\n        <td data-part=\"td\">{val2}</td>\n      </tr>\n    </tbody>\n  </table>\n</div>",
     "html_financial": "<div data-ui=\"table\" data-variant=\"bordered\" data-size=\"md\" data-editable data-multi-sort data-currency=\"USD\" data-negatives=\"both\" data-sticky-header style=\"--table-max-height: 420px\">\n  <table data-part=\"table\">\n    <thead data-part=\"thead\">\n      <tr data-part=\"tr\">\n        <th data-part=\"th\" scope=\"col\" data-sortable aria-sort=\"none\">{account}</th>\n        <th data-part=\"th\" scope=\"col\" data-sortable aria-sort=\"none\" data-format=\"currency\" data-editable>{debit}</th>\n        <th data-part=\"th\" scope=\"col\" data-sortable aria-sort=\"none\" data-format=\"currency\" data-editable>{credit}</th>\n      </tr>\n      <tr data-part=\"filter-row\">\n        <td data-part=\"td\"><input data-part=\"filter-input\" type=\"text\" aria-label=\"Filter {account}\"></td>\n        <td data-part=\"td\"><input data-part=\"filter-input\" type=\"text\" aria-label=\"Filter {debit}\"></td>\n        <td data-part=\"td\"><input data-part=\"filter-input\" type=\"text\" aria-label=\"Filter {credit}\"></td>\n      </tr>\n    </thead>\n    <tbody data-part=\"tbody\">\n      <tr data-part=\"tr\">\n        <td data-part=\"td\">{row_account}</td>\n        <td data-part=\"td\" data-format=\"currency\" data-value=\"{row_debit}\"></td>\n        <td data-part=\"td\" data-format=\"currency\" data-value=\"{row_credit}\"></td>\n      </tr>\n      <tr data-part=\"empty\" hidden><td data-part=\"td\" colspan=\"3\">No matching entries</td></tr>\n    </tbody>\n    <tfoot data-part=\"tfoot\">\n      <tr data-part=\"tr\">\n        <td data-part=\"td\" data-align=\"right\">Total</td>\n        <td data-part=\"td\" data-format=\"currency\" data-aggregate=\"sum\"></td>\n        <td data-part=\"td\" data-format=\"currency\" data-aggregate=\"sum\"></td>\n      </tr>\n    </tfoot>\n  </table>\n</div>",
     "html_tree": "<div data-ui=\"table\" data-tree data-size=\"md\">\n  <table data-part=\"table\">\n    <thead data-part=\"thead\">\n      <tr data-part=\"tr\">\n        <th data-part=\"th\" scope=\"col\">{name}</th>\n        <th data-part=\"th\" scope=\"col\" data-format=\"currency\">{amount}</th>\n      </tr>\n    </thead>\n    <tbody data-part=\"tbody\">\n      <tr data-part=\"tr\" data-level=\"0\"><td data-part=\"td\">{parent}</td><td data-part=\"td\" data-format=\"currency\" data-aggregate=\"sum\"></td></tr>\n      <tr data-part=\"tr\" data-level=\"1\"><td data-part=\"td\">{child}</td><td data-part=\"td\" data-format=\"currency\" data-value=\"{child_amount}\"></td></tr>\n    </tbody>\n  </table>\n</div>"
   },
-
   "safe_transforms": [
     "add-column",
     "remove-column",
@@ -379,7 +509,6 @@
     "set-locale-currency",
     "toggle-responsive-stack"
   ],
-
   "unsafe_transforms": [
     "remove-table-semantics",
     "remove-scope-col",
@@ -392,19 +521,23 @@
     "mix-tree-and-groupable-modes",
     "put-data-level-on-group-headers"
   ],
-
   "composition": {
-    "contains": ["checkbox", "badge", "button", "input"],
-    "used_in": ["crud-table"]
+    "contains": [
+      "checkbox",
+      "badge",
+      "button",
+      "input"
+    ],
+    "used_in": [
+      "crud-table"
+    ]
   },
-
   "files": {
     "html": "table.html",
     "css": "table.css",
     "js": "table.js",
     "manifest": "table.manifest.json"
   },
-
   "tests": [
     "renders-table-with-proper-semantics",
     "th-has-scope-col",

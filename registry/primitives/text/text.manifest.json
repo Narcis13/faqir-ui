@@ -5,7 +5,6 @@
   "kind": "primitive",
   "category": "typography",
   "description": "Text and heading primitives with size, color, weight, alignment, and truncation via data attributes",
-
   "changes": [
     {
       "version": "1.1.0",
@@ -13,44 +12,75 @@
       "breaking": false
     }
   ],
-
   "anatomy": {
     "tag": "p",
     "selector": "[data-ui='text'], [data-ui='heading']",
     "content_model": "text"
   },
-
   "slots": {},
-
   "variants": {
     "variant": {
-      "values": ["default", "muted", "subtle", "primary", "mono"],
+      "values": [
+        "default",
+        "muted",
+        "subtle",
+        "primary",
+        "mono"
+      ],
       "default": "default",
       "attr": "data-variant",
       "applied_to": "root"
     },
     "size": {
-      "values": ["xs", "sm", "base", "lg", "xl", "1", "2", "3", "4", "5", "6"],
+      "values": [
+        "xs",
+        "sm",
+        "base",
+        "lg",
+        "xl",
+        "2xl",
+        "3xl",
+        "4xl",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6"
+      ],
       "default": "base",
       "attr": "data-size"
     },
     "weight": {
-      "values": ["normal", "medium", "semibold", "bold"],
+      "values": [
+        "normal",
+        "medium",
+        "semibold",
+        "bold"
+      ],
       "default": "normal",
       "attr": "data-weight"
     },
     "align": {
-      "values": ["left", "center", "right"],
+      "values": [
+        "left",
+        "center",
+        "right"
+      ],
       "default": "left",
       "attr": "data-align"
     },
     "leading": {
-      "values": ["tight", "snug", "normal", "relaxed"],
+      "values": [
+        "tight",
+        "snug",
+        "normal",
+        "relaxed"
+      ],
       "default": "normal",
       "attr": "data-leading"
     }
   },
-
   "states": {
     "done": {
       "attr": "data-state=\"done\"",
@@ -58,28 +88,50 @@
       "description": "Completed item — strikes the text through and drops it to the subtle foreground (checklists, todo rows)"
     }
   },
-
   "props": {
-    "truncate": { "type": "boolean", "default": false, "attr": "data-truncate", "description": "Clip overflowing text to a single line with an ellipsis" },
-    "tabular": { "type": "boolean", "default": false, "attr": "data-tabular", "description": "Lay the text out as an aligned column at least --text-tabular-width wide (8ch by default) with tabular figures — for label/value lists" }
+    "truncate": {
+      "type": "boolean",
+      "default": false,
+      "attr": "data-truncate",
+      "description": "Clip overflowing text to a single line with an ellipsis"
+    },
+    "tabular": {
+      "type": "boolean",
+      "default": false,
+      "attr": "data-tabular",
+      "description": "Lay the text out as an aligned column at least --text-tabular-width wide (8ch by default) with tabular figures — for label/value lists"
+    }
   },
-
   "a11y": {
     "keyboard": {}
   },
-
   "tokens_used": [
-    "color-fg", "color-fg-muted", "color-fg-subtle", "color-primary",
-    "font-sans", "font-mono",
-    "text-xs", "text-sm", "text-base", "text-lg", "text-xl", "text-2xl", "text-3xl", "text-4xl",
-    "weight-normal", "weight-medium", "weight-semibold", "weight-bold",
-    "leading-tight", "leading-snug", "leading-normal", "leading-relaxed"
+    "color-fg",
+    "color-fg-muted",
+    "color-fg-subtle",
+    "color-primary",
+    "font-sans",
+    "font-mono",
+    "text-xs",
+    "text-sm",
+    "text-base",
+    "text-lg",
+    "text-xl",
+    "text-2xl",
+    "text-3xl",
+    "text-4xl",
+    "weight-normal",
+    "weight-medium",
+    "weight-semibold",
+    "weight-bold",
+    "leading-tight",
+    "leading-snug",
+    "leading-normal",
+    "leading-relaxed"
   ],
-
   "templates": {
     "html": "<p data-ui=\"text\" data-size=\"{size}\" data-variant=\"{variant}\">{content}</p>"
   },
-
   "safe_transforms": [
     "Change data-size to any listed value",
     "Change data-variant to any listed value",
@@ -91,18 +143,15 @@
   "unsafe_transforms": [
     "Remove data-ui attribute"
   ],
-
   "composition": {
     "contains": [],
     "used_in": []
   },
-
   "files": {
     "html": "text.html",
     "css": "text.css",
     "manifest": "text.manifest.json"
   },
-
   "tests": [
     "Heading sizes map to correct font-size",
     "Text variants change color",

@@ -1631,7 +1631,7 @@ import type { ComponentPropsWithoutRef, ReactNode } from "react";
 /** Allowed \`size\` values (manifest variant group "size", attr \`data-size\`). */
 export type LSwitchSize = "sm" | "md" | "lg";
 
-export interface LSwitchProps extends Omit<ComponentPropsWithoutRef<"button">, "size" | "on" | "disabled" | "label"> {
+export interface LSwitchProps extends Omit<ComponentPropsWithoutRef<"button">, "size" | "on" | "disabled" | "label" | "thumb"> {
   /** \`data-size\`; omitted when unset (manifest default: "md"). */
   size?: LSwitchSize;
   /** Sets \`data-state="on"\`. */
@@ -1640,6 +1640,8 @@ export interface LSwitchProps extends Omit<ComponentPropsWithoutRef<"button">, "
   disabled?: boolean;
   /** Projected into \`<span data-part="label">\`. */
   label?: ReactNode;
+  /** Projected into \`<span data-part="thumb">\`. */
+  thumb?: ReactNode;
 }
 
 /** \`switch\` — Toggle switch with on/off states, disabled state, and size variants */
@@ -1655,6 +1657,7 @@ export const LSwitch = createFaqirPrimitive<LSwitchProps>({
   ],
   slots: [
     { name: "label", tag: "span", required: false, isVoid: false },
+    { name: "thumb", tag: "span", required: false, isVoid: false },
   ],
   defaultSlot: true,
 }, "LSwitch");
@@ -1711,7 +1714,7 @@ import type { ComponentPropsWithoutRef } from "react";
 export type LTextVariant = "default" | "muted" | "subtle" | "primary" | "mono";
 
 /** Allowed \`size\` values (manifest variant group "size", attr \`data-size\`). */
-export type LTextSize = "xs" | "sm" | "base" | "lg" | "xl" | "1" | "2" | "3" | "4" | "5" | "6";
+export type LTextSize = "xs" | "sm" | "base" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "1" | "2" | "3" | "4" | "5" | "6";
 
 /** Allowed \`weight\` values (manifest variant group "weight", attr \`data-weight\`). */
 export type LTextWeight = "normal" | "medium" | "semibold" | "bold";
@@ -1747,7 +1750,7 @@ export const LText = createFaqirPrimitive<LTextProps>({
   tag: "p",
   variants: [
     { prop: "variant", attr: "data-variant", values: ["default", "muted", "subtle", "primary", "mono"] },
-    { prop: "size", attr: "data-size", values: ["xs", "sm", "base", "lg", "xl", "1", "2", "3", "4", "5", "6"] },
+    { prop: "size", attr: "data-size", values: ["xs", "sm", "base", "lg", "xl", "2xl", "3xl", "4xl", "1", "2", "3", "4", "5", "6"] },
     { prop: "weight", attr: "data-weight", values: ["normal", "medium", "semibold", "bold"] },
     { prop: "align", attr: "data-align", values: ["left", "center", "right"] },
     { prop: "leading", attr: "data-leading", values: ["tight", "snug", "normal", "relaxed"] },
@@ -2038,7 +2041,7 @@ export type { LSidebarProps } from "./recipes/sidebar";
 export { LSlider } from "./recipes/slider";
 export type { LSliderProps, LSliderSize, LSliderType } from "./recipes/slider";
 export { LTable } from "./recipes/table";
-export type { LTableProps, LTableBordered, LTableSize, LTableStriped } from "./recipes/table";
+export type { LTableProps, LTableSize, LTableVariant } from "./recipes/table";
 export { LTabs } from "./recipes/tabs";
 export type { LTabsProps, LTabsSize, LTabsStyleVariant } from "./recipes/tabs";
 export { LTagInput } from "./recipes/tag-input";

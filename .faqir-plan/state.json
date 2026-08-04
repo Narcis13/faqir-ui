@@ -1,8 +1,8 @@
 {
   "$schema": "./state.schema.md",
   "plan": "FAQIR-PLAN.md",
-  "current": "0.9-03",
-  "last_completed": "0.9-02",
+  "current": null,
+  "last_completed": "0.9-04",
   "history": [
     {
       "id": "0.9-01",
@@ -274,6 +274,18 @@
       "completed": "2026-07-29",
       "commit": "3718efa",
       "summary": "The decision, and the word that turned out to be load-bearing. Candidates 1 and 2 (a `flow` primitive, a `data-flow` prop) are wrappers, and the header's own test — an agent produces spaced output WITHOUT wrapping anything — eliminates a wrapper before it is tried, so candidate 3 wins: `registry/base/rhythm.css`, one rule at (0,0,0), spending `--section-gap-sm` between consecutive block-level participants inside a flow root. FAQIR-SPEC §20 states it in one sentence and argues each of its three load-bearing words: \"flow root\" (sectioning elements plus `container`/`surface`, never a component that lays out its own children, or every `stack` gap doubles), \"block-level\" (a vertical margin on an `inline-flex` box shifts it inside its line box, so 26 inline-level components are excluded by a list DERIVED from each component's root `display` with a UA-default fallback that catches `link`), and \"consecutive\" — which was measured, not reasoned: the first draft spaced every non-first child and the printed invoice scaffold came back with every heading floating 48px above its own section, so the owl form now lets a non-participant suppress the margin and an `h2` stays welded to its table. `data-gap` on the flow root re-tunes it and `data-gap=\"0\"` opts out, reusing the primitives' ladder so no new attribute enters the protocol before the 1.0 freeze. The rule is data in `src/utils/layout.ts` and six surfaces print it from there; `tests/utils/rhythm.test.ts` (27 cases) re-parses §20 AND the CSS back into the module and audits §20's examples, `tests/visual/rhythm.pw.ts` (10 cases) proves it in a browser on nested scopes, the surface boundary and the opt-out plus the two guards. Result: seams 183 → 19, seamPages 42 → 5, overlaps 3 → 1, zeroGutterPages held at 79 and asserted, with no registry fragment edited."
+    },
+    {
+      "id": "0.9-03",
+      "completed": "2026-08-04",
+      "commit": "5071cc1",
+      "summary": "Example-page shell: every fragment mounted in a container gutter+measure column and split into captioned <figure> demo blocks — zeroGutterPages 79 -> 0, seams 19 -> 0; 0.8-13 resolved and the generator now rejects any inline style= it authors."
+    },
+    {
+      "id": "0.9-04",
+      "completed": "2026-08-04",
+      "commit": "PENDING",
+      "summary": "Reference-fragment sweep: 367 audit findings over 87 fragments driven to 0 and 0.7-17 resolved — part attribution follows composition, five rules that flagged correct markup fixed, runtime-presence rules scoped to documents by content; layout primitives demo in surface cells; layout-lint floor pinned at 0 seams / 0 zero-gutter."
     }
   ],
   "note": "Pointer file for the /faqir-plan slash command. FAQIR-PLAN.md status cells (⬜/✅) are the source of truth; this file records the cross-session cursor and a per-task log. Do not hand-edit `current` while a session is running. History is not a complete ledger of every task (phases v0.3–v0.5 are collapsed into one entry); entries flagged `reconstructed: true` were back-filled from git and FAQIR-PLAN.md on 2026-07-25, not written by the session that shipped them."

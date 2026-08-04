@@ -15,25 +15,15 @@
 
 <!-- Default threshold: two columns once the switcher itself reaches 40rem -->
 <div data-ui="switcher">
-  <div data-ui="card">
-    <div data-part="body">Side by side while there is room for both.</div>
-  </div>
-  <div data-ui="card">
-    <div data-part="body">One above the other as soon as there is not.</div>
-  </div>
+  <div data-ui="surface" data-size="md">Side by side while there is room for both.</div>
+  <div data-ui="surface" data-size="md">One above the other as soon as there is not.</div>
 </div>
 
 <!-- Explicit sm threshold, three columns -->
 <div data-ui="switcher" data-threshold="sm" data-gap="4">
-  <div data-ui="card">
-    <div data-part="body">Intrinsic first</div>
-  </div>
-  <div data-ui="card">
-    <div data-part="body">Container second</div>
-  </div>
-  <div data-ui="card">
-    <div data-part="body">Viewport last</div>
-  </div>
+  <div data-ui="surface" data-size="md">Intrinsic first</div>
+  <div data-ui="surface" data-size="md">Container second</div>
+  <div data-ui="surface" data-size="md">Viewport last</div>
 </div>
 
 <!-- A wider threshold: these two only share a line on a roomy container -->
@@ -61,25 +51,15 @@
 
 <!-- Tight switcher -->
 <div data-ui="switcher" data-gap="0">
-  <div data-ui="card">
-    <div data-part="body">No gap, still switching.</div>
-  </div>
-  <div data-ui="card">
-    <div data-part="body">The threshold is about width, not spacing.</div>
-  </div>
+  <div data-ui="surface" data-size="md">No gap, still switching.</div>
+  <div data-ui="surface" data-size="md">The threshold is about width, not spacing.</div>
 </div>
 
 <!-- Nested: the inner switcher measures the column it landed in, not the page -->
 <div data-ui="switcher" data-threshold="md" data-gap="4">
-  <div data-ui="card">
-    <div data-part="body">Outer column</div>
-  </div>
+  <div data-ui="surface" data-size="md">Outer column</div>
   <div data-ui="switcher" data-threshold="sm" data-gap="2">
-    <div data-ui="card">
-      <div data-part="body">Inner A</div>
-    </div>
-    <div data-ui="card">
-      <div data-part="body">Inner B</div>
-    </div>
+    <div data-ui="surface" data-size="md">Inner A</div>
+    <div data-ui="surface" data-size="md">Inner B</div>
   </div>
 </div>

@@ -18,6 +18,27 @@ import { extractComponents, parseDocument } from "../parser/html-parser";
 import type { Manifest } from "../manifest";
 import { type AuditResult, ALL_RULES, DOCUMENT_RULES } from "./rules";
 
+/**
+ * Rules that assert a **runtime is present in the same file** — not a property
+ * of the markup (task 0.9-04, resolving follow-up 0.7-17).
+ *
+ * A component *fragment* — `<div data-ui="dialog">…</div>` with no `<html>`,
+ * `<body>` or doctype — is by construction a thing that gets included into a
+ * page; the `<script>` that boots its controller belongs to that page, and no
+ * edit to the fragment can satisfy the rule without making the fragment stop
+ * being a fragment. Firing here produced 39 findings on Faqir's own reference
+ * markup and, worse, reached users: `faqir audit` scans `ui/**`, so a fresh
+ * `init` + `add crud-table` reported the framework's own files as broken.
+ *
+ * The scope is derived from the content (`ParsedDocument.isFullDocument`), never
+ * from a path allow-list, so it holds identically for the registry, for a user's
+ * server-side partial, and for the docs-site playground — and the moment the
+ * same markup is emitted as a real page (the docs example pages, the
+ * copy-for-agents payloads, both of which carry the CDN preamble) the rules
+ * apply again and must pass.
+ */
+export const RUNTIME_PRESENCE_RULES = ["controller-loaded", "focus-trap"] as const;
+
 export interface HtmlAuditInput {
   /** Raw HTML source to audit. */
   source: string;
@@ -46,11 +67,24 @@ export function auditHtmlSource(input: HtmlAuditInput): AuditResult[] {
   const { source, manifests } = input;
   const file = input.file ?? "input.html";
   const skipRules = new Set(input.skipRules ?? []);
+
+  // One parse decides the scope, and it is the same `isFullDocument` the
+  // document rules have always used to tell a page from a fragment. A fragment
+  // cannot carry the runtime, so the rules that ask for one do not apply to it
+  // (task 0.9-04 — see RUNTIME_PRESENCE_RULES).
+  const doc = parseDocument(source, file);
+  if (!doc.isFullDocument) for (const id of RUNTIME_PRESENCE_RULES) skipRules.add(id);
+
   const activeRules = ALL_RULES.filter((r) => !skipRules.has(r.id));
   const activeDocRules = DOCUMENT_RULES.filter((r) => !skipRules.has(r.id));
 
   const results: AuditResult[] = [];
-  const components = extractComponents(source, file);
+  // Composition-aware part attribution (task 0.9-04): the manifests decide which
+  // enclosing component a `data-part` belongs to, so a pattern's own slot stays
+  // its own when it sits inside a nested primitive. See `extractComponents`.
+  const components = extractComponents(source, file, (name, slot) =>
+    manifests.get(name)?.slots?.[slot] !== undefined,
+  );
 
   for (const component of components) {
     const manifest = manifests.get(component.name);
@@ -61,7 +95,6 @@ export function auditHtmlSource(input: HtmlAuditInput): AuditResult[] {
   }
 
   if (activeDocRules.length > 0) {
-    const doc = parseDocument(source, file);
     for (const rule of activeDocRules) {
       results.push(...rule.check(doc));
     }
@@ -79,6 +112,25 @@ export function auditHtmlSource(input: HtmlAuditInput): AuditResult[] {
         if (results[i].rule_id === "controller-loaded") results.splice(i, 1);
       }
       results.push(...fileControllerResults);
+    }
+  }
+
+  // `focus-trap` says "ensure the controller is loaded" — so it is answered by
+  // the same file-level check, not asserted unconditionally (task 0.9-04). The
+  // per-component rule cannot see the file, so it emits the reminder for every
+  // focus-trapping recipe and it was never satisfiable: a page that loads
+  // faqir-core.js still got four criticals from a dialog reference. Now it
+  // survives only where `controller-loaded` also fires, which is the condition
+  // its own message names, and the copy-for-agents payloads — real documents
+  // carrying the CDN preamble — are clean under the full rule set because of it.
+  if (!skipRules.has("focus-trap") && results.some((r) => r.rule_id === "focus-trap")) {
+    const missing = new Set(
+      checkControllersInFile(source, file, components, manifests).map((r) => r.component_name),
+    );
+    for (let i = results.length - 1; i >= 0; i--) {
+      if (results[i].rule_id === "focus-trap" && !missing.has(results[i].component_name)) {
+        results.splice(i, 1);
+      }
     }
   }
 
@@ -102,15 +154,27 @@ export function checkControllersInFile(
 
   if (recipeComponents.length === 0) return results;
 
-  // Check for script tags or imports referencing the controllers
-  const sourceLower = source.toLowerCase();
+  // Check for script tags or imports referencing the controllers.
+  //
+  // Comments are stripped first (task 0.9-04). Every reference fragment opens
+  // with `<!-- @ui:controller dialog.js -->`, and a plain substring test over
+  // the raw source read that annotation as a loaded controller — so the rule
+  // passed on any file that merely *named* its controller in prose, which is
+  // the opposite of what it checks for.
+  const sourceLower = source.replace(/<!--[\s\S]*?-->/g, " ").toLowerCase();
   for (const comp of recipeComponents) {
     const manifest = manifests.get(comp.name)!;
     const jsFile = manifest.files.js!;
 
-    // Check for a direct controller import or either assembled auto-init runtime.
+    // Check for a direct controller import or any assembled auto-init runtime.
+    // `faqir-core.min.js` belongs in this list (task 0.9-04): it is the file the
+    // CDN preamble loads — the one the copy-for-agents payloads, the README's
+    // two-tag snippet and every "no build step" page in the docs actually
+    // reference — so leaving it out reported 147 findings against pages that
+    // load the runtime by its most common name.
     const hasScript = sourceLower.includes(jsFile)
       || sourceLower.includes("faqir-core.js")
+      || sourceLower.includes("faqir-core.min.js")
       || sourceLower.includes("faqir.js")
       || sourceLower.includes("faqir.min.js");
 

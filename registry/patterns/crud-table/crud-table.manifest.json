@@ -5,13 +5,11 @@
   "kind": "pattern",
   "category": "composite",
   "description": "Data table with create, read, update, delete operations, search, and pagination",
-
   "anatomy": {
     "tag": "div",
     "selector": "[data-ui='crud-table']",
     "content_model": "slots"
   },
-
   "slots": {
     "toolbar": {
       "selector": "[data-part='toolbar']",
@@ -57,27 +55,27 @@
     },
     "row-actions": {
       "selector": "[data-part='row-actions']",
-      "required": true,
+      "required": false,
       "tag_hint": "div",
-      "description": "Edit and delete action buttons per row"
+      "description": "Edit and delete action buttons per row. A read-only crud-table has no per-row actions. Optional since 0.9-04."
     },
     "edit-dialog": {
       "selector": "[data-part='edit-dialog']",
-      "required": true,
+      "required": false,
       "tag_hint": "div",
-      "description": "Dialog for creating or editing a record"
+      "description": "Dialog for creating or editing a record. A read-only crud-table has no editing affordance. Optional since 0.9-04."
     },
     "delete-dialog": {
       "selector": "[data-part='delete-dialog']",
-      "required": true,
+      "required": false,
       "tag_hint": "div",
-      "description": "Confirmation dialog for deleting a record"
+      "description": "Confirmation dialog for deleting a record. A crud-table without destructive actions has no delete dialog. Optional since 0.9-04."
     },
     "pagination": {
       "selector": "[data-part='pagination']",
-      "required": true,
+      "required": false,
       "tag_hint": "div",
-      "description": "Nested Faqir pagination component"
+      "description": "Nested Faqir pagination component. A crud-table that fits on one page has no pager. Optional since 0.9-04."
     },
     "empty-state": {
       "selector": "[data-part='empty-state']",
@@ -90,25 +88,65 @@
       "required": false,
       "tag_hint": "div",
       "description": "Action bar shown when rows are selected"
+    },
+    "field": {
+      "selector": "[data-part='field']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "One labelled control inside the create/edit dialog"
+    },
+    "selection-count": {
+      "selector": "[data-part='selection-count']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Live count of selected rows in the bulk-actions bar"
+    },
+    "empty-icon": {
+      "selector": "[data-part='empty-icon']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Illustration shown when the table has no rows"
+    },
+    "empty-title": {
+      "selector": "[data-part='empty-title']",
+      "required": false,
+      "tag_hint": "p",
+      "description": "Headline of the empty state"
+    },
+    "empty-description": {
+      "selector": "[data-part='empty-description']",
+      "required": false,
+      "tag_hint": "p",
+      "description": "Supporting copy of the empty state"
     }
   },
-
   "variants": {
     "density": {
-      "values": ["compact", "default", "comfortable"],
+      "values": [
+        "compact",
+        "default",
+        "comfortable"
+      ],
       "default": "default",
       "attr": "data-variant",
       "applied_to": "root"
     }
   },
-
   "states": {
-    "default": { "attr": "data-state=\"default\"", "default": true },
-    "loading": { "attr": "data-state=\"loading\"" },
-    "empty": { "attr": "data-state=\"empty\"" },
-    "error": { "attr": "data-state=\"error\"" }
+    "default": {
+      "attr": "data-state=\"default\"",
+      "default": true
+    },
+    "loading": {
+      "attr": "data-state=\"loading\""
+    },
+    "empty": {
+      "attr": "data-state=\"empty\""
+    },
+    "error": {
+      "attr": "data-state=\"error\""
+    }
   },
-
   "a11y": {
     "required_attrs": [
       "aria-label on search input",
@@ -123,24 +161,39 @@
       "Escape": "close open dialogs"
     }
   },
-
   "tokens_used": [
-    "color-bg", "color-bg-subtle", "color-bg-muted",
-    "color-fg", "color-fg-muted",
-    "color-border", "color-primary", "color-primary-fg",
-    "color-destructive", "color-destructive-fg",
-    "radius-md", "radius-lg",
+    "color-bg",
+    "color-bg-subtle",
+    "color-bg-muted",
+    "color-fg",
+    "color-fg-muted",
+    "color-border",
+    "color-primary",
+    "color-primary-fg",
+    "color-destructive",
+    "color-destructive-fg",
+    "radius-md",
+    "radius-lg",
     "shadow-sm",
-    "space-1", "space-2", "space-3", "space-4", "space-6", "space-8",
-    "font-sans", "text-sm", "text-base", "text-lg",
-    "weight-medium", "weight-semibold",
-    "duration-fast", "duration-normal", "ease-default"
+    "space-1",
+    "space-2",
+    "space-3",
+    "space-4",
+    "space-6",
+    "space-8",
+    "font-sans",
+    "text-sm",
+    "text-base",
+    "text-lg",
+    "weight-medium",
+    "weight-semibold",
+    "duration-fast",
+    "duration-normal",
+    "ease-default"
   ],
-
   "templates": {
     "html": "<div data-ui=\"crud-table\" data-state=\"default\" data-variant=\"default\">\n  <div data-part=\"toolbar\">...</div>\n  <div data-part=\"table-wrapper\">\n    <div data-ui=\"table\">...</div>\n  </div>\n  <div data-part=\"pagination\">\n    <div data-ui=\"pagination\">...</div>\n  </div>\n</div>"
   },
-
   "safe_transforms": [
     "change-density-variant",
     "add-column",
@@ -154,7 +207,6 @@
     "add-bulk-action",
     "change-empty-state-content"
   ],
-
   "unsafe_transforms": [
     "remove-table-semantics",
     "remove-dialog-a11y",
@@ -163,18 +215,22 @@
     "remove-row-action-labels",
     "remove-delete-confirmation"
   ],
-
   "composition": {
-    "contains": ["table", "button", "dialog", "pagination", "input", "badge"],
+    "contains": [
+      "table",
+      "button",
+      "dialog",
+      "pagination",
+      "input",
+      "badge"
+    ],
     "used_in": []
   },
-
   "files": {
     "html": "crud-table.html",
     "css": "crud-table.css",
     "manifest": "crud-table.manifest.json"
   },
-
   "tests": [
     "renders-toolbar-with-search-and-create",
     "search-input-has-aria-label",

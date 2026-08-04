@@ -61,6 +61,8 @@ import { buildLogicalPropertyResults, findDanglingTokenReferences } from "../src
 import { collectDefinedTokens } from "../src/parser/css-parser";
 import { parseDocument } from "../src/parser/html-parser";
 import { DOCUMENT_RULES } from "../src/audit/rules";
+import { auditHtmlSource } from "../src/audit/html-audit";
+import { loadRegistryManifestMap } from "../src/utils/components";
 import {
   buildBreakpointCanonResults,
   buildUndeclaredAttributeResults,
@@ -281,6 +283,49 @@ if (cssRuleOffenders["undeclared-attribute"].length === 0 && cssRuleOffenders["b
   console.log(
     `✓ Zero findings — every selected data-* attribute is declared, every width prelude is canon.`,
   );
+}
+
+// ── Gate 7: the FULL rule set over the reference markup (task 0.9-04) ────────
+// Resolves follow-up 0.7-17. Gate 3 above runs only the *document* rules, which
+// is why 367 per-component findings sat in this tree unseen — and they were not
+// only a docs problem: `faqir audit` scans a project's `ui/**`, which includes
+// every reference fragment `faqir add` copied in, so a fresh `init` + `add
+// crud-table` reported a wall of findings from Faqir's own markup.
+//
+// The contract this gate enforces (see FAQIR-PLAN 0.9-04 / 0.7-17):
+//
+//  1. Reference fragments are held to EVERY rule a fragment can satisfy, at
+//     zero. No path allow-list, no per-file suppression, no severity filter.
+//  2. `controller-loaded` and `focus-trap` assert a runtime in the same file,
+//     which a fragment by construction never carries. `auditHtmlSource` scopes
+//     them out from the CONTENT (`isFullDocument`), so they still apply — and
+//     still have to pass — the moment this markup is emitted as a page, which
+//     is what the docs example pages and the copy-for-agents payloads are.
+//
+// Everything else was fixed rather than excused: real markup defects, real
+// manifest drift, and five rules that were reporting correct markup.
+const fullRuleManifests = await loadRegistryManifestMap(REGISTRY);
+const fullRuleOffenders = [];
+for (const rel of htmlFiles) {
+  const src = readFileSync(join(REGISTRY, rel), "utf8");
+  for (const r of auditHtmlSource({ source: src, file: rel, manifests: fullRuleManifests })) {
+    fullRuleOffenders.push(`  ${rel}:${r.line} — [${r.rule_id}] ${r.message}`);
+  }
+}
+
+console.log(`\n▶ Registry self-audit — the full rule set over registry/{primitives,recipes,patterns}/**/*.html`);
+console.log(`  scanned ${htmlFiles.length} fragment(s) against ${fullRuleManifests.size} manifest(s)`);
+
+if (fullRuleOffenders.length > 0) {
+  console.error(`\n✗ ${fullRuleOffenders.length} finding(s) — the reference markup does not satisfy its own rules:`);
+  console.error(fullRuleOffenders.join("\n"));
+  console.error(
+    `\nFix the markup, declare the slot in the manifest, or — if the rule is asking a fragment` +
+    `\nfor something only a page can have — say so in RUNTIME_PRESENCE_RULES. Never by path.`,
+  );
+  failed = true;
+} else {
+  console.log(`✓ Zero findings — every reference fragment satisfies every rule it can.`);
 }
 
 process.exit(failed ? 1 : 0);

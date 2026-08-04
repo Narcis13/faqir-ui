@@ -1,0 +1,393 @@
+{
+  "patterns/auth-form/auth-form.html": {
+    "auth-form": 7,
+    "button": 11,
+    "card": 7,
+    "input": 14,
+    "label": 14,
+    "separator": 2
+  },
+  "patterns/crud-table/crud-table.html": {
+    "badge": 5,
+    "button": 23,
+    "crud-table": 5,
+    "dialog": 2,
+    "input": 7,
+    "input-group": 5,
+    "label": 3,
+    "pagination": 3,
+    "select": 1,
+    "spinner": 1,
+    "table": 3
+  },
+  "patterns/dashboard-shell/dashboard-shell.html": {
+    "avatar": 5,
+    "badge": 9,
+    "button": 8,
+    "card": 5,
+    "dashboard-shell": 3,
+    "dropdown": 1,
+    "grid": 2,
+    "input": 3,
+    "input-group": 1,
+    "separator": 7
+  },
+  "patterns/document/document-print.html": {
+    "document": 1,
+    "page-break": 2
+  },
+  "patterns/document/document.html": {
+    "callout": 2,
+    "document": 5,
+    "field-group": 3,
+    "input": 2,
+    "key-value": 3,
+    "page-break": 1,
+    "signature": 3,
+    "table": 1,
+    "text": 10,
+    "textarea": 1
+  },
+  "patterns/empty-state/empty-state.html": {
+    "button": 5,
+    "empty-state": 4
+  },
+  "patterns/feature-grid/feature-grid.html": {
+    "button": 1,
+    "feature-grid": 3,
+    "icon": 12
+  },
+  "patterns/form-page/form-page.html": {
+    "checkbox": 1,
+    "field-group": 5,
+    "input": 2,
+    "radio": 3,
+    "radio-group": 1,
+    "radio-label": 3,
+    "textarea": 1
+  },
+  "patterns/hero/hero.html": {
+    "badge": 2,
+    "button": 3,
+    "hero": 2,
+    "image": 1
+  },
+  "patterns/inbox/inbox.html": {
+    "avatar": 8,
+    "badge": 2,
+    "button": 10,
+    "empty-state": 2,
+    "inbox": 2,
+    "input": 1,
+    "stack": 4,
+    "tabs": 1
+  },
+  "patterns/pricing/pricing.html": {
+    "badge": 2,
+    "button": 5,
+    "card": 5,
+    "icon": 15,
+    "pricing": 2,
+    "separator": 5,
+    "stat": 5
+  },
+  "patterns/search-results/search-results.html": {
+    "badge": 9,
+    "button": 1,
+    "empty-state": 1,
+    "input": 4,
+    "input-group": 4,
+    "pagination": 1,
+    "search-results": 4,
+    "select": 2,
+    "spinner": 1
+  },
+  "patterns/settings-page/settings-page.html": {
+    "button": 10,
+    "card": 10,
+    "dialog": 1,
+    "input": 10,
+    "label": 15,
+    "select": 4,
+    "settings-page": 4,
+    "switch": 7,
+    "switch-label": 7,
+    "tabs": 4,
+    "textarea": 1
+  },
+  "patterns/site-footer/site-footer.html": {
+    "icon": 3,
+    "link": 3,
+    "nav": 5,
+    "separator": 1,
+    "site-footer": 2
+  },
+  "patterns/stats-dashboard/stats-dashboard.html": {
+    "badge": 4,
+    "button": 1,
+    "card": 3,
+    "grid": 2,
+    "stat": 7,
+    "stats-dashboard": 2,
+    "table": 2
+  },
+  "patterns/wizard/wizard.html": {
+    "button": 3,
+    "card": 2,
+    "field-group": 3,
+    "input": 2,
+    "radio": 2,
+    "radio-group": 1,
+    "radio-label": 2,
+    "stepper": 1,
+    "wizard": 1
+  },
+  "primitives/aspect-ratio/aspect-ratio.html": {
+    "aspect-ratio": 7
+  },
+  "primitives/avatar/avatar.html": {
+    "avatar": 5
+  },
+  "primitives/badge/badge.html": {
+    "badge": 9
+  },
+  "primitives/breadcrumb/breadcrumb.html": {
+    "breadcrumb": 4
+  },
+  "primitives/button/button.html": {
+    "button": 17,
+    "button-group": 1
+  },
+  "primitives/callout/callout.html": {
+    "callout": 8
+  },
+  "primitives/card/card.html": {
+    "button": 2,
+    "card": 4
+  },
+  "primitives/checkbox/checkbox.html": {
+    "checkbox": 8,
+    "checkbox-label": 8
+  },
+  "primitives/chip/chip.html": {
+    "chip": 9
+  },
+  "primitives/cluster/cluster.html": {
+    "badge": 12,
+    "button": 5,
+    "chip": 7,
+    "cluster": 9
+  },
+  "primitives/collapsible/collapsible.html": {
+    "collapsible": 3
+  },
+  "primitives/container/container.html": {
+    "button": 1,
+    "container": 7,
+    "field-group": 1,
+    "input": 1,
+    "stack": 1
+  },
+  "primitives/description-list/description-list.html": {
+    "description-list": 5
+  },
+  "primitives/empty-state/empty-state.html": {
+    "button": 1,
+    "empty-state": 2
+  },
+  "primitives/field-group/field-group.html": {
+    "field-group": 10,
+    "input": 8,
+    "select": 1,
+    "textarea": 1
+  },
+  "primitives/grid/grid.html": {
+    "grid": 9
+  },
+  "primitives/icon/icon.html": {
+    "icon": 120
+  },
+  "primitives/image/image.html": {
+    "image": 10
+  },
+  "primitives/input/input.html": {
+    "input": 9,
+    "input-group": 2,
+    "label": 1
+  },
+  "primitives/kbd/kbd.html": {
+    "kbd": 9
+  },
+  "primitives/key-value/key-value.html": {
+    "key-value": 6
+  },
+  "primitives/label/label.html": {
+    "label": 7
+  },
+  "primitives/link/link.html": {
+    "link": 5
+  },
+  "primitives/nav/nav.html": {
+    "nav": 4
+  },
+  "primitives/page-break/page-break.html": {
+    "page-break": 2
+  },
+  "primitives/progress/progress.html": {
+    "progress": 4
+  },
+  "primitives/radio/radio.html": {
+    "label": 3,
+    "radio": 9,
+    "radio-group": 3,
+    "radio-label": 9
+  },
+  "primitives/select/select.html": {
+    "label": 3,
+    "select": 6
+  },
+  "primitives/separator/separator.html": {
+    "separator": 9
+  },
+  "primitives/signature/signature.html": {
+    "signature": 6
+  },
+  "primitives/skeleton/skeleton.html": {
+    "card": 1,
+    "skeleton": 8,
+    "stack": 2
+  },
+  "primitives/spinner/spinner.html": {
+    "spinner": 4
+  },
+  "primitives/stack/stack.html": {
+    "stack": 8
+  },
+  "primitives/stat/stat.html": {
+    "grid": 1,
+    "stat": 10
+  },
+  "primitives/stepper/stepper.html": {
+    "stepper": 2
+  },
+  "primitives/surface/surface.html": {
+    "surface": 7
+  },
+  "primitives/switch/switch.html": {
+    "switch": 7,
+    "switch-label": 7
+  },
+  "primitives/switcher/switcher.html": {
+    "button": 3,
+    "card": 12,
+    "switcher": 7
+  },
+  "primitives/text/text.html": {
+    "heading": 6,
+    "text": 10
+  },
+  "primitives/textarea/textarea.html": {
+    "label": 4,
+    "textarea": 7
+  },
+  "primitives/toggle/toggle.html": {
+    "toggle": 7
+  },
+  "primitives/watermark/watermark.html": {
+    "watermark": 1
+  },
+  "recipes/accordion/accordion.html": {
+    "accordion": 3
+  },
+  "recipes/alert-dialog/alert-dialog.html": {
+    "alert-dialog": 3,
+    "button": 8
+  },
+  "recipes/barcode/barcode.html": {
+    "barcode": 3
+  },
+  "recipes/calendar/calendar.html": {
+    "calendar": 5
+  },
+  "recipes/carousel/carousel.html": {
+    "carousel": 2,
+    "text": 8
+  },
+  "recipes/combobox/combobox.html": {
+    "combobox": 4
+  },
+  "recipes/command-palette/command-palette.html": {
+    "command-palette": 3
+  },
+  "recipes/context-menu/context-menu.html": {
+    "context-menu": 1
+  },
+  "recipes/date-picker/date-picker.html": {
+    "calendar": 3,
+    "date-picker": 3
+  },
+  "recipes/dialog/dialog.html": {
+    "button": 6,
+    "dialog": 4
+  },
+  "recipes/drawer/drawer.html": {
+    "button": 5,
+    "drawer": 4
+  },
+  "recipes/dropdown/dropdown.html": {
+    "dropdown": 4
+  },
+  "recipes/file-upload/file-upload.html": {
+    "file-upload": 1
+  },
+  "recipes/input-otp/input-otp.html": {
+    "input-otp": 4
+  },
+  "recipes/menubar/menubar.html": {
+    "menubar": 1
+  },
+  "recipes/pagination/pagination.html": {
+    "pagination": 3
+  },
+  "recipes/popover/popover.html": {
+    "popover": 4
+  },
+  "recipes/qr-code/qr-code.html": {
+    "qr-code": 5
+  },
+  "recipes/select-custom/select-custom.html": {
+    "select-custom": 4
+  },
+  "recipes/sheet/sheet.html": {
+    "sheet": 4
+  },
+  "recipes/sidebar/sidebar.html": {
+    "button": 1,
+    "sidebar": 2
+  },
+  "recipes/slider/slider.html": {
+    "slider": 4
+  },
+  "recipes/table/table.html": {
+    "table": 12
+  },
+  "recipes/tabs/tabs.html": {
+    "tabs": 4
+  },
+  "recipes/tag-input/tag-input.html": {
+    "chip": 3,
+    "tag-input": 2
+  },
+  "recipes/toast/toast.html": {
+    "toast": 5
+  },
+  "recipes/toggle-group/toggle-group.html": {
+    "toggle-group": 3
+  },
+  "recipes/tooltip/tooltip.html": {
+    "tooltip": 4
+  },
+  "recipes/tree-view/tree-view.html": {
+    "tree-view": 1
+  }
+}

@@ -1644,9 +1644,44 @@ interface RepairAction {
 | `orphan-panel` | error | Tab panels have matching tab triggers |
 | `orphan-part` | warning | `data-part` values are valid slot names from manifest |
 | `aria-describedby` | warning | If description slot exists, panel has `aria-describedby` |
-| `close-label` | warning | Close buttons have `aria-label` |
+| `close-label` | warning | Close buttons have an accessible name (`aria-label`, `aria-labelledby`, or visible text) |
 | `token-exists` | warning | CSS token variables reference existing tokens |
 | `reduced-motion` | info | Component CSS includes `prefers-reduced-motion` media query |
+
+### What a rule is asked about: fragments, pages and composition
+
+Three scoping decisions, all derived from the *content* being audited — never from
+a path, a filename, or a per-file suppression. They hold identically for the
+registry's own reference markup, for a project's `ui/**`, and for the docs-site
+playground, because there is one implementation (`auditHtmlSource`).
+
+**1. A fragment is not a page.** A file with no doctype, `<html>` or `<body>` is
+a component fragment: something that gets *included into* a page. Two rules —
+`controller-loaded` and `focus-trap` — assert that a runtime is present in the
+same file, and no edit to a fragment can satisfy that without making it stop
+being a fragment. They are therefore scoped to full documents. The moment the
+same markup is emitted as a page (a docs example page, a copy-for-agents
+payload, a real project page) they apply again and must pass. This is why
+`faqir audit` no longer reports a wall of findings against the reference pages
+`faqir add` copied into a project.
+
+**2. A `data-part` belongs to the nearest component that *declares* it.** A
+pattern composed out of a primitive puts its own parts inside that primitive —
+`auth-form` nests a `card` and its `<form data-part="form">` sits inside it.
+Attribution walks outward to the nearest enclosing `data-ui` whose manifest
+declares the slot, so the pattern's part stays the pattern's and the card's
+`header` stays the card's. When nobody declares it, the nearest component keeps
+it, so `orphan-part` still fires once and at the closest owner. Separately,
+`required-slot` asks a weaker question — is there a `data-part` of that name
+*anywhere* in the subtree — because a slot filled by an element a nested
+component also claims is still filled.
+
+**3. `required` describes the default state.** A component whose root carries a
+declared, non-default `data-state` is demonstrating that state, and
+`required-slot` does not apply to it: `data-state="empty"` is precisely the
+state in which a table has no rows. `required_attrs` entries that name a
+condition in prose ("… when in loading state", "… in single mode") are likewise
+not statically checkable and are skipped rather than guessed at.
 
 ### Repair Engine
 

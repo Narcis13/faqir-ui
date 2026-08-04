@@ -216,14 +216,14 @@
         },
         {
           "path": "cluster.html",
-          "sha256": "123641fb8471ae0f6018dcca2bca3570b46a50595744fd9e93bbb0828e72f782"
+          "sha256": "d0524d928b6e3290f820acb2dd69a81774ed8e01938884bde20fdbb390187445"
         },
         {
           "path": "cluster.manifest.json",
           "sha256": "20c50ab34787df4ba70eeb66234fa003623e2ff012e7fd35f5a180bf9f7d2446"
         }
       ],
-      "hash": "192d940006c78c6ea42a841ca72b6e0b9c591844bb690dfc99fd549951b97781",
+      "hash": "ac9382dc52784ea150c38e4db3abe462ffad223f9d5832428e5a53a492b67589",
       "deps": []
     },
     {
@@ -260,14 +260,14 @@
         },
         {
           "path": "container.html",
-          "sha256": "bad633b7867f2be57783f3ff8516a79a4e4d6dbe7f5ffbfc335c227e1637de53"
+          "sha256": "dcedbb3a325b0b90684718caa0611aac2635df06acc429a9261231f078ce1679"
         },
         {
           "path": "container.manifest.json",
           "sha256": "336380333591787c3deb94bb0ca520ea598c30f60065dec87c1b3f623ad1e214"
         }
       ],
-      "hash": "7c2818b93a063efb1a99d97a626db6751b83f9e404ec662f22cd76449befaa2e",
+      "hash": "b51a72ebb00969f65be8f968df3ed7b0578cdd966d963c222954685198465513",
       "deps": []
     },
     {
@@ -357,14 +357,14 @@
         },
         {
           "path": "grid.html",
-          "sha256": "16bc8ad1c7955830e3fa655edc4f449bfea1bba62c555ace4d5abc77a4bd60c7"
+          "sha256": "fce7614cb5fc1399faab929250e47ba4357b0f8d4df8b72fd7b816b281c7c922"
         },
         {
           "path": "grid.manifest.json",
           "sha256": "1d1e9e94793ae7ebb488dc2dfce9f4c7ee85ed6580e08020142f81c9d4c7a65b"
         }
       ],
-      "hash": "403e4b130cc699f307196aacbd9f30be9f68db05fd78fc83b7685291ebca762b",
+      "hash": "7e075b3cd5b43b7ffbd4e916690b1851bf64e23bcdfc0d32823294895a5238cc",
       "deps": []
     },
     {
@@ -735,14 +735,14 @@
         },
         {
           "path": "stack.html",
-          "sha256": "2b300ed4fb1e2189fc3fd310502720a398e9e91868dc71b02547826802830ccb"
+          "sha256": "f99e273bafeb06f00a3bb83e22e208fd34ca9967abb542b7147c36e19b022732"
         },
         {
           "path": "stack.manifest.json",
           "sha256": "b5604ba5973a4c404e66e0f54bab6590e3bfb241c7dabd037f71a6ef1fad0939"
         }
       ],
-      "hash": "860ef6739ef41ba7e56e355bd335477aca6f49af43b9357e548acdb6de9b9be8",
+      "hash": "45cb97070b17f386fee29075904fa2b57d567c83fb7a7bf5ae5ee84b9be6e802",
       "deps": []
     },
     {
@@ -825,14 +825,14 @@
         },
         {
           "path": "switch.html",
-          "sha256": "9ab17c20cb212cae729e7a8721bcec9f896fa961cc51e06317fe6367f839b751"
+          "sha256": "cb82ff13ffe4f3aaab87444184e85759e8bbebecedd76d733d95c3556d67b85c"
         },
         {
           "path": "switch.manifest.json",
-          "sha256": "e74312dde87aa0c1c8fffd86e32b4894ef337987c3154d24276f70610d0aea32"
+          "sha256": "eecf46712cbcdc75c674b7b99ca21f84f16e4c6c35dc7c0fcae13d13f9664d84"
         }
       ],
-      "hash": "b3e7544994591cecfedc742ed42f6e486ede0c1008bd453a2339f2a78fb57045",
+      "hash": "025981dfdc69539e4fa6b0e40b7fea3a194663b7b9bab813e0c334b1ed6640b6",
       "deps": []
     },
     {
@@ -847,14 +847,14 @@
         },
         {
           "path": "switcher.html",
-          "sha256": "5656baa99baeaf504bbf648a186a8df87b3c83b6b11e2da830f3c51c4e8ed037"
+          "sha256": "d01a11c4dd43bf373541874891bf3508a90862174cec6b2ddbc63e389458b2c8"
         },
         {
           "path": "switcher.manifest.json",
           "sha256": "a7e1d91a4e25ec37e05d397f443b994f07c09c2f2e32b24e1b0c942fe8b44698"
         }
       ],
-      "hash": "c038b23b0d193f13770115ed9c2d3909c4a45e4122bee51a03b57e417b8e6414",
+      "hash": "54e2f6308990ef6a84f10ac399b3c3d86aad932003d37d1a3c917708afdf90be",
       "deps": []
     },
     {
@@ -873,10 +873,10 @@
         },
         {
           "path": "text.manifest.json",
-          "sha256": "afce354a57563a17e6dcfcf49e0634446b2b28f59b3653f1c6d799e9078d5c32"
+          "sha256": "994409c13ab90318953e1c309482df945ff81b8cac44f4bd114ba3ef2c4ac3b6"
         }
       ],
-      "hash": "4ef44f83d19f614d2ac6483b10c39ebad8f014905ea6e4b201f98a99854c1192",
+      "hash": "0c5c2654504b0045a5e367ee63e9abd4fb4590838047889446b63c887b3e569a",
       "deps": []
     },
     {
@@ -1115,7 +1115,7 @@
         },
         {
           "path": "command-palette.html",
-          "sha256": "0893288db7444ff8099f257b233cb949925a08f9fdb46e348dd4b3a4832b8801"
+          "sha256": "2181a2aeb95453bdb6d1adb2e414c82c16e3ee761f6468074bf843ac7bcb11e2"
         },
         {
           "path": "command-palette.js",
@@ -1123,10 +1123,10 @@
         },
         {
           "path": "command-palette.manifest.json",
-          "sha256": "f33f8904bef067b95838f3183c0b986262363f7daeeba0afb9f3e6ac4a65f39f"
+          "sha256": "38d736b76b5c15778c0067ec6c8bdf633dbae4e704b75dfe2b717879e8461bef"
         }
       ],
-      "hash": "24197ec662eff123d9a1a85e2baded8162ee6d8a7f6dfd2a6d96cf2f57942800",
+      "hash": "69c989ae4d95ccec8df8994237cce3d95f98565d89305c06d960320b36320eab",
       "deps": [
         "kbd"
       ]
@@ -1198,7 +1198,7 @@
         },
         {
           "path": "dialog.html",
-          "sha256": "2d337fd8c6d565bd650552cfe8bb73cd475976c5467924ebd0b8a8972c11d52f"
+          "sha256": "e2a828ca120e0cc1042cf674c8f57d7db29bd44a259a7cbd515f4c2d1d2426c4"
         },
         {
           "path": "dialog.js",
@@ -1206,10 +1206,10 @@
         },
         {
           "path": "dialog.manifest.json",
-          "sha256": "ce5dbfd26bf5ba92687ca07dfecf1cde03f4c775cd3ded5944d17b032228dcf7"
+          "sha256": "446bf76932c4491a0b57860f09fb3af822f0336ae509e5c3aa71637f404b5abe"
         }
       ],
-      "hash": "00f1257ac15389abe12b67bc2243864c24e2c1fe54a2ce47fb6a86481d1a72b6",
+      "hash": "74d9e00d6beddb00b2714025606f4c4a65f52dd166a6d69caacbfc4d887cec62",
       "deps": [
         "button"
       ]
@@ -1440,7 +1440,7 @@
         },
         {
           "path": "select-custom.html",
-          "sha256": "a3041cd216d4c3e47041acb15b634e5d27272c156296107ad2641c20f9ca2486"
+          "sha256": "93267ec8928bc882f614afb1799f027fb28de07e94236ff8f4c1f68ef34e6dff"
         },
         {
           "path": "select-custom.js",
@@ -1448,10 +1448,10 @@
         },
         {
           "path": "select-custom.manifest.json",
-          "sha256": "b2290ef9464f01056eed27465fd305f460849bb8660bdbbddbf7a112211ce6f0"
+          "sha256": "5fc85c98e279f5e298551b0b4bf472ec41de0083b67cc27e229e573e18c2cb7a"
         }
       ],
-      "hash": "0e357bfebf3f3af6a94a8c261e2b4e1121e06755a0ebe4ac823017f1c1b118ef",
+      "hash": "b02b1daeb3c3d9e27dca1fdb0b15239b65be521c19e124d532e22b1740bd5070",
       "deps": []
     },
     {
@@ -1551,7 +1551,7 @@
         },
         {
           "path": "table.html",
-          "sha256": "0d9064abe246aa32d8871ca47974a3320c981b84c9764071a45c084f2070ee94"
+          "sha256": "69a1d612b6d07561131857608946dde7a2e15c08c0ecceca4a379ccf8c6199b0"
         },
         {
           "path": "table.js",
@@ -1559,10 +1559,10 @@
         },
         {
           "path": "table.manifest.json",
-          "sha256": "8a113c1510dd2177fa4c8eef45fb5d4fe49c9c4a0a54c7851a988f22fbf99a8f"
+          "sha256": "7060e9aa8563c07658c9589a8e1bfd8d014e9790257485b6159e5b6f30c122d4"
         }
       ],
-      "hash": "43efe22db9a1f833691514b1bb961e2cec960631e7a4a0115b5ef74ec17eef51",
+      "hash": "50e5a41e154edd1d52e02760d91e3d0ea045c2315919371e682799829d718266",
       "deps": [
         "checkbox",
         "badge",
@@ -1644,10 +1644,10 @@
         },
         {
           "path": "toast.manifest.json",
-          "sha256": "1de2e98ce2de6befd86e02d854479791d4ee2f46a7e6982875c0904cadb4d153"
+          "sha256": "db722d84a1f18899528aadc821d1b4e937373f026f635449ed34822010bfce64"
         }
       ],
-      "hash": "56d8017d97739e66bf3774239e5475a8fdf7ecd6120c7f29ccc86de0bf979787",
+      "hash": "667d4cf7507f9b2dc242a4ed0b1af5e6e4da1a191c1cb2501eaeb248220f80d1",
       "deps": [
         "button"
       ]
@@ -1742,14 +1742,14 @@
         },
         {
           "path": "auth-form.html",
-          "sha256": "b8d749cfb2067c85a2c1e2050f4116c4a40672fb7e0ae6246ecb3b0742bd24dc"
+          "sha256": "c37d3eb842c170151a1957d53905faf339d373a3f97a271ca60f4e39af93ffce"
         },
         {
           "path": "auth-form.manifest.json",
           "sha256": "657c2462154dcda615a5834776f1683561571a40aed594715ddbcaa1cc7d0094"
         }
       ],
-      "hash": "ec9286fc867a2413810b13fa8c52ca7cb24fdb606f0ab6d9f526c635bd9a7a28",
+      "hash": "c648138467a23e183d15d1908858d63f9f9415fb779aace650d1faf1c262167b",
       "deps": [
         "card",
         "input",
@@ -1770,14 +1770,14 @@
         },
         {
           "path": "crud-table.html",
-          "sha256": "c2cd186e16027bfbfc3874063367e3b569a330d9fd2c01971a7255fb51ffc66f"
+          "sha256": "87adb744326e3d0c1cfa5a8e7cca1e5e5d7eae6db3dbf4d89ac4da596025ae12"
         },
         {
           "path": "crud-table.manifest.json",
-          "sha256": "5a4c7e8c1b822d4dad2793d5b9e9e5eafa7ebc6cd8645bbdbefe6002eea258ad"
+          "sha256": "e37c6db783ce6bed63b2ac421cd63a1c1a796b891509da23fe2e8f0749cf46e6"
         }
       ],
-      "hash": "ece03c78cdc922618acfdef3b3ac84ee142e909263182c9b5b14fed64496fdd3",
+      "hash": "c02ae779b8f569d624ae25f0cef21d52f5fde1069d35f1b3644f6a5e42b507c5",
       "deps": [
         "table",
         "button",
@@ -1799,14 +1799,14 @@
         },
         {
           "path": "dashboard-shell.html",
-          "sha256": "93276d9e827c629169279d3640de7f012d23be4251ec668a37a9d4f2708b4310"
+          "sha256": "0fa5566181f9c2fa50d827a1fa8d792d2c76654f4b2cb209a74ef5481df3d371"
         },
         {
           "path": "dashboard-shell.manifest.json",
-          "sha256": "fc7f4ac466fd2d8482d0868efa8b471b1ded840150cef74426792896158def60"
+          "sha256": "0ffc3dd4b74b215077237b4b86fb5079256ca85f10194b0e84ea879bc1392ecc"
         }
       ],
-      "hash": "7aa9b04f2ca5a45f93a67ebe688cefb9f237c7a6b8d324dc1c07a21f8afd72a6",
+      "hash": "09dac8fa27be9d1d67ab75cd7e7eca6c1021b8ad2b289883c73ff4472dfb0e73",
       "deps": [
         "card",
         "grid",
@@ -1833,14 +1833,14 @@
         },
         {
           "path": "document.html",
-          "sha256": "6481b73d156f31c82431f24591853690e0b09d557f759495abe00b5eb28b9827"
+          "sha256": "097ac6d15cb425c3ae7e033ebb5189e9224e0d6bdae247dac1133827d20480e5"
         },
         {
           "path": "document.manifest.json",
           "sha256": "e99578f71e6e156fdf8a3cd509d634fee481c0083f6dcfaf5b4ea3643a608e3f"
         }
       ],
-      "hash": "4b3677532e4fab58164f083d3f1a097f6372be6331f2ef78214ecbe77960cf10",
+      "hash": "4310ccb4019c4fd6d6d0bc4e7d54935f19a722cea560f91bdd2caa20c63aa72e",
       "deps": [
         "key-value",
         "table",
@@ -1865,14 +1865,14 @@
         },
         {
           "path": "empty-state.html",
-          "sha256": "85261f99c511573edf6eaeaa8d8294e1bf2586bb196135032a3c52d5f9d671b2"
+          "sha256": "01cd37755df445e8d24a67a09bbf650b504739854e69bcfb75387d45c4ffaa76"
         },
         {
           "path": "empty-state.manifest.json",
-          "sha256": "a54cb09a269e32b37dbdae4d0b7a71160f863bc1fba905e0351b1b84b40ebb58"
+          "sha256": "78b3ccf5f5c5ab6f26a3d32d43a043d410257532dbce35772da3084bb098e201"
         }
       ],
-      "hash": "d6429b9f3d8b2145f3f5daf4d95bb5a64dd60206fcb2fb647faf2891ceec743f",
+      "hash": "415de798d4b1f4b614b2a025e9effc7ab0436d29a9d4b820a8d8355d1bd66037",
       "deps": [
         "card",
         "button",
@@ -2029,14 +2029,14 @@
         },
         {
           "path": "search-results.html",
-          "sha256": "fed8af8248a7b61db077825fd60b6f11c37813eea84f91debf7e33b72b1af2dd"
+          "sha256": "743c4e21eb4d02df275337b8069a47407efdd38df26ed8aceab352f932b42f50"
         },
         {
           "path": "search-results.manifest.json",
           "sha256": "d878e556bd0bc16e13161593ee30331e63d4e07b0ca977ee799e84fae26678f0"
         }
       ],
-      "hash": "7eb48c08684e2ea2206bdc69369ba4963d72bba4f3ff66d510833315cff8729e",
+      "hash": "561fdb5c287743816e590674f69133e0c592772490061917e31302aa55eef788",
       "deps": [
         "input",
         "card",
@@ -2061,10 +2061,10 @@
         },
         {
           "path": "settings-page.manifest.json",
-          "sha256": "dfcc73f5ea013bc436fabd781cfbd6037306de5b9e10464dabe53d244682f7c5"
+          "sha256": "170bdc5f95fcbefd3c3ffbaaf1840b5d0c7a607f0a35a71c4ea7f0cadea37d09"
         }
       ],
-      "hash": "785697c3742d323025225dc9971c3120442f648f9458897b91aa57fc00fe7e3f",
+      "hash": "47168e3b85db4e0a8266a1da4cfaaf75f4e523b608fbea91dfabee0169bfb6d5",
       "deps": [
         "tabs",
         "card",

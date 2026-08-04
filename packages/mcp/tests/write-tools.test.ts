@@ -194,7 +194,7 @@ describe("faqir_repair_html", () => {
 
   it("repairs a missing close-button aria-label", async () => {
     const { client } = await makeClient();
-    const bad = `<div data-ui="card"><div data-part="body">x</div><button data-part="close">✕</button></div>`;
+    const bad = `<div data-ui="card"><div data-part="body">x</div><button data-part="close"><svg aria-hidden="true"></svg></button></div>`;
     const res = await client.callTool({ name: "faqir_repair_html", arguments: { html: bad } });
     const data = res.structuredContent as any;
     expect(data.changes.some((c: any) => c.rule_id === "close-label")).toBe(true);
@@ -328,7 +328,7 @@ describe("acceptance — audit/repair require zero filesystem access", () => {
   });
 
   it("repairs a string with no filesystem access", () => {
-    const src = `<div data-ui="card"><div data-part="body">x</div><button data-part="close">✕</button></div>`;
+    const src = `<div data-ui="card"><div data-part="body">x</div><button data-part="close"><svg aria-hidden="true"></svg></button></div>`;
     const results = auditHtmlSource({ source: src, manifests });
     const repaired = applyRepairsToSource(src, results);
     expect(repaired.applied).toBeGreaterThanOrEqual(1);

@@ -101,12 +101,17 @@ Data table with create, read, update, delete operations, search, and pagination
 ├─ [data-part='create-button']  <button>  required  — Primary button to create a new record
 ├─ [data-part='table-wrapper']  <div>  required  — Scrollable container for the data table
 ├─ [data-part='table']  <div>  required  — Nested Faqir table component
-├─ [data-part='row-actions']  <div>  required  — Edit and delete action buttons per row
-├─ [data-part='edit-dialog']  <div>  required  — Dialog for creating or editing a record
-├─ [data-part='delete-dialog']  <div>  required  — Confirmation dialog for deleting a record
-├─ [data-part='pagination']  <div>  required  — Nested Faqir pagination component
+├─ [data-part='row-actions']  <div>  optional  — Edit and delete action buttons per row. A read-only crud-table has no per-row actions. Optional since 0.9-04.
+├─ [data-part='edit-dialog']  <div>  optional  — Dialog for creating or editing a record. A read-only crud-table has no editing affordance. Optional since 0.9-04.
+├─ [data-part='delete-dialog']  <div>  optional  — Confirmation dialog for deleting a record. A crud-table without destructive actions has no delete dialog. Optional since 0.9-04.
+├─ [data-part='pagination']  <div>  optional  — Nested Faqir pagination component. A crud-table that fits on one page has no pager. Optional since 0.9-04.
 ├─ [data-part='empty-state']  <div>  optional  — Shown when the table has no data
-└─ [data-part='bulk-actions']  <div>  optional  — Action bar shown when rows are selected
+├─ [data-part='bulk-actions']  <div>  optional  — Action bar shown when rows are selected
+├─ [data-part='field']  <div>  optional  — One labelled control inside the create/edit dialog
+├─ [data-part='selection-count']  <span>  optional  — Live count of selected rows in the bulk-actions bar
+├─ [data-part='empty-icon']  <div>  optional  — Illustration shown when the table has no rows
+├─ [data-part='empty-title']  <p>  optional  — Headline of the empty state
+└─ [data-part='empty-description']  <p>  optional  — Supporting copy of the empty state
 ```
 
 **Variants**
@@ -152,7 +157,15 @@ Application dashboard layout with sidebar navigation, header, and content area
 ├─ [data-part='search']  <div>  optional  — Search input area within the header
 ├─ [data-part='user-menu']  <div>  optional  — User dropdown menu area in the header
 ├─ [data-part='content']  <main>  required  — Main content area for dashboard pages
-└─ [data-part='footer']  <footer>  optional  — Optional footer at the bottom of the content area
+├─ [data-part='footer']  <footer>  optional  — Optional footer at the bottom of the content area
+├─ [data-part='sidebar-toggle']  <button>  optional  — Button collapsing the sidebar on narrow viewports
+├─ [data-part='nav-icon']  <span>  optional  — Leading glyph of a nav-item
+├─ [data-part='nav-label']  <span>  optional  — Text of a nav-item, hidden when the sidebar is collapsed
+├─ [data-part='sidebar-user']  <div>  optional  — Account block pinned to the foot of the sidebar
+├─ [data-part='sidebar-user-name']  <span>  optional  — Display name inside sidebar-user
+├─ [data-part='header-actions']  <div>  optional  — Trailing cluster of header controls
+├─ [data-part='metric']  <div>  optional  — A single KPI figure inside a content card
+└─ [data-part='activity-item']  <li>  optional  — One entry of the activity feed inside a content card
 ```
 
 **Variants**
@@ -231,15 +244,14 @@ Placeholder display for empty content areas with icon, message, and action
 ├─ [data-part='icon']  <div>  optional  — Decorative icon or illustration area
 ├─ [data-part='title']  <h3>  required  — Primary heading communicating the empty state
 ├─ [data-part='description']  <p>  optional  — Supporting message with context or guidance
-├─ [data-part='action']  <div>  optional  — Primary call-to-action button slot
-└─ [data-part='secondary-action']  <div>  optional  — Optional secondary action or link
+└─ [data-part='actions']  <div>  optional  — Cluster of call-to-action buttons, primary first
 ```
 
 **Variants**
 
 | Variant | Values | Default | Attribute | Applied to |
 |---------|--------|---------|-----------|------------|
-| size | `sm`, `md`, `lg` | `md` | `data-size` | root |
+| size | `sm` | `` | `data-size` | root |
 
 - **Safe transforms:** `change-size`, `change-icon`, `change-title-text`, `change-description-text`, `change-action-button-variant`, `add-secondary-action`, `remove-secondary-action`, `remove-icon`, `restyle-background`
 - **Unsafe (never do):** `remove-title-slot`, `flatten-to-single-div`, `remove-action-without-alternative`
@@ -604,7 +616,7 @@ Settings page with tabbed sections, form fields, and save/discard actions
 ├─ [data-part='header']  <div>  required  — Page header area containing title and description
 ├─ [data-part='title']  <h1>  required  — Page heading text
 ├─ [data-part='description']  <p>  optional  — Brief page description below the title
-├─ [data-ui='tabs']  <div>  required  — Tabs component for switching between settings sections
+├─ [data-ui='tabs']  <div>  optional  — Tabs component for switching between settings sections. A single-section settings page has no tab strip; four of the five reference layouts are exactly that. Optional since 0.9-04.
 ├─ [data-part='section']  <div>  required  — Individual settings section, typically wrapped in a card
 ├─ [data-part='section-title']  <h2>  required  — Heading for a settings section
 ├─ [data-part='section-description']  <p>  optional  — Brief description for a settings section

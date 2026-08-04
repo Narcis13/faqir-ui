@@ -135,7 +135,7 @@ export type { LSidebarProps } from "./recipes/sidebar";
 export { LSlider } from "./recipes/slider";
 export type { LSliderProps, LSliderSize, LSliderType } from "./recipes/slider";
 export { LTable } from "./recipes/table";
-export type { LTableProps, LTableBordered, LTableSize, LTableStriped } from "./recipes/table";
+export type { LTableProps, LTableSize, LTableVariant } from "./recipes/table";
 export { LTabs } from "./recipes/tabs";
 export type { LTabsProps, LTabsSize, LTabsStyleVariant } from "./recipes/tabs";
 export { LTagInput } from "./recipes/tag-input";

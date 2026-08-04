@@ -5,13 +5,11 @@
   "kind": "recipe",
   "category": "feedback",
   "description": "Auto-dismissing notification messages with stack management",
-
   "anatomy": {
     "tag": "div",
     "selector": "[data-ui='toast']",
     "content_model": "slots"
   },
-
   "slots": {
     "container": {
       "selector": "[data-part='container']",
@@ -33,9 +31,9 @@
     },
     "message": {
       "selector": "[data-part='message']",
-      "required": true,
+      "required": false,
       "tag_hint": "span",
-      "description": "Toast message text content"
+      "description": "Toast message text content. Required of an individual toast, not of the container: the resting state of a toast region is empty, and the controller appends toasts into it. Optional since 0.9-04."
     },
     "action": {
       "selector": "[data-part='action']",
@@ -45,40 +43,73 @@
     },
     "close": {
       "selector": "[data-part='close']",
-      "required": true,
+      "required": false,
       "tag_hint": "button",
-      "description": "Dismiss button, must have aria-label"
+      "description": "Dismiss button, must have aria-label. Required of a dismissible toast, not of the container. Optional since 0.9-04."
     }
   },
-
   "variants": {
     "tone": {
-      "values": ["default", "success", "error", "warning"],
+      "values": [
+        "default",
+        "success",
+        "error",
+        "warning"
+      ],
       "default": "default",
       "attr": "data-variant",
       "applied_to": "toast"
     },
     "position": {
-      "values": ["top-right", "top-left", "bottom-right", "bottom-left"],
+      "values": [
+        "top-right",
+        "top-left",
+        "bottom-right",
+        "bottom-left"
+      ],
       "default": "top-right",
       "attr": "data-variant",
       "applied_to": "container"
     }
   },
-
   "states": {
-    "entering": { "attr": "data-state=\"entering\"", "transient": true, "applied_to": "toast" },
-    "visible": { "attr": "data-state=\"visible\"", "default": true, "applied_to": "toast" },
-    "exiting": { "attr": "data-state=\"exiting\"", "transient": true, "applied_to": "toast" },
-    "removed": { "attr": "data-state=\"removed\"", "applied_to": "toast" }
+    "entering": {
+      "attr": "data-state=\"entering\"",
+      "transient": true,
+      "applied_to": "toast"
+    },
+    "visible": {
+      "attr": "data-state=\"visible\"",
+      "default": true,
+      "applied_to": "toast"
+    },
+    "exiting": {
+      "attr": "data-state=\"exiting\"",
+      "transient": true,
+      "applied_to": "toast"
+    },
+    "removed": {
+      "attr": "data-state=\"removed\"",
+      "applied_to": "toast"
+    }
   },
-
   "props": {
-    "message": { "type": "string", "default": "", "description": "Toast message text" },
-    "tone": { "type": "string", "default": "default", "description": "Toast tone: default, success, error, warning" },
-    "duration": { "type": "number", "default": 5000, "description": "Auto-dismiss duration in milliseconds" }
+    "message": {
+      "type": "string",
+      "default": "",
+      "description": "Toast message text"
+    },
+    "tone": {
+      "type": "string",
+      "default": "default",
+      "description": "Toast tone: default, success, error, warning"
+    },
+    "duration": {
+      "type": "number",
+      "default": 5000,
+      "description": "Auto-dismiss duration in milliseconds"
+    }
   },
-
   "a11y": {
     "required_attrs": [
       "role=\"region\" on container",
@@ -89,21 +120,29 @@
     ],
     "keyboard": {}
   },
-
   "tokens_used": [
-    "color-bg", "color-fg", "color-fg-muted", "color-border",
-    "color-success", "color-destructive", "color-warning",
-    "shadow-lg", "radius-lg",
-    "space-2", "space-3", "space-4",
-    "text-sm", "weight-medium",
+    "color-bg",
+    "color-fg",
+    "color-fg-muted",
+    "color-border",
+    "color-success",
+    "color-destructive",
+    "color-warning",
+    "shadow-lg",
+    "radius-lg",
+    "space-2",
+    "space-3",
+    "space-4",
+    "text-sm",
+    "weight-medium",
     "z-toast",
-    "duration-normal", "duration-slow", "ease-out"
+    "duration-normal",
+    "duration-slow",
+    "ease-out"
   ],
-
   "templates": {
     "html": "<div data-ui=\"toast\" data-variant=\"{position}\" data-part=\"container\" role=\"region\" aria-label=\"Notifications\" id=\"{id}\"></div>"
   },
-
   "safe_transforms": [
     "change-position",
     "change-auto-dismiss-duration",
@@ -113,7 +152,6 @@
     "change-max-width",
     "modify-enter-exit-animations"
   ],
-
   "unsafe_transforms": [
     "remove-role-region",
     "remove-aria-label",
@@ -122,19 +160,18 @@
     "remove-close-button",
     "remove-auto-dismiss"
   ],
-
   "composition": {
-    "contains": ["button"],
+    "contains": [
+      "button"
+    ],
     "used_in": []
   },
-
   "files": {
     "html": "toast.html",
     "css": "toast.css",
     "js": "toast.js",
     "manifest": "toast.manifest.json"
   },
-
   "tests": [
     "container-has-role-region",
     "container-has-aria-label-notifications",

@@ -11,7 +11,7 @@ import { createSelectCustom } from "../controllers/select-custom";
 /** Allowed `size` values (manifest variant group "size", attr `data-size` on root). */
 export type LSelectCustomSize = "sm" | "md" | "lg";
 
-export interface LSelectCustomProps extends Omit<ComponentPropsWithoutRef<"div">, "id" | "placeholder" | "value" | "size" | "trigger" | "listbox"> {
+export interface LSelectCustomProps extends Omit<ComponentPropsWithoutRef<"div">, "id" | "placeholder" | "value" | "size" | "trigger" | "listbox" | "chevron"> {
   /** Root/ARIA id base; auto-generated per instance when unset. */
   id?: string;
   /** Template text/attr substitution (default: ""). */
@@ -24,6 +24,8 @@ export interface LSelectCustomProps extends Omit<ComponentPropsWithoutRef<"div">
   value?: ReactNode;
   /** Content projected into the `[data-part="listbox"]` element. */
   listbox?: ReactNode;
+  /** Content projected into the `[data-part="chevron"]` element. */
+  chevron?: ReactNode;
 }
 
 /** `select-custom` — Custom styled select dropdown with search filtering and keyboard navigation Exposes via ref: `open()`, `close()`, `toggle()`, `select()`, `getValue()`. */
@@ -32,13 +34,13 @@ export const LSelectCustom = createFaqirRecipe<LSelectCustomProps>({
   create: createSelectCustom,
   methods: ["open", "close", "toggle", "select", "getValue"],
   events: [],
-  slots: ["trigger", "value", "listbox"],
+  slots: ["trigger", "value", "listbox", "chevron"],
   stringProps: [{ prop: "placeholder", default: "" }, { prop: "value", default: "" }],
   boolProps: [],
   variantProps: [
     { prop: "size", values: ["sm", "md", "lg"] },
   ],
-  tree: {"tag":"div","attrs":[["data-ui",["select-custom"]],["data-state",["closed"]]],"children":[{"tag":"button","attrs":[["data-part",["trigger"]],["role",["combobox"]],["aria-expanded",["false"]],["aria-haspopup",["listbox"]],["aria-controls",[{"p":"id"},"-listbox"]]],"children":[{"tag":"span","attrs":[["data-part",["value"]],["data-placeholder",true]],"children":[{"p":"placeholder"}],"slot":"value"},{"tag":"span","attrs":[["data-part",["chevron"]],["aria-hidden",["true"]]],"children":["▾"]}],"slot":"trigger"},{"tag":"div","attrs":[["data-part",["listbox"]],["role",["listbox"]],["id",[{"p":"id"},"-listbox"]],["hidden",true]],"children":[{"tag":"div","attrs":[["data-part",["option"]],["role",["option"]],["aria-selected",["false"]],["data-value",[{"p":"value"}]]],"children":[]},{"tag":"div","attrs":[["data-part",["option"]],["role",["option"]],["aria-selected",["false"]],["data-value",[{"p":"value"}]]],"children":[]}],"slot":"listbox"}],"dyn":[["size","data-size"]]} as unknown as RecipeNode,
+  tree: {"tag":"div","attrs":[["data-ui",["select-custom"]],["data-state",["closed"]]],"children":[{"tag":"button","attrs":[["data-part",["trigger"]],["role",["combobox"]],["aria-expanded",["false"]],["aria-haspopup",["listbox"]],["aria-controls",[{"p":"id"},"-listbox"]]],"children":[{"tag":"span","attrs":[["data-part",["value"]],["data-placeholder",true]],"children":[{"p":"placeholder"}],"slot":"value"},{"tag":"span","attrs":[["data-part",["chevron"]],["aria-hidden",["true"]]],"children":["▾"],"slot":"chevron"}],"slot":"trigger"},{"tag":"div","attrs":[["data-part",["listbox"]],["role",["listbox"]],["id",[{"p":"id"},"-listbox"]],["hidden",true]],"children":[{"tag":"div","attrs":[["data-part",["option"]],["role",["option"]],["aria-selected",["false"]],["data-value",[{"p":"value"}]]],"children":[]},{"tag":"div","attrs":[["data-part",["option"]],["role",["option"]],["aria-selected",["false"]],["data-value",[{"p":"value"}]]],"children":[]}],"slot":"listbox"}],"dyn":[["size","data-size"]]} as unknown as RecipeNode,
 }, "LSelectCustom");
 
 export default LSelectCustom;

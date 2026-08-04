@@ -116,8 +116,11 @@ describe("faqir audit", () => {
   it("detects missing controller script", async () => {
     await setupProject(["dialog"]);
 
-    // HTML with dialog but no script tag at all
-    const html = `<div data-ui="dialog" data-state="closed" id="test">
+    // A PAGE with a dialog and no script tag at all. The page is where the
+    // runtime belongs, so this is where the rule applies (task 0.9-04).
+    const html = `<!doctype html>
+<html lang="en"><head><title>T</title></head><body><main>
+<div data-ui="dialog" data-state="closed" id="test">
   <button data-part="trigger">Open</button>
   <div data-part="overlay"></div>
   <div data-part="panel" role="dialog" aria-modal="true" aria-labelledby="test-t">
@@ -125,12 +128,39 @@ describe("faqir audit", () => {
     <button data-part="close" aria-label="Close">X</button>
     <div data-part="body">C</div>
   </div>
-</div>`;
+</div>
+</main></body></html>`;
     await Bun.write(join(TEST_DIR, "test.html"), html);
 
     const summary = await runAudit({ cwd: TEST_DIR });
     const controllerResults = summary.results.filter(r => r.rule_id === "controller-loaded");
     expect(controllerResults.length).toBeGreaterThan(0);
+  });
+
+  // Task 0.9-04, resolving follow-up 0.7-17. `faqir audit` scans `ui/**`, which
+  // includes every reference fragment `faqir add` copied in; before this, a
+  // fresh `init` + `add` reported a wall of findings from Faqir's own markup.
+  // A fragment cannot carry the runtime, so the rules that ask for one do not
+  // apply to it — decided from the content, never from a path allow-list.
+  it("does not ask a fragment for a runtime it cannot carry", async () => {
+    await setupProject(["dialog"]);
+
+    const fragment = `<div data-ui="dialog" data-state="closed" id="frag">
+  <button data-part="trigger">Open</button>
+  <div data-part="overlay"></div>
+  <div data-part="panel" role="dialog" aria-modal="true" aria-labelledby="frag-t">
+    <h2 data-part="title" id="frag-t">T</h2>
+    <button data-part="close" aria-label="Close">X</button>
+    <div data-part="body">C</div>
+  </div>
+</div>`;
+    await Bun.write(join(TEST_DIR, "fragment.html"), fragment);
+
+    const summary = await runAudit({ cwd: TEST_DIR });
+    const runtimeResults = summary.results.filter(
+      (r) => r.file.includes("fragment.html") && (r.rule_id === "controller-loaded" || r.rule_id === "focus-trap"),
+    );
+    expect(runtimeResults).toEqual([]);
   });
 
   it("audit --file scopes to a single file", async () => {
@@ -176,7 +206,7 @@ describe("faqir repair", () => {
   <div data-part="overlay"></div>
   <div data-part="panel" role="dialog" aria-modal="true" aria-labelledby="test-t">
     <h2 data-part="title" id="test-t">Title</h2>
-    <button data-part="close">X</button>
+    <button data-part="close"><svg aria-hidden="true"></svg></button>
     <div data-part="body">Content</div>
   </div>
 </div>
@@ -206,7 +236,7 @@ describe("faqir repair", () => {
   <div data-part="overlay"></div>
   <div data-part="panel" role="dialog" aria-modal="true" aria-labelledby="test-t">
     <h2 data-part="title" id="test-t">Title</h2>
-    <button data-part="close">X</button>
+    <button data-part="close"><svg aria-hidden="true"></svg></button>
     <div data-part="body">Content</div>
   </div>
 </div>
