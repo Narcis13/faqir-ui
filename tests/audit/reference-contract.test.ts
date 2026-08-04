@@ -19,7 +19,8 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { Glob } from "bun";
 import { auditHtmlSource, RUNTIME_PRESENCE_RULES } from "../../src/audit/html-audit";
-import { loadRegistryManifestMap } from "../../src/utils/components";
+import { loadRegistryManifestMap, loadRegistryStylesheetMap } from "../../src/utils/components";
+import { TRIGGER_CONTRACT_RULE, TRIGGER_PART } from "../../src/audit/rules";
 import { maskNonMarkup } from "../../src/parser/html-parser";
 import BASELINE_ROOTS from "../fixtures/registry-component-roots.json";
 
@@ -33,8 +34,10 @@ const FRAGMENTS = ["primitives", "recipes", "patterns"]
 // file makes `bun test` serialise the whole run behind this file's evaluation
 // and the suite stops finishing (task 0.9-04 — found the slow way).
 let manifests: Awaited<ReturnType<typeof loadRegistryManifestMap>>;
+let styles: Awaited<ReturnType<typeof loadRegistryStylesheetMap>>;
 beforeAll(async () => {
   manifests = await loadRegistryManifestMap(REGISTRY);
+  styles = await loadRegistryStylesheetMap(REGISTRY);
 });
 
 const read = (rel: string) => readFileSync(join(REGISTRY, rel), "utf8");
@@ -67,6 +70,15 @@ const INTENDED_ROOT_CHANGES: Record<string, string> = {
   "primitives/cluster/cluster.html": "5 bare cells → surface",
   "primitives/switcher/switcher.html": "5 body-only cards → surface (2 richer cards kept)",
   "primitives/container/container.html": "each measure column's content bounded by a surface",
+  // The trigger contract (0.9-05): four recipes styled their trigger part with
+  // nothing at all, so every one of those 16 buttons rendered as the reset's
+  // bare element. They now delegate to the `button` primitive, which is the
+  // route `alert-dialog` already took — so what changed is that the trigger
+  // demonstrates a control, which is what a trigger is.
+  "recipes/dialog/dialog.html": "4 unstyled triggers → data-ui=\"button\"",
+  "recipes/drawer/drawer.html": "4 unstyled triggers → data-ui=\"button\"",
+  "recipes/sheet/sheet.html": "4 unstyled triggers → data-ui=\"button\"",
+  "recipes/tooltip/tooltip.html": "4 unstyled triggers → data-ui=\"button\"",
 };
 
 describe("the registry's own markup satisfies its own rules", () => {
@@ -77,7 +89,7 @@ describe("the registry's own markup satisfies its own rules", () => {
 
   it("reports zero findings under the full rule set", () => {
     const findings = FRAGMENTS.flatMap((rel) =>
-      auditHtmlSource({ source: read(rel), file: rel, manifests }).map(
+      auditHtmlSource({ source: read(rel), file: rel, manifests, styles }).map(
         (r) => `${r.file}:${r.line} [${r.rule_id}] ${r.message}`,
       ),
     );
@@ -90,11 +102,67 @@ describe("the registry's own markup satisfies its own rules", () => {
   it("reports zero findings at every severity, per rule", () => {
     const byRule: Record<string, number> = {};
     for (const rel of FRAGMENTS) {
-      for (const r of auditHtmlSource({ source: read(rel), file: rel, manifests })) {
+      for (const r of auditHtmlSource({ source: read(rel), file: rel, manifests, styles })) {
         byRule[r.rule_id] = (byRule[r.rule_id] ?? 0) + 1;
       }
     }
     expect(byRule).toEqual({});
+  });
+});
+
+// ── the trigger contract (task 0.9-05) ──────────────────────────────────────
+//
+// Asserted over the WHOLE registry rather than over the four recipes the sweep
+// found, so a recipe added tomorrow inherits the gate without a suite edit. The
+// sweep above already runs the rule; these cases pin what it is measuring, so a
+// silently-skipped rule (styles not threaded through, say) cannot pass as
+// compliance.
+describe("every trigger part in the registry satisfies the trigger contract", () => {
+  /** Every fragment carrying at least one trigger part, with its trigger count. */
+  const withTriggers = () =>
+    FRAGMENTS.map((rel) => ({
+      rel,
+      count: (read(rel).match(/data-part="trigger"/g) ?? []).length,
+    })).filter((f) => f.count > 0);
+
+  it("finds triggers to check — in more than one layer", () => {
+    const files = withTriggers();
+    expect(files.length).toBeGreaterThanOrEqual(15);
+    expect(files.reduce((n, f) => n + f.count, 0)).toBeGreaterThanOrEqual(70);
+    // primitives, recipes and patterns all carry one, so the gate is not a
+    // recipe-only claim wearing a registry-wide name.
+    for (const layer of ["primitives/", "recipes/", "patterns/"]) {
+      expect(files.some((f) => f.rel.startsWith(layer))).toBe(true);
+    }
+  });
+
+  it("reports no trigger-contract finding on any fragment", () => {
+    const findings = FRAGMENTS.flatMap((rel) =>
+      auditHtmlSource({ source: read(rel), file: rel, manifests, styles })
+        .filter((r) => r.rule_id === TRIGGER_CONTRACT_RULE.id)
+        .map((r) => `${r.file}:${r.line} ${r.message}`),
+    );
+    expect(findings).toEqual([]);
+  });
+
+  // The contract, restated as the two forms it allows — read off the registry
+  // rather than off the rule, so this fails if the tree drifts even where the
+  // rule happens to skip (a component whose sheet is missing, say).
+  it("satisfies it in one of exactly two ways, per component", () => {
+    const delegating: string[] = [];
+    const selfStyled: string[] = [];
+    for (const [name, css] of styles) {
+      if (!css.includes(`[data-part="${TRIGGER_PART}"]`)) continue;
+      selfStyled.push(name);
+    }
+    for (const { rel } of withTriggers()) {
+      const source = maskNonMarkup(read(rel));
+      for (const [tag] of source.matchAll(/<[a-z][^>]*data-part="trigger"[^>]*>/g)) {
+        if (tag.includes("data-ui=")) delegating.push(rel);
+      }
+    }
+    expect(selfStyled.length).toBeGreaterThan(0);
+    expect(delegating.length).toBeGreaterThan(0);
   });
 });
 

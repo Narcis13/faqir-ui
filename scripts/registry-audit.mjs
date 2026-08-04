@@ -62,7 +62,7 @@ import { collectDefinedTokens } from "../src/parser/css-parser";
 import { parseDocument } from "../src/parser/html-parser";
 import { DOCUMENT_RULES } from "../src/audit/rules";
 import { auditHtmlSource } from "../src/audit/html-audit";
-import { loadRegistryManifestMap } from "../src/utils/components";
+import { loadRegistryManifestMap, loadRegistryStylesheetMap } from "../src/utils/components";
 import {
   buildBreakpointCanonResults,
   buildUndeclaredAttributeResults,
@@ -304,11 +304,22 @@ if (cssRuleOffenders["undeclared-attribute"].length === 0 && cssRuleOffenders["b
 //
 // Everything else was fixed rather than excused: real markup defects, real
 // manifest drift, and five rules that were reporting correct markup.
+//  3. The stylesheets travel with the manifests (task 0.9-05), because
+//     `trigger-contract` is decided from BOTH halves of a component: a trigger
+//     is satisfied either by carrying a `data-ui` or by its own sheet styling
+//     the part. Handing the engine markup alone would silently skip the rule —
+//     which is exactly how `dialog` shipped four unstyled triggers.
 const fullRuleManifests = await loadRegistryManifestMap(REGISTRY);
+const fullRuleStyles = await loadRegistryStylesheetMap(REGISTRY);
 const fullRuleOffenders = [];
 for (const rel of htmlFiles) {
   const src = readFileSync(join(REGISTRY, rel), "utf8");
-  for (const r of auditHtmlSource({ source: src, file: rel, manifests: fullRuleManifests })) {
+  for (const r of auditHtmlSource({
+    source: src,
+    file: rel,
+    manifests: fullRuleManifests,
+    styles: fullRuleStyles,
+  })) {
     fullRuleOffenders.push(`  ${rel}:${r.line} — [${r.rule_id}] ${r.message}`);
   }
 }

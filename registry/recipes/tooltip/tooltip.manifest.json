@@ -17,7 +17,7 @@
       "selector": "[data-part='trigger']",
       "required": true,
       "tag_hint": "button",
-      "description": "Element that activates the tooltip on hover or focus"
+      "description": "Element that activates the tooltip on hover or focus. Carries data-ui=\"button\": a trigger part is either a component in its own right or styled by its own recipe (the trigger contract, audit rule `trigger-contract`)."
     },
     "content": {
       "selector": "[data-part='content']",
@@ -82,7 +82,7 @@
   ],
 
   "composition": {
-    "contains": [],
+    "contains": ["button"],
     "used_in": []
   },
 

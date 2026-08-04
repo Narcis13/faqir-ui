@@ -2,6 +2,7 @@
 
 import type { ParsedComponent, ParsedElement, ParsedDocument } from "../parser/html-parser";
 import { offsetToPosition, textInSubtree } from "../parser/html-parser";
+import { findSelectedAttributes } from "../parser/css-parser";
 import type { Manifest, ManifestVariant } from "../manifest";
 import { TIERS, isTier } from "../utils/breakpoints";
 import { suggestClosest } from "../utils/suggest";
@@ -904,6 +905,113 @@ export const ALL_RULES: AuditRule[] = [
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
+// The trigger contract (task 0.9-05)
+//
+// `dialog.css` shipped no rule for `[data-part="trigger"]` at all, so all four
+// of its triggers rendered as the reset's bare `<button>` — no padding, no
+// border, no background — while the same stylesheet dressed its footer actions
+// with `data-ui="button"`. One file, two answers, and the docs page for the
+// framework's flagship recipe demonstrated nothing.
+//
+// That is a missing **contract**, not a missing declaration, because there are
+// two defensible answers and no rule said which:
+//
+//   1. **Delegate.** The trigger carries `data-ui`, so a primitive styles it —
+//      `alert-dialog` already does exactly this (`data-ui="button"
+//      data-variant="destructive"`), which is why its page looks right.
+//   2. **Own it.** The recipe's stylesheet declares a rule for its own
+//      `[data-part="trigger"]` — `dropdown`, `tabs`, `accordion`, `popover`,
+//      `select-custom`, `date-picker`, `menubar`, `sidebar` and `collapsible`
+//      all take this route, and must: their triggers are not buttons in the
+//      visual sense (a tab, an accordion header, a select field).
+//
+// Either is fine. **Neither is not** — that is a trigger nothing styles, and it
+// is invisible to review because a missing rule looks like nothing at all.
+//
+// The rule needs both halves of the component to decide, which is what makes it
+// the only rule here that reads a stylesheet as well as markup: the finding is
+// on an element (markup), but one of the two ways to satisfy it is a fact about
+// the sheet. A component whose stylesheet the caller cannot supply is skipped
+// rather than guessed at — the same stance `undeclared-attribute` takes toward a
+// manifest it cannot find.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** The part this contract governs. A trigger is the control that opens a thing. */
+export const TRIGGER_PART = "trigger";
+
+export const TRIGGER_CONTRACT_RULE: RuleInfo = {
+  id: "trigger-contract",
+  severity: "error",
+  applies_to: "component markup vs its own stylesheet",
+  exempt: [
+    "components whose stylesheet is not available to the caller (never guessed at)",
+  ],
+  description:
+    'Every [data-part="trigger"] must be styled by something: either it carries a ' +
+    'data-ui (delegating its look to a primitive — data-ui="button" is the usual ' +
+    "answer) or its own component's stylesheet declares a rule for " +
+    '[data-part="trigger"]. A trigger with neither renders as the reset\'s bare ' +
+    "element — no padding, no border, no affordance — and nothing in review shows " +
+    "a rule that was never written.",
+};
+
+/**
+ * Does this stylesheet declare any rule targeting `[data-part="<part>"]`?
+ *
+ * Reads the sheet through the same selector scanner `undeclared-attribute` uses,
+ * so "styles the part" means what the CSS parser says it means — a substring
+ * search would count the name inside a comment or an at-rule prelude.
+ */
+export function stylesheetStylesPart(css: string, part: string): boolean {
+  for (const selected of findSelectedAttributes(css)) {
+    if (selected.attr.toLowerCase() === "data-part" && selected.value === part) return true;
+  }
+  return false;
+}
+
+/**
+ * `trigger-contract` findings for one component against its own stylesheet
+ * (task 0.9-05).
+ *
+ * Attribution is `ParsedComponent.parts`, so a trigger belongs to the component
+ * whose manifest declares the slot — `inbox`'s tab triggers are `tabs`' triggers
+ * and are answered by `tabs.css`, not by the pattern that composes it.
+ */
+export function buildTriggerContractResults(
+  component: ParsedComponent,
+  css: string,
+  file: string = component.file,
+): AuditResult[] {
+  const triggers = component.parts[TRIGGER_PART];
+  if (!triggers || triggers.length === 0) return [];
+  if (stylesheetStylesPart(css, TRIGGER_PART)) return [];
+
+  const results: AuditResult[] = [];
+  for (const el of triggers) {
+    if ("data-ui" in el.attrs) continue; // delegated to a primitive that styles it
+    results.push({
+      rule_id: TRIGGER_CONTRACT_RULE.id,
+      severity: TRIGGER_CONTRACT_RULE.severity,
+      component_name: component.name,
+      file,
+      line: countLineFromEl(component, el),
+      message:
+        `[data-part="${TRIGGER_PART}"] in [data-ui="${component.name}"] is styled by nothing — ` +
+        `${component.name}.css declares no rule for [data-part="${TRIGGER_PART}"] and this ` +
+        `element carries no data-ui. Give it data-ui="button" (the usual answer for a control ` +
+        `that opens an overlay), or style the part in ${component.name}.css (the answer for a ` +
+        `trigger that is not a button — a tab, an accordion header, a select field).`,
+      fix: {
+        type: "add-attribute",
+        offset: el.start,
+        details: { attribute: "data-ui", value: "button", part: TRIGGER_PART },
+      },
+    });
+  }
+  return results;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Document-level rules (task 0.4-15)
 //
 // These operate on a whole HTML file (`ParsedDocument`), not a single component
@@ -1305,6 +1413,7 @@ export function getRuleInventory(): RuleInfo[] {
     ...fromDocumentRules,
     ...ANTIPATTERN_RULES,
     ...CSS_RULES,
+    TRIGGER_CONTRACT_RULE,
     CONTRAST_TOKENS_RULE,
   ];
 }

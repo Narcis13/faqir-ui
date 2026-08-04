@@ -17,7 +17,7 @@
       "selector": "[data-part='trigger']",
       "required": true,
       "tag_hint": "button",
-      "description": "Button that opens the drawer"
+      "description": "Button that opens the drawer. Carries data-ui=\"button\": a trigger part is either a component in its own right or styled by its own recipe (the trigger contract, audit rule `trigger-contract`)."
     },
     "overlay": {
       "selector": "[data-part='overlay']",

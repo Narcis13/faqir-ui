@@ -111,8 +111,14 @@
   color: var(--color-fg);
 }
 
-/* ── Close Button ── */
-[data-ui="drawer"] [data-part="close"] {
+/* ── Close Button ──
+   `:not([data-ui])` is the trigger contract read backwards (task 0.9-05): a part
+   that delegates its look to a primitive must not then be restyled by the recipe.
+   Without it this icon-close rule also caught the footer's
+   `<button data-ui="button" data-part="close">Cancel</button>` and squashed it to
+   a 32px borderless square — invisible for as long as the panel was, and the
+   first thing the forced-open preview showed. */
+[data-ui="drawer"] [data-part="close"]:not([data-ui]) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -128,12 +134,12 @@
   flex-shrink: 0;
 }
 
-[data-ui="drawer"] [data-part="close"]:hover {
+[data-ui="drawer"] [data-part="close"]:not([data-ui]):hover {
   background: var(--color-bg-muted, oklch(0.96 0.004 260));
   color: var(--color-fg);
 }
 
-[data-ui="drawer"] [data-part="close"]:focus-visible {
+[data-ui="drawer"] [data-part="close"]:not([data-ui]):focus-visible {
   outline: 2px solid var(--color-ring, oklch(0.55 0.22 264 / 0.4));
   outline-offset: 2px;
 }

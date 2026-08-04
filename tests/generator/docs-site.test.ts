@@ -34,12 +34,16 @@ import {
   isSitePage,
   parseTokenReference,
   relUrl,
+  renderOverlayPreviewRules,
+  rendersOnlyTriggers,
   sanitizeReferenceFragment,
   splitReferenceDemos,
   tokenAnchor,
   DOCS_GENERATION_MARKER,
   EXAMPLE_GUTTER,
   EXAMPLE_MEASURE,
+  OVERLAY_PREVIEW_ATTR,
+  OVERLAY_PREVIEW_SURFACES,
   type DocsComponent,
   type SiteFile,
 } from "../../src/generator/docs";
@@ -688,6 +692,125 @@ describe("site stylesheet", () => {
   it("inlines nothing and imports nothing — one file, no network", () => {
     expect(css).not.toContain("@import");
     expect(css).not.toMatch(/url\(\s*["']?https?:/i);
+  });
+});
+
+// ── forced-open overlay previews (task 0.9-05) ──────────────────────────────
+//
+// Eight recipes documented themselves with a lone trigger and nothing else,
+// because the panel is `hidden` until a controller opens it. The docs force
+// those surfaces open — and the whole claim is that it is a DOCS state: the
+// registry, the example page's markup and the copy-for-agents payload are the
+// same bytes whether the preview is on or off. `buildDocsSite({ overlayPreview:
+// false })` is that comparison, run for real rather than reasoned about.
+describe("forced-open overlay previews", () => {
+  const without = buildDocsSite({ overlayPreview: false });
+  const withoutByPath = new Map(without.map((f) => [f.path, f.content]));
+
+  it("declares a surface for every component whose fragment shows only triggers", () => {
+    const lonely = components
+      .filter((c) => existsSync(c.referencePath))
+      .filter((c) => rendersOnlyTriggers(sanitizeReferenceFragment(readFileSync(c.referencePath, "utf8"))))
+      .map((c) => c.name)
+      .sort();
+
+    // The eight the sweep found. Named here so a change to the set is a diff
+    // someone has to justify, not a silent widening or narrowing.
+    expect(lonely).toEqual([
+      "alert-dialog",
+      "command-palette",
+      "dialog",
+      "drawer",
+      "dropdown",
+      "popover",
+      "sheet",
+      "tooltip",
+    ]);
+    // The gate: derived, so a recipe added tomorrow inherits it.
+    for (const name of lonely) {
+      expect(OVERLAY_PREVIEW_SURFACES[name], `${name} renders nothing but its triggers and declares no preview surface`).toBeDefined();
+    }
+  });
+
+  it("names a part the fragment really hides, with the display it really takes", () => {
+    for (const [name, surfaces] of Object.entries(OVERLAY_PREVIEW_SURFACES)) {
+      const c = components.find((x) => x.name === name)!;
+      const fragment = readFileSync(c.referencePath, "utf8");
+      const css = readFileSync(join(REGISTRY, c.layer, c.name, c.manifest.files.css), "utf8");
+      for (const { part, display } of surfaces) {
+        // The part exists, is a declared slot, and is hidden in the markup —
+        // a preview for a part that is already visible reveals nothing.
+        expect(c.manifest.slots[part], `${name} declares no "${part}" slot`).toBeDefined();
+        expect(fragment).toMatch(new RegExp(`data-part="${part}"[^>]*hidden|hidden[^>]*data-part="${part}"`));
+        // …and the display matches what the recipe lays the part out as, which
+        // the reset's `[hidden] { display: none !important }` otherwise erases.
+        const declared = new RegExp(
+          `\\[data-part="${part}"\\][^{]*\\{[^}]*?display:\\s*([a-z-]+)`,
+        ).exec(css);
+        expect(declared?.[1] ?? "block", `${name}/${part} display`).toBe(display);
+      }
+    }
+  });
+
+  it("marks exactly those example pages, and only example pages", () => {
+    const marked = files.filter((f) => f.content.includes(`${OVERLAY_PREVIEW_ATTR}="`));
+    const pagesMarked = marked.filter((f) => f.path.endsWith(".html")).map((f) => f.path);
+    expect(pagesMarked.every(isExamplePage)).toBe(true);
+    expect(pagesMarked.length).toBe(Object.keys(OVERLAY_PREVIEW_SURFACES).length);
+    // The rest of the site is untouched: only the stylesheet mentions it at all.
+    expect(marked.filter((f) => !f.path.endsWith(".html")).map((f) => f.path)).toEqual([
+      "styles/faqir.css",
+    ]);
+  });
+
+  it("is docs-only: every example page's registry markup is byte-identical", () => {
+    expect(without.map((f) => f.path)).toEqual(files.map((f) => f.path));
+    for (const c of components) {
+      if (!existsSync(c.referencePath)) continue;
+      const fragment = sanitizeReferenceFragment(readFileSync(c.referencePath, "utf8"));
+      const on = page(c.examplePath);
+      const off = withoutByPath.get(c.examplePath)!;
+      // The one legal difference between the two builds is the attribute on
+      // <html>; strip it and the pages are the same document.
+      expect(on.replace(new RegExp(` ${OVERLAY_PREVIEW_ATTR}="[^"]*"`), "")).toBe(off);
+      for (const demo of splitReferenceDemos(fragment)) {
+        expect(markupOnly(on), `${c.name}'s example lost its fragment`).toContain(
+          markupOnly(demo.html),
+        );
+      }
+    }
+  });
+
+  it("changes no copy-for-agents payload — the thing people paste", () => {
+    const snippets = files.filter((f) => f.path.startsWith("snippets/"));
+    expect(snippets.length).toBeGreaterThan(50);
+    for (const f of snippets) {
+      expect(f.content, `${f.path} changed with the preview on`).toBe(
+        withoutByPath.get(f.path) ?? "",
+      );
+      expect(f.content).not.toContain(OVERLAY_PREVIEW_ATTR);
+    }
+  });
+
+  it("lives entirely in the site stylesheet, which the preview switch removes", () => {
+    const on = page("styles/faqir.css");
+    const off = withoutByPath.get("styles/faqir.css")!;
+    expect(on).toContain(renderOverlayPreviewRules());
+    expect(off).not.toContain(OVERLAY_PREVIEW_ATTR);
+    // …and it is purely appended: everything before it is the same bytes, so
+    // the preview cannot have perturbed a token, a base rule or a component.
+    expect(on.startsWith(off.replace(/\n$/, ""))).toBe(true);
+  });
+
+  it("scopes every rule to one component's own page", () => {
+    // A `dropdown` inside `dashboard-shell` must stay shut on the shell's page:
+    // the reveal is about the component the page documents, not the part name.
+    for (const line of renderOverlayPreviewRules().split("\n")) {
+      if (!line.includes("[data-part=")) continue;
+      expect(line, `unscoped preview rule: ${line}`).toMatch(
+        new RegExp(`\\[${OVERLAY_PREVIEW_ATTR}="[a-z-]+"\\]`),
+      );
+    }
   });
 });
 

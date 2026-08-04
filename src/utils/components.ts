@@ -210,6 +210,34 @@ export async function loadRegistryManifestMap(registryPath: string): Promise<Map
   return map;
 }
 
+/**
+ * Every registry component's stylesheet, keyed the same way
+ * {@link loadRegistryManifestMap} keys manifests — the second input the audit
+ * engine needs for `trigger-contract` (task 0.9-05).
+ *
+ * The sheet is the one the manifest's `files.css` names, so `icon` (whose sheet
+ * is `icons.css`) is paired correctly rather than skipped. A component that
+ * declares no stylesheet is simply absent from the map, and the rule skips it.
+ */
+export async function loadRegistryStylesheetMap(registryPath: string): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+
+  for (const name of listRegistryComponents(registryPath)) {
+    const found = findComponentInRegistry(name, registryPath);
+    if (!found) continue;
+    const manifest = await loadRegistryManifest(name, registryPath);
+    const cssPath = join(found.path, manifest?.files?.css ?? `${found.name}.css`);
+    if (existsSync(cssPath)) map.set(name, readFileSync(cssPath, "utf8"));
+  }
+
+  for (const [alias, canonical] of getRegistryAliases(registryPath)) {
+    const css = map.get(canonical);
+    if (css !== undefined && !map.has(alias)) map.set(alias, css);
+  }
+
+  return map;
+}
+
 export function controllerName(recipe: string): string {
   return "create" + recipe.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join("");
 }

@@ -16,7 +16,13 @@
 
 import { extractComponents, parseDocument } from "../parser/html-parser";
 import type { Manifest } from "../manifest";
-import { type AuditResult, ALL_RULES, DOCUMENT_RULES } from "./rules";
+import {
+  type AuditResult,
+  ALL_RULES,
+  DOCUMENT_RULES,
+  TRIGGER_CONTRACT_RULE,
+  buildTriggerContractResults,
+} from "./rules";
 
 /**
  * Rules that assert a **runtime is present in the same file** — not a property
@@ -46,6 +52,16 @@ export interface HtmlAuditInput {
   file?: string;
   /** Manifests keyed by their `data-ui` name (canonical + aliases). */
   manifests: Map<string, Manifest>;
+  /**
+   * Component stylesheets, keyed exactly as `manifests` is (task 0.9-05).
+   *
+   * Optional, and the ONLY input `trigger-contract` can be decided from: one of
+   * its two satisfying forms is a fact about the sheet, so a component whose
+   * stylesheet the caller cannot supply is skipped rather than guessed at. Every
+   * caller that has the sheets on hand passes them — `runAudit` from the
+   * project's `ui/**`, the registry gate from `registry/**`.
+   */
+  styles?: Map<string, string>;
   /** Rule IDs to skip. */
   skipRules?: string[];
 }
@@ -86,11 +102,17 @@ export function auditHtmlSource(input: HtmlAuditInput): AuditResult[] {
     manifests.get(name)?.slots?.[slot] !== undefined,
   );
 
+  const triggerContract = !skipRules.has(TRIGGER_CONTRACT_RULE.id) && input.styles !== undefined;
+
   for (const component of components) {
     const manifest = manifests.get(component.name);
     if (!manifest) continue; // unknown/not-installed component — skip per-component rules
     for (const rule of activeRules) {
       results.push(...rule.check(component, manifest));
+    }
+    if (triggerContract) {
+      const css = input.styles!.get(component.name);
+      if (css !== undefined) results.push(...buildTriggerContractResults(component, css, file));
     }
   }
 

@@ -38,7 +38,12 @@ import {
   MANIFESTS_GLOBAL,
 } from "../../src/generator/docs";
 import { auditHtmlSource } from "../../src/audit/checker";
-import { ALL_RULES, DOCUMENT_RULES, type AuditResult } from "../../src/audit/rules";
+import {
+  ALL_RULES,
+  DOCUMENT_RULES,
+  TRIGGER_CONTRACT_RULE,
+  type AuditResult,
+} from "../../src/audit/rules";
 import {
   CSS_RULES,
   buildBreakpointCanonResults,
@@ -61,7 +66,10 @@ interface BundleApi {
   version: string;
   rules: Array<{ id: string; severity: string; description: string; scope: string }>;
   severities: string[];
-  createAuditor(manifests: Record<string, Manifest>): {
+  createAuditor(
+    manifests: Record<string, Manifest>,
+    styles?: Record<string, string>,
+  ): {
     audit(source: string, options?: { file?: string; skipRules?: string[] }): AuditResult[];
     components: string[];
   };
@@ -197,12 +205,17 @@ describe("the browser audit bundle", () => {
     expect(bundleSource).not.toMatch(/https?:\/\//);
   });
 
-  it("advertises exactly the rules the engine runs, in all three scopes", () => {
+  it("advertises exactly the rules the engine runs, in all four scopes", () => {
     const api = loadBundle();
     const expected = [
       ...ALL_RULES.map((r) => ({ id: r.id, severity: r.severity, scope: "component" })),
       ...DOCUMENT_RULES.map((r) => ({ id: r.id, severity: r.severity, scope: "document" })),
       ...CSS_RULES.map((r) => ({ id: r.id, severity: r.severity, scope: "css" })),
+      {
+        id: TRIGGER_CONTRACT_RULE.id,
+        severity: TRIGGER_CONTRACT_RULE.severity,
+        scope: "markup+css",
+      },
     ];
     expect(api.rules.map((r) => ({ id: r.id, severity: r.severity, scope: r.scope }))).toEqual(
       expected,
@@ -212,6 +225,13 @@ describe("the browser audit bundle", () => {
     expect(api.rules.filter((r) => r.scope === "css").map((r) => r.id)).toEqual([
       "undeclared-attribute",
       "breakpoint-canon",
+    ]);
+    // `trigger-contract` (0.9-05) is neither: its finding is on markup, but one
+    // of the two ways to satisfy it is a fact about the component's stylesheet,
+    // so a caller holding only one of the two cannot run it — which is exactly
+    // what the playground is, and why it counts neither scope.
+    expect(api.rules.filter((r) => r.scope === "markup+css").map((r) => r.id)).toEqual([
+      "trigger-contract",
     ]);
   });
 
@@ -400,6 +420,74 @@ describe("CLI ↔ browser finding parity", () => {
         expect(Array.isArray(results)).toBe(true);
         expect(results.some((r) => r.rule_id === "audit-error")).toBe(false);
       }
+    });
+  });
+
+  // ── the trigger contract, through the same bundle (task 0.9-05) ───────────
+  //
+  // The third seam: a rule decided from a component's markup AND its stylesheet.
+  // It only runs where the caller supplies the sheets, so the parity claim has
+  // to be made twice — once for an auditor that was given them and once for one
+  // that was not, because "the rule is silent" and "the rule never ran" look the
+  // same from the outside and only one of them is parity.
+  describe("the trigger contract", () => {
+    const dialog = components.find((c) => c.name === "dialog")!;
+    const dialogCss = readFileSync(
+      join(dirname(dialog.referencePath), dialog.manifest.files?.css ?? "dialog.css"),
+      "utf8",
+    );
+    const bare = '<div data-ui="dialog" data-state="closed"><button data-part="trigger">Open</button></div>';
+    const delegated =
+      '<div data-ui="dialog" data-state="closed">' +
+      '<button data-part="trigger" data-ui="button" data-variant="primary">Open</button></div>';
+    const styledSheet = '[data-ui="dialog"] [data-part="trigger"] { cursor: pointer; }';
+
+    const cases = [
+      { label: "neither form — a finding", source: bare, css: "" },
+      { label: "delegated to a primitive — silent", source: delegated, css: "" },
+      { label: "styled by its own recipe — silent", source: bare, css: styledSheet },
+      { label: "both forms at once — silent", source: delegated, css: styledSheet },
+      { label: "the shipped recipe, its own sheet", source: readFileSync(dialog.referencePath, "utf8"), css: dialogCss },
+    ];
+
+    it("reports a finding for neither form and stays silent for both", () => {
+      for (const c of cases) {
+        const withStyles = api.createAuditor(shipped, { dialog: c.css });
+        const ids = withStyles.audit(c.source, { file: "f.html" }).map((r) => r.rule_id);
+        const fired = ids.filter((id) => id === TRIGGER_CONTRACT_RULE.id);
+        expect(fired.length, c.label).toBe(c.label.includes("a finding") ? 1 : 0);
+      }
+    });
+
+    it("agrees with the CLI on every case — through the committed bundle", () => {
+      for (const c of cases) {
+        const styles = new Map([["dialog", c.css]]);
+        const expected = auditHtmlSource({
+          source: c.source,
+          file: "f.html",
+          manifests: cli,
+          styles,
+        });
+        const actual = api.createAuditor(shipped, { dialog: c.css }).audit(c.source, { file: "f.html" });
+        expect(JSON.stringify(actual), c.label).toBe(JSON.stringify(expected));
+      }
+    });
+
+    it("skips the rule — on both sides — when the sheets were never supplied", () => {
+      const ids = auditor.audit(bare, { file: "f.html" }).map((r) => r.rule_id);
+      expect(ids).not.toContain(TRIGGER_CONTRACT_RULE.id);
+      expect(JSON.stringify(auditor.audit(bare, { file: "f.html" }))).toBe(
+        JSON.stringify(auditHtmlSource({ source: bare, file: "f.html", manifests: cli })),
+      );
+    });
+
+    it("honours skipRules", () => {
+      const withStyles = api.createAuditor(shipped, { dialog: "" });
+      expect(
+        withStyles
+          .audit(bare, { file: "f.html", skipRules: [TRIGGER_CONTRACT_RULE.id] })
+          .map((r) => r.rule_id),
+      ).not.toContain(TRIGGER_CONTRACT_RULE.id);
     });
   });
 

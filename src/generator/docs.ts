@@ -81,6 +81,7 @@ import {
   parseArchetypes,
   type ParsedArchetype,
 } from "../utils/layout";
+import { parseDocument, type ParsedElement } from "../parser/html-parser";
 import type { ThemeManifest } from "../theme-manifest";
 // The playground's rule legend is derived from the engine's own rule lists, so it
 // cannot describe a rule the shipped browser bundle does not run.
@@ -290,6 +291,14 @@ export interface DocsSiteOptions {
    * (the CDN pin the copy-for-agents snippets carry). Defaults to `<package>`.
    */
   packageRoot?: string;
+  /**
+   * Force the overlay recipes' panels open on their own example pages
+   * (task 0.9-05). Defaults to true; `false` builds the same site without the
+   * preview, which is how the tests prove the state is docs-only — every
+   * registry fragment and every copy-for-agents payload is byte-identical
+   * either way.
+   */
+  overlayPreview?: boolean;
 }
 
 export interface SiteConfig {
@@ -630,6 +639,171 @@ function hasDialog(fragment: string): boolean {
     /data-ui\s*=\s*["']dialog["']/i.test(fragment) ||
     /role\s*=\s*["'](?:dialog|alertdialog)["']/i.test(fragment)
   );
+}
+
+// ---------------------------------------------------------------------------
+// Forced-open overlay previews (task 0.9-05)
+// ---------------------------------------------------------------------------
+
+/**
+ * The attribute an example page's `<html>` carries so the site stylesheet can
+ * force that one component's overlay open. Its value is the component name, so
+ * the reveal is scoped to the page that documents it: a `dropdown` nested inside
+ * `dashboard-shell` stays shut on the shell's own page, where it is furniture
+ * rather than the subject.
+ */
+export const OVERLAY_PREVIEW_ATTR = "data-docs-overlay";
+
+/**
+ * The surfaces a static page can never show, per component.
+ *
+ * Eight recipes documented themselves with a lone trigger and nothing else: the
+ * panel is `hidden` until a controller opens it, so `dialog`'s contract page —
+ * the flagship recipe — rendered four buttons and no dialog. That is also why
+ * `dialog.css` could ship with no trigger rule at all for as long as it did
+ * (task 0.9-05): nobody could see the page was wrong, because the page showed
+ * nothing to be wrong about.
+ *
+ * **This list is not free-form.** `lonelyFragments()` derives, from the registry
+ * itself, every component whose reference markup leaves nothing visible but its
+ * triggers, and the docs tests assert that each one appears here — so a recipe
+ * added tomorrow inherits the gate rather than quietly joining the eight. Two
+ * entries (`context-menu`, `menubar`) are editorial additions on top of that
+ * floor: their fragments do render something, but the menu — the substance of
+ * the component — is exactly the part that never appears.
+ *
+ * Deliberately NOT in it: `tabs`' inactive panels and `accordion`'s collapsed
+ * content, which are `hidden` because closed *is* the state being demonstrated,
+ * and every pattern, whose incidental dialogs are not what its page is about.
+ */
+export interface OverlaySurface {
+  /** The `data-part` that is `hidden` until a controller opens it. */
+  part: string;
+  /**
+   * The display the part takes when open — **not** derivable at render time.
+   * `registry/base/reset.css` ships `[hidden] { display: none !important }`, so
+   * a recipe's own `display: flex` never applies to a hidden panel and the only
+   * declaration that can revive one is an `!important` of equal or greater
+   * specificity. That forces the docs layer to *state* the value, which is why
+   * it is recorded here beside the part rather than inferred: getting it wrong
+   * silently relayouts a panel (`drawer`, `sheet` and `command-palette` are
+   * flex columns; the rest are blocks).
+   */
+  display: string;
+}
+
+const panel = (display: string): readonly OverlaySurface[] =>
+  Object.freeze([{ part: "panel", display }]);
+
+export const OVERLAY_PREVIEW_SURFACES: Readonly<Record<string, readonly OverlaySurface[]>> =
+  Object.freeze({
+    "alert-dialog": panel("block"),
+    "command-palette": panel("flex"),
+    "context-menu": Object.freeze([{ part: "menu", display: "block" }]),
+    dialog: panel("block"),
+    drawer: panel("flex"),
+    dropdown: Object.freeze([{ part: "menu", display: "block" }]),
+    menubar: Object.freeze([{ part: "submenu", display: "block" }]),
+    popover: Object.freeze([{ part: "content", display: "block" }]),
+    sheet: panel("flex"),
+    tooltip: Object.freeze([{ part: "content", display: "block" }]),
+  });
+
+/**
+ * Does this reference fragment render nothing but its triggers?
+ *
+ * The predicate {@link OVERLAY_PREVIEW_SURFACES} is measured against, and the
+ * reason the list cannot go stale: every part in the fragment is either visible
+ * or sits under a `hidden` ancestor, and a fragment whose visible parts are only
+ * triggers (or which has no visible part at all — `command-palette` renders an
+ * empty page) is a component whose contract page demonstrates nothing.
+ *
+ * Attribution is deliberately by *ancestor*, not by owning component: a `close`
+ * button inside a `hidden` panel is hidden regardless of which component claims
+ * it, which is exactly the question being asked here.
+ */
+export function rendersOnlyTriggers(fragment: string): boolean {
+  const doc = parseDocument(fragment, "fragment.html");
+  const hidden = new Set<ParsedElement>();
+  let visibleParts = 0;
+  let visibleNonTrigger = 0;
+
+  for (const el of doc.elements) {
+    const concealed = "hidden" in el.attrs || (el.parent !== null && hidden.has(el.parent));
+    if (concealed) hidden.add(el);
+    const part = el.attrs["data-part"];
+    if (part === undefined || concealed) continue;
+    visibleParts++;
+    if (part !== "trigger") visibleNonTrigger++;
+  }
+
+  // A fragment with no parts at all is a primitive demonstrating itself
+  // (`badge`, `kbd`), not an overlay hiding its substance.
+  return visibleNonTrigger === 0 && (visibleParts > 0 || doc.elements.some((e) => "hidden" in e.attrs));
+}
+
+/**
+ * The forced-open rules, generated from {@link OVERLAY_PREVIEW_SURFACES} — the
+ * docs-only half of this task, and the reason it is CSS rather than markup.
+ *
+ * An example page's body IS its registry fragment, byte for byte (asserted by
+ * `tests/generator/docs-site.test.ts`), and the copy-for-agents payload is the
+ * same bytes under a CDN preamble. A preview state that edited either would ship
+ * an open dialog to everyone who pasted the snippet. A stylesheet the registry
+ * never sees cannot: it lives in `styles/faqir.css`, which only the docs site
+ * links, behind an attribute only an example page carries.
+ *
+ * Two rules per surface, and the split between them is load-bearing:
+ *
+ *  1. **Defeat `[hidden]`, and only that.** The reset ships
+ *     `[hidden] { display: none !important }` — the one `!important` in the base
+ *     layer — so nothing but another `!important` can put the panel back in the
+ *     box tree, and the value has to be *stated* rather than left to the
+ *     recipe's own rule (which the reset already outranks). Hence
+ *     {@link OverlaySurface.display}: this is the whole reason a docs table
+ *     records a display at all.
+ *  2. **Force the open look, above the closed-state rules.** Four attribute
+ *     selectors outrank every `[data-ui=…][data-state=…] [data-part=…]` rule in
+ *     the registry, and the docs layer is concatenated last, so it also wins the
+ *     ties (`tooltip` has one). No `!important` here: nothing in the base layer
+ *     competes for these properties, so ordinary specificity settles it.
+ *
+ * The panel is put back **in flow** (`position: static`) rather than shown where
+ * it really opens. A fixed panel would cover the triggers, stack four deep on a
+ * page with four demos, and — since the layout gate of 0.9-01 counts overlapping
+ * *fixed* boxes — turn every one of these pages into a finding. In flow it reads
+ * as what it is: this trigger opens this panel.
+ */
+export function renderOverlayPreviewRules(
+  surfaces: Readonly<Record<string, readonly OverlaySurface[]>> = OVERLAY_PREVIEW_SURFACES,
+): string {
+  const blocks: string[] = [];
+  for (const name of Object.keys(surfaces).sort()) {
+    for (const { part, display } of surfaces[name]) {
+      const page = `[${OVERLAY_PREVIEW_ATTR}="${name}"]`;
+      const target = `[data-part="${part}"]`;
+      blocks.push(
+        `/* ${name} — ${part}: the surface a static page can never show */\n` +
+          `${page} [data-ui="${name}"] ${target}[hidden] {\n` +
+          `  display: ${display} !important;\n` +
+          `  max-inline-size: 100%;\n` +
+          `}\n\n` +
+          `${page} [data-ui="${name}"] ${target}[hidden] {\n` +
+          `  position: static;\n` +
+          `  inset: auto;\n` +
+          `  inline-size: auto;\n` +
+          `  block-size: auto;\n` +
+          `  max-block-size: none;\n` +
+          `  opacity: 1;\n` +
+          `  visibility: visible;\n` +
+          `  transform: none;\n` +
+          `  transition: none;\n` +
+          `  margin-block-start: var(--space-3);\n` +
+          `}`,
+      );
+    }
+  }
+  return blocks.join("\n\n");
 }
 
 // ---------------------------------------------------------------------------
@@ -1886,16 +2060,27 @@ function mountExample(fragment: string, name: string): string {
   return `${EXAMPLE_COLUMN_OPEN}\n<main>\n${demos}\n</main>\n</div>`;
 }
 
-function renderExamplePage(c: DocsComponent, config: SiteConfig): SiteFile | null {
+function renderExamplePage(
+  c: DocsComponent,
+  config: SiteConfig,
+  overlayPreview: boolean = true,
+): SiteFile | null {
   if (!existsSync(c.referencePath)) return null;
   const fragment = sanitizeReferenceFragment(readText(c.referencePath));
   const u = (to: string) => escAttr(relUrl(c.examplePath, to));
   const mounted = mountExample(fragment, c.name);
+  // The forced-open preview is one attribute on the wrapper the generator owns —
+  // never a byte of the fragment, which is what keeps the page, the snippet and
+  // the registry the same markup (task 0.9-05).
+  const preview =
+    overlayPreview && c.name in OVERLAY_PREVIEW_SURFACES
+      ? ` ${OVERLAY_PREVIEW_ATTR}="${escAttr(c.name)}"`
+      : "";
 
   return {
     path: c.examplePath,
     content: `<!DOCTYPE html>
-<html lang="en" data-theme="auto" data-preview-role="component">
+<html lang="en" data-theme="auto" data-preview-role="component"${preview}>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -2586,6 +2771,7 @@ function renderAgentsPage(ctx: {
 export function buildSiteStylesheet(
   registryRoot: string,
   siteRoot: string = join(PACKAGE_ROOT, "site"),
+  overlayPreview: boolean = true,
 ): string {
   const parts: string[] = [`/* ${DOCS_GENERATION_MARKER} — do not edit by hand */`];
 
@@ -2627,6 +2813,14 @@ export function buildSiteStylesheet(
   // reference the pages are, rather than written inline on 100-odd spans.
   parts.push("/* ── documentation swatches (generated from the token reference) ── */");
   parts.push(renderSwatchRules(parseTokenReference(registryRoot)));
+
+  // Last, so it wins the specificity ties the closed-state rules can force
+  // (task 0.9-05). Scoped to `[data-docs-overlay="<name>"]`, which only an
+  // example page carries — nothing a user installs or pastes ever sees these.
+  if (overlayPreview) {
+    parts.push("/* ── forced-open overlay previews (docs example pages only) ── */");
+    parts.push(renderOverlayPreviewRules());
+  }
 
   return parts.join("\n") + "\n";
 }
@@ -2690,8 +2884,9 @@ export function buildDocsSite(options: DocsSiteOptions = {}): SiteFile[] {
   // with no reference markup gets neither.
   const examples = new Map<string, SiteFile>();
   const snippets = new Map<string, string>();
+  const overlayPreview = options.overlayPreview ?? true;
   for (const c of components) {
-    const example = renderExamplePage(c, config);
+    const example = renderExamplePage(c, config, overlayPreview);
     if (!example) continue;
     examples.set(c.examplePath, example);
     snippets.set(
@@ -2796,7 +2991,10 @@ export function buildDocsSite(options: DocsSiteOptions = {}): SiteFile[] {
   );
   files.push(renderHeadersFile(machine));
 
-  files.push({ path: "styles/faqir.css", content: buildSiteStylesheet(registryRoot, siteRoot) });
+  files.push({
+    path: "styles/faqir.css",
+    content: buildSiteStylesheet(registryRoot, siteRoot, overlayPreview),
+  });
   for (const t of themes) {
     files.push({ path: t.stylePath, content: buildThemeStylesheet(t) });
   }

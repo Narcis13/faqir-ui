@@ -71,6 +71,21 @@ export async function runAudit(options: AuditOptions = {}): Promise<AuditSummary
     }
   }
 
+  // The installed stylesheets, keyed like the manifests — the second half of the
+  // input `trigger-contract` decides from (task 0.9-05). A component with no
+  // sheet on disk is simply absent, and the rule skips it.
+  const styles = new Map<string, string>();
+  for (const [layer, names] of [
+    ["primitives", config.installed.primitives],
+    ["recipes", config.installed.recipes],
+    ["patterns", config.installed.patterns],
+  ] as const) {
+    for (const name of names) {
+      const cssPath = join(outputDir, layer, name, `${name}.css`);
+      if (existsSync(cssPath)) styles.set(name, await Bun.file(cssPath).text());
+    }
+  }
+
   // Find HTML files to scan
   const htmlFiles: string[] = [];
   if (options.file) {
@@ -99,7 +114,9 @@ export async function runAudit(options: AuditOptions = {}): Promise<AuditSummary
     const source = await Bun.file(filePath).text();
     const relPath = relative(cwd, filePath);
     componentsFound += extractComponents(source, relPath).length;
-    results.push(...auditHtmlSource({ source, file: relPath, manifests, skipRules: options.skipRules }));
+    results.push(
+      ...auditHtmlSource({ source, file: relPath, manifests, styles, skipRules: options.skipRules }),
+    );
   }
 
   // CSS-level checks: token-exists and reduced-motion

@@ -80,7 +80,7 @@ Interruptive confirmation dialog (role=alertdialog) for destructive or irreversi
 
 ```text
 [data-ui='alert-dialog']  ·  <div> · content: slots
-├─ [data-part='trigger']  <button>  required  — Button that opens the alert dialog
+├─ [data-part='trigger']  <button>  required  — Button that opens the alert dialog. Carries data-ui="button": a trigger part is either a component in its own right or styled by its own recipe (the trigger contract, audit rule `trigger-contract`).
 ├─ [data-part='overlay']  <div>  required  — Backdrop overlay — visual only; clicking it does NOT close an alertdialog
 ├─ [data-part='panel']  <div>  required  — The alert box; carries role=alertdialog and aria-modal
 ├─ [data-part='header']  <div>  optional
@@ -428,7 +428,7 @@ Modal dialog with focus trap, escape-to-close, and overlay backdrop
 
 ```text
 [data-ui='dialog']  ·  <div> · content: slots
-├─ [data-part='trigger']  <button>  optional  — Button that opens the dialog. A dialog is opened by whatever the application decides — a row button in a table, a menu item, a route change — so the trigger is not always inside the dialog. Optional since 0.9-04.
+├─ [data-part='trigger']  <button>  optional  — Button that opens the dialog. A dialog is opened by whatever the application decides — a row button in a table, a menu item, a route change — so the trigger is not always inside the dialog. Optional since 0.9-04. Carries data-ui="button": a trigger part is either a component in its own right or styled by its own recipe (the trigger contract, audit rule `trigger-contract`).
 ├─ [data-part='overlay']  <div>  required  — Backdrop overlay, click to close
 ├─ [data-part='panel']  <div>  required  — The dialog box container
 ├─ [data-part='header']  <div>  optional
@@ -476,7 +476,7 @@ Side panel that slides in from screen edge with overlay backdrop
 
 ```text
 [data-ui='drawer']  ·  <div> · content: slots
-├─ [data-part='trigger']  <button>  required  — Button that opens the drawer
+├─ [data-part='trigger']  <button>  required  — Button that opens the drawer. Carries data-ui="button": a trigger part is either a component in its own right or styled by its own recipe (the trigger contract, audit rule `trigger-contract`).
 ├─ [data-part='overlay']  <div>  required  — Backdrop overlay, click to close
 ├─ [data-part='panel']  <div>  required  — The drawer panel container
 ├─ [data-part='header']  <div>  optional  — Header area containing title and close button
@@ -849,7 +849,7 @@ Mobile-friendly bottom or side sheet that slides in from screen edge
 
 ```text
 [data-ui='sheet']  ·  <div> · content: slots
-├─ [data-part='trigger']  <button>  required  — Button that opens the sheet
+├─ [data-part='trigger']  <button>  required  — Button that opens the sheet. Carries data-ui="button": a trigger part is either a component in its own right or styled by its own recipe (the trigger contract, audit rule `trigger-contract`).
 ├─ [data-part='overlay']  <div>  required  — Backdrop overlay, click to close
 ├─ [data-part='panel']  <div>  required  — The sheet panel container
 ├─ [data-part='header']  <div>  optional  — Header area containing title and close button
@@ -1179,7 +1179,7 @@ Informational popup shown on hover or focus of trigger element
 
 ```text
 [data-ui='tooltip']  ·  <div> · content: slots
-├─ [data-part='trigger']  <button>  required  — Element that activates the tooltip on hover or focus
+├─ [data-part='trigger']  <button>  required  — Element that activates the tooltip on hover or focus. Carries data-ui="button": a trigger part is either a component in its own right or styled by its own recipe (the trigger contract, audit rule `trigger-contract`).
 └─ [data-part='content']  <div>  required  — Tooltip content with role=tooltip, linked via aria-describedby on trigger
 ```
 

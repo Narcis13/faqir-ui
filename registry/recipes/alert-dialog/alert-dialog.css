@@ -67,9 +67,10 @@
   border-color: var(--color-destructive, oklch(0.55 0.22 25));
 }
 
-[data-ui="alert-dialog"] [data-part="panel"][data-variant="destructive"] [data-part="title"] {
-  color: var(--color-destructive, oklch(0.55 0.22 25));
-}
+/* The destructive tone is carried by the panel's border and its confirm button —
+   NOT by the title, which at --text-lg on --color-bg is 4.22:1 in dark, below AA.
+   `dialog`'s danger variant already signalled tone this way; the two recipes now
+   agree, and both stay readable (task 0.9-05, found by rendering the panel). */
 
 /* ── Header ── */
 [data-ui="alert-dialog"] [data-part="header"] {

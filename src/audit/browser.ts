@@ -17,7 +17,13 @@
 // bundle test, which is the gate that keeps the browser build possible at all.
 
 import { auditHtmlSource } from "./html-audit";
-import { ALL_RULES, DOCUMENT_RULES, type AuditResult, type Severity } from "./rules";
+import {
+  ALL_RULES,
+  DOCUMENT_RULES,
+  TRIGGER_CONTRACT_RULE,
+  type AuditResult,
+  type Severity,
+} from "./rules";
 import {
   CSS_RULES,
   buildBreakpointCanonResults,
@@ -28,6 +34,9 @@ import { VERSION } from "../version";
 
 /** Manifests as a page has them: a plain object keyed by component name. */
 export type ManifestRecord = Record<string, Manifest>;
+
+/** Component stylesheets as a page has them: source keyed by component name. */
+export type StyleRecord = Record<string, string>;
 
 export interface BrowserAuditOptions {
   /** File label used in findings. Defaults to `input.html`. */
@@ -42,7 +51,7 @@ export interface BrowserRuleInfo {
   severity: Severity;
   description: string;
   /** Which contract the rule enforces. */
-  scope: "component" | "document" | "css";
+  scope: "component" | "document" | "css" | "markup+css";
 }
 
 /** Input for {@link auditComponentCss} — one stylesheet and the manifest it belongs to. */
@@ -98,8 +107,12 @@ export function manifestMap(manifests: ManifestRecord): Map<string, Manifest> {
  * instead of an exception. The fuzz-corpus test asserts both halves: no throw,
  * and no silent swallow of real findings.
  */
-export function createAuditor(manifests: ManifestRecord): Auditor {
+export function createAuditor(manifests: ManifestRecord, styles?: StyleRecord): Auditor {
   const map = manifestMap(manifests);
+  // Same optionality as the CLI's: `trigger-contract` runs only where the
+  // stylesheets are actually available (task 0.9-05). A page that hands over
+  // manifests alone gets exactly the rules it can decide.
+  const styleMap = styles ? new Map(Object.entries(styles)) : undefined;
   const canonical = new Set<string>();
   for (const key of Object.keys(manifests)) {
     const m = manifests[key];
@@ -114,6 +127,7 @@ export function createAuditor(manifests: ManifestRecord): Auditor {
           source,
           file: options.file ?? "input.html",
           manifests: map,
+          styles: styleMap,
           skipRules: options.skipRules,
         });
       } catch (error) {
@@ -193,6 +207,15 @@ export function ruleInventory(): BrowserRuleInfo[] {
       description: r.description,
       scope: "css" as const,
     })),
+    {
+      id: TRIGGER_CONTRACT_RULE.id,
+      severity: TRIGGER_CONTRACT_RULE.severity,
+      description: TRIGGER_CONTRACT_RULE.description,
+      // Its own scope: the finding is on markup, but one of the two ways to
+      // satisfy it is a fact about the component's stylesheet — so a caller with
+      // only one of the two cannot run it.
+      scope: "markup+css" as const,
+    },
   ];
 }
 

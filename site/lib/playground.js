@@ -179,9 +179,12 @@
       // Count what this page RUNS, not what the engine ships: since 0.8-10 the
       // bundle also carries the stylesheet rules (undeclared-attribute,
       // breakpoint-canon), and those audit a component's CSS against its
-      // manifest — there is no CSS in this textarea to run them on.
+      // manifest — there is no CSS in this textarea to run them on. Since 0.9-05
+      // it also carries `trigger-contract` (scope "markup+css"), which is
+      // decided from a component's markup AND its stylesheet: this page hands
+      // the auditor manifests only, so that rule does not run here either.
       var markupRules = window.FaqirAudit.rules.filter(function (rule) {
-        return rule.scope !== "css";
+        return rule.scope === "component" || rule.scope === "document";
       });
       status.textContent =
         markupRules.length +

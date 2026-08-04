@@ -979,7 +979,7 @@
       "files": [
         {
           "path": "alert-dialog.css",
-          "sha256": "0be3df74eadad12e1cc70e5bda95cfdf3a694b1548f4cde2f791b61d50299677"
+          "sha256": "d0e463cd907d422be616160840ce475f0284e54e594d15342592fcb5973be932"
         },
         {
           "path": "alert-dialog.html",
@@ -991,10 +991,10 @@
         },
         {
           "path": "alert-dialog.manifest.json",
-          "sha256": "5940214948847e8fc31f7a52e87b93e293f8e24cc2553fe0e4077f32400fb1f9"
+          "sha256": "50c647e0e506b12ae928cc9f379db2835ae643884892a573f7bd94ba56f32bba"
         }
       ],
-      "hash": "b9daac73bb6e0ebe0b4d3748a3ea52aef78a3b02cd6016bb8a5750e087df8c3d",
+      "hash": "2444e53c03101fcc2e613fa6239a96d58fb076591960849d4a62b7ad63904bc2",
       "deps": [
         "button"
       ]
@@ -1111,7 +1111,7 @@
       "files": [
         {
           "path": "command-palette.css",
-          "sha256": "83837c5e569812498778c4a14171639d90259e6b49af31bbb5096acf96a446a1"
+          "sha256": "82338050495d151f9032838a64ada8a665d7c731b00462502dbd24ae82abcd7f"
         },
         {
           "path": "command-palette.html",
@@ -1126,7 +1126,7 @@
           "sha256": "38d736b76b5c15778c0067ec6c8bdf633dbae4e704b75dfe2b717879e8461bef"
         }
       ],
-      "hash": "69c989ae4d95ccec8df8994237cce3d95f98565d89305c06d960320b36320eab",
+      "hash": "71775e9de3ce52b6fcca4cbb7bbcd0e6f510157eb29b73fe36c95362c5703c5d",
       "deps": [
         "kbd"
       ]
@@ -1194,11 +1194,11 @@
       "files": [
         {
           "path": "dialog.css",
-          "sha256": "30ae90426be3ec51871bce3025a1c71e2cc7b1bc1c9ef9ea9219ad08935ce51b"
+          "sha256": "9b027bdeeda750b3de5979b433314133c82a1787d3014bbaa1c754f0868213b4"
         },
         {
           "path": "dialog.html",
-          "sha256": "e2a828ca120e0cc1042cf674c8f57d7db29bd44a259a7cbd515f4c2d1d2426c4"
+          "sha256": "7b793c6059d1c916cce8a93b95f130cfb7696789916f4ed98ce9ab1efd568072"
         },
         {
           "path": "dialog.js",
@@ -1206,10 +1206,10 @@
         },
         {
           "path": "dialog.manifest.json",
-          "sha256": "446bf76932c4491a0b57860f09fb3af822f0336ae509e5c3aa71637f404b5abe"
+          "sha256": "37adbcf3a039dd639484473244c7eb67424be8a4882d3bc7618c7b02fdcfa529"
         }
       ],
-      "hash": "74d9e00d6beddb00b2714025606f4c4a65f52dd166a6d69caacbfc4d887cec62",
+      "hash": "471cfb8eac9c74fc99c72a4b06b808a5f33dc9dac27965df467170c11b976353",
       "deps": [
         "button"
       ]
@@ -1222,11 +1222,11 @@
       "files": [
         {
           "path": "drawer.css",
-          "sha256": "7f5e5cfd37c819334cc76ee9c483d44825effefed4f1b2397c1e789b1ccf7da8"
+          "sha256": "3ab87a2564354c41a19bdf56372df421cf2577f36b7a05ad3648513585acca0e"
         },
         {
           "path": "drawer.html",
-          "sha256": "0302be43388d175dbb445aec6b123ccdce6b053039cd5e5fa8198050480df924"
+          "sha256": "1e283ee5b7c0991ed75af31f63165c18a8e0937f045f9743fd145fffe3e5508d"
         },
         {
           "path": "drawer.js",
@@ -1234,10 +1234,10 @@
         },
         {
           "path": "drawer.manifest.json",
-          "sha256": "25d298c3ad0c6d771b9a53200f18888df93bc823feb9dad1759c92c68b31952d"
+          "sha256": "980dd54ff787ff36baed9d67bc6d69fcd99da15ee71407dbe3a6389c9af21ce9"
         }
       ],
-      "hash": "3edceaf78ec1a4f39593f754f000f4ace218bfdc608652e1a41f808bcddb59b6",
+      "hash": "b817e11a1ff4c5caf35fea36e17588dae5c856e02ba8c3619ca10a2c9362d862",
       "deps": [
         "button"
       ]
@@ -1462,11 +1462,11 @@
       "files": [
         {
           "path": "sheet.css",
-          "sha256": "5fb273fd5cc2708bc3b2e250de043c6e95d23473c05652affb2ce93a14982075"
+          "sha256": "ffb5918329a602d39d509edb03d1af711b6aa05e8a4044e1d5565ce0931a3d71"
         },
         {
           "path": "sheet.html",
-          "sha256": "6fc69255f483947da70ba79484787227819c32cc47ff188394f96ea7cbc62e32"
+          "sha256": "073bfe5ae9a0150dbabd78b4192307900ac98fa666a321b477df15c41044a8fd"
         },
         {
           "path": "sheet.js",
@@ -1474,10 +1474,10 @@
         },
         {
           "path": "sheet.manifest.json",
-          "sha256": "95ee613ec6203fe5297013f91e9172e7094f2a1b5dc2b5caa7e06eec0b883c19"
+          "sha256": "c28055cf43062eba744b77cc6933769582f24bdc85b153d2b7d13776652dd52c"
         }
       ],
-      "hash": "aa0e550e3ef05c91da2dcae327efe8532e25dd966a1d9ab9efd3cd768940107f",
+      "hash": "708bc6e2b391f0c253d286a5a29fa26f11f761de92654360b979e09cf813d1e1",
       "deps": [
         "button"
       ]
@@ -1690,7 +1690,7 @@
         },
         {
           "path": "tooltip.html",
-          "sha256": "421b7306f075becfcb32a016f34fbb986d71c3d38adadf206bd2e2fb3670eaa5"
+          "sha256": "d5d4d77238b21221ed9f8a6d3a6a94d62c0bd33938bb00c95e35852f9f2041c9"
         },
         {
           "path": "tooltip.js",
@@ -1698,11 +1698,13 @@
         },
         {
           "path": "tooltip.manifest.json",
-          "sha256": "36f0635c40a78569a7ff0c32aa897ddd6df6ba4fc52e4f33472ae648cb522e99"
+          "sha256": "1ada8f1a4ebd60ce89acb857f44c1c3fa13b96aaa03d88446b975f8c513ab404"
         }
       ],
-      "hash": "d5fc46559138912ccdba7fa10d6755a10823e865f2e45bc3e0f20c40a39a5878",
-      "deps": []
+      "hash": "8544229b59eb50a28d2d52364d0d062a4b81a9bbd17ed580ca72f5043192d066",
+      "deps": [
+        "button"
+      ]
     },
     {
       "name": "tree-view",
