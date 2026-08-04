@@ -435,10 +435,14 @@ describe("rhythm — the layout budget fell, and by how much", () => {
     );
   });
 
-  it("leaves the gutter to 0.9-03, which is the task that owns it", () => {
-    // The rule is vertical only; a page flush against the window edge stays
-    // flush. Asserting this keeps the win honest — the seam drop is the rhythm
-    // rule's, not a side effect of some other change.
-    expect(budget.totals.zeroGutterPages).toBe(BASELINE_0_9_01.zeroGutterPages);
+  it("left the gutter to 0.9-03, which is the task that owned it — and closed it", () => {
+    // §20 is vertical only: a page flush against the window edge stayed flush,
+    // and pinning that was what kept 0.9-02's seam win attributable to the
+    // rhythm rule rather than to something else that moved. 0.9-03 then mounted
+    // every example page in a `container`, so the number this used to pin at 79
+    // is now 0. Kept as a ratchet rather than deleted: the gutter is closed, and
+    // a later task re-opening one page of it must be a decision.
+    expect(budget.totals.zeroGutterPages).toBeLessThan(BASELINE_0_9_01.zeroGutterPages);
+    expect(budget.totals.zeroGutterPages).toBe(0);
   });
 });

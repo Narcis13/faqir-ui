@@ -27,6 +27,7 @@ import {
   buildDocsSite,
   discoverDocsComponents,
   discoverThemes,
+  hasOwnMain,
   isExamplePage,
   isFramePage,
   isShellPage,
@@ -34,8 +35,11 @@ import {
   parseTokenReference,
   relUrl,
   sanitizeReferenceFragment,
+  splitReferenceDemos,
   tokenAnchor,
   DOCS_GENERATION_MARKER,
+  EXAMPLE_GUTTER,
+  EXAMPLE_MEASURE,
   type DocsComponent,
   type SiteFile,
 } from "../../src/generator/docs";
@@ -319,11 +323,32 @@ describe("the site dogfoods faqir audit", () => {
     // body is not the site's markup — it is the registry's, byte for byte. This
     // asserts that claim for every example page, so the split can never become a
     // per-component escape hatch for site markup the generator authored.
+    //
+    // Since 0.9-03 the fragment is *rendered* rather than pasted: each demo goes
+    // into its own captioned block, so the claim is a reconstruction rather than
+    // a substring. It is the stronger form of the same statement — every byte of
+    // markup on the page is still the registry's, and now that is proven demo by
+    // demo instead of in one lump.
     for (const c of components) {
       const fragment = sanitizeReferenceFragment(readFileSync(c.referencePath, "utf8"));
-      expect(page(c.examplePath), `${c.name}'s example is not the registry fragment`).toContain(
-        fragment,
-      );
+      const rendered = page(c.examplePath);
+      if (hasOwnMain(fragment)) {
+        expect(rendered, `${c.name}'s example is not the registry fragment`).toContain(fragment);
+        continue;
+      }
+      const blocks = splitReferenceDemos(fragment);
+      expect(blocks.length, `${c.name} split into no demos at all`).toBeGreaterThan(0);
+      for (const block of blocks) {
+        expect(rendered, `${c.name}: a demo block is not registry markup`).toContain(block.html);
+      }
+      // …and nothing was dropped on the way: the blocks, rejoined, are the
+      // fragment itself. Compared with every comment removed from both sides —
+      // the top-level ones became captions, and comparing what is left is what
+      // proves no *markup* was lost, reordered or invented.
+      expect(
+        markupOnly(blocks.map((b) => b.html).join("\n")),
+        `${c.name}'s demos do not reconstitute its fragment`,
+      ).toBe(markupOnly(fragment));
     }
   });
 
@@ -341,21 +366,195 @@ describe("the site dogfoods faqir audit", () => {
     }
   });
 
-  it("uses no class attributes and no hardcoded colours anywhere it authors markup", () => {
+  it("uses no class attributes and no inline styles anywhere it authors markup", () => {
+    // The colour half of this used to be the whole of it: an inline `style` was
+    // allowed as long as it referenced tokens. Task 0.9-03 closed the general
+    // case — 0.8-03 had already banned one inline escape (`flex-wrap` in the
+    // theme frames) and there were four left, each of them layout or paint that
+    // a rule keyed on an attribute can express. A site that documents "CSS
+    // targets attributes and tokens only" may not carry a style attribute at all.
     for (const f of sitePages) {
       expect(f.content, `${f.path} uses a class attribute`).not.toMatch(/\sclass\s*=/);
-      // `#rrggbb`/`rgb()`/`oklch()` literals would mean the site stopped using
-      // tokens. Token *values* live on the token page inside <code>, so only
-      // attribute positions are checked.
       const doc = parseDocument(f.content, f.path);
-      for (const el of doc.elements) {
-        const style = el.attrs["style"];
-        if (!style) continue;
-        expect(style, `${f.path} <${el.tag}> hardcodes a colour`).not.toMatch(
-          /#[0-9a-f]{3,8}\b|\b(?:rgb|hsl|oklch)\(/i,
+      const styled = doc.elements.filter((el) => el.attrs["style"] !== undefined);
+      expect(
+        styled.map((el) => `<${el.tag} style="${el.attrs["style"]}">`).join("\n"),
+        `${f.path} carries an inline style attribute`,
+      ).toBe("");
+    }
+  });
+
+  it("keeps example pages outside the per-component audit gate", () => {
+    // The 0.7-13 split is deliberate and load-bearing, so it is asserted in both
+    // halves. First: no example page is in the set the strict gate iterates.
+    expect(examplePages.map((f) => f.path).filter(isSitePage)).toEqual([]);
+    expect(sitePages.map((f) => f.path).filter(isExamplePage)).toEqual([]);
+
+    // Second: the split is not cosmetic. The per-component rules genuinely fire
+    // on registry reference markup — those pages are deliberately partial demos
+    // (a card showing just its header, a dialog with no live controller) — which
+    // is why the gate runs them where that markup lives instead of here. If this
+    // ever reaches zero the split has stopped being about anything and should be
+    // deleted rather than silently kept. (Triaged by 0.9-04 / follow-up 0.7-17.)
+    const skipRules = [
+      "controller-loaded",
+      ...DOCUMENT_RULES.map((r) => r.id),
+    ];
+    const findings = examplePages.flatMap((f) =>
+      auditHtmlSource({ source: f.content, file: f.path, manifests, skipRules }),
+    );
+    expect(findings.length).toBeGreaterThan(0);
+  });
+});
+
+// ── the example-page shell (task 0.9-03) ────────────────────────────────────
+
+describe("example pages carry a measure and a gutter", () => {
+  it("mounts every fragment in a container with a bounded measure and a real gutter", () => {
+    // A property over all 86, not a sample: 84 of them rendered flush to x = 0
+    // before this shell existed, with `avatar` and `skeleton` clipped by the
+    // viewport edge and a text input stretched across the whole window.
+    const declared = JSON.parse(
+      readFileSync(join(REGISTRY, "primitives", "container", "container.manifest.json"), "utf8"),
+    ) as { variants: Record<string, { values: string[] }>; props: Record<string, { values: string[] }> };
+    const measures = declared.variants.measure.values;
+    const gutters = declared.props.gutter.values;
+
+    // The measure and the gutter are the primitive's own vocabulary — the site
+    // must not invent a value to fix its own showcase — and both must actually
+    // bound something: `full` is the opt-out, `0` is no gutter at all.
+    expect(measures).toContain(EXAMPLE_MEASURE);
+    expect(EXAMPLE_MEASURE).not.toBe("full");
+    expect(gutters).toContain(EXAMPLE_GUTTER);
+    expect(EXAMPLE_GUTTER).not.toBe("0");
+
+    const column =
+      `<div data-ui="container" data-measure="${EXAMPLE_MEASURE}" data-gutter="${EXAMPLE_GUTTER}">`;
+    const ownDocument: string[] = [];
+    for (const c of components) {
+      const fragment = sanitizeReferenceFragment(readFileSync(c.referencePath, "utf8"));
+      if (hasOwnMain(fragment)) {
+        ownDocument.push(c.name);
+        continue;
+      }
+      expect(page(c.examplePath), `${c.name}'s example has no measure column`).toContain(column);
+    }
+    // The exemption is content-derived, never a per-component list: a fragment
+    // that declares its own `main` is a whole app shell that runs edge to edge
+    // and paints its own inset (layout-lint already measures a gutter on both).
+    // Naming them here is the tripwire — a third one appearing is a decision,
+    // not an accident.
+    expect(ownDocument.sort()).toEqual(["dashboard-shell", "sidebar"]);
+  });
+
+  it("keeps the measure column out of the copy-for-agents payload", () => {
+    // The payload is what someone pastes into an empty file, so it stays the
+    // minimal example: the shell and the captions are a docs rendering.
+    for (const c of components) {
+      const snippet = byPath.get(`snippets/${c.layer}/${c.name}.html.txt`);
+      if (!snippet) continue;
+      expect(snippet, `${c.name}'s payload leaked the docs shell`).not.toContain(
+        "data-docs-demo",
+      );
+      // The exact column, not just its attributes: `container`'s own reference
+      // fragment demonstrates `data-gutter="4"`, and that is the component doing
+      // its job rather than the shell leaking.
+      expect(snippet).not.toContain(
+        `<div data-ui="container" data-measure="${EXAMPLE_MEASURE}" data-gutter="${EXAMPLE_GUTTER}">`,
+      );
+    }
+  });
+});
+
+describe("demo captions are lifted from the fragments' own comments", () => {
+  it("splits a fragment at its top-level comments and nowhere else", () => {
+    const blocks = splitReferenceDemos(
+      [
+        "<!-- Default -->",
+        '<span data-ui="badge">Badge</span>',
+        "<!-- Sizes -->",
+        '<div data-ui="wrap">',
+        "  <!-- not a boundary: this comment is nested -->",
+        '  <span data-ui="badge" data-size="sm">Small</span>',
+        "</div>",
+      ].join("\n"),
+    );
+    expect(blocks.map((b) => b.caption)).toEqual(["Default", "Sizes"]);
+    expect(blocks[1].html).toContain("not a boundary");
+    expect(blocks.every((b) => b.note === null)).toBe(true);
+  });
+
+  it("takes the caption from the nearest label and keeps the rest as a note", () => {
+    const blocks = splitReferenceDemos(
+      [
+        "<!--",
+        "  ─────────────────────────",
+        "  Orientation prose the author wrote once, above the first demo.",
+        "  ─────────────────────────",
+        "-->",
+        "<!-- Square (default) -->",
+        '<div data-ui="aspect-ratio"></div>',
+      ].join("\n"),
+    );
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0].caption).toBe("Square (default)");
+    expect(blocks[0].note).toBe("Orientation prose the author wrote once, above the first demo.");
+  });
+
+  it("emits no caption element at all for a fragment that labels nothing", () => {
+    const blocks = splitReferenceDemos('<div data-ui="tree-view"></div>');
+    expect(blocks).toEqual([
+      { caption: null, note: null, html: '<div data-ui="tree-view"></div>' },
+    ]);
+  });
+
+  it("renders the labels a fragment already carries, in both directions", () => {
+    // Direction one: a fragment WITH labels renders them, verbatim, as captions.
+    const badge = find("badge", "primitives");
+    const rendered = page(badge.examplePath);
+    for (const caption of ["Default", "Variants", "Sizes"]) {
+      expect(rendered, `badge's "${caption}" demo is unlabelled`).toContain(
+        `<figcaption data-docs-demo-caption>${caption}</figcaption>`,
+      );
+    }
+    expect((rendered.match(/<figure data-docs-demo>/g) ?? []).length).toBe(3);
+
+    // Direction two: a fragment WITHOUT labels stays uncaptioned rather than
+    // emitting an empty caption element. Derived, not hard-coded: every fragment
+    // whose comments carry no label must produce no <figcaption> anywhere.
+    const unlabelled = components.filter((c) => {
+      const fragment = sanitizeReferenceFragment(readFileSync(c.referencePath, "utf8"));
+      return (
+        !hasOwnMain(fragment) &&
+        splitReferenceDemos(fragment).every((b) => b.caption === null)
+      );
+    });
+    expect(unlabelled.length).toBeGreaterThan(0);
+    for (const c of unlabelled) {
+      expect(page(c.examplePath), `${c.name} emitted an empty caption`).not.toContain(
+        "<figcaption",
+      );
+      expect(page(c.examplePath)).toContain("<figure data-docs-demo>");
+    }
+  });
+
+  it("captions no fragment that this task edited — the labels were already there", () => {
+    // 0.9-03 is a rendering change, which is what keeps 0.9-04 mechanical. Every
+    // caption on the site must be findable, character for character, in the
+    // registry file it came from.
+    let captions = 0;
+    for (const c of components) {
+      const source = readFileSync(c.referencePath, "utf8");
+      for (const [, caption] of page(c.examplePath).matchAll(
+        /<figcaption data-docs-demo-caption>([^<]*)<\/figcaption>/g,
+      )) {
+        captions++;
+        expect(source, `${c.name}'s caption "${caption}" is not in its fragment`).toContain(
+          caption.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">"),
         );
       }
     }
+    expect(captions).toBeGreaterThan(300);
   });
 });
 
@@ -553,9 +752,12 @@ describe("adding a component to the registry", () => {
         2,
       ),
     );
+    // The demo carries a label, the way every fragment in the registry does —
+    // that is what the example page lifts into a visible caption (task 0.9-03),
+    // and a probe with no label would prove the shell but not the rendering.
     writeFileSync(
       join(dir, "zz-probe.html"),
-      '<!-- @ui:component zz-probe -->\n<span data-ui="zz-probe">Probe</span>\n',
+      '<!-- @ui:component zz-probe -->\n<!-- Probe row -->\n<span data-ui="zz-probe">Probe</span>\n',
     );
     writeFileSync(
       join(dir, "zz-probe.css"),
@@ -606,6 +808,17 @@ describe("adding a component to the registry", () => {
 
     // And its stylesheet is in the bundle.
     expect(grownByPath.get("styles/faqir.css")).toContain('[data-ui="zz-probe"]');
+
+    // Its example page gets the shell every other example page gets, with no
+    // site-side edit either: the measure column, the gutter, and the caption
+    // lifted out of the fragment's own comment (task 0.9-03).
+    const example = grownByPath.get("examples/primitives/zz-probe.html")!;
+    expect(example).toContain(
+      `<div data-ui="container" data-measure="${EXAMPLE_MEASURE}" data-gutter="${EXAMPLE_GUTTER}">`,
+    );
+    expect(example).toContain(
+      "<figure data-docs-demo>\n<figcaption data-docs-demo-caption>Probe row</figcaption>",
+    );
 
     // The site grew by exactly one component's worth of files: page, live
     // example, agent snippet.
@@ -765,4 +978,14 @@ function get(port: number, path: string): Promise<{ status: number; body: string
 /** Match the generator's body-text escaping when asserting on rendered output. */
 function esc(value: string): string {
   return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+/**
+ * Markup with every comment and every run of whitespace removed — the form in
+ * which "these demo blocks are that fragment" is a meaningful comparison. The
+ * top-level comments became captions and the whitespace between blocks is the
+ * wrapper's, so what is left is exactly the markup, and it must match.
+ */
+function markupOnly(html: string): string {
+  return html.replace(/<!--[^]*?-->/g, "").replace(/\s+/g, " ").trim();
 }

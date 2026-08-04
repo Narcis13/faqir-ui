@@ -239,17 +239,19 @@ test("the sweep covers every example page and every shell page", () => {
   expect(PAGES.filter(isShellPage).length).toBeGreaterThan(5);
   expect(findings).toHaveLength(PAGES.length);
   // …and one that found pages but no boxes would report the same. Every page must
-  // have yielded evidence of *some* kind; a page whose only painted boxes are
-  // fixed (`watermark`, `toast`) legitimately has no gutter to measure, which is
-  // why the tripwire counts boxes rather than requiring a gutter everywhere.
+  // have yielded evidence of *some* kind.
   const empty = observations.filter(
     (o) => o.topLevel.length + o.demos.length + o.boxes.length + o.fixed.length === 0,
   );
   expect(empty.map((o) => o.page)).toEqual([]);
-  expect(findings.filter((f) => f.gutter === null).map((f) => f.page)).toEqual([
-    "examples/primitives/watermark.html",
-    "examples/recipes/toast.html",
-  ]);
+  // Every page also yields a *gutter* now. Two used not to: `watermark` and
+  // `toast` paint nothing but fixed boxes, so there was no in-flow content whose
+  // inset could be measured. Task 0.9-03's example shell lifts each fragment's
+  // own comment labels into visible captions, and a caption is in-flow content —
+  // so those two pages became measurable like every other, without either
+  // fragment being edited. The list stays (rather than being deleted) as the
+  // tripwire it always was: a page dropping out of the measurement is a decision.
+  expect(findings.filter((f) => f.gutter === null).map((f) => f.page)).toEqual([]);
 });
 
 test("the collector sees a seeded defect, and nothing on a clean page", async ({ page }) => {

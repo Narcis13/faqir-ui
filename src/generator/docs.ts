@@ -437,8 +437,185 @@ export function sanitizeReferenceFragment(html: string): string {
     .trim();
 }
 
-/** Does a fragment declare its own `main` landmark (patterns often do)? */
-function hasOwnMain(fragment: string): boolean {
+// ---------------------------------------------------------------------------
+// Demo blocks — lifting the fragments' own labels into visible captions (0.9-03)
+// ---------------------------------------------------------------------------
+
+/**
+ * One demonstration inside a reference fragment: the markup, plus the label its
+ * author already wrote for it.
+ *
+ * Every fragment in the registry separates its demos with a top-level HTML
+ * comment — `<!-- Tag row — the canonical cluster -->`, `<!-- Sizes -->`. A
+ * comment is invisible in a browser, so a reader of `accordion`'s example page
+ * saw three accordions as one seven-item accordion and `table`'s five tables as
+ * one table. The labels are already there in all 86 files; this is what makes
+ * them visible, which is why 0.9-03 edits no fragment.
+ */
+export interface DemoBlock {
+  /**
+   * The one-line label lifted from the comment, or `null` when the demo carries
+   * no comment at all (five fragments today) — an uncaptioned block, never an
+   * empty caption.
+   */
+  caption: string | null;
+  /**
+   * The comment's remaining lines. 25 fragments annotate a demo with a
+   * paragraph of authoring prose rather than a label; it was shipped as
+   * invisible bytes before and is rendered as a note now. `null` when the
+   * comment was a single line.
+   */
+  note: string | null;
+  /** The fragment slice this block wraps — the registry's markup, verbatim. */
+  html: string;
+}
+
+/** HTML elements with no end tag, so the depth counter does not go negative. */
+const VOID_ELEMENTS = new Set([
+  "area", "base", "br", "col", "embed", "hr", "img", "input",
+  "link", "meta", "param", "source", "track", "wbr",
+]);
+
+/**
+ * Split a sanitized reference fragment at its **top-level** comments.
+ *
+ * Depth matters: `sidebar` writes `<!-- ── Sidebar ── -->` *inside* its shell and
+ * that is an annotation, not a demo boundary. Only a comment at nesting depth 0
+ * separates two demos, so the scanner tracks open elements rather than running a
+ * regex over the whole file.
+ *
+ * The markup between two boundaries is passed through byte for byte — the
+ * concatenation of the blocks is the fragment with its top-level comments
+ * removed, which is what `tests/generator/docs-site.test.ts` asserts and what
+ * keeps "an example page IS its registry fragment" true after this task.
+ */
+export function splitReferenceDemos(fragment: string): DemoBlock[] {
+  const blocks: DemoBlock[] = [];
+  let depth = 0;
+  let cursor = 0;
+  // Every comment seen since the last demo. Usually one; a fragment that opens
+  // with a paragraph of orientation prose and *then* labels its first demo
+  // (`aspect-ratio`) leaves two, and neither may be dropped.
+  let pending: string[] = [];
+  let start = 0;
+
+  const flush = (end: number) => {
+    const html = fragment.slice(start, end).trim();
+    // A label with nothing under it labels nothing: keep the comment pending so
+    // it reaches the demo it belongs to instead of becoming an empty block.
+    if (html.length === 0) return;
+    blocks.push({ ...parseDemoLabel(pending), html });
+    pending = [];
+  };
+
+  while (cursor < fragment.length) {
+    const lt = fragment.indexOf("<", cursor);
+    if (lt === -1) break;
+
+    if (fragment.startsWith("<!--", lt)) {
+      const close = fragment.indexOf("-->", lt);
+      const end = close === -1 ? fragment.length : close;
+      if (depth === 0) {
+        flush(lt);
+        pending.push(fragment.slice(lt + 4, end));
+        start = close === -1 ? fragment.length : close + 3;
+      }
+      cursor = close === -1 ? fragment.length : close + 3;
+      continue;
+    }
+
+    const tag = /^<(\/?)([a-zA-Z][a-zA-Z0-9-]*)/.exec(fragment.slice(lt, lt + 40));
+    if (!tag) {
+      cursor = lt + 1;
+      continue;
+    }
+    // Walk to the tag's `>`, honouring quoted attribute values so a `>` inside
+    // one (`aria-label="a > b"`) does not end the tag early.
+    let i = lt + 1;
+    let quote = "";
+    for (; i < fragment.length; i++) {
+      const ch = fragment[i];
+      if (quote) {
+        if (ch === quote) quote = "";
+      } else if (ch === '"' || ch === "'") quote = ch;
+      else if (ch === ">") break;
+    }
+    const source = fragment.slice(lt, i + 1);
+    if (tag[1] === "/") depth = Math.max(0, depth - 1);
+    else if (!VOID_ELEMENTS.has(tag[2].toLowerCase()) && !source.endsWith("/>")) depth++;
+    cursor = i + 1;
+  }
+  flush(fragment.length);
+  return blocks;
+}
+
+/**
+ * The caption and note a run of comments yields.
+ *
+ * The **caption is the first line of the last comment** — the nearest label,
+ * which is the one an author wrote for this demo. Every other line becomes the
+ * note, in document order, so an opening paragraph of prose is still shown; it
+ * just does not out-shout the label it precedes.
+ *
+ * Lines carrying no letter or digit are dropped first, so the box-drawing rules
+ * some fragments frame a comment with (`── ────── ──`) never become the label.
+ */
+function parseDemoLabel(comments: readonly string[]): {
+  caption: string | null;
+  note: string | null;
+} {
+  const meaningful = (text: string) =>
+    text
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => /[\p{L}\p{N}]/u.test(line));
+
+  const groups = comments.map(meaningful).filter((lines) => lines.length > 0);
+  if (groups.length === 0) return { caption: null, note: null };
+
+  const last = groups[groups.length - 1];
+  const caption = last[0];
+  const note = [...groups.slice(0, -1).flat(), ...last.slice(1)];
+  return { caption, note: note.length > 0 ? note.join("\n") : null };
+}
+
+/**
+ * The demo blocks as markup: one `<figure>` per demo, captioned by
+ * `<figcaption>`.
+ *
+ * `figure`/`figcaption` rather than a section and a heading, for two reasons
+ * that both matter here. It is literally what the elements are for — self-
+ * contained content with a caption — and it keeps the example pages out of the
+ * heading outline, so a caption cannot collide with the headings the fragment
+ * itself contains (the `heading-order` document rule runs over these pages).
+ * `figure` is also a flow root *and* a participant in the default rhythm
+ * (§20/0.9-02), so consecutive demos are spaced by the base rule with nothing
+ * declared here — which is why this change also separates the demos whose own
+ * roots were not `[data-ui]` siblings.
+ */
+function renderDemoBlocks(blocks: readonly DemoBlock[]): string {
+  return blocks
+    .map((b) => {
+      const parts = [`<figure data-docs-demo>`];
+      if (b.caption !== null) {
+        parts.push(`<figcaption data-docs-demo-caption>${esc(b.caption)}</figcaption>`);
+      }
+      if (b.note !== null) parts.push(`<p data-docs-demo-note>${esc(b.note)}</p>`);
+      parts.push(b.html, `</figure>`);
+      return parts.join("\n");
+    })
+    .join("\n");
+}
+
+/**
+ * Does a fragment declare its own `main` landmark (patterns often do)?
+ *
+ * Exported because it is the *content-derived* exemption from the example-page
+ * shell: a fragment that declares the landmark is describing a whole document —
+ * an app shell that runs edge to edge and paints its own inset — so mounting it
+ * inside a 72rem measure column would misrepresent the very thing it demos.
+ */
+export function hasOwnMain(fragment: string): boolean {
   return /<main[\s>]/i.test(fragment) || /role\s*=\s*["']main["']/i.test(fragment);
 }
 
@@ -575,6 +752,39 @@ function isColorToken(entry: TokenEntry): boolean {
 /** Anchor id for a token on the token-reference page. */
 export function tokenAnchor(name: string): string {
   return `token-${slug(name)}`;
+}
+
+/**
+ * Tokens the site paints a swatch for: the ones whose *value* is a colour (the
+ * token reference's sample column) plus the semantic `color-*` set, whose values
+ * are usually a `var(--palette-…)` hop the value heuristic cannot see and which
+ * is exactly the surface a theme re-declares (the gallery frames).
+ *
+ * One list, because one list is what {@link renderSwatchRules} can turn into
+ * CSS: a swatch's background is a *per-token* declaration, and the alternative
+ * — `style="background: var(--x)"` on every span — is the inline escape 0.9-03
+ * removes from the site.
+ */
+function isSwatchToken(entry: TokenEntry): boolean {
+  return isColorToken(entry) || (entry.group === "semantic" && entry.name.startsWith("color-"));
+}
+
+/** One painted swatch, named by the token it shows. */
+function renderSwatch(entry: TokenEntry): string {
+  return `<span data-docs-swatch="${escAttr(entry.name)}" title="--${escAttr(entry.name)}"></span>`;
+}
+
+/**
+ * `[data-docs-swatch="…"] { background: var(--…); }` for every swatchable token.
+ * Generated rather than authored: the token set is the registry's, so a new
+ * colour token paints itself with no edit to `site/styles/docs.css`, which is
+ * the same claim every other page of this site makes.
+ */
+function renderSwatchRules(tokenList: readonly TokenEntry[]): string {
+  return tokenList
+    .filter(isSwatchToken)
+    .map((t) => `[data-docs-swatch="${t.name}"] { background: var(--${t.name}); }`)
+    .join("\n");
 }
 
 // ---------------------------------------------------------------------------
@@ -1304,9 +1514,7 @@ function renderTokenPage(ctx: {
       )} (${entries.length})</h2>`,
     );
     const rows = entries.map((t) => {
-      const swatch = isColorToken(t)
-        ? `<span style="display: inline-block; inline-size: 1.25rem; block-size: 1.25rem; vertical-align: middle; border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--${t.name});"></span>`
-        : "—";
+      const swatch = isColorToken(t) ? renderSwatch(t) : "—";
       return [
         `<code id="${escAttr(tokenAnchor(t.name))}">--${esc(t.name)}</code>`,
         code(t.value),
@@ -1613,14 +1821,16 @@ function renderLayoutsPage(ctx: {
 }
 
 /**
- * A standalone live-example page: the component's registry reference fragment,
- * verbatim, in a minimal document that links the site stylesheet and loads the
- * registry engine so recipe controllers actually run.
+ * The **copy-for-agents** mount: the reference fragment, verbatim, under exactly
+ * the landmark it needs and nothing else. A fragment that declares its own
+ * `main` is mounted as-is, a fragment carrying dialog-class markup is mounted
+ * beside `<main>` (overlays belong outside the content flow), and everything
+ * else is wrapped in `<main>`.
  *
- * Landmark placement is decided from the fragment itself, never from a
- * per-component list: a fragment that declares its own `main` is mounted as-is,
- * a fragment carrying dialog-class markup is mounted beside `<main>` (overlays
- * belong outside the content flow), and everything else is wrapped in `<main>`.
+ * Deliberately NOT what the live-example page carries any more (see
+ * {@link mountExample}): a payload someone pastes into an empty file must stay a
+ * correct *minimal* example, so the docs site's measure column and demo captions
+ * — which are a rendering of the fragment, not part of it — end at the page.
  */
 function mountFragment(fragment: string, name: string): string {
   if (hasOwnMain(fragment)) return fragment;
@@ -1633,11 +1843,54 @@ function mountFragment(fragment: string, name: string): string {
   return `<main>\n${fragment}\n</main>`;
 }
 
+/**
+ * The measure column every example page is mounted in. `wide` (72rem) is the
+ * docs shell's own measure, so a component is demonstrated at the width the site
+ * reads at rather than stretched across whatever window is open; `data-gutter`
+ * keeps `avatar`'s and `skeleton`'s circles off the viewport edge.
+ *
+ * Both come from `container`'s declared vocabulary — the site must not reach for
+ * an inline style to fix its own showcase, which is the whole of the 0.9-03
+ * gutter defect. The container wraps the landmark rather than *being* it, which
+ * is what `container.manifest.json`'s a11y note asks for: it is a layout-only
+ * primitive and the landmark belongs on the element inside.
+ */
+export const EXAMPLE_MEASURE = "wide";
+export const EXAMPLE_GUTTER = "4";
+const EXAMPLE_COLUMN_OPEN = `<div data-ui="container" data-measure="${EXAMPLE_MEASURE}" data-gutter="${EXAMPLE_GUTTER}">`;
+
+/**
+ * The body of a live-example page: the fragment's demos, each in its own
+ * captioned block, inside the measure column.
+ *
+ * Landmark placement is decided from the fragment itself, never from a
+ * per-component list — a fragment that declares its own `main` already describes
+ * a whole document (an app shell) and is mounted verbatim, a fragment carrying
+ * dialog-class markup keeps its overlays outside `<main>` where the `landmark`
+ * rule wants them, and everything else becomes the content of `<main>`.
+ *
+ * The captioned blocks are a *rendering* of the fragment: every byte of markup
+ * inside them is the registry's (see {@link splitReferenceDemos}), which is what
+ * keeps example pages outside the per-component audit gate honest.
+ */
+function mountExample(fragment: string, name: string): string {
+  if (hasOwnMain(fragment)) return fragment;
+  const demos = renderDemoBlocks(splitReferenceDemos(fragment));
+  if (hasDialog(fragment)) {
+    return (
+      `${EXAMPLE_COLUMN_OPEN}\n<main>\n<p>Live reference example: <code>${esc(name)}</code>. ` +
+      `Overlay markup is mounted outside the main landmark, where it belongs.</p>\n</main>\n` +
+      `${demos}\n</div>`
+    );
+  }
+  return `${EXAMPLE_COLUMN_OPEN}\n<main>\n${demos}\n</main>\n</div>`;
+}
+
 function renderExamplePage(c: DocsComponent, config: SiteConfig): SiteFile | null {
   if (!existsSync(c.referencePath)) return null;
   const fragment = sanitizeReferenceFragment(readText(c.referencePath));
   const u = (to: string) => escAttr(relUrl(c.examplePath, to));
-  const mounted = mountFragment(fragment, c.name);
+  const mounted = mountExample(fragment, c.name);
 
   return {
     path: c.examplePath,
@@ -1669,10 +1922,11 @@ ${mounted}
  * that renders that component with **no repository, no install and no build
  * step** — the registry's own reference markup under the two-tag CDN preamble.
  *
- * Everything below the preamble is the same mounted fragment the live-example
- * page carries ({@link mountFragment}), which is what keeps the payload clean
- * under the document rules: the landmark decision is made once, from the
- * fragment's own content, for both surfaces.
+ * Everything below the preamble is {@link mountFragment} — the fragment under
+ * the landmark its own content asks for, and nothing else. The docs site's
+ * example page adds a measure column and visible demo captions on top of the
+ * same fragment ({@link mountExample}); a payload does not, because the payload
+ * is what someone pastes into an empty file and it has to stay minimal.
  *
  * Paste it into an empty file, open the file, and it works. That claim is the
  * whole point of the button, so the tests assert it as a document — it parses,
@@ -1797,8 +2051,7 @@ function renderPlaygroundPage(ctx: {
       `      <p>The same markup, rendered with the site's stylesheet and the registry engine, ` +
         `in a sandboxed frame.</p>\n` +
         `      <iframe id="playground-preview" title="Rendered preview of the markup above" ` +
-        `sandbox="allow-scripts" style="inline-size: 100%; block-size: 20rem; resize: vertical; ` +
-        `border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-bg);"></iframe>`,
+        `sandbox="allow-scripts" data-docs-playground-frame></iframe>`,
     ),
     section(
       "rules",
@@ -1860,6 +2113,18 @@ function variantValues(c: DocsComponent | undefined, attr: string): string[] {
  * theme re-declares. Add a variant to `button.manifest.json` and every theme
  * preview grows it.
  *
+ * The frame's own `<main>` is a `surface` (task 0.9-03, resolving follow-up
+ * 0.8-13). It was `<main style="padding: var(--space-4); display: grid; gap:
+ * var(--space-4);">` — the last inline layout escape in this generator, and two
+ * concerns in one attribute: an inset and a rhythm. `container` could not
+ * express it, because a container's gutter is `padding-inline` only and a naive
+ * swap would silently drop the frame's block padding; `surface` is the primitive
+ * that pads on both axes (`data-size="md"` is literally `padding:
+ * var(--space-4)`), and the rhythm no longer needs a grid at all — a surface is
+ * a flow root, so §20's default rule spaces the four demos and `data-gap="4"`
+ * tunes it to the same `--space-4` the grid used. `flat` because the frame is
+ * the page, not a card on it: no border, no shadow.
+ *
  * The two rows are `cluster`s — a button row and a swatch row are the primitive's
  * literal use case (task 0.8-05). They have been through the whole argument: an
  * inline `flex-wrap` escape while the attribute existed in `stack.css` but no
@@ -1901,12 +2166,7 @@ function renderThemePreviewPage(ctx: {
   // tokens a theme re-declares, and `color-*` in the semantic layer IS that set.
   const swatches = ctx.tokenList
     .filter((t) => t.group === "semantic" && t.name.startsWith("color-"))
-    .map(
-      (t) =>
-        `      <span title="--${escAttr(t.name)}" style="display: inline-block; inline-size: 1.5rem; ` +
-        `block-size: 1.5rem; border: 1px solid var(--color-border); border-radius: var(--radius-sm); ` +
-        `background: var(--${escAttr(t.name)});"></span>`,
-    )
+    .map((t) => `      ${renderSwatch(t)}`)
     .join("\n");
 
   const card = byName.has("card")
@@ -1954,7 +2214,7 @@ function renderThemePreviewPage(ctx: {
 <!-- ${DOCS_GENERATION_MARKER} · theme preview frame for ${escAttr(theme.name)} -->
 </head>
 <body>
-<main style="padding: var(--space-4); display: grid; gap: var(--space-4);">
+<main data-ui="surface" data-variant="flat" data-size="md" data-gap="4">
 ${card}
 ${callout}
     <div data-ui="cluster" data-gap="2">
@@ -2359,6 +2619,14 @@ export function buildSiteStylesheet(
     parts.push("/* ── documentation presentation ── */");
     parts.push(readText(docsCss));
   }
+
+  // One rule per swatchable token. The *shape* of a swatch (size, border, radius)
+  // is authored in docs.css; only its colour is per-token, and a colour that
+  // varies per element is the one thing an attribute selector cannot express
+  // without a rule per value — so the rules are generated from the same token
+  // reference the pages are, rather than written inline on 100-odd spans.
+  parts.push("/* ── documentation swatches (generated from the token reference) ── */");
+  parts.push(renderSwatchRules(parseTokenReference(registryRoot)));
 
   return parts.join("\n") + "\n";
 }

@@ -769,6 +769,66 @@ body {
   color-scheme: light dark;
 }
 
+/* ── Token swatches ─────────────────────────────────────────────────────── */
+
+/* The shape of a swatch. Its *colour* is the one thing that varies per element,
+ * so the generator emits `[data-docs-swatch="<token>"] { background: var(--<token>) }`
+ * from the token reference (see `renderSwatchRules`) and nothing on this site
+ * carries a `style` attribute. */
+[data-docs-swatch] {
+  display: inline-block;
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+  vertical-align: middle;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+/* ── Reference example pages ────────────────────────────────────────────── */
+
+/* An example page is a registry fragment in the framework's own `container`
+ * (task 0.9-03). The column supplies the measure and the inline gutter; the
+ * block inset is the page frame's, and belongs here rather than on the
+ * primitive — `container`'s gutter is `padding-inline` only, on purpose. */
+[data-preview-role="component"] body {
+  padding-block: var(--space-6);
+}
+
+/* One demo, one block. `figure` is a flow root and a participant in the default
+ * rhythm (base/rhythm.css), so the space *between* demos is the base rule's and
+ * is deliberately not re-declared here. */
+[data-docs-demo-caption] {
+  margin-block-end: var(--space-3);
+  padding-block-end: var(--space-2);
+  border-block-end: 1px solid var(--color-border);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-fg-muted);
+}
+
+/* The rest of the fragment's own comment, when its author wrote a paragraph
+ * rather than a label. `pre-line` keeps the authored line breaks — several are
+ * bulleted notes, and reflowing them into one run would lose the list. */
+[data-docs-demo-note] {
+  margin-block-end: var(--space-4);
+  white-space: pre-line;
+  font-size: var(--text-sm);
+  color: var(--color-fg-muted);
+}
+
+/* ── Playground preview ─────────────────────────────────────────────────── */
+
+[data-docs-playground-frame] {
+  inline-size: 100%;
+  block-size: 20rem;
+  resize: vertical;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+}
+
 /* ── Responsive shell and content ───────────────────────────────────────── */
 
 @media (max-width: 70rem) {

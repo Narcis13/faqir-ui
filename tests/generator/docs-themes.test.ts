@@ -132,11 +132,22 @@ describe("theme coverage", () => {
       expect(frame, `${theme.name} renders text on a -subtle surface`).not.toMatch(
         /data-ui="badge" data-variant="(?:warning|success|destructive)"/,
       );
-      // …and it does still show every semantic colour the theme owns.
-      const swatches = [...frame.matchAll(/background: var\(--(color-[a-z-]+)\)/g)].map((m) => m[1]);
+      // …and it does still show every semantic colour the theme owns. Named by
+      // the attribute the swatch carries, not by an inline `background:` — task
+      // 0.9-03 moved that declaration into a generated rule so no page of this
+      // site carries a `style` attribute.
+      const swatches = [...frame.matchAll(/data-docs-swatch="(color-[a-z-]+)"/g)].map((m) => m[1]);
       expect(swatches.length).toBeGreaterThan(20);
       for (const token of ["color-warning", "color-success", "color-destructive", "color-primary"]) {
         expect(swatches, `${theme.name} hides --${token}`).toContain(token);
+      }
+      // The swatch is only a swatch if something paints it: the generated rule
+      // for each of those tokens must be in the stylesheet the frame links.
+      const css = page("styles/faqir.css");
+      for (const token of swatches) {
+        expect(css, `--${token} has no swatch rule`).toContain(
+          `[data-docs-swatch="${token}"] { background: var(--${token}); }`,
+        );
       }
     }
   });
