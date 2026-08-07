@@ -17,7 +17,7 @@ export interface LCheckboxProps {
   disabled?: boolean;
 }
 
-/** `checkbox` — Custom styled checkbox with checked, indeterminate, disabled states and size variants */
+/** `checkbox` — Custom styled checkbox with checked, indeterminate, disabled states and size variants; compose sibling items in a cluster with data-gap=4 while a single labeled checkbox may stand alone */
 export const LCheckbox = defineFaqirPrimitive<LCheckboxProps>({
   name: "checkbox",
   tag: "input",

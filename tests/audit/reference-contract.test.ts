@@ -76,6 +76,12 @@ const INTENDED_ROOT_CHANGES: Record<string, string> = {
   "primitives/input/input.html": "labeled input → one field-group",
   "primitives/select/select.html": "three labeled selects → field-group",
   "primitives/textarea/textarea.html": "four labeled textareas → field-group",
+  // Inline control rows (0.9-08): the complete labeled item remains the unit;
+  // cluster adds only the wider visual relationship between sibling items.
+  "primitives/checkbox/checkbox.html": "two canonical control rows → cluster gap 4",
+  "primitives/radio/radio.html": "each fieldset's inline options → cluster gap 4",
+  "primitives/switch/switch.html": "two canonical control rows → cluster gap 4",
+  "primitives/toggle/toggle.html": "two canonical control rows → cluster gap 4",
   // The trigger contract (0.9-05): four recipes styled their trigger part with
   // nothing at all, so every one of those 16 buttons rendered as the reset's
   // bare element. They now delegate to the `button` primitive, which is the

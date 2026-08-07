@@ -20,7 +20,7 @@ export interface LSwitchProps extends Omit<ComponentPropsWithoutRef<"button">, "
   thumb?: ReactNode;
 }
 
-/** `switch` — Toggle switch with on/off states, disabled state, and size variants */
+/** `switch` — Toggle switch with on/off states, disabled state, and size variants; compose sibling labeled switches in a cluster with data-gap=4 while one may stand alone */
 export const LSwitch = createFaqirPrimitive<LSwitchProps>({
   name: "switch",
   tag: "button",

@@ -1,10 +1,18 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "toggle",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "kind": "primitive",
   "category": "actions",
-  "description": "Two-state toggle button whose pressed appearance is driven entirely by aria-pressed — CSS-only, no JavaScript",
+  "description": "Two-state toggle button whose pressed appearance is driven entirely by aria-pressed; compose sibling toggles in a cluster with data-gap=4 while one may stand alone",
+
+  "changes": [
+    {
+      "version": "1.1.0",
+      "note": "Canonical toggle rows now use cluster data-gap='4' so adjacent buttons cannot read as one control; a single toggle remains valid without a cluster.",
+      "breaking": false
+    }
+  ],
 
   "anatomy": {
     "tag": "button",
@@ -42,7 +50,7 @@
     "keyboard": {
       "Enter/Space": "Toggles the pressed state (native button behavior)"
     },
-    "notes": "The toggle MUST be a <button type=\"button\"> carrying aria-pressed=\"true|false\". aria-pressed is the source of truth for both state and styling — the CSS reacts to [aria-pressed=\"true\"]. Flipping the attribute (e.g. on click) is left to page/application code; the primitive itself ships no controller."
+    "notes": "The toggle MUST be a <button type=\"button\"> carrying aria-pressed=\"true|false\". aria-pressed is the source of truth for both state and styling — the CSS reacts to [aria-pressed=\"true\"]. Flipping the attribute (e.g. on click) is left to page/application code; the primitive itself ships no controller. A single toggle may stand alone; two or more sibling toggles use cluster data-gap=\"4\" so each button remains a distinct visual target."
   },
 
   "tokens_used": [
@@ -56,8 +64,10 @@
   ],
 
   "templates": {
-    "html": "<button data-ui=\"toggle\" type=\"button\" aria-pressed=\"false\">{label}</button>",
-    "html_pressed": "<button data-ui=\"toggle\" type=\"button\" aria-pressed=\"true\">{label}</button>"
+    "html": "<div data-ui=\"cluster\" data-gap=\"4\">\n  <button data-ui=\"toggle\" type=\"button\" aria-pressed=\"false\">{label1}</button>\n  <button data-ui=\"toggle\" type=\"button\" aria-pressed=\"false\">{label2}</button>\n</div>",
+    "html_single": "<button data-ui=\"toggle\" type=\"button\" aria-pressed=\"false\">{label}</button>",
+    "html_pressed": "<button data-ui=\"toggle\" type=\"button\" aria-pressed=\"true\">{label}</button>",
+    "html_row": "<div data-ui=\"cluster\" data-gap=\"4\">\n  <button data-ui=\"toggle\" type=\"button\" aria-pressed=\"false\">{label1}</button>\n  <button data-ui=\"toggle\" type=\"button\" aria-pressed=\"false\">{label2}</button>\n</div>"
   },
 
   "safe_transforms": [
@@ -92,6 +102,8 @@
     "pressed-styling-reacts-to-aria-pressed-true",
     "unpressed-uses-muted-foreground",
     "sm-size-sets-data-size-sm",
-    "disabled-lowers-opacity"
+    "disabled-lowers-opacity",
+    "control-rows-use-cluster-gap-4",
+    "single-control-may-stand-alone"
   ]
 }

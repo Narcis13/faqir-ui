@@ -2164,6 +2164,39 @@ consults the viewport is asserting something it cannot know about its own placem
 queries are unaffected by this hierarchy — they ask about a user preference or an
 output medium, not about available space.
 
+### Inline control rows
+
+`checkbox`, `radio`, `switch` and `toggle` are inline controls, so §20's vertical
+rhythm deliberately skips them. Their row contract is intrinsic instead: **two or
+more sibling control items are children of `cluster` with `data-gap="4"`.** The
+complete labeled item is the child, never the input/button separated from its text.
+
+For checkbox, radio and switch, the component's label wrapper owns the tight
+label-to-box step at `--space-2`; the cluster owns the wider control-to-control step
+at `--space-4`. That strict inner < outer relationship is the point of the fixed
+row gap: visual proximity tells a sighted reader the same ownership that `for`/`id`
+or the wrapping label tells the accessibility tree. `toggle` carries its accessible
+label inside the button, so its inner distance is zero and the same outer rule keeps
+adjacent buttons distinct.
+
+```html
+<div data-ui="cluster" data-gap="4">
+  <label data-ui="checkbox-label" for="email-updates">
+    <input data-ui="checkbox" id="email-updates" type="checkbox">
+    <span data-part="label">Email updates</span>
+  </label>
+  <label data-ui="checkbox-label" for="product-news">
+    <input data-ui="checkbox" id="product-news" type="checkbox">
+    <span data-part="label">Product news</span>
+  </label>
+</div>
+```
+
+The wrapper is visual, not semantic. A radio row keeps its `fieldset` and `legend`,
+with the cluster around the option labels inside them. A single labeled control may
+stand alone (or be the direct child of a radio fieldset): cluster is required by the
+row, not by the primitive, and no control CSS selector depends on an ancestor.
+
 ### What this binds
 
 - Registry CSS: every threshold is a canon tier, expressed as `min-width`.

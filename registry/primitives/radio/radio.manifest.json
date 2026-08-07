@@ -1,10 +1,18 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "radio",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "kind": "primitive",
   "category": "forms",
-  "description": "Custom styled radio button for single selection within a group, with size variants",
+  "description": "Custom styled radio button for single selection within a group, with size variants; inline option rows use cluster data-gap=4 inside their fieldset",
+
+  "changes": [
+    {
+      "version": "1.1.0",
+      "note": "Canonical inline radio options now use cluster data-gap='4' inside the semantic fieldset, keeping the inter-control step wider than each label's internal space-2 step; one option may remain a direct fieldset child.",
+      "breaking": false
+    }
+  ],
 
   "anatomy": {
     "tag": "input",
@@ -55,7 +63,8 @@
       "ArrowUp/ArrowLeft": "select previous radio",
       "ArrowDown/ArrowRight": "select next radio",
       "Space": "select focused radio"
-    }
+    },
+    "notes": "fieldset and legend own radio-group semantics. Inside them, two or more inline option labels use cluster data-gap=\"4\"; radio-label keeps the label-to-box gap at space-2. A fieldset containing one direct radio-label needs no cluster."
   },
 
   "tokens_used": [
@@ -66,8 +75,9 @@
   ],
 
   "templates": {
-    "html_group": "<fieldset data-ui=\"radio-group\">\n  <legend data-ui=\"label\">{legend}</legend>\n  <label data-ui=\"radio-label\">\n    <input data-ui=\"radio\" type=\"radio\" name=\"{name}\" value=\"{value}\">\n    <span data-part=\"label\">{label}</span>\n  </label>\n</fieldset>",
-    "html_single": "<label data-ui=\"radio-label\">\n  <input data-ui=\"radio\" type=\"radio\" name=\"{name}\" value=\"{value}\">\n  <span data-part=\"label\">{label}</span>\n</label>"
+    "html": "<fieldset data-ui=\"radio-group\">\n  <legend data-ui=\"label\">{legend}</legend>\n  <div data-ui=\"cluster\" data-gap=\"4\">\n    <label data-ui=\"radio-label\" for=\"{id1}\"><input data-ui=\"radio\" id=\"{id1}\" type=\"radio\" name=\"{name}\" value=\"{value1}\"><span data-part=\"label\">{label1}</span></label>\n    <label data-ui=\"radio-label\" for=\"{id2}\"><input data-ui=\"radio\" id=\"{id2}\" type=\"radio\" name=\"{name}\" value=\"{value2}\"><span data-part=\"label\">{label2}</span></label>\n  </div>\n</fieldset>",
+    "html_group": "<fieldset data-ui=\"radio-group\">\n  <legend data-ui=\"label\">{legend}</legend>\n  <div data-ui=\"cluster\" data-gap=\"4\">\n    <label data-ui=\"radio-label\" for=\"{id1}\"><input data-ui=\"radio\" id=\"{id1}\" type=\"radio\" name=\"{name}\" value=\"{value1}\"><span data-part=\"label\">{label1}</span></label>\n    <label data-ui=\"radio-label\" for=\"{id2}\"><input data-ui=\"radio\" id=\"{id2}\" type=\"radio\" name=\"{name}\" value=\"{value2}\"><span data-part=\"label\">{label2}</span></label>\n  </div>\n</fieldset>",
+    "html_single": "<fieldset data-ui=\"radio-group\">\n  <legend data-ui=\"label\">{legend}</legend>\n  <label data-ui=\"radio-label\" for=\"{id}\">\n    <input data-ui=\"radio\" id=\"{id}\" type=\"radio\" name=\"{name}\" value=\"{value}\">\n    <span data-part=\"label\">{label}</span>\n  </label>\n</fieldset>"
   },
 
   "safe_transforms": [
@@ -103,6 +113,8 @@
     "sm-size-sets-data-size-sm",
     "radios-share-name-attribute",
     "group-wrapped-in-fieldset-with-legend",
-    "native-appearance-is-none"
+    "native-appearance-is-none",
+    "inline-option-rows-use-cluster-gap-4",
+    "single-fieldset-option-may-stand-outside-cluster"
   ]
 }

@@ -16,7 +16,7 @@ export interface LRadioProps extends Omit<ComponentPropsWithoutRef<"input">, "si
   disabled?: boolean;
 }
 
-/** `radio` — Custom styled radio button for single selection within a group, with size variants */
+/** `radio` — Custom styled radio button for single selection within a group, with size variants; inline option rows use cluster data-gap=4 inside their fieldset */
 export const LRadio = createFaqirPrimitive<LRadioProps>({
   name: "radio",
   tag: "input",

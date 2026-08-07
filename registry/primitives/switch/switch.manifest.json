@@ -1,10 +1,17 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "switch",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "kind": "primitive",
   "category": "forms",
-  "description": "Toggle switch with on/off states, disabled state, and size variants",
+  "description": "Toggle switch with on/off states, disabled state, and size variants; compose sibling labeled switches in a cluster with data-gap=4 while one may stand alone",
+  "changes": [
+    {
+      "version": "1.1.0",
+      "note": "Canonical switch rows now use cluster data-gap='4', keeping the inter-control step wider than each label's internal space-2 step; a single labeled switch remains valid without a cluster.",
+      "breaking": false
+    }
+  ],
   "anatomy": {
     "tag": "button",
     "selector": "[data-ui='switch']",
@@ -75,7 +82,8 @@
       "Tab": "focus switch",
       "Space": "toggle on/off",
       "Enter": "toggle on/off"
-    }
+    },
+    "notes": "A single labeled switch may stand alone. When two or more switch items share an inline row, wrap the complete label items in cluster data-gap=\"4\"; switch-label keeps the label-to-track gap at space-2."
   },
   "tokens_used": [
     "color-bg-muted",
@@ -90,8 +98,10 @@
     "ease-default"
   ],
   "templates": {
-    "html": "<button data-ui=\"switch\" role=\"switch\" aria-checked=\"false\">\n  <span data-part=\"thumb\"></span>\n</button>",
-    "html_with_label": "<label data-ui=\"switch-label\">\n  <button data-ui=\"switch\" role=\"switch\" aria-checked=\"false\">\n    <span data-part=\"thumb\"></span>\n  </button>\n  <span data-part=\"label\">{label}</span>\n</label>"
+    "html": "<div data-ui=\"cluster\" data-gap=\"4\">\n  <label data-ui=\"switch-label\" for=\"{id1}\"><button data-ui=\"switch\" id=\"{id1}\" role=\"switch\" aria-checked=\"false\"><span data-part=\"thumb\"></span></button><span data-part=\"label\">{label1}</span></label>\n  <label data-ui=\"switch-label\" for=\"{id2}\"><button data-ui=\"switch\" id=\"{id2}\" role=\"switch\" aria-checked=\"false\"><span data-part=\"thumb\"></span></button><span data-part=\"label\">{label2}</span></label>\n</div>",
+    "html_single": "<label data-ui=\"switch-label\" for=\"{id}\">\n  <button data-ui=\"switch\" id=\"{id}\" role=\"switch\" aria-checked=\"false\">\n    <span data-part=\"thumb\"></span>\n  </button>\n  <span data-part=\"label\">{label}</span>\n</label>",
+    "html_with_label": "<label data-ui=\"switch-label\" for=\"{id}\">\n  <button data-ui=\"switch\" id=\"{id}\" role=\"switch\" aria-checked=\"false\">\n    <span data-part=\"thumb\"></span>\n  </button>\n  <span data-part=\"label\">{label}</span>\n</label>",
+    "html_unlabeled": "<button data-ui=\"switch\" role=\"switch\" aria-checked=\"false\" aria-label=\"{label}\">\n  <span data-part=\"thumb\"></span>\n</button>"
   },
   "safe_transforms": [
     "change-size",
@@ -122,6 +132,8 @@
     "thumb-translates-on-state-change",
     "disabled-state-has-disabled-attribute",
     "sm-size-sets-correct-dimensions",
-    "lg-size-sets-correct-dimensions"
+    "lg-size-sets-correct-dimensions",
+    "control-rows-use-cluster-gap-4",
+    "single-labeled-control-may-stand-alone"
   ]
 }

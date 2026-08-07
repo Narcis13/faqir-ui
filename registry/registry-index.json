@@ -164,7 +164,7 @@
       "name": "checkbox",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "files": [
         {
           "path": "checkbox.css",
@@ -172,14 +172,14 @@
         },
         {
           "path": "checkbox.html",
-          "sha256": "e94399c34297d5ab6d2a1591bec5f682f5ca947598119b3c5abb85fba431950b"
+          "sha256": "506aa19f2e1688ae5ba075ecd9f7e74b18f27473c9da785ae2643d9b416efee3"
         },
         {
           "path": "checkbox.manifest.json",
-          "sha256": "cf423ce4cc816cad6c0ada76d064d75b4b2f18fa865ed9f58e801301d8f5ed63"
+          "sha256": "3567e4f01b095a6d28accc12000cb050af83d039e37283d3428fa6266f432ac6"
         }
       ],
-      "hash": "d9ed80a1c2146fce2c77e8af3e857797d0443b2ce525c1436f990823c348ca68",
+      "hash": "8d0d11186ea91545694652997480d9a4dfaaa8c4cc2e7124098660b7bf5738a2",
       "deps": []
     },
     {
@@ -595,7 +595,7 @@
       "name": "radio",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "files": [
         {
           "path": "radio.css",
@@ -603,14 +603,14 @@
         },
         {
           "path": "radio.html",
-          "sha256": "d41cf132c4eee6c95eea9da357464ee3086eb4ddf4e710093fac1506ba58c8a2"
+          "sha256": "243f1a953811115544856d2fa757b6a7d20beab0aabaebedadb837ce0fe50675"
         },
         {
           "path": "radio.manifest.json",
-          "sha256": "1399994fe67547ea7cdaaa682ba35b45203f26a8e31106b11dd06fb650314ccc"
+          "sha256": "acca0ea9a5df2ceb0939af7edaecb4e6e71f35f02e2d0bafb08e900323356491"
         }
       ],
-      "hash": "3746807e12dced877a5d01b84d86c155bf474293962c87e2e34aa8192090bdb9",
+      "hash": "0baa67c8eebc127b54ec111ef643352b345b396d03047ae8ccfbe215407ce1a3",
       "deps": []
     },
     {
@@ -817,7 +817,7 @@
       "name": "switch",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "files": [
         {
           "path": "switch.css",
@@ -825,14 +825,14 @@
         },
         {
           "path": "switch.html",
-          "sha256": "cb82ff13ffe4f3aaab87444184e85759e8bbebecedd76d733d95c3556d67b85c"
+          "sha256": "9a2c9a7dae67a58019899141ec93e2a4dc01e7aca6671dd3926f53952430404f"
         },
         {
           "path": "switch.manifest.json",
-          "sha256": "eecf46712cbcdc75c674b7b99ca21f84f16e4c6c35dc7c0fcae13d13f9664d84"
+          "sha256": "6110bdb977bea84c6b3de8556df7cbe5c48e3b81d5adfb466069fdacf616d039"
         }
       ],
-      "hash": "025981dfdc69539e4fa6b0e40b7fea3a194663b7b9bab813e0c334b1ed6640b6",
+      "hash": "96509ff6498d397220697b8a01c1a66bd3cd1813e414692d380965e2e5964622",
       "deps": []
     },
     {
@@ -905,7 +905,7 @@
       "name": "toggle",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "files": [
         {
           "path": "toggle.css",
@@ -913,14 +913,14 @@
         },
         {
           "path": "toggle.html",
-          "sha256": "84c1a47659d0382eb33da3d838d4a014447b0e53eac7977f5b3bcb6e25cdb19c"
+          "sha256": "40621889fcfb25324e991ddeac5d956968f49d0efcde9da4b5117806f2edf786"
         },
         {
           "path": "toggle.manifest.json",
-          "sha256": "4bd7ce50d8362960cb1c18342bb7a29f1d4f66c89c8e3c16d370d43e2e5fa964"
+          "sha256": "d9507d7fe392617fc5b4f1bd468c2deb2661b09f6008e611f44582aa0d4f9037"
         }
       ],
-      "hash": "ac121013b8c6ad63490ca22f6d4ec1789db60be72d7edbf36fa457c09ecc182b",
+      "hash": "2287c16a8b8a4eb03a9bc537041882fae861c2839766fc21a9710b3630b1f538",
       "deps": []
     },
     {

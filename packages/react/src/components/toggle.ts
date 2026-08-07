@@ -14,7 +14,7 @@ export interface LToggleProps extends Omit<ComponentPropsWithoutRef<"button">, "
   pressed?: boolean;
 }
 
-/** `toggle` — Two-state toggle button whose pressed appearance is driven entirely by aria-pressed — CSS-only, no JavaScript */
+/** `toggle` — Two-state toggle button whose pressed appearance is driven entirely by aria-pressed; compose sibling toggles in a cluster with data-gap=4 while one may stand alone */
 export const LToggle = createFaqirPrimitive<LToggleProps>({
   name: "toggle",
   tag: "button",

@@ -1,10 +1,18 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "checkbox",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "kind": "primitive",
   "category": "forms",
-  "description": "Custom styled checkbox with checked, indeterminate, disabled states and size variants",
+  "description": "Custom styled checkbox with checked, indeterminate, disabled states and size variants; compose sibling items in a cluster with data-gap=4 while a single labeled checkbox may stand alone",
+
+  "changes": [
+    {
+      "version": "1.1.0",
+      "note": "Canonical checkbox rows now use cluster data-gap='4', keeping the inter-control step wider than each label's internal space-2 step; a single labeled checkbox remains valid without a cluster.",
+      "breaking": false
+    }
+  ],
 
   "anatomy": {
     "tag": "input",
@@ -51,7 +59,8 @@
     "keyboard": {
       "Tab": "focus checkbox",
       "Space": "toggle checked state"
-    }
+    },
+    "notes": "A single labeled checkbox may stand alone. When two or more checkbox items share an inline row, wrap the complete label items in cluster data-gap=\"4\"; checkbox-label keeps the label-to-box gap at space-2, so visual proximity agrees with the label association."
   },
 
   "tokens_used": [
@@ -62,7 +71,8 @@
   ],
 
   "templates": {
-    "html": "<label data-ui=\"checkbox-label\">\n  <input data-ui=\"checkbox\" type=\"checkbox\">\n  <span data-part=\"label\">{label}</span>\n</label>"
+    "html": "<div data-ui=\"cluster\" data-gap=\"4\">\n  <label data-ui=\"checkbox-label\" for=\"{id1}\"><input data-ui=\"checkbox\" id=\"{id1}\" type=\"checkbox\"><span data-part=\"label\">{label1}</span></label>\n  <label data-ui=\"checkbox-label\" for=\"{id2}\"><input data-ui=\"checkbox\" id=\"{id2}\" type=\"checkbox\"><span data-part=\"label\">{label2}</span></label>\n</div>",
+    "html_single": "<label data-ui=\"checkbox-label\" for=\"{id}\">\n  <input data-ui=\"checkbox\" id=\"{id}\" type=\"checkbox\">\n  <span data-part=\"label\">{label}</span>\n</label>"
   },
 
   "safe_transforms": [
@@ -97,6 +107,8 @@
     "disabled-state-has-disabled-attribute",
     "sm-size-sets-data-size-sm",
     "wrapped-in-label-for-accessibility",
-    "native-appearance-is-none"
+    "native-appearance-is-none",
+    "control-rows-use-cluster-gap-4",
+    "single-labeled-control-may-stand-alone"
   ]
 }

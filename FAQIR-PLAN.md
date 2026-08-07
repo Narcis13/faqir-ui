@@ -172,7 +172,7 @@ done in any order (or in parallel worktrees).
 | 0.9-05 | `dialog` trigger contract + overlay preview state | ✅ |
 | 0.9-06 | `toast` container contract + `single-fixed-region` audit rule | ✅ |
 | 0.9-07 | Form proximity: intra- vs inter-group spacing | ✅ |
-| 0.9-08 | Inline control rows: `checkbox`/`radio`/`switch` groups | ⬜ |
+| 0.9-08 | Inline control rows: `checkbox`/`radio`/`switch` groups | ✅ |
 | 0.9-09 | Cross-card row alignment (subgrid) | ⬜ |
 | 0.9-10 | Surface elevation ramp + the `-subtle` contrast debt | ⬜ |
 | 0.9-11 | Variant consistency sweep + `carousel` viewport bleed | ⬜ |
@@ -2875,9 +2875,9 @@ that before writing CSS.
 - Layout-lint seam count for the four pages reaches 0.
 
 **Acceptance criteria**
-- [ ] Inline controls carry a documented row wrapper with an enforced gap; visual grouping matches `for`/`id` association.
-- [ ] The lone-control case has a defined answer.
-- [ ] No new undeclared attributes; bindings and skill regenerated.
+- [x] Inline controls carry a documented row wrapper with an enforced gap; visual grouping matches `for`/`id` association. (**`cluster data-gap="4"` is the row owner.** The decision is written in FAQIR-SPEC §15 and all four 1.1.0 manifests, whose canonical `html` templates now show it: checkbox and switch each have state and size rows, toggle has state/content and size rows, and every radio fieldset keeps its semantic legend while a nested cluster lays out the option labels. No control CSS changed: `checkbox-label`, `radio-label` and `switch-label` already own the inner `space-2` step, so cluster's `space-4` is the distinct outer step the task asked for. The references now make every visible association explicit with matching `for`/`id`. `tests/visual/inline-control-rows.pw.ts` measures all **31 controls** (8 checkbox, 9 radio, 7 switch, 7 toggle): labeled controls resolve to an 8px inner step, each cluster enforces a 16px item step, and every label-to-own-box distance is strictly below the adjacent-control distance; toggle's label is inside its button, so its inner distance is 0. Layout-lint additionally pins both docs renderings of all four references at **0 seams**.)
+- [x] The lone-control case has a defined answer. (**Allowed.** A cluster belongs to a row, not to the primitive: checkbox, switch and toggle expose named single-item templates, and radio's single template keeps one direct `radio-label` inside its fieldset. The browser fixture renders one of each with no cluster ancestor and proves every box stays visible and sized, while each labeled wrapper keeps its 8px internal gap. The structural suite also proves none of the four stylesheets contains a cluster-dependent selector, so standalone rendering is a contract rather than a coincidental screenshot.)
+- [x] No new undeclared attributes; bindings and skill regenerated. (The references add only `cluster`'s already-declared `data-gap="4"` plus standard `id`/`for`; the full registry audit reports zero undeclared-attribute or markup findings. All four manifests carry a non-breaking 1.1.0 changelog entry, canonical row and single templates, and the rule/lone-case prose. React and Vue component modules plus their snapshots, `.claude/skills/faqir-creator/references/primitives.md`, and `registry/registry-index.json` were regenerated and pass their drift checks. Verification: **3295 + 37 Bun tests**, root/MCP/forms/Vue/React typecheck, 40 targeted axe cases, 2 geometry cases, and all 6 layout-lint cases green; the existing keyboard/ARIA suites were not edited.)
 
 ---
 

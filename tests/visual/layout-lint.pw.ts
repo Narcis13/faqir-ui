@@ -273,6 +273,22 @@ test("the collector sees a seeded defect, and nothing on a clean page", async ({
   expect(dirtyFindings.overlaps).toHaveLength(1);
 });
 
+test("the four inline-control references have zero layout seams", () => {
+  // Both navigable renderings are pinned: the contract page and the canonical
+  // reference page. A future generator change must not hide a seam in one while
+  // the other stays green.
+  for (const name of ["checkbox", "radio", "switch", "toggle"]) {
+    for (const path of [
+      `components/primitives/${name}.html`,
+      `examples/primitives/${name}.html`,
+    ]) {
+      const page = findings.find((finding) => finding.page === path);
+      expect(page, `${path} was not measured`).toBeDefined();
+      expect(page!.seams, `${path} contains a zero-gap seam`).toEqual([]);
+    }
+  }
+});
+
 test("two toasts in one fixed container stack with the container's real gap", async ({ page }) => {
   await page.goto(`${origin}/examples/recipes/toast.html`, { waitUntil: "load" });
   await page.evaluate(() => document.fonts.ready);

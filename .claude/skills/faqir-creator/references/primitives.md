@@ -221,13 +221,13 @@ Container surface with header, body, and footer slots
 
 _kind: primitive · category: forms_
 
-Custom styled checkbox with checked, indeterminate, disabled states and size variants
+Custom styled checkbox with checked, indeterminate, disabled states and size variants; compose sibling items in a cluster with data-gap=4 while a single labeled checkbox may stand alone
 
 ```html
-<label data-ui="checkbox-label">
-  <input data-ui="checkbox" type="checkbox">
-  <span data-part="label">{label}</span>
-</label>
+<div data-ui="cluster" data-gap="4">
+  <label data-ui="checkbox-label" for="{id1}"><input data-ui="checkbox" id="{id1}" type="checkbox"><span data-part="label">{label1}</span></label>
+  <label data-ui="checkbox-label" for="{id2}"><input data-ui="checkbox" id="{id2}" type="checkbox"><span data-part="label">{label2}</span></label>
+</div>
 ```
 
 **Anatomy**
@@ -773,15 +773,15 @@ Progress bar with animated fill, color variants, and optional label
 
 _kind: primitive · category: forms_
 
-Custom styled radio button for single selection within a group, with size variants
+Custom styled radio button for single selection within a group, with size variants; inline option rows use cluster data-gap=4 inside their fieldset
 
 ```html
 <fieldset data-ui="radio-group">
   <legend data-ui="label">{legend}</legend>
-  <label data-ui="radio-label">
-    <input data-ui="radio" type="radio" name="{name}" value="{value}">
-    <span data-part="label">{label}</span>
-  </label>
+  <div data-ui="cluster" data-gap="4">
+    <label data-ui="radio-label" for="{id1}"><input data-ui="radio" id="{id1}" type="radio" name="{name}" value="{value1}"><span data-part="label">{label1}</span></label>
+    <label data-ui="radio-label" for="{id2}"><input data-ui="radio" id="{id2}" type="radio" name="{name}" value="{value2}"><span data-part="label">{label2}</span></label>
+  </div>
 </fieldset>
 ```
 
@@ -1076,12 +1076,13 @@ Generic visual box with elevation and configurable padding, optionally capped at
 
 _kind: primitive · category: forms_
 
-Toggle switch with on/off states, disabled state, and size variants
+Toggle switch with on/off states, disabled state, and size variants; compose sibling labeled switches in a cluster with data-gap=4 while one may stand alone
 
 ```html
-<button data-ui="switch" role="switch" aria-checked="false">
-  <span data-part="thumb"></span>
-</button>
+<div data-ui="cluster" data-gap="4">
+  <label data-ui="switch-label" for="{id1}"><button data-ui="switch" id="{id1}" role="switch" aria-checked="false"><span data-part="thumb"></span></button><span data-part="label">{label1}</span></label>
+  <label data-ui="switch-label" for="{id2}"><button data-ui="switch" id="{id2}" role="switch" aria-checked="false"><span data-part="thumb"></span></button><span data-part="label">{label2}</span></label>
+</div>
 ```
 
 **Anatomy**
@@ -1189,10 +1190,13 @@ Multi-line text input with error, disabled states and size variants; compose lab
 
 _kind: primitive · category: actions_
 
-Two-state toggle button whose pressed appearance is driven entirely by aria-pressed — CSS-only, no JavaScript
+Two-state toggle button whose pressed appearance is driven entirely by aria-pressed; compose sibling toggles in a cluster with data-gap=4 while one may stand alone
 
 ```html
-<button data-ui="toggle" type="button" aria-pressed="false">{label}</button>
+<div data-ui="cluster" data-gap="4">
+  <button data-ui="toggle" type="button" aria-pressed="false">{label1}</button>
+  <button data-ui="toggle" type="button" aria-pressed="false">{label2}</button>
+</div>
 ```
 
 **Anatomy**

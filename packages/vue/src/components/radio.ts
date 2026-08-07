@@ -15,7 +15,7 @@ export interface LRadioProps {
   disabled?: boolean;
 }
 
-/** `radio` — Custom styled radio button for single selection within a group, with size variants */
+/** `radio` — Custom styled radio button for single selection within a group, with size variants; inline option rows use cluster data-gap=4 inside their fieldset */
 export const LRadio = defineFaqirPrimitive<LRadioProps>({
   name: "radio",
   tag: "input",

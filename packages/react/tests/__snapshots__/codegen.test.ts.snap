@@ -319,7 +319,7 @@ export interface LCheckboxProps extends Omit<ComponentPropsWithoutRef<"input">, 
   disabled?: boolean;
 }
 
-/** \`checkbox\` — Custom styled checkbox with checked, indeterminate, disabled states and size variants */
+/** \`checkbox\` — Custom styled checkbox with checked, indeterminate, disabled states and size variants; compose sibling items in a cluster with data-gap=4 while a single labeled checkbox may stand alone */
 export const LCheckbox = createFaqirPrimitive<LCheckboxProps>({
   name: "checkbox",
   tag: "input",
@@ -1162,7 +1162,7 @@ export interface LRadioProps extends Omit<ComponentPropsWithoutRef<"input">, "si
   disabled?: boolean;
 }
 
-/** \`radio\` — Custom styled radio button for single selection within a group, with size variants */
+/** \`radio\` — Custom styled radio button for single selection within a group, with size variants; inline option rows use cluster data-gap=4 inside their fieldset */
 export const LRadio = createFaqirPrimitive<LRadioProps>({
   name: "radio",
   tag: "input",
@@ -1644,7 +1644,7 @@ export interface LSwitchProps extends Omit<ComponentPropsWithoutRef<"button">, "
   thumb?: ReactNode;
 }
 
-/** \`switch\` — Toggle switch with on/off states, disabled state, and size variants */
+/** \`switch\` — Toggle switch with on/off states, disabled state, and size variants; compose sibling labeled switches in a cluster with data-gap=4 while one may stand alone */
 export const LSwitch = createFaqirPrimitive<LSwitchProps>({
   name: "switch",
   tag: "button",
@@ -1823,7 +1823,7 @@ export interface LToggleProps extends Omit<ComponentPropsWithoutRef<"button">, "
   pressed?: boolean;
 }
 
-/** \`toggle\` — Two-state toggle button whose pressed appearance is driven entirely by aria-pressed — CSS-only, no JavaScript */
+/** \`toggle\` — Two-state toggle button whose pressed appearance is driven entirely by aria-pressed; compose sibling toggles in a cluster with data-gap=4 while one may stand alone */
 export const LToggle = createFaqirPrimitive<LToggleProps>({
   name: "toggle",
   tag: "button",
