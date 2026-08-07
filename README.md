@@ -1301,6 +1301,7 @@ freeze depend on:
 | `no-class-selector` | No class selectors (use `data-*`) |
 | `no-external-import` | Only relative/core imports in JS |
 | `reduced-motion` | Animations include `prefers-reduced-motion` query |
+| `single-fixed-region` | Same-component fixed roots/parts do not resolve to the same viewport anchor |
 
 ### Repair
 

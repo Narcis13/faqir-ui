@@ -273,6 +273,37 @@ test("the collector sees a seeded defect, and nothing on a clean page", async ({
   expect(dirtyFindings.overlaps).toHaveLength(1);
 });
 
+test("two toasts in one fixed container stack with the container's real gap", async ({ page }) => {
+  await page.goto(`${origin}/examples/recipes/toast.html`, { waitUntil: "load" });
+  await page.evaluate(() => document.fonts.ready);
+
+  const measuredStack = await page.evaluate(() => {
+    const containers = Array.from(
+      document.querySelectorAll<HTMLElement>('[data-ui="toast"][data-part="container"]'),
+    );
+    const topRight = containers.find((element) => element.dataset.variant === "top-right");
+    if (!topRight) return null;
+    const toasts = Array.from(topRight.querySelectorAll<HTMLElement>(':scope > [data-part="toast"]'));
+    if (toasts.length !== 2) {
+      return { containers: containers.length, toasts: toasts.length, cssGap: null, measuredGap: null };
+    }
+    const first = toasts[0].getBoundingClientRect();
+    const second = toasts[1].getBoundingClientRect();
+    return {
+      containers: containers.length,
+      toasts: toasts.length,
+      cssGap: Number.parseFloat(getComputedStyle(topRight).rowGap),
+      measuredGap: second.top - first.bottom,
+    };
+  });
+
+  expect(measuredStack).not.toBeNull();
+  expect(measuredStack!.containers).toBe(4);
+  expect(measuredStack!.toasts).toBe(2);
+  expect(measuredStack!.cssGap!).toBeGreaterThan(0);
+  expect(measuredStack!.measuredGap!).toBeCloseTo(measuredStack!.cssGap!, 5);
+});
+
 test("no ratcheted count rose against the committed budget", () => {
   // Update mode runs the identical comparison before it writes (below), so the
   // gate is never bypassed — it just cannot also assert here, or recording an

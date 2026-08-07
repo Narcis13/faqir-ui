@@ -180,9 +180,10 @@
       // bundle also carries the stylesheet rules (undeclared-attribute,
       // breakpoint-canon), and those audit a component's CSS against its
       // manifest — there is no CSS in this textarea to run them on. Since 0.9-05
-      // it also carries `trigger-contract` (scope "markup+css"), which is
-      // decided from a component's markup AND its stylesheet: this page hands
-      // the auditor manifests only, so that rule does not run here either.
+      // it also carries the markup+css rules (`trigger-contract` and
+      // `single-fixed-region`), which need a component's markup AND its
+      // stylesheet: this page hands the auditor manifests only, so those rules
+      // do not run here either.
       var markupRules = window.FaqirAudit.rules.filter(function (rule) {
         return rule.scope === "component" || rule.scope === "document";
       });

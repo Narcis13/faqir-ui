@@ -20,6 +20,7 @@ import { auditHtmlSource } from "./html-audit";
 import {
   ALL_RULES,
   DOCUMENT_RULES,
+  SINGLE_FIXED_REGION_RULE,
   TRIGGER_CONTRACT_RULE,
   type AuditResult,
   type Severity,
@@ -109,9 +110,9 @@ export function manifestMap(manifests: ManifestRecord): Map<string, Manifest> {
  */
 export function createAuditor(manifests: ManifestRecord, styles?: StyleRecord): Auditor {
   const map = manifestMap(manifests);
-  // Same optionality as the CLI's: `trigger-contract` runs only where the
-  // stylesheets are actually available (task 0.9-05). A page that hands over
-  // manifests alone gets exactly the rules it can decide.
+  // Same optionality as the CLI's: the markup+css rules run only where the
+  // stylesheets are actually available. A page that hands over manifests alone
+  // gets exactly the rules it can decide.
   const styleMap = styles ? new Map(Object.entries(styles)) : undefined;
   const canonical = new Set<string>();
   for (const key of Object.keys(manifests)) {
@@ -214,6 +215,14 @@ export function ruleInventory(): BrowserRuleInfo[] {
       // Its own scope: the finding is on markup, but one of the two ways to
       // satisfy it is a fact about the component's stylesheet — so a caller with
       // only one of the two cannot run it.
+      scope: "markup+css" as const,
+    },
+    {
+      id: SINGLE_FIXED_REGION_RULE.id,
+      severity: SINGLE_FIXED_REGION_RULE.severity,
+      description: SINGLE_FIXED_REGION_RULE.description,
+      // Like trigger-contract, it needs authored elements and the component
+      // sheet together; unlike it, it reconciles regions across instances.
       scope: "markup+css" as const,
     },
   ];

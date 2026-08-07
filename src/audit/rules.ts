@@ -1012,6 +1012,572 @@ export function buildTriggerContractResults(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Fixed-region uniqueness (task 0.9-06)
+//
+// A toast reference shipped several individually-valid fixed containers at the
+// same top-right coordinates. No value rule could see the defect: the collision
+// exists only after the stylesheet and two component instances are considered
+// together. The other overlay recipes prove this is not toast-specific — two
+// visible drawer/sheet/command-palette panels can make the same mistake — so the
+// rule is intentionally generic across component roots and their owned parts.
+//
+// This is a static audit, not a browser engine. It resolves unconditional rules
+// from the component's own stylesheet plus inline declarations, including the
+// small selector/cascade subset the registry uses for fixed regions. Conditional
+// at-rules are skipped because there is no viewport, media mode or container size
+// in an HTML audit from which to decide them.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const SINGLE_FIXED_REGION_RULE: RuleInfo = {
+  id: "single-fixed-region",
+  severity: "error",
+  applies_to: "component markup vs its own stylesheet",
+  exempt: [
+    "regions hidden in the authored markup (including by a hidden ancestor)",
+    "different region kinds in one component (for example a panel over its backdrop)",
+    "conditional @media/@container/@supports rules, which need runtime context to resolve",
+    "components whose stylesheet is not available to the caller (never guessed at)",
+  ],
+  description:
+    "A component may expose only one visible fixed region of the same kind at a " +
+    "resolved viewport anchor. Two roots (or two panels, two overlays, and so on) " +
+    "with the same fixed block/inline offsets paint on top of each other. Hidden " +
+    "regions and intentional layers of different kinds are not collisions.",
+};
+
+interface StaticStyleRule {
+  selectors: string[];
+  declarations: Array<{ property: string; value: string }>;
+  order: number;
+}
+
+type AnchorSide = "block-start" | "block-end" | "inline-start" | "inline-end";
+type FixedProperty = "position" | "transform" | AnchorSide;
+
+interface FixedAnchor {
+  signature: string;
+  description: string;
+}
+
+/** Strip comments without letting braces/selectors inside them become rules. */
+function cssWithoutComments(source: string): string {
+  return source.replace(/\/\*[\s\S]*?\*\//g, (comment) =>
+    "\n".repeat((comment.match(/\n/g) ?? []).length),
+  );
+}
+
+/** Split on one delimiter, ignoring delimiters inside strings/brackets/functions. */
+function splitCssTopLevel(source: string, delimiter: string): string[] {
+  const out: string[] = [];
+  let start = 0;
+  let quote: '"' | "'" | null = null;
+  let square = 0;
+  let round = 0;
+
+  for (let i = 0; i < source.length; i++) {
+    const char = source[i];
+    if (quote) {
+      if (char === quote && source[i - 1] !== "\\") quote = null;
+      continue;
+    }
+    if (char === '"' || char === "'") {
+      quote = char;
+      continue;
+    }
+    if (char === "[") square++;
+    else if (char === "]") square = Math.max(0, square - 1);
+    else if (char === "(") round++;
+    else if (char === ")") round = Math.max(0, round - 1);
+    else if (char === delimiter && square === 0 && round === 0) {
+      out.push(source.slice(start, i));
+      start = i + 1;
+    }
+  }
+  out.push(source.slice(start));
+  return out;
+}
+
+/** Find the closing brace paired with `open`, respecting quoted strings. */
+function matchingCssBrace(source: string, open: number): number {
+  let depth = 0;
+  let quote: '"' | "'" | null = null;
+  for (let i = open; i < source.length; i++) {
+    const char = source[i];
+    if (quote) {
+      if (char === quote && source[i - 1] !== "\\") quote = null;
+      continue;
+    }
+    if (char === '"' || char === "'") quote = char;
+    else if (char === "{") depth++;
+    else if (char === "}" && --depth === 0) return i;
+  }
+  return source.length - 1;
+}
+
+/**
+ * Unconditional top-level style rules, in cascade order.
+ *
+ * At-rules are skipped as whole blocks: resolving one without the media/
+ * container/supports context would turn a static rule into a guess. This still
+ * covers every registry overlay checked for 0.9-06; their fixed geometry is in
+ * unconditional rules.
+ */
+function staticStyleRules(source: string): StaticStyleRule[] {
+  const css = cssWithoutComments(source);
+  const rules: StaticStyleRule[] = [];
+  let cursor = 0;
+  let order = 0;
+
+  while (cursor < css.length) {
+    let open = -1;
+    let quote: '"' | "'" | null = null;
+    let square = 0;
+    let round = 0;
+    let preludeStart = cursor;
+
+    for (let i = cursor; i < css.length; i++) {
+      const char = css[i];
+      if (quote) {
+        if (char === quote && css[i - 1] !== "\\") quote = null;
+        continue;
+      }
+      if (char === '"' || char === "'") {
+        quote = char;
+        continue;
+      }
+      if (char === "[") square++;
+      else if (char === "]") square = Math.max(0, square - 1);
+      else if (char === "(") round++;
+      else if (char === ")") round = Math.max(0, round - 1);
+      else if (char === ";" && square === 0 && round === 0) preludeStart = i + 1;
+      else if (char === "{" && square === 0 && round === 0) {
+        open = i;
+        break;
+      }
+    }
+    if (open < 0) break;
+
+    const close = matchingCssBrace(css, open);
+    const prelude = css.slice(preludeStart, open).trim();
+    if (prelude && !prelude.startsWith("@")) {
+      const declarations: StaticStyleRule["declarations"] = [];
+      for (const raw of splitCssTopLevel(css.slice(open + 1, close), ";")) {
+        const colon = raw.indexOf(":");
+        if (colon < 0) continue;
+        const property = raw.slice(0, colon).trim().toLowerCase();
+        const value = raw.slice(colon + 1).trim();
+        if (property && value && !property.startsWith("--")) declarations.push({ property, value });
+      }
+      rules.push({
+        selectors: splitCssTopLevel(prelude, ",")
+          .map((selector) => selector.trim().replace(/\s+/g, " "))
+          .filter(Boolean),
+        declarations,
+        order: order++,
+      });
+    }
+    cursor = close + 1;
+  }
+
+  return rules;
+}
+
+const FIXED_ATTR_RE =
+  /\[\s*([A-Za-z_][\w:.-]*)\s*(?:([~|^$*]?=)\s*(?:"([^"]*)"|'([^']*)'|([^\]\s]+))\s*)?[is]?\s*\]/g;
+
+function attributeConditionMatches(
+  attrs: Record<string, string>,
+  name: string,
+  operator: string | undefined,
+  value: string | undefined,
+): boolean {
+  if (!operator) return name in attrs;
+  const actual = attrs[name];
+  if (actual === undefined) return false;
+  if (operator === "=") return actual === value;
+  if (operator === "~=") return actual.split(/\s+/).includes(value ?? "");
+  if (operator === "|=") return actual === value || actual.startsWith(`${value}-`);
+  if (operator === "^=") return actual.startsWith(value ?? "");
+  if (operator === "$=") return actual.endsWith(value ?? "");
+  if (operator === "*=") return actual.includes(value ?? "");
+  return false;
+}
+
+/** Match the attribute/tag subset used by component fixed-region selectors. */
+function fixedCompoundMatches(compound: string, element: ParsedElement): boolean {
+  let rest = compound.trim();
+
+  // `:not([hidden])` is useful on visible-region rules; reject other complex
+  // negations rather than pretending to understand them.
+  for (const match of [...rest.matchAll(/:not\(([^()]*)\)/g)]) {
+    if (fixedCompoundMatches(match[1], element)) return false;
+  }
+  rest = rest.replace(/:not\(([^()]*)\)/g, "");
+  // :where() changes specificity, not matching. The specificity helper removes
+  // its arguments separately; here its simple compound belongs in the match.
+  rest = rest.replace(/:where\(([^()]*)\)/g, "$1");
+
+  const tag = /^([a-z][\w-]*|\*)/i.exec(rest)?.[1];
+  if (tag && tag !== "*" && tag.toLowerCase() !== element.tag) return false;
+
+  FIXED_ATTR_RE.lastIndex = 0;
+  let match: RegExpExecArray | null;
+  while ((match = FIXED_ATTR_RE.exec(rest)) !== null) {
+    const value = match[3] ?? match[4] ?? match[5];
+    if (!attributeConditionMatches(element.attrs, match[1].toLowerCase(), match[2], value)) {
+      return false;
+    }
+  }
+
+  // Anything left after the supported syntax (class/id/dynamic pseudo/etc.) is
+  // deliberately not matched. A false negative is safer than inventing a
+  // collision from a selector whose conditions the static audit did not read.
+  rest = rest.replace(FIXED_ATTR_RE, "").replace(/^([a-z][\w-]*|\*)/i, "").trim();
+  return rest === "";
+}
+
+interface SelectorChain {
+  compounds: string[];
+  combinators: Array<"child" | "descendant">;
+}
+
+/** Split a selector into compounds without splitting whitespace inside `[]`/`()`. */
+function fixedSelectorChain(selector: string): SelectorChain | null {
+  const compounds: string[] = [];
+  const combinators: Array<"child" | "descendant"> = [];
+  let buffer = "";
+  let quote: '"' | "'" | null = null;
+  let square = 0;
+  let round = 0;
+  let pending: "child" | "descendant" | null = null;
+
+  const flush = () => {
+    const value = buffer.trim();
+    if (!value) return;
+    if (compounds.length > 0) combinators.push(pending ?? "descendant");
+    compounds.push(value);
+    buffer = "";
+    pending = null;
+  };
+
+  for (let i = 0; i < selector.length; i++) {
+    const char = selector[i];
+    if (quote) {
+      buffer += char;
+      if (char === quote && selector[i - 1] !== "\\") quote = null;
+      continue;
+    }
+    if (char === '"' || char === "'") {
+      quote = char;
+      buffer += char;
+      continue;
+    }
+    if (char === "[") square++;
+    else if (char === "]") square = Math.max(0, square - 1);
+    else if (char === "(") round++;
+    else if (char === ")") round = Math.max(0, round - 1);
+
+    if (square === 0 && round === 0 && char === ">") {
+      flush();
+      pending = "child";
+      continue;
+    }
+    if (square === 0 && round === 0 && /\s/.test(char)) {
+      flush();
+      if (pending === null) pending = "descendant";
+      continue;
+    }
+    buffer += char;
+  }
+  flush();
+  return compounds.length > 0 && combinators.length === compounds.length - 1
+    ? { compounds, combinators }
+    : null;
+}
+
+function fixedSelectorMatches(selector: string, element: ParsedElement): boolean {
+  const chain = fixedSelectorChain(selector);
+  if (!chain) return false;
+  let current: ParsedElement | null = element;
+  const last = chain.compounds.length - 1;
+  if (!fixedCompoundMatches(chain.compounds[last], current)) return false;
+
+  for (let i = last - 1; i >= 0; i--) {
+    const combinator = chain.combinators[i];
+    if (combinator === "child") {
+      current = current.parent;
+      if (!current || !fixedCompoundMatches(chain.compounds[i], current)) return false;
+      continue;
+    }
+    current = current.parent;
+    while (current && !fixedCompoundMatches(chain.compounds[i], current)) current = current.parent;
+    if (!current) return false;
+  }
+  return true;
+}
+
+/** Enough specificity for the attribute-only component selectors this rule accepts. */
+function fixedSelectorSpecificity(selector: string): number {
+  const withoutWhere = selector.replace(/:where\(([^()]*)\)/g, "");
+  const ids = (withoutWhere.match(/#[a-z_][\w-]*/gi) ?? []).length;
+  const attrs = (withoutWhere.match(/\[[^\]]+\]/g) ?? []).length;
+  const classes = (withoutWhere.match(/\.[a-z_][\w-]*/gi) ?? []).length;
+  const tags = fixedSelectorChain(withoutWhere)?.compounds.filter((compound) =>
+    /^[a-z][\w-]*/i.test(compound),
+  ).length ?? 0;
+  return ids * 100 + (attrs + classes) * 10 + tags;
+}
+
+function splitCssWhitespace(value: string): string[] {
+  const parts: string[] = [];
+  let buffer = "";
+  let quote: '"' | "'" | null = null;
+  let round = 0;
+  const flush = () => {
+    if (buffer.trim()) parts.push(buffer.trim());
+    buffer = "";
+  };
+  for (let i = 0; i < value.length; i++) {
+    const char = value[i];
+    if (quote) {
+      buffer += char;
+      if (char === quote && value[i - 1] !== "\\") quote = null;
+      continue;
+    }
+    if (char === '"' || char === "'") quote = char;
+    else if (char === "(") round++;
+    else if (char === ")") round = Math.max(0, round - 1);
+    if (/\s/.test(char) && round === 0 && !quote) flush();
+    else buffer += char;
+  }
+  flush();
+  return parts;
+}
+
+function fourSides(values: string[]): [string, string, string, string] | null {
+  if (values.length === 1) return [values[0], values[0], values[0], values[0]];
+  if (values.length === 2) return [values[0], values[1], values[0], values[1]];
+  if (values.length === 3) return [values[0], values[1], values[2], values[1]];
+  if (values.length === 4) return [values[0], values[1], values[2], values[3]];
+  return null;
+}
+
+/** Expand physical/logical inset shorthands into one normalized four-side axis. */
+function fixedDeclarationEntries(
+  property: string,
+  value: string,
+): Array<{ property: FixedProperty; value: string }> {
+  if (property === "position" || property === "transform") return [{ property, value }];
+  const direct: Record<string, AnchorSide> = {
+    top: "block-start",
+    "inset-block-start": "block-start",
+    bottom: "block-end",
+    "inset-block-end": "block-end",
+    left: "inline-start",
+    "inset-inline-start": "inline-start",
+    right: "inline-end",
+    "inset-inline-end": "inline-end",
+  };
+  if (direct[property]) return [{ property: direct[property], value }];
+
+  const values = splitCssWhitespace(value);
+  if (property === "inset") {
+    const sides = fourSides(values);
+    if (!sides) return [];
+    return [
+      { property: "block-start", value: sides[0] },
+      { property: "inline-end", value: sides[1] },
+      { property: "block-end", value: sides[2] },
+      { property: "inline-start", value: sides[3] },
+    ];
+  }
+  if (property === "inset-block" && (values.length === 1 || values.length === 2)) {
+    return [
+      { property: "block-start", value: values[0] },
+      { property: "block-end", value: values[1] ?? values[0] },
+    ];
+  }
+  if (property === "inset-inline" && (values.length === 1 || values.length === 2)) {
+    return [
+      { property: "inline-start", value: values[0] },
+      { property: "inline-end", value: values[1] ?? values[0] },
+    ];
+  }
+  return [];
+}
+
+function normalizedFixedValue(value: string): string {
+  const normalized = value.replace(/\s*!important\s*$/i, "").trim().replace(/\s+/g, " ").toLowerCase();
+  return /^[-+]?0(?:\.0+)?(?:px|rem|em|%|vh|vw|dvh|dvw)?$/.test(normalized) ? "0" : normalized;
+}
+
+function inlineDeclarations(element: ParsedElement): StaticStyleRule["declarations"] {
+  const style = element.attrs.style;
+  if (!style) return [];
+  const declarations: StaticStyleRule["declarations"] = [];
+  for (const raw of splitCssTopLevel(style, ";")) {
+    const colon = raw.indexOf(":");
+    if (colon < 0) continue;
+    const property = raw.slice(0, colon).trim().toLowerCase();
+    const value = raw.slice(colon + 1).trim();
+    if (property && value) declarations.push({ property, value });
+  }
+  return declarations;
+}
+
+/** Resolve fixed positioning and its four inset sides for one authored element. */
+function fixedAnchorFor(element: ParsedElement, rules: StaticStyleRule[]): FixedAnchor | null {
+  const winners = new Map<FixedProperty, { specificity: number; order: number; value: string }>();
+  const consider = (
+    property: FixedProperty,
+    value: string,
+    specificity: number,
+    order: number,
+  ) => {
+    const previous = winners.get(property);
+    if (!previous || specificity > previous.specificity || (specificity === previous.specificity && order >= previous.order)) {
+      winners.set(property, { specificity, order, value: normalizedFixedValue(value) });
+    }
+  };
+
+  for (const rule of rules) {
+    let specificity = -1;
+    for (const selector of rule.selectors) {
+      if (fixedSelectorMatches(selector, element)) {
+        specificity = Math.max(specificity, fixedSelectorSpecificity(selector));
+      }
+    }
+    if (specificity < 0) continue;
+    for (let i = 0; i < rule.declarations.length; i++) {
+      for (const declaration of fixedDeclarationEntries(
+        rule.declarations[i].property,
+        rule.declarations[i].value,
+      )) {
+        consider(declaration.property, declaration.value, specificity, rule.order * 1_000 + i);
+      }
+    }
+  }
+
+  // Inline declarations win over every component selector.
+  const inline = inlineDeclarations(element);
+  for (let i = 0; i < inline.length; i++) {
+    const declaration = inline[i];
+    for (const expanded of fixedDeclarationEntries(declaration.property, declaration.value)) {
+      consider(expanded.property, expanded.value, 1_000_000, i);
+    }
+  }
+
+  if (winners.get("position")?.value !== "fixed") return null;
+  const sides: Record<AnchorSide, string> = {
+    "block-start": winners.get("block-start")?.value ?? "auto",
+    "block-end": winners.get("block-end")?.value ?? "auto",
+    "inline-start": winners.get("inline-start")?.value ?? "auto",
+    "inline-end": winners.get("inline-end")?.value ?? "auto",
+  };
+  const hasBlockAnchor = sides["block-start"] !== "auto" || sides["block-end"] !== "auto";
+  const hasInlineAnchor = sides["inline-start"] !== "auto" || sides["inline-end"] !== "auto";
+  if (!hasBlockAnchor || !hasInlineAnchor) return null;
+
+  const ordered = (["block-start", "block-end", "inline-start", "inline-end"] as AnchorSide[])
+    .map((side) => `${side}=${sides[side]}`);
+  const transform = winners.get("transform")?.value ?? "none";
+  return {
+    signature: [...ordered, `transform=${transform}`].join("|"),
+    description: [...ordered, `transform=${transform}`].join(", "),
+  };
+}
+
+function hiddenInMarkup(element: ParsedElement): boolean {
+  for (let current: ParsedElement | null = element; current; current = current.parent) {
+    if ("hidden" in current.attrs) return true;
+    const style = current.attrs.style?.toLowerCase() ?? "";
+    if (/(?:^|;)\s*(?:display\s*:\s*none|visibility\s*:\s*hidden)\s*(?:;|$)/.test(style)) return true;
+  }
+  return false;
+}
+
+function fixedRegionElements(component: ParsedComponent): ParsedElement[] {
+  const elements = new Set<ParsedElement>([component.root]);
+  for (const parts of Object.values(component.parts)) for (const part of parts) elements.add(part);
+  return [...elements];
+}
+
+function fixedRegionKind(component: ParsedComponent, element: ParsedElement): string | null {
+  const part = element.attrs["data-part"];
+  if (part) return `part:${part}`;
+  return element === component.root ? "root" : null;
+}
+
+function fixedRegionLabel(element: ParsedElement): string {
+  const attrs = ["data-ui", "data-part", "data-variant", "id"]
+    .filter((name) => element.attrs[name] !== undefined)
+    .map((name) => `${name}="${element.attrs[name]}"`)
+    .join(" ");
+  return `<${element.tag}${attrs ? ` ${attrs}` : ""}> at line ${element.line}`;
+}
+
+/**
+ * One finding per duplicate group, not one per element/pair. A three-region
+ * collision is one contract failure whose message names all three participants.
+ */
+export function buildSingleFixedRegionResults(
+  components: ParsedComponent[],
+  styles: Map<string, string>,
+  file: string = components[0]?.file ?? "input.html",
+): AuditResult[] {
+  interface Region {
+    component: ParsedComponent;
+    element: ParsedElement;
+    anchor: FixedAnchor;
+  }
+  const groups = new Map<string, Region[]>();
+  const parsedStyles = new Map<string, StaticStyleRule[]>();
+
+  for (const component of components) {
+    const css = styles.get(component.name);
+    if (css === undefined) continue;
+    let rules = parsedStyles.get(component.name);
+    if (!rules) {
+      rules = staticStyleRules(css);
+      parsedStyles.set(component.name, rules);
+    }
+    for (const element of fixedRegionElements(component)) {
+      if (hiddenInMarkup(element)) continue;
+      const kind = fixedRegionKind(component, element);
+      if (!kind) continue;
+      const anchor = fixedAnchorFor(element, rules);
+      if (!anchor) continue;
+      const key = `${component.name}\0${kind}\0${anchor.signature}`;
+      const group = groups.get(key);
+      const region = { component, element, anchor };
+      if (group) group.push(region);
+      else groups.set(key, [region]);
+    }
+  }
+
+  const results: AuditResult[] = [];
+  for (const regions of groups.values()) {
+    if (regions.length < 2) continue;
+    const first = regions[0];
+    const kind = fixedRegionKind(first.component, first.element)!;
+    const labels = regions.map((region) => fixedRegionLabel(region.element));
+    results.push({
+      rule_id: SINGLE_FIXED_REGION_RULE.id,
+      severity: SINGLE_FIXED_REGION_RULE.severity,
+      component_name: first.component.name,
+      file,
+      line: regions[1].element.line,
+      message:
+        `${regions.length} visible fixed ${kind.replace(/^part:/, "")} regions in ` +
+        `[data-ui="${first.component.name}"] resolve to the same viewport anchor ` +
+        `(${first.anchor.description}): ${labels.join(" and ")}. Keep one region at this ` +
+        `anchor and stack its content inside it, or give each region a distinct position.`,
+    });
+  }
+  return results;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Document-level rules (task 0.4-15)
 //
 // These operate on a whole HTML file (`ParsedDocument`), not a single component
@@ -1414,6 +1980,7 @@ export function getRuleInventory(): RuleInfo[] {
     ...ANTIPATTERN_RULES,
     ...CSS_RULES,
     TRIGGER_CONTRACT_RULE,
+    SINGLE_FIXED_REGION_RULE,
     CONTRAST_TOKENS_RULE,
   ];
 }

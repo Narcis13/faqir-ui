@@ -1636,7 +1636,7 @@
         },
         {
           "path": "toast.html",
-          "sha256": "678704f4e036126bf7aaecb1bb126b321027253c28d9fb91f63dce26a16b11bd"
+          "sha256": "870ae8e92f3c25e145756421137a2590d64896639898bca0127b72416da4af22"
         },
         {
           "path": "toast.js",
@@ -1647,7 +1647,7 @@
           "sha256": "db722d84a1f18899528aadc821d1b4e937373f026f635449ed34822010bfce64"
         }
       ],
-      "hash": "667d4cf7507f9b2dc242a4ed0b1af5e6e4da1a191c1cb2501eaeb248220f80d1",
+      "hash": "e92fc304399d5b9668574872aeb09a6796072792d5de5e55ae1de1676d0a600d",
       "deps": [
         "button"
       ]

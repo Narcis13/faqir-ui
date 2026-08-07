@@ -79,6 +79,10 @@ const INTENDED_ROOT_CHANGES: Record<string, string> = {
   "recipes/drawer/drawer.html": "4 unstyled triggers → data-ui=\"button\"",
   "recipes/sheet/sheet.html": "4 unstyled triggers → data-ui=\"button\"",
   "recipes/tooltip/tooltip.html": "4 unstyled triggers → data-ui=\"button\"",
+  // Fixed-region uniqueness (0.9-06): the five roots included three top-right
+  // containers. The reference now has exactly four roots — one per position —
+  // and the top-right root contains two toasts to demonstrate the real stack.
+  "recipes/toast/toast.html": "5 colliding containers → 4 unique positions with one stacked pair",
 };
 
 describe("the registry's own markup satisfies its own rules", () => {

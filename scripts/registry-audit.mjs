@@ -304,11 +304,11 @@ if (cssRuleOffenders["undeclared-attribute"].length === 0 && cssRuleOffenders["b
 //
 // Everything else was fixed rather than excused: real markup defects, real
 // manifest drift, and five rules that were reporting correct markup.
-//  3. The stylesheets travel with the manifests (task 0.9-05), because
-//     `trigger-contract` is decided from BOTH halves of a component: a trigger
-//     is satisfied either by carrying a `data-ui` or by its own sheet styling
-//     the part. Handing the engine markup alone would silently skip the rule —
-//     which is exactly how `dialog` shipped four unstyled triggers.
+//  3. The stylesheets travel with the manifests because the markup+css rules
+//     need BOTH halves of a component: `trigger-contract` (task 0.9-05) asks
+//     whether a trigger delegates or its sheet styles the part, and
+//     `single-fixed-region` (task 0.9-06) resolves viewport anchors across
+//     instances. Handing the engine markup alone would silently skip both.
 const fullRuleManifests = await loadRegistryManifestMap(REGISTRY);
 const fullRuleStyles = await loadRegistryStylesheetMap(REGISTRY);
 const fullRuleOffenders = [];

@@ -9,7 +9,7 @@
     "seamPages": 0,
     "seams": 0,
     "bleeds": 7,
-    "overlaps": 3
+    "overlaps": 0
   },
   "pages": {
     "agents/index.html": {
@@ -1036,7 +1036,7 @@
       "zeroGutter": false,
       "seams": 0,
       "bleeds": 0,
-      "overlaps": 3
+      "overlaps": 0
     },
     "examples/recipes/toggle-group.html": {
       "zeroGutter": false,

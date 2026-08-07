@@ -20,7 +20,9 @@ import {
   type AuditResult,
   ALL_RULES,
   DOCUMENT_RULES,
+  SINGLE_FIXED_REGION_RULE,
   TRIGGER_CONTRACT_RULE,
+  buildSingleFixedRegionResults,
   buildTriggerContractResults,
 } from "./rules";
 
@@ -55,11 +57,12 @@ export interface HtmlAuditInput {
   /**
    * Component stylesheets, keyed exactly as `manifests` is (task 0.9-05).
    *
-   * Optional, and the ONLY input `trigger-contract` can be decided from: one of
-   * its two satisfying forms is a fact about the sheet, so a component whose
-   * stylesheet the caller cannot supply is skipped rather than guessed at. Every
-   * caller that has the sheets on hand passes them — `runAudit` from the
-   * project's `ui/**`, the registry gate from `registry/**`.
+   * Optional, and the input the markup+css rules can be decided from:
+   * `trigger-contract` needs to know whether the sheet styles a trigger, while
+   * `single-fixed-region` resolves fixed anchors across component instances. A
+   * component whose stylesheet the caller cannot supply is skipped rather than
+   * guessed at. Every caller that has the sheets on hand passes them —
+   * `runAudit` from the project's `ui/**`, the registry gate from `registry/**`.
    */
   styles?: Map<string, string>;
   /** Rule IDs to skip. */
@@ -114,6 +117,10 @@ export function auditHtmlSource(input: HtmlAuditInput): AuditResult[] {
       const css = input.styles!.get(component.name);
       if (css !== undefined) results.push(...buildTriggerContractResults(component, css, file));
     }
+  }
+
+  if (!skipRules.has(SINGLE_FIXED_REGION_RULE.id) && input.styles !== undefined) {
+    results.push(...buildSingleFixedRegionResults(components, input.styles, file));
   }
 
   if (activeDocRules.length > 0) {

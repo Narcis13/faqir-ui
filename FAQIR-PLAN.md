@@ -170,7 +170,7 @@ done in any order (or in parallel worktrees).
 | 0.9-03 | Example-page shell: gutter, measure, visible demo captions | ✅ |
 | 0.9-04 | Reference-fragment recomposition sweep (86 fragments) | ✅ |
 | 0.9-05 | `dialog` trigger contract + overlay preview state | ✅ |
-| 0.9-06 | `toast` container contract + `single-fixed-region` audit rule | ⬜ |
+| 0.9-06 | `toast` container contract + `single-fixed-region` audit rule | ✅ |
 | 0.9-07 | Form proximity: intra- vs inter-group spacing | ⬜ |
 | 0.9-08 | Inline control rows: `checkbox`/`radio`/`switch` groups | ⬜ |
 | 0.9-09 | Cross-card row alignment (subgrid) | ⬜ |
@@ -2811,9 +2811,9 @@ page at once, which is exactly the class of defect an audit is for. Check whethe
 - A browser test asserting two toasts inside *one* container stack with a real gap — the behaviour the reference was accidentally claiming was broken.
 
 **Acceptance criteria**
-- [ ] `toast.html` ships one container per position and the four positions are demonstrated without overlap.
-- [ ] A rule catches same-position fixed-region collisions; its scope (toast-only vs any fixed region) is decided with the other overlay recipes checked, not assumed.
-- [ ] Layout-lint reports 0 overlapping fixed boxes.
+- [x] `toast.html` ships one container per position and the four positions are demonstrated without overlap. (**Exactly four roots, exactly four positions.** The three top-right roots in the inherited reference — the empty controller target plus the default and success examples — are now one top-right container holding the default and success toasts. Top-left, bottom-right and bottom-left each have their own occupied container, so every position is visible rather than merely named. The controller contract did not need changing: it already appends multiple `[data-part="toast"]` children to one root, and the browser test now measures the two top-right children and proves their physical separation equals the container's computed `row-gap` (`var(--space-3)`, 12px at the test root size), not just that the stylesheet contains a `gap` declaration. The regenerated registry index records the new reference bytes.)
+- [x] A rule catches same-position fixed-region collisions; its scope (toast-only vs any fixed region) is decided with the other overlay recipes checked, not assumed. (**Generic, with the boundary derived from the overlay audit.** `single-fixed-region` is a `markup+css` error rule over visible component roots and manifest-attributed parts. It resolves each region's unconditional `position`, logical/physical inset sides and transform through its own component sheet (plus inline declarations), then groups only the same component + same region kind + same resolved viewport anchor; one panel over its own overlay is therefore an intentional different-kind layer, while two panels at the same anchor are one finding naming every participant. `hidden` regions and conditional at-rules whose viewport context is unavailable are explicitly out of scope rather than guessed at. `drawer`, `sheet` and `command-palette` were checked in both directions: their shipped references are silent because every fixed panel is authored hidden, while two seeded visible same-position panels in each recipe report exactly one collision. The toast fixture proves two top-right roots produce exactly one finding naming both IDs; one root and all four distinct positions are silent. Five shared cases are deep-equal through the CLI source engine and the regenerated committed `site/lib/faqir-audit.js`, including no-styles and `skipRules` behavior; the browser rule inventory exposes both markup+css rules rather than hardcoding a toast exception.)
+- [x] Layout-lint reports 0 overlapping fixed boxes. (**`overlaps` 3 → 0 over the same 180-page, 1280×900 sweep**, and `examples/recipes/toast.html` 3 → 0; every other layout count is unchanged: zero gutters 0, seams 0, bleeds 7. `tests/visual/layout-budget.json` was regenerated through the ratchet's update mode, then the ordinary non-update gate rechecked the committed measurement.)
 
 ---
 

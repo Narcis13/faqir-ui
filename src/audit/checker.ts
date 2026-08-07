@@ -72,8 +72,9 @@ export async function runAudit(options: AuditOptions = {}): Promise<AuditSummary
   }
 
   // The installed stylesheets, keyed like the manifests — the second half of the
-  // input `trigger-contract` decides from (task 0.9-05). A component with no
-  // sheet on disk is simply absent, and the rule skips it.
+  // input the markup+css rules decide from (`trigger-contract`, task 0.9-05;
+  // `single-fixed-region`, task 0.9-06). A component with no sheet on disk is
+  // simply absent, and those rules skip it.
   const styles = new Map<string, string>();
   for (const [layer, names] of [
     ["primitives", config.installed.primitives],

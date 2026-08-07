@@ -41,6 +41,7 @@ import { auditHtmlSource } from "../../src/audit/checker";
 import {
   ALL_RULES,
   DOCUMENT_RULES,
+  SINGLE_FIXED_REGION_RULE,
   TRIGGER_CONTRACT_RULE,
   type AuditResult,
 } from "../../src/audit/rules";
@@ -216,6 +217,11 @@ describe("the browser audit bundle", () => {
         severity: TRIGGER_CONTRACT_RULE.severity,
         scope: "markup+css",
       },
+      {
+        id: SINGLE_FIXED_REGION_RULE.id,
+        severity: SINGLE_FIXED_REGION_RULE.severity,
+        scope: "markup+css",
+      },
     ];
     expect(api.rules.map((r) => ({ id: r.id, severity: r.severity, scope: r.scope }))).toEqual(
       expected,
@@ -226,12 +232,14 @@ describe("the browser audit bundle", () => {
       "undeclared-attribute",
       "breakpoint-canon",
     ]);
-    // `trigger-contract` (0.9-05) is neither: its finding is on markup, but one
-    // of the two ways to satisfy it is a fact about the component's stylesheet,
-    // so a caller holding only one of the two cannot run it — which is exactly
-    // what the playground is, and why it counts neither scope.
+    // The markup+css rules are neither: trigger-contract needs to know whether
+    // the component styles its trigger, and single-fixed-region needs to resolve
+    // viewport anchors across instances. A caller holding only markup cannot run
+    // either — which is exactly what the playground is, and why it counts neither
+    // scope.
     expect(api.rules.filter((r) => r.scope === "markup+css").map((r) => r.id)).toEqual([
       "trigger-contract",
+      "single-fixed-region",
     ]);
   });
 
@@ -488,6 +496,84 @@ describe("CLI ↔ browser finding parity", () => {
           .audit(bare, { file: "f.html", skipRules: [TRIGGER_CONTRACT_RULE.id] })
           .map((r) => r.rule_id),
       ).not.toContain(TRIGGER_CONTRACT_RULE.id);
+    });
+  });
+
+  // ── fixed-region uniqueness, through the same bundle (task 0.9-06) ────────
+  describe("fixed-region uniqueness", () => {
+    const toast = components.find((component) => component.name === "toast")!;
+    const toastCss = readFileSync(
+      join(dirname(toast.referencePath), toast.manifest.files?.css ?? "toast.css"),
+      "utf8",
+    );
+    const container = (position: string, id: string) =>
+      `<div data-ui="toast" data-part="container" data-variant="${position}" ` +
+      `role="region" aria-label="Notifications" id="${id}"></div>`;
+    const cases = [
+      {
+        label: "two top-right regions — one finding",
+        source: container("top-right", "first") + container("top-right", "second"),
+        count: 1,
+      },
+      { label: "one region — silent", source: container("top-right", "only"), count: 0 },
+      {
+        label: "four distinct positions — silent",
+        source: ["top-right", "top-left", "bottom-right", "bottom-left"]
+          .map((position) => container(position, position))
+          .join(""),
+        count: 0,
+      },
+      {
+        label: "hidden duplicate — silent",
+        source:
+          container("top-right", "visible") +
+          `<div hidden>${container("top-right", "hidden")}</div>`,
+        count: 0,
+      },
+      {
+        label: "shipped reference — silent",
+        source: readFileSync(toast.referencePath, "utf8"),
+        count: 0,
+      },
+    ];
+
+    it("reports the seeded collision and stays silent for the valid fixtures", () => {
+      const withStyles = api.createAuditor(shipped, { toast: toastCss });
+      for (const fixture of cases) {
+        const findings = withStyles
+          .audit(fixture.source, { file: "f.html" })
+          .filter((result) => result.rule_id === SINGLE_FIXED_REGION_RULE.id);
+        expect(findings.length, fixture.label).toBe(fixture.count);
+      }
+    });
+
+    it("agrees with the CLI on the shared fixture set through the committed bundle", () => {
+      for (const fixture of cases) {
+        const styleMap = new Map([["toast", toastCss]]);
+        const expected = auditHtmlSource({
+          source: fixture.source,
+          file: "f.html",
+          manifests: cli,
+          styles: styleMap,
+        });
+        const actual = api
+          .createAuditor(shipped, { toast: toastCss })
+          .audit(fixture.source, { file: "f.html" });
+        expect(JSON.stringify(actual), fixture.label).toBe(JSON.stringify(expected));
+      }
+    });
+
+    it("skips the rule without styles and honours skipRules with styles", () => {
+      const collision = cases[0].source;
+      expect(auditor.audit(collision).map((result) => result.rule_id)).not.toContain(
+        SINGLE_FIXED_REGION_RULE.id,
+      );
+      expect(
+        api
+          .createAuditor(shipped, { toast: toastCss })
+          .audit(collision, { skipRules: [SINGLE_FIXED_REGION_RULE.id] })
+          .map((result) => result.rule_id),
+      ).not.toContain(SINGLE_FIXED_REGION_RULE.id);
     });
   });
 

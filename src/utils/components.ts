@@ -213,7 +213,8 @@ export async function loadRegistryManifestMap(registryPath: string): Promise<Map
 /**
  * Every registry component's stylesheet, keyed the same way
  * {@link loadRegistryManifestMap} keys manifests — the second input the audit
- * engine needs for `trigger-contract` (task 0.9-05).
+ * engine needs for the markup+css rules (`trigger-contract`, task 0.9-05, and
+ * `single-fixed-region`, task 0.9-06).
  *
  * The sheet is the one the manifest's `files.css` names, so `icon` (whose sheet
  * is `icons.css`) is paired correctly rather than skipped. A component that
