@@ -140,7 +140,7 @@
       "name": "card",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "files": [
         {
           "path": "card.css",
@@ -148,14 +148,14 @@
         },
         {
           "path": "card.html",
-          "sha256": "a5feae14f71ff82896f091546e7d5c9eae830e36cffd762eb8ffad2cf8a11822"
+          "sha256": "f502346b273d7378022bc2a3f8c93a84d4d88b0dc4264a331338a2ab2e6ae886"
         },
         {
           "path": "card.manifest.json",
-          "sha256": "e1e02544c145a1ce8aa4434d1ce86ab4c2501a7e54484f526af30be7ad034378"
+          "sha256": "0e0f0100e1e654f9c619a8c9ed8b0a18439ce561a907c8bcfadab3f0b0447c74"
         }
       ],
-      "hash": "4c7df054d1fc0e5e48609b7bef45bf360c0a51b8e57d36bf535f8bc33cd66626",
+      "hash": "2461b2f86086f2a4cf3ca5a1fdc3d393bafc419b1de79bfb0d304d4b6aade2b6",
       "deps": [
         "button"
       ]
@@ -349,23 +349,25 @@
       "name": "grid",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "2.0.0",
+      "version": "2.1.0",
       "files": [
         {
           "path": "grid.css",
-          "sha256": "37bb6edda1008419329b2546fae622473b8d17e9158872731312044637d420f4"
+          "sha256": "bc7a525bc039edee9769d092f40264f980cf315a4be577085ab441bd46a0e99c"
         },
         {
           "path": "grid.html",
-          "sha256": "fce7614cb5fc1399faab929250e47ba4357b0f8d4df8b72fd7b816b281c7c922"
+          "sha256": "3dab8928de9aa3b4dd2ea83089a00156a3b5c0d6d5e5c025fd70e962c79f61bc"
         },
         {
           "path": "grid.manifest.json",
-          "sha256": "1d1e9e94793ae7ebb488dc2dfce9f4c7ee85ed6580e08020142f81c9d4c7a65b"
+          "sha256": "4809ad2bb3b99039ca666ae49d4fc5f66650a82933b698cb35c4a1349d7bcceb"
         }
       ],
-      "hash": "7e075b3cd5b43b7ffbd4e916690b1851bf64e23bcdfc0d32823294895a5238cc",
-      "deps": []
+      "hash": "88442fd5e4c46f838af13ec7c5f18af76b9a2a61060059d36a138f73d5ba2c16",
+      "deps": [
+        "card"
+      ]
     },
     {
       "name": "icon",
@@ -1994,23 +1996,24 @@
       "name": "pricing",
       "kind": "pattern",
       "layer": "patterns",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "files": [
         {
           "path": "pricing.css",
-          "sha256": "5aaff0cd910fe72fda1cf4b3ae7c3eab78513319f413ca7d9da1fd1f865ff954"
+          "sha256": "590ad2773fc8cbc0058a569166b4b69363678a511b521a88e9b057c09ddc5222"
         },
         {
           "path": "pricing.html",
-          "sha256": "4a8b2c4b6c65a8c809be95b4eb03470cd676a1d34c80eda5b2de9d757fac3be7"
+          "sha256": "81fcd883f9737c9f6e482dbe2628e1b6f29de65077f50cde1d28006571431368"
         },
         {
           "path": "pricing.manifest.json",
-          "sha256": "a8f05b7d6399cf9296349cc7038f1be35fa67b281fe11b556a3fe1484a0eba34"
+          "sha256": "fe49448265fc1bf766f5ec55e196c1e5160cf6796c1b6ced0dd449ee98d3ffe8"
         }
       ],
-      "hash": "80fd2c1f9c4c083d5c1f9d225d552e3d8f7d00df1f2b6c9861b344091ced2767",
+      "hash": "ae76bebe9ec1ab60f8578a094dc4ade0ed783c933f4ccf3fa3eb6fd2dbb423f2",
       "deps": [
+        "grid",
         "card",
         "badge",
         "stat",

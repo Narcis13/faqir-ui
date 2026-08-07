@@ -32,14 +32,12 @@
 }
 
 /* ── Tiers ──
-   Pattern CSS rather than a nested data-ui="grid": a nested component would own
-   the data-part on its children, and [data-part="tier"] must stay pricing's.
-   The column count follows grid's mobile-first semantics (0.8-04): `data-cols`
-   names the WIDEST count, reached at lg; one tier per row is the phone base, so
-   a price line never has to wrap. */
+   A real grid primitive owns the layout attributes while manifest-aware part
+   ownership keeps `tiers` and `tier` with pricing (grid declares neither slot).
+   `data-align-rows` makes every direct card a four-row subgrid. The redundant
+   contextual column declarations preserve pricing's root `data-cols` API; the
+   nested grid attributes are the canonical ladder and the browser-test oracle. */
 [data-ui="pricing"] [data-part="tiers"] {
-  display: grid;
-  gap: var(--space-6);
   margin-block-start: var(--space-8);
   align-items: stretch;
   grid-template-columns: 1fr;
@@ -49,9 +47,7 @@
    The tier IS a card; everything below restyles the card's own slots in the
    pricing context, so the card primitive stays the single source of its box. */
 [data-ui="pricing"] [data-part="tier"] {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
+  row-gap: var(--space-4);
 }
 
 [data-ui="pricing"] [data-part="tier"] [data-part="header"] {
@@ -78,7 +74,8 @@
 /* The price is the stat primitive. Its label carries `order: -1` so the caption
    sits above the number; in a price block the number leads, so DOM order wins. */
 [data-ui="pricing"] [data-part="tier"] [data-ui="stat"] {
-  margin-block-start: var(--space-2);
+  margin-block-start: auto;
+  padding-block-start: var(--space-2);
 }
 
 [data-ui="pricing"] [data-part="tier"] [data-ui="stat"] [data-part="label"] {
@@ -113,7 +110,6 @@
 /* ── Tier footer ── */
 [data-ui="pricing"] [data-part="tier"] [data-part="footer"] {
   display: flex;
-  margin-block-start: auto;
   padding-block-start: var(--space-2);
 }
 
@@ -158,11 +154,13 @@
     grid-template-columns: repeat(3, 1fr);
   }
 
-  [data-ui="pricing"][data-cols="2"] [data-part="tiers"] {
+  [data-ui="pricing"][data-cols="2"] [data-part="tiers"],
+  [data-ui="pricing"][data-cols="2"] > [data-ui="grid"][data-ui="grid"][data-ui="grid"][data-part="tiers"] {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  [data-ui="pricing"][data-cols="3"] [data-part="tiers"] {
+  [data-ui="pricing"][data-cols="3"] [data-part="tiers"],
+  [data-ui="pricing"][data-cols="3"] > [data-ui="grid"][data-ui="grid"][data-ui="grid"][data-part="tiers"] {
     grid-template-columns: repeat(3, 1fr);
   }
 }

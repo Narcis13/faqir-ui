@@ -16,7 +16,7 @@ export interface LCardProps {
   size?: LCardSize;
 }
 
-/** `card` — Container surface with header, body, and footer slots */
+/** `card` — Container surface with header, optional divider, body, and footer slots; direct children can participate in grid's four-row alignment mode */
 export const LCard = defineFaqirPrimitive<LCardProps>({
   name: "card",
   tag: "div",
@@ -29,6 +29,7 @@ export const LCard = defineFaqirPrimitive<LCardProps>({
     { name: "header", tag: "div", required: false, isVoid: false },
     { name: "title", tag: "h3", required: false, isVoid: false },
     { name: "description", tag: "p", required: false, isVoid: false },
+    { name: "divider", tag: "hr", required: false, isVoid: true },
     { name: "body", tag: "div", required: true, isVoid: false },
     { name: "footer", tag: "div", required: false, isVoid: false },
   ],

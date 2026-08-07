@@ -413,9 +413,17 @@ No breakpoint is involved: a cluster reflows when it runs out of room, at any wi
 | `data-min` | `8`, `12`, `16`, `20`, `24` — item floor in **rem** for `auto` mode | `16` | — |
 | `data-span` | `2`, `3`, `4`, `6`, `full` — **on a child** | — | — |
 | `data-scroll` | boolean — a snap-scroll strip below `sm`, a grid from `sm` up | off | — |
+| `data-align-rows` | boolean — align direct cards' `header` / `divider` / `body` / `footer` rows with subgrid | off | — |
 
 `data-span` holds at every width, so pair a span with a base column count that can
 hold it; under a `data-cols="1"` base the only safe span is `full`.
+
+Equal heights are not internal alignment: `switcher` and ordinary grid stretching
+can equalize peer boxes while their dividers and actions still land at different
+positions. `data-align-rows` is the explicit card-in-grid mechanism. Every direct
+card supplies exactly four rows in order (`header`, `divider`, `body`, `footer`);
+subgrid shares those tracks per wrapped line. Without subgrid, participating cards
+span the full width and stack — a correct intrinsic fallback, not guessed padding.
 
 ### Container — the measure column
 

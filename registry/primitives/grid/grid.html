@@ -8,6 +8,12 @@
   implicitly — a grid that should stack on a phone says data-cols="1" and
   widens per tier. Prefer data-cols="auto" + data-min when the requirement is
   just "as many columns as fit": it needs no breakpoint at all.
+
+  Cross-card alignment (task 0.9-09) is the declared data-align-rows mode.
+  Direct card children then provide exactly header/divider/body/footer rows;
+  pricing.html is the canonical unequal-content composition. Subgrid aligns
+  those rows per wrapped line. Without subgrid the cards stack at full width,
+  preserving correct content relationships rather than faking alignment.
 -->
 
 <!-- Intrinsic: as many 16rem columns as fit, at any width -->

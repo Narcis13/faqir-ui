@@ -10,7 +10,7 @@ export type LCardVariant = "default" | "outlined" | "filled";
 /** Allowed `size` values (manifest variant group "size", attr `data-size`). */
 export type LCardSize = "sm" | "md" | "lg";
 
-export interface LCardProps extends Omit<ComponentPropsWithoutRef<"div">, "variant" | "size" | "header" | "title" | "description" | "body" | "footer"> {
+export interface LCardProps extends Omit<ComponentPropsWithoutRef<"div">, "variant" | "size" | "header" | "title" | "description" | "divider" | "body" | "footer"> {
   /** `data-variant`; omitted when unset (manifest default: "default"). */
   variant?: LCardVariant;
   /** `data-size`; omitted when unset (manifest default: "md"). */
@@ -21,13 +21,15 @@ export interface LCardProps extends Omit<ComponentPropsWithoutRef<"div">, "varia
   title?: ReactNode;
   /** Projected into `<p data-part="description">`. */
   description?: ReactNode;
+  /** Projected into `<hr data-part="divider">`. */
+  divider?: ReactNode;
   /** Projected into `<div data-part="body">` (required part — always rendered). */
   body?: ReactNode;
   /** Projected into `<div data-part="footer">`. */
   footer?: ReactNode;
 }
 
-/** `card` — Container surface with header, body, and footer slots */
+/** `card` — Container surface with header, optional divider, body, and footer slots; direct children can participate in grid's four-row alignment mode */
 export const LCard = createFaqirPrimitive<LCardProps>({
   name: "card",
   tag: "div",
@@ -40,6 +42,7 @@ export const LCard = createFaqirPrimitive<LCardProps>({
     { name: "header", tag: "div", required: false, isVoid: false },
     { name: "title", tag: "h3", required: false, isVoid: false },
     { name: "description", tag: "p", required: false, isVoid: false },
+    { name: "divider", tag: "hr", required: false, isVoid: true },
     { name: "body", tag: "div", required: true, isVoid: false },
     { name: "footer", tag: "div", required: false, isVoid: false },
   ],

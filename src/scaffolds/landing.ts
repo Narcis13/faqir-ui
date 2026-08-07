@@ -40,6 +40,7 @@ export const LANDING_COMPONENTS = [
   "badge",
   "button",
   "card",
+  "grid",
   "icon",
   "link",
   "nav",

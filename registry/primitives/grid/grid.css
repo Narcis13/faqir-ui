@@ -23,12 +23,22 @@
  * queries. `data-min` moves the item floor over rem steps; it lives on the
  * base rule at (0,1,0) so the `data-min` rules at (0,2,0) override it at any
  * source position.
+ *
+ * `data-align-rows` is the cross-card alignment mode. Direct card children
+ * share exactly four row tracks (header, divider, body, footer) through
+ * subgrid. The feature-query fallback makes every card span the full grid
+ * instead: an older engine loses side-by-side density, never the visual truth
+ * of corresponding rows. Equal outer heights alone cannot provide that truth.
  */
 
 /* ── Base ── */
 [data-ui="grid"] {
   display: grid;
   --grid-min: 16rem;
+}
+
+[data-ui="grid"][data-align-rows] {
+  align-items: stretch;
 }
 
 /* ── Columns — the base, at every width ── */
@@ -102,6 +112,27 @@
 
 [data-ui="grid"] > [data-span="full"] {
   grid-column: 1 / -1;
+}
+
+/* ── Cross-card row alignment ──
+ * Four rows is a deliberate contract, not an inferred child count. A wrapping
+ * grid creates a fresh four-track group for each visual row, so only cards that
+ * are actually side by side share their intrinsic maxima. */
+@supports (grid-template-rows: subgrid) {
+  [data-ui="grid"][data-align-rows] > [data-ui="card"] {
+    display: grid;
+    grid-row: span 4;
+    grid-template-rows: subgrid;
+  }
+}
+
+/* Correct fallback: without subgrid there must be no side-by-side cards whose
+ * internal landmarks pretend to align. Each card spans the grid and keeps the
+ * card primitive's intrinsic flex layout and complete content order. */
+@supports not (grid-template-rows: subgrid) {
+  [data-ui="grid"][data-align-rows] > [data-ui="card"] {
+    grid-column: 1 / -1;
+  }
 }
 
 /* ── Scroll strip — mobile-first ──

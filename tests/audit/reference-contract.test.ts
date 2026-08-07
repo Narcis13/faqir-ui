@@ -82,6 +82,9 @@ const INTENDED_ROOT_CHANGES: Record<string, string> = {
   "primitives/radio/radio.html": "each fieldset's inline options → cluster gap 4",
   "primitives/switch/switch.html": "two canonical control rows → cluster gap 4",
   "primitives/toggle/toggle.html": "two canonical control rows → cluster gap 4",
+  // Cross-card row alignment (0.9-09): pricing's tier owner is now the real
+  // grid primitive whose declared mode makes its card children subgrids.
+  "patterns/pricing/pricing.html": "two tier containers → grid data-align-rows",
   // The trigger contract (0.9-05): four recipes styled their trigger part with
   // nothing at all, so every one of those 16 buttons rendered as the reset's
   // bare element. They now delegate to the `button` primitive, which is the

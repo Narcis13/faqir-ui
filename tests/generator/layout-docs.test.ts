@@ -314,6 +314,15 @@ describe("layout doctrine — the module's names resolve", () => {
     expect(LAYOUT_MECHANISMS.map((m) => m.step)).toEqual([1, 2, 3]);
   });
 
+  it("distinguishes equal peer heights from cross-card row alignment", () => {
+    expect(LAYOUT_DOC).toContain("Equal height is not alignment");
+    expect(LAYOUT_DOC).toContain("`switcher` stretches the peer boxes");
+    expect(LAYOUT_DOC).toContain("`data-align-rows`");
+    expect(LAYOUT_DOC).toContain("`grid-template-rows: subgrid`");
+    expect(LAYOUT_DOC).toContain("non-subgrid fallback");
+    expect(LAYOUT_RULES.some((rule) => rule.startsWith("Equal heights are not"))).toBe(true);
+  });
+
   it("files its archetypes under the heading the parser looks for", () => {
     expect(LAYOUT_DOC).toContain(ARCHETYPE_SECTION_HEADING);
     // A markdown file with no archetype section parses to nothing rather than throwing.
@@ -411,6 +420,7 @@ describe("skill — the layout guidance survives regeneration", () => {
     for (const p of LAYOUT_PRIMITIVES) expect(skill).toContain(`| \`${p.name}\` |`);
     for (const b of BREAKPOINT_LIST) expect(skill).toContain(`| \`${b.tier}\` | \`${b.rem}rem\` | ${b.px} |`);
     expect(skill).toContain(RESPONSIVE_GRAMMAR);
+    expect(skill).toContain("Equal heights are not internal alignment");
     for (const a of ARCHETYPES) expect(skill).toContain(a.title);
     expect(skill).toContain("docs/layout.md");
   });

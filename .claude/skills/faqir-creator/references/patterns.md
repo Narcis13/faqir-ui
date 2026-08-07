@@ -470,13 +470,13 @@ _No variants._
 
 _kind: pattern · category: marketing_
 
-Pricing table composing card tiers with the stat primitive for the price, a badge for the highlight, separators, icon-ticked feature lists, and one call-to-action per tier. Composition only: zero JavaScript, no controller, no reactive directives. A highlighted tier is data-state='featured' on the tier card.
+Pricing table composing a row-aligned grid of card tiers with stat prices, highlight badges, separators, icon-ticked feature lists, and one call-to-action per tier. Composition only: zero JavaScript. A highlighted tier is data-state='featured' on the tier card.
 
 ```html
 <section data-ui="pricing" data-cols="{columns}" aria-labelledby="{id}-heading">
   <h2 data-part="heading" id="{id}-heading">{heading}</h2>
   <p data-part="description">{description}</p>
-  <div data-part="tiers">
+  <div data-ui="grid" data-part="tiers" data-cols="1" data-cols-sm="2" data-cols-lg="{columns}" data-gap="6" data-align-rows>
     <article data-ui="card" data-part="tier" aria-labelledby="{id}-tier">
       <div data-part="header">
         <h3 data-part="title" id="{id}-tier">{tier_name}</h3>
@@ -486,7 +486,7 @@ Pricing table composing card tiers with the stat primitive for the price, a badg
           <div data-part="label">{period}</div>
         </div>
       </div>
-      <hr data-ui="separator">
+      <hr data-ui="separator" data-part="divider">
       <div data-part="body">
         <ul>
           <li><span data-ui="icon" data-icon="check" aria-hidden="true"></span>{feature}</li>
@@ -507,8 +507,8 @@ Pricing table composing card tiers with the stat primitive for the price, a badg
 [data-ui='pricing']  ·  <section> · content: slots
 ├─ [data-part='heading']  <h2>  required  — Section heading. Give it an id and point the section's aria-labelledby at it
 ├─ [data-part='description']  <p>  optional  — Optional intro paragraph. Must be a direct child of the section — the tiers' own card descriptions are card slots, not this one
-├─ [data-part='tiers']  <div>  required  — The tier grid. Column count comes from data-cols on the root, not from a nested grid component
-├─ [data-part='tier']  <article>  required  — One plan — a nested data-ui='card'. Inside a tier you address the CARD's slots (header, title, description, body, footer), never pricing's: the nearest data-ui ancestor owns a data-part
+├─ [data-part='tiers']  <div>  required  — The tier grid — a nested data-ui='grid' with data-align-rows and a mirrored mobile-first column ladder. Manifest-aware slot ownership leaves this part and its tier children with pricing because grid declares neither slot
+├─ [data-part='tier']  <article>  required  — One plan — a direct card child of the tier grid with exactly four direct rows in order: header, divider, body, footer. Inside a tier, those rows and title/description are card slots, never pricing slots
 └─ [data-part='footnote']  <p>  optional  — Fine print under the tiers (taxes, cancellation, currency)
 ```
 

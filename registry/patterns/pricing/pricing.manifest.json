@@ -1,10 +1,10 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "pricing",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "kind": "pattern",
   "category": "marketing",
-  "description": "Pricing table composing card tiers with the stat primitive for the price, a badge for the highlight, separators, icon-ticked feature lists, and one call-to-action per tier. Composition only: zero JavaScript, no controller, no reactive directives. A highlighted tier is data-state='featured' on the tier card.",
+  "description": "Pricing table composing a row-aligned grid of card tiers with stat prices, highlight badges, separators, icon-ticked feature lists, and one call-to-action per tier. Composition only: zero JavaScript. A highlighted tier is data-state='featured' on the tier card.",
 
   "anatomy": {
     "tag": "section",
@@ -29,13 +29,13 @@
       "selector": "[data-part='tiers']",
       "required": true,
       "tag_hint": "div",
-      "description": "The tier grid. Column count comes from data-cols on the root, not from a nested grid component"
+      "description": "The tier grid — a nested data-ui='grid' with data-align-rows and a mirrored mobile-first column ladder. Manifest-aware slot ownership leaves this part and its tier children with pricing because grid declares neither slot"
     },
     "tier": {
       "selector": "[data-part='tier']",
       "required": true,
       "tag_hint": "article",
-      "description": "One plan — a nested data-ui='card'. Inside a tier you address the CARD's slots (header, title, description, body, footer), never pricing's: the nearest data-ui ancestor owns a data-part"
+      "description": "One plan — a direct card child of the tier grid with exactly four direct rows in order: header, divider, body, footer. Inside a tier, those rows and title/description are card slots, never pricing slots"
     },
     "footnote": {
       "selector": "[data-part='footnote']",
@@ -85,7 +85,7 @@
   ],
 
   "templates": {
-    "html": "<section data-ui=\"pricing\" data-cols=\"{columns}\" aria-labelledby=\"{id}-heading\">\n  <h2 data-part=\"heading\" id=\"{id}-heading\">{heading}</h2>\n  <p data-part=\"description\">{description}</p>\n  <div data-part=\"tiers\">\n    <article data-ui=\"card\" data-part=\"tier\" aria-labelledby=\"{id}-tier\">\n      <div data-part=\"header\">\n        <h3 data-part=\"title\" id=\"{id}-tier\">{tier_name}</h3>\n        <p data-part=\"description\">{tier_blurb}</p>\n        <div data-ui=\"stat\" data-size=\"lg\">\n          <div data-part=\"value\">{price}</div>\n          <div data-part=\"label\">{period}</div>\n        </div>\n      </div>\n      <hr data-ui=\"separator\">\n      <div data-part=\"body\">\n        <ul>\n          <li><span data-ui=\"icon\" data-icon=\"check\" aria-hidden=\"true\"></span>{feature}</li>\n        </ul>\n      </div>\n      <div data-part=\"footer\">\n        <a data-ui=\"button\" data-variant=\"outline\" href=\"{href}\">{cta}</a>\n      </div>\n    </article>\n  </div>\n  <p data-part=\"footnote\">{footnote}</p>\n</section>"
+    "html": "<section data-ui=\"pricing\" data-cols=\"{columns}\" aria-labelledby=\"{id}-heading\">\n  <h2 data-part=\"heading\" id=\"{id}-heading\">{heading}</h2>\n  <p data-part=\"description\">{description}</p>\n  <div data-ui=\"grid\" data-part=\"tiers\" data-cols=\"1\" data-cols-sm=\"2\" data-cols-lg=\"{columns}\" data-gap=\"6\" data-align-rows>\n    <article data-ui=\"card\" data-part=\"tier\" aria-labelledby=\"{id}-tier\">\n      <div data-part=\"header\">\n        <h3 data-part=\"title\" id=\"{id}-tier\">{tier_name}</h3>\n        <p data-part=\"description\">{tier_blurb}</p>\n        <div data-ui=\"stat\" data-size=\"lg\">\n          <div data-part=\"value\">{price}</div>\n          <div data-part=\"label\">{period}</div>\n        </div>\n      </div>\n      <hr data-ui=\"separator\" data-part=\"divider\">\n      <div data-part=\"body\">\n        <ul>\n          <li><span data-ui=\"icon\" data-icon=\"check\" aria-hidden=\"true\"></span>{feature}</li>\n        </ul>\n      </div>\n      <div data-part=\"footer\">\n        <a data-ui=\"button\" data-variant=\"outline\" href=\"{href}\">{cta}</a>\n      </div>\n    </article>\n  </div>\n  <p data-part=\"footnote\">{footnote}</p>\n</section>"
   },
 
   "safe_transforms": [
@@ -108,11 +108,12 @@
   ],
 
   "composition": {
-    "contains": ["card", "badge", "stat", "separator", "button", "icon"],
+    "contains": ["grid", "card", "badge", "stat", "separator", "button", "icon"],
     "used_in": ["landing-page"],
     "notes": [
-      "Slot ownership: a data-part belongs to its nearest data-ui ancestor. Inside a tier that ancestor is the card, so the price/features live in the card's header and body slots and pricing addresses them contextually in CSS. Adding a pricing-specific data-part inside a tier makes it an orphan part of the card and `faqir audit` flags it.",
-      "The price is a nested data-ui='stat' (value = amount, label = period). Pricing re-orders the stat label so the amount leads.",
+      "A data-part belongs to the nearest enclosing component that declares it. The nested grid declares neither tiers nor tier, so those remain pricing slots; inside a tier, header/divider/body/footer belong to card.",
+      "The price is a nested data-ui='stat' (value = amount, label = period). Pricing re-orders the stat label so the amount leads and uses auto space above the stat so prices share the bottom edge of the aligned header track.",
+      "data-align-rows fixes four direct card rows (header, divider, body, footer) per wrapped grid line. Without subgrid the grid mode makes every tier span the full width, so the fallback is a correct intrinsic stack rather than misaligned side-by-side cards.",
       "`faqir scaffold landing-page` copies the block between the <!-- @ui:scaffold landing-page --> markers in pricing.html verbatim."
     ]
   },
@@ -133,10 +134,17 @@
     "feature-ticks-are-aria-hidden-icons",
     "ships-zero-javascript",
     "one-tier-per-row-below-sm-two-from-sm-and-the-declared-count-from-lg",
+    "tier-grid-declares-four-row-card-alignment",
+    "non-subgrid-fallback-stacks-complete-tier-cards",
     "reference-page-is-audit-clean"
   ],
 
   "changes": [
+    {
+      "version": "1.2.0",
+      "note": "Tier containers now compose the grid primitive with its declared data-align-rows mode. Every tier card exposes four direct rows (header, divider, body, footer); supporting engines share those tracks through subgrid, and the price is bottom-aligned inside the shared header track. The grid's no-subgrid fallback stacks complete cards at full width, preserving truthful content relationships. The root data-cols contract remains mirrored into the nested grid ladder.",
+      "breaking": false
+    },
     {
       "version": "1.1.0",
       "note": "The responsive ladder moves onto the breakpoint canon, mobile-first (task 0.8-09). The sheet's max-width media blocks became min-width floors on canon tiers (sm 40rem/640px, md 48rem/768px, lg 64rem/1024px), so every unconditional rule is now the PHONE case and a tier block only ever widens it. The tier grid follows grid's mobile-first semantics (0.8-04): data-cols names the WIDEST count, reached at lg, with two columns from sm and one on a phone. The floors keep their values, so the only behavioural shift is at exactly a floor: 1024px now gets the wide layout rather than the narrow one.",

@@ -46,7 +46,7 @@ Page structure is five primitives, one token ladder and one breakpoint canon —
 |-----------|-----------|-------------------|
 | `stack` | intrinsic | One direction, one gap — the vertical rhythm of a page and the horizontal row of a toolbar. Make the direction responsive (`data-direction-md`) rather than nesting two stacks. |
 | `cluster` | intrinsic | A row that wraps by itself — tags, chips, meta rows, button groups. No breakpoint involved; `data-push` on a child sends it (and everything after) to the far end. |
-| `grid` | intrinsic | Columns. `data-cols="auto"` with `data-min` needs no query at all; the `data-cols-<tier>` ladder is for when the column count is a deliberate editorial choice. |
+| `grid` | intrinsic | Columns. `data-cols="auto"` with `data-min` needs no query at all; the `data-cols-<tier>` ladder is for an editorial count, and `data-align-rows` gives direct four-row cards real internal alignment through subgrid. |
 | `container` | intrinsic | The centred measure column: caps line length at a `--measure-*` token and centres what is left. Every page-level width in Faqir is one of these, never a hand-written max-width. |
 | `switcher` | container | Equal peers side by side that become one column when the switcher itself is narrower than `data-threshold` — correct full-bleed, in a sidebar and in a dialog, from the same markup. |
 
@@ -73,6 +73,7 @@ Page structure is five primitives, one token ladder and one breakpoint canon —
 - Reach for a viewport query last — intrinsic first, then the component's own inline size.
 - Never hand-write a max-width for a page column; use `container` and a `--measure-*` token.
 - Vertical rhythm is the default, not an opt-in: block-level components stacked inside a flow root are already spaced, so do not wrap a sequence in a `stack` merely to separate it.
+- Equal heights are not internal alignment: `switcher` stretches peer boxes, while `grid[data-align-rows]` aligns the header/divider/body/footer rows of direct card children through subgrid and stacks them as the correct fallback when subgrid is unavailable.
 
 **Measure** (centred column widths): `--measure-narrow` (a single form column, a login card), `--measure-content` (an article body, a settings panel), `--measure-wide` (a page shell — the widest thing still centred), `--measure-prose` (optimal line length in characters, so it tracks the reader's font rather than the layout).
 **Rhythm** (page air): `--section-gap-sm` (dense pages — docs, dashboards), `--section-gap-md` (the default marketing rhythm), `--section-gap-lg` (spacious — one idea per screen), `--content-gutter` (the page's own padding-inline).

@@ -1,7 +1,13 @@
 <!-- @ui:component card -->
 <!-- @ui:kind primitive -->
-<!-- @ui:slots header title description body footer -->
+<!-- @ui:slots header title description divider body footer -->
 <!-- @ui:variants variant=default|outlined|filled size=sm|md|lg -->
+<!--
+  A card stays an intrinsic flex column by default. For cross-card alignment,
+  put cards directly in grid[data-align-rows] and give every card exactly four
+  direct rows in this order: header, divider, body, footer. Pricing is the
+  canonical unequal-content example and documents the stacking fallback.
+-->
 
 <!-- Default Card -->
 <div data-ui="card">

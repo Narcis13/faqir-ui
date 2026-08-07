@@ -10,7 +10,7 @@ export type LGridCols = "1" | "2" | "3" | "4" | "6" | "12" | "auto";
 /** Allowed `gap` values (manifest variant group "gap", attr `data-gap`). */
 export type LGridGap = "0" | "1" | "2" | "3" | "4" | "6" | "8" | "10" | "12" | "16";
 
-export interface LGridProps extends Omit<ComponentPropsWithoutRef<"div">, "cols" | "colsSm" | "colsMd" | "colsLg" | "colsXl" | "gap" | "gapSm" | "gapMd" | "gapLg" | "gapXl" | "scroll"> {
+export interface LGridProps extends Omit<ComponentPropsWithoutRef<"div">, "cols" | "colsSm" | "colsMd" | "colsLg" | "colsXl" | "gap" | "gapSm" | "gapMd" | "gapLg" | "gapXl" | "scroll" | "alignRows"> {
   /** `data-cols`; omitted when unset (manifest default: "1"). */
   cols?: LGridCols;
   /** `data-cols-sm` — the `cols` value from the `sm` breakpoint up; omitted when unset. */
@@ -33,6 +33,8 @@ export interface LGridProps extends Omit<ComponentPropsWithoutRef<"div">, "cols"
   gapXl?: LGridGap;
   /** Below the sm tier the grid becomes a horizontal snap-scroll strip (each child at least 280px, snap-aligned to start); from sm up it lays out as a normal grid again. An explicit alternative to collapsing dense card rows on phones. */
   scroll?: boolean;
+  /** Align the four direct rows of sibling card children (header, divider, body, footer) with grid-template-rows: subgrid. Every participating card must provide those four direct rows in that order. Alignment is scoped to each visual row after wrapping. Without subgrid, cards span the full grid width and stack, which preserves correct content relationships instead of showing falsely aligned side-by-side peers. Do not combine with data-scroll. */
+  alignRows?: boolean;
 }
 
 /** `grid` — CSS Grid container with configurable columns and gap — mobile-first responsive column tiers on the canon breakpoints, plus an intrinsic auto mode that needs no media query at all */
@@ -53,6 +55,7 @@ export const LGrid = createFaqirPrimitive<LGridProps>({
   ],
   states: [
     { prop: "scroll", attr: "data-scroll", value: null, kind: "presence" },
+    { prop: "alignRows", attr: "data-align-rows", value: null, kind: "presence" },
   ],
   slots: [],
   defaultSlot: true,

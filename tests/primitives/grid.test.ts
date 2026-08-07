@@ -98,9 +98,12 @@ function declaredAttributes(): Set<string> {
 // ── 1 · Completeness ─────────────────────────────────────────────────────────
 
 describe("grid — manifest declares everything the CSS selects on", () => {
-  it("validates, and is the 2.0 release with a breaking mobile-first changelog entry", () => {
+  it("validates as 2.1 while retaining the breaking 2.0 mobile-first entry", () => {
     expect(validateManifest(MANIFEST)).toEqual([]);
-    expect(MANIFEST.version).toBe("2.0.0");
+    expect(MANIFEST.version).toBe("2.1.0");
+    const alignment = (MANIFEST.changes ?? []).find((c) => c.version === "2.1.0");
+    expect(alignment?.breaking).toBe(false);
+    expect(alignment?.note).toContain("data-align-rows");
     const entry = (MANIFEST.changes ?? []).find((c) => c.version === "2.0.0");
     expect(entry, "grid 2.0 must record its own changelog entry").toBeDefined();
     expect(entry!.breaking).toBe(true);
@@ -163,7 +166,7 @@ describe("grid — manifest declares everything the CSS selects on", () => {
     }
   });
 
-  it("selects no bare value-less attribute except the boolean data-scroll", () => {
+  it("selects no bare value-less attribute except the two declared booleans", () => {
     // The 1.x forced collapse rode exactly such selectors: a blanket
     // `[data-cols]` and a blanket `[data-span]`. Only the declared boolean may
     // be selected by presence.
@@ -175,7 +178,7 @@ describe("grid — manifest declares everything the CSS selects on", () => {
         }
       }
     }
-    expect([...presence]).toEqual(["data-scroll"]);
+    expect([...presence].sort()).toEqual(["data-align-rows", "data-scroll"]);
   });
 
   it("suffixes no protocol attribute — the grammar cannot reach data-variant", () => {
@@ -391,11 +394,18 @@ describe("grid — one declaration, every generated surface", () => {
     }
   });
 
-  it("keeps auto in the cols union and scroll as a boolean prop", () => {
+  it("keeps auto in the cols union and both layout modes as boolean props", () => {
     expect(ir.variants.find((v) => v.prop === "cols")!.values).toContain("auto");
     const scroll = ir.states.find((s) => s.prop === "scroll")!;
     expect(scroll).toMatchObject({ attr: "data-scroll", kind: "presence", value: null });
     expect(scroll.doc).toBe(MANIFEST.props!.scroll.description);
+    const alignRows = ir.states.find((s) => s.prop === "alignRows")!;
+    expect(alignRows).toMatchObject({
+      attr: "data-align-rows",
+      kind: "presence",
+      value: null,
+    });
+    expect(alignRows.doc).toBe(MANIFEST.props!.alignRows.description);
     // The enum props document child/auto vocabulary; they are not root booleans.
     expect(ir.states.some((s) => s.prop === "min" || s.prop === "span")).toBe(false);
   });
@@ -414,6 +424,7 @@ describe("grid — one declaration, every generated surface", () => {
         expect(src).toContain(`gap${tier}?: LGridGap;`);
       }
       expect(src).toContain("scroll?: boolean;");
+      expect(src).toContain("alignRows?: boolean;");
       // Tier props reuse the base union — one exported type per group.
       expect(src).not.toContain("LGridColsMd");
     });
@@ -435,5 +446,15 @@ describe("grid — one declaration, every generated surface", () => {
     expect(HTML).toContain('data-cols="1" data-cols-md="2" data-cols-lg="4"');
     expect(HTML).toContain("data-scroll");
     expect(HTML).toContain('data-span="full"');
+  });
+
+  it("gates four-row card subgrid and its full-width fallback as a pair", () => {
+    expect(CSS).toContain("@supports (grid-template-rows: subgrid)");
+    expect(CSS).toContain("grid-row: span 4");
+    expect(CSS).toContain("grid-template-rows: subgrid");
+    expect(CSS).toContain("@supports not (grid-template-rows: subgrid)");
+    expect(CSS).toContain("grid-column: 1 / -1");
+    expect(MANIFEST.props!.alignRows.description).toContain("header, divider, body, footer");
+    expect(MANIFEST.props!.alignRows.description).toContain("Without subgrid");
   });
 });

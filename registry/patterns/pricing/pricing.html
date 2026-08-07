@@ -3,7 +3,7 @@
 <!-- @ui:slots heading description tiers tier footnote -->
 <!-- @ui:variants columns=2|3 -->
 <!-- @ui:states featured -->
-<!-- @ui:composition card badge stat separator button icon -->
+<!-- @ui:composition grid card badge stat separator button icon -->
 <!--
   Pricing table — composition only, zero JavaScript.
     · Every tier is a real data-ui="card": the card owns its own header/title/
@@ -15,6 +15,10 @@
     · A highlighted tier is data-state="featured" on the tier card. The emphasis
       is also stated in content (a "Most popular" badge), so it survives for
       anyone who never sees the ring.
+    · The tiers are a real grid with data-align-rows. Each card exposes exactly
+      four direct rows — header/divider/body/footer — and the price sits at the
+      bottom of the shared header row. Subgrid aligns peers on each wrapped line;
+      engines without it stack the cards at full width instead of faking it.
     · `faqir scaffold landing-page` composes the block marked below verbatim.
 -->
 
@@ -23,7 +27,7 @@
   <h2 data-part="heading" id="pricing-heading">Simple, transparent pricing</h2>
   <p data-part="description">Start free while you build. Move up only when your team does.</p>
 
-  <div data-part="tiers">
+  <div data-ui="grid" data-part="tiers" data-cols="1" data-cols-sm="2" data-cols-lg="3" data-gap="6" data-align-rows>
 
     <article data-ui="card" data-part="tier" aria-labelledby="pricing-tier-starter">
       <div data-part="header">
@@ -34,7 +38,7 @@
           <div data-part="label">forever</div>
         </div>
       </div>
-      <hr data-ui="separator">
+      <hr data-ui="separator" data-part="divider">
       <div data-part="body">
         <ul>
           <li><span data-ui="icon" data-icon="check" aria-hidden="true"></span>Up to 3 projects</li>
@@ -57,7 +61,7 @@
           <div data-part="label">per editor / month</div>
         </div>
       </div>
-      <hr data-ui="separator">
+      <hr data-ui="separator" data-part="divider">
       <div data-part="body">
         <ul>
           <li><span data-ui="icon" data-icon="check" aria-hidden="true"></span>Unlimited projects</li>
@@ -80,7 +84,7 @@
           <div data-part="label">annual agreement</div>
         </div>
       </div>
-      <hr data-ui="separator">
+      <hr data-ui="separator" data-part="divider">
       <div data-part="body">
         <ul>
           <li><span data-ui="icon" data-icon="check" aria-hidden="true"></span>Everything in Team</li>
@@ -104,7 +108,7 @@
 <section data-ui="pricing" data-cols="2" aria-labelledby="pricing-two-heading">
   <h2 data-part="heading" id="pricing-two-heading">Personal or business</h2>
 
-  <div data-part="tiers">
+  <div data-ui="grid" data-part="tiers" data-cols="1" data-cols-sm="2" data-cols-lg="2" data-gap="6" data-align-rows>
 
     <article data-ui="card" data-part="tier" aria-labelledby="pricing-tier-personal">
       <div data-part="header">
@@ -114,7 +118,7 @@
           <div data-part="label">per month</div>
         </div>
       </div>
-      <hr data-ui="separator">
+      <hr data-ui="separator" data-part="divider">
       <div data-part="body">
         <ul>
           <li><span data-ui="icon" data-icon="check" aria-hidden="true"></span>One workspace</li>
@@ -135,7 +139,7 @@
           <div data-part="label">per month</div>
         </div>
       </div>
-      <hr data-ui="separator">
+      <hr data-ui="separator" data-part="divider">
       <div data-part="body">
         <ul>
           <li><span data-ui="icon" data-icon="check" aria-hidden="true"></span>Unlimited workspaces</li>

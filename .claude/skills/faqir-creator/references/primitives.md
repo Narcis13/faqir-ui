@@ -183,7 +183,7 @@ Callout box for info notices, warnings, alerts, legal text, and disclaimers
 
 _kind: primitive · category: layout_
 
-Container surface with header, body, and footer slots
+Container surface with header, optional divider, body, and footer slots; direct children can participate in grid's four-row alignment mode
 
 ```html
 <div data-ui="card">
@@ -203,6 +203,7 @@ Container surface with header, body, and footer slots
 ├─ [data-part='header']  <div>  optional  — Card header area containing title and description
 ├─ [data-part='title']  <h3>  optional  — Card title text
 ├─ [data-part='description']  <p>  optional  — Brief card description
+├─ [data-part='divider']  <hr>  optional  — Optional separator between the header and body; required as the second direct row when the parent grid opts into four-row card alignment
 ├─ [data-part='body']  <div>  required  — Main card content
 └─ [data-part='footer']  <div>  optional  — Card footer with action buttons
 ```
@@ -214,7 +215,7 @@ Container surface with header, body, and footer slots
 | visual | `default`, `outlined`, `filled` | `default` | `data-variant` | root |
 | size | `sm`, `md`, `lg` | `md` | `data-size` | root |
 
-- **Safe transforms:** `change-variant`, `add-header`, `add-footer`, `change-title`, `restyle-background`
+- **Safe transforms:** `change-variant`, `add-header`, `add-divider`, `add-footer`, `change-title`, `restyle-background`
 - **Unsafe (never do):** `remove-body-slot`, `flatten-to-single-div`
 
 ## checkbox
@@ -486,8 +487,8 @@ CSS Grid container with configurable columns and gap — mobile-first responsive
 
 - **Responsive:** the marked groups accept `<attr>-<tier>` for the canon tiers `sm` (40rem), `md` (48rem), `lg` (64rem), `xl` (80rem) — `data-cols-md="auto"` applies that value from `md` up. Mobile-first: the unsuffixed attribute is the base.
 
-- **Safe transforms:** `change-cols`, `change-gap`, `add-responsive-tier`, `switch-to-auto-mode`, `change-min`, `add-children`, `remove-children`
-- **Unsafe (never do):** `change-display-property`, `replace-with-non-grid-container`
+- **Safe transforms:** `change-cols`, `change-gap`, `add-responsive-tier`, `switch-to-auto-mode`, `change-min`, `enable-card-row-alignment`, `add-children`, `remove-children`
+- **Unsafe (never do):** `change-display-property`, `replace-with-non-grid-container`, `use-row-alignment-with-non-card-children`, `change-the-four-row-card-contract-per-instance`, `combine-row-alignment-with-scroll`
 
 ## icon
 

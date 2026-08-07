@@ -127,6 +127,52 @@ short version:
 </div>
 ```
 
+## Equal height is not alignment
+
+Equal heights make peer boxes end on the same edge; they do not make the
+landmarks *inside* those boxes line up. `switcher` stretches the peer boxes in a
+row, and an ordinary grid stretches its cells, but an extra badge in one card
+still pushes that card's divider, body and action below the same content in its
+siblings.
+
+For that second requirement, put direct card children in `grid` and declare
+`data-align-rows`. The contract fixes exactly four direct rows, in order:
+`header`, `divider`, `body`, `footer`. Supporting engines make each card span the
+parent's four row tracks with `grid-template-rows: subgrid`, so extra content
+grows the corresponding track for every card on that visual row. When the grid
+wraps, the next line starts a fresh four-row alignment group.
+
+```html
+<div data-ui="grid" data-cols="1" data-cols-md="2" data-gap="6" data-align-rows>
+  <article data-ui="card">
+    <div data-part="header">
+      <h3 data-part="title">Starter</h3>
+      <p data-part="description">For small projects.</p>
+    </div>
+    <hr data-ui="separator" data-part="divider">
+    <div data-part="body">Three projects and community support.</div>
+    <div data-part="footer"><button data-ui="button">Choose Starter</button></div>
+  </article>
+  <article data-ui="card">
+    <div data-part="header">
+      <span data-ui="badge">Most popular</span>
+      <h3 data-part="title">Team</h3>
+      <p data-part="description">For teams that ship every week.</p>
+    </div>
+    <hr data-ui="separator" data-part="divider">
+    <div data-part="body">Unlimited projects and review history.</div>
+    <div data-part="footer"><button data-ui="button">Choose Team</button></div>
+  </article>
+</div>
+```
+
+The non-subgrid fallback is intentionally a one-column stack: every participating
+card spans the full grid width and keeps its intrinsic card layout. That loses
+density, but remains correct at every size; guessed minimum heights or
+per-instance padding would leave false side-by-side correspondence. Do not combine
+`data-align-rows` with `data-scroll`, because a snap strip cannot provide shared
+row tracks.
+
 ## Measure and rhythm
 
 Two token ladders carry every page-level number, so a layout never hand-writes one.

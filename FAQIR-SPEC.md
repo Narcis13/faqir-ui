@@ -2197,6 +2197,22 @@ with the cluster around the option labels inside them. A single labeled control 
 stand alone (or be the direct child of a radio fieldset): cluster is required by the
 row, not by the primitive, and no control CSS selector depends on an ancestor.
 
+### Equal height and cross-card row alignment
+
+**Equal heights are not alignment.** `switcher` and ordinary grid stretching make
+peer boxes share an outer height; neither aligns the landmarks inside those boxes.
+When sibling cards must align internally, their direct parent is `grid` with
+`data-align-rows`, and every direct card child provides exactly four direct rows in
+the same order: `header`, `divider`, `body`, `footer`.
+
+Supporting engines make each card span four parent rows and set
+`grid-template-rows: subgrid`, so unequal content expands the corresponding shared
+track for every card on that visual row. A wrapped line establishes a new four-row
+group. Without subgrid, each participating card spans the full grid width and keeps
+its intrinsic card layout. The fallback therefore trades side-by-side density for
+correct content relationships; per-instance padding or guessed minimum heights are
+not conforming fallbacks. `data-align-rows` and `data-scroll` are mutually exclusive.
+
 ### What this binds
 
 - Registry CSS: every threshold is a canon tier, expressed as `min-width`.

@@ -89,7 +89,7 @@ export const LAYOUT_PRIMITIVES: readonly LayoutPrimitiveDoc[] = Object.freeze([
   Object.freeze({
     name: "grid",
     mechanism: "intrinsic",
-    use: "Columns. `data-cols=\"auto\"` with `data-min` needs no query at all; the `data-cols-<tier>` ladder is for when the column count is a deliberate editorial choice.",
+    use: "Columns. `data-cols=\"auto\"` with `data-min` needs no query at all; the `data-cols-<tier>` ladder is for an editorial count, and `data-align-rows` gives direct four-row cards real internal alignment through subgrid.",
   }),
   Object.freeze({
     name: "container",
@@ -290,6 +290,7 @@ export const LAYOUT_RULES: readonly string[] = Object.freeze([
   "Reach for a viewport query last — intrinsic first, then the component's own inline size.",
   "Never hand-write a max-width for a page column; use `container` and a `--measure-*` token.",
   "Vertical rhythm is the default, not an opt-in: block-level components stacked inside a flow root are already spaced, so do not wrap a sequence in a `stack` merely to separate it.",
+  "Equal heights are not internal alignment: `switcher` stretches peer boxes, while `grid[data-align-rows]` aligns the header/divider/body/footer rows of direct card children through subgrid and stacks them as the correct fallback when subgrid is unavailable.",
 ]);
 
 /** `data-<attr>-<tier>` — the responsive attribute grammar, as a literal. */

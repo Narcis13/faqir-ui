@@ -93,7 +93,9 @@ function columnsAt(
 
 /** Elements of one component in a reference page, by data-ui name. */
 function componentsNamed(source: string, name: string) {
-  return extractComponents(source, `${name}.html`).filter((c) => c.name === name);
+  return extractComponents(source, `${name}.html`, (component, slot) =>
+    manifests.get(component)?.slots?.[slot] !== undefined,
+  ).filter((c) => c.name === name);
 }
 
 const manifests = await loadRegistryManifestMap(REGISTRY);
@@ -416,6 +418,17 @@ describe("feature-grid", () => {
 describe("pricing", () => {
   const source = html("pricing");
 
+  it("declares row alignment on a real grid primitive", () => {
+    for (const pricing of componentsNamed(source, "pricing")) {
+      const tiers = pricing.parts["tiers"][0];
+      expect(tiers.attrs["data-ui"]).toBe("grid");
+      expect(tiers.attrs["data-align-rows"]).toBeDefined();
+      expect(tiers.attrs["data-cols"]).toBe("1");
+      expect(tiers.attrs["data-cols-sm"]).toBe("2");
+      expect(tiers.attrs["data-cols-lg"]).toBe(pricing.root.attrs["data-cols"]);
+    }
+  });
+
   it("builds every tier from the card primitive", () => {
     for (const pricing of componentsNamed(source, "pricing")) {
       expect(pricing.parts["tier"].length).toBeGreaterThan(1);
@@ -456,6 +469,7 @@ describe("pricing", () => {
     const cardSlots = new Set(Object.keys(manifests.get("card")!.slots));
     const cards = extractComponents(source, "pricing.html").filter((c) => c.name === "card");
     for (const card of cards) {
+      expect(card.parts["divider"], "every aligned tier supplies the fourth card row").toHaveLength(1);
       for (const part of Object.keys(card.parts)) {
         expect(cardSlots.has(part), `[data-part="${part}"] belongs to card`).toBe(true);
       }
