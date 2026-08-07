@@ -1,5 +1,5 @@
 /* @ui:component label */
-/* @ui:tokens color-fg color-fg-muted color-destructive font-sans text-xs text-sm text-base weight-medium space-1 */
+/* @ui:tokens color-fg color-fg-muted color-destructive font-sans text-xs text-sm text-base weight-medium */
 
 /* ── Base ── */
 [data-ui="label"] {
@@ -9,9 +9,12 @@
   font-weight: var(--weight-medium);
   color: var(--color-fg);
   line-height: 1;
-  margin-bottom: var(--space-1);
   cursor: pointer;
 }
+
+/* A label describes itself, not the distance to an adjacent control. Compose it
+   through field-group when a field needs label/control/help spacing; that keeps
+   the inner step in one owner and leaves the outer step to the default rhythm. */
 
 /* ── Parts ── */
 [data-ui="label"] [data-part="indicator"] {

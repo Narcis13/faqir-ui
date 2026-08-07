@@ -33,6 +33,10 @@ const FG_DIR = join(ROOT, "registry/primitives/field-group");
 const CSS = readFileSync(join(FG_DIR, "field-group.css"), "utf8");
 const HTML = readFileSync(join(FG_DIR, "field-group.html"), "utf8");
 const MANIFEST = JSON.parse(readFileSync(join(FG_DIR, "field-group.manifest.json"), "utf8")) as Manifest;
+const CONTROL_REFERENCES = ["input", "select", "textarea"].map((name) => ({
+  name,
+  html: readFileSync(join(ROOT, "registry/primitives", name, `${name}.html`), "utf8"),
+}));
 
 // ─────────────────────────────── CSS contract ───────────────────────────────
 
@@ -87,12 +91,53 @@ describe("field-group · manifest documents the normalized contract", () => {
   });
 
   it("carries a breaking 2.0.0 `changes` entry for the rename", () => {
-    expect(MANIFEST.version).toBe("2.0.0");
+    expect(MANIFEST.version).toBe("2.1.0");
     const changes = MANIFEST.changes ?? [];
     const entry = changes.find((c) => c.version === "2.0.0");
     expect(entry).toBeDefined();
     expect(entry!.breaking).toBe(true);
     expect(entry!.note.toLowerCase()).toContain("invalid");
+  });
+
+  it("declares the Address row's horizontal layout instead of relying on incidental markup", () => {
+    const variants = MANIFEST.variants as Record<string, { attr: string; values: string[] }>;
+    expect(variants.layout.attr).toBe("data-variant");
+    expect(variants.layout.values).toContain("horizontal");
+
+    const doc = parseDocument(HTML, "field-group.html");
+    const address = doc.elements.find((element) => element.attrs.id === "address");
+    expect(address).toBeDefined();
+    expect(address!.parent?.parent?.attrs["data-ui"]).toBe("field-group");
+    expect(address!.parent?.parent?.attrs["data-variant"]).toBe("horizontal");
+  });
+});
+
+describe("form primitives · labeled references use the field-group spacing owner", () => {
+  it.each(CONTROL_REFERENCES)("$name has no loose label/control sibling pair", ({ name, html }) => {
+    const doc = parseDocument(html, `${name}.html`);
+    const controls = doc.elements.filter((element) => element.attrs["data-ui"] === name);
+    const labeled = controls.filter((control) => control.attrs.id !== undefined);
+    expect(labeled.length).toBeGreaterThan(0);
+
+    for (const control of labeled) {
+      const matchingLabel = doc.elements.find(
+        (element) => element.tag === "label" && element.attrs.for === control.attrs.id,
+      );
+      expect(matchingLabel, `${name}#${control.attrs.id} has no matching label`).toBeDefined();
+      expect(matchingLabel!.attrs["data-part"]).toBe("label");
+      expect(matchingLabel!.parent?.attrs["data-ui"]).toBe("field-group");
+      expect(control.parent?.attrs["data-part"]).toBe("input");
+      expect(control.parent?.parent).toBe(matchingLabel!.parent);
+    }
+  });
+
+  it("uses spacing-scale rungs for every field-group size and no outer margin", () => {
+    expect(CSS).toContain("gap: var(--space-2)");
+    expect(CSS).toContain("gap: var(--space-1)");
+    expect(CSS).toContain("gap: var(--space-3)");
+    const rootRule = /\[data-ui="field-group"\]\s*\{[^}]*\}/.exec(CSS);
+    expect(rootRule).not.toBeNull();
+    expect(rootRule![0]).not.toMatch(/\bmargin(?:-block(?:-start|-end)?)?\s*:/);
   });
 });
 
@@ -211,7 +256,7 @@ describe("field-group · faqir upgrade migrates a project off the old vocabulary
 
     // Clean fast-forward (ours == base), old → new version, breaking flagged.
     expect(code).toBe(0);
-    expect(output).toContain("1.0.0 → 2.0.0");
+    expect(output).toContain("1.0.0 → 2.1.0");
     expect(output.toLowerCase()).toContain("breaking");
 
     // Working copy is now on the normalized vocabulary.

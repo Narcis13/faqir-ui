@@ -427,7 +427,7 @@ Placeholder for empty content sections with icon, title, description, and action
 
 _kind: primitive · category: forms_
 
-Form field wrapper combining label, input slot, description, and error message, with a normalized validation contract (§7.1): states invalid | validating | disabled, a standardized required marker, and CSS-driven error visibility (no JS class toggling)
+Form field wrapper combining label, control, and help/error text with a tight density-aware inner step; the surrounding default rhythm owns the looser step between fields. Includes the normalized §7.1 validation contract (invalid | validating | disabled).
 
 ```html
 <div data-ui="field-group">
@@ -446,8 +446,8 @@ Form field wrapper combining label, input slot, description, and error message, 
 ├─ [data-part='label']  <label>  required  — Field label text
 ├─ [data-part='required']  <span>  optional  — Standardized required marker (§7.1). Placed inside the label, e.g. <span data-part="required">*</span>; carries the marker color and is announced/hidden with the label. Canonical alternative to the legacy [data-required] attribute.
 ├─ [data-part='input']  <div>  required  — Slot for the input element (input, select, textarea, etc.)
-├─ [data-part='description']  <p>  optional  — Helper text below the input
-└─ [data-part='error']  <p>  optional  — Error message shown in error state
+├─ [data-part='description']  <p>  optional  — Helper text below the control, separated by the same tight intra-field step as label → control
+└─ [data-part='error']  <p>  optional  — Error message shown in invalid state, occupying the help-text position in the intra-field rhythm
 ```
 
 **Variants**
@@ -549,7 +549,7 @@ Responsive image with variants for different display modes and print optimizatio
 
 _kind: primitive · category: forms_
 
-Text input with error, disabled states and size variants
+Text input with error, disabled states and size variants; compose labeled or described inputs inside field-group so inner proximity and outer form rhythm have distinct owners
 
 ```html
 <input data-ui="input" type="{type}" placeholder="{placeholder}">
@@ -633,7 +633,7 @@ Labeled data pair for displaying key-value information
 
 _kind: primitive · category: forms_
 
-Form label with optional required/optional indicator
+Form label with optional required/optional indicator; spacing to a control belongs to the containing field-group rather than the label itself
 
 ```html
 <label data-ui="label" for="{for}">{text}</label>
@@ -807,7 +807,7 @@ Custom styled radio button for single selection within a group, with size varian
 
 _kind: primitive · category: forms_
 
-Native select dropdown with custom arrow, error and disabled states, and size variants
+Native select dropdown with custom arrow, error and disabled states, and size variants; compose labeled or described selects inside field-group for correct form proximity
 
 ```html
 <select data-ui="select">
@@ -1162,7 +1162,7 @@ Text and heading primitives with size, color, weight, alignment, and truncation 
 
 _kind: primitive · category: forms_
 
-Multi-line text input with error, disabled states and size variants
+Multi-line text input with error, disabled states and size variants; compose labeled or described textareas inside field-group for correct form proximity
 
 ```html
 <textarea data-ui="textarea" placeholder="{placeholder}"></textarea>

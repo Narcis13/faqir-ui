@@ -18,7 +18,7 @@ export interface LLabelProps {
   disabled?: boolean;
 }
 
-/** `label` — Form label with optional required/optional indicator */
+/** `label` — Form label with optional required/optional indicator; spacing to a control belongs to the containing field-group rather than the label itself */
 export const LLabel = defineFaqirPrimitive<LLabelProps>({
   name: "label",
   tag: "label",

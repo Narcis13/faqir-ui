@@ -2238,6 +2238,17 @@ the commonest shape there is, and a rule that spaced `[data-ui]` children only w
 leave exactly that page flush. It is deliberately not "any child": 3rem between a
 heading and its own paragraph is a different defect from the one this fixes.
 
+### Form spacing ownership
+
+`field-group` owns only the tight step *inside* one field: label → control → help or
+error text. Those gaps use `--space-*` rungs and therefore remap with density. It
+does not declare an outer margin. A surrounding flow root (`form`, `fieldset`, or a
+reference-page `figure`) owns the looser step between sibling fields through the
+default `--flow-space`, which resolves to `--section-gap-sm` unless re-tuned. This
+keeps the two systems independent: `data-gap="0"` can disable the default rhythm
+without changing a field's internal grouping, and compact density remaps both steps
+without making either component compensate for the other.
+
 **"Consecutive" is load-bearing.** The margin goes on the second of two
 *participants*, so a non-participant between them suppresses it — an `h2` followed by
 a table is a label and the thing it labels, and a rule that pushed them apart would

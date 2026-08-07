@@ -15,7 +15,7 @@ export interface LInputProps {
   disabled?: boolean;
 }
 
-/** `input` — Text input with error, disabled states and size variants */
+/** `input` — Text input with error, disabled states and size variants; compose labeled or described inputs inside field-group so inner proximity and outer form rhythm have distinct owners */
 export const LInput = defineFaqirPrimitive<LInputProps>({
   name: "input",
   tag: "input",

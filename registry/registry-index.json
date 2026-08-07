@@ -320,11 +320,11 @@
       "name": "field-group",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "2.0.0",
+      "version": "2.1.0",
       "files": [
         {
           "path": "field-group.css",
-          "sha256": "3c81b732ec58e2f9293c3a9e611d6c6b4bdc0df93f4e9ee93148858b0d7162c8"
+          "sha256": "fa2e3e09a7b5029b2407c56448c5a7714a4f468b0a93155a72ce631b065701a9"
         },
         {
           "path": "field-group.html",
@@ -332,10 +332,10 @@
         },
         {
           "path": "field-group.manifest.json",
-          "sha256": "816d0f9dbb87b93a756c5b13c9be21d6e19eea4b01e99933422bc2d6a5df670d"
+          "sha256": "d982dbf05b229192b51dea6af706f1467850a9471c3146049450ffa50c4ae0fe"
         }
       ],
-      "hash": "ade8788cdc4f109f8e13a6a4a2a1feab7c489b3172a08b748138dd4ca770007c",
+      "hash": "09073558fffd3e8fe04ae9d6d819a9cf4ac0a127dd7c003c0c6bc55f1e3e09e8",
       "deps": [
         "input",
         "select",
@@ -419,7 +419,7 @@
       "name": "input",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "files": [
         {
           "path": "input.css",
@@ -427,14 +427,14 @@
         },
         {
           "path": "input.html",
-          "sha256": "8125a3462c0febeb19a88173600563bda4d724d9ee564a95088937f1a7fe771e"
+          "sha256": "db101c68759ebd4e5b24f43430e2e0cb5f0d36926c41813a9733ebe5bee86c81"
         },
         {
           "path": "input.manifest.json",
-          "sha256": "e67dd23ac6d75d3f7927f2f85bfa6c793f48441e064a89c869d203ccee7315a3"
+          "sha256": "31a7b2f35baca2a93fd16eab5af93426d4e0fe734d308fc5e7566a78501fba92"
         }
       ],
-      "hash": "30ad5927b762ac04878a09e80abe036a7dfbf4f12f27c9dc412ee5af7c925eb9",
+      "hash": "17ae695eea2390046b1574ff8bb62b42f6f3198dcbc408be5067ca23848f5ee2",
       "deps": []
     },
     {
@@ -485,11 +485,11 @@
       "name": "label",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "files": [
         {
           "path": "label.css",
-          "sha256": "02de49f2cc9f7a227efd26aaa93c02e5d71e978b3f62fa999f9c1c80b5f2fd29"
+          "sha256": "16edbfcbe24d9b6d4d8da1cae56d441276c993a96cd2594fe2cdd4c7f4c19730"
         },
         {
           "path": "label.html",
@@ -497,10 +497,10 @@
         },
         {
           "path": "label.manifest.json",
-          "sha256": "c02514dd6cdc31d64679e2c41780f381a7fda19191363a54a1e4450d555a46c3"
+          "sha256": "d9c865a26996f7f499e725c2635073938396f60e874c7b643cd5f22c63ff3501"
         }
       ],
-      "hash": "886e8847beb68b6c35f48bdce88e1651a9b17cf210088762fa8c64e8424421c2",
+      "hash": "cbb0d3084c0440ceec768fcdb9123911fa1d568bc7468adf87d20b5e2c4f25c4",
       "deps": []
     },
     {
@@ -617,7 +617,7 @@
       "name": "select",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "files": [
         {
           "path": "select.css",
@@ -625,14 +625,14 @@
         },
         {
           "path": "select.html",
-          "sha256": "208d342ab6fbc3bc6e86073ca003e7d224c6f015948ecf3ec534b01323f8224b"
+          "sha256": "ad75629ef0f6e54df2f4e10d682b9f1b2d243d477e6237f6e8eadde6aa4657c7"
         },
         {
           "path": "select.manifest.json",
-          "sha256": "2083acad688c3dd4c1e51fb6e24942be836f0282027988cdfc8fb4d2fc89d339"
+          "sha256": "41ed03543808f1080431115b0f7cf0efad1e748018b7e0707aeb259c8d27c9e5"
         }
       ],
-      "hash": "4c348efadb1454ad6aea124ba04a278d7a4fc3cefd3ecdcdc15f5a76f23b3f7e",
+      "hash": "3ccf8b9b4f1de9c3763829c38ad4285c44fdf7195653e1731245442ff0cb0262",
       "deps": []
     },
     {
@@ -883,7 +883,7 @@
       "name": "textarea",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "files": [
         {
           "path": "textarea.css",
@@ -891,14 +891,14 @@
         },
         {
           "path": "textarea.html",
-          "sha256": "c91ee5b58c38e5afa7747a4357194ed62c75411d8c62e4bff1f64e49d2a4220c"
+          "sha256": "f58a45640e05615fd8c496d426baf060bc2821395a6a1a8345a7330751d52884"
         },
         {
           "path": "textarea.manifest.json",
-          "sha256": "2498ec4304236e0166d595ed50627bfa3b5cf31d2a006592aa1e26420c321711"
+          "sha256": "4836d4602cf8a398962a2a579afbdb03a183b2d84de413218caefdf096beba9c"
         }
       ],
-      "hash": "0204ef53a6a7715cdfa0daddd3f20b5a1a39a6c569d37e5ac8523a1c38665104",
+      "hash": "650a227b16a765b6ce76dd7b497ae89a69b73a625aab2c2c6f4944f6fe331765",
       "deps": []
     },
     {

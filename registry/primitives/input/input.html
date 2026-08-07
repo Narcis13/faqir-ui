@@ -7,8 +7,13 @@
 <input data-ui="input" type="text" placeholder="Enter text...">
 
 <!-- With label (recommended pattern) -->
-<label data-ui="label" for="email-input">Email</label>
-<input data-ui="input" type="email" id="email-input" placeholder="you@example.com">
+<div data-ui="field-group">
+  <label data-part="label" for="email-input">Email</label>
+  <div data-part="input">
+    <input data-ui="input" type="email" id="email-input" placeholder="you@example.com" aria-describedby="email-input-hint">
+  </div>
+  <p data-part="description" id="email-input-hint">Use the address where you receive account updates.</p>
+</div>
 
 <!-- Error state -->
 <input data-ui="input" type="text" data-state="error" aria-invalid="true" value="bad input" aria-label="Username">

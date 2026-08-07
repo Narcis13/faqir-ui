@@ -1,12 +1,17 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "input",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "kind": "primitive",
   "category": "forms",
-  "description": "Text input with error, disabled states and size variants",
+  "description": "Text input with error, disabled states and size variants; compose labeled or described inputs inside field-group so inner proximity and outer form rhythm have distinct owners",
 
   "changes": [
+    {
+      "version": "1.2.0",
+      "note": "The labeled reference now composes field-group, which keeps label/control/help text on the tight density-aware inner step while the surrounding default rhythm spaces adjacent fields.",
+      "breaking": false
+    },
     {
       "version": "1.1.0",
       "note": "data-width='fixed' is now declared (it was in the CSS but in no manifest) and its responsive rule is mobile-first on the breakpoint canon: the 250px cap applies from sm (40rem) up instead of being undone below 640px. Same two widths at the same threshold; the boundary itself moves to the wide side, so at exactly 640px the input is now capped rather than full-bleed.",
@@ -102,7 +107,7 @@
 
   "composition": {
     "contains": [],
-    "used_in": ["auth-form", "search-results", "crud-table", "settings-page"]
+    "used_in": ["field-group", "auth-form", "search-results", "crud-table", "settings-page"]
   },
 
   "files": {

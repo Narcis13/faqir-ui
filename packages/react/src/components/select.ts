@@ -16,7 +16,7 @@ export interface LSelectProps extends Omit<ComponentPropsWithoutRef<"select">, "
   disabled?: boolean;
 }
 
-/** `select` — Native select dropdown with custom arrow, error and disabled states, and size variants */
+/** `select` — Native select dropdown with custom arrow, error and disabled states, and size variants; compose labeled or described selects inside field-group for correct form proximity */
 export const LSelect = createFaqirPrimitive<LSelectProps>({
   name: "select",
   tag: "select",

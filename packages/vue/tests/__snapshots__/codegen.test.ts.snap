@@ -600,7 +600,7 @@ export interface LFieldGroupProps {
   disabled?: boolean;
 }
 
-/** \`field-group\` — Form field wrapper combining label, input slot, description, and error message, with a normalized validation contract (§7.1): states invalid | validating | disabled, a standardized required marker, and CSS-driven error visibility (no JS class toggling) */
+/** \`field-group\` — Form field wrapper combining label, control, and help/error text with a tight density-aware inner step; the surrounding default rhythm owns the looser step between fields. Includes the normalized §7.1 validation contract (invalid | validating | disabled). */
 export const LFieldGroup = defineFaqirPrimitive<LFieldGroupProps>({
   name: "field-group",
   tag: "div",
@@ -779,7 +779,7 @@ export interface LInputProps {
   disabled?: boolean;
 }
 
-/** \`input\` — Text input with error, disabled states and size variants */
+/** \`input\` — Text input with error, disabled states and size variants; compose labeled or described inputs inside field-group so inner proximity and outer form rhythm have distinct owners */
 export const LInput = defineFaqirPrimitive<LInputProps>({
   name: "input",
   tag: "input",
@@ -881,7 +881,7 @@ export interface LLabelProps {
   disabled?: boolean;
 }
 
-/** \`label\` — Form label with optional required/optional indicator */
+/** \`label\` — Form label with optional required/optional indicator; spacing to a control belongs to the containing field-group rather than the label itself */
 export const LLabel = defineFaqirPrimitive<LLabelProps>({
   name: "label",
   tag: "label",
@@ -1090,7 +1090,7 @@ export interface LSelectProps {
   disabled?: boolean;
 }
 
-/** \`select\` — Native select dropdown with custom arrow, error and disabled states, and size variants */
+/** \`select\` — Native select dropdown with custom arrow, error and disabled states, and size variants; compose labeled or described selects inside field-group for correct form proximity */
 export const LSelect = defineFaqirPrimitive<LSelectProps>({
   name: "select",
   tag: "select",
@@ -1641,7 +1641,7 @@ export interface LTextareaProps {
   disabled?: boolean;
 }
 
-/** \`textarea\` — Multi-line text input with error, disabled states and size variants */
+/** \`textarea\` — Multi-line text input with error, disabled states and size variants; compose labeled or described textareas inside field-group for correct form proximity */
 export const LTextarea = defineFaqirPrimitive<LTextareaProps>({
   name: "textarea",
   tag: "textarea",

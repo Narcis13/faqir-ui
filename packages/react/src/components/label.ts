@@ -21,7 +21,7 @@ export interface LLabelProps extends Omit<ComponentPropsWithoutRef<"label">, "va
   indicator?: ReactNode;
 }
 
-/** `label` — Form label with optional required/optional indicator */
+/** `label` — Form label with optional required/optional indicator; spacing to a control belongs to the containing field-group rather than the label itself */
 export const LLabel = createFaqirPrimitive<LLabelProps>({
   name: "label",
   tag: "label",

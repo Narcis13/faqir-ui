@@ -1,12 +1,17 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "field-group",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "kind": "primitive",
   "category": "forms",
-  "description": "Form field wrapper combining label, input slot, description, and error message, with a normalized validation contract (§7.1): states invalid | validating | disabled, a standardized required marker, and CSS-driven error visibility (no JS class toggling)",
+  "description": "Form field wrapper combining label, control, and help/error text with a tight density-aware inner step; the surrounding default rhythm owns the looser step between fields. Includes the normalized §7.1 validation contract (invalid | validating | disabled).",
 
   "changes": [
+    {
+      "version": "2.1.0",
+      "note": "Field spacing now uses density-aware --space-* rungs for every size. field-group owns only the tight label → control → description/error step; the surrounding flow root owns the looser sibling-field step through --flow-space/--section-gap-sm. The horizontal label-beside-control layout remains an explicit data-variant value rather than incidental markup.",
+      "breaking": false
+    },
     {
       "version": "2.0.0",
       "note": "BREAKING: validation state vocabulary normalized to invalid | validating | disabled — the shipped data-state=\"error\" is renamed to data-state=\"invalid\" to align with the framework's naming; new validating and disabled states added. The required marker is standardized as a [data-part=\"required\"] element inside the label (the legacy [data-required] attribute still renders a marker for backward compatibility). Migration: replace data-state=\"error\" with data-state=\"invalid\" on every field-group (faqir upgrade three-way merges the CSS; page markup using the old state must be updated by hand — the field-wiring audit rule accepts both names during the transition).",
@@ -43,13 +48,13 @@
       "selector": "[data-part='description']",
       "required": false,
       "tag_hint": "p",
-      "description": "Helper text below the input"
+      "description": "Helper text below the control, separated by the same tight intra-field step as label → control"
     },
     "error": {
       "selector": "[data-part='error']",
       "required": false,
       "tag_hint": "p",
-      "description": "Error message shown in error state"
+      "description": "Error message shown in invalid state, occupying the help-text position in the intra-field rhythm"
     }
   },
 

@@ -171,7 +171,7 @@ done in any order (or in parallel worktrees).
 | 0.9-04 | Reference-fragment recomposition sweep (86 fragments) | ✅ |
 | 0.9-05 | `dialog` trigger contract + overlay preview state | ✅ |
 | 0.9-06 | `toast` container contract + `single-fixed-region` audit rule | ✅ |
-| 0.9-07 | Form proximity: intra- vs inter-group spacing | ⬜ |
+| 0.9-07 | Form proximity: intra- vs inter-group spacing | ✅ |
 | 0.9-08 | Inline control rows: `checkbox`/`radio`/`switch` groups | ⬜ |
 | 0.9-09 | Cross-card row alignment (subgrid) | ⬜ |
 | 0.9-10 | Surface elevation ramp + the `-subtle` contrast debt | ⬜ |
@@ -2845,9 +2845,9 @@ full-width, with no attribute distinguishing them.
 - Bindings/skill/manifest regeneration clean; the inline-layout variant is declared rather than incidental.
 
 **Acceptance criteria**
-- [ ] Label, control and help text are measurably closer to each other than to the adjacent field, asserted as a property across the whole reference.
-- [ ] Ownership of the outer step is decided between `field-group` and the default rhythm and written down.
-- [ ] The inline label-beside-control layout is a declared variant or removed; no undeclared attribute remains (0.8-10's rule stays green).
+- [x] Label, control and help text are measurably closer to each other than to the adjacent field, asserted as a property across the whole reference. (**Proven over all ten `field-group.html` shapes in Chromium, not by named cases:** `tests/visual/form-proximity.pw.ts` walks each visible label → control → description/error edge and asserts every distance is strictly below the distance from that field's last part to the next label. The default geometry resolves to 4/8/16px inner steps by size/layout against a 48px outer step; compact resolves to 3/6/12px against 36px, and the inequality remains true. The labeled `input`, `select`, and `textarea` references now compose complete field groups with wired help/error text instead of leaving label and control as consecutive rhythm participants.)
+- [x] Ownership of the outer step is decided between `field-group` and the default rhythm and written down. (**The default rhythm owns it.** FAQIR-SPEC §20's new “Form spacing ownership” subsection and the source comment in `field-group.css` state the split: field-group owns only density-aware `--space-*` inner gaps and declares no outer margin; the surrounding `form`/`fieldset`/`figure` supplies `--flow-space`, defaulting to `--section-gap-sm`. The browser fixture flips `data-gap="0"`: every inner distance stays byte-for-byte equal while the measured outer distance changes from 48px to 0, proving the systems do not fight.)
+- [x] The inline label-beside-control layout is a declared variant or removed; no undeclared attribute remains (0.8-10's rule stays green). (**Declared and measured.** The Address group carries `data-variant="horizontal"`; `field-group.manifest.json` declares `layout: vertical | horizontal` on `data-variant`; the browser test proves the resolved flex direction is `row` and the control sits after the label. The full reference-contract sweep and registry `undeclared-attribute` gate both report zero findings.)
 
 ---
 

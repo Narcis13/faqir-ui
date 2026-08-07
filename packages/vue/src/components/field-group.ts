@@ -24,7 +24,7 @@ export interface LFieldGroupProps {
   disabled?: boolean;
 }
 
-/** `field-group` — Form field wrapper combining label, input slot, description, and error message, with a normalized validation contract (§7.1): states invalid | validating | disabled, a standardized required marker, and CSS-driven error visibility (no JS class toggling) */
+/** `field-group` — Form field wrapper combining label, control, and help/error text with a tight density-aware inner step; the surrounding default rhythm owns the looser step between fields. Includes the normalized §7.1 validation contract (invalid | validating | disabled). */
 export const LFieldGroup = defineFaqirPrimitive<LFieldGroupProps>({
   name: "field-group",
   tag: "div",

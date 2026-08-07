@@ -70,6 +70,12 @@ const INTENDED_ROOT_CHANGES: Record<string, string> = {
   "primitives/cluster/cluster.html": "5 bare cells → surface",
   "primitives/switcher/switcher.html": "5 body-only cards → surface (2 richer cards kept)",
   "primitives/container/container.html": "each measure column's content bounded by a surface",
+  // Form proximity (0.9-07): a label/control/help sequence is one field, not a
+  // run of sibling components for the default rhythm to split. The full field
+  // wrapper is now visible in each control primitive's own canonical reference.
+  "primitives/input/input.html": "labeled input → one field-group",
+  "primitives/select/select.html": "three labeled selects → field-group",
+  "primitives/textarea/textarea.html": "four labeled textareas → field-group",
   // The trigger contract (0.9-05): four recipes styled their trigger part with
   // nothing at all, so every one of those 16 buttons rendered as the reset's
   // bare element. They now delegate to the `button` primitive, which is the

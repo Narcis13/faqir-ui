@@ -16,7 +16,7 @@ export interface LTextareaProps extends Omit<ComponentPropsWithoutRef<"textarea"
   disabled?: boolean;
 }
 
-/** `textarea` — Multi-line text input with error, disabled states and size variants */
+/** `textarea` — Multi-line text input with error, disabled states and size variants; compose labeled or described textareas inside field-group for correct form proximity */
 export const LTextarea = createFaqirPrimitive<LTextareaProps>({
   name: "textarea",
   tag: "textarea",

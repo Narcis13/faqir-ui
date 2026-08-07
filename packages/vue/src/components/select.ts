@@ -15,7 +15,7 @@ export interface LSelectProps {
   disabled?: boolean;
 }
 
-/** `select` — Native select dropdown with custom arrow, error and disabled states, and size variants */
+/** `select` — Native select dropdown with custom arrow, error and disabled states, and size variants; compose labeled or described selects inside field-group for correct form proximity */
 export const LSelect = defineFaqirPrimitive<LSelectProps>({
   name: "select",
   tag: "select",
