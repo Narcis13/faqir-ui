@@ -149,7 +149,7 @@ npm run lint:layout                             # the layout gate only
 > and every cell is baselined by `test:visual:update`. If most theme cells report a
 > missing snapshot, a previous local update was scoped with `--grep` and only wrote
 > the cells it ran. Regenerate the set once, unscoped, and the suite is green as a
-> whole (4 243 tests · ≈164 MB · ~7 min to generate, ~5 min to diff, on an 8-core
+> whole (4 264 tests · ≈164 MB · ~7 min to generate, ~5 min to diff, on an 8-core
 > laptop). This is what 0.8-14 turned out to be, alongside six genuinely stale
 > captures; nothing is excluded from the matrix on purpose.
 

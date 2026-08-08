@@ -3,6 +3,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { buildDocumentScaffoldPage } from "../scaffolds/document-pages";
 import { buildLandingScaffoldPage } from "../scaffolds/landing-page";
 import { WCAG_TAGS } from "./axe-config";
+import { A11Y_THEMES } from "./a11y-matrix";
 
 async function scan(page: import("@playwright/test").Page, html: string) {
   await page.route(/^https?:\/\//, (route) => route.abort());
@@ -24,8 +25,8 @@ for (const name of ["invoice", "report"] as const) {
 
 // The landing patterns are scanned individually by the a11y matrix; this covers
 // the assembled page a user gets — where the sections share one document, one
-// heading outline, and four navigation landmarks. Both themes the gate sweeps.
-for (const theme of ["default", "contrast"] as const) {
+// heading outline, and four navigation landmarks. Every theme the gate sweeps.
+for (const theme of A11Y_THEMES) {
   test(`scaffold__landing-page__${theme} has zero axe violations`, async ({ page }) => {
     expect(await scan(page, buildLandingScaffoldPage(theme))).toEqual([]);
   });

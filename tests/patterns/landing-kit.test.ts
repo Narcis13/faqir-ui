@@ -210,7 +210,7 @@ describe("landing kit — swept by the visual and a11y matrices", () => {
       expect([...schemes].sort()).toEqual([...SCHEMES].sort());
     });
 
-    it(`${pattern} is scanned by axe in both schemes on the default and contrast themes`, () => {
+    it(`${pattern} is scanned by axe in both schemes across every theme`, () => {
       const cases = buildA11yMatrix().filter((c) => c.component.name === pattern);
       expect(cases.length).toBe(A11Y_THEMES.length * SCHEMES.length);
       expect([...new Set(cases.map((c) => c.theme))].sort()).toEqual([...A11Y_THEMES].sort());

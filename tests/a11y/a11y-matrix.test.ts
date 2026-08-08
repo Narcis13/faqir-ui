@@ -79,9 +79,10 @@ describe("a11y matrix generation", () => {
     }
   });
 
-  test("both required themes (default + contrast) exist in the registry", () => {
+  test("the sweep is every discovered theme, including required default + contrast", () => {
     const themes = new Set(discoverThemes());
     for (const t of A11Y_THEMES) expect(themes.has(t)).toBe(true);
+    expect([...A11Y_THEMES]).toEqual([...themes]);
     // §12.3 minimum: a neutral baseline theme and the high-contrast theme.
     expect(A11Y_THEMES).toContain("default");
     expect(A11Y_THEMES).toContain("contrast");

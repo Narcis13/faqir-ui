@@ -6,6 +6,10 @@
   --color-bg:               white;
   --color-bg-subtle:        oklch(0.97 0.006 75);
   --color-bg-muted:         oklch(0.93 0.010 75);
+  --color-surface-1:        var(--color-bg-subtle);
+  --color-surface-2:        var(--color-bg-muted);
+  --color-surface-1-border: var(--color-border);
+  --color-surface-2-border: var(--color-border-strong);
   --color-fg:               oklch(0.15 0.012 55);
   --color-fg-muted:         oklch(0.37 0.018 55);
   --color-fg-subtle:        oklch(0.52 0.018 55);

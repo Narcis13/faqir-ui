@@ -1,11 +1,16 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "text",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "kind": "primitive",
   "category": "typography",
   "description": "Text and heading primitives with size, color, weight, alignment, and truncation via data attributes",
   "changes": [
+    {
+      "version": "1.1.1",
+      "note": "Keep visible subtle and completed text on the AA-gated muted foreground; color-fg-subtle remains reserved for decorative, placeholder, and disabled content.",
+      "breaking": false
+    },
     {
       "version": "1.1.0",
       "note": "data-truncate, data-tabular and data-state=\"done\" are now declared — all three were in text.css and in no manifest. The two authored, valueless switches are boolean props; \"done\" is a state because it rides the protocol's data-state attribute, which is the runtime's vocabulary. No CSS or behaviour change. 0.8-10's undeclared-attribute rule now makes this class of drift impossible: an attribute a component's CSS selects on that its manifest never declares fails the registry gate.",
@@ -85,7 +90,7 @@
     "done": {
       "attr": "data-state=\"done\"",
       "applied_to": "root",
-      "description": "Completed item — strikes the text through and drops it to the subtle foreground (checklists, todo rows)"
+      "description": "Completed item — strikes the text through and drops it to the AA-gated muted foreground (checklists, todo rows)"
     }
   },
   "props": {
@@ -108,7 +113,6 @@
   "tokens_used": [
     "color-fg",
     "color-fg-muted",
-    "color-fg-subtle",
     "color-primary",
     "font-sans",
     "font-mono",

@@ -12,15 +12,14 @@
  *
  * The a11y axes are narrower than the visual matrix on purpose:
  *
- *   every component  ×  { default, contrast } themes  ×  { light, dark }
+ *   every component  ×  every registry theme  ×  { light, dark }
  *
- * §12.3 requires "at least default + contrast themes, light+dark". axe rules are
- * DOM/role/contrast checks: colour-contrast is scheme- and theme-sensitive (hence
- * both schemes and both a neutral + a high-contrast theme), but nothing axe
+ * §12.3 requires "at least default + contrast themes, light+dark". The gate now
+ * covers the full discovered theme axis: colour-contrast is scheme- and
+ * theme-sensitive, but nothing axe
  * evaluates depends on text direction, so the RTL axis the visual suite sweeps
- * would only double the runtime without covering a new failure mode. Widen
- * `A11Y_THEMES` to sweep more themes at any time — it stays a subset of the
- * registry's themes, guarded by the meta-test.
+ * would only double the runtime without covering a new failure mode.
+ * `A11Y_THEMES` is the complete discovered theme set, guarded by the meta-test.
  *
  * Task 0.8-11 adds a second, narrower matrix below — `buildMobileA11yMatrix` —
  * which re-scans only the layout-bearing set at 390px, where mobile layouts have
@@ -38,12 +37,11 @@ import {
 import { discoverLayoutBearing } from "../visual/responsive-matrix";
 
 /**
- * Themes the a11y gate sweeps. `default` is the neutral baseline; `contrast` is
- * the WCAG-AAA high-contrast theme (`registry/themes/contrast.theme.json`,
- * mood: wcag-aaa). Both must exist in the registry — enforced by `buildA11yMatrix`
- * and the meta-test.
+ * Themes the a11y gate sweeps. Discovery is the contract: every registry theme
+ * enters automatically, including a thirteenth theme on arrival. The meta-test
+ * also pins `default` and `contrast` as the required neutral/AAA anchors.
  */
-export const A11Y_THEMES = ["default", "contrast"] as const;
+export const A11Y_THEMES: readonly string[] = Object.freeze(discoverThemes());
 export type A11yTheme = (typeof A11Y_THEMES)[number];
 
 // The a11y suite captures each page in one direction — axe evaluates roles,

@@ -1,13 +1,13 @@
 /* @ui:component card */
-/* @ui:tokens color-bg color-bg-subtle color-bg-muted color-fg color-fg-muted color-border radius-lg shadow-sm space-4 space-6 font-sans text-sm text-lg text-xl weight-semibold leading-tight */
+/* @ui:tokens color-surface-1 color-surface-2 color-surface-1-border color-surface-2-border color-fg color-fg-muted radius-lg shadow-sm space-4 space-6 font-sans text-sm text-lg text-xl weight-semibold leading-tight */
 
 /* ── Base ── */
 [data-ui="card"] {
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--card-border, var(--color-border));
+  border: 1px solid var(--card-border, var(--color-surface-1-border));
   border-radius: var(--card-radius, var(--radius-lg));
-  background: var(--card-bg, var(--color-bg));
+  background: var(--card-bg, var(--color-surface-1));
   box-shadow: var(--card-shadow, var(--shadow-sm));
   overflow: hidden;
 }
@@ -18,8 +18,8 @@
 }
 
 [data-ui="card"][data-variant="filled"] {
-  background: var(--color-bg-subtle);
-  border-color: transparent;
+  background: var(--color-surface-2);
+  border-color: var(--color-surface-2-border);
   box-shadow: none;
 }
 

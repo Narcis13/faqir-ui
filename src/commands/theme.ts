@@ -296,8 +296,12 @@ async function themeCreate(name: string): Promise<void> {
 :root {
   /* ── Surfaces ── */
   /* --color-bg:              var(--palette-gray-25); */
-  /* --color-bg-subtle:       var(--palette-gray-50); */
-  /* --color-bg-muted:        var(--palette-gray-100); */
+  /* --color-bg-subtle:       var(--palette-gray-100); */
+  /* --color-bg-muted:        var(--palette-gray-200); */
+  /* --color-surface-1:        var(--color-bg-subtle); */
+  /* --color-surface-2:        var(--color-bg-muted); */
+  /* --color-surface-1-border: var(--color-border); */
+  /* --color-surface-2-border: var(--color-border-strong); */
   /* --color-fg:              var(--palette-gray-950); */
   /* --color-fg-muted:        var(--palette-gray-500); */
   /* --color-fg-subtle:       var(--palette-gray-400); */
@@ -360,6 +364,10 @@ async function themeCreate(name: string): Promise<void> {
   /* --color-bg:              var(--palette-gray-950); */
   /* --color-bg-subtle:       var(--palette-gray-900); */
   /* --color-bg-muted:        var(--palette-gray-800); */
+  /* --color-surface-1:        var(--color-bg-subtle); */
+  /* --color-surface-2:        var(--color-bg-muted); */
+  /* --color-surface-1-border: var(--color-border); */
+  /* --color-surface-2-border: var(--color-border-strong); */
   /* --color-fg:              var(--palette-gray-50); */
   /* --color-fg-muted:        var(--palette-gray-400); */
   /* --color-fg-subtle:       var(--palette-gray-500); */

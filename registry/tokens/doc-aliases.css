@@ -50,7 +50,7 @@
   /* ── Page Break ── */
   --page-break-screen-color: var(--color-border);      /* dashed line on screen */
   --page-break-screen-style: dashed;
-  --page-break-screen-label-color: var(--color-fg-subtle);
+  --page-break-screen-label-color: var(--color-fg-muted);
   --page-break-screen-label-size: var(--text-xs);
 
   /* ── Stat / Metric ── */

@@ -119,19 +119,27 @@ describe("theme coverage", () => {
         );
       }
     }
-  });
 
-  it("shows the semantic palette as swatches, never as text on a tinted surface", () => {
-    // The frame is the first thing in the project that renders components in every
-    // theme, and its axe gate found `badge`'s soft variants (--color-<sem> text on
-    // --color-<sem>-subtle) below AA in 10 of 12 themes — a theme defect, filed as
-    // task 0.7-19. Until those pairs clear AA the frame must not make that claim,
-    // so it shows the tokens as swatches and components in their solid colours.
+    const badge = components.find((x) => x.name === "badge" && x.layer === "primitives")!;
+    const badgeValues = Object.values(badge.manifest.variants ?? {}).find(
+      (v) => v.attr === "data-variant",
+    )!.values;
     for (const theme of themes) {
       const frame = page(themePreviewPath(theme.name));
-      expect(frame, `${theme.name} renders text on a -subtle surface`).not.toMatch(
-        /data-ui="badge" data-variant="(?:warning|success|destructive)"/,
-      );
+      for (const value of badgeValues) {
+        expect(frame, `${theme.name} is missing badge/${value}`).toContain(
+          `<span data-ui="badge" data-variant="${value}">`,
+        );
+      }
+    }
+  });
+
+  it("shows the restored semantic badge row and the complete semantic palette", () => {
+    for (const theme of themes) {
+      const frame = page(themePreviewPath(theme.name));
+      for (const variant of ["warning", "success", "destructive", "primary"]) {
+        expect(frame).toContain(`data-ui="badge" data-variant="${variant}"`);
+      }
       // …and it does still show every semantic colour the theme owns. Named by
       // the attribute the swatch carries, not by an inline `background:` — task
       // 0.9-03 moved that declaration into a generated rule so no page of this

@@ -1,5 +1,5 @@
 /* @ui:component text */
-/* @ui:tokens color-fg color-fg-muted color-fg-subtle color-primary text-xs text-sm text-base text-lg text-xl text-2xl text-3xl text-4xl weight-normal weight-medium weight-semibold weight-bold leading-tight leading-snug leading-normal leading-relaxed font-sans font-mono */
+/* @ui:tokens color-fg color-fg-muted color-primary text-xs text-sm text-base text-lg text-xl text-2xl text-3xl text-4xl weight-normal weight-medium weight-semibold weight-bold leading-tight leading-snug leading-normal leading-relaxed font-sans font-mono */
 
 /* ── Heading ── */
 [data-ui="heading"] {
@@ -54,7 +54,7 @@
 
 /* Text color variants */
 [data-ui="text"][data-variant="muted"] { color: var(--color-fg-muted); }
-[data-ui="text"][data-variant="subtle"] { color: var(--color-fg-subtle); }
+[data-ui="text"][data-variant="subtle"] { color: var(--color-fg-muted); }
 [data-ui="text"][data-variant="primary"] { color: var(--color-primary); }
 
 /* Text weight */
@@ -103,7 +103,7 @@
 /* Done state */
 [data-ui="text"][data-state="done"] {
   text-decoration: line-through;
-  color: var(--color-fg-subtle);
+  color: var(--color-fg-muted);
 }
 
 /* Tabular — inline-block with min-width for aligned label/value lists */

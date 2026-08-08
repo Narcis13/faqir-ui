@@ -5,8 +5,12 @@
 :root {
   /* ── Surfaces ── */
   --color-bg:              oklch(0.98 0.004 300);    /* violet-tinted white */
-  --color-bg-subtle:       oklch(0.955 0.007 300);   /* subtle violet-gray */
-  --color-bg-muted:        oklch(0.93 0.01 300);     /* muted violet surface */
+  --color-bg-subtle:       oklch(0.945 0.007 300);   /* elevation step 1 */
+  --color-bg-muted:        oklch(0.91 0.01 300);     /* elevation step 2 */
+  --color-surface-1:        var(--color-bg-subtle);
+  --color-surface-2:        var(--color-bg-muted);
+  --color-surface-1-border: var(--color-border);
+  --color-surface-2-border: var(--color-border-strong);
   --color-fg:              oklch(0.17 0.02 300);     /* deep violet-black */
   --color-fg-muted:        oklch(0.45 0.02 300);     /* muted violet-gray */
   --color-fg-subtle:       oklch(0.57 0.018 300);    /* subtle violet-gray */
@@ -24,17 +28,17 @@
   --color-secondary-fg:    oklch(0.20 0.02 300);
 
   /* ── Interactive: Destructive ── */
-  --color-destructive:        oklch(0.55 0.22 20);
+  --color-destructive:        oklch(0.53 0.22 20);
   --color-destructive-hover:  oklch(0.50 0.23 20);
   --color-destructive-fg:     white;
   --color-destructive-subtle: oklch(0.94 0.04 20);
 
   /* ── Feedback ── */
-  --color-success:         oklch(0.58 0.17 155);
+  --color-success:         oklch(0.48 0.17 155);
   --color-success-subtle:  oklch(0.94 0.05 155);
-  --color-warning:         oklch(0.72 0.15 80);
+  --color-warning:         oklch(0.51 0.15 80);
   --color-warning-subtle:  oklch(0.94 0.05 80);
-  --color-info:            oklch(0.55 0.19 260);
+  --color-info:            oklch(0.52 0.19 260);
   --color-info-subtle:     oklch(0.94 0.04 260);
 
   /* ── Borders ── */
@@ -60,6 +64,10 @@
   --color-bg:              oklch(0.13 0.008 290);    /* near-black neutral */
   --color-bg-subtle:       oklch(0.17 0.01 290);     /* dark charcoal */
   --color-bg-muted:        oklch(0.22 0.012 290);    /* muted charcoal */
+  --color-surface-1:        var(--color-bg-subtle);
+  --color-surface-2:        var(--color-bg-muted);
+  --color-surface-1-border: var(--color-border);
+  --color-surface-2-border: var(--color-border-strong);
   --color-fg:              oklch(0.96 0.005 290);    /* near-white */
   --color-fg-muted:        oklch(0.66 0.02 290);     /* muted gray */
   --color-fg-subtle:       oklch(0.51 0.02 290);     /* subtle gray */
@@ -69,7 +77,7 @@
   --color-primary-hover:   oklch(0.78 0.15 307);     /* lighter violet */
   --color-primary-active:  oklch(0.84 0.12 307);     /* lightest violet */
   --color-primary-fg:      oklch(0.13 0.008 290);    /* charcoal for contrast */
-  --color-primary-subtle:  oklch(0.72 0.18 307 / 0.14);
+  --color-primary-subtle:  oklch(0.22 0.054 307);
 
   /* ── Interactive: Secondary ── */
   --color-secondary:       oklch(0.25 0.02 290);
@@ -77,18 +85,18 @@
   --color-secondary-fg:    oklch(0.92 0.008 290);
 
   /* ── Interactive: Destructive ── */
-  --color-destructive:        oklch(0.58 0.21 20);
+  --color-destructive:        oklch(0.66 0.21 20);
   --color-destructive-hover:  oklch(0.63 0.20 20);
-  --color-destructive-fg:     white;
-  --color-destructive-subtle: oklch(0.58 0.21 20 / 0.16);
+  --color-destructive-fg:     oklch(0.13 0.008 290);
+  --color-destructive-subtle: oklch(0.22 0.063 20);
 
   /* ── Feedback ── */
   --color-success:         oklch(0.75 0.17 160);
-  --color-success-subtle:  oklch(0.75 0.17 160 / 0.15);
+  --color-success-subtle:  oklch(0.22 0.051 160);
   --color-warning:         oklch(0.82 0.15 85);
-  --color-warning-subtle:  oklch(0.82 0.15 85 / 0.15);
+  --color-warning-subtle:  oklch(0.22 0.045 85);
   --color-info:            oklch(0.72 0.15 250);
-  --color-info-subtle:     oklch(0.72 0.15 250 / 0.15);
+  --color-info-subtle:     oklch(0.22 0.045 250);
 
   /* ── Borders ── */
   --color-border:          oklch(0.27 0.015 290);
@@ -113,6 +121,10 @@
     --color-bg:              oklch(0.13 0.008 290);
     --color-bg-subtle:       oklch(0.17 0.01 290);
     --color-bg-muted:        oklch(0.22 0.012 290);
+    --color-surface-1:        var(--color-bg-subtle);
+    --color-surface-2:        var(--color-bg-muted);
+    --color-surface-1-border: var(--color-border);
+    --color-surface-2-border: var(--color-border-strong);
     --color-fg:              oklch(0.96 0.005 290);
     --color-fg-muted:        oklch(0.66 0.02 290);
     --color-fg-subtle:       oklch(0.51 0.02 290);
@@ -122,7 +134,7 @@
     --color-primary-hover:   oklch(0.78 0.15 307);
     --color-primary-active:  oklch(0.84 0.12 307);
     --color-primary-fg:      oklch(0.13 0.008 290);
-    --color-primary-subtle:  oklch(0.72 0.18 307 / 0.14);
+    --color-primary-subtle:  oklch(0.22 0.054 307);
 
     /* ── Interactive: Secondary ── */
     --color-secondary:       oklch(0.25 0.02 290);
@@ -130,18 +142,18 @@
     --color-secondary-fg:    oklch(0.92 0.008 290);
 
     /* ── Interactive: Destructive ── */
-    --color-destructive:        oklch(0.58 0.21 20);
+    --color-destructive:        oklch(0.66 0.21 20);
     --color-destructive-hover:  oklch(0.63 0.20 20);
-    --color-destructive-fg:     white;
-    --color-destructive-subtle: oklch(0.58 0.21 20 / 0.16);
+    --color-destructive-fg:     oklch(0.13 0.008 290);
+    --color-destructive-subtle: oklch(0.22 0.063 20);
 
     /* ── Feedback ── */
     --color-success:         oklch(0.75 0.17 160);
-    --color-success-subtle:  oklch(0.75 0.17 160 / 0.15);
+    --color-success-subtle:  oklch(0.22 0.051 160);
     --color-warning:         oklch(0.82 0.15 85);
-    --color-warning-subtle:  oklch(0.82 0.15 85 / 0.15);
+    --color-warning-subtle:  oklch(0.22 0.045 85);
     --color-info:            oklch(0.72 0.15 250);
-    --color-info-subtle:     oklch(0.72 0.15 250 / 0.15);
+    --color-info-subtle:     oklch(0.22 0.045 250);
 
     /* ── Borders ── */
     --color-border:          oklch(0.27 0.015 290);

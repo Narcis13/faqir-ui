@@ -277,7 +277,7 @@ describe("inbox — swept by the visual and a11y matrices", () => {
     expect([...new Set(cases.map((c) => c.scheme))].sort()).toEqual([...SCHEMES].sort());
   });
 
-  it("is scanned by axe in both schemes on the default and contrast themes", () => {
+  it("is scanned by axe in both schemes across every theme", () => {
     const cases = buildA11yMatrix().filter((c) => c.component.name === "inbox");
     expect(cases.length).toBe(A11Y_THEMES.length * SCHEMES.length);
     expect([...new Set(cases.map((c) => c.theme))].sort()).toEqual([...A11Y_THEMES].sort());

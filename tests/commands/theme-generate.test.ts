@@ -242,7 +242,7 @@ describe("faqir theme generate · CLI", () => {
         manifest: "themes/cli-brand-document.theme.json",
       },
     ]);
-    expect(report.contrast.length).toBe(24);
+    expect(report.contrast.length).toBe(39);
     expect(report.contrast.every((pair: { passes: boolean }) => pair.passes)).toBe(true);
     for (const file of report.generated) {
       expect(existsSync(join(tempDir, file.css))).toBe(true);

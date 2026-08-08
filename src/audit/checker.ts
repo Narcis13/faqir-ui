@@ -7,7 +7,12 @@ import { extractTokenReferences, extractTokenDefinitions, collectDefinedTokens, 
 import { findExternalImports, findDataFetching } from "../parser/js-parser";
 import { loadManifest, type Manifest } from "../manifest";
 import { type AuditResult, type Severity, ALL_RULES, DOCUMENT_RULES, NO_FETCH_RULE, NO_EXTERNAL_IMPORT_RULE, LOGICAL_PROPERTIES_RULE } from "./rules";
-import { checkThemeContrast, CONTRAST_TOKENS_RULE } from "./contrast-tokens";
+import {
+  checkThemeContrast,
+  checkThemeElevation,
+  CONTRAST_TOKENS_RULE,
+  SURFACE_ELEVATION_RULE,
+} from "./contrast-tokens";
 import {
   BREAKPOINT_CANON_RULE,
   UNDECLARED_ATTRIBUTE_RULE,
@@ -150,8 +155,8 @@ export async function runAudit(options: AuditOptions = {}): Promise<AuditSummary
   }
 
   // Theme contrast check: the active theme's token pairs must clear WCAG AA.
-  if (!skipRules.has(CONTRAST_TOKENS_RULE.id)) {
-    const contrastResults = await checkContrastTokens(outputDir, config.theme, cwd);
+  if (!skipRules.has(CONTRAST_TOKENS_RULE.id) || !skipRules.has(SURFACE_ELEVATION_RULE.id)) {
+    const contrastResults = await checkContrastTokens(outputDir, config.theme, cwd, skipRules);
     results.push(...contrastResults);
   }
 
@@ -243,6 +248,7 @@ async function checkContrastTokens(
   outputDir: string,
   themeName: string,
   cwd: string,
+  skipRules: Set<string>,
 ): Promise<AuditResult[]> {
   const tokenDir = join(outputDir, "tokens");
   const themePath = join(tokenDir, "theme.css");
@@ -258,12 +264,16 @@ async function checkContrastTokens(
   if (baseParts.length === 0) return [];
 
   const themeCss = await Bun.file(themePath).text();
-  return checkThemeContrast({
+  const input = {
     themeName: themeName || "theme",
     themeCss,
     baseCss: baseParts.join("\n"),
     file: relative(cwd, themePath),
-  });
+  };
+  return [
+    ...(!skipRules.has(CONTRAST_TOKENS_RULE.id) ? checkThemeContrast(input) : []),
+    ...(!skipRules.has(SURFACE_ELEVATION_RULE.id) ? checkThemeElevation(input) : []),
+  ];
 }
 
 /**

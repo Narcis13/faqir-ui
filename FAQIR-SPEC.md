@@ -725,8 +725,8 @@ Raw color values. Never referenced directly by components.
   --palette-indigo-200: oklch(0.85 0.12 264);
   --palette-indigo-300: oklch(0.75 0.16 264);
   --palette-indigo-400: oklch(0.65 0.20 264);
-  --palette-indigo-500: oklch(0.55 0.22 264);
-  --palette-indigo-600: oklch(0.50 0.22 264);
+  --palette-indigo-500: oklch(0.53 0.22 264);
+  --palette-indigo-600: oklch(0.48 0.22 264);
   --palette-indigo-700: oklch(0.42 0.20 264);
   --palette-indigo-800: oklch(0.35 0.18 264);
   --palette-indigo-900: oklch(0.28 0.14 264);
@@ -770,8 +770,12 @@ Purpose-based tokens that reference palette values. Components reference THESE.
 :root {
   /* ── Surfaces ── */
   --color-bg:              var(--palette-gray-25);
-  --color-bg-subtle:       var(--palette-gray-50);
-  --color-bg-muted:        var(--palette-gray-100);
+  --color-bg-subtle:       var(--palette-gray-100);
+  --color-bg-muted:        var(--palette-gray-200);
+  --color-surface-1:        var(--color-bg-subtle);
+  --color-surface-2:        var(--color-bg-muted);
+  --color-surface-1-border: var(--color-border);
+  --color-surface-2-border: var(--color-border-strong);
   --color-fg:              var(--palette-gray-950);
   --color-fg-muted:        var(--palette-gray-500);
   --color-fg-subtle:       var(--palette-gray-400);
@@ -889,6 +893,13 @@ Purpose-based tokens that reference palette values. Components reference THESE.
 }
 ```
 
+`color-bg` → `color-surface-1` → `color-surface-2` is the canonical elevation
+ramp. Every adjacent fill and each surface against its matching border must keep
+an OKLab ΔE of at least 0.03 in both schemes. Theme discovery drives the gate, so
+new themes cannot omit the guarantee. Semantic `color-<sem>` text on
+`color-<sem>-subtle` fills is an opaque, WCAG-AA pair (≥ 4.5:1), not a decorative
+contrast exemption.
+
 #### Layer 3: Component Aliases (Optional)
 
 Components can optionally define their own aliases that map to semantic tokens. This allows per-component overrides without touching the global token system.
@@ -904,8 +915,8 @@ Components can optionally define their own aliases that map to semantic tokens. 
 
   --card-radius:       var(--radius-lg);
   --card-shadow:       var(--shadow-sm);
-  --card-border:       var(--color-border);
-  --card-bg:           var(--color-bg);
+  --card-border:       var(--color-surface-1-border);
+  --card-bg:           var(--color-surface-1);
 
   --dialog-radius:     var(--radius-xl);
   --dialog-shadow:     var(--shadow-xl);
@@ -922,13 +933,17 @@ Dark theme is activated by `data-theme="dark"` on the `<html>` element. Only sem
   --color-bg:              var(--palette-gray-950);
   --color-bg-subtle:       var(--palette-gray-900);
   --color-bg-muted:        var(--palette-gray-800);
+  --color-surface-1:        var(--color-bg-subtle);
+  --color-surface-2:        var(--color-bg-muted);
+  --color-surface-1-border: var(--color-border);
+  --color-surface-2-border: var(--color-border-strong);
   --color-fg:              var(--palette-gray-50);
   --color-fg-muted:        var(--palette-gray-400);
   --color-fg-subtle:       var(--palette-gray-500);
 
   --color-primary:         var(--palette-indigo-400);
   --color-primary-hover:   var(--palette-indigo-300);
-  --color-primary-subtle:  oklch(0.55 0.22 264 / 0.15);
+  --color-primary-subtle:  oklch(0.24 0.06 264);
 
   --color-secondary:       var(--palette-gray-800);
   --color-secondary-hover: var(--palette-gray-700);

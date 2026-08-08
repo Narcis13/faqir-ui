@@ -1,6 +1,7 @@
 import {
   buildSchemeLookups,
   checkThemeContrast,
+  checkThemeElevation,
   CONTRAST_AA,
   CONTRAST_PAIRS,
 } from "../audit/contrast-tokens";
@@ -152,6 +153,14 @@ function neutralColor(neutral: ThemeNeutral, lightness: number, chromaScale = 1)
   return oklch({ l: lightness, c: seed.c * chromaScale, h: seed.h });
 }
 
+function subtleColor(color: OklchColor, lightness: number): string {
+  return oklch({
+    l: lightness,
+    c: clamp(color.c * 0.3, 0.025, 0.07),
+    h: color.h,
+  });
+}
+
 /** Fixed interpolation curve anchored by the supplied brand color. */
 export function generateAccentRamp(seed: OklchColor): AccentStep[] {
   // Extreme source colors still need a useful full ramp. The anchor clamp only
@@ -180,6 +189,9 @@ function pickPrimary(
   for (const index of candidates) {
     const ratio = contrastOf(ramp[index].css, foreground);
     if (ratio < CONTRAST_AA) continue;
+    // In light mode the same semantic color is also text on the palest brand
+    // step (`color-primary-subtle`). Select a step that clears both contracts.
+    if (mode === "light" && contrastOf(ramp[index].css, ramp[0].css) < CONTRAST_AA) continue;
     const direction = mode === "light" ? 1 : -1;
     const hoverIndex = clamp(index + direction, 0, ramp.length - 1);
     const activeIndex = clamp(index + direction * 2, 0, ramp.length - 1);
@@ -213,8 +225,12 @@ function lightDeclarations(
   const brand = (index: number) => `var(--palette-${name}-${ramp[index].step})`;
   return [
     ["color-bg", neutralColor(neutral, 0.995, 0.1)],
-    ["color-bg-subtle", neutralColor(neutral, 0.975, 0.25)],
-    ["color-bg-muted", neutralColor(neutral, 0.94, 0.4)],
+    ["color-bg-subtle", neutralColor(neutral, 0.96, 0.25)],
+    ["color-bg-muted", neutralColor(neutral, 0.92, 0.4)],
+    ["color-surface-1", "var(--color-bg-subtle)"],
+    ["color-surface-2", "var(--color-bg-muted)"],
+    ["color-surface-1-border", "var(--color-border)"],
+    ["color-surface-2-border", "var(--color-border-strong)"],
     ["color-fg", neutralColor(neutral, 0.14)],
     ["color-fg-muted", neutralColor(neutral, 0.4)],
     ["color-fg-subtle", neutralColor(neutral, 0.53)],
@@ -232,7 +248,7 @@ function lightDeclarations(
     ["color-destructive-subtle", "oklch(0.96 0.03 25)"],
     ["color-success", "oklch(0.45 0.12 150)"],
     ["color-success-subtle", "oklch(0.96 0.02 150)"],
-    ["color-warning", "oklch(0.55 0.14 75)"],
+    ["color-warning", "oklch(0.52 0.14 75)"],
     ["color-warning-subtle", "oklch(0.96 0.03 75)"],
     ["color-info", brand(Math.max(primary.index, 6))],
     ["color-info-subtle", brand(0)],
@@ -258,6 +274,10 @@ function darkDeclarations(
     ["color-bg", neutralColor(neutral, 0.13)],
     ["color-bg-subtle", neutralColor(neutral, 0.18)],
     ["color-bg-muted", neutralColor(neutral, 0.25)],
+    ["color-surface-1", "var(--color-bg-subtle)"],
+    ["color-surface-2", "var(--color-bg-muted)"],
+    ["color-surface-1-border", "var(--color-border)"],
+    ["color-surface-2-border", "var(--color-border-strong)"],
     ["color-fg", neutralColor(neutral, 0.97, 0.25)],
     ["color-fg-muted", neutralColor(neutral, 0.74, 0.7)],
     ["color-fg-subtle", neutralColor(neutral, 0.64, 0.8)],
@@ -265,20 +285,20 @@ function darkDeclarations(
     ["color-primary-hover", brand(primary.hoverIndex)],
     ["color-primary-active", brand(primary.activeIndex)],
     ["color-primary-fg", primary.foreground],
-    ["color-primary-subtle", oklch(ramp[5].color, 0.16)],
+    ["color-primary-subtle", subtleColor(ramp[primary.index].color, 0.23)],
     ["color-secondary", neutralColor(neutral, 0.27)],
     ["color-secondary-hover", neutralColor(neutral, 0.34)],
     ["color-secondary-fg", neutralColor(neutral, 0.94, 0.3)],
-    ["color-destructive", "oklch(0.65 0.2 25)"],
+    ["color-destructive", "oklch(0.68 0.2 25)"],
     ["color-destructive-hover", "oklch(0.72 0.18 25)"],
     ["color-destructive-fg", neutralColor(neutral, 0.13)],
-    ["color-destructive-subtle", "oklch(0.55 0.2 25 / 0.16)"],
+    ["color-destructive-subtle", "oklch(0.23 0.06 25)"],
     ["color-success", "oklch(0.72 0.16 155)"],
-    ["color-success-subtle", "oklch(0.6 0.18 155 / 0.16)"],
+    ["color-success-subtle", "oklch(0.23 0.05 155)"],
     ["color-warning", "oklch(0.8 0.14 80)"],
-    ["color-warning-subtle", "oklch(0.75 0.15 75 / 0.16)"],
+    ["color-warning-subtle", "oklch(0.23 0.045 80)"],
     ["color-info", brand(Math.min(primary.index, 4))],
-    ["color-info-subtle", oklch(ramp[5].color, 0.16)],
+    ["color-info-subtle", subtleColor(ramp[Math.min(primary.index, 4)].color, 0.23)],
     ["color-border", neutralColor(neutral, 0.29)],
     ["color-border-strong", neutralColor(neutral, 0.38)],
     ["color-ring", oklch(ramp[primary.index].color, 0.48)],
@@ -551,11 +571,15 @@ function verifiedFile(
     }
   }
 
-  const findings = checkThemeContrast({ themeName: name, themeCss: css, baseCss });
+  const input = { themeName: name, themeCss: css, baseCss };
+  const findings = [
+    ...checkThemeContrast(input),
+    ...checkThemeElevation(input),
+  ];
   if (findings.length > 0) {
     throw new Error(
-      `Generated theme '${name}' failed contrast verification before writing: ${findings[0].message} ` +
-        `Try a darker accent or choose a different brand color.`,
+      `Generated theme '${name}' failed token verification before writing: ${findings[0].message} ` +
+        `Adjust the accent or surface ramp until every reported contract passes.`,
     );
   }
 

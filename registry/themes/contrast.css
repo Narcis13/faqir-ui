@@ -20,6 +20,10 @@
   --color-bg:              oklch(1 0 0);          /* pure white */
   --color-bg-subtle:       oklch(0.97 0 0);       /* faint gray */
   --color-bg-muted:        oklch(0.93 0 0);       /* muted gray */
+  --color-surface-1:        var(--color-bg-subtle);
+  --color-surface-2:        var(--color-bg-muted);
+  --color-surface-1-border: var(--color-border);
+  --color-surface-2-border: var(--color-border-strong);
   --color-fg:              oklch(0.18 0 0);       /* near-black */
   --color-fg-muted:        oklch(0.34 0 0);       /* dark gray — still ≥ 7:1 on every surface */
   --color-fg-subtle:       oklch(0.40 0 0);       /* dark gray — still ≥ 7:1 on every surface */
@@ -70,6 +74,10 @@
   --color-bg:              oklch(0.16 0 0);        /* near-black */
   --color-bg-subtle:       oklch(0.21 0 0);
   --color-bg-muted:        oklch(0.25 0 0);
+  --color-surface-1:        var(--color-bg-subtle);
+  --color-surface-2:        var(--color-bg-muted);
+  --color-surface-1-border: var(--color-border);
+  --color-surface-2-border: var(--color-border-strong);
   --color-fg:              oklch(0.97 0 0);        /* near-white */
   --color-fg-muted:        oklch(0.84 0 0);        /* light gray — still ≥ 7:1 on every surface */
   --color-fg-subtle:       oklch(0.77 0 0);        /* light gray — still ≥ 7:1 on every surface */
@@ -120,6 +128,10 @@
     --color-bg:              oklch(0.16 0 0);
     --color-bg-subtle:       oklch(0.21 0 0);
     --color-bg-muted:        oklch(0.25 0 0);
+    --color-surface-1:        var(--color-bg-subtle);
+    --color-surface-2:        var(--color-bg-muted);
+    --color-surface-1-border: var(--color-border);
+    --color-surface-2-border: var(--color-border-strong);
     --color-fg:              oklch(0.97 0 0);
     --color-fg-muted:        oklch(0.84 0 0);
     --color-fg-subtle:       oklch(0.77 0 0);

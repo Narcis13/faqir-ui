@@ -7,10 +7,10 @@ discovery util (`../visual/matrix.ts`), so the two gates can never disagree abou
 which pages exist. The a11y matrix is:
 
 ```
-every component  ×  { default, contrast } themes  ×  { light, dark }
+every component  ×  every registry theme  ×  { light, dark }
 ```
 
-At the current registry that is **86 components × 2 themes × 2 schemes = 344
+At the current registry that is **86 components × 12 themes × 2 schemes = 2,064
 scans** (plus a non-empty tripwire, the gate-bites fixture test and the density
 reference page). Adding a component
 (`registry/{primitives,recipes,patterns}/<name>/<name>.html` with an
@@ -30,7 +30,7 @@ axis captures at — over the **layout-bearing set**: manifest `category: "layou
 or `kind: "pattern"`, discovered by the *same imported function*
 (`discoverLayoutBearing`) the visual axis uses, so the two gates cannot disagree
 about which pages have responsive behaviour worth re-checking. That is
-**26 components × 2 themes × 2 schemes = 104 scans**. Components with no
+**26 components × 12 themes × 2 schemes = 624 scans**. Components with no
 responsive behaviour render identically at both widths and are deliberately not
 re-scanned.
 
@@ -56,11 +56,10 @@ The scan runs axe's `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa` tags
 component *fragments*, not whole documents, so advisory rules like `region` or
 `page-has-heading-one` would flag structure that is correct in context.
 
-Why default + contrast, light + dark? §12.3's minimum. `color-contrast` is the
-theme- and scheme-sensitive rule, so the gate sweeps a neutral baseline theme
-(`default`) and the WCAG-AAA high-contrast theme (`contrast`) in both schemes.
-Nothing axe evaluates depends on text direction, so — unlike the visual suite —
-there is no RTL axis. Widen `A11Y_THEMES` in `a11y-matrix.ts` to sweep more.
+`color-contrast` is theme- and scheme-sensitive, so the gate discovers and sweeps
+every registry theme in both schemes; `default` and the WCAG-AAA `contrast` theme
+remain mandatory anchors. Nothing axe evaluates depends on text direction, so —
+unlike the visual suite — there is no RTL axis.
 
 ## Files
 

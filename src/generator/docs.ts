@@ -2317,14 +2317,10 @@ function variantValues(c: DocsComponent | undefined, attr: string): string[] {
  * (0.7-20); then `stack` + `data-wrap` once 0.8-03 declared it; now the component
  * whose wrap is intrinsic rather than opted into.
  *
- * It deliberately shows **solid** component colour and bare token swatches, not
- * text on a tinted `-subtle` surface. That is not a layout preference: the
- * gallery's axe gate found `badge`'s soft variants (`--color-<sem>` text on
- * `--color-<sem>-subtle`) below WCAG AA in 10 of the 12 registry themes — this
- * frame is the first thing that ever rendered a component in every theme, and the
- * static `contrast-tokens` rule exempts those pairs on the premise that they carry
- * no text. Filed as task 0.7-19 with the measured ratios; the badge row belongs in
- * this frame the moment the pairs clear AA.
+ * The badge row is the browser witness for the semantic subtle-pair contract.
+ * It was removed when the gallery first exposed sub-AA `<sem>` text on
+ * `<sem>-subtle` fills in 10 of 12 themes (0.7-19); 0.9-10 restores it after the
+ * static contrast gate and the full-theme axe matrix make that rendering safe.
  */
 function renderThemePreviewPage(ctx: {
   theme: DocsTheme;
@@ -2342,6 +2338,13 @@ function renderThemePreviewPage(ctx: {
         `      <button data-ui="button" data-variant="${escAttr(v)}" data-size="sm" type="button">${esc(
           v,
         )}</button>`,
+    )
+    .join("\n");
+
+  const badges = variantValues(byName.get("badge"), "data-variant")
+    .map(
+      (v) =>
+        `      <span data-ui="badge" data-variant="${escAttr(v)}">${esc(v)}</span>`,
     )
     .join("\n");
 
@@ -2402,6 +2405,9 @@ function renderThemePreviewPage(ctx: {
 <main data-ui="surface" data-variant="flat" data-size="md" data-gap="4">
 ${card}
 ${callout}
+    <div data-ui="cluster" data-gap="2" role="group" aria-label="Badge variants">
+${badges}
+    </div>
     <div data-ui="cluster" data-gap="2">
 ${buttons}
     </div>

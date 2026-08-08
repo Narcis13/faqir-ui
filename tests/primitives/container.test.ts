@@ -399,7 +399,7 @@ describe("the measure ladder is a token set, not a number repeated", () => {
       readFileSync(join(ROOT, "registry/primitives/surface/surface.manifest.json"), "utf8"),
     ) as Manifest;
     expect(validateManifest(manifest)).toEqual([]);
-    expect(manifest.version).toBe("2.0.0");
+    expect(manifest.version).toBe("2.1.0");
     const entry = (manifest.changes ?? []).find((c) => c.version === "2.0.0")!;
     expect(entry, "surface 2.0.0 has a changelog entry").toBeDefined();
     expect(entry.breaking).toBe(true);

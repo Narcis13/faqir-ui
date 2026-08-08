@@ -16,6 +16,10 @@
   --color-bg:              oklch(0.97 0.01 145);      /* green-tinted paper */
   --color-bg-subtle:       oklch(0.94 0.015 145);     /* faint green wash */
   --color-bg-muted:        oklch(0.90 0.02 145);      /* muted green wash */
+  --color-surface-1:        var(--color-bg-subtle);
+  --color-surface-2:        var(--color-bg-muted);
+  --color-surface-1-border: var(--color-border);
+  --color-surface-2-border: var(--color-border-strong);
   --color-fg:              oklch(0.28 0.06 145);      /* dark green ink */
   --color-fg-muted:        oklch(0.44 0.07 145);      /* muted green ink */
   --color-fg-subtle:       oklch(0.55 0.06 145);      /* subtle green ink */
@@ -41,7 +45,7 @@
   /* ── Feedback (amber carries warnings, per the CRT palette) ── */
   --color-success:         oklch(0.45 0.14 150);
   --color-success-subtle:  oklch(0.93 0.05 150);
-  --color-warning:         oklch(0.55 0.12 80);       /* printed amber */
+  --color-warning:         oklch(0.51 0.12 80);       /* printed amber */
   --color-warning-subtle:  oklch(0.94 0.06 80);
   --color-info:            oklch(0.48 0.10 200);
   --color-info-subtle:     oklch(0.93 0.04 200);
@@ -85,6 +89,10 @@
   --color-bg:              oklch(0.14 0.015 145);     /* near-black glass */
   --color-bg-subtle:       oklch(0.18 0.02 145);      /* dark glass */
   --color-bg-muted:        oklch(0.23 0.025 145);     /* muted glass */
+  --color-surface-1:        var(--color-bg-subtle);
+  --color-surface-2:        var(--color-bg-muted);
+  --color-surface-1-border: var(--color-border);
+  --color-surface-2-border: var(--color-border-strong);
   --color-fg:              oklch(0.87 0.21 145);      /* phosphor green */
   --color-fg-muted:        oklch(0.68 0.13 145);      /* dimmed phosphor */
   --color-fg-subtle:       oklch(0.52 0.09 145);      /* faded phosphor */
@@ -94,7 +102,7 @@
   --color-primary-hover:   oklch(0.90 0.22 145);
   --color-primary-active:  oklch(0.94 0.18 145);
   --color-primary-fg:      oklch(0.14 0.015 145);     /* glass for contrast */
-  --color-primary-subtle:  oklch(0.85 0.23 145 / 0.14);
+  --color-primary-subtle:  oklch(0.23 0.069 145);
 
   /* ── Interactive: Secondary ── */
   --color-secondary:       oklch(0.25 0.04 145);
@@ -105,15 +113,15 @@
   --color-destructive:        oklch(0.68 0.21 30);    /* alarm red */
   --color-destructive-hover:  oklch(0.74 0.19 30);
   --color-destructive-fg:     oklch(0.14 0.01 30);
-  --color-destructive-subtle: oklch(0.68 0.21 30 / 0.15);
+  --color-destructive-subtle: oklch(0.23 0.063 30);
 
   /* ── Feedback (phosphor amber carries warnings) ── */
   --color-success:         oklch(0.80 0.19 150);
-  --color-success-subtle:  oklch(0.80 0.19 150 / 0.15);
+  --color-success-subtle:  oklch(0.23 0.057 150);
   --color-warning:         oklch(0.82 0.16 85);       /* phosphor amber */
-  --color-warning-subtle:  oklch(0.82 0.16 85 / 0.15);
+  --color-warning-subtle:  oklch(0.23 0.048 85);
   --color-info:            oklch(0.75 0.12 200);
-  --color-info-subtle:     oklch(0.75 0.12 200 / 0.15);
+  --color-info-subtle:     oklch(0.23 0.036 200);
 
   /* ── Borders ── */
   --color-border:          oklch(0.30 0.05 145);
@@ -135,6 +143,10 @@
     --color-bg:              oklch(0.14 0.015 145);
     --color-bg-subtle:       oklch(0.18 0.02 145);
     --color-bg-muted:        oklch(0.23 0.025 145);
+    --color-surface-1:        var(--color-bg-subtle);
+    --color-surface-2:        var(--color-bg-muted);
+    --color-surface-1-border: var(--color-border);
+    --color-surface-2-border: var(--color-border-strong);
     --color-fg:              oklch(0.87 0.21 145);
     --color-fg-muted:        oklch(0.68 0.13 145);
     --color-fg-subtle:       oklch(0.52 0.09 145);
@@ -144,7 +156,7 @@
     --color-primary-hover:   oklch(0.90 0.22 145);
     --color-primary-active:  oklch(0.94 0.18 145);
     --color-primary-fg:      oklch(0.14 0.015 145);
-    --color-primary-subtle:  oklch(0.85 0.23 145 / 0.14);
+    --color-primary-subtle:  oklch(0.23 0.069 145);
 
     /* ── Interactive: Secondary ── */
     --color-secondary:       oklch(0.25 0.04 145);
@@ -155,15 +167,15 @@
     --color-destructive:        oklch(0.68 0.21 30);
     --color-destructive-hover:  oklch(0.74 0.19 30);
     --color-destructive-fg:     oklch(0.14 0.01 30);
-    --color-destructive-subtle: oklch(0.68 0.21 30 / 0.15);
+    --color-destructive-subtle: oklch(0.23 0.063 30);
 
     /* ── Feedback ── */
     --color-success:         oklch(0.80 0.19 150);
-    --color-success-subtle:  oklch(0.80 0.19 150 / 0.15);
+    --color-success-subtle:  oklch(0.23 0.057 150);
     --color-warning:         oklch(0.82 0.16 85);
-    --color-warning-subtle:  oklch(0.82 0.16 85 / 0.15);
+    --color-warning-subtle:  oklch(0.23 0.048 85);
     --color-info:            oklch(0.75 0.12 200);
-    --color-info-subtle:     oklch(0.75 0.12 200 / 0.15);
+    --color-info-subtle:     oklch(0.23 0.036 200);
 
     /* ── Borders ── */
     --color-border:          oklch(0.30 0.05 145);

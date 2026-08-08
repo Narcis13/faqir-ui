@@ -514,7 +514,9 @@ Purpose-based tokens that map to palette values. Themes override these.
 
 ```css
 /* Surfaces */
---color-bg              --color-bg-subtle        --color-bg-muted
+--color-bg              --color-surface-1        --color-surface-2
+--color-surface-1-border                         --color-surface-2-border
+--color-bg-subtle       --color-bg-muted
 --color-fg              --color-fg-muted         --color-fg-subtle
 
 /* Interactive */
@@ -525,6 +527,18 @@ Purpose-based tokens that map to palette values. Themes override these.
 /* Borders */
 --color-border          --color-border-strong     --color-ring
 ```
+
+The canonical elevation ramp is `--color-bg` → `--color-surface-1` →
+`--color-surface-2`. Adjacent fills, and each surface against its matching
+`-border`, must differ by at least **0.03 OKLab ΔE** in both light and dark
+schemes. The generated theme gate enforces all four pairs for every stylesheet in
+`registry/themes/`, so a new theme enters the check automatically. Cards map
+default/outlined to surface 1 and filled to surface 2; `surface` maps flat,
+raised, and overlay to background, surface 1, and surface 2 respectively.
+
+Semantic soft fills are text-bearing, not decorative: `--color-primary` on
+`--color-primary-subtle` (and destructive/success/warning/info equivalents) must
+be opaque and clear WCAG AA 4.5:1.
 
 ### Layer 3: Aliases (component-specific)
 

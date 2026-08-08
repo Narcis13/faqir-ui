@@ -16,10 +16,14 @@ import {
 } from "../../src/utils/oklch";
 import {
   checkThemeContrast,
+  checkThemeElevation,
   buildSchemeLookups,
   CONTRAST_PAIRS,
   CONTRAST_AA,
   CONTRAST_TOKENS_RULE,
+  ELEVATION_MIN_DELTA,
+  ELEVATION_PAIRS,
+  SURFACE_ELEVATION_RULE,
 } from "../../src/audit/contrast-tokens";
 
 const TOKENS_DIR = join(import.meta.dir, "../../registry/tokens");
@@ -203,6 +207,40 @@ describe("checkThemeContrast · flags a sub-AA pair with the computed ratio", ()
     expect(results).toEqual([]);
   });
 
+  it("reports text-bearing semantic subtle alpha instead of applying the old decorative exemption", () => {
+    const beforeFix = `:root {
+      --color-warning:        oklch(0.72 0.15 80);
+      --color-warning-subtle: oklch(0.72 0.15 80 / 0.15);
+    }`;
+    const results = checkThemeContrast({
+      themeName: "before-fix",
+      themeCss: beforeFix,
+      baseCss: BASE_CSS,
+      pairs: [{ fg: "color-warning", bg: "color-warning-subtle" }],
+    });
+    expect(results).toHaveLength(2);
+    expect(results.every((result) => result.rule_id === "contrast-tokens")).toBe(true);
+    expect(results[0].message).toContain("text-bearing pair is translucent");
+  });
+
+  it("reports the old low-contrast semantic subtle pair and is silent after tuning", () => {
+    const beforeFix = `:root {
+      --color-warning:        oklch(0.72 0.15 80);
+      --color-warning-subtle: oklch(0.94 0.05 80);
+    }`;
+    const afterFix = `:root {
+      --color-warning:        oklch(0.51 0.15 80);
+      --color-warning-subtle: oklch(0.94 0.05 80);
+    }`;
+    const input = {
+      themeName: "fixture",
+      baseCss: BASE_CSS,
+      pairs: [{ fg: "color-warning", bg: "color-warning-subtle" }],
+    };
+    expect(checkThemeContrast({ ...input, themeCss: beforeFix })).toHaveLength(2);
+    expect(checkThemeContrast({ ...input, themeCss: afterFix })).toEqual([]);
+  });
+
   it("resolves a 3-layer chain before computing (fg via alias → semantic → palette)", () => {
     // The theme paints fg through a component alias that chains into the base
     // palette; the rule must resolve it, not skip it, and still catch the fail.
@@ -251,6 +289,42 @@ describe("contrast-tokens gate · every shipped theme clears WCAG AA", () => {
   }
 });
 
+// ═══════════════════════════ Elevation ramp: every theme × scheme ══════════
+describe("surface-elevation gate · every shipped theme has a separable ramp", () => {
+  const themeFiles = readdirSync(THEMES_DIR).filter((file) => file.endsWith(".css")).sort();
+
+  for (const file of themeFiles) {
+    const name = file.replace(/\.css$/, "");
+    it(`${name} keeps every adjacent fill/border pair at ΔE >= ${ELEVATION_MIN_DELTA}`, () => {
+      const themeCss = readFileSync(join(THEMES_DIR, file), "utf8");
+      expect(checkThemeElevation({ themeName: name, themeCss, baseCss: BASE_CSS })).toEqual([]);
+    });
+  }
+
+  it("fails equal adjacent surfaces in both schemes", () => {
+    const weak = `:root {
+      --color-bg: oklch(0.98 0 0);
+      --color-surface-1: oklch(0.98 0 0);
+    }`;
+    const results = checkThemeElevation({
+      themeName: "weak",
+      themeCss: weak,
+      baseCss: BASE_CSS,
+      pairs: [{ fg: "color-bg", bg: "color-surface-1" }],
+    });
+    expect(results).toHaveLength(2);
+    expect(results[0].rule_id).toBe("surface-elevation");
+    expect(results[0].message).toContain("OKLab ΔE 0.000");
+  });
+
+  it("wires card variants to the checked ramp instead of an eye-only distinction", () => {
+    const cardCss = readFileSync(join(import.meta.dir, "../../registry/primitives/card/card.css"), "utf8");
+    expect(cardCss).toContain("var(--card-bg, var(--color-surface-1))");
+    expect(cardCss).toMatch(/data-variant="filled"[^}]*var\(--color-surface-2\)/s);
+    expect(cardCss).toMatch(/data-variant="filled"[^}]*var\(--color-surface-2-border\)/s);
+  });
+});
+
 // ═══════════════════════════ Encoded pair list / rule metadata ═════════════
 describe("contrast-tokens · encoded pair list & rule descriptor", () => {
   it("encodes the declared pairs once, including the plan's callouts", () => {
@@ -259,6 +333,9 @@ describe("contrast-tokens · encoded pair list & rule descriptor", () => {
     expect(has("color-fg", "color-bg")).toBe(true); // fg/bg
     expect(has("color-primary-fg", "color-primary")).toBe(true); // primary/primary-fg
     expect(has("color-fg-muted", "color-bg")).toBe(true); // muted-fg/bg
+    for (const semantic of ["primary", "destructive", "success", "warning", "info"]) {
+      expect(has(`color-${semantic}`, `color-${semantic}-subtle`)).toBe(true);
+    }
     // fg-subtle is a low-emphasis weight — deliberately NOT gated.
     expect(CONTRAST_PAIRS.some((p) => p.fg === "color-fg-subtle")).toBe(false);
   });
@@ -266,5 +343,10 @@ describe("contrast-tokens · encoded pair list & rule descriptor", () => {
   it("the rule descriptor is an error-level theme rule", () => {
     expect(CONTRAST_TOKENS_RULE.id).toBe("contrast-tokens");
     expect(CONTRAST_TOKENS_RULE.severity).toBe("error");
+    expect(CONTRAST_TOKENS_RULE.exempt?.join(" ")).not.toMatch(
+      /tinted.*-subtle|-subtle.*feedback backgrounds/i,
+    );
+    expect(SURFACE_ELEVATION_RULE.severity).toBe("error");
+    expect(ELEVATION_PAIRS).toHaveLength(4);
   });
 });

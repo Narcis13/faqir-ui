@@ -2,7 +2,7 @@
 // Theme coverage matrix — permanent CI gate  [task 0.3-11]
 // ═══════════════════════════════════════════════════════════════════════════
 //
-// Every shipped theme must define values for all 27 semantic color tokens plus
+// Every shipped theme must define values for all 31 semantic color tokens plus
 // the 5 shadow tokens in each color scheme it ships (light + dark, or an explicit
 // single-scheme via `@ui:schemes light`). A dark block cannot inherit correct
 // values from the base `:root` (that holds the *light* values), so it must
@@ -52,10 +52,10 @@ const BASE = new Set<string>([
 const THEME_FILES = [...new Glob("*.css").scanSync(THEMES_DIR)].sort();
 
 describe("theme coverage · required token set (data-driven)", () => {
-  it("derives 27 semantic color tokens + 5 shadow tokens from the base files", () => {
-    expect(REQUIRED.colors.length).toBe(27);
+  it("derives 31 semantic color tokens + 5 shadow tokens from the base files", () => {
+    expect(REQUIRED.colors.length).toBe(31);
     expect(REQUIRED.shadows.length).toBe(5);
-    expect(REQUIRED.all.length).toBe(32);
+    expect(REQUIRED.all.length).toBe(36);
   });
 
   it("the base (semantic.css + effects.css) defines every required token for light", () => {

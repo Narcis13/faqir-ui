@@ -16,7 +16,7 @@ name: Visual regression
 #   scaffolds     invoice + report                       =     2
 #                                                          ─────
 #                                                          4 214 screenshots
-#                                                                (4 243 tests)
+#                                                                (4 264 tests)
 #
 # The layout gate (tests/visual/layout-lint.pw.ts, task 0.9-01) rides in the same
 # run and takes no screenshots: it loads all 180 generated docs pages once and

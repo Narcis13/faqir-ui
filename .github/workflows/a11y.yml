@@ -3,19 +3,19 @@ name: Accessibility (axe-core)
 # Task 0.4-24 · FAQIR-PLAN §12.3 · mobile sweep added by 0.8-11 (§19)
 #
 # axe-core scan of every registry reference page (tests/a11y/a11y.pw.ts), across
-# the default + high-contrast themes in light and dark, generated from the same
-# registry-discovery util the visual suite uses. Zero-violation policy: any
+# every registry theme in light and dark, generated from the same registry-
+# discovery util the visual suite uses. Zero-violation policy: any
 # non-exempt WCAG 2.0/2.1 A/AA violation fails the job, and the log names the
 # component (case id), the rule, and the offending selector(s).
 #
 # Scan count at the current registry:
 #
-#   components  86 × 2 themes × 2 schemes            = 344   (a11y.pw.ts, 1280px)
-#   density      2 themes × 2 schemes                =   4
-#   mobile      26 layout-bearing × 2 × 2            = 104   (mobile.pw.ts, 390px)
-#   docs site + scaffolds                            = 213
-#                                                      ───
-#                                                      665 scans (668 tests)
+#   components  86 × 12 themes × 2 schemes          = 2 064   (a11y.pw.ts, 1280px)
+#   density     12 themes × 2 schemes                =    24
+#   mobile      26 layout-bearing × 12 × 2           =   624   (mobile.pw.ts, 390px)
+#   docs site + overlays + scaffolds + tripwires     =   261
+#                                                      ─────
+#                                                      2 973 tests
 #
 # The mobile sweep (tests/a11y/mobile.pw.ts) re-scans only the layout-bearing set
 # — manifest `category: layout` or `kind: pattern`, the same discovery the visual

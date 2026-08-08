@@ -1,15 +1,16 @@
 /* @ui:component surface */
-/* @ui:tokens color-bg color-border measure-content measure-narrow measure-prose measure-wide radius-lg shadow-sm shadow-md shadow-lg space-3 space-4 space-6 */
+/* @ui:tokens color-bg color-surface-1 color-surface-2 color-surface-1-border color-surface-2-border measure-content measure-narrow measure-prose measure-wide radius-lg shadow-sm shadow-md shadow-lg space-3 space-4 space-6 */
 
 /* ── Base ── */
 [data-ui="surface"] {
-  background: var(--color-bg);
+  background: var(--color-surface-1);
   border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-surface-1-border);
 }
 
 /* ── Elevation Variants ── */
 [data-ui="surface"][data-variant="flat"] {
+  background: var(--color-bg);
   border: none;
   box-shadow: none;
 }
@@ -19,8 +20,9 @@
 }
 
 [data-ui="surface"][data-variant="overlay"] {
+  background: var(--color-surface-2);
   box-shadow: var(--shadow-lg);
-  border: none;
+  border-color: var(--color-surface-2-border);
 }
 
 /* ── Padding Sizes ── */

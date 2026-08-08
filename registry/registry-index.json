@@ -140,11 +140,11 @@
       "name": "card",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "files": [
         {
           "path": "card.css",
-          "sha256": "b27a21613a9d26f8d0cd7ca0d61590e9f6b7989c63b16cf3d5b261b16c9e0999"
+          "sha256": "a277c61555cd79db4475bd868a2cd971af745cd6c8ec1ca8e8fd6207d6461618"
         },
         {
           "path": "card.html",
@@ -152,10 +152,10 @@
         },
         {
           "path": "card.manifest.json",
-          "sha256": "0e0f0100e1e654f9c619a8c9ed8b0a18439ce561a907c8bcfadab3f0b0447c74"
+          "sha256": "0cf3f71c8f9673d9eaaf727cbbc8b95bff8034d791172ab542ad990b1db1c654"
         }
       ],
-      "hash": "2461b2f86086f2a4cf3ca5a1fdc3d393bafc419b1de79bfb0d304d4b6aade2b6",
+      "hash": "cb48ef8152666647f8d7dc0ad738c9f4bb9a336a023f938565051f003c78ce5b",
       "deps": [
         "button"
       ]
@@ -797,11 +797,11 @@
       "name": "surface",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "2.0.0",
+      "version": "2.1.0",
       "files": [
         {
           "path": "surface.css",
-          "sha256": "fceea71e8833935422f310b12082970bb6a384015f0df5da51a84b4a00881933"
+          "sha256": "76be84575380bd5ebbd8d45891bd0e8f614b299373238206841fcca4f9829daf"
         },
         {
           "path": "surface.html",
@@ -809,10 +809,10 @@
         },
         {
           "path": "surface.manifest.json",
-          "sha256": "9805ad01111b584a891de3e3466a4e1562623da53829de608837dd298306492e"
+          "sha256": "d77676f87e71486af9a91e1cd41bf30ac49c75871ac704d8020e3c90b3f6729d"
         }
       ],
-      "hash": "9fecdb17060d3cc7fd6f6988cc896a93736167a564913d3ded378cf9a6848977",
+      "hash": "4e1950bf521185bd5994d3d51d1eced733fd1e235225b0c8138688d1d1bb610e",
       "deps": []
     },
     {
@@ -863,11 +863,11 @@
       "name": "text",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "files": [
         {
           "path": "text.css",
-          "sha256": "3b1f10b7c81c150cf74c4caaaf7d9302ee07d7486139b2cf43f87682f90796cd"
+          "sha256": "306b4bf3c58c5a86cfa223adce687920e2e0d1b50d89201619adfa12855cd1f5"
         },
         {
           "path": "text.html",
@@ -875,10 +875,10 @@
         },
         {
           "path": "text.manifest.json",
-          "sha256": "994409c13ab90318953e1c309482df945ff81b8cac44f4bd114ba3ef2c4ac3b6"
+          "sha256": "ad4a1e1f7cee5aebf5b5c1e207a3d55d684aff8fb3971660b50975d04fbd8c34"
         }
       ],
-      "hash": "0c5c2654504b0045a5e367ee63e9abd4fb4590838047889446b63c887b3e569a",
+      "hash": "daaeaa01a00185906a84071f7d8b4e6bffe6eb5fa112f07b03f42422b935fc24",
       "deps": []
     },
     {
@@ -1795,11 +1795,11 @@
       "name": "dashboard-shell",
       "kind": "pattern",
       "layer": "patterns",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "files": [
         {
           "path": "dashboard-shell.css",
-          "sha256": "d26a4bc49bf6fae3c48061652e8c12ef5b4b414752251e78995d2f85947c505d"
+          "sha256": "5c0d3bca8586efd5c8d0127659b4d2812a69e20367269df8ab0fe51736d505ac"
         },
         {
           "path": "dashboard-shell.html",
@@ -1807,10 +1807,10 @@
         },
         {
           "path": "dashboard-shell.manifest.json",
-          "sha256": "0ffc3dd4b74b215077237b4b86fb5079256ca85f10194b0e84ea879bc1392ecc"
+          "sha256": "1c95e7a3294462adcaf92d2a2ba07948673d12a0164b5534bcfdd84ed7724198"
         }
       ],
-      "hash": "09dac8fa27be9d1d67ab75cd7e7eca6c1021b8ad2b289883c73ff4472dfb0e73",
+      "hash": "c1a0d699d403889c93d70957bc4f0bd21f9a0d56fd566721c6d9f6eca2c78c68",
       "deps": [
         "card",
         "grid",

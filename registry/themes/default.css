@@ -8,6 +8,10 @@
    semantic colours (button, progress, stepper marker) carries light text or no
    text, so a deeper tone only raises its contrast. */
 :root {
+  --color-surface-1:        var(--color-bg-subtle);
+  --color-surface-2:        var(--color-bg-muted);
+  --color-surface-1-border: var(--color-border);
+  --color-surface-2-border: var(--color-border-strong);
   --color-fg-muted:  var(--palette-gray-600); /* AA: gray-500 was 4.31:1 on muted surfaces (avatar/tabs) */
   --color-fg-subtle: var(--palette-gray-500); /* AA: gray-400 was 2.61:1 (subtle text, footers, page-break) */
   --color-success:   var(--palette-green-700); /* AA: green-500 as soft-badge/stat/stepper text was 3.19:1 */
@@ -19,6 +23,10 @@
   --color-bg:              var(--palette-gray-950);
   --color-bg-subtle:       var(--palette-gray-900);
   --color-bg-muted:        var(--palette-gray-800);
+  --color-surface-1:        var(--color-bg-subtle);
+  --color-surface-2:        var(--color-bg-muted);
+  --color-surface-1-border: var(--color-border);
+  --color-surface-2-border: var(--color-border-strong);
   --color-fg:              var(--palette-gray-50);
   --color-fg-muted:        var(--palette-gray-300); /* AA: gray-400 kept subtle above 4.5:1, so muted moves up */
   --color-fg-subtle:       var(--palette-gray-400); /* AA: gray-500 subtle text was 4.11:1 on bg */
@@ -27,7 +35,7 @@
   --color-primary-hover:   var(--palette-indigo-300);
   --color-primary-active:  var(--palette-indigo-200);
   --color-primary-fg:      var(--palette-gray-950); /* AA: dark ink on the luminous dark-mode accent — white was 3.4:1 [0.4-16] */
-  --color-primary-subtle:  oklch(0.55 0.22 264 / 0.15);
+  --color-primary-subtle:  oklch(0.24 0.06 264);
 
   --color-secondary:       var(--palette-gray-800);
   --color-secondary-hover: var(--palette-gray-700);
@@ -36,14 +44,14 @@
   --color-destructive:        var(--palette-red-400); /* AA: luminous red so it reads as text on subtle/dark bg (badge/chip/field/stat); red-500 was 3.42:1 [0.4-24] */
   --color-destructive-hover:  var(--palette-red-300);
   --color-destructive-fg:     var(--palette-gray-950); /* AA: dark ink on the luminous red for solid surfaces (button) — mirrors --color-primary-fg [0.4-24] */
-  --color-destructive-subtle: oklch(0.55 0.22 25 / 0.15);
+  --color-destructive-subtle: oklch(0.24 0.06 25);
 
   --color-success:         var(--palette-green-400);
-  --color-success-subtle:  oklch(0.60 0.18 155 / 0.15);
+  --color-success-subtle:  oklch(0.24 0.054 155);
   --color-warning:         var(--palette-amber-400);
-  --color-warning-subtle:  oklch(0.75 0.15 75 / 0.15);
+  --color-warning-subtle:  oklch(0.24 0.045 75);
   --color-info:            var(--palette-blue-400);
-  --color-info-subtle:     oklch(0.55 0.20 240 / 0.15);
+  --color-info-subtle:     oklch(0.24 0.054 240);
 
   --color-border:          var(--palette-gray-800);
   --color-border-strong:   var(--palette-gray-700);
@@ -63,6 +71,10 @@
     --color-bg:              var(--palette-gray-950);
     --color-bg-subtle:       var(--palette-gray-900);
     --color-bg-muted:        var(--palette-gray-800);
+    --color-surface-1:        var(--color-bg-subtle);
+    --color-surface-2:        var(--color-bg-muted);
+    --color-surface-1-border: var(--color-border);
+    --color-surface-2-border: var(--color-border-strong);
     --color-fg:              var(--palette-gray-50);
     --color-fg-muted:        var(--palette-gray-300); /* AA — see [data-theme="dark"] */
     --color-fg-subtle:       var(--palette-gray-400); /* AA — see [data-theme="dark"] */
@@ -71,7 +83,7 @@
     --color-primary-hover:   var(--palette-indigo-300);
     --color-primary-active:  var(--palette-indigo-200);
     --color-primary-fg:      var(--palette-gray-950); /* AA: dark ink on the luminous dark-mode accent — white was 3.4:1 [0.4-16] */
-    --color-primary-subtle:  oklch(0.55 0.22 264 / 0.15);
+    --color-primary-subtle:  oklch(0.24 0.06 264);
 
     --color-secondary:       var(--palette-gray-800);
     --color-secondary-hover: var(--palette-gray-700);
@@ -80,14 +92,14 @@
     --color-destructive:        var(--palette-red-400); /* AA — see [data-theme="dark"] [0.4-24] */
     --color-destructive-hover:  var(--palette-red-300);
     --color-destructive-fg:     var(--palette-gray-950); /* AA — see [data-theme="dark"] [0.4-24] */
-    --color-destructive-subtle: oklch(0.55 0.22 25 / 0.15);
+    --color-destructive-subtle: oklch(0.24 0.06 25);
 
     --color-success:         var(--palette-green-400);
-    --color-success-subtle:  oklch(0.60 0.18 155 / 0.15);
+    --color-success-subtle:  oklch(0.24 0.054 155);
     --color-warning:         var(--palette-amber-400);
-    --color-warning-subtle:  oklch(0.75 0.15 75 / 0.15);
+    --color-warning-subtle:  oklch(0.24 0.045 75);
     --color-info:            var(--palette-blue-400);
-    --color-info-subtle:     oklch(0.55 0.20 240 / 0.15);
+    --color-info-subtle:     oklch(0.24 0.054 240);
 
     --color-border:          var(--palette-gray-800);
     --color-border-strong:   var(--palette-gray-700);

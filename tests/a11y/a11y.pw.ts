@@ -1,8 +1,8 @@
 /**
  * Automated accessibility suite — task 0.4-24 (FAQIR-PLAN §12.3).
  *
- * One axe-core scan per matrix case (component × {default, contrast} × {light,
- * dark}), with the matrix generated from the registry at runtime by
+ * One axe-core scan per matrix case (component × every theme × {light, dark}),
+ * with the matrix generated from the registry at runtime by
  * `./a11y-matrix` — the *same* discovery util and page builder the visual suite
  * uses. Adding a component or an a11y theme grows this suite automatically; there
  * is nothing to edit here. Zero-violation policy: any non-exempt WCAG 2.0/2.1 A/AA
@@ -95,7 +95,7 @@ for (const c of matrix) {
 // The density reference page is not a component, so it is not in `matrix` — but a
 // compact mode is exactly where an accessibility regression would hide (shorter
 // controls, tighter targets, smaller gaps). Scanned on the same axes as every
-// component page: { default, contrast } × { light, dark }.
+// component page: every registry theme × { light, dark }.
 for (const theme of A11Y_THEMES) {
   for (const scheme of SCHEMES) {
     const id = `density__${theme}__${scheme}__ltr`;

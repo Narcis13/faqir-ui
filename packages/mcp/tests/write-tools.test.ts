@@ -247,7 +247,7 @@ describe("faqir_generate_theme", () => {
     expect(data.generated[0].manifest.name).toBe("agent-brand");
     expect(data.generated[1].manifest.scheme).toBe("light");
     const ratios = data.generated.flatMap((file: any) => file.contrast);
-    expect(ratios.length).toBe(24);
+    expect(ratios.length).toBe(39);
     expect(ratios.every((pair: any) => pair.passes && pair.ratio >= 4.5)).toBe(true);
     expect(ratios.some((pair: any) => pair.auto_adjusted)).toBe(true);
   });

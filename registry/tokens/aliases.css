@@ -47,8 +47,8 @@
   /* ── Card ── */
   --card-radius:       var(--radius-lg);
   --card-shadow:       var(--shadow-sm);
-  --card-border:       var(--color-border);
-  --card-bg:           var(--color-bg);
+  --card-border:       var(--color-surface-1-border);
+  --card-bg:           var(--color-surface-1);
   --card-padding:      var(--space-6);
 
   /* ── Input ── */

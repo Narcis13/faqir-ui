@@ -7,8 +7,8 @@
   --palette-indigo-200: oklch(0.85 0.12 264);
   --palette-indigo-300: oklch(0.75 0.16 264);
   --palette-indigo-400: oklch(0.65 0.20 264);
-  --palette-indigo-500: oklch(0.55 0.22 264);
-  --palette-indigo-600: oklch(0.50 0.22 264);
+  --palette-indigo-500: oklch(0.53 0.22 264);
+  --palette-indigo-600: oklch(0.48 0.22 264);
   --palette-indigo-700: oklch(0.42 0.20 264);
   --palette-indigo-800: oklch(0.35 0.18 264);
   --palette-indigo-900: oklch(0.28 0.14 264);
@@ -73,8 +73,8 @@
   --palette-blue-200: oklch(0.85 0.12 240);
   --palette-blue-300: oklch(0.75 0.14 240);
   --palette-blue-400: oklch(0.65 0.18 240);
-  --palette-blue-500: oklch(0.55 0.20 240);
-  --palette-blue-600: oklch(0.50 0.20 240);
+  --palette-blue-500: oklch(0.50 0.20 240);
+  --palette-blue-600: oklch(0.45 0.20 240);
   --palette-blue-700: oklch(0.42 0.18 240);
   --palette-blue-800: oklch(0.35 0.16 240);
   --palette-blue-900: oklch(0.28 0.12 240);

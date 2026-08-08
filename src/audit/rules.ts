@@ -6,7 +6,7 @@ import { findSelectedAttributes } from "../parser/css-parser";
 import type { Manifest, ManifestVariant } from "../manifest";
 import { TIERS, isTier } from "../utils/breakpoints";
 import { suggestClosest } from "../utils/suggest";
-import { CONTRAST_TOKENS_RULE } from "./contrast-tokens";
+import { CONTRAST_TOKENS_RULE, SURFACE_ELEVATION_RULE } from "./contrast-tokens";
 import { CSS_RULES } from "./css-rules";
 import { fieldWiringRule } from "./field-wiring";
 
@@ -1982,6 +1982,7 @@ export function getRuleInventory(): RuleInfo[] {
     TRIGGER_CONTRACT_RULE,
     SINGLE_FIXED_REGION_RULE,
     CONTRAST_TOKENS_RULE,
+    SURFACE_ELEVATION_RULE,
   ];
 }
 
