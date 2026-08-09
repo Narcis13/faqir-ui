@@ -176,7 +176,7 @@ done in any order (or in parallel worktrees).
 | 0.9-09 | Cross-card row alignment (subgrid) | ⬜ |
 | 0.9-10 | Surface elevation ramp + the `-subtle` contrast debt | ✅ |
 | 0.9-11 | Variant consistency sweep + `carousel` viewport bleed | ✅ |
-| 0.9-12 | Spacing, rhythm & density documentation surfaces | ⬜ |
+| 0.9-12 | Spacing, rhythm & density documentation surfaces | ✅ |
 
 ### Phase v1.0 — The Standard
 
@@ -3019,9 +3019,9 @@ declare, nothing declared that the pages omit.
 - Both new pages axe-clean in light and dark; `check:docs`, `check:skill` green.
 
 **Acceptance criteria**
-- [ ] A spacing/rhythm page and a density page exist, with live audit-clean examples generated from one source.
-- [ ] An agent reading only llms.txt can discover the default rhythm rule, the spacing ladder and the density axis.
-- [ ] Cross-check green in both directions; every gate (`check:docs`, `check:skill`, `audit:registry`, axe, visual, layout-lint) green at phase close.
+- [x] A spacing/rhythm page and a density page exist, with live audit-clean examples generated from one source. (`site/content/spacing.html` and `site/content/density.html` are authored pages in the generated site navigation. Each example is a named `<template>`; `parseGuideExamples()` passes its inner markup unchanged to both the live mount and the auditor, while only escaping the code rendering. The regression suite proves byte identity and zero findings at every severity for every example and each complete page.)
+- [x] An agent reading only llms.txt can discover the default rhythm rule, the spacing ladder and the density axis. (The hosted `llms.txt` spells out the complete `--space-0` through `--space-64` ladder, the default `--flow-space` / `--section-gap-sm` rule, all three page-rhythm aliases, and `data-density="compact|comfortable"`; the same doctrine expands in `llms-full.txt`. Both hosted files are asserted through the byte-equality harness, and the generated creator skill carries the same shared source data.)
+- [x] Cross-check green in both directions; every gate (`check:docs`, `check:skill`, `audit:registry`, axe, visual, layout-lint) green at phase close. (The bidirectional tests compare every declared spacing rung, rhythm alias, and all 39 compact/comfortable density remaps against the rendered tables, rejecting either undocumented declarations or invented tokens. Verification: **3,366 Bun tests**, root/MCP typecheck, `check:docs`, `check:skill`, all six registry audit sections, **2,977 axe cases**, the complete **4,269-case visual suite**, and all seven layout-lint cases passed. Both new pages record zero seams, gutter findings, viewport bleeds, and overlaps.)
 
 ---
 
