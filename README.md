@@ -353,6 +353,28 @@ is load-bearing: the margin goes on the second of two participants, so an `<h2>`
 stays welded to the table it labels. Reach for a `stack` when you want a *different*
 rhythm, a direction or alignment, not merely to separate a sequence.
 
+### Spacing and density
+
+Use `--space-*` for relationships inside a component or an intentional group;
+use the named `--section-gap-*` aliases for page-level air. The complete ladder is
+`--space-0`, `--space-px`, the half steps `--space-0h|1h|2h|3h`, the 4px rungs
+`--space-1|2|3|4|5|6|7|8|10|12|16|20|24`, and the page-rhythm rungs
+`--space-32|40|48|64`. Prefer the smallest rung that still makes the relationship
+clear. For a normal block sequence, prefer no authored gap at all: the default
+rhythm already owns it.
+
+The intra-/inter-group split is explicit: `field-group` owns its tight
+`--space-*` step from label → control → help/error; its surrounding `form` or
+`fieldset` owns the looser `--flow-space` step between fields, defaulting to
+`--section-gap-sm`.
+
+`data-density="compact"` on any container tightens spacing, control heights, and
+the `--section-gap-*` / `--content-gutter` rhythm aliases for that subtree.
+`data-density="comfortable"` resets a nested subtree to the base scale. It is a
+pure-CSS sanctioned modifier, not a sixth component protocol attribute. The full
+spacing, rhythm, density, and nesting rules live in
+[`docs/layout.md`](docs/layout.md#spacing-rhythm--density).
+
 ### Stack — one direction, one gap
 
 ```html
@@ -558,9 +580,10 @@ has a single ramp to remap.
 ### Density Mode
 
 Put `data-density="compact"` on any container and its whole subtree renders
-tighter — spacing steps shrink by `--density-scale` (0.75) and controls drop to a
-28/32/40px ramp. `data-density="comfortable"` restores the base scale, so an inner
-subtree can reset out of a compact ancestor.
+tighter — spacing steps through `--space-64` shrink by `--density-scale` (0.75),
+the `--section-gap-*` / `--content-gutter` rhythm aliases re-substitute in that
+scope, and controls drop to a 28/32/40px ramp. `data-density="comfortable"`
+restores the base scale, so an inner subtree can reset out of a compact ancestor.
 
 ```html
 <section data-density="compact">
@@ -579,7 +602,7 @@ theme.
 
 | File | Key Tokens |
 |------|------------|
-| `spacing.css` | `--space-0` through `--space-24` (4px base scale) |
+| `spacing.css` | `--space-0` through `--space-64` (4px base scale with half steps and page-rhythm rungs) |
 | `typography.css` | `--font-sans`, `--font-mono`, `--text-xs` through `--text-4xl`, `--weight-*`, `--leading-*` |
 | `effects.css` | `--radius-sm` through `--radius-2xl`, `--shadow-xs` through `--shadow-xl`, `--z-*` |
 | `motion.css` | `--ease-default`, `--ease-in-out`, `--duration-fast` (150ms), `--duration-normal` (250ms), `--duration-slow` (350ms) |

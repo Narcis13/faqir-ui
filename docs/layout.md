@@ -250,6 +250,46 @@ Three things worth knowing and nothing else:
 Reach for a `stack` when you want a *different* rhythm, a direction, or alignment —
 not merely to separate a sequence.
 
+## Spacing, rhythm & density
+
+Choose spacing by the relationship it expresses, not by scanning for a nearby
+number:
+
+| Band | Tokens | Use |
+|------|--------|-----|
+| invariant | `--space-0`, `--space-px` | resets and one-pixel hairlines; density never changes them |
+| micro | `--space-0h` through `--space-3h` | tight relationships inside a component — icon → label, label → control, control → help |
+| component | `--space-4` through `--space-8` | component padding and gaps inside an intentional group |
+| layout | `--space-10` through `--space-24` | deliberate separation between groups or major regions in one section |
+| page | `--space-32` through `--space-64` | source rungs for named page rhythm; prefer `--section-gap-*` in page CSS |
+
+That last preference is load-bearing. `--section-gap-sm` means dense pages,
+`--section-gap-md` means the default marketing cadence, and `--section-gap-lg`
+means one spacious idea per screen. Their current values are composed from the
+raw scale; their *roles* are the API. `--content-gutter` is the corresponding
+page inset.
+
+Forms demonstrate the ownership split. A `field-group` owns only the tight
+intra-field `--space-*` step between label, control and help/error text. Its
+surrounding `form` or `fieldset` owns the looser inter-field step through the
+default `--flow-space` / `--section-gap-sm` rhythm. Do not put an outer margin on
+the field group: that would duplicate the owner and make `data-gap="0"` unable to
+disable the sequence rhythm.
+
+Density is a first-class page axis. Put `data-density="compact"` on any container
+to remap its own tokens and the whole descendant subtree; put
+`data-density="comfortable"` on an inner container to reset that island to the
+base values. The nearest density scope wins. It is pure CSS and is not a sixth
+component protocol attribute: it identifies no component and no controller reads
+or writes it.
+
+Compact density scales `--space-0h` through `--space-64` by 0.75, uses an explicit
+28/32/40px `--control-height-{sm,md,lg}` ramp, and re-substitutes every alias that
+reads those tokens. The rhythm aliases are explicit members of that remap:
+`--section-gap-sm`, `--section-gap-md`, `--section-gap-lg`, and
+`--content-gutter` all tighten with the subtree. `--space-0` and `--space-px`
+remain invariant; `--doc-*` and `--page-*` remain a print-theme concern.
+
 ## Page archetypes
 
 Five pages, each *structured* by the five primitives and filled with ordinary

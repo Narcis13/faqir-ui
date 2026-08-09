@@ -20,6 +20,7 @@ import {
   RHYTHM_REJECTED,
   RHYTHM_RULE,
   rhythmLine,
+  spacingLadderLine,
 } from "../utils/layout";
 import { loadThemeManifest, type ThemeManifest } from "../theme-manifest";
 import { readConfig, type FaqirConfig } from "../utils/config";
@@ -355,7 +356,7 @@ export function composeContextData(input: ContextComposition): ContextData {
     },
     tokens: {
       prefix: "--",
-      spacing: "4px base (--space-1 through --space-24)",
+      spacing: `4px base ladder: ${spacingLadderLine()}`,
       radius: { sm: "4px", md: "6px", lg: "8px", xl: "12px" },
       shadows: "xs, sm, md, lg, xl",
       z_index: "dropdown:50, sticky:100, overlay:200, modal:300, toast:400",
@@ -366,9 +367,9 @@ export function composeContextData(input: ContextComposition): ContextData {
       default: "comfortable",
       scope: "subtree — the element it is set on and every descendant, until an inner data-density resets it",
       remaps: [
-        "--space-1 … --space-24 (× --density-scale; --space-0 and --space-px are invariant)",
+        "--space-0h … --space-64 (× --density-scale; --space-0 and --space-px are invariant)",
         "--control-height-sm|md|lg (explicit shorter ramp: 28/32/40px compact vs 32/40/48px comfortable)",
-        "the component aliases that read them: --button-height-*, --input-height, --card-padding, --field-gap, --callout-padding-*, --kv-*-gap",
+        "the aliases that read them: --button-height-*, --input-height, --card-padding, --field-gap, --callout-padding-*, --kv-*-gap, --section-gap-sm|md|lg, --content-gutter",
       ],
       stylesheet: "tokens/density.css",
       example: '<section data-density="compact"> … dense form / table / toolbar … </section>',
@@ -886,6 +887,14 @@ export function formatContextLlms(data: ContextData): string {
   );
   lines.push("");
   lines.push(`Vertical rhythm is a default, not an opt-in: ${rhythmLine()}`);
+  lines.push("");
+  lines.push(`Spacing ladder: ${spacingLadderLine()}. Use \`--space-*\` inside components and groups; use \`--section-gap-sm|md|lg\` for page rhythm.`);
+  lines.push("");
+  lines.push(
+    `Density axis: \`${data.density.attribute}="compact"\` tightens the current subtree; ` +
+      `\`${data.density.attribute}="comfortable"\` resets a nested subtree. ` +
+      `The rhythm aliases \`--section-gap-sm|md|lg\` and \`--content-gutter\` remap with it.`,
+  );
   lines.push("");
 
   const linkItem = (name: string, c: Record<string, unknown>): string => {

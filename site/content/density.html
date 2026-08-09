@@ -1,0 +1,97 @@
+<!--
+  Density guide source. Each example is mounted live and printed from the same
+  bytes by src/generator/docs.ts; the test suite audits those extracted bytes.
+-->
+      <div data-docs-guide>
+        <header>
+          <span data-ui="badge" data-variant="primary">Density</span>
+          <h1>One sanctioned axis for how tightly a subtree renders.</h1>
+          <p>
+            Put <code>data-density="compact"</code> on any container to tighten its
+            spacing and control tokens. The attribute is a pure-CSS protocol modifier,
+            not a sixth component attribute: it identifies no component and no
+            controller reads it.
+          </p>
+        </header>
+
+        <section aria-labelledby="density-axis-heading" data-docs-section>
+          <div data-docs-section-heading>
+            <span data-ui="badge" data-variant="secondary">The axis</span>
+            <h2 id="density-axis-heading">Compact where information density earns it.</h2>
+            <p>
+              Tables, forms, and toolbars may opt into compact density. Comfortable is
+              the base scale and is also an explicit reset value for nested subtrees.
+            </p>
+          </div>
+          <template data-docs-example="density-comparison" data-title="The same contract at two densities">
+<div data-ui="switcher" data-threshold="sm" data-gap="4">
+  <section data-ui="surface" data-variant="raised" data-size="md" aria-label="Comfortable form" data-density="comfortable">
+    <form aria-label="Comfortable account fields">
+      <div data-ui="field-group">
+        <label data-part="label" for="density-comfortable-email">Email</label>
+        <div data-part="input"><input data-ui="input" id="density-comfortable-email" type="email"></div>
+      </div>
+      <div data-ui="field-group">
+        <label data-part="label" for="density-comfortable-team">Team</label>
+        <div data-part="input"><input data-ui="input" id="density-comfortable-team"></div>
+      </div>
+    </form>
+  </section>
+  <section data-ui="surface" data-variant="raised" data-size="md" aria-label="Compact form" data-density="compact">
+    <form aria-label="Compact account fields">
+      <div data-ui="field-group">
+        <label data-part="label" for="density-compact-email">Email</label>
+        <div data-part="input"><input data-ui="input" id="density-compact-email" type="email"></div>
+      </div>
+      <div data-ui="field-group">
+        <label data-part="label" for="density-compact-team">Team</label>
+        <div data-part="input"><input data-ui="input" id="density-compact-team"></div>
+      </div>
+    </form>
+  </section>
+</div>
+          </template>
+        </section>
+
+        <section aria-labelledby="density-nesting-heading" data-docs-section>
+          <div data-docs-section-heading>
+            <span data-ui="badge">Nesting and reset</span>
+            <h2 id="density-nesting-heading">The nearest density scope wins.</h2>
+            <p>
+              Compact applies to the element itself and every descendant. An inner
+              <code>data-density="comfortable"</code> re-declares the base values, so
+              that subtree resets honestly instead of inheriting the compact result.
+            </p>
+          </div>
+          <template data-docs-example="density-nesting-reset" data-title="A comfortable island inside a compact surface">
+<section data-ui="surface" data-variant="raised" data-size="lg" data-density="compact" aria-label="Compact results workspace">
+  <div data-ui="card" data-variant="filled"><div data-part="body">Compact result row</div></div>
+  <section data-ui="surface" data-variant="flat" data-size="md" data-density="comfortable" aria-label="Comfortable review panel">
+    <div data-ui="card" data-variant="outlined"><div data-part="body">Comfortable review content</div></div>
+    <div data-ui="card" data-variant="outlined"><div data-part="body">The base rhythm is restored here</div></div>
+  </section>
+</section>
+          </template>
+        </section>
+
+        <section aria-labelledby="density-remap-heading" data-docs-section>
+          <div data-docs-section-heading>
+            <span data-ui="badge" data-variant="secondary">Complete remap</span>
+            <h2 id="density-remap-heading">Nothing density-aware is implicit.</h2>
+            <p>
+              Spacing rungs <code>--space-0h</code> through <code>--space-64</code>
+              scale by 0.75 in compact mode; controls use the explicit 28/32/40px
+              compact ramp. <code>--space-0</code> and <code>--space-px</code> stay
+              invariant. Every alias below is re-declared so it re-substitutes in the
+              nearest density scope.
+            </p>
+            <p>
+              The page-rhythm aliases are part of that contract:
+              <code>--section-gap-sm</code>, <code>--section-gap-md</code>,
+              <code>--section-gap-lg</code>, and <code>--content-gutter</code> all remap.
+              Paged-media <code>--doc-*</code> and <code>--page-*</code> tokens do not.
+            </p>
+          </div>
+<!-- @faqir:density-remaps -->
+        </section>
+      </div>

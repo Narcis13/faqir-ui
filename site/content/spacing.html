@@ -1,0 +1,95 @@
+<!--
+  Spacing/rhythm guide source. Each <template data-docs-example> is expanded by
+  src/generator/docs.ts into a live example and a copyable code block from the
+  exact same inner bytes. Tests audit those extracted bytes before the page ships.
+-->
+      <div data-docs-guide>
+        <header>
+          <span data-ui="badge" data-variant="primary">Spacing &amp; rhythm</span>
+          <h1>Choose by relationship, not by whichever number looks close.</h1>
+          <p>
+            Use <code>--space-*</code> inside a component or an intentional group.
+            Use <code>--section-gap-*</code> for page-level air. For an ordinary
+            sequence of block components, choose nothing: the default rhythm already
+            separates them.
+          </p>
+        </header>
+
+        <section aria-labelledby="spacing-ladder-heading" data-docs-section>
+          <div data-docs-section-heading>
+            <span data-ui="badge" data-variant="secondary">The complete ladder</span>
+            <h2 id="spacing-ladder-heading">One scale, five bands.</h2>
+            <p>
+              Values are shown in rem in the source-of-truth column and in pixels only
+              as a comparison at the default 16px root. Density remaps the rem-based
+              rungs; it never changes zero or a one-pixel hairline.
+            </p>
+          </div>
+<!-- @faqir:spacing-ladder -->
+        </section>
+
+        <section aria-labelledby="rhythm-ladder-heading" data-docs-section>
+          <div data-docs-section-heading>
+            <span data-ui="badge" data-variant="secondary">Page-level aliases</span>
+            <h2 id="rhythm-ladder-heading">Name the role of the air.</h2>
+            <p>
+              Pick a section token by intent—dense, marketing, or spacious—not by
+              reverse-engineering its current value. The aliases compose spacing rungs,
+              so compact density remaps them in the same scope.
+            </p>
+          </div>
+<!-- @faqir:rhythm-ladder -->
+        </section>
+
+        <section aria-labelledby="default-rhythm-heading" data-docs-section>
+          <div data-docs-section-heading>
+            <span data-ui="badge">The default rule</span>
+            <h2 id="default-rhythm-heading">A bare sequence is already spaced.</h2>
+            <p>
+              Inside a flow root, consecutive block-level Faqir components and nested
+              flow roots are separated by <code>--flow-space</code>. It defaults to
+              <code>--section-gap-sm</code>. Add a stack only when you need a different
+              direction, alignment, or deliberate local rhythm.
+            </p>
+          </div>
+          <template data-docs-example="default-field-rhythm" data-title="Intra-field tight; inter-field loose">
+<form aria-label="Profile details">
+  <div data-ui="field-group">
+    <label data-part="label" for="rhythm-name">Name</label>
+    <div data-part="input"><input data-ui="input" id="rhythm-name" aria-describedby="rhythm-name-help"></div>
+    <p data-part="description" id="rhythm-name-help">Shown on your public profile.</p>
+  </div>
+  <div data-ui="field-group">
+    <label data-part="label" for="rhythm-role">Role</label>
+    <div data-part="input"><input data-ui="input" id="rhythm-role" aria-describedby="rhythm-role-help"></div>
+    <p data-part="description" id="rhythm-role-help">Used to tune your workspace.</p>
+  </div>
+</form>
+          </template>
+          <p>
+            This is the 0.9-07 pair: each <code>field-group</code> owns its tight
+            <code>--space-*</code> label → control → help step; the surrounding form
+            owns the looser sibling-field step through the default rhythm. Neither
+            duplicates the other.
+          </p>
+        </section>
+
+        <section aria-labelledby="override-rhythm-heading" data-docs-section>
+          <div data-docs-section-heading>
+            <span data-ui="badge">Override deliberately</span>
+            <h2 id="override-rhythm-heading">Re-tune at the owning flow root.</h2>
+            <p>
+              Put <code>data-gap</code> on the flow root when the whole sequence needs a
+              different local cadence. <code>data-gap="0"</code> disables the inherited
+              rhythm. Do not add sibling margins to each component.
+            </p>
+          </div>
+          <template data-docs-example="retuned-section-rhythm" data-title="One flow root, one explicit override">
+<section data-gap="8" aria-label="Release milestones">
+  <div data-ui="card" data-variant="outlined"><div data-part="body">Design complete</div></div>
+  <div data-ui="card" data-variant="outlined"><div data-part="body">Accessibility review complete</div></div>
+  <div data-ui="card" data-variant="outlined"><div data-part="body">Ready to ship</div></div>
+</section>
+          </template>
+        </section>
+      </div>

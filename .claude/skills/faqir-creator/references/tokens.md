@@ -54,7 +54,13 @@ Always use `var(--token-name)` — never hardcode values.
 --space-8     32px     --space-10    40px
 --space-12    48px     --space-16    64px
 --space-20    80px     --space-24    96px
+--space-32    128px    --space-40    160px
+--space-48    192px    --space-64    256px
 ```
+
+Use `--space-*` inside a component or intentional group. Use
+`--section-gap-sm|md|lg` for page-level air; a bare sequence in a flow root is
+already separated by `--flow-space`, which defaults to `--section-gap-sm`.
 
 ## Density Mode
 
@@ -74,9 +80,10 @@ data-density="compact"       spacing × 0.75, controls 28/32/40px
 data-density="comfortable"   the base scale (default; use it to reset a nested subtree)
 ```
 
-Remapped: `--space-1` … `--space-24` (`--space-0` / `--space-px` are invariant),
+Remapped: `--space-0h` … `--space-64` (`--space-0` / `--space-px` are invariant),
 `--control-height-{sm,md,lg}`, and the aliases that read them (`--button-height-*`,
-`--input-height`, `--card-padding`, `--field-gap`, `--callout-padding-*`, `--kv-*-gap`).
+`--input-height`, `--card-padding`, `--field-gap`, `--callout-padding-*`, `--kv-*-gap`,
+`--section-gap-sm|md|lg`, and `--content-gutter`).
 Paged-media tokens (`--doc-*`, `--page-*`) are not remapped — print density is a
 theme concern.
 

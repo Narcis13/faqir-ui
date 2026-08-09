@@ -114,6 +114,121 @@ export const MEASURE_TOKENS: readonly { token: string; role: string }[] = Object
   }),
 ]);
 
+/**
+ * The complete spacing ladder, including the two invariant rungs. Values are
+ * expressed in CSS pixels at the default 16px root only to make the scale easy
+ * to compare; `registry/tokens/spacing.css` remains the value source of truth.
+ * `tests/generator/rhythm-density-docs.test.ts` cross-checks this list against
+ * that stylesheet in both directions.
+ */
+export const SPACING_LADDER: readonly { token: string; px: number }[] = Object.freeze([
+  Object.freeze({ token: "space-0", px: 0 }),
+  Object.freeze({ token: "space-px", px: 1 }),
+  Object.freeze({ token: "space-0h", px: 2 }),
+  Object.freeze({ token: "space-1", px: 4 }),
+  Object.freeze({ token: "space-1h", px: 6 }),
+  Object.freeze({ token: "space-2", px: 8 }),
+  Object.freeze({ token: "space-2h", px: 10 }),
+  Object.freeze({ token: "space-3", px: 12 }),
+  Object.freeze({ token: "space-3h", px: 14 }),
+  Object.freeze({ token: "space-4", px: 16 }),
+  Object.freeze({ token: "space-5", px: 20 }),
+  Object.freeze({ token: "space-6", px: 24 }),
+  Object.freeze({ token: "space-7", px: 28 }),
+  Object.freeze({ token: "space-8", px: 32 }),
+  Object.freeze({ token: "space-10", px: 40 }),
+  Object.freeze({ token: "space-12", px: 48 }),
+  Object.freeze({ token: "space-16", px: 64 }),
+  Object.freeze({ token: "space-20", px: 80 }),
+  Object.freeze({ token: "space-24", px: 96 }),
+  Object.freeze({ token: "space-32", px: 128 }),
+  Object.freeze({ token: "space-40", px: 160 }),
+  Object.freeze({ token: "space-48", px: 192 }),
+  Object.freeze({ token: "space-64", px: 256 }),
+]);
+
+/** Named bands answer “which rung?” without turning the scale into a utility API. */
+export const SPACING_BANDS: readonly {
+  label: string;
+  from: string;
+  to: string;
+  use: string;
+}[] = Object.freeze([
+  Object.freeze({
+    label: "Invariant",
+    from: "space-0",
+    to: "space-px",
+    use: "resets and one-pixel hairlines; neither changes with density",
+  }),
+  Object.freeze({
+    label: "Micro",
+    from: "space-0h",
+    to: "space-3h",
+    use: "tight relationships inside a component: icon to label, label to control, control to help text",
+  }),
+  Object.freeze({
+    label: "Component",
+    from: "space-4",
+    to: "space-8",
+    use: "ordinary component padding and gaps inside an intentional group",
+  }),
+  Object.freeze({
+    label: "Layout",
+    from: "space-10",
+    to: "space-24",
+    use: "deliberate separation between groups or major regions inside one section",
+  }),
+  Object.freeze({
+    label: "Page",
+    from: "space-32",
+    to: "space-64",
+    use: "raw source rungs for named page-rhythm aliases; prefer --section-gap-* in page CSS",
+  }),
+]);
+
+/** The two spacing tokens density deliberately leaves unchanged. */
+export const DENSITY_INVARIANT_TOKENS = Object.freeze(["space-0", "space-px"] as const);
+
+/** The explicit control ramp remapped alongside spacing. */
+export const DENSITY_CONTROL_TOKENS = Object.freeze([
+  "control-height-sm",
+  "control-height-md",
+  "control-height-lg",
+] as const);
+
+/** Aliases that must re-substitute inside each density scope. */
+export const DENSITY_ALIAS_TOKENS = Object.freeze([
+  "button-height-sm",
+  "button-height-md",
+  "button-height-lg",
+  "input-height",
+  "card-padding",
+  "kv-pair-gap",
+  "kv-grid-gap",
+  "callout-padding-y",
+  "callout-padding-x",
+  "field-gap",
+  "section-gap-sm",
+  "section-gap-md",
+  "section-gap-lg",
+  "content-gutter",
+] as const);
+
+/** Every custom property the compact and comfortable density scopes declare. */
+export const DENSITY_TOKENS: readonly string[] = Object.freeze([
+  "density-scale",
+  ...SPACING_LADDER.map((entry) => entry.token).filter(
+    (token) => !(DENSITY_INVARIANT_TOKENS as readonly string[]).includes(token),
+  ),
+  ...DENSITY_CONTROL_TOKENS,
+  ...DENSITY_ALIAS_TOKENS,
+]);
+
+/** A compact, deterministic spelling for agent surfaces such as llms.txt. */
+export function spacingLadderLine(): string {
+  return SPACING_LADDER.map((entry) => `\`--${entry.token}\` ${entry.px}px`).join(", ");
+}
+
 /** Page rhythm: the air between sections and the inset of the page itself. */
 export const RHYTHM_TOKENS: readonly { token: string; role: string }[] = Object.freeze([
   Object.freeze({ token: "section-gap-sm", role: "dense pages — docs, dashboards" }),

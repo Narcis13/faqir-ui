@@ -28,8 +28,10 @@ import {
   LAYOUT_RULES,
   MEASURE_TOKENS,
   RHYTHM_TOKENS,
+  SPACING_BANDS,
   grammarLine,
   rhythmLine,
+  spacingLadderLine,
 } from "../utils/layout";
 import { getSchemaVersion } from "../utils/schema";
 import { loadPluginMetadata, type PluginMetadata } from "./plugins";
@@ -347,6 +349,16 @@ function renderLayoutSystem(): string[] {
   lines.push("**The default rhythm** (FAQIR-SPEC §20) — the one thing that means you do NOT have to wrap a sequence to space it:");
   lines.push("");
   lines.push(rhythmLine());
+  lines.push("");
+  lines.push(`**Spacing ladder** — ${spacingLadderLine()}.`);
+  lines.push("");
+  for (const band of SPACING_BANDS) {
+    lines.push(`- **${band.label}:** \`--${band.from}\` through \`--${band.to}\` — ${band.use}.`);
+  }
+  lines.push("");
+  lines.push(
+    "**Density axis** — `data-density=\"compact\"` tightens the element and its subtree; `data-density=\"comfortable\"` resets a nested subtree. Spacing through `--space-64`, control heights, `--section-gap-sm|md|lg`, and `--content-gutter` remap in the nearest scope. It is pure CSS, not a sixth protocol attribute.",
+  );
   lines.push("");
   lines.push(
     `Copy-ready page archetypes — ${ARCHETYPES.map((a) => a.title).join(", ")} — are in \`docs/layout.md\`, and each one is audited on every test run.`,

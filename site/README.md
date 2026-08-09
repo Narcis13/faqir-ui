@@ -16,6 +16,8 @@ bun run deploy:site         # build, then `wrangler pages deploy` (needs a login
 | `site.config.json` | Title, tagline, description, initial theme, footer. |
 | `content/home.html` | Hand-written homepage narrative and showroom sections. Registry stats, featured patterns, and theme controls are injected by the generator. |
 | `content/layouts.html` | Hand-written responsive layout lab for cluster, switcher, grid, and the canonical breakpoint ladder. |
+| `content/spacing.html` | Spacing/rhythm doctrine and audited example templates; the generator injects the complete token ladders. |
+| `content/density.html` | Density, nesting/reset guidance, and audited example templates; the generator injects the scoped remap table. |
 | `styles/docs.css` | The docs presentation layer: attribute selectors and design tokens only, with responsive and reduced-motion rules. |
 | `lib/gallery.js` | Shared progressive enhancement: persistent theme/mode controls, frame synchronization, mobile navigation, filters, and preview widths. |
 | `lib/playground.js` | Browser audit playground wiring and live preview synchronization. |

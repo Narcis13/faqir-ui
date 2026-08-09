@@ -82,6 +82,16 @@ Page structure is five primitives, one token ladder and one breakpoint canon —
 
 Inside a flow root, consecutive block-level Faqir components and nested flow roots are separated by `--flow-space` of vertical space. `--flow-space` defaults to `--section-gap-sm`; `data-gap` on the flow root re-tunes it and `data-gap="0"` turns it off. A flow root is `body`, `main`, `article`, `section`, `aside`, `header`, `footer`, `form`, `fieldset`, `dialog`, `blockquote`, `figure`, `[data-ui="container"]`, `[data-ui="surface"]` — never a component that lays out its own children.
 
+**Spacing ladder** — `--space-0` 0px, `--space-px` 1px, `--space-0h` 2px, `--space-1` 4px, `--space-1h` 6px, `--space-2` 8px, `--space-2h` 10px, `--space-3` 12px, `--space-3h` 14px, `--space-4` 16px, `--space-5` 20px, `--space-6` 24px, `--space-7` 28px, `--space-8` 32px, `--space-10` 40px, `--space-12` 48px, `--space-16` 64px, `--space-20` 80px, `--space-24` 96px, `--space-32` 128px, `--space-40` 160px, `--space-48` 192px, `--space-64` 256px.
+
+- **Invariant:** `--space-0` through `--space-px` — resets and one-pixel hairlines; neither changes with density.
+- **Micro:** `--space-0h` through `--space-3h` — tight relationships inside a component: icon to label, label to control, control to help text.
+- **Component:** `--space-4` through `--space-8` — ordinary component padding and gaps inside an intentional group.
+- **Layout:** `--space-10` through `--space-24` — deliberate separation between groups or major regions inside one section.
+- **Page:** `--space-32` through `--space-64` — raw source rungs for named page-rhythm aliases; prefer --section-gap-* in page CSS.
+
+**Density axis** — `data-density="compact"` tightens the element and its subtree; `data-density="comfortable"` resets a nested subtree. Spacing through `--space-64`, control heights, `--section-gap-sm|md|lg`, and `--content-gutter` remap in the nearest scope. It is pure CSS, not a sixth protocol attribute.
+
 Copy-ready page archetypes — Dashboard, Landing page, Prose / document, Split view, Centred form — are in `docs/layout.md`, and each one is audited on every test run.
 
 ## Component Inventory

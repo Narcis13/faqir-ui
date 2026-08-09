@@ -16,6 +16,8 @@
 //   components/<layer>/<name>.html    one page per component
 //   tokens/index.html                 token reference, grouped by token file
 //   layouts/index.html                responsive layout doctrine + live labs
+//   spacing/index.html                spacing ladder + default rhythm guide
+//   density/index.html                density axis + nesting/reset guide
 //   playground/index.html             live in-browser audit playground (task 0.7-14)
 //   themes/index.html                 theme gallery + instant switcher (task 0.7-14)
 //   agents/index.html                 the machine surfaces, documented (task 0.7-15)
@@ -76,6 +78,9 @@ import {
   MEASURE_TOKENS,
   RESPONSIVE_GRAMMAR,
   RHYTHM_TOKENS,
+  DENSITY_TOKENS,
+  SPACING_BANDS,
+  SPACING_LADDER,
   RHYTHM_REJECTED,
   rhythmLine,
   parseArchetypes,
@@ -113,6 +118,12 @@ export const AGENTS_PAGE = "agents/index.html";
 
 /** The layout guide: the doctrine, the ladder and the archetypes (task 0.8-12). */
 export const LAYOUT_PAGE = "layout/index.html";
+
+/** Spacing ladder, default rhythm, override rules, and grouping ownership. */
+export const SPACING_PAGE = "spacing/index.html";
+
+/** The `data-density` axis, remap inventory, and nesting/reset contract. */
+export const DENSITY_PAGE = "density/index.html";
 
 /**
  * The site's **machine contract**: four files an agent or a tool fetches by URL
@@ -914,6 +925,87 @@ export function parseTokenReference(registryRoot: string): TokenEntry[] {
   return [...seen.values()];
 }
 
+export interface DensityTokenEntry {
+  /** Token name without the leading `--`. */
+  name: string;
+  /** Value in `[data-density="compact"]`. */
+  compact: string | null;
+  /** Value in `[data-density="comfortable"]`. */
+  comfortable: string | null;
+}
+
+/**
+ * Every custom property in the two density scopes, ordered by the public
+ * density contract in `src/utils/layout.ts`. The page renderer and the reverse
+ * cross-check consume this same shape, while the CSS parser remains independent
+ * enough to expose a missing or extra declaration as `null`/a set mismatch.
+ */
+export function parseDensityReference(registryRoot: string): DensityTokenEntry[] {
+  const path = join(registryRoot, "tokens", "density.css");
+  if (!existsSync(path)) return [];
+  const css = readText(path).replace(/\/\*[^]*?\*\//g, "");
+  const scopes = new Map<string, Map<string, string>>();
+  for (const match of css.matchAll(/\[data-density="(compact|comfortable)"\]\s*\{([^}]*)\}/g)) {
+    const declarations = new Map<string, string>();
+    for (const decl of match[2].matchAll(DECL_RE)) {
+      declarations.set(decl[1], decl[2].trim().replace(/\s+/g, " "));
+    }
+    scopes.set(match[1], declarations);
+  }
+  const compact = scopes.get("compact") ?? new Map<string, string>();
+  const comfortable = scopes.get("comfortable") ?? new Map<string, string>();
+  const declared = new Set([...compact.keys(), ...comfortable.keys()]);
+  const ordered = [
+    ...DENSITY_TOKENS,
+    ...[...declared].filter((name) => !DENSITY_TOKENS.includes(name)).sort(),
+  ];
+  return ordered.map((name) => ({
+    name,
+    compact: compact.get(name) ?? null,
+    comfortable: comfortable.get(name) ?? null,
+  }));
+}
+
+/** One live example embedded in an authored spacing/density guide. */
+export interface GuideExample {
+  id: string;
+  title: string;
+  /** Exact bytes between the authored `<template>` tags. */
+  html: string;
+}
+
+const GUIDE_EXAMPLE_RE =
+  /<template data-docs-example="([a-z0-9-]+)" data-title="([^"]+)">\s*\n([\s\S]*?)\n\s*<\/template>/g;
+
+/**
+ * Extract guide examples from `site/content/{spacing,density}.html` without
+ * rewriting their markup. Tests audit `html`; the renderer below mounts and
+ * prints those exact bytes, so the page cannot ship a lookalike of the example
+ * that passed the audit.
+ */
+export function parseGuideExamples(authored: string): GuideExample[] {
+  return [...authored.matchAll(GUIDE_EXAMPLE_RE)].map((match) => ({
+    id: match[1],
+    title: match[2],
+    html: match[3],
+  }));
+}
+
+function renderGuideExamples(authored: string): string {
+  return authored.replace(GUIDE_EXAMPLE_RE, (_whole, id: string, title: string, html: string) => {
+    return (
+      `<figure data-docs-guide-example id="${escAttr(id)}">\n` +
+      `  <figcaption><strong>${esc(title)}</strong></figcaption>\n` +
+      `  <div data-docs-example-live>\n${html}\n  </div>\n` +
+      `  <details>\n` +
+      `    <summary>Copy the audited markup</summary>\n` +
+      `    <pre tabindex="0"><code>${esc(html)}</code></pre>\n` +
+      `  </details>\n` +
+      `</figure>`
+    );
+  });
+}
+
 /** Is this token's value paintable — i.e. worth a colour swatch? */
 function isColorToken(entry: TokenEntry): boolean {
   return (
@@ -1066,7 +1158,7 @@ function renderShell(input: ShellInput): string {
       section === "components"
         ? current.startsWith("components/")
         : section === "layouts"
-          ? current === LAYOUT_PAGE || current === LAYOUTS_PAGE
+          ? [LAYOUT_PAGE, LAYOUTS_PAGE, SPACING_PAGE, DENSITY_PAGE].includes(current)
           : section === "themes"
             ? current === THEMES_PAGE
             : section === "agents"
@@ -1119,6 +1211,12 @@ ${scripts.map((src) => `<script src="${u(src)}" defer></script>`).join("\n")}
         <a data-part="nav-item" href="${u(LAYOUTS_PAGE)}"${currentAttr(
           LAYOUTS_PAGE,
         )}>Responsive lab</a>
+        <a data-part="nav-item" href="${u(SPACING_PAGE)}"${currentAttr(
+          SPACING_PAGE,
+        )}>Spacing &amp; rhythm</a>
+        <a data-part="nav-item" href="${u(DENSITY_PAGE)}"${currentAttr(
+          DENSITY_PAGE,
+        )}>Density</a>
         <a data-part="nav-item" href="${u("tokens/index.html")}"${currentAttr(
           "tokens/index.html",
         )}>Design tokens</a>
@@ -1816,6 +1914,122 @@ function renderLayoutPage(ctx: {
       description:
         "The Faqir layout system: the doctrine, the five layout primitives, the breakpoint ladder, and five copy-ready page archetypes.",
       body: parts.join("\n"),
+      config: ctx.config,
+      components: ctx.components,
+      themes: ctx.themes,
+      current: pagePath,
+      layout: "wide",
+    }),
+  };
+}
+
+const SPACING_LADDER_MARKER = "<!-- @faqir:spacing-ladder -->";
+const RHYTHM_LADDER_MARKER = "<!-- @faqir:rhythm-ladder -->";
+const DENSITY_REMAP_MARKER = "<!-- @faqir:density-remaps -->";
+
+function replaceGuideMarker(authored: string, marker: string, generated: string): string {
+  return authored.includes(marker) ? authored.replace(marker, generated) : `${authored}\n${generated}`;
+}
+
+function documentedToken(name: string): string {
+  return `<code data-token="--${escAttr(name)}">--${esc(name)}</code>`;
+}
+
+/** The authored spacing/rhythm guide plus registry-derived ladder tables. */
+function renderSpacingPage(ctx: {
+  config: SiteConfig;
+  components: DocsComponent[];
+  themes: DocsTheme[];
+  authored: string;
+  tokenList: TokenEntry[];
+}): SiteFile {
+  const pagePath = SPACING_PAGE;
+  const byName = new Map(ctx.tokenList.map((entry) => [entry.name, entry]));
+  const ladder = table(
+    ["Token", "CSS value", "At 16px root", "Reach for it when"],
+    SPACING_LADDER.map((entry) => {
+      const actual = byName.get(entry.token);
+      const index = SPACING_LADDER.findIndex((candidate) => candidate.token === entry.token);
+      const band = SPACING_BANDS.find((candidate) => {
+        const start = SPACING_LADDER.findIndex((item) => item.token === candidate.from);
+        const end = SPACING_LADDER.findIndex((item) => item.token === candidate.to);
+        return index >= start && index <= end;
+      });
+      return [
+        documentedToken(entry.token),
+        actual ? code(actual.value) : "<em>not declared</em>",
+        code(`${entry.px}px`),
+        band ? `<strong>${esc(band.label)}</strong> — ${esc(band.use)}` : "—",
+      ];
+    }),
+    "No spacing tokens in this registry.",
+  );
+  const rhythm = table(
+    ["Token", "Composes", "Use"],
+    RHYTHM_TOKENS.map((entry) => {
+      const actual = byName.get(entry.token);
+      return [
+        documentedToken(entry.token),
+        actual ? code(actual.value) : "<em>not declared</em>",
+        esc(entry.role),
+      ];
+    }),
+    "No rhythm tokens in this registry.",
+  );
+
+  let body = replaceGuideMarker(ctx.authored, SPACING_LADDER_MARKER, ladder);
+  body = replaceGuideMarker(body, RHYTHM_LADDER_MARKER, rhythm);
+  body = renderGuideExamples(body);
+
+  return {
+    path: pagePath,
+    content: renderShell({
+      pagePath,
+      title: `Spacing & rhythm · ${ctx.config.title}`,
+      description:
+        "The complete Faqir spacing ladder, the default vertical rhythm, override rules, and intra-/inter-group spacing ownership.",
+      body,
+      config: ctx.config,
+      components: ctx.components,
+      themes: ctx.themes,
+      current: pagePath,
+      layout: "wide",
+    }),
+  };
+}
+
+/** The authored density guide plus the complete scoped token remap. */
+function renderDensityPage(ctx: {
+  config: SiteConfig;
+  components: DocsComponent[];
+  themes: DocsTheme[];
+  authored: string;
+  tokenList: TokenEntry[];
+  densityTokens: DensityTokenEntry[];
+}): SiteFile {
+  const pagePath = DENSITY_PAGE;
+  const base = new Map(ctx.tokenList.map((entry) => [entry.name, entry.value]));
+  const remaps = table(
+    ["Token", "Compact", "Comfortable reset", "Base declaration"],
+    ctx.densityTokens.map((entry) => [
+      documentedToken(entry.name),
+      entry.compact ? code(entry.compact) : "<em>not declared</em>",
+      entry.comfortable ? code(entry.comfortable) : "<em>not declared</em>",
+      base.has(entry.name) ? code(base.get(entry.name)!) : "scoped only",
+    ]),
+    "No density remaps in this registry.",
+  );
+
+  let body = replaceGuideMarker(ctx.authored, DENSITY_REMAP_MARKER, remaps);
+  body = renderGuideExamples(body);
+  return {
+    path: pagePath,
+    content: renderShell({
+      pagePath,
+      title: `Density · ${ctx.config.title}`,
+      description:
+        "The Faqir data-density axis: compact subtrees, comfortable nesting resets, and the complete token remap.",
+      body,
       config: ctx.config,
       components: ctx.components,
       themes: ctx.themes,
@@ -2939,6 +3153,29 @@ export function buildDocsSite(options: DocsSiteOptions = {}): SiteFile[] {
       components,
       themes,
       archetypes: existsSync(layoutDoc) ? parseArchetypes(readText(layoutDoc)) : [],
+    }),
+  );
+
+  const authoredSpacing = join(siteRoot, "content", "spacing.html");
+  files.push(
+    renderSpacingPage({
+      config,
+      components,
+      themes,
+      authored: existsSync(authoredSpacing) ? readText(authoredSpacing).trim() : "",
+      tokenList,
+    }),
+  );
+
+  const authoredDensity = join(siteRoot, "content", "density.html");
+  files.push(
+    renderDensityPage({
+      config,
+      components,
+      themes,
+      authored: existsSync(authoredDensity) ? readText(authoredDensity).trim() : "",
+      tokenList,
+      densityTokens: parseDensityReference(registryRoot),
     }),
   );
 

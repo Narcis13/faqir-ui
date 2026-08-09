@@ -40,7 +40,13 @@ import {
 import { buildRegistryContext } from "../../src/generator/registry-context";
 import { formatContextLlms, formatContextLlmsFull } from "../../src/generator/context";
 import { BREAKPOINT_LIST } from "../../src/utils/breakpoints";
-import { LAYOUT_PRIMITIVES, RESPONSIVE_GRAMMAR } from "../../src/utils/layout";
+import {
+  LAYOUT_PRIMITIVES,
+  RESPONSIVE_GRAMMAR,
+  RHYTHM_TOKENS,
+  SPACING_LADDER,
+  rhythmLine,
+} from "../../src/utils/layout";
 import { DOCUMENT_RULES } from "../../src/audit/rules";
 import { auditHtmlSource } from "../../src/audit/html-audit";
 import { loadRegistryManifestMap } from "../../src/utils/components";
@@ -213,6 +219,24 @@ describe("the hosted llms.txt pair describes the whole registry", () => {
     }
     expect(full()).toContain("## Layout system");
     expect(full()).toContain("## Responsive tiers");
+  });
+
+  it("teaches rhythm, the complete spacing ladder, and density from the hosted bytes", () => {
+    // `index()` is the actual file in buildDocsSite's hosted output. The parity
+    // case above already proves those bytes equal the CLI formatter; assert the
+    // discoverability requirement against this side of that equality.
+    const idx = index();
+    expect(idx).toContain(rhythmLine());
+    for (const entry of SPACING_LADDER) {
+      expect(idx, `hosted llms.txt omits --${entry.token}`).toContain(`--${entry.token}`);
+    }
+    expect(idx).toContain('data-density="compact"');
+    expect(idx).toContain('data-density="comfortable"');
+    for (const entry of RHYTHM_TOKENS) expect(idx).toContain(`--${entry.token}`);
+
+    expect(full()).toContain("## Density mode");
+    expect(full()).toContain("--space-64");
+    expect(full()).toContain("--section-gap-sm|md|lg");
   });
 
   it("carries no timestamp, so the drift gate stays meaningful", () => {
