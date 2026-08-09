@@ -4,7 +4,7 @@
     "height": 900
   },
   "totals": {
-    "pages": 180,
+    "pages": 182,
     "zeroGutterPages": 0,
     "seamPages": 0,
     "seams": 0,
@@ -535,6 +535,12 @@
       "overlaps": 0
     },
     "components/recipes/tree-view.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "density/index.html": {
       "zeroGutter": false,
       "seams": 0,
       "bleeds": 0,
@@ -1075,6 +1081,12 @@
       "overlaps": 0
     },
     "playground/index.html": {
+      "zeroGutter": false,
+      "seams": 0,
+      "bleeds": 0,
+      "overlaps": 0
+    },
+    "spacing/index.html": {
       "zeroGutter": false,
       "seams": 0,
       "bleeds": 0,
