@@ -28,33 +28,33 @@
       "name": "avatar",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "files": [
         {
           "path": "avatar.css",
-          "sha256": "13765311dfa2b495c2b38bbf36a67262c39fd29c9bfaa2fa332b06f72c943693"
+          "sha256": "3174845bb4b7ed912f81a9def5a5e25df5e6fbcf0690f574d4789409912e6fdb"
         },
         {
           "path": "avatar.html",
-          "sha256": "7c65d65062000170c768bed2557cabe558f22a883c76f986eeca965d2f403ea4"
+          "sha256": "4dc5f55a57252e5ab1b37835f3df6f8044862292d77eb4551c6a0a83d16e7242"
         },
         {
           "path": "avatar.manifest.json",
-          "sha256": "59d1ccb4312df23ce02e19e5485106c9331cbfed072a8ca33913f683cfaacb58"
+          "sha256": "5cfee66f601fbc9c2b9939ad4849d9f2a04fa6692fd38a0eb73029625ba85b2d"
         }
       ],
-      "hash": "852e11efaf4e897e45da051c7f0b731ff5b300e444421e0295e7218186d7dbcf",
+      "hash": "4e4249cda2dc6389ac18dd79ac8e14e407cc99770e8f14a05bda94549cda831a",
       "deps": []
     },
     {
       "name": "badge",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "files": [
         {
           "path": "badge.css",
-          "sha256": "790d495ae24522ea3161b97c4cb1c645be752e4ac83353c29c18be07e92370b9"
+          "sha256": "be744b6dfdd181cdd142a4fc25f7c3102a0d1aa8a4243ff2173173e3647d7db0"
         },
         {
           "path": "badge.html",
@@ -62,10 +62,10 @@
         },
         {
           "path": "badge.manifest.json",
-          "sha256": "58ebe2b70db9a4c221d7124bf1042badbffe702ccb89de7cd8090e11ebd0c205"
+          "sha256": "fdc5d8ba71a34d427f6371e3aed31003e8e1436986f757aba486be1700b3b0d6"
         }
       ],
-      "hash": "7386787a2728d6822ee43edf8acab52abeded39207fb5e3bd794a55169c4cbb1",
+      "hash": "44f187e9f5e671b76eaa858ab92b46879f27612a232b013c6da355b6f6a3131f",
       "deps": []
     },
     {
@@ -116,22 +116,22 @@
       "name": "callout",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "files": [
         {
           "path": "callout.css",
-          "sha256": "48f4da77b05d0f372be9c287abed6358295090f78cfb9ccb4f1782fd155a26e5"
+          "sha256": "7ff6dab5dd68d7a1ef602047bedd4f2f7a168b6704ddaf0b09b6469d1e2a47af"
         },
         {
           "path": "callout.html",
-          "sha256": "7949baffc46c8a1e0c1779decd089d235ecad20d243706f630bdac863ac8bbcd"
+          "sha256": "631bd631c262e8ce7fc85af1770cb177df8363bd235facb6d35c85d354e290c7"
         },
         {
           "path": "callout.manifest.json",
-          "sha256": "dd1eae6f85c52d91c19b4759364484ce8f5f9635492b965de2763b95b5de8b5e"
+          "sha256": "c5f4d2b8fb6f4e57c84cfad74598d19ae54280d332e405d67e63579c2c61e28f"
         }
       ],
-      "hash": "8b53bd08d0dfa8a877283ec8d16a9a7aff856da78b72b1c7faa99f9e622a4abc",
+      "hash": "ab6bbc23d381f2753bde5ec53afe3f2b1f28825a270247d7efec112551b4f26a",
       "deps": [
         "text"
       ]
@@ -575,22 +575,22 @@
       "name": "progress",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "files": [
         {
           "path": "progress.css",
-          "sha256": "364b7e6f20de7c262c7c9fe46daea597c33f90f8e583787a2056c1e9e489af72"
+          "sha256": "a4663c8e2e1454d1c714d349633af4a5dcc56cbf1c785a8c03ccc92ae774e5fa"
         },
         {
           "path": "progress.html",
-          "sha256": "02d361d3131077b838645a45ee974021ffbfab85458e93d4a0ce9b1687ef46d3"
+          "sha256": "330ff5da05529690394296ef78156d4e93b76dae8ee9fa1e82351b69d6c495a9"
         },
         {
           "path": "progress.manifest.json",
-          "sha256": "a6073b1a48c870a98120a874e30afa305f3079c573bea97b6f5d417f0c59e617"
+          "sha256": "228870a01681dd2e133cad22131cfb2f863b0082662e9242328d318e26db8e67"
         }
       ],
-      "hash": "7c0d4b6f88066e71aba504c2ca54e01cc8e492b7fb1229db3178bc7b230d5d13",
+      "hash": "81f29d661598f55f926006861ac1907f0e983751edf2c46f33d7d9e49c5e8195",
       "deps": []
     },
     {
@@ -1057,11 +1057,11 @@
       "name": "carousel",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "files": [
         {
           "path": "carousel.css",
-          "sha256": "45734c1ae60996fb29339f994d1451c6b91832f9b3a9fac82ffab5c6f74ca5dd"
+          "sha256": "6492118b45a2646eccab72f196af0e7ff55e1daa836301e038133e73f7d9effe"
         },
         {
           "path": "carousel.html",
@@ -1073,10 +1073,10 @@
         },
         {
           "path": "carousel.manifest.json",
-          "sha256": "5b595a5783bbed99f03e03bea99bf40eb7f085927ad498718e3cf5d3d86aeec7"
+          "sha256": "116bf17fd8529cf72db674576e88a56f131cd1b5887e9d8d5e120dce3d6e5b50"
         }
       ],
-      "hash": "341a312bf41cc4987f258d78e87b5101785afa892bf61b1fab0c8c5304ce5056",
+      "hash": "7ea89dc45ad5a5962a4398928e0b29a22ad5f5c0aca88c7a462175060a20fd92",
       "deps": []
     },
     {
@@ -1488,11 +1488,11 @@
       "name": "sidebar",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "files": [
         {
           "path": "sidebar.css",
-          "sha256": "d9c0e4a87dbc8cdbe0f556b46480d9f278959ca9bde9dcb3a3c261effe40770b"
+          "sha256": "94197725c6e2bf6b23943da6927931d052a5a6266179eaafdbc577cc58b0d73b"
         },
         {
           "path": "sidebar.html",
@@ -1504,10 +1504,10 @@
         },
         {
           "path": "sidebar.manifest.json",
-          "sha256": "28248efff7edec2b3c6cd840a8471e941e6c12d6fcd3ef12e5620669db7d7293"
+          "sha256": "8cecf35c20c5215a1265a65412444a0e2945902190f14c2405c1d4cba3db52e6"
         }
       ],
-      "hash": "0fd96b771f50d86b4608301535a8a995fccba30fbf4a6ed7bd213a230ad8c380",
+      "hash": "b165645ca5010e4426131a92967f1c75a3b83365e76acdd79e70e511289aed2b",
       "deps": [
         "button",
         "badge",
@@ -1795,11 +1795,11 @@
       "name": "dashboard-shell",
       "kind": "pattern",
       "layer": "patterns",
-      "version": "1.1.1",
+      "version": "1.2.0",
       "files": [
         {
           "path": "dashboard-shell.css",
-          "sha256": "5c0d3bca8586efd5c8d0127659b4d2812a69e20367269df8ab0fe51736d505ac"
+          "sha256": "8340bb62626663ef40d4b4c1ea205f8d35696e767f88cd3c8009ba700531f5d6"
         },
         {
           "path": "dashboard-shell.html",
@@ -1807,10 +1807,10 @@
         },
         {
           "path": "dashboard-shell.manifest.json",
-          "sha256": "1c95e7a3294462adcaf92d2a2ba07948673d12a0164b5534bcfdd84ed7724198"
+          "sha256": "a1364bd9d5db89bc2199c45b9bcd19729fd4b3ad7c6cc6aad90cdc5cd357ab93"
         }
       ],
-      "hash": "c1a0d699d403889c93d70957bc4f0bd21f9a0d56fd566721c6d9f6eca2c78c68",
+      "hash": "4b06cdc4c1fd5c5f2f0dc408120bab198fc3c67674d703c060db7fe0cf124b2a",
       "deps": [
         "card",
         "grid",

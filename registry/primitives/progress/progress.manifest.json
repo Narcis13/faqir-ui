@@ -1,10 +1,18 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "progress",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "kind": "primitive",
   "category": "feedback",
-  "description": "Progress bar with animated fill, color variants, and optional label",
+  "description": "Progress bar with animated fill, color variants, and an optional percentage label",
+
+  "changes": [
+    {
+      "version": "1.1.0",
+      "note": "Render the percentage label in every canonical visual variant, reserve four characters plus an inline-end inset for 100%, give the progressbar an accessible name, and complete the reference's visual-variant set. The label remains an explicitly optional slot for bespoke progress indicators.",
+      "breaking": false
+    }
+  ],
 
   "anatomy": {
     "tag": "div",
@@ -29,7 +37,7 @@
       "selector": "[data-part='label']",
       "required": false,
       "tag_hint": "span",
-      "description": "Optional text label showing percentage or status"
+      "description": "Optional visible text showing the current percentage or status; when present, sized to keep 100% fully inside the root"
     }
   },
 
@@ -51,26 +59,26 @@
 
   "a11y": {
     "role": "progressbar",
-    "required_attrs": ["aria-valuenow", "aria-valuemin", "aria-valuemax"],
+    "required_attrs": ["aria-label", "aria-valuenow", "aria-valuemin", "aria-valuemax"],
     "keyboard": {}
   },
 
   "tokens_used": [
     "color-primary", "color-bg-muted", "color-success",
     "color-warning", "color-destructive", "color-fg-muted",
-    "radius-full", "text-sm", "space-2",
+    "radius-full", "text-sm", "space-1", "space-2",
     "duration-normal", "ease-default"
   ],
 
   "templates": {
-    "html": "<div data-ui=\"progress\" data-variant=\"{variant}\" role=\"progressbar\" aria-valuenow=\"{value}\" aria-valuemin=\"0\" aria-valuemax=\"100\"><div data-part=\"track\"><div data-part=\"fill\" style=\"width: {value}%\"></div></div><span data-part=\"label\">{value}%</span></div>"
+    "html": "<div data-ui=\"progress\" data-variant=\"{variant}\" role=\"progressbar\" aria-label=\"Progress\" aria-valuenow=\"{value}\" aria-valuemin=\"0\" aria-valuemax=\"100\"><div data-part=\"track\"><div data-part=\"fill\" style=\"width: {value}%\"></div></div><span data-part=\"label\">{value}%</span></div>"
   },
 
   "safe_transforms": [
     "Change data-variant to any listed variant",
     "Change data-size to any listed size",
-    "Update fill width percentage",
-    "Add or remove label slot"
+    "Update fill width percentage and matching label text",
+    "Add or remove the label slot"
   ],
   "unsafe_transforms": [
     "Remove data-ui attribute",
@@ -90,8 +98,10 @@
 
   "tests": [
     "Renders track and fill",
+    "Every variant renders track fill and label",
     "Fill width reflects value",
     "Variants change fill color",
-    "Sizes change track height"
+    "Sizes change track height",
+    "Labels stay fully within the root including 100 percent"
   ]
 }

@@ -118,7 +118,9 @@
 
 /* ── Variant: Muted ── */
 [data-ui="callout"][data-variant="muted"] {
-  border-inline-start-color: var(--color-border, oklch(0.87 0.006 260));
+  /* A semantic foreground keeps the legal/disclaimer accent visible even when
+     a theme makes its ordinary hairline border blend into the surface. */
+  border-inline-start-color: var(--color-fg-muted);
   background: var(--callout-bg);
   color: var(--color-fg-muted);
 }

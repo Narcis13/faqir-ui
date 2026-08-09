@@ -64,6 +64,7 @@ rule with an injected override and prove the check bites in the browser too.
 | `responsive-matrix.test.ts` | `bun test` meta-test. Guards the discovery property and every failure mode of the pre-assertion. |
 | `layout-lint.pw.ts` | The layout gate (0.9-01): loads every generated docs page and measures four conditions against a committed budget. No screenshots. |
 | `layout-budget.json` | The ratchet. Committed, unlike the baselines — it is five integers and a per-page table, not pixels. |
+| `variant-consistency.pw.ts` | Computed geometry for the 0.9-11 consistency sweep: mixed-size baselines, callout accents, progress-label bounds, and contained-but-reachable carousel overflow. |
 | `../../src/utils/layout-lint.ts` | The four conditions as pure geometry, proven from literal rectangles in `tests/utils/layout-lint.test.ts`. |
 | `../../playwright.config.ts` | One default viewport, chromium, single platform-agnostic baseline set, `testMatch: **/*.pw.ts`. The responsive and layout-lint specs set their own viewport. |
 | `../../.github/workflows/visual.yml` | CI: seed baselines on `main`, diff PRs (sharded ×4), upload a merged HTML diff report. |

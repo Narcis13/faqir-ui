@@ -1128,7 +1128,7 @@ export interface LProgressProps extends Omit<ComponentPropsWithoutRef<"div">, "v
   label?: ReactNode;
 }
 
-/** \`progress\` — Progress bar with animated fill, color variants, and optional label */
+/** \`progress\` — Progress bar with animated fill, color variants, and an optional percentage label */
 export const LProgress = createFaqirPrimitive<LProgressProps>({
   name: "progress",
   tag: "div",

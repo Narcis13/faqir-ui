@@ -743,10 +743,10 @@ Print page break with visual indicator for screen editing
 
 _kind: primitive · category: feedback_
 
-Progress bar with animated fill, color variants, and optional label
+Progress bar with animated fill, color variants, and an optional percentage label
 
 ```html
-<div data-ui="progress" data-variant="{variant}" role="progressbar" aria-valuenow="{value}" aria-valuemin="0" aria-valuemax="100"><div data-part="track"><div data-part="fill" style="width: {value}%"></div></div><span data-part="label">{value}%</span></div>
+<div data-ui="progress" data-variant="{variant}" role="progressbar" aria-label="Progress" aria-valuenow="{value}" aria-valuemin="0" aria-valuemax="100"><div data-part="track"><div data-part="fill" style="width: {value}%"></div></div><span data-part="label">{value}%</span></div>
 ```
 
 **Anatomy**
@@ -755,7 +755,7 @@ Progress bar with animated fill, color variants, and optional label
 [data-ui='progress']  ·  <div> · content: slots
 ├─ [data-part='track']  <div>  required  — Background track container
 ├─ [data-part='fill']  <div>  required  — Filled portion — width set via inline style or reactive binding
-└─ [data-part='label']  <span>  optional  — Optional text label showing percentage or status
+└─ [data-part='label']  <span>  optional  — Optional visible text showing the current percentage or status; when present, sized to keep 100% fully inside the root
 ```
 
 **Variants**
@@ -765,10 +765,10 @@ Progress bar with animated fill, color variants, and optional label
 | variant | `default`, `success`, `warning`, `destructive` | `default` | `data-variant` | root |
 | size | `sm`, `md`, `lg` | `md` | `data-size` | root |
 
-- **Safe transforms:** `Change data-variant to any listed variant`, `Change data-size to any listed size`, `Update fill width percentage`, `Add or remove label slot`
+- **Safe transforms:** `Change data-variant to any listed variant`, `Change data-size to any listed size`, `Update fill width percentage and matching label text`, `Add or remove the label slot`
 - **Unsafe (never do):** `Remove data-ui attribute`, `Remove track or fill slots`
 - **A11y:** role=progressbar
-- **Required ARIA:** `aria-valuenow`; `aria-valuemin`; `aria-valuemax`
+- **Required ARIA:** `aria-label`; `aria-valuenow`; `aria-valuemin`; `aria-valuemax`
 
 ## radio
 

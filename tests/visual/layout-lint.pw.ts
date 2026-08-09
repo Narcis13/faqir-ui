@@ -289,6 +289,13 @@ test("the four inline-control references have zero layout seams", () => {
   }
 });
 
+test("no reference page has unreachable viewport bleed", () => {
+  const bled = findings
+    .filter((finding) => finding.bleeds.length > 0)
+    .map((finding) => ({ page: finding.page, bleeds: finding.bleeds }));
+  expect(bled).toEqual([]);
+});
+
 test("two toasts in one fixed container stack with the container's real gap", async ({ page }) => {
   await page.goto(`${origin}/examples/recipes/toast.html`, { waitUntil: "load" });
   await page.evaluate(() => document.fonts.ready);

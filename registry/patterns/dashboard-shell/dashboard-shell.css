@@ -91,6 +91,21 @@
   display: none;
 }
 
+/* A collapsed rail owns the full width of its nav. Trailing badges need their
+   labels to be meaningful and do not fit beside a glyph in the 4rem column, so
+   they join the labels in the declared collapsed presentation. */
+[data-ui="dashboard-shell"] > [data-part="sidebar"][data-state="collapsed"] [data-part="nav"] {
+  inline-size: 100%;
+}
+
+[data-ui="dashboard-shell"] > [data-part="sidebar"][data-state="collapsed"] [data-part="nav-item"] {
+  justify-content: center;
+}
+
+[data-ui="dashboard-shell"] > [data-part="sidebar"][data-state="collapsed"] [data-part="nav-item"] [data-ui="badge"] {
+  display: none;
+}
+
 /* ── Logo ── */
 [data-ui="dashboard-shell"] > [data-part="sidebar"] [data-part="logo"] {
   display: flex;

@@ -351,13 +351,14 @@ describe("the ratchet", () => {
   });
 
   // The committed file, not a fixture: the library's own floor is zero today.
-  it("has zero as the committed floor for seams and zero-gutter pages", async () => {
+  it("has zero as the committed floor for gutters, seams, and bleeds", async () => {
     const committed = (await import("../visual/layout-budget.json")).default as unknown as {
       totals: Record<string, number>;
     };
     expect(committed.totals.seams).toBe(0);
     expect(committed.totals.seamPages).toBe(0);
     expect(committed.totals.zeroGutterPages).toBe(0);
+    expect(committed.totals.bleeds).toBe(0);
     expect(committed.totals.pages).toBeGreaterThanOrEqual(180);
   });
 

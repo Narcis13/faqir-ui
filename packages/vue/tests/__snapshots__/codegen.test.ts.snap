@@ -1018,7 +1018,7 @@ export interface LProgressProps {
   size?: LProgressSize;
 }
 
-/** \`progress\` — Progress bar with animated fill, color variants, and optional label */
+/** \`progress\` — Progress bar with animated fill, color variants, and an optional percentage label */
 export const LProgress = defineFaqirPrimitive<LProgressProps>({
   name: "progress",
   tag: "div",

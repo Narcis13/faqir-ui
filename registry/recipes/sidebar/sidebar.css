@@ -177,6 +177,14 @@
   padding-inline: var(--space-2);
 }
 
+/* The brand glyph (28px) and trigger (32px) cannot share one inline row inside
+   the rail's 44px content box. Stack them so both stay fully reachable. */
+[data-ui="sidebar"][data-state="rail"] [data-part="header"] {
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
 [data-ui="sidebar"][data-state="rail"] [data-part="brand"],
 [data-ui="sidebar"][data-state="rail"] [data-part="item"] {
   justify-content: center;

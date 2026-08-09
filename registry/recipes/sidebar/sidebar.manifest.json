@@ -1,10 +1,18 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "sidebar",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "kind": "recipe",
   "category": "navigation",
   "description": "Collapsible application sidebar with three modes — expanded, rail (icons only), and a mobile off-canvas drawer — switched responsively and toggled from the keyboard",
+
+  "changes": [
+    {
+      "version": "1.1.0",
+      "note": "Stack the brand glyph and toggle in rail mode so both fit inside the 3.75rem column without unreachable inline-start clipping.",
+      "breaking": false
+    }
+  ],
 
   "anatomy": {
     "tag": "div",
@@ -206,6 +214,7 @@
     "breakpoint-change-tears-down-open-drawer",
     "trigger-aria-expanded-tracks-state",
     "external-trigger-toggles-and-tracks",
+    "rail-header-keeps-brand-and-trigger-within-the-panel",
     "prevents-double-initialization",
     "destroy-removes-listeners"
   ]

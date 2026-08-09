@@ -1,7 +1,7 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "dashboard-shell",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "kind": "pattern",
   "category": "composite",
   "description": "Application dashboard layout with sidebar navigation, header, and content area",
@@ -235,6 +235,7 @@
     "sidebar-has-expanded-state-by-default",
     "sidebar-collapses-with-data-state-collapsed",
     "sidebar-position-right-variant-moves-sidebar",
+    "collapsed-sidebar-keeps-navigation-within-the-rail",
     "nav-has-aria-label",
     "active-nav-item-has-aria-current",
     "sidebar-is-an-off-canvas-drawer-below-md-and-a-grid-column-from-it",
@@ -244,6 +245,11 @@
     "contains-dropdown-component"
   ],
   "changes": [
+    {
+      "version": "1.2.0",
+      "note": "Give the collapsed rail's navigation the available inline size, center its glyphs, and hide label-dependent badges so no navigation box is clipped past the viewport start.",
+      "breaking": false
+    },
     {
       "version": "1.1.1",
       "note": "Use the AA-gated muted foreground for visible footer text instead of the decorative subtle foreground.",

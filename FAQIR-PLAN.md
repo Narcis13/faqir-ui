@@ -175,7 +175,7 @@ done in any order (or in parallel worktrees).
 | 0.9-08 | Inline control rows: `checkbox`/`radio`/`switch` groups | ✅ |
 | 0.9-09 | Cross-card row alignment (subgrid) | ⬜ |
 | 0.9-10 | Surface elevation ramp + the `-subtle` contrast debt | ✅ |
-| 0.9-11 | Variant consistency sweep + `carousel` viewport bleed | ⬜ |
+| 0.9-11 | Variant consistency sweep + `carousel` viewport bleed | ✅ |
 | 0.9-12 | Spacing, rhythm & density documentation surfaces | ⬜ |
 
 ### Phase v1.0 — The Standard
@@ -2982,9 +2982,9 @@ it will find the fifth before a human does.
 - `progress` labels are present and fully within bounds at every declared value including 100%.
 
 **Acceptance criteria**
-- [ ] Every variant in the four groups renders its group's full part set; exceptions are declared, not incidental.
-- [ ] Layout-lint reports 0 viewport bleed; the `carousel` cause is diagnosed as component or demo and fixed at the source.
-- [ ] The parity assertion is generic — pointed at a fifth component it runs without edits.
+- [x] Every variant in the four groups renders its group's full part set; exceptions are declared, not incidental. (The canonical `callout`, `avatar`, and `progress` examples now expose the same representative part set for every declared value; optional examples remain explicitly optional in their manifests. Computed-browser checks also cover the callout accent, avatar/badge baselines, and every progress label through 100%.)
+- [x] Layout-lint reports 0 viewport bleed; the `carousel` cause is diagnosed as component or demo and fixed at the source. (`carousel` slide overflow is intentional, reachable scroller content; the component root and viewport now enforce inline containment. The seven genuinely unreachable boxes were traced to label-dependent dashboard badges and a side-by-side sidebar rail header, fixed in those component sources, and the 180-page bleed budget dropped from 7 to 0.)
+- [x] The parity assertion is generic — pointed at a fifth component it runs without edits. (`variant-parity.test.ts` takes only a manifest group descriptor, derives the declared values and part contract itself, and passes unchanged against `chip`'s visual variants as the fifth component.)
 
 ---
 

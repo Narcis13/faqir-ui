@@ -4,6 +4,7 @@
 /* ── Base ── */
 [data-ui="avatar"] {
   display: inline-flex;
+  vertical-align: bottom;
   align-items: center;
   justify-content: center;
   width: var(--avatar-size-md, 40px);

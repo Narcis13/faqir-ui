@@ -8,7 +8,7 @@
     "zeroGutterPages": 0,
     "seamPages": 0,
     "seams": 0,
-    "bleeds": 7,
+    "bleeds": 0,
     "overlaps": 0
   },
   "pages": {
@@ -555,7 +555,7 @@
     "examples/patterns/dashboard-shell.html": {
       "zeroGutter": false,
       "seams": 0,
-      "bleeds": 4,
+      "bleeds": 0,
       "overlaps": 0
     },
     "examples/patterns/document.html": {
@@ -1005,7 +1005,7 @@
     "examples/recipes/sidebar.html": {
       "zeroGutter": false,
       "seams": 0,
-      "bleeds": 3,
+      "bleeds": 0,
       "overlaps": 0
     },
     "examples/recipes/slider.html": {
