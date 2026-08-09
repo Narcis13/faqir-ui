@@ -888,12 +888,16 @@ export function formatContextLlms(data: ContextData): string {
   lines.push("");
   lines.push(`Vertical rhythm is a default, not an opt-in: ${rhythmLine()}`);
   lines.push("");
-  lines.push(`Spacing ladder: ${spacingLadderLine()}. Use \`--space-*\` inside components and groups; use \`--section-gap-sm|md|lg\` for page rhythm.`);
+  lines.push(
+    `Spacing ladder: ${spacingLadderLine()}. Use \`--space-*\` inside components and groups; ` +
+      `use \`--section-gap-sm\`, \`--section-gap-md\`, and \`--section-gap-lg\` for page rhythm.`,
+  );
   lines.push("");
   lines.push(
     `Density axis: \`${data.density.attribute}="compact"\` tightens the current subtree; ` +
       `\`${data.density.attribute}="comfortable"\` resets a nested subtree. ` +
-      `The rhythm aliases \`--section-gap-sm|md|lg\` and \`--content-gutter\` remap with it.`,
+      `The rhythm aliases \`--section-gap-sm\`, \`--section-gap-md\`, \`--section-gap-lg\`, ` +
+      `and \`--content-gutter\` remap with it.`,
   );
   lines.push("");
 
