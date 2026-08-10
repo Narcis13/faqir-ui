@@ -200,6 +200,14 @@ test.describe("theme gallery", () => {
 });
 
 test.describe("documentation showroom", () => {
+  test("starts the shell at the viewport top after the fixed skip link", async ({ page }) => {
+    await page.goto(`${origin}/index.html`, { waitUntil: "load" });
+    const shell = page.locator("[data-docs-shell]");
+
+    await expect(shell).toHaveCSS("margin-block-start", "0px");
+    expect((await shell.boundingBox())?.y).toBe(0);
+  });
+
   test("persists appearance across navigation and synchronizes component frames", async ({
     page,
   }) => {

@@ -53,6 +53,9 @@ body {
   --shell-header-height: var(--docs-header-height);
   grid-template-columns: var(--docs-sidebar-width) minmax(0, 1fr);
   grid-template-rows: var(--docs-header-height) minmax(0, 1fr) auto;
+  /* The fixed skip link is a preceding data-ui sibling; do not let the default
+     flow rhythm turn that accessibility relationship into a page offset. */
+  margin-block-start: 0;
   block-size: 100dvh;
   min-block-size: 36rem;
   overflow: hidden;
