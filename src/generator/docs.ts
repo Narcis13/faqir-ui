@@ -18,6 +18,8 @@
 //   layouts/index.html                responsive layout doctrine + live labs
 //   spacing/index.html                spacing ladder + default rhythm guide
 //   density/index.html                density axis + nesting/reset guide
+//   icons/index.html                  searchable manifest-derived icon catalogue
+//   typography/index.html             type tokens, scale and prose specimens
 //   playground/index.html             live in-browser audit playground (task 0.7-14)
 //   themes/index.html                 theme gallery + instant switcher (task 0.7-14)
 //   agents/index.html                 the machine surfaces, documented (task 0.7-15)
@@ -26,6 +28,9 @@
 //   llms.txt · llms-full.txt          full-registry agent context (llmstxt.org)
 //   manifest.schema.json              the manifest contract, at its own `$id` path
 //   registry-index.json               the remote-registry index (`faqir add --registry`)
+//   api/messages                      same-origin JSON fixture for the live inbox demo
+//   robots.txt · sitemap.xml           static-publishing discovery surfaces
+//   404.html                           audit-clean not-found page
 //   snippets/<layer>/<name>.html.txt  copy-for-agents payload: markup + CDN preamble
 //   _headers                          content types + CORS for the files above
 //   styles/faqir.css                  tokens + base + components + docs presentation
@@ -124,6 +129,22 @@ export const SPACING_PAGE = "spacing/index.html";
 
 /** The `data-density` axis, remap inventory, and nesting/reset contract. */
 export const DENSITY_PAGE = "density/index.html";
+
+/** Searchable catalogue derived from the icon primitive's declared names. */
+export const ICONS_PAGE = "icons/index.html";
+
+/** Typography tokens, specimens, semantic hierarchy, and prose guidance. */
+export const TYPOGRAPHY_PAGE = "typography/index.html";
+
+/** Static-host not-found document. */
+export const NOT_FOUND_PAGE = "404.html";
+
+/** Search-engine discovery files emitted beside the static site. */
+export const ROBOTS_FILE = "robots.txt";
+export const SITEMAP_FILE = "sitemap.xml";
+
+/** Same-origin static response consumed by the inbox reference's `l-source`. */
+export const DEMO_MESSAGES_API = "api/messages";
 
 /**
  * The site's **machine contract**: four files an agent or a tool fetches by URL
@@ -316,6 +337,8 @@ export interface SiteConfig {
   title: string;
   tagline: string;
   description: string;
+  /** Canonical public origin, without a trailing slash. */
+  url: string;
   theme: string;
   footer: string;
 }
@@ -324,6 +347,7 @@ const DEFAULT_SITE_CONFIG: SiteConfig = {
   title: "Faqir UI",
   tagline: "The agent-native UI framework",
   description: "Manifest-driven, zero-dependency UI components documented from their own manifests.",
+  url: "https://faqir.dev",
   theme: "default",
   footer: "Faqir UI — every page on this site is generated from the registry manifests.",
 };
@@ -359,6 +383,13 @@ function slug(value: string): string {
 export function relUrl(fromPagePath: string, toPath: string): string {
   const depth = fromPagePath.split("/").length - 1;
   return depth === 0 ? toPath : "../".repeat(depth) + toPath;
+}
+
+/** Public URL for a generated page, with directory-style URLs for index pages. */
+export function canonicalUrl(config: SiteConfig, pagePath: string): string {
+  const origin = config.url.replace(/\/+$/, "");
+  const path = pagePath === "index.html" ? "" : pagePath.replace(/index\.html$/, "");
+  return `${origin}/${path}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -1053,6 +1084,33 @@ function renderSwatchRules(tokenList: readonly TokenEntry[]): string {
     .join("\n");
 }
 
+/**
+ * Live typography previews, generated from the same token list as the reference
+ * page. The attribute value names the token; the prefix decides which CSS
+ * property consumes it, so adding a new type-scale step makes it render without
+ * an inline style or a hand-maintained selector.
+ */
+function renderTypographyPreviewRules(tokenList: readonly TokenEntry[]): string {
+  return tokenList
+    .filter((entry) => entry.group === "typography")
+    .map((entry) => {
+      const property = entry.name.startsWith("font-")
+        ? "font-family"
+        : entry.name.startsWith("text-")
+          ? "font-size"
+          : entry.name.startsWith("weight-")
+            ? "font-weight"
+            : entry.name.startsWith("leading-")
+              ? "line-height"
+              : null;
+      return property
+        ? `[data-docs-token-preview="${entry.name}"] { ${property}: var(--${entry.name}); }`
+        : "";
+    })
+    .filter(Boolean)
+    .join("\n");
+}
+
 // ---------------------------------------------------------------------------
 // Page shell
 // ---------------------------------------------------------------------------
@@ -1108,6 +1166,7 @@ function renderShell(input: ShellInput): string {
   const { pagePath, config, components, current } = input;
   const themes = input.themes ?? [];
   const u = (to: string) => escAttr(relUrl(pagePath, to));
+  const canonical = canonicalUrl(config, pagePath);
   const currentAttr = (key: string) => (key === current ? ' aria-current="page"' : "");
   const themeLink = renderThemeLink(pagePath, config.theme);
   const scripts = ["scripts/gallery.js", ...(input.scripts ?? [])].filter(
@@ -1157,13 +1216,17 @@ function renderShell(input: ShellInput): string {
     const active =
       section === "components"
         ? current.startsWith("components/")
-        : section === "layouts"
-          ? [LAYOUT_PAGE, LAYOUTS_PAGE, SPACING_PAGE, DENSITY_PAGE].includes(current)
-          : section === "themes"
-            ? current === THEMES_PAGE
-            : section === "agents"
-              ? current === AGENTS_PAGE
-              : false;
+        : section === "icons"
+          ? current === ICONS_PAGE
+          : section === "typography"
+            ? current === TYPOGRAPHY_PAGE
+            : section === "layouts"
+              ? [LAYOUT_PAGE, LAYOUTS_PAGE, SPACING_PAGE, DENSITY_PAGE].includes(current)
+              : section === "themes"
+                ? current === THEMES_PAGE
+                : section === "agents"
+                  ? current === AGENTS_PAGE
+                  : false;
     return active ? ' data-state="active"' : "";
   };
 
@@ -1176,9 +1239,12 @@ function renderShell(input: ShellInput): string {
 <meta name="description" content="${escAttr(input.description)}">
 <meta name="color-scheme" content="light dark">
 <meta property="og:type" content="website">
+<meta property="og:site_name" content="${escAttr(config.title)}">
 <meta property="og:title" content="${escAttr(input.title)}">
 <meta property="og:description" content="${escAttr(input.description)}">
+<meta property="og:url" content="${escAttr(canonical)}">
 <meta name="twitter:card" content="summary">
+<link rel="canonical" href="${escAttr(canonical)}">
 <link rel="stylesheet" href="${u("styles/faqir.css")}">${themeLink}
 ${scripts.map((src) => `<script src="${u(src)}" defer></script>`).join("\n")}
 <!-- ${DOCS_GENERATION_MARKER} · regenerate with \`bun run build:docs\` · do not edit by hand -->
@@ -1205,6 +1271,12 @@ ${scripts.map((src) => `<script src="${u(src)}" defer></script>`).join("\n")}
         <a data-part="nav-item" href="${u("components/index.html")}"${currentAttr(
           "components/index.html",
         )}>All components</a>
+        <a data-part="nav-item" href="${u(ICONS_PAGE)}"${currentAttr(
+          ICONS_PAGE,
+        )}>Icons</a>
+        <a data-part="nav-item" href="${u(TYPOGRAPHY_PAGE)}"${currentAttr(
+          TYPOGRAPHY_PAGE,
+        )}>Typography</a>
         <a data-part="nav-item" href="${u(LAYOUT_PAGE)}"${currentAttr(
           LAYOUT_PAGE,
         )}>Layout guide</a>
@@ -1246,6 +1318,8 @@ ${navGroups}
     </a>
     <nav data-ui="nav" aria-label="Site sections" data-docs-top-nav>
       <a data-part="link"${topActive("components")} href="${u("components/index.html")}">Components</a>
+      <a data-part="link"${topActive("icons")} href="${u(ICONS_PAGE)}">Icons</a>
+      <a data-part="link"${topActive("typography")} href="${u(TYPOGRAPHY_PAGE)}">Typography</a>
       <a data-part="link"${topActive("layouts")} href="${u(LAYOUT_PAGE)}">Layouts</a>
       <a data-part="link"${topActive("themes")} href="${u(THEMES_PAGE)}">Themes</a>
       <a data-part="link"${topActive("agents")} href="${u(AGENTS_PAGE)}">For agents</a>
@@ -1695,6 +1769,294 @@ function renderComponentIndex(ctx: {
       title: `Components · ${ctx.config.title}`,
       description: `Every component in the Faqir registry, grouped by layer.`,
       body: parts.join("\n"),
+      config: ctx.config,
+      components: ctx.components,
+      themes: ctx.themes,
+      current: pagePath,
+      layout: "wide",
+    }),
+  };
+}
+
+/** The icon catalogue: every name comes from the icon primitive's manifest. */
+function renderIconPage(ctx: {
+  config: SiteConfig;
+  components: DocsComponent[];
+  themes: DocsTheme[];
+}): SiteFile {
+  const pagePath = ICONS_PAGE;
+  const icon = ctx.components.find((c) => c.layer === "primitives" && c.name === "icon");
+  const names = [...new Set(icon?.manifest.variants.icon?.values ?? [])].sort();
+  const iconContract = icon?.pagePath ?? "components/primitives/icon.html";
+  const cards = names
+    .map(
+      (name) =>
+        `        <button data-ui="button" data-variant="ghost" type="button" data-docs-icon-card ` +
+        `data-docs-icon-copy="${escAttr(name)}" title="Copy ${escAttr(name)} icon markup">\n` +
+        `          <span data-ui="icon" data-icon="${escAttr(name)}" aria-hidden="true"></span>\n` +
+        `          <span data-ui="text" data-size="xs" data-variant="mono">${esc(name)}</span>\n` +
+        `        </button>`,
+    )
+    .join("\n");
+
+  const body = `      <div data-docs-foundation-page>
+        <header data-docs-foundation-header>
+          <span data-ui="badge" data-variant="primary">CSS-only · Lucide ISC</span>
+          <h1>Icons</h1>
+          <p>${esc(
+            `${names.length} curated glyphs rendered as CSS masks. They inherit currentColor, scale with font-size, need no JavaScript, and make no network request.`,
+          )}</p>
+          <div data-ui="cluster" data-gap="3">
+            <a data-ui="button" data-variant="primary" href="${escAttr(
+              relUrl(pagePath, iconContract),
+            )}">Open the icon contract</a>
+            <a data-ui="button" data-variant="outline" href="#icon-usage">Usage &amp; accessibility</a>
+          </div>
+        </header>
+
+        <section aria-labelledby="icon-library-heading">
+          <div data-docs-section-heading>
+            <span data-ui="badge" data-variant="secondary">Complete set</span>
+            <h2 id="icon-library-heading">Find and copy a glyph.</h2>
+            <p>Search by name, then activate a tile to copy its complete decorative markup.</p>
+          </div>
+          <div data-docs-filter-panel data-docs-icon-toolbar>
+            <div data-docs-filter-control>
+              <label data-ui="label" for="icon-search">Search ${esc(String(names.length))} icons</label>
+              <input data-ui="input" id="icon-search" type="search" placeholder="arrow, user, chart…" autocomplete="off" data-docs-icon-search>
+            </div>
+            <div data-docs-filter-meta>
+              <strong id="icon-result-count" role="status" aria-live="polite">${esc(
+                `${names.length} of ${names.length} icons`,
+              )}</strong>
+              <span>Click any tile to copy its markup</span>
+            </div>
+            <span id="icon-copy-status" role="status" aria-live="polite" data-docs-a11y></span>
+          </div>
+          <div data-ui="grid" data-cols="auto" data-min="8" data-gap="2" data-docs-icon-grid>
+${cards}
+          </div>
+          <p data-docs-icon-empty hidden>No icons match that search. Try a broader name.</p>
+        </section>
+
+        <section id="icon-usage" aria-labelledby="icon-usage-heading" data-docs-section>
+          <div data-docs-section-heading>
+            <span data-ui="badge">One element</span>
+            <h2 id="icon-usage-heading">Use the accessible form that matches the meaning.</h2>
+            <p>Decorative icons disappear from the accessibility tree. Meaningful icons expose an image role and a concise label.</p>
+          </div>
+          <div data-ui="grid" data-cols="1" data-cols-lg="2" data-gap="4">
+            <div data-ui="card" data-variant="outlined">
+              <div data-part="header">
+                <span data-ui="icon" data-icon="sparkles" aria-hidden="true"></span>
+                <h3 data-part="title">Decorative</h3>
+                <p data-part="description">The adjacent text already carries the meaning.</p>
+              </div>
+              <div data-part="body"><pre tabindex="0"><code>&lt;span data-ui="icon"
+  data-icon="sparkles"
+  aria-hidden="true"&gt;&lt;/span&gt;</code></pre></div>
+            </div>
+            <div data-ui="card" data-variant="outlined">
+              <div data-part="header">
+                <span data-ui="icon" data-icon="circle-check" role="img" aria-label="Complete"></span>
+                <h3 data-part="title">Meaningful</h3>
+                <p data-part="description">The glyph communicates information on its own.</p>
+              </div>
+              <div data-part="body"><pre tabindex="0"><code>&lt;span data-ui="icon"
+  data-icon="circle-check"
+  role="img"
+  aria-label="Complete"&gt;&lt;/span&gt;</code></pre></div>
+            </div>
+          </div>
+          <div data-ui="callout" data-variant="info">
+            <span data-part="icon"><span data-ui="icon" data-icon="package" aria-hidden="true"></span></span>
+            <div data-part="content">
+              <h3 data-part="title">Ship only what you use</h3>
+              <p><code>faqir add icons --only check,x,chevron-down</code> creates a deterministic subset and merges future additions without clobbering the current set.</p>
+            </div>
+          </div>
+        </section>
+      </div>`;
+
+  return {
+    path: pagePath,
+    content: renderShell({
+      pagePath,
+      title: `Icons · ${ctx.config.title}`,
+      description: `${names.length} searchable, CSS-only icons with copy-ready accessible markup.`,
+      body,
+      config: ctx.config,
+      components: ctx.components,
+      themes: ctx.themes,
+      current: pagePath,
+      layout: "wide",
+    }),
+  };
+}
+
+/** Typography specimens and guidance, driven by registry/tokens/typography.css. */
+function renderTypographyPage(ctx: {
+  config: SiteConfig;
+  components: DocsComponent[];
+  themes: DocsTheme[];
+  tokenList: TokenEntry[];
+}): SiteFile {
+  const pagePath = TYPOGRAPHY_PAGE;
+  const typography = ctx.tokenList.filter((entry) => entry.group === "typography");
+  const families = typography.filter((entry) => entry.name.startsWith("font-"));
+  const sizes = typography.filter((entry) => entry.name.startsWith("text-"));
+  const weights = typography.filter((entry) => entry.name.startsWith("weight-"));
+  const leading = typography.filter((entry) => entry.name.startsWith("leading-"));
+  const textComponent = ctx.components.find(
+    (component) => component.layer === "primitives" && component.name === "text",
+  );
+
+  const familyCards = families
+    .map(
+      (entry) => `          <div data-ui="card" data-variant="outlined" data-docs-type-family>
+            <div data-part="header">
+              <span data-ui="text" data-size="xs" data-variant="mono">--${esc(entry.name)}</span>
+              <h3 data-part="title">${esc(entry.name.replace("font-", ""))}</h3>
+              <p data-part="description"><code>${esc(entry.value)}</code></p>
+            </div>
+            <div data-part="body">
+              <p data-docs-token-preview="${escAttr(entry.name)}" data-docs-type-display>Ag</p>
+              <p data-docs-token-preview="${escAttr(entry.name)}">The interface is the contract. 0123456789</p>
+            </div>
+          </div>`,
+    )
+    .join("\n");
+  const sizeRows = sizes
+    .map(
+      (entry) => `          <li data-docs-type-row>
+            <span data-docs-type-sample data-docs-token-preview="${escAttr(entry.name)}">The interface is the contract.</span>
+            <span data-docs-type-meta><code>--${esc(entry.name)}</code><span>${esc(entry.value)}</span></span>
+          </li>`,
+    )
+    .join("\n");
+  const weightRows = weights
+    .map(
+      (entry) => `          <div data-ui="surface" data-variant="flat" data-size="md">
+            <p data-docs-token-preview="${escAttr(entry.name)}">${esc(
+              entry.name.replace("weight-", ""),
+            )} — Build interfaces agents can understand.</p>
+            <code>--${esc(entry.name)} · ${esc(entry.value)}</code>
+          </div>`,
+    )
+    .join("\n");
+  const leadingRows = leading
+    .map(
+      (entry) => `          <div data-ui="surface" data-variant="flat" data-size="md">
+            <p data-docs-token-preview="${escAttr(entry.name)}">A stable interface contract makes markup readable to people, style sheets, controllers, audits, and agents at the same time.</p>
+            <code>--${esc(entry.name)} · ${esc(entry.value)}</code>
+          </div>`,
+    )
+    .join("\n");
+
+  const body = `      <div data-docs-foundation-page>
+        <header data-docs-foundation-header>
+          <span data-ui="badge" data-variant="primary">System fonts · token scale</span>
+          <h1>Typography</h1>
+          <p>${esc(
+            `${families.length} font stacks, ${sizes.length} size steps, ${weights.length} weights, and ${leading.length} line-height choices form one portable type system with no font download.`,
+          )}</p>
+          <div data-ui="cluster" data-gap="3">
+            <a data-ui="button" data-variant="primary" href="${escAttr(
+              relUrl(pagePath, textComponent?.pagePath ?? "components/primitives/text.html"),
+            )}">Open the text contract</a>
+            <a data-ui="button" data-variant="outline" href="${escAttr(
+              relUrl(pagePath, "tokens/index.html"),
+            )}#group-typography">View typography tokens</a>
+          </div>
+        </header>
+
+        <section aria-labelledby="font-families-heading" data-docs-section>
+          <div data-docs-section-heading>
+            <span data-ui="badge" data-variant="secondary">Font families</span>
+            <h2 id="font-families-heading">Native stacks, available immediately.</h2>
+            <p>The sans, serif, and monospace stacks use installed system fonts, keeping text private, fast, and stable across static and offline pages.</p>
+          </div>
+          <div data-ui="grid" data-cols="1" data-cols-lg="3" data-gap="4">
+${familyCards}
+          </div>
+        </section>
+
+        <section aria-labelledby="type-scale-heading" data-docs-section>
+          <div data-docs-section-heading>
+            <span data-ui="badge">Type scale</span>
+            <h2 id="type-scale-heading">Eight deliberate steps.</h2>
+            <p>Use the semantic heading level the document needs, then choose a visual size through the text or heading primitive.</p>
+          </div>
+          <ol data-docs-type-scale>
+${sizeRows}
+          </ol>
+        </section>
+
+        <section aria-labelledby="type-detail-heading" data-docs-section>
+          <div data-docs-section-heading>
+            <span data-ui="badge" data-variant="secondary">Rhythm inside text</span>
+            <h2 id="type-detail-heading">Weight and leading stay independent.</h2>
+            <p>Weight establishes emphasis. Line height establishes reading density. Keeping them separate prevents a visual choice from changing the document hierarchy.</p>
+          </div>
+          <div data-ui="switcher" data-threshold="lg" data-gap="4">
+            <div data-ui="card" data-variant="outlined">
+              <div data-part="header"><h3 data-part="title">Weights</h3></div>
+              <div data-part="body"><div data-ui="stack" data-gap="3">${weightRows}</div></div>
+            </div>
+            <div data-ui="card" data-variant="outlined">
+              <div data-part="header"><h3 data-part="title">Line heights</h3></div>
+              <div data-part="body"><div data-ui="stack" data-gap="3">${leadingRows}</div></div>
+            </div>
+          </div>
+        </section>
+
+        <section aria-labelledby="hierarchy-heading" data-docs-section>
+          <div data-docs-section-heading>
+            <span data-ui="badge" data-variant="primary">Semantic hierarchy</span>
+            <h2 id="hierarchy-heading">Structure first, appearance second.</h2>
+            <p>Heading elements preserve the page outline. Faqir's heading primitive applies the visual level without asking the HTML element to lie about its meaning.</p>
+          </div>
+          <div data-ui="surface" data-variant="raised" data-size="lg" data-docs-hierarchy-specimen>
+            <p data-ui="heading" data-size="1">Heading level 1 style</p>
+            <p data-ui="heading" data-size="2">Heading level 2 style</p>
+            <p data-ui="heading" data-size="3">Heading level 3 style</p>
+            <p data-ui="heading" data-size="4">Heading level 4 style</p>
+            <p data-ui="text" data-size="base" data-leading="relaxed">Body copy uses the base step and relaxed leading for comfortable reading across documentation, applications, and print surfaces.</p>
+            <p data-ui="text" data-size="sm" data-variant="muted">Supporting copy uses a smaller step and the AA-gated muted foreground.</p>
+          </div>
+        </section>
+
+        <section aria-labelledby="prose-heading" data-docs-section>
+          <div data-docs-section-heading>
+            <span data-ui="badge">Long-form prose</span>
+            <h2 id="prose-heading">A complete reading surface.</h2>
+            <p>The base prose layer coordinates headings, paragraphs, links, lists, quotations, code, tables, and media around a readable measure.</p>
+          </div>
+          <div data-ui="surface" data-variant="flat" data-size="lg" data-docs-prose-specimen>
+            <h3>Designing a machine-readable interface</h3>
+            <p>A component contract works when its structure remains clear in source, in the browser, and in the tools that inspect it. <a href="${escAttr(
+              relUrl(pagePath, "agents/index.html"),
+            )}">Agent surfaces</a> expose that same contract without a parallel documentation format.</p>
+            <blockquote>Readable interfaces are easier to operate, test, repair, and hand to the next contributor.</blockquote>
+            <ul>
+              <li>Use one heading level per document relationship.</li>
+              <li>Keep paragraphs near the content they explain.</li>
+              <li>Reserve monospace text for code, tokens, and identifiers.</li>
+            </ul>
+            <pre tabindex="0"><code>&lt;p data-ui="text" data-size="lg" data-leading="relaxed"&gt;
+  Human-readable. Agent-readable.
+&lt;/p&gt;</code></pre>
+          </div>
+        </section>
+      </div>`;
+
+  return {
+    path: pagePath,
+    content: renderShell({
+      pagePath,
+      title: `Typography · ${ctx.config.title}`,
+      description: "Faqir's complete typography system: font stacks, scale, weights, leading, hierarchy, and prose.",
+      body,
       config: ctx.config,
       components: ctx.components,
       themes: ctx.themes,
@@ -2875,6 +3237,13 @@ function renderHeadersFile(machine: MachineFile[]): SiteFile {
     "# directory. It exists for the machine surfaces: an agent fetching llms.txt or",
     "# the manifest schema needs the right content type and a permissive CORS header.",
     "",
+    "/*",
+    "  X-Content-Type-Options: nosniff",
+    "  Referrer-Policy: strict-origin-when-cross-origin",
+    "  Permissions-Policy: camera=(), geolocation=(), microphone=()",
+    "  X-Frame-Options: SAMEORIGIN",
+    "  Content-Security-Policy: default-src 'self'; base-uri 'self'; connect-src 'self'; font-src 'self'; frame-src 'self'; frame-ancestors 'self'; img-src 'self' data:; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'",
+    "",
   ];
   for (const f of machine) {
     lines.push(`/${f.path}`);
@@ -2886,7 +3255,86 @@ function renderHeadersFile(machine: MachineFile[]): SiteFile {
   lines.push(`  Content-Type: text/plain; charset=utf-8`);
   lines.push(`  Access-Control-Allow-Origin: *`);
   lines.push("");
+  lines.push(`/${DEMO_MESSAGES_API}`);
+  lines.push(`  Content-Type: application/json; charset=utf-8`);
+  lines.push(`  Cache-Control: public, max-age=300`);
+  lines.push("");
   return { path: HEADERS_FILE, content: lines.join("\n") };
+}
+
+/** Static JSON backing for the canonical inbox reference on a backend-free host. */
+function renderDemoMessagesFile(siteRoot: string): SiteFile {
+  const source = join(siteRoot, "content", "messages.json");
+  const content = existsSync(source) ? `${readText(source).trim()}\n` : "[]\n";
+  const parsed = JSON.parse(content) as unknown;
+  if (!Array.isArray(parsed)) {
+    throw new Error("site/content/messages.json must contain a JSON array");
+  }
+  return { path: DEMO_MESSAGES_API, content };
+}
+
+/** Audit-clean destination for unknown static-host paths. */
+function renderNotFoundPage(ctx: {
+  config: SiteConfig;
+  components: DocsComponent[];
+  themes: DocsTheme[];
+}): SiteFile {
+  const pagePath = NOT_FOUND_PAGE;
+  const body = `      <div data-docs-empty-page>
+        <span data-ui="badge" data-variant="secondary">404 · Not found</span>
+        <span data-ui="icon" data-icon="compass" aria-hidden="true"></span>
+        <h1>This route has no contract.</h1>
+        <p>The page may have moved, or the URL may describe something that is not in the published registry.</p>
+        <div data-ui="cluster" data-gap="3" data-justify="center">
+          <a data-ui="button" data-variant="primary" href="${escAttr(
+            relUrl(pagePath, "index.html"),
+          )}">Return to the overview</a>
+          <a data-ui="button" data-variant="outline" href="${escAttr(
+            relUrl(pagePath, "components/index.html"),
+          )}">Browse components</a>
+        </div>
+      </div>`;
+  return {
+    path: pagePath,
+    content: renderShell({
+      pagePath,
+      title: `Not found · ${ctx.config.title}`,
+      description: "The requested Faqir documentation page could not be found.",
+      body,
+      config: ctx.config,
+      components: ctx.components,
+      themes: ctx.themes,
+      current: pagePath,
+      layout: "reference",
+    }),
+  };
+}
+
+/** Search-engine discovery file for the static deployment. */
+function renderRobotsFile(config: SiteConfig): SiteFile {
+  return {
+    path: ROBOTS_FILE,
+    content:
+      `# ${DOCS_GENERATION_MARKER}\n` +
+      "User-agent: *\n" +
+      "Allow: /\n" +
+      `Sitemap: ${config.url.replace(/\/+$/, "")}/${SITEMAP_FILE}\n`,
+  };
+}
+
+/** Deterministic sitemap for every navigable public document. */
+function renderSitemapFile(config: SiteConfig, paths: readonly string[]): SiteFile {
+  const urls = [...new Set(paths)]
+    .filter((path) => path !== NOT_FOUND_PAGE)
+    .sort()
+    .map((path) => `  <url><loc>${esc(canonicalUrl(config, path))}</loc></url>`)
+    .join("\n");
+  return {
+    path: SITEMAP_FILE,
+    content:
+      `<?xml version="1.0" encoding="UTF-8"?>\n` +
+      `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`,
+  };
 }
 
 /**
@@ -3034,6 +3482,9 @@ export function buildSiteStylesheet(
   parts.push("/* ── documentation swatches (generated from the token reference) ── */");
   parts.push(renderSwatchRules(parseTokenReference(registryRoot)));
 
+  parts.push("/* ── documentation typography specimens (generated from type tokens) ── */");
+  parts.push(renderTypographyPreviewRules(parseTokenReference(registryRoot)));
+
   // Last, so it wins the specificity ties the closed-state rules can force
   // (task 0.9-05). Scoped to `[data-docs-overlay="<name>"]`, which only an
   // example page carries — nothing a user installs or pastes ever sees these.
@@ -3132,6 +3583,8 @@ export function buildDocsSite(options: DocsSiteOptions = {}): SiteFile[] {
     }),
   );
   files.push(renderComponentIndex({ config, components, themes }));
+  files.push(renderIconPage({ config, components, themes }));
+  files.push(renderTypographyPage({ config, components, themes, tokenList }));
   files.push(renderTokenPage({ config, components, themes, tokenList }));
 
   const authoredLayouts = join(siteRoot, "content", "layouts.html");
@@ -3232,6 +3685,8 @@ export function buildDocsSite(options: DocsSiteOptions = {}): SiteFile[] {
       exampleSnippet: firstSnippet ? snippetPath(firstSnippet.layer, firstSnippet.name) : null,
     }),
   );
+  files.push(renderNotFoundPage({ config, components, themes }));
+  files.push(renderDemoMessagesFile(siteRoot));
   files.push(renderHeadersFile(machine));
 
   files.push({
@@ -3261,6 +3716,12 @@ export function buildDocsSite(options: DocsSiteOptions = {}): SiteFile[] {
     const path = join(siteRoot, "lib", name);
     if (existsSync(path)) files.push({ path: `scripts/${name}`, content: readText(path) });
   }
+
+  const publicPages = files
+    .filter((file) => isShellPage(file.path))
+    .map((file) => file.path);
+  files.push(renderRobotsFile(config));
+  files.push(renderSitemapFile(config, publicPages));
 
   return files.sort((a, b) => a.path.localeCompare(b.path));
 }

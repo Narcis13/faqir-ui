@@ -47,10 +47,11 @@ const CDN_ENTRY = join(PKG, "src", "cdn-entry.js");
 /** The package's own name + version — what a CDN URL pins to. */
 const pkg = JSON.parse(readFileSync(join(PKG, "package.json"), "utf8"));
 
-// Engine gzip budget (§A6). Over-budget is a printed note today, not a failure:
-// recipe controllers are still inlined in the engine (dedup lands in 0.3-04) and
-// the engine/controller split lands in 0.3-03.
-const ENGINE_GZIP_BUDGET = 14 * 1024;
+// Shipped engine + controller budget (§10.4), kept aligned with
+// scripts/check-size.mjs. The engine-only 14 KB budget applies to
+// src/core-src/engine.js; this package artifact intentionally assembles every
+// recipe controller and is governed by the 44 KB launch budget.
+const ASSEMBLED_GZIP_BUDGET = 44 * 1024;
 
 // Token files in cascade order (mirrors src/utils/bundler.ts). We concatenate the
 // individual files rather than tokens/index.css precisely because index.css is a
@@ -245,12 +246,11 @@ console.log(`  themes               ${themes.map((t) => `faqir.${t}.css`).join("
 console.log(`  plugins              ${pluginFiles.length ? pluginFiles.join(", ") : "(none yet)"}`);
 console.log(`  sri.json             ${Object.keys(sri).length} files hashed (SHA-384)`);
 
-if (minGzip <= ENGINE_GZIP_BUDGET) {
-  console.log(`  size budget          OK — ${kb(minGzip)} KB ≤ ${kb(ENGINE_GZIP_BUDGET)} KB gzip`);
+if (minGzip <= ASSEMBLED_GZIP_BUDGET) {
+  console.log(`  size budget          OK — ${kb(minGzip)} KB ≤ ${kb(ASSEMBLED_GZIP_BUDGET)} KB gzip`);
 } else {
   console.log(
-    `  size budget          NOTE — ${kb(minGzip)} KB > ${kb(ENGINE_GZIP_BUDGET)} KB gzip. ` +
-      `Recipe controllers are still inlined in the engine; the engine/controller split (0.3-03) ` +
-      `and controller de-duplication (0.3-04) bring this under budget.`
+    `  size budget          OVER — ${kb(minGzip)} KB > ${kb(ASSEMBLED_GZIP_BUDGET)} KB gzip. ` +
+      `Run \`bun run size\` for the enforced engine, assembled-runtime, and plugin budgets.`
   );
 }

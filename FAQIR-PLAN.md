@@ -173,7 +173,7 @@ done in any order (or in parallel worktrees).
 | 0.9-06 | `toast` container contract + `single-fixed-region` audit rule | ✅ |
 | 0.9-07 | Form proximity: intra- vs inter-group spacing | ✅ |
 | 0.9-08 | Inline control rows: `checkbox`/`radio`/`switch` groups | ✅ |
-| 0.9-09 | Cross-card row alignment (subgrid) | ⬜ |
+| 0.9-09 | Cross-card row alignment (subgrid) | ✅ |
 | 0.9-10 | Surface elevation ramp + the `-subtle` contrast debt | ✅ |
 | 0.9-11 | Variant consistency sweep + `carousel` viewport bleed | ✅ |
 | 0.9-12 | Spacing, rhythm & density documentation surfaces | ✅ |

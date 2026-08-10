@@ -42,6 +42,7 @@ import {
   DOCS_GENERATION_MARKER,
   EXAMPLE_GUTTER,
   EXAMPLE_MEASURE,
+  NOT_FOUND_PAGE,
   OVERLAY_PREVIEW_ATTR,
   OVERLAY_PREVIEW_SURFACES,
   type DocsComponent,
@@ -123,19 +124,21 @@ describe("docs site coverage", () => {
     const html = files.filter((f) => f.path.endsWith(".html"));
     expect(html.length).toBe(sitePages.length + examplePages.length);
     expect(shellPages.length + framePages.length).toBe(sitePages.length);
-    // home, component index, layout guide, responsive lab, spacing, density,
-    // tokens, playground, theme gallery, and agents
-    expect(shellPages.length).toBe(components.length + 10);
+    // home, component index, icons, typography, layout guide, responsive lab,
+    // spacing, density, tokens, playground, theme gallery, agents, and 404
+    expect(shellPages.length).toBe(components.length + 13);
     // one gallery frame per theme
     expect(framePages.length).toBe(themes.length);
     const assets = files.filter((f) => !f.path.endsWith(".html")).map((f) => f.path);
     expect(assets.sort()).toEqual(
       [
         "_headers",
+        "api/messages",
         "llms-full.txt",
         "llms.txt",
         "manifest.schema.json",
         "registry-index.json",
+        "robots.txt",
         "scripts/copy-snippet.js",
         "scripts/faqir-audit.js",
         "scripts/faqir-core.js",
@@ -143,6 +146,7 @@ describe("docs site coverage", () => {
         "scripts/gallery.js",
         "scripts/playground.js",
         "styles/faqir.css",
+        "sitemap.xml",
         ...themes.map((t) => t.stylePath),
         // One copy-for-agents payload per component that ships reference markup
         // — a text payload, deliberately not a page (see `snippetPath`).
@@ -584,7 +588,10 @@ describe("navigation shell", () => {
       const current = doc.elements.filter(
         (el) => el.attrs["data-part"] === "nav-item" && el.attrs["aria-current"] === "page",
       );
-      expect(current.length, `${f.path} marks ${current.length} current nav entries`).toBe(1);
+      const expected = f.path === NOT_FOUND_PAGE ? 0 : 1;
+      expect(current.length, `${f.path} marks ${current.length} current nav entries`).toBe(
+        expected,
+      );
     }
     // …and it is the entry for the page itself.
     const button = find("button", "primitives");

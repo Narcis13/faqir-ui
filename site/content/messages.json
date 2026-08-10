@@ -1,0 +1,20 @@
+[
+  {
+    "id": "demo-1",
+    "sender": "Dana Ortiz",
+    "initials": "DO",
+    "time": "11:05",
+    "subject": "Contract renewal",
+    "preview": "Legal signed off this morning.",
+    "body": "Legal signed off this morning — we can countersign whenever you are ready."
+  },
+  {
+    "id": "demo-2",
+    "sender": "Sam Weber",
+    "initials": "SW",
+    "time": "Tuesday",
+    "subject": "Warehouse audit",
+    "preview": "Two pallets are unaccounted for.",
+    "body": "Two pallets are unaccounted for. I have asked the carrier for the scan log."
+  }
+]

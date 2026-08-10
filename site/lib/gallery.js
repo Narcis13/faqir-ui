@@ -7,7 +7,8 @@
  *   • theme-gallery buttons and preview-frame broadcasts;
  *   • responsive component-preview widths;
  *   • the mobile documentation drawer;
- *   • component and sidebar filtering.
+ *   • component, icon, and sidebar filtering;
+ *   • copy-ready icon markup on the manifest-derived icon page.
  *
  * It still owns no framework logic. Components are styled by their CSS and
  * recipes by faqir-core.js; this file only connects authored controls to native
@@ -308,6 +309,56 @@
     run();
   }
 
+  function startIconLibrary() {
+    var search = document.querySelector("[data-docs-icon-search]");
+    var cards = all("[data-docs-icon-card]");
+    var count = document.getElementById("icon-result-count");
+    var empty = document.querySelector("[data-docs-icon-empty]");
+    var status = document.getElementById("icon-copy-status");
+    if (!search || cards.length === 0) return;
+
+    function run() {
+      var query = search.value.trim().toLowerCase();
+      var visible = 0;
+      cards.forEach(function (card) {
+        var name = card.getAttribute("data-docs-icon-copy") || "";
+        var show = !query || name.toLowerCase().indexOf(query) !== -1;
+        card.hidden = !show;
+        if (show) visible++;
+      });
+      if (count) count.textContent = visible + " of " + cards.length + " icons";
+      if (empty) empty.hidden = visible !== 0;
+    }
+
+    cards.forEach(function (card) {
+      card.addEventListener("click", function () {
+        var name = card.getAttribute("data-docs-icon-copy") || "";
+        if (!name) return;
+        var markup =
+          '<span data-ui="icon" data-icon="' + name + '" aria-hidden="true"></span>';
+        if (!navigator.clipboard || !navigator.clipboard.writeText) {
+          if (status) status.textContent = "Clipboard access is unavailable. Use the visible icon name.";
+          return;
+        }
+        navigator.clipboard.writeText(markup).then(
+          function () {
+            card.setAttribute("data-docs-copied", "");
+            if (status) status.textContent = "Copied " + name + " icon markup.";
+            window.setTimeout(function () {
+              card.removeAttribute("data-docs-copied");
+            }, 1200);
+          },
+          function () {
+            if (status) status.textContent = "The browser did not allow clipboard access.";
+          },
+        );
+      });
+    });
+
+    search.addEventListener("input", run);
+    run();
+  }
+
   // ── component preview widths ──────────────────────────────────────────────
 
   function startPreviewControls() {
@@ -368,6 +419,7 @@
     startMobileNavigation();
     startSidebarFilter();
     startComponentFilter();
+    startIconLibrary();
     startPreviewControls();
     broadcastAppearance();
 

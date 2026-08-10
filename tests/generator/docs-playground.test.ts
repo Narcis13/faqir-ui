@@ -202,7 +202,7 @@ describe("the playground page", () => {
     // held to being a single assignment instead, below. The shell may link to
     // GitHub as navigation; only fetched subresources are relevant here.
     expect(page).not.toMatch(
-      /<(?:script|iframe)\b[^>]*\bsrc="https?:\/\/|<link\b[^>]*\bhref="https?:\/\//i,
+      /<(?:script|iframe)\b[^>]*\bsrc="https?:\/\/|<link\b(?=[^>]*\brel="stylesheet")(?=[^>]*\bhref="https?:\/\/)[^>]*>/i,
     );
     for (const path of [
       "scripts/gallery.js",

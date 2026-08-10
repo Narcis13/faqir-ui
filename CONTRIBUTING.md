@@ -49,7 +49,7 @@ registry/               Component registry (shipped with CLI)
 scripts/                Build + release scripts (build-core.mjs, build-cli.mjs, …)
 
 site/                   The documentation site — a Faqir project
-  site.config.json      Title, tagline, theme
+  site.config.json      Title, tagline, canonical URL, theme
   content/home.html     Hand-written homepage narrative
   content/layouts.html  Hand-written responsive layout lab
   styles/docs.css       Token-based documentation presentation layer
@@ -64,8 +64,9 @@ tests/                  Test files mirroring src/ structure
 
 `site/dist` is generated from the registry manifests: one page per component
 (anatomy, variant matrix, states, a11y, tokens, templates, composition), a token
-reference, searchable catalogue, responsive layout lab, theme gallery, agent
-surfaces, navigation shell and a live example per component. **Adding a
+reference, searchable component and icon catalogues, a typography specimen,
+responsive layout lab, theme gallery, agent surfaces, navigation shell,
+publishing metadata, and a live example per component. **Adding a
 component to `registry/` adds its page, catalogue card, navigation entry, live
 example, and agent snippet with zero edits to `site/`** — if you find yourself
 editing `site/` to describe a component, put it in the manifest instead.

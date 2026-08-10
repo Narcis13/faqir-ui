@@ -48,7 +48,12 @@ import {
   formatContextLlmsFull,
   formatContextMarkdown,
 } from "../../src/generator/context";
-import { buildDocsSite, LAYOUT_PAGE } from "../../src/generator/docs";
+import {
+  buildDocsSite,
+  isExamplePage,
+  isShellPage,
+  LAYOUT_PAGE,
+} from "../../src/generator/docs";
 import { generateShippedSkillFiles } from "../../src/generator/skill";
 import type { LayoutBudget } from "../../src/utils/layout-lint";
 
@@ -422,8 +427,12 @@ describe("rhythm — the layout budget fell, and by how much", () => {
     readFileSync(join(ROOT, "tests/visual/layout-budget.json"), "utf8"),
   ) as LayoutBudget;
 
-  it("measures the same pages, so the comparison is like for like", () => {
-    expect(budget.totals.pages).toBe(BASELINE_0_9_01.pages);
+  it("measures the complete current site while retaining the original baseline", () => {
+    const currentPages = buildDocsSite().filter(
+      (file) => isExamplePage(file.path) || isShellPage(file.path),
+    ).length;
+    expect(budget.totals.pages).toBe(currentPages);
+    expect(budget.totals.pages).toBeGreaterThanOrEqual(BASELINE_0_9_01.pages);
   });
 
   it("drops the seam count without a single fragment being edited", () => {

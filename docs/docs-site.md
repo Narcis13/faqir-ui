@@ -23,13 +23,13 @@ registry copy with one extra component in it.
 
 | Path | Written by | What it is |
 |---|---|---|
-| `site/site.config.json` | you | Title, tagline, description, theme, footer. |
+| `site/site.config.json` | you | Title, tagline, description, canonical URL, theme, footer. |
 | `site/content/home.html` | you | Hand-written homepage narrative; generated stats, patterns, and theme controls are inserted at markers. |
 | `site/content/layouts.html` | you | Hand-written responsive layout lab. |
 | `site/content/playground.html` | you | Hand-written: the playground's sample markup. |
 | `site/styles/docs.css` | you | Documentation presentation layer: attribute selectors, tokens, responsive rules, reduced-motion fallback. |
 | `site/lib/playground.js` | you | The playground and live-preview wiring. |
-| `site/lib/gallery.js` | you | Shared theme persistence, frame sync, mobile navigation, filters, and preview controls. |
+| `site/lib/gallery.js` | you | Shared theme persistence, frame sync, mobile navigation, component/icon filters, icon copying, and preview controls. |
 | `site/lib/copy-snippet.js` | you | The copy-for-agents button. |
 | `site/lib/faqir-audit.js` | generated | The audit engine, compiled for the browser. **Committed** — `bun run build:audit-browser`. |
 | `scripts/build-docs.mjs` | — | The writer: builds in memory, clears `site/dist`, writes. |
@@ -43,6 +43,8 @@ Output shape:
 index.html                        home (authored fragment + registry stats)
 components/index.html             every component, grouped by layer
 components/<layer>/<name>.html    one page per component
+icons/index.html                  searchable icon set derived from the icon manifest
+typography/index.html             type tokens, hierarchy and prose specimens
 layouts/index.html                responsive layout doctrine + live lab
 tokens/index.html                 token reference, grouped by token file
 playground/index.html             in-browser audit playground
@@ -53,8 +55,11 @@ frames/theme-preview-<name>.html  the demo document each gallery frame renders
 llms.txt · llms-full.txt          full-registry agent context (llmstxt.org)
 manifest.schema.json              the manifest contract, at its own `$id` path
 registry-index.json               the remote-registry index
+api/messages                      static JSON fixture for the live inbox demo
+404.html                          not-found page in the same audited shell
+robots.txt · sitemap.xml          static-publishing discovery surfaces
 snippets/<layer>/<name>.html.txt  copy-for-agents payload: markup + CDN preamble
-_headers                          content types + CORS for the files above
+_headers                          security baseline + machine-file content types/CORS
 styles/faqir.css                  tokens + base + every component CSS
 styles/themes/<name>.css          one per registry theme — the swappable link
 scripts/faqir-core.js             the registry engine
@@ -65,8 +70,9 @@ scripts/gallery.js                shared docs-shell + appearance wiring
 scripts/copy-snippet.js           the copy-for-agents button
 ```
 
-Every URL in the site is relative, so the output works at a domain root, in a
-sub-directory, or opened as a local file.
+Every navigational and fetched asset URL in the site is relative, so the output
+works at a domain root, in a sub-directory, or opened as a local file. Canonical
+and Open Graph metadata use the public origin from `site/site.config.json`.
 
 ---
 
@@ -92,8 +98,9 @@ All of it derived from `<name>.manifest.json`:
 
 The site ships two kinds of page, and the distinction is load-bearing:
 
-**Site pages** (home, component index, component pages, layout lab, token
-reference, playground, theme gallery, gallery frames) are authored by the
+**Site pages** (home, component index, component pages, icon and typography
+references, layout lab, token reference, playground, theme gallery, 404, and
+gallery frames) are authored by the
 generator out of registry components and design tokens only. They carry **no
 `class` attribute and no hardcoded colour**. Their presentation stylesheet
 follows the registry's own attribute-selector, token, responsive, and
@@ -246,7 +253,10 @@ copy — the served bytes are the contract, not a rendering of it.
 `_headers` (Cloudflare Pages / Netlify format) is generated from the same list
 that emits those files, so a machine file cannot be served without a content type
 and a permissive `Access-Control-Allow-Origin` — a browser-based agent that
-cannot read the file cross-origin cannot use it at all.
+cannot read the file cross-origin cannot use it at all. Its site-wide rule also
+sets `nosniff`, a strict referrer policy, a closed permissions policy, same-origin
+framing, and a CSP that allows only the site's own scripts, styles, and frames
+(plus inline reference-demo styles and data images).
 
 ### Copy for agents
 
@@ -295,8 +305,9 @@ browser refuses to load.
 
 ## Hosting
 
-The output is a directory of static files with relative URLs throughout, so any
-host works. The repository is configured for Cloudflare Pages:
+The output is a directory of static files with relative navigation and asset
+URLs, so any static host works. The repository is configured for Cloudflare
+Pages:
 
 ```bash
 bun run deploy:site      # build:docs, then `wrangler pages deploy`
@@ -309,7 +320,11 @@ needs a Cloudflare account and an interactive `wrangler login` (or a
 it is not a dependency of this repository.
 
 For any other host, publish `site/dist` and honour `_headers` (Netlify reads the
-same file; on other hosts, translate the four content types and the CORS header).
+same file; on other hosts, translate the security rule plus the four machine-file
+content types and CORS headers). `robots.txt`, `sitemap.xml`, canonical links,
+`404.html`, and the same-origin `/api/messages` fixture are already generated
+from `site.config.json`, authored site content, and the public page set; no
+host-specific rendering step is required.
 
 ---
 

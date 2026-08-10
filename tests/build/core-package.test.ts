@@ -80,6 +80,13 @@ describe("per-theme CSS bundles", () => {
 });
 
 describe("minified engine artifact", () => {
+  test("the package report uses the assembled runtime budget", () => {
+    const build = readFileSync(join(ROOT, "scripts", "build-core-package.mjs"), "utf8");
+    expect(build).toContain("const ASSEMBLED_GZIP_BUDGET = 44 * 1024");
+    expect(build).not.toContain("Recipe controllers are still inlined in the engine");
+    expect(build).not.toContain("controller de-duplication (0.3-04) bring this under budget");
+  });
+
   test("faqir-core.min.js and its sourcemap exist and are linked", () => {
     const min = join(DIST, "faqir-core.min.js");
     expect(existsSync(min)).toBe(true);
