@@ -12,6 +12,7 @@ import { join, dirname, resolve } from "node:path";
 import { validateAgainstSchema } from "../../src/utils/json-schema";
 import { MANIFEST_CATEGORIES, validateManifest } from "../../src/manifest";
 import { DRAFT_07_META_SCHEMA } from "../../src/utils/draft-07-meta";
+import { SCHEMA_VERSION } from "../../src/version";
 
 const ROOT = join(import.meta.dir, "../..");
 const SCHEMA_PATH = join(ROOT, "manifest.schema.json");
@@ -34,10 +35,13 @@ describe("manifest.schema.json", () => {
     expect(typeof schema).toBe("object");
   });
 
-  it("declares a schema_version (the 1.0-01 freeze builds on this)", async () => {
+  it("declares the frozen schema_version (task 1.0-01)", async () => {
     const schema = await loadSchema();
-    expect(typeof schema.schema_version).toBe("string");
-    expect((schema.schema_version as string).length).toBeGreaterThan(0);
+    // Exactly the constant, not merely "a string": the freeze is a number the
+    // spec, the CLI and the published site path all repeat, and
+    // `tests/spec/protocol-1.0.test.ts` compares all four.
+    expect(schema.schema_version).toBe(SCHEMA_VERSION);
+    expect(schema.stability).toBe("frozen");
   });
 
   it("targets the Draft-07 meta-schema", async () => {

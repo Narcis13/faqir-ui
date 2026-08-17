@@ -30,6 +30,12 @@ TypeScript.
 - `src/command-registry.ts` is the command-registration source of truth.
 - `manifest.schema.json` and the validation code in `src/manifest.ts` and
   `src/theme-manifest.ts` define manifest contracts.
+- `SPEC-1.0.md` is the **frozen** protocol: the five attributes, their value
+  grammars, the sanctioned token modifiers, the responsive tier suffix and the
+  manifest schema. `src/protocol.ts` is the same contract as data, and
+  `tests/spec/protocol-1.0.test.ts` fails if the two disagree — so neither may be
+  edited alone. Changing anything either one publishes needs the amendment
+  process in SPEC-1.0 §8, not a judgement call.
 
 ## Setup and common commands
 

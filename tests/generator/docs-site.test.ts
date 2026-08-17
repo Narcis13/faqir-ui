@@ -125,8 +125,9 @@ describe("docs site coverage", () => {
     expect(html.length).toBe(sitePages.length + examplePages.length);
     expect(shellPages.length + framePages.length).toBe(sitePages.length);
     // home, component index, icons, typography, layout guide, responsive lab,
-    // spacing, density, tokens, playground, theme gallery, agents, and 404
-    expect(shellPages.length).toBe(components.length + 13);
+    // protocol spec, spacing, density, tokens, playground, theme gallery,
+    // agents, and 404
+    expect(shellPages.length).toBe(components.length + 14);
     // one gallery frame per theme
     expect(framePages.length).toBe(themes.length);
     const assets = files.filter((f) => !f.path.endsWith(".html")).map((f) => f.path);
@@ -147,6 +148,9 @@ describe("docs site coverage", () => {
         "scripts/playground.js",
         "styles/faqir.css",
         "sitemap.xml",
+        // The frozen protocol, published with its version in the path (1.0-01).
+        "spec/1.0/manifest.schema.json",
+        "spec/1.0/spec.md",
         ...themes.map((t) => t.stylePath),
         // One copy-for-agents payload per component that ships reference markup
         // — a text payload, deliberately not a page (see `snippetPath`).

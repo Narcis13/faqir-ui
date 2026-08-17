@@ -23,6 +23,9 @@
 //   playground/index.html             live in-browser audit playground (task 0.7-14)
 //   themes/index.html                 theme gallery + instant switcher (task 0.7-14)
 //   agents/index.html                 the machine surfaces, documented (task 0.7-15)
+//   spec/<version>/index.html         the frozen protocol, rendered (task 1.0-01)
+//   spec/<version>/spec.md            the same spec, verbatim markdown
+//   spec/<version>/manifest.schema.json  the schema, addressable by version
 //   examples/<layer>/<name>.html      one standalone live example per component
 //   frames/theme-preview-<name>.html  the demo document each gallery frame renders
 //   llms.txt · llms-full.txt          full-registry agent context (llmstxt.org)
@@ -91,6 +94,26 @@ import {
   parseArchetypes,
   type ParsedArchetype,
 } from "../utils/layout";
+// The frozen protocol, as data (task 1.0-01). The spec page states what this
+// module says and renders the examples `SPEC-1.0.md` carries, so the published
+// page, the audited markup and the normative document are one source.
+import {
+  AMENDMENT_RULES,
+  ATTRIBUTE_SPECS,
+  FREEZE_STATEMENT,
+  PROTOCOL_RULES,
+  PROTOCOL_STATUS,
+  PROTOCOL_VALUE_GRAMMAR,
+  PROTOCOL_VALUE_PATTERN,
+  PROTOCOL_VERSION,
+  RESPONSIVE_RULES,
+  SCHEMA_CHANGELOG,
+  SCHEMA_VERSION,
+  SPEC_FILE,
+  TOKEN_MODIFIERS,
+  parseSpecExamples,
+  type SpecExample,
+} from "../protocol";
 import { parseDocument, type ParsedElement } from "../parser/html-parser";
 import type { ThemeManifest } from "../theme-manifest";
 // The playground's rule legend is derived from the engine's own rule lists, so it
@@ -123,6 +146,21 @@ export const AGENTS_PAGE = "agents/index.html";
 
 /** The layout guide: the doctrine, the ladder and the archetypes (task 0.8-12). */
 export const LAYOUT_PAGE = "layout/index.html";
+
+/**
+ * The frozen protocol, published **with its version in the path** (task 1.0-01).
+ *
+ * `spec/1.0/` is a promise, not a route: a 1.1 would be published beside it and
+ * this directory would keep serving exactly what it serves today. The prefix is
+ * therefore built from {@link PROTOCOL_VERSION} rather than written out, so the
+ * URL and the constant cannot disagree — which is half of what the version
+ * consistency gate checks.
+ */
+export const SPEC_PREFIX = `spec/${PROTOCOL_VERSION}/`;
+/** The rendered specification. */
+export const SPEC_PAGE = `${SPEC_PREFIX}index.html`;
+/** The spec's own source, served verbatim for an agent that would rather read markdown. */
+export const SPEC_MARKDOWN_FILE = `${SPEC_PREFIX}spec.md`;
 
 /** Spacing ladder, default rhythm, override rules, and grouping ownership. */
 export const SPACING_PAGE = "spacing/index.html";
@@ -160,6 +198,14 @@ export const LLMS_INDEX_FILE = "llms.txt";
 export const LLMS_FULL_FILE = "llms-full.txt";
 export const SCHEMA_FILE = "manifest.schema.json";
 export const REGISTRY_INDEX_FILE = "registry-index.json";
+
+/**
+ * The versioned copy of the schema, beside the spec that freezes it (task
+ * 1.0-01). Byte-identical to {@link SCHEMA_FILE} while 1.0 is current: the root
+ * path is the `$id` alias that always serves the newest 1.x schema, this one is
+ * the address that will still serve *this* schema after 1.1 exists.
+ */
+export const SPEC_SCHEMA_FILE = `${SPEC_PREFIX}${SCHEMA_FILE}`;
 
 /**
  * Cloudflare-Pages-style `_headers`, emitted next to the files it describes so
@@ -1226,7 +1272,9 @@ function renderShell(input: ShellInput): string {
                 ? current === THEMES_PAGE
                 : section === "agents"
                   ? current === AGENTS_PAGE
-                  : false;
+                  : section === "spec"
+                    ? current === SPEC_PAGE
+                    : false;
     return active ? ' data-state="active"' : "";
   };
 
@@ -1301,6 +1349,9 @@ ${scripts.map((src) => `<script src="${u(src)}" defer></script>`).join("\n")}
         <a data-part="nav-item" href="${u(AGENTS_PAGE)}"${currentAttr(
           AGENTS_PAGE,
         )}>For agents</a>
+        <a data-part="nav-item" href="${u(SPEC_PAGE)}"${currentAttr(
+          SPEC_PAGE,
+        )}>Protocol ${esc(PROTOCOL_VERSION)}</a>
       </div>
       <div data-docs-nav-groups>
 ${navGroups}
@@ -1323,6 +1374,7 @@ ${navGroups}
       <a data-part="link"${topActive("layouts")} href="${u(LAYOUT_PAGE)}">Layouts</a>
       <a data-part="link"${topActive("themes")} href="${u(THEMES_PAGE)}">Themes</a>
       <a data-part="link"${topActive("agents")} href="${u(AGENTS_PAGE)}">For agents</a>
+      <a data-part="link"${topActive("spec")} href="${u(SPEC_PAGE)}">Protocol</a>
       <a data-part="link" href="${u(PLAYGROUND_PAGE)}">Playground</a>
     </nav>
     <div data-docs-appearance>
@@ -2285,6 +2337,163 @@ function renderLayoutPage(ctx: {
   };
 }
 
+/**
+ * The frozen protocol (task 1.0-01), at `spec/<version>/`.
+ *
+ * Every table on this page is rendered from `src/protocol.ts`, and every code
+ * block is an example lifted verbatim out of `SPEC-1.0.md` — the same examples
+ * `tests/spec/protocol-1.0.test.ts` audits against the shipped manifests. So the
+ * page cannot publish a rule the framework does not hold itself to, or markup
+ * the framework would reject. A build with no `SPEC-1.0.md` on disk still emits
+ * the contract and simply carries no examples: the normative half lives in the
+ * module, not in the markdown.
+ */
+function renderSpecPage(ctx: {
+  config: SiteConfig;
+  components: DocsComponent[];
+  themes: DocsTheme[];
+  examples: SpecExample[];
+}): SiteFile {
+  const pagePath = SPEC_PAGE;
+  const u = (to: string) => escAttr(relUrl(pagePath, to));
+  const badge = (variant: string, text: string) =>
+    `<span data-ui="badge" data-variant="${escAttr(variant)}">${esc(text)}</span>`;
+  /** The examples filed under one spec section, in document order. */
+  const under = (prefix: string) => ctx.examples.filter((e) => e.section.startsWith(prefix));
+  const blocks = (list: SpecExample[]) =>
+    list.map((e) => `      <pre tabindex="0"><code>${esc(e.html)}</code></pre>`).join("\n");
+
+  const parts: string[] = [
+    `      <h1>Protocol ${esc(PROTOCOL_VERSION)}</h1>`,
+    `      <p>${badge("primary", PROTOCOL_STATUS)} ${badge(
+      "secondary",
+      `protocol ${PROTOCOL_VERSION}`,
+    )} ${badge("default", `manifest schema ${SCHEMA_VERSION}`)}</p>`,
+    `      <p>${esc(FREEZE_STATEMENT)}</p>`,
+    `      <p>Five attributes, three token modifiers, one tier suffix, and one manifest schema. ` +
+      `This page is generated from the same module the audit engine reads; the normative text is ` +
+      `<a data-ui="link" href="${u(SPEC_MARKDOWN_FILE)}">${esc(SPEC_FILE)}</a>, published beside it.</p>`,
+    section(
+      "attributes",
+      "The five attributes",
+      table(
+        ["Attribute", "Purpose", "Written by", "Legal values come from", "Enforced by"],
+        ATTRIBUTE_SPECS.map((a) => [
+          code(a.attr),
+          esc(a.purpose),
+          esc(a.owner),
+          esc(a.vocabulary.replace(/`/g, "")),
+          a.rule ? code(a.rule) : "—",
+        ]),
+        "No protocol attributes in this build.",
+      ),
+    ),
+    `      <ol>\n` +
+      PROTOCOL_RULES.map((r) => `        <li>${esc(r.replace(/`/g, ""))}</li>`).join("\n") +
+      `\n      </ol>`,
+    blocks(under("2.")),
+    section(
+      "grammar",
+      "Value grammar",
+      `      <p>All five take ${esc(PROTOCOL_VALUE_GRAMMAR.replace(/`/g, ""))}. ` +
+        `A component that needs a second visual axis declares a second attribute of its own ` +
+        `rather than a second value here — which is why a stylesheet never needs ` +
+        `<code>~=</code> and never depends on attribute-value order.</p>\n` +
+        `      <pre tabindex="0"><code>${esc(PROTOCOL_VALUE_PATTERN)}</code></pre>\n` +
+        blocks(under("3.")),
+    ),
+    section(
+      "modifiers",
+      "Sanctioned token modifiers",
+      `      <p>Three attributes are part of the frozen surface without being protocol ` +
+        `attributes: each re-declares design tokens for a subtree and is inherited by every ` +
+        `descendant. None names a component, fills a slot, or carries a per-component ` +
+        `vocabulary — which is exactly why none of them needs a manifest declaration.</p>\n` +
+        table(
+          ["Attribute", "Purpose", "Values", "Written by"],
+          TOKEN_MODIFIERS.map((m) => [
+            code(m.attr),
+            esc(m.purpose),
+            m.values.map((v) => code(v)).join(" · "),
+            esc(m.owner),
+          ]),
+          "No token modifiers in this build.",
+        ) +
+        "\n" +
+        blocks(under("4.")),
+    ),
+    section(
+      "responsive",
+      "The responsive tier suffix",
+      `      <ul>\n` +
+        RESPONSIVE_RULES.map((r) => `        <li>${esc(r.replace(/`/g, ""))}</li>`).join("\n") +
+        `\n      </ul>\n` +
+        blocks(under("5.")),
+    ),
+    section(
+      "schema",
+      `Manifest schema ${SCHEMA_VERSION}`,
+      `      <p>Every component and theme manifest validates against one JSON Schema document. ` +
+        `It is published twice on purpose: ${monoLink(
+          relUrl(pagePath, SPEC_SCHEMA_FILE),
+          `/${SPEC_SCHEMA_FILE}`,
+        )} is the versioned address that will still serve <em>this</em> schema after a 1.1 ` +
+        `exists, and ${monoLink(
+          relUrl(pagePath, SCHEMA_FILE),
+          `/${SCHEMA_FILE}`,
+        )} is the schema's own <code>$id</code> — the alias that always resolves to the newest ` +
+        `1.x. While 1.0 is current the two are byte-identical.</p>`,
+    ),
+    section(
+      "amendments",
+      "The amendment process",
+      `      <p>An <strong>additive</strong> change may ship in any 1.x release. A ` +
+        `<strong>major</strong> change waits for 2.0, however small it looks.</p>\n` +
+        table(
+          ["Change", "Level", "Because"],
+          AMENDMENT_RULES.map((r) => [
+            esc(r.change.replace(/`/g, "")),
+            `<strong>${esc(r.level)}</strong>`,
+            esc(r.because.replace(/`/g, "")),
+          ]),
+          "No amendment policy in this build.",
+        ),
+    ),
+    section(
+      "changelog",
+      "Manifest schema changelog",
+      table(
+        ["Schema", "Task", "Change", "Breaking"],
+        SCHEMA_CHANGELOG.map((c) => [
+          code(c.version),
+          esc(c.task),
+          esc(c.note.replace(/`/g, "")),
+          c.breaking ? "yes" : "no",
+        ]),
+        "No changelog in this build.",
+      ),
+    ),
+  ];
+
+  return {
+    path: pagePath,
+    content: renderShell({
+      pagePath,
+      title: `Protocol ${PROTOCOL_VERSION} · ${ctx.config.title}`,
+      description:
+        `The frozen Faqir protocol ${PROTOCOL_VERSION}: the five attributes and their value ` +
+        `grammars, the sanctioned token modifiers, the responsive tier suffix, manifest schema ` +
+        `${SCHEMA_VERSION}, and the amendment process.`,
+      body: parts.filter((p) => p.trim() !== "").join("\n"),
+      config: ctx.config,
+      components: ctx.components,
+      themes: ctx.themes,
+      current: pagePath,
+      layout: "wide",
+    }),
+  };
+}
+
 const SPACING_LADDER_MARKER = "<!-- @faqir:spacing-ladder -->";
 const RHYTHM_LADDER_MARKER = "<!-- @faqir:rhythm-ladder -->";
 const DENSITY_REMAP_MARKER = "<!-- @faqir:density-remaps -->";
@@ -3194,15 +3403,37 @@ function buildMachineFiles(ctx: {
   ];
 
   // The schema is served at the path its own `$id` claims, so a `$schema` link
-  // in any manifest resolves here.
+  // in any manifest resolves here — and again under the frozen spec's versioned
+  // prefix, from the same bytes, so an agent can pin the schema it validated
+  // against instead of following an alias that will one day move (task 1.0-01).
   const schemaPath = join(ctx.packageRoot, SCHEMA_FILE);
   if (existsSync(schemaPath)) {
+    const schema = readText(schemaPath);
     files.push({
       path: SCHEMA_FILE,
-      content: readText(schemaPath),
+      content: schema,
       contentType: "application/schema+json; charset=utf-8",
       description:
         "JSON Schema for component and theme manifests — the contract every manifest validates against.",
+    });
+    files.push({
+      path: SPEC_SCHEMA_FILE,
+      content: schema,
+      contentType: "application/schema+json; charset=utf-8",
+      description: `The same schema, frozen at ${SCHEMA_VERSION} and addressable by version — the copy to pin.`,
+    });
+  }
+
+  // The spec's own source. Served as markdown because that is what it is: an
+  // agent that reads llms.txt reads this the same way, and the bytes are the
+  // repository's `SPEC-1.0.md` rather than a rendering of it.
+  const specPath = join(ctx.packageRoot, SPEC_FILE);
+  if (existsSync(specPath)) {
+    files.push({
+      path: SPEC_MARKDOWN_FILE,
+      content: readText(specPath),
+      contentType: "text/markdown; charset=utf-8",
+      description: `The frozen protocol ${PROTOCOL_VERSION} specification, verbatim — five attributes, three token modifiers, one tier suffix, one schema.`,
     });
   }
 
@@ -3606,6 +3837,19 @@ export function buildDocsSite(options: DocsSiteOptions = {}): SiteFile[] {
       components,
       themes,
       archetypes: existsSync(layoutDoc) ? parseArchetypes(readText(layoutDoc)) : [],
+    }),
+  );
+
+  // The frozen protocol (task 1.0-01). The normative tables come from
+  // `src/protocol.ts`; the examples come from the spec document itself, so the
+  // page renders exactly the markup the test suite audits.
+  const specDoc = join(packageRoot, SPEC_FILE);
+  files.push(
+    renderSpecPage({
+      config,
+      components,
+      themes,
+      examples: existsSync(specDoc) ? parseSpecExamples(readText(specDoc)) : [],
     }),
   );
 

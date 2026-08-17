@@ -291,7 +291,7 @@ describe("site JavaScript", () => {
         f.path !== PLAYGROUND_PAGE &&
         f.path !== THEMES_PAGE,
     );
-    expect(documentation.length).toBe(components.length + 11);
+    expect(documentation.length).toBe(components.length + 12);
     for (const f of documentation) {
       const scripts = [...f.content.matchAll(/<script\b[^>]*>/g)].map((m) => m[0]);
       const isComponentPage = components.some((c) => c.pagePath === f.path);

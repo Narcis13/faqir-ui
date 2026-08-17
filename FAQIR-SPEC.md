@@ -143,6 +143,14 @@ faqir/
 
 All Faqir components use a standardized set of data attributes. This is the DOM contract — the stable API between HTML and everything else.
 
+> **Frozen at 1.0 — see [`SPEC-1.0.md`](SPEC-1.0.md).** That document, not this section,
+> is the normative one: it specifies the five attributes and their value grammars, the three
+> sanctioned token modifiers (`data-theme`, `data-density`, `data-motion`), the
+> `data-<attr>-<tier>` responsive suffix of §15, manifest schema 1.0, and the amendment
+> process that decides what may change before 2.0. This section stays as the design record
+> — how the protocol was arrived at — and `src/protocol.ts` carries the same contract as
+> data, cross-checked against the spec on every test run.
+
 ### The Five Attributes
 
 | Attribute | Purpose | Example |

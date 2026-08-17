@@ -89,6 +89,11 @@ describe("the site contract — stable agent-facing URLs", () => {
     "agents/index.html",
     "snippets/primitives/button.html.txt",
     "snippets/recipes/dialog.html.txt",
+    // The frozen protocol (task 1.0-01). These three are the strongest form of
+    // the rule above: a versioned path exists precisely so that it never moves.
+    "spec/1.0/index.html",
+    "spec/1.0/spec.md",
+    "spec/1.0/manifest.schema.json",
   ];
 
   it("serves every documented path", () => {
@@ -129,6 +134,8 @@ describe("the site contract — stable agent-facing URLs", () => {
       "/manifest.schema.json": "application/schema+json; charset=utf-8",
       "/registry-index.json": "application/json; charset=utf-8",
       "/snippets/*": "text/plain; charset=utf-8",
+      "/spec/1.0/manifest.schema.json": "application/schema+json; charset=utf-8",
+      "/spec/1.0/spec.md": "text/markdown; charset=utf-8",
     };
     for (const [path, type] of Object.entries(types)) {
       expect(headers, `${path} has no rule in _headers`).toContain(

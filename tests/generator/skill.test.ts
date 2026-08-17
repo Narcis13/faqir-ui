@@ -11,6 +11,7 @@ import { mkdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { init } from "../../src/commands/init";
 import { add } from "../../src/commands/add";
+import { SCHEMA_VERSION } from "../../src/version";
 import {
   generateSkill,
   generateShippedSkillFiles,
@@ -38,7 +39,10 @@ describe("project skill generator", () => {
     await add(["button"]);
     const content = await generateSkill(TEST_DIR);
     expect(content).toContain(SKILL_GENERATION_MARKER);
-    expect(content).toMatch(/schema_version \d+\.\d+\.\d+/);
+    // The schema is versioned `<major>.<minor>` since the 1.0-01 freeze — the
+    // patch digit said nothing, because a schema patch is not a thing that can
+    // exist under "additive only". Asserted against the constant, not a shape.
+    expect(content).toContain(`schema_version ${SCHEMA_VERSION}`);
   });
 
   it("emits a section per installed component with matching anatomy + variants", async () => {

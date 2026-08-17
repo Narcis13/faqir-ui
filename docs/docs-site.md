@@ -50,6 +50,9 @@ tokens/index.html                 token reference, grouped by token file
 playground/index.html             in-browser audit playground
 themes/index.html                 theme gallery + instant switcher
 agents/index.html                 the machine surfaces, documented
+spec/<version>/index.html         the frozen protocol, rendered
+spec/<version>/spec.md            the same spec, verbatim markdown
+spec/<version>/manifest.schema.json  the schema, addressable by version
 examples/<layer>/<name>.html      one standalone live example per component
 frames/theme-preview-<name>.html  the demo document each gallery frame renders
 llms.txt · llms-full.txt          full-registry agent context (llmstxt.org)
@@ -227,7 +230,7 @@ on the site stays a plain relative path the link checker can resolve.
 
 ## Agent surfaces (the machine half of the site)
 
-Four files describe the framework to a machine. Their **paths are a contract** —
+Six files describe the framework to a machine. Their **paths are a contract** —
 an llms.txt URL that has been pasted into a prompt is an API — so they are
 asserted as literal strings in `tests/generator/docs-agents.test.ts`, and moving
 one fails CI rather than 404-ing in production.
@@ -238,6 +241,18 @@ one fails CI rather than 404-ing in production.
 | `/llms-full.txt` | The expanded reference: template, variants, slots, states, a11y contract per component, plus the protocol and token scales. | `text/plain` |
 | `/manifest.schema.json` | The manifest contract. At the root because that *is* its `$id`. | `application/schema+json` |
 | `/registry-index.json` | The remote-registry index (SHA-256 per file) that `faqir add --registry <url>` fetches. | `application/json` |
+| `/spec/1.0/spec.md` | The frozen protocol specification, verbatim — the repository's `SPEC-1.0.md`. | `text/markdown` |
+| `/spec/1.0/manifest.schema.json` | The same schema as above, addressable **by version**: the copy to pin. | `application/schema+json` |
+
+The two `spec/1.0/` paths carry the version in the URL because that is the only
+form a frozen contract can be published in (task 1.0-01). `/manifest.schema.json`
+is the alias that always resolves to the newest 1.x schema — the schema's own
+`$id` — while `/spec/1.0/manifest.schema.json` will still serve *this* schema
+after a 1.1 exists. While 1.0 is current the two are byte-identical, which is
+asserted rather than assumed. The rendered page at `/spec/1.0/` is a normal
+generated site page under the normal audit + axe gate; its tables come from
+`src/protocol.ts` and its examples are lifted out of `SPEC-1.0.md`, so the page
+cannot publish a rule the framework does not hold itself to.
 
 The llms.txt pair is **the CLI's own generator pointed at the registry** — the
 same `formatContextLlms` / `formatContextLlmsFull` that `faqir context --format

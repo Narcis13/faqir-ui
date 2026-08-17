@@ -1,9 +1,33 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://faqir.dev/manifest.schema.json",
-  "schema_version": "1.0.0",
+  "schema_version": "1.0",
   "title": "Faqir manifest",
-  "description": "The machine-readable contract shipped beside every Faqir component and theme. A file validates as either a component manifest (`<name>.manifest.json`) or a theme manifest (`<name>.theme.json`). Versioned via `schema_version`; the 1.0-01 freeze builds on this schema.",
+  "description": "The machine-readable contract shipped beside every Faqir component and theme. A file validates as either a component manifest (`<name>.manifest.json`) or a theme manifest (`<name>.theme.json`). FROZEN at 1.0: until 2.0 this schema may only gain optional fields and widened enums — no field is renamed, removed, or made required. See SPEC-1.0.md §6 and §8.",
+  "stability": "frozen",
+  "protocol_version": "1.0",
+  "amendment_policy": "https://faqir.dev/spec/1.0/#amendments",
+  "$comment": "The versioned copy of this file is published at https://faqir.dev/spec/1.0/manifest.schema.json; the $id above is the alias that always serves the newest 1.x schema. Both are byte-identical while 1.0 is current.",
+  "changelog": [
+    {
+      "version": "0.5",
+      "task": "0.5-07",
+      "note": "First published as a file: component and theme manifests in one document, `changes[]` changelog entries, an `$id`, and a resolvable `$schema` on every registry manifest. Before this the contract existed only as the validator in `src/manifest.ts`.",
+      "breaking": false
+    },
+    {
+      "version": "0.8",
+      "task": "0.8-02",
+      "note": "`props` — the non-variant attributes — declared; `variants.<group>.responsive` added for the tier suffix grammar; `category` closed to a documented enum, which retired the `form` spelling in favour of `forms`.",
+      "breaking": true
+    },
+    {
+      "version": "1.0",
+      "task": "1.0-01",
+      "note": "Frozen. `schema_version` is `1.0`, `stability` and `amendment_policy` are declared in the file, this changelog is carried in it, and the schema is published at a versioned URL beside the spec. No field changed shape.",
+      "breaking": false
+    }
+  ],
   "oneOf": [
     { "$ref": "#/definitions/componentManifest" },
     { "$ref": "#/definitions/themeManifest" }

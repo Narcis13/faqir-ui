@@ -125,6 +125,14 @@ Same as primitives, plus:
 
 ## Manifest Schema
 
+**Schema 1.0 is frozen** (task 1.0-01). Until 2.0 it may only gain *optional* fields and
+*widened* enums: no field is renamed, removed, or made required, so a manifest that validates
+today validates against every 1.x schema. Before changing `manifest.schema.json`, read the
+amendment table in [`SPEC-1.0.md`](SPEC-1.0.md) §8.2 — it says which side of the line your
+change falls on. An accepted additive change lands with the spec edit, the `src/protocol.ts`
+edit, the schema edit, a row in the spec's §9 changelog *and* in the schema's own `changelog`
+array, and tests; `tests/spec/protocol-1.0.test.ts` fails on any subset of those.
+
 Every manifest must include:
 
 - `name` — lowercase kebab-case

@@ -59,6 +59,7 @@
     "dist",
     "registry",
     "manifest.schema.json",
+    "SPEC-1.0.md",
     "README.md",
     "LICENSE"
   ],
