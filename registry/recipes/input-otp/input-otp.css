@@ -9,6 +9,11 @@
   position: relative;
   display: inline-flex;
   inline-size: fit-content;
+  /* `fit-content` has no ceiling of its own: six `lg` segments and their gaps
+     are 372px, which is already wider than a 375px window once the page has a
+     gutter. The transparent input is `inset: 0`, so it follows the box the
+     segments settle into however many rows that takes. */
+  max-inline-size: 100%;
   font-family: var(--font-sans, system-ui, sans-serif);
 }
 
@@ -41,7 +46,10 @@
 /* ── Segment row (decorative) ── */
 [data-ui="input-otp"] [data-part="segments"] {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: var(--input-otp-gap);
+  min-inline-size: 0;
   pointer-events: none;
 }
 

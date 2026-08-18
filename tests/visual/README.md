@@ -64,6 +64,7 @@ rule with an injected override and prove the check bites in the browser too.
 | `responsive-matrix.test.ts` | `bun test` meta-test. Guards the discovery property and every failure mode of the pre-assertion. |
 | `layout-lint.pw.ts` | The layout gate (0.9-01): loads every generated docs page, at 1280×900 and 375×812, and measures four conditions against a committed budget. No screenshots. |
 | `layout-budget.json` | The ratchet. Committed, unlike the baselines — one section per viewport, each five integers and a per-page table, not pixels. |
+| `narrow-fit.pw.ts` | The other half of the layout gate (1.0R-07): the *wall*, per component and with no budget. Each fixed component's reference is mounted alone at 320 and 375, and again in a container 60% of its own `max-content` width — because a window is not the only thing that runs out. Every fix is pinned by a case that reverts it. No screenshots. |
 | `variant-consistency.pw.ts` | Computed geometry for the 0.9-11 consistency sweep: mixed-size baselines, callout accents, progress-label bounds, and contained-but-reachable carousel overflow. |
 | `../../src/utils/layout-lint.ts` | The four conditions as pure geometry, proven from literal rectangles in `tests/utils/layout-lint.test.ts`. |
 | `../../playwright.config.ts` | One default viewport, chromium, single platform-agnostic baseline set, `testMatch: **/*.pw.ts`. The responsive and layout-lint specs set their own viewport. |
@@ -143,6 +144,29 @@ than rasterised pixels, so it does not vary with the platform's fonts. The sweep
 runs with `prefers-reduced-motion` and finishes every finite animation before it
 measures, so a controller settling its state on load (the sidebar's mobile drawer)
 cannot be caught mid-slide.
+
+### The wall beside it (task 1.0R-07)
+
+A budget is a site total: it proves the pages got better, but it names no
+component, and a page can be green because its defect was fixed or because that
+page happened to give the component room. `narrow-fit.pw.ts` asks the same
+question per component, with no budget and no slack — affordable only because the
+set is at zero, so components join it as they are fixed.
+
+Each reference is mounted **alone** (`buildPageHtml`, the same shipped-bytes
+document the matrix captures — no docs container, no page gutter) and asked twice:
+
+- **Does it fit a phone window?** 320, the doctrine's floor, and 375, the
+  ratchet's ruler. Both, because three of the five components 1.0R-07 fixed
+  measured clean at 375 while still bleeding at 320.
+- **Does it fit a container narrower than its own content?** 60% of the width the
+  widest demo *wants*, each root measured at `max-content` on its own. A window is
+  not the only thing that runs out: `menubar` fits a 375px window in isolation at
+  229px wide and still bled 198px on a page that offers it 343, so the window
+  question alone would have pinned nothing for it.
+
+Every fix is pinned by a case that reverts exactly that declaration and asserts
+the named box reappears — then re-runs the same page unbroken and expects silence.
 
 ## Running locally
 
