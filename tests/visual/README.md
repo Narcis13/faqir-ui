@@ -62,8 +62,8 @@ rule with an injected override and prove the check bites in the browser too.
 | `responsive-matrix.ts` | The viewport axis: manifest-driven discovery of the layout-bearing set, the widths, the in-page fact gatherer and the pure pre-assertion. |
 | `responsive.pw.ts` | Playwright spec: the 78 responsive captures (each pre-asserted), the "pre-assertion bites" negatives, and the archetype behaviour cases (drawer transition, pane swap, auth-form bleed). |
 | `responsive-matrix.test.ts` | `bun test` meta-test. Guards the discovery property and every failure mode of the pre-assertion. |
-| `layout-lint.pw.ts` | The layout gate (0.9-01): loads every generated docs page and measures four conditions against a committed budget. No screenshots. |
-| `layout-budget.json` | The ratchet. Committed, unlike the baselines — it is five integers and a per-page table, not pixels. |
+| `layout-lint.pw.ts` | The layout gate (0.9-01): loads every generated docs page, at 1280×900 and 375×812, and measures four conditions against a committed budget. No screenshots. |
+| `layout-budget.json` | The ratchet. Committed, unlike the baselines — one section per viewport, each five integers and a per-page table, not pixels. |
 | `variant-consistency.pw.ts` | Computed geometry for the 0.9-11 consistency sweep: mixed-size baselines, callout accents, progress-label bounds, and contained-but-reachable carousel overflow. |
 | `../../src/utils/layout-lint.ts` | The four conditions as pure geometry, proven from literal rectangles in `tests/utils/layout-lint.test.ts`. |
 | `../../playwright.config.ts` | One default viewport, chromium, single platform-agnostic baseline set, `testMatch: **/*.pw.ts`. The responsive and layout-lint specs set their own viewport. |
@@ -100,8 +100,9 @@ expect.toHaveScreenshot`), so nothing time-dependent leaks into a screenshot.
 
 The screenshot matrix gates *change*, never *quality*: a page that has always been
 cramped is baselined as correct. `layout-lint.pw.ts` measures quality instead —
-it loads all 180 generated docs pages (86 examples + the shell pages) at 1280×900
-and reduces each to four numbers a diff can argue with:
+it loads all 186 generated docs pages (86 examples + the shell pages) at **two
+viewports**, 1280×900 and 375×812, and reduces each to four numbers a diff can
+argue with:
 
 | Condition | What it asks |
 | --- | --- |
@@ -115,19 +116,33 @@ literal rectangles under `bun test`); the spec only supplies boxes from a real
 browser and one synthetic page per direction proves the *collector* hands over the
 right ones.
 
-**It is a ratchet, not a wall.** `layout-budget.json` records today's counts; a
-count that rises fails, a count that falls passes and prints its slack. Update
-mode refuses to record a rise, so the committed file can only ever describe a
-better site:
+Bleed is the one of the four that depends on the ruler, which is why the phone
+width was added in 1.0R-06: 1280 had been at zero bleeds since 0.9-11 while eight
+pages pushed up to 198px past the edge at 375, measured by nothing in the repo
+(`tests/a11y/mobile.pw.ts` re-scans narrow, but only the layout-bearing set, and
+axe has no reflow rule). Two subjects are deliberately *not* bleed, and
+`layout-lint.pw.ts` pins both with a synthetic page: a box whose visible slice is
+clipped away by an ancestor, and anything inside an `inert` subtree — a dismissed
+off-canvas drawer is not content a reader was offered. A box that is merely
+off-screen with neither excuse still counts.
+
+**It is a ratchet, not a wall.** `layout-budget.json` records today's counts, one
+section per viewport; a count that rises fails, a count that falls passes and
+prints its slack. The viewports ratchet independently — a fall at 1280 cannot pay
+for a rise at 375. Update mode refuses to record a rise, so the committed file can
+only ever describe a better site:
 
 ```bash
 npm run lint:layout          # measure + compare (also runs inside test:visual)
 npm run lint:layout:update   # re-record after an improvement
 ```
 
-Unlike the screenshots, the budget is **committed**: it is five integers and a
-per-page table of counts, all of them derived from gaps and insets rather than
-rasterised pixels, so it does not vary with the platform's fonts.
+Unlike the screenshots, the budget is **committed**: per viewport, five integers
+and a per-page table of counts, all of them derived from gaps and insets rather
+than rasterised pixels, so it does not vary with the platform's fonts. The sweep
+runs with `prefers-reduced-motion` and finishes every finite animation before it
+measures, so a controller settling its state on load (the sidebar's mobile drawer)
+cannot be caught mid-slide.
 
 ## Running locally
 

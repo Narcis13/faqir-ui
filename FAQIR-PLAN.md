@@ -3296,9 +3296,18 @@ number is the point; hiding six findings behind an exemption is the failure mode
 - The narrow pass runs in the same Playwright job — no new workflow.
 
 **Acceptance criteria**
-- [ ] Phone-width bleed is measured on every generated page, every run.
-- [ ] Today's six bleeds are recorded in the budget, not exempted.
-- [ ] A new bleed at 375px fails CI.
+- [x] Phone-width bleed is measured on every generated page, every run.
+- [x] Today's six bleeds are recorded in the budget, not exempted.
+- [x] A new bleed at 375px fails CI.
+
+> Recorded: **52 bleeding boxes over 8 pages** at 375×812, plus 3 fixed-box
+> overlaps the desktop pass never saw. A superset of the six above — the sweep
+> reads every painted box, not one number per page, and it also finds
+> `patterns/dashboard-shell` (14) and `recipes/toast` (2), whose panels cross the
+> inline *start*, where the review's right-edge measure could not look. 1280
+> re-recorded identically (all five counts still 0), which is what says the two
+> collector rules the phone width forced — a box clipped away paints nothing, an
+> `inert` subtree is not content on offer — changed no desktop number.
 
 ---
 

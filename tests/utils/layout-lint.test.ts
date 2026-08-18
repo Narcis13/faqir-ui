@@ -13,21 +13,28 @@ import {
   OVERLAP_PX,
   RATCHETED,
   SEAM_GAP_PX,
+  collectBudget,
   compareBudget,
+  compareBudgets,
   findBleeds,
   findOverlaps,
   findSeams,
   formatComparison,
+  formatComparisons,
   lintPage,
   measureGutter,
   summarize,
+  viewportKey,
   type LabelledBox,
   type LayoutBudget,
   type PageFindings,
   type PageObservation,
+  type ViewportBudget,
 } from "../../src/utils/layout-lint";
 
 const VIEWPORT = { width: 1280, height: 900 };
+/** The phone width task 1.0R-06 added to the sweep. */
+const PHONE = { width: 375, height: 812 };
 
 function box(label: string, x: number, y: number, width: number, height: number): LabelledBox {
   return { label, x, y, width, height };
@@ -236,10 +243,14 @@ describe("summarize", () => {
   });
 });
 
-/** A budget with the given totals and no per-page detail beyond one page. */
-function budgetOf(totals: Partial<LayoutBudget["totals"]>, pages: LayoutBudget["pages"] = {}): LayoutBudget {
+/** One viewport's section with the given totals and per-page detail. */
+function budgetOf(
+  totals: Partial<ViewportBudget["totals"]>,
+  pages: ViewportBudget["pages"] = {},
+  viewport = VIEWPORT,
+): ViewportBudget {
   return {
-    viewport: VIEWPORT,
+    viewport,
     totals: {
       pages: 1,
       zeroGutterPages: 0,
@@ -251,6 +262,11 @@ function budgetOf(totals: Partial<LayoutBudget["totals"]>, pages: LayoutBudget["
     },
     pages,
   };
+}
+
+/** The file the gate actually commits — read, never fabricated. */
+async function committedBudget(): Promise<LayoutBudget> {
+  return (await import("../visual/layout-budget.json")).default as unknown as LayoutBudget;
 }
 
 describe("the ratchet", () => {
@@ -351,15 +367,13 @@ describe("the ratchet", () => {
   });
 
   // The committed file, not a fixture: the library's own floor is zero today.
-  it("has zero as the committed floor for gutters, seams, and bleeds", async () => {
-    const committed = (await import("../visual/layout-budget.json")).default as unknown as {
-      totals: Record<string, number>;
-    };
-    expect(committed.totals.seams).toBe(0);
-    expect(committed.totals.seamPages).toBe(0);
-    expect(committed.totals.zeroGutterPages).toBe(0);
-    expect(committed.totals.bleeds).toBe(0);
-    expect(committed.totals.pages).toBeGreaterThanOrEqual(180);
+  it("has zero as the committed floor for gutters, seams, and bleeds at 1280", async () => {
+    const desktop = (await committedBudget()).viewports[viewportKey(VIEWPORT)];
+    expect(desktop.totals.seams).toBe(0);
+    expect(desktop.totals.seamPages).toBe(0);
+    expect(desktop.totals.zeroGutterPages).toBe(0);
+    expect(desktop.totals.bleeds).toBe(0);
+    expect(desktop.totals.pages).toBeGreaterThanOrEqual(180);
   });
 
   it("never ratchets the page count — adding a clean page is not a regression", () => {
@@ -369,5 +383,156 @@ describe("the ratchet", () => {
       { ...budget.pages, "c.html": { zeroGutter: false, seams: 0, bleeds: 0, overlaps: 0 } },
     );
     expect(compareBudget(grown, budget).ok).toBe(true);
+  });
+});
+
+// ── the second viewport (task 1.0R-06) ───────────────────────────────────────
+//
+// Bleed is the one condition that depends on the ruler: a page that clears 1280
+// can push 198px past the edge at 375. Before this task the gate ran one
+// viewport, so nothing in the repo measured phone-width bleed. What makes the
+// second viewport a real gate rather than a second column of numbers is that the
+// two ratchet *independently* — which is what these prove.
+
+describe("per-viewport budgets", () => {
+  const desktop = budgetOf(
+    { pages: 2, bleeds: 0 },
+    {
+      "a.html": { zeroGutter: false, seams: 0, bleeds: 0, overlaps: 0 },
+      "b.html": { zeroGutter: false, seams: 0, bleeds: 0, overlaps: 0 },
+    },
+  );
+  const phone = budgetOf(
+    { pages: 2, bleeds: 4 },
+    {
+      "a.html": { zeroGutter: false, seams: 0, bleeds: 3, overlaps: 0 },
+      "b.html": { zeroGutter: false, seams: 0, bleeds: 1, overlaps: 0 },
+    },
+    PHONE,
+  );
+  const both = collectBudget([phone, desktop]);
+
+  /** The same file with one viewport's section swapped for a worse one. */
+  function worseAt(viewport: typeof VIEWPORT, section: ViewportBudget): LayoutBudget {
+    return collectBudget([
+      ...Object.values(both.viewports).filter((s) => s.viewport.width !== viewport.width),
+      section,
+    ]);
+  }
+
+  it("keys each section by its viewport and writes the widest first", () => {
+    expect(Object.keys(both.viewports)).toEqual(["1280x900", "375x812"]);
+    expect(both.viewports["375x812"].totals.bleeds).toBe(4);
+    expect(both.viewports["1280x900"].totals.bleeds).toBe(0);
+  });
+
+  it("holds 'the budget is the current measurement' for each viewport independently", () => {
+    // Neither section's numbers leak into the other's comparison: measured
+    // against itself, the whole file is unchanged, with no slack anywhere.
+    const cmp = compareBudgets(both, both);
+    expect(cmp.ok).toBe(true);
+    expect(cmp.viewports.map((v) => v.viewport)).toEqual(["1280x900", "375x812"]);
+    for (const v of cmp.viewports) expect({ ...v }).toEqual({
+      viewport: v.viewport,
+      regressions: [],
+      slack: [],
+      ok: true,
+    });
+    expect(cmp.unbudgeted).toEqual([]);
+    expect(cmp.unmeasured).toEqual([]);
+  });
+
+  it("fails a rise at 375 while 1280 stays green", () => {
+    const risen = worseAt(
+      PHONE,
+      budgetOf(
+        { pages: 2, bleeds: 5 },
+        {
+          "a.html": { zeroGutter: false, seams: 0, bleeds: 3, overlaps: 0 },
+          "b.html": { zeroGutter: false, seams: 0, bleeds: 2, overlaps: 0 },
+        },
+        PHONE,
+      ),
+    );
+    const cmp = compareBudgets(risen, both);
+    expect(cmp.ok).toBe(false);
+    const failed = cmp.viewports.filter((v) => !v.ok);
+    expect(failed.map((v) => v.viewport)).toEqual(["375x812"]);
+    expect(failed[0].regressions.map((r) => r.count)).toEqual(["bleeds"]);
+    expect(failed[0].regressions[0].pages).toEqual(["b.html"]);
+    expect(formatComparisons(cmp)).toContain("375x812:");
+    expect(formatComparisons(cmp)).toContain("bleeds: 4 → 5");
+    expect(formatComparisons(cmp)).not.toContain("1280x900:");
+  });
+
+  it("fails a rise at 1280 while 375 stays green", () => {
+    const risen = worseAt(
+      VIEWPORT,
+      budgetOf(
+        { pages: 2, bleeds: 1 },
+        {
+          "a.html": { zeroGutter: false, seams: 0, bleeds: 1, overlaps: 0 },
+          "b.html": { zeroGutter: false, seams: 0, bleeds: 0, overlaps: 0 },
+        },
+      ),
+    );
+    const cmp = compareBudgets(risen, both);
+    expect(cmp.ok).toBe(false);
+    expect(cmp.viewports.filter((v) => !v.ok).map((v) => v.viewport)).toEqual(["1280x900"]);
+    expect(formatComparisons(cmp)).toContain("bleeds: 0 → 1");
+  });
+
+  it("does not let a fall at one viewport pay for a rise at the other", () => {
+    const traded = collectBudget([
+      budgetOf(
+        { pages: 2, bleeds: 1 },
+        {
+          "a.html": { zeroGutter: false, seams: 0, bleeds: 1, overlaps: 0 },
+          "b.html": { zeroGutter: false, seams: 0, bleeds: 0, overlaps: 0 },
+        },
+      ),
+      budgetOf(
+        { pages: 2, bleeds: 0 },
+        {
+          "a.html": { zeroGutter: false, seams: 0, bleeds: 0, overlaps: 0 },
+          "b.html": { zeroGutter: false, seams: 0, bleeds: 0, overlaps: 0 },
+        },
+        PHONE,
+      ),
+    ]);
+    const cmp = compareBudgets(traded, both);
+    expect(cmp.ok).toBe(false);
+    expect(cmp.viewports.find((v) => v.viewport === "375x812")!.slack).toEqual([
+      { count: "bleeds", budget: 4, measured: 0 },
+    ]);
+  });
+
+  it("treats a viewport with no budget as unrecorded, not as a regression", () => {
+    // The one thing that must not fail: adding a viewport to the sweep. Update
+    // mode runs the same comparison before it writes, so a "rise" against a
+    // section that does not exist yet would deadlock the recording of it.
+    const cmp = compareBudgets(both, collectBudget([desktop]));
+    expect(cmp.ok).toBe(true);
+    expect(cmp.unbudgeted).toEqual(["375x812"]);
+    expect(formatComparisons(cmp)).toContain("375x812: no budget yet");
+  });
+
+  it("fails when a budgeted viewport stops being measured", () => {
+    // A sweep that quietly dropped a viewport would report a perfect site.
+    const cmp = compareBudgets(collectBudget([desktop]), both);
+    expect(cmp.ok).toBe(false);
+    expect(cmp.unmeasured).toEqual(["375x812"]);
+    expect(formatComparisons(cmp)).toContain("budgeted but not measured");
+  });
+
+  it("carries both viewports in the committed file, over the same page set", async () => {
+    const committed = await committedBudget();
+    expect(Object.keys(committed.viewports)).toEqual(["1280x900", "375x812"]);
+    const [wide, narrow] = Object.values(committed.viewports);
+    expect(Object.keys(narrow.pages)).toEqual(Object.keys(wide.pages));
+    expect(narrow.totals.pages).toBe(wide.totals.pages);
+    // Recording the phone width was the point of 1.0R-06: today's narrow bleed
+    // is real and committed rather than exempted, and 1.0R-07 is what spends it.
+    expect(narrow.totals.bleeds).toBeGreaterThan(0);
   });
 });

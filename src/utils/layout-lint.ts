@@ -284,12 +284,42 @@ export interface BudgetTotals {
   overlaps: number;
 }
 
-/** The committed budget: totals to ratchet against, plus per-page detail. */
-export interface LayoutBudget {
-  viewport: { width: number; height: number };
+/** A viewport the sweep measures at — the ruler both gutter and bleed use. */
+export interface Viewport {
+  width: number;
+  height: number;
+}
+
+/**
+ * The key one viewport's section is recorded under, e.g. `1280x900`. A width is
+ * not enough on its own: the height decides how much of a long page is laid out
+ * before the fold, so two sweeps at the same width and different heights are two
+ * different measurements and must not collide in the file.
+ */
+export function viewportKey(v: Viewport): string {
+  return `${v.width}x${v.height}`;
+}
+
+/** One viewport's measurement: totals to ratchet against, plus per-page detail. */
+export interface ViewportBudget {
+  viewport: Viewport;
   totals: BudgetTotals;
   /** Site-relative page path → that page's counts, sorted by path. */
   pages: Record<string, PageBudget>;
+}
+
+/**
+ * The committed budget: one section per measured viewport (task 1.0R-06).
+ *
+ * Bleed is the condition that depends on the ruler — a page that clears 1280 can
+ * push 198px past the edge at 375, and until this file grew a second section
+ * nothing in the repo measured that. Each viewport ratchets independently: a rise
+ * at 375 fails even while 1280 is green, and vice versa, because they are
+ * different defects on different readers' screens, not two views of one number.
+ */
+export interface LayoutBudget {
+  /** `viewportKey()` → that viewport's counts. Widest first, as written. */
+  viewports: Record<string, ViewportBudget>;
 }
 
 /** The counts that may only ever fall. Order is the order failures report in. */
@@ -301,11 +331,11 @@ export const RATCHETED: readonly (keyof BudgetTotals)[] = Object.freeze([
   "overlaps",
 ] as const);
 
-/** Reduce a sweep to the budget it would be committed as. */
+/** Reduce one viewport's sweep to the section it would be committed as. */
 export function summarize(
   findings: readonly PageFindings[],
-  viewport: { width: number; height: number },
-): LayoutBudget {
+  viewport: Viewport,
+): ViewportBudget {
   const pages: Record<string, PageBudget> = {};
   for (const f of [...findings].sort((a, b) => a.page.localeCompare(b.page))) {
     pages[f.page] = {
@@ -328,6 +358,21 @@ export function summarize(
 
 function sum<T>(items: readonly T[], of: (item: T) => number): number {
   return items.reduce((n, item) => n + of(item), 0);
+}
+
+/**
+ * Assemble the whole committed file from one section per viewport, widest first
+ * so the desktop case — the one most diffs are about — stays at the top of the
+ * file however many viewports are added later.
+ */
+export function collectBudget(sections: readonly ViewportBudget[]): LayoutBudget {
+  const viewports: Record<string, ViewportBudget> = {};
+  for (const section of [...sections].sort(
+    (a, b) => b.viewport.width - a.viewport.width || b.viewport.height - a.viewport.height,
+  )) {
+    viewports[viewportKey(section.viewport)] = section;
+  }
+  return { viewports };
 }
 
 /** A count that rose — the only thing that fails the gate. */
@@ -359,7 +404,7 @@ export interface BudgetComparison {
  * budget of today's counts is green on day one and can only be lowered: every
  * task after this one moves a number it is not allowed to raise.
  */
-export function compareBudget(measured: LayoutBudget, budget: LayoutBudget): BudgetComparison {
+export function compareBudget(measured: ViewportBudget, budget: ViewportBudget): BudgetComparison {
   const regressions: Regression[] = [];
   const slack: Slack[] = [];
   for (const count of RATCHETED) {
@@ -373,8 +418,8 @@ export function compareBudget(measured: LayoutBudget, budget: LayoutBudget): Bud
 
 /** Which pages account for a risen count — a total is useless without a name. */
 function worsened(
-  measured: LayoutBudget,
-  budget: LayoutBudget,
+  measured: ViewportBudget,
+  budget: ViewportBudget,
   count: keyof BudgetTotals,
 ): string[] {
   const pages: string[] = [];
@@ -407,6 +452,57 @@ function pageCount(p: PageBudget, count: keyof BudgetTotals): number {
   }
 }
 
+/** One viewport's comparison, tagged with the section it came from. */
+export interface ViewportComparison extends BudgetComparison {
+  /** The `viewportKey()` this comparison is about, e.g. `375x812`. */
+  viewport: string;
+}
+
+/** The whole file's comparison — one ratchet per viewport, plus the bookkeeping. */
+export interface LayoutComparison {
+  /** Widest first, matching the order the file is written in. */
+  viewports: ViewportComparison[];
+  /**
+   * Viewports measured but absent from the committed budget — a first run, or a
+   * viewport just added to the sweep. Not a failure: there is no number to have
+   * risen against. The "budget is the current measurement" check is what forces
+   * it to be recorded, and update mode is what records it.
+   */
+  unbudgeted: string[];
+  /**
+   * Viewports the budget carries but the sweep did not measure. Always a failure:
+   * a gate that quietly stopped measuring a viewport reports a perfect site.
+   */
+  unmeasured: string[];
+  /** True when nothing rose anywhere and no budgeted viewport went unmeasured. */
+  ok: boolean;
+}
+
+/**
+ * The ratchet across every viewport. Each section is compared **within its own
+ * viewport** — 1280's bleeds have nothing to say about 375's, so a rise at one
+ * width fails on its own without a fall at the other width paying for it.
+ */
+export function compareBudgets(measured: LayoutBudget, budget: LayoutBudget): LayoutComparison {
+  const viewports: ViewportComparison[] = [];
+  const unbudgeted: string[] = [];
+  for (const [key, section] of Object.entries(measured.viewports)) {
+    const was = budget.viewports[key];
+    if (!was) {
+      unbudgeted.push(key);
+      continue;
+    }
+    viewports.push({ viewport: key, ...compareBudget(section, was) });
+  }
+  const unmeasured = Object.keys(budget.viewports).filter((key) => !(key in measured.viewports));
+  return {
+    viewports,
+    unbudgeted,
+    unmeasured,
+    ok: viewports.every((cmp) => cmp.ok) && unmeasured.length === 0,
+  };
+}
+
 /** The failure/slack message, so a CI log says what moved and where. */
 export function formatComparison(cmp: BudgetComparison): string {
   const lines: string[] = [];
@@ -417,6 +513,22 @@ export function formatComparison(cmp: BudgetComparison): string {
   }
   for (const s of cmp.slack) {
     lines.push(`✓ ${s.count}: ${s.budget} → ${s.measured} (${s.budget - s.measured} better than budget)`);
+  }
+  return lines.join("\n");
+}
+
+/** The same message for the whole file, one block per viewport. */
+export function formatComparisons(cmp: LayoutComparison): string {
+  const lines: string[] = [];
+  for (const key of cmp.unmeasured) {
+    lines.push(`✗ ${key}: budgeted but not measured (the sweep stopped covering this viewport)`);
+  }
+  for (const v of cmp.viewports) {
+    const body = formatComparison(v);
+    if (body) lines.push(`${v.viewport}:`, ...body.split("\n").map((line) => `  ${line}`));
+  }
+  for (const key of cmp.unbudgeted) {
+    lines.push(`… ${key}: no budget yet — record it with \`bun run lint:layout:update\``);
   }
   return lines.join("\n");
 }
