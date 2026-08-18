@@ -1162,6 +1162,7 @@ faqir add alert                   # Aliases resolve to their canonical component
 
 faqir create my-widget --kind primitive    # Scaffold a new custom component
 faqir create data-grid --kind recipe       # Scaffold with JS controller
+faqir create pricing-block --kind pattern  # Scaffold a composition
 faqir create status --kind primitive --category layout
 
 faqir inspect button              # Show manifest details
@@ -1416,12 +1417,18 @@ This generates a complete component directory:
 
 ```
 ui/primitives/sidebar/
-├── sidebar.manifest.json    Valid manifest skeleton
+├── sidebar.manifest.json    Valid manifest skeleton, with a resolvable $schema
 ├── sidebar.css              CSS with [data-ui="sidebar"] selector
 └── sidebar.html             Reference markup
 ```
 
-For recipes (`--kind recipe`), a JavaScript controller stub is also generated with the `create{Name}` pattern.
+`--kind` takes `primitive`, `recipe` or `pattern`, which chooses the layer directory. For
+recipes (`--kind recipe`), a JavaScript controller stub is also generated with the
+`create{Name}` pattern.
+
+The manifest carries every field the schema requires plus a `$schema` pointing at the
+project root's `manifest.schema.json`, relative to the component's own directory — so an
+editor validates it as you type and it passes the same check the registry does.
 
 Custom components are immediately registered in `faqir.config.json`, included in the CSS bundle, and visible to `faqir audit`, `faqir context`, and all other CLI tools.
 

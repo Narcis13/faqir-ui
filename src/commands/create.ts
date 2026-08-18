@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 import { log } from "../utils/logger";
 import { configExists, readConfig, writeConfig } from "../utils/config";
 import { ensureDir } from "../utils/fs";
@@ -7,7 +7,14 @@ import { controllerName } from "../utils/components";
 import { regenerateContext } from "../utils/codegen";
 import { generateBundle } from "../utils/bundler";
 
-type Kind = "primitive" | "recipe";
+type Kind = "primitive" | "recipe" | "pattern";
+
+/** Which layer directory a kind is scaffolded into. */
+const LAYER: Record<Kind, "primitives" | "recipes" | "patterns"> = {
+  primitive: "primitives",
+  recipe: "recipes",
+  pattern: "patterns",
+};
 
 interface CreateOptions {
   kind: Kind | null;
@@ -22,10 +29,10 @@ function parseArgs(args: string[]): { name: string | null; options: CreateOption
     switch (args[i]) {
       case "--kind": {
         const val = args[++i];
-        if (val === "primitive" || val === "recipe") {
+        if (val === "primitive" || val === "recipe" || val === "pattern") {
           options.kind = val;
         } else {
-          log.error(`Invalid kind: ${val}. Must be: primitive, recipe`);
+          log.error(`Invalid kind: ${val}. Must be: primitive, recipe, pattern`);
           process.exit(1);
         }
         break;
@@ -49,7 +56,7 @@ function parseArgs(args: string[]): { name: string | null; options: CreateOption
 }
 
 function printHelp() {
-  log.heading("faqir create <name> --kind <primitive|recipe>");
+  log.heading("faqir create <name> --kind <primitive|recipe|pattern>");
   log.blank();
   console.log("Scaffold a new custom component with manifest, CSS, HTML, and optional JS.");
   log.blank();
@@ -57,16 +64,35 @@ function printHelp() {
   console.log("  faqir create my-widget --kind primitive");
   console.log("  faqir create data-grid --kind recipe");
   console.log("  faqir create status-bar --kind primitive --category layout");
+  console.log("  faqir create pricing-block --kind pattern");
   log.blank();
   console.log("Options:");
   log.table([
-    ["--kind <type>", "Component kind: primitive or recipe (required)"],
+    ["--kind <type>", "Component kind: primitive, recipe or pattern (required)"],
     ["--category <name>", "Component category (default: 'custom')"],
   ]);
 }
 
-function generateManifest(name: string, kind: Kind, category: string): object {
+/**
+ * The `$schema` a scaffolded manifest carries (task 1.0R-04).
+ *
+ * Computed exactly the way `scripts/add-schema-refs.mjs` computes it for the
+ * registry: a path from the manifest's own directory to the project root's
+ * `manifest.schema.json`, so it resolves at any `output_dir` depth and a fresh
+ * component satisfies the same rule every installed manifest already does.
+ * Before this, `faqir create` was the one thing in a project that produced a
+ * manifest with no `$schema` at all.
+ */
+function schemaRefFor(manifestDir: string, projectRoot: string): string {
+  const rel = relative(manifestDir, join(projectRoot, "manifest.schema.json")).split("\\").join("/");
+  return rel.startsWith(".") ? rel : `./${rel}`;
+}
+
+function generateManifest(name: string, kind: Kind, category: string, schemaRef: string): object {
   const manifest: Record<string, unknown> = {
+    // First property, as `add-schema-refs.mjs` inserts it — editors resolve it
+    // for completion, and CI resolves it for validation.
+    $schema: schemaRef,
     name,
     version: "0.1.0",
     kind,
@@ -197,12 +223,12 @@ export async function create(args: string[]): Promise<void> {
   const cwd = process.cwd();
 
   if (!name) {
-    log.error("Component name required. Usage: faqir create <name> --kind <primitive|recipe>");
+    log.error("Component name required. Usage: faqir create <name> --kind <primitive|recipe|pattern>");
     process.exit(1);
   }
 
   if (!options.kind) {
-    log.error("--kind is required. Must be: primitive or recipe");
+    log.error("--kind is required. Must be: primitive, recipe or pattern");
     process.exit(1);
   }
 
@@ -219,7 +245,7 @@ export async function create(args: string[]): Promise<void> {
 
   const config = await readConfig(cwd);
   const outputDir = join(cwd, config.output_dir);
-  const layer = options.kind === "recipe" ? "recipes" : "primitives";
+  const layer = LAYER[options.kind];
   const compDir = join(outputDir, layer, name);
 
   if (existsSync(compDir)) {
@@ -232,7 +258,7 @@ export async function create(args: string[]): Promise<void> {
   ensureDir(compDir);
 
   // Generate files
-  const manifest = generateManifest(name, options.kind, options.category);
+  const manifest = generateManifest(name, options.kind, options.category, schemaRefFor(compDir, cwd));
   await Bun.write(join(compDir, `${name}.manifest.json`), JSON.stringify(manifest, null, 2) + "\n");
   log.success(`${name}.manifest.json`);
 

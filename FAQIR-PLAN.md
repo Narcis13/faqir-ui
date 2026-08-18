@@ -190,7 +190,7 @@ document order is the traversal order: these are the things that should be true 
 | 1.0R-01 | Retire (or gate) the stale `faqir-creator.skill` archive | ✅ |
 | 1.0R-02 | `references/tokens.md` becomes token-source-derived | ✅ |
 | 1.0R-03 | `references/directives.md` becomes engine + plugin-derived | ✅ |
-| 1.0R-04 | `references/manifest.md` from the schema; `faqir create` emits `$schema` | ⬜ |
+| 1.0R-04 | `references/manifest.md` from the schema; `faqir create` emits `$schema` | ✅ |
 | 1.0R-05 | SKILL.md surface completion: commands, scaffolds, themes | ⬜ |
 | 1.0R-06 | Layout-lint gains a 375px viewport (the measurement) | ⬜ |
 | 1.0R-07 | Fix the three components that bleed at phone width | ⬜ |
@@ -3210,9 +3210,21 @@ Second half, same seam: `faqir create` scaffolds seventeen keys and no `$schema`
 - `check:skill` reports 7 files — the whole skill directory is now gated.
 
 **Acceptance criteria**
-- [ ] An agent following `manifest.md` alone authors a manifest that validates.
-- [ ] `faqir create` output passes `check:schema-refs`' rule.
-- [ ] `check:skill` covers all seven files.
+- [x] An agent following `manifest.md` alone authors a manifest that validates. (The file is walked out of `manifest.schema.json`: the required/optional split per manifest definition, a row per property with the schema's own type and description, the nine nested `$ref` shapes with their own required columns, the six closed enums verbatim, and the schema's `changelog`. The criterion is mechanical rather than asserted — a test parses the REQUIRED TABLE BACK OUT OF THE MARKDOWN, builds a manifest from the field names and types it finds there (recursing into the nested-type tables), and validates the result against both the published schema and `validateManifest`. Drop one row from the generator and that test fails, which is how it was checked.)
+- [x] `faqir create` output passes `check:schema-refs`' rule. (`$schema` is emitted as the first property, computed by `add-schema-refs.mjs`'s own rule — a POSIX path from the manifest's directory to the project root's `manifest.schema.json` — so it is `../../../manifest.schema.json` at the default `output_dir` and `../../../../../` under `./src/vendor/faqir`, matching what `faqir add` installs. The test reimplements the rule independently, resolves the value against the file's own directory, and runs at two depths and for all three kinds.)
+- [x] `check:skill` covers all seven files. (`generateShippedSkillFiles()` returns 7; `check:skill` reports 7, and a test compares the generated set against `readdirSync` of the shipped `references/` directory so an ungated file cannot reappear. Suite: 3418 + 37 pass, with one pre-existing failure untouched by this task — `docs-agents.test.ts`'s CDN pin vs `packages/core/sri.json`, which fails identically on a clean tree. `typecheck`, `check:schema-refs` (98 manifests), `check:docs` (313 files), `check:registry-index`, `check:audit-browser`, `audit:registry`, `size` and `smoke` all green.)
+
+`faqir create` grew a third kind while it was open: `--kind pattern` (the plan's tests ask
+for "all three kinds" and the command took two, scaffolding into `primitives`/`recipes`
+only). Kind → layer is one table now, and the pattern scaffold is the primitive scaffold
+without a controller, which is what the 15 registry patterns are.
+
+Two things in the reference are counted rather than described: the per-kind file set —
+42 primitives / 29 recipes / 15 patterns, and `files.js` declared by all 29 recipes and
+nothing else — and the worked example, which is `button.manifest.json` read off disk. The
+old file transcribed it at `version: "1.0.0"` with no `$schema`, no `props` and no
+`changes`, against a shipped `1.1.0` that has all three; a transcription cannot rot if it
+is not a transcription.
 
 ---
 

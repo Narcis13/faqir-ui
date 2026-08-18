@@ -34,7 +34,7 @@ import {
   spacingLadderLine,
 } from "../utils/layout";
 import { TOKEN_MODIFIERS } from "../protocol";
-import { getSchemaVersion } from "../utils/schema";
+import { getSchemaVersion, loadManifestSchema } from "../utils/schema";
 import { loadPluginMetadata, type PluginMetadata } from "./plugins";
 
 /** Stable, grep-able marker proving a file came out of this generator. */
@@ -1301,6 +1301,398 @@ export function renderDirectivesReference(
 }
 
 // ---------------------------------------------------------------------------
+// Manifest reference (task 1.0R-04) — derived from manifest.schema.json
+//
+// `references/manifest.md` was hand-maintained and actively misleading: it
+// omitted `$schema`, `props`, `changes`, `aliases` and `variants.<group>.responsive`,
+// listed nine categories where the schema closes the vocabulary at eleven, and
+// — worst — never said that `definitions.componentManifest.required` names ALL
+// seventeen fields, so its "Full Schema" block read as though everything were
+// optional and an agent authoring by hand produced something that fails.
+//
+// Nothing below is transcribed. The definition sections, the required/optional
+// split, every type, every description and every enum are walked out of the
+// schema document, so a property added to `manifest.schema.json` appears here
+// (and `check:skill` fails until it is regenerated). The one worked example is
+// the shipped `button.manifest.json`, lifted byte-for-byte.
+// ---------------------------------------------------------------------------
+
+/** The Draft-07 subset `manifest.schema.json` uses, as read by the renderer. */
+interface SchemaNode {
+  type?: string | string[];
+  description?: string;
+  enum?: string[];
+  properties?: Record<string, SchemaNode>;
+  required?: string[];
+  items?: SchemaNode;
+  additionalProperties?: SchemaNode | boolean;
+  minLength?: number;
+  minItems?: number;
+  minProperties?: number;
+  $ref?: string;
+}
+
+/** How many registry components of one `kind` declare a `files.js` controller. */
+export interface KindFileSet {
+  kind: string;
+  count: number;
+  withJs: number;
+}
+
+/** The worked example a manifest reference carries, read off disk. */
+export interface ManifestExample {
+  /** Component name, e.g. `button`. */
+  name: string;
+  /** Repo-relative path of the manifest, quoted in the heading. */
+  manifestPath: string;
+  /** The manifest file, verbatim. */
+  manifestJson: string;
+  /** The component's HTML source (its `@ui:` header is lifted from it). */
+  html?: string;
+  /** The component's CSS source (same). */
+  css?: string;
+}
+
+/** `#/definitions/slot` → `slot`. */
+function refName(ref: string): string {
+  return ref.split("/").pop() ?? ref;
+}
+
+/** A markdown table cell: one line, pipes escaped. */
+function mdCell(text: string): string {
+  return text.replace(/\s+/g, " ").replace(/\|/g, "\\|").trim();
+}
+
+/** Backticked values, comma-separated — the form every enum is rendered in. */
+function enumValues(values: string[]): string {
+  return values.map((v) => `\`${v}\``).join(", ");
+}
+
+/**
+ * The type of one property, as a table cell. `$ref`s render as the definition
+ * name (each has its own section below), arrays as `<item>[]`, and open maps as
+ * `{ <key>: <value> }` — the shape `slots`, `variants`, `props` and `states` use.
+ */
+function typeLabel(node: SchemaNode): string {
+  if (node.$ref) return `\`${refName(node.$ref)}\``;
+  const type = Array.isArray(node.type) ? node.type.join(" \\| ") : node.type;
+  if (type === "array") {
+    const item = node.items ? typeLabel(node.items) : "`any`";
+    return `${item}[]`;
+  }
+  if (type === "object" && node.additionalProperties && typeof node.additionalProperties === "object") {
+    return `{ \`<key>\`: ${typeLabel(node.additionalProperties)} }`;
+  }
+  if (node.enum) return `\`${type ?? "string"}\` (enum)`;
+  return `\`${type ?? "any"}\``;
+}
+
+/** The constraints a node declares, spelled out for the Notes cell. */
+function constraintNotes(node: SchemaNode): string[] {
+  const out: string[] = [];
+  if (node.minLength === 1) out.push("non-empty");
+  else if (typeof node.minLength === "number") out.push(`at least ${node.minLength} characters`);
+  if (typeof node.minItems === "number") out.push(`at least ${node.minItems} item${node.minItems === 1 ? "" : "s"}`);
+  if (typeof node.minProperties === "number") {
+    out.push(`at least ${node.minProperties} entr${node.minProperties === 1 ? "y" : "ies"}`);
+  }
+  if (node.enum) out.push(`one of ${enumValues(node.enum)}`);
+  if (node.items?.enum) out.push(`each one of ${enumValues(node.items.enum)}`);
+  if (node.items?.minLength === 1) out.push("items non-empty");
+  return out;
+}
+
+/**
+ * The Notes cell: the schema's own description plus its constraints. A `$ref`
+ * carries neither, so the referenced definition's description and constraints
+ * are read through — `category` states its eleven values on the row that uses it.
+ */
+function notesCell(node: SchemaNode, definitions: Record<string, SchemaNode>): string {
+  const target = node.$ref ? definitions[refName(node.$ref)] : undefined;
+  const parts = [
+    ...(node.description ? [node.description] : []),
+    ...(target?.description && target.description !== node.description ? [target.description] : []),
+    ...constraintNotes(node),
+    ...(target ? constraintNotes(target) : []),
+  ];
+  return parts.length > 0 ? mdCell(parts.join(" · ")) : "—";
+}
+
+/** One `| field | type | notes |` row. */
+function propertyRow(name: string, node: SchemaNode, definitions: Record<string, SchemaNode>): string {
+  return `| \`${name}\` | ${typeLabel(node)} | ${notesCell(node, definitions)} |`;
+}
+
+/** A property table, in the order given. */
+function propertyTable(
+  properties: Record<string, SchemaNode>,
+  names: string[],
+  definitions: Record<string, SchemaNode>,
+): string[] {
+  const lines = ["| Field | Type | Notes |", "|---|---|---|"];
+  for (const name of names) lines.push(propertyRow(name, properties[name], definitions));
+  return lines;
+}
+
+/**
+ * A top-level manifest definition (component or theme), split the way the
+ * schema splits it: `required` first, in the order the schema lists them, then
+ * everything else. The split is the point — the old file never stated it.
+ */
+function renderManifestDefinition(
+  title: string,
+  node: SchemaNode,
+  filename: string,
+  definitions: Record<string, SchemaNode>,
+): string[] {
+  const properties = node.properties ?? {};
+  const required = (node.required ?? []).filter((name) => name in properties);
+  const optional = Object.keys(properties).filter((name) => !required.includes(name));
+
+  const lines: string[] = [`## ${title}`, ""];
+  if (node.description) {
+    lines.push(node.description, "");
+  }
+  lines.push(`Shipped as \`${filename}\`.`, "");
+  lines.push(`### Required — all ${required.length}`, "");
+  lines.push(
+    `\`required\` names **every one of these ${required.length} fields**. A manifest that omits any ` +
+      "of them does not validate, however sensible the omission looks — an empty object (`{}`) or " +
+      "an empty array (`[]`) is how a component with nothing to say says it.",
+    "",
+  );
+  lines.push(...propertyTable(properties, required, definitions), "");
+  lines.push(`### Optional — ${optional.length}`, "");
+  lines.push(...propertyTable(properties, optional, definitions), "");
+  return lines;
+}
+
+/** A nested definition — one table, with each property marked required or not. */
+function renderNestedDefinition(
+  name: string,
+  node: SchemaNode,
+  definitions: Record<string, SchemaNode>,
+): string[] {
+  const lines: string[] = [`### \`${name}\``, ""];
+  if (node.description) lines.push(node.description, "");
+
+  if (node.enum) {
+    lines.push(`A closed \`${node.type ?? "string"}\` vocabulary — ${node.enum.length} values:`, "");
+    lines.push(...node.enum.map((v) => `- \`${v}\``), "");
+    return lines;
+  }
+
+  const properties = node.properties ?? {};
+  const required = new Set(node.required ?? []);
+  const names = Object.keys(properties);
+  if (names.length === 0) {
+    if (node.additionalProperties && typeof node.additionalProperties === "object") {
+      lines.push(`Every value is ${typeLabel(node.additionalProperties)}.`, "");
+    }
+    for (const note of constraintNotes(node)) lines.push(`- ${note}`);
+    if (constraintNotes(node).length > 0) lines.push("");
+    return lines;
+  }
+
+  lines.push("| Field | Type | Required | Notes |", "|---|---|---|---|");
+  for (const prop of names) {
+    lines.push(
+      `| \`${prop}\` | ${typeLabel(properties[prop])} | ${required.has(prop) ? "yes" : "no"} | ` +
+        `${notesCell(properties[prop], definitions)} |`,
+    );
+  }
+  lines.push("");
+  for (const note of constraintNotes(node)) lines.push(`- ${note}`);
+  if (constraintNotes(node).length > 0) lines.push("");
+  return lines;
+}
+
+/** Every `enum` in the document, with the path it sits at — walked, not listed. */
+function collectEnums(node: unknown, path: string, out: { path: string; values: string[] }[] = []) {
+  if (node === null || typeof node !== "object") return out;
+  if (Array.isArray(node)) {
+    node.forEach((item, i) => collectEnums(item, `${path}[${i}]`, out));
+    return out;
+  }
+  const record = node as Record<string, unknown>;
+  if (Array.isArray(record.enum) && record.enum.every((v) => typeof v === "string")) {
+    out.push({ path, values: record.enum as string[] });
+  }
+  for (const [key, value] of Object.entries(record)) {
+    if (key === "enum") continue;
+    // `properties`/`definitions` are name maps, not keywords: skip the level so
+    // the path reads `variant.responsive` rather than
+    // `definitions.variant.properties.responsive`.
+    const next = key === "properties" || key === "definitions" ? path : path ? `${path}.${key}` : key;
+    collectEnums(value, next, out);
+  }
+  return out;
+}
+
+/** The `@ui:` header comment lines a component source carries, verbatim. */
+function machineComments(source: string | undefined, prefix: string): string[] {
+  if (!source) return [];
+  return source
+    .split("\n")
+    .filter((line) => line.includes("@ui:"))
+    .filter((line) => line.trimStart().startsWith(prefix))
+    .map((line) => line.trim());
+}
+
+/**
+ * Build `references/manifest.md` from the schema document plus one shipped
+ * manifest as the worked example. Both are parameters so a test can hand it a
+ * fixture schema and prove the file is derived rather than transcribed.
+ */
+export function renderManifestReference(
+  schema: Record<string, unknown>,
+  example: ManifestExample,
+  schemaVersion: string,
+  fileSets: KindFileSet[] = [],
+): string {
+  const definitions = (schema.definitions ?? {}) as Record<string, SchemaNode>;
+  const lines: string[] = [];
+
+  lines.push(generationHeader(schemaVersion));
+  lines.push("");
+  lines.push("# Faqir Manifest Schema Reference");
+  lines.push("");
+  if (typeof schema.description === "string") {
+    lines.push(schema.description);
+    lines.push("");
+  }
+  lines.push(
+    `Everything below is read out of \`manifest.schema.json\` — \`schema_version\` ` +
+      `${schema.schema_version}, \`stability\` ${schema.stability}, published at \`${schema.$id}\`` +
+      (schema.amendment_policy ? `, amendment policy \`${schema.amendment_policy}\`` : "") +
+      ". Field names, types, descriptions and enums are the schema's own, so this file cannot " +
+      "drift from the contract it documents.",
+  );
+  lines.push("");
+  lines.push(
+    "A component manifest sits beside its HTML and CSS at " +
+      "`registry/<primitives|recipes|patterns>/<name>/<name>.manifest.json`; a theme manifest is " +
+      "`registry/themes/<name>.theme.json`. Every manifest carries a `$schema` — a path relative " +
+      "to its own directory, so it resolves at any depth. `faqir create` writes one, and " +
+      "`bun scripts/add-schema-refs.mjs --check` fails on any manifest whose value is missing or stale.",
+  );
+  lines.push("");
+  lines.push(
+    "The document is a `oneOf`: a file validates as **either** a component manifest **or** a theme " +
+      "manifest, never both and never neither.",
+  );
+  lines.push("");
+  lines.push(
+    "**Authoring one.** `faqir create <name> --kind <primitive|recipe|pattern>` scaffolds a manifest " +
+      "that already carries every required field and a resolvable `$schema`, and registers the " +
+      "component — start there and fill it in, rather than from a blank file. Writing one by hand " +
+      "means writing every field in the required table below: there is no field the validator " +
+      "infers for you, and `faqir inspect <component>` prints a shipped one to work from.",
+  );
+  lines.push("");
+
+  if (definitions.componentManifest) {
+    lines.push(
+      ...renderManifestDefinition(
+        "Component Manifest",
+        definitions.componentManifest,
+        "<name>.manifest.json",
+        definitions,
+      ),
+    );
+  }
+  if (definitions.themeManifest) {
+    lines.push(
+      ...renderManifestDefinition("Theme Manifest", definitions.themeManifest, "<name>.theme.json", definitions),
+    );
+  }
+
+  const nested = Object.keys(definitions).filter(
+    (name) => name !== "componentManifest" && name !== "themeManifest",
+  );
+  if (nested.length > 0) {
+    lines.push("## Nested Types", "");
+    lines.push(
+      `The ${nested.length} shapes the two manifest definitions \`$ref\` into. A field typed ` +
+        "`slot` above takes exactly the object documented here.",
+      "",
+    );
+    for (const name of nested) lines.push(...renderNestedDefinition(name, definitions[name], definitions));
+  }
+
+  if (fileSets.length > 0) {
+    const total = fileSets.reduce((n, k) => n + k.count, 0);
+    lines.push("## File Set Per Kind", "");
+    lines.push(
+      "`files` requires `html`, `css` and `manifest` whatever the kind — `js` is declared by the " +
+        `components that ship a controller, and only those. Counted across the ${total} manifests ` +
+        "in `registry/`:",
+      "",
+    );
+    lines.push("| `kind` | Components | Declare `files.js` |", "|---|---|---|");
+    for (const k of fileSets) lines.push(`| \`${k.kind}\` | ${k.count} | ${k.withJs} |`);
+    lines.push("");
+  }
+
+  const enums = collectEnums(schema.definitions, "");
+  if (enums.length > 0) {
+    lines.push("## Closed Enums", "");
+    lines.push(
+      `${enums.length} fields are closed vocabularies — a value outside the list fails validation. ` +
+        "Widening one is a schema amendment, not a manifest edit.",
+      "",
+    );
+    lines.push("| Field | Values |", "|---|---|");
+    for (const e of enums) lines.push(`| \`${e.path}\` | ${enumValues(e.values)} |`);
+    lines.push("");
+  }
+
+  const changelog = Array.isArray(schema.changelog) ? (schema.changelog as Record<string, unknown>[]) : [];
+  if (changelog.length > 0) {
+    lines.push("## Schema Changelog", "");
+    lines.push("The schema carries its own history. `1.0` is frozen: until `2.0` it may only gain optional fields and widen enums.", "");
+    lines.push("| Version | Task | Breaking | Note |", "|---|---|---|---|");
+    for (const entry of changelog) {
+      lines.push(
+        `| \`${entry.version}\` | ${entry.task ? `\`${entry.task}\`` : "—"} | ` +
+          `${entry.breaking ? "yes" : "no"} | ${mdCell(String(entry.note ?? ""))} |`,
+      );
+    }
+    lines.push("");
+  }
+
+  lines.push(`## Worked Example — \`${example.manifestPath}\``, "");
+  lines.push(
+    `The shipped \`${example.name}\` manifest, verbatim. Not an illustration of one: this is the ` +
+      "file in the registry, so every field it shows is a field that validates today.",
+    "",
+  );
+  lines.push("```json");
+  lines.push(example.manifestJson.replace(/\s+$/, ""));
+  lines.push("```");
+  lines.push("");
+
+  const htmlComments = machineComments(example.html, "<!--");
+  const cssComments = machineComments(example.css, "/*");
+  if (htmlComments.length > 0 || cssComments.length > 0) {
+    lines.push("## Machine Comments", "");
+    lines.push(
+      "The manifest is the contract; the sources repeat the machine-readable part of it in their " +
+        `header comments, which \`faqir audit\` and the registry gate parse. From \`${example.name}\`:`,
+      "",
+    );
+    if (htmlComments.length > 0) {
+      lines.push("```html", ...htmlComments, "```", "");
+    }
+    if (cssComments.length > 0) {
+      lines.push("```css", ...cssComments, "```", "");
+    }
+  }
+
+  return lines.join("\n").replace(/\n{3,}/g, "\n\n").replace(/\s+$/g, "") + "\n";
+}
+
+// ---------------------------------------------------------------------------
 // Manifest loading
 // ---------------------------------------------------------------------------
 
@@ -1530,7 +1922,10 @@ function renderShippedSkill(
     "- [references/directives.md](references/directives.md) — every faqir-core directive, modifier " +
       "and magic, plus the plugin vocabulary",
   );
-  lines.push("- [references/manifest.md](references/manifest.md) — manifest schema and examples");
+  lines.push(
+    "- [references/manifest.md](references/manifest.md) — the manifest contract, derived from " +
+      "`manifest.schema.json`: which fields are required, every closed enum, one shipped example",
+  );
   lines.push("");
 
   return lines.join("\n").replace(/\n{3,}/g, "\n\n").replace(/\s+$/g, "") + "\n";
@@ -1570,7 +1965,53 @@ export async function generateShippedSkillFiles(): Promise<GeneratedFile[]> {
       schemaVersion,
     ),
   });
+  // And the manifest reference: derived from `manifest.schema.json` itself, so
+  // a field added to the contract cannot go undocumented — with `check:skill`
+  // now covering all seven files of the skill directory.
+  files.push({
+    relPath: join("references", "manifest.md"),
+    content: renderManifestReference(
+      await loadManifestSchema(),
+      manifestExample(),
+      schemaVersion,
+      kindFileSets(byLayer),
+    ),
+  });
   return files;
+}
+
+/**
+ * Per-`kind` controller counts, read off the manifests rather than asserted: a
+ * kind that starts shipping JS moves its own row.
+ */
+export function kindFileSets(byLayer: Record<Layer, Manifest[]>): KindFileSet[] {
+  const out = new Map<string, KindFileSet>();
+  for (const layer of LAYERS) {
+    for (const m of byLayer[layer]) {
+      const row = out.get(m.kind) ?? { kind: m.kind, count: 0, withJs: 0 };
+      row.count++;
+      if (m.files?.js) row.withJs++;
+      out.set(m.kind, row);
+    }
+  }
+  return [...out.values()].sort((a, b) => a.kind.localeCompare(b.kind));
+}
+
+/**
+ * The worked example the manifest reference carries: the shipped `button`
+ * component, read off disk rather than transcribed — the version, the `$schema`
+ * and the `changes[]` entry in the reference are whatever the registry ships.
+ */
+export function manifestExample(): ManifestExample {
+  const dir = join(getRegistryPath(), "primitives", "button");
+  const read = (file: string) => (existsSync(join(dir, file)) ? readFileSync(join(dir, file), "utf8") : undefined);
+  return {
+    name: "button",
+    manifestPath: "registry/primitives/button/button.manifest.json",
+    manifestJson: readFileSync(join(dir, "button.manifest.json"), "utf8"),
+    html: read("button.html"),
+    css: read("button.css"),
+  };
 }
 
 /** The engine source the directive vocabulary is declared in. */

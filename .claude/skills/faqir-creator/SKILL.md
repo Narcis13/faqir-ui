@@ -242,4 +242,4 @@ Full anatomy trees, variant tables, and safe/unsafe transforms for every compone
 - [references/patterns.md](references/patterns.md) — 15 patterns
 - [references/tokens.md](references/tokens.md) — every design token, derived from `registry/tokens/*.css`
 - [references/directives.md](references/directives.md) — every faqir-core directive, modifier and magic, plus the plugin vocabulary
-- [references/manifest.md](references/manifest.md) — manifest schema and examples
+- [references/manifest.md](references/manifest.md) — the manifest contract, derived from `manifest.schema.json`: which fields are required, every closed enum, one shipped example
