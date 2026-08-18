@@ -228,10 +228,8 @@ Placeholder display for empty content areas with icon, message, and action
   <div data-part="icon">{icon}</div>
   <h3 data-part="title">{title}</h3>
   <p data-part="description">{description}</p>
-  <div data-part="action">
+  <div data-part="actions">
     <button data-ui="button" data-variant="primary">{action_label}</button>
-  </div>
-  <div data-part="secondary-action">
     <button data-ui="button" data-variant="ghost">{secondary_label}</button>
   </div>
 </div>

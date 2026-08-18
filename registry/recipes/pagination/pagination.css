@@ -4,13 +4,25 @@
 /* ── Root ── */
 [data-ui="pagination"] {
   display: inline-flex;
+  /* An `inline-flex` box is sized by its content, so without a ceiling the
+     numbered nav sets the width and pushes the whole component past a phone
+     window. The ceiling is what lets the wrap below actually happen. */
+  max-inline-size: 100%;
 }
 
-/* ── Nav ── */
+/* ── Nav ──
+   Wraps rather than scrolls: the page numbers are the navigation, so a row that
+   runs off the window is a row whose last pages cannot be reached. Wrapping
+   keeps every target on screen at any width, with no breakpoint involved. */
 [data-ui="pagination"] [data-part="nav"] {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: center;
   gap: var(--space-1);
+  /* A flex item's automatic minimum size is its min-content width; the nav must
+     be allowed below that of the un-wrapped row for the ceiling above to bind. */
+  min-inline-size: 0;
 }
 
 /* ── Shared button styles ── */

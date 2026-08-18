@@ -1142,7 +1142,7 @@
         "zeroGutterPages": 0,
         "seamPages": 0,
         "seams": 0,
-        "bleeds": 52,
+        "bleeds": 29,
         "overlaps": 3
       },
       "pages": {
@@ -1713,7 +1713,7 @@
         "examples/patterns/empty-state.html": {
           "zeroGutter": false,
           "seams": 0,
-          "bleeds": 4,
+          "bleeds": 0,
           "overlaps": 0
         },
         "examples/patterns/feature-grid.html": {
@@ -1899,7 +1899,7 @@
         "examples/primitives/key-value.html": {
           "zeroGutter": false,
           "seams": 0,
-          "bleeds": 2,
+          "bleeds": 0,
           "overlaps": 0
         },
         "examples/primitives/label.html": {
@@ -2109,19 +2109,19 @@
         "examples/recipes/input-otp.html": {
           "zeroGutter": false,
           "seams": 0,
-          "bleeds": 4,
+          "bleeds": 0,
           "overlaps": 0
         },
         "examples/recipes/menubar.html": {
           "zeroGutter": false,
           "seams": 0,
-          "bleeds": 8,
+          "bleeds": 0,
           "overlaps": 0
         },
         "examples/recipes/pagination.html": {
           "zeroGutter": false,
           "seams": 0,
-          "bleeds": 5,
+          "bleeds": 0,
           "overlaps": 0
         },
         "examples/recipes/popover.html": {

@@ -25,6 +25,12 @@ name: Visual regression
 # The phone pass is the same job and the same file: no new workflow, ~7s more.
 # It is a serial file, so sharding keeps its tests together in one shard.
 #
+# Its per-component counterpart (tests/visual/narrow-fit.pw.ts, task 1.0R-07)
+# rides along too and takes no screenshots either: 20 tests that mount one
+# reference at a time at 320/375 and in a container 60% of its own max-content
+# width, and assert nothing paints outside it — a wall with no budget, plus one
+# reverting case per fix so it cannot go green on an inert assertion. ~2s.
+#
 # The viewport axis (tests/visual/responsive.pw.ts) sweeps only category-`layout`
 # components and patterns, at 390/768/1280, in the default theme, light, LTR —
 # 78 captures. The full cross-product would have been 26 × 3 × 12 × 2 × 2 = 3 744,

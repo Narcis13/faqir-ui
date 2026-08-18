@@ -81,7 +81,7 @@
     "ease-default"
   ],
   "templates": {
-    "html": "<div data-ui=\"empty-state\" data-size=\"{size}\">\n  <div data-part=\"icon\">{icon}</div>\n  <h3 data-part=\"title\">{title}</h3>\n  <p data-part=\"description\">{description}</p>\n  <div data-part=\"action\">\n    <button data-ui=\"button\" data-variant=\"primary\">{action_label}</button>\n  </div>\n  <div data-part=\"secondary-action\">\n    <button data-ui=\"button\" data-variant=\"ghost\">{secondary_label}</button>\n  </div>\n</div>"
+    "html": "<div data-ui=\"empty-state\" data-size=\"{size}\">\n  <div data-part=\"icon\">{icon}</div>\n  <h3 data-part=\"title\">{title}</h3>\n  <p data-part=\"description\">{description}</p>\n  <div data-part=\"actions\">\n    <button data-ui=\"button\" data-variant=\"primary\">{action_label}</button>\n    <button data-ui=\"button\" data-variant=\"ghost\">{secondary_label}</button>\n  </div>\n</div>"
   },
   "safe_transforms": [
     "change-size",
@@ -117,8 +117,8 @@
     "title-slot-is-required",
     "icon-slot-is-optional",
     "description-slot-is-optional",
-    "action-slot-is-optional",
-    "secondary-action-slot-is-optional",
+    "actions-slot-is-optional",
+    "secondary-button-is-optional",
     "default-size-is-md",
     "sm-variant-reduces-icon-and-text",
     "lg-variant-increases-icon-and-text",

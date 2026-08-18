@@ -33,10 +33,18 @@
 }
 
 /* ── Actions ── */
+/* The action cluster is centred by the root's `align-items: center`, which sizes
+   it to its content — so a row of two buttons that does not wrap overflows the
+   window symmetrically, past BOTH edges, and the inline-start half is
+   unreachable at any scroll position. Wrapping is the whole fix; the ceiling
+   keeps a single very wide button honest too. */
 [data-ui="empty-state"] [data-part="actions"] {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: var(--space-3);
   margin-top: var(--space-2);
+  max-inline-size: 100%;
 }
 
 /* ── Compact size ── */

@@ -191,9 +191,9 @@ document order is the traversal order: these are the things that should be true 
 | 1.0R-02 | `references/tokens.md` becomes token-source-derived | ✅ |
 | 1.0R-03 | `references/directives.md` becomes engine + plugin-derived | ✅ |
 | 1.0R-04 | `references/manifest.md` from the schema; `faqir create` emits `$schema` | ✅ |
-| 1.0R-05 | SKILL.md surface completion: commands, scaffolds, themes | ⬜ |
-| 1.0R-06 | Layout-lint gains a 375px viewport (the measurement) | ⬜ |
-| 1.0R-07 | Fix the three components that bleed at phone width | ⬜ |
+| 1.0R-05 | SKILL.md surface completion: commands, scaffolds, themes | ✅ |
+| 1.0R-06 | Layout-lint gains a 375px viewport (the measurement) | ✅ |
+| 1.0R-07 | Fix the three components that bleed at phone width | ✅ |
 | 1.0R-08 | Site: the five scaffolds get a gallery | ⬜ |
 | 1.0R-09 | Site: reactive-engine page; `/layout/` vs `/layouts/` disambiguated | ⬜ |
 | 1.0R-10 | Theme preview parity + the `data-ui="prose"` decision | ⬜ |
@@ -3340,9 +3340,43 @@ query, and emphatically not a new breakpoint outside the canon.
 - Manifests updated in the same commit if any part's contract changed; visual baselines refreshed.
 
 **Acceptance criteria**
-- [ ] `pagination`, `key-value` and `empty-state` fit 320px with no horizontal scroll.
-- [ ] The narrow budget from 1.0R-06 strictly falls.
-- [ ] `audit:registry` clean; no new breakpoint introduced.
+- [x] `pagination`, `key-value` and `empty-state` fit 320px with no horizontal scroll (`tests/visual/narrow-fit.pw.ts` — each reference mounted alone at 320 *and* 375, zero painted boxes past either edge and `scrollWidth == innerWidth`; `input-otp` and `menubar` cleared the same bar and joined the set).
+- [x] The narrow budget from 1.0R-06 strictly falls (375×812 bleeds **52 → 29**; all five target pages went to **0**. 1280×900 re-recorded identically on all five counts, and the 968-case desktop matrix for the touched components is byte-identical).
+- [x] `audit:registry` clean; no new breakpoint introduced (five rule sets, zero findings — including `breakpoint-canon`, which sees no width prelude because none was added: every fix is `flex-wrap` / `max-inline-size` / `min-inline-size` / `overflow-wrap`).
+
+> Fixed: **`pagination`** (the numbered nav neither wrapped nor had a ceiling —
+> the `inline-flex` root is sized by its content, so the row set the width),
+> **`key-value`** (a 24-character IBAN is the `1fr` track's min-content, so one
+> unbreakable value sized the whole grid; `overflow-wrap: anywhere` rather than
+> `break-word`, because only `anywhere` lowers the min-content contribution the
+> track is floored by), **`empty-state`** (the centred cluster overflowed past
+> *both* edges — the inline-start half unreachable at any scroll position).
+>
+> Both judgement calls came out "same mechanism, fix them". **`input-otp`**: six
+> `lg` segments and their gaps are 372px, wider than a 375px window before the
+> page gutter — `flex-wrap` plus a ceiling on the `fit-content` root, and the
+> transparent input is `inset: 0` so it follows whatever box the segments settle
+> into. **`menubar`**: the trigger bar is the same unwrapped row, 198px past its
+> own example page. Its *open submenu* is a different mechanism — an anchored
+> dropdown with no viewport clamp — and is 1.0R-12, filed with the reproduction
+> rather than hidden by the bar's fix, which only moves the anchor.
+>
+> The real cause of `empty-state`'s bleed was contract drift, not a missing
+> declaration: 0.9-04 aligned the pattern's *markup* and *slots* onto the
+> declared `actions` cluster but left the sheet styling `action` and
+> `secondary-action` — parts nothing renders — so the slot that exists had no
+> rule of its own, and the row it got came from the *primitive* of the same name
+> (see 0.9-13's collision). Both sheets now style `actions`, and the pattern's
+> manifest template stops emitting the two phantom parts, so `faqir add` cannot
+> reproduce the defect.
+>
+> The wall is per-component and has no budget, which is affordable only because
+> the set is at zero: each of the five is also squeezed into a container 60% of
+> its own `max-content` width, and each of the five fixes is pinned by a case
+> that reverts exactly that declaration and asserts the named box reappears.
+> A window check alone would have proven nothing for `menubar`, which fits a
+> 375px window in isolation at 229px wide and still bled 198px on a page that
+> offers it 343.
 
 ---
 
@@ -3609,3 +3643,4 @@ submissions, Show HN, awesome lists) as a doc — execution is human.
 | 0.8-17 | **A mobile-first grid cannot express an asymmetric split, because `data-span` is a prop and not a responsive group — found by 0.8-12 while writing the dashboard archetype.** `grid.manifest.json` declares `span` under `props` (`2|3|4|6|full`) and `grid.css` selects `[data-ui="grid"] > [data-span="N"] { grid-column: span N; }` with no tier blocks, so a span holds at every width — which the manifest's own description admits ("pair wide spans with column tiers so the span never exceeds the column count"). Under the mobile-first base the canon now mandates (`data-cols="1"`), that advice cannot be followed: any span above 1 exceeds the base column count and CSS conjures an implicit column on a phone. The only safe span under a 1-column base is `full` (`grid-column: 1 / -1`, a no-op in one column), which is what the dashboard archetype ships. So the ordinary two-thirds/one-third dashboard row — main panel beside a sidebar, stacked on a phone — has **no expression in the layout system today**: not `grid` (spans do not tier), not `switcher` (equal peers by construction), and `dashboard-shell` is a whole-page scaffold rather than a row. Worse, `data-span-lg="3"` **audits clean and does nothing**: `valid-variant`'s suffix reader only looks at groups declaring `"responsive": true`, and `undeclared-attribute` (0.8-10) reads stylesheets, not markup — so the natural guess fails silently, which is exactly the failure mode the canon exists to prevent. Fix: decide whether `span` becomes a responsive **variant group** (the tier ladder it visibly wants — four more specificity-ordered blocks in `grid.css`, the shape `cols` already proves) or whether the asymmetric split gets its own primitive (`sidebar`-style: a fixed-measure aside beside a `1fr` main, folding intrinsically with `flex-basis`+`flex-wrap` and therefore needing no query at all — the doctrine's own preferred answer). Either way the markup-side gap should close too: an audit rule that flags a tier suffix on an attribute the manifest declares as a non-responsive prop, so `data-span-lg` is a finding instead of a no-op. `docs/layout.md` and README both document the constraint in the meantime. | 0.8-12 | ⬜ |
 | 0.9-13 | **`empty-state` is two different components sharing one name, and the manifest map silently keeps whichever loads last — found by 0.9-04 while driving the registry to zero findings.** `registry/primitives/empty-state/` and `registry/patterns/empty-state/` both declare `"name": "empty-state"`, both are listed in `registry-index.json` (86 components, 87 files), and `loadRegistryManifestMap` keys by name — so one manifest overwrites the other and every rule judges the pattern's markup against whichever won. 0.9-04 made the collision *harmless* rather than fixing it: the pattern's slots and markup were aligned to the primitive's (`action`/`secondary-action` → the declared `actions` cluster, `data-size="lg"` dropped since only `sm` exists), so both readings now agree and the audit is at zero either way. The collision itself is untouched, and it is the same defect 0.7-21 reports from the `llms-full.txt` side (two `### empty-state` blocks, one anchor) — that row treats it as a formatting problem; it is a naming one, and `faqir add empty-state` is ambiguous too. Fix: decide whether the registry allows one name per layer (then key manifests, index, context and `add` by `layer/name` throughout) or requires globally unique names (then rename one, with an alias for the old name and an `upgrade` path), and resolve 0.7-21 with it. | 0.9-04 | ⬜ |
 | 0.9-14 | **Seven `<!-- @ui:slots … -->` annotations disagree with their manifests — found by 0.9-04 while syncing the five it had just changed.** The annotation is *generated* from `Object.keys(manifest.slots)` by `faqir conform` (`src/commands/conform.ts:60`), so a fragment whose header lists a different set is stale output, not a second opinion — but nothing gates it, so seven have drifted in both directions: `document` (+`header` `footer`), `alert-dialog` (+`close`), `label` (+`indicator`) and `page-break` (a literal `(none)` where the manifest has no slots) under-report; `input` claims an `icon` slot its manifest does not declare; `hero` and `table` differ only in ORDER, which is the harmless half and the reason a naive equality gate would need `conform` run first. 0.9-04 synced only the five it caused (`crud-table`, `dashboard-shell`, `switch`, `command-palette`, `select-custom`) rather than widening its diff. Fix: decide whether `icon` is a real `input` slot (declare it) or dead prose (drop it), run `faqir conform` over the registry, and add the equality check to `audit:registry` so the annotation can never drift from the manifest again — it is the same "manifests are the source of truth" gate 0.8-10 built for `data-*` attributes, one surface over. | 0.9-04 | ⬜ |
+| 1.0R-12 | **An anchored dropdown has no viewport clamp, so a menu can open where it cannot be read — found by 1.0R-07 while fixing the `menubar` bar it hangs from.** `menubar.css` positions `[data-part="submenu"]` at `inset-inline-start: 0` of its group with `min-inline-size: calc(var(--space-20) * 2)` (160px) and nothing that keeps it inside the window; where the group sits decides whether the menu is readable. 1.0R-07 made the bar wrap, which moved every group to the inline start and took the example page from 8 bleeds to 0 at 375 — but that is the anchor moving, not the dropdown being clamped. Reproduced after the fix: a five-trigger bar at 375px wraps so the open group lands mid-row, and its submenu paints **44px past the window edge** with its items 39px past (scratch spec, real Chromium). It is a family question, not a `menubar` one — `context-menu`, `dropdown-menu`, `select-custom`, `popover` and `tooltip` all anchor a panel to a trigger the same way, and the layout ratchet cannot see any of them because every one is closed on its example page. Fix: decide where the clamp lives (CSS anchor positioning's `position-try` fallbacks are the declarative answer, subject to checking support against the framework's own baseline; a shared controller helper is the portable one) and apply it once across the family, then open one panel per example page so the ratchet measures the state a user actually meets. | 1.0R-07 | ⬜ |

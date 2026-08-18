@@ -21,13 +21,21 @@
   flex-shrink: 0;
 }
 
-/* ── Value ── */
+/* ── Value ──
+   The value is the cell that carries unbreakable data: an IBAN, a reference, a
+   hash. In the `1fr` track of the grid variants its automatic minimum size is
+   its min-content width, so one 24-character IBAN sizes the whole grid wider
+   than a phone window and every later row bleeds with it. `anywhere` (not
+   `break-word`, which is ignored when min-content is computed) lets the track
+   floor drop, and `min-inline-size: 0` removes the grid item's own floor. */
 [data-ui="key-value"] [data-part="value"] {
   font-size: var(--kv-value-size);
   font-weight: var(--kv-value-weight);
   color: var(--kv-value-color);
   margin: 0;
   padding: 0;
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
 }
 
 /* ── Variant: Horizontal (default) ── */

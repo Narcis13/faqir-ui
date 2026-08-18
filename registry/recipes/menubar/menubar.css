@@ -4,7 +4,13 @@
 [data-ui="menubar"] {
   position: relative;
   display: inline-flex;
+  flex-wrap: wrap;
   align-items: center;
+  /* The bar is a row of triggers; unwrapped and unbounded it runs 198px past a
+     phone window, taking its last menus with it. (The open submenu's own
+     overflow is a different mechanism — an anchored dropdown with no viewport
+     clamp — and is task 1.0R-12.) */
+  max-inline-size: 100%;
   gap: var(--space-1);
   padding: var(--space-1);
   border: var(--space-px) solid var(--color-border);

@@ -50,14 +50,20 @@
   max-width: 36ch;
 }
 
-/* ── Action ── */
-[data-ui="empty-state"] [data-part="action"] {
+/* ── Actions ──
+   `actions` is the slot this component declares and its reference authors; the
+   sheet used to style `action` and `secondary-action` instead — parts that
+   appear nowhere but the stale template below it — so the real cluster was left
+   with no rule of its own. Centred by the root's `align-items: center`, an
+   unwrapped row of two buttons overflows past BOTH window edges on a phone, and
+   the inline-start half cannot be scrolled to. */
+[data-ui="empty-state"] [data-part="actions"] {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3);
   margin-top: var(--space-2);
-}
-
-/* ── Secondary Action ── */
-[data-ui="empty-state"] [data-part="secondary-action"] {
-  margin-top: 0;
+  max-inline-size: 100%;
 }
 
 /* ── Fade-in animation ── */
