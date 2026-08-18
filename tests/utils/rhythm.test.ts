@@ -423,9 +423,14 @@ describe("rhythm — the layout budget fell, and by how much", () => {
   // the rise and this catches the loss of the win that paid for §20.
   const BASELINE_0_9_01 = { seams: 183, seamPages: 42, zeroGutterPages: 79, pages: 180 };
 
-  const budget = JSON.parse(
-    readFileSync(join(ROOT, "tests/visual/layout-budget.json"), "utf8"),
-  ) as LayoutBudget;
+  // The desktop section, which is the width §20's numbers were measured at. The
+  // file grew a 375 section in 1.0R-06; comparing a phone-width count against a
+  // 1280 baseline would be comparing two different measurements.
+  const budget = (
+    JSON.parse(
+      readFileSync(join(ROOT, "tests/visual/layout-budget.json"), "utf8"),
+    ) as LayoutBudget
+  ).viewports["1280x900"];
 
   it("measures the complete current site while retaining the original baseline", () => {
     const currentPages = buildDocsSite().filter(
