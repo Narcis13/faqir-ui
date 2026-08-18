@@ -271,7 +271,7 @@ and commit on branch faqir-migration as: faqir(S<X.Y>): <summary>.
 **Read first:** proto `CLAUDE.md`, faqir README "AI Agent Integration", PREFLIGHT.md (MCP/skill availability).
 
 **Steps:**
-1. Install the `faqir-creator` skill into proto: copy the skill directory (or unzip `faqir-creator.skill`) into `proto/.claude/skills/faqir-creator/`. If 1.0's `faqir context --skill` generates a project-scoped SKILL.md, prefer generating it here so it reflects *installed* components.
+1. Install the `faqir-creator` skill into proto: copy the whole directory `faqir/.claude/skills/faqir-creator/` (SKILL.md + `references/`) into `proto/.claude/skills/faqir-creator/`. That directory is the shipped agent surface — it is generated from the registry manifests by `bun run gen:skill` and gated by `bun run check:skill`, so re-copy it after a faqir upgrade rather than hand-editing it. If 1.0's `faqir context --skill` generates a project-scoped SKILL.md, prefer generating it here so it reflects *installed* components.
 2. Register the MCP server in proto's `.mcp.json` (create if absent): `@faqir-ui/mcp` via `npx`, stdio. Verify it starts.
 3. `pnpm exec faqir context --format md` → commit the generated context artifacts (`.faqir/context.json` + markdown if produced).
 4. Add an interim section to proto `CLAUDE.md` titled **"UI layer — MIGRATION IN PROGRESS"** stating: Faqir is the target UI layer; new UI code MUST use Faqir (data-ui attributes, tokens, no classes); PrimeVue exists only in not-yet-migrated pages and must not be used in new code; the two-consumption-mode rule (D1: no `l-*` in Vue; Vue owns reactivity); pointer to `docs/faqir-migration/PLAN.md`. Keep proto's existing sections intact.

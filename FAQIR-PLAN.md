@@ -187,7 +187,7 @@ document order is the traversal order: these are the things that should be true 
 
 | ID | Task | Status |
 |----|------|--------|
-| 1.0R-01 | Retire (or gate) the stale `faqir-creator.skill` archive | ⬜ |
+| 1.0R-01 | Retire (or gate) the stale `faqir-creator.skill` archive | ✅ |
 | 1.0R-02 | `references/tokens.md` becomes token-source-derived | ⬜ |
 | 1.0R-03 | `references/directives.md` becomes engine + plugin-derived | ⬜ |
 | 1.0R-04 | `references/manifest.md` from the schema; `faqir create` emits `$schema` | ⬜ |
@@ -3087,9 +3087,9 @@ third state: a shipped skill artifact that no gate can see.
 - Either way: a doc test asserting every path `FAQIR-PROTO-INTEGRATION.md` tells a reader to copy actually exists on disk.
 
 **Acceptance criteria**
-- [ ] No skill artifact ships that `check:skill` does not gate.
-- [ ] `FAQIR-PROTO-INTEGRATION.md`'s install instructions resolve to files that exist.
-- [ ] `bun run check:skill` green; suite green.
+- [x] No skill artifact ships that `check:skill` does not gate. (Option **(a)**: the archive is deleted, `*.skill` is gitignored, and the generated `.claude/skills/faqir-creator/` directory — gated by `check:skill` — is the only shipped agent surface.)
+- [x] `FAQIR-PROTO-INTEGRATION.md`'s install instructions resolve to files that exist. (Step S1.4.1 now copies the generated directory; a doc test resolves every faqir-repo path the doc names.)
+- [x] `bun run check:skill` green; suite green. (4 files up to date; 3382 + 37 tests pass.)
 
 ---
 

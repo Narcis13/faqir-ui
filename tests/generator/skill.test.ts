@@ -5,9 +5,12 @@
 //    idempotently.
 //  • Shipped skill: covers every registry component, carries the header, and the
 //    committed files equal a fresh generation (the `check:skill` CI gate).
+//  • Shipped artifact surface (1.0R-01): the generated directory is the only
+//    shipped skill artifact — no packed `.skill` zip that no gate can see — and
+//    FAQIR-PROTO-INTEGRATION.md's install paths resolve on disk.
 
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
-import { mkdirSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { init } from "../../src/commands/init";
 import { add } from "../../src/commands/add";
@@ -145,5 +148,60 @@ describe("shipped faqir-creator skill", () => {
       const committed = await Bun.file(join(dir, f.relPath)).text();
       expect(committed).toBe(f.content);
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Shipped artifact surface (task 1.0R-01)
+//
+// The generated directory `.claude/skills/faqir-creator/` is the ONLY shipped
+// agent surface, and `check:skill` gates it. A packed `.skill` zip alongside it
+// would be a second artifact no gate can look inside, so none may be tracked —
+// and the integration doc must point readers at the directory instead.
+// ---------------------------------------------------------------------------
+
+describe("shipped skill artifact surface", () => {
+  const INTEGRATION_DOC = join(REPO, "FAQIR-PROTO-INTEGRATION.md");
+
+  it("tracks no packed `.skill` archive at the repo root", async () => {
+    const proc = Bun.spawn(["git", "ls-files", "-z", "--", "*.skill", ":(glob)*.skill"], {
+      cwd: REPO,
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+    const tracked = (await new Response(proc.stdout).text()).split("\0").filter(Boolean);
+    expect(tracked).toEqual([]);
+  });
+
+  it("leaves no packed `.skill` archive on disk at the repo root", () => {
+    const archives = readdirSync(REPO).filter((n) => n.endsWith(".skill"));
+    expect(archives).toEqual([]);
+  });
+
+  it("FAQIR-PROTO-INTEGRATION.md no longer instructs unzipping an archive", async () => {
+    const doc = await Bun.file(INTEGRATION_DOC).text();
+    expect(doc).not.toMatch(/unzip/i);
+    expect(doc).not.toMatch(/\.skill\b/);
+  });
+
+  it("FAQIR-PROTO-INTEGRATION.md points at the generated skill directory", async () => {
+    const doc = await Bun.file(INTEGRATION_DOC).text();
+    expect(doc).toContain("faqir/.claude/skills/faqir-creator/");
+  });
+
+  it("every faqir-repo path FAQIR-PROTO-INTEGRATION.md names resolves on disk", async () => {
+    const doc = await Bun.file(INTEGRATION_DOC).text();
+    // The doc is written from proto's side, where this repo is a sibling checkout:
+    // a backticked path rooted at `faqir/`, `registry/` or `.claude/` refers here.
+    // (`proto/...` paths are the reader's repo and are deliberately not matched.)
+    const cited = new Set<string>();
+    for (const [, path] of doc.matchAll(/`((?:faqir|registry|\.claude)\/[A-Za-z0-9._/-]*)`/g)) {
+      cited.add(path.replace(/^faqir\//, "").replace(/\/$/, ""));
+    }
+    expect(cited.size).toBeGreaterThan(0);
+    const missing = [...cited].filter((p) => !existsSync(join(REPO, p)));
+    expect(missing).toEqual([]);
+    // The install instruction's target specifically.
+    expect(cited).toContain(".claude/skills/faqir-creator");
   });
 });

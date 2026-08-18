@@ -22,3 +22,8 @@ playwright/.cache/
 
 # Local codex_autoresearch iteration log.
 autoresearch-results.tsv
+
+# Packed skill archives. The shipped agent surface is the generated directory
+# `.claude/skills/faqir-creator/` (`bun run gen:skill`, gated by `check:skill`) —
+# a committed zip drifts from the manifests and no gate can see inside it (1.0R-01).
+*.skill
