@@ -4,61 +4,11 @@
 // bundle on plain Node. No-op under the Bun runtime.
 import "./utils/runtime-shim";
 
-import { COMMANDS } from "./command-registry";
+import { COMMANDS, COMMAND_CATEGORIES, commandsInCategory } from "./command-registry";
 import { log } from "./utils/logger";
 import { suggestClosest } from "./utils/suggest";
 import { initJSONMode, recordJSONError } from "./utils/json-output";
 import { VERSION } from "./version";
-
-const HELP_CATEGORIES = [
-  {
-    name: "Project Setup",
-    commands: [
-      ["init", "Initialize a new Faqir project"],
-      ["doctor", "Check project health"],
-    ],
-  },
-  {
-    name: "Components",
-    commands: [
-      ["add", "Add components from the registry"],
-      ["remove", "Remove installed components"],
-      ["upgrade", "Three-way merge components to the registry's latest"],
-      ["list", "Show installed and available components"],
-      ["search", "Search components by name, alias, or description"],
-      ["create", "Scaffold a new custom component"],
-      ["inspect", "Show component manifest details"],
-    ],
-  },
-  {
-    name: "Development",
-    commands: [
-      ["dev", "Start a local dev server"],
-      ["bundle", "Compose CSS into a single bundle file"],
-      ["theme", "Manage or generate contrast-verified themes"],
-      ["variant", "Add or remove component variants"],
-      ["scaffold", "Generate full page templates"],
-      ["bindings", "Generate framework bindings from manifests (vue, react)"],
-    ],
-  },
-  {
-    name: "Quality",
-    commands: [
-      ["audit", "Validate components against manifests"],
-      ["repair", "Auto-fix audit issues"],
-      ["conform", "Normalize component markup"],
-      ["diff", "Show component drift vs the pristine copy"],
-      ["trace", "Show dependency and file trace"],
-    ],
-  },
-  {
-    name: "AI / Agent",
-    commands: [
-      ["context", "Generate AI context file"],
-      ["explain", "Human/agent-readable component explanation"],
-    ],
-  },
-];
 
 function suggestCommand(input: string): string | null {
   return suggestClosest(input, Object.keys(COMMANDS), 3);
@@ -71,10 +21,14 @@ function printHelp() {
   log.blank();
   console.log("Usage: faqir <command> [options]");
 
-  for (const category of HELP_CATEGORIES) {
+  // Groups are read out of the command registry, so registering a command
+  // lists it here — there is no second table to remember to update.
+  for (const category of COMMAND_CATEGORIES) {
+    const commands = commandsInCategory(category);
+    if (commands.length === 0) continue;
     log.blank();
-    console.log(`  ${category.name}:`);
-    log.table(category.commands as [string, string][]);
+    console.log(`  ${category}:`);
+    log.table(commands.map(([name, def]) => [name, def.summary] as [string, string]));
   }
 
   log.blank();

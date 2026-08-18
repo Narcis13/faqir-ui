@@ -15,7 +15,7 @@
 // Output carries a grep-able generation header and no timestamps, so
 // regeneration is byte-idempotent (gated by `bun run check:skill`).
 
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { readConfig } from "../utils/config";
 import { ensureDir, getPackageRoot, getRegistryPath } from "../utils/fs";
@@ -34,6 +34,9 @@ import {
   spacingLadderLine,
 } from "../utils/layout";
 import { TOKEN_MODIFIERS } from "../protocol";
+import { COMMAND_CATEGORIES, commandsInCategory } from "../command-registry";
+import { DOCUMENT_SCAFFOLD_NAMES, SCAFFOLDS } from "../scaffolds/registry";
+import type { ThemeManifest } from "../theme-manifest";
 import { getSchemaVersion, loadManifestSchema } from "../utils/schema";
 import { loadPluginMetadata, type PluginMetadata } from "./plugins";
 
@@ -392,32 +395,147 @@ function renderDataDriven(): string[] {
   ];
 }
 
+/**
+ * The CLI reference, derived command-for-command from `COMMAND_DEFINITIONS`
+ * (task 1.0R-05).
+ *
+ * This list was hand-written and had fallen five commands behind the registry —
+ * `doctor`, `variant`, `scaffold`, `dev` and `bindings` were dispatched by the
+ * CLI and invisible to the skill. Nothing below is transcribed: the invocation
+ * is `faqir <name> <args>` from the registry entry and the gloss is its
+ * `skillNote` (or `summary`), grouped by the same categories `faqir help` uses.
+ * Registering a command therefore documents it here, and
+ * `tests/generator/skill.test.ts` fails if any registered name is missing.
+ */
 function renderCliReference(): string[] {
-  return [
-    "## CLI Reference",
-    "",
-    "```bash",
-    "faqir init [--theme <name>]          # scaffold a project",
-    "faqir add <component...>             # add components (resolves deps, accepts aliases)",
-    "faqir remove <component...>          # remove (checks dependents)",
-    "faqir list                          # installed / available",
-    "faqir search <query>                # find by name, alias, or description",
-    "faqir create <name> --kind <type>   # scaffold a custom component",
-    "faqir inspect <component>           # full manifest",
-    "faqir explain <component> [--json]  # human/agent explanation",
-    "faqir trace <component> [--json]    # dependency graph",
-    "faqir audit [--json]                # validate markup against manifests",
-    "faqir repair                        # auto-fix audit issues",
-    "faqir conform [--dry-run]           # normalize markup",
-    "faqir diff [component...]           # user drift vs pristine baseline",
-    "faqir upgrade [component...]        # three-way merge to the latest version",
-    "faqir bundle [--minify] [--watch]   # compose CSS into one file",
-    "faqir theme set|list|create <name>  # manage themes",
-    "faqir context [--format json|md|cursorrules|llms] [--skill]",
-    "```",
-    "",
-  ];
+  const lines: string[] = ["## CLI Reference", ""];
+  for (const category of COMMAND_CATEGORIES) {
+    const commands = commandsInCategory(category);
+    if (commands.length === 0) continue;
+    const invocations = commands.map(
+      ([name, def]) => `faqir ${name}${def.args ? ` ${def.args}` : ""}`,
+    );
+    const width = Math.max(...invocations.map((i) => i.length));
+    lines.push(`**${category}**`);
+    lines.push("");
+    lines.push("```bash");
+    commands.forEach(([, def], i) => {
+      lines.push(`${invocations[i]!.padEnd(width)}  # ${def.skillNote ?? def.summary}`);
+    });
+    lines.push("```");
+    lines.push("");
+  }
+  lines.push("Every command accepts `--json` for machine-readable output.");
+  lines.push("");
+  return lines;
 }
+
+/**
+ * The scaffold catalogue (task 1.0R-05) — read from `SCAFFOLDS`, so registering
+ * a scaffold adds a row with no edit here.
+ *
+ * The frontmatter promises "page scaffolding" and "building printable documents
+ * (invoices, reports, forms)"; before this section the body never named
+ * `faqir scaffold`, so an agent asked for an invoice hand-composed one instead
+ * of running the generator that is print-tested on every run.
+ */
+export function renderScaffolds(): string[] {
+  const lines: string[] = ["## Scaffolds — Whole Pages and Documents", ""];
+  lines.push(
+    "`faqir scaffold <name>` writes a complete, audit-clean page composed from maintained registry " +
+      "patterns and installs everything it references. **Reach for it before hand-composing a page** — " +
+      "an invoice or a report written by hand skips the print tests these carry.",
+  );
+  lines.push("");
+  lines.push("| Scaffold | Produces | Patterns | Default theme |");
+  lines.push("|----------|----------|----------|---------------|");
+  for (const def of Object.values(SCAFFOLDS)) {
+    const patterns = def.patterns.map((p) => `\`${p}\``).join(", ");
+    const theme = def.defaultTheme ? `\`${def.defaultTheme}\`` : "project theme";
+    lines.push(`| \`${def.name}\` | ${def.description} | ${patterns} | ${theme} |`);
+  }
+  lines.push("");
+  lines.push("```bash");
+  lines.push("faqir scaffold invoice --output invoices/2026-04.html   # print-ready document");
+  lines.push("faqir scaffold landing-page --theme aurora              # marketing page");
+  lines.push("```");
+  lines.push("");
+  lines.push(
+    `Document scaffolds (${DOCUMENT_SCAFFOLD_NAMES.map((n) => `\`${n}\``).join(", ")}) default to the ` +
+      "`document` theme and mark every editable value with a `FAQIR_REPLACE: path.to.value` comment — " +
+      "replace the sample that follows each one and leave the `data-ui`/`data-part` attributes intact " +
+      "so the page stays auditable. `--no-add` skips auto-installing missing components.",
+  );
+  lines.push("");
+  return lines;
+}
+
+/**
+ * The shipped theme gallery (task 1.0R-05) — read out of
+ * `registry/themes/*.theme.json`, the same manifests `faqir theme list` and the
+ * docs gallery use.
+ *
+ * The skill named `faqir theme set|list|create` without naming a single theme,
+ * so "make it dark" had nothing to choose from. `mood` is the agent-selectable
+ * axis the manifest exists for; `scheme` says which color schemes ship.
+ */
+export function renderThemes(registryPath: string): string[] {
+  const themesDir = join(registryPath, "themes");
+  const manifests: ThemeManifest[] = [];
+  if (existsSync(themesDir)) {
+    const files = readdirSync(themesDir)
+      .filter((f) => f.endsWith(".theme.json"))
+      .sort();
+    for (const file of files) {
+      manifests.push(JSON.parse(readFileSync(join(themesDir, file), "utf8")) as ThemeManifest);
+    }
+  }
+  if (manifests.length === 0) return [];
+
+  const lines: string[] = ["## Themes", ""];
+  lines.push(
+    `${manifests.length} themes ship with the registry. A theme redefines tokens only — no component ` +
+      "markup changes, so switching one never invalidates a page. Pick by **mood**, then " +
+      "`faqir theme set <name>`.",
+  );
+  lines.push("");
+  lines.push("| Theme | Mood | Schemes | Dark mode | Pairs with |");
+  lines.push("|-------|------|---------|-----------|------------|");
+  for (const m of manifests) {
+    const pairs = m.pairs_with.length > 0 ? m.pairs_with.map((t) => `\`${t}\``).join(", ") : "—";
+    lines.push(
+      `| \`${m.name}\` | ${m.mood.join(", ")} | ${m.scheme} | ${m.dark_mode} | ${pairs} |`,
+    );
+  }
+  lines.push("");
+  lines.push(
+    "`scheme: both` means the theme ships a light and a dark rendering; `dark_mode: native` means it " +
+      "carries an explicit dark block, so `data-theme=\"dark\"` on `<html>` is enough. " +
+      "`faqir theme create <name>` generates a new contrast-verified theme plus its manifest.",
+  );
+  lines.push("");
+  return lines;
+}
+
+/**
+ * Every capability the frontmatter advertises, paired with the body section that
+ * delivers it (task 1.0R-05).
+ *
+ * The frontmatter is the routing surface — Claude Code matches on it — so a
+ * promise there with no section behind it routes a task to a skill that cannot
+ * answer it. Both halves are asserted in `tests/generator/skill.test.ts`: the
+ * claim must appear in the description, and the section must appear in the body.
+ */
+export const FRONTMATTER_CAPABILITIES: { claim: string; section: string }[] = [
+  { claim: "page scaffolding", section: "## Scaffolds — Whole Pages and Documents" },
+  { claim: "printable documents (invoices, reports, forms)", section: "## Scaffolds — Whole Pages and Documents" },
+  { claim: "document/print layout", section: "## Scaffolds — Whole Pages and Documents" },
+  { claim: "theme selection", section: "## Themes" },
+  { claim: "CLI operations", section: "## CLI Reference" },
+  { claim: "generating page layouts using Faqir tokens and primitives", section: "## Layout System" },
+  { claim: "data-driven rendering", section: "## Data-Driven Rendering" },
+  { claim: "data-ui/data-part/data-variant/data-state attributes", section: "## The Attribute Protocol" },
+];
 
 /** Component inventory grouped by layer, derived from the loaded manifests. */
 function renderInventory(byLayer: Record<Layer, Manifest[]>): string[] {
@@ -1823,6 +1941,12 @@ export async function generateSkill(cwd: string): Promise<string> {
   if (compositions.length) lines.push(...compositions);
 
   lines.push(...renderDataDriven());
+  // Scaffolds and themes are registry-wide, not per-install: a project agent
+  // needs `faqir scaffold invoice` and a theme name it can actually pass just as
+  // much as the shipped skill does, and it keeps the CLI reference's pointers
+  // resolvable in both skills.
+  lines.push(...renderScaffolds());
+  lines.push(...renderThemes(getRegistryPath()));
   lines.push(...renderCliReference());
 
   return lines.join("\n").replace(/\n{3,}/g, "\n\n").replace(/\s+$/g, "") + "\n";
@@ -1847,7 +1971,7 @@ export async function writeSkillFile(cwd: string): Promise<string> {
  * manifest-derived — Claude Code matches on it to route Faqir tasks here.
  */
 const SHIPPED_FRONTMATTER_DESCRIPTION =
-  "Expert agent for the Faqir UI framework — generates, audits, repairs, and explains zero-class, manifest-driven UI components and pages. Use when building HTML pages or components with Faqir UI, when the user asks to create/modify/audit Faqir UI markup, when working with data-ui/data-part/data-variant/data-state attributes, when generating page layouts using Faqir tokens and primitives, when creating new registry components (primitives, recipes, patterns), when connecting pages to server data via l-source directive or apiSource(), or when building printable documents (invoices, reports, forms). Triggers on any Faqir UI task including component creation, page scaffolding, code auditing, token usage, reactive directive usage (l-data, l-model, l-for, l-source), data-driven rendering, document/print layout, and CLI operations.";
+  "Expert agent for the Faqir UI framework — generates, audits, repairs, and explains zero-class, manifest-driven UI components and pages. Use when building HTML pages or components with Faqir UI, when the user asks to create/modify/audit Faqir UI markup, when working with data-ui/data-part/data-variant/data-state attributes, when generating page layouts using Faqir tokens and primitives, when creating new registry components (primitives, recipes, patterns), when connecting pages to server data via l-source directive or apiSource(), when picking or switching the visual theme of a page, or when building printable documents (invoices, reports, forms). Triggers on any Faqir UI task including component creation, page scaffolding, code auditing, token usage, theme selection, reactive directive usage (l-data, l-model, l-for, l-source), data-driven rendering, document/print layout, and CLI operations.";
 
 /** A single generated file destined for the shipped skill directory. */
 export interface GeneratedFile {
@@ -1905,6 +2029,8 @@ function renderShippedSkill(
   lines.push(...renderPlugins(plugins, "registry/core"));
   lines.push(...renderCompositions(byLayer.patterns));
   lines.push(...renderDataDriven());
+  lines.push(...renderScaffolds());
+  lines.push(...renderThemes(getRegistryPath()));
   lines.push(...renderCliReference());
 
   lines.push("## Per-Component Reference");

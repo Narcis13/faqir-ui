@@ -16,6 +16,10 @@
 //  • Manifest reference (1.0R-04): `references/manifest.md` is walked out of
 //    `manifest.schema.json` — every property, the required/optional split and
 //    every closed enum — so a field added to the contract cannot go undocumented.
+//  • Surface completion (1.0R-05): the CLI section is derived from the command
+//    registry, the Scaffolds and Themes sections from the scaffold catalogue and
+//    `registry/themes/*.theme.json`, and every capability the frontmatter
+//    advertises is backed by a section — all three checked in both directions.
 
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -26,6 +30,7 @@ import { SCHEMA_VERSION } from "../../src/version";
 import { TOKEN_MODIFIERS } from "../../src/protocol";
 import {
   enginePath,
+  FRONTMATTER_CAPABILITIES,
   generateSkill,
   generateShippedSkillFiles,
   manifestExample,
@@ -34,12 +39,16 @@ import {
   parseSourceController,
   renderDirectivesReference,
   renderManifestReference,
+  renderScaffolds,
+  renderThemes,
   renderTokensReference,
   shippedSkillDir,
   SKILL_GENERATION_MARKER,
   type KindFileSet,
 } from "../../src/generator/skill";
 import { loadPluginMetadata } from "../../src/generator/plugins";
+import { COMMAND_DEFINITIONS, COMMAND_NAMES } from "../../src/command-registry";
+import { SCAFFOLDS } from "../../src/scaffolds/registry";
 import { validateManifest } from "../../src/manifest";
 import { validateAgainstSchema } from "../../src/utils/json-schema";
 
@@ -181,6 +190,261 @@ describe("shipped faqir-creator skill", () => {
       const committed = await Bun.file(join(dir, f.relPath)).text();
       expect(committed).toBe(f.content);
     }
+  });
+});
+
+
+// ---------------------------------------------------------------------------
+// Surface completion (task 1.0R-05)
+//
+// The skill's frontmatter is its routing surface — Claude Code matches tasks on
+// it — so a promise there with nothing behind it routes work to a skill that
+// cannot answer. Three surfaces had drifted: the CLI list was five commands
+// behind the registry, `faqir scaffold` was never named at all (so an agent
+// asked for an invoice hand-composed one), and not one of the twelve shipped
+// themes was, so "make it dark" had nothing to choose from. All three are now
+// derived, and checked here in BOTH directions.
+// ---------------------------------------------------------------------------
+
+/** The body of one `## Heading` section of a generated markdown file. */
+function section(markdown: string, heading: string): string {
+  const lines = markdown.split("\n");
+  const start = lines.findIndex((l) => l.trim() === heading);
+  if (start === -1) return "";
+  const rest = lines.slice(start + 1);
+  const end = rest.findIndex((l) => /^## /.test(l));
+  return (end === -1 ? rest : rest.slice(0, end)).join("\n");
+}
+
+/** The first cell of every ``| `x` | …`` row in a markdown table. */
+function tableKeys(markdown: string): string[] {
+  return markdown
+    .split("\n")
+    .filter((line) => /^\| `/.test(line))
+    .map((line) => line.split("|")[1]!.trim().replace(/`/g, ""));
+}
+
+describe("shipped skill CLI reference", () => {
+  let skill = "";
+
+  beforeEach(async () => {
+    const files = await generateShippedSkillFiles();
+    skill = files.find((f) => f.relPath === "SKILL.md")!.content;
+  });
+
+  /** Command names the CLI section actually invokes, in order. */
+  function documentedCommands(md: string): string[] {
+    return section(md, "## CLI Reference")
+      .split("\n")
+      .filter((line) => /^faqir \S/.test(line))
+      .map((line) => line.split(/\s+/)[1]!);
+  }
+
+  it("gives every registered command a line", () => {
+    const documented = documentedCommands(skill);
+    for (const name of COMMAND_NAMES) expect(documented).toContain(name);
+  });
+
+  it("invokes nothing the registry does not dispatch", () => {
+    for (const name of documentedCommands(skill)) expect(COMMAND_NAMES).toContain(name);
+  });
+
+  it("covers the five commands the hand-written list had fallen behind on", () => {
+    const documented = documentedCommands(skill);
+    for (const name of ["doctor", "variant", "scaffold", "dev", "bindings"]) {
+      expect(documented).toContain(name);
+    }
+  });
+
+  it("states each command's own args and gloss, not a paraphrase", () => {
+    const cli = section(skill, "## CLI Reference");
+    for (const [name, def] of Object.entries(COMMAND_DEFINITIONS)) {
+      const invocation = `faqir ${name}${def.args ? ` ${def.args}` : ""}`;
+      expect(cli).toContain(invocation);
+      expect(cli).toContain(`# ${def.skillNote ?? def.summary}`);
+    }
+  });
+
+  it("picks up a command registered with no generator edit", async () => {
+    COMMAND_DEFINITIONS["teleport"] = {
+      run: async () => {},
+      category: "Development",
+      summary: "Teleport a component",
+      args: "<component> --to <page>",
+      skillNote: "teleport a component onto another page",
+    };
+    try {
+      const files = await generateShippedSkillFiles();
+      const regenerated = files.find((f) => f.relPath === "SKILL.md")!.content;
+      expect(documentedCommands(regenerated)).toContain("teleport");
+      expect(section(regenerated, "## CLI Reference")).toContain(
+        "faqir teleport <component> --to <page>",
+      );
+    } finally {
+      delete COMMAND_DEFINITIONS["teleport"];
+    }
+  });
+
+  it("groups commands under the same categories `faqir help` prints", () => {
+    const cli = section(skill, "## CLI Reference");
+    for (const category of new Set(Object.values(COMMAND_DEFINITIONS).map((d) => d.category))) {
+      expect(cli).toContain(`**${category}**`);
+    }
+  });
+});
+
+describe("shipped skill scaffold catalogue", () => {
+  let skill = "";
+
+  beforeEach(async () => {
+    const files = await generateShippedSkillFiles();
+    skill = files.find((f) => f.relPath === "SKILL.md")!.content;
+  });
+
+  it("gives every registered scaffold a row, and invents none", () => {
+    const rows = tableKeys(section(skill, "## Scaffolds — Whole Pages and Documents"));
+    expect(rows.sort()).toEqual(Object.keys(SCAFFOLDS).sort());
+  });
+
+  it("names the five shipped scaffolds the frontmatter implies", () => {
+    const rows = tableKeys(section(skill, "## Scaffolds — Whole Pages and Documents"));
+    for (const name of ["landing-page", "admin-dashboard", "internal-tool", "invoice", "report"]) {
+      expect(rows).toContain(name);
+    }
+  });
+
+  it("carries each scaffold's own description and patterns", () => {
+    const scaffolds = section(skill, "## Scaffolds — Whole Pages and Documents");
+    for (const def of Object.values(SCAFFOLDS)) {
+      expect(scaffolds).toContain(def.description);
+      for (const pattern of def.patterns) expect(scaffolds).toContain(`\`${pattern}\``);
+    }
+  });
+
+  it("tells an agent to run the generator rather than hand-compose", () => {
+    const scaffolds = section(skill, "## Scaffolds — Whole Pages and Documents");
+    expect(scaffolds).toContain("faqir scaffold ");
+    expect(scaffolds).toContain("FAQIR_REPLACE");
+  });
+
+  it("picks up a scaffold registered with no generator edit", () => {
+    SCAFFOLDS["press-kit"] = {
+      name: "press-kit",
+      title: "Press Kit",
+      description: "Press kit with boilerplate, assets, and contacts",
+      patterns: ["hero"],
+      components: ["card"],
+    };
+    try {
+      const rows = tableKeys(renderScaffolds().join("\n"));
+      expect(rows).toContain("press-kit");
+    } finally {
+      delete SCAFFOLDS["press-kit"];
+    }
+  });
+});
+
+describe("shipped skill theme gallery", () => {
+  const THEMES_DIR = join(REPO, "registry", "themes");
+  let skill = "";
+
+  beforeEach(async () => {
+    const files = await generateShippedSkillFiles();
+    skill = files.find((f) => f.relPath === "SKILL.md")!.content;
+  });
+
+  /** Every `{name}.theme.json` shipped in the registry. */
+  function shippedThemes(): string[] {
+    return readdirSync(THEMES_DIR)
+      .filter((f) => f.endsWith(".theme.json"))
+      .map((f) => f.replace(/\.theme\.json$/, ""))
+      .sort();
+  }
+
+  it("gives every `*.theme.json` a row, and invents none", () => {
+    expect(tableKeys(section(skill, "## Themes")).sort()).toEqual(shippedThemes());
+  });
+
+  it("carries each theme's mood and scheme, read from its manifest", () => {
+    const themes = section(skill, "## Themes");
+    for (const name of shippedThemes()) {
+      const manifest = JSON.parse(readFileSync(join(THEMES_DIR, `${name}.theme.json`), "utf8"));
+      const row = themes.split("\n").find((line) => line.startsWith(`| \`${name}\` |`))!;
+      expect(row).toBeDefined();
+      for (const mood of manifest.mood) expect(row).toContain(mood);
+      expect(row).toContain(manifest.scheme);
+      expect(row).toContain(manifest.dark_mode);
+    }
+  });
+
+  it("gives an agent asked for dark a theme it can actually pass", () => {
+    const themes = section(skill, "## Themes");
+    const dark = themes
+      .split("\n")
+      .filter((line) => /^\| `/.test(line) && /\bdark\b/.test(line))
+      .map((line) => line.split("|")[1]!.trim().replace(/`/g, ""));
+    expect(dark.length).toBeGreaterThan(0);
+    for (const name of dark) expect(existsSync(join(THEMES_DIR, `${name}.css`))).toBe(true);
+    expect(themes).toContain("faqir theme set <name>");
+  });
+
+  it("picks up a theme manifest added with no generator edit", () => {
+    const dir = join(TEST_DIR, "registry");
+    mkdirSync(join(dir, "themes"), { recursive: true });
+    try {
+      writeFileSync(
+        join(dir, "themes", "sepia.theme.json"),
+        JSON.stringify({
+          name: "sepia",
+          version: "1.0.0",
+          mood: ["warm", "archival"],
+          scheme: "light",
+          dark_mode: "none",
+          tokens_overridden: ["color-bg"],
+          tokens_inherited: [],
+          pairs_with: ["paper"],
+          preview: "sepia.preview.html",
+        }),
+      );
+      const rendered = renderThemes(dir).join("\n");
+      expect(tableKeys(rendered)).toEqual(["sepia"]);
+      expect(rendered).toContain("warm, archival");
+      expect(rendered).toContain("`paper`");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("shipped skill frontmatter promises", () => {
+  let skill = "";
+  let description = "";
+
+  beforeEach(async () => {
+    const files = await generateShippedSkillFiles();
+    skill = files.find((f) => f.relPath === "SKILL.md")!.content;
+    description = skill.split("\n").find((l) => l.startsWith("description: "))!.slice(13);
+  });
+
+  it("claims in the frontmatter only what the body has a section for", () => {
+    for (const { claim, section: heading } of FRONTMATTER_CAPABILITIES) {
+      expect(description).toContain(claim);
+      expect(skill.split("\n")).toContain(heading);
+    }
+  });
+
+  it("backs the three capabilities 1.0R-05 found unbacked", () => {
+    const claims = FRONTMATTER_CAPABILITIES.map((c) => c.claim);
+    expect(claims).toContain("page scaffolding");
+    expect(claims).toContain("printable documents (invoices, reports, forms)");
+    expect(claims).toContain("theme selection");
+  });
+
+  it("fails when a claimed capability loses its section", () => {
+    // The tripwire itself: strike the Themes heading and the promise is unbacked.
+    const withoutThemes = skill.split("\n").filter((l) => l !== "## Themes");
+    const themeClaim = FRONTMATTER_CAPABILITIES.find((c) => c.section === "## Themes")!;
+    expect(withoutThemes).not.toContain(themeClaim.section);
   });
 });
 
