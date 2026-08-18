@@ -2,8 +2,14 @@
   "$schema": "./state.schema.md",
   "plan": "FAQIR-PLAN.md",
   "current": null,
-  "last_completed": "1.0R-04",
+  "last_completed": "1.0R-05",
   "history": [
+    {
+      "id": "1.0R-05",
+      "completed": "2026-08-18",
+      "commit": null,
+      "summary": "Three promises the frontmatter made and the body did not keep, all three closed by derivation rather than by writing the missing prose. (1) The CLI list was hand-written and five commands behind the registry \u2014 doctor, variant, scaffold, dev, bindings were dispatched by the CLI and invisible to the skill. Fixed at the source: src/command-registry.ts now holds COMMAND_DEFINITIONS, one entry per command carrying handler + category + args + summary + skillNote, so the TYPE makes it impossible to register a command without the metadata both readers need; COMMANDS is derived from it for dispatch, src/index.ts's HELP_CATEGORIES (the second, drifting copy) is deleted and `faqir help` groups straight off the registry, and renderCliReference() emits `faqir <name> <args>  # <skillNote>` per category. (2) `faqir scaffold` was never named in the body at all, so an agent asked for an invoice hand-composed one instead of running the print-tested generator. The catalogue moved out of src/commands/scaffold.ts into a side-effect-free src/scaffolds/registry.ts (SCAFFOLDS, SCAFFOLD_NAMES, DOCUMENT_SCAFFOLD_NAMES); both the command's --help and the new Scaffolds section read it, and the section states the FAQIR_REPLACE convention so the placeholders are usable. (3) Not one of the twelve shipped themes was named, so \"make it dark\" had nothing to pass. The Themes section is a row per registry/themes/*.theme.json with the manifest's own mood / scheme / dark_mode / pairs_with \u2014 the agent-selectable axis those manifests exist for. Both sections go into the project skill too, which is what keeps the CLI reference's pointers resolvable in both. The frontmatter gained the theme claim it was missing, and FRONTMATTER_CAPABILITIES pairs each advertised capability with the section that delivers it \u2014 asserted in both directions, since the frontmatter is the routing surface and a promise with nothing behind it routes work to a skill that cannot answer it. Tests: 21 new cases across four describes \u2014 every COMMAND_NAMES entry documented and nothing invented, each command's own args/gloss verbatim, a synthetic command/scaffold/theme.json each picked up with no generator edit, every theme row cross-read against its manifest, and every dark-moods theme confirmed to have a real .css to pass. Verified: 63 pass in skill.test.ts (mutation-checked \u2014 dropping one theme row fails four cases), 3436/3437 full suite, typecheck, check:skill, check:docs, smoke. PRE-EXISTING, NOT CAUSED HERE: docs-agents.test.ts's CDN-pin case fails on a clean tree too (local packages/core sri.json is stale)."
+    },
     {
       "id": "1.0-01",
       "completed": "2026-08-17",

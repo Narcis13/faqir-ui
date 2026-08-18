@@ -6,58 +6,9 @@ import { log } from "../utils/logger";
 import { configExists, readConfig, writeConfig } from "../utils/config";
 import { copyFile, ensureDir, getRegistryPath } from "../utils/fs";
 import { generateBundle } from "../utils/bundler";
-import {
-  DOCUMENT_SCAFFOLDS,
-  generateDocumentScaffold,
-  type DocumentScaffoldName,
-} from "../scaffolds/documents";
-import {
-  LANDING_COMPONENTS,
-  LANDING_PATTERNS,
-  generateLandingPage,
-} from "../scaffolds/landing";
-
-interface ScaffoldDef {
-  name: string;
-  title: string;
-  description: string;
-  patterns: string[];
-  components: string[];
-  defaultTheme?: string;
-}
-
-const SCAFFOLDS: Record<string, ScaffoldDef> = {
-  "landing-page": {
-    name: "landing-page",
-    title: "Landing Page",
-    description: "Marketing landing page composed from the hero, feature-grid, pricing, and site-footer patterns",
-    patterns: [...LANDING_PATTERNS],
-    components: [...LANDING_COMPONENTS],
-  },
-  "admin-dashboard": {
-    name: "admin-dashboard",
-    title: "Admin Dashboard",
-    description: "Full admin dashboard with sidebar, data tables, and charts",
-    patterns: ["dashboard-shell", "crud-table"],
-    components: [
-      "button", "card", "input", "badge", "avatar", "separator", "spinner",
-      "grid", "stack", "surface", "table", "dialog", "dropdown", "tabs", "toast",
-      "pagination",
-    ],
-  },
-  "internal-tool": {
-    name: "internal-tool",
-    title: "Internal Tool",
-    description: "Internal tool with settings, forms, and data management",
-    patterns: ["settings-page", "crud-table"],
-    components: [
-      "button", "card", "input", "label", "select", "checkbox", "switch",
-      "badge", "separator", "spinner", "grid", "stack",
-      "tabs", "dialog", "dropdown", "toast", "table", "pagination",
-    ],
-  },
-  ...DOCUMENT_SCAFFOLDS,
-};
+import { generateDocumentScaffold, type DocumentScaffoldName } from "../scaffolds/documents";
+import { SCAFFOLDS } from "../scaffolds/registry";
+import { generateLandingPage } from "../scaffolds/landing";
 
 function printHelp() {
   log.heading("faqir scaffold <name>");

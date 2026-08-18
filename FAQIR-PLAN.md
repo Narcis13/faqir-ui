@@ -3255,9 +3255,9 @@ summarises.
 - Each capability claimed in the frontmatter description (scaffolding, documents, themes) is backed by a section — a claim with no section fails.
 
 **Acceptance criteria**
-- [ ] The skill's CLI reference cannot fall behind the command registry.
-- [ ] Scaffolds and themes are discoverable from the skill alone.
-- [ ] The frontmatter's promises and the body agree, test-enforced.
+- [x] The skill's CLI reference cannot fall behind the command registry.
+- [x] Scaffolds and themes are discoverable from the skill alone.
+- [x] The frontmatter's promises and the body agree, test-enforced.
 
 ---
 
