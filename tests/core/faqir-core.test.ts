@@ -644,6 +644,31 @@ describe("Directives", () => {
       // Note: with self modifier, e.target must equal the element
     });
 
+    it("reads a custom debounce time from the modifier itself, not a dotted one", async () => {
+      // Pinned because `references/directives.md` states it (task 1.0R-03):
+      // `.debounce500ms` carries its time; `.debounce.500ms` is two modifiers
+      // and the second is not read, so the handler keeps the 250ms default.
+      document.body.innerHTML = `
+        <div l-data="{ dotted: 0, attached: 0 }">
+          <button id="dotted" @click.debounce.500ms="dotted++">a</button>
+          <button id="attached" @click.debounce500ms="attached++">b</button>
+        </div>
+      `;
+      Faqir.start();
+      await tick();
+
+      const scope = (document.querySelector("[l-data]") as any).__faqirScope;
+      (document.querySelector("#dotted") as HTMLElement).click();
+      (document.querySelector("#attached") as HTMLElement).click();
+
+      await new Promise((r) => setTimeout(r, 320));
+      expect(scope.dotted).toBe(1); // the default 250ms elapsed
+      expect(scope.attached).toBe(0); // still waiting out its 500ms
+
+      await new Promise((r) => setTimeout(r, 400));
+      expect(scope.attached).toBe(1);
+    });
+
     it("supports key modifiers for keydown", async () => {
       document.body.innerHTML = `
         <div l-data="{ pressed: false }">

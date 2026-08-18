@@ -10,6 +10,9 @@
 //    FAQIR-PROTO-INTEGRATION.md's install paths resolve on disk.
 //  • Token reference (1.0R-02): `references/tokens.md` is derived from
 //    `registry/tokens/*.css` and cross-checked against it in BOTH directions.
+//  • Directive reference (1.0R-03): `references/directives.md` is derived from
+//    the engine's declared vocabulary plus the plugin headers, with a tripwire
+//    that fails on any `l-…` or `$…` the engine has and the reference lacks.
 
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -19,12 +22,18 @@ import { add } from "../../src/commands/add";
 import { SCHEMA_VERSION } from "../../src/version";
 import { TOKEN_MODIFIERS } from "../../src/protocol";
 import {
+  enginePath,
   generateSkill,
   generateShippedSkillFiles,
+  parseEngineMap,
+  parseEngineVocabulary,
+  parseSourceController,
+  renderDirectivesReference,
   renderTokensReference,
   shippedSkillDir,
   SKILL_GENERATION_MARKER,
 } from "../../src/generator/skill";
+import { loadPluginMetadata } from "../../src/generator/plugins";
 
 const REPO = join(import.meta.dir, "../..");
 const TEST_DIR = join(import.meta.dir, "../.tmp-skill-test");
@@ -111,7 +120,7 @@ describe("shipped faqir-creator skill", () => {
     process.chdir(REPO);
   });
 
-  it("generates SKILL.md plus one reference file per layer and the token reference", async () => {
+  it("generates SKILL.md plus one reference file per layer, tokens and directives", async () => {
     const files = await generateShippedSkillFiles();
     const rels = files.map((f) => f.relPath);
     expect(rels).toContain("SKILL.md");
@@ -119,8 +128,9 @@ describe("shipped faqir-creator skill", () => {
     expect(rels).toContain(join("references", "recipes.md"));
     expect(rels).toContain(join("references", "patterns.md"));
     expect(rels).toContain(join("references", "tokens.md"));
-    // What `check:skill` counts — five generated files, every one of them gated.
-    expect(files.length).toBe(5);
+    expect(rels).toContain(join("references", "directives.md"));
+    // What `check:skill` counts — six generated files, every one of them gated.
+    expect(files.length).toBe(6);
   });
 
   it("every generated file carries the generation header", async () => {
@@ -364,5 +374,204 @@ describe("shipped token reference", () => {
     } finally {
       rmSync(TEST_DIR, { recursive: true, force: true });
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Directive reference (task 1.0R-03)
+//
+// `references/directives.md` is generated from the engine's declared vocabulary
+// (§3.0 of `src/core-src/engine.js`) and the plugin headers. The tripwire is the
+// point: grep the engine for every `l-…` and `$…` name it mentions and hold it
+// against the declarations, in both directions. A directive added to the engine
+// without a declaration fails here; so does a declaration for something the
+// engine does not implement.
+// ---------------------------------------------------------------------------
+
+describe("shipped directive reference", () => {
+  const ENGINE = readFileSync(enginePath(), "utf8");
+  const PLUGINS_DIR = join(REPO, "registry", "core", "plugins");
+  const VOCAB = parseEngineVocabulary(ENGINE);
+  const REFERENCE = renderDirectivesReference(ENGINE, PLUGINS_DIR, SCHEMA_VERSION);
+  const plugins = loadPluginMetadata(PLUGINS_DIR);
+
+  /** Every `l-…` name the engine source mentions, code and comments alike. */
+  const implemented = new Set([...ENGINE.matchAll(/l-[a-z][a-z-]*/g)].map((m) => m[0]));
+  /** Every `$…` name it mentions. */
+  const implementedMagics = new Set([...ENGINE.matchAll(/\$[a-zA-Z][a-zA-Z0-9]*/g)].map((m) => m[0]));
+
+  const sorted = (values: Iterable<string>) => [...values].sort();
+
+  it("declares every `l-…` the engine mentions, and mentions every one it declares", () => {
+    // Plugin directives appear in the engine only as comments about plugins;
+    // they are documented from the plugin headers instead.
+    const fromPlugins = new Set(
+      plugins.flatMap((p) => p.provides).filter((v) => v.startsWith("l-")),
+    );
+    const declared = new Set(VOCAB.directives.map((d) => d.name));
+    const internal = new Set(
+      VOCAB.directives.filter((d) => d.placement === "internal").map((d) => d.name),
+    );
+
+    const undocumented = [...implemented].filter(
+      (name) => !declared.has(name) && !fromPlugins.has(name),
+    );
+    expect(undocumented, "an `l-…` the engine has that nothing documents").toEqual([]);
+    // Internal declarations must carry their reason, not just an exemption.
+    for (const d of VOCAB.directives.filter((x) => internal.has(x.name))) {
+      expect(d.description.length, `${d.name} is declared internal without a reason`).toBeGreaterThan(20);
+    }
+    // The other direction: nothing declared that the engine never mentions.
+    expect(sorted([...declared].filter((name) => !implemented.has(name)))).toEqual([]);
+  });
+
+  it("declares every `$…` the engine mentions, naming the internals as internals", () => {
+    const declared = new Set(VOCAB.magics.map((m) => m.name));
+    expect(sorted(implementedMagics)).toEqual(sorted(declared));
+
+    // `$scope` is the evaluator's own `with()` binding, not vocabulary: it must
+    // be declared internal WITH a reason and must not sit in the magic table.
+    const internal = VOCAB.magics.filter((m) => m.where === "internal");
+    expect(internal.map((m) => m.name)).toContain("$scope");
+    for (const m of internal) {
+      expect(m.description.length, `${m.name} is declared internal without a reason`).toBeGreaterThan(20);
+      expect(REFERENCE, `${m.name} is dropped rather than named`).toContain(m.name);
+      expect(REFERENCE).not.toContain(`| \`${m.name}\` | every expression |`);
+    }
+    expect(REFERENCE).toContain("**Not vocabulary:**");
+  });
+
+  it("documents every declared directive, modifier and magic as a row", () => {
+    for (const d of VOCAB.directives) {
+      expect(REFERENCE, `${d.attribute} has no row`).toContain(`| \`${d.attribute}\` |`);
+      expect(REFERENCE, `${d.attribute} has no example`).toContain(d.example.replace(/\|/g, "\\|"));
+    }
+    for (const m of VOCAB.modifiers) {
+      expect(REFERENCE, `${m.directive}${m.modifier} has no row`).toContain(`| \`${m.modifier}\` |`);
+    }
+    for (const m of VOCAB.magics.filter((x) => x.where !== "internal")) {
+      expect(REFERENCE, `${m.name} has no row`).toContain(`| \`${m.name}\` |`);
+    }
+  });
+
+  it("covers what the hand-written file missed: transition, teleport, key, plugins", () => {
+    for (const missing of ["l-transition", "l-teleport", "l-key", "data-motion"]) {
+      expect(REFERENCE, `${missing} is still absent`).toContain(missing);
+    }
+    for (const provided of plugins.flatMap((p) => p.provides)) {
+      expect(REFERENCE, `${provided} is not documented`).toContain(`\`${provided}\``);
+    }
+  });
+
+  it("no longer documents key combos the engine never implemented", () => {
+    // The hand-written file listed `.ctrl` / `.shift` / `.alt` / `.meta` as
+    // modifiers; `handleOn` has never looked at them.
+    for (const combo of ["`.ctrl`", "`.shift`", "`.alt`", "`.meta`"]) {
+      expect(REFERENCE).not.toContain(`| ${combo} |`);
+    }
+  });
+
+  it("reads the key modifiers out of KEY_MAP", () => {
+    const keys = parseEngineMap(ENGINE, "KEY_MAP");
+    expect(keys.length).toBeGreaterThan(10);
+    for (const [modifier, key] of keys) {
+      expect(REFERENCE, `.${modifier} is missing`).toContain(`| \`.${modifier}\` |`);
+      if (key.trim()) expect(REFERENCE).toContain(`\`${key}\``);
+    }
+  });
+
+  it("takes `data-motion`'s phases from TOKEN_MODIFIERS", () => {
+    const motion = TOKEN_MODIFIERS.find((m) => m.attr === "data-motion")!;
+    expect(motion.values.length).toBe(4);
+    expect(REFERENCE).toContain(`- **Values:** ${motion.values.map((v) => `\`${v}\``).join(", ")}`);
+    expect(REFERENCE).toContain(`- **Purpose:** ${motion.purpose}`);
+    expect(REFERENCE).toContain(`- **Scope:** ${motion.scope}`);
+    expect(REFERENCE).toContain(`show:  data-motion="${motion.values[0]}"`);
+    expect(REFERENCE).toContain(`hide:  data-motion="${motion.values[2]}"`);
+  });
+
+  it("takes the `l-transition` presets from MOTION_PRESETS", () => {
+    const presets = parseEngineMap(ENGINE, "MOTION_PRESETS").map(([name]) => name);
+    expect(presets).toEqual(["fade", "slide-up", "scale"]);
+    for (const preset of presets) expect(REFERENCE).toContain(`\`${preset}\``);
+  });
+
+  it("takes the `$source` controller API from the engine's own `ctrl` literal", () => {
+    const methods = parseSourceController(ENGINE);
+    // Cross-checked against an independent scan of the engine: every property
+    // the controller is given, however it is written.
+    const body = ENGINE.slice(ENGINE.indexOf("var ctrl = {"));
+    const independent = [...body.slice(0, body.indexOf("\n    };")).matchAll(/^ {6}(\w+):/gm)].map(
+      (m) => m[1],
+    );
+    expect(methods.map((m) => m.name)).toEqual(independent);
+    expect(independent).toContain("startPolling");
+    for (const m of methods) expect(REFERENCE).toContain(`\`${m.name}(${m.params})\``);
+  });
+
+  it("gives every plugin file a row, read from its `@ui:provides` header", () => {
+    const files = readdirSync(PLUGINS_DIR).filter((f) => f.endsWith(".js"));
+    expect(files.length).toBe(plugins.length);
+    for (const p of plugins) {
+      expect(REFERENCE, `${p.name} has no row`).toContain(`| \`${p.name}\` |`);
+      expect(REFERENCE).toContain(`registry/core/plugins/${p.file}`);
+      for (const provided of p.provides) expect(REFERENCE).toContain(`\`${provided}\``);
+    }
+  });
+
+  it("picks up a sixth plugin with no generator edit", () => {
+    const fixture = join(TEST_DIR, "fixture-plugins");
+    rmSync(TEST_DIR, { recursive: true, force: true });
+    mkdirSync(fixture, { recursive: true });
+    try {
+      writeFileSync(
+        join(fixture, "faqir-invented.js"),
+        "// @ui:plugin faqir-invented\n// @ui:provides l-invented, $invented()\n" +
+          "/**\n * faqir-invented — a plugin no generator knows about. [9.9-99]\n *\n" +
+          ' *   <div l-invented="x"></div>\n *\n * It exists only in this fixture.\n */\n',
+      );
+      const md = renderDirectivesReference(ENGINE, fixture, SCHEMA_VERSION);
+      expect(md).toContain("| `faqir-invented` | `l-invented`, `$invented()` |");
+      // Header prose and example travel with it — and the plan/spec reference
+      // in the summary does not.
+      expect(md).toContain('<div l-invented="x"></div>');
+      expect(md).toContain("It exists only in this fixture.");
+      expect(md).toContain("a plugin no generator knows about. |");
+      expect(md).not.toContain("[9.9-99]");
+    } finally {
+      rmSync(TEST_DIR, { recursive: true, force: true });
+    }
+  });
+
+  it("renders an internal directive declaration as a named exemption, not a row", () => {
+    // No engine directive is internal today; the fixture proves the path an
+    // engine hacker would use exists and does not silently drop the name.
+    const fixture =
+      "  // @ui:directive l-probe | — | internal | l-probe | Never bound — the walker only tests for it.\n" +
+      "  // @ui:magic $el | every expression | The element.\n";
+    const md = renderDirectivesReference(fixture, PLUGINS_DIR, SCHEMA_VERSION);
+    expect(md).not.toContain("| `l-probe` |");
+    const vocab = parseEngineVocabulary(fixture);
+    expect(vocab.directives[0].placement).toBe("internal");
+    expect(vocab.directives[0].description).toContain("the walker only tests for it");
+  });
+
+  it("is one of the files `check:skill` gates", async () => {
+    const files = await generateShippedSkillFiles();
+    expect(files.map((f) => f.relPath).sort()).toEqual(
+      [
+        "SKILL.md",
+        join("references", "directives.md"),
+        join("references", "patterns.md"),
+        join("references", "primitives.md"),
+        join("references", "recipes.md"),
+        join("references", "tokens.md"),
+      ].sort(),
+    );
+    const committed = readFileSync(
+      join(shippedSkillDir(), "references", "directives.md"),
+      "utf8",
+    );
+    expect(committed).toBe(REFERENCE);
   });
 });

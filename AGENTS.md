@@ -136,9 +136,11 @@ Do not hand-edit generated outputs. Change their source and regenerate them:
 - `registry/registry-index.json`: run `bun run build:registry-index` after
   registry changes that affect the index.
 - `.claude/skills/faqir-creator/`: run `bun run gen:skill` after relevant
-  manifest, `registry/tokens/*.css`, or generator changes. `SKILL.md` and
-  `references/{primitives,recipes,patterns,tokens}.md` are generated and gated
-  by `bun run check:skill`; never hand-edit them.
+  manifest, `registry/tokens/*.css`, `src/core-src/engine.js` (its §3.0
+  `@ui:directive` / `@ui:modifier` / `@ui:magic` declarations), plugin header,
+  or generator changes. `SKILL.md` and
+  `references/{primitives,recipes,patterns,tokens,directives}.md` are generated
+  and gated by `bun run check:skill`; never hand-edit them.
 - Manifest `$schema` references: run `bun run gen:schema-refs`; use
   `bun run check:schema-refs` to verify drift.
 - Root `dist/`, `packages/core/dist/`, and `packages/mcp/registry/` are ignored

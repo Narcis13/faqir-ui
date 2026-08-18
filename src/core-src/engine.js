@@ -261,6 +261,77 @@
   var customDirectives = new Map();
   var globalStores = {};
 
+  // --- 3.0 Declared vocabulary  [task 1.0R-03] ---
+  //
+  // The engine's public surface, declared once, in comments only — the minifier
+  // drops them, so this costs zero shipped bytes. `src/generator/skill.ts` reads
+  // these lines into `.claude/skills/faqir-creator/references/directives.md`, so
+  // the reference an agent is sent to is not a transcription: add a line here
+  // and the row appears. `tests/generator/skill.test.ts` greps this file for
+  // every `l-…` and `$…` name it mentions and fails on any the engine
+  // implements without a line below — which is why something that is NOT public
+  // vocabulary (the evaluator's own `$scope` binding) is declared `internal`
+  // with its reason rather than left out.
+  //
+  // Fields are ` | `-separated; never use `|` inside one.
+  //   @ui:directive <attribute> | <shorthand> | <placement> | <example> | <what it does>
+  //   @ui:modifier  <attribute> <.modifier> | <what it does>
+  //   @ui:magic     $<name> | <where it resolves> | <what it is>
+  //
+  // The three lists that already exist as code — PRIORITY (§3.2), KEY_MAP
+  // (§3.9) and MOTION_PRESETS (§3.14) — are read from the code itself, not
+  // repeated here.
+  //
+  // @ui:directive l-data | — | any element, which becomes the scope root | l-data="{ count: 0 }" | Declares a reactive scope from an object literal, or from a name registered with `Faqir.data()`. `data-prop-*` attributes are JSON-parsed and merged over it. Descendants share the scope until the next `l-data`.
+  // @ui:directive l-init | — | a scope root, beside `l-data` | l-init="load()" | Runs once, after the scope exists and its `l-source` bindings are injected.
+  // @ui:directive l-source:<name> | — | a scope root, beside `l-data` | l-source:tasks="/api/tasks" | Binds a REST collection into the scope as `<name>`, `<name>Loading`, `<name>Error` and the `$<name>` CRUD controller. See below.
+  // @ui:directive l-text | — | any element | l-text="count" | Writes the value to `textContent`; `null` and `undefined` write an empty string.
+  // @ui:directive l-html | — | any element | l-html="body" | Writes the value to `innerHTML`, unsanitized — never pass user input. The dev engine reports every use.
+  // @ui:directive l-bind:<attr> | :<attr> | any element | :disabled="loading" | Binds one attribute. `class` and `style` take a string, an array or an object; boolean attributes are added or removed; `null`, `undefined` and `false` remove the attribute.
+  // @ui:directive l-on:<event> | @<event> | any element | @click="count++" | Adds a listener for `<event>`. Inside the expression `$event` is the DOM event.
+  // @ui:directive l-model | — | an input, textarea or select, or `[data-ui="switch"]` | l-model="name" | Two-way binding. A checkbox bound to an array is a checkbox group; radios bind by value; `<select multiple>` is not handled. The modifiers below apply to the text-like branch (input, textarea, number) only.
+  // @ui:directive l-show | — | any element | l-show="open" | Toggles `display: none`, leaving the element in the DOM. Runs `l-transition` on each flip.
+  // @ui:directive l-if | — | a `<template>` element | <template l-if="open"> | Inserts and removes the template's content. Removal tears the subtree down: cleanups run and in-flight `l-source` requests abort.
+  // @ui:directive l-for | — | a `<template>` element | <template l-for="(task, i) in tasks"> | Repeats the template's content once per item, with the item and index names bound in a child scope.
+  // @ui:directive l-key | — | the same `<template>` as `l-for` | l-key="task.id" | The reconciliation key. Without it items are matched by position, so a reorder re-renders rather than moves; the dev engine reports that case.
+  // @ui:directive l-ref | — | any element | l-ref="field" | Registers the element on the scope's `$refs` under that name.
+  // @ui:directive l-effect | — | any element | l-effect="document.title = title" | Runs the expression immediately, then again whenever a value it read changes.
+  // @ui:directive l-cloak | — | any element | l-cloak | Removed from every element once the tree is initialized. Pair with `[l-cloak] { display: none }` to hide markup before it binds.
+  // @ui:directive l-transition | — | an `l-show` element, or a top-level element inside a `<template l-if>` | l-transition="slide-up" | Names the motion preset for that element's enter/leave cycle. The engine only stamps `data-motion`; the CSS animates.
+  // @ui:directive l-teleport | — | any element | l-teleport="body" | Moves the element into the first element matching the value, which is a plain CSS selector rather than an expression.
+  //
+  // @ui:modifier l-model .number | Casts the input value with `parseFloat` (`0` when it does not parse).
+  // @ui:modifier l-model .trim | Trims the input value before assigning.
+  // @ui:modifier l-model .lazy | Binds on `change` instead of `input`.
+  // @ui:modifier l-model .debounce | Debounces the write by 300ms. Fixed — unlike `l-on`, this one reads no time.
+  // @ui:modifier l-on .prevent | `preventDefault()` before the expression runs.
+  // @ui:modifier l-on .stop | `stopPropagation()` before the expression runs.
+  // @ui:modifier l-on .self | Ignores the event unless `event.target` is the element itself.
+  // @ui:modifier l-on .once | Listener option `once` — removed after it fires.
+  // @ui:modifier l-on .capture | Listener option `capture`.
+  // @ui:modifier l-on .passive | Listener option `passive`.
+  // @ui:modifier l-on .window | Listens on `window` instead of the element.
+  // @ui:modifier l-on .document | Listens on `document` instead of the element.
+  // @ui:modifier l-on .debounce | Debounces the handler, 250ms by default. A custom time is part of the same modifier — `.debounce500ms`, `.debounce2s`. A dotted `.debounce.500ms` is TWO modifiers and the time is ignored.
+  // @ui:modifier l-on .throttle | Throttles the handler, 250ms by default. Takes a time the same way — `.throttle1s`.
+  // @ui:modifier l-source .lazy | Skips the load on init — the collection stays empty until `$<name>.load()`.
+  // @ui:modifier l-source .optimistic | Applies create/update/remove to the local array first and rolls back if the request fails.
+  // @ui:modifier l-source .poll | Re-loads on an interval, 30000ms by default. Takes the interval: `.poll.5000`.
+  // @ui:modifier l-source .key | Names the identity property, `id` by default: `.key.uuid`.
+  //
+  // @ui:magic $el | every expression | The scope ROOT — the element carrying `l-data`, not the element the expression is written on. Every magic that walks the DOM starts from here.
+  // @ui:magic $refs | every expression | The scope's `l-ref` elements, keyed by name. Cleared entry by entry as elements are destroyed.
+  // @ui:magic $store | every expression | Every store registered with `Faqir.store()`.
+  // @ui:magic $state | every expression | `data-state` of the `[data-ui]` closest to the scope root. Writable — assigning sets the attribute — and reads re-run when a controller changes it.
+  // @ui:magic $variant | every expression | `data-variant` of the same `[data-ui]`, writable and observed the same way.
+  // @ui:magic $ui | every expression | The controller API of that same `[data-ui]` — `$ui.open()` — or `null` when it has none.
+  // @ui:magic $dispatch | every expression | `$dispatch('name', detail)` fires a bubbling, composed `CustomEvent` from the scope root.
+  // @ui:magic $nextTick | every expression | `$nextTick(fn)` queues `fn` as a microtask, so it runs after the effects a mutation queued have flushed and the DOM is updated.
+  // @ui:magic $watch | every expression | `$watch('key', function (value, old) { … })` — returns a disposer.
+  // @ui:magic $id | every expression | `$id('label')` returns `faqir-<scope>-label`, stable for the scope and unique across scopes.
+  // @ui:magic $event | `l-on` expressions only | The DOM event being handled. Set for the duration of the handler and deleted again after it, so it reads as `undefined` anywhere else.
+  // @ui:magic $scope | internal | the evaluator compiles every expression to `with($scope) { … }`, so the name runs through the engine source as that compiled function's own parameter. Page code never writes it.
+  //
   // --- 3.1 Attribute Parsing ---
 
   function parseDirectives(el) {
@@ -860,7 +931,7 @@
       }
     };
 
-    // Inject controller as $name
+    // Inject controller as $<name>
     scope['$' + name] = ctrl;
 
     // Auto-load unless .lazy

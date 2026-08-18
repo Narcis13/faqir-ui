@@ -711,19 +711,30 @@ It provides Alpine.js-style reactive directives, automatic recipe controller ini
 | `l-show` | — | Toggle visibility (with transitions) |
 | `l-if` | — | Conditional rendering (on `<template>`) |
 | `l-for` | — | List rendering (on `<template>`) |
+| `l-key` | — | Reconciliation key (on the same `<template>` as `l-for`) |
 | `l-ref` | — | Named element reference |
 | `l-init` | — | Run code once on initialization |
 | `l-effect` | — | Tracked reactive side effect |
 | `l-cloak` | — | Hide element until Faqir initializes |
+| `l-transition` | — | Motion preset for an `l-show` / `l-if` element (drives `data-motion`) |
+| `l-teleport` | — | Move the element to another part of the document |
 | `l-source:name` | — | Declarative REST data binding (injects array + CRUD controller) |
+
+Every directive, modifier and magic — plus the plugin vocabulary — is generated
+into
+[`.claude/skills/faqir-creator/references/directives.md`](.claude/skills/faqir-creator/references/directives.md)
+from the engine's own declarations.
 
 ### Event Modifiers
 
-`@click.prevent`, `@submit.stop`, `@keydown.enter`, `@click.once`, `@input.debounce.300ms`, `@resize.throttle.100ms`, `@click.self`
+`@click.prevent`, `@submit.stop`, `@keydown.enter`, `@click.once`, `@input.debounce300ms`, `@resize.throttle100ms`, `@click.self`, `@keydown.escape.window`
+
+A custom time belongs to the modifier itself (`.debounce300ms`); a dotted
+`.debounce.300ms` is two modifiers and falls back to the 250ms default.
 
 ### Model Modifiers
 
-`l-model.number`, `l-model.trim`, `l-model.lazy`, `l-model.debounce.300ms`
+`l-model.number`, `l-model.trim`, `l-model.lazy`, `l-model.debounce` (fixed 300ms)
 
 ### Magic Properties
 
@@ -1460,7 +1471,7 @@ The skill references are in `.claude/skills/faqir-creator/references/`:
 - `patterns.md` — All 6 composition patterns
 - `tokens.md` — Complete design token reference
 - `manifest.md` — Manifest JSON schema and examples
-- `directives.md` — Reactive directives and global API
+- `directives.md` — Every directive, modifier and magic the engine declares, plus the plugin vocabulary
 
 ---
 

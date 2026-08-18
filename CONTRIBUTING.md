@@ -310,7 +310,14 @@ artifact. Diagnostics reach the engine only through the `devHooks` seam
 its number without enforcing one. See [docs/devtools.md](docs/devtools.md).
 
 **To change engine behavior:** edit `src/core-src/engine.js`, then run
-`bun run build:core`. **To change a controller:** edit its recipe `.js`, then run
+`bun run build:core`. **Adding a directive, a modifier or a magic** also means
+adding its `@ui:directive` / `@ui:modifier` / `@ui:magic` line to the declared
+vocabulary in §3.0 of that file: the agent reference
+`.claude/skills/faqir-creator/references/directives.md` is generated from those
+lines (`bun run gen:skill`), and `tests/generator/skill.test.ts` greps the
+engine for every `l-…` and `$…` name it mentions and fails on any that is
+undeclared — an engine-only name is declared `internal` with its reason rather
+than left out. **To change a controller:** edit its recipe `.js`, then run
 `bun run build:core`. Adding a new recipe controller requires no wiring — it is
 auto-discovered from `registry/recipes/*/*.js` and registered automatically.
 

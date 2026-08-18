@@ -189,7 +189,7 @@ document order is the traversal order: these are the things that should be true 
 |----|------|--------|
 | 1.0R-01 | Retire (or gate) the stale `faqir-creator.skill` archive | ✅ |
 | 1.0R-02 | `references/tokens.md` becomes token-source-derived | ✅ |
-| 1.0R-03 | `references/directives.md` becomes engine + plugin-derived | ⬜ |
+| 1.0R-03 | `references/directives.md` becomes engine + plugin-derived | ✅ |
 | 1.0R-04 | `references/manifest.md` from the schema; `faqir create` emits `$schema` | ⬜ |
 | 1.0R-05 | SKILL.md surface completion: commands, scaffolds, themes | ⬜ |
 | 1.0R-06 | Layout-lint gains a 375px viewport (the measurement) | ⬜ |
@@ -3161,9 +3161,22 @@ stop being memory.
 - `check:skill` reports 6 files.
 
 **Acceptance criteria**
-- [ ] No directive or magic the engine implements is missing from the reference.
-- [ ] Plugin vocabulary is documented where the agent is sent to look for it.
-- [ ] `check:skill` covers the file.
+- [x] No directive or magic the engine implements is missing from the reference. (The engine declares its own surface in §3.0 of `engine.js` — 17 `@ui:directive`, 18 `@ui:modifier` and 12 `@ui:magic` lines, comments only, zero shipped bytes — and the generator reads them. The tripwire runs both ways: every `l-…` and every `$…` the engine source mentions must be declared, and nothing may be declared that the engine never mentions. `$scope` is declared `internal` with its reason and rendered as a named exemption, not dropped. Newly documented: `l-transition`, `l-teleport`, `l-key`, `data-motion`, `.capture` / `.passive` / `.window` / `.document`, nine more key aliases, and `l-model.debounce`; removed: `.ctrl` / `.shift` / `.alt` / `.meta`, which `handleOn` has never read.)
+- [x] Plugin vocabulary is documented where the agent is sent to look for it. (A row per file under `registry/core/plugins/`, read from `@ui:provides` via `loadPluginMetadata()` — `l-persist` / `$persist()`, `l-collapse`, `l-intersect`, `l-mask`, `l-validate` — each with the example and prose paragraph its own header carries. A fixture sixth plugin appears with no generator edit.)
+- [x] `check:skill` covers the file. (`generateShippedSkillFiles()` returns 6 files; `check:skill` reports 6 and fails on a hand-edited row. Suite green: 3403 + 37 tests, typecheck, size, docs, registry-index and audit gates clean.)
+
+Derived rather than declared, so they cannot drift either: the application order
+from `PRIORITY`, the key aliases from `KEY_MAP`, the transition presets from
+`MOTION_PRESETS`, `data-motion`'s phases from `TOKEN_MODIFIERS`, and the
+`$<name>` controller signatures from the engine's own `ctrl` literal.
+
+One behavioural correction fell out of writing the tables from the code: a
+dotted `@click.debounce.500ms` is two modifiers and the time is never read —
+`parseTimeMod` runs against the `debounce` segment alone — so the handler keeps
+the 250ms default. The working form is `.debounce500ms`. Documented as such,
+pinned by a test in `tests/core/faqir-core.test.ts`, and corrected in README and
+`docs/for_craft.md`, which both taught the dotted form. Whether the engine
+SHOULD read the dotted segment is a behaviour change and left alone here.
 
 ---
 

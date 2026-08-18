@@ -228,7 +228,7 @@ The `apiSource()` pattern maps directly to craft's data consumption model:
   <div data-ui="field-group" data-required>
     <label data-part="label">CIF Client</label>
     <input data-ui="input" l-model="fields.client_cui"
-           @input.debounce.300ms="validateCui('client_cui')">
+           @input.debounce300ms="validateCui('client_cui')">
     <span data-part="error" l-show="errors.client_cui" l-text="errors.client_cui"></span>
   </div>
 </div>

@@ -753,6 +753,554 @@ export function renderTokensReference(registryRoot: string, schemaVersion: strin
 }
 
 // ---------------------------------------------------------------------------
+// Directive reference (task 1.0R-03) — derived from the engine + the plugins
+//
+// `references/directives.md` was hand-maintained and drifted: `l-transition`,
+// `l-teleport`, `l-key`, `data-motion` and every plugin directive were missing,
+// while `.ctrl` / `.shift` / `.alt` / `.meta` were documented as event
+// modifiers the engine has never implemented. The vocabulary tables below are
+// now READ, not remembered:
+//
+//   • directives, their modifiers and the magics come from the `@ui:directive`
+//     / `@ui:modifier` / `@ui:magic` lines the engine declares in §3.0;
+//   • the priority ladder, the key aliases and the motion presets come from
+//     `PRIORITY`, `KEY_MAP` and `MOTION_PRESETS` — code, read as code;
+//   • `data-motion`'s phases come from `TOKEN_MODIFIERS` (`src/protocol.ts`);
+//   • the `l-source` controller API comes from the `ctrl` literal itself;
+//   • plugin rows come from `loadPluginMetadata()`, so a sixth plugin file
+//     documents itself.
+//
+// The prose sections (global API, worked patterns, devtools) stay hand-written:
+// nothing derives them.
+// ---------------------------------------------------------------------------
+
+/** One `@ui:directive` line: the engine's public `l-*` surface. */
+interface DirectiveDeclaration {
+  /** Attribute as authored, e.g. `l-bind:<attr>`. */
+  attribute: string;
+  /** Base name without the argument, e.g. `l-bind`. */
+  name: string;
+  shorthand: string;
+  placement: string;
+  example: string;
+  description: string;
+}
+
+/** One `@ui:magic` line. `where` is `internal` for engine-only names. */
+interface MagicDeclaration {
+  name: string;
+  where: string;
+  description: string;
+}
+
+/** One `@ui:modifier` line, attached to the directive it modifies. */
+interface ModifierDeclaration {
+  directive: string;
+  modifier: string;
+  description: string;
+}
+
+export interface EngineVocabulary {
+  directives: DirectiveDeclaration[];
+  magics: MagicDeclaration[];
+  modifiers: ModifierDeclaration[];
+}
+
+/** `internal` in the placement/where column means "named here, not vocabulary". */
+const INTERNAL = "internal";
+
+/**
+ * Read the engine's declared vocabulary (§3.0 of `src/core-src/engine.js`).
+ * Exported so the tripwire test can hold the declarations against what the
+ * engine actually implements, in both directions.
+ */
+export function parseEngineVocabulary(engineSource: string): EngineVocabulary {
+  const fields = (line: string) => line.split("|").map((f) => f.trim());
+  const directives: DirectiveDeclaration[] = [];
+  const magics: MagicDeclaration[] = [];
+  const modifiers: ModifierDeclaration[] = [];
+
+  // Exactly one space after `//` — the field legend above the block indents its
+  // `@ui:…` tokens further precisely so it is documentation, not a declaration.
+  const line = /^\s*\/\/ @ui:(directive|magic|modifier) +([^\n]+?)\s*$/gm;
+  for (const [, kind, rest] of engineSource.matchAll(line)) {
+    const parts = fields(rest);
+    if (kind === "directive") {
+      const [attribute, shorthand, placement, example, ...tail] = parts;
+      directives.push({
+        attribute,
+        name: attribute.split(":")[0],
+        shorthand,
+        placement,
+        example,
+        description: tail.join(" | "),
+      });
+    } else if (kind === "magic") {
+      const [name, where, ...tail] = parts;
+      magics.push({ name, where, description: tail.join(" | ") });
+    } else {
+      const [head, ...tail] = parts;
+      const [directive, modifier] = head.split(/\s+/);
+      modifiers.push({ directive, modifier, description: tail.join(" | ") });
+    }
+  }
+  return { directives, magics, modifiers };
+}
+
+/**
+ * The entries of an object literal the engine declares as
+ * `var <NAME> = { … }`, in source order. Used for the three lists that are
+ * already code — `PRIORITY`, `KEY_MAP`, `MOTION_PRESETS` — so they are read
+ * rather than repeated in a comment.
+ */
+export function parseEngineMap(engineSource: string, name: string): [string, string][] {
+  const body = new RegExp(`var\\s+${name}\\s*=\\s*\\{([^}]*)\\}`).exec(engineSource)?.[1];
+  if (!body) return [];
+  const out: [string, string][] = [];
+  for (const m of body.replace(/\/\/[^\n]*/g, "").matchAll(/'([^']+)'\s*:\s*([^,\n]+)|([A-Za-z_$][\w$]*)\s*:\s*([^,\n]+)/g)) {
+    const key = m[1] ?? m[3];
+    const value = (m[2] ?? m[4]).trim().replace(/,$/, "");
+    out.push([key, value.replace(/^'|'$/g, "")]);
+  }
+  return out;
+}
+
+/**
+ * The `l-source` controller API, read off the `ctrl` object literal in §3.5 —
+ * the methods and their parameters are the ones the engine defines, so a new
+ * one documents itself.
+ */
+export function parseSourceController(engineSource: string): { name: string; params: string }[] {
+  const start = engineSource.indexOf("var ctrl = {");
+  if (start < 0) return [];
+  const lines = engineSource.slice(start).split("\n");
+  const out: { name: string; params: string }[] = [];
+  for (const line of lines.slice(1)) {
+    if (/^ {4}\};/.test(line)) break;
+    const m = /^ {6}([A-Za-z_$][\w$]*)\s*:\s*function\s*\(([^)]*)\)/.exec(line);
+    if (m) out.push({ name: m[1], params: m[2].trim() });
+  }
+  return out;
+}
+
+/** A markdown cell: escape the pipes a selector or expression may contain. */
+function md(value: string): string {
+  return value.replace(/\|/g, "\\|");
+}
+
+/** Code cell, unless the source already wrote `—` for "none". */
+function codeCell(value: string): string {
+  return value === "—" || value === "" ? "—" : `\`${md(value)}\``;
+}
+
+/** The directive table, plus the order the engine applies them (PRIORITY). */
+function renderDirectiveTable(vocab: EngineVocabulary, engineSource: string): string[] {
+  const lines: string[] = ["## Directives", ""];
+  const isPublic = (d: DirectiveDeclaration) => d.placement !== INTERNAL;
+  const shown = vocab.directives.filter(isPublic);
+  lines.push(
+    `${shown.length} directives. Every one is an attribute — there is no template syntax to learn, ` +
+      "and an element carrying none is inert.",
+  );
+  lines.push("");
+  lines.push("| Directive | Shorthand | Goes on | Example | What it does |");
+  lines.push("|---|---|---|---|---|");
+  for (const d of shown) {
+    lines.push(
+      `| \`${md(d.attribute)}\` | ${codeCell(d.shorthand)} | ${md(d.placement)} | ` +
+        `\`${md(d.example)}\` | ${md(d.description)} |`,
+    );
+  }
+  lines.push("");
+
+  const priority = parseEngineMap(engineSource, "PRIORITY");
+  if (priority.length > 0) {
+    const byRank = new Map<string, string[]>();
+    for (const [type, rank] of priority) {
+      byRank.set(rank, [...(byRank.get(rank) ?? []), `\`l-${type}\``]);
+    }
+    const order = [...byRank.entries()].sort((a, b) => Number(a[0]) - Number(b[0]));
+    lines.push(
+      "**Application order** — directives on one element run in this order, whatever order the " +
+        "attributes are written in: " +
+        order.map(([, names]) => names.join(", ")).join(" → ") +
+        ". That is why `l-data` sees no half-built scope and `l-cloak` clears last.",
+    );
+    lines.push("");
+  }
+  return lines;
+}
+
+/** The modifier tables, one per directive, plus the key aliases from KEY_MAP. */
+function renderModifiers(vocab: EngineVocabulary, engineSource: string): string[] {
+  const lines: string[] = ["## Modifiers", ""];
+  lines.push(
+    "Modifiers are dot-suffixes on the attribute name: `@input.debounce500ms`, " +
+      "`l-model.number`, `l-source:items.optimistic.poll.10000.key.uuid`. " +
+      "A modifier the engine does not know is ignored — silently in the production " +
+      "engine, with a warning in the dev one.",
+  );
+  lines.push("");
+
+  const directives = [...new Set(vocab.modifiers.map((m) => m.directive))];
+  for (const directive of directives) {
+    lines.push(`### \`${directive}\``);
+    lines.push("");
+    lines.push("| Modifier | Effect |");
+    lines.push("|---|---|");
+    for (const m of vocab.modifiers.filter((x) => x.directive === directive)) {
+      lines.push(`| \`${m.modifier}\` | ${md(m.description)} |`);
+    }
+    lines.push("");
+  }
+
+  const keys = parseEngineMap(engineSource, "KEY_MAP");
+  if (keys.length > 0) {
+    lines.push("### Key modifiers");
+    lines.push("");
+    lines.push(
+      "On `keydown` / `keyup` / `keypress`, a key modifier gates the handler on `event.key`. " +
+        "The first recognised modifier wins; there are no combo modifiers — test `$event.ctrlKey`, " +
+        "`$event.shiftKey`, `$event.altKey` or `$event.metaKey` in the expression instead.",
+    );
+    lines.push("");
+    lines.push("| Modifier | `event.key` |");
+    lines.push("|---|---|");
+    for (const [modifier, key] of keys) {
+      lines.push(`| \`.${modifier}\` | \`${key === " " ? "' '" : key}\` |`);
+    }
+    lines.push("");
+  }
+  return lines;
+}
+
+/** The magic table, with the engine internals named rather than dropped. */
+function renderMagics(vocab: EngineVocabulary): string[] {
+  const lines: string[] = ["## Magic Properties", ""];
+  const magics = vocab.magics.filter((m) => m.where !== INTERNAL);
+  const internals = vocab.magics.filter((m) => m.where === INTERNAL);
+  lines.push(
+    "Available on every scope without declaring them. They are non-enumerable, so `l-data` " +
+      "object spreads and `Faqir.inspect()` snapshots never contain them.",
+  );
+  lines.push("");
+  lines.push("| Magic | Available in | What it is |");
+  lines.push("|---|---|---|");
+  for (const m of magics) lines.push(`| \`${m.name}\` | ${md(m.where)} | ${md(m.description)} |`);
+  lines.push("");
+  if (internals.length > 0) {
+    lines.push(
+      "**Not vocabulary:** " +
+        internals.map((m) => `\`${m.name}\` — ${md(m.description)}`).join(" ") +
+        " It is named here so its absence from the table above reads as deliberate.",
+    );
+    lines.push("");
+  }
+  return lines;
+}
+
+/** `l-transition`: the presets are the engine's, the phases are the protocol's. */
+function renderTransitions(engineSource: string): string[] {
+  const presets = parseEngineMap(engineSource, "MOTION_PRESETS").map(([name]) => name);
+  const motion = TOKEN_MODIFIERS.find((m) => m.attr === "data-motion");
+  if (presets.length === 0 || !motion) return [];
+
+  const lines: string[] = ["## Transitions — `l-transition` and `data-motion`", ""];
+  lines.push(
+    `\`l-transition\` names one of ${presets.length} presets shipped by ` +
+      `\`registry/base/motion-presets.css\`: ${presets.map((p) => `\`${p}\``).join(", ")}. ` +
+      "An empty value means `fade`; an unknown name still animates but has no styling, so the " +
+      "engine warns.",
+  );
+  lines.push("");
+  lines.push(
+    "There are no per-stage CSS classes: the lifecycle runs through one frozen token modifier, " +
+      `\`${motion.attr}\`.`,
+  );
+  lines.push("");
+  lines.push(`- **Purpose:** ${motion.purpose}`);
+  lines.push(`- **Values:** ${motion.values.map((v) => `\`${v}\``).join(", ")} — the phases below.`);
+  lines.push(`- **Scope:** ${motion.scope}`);
+  lines.push(`- **Written by:** the ${motion.owner}, never by an author.`);
+  lines.push("");
+  lines.push("```text");
+  lines.push(`show:  data-motion="${motion.values[0]}"  →  "${motion.values[1]}"  →  (removed)`);
+  lines.push(
+    `hide:  data-motion="${motion.values[2]}"  →  "${motion.values[3]}"  →  (removed, then the element is)`,
+  );
+  lines.push("```");
+  lines.push("");
+  lines.push(
+    "So a transition is auditable straight from the DOM. Under `prefers-reduced-motion` no phase " +
+      "is stamped at all — the element simply appears and disappears.",
+  );
+  lines.push("");
+  lines.push("```html");
+  lines.push('<div l-data="{ open: false }">');
+  lines.push('  <button @click="open = !open">Toggle</button>');
+  lines.push('  <p l-show="open" l-transition="slide-up">Announced with motion.</p>');
+  lines.push("</div>");
+  lines.push("```");
+  lines.push("");
+  return lines;
+}
+
+/** `l-source`: what it injects, and the controller API read off the engine. */
+function renderSource(engineSource: string, vocab: EngineVocabulary): string[] {
+  const methods = parseSourceController(engineSource);
+  const lines: string[] = ["## `l-source` — declarative REST binding", ""];
+  lines.push("Place it on an `l-data` element; one scope may carry several.");
+  lines.push("");
+  lines.push("```html");
+  lines.push('<div l-data="{ newTitle: \'\' }" l-source:tasks="/api/tasks">');
+  lines.push('  <template l-for="task in tasks" l-key="task.id">');
+  lines.push('    <li l-text="task.title"></li>');
+  lines.push("  </template>");
+  lines.push('  <p l-show="tasksLoading">Loading…</p>');
+  lines.push('  <p l-show="tasksError" l-text="tasksError"></p>');
+  lines.push('  <button @click="$tasks.create({ title: newTitle })">Add</button>');
+  lines.push("</div>");
+  lines.push("```");
+  lines.push("");
+  lines.push("Injected into the scope, for `l-source:tasks`:");
+  lines.push("");
+  lines.push("| Name | What it holds |");
+  lines.push("|---|---|");
+  lines.push("| `tasks` | The fetched items, reactive |");
+  lines.push("| `tasksLoading` | `true` while a request is in flight |");
+  lines.push("| `tasksError` | The last error message, or `null` |");
+  lines.push("| `$tasks` | The controller below |");
+  lines.push("");
+  if (methods.length > 0) {
+    lines.push(
+      `Controller methods (\`$tasks.…\`), each returning a promise: ` +
+        methods.map((m) => `\`${m.name}(${m.params})\``).join(", ") + ".",
+    );
+    lines.push("");
+  }
+  const sourceModifiers = vocab.modifiers.filter((m) => m.directive === "l-source");
+  if (sourceModifiers.length > 0) {
+    lines.push(
+      `Modifiers: ${sourceModifiers.map((m) => `\`${m.modifier}\``).join(", ")} — see the table above. ` +
+        "Teardown is automatic: removing the scope (an `l-if` flip, a keyed `l-for` removal) aborts " +
+        "in-flight requests and stops polling.",
+    );
+    lines.push("");
+  }
+  return lines;
+}
+
+/**
+ * The official plugins, from their `@ui:plugin` / `@ui:provides` headers — the
+ * vocabulary the engine does not carry, documented where the agent is sent to
+ * look for it. A new plugin file is a new row and nothing else.
+ */
+function renderPluginVocabulary(plugins: PluginMetadata[]): string[] {
+  if (plugins.length === 0) return [];
+  const lines: string[] = ["## Plugin Vocabulary", ""];
+  lines.push(
+    `${plugins.length} official plugins add directives and magics to the same expression language. ` +
+      "Load one after `faqir-core.js` (`<script src=\"core/plugins/faqir-persist.js\"></script>`), or " +
+      "bundle core plus every plugin with `faqir bundle --js`. Each self-registers, is dependency-free " +
+      "and is ≤ 2 KB gzip.",
+  );
+  lines.push("");
+  lines.push("| Plugin | Provides | File | What it does |");
+  lines.push("|---|---|---|---|");
+  for (const p of plugins) {
+    lines.push(
+      `| \`${p.name}\` | ${p.provides.map((v) => `\`${v}\``).join(", ") || "—"} | ` +
+        `\`registry/core/plugins/${p.file}\` | ${md(p.description ?? "—")} |`,
+    );
+  }
+  lines.push("");
+  for (const p of plugins) {
+    if (!p.example) continue;
+    lines.push(`### \`${p.name}\``);
+    lines.push("");
+    if (p.notes) lines.push(p.notes, "");
+    lines.push("```html");
+    lines.push(p.example);
+    lines.push("```");
+    lines.push("");
+  }
+  return lines;
+}
+
+/**
+ * The hand-written half. The global API, the worked patterns and the devtools
+ * handle are not derivable from any declaration — they are the prose an agent
+ * needs around the tables, and they stay authored.
+ */
+const DIRECTIVE_PROSE = `## Global API
+
+\`\`\`js
+Faqir.store('name', { count: 0 })   // Register a global store, read as $store.name
+Faqir.data('name', () => ({ … }))   // Register a reusable l-data factory
+Faqir.directive('name', handler)    // Register a custom l-name directive
+Faqir.magic('name', callback)       // Register a custom $name magic
+Faqir.plugin(fn)                    // Install a plugin (fn receives Faqir)
+Faqir.controller('name', factory)   // Register a recipe controller
+Faqir.initTree(el)                  // Bind a subtree added after load
+\`\`\`
+
+Anything injected into the DOM after page load — a fetched fragment, a cloned
+row — is inert until \`Faqir.initTree(el)\` walks it.
+
+## Common Patterns
+
+### Counter
+
+\`\`\`html
+<div l-data="{ count: 0 }">
+  <button @click="count--">-</button>
+  <span l-text="count"></span>
+  <button @click="count++">+</button>
+</div>
+\`\`\`
+
+### Two-way binding
+
+\`\`\`html
+<div l-data="{ name: '' }">
+  <input l-model.trim="name" placeholder="Name…">
+  <p>Hello, <strong l-text="name || '…'"></strong></p>
+</div>
+\`\`\`
+
+### Conditional rendering
+
+\`\`\`html
+<div l-data="{ show: true }">
+  <button @click="show = !show" l-text="show ? 'Hide' : 'Show'"></button>
+  <div l-show="show">Kept in the DOM, display toggled</div>
+  <template l-if="show">
+    <p>Created and destroyed with the flag</p>
+  </template>
+</div>
+\`\`\`
+
+### Keyed list
+
+\`\`\`html
+<div l-data="{ items: [{ id: 1, label: 'A' }, { id: 2, label: 'B' }] }">
+  <template l-for="(item, i) in items" l-key="item.id">
+    <span l-text="item.label"></span>
+    <button @click="items.splice(i, 1)">Remove</button>
+  </template>
+</div>
+\`\`\`
+
+### Calling a controller through \`$ui\`
+
+\`\`\`html
+<div data-ui="dialog" data-state="closed" l-data>
+  <button @click="$ui.open()">Open</button>
+  <!-- … dialog structure … -->
+</div>
+\`\`\`
+
+\`$state\` and \`$variant\` read the same component both ways: a controller
+setting \`data-state="open"\` re-runs every expression that read \`$state\`.
+
+### Global store
+
+\`\`\`html
+<script>
+  Faqir.store('user', { name: 'Alice', role: 'admin' });
+</script>
+<div l-data>
+  <p l-text="$store.user.name"></p>
+</div>
+\`\`\`
+
+## Inspecting a live page
+
+Both engine builds install \`window.__FAQIR_DEVTOOLS__\` (handle \`version: 1\`).
+Use it when driving a browser to check what the engine actually bound.
+
+| Key | Returns |
+|-----|---------|
+| \`inspect(el\\|selector)\` | full snapshot for one element (below) |
+| \`scopes(within?)\` | \`{ el, id, label, scope }[]\` — declared scope roots |
+| \`components(within?)\` | \`{ el, label, ui, variant, size, state, parts[], controller }[]\` |
+| \`stores()\` | snapshot of every \`Faqir.store()\` |
+| \`warnings()\` | recorded diagnostics; **always empty in the production engine** |
+| \`dev\` | \`true\` only when the page loaded \`core/faqir-core.dev.js\` |
+
+\`Faqir.inspect(el)\` (same function) returns:
+
+\`\`\`js
+{
+  el, scopeRoot, scopeId,
+  scope:      { /* plain copy of the scope's data; magics excluded */ },
+  directives: [{ type, arg, expression, modifiers, raw }],
+  controller: { ui, el, api, methods } | null,
+  state:      { ui, part, variant, size, state }
+}
+\`\`\`
+
+\`scope\` is a copy — mutating it does not touch the page, and inspecting
+registers no reactive dependency.
+
+### The development engine
+
+\`core/faqir-core.dev.js\` behaves identically and adds four diagnostic classes,
+each printed once with the offending element's \`outerHTML\` and readable via
+\`warnings()\`: \`expression\` (a failed \`l-*\` expression), \`directive\` (an \`l-…\`
+attribute nothing handles), \`reorder\` (an unkeyed \`l-for\` that reordered), and
+\`html\` (\`l-html\` writes unsanitized markup). Swap the script tag while
+developing; ship \`core/faqir-core.js\`.
+
+\`faqir dev\` also injects an inspector overlay into every page it serves —
+toggle it with \`Ctrl/Cmd + Shift + F\` (\`--no-overlay\` to disable). It is served
+by the dev server only and is never written into the project.
+`;
+
+/**
+ * Build `references/directives.md`. `engineSource` is `src/core-src/engine.js`
+ * and `pluginsDir` is `registry/core/plugins/`; both are parameters so a test
+ * can point them at fixtures and prove the file is derived, not transcribed.
+ */
+export function renderDirectivesReference(
+  engineSource: string,
+  pluginsDir: string,
+  schemaVersion: string,
+): string {
+  const vocab = parseEngineVocabulary(engineSource);
+  const plugins = loadPluginMetadata(pluginsDir);
+
+  const lines: string[] = [];
+  lines.push(generationHeader(schemaVersion));
+  lines.push("");
+  lines.push("# Faqir-Core Reactive Directives Reference");
+  lines.push("");
+  lines.push(
+    "Every directive, modifier and magic the engine implements, read out of " +
+      "`src/core-src/engine.js` — plus the vocabulary the official plugins add. " +
+      "Load the engine with `<script src=\"core/faqir-core.js\" defer></script>`: it binds on " +
+      "`DOMContentLoaded` and needs no build step. Add `data-manual` to that tag to bootstrap " +
+      "yourself with `Faqir.start()`.",
+  );
+  lines.push("");
+  lines.push(
+    "Expressions are plain JavaScript evaluated against the nearest scope: any name the scope " +
+      "declares is in scope unqualified, and the `$…` magics below are always available.",
+  );
+  lines.push("");
+
+  lines.push(...renderDirectiveTable(vocab, engineSource));
+  lines.push(...renderModifiers(vocab, engineSource));
+  lines.push(...renderMagics(vocab));
+  lines.push(...renderTransitions(engineSource));
+  lines.push(...renderSource(engineSource, vocab));
+  lines.push(...renderPluginVocabulary(plugins));
+  lines.push(DIRECTIVE_PROSE);
+
+  return lines.join("\n").replace(/\n{3,}/g, "\n\n").replace(/\s+$/g, "") + "\n";
+}
+
+// ---------------------------------------------------------------------------
 // Manifest loading
 // ---------------------------------------------------------------------------
 
@@ -978,7 +1526,10 @@ function renderShippedSkill(
     );
   }
   lines.push("- [references/tokens.md](references/tokens.md) — every design token, derived from `registry/tokens/*.css`");
-  lines.push("- [references/directives.md](references/directives.md) — faqir-core reactive directives");
+  lines.push(
+    "- [references/directives.md](references/directives.md) — every faqir-core directive, modifier " +
+      "and magic, plus the plugin vocabulary",
+  );
   lines.push("- [references/manifest.md](references/manifest.md) — manifest schema and examples");
   lines.push("");
 
@@ -1009,7 +1560,22 @@ export async function generateShippedSkillFiles(): Promise<GeneratedFile[]> {
     relPath: join("references", "tokens.md"),
     content: renderTokensReference(getRegistryPath(), schemaVersion),
   });
+  // Likewise the directive reference: derived from the engine's declared
+  // vocabulary and the plugin headers, so `check:skill` gates it too.
+  files.push({
+    relPath: join("references", "directives.md"),
+    content: renderDirectivesReference(
+      readFileSync(enginePath(), "utf8"),
+      join(getRegistryPath(), "core", "plugins"),
+      schemaVersion,
+    ),
+  });
   return files;
+}
+
+/** The engine source the directive vocabulary is declared in. */
+export function enginePath(): string {
+  return join(getPackageRoot(), "src", "core-src", "engine.js");
 }
 
 /** Absolute path to the shipped skill directory. */

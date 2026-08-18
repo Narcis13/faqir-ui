@@ -10,8 +10,8 @@
  * The base directive runs on enter; `.leave` runs when the element leaves;
  * `.once` disconnects after its first matching observation. The active entry is
  * available to expressions as `$intersection`. Returning the observer cleanup
- * to faqir-core makes scope teardown disconnect it automatically. Self-
- * registering, zero dependencies, and ≤ 2 KB gzip.
+ * to faqir-core makes scope teardown disconnect it automatically.
+ * Self-registering, zero dependencies, and ≤ 2 KB gzip.
  */
 (function () {
   "use strict";

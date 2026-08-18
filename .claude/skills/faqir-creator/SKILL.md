@@ -106,11 +106,11 @@ Copy-ready page archetypes — Dashboard, Landing page, Prose / document, Split 
 
 Load a plugin after `faqir-core.js`, or combine core plus every plugin with `faqir bundle --js`:
 
-- `faqir-collapse` (`l-collapse`): `registry/core/plugins/faqir-collapse.js` — height auto-animation for a boolean expression. [0.4-11 · §A5]
-- `faqir-intersect` (`l-intersect`): `registry/core/plugins/faqir-intersect.js` — declarative IntersectionObserver hooks. [0.6-05 · §A5]
-- `faqir-mask` (`l-mask`): `registry/core/plugins/faqir-mask.js` — caret-safe input masking. [0.6-06 · §A5]
-- `faqir-persist` (`l-persist`, `$persist()`): `registry/core/plugins/faqir-persist.js` — localStorage-backed reactive state. [0.6-05 · §A5]
-- `faqir-validate` (`l-validate`): `registry/core/plugins/faqir-validate.js` — declarative form validation for the field-group contract. [0.6-02 · §7.1, §A5]
+- `faqir-collapse` (`l-collapse`): `registry/core/plugins/faqir-collapse.js` — height auto-animation for a boolean expression.
+- `faqir-intersect` (`l-intersect`): `registry/core/plugins/faqir-intersect.js` — declarative IntersectionObserver hooks.
+- `faqir-mask` (`l-mask`): `registry/core/plugins/faqir-mask.js` — caret-safe input masking.
+- `faqir-persist` (`l-persist`, `$persist()`): `registry/core/plugins/faqir-persist.js` — localStorage-backed reactive state.
+- `faqir-validate` (`l-validate`): `registry/core/plugins/faqir-validate.js` — declarative form validation for the field-group contract.
 
 ## Canonical Compositions
 
@@ -241,5 +241,5 @@ Full anatomy trees, variant tables, and safe/unsafe transforms for every compone
 - [references/recipes.md](references/recipes.md) — 29 recipes
 - [references/patterns.md](references/patterns.md) — 15 patterns
 - [references/tokens.md](references/tokens.md) — every design token, derived from `registry/tokens/*.css`
-- [references/directives.md](references/directives.md) — faqir-core reactive directives
+- [references/directives.md](references/directives.md) — every faqir-core directive, modifier and magic, plus the plugin vocabulary
 - [references/manifest.md](references/manifest.md) — manifest schema and examples
