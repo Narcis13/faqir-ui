@@ -178,11 +178,32 @@ done in any order (or in parallel worktrees).
 | 0.9-11 | Variant consistency sweep + `carousel` viewport bleed | ✅ |
 | 0.9-12 | Spacing, rhythm & density documentation surfaces | ✅ |
 
+### Phase v1.0-R — Pre-release remediation (2026-08-18 deep review)
+
+Eleven findings from the pre-1.0 review of the showcase site and the shipped
+`faqir-creator` skill. Placed **before** v1.0's remaining tasks in the index because
+document order is the traversal order: these are the things that should be true before
+`1.0-04` tags a release, not after.
+
+| ID | Task | Status |
+|----|------|--------|
+| 1.0R-01 | Retire (or gate) the stale `faqir-creator.skill` archive | ⬜ |
+| 1.0R-02 | `references/tokens.md` becomes token-source-derived | ⬜ |
+| 1.0R-03 | `references/directives.md` becomes engine + plugin-derived | ⬜ |
+| 1.0R-04 | `references/manifest.md` from the schema; `faqir create` emits `$schema` | ⬜ |
+| 1.0R-05 | SKILL.md surface completion: commands, scaffolds, themes | ⬜ |
+| 1.0R-06 | Layout-lint gains a 375px viewport (the measurement) | ⬜ |
+| 1.0R-07 | Fix the three components that bleed at phone width | ⬜ |
+| 1.0R-08 | Site: the five scaffolds get a gallery | ⬜ |
+| 1.0R-09 | Site: reactive-engine page; `/layout/` vs `/layouts/` disambiguated | ⬜ |
+| 1.0R-10 | Theme preview parity + the `data-ui="prose"` decision | ⬜ |
+| 1.0R-11 | `unknown-component` audit rule | ⬜ |
+
 ### Phase v1.0 — The Standard
 
 | ID | Task | Status |
 |----|------|--------|
-| 1.0-01 | Protocol spec 1.0 + manifest schema 1.0 frozen and published | ⬜ |
+| 1.0-01 | Protocol spec 1.0 + manifest schema 1.0 frozen and published | ✅ |
 | 1.0-02 | `faqir-core.d.ts` finalized + security guidance doc | ⬜ |
 | 1.0-03 | Migration notes v0.x→1.0 + `faqir upgrade` path verified | ⬜ |
 | 1.0-04 | Release engineering: workspace publish, provenance, launch checklist | ⬜ |
@@ -3022,6 +3043,409 @@ declare, nothing declared that the pages omit.
 - [x] A spacing/rhythm page and a density page exist, with live audit-clean examples generated from one source. (`site/content/spacing.html` and `site/content/density.html` are authored pages in the generated site navigation. Each example is a named `<template>`; `parseGuideExamples()` passes its inner markup unchanged to both the live mount and the auditor, while only escaping the code rendering. The regression suite proves byte identity and zero findings at every severity for every example and each complete page.)
 - [x] An agent reading only llms.txt can discover the default rhythm rule, the spacing ladder and the density axis. (The hosted `llms.txt` spells out the complete `--space-0` through `--space-64` ladder, the default `--flow-space` / `--section-gap-sm` rule, all three page-rhythm aliases, and `data-density="compact|comfortable"`; the same doctrine expands in `llms-full.txt`. Both hosted files are asserted through the byte-equality harness, and the generated creator skill carries the same shared source data.)
 - [x] Cross-check green in both directions; every gate (`check:docs`, `check:skill`, `audit:registry`, axe, visual, layout-lint) green at phase close. (The bidirectional tests compare every declared spacing rung, rhythm alias, and all 39 compact/comfortable density remaps against the rendered tables, rejecting either undocumented declarations or invented tokens. Verification: **3,366 Bun tests**, root/MCP typecheck, `check:docs`, `check:skill`, all six registry audit sections, **2,977 axe cases**, the complete **4,269-case visual suite**, and all seven layout-lint cases passed. Both new pages record zero seams, gutter findings, viewport bleeds, and overlaps.)
+
+---
+
+# Phase v1.0-R — Pre-release remediation
+
+Findings from the 2026-08-18 deep review of `site/` and `.claude/skills/faqir-creator`.
+Every number quoted below was measured on that date against the tree at `4fac946`; a task
+that finds a different number should say so rather than silently adopting it.
+
+The review's baseline, for context: 3,414 Bun tests / 0 fail, root+workspace typecheck
+clean, all seven `check:*` gates green, `audit:registry` zero findings across six sweeps,
+2,985 axe cases green, 8/8 size budgets green, and a 198-page site sweep under the real
+production CSP with zero console errors, zero failed requests and zero bleed at 1280px.
+Nothing here is rot. All eleven are drift and coverage.
+
+---
+
+### 1.0R-01 · Retire (or gate) the stale `faqir-creator.skill` archive
+
+**Depends:** — · **Ref:** review 2026-08-18 · **Touches:** `faqir-creator.skill`, `FAQIR-PROTO-INTEGRATION.md`, `.gitignore`, `scripts/gen-skill.mjs`, `src/generator/skill.ts`, `tests/generator/skill.test.ts`
+
+The repo root ships `faqir-creator.skill`, a zip of the skill as it stood on 9 July —
+before `0.5-07` replaced the hand-written template with the manifest-derived generator.
+Measured drift inside the archive: `SKILL.md` 13,870 B against today's 16,081 B,
+`references/primitives.md` 10,464 B against 48,676 B, `references/patterns.md` 8,079 B
+against 50,532 B. It carries no layout system, no breakpoint canon, no plugin list, no
+density axis, and an inventory from a 53-component registry. It is committed, not
+gitignored, not produced by `gen:skill`, and not seen by `check:skill` — and
+`FAQIR-PROTO-INTEGRATION.md:274` tells readers to install Faqir's agent surface by
+unzipping exactly this file.
+
+Pick one and finish it. **(a) Delete** the archive, ignore the pattern, and rewrite the
+integration doc to copy `.claude/skills/faqir-creator/` — the smaller change, and the one
+consistent with "manifests are the source of truth". **(b) Generate** it: emit a
+deterministic zip from the same `GeneratedFile[]` `generateShippedSkillFiles()` already
+returns, and extend `check:skill` to cover it. What must not survive this session is the
+third state: a shipped skill artifact that no gate can see.
+
+**Tests**
+- (a) A test asserting no `*.skill` archive is tracked at the repo root, and that `FAQIR-PROTO-INTEGRATION.md` no longer instructs unzipping one.
+- (b) `check:skill` fails on a hand-edited archive; entries byte-match `generateShippedSkillFiles()`; two runs produce identical bytes (no timestamps in the zip headers).
+- Either way: a doc test asserting every path `FAQIR-PROTO-INTEGRATION.md` tells a reader to copy actually exists on disk.
+
+**Acceptance criteria**
+- [ ] No skill artifact ships that `check:skill` does not gate.
+- [ ] `FAQIR-PROTO-INTEGRATION.md`'s install instructions resolve to files that exist.
+- [ ] `bun run check:skill` green; suite green.
+
+---
+
+### 1.0R-02 · `references/tokens.md` becomes token-source-derived
+
+**Depends:** — · **Ref:** review 2026-08-18 · **Touches:** `src/generator/skill.ts`, `.claude/skills/faqir-creator/references/tokens.md`, `tests/generator/skill.test.ts`
+
+`gen:skill` emits four files; the skill directory holds seven. `tokens.md` (last touched
+10 Aug), `directives.md` (27 Jul) and `manifest.md` (10 Jul) are hand-maintained and
+`check:skill` never opens them. All three have drifted. This task takes the first.
+
+Measured drift in `tokens.md` against `registry/tokens/`:
+
+- The surface elevation ramp is absent — `--color-surface-1`, `--color-surface-2` and their
+  `-border` pairs (`semantic.css:9-13`), which `card` now sizes from and which the generated
+  theme ΔE gate enforces.
+- The `--measure-*` ladder is absent (`aliases.css:19-25`) — while `SKILL.md`'s own layout
+  section documents it, so the two files in one skill disagree.
+- `--control-height-{sm,md,lg}` appears only obliquely under Density, never as the shared
+  ramp every control lines up against.
+- Shadow values are wrong: the doc says `--shadow-xs: 0 1px 2px oklch(0 0 0 / 0.05)`; the
+  source is `/ 0.04`, and every shadow from `sm` up became two-layer (`effects.css:14-18`).
+- `--leading-loose: 1.75` is missing.
+
+Derive the file from `registry/tokens/*.css`, grouping by the `@ui:tokens <group>` header
+each file already carries, and emit the three sanctioned token modifiers from
+`TOKEN_MODIFIERS` in `src/protocol.ts` — the same constant `SPEC-1.0.md` §4 is parsed back
+out against, so `data-density` / `data-motion` / `data-theme` are stated once in the
+codebase and read twice. Add the file to `generateShippedSkillFiles()` so `check:skill`
+reports five files.
+
+**Tests**
+- Bidirectional cross-check in the shape 0.9-12 established: every `--token` declared under `registry/tokens/` appears in the generated reference, and every token the reference names is declared. Both directions fail loudly.
+- The density remap section is derived from `density.css`, not written — an added remap appears without editing the generator.
+- The token-modifier section equals `TOKEN_MODIFIERS` row for row.
+- `gen:skill` twice is byte-identical; `check:skill` reports 5 files.
+
+**Acceptance criteria**
+- [ ] `tokens.md` carries the surface ramp, the measure ladder and the control-height ramp.
+- [ ] Every value in the reference equals its declaration in the token sources (test-enforced, both directions).
+- [ ] `check:skill` covers the file; hand-editing it fails CI.
+
+---
+
+### 1.0R-03 · `references/directives.md` becomes engine + plugin-derived
+
+**Depends:** 1.0R-02 · **Ref:** review 2026-08-18 · **Touches:** `src/generator/skill.ts`, `src/core-src/engine.js`, `.claude/skills/faqir-creator/references/directives.md`, `tests/generator/skill.test.ts`
+
+Second of the three ungated references. What the current file does not mention:
+`l-transition` (`engine.js` §3.14 — presets `fade` | `slide-up` | `scale`, driven through
+the `data-motion` phases), `l-teleport` (§3.19), `l-key` (`engine.js:1537`), and every
+directive and magic the five official plugins provide — `l-persist` / `$persist()`,
+`l-collapse`, `l-intersect`, `l-mask`, `l-validate`. `SKILL.md` names the plugins; the
+reference an agent is sent to for the vocabulary documents none of them. `data-motion`
+is likewise absent, though `SPEC-1.0.md:239` lists it as one of three frozen sanctioned
+modifiers.
+
+Make the vocabulary tables generated: directives and magics from a declared list in the
+engine (add one, rather than grepping — then pin it with a tripwire that greps and fails
+on anything undocumented), plugin rows from `loadPluginMetadata()`, which `skill.ts`
+already imports for `SKILL.md`'s plugin section. Keep the hand-written prose — the
+devtools section and the worked patterns are good and are not derivable — but the tables
+stop being memory.
+
+**Tests**
+- Tripwire: every `l-[a-z-]+` occurring in `engine.js` is either a documented row or on an explicit internal allow-list carrying a reason. Same for `$magic` names (`$event` / `$scope` are internals and must be named as such, not silently dropped).
+- Every plugin file under `registry/core/plugins/` produces a row, read from its `@ui:provides` header — adding a plugin adds a row with no generator edit.
+- `data-motion`'s phase vocabulary matches `TOKEN_MODIFIERS`.
+- `check:skill` reports 6 files.
+
+**Acceptance criteria**
+- [ ] No directive or magic the engine implements is missing from the reference.
+- [ ] Plugin vocabulary is documented where the agent is sent to look for it.
+- [ ] `check:skill` covers the file.
+
+---
+
+### 1.0R-04 · `references/manifest.md` from the schema; `faqir create` emits `$schema`
+
+**Depends:** 1.0R-03 · **Ref:** review 2026-08-18 · **Touches:** `src/generator/skill.ts`, `src/commands/create.ts`, `.claude/skills/faqir-creator/references/manifest.md`, `tests/generator/skill.test.ts`, `tests/commands/create.test.ts`
+
+Third ungated reference, and the one that actively misleads. Against
+`manifest.schema.json`, `manifest.md` omits `$schema`, `props`, `changes`, `aliases` and
+`variants.<group>.responsive`; its `category` enum lists nine values where the schema has
+eleven (`custom` and `marketing` missing); its Button example is `version: "1.0.0"` where
+the shipped manifest is `1.1.0` and carries `$schema`, `props` and `changes`. Worst: it
+never states that `definitions.componentManifest.required` names **all seventeen** fields,
+so the "Full Schema" block reads as though everything is optional and an agent authoring
+by hand produces something that fails validation.
+
+Generate it from the schema: the required/optional split, per-field types and descriptions,
+closed enums verbatim. Keep one worked example, but lift it from the shipped
+`button.manifest.json` rather than transcribing it.
+
+Second half, same seam: `faqir create` scaffolds seventeen keys and no `$schema` (verified
+2026-08-18 — a fresh `faqir create my-widget --kind primitive` produces a manifest with no
+`$schema` field). That makes a freshly created component the one manifest in a project that
+`check:schema-refs` would reject. Emit a correctly-relative `$schema` the way
+`scripts/add-schema-refs.mjs` already computes it.
+
+**Tests**
+- The generated reference names every required field and every value of every closed enum; a schema property absent from the reference fails.
+- Adding a property to the schema without regenerating fails `check:skill`.
+- `faqir create` output validates against schema 1.0 **and** carries a `$schema` that resolves from the created file's own directory, for all three kinds.
+- `check:skill` reports 7 files — the whole skill directory is now gated.
+
+**Acceptance criteria**
+- [ ] An agent following `manifest.md` alone authors a manifest that validates.
+- [ ] `faqir create` output passes `check:schema-refs`' rule.
+- [ ] `check:skill` covers all seven files.
+
+---
+
+### 1.0R-05 · SKILL.md surface completion: commands, scaffolds, themes
+
+**Depends:** — · **Ref:** review 2026-08-18 · **Touches:** `src/generator/skill.ts`, `src/scaffolds/`, `.claude/skills/faqir-creator/SKILL.md`, `tests/generator/skill.test.ts`
+
+Three things the skill's own frontmatter promises and its body does not deliver.
+
+1. `renderCliReference()` (`src/generator/skill.ts:396-416`) hardcodes seventeen of the
+   twenty-two commands in `COMMANDS` (`src/command-registry.ts:29-51`). Missing: `doctor`,
+   `variant`, `scaffold`, `dev`, `bindings`.
+2. The frontmatter advertises "page scaffolding" and "building printable documents
+   (invoices, reports, forms)". The body never mentions that `faqir scaffold` exists, or
+   that it ships `landing-page`, `admin-dashboard`, `internal-tool`, `invoice`, `report`.
+   An agent asked for an invoice hand-composes one instead of running the tested generator.
+3. The skill never names a theme. `faqir theme set|list|create <name>` appears with no list
+   of the twelve shipped themes, so "make it dark" has nothing to choose from.
+
+All three are derivable: `COMMAND_NAMES` is already exported side-effect-free for exactly
+this kind of meta-test, the scaffold catalogue from the scaffold registry, the theme list
+(with mood/scheme) from `registry/themes/*.theme.json` — which the docs generator already
+summarises.
+
+**Tests**
+- Every name in `COMMAND_NAMES` appears in the CLI section; registering a command without a line fails.
+- Every registered scaffold and every `*.theme.json` is a row; adding either adds a row with no generator edit.
+- Each capability claimed in the frontmatter description (scaffolding, documents, themes) is backed by a section — a claim with no section fails.
+
+**Acceptance criteria**
+- [ ] The skill's CLI reference cannot fall behind the command registry.
+- [ ] Scaffolds and themes are discoverable from the skill alone.
+- [ ] The frontmatter's promises and the body agree, test-enforced.
+
+---
+
+### 1.0R-06 · Layout-lint gains a 375px viewport (the measurement)
+
+**Depends:** — · **Ref:** review 2026-08-18 · **Touches:** `tests/visual/layout-lint.pw.ts`, `tests/visual/layout-budget.json`, `src/utils/layout-lint.ts`
+
+`layout-lint.pw.ts:55` runs one viewport, 1280×900. `tests/a11y/mobile.pw.ts` re-scans at
+phone width but only the layout-bearing set (`category: layout` or `kind: pattern`), and
+axe has no reflow rule in any case. The result is that **nothing in the repo measures
+horizontal bleed at phone width** — which is why the six pages below have been green all
+along.
+
+Sweeping all 198 generated pages at 375×812 (2026-08-18, real Chromium, production CSP):
+
+| Page | Bleed at 375px |
+|---|---|
+| `examples/recipes/menubar.html` | 198px |
+| `examples/recipes/pagination.html` | 146px |
+| `examples/primitives/key-value.html` | 65px |
+| `examples/patterns/settings-page.html` | 44px |
+| `examples/patterns/empty-state.html` | 17px |
+| `examples/recipes/input-otp.html` | 13px |
+
+Add the viewport to the existing ratchet rather than building a second gate — the whole
+argument of 0.9-01 (a budget that can only fall beats a wall that gets ignored) applies
+unchanged. `layout-budget.json` grows a per-viewport section; `compareBudget` compares
+within a viewport; update mode still refuses to record a rise. **This task records today's
+numbers as the opening budget and fixes nothing** — 1.0R-07 spends it. Recording a real
+number is the point; hiding six findings behind an exemption is the failure mode.
+
+**Tests**
+- The budget file carries both viewports and the "budget is the current measurement" case holds for each independently.
+- A synthetic rise at 375 fails while 1280 stays green, and vice versa.
+- `UPDATE_LAYOUT_BUDGET=1` refuses to write a rise at either viewport.
+- The narrow pass runs in the same Playwright job — no new workflow.
+
+**Acceptance criteria**
+- [ ] Phone-width bleed is measured on every generated page, every run.
+- [ ] Today's six bleeds are recorded in the budget, not exempted.
+- [ ] A new bleed at 375px fails CI.
+
+---
+
+### 1.0R-07 · Fix the three components that bleed at phone width
+
+**Depends:** 1.0R-06 · **Ref:** review 2026-08-18 · **Touches:** `registry/recipes/pagination/`, `registry/primitives/key-value/`, `registry/patterns/empty-state/`, `tests/visual/layout-budget.json`
+
+Measured on the registry fragments **in isolation** — no docs container, no gutter — so
+these are component defects, not docs-chrome artifacts (2026-08-18, 375px / 320px):
+
+| Component | 375px | 320px | Mechanism |
+|---|---|---|---|
+| `recipes/pagination` | 130px | 185px | the numbered nav neither wraps nor scrolls |
+| `primitives/key-value` | 49px | 104px | `dd[data-part="value"]` does not wrap long values |
+| `patterns/empty-state` | 17px | 44px | `[data-part="actions"]` is a non-wrapping row |
+
+Two more are gutter-sensitive rather than plainly broken and need a judgement call:
+`recipes/menubar` measures 0 at both widths in isolation but bleeds 198px on its example
+page (which offers 343px after `data-gutter="4"`), and `recipes/input-otp` measures 0 at
+375 and 52px at 320. If the same mechanism fixes them, fix them; if not, leave their
+budget numbers recorded and open a follow-up row rather than overrunning.
+
+Intrinsic first, per the layout doctrine the framework teaches: `flex-wrap`,
+`min-inline-size: 0`, `overflow-wrap`, or an explicitly scrollable region — not a media
+query, and emphatically not a new breakpoint outside the canon.
+
+**Tests**
+- Per-component narrow-width assertions reading the real stylesheet (the shape `tests/visual/responsive.pw.ts` and the inbox `matchMedia` tests already use).
+- The 375px layout budget falls — the ratchet is the proof, and update mode records the drop.
+- Manifests updated in the same commit if any part's contract changed; visual baselines refreshed.
+
+**Acceptance criteria**
+- [ ] `pagination`, `key-value` and `empty-state` fit 320px with no horizontal scroll.
+- [ ] The narrow budget from 1.0R-06 strictly falls.
+- [ ] `audit:registry` clean; no new breakpoint introduced.
+
+---
+
+### 1.0R-08 · Site: the five scaffolds get a gallery
+
+**Depends:** — · **Ref:** review 2026-08-18 · **Touches:** `src/generator/docs.ts`, `src/scaffolds/`, `tests/generator/docs-site.test.ts`
+
+`faqir scaffold` ships `landing-page`, `admin-dashboard`, `internal-tool`, `invoice` and
+`report`. They are axe-tested (`tests/a11y/scaffolds.pw.ts`), visually tested
+(`tests/visual/scaffolds.pw.ts`) and print-tested — and the published site shows none of
+them. The string "scaffold" appears on the live site only inside two feature-card blurbs.
+These are the most persuasive artifacts the framework has, and a visitor cannot see one.
+
+Generate the section from the same builders the tests already drive (`src/scaffolds/`), one
+page per scaffold: the live document in a frame, the copy-for-agents payload, and the one
+command that produces it. Wire into nav, sitemap and `llms.txt` exactly as component pages
+are — the point of the docs generator is that adding a scaffold adds its page without
+anyone editing `site/`.
+
+**Tests**
+- One page per registered scaffold, asserted by meta-test — registering a sixth adds a page with no generator edit.
+- Scaffold pages audit-clean and enter the axe + layout-lint sets automatically (assert membership, do not duplicate the scans).
+- Nav, sitemap and `llms.txt` updated; `check:docs` green.
+
+**Acceptance criteria**
+- [ ] Every scaffold the CLI can generate is visible on the site.
+- [ ] The print-oriented scaffolds (`invoice`, `report`) are shown as documents, not as component dumps.
+- [ ] Adding a scaffold requires no edit under `site/`.
+
+---
+
+### 1.0R-09 · Site: reactive-engine page; `/layout/` vs `/layouts/` disambiguated
+
+**Depends:** 1.0R-03, 1.0R-08 · **Ref:** review 2026-08-18 · **Touches:** `src/generator/docs.ts`, `site/content/`, `tests/generator/docs-site.test.ts`, `tests/generator/layout-docs.test.ts`
+
+Two holes in the site's information architecture.
+
+**The engine has no page.** `faqir-core` has a README section, its own size budget, and a
+shipped `scripts/faqir-core.js` on the site — and there is no page for `l-data`, `l-model`,
+`l-for`, `l-source`, the magics, the plugins or the devtools handle. They appear only
+incidentally inside four component examples. An agent pointed at the site can learn every
+component and nothing about the runtime that drives them.
+
+**Two routes differ by one character.** `LAYOUT_PAGE` (`docs.ts:148`, nav label "Layout
+guide") publishes at `/layout/` and `LAYOUTS_PAGE` (`docs.ts:139`, "Responsive lab") at
+`/layouts/`. Both are linked from the homepage. The nav labels disambiguate; the URLs do
+not, and these are URLs that will end up in prompts and bookmarks.
+
+Build the engine page from the same generated vocabulary as 1.0R-03 so the site and the
+skill cannot disagree about what the engine implements. Give the lab a URL that reads as
+what it is, and leave the old path resolving rather than 404-ing.
+
+**Tests**
+- Every directive and magic in the generated vocabulary appears on the engine page — the same tripwire as 1.0R-03, pointed at the site.
+- The page's live examples are audit-clean and run under the real engine.
+- The two layout URLs differ by more than a trailing character (asserted), and no internal link or sitemap entry points at a retired path.
+
+**Acceptance criteria**
+- [ ] The reactive engine is documented on the site, derived from the engine.
+- [ ] Neither layout URL can be mistyped into the other.
+- [ ] `check:docs` green; the link sweep finds nothing dangling.
+
+---
+
+### 1.0R-10 · Theme preview parity + the `data-ui="prose"` decision
+
+**Depends:** — · **Ref:** review 2026-08-18 · **Touches:** `registry/themes/`, `scripts/gen-theme-manifests.mjs`, `src/commands/theme-generate.ts`, `registry/base/prose.css`, `src/generator/skill.ts`, `src/generator/docs.ts`
+
+Two dangling contracts, both small, both the kind a 1.0 should not ship.
+
+**Five theme manifests name a file that does not exist.** `brutalist`, `default`,
+`document`, `midnight` and `paper` each declare `"preview": "<name>.preview.html"`; only
+seven of twelve previews are on disk. Both generators write the field unconditionally —
+`scripts/gen-theme-manifests.mjs:158` and `src/commands/theme-generate.ts:481`. Either
+write the five previews or make the field conditional on the file existing. A shipped
+manifest must not point at nothing.
+
+**`data-ui="prose"` is invisible to agents.** `registry/base/prose.css` defines it, the
+framework's own site uses it on ten-plus pages, and it has no manifest, no catalogue page,
+no `llms.txt` entry and no skill mention — so an agent building a Faqir docs page cannot
+discover the thing Faqir's own docs are built with. Default resolution: document the base
+layer explicitly (skill + `llms.txt` + a site section) as `data-ui` values that are styling
+rather than components, which is what they are. Giving `prose` a manifest is the
+alternative and cascades into `registry-index.json`, the skill and the docs — take that
+route only if it is genuinely a primitive, and take the whole cascade in the same session
+if so.
+
+Independently of which route: `prose.css:8` hardcodes `max-width: 65ch`, which is exactly
+`var(--measure-prose)` — Strict Rule 2, violated in the base layer — and uses `max-width`
+where `container.css` uses `max-inline-size`. Fix both.
+
+**Tests**
+- Every `preview` a theme manifest declares resolves to a file, asserted for all twelve and for both generators' output.
+- A registry sweep asserting no base-layer `data-ui` value is undocumented across skill, `llms.txt` and the site.
+- `prose.css` contains no hardcoded length for which a token exists, and no physical property where a logical one applies (folds into `audit:registry`'s existing sweeps if it fits).
+
+**Acceptance criteria**
+- [ ] No shipped manifest names a file that is not there.
+- [ ] `data-ui="prose"` is discoverable from the skill and from `llms.txt`.
+- [ ] `audit:registry` clean, including the base layer.
+
+---
+
+### 1.0R-11 · `unknown-component` audit rule
+
+**Depends:** — · **Ref:** review 2026-08-18 · **Touches:** `src/audit/html-audit.ts`, `src/audit/rules.ts`, `src/utils/registry-index.ts`, `site/lib/faqir-audit.js`, `tests/audit/`
+
+`src/audit/html-audit.ts:112` — `if (!manifest) continue;` — skips every per-component rule
+when no manifest matches the `data-ui` value. That is deliberate and half right: a component
+present in the registry but not installed in *this* project must not error. The consequence
+is the other half: `<div data-ui="datatable">` audits completely clean. Verified
+2026-08-18 — a probe page containing `data-ui="nonexistent-thing"` produced one unrelated
+landmark warning and passed.
+
+For a framework whose pitch is "the AI generates it, the audit catches it", a hallucinated
+component name is the single most likely failure mode and the one thing the audit cannot
+currently see. This is the largest remaining gap in the tool that is supposed to be the
+safety net.
+
+`registry-index.json` makes the distinction available. **In the registry, not installed** →
+stays silent, exactly as today. **Not a Faqir component at all** → a finding carrying a
+`suggestClosest()` hint; `src/utils/suggest.ts` exists and the variant rules already use it.
+Choose the severity deliberately and document the escape hatch: `warning` keeps `faqir audit`
+exit-zero for pages that legitimately mix Faqir with non-Faqir `data-ui` values, which is a
+real use and must stay possible.
+
+**Tests**
+- Unknown name → exactly one finding, naming the closest registry match.
+- Registry-known-but-not-installed → silent (regression guard on the deliberate behaviour).
+- The opt-out (whatever form it takes) suppresses it and is documented.
+- CLI ↔ browser parity: the browser bundle produces the identical finding — parity is structural through `html-audit.ts`, so assert it rather than assuming it. `check:audit-browser` regenerated in the same commit.
+- The playground's rule legend gains the row from `ALL_RULES` with no site edit.
+
+**Acceptance criteria**
+- [ ] A hallucinated `data-ui` value is caught, with a suggestion.
+- [ ] Not-installed components stay silent; mixed-framework pages stay usable.
+- [ ] `bun run check:audit-browser` green; playground legend updated automatically.
 
 ---
 
