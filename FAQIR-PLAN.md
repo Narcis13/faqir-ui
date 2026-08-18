@@ -188,7 +188,7 @@ document order is the traversal order: these are the things that should be true 
 | ID | Task | Status |
 |----|------|--------|
 | 1.0R-01 | Retire (or gate) the stale `faqir-creator.skill` archive | ✅ |
-| 1.0R-02 | `references/tokens.md` becomes token-source-derived | ⬜ |
+| 1.0R-02 | `references/tokens.md` becomes token-source-derived | ✅ |
 | 1.0R-03 | `references/directives.md` becomes engine + plugin-derived | ⬜ |
 | 1.0R-04 | `references/manifest.md` from the schema; `faqir create` emits `$schema` | ⬜ |
 | 1.0R-05 | SKILL.md surface completion: commands, scaffolds, themes | ⬜ |
@@ -3128,9 +3128,9 @@ reports five files.
 - `gen:skill` twice is byte-identical; `check:skill` reports 5 files.
 
 **Acceptance criteria**
-- [ ] `tokens.md` carries the surface ramp, the measure ladder and the control-height ramp.
-- [ ] Every value in the reference equals its declaration in the token sources (test-enforced, both directions).
-- [ ] `check:skill` covers the file; hand-editing it fails CI.
+- [x] `tokens.md` carries the surface ramp, the measure ladder and the control-height ramp. (All 301 `:root` tokens are documented under the `@ui:tokens` group of the file that declares them, with the source's own `── Banner ──` runs as sub-headings: `--color-surface-{1,2}` and their `-border` pairs under semantic/Surfaces, the four `--measure-*` under aliases/Measure, `--control-height-{sm,md,lg}` under aliases/Controls as the shared ramp, `--leading-loose: 1.75`, and the two-layer shadows at their real `/ 0.04` alphas.)
+- [x] Every value in the reference equals its declaration in the token sources (test-enforced, both directions). (`documents every declared token and declares every documented token` compares the two name sets with an independent parser — a token added to the CSS and a token invented in prose fail the same assertion; `carries every :root value verbatim` then matches each declaration against its rendered row, and the density test matches all 39 remaps against their compact/comfortable pair. Both directions were seeded and observed to fail before passing.)
+- [x] `check:skill` covers the file; hand-editing it fails CI. (`generateShippedSkillFiles()` returns 5 files; `check:skill` reports `references/tokens.md` stale on a hand-appended row. Suite green: 3389 + 37 tests, typecheck clean.)
 
 ---
 

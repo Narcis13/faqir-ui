@@ -240,6 +240,6 @@ Full anatomy trees, variant tables, and safe/unsafe transforms for every compone
 - [references/primitives.md](references/primitives.md) — 42 primitives
 - [references/recipes.md](references/recipes.md) — 29 recipes
 - [references/patterns.md](references/patterns.md) — 15 patterns
-- [references/tokens.md](references/tokens.md) — design token reference
+- [references/tokens.md](references/tokens.md) — every design token, derived from `registry/tokens/*.css`
 - [references/directives.md](references/directives.md) — faqir-core reactive directives
 - [references/manifest.md](references/manifest.md) — manifest schema and examples

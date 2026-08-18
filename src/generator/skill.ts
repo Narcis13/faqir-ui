@@ -15,7 +15,7 @@
 // Output carries a grep-able generation header and no timestamps, so
 // regeneration is byte-idempotent (gated by `bun run check:skill`).
 
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { readConfig } from "../utils/config";
 import { ensureDir, getPackageRoot, getRegistryPath } from "../utils/fs";
@@ -33,6 +33,7 @@ import {
   rhythmLine,
   spacingLadderLine,
 } from "../utils/layout";
+import { TOKEN_MODIFIERS } from "../protocol";
 import { getSchemaVersion } from "../utils/schema";
 import { loadPluginMetadata, type PluginMetadata } from "./plugins";
 
@@ -436,6 +437,322 @@ function renderInventory(byLayer: Record<Layer, Manifest[]>): string[] {
 }
 
 // ---------------------------------------------------------------------------
+// Token reference (task 1.0R-02) — derived from registry/tokens/*.css
+//
+// `references/tokens.md` was hand-maintained and drifted: it quoted shadow values
+// the source had not carried for months, and the surface ramp, the measure ladder
+// and `--leading-loose` were missing outright. Nothing below is transcribed — the
+// group names, their blurbs, the `── Banner ──` sub-headings, every value and
+// every px note are read out of the token sources, and the modifier table is
+// `TOKEN_MODIFIERS` verbatim, so `data-density` / `data-motion` / `data-theme`
+// are stated once in the codebase and read twice (here and by `SPEC-1.0.md` §4).
+// ---------------------------------------------------------------------------
+
+/** One declared custom property, with the banner it sits under. */
+interface TokenDeclaration {
+  /** Name without the leading `--`. */
+  name: string;
+  /** Declared value, verbatim, whitespace collapsed. */
+  value: string;
+  /** Trailing same-line comment, e.g. `16px`. */
+  note?: string;
+  /** The `── Label ──` banner this declaration follows, if any. */
+  section?: string;
+}
+
+/** One token file: its `@ui:tokens` group, header blurb and `:root` declarations. */
+interface TokenGroup {
+  group: string;
+  file: string;
+  blurb?: string;
+  tokens: TokenDeclaration[];
+  /** `true` when the file declares into `[data-density]` scopes (density.css). */
+  scoped: boolean;
+}
+
+/** Drop the internal task/plan references the source comments carry. */
+function stripSourceRefs(text: string): string {
+  return text.replace(/\s*\((?:task|see)\s[^)]*\)/gi, "").trim();
+}
+
+/** Collapse a comment or value onto one line. */
+function oneLine(text: string): string {
+  return text.trim().replace(/\s+/g, " ");
+}
+
+/**
+ * A same-length copy with every comment blanked. Brace scanning runs against
+ * this, because a `:root` body legitimately contains `}` inside a comment
+ * (`document.css` documents `@page { … }` there) and would otherwise truncate.
+ */
+function maskComments(css: string): string {
+  return css.replace(/\/\*[\s\S]*?\*\//g, (c) => " ".repeat(c.length));
+}
+
+/**
+ * The bodies of every `<selector> { … }` block, sliced out of the ORIGINAL css
+ * (comments intact — they carry the sub-headings and px notes) using offsets
+ * found on the masked copy. `selector` must contain no capture group.
+ */
+function blockBodies(css: string, selector: string): string[] {
+  const masked = maskComments(css);
+  const out: string[] = [];
+  for (const m of masked.matchAll(new RegExp(`${selector}\\s*\\{([^{}]*)\\}`, "g"))) {
+    const start = (m.index ?? 0) + m[0].indexOf("{") + 1;
+    out.push(css.slice(start, start + m[1].length));
+  }
+  return out;
+}
+
+/**
+ * Walk a block body in source order, returning every custom property with the
+ * banner it follows and its trailing same-line comment. Comments are read, not
+ * skipped: they carry the sub-headings and the px equivalents.
+ */
+function scanDeclarations(body: string): TokenDeclaration[] {
+  const out: TokenDeclaration[] = [];
+  let section: string | undefined;
+  let prevEnd = -1;
+  for (const m of body.matchAll(/\/\*([\s\S]*?)\*\/|--([a-z0-9-]+)\s*:\s*([^;]+);/gi)) {
+    const start = m.index ?? 0;
+    if (m[1] !== undefined) {
+      const banner = /──\s*([^─]+?)\s*──/.exec(m[1]);
+      if (banner) {
+        section = stripSourceRefs(oneLine(banner[1]));
+      } else if (prevEnd >= 0 && out.length > 0 && !body.slice(prevEnd, start).includes("\n")) {
+        // A comment on the same line as the previous declaration annotates it.
+        out[out.length - 1].note = oneLine(m[1]);
+      }
+      continue;
+    }
+    out.push({ name: m[2], value: oneLine(m[3]), section });
+    prevEnd = start + m[0].length;
+  }
+  return out;
+}
+
+/** The `@ui:tokens <group> — <blurb>` header every token file carries. */
+function tokenHeader(css: string): { group: string; blurb?: string } | undefined {
+  const line = /@ui:tokens\s+(\S+)([^\n]*)/.exec(css);
+  if (!line) return undefined;
+  const tail = /—\s*(.+?)\s*(?:\*\/)?$/.exec(line[2]);
+  return { group: line[1], blurb: tail ? stripSourceRefs(tail[1]) : undefined };
+}
+
+/**
+ * The token files in cascade order, read out of `tokens/index.css` itself — the
+ * order the reference documents is the order the browser resolves.
+ */
+function tokenFileOrder(tokensDir: string): string[] {
+  const index = join(tokensDir, "index.css");
+  if (!existsSync(index)) return [];
+  return [...readFileSync(index, "utf8").matchAll(/@import\s+['"]\.\/([^'"]+)['"]/g)].map((m) => m[1]);
+}
+
+/** Every token file's `:root` declarations, grouped, in cascade order. */
+function loadTokenGroups(tokensDir: string): TokenGroup[] {
+  const groups: TokenGroup[] = [];
+  for (const file of tokenFileOrder(tokensDir)) {
+    const path = join(tokensDir, file);
+    if (!existsSync(path)) continue;
+    const css = readFileSync(path, "utf8");
+    const header = tokenHeader(css);
+    if (!header) continue;
+    groups.push({
+      group: header.group,
+      file,
+      blurb: header.blurb,
+      tokens: blockBodies(css, ":root").flatMap(scanDeclarations),
+      scoped: /\[data-density="/.test(maskComments(css)),
+    });
+  }
+  return groups;
+}
+
+/** The `[data-density="<scope>"]` declarations of a token file, in source order. */
+function densityScope(css: string, scope: string): TokenDeclaration[] {
+  return blockBodies(css, `\\[data-density="${scope}"\\]`).flatMap(scanDeclarations);
+}
+
+/** A markdown cell — token values never contain a backtick, but may contain a pipe. */
+function cell(value: string): string {
+  return `\`${value.replace(/\|/g, "\\|")}\``;
+}
+
+/** One table of declarations. Optional columns appear only when they carry data. */
+function renderTokenTable(
+  tokens: TokenDeclaration[],
+  valueLabel = "Value",
+  extra?: { label: string; render: (t: TokenDeclaration) => string },
+): string[] {
+  const noted = tokens.some((t) => t.note);
+  const head = ["Token", valueLabel, ...(extra ? [extra.label] : []), ...(noted ? ["Notes"] : [])];
+  const lines = [`| ${head.join(" | ")} |`, `|${head.map(() => "---").join("|")}|`];
+  for (const t of tokens) {
+    const row = [cell(`--${t.name}`), cell(t.value)];
+    if (extra) row.push(extra.render(t));
+    if (noted) row.push(t.note ?? "—");
+    lines.push(`| ${row.join(" | ")} |`);
+  }
+  return lines;
+}
+
+/** Split declarations into their `── Banner ──` runs, preserving source order. */
+function bySection(tokens: TokenDeclaration[]): { section?: string; tokens: TokenDeclaration[] }[] {
+  const out: { section?: string; tokens: TokenDeclaration[] }[] = [];
+  for (const t of tokens) {
+    const last = out[out.length - 1];
+    if (last && last.section === t.section) last.tokens.push(t);
+    else out.push({ section: t.section, tokens: [t] });
+  }
+  return out;
+}
+
+/** The sanctioned token modifiers, stated once in `src/protocol.ts`. */
+function renderTokenModifiers(): string[] {
+  const lines: string[] = ["## Sanctioned Token Modifiers", ""];
+  lines.push(
+    `${TOKEN_MODIFIERS.length} attributes are part of the frozen contract without being protocol ` +
+      "attributes: each re-declares design tokens for its subtree, and every descendant inherits the " +
+      "result. None names a component, fills a slot, or needs a manifest declaration.",
+  );
+  lines.push("");
+  lines.push("| Attribute | Purpose | Values | Written by | Scope |");
+  lines.push("|---|---|---|---|---|");
+  for (const m of TOKEN_MODIFIERS) {
+    lines.push(
+      `| \`${m.attr}\` | ${m.purpose} | ${m.values.map((v) => `\`${v}\``).join(", ")} | ` +
+        `${m.owner} | ${m.scope} |`,
+    );
+  }
+  lines.push("");
+  return lines;
+}
+
+/**
+ * The `[data-density]` remap, derived from `density.css` rather than described:
+ * a token added to the compact scope appears here without editing this file.
+ */
+function renderDensityRemap(css: string, group: TokenGroup, rootGroups: TokenGroup[]): string[] {
+  const compact = densityScope(css, "compact");
+  const comfortable = new Map(densityScope(css, "comfortable").map((t) => [t.name, t.value]));
+  if (compact.length === 0) return [];
+
+  const lines: string[] = [];
+  lines.push(`## ${group.group}${group.blurb ? ` — ${group.blurb}` : ""}`);
+  lines.push("");
+  lines.push(`_\`registry/tokens/${group.file}\` · ${compact.length} tokens re-declared per scope_`);
+  lines.push("");
+
+  const origin = new Map<string, string>();
+  for (const g of rootGroups) for (const t of g.tokens) if (!origin.has(t.name)) origin.set(t.name, g.group);
+  const counts = new Map<string, number>();
+  const ownTokens: string[] = [];
+  for (const t of compact) {
+    const from = origin.get(t.name);
+    if (from) counts.set(from, (counts.get(from) ?? 0) + 1);
+    else ownTokens.push(t.name);
+  }
+  lines.push(
+    `Remapped by source group: ${[...counts].map(([g, n]) => `\`${g}\` (${n})`).join(", ")}` +
+      (ownTokens.length
+        ? `, plus ${ownTokens.map((n) => `\`--${n}\``).join(", ")} declared only in these scopes.`
+        : "."),
+  );
+  // Where a group is mostly remapped, the handful it leaves alone is the news:
+  // `--space-0` is 0 at any density and a 1px hairline is a hairline. Groups the
+  // scope barely touches (or never touches) say nothing here.
+  const remapped = new Set(compact.map((t) => t.name));
+  for (const g of rootGroups) {
+    const untouched = g.tokens.filter((t) => !remapped.has(t.name));
+    if (untouched.length === 0 || untouched.length >= g.tokens.length - untouched.length) continue;
+    lines.push("");
+    lines.push(
+      `Invariant in \`${g.group}\`: ${untouched.map((t) => `\`--${t.name}\``).join(", ")} — ` +
+        "never scaled, at any density.",
+    );
+  }
+  lines.push("");
+  for (const run of bySection(compact)) {
+    if (run.section) {
+      lines.push(`### ${run.section}`);
+      lines.push("");
+    }
+    lines.push(
+      ...renderTokenTable(run.tokens, "`compact`", {
+        label: "`comfortable`",
+        render: (t) => (comfortable.has(t.name) ? cell(comfortable.get(t.name)!) : "—"),
+      }),
+    );
+    lines.push("");
+  }
+  return lines;
+}
+
+/**
+ * Build `references/tokens.md` from `<registryRoot>/tokens/*.css`. Exported so a
+ * test can point it at a fixture registry and prove the file is derived rather
+ * than transcribed.
+ */
+export function renderTokensReference(registryRoot: string, schemaVersion: string): string {
+  const tokensDir = join(registryRoot, "tokens");
+  const groups = loadTokenGroups(tokensDir);
+  const rootGroups = groups.filter((g) => g.tokens.length > 0);
+  const scopedGroups = groups.filter((g) => g.scoped);
+
+  const lines: string[] = [];
+  lines.push(generationHeader(schemaVersion));
+  lines.push("");
+  lines.push("# Faqir Design Tokens Reference");
+  lines.push("");
+  lines.push(
+    "Every token the registry declares, read out of `registry/tokens/*.css` — the values below ARE " +
+      "the declarations. Never hardcode a colour, size, duration or shadow: reference one of these " +
+      "tokens through `var()`.",
+  );
+  lines.push("");
+  lines.push(
+    `Cascade order, as \`tokens/index.css\` imports them: ${groups.map((g) => `\`${g.file}\``).join(" → ")}. ` +
+      "First declaration wins, and each heading below is the `@ui:tokens` group name its file carries — " +
+      "palette (raw values) feeds semantic (purpose) feeds aliases (per-component).",
+  );
+  lines.push("");
+
+  lines.push(...renderTokenModifiers());
+
+  const total = rootGroups.reduce((n, g) => n + g.tokens.length, 0);
+  lines.push("## Token Groups");
+  lines.push("");
+  lines.push(`${total} tokens in ${rootGroups.length} groups:`);
+  lines.push("");
+  for (const g of rootGroups) {
+    lines.push(`- \`${g.group}\` (${g.tokens.length})${g.blurb ? ` — ${g.blurb}` : ""}`);
+  }
+  lines.push("");
+
+  for (const g of rootGroups) {
+    lines.push(`## ${g.group}${g.blurb ? ` — ${g.blurb}` : ""}`);
+    lines.push("");
+    lines.push(`_\`registry/tokens/${g.file}\` · ${g.tokens.length} tokens_`);
+    lines.push("");
+    for (const run of bySection(g.tokens)) {
+      if (run.section) {
+        lines.push(`### ${run.section}`);
+        lines.push("");
+      }
+      lines.push(...renderTokenTable(run.tokens));
+      lines.push("");
+    }
+  }
+
+  for (const g of scopedGroups) {
+    lines.push(...renderDensityRemap(readFileSync(join(tokensDir, g.file), "utf8"), g, rootGroups));
+  }
+
+  return lines.join("\n").replace(/\n{3,}/g, "\n\n").replace(/\s+$/g, "") + "\n";
+}
+
+// ---------------------------------------------------------------------------
 // Manifest loading
 // ---------------------------------------------------------------------------
 
@@ -660,7 +977,7 @@ function renderShippedSkill(
       `- [references/${layer}.md](references/${layer}.md) — ${byLayer[layer].length} ${REFERENCE_LABEL[layer].toLowerCase()}`,
     );
   }
-  lines.push("- [references/tokens.md](references/tokens.md) — design token reference");
+  lines.push("- [references/tokens.md](references/tokens.md) — every design token, derived from `registry/tokens/*.css`");
   lines.push("- [references/directives.md](references/directives.md) — faqir-core reactive directives");
   lines.push("- [references/manifest.md](references/manifest.md) — manifest schema and examples");
   lines.push("");
@@ -686,6 +1003,12 @@ export async function generateShippedSkillFiles(): Promise<GeneratedFile[]> {
       content: renderReferenceFile(layer, byLayer[layer], schemaVersion),
     });
   }
+  // The token reference is derived from registry/tokens/*.css rather than the
+  // manifests, so `check:skill` gates it exactly like the per-layer files.
+  files.push({
+    relPath: join("references", "tokens.md"),
+    content: renderTokensReference(getRegistryPath(), schemaVersion),
+  });
   return files;
 }
 
