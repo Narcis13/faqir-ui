@@ -26,6 +26,7 @@ import { loadThemeManifest, type ThemeManifest } from "../theme-manifest";
 import { readConfig, type FaqirConfig } from "../utils/config";
 import { ensureDir, getRegistryPath } from "../utils/fs";
 import { loadPluginMetadata, type PluginMetadata } from "./plugins";
+import { BASE_LAYER_BLURB, baseLayerUiValues, loadBaseLayer } from "../base-layer";
 import { SCAFFOLDS, SCAFFOLD_NAMES } from "../scaffolds/registry";
 
 /**
@@ -881,6 +882,21 @@ function partitionComponents(data: ContextData): {
 }
 
 /**
+ * The base layer, for both llms surfaces (task 1.0R-10).
+ *
+ * `data-ui="prose"` is defined in `registry/base/prose.css`, is loaded by every
+ * project, and had no manifest — so it appeared in neither the component list
+ * nor the token reference, and an agent reading llms.txt could not find it. It
+ * is derived here from the base stylesheets rather than listed, so it is the
+ * same set the skill and the site document.
+ */
+function baseLayerEntries(): { value: string; file: string; blurb: string }[] {
+  return loadBaseLayer(getRegistryPath()).flatMap((file) =>
+    file.defines.map((value) => ({ value, file: file.file, blurb: file.blurb })),
+  );
+}
+
+/**
  * Format the concise `llms.txt` index following the llmstxt.org convention:
  * an H1 project title, a blockquote summary, an optional detail paragraph, and
  * H2 sections whose bodies are markdown link lists (`[name](url): notes`).
@@ -987,6 +1003,21 @@ export function formatContextLlms(data: ContextData): string {
       lines.push(
         `- [${name}](llms-full.txt#scaffolds): ${def.description} — \`faqir scaffold ${name}\``,
       );
+    }
+    lines.push("");
+  }
+
+  // The base layer is a property of the framework, not of an installed `ui/`
+  // directory — like scaffolds above, it is listed from the registry itself so
+  // a project's llms.txt and the hosted one carry the same lines.
+  const baseLayer = baseLayerEntries();
+  if (baseLayer.length > 0) {
+    lines.push("## Base layer");
+    lines.push("");
+    lines.push(BASE_LAYER_BLURB);
+    lines.push("");
+    for (const entry of baseLayer) {
+      lines.push(`- [${entry.value}](llms-full.txt#base-layer): ${entry.blurb} — \`base/${entry.file}\`, no manifest, no parts`);
     }
     lines.push("");
   }
@@ -1220,6 +1251,33 @@ export function formatContextLlmsFull(data: ContextData): string {
       const summary = plugin.description ? ` — ${plugin.description}` : "";
       lines.push(`- **${name}** (${plugin.provides.join(", ")}): \`${plugin.file}\`${summary}`);
     }
+    lines.push("");
+  }
+
+  // Base layer
+  const baseLayerFull = baseLayerEntries();
+  if (baseLayerFull.length > 0) {
+    lines.push("## Base layer");
+    lines.push("");
+    lines.push(BASE_LAYER_BLURB);
+    lines.push("");
+    lines.push("| `data-ui` | Defined in | What it styles |");
+    lines.push("|-----------|------------|----------------|");
+    for (const entry of baseLayerFull) {
+      lines.push(`| \`${entry.value}\` | \`base/${entry.file}\` | ${entry.blurb} |`);
+    }
+    lines.push("");
+    lines.push("```html");
+    lines.push('<article data-ui="prose">');
+    lines.push("  <h1>Release notes</h1>");
+    lines.push("  <p>Everything inside is plain HTML — no per-element attributes.</p>");
+    lines.push("</article>");
+    lines.push("```");
+    lines.push("");
+    lines.push(
+      "`prose` sets its own measure (`max-inline-size: var(--measure-prose)`); wrap it in " +
+        "`container` when the page needs a different one.",
+    );
     lines.push("");
   }
 

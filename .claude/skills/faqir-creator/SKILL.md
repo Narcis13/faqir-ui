@@ -102,6 +102,33 @@ Copy-ready page archetypes — Dashboard, Landing page, Prose / document, Split 
 
 **15 Patterns (composition, no JS):** auth-form, crud-table, dashboard-shell, document, empty-state, feature-grid, form-page, hero, inbox, pricing, search-results, settings-page, site-footer, stats-dashboard, wizard
 
+## Base Layer
+
+4 stylesheets ship under `base/` and are loaded before any component:
+
+- `base/motion-presets.css` — l-transition presets (Transitions 2.0 · 0.4-11 · §A4)
+- `base/prose.css` — typography defaults for long-form content
+- `base/reset.css` — modern CSS reset for Faqir projects
+- `base/rhythm.css` — the default vertical rhythm (task 0.9-02, FAQIR-SPEC §20)
+
+The base layer is loaded by every project and is not a component: these `data-ui` values are styling — they take no `data-part`, no `data-variant` and no `data-state`, and they style the plain HTML elements written inside them.
+
+| `data-ui` | Defined in | What it styles |
+|-----------|------------|----------------|
+| `prose` | `base/prose.css` | typography defaults for long-form content |
+
+Use it for any run of authored copy — documentation, an article, a changelog, the body of a marketing page. Write ordinary HTML inside; it styles the elements for you:
+
+```html
+<article data-ui="prose">
+  <h1>Release notes</h1>
+  <p>Everything inside is plain HTML — no per-element attributes.</p>
+  <ul><li>Headings, lists, tables, blockquotes and code blocks are all styled.</li></ul>
+</article>
+```
+
+Width is the one thing it sets for you: `max-inline-size: var(--measure-prose)`. Pair it with `container` when the page needs a different measure.
+
 ## Official Plugins
 
 Load a plugin after `faqir-core.js`, or combine core plus every plugin with `faqir bundle --js`:

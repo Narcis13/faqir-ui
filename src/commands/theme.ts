@@ -9,6 +9,11 @@ import { generateBundle } from "../utils/bundler";
 import { emitJSON, isJSONMode } from "../utils/json-output";
 import { listRegistryThemes } from "../theme-manifest";
 import {
+  previewStylesheets,
+  renderThemePreview,
+  type ThemePreviewSpec,
+} from "../theme-preview";
+import {
   generateThemeBundle,
   type ThemeGenerateInput,
   type ThemeNeutral,
@@ -55,7 +60,7 @@ function printGenerateHelp() {
     ["--json", "Report generated files and all computed contrast ratios"],
   ]);
   log.blank();
-  log.dim("Outputs: themes/<name>.css + themes/<name>.theme.json");
+  log.dim("Outputs: themes/<name>.css + themes/<name>.theme.json + themes/<name>.preview.html");
   log.dim("Contrast policy: white ink in light mode, dark ink in dark mode; the primary ramp step is adjusted automatically.");
 }
 
@@ -163,12 +168,21 @@ async function themeGenerate(args: string[]): Promise<void> {
   const result = generateThemeBundle(input, baseCssSources);
   const outputDir = join(process.cwd(), "themes");
   ensureDir(outputDir);
+  const previews = new Map<string, string>();
   for (const file of result.generated) {
     await Bun.write(join(process.cwd(), file.css_path), file.css);
     await Bun.write(
       join(process.cwd(), file.manifest_path),
       JSON.stringify(file.manifest, null, 2) + "\n",
     );
+    // The manifest declares `preview: "<name>.preview.html"`, so the file has to
+    // be there: a shipped manifest must not name a file that is not (1.0R-10).
+    // It is written self-contained — `themes/` here is a drop folder with no
+    // registry beside it, so a linking harness would resolve to nothing.
+    const preview = await renderGeneratedPreview(file.name, file.kind, file.manifest.scheme, file.css);
+    const previewPath = `themes/${file.name}.preview.html`;
+    await Bun.write(join(process.cwd(), previewPath), preview);
+    previews.set(file.name, previewPath);
   }
 
   const report = {
@@ -187,6 +201,7 @@ async function themeGenerate(args: string[]): Promise<void> {
       name: file.name,
       css: file.css_path,
       manifest: file.manifest_path,
+      preview: previews.get(file.name)!,
     })),
     contrast: result.generated.flatMap((file) => file.contrast),
   };
@@ -200,6 +215,7 @@ async function themeGenerate(args: string[]): Promise<void> {
   for (const file of result.generated) {
     log.step(`${file.css_path}`);
     log.step(`${file.manifest_path}`);
+    log.step(`${previews.get(file.name)}`);
   }
   const primaryRatios = report.contrast.filter(
     (pair) => pair.foreground === "color-primary-fg" && pair.background === "color-primary",
@@ -208,6 +224,48 @@ async function themeGenerate(args: string[]): Promise<void> {
     const adjusted = pair.auto_adjusted ? " (lightness auto-adjusted)" : "";
     log.dim(`${pair.theme} ${pair.scheme}: primary contrast ${pair.ratio.toFixed(2)}:1${adjusted}`);
   }
+}
+
+/**
+ * Render the self-contained gallery a generated theme's manifest points at.
+ *
+ * `faqir theme generate` writes into a bare `themes/` directory — there is no
+ * `../tokens/` or `../primitives/` beside it to link, and the command may be run
+ * outside a Faqir project entirely. So the harness carries its stylesheets: the
+ * token surface, the reset, the theme itself, and the components the gallery
+ * renders, read from the registry the CLI ships and inlined in cascade order.
+ */
+async function renderGeneratedPreview(
+  name: string,
+  kind: "theme" | "document",
+  scheme: ThemePreviewSpec["scheme"],
+  themeCss: string,
+): Promise<string> {
+  const registryPath = getRegistryPath();
+  const spec: ThemePreviewSpec = {
+    name,
+    tagline:
+      kind === "document"
+        ? "Generated print companion — light only, sized for the page."
+        : "Generated from your brand accent, contrast-verified before it was written.",
+    initials: name.replace(/[^a-z]/gi, "").slice(0, 2).toUpperCase() || "FA",
+    scheme,
+    extraTokens: kind === "document" ? ["tokens/document.css", "tokens/doc-aliases.css"] : undefined,
+  };
+  const ownSheet = `themes/${name}.css`;
+  const sources: string[] = [];
+  for (const rel of previewStylesheets(spec)) {
+    if (rel === ownSheet) {
+      sources.push(`/* ${rel} */\n${themeCss}`);
+      continue;
+    }
+    const path = join(registryPath, rel);
+    if (!existsSync(path)) {
+      throw new Error(`Preview stylesheet '${rel}' is missing from the registry at ${registryPath}.`);
+    }
+    sources.push(`/* ${rel} */\n${await Bun.file(path).text()}`);
+  }
+  return renderThemePreview({ ...spec, inlineCss: sources.join("\n") });
 }
 
 function listProjectThemes(outputDir: string): string[] {

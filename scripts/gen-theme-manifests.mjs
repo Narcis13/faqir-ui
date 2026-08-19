@@ -15,8 +15,8 @@
  * is how a new theme is forced to declare its manifest metadata.
  */
 import { Glob } from "bun";
-import { readFileSync, writeFileSync } from "node:fs";
-import { basename, dirname, join, resolve } from "node:path";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { basename, dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   overriddenTokens,
@@ -140,6 +140,19 @@ if (missingSeed.length > 0) {
   process.exit(1);
 }
 
+// A manifest declares `preview`, and the schema makes it required — so the file
+// it names must be on disk. Five themes declared one that was never written
+// (task 1.0R-10); rather than let the field point at nothing, the missing file
+// is now a build error. Generated previews come from `gen:theme-previews`.
+const missingPreview = themeFiles
+  .map((f) => basename(f, ".css"))
+  .filter((name) => !existsSync(join(THEMES_DIR, `${name}.preview.html`)));
+if (missingPreview.length > 0) {
+  console.error(`✗ No preview harness for theme(s): ${missingPreview.join(", ")}`);
+  console.error(`  Run 'bun run gen:theme-previews', or hand-author the file.`);
+  process.exit(1);
+}
+
 let written = 0;
 for (const file of themeFiles) {
   const name = basename(file, ".css");
@@ -147,6 +160,10 @@ for (const file of themeFiles) {
   const css = readFileSync(join(THEMES_DIR, file), "utf8");
 
   const manifest = {
+    // Same rule as `add-schema-refs.mjs` and `faqir create`: the reference is
+    // relative from the manifest's own directory to the published schema. It is
+    // written here so a regeneration cannot silently strip it (task 1.0R-10).
+    $schema: relative(THEMES_DIR, join(ROOT, "manifest.schema.json")),
     name,
     version: meta.version,
     mood: meta.mood,
@@ -155,6 +172,7 @@ for (const file of themeFiles) {
     tokens_overridden: overriddenTokens(css),
     tokens_inherited: inheritedTokens(css, SURFACE),
     pairs_with: meta.pairs_with,
+    // Checked above: the file exists, so the field cannot dangle.
     preview: `${name}.preview.html`,
   };
 

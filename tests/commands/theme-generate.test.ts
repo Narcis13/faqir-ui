@@ -228,18 +228,23 @@ describe("faqir theme generate · CLI", () => {
     const report = JSON.parse(result.stdout);
     expect(report.theme_generate_schema_version).toBe(1);
     expect(report.command).toBe("theme generate");
+    // `preview` is a REQUIRED field of every theme manifest, so the command that
+    // writes the manifest writes the harness too — a shipped manifest must not
+    // name a file that is not there (task 1.0R-10).
     expect(report.generated).toEqual([
       {
         kind: "theme",
         name: "cli-brand",
         css: "themes/cli-brand.css",
         manifest: "themes/cli-brand.theme.json",
+        preview: "themes/cli-brand.preview.html",
       },
       {
         kind: "document",
         name: "cli-brand-document",
         css: "themes/cli-brand-document.css",
         manifest: "themes/cli-brand-document.theme.json",
+        preview: "themes/cli-brand-document.preview.html",
       },
     ]);
     expect(report.contrast.length).toBe(39);
@@ -247,6 +252,11 @@ describe("faqir theme generate · CLI", () => {
     for (const file of report.generated) {
       expect(existsSync(join(tempDir, file.css))).toBe(true);
       expect(existsSync(join(tempDir, file.manifest))).toBe(true);
+      expect(existsSync(join(tempDir, file.preview))).toBe(true);
+      // The manifest's own `preview` resolves relative to the manifest, which is
+      // the path the report names.
+      const manifest = JSON.parse(readFileSync(join(tempDir, file.manifest), "utf8"));
+      expect(join("themes", manifest.preview)).toBe(file.preview);
     }
   });
 

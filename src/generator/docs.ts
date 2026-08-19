@@ -125,6 +125,7 @@ import { ALL_RULES, DOCUMENT_RULES } from "../audit/rules";
 // The hosted llms.txt pair is the CLI's own `--format llms` generator pointed at
 // the whole registry instead of at one project (task 0.7-15).
 import { formatContextLlms, formatContextLlmsFull } from "./context";
+import { BASE_LAYER_BLURB, baseLayerUiValues, loadBaseLayer } from "../base-layer";
 // The reactive-engine page reads the engine's own §3.0 declarations through the
 // same parsers that build the skill's `references/directives.md` (task 1.0R-03):
 // the site and the skill are two renderings of one vocabulary, not two lists.
@@ -1920,6 +1921,7 @@ function renderComponentIndex(ctx: {
   config: SiteConfig;
   components: DocsComponent[];
   themes: DocsTheme[];
+  registryRoot: string;
 }): SiteFile {
   const pagePath = "components/index.html";
   const categories = [
@@ -2008,6 +2010,8 @@ function renderComponentIndex(ctx: {
     parts.push(`      </section>`);
   }
 
+  parts.push(...renderBaseLayerSection(ctx.registryRoot));
+
   return {
     path: pagePath,
     content: renderShell({
@@ -2022,6 +2026,45 @@ function renderComponentIndex(ctx: {
       layout: "wide",
     }),
   };
+}
+
+/**
+ * The base layer, on the page that lists every component (task 1.0R-10).
+ *
+ * `data-ui="prose"` is defined in `registry/base/prose.css` and used on a dozen
+ * pages of this very site, but it has no manifest — so it appeared on no
+ * catalogue page, and a reader who searched the component index for it found
+ * nothing. It belongs on this page precisely because it is NOT one of the cards
+ * above: the section says so, and the rows are derived from the base
+ * stylesheets rather than typed, so a second base-layer value would appear here
+ * on its own.
+ */
+function renderBaseLayerSection(registryRoot: string): string[] {
+  const files = loadBaseLayer(registryRoot);
+  if (baseLayerUiValues(files).length === 0) return [];
+  const rows = files.flatMap((file) =>
+    file.defines.map((value) => [
+      code(`data-ui="${value}"`),
+      code(`base/${file.file}`),
+      esc(file.blurb),
+    ]),
+  );
+  return [
+    `      <section id="base-layer">`,
+    `      <h2>Base layer</h2>`,
+    `      <p>${esc(BASE_LAYER_BLURB.replace(/`/g, ""))}</p>`,
+    `      <p>${esc(
+      "These are not components and the filters above do not apply to them: they ship in base/, " +
+        "every project loads them, and they have no manifest because there is no structure to declare.",
+    )}</p>`,
+    table(["Attribute", "Defined in", "What it styles"], rows, "No base-layer values."),
+    `      <p>${esc(
+      "Write ordinary HTML inside — headings, paragraphs, lists, tables, blockquotes and code " +
+        "blocks are all styled for you. prose sets its own measure (max-inline-size: " +
+        "var(--measure-prose)); wrap it in container when a page needs a different one.",
+    )}</p>`,
+    `      </section>`,
+  ];
 }
 
 /** The icon catalogue: every name comes from the icon primitive's manifest. */
@@ -4597,7 +4640,7 @@ export function buildDocsSite(options: DocsSiteOptions = {}): SiteFile[] {
       tokenCount: tokenList.length,
     }),
   );
-  files.push(renderComponentIndex({ config, components, themes }));
+  files.push(renderComponentIndex({ config, components, themes, registryRoot }));
   files.push(renderIconPage({ config, components, themes }));
   files.push(renderTypographyPage({ config, components, themes, tokenList }));
   files.push(renderTokenPage({ config, components, themes, tokenList }));

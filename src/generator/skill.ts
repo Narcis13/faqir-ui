@@ -34,6 +34,7 @@ import {
   spacingLadderLine,
 } from "../utils/layout";
 import { TOKEN_MODIFIERS } from "../protocol";
+import { BASE_LAYER_BLURB, baseLayerUiValues, loadBaseLayer } from "../base-layer";
 import { COMMAND_CATEGORIES, commandsInCategory } from "../command-registry";
 import { DOCUMENT_SCAFFOLD_NAMES, SCAFFOLDS } from "../scaffolds/registry";
 import type { ThemeManifest } from "../theme-manifest";
@@ -551,6 +552,62 @@ function renderInventory(byLayer: Record<Layer, Manifest[]>): string[] {
     lines.push(`**${names.length} ${label[layer]}:** ${names.join(", ")}`);
     lines.push("");
   }
+  return lines;
+}
+
+/**
+ * The base layer (task 1.0R-10): the stylesheets every project loads, and the
+ * `data-ui` values among them that are styling rather than components.
+ *
+ * `data-ui="prose"` had no manifest, no catalogue page, no `llms.txt` line and
+ * no skill mention, while the framework's own site used it on a dozen pages — an
+ * agent could not discover the thing Faqir's docs are built with. It is
+ * documented here as what it is rather than given a manifest it does not fit.
+ * The rows are derived (see `src/base-layer.ts`), so a second base-layer value
+ * would appear without an edit.
+ */
+function renderBaseLayer(registryPath: string, prefix = "base"): string[] {
+  const files = loadBaseLayer(registryPath);
+  if (files.length === 0) return [];
+  const values = baseLayerUiValues(files);
+  const lines: string[] = ["## Base Layer", ""];
+  lines.push(
+    `${files.length} stylesheets ship under \`${prefix}/\` and are loaded before any component:`,
+  );
+  lines.push("");
+  for (const file of files) {
+    lines.push(`- \`${prefix}/${file.file}\` — ${file.blurb}`);
+  }
+  lines.push("");
+  if (values.length === 0) return lines;
+  lines.push(BASE_LAYER_BLURB);
+  lines.push("");
+  lines.push("| `data-ui` | Defined in | What it styles |");
+  lines.push("|-----------|------------|----------------|");
+  for (const file of files) {
+    for (const value of file.defines) {
+      lines.push(`| \`${value}\` | \`${prefix}/${file.file}\` | ${file.blurb} |`);
+    }
+  }
+  lines.push("");
+  lines.push(
+    "Use it for any run of authored copy — documentation, an article, a changelog, " +
+      "the body of a marketing page. Write ordinary HTML inside; it styles the elements for you:",
+  );
+  lines.push("");
+  lines.push("```html");
+  lines.push('<article data-ui="prose">');
+  lines.push("  <h1>Release notes</h1>");
+  lines.push("  <p>Everything inside is plain HTML — no per-element attributes.</p>");
+  lines.push("  <ul><li>Headings, lists, tables, blockquotes and code blocks are all styled.</li></ul>");
+  lines.push("</article>");
+  lines.push("```");
+  lines.push("");
+  lines.push(
+    "Width is the one thing it sets for you: `max-inline-size: var(--measure-prose)`. " +
+      "Pair it with `container` when the page needs a different measure.",
+  );
+  lines.push("");
   return lines;
 }
 
@@ -1888,6 +1945,10 @@ export async function generateSkill(cwd: string): Promise<string> {
   lines.push(...renderStrictRules());
   lines.push(...renderLayoutSystem());
   lines.push(...renderInventory(byLayer));
+  // The base layer is installed in every project too — and `data-ui="prose"` is
+  // the one value in it that no manifest declares, so nothing else in this file
+  // would ever mention it (task 1.0R-10).
+  lines.push(...renderBaseLayer(getRegistryPath(), `${config.output_dir.replace(/^\.\//, "").replace(/\/$/, "")}/base`));
   lines.push(...renderPlugins(plugins, corePrefix));
 
   // Aliases — alternate names installed components answer to, so an agent
@@ -2026,6 +2087,7 @@ function renderShippedSkill(
   lines.push(...renderStrictRules());
   lines.push(...renderLayoutSystem());
   lines.push(...renderInventory(byLayer));
+  lines.push(...renderBaseLayer(getRegistryPath()));
   lines.push(...renderPlugins(plugins, "registry/core"));
   lines.push(...renderCompositions(byLayer.patterns));
   lines.push(...renderDataDriven());
