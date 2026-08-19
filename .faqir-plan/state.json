@@ -1,9 +1,15 @@
 {
   "$schema": "./state.schema.md",
   "plan": "FAQIR-PLAN.md",
-  "current": "1.0R-10",
-  "last_completed": "1.0R-09",
+  "current": null,
+  "last_completed": "1.0R-10",
   "history": [
+    {
+      "id": "1.0R-10",
+      "completed": "2026-08-19",
+      "commit": "94d63b1",
+      "summary": "Theme preview parity + the data-ui=\"prose\" decision. TWELVE manifests declared `preview: \"<name>.preview.html\"`; SEVEN existed. The field is REQUIRED by the frozen schema and relaxing it would drag SPEC-1.0.md §8.2 plus src/protocol.ts's mirrored amendment table into a task whose Touches names neither — so the field stayed and the FILE became the obligation. `src/theme-preview.ts` renders the gallery once and `gen:theme-previews` writes the five missing (brutalist, default, document, midnight, paper); the other seven stay hand-authored on purpose (contrast paints every focus ring, document-serif is a signed agreement, glass needs a gradient to be translucent against) and BESPOKE_PREVIEWS names them so generated ∪ bespoke covers the theme set with no gap. BOTH writers now guarantee the file: gen-theme-manifests refuses a manifest whose preview is absent, and `faqir theme generate` — which declared a preview it never wrote, for every theme it will ever generate — writes one per theme AND per --document companion, INLINED not linked, because `themes/` there is a drop folder with no registry beside it (141 KB, self-contained). Found in passing: gen:theme-manifests was silently STRIPPING the $schema ref add-schema-refs.mjs adds; it writes it itself now and the twelve regenerate byte-identical. Second half: `data-ui=\"prose\"` was invisible to agents — defined in registry/base/prose.css, used on a dozen pages of Faqir's own site, no manifest, so in NO manifest-derived surface. src/base-layer.ts DERIVES it (a data-ui some base stylesheet selects on that no component claims — today exactly prose; rhythm.css's dozen component selectors correctly yield none), documented as styling rather than given a manifest, on four surfaces: shipped SKILL.md, a project's .faqir/SKILL.md under THAT project's output dir (ui/base/prose.css), llms.txt + llms-full.txt, and components/index.html — the page a reader searched and found nothing on, and which is itself built out of prose. prose.css also violated Strict Rule 2 IN THE BASE LAYER: `max-width: 65ch` against a --measure-prose whose value is exactly 65ch. Two sweeps guard it, scoped to the file because the rest of the registry writes block-axis physical properties by convention; both exemptions are by construction — border WIDTHS have no token ladder here (matching 1px to --space-px would swap a spacing token into a border) and overflow-inline is an axis keyword, not a rename. 3,534 bun tests, every check gate, layout ratchet unchanged, 251 docs-site axe scans green. Nine mutations seeded and observed to fail individually."
+    },
     {
       "id": "1.0R-09",
       "completed": "2026-08-19",
