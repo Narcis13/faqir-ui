@@ -5,6 +5,7 @@
 <!-- @ui:composition tabs card input select switch button dialog -->
 
 <!-- Vertical layout (default) -->
+<!-- @ui:scaffold internal-tool -->
 <div data-ui="settings-page" data-state="default" data-variant="vertical" aria-labelledby="settings-title">
 
   <!-- Page header -->
@@ -234,6 +235,7 @@
     <button data-ui="button" data-part="save-button" data-variant="primary">Save changes</button>
   </div>
 
+  <!-- @ui:scaffold-omit -->
   <!-- Unsaved changes confirmation dialog -->
   <div data-ui="dialog" data-state="closed" data-part="confirm-dialog" id="settings-confirm-dialog">
     <div data-part="overlay" hidden></div>
@@ -258,8 +260,10 @@
       </div>
     </div>
   </div>
+  <!-- @ui:scaffold-omit-end -->
 
 </div>
+<!-- @ui:scaffold-end -->
 
 <!-- Horizontal layout variant (tabs on left, content on right) -->
 <div data-ui="settings-page" data-state="default" data-variant="horizontal" aria-labelledby="settings-horiz-title">

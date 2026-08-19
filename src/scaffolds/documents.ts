@@ -79,6 +79,18 @@ function coreScript(src?: string): string {
   return src ? `\n  <script src="${src}" defer></script>` : "";
 }
 
+/**
+ * The `<body>` contents of a document scaffold: the `<main>` landmark wrapping
+ * the `<article data-ui="document">` itself.
+ *
+ * Split out of the shell so the documentation site can mount the same document
+ * in its own frame (task 1.0R-08) rather than re-deriving a lookalike — the
+ * invoice on the site is the invoice `faqir scaffold invoice` writes.
+ */
+export function documentScaffoldBody(name: DocumentScaffoldName): string {
+  return `<main>\n${name === "invoice" ? INVOICE_BODY : REPORT_BODY}  </main>`;
+}
+
 function documentShell(options: DocumentScaffoldOptions, body: string): string {
   return `<!DOCTYPE html>
 <html lang="en" data-theme="light">
@@ -97,8 +109,8 @@ ${body}  </main>${coreScript(options.coreScriptSrc)}
 </html>`;
 }
 
-function generateInvoice(options: DocumentScaffoldOptions): string {
-  return documentShell(options, `
+/** The invoice document, verbatim — the `<body>` half of the generated page. */
+const INVOICE_BODY = `
   <article data-ui="document" data-variant="invoice" data-format="a4" aria-label="Invoice INV-2026-001">
     <header data-part="doc-header">
       <div>
@@ -254,13 +266,12 @@ function generateInvoice(options: DocumentScaffoldOptions): string {
       <p>Northstar Studio LLC · billing@example.com · +1 555 0100</p>
     </footer>
   </article>
-`);
-}
+`;
 
 const REPORT_IMAGE = "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%221200%22 height=%22480%22 viewBox=%220 0 1200 480%22%3E%3Crect width=%221200%22 height=%22480%22 fill=%22%23e5e7eb%22/%3E%3Cpath d=%22M0 390L260 220L460 320L710 110L930 250L1200 80V480H0Z%22 fill=%22%239ca3af%22/%3E%3Ctext x=%22600%22 y=%22435%22 text-anchor=%22middle%22 font-family=%22Arial,sans-serif%22 font-size=%2232%22 fill=%22%23374151%22%3EREPLACE REPORT IMAGE%3C/text%3E%3C/svg%3E";
 
-function generateReport(options: DocumentScaffoldOptions): string {
-  return documentShell(options, `
+/** The report document, verbatim — the `<body>` half of the generated page. */
+const REPORT_BODY = `
   <article data-ui="document" data-variant="report" data-format="a4" aria-label="Quarterly performance report">
     <header data-part="doc-header">
       <!-- FAQIR_REPLACE: report.title -->
@@ -371,12 +382,11 @@ function generateReport(options: DocumentScaffoldOptions): string {
       <p>Confidential · Internal distribution only</p>
     </footer>
   </article>
-`);
-}
+`;
 
 export function generateDocumentScaffold(
   name: DocumentScaffoldName,
   options: DocumentScaffoldOptions,
 ): string {
-  return name === "invoice" ? generateInvoice(options) : generateReport(options);
+  return documentShell(options, name === "invoice" ? INVOICE_BODY : REPORT_BODY);
 }

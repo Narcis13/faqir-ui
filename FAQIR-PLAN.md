@@ -3402,9 +3402,49 @@ anyone editing `site/`.
 - Nav, sitemap and `llms.txt` updated; `check:docs` green.
 
 **Acceptance criteria**
-- [ ] Every scaffold the CLI can generate is visible on the site.
-- [ ] The print-oriented scaffolds (`invoice`, `report`) are shown as documents, not as component dumps.
-- [ ] Adding a scaffold requires no edit under `site/`.
+- [x] Every scaffold the CLI can generate is visible on the site.
+- [x] The print-oriented scaffolds (`invoice`, `report`) are shown as documents, not as component dumps.
+- [x] Adding a scaffold requires no edit under `site/`.
+
+> **Done.** `scaffolds/` — a gallery plus one page per scaffold — is generated from
+> `SCAFFOLDS`, the CLI's own catalogue: the live document in a `frames/scaffold-<name>.html`
+> frame, the copy-for-agents payload under the pinned CDN preamble, the one command that
+> writes it, and a table of what it installs, linked to each component's page. Nav (top,
+> sidebar primary, and a `Scaffolds` group beside the layer groups), sitemap and both
+> `llms.txt` files follow from the same list. The meta-test registers a sixth scaffold at
+> runtime and asserts the site grows a page, a frame, a payload, a nav entry, a sitemap row
+> and an llms.txt line — three files, nothing else moved, no edit under `site/`.
+>
+> **The task assumed five builders in `src/scaffolds/` and found three.**
+> `admin-dashboard` and `internal-tool` were hand-written HTML inside
+> `src/commands/scaffold.ts` — a page-local `<style>` block, `style="…"` attributes, and
+> `data-part` values belonging to no component. They named `dashboard-shell`, `crud-table`
+> and `settings-page` in the catalogue and composed none of them, so `faqir scaffold
+> admin-dashboard` wrote a page `faqir audit` would have complained about, and the site's
+> "no class attribute, no inline style, zero findings at any severity" gate could not have
+> hosted it. Both are now composed the way `landing-page` has been since 0.7-08: verbatim,
+> out of the pattern's own `@ui:scaffold` block. 303 lines of drifting markup deleted; the
+> two pages entered the axe gate (`tests/a11y/scaffolds.pw.ts`) for the first time.
+>
+> The marker grammar grew two members to make that possible, both authored in the registry
+> rather than inferred. `@ui:scaffold-slot` marks where a *shell* pattern wants the rest of
+> the composition — an admin dashboard is a `dashboard-shell` with a `crud-table` inside its
+> content, not a shell followed by a table. `@ui:scaffold-omit` brackets what a composed
+> page must not carry: `crud-table` and `settings-page` each nest modal dialogs, and inside
+> a page's `<main>` those earn a `landmark` finding, while lifting them out re-parents
+> `crud-table`'s `field` onto the `dialog` that does not declare it and earns `orphan-part`.
+> An unwired modal is dead markup in a starting page; the pattern still ships them and the
+> generated page's guide comment says where to find them.
+>
+> A frame's `<body>` is the CLI's output through `sanitizeReferenceFragment` — the one
+> transform every piece of registry markup on this site gets, because no page here reaches
+> the network. That makes the frame the only site page whose body is not its own markup, so
+> `isScaffoldFramePage` exempts it from the anchor half of the link check (the patterns'
+> `#pricing` placeholders point at an imaginary host app) and from "a frame carries no
+> dashboard-shell" — there, the shell *is* the document. Every other gate applies: audit at
+> every severity, axe in both schemes, no class, no inline style.
+>
+> All six new pages measured zero seams, zero bleeds and zero overlaps at 1280 *and* at 375.
 
 ---
 

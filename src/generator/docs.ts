@@ -123,6 +123,7 @@ import { ALL_RULES, DOCUMENT_RULES } from "../audit/rules";
 // the whole registry instead of at one project (task 0.7-15).
 import { formatContextLlms, formatContextLlmsFull } from "./context";
 import { buildRegistryContext } from "./registry-context";
+import { SCAFFOLDS, SCAFFOLD_NAMES, scaffoldBody, scaffoldCommand, type ScaffoldDef } from "../scaffolds";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 /** Repository root — `src/generator/` is two levels down. */
@@ -146,6 +147,32 @@ export const AGENTS_PAGE = "agents/index.html";
 
 /** The layout guide: the doctrine, the ladder and the archetypes (task 0.8-12). */
 export const LAYOUT_PAGE = "layout/index.html";
+
+/**
+ * The scaffold gallery (task 1.0R-08): every whole page `faqir scaffold` can
+ * write, shown as the document it writes.
+ *
+ * Derived from {@link SCAFFOLDS}, exactly as component pages are derived from
+ * the registry — registering a scaffold publishes its page, its frame, its
+ * copy-for-agents payload, its nav entry, its sitemap row and its llms.txt line
+ * with no edit under `site/` and none here.
+ */
+export const SCAFFOLDS_PAGE = "scaffolds/index.html";
+
+/** One scaffold's documentation page. */
+export function scaffoldPagePath(name: string): string {
+  return `scaffolds/${name}/index.html`;
+}
+
+/** The live document for one scaffold, rendered inside an `<iframe>`. */
+export function scaffoldFramePath(name: string): string {
+  return `${FRAME_PREFIX}scaffold-${name}.html`;
+}
+
+/** One scaffold's copy-for-agents payload, as a file (see {@link snippetPath}). */
+export function scaffoldSnippetPath(name: string): string {
+  return `${SNIPPET_PREFIX}scaffolds/${name}.html.txt`;
+}
 
 /**
  * The frozen protocol, published **with its version in the path** (task 1.0-01).
@@ -1224,6 +1251,25 @@ function renderShell(input: ShellInput): string {
     items: components.filter((c) => c.layer === layer),
   })).filter((g) => g.items.length > 0);
 
+  // The scaffold group, built from the CLI catalogue exactly as the layer groups
+  // are built from the registry: registering a scaffold adds its nav entry.
+  const scaffoldNav = SCAFFOLD_NAMES.length
+    ? `        <details data-docs-nav-group data-docs-layer="scaffolds"${
+        current.startsWith("scaffolds/") ? " open" : ""
+      }>\n` +
+      `          <summary>Scaffolds <span data-ui="badge" data-size="sm">${esc(
+        String(SCAFFOLD_NAMES.length),
+      )}</span></summary>\n` +
+      `          <div data-docs-nav-items>\n` +
+      SCAFFOLD_NAMES.map(
+        (name) =>
+          `            <a data-part="nav-item" href="${u(scaffoldPagePath(name))}"${currentAttr(
+            scaffoldPagePath(name),
+          )}>${esc(name)}</a>`,
+      ).join("\n") +
+      `\n          </div>\n        </details>`
+    : "";
+
   const navGroups = groups
     .map((g) => {
       const open = current.startsWith(`components/${g.layer}/`) ? " open" : "";
@@ -1268,13 +1314,15 @@ function renderShell(input: ShellInput): string {
             ? current === TYPOGRAPHY_PAGE
             : section === "layouts"
               ? [LAYOUT_PAGE, LAYOUTS_PAGE, SPACING_PAGE, DENSITY_PAGE].includes(current)
-              : section === "themes"
-                ? current === THEMES_PAGE
-                : section === "agents"
-                  ? current === AGENTS_PAGE
-                  : section === "spec"
-                    ? current === SPEC_PAGE
-                    : false;
+              : section === "scaffolds"
+                ? current.startsWith("scaffolds/")
+                : section === "themes"
+                  ? current === THEMES_PAGE
+                  : section === "agents"
+                    ? current === AGENTS_PAGE
+                    : section === "spec"
+                      ? current === SPEC_PAGE
+                      : false;
     return active ? ' data-state="active"' : "";
   };
 
@@ -1343,6 +1391,9 @@ ${scripts.map((src) => `<script src="${u(src)}" defer></script>`).join("\n")}
         <a data-part="nav-item" href="${u(THEMES_PAGE)}"${currentAttr(
           THEMES_PAGE,
         )}>Theme gallery</a>
+        <a data-part="nav-item" href="${u(SCAFFOLDS_PAGE)}"${currentAttr(
+          SCAFFOLDS_PAGE,
+        )}>Scaffolds</a>
         <a data-part="nav-item" href="${u(PLAYGROUND_PAGE)}"${currentAttr(
           PLAYGROUND_PAGE,
         )}>Audit playground</a>
@@ -1354,7 +1405,7 @@ ${scripts.map((src) => `<script src="${u(src)}" defer></script>`).join("\n")}
         )}>Protocol ${esc(PROTOCOL_VERSION)}</a>
       </div>
       <div data-docs-nav-groups>
-${navGroups}
+${[scaffoldNav, navGroups].filter(Boolean).join("\n")}
       </div>
     </nav>
   </aside>
@@ -1373,6 +1424,7 @@ ${navGroups}
       <a data-part="link"${topActive("typography")} href="${u(TYPOGRAPHY_PAGE)}">Typography</a>
       <a data-part="link"${topActive("layouts")} href="${u(LAYOUT_PAGE)}">Layouts</a>
       <a data-part="link"${topActive("themes")} href="${u(THEMES_PAGE)}">Themes</a>
+      <a data-part="link"${topActive("scaffolds")} href="${u(SCAFFOLDS_PAGE)}">Scaffolds</a>
       <a data-part="link"${topActive("agents")} href="${u(AGENTS_PAGE)}">For agents</a>
       <a data-part="link"${topActive("spec")} href="${u(SPEC_PAGE)}">Protocol</a>
       <a data-part="link" href="${u(PLAYGROUND_PAGE)}">Playground</a>
@@ -3355,6 +3407,318 @@ function renderThemeGalleryPage(ctx: {
 }
 
 // ---------------------------------------------------------------------------
+// The scaffold gallery (task 1.0R-08)
+// ---------------------------------------------------------------------------
+
+/**
+ * The theme a scaffold's document is shown in: the one the CLI pins for it
+ * (`invoice` and `report` pin `document`), falling back to the site's own.
+ *
+ * A print-oriented scaffold shown in the docs theme would be a component dump
+ * with a page border; shown in its own theme it is the document it is.
+ */
+function scaffoldTheme(def: ScaffoldDef, config: SiteConfig, themes: readonly DocsTheme[]): string {
+  const pinned = def.defaultTheme;
+  if (pinned && themes.some((t) => t.name === pinned)) return pinned;
+  return config.theme;
+}
+
+/**
+ * The live document for one scaffold, as a frame page.
+ *
+ * The markup is {@link scaffoldBody} — the same bytes `faqir scaffold <name>`
+ * writes into the file — run through {@link sanitizeReferenceFragment} for the
+ * same reason every example page is: the registry's own reference markup points
+ * an `<img>` at `example.com`, and no page this site serves reaches the network.
+ * Nothing else is touched, which is what makes the gallery a demonstration
+ * rather than an illustration.
+ */
+function renderScaffoldFrame(ctx: {
+  def: ScaffoldDef;
+  config: SiteConfig;
+  themes: DocsTheme[];
+  registryRoot: string;
+}): SiteFile {
+  const { def } = ctx;
+  const pagePath = scaffoldFramePath(def.name);
+  const u = (to: string) => escAttr(relUrl(pagePath, to));
+  const theme = scaffoldTheme(def, ctx.config, ctx.themes);
+  // A document theme is a paper simulation: it declares light surfaces only, so
+  // the frame pins the scheme instead of following the reader's.
+  const scheme = def.defaultTheme ? "light" : "auto";
+
+  return {
+    path: pagePath,
+    content: `<!DOCTYPE html>
+<html lang="en" data-theme="${escAttr(scheme)}" data-preview-role="scaffold">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${escAttr(`${def.title} scaffold · ${ctx.config.title}`)}</title>
+<link rel="stylesheet" href="${u("styles/faqir.css")}">
+<link rel="stylesheet" href="${u(`styles/themes/${theme}.css`)}" id="${THEME_LINK_ID}" data-theme-name="${escAttr(
+      theme,
+    )}">
+<script src="${u("scripts/gallery.js")}" defer></script>
+<script src="${u("scripts/faqir-core.js")}" defer></script>
+<!-- ${DOCS_GENERATION_MARKER} · the page \`faqir scaffold ${escAttr(def.name)}\` writes -->
+</head>
+<body>
+${sanitizeReferenceFragment(scaffoldBody(def.name, ctx.registryRoot))}
+</body>
+</html>
+`,
+  };
+}
+
+/**
+ * A scaffold's copy-for-agents payload: the whole page under the two-tag CDN
+ * preamble, pinned and integrity-checked. Paste it into an empty file, open the
+ * file, and a complete admin dashboard — or a print-ready invoice — renders with
+ * no repository, no install and no build step.
+ */
+function renderScaffoldSnippet(ctx: {
+  def: ScaffoldDef;
+  config: SiteConfig;
+  themes: DocsTheme[];
+  registryRoot: string;
+  pin: CdnPin;
+}): string {
+  const { def } = ctx;
+  const theme = scaffoldTheme(def, ctx.config, ctx.themes);
+  return `<!DOCTYPE html>
+<html lang="en" data-theme="${def.defaultTheme ? "light" : "auto"}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${escAttr(`${def.title} · ${ctx.config.title}`)}</title>
+${renderCdnPreamble(ctx.pin, theme)}
+</head>
+<body>
+${sanitizeReferenceFragment(scaffoldBody(def.name, ctx.registryRoot))}
+</body>
+</html>
+`;
+}
+
+/** The composition table: what a scaffold installs, linked to each component's page. */
+function renderScaffoldComposition(
+  def: ScaffoldDef,
+  byName: Map<string, DocsComponent>,
+  pagePath: string,
+): string {
+  const link = (name: string): string => {
+    const c = byName.get(name);
+    return c ? monoLink(escAttr(relUrl(pagePath, c.pagePath)), name) : code(name);
+  };
+  return table(
+    ["Layer", "Installed"],
+    [
+      ["Patterns", def.patterns.map(link).join(" ")],
+      ["Components", def.components.map(link).join(" ")],
+    ],
+    "This scaffold installs nothing.",
+  );
+}
+
+/** One scaffold's page: the live document, the payload, and the command. */
+function renderScaffoldPage(ctx: {
+  def: ScaffoldDef;
+  config: SiteConfig;
+  components: DocsComponent[];
+  byName: Map<string, DocsComponent>;
+  themes: DocsTheme[];
+  snippet: string;
+  pin: CdnPin;
+}): SiteFile {
+  const { def } = ctx;
+  const pagePath = scaffoldPagePath(def.name);
+  const u = (to: string) => escAttr(relUrl(pagePath, to));
+  const frame = u(scaffoldFramePath(def.name));
+  const theme = scaffoldTheme(def, ctx.config, ctx.themes);
+  const sourceId = "agent-snippet";
+  const statusId = "agent-snippet-status";
+
+  const command =
+    `      <pre tabindex="0"><code>${esc(
+      `${scaffoldCommand(def.name)}${
+        def.defaultTheme ? `\n# pins the ${def.defaultTheme} theme; override with --theme <name>` : ""
+      }`,
+    )}</code></pre>`;
+
+  const body = [
+    `      <nav data-ui="breadcrumb" data-size="sm" aria-label="Breadcrumb" data-docs-breadcrumbs>
+        <ol data-part="list">
+          <li><a data-part="item" href="${u("index.html")}">Overview</a></li>
+          <li data-part="separator" aria-hidden="true"></li>
+          <li><a data-part="item" href="${u(SCAFFOLDS_PAGE)}">Scaffolds</a></li>
+          <li data-part="separator" aria-hidden="true"></li>
+          <li><span data-part="current" aria-current="page">${esc(def.name)}</span></li>
+        </ol>
+      </nav>`,
+    `      <h1>${esc(def.title)}</h1>`,
+    `      <p><span data-ui="badge" data-variant="primary">scaffold</span> ` +
+      `<span data-ui="badge" data-variant="default">${esc(theme)} theme</span> ` +
+      `<span data-ui="badge" data-variant="default">${esc(
+        `${def.patterns.length} patterns · ${def.components.length} components`,
+      )}</span></p>`,
+    `      <p>${esc(def.description)}.</p>`,
+    section(
+      "command",
+      "The command",
+      `      <p>One command writes the whole page and installs everything it references. ` +
+        `Nothing below is authored by this site — it is the file you get.</p>\n${command}`,
+    ),
+    section(
+      "document",
+      "The document",
+      `      <p>The frame below is the generated page, running live under the site's own stylesheet. ` +
+        `<a data-ui="link" href="${frame}">Open it on its own page</a>.</p>\n` +
+        `      <div data-docs-preview-toolbar>\n` +
+        `        <span data-ui="text" data-size="sm" data-variant="muted">Check the page at three widths.</span>\n` +
+        `        <div data-ui="cluster" data-gap="2" role="group" aria-label="Preview width">\n` +
+        `          <button data-ui="button" data-variant="outline" data-size="sm" type="button" data-preview-size="phone" data-preview-width="23.5rem" data-preview-target="scaffold-preview" aria-pressed="false">Phone</button>\n` +
+        `          <button data-ui="button" data-variant="outline" data-size="sm" type="button" data-preview-size="tablet" data-preview-width="48rem" data-preview-target="scaffold-preview" aria-pressed="false">Tablet</button>\n` +
+        `          <button data-ui="button" data-variant="outline" data-size="sm" type="button" data-preview-size="full" data-preview-width="100%" data-preview-target="scaffold-preview" aria-pressed="true">Full</button>\n` +
+        `        </div>\n` +
+        `      </div>\n` +
+        `      <div data-docs-preview-stage data-docs-scaffold-stage>\n` +
+        `        <iframe id="scaffold-preview" src="${frame}" title="${escAttr(
+          `${def.title} scaffold, running live`,
+        )}" loading="lazy" data-docs-preview-frame data-docs-scaffold-frame></iframe>\n` +
+        `      </div>`,
+    ),
+    section(
+      "copy-for-agents",
+      "Copy for agents",
+      `      <p>The same page as a standalone document, under the two-tag CDN preamble pinned to ` +
+        `<code>${esc(`${ctx.pin.package}@${ctx.pin.version}`)}</code> with subresource integrity. ` +
+        `Paste it into an empty file and open it — no repository, no install, no build step.</p>\n` +
+        `      <p>\n` +
+        `        <button data-ui="button" data-variant="primary" data-size="sm" type="button" ` +
+        `data-copy-snippet="${sourceId}" data-copy-status="${statusId}">Copy for agents</button>\n` +
+        `        <a data-ui="link" href="${u(scaffoldSnippetPath(def.name))}">Open the raw file</a>\n` +
+        `        <span data-ui="text" data-size="sm" data-variant="muted" id="${statusId}" ` +
+        `role="status" aria-live="polite"></span>\n` +
+        `      </p>\n` +
+        `      <pre tabindex="0"><code id="${sourceId}">${esc(ctx.snippet)}</code></pre>`,
+    ),
+    section(
+      "composition",
+      "What it installs",
+      `      <p>Every block on the page is one of these patterns' own canonical example, copied ` +
+        `verbatim — so the generated page is audit-clean, themed from tokens, and free of inline ` +
+        `styles before you edit a word of it.</p>\n` +
+        renderScaffoldComposition(def, ctx.byName, pagePath),
+    ),
+  ].join("\n");
+
+  return {
+    path: pagePath,
+    content: renderShell({
+      pagePath,
+      title: `${def.title} scaffold · ${ctx.config.title}`,
+      description: `${def.description} — generated by \`faqir scaffold ${def.name}\`.`,
+      body,
+      config: ctx.config,
+      components: ctx.components,
+      themes: ctx.themes,
+      current: pagePath,
+      layout: "reference",
+      scripts: ["scripts/copy-snippet.js"],
+    }),
+  };
+}
+
+/** The gallery: every registered scaffold, as the document it produces. */
+function renderScaffoldGalleryPage(ctx: {
+  config: SiteConfig;
+  components: DocsComponent[];
+  themes: DocsTheme[];
+  defs: ScaffoldDef[];
+}): SiteFile {
+  const pagePath = SCAFFOLDS_PAGE;
+  const u = (to: string) => escAttr(relUrl(pagePath, to));
+
+  const cards = ctx.defs
+    .map(
+      (def) =>
+        `        <div data-ui="card" data-variant="outlined" data-docs-theme-card>\n` +
+        `          <div data-part="header">\n` +
+        `            <h3 data-part="title">${esc(def.title)}</h3>\n` +
+        `            <p data-part="description">${esc(def.description)}</p>\n` +
+        `          </div>\n` +
+        `          <div data-part="body">\n` +
+        `            <iframe src="${u(scaffoldFramePath(def.name))}" title="${escAttr(
+          `${def.title} scaffold preview`,
+        )}" loading="lazy"></iframe>\n` +
+        `          </div>\n` +
+        `          <div data-part="footer">\n` +
+        `            <span data-ui="badge" data-variant="secondary">${esc(
+          `${def.patterns.length} patterns`,
+        )}</span>\n` +
+        `            <a data-ui="link" href="${u(scaffoldPagePath(def.name))}">Open the scaffold</a>\n` +
+        `          </div>\n` +
+        `        </div>`,
+    )
+    .join("\n");
+
+  const rows = ctx.defs.map((def) => [
+    monoLink(u(scaffoldPagePath(def.name)), def.name),
+    esc(def.description),
+    def.patterns.map((p) => code(p)).join(" "),
+    def.defaultTheme ? code(def.defaultTheme) : "project's",
+  ]);
+
+  const body = [
+    `      <h1>Scaffolds</h1>`,
+    `      <p>${esc(
+      `${ctx.defs.length} whole pages, each written by one command. A scaffold is not a starter ` +
+        `template that drifts from the framework: every block in it is a registry pattern's own ` +
+        `canonical example, copied verbatim, so the page you get is already audit-clean, ` +
+        `accessible and themed from tokens.`,
+    )}</p>`,
+    section(
+      "gallery",
+      "Every scaffold, running live",
+      `      <p>Each frame is the real generated document, not a screenshot.</p>\n` +
+        `      <div data-ui="grid" data-cols="1" data-cols-lg="2" data-gap="4">\n${cards}\n      </div>`,
+    ),
+    section(
+      "reference",
+      "Scaffold reference",
+      `      <p>Derived from the CLI's own catalogue, so this table cannot advertise a scaffold ` +
+        `<code>faqir scaffold</code> will not write.</p>\n` +
+        table(["Scaffold", "What it is", "Patterns", "Theme"], rows, "No scaffolds are registered."),
+    ),
+    section(
+      "usage",
+      "Using a scaffold",
+      `      <pre tabindex="0"><code>${esc(
+        ctx.defs.map((def) => scaffoldCommand(def.name)).join("\n"),
+      )}</code></pre>\n` +
+        `      <p>Add <code>--theme &lt;name&gt;</code> to pin a theme, or <code>--no-add</code> to ` +
+        `write the page without installing anything it references.</p>`,
+    ),
+  ].join("\n");
+
+  return {
+    path: pagePath,
+    content: renderShell({
+      pagePath,
+      title: `Scaffolds · ${ctx.config.title}`,
+      description: `Every whole page \`faqir scaffold\` writes, running live — landing pages, dashboards, and print-ready documents.`,
+      body,
+      config: ctx.config,
+      components: ctx.components,
+      themes: ctx.themes,
+      current: pagePath,
+      layout: "wide",
+    }),
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Agent surfaces (task 0.7-15)
 // ---------------------------------------------------------------------------
 
@@ -3893,6 +4257,21 @@ export function buildDocsSite(options: DocsSiteOptions = {}): SiteFile[] {
     }
   }
 
+  // The scaffold gallery (task 1.0R-08). Driven by SCAFFOLD_NAMES — the CLI's own
+  // catalogue — so registering a sixth scaffold publishes its page, its frame,
+  // its payload, its nav entry and its sitemap row with no edit here and none
+  // under `site/`.
+  const scaffoldDefs = SCAFFOLD_NAMES.map((name) => SCAFFOLDS[name]);
+  files.push(renderScaffoldGalleryPage({ config, components, themes, defs: scaffoldDefs }));
+  for (const def of scaffoldDefs) {
+    files.push(renderScaffoldFrame({ def, config, themes, registryRoot }));
+    const snippet = renderScaffoldSnippet({ def, config, themes, registryRoot, pin });
+    files.push({ path: scaffoldSnippetPath(def.name), content: snippet });
+    files.push(
+      renderScaffoldPage({ def, config, components, byName, themes, snippet, pin }),
+    );
+  }
+
   for (const c of components) {
     files.push(
       renderComponentPage(c, {
@@ -4020,4 +4399,18 @@ export function isFramePage(path: string): boolean {
 /** True for the site pages that carry the `dashboard-shell` navigation. */
 export function isShellPage(path: string): boolean {
   return isSitePage(path) && !isFramePage(path);
+}
+
+/**
+ * True for a scaffold's live-document frame (task 1.0R-08).
+ *
+ * These are the one page class the generator emits whose `<body>` is not its own
+ * markup: it is the page `faqir scaffold <name>` writes, composed verbatim out of
+ * registry patterns. They carry the same audit + axe gate as every other site
+ * page — an audit-clean scaffold is the whole claim — but their in-body `href`s
+ * are the patterns' own placeholders (`#pricing`, `/`), pointing at an imaginary
+ * host app, exactly as on an `examples/**` page.
+ */
+export function isScaffoldFramePage(path: string): boolean {
+  return isFramePage(path) && basename(path).startsWith("scaffold-");
 }
