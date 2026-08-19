@@ -1,0 +1,205 @@
+<!--
+  Reactive-engine guide source (task 1.0R-09).
+
+  The five `<!-- @faqir:engine-* -->` markers are replaced by src/generator/docs.ts
+  with tables read out of the engine's own §3.0 declarations, PRIORITY, KEY_MAP,
+  MOTION_PRESETS, the `ctrl` literal and the plugin headers — the same parse that
+  builds the skill's references/directives.md. Nothing here restates a directive.
+
+  Each <template data-docs-example> is expanded into a live example and a copyable
+  code block from the exact same inner bytes. The page loads scripts/faqir-core.js,
+  so those examples are running as you read them, and the suite audits the bytes
+  before the page ships.
+-->
+      <div data-docs-guide>
+        <header>
+          <span data-ui="badge" data-variant="primary">faqir-core</span>
+          <h1>The whole engine is attributes on the markup you already wrote.</h1>
+          <p>
+            <code>faqir-core</code> is a zero-dependency reactive runtime with no build
+            step and no template language, held under a gzip budget the release gate
+            enforces. It reads <code>l-*</code> attributes
+            off the DOM, evaluates plain JavaScript against the nearest scope, and updates
+            only what changed. Components stay components: the engine drives them through
+            the same five protocol attributes an agent already knows.
+          </p>
+        </header>
+
+        <section aria-labelledby="engine-load-heading" data-docs-section>
+          <div data-docs-section-heading>
+            <span data-ui="badge" data-variant="secondary">Loading it</span>
+            <h2 id="engine-load-heading">One script tag, bound on DOMContentLoaded.</h2>
+            <p>
+              Add <code>data-manual</code> to bootstrap yourself with <code>Faqir.start()</code>.
+              Anything injected after load — a fetched fragment, a cloned row — is inert
+              until <code>Faqir.initTree(el)</code> walks it.
+            </p>
+          </div>
+          <pre tabindex="0"><code>&lt;script src="core/faqir-core.js" defer&gt;&lt;/script&gt;</code></pre>
+          <p>
+            Expressions are plain JavaScript evaluated against the nearest scope: any name
+            the scope declares is in scope unqualified, and the <code>$…</code> magics below
+            are always available.
+          </p>
+        </section>
+
+        <section aria-labelledby="engine-directives-heading" data-docs-section>
+          <div data-docs-section-heading>
+            <span data-ui="badge" data-variant="secondary">The vocabulary</span>
+            <h2 id="engine-directives-heading">Every directive the engine implements.</h2>
+            <p>
+              Read out of the engine source at build time, so this table cannot describe a
+              runtime other than the one this site ships.
+            </p>
+          </div>
+<!-- @faqir:engine-directives -->
+
+          <template data-docs-example="counter" data-title="A scope, an event and a text binding">
+<div data-ui="cluster" data-gap="3" data-align="center" l-data="{ count: 0 }">
+  <button data-ui="button" data-variant="outline" data-size="sm" type="button" @click="count--">Less</button>
+  <span data-ui="text" data-variant="mono" data-weight="semibold" l-text="count">0</span>
+  <button data-ui="button" data-variant="outline" data-size="sm" type="button" @click="count++">More</button>
+</div>
+          </template>
+
+          <template data-docs-example="two-way" data-title="l-model binds the input both ways">
+<div data-ui="stack" data-gap="3" l-data="{ name: '' }">
+  <label data-ui="label" for="engine-name">Your name</label>
+  <input data-ui="input" id="engine-name" type="text" placeholder="Ada" l-model.trim="name">
+  <p>Hello, <span data-ui="text" data-weight="semibold" l-text="name || 'stranger'">stranger</span>.</p>
+</div>
+          </template>
+
+          <template data-docs-example="keyed-list" data-title="l-for with l-key, and l-if for the empty case">
+<div data-ui="stack" data-gap="3" l-data="{ tasks: [{ id: 1, label: 'Read the manifest' }, { id: 2, label: 'Ship the page' }] }">
+  <ul data-ui="stack" data-gap="2">
+    <template l-for="(task, i) in tasks" l-key="task.id">
+      <li data-ui="cluster" data-gap="3" data-align="center">
+        <span l-text="task.label"></span>
+        <button data-ui="button" data-variant="ghost" data-size="sm" type="button" @click="tasks.splice(i, 1)">Remove</button>
+      </li>
+    </template>
+  </ul>
+  <template l-if="tasks.length === 0">
+    <p>Nothing left. Reload the page to put them back.</p>
+  </template>
+</div>
+          </template>
+
+          <template data-docs-example="show-transition" data-title="l-show, animated by l-transition">
+<div data-ui="stack" data-gap="3" l-data="{ open: true }">
+  <button data-ui="button" data-variant="primary" data-size="sm" type="button" @click="open = !open" l-text="open ? 'Hide the note' : 'Show the note'">Hide the note</button>
+  <div data-ui="surface" data-variant="raised" data-size="md" l-show="open" l-transition="slide-up">
+    <p>Still in the DOM — <code>l-show</code> toggles display, and the engine stamps the motion phases the CSS animates.</p>
+  </div>
+</div>
+          </template>
+        </section>
+
+        <section aria-labelledby="engine-modifiers-heading" data-docs-section>
+          <div data-docs-section-heading>
+            <span data-ui="badge" data-variant="secondary">Modifiers</span>
+            <h2 id="engine-modifiers-heading">Dotted suffixes, per directive.</h2>
+            <p>
+              A modifier is part of the attribute name, never a separate attribute. Times
+              belong to the modifier they qualify — <code>.debounce500ms</code>, not
+              <code>.debounce.500ms</code>, which is two modifiers and a discarded number.
+            </p>
+          </div>
+<!-- @faqir:engine-modifiers -->
+        </section>
+
+        <section aria-labelledby="engine-magics-heading" data-docs-section>
+          <div data-docs-section-heading>
+            <span data-ui="badge" data-variant="secondary">Magics</span>
+            <h2 id="engine-magics-heading">The bridge from an expression to the component.</h2>
+            <p>
+              <code>$state</code>, <code>$variant</code> and <code>$ui</code> are what make
+              this engine a Faqir engine rather than a generic one: they read and write the
+              protocol attributes of the nearest <code>[data-ui]</code>, so a controller
+              setting <code>data-state="open"</code> re-runs every expression that read it.
+            </p>
+          </div>
+<!-- @faqir:engine-magics -->
+
+          <template data-docs-example="magics" data-title="$refs reaches an element, l-bind writes an attribute">
+<div data-ui="stack" data-gap="3" l-data="{ note: '' }">
+  <label data-ui="label" for="engine-note">Leave a note</label>
+  <input data-ui="input" id="engine-note" type="text" l-ref="note" l-model="note" :aria-describedby="note ? 'engine-note-count' : false">
+  <div data-ui="cluster" data-gap="3" data-align="center">
+    <button data-ui="button" data-variant="outline" data-size="sm" type="button" @click="$refs.note.focus()">Focus it</button>
+    <span data-ui="text" data-variant="muted" id="engine-note-count" l-text="note.length + ' characters'">0 characters</span>
+  </div>
+</div>
+          </template>
+        </section>
+
+        <section aria-labelledby="engine-source-heading" data-docs-section>
+          <div data-docs-section-heading>
+            <span data-ui="badge" data-variant="secondary">Server data</span>
+            <h2 id="engine-source-heading">l-source binds a REST collection into the scope.</h2>
+            <p>
+              <code>l-source:messages="/api/messages"</code> injects <code>messages</code>,
+              <code>messagesLoading</code>, <code>messagesError</code> and a
+              <code>$messages</code> CRUD controller. The example below reads this site's own
+              static endpoint, so what you see is a real request.
+            </p>
+          </div>
+<!-- @faqir:engine-source -->
+
+          <template data-docs-example="source" data-title="A live collection, loading state and all">
+<div data-ui="stack" data-gap="3" l-data l-source:messages="../api/messages">
+  <p l-show="messagesLoading">Loading…</p>
+  <p l-show="messagesError" l-text="messagesError"></p>
+  <ul data-ui="stack" data-gap="2">
+    <template l-for="message in messages" l-key="message.id">
+      <li data-ui="cluster" data-gap="3" data-align="baseline">
+        <span data-ui="text" data-weight="semibold" l-text="message.sender"></span>
+        <span data-ui="text" data-variant="muted" l-text="message.subject"></span>
+      </li>
+    </template>
+  </ul>
+</div>
+          </template>
+        </section>
+
+        <section aria-labelledby="engine-plugins-heading" data-docs-section>
+          <div data-docs-section-heading>
+            <span data-ui="badge" data-variant="secondary">Plugins</span>
+            <h2 id="engine-plugins-heading">The official plugins, each one file.</h2>
+            <p>
+              A plugin adds directives and magics to the same expression language. Copy the
+              file, load it after the engine, and the vocabulary is there. Each row and each
+              example below is read from the plugin's own source header.
+            </p>
+          </div>
+<!-- @faqir:engine-plugins -->
+        </section>
+
+        <section aria-labelledby="engine-inspect-heading" data-docs-section>
+          <div data-docs-section-heading>
+            <span data-ui="badge" data-variant="secondary">Inspecting a live page</span>
+            <h2 id="engine-inspect-heading">window.__FAQIR_DEVTOOLS__, in both builds.</h2>
+            <p>
+              Both engine builds install the handle (<code>version: 1</code>). Use it when
+              driving a browser to check what the engine actually bound:
+              <code>inspect(el|selector)</code> for one element,
+              <code>scopes(within?)</code> for the declared scope roots,
+              <code>components(within?)</code> for every <code>[data-ui]</code> with its
+              parts and controller, <code>stores()</code> for the registered stores,
+              <code>warnings()</code> for recorded diagnostics, and <code>dev</code>, which
+              is true only under the development build.
+            </p>
+            <p>
+              <code>core/faqir-core.dev.js</code> behaves identically and reports four
+              diagnostic classes with the offending element's <code>outerHTML</code>: a
+              failed expression, an <code>l-…</code> attribute nothing handles, an unkeyed
+              <code>l-for</code> that reordered, and an <code>l-html</code> write. Develop
+              against it; ship <code>core/faqir-core.js</code>. <code>faqir dev</code> also
+              injects an inspector overlay — <kbd data-ui="kbd">Ctrl</kbd> +
+              <kbd data-ui="kbd">Shift</kbd> + <kbd data-ui="kbd">F</kbd> — which is served
+              by the dev server and never written into a project.
+            </p>
+          </div>
+        </section>
+      </div>

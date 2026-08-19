@@ -55,7 +55,20 @@ import {
   formatContextLlmsFull,
   formatContextMarkdown,
 } from "../../src/generator/context";
-import { buildDocsSite, esc, LAYOUT_PAGE, parseTokenReference } from "../../src/generator/docs";
+import {
+  buildDocsSite,
+  esc,
+  isRetiredPage,
+  isShellPage,
+  relUrl,
+  routeSegment,
+  DOCS_GENERATION_MARKER,
+  ENGINE_PAGE,
+  LAYOUT_PAGE,
+  RESPONSIVE_PAGE,
+  RETIRED_PAGES,
+  parseTokenReference,
+} from "../../src/generator/docs";
 import { generateShippedSkillFiles } from "../../src/generator/skill";
 
 const ROOT = join(import.meta.dir, "../..");
@@ -480,6 +493,124 @@ describe("docs site — the layout guide and the token reference", () => {
     }
   });
 });
+
+// ── 4b. two routes that differed by one character  [task 1.0R-09] ───────────
+//
+// `/layout/` (the guide) and `/layouts/` (the lab) were both linked from the
+// home page and told apart only by their nav labels — which is no help at all
+// in a prompt, a bookmark or a bug report. The lab moved to `/responsive/`, the
+// old path is a signpost naming both destinations, and the property below keeps
+// the whole published route set out of that shape rather than fixing one pair.
+
+describe("published routes cannot be mistyped into one another", () => {
+  const files = buildDocsSite();
+  const page = (path: string) => {
+    const f = files.find((x) => x.path === path);
+    expect(f, `site is missing ${path}`).toBeDefined();
+    return f!.content;
+  };
+
+  /** Levenshtein distance — the number of keystrokes between two routes. */
+  function editDistance(a: string, b: string): number {
+    const rows = Array.from({ length: a.length + 1 }, (_, i) =>
+      Array.from({ length: b.length + 1 }, (_, j) => (i === 0 ? j : j === 0 ? i : 0)),
+    );
+    for (let i = 1; i <= a.length; i++) {
+      for (let j = 1; j <= b.length; j++) {
+        rows[i][j] = Math.min(
+          rows[i - 1][j] + 1,
+          rows[i][j - 1] + 1,
+          rows[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1),
+        );
+      }
+    }
+    return rows[a.length][b.length];
+  }
+
+  it("measures its own ruler", () => {
+    expect(editDistance("layout", "layouts")).toBe(1);
+    expect(editDistance("layout", "responsive")).toBeGreaterThan(1);
+    expect(editDistance("engine", "engine")).toBe(0);
+  });
+
+  it("keeps every pair of published top-level routes at least two keystrokes apart", () => {
+    const routes = [
+      ...new Set(
+        files
+          .filter((f) => isShellPage(f.path) && !isRetiredPage(f.path))
+          .map((f) => routeSegment(f.path)),
+      ),
+    ].sort();
+    expect(routes.length).toBeGreaterThan(10);
+    expect(routes).toContain(routeSegment(LAYOUT_PAGE));
+    expect(routes).toContain(routeSegment(RESPONSIVE_PAGE));
+    expect(routes).toContain(routeSegment(ENGINE_PAGE));
+
+    const collisions: string[] = [];
+    for (let i = 0; i < routes.length; i++) {
+      for (let j = i + 1; j < routes.length; j++) {
+        if (editDistance(routes[i], routes[j]) < 2) {
+          collisions.push(`/${routes[i]}/ ↔ /${routes[j]}/`);
+        }
+      }
+    }
+    expect(collisions.join("\n")).toBe("");
+  });
+
+  it("keeps the retired URL resolving, as a signpost rather than a redirect", () => {
+    for (const entry of RETIRED_PAGES) {
+      const signpost = page(entry.path);
+      // Both destinations must be offered by the SIGNPOST, not merely by the
+      // navigation shell every page carries — which links the guide anyway.
+      const body = signpost.slice(signpost.indexOf("<main"), signpost.indexOf("</main>"));
+      // Not a redirect: landing here after mistyping the OTHER route must not
+      // quietly serve the lab.
+      expect(signpost).not.toContain("http-equiv");
+      expect(body).toContain(`href="${relUrl(entry.path, entry.movedTo)}"`);
+      expect(body).toContain(`href="${relUrl(entry.path, entry.confusedWith)}"`);
+      expect(signpost).toContain('<meta name="robots" content="noindex">');
+      // And it is a page of this site: same shell, same gates.
+      expect(isShellPage(entry.path)).toBe(true);
+      expect(signpost).toContain(DOCS_GENERATION_MARKER);
+    }
+  });
+
+  it("points no internal link, nav entry or sitemap row at a retired path", () => {
+    const sitemap = files.find((f) => f.path === "sitemap.xml")!.content;
+    const offenders: string[] = [];
+    for (const entry of RETIRED_PAGES) {
+      const dir = entry.path.slice(0, entry.path.lastIndexOf("/"));
+      if (sitemap.includes(`/${dir}/`)) offenders.push(`sitemap → ${entry.path}`);
+      for (const f of files) {
+        if (!f.path.endsWith(".html") || f.path === entry.path) continue;
+        for (const el of parseDocument(f.content, f.path).elements) {
+          const href = el.attrs["href"];
+          if (!href || /^(?:https?:|mailto:|tel:|data:|#)/i.test(href)) continue;
+          const resolved = resolveFrom(f.path, href.split("#")[0]);
+          if (resolved === entry.path) offenders.push(`${f.path} → ${href}`);
+        }
+      }
+    }
+    expect(offenders.join("\n")).toBe("");
+  });
+
+  it("still links the lab and the guide from the home page, at their new URLs", () => {
+    const home = page("index.html");
+    expect(home).toContain(`href="${RESPONSIVE_PAGE}"`);
+    expect(home).toContain(`href="${LAYOUT_PAGE}"`);
+    expect(home).toContain(`href="${ENGINE_PAGE}"`);
+  });
+});
+
+/** Resolve a site-relative href against the directory of the page holding it. */
+function resolveFrom(fromPage: string, href: string): string {
+  const parts = fromPage.includes("/") ? fromPage.slice(0, fromPage.lastIndexOf("/")).split("/") : [];
+  for (const seg of href.split("/")) {
+    if (seg === "..") parts.pop();
+    else if (seg !== "." && seg !== "") parts.push(seg);
+  }
+  return parts.join("/");
+}
 
 // ── 5. the freeze list still names what v0.8 added ──────────────────────────
 

@@ -11,7 +11,9 @@ import {
   DEMO_MESSAGES_API,
   discoverDocsComponents,
   ICONS_PAGE,
+  isRetiredPage,
   isShellPage,
+  RETIRED_PAGES,
   NOT_FOUND_PAGE,
   parseTokenReference,
   ROBOTS_FILE,
@@ -160,11 +162,22 @@ describe("static publishing surfaces", () => {
     expect(file(ROBOTS_FILE)).toContain(`Sitemap: ${SITE_URL}/${SITEMAP_FILE}`);
     const sitemap = file(SITEMAP_FILE);
     const publicPages = files
-      .filter((candidate) => isShellPage(candidate.path) && candidate.path !== NOT_FOUND_PAGE)
+      .filter(
+        (candidate) =>
+          isShellPage(candidate.path) &&
+          candidate.path !== NOT_FOUND_PAGE &&
+          // A retired URL resolves; it is not advertised (task 1.0R-09).
+          !isRetiredPage(candidate.path),
+      )
       .map((candidate) => candidate.path);
     const locations = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]);
     expect(locations).toEqual(publicPages.map((path) => canonicalUrl(config, path)));
     expect(sitemap).not.toContain(NOT_FOUND_PAGE);
+    for (const entry of RETIRED_PAGES) {
+      expect(sitemap, `${entry.path} is retired and must not be in the sitemap`).not.toContain(
+        canonicalUrl(config, entry.path),
+      );
+    }
     expect(sitemap).not.toMatch(/<lastmod>/);
   });
 

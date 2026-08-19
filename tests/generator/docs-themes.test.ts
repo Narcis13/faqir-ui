@@ -32,7 +32,8 @@ import {
   scaffoldPagePath,
   themePreviewPath,
   PLAYGROUND_PAGE,
-  LAYOUTS_PAGE,
+  ENGINE_PAGE,
+  RESPONSIVE_PAGE,
   THEMES_PAGE,
   THEME_LINK_ID,
   SITE_SCRIPTS,
@@ -259,7 +260,12 @@ describe("site JavaScript", () => {
       "scripts/playground.js",
     ]);
     expect(scriptsOf(THEMES_PAGE)).toEqual(["scripts/gallery.js"]);
-    expect(scriptsOf(LAYOUTS_PAGE)).toEqual([
+    expect(scriptsOf(RESPONSIVE_PAGE)).toEqual([
+      "scripts/gallery.js",
+      "scripts/faqir-core.js",
+    ]);
+    // The engine page's examples are the engine running (task 1.0R-09).
+    expect(scriptsOf(ENGINE_PAGE)).toEqual([
       "scripts/gallery.js",
       "scripts/faqir-core.js",
     ]);
@@ -286,15 +292,17 @@ describe("site JavaScript", () => {
 
   it("keeps documentation progressive: shared wiring plus only page-specific scripts", () => {
     // Every shell page has the small shared appearance/navigation layer. A
-    // component page adds only copy wiring, while the layout lab adds the core
-    // engine for its live table recipe. There is still no inline script.
+    // component page adds only copy wiring, while the responsive lab and the
+    // engine page add the core engine — the first for its live table recipe,
+    // the second because its examples ARE the engine. Still no inline script.
     const documentation = files.filter(
       (f) =>
         isShellPage(f.path) &&
         f.path !== PLAYGROUND_PAGE &&
         f.path !== THEMES_PAGE,
     );
-    expect(documentation.length).toBe(components.length + 13 + SCAFFOLD_NAMES.length);
+    // +2 on 1.0R-09: the engine page, and the signpost at the retired lab URL.
+    expect(documentation.length).toBe(components.length + 15 + SCAFFOLD_NAMES.length);
     for (const f of documentation) {
       const scripts = [...f.content.matchAll(/<script\b[^>]*>/g)].map((m) => m[0]);
       // A scaffold page carries the same copy-for-agents wiring a component page
@@ -307,7 +315,7 @@ describe("site JavaScript", () => {
             `<script src="${relUrl(f.path, "scripts/gallery.js")}" defer>`,
             `<script src="${relUrl(f.path, "scripts/copy-snippet.js")}" defer>`,
           ]
-        : f.path === LAYOUTS_PAGE
+        : f.path === RESPONSIVE_PAGE || f.path === ENGINE_PAGE
           ? [
               `<script src="${relUrl(f.path, "scripts/gallery.js")}" defer>`,
               `<script src="${relUrl(f.path, "scripts/faqir-core.js")}" defer>`,

@@ -36,6 +36,7 @@ import {
   scaffoldFramePath,
   scaffoldPagePath,
   scaffoldSnippetPath,
+  parseGuideExamples,
   parseTokenReference,
   relUrl,
   renderOverlayPreviewRules,
@@ -49,12 +50,23 @@ import {
   NOT_FOUND_PAGE,
   OVERLAY_PREVIEW_ATTR,
   OVERLAY_PREVIEW_SURFACES,
+  ENGINE_PAGE,
+  RESPONSIVE_PAGE,
   SCAFFOLDS_PAGE,
   SITEMAP_FILE,
   LLMS_INDEX_FILE,
   type DocsComponent,
   type SiteFile,
 } from "../../src/generator/docs";
+import {
+  loadPluginMetadata,
+} from "../../src/generator/plugins";
+import {
+  parseEngineMap,
+  parseEngineVocabulary,
+  parseSourceController,
+} from "../../src/generator/skill";
+import { SPEC_FILE } from "../../src/protocol";
 import { auditHtmlSource } from "../../src/audit/checker";
 import { ALL_RULES, DOCUMENT_RULES } from "../../src/audit/rules";
 import { parseDocument } from "../../src/parser/html-parser";
@@ -133,9 +145,10 @@ describe("docs site coverage", () => {
     expect(html.length).toBe(sitePages.length + examplePages.length);
     expect(shellPages.length + framePages.length).toBe(sitePages.length);
     // home, component index, icons, typography, layout guide, responsive lab,
-    // protocol spec, spacing, density, tokens, playground, theme gallery,
-    // agents, 404, and the scaffold gallery — plus one page per scaffold
-    expect(shellPages.length).toBe(components.length + 15 + SCAFFOLD_NAMES.length);
+    // reactive engine, the signpost at the retired lab URL, protocol spec,
+    // spacing, density, tokens, playground, theme gallery, agents, 404, and the
+    // scaffold gallery — plus one page per scaffold
+    expect(shellPages.length).toBe(components.length + 17 + SCAFFOLD_NAMES.length);
     // one gallery frame per theme, and one live document per scaffold
     expect(framePages.length).toBe(themes.length + SCAFFOLD_NAMES.length);
     const assets = files.filter((f) => !f.path.endsWith(".html")).map((f) => f.path);
@@ -181,12 +194,12 @@ describe("docs site coverage", () => {
   });
 
   it("publishes a dedicated responsive layout lab", () => {
-    const layouts = page("layouts/index.html");
-    expect(layouts).toContain("Live layout lab");
-    expect(layouts).toContain('data-ui="cluster"');
-    expect(layouts).toContain('data-ui="switcher"');
-    expect(layouts).toContain('data-cols-lg="4"');
-    expect(layouts).toContain('scripts/faqir-core.js');
+    const lab = page(RESPONSIVE_PAGE);
+    expect(lab).toContain("Live layout lab");
+    expect(lab).toContain('data-ui="cluster"');
+    expect(lab).toContain('data-ui="switcher"');
+    expect(lab).toContain('data-cols-lg="4"');
+    expect(lab).toContain('scripts/faqir-core.js');
   });
 });
 
@@ -982,6 +995,144 @@ describe("regeneration", () => {
     for (const f of sitePages) {
       expect(f.content).not.toMatch(/\b20\d\d-\d\d-\d\dT\d\d:\d\d/);
     }
+  });
+});
+
+// ── the reactive engine page (task 1.0R-09) ─────────────────────────────────
+
+describe("the reactive engine has a page, derived from the engine", () => {
+  const engineSource = readFileSync(join(REPO, "src", "core-src", "engine.js"), "utf8");
+  const vocabulary = parseEngineVocabulary(engineSource);
+  const plugins = loadPluginMetadata(join(REGISTRY, "core", "plugins"));
+  const enginePage = page(ENGINE_PAGE);
+
+  it("names every directive, modifier and magic the engine declares", () => {
+    // The tripwire 1.0R-03 points at `references/directives.md`, pointed at the
+    // site instead: both are renderings of one parse, so neither can document a
+    // vocabulary the other does not.
+    expect(vocabulary.directives.length).toBeGreaterThan(10);
+    expect(vocabulary.magics.length).toBeGreaterThan(5);
+
+    // Each name is required in its own TABLE CELL, not merely somewhere in the
+    // page: `l-teleport` is also named by the application-order paragraph, so a
+    // looser assertion passes with the row deleted.
+    const missing: string[] = [];
+    const cell = (value: string) => enginePage.includes(`<td><code>${esc(value)}</code></td>`);
+    for (const d of vocabulary.directives) {
+      if (d.placement === "internal") continue;
+      if (!cell(d.attribute) || !enginePage.includes(esc(d.example))) missing.push(d.attribute);
+    }
+    for (const m of vocabulary.magics) {
+      // `$scope` is an engine internal; it is NAMED on the page as one rather
+      // than dropped, exactly as the skill reference names it — in prose, not
+      // in the vocabulary table.
+      const named = m.where === "internal" ? enginePage.includes(`<code>${esc(m.name)}</code>`) : cell(m.name);
+      if (!named) missing.push(m.name);
+    }
+    for (const m of vocabulary.modifiers) {
+      if (!cell(m.modifier)) missing.push(`${m.directive}${m.modifier}`);
+    }
+    expect(missing.join(", ")).toBe("");
+  });
+
+  it("reads the derived lists out of the code rather than repeating them", () => {
+    // PRIORITY, KEY_MAP, MOTION_PRESETS and the `ctrl` literal are already code.
+    for (const [name] of parseEngineMap(engineSource, "MOTION_PRESETS")) {
+      expect(enginePage, `${name} is a transition preset the page omits`).toContain(
+        `<code>${name}</code>`,
+      );
+    }
+    for (const [alias] of parseEngineMap(engineSource, "KEY_MAP")) {
+      expect(enginePage, `.${alias} is a key alias the page omits`).toContain(
+        `<code>.${alias}</code>`,
+      );
+    }
+    const controller = parseSourceController(engineSource);
+    expect(controller.length).toBeGreaterThan(3);
+    for (const method of controller) {
+      expect(enginePage, `$<name>.${method.name}() is missing`).toContain(
+        `<code>$&lt;name&gt;.${method.name}(${esc(method.params)})</code>`,
+      );
+    }
+  });
+
+  it("documents the vocabulary every official plugin provides", () => {
+    expect(plugins.length).toBeGreaterThan(3);
+    for (const plugin of plugins) {
+      expect(enginePage, `${plugin.name} is missing from the page`).toContain(esc(plugin.name));
+      for (const provided of plugin.provides) {
+        expect(enginePage, `${plugin.name} provides ${provided}, undocumented`).toContain(
+          `<code>${esc(provided)}</code>`,
+        );
+      }
+    }
+  });
+
+  it("audits its live examples, and mounts the bytes it audited", () => {
+    const authored = readFileSync(join(REPO, "site", "content", "engine.html"), "utf8");
+    const examples = parseGuideExamples(authored);
+    expect(examples.length).toBeGreaterThanOrEqual(4);
+    expect(new Set(examples.map((e) => e.id)).size).toBe(examples.length);
+
+    const manifests = auditManifests();
+    for (const example of examples) {
+      const findings = auditHtmlSource({
+        source: example.html,
+        file: `${ENGINE_PAGE}#${example.id}`,
+        manifests,
+      });
+      expect(
+        findings.map((f) => `${f.severity}/${f.rule_id}: ${f.message}`).join("\n"),
+      ).toBe("");
+      // Rendered live, and printed as source, from one set of bytes.
+      expect(enginePage, `${example.id} is not mounted from its source bytes`).toContain(
+        `\n${example.html}\n`,
+      );
+      expect(enginePage, `${example.id} prints markup it does not run`).toContain(
+        `<code>${esc(example.html)}</code>`,
+      );
+    }
+    // Every example is engine markup, and the page loads the engine, so what is
+    // on the page is running rather than illustrated.
+    expect(examples.some((e) => /\bl-data\b/.test(e.html))).toBe(true);
+    expect(examples.some((e) => /\bl-for\b/.test(e.html) && /\bl-key\b/.test(e.html))).toBe(true);
+    expect(enginePage).toContain('<script src="../scripts/faqir-core.js" defer></script>');
+  });
+
+  it("grows a row when the engine declares one more directive, with no generator edit", () => {
+    const root = join(TMP, "engine-plus-one");
+    rmSync(TMP, { recursive: true, force: true });
+    mkdirSync(join(root, "src", "core-src"), { recursive: true });
+    // Everything else `buildDocsSite` reads out of the package root, verbatim.
+    for (const rel of [
+      ["packages", "core", "cdn.json"],
+      ["docs", "layout.md"],
+      [SPEC_FILE],
+    ] as const) {
+      const from = join(REPO, ...rel);
+      const to = join(root, ...rel);
+      mkdirSync(dirname(to), { recursive: true });
+      cpSync(from, to);
+    }
+    writeFileSync(
+      join(root, "src", "core-src", "engine.js"),
+      engineSource.replace(
+        "  // @ui:directive l-teleport",
+        "  // @ui:directive l-probe | — | any element | l-probe=\"x\" | A probe directive that exists only to prove the page is derived.\n" +
+          "  // @ui:modifier l-probe .zz | A probe modifier.\n" +
+          "  // @ui:magic $probe | every expression | A probe magic.\n" +
+          "  // @ui:directive l-teleport",
+      ),
+    );
+
+    const grown = buildDocsSite({ packageRoot: root });
+    const grownPage = grown.find((f) => f.path === ENGINE_PAGE)!.content;
+    expect(grownPage).toContain("<code>l-probe</code>");
+    expect(grownPage).toContain("<code>.zz</code>");
+    expect(grownPage).toContain("<code>$probe</code>");
+    // …and the page that ships does not, because the engine does not declare it.
+    expect(enginePage).not.toContain("l-probe");
+    rmSync(TMP, { recursive: true, force: true });
   });
 });
 

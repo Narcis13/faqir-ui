@@ -194,8 +194,8 @@ document order is the traversal order: these are the things that should be true 
 | 1.0R-05 | SKILL.md surface completion: commands, scaffolds, themes | ✅ |
 | 1.0R-06 | Layout-lint gains a 375px viewport (the measurement) | ✅ |
 | 1.0R-07 | Fix the three components that bleed at phone width | ✅ |
-| 1.0R-08 | Site: the five scaffolds get a gallery | ⬜ |
-| 1.0R-09 | Site: reactive-engine page; `/layout/` vs `/layouts/` disambiguated | ⬜ |
+| 1.0R-08 | Site: the five scaffolds get a gallery | ✅ |
+| 1.0R-09 | Site: reactive-engine page; `/layout/` vs `/layouts/` disambiguated | ✅ |
 | 1.0R-10 | Theme preview parity + the `data-ui="prose"` decision | ⬜ |
 | 1.0R-11 | `unknown-component` audit rule | ⬜ |
 
@@ -3475,9 +3475,50 @@ what it is, and leave the old path resolving rather than 404-ing.
 - The two layout URLs differ by more than a trailing character (asserted), and no internal link or sitemap entry points at a retired path.
 
 **Acceptance criteria**
-- [ ] The reactive engine is documented on the site, derived from the engine.
-- [ ] Neither layout URL can be mistyped into the other.
-- [ ] `check:docs` green; the link sweep finds nothing dangling.
+- [x] The reactive engine is documented on the site, derived from the engine. (`engine/index.html` — 17 directives, 18 modifiers, 11 magics + the named internal, the priority ladder, the key aliases, the transition presets, the `$<name>` controller API and the five plugins, every one of them read out of `src/core-src/engine.js` §3.0 and `registry/core/plugins/` by the parsers 1.0R-03 wrote for `references/directives.md`. The tripwire requires each name in its own table CELL — `l-teleport` is also named by the application-order paragraph, so a looser assertion passes with the row deleted — and a fixture package root that declares `l-probe` / `.zz` / `$probe` grows all three rows with no generator edit.)
+- [x] Neither layout URL can be mistyped into the other. (The lab moved `/layouts/` → `/responsive/`; the guide keeps `/layout/`. Asserted as a property over the whole published route set, not for one pair: every pair of top-level routes is at least two keystrokes apart by Levenshtein, with the ruler itself checked. The retired path is a SIGNPOST, not a redirect — a redirect would fix the bookmark and re-create the defect, since anyone landing on `/layouts/` may have mistyped `/layout/` — so it names both destinations, carries `noindex`, and is out of the sitemap.)
+- [x] `check:docs` green; the link sweep finds nothing dangling. (`check:docs` 331 files; the site's own link integrity case resolves every href and anchor; a new case proves no page, nav entry or sitemap row points at a retired path. All six generated-artifact gates, `audit:registry`, `size`, `check:bindings` and typecheck green; 3,516 bun tests; a11y green on the new pages in both schemes; layout budget re-recorded at 194 pages with the new and moved pages at 0 seams / 0 bleeds / 0 overlaps at 1280 AND 375, and every ratcheted total unchanged.)
+
+> **Done.** Two holes, both closed by derivation.
+>
+> The engine page is authored prose and live examples around five generated
+> tables (`site/content/engine.html` + the `@faqir:engine-*` markers), and it
+> loads `scripts/faqir-core.js`, so its examples are the engine running rather
+> than the engine illustrated. `tests/generator/engine-page.test.ts` mounts every
+> authored example under `faqir-core.dev.js` and asserts it binds, reacts and
+> draws **no diagnostic** from the dev engine: the counter counts, `.trim` puts
+> the trimmed value in the scope, the keyed list reconciles a removal and then
+> reveals its `l-if` empty state, `l-show` flips and stamps `data-motion`, and
+> `l-source` loads the site's own `api/messages` payload and renders a row per
+> message.
+>
+> **That runtime test found a shipped bug on its first run.** `parseGuideExamples`
+> ended an example at the first `</template>` — fine for the spacing and density
+> guides, wrong for the first guide whose examples ARE templates: `l-for` and
+> `l-if` are `<template>` directives, so the keyed-list example shipped
+> **truncated** at the closing tag of its own `l-for`. It audited clean anyway,
+> because the audit tolerates an unclosed element, and it rendered as *something*,
+> because a browser closes what the author did not. The extractor now finds the
+> close tag by counting depth, and `renderGuideExamples` mounts from the same
+> scan. A second latent bug came out of the same page: `replaceGuideMarker`
+> passed its generated block to `String.replace` as a *string*, which reads `$&`
+> and `$<name>` as substitution patterns — and the `l-source` controller is
+> literally called `$<name>`, so the engine table ate it. It is a replacer
+> function now.
+>
+> On the second hole, the judgement call was **signpost, not redirect**. The
+> obvious fix — 301 `/layouts/` → `/responsive/` — fixes the bookmark and keeps
+> the defect: `/layouts/` is one keystroke from `/layout/`, so a reader who lands
+> there may have been aiming at the guide, and quietly serving them the lab is
+> the confusion this task removes. The page at the retired URL names both
+> destinations and makes the reader choose. It is `noindex`, it is filtered out
+> of the sitemap, and it is the one shell page the route-distance property
+> exempts — because it is the exemption.
+>
+> Not done, deliberately: the engine is in the sidebar of every page and on the
+> home page, but NOT in the top nav. That bar is `overflow: hidden` with nine
+> links at 1280; a tenth would clip an existing one silently, and the layout
+> ratchet cannot see a clip.
 
 ---
 

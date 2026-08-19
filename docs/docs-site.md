@@ -25,7 +25,8 @@ registry copy with one extra component in it.
 |---|---|---|
 | `site/site.config.json` | you | Title, tagline, description, canonical URL, theme, footer. |
 | `site/content/home.html` | you | Hand-written homepage narrative; generated stats, patterns, and theme controls are inserted at markers. |
-| `site/content/layouts.html` | you | Hand-written responsive layout lab. |
+| `site/content/responsive.html` | you | Hand-written responsive layout lab (published at `responsive/`). |
+| `site/content/engine.html` | you | Hand-written reactive-engine guide; the vocabulary tables are inserted at markers, read out of the engine itself. |
 | `site/content/playground.html` | you | Hand-written: the playground's sample markup. |
 | `site/styles/docs.css` | you | Documentation presentation layer: attribute selectors, tokens, responsive rules, reduced-motion fallback. |
 | `site/lib/playground.js` | you | The playground and live-preview wiring. |
@@ -45,7 +46,10 @@ components/index.html             every component, grouped by layer
 components/<layer>/<name>.html    one page per component
 icons/index.html                  searchable icon set derived from the icon manifest
 typography/index.html             type tokens, hierarchy and prose specimens
-layouts/index.html                responsive layout doctrine + live lab
+layout/index.html                 the layout doctrine, ladder and archetypes
+responsive/index.html             the responsive lab: live, resizable demos
+engine/index.html                 faqir-core: directives, magics, plugins
+layouts/index.html                signpost for the retired responsive-lab URL
 tokens/index.html                 token reference, grouped by token file
 playground/index.html             in-browser audit playground
 themes/index.html                 theme gallery + instant switcher
