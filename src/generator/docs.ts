@@ -121,11 +121,14 @@ import { parseDocument, type ParsedElement } from "../parser/html-parser";
 import type { ThemeManifest } from "../theme-manifest";
 // The playground's rule legend is derived from the engine's own rule lists, so it
 // cannot describe a rule the shipped browser bundle does not run.
-import { ALL_RULES, DOCUMENT_RULES } from "../audit/rules";
+import { getHtmlRuleInventory } from "../audit/rules";
 // The hosted llms.txt pair is the CLI's own `--format llms` generator pointed at
 // the whole registry instead of at one project (task 0.7-15).
 import { formatContextLlms, formatContextLlmsFull } from "./context";
 import { BASE_LAYER_BLURB, baseLayerUiValues, loadBaseLayer } from "../base-layer";
+// The playground audits against the registry's own name list — the same one the
+// CLI uses — so `unknown-component` says the same thing in both (task 1.0R-11).
+import { knownUiValues } from "../utils/components";
 // The reactive-engine page reads the engine's own §3.0 declarations through the
 // same parsers that build the skill's `references/directives.md` (task 1.0R-03):
 // the site and the skill are two renderings of one vocabulary, not two lists.
@@ -361,6 +364,20 @@ export const THEME_LINK_ID = "faqir-theme";
 
 /** The global `scripts/faqir-manifests.js` installs, for the playground. */
 export const MANIFESTS_GLOBAL = "__FAQIR_MANIFESTS__";
+
+/**
+ * The second global `scripts/faqir-manifests.js` installs: every `data-ui` value
+ * the registry defines — components, aliases and base-layer values (task
+ * 1.0R-11).
+ *
+ * It is not derivable from the manifest payload beside it: the payload has no
+ * entry for `prose` (base-layer styling with no manifest), and a page deriving
+ * "the registry" from whatever manifests it was handed would be right only for a
+ * payload that happens to be complete. So the generator ships the list the CLI
+ * computes, and the playground hands it to `createAuditor`; without it the
+ * `unknown-component` rule does not run.
+ */
+export const UI_VALUES_GLOBAL = "__FAQIR_UI_VALUES__";
 
 /**
  * Authored scripts copied out of `site/lib/` into `scripts/`. Named, never
@@ -3499,10 +3516,16 @@ function renderPlaygroundPage(ctx: {
 }): SiteFile {
   const pagePath = PLAYGROUND_PAGE;
 
-  const ruleRows = [
-    ...ALL_RULES.map((r) => ({ ...r, scope: "component markup vs manifest" })),
-    ...DOCUMENT_RULES.map((r) => ({ ...r, scope: "whole document" })),
-  ].map((r) => [code(r.id), esc(r.severity), esc(r.scope), esc(r.description)]);
+  // Every rule a caller holding markup alone can run, as the engine lists them
+  // (`getHtmlRuleInventory`). A rule added there gains its row here with no edit
+  // to this generator and none to the site — which is how `unknown-component`
+  // (task 1.0R-11) arrived.
+  const ruleRows = getHtmlRuleInventory().map((r) => [
+    code(r.id),
+    esc(r.severity),
+    esc(r.applies_to),
+    esc(r.description),
+  ]);
 
   const body = [
     `      <h1>Audit playground</h1>`,
@@ -3551,7 +3574,9 @@ function renderPlaygroundPage(ctx: {
       `      <pre tabindex="0"><code>${esc(
         "faqir audit                 # every HTML file in the project\n" +
           "faqir audit --stdin < page.html\n" +
-          "faqir audit --json          # the findings above, as JSON",
+          "faqir audit --json          # the findings above, as JSON\n" +
+          "faqir audit --rules         # every rule, its severity and its exemptions\n" +
+          "faqir audit --skip-rules unknown-component   # a page that mixes in another system\x27s data-ui",
       )}</code></pre>`,
     ),
   ].join("\n");
@@ -4810,7 +4835,7 @@ export function buildDocsSite(options: DocsSiteOptions = {}): SiteFile[] {
   // can exist in two layers; `createAuditor` re-keys by the manifest's own name.
   files.push({
     path: "scripts/faqir-manifests.js",
-    content: renderManifestsScript(components),
+    content: renderManifestsScript(components, registryRoot),
   });
 
   for (const name of SITE_SCRIPTS) {
@@ -4844,18 +4869,22 @@ export function buildDocsSite(options: DocsSiteOptions = {}): SiteFile[] {
  * therefore needs no network at all — which is the difference between "runs
  * client-side" and "calls an endpoint".
  */
-function renderManifestsScript(components: DocsComponent[]): string {
+function renderManifestsScript(components: DocsComponent[], registryRoot: string): string {
   const payload: Record<string, Manifest> = {};
   // Written in discovery order — primitives, then recipes, then patterns, each
   // sorted by name. That is deterministic (the idempotence gate) AND it is the
   // order `runAudit` loads manifests in, which decides who wins when a name ships
   // in two layers (`empty-state`). `manifestMap` in the browser preserves it.
   for (const c of components) payload[`${c.layer}/${c.name}`] = c.manifest;
+  // The same list `faqir audit` decides `unknown-component` from, from the same
+  // function — not a second derivation that could disagree with the CLI.
+  const values = knownUiValues(registryRoot);
   return (
     `/* ${DOCS_GENERATION_MARKER} — ${
       Object.keys(payload).length
-    } manifests, verbatim from the registry */\n` +
-    `window.${MANIFESTS_GLOBAL} = ${JSON.stringify(payload)};\n`
+    } manifests, verbatim from the registry, and the ${values.length} data-ui values it defines */\n` +
+    `window.${MANIFESTS_GLOBAL} = ${JSON.stringify(payload)};\n` +
+    `window.${UI_VALUES_GLOBAL} = ${JSON.stringify(values)};\n`
   );
 }
 

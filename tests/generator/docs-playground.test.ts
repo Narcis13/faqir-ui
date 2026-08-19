@@ -19,8 +19,10 @@ import {
   PLAYGROUND_PAGE,
   MANIFESTS_GLOBAL,
   THEME_LINK_ID,
+  UI_VALUES_GLOBAL,
 } from "../../src/generator/docs";
-import { ALL_RULES, DOCUMENT_RULES } from "../../src/audit/rules";
+import { getHtmlRuleInventory } from "../../src/audit/rules";
+import { knownUiValues } from "../../src/utils/components";
 import { generateAt } from "../parser/fuzz/fuzz-core";
 
 const REPO = join(import.meta.dir, "../..");
@@ -189,7 +191,11 @@ describe("the playground page", () => {
   });
 
   it("documents every rule the engine actually runs", () => {
-    for (const rule of [...ALL_RULES, ...DOCUMENT_RULES]) {
+    // `getHtmlRuleInventory()` is the engine's own list of the rules a caller
+    // holding markup alone can run, so a rule added there gains its legend row
+    // with no edit to the generator and none to the site (task 1.0R-11).
+    expect(getHtmlRuleInventory().map((r) => r.id)).toContain("unknown-component");
+    for (const rule of getHtmlRuleInventory()) {
       expect(page, `the playground does not document ${rule.id}`).toContain(
         `<code>${rule.id}</code>`,
       );
@@ -238,6 +244,25 @@ describe("typing into the playground", () => {
       "success",
     );
     expect(harness.count.textContent).toBe("0");
+  });
+
+  it("catches a hallucinated component name in the page (task 1.0R-11)", async () => {
+    // The rule the playground exists to demonstrate: an agent's most likely
+    // mistake, in the shop window, decided from the registry name list the
+    // generator ships beside the manifests.
+    await harness.type('<div data-ui="dailog"><div data-part="panel">Hi</div></div>');
+    expect(harness.rows().map((r) => r[1])).toEqual(["unknown-component"]);
+    expect(harness.rows()[0][0]).toBe("warning");
+    expect(harness.rows()[0][3]).toContain('Did you mean data-ui="dialog"?');
+
+    // …and the names that merely have no manifest in the payload stay silent:
+    // an alias, a base-layer value and a companion value.
+    await harness.type(
+      '<div data-ui="alert"><div data-part="content">A</div></div>' +
+        '<article data-ui="prose"><p>B</p></article>' +
+        '<div data-ui="button-group"><button data-ui="button">C</button></div>',
+    );
+    expect(harness.rows().map((r) => r[1])).toEqual([]);
   });
 
   it("orders findings worst-first", async () => {
@@ -337,13 +362,40 @@ describe("malformed input", () => {
 // ── the manifests payload ───────────────────────────────────────────────────
 
 describe("the manifests payload", () => {
-  it("installs one global and nothing else", () => {
+  it("installs two globals and nothing else", () => {
     const content = file("scripts/faqir-manifests.js");
-    // Data, not code: a comment and one assignment of a JSON object literal.
+    // Data, not code: a comment, then one assignment of a JSON object literal
+    // (the manifests) and one of a JSON array (every data-ui value the registry
+    // defines — the input `unknown-component` is decided from, task 1.0R-11).
     expect(content).toMatch(
-      new RegExp(`^/\\*[^]*?\\*/\\nwindow\\.${MANIFESTS_GLOBAL} = \\{".*\\};\\n$`),
+      new RegExp(
+        `^/\\*[^]*?\\*/\\n` +
+          `window\\.${MANIFESTS_GLOBAL} = \\{".*\\};\\n` +
+          `window\\.${UI_VALUES_GLOBAL} = \\[".*"\\];\\n$`,
+      ),
     );
-    expect(content.split("\n").filter((l) => l && !l.startsWith("/*")).length).toBe(1);
+    expect(content.split("\n").filter((l) => l && !l.startsWith("/*")).length).toBe(2);
+  });
+
+  it("ships exactly the names the CLI decides `unknown-component` from", () => {
+    // Not a second derivation: the generator calls the same `knownUiValues` the
+    // CLI does, so the playground cannot disagree with `faqir audit` about what
+    // a Faqir component is.
+    const content = file("scripts/faqir-manifests.js");
+    const line = content.split("\n").find((l) => l.startsWith(`window.${UI_VALUES_GLOBAL}`))!;
+    const values = JSON.parse(line.slice(line.indexOf("=") + 1).trim().replace(/;$/, ""));
+    expect(values).toEqual(knownUiValues(join(import.meta.dir, "../../registry")));
+    // The three kinds that have no manifest of their own, and would otherwise
+    // look hallucinated in a page: an alias, a base-layer value, a companion.
+    expect(values).toContain("alert");
+    expect(values).toContain("prose");
+    expect(values).toContain("button-group");
+  });
+
+  it("is handed to the auditor, so the playground runs the rule it documents", () => {
+    const wiring = file("scripts/playground.js");
+    expect(wiring).toContain(`window.${UI_VALUES_GLOBAL}`);
+    expect(wiring).toMatch(/createAuditor\(/);
   });
 
   it("reports its size", () => {

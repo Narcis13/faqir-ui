@@ -10,12 +10,35 @@
 import { configExists } from "../utils/config";
 import { log } from "../utils/logger";
 import { getRegistryPath } from "../utils/fs";
-import { loadRegistryManifestMap } from "../utils/components";
+import { knownUiValues, loadRegistryManifestMap } from "../utils/components";
 import { extractComponents } from "../parser/html-parser";
 import { runAudit, auditHtmlSource, type AuditSummary } from "../audit/checker";
 import type { AuditResult, Severity } from "../audit/rules";
 import { printAuditReport, printAuditJSON, printRuleInventory } from "../audit/reporter";
 import { readStdin } from "../utils/stdin";
+
+/**
+ * `--skip-rules <ids>` — the documented escape hatch (task 1.0R-11).
+ *
+ * Accepts a comma- and/or space-separated list (`--skip-rules unknown-component`,
+ * `--skip-rules a,b`, `--skip-rules a b`), reading every value until the next
+ * flag. Generic over the rule inventory rather than special-cased for one rule:
+ * `faqir audit --rules` prints the ids, and any of them can be silenced. The
+ * case it exists for is `unknown-component` on a page that deliberately mixes
+ * Faqir with `data-ui` values belonging to another system.
+ */
+export function parseSkipRules(args: string[]): string[] | undefined {
+  const at = args.indexOf("--skip-rules");
+  if (at < 0) return undefined;
+  const ids: string[] = [];
+  for (let i = at + 1; i < args.length && !args[i].startsWith("--"); i++) {
+    for (const id of args[i].split(",")) {
+      const trimmed = id.trim();
+      if (trimmed) ids.push(trimmed);
+    }
+  }
+  return ids;
+}
 
 /** Build an AuditSummary from a flat result list (used by the stdin path). */
 function summarize(results: AuditResult[], filesScanned: number, componentsFound: number): AuditSummary {
@@ -38,7 +61,16 @@ async function auditStdin(args: string[]): Promise<void> {
   const registryPath = getRegistryPath();
   const manifests = await loadRegistryManifestMap(registryPath);
 
-  const results = auditHtmlSource({ source, file: "<stdin>", manifests });
+  // Here the manifests ARE the registry, so `unknown-component` (task 1.0R-11)
+  // is decided from the same registry the manifests came from — plus the aliases
+  // and base-layer values that have no manifest of their own.
+  const results = auditHtmlSource({
+    source,
+    file: "<stdin>",
+    manifests,
+    knownUiValues: knownUiValues(registryPath),
+    skipRules: parseSkipRules(args),
+  });
   const componentsFound = extractComponents(source, "<stdin>").length;
   const summary = summarize(results, 1, componentsFound);
 
@@ -82,7 +114,7 @@ export async function audit(args: string[]): Promise<void> {
     return repair(args.filter(a => a !== "--fix"));
   }
 
-  const summary = await runAudit({ cwd, file });
+  const summary = await runAudit({ cwd, file, skipRules: parseSkipRules(args) });
 
   if (jsonMode) {
     printAuditJSON(summary);

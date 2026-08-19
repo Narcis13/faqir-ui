@@ -62,7 +62,7 @@ import { collectDefinedTokens } from "../src/parser/css-parser";
 import { parseDocument } from "../src/parser/html-parser";
 import { DOCUMENT_RULES } from "../src/audit/rules";
 import { auditHtmlSource } from "../src/audit/html-audit";
-import { loadRegistryManifestMap, loadRegistryStylesheetMap } from "../src/utils/components";
+import { knownUiValues, loadRegistryManifestMap, loadRegistryStylesheetMap } from "../src/utils/components";
 import {
   buildBreakpointCanonResults,
   buildUndeclaredAttributeResults,
@@ -309,8 +309,16 @@ if (cssRuleOffenders["undeclared-attribute"].length === 0 && cssRuleOffenders["b
 //     whether a trigger delegates or its sheet styles the part, and
 //     `single-fixed-region` (task 0.9-06) resolves viewport anchors across
 //     instances. Handing the engine markup alone would silently skip both.
+//  4. The registry's own `data-ui` names travel with them for the same reason
+//     (`unknown-component`, task 1.0R-11): the rule is skipped unless the caller
+//     supplies the names, and a gate that says "every rule a fragment can
+//     satisfy" cannot quietly leave one unarmed. Here it is a tripwire on the
+//     framework's own markup — a fragment may only name a component the registry
+//     has, an alias of one, a base-layer value, or a value some component
+//     stylesheet defines (`button-group` and its six siblings).
 const fullRuleManifests = await loadRegistryManifestMap(REGISTRY);
 const fullRuleStyles = await loadRegistryStylesheetMap(REGISTRY);
+const fullRuleKnown = knownUiValues(REGISTRY);
 const fullRuleOffenders = [];
 for (const rel of htmlFiles) {
   const src = readFileSync(join(REGISTRY, rel), "utf8");
@@ -319,6 +327,7 @@ for (const rel of htmlFiles) {
     file: rel,
     manifests: fullRuleManifests,
     styles: fullRuleStyles,
+    knownUiValues: fullRuleKnown,
   })) {
     fullRuleOffenders.push(`  ${rel}:${r.line} — [${r.rule_id}] ${r.message}`);
   }

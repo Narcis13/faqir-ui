@@ -905,6 +905,104 @@ export const ALL_RULES: AuditRule[] = [
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
+// The unknown component (task 1.0R-11)
+//
+// Every per-component rule above is answered by a manifest, and
+// `auditHtmlSource` skips a `data-ui` value it has no manifest for. That skip is
+// deliberate and half right: a component that exists in the registry but is not
+// installed in *this* project must not error — a page can reference `dialog`
+// before `faqir add dialog` runs, and reporting it would make the audit a
+// nag about installation order rather than a check of the markup.
+//
+// The other half is the consequence: `<div data-ui="datatable">` — a name the
+// registry has never had — audited completely clean. For a framework whose
+// pitch is "the agent generates it, the audit catches it", a hallucinated
+// component name is the single most likely failure mode, and it was the one
+// thing the audit could not see.
+//
+// The distinction the rule needs is not in the manifests the caller happens to
+// hold; it is the set of `data-ui` values Faqir *defines* — every registry
+// component in all three layers, their aliases (`alert` is `callout`), and the
+// base-layer values that are styling rather than components (`prose`, derived,
+// task 1.0R-10). A caller that cannot produce that set does not run the rule:
+// guessing from the installed manifests alone would report every not-installed
+// component, which is exactly the behaviour the skip above protects.
+//
+// Severity is `warning`, chosen rather than defaulted. A page may legitimately
+// mix Faqir with `data-ui` values belonging to something else, and `faqir audit`
+// exits non-zero only on `error`/`critical`, so such a page stays usable and
+// still says so out loud. Silencing it entirely is
+// `faqir audit --skip-rules unknown-component`.
+//
+// It carries no `fix`. Every other suggestion in this file repairs markup the
+// manifest proves wrong; here the manifest is the thing that does not exist, so
+// the closest name is a guess — and `faqir repair` renaming a foreign
+// `data-ui` to a Faqir component would be a wrong answer applied automatically.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const UNKNOWN_COMPONENT_RULE: RuleInfo = {
+  id: "unknown-component",
+  severity: "warning",
+  applies_to: "data-ui values vs every component the registry defines",
+  exempt: [
+    "components that exist in the registry but are not installed in this project (silent by design)",
+    "aliases of registry components (data-ui=\"alert\" is callout) and base-layer values (data-ui=\"prose\")",
+    "every value, when the caller cannot supply the registry's names (never guessed at)",
+    "`faqir audit --skip-rules unknown-component` — pages that deliberately mix Faqir with foreign data-ui values",
+  ],
+  description:
+    "A data-ui value must name something Faqir defines — a component in the " +
+    "registry (installed or not), one of its aliases, or a base-layer value. A " +
+    "name that exists nowhere is a typo or a hallucination, and nothing else in " +
+    "the audit can see it: every other component rule is answered by a manifest, " +
+    "and a name with no manifest is skipped. Reported as a warning with the " +
+    "closest registry name, so a page that deliberately mixes in foreign data-ui " +
+    "values still exits zero.",
+};
+
+/**
+ * `unknown-component` findings for one file (task 1.0R-11).
+ *
+ * `known` is every `data-ui` value Faqir defines, whether or not this project
+ * installed it; `manifests` is what the caller actually holds. A name in either
+ * is fine — the first is "in the registry", the second is "installed here",
+ * and an installed custom component (`faqir create`) is only ever in the second.
+ * Suggestions come from both, sorted, so the same input always names the same
+ * closest match.
+ */
+export function buildUnknownComponentResults(
+  components: ParsedComponent[],
+  known: ReadonlySet<string>,
+  manifests: Map<string, Manifest>,
+  file?: string,
+): AuditResult[] {
+  const unknown = components.filter((c) => !known.has(c.name) && !manifests.has(c.name));
+  if (unknown.length === 0) return [];
+
+  const candidates = [...new Set([...known, ...manifests.keys()])].sort();
+  const results: AuditResult[] = [];
+  for (const component of unknown) {
+    const closest = suggestClosest(component.name, candidates);
+    results.push({
+      rule_id: UNKNOWN_COMPONENT_RULE.id,
+      severity: UNKNOWN_COMPONENT_RULE.severity,
+      component_name: component.name,
+      file: file ?? component.file,
+      line: component.line,
+      message:
+        `data-ui="${component.name}" is not a Faqir component — no component, alias or ` +
+        `base-layer value of that name exists in the registry, installed or not. ` +
+        (closest
+          ? `Did you mean data-ui="${closest}"? `
+          : `Run \`faqir list\` to see the names that do exist. `) +
+        `If this element deliberately belongs to another system, silence the rule with ` +
+        `\`faqir audit --skip-rules unknown-component\`.`,
+    });
+  }
+  return results;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // The trigger contract (task 0.9-05)
 //
 // `dialog.css` shipped no rule for `[data-part="trigger"]` at all, so all four
@@ -1958,6 +2056,36 @@ export const ANTIPATTERN_RULES: RuleInfo[] = [
 ];
 
 /**
+ * The rules that decide an **HTML source** — everything a caller holding markup
+ * alone can run. `getRuleInventory()` is the whole engine (stylesheets, token
+ * and contrast checks included); this is the subset the docs-site playground
+ * legend describes, because a textarea has no stylesheet to audit.
+ *
+ * Derived, not listed: a rule added to `ALL_RULES`, to `DOCUMENT_RULES` or to
+ * the markup+registry group appears in the legend with no edit to the site
+ * generator. The markup+css rules (`trigger-contract`, `single-fixed-region`)
+ * are deliberately absent — they need a component's stylesheet, which the
+ * playground does not have.
+ */
+export function getHtmlRuleInventory(): RuleInfo[] {
+  return [
+    ...ALL_RULES.map((r) => ({
+      id: r.id,
+      severity: r.severity,
+      description: r.description,
+      applies_to: "component markup vs manifest",
+    })),
+    ...DOCUMENT_RULES.map((r) => ({
+      id: r.id,
+      severity: r.severity,
+      description: r.description,
+      applies_to: "whole document",
+    })),
+    UNKNOWN_COMPONENT_RULE,
+  ];
+}
+
+/**
  * Full rule inventory (manifest rules + source-scanning anti-pattern rules),
  * as flat descriptors — powers `faqir audit --rules` and the JSON `rules` field.
  */
@@ -1977,6 +2105,7 @@ export function getRuleInventory(): RuleInfo[] {
   return [
     ...fromManifestRules,
     ...fromDocumentRules,
+    UNKNOWN_COMPONENT_RULE,
     ...ANTIPATTERN_RULES,
     ...CSS_RULES,
     TRIGGER_CONTRACT_RULE,

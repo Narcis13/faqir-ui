@@ -1,6 +1,8 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { loadManifest, type Manifest } from "../manifest";
+import { baseLayerUiValues, loadBaseLayer } from "../base-layer";
+import { findSelectedAttributes } from "../parser/css-parser";
 import type { FaqirConfig } from "./config";
 
 export type Layer = "primitives" | "recipes" | "patterns";
@@ -185,6 +187,74 @@ export async function loadRegistryManifest(
   const found = findComponentInRegistry(name, registryPath);
   if (!found) return null;
   return loadManifest(join(found.path, `${found.name}.manifest.json`));
+}
+
+/**
+ * `data-ui` values a **component's own stylesheet defines** and no component
+ * claims — the companion values (task 1.0R-11).
+ *
+ * The same derivation `loadBaseLayer` performs one layer out (task 1.0R-10), and
+ * it exists for the same reason: `button.css` declares
+ * `[data-ui="button-group"]`, `button.html` uses it, and there is no
+ * `button-group` component. Seven such values ship — `button-group`,
+ * `input-group`, `radio-group`, `radio-label`, `checkbox-label`, `switch-label`
+ * and `heading` — every one of them written by the framework itself, so a rule
+ * that called them unknown would report Faqir's own reference markup as broken.
+ *
+ * Read from the **stylesheets**, never from the reference HTML: something that
+ * styles a value is evidence the value is real, whereas trusting markup would
+ * let a typo in the very file being audited legitimise itself.
+ */
+export function componentDefinedUiValues(registryPath: string): string[] {
+  const components = new Set(listRegistryComponents(registryPath));
+  const defined = new Set<string>();
+
+  for (const layer of ["primitives", "recipes", "patterns"] as Layer[]) {
+    const layerPath = join(registryPath, layer);
+    if (!existsSync(layerPath)) continue;
+    for (const name of components) {
+      const dir = join(layerPath, name);
+      if (!existsSync(dir)) continue;
+      for (const file of readdirSync(dir).filter((f) => f.endsWith(".css"))) {
+        for (const selected of findSelectedAttributes(readFileSync(join(dir, file), "utf8"))) {
+          if (selected.attr.toLowerCase() !== "data-ui") continue;
+          const value = selected.value;
+          if (value && !components.has(value)) defined.add(value);
+        }
+      }
+    }
+  }
+
+  return [...defined].sort();
+}
+
+/**
+ * Every `data-ui` value **Faqir defines**, sorted — the input the
+ * `unknown-component` audit rule is decided from (task 1.0R-11).
+ *
+ * Four sources, because a legitimate `data-ui` can come from any of them and a
+ * missing one would report correct markup:
+ *
+ *  • every component directory in the three layers ({@link listRegistryComponents});
+ *  • every alias a manifest declares ({@link getRegistryAliases}) — `alert` is
+ *    `callout`, and an agent writing `data-ui="alert"` is writing valid markup;
+ *  • the base layer ({@link baseLayerUiValues}) — `data-ui="prose"` is styling
+ *    with no manifest, which is precisely why it would look unknown;
+ *  • the companion values a component's own sheet defines
+ *    ({@link componentDefinedUiValues}) — `button-group` and six others.
+ *
+ * Read from the registry rather than from `registry-index.json`: the index
+ * carries neither aliases nor the values that have no component directory, and
+ * both are exactly the cases that matter. Deliberately independent of what the
+ * project has *installed* — a component in the registry but not yet added is
+ * known, and must stay silent.
+ */
+export function knownUiValues(registryPath: string): string[] {
+  const values = new Set<string>(listRegistryComponents(registryPath));
+  for (const alias of getRegistryAliases(registryPath).keys()) values.add(alias);
+  for (const value of baseLayerUiValues(loadBaseLayer(registryPath))) values.add(value);
+  for (const value of componentDefinedUiValues(registryPath)) values.add(value);
+  return [...values].sort();
 }
 
 /**

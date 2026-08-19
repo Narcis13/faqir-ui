@@ -2,8 +2,14 @@
   "$schema": "./state.schema.md",
   "plan": "FAQIR-PLAN.md",
   "current": null,
-  "last_completed": "1.0R-10",
+  "last_completed": "1.0R-11",
   "history": [
+    {
+      "id": "1.0R-11",
+      "completed": "2026-08-20",
+      "commit": "PENDING",
+      "summary": "The `unknown-component` rule, and the seven data-ui values it found in Faqir's own registry. `<div data-ui=\"datatable\">` audited CLEAN because every per-component rule is answered by a manifest and `html-audit.ts` skips a name it has none for — a skip that is HALF RIGHT (a registry component this project has not installed must not error) and hid the framework's single most likely failure mode. The distinction is not in the manifests a caller happens to hold: a new optional `HtmlAuditInput.knownUiValues` carries every data-ui value Faqir DEFINES, and a caller that cannot produce it does not get a guess (the 0.9-05 stance, asserted in both directions because \"silent\" and \"never ran\" look identical from outside). Known is FOUR sources: component directories, ALIASES (`alert` is `callout` — which is why the set is read from the manifests and NOT from registry-index.json, whose entries have no aliases field), base-layer values (`prose`, 1.0R-10), and — found on the rule's first run against the registry — the COMPANION values a component's own stylesheet defines: `button-group`, `input-group`, `radio-group`, `radio-label`, `checkbox-label`, `switch-label`, `heading`. Seven shipped data-ui values with no manifest anywhere, four used by patterns; `add button` + `faqir audit` reported button.html as broken until they were derived — from the STYLESHEETS, never from the markup under audit, so a typo in the audited file cannot legitimise itself (pinned on a synthetic registry, since in the real one every companion appears in both). Documenting them is follow-up 1.0R-13. Severity `warning` chosen not defaulted (a mixed-framework page stays exit-zero), no `fix` (the closest NAME is a guess and `faqir repair` applies fixes), and the escape hatch is a new generic `faqir audit --skip-rules <ids>` named in the message, in `--rules`, in SKILL.md and on the site. The plan's own example `datatable` gets NO suggestion and that is correct — nothing is within suggestClosest's three edits of it. Browser: `createAuditor(manifests, styles, knownUiValues)` — explicit, because deriving \"the registry\" from a page's payload is right only for a complete payload — a fifth rule scope `markup+registry`, and the generator ships `window.__FAQIR_UI_VALUES__` from the SAME `knownUiValues` the CLI calls, so the playground cannot disagree with `faqir audit`. The legend became `getHtmlRuleInventory()`, so the row arrived with no site edit. `audit:registry` and the reference sweep arm the rule — a gate promising \"every rule a fragment can satisfy\" cannot leave one unarmed. 3,564 bun tests, every check gate green; six mutations seeded and observed to fail individually."
+    },
     {
       "id": "1.0R-10",
       "completed": "2026-08-19",

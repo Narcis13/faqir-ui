@@ -43,6 +43,7 @@ import {
   DOCUMENT_RULES,
   SINGLE_FIXED_REGION_RULE,
   TRIGGER_CONTRACT_RULE,
+  UNKNOWN_COMPONENT_RULE,
   type AuditResult,
 } from "../../src/audit/rules";
 import {
@@ -50,6 +51,7 @@ import {
   buildBreakpointCanonResults,
   buildUndeclaredAttributeResults,
 } from "../../src/audit/css-rules";
+import { knownUiValues } from "../../src/utils/components";
 import { VERSION } from "../../src/version";
 import { generateAt } from "../parser/fuzz/fuzz-core";
 import type { Manifest } from "../../src/manifest";
@@ -70,9 +72,11 @@ interface BundleApi {
   createAuditor(
     manifests: Record<string, Manifest>,
     styles?: Record<string, string>,
+    knownUiValues?: string[],
   ): {
     audit(source: string, options?: { file?: string; skipRules?: string[] }): AuditResult[];
     components: string[];
+    knownUiValues: string[];
   };
   auditComponentCss(input: {
     css: string;
@@ -206,11 +210,16 @@ describe("the browser audit bundle", () => {
     expect(bundleSource).not.toMatch(/https?:\/\//);
   });
 
-  it("advertises exactly the rules the engine runs, in all four scopes", () => {
+  it("advertises exactly the rules the engine runs, in all five scopes", () => {
     const api = loadBundle();
     const expected = [
       ...ALL_RULES.map((r) => ({ id: r.id, severity: r.severity, scope: "component" })),
       ...DOCUMENT_RULES.map((r) => ({ id: r.id, severity: r.severity, scope: "document" })),
+      {
+        id: UNKNOWN_COMPONENT_RULE.id,
+        severity: UNKNOWN_COMPONENT_RULE.severity,
+        scope: "markup+registry",
+      },
       ...CSS_RULES.map((r) => ({ id: r.id, severity: r.severity, scope: "css" })),
       {
         id: TRIGGER_CONTRACT_RULE.id,
@@ -240,6 +249,12 @@ describe("the browser audit bundle", () => {
     expect(api.rules.filter((r) => r.scope === "markup+css").map((r) => r.id)).toEqual([
       "trigger-contract",
       "single-fixed-region",
+    ]);
+    // And `markup+registry` is a fifth: markup decided against the registry's
+    // name list rather than against a manifest (task 1.0R-11). A page that has
+    // the names — the playground does — runs it; one that does not, cannot.
+    expect(api.rules.filter((r) => r.scope === "markup+registry").map((r) => r.id)).toEqual([
+      "unknown-component",
     ]);
   });
 
@@ -574,6 +589,69 @@ describe("CLI ↔ browser finding parity", () => {
           .audit(collision, { skipRules: [SINGLE_FIXED_REGION_RULE.id] })
           .map((result) => result.rule_id),
       ).not.toContain(SINGLE_FIXED_REGION_RULE.id);
+    });
+  });
+
+  // ── the unknown component, through the same bundle (task 1.0R-11) ─────────
+  //
+  // The fourth seam, and the same double claim as the trigger contract: a rule
+  // that only runs when the caller supplies something. Here it is the registry's
+  // own name list, which a page is GIVEN (`window.__FAQIR_UI_VALUES__`) rather
+  // than deriving from its manifest payload — so parity has to be asserted with
+  // the list and without it.
+  describe("the unknown component", () => {
+    const known = knownUiValues(REGISTRY);
+    const armed = api.createAuditor(shipped, undefined, known);
+    const sources = [
+      '<div data-ui="datatable">rows</div>',
+      '<div data-ui="dailog"><div data-part="panel"></div></div>',
+      '<article data-ui="prose"><p>Base layer.</p></article>',
+      '<div data-ui="button-group"><button data-ui="button">A</button></div>',
+      '<div data-ui="alert"><div data-part="content">Alias.</div></div>',
+      '<div data-ui="card"><div data-part="body">Real.</div><div data-ui="nope-9000"></div></div>',
+    ];
+
+    it("produces the identical finding, byte for byte, on every shape", () => {
+      for (const source of sources) {
+        expect(armed.audit(source, { file: "f.html" })).toEqual(
+          auditHtmlSource({
+            source,
+            file: "f.html",
+            manifests: cli,
+            knownUiValues: known,
+          }),
+        );
+      }
+      // …and the findings are not all empty: the parity above would otherwise
+      // agree on nothing six times.
+      expect(
+        armed.audit(sources[0], { file: "f.html" }).map((r) => r.rule_id),
+      ).toEqual(["unknown-component"]);
+      expect(armed.audit(sources[1], { file: "f.html" })[0].message).toContain(
+        'Did you mean data-ui="dialog"?',
+      );
+    });
+
+    it("does not run for a page that was given no names — in either engine", () => {
+      for (const source of sources) {
+        expect(auditor.audit(source, { file: "f.html" }).map((r) => r.rule_id)).not.toContain(
+          "unknown-component",
+        );
+        expect(auditor.audit(source, { file: "f.html" })).toEqual(
+          auditHtmlSource({ source, file: "f.html", manifests: cli }),
+        );
+      }
+      expect(auditor.knownUiValues).toEqual([]);
+      expect(armed.knownUiValues).toEqual(known);
+    });
+
+    it("honours skipRules identically with the names in hand", () => {
+      const source = sources[0];
+      const skipRules = ["unknown-component"];
+      expect(armed.audit(source, { file: "f.html", skipRules })).toEqual(
+        auditHtmlSource({ source, file: "f.html", manifests: cli, knownUiValues: known, skipRules }),
+      );
+      expect(armed.audit(source, { file: "f.html", skipRules })).toEqual([]);
     });
   });
 

@@ -135,7 +135,7 @@ export const COMMAND_DEFINITIONS: Record<string, CommandDefinition> = {
     run: audit,
     category: "Quality",
     summary: "Validate components against manifests",
-    args: "[--json]",
+    args: "[--json] [--skip-rules <ids>]",
     skillNote: "validate markup against manifests",
   },
   repair: {

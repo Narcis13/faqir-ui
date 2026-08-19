@@ -7,6 +7,10 @@
  *                               src/audit/browser.ts (scripts/faqir-audit.js)
  *   window.__FAQIR_MANIFESTS__  every registry manifest, emitted by the docs
  *                               generator (scripts/faqir-manifests.js)
+ *   window.__FAQIR_UI_VALUES__  every data-ui value the registry defines —
+ *                               components, aliases and base-layer values — from
+ *                               the same script. The `unknown-component` rule is
+ *                               decided from it, and does not run without it.
  *   the page                    a textarea, a findings region, a preview frame
  *
  * There is no server, no API, no build step: the audit runs in this page, so the
@@ -168,7 +172,15 @@
       return;
     }
 
-    var auditor = window.FaqirAudit.createAuditor(window.__FAQIR_MANIFESTS__);
+    // The third argument is the registry's own name list (task 1.0R-11) — the
+    // page has manifests for what the registry *ships*, but only this list also
+    // carries its aliases and base-layer values, so an unknown data-ui can be
+    // told apart from a legitimate one the payload has no manifest for.
+    var auditor = window.FaqirAudit.createAuditor(
+      window.__FAQIR_MANIFESTS__,
+      undefined,
+      window.__FAQIR_UI_VALUES__
+    );
     var urls = {
       styles: assetUrl(document.querySelector('link[rel="stylesheet"]:not([id="faqir-theme"])')),
       theme: assetUrl(document.getElementById("faqir-theme")),
@@ -185,6 +197,10 @@
       // stylesheet: this page hands the auditor manifests only, so those rules
       // do not run here either.
       var markupRules = window.FaqirAudit.rules.filter(function (rule) {
+        // `markup+registry` is `unknown-component`: markup decided against the
+        // registry's names, which this page has — so unlike the markup+css
+        // rules it does run here, and is counted.
+        if (rule.scope === "markup+registry") return auditor.knownUiValues.length > 0;
         return rule.scope === "component" || rule.scope === "document";
       });
       status.textContent =

@@ -20,6 +20,7 @@ import {
   buildUndeclaredAttributeResults,
 } from "./css-rules";
 import { readConfig } from "../utils/config";
+import { knownUiValues } from "../utils/components";
 import { getRegistryPath } from "../utils/fs";
 import { auditHtmlSource, type HtmlAuditInput } from "./html-audit";
 
@@ -92,6 +93,19 @@ export async function runAudit(options: AuditOptions = {}): Promise<AuditSummary
     }
   }
 
+  // Every `data-ui` value the registry defines, installed here or not — the
+  // input `unknown-component` is decided from (task 1.0R-11). The manifests
+  // above are the *installed* subset, so on their own they cannot tell a
+  // hallucinated name from one the project simply has not added yet. Read from
+  // the CLI's own bundled registry; if that is unreadable the rule does not run,
+  // because a half-known set would report correct markup.
+  let known: string[] | undefined;
+  try {
+    known = knownUiValues(registryPath);
+  } catch {
+    known = undefined;
+  }
+
   // Find HTML files to scan
   const htmlFiles: string[] = [];
   if (options.file) {
@@ -121,7 +135,14 @@ export async function runAudit(options: AuditOptions = {}): Promise<AuditSummary
     const relPath = relative(cwd, filePath);
     componentsFound += extractComponents(source, relPath).length;
     results.push(
-      ...auditHtmlSource({ source, file: relPath, manifests, styles, skipRules: options.skipRules }),
+      ...auditHtmlSource({
+        source,
+        file: relPath,
+        manifests,
+        styles,
+        knownUiValues: known,
+        skipRules: options.skipRules,
+      }),
     );
   }
 

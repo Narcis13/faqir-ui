@@ -19,7 +19,11 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { Glob } from "bun";
 import { auditHtmlSource, RUNTIME_PRESENCE_RULES } from "../../src/audit/html-audit";
-import { loadRegistryManifestMap, loadRegistryStylesheetMap } from "../../src/utils/components";
+import {
+  knownUiValues,
+  loadRegistryManifestMap,
+  loadRegistryStylesheetMap,
+} from "../../src/utils/components";
 import { TRIGGER_CONTRACT_RULE, TRIGGER_PART } from "../../src/audit/rules";
 import { maskNonMarkup } from "../../src/parser/html-parser";
 import BASELINE_ROOTS from "../fixtures/registry-component-roots.json";
@@ -101,6 +105,13 @@ const INTENDED_ROOT_CHANGES: Record<string, string> = {
 };
 
 describe("the registry's own markup satisfies its own rules", () => {
+  // The registry's own names travel with the manifests and stylesheets, so the
+  // sweep below runs `unknown-component` too (task 1.0R-11) — the same arming
+  // `audit:registry` does. A fragment may name a component, an alias, a
+  // base-layer value or a value some component stylesheet defines; anything else
+  // is a typo in the framework's own markup, and nothing else could see it.
+  const known = knownUiValues(REGISTRY);
+
   it("covers every shipped fragment", () => {
     expect(FRAGMENTS.length).toBeGreaterThanOrEqual(86);
     expect(Object.keys(BASELINE_ROOTS).sort()).toEqual(FRAGMENTS);
@@ -108,9 +119,13 @@ describe("the registry's own markup satisfies its own rules", () => {
 
   it("reports zero findings under the full rule set", () => {
     const findings = FRAGMENTS.flatMap((rel) =>
-      auditHtmlSource({ source: read(rel), file: rel, manifests, styles }).map(
-        (r) => `${r.file}:${r.line} [${r.rule_id}] ${r.message}`,
-      ),
+      auditHtmlSource({
+        source: read(rel),
+        file: rel,
+        manifests,
+        styles,
+        knownUiValues: known,
+      }).map((r) => `${r.file}:${r.line} [${r.rule_id}] ${r.message}`),
     );
     expect(findings).toEqual([]);
   });
@@ -121,11 +136,33 @@ describe("the registry's own markup satisfies its own rules", () => {
   it("reports zero findings at every severity, per rule", () => {
     const byRule: Record<string, number> = {};
     for (const rel of FRAGMENTS) {
-      for (const r of auditHtmlSource({ source: read(rel), file: rel, manifests, styles })) {
+      for (const r of auditHtmlSource({
+        source: read(rel),
+        file: rel,
+        manifests,
+        styles,
+        knownUiValues: known,
+      })) {
         byRule[r.rule_id] = (byRule[r.rule_id] ?? 0) + 1;
       }
     }
     expect(byRule).toEqual({});
+  });
+
+  it("would catch a hallucinated name in a fragment", () => {
+    // The sweep above agrees on the empty array 87 times; this is the seeded
+    // mutation that proves the rule is armed rather than absent. `dailog` is one
+    // keystroke from a real recipe and is exactly what an agent produces.
+    const seeded = read(FRAGMENTS[0]) + '\n<div data-ui="dailog"></div>';
+    const findings = auditHtmlSource({
+      source: seeded,
+      file: "seeded.html",
+      manifests,
+      styles,
+      knownUiValues: known,
+    });
+    expect(findings.map((r) => r.rule_id)).toEqual(["unknown-component"]);
+    expect(findings[0].message).toContain('Did you mean data-ui="dialog"?');
   });
 });
 

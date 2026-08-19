@@ -22,8 +22,10 @@ import {
   DOCUMENT_RULES,
   SINGLE_FIXED_REGION_RULE,
   TRIGGER_CONTRACT_RULE,
+  UNKNOWN_COMPONENT_RULE,
   buildSingleFixedRegionResults,
   buildTriggerContractResults,
+  buildUnknownComponentResults,
 } from "./rules";
 
 /**
@@ -65,6 +67,20 @@ export interface HtmlAuditInput {
    * `runAudit` from the project's `ui/**`, the registry gate from `registry/**`.
    */
   styles?: Map<string, string>;
+  /**
+   * Every `data-ui` value **Faqir defines** — each registry component in all
+   * three layers, their aliases, and the base-layer values that are styling
+   * rather than components (task 1.0R-11). Not the same thing as `manifests`,
+   * which is what this caller *holds*: in a project that is the installed
+   * subset, in `--stdin` and in a page it is the whole registry.
+   *
+   * The input `unknown-component` is decided from, and optional for the same
+   * reason `styles` is: a caller that cannot produce it does not get a guess.
+   * Without it, an unrecognised `data-ui` is skipped exactly as it always was,
+   * because the alternative — treating `manifests` as the registry — would
+   * report every component the project has not installed yet.
+   */
+  knownUiValues?: Iterable<string>;
   /** Rule IDs to skip. */
   skipRules?: string[];
 }
@@ -80,7 +96,10 @@ export interface HtmlAuditInput {
  *
  * Pure: it reads nothing and writes nothing. Unknown `data-ui` names (no manifest
  * in the map) are skipped for per-component rules, exactly as `runAudit` skips
- * not-installed components; document rules still run over the whole source.
+ * not-installed components; document rules still run over the whole source. A
+ * caller that also supplies {@link HtmlAuditInput.knownUiValues} gets
+ * `unknown-component` on top: the names that are not merely uninstalled but do
+ * not exist in the registry at all (task 1.0R-11).
  */
 export function auditHtmlSource(input: HtmlAuditInput): AuditResult[] {
   const { source, manifests } = input;
@@ -106,6 +125,7 @@ export function auditHtmlSource(input: HtmlAuditInput): AuditResult[] {
   );
 
   const triggerContract = !skipRules.has(TRIGGER_CONTRACT_RULE.id) && input.styles !== undefined;
+  const known = input.knownUiValues !== undefined ? new Set(input.knownUiValues) : undefined;
 
   for (const component of components) {
     const manifest = manifests.get(component.name);
@@ -117,6 +137,15 @@ export function auditHtmlSource(input: HtmlAuditInput): AuditResult[] {
       const css = input.styles!.get(component.name);
       if (css !== undefined) results.push(...buildTriggerContractResults(component, css, file));
     }
+  }
+
+  // The name nothing else can see (task 1.0R-11). Every rule above is answered
+  // by a manifest, so a `data-ui` with none is skipped — deliberately, since a
+  // registry component that is simply not installed here must not error. Given
+  // the registry's own names, the other case becomes visible: a name that exists
+  // nowhere at all.
+  if (known !== undefined && !skipRules.has(UNKNOWN_COMPONENT_RULE.id)) {
+    results.push(...buildUnknownComponentResults(components, known, manifests, file));
   }
 
   if (!skipRules.has(SINGLE_FIXED_REGION_RULE.id) && input.styles !== undefined) {

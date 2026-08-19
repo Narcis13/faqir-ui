@@ -22,6 +22,7 @@ import {
   DOCUMENT_RULES,
   SINGLE_FIXED_REGION_RULE,
   TRIGGER_CONTRACT_RULE,
+  UNKNOWN_COMPONENT_RULE,
   type AuditResult,
   type Severity,
 } from "./rules";
@@ -52,7 +53,7 @@ export interface BrowserRuleInfo {
   severity: Severity;
   description: string;
   /** Which contract the rule enforces. */
-  scope: "component" | "document" | "css" | "markup+css";
+  scope: "component" | "document" | "css" | "markup+css" | "markup+registry";
 }
 
 /** Input for {@link auditComponentCss} — one stylesheet and the manifest it belongs to. */
@@ -72,6 +73,12 @@ export interface Auditor {
   audit(source: string, options?: BrowserAuditOptions): AuditResult[];
   /** Component names this auditor knows (canonical names only), sorted. */
   components: string[];
+  /**
+   * Every `data-ui` value the registry defines, as the page supplied them, or
+   * `[]` when it supplied none — in which case `unknown-component` does not run
+   * and a page can say so rather than quietly under-reporting.
+   */
+  knownUiValues: string[];
 }
 
 /**
@@ -101,6 +108,12 @@ export function manifestMap(manifests: ManifestRecord): Map<string, Manifest> {
 /**
  * Build an auditor bound to a set of manifests.
  *
+ * The third argument is every `data-ui` value the registry defines — components,
+ * aliases and base-layer values (task 1.0R-11). A page has to be *given* it:
+ * deriving it from the manifest payload would be right only for a payload that
+ * happens to be the whole registry, and silently wrong for any page auditing
+ * against a subset. Omitted, `unknown-component` does not run.
+ *
  * `audit()` **never throws.** A playground types into a textarea, so most input
  * is malformed HTML mid-keystroke; the tokenizer is total by design (task 0.5-08)
  * but a page that dies on one pathological string is worse than one that reports
@@ -108,7 +121,11 @@ export function manifestMap(manifests: ManifestRecord): Map<string, Manifest> {
  * instead of an exception. The fuzz-corpus test asserts both halves: no throw,
  * and no silent swallow of real findings.
  */
-export function createAuditor(manifests: ManifestRecord, styles?: StyleRecord): Auditor {
+export function createAuditor(
+  manifests: ManifestRecord,
+  styles?: StyleRecord,
+  knownUiValues?: string[],
+): Auditor {
   const map = manifestMap(manifests);
   // Same optionality as the CLI's: the markup+css rules run only where the
   // stylesheets are actually available. A page that hands over manifests alone
@@ -122,6 +139,7 @@ export function createAuditor(manifests: ManifestRecord, styles?: StyleRecord): 
 
   return {
     components: [...canonical].sort(),
+    knownUiValues: knownUiValues ? [...knownUiValues] : [],
     audit(source, options = {}) {
       try {
         return auditHtmlSource({
@@ -129,6 +147,7 @@ export function createAuditor(manifests: ManifestRecord, styles?: StyleRecord): 
           file: options.file ?? "input.html",
           manifests: map,
           styles: styleMap,
+          knownUiValues,
           skipRules: options.skipRules,
         });
       } catch (error) {
@@ -202,6 +221,15 @@ export function ruleInventory(): BrowserRuleInfo[] {
       description: r.description,
       scope: "document" as const,
     })),
+    {
+      id: UNKNOWN_COMPONENT_RULE.id,
+      severity: UNKNOWN_COMPONENT_RULE.severity,
+      description: UNKNOWN_COMPONENT_RULE.description,
+      // A scope of its own: the finding is on markup, but it is decided against
+      // the registry's name list rather than against a manifest — which is why
+      // it is the one markup rule that can fire for a component nobody installed.
+      scope: "markup+registry" as const,
+    },
     ...CSS_RULES.map((r) => ({
       id: r.id,
       severity: r.severity,
