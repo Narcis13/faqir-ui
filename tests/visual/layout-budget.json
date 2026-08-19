@@ -6,7 +6,7 @@
         "height": 900
       },
       "totals": {
-        "pages": 186,
+        "pages": 192,
         "zeroGutterPages": 0,
         "seamPages": 0,
         "seams": 0,
@@ -1100,6 +1100,42 @@
           "bleeds": 0,
           "overlaps": 0
         },
+        "scaffolds/admin-dashboard/index.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "scaffolds/index.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "scaffolds/internal-tool/index.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "scaffolds/invoice/index.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "scaffolds/landing-page/index.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "scaffolds/report/index.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
         "spacing/index.html": {
           "zeroGutter": false,
           "seams": 0,
@@ -1138,7 +1174,7 @@
         "height": 812
       },
       "totals": {
-        "pages": 186,
+        "pages": 192,
         "zeroGutterPages": 0,
         "seamPages": 0,
         "seams": 0,
@@ -2227,6 +2263,42 @@
           "overlaps": 0
         },
         "playground/index.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "scaffolds/admin-dashboard/index.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "scaffolds/index.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "scaffolds/internal-tool/index.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "scaffolds/invoice/index.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "scaffolds/landing-page/index.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "scaffolds/report/index.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,

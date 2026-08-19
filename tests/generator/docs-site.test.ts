@@ -30,8 +30,12 @@ import {
   hasOwnMain,
   isExamplePage,
   isFramePage,
+  isScaffoldFramePage,
   isShellPage,
   isSitePage,
+  scaffoldFramePath,
+  scaffoldPagePath,
+  scaffoldSnippetPath,
   parseTokenReference,
   relUrl,
   renderOverlayPreviewRules,
@@ -45,6 +49,9 @@ import {
   NOT_FOUND_PAGE,
   OVERLAY_PREVIEW_ATTR,
   OVERLAY_PREVIEW_SURFACES,
+  SCAFFOLDS_PAGE,
+  SITEMAP_FILE,
+  LLMS_INDEX_FILE,
   type DocsComponent,
   type SiteFile,
 } from "../../src/generator/docs";
@@ -52,6 +59,7 @@ import { auditHtmlSource } from "../../src/audit/checker";
 import { ALL_RULES, DOCUMENT_RULES } from "../../src/audit/rules";
 import { parseDocument } from "../../src/parser/html-parser";
 import { discoverComponents as discoverA11yComponents } from "../visual/matrix";
+import { SCAFFOLDS, SCAFFOLD_NAMES, scaffoldBody } from "../../src/scaffolds";
 import type { Manifest } from "../../src/manifest";
 
 const REPO = join(import.meta.dir, "../..");
@@ -126,10 +134,10 @@ describe("docs site coverage", () => {
     expect(shellPages.length + framePages.length).toBe(sitePages.length);
     // home, component index, icons, typography, layout guide, responsive lab,
     // protocol spec, spacing, density, tokens, playground, theme gallery,
-    // agents, and 404
-    expect(shellPages.length).toBe(components.length + 14);
-    // one gallery frame per theme
-    expect(framePages.length).toBe(themes.length);
+    // agents, 404, and the scaffold gallery — plus one page per scaffold
+    expect(shellPages.length).toBe(components.length + 15 + SCAFFOLD_NAMES.length);
+    // one gallery frame per theme, and one live document per scaffold
+    expect(framePages.length).toBe(themes.length + SCAFFOLD_NAMES.length);
     const assets = files.filter((f) => !f.path.endsWith(".html")).map((f) => f.path);
     expect(assets.sort()).toEqual(
       [
@@ -157,6 +165,9 @@ describe("docs site coverage", () => {
         ...examplePages.map((f) =>
           f.path.replace(/^examples\//, "snippets/").replace(/\.html$/, ".html.txt"),
         ),
+        // …and one per registered scaffold: the whole page, under the same
+        // preamble, as the same kind of payload (task 1.0R-08).
+        ...SCAFFOLD_NAMES.map((name) => `snippets/scaffolds/${name}.html.txt`),
       ].sort(),
     );
   });
@@ -570,6 +581,135 @@ describe("demo captions are lifted from the fragments' own comments", () => {
   });
 });
 
+// ── the scaffold gallery (task 1.0R-08) ─────────────────────────────────────
+//
+// `faqir scaffold` ships five whole pages — the most persuasive artifacts the
+// framework has — and until this task the published site showed none of them.
+// The section is generated from the CLI's own catalogue, so these tests are all
+// one claim in different words: registering a scaffold publishes it, everywhere,
+// with no edit here and none under `site/`.
+
+describe("the scaffold gallery", () => {
+  it("publishes a page, a frame, a payload and a nav entry for every scaffold", () => {
+    expect(SCAFFOLD_NAMES.length).toBeGreaterThan(0); // tripwire: catalogue must not go empty
+
+    const gallery = page(SCAFFOLDS_PAGE);
+    const home = page("index.html");
+    for (const name of SCAFFOLD_NAMES) {
+      expect(byPath.has(scaffoldPagePath(name)), `missing page for ${name}`).toBe(true);
+      expect(byPath.has(scaffoldFramePath(name)), `missing frame for ${name}`).toBe(true);
+      expect(byPath.has(scaffoldSnippetPath(name)), `missing payload for ${name}`).toBe(true);
+      // The nav is rendered into every page from the same list, so the home page
+      // is a sufficient witness that the scaffold is reachable.
+      expect(home, `${name} missing from the navigation shell`).toContain(
+        `href="${scaffoldPagePath(name)}"`,
+      );
+      expect(gallery, `${name} missing from the gallery`).toContain(
+        `href="${relUrl(SCAFFOLDS_PAGE, scaffoldPagePath(name))}"`,
+      );
+    }
+  });
+
+  it("adds a scaffold with no edit under site/ — asserted by registering one", () => {
+    // The meta-test the task asks for, run for real: a sixth scaffold appears in
+    // the catalogue and the site grows a page, a frame, a payload, a nav entry, a
+    // sitemap row and an llms.txt line without a byte changing in `site/` or in
+    // the generator. Restored in a `finally` so the catalogue is a fixture, not a
+    // side effect on every later test in this file.
+    const probe = "zz-probe-scaffold";
+    const before = buildDocsSite().length;
+    SCAFFOLDS[probe] = {
+      name: probe,
+      title: "Probe Scaffold",
+      description: "A scaffold that exists only to prove the site needs no edits",
+      patterns: ["hero"],
+      components: ["badge", "button"],
+    };
+    SCAFFOLD_NAMES.push(probe);
+    try {
+      const grown = buildDocsSite();
+      const grownByPath = new Map(grown.map((f) => [f.path, f.content]));
+
+      expect(grownByPath.has(scaffoldPagePath(probe))).toBe(true);
+      expect(grownByPath.has(scaffoldFramePath(probe))).toBe(true);
+      expect(grownByPath.has(scaffoldSnippetPath(probe))).toBe(true);
+      expect(grownByPath.get(SCAFFOLDS_PAGE)).toContain(
+        `href="${relUrl(SCAFFOLDS_PAGE, scaffoldPagePath(probe))}"`,
+      );
+      expect(grownByPath.get("index.html")).toContain(`href="${scaffoldPagePath(probe)}"`);
+      // The sitemap lists canonical URLs, which drop the `index.html`.
+      expect(grownByPath.get(SITEMAP_FILE)).toContain(`<loc>https://faqir.dev/scaffolds/${probe}/</loc>`);
+      expect(grownByPath.get(LLMS_INDEX_FILE)).toContain(`faqir scaffold ${probe}`);
+      // Three files per scaffold, and nothing else moved.
+      expect(grown.length).toBe(before + 3);
+    } finally {
+      delete SCAFFOLDS[probe];
+      SCAFFOLD_NAMES.splice(SCAFFOLD_NAMES.indexOf(probe), 1);
+    }
+  });
+
+  it("shows the document `faqir scaffold` writes, not a lookalike", () => {
+    // Every byte of a frame's <body> is the CLI's own output, run through the
+    // one transform every piece of registry markup on this site gets: external
+    // image sources neutralised, because no page here reaches the network.
+    for (const name of SCAFFOLD_NAMES) {
+      const expected = sanitizeReferenceFragment(scaffoldBody(name, REGISTRY));
+      expect(expected.length, `${name} composed an empty page`).toBeGreaterThan(500);
+      expect(page(scaffoldFramePath(name)), `${name}'s frame is not the generated page`).toContain(
+        expected,
+      );
+      expect(byPath.get(scaffoldSnippetPath(name)), `${name}'s payload is not the generated page`)
+        .toContain(expected);
+    }
+  });
+
+  it("shows the print scaffolds as documents, in their own theme", () => {
+    // The acceptance criterion 1.0R-08 states in words: an invoice on this site
+    // is a document, not a dump of the components it happens to use. That means
+    // the `document` root the print layer styles, and the theme the CLI pins for
+    // it — in the docs theme it would be a component dump with a page border.
+    const printed = SCAFFOLD_NAMES.filter((name) => SCAFFOLDS[name].defaultTheme);
+    expect(printed).toEqual(["invoice", "report"]);
+    for (const name of printed) {
+      const frame = page(scaffoldFramePath(name));
+      expect(frame, `${name} is not rendered as a document`).toContain('data-ui="document"');
+      expect(frame, `${name} is not paginated`).toContain('data-format="a4"');
+      expect(frame, `${name} is not in its own theme`).toContain(
+        `data-theme-name="${SCAFFOLDS[name].defaultTheme}"`,
+      );
+    }
+  });
+
+  it("names the one command that produces each page", () => {
+    for (const name of SCAFFOLD_NAMES) {
+      expect(page(scaffoldPagePath(name)), `${name} does not say how to generate it`).toContain(
+        `faqir scaffold ${name}`,
+      );
+    }
+  });
+
+  it("enters the axe and layout-lint sets automatically", () => {
+    // Membership, not a second scan: `tests/a11y/docs-site.pw.ts` sweeps
+    // `isSitePage` and `tests/visual/layout-lint.pw.ts` sweeps
+    // `isExamplePage || isShellPage`. A scaffold page that fell outside both
+    // would be published unscanned, which is the only thing this can assert here.
+    for (const name of SCAFFOLD_NAMES) {
+      const pagePath = scaffoldPagePath(name);
+      const framePath = scaffoldFramePath(name);
+      expect(isSitePage(pagePath) && isShellPage(pagePath), `${pagePath} is outside both gates`).toBe(true);
+      expect(isSitePage(framePath), `${framePath} is outside the axe gate`).toBe(true);
+      expect(isScaffoldFramePage(framePath)).toBe(true);
+    }
+    // …and the audit gate above (`the site dogfoods faqir audit`) iterates
+    // `sitePages`, which both classes are in — the strongest of the three.
+    const gated = new Set(sitePages.map((f) => f.path));
+    for (const name of SCAFFOLD_NAMES) {
+      expect(gated.has(scaffoldPagePath(name))).toBe(true);
+      expect(gated.has(scaffoldFramePath(name))).toBe(true);
+    }
+  });
+});
+
 // ── navigation shell ────────────────────────────────────────────────────────
 
 describe("navigation shell", () => {
@@ -640,7 +780,9 @@ describe("link integrity", () => {
     const broken: string[] = [];
     for (const f of files) {
       if (!f.path.endsWith(".html")) continue;
-      const site = isSitePage(f.path);
+      // A scaffold frame's body is the registry's markup, not the site's — the
+      // same exemption an examples/** page gets, for the same reason.
+      const site = isSitePage(f.path) && !isScaffoldFramePage(f.path);
       const doc = parseDocument(f.content, f.path);
       for (const el of doc.elements) {
         // On an example page only the assets are the generator's — everything in

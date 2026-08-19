@@ -5,6 +5,7 @@
 <!-- @ui:contains table button dialog pagination input badge -->
 
 <!-- Default state -->
+<!-- @ui:scaffold admin-dashboard internal-tool -->
 <div data-ui="crud-table" data-state="default" data-variant="default">
 
   <!-- ── Toolbar ── -->
@@ -144,6 +145,7 @@
     </div>
   </div>
 
+  <!-- @ui:scaffold-omit -->
   <!-- ── Edit Dialog ── -->
   <div data-ui="dialog" data-part="edit-dialog" data-state="closed" id="crud-edit-dialog">
     <div data-part="overlay" hidden></div>
@@ -212,6 +214,7 @@
       </div>
     </div>
   </div>
+  <!-- @ui:scaffold-omit-end -->
 
   <!-- ── Empty State (shown when data-state="empty") ── -->
   <div data-part="empty-state" hidden>
@@ -225,6 +228,7 @@
   </div>
 
 </div>
+<!-- @ui:scaffold-end -->
 
 <!-- ── Loading state ── -->
 <div data-ui="crud-table" data-state="loading" data-variant="default">

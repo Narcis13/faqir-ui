@@ -879,6 +879,19 @@ body {
   color: var(--color-primary);
 }
 
+/* ── Scaffold gallery (task 1.0R-08) ─────────────────────────────────────── */
+
+/* A scaffold is a whole page, not a component: the stage gives it room to be one
+ * rather than a 28rem letterbox. Both values are still the reader's to change —
+ * the frame keeps `resize: vertical` from [data-docs-preview-frame]. */
+[data-docs-scaffold-stage] {
+  min-block-size: 40rem;
+}
+
+[data-docs-scaffold-frame] {
+  block-size: 44rem;
+}
+
 /* ── Theme gallery ───────────────────────────────────────────────────────── */
 
 [data-docs-theme-switcher] {
@@ -1183,6 +1196,14 @@ body {
 
   [data-docs-preview-frame] {
     block-size: 25rem;
+  }
+
+  [data-docs-scaffold-stage] {
+    min-block-size: 0;
+  }
+
+  [data-docs-scaffold-frame] {
+    block-size: 32rem;
   }
 
   [data-docs-foundation-header] {

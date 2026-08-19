@@ -9,6 +9,7 @@
 // `--help` and the skill's Scaffolds section now read this map, so registering a
 // scaffold documents it in both places with no further edit.
 
+import { APP_SCAFFOLD_COMPONENTS, APP_SCAFFOLD_PATTERNS } from "./app";
 import { DOCUMENT_SCAFFOLDS } from "./documents";
 import { LANDING_COMPONENTS, LANDING_PATTERNS } from "./landing";
 
@@ -35,24 +36,18 @@ export const SCAFFOLDS: Record<string, ScaffoldDef> = {
   "admin-dashboard": {
     name: "admin-dashboard",
     title: "Admin Dashboard",
-    description: "Full admin dashboard with sidebar, data tables, and charts",
-    patterns: ["dashboard-shell", "crud-table"],
-    components: [
-      "button", "card", "input", "badge", "avatar", "separator", "spinner",
-      "grid", "stack", "surface", "table", "dialog", "dropdown", "tabs", "toast",
-      "pagination",
-    ],
+    description:
+      "Admin dashboard composed from the dashboard-shell and crud-table patterns — sidebar, header, metrics, and a records table",
+    patterns: [...APP_SCAFFOLD_PATTERNS["admin-dashboard"]],
+    components: [...APP_SCAFFOLD_COMPONENTS["admin-dashboard"]],
   },
   "internal-tool": {
     name: "internal-tool",
     title: "Internal Tool",
-    description: "Internal tool with settings, forms, and data management",
-    patterns: ["settings-page", "crud-table"],
-    components: [
-      "button", "card", "input", "label", "select", "checkbox", "switch",
-      "badge", "separator", "spinner", "grid", "stack",
-      "tabs", "dialog", "dropdown", "toast", "table", "pagination",
-    ],
+    description:
+      "Internal tool composed from the settings-page and crud-table patterns — tabbed settings, forms, and data management",
+    patterns: [...APP_SCAFFOLD_PATTERNS["internal-tool"]],
+    components: [...APP_SCAFFOLD_COMPONENTS["internal-tool"]],
   },
   ...DOCUMENT_SCAFFOLDS,
 };

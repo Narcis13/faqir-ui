@@ -26,6 +26,7 @@ import { loadThemeManifest, type ThemeManifest } from "../theme-manifest";
 import { readConfig, type FaqirConfig } from "../utils/config";
 import { ensureDir, getRegistryPath } from "../utils/fs";
 import { loadPluginMetadata, type PluginMetadata } from "./plugins";
+import { SCAFFOLDS, SCAFFOLD_NAMES } from "../scaffolds/registry";
 
 /**
  * The active theme, as embedded in context. Either the full theme manifest (when
@@ -686,6 +687,35 @@ export function formatContextMarkdown(data: ContextData): string {
     lines.push("");
   }
 
+  // Scaffolds — one section, not one block per scaffold: these are whole pages,
+  // and the component blocks above are the per-component reference.
+  if (SCAFFOLD_NAMES.length > 0) {
+    lines.push("## Scaffolds");
+    lines.push("");
+    lines.push(
+      "`faqir scaffold <name>` writes a complete page composed verbatim from maintained registry " +
+        "patterns, and installs everything it references. The output is audit-clean before it is " +
+        "edited, so generating one and replacing its copy beats composing a page by hand.",
+    );
+    lines.push("");
+    lines.push("| Scaffold | Command | Patterns | Theme |");
+    lines.push("|----------|---------|----------|-------|");
+    for (const name of SCAFFOLD_NAMES) {
+      const def = SCAFFOLDS[name];
+      lines.push(
+        `| ${name} | \`faqir scaffold ${name}\` | ${def.patterns.join(", ")} | ${
+          def.defaultTheme ?? "the project's"
+        } |`,
+      );
+    }
+    lines.push("");
+    for (const name of SCAFFOLD_NAMES) {
+      const def = SCAFFOLDS[name];
+      lines.push(`- **${name}** — ${def.description}. Installs: ${def.components.join(", ")}.`);
+    }
+    lines.push("");
+  }
+
   // Rules
   lines.push("## Rules");
   lines.push("");
@@ -936,6 +966,28 @@ export function formatContextLlms(data: ContextData): string {
     lines.push("## Plugins");
     lines.push("");
     lines.push("- [Official plugins](llms-full.txt#official-plugins): directives and magics loadable separately or through `faqir bundle --js`");
+    lines.push("");
+  }
+
+  // Scaffolds (task 1.0R-08) — whole pages, not components. They are a property
+  // of the CLI rather than of an installed `ui/` directory, so they are listed
+  // from the catalogue itself and the same lines appear in a project's llms.txt
+  // and in the one the documentation site hosts.
+  if (SCAFFOLD_NAMES.length > 0) {
+    lines.push("## Scaffolds");
+    lines.push("");
+    lines.push(
+      "Whole pages, each written by one command and composed verbatim from the patterns below — " +
+        "already audit-clean, accessible, and themed from tokens. Prefer one of these over " +
+        "hand-composing a page:",
+    );
+    lines.push("");
+    for (const name of SCAFFOLD_NAMES) {
+      const def = SCAFFOLDS[name];
+      lines.push(
+        `- [${name}](llms-full.txt#scaffolds): ${def.description} — \`faqir scaffold ${name}\``,
+      );
+    }
     lines.push("");
   }
 
@@ -1193,6 +1245,35 @@ export function formatContextLlmsFull(data: ContextData): string {
     for (const [name, pat] of patternEntries) {
       lines.push(...llmsFullComponentBlock(name, pat as Record<string, unknown>));
     }
+  }
+
+  // Scaffolds — one section, not one block per scaffold: these are whole pages,
+  // and the component blocks above are the per-component reference.
+  if (SCAFFOLD_NAMES.length > 0) {
+    lines.push("## Scaffolds");
+    lines.push("");
+    lines.push(
+      "`faqir scaffold <name>` writes a complete page composed verbatim from maintained registry " +
+        "patterns, and installs everything it references. The output is audit-clean before it is " +
+        "edited, so generating one and replacing its copy beats composing a page by hand.",
+    );
+    lines.push("");
+    lines.push("| Scaffold | Command | Patterns | Theme |");
+    lines.push("|----------|---------|----------|-------|");
+    for (const name of SCAFFOLD_NAMES) {
+      const def = SCAFFOLDS[name];
+      lines.push(
+        `| ${name} | \`faqir scaffold ${name}\` | ${def.patterns.join(", ")} | ${
+          def.defaultTheme ?? "the project's"
+        } |`,
+      );
+    }
+    lines.push("");
+    for (const name of SCAFFOLD_NAMES) {
+      const def = SCAFFOLDS[name];
+      lines.push(`- **${name}** — ${def.description}. Installs: ${def.components.join(", ")}.`);
+    }
+    lines.push("");
   }
 
   // Rules

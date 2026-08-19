@@ -218,8 +218,8 @@ Both are **data layers** — recipe controllers still never call `fetch`.
 | Scaffold | Produces | Patterns | Default theme |
 |----------|----------|----------|---------------|
 | `landing-page` | Marketing landing page composed from the hero, feature-grid, pricing, and site-footer patterns | `hero`, `feature-grid`, `pricing`, `site-footer` | project theme |
-| `admin-dashboard` | Full admin dashboard with sidebar, data tables, and charts | `dashboard-shell`, `crud-table` | project theme |
-| `internal-tool` | Internal tool with settings, forms, and data management | `settings-page`, `crud-table` | project theme |
+| `admin-dashboard` | Admin dashboard composed from the dashboard-shell and crud-table patterns — sidebar, header, metrics, and a records table | `dashboard-shell`, `crud-table` | project theme |
+| `internal-tool` | Internal tool composed from the settings-page and crud-table patterns — tabbed settings, forms, and data management | `settings-page`, `crud-table` | project theme |
 | `invoice` | Print-ready invoice with line items, payment QR code, and signatures | `document` | `document` |
 | `report` | Print-ready business report with callouts, metrics, details, and imagery | `document` | `document` |
 

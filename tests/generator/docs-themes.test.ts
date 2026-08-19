@@ -26,8 +26,10 @@ import {
   discoverThemes,
   isSitePage,
   isFramePage,
+  isScaffoldFramePage,
   isShellPage,
   relUrl,
+  scaffoldPagePath,
   themePreviewPath,
   PLAYGROUND_PAGE,
   LAYOUTS_PAGE,
@@ -36,6 +38,7 @@ import {
   SITE_SCRIPTS,
 } from "../../src/generator/docs";
 import { parseDocument } from "../../src/parser/html-parser";
+import { SCAFFOLD_NAMES } from "../../src/scaffolds";
 
 const REPO = join(import.meta.dir, "../..");
 const REGISTRY = join(REPO, "registry");
@@ -291,10 +294,14 @@ describe("site JavaScript", () => {
         f.path !== PLAYGROUND_PAGE &&
         f.path !== THEMES_PAGE,
     );
-    expect(documentation.length).toBe(components.length + 12);
+    expect(documentation.length).toBe(components.length + 13 + SCAFFOLD_NAMES.length);
     for (const f of documentation) {
       const scripts = [...f.content.matchAll(/<script\b[^>]*>/g)].map((m) => m[0]);
-      const isComponentPage = components.some((c) => c.pagePath === f.path);
+      // A scaffold page carries the same copy-for-agents wiring a component page
+      // does, and for the same payload (task 1.0R-08).
+      const isComponentPage =
+        components.some((c) => c.pagePath === f.path) ||
+        SCAFFOLD_NAMES.some((name) => scaffoldPagePath(name) === f.path);
       const allowed = isComponentPage
         ? [
             `<script src="${relUrl(f.path, "scripts/gallery.js")}" defer>`,
@@ -368,7 +375,15 @@ describe("gallery frames", () => {
 
   it("carry no navigation — there is nowhere to navigate from inside a frame", () => {
     for (const f of files.filter((x) => isFramePage(x.path))) {
-      expect(f.content).not.toContain('data-ui="dashboard-shell"');
+      // A scaffold frame is exempt from the first half and only from it: the
+      // admin-dashboard scaffold IS a `dashboard-shell`, so the shell there is
+      // the document being demonstrated rather than the docs site's own chrome.
+      // The `<main>` half still holds, and so does everything else a frame is
+      // held to — it is a site page like any other.
+      if (!isScaffoldFramePage(f.path)) {
+        expect(f.content).not.toContain('data-ui="dashboard-shell"');
+      }
+      expect(f.content).not.toContain("data-docs-shell");
       expect(f.content).toContain("<main");
     }
   });

@@ -15,8 +15,7 @@
 // the page inherits the pattern's audit-clean, axe-clean, themed CSS instead of
 // one-off inline styles. The four sections carry zero JavaScript between them.
 
-import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { extractScaffoldBlock, readPatternSection } from "./compose";
 
 /** Patterns composed into the page, in the order they are laid out. */
 export const LANDING_PATTERNS = ["hero", "feature-grid", "pricing", "site-footer"] as const;
@@ -56,35 +55,10 @@ export interface LandingScaffoldOptions {
   registryPath: string;
 }
 
-const START_MARKER = "<!-- @ui:scaffold landing-page -->";
-const END_MARKER = "<!-- @ui:scaffold-end -->";
-
-/**
- * The canonical example a pattern offers to the landing-page scaffold: the block
- * between its `@ui:scaffold landing-page` markers. Throws rather than falling
- * back to synthesised markup — a missing marker is a registry bug, and silently
- * emitting a different page is exactly the drift this module exists to remove.
- */
-export function extractScaffoldBlock(source: string, pattern: string): string {
-  const start = source.indexOf(START_MARKER);
-  const end = source.indexOf(END_MARKER);
-  if (start === -1 || end === -1 || end < start) {
-    throw new Error(
-      `Pattern '${pattern}' has no <!-- @ui:scaffold landing-page --> … <!-- @ui:scaffold-end --> block. ` +
-        `The landing-page scaffold composes patterns verbatim and cannot synthesise a replacement.`,
-    );
-  }
-  return source.slice(start + START_MARKER.length, end).trim();
-}
-
-/** Read one pattern's reference page out of the registry. */
-export function readPatternSection(registryPath: string, pattern: string): string {
-  const file = join(registryPath, "patterns", pattern, `${pattern}.html`);
-  if (!existsSync(file)) {
-    throw new Error(`Pattern '${pattern}' is missing from the registry (${file}).`);
-  }
-  return extractScaffoldBlock(readFileSync(file, "utf8"), pattern);
-}
+// The marker grammar now lives in ./compose.ts, shared with the app scaffolds
+// (task 1.0R-08). Re-exported here because this module is where it was born and
+// where the landing tests still reach for it.
+export { extractScaffoldBlock, readPatternSection };
 
 const GUIDE = `  <!--
     Composed by \`faqir scaffold landing-page\` from four maintained patterns:
@@ -99,15 +73,25 @@ const GUIDE = `  <!--
   -->`;
 
 /**
- * Assemble the page: hero + feature-grid + pricing inside <main> (the main
- * landmark the `landmark` audit rule requires), with the site-footer as a
+ * The page's `<body>` contents: hero + feature-grid + pricing inside <main> (the
+ * main landmark the `landmark` audit rule requires), with the site-footer as a
  * sibling so it stays the document's contentinfo.
+ *
+ * Split out from {@link generateLandingPage} so the documentation site can mount
+ * the same composition in its own frame (task 1.0R-08) rather than re-deriving
+ * a lookalike: the gallery shows the bytes `faqir scaffold` writes.
  */
+export function landingScaffoldBody(registryPath: string): string {
+  const sections = LANDING_MAIN_PATTERNS.map((p) => readPatternSection(registryPath, p)).join(
+    "\n\n",
+  );
+  const footer = readPatternSection(registryPath, "site-footer");
+  return `<main>\n\n${sections}\n\n</main>\n\n${footer}`;
+}
+
+/** The whole document `faqir scaffold landing-page` writes. */
 export function generateLandingPage(options: LandingScaffoldOptions): string {
-  const sections = LANDING_MAIN_PATTERNS.map((p) =>
-    readPatternSection(options.registryPath, p),
-  ).join("\n\n");
-  const footer = readPatternSection(options.registryPath, "site-footer");
+  const body = landingScaffoldBody(options.registryPath);
 
   return `<!DOCTYPE html>
 <html lang="en" data-theme="light">
@@ -120,13 +104,7 @@ ${options.stylesheets}
 <body>
 ${GUIDE}
 
-<main>
-
-${sections}
-
-</main>
-
-${footer}
+${body}
 
 </body>
 </html>

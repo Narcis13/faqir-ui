@@ -1774,14 +1774,14 @@
         },
         {
           "path": "crud-table.html",
-          "sha256": "87adb744326e3d0c1cfa5a8e7cca1e5e5d7eae6db3dbf4d89ac4da596025ae12"
+          "sha256": "703166ac93ab146e105e025b7d414cdaf7f574ffe4c48f33f04fe92cd48f6908"
         },
         {
           "path": "crud-table.manifest.json",
           "sha256": "e37c6db783ce6bed63b2ac421cd63a1c1a796b891509da23fe2e8f0749cf46e6"
         }
       ],
-      "hash": "c02ae779b8f569d624ae25f0cef21d52f5fde1069d35f1b3644f6a5e42b507c5",
+      "hash": "0a2e79609d8eb86122288cf9f6ee5e0cd99acee7ea8cdf9c19da467a71f5cb52",
       "deps": [
         "table",
         "button",
@@ -1803,14 +1803,14 @@
         },
         {
           "path": "dashboard-shell.html",
-          "sha256": "0fa5566181f9c2fa50d827a1fa8d792d2c76654f4b2cb209a74ef5481df3d371"
+          "sha256": "a0ad6f38b335cf73bf4b1f97965ae63a858a43b2598f6ec52fb440a32fee23b9"
         },
         {
           "path": "dashboard-shell.manifest.json",
           "sha256": "a1364bd9d5db89bc2199c45b9bcd19729fd4b3ad7c6cc6aad90cdc5cd357ab93"
         }
       ],
-      "hash": "4b06cdc4c1fd5c5f2f0dc408120bab198fc3c67674d703c060db7fe0cf124b2a",
+      "hash": "195f0417e30206640ed2479af590f23ab79459e6eaab883af1a37db52d964264",
       "deps": [
         "card",
         "grid",
@@ -2062,14 +2062,14 @@
         },
         {
           "path": "settings-page.html",
-          "sha256": "6feef9918f4c8cfb43c4dc06f7c92a9b8dfbcf0697f84143220bcddc67140237"
+          "sha256": "54ece38490abf5cd6c96553b1e4b2ee0258d755ee94294777dbf980553dd3c36"
         },
         {
           "path": "settings-page.manifest.json",
           "sha256": "170bdc5f95fcbefd3c3ffbaaf1840b5d0c7a607f0a35a71c4ea7f0cadea37d09"
         }
       ],
-      "hash": "47168e3b85db4e0a8266a1da4cfaaf75f4e523b608fbea91dfabee0169bfb6d5",
+      "hash": "4d4ef328f2d44253f0bff031ae9595704b0a7efe964ab6f938187da042952d08",
       "deps": [
         "tabs",
         "card",
