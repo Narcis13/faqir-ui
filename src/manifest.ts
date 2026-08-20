@@ -1,5 +1,6 @@
 // Manifest JSON schema — TypeScript types + validation
 
+import { readFile } from "node:fs/promises";
 import { isProtocolAttribute } from "./utils/breakpoints";
 
 export interface ManifestSlot {
@@ -384,7 +385,8 @@ export function validateManifest(data: unknown): ManifestValidationError[] {
 }
 
 export async function loadManifest(path: string): Promise<Manifest> {
-  const file = Bun.file(path);
-  const json = await file.json();
-  return json as Manifest;
+  // `node:fs/promises`, not `Bun.file`: manifest loading is reached from the
+  // Playwright suites (a11y, visual), which run under Node in the pinned
+  // Playwright container, where `Bun` is not a global.
+  return JSON.parse(await readFile(path, "utf8")) as Manifest;
 }

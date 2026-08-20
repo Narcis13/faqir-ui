@@ -1272,6 +1272,16 @@
   function runMotion(el, phase, done) {
     done = done || function() {};
 
+    // Call off a cycle still in flight on this element before starting a new
+    // one. A toggle that arrives before the previous cycle completed used to
+    // leave the old cycle's finisher armed, and it would then fire *into* the
+    // new one: clearing the new `data-motion` mid-flight (so the element jumps
+    // instead of animating), and — when the stale cycle was a leave — running
+    // its `done`, which sets `display: none` on an element the new enter had
+    // just made visible. One cancel handle per element, cleared on completion.
+    if (el.__faqirMotion) el.__faqirMotion();
+    el.__faqirMotion = null;
+
     if (prefersReducedMotion()) {
       el.removeAttribute('data-motion');
       done();
@@ -1291,17 +1301,27 @@
       ? requestAnimationFrame
       : function(cb) { return setTimeout(cb, 16); };
 
+    // Cancelled between the from-state and the rAF: the next cycle has already
+    // stamped its own from-state, so this one must not stamp its active stage.
+    var cancelled = false;
+    el.__faqirMotion = function() { cancelled = true; };
+
     raf(function() {
+      if (cancelled) return;
       el.setAttribute('data-motion', phase + '-active'); // to-state + transition
 
       var finished = false;
       var timer = null;
-      function finish() {
-        if (finished) return;
-        finished = true;
+      function teardown() {
         clearTimeout(timer);
         el.removeEventListener('transitionend', onEnd);
         el.removeEventListener('animationend', onEnd);
+      }
+      function finish() {
+        if (finished || cancelled) return;
+        finished = true;
+        teardown();
+        el.__faqirMotion = null;
         el.removeAttribute('data-motion');
         done();
       }
@@ -1312,6 +1332,7 @@
       el.addEventListener('transitionend', onEnd);
       el.addEventListener('animationend', onEnd);
       timer = setTimeout(finish, motionTimeoutMs(el));
+      el.__faqirMotion = function() { cancelled = true; teardown(); };
     });
   }
 

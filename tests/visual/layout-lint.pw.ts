@@ -114,6 +114,19 @@ function findingsAt(viewport: Viewport): PageFindings[] {
 }
 
 test.beforeAll(async ({ browser }) => {
+  // The whole measurement lives in this one hook — `PAGES.length` × `VIEWPORTS`
+  // page loads, ~370 of them, each doing a `goto`, a font wait, a motion settle
+  // and a geometry read. That is minutes of work, and a `beforeAll` gets the
+  // config's plain 30s test timeout unless it asks for more (`test.slow()` is
+  // not allowed in beforeAll). Without this the hook is killed mid-sweep on the
+  // CI runner, the in-memory server is torn down by `afterAll` while a `goto` is
+  // still in flight, and the job reports `ERR_CONNECTION_REFUSED` on whichever
+  // page happened to be next — a confusing symptom for a plain timeout. The
+  // sweep measures ~35s locally and rather more on a shared runner; ten minutes
+  // is an order of magnitude of headroom and still a bound, so a sweep that
+  // truly hangs fails rather than burning the job's whole budget.
+  test.setTimeout(600_000);
+
   const byPath = new Map(files.map((f) => [f.path, f.content]));
   server = createServer((req, res) => {
     const path =

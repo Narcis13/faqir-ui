@@ -156,6 +156,57 @@ describe("l-transition · completion paths", () => {
   });
 });
 
+describe("l-transition · re-entrancy", () => {
+  // The cycle that is still in flight when the next toggle arrives. This is the
+  // condition the CI runner kept hitting and a local machine did not: the mount
+  // starts a leave cycle, and on a loaded runner its ~50ms finisher had not run
+  // yet when the click flipped the element back on. The stale finisher then
+  // fired into the new cycle — clearing the enter's `data-motion` between the
+  // from-state and the active stage, and running the leave's `done`, which puts
+  // `display: none` on an element the enter had just shown. A visibly broken
+  // toggle, not merely a flaky assertion.
+  it("a toggle mid-cycle cancels the old cycle instead of being clipped by it", async () => {
+    document.body.innerHTML = `
+      <div l-data="{ visible: false }">
+        <span id="t" l-show="visible" l-transition="fade">Hi</span>
+        <button id="b" @click="visible = !visible"></button>
+      </div>`;
+    Faqir.start();
+    // Deliberately starved: one tick is past the mount leave's rAF and short of
+    // its finisher, so the click below lands with a cycle still running.
+    await tick();
+
+    const span = document.getElementById("t")!;
+    const seq = recordMotion(span);
+    document.getElementById("b")!.click();
+    await settle(300);
+
+    expect(phases(seq)).toEqual(["enter", "enter-active", null]);
+    // The load-bearing one: the stale leave must not have hidden it.
+    expect(span.style.display).not.toBe("none");
+  });
+
+  it("the last of several rapid toggles decides the final state", async () => {
+    document.body.innerHTML = `
+      <div l-data="{ visible: true }">
+        <span id="t" l-show="visible" l-transition="fade">Hi</span>
+        <button id="b" @click="visible = !visible"></button>
+      </div>`;
+    Faqir.start();
+    await settle();
+
+    const span = document.getElementById("t")!;
+    const button = document.getElementById("b")!;
+    button.click(); // → hide
+    await tick();
+    button.click(); // → show, while the leave is mid-flight
+    await settle(300);
+
+    expect(span.hasAttribute("data-motion")).toBe(false); // no residue
+    expect(span.style.display).not.toBe("none");
+  });
+});
+
 describe("l-transition · preset resolution", () => {
   function captureWarn() {
     const warns: string[] = [];

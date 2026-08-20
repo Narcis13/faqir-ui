@@ -22,6 +22,26 @@ export interface ComponentSummary {
 }
 
 /**
+ * Every component directory inside one layer directory — i.e. every subdirectory
+ * carrying its own `<name>.manifest.json` — sorted by name.
+ *
+ * Plain `node:fs`, deliberately: these discovery helpers are reached from the
+ * Playwright suites (`tests/a11y`, `tests/visual`), which run under **Node** in
+ * the pinned Playwright container, not under Bun. `Bun.Glob` here is a
+ * `ReferenceError: Bun is not defined` there, and the whole a11y/visual job
+ * fails at import time rather than at any assertion. Sorting also makes the
+ * discovery order deterministic across filesystems, which the generated
+ * manifests payload documents as its own contract.
+ */
+function componentDirs(layerPath: string): string[] {
+  return readdirSync(layerPath, { withFileTypes: true })
+    .filter((e) => e.isDirectory())
+    .map((e) => e.name)
+    .filter((name) => existsSync(join(layerPath, name, `${name}.manifest.json`)))
+    .sort();
+}
+
+/**
  * Build a map of `alias → canonical component name` by scanning registry
  * manifests for the optional `aliases` field (see manifest.ts schema notes).
  *
@@ -36,11 +56,8 @@ export function getRegistryAliases(registryPath: string): Map<string, string> {
     const layerPath = join(registryPath, layer);
     if (!existsSync(layerPath)) continue;
 
-    const glob = new Bun.Glob("*/");
-    for (const dir of glob.scanSync({ cwd: layerPath, onlyFiles: false })) {
-      const name = dir.replace(/\/$/, "");
+    for (const name of componentDirs(layerPath)) {
       const manifestPath = join(layerPath, name, `${name}.manifest.json`);
-      if (!existsSync(manifestPath)) continue;
 
       let manifest: { aliases?: unknown };
       try {
@@ -108,13 +125,7 @@ export function listRegistryComponents(registryPath: string, layer?: Layer): str
     const layerPath = join(registryPath, l);
     if (!existsSync(layerPath)) continue;
 
-    const glob = new Bun.Glob("*/");
-    for (const dir of glob.scanSync({ cwd: layerPath, onlyFiles: false })) {
-      const name = dir.replace(/\/$/, "");
-      if (existsSync(join(layerPath, name, `${name}.manifest.json`))) {
-        components.push(name);
-      }
-    }
+    components.push(...componentDirs(layerPath));
   }
 
   return components;
@@ -140,15 +151,7 @@ export async function listRegistryComponentsWithMeta(
     const layerPath = join(registryPath, layer);
     if (!existsSync(layerPath)) continue;
 
-    const names: string[] = [];
-    const glob = new Bun.Glob("*/");
-    for (const dir of glob.scanSync({ cwd: layerPath, onlyFiles: false })) {
-      const name = dir.replace(/\/$/, "");
-      if (existsSync(join(layerPath, name, `${name}.manifest.json`))) {
-        names.push(name);
-      }
-    }
-    names.sort();
+    const names = componentDirs(layerPath);
 
     for (const name of names) {
       let manifest: Manifest;
