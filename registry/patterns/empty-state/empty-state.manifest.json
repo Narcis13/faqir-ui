@@ -1,10 +1,18 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "empty-state",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "kind": "pattern",
   "category": "composite",
   "description": "Placeholder display for empty content areas with icon, message, and action",
+
+  "changes": [
+    {
+      "version": "2.0.0",
+      "note": "BREAKING: the action cluster is one slot. data-part=\"action\" and data-part=\"secondary-action\" — two slots the 1.x sheet styled and the 1.x manifest declared — are replaced by the single data-part=\"actions\" cluster the reference now authors (task 0.9-04 moved the markup, 1.0R-07 moved the styling, and this entry records the vocabulary change neither of them wrote down). Migration: wrap the buttons in one <div data-part=\"actions\"> instead of marking each one; the cluster wraps and centres, which is what stopped the two-button row bleeding past both phone edges. Also corrected here: data-size=\"md\" and data-size=\"lg\" are declared again. Both are styled by empty-state.css and both were legal in 1.x, but the manifest had been trimmed to sm alone, so faqir audit rejected markup the stylesheet renders — md is the unstyled default, lg is the larger cluster.",
+      "breaking": true
+    }
+  ],
   "anatomy": {
     "tag": "div",
     "selector": "[data-ui='empty-state']",
@@ -39,9 +47,11 @@
   "variants": {
     "size": {
       "values": [
-        "sm"
+        "sm",
+        "md",
+        "lg"
       ],
-      "default": "",
+      "default": "md",
       "attr": "data-size",
       "applied_to": "root"
     }

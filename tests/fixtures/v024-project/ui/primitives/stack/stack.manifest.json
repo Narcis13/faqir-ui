@@ -1,0 +1,87 @@
+{
+  "name": "stack",
+  "version": "1.0.0",
+  "kind": "primitive",
+  "category": "layout",
+  "description": "Flexbox layout container for vertical or horizontal stacking with configurable gap and alignment",
+
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='stack']",
+    "content_model": "block"
+  },
+
+  "slots": {},
+
+  "variants": {
+    "direction": {
+      "values": ["vertical", "horizontal"],
+      "default": "vertical",
+      "attr": "data-variant",
+      "applied_to": "root"
+    },
+    "gap": {
+      "values": ["0", "1", "2", "3", "4", "6", "8"],
+      "default": "0",
+      "attr": "data-gap",
+      "applied_to": "root"
+    },
+    "align": {
+      "values": ["start", "center", "end", "stretch"],
+      "default": "stretch",
+      "attr": "data-align",
+      "applied_to": "root"
+    }
+  },
+
+  "states": {},
+
+  "a11y": {
+    "notes": "Layout-only primitive; no semantic role required",
+    "keyboard": {}
+  },
+
+  "tokens_used": [
+    "space-0", "space-1", "space-2", "space-3", "space-4", "space-6", "space-8"
+  ],
+
+  "templates": {
+    "html": "<div data-ui=\"stack\" data-gap=\"{gap}\">{children}</div>",
+    "html_horizontal": "<div data-ui=\"stack\" data-variant=\"horizontal\" data-gap=\"{gap}\">{children}</div>",
+    "html_aligned": "<div data-ui=\"stack\" data-gap=\"{gap}\" data-align=\"{align}\">{children}</div>"
+  },
+
+  "safe_transforms": [
+    "change-direction",
+    "change-gap",
+    "change-alignment",
+    "add-children",
+    "remove-children"
+  ],
+
+  "unsafe_transforms": [
+    "change-display-property",
+    "replace-with-non-flex-container"
+  ],
+
+  "composition": {
+    "contains": [],
+    "used_in": ["auth-form", "settings-page", "dashboard-shell"]
+  },
+
+  "files": {
+    "html": "stack.html",
+    "css": "stack.css",
+    "manifest": "stack.manifest.json"
+  },
+
+  "tests": [
+    "renders-as-div-element",
+    "default-direction-is-column",
+    "horizontal-variant-sets-row-direction",
+    "gap-4-applies-space-4",
+    "align-center-applies-center",
+    "align-stretch-applies-stretch",
+    "no-gap-attr-defaults-to-zero"
+  ]
+}

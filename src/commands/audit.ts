@@ -7,7 +7,7 @@
 //     manifests. Filesystem-free per call (the shared `auditHtmlSource` engine,
 //     the same one the MCP `faqir_audit_html` tool drives) and needs no project.
 
-import { configExists } from "../utils/config";
+import { configExists, missingConfigMessage } from "../utils/config";
 import { log } from "../utils/logger";
 import { getRegistryPath } from "../utils/fs";
 import { knownUiValues, loadRegistryManifestMap } from "../utils/components";
@@ -101,7 +101,7 @@ export async function audit(args: string[]): Promise<void> {
   }
 
   if (!configExists(cwd)) {
-    log.error("No faqir.config.json found. Run 'faqir init' first.");
+    log.error(missingConfigMessage(cwd));
     process.exit(1);
   }
 

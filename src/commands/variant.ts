@@ -3,7 +3,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { log } from "../utils/logger";
-import { configExists, readConfig } from "../utils/config";
+import { configExists, readConfig, missingConfigMessage } from "../utils/config";
 import { loadManifest } from "../manifest";
 
 function printHelp() {
@@ -45,7 +45,7 @@ async function variantAdd(componentName: string, variantStr: string): Promise<vo
   const cwd = process.cwd();
 
   if (!configExists(cwd)) {
-    log.error("No faqir.config.json found. Run 'faqir init' first.");
+    log.error(missingConfigMessage(cwd));
     process.exit(1);
   }
 
@@ -121,7 +121,7 @@ async function variantRemove(componentName: string, variantStr: string): Promise
   const cwd = process.cwd();
 
   if (!configExists(cwd)) {
-    log.error("No faqir.config.json found. Run 'faqir init' first.");
+    log.error(missingConfigMessage(cwd));
     process.exit(1);
   }
 

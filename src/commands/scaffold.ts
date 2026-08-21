@@ -3,7 +3,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { log } from "../utils/logger";
-import { configExists, readConfig, writeConfig } from "../utils/config";
+import { configExists, readConfig, writeConfig, missingConfigMessage } from "../utils/config";
 import { copyFile, ensureDir, getRegistryPath } from "../utils/fs";
 import { generateBundle } from "../utils/bundler";
 import { generateDocumentScaffold, type DocumentScaffoldName } from "../scaffolds/documents";
@@ -171,7 +171,7 @@ export async function scaffold(args: string[]): Promise<void> {
   const cwd = process.cwd();
 
   if (!configExists(cwd)) {
-    log.error("No faqir.config.json found. Run 'faqir init' first.");
+    log.error(missingConfigMessage(cwd));
     process.exit(1);
   }
 

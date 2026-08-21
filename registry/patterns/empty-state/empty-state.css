@@ -120,7 +120,7 @@
   max-width: 44ch;
 }
 
-[data-ui="empty-state"][data-size="lg"] [data-part="action"] {
+[data-ui="empty-state"][data-size="lg"] [data-part="actions"] {
   margin-top: var(--space-4);
 }
 

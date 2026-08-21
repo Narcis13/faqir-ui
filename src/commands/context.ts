@@ -2,7 +2,7 @@
 
 import { log } from "../utils/logger";
 import { emitJSON } from "../utils/json-output";
-import { configExists } from "../utils/config";
+import { configExists, missingConfigMessage } from "../utils/config";
 import {
   writeContextFiles,
   writeLlmsFiles,
@@ -60,7 +60,7 @@ export async function context(args: string[]): Promise<void> {
   const cwd = process.cwd();
 
   if (!configExists(cwd)) {
-    log.error("No faqir.config.json found. Run 'faqir init' first.");
+    log.error(missingConfigMessage(cwd));
     process.exit(1);
   }
 

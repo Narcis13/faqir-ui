@@ -1,0 +1,265 @@
+/* @ui:component auth-form */
+/* @ui:tokens color-bg color-bg-subtle color-fg color-fg-muted color-border color-border-strong color-ring color-primary color-primary-hover color-primary-fg color-destructive color-destructive-subtle color-success color-success-subtle radius-lg radius-xl shadow-sm shadow-md space-1 space-2 space-3 space-4 space-5 space-6 space-8 font-sans text-xs text-sm text-base text-lg text-xl text-2xl weight-medium weight-semibold weight-bold leading-tight leading-normal duration-fast duration-normal ease-default */
+
+/* ── Root Container ── */
+[data-ui="auth-form"] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  font-family: var(--font-sans);
+}
+
+[data-ui="auth-form"] > [data-ui="card"] {
+  width: 100%;
+  max-width: var(--auth-form-max-width, 400px);
+}
+
+/* ── Header ── */
+[data-ui="auth-form"] [data-part="header"] {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-6);
+  padding-bottom: 0;
+  text-align: center;
+}
+
+[data-ui="auth-form"] [data-part="title"] {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+  color: var(--color-fg);
+}
+
+[data-ui="auth-form"] [data-part="description"] {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-fg-muted);
+  line-height: var(--leading-normal);
+}
+
+/* ── Error Message ── */
+[data-ui="auth-form"] [data-part="error"] {
+  display: none;
+  margin: var(--space-4) var(--space-6) 0;
+  padding: var(--space-3);
+  background: var(--color-destructive-subtle);
+  border: 1px solid var(--color-destructive);
+  border-radius: var(--radius-lg);
+  color: var(--color-destructive);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+}
+
+[data-ui="auth-form"] [data-part="error"] p {
+  margin: 0;
+}
+
+[data-ui="auth-form"][data-state="error"] [data-part="error"] {
+  display: block;
+}
+
+[data-ui="auth-form"] [data-part="error"]:not([hidden]) {
+  display: block;
+}
+
+/* ── Form ── */
+[data-ui="auth-form"] [data-part="form"] {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-6);
+}
+
+/* ── Field Groups ── */
+[data-ui="auth-form"] [data-part="email-field"],
+[data-ui="auth-form"] [data-part="password-field"],
+[data-ui="auth-form"] [data-part="name-field"] {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* ── Submit Button ── */
+[data-ui="auth-form"] [data-part="submit"] {
+  width: 100%;
+  margin-top: var(--space-2);
+}
+
+/* ── Separator ── */
+[data-ui="auth-form"] [data-part="separator"] {
+  padding: 0 var(--space-6);
+}
+
+/* ── Social Buttons ── */
+[data-ui="auth-form"] [data-part="social"] {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: 0 var(--space-6);
+}
+
+[data-ui="auth-form"] [data-part="social"] > [data-ui="button"] {
+  width: 100%;
+}
+
+/* ── Footer ── */
+[data-ui="auth-form"] [data-part="footer"] {
+  padding: var(--space-4) var(--space-6) var(--space-6);
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--color-fg-muted);
+}
+
+[data-ui="auth-form"] [data-part="footer"] p {
+  margin: 0;
+}
+
+[data-ui="auth-form"] [data-part="footer"] a {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: var(--weight-medium);
+}
+
+[data-ui="auth-form"] [data-part="footer"] a:hover {
+  text-decoration: underline;
+  color: var(--color-primary-hover);
+}
+
+[data-ui="auth-form"] [data-part="footer"] a:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm, 0.25rem);
+}
+
+/* ── Mode Variants ── */
+
+/* Login mode: hide name field */
+[data-ui="auth-form"][data-variant="login"] [data-part="name-field"] {
+  display: none;
+}
+
+/* Register mode: hide social section and separator */
+[data-ui="auth-form"][data-variant="register"] [data-part="social"],
+[data-ui="auth-form"][data-variant="register"] [data-part="separator"] {
+  display: none;
+}
+
+/* Forgot-password mode: hide password, name, social, separator */
+[data-ui="auth-form"][data-variant="forgot-password"] [data-part="password-field"],
+[data-ui="auth-form"][data-variant="forgot-password"] [data-part="name-field"],
+[data-ui="auth-form"][data-variant="forgot-password"] [data-part="social"],
+[data-ui="auth-form"][data-variant="forgot-password"] [data-part="separator"] {
+  display: none;
+}
+
+/* ── State: Loading ── */
+[data-ui="auth-form"][data-state="loading"] [data-part="form"] {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* ── State: Success ── */
+[data-ui="auth-form"][data-state="success"] [data-part="error"] {
+  display: none;
+}
+
+/* ── Size Variants ── */
+
+/* Small */
+[data-ui="auth-form"][data-size="sm"] > [data-ui="card"] {
+  max-width: var(--auth-form-max-width-sm, 340px);
+}
+
+[data-ui="auth-form"][data-size="sm"] [data-part="header"] {
+  padding: var(--space-4);
+  padding-bottom: 0;
+}
+
+[data-ui="auth-form"][data-size="sm"] [data-part="title"] {
+  font-size: var(--text-lg);
+}
+
+[data-ui="auth-form"][data-size="sm"] [data-part="form"] {
+  padding: var(--space-4);
+  gap: var(--space-3);
+}
+
+[data-ui="auth-form"][data-size="sm"] [data-part="separator"] {
+  padding: 0 var(--space-4);
+}
+
+[data-ui="auth-form"][data-size="sm"] [data-part="social"] {
+  padding: 0 var(--space-4);
+  gap: var(--space-2);
+}
+
+[data-ui="auth-form"][data-size="sm"] [data-part="footer"] {
+  padding: var(--space-3) var(--space-4) var(--space-4);
+}
+
+[data-ui="auth-form"][data-size="sm"] [data-part="error"] {
+  margin: var(--space-3) var(--space-4) 0;
+}
+
+/* Large */
+[data-ui="auth-form"][data-size="lg"] > [data-ui="card"] {
+  max-width: var(--auth-form-max-width-lg, 480px);
+}
+
+[data-ui="auth-form"][data-size="lg"] [data-part="header"] {
+  padding: var(--space-8);
+  padding-bottom: 0;
+}
+
+[data-ui="auth-form"][data-size="lg"] [data-part="title"] {
+  font-size: var(--text-2xl);
+}
+
+[data-ui="auth-form"][data-size="lg"] [data-part="form"] {
+  padding: var(--space-8);
+  gap: var(--space-5);
+}
+
+[data-ui="auth-form"][data-size="lg"] [data-part="separator"] {
+  padding: 0 var(--space-8);
+}
+
+[data-ui="auth-form"][data-size="lg"] [data-part="social"] {
+  padding: 0 var(--space-8);
+  gap: var(--space-4);
+}
+
+[data-ui="auth-form"][data-size="lg"] [data-part="footer"] {
+  padding: var(--space-5) var(--space-8) var(--space-8);
+}
+
+[data-ui="auth-form"][data-size="lg"] [data-part="error"] {
+  margin: var(--space-5) var(--space-8) 0;
+}
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+  [data-ui="auth-form"] > [data-ui="card"] {
+    max-width: 100%;
+    border-radius: 0;
+    box-shadow: none;
+    border-left: none;
+    border-right: none;
+  }
+
+  [data-ui="auth-form"] [data-part="social"] {
+    flex-direction: column;
+  }
+}
+
+/* ── Reduced Motion ── */
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="auth-form"] [data-part="form"],
+  [data-ui="auth-form"] [data-part="error"],
+  [data-ui="auth-form"] [data-part="footer"] a {
+    transition: none;
+  }
+}

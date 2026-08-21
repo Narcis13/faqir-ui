@@ -1,0 +1,133 @@
+{
+  "name": "field-group",
+  "version": "1.0.0",
+  "kind": "primitive",
+  "category": "forms",
+  "description": "Form field wrapper combining label, input slot, description, and error message",
+
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='field-group']",
+    "content_model": "slots"
+  },
+
+  "slots": {
+    "label": {
+      "selector": "[data-part='label']",
+      "required": true,
+      "tag_hint": "label",
+      "description": "Field label text"
+    },
+    "input": {
+      "selector": "[data-part='input']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "Slot for the input element (input, select, textarea, etc.)"
+    },
+    "description": {
+      "selector": "[data-part='description']",
+      "required": false,
+      "tag_hint": "p",
+      "description": "Helper text below the input"
+    },
+    "error": {
+      "selector": "[data-part='error']",
+      "required": false,
+      "tag_hint": "p",
+      "description": "Error message shown in error state"
+    }
+  },
+
+  "variants": {
+    "layout": {
+      "values": ["vertical", "horizontal"],
+      "default": "vertical",
+      "attr": "data-variant",
+      "applied_to": "root"
+    },
+    "size": {
+      "values": ["sm", "md", "lg"],
+      "default": "md",
+      "attr": "data-size",
+      "applied_to": "root"
+    }
+  },
+
+  "states": {
+    "default": { "attr": "data-state=\"default\"", "default": true },
+    "error": { "attr": "data-state=\"error\"", "description": "Red border and visible error message" },
+    "valid": { "attr": "data-state=\"valid\"", "description": "Green accent indicating valid input" }
+  },
+
+  "props": {
+    "required": { "type": "boolean", "default": false, "description": "Shows asterisk after label (data-required attribute)" }
+  },
+
+  "a11y": {
+    "required_attrs": [
+      "label must have for attribute matching input id",
+      "aria-describedby on input pointing to description/error id",
+      "aria-invalid=\"true\" on input in error state",
+      "aria-required=\"true\" on required inputs"
+    ],
+    "keyboard": {}
+  },
+
+  "tokens_used": [
+    "color-fg", "color-fg-muted",
+    "color-destructive", "color-success",
+    "space-1", "space-2", "space-3", "space-4",
+    "text-xs", "text-sm",
+    "font-sans", "weight-medium"
+  ],
+
+  "templates": {
+    "html": "<div data-ui=\"field-group\">\n  <label data-part=\"label\" for=\"{id}\">{label}</label>\n  <div data-part=\"input\">\n    <input data-ui=\"input\" id=\"{id}\" name=\"{name}\">\n  </div>\n  <p data-part=\"description\">{description}</p>\n</div>",
+    "html_with_error": "<div data-ui=\"field-group\" data-state=\"error\">\n  <label data-part=\"label\" for=\"{id}\">{label}</label>\n  <div data-part=\"input\">\n    <input data-ui=\"input\" id=\"{id}\" name=\"{name}\" aria-invalid=\"true\" aria-describedby=\"{id}-error\">\n  </div>\n  <p data-part=\"error\" id=\"{id}-error\">{error}</p>\n</div>",
+    "html_required": "<div data-ui=\"field-group\" data-required>\n  <label data-part=\"label\" for=\"{id}\">{label}</label>\n  <div data-part=\"input\">\n    <input data-ui=\"input\" id=\"{id}\" name=\"{name}\" required aria-required=\"true\">\n  </div>\n</div>"
+  },
+
+  "safe_transforms": [
+    "change-label-text",
+    "add-description",
+    "remove-description",
+    "set-error-state",
+    "set-valid-state",
+    "toggle-required",
+    "change-size",
+    "change-layout",
+    "swap-input-type"
+  ],
+
+  "unsafe_transforms": [
+    "remove-label",
+    "remove-for-attribute",
+    "remove-aria-describedby"
+  ],
+
+  "composition": {
+    "contains": ["input", "select", "textarea", "checkbox", "radio", "switch"],
+    "used_in": ["auth-form", "settings-page", "document"]
+  },
+
+  "files": {
+    "html": "field-group.html",
+    "css": "field-group.css",
+    "manifest": "field-group.manifest.json"
+  },
+
+  "tests": [
+    "renders-as-div-element",
+    "label-slot-is-required",
+    "input-slot-is-required",
+    "description-slot-is-optional",
+    "error-slot-is-optional",
+    "error-state-shows-red-border",
+    "error-state-shows-error-message",
+    "valid-state-shows-green-accent",
+    "required-shows-asterisk-after-label",
+    "label-has-for-attribute",
+    "horizontal-layout-side-by-side",
+    "sm-size-reduces-spacing"
+  ]
+}

@@ -1163,7 +1163,7 @@
       "name": "date-picker",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.1.0",
+      "version": "2.0.0",
       "files": [
         {
           "path": "date-picker.css",
@@ -1179,10 +1179,10 @@
         },
         {
           "path": "date-picker.manifest.json",
-          "sha256": "de659c3b63c33ce0dec9878c0fc3e865736cd97b8070057c88e03531faa34882"
+          "sha256": "cc39ecd4962eac45fa7338788817b8ffc66ace760c1df62f137f5ff400a21cd2"
         }
       ],
-      "hash": "0f36746a2e64d3f82713fdaab4d4579e8832cfc1ff079871c7e98d79499c0280",
+      "hash": "44f0a9494a5db2cd8705bcc7f2863dd30b874e5879afe125619989529d0ca5a5",
       "deps": [
         "calendar",
         "button"
@@ -1561,10 +1561,10 @@
         },
         {
           "path": "table.manifest.json",
-          "sha256": "7060e9aa8563c07658c9589a8e1bfd8d014e9790257485b6159e5b6f30c122d4"
+          "sha256": "0378d4471e3114955c0ee8686ccc6dddcfccd7d3157f0f52b0972e6081deadca"
         }
       ],
-      "hash": "50e5a41e154edd1d52e02760d91e3d0ea045c2315919371e682799829d718266",
+      "hash": "52bf731149035c01fd014d1cc76829d8e48b65b2cd184ed4067e38b444e31eb9",
       "deps": [
         "checkbox",
         "badge",
@@ -1861,11 +1861,11 @@
       "name": "empty-state",
       "kind": "pattern",
       "layer": "patterns",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "files": [
         {
           "path": "empty-state.css",
-          "sha256": "8acbf640369c8111b7ffaf5d130107066fa19140873a21e19376d975c50f1cc0"
+          "sha256": "1b0bc67c8fa6497f0b4e75af292b2fdb37851ef946b4d9e102dac0d35e18f3be"
         },
         {
           "path": "empty-state.html",
@@ -1873,10 +1873,10 @@
         },
         {
           "path": "empty-state.manifest.json",
-          "sha256": "bea0a70784de099ba3e74c5be6f0fc4cf64dcd8e94539c82f6fd6e2c0b23ccc5"
+          "sha256": "8c2a326203530b16d4f49a56ebdbb0592a5b507e2b5a1e3e5e9546b11ff5350c"
         }
       ],
-      "hash": "23bbec24b205e37b77bd04b3f656647d6a3aab7820dae15080c1fbbf6e97addb",
+      "hash": "ff32cf85903b958ef59e470d69adfe2301f84b89087da8cc238945e5ea66e59a",
       "deps": [
         "card",
         "button",

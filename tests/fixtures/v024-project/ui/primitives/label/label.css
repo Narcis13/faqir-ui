@@ -1,0 +1,39 @@
+/* @ui:component label */
+/* @ui:tokens color-fg color-fg-muted color-destructive font-sans text-xs text-sm text-base weight-medium space-1 */
+
+/* ── Base ── */
+[data-ui="label"] {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-fg);
+  line-height: 1;
+  margin-bottom: var(--space-1);
+  cursor: pointer;
+}
+
+/* ── Parts ── */
+[data-ui="label"] [data-part="indicator"] {
+  color: var(--color-fg-muted);
+  font-weight: var(--weight-normal, 400);
+}
+
+[data-ui="label"][data-variant="required"] [data-part="indicator"] {
+  color: var(--color-destructive);
+}
+
+/* ── Sizes ── */
+[data-ui="label"][data-size="sm"] {
+  font-size: var(--text-xs);
+}
+
+[data-ui="label"][data-size="lg"] {
+  font-size: var(--text-base);
+}
+
+/* ── States ── */
+[data-ui="label"][data-state="disabled"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

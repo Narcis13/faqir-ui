@@ -146,9 +146,9 @@ describe("docs site coverage", () => {
     expect(shellPages.length + framePages.length).toBe(sitePages.length);
     // home, component index, icons, typography, layout guide, responsive lab,
     // reactive engine, the signpost at the retired lab URL, protocol spec,
-    // spacing, density, tokens, playground, theme gallery, agents, 404, and the
-    // scaffold gallery — plus one page per scaffold
-    expect(shellPages.length).toBe(components.length + 17 + SCAFFOLD_NAMES.length);
+    // migration guide, spacing, density, tokens, playground, theme gallery,
+    // agents, 404, and the scaffold gallery — plus one page per scaffold
+    expect(shellPages.length).toBe(components.length + 18 + SCAFFOLD_NAMES.length);
     // one gallery frame per theme, and one live document per scaffold
     expect(framePages.length).toBe(themes.length + SCAFFOLD_NAMES.length);
     const assets = files.filter((f) => !f.path.endsWith(".html")).map((f) => f.path);
@@ -159,6 +159,8 @@ describe("docs site coverage", () => {
         "llms-full.txt",
         "llms.txt",
         "manifest.schema.json",
+        // The migration guide's own markdown, beside its rendered page (1.0-03).
+        "migration/migration-1.0.md",
         "registry-index.json",
         "robots.txt",
         "scripts/copy-snippet.js",

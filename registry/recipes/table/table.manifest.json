@@ -18,7 +18,7 @@
     },
     {
       "version": "2.0.0",
-      "note": "Feature release: multi-sort, filtering, tree/grouping with aggregates, inline editing, row/column drag & drop, column resize/hide/pin, sticky header/footer, keyboard grid navigation, CSV export, responsive stack mode, state persistence. The 1.x API (sort, selectRow, selectAll, deselectAll, getSelected, destroy) and all 1.x markup keep working unchanged; ISO date columns now sort chronologically instead of by year.",
+      "note": "Feature release: multi-sort, filtering, tree/grouping with aggregates, inline editing, row/column drag & drop, column resize/hide/pin, sticky header/footer, keyboard grid navigation, CSV export, responsive stack mode, state persistence. The 1.x API (sort, selectRow, selectAll, deselectAll, getSelected, destroy) and all 1.x markup keep working unchanged; ISO date columns now sort chronologically instead of by year. Also corrected here, with no effect on any markup: 1.x declared two variant groups named striped and bordered whose values were data-variant=\"true\" and data-variant=\"false\" — values no selector in table.css has ever matched. One group, data-variant: default|striped|bordered, replaces them and describes what the sheet actually styles.",
       "breaking": false
     }
   ],

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="default">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Billing · Acme</title>
+  <link rel="stylesheet" href="../ui/loom.bundle.css">
+</head>
+<body>
+  <main data-ui="surface" data-max="lg" data-size="md">
+    <h1 data-ui="text" data-size="3">Billing</h1>
+
+    <!-- A horizontal cluster: data-variant="horizontal" on stack. -->
+    <div data-ui="stack" data-variant="horizontal" data-gap="4" data-align="center">
+      <button data-ui="button" data-variant="primary">New invoice</button>
+      <button data-ui="button" data-variant="ghost">Export</button>
+    </div>
+
+    <!-- A three-column grid: 1.x collapsed this to one column below 640px. -->
+    <div data-ui="grid" data-cols="3" data-gap="4">
+      <div data-ui="card">
+        <div data-part="body">Revenue</div>
+      </div>
+      <div data-ui="card">
+        <div data-part="body">Outstanding</div>
+      </div>
+      <div data-ui="card">
+        <div data-part="body">Overdue</div>
+      </div>
+    </div>
+
+    <form>
+      <!-- The 1.x validation vocabulary: data-state="error" + [data-required]. -->
+      <div data-ui="field-group" data-state="error" data-required>
+        <label data-part="label" for="cui">Registration number</label>
+        <div data-part="input">
+          <input data-ui="input" id="cui" name="cui" value="123" aria-invalid="true" aria-describedby="cui-error">
+        </div>
+        <p data-part="error" id="cui-error">Registration numbers are 6 to 10 digits.</p>
+      </div>
+
+      <div data-ui="field-group">
+        <label data-part="label" for="issued">Issue date</label>
+        <div data-part="input">
+          <!-- 1.x date-picker: the month grid lived directly in the popup. -->
+          <div data-ui="date-picker" data-state="closed" data-size="md">
+            <div data-part="trigger">
+              <input data-part="input" id="issued" type="text" placeholder="Select a date" readonly aria-haspopup="dialog" aria-expanded="false" aria-label="Choose date">
+              <span data-part="icon" aria-hidden="true">&#x1F4C5;</span>
+            </div>
+            <div data-part="calendar" role="dialog" aria-label="Date picker" hidden>
+              <div data-part="header">
+                <button data-part="nav-prev" aria-label="Previous month">&lsaquo;</button>
+                <span data-part="month-label"></span>
+                <button data-part="nav-next" aria-label="Next month">&rsaquo;</button>
+              </div>
+              <table data-part="grid" role="grid" aria-label="Calendar">
+                <thead>
+                  <tr>
+                    <th scope="col" abbr="Monday">Mo</th>
+                    <th scope="col" abbr="Tuesday">Tu</th>
+                    <th scope="col" abbr="Wednesday">We</th>
+                    <th scope="col" abbr="Thursday">Th</th>
+                    <th scope="col" abbr="Friday">Fr</th>
+                    <th scope="col" abbr="Saturday">Sa</th>
+                    <th scope="col" abbr="Sunday">Su</th>
+                  </tr>
+                </thead>
+                <tbody data-part="grid-body">
+                  <!-- Days are generated dynamically by JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+
+    <h2 data-ui="text" data-size="2">Invoices</h2>
+
+    <!-- 1.x responsive columns: sm meant 480px here and nowhere else. -->
+    <div data-ui="table" data-variant="striped" data-size="md" data-stack-below="sm">
+      <table data-part="table">
+        <thead data-part="thead">
+          <tr data-part="tr">
+            <th data-part="th" scope="col" data-sortable aria-sort="none">Invoice</th>
+            <th data-part="th" scope="col" data-hide-below="sm">Issued</th>
+            <th data-part="th" scope="col" data-sortable aria-sort="none">Total</th>
+          </tr>
+        </thead>
+        <tbody data-part="tbody">
+          <tr data-part="tr">
+            <td data-part="td">INV-001</td>
+            <td data-part="td" data-hide-below="sm">2026-01-04</td>
+            <td data-part="td">1200.00</td>
+          </tr>
+          <tr data-part="tr">
+            <td data-part="td">INV-002</td>
+            <td data-part="td" data-hide-below="sm">2026-01-11</td>
+            <td data-part="td">340.00</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </main>
+
+  <div data-ui="dialog" data-state="closed" id="confirm-void">
+    <button data-ui="button" data-part="trigger">Void invoice</button>
+    <div data-part="overlay" hidden></div>
+    <div data-part="panel" role="dialog" aria-modal="true" aria-labelledby="confirm-void-title" data-size="sm" hidden>
+      <div data-part="header">
+        <h2 id="confirm-void-title" data-part="title">Void this invoice?</h2>
+        <button data-part="close" aria-label="Close dialog">&#x2715;</button>
+      </div>
+      <div data-part="body">
+        <p>Voiding cannot be undone.</p>
+      </div>
+      <div data-part="footer">
+        <button data-ui="button" data-part="close" data-variant="ghost">Cancel</button>
+        <button data-ui="button" data-variant="primary">Void</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="../ui/core/loom.js"></script>
+</body>
+</html>

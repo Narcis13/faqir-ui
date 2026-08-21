@@ -1,7 +1,7 @@
 import { existsSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { log } from "../utils/logger";
-import { configExists, readConfig, writeConfig } from "../utils/config";
+import { configExists, readConfig, writeConfig, missingConfigMessage } from "../utils/config";
 import { findInstalledLayer, getInstalledDependents } from "../utils/components";
 import { regenerateFaqirInit, regenerateContext } from "../utils/codegen";
 import { generateBundle } from "../utils/bundler";
@@ -59,7 +59,7 @@ export async function remove(args: string[]): Promise<void> {
   const cwd = process.cwd();
 
   if (!configExists(cwd)) {
-    log.error("No faqir.config.json found. Run 'faqir init' first.");
+    log.error(missingConfigMessage(cwd));
     process.exit(1);
   }
 

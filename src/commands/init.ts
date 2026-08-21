@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { log } from "../utils/logger";
-import { configExists, writeConfig, DEFAULT_CONFIG, type FaqirConfig } from "../utils/config";
+import { configExists, readConfig, writeConfig, DEFAULT_CONFIG, type FaqirConfig } from "../utils/config";
 import { ensureDir, copyDir, copyFile, getRegistryPath, getPackageRoot } from "../utils/fs";
 import { generateBundle } from "../utils/bundler";
 
@@ -179,14 +179,34 @@ export async function init(args: string[]): Promise<void> {
   }
 
   // 6. Create faqir.config.json
-  log.step("Creating faqir.config.json...");
+  //
+  // `--force` re-initializes an *existing* project, and what it re-initializes
+  // is what the registry owns: tokens, base styles, the core modules and the
+  // theme, all rewritten above. The component inventory is not the registry's
+  // to reset — those directories are still on disk, so forgetting them here
+  // would leave `faqir list` lying about a project that `faqir upgrade` then
+  // skips. The installed lists, any configured remote registries and the bundle
+  // settings therefore survive; everything the flags name is taken from the
+  // flags (task 1.0-03: this is what makes "refresh the engine" one command on
+  // the v0.x → 1.0 path).
+  const existing = configExists(cwd) ? await readConfig(cwd).catch(() => null) : null;
+  log.step(existing ? "Updating faqir.config.json..." : "Creating faqir.config.json...");
+  const installed = {
+    primitives: [...(existing?.installed?.primitives ?? [])],
+    recipes: [...(existing?.installed?.recipes ?? [])],
+    patterns: [...(existing?.installed?.patterns ?? [])],
+  };
   const config: FaqirConfig = {
     ...DEFAULT_CONFIG,
+    ...(existing ?? {}),
     theme: opts.theme,
     output_dir: opts.dir,
     tokens_split: opts.tokensSplit,
     include_core: !opts.noCore,
+    installed,
   };
+  const kept = installed.primitives.length + installed.recipes.length + installed.patterns.length;
+  if (kept > 0) log.dim(`Kept ${kept} installed component${kept === 1 ? "" : "s"} in the config.`);
   await writeConfig(config, cwd);
 
   // 7. Create .faqir directory with context placeholder
@@ -253,8 +273,8 @@ export async function init(args: string[]): Promise<void> {
   log.step("Generating CSS bundle...");
   config.bundle = {
     output: `${opts.dir}/faqir.bundle.css`,
-    auto: true,
-    minify: false,
+    auto: config.bundle?.auto ?? true,
+    minify: config.bundle?.minify ?? false,
   };
   await writeConfig(config, cwd);
   await generateBundle(cwd);

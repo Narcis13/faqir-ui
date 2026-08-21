@@ -57,6 +57,8 @@ agents/index.html                 the machine surfaces, documented
 spec/<version>/index.html         the frozen protocol, rendered
 spec/<version>/spec.md            the same spec, verbatim markdown
 spec/<version>/manifest.schema.json  the schema, addressable by version
+migration/index.html              the v0.x → 1.0 migration guide
+migration/migration-1.0.md        the same guide, verbatim markdown
 examples/<layer>/<name>.html      one standalone live example per component
 frames/theme-preview-<name>.html  the demo document each gallery frame renders
 llms.txt · llms-full.txt          full-registry agent context (llmstxt.org)

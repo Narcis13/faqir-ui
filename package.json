@@ -36,6 +36,7 @@
     "size": "node scripts/check-size.mjs",
     "audit:registry": "bun scripts/registry-audit.mjs",
     "gen:theme-manifests": "bun scripts/gen-theme-manifests.mjs",
+    "gen:v024-surface": "bun scripts/gen-v024-surface.mjs",
     "gen:theme-previews": "bun scripts/gen-theme-previews.mjs",
     "gen:skill": "bun scripts/gen-skill.mjs",
     "check:skill": "bun scripts/gen-skill.mjs --check",

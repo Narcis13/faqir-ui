@@ -22,7 +22,7 @@ import { existsSync, rmSync } from "node:fs";
 import { dirname, join, sep } from "node:path";
 import { log } from "../utils/logger";
 import { emitJSON } from "../utils/json-output";
-import { configExists, readConfig, type FaqirConfig } from "../utils/config";
+import { configExists, readConfig, type FaqirConfig, missingConfigMessage } from "../utils/config";
 import { ensureDir, getRegistryPath } from "../utils/fs";
 import { findComponentInRegistry, findInstalledLayer, type Layer } from "../utils/components";
 import { loadManifest, type Manifest, type ManifestChange } from "../manifest";
@@ -48,7 +48,7 @@ const CONFLICT_EXIT_CODE = 2;
 type ComponentStatus =
   | "upgraded" // clean three-way merge applied (or would apply)
   | "conflicted" // merged, but one or more files carry conflict markers
-  | "up-to-date" // installed version already matches the registry
+  | "up-to-date" // the merge found nothing to apply (see upgradeComponent)
   | "no-baseline" // predates the pristine store — cannot merge safely
   | "not-in-registry"; // no longer offered by the local registry
 
@@ -214,10 +214,12 @@ async function upgradeComponent(
   const newVersion = newManifest?.version ?? entry.version;
   base.toVersion = newVersion;
 
-  if (compareVersions(newVersion, entry.version) === 0) {
-    return { ...base, status: "up-to-date" };
-  }
-
+  // Deliberately NOT an early return on `newVersion === entry.version`. A
+  // version number is a claim about the files, and the registry has shipped
+  // changed bytes under an unchanged number often enough that trusting the
+  // claim skipped 24 of the 53 components a v0.2.4 project holds (task 1.0-03).
+  // What is up to date is decided below, by the merge: a component whose every
+  // file comes back `unchanged` is up to date, whatever the two versions say.
   base.changes = selectChanges(newManifest?.changes ?? [], entry.version, newVersion);
   base.breaking = base.changes.some((c) => c.breaking);
 
@@ -255,7 +257,11 @@ async function upgradeComponent(
     base.files.push({ path: o.path, status: o.status, conflicts: o.conflicts, note: o.note });
   }
   base.summary = summary;
-  base.status = base.conflictedFiles.length > 0 ? "conflicted" : "upgraded";
+  const touched = summary.updated + summary.added + summary.deleted + summary.conflicts;
+  base.status =
+    base.conflictedFiles.length > 0 ? "conflicted" : touched === 0 ? "up-to-date" : "upgraded";
+
+  if (base.status === "up-to-date") return base;
 
   if (!dryRun) {
     for (const o of outcomes) {
@@ -331,6 +337,12 @@ function printComponentHuman(report: ComponentReport): void {
   }
 
   log.heading(`${report.component}: ${report.fromVersion} → ${report.toVersion}`);
+  if (report.fromVersion === report.toVersion) {
+    log.dim(
+      "Same version on both sides — the registry's files changed without a version bump, " +
+        "so there is no changelog to show for them.",
+    );
+  }
   printChangelog(report);
   log.blank();
 
@@ -375,7 +387,7 @@ export async function upgrade(args: string[], internal?: { registryPath?: string
 
   const cwd = process.cwd();
   if (!configExists(cwd)) {
-    log.error("No faqir.config.json found. Run 'faqir init' first.");
+    log.error(missingConfigMessage(cwd));
     process.exit(1);
   }
 

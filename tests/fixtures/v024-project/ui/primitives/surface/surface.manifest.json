@@ -1,0 +1,85 @@
+{
+  "name": "surface",
+  "version": "1.0.0",
+  "kind": "primitive",
+  "category": "layout",
+  "description": "Generic container with visual elevation and configurable padding",
+
+  "anatomy": {
+    "tag": "div",
+    "selector": "[data-ui='surface']",
+    "content_model": "block"
+  },
+
+  "slots": {},
+
+  "variants": {
+    "elevation": {
+      "values": ["flat", "raised", "overlay"],
+      "default": "default",
+      "attr": "data-variant",
+      "applied_to": "root"
+    },
+    "padding": {
+      "values": ["0", "sm", "md", "lg"],
+      "default": "0",
+      "attr": "data-size",
+      "applied_to": "root"
+    }
+  },
+
+  "states": {},
+
+  "a11y": {
+    "notes": "Layout-only primitive; no semantic role required. Use landmark roles on the content inside when appropriate.",
+    "keyboard": {}
+  },
+
+  "tokens_used": [
+    "color-bg", "color-border",
+    "radius-lg",
+    "shadow-sm", "shadow-md", "shadow-lg",
+    "space-3", "space-4", "space-6"
+  ],
+
+  "templates": {
+    "html": "<div data-ui=\"surface\" data-variant=\"{elevation}\" data-size=\"{padding}\">{children}</div>",
+    "html_default": "<div data-ui=\"surface\" data-size=\"{padding}\">{children}</div>"
+  },
+
+  "safe_transforms": [
+    "change-elevation",
+    "change-padding",
+    "add-children",
+    "remove-children"
+  ],
+
+  "unsafe_transforms": [
+    "remove-background",
+    "remove-border-radius"
+  ],
+
+  "composition": {
+    "contains": [],
+    "used_in": ["empty-state", "dashboard-shell"]
+  },
+
+  "files": {
+    "html": "surface.html",
+    "css": "surface.css",
+    "manifest": "surface.manifest.json"
+  },
+
+  "tests": [
+    "renders-as-div-element",
+    "default-has-border",
+    "flat-variant-has-no-border",
+    "raised-variant-has-shadow-sm",
+    "overlay-variant-has-shadow-lg",
+    "overlay-variant-has-no-border",
+    "sm-padding-applies-space-3",
+    "md-padding-applies-space-4",
+    "lg-padding-applies-space-6",
+    "no-padding-by-default"
+  ]
+}

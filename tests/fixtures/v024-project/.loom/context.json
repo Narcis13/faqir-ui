@@ -1,0 +1,16 @@
+{
+  "meta": {
+    "framework": "loom",
+    "version": "1.0.0",
+    "theme": "default",
+    "component_count": { "primitives": 9, "recipes": 3, "patterns": 2 }
+  },
+  "protocol": {
+    "identity": "data-ui",
+    "part": "data-part",
+    "state": "data-state",
+    "variant": "data-variant",
+    "size": "data-size"
+  },
+  "components": {}
+}
