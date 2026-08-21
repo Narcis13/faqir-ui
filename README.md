@@ -34,6 +34,7 @@ The CLI is the conductor.
 - [Data-Driven Rendering](#data-driven-rendering)
 - [AI Agent Integration](#ai-agent-integration)
 - [CSS Conventions](#css-conventions)
+- [Security](#security)
 - [Project Structure](#project-structure)
 - [Development](#development)
 - [License](#license)
@@ -821,6 +822,10 @@ install. Two development aids build on it:
 
 Full reference: [docs/devtools.md](docs/devtools.md).
 
+The engine compiles expressions with `new Function` and `l-html` is unsanitized
+by design — see [Security](#security) and [docs/security.md](docs/security.md)
+before pointing either at anything a user typed.
+
 ---
 
 ## The Manifest System
@@ -1512,6 +1517,42 @@ Seven rules govern all component CSS in Faqir:
   /* state style */
 }
 ```
+
+---
+
+## Security
+
+Two engine behaviours are deliberate and worth knowing before you deploy:
+
+- **`l-*` expressions are compiled with `new Function`**, so a page that uses
+  them needs `script-src 'unsafe-eval'`. Without it the engine still loads and
+  mounts controllers — expressions just silently yield `undefined`, so `l-text`
+  writes empty strings and `@click` does nothing.
+- **`l-html` writes `innerHTML` unsanitized**, exactly like Alpine's `x-html`.
+  Use `l-text` for anything you did not author.
+
+A policy that works:
+
+```
+Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-eval';
+  style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none';
+  base-uri 'self'; frame-ancestors 'self'
+```
+
+`style-src 'unsafe-inline'` buys one thing only — the `<style>` element that
+makes `l-cloak` work. `l-show` and `l-bind:style` write through the CSSOM, which
+CSP does not govern.
+
+The threat model is *generated, trusted markup*: an `l-*` attribute value is
+JavaScript, so interpolating user input into one is remote code execution
+whether or not `l-html` is involved. Put untrusted values in the scope
+(`l-data`, `data-prop-*`, `l-source`) and render them with `l-text`.
+
+Primitives and patterns are markup and CSS only — a page that uses no `l-*`
+attributes needs no `'unsafe-eval'` at all.
+
+Full reference, including the CSP-restricted playbook and the supply-chain
+posture: [docs/security.md](docs/security.md).
 
 ---
 

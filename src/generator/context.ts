@@ -145,6 +145,27 @@ export interface ContextData {
     overlay: string;
     notes: string[];
   };
+  /**
+   * The security posture (task 1.0-02, §A6). Two engine behaviours are load-
+   * bearing for anything an agent generates — expressions are compiled with
+   * `new Function`, and `l-html` writes markup unsanitized — and an agent that
+   * learns them from `docs/security.md` only after shipping learned them too
+   * late. The prose lives in that document; this is the short form.
+   */
+  security: {
+    reference: string;
+    csp: {
+      required: string;
+      script_src: string;
+      style_src: string;
+      policy: string;
+    };
+    /** Surfaces that EXECUTE what they are given. Never untrusted values. */
+    unsafe: Record<string, string>;
+    /** Surfaces that treat what they are given as data. */
+    safe: Record<string, string>;
+    rules: string[];
+  };
   components: Record<string, unknown>;
   patterns: Record<string, unknown>;
   plugins: Record<string, {
@@ -459,6 +480,40 @@ export function composeContextData(input: ContextComposition): ContextData {
         "The `faqir dev` overlay is served by the dev server only; it is never written into a project.",
       ],
     },
+    security: {
+      reference: "docs/security.md",
+      csp: {
+        required:
+          "A page that uses l-* directives needs 'unsafe-eval' — the evaluator compiles every expression with new Function.",
+        script_src: "'self' 'unsafe-eval'",
+        style_src:
+          "'self' 'unsafe-inline' — only l-cloak's injected <style> needs it; l-show and l-bind:style write through the CSSOM, which CSP does not govern.",
+        policy:
+          "default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; base-uri 'self'; frame-ancestors 'self'",
+      },
+      unsafe: {
+        "l-html":
+          "innerHTML, verbatim. <script> does not run but onerror/onload attributes do. Use l-text for anything you did not author.",
+        "any l-* attribute value":
+          "compiled as JavaScript. Interpolating user input into one is remote code execution, l-html or not.",
+        "l-bind:href / l-bind:src":
+          "a javascript: URL runs. Check the scheme before binding a value you did not author.",
+      },
+      safe: {
+        "l-text": "textContent — markup in the value is inert.",
+        "l-model": "reads and writes .value/.checked.",
+        "data-prop-*": "JSON.parse, falling back to the raw string. Parsed as data, never evaluated.",
+        "l-source:<name>": "fetch + res.json(). The response is parsed as JSON, never evaluated.",
+        "l-teleport": "the value is a CSS selector, not an expression.",
+      },
+      rules: [
+        "Faqir assumes the markup is yours — generated, reviewed and committed like source.",
+        "Put untrusted values in the SCOPE (l-data, data-prop-*, l-source) and render them with l-text; never build markup or an l-* value out of them.",
+        "HTML-escaping is not enough: &#39; is decoded back to ' before the evaluator sees the attribute.",
+        "Without 'unsafe-eval' the engine still loads and mounts controllers — expressions just silently yield undefined, so l-text writes empty strings.",
+        "Primitives and patterns are markup and CSS only (inbox and wizard excepted); a page that uses no l-* attributes needs no 'unsafe-eval'.",
+      ],
+    },
     components,
     patterns,
     plugins,
@@ -619,6 +674,28 @@ export function formatContextMarkdown(data: ContextData): string {
   }
   lines.push("");
   for (const n of data.devtools.notes) lines.push(`- ${n}`);
+  lines.push("");
+
+  // Security (task 1.0-02)
+  lines.push("## Security");
+  lines.push("");
+  lines.push(`${data.security.csp.required} Full reference: \`${data.security.reference}\`.`);
+  lines.push("");
+  lines.push("```");
+  lines.push(`Content-Security-Policy: ${data.security.csp.policy}`);
+  lines.push("```");
+  lines.push("");
+  lines.push("Executes what it is given — never an untrusted value:");
+  for (const [key, meaning] of Object.entries(data.security.unsafe)) {
+    lines.push(`- \`${key}\` — ${meaning}`);
+  }
+  lines.push("");
+  lines.push("Treats what it is given as data:");
+  for (const [key, meaning] of Object.entries(data.security.safe)) {
+    lines.push(`- \`${key}\` — ${meaning}`);
+  }
+  lines.push("");
+  for (const r of data.security.rules) lines.push(`- ${r}`);
   lines.push("");
 
   // Data Service
@@ -978,6 +1055,14 @@ export function formatContextLlms(data: ContextData): string {
     lines.push("");
   }
 
+  lines.push("## Security");
+  lines.push("");
+  lines.push(
+    `- [Security posture](llms-full.txt#security): \`${data.security.reference}\` — ` +
+      "`l-*` expressions need `'unsafe-eval'`; `l-html` is unsanitized by design.",
+  );
+  lines.push("");
+
   if (Object.keys(data.plugins).length > 0) {
     lines.push("## Plugins");
     lines.push("");
@@ -1229,6 +1314,29 @@ export function formatContextLlmsFull(data: ContextData): string {
   lines.push(`Development engine: \`${data.devtools.dev_build}\` · Overlay: ${data.devtools.overlay}`);
   lines.push("");
   for (const n of data.devtools.notes) lines.push(`- ${n}`);
+  lines.push("");
+
+  // Security (task 1.0-02)
+  lines.push("## Security");
+  lines.push("");
+  lines.push(data.security.csp.required);
+  lines.push("");
+  lines.push("```");
+  lines.push(`Content-Security-Policy: ${data.security.csp.policy}`);
+  lines.push("```");
+  lines.push("");
+  lines.push("| Surface | Handling | Untrusted values |");
+  lines.push("|---------|----------|------------------|");
+  for (const [key, meaning] of Object.entries(data.security.unsafe)) {
+    lines.push(`| \`${key}\` | ${meaning} | **never** |`);
+  }
+  for (const [key, meaning] of Object.entries(data.security.safe)) {
+    lines.push(`| \`${key}\` | ${meaning} | safe |`);
+  }
+  lines.push("");
+  for (const r of data.security.rules) lines.push(`- ${r}`);
+  lines.push("");
+  lines.push(`Full reference: \`${data.security.reference}\``);
   lines.push("");
 
   // Data-driven rendering

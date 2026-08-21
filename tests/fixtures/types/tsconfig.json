@@ -1,0 +1,35 @@
+{
+  // Type tests for `packages/core/faqir-core.d.ts` (task 1.0-02).
+  //
+  // Compiled by `tests/core/faqir-core-types.test.ts` and by the root
+  // `typecheck` script. The contract is ZERO diagnostics, which asserts BOTH
+  // directions at once: correct usage must compile, and every
+  // `@ts-expect-error` line must actually error — an unused one is itself a
+  // diagnostic ("Unused '@ts-expect-error' directive"), so a declaration that
+  // quietly accepts misuse fails here.
+  //
+  // `skipLibCheck` is off on purpose: the point is to check the .d.ts, and the
+  // root tsconfig (which turns it on) excludes this directory for that reason.
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "strict": true,
+    "exactOptionalPropertyTypes": false,
+    "esModuleInterop": true,
+    "skipLibCheck": false,
+    "noEmit": true,
+    "types": [],
+    "baseUrl": ".",
+    "paths": {
+      "@faqir-ui/core": ["../../../packages/core/faqir-core.d.ts"]
+    }
+  },
+  "files": [
+    "../../../packages/core/faqir-core.d.ts",
+    "module-usage.ts",
+    "global-usage.ts",
+    "augmentation.ts"
+  ]
+}

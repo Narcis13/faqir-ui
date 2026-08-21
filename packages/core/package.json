@@ -4,16 +4,21 @@
   "description": "Faqir UI runtime engine — the Alpine-style reactive core (faqir-core.js), minified CDN build, and prebuilt per-theme CSS bundles. Zero dependencies.",
   "type": "module",
   "main": "./dist/faqir-core.js",
+  "types": "./faqir-core.d.ts",
   "module": "./dist/faqir-core.js",
   "unpkg": "./dist/faqir-core.min.js",
   "jsdelivr": "./dist/faqir-core.min.js",
   "exports": {
     ".": {
+      "types": "./faqir-core.d.ts",
       "import": "./dist/faqir-core.js",
       "require": "./dist/faqir-core.js",
       "default": "./dist/faqir-core.js"
     },
-    "./faqir-core.js": "./dist/faqir-core.js",
+    "./faqir-core.js": {
+      "types": "./faqir-core.d.ts",
+      "default": "./dist/faqir-core.js"
+    },
     "./faqir-core.min.js": "./dist/faqir-core.min.js",
     "./sri.json": "./dist/sri.json",
     "./dist/*": "./dist/*",
@@ -21,6 +26,7 @@
   },
   "files": [
     "dist",
+    "faqir-core.d.ts",
     "src",
     "examples",
     "cdn.json",
