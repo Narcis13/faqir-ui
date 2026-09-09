@@ -12,8 +12,8 @@
 //   3. `aria-describedby` has no dangling references (every token resolves to a
 //      real element id in the document).
 //   4. `aria-invalid="true"` is present iff the group is in the invalid state —
-//      tolerating BOTH the shipped `data-state="error"` naming AND the normalized
-//      `data-state="invalid"` naming (forward-compatible with 0.6-01).
+//      using the `data-state="invalid"` naming SPEC-1.0 freezes. The legacy
+//      `error` value is reported by `valid-state`, not here.
 //
 // Auto-repair generates any missing IDs and wires them, deriving a deterministic
 // base id from the field name/label so the same input always repairs to the same
@@ -38,8 +38,18 @@ const CONTROL_TAGS = new Set(["input", "select", "textarea"]);
 /** `data-ui` values that also identify a control, when it isn't a native tag. */
 const CONTROL_UI = new Set(["input", "select", "textarea", "checkbox", "radio", "switch"]);
 
-/** `data-state` values that mean "the group is invalid" — shipped + normalized. */
-const INVALID_STATES = new Set(["invalid", "error"]);
+/**
+ * The `data-state` value that means "the group is invalid".
+ *
+ * ONE value, not two. `field-group` 2.0.0 renamed `error` to `invalid`, and this
+ * rule accepted both "during the transition" — but SPEC-1.0 freezes value
+ * grammars, and a transition with no end date is a second grammar. Two rules
+ * disagreed about the same markup while it lasted: `valid-state` reported
+ * `data-state="error"` as invalid (the manifest declares only `invalid`), and
+ * this rule silently blessed it. The frozen grammar is `invalid`; a page still
+ * on `error` is told so once, by the rule whose job that is. [W3-5]
+ */
+const INVALID_STATES = new Set(["invalid"]);
 
 /** One tag-local edit for the repairer: set and/or remove attributes on the tag
  * whose opening `<` sits at `offset`. Serialized into the fix payload. */
@@ -185,7 +195,7 @@ export const fieldWiringRule: DocumentRule = {
   description:
     "field-group ARIA contract (§7.1): the control's aria-describedby must reference the " +
     "existing description/error part IDs (no missing, no dangling refs), aria-invalid must be " +
-    "present iff the group is in the invalid state (data-state invalid|error), and the label's " +
+    "present iff the group is in the invalid state (data-state=\"invalid\"), and the label's " +
     "for must match the control id. Auto-repairable: missing IDs are generated and wired " +
     "deterministically from the field name/label.",
   check(doc) {
@@ -290,7 +300,7 @@ function checkFieldGroup(doc: ParsedDocument, root: ParsedElement, docIds: Set<s
   } else if (!invalid && asserted) {
     findings.push(base(
       `field-group control has aria-invalid="${control.attrs["aria-invalid"]}" but the group is not in the invalid ` +
-      `state — aria-invalid must be present only while the group is invalid (data-state="invalid"|"error").`,
+      `state — aria-invalid must be present only while the group is invalid (data-state="invalid").`,
       control,
     ));
   }

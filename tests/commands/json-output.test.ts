@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeAll, afterAll } from "bun:test";
-import { mkdtempSync, rmSync } from "node:fs";
+import { describe, it, expect, beforeAll, afterAll, setDefaultTimeout } from "bun:test";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { COMMAND_NAMES } from "../../src/command-registry";
@@ -137,3 +137,170 @@ describe("universal --json guarantee", () => {
 // — so the async-stdout truncation this repo shipped is invisible from here. It
 // only reproduces against the compiled bundle on Node, which is what the
 // published `bin/faqir` actually runs.
+
+// ═══════════════════════════════════════════════════════════════════════════
+// The same guarantee, on the runtime the artifact actually uses  [W3-5]
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// The loop above spawns `process.execPath`, which under `bun test` is the Bun
+// binary — so for as long as it existed, the file guarding the `--json` contract
+// across all 22 commands never once ran the thing users run. `bin/faqir` is
+// `#!/usr/bin/env node`, and on Node the CLI is a different program: `Bun.file`,
+// `Bun.write` and `Bun.Glob` are all `src/utils/runtime-shim.ts` standing in for
+// them, and `console.log` writes through an async stream rather than
+// synchronously. That is not a hypothetical difference — it is why a truncated
+// `--json` payload shipped (see tests/build/dist-cli.test.ts) and why
+// `trace --json` came back in a different ORDER depending on whether the user
+// had Bun installed.
+//
+// Two other things change here at the same time, because they are the same
+// mistake:
+//
+//   • A REAL PROJECT, not an empty directory. Every command above hits its "no
+//     project" error path, so the loop proved that 22 commands can *fail* in
+//     JSON and nothing about what they emit when they work.
+//   • KEY SETS, not `typeof parsed === "object"`. A command that silently
+//     stopped emitting `results`, or started emitting a bare `{}`, passed.
+
+describe("universal --json guarantee · compiled bundle on Node, in a real project", () => {
+  const DIST = join(import.meta.dir, "../../dist/faqir.mjs");
+
+  /** The generic envelope every command falls back to. `error` is present only on a failure. */
+  const ENVELOPE = ["command", "exit_code", "json_schema_version", "messages", "ok"];
+
+  /**
+   * What each command emits in a project that HAS one. `null` means the generic
+   * envelope; an array is the exact key set. Recorded from the compiled bundle
+   * on Node — the shape an agent parsing this CLI actually receives.
+   */
+  const SHAPES: Record<string, string[] | null> = {
+    init: null,
+    doctor: null,
+    add: null,
+    remove: null,
+    diff: ["components", "schema"],
+    upgrade: ["components", "dryRun", "hasConflicts", "schema"],
+    list: null,
+    search: null,
+    create: null,
+    inspect: null,
+    audit: [
+      "audit_schema_version",
+      "components_found",
+      "counts",
+      "files_scanned",
+      "passed",
+      "results",
+      "vendor_counts",
+    ],
+    repair: null,
+    context: ["command", "formats"],
+    explain: null,
+    trace: null,
+    conform: null,
+    theme: null,
+    variant: null,
+    scaffold: null,
+    bundle: null,
+    dev: [
+      "auto_bundle",
+      "command",
+      "dir",
+      "overlay",
+      "overlay_route",
+      "overlay_shortcut",
+      "port",
+      "serves",
+      "url",
+    ],
+    bindings: null,
+  };
+
+  let template: string;
+  let workspace: string;
+
+  // A cold `build:cli` on a loaded runner outlives bun's default hook timeout.
+  setDefaultTimeout(180_000);
+
+  beforeAll(() => {
+    if (!existsSync(DIST)) {
+      const build = runSync("bun", ["run", "build:cli"], {
+        cwd: join(import.meta.dir, "../.."),
+        encoding: "utf8",
+        timeout: SPAWN_TIMEOUT.BUILD,
+      });
+      if (build.status !== 0) {
+        throw new Error(`build:cli failed:\n${build.stdout ?? ""}${build.stderr ?? ""}`);
+      }
+    }
+
+    workspace = mkdtempSync(join(tmpdir(), "faqir-json-node-"));
+    template = join(workspace, "template");
+    mkdirSync(template, { recursive: true });
+
+    const node = (args: string[]) =>
+      runSync("node", [DIST, ...args], { cwd: template, encoding: "utf8", timeout: SPAWN_TIMEOUT.CLI });
+
+    expect(node(["init", "--yes"]).status, "init failed in the fixture project").toBe(0);
+    expect(node(["add", "card", "button", "badge"]).status, "add failed").toBe(0);
+    // Something for `audit` / `conform` / `repair` to have an opinion about.
+    writeFileSync(
+      join(template, "page.html"),
+      '<div data-ui="card"><div data-part="body">x</div></div>\n',
+    );
+  });
+
+  afterAll(() => {
+    if (workspace) rmSync(workspace, { recursive: true, force: true });
+  });
+
+  it("the shape table covers every registered command", () => {
+    // A command added without a line here would otherwise skip the check.
+    expect(Object.keys(SHAPES).sort()).toEqual([...COMMAND_NAMES].sort());
+  });
+
+  for (const name of COMMAND_NAMES) {
+    it(`node dist/faqir.mjs ${name} --json emits its documented shape`, () => {
+      // A copy per command, so a side-effectful one (init, add, remove, repair,
+      // conform, bundle) cannot change what the next one sees.
+      const cwd = mkdtempSync(join(workspace, `${name}-`));
+      cpSync(template, cwd, { recursive: true });
+
+      const r = runSync("node", [DIST, name, "--json"], {
+        cwd,
+        encoding: "utf8",
+        stdio: ["pipe", "pipe", "pipe"],
+        timeout: SPAWN_TIMEOUT.CLI,
+      });
+      const stdout = r.stdout ?? "";
+
+      expect(stdout.trim().length, `${name} emitted nothing on stdout`).toBeGreaterThan(0);
+      const parsed = JSON.parse(stdout); // throws → the test fails, which is the point
+      expect(parsed).not.toBeNull();
+      expect(typeof parsed).toBe("object");
+
+      const expected = SHAPES[name] ?? ENVELOPE;
+      const keys = Object.keys(parsed).sort();
+      // The envelope carries `error` only on a failure, so it is allowed but not
+      // required; every other key must be exactly the recorded set.
+      expect(keys.filter((k) => k !== "error"), `${name} --json changed shape`).toEqual(
+        [...expected].sort(),
+      );
+
+      if (SHAPES[name] === null) {
+        expect(typeof parsed.ok).toBe("boolean");
+        expect(typeof parsed.exit_code).toBe("number");
+        expect(Array.isArray(parsed.messages)).toBe(true);
+      }
+
+      if ((r.status ?? 0) !== 0) {
+        const signalsFailure =
+          parsed.ok === false ||
+          "error" in parsed ||
+          parsed.passed === false ||
+          parsed.hasConflicts === true;
+        expect(signalsFailure, `${name} exited ${r.status} without a machine-readable signal`).toBe(true);
+      }
+    });
+  }
+});

@@ -11,6 +11,24 @@ export function createDropdown(root) {
   const trigger = root.querySelector("[data-part='trigger']");
   const menu = root.querySelector("[data-part='menu']");
 
+  // Incomplete markup — a wrapper emitted without one of its parts, which is
+  // what a generator interrupted mid-component produces — used to throw a
+  // TypeError out of the first dereference below. The engine contains that now
+  // (the component fails, the page survives), but "Cannot read properties of
+  // null" is a poor way to say which part is missing. Say it, and hand back an
+  // inert API so `$ui.open()` is a no-op rather than a second crash. [W3-2]
+  if (!trigger || !menu) {
+    console.warn(
+      "[Faqir] dropdown needs [data-part='trigger'] and [data-part='menu'] — " +
+        `missing ${[!trigger && "trigger", !menu && "menu"].filter(Boolean).join(" and ")}. ` +
+        "Component left inert.",
+      root
+    );
+    const inert = { open() {}, close() {}, toggle() {}, destroy() {} };
+    root._faqirDropdown = inert;
+    return inert;
+  }
+
   let outsideClickCleanup = null;
 
   const navigation = createMenuNavigation(menu, {
@@ -83,6 +101,10 @@ export function createDropdown(root) {
   menu?.addEventListener("click", onMenuClick);
 
   function destroy() {
+    // Leaving a destroyed overlay open leaves a dead one: nothing is listening
+    // any more, so its close button, Escape and overlay click all do nothing.
+    // `context-menu` is the model — it has always closed itself here. [W3-2]
+    close({ restoreFocus: false });
     trigger?.removeEventListener("click", onTriggerClick);
     trigger?.removeEventListener("keydown", onTriggerKeyDown);
     menu?.removeEventListener("click", onMenuClick);

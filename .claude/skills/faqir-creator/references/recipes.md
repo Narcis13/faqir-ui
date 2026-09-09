@@ -338,7 +338,7 @@ Reach it as `$ui.<method>()` from any expression inside this component, or as th
 - **Safe transforms:** `add-option`, `remove-option`, `change-size`, `change-placeholder`, `restyle-listbox-background`, `customize-empty-message`
 - **Unsafe (never do):** `remove-combobox-role`, `remove-listbox-role`, `remove-option-role`, `remove-aria-expanded`, `remove-aria-autocomplete`, `remove-keyboard-navigation`
 - **A11y:** keys: ArrowDown, ArrowUp, Enter, Escape, Home, End
-- **Required ARIA:** `role="combobox" on input`; `aria-expanded on input`; `aria-autocomplete="list" on input`; `aria-controls on input pointing to listbox id`; `role="listbox" on listbox`; `role="option" on each option`; `aria-selected on active option`
+- **Required ARIA:** `role="combobox" on input`; `aria-expanded on input`; `aria-autocomplete="list" on input`; `aria-controls on input pointing to listbox id`; `role="listbox" on listbox`; `role="option" on each option`; `aria-selected on active option`; `aria-activedescendant on the combobox, naming the active option while the list is open`
 
 ## command-palette
 
@@ -406,7 +406,7 @@ Reach it as `$ui.<method>()` from any expression inside this component, or as th
 - **Safe transforms:** `add-command-item`, `remove-command-item`, `add-group`, `remove-group`, `change-panel-size`, `change-placeholder`, `restyle-panel-background`, `customize-empty-message`
 - **Unsafe (never do):** `remove-dialog-role`, `remove-aria-modal`, `remove-focus-trap`, `remove-escape-handler`, `remove-keyboard-navigation`, `remove-global-shortcut`
 - **A11y:** role=dialog · aria-modal · focus-trap · escape-closes · keys: Cmd+K / Ctrl+K, Escape, ArrowDown, ArrowUp, Enter, Home, End
-- **Required ARIA:** `role="dialog" on panel`; `aria-modal="true" on panel`; `aria-label on panel`; `role="combobox" on search input`; `role="listbox" on list`; `role="option" on each item`
+- **Required ARIA:** `role="dialog" on panel`; `aria-modal="true" on panel`; `aria-label on panel`; `role="combobox" on search input`; `role="listbox" on list`; `role="option" on each item`; `aria-activedescendant on the combobox, naming the active option while the list is open`
 
 ## context-menu
 
@@ -1026,7 +1026,8 @@ Custom styled select dropdown with search filtering and keyboard navigation
 ├─ [data-part='option']  <div>  required  — Individual option with role=option and data-value
 ├─ [data-part='search']  <input>  optional  — Optional search input to filter options
 ├─ [data-part='empty']  <div>  optional  — Empty state message when no options match the filter
-└─ [data-part='chevron']  <span>  optional  — Disclosure caret inside the trigger, rotated by [data-state="open"]
+├─ [data-part='chevron']  <span>  optional  — Disclosure caret inside the trigger, rotated by [data-state="open"]
+└─ [data-part='input']  <input>  optional  — Hidden input carrying the selected value so the widget submits inside a native form. Authored, or created by the controller when the root declares data-name.
 ```
 
 **Variants**
@@ -1051,7 +1052,7 @@ Reach it as `$ui.<method>()` from any expression inside this component, or as th
 - **Safe transforms:** `add-option`, `remove-option`, `add-search`, `remove-search`, `change-size`, `change-placeholder`, `restyle-listbox-background`, `customize-empty-message`
 - **Unsafe (never do):** `remove-combobox-role`, `remove-listbox-role`, `remove-option-role`, `remove-aria-expanded`, `remove-aria-haspopup`, `remove-keyboard-navigation`, `remove-click-outside-handler`
 - **A11y:** keys: Enter / Space, ArrowDown, ArrowUp, Enter, Escape, Home, End
-- **Required ARIA:** `role="combobox" on trigger`; `aria-expanded on trigger`; `aria-haspopup="listbox" on trigger`; `aria-controls on trigger pointing to listbox id`; `role="listbox" on listbox`; `role="option" on each option`; `aria-selected on options`
+- **Required ARIA:** `role="combobox" on trigger`; `aria-expanded on trigger`; `aria-haspopup="listbox" on trigger`; `aria-controls on trigger pointing to listbox id`; `role="listbox" on listbox`; `role="option" on each option`; `aria-selected on options`; `aria-activedescendant on the combobox, naming the active option while the list is open`
 
 ## sheet
 
@@ -1420,7 +1421,7 @@ Reach it as `$ui.<method>()` from any expression inside this component, or as th
 - **Safe transforms:** `add-suggestion-option`, `remove-suggestion-option`, `change-placeholder`, `toggle-allow-duplicates`, `seed-initial-tags`, `restyle-listbox-background`
 - **Unsafe (never do):** `remove-taglist-role-group`, `remove-dismiss-aria-label`, `remove-combobox-role-when-suggestions-present`, `remove-keyboard-handling`
 - **A11y:** keys: Enter, Backspace, ArrowDown/ArrowUp, Escape
-- **Required ARIA:** `role="group" on taglist with an accessible name`; `type="button" and aria-label on each chip dismiss button`; `role="combobox", aria-autocomplete="list", aria-expanded on the input when suggestions are present`; `role="listbox" on listbox, role="option" on each option, aria-controls linking input to listbox`
+- **Required ARIA:** `role="group" on taglist with an accessible name`; `type="button" and aria-label on each chip dismiss button`; `role="combobox", aria-autocomplete="list", aria-expanded on the input when suggestions are present`; `role="listbox" on listbox, role="option" on each option, aria-controls linking input to listbox`; `aria-activedescendant on the combobox, naming the active option while the list is open`
 
 ## toast
 

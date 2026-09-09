@@ -12,6 +12,16 @@
  * bottom sees the native `Bun` global and never overwrites it. It must be the
  * first import in `src/index.ts` so the polyfill is installed before any
  * command touches a `Bun.*` API.
+ *
+ * TESTING. This file had zero references in the suite — not even by name — for
+ * as long as it existed, which is a strange place for 260 lines of hand-rolled
+ * runtime to live: `bin/faqir` is `#!/usr/bin/env node`, so on a machine with no
+ * Bun installed EVERY `Bun.file` / `Bun.write` / `Bun.Glob` call in the CLI is
+ * one of these. The pieces that can be tested without a second runtime are
+ * exported for that reason: `tests/utils/runtime-shim.test.ts` runs `NodeGlob`
+ * and the real `Bun.Glob` over the same directory tree and requires the same
+ * answers, which is the only check that means anything here — a polyfill is
+ * correct exactly insofar as it agrees with the thing it stands in for.
  */
 import {
   createReadStream,
@@ -167,8 +177,12 @@ class NodeGlob {
         }
         const rel = relDir ? `${relDir}/${name}` : name;
         if (isDir) {
-          const includeDirs = this.dirOnly || !onlyFiles;
-          if (includeDirs && this.matches(rel)) out.push(rel);
+          // `onlyFiles` decides this, and nothing else. The shim used to add
+          // `this.dirOnly ||`, so a `*/` scan with the default options returned
+          // every directory where Bun returns nothing at all — a divergence that
+          // no test could see, because `src/` only ever issues `*/` together with
+          // `onlyFiles: false`. [W3-5]
+          if (!onlyFiles && this.matches(rel)) out.push(rel);
           walk(abs, rel);
         } else if (!this.dirOnly && this.matches(rel)) {
           out.push(rel);
@@ -259,6 +273,13 @@ function bunServe(options: any): any {
     },
   };
 }
+
+/**
+ * The shim's own pieces, exported for the differential test. Nothing in the CLI
+ * imports these — it reaches them through the `Bun` global like any other
+ * caller — so exporting them changes no behaviour.
+ */
+export { NodeGlob, NodeBunFile, globToRegExp, bunFile, bunWrite, bunServe };
 
 function installBunShim(): void {
   (globalThis as any).Bun = {

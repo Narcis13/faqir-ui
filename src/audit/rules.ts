@@ -1133,6 +1133,7 @@ export const SINGLE_FIXED_REGION_RULE: RuleInfo = {
   applies_to: "component markup vs its own stylesheet",
   exempt: [
     "regions hidden in the authored markup (including by a hidden ancestor)",
+    "regions the component's own stylesheet resolves to `visibility: hidden` — an off-canvas panel that is closed paints nothing and cannot collide",
     "different region kinds in one component (for example a panel over its backdrop)",
     "conditional @media/@container/@supports rules, which need runtime context to resolve",
     "components whose stylesheet is not available to the caller (never guessed at)",
@@ -1151,7 +1152,7 @@ interface StaticStyleRule {
 }
 
 type AnchorSide = "block-start" | "block-end" | "inline-start" | "inline-end";
-type FixedProperty = "position" | "transform" | AnchorSide;
+type FixedProperty = "position" | "transform" | "visibility" | AnchorSide;
 
 interface FixedAnchor {
   signature: string;
@@ -1466,7 +1467,9 @@ function fixedDeclarationEntries(
   property: string,
   value: string,
 ): Array<{ property: FixedProperty; value: string }> {
-  if (property === "position" || property === "transform") return [{ property, value }];
+  if (property === "position" || property === "transform" || property === "visibility") {
+    return [{ property, value }];
+  }
   const direct: Record<string, AnchorSide> = {
     top: "block-start",
     "inset-block-start": "block-start",
@@ -1567,6 +1570,13 @@ function fixedAnchorFor(element: ParsedElement, rules: StaticStyleRule[]): Fixed
   }
 
   if (winners.get("position")?.value !== "fixed") return null;
+  // A region the stylesheet hides paints nothing and takes no focus, so it
+  // cannot collide with anything. `hiddenInMarkup` already exempts the authored
+  // forms (`hidden`, an inline `visibility: hidden`); this is the same judgement
+  // for the sheet, which is where a component that is off-canvas until it is
+  // opened states it. Without it, two closed drawers — the shape every recipe
+  // with an off-canvas panel has — read as a collision. [W3-3]
+  if (winners.get("visibility")?.value === "hidden") return null;
   const sides: Record<AnchorSide, string> = {
     "block-start": winners.get("block-start")?.value ?? "auto",
     "block-end": winners.get("block-end")?.value ?? "auto",

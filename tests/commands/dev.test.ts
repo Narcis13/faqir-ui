@@ -254,7 +254,12 @@ describe("the dev server serves and injects it", () => {
     const port = 42000 + Math.floor(Math.random() * 10000);
     // `faqir dev` resolves --dir against the cwd, so the fixture directory is
     // the cwd and the CLI entry is addressed absolutely.
-    const server = spawn("bun", [join(ROOT, "src", "index.ts"), "dev", "--port", String(port)], {
+    // `process.execPath`, not the literal string "bun": under `bun test` these
+    // are the same binary, but hardcoding the name means the test silently
+    // depends on Bun being on PATH — and says nothing at all about the Node
+    // path, which is what `bin/faqir` actually runs. The Node smoke for the
+    // same server lives in tests/build/dist-cli.test.ts. [W3-5]
+    const server = spawn(process.execPath, [join(ROOT, "src", "index.ts"), "dev", "--port", String(port)], {
       cwd: dir,
       stdio: ["ignore", "pipe", "pipe"],
     });

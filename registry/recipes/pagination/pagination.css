@@ -60,7 +60,7 @@
 [data-ui="pagination"] [data-part="page"]:focus-visible,
 [data-ui="pagination"] [data-part="prev"]:focus-visible,
 [data-ui="pagination"] [data-part="next"]:focus-visible {
-  outline: 2px solid var(--color-ring, oklch(0.55 0.22 264 / 0.4));
+  outline: 2px solid var(--color-ring, oklch(0.55 0.22 264));
   outline-offset: 2px;
 }
 

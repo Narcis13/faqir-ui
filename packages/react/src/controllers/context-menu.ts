@@ -15,6 +15,20 @@ export function createContextMenu(root) {
   const target = root.querySelector("[data-part='target']");
   const menu = root.querySelector("[data-part='menu']");
 
+  // Same as `dropdown`: a missing part must name itself rather than throwing a
+  // TypeError out of `createMenuNavigation(null)`. [W3-2]
+  if (!target || !menu) {
+    console.warn(
+      "[Faqir] context-menu needs [data-part='target'] and [data-part='menu'] — " +
+        `missing ${[!target && "target", !menu && "menu"].filter(Boolean).join(" and ")}. ` +
+        "Component left inert.",
+      root
+    );
+    const inert = { open() {}, close() {}, destroy() {} };
+    root._faqirContextMenu = inert;
+    return inert;
+  }
+
   let outsideClickCleanup = null;
 
   function clearOutsideClick() {

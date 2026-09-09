@@ -84,7 +84,7 @@
 
   "tokens_used": [
     "color-primary", "color-primary-fg", "color-bg-muted",
-    "color-fg-muted", "color-success", "color-border",
+    "color-fg-muted", "color-success", "color-success-subtle", "color-border",
     "text-sm", "text-xs", "weight-medium",
     "radius-full", "space-1", "space-2", "space-4", "space-6"
   ],

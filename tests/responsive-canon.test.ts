@@ -256,9 +256,13 @@ describe("dashboard-shell · the sidebar is a drawer below md and a column above
   it("the shell is one column on a phone and two from md — collapsed or not", () => {
     const columns = (widthPx: number, attrs: Record<string, string> = {}) =>
       resolve(rules, "dashboard-shell", attrs, "grid-template-columns", widthPx);
-    expect(columns(390)).toBe("1fr");
-    expect(columns(390, { "data-variant": "right" })).toBe("1fr");
-    expect(columns(MD)).toBe("var(--shell-sidebar-width, 16rem) 1fr");
+    // `minmax(0, 1fr)`, not `1fr`: a `1fr` track keeps `auto` as its minimum, so
+    // it never shrinks below the min-content of the header and content inside
+    // it — which is how the shell rendered 9px wider than the phone it was on.
+    // [W3-3]
+    expect(columns(390)).toBe("minmax(0, 1fr)");
+    expect(columns(390, { "data-variant": "right" })).toBe("minmax(0, 1fr)");
+    expect(columns(MD)).toBe("var(--shell-sidebar-width, 16rem) minmax(0, 1fr)");
 
     // The two `:has(sidebar collapsed)` rules used to sit unconditionally, at
     // (0,3,0) against the single-column rule's (0,1,0) — so a collapsed sidebar

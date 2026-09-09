@@ -61,9 +61,20 @@
 
 [data-ui="context-menu"] [data-part="item"]:hover,
 [data-ui="context-menu"] [data-part="item"]:focus-visible {
-  outline: none;
   background: var(--color-primary-subtle);
   color: var(--color-primary);
+}
+
+/* Keyboard focus is NOT the same signal as hover.
+   Both rules used to `outline: none` and paint the same `--color-primary-subtle`
+   tint — a ~1.1:1 wash that is identical to what the mouse already does, so a
+   keyboard user navigating the menu had no way to tell where they were. The
+   tint stays (it is the menu's active-item affordance, shared by both), and
+   focus additionally draws the ring, inset so it does not overlap the item
+   above. [W3-3] */
+[data-ui="context-menu"] [data-part="item"]:focus-visible {
+  outline: calc(var(--space-px) * 2) solid var(--color-ring);
+  outline-offset: calc(var(--space-px) * -2);
 }
 
 [data-ui="context-menu"] [data-part="item"]:disabled,

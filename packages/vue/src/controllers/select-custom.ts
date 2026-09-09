@@ -7,6 +7,7 @@
 // @ui:provides open close toggle select getValue destroy
 
 import { onOutsideClick } from "./_core-events.js";
+import { uid } from "./_core-utils.js";
 
 export function createSelectCustom(root) {
   // Prevent double-init
@@ -25,6 +26,60 @@ export function createSelectCustom(root) {
   let selectedValue = "";
   const placeholderText = valueEl?.textContent || "";
 
+  /**
+   * `aria-activedescendant` — the half of the combobox pattern that was declared
+   * and never implemented.  [W3-4]
+   *
+   * The trigger publishes `role="combobox"`, which is the APG contract: as the
+   * user arrows through the listbox, the combobox must name the active option so
+   * a screen reader announces it. Highlighting lived in `data-highlighted`
+   * alone and the options carried no `id`, so there was nothing to point at and
+   * nothing was ever announced. The axe gate structurally cannot see this — it
+   * evaluates static DOM, and the defect exists only mid-navigation.
+   *
+   * The owner is whichever element holds the combobox role: the search field
+   * when the listbox has one (that is where focus is), otherwise the trigger.
+   */
+  const activeOwner = () => searchInput || trigger;
+
+  function optionId(opt) {
+    if (!opt.id) opt.id = uid("faqir-option");
+    return opt.id;
+  }
+
+  function setActiveDescendant(opt) {
+    const owner = activeOwner();
+    if (!owner) return;
+    if (opt) owner.setAttribute("aria-activedescendant", optionId(opt));
+    else owner.removeAttribute("aria-activedescendant");
+  }
+
+  /**
+   * The hidden input that makes this a form control.  [W3-4 · 0.4-28]
+   *
+   * `select-custom` is sold as a replacement for `<select>`, and a `<select>`
+   * submits. This one rendered a `<div>` listbox and kept its value in a
+   * closure, so a form containing it POSTed without the field at all — silently,
+   * because a missing field looks exactly like an empty one on the server. The
+   * input is created only when the markup does not already carry one, and only
+   * when the component names itself, so nothing is invented for a component with
+   * no name to submit under.
+   */
+  function ensureValueInput() {
+    let el = root.querySelector("[data-part='input']");
+    if (el) return el;
+    const name = root.dataset.name || root.getAttribute("name");
+    if (!name) return null;
+    el = document.createElement("input");
+    el.type = "hidden";
+    el.setAttribute("data-part", "input");
+    el.name = name;
+    root.appendChild(el);
+    return el;
+  }
+
+  const valueInput = ensureValueInput();
+
   function open() {
     root.dataset.state = "open";
     listbox.hidden = false;
@@ -41,7 +96,16 @@ export function createSelectCustom(root) {
     outsideClickCleanup = onOutsideClick(root, close);
   }
 
-  function close() {
+  /**
+   * Everything `close()` does EXCEPT moving focus.
+   *
+   * `destroy()` used to leave an open overlay standing with nothing listening —
+   * a dead widget the user cannot dismiss. Closing it on teardown is the fix
+   * (`context-menu` is the model), but teardown must not also yank focus
+   * somewhere: on an SPA route change the element it would restore to is
+   * usually on its way out of the document. [W3-2]
+   */
+  function dismiss() {
     root.dataset.state = "closed";
     listbox.hidden = true;
     trigger.setAttribute("aria-expanded", "false");
@@ -51,7 +115,10 @@ export function createSelectCustom(root) {
       outsideClickCleanup();
       outsideClickCleanup = null;
     }
+  }
 
+  function close() {
+    dismiss();
     trigger.focus();
   }
 
@@ -63,6 +130,7 @@ export function createSelectCustom(root) {
     options().forEach((opt) => {
       opt.removeAttribute("data-highlighted");
     });
+    setActiveDescendant(null);
     highlightedIndex = -1;
   }
 
@@ -83,6 +151,7 @@ export function createSelectCustom(root) {
 
     visible[index].setAttribute("data-highlighted", "");
     visible[index].scrollIntoView({ block: "nearest" });
+    setActiveDescendant(visible[index]);
     highlightedIndex = index;
   }
 
@@ -145,6 +214,9 @@ export function createSelectCustom(root) {
       valueEl.removeAttribute("data-placeholder");
     }
 
+    // …and the value a form actually submits. [W3-4 · 0.4-28]
+    if (valueInput) valueInput.value = selectedValue;
+
     // Dispatch change event
     const event = new CustomEvent("select-change", {
       bubbles: true,
@@ -181,6 +253,9 @@ export function createSelectCustom(root) {
       case "Escape":
         if (root.dataset.state === "open") {
           e.preventDefault();
+          // Closing the listbox is the whole action — the form around it, and
+          // everything the user has typed into it, stays. [W3-2]
+          e.stopPropagation();
           close();
         }
         break;
@@ -208,6 +283,8 @@ export function createSelectCustom(root) {
         break;
       case "Escape":
         e.preventDefault();
+        // Reached only while the listbox is open, so this Escape is always ours.
+        e.stopPropagation();
         close();
         break;
       case "Home":
@@ -244,6 +321,7 @@ export function createSelectCustom(root) {
   searchInput?.addEventListener("input", onSearchInput);
 
   function destroy() {
+    dismiss();
     trigger?.removeEventListener("click", onTriggerClick);
     trigger?.removeEventListener("keydown", onTriggerKeyDown);
     listbox?.removeEventListener("keydown", onListboxKeyDown);

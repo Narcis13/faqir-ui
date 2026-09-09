@@ -57,6 +57,9 @@ export function createPopover(root) {
   function onKeyDown(e) {
     if (e.key === "Escape" && root.dataset.state === "open") {
       e.preventDefault();
+      // Dismissing this popover consumes the keystroke — an enclosing dialog or
+      // drawer must not close on the same Escape. [W3-2]
+      e.stopPropagation();
       close();
       trigger.focus();
     }
@@ -67,6 +70,10 @@ export function createPopover(root) {
   root.addEventListener("keydown", onKeyDown);
 
   function destroy() {
+    // Leaving a destroyed overlay open leaves a dead one: nothing is listening
+    // any more, so its close button, Escape and overlay click all do nothing.
+    // `context-menu` is the model — it has always closed itself here. [W3-2]
+    close();
     trigger?.removeEventListener("click", onTriggerClick);
     closeBtn?.removeEventListener("click", onCloseClick);
     root.removeEventListener("keydown", onKeyDown);

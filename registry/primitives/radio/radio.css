@@ -95,3 +95,26 @@
     transition: none;
   }
 }
+
+/* ── Forced colors (Windows High Contrast) ──
+   Same shape as `checkbox`: the selected dot is a `--color-primary-fg` fill
+   inside a `--color-primary` circle, and the OS collapses both to one colour. [W3-3] */
+@media (forced-colors: active) {
+  [data-ui="radio"] {
+    border: 1px solid ButtonText;
+  }
+
+  [data-ui="radio"]:checked {
+    background: Highlight;
+    border-color: Highlight;
+  }
+
+  [data-ui="radio"]:checked::before {
+    forced-color-adjust: none;
+    background: HighlightText;
+  }
+
+  [data-ui="radio"]:disabled {
+    border-color: GrayText;
+  }
+}

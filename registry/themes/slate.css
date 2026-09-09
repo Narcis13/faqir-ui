@@ -44,7 +44,7 @@
   /* ── Borders ── */
   --color-border:          oklch(0.89 0.008 240);
   --color-border-strong:   oklch(0.80 0.012 240);
-  --color-ring:            oklch(0.45 0.09 245 / 0.4);
+  --color-ring:            oklch(0.45 0.09 245);
 
   /* ── Shadows (restrained, cool gray) ── */
   --shadow-xs:  0 1px 2px oklch(0.25 0.02 250 / 0.06);
@@ -98,7 +98,7 @@
   /* ── Borders ── */
   --color-border:          oklch(0.30 0.02 250);
   --color-border-strong:   oklch(0.38 0.022 250);
-  --color-ring:            oklch(0.68 0.11 245 / 0.45);
+  --color-ring:            oklch(0.68 0.11 245);
 
   /* ── Shadows (quiet, dark neutral) ── */
   --shadow-xs:  0 1px 3px oklch(0.08 0.01 250 / 0.35);
@@ -152,7 +152,7 @@
     /* ── Borders ── */
     --color-border:          oklch(0.30 0.02 250);
     --color-border-strong:   oklch(0.38 0.022 250);
-    --color-ring:            oklch(0.68 0.11 245 / 0.45);
+    --color-ring:            oklch(0.68 0.11 245);
 
     /* ── Shadows (quiet, dark neutral) ── */
     --shadow-xs:  0 1px 3px oklch(0.08 0.01 250 / 0.35);

@@ -268,7 +268,52 @@ controller-addressed `$dispatch`.
 
 ## Wave 3 — Correctness and accessibility debt
 
-Est. **1 week.**
+Est. **1 week.** **Landed** — what follows is the diagnosis as written; the notes
+below record what each item became.
+
+> **W3-1** Cleanup ownership now follows the `__faqirCleanups` array rather than
+> the scope object, and `l-if`/`l-for` register their disposer on the anchor
+> COMMENT they leave behind (`destroyScope` walks child nodes, so it can see
+> one). `l-data` on a cloned top node goes through `initTree`, so `l-source`
+> inside an `l-if` fetches. `l-model` unbinds its listener, `l-if` removes every
+> node it inserted, `$watch` disposers are registered, teleported subtrees own
+> their teardown, `l-cloak` comes off at bind time and off anything the observer
+> is handed, and a second `Faqir.start()` re-binds nothing. `apiSource()` gained
+> `destroy()` (abort + latch + stop polling), wired through a `__faqirTeardown`
+> hook the engine runs on scope teardown — and 37 tests, from zero.
+> `tests/core/lifecycle.test.ts` is the per-leak suite.
+>
+> **W3-2** Escape stops propagating in all eight places (`menu-navigation`
+> covers dropdown/context-menu/menubar; the menubar opts out when it has nothing
+> to dismiss, so it does not swallow a keystroke that is not its own). Twelve
+> controllers dismiss on `destroy()`. Four name the missing part and return an
+> inert API instead of throwing. `tests/recipes/overlay-family.test.ts` asserts
+> all three across the family.
+>
+> **W3-3** Every `--color-ring` is opaque (4.03:1 minimum, from 1.37); the
+> `contrast-tokens` rule gained a non-text half at SC 1.4.11's 3:1 that treats a
+> translucent ring as a finding, and the two forgotten pairs. The checkbox tick
+> is a mask painted in `--color-primary-fg`; the stepper's `white` is gone.
+> `switch`, `checkbox`, `radio`, `progress`, `tabs` and `slider` have
+> forced-colors blocks. The switch thumb and the select chevron are
+> direction-aware. `settings-page`, `sidebar` and `dashboard-shell` fit 320px,
+> and `narrow-fit` holds them there. Menu items get their focus ring back.
+>
+> **W3-4** `select-custom`, `combobox`, `command-palette` and `tag-input`
+> maintain `aria-activedescendant`; `select-custom` submits through a hidden
+> input when the root is named. The four "GAP" tests now assert the fix.
+>
+> **W3-5** The layout ratchet ratchets per page. `json-output.test.ts` runs the
+> compiled bundle on Node in a real project and asserts key sets. `NodeGlob` is
+> tested against `Bun.Glob` (which found a divergence). `trace --json` sorts.
+> `faqir dev` has a Node smoke, and the four vacuous tests assert something.
+> `field-wiring` has one invalid-state grammar. The print filter and the
+> visual-baseline workflow are both held by meta-tests.
+>
+> **W3-6** Third-party manifest text is labelled where it is emitted — a
+> provenance block in every context surface, a marker on each third-party
+> section, and `provenance`/`trust` keys in `context.json`. `docs/security.md` §9
+> says what that does and does not buy.
 
 ### W3-1 · Engine lifecycle (four confirmed leaks)
 - **`l-if`/`l-for` disposers are silently dropped** (`engine.js:1516`, `:1756`;

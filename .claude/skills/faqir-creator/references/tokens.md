@@ -36,19 +36,19 @@ _`registry/tokens/palette.css` · 67 tokens_
 
 ### Indigo
 
-| Token | Value |
-|---|---|
-| `--palette-indigo-50` | `oklch(0.96 0.04 264)` |
-| `--palette-indigo-100` | `oklch(0.92 0.08 264)` |
-| `--palette-indigo-200` | `oklch(0.85 0.12 264)` |
-| `--palette-indigo-300` | `oklch(0.75 0.16 264)` |
-| `--palette-indigo-400` | `oklch(0.65 0.20 264)` |
-| `--palette-indigo-500` | `oklch(0.53 0.22 264)` |
-| `--palette-indigo-600` | `oklch(0.48 0.22 264)` |
-| `--palette-indigo-700` | `oklch(0.42 0.20 264)` |
-| `--palette-indigo-800` | `oklch(0.35 0.18 264)` |
-| `--palette-indigo-900` | `oklch(0.28 0.14 264)` |
-| `--palette-indigo-950` | `oklch(0.20 0.10 264)` |
+| Token | Value | Notes |
+|---|---|---|
+| `--palette-indigo-50` | `oklch(0.96 0.04 264)` | — |
+| `--palette-indigo-100` | `oklch(0.92 0.08 264)` | — |
+| `--palette-indigo-200` | `oklch(0.85 0.12 264)` | — |
+| `--palette-indigo-300` | `oklch(0.75 0.16 264)` | — |
+| `--palette-indigo-400` | `oklch(0.68 0.20 264)` | AA: --color-primary on --color-bg-muted was 4.44:1 in dark [W3-3] |
+| `--palette-indigo-500` | `oklch(0.51 0.22 264)` | AA: --color-primary on --color-bg-muted was 4.40:1 in light [W3-3] |
+| `--palette-indigo-600` | `oklch(0.47 0.22 264)` | keeps the hover step visible after the 500 nudge |
+| `--palette-indigo-700` | `oklch(0.42 0.20 264)` | — |
+| `--palette-indigo-800` | `oklch(0.35 0.18 264)` | — |
+| `--palette-indigo-900` | `oklch(0.28 0.14 264)` | — |
+| `--palette-indigo-950` | `oklch(0.20 0.10 264)` | — |
 
 ### Red
 
@@ -347,7 +347,7 @@ _`registry/tokens/semantic.css` · 31 tokens_
 |---|---|
 | `--color-border` | `var(--palette-gray-200)` |
 | `--color-border-strong` | `var(--palette-gray-300)` |
-| `--color-ring` | `oklch(0.55 0.22 264 / 0.4)` |
+| `--color-ring` | `oklch(0.55 0.22 264)` |
 
 ## aliases — per-component overrides mapping to semantic tokens
 

@@ -126,7 +126,8 @@
       "role=\"group\" on taglist with an accessible name",
       "type=\"button\" and aria-label on each chip dismiss button",
       "role=\"combobox\", aria-autocomplete=\"list\", aria-expanded on the input when suggestions are present",
-      "role=\"listbox\" on listbox, role=\"option\" on each option, aria-controls linking input to listbox"
+      "role=\"listbox\" on listbox, role=\"option\" on each option, aria-controls linking input to listbox",
+      "aria-activedescendant on the combobox, naming the active option while the list is open"
     ],
     "keyboard": {
       "Enter": "commit the highlighted suggestion, else the trimmed draft, as a tag",

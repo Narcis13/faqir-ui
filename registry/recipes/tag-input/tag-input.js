@@ -2,6 +2,7 @@
 // @ui:provides getValue setValue addTag removeTag clear destroy
 
 import { onOutsideClick } from "../../core/events.js";
+import { uid } from "../../core/utils.js";
 
 /**
  * tag-input — a multi-value text input that composes two existing recipes:
@@ -191,8 +192,25 @@ export function createTagInput(root) {
     }
   }
 
+  /**
+   * `aria-activedescendant`, for the same reason as `combobox`: the field
+   * publishes `role="combobox"` + `aria-autocomplete="list"`, so it owes the
+   * reader the name of the active suggestion. [W3-4]
+   */
+  function optionId(opt) {
+    if (!opt.id) opt.id = uid("faqir-suggestion");
+    return opt.id;
+  }
+
+  function setActiveDescendant(opt) {
+    if (!input) return;
+    if (opt) input.setAttribute("aria-activedescendant", optionId(opt));
+    else input.removeAttribute("aria-activedescendant");
+  }
+
   function clearHighlight() {
     options().forEach((o) => o.removeAttribute("data-highlighted"));
+    setActiveDescendant(null);
     highlightedIndex = -1;
   }
 
@@ -204,6 +222,7 @@ export function createTagInput(root) {
     options().forEach((o) => o.removeAttribute("data-highlighted"));
     vis[index].setAttribute("data-highlighted", "");
     vis[index].scrollIntoView?.({ block: "nearest" });
+    setActiveDescendant(vis[index]);
     highlightedIndex = index;
   }
 
@@ -274,6 +293,8 @@ export function createTagInput(root) {
       case "Escape":
         if (listbox && root.dataset.state === "open") {
           e.preventDefault();
+          // The suggestion list is what closes; the form around it stays. [W3-2]
+          e.stopPropagation();
           closeList();
         }
         break;
@@ -311,6 +332,10 @@ export function createTagInput(root) {
   listbox?.addEventListener("click", onListboxClick);
 
   function destroy() {
+    // Leaving a destroyed overlay open leaves a dead one: nothing is listening
+    // any more, so its close button, Escape and overlay click all do nothing.
+    // `context-menu` is the model — it has always closed itself here. [W3-2]
+    closeList();
     input?.removeEventListener("input", onInput);
     input?.removeEventListener("keydown", onInputKeyDown);
     taglist?.removeEventListener("click", onTaglistClick);

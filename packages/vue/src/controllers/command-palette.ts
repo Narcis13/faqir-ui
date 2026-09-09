@@ -7,6 +7,7 @@
 // @ui:provides open close filter selectItem registerCommand destroy
 
 import { trapFocus } from "./_core-focus.js";
+import { uid } from "./_core-utils.js";
 
 export function createCommandPalette(root) {
   // Prevent double-init
@@ -42,17 +43,52 @@ export function createCommandPalette(root) {
     searchInput.focus();
   }
 
-  function close() {
+  /**
+   * Everything `close()` does EXCEPT moving focus.
+   *
+   * `destroy()` used to leave an open overlay standing with nothing listening —
+   * a dead widget the user cannot dismiss. Closing it on teardown is the fix
+   * (`context-menu` is the model), but teardown must not also yank focus
+   * somewhere: on an SPA route change the element it would restore to is
+   * usually on its way out of the document. [W3-2]
+   */
+  function dismiss() {
     root.dataset.state = "closed";
     overlay.hidden = true;
     panel.hidden = true;
+    // A closed palette must not still name an active item: `aria-activedescendant`
+    // pointing into a hidden list is a reference a reader can follow to nothing. [W3-4]
+    clearHighlight();
 
     if (focusCleanup) {
       focusCleanup();
       focusCleanup = null;
     }
+  }
 
+  function close() {
+    dismiss();
     previouslyFocused?.focus();
+  }
+
+  /**
+   * `aria-activedescendant` — the declared half of the combobox pattern. [W3-4]
+   *
+   * The search field publishes `role="combobox"` and `aria-autocomplete="list"`,
+   * which obliges it to name the active item as the user arrows through the
+   * results. Highlighting lived in `data-highlighted` alone and the items had no
+   * `id`, so a screen-reader user heard nothing move. The axe gate cannot see
+   * this — it reads static DOM, and the defect exists only mid-navigation.
+   */
+  function itemId(item) {
+    if (!item.id) item.id = uid("faqir-command");
+    return item.id;
+  }
+
+  function setActiveDescendant(item) {
+    if (!searchInput) return;
+    if (item) searchInput.setAttribute("aria-activedescendant", itemId(item));
+    else searchInput.removeAttribute("aria-activedescendant");
   }
 
   function clearHighlight() {
@@ -60,6 +96,7 @@ export function createCommandPalette(root) {
       item.removeAttribute("data-highlighted");
       item.setAttribute("aria-selected", "false");
     });
+    setActiveDescendant(null);
     highlightedIndex = -1;
   }
 
@@ -84,6 +121,7 @@ export function createCommandPalette(root) {
     visible[index].setAttribute("data-highlighted", "");
     visible[index].setAttribute("aria-selected", "true");
     visible[index].scrollIntoView({ block: "nearest" });
+    setActiveDescendant(visible[index]);
     highlightedIndex = index;
   }
 
@@ -186,8 +224,13 @@ export function createCommandPalette(root) {
         }
         break;
       case "Escape":
-        e.preventDefault();
-        close();
+        // The palette is an overlay in its own right: dismissing it must not
+        // also dismiss whatever it was opened over. [W3-2]
+        if (root.dataset.state === "open") {
+          e.preventDefault();
+          e.stopPropagation();
+          close();
+        }
         break;
       case "Home":
         if (visible.length > 0) {
@@ -237,6 +280,7 @@ export function createCommandPalette(root) {
   document.addEventListener("keydown", onGlobalKeyDown);
 
   function destroy() {
+    dismiss();
     searchInput?.removeEventListener("input", onSearchInput);
     searchInput?.removeEventListener("keydown", onSearchKeyDown);
     overlay?.removeEventListener("click", onOverlayClick);

@@ -44,5 +44,5 @@
   /* ── Borders ── */
   --color-border:          var(--palette-gray-200);
   --color-border-strong:   var(--palette-gray-300);
-  --color-ring:            oklch(0.55 0.22 264 / 0.4);
+  --color-ring:            oklch(0.55 0.22 264);
 }

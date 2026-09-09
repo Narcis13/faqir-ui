@@ -1,5 +1,5 @@
 /* @ui:component stepper */
-/* @ui:tokens color-primary color-primary-fg color-bg-muted color-fg-muted color-success color-border text-sm text-xs weight-medium radius-full space-2 space-3 space-1 */
+/* @ui:tokens color-primary color-primary-fg color-bg-muted color-fg-muted color-success color-success-subtle color-border text-sm text-xs weight-medium radius-full space-2 space-3 space-1 */
 
 /* ── Base ── */
 [data-ui="stepper"] {
@@ -37,9 +37,18 @@
 }
 
 /* ── Completed step ── */
+/* The bare `white` that used to sit here was the last colour literal in the
+   registry, and no token could reach it: on a theme whose success colour is a
+   pale mint — 9 of the 12 dark themes — the numeral inside a completed step
+   was white on near-white. There is no `--color-success-fg` to swap in (the
+   token set pairs a `-fg` only with primary, secondary and destructive), so
+   this uses the pair the contrast gate already guarantees at AA:
+   `--color-success` ON `--color-success-subtle`. Completed reads as a settled
+   tint next to the active step's solid fill, which is what "done" should look
+   like beside "you are here". [W3-3] */
 [data-ui="stepper"] [data-part="step"][data-state="completed"] [data-part="indicator"] {
-  background: var(--color-success);
-  color: white;
+  background: var(--color-success-subtle);
+  color: var(--color-success);
 }
 
 /* ── Step label ──

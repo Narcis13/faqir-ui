@@ -74,6 +74,10 @@ export function createTooltip(root) {
   root.addEventListener("keydown", onKeyDown);
 
   function destroy() {
+    // Leaving a destroyed overlay open leaves a dead one: nothing is listening
+    // any more, so its close button, Escape and overlay click all do nothing.
+    // `context-menu` is the model — it has always closed itself here. [W3-2]
+    hide();
     clearTimeout(showTimer);
     clearTimeout(hideTimer);
     trigger?.removeEventListener("mouseenter", onMouseEnter);

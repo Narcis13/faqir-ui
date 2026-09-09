@@ -47,7 +47,7 @@
   /* ── Borders: strong, visible lines for table/document structure ── */
   --color-border:           oklch(0.78 0 0);           /* visible gray */
   --color-border-strong:    oklch(0.50 0 0);           /* dark for table headers */
-  --color-ring:             oklch(0.35 0.10 250 / 0.4);
+  --color-ring:             oklch(0.35 0.10 250);
 
   /* ── Shadows: NONE — flat output for PDF ── */
   --shadow-xs:              none;

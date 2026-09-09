@@ -44,7 +44,7 @@
   /* ── Borders (thick, strong, black) ── */
   --color-border:          oklch(0.00 0 0);           /* pure black */
   --color-border-strong:   oklch(0.00 0 0);           /* pure black */
-  --color-ring:            oklch(0.00 0 0 / 0.6);
+  --color-ring:            oklch(0.00 0 0);
 
   /* ── Shadows (none — brutalist has no shadows) ── */
   --shadow-xs:  none;
@@ -116,7 +116,7 @@
   /* ── Borders (thick, strong, white) ── */
   --color-border:          oklch(1.00 0 0);           /* pure white */
   --color-border-strong:   oklch(1.00 0 0);           /* pure white */
-  --color-ring:            oklch(1.00 0 0 / 0.6);
+  --color-ring:            oklch(1.00 0 0);
 
   /* ── Shadows (none) ── */
   --shadow-xs:  none;
@@ -170,7 +170,7 @@
     /* ── Borders (thick, strong, white) ── */
     --color-border:          oklch(1.00 0 0);
     --color-border-strong:   oklch(1.00 0 0);
-    --color-ring:            oklch(1.00 0 0 / 0.6);
+    --color-ring:            oklch(1.00 0 0);
 
     /* ── Shadows (none) ── */
     --shadow-xs:  none;

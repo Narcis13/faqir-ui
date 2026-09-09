@@ -108,6 +108,44 @@ const FIXED = [
   },
 ] as const;
 
+/**
+ * Page shells, held to the WINDOW cases only.  [W3-3]
+ *
+ * All three overflowed a phone: `settings-page` rendered 403px wide at 375 (its
+ * stylesheet had no media query at all), `sidebar` the same 403 (its collapse to
+ * a drawer was the controller's job alone, so every rendering without JS — a
+ * screenshot, a print, a page before its script runs — kept a 256px rail on a
+ * 320px phone), and `dashboard-shell` 369 at 320.
+ *
+ * They are not in `FIXED` because the squeeze case does not apply to them. Each
+ * reference is a whole PAGE — a shell with its own header, its own content
+ * column and, in two of the three, a sidebar beside them — and a page's
+ * container IS the window. "Fits a box 60% of its own max-content" is a
+ * meaningful question about a pagination bar; asked of an app shell it measures
+ * the demo page's inner `<main>`, not the component. The window cases are the
+ * criterion these three failed, and the criterion a reader meets.
+ */
+const PAGE_SHELLS = [
+  {
+    name: "settings-page",
+    kind: "pattern",
+    mechanism: "the tab rail stacks below `md` and the tab row wraps",
+  },
+  {
+    name: "sidebar",
+    kind: "recipe",
+    mechanism: "off-canvas below `md` in CSS, not only when the controller says so",
+  },
+  {
+    name: "dashboard-shell",
+    kind: "pattern",
+    mechanism: "phone gutters, `minmax(0, 1fr)` tracks, and a closed drawer that is not painted",
+  },
+] as const;
+
+/** Everything held to the window cases: the five squeezed components and the three shells. */
+const FITS_A_PHONE = [...FIXED, ...PAGE_SHELLS] as const;
+
 /** One painted box that reaches past the content box it was given. */
 interface Bleed {
   label: string;
@@ -277,7 +315,7 @@ async function squeezeWidth(
 
 // ── the wall: a phone window ─────────────────────────────────────────────────
 
-for (const component of FIXED) {
+for (const component of FITS_A_PHONE) {
   for (const width of WINDOW_WIDTHS) {
     test(`${component.kind}/${component.name} fits a ${width}px window — ${component.mechanism}`, async ({
       page,
@@ -359,6 +397,48 @@ test.describe("the fit assertion catches each fix being undone", () => {
       expect: /data-ui="menubar"\] past the inline end/,
     },
   ] as const;
+
+  /** The same shape for the page shells, at the phone window they each failed. */
+  const SHELL_REGRESSIONS = [
+    {
+      what: "the tab row stops wrapping",
+      component: { name: "settings-page", kind: "pattern" },
+      width: 320,
+      css: `[data-ui="tabs"] [data-part="list"] { flex-wrap: nowrap !important; }`,
+      expect: /data-part="trigger"\] past the inline end/,
+    },
+    {
+      what: "the sidebar stops going off-canvas without JS",
+      component: { name: "sidebar", kind: "recipe" },
+      width: 320,
+      css: `[data-ui="sidebar"] { inline-size: 16rem !important; }`,
+      expect: /past the inline end/,
+    },
+    {
+      what: "the shell's grid track stops being allowed to shrink",
+      component: { name: "dashboard-shell", kind: "pattern" },
+      width: 320,
+      css: `[data-ui="dashboard-shell"] { grid-template-columns: 1fr !important; }`,
+      expect: /past the inline end/,
+    },
+  ] as const;
+
+  for (const regression of SHELL_REGRESSIONS) {
+    test(regression.what, async ({ page }) => {
+      await mount(
+        page,
+        documentFor(regression.component, { css: regression.css }),
+        regression.width,
+      );
+      expect(
+        describe(await page.evaluate(collectBleeds, TOLERANCE)),
+        "the reverted fix should have been caught",
+      ).toMatch(regression.expect);
+
+      await mount(page, documentFor(regression.component), regression.width);
+      expect(await page.evaluate(collectBleeds, TOLERANCE)).toEqual([]);
+    });
+  }
 
   for (const regression of REGRESSIONS) {
     test(regression.what, async ({ page }) => {

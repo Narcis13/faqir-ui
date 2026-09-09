@@ -66,3 +66,22 @@
     transition: none;
   }
 }
+
+/* ── Forced colors (Windows High Contrast) ──
+   The OS drops every background, so the track and the fill became the same
+   nothing: a progress bar that showed no progress, at any value. The fill is
+   the one element here that MUST keep a colour, so it opts out of the
+   substitution and paints `Highlight`; the track keeps a visible boundary. [W3-3] */
+@media (forced-colors: active) {
+  [data-ui="progress"] [data-part="track"] {
+    border: 1px solid ButtonText;
+  }
+
+  [data-ui="progress"] [data-part="fill"],
+  [data-ui="progress"][data-variant="success"] [data-part="fill"],
+  [data-ui="progress"][data-variant="warning"] [data-part="fill"],
+  [data-ui="progress"][data-variant="destructive"] [data-part="fill"] {
+    forced-color-adjust: none;
+    background: Highlight;
+  }
+}

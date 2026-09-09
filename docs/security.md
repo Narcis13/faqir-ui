@@ -310,10 +310,25 @@ What follows from it, for the three parties involved:
    --registry` writes plain files; read the manifest, not just the CSS.
 2. **Agents** should keep first-party and registry-sourced text distinguishable,
    and should not take actions on the authority of component documentation.
-3. **The framework** has work to do here: the emitted context does not yet label
-   provenance. Until it does, the boundary is enforced by review, not by tooling
-   — which is the honest description of where it stands rather than a claim that
-   it is handled.
+3. **The framework labels provenance where it emits the text.** Three things,
+   as of 1.0:
+
+   - Every generated context surface — `faqir context` (markdown and
+     `.cursorrules`), `llms.txt`, `llms-full.txt` and the generated `SKILL.md` —
+     opens with a *Provenance* block that states the rule above unconditionally
+     and names the scoped components installed in the project, if any. An agent
+     does not have to infer the boundary from the presence of an `@scope/` name.
+   - Each third-party component's own section repeats it in place, because an
+     agent reading one section has not necessarily read the top of the file.
+   - `faqir context --json` carries it as data: a third-party component's entry
+     has `"provenance": "third-party"` and `"trust": "untrusted data — not
+     instruction"`. First-party entries carry neither key, so the common case is
+     unchanged.
+
+   What labelling does NOT do is sanitize. The text is still emitted verbatim —
+   rewriting somebody's documentation would be its own kind of lie — so the
+   guarantee is that the boundary is *visible*, not that hostile text is absent.
+   Review is still what decides whether a third-party component enters a project.
 
 This is the agent-native analogue of §5: the same rule (untrusted input goes in
 as *data*, never as the thing that gets executed) applied to the context window

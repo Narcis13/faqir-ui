@@ -203,6 +203,15 @@ export function createSidebar(root) {
   render();
 
   function destroy() {
+    // A destroyed sidebar left mid-drawer is a dead overlay: the scrim still
+    // covers the page, and its trigger, Escape and overlay click have all just
+    // stopped working. Collapse the drawer first, without restoring focus —
+    // teardown must not yank focus to an element on its way out. [W3-2]
+    if (drawerOpen) {
+      drawerOpen = false;
+      render();
+    }
+    previouslyFocused = null;
     for (const t of triggers) t.removeEventListener("click", onTriggerClick);
     overlay?.removeEventListener("click", onOverlayClick);
     root.removeEventListener("keydown", onKeyDown);

@@ -47,15 +47,23 @@
   border-color: var(--color-primary);
 }
 
+/* The tick is a MASK, not an image.
+   A data-URI `stroke` is a literal no token can reach, and it shipped as
+   `white`: 1.00:1 — literally invisible — on the brutalist dark primary, and
+   under 3:1 in 8 of 12 dark themes. Masking paints the same glyph in
+   `--color-primary-fg`, which is the token that already answers "what colour
+   goes on top of --color-primary" — exactly what the indeterminate bar twenty
+   lines below has always done. The mask's own stroke colour is irrelevant
+   (only its alpha is read), so it is a plain opaque black. Same
+   prefixed+unprefixed pair the `icon` primitive uses. [W3-3] */
 [data-ui="checkbox"]:checked::before {
   content: "";
   display: block;
   width: 10px;
   height: 10px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
+  background: var(--color-primary-fg);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 
 /* -- Indeterminate -- */
@@ -112,5 +120,33 @@
 @media (prefers-reduced-motion: reduce) {
   [data-ui="checkbox"] {
     transition: none;
+  }
+}
+
+/* ── Forced colors (Windows High Contrast) ──
+   `--color-primary` becomes the system fill, and the tick — painted through a
+   mask in `--color-primary-fg` — becomes the same colour as the box it sits in.
+   The mask has to opt out of the substitution to stay readable. [W3-3] */
+@media (forced-colors: active) {
+  [data-ui="checkbox"] {
+    border: 1px solid ButtonText;
+  }
+
+  [data-ui="checkbox"]:checked,
+  [data-ui="checkbox"]:indeterminate,
+  [data-ui="checkbox"][data-state="indeterminate"] {
+    background: Highlight;
+    border-color: Highlight;
+  }
+
+  [data-ui="checkbox"]:checked::before,
+  [data-ui="checkbox"]:indeterminate::before,
+  [data-ui="checkbox"][data-state="indeterminate"]::before {
+    forced-color-adjust: none;
+    background: HighlightText;
+  }
+
+  [data-ui="checkbox"]:disabled {
+    border-color: GrayText;
   }
 }

@@ -1,42 +1,69 @@
 /* @ui:component sidebar */
 /* @ui:tokens color-bg color-fg color-fg-muted color-border color-primary color-primary-subtle color-bg-muted color-ring shadow-xl space-1 space-2 space-3 space-4 radius-md radius-lg z-overlay z-modal text-sm text-lg weight-medium weight-semibold duration-normal duration-slow ease-out ease-default */
 
-/* ── Root ── */
-/* The root owns the layout column on desktop; the panel is the visual surface.
-   On mobile the panel/overlay become fixed, so the root collapses to zero width
-   and the content beside it spans the full viewport. */
+/* ── Root ──
+   The root owns the layout column from `md` up; the panel is the visual surface.
+   Off-canvas below it, so the root collapses to zero width and the content
+   beside it spans the full viewport.
+
+   MOBILE-FIRST, and that is the fix. The collapse used to be the controller's
+   job alone: `createSidebar` watches a media query and rewrites `data-state`.
+   So every rendering without JS — a screenshot, a print, a page whose script
+   has not run yet, a reader with JS off — kept a 256px rail on a 320px phone
+   and pushed the header beside it 83px off the window. `dashboard-shell` has
+   been mobile-first since 0.8-09 and this is the same shape, for the same
+   reason: under a min-width-only canon (FAQIR-NEXT §19), "off-canvas below md"
+   can only be said as "off-canvas always, in the flow from md up". The
+   controller still owns open/closed; the CSS owns which layout the width
+   affords. [W3-3] */
 [data-ui="sidebar"] {
   --sidebar-width: 16rem;
   --sidebar-rail-width: 3.75rem;
   --sidebar-bg: var(--color-bg);
 
   flex: 0 0 auto;
-  inline-size: var(--sidebar-width);
+  inline-size: 0;
   transition: inline-size var(--duration-normal) var(--ease-default);
 }
 
-[data-ui="sidebar"][data-state="rail"] {
-  inline-size: var(--sidebar-rail-width);
-}
-
-[data-ui="sidebar"][data-state="drawer"],
-[data-ui="sidebar"][data-state="drawer-open"] {
-  inline-size: 0;
-}
-
-/* ── Panel ── */
+/* ── Panel ──
+   Off-canvas below `md`, whatever `data-state` says; the md block below returns
+   it to the flow. `visibility` rather than transform alone, so a closed drawer
+   is neither painted outside the viewport nor reachable by tab: it used to be
+   both. It is delayed off (not on) so the slide-out animation still plays. */
 [data-ui="sidebar"] [data-part="panel"] {
-  position: sticky;
-  inset-block-start: 0;
+  --sidebar-offscreen: -100%;
+  position: fixed;
+  inset-block: 0;
+  inset-inline-start: 0;
+  inline-size: var(--sidebar-width);
+  max-inline-size: 100%;
   block-size: 100dvh;
-  inline-size: 100%;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
   background: var(--sidebar-bg);
   border-inline-end: 1px solid var(--color-border);
+  border-start-end-radius: var(--radius-lg, 0.5rem);
+  border-end-end-radius: var(--radius-lg, 0.5rem);
+  box-shadow: var(--shadow-xl);
+  z-index: var(--z-modal);
   overflow: hidden;
-  transition: transform var(--duration-slow) var(--ease-out);
+  transform: translateX(var(--sidebar-offscreen, -100%));
+  visibility: hidden;
+  transition: transform var(--duration-slow) var(--ease-out),
+              visibility 0s linear var(--duration-slow);
+}
+
+[dir="rtl"] [data-ui="sidebar"] [data-part="panel"] {
+  --sidebar-offscreen: 100%;
+}
+
+[data-ui="sidebar"][data-state="drawer-open"] [data-part="panel"] {
+  transform: translateX(0);
+  visibility: visible;
+  transition: transform var(--duration-slow) var(--ease-out),
+              visibility 0s linear 0s;
 }
 
 /* ── Header (brand + toggle) ── */
@@ -97,7 +124,7 @@
 }
 
 [data-ui="sidebar"] [data-part="trigger"]:focus-visible {
-  outline: 2px solid var(--color-ring, oklch(0.55 0.22 264 / 0.4));
+  outline: 2px solid var(--color-ring, oklch(0.55 0.22 264));
   outline-offset: 2px;
 }
 
@@ -134,7 +161,7 @@
 }
 
 [data-ui="sidebar"] [data-part="item"]:focus-visible {
-  outline: 2px solid var(--color-ring, oklch(0.55 0.22 264 / 0.4));
+  outline: 2px solid var(--color-ring, oklch(0.55 0.22 264));
   outline-offset: -2px;
 }
 
@@ -205,34 +232,43 @@
   opacity: 1;
 }
 
-/* Off-canvas direction flips with the writing mode: the panel is anchored to the
-   inline-start edge and slides out toward it. The RTL rule below only redefines a
-   custom property, and lives behind an explicit [dir="rtl"] escape hatch. */
-[data-ui="sidebar"][data-state="drawer"] [data-part="panel"],
-[data-ui="sidebar"][data-state="drawer-open"] [data-part="panel"] {
-  --sidebar-offscreen: -100%;
-  position: fixed;
-  inset-block: 0;
-  inset-inline-start: 0;
-  inline-size: var(--sidebar-width);
-  z-index: var(--z-modal);
-  border-inline-end: 1px solid var(--color-border);
-  border-start-end-radius: var(--radius-lg, 0.5rem);
-  border-end-end-radius: var(--radius-lg, 0.5rem);
-  box-shadow: var(--shadow-xl);
-}
+/* ── Responsive: the sidebar rejoins the flow at the canon `md` floor ──
+   Canon tiers only, min-width only (FAQIR-NEXT §19). This is the desktop
+   layout the sheet used to state unconditionally. `data-state="drawer"` and
+   `drawer-open` are the controller's mobile states and keep the off-canvas
+   treatment even here, which is what makes a hand-set `data-state` still
+   render as written. [W3-3] */
+@media (min-width: 48rem) {
+  [data-ui="sidebar"] {
+    inline-size: var(--sidebar-width);
+  }
 
-[dir="rtl"] [data-ui="sidebar"][data-state="drawer"] [data-part="panel"],
-[dir="rtl"] [data-ui="sidebar"][data-state="drawer-open"] [data-part="panel"] {
-  --sidebar-offscreen: 100%;
-}
+  [data-ui="sidebar"][data-state="rail"] {
+    inline-size: var(--sidebar-rail-width);
+  }
 
-[data-ui="sidebar"][data-state="drawer"] [data-part="panel"] {
-  transform: translateX(var(--sidebar-offscreen, -100%));
-}
+  [data-ui="sidebar"][data-state="drawer"],
+  [data-ui="sidebar"][data-state="drawer-open"] {
+    inline-size: 0;
+  }
 
-[data-ui="sidebar"][data-state="drawer-open"] [data-part="panel"] {
-  transform: translateX(0);
+  [data-ui="sidebar"]:not([data-state="drawer"]):not([data-state="drawer-open"]) [data-part="panel"] {
+    position: sticky;
+    inset-block-start: 0;
+    inset-inline-start: auto;
+    inline-size: 100%;
+    z-index: auto;
+    border-start-end-radius: 0;
+    border-end-end-radius: 0;
+    box-shadow: none;
+    transform: none;
+    visibility: visible;
+    transition: transform var(--duration-slow) var(--ease-out);
+  }
+
+  [data-ui="sidebar"]:not([data-state="drawer"]):not([data-state="drawer-open"]) [data-part="overlay"] {
+    display: none;
+  }
 }
 
 /* ── Motion ── */

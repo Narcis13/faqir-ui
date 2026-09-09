@@ -526,7 +526,13 @@
     var children = [].slice.call(el.children);
     for (var i = 0; i < children.length; i++) {
       var child = children[i];
-      if (child.__faqirScope) continue;
+      // `__faqirStray` is this sweep's equivalent of `__faqirScope`: stray
+      // elements never get a scope of their own, so without a mark a second
+      // `Faqir.start()` re-bound every one of them and each `@click` fired
+      // twice. The subtree was walked with it the first time, so skipping the
+      // element skips the subtree too. [W3-1]
+      if (child.__faqirScope || child.__faqirStray) continue;
+      child.__faqirStray = true;
       processElement(child, scope);
       if (child.parentNode) walkUnscoped(child, scope);
     }
@@ -601,6 +607,18 @@
     root.__scopeId = scopeId;
     root.__faqirCleanups = [];
 
+    // A data source spread into `l-data` can own timers, sockets or in-flight
+    // requests, and until 1.0 nothing gave it a way to be told the scope had
+    // gone: `apiSource()`'s `setInterval` poll and its `fetch` calls simply
+    // outlived the element, which on an SPA route change means one live poller
+    // per page the user ever visited. Any own `__faqirTeardown` function on the
+    // scope data is run on teardown — namespaced so no ordinary data key can be
+    // mistaken for one. [W3-1]
+    if (typeof userData.__faqirTeardown === 'function') {
+      var sourceTeardown = userData.__faqirTeardown;
+      addCleanup(root, function() { sourceTeardown(); });
+    }
+
     // Set up bidirectional bridge for $state/$variant
     setupStateBridge(root, scope);
 
@@ -662,7 +680,16 @@
         enumerable: false
       },
       $watch: {
-        value: function(key, cb) { return watchProperty(scope, key, cb); },
+        value: function(key, cb) {
+          var dispose = watchProperty(scope, key, cb);
+          // `$watch` handed its disposer back and nothing ever held one, so a
+          // watcher created in `l-init` — the documented place to create one —
+          // outlived every teardown and kept firing against a dead scope.
+          // Registering it here makes `Faqir.destroy()` stop it; the return
+          // value still works for callers that dispose by hand. [W3-1]
+          addCleanup(root, dispose);
+          return dispose;
+        },
         enumerable: false
       },
       $id: {
@@ -721,28 +748,79 @@
     return el;
   }
 
-  function addCleanup(el, cleanupFn) {
-    var root = findScopeRoot(el);
+  // The nearest ancestor (inclusive) that OWNS a cleanup list.
+  //
+  // A different question from `findScopeRoot`, and the reason four disposers
+  // went missing. Cleanup ownership follows the `__faqirCleanups` array —
+  // stamped by `initScope`, `handleIf`, `handleFor` and `handleTeleport` —
+  // rather than the scope object, because the two do not always sit on the same
+  // element: `l-teleport` moves a subtree out of its scope root, so every
+  // directive bound underneath it resolved to no owner at all and its disposer
+  // was dropped on the floor. [W3-1]
+  function findCleanupRoot(el) {
+    var node = el;
+    while (node) {
+      if (node.__faqirCleanups) return node;
+      node = node.parentNode;
+    }
+    return null;
+  }
+
+  /**
+   * Register `cleanupFn` against the element that owns `el`'s teardown.
+   *
+   * `owner` is the escape hatch for the detached case. `l-if` and `l-for` insert
+   * an anchor comment and then `el.remove()` their own `<template>`, so by the
+   * time the list effect is registered `el` has no parent, resolves to no owner,
+   * and the disposer is discarded — `Faqir.destroy()` could not stop a list that
+   * went on re-rendering into the live document after teardown, contradicting
+   * what `faqir-core.d.ts` promises. Callers that detach capture the owner
+   * BEFORE they do and pass it here. [W3-1]
+   */
+  function addCleanup(el, cleanupFn, owner) {
+    var root = owner || findCleanupRoot(el);
     if (root && root.__faqirCleanups) {
       root.__faqirCleanups.push(cleanupFn);
     }
   }
 
-  function destroyScope(el) {
-    if (el.__faqirCleanups) {
-      for (var i = 0; i < el.__faqirCleanups.length; i++) {
-        el.__faqirCleanups[i]();
+  // Run one node's cleanups exactly once. The list is emptied BEFORE it runs, so
+  // a cleanup that tears down its own subtree re-entrantly finds nothing left to
+  // do rather than disposing everything twice. One failing disposer must not
+  // strand the ones behind it — teardown is the path where a half-finished job
+  // is the leak.
+  function runCleanups(node) {
+    var list = node.__faqirCleanups;
+    if (!list || list.length === 0) return;
+    node.__faqirCleanups = [];
+    for (var i = 0; i < list.length; i++) {
+      try {
+        list[i]();
+      } catch (e) {
+        console.error('[Faqir] a cleanup threw during teardown', node, e);
       }
-      el.__faqirCleanups = [];
     }
-    var children = el.querySelectorAll ? el.querySelectorAll('*') : [];
-    for (var i = 0; i < children.length; i++) {
-      if (children[i].__faqirCleanups) {
-        for (var j = 0; j < children[i].__faqirCleanups.length; j++) {
-          children[i].__faqirCleanups[j]();
-        }
-        children[i].__faqirCleanups = [];
-      }
+  }
+
+  /**
+   * Tear down `el` and everything under it.
+   *
+   * Walks CHILD NODES, not `querySelectorAll('*')`. `l-if` and `l-for` own their
+   * subtree through an anchor COMMENT — that is the node their list effect's
+   * disposer is registered on — and an element-only walk cannot see a comment,
+   * so `Faqir.destroy()` left both structural directives running: the effect
+   * stayed subscribed and went on re-rendering into a document nothing was
+   * supposed to be driving any more. [W3-1]
+   */
+  function destroyScope(el) {
+    if (!el) return;
+    runCleanups(el);
+    var child = el.firstChild;
+    while (child) {
+      // Read the sibling first: a cleanup is allowed to remove its own node.
+      var next = child.nextSibling;
+      destroyScope(child);
+      child = next;
     }
   }
 
@@ -1042,7 +1120,11 @@
       case 'init':       return handleInit(el, dir, scope);
       case 'effect':     return handleEffect(el, dir, scope);
       case 'source':     return; // Handled by initScope → processSourceDirectives
-      case 'cloak':      return; // Handled by removeCloaks()
+      // Uncloak as soon as the element is bound. Bootstrap's sweep still runs
+      // (it catches elements no directive walk reaches), and so does the
+      // MutationObserver's — but content rendered by `l-if`/`l-for` is bound
+      // here, before it is ever inserted, so it never needs either. [W3-1]
+      case 'cloak':      el.removeAttribute('l-cloak'); return;
       case 'teleport':   return handleTeleport(el, dir, scope);
       case 'transition': return; // Handled by l-show and l-if
       default:
@@ -1271,13 +1353,32 @@
   // --- 3.13 l-cloak ---
 
   function injectCloakStyle() {
+    // Once per document. A second `Faqir.start()` used to append another
+    // identical <style> to <head>, and nothing ever removed either. [W3-1]
+    if (document.querySelector('style[data-faqir-cloak]')) return;
     var style = document.createElement('style');
+    style.setAttribute('data-faqir-cloak', '');
     style.textContent = '[l-cloak] { display: none !important; }';
     document.head.appendChild(style);
   }
 
-  function removeCloaks() {
-    var els = document.querySelectorAll('[l-cloak]');
+  /**
+   * Strip `l-cloak` from `within` and everything under it (the whole document
+   * when called with nothing).
+   *
+   * The sweep used to run exactly once, at the end of bootstrap, against a
+   * document-wide selector. Anything inserted afterwards — an `l-if` branch, an
+   * `l-for` row, a fragment an application appended — kept the attribute, and
+   * the injected `[l-cloak] { display: none !important }` rule then hid it
+   * permanently: content that had bound correctly and could never be seen. The
+   * MutationObserver runs this over every node it is handed. [W3-1]
+   */
+  function removeCloaks(within) {
+    var host = within || document;
+    if (host.nodeType === 1 && host.hasAttribute('l-cloak')) {
+      host.removeAttribute('l-cloak');
+    }
+    var els = host.querySelectorAll ? host.querySelectorAll('[l-cloak]') : [];
     for (var i = 0; i < els.length; i++) {
       els[i].removeAttribute('l-cloak');
     }
@@ -1407,6 +1508,17 @@
     var prop = dir.expression;
     var modifiers = new Set(dir.modifiers);
 
+    // Every branch below binds a DOM listener, and not one of them ever removed
+    // it: the effect disposer was registered, the `addEventListener` was not.
+    // So `Faqir.destroy()` left five live listeners writing user input back into
+    // a scope nothing was supposed to be driving any more — for the life of the
+    // page, on every `l-model` the page had ever mounted. One helper, so a sixth
+    // branch cannot forget. [W3-1]
+    function bind(eventName, handler) {
+      el.addEventListener(eventName, handler);
+      addCleanup(el, function() { el.removeEventListener(eventName, handler); });
+    }
+
     var tag = el.tagName.toLowerCase();
     var type = el.getAttribute('type');
     var isFaqirSwitch = el.hasAttribute('data-ui') && el.dataset.ui === 'switch';
@@ -1418,7 +1530,7 @@
         el.dataset.state = value ? 'on' : 'off';
         el.setAttribute('aria-checked', value ? 'true' : 'false');
       });
-      el.addEventListener('change', function() {
+      bind('change', function() {
         writeModel(prop, el.checked, scope, el);
       });
       addCleanup(el, cl);
@@ -1432,7 +1544,7 @@
           el.checked = !!current;
         }
       });
-      el.addEventListener('change', function() {
+      bind('change', function() {
         var current = evaluate(prop, scope, el);
         if (Array.isArray(current)) {
           var arr = current.slice();
@@ -1450,7 +1562,7 @@
       var cl = effect(function() {
         el.checked = evaluate(prop, scope, el) === el.value;
       });
-      el.addEventListener('change', function() {
+      bind('change', function() {
         if (el.checked) {
           writeModel(prop, el.value, scope, el);
         }
@@ -1461,7 +1573,7 @@
       var cl = effect(function() {
         el.value = evaluate(prop, scope, el) || '';
       });
-      el.addEventListener('change', function() {
+      bind('change', function() {
         writeModel(prop, el.value, scope, el);
       });
       addCleanup(el, cl);
@@ -1492,7 +1604,7 @@
         inputHandler = debounce(inputHandler, 300);
       }
 
-      el.addEventListener(eventName, inputHandler);
+      bind(eventName, inputHandler);
       addCleanup(el, cl);
     }
   }
@@ -1536,6 +1648,19 @@
     el.parentNode.insertBefore(anchor, el);
     el.remove();
 
+    // The anchor owns this directive's teardown.
+    //
+    // `el` is detached one line above, so `addCleanup(el, …)` resolved to no
+    // owner and the disposer was discarded — `Faqir.destroy()` could not stop
+    // an `l-if` at all. The anchor stands exactly where the template stood, so
+    // it is inside the subtree `destroyScope` walks, and it survives every
+    // toggle. [W3-1]
+    anchor.__faqirCleanups = [];
+
+    // EVERY node the template renders, not only the elements. Filtering to
+    // `nodeType === 1` left text and comment nodes in the document on each
+    // hide, so ten toggles of a two-element template left 34 child nodes where
+    // 2 were expected — and each cycle added more. [W3-1]
     var insertedNodes = [];
 
     var cl = effect(function() {
@@ -1547,23 +1672,41 @@
           var nodes = [].slice.call(fragment.childNodes);
 
           for (var i = 0; i < nodes.length; i++) {
-            if (nodes[i].nodeType === 1) {
-              // Mark as initialized (mirrors handleFor) so a later
-              // walkChildren pass over an ancestor doesn't re-process these
-              // nodes — re-processing would re-bind handlers and evaluate
-              // expressions outside the scope they were rendered with.
-              nodes[i].__faqirScope = scope;
-              nodes[i].__faqirCleanups = nodes[i].__faqirCleanups || [];
-              processElement(nodes[i], scope);
-              walkChildren(nodes[i], scope);
+            if (nodes[i].nodeType !== 1) continue;
+
+            // A cloned top node carrying `l-data` is a scope root in its own
+            // right. `processElement` has no `case 'data'` — nothing there
+            // creates a scope — so the node was stamped with the ENCLOSING
+            // scope, its literal never evaluated, and `processSourceDirectives`
+            // never ran: `l-source` inside an `l-if` issued zero fetches.
+            // `initTree` is the one path that builds a scope. [W3-1]
+            if (nodes[i].hasAttribute('l-data')) {
+              initTree(nodes[i], scope);
+              continue;
             }
+
+            // Mark as initialized (mirrors handleFor) so a later
+            // walkChildren pass over an ancestor doesn't re-process these
+            // nodes — re-processing would re-bind handlers and evaluate
+            // expressions outside the scope they were rendered with.
+            nodes[i].__faqirScope = scope;
+            nodes[i].__faqirCleanups = nodes[i].__faqirCleanups || [];
+            processElement(nodes[i], scope);
+            // A top-level structural directive replaces the node with its own
+            // anchor; there is then nothing left to walk into.
+            if (nodes[i].parentNode) walkChildren(nodes[i], scope);
           }
 
+          // Re-read the fragment rather than trusting the pre-processing
+          // snapshot: a top-level `l-if`/`l-for` inside this template has by now
+          // swapped its own <template> for an anchor plus rendered content, so
+          // `nodes` describes something that no longer exists. (Same reason
+          // `handleFor.createEntry` re-captures.)
+          insertedNodes = [].slice.call(fragment.childNodes);
           anchor.parentNode.insertBefore(fragment, anchor.nextSibling);
-          insertedNodes = nodes.filter(function(n) { return n.nodeType === 1; });
 
           for (var i = 0; i < insertedNodes.length; i++) {
-            if (insertedNodes[i].hasAttribute && insertedNodes[i].hasAttribute('l-transition')) {
+            if (insertedNodes[i].nodeType === 1 && insertedNodes[i].hasAttribute('l-transition')) {
               runEnterTransition(insertedNodes[i]);
             }
           }
@@ -1571,7 +1714,7 @@
       } else {
         for (var i = 0; i < insertedNodes.length; i++) {
           var node = insertedNodes[i];
-          if (node.hasAttribute && node.hasAttribute('l-transition')) {
+          if (node.nodeType === 1 && node.hasAttribute('l-transition')) {
             (function(n) {
               runLeaveTransition(n, function() {
                 n.remove();
@@ -1586,7 +1729,7 @@
       }
     });
 
-    addCleanup(el, cl);
+    addCleanup(el, cl, anchor);
   }
 
   // --- 3.18 l-for ---
@@ -1705,6 +1848,12 @@
     el.parentNode.insertBefore(anchor, el);
     el.remove();
 
+    // Same as `l-if`: the template is detached above, so the anchor — which
+    // stands where it stood and is reachable from `destroyScope` — is what owns
+    // the list effect's disposer. Registering it against the detached template
+    // dropped it, and a destroyed scope went on rendering rows. [W3-1]
+    anchor.__faqirCleanups = [];
+
     // Reconciliation key for an item. Falls back to its position when there is
     // no l-key. Untracked so key reads never subscribe the list effect to
     // individual item properties.
@@ -1730,10 +1879,17 @@
       var childScope = createForItemScope(own, scope);
       for (var j = 0; j < nodes.length; j++) {
         if (nodes[j].nodeType !== 1) continue;
+        // A row whose top node declares `l-data` is a scope root: build it with
+        // `initTree` (which evaluates the literal and reads `l-source`) instead
+        // of stamping it with the row scope and leaving both inert. [W3-1]
+        if (nodes[j].hasAttribute('l-data')) {
+          initTree(nodes[j], childScope);
+          continue;
+        }
         nodes[j].__faqirScope = childScope;
         nodes[j].__faqirCleanups = [];
         processElement(nodes[j], childScope);
-        walkChildren(nodes[j], childScope);
+        if (nodes[j].parentNode) walkChildren(nodes[j], childScope);
       }
       // Re-capture the fragment's children: a top-level structural directive
       // (l-if / nested l-for) replaces its <template> with an anchor comment
@@ -1826,12 +1982,29 @@
       currentEntries = newEntries;
     });
 
-    addCleanup(el, cl);
+    addCleanup(el, cl, anchor);
   }
 
   // --- 3.19 l-teleport ---
 
   function handleTeleport(el, dir, scope) {
+    // Teleporting moves the element OUT of its scope root's subtree, so from
+    // here on `findCleanupRoot` walking up from anything inside it lands
+    // somewhere else entirely — every disposer bound below a teleport was
+    // dropped, and `destroyScope` on the scope root could never have reached
+    // the nodes anyway. Two moves fix both halves: the subtree owns its own
+    // cleanup list from now on, and the scope that WROTE the teleport keeps a
+    // handle that tears that list down. [W3-1]
+    var owner = el.parentNode ? findCleanupRoot(el.parentNode) : null;
+    if (!el.__faqirCleanups) el.__faqirCleanups = [];
+
+    // The teleported subtree belongs to the scope that wrote the directive, but
+    // it now sits somewhere the scope-root sweep will never look — so the
+    // unscoped sweep would find it "unclaimed" and bind every directive under it
+    // a SECOND time, against the document scope, where the expressions do not
+    // resolve. Claiming it here is what tells that sweep to walk past. [W3-1]
+    el.__faqirStray = true;
+
     var cl = effect(function() {
       var target = document.querySelector(dir.expression);
       if (target && el.parentNode !== target) {
@@ -1839,6 +2012,13 @@
       }
     });
     addCleanup(el, cl);
+
+    if (owner && owner !== el) {
+      addCleanup(el, function() {
+        destroyScope(el);
+        el.remove();
+      }, owner);
+    }
   }
 
   // ═══════════════════════════════════════════════════════
@@ -2223,6 +2403,9 @@
     var out = {};
     var keys = Object.keys(scope);
     for (var i = 0; i < keys.length; i++) {
+      // `__`-prefixed keys are engine plumbing (`__faqirTeardown`), not data an
+      // agent inspecting the page should have to reason about.
+      if (keys[i].slice(0, 2) === '__') continue;
       out[keys[i]] = snapshotValue(scope[keys[i]], [], 0);
     }
     return out;
@@ -2417,6 +2600,11 @@
     }
   }
 
+  // The document's one MutationObserver, or null before the first bootstrap,
+  // and the <body> it is currently watching.
+  var mutationObserver = null;
+  var observedBody = null;
+
   function bootstrap() {
     injectCloakStyle();
 
@@ -2438,6 +2626,20 @@
     for (var r = 0; r < roots.length; r++) {
       var rootEl = roots[r];
       if (processed.has(rootEl)) continue;
+
+      // Already initialized — by an earlier `Faqir.start()`, or by the
+      // MutationObserver. Re-running `initTree` over it would build a second
+      // scope and apply every directive on top of the first: `start()` twice
+      // meant every `@click` handler fired twice, every `l-effect` ran twice
+      // and every `l-source` fetched twice. Markup added since the last call
+      // still has no scope, so it is still picked up — which is the only reason
+      // to call `start()` again. [W3-1]
+      if (rootEl.__faqirScope) {
+        processed.add(rootEl);
+        var seen = rootEl.querySelectorAll('[l-data]');
+        for (var sd = 0; sd < seen.length; sd++) processed.add(seen[sd]);
+        continue;
+      }
 
       // Skip if nested inside an unprocessed ancestor l-data scope
       var ancestor = rootEl.parentElement;
@@ -2489,13 +2691,31 @@
 
     removeCloaks();
 
-    // MutationObserver for dynamically added elements
-    var observer = new MutationObserver(function(mutations) {
+    // MutationObserver for dynamically added elements. ONE per document: a
+    // second `Faqir.start()` used to install another, and every observer then
+    // initialized every added node again — the same handler running twice per
+    // insertion, which is how one `Faqir.start()` too many double-fired
+    // everything on the page. Re-observed only if `document.body` itself was
+    // replaced, which is what a test harness swapping bodies does. [W3-1]
+    if (mutationObserver && observedBody === document.body) return;
+    if (mutationObserver) {
+      observedBody = document.body;
+      mutationObserver.observe(document.body, { childList: true, subtree: true });
+      return;
+    }
+    observedBody = document.body;
+
+    mutationObserver = new MutationObserver(function(mutations) {
       for (var i = 0; i < mutations.length; i++) {
         var addedNodes = mutations[i].addedNodes;
         for (var j = 0; j < addedNodes.length; j++) {
           var node = addedNodes[j];
           if (node.nodeType !== 1) continue;
+
+          // Content that arrives after bootstrap has already bound by the time
+          // it is here; leaving `l-cloak` on it means the injected rule hides
+          // it forever. [W3-1]
+          removeCloaks(node);
 
           var uiName = node.getAttribute ? node.getAttribute('data-ui') : null;
           if (uiName && controllerRegistry[uiName]) {
@@ -2539,7 +2759,7 @@
       }
     });
 
-    observer.observe(document.body, { childList: true, subtree: true });
+    mutationObserver.observe(document.body, { childList: true, subtree: true });
   }
 
   // Auto-start logic

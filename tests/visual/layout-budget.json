@@ -1196,7 +1196,7 @@
         "zeroGutterPages": 0,
         "seamPages": 0,
         "seams": 0,
-        "bleeds": 29,
+        "bleeds": 2,
         "overlaps": 3
       },
       "pages": {
@@ -1761,7 +1761,7 @@
         "examples/patterns/dashboard-shell.html": {
           "zeroGutter": false,
           "seams": 0,
-          "bleeds": 14,
+          "bleeds": 0,
           "overlaps": 1
         },
         "examples/patterns/document.html": {
@@ -1815,7 +1815,7 @@
         "examples/patterns/settings-page.html": {
           "zeroGutter": false,
           "seams": 0,
-          "bleeds": 13,
+          "bleeds": 0,
           "overlaps": 0
         },
         "examples/patterns/site-footer.html": {

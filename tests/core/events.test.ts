@@ -112,20 +112,27 @@ describe("events", () => {
     });
 
     it("does not fire when clicking inside the element", () => {
+      // `expect(typeof called).toBe("boolean")` used to stand here — an
+      // assertion that cannot fail, on the one case this function exists to get
+      // right. The handler listens on `document` and asks `el.contains(target)`,
+      // so the event has to REACH document from the child for the question to be
+      // asked at all: the assertion below is preceded by the check that it did.
+      // [W3-5]
       document.body.innerHTML = `<div id="target"><span id="child">In</span></div>`;
       const target = document.getElementById("target")!;
+      const child = target.querySelector("#child")!;
       let called = false;
+      let reachedDocument = false;
 
+      const witness = () => { reachedDocument = true; };
+      document.addEventListener("pointerdown", witness);
       onOutsideClick(target, () => { called = true; });
 
-      target.querySelector("#child")!.dispatchEvent(
-        new Event("pointerdown", { bubbles: true })
-      );
-      // pointerdown on a child — the handler listens on document, so
-      // we need to simulate document receiving the event with target as the child
-      // happy-dom may not fully bubble, so let's dispatch directly on document
-      // with a composed target. For now, verify the cleanup works.
-      expect(typeof called).toBe("boolean");
+      child.dispatchEvent(new Event("pointerdown", { bubbles: true }));
+      document.removeEventListener("pointerdown", witness);
+
+      expect(reachedDocument, "the event never reached document — the case was not exercised").toBe(true);
+      expect(called).toBe(false);
     });
 
     it("returns a cleanup function", () => {

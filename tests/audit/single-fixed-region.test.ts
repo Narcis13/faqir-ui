@@ -87,6 +87,61 @@ describe("single-fixed-region", () => {
     expect(fixedFindings(source)).toEqual([]);
   });
 
+  // A closed off-canvas panel paints nothing and takes no focus, so two of them
+  // are not a collision. The markup exemption above cannot express this: the
+  // panel is not `hidden` in the HTML — the component's own stylesheet resolves
+  // it to `visibility: hidden` until it is opened, which is how every
+  // mobile-first drawer states "closed". Without this, `sidebar`'s reference
+  // (three demo sidebars on one page) reads as a defect the moment the recipe
+  // becomes off-canvas below `md` in CSS rather than only when its controller
+  // says so. [W3-3]
+  it("ignores fixed regions the stylesheet resolves to visibility: hidden", () => {
+    const css = `
+      [data-ui="acme-drawer"] [data-part="panel"] {
+        position: fixed; inset-block: 0; inset-inline-start: 0;
+        visibility: hidden;
+      }
+      [data-ui="acme-drawer"][data-state="open"] [data-part="panel"] {
+        visibility: visible;
+      }`;
+    const withDrawer = new Map(styles);
+    withDrawer.set("acme-drawer", css);
+    const withManifest = new Map(manifests);
+    withManifest.set("acme-drawer", {
+      name: "acme-drawer",
+      kind: "recipe",
+      anatomy: { tag: "div", selector: '[data-ui="acme-drawer"]', content_model: "slots" },
+      slots: { panel: { selector: "[data-part='panel']", required: false } },
+      variants: {},
+      states: { closed: { attr: 'data-state="closed"', default: true }, open: { attr: 'data-state="open"' } },
+      files: { css: "acme-drawer.css" },
+    } as never);
+
+    const two =
+      '<div data-ui="acme-drawer"><div data-part="panel">one</div></div>' +
+      '<div data-ui="acme-drawer"><div data-part="panel">two</div></div>';
+    const findings = auditHtmlSource({
+      source: two,
+      file: "fixture.html",
+      manifests: withManifest,
+      styles: withDrawer,
+    }).filter((r) => r.rule_id === SINGLE_FIXED_REGION_RULE.id);
+    expect(findings).toEqual([]);
+
+    // …and two OPEN ones at the same anchor are still a collision, so the
+    // exemption is about being hidden rather than about being a drawer.
+    const bothOpen =
+      '<div data-ui="acme-drawer" data-state="open"><div data-part="panel">one</div></div>' +
+      '<div data-ui="acme-drawer" data-state="open"><div data-part="panel">two</div></div>';
+    const openFindings = auditHtmlSource({
+      source: bothOpen,
+      file: "fixture.html",
+      manifests: withManifest,
+      styles: withDrawer,
+    }).filter((r) => r.rule_id === SINGLE_FIXED_REGION_RULE.id);
+    expect(openFindings).toHaveLength(1);
+  });
+
   it("does not confuse a panel with its intentional fixed backdrop", () => {
     const source =
       '<div data-ui="command-palette" data-state="open">' +

@@ -410,8 +410,21 @@ export function compareBudget(measured: ViewportBudget, budget: ViewportBudget):
   for (const count of RATCHETED) {
     const was = budget.totals[count];
     const now = measured.totals[count];
-    if (now > was) regressions.push({ count, budget: was, measured: now, pages: worsened(measured, budget, count) });
-    else if (now < was) slack.push({ count, budget: was, measured: now });
+    const pages = worsened(measured, budget, count);
+
+    // The ratchet is PER PAGE, not only per total.
+    //
+    // A total nets out a swap: one page gaining a bleed while another loses one
+    // moves the sum by zero, and the page that got worse is invisible — content
+    // painted outside the viewport, reachable by tab order but not by eye,
+    // landing green. So a page whose own count rises is a regression even when
+    // the total is flat or falling, and the slack from the page that improved is
+    // still reported beside it. [W3-5]
+    if (now > was || pages.length > 0) {
+      regressions.push({ count, budget: was, measured: now, pages });
+    } else if (now < was) {
+      slack.push({ count, budget: was, measured: now });
+    }
   }
   return { regressions, slack, ok: regressions.length === 0 };
 }
@@ -507,7 +520,14 @@ export function compareBudgets(measured: LayoutBudget, budget: LayoutBudget): La
 export function formatComparison(cmp: BudgetComparison): string {
   const lines: string[] = [];
   for (const r of cmp.regressions) {
-    lines.push(`✗ ${r.count}: ${r.budget} → ${r.measured} (the budget may only fall)`);
+    // A flat or falling total with named pages is the swap case: say so, or the
+    // reader spends the next ten minutes wondering why "8 → 8" is a failure.
+    const totals =
+      r.measured > r.budget
+        ? `${r.budget} → ${r.measured} (the budget may only fall)`
+        : `${r.budget} → ${r.measured} overall, but these pages got worse ` +
+          `(the ratchet is per page — a swap nets zero and still hides a regression)`;
+    lines.push(`✗ ${r.count}: ${totals}`);
     for (const p of r.pages.slice(0, 10)) lines.push(`    ${p}`);
     if (r.pages.length > 10) lines.push(`    … and ${r.pages.length - 10} more`);
   }

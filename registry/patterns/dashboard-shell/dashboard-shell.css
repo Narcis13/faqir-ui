@@ -13,7 +13,10 @@
    as "position: fixed always, static from md up". */
 [data-ui="dashboard-shell"] {
   display: grid;
-  grid-template-columns: 1fr;
+  /* `minmax(0, 1fr)`, not `1fr`: a `1fr` track has `auto` for its minimum, so it
+     never shrinks below the min-content of the header/content/footer inside it
+     and the whole shell grew 9px wider than the phone it was on. [W3-3] */
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: var(--shell-header-height, 3.5rem) 1fr auto;
   grid-template-areas:
     "header"
@@ -28,7 +31,7 @@
 /* ── Sidebar-Right Variant ──
    Same single column below md; only the drawer's side and the md grid differ. */
 [data-ui="dashboard-shell"][data-variant="right"] {
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   grid-template-areas:
     "header"
     "content"
@@ -55,7 +58,12 @@
   z-index: var(--z-overlay, 200);
   box-shadow: var(--shadow-md);
   transform: translateX(-100%);
-  transition: transform var(--duration-slow) var(--ease-out);
+  /* A closed drawer sat outside the window, painted and tabbable: the nav links
+     inside it took focus with nothing visible on screen. `visibility` removes it
+     from both, and is delayed off (not on) so the slide-out still animates. [W3-3] */
+  visibility: hidden;
+  transition: transform var(--duration-slow) var(--ease-out),
+              visibility 0s linear var(--duration-slow);
 }
 
 [data-ui="dashboard-shell"][data-variant="right"] > [data-part="sidebar"] {
@@ -66,12 +74,12 @@
   transform: translateX(100%);
 }
 
-[data-ui="dashboard-shell"] > [data-part="sidebar"][data-state="expanded"] {
-  transform: translateX(0);
-}
-
+[data-ui="dashboard-shell"] > [data-part="sidebar"][data-state="expanded"],
 [data-ui="dashboard-shell"][data-variant="right"] > [data-part="sidebar"][data-state="expanded"] {
   transform: translateX(0);
+  visibility: visible;
+  transition: transform var(--duration-slow) var(--ease-out),
+              visibility 0s linear 0s;
 }
 
 /* ── Sidebar Collapsed ──
@@ -154,7 +162,7 @@
 }
 
 [data-ui="dashboard-shell"] > [data-part="sidebar"] [data-part="nav-item"]:focus-visible {
-  outline: 2px solid var(--color-ring, oklch(0.55 0.22 264 / 0.4));
+  outline: 2px solid var(--color-ring, oklch(0.55 0.22 264));
   outline-offset: -2px;
 }
 
@@ -190,12 +198,17 @@
 }
 
 /* ── Header ── */
+/* Mobile-first gutters. A 48px inline padding plus a search field plus an
+   actions cluster does not fit a 320px window, and the header pushed itself
+   49px past its own edge — with the user menu, the thing that opens the
+   sidebar, among the parts outside it. The `md` block restores the roomier
+   desktop gutter. [W3-3] */
 [data-ui="dashboard-shell"] > [data-part="header"] {
   grid-area: header;
   display: flex;
   align-items: center;
-  gap: var(--space-4);
-  padding: 0 var(--space-6);
+  gap: var(--space-2);
+  padding: 0 var(--space-3);
   background: var(--color-bg);
   border-bottom: 1px solid var(--color-border);
   position: sticky;
@@ -205,7 +218,10 @@
 
 /* ── Search ── */
 [data-ui="dashboard-shell"] > [data-part="header"] [data-part="search"] {
-  flex: 1;
+  /* `flex: 1` alone keeps the field's own min-content as a floor; a search input
+     will not give that up on a phone without an explicit one. */
+  flex: 1 1 0;
+  min-inline-size: 0;
   max-width: 28rem;
 }
 
@@ -215,12 +231,23 @@
   align-items: center;
   gap: var(--space-2);
   margin-inline-start: auto;
+  min-inline-size: 0;
 }
 
 /* ── User Menu ── */
 [data-ui="dashboard-shell"] > [data-part="header"] [data-part="user-menu"] {
   display: flex;
   align-items: center;
+  min-inline-size: 0;
+}
+
+/* The account name is the header's only elastic text: let it ellipsize rather
+   than set the width of everything beside it. */
+[data-ui="dashboard-shell"] > [data-part="header"] [data-part="user-menu"] [data-part="trigger"] {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ── Content ── */
@@ -228,9 +255,11 @@
   grid-area: content;
   display: flex;
   flex-direction: column;
-  gap: var(--space-6);
-  padding: var(--space-6);
+  gap: var(--space-4);
+  /* Same reason as the header: 48px of gutter is a sixth of a 320px window. */
+  padding: var(--space-3);
   overflow-y: auto;
+  min-inline-size: 0;
 }
 
 /* ── Content Metric ── */
@@ -273,8 +302,18 @@
    specificities ((0,2,0) through (0,4,0)) and an override has to meet each; the
    md block is later in the sheet, so equal specificity is enough to win. */
 @media (min-width: 48rem) {
+  [data-ui="dashboard-shell"] > [data-part="header"] {
+    gap: var(--space-4);
+    padding: 0 var(--space-6);
+  }
+
+  [data-ui="dashboard-shell"] > [data-part="content"] {
+    gap: var(--space-6);
+    padding: var(--space-6);
+  }
+
   [data-ui="dashboard-shell"] {
-    grid-template-columns: var(--shell-sidebar-width, 16rem) 1fr;
+    grid-template-columns: var(--shell-sidebar-width, 16rem) minmax(0, 1fr);
     grid-template-areas:
       "sidebar header"
       "sidebar content"
@@ -282,7 +321,7 @@
   }
 
   [data-ui="dashboard-shell"][data-variant="right"] {
-    grid-template-columns: 1fr var(--shell-sidebar-width, 16rem);
+    grid-template-columns: minmax(0, 1fr) var(--shell-sidebar-width, 16rem);
     grid-template-areas:
       "header  sidebar"
       "content sidebar"
@@ -292,11 +331,11 @@
   /* A collapsed sidebar narrows the column it actually occupies — which only
      exists from here up. */
   [data-ui="dashboard-shell"]:has(> [data-part="sidebar"][data-state="collapsed"]) {
-    grid-template-columns: var(--shell-sidebar-collapsed-width, 4rem) 1fr;
+    grid-template-columns: var(--shell-sidebar-collapsed-width, 4rem) minmax(0, 1fr);
   }
 
   [data-ui="dashboard-shell"][data-variant="right"]:has(> [data-part="sidebar"][data-state="collapsed"]) {
-    grid-template-columns: 1fr var(--shell-sidebar-collapsed-width, 4rem);
+    grid-template-columns: minmax(0, 1fr) var(--shell-sidebar-collapsed-width, 4rem);
   }
 
   [data-ui="dashboard-shell"] > [data-part="sidebar"] {
@@ -306,6 +345,7 @@
     z-index: auto;
     box-shadow: none;
     transform: none;
+    visibility: visible;
     transition: width var(--duration-slow) var(--ease-out),
                 padding var(--duration-slow) var(--ease-out);
   }

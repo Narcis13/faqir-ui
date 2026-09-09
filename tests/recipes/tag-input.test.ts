@@ -245,3 +245,37 @@ describe("tag-input controller", () => {
     expect(api.getValue()).toEqual(["alpha", "beta"]);
   });
 });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// aria-activedescendant — the fourth widget that declared the contract  [W3-4]
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// The field publishes `role="combobox"` and `aria-autocomplete="list"`, the same
+// APG contract `select-custom`, `combobox` and `command-palette` publish. All
+// four tracked the active option in `data-highlighted` alone, on options with no
+// `id`, so a screen-reader user arrowing through the suggestions was told
+// nothing. The axe gate cannot catch it: it reads static DOM, and the attribute
+// only matters mid-navigation.
+
+describe("tag-input · aria-activedescendant", () => {
+  it("names the highlighted suggestion", () => {
+    const { input, options, type, key } = setup({ suggestions: true });
+    type("V");
+    key("ArrowDown");
+
+    const active = options().find((o) => o.hasAttribute("data-highlighted"))!;
+    expect(active).toBeDefined();
+    expect(active.id).toBeTruthy();
+    expect(input.getAttribute("aria-activedescendant")).toBe(active.id);
+  });
+
+  it("drops it when the list closes", () => {
+    const { input, type, key } = setup({ suggestions: true });
+    type("V");
+    key("ArrowDown");
+    expect(input.hasAttribute("aria-activedescendant")).toBe(true);
+
+    key("Escape");
+    expect(input.hasAttribute("aria-activedescendant")).toBe(false);
+  });
+});

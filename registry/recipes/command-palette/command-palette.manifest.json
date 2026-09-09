@@ -160,7 +160,8 @@
       "aria-label on panel",
       "role=\"combobox\" on search input",
       "role=\"listbox\" on list",
-      "role=\"option\" on each item"
+      "role=\"option\" on each item",
+      "aria-activedescendant on the combobox, naming the active option while the list is open"
     ],
     "focus_trap": true,
     "escape_closes": true,

@@ -1,5 +1,7 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { spawn } from "node:child_process";
+import { request } from "node:http";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -204,4 +206,70 @@ describe("faqir-ui-cli declares no importable entry point", () => {
     // importing it RUNS the CLI rather than exposing an API.
     expect(r.stdout).toContain("Agent-Native UI Framework CLI");
   });
+});
+
+// ── `faqir dev` on the Node path ────────────────────────────────────────────
+//
+// `runtime-shim.ts`'s `Bun.serve` polyfill (a hand-rolled `node:http` server
+// with its own Request/Response adaptation) had NO test at all: `faqir dev` is
+// its only consumer, and every dev-server test spawned Bun. So on a machine
+// with no Bun installed — which is every user who has not gone out of their way
+// — `faqir dev` ran entirely untested code.
+//
+// One smoke, end to end: start the compiled bundle on Node, ask it for a page,
+// and require the page back with the overlay injected. That exercises the
+// polyfill's listen, its request adaptation, its `Response` handling and its
+// stop path in a single pass.
+describe("faqir dev runs on plain Node (the Bun.serve polyfill)", () => {
+  test("serves a page, injects the overlay, and stops", async () => {
+    const dir = mkdtempSync(join(tmp, "dev-"));
+    writeFileSync(join(dir, "index.html"), "<html><body><h1>hello</h1></body></html>");
+
+    const port = 43000 + Math.floor(Math.random() * 10000);
+    const server = spawn("node", [DIST, "dev", "--port", String(port)], {
+      cwd: dir,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+
+    const fetchPage = (path: string) =>
+      new Promise<{ status: number; body: string }>((resolve, reject) => {
+        const req = request({ host: "127.0.0.1", port, path, method: "GET" }, (res) => {
+          let body = "";
+          res.setEncoding("utf8");
+          res.on("data", (c) => (body += c));
+          res.on("end", () => resolve({ status: res.statusCode ?? 0, body }));
+        });
+        req.on("error", reject);
+        req.end();
+      });
+
+    try {
+      let stderr = "";
+      server.stderr?.on("data", (b) => (stderr += b));
+      let listening = false;
+      for (let i = 0; i < 100 && !listening; i++) {
+        if (server.exitCode !== null) throw new Error(`dev server exited on Node: ${stderr}`);
+        try {
+          await fetchPage("/");
+          listening = true;
+        } catch {
+          await new Promise((r) => setTimeout(r, 100));
+        }
+      }
+      expect(listening, `dev server never listened on Node: ${stderr}`).toBe(true);
+
+      const page = await fetchPage("/index.html");
+      expect(page.status).toBe(200);
+      expect(page.body).toContain("<h1>hello</h1>");
+      // The overlay proves the response body went through the CLI's own
+      // rewriting rather than being streamed straight off disk.
+      expect(page.body).toContain("data-faqir-dev-overlay");
+
+      // A path outside the served directory is refused, on this runtime too.
+      const escape = await fetchPage("/..%2f..%2fetc/passwd");
+      expect(escape.status).toBeGreaterThanOrEqual(400);
+    } finally {
+      server.kill("SIGKILL");
+    }
+  }, 60_000);
 });

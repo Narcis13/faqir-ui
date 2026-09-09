@@ -1863,9 +1863,13 @@ describe("Magic Properties", () => {
   });
 
   describe("$dispatch", () => {
-    it("dispatches custom events", async () => {
+    // This was `$dispatch`'s only behavioural test and it asserted NOTHING: it
+    // set `eventFired`, never read it, and closed on a comment. A test with no
+    // expect() cannot fail, so the magic that carries every custom event
+    // between components was, in practice, untested. [W3-5]
+    it("fires a bubbling CustomEvent an ancestor listener receives", async () => {
       document.body.innerHTML = `
-        <div l-data="{ received: '' }" @custom-event.window="received = 'got it'">
+        <div id="root" l-data="{ received: '' }" @custom-event.window="received = 'got it'">
           <button @click="$dispatch('custom-event')">Fire</button>
           <span l-text="received"></span>
         </div>
@@ -1873,15 +1877,47 @@ describe("Magic Properties", () => {
       Faqir.start();
       await tick();
 
-      // Dispatch directly for testing
-      let eventFired = false;
-      document.querySelector("button")!.addEventListener("custom-event", () => {
-        eventFired = true;
+      let seenOnRoot = 0;
+      document.getElementById("root")!.addEventListener("custom-event", () => {
+        seenOnRoot++;
       });
 
       document.querySelector("button")!.click();
       await tick();
-      // The $dispatch fires a CustomEvent that bubbles
+
+      // It bubbles: the ancestor sees an event dispatched on the button…
+      expect(seenOnRoot).toBe(1);
+      // …and the `.window` handler ran, which is how the scope learned about it.
+      expect(document.querySelector("span")!.textContent).toBe("got it");
+    });
+
+    it("carries its detail payload", async () => {
+      document.body.innerHTML = `
+        <div l-data="{}">
+          <button @click="$dispatch('picked', { id: 7 })">Fire</button>
+        </div>
+      `;
+      Faqir.start();
+      await tick();
+
+      let detail: unknown = null;
+      window.addEventListener("picked", (e) => {
+        detail = (e as CustomEvent).detail;
+      }, { once: true });
+
+      document.querySelector("button")!.click();
+      await tick();
+      expect(detail).toEqual({ id: 7 });
+    });
+
+    it("returns whether the event went undefaulted", async () => {
+      document.body.innerHTML = `<div id="root" l-data="{ ok: null }" l-init="ok = $dispatch('probe')"></div>`;
+      Faqir.start();
+      await tick();
+      // `dispatchEvent` returns false only for a cancelled cancelable event;
+      // `$dispatch` creates a non-cancelable one, so this is always true — and
+      // an expression may branch on it.
+      expect((document.getElementById("root") as any).__faqirScope.ok).toBe(true);
     });
   });
 

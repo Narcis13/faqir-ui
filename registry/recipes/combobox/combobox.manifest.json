@@ -129,7 +129,8 @@
       "aria-controls on input pointing to listbox id",
       "role=\"listbox\" on listbox",
       "role=\"option\" on each option",
-      "aria-selected on active option"
+      "aria-selected on active option",
+      "aria-activedescendant on the combobox, naming the active option while the list is open"
     ],
     "keyboard": {
       "ArrowDown": "highlight next option",

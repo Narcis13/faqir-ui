@@ -104,7 +104,13 @@ export function createMenuNavigation(container, options = {}) {
 
     if (event.key === "Escape" && options.onEscape) {
       event.preventDefault();
-      options.onEscape(event);
+      // Escape DISMISSES ONE THING. Without stopping it here the same keystroke
+      // reached every ancestor overlay: closing a dropdown inside a dialog
+      // closed the dialog too, and with it whatever the user had typed. The
+      // callback opts out by returning `false` — its way of saying "this
+      // Escape was not mine", so it still reaches whatever encloses us. [W3-2]
+      const handled = options.onEscape(event);
+      if (handled !== false) event.stopPropagation();
       return;
     }
     if (event.key === "Tab" && options.onTab) {

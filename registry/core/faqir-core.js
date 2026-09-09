@@ -538,7 +538,13 @@
     var children = [].slice.call(el.children);
     for (var i = 0; i < children.length; i++) {
       var child = children[i];
-      if (child.__faqirScope) continue;
+      // `__faqirStray` is this sweep's equivalent of `__faqirScope`: stray
+      // elements never get a scope of their own, so without a mark a second
+      // `Faqir.start()` re-bound every one of them and each `@click` fired
+      // twice. The subtree was walked with it the first time, so skipping the
+      // element skips the subtree too. [W3-1]
+      if (child.__faqirScope || child.__faqirStray) continue;
+      child.__faqirStray = true;
       processElement(child, scope);
       if (child.parentNode) walkUnscoped(child, scope);
     }
@@ -613,6 +619,18 @@
     root.__scopeId = scopeId;
     root.__faqirCleanups = [];
 
+    // A data source spread into `l-data` can own timers, sockets or in-flight
+    // requests, and until 1.0 nothing gave it a way to be told the scope had
+    // gone: `apiSource()`'s `setInterval` poll and its `fetch` calls simply
+    // outlived the element, which on an SPA route change means one live poller
+    // per page the user ever visited. Any own `__faqirTeardown` function on the
+    // scope data is run on teardown — namespaced so no ordinary data key can be
+    // mistaken for one. [W3-1]
+    if (typeof userData.__faqirTeardown === 'function') {
+      var sourceTeardown = userData.__faqirTeardown;
+      addCleanup(root, function() { sourceTeardown(); });
+    }
+
     // Set up bidirectional bridge for $state/$variant
     setupStateBridge(root, scope);
 
@@ -674,7 +692,16 @@
         enumerable: false
       },
       $watch: {
-        value: function(key, cb) { return watchProperty(scope, key, cb); },
+        value: function(key, cb) {
+          var dispose = watchProperty(scope, key, cb);
+          // `$watch` handed its disposer back and nothing ever held one, so a
+          // watcher created in `l-init` — the documented place to create one —
+          // outlived every teardown and kept firing against a dead scope.
+          // Registering it here makes `Faqir.destroy()` stop it; the return
+          // value still works for callers that dispose by hand. [W3-1]
+          addCleanup(root, dispose);
+          return dispose;
+        },
         enumerable: false
       },
       $id: {
@@ -733,28 +760,79 @@
     return el;
   }
 
-  function addCleanup(el, cleanupFn) {
-    var root = findScopeRoot(el);
+  // The nearest ancestor (inclusive) that OWNS a cleanup list.
+  //
+  // A different question from `findScopeRoot`, and the reason four disposers
+  // went missing. Cleanup ownership follows the `__faqirCleanups` array —
+  // stamped by `initScope`, `handleIf`, `handleFor` and `handleTeleport` —
+  // rather than the scope object, because the two do not always sit on the same
+  // element: `l-teleport` moves a subtree out of its scope root, so every
+  // directive bound underneath it resolved to no owner at all and its disposer
+  // was dropped on the floor. [W3-1]
+  function findCleanupRoot(el) {
+    var node = el;
+    while (node) {
+      if (node.__faqirCleanups) return node;
+      node = node.parentNode;
+    }
+    return null;
+  }
+
+  /**
+   * Register `cleanupFn` against the element that owns `el`'s teardown.
+   *
+   * `owner` is the escape hatch for the detached case. `l-if` and `l-for` insert
+   * an anchor comment and then `el.remove()` their own `<template>`, so by the
+   * time the list effect is registered `el` has no parent, resolves to no owner,
+   * and the disposer is discarded — `Faqir.destroy()` could not stop a list that
+   * went on re-rendering into the live document after teardown, contradicting
+   * what `faqir-core.d.ts` promises. Callers that detach capture the owner
+   * BEFORE they do and pass it here. [W3-1]
+   */
+  function addCleanup(el, cleanupFn, owner) {
+    var root = owner || findCleanupRoot(el);
     if (root && root.__faqirCleanups) {
       root.__faqirCleanups.push(cleanupFn);
     }
   }
 
-  function destroyScope(el) {
-    if (el.__faqirCleanups) {
-      for (var i = 0; i < el.__faqirCleanups.length; i++) {
-        el.__faqirCleanups[i]();
+  // Run one node's cleanups exactly once. The list is emptied BEFORE it runs, so
+  // a cleanup that tears down its own subtree re-entrantly finds nothing left to
+  // do rather than disposing everything twice. One failing disposer must not
+  // strand the ones behind it — teardown is the path where a half-finished job
+  // is the leak.
+  function runCleanups(node) {
+    var list = node.__faqirCleanups;
+    if (!list || list.length === 0) return;
+    node.__faqirCleanups = [];
+    for (var i = 0; i < list.length; i++) {
+      try {
+        list[i]();
+      } catch (e) {
+        console.error('[Faqir] a cleanup threw during teardown', node, e);
       }
-      el.__faqirCleanups = [];
     }
-    var children = el.querySelectorAll ? el.querySelectorAll('*') : [];
-    for (var i = 0; i < children.length; i++) {
-      if (children[i].__faqirCleanups) {
-        for (var j = 0; j < children[i].__faqirCleanups.length; j++) {
-          children[i].__faqirCleanups[j]();
-        }
-        children[i].__faqirCleanups = [];
-      }
+  }
+
+  /**
+   * Tear down `el` and everything under it.
+   *
+   * Walks CHILD NODES, not `querySelectorAll('*')`. `l-if` and `l-for` own their
+   * subtree through an anchor COMMENT — that is the node their list effect's
+   * disposer is registered on — and an element-only walk cannot see a comment,
+   * so `Faqir.destroy()` left both structural directives running: the effect
+   * stayed subscribed and went on re-rendering into a document nothing was
+   * supposed to be driving any more. [W3-1]
+   */
+  function destroyScope(el) {
+    if (!el) return;
+    runCleanups(el);
+    var child = el.firstChild;
+    while (child) {
+      // Read the sibling first: a cleanup is allowed to remove its own node.
+      var next = child.nextSibling;
+      destroyScope(child);
+      child = next;
     }
   }
 
@@ -1054,7 +1132,11 @@
       case 'init':       return handleInit(el, dir, scope);
       case 'effect':     return handleEffect(el, dir, scope);
       case 'source':     return; // Handled by initScope → processSourceDirectives
-      case 'cloak':      return; // Handled by removeCloaks()
+      // Uncloak as soon as the element is bound. Bootstrap's sweep still runs
+      // (it catches elements no directive walk reaches), and so does the
+      // MutationObserver's — but content rendered by `l-if`/`l-for` is bound
+      // here, before it is ever inserted, so it never needs either. [W3-1]
+      case 'cloak':      el.removeAttribute('l-cloak'); return;
       case 'teleport':   return handleTeleport(el, dir, scope);
       case 'transition': return; // Handled by l-show and l-if
       default:
@@ -1281,13 +1363,32 @@
   // --- 3.13 l-cloak ---
 
   function injectCloakStyle() {
+    // Once per document. A second `Faqir.start()` used to append another
+    // identical <style> to <head>, and nothing ever removed either. [W3-1]
+    if (document.querySelector('style[data-faqir-cloak]')) return;
     var style = document.createElement('style');
+    style.setAttribute('data-faqir-cloak', '');
     style.textContent = '[l-cloak] { display: none !important; }';
     document.head.appendChild(style);
   }
 
-  function removeCloaks() {
-    var els = document.querySelectorAll('[l-cloak]');
+  /**
+   * Strip `l-cloak` from `within` and everything under it (the whole document
+   * when called with nothing).
+   *
+   * The sweep used to run exactly once, at the end of bootstrap, against a
+   * document-wide selector. Anything inserted afterwards — an `l-if` branch, an
+   * `l-for` row, a fragment an application appended — kept the attribute, and
+   * the injected `[l-cloak] { display: none !important }` rule then hid it
+   * permanently: content that had bound correctly and could never be seen. The
+   * MutationObserver runs this over every node it is handed. [W3-1]
+   */
+  function removeCloaks(within) {
+    var host = within || document;
+    if (host.nodeType === 1 && host.hasAttribute('l-cloak')) {
+      host.removeAttribute('l-cloak');
+    }
+    var els = host.querySelectorAll ? host.querySelectorAll('[l-cloak]') : [];
     for (var i = 0; i < els.length; i++) {
       els[i].removeAttribute('l-cloak');
     }
@@ -1417,6 +1518,17 @@
     var prop = dir.expression;
     var modifiers = new Set(dir.modifiers);
 
+    // Every branch below binds a DOM listener, and not one of them ever removed
+    // it: the effect disposer was registered, the `addEventListener` was not.
+    // So `Faqir.destroy()` left five live listeners writing user input back into
+    // a scope nothing was supposed to be driving any more — for the life of the
+    // page, on every `l-model` the page had ever mounted. One helper, so a sixth
+    // branch cannot forget. [W3-1]
+    function bind(eventName, handler) {
+      el.addEventListener(eventName, handler);
+      addCleanup(el, function() { el.removeEventListener(eventName, handler); });
+    }
+
     var tag = el.tagName.toLowerCase();
     var type = el.getAttribute('type');
     var isFaqirSwitch = el.hasAttribute('data-ui') && el.dataset.ui === 'switch';
@@ -1428,7 +1540,7 @@
         el.dataset.state = value ? 'on' : 'off';
         el.setAttribute('aria-checked', value ? 'true' : 'false');
       });
-      el.addEventListener('change', function() {
+      bind('change', function() {
         writeModel(prop, el.checked, scope, el);
       });
       addCleanup(el, cl);
@@ -1442,7 +1554,7 @@
           el.checked = !!current;
         }
       });
-      el.addEventListener('change', function() {
+      bind('change', function() {
         var current = evaluate(prop, scope, el);
         if (Array.isArray(current)) {
           var arr = current.slice();
@@ -1460,7 +1572,7 @@
       var cl = effect(function() {
         el.checked = evaluate(prop, scope, el) === el.value;
       });
-      el.addEventListener('change', function() {
+      bind('change', function() {
         if (el.checked) {
           writeModel(prop, el.value, scope, el);
         }
@@ -1471,7 +1583,7 @@
       var cl = effect(function() {
         el.value = evaluate(prop, scope, el) || '';
       });
-      el.addEventListener('change', function() {
+      bind('change', function() {
         writeModel(prop, el.value, scope, el);
       });
       addCleanup(el, cl);
@@ -1502,7 +1614,7 @@
         inputHandler = debounce(inputHandler, 300);
       }
 
-      el.addEventListener(eventName, inputHandler);
+      bind(eventName, inputHandler);
       addCleanup(el, cl);
     }
   }
@@ -1546,6 +1658,19 @@
     el.parentNode.insertBefore(anchor, el);
     el.remove();
 
+    // The anchor owns this directive's teardown.
+    //
+    // `el` is detached one line above, so `addCleanup(el, …)` resolved to no
+    // owner and the disposer was discarded — `Faqir.destroy()` could not stop
+    // an `l-if` at all. The anchor stands exactly where the template stood, so
+    // it is inside the subtree `destroyScope` walks, and it survives every
+    // toggle. [W3-1]
+    anchor.__faqirCleanups = [];
+
+    // EVERY node the template renders, not only the elements. Filtering to
+    // `nodeType === 1` left text and comment nodes in the document on each
+    // hide, so ten toggles of a two-element template left 34 child nodes where
+    // 2 were expected — and each cycle added more. [W3-1]
     var insertedNodes = [];
 
     var cl = effect(function() {
@@ -1557,23 +1682,41 @@
           var nodes = [].slice.call(fragment.childNodes);
 
           for (var i = 0; i < nodes.length; i++) {
-            if (nodes[i].nodeType === 1) {
-              // Mark as initialized (mirrors handleFor) so a later
-              // walkChildren pass over an ancestor doesn't re-process these
-              // nodes — re-processing would re-bind handlers and evaluate
-              // expressions outside the scope they were rendered with.
-              nodes[i].__faqirScope = scope;
-              nodes[i].__faqirCleanups = nodes[i].__faqirCleanups || [];
-              processElement(nodes[i], scope);
-              walkChildren(nodes[i], scope);
+            if (nodes[i].nodeType !== 1) continue;
+
+            // A cloned top node carrying `l-data` is a scope root in its own
+            // right. `processElement` has no `case 'data'` — nothing there
+            // creates a scope — so the node was stamped with the ENCLOSING
+            // scope, its literal never evaluated, and `processSourceDirectives`
+            // never ran: `l-source` inside an `l-if` issued zero fetches.
+            // `initTree` is the one path that builds a scope. [W3-1]
+            if (nodes[i].hasAttribute('l-data')) {
+              initTree(nodes[i], scope);
+              continue;
             }
+
+            // Mark as initialized (mirrors handleFor) so a later
+            // walkChildren pass over an ancestor doesn't re-process these
+            // nodes — re-processing would re-bind handlers and evaluate
+            // expressions outside the scope they were rendered with.
+            nodes[i].__faqirScope = scope;
+            nodes[i].__faqirCleanups = nodes[i].__faqirCleanups || [];
+            processElement(nodes[i], scope);
+            // A top-level structural directive replaces the node with its own
+            // anchor; there is then nothing left to walk into.
+            if (nodes[i].parentNode) walkChildren(nodes[i], scope);
           }
 
+          // Re-read the fragment rather than trusting the pre-processing
+          // snapshot: a top-level `l-if`/`l-for` inside this template has by now
+          // swapped its own <template> for an anchor plus rendered content, so
+          // `nodes` describes something that no longer exists. (Same reason
+          // `handleFor.createEntry` re-captures.)
+          insertedNodes = [].slice.call(fragment.childNodes);
           anchor.parentNode.insertBefore(fragment, anchor.nextSibling);
-          insertedNodes = nodes.filter(function(n) { return n.nodeType === 1; });
 
           for (var i = 0; i < insertedNodes.length; i++) {
-            if (insertedNodes[i].hasAttribute && insertedNodes[i].hasAttribute('l-transition')) {
+            if (insertedNodes[i].nodeType === 1 && insertedNodes[i].hasAttribute('l-transition')) {
               runEnterTransition(insertedNodes[i]);
             }
           }
@@ -1581,7 +1724,7 @@
       } else {
         for (var i = 0; i < insertedNodes.length; i++) {
           var node = insertedNodes[i];
-          if (node.hasAttribute && node.hasAttribute('l-transition')) {
+          if (node.nodeType === 1 && node.hasAttribute('l-transition')) {
             (function(n) {
               runLeaveTransition(n, function() {
                 n.remove();
@@ -1596,7 +1739,7 @@
       }
     });
 
-    addCleanup(el, cl);
+    addCleanup(el, cl, anchor);
   }
 
   // --- 3.18 l-for ---
@@ -1698,6 +1841,12 @@
     el.parentNode.insertBefore(anchor, el);
     el.remove();
 
+    // Same as `l-if`: the template is detached above, so the anchor — which
+    // stands where it stood and is reachable from `destroyScope` — is what owns
+    // the list effect's disposer. Registering it against the detached template
+    // dropped it, and a destroyed scope went on rendering rows. [W3-1]
+    anchor.__faqirCleanups = [];
+
     // Reconciliation key for an item. Falls back to its position when there is
     // no l-key. Untracked so key reads never subscribe the list effect to
     // individual item properties.
@@ -1723,10 +1872,17 @@
       var childScope = createForItemScope(own, scope);
       for (var j = 0; j < nodes.length; j++) {
         if (nodes[j].nodeType !== 1) continue;
+        // A row whose top node declares `l-data` is a scope root: build it with
+        // `initTree` (which evaluates the literal and reads `l-source`) instead
+        // of stamping it with the row scope and leaving both inert. [W3-1]
+        if (nodes[j].hasAttribute('l-data')) {
+          initTree(nodes[j], childScope);
+          continue;
+        }
         nodes[j].__faqirScope = childScope;
         nodes[j].__faqirCleanups = [];
         processElement(nodes[j], childScope);
-        walkChildren(nodes[j], childScope);
+        if (nodes[j].parentNode) walkChildren(nodes[j], childScope);
       }
       // Re-capture the fragment's children: a top-level structural directive
       // (l-if / nested l-for) replaces its <template> with an anchor comment
@@ -1806,12 +1962,29 @@
       currentEntries = newEntries;
     });
 
-    addCleanup(el, cl);
+    addCleanup(el, cl, anchor);
   }
 
   // --- 3.19 l-teleport ---
 
   function handleTeleport(el, dir, scope) {
+    // Teleporting moves the element OUT of its scope root's subtree, so from
+    // here on `findCleanupRoot` walking up from anything inside it lands
+    // somewhere else entirely — every disposer bound below a teleport was
+    // dropped, and `destroyScope` on the scope root could never have reached
+    // the nodes anyway. Two moves fix both halves: the subtree owns its own
+    // cleanup list from now on, and the scope that WROTE the teleport keeps a
+    // handle that tears that list down. [W3-1]
+    var owner = el.parentNode ? findCleanupRoot(el.parentNode) : null;
+    if (!el.__faqirCleanups) el.__faqirCleanups = [];
+
+    // The teleported subtree belongs to the scope that wrote the directive, but
+    // it now sits somewhere the scope-root sweep will never look — so the
+    // unscoped sweep would find it "unclaimed" and bind every directive under it
+    // a SECOND time, against the document scope, where the expressions do not
+    // resolve. Claiming it here is what tells that sweep to walk past. [W3-1]
+    el.__faqirStray = true;
+
     var cl = effect(function() {
       var target = document.querySelector(dir.expression);
       if (target && el.parentNode !== target) {
@@ -1819,6 +1992,13 @@
       }
     });
     addCleanup(el, cl);
+
+    if (owner && owner !== el) {
+      addCleanup(el, function() {
+        destroyScope(el);
+        el.remove();
+      }, owner);
+    }
   }
 
   // ═══════════════════════════════════════════════════════
@@ -2227,7 +2407,13 @@
 
       if (event.key === "Escape" && options.onEscape) {
         event.preventDefault();
-        options.onEscape(event);
+        // Escape DISMISSES ONE THING. Without stopping it here the same keystroke
+        // reached every ancestor overlay: closing a dropdown inside a dialog
+        // closed the dialog too, and with it whatever the user had typed. The
+        // callback opts out by returning `false` — its way of saying "this
+        // Escape was not mine", so it still reaches whatever encloses us. [W3-2]
+        const handled = options.onEscape(event);
+        if (handled !== false) event.stopPropagation();
         return;
       }
       if (event.key === "Tab" && options.onTab) {
@@ -2637,6 +2823,32 @@ function createCalendar(root) {
   const navNext = root.querySelector("[data-part='nav-next']");
   const monthLabel = root.querySelector("[data-part='month-label']");
   const gridBody = root.querySelector("[data-part='grid-body']");
+
+  // `grid-body` is the one part every render writes into: without it the first
+  // `render()` throws on `gridBody.innerHTML`, taking the date-picker that
+  // wraps it down with it. The optional parts (nav, month label) are already
+  // guarded individually. [W3-2]
+  if (!gridBody) {
+    console.warn(
+      "[Faqir] calendar needs [data-part='grid-body'] to render into. " +
+        "Component left inert.",
+      root
+    );
+    const inert = {
+      getValue: () => null,
+      setValue() {},
+      clear() {},
+      navigate() {},
+      selectDate() {},
+      focusDate() {},
+      setMin() {},
+      setMax() {},
+      setDisabledDates() {},
+      destroy() {},
+    };
+    root._faqirCalendar = inert;
+    return inert;
+  }
 
   const today = new Date();
   const mode = root.dataset.mode === "range" ? "range" : "single";
@@ -3310,6 +3522,31 @@ function createCombobox(root) {
   let outsideClickCleanup = null;
   let selectedValue = "";
 
+  /**
+   * `aria-activedescendant` — the half of the combobox pattern that was declared
+   * and never implemented.  [W3-4]
+   *
+   * The markup publishes `role="combobox"` and `aria-autocomplete="list"`, which
+   * is the APG contract: as the user arrows through the list, the combobox must
+   * name the active option so a screen reader announces it. Highlighting was
+   * tracked in `data-highlighted` alone and the options carried no `id`, so
+   * there was nothing to point at and nothing was ever announced — the widget
+   * claimed a pattern it did not implement. The axe gate structurally cannot see
+   * this: it evaluates static DOM, and the defect exists only mid-navigation.
+   *
+   * Ids are minted on demand so authored ids are respected and generated markup
+   * needs none.
+   */
+  function optionId(opt) {
+    if (!opt.id) opt.id = uid("faqir-option");
+    return opt.id;
+  }
+
+  function setActiveDescendant(opt) {
+    if (opt) input.setAttribute("aria-activedescendant", optionId(opt));
+    else input.removeAttribute("aria-activedescendant");
+  }
+
   function open() {
     root.dataset.state = "open";
     listbox.hidden = false;
@@ -3336,6 +3573,7 @@ function createCombobox(root) {
       opt.removeAttribute("data-highlighted");
       opt.setAttribute("aria-selected", "false");
     });
+    setActiveDescendant(null);
     highlightedIndex = -1;
   }
 
@@ -3356,6 +3594,7 @@ function createCombobox(root) {
     allOptions[index].setAttribute("data-highlighted", "");
     allOptions[index].setAttribute("aria-selected", "true");
     allOptions[index].scrollIntoView({ block: "nearest" });
+    setActiveDescendant(allOptions[index]);
     highlightedIndex = index;
   }
 
@@ -3449,8 +3688,13 @@ function createCombobox(root) {
         }
         break;
       case "Escape":
-        e.preventDefault();
-        close();
+        // Only ours while the list is open; a closed combobox lets Escape reach
+        // the dialog it sits in rather than swallowing it. [W3-2]
+        if (root.dataset.state === "open") {
+          e.preventDefault();
+          e.stopPropagation();
+          close();
+        }
         break;
       case "Home":
         if (root.dataset.state === "open" && visible.length > 0) {
@@ -3484,6 +3728,10 @@ function createCombobox(root) {
   listbox?.addEventListener("click", onListboxClick);
 
   function destroy() {
+    // Leaving a destroyed overlay open leaves a dead one: nothing is listening
+    // any more, so its close button, Escape and overlay click all do nothing.
+    // `context-menu` is the model — it has always closed itself here. [W3-2]
+    close();
     input?.removeEventListener("input", onInput);
     input?.removeEventListener("focus", onInputFocus);
     input?.removeEventListener("keydown", onInputKeyDown);
@@ -3538,17 +3786,52 @@ function createCommandPalette(root) {
     searchInput.focus();
   }
 
-  function close() {
+  /**
+   * Everything `close()` does EXCEPT moving focus.
+   *
+   * `destroy()` used to leave an open overlay standing with nothing listening —
+   * a dead widget the user cannot dismiss. Closing it on teardown is the fix
+   * (`context-menu` is the model), but teardown must not also yank focus
+   * somewhere: on an SPA route change the element it would restore to is
+   * usually on its way out of the document. [W3-2]
+   */
+  function dismiss() {
     root.dataset.state = "closed";
     overlay.hidden = true;
     panel.hidden = true;
+    // A closed palette must not still name an active item: `aria-activedescendant`
+    // pointing into a hidden list is a reference a reader can follow to nothing. [W3-4]
+    clearHighlight();
 
     if (focusCleanup) {
       focusCleanup();
       focusCleanup = null;
     }
+  }
 
+  function close() {
+    dismiss();
     previouslyFocused?.focus();
+  }
+
+  /**
+   * `aria-activedescendant` — the declared half of the combobox pattern. [W3-4]
+   *
+   * The search field publishes `role="combobox"` and `aria-autocomplete="list"`,
+   * which obliges it to name the active item as the user arrows through the
+   * results. Highlighting lived in `data-highlighted` alone and the items had no
+   * `id`, so a screen-reader user heard nothing move. The axe gate cannot see
+   * this — it reads static DOM, and the defect exists only mid-navigation.
+   */
+  function itemId(item) {
+    if (!item.id) item.id = uid("faqir-command");
+    return item.id;
+  }
+
+  function setActiveDescendant(item) {
+    if (!searchInput) return;
+    if (item) searchInput.setAttribute("aria-activedescendant", itemId(item));
+    else searchInput.removeAttribute("aria-activedescendant");
   }
 
   function clearHighlight() {
@@ -3556,6 +3839,7 @@ function createCommandPalette(root) {
       item.removeAttribute("data-highlighted");
       item.setAttribute("aria-selected", "false");
     });
+    setActiveDescendant(null);
     highlightedIndex = -1;
   }
 
@@ -3580,6 +3864,7 @@ function createCommandPalette(root) {
     visible[index].setAttribute("data-highlighted", "");
     visible[index].setAttribute("aria-selected", "true");
     visible[index].scrollIntoView({ block: "nearest" });
+    setActiveDescendant(visible[index]);
     highlightedIndex = index;
   }
 
@@ -3682,8 +3967,13 @@ function createCommandPalette(root) {
         }
         break;
       case "Escape":
-        e.preventDefault();
-        close();
+        // The palette is an overlay in its own right: dismissing it must not
+        // also dismiss whatever it was opened over. [W3-2]
+        if (root.dataset.state === "open") {
+          e.preventDefault();
+          e.stopPropagation();
+          close();
+        }
         break;
       case "Home":
         if (visible.length > 0) {
@@ -3733,6 +4023,7 @@ function createCommandPalette(root) {
   document.addEventListener("keydown", onGlobalKeyDown);
 
   function destroy() {
+    dismiss();
     searchInput?.removeEventListener("input", onSearchInput);
     searchInput?.removeEventListener("keydown", onSearchKeyDown);
     overlay?.removeEventListener("click", onOverlayClick);
@@ -3759,6 +4050,20 @@ function createContextMenu(root) {
 
   const target = root.querySelector("[data-part='target']");
   const menu = root.querySelector("[data-part='menu']");
+
+  // Same as `dropdown`: a missing part must name itself rather than throwing a
+  // TypeError out of `createMenuNavigation(null)`. [W3-2]
+  if (!target || !menu) {
+    console.warn(
+      "[Faqir] context-menu needs [data-part='target'] and [data-part='menu'] — " +
+        `missing ${[!target && "target", !menu && "menu"].filter(Boolean).join(" and ")}. ` +
+        "Component left inert.",
+      root
+    );
+    const inert = { open() {}, close() {}, destroy() {} };
+    root._faqirContextMenu = inert;
+    return inert;
+  }
 
   let outsideClickCleanup = null;
 
@@ -3878,6 +4183,29 @@ function createDatePicker(root) {
   // directly inside the popup) still works — the popup itself then acts as the
   // calendar root.
   const calendarRoot = root.querySelector("[data-ui='calendar']") || popup;
+
+  // `input` carries the value and the aria-expanded state, `popup` is what
+  // opens; either one missing made every open()/close() throw. `trigger` is
+  // optional — an input-only date picker opens from the field. [W3-2]
+  if (!input || !popup) {
+    console.warn(
+      "[Faqir] date-picker needs [data-part='input'] and [data-part='calendar'] — " +
+        `missing ${[!input && "input", !popup && "calendar"].filter(Boolean).join(" and ")}. ` +
+        "Component left inert.",
+      root
+    );
+    const inert = {
+      open() {},
+      close() {},
+      getValue: () => null,
+      setValue() {},
+      navigate() {},
+      selectDate() {},
+      destroy() {},
+    };
+    root._faqirDatePicker = inert;
+    return inert;
+  }
   const calendar = createCalendar(calendarRoot);
 
   const today = new Date();
@@ -3968,6 +4296,9 @@ function createDatePicker(root) {
   function onRootKeyDown(e) {
     if (e.key === "Escape" && root.dataset.state === "open") {
       e.preventDefault();
+      // Closing the calendar popup is the whole action — a date picker inside a
+      // dialog must not take the dialog down with it. [W3-2]
+      e.stopPropagation();
       close();
       input.focus();
     }
@@ -3978,6 +4309,10 @@ function createDatePicker(root) {
   root.addEventListener("keydown", onRootKeyDown);
 
   function destroy() {
+    // Leaving a destroyed overlay open leaves a dead one: nothing is listening
+    // any more, so its close button, Escape and overlay click all do nothing.
+    // `context-menu` is the model — it has always closed itself here. [W3-2]
+    close();
     trigger?.removeEventListener("click", onTriggerClick);
     root.removeEventListener("faqir:calendar-change", onCalendarChange);
     root.removeEventListener("keydown", onRootKeyDown);
@@ -4101,6 +4436,25 @@ function createDialog(root) {
     cancelExitWait = whenExitDone(panel, null, onEnd);
   }
 
+  /**
+   * Tear the overlay down NOW — no exit animation, no focus restore.
+   *
+   * `destroy()` unbound every listener and left the panel and its backdrop
+   * exactly where they were: a full-page block whose close button, Escape key
+   * and overlay click had all just stopped working, with no way out. An SPA
+   * route change destroys controllers and does precisely this. The model is
+   * `context-menu`, which has always closed itself on teardown. [W3-2]
+   */
+  function dismiss() {
+    cancelExitWait?.();
+    cancelExitWait = null;
+    root.dataset.state = "closed";
+    if (overlay) overlay.hidden = true;
+    if (panel) panel.hidden = true;
+    if (focusCleanup) focusCleanup();
+    focusCleanup = null;
+  }
+
   function toggle() {
     root.dataset.state === "open" ? close() : open();
   }
@@ -4183,7 +4537,7 @@ function createDialog(root) {
         el.removeEventListener("click", onTriggerClick)
       );
     }
-    if (focusCleanup) focusCleanup();
+    dismiss();
     delete root._faqirDialog;
   }
 
@@ -4266,6 +4620,26 @@ function createDrawer(root) {
     cancelExitWait = whenExitDone(panel, "transform", onEnd);
   }
 
+  /**
+   * Tear the overlay down NOW — no exit animation, no focus restore.
+   *
+   * `destroy()` unbound every listener and left the panel and its backdrop
+   * exactly where they were: a full-page block whose close button, Escape key
+   * and overlay click had all just stopped working, with no way out. An SPA
+   * route change destroys controllers and does precisely this. The model is
+   * `context-menu`, which has always closed itself on teardown. [W3-2]
+   */
+  function dismiss() {
+    cancelExitWait?.();
+    cancelExitWait = null;
+    root.dataset.state = "closed";
+    if (overlay) overlay.hidden = true;
+    if (panel) panel.hidden = true;
+    unlockScroll();
+    if (focusCleanup) focusCleanup();
+    focusCleanup = null;
+  }
+
   function toggle() {
     root.dataset.state === "open" ? close() : open();
   }
@@ -4317,10 +4691,7 @@ function createDrawer(root) {
         el.removeEventListener("click", onTriggerClick)
       );
     }
-    cancelExitWait?.();
-    cancelExitWait = null;
-    if (focusCleanup) focusCleanup();
-    unlockScroll();
+    dismiss();
     delete root._faqirDrawer;
   }
 
@@ -4342,6 +4713,24 @@ function createDropdown(root) {
 
   const trigger = root.querySelector("[data-part='trigger']");
   const menu = root.querySelector("[data-part='menu']");
+
+  // Incomplete markup — a wrapper emitted without one of its parts, which is
+  // what a generator interrupted mid-component produces — used to throw a
+  // TypeError out of the first dereference below. The engine contains that now
+  // (the component fails, the page survives), but "Cannot read properties of
+  // null" is a poor way to say which part is missing. Say it, and hand back an
+  // inert API so `$ui.open()` is a no-op rather than a second crash. [W3-2]
+  if (!trigger || !menu) {
+    console.warn(
+      "[Faqir] dropdown needs [data-part='trigger'] and [data-part='menu'] — " +
+        `missing ${[!trigger && "trigger", !menu && "menu"].filter(Boolean).join(" and ")}. ` +
+        "Component left inert.",
+      root
+    );
+    const inert = { open() {}, close() {}, toggle() {}, destroy() {} };
+    root._faqirDropdown = inert;
+    return inert;
+  }
 
   let outsideClickCleanup = null;
 
@@ -4415,6 +4804,10 @@ function createDropdown(root) {
   menu?.addEventListener("click", onMenuClick);
 
   function destroy() {
+    // Leaving a destroyed overlay open leaves a dead one: nothing is listening
+    // any more, so its close button, Escape and overlay click all do nothing.
+    // `context-menu` is the model — it has always closed itself here. [W3-2]
+    close({ restoreFocus: false });
     trigger?.removeEventListener("click", onTriggerClick);
     trigger?.removeEventListener("keydown", onTriggerKeyDown);
     menu?.removeEventListener("click", onMenuClick);
@@ -5315,6 +5708,11 @@ function createMenubar(root) {
     roving: true,
     onActivate: activateTopItem,
     onEscape() {
+      // The menubar itself is never hidden, so it receives Escape even with
+      // every submenu collapsed. Nothing to dismiss means the keystroke is not
+      // ours, and swallowing it would trap the user in whatever encloses the
+      // menubar. [W3-2]
+      if (root.dataset.state !== "open") return false;
       close(false);
     },
     onTab() {
@@ -5730,6 +6128,9 @@ function createPopover(root) {
   function onKeyDown(e) {
     if (e.key === "Escape" && root.dataset.state === "open") {
       e.preventDefault();
+      // Dismissing this popover consumes the keystroke — an enclosing dialog or
+      // drawer must not close on the same Escape. [W3-2]
+      e.stopPropagation();
       close();
       trigger.focus();
     }
@@ -5740,6 +6141,10 @@ function createPopover(root) {
   root.addEventListener("keydown", onKeyDown);
 
   function destroy() {
+    // Leaving a destroyed overlay open leaves a dead one: nothing is listening
+    // any more, so its close button, Escape and overlay click all do nothing.
+    // `context-menu` is the model — it has always closed itself here. [W3-2]
+    close();
     trigger?.removeEventListener("click", onTriggerClick);
     closeBtn?.removeEventListener("click", onCloseClick);
     root.removeEventListener("keydown", onKeyDown);
@@ -6251,6 +6656,60 @@ function createSelectCustom(root) {
   let selectedValue = "";
   const placeholderText = valueEl?.textContent || "";
 
+  /**
+   * `aria-activedescendant` — the half of the combobox pattern that was declared
+   * and never implemented.  [W3-4]
+   *
+   * The trigger publishes `role="combobox"`, which is the APG contract: as the
+   * user arrows through the listbox, the combobox must name the active option so
+   * a screen reader announces it. Highlighting lived in `data-highlighted`
+   * alone and the options carried no `id`, so there was nothing to point at and
+   * nothing was ever announced. The axe gate structurally cannot see this — it
+   * evaluates static DOM, and the defect exists only mid-navigation.
+   *
+   * The owner is whichever element holds the combobox role: the search field
+   * when the listbox has one (that is where focus is), otherwise the trigger.
+   */
+  const activeOwner = () => searchInput || trigger;
+
+  function optionId(opt) {
+    if (!opt.id) opt.id = uid("faqir-option");
+    return opt.id;
+  }
+
+  function setActiveDescendant(opt) {
+    const owner = activeOwner();
+    if (!owner) return;
+    if (opt) owner.setAttribute("aria-activedescendant", optionId(opt));
+    else owner.removeAttribute("aria-activedescendant");
+  }
+
+  /**
+   * The hidden input that makes this a form control.  [W3-4 · 0.4-28]
+   *
+   * `select-custom` is sold as a replacement for `<select>`, and a `<select>`
+   * submits. This one rendered a `<div>` listbox and kept its value in a
+   * closure, so a form containing it POSTed without the field at all — silently,
+   * because a missing field looks exactly like an empty one on the server. The
+   * input is created only when the markup does not already carry one, and only
+   * when the component names itself, so nothing is invented for a component with
+   * no name to submit under.
+   */
+  function ensureValueInput() {
+    let el = root.querySelector("[data-part='input']");
+    if (el) return el;
+    const name = root.dataset.name || root.getAttribute("name");
+    if (!name) return null;
+    el = document.createElement("input");
+    el.type = "hidden";
+    el.setAttribute("data-part", "input");
+    el.name = name;
+    root.appendChild(el);
+    return el;
+  }
+
+  const valueInput = ensureValueInput();
+
   function open() {
     root.dataset.state = "open";
     listbox.hidden = false;
@@ -6267,7 +6726,16 @@ function createSelectCustom(root) {
     outsideClickCleanup = onOutsideClick(root, close);
   }
 
-  function close() {
+  /**
+   * Everything `close()` does EXCEPT moving focus.
+   *
+   * `destroy()` used to leave an open overlay standing with nothing listening —
+   * a dead widget the user cannot dismiss. Closing it on teardown is the fix
+   * (`context-menu` is the model), but teardown must not also yank focus
+   * somewhere: on an SPA route change the element it would restore to is
+   * usually on its way out of the document. [W3-2]
+   */
+  function dismiss() {
     root.dataset.state = "closed";
     listbox.hidden = true;
     trigger.setAttribute("aria-expanded", "false");
@@ -6277,7 +6745,10 @@ function createSelectCustom(root) {
       outsideClickCleanup();
       outsideClickCleanup = null;
     }
+  }
 
+  function close() {
+    dismiss();
     trigger.focus();
   }
 
@@ -6289,6 +6760,7 @@ function createSelectCustom(root) {
     options().forEach((opt) => {
       opt.removeAttribute("data-highlighted");
     });
+    setActiveDescendant(null);
     highlightedIndex = -1;
   }
 
@@ -6309,6 +6781,7 @@ function createSelectCustom(root) {
 
     visible[index].setAttribute("data-highlighted", "");
     visible[index].scrollIntoView({ block: "nearest" });
+    setActiveDescendant(visible[index]);
     highlightedIndex = index;
   }
 
@@ -6371,6 +6844,9 @@ function createSelectCustom(root) {
       valueEl.removeAttribute("data-placeholder");
     }
 
+    // …and the value a form actually submits. [W3-4 · 0.4-28]
+    if (valueInput) valueInput.value = selectedValue;
+
     // Dispatch change event
     const event = new CustomEvent("select-change", {
       bubbles: true,
@@ -6407,6 +6883,9 @@ function createSelectCustom(root) {
       case "Escape":
         if (root.dataset.state === "open") {
           e.preventDefault();
+          // Closing the listbox is the whole action — the form around it, and
+          // everything the user has typed into it, stays. [W3-2]
+          e.stopPropagation();
           close();
         }
         break;
@@ -6434,6 +6913,8 @@ function createSelectCustom(root) {
         break;
       case "Escape":
         e.preventDefault();
+        // Reached only while the listbox is open, so this Escape is always ours.
+        e.stopPropagation();
         close();
         break;
       case "Home":
@@ -6470,6 +6951,7 @@ function createSelectCustom(root) {
   searchInput?.addEventListener("input", onSearchInput);
 
   function destroy() {
+    dismiss();
     trigger?.removeEventListener("click", onTriggerClick);
     trigger?.removeEventListener("keydown", onTriggerKeyDown);
     listbox?.removeEventListener("keydown", onListboxKeyDown);
@@ -6558,6 +7040,26 @@ function createSheet(root) {
     cancelExitWait = whenExitDone(panel, "transform", onEnd);
   }
 
+  /**
+   * Tear the overlay down NOW — no exit animation, no focus restore.
+   *
+   * `destroy()` unbound every listener and left the panel and its backdrop
+   * exactly where they were: a full-page block whose close button, Escape key
+   * and overlay click had all just stopped working, with no way out. An SPA
+   * route change destroys controllers and does precisely this. The model is
+   * `context-menu`, which has always closed itself on teardown. [W3-2]
+   */
+  function dismiss() {
+    cancelExitWait?.();
+    cancelExitWait = null;
+    root.dataset.state = "closed";
+    if (overlay) overlay.hidden = true;
+    if (panel) panel.hidden = true;
+    unlockScroll();
+    if (focusCleanup) focusCleanup();
+    focusCleanup = null;
+  }
+
   function toggle() {
     root.dataset.state === "open" ? close() : open();
   }
@@ -6594,10 +7096,7 @@ function createSheet(root) {
       btn.removeEventListener("click", onCloseClick)
     );
     root.removeEventListener("keydown", onKeyDown);
-    cancelExitWait?.();
-    cancelExitWait = null;
-    if (focusCleanup) focusCleanup();
-    unlockScroll();
+    dismiss();
     delete root._faqirSheet;
   }
 
@@ -6808,6 +7307,15 @@ function createSidebar(root) {
   render();
 
   function destroy() {
+    // A destroyed sidebar left mid-drawer is a dead overlay: the scrim still
+    // covers the page, and its trigger, Escape and overlay click have all just
+    // stopped working. Collapse the drawer first, without restoring focus —
+    // teardown must not yank focus to an element on its way out. [W3-2]
+    if (drawerOpen) {
+      drawerOpen = false;
+      render();
+    }
+    previouslyFocused = null;
     for (const t of triggers) t.removeEventListener("click", onTriggerClick);
     overlay?.removeEventListener("click", onOverlayClick);
     root.removeEventListener("keydown", onKeyDown);
@@ -9643,8 +10151,25 @@ function createTagInput(root) {
     }
   }
 
+  /**
+   * `aria-activedescendant`, for the same reason as `combobox`: the field
+   * publishes `role="combobox"` + `aria-autocomplete="list"`, so it owes the
+   * reader the name of the active suggestion. [W3-4]
+   */
+  function optionId(opt) {
+    if (!opt.id) opt.id = uid("faqir-suggestion");
+    return opt.id;
+  }
+
+  function setActiveDescendant(opt) {
+    if (!input) return;
+    if (opt) input.setAttribute("aria-activedescendant", optionId(opt));
+    else input.removeAttribute("aria-activedescendant");
+  }
+
   function clearHighlight() {
     options().forEach((o) => o.removeAttribute("data-highlighted"));
+    setActiveDescendant(null);
     highlightedIndex = -1;
   }
 
@@ -9656,6 +10181,7 @@ function createTagInput(root) {
     options().forEach((o) => o.removeAttribute("data-highlighted"));
     vis[index].setAttribute("data-highlighted", "");
     vis[index].scrollIntoView?.({ block: "nearest" });
+    setActiveDescendant(vis[index]);
     highlightedIndex = index;
   }
 
@@ -9726,6 +10252,8 @@ function createTagInput(root) {
       case "Escape":
         if (listbox && root.dataset.state === "open") {
           e.preventDefault();
+          // The suggestion list is what closes; the form around it stays. [W3-2]
+          e.stopPropagation();
           closeList();
         }
         break;
@@ -9763,6 +10291,10 @@ function createTagInput(root) {
   listbox?.addEventListener("click", onListboxClick);
 
   function destroy() {
+    // Leaving a destroyed overlay open leaves a dead one: nothing is listening
+    // any more, so its close button, Escape and overlay click all do nothing.
+    // `context-menu` is the model — it has always closed itself here. [W3-2]
+    closeList();
     input?.removeEventListener("input", onInput);
     input?.removeEventListener("keydown", onInputKeyDown);
     taglist?.removeEventListener("click", onTaglistClick);
@@ -10264,6 +10796,10 @@ function createTooltip(root) {
   root.addEventListener("keydown", onKeyDown);
 
   function destroy() {
+    // Leaving a destroyed overlay open leaves a dead one: nothing is listening
+    // any more, so its close button, Escape and overlay click all do nothing.
+    // `context-menu` is the model — it has always closed itself here. [W3-2]
+    hide();
     clearTimeout(showTimer);
     clearTimeout(hideTimer);
     trigger?.removeEventListener("mouseenter", onMouseEnter);
@@ -10834,6 +11370,9 @@ function createTreeView(root) {
     var out = {};
     var keys = Object.keys(scope);
     for (var i = 0; i < keys.length; i++) {
+      // `__`-prefixed keys are engine plumbing (`__faqirTeardown`), not data an
+      // agent inspecting the page should have to reason about.
+      if (keys[i].slice(0, 2) === '__') continue;
       out[keys[i]] = snapshotValue(scope[keys[i]], [], 0);
     }
     return out;
@@ -11027,6 +11566,11 @@ function createTreeView(root) {
     }
   }
 
+  // The document's one MutationObserver, or null before the first bootstrap,
+  // and the <body> it is currently watching.
+  var mutationObserver = null;
+  var observedBody = null;
+
   function bootstrap() {
     injectCloakStyle();
 
@@ -11048,6 +11592,20 @@ function createTreeView(root) {
     for (var r = 0; r < roots.length; r++) {
       var rootEl = roots[r];
       if (processed.has(rootEl)) continue;
+
+      // Already initialized — by an earlier `Faqir.start()`, or by the
+      // MutationObserver. Re-running `initTree` over it would build a second
+      // scope and apply every directive on top of the first: `start()` twice
+      // meant every `@click` handler fired twice, every `l-effect` ran twice
+      // and every `l-source` fetched twice. Markup added since the last call
+      // still has no scope, so it is still picked up — which is the only reason
+      // to call `start()` again. [W3-1]
+      if (rootEl.__faqirScope) {
+        processed.add(rootEl);
+        var seen = rootEl.querySelectorAll('[l-data]');
+        for (var sd = 0; sd < seen.length; sd++) processed.add(seen[sd]);
+        continue;
+      }
 
       // Skip if nested inside an unprocessed ancestor l-data scope
       var ancestor = rootEl.parentElement;
@@ -11099,13 +11657,31 @@ function createTreeView(root) {
 
     removeCloaks();
 
-    // MutationObserver for dynamically added elements
-    var observer = new MutationObserver(function(mutations) {
+    // MutationObserver for dynamically added elements. ONE per document: a
+    // second `Faqir.start()` used to install another, and every observer then
+    // initialized every added node again — the same handler running twice per
+    // insertion, which is how one `Faqir.start()` too many double-fired
+    // everything on the page. Re-observed only if `document.body` itself was
+    // replaced, which is what a test harness swapping bodies does. [W3-1]
+    if (mutationObserver && observedBody === document.body) return;
+    if (mutationObserver) {
+      observedBody = document.body;
+      mutationObserver.observe(document.body, { childList: true, subtree: true });
+      return;
+    }
+    observedBody = document.body;
+
+    mutationObserver = new MutationObserver(function(mutations) {
       for (var i = 0; i < mutations.length; i++) {
         var addedNodes = mutations[i].addedNodes;
         for (var j = 0; j < addedNodes.length; j++) {
           var node = addedNodes[j];
           if (node.nodeType !== 1) continue;
+
+          // Content that arrives after bootstrap has already bound by the time
+          // it is here; leaving `l-cloak` on it means the injected rule hides
+          // it forever. [W3-1]
+          removeCloaks(node);
 
           var uiName = node.getAttribute ? node.getAttribute('data-ui') : null;
           if (uiName && controllerRegistry[uiName]) {
@@ -11149,7 +11725,7 @@ function createTreeView(root) {
       }
     });
 
-    observer.observe(document.body, { childList: true, subtree: true });
+    mutationObserver.observe(document.body, { childList: true, subtree: true });
   }
 
   // Auto-start logic

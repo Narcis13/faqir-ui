@@ -63,7 +63,7 @@
 }
 
 [data-ui="slider"] [data-part="thumb"]:focus-visible {
-  outline: 2px solid var(--color-ring, oklch(0.55 0.22 264 / 0.4));
+  outline: 2px solid var(--color-ring, oklch(0.55 0.22 264));
   outline-offset: 2px;
 }
 
@@ -106,5 +106,30 @@
 @media (prefers-reduced-motion: reduce) {
   [data-ui="slider"] [data-part="thumb"] {
     transition: none;
+  }
+}
+
+/* ── Forced colors (Windows High Contrast) ──
+   The filled range and the empty track differ only by background, and the OS
+   drops both: the slider showed no value. The range and the thumb opt out of
+   the substitution so the control still reads as "this much, up to here". [W3-3] */
+@media (forced-colors: active) {
+  [data-ui="slider"] [data-part="track"] {
+    border: 1px solid ButtonText;
+  }
+
+  [data-ui="slider"] [data-part="range"] {
+    forced-color-adjust: none;
+    background: Highlight;
+  }
+
+  [data-ui="slider"] [data-part="thumb"] {
+    forced-color-adjust: none;
+    background: ButtonText;
+    border: 1px solid ButtonFace;
+  }
+
+  [data-ui="slider"] [data-part="thumb"]:focus-visible {
+    outline-color: Highlight;
   }
 }

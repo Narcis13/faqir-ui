@@ -23,13 +23,18 @@
 //     data-value or, as a fallback, the option's text.
 //   • Double init returns the same api; destroy() unbinds every listener.
 //
-// KNOWN GAPS (asserted as current behavior; filed as follow-ups 0.4-27 / 0.4-28)
-//   • The APG combobox `aria-activedescendant` link is NOT maintained — the
-//     controller tracks the active option with `data-highlighted` instead, and
-//     options carry no id to point at. → 0.4-27.
-//   • There is no hidden <input>; selection updates only the visible value span
-//     and in-memory state, so the widget does not submit inside a native form.
-//     → 0.4-28.
+// CLOSED GAPS (0.4-27 / 0.4-28, fixed in W3-4 — the two tests at the foot of
+// this file used to assert the defect and now assert the fix)
+//   • `aria-activedescendant` IS maintained. The trigger publishes
+//     `role="combobox"`, which is the APG contract; tracking the active option
+//     only in `data-highlighted`, on options with no `id`, meant a screen-reader
+//     user got no announcement on any arrow key. Options are given ids on demand
+//     and the owner (the search field when there is one, else the trigger)
+//     points at the active one. → 0.4-27.
+//   • A hidden <input> carries the value, so the widget submits inside a native
+//     form. It is created when the root names itself (`data-name` / `name`) and
+//     the markup does not already provide one. A `<select>` replacement that
+//     drops its value on submit is a silent data loss. → 0.4-28.
 
 import { describe, it, expect, beforeEach } from "bun:test";
 import { createSelectCustom } from "../../registry/recipes/select-custom/select-custom.js";
@@ -300,22 +305,101 @@ describe("select-custom controller", () => {
     expect((root as any)._faqirSelectCustom).toBeUndefined();
   });
 
-  // ── known gaps: codified as current behavior (flip on the follow-up fix) ──
-  it("GAP (0.4-27): does not maintain aria-activedescendant during navigation", () => {
+  // ── the APG contract the markup declares  [W3-4 · 0.4-27] ────────────────
+  it("points aria-activedescendant at the highlighted option", () => {
     const { api, listbox, trigger, options, key } = setup();
     api.open();
     key(listbox, "ArrowDown");
-    // Highlight is tracked via data-highlighted, NOT aria-activedescendant.
-    expect(trigger.hasAttribute("aria-activedescendant")).toBe(false);
-    expect(listbox.hasAttribute("aria-activedescendant")).toBe(false);
-    // …and the options have no id to point an activedescendant at yet.
-    expect(options().every((o) => !o.id)).toBe(true);
+
+    const active = options().find((o) => o.hasAttribute("data-highlighted"))!;
+    expect(active).toBeDefined();
+    expect(active.id).toBeTruthy();
+    expect(trigger.getAttribute("aria-activedescendant")).toBe(active.id);
   });
 
-  it("GAP (0.4-28): has no hidden input, so selection is not form-submittable", () => {
+  it("moves it with the highlight", () => {
+    const { api, listbox, trigger, options, key } = setup();
+    api.open();
+    key(listbox, "ArrowDown");
+    const first = trigger.getAttribute("aria-activedescendant");
+    key(listbox, "ArrowDown");
+    const second = trigger.getAttribute("aria-activedescendant");
+
+    expect(second).not.toBe(first);
+    expect(options().find((o) => o.hasAttribute("data-highlighted"))!.id).toBe(second ?? "");
+  });
+
+  it("drops it when nothing is highlighted", () => {
+    const { api, listbox, trigger, key } = setup();
+    api.open();
+    key(listbox, "ArrowDown");
+    expect(trigger.hasAttribute("aria-activedescendant")).toBe(true);
+    api.close();
+    expect(trigger.hasAttribute("aria-activedescendant")).toBe(false);
+  });
+
+  it("keeps an authored id rather than replacing it", () => {
+    const { api, listbox, trigger, options, key } = setup();
+    options()[0].id = "authored-apple";
+    api.open();
+    key(listbox, "ArrowDown");
+    expect(trigger.getAttribute("aria-activedescendant")).toBe("authored-apple");
+  });
+
+  it("names the search field when the listbox has one — that is where focus is", () => {
+    const { api, listbox, root, key } = setup({ search: true });
+    api.open();
+    key(listbox, "ArrowDown");
+    const search = root.querySelector("[data-part='search']")!;
+    expect(search.getAttribute("aria-activedescendant")).toBeTruthy();
+  });
+
+  // ── the value a form submits  [W3-4 · 0.4-28] ────────────────────────────
+  it("carries the selection in a hidden input when the root is named", () => {
+    document.body.innerHTML = `
+      <form>
+        <div data-ui="select-custom" data-state="closed" data-name="fruit">
+          <button data-part="trigger" role="combobox" aria-expanded="false" aria-haspopup="listbox">
+            <span data-part="value">Choose</span>
+          </button>
+          <div data-part="listbox" role="listbox" hidden>
+            <div data-part="option" role="option" data-value="apple">Apple</div>
+            <div data-part="option" role="option" data-value="banana">Banana</div>
+          </div>
+        </div>
+      </form>`;
+    const el = document.querySelector("[data-ui='select-custom']") as HTMLElement;
+    const controller = createSelectCustom(el);
+    controller.select("apple");
+
+    const hidden = el.querySelector("input[data-part='input']") as HTMLInputElement;
+    expect(hidden).not.toBeNull();
+    expect(hidden.type).toBe("hidden");
+    expect(hidden.name).toBe("fruit");
+    // The whole point: a `<select>` replacement that submits nothing is a silent
+    // data loss, because a missing field looks like an empty one on the server.
+    expect(new FormData(document.querySelector("form")!).get("fruit")).toBe("apple");
+  });
+
+  it("invents no input for a root with no name to submit under", () => {
     const { root, api } = setup();
     api.select("apple");
-    expect(root.querySelector("input[type='hidden']")).toBeNull();
-    expect(root.querySelector("input[name]")).toBeNull();
+    expect(root.querySelector("input[data-part='input']")).toBeNull();
+  });
+
+  it("uses an authored hidden input rather than adding a second", () => {
+    document.body.innerHTML = `
+      <div data-ui="select-custom" data-state="closed" data-name="fruit">
+        <button data-part="trigger" role="combobox" aria-expanded="false"><span data-part="value">Choose</span></button>
+        <div data-part="listbox" role="listbox" hidden>
+          <div data-part="option" role="option" data-value="apple">Apple</div>
+        </div>
+        <input data-part="input" type="hidden" name="authored">
+      </div>`;
+    const el = document.querySelector("[data-ui='select-custom']") as HTMLElement;
+    createSelectCustom(el).select("apple");
+
+    expect(el.querySelectorAll("input[data-part='input']").length).toBe(1);
+    expect((el.querySelector("input[data-part='input']") as HTMLInputElement).name).toBe("authored");
   });
 });

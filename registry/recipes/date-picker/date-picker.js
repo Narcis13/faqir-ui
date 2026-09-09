@@ -22,6 +22,29 @@ export function createDatePicker(root) {
   // directly inside the popup) still works — the popup itself then acts as the
   // calendar root.
   const calendarRoot = root.querySelector("[data-ui='calendar']") || popup;
+
+  // `input` carries the value and the aria-expanded state, `popup` is what
+  // opens; either one missing made every open()/close() throw. `trigger` is
+  // optional — an input-only date picker opens from the field. [W3-2]
+  if (!input || !popup) {
+    console.warn(
+      "[Faqir] date-picker needs [data-part='input'] and [data-part='calendar'] — " +
+        `missing ${[!input && "input", !popup && "calendar"].filter(Boolean).join(" and ")}. ` +
+        "Component left inert.",
+      root
+    );
+    const inert = {
+      open() {},
+      close() {},
+      getValue: () => null,
+      setValue() {},
+      navigate() {},
+      selectDate() {},
+      destroy() {},
+    };
+    root._faqirDatePicker = inert;
+    return inert;
+  }
   const calendar = createCalendar(calendarRoot);
 
   const today = new Date();
@@ -112,6 +135,9 @@ export function createDatePicker(root) {
   function onRootKeyDown(e) {
     if (e.key === "Escape" && root.dataset.state === "open") {
       e.preventDefault();
+      // Closing the calendar popup is the whole action — a date picker inside a
+      // dialog must not take the dialog down with it. [W3-2]
+      e.stopPropagation();
       close();
       input.focus();
     }
@@ -122,6 +148,10 @@ export function createDatePicker(root) {
   root.addEventListener("keydown", onRootKeyDown);
 
   function destroy() {
+    // Leaving a destroyed overlay open leaves a dead one: nothing is listening
+    // any more, so its close button, Escape and overlay click all do nothing.
+    // `context-menu` is the model — it has always closed itself here. [W3-2]
+    close();
     trigger?.removeEventListener("click", onTriggerClick);
     root.removeEventListener("faqir:calendar-change", onCalendarChange);
     root.removeEventListener("keydown", onRootKeyDown);

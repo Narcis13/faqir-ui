@@ -15,6 +15,23 @@
 }
 
 /* -- Base (track) -- */
+/* Travel direction.
+   `translateX` is PHYSICAL, and CSS has no logical translate: in an RTL page
+   the track flips but the thumb still slid right, 17px outside its own track.
+   One sign flip, read by every `translateX` below. `[dir]` covers the attribute
+   an RTL page sets; `:dir()` is a separate rule so a browser without it still
+   applies the first. [W3-3] */
+[data-ui="switch"] {
+  --switch-dir: 1;
+}
+[dir="rtl"] [data-ui="switch"],
+[data-ui="switch"][dir="rtl"] {
+  --switch-dir: -1;
+}
+[data-ui="switch"]:dir(rtl) {
+  --switch-dir: -1;
+}
+
 [data-ui="switch"] {
   appearance: none;
   display: inline-flex;
@@ -78,12 +95,12 @@
 [data-ui="switch"]:checked::after,
 [data-ui="switch"][aria-checked="true"]::after,
 [data-ui="switch"][data-state="on"]::after {
-  transform: translateX(var(--switch-travel, 20px));
+  transform: translateX(calc(var(--switch-travel, 20px) * var(--switch-dir, 1)));
 }
 
 [data-ui="switch"][aria-checked="true"] [data-part="thumb"],
 [data-ui="switch"][data-state="on"] [data-part="thumb"] {
-  transform: translateX(var(--switch-travel, 20px));
+  transform: translateX(calc(var(--switch-travel, 20px) * var(--switch-dir, 1)));
 }
 
 /* -- Sizes -- */
@@ -103,7 +120,7 @@
 [data-ui="switch"][data-size="sm"][data-state="on"]::after,
 [data-ui="switch"][data-size="sm"][aria-checked="true"] [data-part="thumb"],
 [data-ui="switch"][data-size="sm"][data-state="on"] [data-part="thumb"] {
-  transform: translateX(16px);
+  transform: translateX(calc(16px * var(--switch-dir, 1)));
 }
 
 /* Large: 52x28, thumb 22px, travel 24px */
@@ -121,12 +138,54 @@
 [data-ui="switch"][data-size="lg"][data-state="on"]::after,
 [data-ui="switch"][data-size="lg"][aria-checked="true"] [data-part="thumb"],
 [data-ui="switch"][data-size="lg"][data-state="on"] [data-part="thumb"] {
-  transform: translateX(24px);
+  transform: translateX(calc(24px * var(--switch-dir, 1)));
 }
 
 /* -- Disabled -- */
 [data-ui="switch"]:disabled {
   cursor: not-allowed;
+}
+
+/* -- Forced colors (Windows High Contrast) --
+   Every colour above is dropped by the OS, so the track rendered as an empty
+   pill and ON and OFF were pixel-identical: the ONE thing this control exists
+   to say could not be read. `forced-color-adjust: none` on the thumb keeps a
+   fill the OS would otherwise strip, and the system keywords carry the state:
+   the track's border is always visible, and ON fills it with `Highlight`. [W3-3] */
+@media (forced-colors: active) {
+  [data-ui="switch"] {
+    border: 1px solid ButtonText;
+    background: ButtonFace;
+  }
+
+  [data-ui="switch"]::after,
+  [data-ui="switch"] [data-part="thumb"] {
+    forced-color-adjust: none;
+    background: ButtonText;
+  }
+
+  [data-ui="switch"]:checked,
+  [data-ui="switch"][aria-checked="true"],
+  [data-ui="switch"][data-state="on"] {
+    background: Highlight;
+    border-color: Highlight;
+  }
+
+  [data-ui="switch"]:checked::after,
+  [data-ui="switch"][aria-checked="true"]::after,
+  [data-ui="switch"][data-state="on"]::after,
+  [data-ui="switch"][aria-checked="true"] [data-part="thumb"],
+  [data-ui="switch"][data-state="on"] [data-part="thumb"] {
+    background: HighlightText;
+  }
+
+  [data-ui="switch"]:disabled {
+    border-color: GrayText;
+  }
+
+  [data-ui="switch"]:focus-visible {
+    outline-color: Highlight;
+  }
 }
 
 /* -- Motion -- */

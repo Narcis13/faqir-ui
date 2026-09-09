@@ -19,40 +19,50 @@ function tick(): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, 0));
 }
 
-// Controllers observed to throw when mounted on a bare root. The point of the
-// test is the containment, so it tolerates any of these learning to survive on
-// its own — what it does not tolerate is the page dying with them.
-const THROWS_ON_BARE_ROOT = ["calendar", "context-menu", "date-picker", "dropdown"];
+// The four controllers that used to throw when mounted on a bare root. They no
+// longer do — W3-2 gave each one an up-front check that names the missing part
+// and returns an inert API — but the containment they motivated is what this
+// file guards, so they stay the fixture. What must hold either way: the page
+// survives, and the component says something.
+const INCOMPLETE_ON_BARE_ROOT = ["calendar", "context-menu", "date-picker", "dropdown"];
 
-let consoleErrors: unknown[][] = [];
+let consoleMessages: unknown[][] = [];
 let realError: typeof console.error;
+let realWarn: typeof console.warn;
 
 beforeEach(() => {
   // Deliberately does NOT clear document.body: the single bootstrapped page is
-  // shared by every test here (see the note above). console.error is captured
+  // shared by every test here (see the note above). Console output is captured
   // per test so the reporting assertion sees only its own run.
+  //
+  // BOTH channels: a controller that throws is reported by the engine through
+  // console.error, and one that detects its own incomplete markup reports it
+  // through console.warn. The assertion is that neither shape is silent.
   realError = console.error;
-  console.error = (...args: unknown[]) => void consoleErrors.push(args);
+  realWarn = console.warn;
+  console.error = (...args: unknown[]) => void consoleMessages.push(args);
+  console.warn = (...args: unknown[]) => void consoleMessages.push(args);
 });
 
 afterEach(() => {
   console.error = realError;
+  console.warn = realWarn;
 });
 
-// `Faqir.start()` IS bootstrap — the controller auto-mount sweep lives there, not
-// in initTree, so it is the only path that exercises this. It also has no
-// re-entry guard and installs a fresh MutationObserver on document.body every
-// call, and bun shares one happy-dom realm across every test file: each extra
-// call leaves a permanent observer that fires on every later DOM mutation in the
-// whole suite, running one querySelectorAll per registered controller. So this
-// file boots ONCE and asserts everything against that single page.
+// `Faqir.start()` IS bootstrap — the controller auto-mount sweep lives there,
+// not in initTree, so it is the only path that exercises this. Bun shares one
+// happy-dom realm across every test file, and each call re-runs the sweep over
+// the whole document, so this file boots ONCE and asserts everything against
+// that single page. (Since W3-1 a second `start()` no longer re-binds an
+// initialized scope or installs a second MutationObserver, but booting once is
+// still the cheapest way to keep these assertions about ONE mount.)
 describe("a throwing controller is contained", () => {
   let booted = false;
 
   function bootOnce() {
     if (booted) return;
     document.body.innerHTML = `
-      ${THROWS_ON_BARE_ROOT.map((n) => `<div data-ui="${n}"></div>`).join("\n      ")}
+      ${INCOMPLETE_ON_BARE_ROOT.map((n) => `<div data-ui="${n}"></div>`).join("\n      ")}
       <div l-data="{ n: 7 }"><span id="probe" l-text="n"></span></div>
       <div l-data="{ open: false }">
         <button id="btn" @click="open = true">go</button>
@@ -89,8 +99,8 @@ describe("a throwing controller is contained", () => {
     await tick();
     // A contained failure that is also a silent failure would just move the
     // problem: whoever generated the markup still needs to be told.
-    const messages = consoleErrors.map((a) => String(a[0])).join("\n");
-    for (const name of THROWS_ON_BARE_ROOT) {
+    const messages = consoleMessages.map((a) => String(a[0])).join("\n");
+    for (const name of INCOMPLETE_ON_BARE_ROOT) {
       expect(messages, `${name} failed silently`).toContain(name);
     }
     expect(messages).toContain("[Faqir]");

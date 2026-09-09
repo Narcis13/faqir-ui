@@ -132,49 +132,84 @@
   max-width: 960px;
 }
 
+/* Mobile-first. The horizontal variant is a fixed 192px rail beside a `1fr`
+   column, and this sheet carried NO media query at all — so on a 375px phone the
+   rail plus its gap plus the panel's own minimum forced the page 403px wide,
+   with the right-hand edge of every settings card painted outside the viewport.
+   Below the canon `md` tier the rail stacks above the panel, which is the layout
+   the default (vertical) variant already had. [W3-3] */
 [data-ui="settings-page"][data-variant="horizontal"] [data-ui="tabs"] {
   display: grid;
-  grid-template-columns: var(--space-48) 1fr;
-  gap: var(--space-8);
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
   align-items: start;
 }
 
 [data-ui="settings-page"][data-variant="horizontal"] [data-ui="tabs"] [data-part="list"] {
-  flex-direction: column;
-  border-bottom: none;
-  border-inline-end: 1px solid var(--color-border);
-  padding-inline-end: var(--space-4);
-  position: sticky;
-  top: var(--space-4);
-}
-
-[data-ui="settings-page"][data-variant="horizontal"] [data-ui="tabs"] [data-part="trigger"] {
-  justify-content: flex-start;
-  text-align: start;
-  border-bottom: none;
-  border-inline-start: 2px solid transparent;
-  margin-bottom: 0;
-  margin-inline-end: -1px;
-  padding: var(--space-2) var(--space-3);
-  border-radius: 0;
-}
-
-[data-ui="settings-page"][data-variant="horizontal"] [data-ui="tabs"] [data-part="trigger"][aria-selected="true"] {
-  border-inline-start-color: var(--color-primary);
-  border-bottom-color: transparent;
-}
-
-[data-ui="settings-page"][data-variant="horizontal"] [data-ui="tabs"] [data-part="trigger"]:hover {
-  border-inline-start-color: var(--color-border-strong, var(--color-border));
-  border-bottom-color: transparent;
-}
-
-[data-ui="settings-page"][data-variant="horizontal"] [data-ui="tabs"] [data-part="trigger"][aria-selected="true"]:hover {
-  border-inline-start-color: var(--color-primary);
+  /* A row of tabs again, as in the default variant, until there is room for a
+     rail — and one that WRAPS. A horizontal scroller would keep the triggers
+     reachable, but reachable-by-gesture is not the same as visible, and a
+     settings page is not a place to hide a section behind a swipe. */
+  flex-direction: row;
+  flex-wrap: wrap;
+  border-inline-end: none;
+  border-bottom: 1px solid var(--color-border);
+  padding-inline-end: 0;
+  position: static;
 }
 
 [data-ui="settings-page"][data-variant="horizontal"] [data-ui="tabs"] [data-part="panel"] {
-  grid-column: 2;
+  /* `grid-column: 2` has no column 2 to sit in while the grid is single-track. */
+  grid-column: 1;
+}
+
+@media (min-width: 48rem) {
+  [data-ui="settings-page"][data-variant="horizontal"] [data-ui="tabs"] {
+    grid-template-columns: var(--space-48) 1fr;
+    gap: var(--space-8);
+  }
+
+  [data-ui="settings-page"][data-variant="horizontal"] [data-ui="tabs"] [data-part="list"] {
+    flex-direction: column;
+    border-bottom: none;
+    border-inline-end: 1px solid var(--color-border);
+    padding-inline-end: var(--space-4);
+    position: sticky;
+    top: var(--space-4);
+    flex-wrap: nowrap;
+  }
+
+  [data-ui="settings-page"][data-variant="horizontal"] [data-ui="tabs"] [data-part="panel"] {
+    grid-column: 2;
+  }
+
+  /* The rail's own trigger treatment: a start-edge marker instead of the
+     underline. Below `md` the triggers are a row again, so they keep the
+     default tabs look rather than a border on an edge that is not there. */
+  [data-ui="settings-page"][data-variant="horizontal"] [data-ui="tabs"] [data-part="trigger"] {
+    justify-content: flex-start;
+    text-align: start;
+    border-bottom: none;
+    border-inline-start: 2px solid transparent;
+    margin-bottom: 0;
+    margin-inline-end: -1px;
+    padding: var(--space-2) var(--space-3);
+    border-radius: 0;
+  }
+
+  [data-ui="settings-page"][data-variant="horizontal"] [data-ui="tabs"] [data-part="trigger"][aria-selected="true"] {
+    border-inline-start-color: var(--color-primary);
+    border-bottom-color: transparent;
+  }
+
+  [data-ui="settings-page"][data-variant="horizontal"] [data-ui="tabs"] [data-part="trigger"]:hover {
+    border-inline-start-color: var(--color-border-strong, var(--color-border));
+    border-bottom-color: transparent;
+  }
+
+  [data-ui="settings-page"][data-variant="horizontal"] [data-ui="tabs"] [data-part="trigger"][aria-selected="true"]:hover {
+    border-inline-start-color: var(--color-primary);
+  }
 }
 
 /* ══════════════════════════════════════════════

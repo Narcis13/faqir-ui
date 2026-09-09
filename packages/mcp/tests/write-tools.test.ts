@@ -1,4 +1,5 @@
 import { describe, it, expect } from "bun:test";
+import { CONTRAST_PAIRS } from "../../../src/audit/contrast-tokens";
 import { join, resolve } from "node:path";
 
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
@@ -247,7 +248,10 @@ describe("faqir_generate_theme", () => {
     expect(data.generated[0].manifest.name).toBe("agent-brand");
     expect(data.generated[1].manifest.scheme).toBe("light");
     const ratios = data.generated.flatMap((file: any) => file.contrast);
-    expect(ratios.length).toBe(39);
+    // One entry per declared token pair per scheme. Derived from the pair list
+    // rather than hardcoded: it grew in W3-3 (the focus ring, and the two pairs
+    // the gate had exempted by forgetting), and a literal read as a regression.
+    expect(ratios.length).toBe(CONTRAST_PAIRS.length * 3);
     expect(ratios.every((pair: any) => pair.passes && pair.ratio >= 4.5)).toBe(true);
     expect(ratios.some((pair: any) => pair.auto_adjusted)).toBe(true);
   });

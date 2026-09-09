@@ -24,8 +24,8 @@
   --color-fg-subtle:       oklch(0.60 0.03 50);       /* subtle warm gray */
 
   /* ── Interactive: Primary (calm teal) ── */
-  --color-primary:         oklch(0.50 0.10 185);      /* calm teal */
-  --color-primary-hover:   oklch(0.46 0.09 185);
+  --color-primary:         oklch(0.48 0.10 185);      /* calm teal — AA on --color-bg-muted (was 4.40:1) [W3-3] */
+  --color-primary-hover:   oklch(0.44 0.09 185);
   --color-primary-active:  oklch(0.41 0.08 185);
   --color-primary-fg:      white;
   --color-primary-subtle:  oklch(0.94 0.05 185);
@@ -52,7 +52,7 @@
   /* ── Borders (soft, warm) ── */
   --color-border:          oklch(0.90 0.02 55);
   --color-border-strong:   oklch(0.80 0.03 55);
-  --color-ring:            oklch(0.51 0.10 185 / 0.4);
+  --color-ring:            oklch(0.51 0.10 185);
 
   /* ── Shadows (diffuse warm haze, never harsh) ── */
   --shadow-xs:  0 1px 3px oklch(0.45 0.05 50 / 0.07);
@@ -120,7 +120,7 @@
   /* ── Borders ── */
   --color-border:          oklch(0.36 0.02 50);
   --color-border-strong:   oklch(0.46 0.025 50);
-  --color-ring:            oklch(0.75 0.10 185 / 0.45);
+  --color-ring:            oklch(0.75 0.10 185);
 
   /* ── Shadows (deep warm haze) ── */
   --shadow-xs:  0 1px 3px oklch(0.10 0.01 50 / 0.35);
@@ -174,7 +174,7 @@
     /* ── Borders ── */
     --color-border:          oklch(0.36 0.02 50);
     --color-border-strong:   oklch(0.46 0.025 50);
-    --color-ring:            oklch(0.75 0.10 185 / 0.45);
+    --color-ring:            oklch(0.75 0.10 185);
 
     /* ── Shadows ── */
     --shadow-xs:  0 1px 3px oklch(0.10 0.01 50 / 0.35);

@@ -181,6 +181,7 @@ function pickPrimary(
   ramp: AccentStep[],
   mode: "light" | "dark",
   darkForeground: string,
+  mutedSurface: string,
 ): PrimarySelection {
   const candidates = mode === "light" ? [5, 6, 7, 8, 9, 10] : [4, 3, 2, 1, 0];
   const foreground = mode === "light" ? "white" : darkForeground;
@@ -192,6 +193,11 @@ function pickPrimary(
     // In light mode the same semantic color is also text on the palest brand
     // step (`color-primary-subtle`). Select a step that clears both contracts.
     if (mode === "light" && contrastOf(ramp[index].css, ramp[0].css) < CONTRAST_AA) continue;
+    // …and it is an accent-coloured label on the muted plate, which is the
+    // darkest surface it lands on in light mode and the lightest in dark. That
+    // pair is the one the gate used to omit, so the generator could pick a step
+    // that failed it. [W3-3]
+    if (contrastOf(ramp[index].css, mutedSurface) < CONTRAST_AA) continue;
     const direction = mode === "light" ? 1 : -1;
     const hoverIndex = clamp(index + direction, 0, ramp.length - 1);
     const activeIndex = clamp(index + direction * 2, 0, ramp.length - 1);
@@ -254,7 +260,10 @@ function lightDeclarations(
     ["color-info-subtle", brand(0)],
     ["color-border", neutralColor(neutral, 0.84, 0.6)],
     ["color-border-strong", neutralColor(neutral, 0.7, 0.8)],
-    ["color-ring", oklch(ramp[primary.index].color, 0.42)],
+    // Opaque. A translucent ring composites down to 1.4–2.7:1 against the page
+    // it is drawn on — below SC 1.4.11's 3:1, on a token whose only job is to be
+    // seen. [W3-3]
+    ["color-ring", oklch(ramp[primary.index].color)],
     ["shadow-xs", "0 1px 2px oklch(0 0 0 / 0.04)"],
     ["shadow-sm", "0 1px 3px oklch(0 0 0 / 0.06), 0 1px 2px oklch(0 0 0 / 0.04)"],
     ["shadow-md", "0 4px 6px oklch(0 0 0 / 0.06), 0 2px 4px oklch(0 0 0 / 0.04)"],
@@ -301,7 +310,7 @@ function darkDeclarations(
     ["color-info-subtle", subtleColor(ramp[Math.min(primary.index, 4)].color, 0.23)],
     ["color-border", neutralColor(neutral, 0.29)],
     ["color-border-strong", neutralColor(neutral, 0.38)],
-    ["color-ring", oklch(ramp[primary.index].color, 0.48)],
+    ["color-ring", oklch(ramp[primary.index].color)],
     ["shadow-xs", "none"],
     ["shadow-sm", "0 1px 3px oklch(0 0 0 / 0.3)"],
     ["shadow-md", "0 4px 6px oklch(0 0 0 / 0.3)"],
@@ -609,8 +618,12 @@ export function generateThemeBundle(
 
   const ramp = generateAccentRamp(accent);
   const darkForeground = neutralColor(input.neutral, 0.13);
-  const lightPrimary = pickPrimary(ramp, "light", darkForeground);
-  const darkPrimary = pickPrimary(ramp, "dark", darkForeground);
+  // The muted plate each mode's `--color-bg-muted` resolves to; kept beside the
+  // declaration lists below so the two cannot drift apart.
+  const lightMuted = neutralColor(input.neutral, 0.92, 0.4);
+  const darkMuted = neutralColor(input.neutral, 0.25);
+  const lightPrimary = pickPrimary(ramp, "light", darkForeground, lightMuted);
+  const darkPrimary = pickPrimary(ramp, "dark", darkForeground, darkMuted);
   const light = lightDeclarations(input.name, input.neutral, ramp, lightPrimary);
   const dark = darkDeclarations(input.name, input.neutral, ramp, darkPrimary);
   const baseCss = baseCssSources.join("\n");

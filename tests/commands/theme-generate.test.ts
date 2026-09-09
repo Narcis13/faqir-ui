@@ -1,6 +1,7 @@
 // faqir theme generate — deterministic parametric themes [task 0.6-11 · §C4]
 
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
+import { CONTRAST_PAIRS } from "../../src/audit/contrast-tokens";
 import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -202,6 +203,10 @@ describe("faqir theme generate · CLI", () => {
   });
 
   function run(args: string[], cwd = tempDir) {
+    // `process.execPath` is the Bun binary under `bun test`, so this exercises
+    // the source on Bun and nothing else. The compiled bundle on Node is covered
+    // by tests/build/dist-cli.test.ts and the shape loop in
+    // tests/commands/json-output.test.ts. [W3-5]
     const result = runSync(process.execPath, [SRC_INDEX, "theme", "generate", ...args], {
       cwd,
       encoding: "utf8",
@@ -248,7 +253,10 @@ describe("faqir theme generate · CLI", () => {
         preview: "themes/cli-brand-document.preview.html",
       },
     ]);
-    expect(report.contrast.length).toBe(39);
+    // One entry per declared pair per scheme (light, dark, auto). Derived
+    // rather than hardcoded: the pair list grew in W3-3 and a literal 39 made
+    // that read as a regression instead of as coverage.
+    expect(report.contrast.length).toBe(CONTRAST_PAIRS.length * 3);
     expect(report.contrast.every((pair: { passes: boolean }) => pair.passes)).toBe(true);
     for (const file of report.generated) {
       expect(existsSync(join(tempDir, file.css))).toBe(true);

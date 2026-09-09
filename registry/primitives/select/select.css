@@ -19,10 +19,22 @@
   appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right var(--space-2) center;
+  /* `background-position` is PHYSICAL and CSS gives it no logical form, so in
+     an RTL page the padding flipped to the left while the chevron stayed on the
+     right — painted straight over the option text. One variable holds the edge,
+     one holds its inset, and the two RTL rules below flip the edge. [W3-3] */
+  background-position: var(--select-chevron-edge, right) var(--select-chevron-inset, var(--space-2)) center;
   background-size: 16px 16px;
   transition: border-color var(--duration-fast) var(--ease-default),
               box-shadow var(--duration-fast) var(--ease-default);
+}
+
+[dir="rtl"] [data-ui="select"],
+[data-ui="select"][dir="rtl"] {
+  --select-chevron-edge: left;
+}
+[data-ui="select"]:dir(rtl) {
+  --select-chevron-edge: left;
 }
 
 [data-ui="select"]:hover {
@@ -50,7 +62,7 @@
   padding-inline-end: var(--space-10, 2.5rem);
   font-size: var(--text-base);
   background-size: 18px 18px;
-  background-position: right var(--space-3) center;
+  --select-chevron-inset: var(--space-3);
 }
 
 /* -- States -- */

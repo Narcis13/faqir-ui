@@ -30,6 +30,10 @@ recipe controllers, so this layer lives outside that boundary.
     const { idKey = 'id', pollInterval = 0, optimistic = true } = options;
     let pollTimer = null;
 
+    // Abbreviated here. The shipped file (`ui/core/api-source.js`, written by
+    // `faqir init`) also tracks in-flight requests for `destroy()` and latches
+    // itself closed so a late response cannot write into a torn-down scope —
+    // see "Teardown" below.
     return {
       items: [],
       loading: true,
@@ -311,6 +315,37 @@ recipe controllers, so this layer lives outside that boundary.
   </template>
 </div>
 ```
+
+### Teardown
+
+A source owns a `setInterval` poll and, while a request is in flight, an
+`AbortController`. Both outlive the element that created them unless something
+stops them — one live poller per route a single-page app has ever visited, each
+one still writing into a scope that no longer exists.
+
+`apiSource()` therefore ships a `destroy()`, and the engine calls it for you: the
+returned object carries `__faqirTeardown`, and `initScope` runs any own
+`__faqirTeardown` function on a scope's data when that scope is destroyed — an
+`l-if` hiding, a keyed `l-for` row dropping, an SPA route change calling
+`Faqir.destroy(root)`.
+
+```html
+<!-- Nothing to remember: the source is torn down with the scope. -->
+<div l-data="{ ...apiSource('/api/notifications', { pollInterval: 15000 }) }"
+     l-init="load(); startPolling()"> … </div>
+```
+
+```js
+// Holding a source outside an l-data means owning its teardown yourself.
+const source = apiSource('/api/menus', { pollInterval: 10000 });
+source.startPolling();
+// …later
+source.destroy();
+```
+
+`destroy()` is idempotent. After it, polling is stopped, every in-flight request
+is aborted, and no method starts new work or writes back — a response already on
+the wire cannot resurrect a dead scope.
 
 ### Multiple Sources on One Page
 

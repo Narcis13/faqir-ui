@@ -172,13 +172,16 @@ describe("minified engine artifact", () => {
   });
 
   test("is within the engine + controllers gzip budget", () => {
-    // 44 → 45 KB in Wave 2. The budget has moved twice before on the same terms
-    // (42 → 43 for the 29th controller, 43 → 44 for inspect/devtools); this move
-    // bought the shared exit-transition helper the overlay controllers wait on,
-    // the sweep that binds directives outside every scope root, root-directive
-    // application, and `$ui('#id')`. See scripts/check-size.mjs for the ledger.
+    // 45 → 46 KB in Wave 3. The budget has moved on the same terms three times
+    // before (42 → 43 for the 29th controller, 43 → 44 for inspect/devtools,
+    // 44 → 45 for Wave 2's exit-transition helper and unscoped sweep); this move
+    // bought `aria-activedescendant` in the four widgets that published the
+    // combobox contract without implementing it, dismiss-on-destroy across
+    // twelve overlay controllers, cleanup ownership that survives a detached
+    // template, `l-model` listener teardown, and the missing-part guards that
+    // name the part instead of throwing. See scripts/check-size.mjs for the ledger.
     const gzip = gzipSync(readFileSync(join(DIST, "faqir-core.min.js"))).length;
-    expect(gzip).toBeLessThanOrEqual(45 * 1024);
+    expect(gzip).toBeLessThanOrEqual(46 * 1024);
   });
 });
 

@@ -59,6 +59,12 @@
       "required": false,
       "tag_hint": "span",
       "description": "Disclosure caret inside the trigger, rotated by [data-state=\"open\"]"
+    },
+    "input": {
+      "selector": "[data-part='input']",
+      "required": false,
+      "tag_hint": "input",
+      "description": "Hidden input carrying the selected value so the widget submits inside a native form. Authored, or created by the controller when the root declares data-name."
     }
   },
   "variants": {
@@ -130,6 +136,11 @@
       "type": "string",
       "default": "",
       "description": "Selected value"
+    },
+    "name": {
+      "type": "string",
+      "default": "",
+      "description": "Form field name. With `data-name`, the controller keeps a hidden [data-part='input'] of that name in sync with the selection, so the widget submits inside a native <form> the way the <select> it replaces would."
     }
   },
   "a11y": {
@@ -140,7 +151,8 @@
       "aria-controls on trigger pointing to listbox id",
       "role=\"listbox\" on listbox",
       "role=\"option\" on each option",
-      "aria-selected on options"
+      "aria-selected on options",
+      "aria-activedescendant on the combobox, naming the active option while the list is open"
     ],
     "keyboard": {
       "Enter / Space": "open select dropdown",

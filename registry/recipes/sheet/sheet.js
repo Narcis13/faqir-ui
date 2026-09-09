@@ -71,6 +71,26 @@ export function createSheet(root) {
     cancelExitWait = whenExitDone(panel, "transform", onEnd);
   }
 
+  /**
+   * Tear the overlay down NOW — no exit animation, no focus restore.
+   *
+   * `destroy()` unbound every listener and left the panel and its backdrop
+   * exactly where they were: a full-page block whose close button, Escape key
+   * and overlay click had all just stopped working, with no way out. An SPA
+   * route change destroys controllers and does precisely this. The model is
+   * `context-menu`, which has always closed itself on teardown. [W3-2]
+   */
+  function dismiss() {
+    cancelExitWait?.();
+    cancelExitWait = null;
+    root.dataset.state = "closed";
+    if (overlay) overlay.hidden = true;
+    if (panel) panel.hidden = true;
+    unlockScroll();
+    if (focusCleanup) focusCleanup();
+    focusCleanup = null;
+  }
+
   function toggle() {
     root.dataset.state === "open" ? close() : open();
   }
@@ -107,10 +127,7 @@ export function createSheet(root) {
       btn.removeEventListener("click", onCloseClick)
     );
     root.removeEventListener("keydown", onKeyDown);
-    cancelExitWait?.();
-    cancelExitWait = null;
-    if (focusCleanup) focusCleanup();
-    unlockScroll();
+    dismiss();
     delete root._faqirSheet;
   }
 

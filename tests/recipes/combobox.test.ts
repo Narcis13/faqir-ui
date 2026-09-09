@@ -327,18 +327,46 @@ describe("combobox controller", () => {
     expect((root as any)._faqirCombobox).toBeUndefined();
   });
 
-  // ── known gaps: codified as current behavior (flip on the filed follow-up) ──
-  it("GAP (0.4-30): tracks the active option via data-highlighted, not aria-activedescendant", () => {
+  // ── the APG contract the markup declares  [W3-4 · 0.4-30] ─────────────────
+  it("points aria-activedescendant at the active option", () => {
     const { api, input, options, key } = setup();
     api.open();
     key("ArrowDown");
-    // Active option is data-highlighted; the input never links to it.
-    expect(input.hasAttribute("aria-activedescendant")).toBe(false);
-    // …and options carry no id to point an activedescendant at yet.
-    expect(options().every((o) => !o.id)).toBe(true);
+
+    const active = options().find((o) => o.hasAttribute("data-highlighted"))!;
+    expect(active).toBeDefined();
+    expect(active.id).toBeTruthy();
+    // The input publishes role="combobox" + aria-autocomplete="list", which
+    // obliges it to name the active option; before W3-4 it named nothing and a
+    // screen-reader user heard no movement at all.
+    expect(input.getAttribute("aria-activedescendant")).toBe(active.id);
     // The highlight is *also* mirrored onto aria-selected (active vs selected
-    // are conflated — APG wants aria-selected only on the chosen option).
+    // are conflated — APG wants aria-selected only on the chosen option). That
+    // is 0.4-31 below, and is unchanged here.
     expect(options()[0].getAttribute("aria-selected")).toBe("true");
+  });
+
+  it("moves it with the highlight and drops it on close", () => {
+    const { api, input, options, key } = setup();
+    api.open();
+    key("ArrowDown");
+    const first = input.getAttribute("aria-activedescendant");
+    key("ArrowDown");
+    expect(input.getAttribute("aria-activedescendant")).not.toBe(first);
+    expect(options().find((o) => o.hasAttribute("data-highlighted"))!.id).toBe(
+      input.getAttribute("aria-activedescendant") ?? "",
+    );
+
+    api.close();
+    expect(input.hasAttribute("aria-activedescendant")).toBe(false);
+  });
+
+  it("keeps an authored option id rather than replacing it", () => {
+    const { api, input, options, key } = setup();
+    options()[0].id = "authored-first";
+    api.open();
+    key("ArrowDown");
+    expect(input.getAttribute("aria-activedescendant")).toBe("authored-first");
   });
 
   it("GAP (0.4-31): a committed selection leaves no option marked aria-selected", () => {

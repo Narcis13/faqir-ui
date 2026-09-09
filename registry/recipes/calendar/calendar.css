@@ -48,7 +48,7 @@
 
 [data-ui="calendar"] [data-part="nav-prev"]:focus-visible,
 [data-ui="calendar"] [data-part="nav-next"]:focus-visible {
-  outline: 2px solid var(--color-ring, oklch(0.55 0.22 264 / 0.4));
+  outline: 2px solid var(--color-ring, oklch(0.55 0.22 264));
   outline-offset: 2px;
 }
 
@@ -106,7 +106,7 @@
 }
 
 [data-ui="calendar"] [data-part="day"]:focus-visible {
-  outline: 2px solid var(--color-ring, oklch(0.55 0.22 264 / 0.4));
+  outline: 2px solid var(--color-ring, oklch(0.55 0.22 264));
   outline-offset: 2px;
 }
 

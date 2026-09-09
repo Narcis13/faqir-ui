@@ -312,6 +312,30 @@ describe("the ratchet", () => {
     expect(formatComparison(cmp)).toContain("3 better than budget");
   });
 
+  // The defect that made the ratchet a rubber stamp: it compared TOTALS, so a
+  // page gaining a bleed while another lost one moved the sum by zero and the
+  // page that got worse never appeared. The phone budget carried 29 bleeds
+  // across three pages at the time — content painted outside the viewport,
+  // reachable by tab order but not by eye — and any of them could be swapped for
+  // another silently. [W3-5]
+  it("fails a swap that leaves the total unchanged, and names the page", () => {
+    const swapped = budgetOf(
+      { pages: 2, zeroGutterPages: 1, seamPages: 1, seams: 3, bleeds: 1, overlaps: 1 },
+      {
+        // a.html lost its bleed; b.html gained one. Total: still 1.
+        "a.html": { zeroGutter: true, seams: 3, bleeds: 0, overlaps: 1 },
+        "b.html": { zeroGutter: false, seams: 0, bleeds: 1, overlaps: 0 },
+      },
+    );
+    const cmp = compareBudget(swapped, budget);
+    expect(cmp.ok).toBe(false);
+    const bleed = cmp.regressions.find((r) => r.count === "bleeds");
+    expect(bleed).toBeDefined();
+    expect(bleed!.pages).toEqual(["b.html"]);
+    // The totals are equal, so the message has to explain why this is a failure.
+    expect(formatComparison(cmp)).toContain("these pages got worse");
+  });
+
   it("passes an unchanged measurement with neither regression nor slack", () => {
     const cmp = compareBudget(budget, budget);
     expect(cmp).toEqual({ regressions: [], slack: [], ok: true });

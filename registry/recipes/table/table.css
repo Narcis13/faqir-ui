@@ -105,7 +105,7 @@
 /* Keyboard focus on cells (sortable headers + navigable grids). */
 [data-ui="table"] [data-part="th"]:focus-visible,
 [data-ui="table"] [data-part="td"]:focus-visible {
-  outline: 2px solid var(--color-ring, oklch(0.55 0.22 264 / 0.4));
+  outline: 2px solid var(--color-ring, oklch(0.55 0.22 264));
   outline-offset: -2px;
 }
 
@@ -339,7 +339,7 @@
 
 [data-ui="table"] [data-part="filter-input"]:focus,
 [data-ui="table"] [data-part="filter"]:focus {
-  outline: 2px solid var(--color-ring, oklch(0.55 0.22 264 / 0.4));
+  outline: 2px solid var(--color-ring, oklch(0.55 0.22 264));
   outline-offset: -1px;
   border-color: var(--color-primary);
 }

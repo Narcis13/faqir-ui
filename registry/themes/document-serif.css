@@ -41,7 +41,7 @@
   /* Rules and focus */
   --color-border:           oklch(0.72 0.015 65);
   --color-border-strong:    oklch(0.40 0.020 55);
-  --color-ring:             oklch(0.32 0.10 25 / 0.45);
+  --color-ring:             oklch(0.32 0.10 25);
 
   /* Flat, formal surfaces */
   --shadow-xs:              none;

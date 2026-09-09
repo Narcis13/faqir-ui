@@ -115,6 +115,11 @@ export function createMenubar(root) {
     roving: true,
     onActivate: activateTopItem,
     onEscape() {
+      // The menubar itself is never hidden, so it receives Escape even with
+      // every submenu collapsed. Nothing to dismiss means the keystroke is not
+      // ours, and swallowing it would trap the user in whatever encloses the
+      // menubar. [W3-2]
+      if (root.dataset.state !== "open") return false;
       close(false);
     },
     onTab() {

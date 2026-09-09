@@ -29,8 +29,8 @@
 }
 
 [data-ui="tag-input"] [data-part="taglist"]:focus-within {
-  border-color: var(--color-ring, oklch(0.55 0.22 264 / 0.4));
-  box-shadow: 0 0 0 2px var(--color-ring, oklch(0.55 0.22 264 / 0.4));
+  border-color: var(--color-ring, oklch(0.55 0.22 264));
+  box-shadow: 0 0 0 2px var(--color-ring, oklch(0.55 0.22 264));
 }
 
 /* ── Text input: borderless, grows to fill the remaining row space ── */

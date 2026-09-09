@@ -466,13 +466,44 @@ describe("command-palette controller", () => {
     expect(search.value).toBe("go");
   });
 
-  it("GAP (0.4-34): active item tracked via data-highlighted, not aria-activedescendant", () => {
+  // ── the APG contract the markup declares  [W3-4 · 0.4-34] ─────────────────
+  it("points aria-activedescendant at the active item", () => {
     const { api, search, items, searchKey } = setup();
     api.open();
     searchKey("ArrowDown");
-    expect(search.hasAttribute("aria-activedescendant")).toBe(false);
-    expect(items().every((i) => !i.id)).toBe(true);
-    // Highlight is mirrored onto aria-selected (active vs selected conflated).
+
+    const active = items().find((i) => i.hasAttribute("data-highlighted"))!;
+    expect(active).toBeDefined();
+    expect(active.id).toBeTruthy();
+    // The search field publishes role="combobox" + aria-autocomplete="list";
+    // before W3-4 it named nothing, so arrowing through the palette announced
+    // nothing at all.
+    expect(search.getAttribute("aria-activedescendant")).toBe(active.id);
+    // Highlight is mirrored onto aria-selected (active vs selected conflated) —
+    // unchanged here.
     expect(items()[0].getAttribute("aria-selected")).toBe("true");
+  });
+
+  it("moves it with the highlight and drops it on close", () => {
+    const { api, search, items, searchKey } = setup();
+    api.open();
+    searchKey("ArrowDown");
+    const first = search.getAttribute("aria-activedescendant");
+    searchKey("ArrowDown");
+    expect(search.getAttribute("aria-activedescendant")).not.toBe(first);
+    expect(items().find((i) => i.hasAttribute("data-highlighted"))!.id).toBe(
+      search.getAttribute("aria-activedescendant") ?? "",
+    );
+
+    api.close();
+    expect(search.hasAttribute("aria-activedescendant")).toBe(false);
+  });
+
+  it("keeps an authored item id rather than replacing it", () => {
+    const { api, search, items, searchKey } = setup();
+    items()[0].id = "authored-command";
+    api.open();
+    searchKey("ArrowDown");
+    expect(search.getAttribute("aria-activedescendant")).toBe("authored-command");
   });
 });

@@ -16,6 +16,8 @@ import {
 } from "../../src/utils/oklch";
 import {
   checkThemeContrast,
+  CONTRAST_NON_TEXT,
+  NON_TEXT_PAIRS,
   checkThemeElevation,
   buildSchemeLookups,
   CONTRAST_PAIRS,
@@ -348,5 +350,67 @@ describe("contrast-tokens · encoded pair list & rule descriptor", () => {
     );
     expect(SURFACE_ELEVATION_RULE.severity).toBe("error");
     expect(ELEVATION_PAIRS).toHaveLength(4);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// The pair list is the exemption list  [W3-3]
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// `CONTRAST_PAIRS` is hand-written, so every pair it does NOT name is exempt —
+// not by decision, but by omission. That is how `--color-primary` on
+// `--color-bg-muted` shipped at 4.41:1 in the default dark scheme: nobody chose
+// to exempt it, the list simply never mentioned it. The a11y suite solves the
+// same problem by asserting its exemption list's exact contents; this does the
+// same from the other side, so adding or dropping a pair is a visible diff in
+// review rather than a silent change of what the gate covers.
+
+describe("the declared pair list", () => {
+  it("is exactly what the rule claims to cover", () => {
+    const declared = CONTRAST_PAIRS.map((p) => `${p.fg} on ${p.bg}`).sort();
+    expect(declared).toEqual(
+      [
+        // Body text on every surface it sits on.
+        "color-fg on color-bg",
+        "color-fg on color-bg-subtle",
+        "color-fg on color-bg-muted",
+        // Secondary text on the same surfaces.
+        "color-fg-muted on color-bg",
+        "color-fg-muted on color-bg-subtle",
+        "color-fg-muted on color-bg-muted",
+        // An accent-coloured label on a plate (a `code` span inside a link).
+        "color-primary on color-bg-subtle",
+        "color-primary on color-bg-muted",
+        // Semantic text on the tinted fill its component paints.
+        "color-primary on color-primary-subtle",
+        "color-destructive on color-destructive-subtle",
+        "color-success on color-success-subtle",
+        "color-warning on color-warning-subtle",
+        "color-info on color-info-subtle",
+        // A solid action's label on its own colour.
+        "color-primary-fg on color-primary",
+        "color-secondary-fg on color-secondary",
+        "color-destructive-fg on color-destructive",
+      ].sort(),
+    );
+  });
+
+  it("names no pair twice", () => {
+    const keys = CONTRAST_PAIRS.map((p) => `${p.fg}|${p.bg}`);
+    expect(new Set(keys).size).toBe(keys.length);
+  });
+
+  it("the non-text list covers the ring on every surface a control sits on", () => {
+    expect(NON_TEXT_PAIRS.every((p) => p.fg === "color-ring")).toBe(true);
+    expect(NON_TEXT_PAIRS.map((p) => p.bg).sort()).toEqual([
+      "color-bg",
+      "color-bg-muted",
+      "color-bg-subtle",
+      "color-surface-1",
+      "color-surface-2",
+    ]);
+    // 3:1, not 4.5:1 — a focus ring is not text (WCAG 2.2 SC 1.4.11).
+    expect(CONTRAST_NON_TEXT).toBe(3);
+    expect(CONTRAST_NON_TEXT).toBeLessThan(CONTRAST_AA);
   });
 });

@@ -16,8 +16,8 @@
   --color-fg-subtle:       oklch(0.60 0.03 60);      /* warm light brown */
 
   /* ── Interactive: Primary (warm orange-brown) ── */
-  --color-primary:         oklch(0.52 0.14 45);      /* earthy burnt sienna */
-  --color-primary-hover:   oklch(0.47 0.15 45);
+  --color-primary:         oklch(0.50 0.14 45);      /* earthy burnt sienna — AA on --color-bg-muted (was 4.33:1) [W3-3] */
+  --color-primary-hover:   oklch(0.45 0.15 45);
   --color-primary-active:  oklch(0.42 0.14 45);
   --color-primary-fg:      oklch(0.97 0.015 80);     /* cream for contrast */
   --color-primary-subtle:  oklch(0.94 0.04 50);      /* warm tinted highlight */
@@ -44,7 +44,7 @@
   /* ── Borders ── */
   --color-border:          oklch(0.88 0.02 70);      /* warm tan border */
   --color-border-strong:   oklch(0.78 0.03 65);      /* stronger warm border */
-  --color-ring:            oklch(0.52 0.14 45 / 0.35);
+  --color-ring:            oklch(0.52 0.14 45);
 
   /* ── Shadows (warm, soft) ── */
   --shadow-xs:  0 1px 2px oklch(0.30 0.04 50 / 0.06);
@@ -98,7 +98,7 @@
   /* ── Borders ── */
   --color-border:          oklch(0.28 0.035 55);
   --color-border-strong:   oklch(0.36 0.04 55);
-  --color-ring:            oklch(0.68 0.12 50 / 0.4);
+  --color-ring:            oklch(0.68 0.12 50);
 
   /* ── Shadows (warm, diffuse) ── */
   --shadow-xs:  none;
@@ -152,7 +152,7 @@
     /* ── Borders ── */
     --color-border:          oklch(0.28 0.035 55);
     --color-border-strong:   oklch(0.36 0.04 55);
-    --color-ring:            oklch(0.68 0.12 50 / 0.4);
+    --color-ring:            oklch(0.68 0.12 50);
 
     /* ── Shadows (warm, diffuse) ── */
     --shadow-xs:  none;

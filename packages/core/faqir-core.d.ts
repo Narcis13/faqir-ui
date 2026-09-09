@@ -749,8 +749,20 @@ export interface FaqirGlobal {
   initTree(root: Element, parentScope?: Scope | null): void;
   /**
    * Run the cleanups registered on `el` and its descendants — `l-source`
-   * aborts, poll teardown, effect disposers. Structural directives call this
-   * for you; it is exposed for imperative teardown of a subtree.
+   * aborts, poll teardown, effect disposers, `l-model` listeners, `$watch`
+   * subscriptions, and any `__faqirTeardown` the scope's data declared (which is
+   * how `apiSource()` stops its polling). Structural directives call this for
+   * you; it is exposed for imperative teardown of a subtree.
+   *
+   * "and its descendants" is a walk over CHILD NODES, not elements: `l-if` and
+   * `l-for` own their subtree through an anchor COMMENT, and that is the node
+   * their list effect's disposer lives on. Until W3-1 the walk was
+   * `querySelectorAll('*')` and the disposers were dropped on the floor anyway,
+   * so both structural directives went on running against a destroyed scope —
+   * this doc was true of the intent and false of the engine.
+   *
+   * It does NOT remove rendered DOM. An `l-if` branch that is showing stays
+   * showing; what stops is everything that was driving it.
    */
   destroy(el: Element): void;
 

@@ -166,7 +166,13 @@ async function buildTrace(name: string, cwd: string): Promise<TraceData | null> 
     tokens_declared: tokensDeclared,
     tokens_actual: tokensActual,
     dependencies,
-    dependents: [...new Set([...dependents, ...usedIn])],
+    // SORTED, because the list is built by walking a glob and the two glob
+    // implementations do not walk in the same order: `Bun.Glob` and the Node
+    // shim's `NodeGlob` returned `dependents` in different orders, so
+    // `faqir trace --json` — a contract an agent parses — depended on whether
+    // the user happened to have Bun installed. Anything assembled from a
+    // directory walk has to be ordered before it is published. [W3-5]
+    dependents: [...new Set([...dependents, ...usedIn])].sort(),
     controllers,
     tests: manifest.tests || [],
   };

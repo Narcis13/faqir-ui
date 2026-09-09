@@ -60,19 +60,18 @@ describe("field-wiring · valid field-groups pass untouched", () => {
   });
 });
 
-// ───────────── tolerate shipped `error` AND normalized `invalid` ─────────────
+// ───────────── ONE invalid-state naming, frozen by SPEC-1.0 ─────────────
+//
+// This rule used to accept `data-state="error"` as well, "during the
+// transition" that `field-group` 2.0.0 opened by renaming the state. A
+// transition with no end date is a second grammar, and SPEC-1.0 freezes value
+// grammars — so the two rules that touched this markup disagreed about it:
+// `valid-state` reported `error` (the manifest declares only `invalid`) while
+// this one blessed it. `invalid` is the grammar; `error` is reported once, by
+// the rule whose job that is. [W3-5]
 
-describe("field-wiring · tolerates both invalid-state namings", () => {
-  it("accepts a fully-wired group in the shipped `error` state", () => {
-    const html = `<div data-ui="field-group" data-state="error">
-  <label data-part="label" for="cui">CUI</label>
-  <input data-ui="input" id="cui" aria-invalid="true" aria-describedby="cui-error">
-  <p data-part="error" id="cui-error">Bad CUI</p>
-</div>`;
-    expect(check(html).length).toBe(0);
-  });
-
-  it("accepts a fully-wired group in the normalized `invalid` state", () => {
+describe("field-wiring · the frozen invalid-state naming", () => {
+  it("accepts a fully-wired group in the `invalid` state", () => {
     const html = `<div data-ui="field-group" data-state="invalid">
   <label data-part="label" for="cui">CUI</label>
   <input data-ui="input" id="cui" aria-invalid="true" aria-describedby="cui-error">
@@ -81,17 +80,39 @@ describe("field-wiring · tolerates both invalid-state namings", () => {
     expect(check(html).length).toBe(0);
   });
 
-  it("requires aria-invalid under BOTH namings", () => {
-    for (const state of ["error", "invalid"]) {
-      const html = `<div data-ui="field-group" data-state="${state}">
+  it("requires aria-invalid in the `invalid` state", () => {
+    const html = `<div data-ui="field-group" data-state="invalid">
   <label data-part="label" for="cui">CUI</label>
   <input data-ui="input" id="cui" aria-describedby="cui-error">
   <p data-part="error" id="cui-error">Bad CUI</p>
 </div>`;
-      const results = check(html);
-      expect(results.length).toBe(1);
-      expect(results[0].message).toContain("aria-invalid");
-    }
+    const results = check(html);
+    expect(results.length).toBe(1);
+    expect(results[0].message).toContain("aria-invalid");
+  });
+
+  it("says nothing about the legacy `error` value — that is valid-state's finding", () => {
+    // Not "accepts it": this rule simply does not treat `error` as the invalid
+    // state any more, so a group carrying it is judged as a non-invalid group.
+    // The unknown value itself is reported by `valid-state`, which is where a
+    // page still using it is told to migrate.
+    const html = `<div data-ui="field-group" data-state="error">
+  <label data-part="label" for="cui">CUI</label>
+  <input data-ui="input" id="cui" aria-describedby="cui-error">
+  <p data-part="error" id="cui-error">Bad CUI</p>
+</div>`;
+    expect(check(html).length).toBe(0);
+  });
+
+  it("rejects aria-invalid on a group that is not in the invalid state", () => {
+    const html = `<div data-ui="field-group" data-state="error">
+  <label data-part="label" for="cui">CUI</label>
+  <input data-ui="input" id="cui" aria-invalid="true" aria-describedby="cui-error">
+  <p data-part="error" id="cui-error">Bad CUI</p>
+</div>`;
+    const results = check(html);
+    expect(results.length).toBe(1);
+    expect(results[0].message).toContain("aria-invalid");
   });
 });
 
@@ -135,7 +156,7 @@ describe("field-wiring · violation classes", () => {
   });
 
   it("flags invalid-state without aria-invalid", () => {
-    const html = `<div data-ui="field-group" data-state="error">
+    const html = `<div data-ui="field-group" data-state="invalid">
   <label data-part="label" for="cui">CUI</label>
   <input data-ui="input" id="cui" aria-describedby="cui-error">
   <p data-part="error" id="cui-error">Bad</p>
@@ -267,7 +288,7 @@ describe("field-wiring · repair", () => {
   });
 
   it("makes a minimal edit when only aria-invalid is missing (preserves existing ids)", async () => {
-    const broken = `<div data-ui="field-group" data-state="error">
+    const broken = `<div data-ui="field-group" data-state="invalid">
   <label data-part="label" for="cui">CUI</label>
   <input data-ui="input" id="cui" aria-describedby="cui-error">
   <p data-part="error" id="cui-error">Bad</p>

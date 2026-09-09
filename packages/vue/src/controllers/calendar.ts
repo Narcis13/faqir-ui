@@ -30,6 +30,32 @@ export function createCalendar(root) {
   const monthLabel = root.querySelector("[data-part='month-label']");
   const gridBody = root.querySelector("[data-part='grid-body']");
 
+  // `grid-body` is the one part every render writes into: without it the first
+  // `render()` throws on `gridBody.innerHTML`, taking the date-picker that
+  // wraps it down with it. The optional parts (nav, month label) are already
+  // guarded individually. [W3-2]
+  if (!gridBody) {
+    console.warn(
+      "[Faqir] calendar needs [data-part='grid-body'] to render into. " +
+        "Component left inert.",
+      root
+    );
+    const inert = {
+      getValue: () => null,
+      setValue() {},
+      clear() {},
+      navigate() {},
+      selectDate() {},
+      focusDate() {},
+      setMin() {},
+      setMax() {},
+      setDisabledDates() {},
+      destroy() {},
+    };
+    root._faqirCalendar = inert;
+    return inert;
+  }
+
   const today = new Date();
   const mode = root.dataset.mode === "range" ? "range" : "single";
 

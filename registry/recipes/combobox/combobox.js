@@ -2,6 +2,7 @@
 // @ui:provides open close filter selectOption getValue setValue destroy
 
 import { onOutsideClick } from "../../core/events.js";
+import { uid } from "../../core/utils.js";
 
 export function createCombobox(root) {
   // Prevent double-init
@@ -16,6 +17,31 @@ export function createCombobox(root) {
   let highlightedIndex = -1;
   let outsideClickCleanup = null;
   let selectedValue = "";
+
+  /**
+   * `aria-activedescendant` — the half of the combobox pattern that was declared
+   * and never implemented.  [W3-4]
+   *
+   * The markup publishes `role="combobox"` and `aria-autocomplete="list"`, which
+   * is the APG contract: as the user arrows through the list, the combobox must
+   * name the active option so a screen reader announces it. Highlighting was
+   * tracked in `data-highlighted` alone and the options carried no `id`, so
+   * there was nothing to point at and nothing was ever announced — the widget
+   * claimed a pattern it did not implement. The axe gate structurally cannot see
+   * this: it evaluates static DOM, and the defect exists only mid-navigation.
+   *
+   * Ids are minted on demand so authored ids are respected and generated markup
+   * needs none.
+   */
+  function optionId(opt) {
+    if (!opt.id) opt.id = uid("faqir-option");
+    return opt.id;
+  }
+
+  function setActiveDescendant(opt) {
+    if (opt) input.setAttribute("aria-activedescendant", optionId(opt));
+    else input.removeAttribute("aria-activedescendant");
+  }
 
   function open() {
     root.dataset.state = "open";
@@ -43,6 +69,7 @@ export function createCombobox(root) {
       opt.removeAttribute("data-highlighted");
       opt.setAttribute("aria-selected", "false");
     });
+    setActiveDescendant(null);
     highlightedIndex = -1;
   }
 
@@ -63,6 +90,7 @@ export function createCombobox(root) {
     allOptions[index].setAttribute("data-highlighted", "");
     allOptions[index].setAttribute("aria-selected", "true");
     allOptions[index].scrollIntoView({ block: "nearest" });
+    setActiveDescendant(allOptions[index]);
     highlightedIndex = index;
   }
 
@@ -156,8 +184,13 @@ export function createCombobox(root) {
         }
         break;
       case "Escape":
-        e.preventDefault();
-        close();
+        // Only ours while the list is open; a closed combobox lets Escape reach
+        // the dialog it sits in rather than swallowing it. [W3-2]
+        if (root.dataset.state === "open") {
+          e.preventDefault();
+          e.stopPropagation();
+          close();
+        }
         break;
       case "Home":
         if (root.dataset.state === "open" && visible.length > 0) {
@@ -191,6 +224,10 @@ export function createCombobox(root) {
   listbox?.addEventListener("click", onListboxClick);
 
   function destroy() {
+    // Leaving a destroyed overlay open leaves a dead one: nothing is listening
+    // any more, so its close button, Escape and overlay click all do nothing.
+    // `context-menu` is the model — it has always closed itself here. [W3-2]
+    close();
     input?.removeEventListener("input", onInput);
     input?.removeEventListener("focus", onInputFocus);
     input?.removeEventListener("keydown", onInputKeyDown);

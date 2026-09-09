@@ -1,11 +1,15 @@
 <!-- @ui:component select-custom -->
 <!-- @ui:kind recipe -->
-<!-- @ui:slots trigger value listbox option search empty chevron -->
+<!-- @ui:slots trigger value listbox option search empty chevron input -->
 <!-- @ui:variants size=sm|md|lg -->
 <!-- @ui:controller select-custom.js -->
 
-<!-- Default (medium) -->
-<div data-ui="select-custom" data-state="closed" data-size="md">
+<!-- Default (medium).
+     `data-name` makes this a form control: the controller keeps a hidden
+     [data-part="input"] of that name in sync with the selection, so a
+     `<select>` replaced by this one still submits its value. Author the input
+     yourself if you want a specific one; the controller uses it as-is. -->
+<div data-ui="select-custom" data-state="closed" data-size="md" data-name="fruit">
   <button
     data-part="trigger"
     role="combobox"
@@ -24,6 +28,7 @@
     <div data-part="option" role="option" aria-selected="false" data-value="grape">Grape</div>
     <div data-part="option" role="option" aria-selected="false" data-value="orange">Orange</div>
   </div>
+  <input data-part="input" type="hidden" name="fruit">
 </div>
 
 <!-- With search (medium) -->

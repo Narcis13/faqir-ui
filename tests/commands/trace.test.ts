@@ -86,6 +86,36 @@ describe("faqir trace", () => {
     expect(json.tokens_declared).toBeInstanceOf(Array);
     expect(json.controllers).toBeInstanceOf(Array);
     expect(json.tests).toBeInstanceOf(Array);
+    // The whole key set, not eight of eleven. `dependents` was among the three
+    // this test skipped, which is how it came back in a DIFFERENT ORDER on Node
+    // than on Bun for as long as it did: the array is assembled from a glob
+    // walk, and the two glob implementations do not walk alike. [W3-5]
+    expect(Object.keys(json).sort()).toEqual([
+      "controllers",
+      "dependencies",
+      "dependents",
+      "files",
+      "installed",
+      "kind",
+      "name",
+      "selectors",
+      "tests",
+      "tokens_actual",
+      "tokens_declared",
+    ]);
+  });
+
+  it("emits dependents in a stable, runtime-independent order", async () => {
+    const origLog = console.log;
+    const output: string[] = [];
+    console.log = (...args: any[]) => output.push(args.join(" "));
+    await trace(["button", "--json"]);
+    console.log = origLog;
+
+    const { dependents } = JSON.parse(output.join("\n"));
+    expect(dependents.length).toBeGreaterThan(1);
+    // Sorted, so `--json` reads the same whether or not the user has Bun.
+    expect(dependents).toEqual([...dependents].sort());
   });
 
   it("shows dependency info", async () => {
