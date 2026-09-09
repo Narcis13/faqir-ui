@@ -214,8 +214,10 @@ describe("faqir upgrade — three-way merge", () => {
     expect(parsed.hasConflicts).toBe(false);
   });
 
-  it("reports up-to-date when the registry version matches", async () => {
-    await buildFakeButton({ version: INSTALLED, cssTransform: (css) => css }); // same version
+  it("reports up-to-date when the registry holds the same files", async () => {
+    // The real registry, copied verbatim: same version *and* same bytes.
+    rmSync(FAKE_REGISTRY, { recursive: true, force: true });
+    await copyDir(join(getRegistryPath(), "primitives/button"), join(FAKE_REGISTRY, "primitives/button"));
 
     const { output, code } = await runUpgrade(() => upgradeButton(["button"]));
     expect(code).toBe(0);
@@ -224,6 +226,19 @@ describe("faqir upgrade — three-way merge", () => {
     // Nothing changed on disk.
     const index = await readPristineIndex(TEST_DIR);
     expect(index.components.button.version).toBe(INSTALLED);
+  });
+
+  it("upgrades files the registry changed without bumping the version", async () => {
+    // Task 1.0-03: 24 of the 53 components a v0.2.4 project holds shipped
+    // changed bytes under an unchanged version number. Trusting the number
+    // skips them forever, so the merge — not the manifest — decides.
+    await buildFakeButton({ version: INSTALLED, cssTransform: (css) => css + "\n/* unversioned fix */\n" });
+
+    const { output, code } = await runUpgrade(() => upgradeButton(["button"]));
+    expect(code).toBe(0);
+    expect(output.toLowerCase()).not.toContain("already up to date");
+    expect(output.toLowerCase()).toContain("same version on both sides");
+    expect(readFileSync(BUTTON_CSS, "utf8")).toContain("/* unversioned fix */");
   });
 
   it("errors on an uninstalled component", async () => {

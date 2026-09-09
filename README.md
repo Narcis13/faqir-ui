@@ -1207,7 +1207,15 @@ faqir create status --kind primitive --category layout
 
 faqir inspect button              # Show manifest details
 faqir inspect dialog --json       # Raw JSON output
+
+faqir diff button                 # Your copy against its pristine baseline
+faqir upgrade                     # Three-way merge every component up to the registry
+faqir upgrade table --dry-run     # Preview the merge and read the changelog first
 ```
+
+Coming from a v0.x project? [docs/migration-1.0.md](docs/migration-1.0.md) is the
+whole path: the rename the framework went through, the seven steps that carry a
+v0.2.4 project to 1.0, and every breaking component change shipped since.
 
 ### Development
 

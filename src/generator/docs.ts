@@ -118,6 +118,19 @@ import {
   type SpecExample,
 } from "../protocol";
 import { parseDocument, type ParsedElement } from "../parser/html-parser";
+// The migration page renders the same three things `docs/migration-1.0.md`
+// publishes — the rename, the procedure, the breaking-change inventory — from
+// the module the document is checked against (task 1.0-03).
+import {
+  LEGACY_RENAMES,
+  MIGRATION_FROM_VERSION,
+  MIGRATION_STEPS,
+  breakingChangeId,
+  collectBreakingChanges,
+  parseMigrationDoc,
+  type BreakingChange,
+  type DocumentedBreak,
+} from "../migration";
 import type { ThemeManifest } from "../theme-manifest";
 // The playground's rule legend is derived from the engine's own rule lists, so it
 // cannot describe a rule the shipped browser bundle does not run.
@@ -274,6 +287,17 @@ export const SPEC_PREFIX = `spec/${PROTOCOL_VERSION}/`;
 export const SPEC_PAGE = `${SPEC_PREFIX}index.html`;
 /** The spec's own source, served verbatim for an agent that would rather read markdown. */
 export const SPEC_MARKDOWN_FILE = `${SPEC_PREFIX}spec.md`;
+
+/**
+ * The v0.x → 1.0 migration (task 1.0-03), published as a page and as its own
+ * markdown beside it — the two forms the spec is served in, for the same
+ * reason: an agent asked to upgrade a project would rather read the source.
+ */
+export const MIGRATION_PAGE = "migration/index.html";
+/** `docs/migration-1.0.md`, verbatim. */
+export const MIGRATION_MARKDOWN_FILE = "migration/migration-1.0.md";
+/** The repository path both are built from. */
+export const MIGRATION_DOC_FILE = "docs/migration-1.0.md";
 
 /** Spacing ladder, default rhythm, override rules, and grouping ownership. */
 export const SPACING_PAGE = "spacing/index.html";
@@ -1563,6 +1587,9 @@ ${scripts.map((src) => `<script src="${u(src)}" defer></script>`).join("\n")}
         <a data-part="nav-item" href="${u(SPEC_PAGE)}"${currentAttr(
           SPEC_PAGE,
         )}>Protocol ${esc(PROTOCOL_VERSION)}</a>
+        <a data-part="nav-item" href="${u(MIGRATION_PAGE)}"${currentAttr(
+          MIGRATION_PAGE,
+        )}>Migrating to ${esc(PROTOCOL_VERSION)}</a>
       </div>
       <div data-docs-nav-groups>
 ${[scaffoldNav, navGroups].filter(Boolean).join("\n")}
@@ -2850,6 +2877,203 @@ function renderRetiredPage(ctx: {
       current: entry.movedTo,
       layout: "wide",
       noindex: true,
+    }),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// The migration guide (task 1.0-03)
+//
+// One document, two renderings, and neither is a retelling. The rename table
+// and the numbered procedure come from `src/migration.ts` — the same constants
+// the end-to-end upgrade test executes — and the breaking-change sections are
+// the migration document's own prose, parsed back out by marker. A break that
+// gains a section in `docs/migration-1.0.md` appears here with no edit; a break
+// with no section fails the suite before it can reach this page.
+// ---------------------------------------------------------------------------
+
+/**
+ * Inline markdown: code spans, bold, and links. Deliberately not a markdown
+ * library — the migration document is written by us, the subset is the subset
+ * we write, and anything unrecognised passes through escaped rather than
+ * rendering as an accidental tag.
+ */
+function inlineMarkdown(value: string): string {
+  return esc(value)
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (whole, label: string, href: string) =>
+      /^https?:/.test(href) ? `<a data-ui="link" href="${escAttr(href)}">${label}</a>` : label,
+    );
+}
+
+/**
+ * The block subset the migration document uses: paragraphs, fenced code, pipe
+ * tables and `+`-prefixed diff lines inside fences. A relative link (`../SPEC-1.0.md`)
+ * loses its anchor rather than pointing at a path the site does not serve.
+ */
+function renderMarkdownBlocks(markdown: string): string {
+  const out: string[] = [];
+  const lines = markdown.split("\n");
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    if (line.trim() === "") {
+      i++;
+      continue;
+    }
+    if (line.startsWith("```")) {
+      const body: string[] = [];
+      i++;
+      while (i < lines.length && !lines[i].startsWith("```")) body.push(lines[i++]);
+      i++; // closing fence
+      out.push(`      <pre tabindex="0"><code>${esc(body.join("\n"))}</code></pre>`);
+      continue;
+    }
+    if (line.startsWith("|") && lines[i + 1]?.startsWith("|")) {
+      const rows: string[][] = [];
+      while (i < lines.length && lines[i].startsWith("|")) {
+        const cells = lines[i]
+          .slice(1, lines[i].endsWith("|") ? -1 : undefined)
+          .split("|")
+          .map((c) => c.trim());
+        if (!cells.every((c) => /^:?-{2,}:?$/.test(c))) rows.push(cells);
+        i++;
+      }
+      const [head, ...body] = rows;
+      out.push(table(head ?? [], body.map((row) => row.map(inlineMarkdown)), "No rows."));
+      continue;
+    }
+    const paragraph: string[] = [];
+    while (i < lines.length && lines[i].trim() !== "" && !lines[i].startsWith("```") && !lines[i].startsWith("|")) {
+      paragraph.push(lines[i++]);
+    }
+    out.push(`      <p>${inlineMarkdown(paragraph.join(" "))}</p>`);
+  }
+  return out.join("\n");
+}
+
+/**
+ * The migration guide at `migration/`.
+ *
+ * A build with no `docs/migration-1.0.md` on disk still publishes the rename,
+ * the procedure and the changelog inventory — those come from the module and
+ * the manifests — and simply carries no per-break prose, exactly as the layout
+ * guide does without its own document.
+ */
+function renderMigrationPage(ctx: {
+  config: SiteConfig;
+  components: DocsComponent[];
+  themes: DocsTheme[];
+  breaking: BreakingChange[];
+  documented: DocumentedBreak[];
+  hasDocument: boolean;
+}): SiteFile {
+  const pagePath = MIGRATION_PAGE;
+  const u = (to: string) => escAttr(relUrl(pagePath, to));
+  const badge = (variant: string, text: string) =>
+    `<span data-ui="badge" data-variant="${escAttr(variant)}">${esc(text)}</span>`;
+  const componentPage = (name: string): string | null =>
+    ctx.components.find((c) => c.name === name)?.pagePath ?? null;
+
+  const parts: string[] = [
+    `      <h1>Migrating to 1.0</h1>`,
+    `      <p>${badge("primary", `from v${MIGRATION_FROM_VERSION}`)} ${badge(
+      "secondary",
+      `${ctx.breaking.length} breaking change${ctx.breaking.length === 1 ? "" : "s"}`,
+    )} ${badge("default", `${MIGRATION_STEPS.length} steps`)}</p>`,
+    `      <p>The protocol did not move: the five attributes, their value grammars, the ` +
+      `<code>l-*</code> directives and the token names are the same in 1.0 as in v${esc(
+        MIGRATION_FROM_VERSION,
+      )}. What moved is the framework's own name, and the vocabulary of the components below. ` +
+      `The list is assembled from the manifests' <code>changes</code> arrays, and a test fails ` +
+      `when one of them has no section here.</p>`,
+    `      <p>The full guide, verbatim: ${monoLink(
+      relUrl(pagePath, MIGRATION_MARKDOWN_FILE),
+      `/${MIGRATION_MARKDOWN_FILE}`,
+    )}</p>`,
+    section(
+      "rename",
+      "The rename",
+      `      <p>The framework was called Loom through v${esc(MIGRATION_FROM_VERSION)}. These are ` +
+        `the only things that carry the old name; <code>&lt;output_dir&gt;</code> is whatever your ` +
+        `config's <code>output_dir</code> says, <code>ui/</code> by default.</p>\n` +
+        table(
+          ["v0.2.4 wrote", "1.0 expects", "Why it has to move"],
+          LEGACY_RENAMES.map((r) => [code(r.from), code(r.to), inlineMarkdown(r.why)]),
+          "Nothing was renamed.",
+        ),
+    ),
+    section(
+      "procedure",
+      "The procedure",
+      `      <p>In this order. Nothing runs before the config exists, and ` +
+        `<code>faqir init --force</code> refreshes the tokens, base styles and engine that ` +
+        `<code>faqir upgrade</code> never touches — <code>upgrade</code> merges components and ` +
+        `nothing else.</p>\n` +
+        table(
+          ["#", "Step", "Command", "Why"],
+          MIGRATION_STEPS.map((step, i) => [
+            esc(String(i + 1)),
+            `<strong>${esc(step.title)}</strong>`,
+            step.command ? code(step.command) : "—",
+            inlineMarkdown(step.why),
+          ]),
+          "No procedure in this build.",
+        ),
+    ),
+    section(
+      "breaking",
+      "Breaking changes",
+      `      <p>One section per <code>breaking: true</code> changelog entry in the registry, in ` +
+        `the words of the migration guide. <code>faqir upgrade</code> prints the same list for ` +
+        `the components you actually have installed.</p>`,
+    ),
+  ];
+
+  for (const change of ctx.breaking) {
+    const documented = ctx.documented.find(
+      (d) => d.component === change.component && d.version === change.version,
+    );
+    const page = componentPage(change.component);
+    const heading = documented?.heading ?? `${change.component} ${change.version}`;
+    parts.push(
+      `      <h3 id="${escAttr(breakingChangeId(change))}">${inlineMarkdown(heading)}</h3>`,
+      `      <p>${badge("default", `${change.layer.replace(/s$/, "")}`)} ${
+        page ? `<a data-ui="link" href="${u(page)}">${esc(change.component)}</a>` : code(change.component)
+      } ${badge("secondary", change.version)}</p>`,
+    );
+    if (documented && documented.body.trim() !== "") {
+      parts.push(renderMarkdownBlocks(documented.body));
+    } else {
+      // No prose to render: the manifest's own note is the record, and it is
+      // what `faqir upgrade` prints.
+      parts.push(`      <p>${inlineMarkdown(change.note)}</p>`);
+    }
+  }
+
+  if (!ctx.hasDocument) {
+    parts.push(
+      `      <p><em>Built without ${esc(MIGRATION_DOC_FILE)} — the notes above are the manifests' ` +
+        `own changelog entries.</em></p>`,
+    );
+  }
+
+  return {
+    path: pagePath,
+    content: renderShell({
+      pagePath,
+      title: `Migrating to 1.0 · ${ctx.config.title}`,
+      description:
+        `The v0.x → 1.0 migration: the four files the framework's rename touched, the ` +
+        `${MIGRATION_STEPS.length}-step upgrade procedure, and every breaking component change ` +
+        `shipped since v${MIGRATION_FROM_VERSION}.`,
+      body: parts.filter((p) => p.trim() !== "").join("\n"),
+      config: ctx.config,
+      components: ctx.components,
+      themes: ctx.themes,
+      current: pagePath,
+      layout: "wide",
     }),
   };
 }
@@ -4289,6 +4513,19 @@ function buildMachineFiles(ctx: {
     });
   }
 
+  // The migration guide's own source (task 1.0-03), served as markdown for the
+  // same reason the spec is: an agent upgrading a project reads the document,
+  // not a rendering of it.
+  const migrationPath = join(ctx.packageRoot, MIGRATION_DOC_FILE);
+  if (existsSync(migrationPath)) {
+    files.push({
+      path: MIGRATION_MARKDOWN_FILE,
+      content: readText(migrationPath),
+      contentType: "text/markdown; charset=utf-8",
+      description: `The v0.x → ${PROTOCOL_VERSION} migration guide, verbatim — the rename, the upgrade procedure, and every breaking component change since v${MIGRATION_FROM_VERSION}.`,
+    });
+  }
+
   // The remote-registry index (task 0.5-03): what `faqir add --registry <url>`
   // fetches, with a hash per file.
   const indexPath = join(ctx.registryRoot, REGISTRY_INDEX_FILE);
@@ -4717,6 +4954,23 @@ export function buildDocsSite(options: DocsSiteOptions = {}): SiteFile[] {
       components,
       themes,
       examples: existsSync(specDoc) ? parseSpecExamples(readText(specDoc)) : [],
+    }),
+  );
+
+  // The migration guide (task 1.0-03). The rename and the procedure come from
+  // `src/migration.ts`; the per-break prose is the document's own, parsed by
+  // marker — so the page cannot document a break the guide does not, and the
+  // suite already fails if the guide misses one the registry ships.
+  const migrationDoc = join(packageRoot, MIGRATION_DOC_FILE);
+  const hasMigrationDoc = existsSync(migrationDoc);
+  files.push(
+    renderMigrationPage({
+      config,
+      components,
+      themes,
+      breaking: collectBreakingChanges(registryRoot),
+      documented: hasMigrationDoc ? parseMigrationDoc(readText(migrationDoc)) : [],
+      hasDocument: hasMigrationDoc,
     }),
   );
 

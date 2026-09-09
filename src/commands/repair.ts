@@ -1,6 +1,6 @@
 // faqir repair — attempt deterministic fixes for audit issues
 
-import { configExists } from "../utils/config";
+import { configExists, missingConfigMessage } from "../utils/config";
 import { log } from "../utils/logger";
 import { runAudit } from "../audit/checker";
 import { applyRepairs } from "../audit/repairer";
@@ -24,7 +24,7 @@ export async function repair(args: string[]): Promise<void> {
   const dryRun = args.includes("--dry-run");
 
   if (!configExists(cwd)) {
-    log.error("No faqir.config.json found. Run 'faqir init' first.");
+    log.error(missingConfigMessage(cwd));
     process.exit(1);
   }
 

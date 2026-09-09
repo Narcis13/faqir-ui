@@ -1,0 +1,75 @@
+/* @ui:component card */
+/* @ui:tokens color-bg color-bg-subtle color-bg-muted color-fg color-fg-muted color-border radius-lg shadow-sm space-4 space-6 font-sans text-sm text-lg text-xl weight-semibold leading-tight */
+
+/* ── Base ── */
+[data-ui="card"] {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--card-border, var(--color-border));
+  border-radius: var(--card-radius, var(--radius-lg));
+  background: var(--card-bg, var(--color-bg));
+  box-shadow: var(--card-shadow, var(--shadow-sm));
+  overflow: hidden;
+}
+
+/* ── Variants ── */
+[data-ui="card"][data-variant="outlined"] {
+  box-shadow: none;
+}
+
+[data-ui="card"][data-variant="filled"] {
+  background: var(--color-bg-subtle);
+  border-color: transparent;
+  box-shadow: none;
+}
+
+/* ── Parts ── */
+[data-ui="card"] [data-part="header"] {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1, 0.25rem);
+  padding: var(--card-padding, var(--space-6));
+  padding-bottom: 0;
+}
+
+[data-ui="card"] [data-part="title"] {
+  font-family: var(--font-sans);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tight);
+  color: var(--color-fg);
+  margin: 0;
+}
+
+[data-ui="card"] [data-part="description"] {
+  font-size: var(--text-sm);
+  color: var(--color-fg-muted);
+  margin: 0;
+}
+
+[data-ui="card"] [data-part="body"] {
+  padding: var(--card-padding, var(--space-6));
+  flex: 1;
+}
+
+[data-ui="card"] [data-part="footer"] {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 0.5rem);
+  padding: var(--card-padding, var(--space-6));
+  padding-top: 0;
+  justify-content: flex-end;
+}
+
+/* ── Sizes ── */
+[data-ui="card"][data-size="sm"] [data-part="header"],
+[data-ui="card"][data-size="sm"] [data-part="body"],
+[data-ui="card"][data-size="sm"] [data-part="footer"] {
+  padding: var(--space-4);
+}
+[data-ui="card"][data-size="sm"] [data-part="header"] {
+  padding-bottom: 0;
+}
+[data-ui="card"][data-size="sm"] [data-part="footer"] {
+  padding-top: 0;
+}

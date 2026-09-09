@@ -159,6 +159,11 @@ Do not hand-edit generated outputs. Change their source and regenerate them:
   and gated by `bun run check:skill`; never hand-edit them.
 - Manifest `$schema` references: run `bun run gen:schema-refs`; use
   `bun run check:schema-refs` to verify drift.
+- `tests/fixtures/v024/surface.json`: the v0.2.4 release's honoured component
+  surface, read out of the release tag by `bun run gen:v024-surface`. It is the
+  "before" side of the migration gate in `tests/migration/migration-doc.test.ts`;
+  regenerate only if the extractor in `src/migration.ts` changes — the tag it
+  reads cannot move.
 - Root `dist/`, `packages/core/dist/`, and `packages/mcp/registry/` are ignored
   build outputs. Rebuild them for verification; do not force-add them.
 

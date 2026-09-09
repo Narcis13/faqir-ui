@@ -1,10 +1,18 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "date-picker",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "kind": "recipe",
   "category": "forms",
   "description": "Date input with calendar dropdown for date selection — the month grid is the nested `calendar` recipe",
+
+  "changes": [
+    {
+      "version": "2.0.0",
+      "note": "BREAKING: the month grid moves out into the standalone calendar recipe (task 0.4-10). Seven parts date-picker declared and styled in 1.x now belong to calendar and are gone from this manifest and this stylesheet: data-part=\"header\", data-part=\"nav-prev\", data-part=\"nav-next\", data-part=\"month-label\", data-part=\"grid\", data-part=\"grid-body\" and data-part=\"day\", together with the day cell's markers data-date, data-today=\"true\" and data-outside=\"true\". Migration is two steps: run `faqir add calendar` (date-picker no longer carries the grid's CSS, so without it the month grid renders unstyled), then wrap the grid markup inside [data-part=\"calendar\"] in a <div data-ui=\"calendar\"> root. Behaviour survives either way — the controller falls back to treating the popup itself as the calendar root when no [data-ui=\"calendar\"] is nested — so an unmigrated page keeps working and loses only its styling and its audit. This entry is the record 1.1.0 shipped without: the extraction was a minor bump with no changelog at all, which is what the v0.2.4 → 1.0 surface gate now makes impossible.",
+      "breaking": true
+    }
+  ],
 
   "anatomy": {
     "tag": "div",

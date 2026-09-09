@@ -6,7 +6,7 @@
         "height": 900
       },
       "totals": {
-        "pages": 194,
+        "pages": 195,
         "zeroGutterPages": 0,
         "seamPages": 0,
         "seams": 0,
@@ -1100,6 +1100,12 @@
           "bleeds": 0,
           "overlaps": 0
         },
+        "migration/index.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
         "playground/index.html": {
           "zeroGutter": false,
           "seams": 0,
@@ -1186,7 +1192,7 @@
         "height": 812
       },
       "totals": {
-        "pages": 194,
+        "pages": 195,
         "zeroGutterPages": 0,
         "seamPages": 0,
         "seams": 0,
@@ -2275,6 +2281,12 @@
           "overlaps": 0
         },
         "layouts/index.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "migration/index.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,

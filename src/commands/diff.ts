@@ -17,7 +17,7 @@ import { existsSync } from "node:fs";
 import { join, sep } from "node:path";
 import { log } from "../utils/logger";
 import { emitJSON } from "../utils/json-output";
-import { configExists, readConfig } from "../utils/config";
+import { configExists, readConfig, missingConfigMessage } from "../utils/config";
 import { findInstalledLayer, type Layer } from "../utils/components";
 import {
   readPristineIndex,
@@ -174,7 +174,7 @@ export async function diff(args: string[]): Promise<void> {
 
   const cwd = process.cwd();
   if (!configExists(cwd)) {
-    log.error("No faqir.config.json found. Run 'faqir init' first.");
+    log.error(missingConfigMessage(cwd));
     process.exit(1);
   }
 

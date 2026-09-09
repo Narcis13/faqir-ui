@@ -1,0 +1,93 @@
+{
+  "name": "text",
+  "version": "1.0.0",
+  "kind": "primitive",
+  "category": "typography",
+  "description": "Text and heading primitives with size, color, weight, alignment, and truncation via data attributes",
+
+  "anatomy": {
+    "tag": "p",
+    "selector": "[data-ui='text'], [data-ui='heading']",
+    "content_model": "text"
+  },
+
+  "slots": {},
+
+  "variants": {
+    "variant": {
+      "values": ["default", "muted", "subtle", "primary", "mono"],
+      "default": "default",
+      "attr": "data-variant",
+      "applied_to": "root"
+    },
+    "size": {
+      "values": ["xs", "sm", "base", "lg", "xl", "1", "2", "3", "4", "5", "6"],
+      "default": "base",
+      "attr": "data-size"
+    },
+    "weight": {
+      "values": ["normal", "medium", "semibold", "bold"],
+      "default": "normal",
+      "attr": "data-weight"
+    },
+    "align": {
+      "values": ["left", "center", "right"],
+      "default": "left",
+      "attr": "data-align"
+    },
+    "leading": {
+      "values": ["tight", "snug", "normal", "relaxed"],
+      "default": "normal",
+      "attr": "data-leading"
+    }
+  },
+
+  "states": {},
+
+  "a11y": {
+    "keyboard": {}
+  },
+
+  "tokens_used": [
+    "color-fg", "color-fg-muted", "color-fg-subtle", "color-primary",
+    "font-sans", "font-mono",
+    "text-xs", "text-sm", "text-base", "text-lg", "text-xl", "text-2xl", "text-3xl", "text-4xl",
+    "weight-normal", "weight-medium", "weight-semibold", "weight-bold",
+    "leading-tight", "leading-snug", "leading-normal", "leading-relaxed"
+  ],
+
+  "templates": {
+    "html": "<p data-ui=\"text\" data-size=\"{size}\" data-variant=\"{variant}\">{content}</p>"
+  },
+
+  "safe_transforms": [
+    "Change data-size to any listed value",
+    "Change data-variant to any listed value",
+    "Change data-weight to any listed value",
+    "Change data-align to any listed value",
+    "Change text content",
+    "Add or remove data-truncate attribute"
+  ],
+  "unsafe_transforms": [
+    "Remove data-ui attribute"
+  ],
+
+  "composition": {
+    "contains": [],
+    "used_in": []
+  },
+
+  "files": {
+    "html": "text.html",
+    "css": "text.css",
+    "manifest": "text.manifest.json"
+  },
+
+  "tests": [
+    "Heading sizes map to correct font-size",
+    "Text variants change color",
+    "Weight attribute applies font-weight",
+    "Alignment attribute sets text-align",
+    "Truncate attribute clips overflow"
+  ]
+}

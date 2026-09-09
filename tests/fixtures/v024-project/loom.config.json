@@ -1,0 +1,33 @@
+{
+  "version": "1.0.0",
+  "theme": "default",
+  "output_dir": "./ui",
+  "tokens_split": false,
+  "include_core": true,
+  "installed": {
+    "primitives": [
+      "button",
+      "card",
+      "field-group",
+      "grid",
+      "input",
+      "label",
+      "stack",
+      "surface",
+      "text"
+    ],
+    "recipes": [
+      "date-picker",
+      "dialog",
+      "table"
+    ],
+    "patterns": [
+      "auth-form"
+    ]
+  },
+  "bundle": {
+    "output": "./ui/loom.bundle.css",
+    "auto": true,
+    "minify": false
+  }
+}

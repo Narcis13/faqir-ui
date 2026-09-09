@@ -3,7 +3,7 @@
 import { existsSync } from "node:fs";
 import { join, relative } from "node:path";
 import { log } from "../utils/logger";
-import { configExists, readConfig } from "../utils/config";
+import { configExists, readConfig, missingConfigMessage } from "../utils/config";
 import { loadManifest, type Manifest } from "../manifest";
 
 /** Canonical attribute order for Faqir component elements. */
@@ -192,7 +192,7 @@ export async function conform(args: string[]): Promise<void> {
   const cwd = process.cwd();
 
   if (!configExists(cwd)) {
-    log.error("No faqir.config.json found. Run 'faqir init' first.");
+    log.error(missingConfigMessage(cwd));
     process.exit(1);
   }
 

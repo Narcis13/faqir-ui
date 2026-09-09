@@ -1,7 +1,7 @@
 import { existsSync, watch } from "node:fs";
 import { join } from "node:path";
 import { log } from "../utils/logger";
-import { configExists, readConfig, writeConfig } from "../utils/config";
+import { configExists, readConfig, writeConfig, missingConfigMessage } from "../utils/config";
 import { generateBundle, type BundleOptions } from "../utils/bundler";
 
 interface BundleCmdOptions {
@@ -75,7 +75,7 @@ export async function bundle(args: string[]): Promise<void> {
   const cwd = process.cwd();
 
   if (!configExists(cwd)) {
-    log.error("No faqir.config.json found. Run 'faqir init' first.");
+    log.error(missingConfigMessage(cwd));
     process.exit(1);
   }
 

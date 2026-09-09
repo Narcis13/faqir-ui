@@ -302,7 +302,8 @@ describe("site JavaScript", () => {
         f.path !== THEMES_PAGE,
     );
     // +2 on 1.0R-09: the engine page, and the signpost at the retired lab URL.
-    expect(documentation.length).toBe(components.length + 15 + SCAFFOLD_NAMES.length);
+    // +1 on 1.0-03: the migration guide.
+    expect(documentation.length).toBe(components.length + 16 + SCAFFOLD_NAMES.length);
     for (const f of documentation) {
       const scripts = [...f.content.matchAll(/<script\b[^>]*>/g)].map((m) => m[0]);
       // A scaffold page carries the same copy-for-agents wiring a component page

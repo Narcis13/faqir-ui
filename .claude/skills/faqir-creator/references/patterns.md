@@ -249,7 +249,7 @@ Placeholder display for empty content areas with icon, message, and action
 
 | Variant | Values | Default | Attribute | Applied to |
 |---------|--------|---------|-----------|------------|
-| size | `sm` | `` | `data-size` | root |
+| size | `sm`, `md`, `lg` | `md` | `data-size` | root |
 
 - **Safe transforms:** `change-size`, `change-icon`, `change-title-text`, `change-description-text`, `change-action-button-variant`, `add-secondary-action`, `remove-secondary-action`, `remove-icon`, `restyle-background`
 - **Unsafe (never do):** `remove-title-slot`, `flatten-to-single-div`, `remove-action-without-alternative`

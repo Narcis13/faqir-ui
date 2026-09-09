@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { dirname, join, resolve, relative, isAbsolute } from "node:path";
 import { log } from "../utils/logger";
-import { configExists, readConfig, writeConfig, type FaqirConfig } from "../utils/config";
+import { configExists, readConfig, writeConfig, type FaqirConfig, missingConfigMessage } from "../utils/config";
 import { copyDir, ensureDir, getRegistryPath } from "../utils/fs";
 import { loadManifest, type Manifest } from "../manifest";
 import { findComponentInRegistry, listRegistryComponents, type Layer } from "../utils/components";
@@ -143,14 +143,29 @@ async function snapshotFromRegistry(
 
 /**
  * Backfill story: components installed before the pristine store existed get a
- * snapshot on their next `add` — captured from the *current* registry source
- * and flagged `backfilled` (it may not match the exact bytes they first
- * installed). Each backfill warns, so the approximate baseline is never silent.
+ * snapshot on their next `add`, taken from **the project's own copy** at the
+ * version that copy's manifest records.
+ *
+ * The baseline this writes is the "old" side of the next three-way merge, so
+ * where it is read from decides whether `faqir upgrade` can do anything at all.
+ * Taking it from the current registry — which is what this did until task
+ * 1.0-03 — files today's bytes at today's version, and the very next `upgrade`
+ * compares the registry against itself and reports every component up to date.
+ * The backfill meant to enable the upgrade was the thing preventing it.
+ *
+ * The installed directory is the honest source: `faqir add` wrote it, the
+ * manifest inside it states the version the registry handed over, and if the
+ * component was never edited the snapshot is byte-exact. If it *was* edited
+ * before the store existed, those edits are indistinguishable from the original
+ * and become part of the baseline — which is why the entry is flagged
+ * `backfilled`, the warning says so, and the migration guide tells you to
+ * commit first and read `git diff` after.
  */
 async function backfillLocalPristine(
   resolved: { name: string; layer: Layer; path: string }[],
   alreadyInstalled: Set<string>,
-  cwd: string
+  cwd: string,
+  outputDir: string
 ): Promise<void> {
   const index = await readPristineIndex(cwd);
   const done = new Set<string>();
@@ -158,10 +173,14 @@ async function backfillLocalPristine(
     if (!alreadyInstalled.has(comp.name)) continue; // fresh installs snapshot elsewhere
     if (index.components[comp.name] || done.has(comp.name)) continue;
     done.add(comp.name);
-    await snapshotFromRegistry(comp, cwd, true);
+    const installedDir = join(outputDir, comp.layer, comp.name);
+    const source = existsSync(installedDir) ? { ...comp, path: installedDir } : comp;
+    const version = await readManifestVersion(join(source.path, `${comp.name}.manifest.json`));
+    await snapshotFromRegistry(source, cwd, true);
     log.warn(
-      `No pristine snapshot for '${comp.name}' — captured one from the registry as the upgrade baseline ` +
-        `(it may differ from your original install; run 'faqir diff ${comp.name}' to review).`
+      `No pristine snapshot for '${comp.name}' — captured one from your installed copy at ` +
+        `${version} as the upgrade baseline (edits made before the pristine store existed are ` +
+        `part of it; run 'faqir diff ${comp.name}' after upgrading to review).`
     );
   }
 }
@@ -206,7 +225,7 @@ export async function add(args: string[]): Promise<void> {
   const cwd = process.cwd();
 
   if (!configExists(cwd)) {
-    log.error("No faqir.config.json found. Run 'faqir init' first.");
+    log.error(missingConfigMessage(cwd));
     process.exit(1);
   }
 
@@ -325,7 +344,7 @@ async function addLocal(
 
   // Backfill pristine snapshots for already-installed components that predate
   // the store, so `faqir diff`/`faqir upgrade` have a baseline going forward.
-  await backfillLocalPristine(resolved, alreadyInstalled, cwd);
+  await backfillLocalPristine(resolved, alreadyInstalled, cwd, outputDir);
 
   if (toInstall.length === 0) {
     log.info("All requested components are already installed.");

@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { log } from "../utils/logger";
-import { configExists, readConfig } from "../utils/config";
+import { configExists, readConfig, missingConfigMessage } from "../utils/config";
 import { getRegistryPath } from "../utils/fs";
 import { getRegistryAliases } from "../utils/components";
 
@@ -118,7 +118,7 @@ export async function list(args: string[]): Promise<void> {
   }
 
   if (!hasConfig) {
-    log.dim("No faqir.config.json found. Run 'faqir init' to start a project.");
+    log.dim(missingConfigMessage(cwd));
   } else if (totalInstalled === 0) {
     log.dim("No components installed yet. Run 'faqir add <name>' to add components.");
   }
