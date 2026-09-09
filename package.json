@@ -6,9 +6,7 @@
   "workspaces": [
     "packages/*"
   ],
-  "exports": {
-    ".": "./dist/faqir.mjs"
-  },
+  "//exports": "Deliberately absent. This package is a CLI: `dist/faqir.mjs` calls main() at its top level, which parses process.argv and calls process.exit — so an `exports` map pointing at it made `import \"faqir-ui-cli\"` terminate the importing process. A bin-only package needs no exports map. The programmatic surfaces are the workspace packages (@faqir-ui/core, /react, /vue, /forms).",
   "bin": {
     "faqir": "./bin/faqir"
   },
@@ -20,6 +18,8 @@
     "build:registry-index": "bun scripts/build-registry-index.mjs",
     "check:registry-index": "bun scripts/build-registry-index.mjs --check",
     "build:core-package": "node scripts/build-core-package.mjs",
+    "check:core-package": "node scripts/build-core-package.mjs --check",
+    "install:type-fixture": "node scripts/install-type-fixture.mjs",
     "build:audit-browser": "node scripts/build-audit-browser.mjs",
     "check:audit-browser": "node scripts/build-audit-browser.mjs --check",
     "build:docs": "bun scripts/build-docs.mjs",
@@ -28,8 +28,9 @@
     "test": "bun scripts/test.mjs",
     "test:bun": "bun test",
     "fuzz:parser": "bun scripts/fuzz-parser.ts",
-    "typecheck": "tsc --noEmit && tsc --noEmit -p tests/fixtures/types/tsconfig.json && tsc --noEmit -p packages/mcp/tsconfig.json && tsc --noEmit -p packages/forms/tsconfig.json && packages/vue/node_modules/.bin/vue-tsc --noEmit -p packages/vue/tsconfig.json && tsc --noEmit -p packages/react/tsconfig.json",
+    "typecheck": "node scripts/install-type-fixture.mjs && tsc --noEmit && tsc --noEmit -p tests/fixtures/types/tsconfig.json && tsc --noEmit -p tests/fixtures/types/tsconfig.node16.json && tsc --noEmit -p packages/mcp/tsconfig.json && tsc --noEmit -p packages/forms/tsconfig.json && packages/vue/node_modules/.bin/vue-tsc --noEmit -p packages/vue/tsconfig.json && tsc --noEmit -p packages/react/tsconfig.json",
     "gen:bindings": "bun src/index.ts bindings vue && bun src/index.ts bindings react",
+    "build:bindings": "node scripts/build-bindings-packages.mjs",
     "check:bindings": "bun src/index.ts bindings vue --check && bun src/index.ts bindings react --check",
     "build:mcp": "node packages/mcp/build.mjs",
     "smoke": "bash scripts/smoke-cli.sh",

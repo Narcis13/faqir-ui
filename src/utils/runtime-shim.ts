@@ -180,6 +180,20 @@ class NodeGlob {
     return out;
   }
 
+  /**
+   * Test one path against the pattern, without touching the filesystem.
+   * `faqir conform`'s --include/--exclude filters run through this on every
+   * scanned path, so its absence made the compiled CLI throw
+   * `g.match is not a function` — on Node only, which is every user without
+   * Bun installed.
+   */
+  match(path: string): boolean {
+    let rel = path.replace(/\\/g, "/");
+    if (rel.startsWith("./")) rel = rel.slice(2);
+    if (this.dirOnly) rel = rel.replace(/\/$/, "");
+    return this.matches(rel);
+  }
+
   *scanSync(opts?: ScanOptions | string): Generator<string> {
     yield* this.collect(opts);
   }

@@ -3,10 +3,10 @@
 
 "use client";
 
-import { createFaqirRecipe } from "../recipe-runtime";
-import type { FaqirEventHandler, RecipeNode } from "../recipe-runtime";
+import { createFaqirRecipe } from "../recipe-runtime.js";
+import type { FaqirEventHandler, RecipeNode } from "../recipe-runtime.js";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
-import { createTooltip } from "../controllers/tooltip";
+import { createTooltip } from "../controllers/tooltip.js";
 
 /** Allowed `position` values (manifest variant group "position", attr `data-variant` on root). */
 export type LTooltipPosition = "top" | "bottom" | "left" | "right";

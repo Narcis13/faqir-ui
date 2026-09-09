@@ -60,7 +60,18 @@ bun run check:package
 bun run check:registry-index
 bun run check:skill
 bun run check:schema-refs
+bun run check:audit-browser
+bun run check:core-package
 ```
+
+The last two byte-compare a committed artifact against a fresh `bun build
+--minify`, so they are pinned to the `BUN_VERSION` in
+`.github/workflows/ci.yml`. Bumping Bun means re-running `bun run
+build:audit-browser` **and** `bun run build:core-package` and committing what
+they write; nothing else in the repo changes, but both gates go red until you
+do. `check:core-package` guards `packages/core/cdn.json`, whose SHA-384 hashes
+are emitted as `integrity="…"` into every CDN snippet on the docs site — SRI is
+fail-closed, so a stale hash there is a blank page, not a degraded one.
 
 Use `bun run test` for the full suite, never a bare `bun test`. The two engine
 builds each bootstrap on `require` and install a permanent MutationObserver, so

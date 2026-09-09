@@ -6,7 +6,7 @@
 // @ui:controller drawer
 // @ui:provides open close toggle destroy
 
-import { trapFocus } from "./_core-focus";
+import { trapFocus } from "./_core-focus.js";
 
 export function createDrawer(root) {
   // Prevent double-init

@@ -3,21 +3,26 @@
   "version": "0.2.4",
   "description": "Faqir UI runtime engine — the Alpine-style reactive core (faqir-core.js), minified CDN build, and prebuilt per-theme CSS bundles. Zero dependencies.",
   "type": "module",
-  "main": "./dist/faqir-core.js",
+  "main": "./dist/faqir-core.mjs",
   "types": "./faqir-core.d.ts",
-  "module": "./dist/faqir-core.js",
+  "module": "./dist/faqir-core.mjs",
   "unpkg": "./dist/faqir-core.min.js",
   "jsdelivr": "./dist/faqir-core.min.js",
+  "//exports": "`.` resolves to dist/faqir-core.mjs — real ESM, `export default` plus one named export per engine member. It must NOT resolve to dist/faqir-core.js: that file is UMD, this package is `\"type\": \"module\"`, and under ESM the UMD wrapper takes its global branch and exports nothing, so the documented `import Faqir from \"@faqir-ui/core\"` failed with `SyntaxError: … does not provide an export named 'default'`. The UMD build is still shipped and is still what `<script src>`, unpkg and jsdelivr load; reach it explicitly at `@faqir-ui/core/faqir-core.js`.",
+  "//require": "Deliberately absent. This package is ESM-only. The `require` condition used to point at the UMD file, which threw ERR_REQUIRE_ESM on Node 18 and 20 — most of the range `engines` promises — because `\"type\": \"module\"` classifies a `.js` file as ESM whatever its contents. Supporting `require` honestly would mean shipping a `.cjs` runtime AND a full-fidelity `.d.cts`, and a half-fidelity one recreates exactly the FalseCJS mismatch this shape was fixed to remove. On Node >=22.12 `require()` falls through to `default` and works; below that it fails with a message that names `import()`, which is the right answer.",
   "exports": {
     ".": {
       "types": "./faqir-core.d.ts",
-      "import": "./dist/faqir-core.js",
-      "require": "./dist/faqir-core.js",
-      "default": "./dist/faqir-core.js"
+      "import": "./dist/faqir-core.mjs",
+      "default": "./dist/faqir-core.mjs"
     },
     "./faqir-core.js": {
       "types": "./faqir-core.d.ts",
       "default": "./dist/faqir-core.js"
+    },
+    "./faqir-core.mjs": {
+      "types": "./faqir-core.d.ts",
+      "default": "./dist/faqir-core.mjs"
     },
     "./faqir-core.min.js": "./dist/faqir-core.min.js",
     "./sri.json": "./dist/sri.json",
@@ -33,6 +38,7 @@
     "README.md"
   ],
   "sideEffects": [
+    "./dist/faqir-core.mjs",
     "./dist/faqir-core.js",
     "./dist/faqir-core.min.js",
     "./dist/*.css"

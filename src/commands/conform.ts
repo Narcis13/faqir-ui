@@ -5,6 +5,7 @@ import { join, relative } from "node:path";
 import { log } from "../utils/logger";
 import { configExists, readConfig, missingConfigMessage } from "../utils/config";
 import { loadManifest, type Manifest } from "../manifest";
+import { tokenizeHTML, RAW_TEXT_ELEMENTS, type RawAttr } from "../parser/html-tokenizer";
 
 /** Canonical attribute order for Faqir component elements. */
 const CANONICAL_ORDER = [
@@ -84,66 +85,152 @@ function buildCSSMachineComments(manifest: Manifest): string {
   return lines.join("\n");
 }
 
-// Regex to match an opening HTML tag with its attributes
-const TAG_WITH_ATTRS_RE = /<([a-zA-Z][a-zA-Z0-9-]*)((?:\s+[^>]*?)?)(\s*\/?)>/g;
-const ATTR_RE = /([a-zA-Z_][\w.:-]*)\s*(?:=\s*(?:"([^"]*)"|'([^']*)'|(\S+)))?/g;
+/** The five attributes whose presence makes an element ours to reorder. */
+const FAQIR_ATTRS = new Set(["data-ui", "data-part", "data-state", "data-variant", "data-size"]);
 
-interface ParsedAttr {
-  name: string;
-  value: string | null;
-  raw: string;
-}
+/**
+ * Elements whose *content* must never be treated as markup.
+ *
+ * `script`/`style` are already handled for us — the tokenizer emits a raw-text
+ * element's whole body as one text token, so nothing inside it is ever a start
+ * tag. `textarea` and `title` are RCDATA, which the tokenizer explicitly does
+ * not implement (see its scope note), so we skip their content here: a
+ * `<textarea>` showing example markup to the user is text, and rewriting it
+ * changes what the page displays.
+ */
+const OPAQUE_CONTENT = new Set([...RAW_TEXT_ELEMENTS, "textarea", "title"]);
 
-function parseAttrsFromString(attrStr: string): ParsedAttr[] {
-  const attrs: ParsedAttr[] = [];
-  let match: RegExpExecArray | null;
-  ATTR_RE.lastIndex = 0;
-  while ((match = ATTR_RE.exec(attrStr)) !== null) {
-    const name = match[1];
-    const value = match[2] ?? match[3] ?? match[4] ?? null;
-    // Reconstruct the raw attribute
-    let raw: string;
-    if (value === null && !match[0].includes("=")) {
-      raw = name;
-    } else {
-      raw = `${name}="${value ?? ""}"`;
-    }
-    attrs.push({ name, value, raw });
-  }
-  return attrs;
+/**
+ * Write one attribute back out, preserving how it was authored.
+ *
+ * This function is the whole of the fix. The previous implementation built
+ * every attribute as `name="value"` with hardcoded double quotes and no
+ * escaping, which silently destroyed the two shapes that are *most* common in
+ * Faqir markup:
+ *
+ *     l-data='{ "msg": "hi" }'   →  l-data="{ "msg": "hi" }"   ← broken
+ *     title='He said "no"'       →  title="He said "no""       ← broken
+ *
+ * A value quoted in the source can never contain its own delimiter, so keeping
+ * the delimiter is both faithful and safe — the round trip is byte-identical.
+ * Only an unquoted source value needs a delimiter chosen, and only a value
+ * containing *both* quote characters needs escaping.
+ */
+function serializeAttr(attr: RawAttr): string {
+  if (attr.value === null) return attr.name; // bare attribute: `hidden`, not `hidden=""`
+  if (attr.quote) return `${attr.name}=${attr.quote}${attr.value}${attr.quote}`;
+  if (!attr.value.includes('"')) return `${attr.name}="${attr.value}"`;
+  if (!attr.value.includes("'")) return `${attr.name}='${attr.value}'`;
+  return `${attr.name}="${attr.value.replace(/"/g, "&quot;")}"`;
 }
 
 /**
- * Reorder attributes on elements that have data-ui or data-part attributes.
+ * Reorder attributes on elements carrying a Faqir protocol attribute.
+ *
+ * Tokenized, not regexed. The regex this replaced was applied globally to the
+ * whole file, so it also matched — and rewrote — "tags" inside `<script>` and
+ * `<style>` bodies, turning valid JavaScript into a SyntaxError:
+ *
+ *     <script> "<span data-part='x'>" </script>   →  SyntaxError
+ *
+ * and its `[^>]*?` attribute run stopped at the first `>` wherever it appeared,
+ * so any tag with `>` inside an attribute value (`l-if="a > b"`) was skipped
+ * without a word. The tokenizer gets both cases right by construction.
+ *
+ * Edits are collected with source offsets and applied back-to-front so earlier
+ * offsets stay valid.
  */
 function reorderAttributes(source: string): string {
-  return source.replace(TAG_WITH_ATTRS_RE, (fullMatch, tagName, attrString, closing) => {
-    if (!attrString || attrString.trim().length === 0) return fullMatch;
+  const edits: { start: number; end: number; text: string }[] = [];
+  /** Set while inside an RCDATA element whose content must be left alone. */
+  let opaqueUntil: string | null = null;
 
-    const attrs = parseAttrsFromString(attrString);
-    if (attrs.length === 0) return fullMatch;
+  for (const token of tokenizeHTML(source)) {
+    if (opaqueUntil !== null) {
+      if (token.type === "endTag" && token.name === opaqueUntil) opaqueUntil = null;
+      continue;
+    }
+    if (token.type !== "startTag") continue;
+    // The start tag itself is ordinary markup and may carry Faqir attributes;
+    // only what follows it is opaque.
+    if (OPAQUE_CONTENT.has(token.name) && !token.selfClosing) opaqueUntil = token.name;
 
-    // Only process elements with faqir attributes
-    const hasFaqirAttr = attrs.some(
-      (a) => a.name === "data-ui" || a.name === "data-part" || a.name === "data-state" || a.name === "data-variant" || a.name === "data-size"
-    );
-    if (!hasFaqirAttr) return fullMatch;
+    const attrs = token.rawAttrs;
+    if (attrs.length === 0) continue;
+    if (!attrs.some((a) => FAQIR_ATTRS.has(a.name))) continue;
 
-    // Sort attributes
     const sorted = [...attrs].sort((a, b) => {
       const ka = attrSortKey(a.name);
       const kb = attrSortKey(b.name);
       if (ka !== kb) return ka - kb;
       return a.name.localeCompare(b.name);
     });
+    if (attrs.every((a, i) => a.name === sorted[i].name)) continue;
 
-    // Check if already in order
-    const alreadyOrdered = attrs.every((a, i) => a.name === sorted[i].name);
-    if (alreadyOrdered) return fullMatch;
+    // Tag name in its authored case — the token's `name` is lowercased, and the
+    // name run always starts immediately after the `<`.
+    const tagName = source.slice(token.start + 1, token.start + 1 + token.name.length);
+    const body = sorted.map((a) => ` ${serializeAttr(a)}`).join("");
+    edits.push({
+      start: token.start,
+      end: token.end,
+      text: `<${tagName}${body}${token.selfClosing ? " /" : ""}>`,
+    });
+  }
 
-    const attrStr = sorted.map((a) => a.raw).join(" ");
-    return `<${tagName} ${attrStr}${closing}>`;
-  });
+  if (edits.length === 0) return source;
+  let out = source;
+  for (let i = edits.length - 1; i >= 0; i--) {
+    const edit = edits[i];
+    out = out.slice(0, edit.start) + edit.text + out.slice(edit.end);
+  }
+  return out;
+}
+
+// ── which project files the walk may touch ───────────────────────────────────
+
+/**
+ * Directories and file shapes never rewritten, whatever the glob says.
+ *
+ * The walk used to be an unfiltered recursive HTML glob from the cwd, with
+ * only `node_modules` and `.faqir` excluded — so `faqir conform` rewrote build
+ * output, vendored third-party HTML, and the user's own `.orig`/`.bak` copies
+ * of a file they were mid-way through comparing. None of those are sources,
+ * and two of them are things a person is actively relying on not changing.
+ */
+const DEFAULT_EXCLUDES = [
+  "**/node_modules/**",
+  "**/.git/**",
+  ".faqir/**",
+  "**/dist/**",
+  "**/build/**",
+  "**/vendor/**",
+  "**/coverage/**",
+  "**/.next/**",
+  "**/*.orig",
+  "**/*.orig.html",
+  "**/*.bak",
+  "**/*.bak.html",
+  "**/*.rej",
+];
+
+/** Collect repeatable `--flag <value>` / `--flag=<value>` occurrences. */
+function collectOption(args: string[], flag: string): string[] {
+  const out: string[] = [];
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (arg === flag) {
+      const value = args[i + 1];
+      if (value !== undefined && !value.startsWith("-")) {
+        out.push(value);
+        i++;
+      }
+    } else if (arg.startsWith(`${flag}=`)) {
+      out.push(arg.slice(flag.length + 1));
+    }
+  }
+  // Comma-separated forms are accepted too: `--exclude a/**,b/**`.
+  return out.flatMap((v) => v.split(",")).map((v) => v.trim()).filter(Boolean);
 }
 
 /**
@@ -185,7 +272,15 @@ export async function conform(args: string[]): Promise<void> {
     console.log("Options:");
     log.table([
       ["--dry-run", "Show what would change without writing"],
+      ["--include <glob>", "Only scan project files matching this glob (repeatable; default **/*.html)"],
+      ["--exclude <glob>", "Skip project files matching this glob (repeatable; adds to the defaults)"],
     ]);
+    log.blank();
+    console.log("Both flags accept a comma-separated list and may be repeated.");
+    console.log("Installed component files under output_dir are always processed;");
+    console.log("--include/--exclude filter the project-wide HTML scan only.");
+    log.blank();
+    console.log("Always excluded: " + DEFAULT_EXCLUDES.join(", "));
     return;
   }
 
@@ -197,6 +292,8 @@ export async function conform(args: string[]): Promise<void> {
   }
 
   const dryRun = args.includes("--dry-run");
+  const includes = collectOption(args, "--include");
+  const excludes = [...DEFAULT_EXCLUDES, ...collectOption(args, "--exclude")];
   const config = await readConfig(cwd);
   const outputDir = join(cwd, config.output_dir);
 
@@ -260,10 +357,12 @@ export async function conform(args: string[]): Promise<void> {
   // component file is processed a second time here, and --dry-run reports double
   // the real count. `skill.ts` normalizes the same field for the same reason.
   const outputDirRel = config.output_dir.replace(/^\.\//, "").replace(/\/$/, "");
+  const excludeGlobs = excludes.map((pattern) => new Bun.Glob(pattern));
+  const includeGlobs = includes.map((pattern) => new Bun.Glob(pattern));
   const glob = new Bun.Glob("**/*.html");
   for await (const path of glob.scan({ cwd, onlyFiles: true })) {
-    if (path.includes("node_modules")) continue;
-    if (path.startsWith(".faqir")) continue;
+    if (excludeGlobs.some((g) => g.match(path))) continue;
+    if (includeGlobs.length > 0 && !includeGlobs.some((g) => g.match(path))) continue;
     // Skip component source files (already processed above)
     if (path.startsWith(outputDirRel + "/")) {
       const parts = path.split("/");

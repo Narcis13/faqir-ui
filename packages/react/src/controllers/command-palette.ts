@@ -6,7 +6,7 @@
 // @ui:controller command-palette
 // @ui:provides open close filter selectItem registerCommand destroy
 
-import { trapFocus } from "./_core-focus";
+import { trapFocus } from "./_core-focus.js";
 
 export function createCommandPalette(root) {
   // Prevent double-init

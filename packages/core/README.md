@@ -50,7 +50,8 @@ for tamper-proof loads:
 
 | File | What it is |
 |------|------------|
-| `faqir-core.js` | Canonical UMD engine — use for `import` / `require` / bundlers. |
+| `faqir-core.mjs` | Real ESM — what `import "@faqir-ui/core"` resolves to. `export default` plus one named export per engine member. |
+| `faqir-core.js` | Canonical UMD engine — what `<script src>` and the CDN load. Reachable explicitly at `@faqir-ui/core/faqir-core.js`. |
 | `faqir-core.min.js` (+ `.map`) | Minified classic-script build; a plain `<script src>` sets `window.Faqir`. |
 | `faqir.{theme}.css` | Full CSS bundle per theme: all tokens + theme + base + every component. Self-contained (no `@import`). |
 | `plugins/` | Official self-registering drops: `faqir-persist`, `faqir-intersect`, `faqir-collapse`, and `faqir-validate`. |
@@ -58,13 +59,30 @@ for tamper-proof loads:
 
 ## Module usage
 
-For bundlers, the default export is the `Faqir` global:
+The package is **ESM-only**. The default export is the engine; every member is
+also a named export, so a bundler can tree-shake the import site (the engine
+itself is one blob and is not tree-shakeable).
 
 ```js
-import Faqir from "@faqir-ui/core";              // dist/faqir-core.js (UMD)
+import Faqir from "@faqir-ui/core";              // dist/faqir-core.mjs
 import "@faqir-ui/core/dist/faqir.default.css";  // or your project's own bundle
 
 Faqir.start();
+```
+
+```js
+import { start, reactive, store } from "@faqir-ui/core";
+start();
+```
+
+There is no `require` condition. `require("@faqir-ui/core")` fails on Node 18
+and 20 with a message pointing at `import()`, and resolves through `default` on
+Node ≥ 22.12; use `await import("@faqir-ui/core")` from CommonJS. The UMD build
+is still published for `<script>` and CDN use and can be reached directly:
+
+```js
+// UMD, for a bundler that must have CommonJS-shaped bytes
+import "@faqir-ui/core/faqir-core.js";  // sets globalThis.Faqir
 ```
 
 ## Building

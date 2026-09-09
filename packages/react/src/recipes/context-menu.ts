@@ -3,10 +3,10 @@
 
 "use client";
 
-import { createFaqirRecipe } from "../recipe-runtime";
-import type { FaqirEventHandler, RecipeNode } from "../recipe-runtime";
+import { createFaqirRecipe } from "../recipe-runtime.js";
+import type { FaqirEventHandler, RecipeNode } from "../recipe-runtime.js";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
-import { createContextMenu } from "../controllers/context-menu";
+import { createContextMenu } from "../controllers/context-menu.js";
 
 export interface LContextMenuProps extends Omit<ComponentPropsWithoutRef<"div">, "id" | "target" | "menu" | "separator"> {
   /** Root/ARIA id base; auto-generated per instance when unset. */

@@ -6,7 +6,7 @@
 // @ui:controller dialog
 // @ui:provides open close toggle destroy
 
-import { trapFocus } from "./_core-focus";
+import { trapFocus } from "./_core-focus.js";
 
 /**
  * Shared modal-dialog controller.

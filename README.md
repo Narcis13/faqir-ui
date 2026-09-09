@@ -1260,6 +1260,8 @@ faqir repair                      # Auto-fix audit issues
 
 faqir conform                     # Normalize attribute order, add machine comments
 faqir conform --dry-run           # Preview changes
+faqir conform --include "src/**"  # Restrict the project-wide HTML scan
+faqir conform --exclude "vendor/**"  # Skip more than the built-in exclusions
 
 faqir trace dialog                # Show dependency graph, file tree, token usage
 faqir trace dialog --json         # Machine-readable output
@@ -1497,6 +1499,17 @@ faqir audit --skip-rules no-class-attribute,token-aware-style
 - Reorders attributes to canonical order: `data-ui`, `data-part`, `data-state`, `data-variant`, `data-size`, ARIA, then others
 - Adds machine comments at the top of component CSS files
 - Ensures consistent formatting across all HTML files
+
+It rewrites only elements that already carry a Faqir protocol attribute, and it
+rewrites them **as authored**: the quote character on every attribute is
+preserved, so `l-data='{ "msg": "hi" }'` and `title='He said "no"'` survive
+unchanged, and content inside `<script>`, `<style>`, `<textarea>` and `<title>`
+is never treated as markup.
+
+The project-wide scan skips `node_modules`, `.git`, `.faqir`, `dist`, `build`,
+`vendor`, `coverage`, `.next` and `.orig`/`.bak`/`.rej` backups. `--exclude <glob>` adds to that list and `--include <glob>` narrows the
+scan to matching paths; both are repeatable and accept comma-separated lists.
+Files installed under `output_dir` are always processed.
 
 ---
 

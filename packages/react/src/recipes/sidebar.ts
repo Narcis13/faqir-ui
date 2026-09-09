@@ -3,10 +3,10 @@
 
 "use client";
 
-import { createFaqirRecipe } from "../recipe-runtime";
-import type { FaqirEventHandler, RecipeNode } from "../recipe-runtime";
+import { createFaqirRecipe } from "../recipe-runtime.js";
+import type { FaqirEventHandler, RecipeNode } from "../recipe-runtime.js";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
-import { createSidebar } from "../controllers/sidebar";
+import { createSidebar } from "../controllers/sidebar.js";
 
 export interface LSidebarProps extends Omit<ComponentPropsWithoutRef<"div">, "id" | "overlay" | "panel" | "header" | "brand" | "brand-icon" | "brand-label" | "trigger" | "nav" | "item" | "icon" | "label" | "footer"> {
   /** Root/ARIA id base; auto-generated per instance when unset. */

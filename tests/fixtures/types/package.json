@@ -1,0 +1,6 @@
+{
+  "name": "faqir-type-fixture",
+  "private": true,
+  "//": "A real package boundary, not a directory of loose files. `\"type\": \"module\"` is what makes tsc classify these fixtures as ESM under moduleResolution node16 — which is the classification every real consumer of @faqir-ui/core has, and the one the old `paths`-based fixture never exercised.",
+  "type": "module"
+}

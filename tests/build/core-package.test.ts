@@ -221,3 +221,87 @@ describe("package.json is publish-valid", () => {
     expect(pkg.files).toContain("dist");
   });
 });
+
+
+// ── the `import` condition: a packed, installed consumer ────────────────────
+//
+// `packages/core/README.md` and `faqir-core.d.ts` both lead with
+// `import Faqir from "@faqir-ui/core"`. That line threw
+// `SyntaxError: … does not provide an export named 'default'` for every
+// consumer: the `import` condition resolved to the UMD file, and under
+// `"type": "module"` a UMD wrapper takes its global branch and exports nothing.
+// Nothing caught it because nothing here ever resolved the package by name.
+
+describe("the published `import` shape actually imports", () => {
+  const ESM = join(DIST, "faqir-core.mjs");
+
+  test("dist/faqir-core.mjs exists and the exports map points at it", () => {
+    expect(existsSync(ESM)).toBe(true);
+    const pkg = JSON.parse(readFileSync(join(ROOT, "packages", "core", "package.json"), "utf8"));
+    expect(pkg.exports["."].import).toBe("./dist/faqir-core.mjs");
+    expect(pkg.main).toBe("./dist/faqir-core.mjs");
+    expect(pkg.module).toBe("./dist/faqir-core.mjs");
+    // The require condition is deliberately gone: it threw ERR_REQUIRE_ESM on
+    // Node 18 and 20, most of the range `engines` promises.
+    expect(pkg.exports["."].require).toBeUndefined();
+  });
+
+  test("Node imports the default export and every named export", () => {
+    const probe = [
+      `import Faqir, { version, start, reactive, controller, devtools } from ${JSON.stringify(ESM)};`,
+      `const missing = ["version","reactive","effect","batch","untrack","evaluate",`,
+      `  "evaluateAssignment","nextTick","data","store","directive","magic","plugin",`,
+      `  "controller","start","initTree","inspect","devtools","destroy"]`,
+      `  .filter((k) => Faqir[k] === undefined);`,
+      `if (typeof Faqir !== "object") throw new Error("no default export");`,
+      `if (missing.length) throw new Error("default missing: " + missing.join(","));`,
+      `for (const [name, value] of Object.entries({ version, start, reactive, controller, devtools })) {`,
+      `  if (value === undefined) throw new Error("named export missing: " + name);`,
+      `}`,
+      // The ESM build must NOT reach the consumer through a global — that was
+      // the UMD fallback path, and it makes two installed copies fight.
+      `if (globalThis.Faqir !== undefined) throw new Error("ESM build polluted globalThis.Faqir");`,
+      `console.log("ok");`,
+    ].join("\n");
+
+    const result = runSync("node", ["--input-type=module", "-e", probe], {
+      cwd: ROOT,
+      encoding: "utf8",
+      timeout: SPAWN_TIMEOUT.CLI,
+    });
+    expect(result.stderr ?? "").not.toContain("SyntaxError");
+    expect(result.status, result.stderr ?? "").toBe(0);
+    expect(result.stdout).toContain("ok");
+  });
+
+  test("the ESM entry's named exports match the live engine, both directions", () => {
+    // The entry is hand-written, so it can fall behind the engine silently —
+    // a member added to `Faqir` with no line in esm-entry.js is simply absent
+    // from every bundler import of it, with no error anywhere.
+    const entry = readFileSync(
+      join(ROOT, "packages", "core", "src", "esm-entry.js"),
+      "utf8",
+    );
+    const exported = [...entry.matchAll(/^export const (\w+) = Faqir\.(\w+);$/gm)]
+      .map((m) => {
+        expect(m[1], "the export name must match the engine member it aliases").toBe(m[2]);
+        return m[1];
+      })
+      .sort();
+
+    const engine = require("../../registry/core/faqir-core.js") as Record<string, unknown>;
+    expect(exported).toEqual(Object.keys(engine).sort());
+  });
+
+  test("the declaration's named exports match the ESM entry's", () => {
+    const dts = readFileSync(join(ROOT, "packages", "core", "faqir-core.d.ts"), "utf8");
+    const declared = [...dts.matchAll(/^export declare const (\w+): FaqirGlobal\["(\w+)"\];$/gm)]
+      .map((m) => {
+        expect(m[1]).toBe(m[2]);
+        return m[1];
+      })
+      .sort();
+    const engine = require("../../registry/core/faqir-core.js") as Record<string, unknown>;
+    expect(declared).toEqual(Object.keys(engine).sort());
+  });
+});

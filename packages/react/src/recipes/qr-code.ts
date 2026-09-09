@@ -3,10 +3,10 @@
 
 "use client";
 
-import { createFaqirRecipe } from "../recipe-runtime";
-import type { FaqirEventHandler, RecipeNode } from "../recipe-runtime";
+import { createFaqirRecipe } from "../recipe-runtime.js";
+import type { FaqirEventHandler, RecipeNode } from "../recipe-runtime.js";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
-import { createQRCode } from "../controllers/qr-code";
+import { createQRCode } from "../controllers/qr-code.js";
 
 /** Allowed `ecl` values (manifest variant group "ecl", attr `data-ecl` on root). */
 export type LQrCodeEcl = "L" | "M" | "Q" | "H";

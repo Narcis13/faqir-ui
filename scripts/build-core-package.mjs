@@ -4,6 +4,10 @@
  *
  * Produces, into `packages/core/dist/`:
  *   - `faqir-core.js`        — canonical UMD engine (copied from registry/core)
+ *   - `faqir-core.mjs`       — real ESM: `export default` + one named export per
+ *                              engine member. The target of the `import`
+ *                              condition, because the UMD file exports NOTHING
+ *                              under `"type": "module"` (see src/esm-entry.js).
  *   - `faqir-core.min.js`    — minified classic-script build (+ `.map` sourcemap)
  *   - `faqir.{theme}.css`    — one prebuilt full CSS bundle per registry theme
  *   - `plugins/`             — official self-registering plugin drops (§A5)
@@ -19,6 +23,26 @@
  * The minified engine is bundled from `packages/core/src/cdn-entry.js` with
  * `bun build --format=iife` so a plain `<script src>` sets `window.Faqir`.
  * Requires Bun to *build* the min bundle — but the artifacts run anywhere.
+ *
+ * Usage:
+ *   bun run build:core-package            → write dist/* and packages/core/cdn.json
+ *   bun run check:core-package            → exit 1 if the committed cdn.json is stale
+ *
+ * `--check` is the drift gate, and it is not optional cosmetics. `cdn.json` is
+ * the ONLY committed generated artifact whose staleness is silently fatal at
+ * runtime: `src/generator/docs.ts` emits its hashes verbatim as
+ * `integrity="sha384-…"` into every copy-paste CDN snippet on the docs site, and
+ * SRI is fail-closed — a browser handed a hash that does not match the bytes
+ * refuses to execute the resource at all. A stale hash is not a degraded page,
+ * it is a blank one, with a single console line to explain it. Two commits of
+ * drift shipped exactly that.
+ *
+ * CAVEAT — same shape as `check:audit-browser`, and for the same reason. The
+ * minified bundle comes from `bun build --minify`, whose output is not stable
+ * across Bun releases, so this gate binds `cdn.json` to the `BUN_VERSION` pinned
+ * in `.github/workflows/ci.yml`. Bumping Bun therefore requires re-running
+ * `bun run build:core-package` and committing the new `cdn.json` in the same
+ * change — otherwise CI goes red with no source edit at all.
  *
  * Runnable via `bun run build:core-package` or `node scripts/build-core-package.mjs`.
  */
@@ -44,8 +68,13 @@ const PKG = join(ROOT, "packages", "core");
 const DIST = join(PKG, "dist");
 const ENGINE_SRC = join(REGISTRY, "core", "faqir-core.js");
 const CDN_ENTRY = join(PKG, "src", "cdn-entry.js");
+const ESM_ENTRY = join(PKG, "src", "esm-entry.js");
+const CDN_PIN = join(PKG, "cdn.json");
 /** The package's own name + version — what a CDN URL pins to. */
 const pkg = JSON.parse(readFileSync(join(PKG, "package.json"), "utf8"));
+
+/** `--check`: compare the committed cdn.json against a fresh build, write nothing. */
+const checkOnly = process.argv.slice(2).includes("--check");
 
 // Shipped engine + controller budget (§10.4), kept aligned with
 // scripts/check-size.mjs. The engine-only 14 KB budget applies to
@@ -115,17 +144,10 @@ function buildThemeCss(themeName) {
   return header + sections.join("\n\n") + "\n";
 }
 
-function minifyEngine() {
+/** One `bun build` into DIST. Exits the process with a readable message on failure. */
+function bunBuild(entry, extraArgs, outName) {
   const bun = process.env.FAQIR_BUN || "bun";
-  const args = [
-    "build",
-    CDN_ENTRY,
-    "--minify",
-    "--format=iife",
-    "--sourcemap=linked",
-    `--outdir=${DIST}`,
-    "--entry-naming=faqir-core.min.js",
-  ];
+  const args = ["build", entry, ...extraArgs, `--outdir=${DIST}`, `--entry-naming=${outName}`];
   const result = spawnBudgeted(bun, args, {
     stdio: ["ignore", "pipe", "inherit"],
     cwd: ROOT,
@@ -141,7 +163,7 @@ function minifyEngine() {
   if (result.error) {
     if (result.error.code === "ENOENT") {
       process.stderr.write(
-        "build:core-package needs Bun to minify the engine bundle. Install Bun from https://bun.sh and retry.\n"
+        "build:core-package needs Bun to bundle the engine. Install Bun from https://bun.sh and retry.\n"
       );
       process.exit(1);
     }
@@ -182,7 +204,12 @@ mkdirSync(DIST, { recursive: true });
 copyFileSync(ENGINE_SRC, join(DIST, "faqir-core.js"));
 
 // 2. Minified classic-script engine (+ sourcemap).
-minifyEngine();
+bunBuild(CDN_ENTRY, ["--minify", "--format=iife", "--sourcemap=linked"], "faqir-core.min.js");
+
+// 2b. Real ESM build — the `import` condition's target. Unminified, to match
+//     faqir-core.js: what a bundler consumes should stay readable in a
+//     stack trace, and the bundler minifies it again anyway.
+bunBuild(ESM_ENTRY, ["--format=esm", "--target=browser"], "faqir-core.mjs");
 
 // 3. Per-theme CSS bundles.
 const themes = readdirSync(join(REGISTRY, "themes"))
@@ -238,7 +265,32 @@ const cdnPin = {
   base: `https://cdn.jsdelivr.net/npm/${pkg.name}@${pkg.version}/dist/`,
   integrity: sri,
 };
-writeFileSync(join(PKG, "cdn.json"), JSON.stringify(cdnPin, null, 2) + "\n");
+const cdnText = JSON.stringify(cdnPin, null, 2) + "\n";
+
+if (checkOnly) {
+  const current = existsSync(CDN_PIN) ? readFileSync(CDN_PIN, "utf8") : null;
+  if (current !== cdnText) {
+    process.stderr.write(
+      (current === null
+        ? "packages/core/cdn.json is missing"
+        : "packages/core/cdn.json is stale") +
+        " — run `bun run build:core-package` and commit the result.\n" +
+        "Every hash in that file is emitted verbatim as `integrity=\"sha384-…\"` into the\n" +
+        "docs site's CDN snippets. SRI is fail-closed: a stale hash does not degrade the\n" +
+        "page, it stops the browser executing the file at all.\n" +
+        "If you just bumped Bun, that is the cause — `bun build --minify` output is not\n" +
+        "stable across releases; regenerate and commit alongside the BUN_VERSION bump.\n",
+    );
+    process.exit(1);
+  }
+  process.stdout.write(
+    `✓ packages/core/cdn.json up to date — ${Object.keys(sri).length} files, ` +
+      `pinned to ${pkg.name}@${pkg.version}\n`,
+  );
+  process.exit(0);
+}
+
+writeFileSync(CDN_PIN, cdnText);
 
 // 6. Report + size budget.
 const minPath = join(DIST, "faqir-core.min.js");
@@ -248,6 +300,7 @@ const kb = (n) => (n / 1024).toFixed(2);
 
 console.log(`✓ Built @faqir-ui/core → ${relative(ROOT, DIST)}`);
 console.log(`  faqir-core.js        ${kb(statSync(join(DIST, "faqir-core.js")).size)} KB (UMD)`);
+console.log(`  faqir-core.mjs       ${kb(statSync(join(DIST, "faqir-core.mjs")).size)} KB (ESM)`);
 console.log(`  faqir-core.min.js    ${kb(minRaw)} KB raw · ${kb(minGzip)} KB gzip`);
 console.log(`  themes               ${themes.map((t) => `faqir.${t}.css`).join(", ")}`);
 console.log(`  plugins              ${pluginFiles.length ? pluginFiles.join(", ") : "(none yet)"}`);

@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -138,6 +138,26 @@ describe("JSON mode survives a piped stdout at size", () => {
     expect(report.results.length).toBeGreaterThan(1000);
   });
 
+  test("conform's --include/--exclude globs work on plain Node", () => {
+    // `Bun.Glob#match` had no counterpart in the Node polyfill, so the moment
+    // conform started filtering paths the compiled CLI died with
+    // `g.match is not a function` — on Node only, which is every user who has
+    // not installed Bun. The default exclusions run through the same call, so
+    // this covers the no-flag path too.
+    const cwd = bulkProject(3);
+    mkdirSync(join(cwd, "vendor"), { recursive: true });
+    const vendored = join(cwd, "vendor", "third-party.html");
+    const original = `<div data-variant="NOPE" data-ui="card">x</div>\n`;
+    writeFileSync(vendored, original);
+
+    const r = runNode(["conform", "--exclude", "pages/**"], cwd);
+    expect(r.stderr ?? "").not.toContain("is not a function");
+    expect(r.status).toBe(0);
+    // --exclude took the pages out, and `vendor/` was never in.
+    expect(r.stdout).not.toContain("pages/");
+    expect(readFileSync(vendored, "utf8")).toBe(original);
+  });
+
   test("the generic envelope is complete through a pipe on a zero exit", () => {
     const cwd = bulkProject(700);
     // A real shell pipe, not spawnSync's own: spawnSync drains the child's
@@ -156,5 +176,32 @@ describe("JSON mode survives a piped stdout at size", () => {
     expect(envelope.ok).toBe(true);
     expect(envelope.exit_code).toBe(0);
     expect(envelope.messages.length).toBeGreaterThan(500);
+  });
+});
+
+// ── the package is bin-only ────────────────────────────────────────────────
+
+describe("faqir-ui-cli declares no importable entry point", () => {
+  test("package.json has no `exports` map", () => {
+    const pkg = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8"));
+    expect(pkg.exports).toBeUndefined();
+    expect(pkg.main).toBeUndefined();
+    expect(pkg.bin.faqir).toBe("./bin/faqir");
+  });
+
+  test("the dist bundle it used to point at still exits the process on load", () => {
+    // Not a defect to fix in the bundle — a CLI entry SHOULD parse argv and
+    // exit. It is the reason the package must not advertise it as an import:
+    // `import "faqir-ui-cli"` ran main() against the *host's* argv and killed
+    // the host. This asserts the hazard is real, so the missing `exports` above
+    // is understood as load-bearing rather than tidied away later.
+    const r = runSync("node", ["-e", `import(${JSON.stringify(DIST)})`], {
+      cwd: ROOT,
+      encoding: "utf8",
+      timeout: SPAWN_TIMEOUT.CLI,
+    });
+    // No argv[2] → the CLI prints its help banner and returns; the point is that
+    // importing it RUNS the CLI rather than exposing an API.
+    expect(r.stdout).toContain("Agent-Native UI Framework CLI");
   });
 });

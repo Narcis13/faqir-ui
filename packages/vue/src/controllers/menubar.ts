@@ -6,7 +6,7 @@
 // @ui:controller menubar
 // @ui:provides open close destroy
 
-import { createMenuNavigation } from "./_core-menu-navigation";
+import { createMenuNavigation } from "./_core-menu-navigation.js";
 
 export function createMenubar(root) {
   if (root._faqirMenubar) return root._faqirMenubar;

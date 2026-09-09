@@ -3,10 +3,10 @@
 
 "use client";
 
-import { createFaqirRecipe } from "../recipe-runtime";
-import type { FaqirEventHandler, RecipeNode } from "../recipe-runtime";
+import { createFaqirRecipe } from "../recipe-runtime.js";
+import type { FaqirEventHandler, RecipeNode } from "../recipe-runtime.js";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
-import { createPopover } from "../controllers/popover";
+import { createPopover } from "../controllers/popover.js";
 
 /** Allowed `align` values (manifest variant group "align", attr `data-align` on content). */
 export type LPopoverAlign = "start" | "center" | "end";

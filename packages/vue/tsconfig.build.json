@@ -1,0 +1,23 @@
+{
+  // Emit config for the published package (task 0.6-12 · W1-3). Same rationale
+  // as packages/react/tsconfig.build.json: the package shipped 110 `.ts` files
+  // and zero `.js`/`.d.ts` while `main`/`module`/`types`/`exports` all pointed
+  // at `./src/index.ts`, so nothing but Vite could consume it.
+  //
+  // Plain `tsc`, not `vue-tsc`: every component here is a `defineComponent`
+  // call in a `.ts` file — there is not one SFC in the package — so there is no
+  // template to compile. `vue-tsc` stays the *typecheck* tool (it is what
+  // `bun run typecheck` runs) because it understands the Vue-specific
+  // diagnostics; emit needs none of that.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "verbatimModuleSyntax": true
+  },
+  "include": ["src/**/*.ts"]
+}

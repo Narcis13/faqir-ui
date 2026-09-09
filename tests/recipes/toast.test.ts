@@ -6,8 +6,10 @@
  *            already-attached api (stored on `root._faqirToast`).
  *
  * add(options) → id (string)
- *   options: { message="", tone="default", icon="", actionLabel="", onAction=null,
- *              duration=5000 }
+ *   options: { message="", tone="default", icon="", iconHtml="", actionLabel="",
+ *              onAction=null, duration=5000 }
+ *   • message / icon / actionLabel are TEXT (textContent). Markup in them is inert.
+ *     `iconHtml` is the one opt-in that writes innerHTML — see docs/security.md §4.
  *   • Appends a `[data-part="toast"]` element to `root`. Toasts STACK in insertion
  *     order (DOM order = call order).
  *   • Each toast is its own live region: role="status", aria-live="polite", plus
@@ -109,6 +111,61 @@ describe("toast controller", () => {
     const second = setupToast();
     second.api.add({ message: "No icon" });
     expect(second.root.querySelector("[data-part='icon']")).toBeNull();
+  });
+
+  // ── the innerHTML sink that was  ────────────────────────────────────────────
+  //
+  // `add()` used to concatenate message/icon/actionLabel into one string and
+  // assign it to `innerHTML`, so `add({ message: err.message })` — the single
+  // most ordinary call this API has — was an XSS whenever the error text came
+  // from a server, a URL or a form field. The three cases below are the ones
+  // that executed; each now has to survive as literal text.
+  const XSS = [
+    ['<img src=x onerror="window.__toastXss = true">', "img"],
+    ["<svg onload=\"window.__toastXss = true\"></svg>", "svg"],
+    ["<iframe src=javascript:void(0)></iframe>", "iframe"],
+  ] as const;
+
+  it("escapes message — markup in it never becomes nodes", () => {
+    for (const [payload, tag] of XSS) {
+      document.body.innerHTML = "";
+      const { root } = setupToast();
+      const api = createToastContainer(root);
+      api.add({ message: payload, duration: 0 });
+      const message = root.querySelector("[data-part='message']") as HTMLElement;
+      expect(message.querySelector(tag)).toBeNull();
+      expect(message.children.length).toBe(0);
+      expect(message.textContent).toBe(payload);
+    }
+    expect((window as unknown as Record<string, unknown>).__toastXss).toBeUndefined();
+  });
+
+  it("escapes icon and actionLabel too", () => {
+    const { root, api } = setupToast();
+    const payload = '<img src=x onerror="window.__toastXss = true">';
+    api.add({ message: "ok", icon: payload, actionLabel: payload, duration: 0 });
+    const icon = root.querySelector("[data-part='icon']") as HTMLElement;
+    const action = root.querySelector("[data-part='action']") as HTMLElement;
+    expect(icon.querySelector("img")).toBeNull();
+    expect(icon.textContent).toBe(payload);
+    expect(action.querySelector("img")).toBeNull();
+    expect(action.textContent).toBe(payload);
+    expect((window as unknown as Record<string, unknown>).__toastXss).toBeUndefined();
+  });
+
+  it("iconHtml is the explicit opt-in that does render markup", () => {
+    const { root, api } = setupToast();
+    api.add({ message: "ok", iconHtml: "<svg data-glyph></svg>", duration: 0 });
+    const icon = root.querySelector("[data-part='icon']") as HTMLElement;
+    expect(icon.querySelector("svg")).not.toBeNull();
+  });
+
+  it("iconHtml wins over icon when both are supplied", () => {
+    const { root, api } = setupToast();
+    api.add({ message: "ok", icon: "★", iconHtml: "<svg data-glyph></svg>", duration: 0 });
+    const icon = root.querySelector("[data-part='icon']") as HTMLElement;
+    expect(icon.querySelector("svg")).not.toBeNull();
+    expect(icon.textContent).toBe("");
   });
 
   it("renders an action button only when actionLabel is supplied", () => {

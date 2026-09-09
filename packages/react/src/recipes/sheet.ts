@@ -3,10 +3,10 @@
 
 "use client";
 
-import { createFaqirRecipe } from "../recipe-runtime";
-import type { FaqirEventHandler, RecipeNode } from "../recipe-runtime";
+import { createFaqirRecipe } from "../recipe-runtime.js";
+import type { FaqirEventHandler, RecipeNode } from "../recipe-runtime.js";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
-import { createSheet } from "../controllers/sheet";
+import { createSheet } from "../controllers/sheet.js";
 
 /** Allowed `side` values (manifest variant group "side", attr `data-variant` on panel). */
 export type LSheetSide = "bottom" | "top" | "left" | "right";

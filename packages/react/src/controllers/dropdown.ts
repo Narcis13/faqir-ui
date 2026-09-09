@@ -6,8 +6,8 @@
 // @ui:controller dropdown
 // @ui:provides open close toggle destroy
 
-import { onOutsideClick } from "./_core-events";
-import { createMenuNavigation } from "./_core-menu-navigation";
+import { onOutsideClick } from "./_core-events.js";
+import { createMenuNavigation } from "./_core-menu-navigation.js";
 
 export function createDropdown(root) {
   // Prevent double-init
