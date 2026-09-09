@@ -3,10 +3,10 @@
 
 "use client";
 
-import { createFaqirRecipe } from "../recipe-runtime";
-import type { FaqirEventHandler, RecipeNode } from "../recipe-runtime";
+import { createFaqirRecipe } from "../recipe-runtime.js";
+import type { FaqirEventHandler, RecipeNode } from "../recipe-runtime.js";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
-import { createTreeView } from "../controllers/tree-view";
+import { createTreeView } from "../controllers/tree-view.js";
 
 export interface LTreeViewProps extends Omit<ComponentPropsWithoutRef<"ul">, "id" | "group" | "onExpand" | "onSelect"> {
   /** Root/ARIA id base; auto-generated per instance when unset. */

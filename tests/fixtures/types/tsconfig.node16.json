@@ -1,0 +1,19 @@
+{
+  // The same three fixtures under Node's own module resolution.
+  //
+  // This is the mode that caught the bug the `paths` mapping hid: `node16`
+  // classifies `faqir-core.d.ts` by the package's `"type": "module"`, so the
+  // `export = Faqir` the declaration used to carry was a CommonJS construct in
+  // a file the compiler had already decided was an ES module — TS1192 on
+  // `import Faqir from "@faqir-ui/core"`, the exact line both the README and
+  // the declaration's own header document.
+  //
+  // `bundler` mode alone is not enough to keep that from coming back: it is far
+  // more forgiving about the ESM/CJS boundary, which is why both configs exist
+  // and why both are compiled by the type test and by `bun run typecheck`.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "node16",
+    "moduleResolution": "node16"
+  }
+}

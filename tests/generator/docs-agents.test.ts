@@ -341,9 +341,12 @@ describe("the CDN pin the snippets carry", () => {
   });
 
   it("agrees with the package build's own sri.json when it has been run", () => {
-    // `packages/core/dist/` is git-ignored, so this holds on a developer machine
-    // and is vacuous on a bare CI checkout — which is exactly why the pin is
-    // committed separately in the first place.
+    // `packages/core/dist/` is git-ignored, so this can only compare something
+    // once the package build has run. CI runs `bun run build:core-package`
+    // before `bun test` so that it does. The guard stays for a bare developer
+    // checkout — and it is NOT the drift gate: that is `check:core-package`
+    // in the registry-audit job, which rebuilds and byte-compares cdn.json
+    // unconditionally. This one only asserts the two files agree.
     const sriPath = join(REPO, "packages", "core", "dist", "sri.json");
     if (!existsSync(sriPath)) return;
     const sri = JSON.parse(readFileSync(sriPath, "utf8")) as Record<string, string>;

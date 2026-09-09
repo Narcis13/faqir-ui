@@ -3,10 +3,10 @@
 
 "use client";
 
-import { createFaqirRecipe } from "../recipe-runtime";
-import type { FaqirEventHandler, RecipeNode } from "../recipe-runtime";
+import { createFaqirRecipe } from "../recipe-runtime.js";
+import type { FaqirEventHandler, RecipeNode } from "../recipe-runtime.js";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
-import { createAccordion } from "../controllers/accordion";
+import { createAccordion } from "../controllers/accordion.js";
 
 /** Allowed `bordered` values (manifest variant group "bordered", attr `data-bordered` on root). */
 export type LAccordionBordered = "true" | "false";

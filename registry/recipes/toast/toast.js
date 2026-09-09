@@ -11,11 +11,24 @@ export function createToastContainer(root) {
 
   /**
    * Add a new toast to the container.
+   *
+   * `message`, `icon` and `actionLabel` are TEXT. They are written with
+   * `textContent`, never `innerHTML`, because the overwhelmingly common call is
+   * `add({ message: err.message })` or a message built from a name the server
+   * echoed back — values the caller did not author. Markup in any of them is
+   * inert, exactly as it is in `l-text` (see `docs/security.md` §4).
+   *
+   * `iconHtml` is the explicit opt-in for markup — an inline `<svg>` glyph is
+   * the reason it exists. It is assigned to `innerHTML` verbatim and is
+   * therefore an `l-html`-class surface: never pass a value you did not author.
+   * When both are given, `iconHtml` wins.
+   *
    * @param {Object} options
-   * @param {string} options.message - Toast message text
+   * @param {string} options.message - Toast message text (escaped)
    * @param {string} [options.tone="default"] - default|success|error|warning
-   * @param {string} [options.icon] - Icon HTML content
-   * @param {string} [options.actionLabel] - Action button label
+   * @param {string} [options.icon] - Icon TEXT (a glyph such as "★"); escaped
+   * @param {string} [options.iconHtml] - Icon markup, written unescaped. Author-supplied only.
+   * @param {string} [options.actionLabel] - Action button label (escaped)
    * @param {Function} [options.onAction] - Action button callback
    * @param {number} [options.duration=5000] - Auto-dismiss delay in ms (0 to disable)
    * @returns {string} toast id
@@ -25,6 +38,7 @@ export function createToastContainer(root) {
       message = "",
       tone = "default",
       icon = "",
+      iconHtml = "",
       actionLabel = "",
       onAction = null,
       duration = 5000,
@@ -39,22 +53,37 @@ export function createToastContainer(root) {
     el.setAttribute("role", "status");
     el.setAttribute("aria-live", "polite");
 
-    // Build inner content
-    let html = "";
-
-    if (icon) {
-      html += `<span data-part="icon" aria-hidden="true">${icon}</span>`;
+    // Build inner content as NODES, not as a concatenated string. The same
+    // pattern as file-upload.js and tag-input.js, and for the same reason:
+    // every value below may come from outside the page's author.
+    if (icon || iconHtml) {
+      const iconEl = document.createElement("span");
+      iconEl.dataset.part = "icon";
+      iconEl.setAttribute("aria-hidden", "true");
+      // Opt-in markup wins over the escaped text form; see the doc comment.
+      if (iconHtml) iconEl.innerHTML = iconHtml;
+      else iconEl.textContent = icon;
+      el.appendChild(iconEl);
     }
 
-    html += `<span data-part="message">${message}</span>`;
+    const messageEl = document.createElement("span");
+    messageEl.dataset.part = "message";
+    messageEl.textContent = message;
+    el.appendChild(messageEl);
 
     if (actionLabel) {
-      html += `<button data-part="action">${actionLabel}</button>`;
+      const action = document.createElement("button");
+      action.dataset.part = "action";
+      action.textContent = actionLabel;
+      el.appendChild(action);
     }
 
-    html += `<button data-part="close" aria-label="Dismiss notification">&#x2715;</button>`;
+    const close = document.createElement("button");
+    close.dataset.part = "close";
+    close.setAttribute("aria-label", "Dismiss notification");
+    close.textContent = "\u2715"; // ✕ — was `&#x2715;` in the old innerHTML string
+    el.appendChild(close);
 
-    el.innerHTML = html;
     root.appendChild(el);
 
     // Transition from entering to visible on next frame

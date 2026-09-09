@@ -6,7 +6,7 @@
 // @ui:controller tooltip
 // @ui:provides show hide destroy
 
-import { debounce } from "./_core-utils";
+import { debounce } from "./_core-utils.js";
 
 export function createTooltip(root) {
   // Prevent double-init

@@ -6,7 +6,7 @@
 // @ui:controller sidebar
 // @ui:provides toggle expand collapse open close isMobile getState destroy
 
-import { trapFocus, focusFirst } from "./_core-focus";
+import { trapFocus, focusFirst } from "./_core-focus.js";
 
 /**
  * sidebar — a collapsible application sidebar with three modes:

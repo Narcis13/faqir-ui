@@ -3,10 +3,10 @@
 
 "use client";
 
-import { createFaqirRecipe } from "../recipe-runtime";
-import type { FaqirEventHandler, RecipeNode } from "../recipe-runtime";
+import { createFaqirRecipe } from "../recipe-runtime.js";
+import type { FaqirEventHandler, RecipeNode } from "../recipe-runtime.js";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
-import { createCarousel } from "../controllers/carousel";
+import { createCarousel } from "../controllers/carousel.js";
 
 export interface LCarouselProps extends Omit<ComponentPropsWithoutRef<"div">, "id" | "viewport" | "controls" | "prev" | "next" | "dots" | "status" | "onChange"> {
   /** Root/ARIA id base; auto-generated per instance when unset. */

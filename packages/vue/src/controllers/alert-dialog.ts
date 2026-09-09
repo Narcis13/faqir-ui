@@ -6,7 +6,7 @@
 // @ui:controller alert-dialog
 // @ui:provides open close toggle destroy
 
-import { createDialog } from "./dialog";
+import { createDialog } from "./dialog.js";
 
 /**
  * alert-dialog reuses the `dialog` controller wholesale — there is no forked or

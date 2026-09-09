@@ -3,10 +3,10 @@
 
 "use client";
 
-import { createFaqirRecipe } from "../recipe-runtime";
-import type { FaqirEventHandler, RecipeNode } from "../recipe-runtime";
+import { createFaqirRecipe } from "../recipe-runtime.js";
+import type { FaqirEventHandler, RecipeNode } from "../recipe-runtime.js";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
-import { createTagInput } from "../controllers/tag-input";
+import { createTagInput } from "../controllers/tag-input.js";
 
 export interface LTagInputProps extends Omit<ComponentPropsWithoutRef<"div">, "id" | "placeholder" | "taglist" | "input" | "value"> {
   /** Root/ARIA id base; auto-generated per instance when unset. */

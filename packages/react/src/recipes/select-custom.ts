@@ -3,10 +3,10 @@
 
 "use client";
 
-import { createFaqirRecipe } from "../recipe-runtime";
-import type { FaqirEventHandler, RecipeNode } from "../recipe-runtime";
+import { createFaqirRecipe } from "../recipe-runtime.js";
+import type { FaqirEventHandler, RecipeNode } from "../recipe-runtime.js";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
-import { createSelectCustom } from "../controllers/select-custom";
+import { createSelectCustom } from "../controllers/select-custom.js";
 
 /** Allowed `size` values (manifest variant group "size", attr `data-size` on root). */
 export type LSelectCustomSize = "sm" | "md" | "lg";

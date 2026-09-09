@@ -3,10 +3,10 @@
 
 "use client";
 
-import { createFaqirRecipe } from "../recipe-runtime";
-import type { FaqirEventHandler, RecipeNode } from "../recipe-runtime";
+import { createFaqirRecipe } from "../recipe-runtime.js";
+import type { FaqirEventHandler, RecipeNode } from "../recipe-runtime.js";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
-import { createToastContainer } from "../controllers/toast";
+import { createToastContainer } from "../controllers/toast.js";
 
 /** Allowed `position` values (manifest variant group "position", attr `data-variant` on container). */
 export type LToastPosition = "top-right" | "top-left" | "bottom-right" | "bottom-left";

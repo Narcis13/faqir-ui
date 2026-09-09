@@ -1,0 +1,34 @@
+{
+  // Emit config for the published package (task 0.7-01 · W1-3).
+  //
+  // `tsconfig.json` beside this one is the typecheck config: `noEmit`, sources
+  // only. This one produces what actually ships — `dist/*.js` next to
+  // `dist/*.d.ts` — because the package used to point `main`/`module`/`types`
+  // and every `exports` condition straight at `./src/index.ts`. A tarball of
+  // 108 `.ts` files and zero `.js` is not installable: Node 18 fails with
+  // ERR_UNKNOWN_FILE_EXTENSION, Node 24 with
+  // ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING, `tsc --moduleResolution
+  // node16` reports 175 errors that `skipLibCheck` cannot suppress (it skips
+  // `.d.ts`, and these were `.ts`), and a stock `next build` dies in
+  // `Module parse failed`. Only Vite, and Next with `transpilePackages`,
+  // worked — which is why the SSR story underneath was known to be sound.
+  //
+  // `"use client"` survives: TypeScript preserves a directive prologue through
+  // emit, and `tests/bindings/packaged-consumer.test.ts` asserts it on the
+  // emitted files rather than trusting that.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    // The published .d.ts files are consumed under `node16` as well as
+    // `bundler`, so relative specifiers must carry an extension that resolves
+    // in both. `ESNext`/`bundler` here matches how the sources are authored;
+    // `verbatimModuleSyntax` keeps `import type` from becoming a runtime import.
+    "verbatimModuleSyntax": true
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx"]
+}

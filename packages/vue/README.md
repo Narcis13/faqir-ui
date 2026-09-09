@@ -15,6 +15,22 @@ This package ships **no CSS**. Style with the Faqir bundle your project
 already uses — either your project's `faqir bundle` output or
 `@faqir-ui/core/dist/faqir.{theme}.css`.
 
+## What ships
+
+The published tarball contains compiled output — `dist/*.js` beside `dist/*.d.ts`,
+one module per component — emitted by `tsc` from the generated sources. `main`,
+`module`, `types` and the `exports` map all resolve into `dist/`; the sources are
+shipped alongside only so the declaration and source maps resolve.
+
+That means **no consumer configuration**. It installs and imports on plain Node
+18+, typechecks under `moduleResolution: node16` as well as `bundler`, and builds
+in Next.js without `transpilePackages` (earlier versions published `.ts` and
+required it). `tests/bindings/packaged-consumer.test.ts` installs the packed
+tarball into a throwaway project and holds each of those.
+
+The one-module-per-component emit is deliberate: it keeps tree-shaking intact and
+keeps each component independently importable.
+
 ## Usage
 
 ```vue

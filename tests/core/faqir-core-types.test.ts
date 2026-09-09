@@ -21,7 +21,7 @@
  * interfaces nest, extend one another and carry doc comments full of the very
  * identifiers a regex would match.
  */
-import { describe, expect, it } from "bun:test";
+import { beforeAll, describe, expect, it } from "bun:test";
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -314,10 +314,31 @@ describe("the declaration compiles the fixtures — and rejects their misuse", (
     expect(positives.length).toBeGreaterThanOrEqual(10);
   });
 
-  it("compiles tests/fixtures/types with zero diagnostics", () => {
+  // The fixtures resolve `@faqir-ui/core` out of a packed tarball installed
+  // into their own node_modules, not through a `paths` mapping — see
+  // scripts/install-type-fixture.mjs for why that distinction is the whole
+  // point. Installing is content-addressed, so this is a no-op once warm.
+  beforeAll(() => {
+    const install = runSync("node", [join(ROOT, "scripts", "install-type-fixture.mjs")], {
+      cwd: ROOT,
+      encoding: "utf8",
+      timeout: SPAWN_TIMEOUT.BUILD,
+    });
+    if (install.status !== 0) {
+      throw new Error(`install-type-fixture failed:\n${install.stdout ?? ""}${install.stderr ?? ""}`);
+    }
+  });
+
+  // Both resolution modes. `bundler` is forgiving about the ESM/CJS boundary;
+  // `node16` is the one that fails on a CommonJS `export =` inside a file the
+  // package's `"type": "module"` has already classified as ESM — which is what
+  // the declaration shipped, and what every real consumer hit as TS1192.
+  it.each(["tsconfig.json", "tsconfig.node16.json"])(
+    "compiles tests/fixtures/types with zero diagnostics (%s)",
+    (config) => {
     const tsc = join(ROOT, "node_modules", ".bin", "tsc");
     expect(existsSync(tsc), "typescript must be installed to run the type tests").toBe(true);
-    const result = runSync(tsc, ["-p", join(FIXTURES, "tsconfig.json")], {
+    const result = runSync(tsc, ["-p", join(FIXTURES, config)], {
       cwd: ROOT,
       encoding: "utf8",
       timeout: SPAWN_TIMEOUT.BUILD,

@@ -6,7 +6,7 @@
 // @ui:controller tag-input
 // @ui:provides getValue setValue addTag removeTag clear destroy
 
-import { onOutsideClick } from "./_core-events";
+import { onOutsideClick } from "./_core-events.js";
 
 /**
  * tag-input — a multi-value text input that composes two existing recipes:

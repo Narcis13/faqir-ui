@@ -25,12 +25,38 @@
 
 export type TokenType = "startTag" | "endTag" | "comment" | "doctype" | "text";
 
+/**
+ * One attribute exactly as it was authored — enough to write it back byte for
+ * byte. `attrs` below is the lookup table (last duplicate wins, bare attributes
+ * read as `""`); this is the *source* record, which a rewriter needs and a
+ * reader does not.
+ *
+ * The distinction that matters: `quote` is the delimiter actually used, and
+ * `value` is `null` for a bare attribute (`hidden`) versus `""` for an explicitly
+ * empty one (`hidden=""`). Re-emitting an attribute with a delimiter it was not
+ * authored with is how `l-data='{ "msg": "hi" }'` becomes broken markup.
+ */
+export interface RawAttr {
+  /** Name verbatim, in the case it was written. */
+  name: string;
+  /** Value with delimiters stripped and entities NOT decoded; `null` when there was no `=`. */
+  value: string | null;
+  /** The delimiter used: `"`, `'`, or `""` for an unquoted value or a bare attribute. */
+  quote: '"' | "'" | "";
+}
+
 export interface Token {
   type: TokenType;
   /** Lowercased tag name for start/end tags; "" for comment/doctype/text. */
   name: string;
   /** Attributes for a start tag (names kept verbatim); empty otherwise. */
   attrs: Record<string, string>;
+  /**
+   * The same attributes in source order, with their authored quoting, including
+   * duplicates. Empty for end tags and non-tag tokens. Consumers that only read
+   * values want {@link Token.attrs}; consumers that rewrite the tag want this.
+   */
+  rawAttrs: RawAttr[];
   /** True when a start tag had an explicit `/` before `>` (e.g. `<br/>`). */
   selfClosing: boolean;
   /** Byte offset of the token's leading `<` (or first char, for text). */
@@ -124,6 +150,7 @@ function parseTag(
   const name = source.slice(nameStart, i).toLowerCase();
 
   const attrs: Record<string, string> = {};
+  const rawAttrs: RawAttr[] = [];
   let selfClosing = false;
 
   // Attribute loop (before-attribute-name state and friends, flattened).
@@ -161,12 +188,16 @@ function parseTag(
 
     while (i < n && isWhitespace(source[i])) i++;
 
-    let value = "";
+    // `null` until an `=` is seen, so a bare attribute stays distinguishable
+    // from one written `attr=""` — they serialize differently.
+    let value: string | null = null;
+    let quote: '"' | "'" | "" = "";
     if (source[i] === "=") {
       i++;
       while (i < n && isWhitespace(source[i])) i++;
       const q = source[i];
       if (q === '"' || q === "'") {
+        quote = q;
         i++;
         const vStart = i;
         while (i < n && source[i] !== q) i++;
@@ -179,7 +210,10 @@ function parseTag(
       }
     }
 
-    if (attrName) attrs[attrName] = value; // later duplicate wins (matches prior parser)
+    if (attrName) {
+      attrs[attrName] = value ?? ""; // later duplicate wins (matches prior parser)
+      rawAttrs.push({ name: attrName, value, quote });
+    }
   }
 
   const p = positionAt(lineStarts, start);
@@ -188,6 +222,7 @@ function parseTag(
       type: isEnd ? "endTag" : "startTag",
       name,
       attrs: isEnd ? {} : attrs,
+      rawAttrs: isEnd ? [] : rawAttrs,
       selfClosing,
       start,
       end: i,
@@ -215,7 +250,7 @@ export function tokenizeHTML(source: string): Token[] {
   const pushText = (s: number, e: number) => {
     if (e <= s) return;
     const p = pos(s);
-    tokens.push({ type: "text", name: "", attrs: {}, selfClosing: false, start: s, end: e, line: p.line, column: p.column });
+    tokens.push({ type: "text", name: "", attrs: {}, rawAttrs: [], selfClosing: false, start: s, end: e, line: p.line, column: p.column });
   };
 
   let i = 0;
@@ -245,7 +280,7 @@ export function tokenizeHTML(source: string): Token[] {
           end = close === -1 ? n : close + 3;
         }
         const p = pos(start);
-        tokens.push({ type: "comment", name: "", attrs: {}, selfClosing: false, start, end, line: p.line, column: p.column });
+        tokens.push({ type: "comment", name: "", attrs: {}, rawAttrs: [], selfClosing: false, start, end, line: p.line, column: p.column });
         i = end;
         continue;
       }
@@ -253,7 +288,7 @@ export function tokenizeHTML(source: string): Token[] {
         const gt = source.indexOf(">", i);
         const end = gt === -1 ? n : gt + 1;
         const p = pos(start);
-        tokens.push({ type: "doctype", name: "", attrs: {}, selfClosing: false, start, end, line: p.line, column: p.column });
+        tokens.push({ type: "doctype", name: "", attrs: {}, rawAttrs: [], selfClosing: false, start, end, line: p.line, column: p.column });
         i = end;
         continue;
       }
@@ -261,7 +296,7 @@ export function tokenizeHTML(source: string): Token[] {
       const gt = source.indexOf(">", i);
       const end = gt === -1 ? n : gt + 1;
       const p = pos(start);
-      tokens.push({ type: "comment", name: "", attrs: {}, selfClosing: false, start, end, line: p.line, column: p.column });
+      tokens.push({ type: "comment", name: "", attrs: {}, rawAttrs: [], selfClosing: false, start, end, line: p.line, column: p.column });
       i = end;
       continue;
     }

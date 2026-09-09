@@ -3,10 +3,10 @@
 
 "use client";
 
-import { createFaqirRecipe } from "../recipe-runtime";
-import type { FaqirEventHandler, RecipeNode } from "../recipe-runtime";
+import { createFaqirRecipe } from "../recipe-runtime.js";
+import type { FaqirEventHandler, RecipeNode } from "../recipe-runtime.js";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
-import { createFileUpload } from "../controllers/file-upload";
+import { createFileUpload } from "../controllers/file-upload.js";
 
 export interface LFileUploadProps extends Omit<ComponentPropsWithoutRef<"div">, "id" | "accept" | "maxSize" | "dropzone" | "input" | "prompt" | "description" | "list" | "empty" | "status" | "onFileReject" | "onFileRemove" | "onFiles"> {
   /** Root/ARIA id base; auto-generated per instance when unset. */

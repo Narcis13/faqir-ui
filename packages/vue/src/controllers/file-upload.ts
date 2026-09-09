@@ -6,7 +6,7 @@
 // @ui:controller file-upload
 // @ui:provides getFiles open remove clear destroy
 
-import { uid } from "./_core-utils";
+import { uid } from "./_core-utils.js";
 
 /**
  * Drag-and-drop file collection with a native file-input fallback.

@@ -6,8 +6,8 @@
 // @ui:controller context-menu
 // @ui:provides open close destroy
 
-import { onOutsideClick } from "./_core-events";
-import { createMenuNavigation } from "./_core-menu-navigation";
+import { onOutsideClick } from "./_core-events.js";
+import { createMenuNavigation } from "./_core-menu-navigation.js";
 
 export function createContextMenu(root) {
   if (root._faqirContextMenu) return root._faqirContextMenu;

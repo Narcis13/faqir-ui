@@ -6,8 +6,8 @@
 // @ui:controller date-picker
 // @ui:provides open close getValue setValue navigate selectDate destroy
 
-import { onOutsideClick } from "./_core-events";
-import { createCalendar } from "./calendar";
+import { onOutsideClick } from "./_core-events.js";
+import { createCalendar } from "./calendar.js";
 
 const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",

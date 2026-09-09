@@ -3,10 +3,10 @@
 
 "use client";
 
-import { createFaqirRecipe } from "../recipe-runtime";
-import type { FaqirEventHandler, RecipeNode } from "../recipe-runtime";
+import { createFaqirRecipe } from "../recipe-runtime.js";
+import type { FaqirEventHandler, RecipeNode } from "../recipe-runtime.js";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
-import { createInputOTP } from "../controllers/input-otp";
+import { createInputOTP } from "../controllers/input-otp.js";
 
 /** Allowed `mode` values (manifest variant group "mode", attr `data-mode` on root). */
 export type LInputOtpMode = "numeric" | "alphanumeric";

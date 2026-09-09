@@ -6,7 +6,7 @@
 // @ui:controller combobox
 // @ui:provides open close filter selectOption getValue setValue destroy
 
-import { onOutsideClick } from "./_core-events";
+import { onOutsideClick } from "./_core-events.js";
 
 export function createCombobox(root) {
   // Prevent double-init

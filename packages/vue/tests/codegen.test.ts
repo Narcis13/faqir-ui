@@ -218,9 +218,14 @@ describe("recipe codegen (task 0.6-13)", () => {
   });
 
   it("vendored controllers rewrite imports to package-local modules", () => {
-    expect(generated.get("controllers/dialog.ts")!).toContain('from "./_core-focus"');
-    expect(generated.get("controllers/alert-dialog.ts")!).toContain('from "./dialog"');
-    expect(generated.get("controllers/date-picker.ts")!).toContain('from "./calendar"');
+    // With a `.js` extension: the package publishes real ESM, and Node's
+    // resolver requires the extension on a relative specifier. An extensionless
+    // import typechecks under `bundler` and fails to load under Node — see
+    // tests/bindings/packaged-consumer.test.ts, which asserts the absence of
+    // any extensionless specifier across the whole emitted tarball.
+    expect(generated.get("controllers/dialog.ts")!).toContain('from "./_core-focus.js"');
+    expect(generated.get("controllers/alert-dialog.ts")!).toContain('from "./dialog.js"');
+    expect(generated.get("controllers/date-picker.ts")!).toContain('from "./calendar.js"');
     for (const helper of ["focus", "events", "utils"]) {
       expect(generated.has(`controllers/_core-${helper}.ts`)).toBe(true);
     }

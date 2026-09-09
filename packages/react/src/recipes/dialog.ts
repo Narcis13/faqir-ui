@@ -3,10 +3,10 @@
 
 "use client";
 
-import { createFaqirRecipe } from "../recipe-runtime";
-import type { FaqirEventHandler, RecipeNode } from "../recipe-runtime";
+import { createFaqirRecipe } from "../recipe-runtime.js";
+import type { FaqirEventHandler, RecipeNode } from "../recipe-runtime.js";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
-import { createDialog } from "../controllers/dialog";
+import { createDialog } from "../controllers/dialog.js";
 
 /** Allowed `size` values (manifest variant group "size", attr `data-size` on panel). */
 export type LDialogSize = "sm" | "md" | "lg" | "full";

@@ -6,7 +6,7 @@
 // @ui:controller select-custom
 // @ui:provides open close toggle select getValue destroy
 
-import { onOutsideClick } from "./_core-events";
+import { onOutsideClick } from "./_core-events.js";
 
 export function createSelectCustom(root) {
   // Prevent double-init

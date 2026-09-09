@@ -1642,14 +1642,14 @@
         },
         {
           "path": "toast.js",
-          "sha256": "736b8ee8a78330145234beea0178b70f7e668c58ecd2611aa813b447557bc4fa"
+          "sha256": "e51ecb5507829b7c6e99b83a25dfbeea6e3f1878d571c880cd91f12e49ee00cd"
         },
         {
           "path": "toast.manifest.json",
           "sha256": "db722d84a1f18899528aadc821d1b4e937373f026f635449ed34822010bfce64"
         }
       ],
-      "hash": "e92fc304399d5b9668574872aeb09a6796072792d5de5e55ae1de1676d0a600d",
+      "hash": "8048a7aed42f31e6948838557251d22da386fdab84a580f86719a873a9ddb0b9",
       "deps": [
         "button"
       ]

@@ -1,5 +1,8 @@
 {
-  // Type tests for `packages/core/faqir-core.d.ts` (task 1.0-02).
+  // Type tests for `@faqir-ui/core` (task 1.0-02) — the BUNDLER resolution mode.
+  // `tsconfig.node16.json` beside this file compiles the same three fixtures
+  // under Node's own resolver; both must pass, because the declaration broke in
+  // both and the two disagree about almost everything that matters here.
   //
   // Compiled by `tests/core/faqir-core-types.test.ts` and by the root
   // `typecheck` script. The contract is ZERO diagnostics, which asserts BOTH
@@ -7,6 +10,15 @@
   // `@ts-expect-error` line must actually error — an unused one is itself a
   // diagnostic ("Unused '@ts-expect-error' directive"), so a declaration that
   // quietly accepts misuse fails here.
+  //
+  // NO `paths`. The package is resolved out of `node_modules/@faqir-ui/core`,
+  // installed from a real `npm pack` tarball by
+  // `scripts/install-type-fixture.mjs`. The mapping this replaced pointed tsc
+  // straight at `packages/core/faqir-core.d.ts`, which skips the `exports` map,
+  // condition matching and the ESM/CJS classification that `"type": "module"`
+  // imposes — so the fixture passed while every real consumer got TS1192 on the
+  // very first line of the README. The one shape everybody uses was the one
+  // shape untested.
   //
   // `skipLibCheck` is off on purpose: the point is to check the .d.ts, and the
   // root tsconfig (which turns it on) excludes this directory for that reason.
@@ -20,16 +32,7 @@
     "esModuleInterop": true,
     "skipLibCheck": false,
     "noEmit": true,
-    "types": [],
-    "baseUrl": ".",
-    "paths": {
-      "@faqir-ui/core": ["../../../packages/core/faqir-core.d.ts"]
-    }
+    "types": []
   },
-  "files": [
-    "../../../packages/core/faqir-core.d.ts",
-    "module-usage.ts",
-    "global-usage.ts",
-    "augmentation.ts"
-  ]
+  "files": ["module-usage.ts", "global-usage.ts", "augmentation.ts"]
 }

@@ -6,7 +6,7 @@
 // @ui:controller popover
 // @ui:provides open close toggle destroy
 
-import { onOutsideClick } from "./_core-events";
+import { onOutsideClick } from "./_core-events.js";
 
 export function createPopover(root) {
   // Prevent double-init
