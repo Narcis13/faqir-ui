@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import { existsSync, rmSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { init } from "../../src/commands/init";
+import { SPAWN_TIMEOUT, runSyncBun } from "../helpers/spawn";
 
 const TEST_DIR = join(import.meta.dir, "../.tmp-init-test");
 
@@ -10,7 +11,7 @@ describe("faqir init", () => {
     rmSync(TEST_DIR, { recursive: true, force: true });
     mkdirSync(TEST_DIR, { recursive: true });
     // Also init a git repo so .gitignore logic is tested
-    Bun.spawnSync(["git", "init"], { cwd: TEST_DIR });
+    runSyncBun(["git", "init"], { cwd: TEST_DIR, timeout: SPAWN_TIMEOUT.QUICK });
   });
 
   afterEach(() => {

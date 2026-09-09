@@ -4,7 +4,6 @@ import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { spawnSync } from "node:child_process";
 import { Glob } from "bun";
 import {
   ACCENT_STEPS,
@@ -12,6 +11,7 @@ import {
   type ThemeGenerateInput,
 } from "../../src/commands/theme-generate";
 import { checkThemeContrast, CONTRAST_AA } from "../../src/audit/contrast-tokens";
+import { SPAWN_TIMEOUT, runSync } from "../helpers/spawn";
 import {
   inheritedTokens,
   isSurfaceTokenFile,
@@ -202,10 +202,11 @@ describe("faqir theme generate · CLI", () => {
   });
 
   function run(args: string[], cwd = tempDir) {
-    const result = spawnSync(process.execPath, [SRC_INDEX, "theme", "generate", ...args], {
+    const result = runSync(process.execPath, [SRC_INDEX, "theme", "generate", ...args], {
       cwd,
       encoding: "utf8",
       stdio: ["pipe", "pipe", "pipe"],
+      timeout: SPAWN_TIMEOUT.CLI,
     });
     return {
       status: result.status,

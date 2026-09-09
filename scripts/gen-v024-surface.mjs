@@ -23,6 +23,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { extractRegistrySurface, MIGRATION_FROM_VERSION } from "../src/migration.ts";
+import { BUILD_TIMEOUT_MS } from "./spawn.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const OUT = join(ROOT, "tests", "fixtures", "v024", "surface.json");
@@ -33,9 +34,16 @@ const checkOnly = process.argv.includes("--check");
 const work = mkdtempSync(join(tmpdir(), "faqir-v024-"));
 try {
   const archive = join(work, "registry.tar");
-  execFileSync("git", ["archive", "--output", archive, TAG, "registry"], { cwd: ROOT });
+  execFileSync("git", ["archive", "--output", archive, TAG, "registry"], {
+    cwd: ROOT,
+    timeout: BUILD_TIMEOUT_MS,
+    killSignal: "SIGKILL",
+  });
   mkdirSync(join(work, "tree"), { recursive: true });
-  execFileSync("tar", ["-xf", archive, "-C", join(work, "tree")]);
+  execFileSync("tar", ["-xf", archive, "-C", join(work, "tree")], {
+    timeout: BUILD_TIMEOUT_MS,
+    killSignal: "SIGKILL",
+  });
 
   const surface = extractRegistrySurface(join(work, "tree", "registry"));
   const document = {

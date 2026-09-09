@@ -1,9 +1,9 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { SPAWN_TIMEOUT, runSync } from "../helpers/spawn";
 
 const ROOT = resolve(fileURLToPath(new URL(".", import.meta.url)), "../..");
 const REAL_RECIPES = join(ROOT, "registry", "recipes");
@@ -48,11 +48,19 @@ describe("build:core determinism", () => {
   test("`bun run build:core` is deterministic and the committed artifact is fresh", () => {
     const before = readFileSync(OUT);
 
-    const r1 = spawnSync("bun", ["run", "build:core"], { cwd: ROOT, encoding: "utf8" });
+    const r1 = runSync("bun", ["run", "build:core"], {
+      cwd: ROOT,
+      encoding: "utf8",
+      timeout: SPAWN_TIMEOUT.BUILD,
+    });
     expect(r1.status).toBe(0);
     const after1 = readFileSync(OUT);
 
-    const r2 = spawnSync("bun", ["run", "build:core"], { cwd: ROOT, encoding: "utf8" });
+    const r2 = runSync("bun", ["run", "build:core"], {
+      cwd: ROOT,
+      encoding: "utf8",
+      timeout: SPAWN_TIMEOUT.BUILD,
+    });
     expect(r2.status).toBe(0);
     const after2 = readFileSync(OUT);
 

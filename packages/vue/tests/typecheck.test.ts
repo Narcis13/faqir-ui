@@ -4,12 +4,16 @@
 
 import { describe, it, expect } from "bun:test";
 import { join } from "node:path";
+import { SPAWN_TIMEOUT, runSyncBun } from "../../../tests/helpers/spawn";
 
 const PKG = join(import.meta.dir, "..");
 const VUE_TSC = join(PKG, "node_modules", ".bin", "vue-tsc");
 
 function runVueTsc(project: string): { exitCode: number; output: string } {
-  const proc = Bun.spawnSync([VUE_TSC, "--noEmit", "-p", project], { cwd: PKG });
+  const proc = runSyncBun([VUE_TSC, "--noEmit", "-p", project], {
+    cwd: PKG,
+    timeout: SPAWN_TIMEOUT.BUILD,
+  });
   return {
     exitCode: proc.exitCode,
     output: proc.stdout.toString() + proc.stderr.toString(),

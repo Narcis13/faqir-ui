@@ -22,7 +22,6 @@
  *
  * Runnable via `bun run build:core-package` or `node scripts/build-core-package.mjs`.
  */
-import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
   copyFileSync,
@@ -36,6 +35,7 @@ import {
 } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { BUILD_TIMEOUT_MS, isTimeout, spawnBudgeted, timeoutMessage } from "./spawn.mjs";
 import { gzipSync } from "node:zlib";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -117,19 +117,26 @@ function buildThemeCss(themeName) {
 
 function minifyEngine() {
   const bun = process.env.FAQIR_BUN || "bun";
-  const result = spawnSync(
-    bun,
-    [
-      "build",
-      CDN_ENTRY,
-      "--minify",
-      "--format=iife",
-      "--sourcemap=linked",
-      `--outdir=${DIST}`,
-      "--entry-naming=faqir-core.min.js",
-    ],
-    { stdio: ["ignore", "pipe", "inherit"], cwd: ROOT, encoding: "utf8" }
-  );
+  const args = [
+    "build",
+    CDN_ENTRY,
+    "--minify",
+    "--format=iife",
+    "--sourcemap=linked",
+    `--outdir=${DIST}`,
+    "--entry-naming=faqir-core.min.js",
+  ];
+  const result = spawnBudgeted(bun, args, {
+    stdio: ["ignore", "pipe", "inherit"],
+    cwd: ROOT,
+    encoding: "utf8",
+    timeout: BUILD_TIMEOUT_MS,
+  });
+
+  if (isTimeout(result)) {
+    process.stderr.write(`build:core-package ${timeoutMessage(bun, args)}`);
+    process.exit(1);
+  }
 
   if (result.error) {
     if (result.error.code === "ENOENT") {

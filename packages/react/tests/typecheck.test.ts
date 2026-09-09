@@ -5,13 +5,17 @@
 
 import { describe, it, expect } from "bun:test";
 import { join } from "node:path";
+import { SPAWN_TIMEOUT, runSyncBun } from "../../../tests/helpers/spawn";
 
 const PKG = join(import.meta.dir, "..");
 const REPO_ROOT = join(PKG, "..", "..");
 const TSC = join(REPO_ROOT, "node_modules", ".bin", "tsc");
 
 function runTsc(project: string): { exitCode: number; output: string } {
-  const proc = Bun.spawnSync([TSC, "--noEmit", "-p", project], { cwd: PKG });
+  const proc = runSyncBun([TSC, "--noEmit", "-p", project], {
+    cwd: PKG,
+    timeout: SPAWN_TIMEOUT.BUILD,
+  });
   return {
     exitCode: proc.exitCode,
     output: proc.stdout.toString() + proc.stderr.toString(),

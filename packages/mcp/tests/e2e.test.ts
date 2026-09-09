@@ -1,10 +1,11 @@
 import { describe, it, expect, beforeAll } from "bun:test";
-import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join, resolve } from "node:path";
 
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+
+import { SPAWN_TIMEOUT, runSync } from "../../../tests/helpers/spawn";
 
 const PKG = resolve(import.meta.dir, "..");
 const DIST = join(PKG, "dist", "index.mjs");
@@ -19,7 +20,11 @@ const DIST = join(PKG, "dist", "index.mjs");
 describe("compiled server — real stdio spawn", () => {
   beforeAll(() => {
     // Build once (idempotent). Requires Bun to compile; skipped-with-failure if absent.
-    const build = spawnSync("node", [join(PKG, "build.mjs")], { cwd: PKG, stdio: "pipe" });
+    const build = runSync("node", [join(PKG, "build.mjs")], {
+      cwd: PKG,
+      stdio: "pipe",
+      timeout: SPAWN_TIMEOUT.BUILD,
+    });
     if (build.status !== 0) {
       throw new Error(`build failed:\n${build.stderr?.toString() ?? ""}`);
     }

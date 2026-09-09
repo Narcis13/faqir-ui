@@ -23,6 +23,7 @@ import { describe, it, expect, beforeAll, afterAll } from "bun:test";
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createServer, request } from "node:http";
 import { dirname, join } from "node:path";
+import { SPAWN_TIMEOUT, runSyncBun } from "../helpers/spawn";
 import {
   buildDocsSite,
   discoverDocsComponents,
@@ -1358,7 +1359,10 @@ describe("bun run build:docs", () => {
   it("writes a static directory, and --check gates it against drift", async () => {
     rmSync(outDir, { recursive: true, force: true });
 
-    const build = Bun.spawnSync(["bun", script, "--out", outDir], { cwd: REPO });
+    const build = runSyncBun(["bun", script, "--out", outDir], {
+      cwd: REPO,
+      timeout: SPAWN_TIMEOUT.BUILD,
+    });
     expect(build.exitCode, build.stderr.toString()).toBe(0);
     expect(build.stdout.toString()).toContain("site pages");
 
@@ -1370,20 +1374,31 @@ describe("bun run build:docs", () => {
     expect(existsSync(join(outDir, "styles", "faqir.css"))).toBe(true);
 
     // Fresh output matches a fresh generation…
-    const check = Bun.spawnSync(["bun", script, "--check", "--out", outDir], { cwd: REPO });
+    const check = runSyncBun(["bun", script, "--check", "--out", outDir], {
+      cwd: REPO,
+      timeout: SPAWN_TIMEOUT.BUILD,
+    });
     expect(check.exitCode, check.stderr.toString()).toBe(0);
 
     // …and the gate bites when it does not.
     writeFileSync(join(outDir, "index.html"), "<!doctype html><title>stale</title>");
-    const stale = Bun.spawnSync(["bun", script, "--check", "--out", outDir], { cwd: REPO });
+    const stale = runSyncBun(["bun", script, "--check", "--out", outDir], {
+      cwd: REPO,
+      timeout: SPAWN_TIMEOUT.BUILD,
+    });
     expect(stale.exitCode).toBe(1);
     expect(stale.stderr.toString()).toContain("index.html");
 
     // A rebuild is idempotent on disk: same bytes, and nothing left behind.
-    const rebuild = Bun.spawnSync(["bun", script, "--out", outDir], { cwd: REPO });
+    const rebuild = runSyncBun(["bun", script, "--out", outDir], {
+      cwd: REPO,
+      timeout: SPAWN_TIMEOUT.BUILD,
+    });
     expect(rebuild.exitCode).toBe(0);
     expect(readFileSync(join(outDir, "index.html"), "utf8")).toBe(page("index.html"));
-  }, 60_000);
+    // Four sequential `bun build-docs.mjs` runs — the test budget has to clear
+    // four spawn budgets, or the runner's uninformative timeout wins the race.
+  }, SPAWN_TIMEOUT.BUILD * 4 + 10_000);
 });
 
 /**

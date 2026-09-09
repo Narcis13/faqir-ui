@@ -2,9 +2,9 @@ import { describe, expect, it } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
-import { spawnSync } from "node:child_process";
 import { renderForm } from "../src/index.js";
 import type { ObjectSchema } from "../src/index.js";
+import { SPAWN_TIMEOUT, runSync } from "../../../tests/helpers/spawn";
 
 const ENTRY = join(import.meta.dir, "../src/index.js");
 const SCHEMA: ObjectSchema = { type: "object", properties: { name: { type: "string" } } };
@@ -19,7 +19,10 @@ describe("@faqir-ui/forms runtimes", () => {
     const script = `import { renderForm } from ${JSON.stringify(entry)};\n` +
       `const html = renderForm(${JSON.stringify(SCHEMA)});\n` +
       `if (!html.includes('data-ui="field-group"')) process.exit(2);`;
-    const result = spawnSync("node", ["--input-type=module", "--eval", script], { encoding: "utf8" });
+    const result = runSync("node", ["--input-type=module", "--eval", script], {
+      encoding: "utf8",
+      timeout: SPAWN_TIMEOUT.CLI,
+    });
     expect(result.status, result.stderr).toBe(0);
   });
 

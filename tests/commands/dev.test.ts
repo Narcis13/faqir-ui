@@ -8,12 +8,13 @@
  * spawned server.
  */
 import { afterAll, afterEach, describe, expect, test } from "bun:test";
-import { spawn, spawnSync } from "node:child_process";
+import { spawn } from "node:child_process";
 import { request } from "node:http";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { SPAWN_TIMEOUT, runSync } from "../helpers/spawn";
 
 import {
   OVERLAY_ROUTE,
@@ -300,20 +301,29 @@ describe("the dev server serves and injects it", () => {
   }, 30_000);
 
   test("--json describes the overlay it would inject", async () => {
-    const proc = Bun.spawn(["bun", "src/index.ts", "dev", "--json", "--dir", "."], { cwd: ROOT });
+    const proc = Bun.spawn(["bun", "src/index.ts", "dev", "--json", "--dir", "."], {
+      cwd: ROOT,
+      timeout: SPAWN_TIMEOUT.CLI,
+    });
     const out = JSON.parse(await new Response(proc.stdout).text());
     expect(out.overlay).toBe(true);
     expect(out.overlay_route).toBe(OVERLAY_ROUTE);
     expect(out.overlay_shortcut).toBe(OVERLAY_SHORTCUT);
 
-    const off = Bun.spawn(["bun", "src/index.ts", "dev", "--json", "--no-overlay"], { cwd: ROOT });
+    const off = Bun.spawn(["bun", "src/index.ts", "dev", "--json", "--no-overlay"], {
+      cwd: ROOT,
+      timeout: SPAWN_TIMEOUT.CLI,
+    });
     const offOut = JSON.parse(await new Response(off.stdout).text());
     expect(offOut.overlay).toBe(false);
     expect(offOut.overlay_route).toBeNull();
   }, 30_000);
 
   test("--help documents the shortcut and the opt-out", async () => {
-    const proc = Bun.spawn(["bun", "src/index.ts", "dev", "--help"], { cwd: ROOT });
+    const proc = Bun.spawn(["bun", "src/index.ts", "dev", "--help"], {
+      cwd: ROOT,
+      timeout: SPAWN_TIMEOUT.CLI,
+    });
     const out = await new Response(proc.stdout).text();
     expect(out).toContain("--no-overlay");
     expect(out).toContain(OVERLAY_SHORTCUT);
@@ -425,8 +435,9 @@ describe("the dev server is contained to its --dir", () => {
 
       // …and the listening socket is not a wildcard bind. Asked of the OS
       // rather than inferred, since the default lives in Bun.serve's options.
-      const lsof = spawnSync("lsof", ["-nP", `-iTCP:${port}`, "-sTCP:LISTEN"], {
+      const lsof = runSync("lsof", ["-nP", `-iTCP:${port}`, "-sTCP:LISTEN"], {
         encoding: "utf8",
+        timeout: SPAWN_TIMEOUT.QUICK,
       });
       if (lsof.status === 0 && lsof.stdout.trim()) {
         expect(lsof.stdout).not.toMatch(/\*:\d+ \(LISTEN\)/);

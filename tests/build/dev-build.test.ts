@@ -8,10 +8,10 @@
  * diagnostic cannot be added without the gate covering it.
  */
 import { beforeAll, describe, expect, test } from "bun:test";
-import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { SPAWN_TIMEOUT, runSync } from "../helpers/spawn";
 
 const ROOT = resolve(fileURLToPath(new URL(".", import.meta.url)), "../..");
 const PROD = join(ROOT, "registry", "core", "faqir-core.js");
@@ -157,7 +157,11 @@ describe("both builds are assembled from one source", () => {
   });
 
   test("`bun run build:core` writes both files and reports the dev size", () => {
-    const r = spawnSync("bun", ["run", "build:core"], { cwd: ROOT, encoding: "utf8" });
+    const r = runSync("bun", ["run", "build:core"], {
+      cwd: ROOT,
+      encoding: "utf8",
+      timeout: SPAWN_TIMEOUT.BUILD,
+    });
     expect(r.status).toBe(0);
     expect(r.stdout).toContain("registry/core/faqir-core.js");
     expect(r.stdout).toContain("registry/core/faqir-core.dev.js");
@@ -177,7 +181,7 @@ describe("both builds are assembled from one source", () => {
 
   test("both artifacts parse as JavaScript", () => {
     for (const file of [PROD, DEV]) {
-      const r = spawnSync("node", ["--check", file], { encoding: "utf8" });
+      const r = runSync("node", ["--check", file], { encoding: "utf8", timeout: SPAWN_TIMEOUT.QUICK });
       expect(r.status).toBe(0);
     }
   });
@@ -231,7 +235,11 @@ describe("size reporting", () => {
   });
 
   test("`bun run size` prints the dev engine without a budget and still passes", () => {
-    const r = spawnSync("bun", ["run", "size"], { cwd: ROOT, encoding: "utf8" });
+    const r = runSync("bun", ["run", "size"], {
+      cwd: ROOT,
+      encoding: "utf8",
+      timeout: SPAWN_TIMEOUT.BUILD,
+    });
     expect(r.status).toBe(0);
     expect(r.stdout).toMatch(/dev engine \(report only\).*no budget.*reported, not enforced/);
     expect(r.stdout).toContain("within budget");

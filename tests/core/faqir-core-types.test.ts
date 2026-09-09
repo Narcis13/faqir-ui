@@ -23,11 +23,11 @@
  */
 import { describe, expect, it } from "bun:test";
 import { readFileSync, readdirSync, existsSync } from "node:fs";
-import { spawnSync } from "node:child_process";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
 import { parseEngineVocabulary, parseSourceController } from "../../src/generator/skill";
+import { SPAWN_TIMEOUT, runSync } from "../helpers/spawn";
 
 const ROOT = resolve(fileURLToPath(new URL(".", import.meta.url)), "../..");
 const DTS = join(ROOT, "packages", "core", "faqir-core.d.ts");
@@ -317,9 +317,10 @@ describe("the declaration compiles the fixtures — and rejects their misuse", (
   it("compiles tests/fixtures/types with zero diagnostics", () => {
     const tsc = join(ROOT, "node_modules", ".bin", "tsc");
     expect(existsSync(tsc), "typescript must be installed to run the type tests").toBe(true);
-    const result = spawnSync(tsc, ["-p", join(FIXTURES, "tsconfig.json")], {
+    const result = runSync(tsc, ["-p", join(FIXTURES, "tsconfig.json")], {
       cwd: ROOT,
       encoding: "utf8",
+      timeout: SPAWN_TIMEOUT.BUILD,
     });
     const output = `${result.stdout ?? ""}${result.stderr ?? ""}`.trim();
     // TS2578 "Unused '@ts-expect-error' directive" is the negative direction

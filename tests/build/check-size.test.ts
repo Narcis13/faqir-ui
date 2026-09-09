@@ -8,11 +8,11 @@
 // fixture makes the script exit non-zero (and an under-budget one exits 0).
 
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { spawnSync } from "node:child_process";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { SPAWN_TIMEOUT, runSync } from "../helpers/spawn";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const SCRIPT = join(ROOT, "scripts", "check-size.mjs");
@@ -184,7 +184,8 @@ describe("runSizeCheck (in-process)", () => {
 // ── The CLI wiring actually calls process.exit with the right code ───────────
 // Spawns the script with `node` — present on CI runners and dev machines. Skips
 // cleanly in the rare environment where `node` is not on PATH (Bun-only box).
-const hasNode = spawnSync("node", ["--version"], { encoding: "utf8" }).status === 0;
+const hasNode =
+  runSync("node", ["--version"], { encoding: "utf8", timeout: SPAWN_TIMEOUT.QUICK }).status === 0;
 describe.skipIf(!hasNode)("check-size.mjs CLI", () => {
   function runCli(fixtureBudget: number | string, size: number) {
     const fixture = join(tmp, `cli-${String(size)}.js`);
@@ -192,10 +193,11 @@ describe.skipIf(!hasNode)("check-size.mjs CLI", () => {
     const targets = JSON.stringify([
       { label: "fixture", entry: fixture, budgetBytes: fixtureBudget, minify: false },
     ]);
-    return spawnSync("node", [SCRIPT], {
+    return runSync("node", [SCRIPT], {
       cwd: ROOT,
       encoding: "utf8",
       env: { ...process.env, FAQIR_SIZE_TARGETS: targets },
+      timeout: SPAWN_TIMEOUT.BUILD,
     });
   }
 
@@ -210,10 +212,11 @@ describe.skipIf(!hasNode)("check-size.mjs CLI", () => {
   });
 
   test("exits with code 2 on malformed FAQIR_SIZE_TARGETS", () => {
-    const res = spawnSync("node", [SCRIPT], {
+    const res = runSync("node", [SCRIPT], {
       cwd: ROOT,
       encoding: "utf8",
       env: { ...process.env, FAQIR_SIZE_TARGETS: "{ not an array }" },
+      timeout: SPAWN_TIMEOUT.CLI,
     });
     expect(res.status).toBe(2);
   });

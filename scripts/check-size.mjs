@@ -27,11 +27,11 @@
  *
  * Runnable via `node scripts/check-size.mjs` or `bun run size`.
  */
-import { spawnSync } from "node:child_process";
 import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { BUILD_TIMEOUT_MS, isTimeout, spawnBudgeted, timeoutMessage } from "./spawn.mjs";
 import { gzipSync } from "node:zlib";
 
 export const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -120,11 +120,16 @@ export function minifyBytes(entry, opts = {}) {
   const tmp = mkdtempSync(join(opts.tmpDir || tmpdir(), "faqir-size-"));
   const out = join(tmp, "out.min.js");
   try {
-    const res = spawnSync(
-      bun,
-      ["build", entry, "--minify", "--format=iife", `--outfile=${out}`],
-      { stdio: ["ignore", "ignore", "pipe"], encoding: "utf8", cwd: ROOT },
-    );
+    const args = ["build", entry, "--minify", "--format=iife", `--outfile=${out}`];
+    const res = spawnBudgeted(bun, args, {
+      stdio: ["ignore", "ignore", "pipe"],
+      encoding: "utf8",
+      cwd: ROOT,
+      timeout: BUILD_TIMEOUT_MS,
+    });
+    if (isTimeout(res)) {
+      throw new Error(`check-size ${timeoutMessage(bun, args)}`);
+    }
     if (res.error) {
       if (res.error.code === "ENOENT") {
         throw new Error(

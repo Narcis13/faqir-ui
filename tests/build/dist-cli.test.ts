@@ -1,9 +1,9 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
-import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { SPAWN_TIMEOUT, runSync } from "../helpers/spawn";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const DIST = join(ROOT, "dist", "faqir.mjs");
@@ -13,7 +13,7 @@ const DIST = join(ROOT, "dist", "faqir.mjs");
  * this exercises the exact code path a machine with no Bun installed would take.
  */
 function runNode(args: string[], cwd: string) {
-  return spawnSync("node", [DIST, ...args], { cwd, encoding: "utf8" });
+  return runSync("node", [DIST, ...args], { cwd, encoding: "utf8", timeout: SPAWN_TIMEOUT.CLI });
 }
 
 let tmp: string;
@@ -24,7 +24,11 @@ setDefaultTimeout(120_000);
 
 beforeAll(() => {
   if (!existsSync(DIST)) {
-    const build = spawnSync("bun", ["run", "build:cli"], { cwd: ROOT, encoding: "utf8" });
+    const build = runSync("bun", ["run", "build:cli"], {
+      cwd: ROOT,
+      encoding: "utf8",
+      timeout: SPAWN_TIMEOUT.BUILD,
+    });
     if (build.status !== 0) {
       throw new Error(`build:cli failed:\n${build.stdout ?? ""}${build.stderr ?? ""}`);
     }
@@ -140,10 +144,11 @@ describe("JSON mode survives a piped stdout at size", () => {
     // stdout as it is written, which keeps the buffer from filling and hides
     // the very stall this test exists to catch. `| cat` is what an agent's
     // subprocess wrapper actually looks like.
-    const r = spawnSync("sh", ["-c", `node ${JSON.stringify(DIST)} conform --json | cat`], {
+    const r = runSync("sh", ["-c", `node ${JSON.stringify(DIST)} conform --json | cat`], {
       cwd,
       encoding: "utf8",
       maxBuffer: 64 * 1024 * 1024,
+      timeout: SPAWN_TIMEOUT.CLI,
     });
 
     expect(r.stdout.length).toBeGreaterThan(PIPE_BUFFER_BYTES);

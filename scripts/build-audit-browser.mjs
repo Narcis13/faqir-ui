@@ -22,12 +22,12 @@
  * Runnable via either `bun run …` or `node scripts/build-audit-browser.mjs`
  * (it shells out to `bun build`, exactly as `scripts/build-cli.mjs` does).
  */
-import { spawnSync } from "node:child_process";
 import { gzipSync } from "node:zlib";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { BUILD_TIMEOUT_MS, isTimeout, spawnBudgeted, timeoutMessage } from "./spawn.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const ENTRY = join(ROOT, "src", "audit", "browser.ts");
@@ -48,18 +48,22 @@ function bundle() {
   const target = join(scratch, "faqir-audit.js");
   try {
     const bun = process.env.FAQIR_BUN || "bun";
-    const result = spawnSync(
-      bun,
-      [
-        "build",
-        ENTRY,
-        "--target=browser",
-        "--format=iife",
-        "--minify",
-        `--outfile=${target}`,
-      ],
-      { cwd: ROOT, encoding: "utf8" },
-    );
+    const args = [
+      "build",
+      ENTRY,
+      "--target=browser",
+      "--format=iife",
+      "--minify",
+      `--outfile=${target}`,
+    ];
+    const result = spawnBudgeted(bun, args, {
+      cwd: ROOT,
+      encoding: "utf8",
+      timeout: BUILD_TIMEOUT_MS,
+    });
+    if (isTimeout(result)) {
+      throw new Error(`build:audit-browser ${timeoutMessage(bun, args)}`);
+    }
     if (result.error) {
       if (result.error.code === "ENOENT") {
         throw new Error(

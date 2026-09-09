@@ -9,10 +9,10 @@
  *
  * Runnable via either `bun run build:cli` or `node scripts/build-cli.mjs`.
  */
-import { spawnSync } from "node:child_process";
 import { chmodSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { BUILD_TIMEOUT_MS, isTimeout, spawnBudgeted, timeoutMessage } from "./spawn.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const ENTRY = join(ROOT, "src", "index.ts");
@@ -22,11 +22,17 @@ const NODE_SHEBANG = "#!/usr/bin/env node\n";
 mkdirSync(dirname(OUTFILE), { recursive: true });
 
 const bun = process.env.FAQIR_BUN || "bun";
-const result = spawnSync(
-  bun,
-  ["build", ENTRY, "--target=node", `--outfile=${OUTFILE}`],
-  { stdio: "inherit", cwd: ROOT }
-);
+const buildArgs = ["build", ENTRY, "--target=node", `--outfile=${OUTFILE}`];
+const result = spawnBudgeted(bun, buildArgs, {
+  stdio: "inherit",
+  cwd: ROOT,
+  timeout: BUILD_TIMEOUT_MS,
+});
+
+if (isTimeout(result)) {
+  process.stderr.write(`build:cli ${timeoutMessage(bun, buildArgs)}`);
+  process.exit(1);
+}
 
 if (result.error) {
   if (result.error.code === "ENOENT") {

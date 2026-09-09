@@ -1,10 +1,10 @@
 import { beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test";
-import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { gzipSync } from "node:zlib";
+import { SPAWN_TIMEOUT, runSync } from "../helpers/spawn";
 
 const ROOT = resolve(fileURLToPath(new URL(".", import.meta.url)), "../..");
 const REGISTRY = join(ROOT, "registry");
@@ -33,7 +33,11 @@ beforeAll(() => {
   const needsBuild = !existsSync(join(DIST, "faqir-core.min.js")) ||
     themeNames.some((t) => !existsSync(join(DIST, `faqir.${t}.css`)));
   if (needsBuild) {
-    const build = spawnSync("bun", ["run", "build:core-package"], { cwd: ROOT, encoding: "utf8" });
+    const build = runSync("bun", ["run", "build:core-package"], {
+      cwd: ROOT,
+      encoding: "utf8",
+      timeout: SPAWN_TIMEOUT.BUILD,
+    });
     if (build.status !== 0) {
       throw new Error(`build:core-package failed:\n${build.stdout ?? ""}${build.stderr ?? ""}`);
     }

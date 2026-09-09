@@ -26,6 +26,37 @@ Run a specific test file:
 bun test tests/commands/audit.test.ts
 ```
 
+### Shelling out from a test
+
+Use `runSync` / `runSyncBun` from `tests/helpers/spawn.ts` and pass an explicit
+budget:
+
+```ts
+import { SPAWN_TIMEOUT, runSync } from "../helpers/spawn";
+
+const r = runSync("node", [DIST, "--version"], {
+  cwd,
+  encoding: "utf8",
+  timeout: SPAWN_TIMEOUT.CLI,   // QUICK for a probe, BUILD for a bundler pass
+});
+```
+
+`bun test`'s per-test timeout is cooperative, and `spawnSync` blocks the event
+loop for the child's whole life — so a child that never exits does not fail its
+test, it suspends the entire run. The wrappers enforce the budget in the kernel
+and throw a `SpawnTimeoutError` naming the command, its cwd and its output.
+Everything else — a non-zero exit, a missing binary — passes through unchanged,
+so probes like `runSync("node", ["--version"]).status === 0` still work.
+
+`tests/meta/spawn-timeouts.test.ts` fails on any synchronous spawn without a
+budget, anywhere in `tests/`, `scripts/`, `src/` or `packages/`. Build scripts
+use `scripts/spawn.mjs` (`spawnBudgeted` / `isTimeout` / `timeoutMessage`), which
+is the same idea for plain ESM that must also run under `node`.
+
+On a slow machine, `FAQIR_TEST_SPAWN_SCALE=3 bun run test` multiplies every
+budget; `FAQIR_SPAWN_TIMEOUT_MS` does the same for the build scripts, and
+`FAQIR_TEST_TIMEOUT_MS` for the whole-partition cap in `scripts/test.mjs`.
+
 ## Project Structure
 
 ```

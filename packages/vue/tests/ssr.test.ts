@@ -7,6 +7,7 @@
 
 import { describe, it, expect } from "bun:test";
 import { join } from "node:path";
+import { SPAWN_TIMEOUT, runSyncBun } from "../../../tests/helpers/spawn";
 import { createSSRApp } from "vue";
 import { renderToString } from "vue/server-renderer";
 import { loadRecipeBundle } from "../../../src/bindings/recipe-ir";
@@ -21,8 +22,9 @@ function componentOf(ir: { componentName: string }) {
 }
 
 describe("SSR renderToString (subprocess, zero DOM globals)", () => {
-  const proc = Bun.spawnSync([process.execPath, "run", join(import.meta.dir, "ssr", "render-all.ts")], {
+  const proc = runSyncBun([process.execPath, "run", join(import.meta.dir, "ssr", "render-all.ts")], {
     cwd: join(import.meta.dir, "..", "..", ".."),
+    timeout: SPAWN_TIMEOUT.BUILD,
   });
   const stderr = proc.stderr.toString();
   const rendered = proc.exitCode === 0

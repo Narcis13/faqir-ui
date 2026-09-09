@@ -9,10 +9,10 @@
  *
  * Runnable via `bun run build` (from packages/mcp) or `node build.mjs`.
  */
-import { spawnSync } from "node:child_process";
 import { chmodSync, cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { BUILD_TIMEOUT_MS, isTimeout, spawnBudgeted, timeoutMessage } from "../../scripts/spawn.mjs";
 
 const PKG = resolve(dirname(fileURLToPath(import.meta.url)));
 const REPO_ROOT = resolve(PKG, "..", "..");
@@ -46,11 +46,17 @@ function countFiles(dir) {
 }
 
 const bun = process.env.FAQIR_BUN || "bun";
-const result = spawnSync(
-  bun,
-  ["build", ENTRY, "--target=node", `--outfile=${OUTFILE}`],
-  { stdio: "inherit", cwd: PKG }
-);
+const buildArgs = ["build", ENTRY, "--target=node", `--outfile=${OUTFILE}`];
+const result = spawnBudgeted(bun, buildArgs, {
+  stdio: "inherit",
+  cwd: PKG,
+  timeout: BUILD_TIMEOUT_MS,
+});
+
+if (isTimeout(result)) {
+  process.stderr.write(`build ${timeoutMessage(bun, buildArgs)}`);
+  process.exit(1);
+}
 
 if (result.error) {
   if (result.error.code === "ENOENT") {

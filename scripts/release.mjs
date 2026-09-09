@@ -2,6 +2,7 @@ import { execFileSync } from "node:child_process"
 import { readFileSync, writeFileSync } from "node:fs"
 import { dirname, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
+import { BUILD_TIMEOUT_MS } from "./spawn.mjs"
 
 const VALID_BUMPS = new Set([
   "patch",
@@ -63,7 +64,9 @@ try {
 function ensureCleanWorktree() {
   const status = execFileSync("git", ["status", "--short"], {
     cwd: repoRoot,
-    encoding: "utf8"
+    encoding: "utf8",
+    timeout: BUILD_TIMEOUT_MS,
+    killSignal: "SIGKILL"
   }).trim()
 
   if (status) {
@@ -93,6 +96,11 @@ function syncCliVersion(version) {
 }
 
 function run(command, args) {
+  // spawn-timeout-exempt: the release steps are interactive — `npm publish`
+  // blocks on a 2FA one-time-password prompt and `git push` on a credential
+  // helper, both on inherited stdio. A wall-clock budget here would kill a
+  // publish mid-flight, which is strictly worse than waiting for a human.
+  // Not part of any test run: `release.mjs` is only ever invoked by hand.
   execFileSync(command, args, {
     cwd: repoRoot,
     stdio: "inherit"

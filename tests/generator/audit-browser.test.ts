@@ -26,11 +26,11 @@
 // "stylesheet rules" block below.
 
 import { describe, it, expect } from "bun:test";
-import { spawnSync } from "node:child_process";
 import { readFileSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { createContext, runInContext } from "node:vm";
 import { gzipSync } from "node:zlib";
+import { SPAWN_TIMEOUT, runSync } from "../helpers/spawn";
 import {
   buildDocsSite,
   discoverDocsComponents,
@@ -270,9 +270,10 @@ describe("the browser audit bundle", () => {
   });
 
   it("is the current build of src/audit/browser.ts", () => {
-    const result = spawnSync("node", [join(REPO, "scripts", "build-audit-browser.mjs"), "--check"], {
+    const result = runSync("node", [join(REPO, "scripts", "build-audit-browser.mjs"), "--check"], {
       cwd: REPO,
       encoding: "utf8",
+      timeout: SPAWN_TIMEOUT.BUILD,
     });
     expect(`${result.stdout ?? ""}${result.stderr ?? ""}`.trim()).toContain("up to date");
     expect(result.status).toBe(0);

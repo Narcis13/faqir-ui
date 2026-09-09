@@ -1,21 +1,22 @@
 import { describe, it, expect, beforeAll, afterAll } from "bun:test";
-import { spawnSync } from "node:child_process";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { COMMAND_NAMES } from "../../src/command-registry";
 import { AUDIT_SCHEMA_VERSION } from "../../src/audit/reporter";
+import { SPAWN_TIMEOUT, runSync } from "../helpers/spawn";
 
 const SRC_INDEX = join(import.meta.dir, "../../src/index.ts");
 
 /** Run the CLI (via the same Bun runtime) and capture its stdout/exit code. */
 function runCli(args: string[], opts: { cwd?: string; input?: string } = {}) {
-  const res = spawnSync(process.execPath, [SRC_INDEX, ...args], {
+  const res = runSync(process.execPath, [SRC_INDEX, ...args], {
     cwd: opts.cwd,
     input: opts.input,
     encoding: "utf8",
     // Keep runs fast and deterministic; commands must not block on stdin.
     stdio: ["pipe", "pipe", "pipe"],
+    timeout: SPAWN_TIMEOUT.CLI,
   });
   return { stdout: res.stdout ?? "", stderr: res.stderr ?? "", status: res.status ?? 0 };
 }
