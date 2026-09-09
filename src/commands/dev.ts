@@ -1,5 +1,5 @@
 import { existsSync, watch } from "node:fs";
-import { join, extname } from "node:path";
+import { join, extname, resolve, relative, isAbsolute } from "node:path";
 import { log } from "../utils/logger";
 import { emitJSON } from "../utils/json-output";
 import { configExists, readConfig } from "../utils/config";
@@ -13,6 +13,7 @@ import {
 
 interface DevOptions {
   port: number;
+  host: string;
   dir: string;
   open: boolean;
   autoBundle: boolean;
@@ -22,6 +23,10 @@ interface DevOptions {
 function parseArgs(args: string[]): DevOptions {
   const opts: DevOptions = {
     port: 3000,
+    // Loopback by default. The dev server has no authentication and serves the
+    // working tree, so binding every interface exposes the developer's project
+    // to the whole network. Opt in explicitly with --host.
+    host: "127.0.0.1",
     dir: ".",
     open: false,
     autoBundle: false,
@@ -35,6 +40,9 @@ function parseArgs(args: string[]): DevOptions {
         break;
       case "--dir":
         opts.dir = args[++i] || ".";
+        break;
+      case "--host":
+        opts.host = args[++i] || "127.0.0.1";
         break;
       case "--open":
         opts.open = true;
@@ -55,6 +63,18 @@ function parseArgs(args: string[]): DevOptions {
   return opts;
 }
 
+/**
+ * Whether `candidate` resolves to `root` itself or something beneath it.
+ *
+ * Used to contain the static file server: the request path is attacker-supplied
+ * and reaches us percent-encoded, so containment is asserted on the resolved
+ * path rather than inferred from the URL looking well-formed.
+ */
+function isInside(root: string, candidate: string): boolean {
+  const rel = relative(root, resolve(candidate));
+  return rel === "" || (!rel.startsWith("..") && !isAbsolute(rel));
+}
+
 function printHelp() {
   log.heading("faqir dev");
   log.blank();
@@ -69,6 +89,7 @@ function printHelp() {
   log.table([
     ["--port <number>", "Port to listen on (default: 3000)"],
     ["--dir <path>", "Directory to serve (default: '.')"],
+    ["--host <addr>", "Address to bind (default: 127.0.0.1; use 0.0.0.0 to expose on the network)"],
     ["--open", "Open browser automatically"],
     ["--bundle", "Auto-rebuild CSS bundle on file changes"],
     ["--no-overlay", "Do not inject the inspector overlay into served HTML"],
@@ -128,8 +149,12 @@ export async function dev(args: string[]): Promise<void> {
     process.exit(1);
   }
 
+  // Resolved once so every request compares against a canonical absolute path.
+  const serveRoot = resolve(rootDir);
+
   const server = Bun.serve({
     port: opts.port,
+    hostname: opts.host,
     async fetch(req) {
       const url = new URL(req.url);
 
@@ -144,11 +169,19 @@ export async function dev(args: string[]): Promise<void> {
         });
       }
 
+      // `new URL()` normalizes literal "../" segments, but percent-encoded ones
+      // (%2e%2e%2f) survive it and only become real separators once decoded — so
+      // the decode has to be followed by an explicit containment check, not
+      // trusted because the URL looked clean.
       let filePath = join(rootDir, decodeURIComponent(url.pathname));
 
       // Directory → index.html
       if (filePath.endsWith("/")) {
         filePath += "index.html";
+      }
+
+      if (!isInside(serveRoot, filePath)) {
+        return new Response("Not Found", { status: 404 });
       }
 
       // Try the path, then try with index.html appended

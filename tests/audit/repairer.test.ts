@@ -1,8 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
-import { rmSync, mkdirSync } from "node:fs";
+import { rmSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { AuditResult } from "../../src/audit/rules";
 import { applyRepairs } from "../../src/audit/repairer";
+import { init } from "../../src/commands/init";
+import { add } from "../../src/commands/add";
+import { repair } from "../../src/commands/repair";
 
 const TEST_DIR = join(import.meta.dir, "../.tmp-repairer-test");
 
@@ -169,4 +172,71 @@ describe("Repairer", () => {
     expect(result).toContain('role="dialog"');
     expect(result).toContain('aria-label="Close"');
   });
+});
+
+// ── --dry-run must not write, and --help must not run ───────────────────────
+//
+// `repair(args)` never read `args`: the parameter was declared and ignored, so
+// every flag was silently discarded and the command always mutated the project.
+// `faqir repair --help` rewrote files; `--dry-run` wrote the same changes and
+// then reported them as a preview. For an agent, a preview flag that mutates is
+// the worst kind of wrong — it is the flag you reach for precisely when you are
+// not sure yet.
+describe("faqir repair honors its flags", () => {
+  const DIR = join(import.meta.dir, "../.tmp-repair-flags");
+
+  function seed(): string {
+    rmSync(DIR, { recursive: true, force: true });
+    mkdirSync(DIR, { recursive: true });
+    return DIR;
+  }
+
+  async function inDir<T>(dir: string, fn: () => Promise<T>): Promise<T> {
+    const orig = process.cwd();
+    process.chdir(dir);
+    try {
+      return await fn();
+    } finally {
+      process.chdir(orig);
+    }
+  }
+
+  const BROKEN = '<div data-ui="dialog"><div data-part="panel"><h2 data-part="title">T</h2></div></div>\n';
+
+  afterEach(() => {
+    rmSync(DIR, { recursive: true, force: true });
+  });
+
+  it("--dry-run reports fixes without touching the file", async () => {
+    const dir = seed();
+    await inDir(dir, async () => {
+      await init(["--yes"]);
+      await add(["dialog"]);
+      writeFileSync(join(dir, "page.html"), BROKEN);
+      await repair(["--dry-run"]);
+    });
+    expect(readFileSync(join(dir, "page.html"), "utf8")).toBe(BROKEN);
+  }, 60_000);
+
+  it("--help prints usage without touching the file", async () => {
+    const dir = seed();
+    await inDir(dir, async () => {
+      await init(["--yes"]);
+      await add(["dialog"]);
+      writeFileSync(join(dir, "page.html"), BROKEN);
+      await repair(["--help"]);
+    });
+    expect(readFileSync(join(dir, "page.html"), "utf8")).toBe(BROKEN);
+  }, 60_000);
+
+  it("a bare run still repairs, so --dry-run is a real difference", async () => {
+    const dir = seed();
+    await inDir(dir, async () => {
+      await init(["--yes"]);
+      await add(["dialog"]);
+      writeFileSync(join(dir, "page.html"), BROKEN);
+      await repair([]);
+    });
+    expect(readFileSync(join(dir, "page.html"), "utf8")).not.toBe(BROKEN);
+  }, 60_000);
 });

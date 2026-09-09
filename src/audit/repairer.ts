@@ -80,6 +80,7 @@ export function applyRepairsToSource(source: string, results: AuditResult[]): So
 export async function applyRepairs(
   results: AuditResult[],
   cwd: string,
+  opts: { dryRun?: boolean } = {},
 ): Promise<RepairSummary> {
   const fixable = results.filter(r => r.fix);
   if (fixable.length === 0) {
@@ -110,10 +111,11 @@ export async function applyRepairs(
 
     fixesApplied += repaired.applied;
     fixesSkipped += repaired.skipped;
-    for (const change of repaired.changes) log.step(`Fixed: ${change.message}`);
+    const verb = opts.dryRun ? "Would fix" : "Fixed";
+    for (const change of repaired.changes) log.step(`${verb}: ${change.message}`);
 
     if (repaired.source !== source) {
-      await Bun.write(filePath, repaired.source);
+      if (!opts.dryRun) await Bun.write(filePath, repaired.source);
       filesModified++;
     }
   }

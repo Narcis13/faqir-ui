@@ -8,9 +8,9 @@
  * spawned server.
  */
 import { afterAll, afterEach, describe, expect, test } from "bun:test";
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { request } from "node:http";
-import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -357,3 +357,83 @@ async function waitForListening(server: ReturnType<typeof spawn>, port: number) 
   }
   throw new Error(`dev server never listened on ${port}: ${stderr}`);
 }
+
+// ── The dev server must not serve outside the directory it was given ─────────
+//
+// `new URL()` normalizes literal "../" segments, so a naive read of the request
+// path looks safe. Percent-encoded ones survive that normalization and only
+// become separators when decoded — and the decode happened before any
+// containment check, so `GET /..%2f..%2fetc/passwd` resolved and was served.
+//
+// The server also bound every interface under Bun (`Bun.serve` with no
+// hostname), which made the read reachable from the local network rather than
+// just the machine.
+describe("the dev server is contained to its --dir", () => {
+  test("percent-encoded traversal cannot escape the served root", async () => {
+    const dir = tmp();
+    // The secret sits in the PARENT of the served directory — reachable only by
+    // escaping. Serving `site/` is the shape a real project has.
+    writeFileSync(join(dir, "SECRET.txt"), "canary-do-not-serve\n");
+    const site = join(dir, "site");
+    mkdirSync(site, { recursive: true });
+    writeFileSync(join(site, "index.html"), "<html><body><h1>ok</h1></body></html>");
+
+    const port = 42000 + Math.floor(Math.random() * 10000);
+    const server = spawn(
+      "bun",
+      [join(ROOT, "src", "index.ts"), "dev", "--port", String(port), "--no-overlay"],
+      { cwd: site, stdio: ["ignore", "pipe", "pipe"] },
+    );
+
+    try {
+      await waitForListening(server, port);
+
+      // The server still does its job.
+      expect((await get(port, "/index.html")).body).toContain("<h1>ok</h1>");
+
+      const escapes = [
+        "/..%2fSECRET.txt",
+        "/%2e%2e%2fSECRET.txt",
+        "/..%2F..%2FSECRET.txt",
+        "/..%2f..%2f..%2f..%2f..%2f..%2f..%2f..%2fetc/passwd",
+      ];
+      for (const path of escapes) {
+        const res = await get(port, path);
+        expect(res.status).toBe(404);
+        expect(res.body).not.toContain("canary-do-not-serve");
+      }
+    } finally {
+      server.kill("SIGKILL");
+    }
+  }, 30_000);
+
+  test("binds loopback by default rather than every interface", async () => {
+    const dir = tmp();
+    writeFileSync(join(dir, "index.html"), "<html><body>ok</body></html>");
+
+    const port = 42000 + Math.floor(Math.random() * 10000);
+    const server = spawn(
+      "bun",
+      [join(ROOT, "src", "index.ts"), "dev", "--port", String(port), "--no-overlay"],
+      { cwd: dir, stdio: ["ignore", "pipe", "pipe"] },
+    );
+
+    try {
+      await waitForListening(server, port);
+      // Loopback answers…
+      expect((await get(port, "/index.html")).status).toBe(200);
+
+      // …and the listening socket is not a wildcard bind. Asked of the OS
+      // rather than inferred, since the default lives in Bun.serve's options.
+      const lsof = spawnSync("lsof", ["-nP", `-iTCP:${port}`, "-sTCP:LISTEN"], {
+        encoding: "utf8",
+      });
+      if (lsof.status === 0 && lsof.stdout.trim()) {
+        expect(lsof.stdout).not.toMatch(/\*:\d+ \(LISTEN\)/);
+        expect(lsof.stdout).toMatch(/127\.0\.0\.1:|\[::1\]:/);
+      }
+    } finally {
+      server.kill("SIGKILL");
+    }
+  }, 30_000);
+});

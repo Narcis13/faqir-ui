@@ -124,3 +124,10 @@ describe("universal --json guarantee", () => {
     });
   }
 });
+
+// NOTE: the "large payload through a pipe" regression lives in
+// tests/build/dist-cli.test.ts, not here. This file spawns `process.execPath`,
+// which under `bun test` is the Bun binary, and Bun's console.log is synchronous
+// — so the async-stdout truncation this repo shipped is invisible from here. It
+// only reproduces against the compiled bundle on Node, which is what the
+// published `bin/faqir` actually runs.

@@ -173,6 +173,22 @@ export function indexToMap(index: RegistryIndex): Map<string, RegistryIndexEntry
  * third-party host). Returns the typed index on success or a human-readable
  * reason on failure — never throws.
  */
+// A remote index names both the component directory and every file inside it,
+// and those names become path segments under the project's output_dir. They are
+// attacker-controlled on any registry the user does not run, so they are matched
+// against a closed grammar here rather than sanitized later: a traversal segment,
+// an absolute path, a drive letter or a NUL never becomes a path at all.
+//
+// Both grammars are satisfied by every entry in Faqir's own registry-index.json.
+const COMPONENT_NAME_RE = /^[a-z][a-z0-9-]*$/;
+const FILE_PATH_RE = /^[A-Za-z0-9._-]+(?:\/[A-Za-z0-9._-]+)*$/;
+
+/** Whether `p` is a safe, strictly-relative path with no traversal segment. */
+function isSafeRelativePath(p: string): boolean {
+  if (!FILE_PATH_RE.test(p)) return false;
+  return p.split("/").every((seg) => seg !== "." && seg !== "..");
+}
+
 export function validateRegistryIndex(
   data: unknown
 ): { ok: true; index: RegistryIndex } | { ok: false; error: string } {
@@ -193,6 +209,9 @@ export function validateRegistryIndex(
     const where = `components[${i}]`;
     if (typeof e !== "object" || e === null) return { ok: false, error: `${where} is not an object` };
     if (typeof e.name !== "string" || e.name.length === 0) return { ok: false, error: `${where}.name missing` };
+    if (!COMPONENT_NAME_RE.test(e.name)) {
+      return { ok: false, error: `${where}.name '${e.name}' is not a valid component name` };
+    }
     if (typeof e.layer !== "string" || !validLayers.has(e.layer)) {
       return { ok: false, error: `${where}.layer must be one of ${[...validLayers].join(", ")}` };
     }
@@ -204,6 +223,9 @@ export function validateRegistryIndex(
       const f = e.files[j] as Record<string, unknown>;
       if (typeof f !== "object" || f === null || typeof f.path !== "string" || typeof f.sha256 !== "string") {
         return { ok: false, error: `${where}.files[${j}] must have string 'path' and 'sha256'` };
+      }
+      if (!isSafeRelativePath(f.path)) {
+        return { ok: false, error: `${where}.files[${j}].path '${f.path}' escapes the component directory` };
       }
     }
     if (e.deps !== undefined && !Array.isArray(e.deps)) {

@@ -113,7 +113,7 @@ Available on every scope without declaring them. They are non-enumerable, so `l-
 | `$id` | every expression | `$id('label')` returns `faqir-<scope>-label`, stable for the scope and unique across scopes. |
 | `$event` | `l-on` expressions only | The DOM event being handled. Set for the duration of the handler and deleted again after it, so it reads as `undefined` anywhere else. |
 
-**Not vocabulary:** `$scope` — the evaluator compiles every expression to `with($scope) { … }`, so the name runs through the engine source as that compiled function's own parameter. Page code never writes it. It is named here so its absence from the table above reads as deliberate.
+**Not vocabulary:** `$scope` — the evaluator compiles every expression to `with($scope) { … }`, so the name runs through the engine source as that compiled function's own parameter. Page code never writes it. `$modelValue` — `l-model`'s transport slot. The value a control produces is placed here and the assignment compiles to `prop = $modelValue`, so what the user typed is never spliced into source and never reaches the compiler. Set for the duration of one write and deleted after it; page code never sees it. It is named here so its absence from the table above reads as deliberate.
 
 ## Transitions — `l-transition` and `data-motion`
 

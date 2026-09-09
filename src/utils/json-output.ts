@@ -1,3 +1,5 @@
+import { writeSync } from "node:fs";
+
 // Universal `--json` guarantee for the faqir CLI.
 //
 // Every command accepts `--json` and, in that mode, stdout is guaranteed to be a
@@ -131,6 +133,56 @@ export function isJSONMode(): boolean {
 }
 
 /**
+ * Write one JSON document to fd 1, synchronously.
+ *
+ * `console.log` writes through the async stdout stream. When stdout is a pipe —
+ * which is how every agent and CI wrapper captures us — a queued write is
+ * abandoned if the process tears down before the stream drains, and the reader
+ * gets a document truncated at the pipe buffer (64 KiB) with no error anywhere.
+ * Both of our emit paths sit exactly there: {@link emitJSON} is followed by
+ * `process.exit` in several commands, and {@link flushEnvelope} runs from inside
+ * a `process.on("exit")` handler, which is the last synchronous moment there is.
+ *
+ * `writeSync` on fd 1 bypasses the stream, so the document always lands whole.
+ * A partial write is possible on a full pipe, hence the loop.
+ *
+ * EAGAIN means fd 1 is non-blocking and its buffer is full — the reader has not
+ * drained yet. Retrying immediately would spin a core at 100% for as long as the
+ * reader is slow, so each retry waits a moment first. `Atomics.wait` is the only
+ * way to sleep synchronously, and we are inside a `process.on("exit")` handler
+ * where nothing async can still run.
+ */
+const EAGAIN_BACKOFF_MS = 2;
+const EAGAIN_MAX_WAIT_MS = 30_000;
+
+function sleepSync(ms: number): void {
+  // A private buffer nobody else can notify, so the wait always runs its course.
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
+
+function writeStdoutSync(text: string): void {
+  const buf = Buffer.from(text + "\n", "utf8");
+  let offset = 0;
+  let waited = 0;
+  while (offset < buf.length) {
+    try {
+      offset += writeSync(1, buf, offset, buf.length - offset);
+      waited = 0;
+    } catch (err) {
+      const code = (err as NodeJS.ErrnoException).code;
+      if (code === "EAGAIN") {
+        if (waited >= EAGAIN_MAX_WAIT_MS) return; // reader is gone or stalled; do not hang the process
+        sleepSync(EAGAIN_BACKOFF_MS);
+        waited += EAGAIN_BACKOFF_MS;
+        continue;
+      }
+      if (code === "EPIPE") return; // reader hung up; nothing to salvage
+      throw err;
+    }
+  }
+}
+
+/**
  * Emit a command's bespoke JSON document to the real stdout and mark the run as
  * handled so the generic envelope is suppressed. Use this from any command that
  * owns a stable JSON schema.
@@ -143,7 +195,7 @@ export function emitJSON(payload: unknown): void {
   // stdout. Otherwise defer to the live `console.log` so in-process callers (and
   // tests that spy on it) observe the output normally.
   if (s.active) {
-    s.realConsole.log(text);
+    writeStdoutSync(text);
   } else {
     console.log(text);
   }
@@ -185,7 +237,7 @@ function flushEnvelope(): void {
     envelope.error = { message: s.explicitError ?? firstError?.text ?? "Command failed" };
   }
 
-  s.realConsole.log(JSON.stringify(envelope, null, 2));
+  writeStdoutSync(JSON.stringify(envelope, null, 2));
 }
 
 /** Test-only: reset module state between assertions in the same process. */

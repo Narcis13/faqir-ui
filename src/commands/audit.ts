@@ -86,6 +86,24 @@ async function auditStdin(args: string[]): Promise<void> {
 export async function audit(args: string[]): Promise<void> {
   const cwd = process.cwd();
 
+  // `--help` must never do the thing it is asking about. It is the safest probe
+  // an agent has, so it has to stay free of side effects and of cost.
+  if (args.includes("--help") || args.includes("-h")) {
+    log.heading("faqir audit");
+    log.blank();
+    console.log("Validate components and pages against their manifests.");
+    log.blank();
+    console.log("Options:");
+    log.table([
+      ["--stdin", "Audit HTML read from stdin — no project required"],
+      ["--rules", "List the rule inventory instead of auditing"],
+      ["--skip-rules <ids>", "Comma-separated rule IDs to skip"],
+      ["--fix", "Apply the deterministic fixes (same as `faqir repair`)"],
+      ["--json", "Machine-readable output"],
+    ]);
+    return;
+  }
+
   const jsonMode = args.includes("--json");
 
   // `--rules` lists the rule inventory (id, severity, scope, description,

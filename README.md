@@ -27,11 +27,11 @@ The CLI is the conductor.
 - [Faqir Core — Reactive Engine](#faqir-core--reactive-engine)
 - [The Manifest System](#the-manifest-system)
 - [JavaScript Controllers](#javascript-controllers)
+- [Data-Driven Rendering](#data-driven-rendering)
 - [CLI Reference](#cli-reference)
 - [CSS Bundle](#css-bundle)
 - [Audit and Repair](#audit-and-repair)
 - [Scaffolding and Code Generation](#scaffolding-and-code-generation)
-- [Data-Driven Rendering](#data-driven-rendering)
 - [AI Agent Integration](#ai-agent-integration)
 - [CSS Conventions](#css-conventions)
 - [Security](#security)
@@ -72,7 +72,10 @@ This makes Faqir **agent-native**: AI coding agents can read manifests, generate
 
 ### Prerequisites
 
-- [Bun](https://bun.sh) runtime
+- **Node.js 18 or newer.** That is the whole requirement — `faqir` ships as a
+  Node-compatible bundle and its launcher runs under plain `node`.
+- [Bun](https://bun.sh) is optional. The launcher prefers it when it is on your
+  PATH (it starts faster), and it is required only to develop *this repository*.
 
 ### Install and Initialize
 
@@ -104,7 +107,8 @@ your-project/
 │   └── faqir.bundle.css  Single CSS bundle (auto-generated)
 ├── faqir.config.json     Project configuration
 └── .faqir/
-    └── context.json     AI agent context (auto-generated)
+    ├── context.json     AI agent context (auto-generated)
+    └── README.md        This document, copied in for offline/agent reference
 ```
 
 ### Use in HTML
@@ -691,7 +695,38 @@ ratio for automation.
 
 ## Faqir Core — Reactive Engine
 
-`faqir-core.js` is a zero-dependency reactive engine (~47KB min, ~12KB gzip). Drop it in with a single script tag — no build step required.
+`faqir-core.js` is a zero-dependency reactive engine. Drop it in with a single
+script tag — no build step required.
+
+Sizes, since they are the first thing worth knowing:
+
+| File | What it is | Minified + gzip |
+|------|-----------|-----------------|
+| the engine alone | directives, reactivity, store | **9.5 KB** |
+| `faqir-core.js` | engine **+ all 29 recipe controllers** | **43 KB** |
+
+`faqir add` and `faqir init` install the *unminified* `faqir-core.js` (≈350 KB on
+disk, ≈88 KB gzipped over the wire) so it stays readable and debuggable in your
+project. For production, serve the minified build from the CDN below, or minify
+the file yourself — the CLI does not minify JavaScript.
+
+### CDN — two tags, no install
+
+The CLI is the *ownership* path: it copies component files into your project so
+you can read, audit, theme and upgrade them. For a scratch page, a CodePen, or an
+agent with no shell, `@faqir-ui/core` publishes a prebuilt runtime instead:
+
+```html
+<!-- A theme's full CSS bundle: tokens + theme + base + every component -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@faqir-ui/core@0.2/dist/faqir.default.css">
+
+<!-- The engine, minified — sets window.Faqir and boots on DOMContentLoaded -->
+<script src="https://cdn.jsdelivr.net/npm/@faqir-ui/core@0.2/dist/faqir-core.min.js" defer></script>
+```
+
+Swap the stylesheet to change theme — every theme in [Theme System](#theme-system)
+ships a bundle. Every `dist/` file has a SHA-384 hash in `dist/sri.json` for
+`integrity=` pinning. Full details: [`packages/core/README.md`](packages/core/README.md).
 
 ```html
 <script src="ui/core/faqir-core.js" defer></script>
@@ -1247,7 +1282,7 @@ The CSS bundle solves the multi-file problem. Without it, a page using all compo
 
 1. **Tokens** — design token custom properties
 2. **Theme** — active theme overrides
-3. **Base** — reset.css, prose.css
+3. **Base** — reset.css, prose.css, rhythm.css, motion-presets.css
 4. **Primitives** — installed primitive CSS (alphabetical)
 5. **Recipes** — installed recipe CSS (alphabetical)
 6. **Patterns** — installed pattern CSS (alphabetical)
@@ -1356,21 +1391,93 @@ freeze depend on:
 
 ### Audit Rules
 
-| Rule | What It Checks |
-|------|---------------|
-| `slot-satisfied` | All required `[data-part]` slots present |
-| `valid-attributes` | Only manifest-allowed attributes used |
-| `variant-values` | Variant values match manifest's allowed list |
-| `state-valid` | State values match manifest |
-| `controller-loaded` | Recipe controllers are referenced |
-| `token-exists` | CSS tokens used are defined |
-| `no-fetch` | JS controllers don't fetch data |
-| `no-important` | No `!important` in CSS |
-| `no-id-selector` | No ID selectors in CSS |
-| `no-class-selector` | No class selectors (use `data-*`) |
-| `no-external-import` | Only relative/core imports in JS |
-| `reduced-motion` | Animations include `prefers-reduced-motion` query |
-| `single-fixed-region` | Same-component fixed roots/parts do not resolve to the same viewport anchor |
+Thirty-one rules across nine scopes. `faqir audit --rules` prints this list from
+the live rule registry — that command is the source of truth, and the IDs below
+are the ones `--skip-rules` accepts.
+
+**Scope: component markup vs manifest**
+
+| Rule | Severity | What it checks |
+|------|----------|----------------|
+| `required-slot` | critical | Required slot is missing from component |
+| `required-aria` | critical | Required ARIA attribute is missing |
+| `focus-trap` | critical | Component with focus_trap requires its JS controller to be loaded |
+| `valid-variant` | error | Invalid data-variant value not defined in manifest |
+| `valid-state` | error | Invalid data-state value not defined in manifest |
+| `valid-size` | error | Invalid data-size value not defined in manifest |
+| `icon-name` | error | data-icon value must be a known icon name from the manifest's icon set |
+| `controller-loaded` | error | Recipe component JS controller is not referenced |
+| `orphan-part` | warning | data-part value is not a recognized slot name in the manifest |
+| `aria-describedby` | warning | Description slot exists but aria-describedby is missing on panel |
+| `close-label` | warning | Close button has no accessible name |
+| `no-class-attribute` | warning | Element uses class attribute — Faqir components use data-ui, data-variant, data-state instead |
+| `token-aware-style` | info | Inline style uses hardcoded values instead of design tokens |
+
+**Scope: HTML document**
+
+| Rule | Severity | What it checks |
+|------|----------|----------------|
+| `duplicate-id` | error | Every id must be unique within a document — duplicates break ARIA references… |
+| `heading-order` | warning | Heading levels must not skip when going deeper (h2 → h4 is a skip) — jumping levels breaks the document… |
+| `landmark` | warning | Landmark hygiene: full pages must have a main landmark; dialogs must not be nested inside <main>; and when… |
+| `field-wiring` | error | field-group ARIA contract (§7.1): the control's aria-describedby must reference the existing… |
+
+**Scope: data-ui values vs every component the registry defines**
+
+| Rule | Severity | What it checks |
+|------|----------|----------------|
+| `unknown-component` | warning | A data-ui value must name something Faqir defines — a component in the registry (installed or not), one of… |
+
+**Scope: component CSS**
+
+| Rule | Severity | What it checks |
+|------|----------|----------------|
+| `no-important` | error | Component CSS must not use !important |
+| `no-class-selector` | error | Component CSS must not use class selectors — use data-ui/data-part/data-variant/data-state |
+| `no-id-selector` | error | Component CSS must not use ID selectors |
+| `no-hardcoded-values` | error | Component CSS must reference tokens via var(--token) instead of hardcoded color values |
+| `logical-properties` | warning | Component CSS should use logical properties (margin-inline-start, inset-inline-end,… |
+
+**Scope: recipe controller JS (registry/recipes/<name>/<name>.js)**
+
+| Rule | Severity | What it checks |
+|------|----------|----------------|
+| `no-external-import` | error | Recipe controllers may only import from ../../core/ or relative paths — no external/bare package specifiers |
+| `no-fetch` | error | Recipe component controllers must not fetch data or manage routing (fetch/XHR/axios/history/router) |
+
+**Scope: component CSS vs its manifest**
+
+| Rule | Severity | What it checks |
+|------|----------|----------------|
+| `undeclared-attribute` | error | Every data-* attribute a component's CSS selects on must be declared in its manifest as a variant attr, a… |
+
+**Scope: component CSS (@media / @container preludes)**
+
+| Rule | Severity | What it checks |
+|------|----------|----------------|
+| `breakpoint-canon` | warning | A width prelude may only be one canon min-width floor — sm 40rem · md 48rem · lg 64rem · xl 80rem |
+
+**Scope: component markup vs its own stylesheet**
+
+| Rule | Severity | What it checks |
+|------|----------|----------------|
+| `trigger-contract` | error | Every [data-part="trigger"] must be styled by something: either it carries a data-ui (delegating its look… |
+| `single-fixed-region` | error | A component may expose only one visible fixed region of the same kind at a resolved viewport anchor |
+
+**Scope: theme token CSS (the active theme + base palette/semantic tokens)**
+
+| Rule | Severity | What it checks |
+|------|----------|----------------|
+| `contrast-tokens` | error | Every declared foreground/background token pair (body text on surfaces, and each semantic color on its… |
+| `surface-elevation` | error | The bg → surface-1 → surface-2 elevation ramp, including each surface's border, must keep an adjacent… |
+
+Skip a rule by ID when a page deliberately steps outside the contract — for
+example a page that mixes Faqir with another framework's `data-ui` values:
+
+```bash
+faqir audit --skip-rules unknown-component
+faqir audit --skip-rules no-class-attribute,token-aware-style
+```
 
 ### Repair
 
@@ -1563,7 +1670,7 @@ faqir-ui/
 ├── src/                      CLI source (TypeScript)
 │   ├── index.ts              Entry point — command router
 │   ├── manifest.ts           Manifest types and validation
-│   ├── commands/             18 CLI commands
+│   ├── commands/             CLI command implementations
 │   │   ├── init.ts           Project initialization
 │   │   ├── add.ts            Component installation
 │   │   ├── remove.ts         Component uninstallation
@@ -1583,7 +1690,7 @@ faqir-ui/
 │   │   ├── variant.ts        Variant editor
 │   │   └── scaffold.ts       Page generator
 │   ├── audit/                Audit subsystem
-│   │   ├── rules.ts          12 audit rules
+│   │   ├── rules.ts          audit rule registry (`faqir audit --rules`)
 │   │   ├── checker.ts        DOM contract checker
 │   │   ├── reporter.ts       Formatted output
 │   │   └── repairer.ts       Auto-fix logic
@@ -1604,16 +1711,16 @@ faqir-ui/
 │       └── bundler.ts        CSS bundle generator
 │
 ├── registry/                 Component library (shipped with CLI)
-│   ├── tokens/               10 CSS token files (incl. document.css, doc-aliases.css)
-│   ├── base/                 reset.css, prose.css
+│   ├── tokens/               CSS token layers (incl. document.css, doc-aliases.css)
+│   ├── base/                 reset.css, prose.css, rhythm.css, motion-presets.css
 │   ├── core/                 faqir-core.js, api-source.js + utility modules
 │   ├── themes/               12 built-in themes
-│   ├── primitives/           41 CSS-only components
+│   ├── primitives/           CSS-only components
 │   ├── recipes/              29 CSS+JS interactive components
 │   └── patterns/             15 page-level compositions
 │
-├── tests/                    Bun test suite (462 tests)
-├── playground/               6 example pages + dev server (server.js, db.json)
+├── tests/                    Bun test suite
+├── playground/               example pages + dev server (server.js, db.json)
 ├── package.json
 ├── tsconfig.json
 └── faqir.config.json          (generated per-project)
@@ -1638,7 +1745,7 @@ bun install
 ### Commands
 
 ```bash
-bun test                         # Run all 462 tests
+bun test                         # Run the full suite
 bun run src/index.ts help        # CLI help
 bun run src/index.ts dev         # Start dev server for playground
 tsc --noEmit                     # Type check

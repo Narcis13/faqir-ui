@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve, relative, isAbsolute } from "node:path";
 import { log } from "../utils/logger";
 import { configExists, readConfig, writeConfig, type FaqirConfig } from "../utils/config";
 import { copyDir, ensureDir, getRegistryPath } from "../utils/fs";
@@ -498,8 +498,18 @@ async function addRemote(
   // Every file is verified — commit the buffered bytes to disk.
   log.heading(`Adding ${toInstall.length} component${toInstall.length > 1 ? "s" : ""} from remote registry`);
 
+  const installRoot = resolve(outputDir);
   for (const write of plannedWrites) {
-    const dest = join(outputDir, write.destRel);
+    const dest = resolve(installRoot, write.destRel);
+    // Belt and braces: `validateRegistryIndex` already rejects a name or file
+    // path that could escape, but this is the line that actually writes bytes to
+    // the user's disk from a remote description, so it asserts containment
+    // itself rather than trusting a check made three modules away.
+    const rel = relative(installRoot, dest);
+    if (rel.startsWith("..") || isAbsolute(rel)) {
+      log.error(`Refusing to write outside the project: '${write.destRel}'`);
+      process.exit(1);
+    }
     ensureDir(dirname(dest));
     await Bun.write(dest, write.bytes);
   }

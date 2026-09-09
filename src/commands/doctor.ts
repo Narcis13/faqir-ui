@@ -276,5 +276,9 @@ function printResults(results: CheckResult[]) {
     log.success(`All ${passed} checks passed. Project is healthy.`);
   } else {
     log.warn(`${passed} passed, ${failed} failed.`);
+    // A health check that reports failures and still exits 0 is a green light on
+    // a broken project — the one thing a CI gate or an agent must not get.
+    // `exitCode` rather than `exit()` so the --json envelope still flushes.
+    process.exitCode = 1;
   }
 }

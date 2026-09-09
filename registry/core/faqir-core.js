@@ -239,6 +239,24 @@
     }
   }
 
+  // Write a value into a scope property WITHOUT putting the value into source.
+  //
+  // l-model used to build "prop = '" + value + "'" and compile it, which meant
+  // (a) anything typed into an input was executed as JavaScript, (b) a backslash
+  // or newline silently corrupted or broke the write, and (c) every distinct
+  // value compiled and permanently cached its own Function. Passing the value
+  // through a reserved scope slot — the same trick handleOn uses for $event —
+  // fixes all three: one compiled statement per binding, and user data is never
+  // parsed as code.
+  function writeModel(prop, value, scope, el) {
+    scope.$modelValue = value;
+    try {
+      evaluateAssignment(prop + ' = $modelValue', scope, el);
+    } finally {
+      delete scope.$modelValue;
+    }
+  }
+
   function compileExpression(expr) {
     var key = 'expr:' + expr;
     if (expressionCache.has(key)) return expressionCache.get(key);
@@ -343,6 +361,7 @@
   // @ui:magic $id | every expression | `$id('label')` returns `faqir-<scope>-label`, stable for the scope and unique across scopes.
   // @ui:magic $event | `l-on` expressions only | The DOM event being handled. Set for the duration of the handler and deleted again after it, so it reads as `undefined` anywhere else.
   // @ui:magic $scope | internal | the evaluator compiles every expression to `with($scope) { … }`, so the name runs through the engine source as that compiled function's own parameter. Page code never writes it.
+  // @ui:magic $modelValue | internal | `l-model`'s transport slot. The value a control produces is placed here and the assignment compiles to `prop = $modelValue`, so what the user typed is never spliced into source and never reaches the compiler. Set for the duration of one write and deleted after it; page code never sees it.
   //
   // --- 3.1 Attribute Parsing ---
 
@@ -1356,7 +1375,7 @@
         el.setAttribute('aria-checked', value ? 'true' : 'false');
       });
       el.addEventListener('change', function() {
-        evaluateAssignment(prop + ' = ' + el.checked, scope, el);
+        writeModel(prop, el.checked, scope, el);
       });
       addCleanup(el, cl);
 
@@ -1376,9 +1395,9 @@
           var idx = arr.indexOf(el.value);
           if (el.checked && idx < 0) arr.push(el.value);
           else if (!el.checked && idx >= 0) arr.splice(idx, 1);
-          evaluateAssignment(prop + ' = ' + JSON.stringify(arr), scope, el);
+          writeModel(prop, arr, scope, el);
         } else {
-          evaluateAssignment(prop + ' = ' + el.checked, scope, el);
+          writeModel(prop, el.checked, scope, el);
         }
       });
       addCleanup(el, cl);
@@ -1389,7 +1408,7 @@
       });
       el.addEventListener('change', function() {
         if (el.checked) {
-          evaluateAssignment(prop + " = '" + el.value + "'", scope, el);
+          writeModel(prop, el.value, scope, el);
         }
       });
       addCleanup(el, cl);
@@ -1399,7 +1418,7 @@
         el.value = evaluate(prop, scope, el) || '';
       });
       el.addEventListener('change', function() {
-        evaluateAssignment(prop + " = '" + el.value + "'", scope, el);
+        writeModel(prop, el.value, scope, el);
       });
       addCleanup(el, cl);
 
@@ -1419,9 +1438,9 @@
         if (modifiers.has('number')) value = parseFloat(value) || 0;
         if (modifiers.has('trim')) value = value.trim();
         if (typeof value === 'number') {
-          evaluateAssignment(prop + ' = ' + value, scope, el);
+          writeModel(prop, value, scope, el);
         } else {
-          evaluateAssignment(prop + " = '" + value.replace(/'/g, "\\'") + "'", scope, el);
+          writeModel(prop, value, scope, el);
         }
       };
 
@@ -10777,6 +10796,22 @@ function createTreeView(root) {
   // Section 9: Bootstrap & Auto-init
   // ═══════════════════════════════════════════════════════
 
+  // Mount one controller, containing any failure to that component.
+  //
+  // Controllers are invoked in a bare loop during bootstrap. A controller that
+  // throws — the usual cause is markup missing a part it queries for, which an
+  // agent generating HTML produces routinely — used to abort bootstrap entirely:
+  // no scopes, no directives, no Faqir global, every unrelated island on the page
+  // left blank. One incomplete component must break that component and nothing
+  // else, and the failure has to be visible rather than silent.
+  function initController(name, el) {
+    try {
+      controllerRegistry[name](el);
+    } catch (err) {
+      console.error('[Faqir] Controller "' + name + '" failed to initialize', el, err);
+    }
+  }
+
   function bootstrap() {
     injectCloakStyle();
 
@@ -10785,7 +10820,7 @@ function createTreeView(root) {
     for (var n = 0; n < names.length; n++) {
       var els = document.querySelectorAll('[data-ui="' + names[n] + '"]');
       for (var e = 0; e < els.length; e++) {
-        controllerRegistry[names[n]](els[e]);
+        initController(names[n], els[e]);
       }
     }
 
@@ -10840,7 +10875,7 @@ function createTreeView(root) {
     for (var n2 = 0; n2 < names.length; n2++) {
       var els2 = document.querySelectorAll('[data-ui="' + names[n2] + '"]');
       for (var e2 = 0; e2 < els2.length; e2++) {
-        controllerRegistry[names[n2]](els2[e2]);
+        initController(names[n2], els2[e2]);
       }
     }
 
@@ -10856,7 +10891,7 @@ function createTreeView(root) {
 
           var uiName = node.getAttribute ? node.getAttribute('data-ui') : null;
           if (uiName && controllerRegistry[uiName]) {
-            controllerRegistry[uiName](node);
+            initController(uiName, node);
           }
 
           if (node.hasAttribute && node.hasAttribute('l-data')) {
@@ -10870,7 +10905,7 @@ function createTreeView(root) {
             var cNames = Object.keys(controllerRegistry);
             for (var cn = 0; cn < cNames.length; cn++) {
               var cEls = node.querySelectorAll('[data-ui="' + cNames[cn] + '"]');
-              for (var ce = 0; ce < cEls.length; ce++) controllerRegistry[cNames[cn]](cEls[ce]);
+              for (var ce = 0; ce < cEls.length; ce++) initController(cNames[cn], cEls[ce]);
             }
             var scopeEls = node.querySelectorAll('[l-data]');
             for (var se = 0; se < scopeEls.length; se++) {

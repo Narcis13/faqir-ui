@@ -42,8 +42,8 @@ TypeScript.
 ```bash
 bun install
 bun run dev                 # run the CLI from src/index.ts
-bun test                    # full Bun test suite
-bun test tests/path.test.ts # targeted test file
+bun run test                # full suite — NOT bare `bun test`, see below
+bun test tests/path.test.ts # targeted test file (bare `bun test` is fine here)
 bun run typecheck           # root and MCP TypeScript checks
 bun run build:cli           # build dist/faqir.mjs
 bun run smoke               # exercise the Node-compatible CLI end to end
@@ -62,8 +62,24 @@ bun run check:skill
 bun run check:schema-refs
 ```
 
+Use `bun run test` for the full suite, never a bare `bun test`. The two engine
+builds each bootstrap on `require` and install a permanent MutationObserver, so
+in Bun's single shared happy-dom realm they contaminate each other's assertions;
+`scripts/test.mjs` partitions the suite by engine build to prevent it. A bare
+`bun test` fails or hangs depending on directory walk order. Targeting a single
+file directly is fine.
+
+Engine tests share one happy-dom realm across every file, so a test that scopes
+or boots the *document* leaks into every file that runs after it. Mount into a
+disposable container and tear it down, rather than into `document.body`:
+`Faqir.initTree(document.body, …)` makes `body` a scope root for the rest of the
+run, and `Faqir.start()` has no re-entry guard — each call leaves another
+MutationObserver on `body` that fires on every later mutation in the suite. Both
+show up as an unrelated test elsewhere timing out, which is a slow thing to
+diagnose.
+
 Run the smallest relevant test while iterating. Before handing off a broad
-change, run `bun test` and `bun run typecheck`; add build, smoke, registry,
+change, run `bun run test` and `bun run typecheck`; add build, smoke, registry,
 accessibility, or visual checks when the affected area requires them. Do not
 update visual snapshots unless the visual change is intentional. Local visual
 baselines are ignored because canonical rendering happens in the pinned CI

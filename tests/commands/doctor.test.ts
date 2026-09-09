@@ -6,13 +6,23 @@ import { doctor } from "../../src/commands/doctor";
 
 const TEST_DIR = join(import.meta.dir, "../.tmp-doctor-test");
 
+// `doctor` reports failure through `process.exitCode` (a CLI must, and it cannot
+// use `process.exit` without cutting off the --json envelope). These tests invoke
+// it in-process, so the exit code lands on the test runner itself: each block
+// snapshots and restores it, or a suite with zero failing assertions still exits
+// non-zero. Note `process.exitCode = undefined` is a no-op in Bun — restoring
+// requires an explicit number, or the 1 simply stays.
 describe("faqir doctor", () => {
+  let savedExitCode: typeof process.exitCode;
+
   beforeEach(() => {
+    savedExitCode = process.exitCode;
     rmSync(TEST_DIR, { recursive: true, force: true });
     mkdirSync(TEST_DIR, { recursive: true });
   });
 
   afterEach(() => {
+    process.exitCode = typeof savedExitCode === "number" ? savedExitCode : 0;
     rmSync(TEST_DIR, { recursive: true, force: true });
   });
 
@@ -77,5 +87,57 @@ describe("faqir doctor", () => {
       process.chdir(origCwd);
     }
     expect(existsSync(join(TEST_DIR, "ui", "base", "reset.css"))).toBe(false);
+  });
+});
+
+// ── doctor's exit code is the only part a CI gate reads ─────────────────────
+//
+// `printResults` reported "N passed, M failed" and returned without ever
+// touching the exit code, so `faqir doctor` exited 0 on a project it had just
+// declared broken. A health check that returns success when it found failures
+// is worse than no health check: it converts a real problem into a green light
+// for every agent and pipeline that gates on it.
+describe("faqir doctor exit code", () => {
+  // Sibling describe: the outer block's beforeEach does not reach these.
+  let savedExitCode: typeof process.exitCode;
+
+  beforeEach(() => {
+    savedExitCode = process.exitCode;
+    rmSync(TEST_DIR, { recursive: true, force: true });
+    mkdirSync(TEST_DIR, { recursive: true });
+  });
+  afterEach(() => {
+    process.exitCode = typeof savedExitCode === "number" ? savedExitCode : 0;
+    rmSync(TEST_DIR, { recursive: true, force: true });
+  });
+
+  it("exits non-zero when a check fails", async () => {
+    const origCwd = process.cwd();
+    const origExit: typeof process.exitCode = process.exitCode;
+    process.chdir(TEST_DIR);
+    try {
+      process.exitCode = 0;
+      // Empty dir: no faqir.config.json, so checks fail.
+      await doctor([]);
+      expect(process.exitCode).toBe(1);
+    } finally {
+      process.exitCode = typeof origExit === "number" ? origExit : 0;
+      process.chdir(origCwd);
+    }
+  });
+
+  it("leaves the exit code alone on a healthy project", async () => {
+    const origCwd = process.cwd();
+    const origExit: typeof process.exitCode = process.exitCode;
+    process.chdir(TEST_DIR);
+    try {
+      await init(["--yes"]);
+      process.exitCode = 0;
+      await doctor([]);
+      expect(process.exitCode ?? 0).toBe(0);
+    } finally {
+      process.exitCode = typeof origExit === "number" ? origExit : 0;
+      process.chdir(origCwd);
+    }
   });
 });

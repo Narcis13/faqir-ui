@@ -129,3 +129,68 @@ describe("validateRegistryIndex", () => {
     ).toBe(false);
   });
 });
+
+// ── The index names paths on the installing user's disk ──────────────────────
+//
+// A remote index supplies both the component directory name and every file name
+// inside it, and those become path segments under the project's output_dir. On
+// any registry the user does not operate, they are attacker-controlled.
+//
+// The per-file SHA-256 is no defense here: a hostile host authors the bytes AND
+// the declared hashes, so the integrity check passes by construction and the
+// write proceeds as "verified". Containment has to come from rejecting the name.
+describe("validateRegistryIndex rejects paths that escape the component directory", () => {
+  function indexWith(entry: Record<string, unknown>) {
+    return validateRegistryIndex({
+      schema: REGISTRY_INDEX_SCHEMA,
+      generated_from: "test",
+      components: [
+        {
+          name: "button",
+          layer: "primitives",
+          kind: "primitive",
+          version: "1.0.0",
+          hash: "0".repeat(64),
+          files: [{ path: "button.css", sha256: "0".repeat(64) }],
+          ...entry,
+        },
+      ],
+    });
+  }
+
+  const hostilePaths = [
+    "../../../../.ssh/authorized_keys",
+    "../escape.txt",
+    "..",
+    "./../x",
+    "/etc/passwd",
+    "/absolute.css",
+    "a/../../b.css",
+    "nested/../../../out.css",
+    "back\\slash.css",
+  ];
+
+  for (const path of hostilePaths) {
+    it(`rejects files[].path ${JSON.stringify(path)}`, () => {
+      const r = indexWith({ files: [{ path, sha256: "0".repeat(64) }] });
+      expect(r.ok).toBe(false);
+    });
+  }
+
+  const hostileNames = ["../evil", "..", "a/b", "/abs", ".hidden", "Upper", "has space"];
+
+  for (const name of hostileNames) {
+    it(`rejects component name ${JSON.stringify(name)}`, () => {
+      const r = indexWith({ name });
+      expect(r.ok).toBe(false);
+    });
+  }
+
+  it("still accepts every path and name in Faqir's own registry index", () => {
+    // The grammar has to be tight enough to stop traversal and loose enough for
+    // the real registry — this is the half that proves it is not over-strict.
+    const index = buildRegistryIndex(REGISTRY);
+    const r = validateRegistryIndex(JSON.parse(serializeRegistryIndex(index)));
+    expect(r.ok).toBe(true);
+  });
+});

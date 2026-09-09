@@ -123,6 +123,44 @@ describe("faqir conform", () => {
     expect(result).toBe(html);
   });
 
+  it("--dry-run counts each file once, and agrees with the real run", async () => {
+    // `output_dir` is authored as "./ui" while Bun.Glob yields "ui/…", so the
+    // skip that excludes already-processed component files compared "./ui/" to
+    // "ui/…" and never fired: every component file was counted a second time and
+    // --dry-run reported double. The listed files were always right — only the
+    // total lied, which is why 89% line coverage did not catch it.
+    await init([]);
+    await add(["button"]);
+
+    const html = '<button data-variant="primary" data-ui="button">Click</button>';
+    await Bun.write(join(TEST_DIR, "page.html"), html);
+
+    const countFrom = (lines: string[]) => {
+      const m = lines.join("\n").match(/(\d+) file\(s\) would be updated/);
+      return m ? Number(m[1]) : -1;
+    };
+
+    const origLog = console.log;
+    const dry: string[] = [];
+    console.log = (...a: unknown[]) => void dry.push(a.join(" "));
+    await conform(["--dry-run"]);
+    console.log = origLog;
+
+    // Every file the preview names, and no more.
+    const named = dry.filter((l) => l.includes("Would update:")).length;
+    expect(countFrom(dry)).toBe(named);
+
+    const applied: string[] = [];
+    console.log = (...a: unknown[]) => void applied.push(a.join(" "));
+    await conform([]);
+    console.log = origLog;
+
+    const realCount = Number(
+      (applied.join("\n").match(/(\d+) file\(s\) updated/) ?? [])[1] ?? -1
+    );
+    expect(realCount).toBe(named);
+  });
+
   it("does not touch non-faqir elements", async () => {
     await init([]);
     await add(["button"]);

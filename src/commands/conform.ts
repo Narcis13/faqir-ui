@@ -254,12 +254,18 @@ export async function conform(args: string[]): Promise<void> {
   }
 
   // Process project HTML files (reorder attributes only)
+  //
+  // `output_dir` is authored as "./ui" while the glob yields "ui/…", so the skip
+  // below has to compare normalized forms — otherwise it never fires, every
+  // component file is processed a second time here, and --dry-run reports double
+  // the real count. `skill.ts` normalizes the same field for the same reason.
+  const outputDirRel = config.output_dir.replace(/^\.\//, "").replace(/\/$/, "");
   const glob = new Bun.Glob("**/*.html");
   for await (const path of glob.scan({ cwd, onlyFiles: true })) {
     if (path.includes("node_modules")) continue;
     if (path.startsWith(".faqir")) continue;
     // Skip component source files (already processed above)
-    if (path.startsWith(config.output_dir + "/")) {
+    if (path.startsWith(outputDirRel + "/")) {
       const parts = path.split("/");
       // Skip if it's layer/name/name.html (component source)
       if (parts.length >= 4) continue;

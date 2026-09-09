@@ -8,6 +8,21 @@ import { applyRepairs } from "../audit/repairer";
 export async function repair(args: string[]): Promise<void> {
   const cwd = process.cwd();
 
+  if (args.includes("--help") || args.includes("-h")) {
+    log.heading("faqir repair");
+    log.blank();
+    console.log("Apply the deterministic fixes the audit knows how to make.");
+    log.blank();
+    console.log("Options:");
+    log.table([
+      ["--dry-run", "Show what would be fixed without writing"],
+      ["--json", "Machine-readable output"],
+    ]);
+    return;
+  }
+
+  const dryRun = args.includes("--dry-run");
+
   if (!configExists(cwd)) {
     log.error("No faqir.config.json found. Run 'faqir init' first.");
     process.exit(1);
@@ -29,9 +44,18 @@ export async function repair(args: string[]): Promise<void> {
   log.info(`Found ${fixable.length} auto-fixable issue(s). Applying repairs...`);
   log.blank();
 
-  const repairSummary = await applyRepairs(summary.results, cwd);
+  const repairSummary = await applyRepairs(summary.results, cwd, { dryRun });
 
   log.blank();
+  if (dryRun) {
+    log.info(
+      `${repairSummary.fixes_applied} fix(es) would be applied across ${repairSummary.files_modified} file(s). Run without --dry-run to apply.`
+    );
+    if (repairSummary.fixes_skipped > 0) {
+      log.dim(`  ${repairSummary.fixes_skipped} fix(es) would be skipped (already applied or not applicable).`);
+    }
+    return;
+  }
   log.success(`Repairs complete: ${repairSummary.fixes_applied} fix(es) applied across ${repairSummary.files_modified} file(s).`);
   if (repairSummary.fixes_skipped > 0) {
     log.dim(`  ${repairSummary.fixes_skipped} fix(es) skipped (already applied or not applicable).`);
