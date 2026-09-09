@@ -135,10 +135,19 @@ table?.controller?.api.exportCsv(2);
 
 // ── 16. $ui narrows to destroy() only until you say which component it is ──
 Faqir.directive("via-ui", (_el, _dir, scope) => {
-  scope.$ui?.destroy();
-  (scope.$ui as Faqir.ControllerApis["tabs"] | null)?.activate(1);
+  // The local controller's universal method. Optional, because the element the
+  // expression sits on may have no controller at all.
+  scope.$ui.destroy?.();
+  (scope.$ui as unknown as Faqir.ControllerApis["tabs"]).activate(1);
   // @ts-expect-error — an unidentified controller exposes only destroy().
-  scope.$ui?.activate(1);
+  scope.$ui.activate(1);
+
+  // ── W2-6: the same handle resolves ANOTHER component's controller ──
+  scope.$ui("#detail-drawer")?.destroy();
+  (scope.$ui("#tabs") as Faqir.ControllerApis["tabs"] | null)?.activate(1);
+  scope.$ui(document.body)?.destroy();
+  // @ts-expect-error — the lookup takes a selector or an element, not a number.
+  scope.$ui(7);
 });
 
 // ── 17. the scope's magics ─────────────────────────────────────────────────

@@ -80,6 +80,8 @@ function parseJson<T>(capture: Capture): T {
 interface AuditEnvelope {
   passed: boolean;
   counts: { critical: number; error: number; warning: number; info: number };
+  /** Findings in `ui/` — the framework's own installed files. See W2-3. */
+  vendor_counts: { critical: number; error: number; warning: number; info: number };
   results: Array<{ rule_id: string; severity: string; file: string; message: string; component_name: string }>;
 }
 
@@ -172,6 +174,13 @@ beforeAll(async () => {
   // against the doc's own section for that component further down.
   RAN.push("markup");
   writePage(page().replace('data-ui="field-group" data-state="error"', 'data-ui="field-group" data-state="invalid"'));
+  // `surface` 2.0.0 — the measure ladder replaced the breakpoint-named widths
+  // (docs/migration-1.0.md §"data-max speaks the measure ladder": lg → wide).
+  // This rename is as documented as the `data-state` one above and was missing
+  // from this walkthrough until `attribute-vocabulary` (W2-2) reported the
+  // leftover `data-max="lg"`: no rule had ever checked a non-protocol enum, so
+  // an incomplete migration audited clean.
+  writePage(page().replace('data-max="lg"', 'data-max="wide"'));
   writePage(
     page()
       .replace(
@@ -210,7 +219,16 @@ describe("v0.2.4 → 1.0 · the project the CLI cannot see", () => {
     // engine the page loads under its old name.
     expect(pageFindings.some((r) => r.message.includes("striped"))).toBe(true);
     expect(pageFindings.some((r) => r.rule_id === "controller-loaded")).toBe(true);
-    expect(preAudit.counts.critical + preAudit.counts.error).toBeGreaterThan(10);
+    // Both halves: `counts` is authored-only since W2-3, and a pre-migration
+    // project is broken on both sides of that line — the page speaks a
+    // vocabulary the 1.0 manifests no longer declare, and `ui/` still holds
+    // v0.2.4 component sources.
+    const preErrors =
+      preAudit.counts.critical +
+      preAudit.counts.error +
+      preAudit.vendor_counts.critical +
+      preAudit.vendor_counts.error;
+    expect(preErrors).toBeGreaterThan(10);
   });
 });
 

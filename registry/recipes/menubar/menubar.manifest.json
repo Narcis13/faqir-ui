@@ -5,13 +5,11 @@
   "kind": "recipe",
   "category": "navigation",
   "description": "Horizontal application menubar with roving focus and keyboard-operated submenus",
-
   "anatomy": {
     "tag": "div",
     "selector": "[data-ui='menubar']",
     "content_model": "slots"
   },
-
   "slots": {
     "group": {
       "selector": "[data-part='group']",
@@ -44,21 +42,43 @@
       "description": "Non-interactive separator between groups of submenu actions"
     }
   },
-
   "variants": {
     "size": {
-      "values": ["sm", "md", "lg"],
+      "values": [
+        "sm",
+        "md",
+        "lg"
+      ],
       "default": "md",
       "attr": "data-size",
       "applied_to": "root"
     }
   },
-
   "states": {
-    "closed": { "attr": "data-state=\"closed\"", "default": true },
-    "open": { "attr": "data-state=\"open\"" }
+    "closed": {
+      "attr": "data-state=\"closed\"",
+      "default": true
+    },
+    "open": {
+      "attr": "data-state=\"open\""
+    }
   },
-
+  "api": {
+    "methods": [
+      {
+        "name": "open",
+        "params": "index = 0, focus = \"first\""
+      },
+      {
+        "name": "close",
+        "params": "restoreFocus = true"
+      },
+      {
+        "name": "destroy",
+        "params": ""
+      }
+    ]
+  },
   "props": {
     "label": {
       "type": "string",
@@ -66,7 +86,6 @@
       "description": "Accessible label for the menubar"
     }
   },
-
   "a11y": {
     "role": "menubar",
     "required_attrs": [
@@ -93,20 +112,35 @@
       "Tab": "close all submenus and move focus out of the menubar"
     }
   },
-
   "tokens_used": [
-    "color-bg", "color-border", "color-fg", "color-fg-muted",
-    "color-primary", "color-primary-subtle", "color-ring",
-    "space-px", "space-1", "space-2", "space-3", "space-4", "space-20",
-    "radius-md", "radius-lg", "shadow-md",
-    "text-xs", "text-sm", "text-base", "weight-medium",
-    "duration-fast", "ease-out", "z-dropdown", "font-sans"
+    "color-bg",
+    "color-border",
+    "color-fg",
+    "color-fg-muted",
+    "color-primary",
+    "color-primary-subtle",
+    "color-ring",
+    "space-px",
+    "space-1",
+    "space-2",
+    "space-3",
+    "space-4",
+    "space-20",
+    "radius-md",
+    "radius-lg",
+    "shadow-md",
+    "text-xs",
+    "text-sm",
+    "text-base",
+    "weight-medium",
+    "duration-fast",
+    "ease-out",
+    "z-dropdown",
+    "font-sans"
   ],
-
   "templates": {
     "html": "<div data-ui=\"menubar\" data-state=\"closed\" data-size=\"{size}\" role=\"menubar\" aria-label=\"{label}\">\n  <div data-part=\"group\" role=\"none\">\n    <button type=\"button\" data-part=\"trigger\" id=\"{id}-file\" role=\"menuitem\" tabindex=\"0\" aria-haspopup=\"menu\" aria-expanded=\"false\" aria-controls=\"{id}-file-menu\">{menu1}</button>\n    <div data-part=\"submenu\" id=\"{id}-file-menu\" role=\"menu\" aria-labelledby=\"{id}-file\" hidden>\n      <button type=\"button\" data-part=\"item\" role=\"menuitem\" tabindex=\"-1\">{item1}</button>\n      <button type=\"button\" data-part=\"item\" role=\"menuitem\" tabindex=\"-1\">{item2}</button>\n      <hr data-part=\"separator\" role=\"separator\">\n      <button type=\"button\" data-part=\"item\" role=\"menuitem\" tabindex=\"-1\">{item3}</button>\n    </div>\n  </div>\n  <div data-part=\"group\" role=\"none\">\n    <button type=\"button\" data-part=\"trigger\" id=\"{id}-edit\" role=\"menuitem\" tabindex=\"-1\" aria-haspopup=\"menu\" aria-expanded=\"false\" aria-controls=\"{id}-edit-menu\">{menu2}</button>\n    <div data-part=\"submenu\" id=\"{id}-edit-menu\" role=\"menu\" aria-labelledby=\"{id}-edit\" hidden>\n      <button type=\"button\" data-part=\"item\" role=\"menuitem\" tabindex=\"-1\">{item4}</button>\n      <button type=\"button\" data-part=\"item\" role=\"menuitem\" tabindex=\"-1\">{item5}</button>\n    </div>\n  </div>\n</div>"
   },
-
   "safe_transforms": [
     "add-top-level-menu",
     "add-submenu-item",
@@ -115,7 +149,6 @@
     "change-accessible-label",
     "restyle-menu-surfaces"
   ],
-
   "unsafe_transforms": [
     "remove-menubar-role",
     "remove-menu-or-menuitem-roles",
@@ -124,19 +157,16 @@
     "remove-roving-tabindex",
     "remove-keyboard-navigation"
   ],
-
   "composition": {
     "contains": [],
     "used_in": []
   },
-
   "files": {
     "html": "menubar.html",
     "css": "menubar.css",
     "js": "menubar.js",
     "manifest": "menubar.manifest.json"
   },
-
   "tests": [
     "initial-roving-tabindex-is-valid",
     "horizontal-arrows-move-and-wrap-top-level-focus",

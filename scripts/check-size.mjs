@@ -7,7 +7,7 @@
  *
  *   - engine               src/core-src/engine.js         ≤ 14 KB gzip
  *     (directives, reactivity, plugin API — no controllers)
- *   - engine + controllers registry/core/faqir-core.js    ≤ 44 KB gzip
+ *   - engine + controllers registry/core/faqir-core.js    ≤ 45 KB gzip
  *     (the shipped single-file build: engine + every recipe controller)
  *   - dev engine           registry/core/faqir-core.dev.js  no budget
  *     (development build — measured and printed, never enforced; task 0.7-12)
@@ -38,9 +38,13 @@ export const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const KB = 1024;
 
 // Budgets, in bytes. The single source of truth for the numbers in §10.4.
+//
+// `engineWithControllers` has moved twice before, each time for a named
+// feature and recorded here: 42 → 43 KB for the 29th recipe controller, and
+// 43 → 44 KB for `inspect`/devtools. Wave 2 took it 44 → 45 KB: the shared exit-transition helper the four overlay controllers now wait on (`whenExitDone` — see W2-1's drawer bug), the unscoped-directive sweep that makes `<form l-validate>` bind at all, applying a scope root's own directives, and `$ui('#id')` for reaching another component's controller.
 export const BUDGETS = {
   engine: 14 * KB,
-  engineWithControllers: 44 * KB,
+  engineWithControllers: 45 * KB,
   plugin: 2 * KB,
 };
 

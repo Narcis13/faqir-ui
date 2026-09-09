@@ -5,7 +5,6 @@
   "kind": "recipe",
   "category": "forms",
   "description": "Single- or multi-select group of toggle buttons over native radio/checkbox controls, with roving-tabindex keyboard navigation and native l-model binding",
-
   "changes": [
     {
       "version": "1.1.0",
@@ -13,13 +12,11 @@
       "breaking": false
     }
   ],
-
   "anatomy": {
     "tag": "div",
     "selector": "[data-ui='toggle-group']",
     "content_model": "slots"
   },
-
   "slots": {
     "item": {
       "selector": "[data-part='item']",
@@ -40,16 +37,17 @@
       "description": "Visible option text; provides the control's accessible name via the wrapping label"
     }
   },
-
   "variants": {
     "mode": {
-      "values": ["single", "multi"],
+      "values": [
+        "single",
+        "multi"
+      ],
       "default": "single",
       "attr": "data-mode",
       "applied_to": "root"
     }
   },
-
   "states": {
     "off": {
       "attr": "data-state=\"off\"",
@@ -62,11 +60,33 @@
       "description": "The item's control is checked — the pressed appearance. The controller writes it; nothing else should"
     }
   },
-
-  "props": {
-    "mode": { "type": "string", "default": "single", "description": "single (radiogroup, one value) or multi (independent toggles, array value)" }
+  "api": {
+    "methods": [
+      {
+        "name": "getValue",
+        "params": ""
+      },
+      {
+        "name": "setValue",
+        "params": "val"
+      },
+      {
+        "name": "toggle",
+        "params": "value"
+      },
+      {
+        "name": "destroy",
+        "params": ""
+      }
+    ]
   },
-
+  "props": {
+    "mode": {
+      "type": "string",
+      "default": "single",
+      "description": "single (radiogroup, one value) or multi (independent toggles, array value)"
+    }
+  },
   "a11y": {
     "required_attrs": [
       "role=\"radiogroup\" on root in single mode; role=\"group\" in multi mode",
@@ -83,20 +103,29 @@
     },
     "notes": "The controls are REAL <input type=\"radio\"|\"checkbox\"> elements, so the platform provides the pressed/checked semantics and l-model binds through the engine's native radio (string) / checkbox-array (array) paths with no engine changes. The controller adds only roving tabindex, single-mode exclusivity for uncontrolled use, the [data-state] styling hook, and a faqir:change notification. Design note: multi mode uses native checkbox aria-checked rather than button aria-pressed specifically so array l-model works natively."
   },
-
   "tokens_used": [
-    "color-bg", "color-bg-muted", "color-fg", "color-fg-muted",
-    "color-border", "color-primary", "color-primary-subtle", "color-ring",
+    "color-bg",
+    "color-bg-muted",
+    "color-fg",
+    "color-fg-muted",
+    "color-border",
+    "color-primary",
+    "color-primary-subtle",
+    "color-ring",
     "radius-md",
-    "space-1", "space-1h", "space-2", "space-3",
-    "text-sm", "font-sans", "weight-medium",
-    "duration-fast", "ease-default"
+    "space-1",
+    "space-1h",
+    "space-2",
+    "space-3",
+    "text-sm",
+    "font-sans",
+    "weight-medium",
+    "duration-fast",
+    "ease-default"
   ],
-
   "templates": {
     "html": "<div data-ui=\"toggle-group\" data-mode=\"{mode}\" role=\"radiogroup\" aria-label=\"{label}\">\n  <label data-part=\"item\" data-state=\"off\"><input data-part=\"control\" type=\"radio\" name=\"{id}\" value=\"{value1}\"><span data-part=\"label\">{option1}</span></label>\n  <label data-part=\"item\" data-state=\"off\"><input data-part=\"control\" type=\"radio\" name=\"{id}\" value=\"{value2}\"><span data-part=\"label\">{option2}</span></label>\n</div>"
   },
-
   "safe_transforms": [
     "add-item",
     "remove-item",
@@ -106,7 +135,6 @@
     "remove-disabled",
     "restyle-item-background"
   ],
-
   "unsafe_transforms": [
     "remove-control-input",
     "change-control-from-native-input",
@@ -114,19 +142,16 @@
     "remove-accessible-name",
     "remove-keyboard-navigation"
   ],
-
   "composition": {
     "contains": [],
     "used_in": []
   },
-
   "files": {
     "html": "toggle-group.html",
     "css": "toggle-group.css",
     "js": "toggle-group.js",
     "manifest": "toggle-group.manifest.json"
   },
-
   "tests": [
     "roving-tabindex-single-tab-stop",
     "arrow-keys-move-focus-and-wrap",

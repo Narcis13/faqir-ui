@@ -27,6 +27,7 @@ import {
   buildTriggerContractResults,
   buildUnknownComponentResults,
 } from "./rules";
+import { buildVocabularyResults } from "./vocabulary";
 
 /**
  * Rules that assert a **runtime is present in the same file** — not a property
@@ -157,6 +158,13 @@ export function auditHtmlSource(input: HtmlAuditInput): AuditResult[] {
       results.push(...rule.check(doc));
     }
   }
+
+  // The silent-failure rules (W2-2). Document-wide and manifest-aware, which is
+  // why they take `doc` + `manifests` rather than being `AuditRule`s: the
+  // attributes they check are not all written on a component root or on a part
+  // (`data-span` lives on a plain grid CHILD), and a directive attribute is
+  // normally on an element carrying no `data-ui` at all.
+  results.push(...buildVocabularyResults(doc, manifests, file, skipRules));
 
   // File-level controller-loaded: replace the generic per-component reminders
   // (emitted by controllerLoadedRule) with the precise "is the script actually

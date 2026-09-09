@@ -5,7 +5,6 @@
   "kind": "recipe",
   "category": "layout",
   "description": "Horizontally scrolling slide strip built on CSS scroll-snap, progressively enhanced with prev/next buttons, dot indicators and a polite live region",
-
   "changes": [
     {
       "version": "1.1.0",
@@ -13,13 +12,11 @@
       "breaking": false
     }
   ],
-
   "anatomy": {
     "tag": "div",
     "selector": "[data-ui='carousel']",
     "content_model": "slots"
   },
-
   "slots": {
     "viewport": {
       "selector": "[data-part='viewport']",
@@ -70,9 +67,7 @@
       "description": "Polite live region (role=\"status\") the controller updates with \"Slide N of M\" on every slide change"
     }
   },
-
   "variants": {},
-
   "states": {
     "active": {
       "attr": "data-state=\"active\"",
@@ -86,7 +81,34 @@
       "description": "Every other dot"
     }
   },
-
+  "api": {
+    "methods": [
+      {
+        "name": "next",
+        "params": ""
+      },
+      {
+        "name": "prev",
+        "params": ""
+      },
+      {
+        "name": "goTo",
+        "params": "i"
+      },
+      {
+        "name": "getIndex",
+        "params": ""
+      },
+      {
+        "name": "getCount",
+        "params": ""
+      },
+      {
+        "name": "destroy",
+        "params": ""
+      }
+    ]
+  },
   "props": {
     "loop": {
       "type": "boolean",
@@ -101,7 +123,6 @@
       "description": "Flex basis of each slide, so a strip can show more than one slide at a time (e.g. 60% for a peeking layout). Purely CSS — the controller measures whatever the layout produces"
     }
   },
-
   "a11y": {
     "required_attrs": [
       "role=\"group\" on root",
@@ -123,20 +144,28 @@
     },
     "notes": "Progressive enhancement is the whole design. CSS scroll-snap slides the strip, so with JavaScript disabled the component is a complete, keyboard-operable scroller; the controls and dots — which do nothing without a controller — ship `hidden` and are un-hidden on init (and re-hidden by destroy()). Slides are never aria-hidden: they stay in the scroll container and in the accessibility tree, which is what lets assistive tech and find-in-page reach off-screen content. The [data-part='status'] live region announces \"Slide N of M\" politely on each change. Reduced motion is honoured with an explicit behavior: \"instant\" scroll (which overrides the CSS scroll-behavior: smooth) plus a scroll-behavior: auto override in the media query for native scrolls. No autoplay: an unattended moving carousel would need pause/stop controls to meet WCAG 2.2.2, and none of that JavaScript is worth the budget."
   },
-
   "tokens_used": [
-    "color-bg", "color-bg-muted", "color-fg", "color-fg-muted",
-    "color-border", "color-primary", "color-ring",
-    "radius-md", "radius-lg",
-    "space-1", "space-2", "space-3", "space-4",
-    "text-sm", "font-sans",
-    "duration-fast", "ease-default"
+    "color-bg",
+    "color-bg-muted",
+    "color-fg",
+    "color-fg-muted",
+    "color-border",
+    "color-primary",
+    "color-ring",
+    "radius-md",
+    "radius-lg",
+    "space-1",
+    "space-2",
+    "space-3",
+    "space-4",
+    "text-sm",
+    "font-sans",
+    "duration-fast",
+    "ease-default"
   ],
-
   "templates": {
     "html": "<div data-ui=\"carousel\" role=\"group\" aria-roledescription=\"carousel\" aria-label=\"{label}\">\n  <div data-part=\"viewport\" tabindex=\"0\" role=\"group\" aria-label=\"Slides\">\n    <div data-part=\"slide\" role=\"group\" aria-roledescription=\"slide\" aria-label=\"1 of 2\">{slide1}</div>\n    <div data-part=\"slide\" role=\"group\" aria-roledescription=\"slide\" aria-label=\"2 of 2\">{slide2}</div>\n  </div>\n  <div data-part=\"controls\" hidden>\n    <button data-part=\"prev\" type=\"button\" aria-label=\"Previous slide\">&laquo;</button>\n    <button data-part=\"next\" type=\"button\" aria-label=\"Next slide\">&raquo;</button>\n  </div>\n  <div data-part=\"dots\" role=\"group\" aria-label=\"Choose slide\" hidden>\n    <button data-part=\"dot\" type=\"button\" aria-label=\"Slide 1\"></button>\n    <button data-part=\"dot\" type=\"button\" aria-label=\"Slide 2\"></button>\n  </div>\n  <p data-part=\"status\" role=\"status\" aria-live=\"polite\"></p>\n</div>"
   },
-
   "safe_transforms": [
     "add-slide",
     "remove-slide",
@@ -148,7 +177,6 @@
     "restyle-slide-background",
     "change-slide-size"
   ],
-
   "unsafe_transforms": [
     "remove-scroll-snap-css",
     "remove-viewport-overflow",
@@ -158,41 +186,27 @@
     "remove-aria-roledescription",
     "add-autoplay"
   ],
-
-  "api": {
-    "goTo": "(index) => void — scroll to a slide, wrapped or clamped per the loop-or-stop contract",
-    "next": "() => void — scroll to the next slide",
-    "prev": "() => void — scroll to the previous slide",
-    "getIndex": "() => number — the current slide index",
-    "getCount": "() => number — the number of slides",
-    "destroy": "() => void — remove the click/scroll listeners, re-hide the enhancement-only controls, and drop the private handle"
-  },
-
   "events": {
     "faqir:change": {
       "detail": "{ index: number, count: number }",
       "description": "Fires whenever the current slide changes — from a button, a dot, or the reader scrolling/swiping the strip themselves (scroll math, rAF-throttled). Does not fire for a navigation that lands on the slide already showing."
     }
   },
-
   "js_budget": {
     "file": "carousel.js",
     "gzip_bytes": 1536,
     "note": "The controller is buttons + dots + a live region only — the sliding is CSS. Budget is 1.5 KB gzip of the minified file (bun build --minify | gzip), the same measurement scripts/check-size.mjs applies to the bundles; pinned by tests/recipes/carousel.test.ts."
   },
-
   "composition": {
     "contains": [],
     "used_in": []
   },
-
   "files": {
     "html": "carousel.html",
     "css": "carousel.css",
     "js": "carousel.js",
     "manifest": "carousel.manifest.json"
   },
-
   "tests": [
     "next-button-scrolls-to-the-next-slide",
     "prev-button-scrolls-to-the-previous-slide",

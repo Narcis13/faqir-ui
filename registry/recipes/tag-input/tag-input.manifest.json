@@ -5,7 +5,6 @@
   "kind": "recipe",
   "category": "forms",
   "description": "Multi-value input composing the chip primitive and combobox listbox behaviour — type + Enter to add tags, Backspace to remove the last, dismiss buttons per tag, optional filtered suggestions, and a configurable duplicates policy",
-
   "changes": [
     {
       "version": "1.1.0",
@@ -13,13 +12,11 @@
       "breaking": false
     }
   ],
-
   "anatomy": {
     "tag": "div",
     "selector": "[data-ui='tag-input']",
     "content_model": "slots"
   },
-
   "slots": {
     "taglist": {
       "selector": "[data-part='taglist']",
@@ -64,12 +61,15 @@
       "description": "Hidden input mirroring the tag array as JSON; the controller fires native input events on it so l-model stays in sync"
     }
   },
-
   "variants": {},
-
   "states": {
-    "closed": { "attr": "data-state=\"closed\"", "default": true },
-    "open": { "attr": "data-state=\"open\"" },
+    "closed": {
+      "attr": "data-state=\"closed\"",
+      "default": true
+    },
+    "open": {
+      "attr": "data-state=\"open\""
+    },
     "highlighted": {
       "attr": "data-highlighted",
       "applied_to": "option",
@@ -81,12 +81,46 @@
       "description": "A suggestion filtered out by the current input, or already added as a tag. The controller writes it; hidden options are skipped by keyboard navigation"
     }
   },
-
-  "props": {
-    "placeholder": { "type": "string", "default": "", "description": "Text input placeholder" },
-    "allowDuplicates": { "type": "boolean", "default": false, "description": "When data-allow-duplicates is present, repeated tags are permitted (default: rejected, case-insensitive)" }
+  "api": {
+    "methods": [
+      {
+        "name": "getValue",
+        "params": ""
+      },
+      {
+        "name": "setValue",
+        "params": "next"
+      },
+      {
+        "name": "addTag",
+        "params": "raw"
+      },
+      {
+        "name": "removeTag",
+        "params": "value"
+      },
+      {
+        "name": "clear",
+        "params": ""
+      },
+      {
+        "name": "destroy",
+        "params": ""
+      }
+    ]
   },
-
+  "props": {
+    "placeholder": {
+      "type": "string",
+      "default": "",
+      "description": "Text input placeholder"
+    },
+    "allowDuplicates": {
+      "type": "boolean",
+      "default": false,
+      "description": "When data-allow-duplicates is present, repeated tags are permitted (default: rejected, case-insensitive)"
+    }
+  },
   "a11y": {
     "required_attrs": [
       "role=\"group\" on taglist with an accessible name",
@@ -102,22 +136,29 @@
     },
     "notes": "The taglist is a role=\"group\", not a role=\"list\": the combobox input shares the box with the chips, and role=\"list\" may only own role=\"listitem\" children (axe aria-required-children). Each chip is reachable through its own labelled dismiss button, so no list semantics are lost. Tags reuse the chip primitive's dismiss button (a <button type=\"button\"> with an aria-label). The suggestions listbox reuses the combobox listbox behaviour. The committed value is an array of strings, exposed via getValue(), the faqir:change event detail, and (serialized as JSON) the hidden [data-part=\"value\"] input for l-model."
   },
-
   "tokens_used": [
-    "color-bg", "color-fg", "color-fg-muted", "color-border",
-    "color-primary-subtle", "color-ring",
-    "radius-md", "radius-lg",
+    "color-bg",
+    "color-fg",
+    "color-fg-muted",
+    "color-border",
+    "color-primary-subtle",
+    "color-ring",
+    "radius-md",
+    "radius-lg",
     "shadow-md",
-    "space-1", "space-1h", "space-2", "space-3",
+    "space-1",
+    "space-1h",
+    "space-2",
+    "space-3",
     "text-sm",
     "z-dropdown",
-    "duration-fast", "ease-default", "font-sans"
+    "duration-fast",
+    "ease-default",
+    "font-sans"
   ],
-
   "templates": {
     "html": "<div data-ui=\"tag-input\" data-state=\"closed\">\n  <span data-part=\"taglist\" role=\"group\" aria-label=\"{label}\">\n    <input data-part=\"input\" type=\"text\" role=\"combobox\" aria-expanded=\"false\" aria-autocomplete=\"list\" placeholder=\"{placeholder}\">\n  </span>\n  <input data-part=\"value\" type=\"hidden\">\n</div>"
   },
-
   "safe_transforms": [
     "add-suggestion-option",
     "remove-suggestion-option",
@@ -126,26 +167,24 @@
     "seed-initial-tags",
     "restyle-listbox-background"
   ],
-
   "unsafe_transforms": [
     "remove-taglist-role-group",
     "remove-dismiss-aria-label",
     "remove-combobox-role-when-suggestions-present",
     "remove-keyboard-handling"
   ],
-
   "composition": {
-    "contains": ["chip"],
+    "contains": [
+      "chip"
+    ],
     "used_in": []
   },
-
   "files": {
     "html": "tag-input.html",
     "css": "tag-input.css",
     "js": "tag-input.js",
     "manifest": "tag-input.manifest.json"
   },
-
   "tests": [
     "type-and-enter-adds-a-tag",
     "backspace-on-empty-removes-last-tag",

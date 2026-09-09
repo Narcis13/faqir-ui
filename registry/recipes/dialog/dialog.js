@@ -2,6 +2,7 @@
 // @ui:provides open close toggle destroy
 
 import { trapFocus } from "../../core/focus.js";
+import { whenExitDone } from "../../core/motion.js";
 
 /**
  * Shared modal-dialog controller.
@@ -66,7 +67,12 @@ export function createDialog(root) {
     }
   }
 
+  // Cancels an in-flight "closing" wait when the dialog is re-opened mid-exit.
+  let cancelExitWait = null;
+
   function open() {
+    cancelExitWait?.();
+    cancelExitWait = null;
     previouslyFocused = document.activeElement;
     root.dataset.state = "open";
     overlay.hidden = false;
@@ -76,37 +82,29 @@ export function createDialog(root) {
   }
 
   function close() {
+    // Already gone, or already animating out — a second click (confirm then
+    // close, say) must not start a second wait on top of the one in flight.
+    if (root.dataset.state === "closed" || root.dataset.state === "closing") return;
+
     root.dataset.state = "closing";
 
     const onEnd = () => {
+      cancelExitWait = null;
       root.dataset.state = "closed";
       overlay.hidden = true;
       panel.hidden = true;
       if (focusCleanup) focusCleanup();
       focusCleanup = null;
       previouslyFocused?.focus();
-      panel.removeEventListener("animationend", onEnd);
-      panel.removeEventListener("transitionend", onEnd);
     };
 
-    // If no animation, close immediately
-    let hasAnimation = false;
-    try {
-      const style = getComputedStyle(panel);
-      const animName = style.animationName || "none";
-      const animDur = parseFloat(style.animationDuration) || 0;
-      const transDur = parseFloat(style.transitionDuration) || 0;
-      hasAnimation = (animName !== "none" && animDur > 0) || transDur > 0;
-    } catch {
-      // getComputedStyle may not be available in test environments
-    }
-
-    if (hasAnimation) {
-      panel.addEventListener("animationend", onEnd, { once: true });
-      panel.addEventListener("transitionend", onEnd, { once: true });
-    } else {
-      onEnd();
-    }
+    // The panel's own exit motion. A footer button's `background` transitionend
+    // bubbles here the instant the pointer touches it, and used to eat the
+    // one-shot listener — snapping the panel away mid-animation at best, and at
+    // worst leaving it up. No property filter: the panel's exit is an
+    // `animation` in some themes and a `transition` in others. See
+    // `whenExitDone`. [W2-1]
+    cancelExitWait = whenExitDone(panel, null, onEnd);
   }
 
   function toggle() {

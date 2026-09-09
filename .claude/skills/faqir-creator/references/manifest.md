@@ -42,7 +42,7 @@ Shipped as `<name>.manifest.json`.
 | `files` | `files` | — |
 | `tests` | `string`[] | — |
 
-### Optional — 4
+### Optional — 5
 
 | Field | Type | Notes |
 |---|---|---|
@@ -50,6 +50,7 @@ Shipped as `<name>.manifest.json`.
 | `aliases` | `string`[] | items non-empty |
 | `changes` | `change`[] | — |
 | `props` | { `<key>`: `prop` } | Attributes that are not variant groups: booleans, free-form strings and numbers read by a controller or by CSS. Consumed by the bindings codegen (framework props + defaults) and by the generated agent surfaces. |
+| `api` | `object` | The controller's public surface — the methods `$ui` resolves to, and the object a recipe factory returns. GENERATED from the controller's own `// @ui:provides` line and its function declarations by `scripts/build-manifest-api.mjs`; never authored by hand, and checked for drift in CI. Present only on a component that ships a controller. Optional, which SPEC-1.0 §8 classifies as an additive amendment. |
 
 ## Theme Manifest
 
@@ -81,7 +82,7 @@ Shipped as `<name>.theme.json`.
 
 ## Nested Types
 
-The 9 shapes the two manifest definitions `$ref` into. A field typed `slot` above takes exactly the object documented here.
+The 10 shapes the two manifest definitions `$ref` into. A field typed `slot` above takes exactly the object documented here.
 
 ### `anatomy`
 
@@ -121,6 +122,16 @@ One non-variant attribute of a component: a boolean toggle, a free-form string/n
 | `default` | `string \| boolean \| number \| null` | no | — |
 | `attr` | `string` | no | non-empty |
 | `values` | `string`[] | no | at least 1 item |
+
+### `apiMethod`
+
+One method a controller exposes.
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `name` | `string` | yes | Method name, exactly as `@ui:provides` lists it. · non-empty |
+| `params` | `string` | yes | Parameter list as the controller writes it; empty for a nullary method. |
+| `description` | `string` | no | First sentence of the method's JSDoc, when it has one. |
 
 ### `category`
 
@@ -206,6 +217,7 @@ The schema carries its own history. `1.0` is frozen: until `2.0` it may only gai
 | `0.5` | `0.5-07` | no | First published as a file: component and theme manifests in one document, `changes[]` changelog entries, an `$id`, and a resolvable `$schema` on every registry manifest. Before this the contract existed only as the validator in `src/manifest.ts`. |
 | `0.8` | `0.8-02` | yes | `props` — the non-variant attributes — declared; `variants.<group>.responsive` added for the tier suffix grammar; `category` closed to a documented enum, which retired the `form` spelling in favour of `forms`. |
 | `1.0` | `1.0-01` | no | Frozen. `schema_version` is `1.0`, `stability` and `amendment_policy` are declared in the file, this changelog is carried in it, and the schema is published at a versioned URL beside the spec. No field changed shape. |
+| `1.0` | `W2-4` | no | `api` — a component's controller surface, generated from the controller's `@ui:provides` annotation. Optional, so every 1.0 manifest still validates; additive under SPEC-1.0 §8. It exists because the data was already in every controller and on no surface an agent reads: `faqir explain <recipe> --json` returned no `api` for any of the 29 JS-backed recipes. |
 
 ## Worked Example — `registry/primitives/button/button.manifest.json`
 

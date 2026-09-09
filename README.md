@@ -781,7 +781,7 @@ A custom time belongs to the modifier itself (`.debounce300ms`); a dotted
 | `$store` | Global reactive store |
 | `$state` | Sync reactive state with `data-state` |
 | `$variant` | Sync with `data-variant` |
-| `$ui` | Access recipe controller API |
+| `$ui` | The controller of the enclosing `[data-ui]` — `$ui.open()`. Callable to reach another component's: `$ui('#detail-drawer').open()`, `null` when nothing matches. |
 | `$dispatch` | Dispatch custom events |
 | `$nextTick` | Run after DOM update |
 | `$watch` | Watch reactive value changes |

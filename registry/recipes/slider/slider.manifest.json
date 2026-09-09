@@ -5,13 +5,11 @@
   "kind": "recipe",
   "category": "forms",
   "description": "Draggable range input with single-thumb and two-thumb (range) modes, full keyboard control, and screen-reader-correct ARIA",
-
   "anatomy": {
     "tag": "div",
     "selector": "[data-ui='slider']",
     "content_model": "slots"
   },
-
   "slots": {
     "track": {
       "selector": "[data-part='track']",
@@ -38,37 +36,98 @@
       "description": "Optional live text display of the current value"
     }
   },
-
   "variants": {
     "type": {
-      "values": ["single", "range"],
+      "values": [
+        "single",
+        "range"
+      ],
       "default": "single",
       "attr": "data-variant",
       "applied_to": "root",
       "description": "single = one thumb; range = two non-crossing thumbs. Mode is inferred from the number of thumbs in the DOM."
     },
     "size": {
-      "values": ["sm", "md", "lg"],
+      "values": [
+        "sm",
+        "md",
+        "lg"
+      ],
       "default": "md",
       "attr": "data-size",
       "applied_to": "root"
     }
   },
-
   "states": {
-    "dragging": { "attr": "data-state=\"dragging\"", "transient": true, "applied_to": "thumb" },
-    "disabled": { "attr": "data-disabled", "applied_to": "root" }
+    "dragging": {
+      "attr": "data-state=\"dragging\"",
+      "transient": true,
+      "applied_to": "thumb"
+    },
+    "disabled": {
+      "attr": "data-disabled",
+      "applied_to": "root"
+    }
   },
-
+  "api": {
+    "methods": [
+      {
+        "name": "setValue",
+        "params": "index, value"
+      },
+      {
+        "name": "getValue",
+        "params": ""
+      },
+      {
+        "name": "getValues",
+        "params": ""
+      },
+      {
+        "name": "setFormatter",
+        "params": "fn"
+      },
+      {
+        "name": "destroy",
+        "params": ""
+      }
+    ]
+  },
   "props": {
-    "min": { "type": "number", "default": 0, "attr": "data-min", "description": "Lowest value" },
-    "max": { "type": "number", "default": 100, "attr": "data-max", "description": "Highest value" },
-    "step": { "type": "number", "default": 1, "attr": "data-step", "description": "Granularity of value changes" },
-    "value": { "type": "string", "attr": "data-value", "description": "Initial value; comma-separated for range (e.g. \"200,800\")" },
-    "pageStep": { "type": "number", "attr": "data-page-step", "description": "PageUp/PageDown increment; defaults to 10 × step" },
-    "valueSuffix": { "type": "string", "attr": "data-value-suffix", "description": "Appended to the value to form aria-valuetext (e.g. \"%\")" }
+    "min": {
+      "type": "number",
+      "default": 0,
+      "attr": "data-min",
+      "description": "Lowest value"
+    },
+    "max": {
+      "type": "number",
+      "default": 100,
+      "attr": "data-max",
+      "description": "Highest value"
+    },
+    "step": {
+      "type": "number",
+      "default": 1,
+      "attr": "data-step",
+      "description": "Granularity of value changes"
+    },
+    "value": {
+      "type": "string",
+      "attr": "data-value",
+      "description": "Initial value; comma-separated for range (e.g. \"200,800\")"
+    },
+    "pageStep": {
+      "type": "number",
+      "attr": "data-page-step",
+      "description": "PageUp/PageDown increment; defaults to 10 × step"
+    },
+    "valueSuffix": {
+      "type": "string",
+      "attr": "data-value-suffix",
+      "description": "Appended to the value to form aria-valuetext (e.g. \"%\")"
+    }
   },
-
   "a11y": {
     "role": "slider",
     "required_attrs": [
@@ -94,20 +153,28 @@
       "aria-valuetext is maintained when a data-value-suffix is set or a formatter is registered via setFormatter()."
     ]
   },
-
   "tokens_used": [
-    "color-bg", "color-fg-muted", "color-border", "color-primary", "color-primary-subtle",
-    "color-ring", "color-bg-muted",
-    "space-2", "space-3", "space-4",
-    "radius-full", "text-sm", "text-base", "shadow-sm",
-    "duration-fast", "ease-default"
+    "color-bg",
+    "color-fg-muted",
+    "color-border",
+    "color-primary",
+    "color-primary-subtle",
+    "color-ring",
+    "color-bg-muted",
+    "space-2",
+    "space-3",
+    "space-4",
+    "radius-full",
+    "text-sm",
+    "text-base",
+    "shadow-sm",
+    "duration-fast",
+    "ease-default"
   ],
-
   "templates": {
     "html": "<div data-ui=\"slider\" data-variant=\"single\" data-min=\"0\" data-max=\"100\" data-step=\"1\" data-value=\"{value}\" style=\"--slider-start: 0%; --slider-end: {value}%\">\n  <div data-part=\"track\">\n    <div data-part=\"range\"></div>\n    <div data-part=\"thumb\" role=\"slider\" tabindex=\"0\" aria-label=\"{label}\" aria-valuemin=\"0\" aria-valuemax=\"100\" aria-valuenow=\"{value}\" style=\"--pos: {value}%\"></div>\n  </div>\n  <output data-part=\"output\">{value}</output>\n</div>",
     "range": "<div data-ui=\"slider\" data-variant=\"range\" data-min=\"0\" data-max=\"100\" data-step=\"1\" data-value=\"{low},{high}\" style=\"--slider-start: {low}%; --slider-end: {high}%\">\n  <div data-part=\"track\">\n    <div data-part=\"range\"></div>\n    <div data-part=\"thumb\" role=\"slider\" tabindex=\"0\" aria-label=\"Minimum\" aria-valuemin=\"0\" aria-valuemax=\"{high}\" aria-valuenow=\"{low}\" style=\"--pos: {low}%\"></div>\n    <div data-part=\"thumb\" role=\"slider\" tabindex=\"0\" aria-label=\"Maximum\" aria-valuemin=\"{low}\" aria-valuemax=\"100\" aria-valuenow=\"{high}\" style=\"--pos: {high}%\"></div>\n  </div>\n</div>"
   },
-
   "safe_transforms": [
     "change-min-max-step",
     "change-initial-value",
@@ -119,7 +186,6 @@
     "restyle-thumb",
     "restyle-track"
   ],
-
   "unsafe_transforms": [
     "remove-role-slider",
     "remove-aria-valuemin",
@@ -129,19 +195,18 @@
     "remove-keyboard-handler",
     "remove-track"
   ],
-
   "composition": {
     "contains": [],
-    "used_in": ["settings-page"]
+    "used_in": [
+      "settings-page"
+    ]
   },
-
   "files": {
     "html": "slider.html",
     "css": "slider.css",
     "js": "slider.js",
     "manifest": "slider.manifest.json"
   },
-
   "tests": [
     "single-thumb-renders-value-position",
     "arrow-right-increments-by-step",

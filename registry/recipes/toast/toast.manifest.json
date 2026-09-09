@@ -93,6 +93,29 @@
       "applied_to": "toast"
     }
   },
+  "api": {
+    "methods": [
+      {
+        "name": "add",
+        "params": "options = {}",
+        "description": "Add a new toast to the container."
+      },
+      {
+        "name": "dismiss",
+        "params": "id",
+        "description": "Dismiss a toast by id with exit animation."
+      },
+      {
+        "name": "dismissAll",
+        "params": "",
+        "description": "Dismiss all toasts."
+      },
+      {
+        "name": "destroy",
+        "params": ""
+      }
+    ]
+  },
   "props": {
     "message": {
       "type": "string",

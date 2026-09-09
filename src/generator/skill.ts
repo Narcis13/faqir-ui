@@ -185,6 +185,38 @@ function primaryTemplate(m: Manifest): string | undefined {
  * canonical template, anatomy tree, variant table, transforms, and a11y.
  * `headingLevel` lets the caller nest it (### in references, #### inline).
  */
+/**
+ * The controller's methods, from the manifest's generated `api` block. [W2-4]
+ *
+ * Until 1.0 nothing rendered this. 29 recipes shipped a controller, every one
+ * declared its surface in a `// @ui:provides` line, that line was inlined
+ * verbatim into `faqir-core.js` — and `$ui.` appeared exactly once in 228 KB of
+ * skill documentation, in a worked example. An agent could read the whole skill
+ * and not learn that `drawer` has an `open()`.
+ *
+ * Both call sites are named, because they are genuinely different: `$ui` is how
+ * a page EXPRESSION reaches the controller of the `[data-ui]` it sits in, and the
+ * factory's return value is how imperative code reaches one it holds.
+ */
+function renderControllerApi(m: Manifest): string[] {
+  const methods = m.api?.methods ?? [];
+  if (methods.length === 0) return [];
+
+  const lines: string[] = ["**Controller API**", ""];
+  lines.push(
+    `Reach it as \`$ui.<method>()\` from any expression inside this component, ` +
+      `or as the object \`${factoryName(m.name)}(root)\` returns.`,
+  );
+  lines.push("");
+  lines.push("| Method | What it does |");
+  lines.push("| --- | --- |");
+  for (const method of methods) {
+    lines.push(`| \`${method.name}(${md(method.params)})\` | ${md(method.description ?? "—")} |`);
+  }
+  lines.push("");
+  return lines;
+}
+
 export function renderComponentSection(m: Manifest, headingLevel = 3): string[] {
   const h = "#".repeat(headingLevel);
   const lines: string[] = [];
@@ -218,6 +250,8 @@ export function renderComponentSection(m: Manifest, headingLevel = 3): string[] 
   lines.push("");
   lines.push(...renderVariantTable(m));
   lines.push("");
+
+  lines.push(...renderControllerApi(m));
 
   const transforms = renderTransforms(m);
   const a11y = renderA11y(m);
@@ -270,6 +304,93 @@ function renderCompositions(patterns: Manifest[], limit = 3): string[] {
 // ---------------------------------------------------------------------------
 // Shared framework sections (constant — the DOM contract, not per-component)
 // ---------------------------------------------------------------------------
+
+/**
+ * The published runtime's version-pinned CDN prefix, read from
+ * `packages/core/cdn.json` — the same file the docs site's two-tag preamble
+ * pins against, so the skill can never quote a URL the site has moved past.
+ * Falls back to the unpinned path when the manifest is absent (a bare checkout
+ * before `bun run build:core-package`).
+ */
+function cdnBase(): string {
+  const path = join(getPackageRoot(), "packages", "core", "cdn.json");
+  if (!existsSync(path)) return "https://cdn.jsdelivr.net/npm/@faqir-ui/core/dist/";
+  try {
+    const pin = JSON.parse(readFileSync(path, "utf8")) as { base?: string };
+    return pin.base ?? "https://cdn.jsdelivr.net/npm/@faqir-ui/core/dist/";
+  } catch {
+    return "https://cdn.jsdelivr.net/npm/@faqir-ui/core/dist/";
+  }
+}
+
+/**
+ * The page `<head>` — the six lines that gate every other line in this file.
+ * [W2-5]
+ *
+ * Nothing here was documented anywhere an agent reads. Grepping
+ * `DOCTYPE|rel="stylesheet"` across SKILL.md and all six reference files —
+ * 228 KB — returned **0 hits**; across `llms.txt` + `llms-full.txt`, 2,368
+ * lines, also 0. An agent could learn every attribute, every token, every
+ * variant and every controller method in the framework, and still have no way
+ * to learn what a Faqir page's `<head>` contains. The markup it wrote rendered
+ * as unstyled HTML and nothing anywhere said why.
+ *
+ * `local` and `cdn` are the two real installs, so both are here: `faqir init`
+ * writes a bundle and an engine into the project, and the two-tag CDN preamble
+ * needs no build step at all.
+ *
+ * @param outputDir The project's component directory, `ui` by default.
+ */
+function renderFirstPage(outputDir = "ui"): string[] {
+  const dir = outputDir.replace(/^\.\//, "").replace(/\/$/, "");
+  const cdn = cdnBase();
+  return [
+    "## Your First Page",
+    "",
+    "A Faqir page is ordinary HTML with two additions: one stylesheet and one script. " +
+      "Everything else in this document assumes they are present — without them the markup " +
+      "renders as unstyled HTML and no component opens, closes or reacts.",
+    "",
+    "```html",
+    "<!DOCTYPE html>",
+    '<html lang="en" data-theme="light">',
+    "<head>",
+    '  <meta charset="UTF-8">',
+    '  <meta name="viewport" content="width=device-width, initial-scale=1.0">',
+    "  <title>My page</title>",
+    `  <link rel="stylesheet" href="${dir}/faqir.bundle.css">`,
+    "</head>",
+    "<body>",
+    "  <main>",
+    '    <button data-ui="button" data-variant="primary">Save</button>',
+    "  </main>",
+    `  <script src="${dir}/core/faqir-core.js" defer></script>`,
+    "</body>",
+    "</html>",
+    "```",
+    "",
+    "| Line | Why it is there |",
+    "| --- | --- |",
+    "| `data-theme` on `<html>` | Selects the theme's token set — `light` or `dark`. Omit it and the page follows the OS setting. |",
+    `| \`${dir}/faqir.bundle.css\` | Tokens, base layer, and every installed component's stylesheet, written by \`faqir init\` and rewritten by every \`faqir add\`. |`,
+    `| \`${dir}/core/faqir-core.js\` | The engine: it boots every \`[data-ui]\` controller and binds every \`l-*\` directive on the page. \`defer\` so it runs after the DOM is parsed. |`,
+    "| `<main>` | The page's primary landmark. The `landmark` audit rule asks for one, and assistive tech and skip-to-content links rely on it. |",
+    "",
+    "**No build step?** The same two tags from a CDN, no project required:",
+    "",
+    "```html",
+    `<link rel="stylesheet" href="${cdn}faqir.default.css">`,
+    `<script src="${cdn}faqir-core.min.js" defer></script>`,
+    "```",
+    "",
+    "Add `integrity`/`crossorigin` for production — `packages/core/cdn.json` " +
+      "carries the SHA-384 for every published file, beside the version it was computed for.",
+    "",
+    "Check the page found both: `faqir audit` reports `controller-loaded` when a " +
+      "recipe's controller is missing, and an unstyled render means the stylesheet is not resolving.",
+    "",
+  ];
+}
 
 function renderAttributeProtocol(): string[] {
   return [
@@ -1368,12 +1489,36 @@ row — is inert until \`Faqir.initTree(el)\` walks it.
 
 ### Calling a controller through \`$ui\`
 
+\`$ui\` is the controller of the component the expression sits inside:
+
 \`\`\`html
 <div data-ui="dialog" data-state="closed" l-data>
   <button @click="$ui.open()">Open</button>
   <!-- … dialog structure … -->
 </div>
 \`\`\`
+
+It is also **callable**, which is how one component commands another — pass any
+CSS selector and get that component's controller back:
+
+\`\`\`html
+<tr>
+  <td>Ada Lovelace</td>
+  <td><button @click="$ui('#detail-drawer').open()">View</button></td>
+</tr>
+
+<div data-ui="drawer" id="detail-drawer" data-state="closed">
+  <!-- … drawer structure … -->
+</div>
+\`\`\`
+
+Opening a detail drawer from a table row is the shape this exists for. The
+selector may match the \`[data-ui]\` element itself or anything inside it, and
+the call returns \`null\` when nothing matches or the match has no controller —
+so \`$ui('#maybe')?.open()\` never throws on a typo.
+
+Every component's methods are listed under **Controller API** in its section of
+\`references/recipes.md\`.
 
 \`$state\` and \`$variant\` read the same component both ways: a controller
 setting \`data-state="open"\` re-runs every expression that read \`$state\`.
@@ -1941,6 +2086,7 @@ export async function generateSkill(cwd: string): Promise<string> {
   lines.push("Zero-class, manifest-driven UI. When building UI, read `.faqir/context.json` first; this skill documents the components this project installs.");
   lines.push("");
 
+  lines.push(...renderFirstPage(config.output_dir));
   lines.push(...renderAttributeProtocol());
   lines.push(...renderStrictRules());
   lines.push(...renderLayoutSystem());
@@ -2083,6 +2229,7 @@ function renderShippedSkill(
   );
   lines.push("");
 
+  lines.push(...renderFirstPage());
   lines.push(...renderAttributeProtocol());
   lines.push(...renderStrictRules());
   lines.push(...renderLayoutSystem());

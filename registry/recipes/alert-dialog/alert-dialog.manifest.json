@@ -5,18 +5,15 @@
   "kind": "recipe",
   "category": "overlay",
   "description": "Interruptive confirmation dialog (role=alertdialog) for destructive or irreversible actions",
-
   "anatomy": {
     "tag": "div",
     "selector": "[data-ui='alert-dialog']",
     "content_model": "slots"
   },
-
   "reuses": {
     "controller": "dialog",
     "note": "alert-dialog ships NO controller of its own — its factory delegates to the shared dialog controller, which reads panel role=\"alertdialog\" and switches on the alertdialog behaviours. No forked or duplicated controller logic."
   },
-
   "differs_from_dialog": [
     "Panel uses role=\"alertdialog\" (not role=\"dialog\") — an assertive, interruptive live region.",
     "aria-describedby is REQUIRED and points at the alert message; a dialog's description is optional.",
@@ -26,7 +23,6 @@
     "Escape closes by default (WAI-ARIA allowed), but a data-confirm-required root traps Escape and the overlay so a choice is mandatory.",
     "Default tone is 'destructive'-oriented; size set is compact (sm|md) — no lg/full."
   ],
-
   "slots": {
     "trigger": {
       "selector": "[data-part='trigger']",
@@ -93,22 +89,26 @@
       "description": "Optional dismiss; treated as a cancel (emits faqir:cancel)"
     }
   },
-
   "variants": {
     "size": {
-      "values": ["sm", "md"],
+      "values": [
+        "sm",
+        "md"
+      ],
       "default": "sm",
       "attr": "data-size",
       "applied_to": "panel"
     },
     "tone": {
-      "values": ["default", "destructive"],
+      "values": [
+        "default",
+        "destructive"
+      ],
       "default": "destructive",
       "attr": "data-variant",
       "applied_to": "panel"
     }
   },
-
   "modifiers": {
     "confirm-required": {
       "attr": "data-confirm-required",
@@ -116,20 +116,61 @@
       "description": "Boolean. When present, Escape and overlay are trapped — the user must click cancel or confirm."
     }
   },
-
   "states": {
-    "closed": { "attr": "data-state=\"closed\"", "default": true },
-    "open": { "attr": "data-state=\"open\"" },
-    "closing": { "attr": "data-state=\"closing\"", "transient": true }
+    "closed": {
+      "attr": "data-state=\"closed\"",
+      "default": true
+    },
+    "open": {
+      "attr": "data-state=\"open\""
+    },
+    "closing": {
+      "attr": "data-state=\"closing\"",
+      "transient": true
+    }
   },
-
+  "api": {
+    "methods": [
+      {
+        "name": "open",
+        "params": ""
+      },
+      {
+        "name": "close",
+        "params": ""
+      },
+      {
+        "name": "toggle",
+        "params": ""
+      },
+      {
+        "name": "destroy",
+        "params": ""
+      }
+    ]
+  },
   "props": {
-    "title": { "type": "string", "default": "", "description": "Alert title text" },
-    "description": { "type": "string", "default": "", "description": "Alert message text (required)" },
-    "confirmText": { "type": "string", "default": "Confirm", "description": "Confirm button label" },
-    "cancelText": { "type": "string", "default": "Cancel", "description": "Cancel button label" }
+    "title": {
+      "type": "string",
+      "default": "",
+      "description": "Alert title text"
+    },
+    "description": {
+      "type": "string",
+      "default": "",
+      "description": "Alert message text (required)"
+    },
+    "confirmText": {
+      "type": "string",
+      "default": "Confirm",
+      "description": "Confirm button label"
+    },
+    "cancelText": {
+      "type": "string",
+      "default": "Cancel",
+      "description": "Cancel button label"
+    }
   },
-
   "a11y": {
     "role": "alertdialog",
     "aria-modal": true,
@@ -148,31 +189,42 @@
       "Shift+Tab": "reverse cycle focus within panel"
     }
   },
-
   "events": {
     "faqir:confirm": {
-      "detail": { "variant": "string" },
+      "detail": {
+        "variant": "string"
+      },
       "cancelable": true,
       "description": "Fires when the confirm action is chosen. preventDefault() keeps the dialog open (e.g. for an async destructive request)."
     },
     "faqir:cancel": {
-      "detail": { "reason": "string (cancel|close|escape)" },
+      "detail": {
+        "reason": "string (cancel|close|escape)"
+      },
       "cancelable": true,
       "description": "Fires when the dialog is dismissed without confirming."
     }
   },
-
   "tokens_used": [
-    "radius-xl", "shadow-xl", "space-2", "space-3", "space-6",
-    "color-bg", "color-fg", "color-border", "color-fg-muted", "color-destructive",
-    "duration-normal", "ease-default", "ease-out",
-    "z-overlay", "z-modal"
+    "radius-xl",
+    "shadow-xl",
+    "space-2",
+    "space-3",
+    "space-6",
+    "color-bg",
+    "color-fg",
+    "color-border",
+    "color-fg-muted",
+    "color-destructive",
+    "duration-normal",
+    "ease-default",
+    "ease-out",
+    "z-overlay",
+    "z-modal"
   ],
-
   "templates": {
     "html": "<div data-ui=\"alert-dialog\" data-state=\"closed\" id=\"{id}\"{confirm_required}>\n  <button data-part=\"trigger\">{trigger_text}</button>\n  <div data-part=\"overlay\" hidden></div>\n  <div data-part=\"panel\" role=\"alertdialog\" aria-modal=\"true\" aria-labelledby=\"{id}-title\" aria-describedby=\"{id}-desc\" data-variant=\"{tone}\" data-size=\"{size}\" hidden>\n    <div data-part=\"header\">\n      <h2 id=\"{id}-title\" data-part=\"title\">{title}</h2>\n    </div>\n    <div data-part=\"body\">\n      <p id=\"{id}-desc\" data-part=\"description\">{description}</p>\n    </div>\n    <div data-part=\"footer\">\n      <button data-ui=\"button\" data-part=\"cancel\" data-variant=\"outline\">{cancel_text}</button>\n      <button data-ui=\"button\" data-part=\"confirm\" data-variant=\"destructive\">{confirm_text}</button>\n    </div>\n  </div>\n</div>"
   },
-
   "safe_transforms": [
     "change-variant-size",
     "change-variant-tone",
@@ -182,7 +234,6 @@
     "relabel-actions",
     "toggle-confirm-required"
   ],
-
   "unsafe_transforms": [
     "remove-focus-trap",
     "change-panel-role",
@@ -193,19 +244,21 @@
     "enable-overlay-dismiss",
     "remove-overlay"
   ],
-
   "composition": {
-    "contains": ["button"],
-    "used_in": ["crud-table", "settings-page"]
+    "contains": [
+      "button"
+    ],
+    "used_in": [
+      "crud-table",
+      "settings-page"
+    ]
   },
-
   "files": {
     "html": "alert-dialog.html",
     "css": "alert-dialog.css",
     "js": "alert-dialog.js",
     "manifest": "alert-dialog.manifest.json"
   },
-
   "tests": [
     "opens-with-focus-on-least-destructive-action",
     "panel-has-role-alertdialog",

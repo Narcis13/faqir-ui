@@ -116,6 +116,34 @@
       "description": "An item filtered out by the search query — and, on a group, a group whose every item is filtered out. The controller writes both; hidden items are skipped by keyboard navigation and by the empty-state check"
     }
   },
+  "api": {
+    "methods": [
+      {
+        "name": "open",
+        "params": ""
+      },
+      {
+        "name": "close",
+        "params": ""
+      },
+      {
+        "name": "filter",
+        "params": "query"
+      },
+      {
+        "name": "selectItem",
+        "params": "index"
+      },
+      {
+        "name": "registerCommand",
+        "params": "cmd"
+      },
+      {
+        "name": "destroy",
+        "params": ""
+      }
+    ]
+  },
   "props": {
     "placeholder": {
       "type": "string",

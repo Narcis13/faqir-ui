@@ -358,7 +358,7 @@
   // @ui:magic $store | every expression | Every store registered with `Faqir.store()`.
   // @ui:magic $state | every expression | `data-state` of the `[data-ui]` closest to the scope root. Writable — assigning sets the attribute — and reads re-run when a controller changes it.
   // @ui:magic $variant | every expression | `data-variant` of the same `[data-ui]`, writable and observed the same way.
-  // @ui:magic $ui | every expression | The controller API of that same `[data-ui]` — `$ui.open()` — or `null` when it has none.
+  // @ui:magic $ui | every expression | The controller API of that same `[data-ui]` — `$ui.open()`. Also callable, to reach ANOTHER component's controller by CSS selector: `$ui('#detail-drawer').open()`, which returns `null` when nothing matches or the match has no controller.
   // @ui:magic $dispatch | every expression | `$dispatch('name', detail)` fires a bubbling, composed `CustomEvent` from the scope root.
   // @ui:magic $nextTick | every expression | `$nextTick(fn)` queues `fn` as a microtask, so it runs after the effects a mutation queued have flushed and the DOM is updated.
   // @ui:magic $watch | every expression | `$watch('key', function (value, old) { … })` — returns a disposer.
@@ -469,21 +469,31 @@
 
   // --- 3.3 DOM Tree Walker ---
 
+  // Directives `initScope` has already consumed by the time `initTree` gets to
+  // apply the rest. Everything else written on a scope root has to be applied
+  // HERE: `walkChildren` visits descendants only, so a directive on the root
+  // element itself is seen by nobody else. Until 1.0 only plugin directives were
+  // run here, which made `l-effect`, `l-on`, `l-text`, `l-show`, `l-bind`,
+  // `l-model` and `l-ref` inert — with no error — on the one element the docs
+  // point authors at ("a scope root, beside `l-data`"). [W2-1]
+  var ROOT_CONSUMED = { data: 1, source: 1, init: 1 };
+
   function initTree(root, parentScope) {
     var scope = initScope(root, parentScope);
 
-    // `initScope` owns the built-in root-only directives (`l-data`, `l-source`,
-    // `l-init`). Run plugin directives declared on the same scope root here so
-    // plugins such as l-persist can bind the scope they initialize. Descendant
-    // plugin directives continue through the normal tree walk below.
     var rootDirectives = parseDirectives(root);
     rootDirectives.sort(function(a, b) {
       return (PRIORITY[a.type] || 10) - (PRIORITY[b.type] || 10);
     });
     for (var i = 0; i < rootDirectives.length; i++) {
-      if (customDirectives.has(rootDirectives[i].type)) {
-        applyDirective(root, rootDirectives[i], scope);
-      }
+      var rootDir = rootDirectives[i];
+      if (ROOT_CONSUMED[rootDir.type]) continue;
+      // `l-if` / `l-for` claim the element they sit on and re-render it from a
+      // template. A scope root is not a template slot — it is the thing the
+      // structural directive would have to destroy — so they stay the parent
+      // walk's business and are skipped rather than applied to `root` itself.
+      if (rootDir.type === 'if' || rootDir.type === 'for') continue;
+      applyDirective(root, rootDir, scope);
     }
 
     walkChildren(root, scope);
@@ -515,6 +525,46 @@
     }
   }
 
+  // Directives that live OUTSIDE every scope root.
+  //
+  // Bootstrap only ever walked out from `[l-data]` / `[data-ui]` elements, so an
+  // attribute on anything else was parsed by nobody. The canonical `l-validate`
+  // markup — `<form l-validate>` wrapping a `[data-ui="field-group"]`, straight
+  // out of the plugin's own documentation — has no `l-data` anywhere, which is
+  // why the plugin looked "completely inert": it was registered, the attribute
+  // was on the form, and no code path ever reached the form to apply it. Same
+  // for a bare `@click` or `l-text` on a page that never declared a scope.
+  //
+  // This sweep binds them against the implicit document scope. It stops at any
+  // element that already owns a scope — that subtree was walked from its own
+  // root — so it visits only the parts of the page nothing else claimed. [W2-1]
+  function walkUnscoped(el, scope) {
+    var children = [].slice.call(el.children);
+    for (var i = 0; i < children.length; i++) {
+      var child = children[i];
+      if (child.__faqirScope) continue;
+      processElement(child, scope);
+      if (child.parentNode) walkUnscoped(child, scope);
+    }
+  }
+
+  // The scope those stray directives evaluate against: empty data, magics rooted
+  // at `<body>`. Created once, on first use, so a page with no stray directive
+  // pays nothing for it.
+  var strayScope = null;
+  function getStrayScope() {
+    if (!strayScope) {
+      if (!document.body.__scopeId) document.body.__scopeId = ++scopeCounter;
+      if (!document.body.__faqirCleanups) document.body.__faqirCleanups = [];
+      // Deliberately NOT stored as `document.body.__faqirScope`: `findParentScope`
+      // would then answer "yes, scoped" for every element on the page and the
+      // MutationObserver would stop giving standalone `[data-ui]` islands their
+      // own scope.
+      strayScope = createScopeWithMagics({}, document.body, document.body);
+    }
+    return strayScope;
+  }
+
   function processElement(el, scope) {
     var directives = parseDirectives(el);
     if (directives.length === 0) return;
@@ -523,14 +573,18 @@
       return (PRIORITY[a.type] || 10) - (PRIORITY[b.type] || 10);
     });
 
-    // Structural directives take over the element
+    // Structural directives take over the element — and both anchor a comment
+    // where the element stands, so an element that no longer stands anywhere has
+    // nothing to do. A `<template l-for>` is replaced by its own anchor the first
+    // time it renders, and the MutationObserver is handed that detached template
+    // one microtask later. [W2-1]
     for (var i = 0; i < directives.length; i++) {
       if (directives[i].type === 'if') {
-        handleIf(el, directives[i], scope);
+        if (el.parentNode) handleIf(el, directives[i], scope);
         return;
       }
       if (directives[i].type === 'for') {
-        handleFor(el, directives[i], scope);
+        if (el.parentNode) handleFor(el, directives[i], scope);
         return;
       }
     }
@@ -610,7 +664,7 @@
         set: function(v) { var ui = closestUI(el); if (ui) ui.dataset.variant = v; },
         enumerable: false
       },
-      $ui: { get: function() { return getControllerApi(closestUI(el)); }, enumerable: false },
+      $ui: { get: function() { return uiHandle(el); }, enumerable: false },
       $dispatch: {
         value: function(event, detail) {
           return el.dispatchEvent(
@@ -1818,6 +1872,40 @@
     return null;
   }
 
+  /**
+   * `$ui`, in both of its forms. [W2-6]
+   *
+   * `$ui.open()` — unchanged: the controller of the `[data-ui]` this expression
+   * sits inside. That is the only thing `$ui` could ever reach, and it is why
+   * opening a detail drawer from a table row — the most common admin pattern
+   * there is — had no expression that could say it. The page had to invent a
+   * global store and an `l-effect` handshake to carry "the user clicked row 7"
+   * across two components that were both right there in the DOM.
+   *
+   * `$ui('#detail-drawer').open()` — the same controller API, for a component
+   * named by a CSS selector. Any selector: an id is the useful case, but
+   * `$ui('[data-ui="drawer"]')` resolves the first drawer on the page just as
+   * well. The selector may match the `[data-ui]` element itself or anything
+   * inside it; either way the nearest enclosing component's controller answers.
+   *
+   * Returns `null` when nothing matches or the match has no controller, so
+   * `$ui('#gone')?.open()` is the safe form and a typo cannot throw.
+   */
+  function resolveUi(target) {
+    var node = typeof target === 'string' ? document.querySelector(target) : target;
+    return node ? getControllerApi(closestUI(node)) : null;
+  }
+
+  function uiHandle(el) {
+    var local = getControllerApi(closestUI(el));
+    // A callable, with the local controller's own methods hung off it so both
+    // forms read from one name. The methods are closures over their controller's
+    // state, never `this`-bound, so carrying the reference is enough.
+    var handle = function(target) { return resolveUi(target); };
+    if (local) for (var key in local) handle[key] = local[key];
+    return handle;
+  }
+
   function setupStateBridge(root, scope) {
     var uiEl = root.hasAttribute('data-ui') ? root : (root.closest ? root.closest('[data-ui]') : null);
     if (!uiEl) return;
@@ -1957,6 +2045,101 @@
       el.addEventListener('transitionend', done);
       el.addEventListener('animationend', done);
     });
+  }
+
+  // The four events an exit can end with, in one list: bound and unbound
+  // together, so neither half can drift from the other.
+  var EXIT_EVENTS = ['transitionend', 'transitioncancel', 'animationend', 'animationcancel'];
+
+  // Largest number in a comma-separated CSS time list, in ms ("0.3s, 150ms" → 300).
+  function longestTimeMs(value) {
+    var parts = String(value == null ? '' : value).split(',');
+    var max = 0;
+    for (var i = 0; i < parts.length; i++) {
+      var raw = parts[i].trim();
+      var n = parseFloat(raw);
+      if (isNaN(n)) continue;
+      if (raw.indexOf('ms') === -1) n *= 1000;
+      if (n > max) max = n;
+    }
+    return max;
+  }
+
+  // An upper bound on how long `el`'s motion can run: the longest transition or
+  // animation plus the longest delay. Deliberately an over-estimate — it sizes a
+  // fallback timer, and a fallback that fires early is worse than one that fires
+  // late.
+  function longestMotionMs(style) {
+    var transition = longestTimeMs(style.transitionDuration) + longestTimeMs(style.transitionDelay);
+    var animation = longestTimeMs(style.animationDuration) + longestTimeMs(style.animationDelay);
+    return transition > animation ? transition : animation;
+  }
+
+  /**
+   * Run `done` once `el` has finished its exit motion — the single place every
+   * "closing → closed" controller waits.
+   *
+   * `transitionend` BUBBLES. A panel that contains a button — every dialog,
+   * drawer and sheet in the registry ships one, and the drawer manifest marks
+   * the close button `required` — receives that button's own `background`
+   * transitionend the instant a pointer lands on it. A one-shot listener spends
+   * itself on that event and the panel's own `transform` transitionend, when it
+   * arrives, finds nobody listening. The drawer therefore never finalised
+   * `closing → closed` through the one control it tells you not to remove: the
+   * overlay stayed up, `body` stayed at `overflow: hidden`, the page was dead.
+   *
+   * So four rules, all of them load-bearing:
+   *   • only `el`'s OWN motion counts (`e.target === el`) — descendants bubble;
+   *   • only `property`, when one is named — sibling properties on the same
+   *     element finish at their own times;
+   *   • `transitioncancel` / `animationcancel` count as over — an interrupted
+   *     transition never sends `transitionend` at all;
+   *   • a timer sized from the computed duration runs `done` even if no event
+   *     ever arrives (backgrounded tab, `display` change mid-flight).
+   *
+   * `done` runs at most once — synchronously and immediately when there is no
+   * motion to wait for. Returns a canceller for a re-entrant open. [W2-1]
+   */
+  function whenExitDone(el, property, done) {
+    var settled = false;
+    var timer = null;
+
+    function unbind() {
+      if (timer !== null) { clearTimeout(timer); timer = null; }
+      for (var i = 0; i < EXIT_EVENTS.length; i++) el.removeEventListener(EXIT_EVENTS[i], onMotionEvent);
+    }
+
+    function settle() {
+      if (settled) return;
+      settled = true;
+      unbind();
+      done();
+    }
+
+    function onMotionEvent(e) {
+      if (e.target !== el) return;
+      if (property && e.propertyName && e.propertyName !== property) return;
+      settle();
+    }
+
+    var ms = 0;
+    try {
+      ms = longestMotionMs(getComputedStyle(el));
+    } catch (err) {
+      // No computed style (a bare test DOM) — treat it as "no motion".
+    }
+
+    if (!(ms > 0)) { settle(); return function() {}; }
+
+    for (var i = 0; i < EXIT_EVENTS.length; i++) el.addEventListener(EXIT_EVENTS[i], onMotionEvent);
+    // A couple of frames of slack before the fallback takes over from the event.
+    timer = setTimeout(settle, ms + 50);
+
+    return function cancelExitWait() {
+      if (settled) return;
+      settled = true;
+      unbind();
+    };
   }
 
   // --- From utils.js (debounce/throttle already defined in Section 3.9) ---
@@ -3908,7 +4091,12 @@ function createDialog(root) {
     }
   }
 
+  // Cancels an in-flight "closing" wait when the dialog is re-opened mid-exit.
+  let cancelExitWait = null;
+
   function open() {
+    cancelExitWait?.();
+    cancelExitWait = null;
     previouslyFocused = document.activeElement;
     root.dataset.state = "open";
     overlay.hidden = false;
@@ -3918,37 +4106,29 @@ function createDialog(root) {
   }
 
   function close() {
+    // Already gone, or already animating out — a second click (confirm then
+    // close, say) must not start a second wait on top of the one in flight.
+    if (root.dataset.state === "closed" || root.dataset.state === "closing") return;
+
     root.dataset.state = "closing";
 
     const onEnd = () => {
+      cancelExitWait = null;
       root.dataset.state = "closed";
       overlay.hidden = true;
       panel.hidden = true;
       if (focusCleanup) focusCleanup();
       focusCleanup = null;
       previouslyFocused?.focus();
-      panel.removeEventListener("animationend", onEnd);
-      panel.removeEventListener("transitionend", onEnd);
     };
 
-    // If no animation, close immediately
-    let hasAnimation = false;
-    try {
-      const style = getComputedStyle(panel);
-      const animName = style.animationName || "none";
-      const animDur = parseFloat(style.animationDuration) || 0;
-      const transDur = parseFloat(style.transitionDuration) || 0;
-      hasAnimation = (animName !== "none" && animDur > 0) || transDur > 0;
-    } catch {
-      // getComputedStyle may not be available in test environments
-    }
-
-    if (hasAnimation) {
-      panel.addEventListener("animationend", onEnd, { once: true });
-      panel.addEventListener("transitionend", onEnd, { once: true });
-    } else {
-      onEnd();
-    }
+    // The panel's own exit motion. A footer button's `background` transitionend
+    // bubbles here the instant the pointer touches it, and used to eat the
+    // one-shot listener — snapping the panel away mid-animation at best, and at
+    // worst leaving it up. No property filter: the panel's exit is an
+    // `animation` in some themes and a `transition` in others. See
+    // `whenExitDone`. [W2-1]
+    cancelExitWait = whenExitDone(panel, null, onEnd);
   }
 
   function toggle() {
@@ -4076,7 +4256,12 @@ function createDrawer(root) {
     prevBodyOverflow = null;
   }
 
+  // Cancels an in-flight "closing" wait when the drawer is re-opened mid-slide.
+  let cancelExitWait = null;
+
   function open() {
+    cancelExitWait?.();
+    cancelExitWait = null;
     previouslyFocused = document.activeElement;
     root.dataset.state = "open";
     overlay.hidden = false;
@@ -4087,9 +4272,14 @@ function createDrawer(root) {
   }
 
   function close() {
+    // Already gone, or already sliding out — a second click must not start a
+    // second wait on top of the one in flight.
+    if (root.dataset.state === "closed" || root.dataset.state === "closing") return;
+
     root.dataset.state = "closing";
 
     const onEnd = () => {
+      cancelExitWait = null;
       root.dataset.state = "closed";
       overlay.hidden = true;
       panel.hidden = true;
@@ -4097,28 +4287,13 @@ function createDrawer(root) {
       if (focusCleanup) focusCleanup();
       focusCleanup = null;
       previouslyFocused?.focus();
-      panel.removeEventListener("transitionend", onTransEnd);
     };
 
-    // Listen for transition end on the panel slide
-    let hasTransition = false;
-    try {
-      const style = getComputedStyle(panel);
-      const transDur = parseFloat(style.transitionDuration) || 0;
-      hasTransition = transDur > 0;
-    } catch {
-      // getComputedStyle may not be available in test environments
-    }
-
-    const onTransEnd = (e) => {
-      if (e.propertyName === "transform") onEnd();
-    };
-
-    if (hasTransition) {
-      panel.addEventListener("transitionend", onTransEnd, { once: true });
-    } else {
-      onEnd();
-    }
+    // The panel's OWN `transform` — not the close button's `background`, which
+    // bubbles up to the panel the moment the pointer touches it and used to eat
+    // the one-shot listener, stranding the drawer at "closing" with the overlay
+    // still covering the page. See `whenExitDone`. [W2-1]
+    cancelExitWait = whenExitDone(panel, "transform", onEnd);
   }
 
   function toggle() {
@@ -4172,6 +4347,8 @@ function createDrawer(root) {
         el.removeEventListener("click", onTriggerClick)
       );
     }
+    cancelExitWait?.();
+    cancelExitWait = null;
     if (focusCleanup) focusCleanup();
     unlockScroll();
     delete root._faqirDrawer;
@@ -6371,7 +6548,12 @@ function createSheet(root) {
     prevBodyOverflow = null;
   }
 
+  // Cancels an in-flight "closing" wait when the sheet is re-opened mid-slide.
+  let cancelExitWait = null;
+
   function open() {
+    cancelExitWait?.();
+    cancelExitWait = null;
     previouslyFocused = document.activeElement;
     root.dataset.state = "open";
     overlay.hidden = false;
@@ -6382,9 +6564,14 @@ function createSheet(root) {
   }
 
   function close() {
+    // Already gone, or already sliding out — a second click must not start a
+    // second wait on top of the one in flight.
+    if (root.dataset.state === "closed" || root.dataset.state === "closing") return;
+
     root.dataset.state = "closing";
 
     const onEnd = () => {
+      cancelExitWait = null;
       root.dataset.state = "closed";
       overlay.hidden = true;
       panel.hidden = true;
@@ -6392,28 +6579,13 @@ function createSheet(root) {
       if (focusCleanup) focusCleanup();
       focusCleanup = null;
       previouslyFocused?.focus();
-      panel.removeEventListener("transitionend", onTransEnd);
     };
 
-    // Listen for transition end on the panel slide
-    let hasTransition = false;
-    try {
-      const style = getComputedStyle(panel);
-      const transDur = parseFloat(style.transitionDuration) || 0;
-      hasTransition = transDur > 0;
-    } catch {
-      // getComputedStyle may not be available in test environments
-    }
-
-    const onTransEnd = (e) => {
-      if (e.propertyName === "transform") onEnd();
-    };
-
-    if (hasTransition) {
-      panel.addEventListener("transitionend", onTransEnd, { once: true });
-    } else {
-      onEnd();
-    }
+    // The panel's OWN `transform` — not a close button's `background`, which
+    // bubbles up to the panel the moment the pointer touches it and used to eat
+    // the one-shot listener, stranding the sheet at "closing" with the overlay
+    // still covering the page. See `whenExitDone`. [W2-1]
+    cancelExitWait = whenExitDone(panel, "transform", onEnd);
   }
 
   function toggle() {
@@ -6452,6 +6624,8 @@ function createSheet(root) {
       btn.removeEventListener("click", onCloseClick)
     );
     root.removeEventListener("keydown", onKeyDown);
+    cancelExitWait?.();
+    cancelExitWait = null;
     if (focusCleanup) focusCleanup();
     unlockScroll();
     delete root._faqirSheet;
@@ -9685,7 +9859,6 @@ function createToastContainer(root) {
     el.dataset.part = "toast";
     el.dataset.variant = tone;
     el.dataset.state = "entering";
-    el.dataset.toastId = id;
     el.setAttribute("role", "status");
     el.setAttribute("aria-live", "polite");
 
@@ -9731,12 +9904,23 @@ function createToastContainer(root) {
       });
     });
 
-    // Wire up close button
+    register(el, id, { onAction, duration });
+
+    return id;
+  }
+
+  /**
+   * Bring one toast element under the controller: wire its close and action
+   * buttons, start its auto-dismiss timer, and record it so `dismiss` can find
+   * it. Shared by `add()` and by the adoption of authored toasts on init.
+   */
+  function register(el, id, { onAction = null, duration = 0 } = {}) {
+    el.dataset.toastId = id;
+
     const closeBtn = el.querySelector("[data-part='close']");
     const onCloseClick = () => dismiss(id);
     closeBtn?.addEventListener("click", onCloseClick);
 
-    // Wire up action button
     const actionBtn = el.querySelector("[data-part='action']");
     const onActionClick = () => {
       if (onAction) onAction();
@@ -9746,7 +9930,6 @@ function createToastContainer(root) {
       actionBtn.addEventListener("click", onActionClick);
     }
 
-    // Auto-dismiss timer
     let timer = null;
     if (duration > 0) {
       timer = setTimeout(() => dismiss(id), duration);
@@ -9782,26 +9965,16 @@ function createToastContainer(root) {
     const onEnd = () => {
       closeBtn?.removeEventListener("click", onCloseClick);
       if (actionBtn) actionBtn.removeEventListener("click", onActionClick);
-      el.removeEventListener("transitionend", onEnd);
       el.remove();
       toasts.delete(id);
     };
 
-    // Check if transitions are running
-    let hasTransition = false;
-    try {
-      const style = getComputedStyle(el);
-      const transDur = parseFloat(style.transitionDuration) || 0;
-      hasTransition = transDur > 0;
-    } catch {
-      // getComputedStyle may not be available in test environments
-    }
-
-    if (hasTransition) {
-      el.addEventListener("transitionend", onEnd, { once: true });
-    } else {
-      onEnd();
-    }
+    // The toast's own exit motion. Its close button and action button both
+    // transition `background` on hover, and those events bubble up to the toast
+    // element — a one-shot listener spent itself on the first of them and the
+    // toast was ripped out mid-slide, or (when no further event came) left in
+    // the stack forever. See `whenExitDone`. [W2-1]
+    entry.cancelExitWait = whenExitDone(el, null, onEnd);
   }
 
   /**
@@ -9816,12 +9989,25 @@ function createToastContainer(root) {
     // Clear all toasts immediately without animation
     for (const [id, entry] of toasts) {
       if (entry.timer) clearTimeout(entry.timer);
+      if (entry.cancelExitWait) entry.cancelExitWait();
       entry.closeBtn?.removeEventListener("click", entry.onCloseClick);
       if (entry.actionBtn) entry.actionBtn.removeEventListener("click", entry.onActionClick);
       entry.el.remove();
     }
     toasts.clear();
     delete root._faqirToast;
+  }
+
+  // Adopt the toasts already in the markup.
+  //
+  // `add()` used to be the only way into the registry, so a toast written by
+  // hand — the reference page's own stack, the manifest template, anything an
+  // agent copies out of the docs — had a close button that was wired to
+  // nothing. It looked right, it was in the a11y tree, it did nothing at all
+  // when clicked, and nothing anywhere said so. [W2-1]
+  for (const el of root.querySelectorAll("[data-part='toast']")) {
+    if (el.dataset.toastId) continue;
+    register(el, uid("toast"));
   }
 
   const api = { add, dismiss, dismissAll, destroy };
@@ -11077,6 +11263,9 @@ function createTreeView(root) {
       }
     }
 
+    // Everything the scope-root pass did not claim. [W2-1]
+    walkUnscoped(document.body, getStrayScope());
+
     // Second controller sweep: structural directives (l-for / l-if) may have
     // rendered recipe markup synchronously during the initTree pass above —
     // after the first sweep ran and before the MutationObserver below starts.
@@ -11123,6 +11312,19 @@ function createTreeView(root) {
                 initTree(scopeEls[se], findParentScope(scopeEls[se]));
               }
             }
+          }
+
+          // Directives on a node dropped in outside every scope root — the same
+          // blind spot bootstrap's sweep closes, for nodes that arrive later.
+          //
+          // `isConnected` matters: a mutation record is delivered as a microtask,
+          // by which time the node it reports may already have been consumed —
+          // `l-for` and `l-if` replace their own `<template>` with an anchor, and
+          // that template arrives here detached.
+          if (node.isConnected !== false && !node.__faqirScope && !findParentScope(node)) {
+            var strayHost = getStrayScope();
+            processElement(node, strayHost);
+            if (node.parentNode) walkUnscoped(node, strayHost);
           }
         }
       }

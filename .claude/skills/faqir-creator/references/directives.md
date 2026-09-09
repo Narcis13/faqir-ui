@@ -106,7 +106,7 @@ Available on every scope without declaring them. They are non-enumerable, so `l-
 | `$store` | every expression | Every store registered with `Faqir.store()`. |
 | `$state` | every expression | `data-state` of the `[data-ui]` closest to the scope root. Writable — assigning sets the attribute — and reads re-run when a controller changes it. |
 | `$variant` | every expression | `data-variant` of the same `[data-ui]`, writable and observed the same way. |
-| `$ui` | every expression | The controller API of that same `[data-ui]` — `$ui.open()` — or `null` when it has none. |
+| `$ui` | every expression | The controller API of that same `[data-ui]` — `$ui.open()`. Also callable, to reach ANOTHER component's controller by CSS selector: `$ui('#detail-drawer').open()`, which returns `null` when nothing matches or the match has no controller. |
 | `$dispatch` | every expression | `$dispatch('name', detail)` fires a bubbling, composed `CustomEvent` from the scope root. |
 | `$nextTick` | every expression | `$nextTick(fn)` queues `fn` as a microtask, so it runs after the effects a mutation queued have flushed and the DOM is updated. |
 | `$watch` | every expression | `$watch('key', function (value, old) { … })` — returns a disposer. |
@@ -293,12 +293,36 @@ row — is inert until `Faqir.initTree(el)` walks it.
 
 ### Calling a controller through `$ui`
 
+`$ui` is the controller of the component the expression sits inside:
+
 ```html
 <div data-ui="dialog" data-state="closed" l-data>
   <button @click="$ui.open()">Open</button>
   <!-- … dialog structure … -->
 </div>
 ```
+
+It is also **callable**, which is how one component commands another — pass any
+CSS selector and get that component's controller back:
+
+```html
+<tr>
+  <td>Ada Lovelace</td>
+  <td><button @click="$ui('#detail-drawer').open()">View</button></td>
+</tr>
+
+<div data-ui="drawer" id="detail-drawer" data-state="closed">
+  <!-- … drawer structure … -->
+</div>
+```
+
+Opening a detail drawer from a table row is the shape this exists for. The
+selector may match the `[data-ui]` element itself or anything inside it, and
+the call returns `null` when nothing matches or the match has no controller —
+so `$ui('#maybe')?.open()` never throws on a typo.
+
+Every component's methods are listed under **Controller API** in its section of
+`references/recipes.md`.
 
 `$state` and `$variant` read the same component both ways: a controller
 setting `data-state="open"` re-runs every expression that read `$state`.

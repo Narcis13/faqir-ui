@@ -5,13 +5,11 @@
   "kind": "recipe",
   "category": "navigation",
   "description": "Context menu opened at the pointer or from the keyboard with complete menu navigation",
-
   "anatomy": {
     "tag": "div",
     "selector": "[data-ui='context-menu']",
     "content_model": "slots"
   },
-
   "slots": {
     "target": {
       "selector": "[data-part='target']",
@@ -38,16 +36,33 @@
       "description": "Non-interactive separator between groups of context actions"
     }
   },
-
   "variants": {},
-
   "states": {
-    "closed": { "attr": "data-state=\"closed\"", "default": true },
-    "open": { "attr": "data-state=\"open\"" }
+    "closed": {
+      "attr": "data-state=\"closed\"",
+      "default": true
+    },
+    "open": {
+      "attr": "data-state=\"open\""
+    }
   },
-
+  "api": {
+    "methods": [
+      {
+        "name": "open",
+        "params": "x = 0, y = 0"
+      },
+      {
+        "name": "close",
+        "params": "options = {}"
+      },
+      {
+        "name": "destroy",
+        "params": ""
+      }
+    ]
+  },
   "props": {},
-
   "a11y": {
     "required_attrs": [
       "tabindex=\"0\" on target",
@@ -73,19 +88,34 @@
       "Tab": "close the menu and continue normal tab navigation"
     }
   },
-
   "tokens_used": [
-    "color-bg", "color-bg-muted", "color-fg", "color-fg-muted",
-    "color-border", "color-primary", "color-primary-subtle", "color-ring",
-    "space-px", "space-1", "space-2", "space-3", "space-4", "space-20",
-    "radius-md", "radius-lg", "shadow-md", "text-sm", "weight-medium",
-    "font-sans", "duration-fast", "ease-out", "z-dropdown"
+    "color-bg",
+    "color-bg-muted",
+    "color-fg",
+    "color-fg-muted",
+    "color-border",
+    "color-primary",
+    "color-primary-subtle",
+    "color-ring",
+    "space-px",
+    "space-1",
+    "space-2",
+    "space-3",
+    "space-4",
+    "space-20",
+    "radius-md",
+    "radius-lg",
+    "shadow-md",
+    "text-sm",
+    "weight-medium",
+    "font-sans",
+    "duration-fast",
+    "ease-out",
+    "z-dropdown"
   ],
-
   "templates": {
     "html": "<div data-ui=\"context-menu\" data-state=\"closed\">\n  <div data-part=\"target\" role=\"button\" tabindex=\"0\" aria-haspopup=\"menu\" aria-expanded=\"false\" aria-controls=\"{id}-menu\">{target_text}</div>\n  <div data-part=\"menu\" id=\"{id}-menu\" role=\"menu\" aria-label=\"Context actions\" hidden>\n    <button data-part=\"item\" type=\"button\" role=\"menuitem\" tabindex=\"-1\">{item1}</button>\n    <button data-part=\"item\" type=\"button\" role=\"menuitem\" tabindex=\"-1\">{item2}</button>\n    <hr data-part=\"separator\" role=\"separator\" aria-orientation=\"horizontal\">\n    <button data-part=\"item\" type=\"button\" role=\"menuitem\" tabindex=\"-1\">{item3}</button>\n  </div>\n</div>"
   },
-
   "safe_transforms": [
     "change-target-content",
     "add-menu-item",
@@ -94,7 +124,6 @@
     "change-menu-label",
     "restyle-menu-surface"
   ],
-
   "unsafe_transforms": [
     "remove-target-tabindex",
     "remove-target-button-role",
@@ -105,19 +134,16 @@
     "remove-native-contextmenu-prevention",
     "remove-outside-click-handler"
   ],
-
   "composition": {
     "contains": [],
     "used_in": []
   },
-
   "files": {
     "html": "context-menu.html",
     "css": "context-menu.css",
     "js": "context-menu.js",
     "manifest": "context-menu.manifest.json"
   },
-
   "tests": [
     "opens-at-pointer-coordinates",
     "prevents-native-context-menu",

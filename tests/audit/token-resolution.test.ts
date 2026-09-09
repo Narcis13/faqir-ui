@@ -94,8 +94,10 @@ describe("token resolution · why token-exists missed it", () => {
   });
 
   it("no documented token-exists skip ever matched it", () => {
-    // Hypothesis 2, refuted: the three skips in `checkTokens` are
-    // `palette-*`, `<component>-*` and `button-|card-|dialog-`.
+    // Hypothesis 2, refuted: the three skips `checkTokens` carried at the time
+    // were `palette-*`, `<component>-*` and `button-|card-|dialog-`. (W2-3 has
+    // since replaced all three with the registry gate's own predicate — the
+    // arithmetic below is the record of why none of them was the explanation.)
     const name = "space-48";
     const component = "settings-page";
     expect(name.startsWith("palette-")).toBe(false);
@@ -107,7 +109,7 @@ describe("token resolution · why token-exists missed it", () => {
 
   it("the actual gap: token-exists is project-scoped and never read registry/", () => {
     // Hypothesis 3, confirmed. `checkTokens` resolves its inputs from the
-    // project's output dir and installed list — there is no registry path in it.
+    // project's output dir and installed list — no registry path reaches it.
     const checker = readFileSync(join(ROOT, "src/audit/checker.ts"), "utf8");
     const fn = checker.slice(
       checker.indexOf("async function checkTokens("),
@@ -116,7 +118,24 @@ describe("token resolution · why token-exists missed it", () => {
     expect(fn.length).toBeGreaterThan(0);
     expect(fn).toContain("installed.primitives");
     expect(fn).toContain("join(outputDir,");
-    expect(fn).not.toContain("registry");
+    expect(fn).not.toContain("registryPath");
+    expect(fn).not.toContain("getRegistryPath");
+  });
+
+  it("and now runs the registry gate's predicate rather than its own (W2-3)", () => {
+    // The two gates asked different questions of the same CSS, and the project
+    // one asked the cruder: it missed a token-family name that does not exist,
+    // and it reported an author knob carrying a fallback — six times, on a
+    // pristine `init` + `add dashboard-shell`, before anything was authored.
+    const checker = readFileSync(join(ROOT, "src/audit/checker.ts"), "utf8");
+    const fn = checker.slice(
+      checker.indexOf("async function checkTokens("),
+      checker.indexOf("* Static WCAG-AA contrast gate"),
+    );
+    expect(fn).toContain("findDanglingTokenReferences(cssSource, definedTokens)");
+    // …and the crude skips it replaced are gone, in both spellings.
+    expect(fn).not.toContain('startsWith("palette-")');
+    expect(fn).not.toContain('startsWith("button-")');
   });
 
   it("and the registry's own gate ran three rules, none of them about tokens", () => {

@@ -26,11 +26,21 @@
       "task": "1.0-01",
       "note": "Frozen. `schema_version` is `1.0`, `stability` and `amendment_policy` are declared in the file, this changelog is carried in it, and the schema is published at a versioned URL beside the spec. No field changed shape.",
       "breaking": false
+    },
+    {
+      "version": "1.0",
+      "task": "W2-4",
+      "note": "`api` — a component's controller surface, generated from the controller's `@ui:provides` annotation. Optional, so every 1.0 manifest still validates; additive under SPEC-1.0 §8. It exists because the data was already in every controller and on no surface an agent reads: `faqir explain <recipe> --json` returned no `api` for any of the 29 JS-backed recipes.",
+      "breaking": false
     }
   ],
   "oneOf": [
-    { "$ref": "#/definitions/componentManifest" },
-    { "$ref": "#/definitions/themeManifest" }
+    {
+      "$ref": "#/definitions/componentManifest"
+    },
+    {
+      "$ref": "#/definitions/themeManifest"
+    }
   ],
   "definitions": {
     "componentManifest": {
@@ -56,97 +66,199 @@
         "tests"
       ],
       "properties": {
-        "$schema": { "type": "string" },
-        "name": { "type": "string", "minLength": 1 },
-        "version": { "type": "string", "minLength": 1 },
+        "$schema": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
         "kind": {
           "type": "string",
-          "enum": ["primitive", "recipe", "pattern", "scaffold"]
+          "enum": [
+            "primitive",
+            "recipe",
+            "pattern",
+            "scaffold"
+          ]
         },
-        "category": { "$ref": "#/definitions/category" },
-        "description": { "type": "string", "minLength": 1 },
+        "category": {
+          "$ref": "#/definitions/category"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
         "aliases": {
           "type": "array",
-          "items": { "type": "string", "minLength": 1 }
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
         },
         "changes": {
           "type": "array",
-          "items": { "$ref": "#/definitions/change" }
+          "items": {
+            "$ref": "#/definitions/change"
+          }
         },
-        "anatomy": { "$ref": "#/definitions/anatomy" },
+        "anatomy": {
+          "$ref": "#/definitions/anatomy"
+        },
         "slots": {
           "type": "object",
-          "additionalProperties": { "$ref": "#/definitions/slot" }
+          "additionalProperties": {
+            "$ref": "#/definitions/slot"
+          }
         },
         "variants": {
           "type": "object",
-          "additionalProperties": { "$ref": "#/definitions/variant" }
+          "additionalProperties": {
+            "$ref": "#/definitions/variant"
+          }
         },
         "props": {
           "type": "object",
           "description": "Attributes that are not variant groups: booleans, free-form strings and numbers read by a controller or by CSS. Consumed by the bindings codegen (framework props + defaults) and by the generated agent surfaces.",
-          "additionalProperties": { "$ref": "#/definitions/prop" }
+          "additionalProperties": {
+            "$ref": "#/definitions/prop"
+          }
         },
         "states": {
           "type": "object",
-          "additionalProperties": { "type": "object" }
+          "additionalProperties": {
+            "type": "object"
+          }
         },
-        "a11y": { "type": "object" },
+        "api": {
+          "type": "object",
+          "description": "The controller's public surface — the methods `$ui` resolves to, and the object a recipe factory returns. GENERATED from the controller's own `// @ui:provides` line and its function declarations by `scripts/build-manifest-api.mjs`; never authored by hand, and checked for drift in CI. Present only on a component that ships a controller. Optional, which SPEC-1.0 §8 classifies as an additive amendment.",
+          "required": [
+            "methods"
+          ],
+          "properties": {
+            "methods": {
+              "type": "array",
+              "description": "Methods in the order `@ui:provides` declares them.",
+              "items": {
+                "$ref": "#/definitions/apiMethod"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "a11y": {
+          "type": "object"
+        },
         "tokens_used": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
-        "templates": { "$ref": "#/definitions/templates" },
+        "templates": {
+          "$ref": "#/definitions/templates"
+        },
         "safe_transforms": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
         "unsafe_transforms": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
-        "composition": { "$ref": "#/definitions/composition" },
-        "files": { "$ref": "#/definitions/files" },
+        "composition": {
+          "$ref": "#/definitions/composition"
+        },
+        "files": {
+          "$ref": "#/definitions/files"
+        },
         "tests": {
           "type": "array",
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
     "anatomy": {
       "type": "object",
-      "required": ["tag", "selector"],
+      "required": [
+        "tag",
+        "selector"
+      ],
       "properties": {
-        "tag": { "type": "string" },
-        "selector": { "type": "string" },
+        "tag": {
+          "type": "string"
+        },
+        "selector": {
+          "type": "string"
+        },
         "content_model": {
           "type": "string",
-          "enum": ["inline", "block", "slots", "text", "empty"]
+          "enum": [
+            "inline",
+            "block",
+            "slots",
+            "text",
+            "empty"
+          ]
         }
       }
     },
     "slot": {
       "type": "object",
-      "required": ["selector", "required"],
+      "required": [
+        "selector",
+        "required"
+      ],
       "properties": {
-        "selector": { "type": "string" },
-        "required": { "type": "boolean" },
-        "tag_hint": { "type": "string" },
-        "description": { "type": "string" }
+        "selector": {
+          "type": "string"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "tag_hint": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
       }
     },
     "variant": {
       "type": "object",
-      "required": ["values", "default", "attr"],
+      "required": [
+        "values",
+        "default",
+        "attr"
+      ],
       "properties": {
         "values": {
           "type": "array",
           "minItems": 1,
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         },
-        "default": { "type": "string" },
-        "attr": { "type": "string" },
-        "applied_to": { "type": "string" },
+        "default": {
+          "type": "string"
+        },
+        "attr": {
+          "type": "string"
+        },
+        "applied_to": {
+          "type": "string"
+        },
         "responsive": {
           "type": "boolean",
           "description": "When true, every declared value is ALSO accepted as `<attr>-<tier>` for each canon breakpoint tier (sm, md, lg, xl) — `data-cols-md=\"6\"` means \"6 from the md tier up\" (FAQIR-SPEC §15). Generators expand the group into per-tier props/columns automatically; the responsive grammar never applies to the five frozen protocol attributes."
@@ -156,21 +268,68 @@
     "prop": {
       "type": "object",
       "description": "One non-variant attribute of a component: a boolean toggle, a free-form string/number, or a small enum whose values are listed but which is not a visual variant group.",
-      "required": ["type", "description"],
+      "required": [
+        "type",
+        "description"
+      ],
       "properties": {
         "type": {
           "type": "string",
-          "enum": ["string", "boolean", "number", "enum"]
+          "enum": [
+            "string",
+            "boolean",
+            "number",
+            "enum"
+          ]
         },
-        "description": { "type": "string", "minLength": 1 },
-        "default": { "type": ["string", "boolean", "number", "null"] },
-        "attr": { "type": "string", "minLength": 1 },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "default": {
+          "type": [
+            "string",
+            "boolean",
+            "number",
+            "null"
+          ]
+        },
+        "attr": {
+          "type": "string",
+          "minLength": 1
+        },
         "values": {
           "type": "array",
           "minItems": 1,
-          "items": { "type": "string" }
+          "items": {
+            "type": "string"
+          }
         }
       }
+    },
+    "apiMethod": {
+      "type": "object",
+      "description": "One method a controller exposes.",
+      "required": [
+        "name",
+        "params"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Method name, exactly as `@ui:provides` lists it."
+        },
+        "params": {
+          "type": "string",
+          "description": "Parameter list as the controller writes it; empty for a nullary method."
+        },
+        "description": {
+          "type": "string",
+          "description": "First sentence of the method's JSDoc, when it has one."
+        }
+      },
+      "additionalProperties": false
     },
     "category": {
       "type": "string",
@@ -192,35 +351,74 @@
     "change": {
       "type": "object",
       "description": "One changelog entry (task 0.5-04). Consumed by `faqir upgrade`.",
-      "required": ["version", "note", "breaking"],
+      "required": [
+        "version",
+        "note",
+        "breaking"
+      ],
       "properties": {
-        "version": { "type": "string", "minLength": 1 },
-        "note": { "type": "string", "minLength": 1 },
-        "breaking": { "type": "boolean" }
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "note": {
+          "type": "string",
+          "minLength": 1
+        },
+        "breaking": {
+          "type": "boolean"
+        }
       }
     },
     "templates": {
       "type": "object",
       "description": "Named HTML templates. Most components ship an `html` template; some ship only variant-specific templates (`html_group`, `html_single`, …). Every value is an HTML string.",
       "minProperties": 1,
-      "additionalProperties": { "type": "string" }
+      "additionalProperties": {
+        "type": "string"
+      }
     },
     "composition": {
       "type": "object",
-      "required": ["contains", "used_in"],
+      "required": [
+        "contains",
+        "used_in"
+      ],
       "properties": {
-        "contains": { "type": "array", "items": { "type": "string" } },
-        "used_in": { "type": "array", "items": { "type": "string" } }
+        "contains": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "used_in": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       }
     },
     "files": {
       "type": "object",
-      "required": ["html", "css", "manifest"],
+      "required": [
+        "html",
+        "css",
+        "manifest"
+      ],
       "properties": {
-        "html": { "type": "string" },
-        "css": { "type": "string" },
-        "js": { "type": "string" },
-        "manifest": { "type": "string" }
+        "html": {
+          "type": "string"
+        },
+        "css": {
+          "type": "string"
+        },
+        "js": {
+          "type": "string"
+        },
+        "manifest": {
+          "type": "string"
+        }
       }
     },
     "themeManifest": {
@@ -238,36 +436,66 @@
         "preview"
       ],
       "properties": {
-        "$schema": { "type": "string" },
-        "name": { "type": "string", "minLength": 1 },
-        "version": { "type": "string", "minLength": 1 },
+        "$schema": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
         "mood": {
           "type": "array",
           "minItems": 1,
-          "items": { "type": "string", "minLength": 1 }
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
         },
         "scheme": {
           "type": "string",
-          "enum": ["light", "dark", "both"]
+          "enum": [
+            "light",
+            "dark",
+            "both"
+          ]
         },
         "dark_mode": {
           "type": "string",
-          "enum": ["native", "none"]
+          "enum": [
+            "native",
+            "none"
+          ]
         },
         "tokens_overridden": {
           "type": "array",
           "minItems": 1,
-          "items": { "type": "string", "minLength": 1 }
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
         },
         "tokens_inherited": {
           "type": "array",
-          "items": { "type": "string", "minLength": 1 }
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
         },
         "pairs_with": {
           "type": "array",
-          "items": { "type": "string", "minLength": 1 }
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
         },
-        "preview": { "type": "string", "minLength": 1 }
+        "preview": {
+          "type": "string",
+          "minLength": 1
+        }
       }
     }
   }

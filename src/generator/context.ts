@@ -49,6 +49,8 @@ export interface ContextData {
      * sentence: "this project installs …" is false on a hosted llms.txt.
      */
     scope?: "project" | "registry";
+    /** The project's component directory — see {@link ContextComposition.outputDir}. */
+    output_dir?: string;
     component_count: {
       primitives: number;
       recipes: number;
@@ -276,6 +278,13 @@ export function buildComponentEntry(manifest: Manifest): Record<string, unknown>
     entry.controller = manifest.files.js;
   }
 
+  // The controller's methods — `$ui.open()` from a page expression, or the
+  // object the factory returns. Signatures only: the context payload is an index,
+  // and `faqir explain <name>` carries the sentences. [W2-4]
+  if (manifest.api?.methods?.length) {
+    entry.api = manifest.api.methods.map((m) => `${m.name}(${m.params})`);
+  }
+
   if (manifest.a11y) {
     const a11yParts: string[] = [];
     if (manifest.a11y.role) a11yParts.push(`role=${manifest.a11y.role}`);
@@ -323,6 +332,12 @@ export interface ContextComposition {
   generatedAt: string;
   /** What the component set is — see {@link ContextData.meta.scope}. */
   scope?: "project" | "registry";
+  /**
+   * The project's component directory (`ui` by default) — the prefix in the
+   * `<link>` and `<script>` a page needs. Absent on a registry-scoped build,
+   * where there is no project and the CDN preamble is the answer. [W2-5]
+   */
+  outputDir?: string;
 }
 
 /**
@@ -363,6 +378,7 @@ export function composeContextData(input: ContextComposition): ContextData {
       theme: input.themeName,
       generated_at: input.generatedAt,
       ...(input.scope ? { scope: input.scope } : {}),
+      ...(input.outputDir ? { output_dir: input.outputDir } : {}),
       component_count: input.componentCount,
       plugin_count: input.pluginMetadata.length,
     },
@@ -541,6 +557,9 @@ export async function generateContext(cwd: string): Promise<ContextData> {
     theme: await loadActiveTheme(config),
     themeName: config.theme,
     pluginMetadata: loadPluginMetadata(join(outputDir, "core", "plugins")),
+    // The project's own component directory, so the page skeleton these surfaces
+    // print names paths that exist in THIS project rather than the default. [W2-5]
+    outputDir: config.output_dir,
     // Counted from the config, not from the loaded manifests: the config is what
     // the project declares it installed, and a manifest that failed to load is a
     // problem to see rather than to silently subtract.
@@ -563,6 +582,56 @@ export function formatContextJSON(data: ContextData): string {
 /**
  * Format context as Markdown for LLM prompts.
  */
+/**
+ * The page `<head>` and the script tag — the two lines that gate every other
+ * line these files describe. [W2-5]
+ *
+ * `DOCTYPE|rel="stylesheet"` returned **0 hits** across `llms.txt` and
+ * `llms-full.txt` — 2,368 lines — and 0 across the skill and all six of its
+ * reference files. An agent could read every one of them and still not know what
+ * a Faqir page's `<head>` contains; the markup it wrote rendered unstyled and
+ * nothing said why.
+ *
+ * One formatter, both surfaces, so the two can never disagree about it.
+ */
+function firstPageLines(data: ContextData): string[] {
+  const dir = (data.meta.output_dir ?? "ui").replace(/^\.\//, "").replace(/\/$/, "");
+  return [
+    "## Your first page",
+    "",
+    "A Faqir page is ordinary HTML plus one stylesheet and one script. Without them the " +
+      "markup renders as unstyled HTML and no component opens, closes or reacts.",
+    "",
+    "```html",
+    "<!DOCTYPE html>",
+    '<html lang="en" data-theme="light">',
+    "<head>",
+    '  <meta charset="UTF-8">',
+    '  <meta name="viewport" content="width=device-width, initial-scale=1.0">',
+    "  <title>My page</title>",
+    `  <link rel="stylesheet" href="${dir}/faqir.bundle.css">`,
+    "</head>",
+    "<body>",
+    "  <main>",
+    '    <button data-ui="button" data-variant="primary">Save</button>',
+    "  </main>",
+    `  <script src="${dir}/core/faqir-core.js" defer></script>`,
+    "</body>",
+    "</html>",
+    "```",
+    "",
+    `- \`data-theme\` on \`<html>\` selects the theme's tokens; omit it to follow the OS setting.`,
+    `- \`${dir}/faqir.bundle.css\` is written by \`faqir init\` and rewritten by every \`faqir add\`.`,
+    `- \`${dir}/core/faqir-core.js\` boots every \`[data-ui]\` controller and binds every \`l-*\` directive.`,
+    "- `<main>` is the page's primary landmark; the `landmark` audit rule asks for one.",
+    "",
+    "No build step: the same two tags from a CDN — " +
+      "`https://cdn.jsdelivr.net/npm/@faqir-ui/core/dist/faqir.default.css` and " +
+      "`…/faqir-core.min.js` — pinned to a version, with `integrity`/`crossorigin` in production.",
+    "",
+  ];
+}
+
 export function formatContextMarkdown(data: ContextData): string {
   const lines: string[] = [];
 
@@ -570,6 +639,8 @@ export function formatContextMarkdown(data: ContextData): string {
   lines.push("");
   lines.push(`Theme: ${data.meta.theme} | Components: ${data.meta.component_count.primitives} primitives, ${data.meta.component_count.recipes} recipes, ${data.meta.component_count.patterns} patterns`);
   lines.push("");
+
+  lines.push(...firstPageLines(data));
 
   // Active theme
   const t = data.theme;
@@ -744,6 +815,7 @@ export function formatContextMarkdown(data: ContextData): string {
     if (c.responsive) details.push(`Responsive: ${formatResponsive(c.responsive as Record<string, string[]>)}`);
     if (c.slots) details.push(`Slots: ${(c.slots as string[]).join(", ")}`);
     if (c.states) details.push(`States: ${(c.states as string[]).join(" → ")}`);
+    if (c.api) details.push(`Controller API ($ui): ${(c.api as string[]).join(", ")}`);
     if (c.a11y) details.push(`A11y: ${c.a11y}`);
     if (c.controller) details.push(`Controller: ${c.controller}`);
     if (c.safe_transforms) details.push(`Safe: ${(c.safe_transforms as string[]).join(", ")}`);
@@ -1114,6 +1186,7 @@ export function formatContextLlms(data: ContextData): string {
   lines.push("- [Layout system](llms-full.txt#layout-system): the doctrine, the five layout primitives, measure and rhythm tokens");
   lines.push("- [Responsive tiers](llms-full.txt#responsive-tiers): the breakpoint canon and the data-<attr>-<tier> grammar");
   lines.push("- [Density mode](llms-full.txt#density-mode): data-density, a pure-CSS token modifier for dense subtrees");
+  lines.push("- [Your first page](llms-full.txt#your-first-page): the DOCTYPE, the stylesheet link and the engine script a page needs before anything below applies");
   lines.push("- [Inspecting a live page](llms-full.txt#inspecting-a-live-page): window.__FAQIR_DEVTOOLS__ and Faqir.inspect()");
   lines.push("- [Data-driven rendering](llms-full.txt#data-driven-rendering): apiSource() for server-backed CRUD");
   lines.push("- [Rules](llms-full.txt#rules): authoring constraints agents must follow");
@@ -1165,6 +1238,7 @@ function llmsFullComponentBlock(name: string, c: Record<string, unknown>): strin
   if (c.responsive) details.push(`Responsive: ${formatResponsive(c.responsive as Record<string, string[]>)}`);
   if (c.slots) details.push(`Slots: ${(c.slots as string[]).join(", ")}`);
   if (c.states) details.push(`States: ${(c.states as string[]).join(" → ")}`);
+  if (c.api) details.push(`Controller API ($ui): ${(c.api as string[]).join(", ")}`);
   if (c.a11y) details.push(`A11y: ${c.a11y}`);
   if (c.controller) details.push(`Controller: ${c.controller}`);
   if (c.safe_transforms) details.push(`Safe transforms: ${(c.safe_transforms as string[]).join(", ")}`);
@@ -1190,6 +1264,8 @@ export function formatContextLlmsFull(data: ContextData): string {
   lines.push("");
   lines.push(`> ${llmsBlurb(data)}`);
   lines.push("");
+
+  lines.push(...firstPageLines(data));
 
   // Active theme
   const t = data.theme;

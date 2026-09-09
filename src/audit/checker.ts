@@ -37,14 +37,65 @@ export interface AuditOptions {
   cwd?: string;
   /** Skip specific rules by ID */
   skipRules?: string[];
+  /**
+   * Count vendor findings toward the exit code (`--strict`).
+   *
+   * Off by default: see {@link AuditSummary.vendor_counts} for why.
+   */
+  strict?: boolean;
 }
 
 export interface AuditSummary {
   results: AuditResult[];
   files_scanned: number;
   components_found: number;
+  /** Severity counts for the files the PROJECT authored. Drives `passed`. */
   counts: Record<Severity, number>;
+  /**
+   * Severity counts for findings in the installed component tree — the
+   * framework's own bytes, copied in by `faqir add` and owned by nobody in this
+   * project. [W2-3]
+   *
+   * They are reported in full, and they do NOT decide the exit code unless
+   * `--strict` asks. `faqir init` + `faqir add switch dashboard-shell`, with
+   * nothing authored, exited 1 on two errors and six warnings that were all in
+   * vendor CSS: an agent gating on `faqir audit` could not reach green by any
+   * edit it was allowed to make, and the only thing such a gate can teach is to
+   * stop reading it. (Both halves of the fix shipped: the vendor CSS that caused
+   * that specific failure is also fixed — the split is what keeps the NEXT one
+   * from doing the same.)
+   */
+  vendor_counts: Record<Severity, number>;
+  /** True when nothing the project authored is critical or error. */
   passed: boolean;
+}
+
+/**
+ * True when a finding is in the installed component tree rather than in code the
+ * project wrote — a path under the configured output directory (`ui/` by
+ * default), which is exactly what `faqir add` writes and nothing else does.
+ *
+ * Paths are relative to the project root and always `/`-separated in findings.
+ */
+export function isVendorPath(file: string, outputDirName: string): boolean {
+  const prefix = outputDirName.replace(/^\.\//, "").replace(/\/+$/, "");
+  if (!prefix) return false;
+  const normalized = file.replace(/\\/g, "/");
+  return normalized === prefix || normalized.startsWith(`${prefix}/`);
+}
+
+/** Split severity counts into authored and vendor halves. */
+export function splitCounts(
+  results: AuditResult[],
+  outputDirName: string,
+): { counts: Record<Severity, number>; vendor_counts: Record<Severity, number> } {
+  const counts: Record<Severity, number> = { critical: 0, error: 0, warning: 0, info: 0 };
+  const vendor_counts: Record<Severity, number> = { critical: 0, error: 0, warning: 0, info: 0 };
+  for (const r of results) {
+    if (isVendorPath(r.file, outputDirName)) vendor_counts[r.severity]++;
+    else counts[r.severity]++;
+  }
+  return { counts, vendor_counts };
 }
 
 /**
@@ -181,18 +232,23 @@ export async function runAudit(options: AuditOptions = {}): Promise<AuditSummary
     results.push(...contrastResults);
   }
 
-  // Count severities
-  const counts: Record<Severity, number> = { critical: 0, error: 0, warning: 0, info: 0 };
-  for (const r of results) {
-    counts[r.severity]++;
-  }
+  // Authored findings decide the exit code; vendor findings are reported and
+  // counted separately. `--strict` folds them back in. [W2-3]
+  const { counts, vendor_counts } = splitCounts(results, config.output_dir);
+  const gating = options.strict
+    ? {
+        critical: counts.critical + vendor_counts.critical,
+        error: counts.error + vendor_counts.error,
+      }
+    : counts;
 
   return {
     results,
     files_scanned: htmlFiles.length,
     components_found: componentsFound,
     counts,
-    passed: counts.critical === 0 && counts.error === 0,
+    vendor_counts,
+    passed: gating.critical === 0 && gating.error === 0,
   };
 }
 
@@ -229,27 +285,31 @@ async function checkTokens(
     if (!existsSync(cssPath)) continue;
 
     const cssSource = await Bun.file(cssPath).text();
-    const refs = extractTokenReferences(cssSource);
     const relPath = relative(cwd, cssPath);
 
-    for (const ref of refs) {
-      // Skip palette references (they reference within tokens)
-      if (ref.name.startsWith("palette-")) continue;
-      // Skip component aliases (they use fallbacks)
-      if (ref.name.startsWith(`${name}-`)) continue;
-      // Skip well-known browser properties
-      if (ref.name.startsWith("button-") || ref.name.startsWith("card-") || ref.name.startsWith("dialog-")) continue;
-
-      if (!definedTokens.has(ref.name)) {
-        results.push({
-          rule_id: "token-exists",
-          severity: "warning",
-          component_name: name,
-          file: relPath,
-          line: ref.line,
-          message: `Token "--${ref.name}" referenced in ${name}.css is not defined in any token file`,
-        });
-      }
+    // The SAME predicate the registry gate uses (`findDanglingTokenReferences`),
+    // and for the reason the doctrine comment above it gives: registry CSS
+    // legitimately reads three kinds of custom property, and only one of them is
+    // a design token.
+    //
+    // Until 1.0 this rule ran its own cruder test — "defined in a token file, or
+    // prefixed `palette-` / `<component>-` / `button-` / `card-` / `dialog-`" —
+    // which was wrong in both directions. It missed `var(--space-48, 12rem)`,
+    // a token-family name that does not exist, because the family idea was not
+    // in it. And it reported `var(--shell-sidebar-width, 16rem)`, an author knob
+    // with a fallback that the docs site itself sets, six times: `faqir init` +
+    // `faqir add dashboard-shell` produced six warnings about the framework's
+    // own stylesheet before the user had authored a line. A gate an agent cannot
+    // reach green is a gate it learns to ignore. [W2-3]
+    for (const finding of findDanglingTokenReferences(cssSource, definedTokens)) {
+      results.push({
+        rule_id: "token-exists",
+        severity: "warning",
+        component_name: name,
+        file: relPath,
+        line: finding.line,
+        message: `${finding.message} (in ${name}.css)`,
+      });
     }
   }
 

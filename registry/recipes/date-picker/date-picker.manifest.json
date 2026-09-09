@@ -5,7 +5,6 @@
   "kind": "recipe",
   "category": "forms",
   "description": "Date input with calendar dropdown for date selection — the month grid is the nested `calendar` recipe",
-
   "changes": [
     {
       "version": "2.0.0",
@@ -13,13 +12,11 @@
       "breaking": true
     }
   ],
-
   "anatomy": {
     "tag": "div",
     "selector": "[data-ui='date-picker']",
     "content_model": "slots"
   },
-
   "slots": {
     "trigger": {
       "selector": "[data-part='trigger']",
@@ -46,26 +43,71 @@
       "description": "Calendar dropdown container. Canonically nests a [data-ui='calendar'] recipe that owns the header, month navigation and day grid; legacy markup with those parts placed directly inside this container keeps working"
     }
   },
-
   "variants": {
     "size": {
-      "values": ["sm", "md", "lg"],
+      "values": [
+        "sm",
+        "md",
+        "lg"
+      ],
       "default": "md",
       "attr": "data-size",
       "applied_to": "root"
     }
   },
-
   "states": {
-    "closed": { "attr": "data-state=\"closed\"", "default": true },
-    "open": { "attr": "data-state=\"open\"" }
+    "closed": {
+      "attr": "data-state=\"closed\"",
+      "default": true
+    },
+    "open": {
+      "attr": "data-state=\"open\""
+    }
   },
-
+  "api": {
+    "methods": [
+      {
+        "name": "open",
+        "params": ""
+      },
+      {
+        "name": "close",
+        "params": ""
+      },
+      {
+        "name": "getValue",
+        "params": ""
+      },
+      {
+        "name": "setValue",
+        "params": "dateStr"
+      },
+      {
+        "name": "navigate",
+        "params": "month, year"
+      },
+      {
+        "name": "selectDate",
+        "params": "date"
+      },
+      {
+        "name": "destroy",
+        "params": ""
+      }
+    ]
+  },
   "props": {
-    "value": { "type": "string", "default": "", "description": "Selected date value" },
-    "placeholder": { "type": "string", "default": "Select date", "description": "Input placeholder text" }
+    "value": {
+      "type": "string",
+      "default": "",
+      "description": "Selected date value"
+    },
+    "placeholder": {
+      "type": "string",
+      "default": "Select date",
+      "description": "Input placeholder text"
+    }
   },
-
   "a11y": {
     "required_attrs": [
       "aria-haspopup=\"dialog\" on input",
@@ -89,20 +131,29 @@
       "PageDown": "focus same day next month"
     }
   },
-
   "tokens_used": [
-    "color-bg", "color-fg", "color-fg-muted",
-    "color-border", "color-primary", "color-ring",
-    "shadow-lg", "radius-md", "radius-lg",
-    "space-1", "space-2", "space-3", "space-4",
-    "text-xs", "text-sm",
-    "z-dropdown", "duration-fast", "ease-default"
+    "color-bg",
+    "color-fg",
+    "color-fg-muted",
+    "color-border",
+    "color-primary",
+    "color-ring",
+    "shadow-lg",
+    "radius-md",
+    "radius-lg",
+    "space-1",
+    "space-2",
+    "space-3",
+    "space-4",
+    "text-xs",
+    "text-sm",
+    "z-dropdown",
+    "duration-fast",
+    "ease-default"
   ],
-
   "templates": {
     "html": "<div data-ui=\"date-picker\" data-state=\"closed\" data-size=\"{size}\">\n  <div data-part=\"trigger\">\n    <input data-part=\"input\" type=\"text\" placeholder=\"Select a date\" readonly aria-haspopup=\"dialog\" aria-expanded=\"false\" aria-label=\"Choose date\">\n    <span data-part=\"icon\" aria-hidden=\"true\">&#x1F4C5;</span>\n  </div>\n  <div data-part=\"calendar\" role=\"dialog\" aria-label=\"Date picker\" hidden>\n    <div data-ui=\"calendar\" data-size=\"{size}\">\n      <div data-part=\"header\">\n        <button data-part=\"nav-prev\" type=\"button\" aria-label=\"Previous month\">&lsaquo;</button>\n        <span data-part=\"month-label\"></span>\n        <button data-part=\"nav-next\" type=\"button\" aria-label=\"Next month\">&rsaquo;</button>\n      </div>\n      <table data-part=\"grid\" role=\"grid\" aria-label=\"Calendar\">\n        <thead><tr><th>Su</th><th>Mo</th><th>Tu</th><th>We</th><th>Th</th><th>Fr</th><th>Sa</th></tr></thead>\n        <tbody data-part=\"grid-body\"></tbody>\n      </table>\n    </div>\n  </div>\n</div>"
   },
-
   "safe_transforms": [
     "change-size",
     "customize-date-format",
@@ -111,7 +162,6 @@
     "add-min-max-date",
     "change-first-day-of-week"
   ],
-
   "unsafe_transforms": [
     "remove-aria-expanded",
     "remove-grid-role",
@@ -120,19 +170,19 @@
     "remove-outside-click-handler",
     "duplicate-grid-logic-outside-calendar-recipe"
   ],
-
   "composition": {
-    "contains": ["calendar", "button"],
+    "contains": [
+      "calendar",
+      "button"
+    ],
     "used_in": []
   },
-
   "files": {
     "html": "date-picker.html",
     "css": "date-picker.css",
     "js": "date-picker.js",
     "manifest": "date-picker.manifest.json"
   },
-
   "tests": [
     "opens-calendar-on-trigger-click",
     "closes-calendar-on-escape",

@@ -238,6 +238,17 @@ export function buildPageHtml(c: Case): string {
  * `registry/base/reset.css` (`* { margin: 0; padding: 0 }`, `html { color; background }`),
  * so the block is gone entirely: a capture is now of shipped bytes.
  */
+/**
+ * The complete framework stylesheet for one theme — tokens, base, the theme, and
+ * every component sheet, in the shipped load order. Exported because the browser
+ * smoke suite (`tests/browser`) needs exactly the CSS this suite renders, only
+ * with the controllers actually running on top of it: transition durations are
+ * the whole subject there, and they come from these files.
+ */
+export function frameworkCss(theme = "default"): string {
+  return `${foundationCss()}\n/* theme: ${theme} */\n${read(`themes/${theme}.css`)}\n/* components */\n${componentCss()}`;
+}
+
 function screenPage(
   fragment: string,
   theme: string,
@@ -245,8 +256,7 @@ function screenPage(
   dir: Direction,
   title: string,
 ): string {
-  const themeCss = read(`themes/${theme}.css`);
-  const css = `${foundationCss()}\n/* theme: ${theme} */\n${themeCss}\n/* components */\n${componentCss()}`;
+  const css = frameworkCss(theme);
   return `<!DOCTYPE html>
 <html lang="en" data-theme="${scheme}" dir="${dir}">
 <head>

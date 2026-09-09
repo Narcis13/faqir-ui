@@ -5,13 +5,11 @@
   "kind": "recipe",
   "category": "data-display",
   "description": "Expandable section panels with single or multiple expand modes",
-
   "anatomy": {
     "tag": "div",
     "selector": "[data-ui='accordion']",
     "content_model": "slots"
   },
-
   "slots": {
     "item": {
       "selector": "[data-part='item']",
@@ -38,31 +36,72 @@
       "description": "Chevron icon that rotates when expanded"
     }
   },
-
   "variants": {
     "type": {
-      "values": ["single", "multiple"],
+      "values": [
+        "single",
+        "multiple"
+      ],
       "default": "single",
       "attr": "data-variant",
       "applied_to": "root"
     },
     "bordered": {
-      "values": ["true", "false"],
+      "values": [
+        "true",
+        "false"
+      ],
       "default": "false",
       "attr": "data-bordered",
       "applied_to": "root"
     }
   },
-
   "states": {
-    "collapsed": { "attr": "data-state=\"collapsed\"", "default": true, "applied_to": "item" },
-    "expanded": { "attr": "data-state=\"expanded\"", "applied_to": "item" }
+    "collapsed": {
+      "attr": "data-state=\"collapsed\"",
+      "default": true,
+      "applied_to": "item"
+    },
+    "expanded": {
+      "attr": "data-state=\"expanded\"",
+      "applied_to": "item"
+    }
   },
-
+  "api": {
+    "methods": [
+      {
+        "name": "toggle",
+        "params": "index"
+      },
+      {
+        "name": "expand",
+        "params": "index"
+      },
+      {
+        "name": "collapse",
+        "params": "index"
+      },
+      {
+        "name": "expandAll",
+        "params": ""
+      },
+      {
+        "name": "collapseAll",
+        "params": ""
+      },
+      {
+        "name": "destroy",
+        "params": ""
+      }
+    ]
+  },
   "props": {
-    "mode": { "type": "string", "default": "single", "description": "Expand mode: single or multiple" }
+    "mode": {
+      "type": "string",
+      "default": "single",
+      "description": "Expand mode: single or multiple"
+    }
   },
-
   "a11y": {
     "required_attrs": [
       "aria-expanded on trigger",
@@ -75,18 +114,23 @@
       "Space": "toggle focused section"
     }
   },
-
   "tokens_used": [
-    "color-bg", "color-fg", "color-fg-muted", "color-border",
-    "space-3", "space-4",
-    "text-sm", "text-base", "weight-medium",
-    "duration-normal", "ease-default", "radius-lg"
+    "color-bg",
+    "color-fg",
+    "color-fg-muted",
+    "color-border",
+    "space-3",
+    "space-4",
+    "text-sm",
+    "text-base",
+    "weight-medium",
+    "duration-normal",
+    "ease-default",
+    "radius-lg"
   ],
-
   "templates": {
-    "html": "<div data-ui=\"accordion\" data-variant=\"{type}\" id=\"{id}\">\n  <div data-part=\"item\" data-state=\"collapsed\">\n    <button data-part=\"trigger\" id=\"{id}-trigger-1\" aria-expanded=\"false\" aria-controls=\"{id}-content-1\">\n      <span>{label1}</span>\n      <span data-part=\"icon\" aria-hidden=\"true\">\u25be</span>\n    </button>\n    <div data-part=\"content\" id=\"{id}-content-1\" role=\"region\" aria-labelledby=\"{id}-trigger-1\" hidden>{content1}</div>\n  </div>\n  <div data-part=\"item\" data-state=\"collapsed\">\n    <button data-part=\"trigger\" id=\"{id}-trigger-2\" aria-expanded=\"false\" aria-controls=\"{id}-content-2\">\n      <span>{label2}</span>\n      <span data-part=\"icon\" aria-hidden=\"true\">\u25be</span>\n    </button>\n    <div data-part=\"content\" id=\"{id}-content-2\" role=\"region\" aria-labelledby=\"{id}-trigger-2\" hidden>{content2}</div>\n  </div>\n</div>"
+    "html": "<div data-ui=\"accordion\" data-variant=\"{type}\" id=\"{id}\">\n  <div data-part=\"item\" data-state=\"collapsed\">\n    <button data-part=\"trigger\" id=\"{id}-trigger-1\" aria-expanded=\"false\" aria-controls=\"{id}-content-1\">\n      <span>{label1}</span>\n      <span data-part=\"icon\" aria-hidden=\"true\">▾</span>\n    </button>\n    <div data-part=\"content\" id=\"{id}-content-1\" role=\"region\" aria-labelledby=\"{id}-trigger-1\" hidden>{content1}</div>\n  </div>\n  <div data-part=\"item\" data-state=\"collapsed\">\n    <button data-part=\"trigger\" id=\"{id}-trigger-2\" aria-expanded=\"false\" aria-controls=\"{id}-content-2\">\n      <span>{label2}</span>\n      <span data-part=\"icon\" aria-hidden=\"true\">▾</span>\n    </button>\n    <div data-part=\"content\" id=\"{id}-content-2\" role=\"region\" aria-labelledby=\"{id}-trigger-2\" hidden>{content2}</div>\n  </div>\n</div>"
   },
-
   "safe_transforms": [
     "add-item",
     "remove-item",
@@ -95,7 +139,6 @@
     "restyle-trigger-background",
     "change-icon"
   ],
-
   "unsafe_transforms": [
     "remove-aria-expanded",
     "remove-aria-controls",
@@ -103,19 +146,18 @@
     "remove-aria-labelledby",
     "remove-keyboard-handler"
   ],
-
   "composition": {
     "contains": [],
-    "used_in": ["settings-page"]
+    "used_in": [
+      "settings-page"
+    ]
   },
-
   "files": {
     "html": "accordion.html",
     "css": "accordion.css",
     "js": "accordion.js",
     "manifest": "accordion.manifest.json"
   },
-
   "tests": [
     "all-items-collapsed-by-default",
     "click-trigger-expands-item",

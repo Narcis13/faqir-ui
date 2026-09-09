@@ -86,7 +86,7 @@ describe("per-theme CSS bundles", () => {
 describe("minified engine artifact", () => {
   test("the package report uses the assembled runtime budget", () => {
     const build = readFileSync(join(ROOT, "scripts", "build-core-package.mjs"), "utf8");
-    expect(build).toContain("const ASSEMBLED_GZIP_BUDGET = 44 * 1024");
+    expect(build).toContain("const ASSEMBLED_GZIP_BUDGET = 45 * 1024");
     expect(build).not.toContain("Recipe controllers are still inlined in the engine");
     expect(build).not.toContain("controller de-duplication (0.3-04) bring this under budget");
   });
@@ -172,8 +172,13 @@ describe("minified engine artifact", () => {
   });
 
   test("is within the engine + controllers gzip budget", () => {
+    // 44 → 45 KB in Wave 2. The budget has moved twice before on the same terms
+    // (42 → 43 for the 29th controller, 43 → 44 for inspect/devtools); this move
+    // bought the shared exit-transition helper the overlay controllers wait on,
+    // the sweep that binds directives outside every scope root, root-directive
+    // application, and `$ui('#id')`. See scripts/check-size.mjs for the ledger.
     const gzip = gzipSync(readFileSync(join(DIST, "faqir-core.min.js"))).length;
-    expect(gzip).toBeLessThanOrEqual(44 * 1024);
+    expect(gzip).toBeLessThanOrEqual(45 * 1024);
   });
 });
 

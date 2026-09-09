@@ -63,8 +63,22 @@ export interface AppScaffoldOptions {
   coreScriptSrc?: string;
 }
 
-function guide(name: AppScaffoldName): string {
+function guide(name: AppScaffoldName, coreScriptSrc?: string): string {
   const patterns = APP_SCAFFOLD_PATTERNS[name].join(", ");
+  // Name the engine tag rather than referring to it (task W2-5). This comment
+  // used to end "add the script tag when you wire them up" — while the tag was
+  // already at the bottom of the very file it was printed in, and while nothing
+  // anywhere in the agent-facing documentation ever gave its spelling. A reader
+  // was told a thing was missing, told to add it, and not told what it was.
+  const engine = coreScriptSrc
+    ? `The overlay recipes on this page (dialog, dropdown, tabs) are opened by the
+    engine, which this page already loads at the bottom of <body>:
+      <script src="${coreScriptSrc}" defer></script>
+    Keep it — without it those components render, but never open.`
+    : `The overlay recipes on this page (dialog, dropdown, tabs) need the engine to
+    open. Add it as the last thing in <body>:
+      <script src="ui/core/faqir-core.js" defer></script>`;
+
   return `  <!--
     Composed by \`faqir scaffold ${name}\` from maintained patterns: ${patterns}.
     Each block below is the pattern's own canonical example, copied verbatim — so
@@ -72,9 +86,9 @@ function guide(name: AppScaffoldName): string {
 
     Edit the copy in place, or re-run the scaffold after customising the patterns
     under ui/patterns/. Keep the data-ui / data-part attributes intact so
-    \`faqir audit\` can keep checking the page. The overlay recipes on this page
-    (dialog, dropdown, tabs) need ui/core/faqir-core.js to open; add the script
-    tag when you wire them up.
+    \`faqir audit\` can keep checking the page.
+
+    ${engine}
   -->`;
 }
 
@@ -99,7 +113,7 @@ export function generateAppPage(name: AppScaffoldName, options: AppScaffoldOptio
 ${options.stylesheets}
 </head>
 <body>
-${guide(name)}
+${guide(name, options.coreScriptSrc)}
 
 ${appScaffoldBody(name, options.registryPath)}
 ${options.coreScriptSrc ? `\n<script src="${options.coreScriptSrc}" defer></script>\n` : ""}

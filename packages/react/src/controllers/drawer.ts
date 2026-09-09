@@ -7,6 +7,7 @@
 // @ui:provides open close toggle destroy
 
 import { trapFocus } from "./_core-focus.js";
+import { whenExitDone } from "./_core-motion.js";
 
 export function createDrawer(root) {
   // Prevent double-init
@@ -35,7 +36,12 @@ export function createDrawer(root) {
     prevBodyOverflow = null;
   }
 
+  // Cancels an in-flight "closing" wait when the drawer is re-opened mid-slide.
+  let cancelExitWait = null;
+
   function open() {
+    cancelExitWait?.();
+    cancelExitWait = null;
     previouslyFocused = document.activeElement;
     root.dataset.state = "open";
     overlay.hidden = false;
@@ -46,9 +52,14 @@ export function createDrawer(root) {
   }
 
   function close() {
+    // Already gone, or already sliding out — a second click must not start a
+    // second wait on top of the one in flight.
+    if (root.dataset.state === "closed" || root.dataset.state === "closing") return;
+
     root.dataset.state = "closing";
 
     const onEnd = () => {
+      cancelExitWait = null;
       root.dataset.state = "closed";
       overlay.hidden = true;
       panel.hidden = true;
@@ -56,28 +67,13 @@ export function createDrawer(root) {
       if (focusCleanup) focusCleanup();
       focusCleanup = null;
       previouslyFocused?.focus();
-      panel.removeEventListener("transitionend", onTransEnd);
     };
 
-    // Listen for transition end on the panel slide
-    let hasTransition = false;
-    try {
-      const style = getComputedStyle(panel);
-      const transDur = parseFloat(style.transitionDuration) || 0;
-      hasTransition = transDur > 0;
-    } catch {
-      // getComputedStyle may not be available in test environments
-    }
-
-    const onTransEnd = (e) => {
-      if (e.propertyName === "transform") onEnd();
-    };
-
-    if (hasTransition) {
-      panel.addEventListener("transitionend", onTransEnd, { once: true });
-    } else {
-      onEnd();
-    }
+    // The panel's OWN `transform` — not the close button's `background`, which
+    // bubbles up to the panel the moment the pointer touches it and used to eat
+    // the one-shot listener, stranding the drawer at "closing" with the overlay
+    // still covering the page. See `whenExitDone`. [W2-1]
+    cancelExitWait = whenExitDone(panel, "transform", onEnd);
   }
 
   function toggle() {
@@ -131,6 +127,8 @@ export function createDrawer(root) {
         el.removeEventListener("click", onTriggerClick)
       );
     }
+    cancelExitWait?.();
+    cancelExitWait = null;
     if (focusCleanup) focusCleanup();
     unlockScroll();
     delete root._faqirDrawer;

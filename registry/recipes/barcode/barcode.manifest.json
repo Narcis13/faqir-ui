@@ -26,7 +26,11 @@
   },
   "variants": {
     "size": {
-      "values": ["sm", "md", "lg"],
+      "values": [
+        "sm",
+        "md",
+        "lg"
+      ],
       "default": "md",
       "attr": "data-size",
       "applied_to": "root"
@@ -42,6 +46,22 @@
     "error": {
       "attr": "data-state=\"error\""
     }
+  },
+  "api": {
+    "methods": [
+      {
+        "name": "render",
+        "params": ""
+      },
+      {
+        "name": "update",
+        "params": "newValue"
+      },
+      {
+        "name": "destroy",
+        "params": ""
+      }
+    ]
   },
   "props": {
     "value": {
@@ -89,7 +109,9 @@
   ],
   "composition": {
     "contains": [],
-    "used_in": ["document"]
+    "used_in": [
+      "document"
+    ]
   },
   "files": {
     "html": "barcode.html",

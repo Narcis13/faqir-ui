@@ -5,7 +5,6 @@
   "kind": "recipe",
   "category": "forms",
   "description": "Autocomplete input with filtered dropdown list for type-ahead search",
-
   "changes": [
     {
       "version": "1.1.0",
@@ -13,13 +12,11 @@
       "breaking": false
     }
   ],
-
   "anatomy": {
     "tag": "div",
     "selector": "[data-ui='combobox']",
     "content_model": "slots"
   },
-
   "slots": {
     "input": {
       "selector": "[data-part='input']",
@@ -46,19 +43,26 @@
       "description": "Empty state message shown when no options match the filter"
     }
   },
-
   "variants": {
     "size": {
-      "values": ["sm", "md", "lg"],
+      "values": [
+        "sm",
+        "md",
+        "lg"
+      ],
       "default": "md",
       "attr": "data-size",
       "applied_to": "root"
     }
   },
-
   "states": {
-    "closed": { "attr": "data-state=\"closed\"", "default": true },
-    "open": { "attr": "data-state=\"open\"" },
+    "closed": {
+      "attr": "data-state=\"closed\"",
+      "default": true
+    },
+    "open": {
+      "attr": "data-state=\"open\""
+    },
     "highlighted": {
       "attr": "data-highlighted",
       "applied_to": "option",
@@ -69,14 +73,54 @@
       "applied_to": "option",
       "description": "An option filtered out by the current query. The controller writes it; hidden options are skipped by keyboard navigation and by the empty-state check"
     },
-    "loading": { "attr": "data-state=\"loading\"" }
+    "loading": {
+      "attr": "data-state=\"loading\""
+    }
   },
-
+  "api": {
+    "methods": [
+      {
+        "name": "open",
+        "params": ""
+      },
+      {
+        "name": "close",
+        "params": ""
+      },
+      {
+        "name": "filter",
+        "params": "query"
+      },
+      {
+        "name": "selectOption",
+        "params": "index"
+      },
+      {
+        "name": "getValue",
+        "params": ""
+      },
+      {
+        "name": "setValue",
+        "params": "val"
+      },
+      {
+        "name": "destroy",
+        "params": ""
+      }
+    ]
+  },
   "props": {
-    "placeholder": { "type": "string", "default": "", "description": "Input placeholder text" },
-    "value": { "type": "string", "default": "", "description": "Selected value" }
+    "placeholder": {
+      "type": "string",
+      "default": "",
+      "description": "Input placeholder text"
+    },
+    "value": {
+      "type": "string",
+      "default": "",
+      "description": "Selected value"
+    }
   },
-
   "a11y": {
     "required_attrs": [
       "role=\"combobox\" on input",
@@ -96,22 +140,28 @@
       "End": "highlight last option"
     }
   },
-
   "tokens_used": [
-    "color-bg", "color-fg", "color-fg-muted", "color-border",
-    "color-primary-subtle", "color-ring",
-    "radius-md", "radius-lg",
+    "color-bg",
+    "color-fg",
+    "color-fg-muted",
+    "color-border",
+    "color-primary-subtle",
+    "color-ring",
+    "radius-md",
+    "radius-lg",
     "shadow-md",
-    "space-1", "space-2", "space-3",
-    "text-sm", "text-base",
+    "space-1",
+    "space-2",
+    "space-3",
+    "text-sm",
+    "text-base",
     "z-dropdown",
-    "duration-fast", "ease-default"
+    "duration-fast",
+    "ease-default"
   ],
-
   "templates": {
     "html": "<div data-ui=\"combobox\" data-state=\"closed\" data-size=\"{size}\">\n  <input data-part=\"input\" type=\"text\" role=\"combobox\" aria-expanded=\"false\" aria-autocomplete=\"list\" aria-controls=\"{id}-listbox\" placeholder=\"{placeholder}\">\n  <ul data-part=\"listbox\" role=\"listbox\" id=\"{id}-listbox\" hidden>\n    <li data-part=\"option\" role=\"option\" aria-selected=\"false\">{option1}</li>\n    <li data-part=\"option\" role=\"option\" aria-selected=\"false\">{option2}</li>\n    <li data-part=\"empty\" hidden>No results found</li>\n  </ul>\n</div>"
   },
-
   "safe_transforms": [
     "add-option",
     "remove-option",
@@ -120,7 +170,6 @@
     "restyle-listbox-background",
     "customize-empty-message"
   ],
-
   "unsafe_transforms": [
     "remove-combobox-role",
     "remove-listbox-role",
@@ -129,19 +178,18 @@
     "remove-aria-autocomplete",
     "remove-keyboard-navigation"
   ],
-
   "composition": {
     "contains": [],
-    "used_in": ["search-results"]
+    "used_in": [
+      "search-results"
+    ]
   },
-
   "files": {
     "html": "combobox.html",
     "css": "combobox.css",
     "js": "combobox.js",
     "manifest": "combobox.manifest.json"
   },
-
   "tests": [
     "opens-on-input-focus",
     "closes-on-escape",

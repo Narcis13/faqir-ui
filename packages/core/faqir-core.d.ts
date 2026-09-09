@@ -89,14 +89,20 @@ export interface Magics {
   /** `data-variant` of that same `[data-ui]`, writable and observed alike. */
   $variant: string | undefined;
   /**
-   * The controller API of that same `[data-ui]`, or `null` when it has none.
+   * The controller API of that same `[data-ui]` — and a lookup for any other.
+   *
+   * `$ui.open()` reaches the controller of the component this expression sits
+   * inside. `$ui('#detail-drawer').open()` reaches another component's, named by
+   * a CSS selector, and returns `null` when nothing matches or the match has no
+   * controller — so `$ui('#maybe')?.open()` is the safe form. [W2-6]
    *
    * Only `destroy()` is universal — the rest of the surface differs per
-   * component, and the engine returns whatever the controller returned. Cast
-   * to the component's entry in {@link ControllerApis} to reach the rest:
-   * `($ui as Faqir.ControllerApis["dialog"]).open()`.
+   * component, and the engine returns whatever the controller returned. Cast to
+   * the component's entry in {@link ControllerApis} to reach the rest:
+   * `($ui as unknown as Faqir.ControllerApis["dialog"]).open()`, or
+   * `$ui('#d') as Faqir.ControllerApis["dialog"] | null`.
    */
-  readonly $ui: ControllerApi | null;
+  readonly $ui: UiHandle;
   /** Fires a bubbling, composed `CustomEvent` from the scope root. */
   readonly $dispatch: (event: string, detail?: unknown) => boolean;
   /** Queues `fn` as a microtask, after the effects a mutation queued flush. */
@@ -251,6 +257,23 @@ export interface SourceController<T = Record<string, unknown>> {
  */
 export interface ControllerApi {
   destroy(): void;
+}
+
+/**
+ * What `$ui` is: the local controller's surface, and a function that resolves
+ * another component's. [W2-6]
+ *
+ * Callable because the scope root was the only component an expression could
+ * ever reach, which left "open that drawer from this table row" — the most
+ * common admin interaction there is — with no expression that could say it.
+ */
+export interface UiHandle extends Partial<ControllerApi> {
+  /** The controller of the component matching `selector`, or `null`. */
+  (selector: string): ControllerApi | null;
+  /** The controller of the component at (or enclosing) `element`, or `null`. */
+  (element: Element): ControllerApi | null;
+  /** Any other method the local controller exposes — cast to narrow it. */
+  [method: string]: unknown;
 }
 
 /**

@@ -9,6 +9,46 @@ description: Expert agent for the Faqir UI framework — generates, audits, repa
 
 Expert agent for the Faqir UI framework. Generate class-free HTML using data attributes, design tokens, and manifest contracts. Every component contract below is generated from its manifest.
 
+## Your First Page
+
+A Faqir page is ordinary HTML with two additions: one stylesheet and one script. Everything else in this document assumes they are present — without them the markup renders as unstyled HTML and no component opens, closes or reacts.
+
+```html
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My page</title>
+  <link rel="stylesheet" href="ui/faqir.bundle.css">
+</head>
+<body>
+  <main>
+    <button data-ui="button" data-variant="primary">Save</button>
+  </main>
+  <script src="ui/core/faqir-core.js" defer></script>
+</body>
+</html>
+```
+
+| Line | Why it is there |
+| --- | --- |
+| `data-theme` on `<html>` | Selects the theme's token set — `light` or `dark`. Omit it and the page follows the OS setting. |
+| `ui/faqir.bundle.css` | Tokens, base layer, and every installed component's stylesheet, written by `faqir init` and rewritten by every `faqir add`. |
+| `ui/core/faqir-core.js` | The engine: it boots every `[data-ui]` controller and binds every `l-*` directive on the page. `defer` so it runs after the DOM is parsed. |
+| `<main>` | The page's primary landmark. The `landmark` audit rule asks for one, and assistive tech and skip-to-content links rely on it. |
+
+**No build step?** The same two tags from a CDN, no project required:
+
+```html
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@faqir-ui/core@0.2.4/dist/faqir.default.css">
+<script src="https://cdn.jsdelivr.net/npm/@faqir-ui/core@0.2.4/dist/faqir-core.min.js" defer></script>
+```
+
+Add `integrity`/`crossorigin` for production — `packages/core/cdn.json` carries the SHA-384 for every published file, beside the version it was computed for.
+
+Check the page found both: `faqir audit` reports `controller-loaded` when a recipe's controller is missing, and an unstyled render means the stylesheet is not resolving.
+
 ## The Attribute Protocol
 
 Every Faqir component uses exactly five data attributes — this is the DOM contract.

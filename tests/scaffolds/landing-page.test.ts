@@ -104,9 +104,16 @@ describe("faqir scaffold landing-page", () => {
 
     // The old generator shipped a page-local <style> block and ad-hoc parts
     // ([data-part="hero"], [data-part="cta"]) that belonged to no component.
-    expect(html).not.toContain("<style");
-    expect(html).not.toContain("<script");
-    expect(html).not.toMatch(/\sstyle\s*=/);
+    //
+    // Measured on the markup, not on the file: the guide comment SPELLS the
+    // engine's script tag, because "then include faqir-core.js" without the tag
+    // was the shape of the gap W2-5 closes — a reader told a thing is needed and
+    // not told what it is. A tag inside a comment is prose; what this asserts is
+    // that the page executes nothing.
+    const markup = html.replace(/<!--[\s\S]*?-->/g, "");
+    expect(markup).not.toContain("<style");
+    expect(markup).not.toContain("<script");
+    expect(markup).not.toMatch(/\sstyle\s*=/);
 
     // Every data-ui on the page comes from a pattern or a declared primitive.
     const allowed = new Set<string>([...LANDING_PATTERNS, ...LANDING_COMPONENTS]);

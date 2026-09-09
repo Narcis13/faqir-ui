@@ -356,6 +356,7 @@ describe("document rules · inventory & JSON", () => {
       files_scanned: 1,
       components_found: 0,
       counts: { critical: 0, error: 1, warning: 0, info: 0 },
+      vendor_counts: { critical: 0, error: 0, warning: 0, info: 0 },
       passed: false,
     };
 

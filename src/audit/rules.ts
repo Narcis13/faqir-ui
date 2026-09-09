@@ -9,6 +9,7 @@ import { suggestClosest } from "../utils/suggest";
 import { CONTRAST_TOKENS_RULE, SURFACE_ELEVATION_RULE } from "./contrast-tokens";
 import { CSS_RULES } from "./css-rules";
 import { fieldWiringRule } from "./field-wiring";
+import { VOCABULARY_RULES } from "./vocabulary";
 
 export type Severity = "critical" | "error" | "warning" | "info";
 
@@ -2082,6 +2083,9 @@ export function getHtmlRuleInventory(): RuleInfo[] {
       applies_to: "whole document",
     })),
     UNKNOWN_COMPONENT_RULE,
+    // The silent-failure rules run on the same (source, manifests) pair the
+    // playground already has, so they belong to the browser inventory too.
+    ...VOCABULARY_RULES,
   ];
 }
 
@@ -2106,6 +2110,7 @@ export function getRuleInventory(): RuleInfo[] {
     ...fromManifestRules,
     ...fromDocumentRules,
     UNKNOWN_COMPONENT_RULE,
+    ...VOCABULARY_RULES,
     ...ANTIPATTERN_RULES,
     ...CSS_RULES,
     TRIGGER_CONTRACT_RULE,

@@ -390,6 +390,16 @@ export const SCHEMA_CHANGELOG: readonly SchemaChange[] = Object.freeze([
       "No field changed shape.",
     breaking: false,
   }),
+  Object.freeze({
+    version: "1.0",
+    task: "W2-4",
+    note:
+      "`api` — a component's controller surface, generated from the controller's `@ui:provides` " +
+      "annotation. Optional, so every 1.0 manifest still validates; additive under SPEC-1.0 §8. It " +
+      "exists because the data was already in every controller and on no surface an agent reads: " +
+      "`faqir explain <recipe> --json` returned no `api` for any of the 29 JS-backed recipes.",
+    breaking: false,
+  }),
 ]);
 
 // ---------------------------------------------------------------------------

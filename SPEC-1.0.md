@@ -454,6 +454,7 @@ Two cases the table does not cover, stated so nobody has to guess:
 | 0.5 | 0.5-07 | First published as a file: component and theme manifests in one document, `changes[]` changelog entries, an `$id`, and a resolvable `$schema` on every registry manifest. Before this the contract existed only as the validator in `src/manifest.ts`. | no |
 | 0.8 | 0.8-02 | `props` — the non-variant attributes — declared; `variants.<group>.responsive` added for the tier suffix grammar; `category` closed to a documented enum, which retired the `form` spelling in favour of `forms`. | yes |
 | 1.0 | 1.0-01 | Frozen. `schema_version` is `1.0`, `stability` and `amendment_policy` are declared in the file, this changelog is carried in it, and the schema is published at a versioned URL beside the spec. No field changed shape. | no |
+| 1.0 | W2-4 | `api` — a component's controller surface, generated from the controller's `@ui:provides` annotation. Optional, so every 1.0 manifest still validates; additive under SPEC-1.0 §8. It exists because the data was already in every controller and on no surface an agent reads: `faqir explain <recipe> --json` returned no `api` for any of the 29 JS-backed recipes. | no |
 
 One thing this table records rather than tidies away: the schema file has carried
 `schema_version: "1.0.0"` since its first commit, before there was a freeze to back

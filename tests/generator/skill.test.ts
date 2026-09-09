@@ -675,8 +675,15 @@ describe("shipped directive reference", () => {
   const REFERENCE = renderDirectivesReference(ENGINE, PLUGINS_DIR, SCHEMA_VERSION);
   const plugins = loadPluginMetadata(PLUGINS_DIR);
 
-  /** Every `l-…` name the engine source mentions, code and comments alike. */
-  const implemented = new Set([...ENGINE.matchAll(/l-[a-z][a-z-]*/g)].map((m) => m[0]));
+  /**
+   * Every `l-…` name the engine source mentions, code and comments alike.
+   *
+   * The word boundary is load-bearing: without it the scan reads `l-drawer` out
+   * of the middle of `#detail-drawer` in a prose comment and demands
+   * documentation for a directive that does not exist. A directive name is
+   * always a whole token — quoted, backticked, or standing alone.
+   */
+  const implemented = new Set([...ENGINE.matchAll(/\bl-[a-z][a-z-]*/g)].map((m) => m[0]));
   /** Every `$…` name it mentions. */
   const implementedMagics = new Set([...ENGINE.matchAll(/\$[a-zA-Z][a-zA-Z0-9]*/g)].map((m) => m[0]));
 

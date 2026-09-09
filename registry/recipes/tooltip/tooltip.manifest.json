@@ -5,13 +5,11 @@
   "kind": "recipe",
   "category": "overlay",
   "description": "Informational popup shown on hover or focus of trigger element",
-
   "anatomy": {
     "tag": "div",
     "selector": "[data-ui='tooltip']",
     "content_model": "slots"
   },
-
   "slots": {
     "trigger": {
       "selector": "[data-part='trigger']",
@@ -26,26 +24,56 @@
       "description": "Tooltip content with role=tooltip, linked via aria-describedby on trigger"
     }
   },
-
   "variants": {
     "position": {
-      "values": ["top", "bottom", "left", "right"],
+      "values": [
+        "top",
+        "bottom",
+        "left",
+        "right"
+      ],
       "default": "top",
       "attr": "data-variant",
       "applied_to": "root"
     }
   },
-
   "states": {
-    "hidden": { "attr": "data-state=\"hidden\"", "default": true },
-    "visible": { "attr": "data-state=\"visible\"" }
+    "hidden": {
+      "attr": "data-state=\"hidden\"",
+      "default": true
+    },
+    "visible": {
+      "attr": "data-state=\"visible\""
+    }
   },
-
+  "api": {
+    "methods": [
+      {
+        "name": "show",
+        "params": ""
+      },
+      {
+        "name": "hide",
+        "params": ""
+      },
+      {
+        "name": "destroy",
+        "params": ""
+      }
+    ]
+  },
   "props": {
-    "content": { "type": "string", "default": "", "description": "Tooltip text content" },
-    "delay": { "type": "number", "default": 200, "description": "Show delay in milliseconds" }
+    "content": {
+      "type": "string",
+      "default": "",
+      "description": "Tooltip text content"
+    },
+    "delay": {
+      "type": "number",
+      "default": 200,
+      "description": "Show delay in milliseconds"
+    }
   },
-
   "a11y": {
     "required_attrs": [
       "role=\"tooltip\" on content",
@@ -55,17 +83,20 @@
       "Escape": "hide tooltip"
     }
   },
-
   "tokens_used": [
-    "color-bg", "color-fg", "radius-md",
-    "space-1h", "space-2", "text-xs",
-    "z-dropdown", "duration-fast", "ease-default"
+    "color-bg",
+    "color-fg",
+    "radius-md",
+    "space-1h",
+    "space-2",
+    "text-xs",
+    "z-dropdown",
+    "duration-fast",
+    "ease-default"
   ],
-
   "templates": {
     "html": "<div data-ui=\"tooltip\" data-variant=\"{position}\" data-state=\"hidden\">\n  <button data-part=\"trigger\" aria-describedby=\"{id}-content\">{trigger_text}</button>\n  <div data-part=\"content\" id=\"{id}-content\" role=\"tooltip\" hidden>{tooltip_text}</div>\n</div>"
   },
-
   "safe_transforms": [
     "change-position",
     "restyle-tooltip-background",
@@ -73,26 +104,24 @@
     "adjust-delay",
     "customize-arrow"
   ],
-
   "unsafe_transforms": [
     "remove-role-tooltip",
     "remove-aria-describedby",
     "remove-escape-handler",
     "remove-focus-trigger"
   ],
-
   "composition": {
-    "contains": ["button"],
+    "contains": [
+      "button"
+    ],
     "used_in": []
   },
-
   "files": {
     "html": "tooltip.html",
     "css": "tooltip.css",
     "js": "tooltip.js",
     "manifest": "tooltip.manifest.json"
   },
-
   "tests": [
     "shows-on-trigger-mouseenter-after-delay",
     "hides-on-trigger-mouseleave-after-delay",

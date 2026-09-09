@@ -50,6 +50,35 @@ export interface ManifestProp {
   values?: string[];
 }
 
+/**
+ * One method a controller exposes — a row of {@link ManifestApi}. [W2-4]
+ *
+ * Generated, never authored: `scripts/build-manifest-api.mjs` reads the
+ * controller's `// @ui:provides` line for the names and its declarations for the
+ * shapes, so a method added to a controller reaches every doc surface at once.
+ */
+export interface ApiMethod {
+  /** Method name, exactly as `@ui:provides` lists it. */
+  name: string;
+  /** Parameter list as the controller writes it; empty for a nullary method. */
+  params: string;
+  /** First sentence of the method's JSDoc, when it has one. */
+  description?: string;
+}
+
+/**
+ * A component's controller surface — the methods `$ui` resolves to, and the
+ * object its recipe factory returns.
+ *
+ * Present only on a component that ships a controller. Optional, which SPEC-1.0
+ * §8 classifies as an additive amendment, so every manifest written against 1.0
+ * without it still validates.
+ */
+export interface ManifestApi {
+  /** Methods in the order `@ui:provides` declares them. */
+  methods: ApiMethod[];
+}
+
 export interface ManifestState {
   attr: string;
   default?: boolean;
@@ -145,6 +174,8 @@ export interface Manifest {
   /** Non-variant attributes — see {@link ManifestProp}. */
   props?: Record<string, ManifestProp>;
   states: Record<string, ManifestState>;
+  /** The controller's public surface — see {@link ManifestApi}. Generated. */
+  api?: ManifestApi;
   a11y: ManifestA11y;
   tokens_used: string[];
   templates: ManifestTemplates;

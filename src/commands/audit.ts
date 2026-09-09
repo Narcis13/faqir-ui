@@ -49,6 +49,8 @@ function summarize(results: AuditResult[], filesScanned: number, componentsFound
     files_scanned: filesScanned,
     components_found: componentsFound,
     counts,
+    // Nothing piped on stdin is vendor: the caller authored what it sent.
+    vendor_counts: { critical: 0, error: 0, warning: 0, info: 0 },
     passed: counts.critical === 0 && counts.error === 0,
   };
 }
@@ -98,6 +100,7 @@ export async function audit(args: string[]): Promise<void> {
       ["--stdin", "Audit HTML read from stdin — no project required"],
       ["--rules", "List the rule inventory instead of auditing"],
       ["--skip-rules <ids>", "Comma-separated rule IDs to skip"],
+      ["--strict", "Fail on findings in ui/ too — the framework's own installed files"],
       ["--fix", "Apply the deterministic fixes (same as `faqir repair`)"],
       ["--json", "Machine-readable output"],
     ]);
@@ -132,7 +135,12 @@ export async function audit(args: string[]): Promise<void> {
     return repair(args.filter(a => a !== "--fix"));
   }
 
-  const summary = await runAudit({ cwd, file, skipRules: parseSkipRules(args) });
+  const summary = await runAudit({
+    cwd,
+    file,
+    skipRules: parseSkipRules(args),
+    strict: args.includes("--strict"),
+  });
 
   if (jsonMode) {
     printAuditJSON(summary);

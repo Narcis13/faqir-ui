@@ -5,13 +5,11 @@
   "kind": "recipe",
   "category": "forms",
   "description": "Native file selection plus drag-and-drop, local accept/size validation, removable file list, and event-only app upload handoff",
-
   "anatomy": {
     "tag": "div",
     "selector": "[data-ui='file-upload']",
     "content_model": "slots"
   },
-
   "slots": {
     "dropzone": {
       "selector": "[data-part='dropzone']",
@@ -86,16 +84,51 @@
       "description": "Polite live region announcing rejection and removal results"
     }
   },
-
   "variants": {},
-
   "states": {
-    "idle": { "attr": "data-state=\"idle\"", "default": true, "applied_to": "root" },
-    "dragging": { "attr": "data-state=\"dragging\"", "transient": true, "applied_to": "root" },
-    "has-files": { "attr": "data-state=\"has-files\"", "applied_to": "root" },
-    "disabled": { "attr": "data-disabled", "applied_to": "root" }
+    "idle": {
+      "attr": "data-state=\"idle\"",
+      "default": true,
+      "applied_to": "root"
+    },
+    "dragging": {
+      "attr": "data-state=\"dragging\"",
+      "transient": true,
+      "applied_to": "root"
+    },
+    "has-files": {
+      "attr": "data-state=\"has-files\"",
+      "applied_to": "root"
+    },
+    "disabled": {
+      "attr": "data-disabled",
+      "applied_to": "root"
+    }
   },
-
+  "api": {
+    "methods": [
+      {
+        "name": "getFiles",
+        "params": ""
+      },
+      {
+        "name": "open",
+        "params": ""
+      },
+      {
+        "name": "remove",
+        "params": "target"
+      },
+      {
+        "name": "clear",
+        "params": ""
+      },
+      {
+        "name": "destroy",
+        "params": ""
+      }
+    ]
+  },
   "props": {
     "accept": {
       "type": "string",
@@ -116,7 +149,6 @@
       "description": "Native picker hint; the canonical multi-file recipe retains every accepted file from each batch"
     }
   },
-
   "a11y": {
     "required_attrs": [
       "type=\"file\" on input",
@@ -136,7 +168,6 @@
       "Rejections and removals are announced through the polite status live region."
     ]
   },
-
   "events": {
     "faqir:files": {
       "detail": "{ files: FileList, allFiles: FileList, source: 'drop'|'input' }",
@@ -151,28 +182,37 @@
       "description": "Fires after a remove button or remove() deletes one retained file; files is the remaining FileList."
     }
   },
-
-  "api": {
-    "getFiles": "() => FileList — snapshot of all retained accepted files",
-    "open": "() => void — activate the real file input unless disabled",
-    "remove": "(fileOrIndex) => boolean — remove one retained file and emit faqir:file-remove",
-    "clear": "() => boolean — remove every retained file through the same removal path unless disabled",
-    "destroy": "() => void — remove drag, input, and delegated remove listeners plus the private handle"
-  },
-
   "tokens_used": [
-    "color-bg", "color-bg-subtle", "color-fg", "color-fg-muted",
-    "color-border", "color-border-strong", "color-primary", "color-primary-subtle",
-    "color-ring", "color-destructive", "color-destructive-subtle",
-    "space-px", "space-1", "space-2", "space-3", "space-4", "space-8",
-    "radius-md", "radius-lg", "text-xs", "text-sm", "text-base",
-    "weight-semibold", "font-sans", "duration-fast", "ease-default"
+    "color-bg",
+    "color-bg-subtle",
+    "color-fg",
+    "color-fg-muted",
+    "color-border",
+    "color-border-strong",
+    "color-primary",
+    "color-primary-subtle",
+    "color-ring",
+    "color-destructive",
+    "color-destructive-subtle",
+    "space-px",
+    "space-1",
+    "space-2",
+    "space-3",
+    "space-4",
+    "space-8",
+    "radius-md",
+    "radius-lg",
+    "text-xs",
+    "text-sm",
+    "text-base",
+    "weight-semibold",
+    "font-sans",
+    "duration-fast",
+    "ease-default"
   ],
-
   "templates": {
     "html": "<div data-ui=\"file-upload\" data-state=\"idle\" data-max-size=\"{max_size}\">\n  <label data-part=\"dropzone\">\n    <input data-part=\"input\" type=\"file\" accept=\"{accept}\" multiple aria-describedby=\"{id}-help\">\n    <span data-part=\"prompt\">Choose files or drag them here</span>\n    <span data-part=\"description\" id=\"{id}-help\">Accepted file types and maximum size.</span>\n  </label>\n  <ul data-part=\"list\" aria-label=\"Selected files\">\n    <li data-part=\"empty\">No files selected</li>\n  </ul>\n  <span data-part=\"status\" role=\"status\" aria-live=\"polite\"></span>\n</div>"
   },
-
   "safe_transforms": [
     "change-accept-filter",
     "change-max-size",
@@ -182,7 +222,6 @@
     "restyle-dropzone-and-file-rows",
     "handle-documented-events-in-app-code"
   ],
-
   "unsafe_transforms": [
     "remove-real-file-input",
     "make-file-input-display-none-or-hidden",
@@ -193,19 +232,19 @@
     "perform-network-requests-in-controller",
     "upload-rejected-files"
   ],
-
   "composition": {
     "contains": [],
-    "used_in": ["attachment-form", "message-composer"]
+    "used_in": [
+      "attachment-form",
+      "message-composer"
+    ]
   },
-
   "files": {
     "html": "file-upload.html",
     "css": "file-upload.css",
     "js": "file-upload.js",
     "manifest": "file-upload.manifest.json"
   },
-
   "tests": [
     "drop-emits-filelist-payload",
     "dragover-and-dragleave-transition-root-state",

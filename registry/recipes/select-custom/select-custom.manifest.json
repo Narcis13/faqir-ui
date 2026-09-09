@@ -92,6 +92,34 @@
       "description": "An option filtered out by the search box. The controller writes it; hidden options are skipped by keyboard navigation and by the empty-state check"
     }
   },
+  "api": {
+    "methods": [
+      {
+        "name": "open",
+        "params": ""
+      },
+      {
+        "name": "close",
+        "params": ""
+      },
+      {
+        "name": "toggle",
+        "params": ""
+      },
+      {
+        "name": "select",
+        "params": "value"
+      },
+      {
+        "name": "getValue",
+        "params": ""
+      },
+      {
+        "name": "destroy",
+        "params": ""
+      }
+    ]
+  },
   "props": {
     "placeholder": {
       "type": "string",

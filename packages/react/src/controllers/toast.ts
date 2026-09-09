@@ -7,6 +7,7 @@
 // @ui:provides add dismiss dismissAll destroy
 
 import { uid } from "./_core-utils.js";
+import { whenExitDone } from "./_core-motion.js";
 
 export function createToastContainer(root) {
   // Prevent double-init
@@ -54,7 +55,6 @@ export function createToastContainer(root) {
     el.dataset.part = "toast";
     el.dataset.variant = tone;
     el.dataset.state = "entering";
-    el.dataset.toastId = id;
     el.setAttribute("role", "status");
     el.setAttribute("aria-live", "polite");
 
@@ -100,12 +100,23 @@ export function createToastContainer(root) {
       });
     });
 
-    // Wire up close button
+    register(el, id, { onAction, duration });
+
+    return id;
+  }
+
+  /**
+   * Bring one toast element under the controller: wire its close and action
+   * buttons, start its auto-dismiss timer, and record it so `dismiss` can find
+   * it. Shared by `add()` and by the adoption of authored toasts on init.
+   */
+  function register(el, id, { onAction = null, duration = 0 } = {}) {
+    el.dataset.toastId = id;
+
     const closeBtn = el.querySelector("[data-part='close']");
     const onCloseClick = () => dismiss(id);
     closeBtn?.addEventListener("click", onCloseClick);
 
-    // Wire up action button
     const actionBtn = el.querySelector("[data-part='action']");
     const onActionClick = () => {
       if (onAction) onAction();
@@ -115,7 +126,6 @@ export function createToastContainer(root) {
       actionBtn.addEventListener("click", onActionClick);
     }
 
-    // Auto-dismiss timer
     let timer = null;
     if (duration > 0) {
       timer = setTimeout(() => dismiss(id), duration);
@@ -151,26 +161,16 @@ export function createToastContainer(root) {
     const onEnd = () => {
       closeBtn?.removeEventListener("click", onCloseClick);
       if (actionBtn) actionBtn.removeEventListener("click", onActionClick);
-      el.removeEventListener("transitionend", onEnd);
       el.remove();
       toasts.delete(id);
     };
 
-    // Check if transitions are running
-    let hasTransition = false;
-    try {
-      const style = getComputedStyle(el);
-      const transDur = parseFloat(style.transitionDuration) || 0;
-      hasTransition = transDur > 0;
-    } catch {
-      // getComputedStyle may not be available in test environments
-    }
-
-    if (hasTransition) {
-      el.addEventListener("transitionend", onEnd, { once: true });
-    } else {
-      onEnd();
-    }
+    // The toast's own exit motion. Its close button and action button both
+    // transition `background` on hover, and those events bubble up to the toast
+    // element — a one-shot listener spent itself on the first of them and the
+    // toast was ripped out mid-slide, or (when no further event came) left in
+    // the stack forever. See `whenExitDone`. [W2-1]
+    entry.cancelExitWait = whenExitDone(el, null, onEnd);
   }
 
   /**
@@ -185,12 +185,25 @@ export function createToastContainer(root) {
     // Clear all toasts immediately without animation
     for (const [id, entry] of toasts) {
       if (entry.timer) clearTimeout(entry.timer);
+      if (entry.cancelExitWait) entry.cancelExitWait();
       entry.closeBtn?.removeEventListener("click", entry.onCloseClick);
       if (entry.actionBtn) entry.actionBtn.removeEventListener("click", entry.onActionClick);
       entry.el.remove();
     }
     toasts.clear();
     delete root._faqirToast;
+  }
+
+  // Adopt the toasts already in the markup.
+  //
+  // `add()` used to be the only way into the registry, so a toast written by
+  // hand — the reference page's own stack, the manifest template, anything an
+  // agent copies out of the docs — had a close button that was wired to
+  // nothing. It looked right, it was in the a11y tree, it did nothing at all
+  // when clicked, and nothing anywhere said so. [W2-1]
+  for (const el of root.querySelectorAll("[data-part='toast']")) {
+    if (el.dataset.toastId) continue;
+    register(el, uid("toast"));
   }
 
   const api = { add, dismiss, dismissAll, destroy };

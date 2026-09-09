@@ -84,6 +84,12 @@ jobs:
       # skill matches a fresh manifest-derived generation.
       - run: bun run check:schema-refs
       - run: bun run check:skill
+      # Controller-API drift gate (task W2-4): every recipe manifest's `api`
+      # block must match its controller's own `@ui:provides` line and function
+      # declarations. Nothing here is authored, so a method added to a controller
+      # and not regenerated fails here rather than reaching agents as a manifest
+      # that describes a surface the code no longer has.
+      - run: bun run check:manifest-api
       # Bindings drift gate (tasks 0.6-12/0.7-01, §11.1): the committed
       # @faqir-ui/vue and @faqir-ui/react components must byte-match a fresh
       # `faqir bindings <target>` regeneration.

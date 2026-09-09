@@ -64,7 +64,10 @@ describe("audit JSON schema shape", () => {
     const report = JSON.parse(stdout);
 
     // Snapshot of the schema *shape* — a change here is a schema change and must
-    // bump AUDIT_SCHEMA_VERSION (and the MCP tool / 1.0 freeze docs).
+    // bump AUDIT_SCHEMA_VERSION (and the MCP tool / 1.0 freeze docs). Note the
+    // version is NOT bumped for an added key: `vendor_counts` (W2-3) is
+    // additive, and AUDIT_SCHEMA_VERSION documents additive fields as
+    // non-breaking. A reader that ignores it reads exactly what it read before.
     expect(Object.keys(report).sort()).toEqual([
       "audit_schema_version",
       "components_found",
@@ -72,8 +75,10 @@ describe("audit JSON schema shape", () => {
       "files_scanned",
       "passed",
       "results",
+      "vendor_counts",
     ]);
     expect(Object.keys(report.counts).sort()).toEqual(["critical", "error", "info", "warning"]);
+    expect(Object.keys(report.vendor_counts).sort()).toEqual(["critical", "error", "info", "warning"]);
     expect(Object.keys(report.results[0]).sort()).toEqual([
       "component_name",
       "file",

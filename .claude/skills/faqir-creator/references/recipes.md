@@ -46,6 +46,19 @@ Expandable section panels with single or multiple expand modes
 | type | `single`, `multiple` | `single` | `data-variant` | root |
 | bordered | `true`, `false` | `false` | `data-bordered` | root |
 
+**Controller API**
+
+Reach it as `$ui.<method>()` from any expression inside this component, or as the object `createAccordion(root)` returns.
+
+| Method | What it does |
+| --- | --- |
+| `toggle(index)` | — |
+| `expand(index)` | — |
+| `collapse(index)` | — |
+| `expandAll()` | — |
+| `collapseAll()` | — |
+| `destroy()` | — |
+
 - **Safe transforms:** `add-item`, `remove-item`, `change-variant-type`, `toggle-bordered`, `restyle-trigger-background`, `change-icon`
 - **Unsafe (never do):** `remove-aria-expanded`, `remove-aria-controls`, `remove-region-role`, `remove-aria-labelledby`, `remove-keyboard-handler`
 - **A11y:** keys: Enter, Space
@@ -100,6 +113,17 @@ Interruptive confirmation dialog (role=alertdialog) for destructive or irreversi
 | size | `sm`, `md` | `sm` | `data-size` | panel |
 | tone | `default`, `destructive` | `destructive` | `data-variant` | panel |
 
+**Controller API**
+
+Reach it as `$ui.<method>()` from any expression inside this component, or as the object `createAlertDialog(root)` returns.
+
+| Method | What it does |
+| --- | --- |
+| `open()` | — |
+| `close()` | — |
+| `toggle()` | — |
+| `destroy()` | — |
+
 - **Safe transforms:** `change-variant-size`, `change-variant-tone`, `swap-close-animation`, `restyle-panel-background`, `customize-overlay-opacity`, `relabel-actions`, `toggle-confirm-required`
 - **Unsafe (never do):** `remove-focus-trap`, `change-panel-role`, `remove-aria-modal`, `remove-aria-labelledby`, `remove-aria-describedby`, `remove-confirm-action`, `enable-overlay-dismiss`, `remove-overlay`
 - **A11y:** role=alertdialog · aria-modal · focus-trap · escape-closes · return-focus→trigger · keys: Escape, Tab, Shift+Tab
@@ -128,6 +152,16 @@ Print-safe Code 128-B barcode generator for printable ASCII identifiers
 | Variant | Values | Default | Attribute | Applied to |
 |---------|--------|---------|-----------|------------|
 | size | `sm`, `md`, `lg` | `md` | `data-size` | root |
+
+**Controller API**
+
+Reach it as `$ui.<method>()` from any expression inside this component, or as the object `createBarcode(root)` returns.
+
+| Method | What it does |
+| --- | --- |
+| `render()` | — |
+| `update(newValue)` | — |
+| `destroy()` | — |
 
 - **Safe transforms:** `change-value`, `change-size`, `add-caption`, `remove-caption`
 - **Unsafe (never do):** `remove-aria-label`, `remove-role`, `encode-non-printable-or-non-ascii-input`
@@ -171,6 +205,23 @@ Standalone month-grid calendar with roving-tabindex keyboard navigation, min/max
 | Variant | Values | Default | Attribute | Applied to |
 |---------|--------|---------|-----------|------------|
 | size | `sm`, `md`, `lg` | `md` | `data-size` | root |
+
+**Controller API**
+
+Reach it as `$ui.<method>()` from any expression inside this component, or as the object `createCalendar(root)` returns.
+
+| Method | What it does |
+| --- | --- |
+| `getValue()` | — |
+| `setValue(value)` | Silent set — updates selection and view without emitting a change event. |
+| `clear()` | — |
+| `navigate(month, year)` | — |
+| `selectDate(date)` | — |
+| `focusDate(date)` | — |
+| `setMin(value)` | — |
+| `setMax(value)` | — |
+| `setDisabledDates(list)` | — |
+| `destroy()` | — |
 
 - **Safe transforms:** `change-size`, `restyle-selected-day`, `restyle-today-highlight`, `restyle-range-band`, `add-min-max-date`, `add-disabled-dates`, `change-first-day-of-week`
 - **Unsafe (never do):** `remove-grid-role`, `remove-day-aria-labels`, `remove-keyboard-navigation`, `remove-roving-tabindex`, `hand-author-day-cells`
@@ -219,6 +270,19 @@ Horizontally scrolling slide strip built on CSS scroll-snap, progressively enhan
 
 _No variants._
 
+**Controller API**
+
+Reach it as `$ui.<method>()` from any expression inside this component, or as the object `createCarousel(root)` returns.
+
+| Method | What it does |
+| --- | --- |
+| `next()` | — |
+| `prev()` | — |
+| `goTo(i)` | — |
+| `getIndex()` | — |
+| `getCount()` | — |
+| `destroy()` | — |
+
 - **Safe transforms:** `add-slide`, `remove-slide`, `add-loop`, `remove-loop`, `remove-dots`, `remove-controls`, `change-slide-content`, `restyle-slide-background`, `change-slide-size`
 - **Unsafe (never do):** `remove-scroll-snap-css`, `remove-viewport-overflow`, `remove-viewport-tabindex`, `unhide-controls-in-markup`, `aria-hidden-offscreen-slides`, `remove-aria-roledescription`, `add-autoplay`
 - **A11y:** keys: Tab, ArrowLeft/ArrowRight, Home/End, Enter/Space
@@ -256,6 +320,20 @@ Autocomplete input with filtered dropdown list for type-ahead search
 | Variant | Values | Default | Attribute | Applied to |
 |---------|--------|---------|-----------|------------|
 | size | `sm`, `md`, `lg` | `md` | `data-size` | root |
+
+**Controller API**
+
+Reach it as `$ui.<method>()` from any expression inside this component, or as the object `createCombobox(root)` returns.
+
+| Method | What it does |
+| --- | --- |
+| `open()` | — |
+| `close()` | — |
+| `filter(query)` | — |
+| `selectOption(index)` | — |
+| `getValue()` | — |
+| `setValue(val)` | — |
+| `destroy()` | — |
 
 - **Safe transforms:** `add-option`, `remove-option`, `change-size`, `change-placeholder`, `restyle-listbox-background`, `customize-empty-message`
 - **Unsafe (never do):** `remove-combobox-role`, `remove-listbox-role`, `remove-option-role`, `remove-aria-expanded`, `remove-aria-autocomplete`, `remove-keyboard-navigation`
@@ -312,6 +390,19 @@ Cmd+K style modal command interface with search and keyboard navigation
 |---------|--------|---------|-----------|------------|
 | size | `sm`, `md`, `lg` | `md` | `data-size` | panel |
 
+**Controller API**
+
+Reach it as `$ui.<method>()` from any expression inside this component, or as the object `createCommandPalette(root)` returns.
+
+| Method | What it does |
+| --- | --- |
+| `open()` | — |
+| `close()` | — |
+| `filter(query)` | — |
+| `selectItem(index)` | — |
+| `registerCommand(cmd)` | — |
+| `destroy()` | — |
+
 - **Safe transforms:** `add-command-item`, `remove-command-item`, `add-group`, `remove-group`, `change-panel-size`, `change-placeholder`, `restyle-panel-background`, `customize-empty-message`
 - **Unsafe (never do):** `remove-dialog-role`, `remove-aria-modal`, `remove-focus-trap`, `remove-escape-handler`, `remove-keyboard-navigation`, `remove-global-shortcut`
 - **A11y:** role=dialog · aria-modal · focus-trap · escape-closes · keys: Cmd+K / Ctrl+K, Escape, ArrowDown, ArrowUp, Enter, Home, End
@@ -348,6 +439,16 @@ Context menu opened at the pointer or from the keyboard with complete menu navig
 **Variants**
 
 _No variants._
+
+**Controller API**
+
+Reach it as `$ui.<method>()` from any expression inside this component, or as the object `createContextMenu(root)` returns.
+
+| Method | What it does |
+| --- | --- |
+| `open(x = 0, y = 0)` | — |
+| `close(options = {})` | — |
+| `destroy()` | — |
 
 - **Safe transforms:** `change-target-content`, `add-menu-item`, `remove-menu-item`, `add-separator`, `change-menu-label`, `restyle-menu-surface`
 - **Unsafe (never do):** `remove-target-tabindex`, `remove-target-button-role`, `remove-menu-role`, `remove-menu-accessible-name`, `remove-menuitem-role`, `remove-keyboard-navigation`, `remove-native-contextmenu-prevention`, `remove-outside-click-handler`
@@ -398,6 +499,20 @@ Date input with calendar dropdown for date selection — the month grid is the n
 |---------|--------|---------|-----------|------------|
 | size | `sm`, `md`, `lg` | `md` | `data-size` | root |
 
+**Controller API**
+
+Reach it as `$ui.<method>()` from any expression inside this component, or as the object `createDatePicker(root)` returns.
+
+| Method | What it does |
+| --- | --- |
+| `open()` | — |
+| `close()` | — |
+| `getValue()` | — |
+| `setValue(dateStr)` | — |
+| `navigate(month, year)` | — |
+| `selectDate(date)` | — |
+| `destroy()` | — |
+
 - **Safe transforms:** `change-size`, `customize-date-format`, `restyle-selected-day`, `restyle-today-highlight`, `add-min-max-date`, `change-first-day-of-week`
 - **Unsafe (never do):** `remove-aria-expanded`, `remove-grid-role`, `remove-day-aria-labels`, `remove-keyboard-navigation`, `remove-outside-click-handler`, `duplicate-grid-logic-outside-calendar-recipe`
 - **A11y:** keys: Escape, Enter/Space, ArrowLeft, ArrowRight, ArrowUp, ArrowDown, Home, End, PageUp, PageDown
@@ -446,6 +561,17 @@ Modal dialog with focus trap, escape-to-close, and overlay backdrop
 | size | `sm`, `md`, `lg`, `full` | `md` | `data-size` | panel |
 | tone | `default`, `danger` | `default` | `data-variant` | panel |
 
+**Controller API**
+
+Reach it as `$ui.<method>()` from any expression inside this component, or as the object `createDialog(root)` returns.
+
+| Method | What it does |
+| --- | --- |
+| `open()` | — |
+| `close()` | — |
+| `toggle()` | — |
+| `destroy()` | — |
+
 - **Safe transforms:** `change-variant-size`, `change-variant-tone`, `add-description-slot`, `swap-close-animation`, `restyle-panel-background`, `add-form-to-body`, `customize-overlay-opacity`, `add-header-slot`, `modify-footer-buttons`
 - **Unsafe (never do):** `remove-focus-trap`, `remove-escape-handler`, `remove-aria-labelledby`, `remove-overlay`, `remove-close-button`, `change-panel-role`, `remove-aria-modal`
 - **A11y:** role=dialog · aria-modal · focus-trap · escape-closes · return-focus→trigger · keys: Escape, Tab, Shift+Tab
@@ -493,6 +619,17 @@ Side panel that slides in from screen edge with overlay backdrop
 | side | `left`, `right` | `left` | `data-variant` | panel |
 | size | `sm`, `md`, `lg`, `full` | `md` | `data-size` | panel |
 
+**Controller API**
+
+Reach it as `$ui.<method>()` from any expression inside this component, or as the object `createDrawer(root)` returns.
+
+| Method | What it does |
+| --- | --- |
+| `open()` | — |
+| `close()` | — |
+| `toggle()` | — |
+| `destroy()` | — |
+
 - **Safe transforms:** `change-variant-side`, `change-variant-size`, `restyle-panel-background`, `add-form-to-body`, `customize-overlay-opacity`, `modify-footer-buttons`, `swap-slide-animation`
 - **Unsafe (never do):** `remove-focus-trap`, `remove-escape-handler`, `remove-aria-labelledby`, `remove-overlay`, `remove-close-button`, `change-panel-role`, `remove-aria-modal`
 - **A11y:** role=dialog · aria-modal · focus-trap · escape-closes · return-focus→trigger · keys: Escape, Tab, Shift+Tab
@@ -532,6 +669,17 @@ Dropdown menu with keyboard navigation and click-outside-to-close
 |---------|--------|---------|-----------|------------|
 | align | `start`, `end` | `start` | `data-variant` | menu |
 | size | `sm`, `md`, `lg` | `md` | `data-size` | root |
+
+**Controller API**
+
+Reach it as `$ui.<method>()` from any expression inside this component, or as the object `createDropdown(root)` returns.
+
+| Method | What it does |
+| --- | --- |
+| `open(options = {})` | — |
+| `close(options = {})` | — |
+| `toggle()` | — |
+| `destroy()` | — |
 
 - **Safe transforms:** `add-menu-item`, `remove-menu-item`, `add-separator`, `change-alignment`, `change-size`, `restyle-menu-background`
 - **Unsafe (never do):** `remove-menu-role`, `remove-menuitem-role`, `remove-aria-expanded`, `remove-keyboard-navigation`, `remove-click-outside-handler`
@@ -580,6 +728,18 @@ Native file selection plus drag-and-drop, local accept/size validation, removabl
 
 _No variants._
 
+**Controller API**
+
+Reach it as `$ui.<method>()` from any expression inside this component, or as the object `createFileUpload(root)` returns.
+
+| Method | What it does |
+| --- | --- |
+| `getFiles()` | — |
+| `open()` | — |
+| `remove(target)` | — |
+| `clear()` | — |
+| `destroy()` | — |
+
 - **Safe transforms:** `change-accept-filter`, `change-max-size`, `toggle-multiple`, `change-prompt-and-description`, `relabel-file-list`, `restyle-dropzone-and-file-rows`, `handle-documented-events-in-app-code`
 - **Unsafe (never do):** `remove-real-file-input`, `make-file-input-display-none-or-hidden`, `replace-native-label-activation-with-drag-only-ui`, `remove-input-description-relationship`, `remove-status-live-region`, `remove-per-file-remove-buttons`, `perform-network-requests-in-controller`, `upload-rejected-files`
 - **A11y:** keys: Tab, Enter, Space, Tab on remove, Enter or Space on remove
@@ -620,6 +780,18 @@ Segmented one-time-code input — N visual segments over a single hidden real in
 |---------|--------|---------|-----------|------------|
 | size | `sm`, `md`, `lg` | `md` | `data-size` | root |
 | mode | `numeric`, `alphanumeric` | `numeric` | `data-mode` | root |
+
+**Controller API**
+
+Reach it as `$ui.<method>()` from any expression inside this component, or as the object `createInputOtp(root)` returns.
+
+| Method | What it does |
+| --- | --- |
+| `getValue()` | — |
+| `setValue(str)` | Programmatic set — silent (does not fire change/complete). |
+| `clear()` | — |
+| `focus()` | — |
+| `destroy()` | — |
 
 - **Safe transforms:** `change-length`, `change-mode`, `change-initial-value`, `add-or-change-l-mask-pattern`, `change-size`, `toggle-disabled`, `relabel-input`, `restyle-segment`
 - **Unsafe (never do):** `remove-real-input`, `split-into-per-segment-inputs`, `remove-autocomplete-one-time-code`, `remove-input-accessible-name`, `make-segments-focusable`, `remove-aria-hidden-from-segments`
@@ -670,6 +842,16 @@ Horizontal application menubar with roving focus and keyboard-operated submenus
 |---------|--------|---------|-----------|------------|
 | size | `sm`, `md`, `lg` | `md` | `data-size` | root |
 
+**Controller API**
+
+Reach it as `$ui.<method>()` from any expression inside this component, or as the object `createMenubar(root)` returns.
+
+| Method | What it does |
+| --- | --- |
+| `open(index = 0, focus = "first")` | — |
+| `close(restoreFocus = true)` | — |
+| `destroy()` | — |
+
 - **Safe transforms:** `add-top-level-menu`, `add-submenu-item`, `add-separator`, `change-size`, `change-accessible-label`, `restyle-menu-surfaces`
 - **Unsafe (never do):** `remove-menubar-role`, `remove-menu-or-menuitem-roles`, `remove-aria-expanded-or-aria-controls`, `make-submenu-items-page-tab-stops`, `remove-roving-tabindex`, `remove-keyboard-navigation`
 - **A11y:** role=menubar · keys: ArrowRight, ArrowLeft, ArrowDown, ArrowUp, Home, End, Enter, Space, Escape, Tab
@@ -701,7 +883,7 @@ Page navigation with numbered controls, previous/next, and ellipsis
 ├─ [data-part='nav']  <nav>  required  — Navigation container with role=navigation
 ├─ [data-part='prev']  <button>  required  — Previous page button
 ├─ [data-part='next']  <button>  required  — Next page button
-├─ [data-part='page']  <button>  required  — Individual page number button
+├─ [data-part='page']  <button>  required  — Individual page number button. Carries data-page="<n>" — the 1-based page it selects, which is how the controller derives the current page, the total, and what a click means. A page button without it is inert.
 └─ [data-part='ellipsis']  <span>  optional  — Ellipsis indicator for skipped pages
 ```
 
@@ -710,6 +892,18 @@ Page navigation with numbered controls, previous/next, and ellipsis
 | Variant | Values | Default | Attribute | Applied to |
 |---------|--------|---------|-----------|------------|
 | size | `sm`, `md`, `lg` | `md` | `data-size` | root |
+
+**Controller API**
+
+Reach it as `$ui.<method>()` from any expression inside this component, or as the object `createPagination(root)` returns.
+
+| Method | What it does |
+| --- | --- |
+| `setPage(n)` | — |
+| `getPage()` | — |
+| `setTotal(n)` | — |
+| `render(current, total)` | — |
+| `destroy()` | — |
 
 - **Safe transforms:** `change-size`, `add-page-buttons`, `remove-ellipsis`, `restyle-active-page`, `change-prev-next-text`
 - **Unsafe (never do):** `remove-navigation-role`, `remove-aria-current`, `remove-aria-labels`, `remove-disabled-state`
@@ -748,6 +942,17 @@ Content popup anchored to a trigger element with click toggle
 | position | `top`, `bottom`, `left`, `right` | `bottom` | `data-variant` | content |
 | align | `start`, `center`, `end` | `start` | `data-align` | content |
 
+**Controller API**
+
+Reach it as `$ui.<method>()` from any expression inside this component, or as the object `createPopover(root)` returns.
+
+| Method | What it does |
+| --- | --- |
+| `open()` | — |
+| `close()` | — |
+| `toggle()` | — |
+| `destroy()` | — |
+
 - **Safe transforms:** `change-position`, `change-alignment`, `restyle-content-background`, `add-content`, `remove-close-button`, `customize-arrow`
 - **Unsafe (never do):** `remove-aria-expanded`, `remove-aria-haspopup`, `remove-click-outside-handler`, `remove-escape-handler`
 - **A11y:** keys: Escape, Enter/Space
@@ -777,6 +982,16 @@ SVG QR code generator from text input with configurable size and error correctio
 |---------|--------|---------|-----------|------------|
 | size | `sm`, `md`, `lg` | `md` | `data-size` | root |
 | ecl | `L`, `M`, `Q`, `H` | `M` | `data-ecl` | root |
+
+**Controller API**
+
+Reach it as `$ui.<method>()` from any expression inside this component, or as the object `createQrCode(root)` returns.
+
+| Method | What it does |
+| --- | --- |
+| `render()` | — |
+| `update(newValue, newEcl)` | — |
+| `destroy()` | — |
 
 - **Safe transforms:** `change-value`, `change-size`, `change-ecl`, `add-caption`, `remove-caption`
 - **Unsafe (never do):** `remove-aria-label`, `remove-role`
@@ -819,6 +1034,19 @@ Custom styled select dropdown with search filtering and keyboard navigation
 | Variant | Values | Default | Attribute | Applied to |
 |---------|--------|---------|-----------|------------|
 | size | `sm`, `md`, `lg` | `md` | `data-size` | root |
+
+**Controller API**
+
+Reach it as `$ui.<method>()` from any expression inside this component, or as the object `createSelectCustom(root)` returns.
+
+| Method | What it does |
+| --- | --- |
+| `open()` | — |
+| `close()` | — |
+| `toggle()` | — |
+| `select(value)` | — |
+| `getValue()` | — |
+| `destroy()` | — |
 
 - **Safe transforms:** `add-option`, `remove-option`, `add-search`, `remove-search`, `change-size`, `change-placeholder`, `restyle-listbox-background`, `customize-empty-message`
 - **Unsafe (never do):** `remove-combobox-role`, `remove-listbox-role`, `remove-option-role`, `remove-aria-expanded`, `remove-aria-haspopup`, `remove-keyboard-navigation`, `remove-click-outside-handler`
@@ -864,6 +1092,17 @@ Mobile-friendly bottom or side sheet that slides in from screen edge
 |---------|--------|---------|-----------|------------|
 | side | `bottom`, `top`, `left`, `right` | `bottom` | `data-variant` | panel |
 | size | `sm`, `md`, `lg` | `md` | `data-size` | panel |
+
+**Controller API**
+
+Reach it as `$ui.<method>()` from any expression inside this component, or as the object `createSheet(root)` returns.
+
+| Method | What it does |
+| --- | --- |
+| `open()` | — |
+| `close()` | — |
+| `toggle()` | — |
+| `destroy()` | — |
 
 - **Safe transforms:** `change-variant-side`, `change-variant-size`, `restyle-panel-background`, `add-content-to-body`, `customize-overlay-opacity`, `modify-border-radius`, `swap-slide-animation`
 - **Unsafe (never do):** `remove-focus-trap`, `remove-escape-handler`, `remove-aria-labelledby`, `remove-overlay`, `remove-close-button`, `change-panel-role`, `remove-aria-modal`
@@ -914,6 +1153,21 @@ Collapsible application sidebar with three modes — expanded, rail (icons only)
 
 _No variants._
 
+**Controller API**
+
+Reach it as `$ui.<method>()` from any expression inside this component, or as the object `createSidebar(root)` returns.
+
+| Method | What it does |
+| --- | --- |
+| `toggle()` | — |
+| `expand()` | — |
+| `collapse()` | — |
+| `open()` | — |
+| `close()` | — |
+| `isMobile()` | — |
+| `getState()` | — |
+| `destroy()` | — |
+
 - **Safe transforms:** `change-initial-state`, `change-breakpoint`, `add-nav-item`, `reorder-nav-items`, `set-active-item`, `add-footer-block`, `restyle-panel-background`, `change-sidebar-width`, `swap-brand`
 - **Unsafe (never do):** `remove-panel`, `remove-focus-trap`, `remove-escape-handler`, `remove-overlay`, `remove-trigger-aria-expanded`, `remove-panel-aria-label`, `invent-new-data-state-value`
 - **A11y:** role=navigation · focus-trap · escape-closes · return-focus→trigger · keys: Enter/Space, Escape, Tab, Shift+Tab
@@ -951,6 +1205,18 @@ Draggable range input with single-thumb and two-thumb (range) modes, full keyboa
 |---------|--------|---------|-----------|------------|
 | type | `single`, `range` | `single` | `data-variant` | root |
 | size | `sm`, `md`, `lg` | `md` | `data-size` | root |
+
+**Controller API**
+
+Reach it as `$ui.<method>()` from any expression inside this component, or as the object `createSlider(root)` returns.
+
+| Method | What it does |
+| --- | --- |
+| `setValue(index, value)` | — |
+| `getValue()` | — |
+| `getValues()` | — |
+| `setFormatter(fn)` | — |
+| `destroy()` | — |
 
 - **Safe transforms:** `change-min-max-step`, `change-initial-value`, `add-value-suffix`, `toggle-output`, `change-size`, `single-to-range`, `toggle-disabled`, `restyle-thumb`, `restyle-track`
 - **Unsafe (never do):** `remove-role-slider`, `remove-aria-valuemin`, `remove-aria-valuemax`, `remove-aria-valuenow`, `remove-thumb-tabindex`, `remove-keyboard-handler`, `remove-track`
@@ -1016,6 +1282,44 @@ Advanced data table: multi-column type-aware sorting, global + per-column filter
 | variant | `default`, `striped`, `bordered` | `default` | `data-variant` | root |
 | size | `sm`, `md`, `lg` | `md` | `data-size` | root |
 
+**Controller API**
+
+Reach it as `$ui.<method>()` from any expression inside this component, or as the object `createTable(root)` returns.
+
+| Method | What it does |
+| --- | --- |
+| `sort(columnIndex, direction)` | Legacy API: sort one column with an explicit direction. |
+| `sortBy(specs)` | Multi-sort API: sortBy([{ column, direction }...]). |
+| `clearSort()` | — |
+| `selectRow(index)` | — |
+| `selectAll()` | — |
+| `deselectAll()` | — |
+| `getSelected()` | — |
+| `getSelectedData()` | — |
+| `setFilter(query)` | — |
+| `setColumnFilter(colIndex, query)` | — |
+| `clearFilters()` | — |
+| `toggleGroup(ghOrIndex, force)` | — |
+| `toggleRow(rowOrIndex, force)` | — |
+| `toggleDetail(rowOrIndex, force)` | Master/detail: show or hide a row's [data-part='detail-row'] via the hidden attribute. |
+| `expandAll()` | — |
+| `collapseAll()` | — |
+| `startEdit(a, b)` | — |
+| `commitEdit(focusBack)` | — |
+| `cancelEdit(focusBack)` | — |
+| `moveRow(from, to)` | — |
+| `moveColumn(from, to)` | — |
+| `hideColumn(i)` | — |
+| `showColumn(i)` | — |
+| `toggleColumn(i, force)` | — |
+| `setColumnWidth(i, width)` | — |
+| `exportCsv(o = {})` | — |
+| `getData(o = {})` | — |
+| `getState()` | — |
+| `setState(state)` | — |
+| `refresh()` | — |
+| `destroy()` | — |
+
 - **Safe transforms:** `add-column`, `remove-column`, `add-row`, `remove-row`, `change-size`, `toggle-striped`, `toggle-bordered`, `add-sortable`, `remove-sortable`, `restyle-header-background`, `add-footer-row`, `remove-footer-row`, `set-cell-alignment`, `set-cell-format`, `add-colspan`, `add-row-group`, `toggle-print-compact`, `add-filter-row`, `remove-filter-row`, `add-tree-levels`, `add-aggregate-cells`, `add-drag-handles`, `add-detail-rows`, `add-empty-state-row`, `toggle-multi-sort`, `toggle-editable`, `toggle-sticky-header`, `toggle-sticky-footer`, `pin-column`, `set-hide-below`, `set-persist-key`, `set-locale-currency`, `toggle-responsive-stack`
 - **Unsafe (never do):** `remove-table-semantics`, `remove-scope-col`, `remove-aria-sort`, `remove-checkbox-labels`, `remove-selection-checkboxes`, `remove-aria-level-from-tree-rows`, `remove-filter-input-labels`, `nest-detail-row-away-from-its-row`, `mix-tree-and-groupable-modes`, `put-data-level-on-group-headers`
 - **A11y:** keys: Click header / Enter / Space on focused header, Click checkbox, Shift+Click checkbox or row, Arrow keys / Home / End / PageUp / PageDown, Enter / F2 on a cell, Enter / Escape / Tab in the editor, Space on a row cell, Ctrl/Cmd+A, ArrowUp / ArrowDown on a drag handle, Alt+ArrowLeft/Right on a header, Ctrl+Shift+ArrowLeft/Right on a header
@@ -1054,6 +1358,15 @@ Accessible tabbed interface with keyboard navigation and panel switching
 | style | `underline`, `pill`, `enclosed` | `underline` | `data-variant` | root |
 | size | `sm`, `md`, `lg` | `md` | `data-size` | root |
 
+**Controller API**
+
+Reach it as `$ui.<method>()` from any expression inside this component, or as the object `createTabs(root)` returns.
+
+| Method | What it does |
+| --- | --- |
+| `activate(index)` | — |
+| `destroy()` | — |
+
 - **Safe transforms:** `add-tab`, `remove-tab`, `change-variant-style`, `change-size`, `restyle-tab-indicator`, `change-tab-content`
 - **Unsafe (never do):** `remove-tablist-role`, `remove-tab-role`, `remove-tabpanel-role`, `remove-aria-controls`, `remove-keyboard-navigation`
 - **A11y:** role=tablist · keys: ArrowLeft, ArrowRight, Home, End
@@ -1091,6 +1404,19 @@ Multi-value input composing the chip primitive and combobox listbox behaviour �
 
 _No variants._
 
+**Controller API**
+
+Reach it as `$ui.<method>()` from any expression inside this component, or as the object `createTagInput(root)` returns.
+
+| Method | What it does |
+| --- | --- |
+| `getValue()` | — |
+| `setValue(next)` | — |
+| `addTag(raw)` | — |
+| `removeTag(value)` | — |
+| `clear()` | — |
+| `destroy()` | — |
+
 - **Safe transforms:** `add-suggestion-option`, `remove-suggestion-option`, `change-placeholder`, `toggle-allow-duplicates`, `seed-initial-tags`, `restyle-listbox-background`
 - **Unsafe (never do):** `remove-taglist-role-group`, `remove-dismiss-aria-label`, `remove-combobox-role-when-suggestions-present`, `remove-keyboard-handling`
 - **A11y:** keys: Enter, Backspace, ArrowDown/ArrowUp, Escape
@@ -1125,6 +1451,17 @@ Auto-dismissing notification messages with stack management
 | tone | `default`, `success`, `error`, `warning` | `default` | `data-variant` | toast |
 | position | `top-right`, `top-left`, `bottom-right`, `bottom-left` | `top-right` | `data-variant` | container |
 
+**Controller API**
+
+Reach it as `$ui.<method>()` from any expression inside this component, or as the object `createToast(root)` returns.
+
+| Method | What it does |
+| --- | --- |
+| `add(options = {})` | Add a new toast to the container. |
+| `dismiss(id)` | Dismiss a toast by id with exit animation. |
+| `dismissAll()` | Dismiss all toasts. |
+| `destroy()` | — |
+
 - **Safe transforms:** `change-position`, `change-auto-dismiss-duration`, `restyle-toast-background`, `customize-tone-colors`, `add-progress-bar`, `change-max-width`, `modify-enter-exit-animations`
 - **Unsafe (never do):** `remove-role-region`, `remove-aria-label`, `remove-role-status`, `remove-aria-live`, `remove-close-button`, `remove-auto-dismiss`
 - **Required ARIA:** `role="region" on container`; `aria-label="Notifications" on container`; `role="status" on individual toasts`; `aria-live="polite" on individual toasts`; `aria-label on close button`
@@ -1157,6 +1494,17 @@ Single- or multi-select group of toggle buttons over native radio/checkbox contr
 |---------|--------|---------|-----------|------------|
 | mode | `single`, `multi` | `single` | `data-mode` | root |
 
+**Controller API**
+
+Reach it as `$ui.<method>()` from any expression inside this component, or as the object `createToggleGroup(root)` returns.
+
+| Method | What it does |
+| --- | --- |
+| `getValue()` | — |
+| `setValue(val)` | — |
+| `toggle(value)` | — |
+| `destroy()` | — |
+
 - **Safe transforms:** `add-item`, `remove-item`, `change-mode`, `change-label-text`, `add-disabled`, `remove-disabled`, `restyle-item-background`
 - **Unsafe (never do):** `remove-control-input`, `change-control-from-native-input`, `remove-role-radiogroup-or-group`, `remove-accessible-name`, `remove-keyboard-navigation`
 - **A11y:** keys: Tab, ArrowRight/ArrowDown, ArrowLeft/ArrowUp, Home/End, Space/Enter
@@ -1188,6 +1536,16 @@ Informational popup shown on hover or focus of trigger element
 | Variant | Values | Default | Attribute | Applied to |
 |---------|--------|---------|-----------|------------|
 | position | `top`, `bottom`, `left`, `right` | `top` | `data-variant` | root |
+
+**Controller API**
+
+Reach it as `$ui.<method>()` from any expression inside this component, or as the object `createTooltip(root)` returns.
+
+| Method | What it does |
+| --- | --- |
+| `show()` | — |
+| `hide()` | — |
+| `destroy()` | — |
 
 - **Safe transforms:** `change-position`, `restyle-tooltip-background`, `change-tooltip-text`, `adjust-delay`, `customize-arrow`
 - **Unsafe (never do):** `remove-role-tooltip`, `remove-aria-describedby`, `remove-escape-handler`, `remove-focus-trigger`
@@ -1226,6 +1584,20 @@ Single-select hierarchical tree with complete WAI keyboard navigation, explicit 
 **Variants**
 
 _No variants._
+
+**Controller API**
+
+Reach it as `$ui.<method>()` from any expression inside this component, or as the object `createTreeView(root)` returns.
+
+| Method | What it does |
+| --- | --- |
+| `select(target)` | — |
+| `expand(target)` | — |
+| `collapse(target)` | — |
+| `toggle(target)` | — |
+| `refresh()` | — |
+| `getSelected()` | — |
+| `destroy()` | — |
 
 - **Safe transforms:** `add-item`, `remove-item`, `reorder-keyed-items`, `add-nested-group`, `mark-item-disabled`, `mark-parent-lazy`, `change-tree-label`, `restyle-label-and-toggle`
 - **Unsafe (never do):** `remove-tree-role`, `remove-tree-accessible-name`, `remove-treeitem-role`, `place-children-outside-group`, `put-aria-expanded-on-leaf`, `remove-roving-tabindex`, `remove-positional-aria`, `remove-keyboard-navigation`, `allow-multiple-selected-items`

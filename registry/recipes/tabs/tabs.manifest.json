@@ -5,13 +5,11 @@
   "kind": "recipe",
   "category": "navigation",
   "description": "Accessible tabbed interface with keyboard navigation and panel switching",
-
   "anatomy": {
     "tag": "div",
     "selector": "[data-ui='tabs']",
     "content_model": "slots"
   },
-
   "slots": {
     "list": {
       "selector": "[data-part='list']",
@@ -32,30 +30,53 @@
       "description": "Tab content panel with role=tabpanel"
     }
   },
-
   "variants": {
     "style": {
-      "values": ["underline", "pill", "enclosed"],
+      "values": [
+        "underline",
+        "pill",
+        "enclosed"
+      ],
       "default": "underline",
       "attr": "data-variant",
       "applied_to": "root"
     },
     "size": {
-      "values": ["sm", "md", "lg"],
+      "values": [
+        "sm",
+        "md",
+        "lg"
+      ],
       "default": "md",
       "attr": "data-size",
       "applied_to": "root"
     }
   },
-
   "states": {
-    "default": { "attr": "data-state=\"default\"", "default": true }
+    "default": {
+      "attr": "data-state=\"default\"",
+      "default": true
+    }
   },
-
+  "api": {
+    "methods": [
+      {
+        "name": "activate",
+        "params": "index"
+      },
+      {
+        "name": "destroy",
+        "params": ""
+      }
+    ]
+  },
   "props": {
-    "activeTab": { "type": "number", "default": 0, "description": "Index of the initially active tab" }
+    "activeTab": {
+      "type": "number",
+      "default": 0,
+      "description": "Index of the initially active tab"
+    }
   },
-
   "a11y": {
     "role": "tablist",
     "required_attrs": [
@@ -73,20 +94,28 @@
       "End": "activate last tab"
     }
   },
-
   "tokens_used": [
-    "color-bg", "color-fg", "color-fg-muted", "color-border",
-    "color-primary", "color-primary-subtle",
-    "space-1", "space-2", "space-3", "space-4",
-    "radius-md", "radius-lg",
-    "text-sm", "text-base", "weight-medium",
-    "duration-fast", "ease-default"
+    "color-bg",
+    "color-fg",
+    "color-fg-muted",
+    "color-border",
+    "color-primary",
+    "color-primary-subtle",
+    "space-1",
+    "space-2",
+    "space-3",
+    "space-4",
+    "radius-md",
+    "radius-lg",
+    "text-sm",
+    "text-base",
+    "weight-medium",
+    "duration-fast",
+    "ease-default"
   ],
-
   "templates": {
     "html": "<div data-ui=\"tabs\" data-variant=\"{variant}\">\n  <div data-part=\"list\" role=\"tablist\">\n    <button data-part=\"trigger\" role=\"tab\" id=\"{id}-tab-1\" aria-controls=\"{id}-panel-1\" aria-selected=\"true\">{tab1}</button>\n    <button data-part=\"trigger\" role=\"tab\" id=\"{id}-tab-2\" aria-controls=\"{id}-panel-2\" aria-selected=\"false\" tabindex=\"-1\">{tab2}</button>\n  </div>\n  <div data-part=\"panel\" role=\"tabpanel\" id=\"{id}-panel-1\" aria-labelledby=\"{id}-tab-1\">{content1}</div>\n  <div data-part=\"panel\" role=\"tabpanel\" id=\"{id}-panel-2\" aria-labelledby=\"{id}-tab-2\" hidden>{content2}</div>\n</div>"
   },
-
   "safe_transforms": [
     "add-tab",
     "remove-tab",
@@ -95,7 +124,6 @@
     "restyle-tab-indicator",
     "change-tab-content"
   ],
-
   "unsafe_transforms": [
     "remove-tablist-role",
     "remove-tab-role",
@@ -103,19 +131,18 @@
     "remove-aria-controls",
     "remove-keyboard-navigation"
   ],
-
   "composition": {
     "contains": [],
-    "used_in": ["settings-page"]
+    "used_in": [
+      "settings-page"
+    ]
   },
-
   "files": {
     "html": "tabs.html",
     "css": "tabs.css",
     "js": "tabs.js",
     "manifest": "tabs.manifest.json"
   },
-
   "tests": [
     "first-tab-is-selected-by-default",
     "clicking-tab-shows-its-panel",

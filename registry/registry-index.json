@@ -823,7 +823,7 @@
       "files": [
         {
           "path": "switch.css",
-          "sha256": "cc72646364645d62fafcd10019f0361757038e54db88717df4ffb2728699cc44"
+          "sha256": "b31f59773692e5c742d848813be0566207e1f867d1cea7620b7e4694bc6299b7"
         },
         {
           "path": "switch.html",
@@ -831,10 +831,10 @@
         },
         {
           "path": "switch.manifest.json",
-          "sha256": "6110bdb977bea84c6b3de8556df7cbe5c48e3b81d5adfb466069fdacf616d039"
+          "sha256": "b28847c51a0743cfe41ceb1cc9f81ed9b8890b3a0efcbee65899813e773d73f1"
         }
       ],
-      "hash": "96509ff6498d397220697b8a01c1a66bd3cd1813e414692d380965e2e5964622",
+      "hash": "5d62535c3acb72c665a5d83492d7ec5d5d0ba952031f0555a935218a48d513ce",
       "deps": []
     },
     {
@@ -967,10 +967,10 @@
         },
         {
           "path": "accordion.manifest.json",
-          "sha256": "4d50ded0e6098cba5327d376a5a159c682e1f23c20c869b39e5f59c4c3fd06da"
+          "sha256": "cf094a6448af37877d2a215f51be768561049d172babaa8f878bee4772d7f583"
         }
       ],
-      "hash": "700c800a97b43f354234ce00eb8fd3d2632c01fddf44fbf86b5bbc704a6e0bc1",
+      "hash": "a869637c3b8db35a387973a93a7ba9a35c83834560fffc10c7017cb52e73dbb7",
       "deps": []
     },
     {
@@ -993,10 +993,10 @@
         },
         {
           "path": "alert-dialog.manifest.json",
-          "sha256": "50c647e0e506b12ae928cc9f379db2835ae643884892a573f7bd94ba56f32bba"
+          "sha256": "4e341ba26caca4c61e6776c9cbf5dc40dc15507881912b35edced573991a0b34"
         }
       ],
-      "hash": "2444e53c03101fcc2e613fa6239a96d58fb076591960849d4a62b7ad63904bc2",
+      "hash": "58929d4212503f9c80a7003935a4dde44ba708893d3f955ec4a78c32c33861e4",
       "deps": [
         "button"
       ]
@@ -1021,10 +1021,10 @@
         },
         {
           "path": "barcode.manifest.json",
-          "sha256": "32b597d5e413cda11acdb2a8545566b105fd7091c7128e52a8886bfd85185a8f"
+          "sha256": "ddd03e4b0f64b21dacc6ebd92e9632b525b66a0c0c9d19d0581ecbd3aa2483a5"
         }
       ],
-      "hash": "f446befb336f7066a30a8d4fa05d1dca559e4161f2f3b7bbb31423fd64d21009",
+      "hash": "f489430b1d27b7a3b54624a39b78068ce4a93d990252f76f7364397ab0ff259b",
       "deps": []
     },
     {
@@ -1047,10 +1047,10 @@
         },
         {
           "path": "calendar.manifest.json",
-          "sha256": "48cade3afdeffe3350dbc37f9f65293e9c1a074443494110c8cedffdc39a1330"
+          "sha256": "5899bde572cdd616da5a8b6fb7b74027406fa21683b2906289967ac705294161"
         }
       ],
-      "hash": "569ef8f04e6597c2725dc0174d7548d282fc4c62436f400c3715cf541c6eb56a",
+      "hash": "92a9176f183d25b8f5d161748d4696db8180481692369b1c0e0b43019d100cee",
       "deps": []
     },
     {
@@ -1073,10 +1073,10 @@
         },
         {
           "path": "carousel.manifest.json",
-          "sha256": "116bf17fd8529cf72db674576e88a56f131cd1b5887e9d8d5e120dce3d6e5b50"
+          "sha256": "b62b0fd44a64d8398adecdb48d88046982e0154560f426ffc0c53d23f19a2be9"
         }
       ],
-      "hash": "7ea89dc45ad5a5962a4398928e0b29a22ad5f5c0aca88c7a462175060a20fd92",
+      "hash": "2acc92bf4f37c744857f762e7c648900b18d80a492c3ad011081bb9afd4bb133",
       "deps": []
     },
     {
@@ -1099,10 +1099,10 @@
         },
         {
           "path": "combobox.manifest.json",
-          "sha256": "2a396b4a89e460f8f357a37ccb2c39a8c80a669a1c3436a8f852128994660ab6"
+          "sha256": "7e96269afa5915d57fa50af48c680da9998dd8fe1cb563a6715b72a33027c3ff"
         }
       ],
-      "hash": "e13bd8fa8f22861c8fdaaee79c64a355b658125dd45085a620361d2e02c721a7",
+      "hash": "e94d5b48a69b9c88918487b6eee023a619024dc05c22692e7ec4b5f3556750a1",
       "deps": []
     },
     {
@@ -1125,10 +1125,10 @@
         },
         {
           "path": "command-palette.manifest.json",
-          "sha256": "38d736b76b5c15778c0067ec6c8bdf633dbae4e704b75dfe2b717879e8461bef"
+          "sha256": "7a6660b5fe64a22495c3307fea12e1aca80c258a18f9b6bfd354b224abd05048"
         }
       ],
-      "hash": "71775e9de3ce52b6fcca4cbb7bbcd0e6f510157eb29b73fe36c95362c5703c5d",
+      "hash": "ad826c2132f839a8bdb3cb4168ec11a427227d11d610dd870c62d169eab8e5cd",
       "deps": [
         "kbd"
       ]
@@ -1153,10 +1153,10 @@
         },
         {
           "path": "context-menu.manifest.json",
-          "sha256": "bbf0ff8fcd54f225dfb640a1cdc301cf6bd7b5a1d16b14fac73a780cd004534c"
+          "sha256": "e1d0b1cf94a5641182c229ae814a82524ff632dd6c5b55f847d3ae74624b3153"
         }
       ],
-      "hash": "94de7b4f01bf1ec0769cefa3ae7ba4134acda77de41876f725a9e0bb8ff5b180",
+      "hash": "525c0a473ec4133a69acbea5ec53e712c5e971022a7ecb3b362bfa636c5dedea",
       "deps": []
     },
     {
@@ -1179,10 +1179,10 @@
         },
         {
           "path": "date-picker.manifest.json",
-          "sha256": "cc39ecd4962eac45fa7338788817b8ffc66ace760c1df62f137f5ff400a21cd2"
+          "sha256": "5e54ade2507e17bbe693192481b9785ede921447a7ce77ea122179175e7bcd5a"
         }
       ],
-      "hash": "44f0a9494a5db2cd8705bcc7f2863dd30b874e5879afe125619989529d0ca5a5",
+      "hash": "9f4d41131b2e8e5b641188e85119db5231816bf67d6c4a22d87923cfd55e8f5e",
       "deps": [
         "calendar",
         "button"
@@ -1204,14 +1204,14 @@
         },
         {
           "path": "dialog.js",
-          "sha256": "3d67dbe0a78abc4a297e5f3445666ef74a8be0558ddacdb1fa0c518c8066afb6"
+          "sha256": "6939209b45774534d0b9d71de54b510d01bb3cf2b8c75e923f2f3d2e63441057"
         },
         {
           "path": "dialog.manifest.json",
-          "sha256": "37adbcf3a039dd639484473244c7eb67424be8a4882d3bc7618c7b02fdcfa529"
+          "sha256": "08de5df787de9ab82bf951c84c20647e4d01143666189059309d16abe064292e"
         }
       ],
-      "hash": "471cfb8eac9c74fc99c72a4b06b808a5f33dc9dac27965df467170c11b976353",
+      "hash": "0e509f44b3067b21dab6a72fed5d1d43edc56029567d6d417320172f7c4ed61e",
       "deps": [
         "button"
       ]
@@ -1232,14 +1232,14 @@
         },
         {
           "path": "drawer.js",
-          "sha256": "07e9692d66b95788ec6f76155fe698923987ce4a6e6bf909b17463aa97860937"
+          "sha256": "b17201def1a8ab52d374dfe6aea0fdc7b69303537f533523bd7344b6dfdef679"
         },
         {
           "path": "drawer.manifest.json",
-          "sha256": "980dd54ff787ff36baed9d67bc6d69fcd99da15ee71407dbe3a6389c9af21ce9"
+          "sha256": "c13c1f1dcab56769927fa62728adbf7281b060e9fdf26e0afdda6eddb751deb9"
         }
       ],
-      "hash": "b817e11a1ff4c5caf35fea36e17588dae5c856e02ba8c3619ca10a2c9362d862",
+      "hash": "557879c7d0262343938074db8dce9fafcfc4d521fbfed5877764b9f99da14cbc",
       "deps": [
         "button"
       ]
@@ -1264,10 +1264,10 @@
         },
         {
           "path": "dropdown.manifest.json",
-          "sha256": "0de615d8095883764499b2d123935ff852e48327159f1507c9945ffa6f9f6bd0"
+          "sha256": "e3d9daf91d28c990c53d3e4cb969962eecef5235a9a908941a7f92d053319141"
         }
       ],
-      "hash": "21ef2ae72772a777528f5a6bd78db9acf1a98b1b28ba62c1d28677b334d794bf",
+      "hash": "19ca7949f6ceddb349736457c32de2f3b310980776e927ae484f70e077bb8a2c",
       "deps": []
     },
     {
@@ -1290,10 +1290,10 @@
         },
         {
           "path": "file-upload.manifest.json",
-          "sha256": "a32ecfc6f2ef11aa96d64f79c9e0d078d42a0d64e4e5cae46fefc7fe2d884ee3"
+          "sha256": "1141f7e9da0b850649696d9d6dff22e8bcd62605ea98487f72688278585d9ace"
         }
       ],
-      "hash": "50fdcfe4d230d99512f212bf2a1ad65bc1a33000ffac7b42794f433f43caab1d",
+      "hash": "4f318919a8ba42b19da59c3335080fcf1b192e176bccb109ec49abc392439567",
       "deps": []
     },
     {
@@ -1316,10 +1316,10 @@
         },
         {
           "path": "input-otp.manifest.json",
-          "sha256": "537bfe6be6febb55e7a47315531579daedf2dde31471d14e17432fe82bcd20fd"
+          "sha256": "5d9d830667be87aeab98937ea50d6b2b76d5cabb701fb01beeb6a19c98dc5a30"
         }
       ],
-      "hash": "710ac2cf654e6e32a31f899462b79cac4eeacf4c57fb0ccaec4efa84e57818fa",
+      "hash": "96b9498d0df94507b8e2463322489f978c13d31133c9141a26513aa3d226fdfc",
       "deps": []
     },
     {
@@ -1342,10 +1342,10 @@
         },
         {
           "path": "menubar.manifest.json",
-          "sha256": "5ba76892d94389607216cc109e5723bb0f37feda4a0e21ace9cb0370efe58f1a"
+          "sha256": "0996eddda56a03c9c0b35c53a3dbbcc5a6a72c2f11b87dcbf685aa745bc117ae"
         }
       ],
-      "hash": "8e5b78220e7710f284fe0eea741703a0e06f25159b060cdb526979779f4a958b",
+      "hash": "4d154f06a5a37587cd1d9cf8e36834f58556f349c6a8ddd8480f79b23dc49bd9",
       "deps": []
     },
     {
@@ -1368,10 +1368,10 @@
         },
         {
           "path": "pagination.manifest.json",
-          "sha256": "645ec65a558f1cda903338936272403ad181eacf393f5f8b893a77f53a146bf6"
+          "sha256": "1124fd6ff03ab9bb7f35af2a49d965db3d8eb6144dd0e70cfd923829efa6aac0"
         }
       ],
-      "hash": "b264e96c5009ae71d99d3ecb64c721076c54a884053fabbc6323da871927c5d5",
+      "hash": "ba816b943c7e2c6f23d05377536103421191bd6f52654fefb4971f2ceb135ad1",
       "deps": [
         "button"
       ]
@@ -1396,10 +1396,10 @@
         },
         {
           "path": "popover.manifest.json",
-          "sha256": "5981199f69610d0ca8d4900bdf2f923a1f2510a64597a84918cf34daba9735c7"
+          "sha256": "21becb7db36cfbe9205f7964891b84045ce638b255ede23780e2ce8ccc38a3b0"
         }
       ],
-      "hash": "347c32c8a89874a769c99658a3e6d7463a23c5cfb668e77889f84a3b534b6f4b",
+      "hash": "0589ed23e1b5602614c2994b1b1bb455da714ab6520b5246b895d400b4d44627",
       "deps": [
         "button"
       ]
@@ -1424,10 +1424,10 @@
         },
         {
           "path": "qr-code.manifest.json",
-          "sha256": "9539d3a74dacf2b5095d4921226973db5e1a996bcb94fbbc80b76cbef91c2cbb"
+          "sha256": "d0233f509ee464a92a88c4ed342e73032b67907c298fd272f680a393593a8749"
         }
       ],
-      "hash": "36ec3eef533a1f94669dbca729a90338e23fd87dae4d180069d82aaf802e0b3a",
+      "hash": "8561fff4384d2dd010b3ab2c467aec6b992a3c5766642ab88ab3cee20cc58a3c",
       "deps": []
     },
     {
@@ -1450,10 +1450,10 @@
         },
         {
           "path": "select-custom.manifest.json",
-          "sha256": "5fc85c98e279f5e298551b0b4bf472ec41de0083b67cc27e229e573e18c2cb7a"
+          "sha256": "9ce00ee0d92737442c7555da3de6134c5c0d92f9442170e980ad9bc7beac6727"
         }
       ],
-      "hash": "b02b1daeb3c3d9e27dca1fdb0b15239b65be521c19e124d532e22b1740bd5070",
+      "hash": "16f2819a3290a0f1be6f9a66f93a899c739f80b964813d8bb7314492eb31d971",
       "deps": []
     },
     {
@@ -1472,14 +1472,14 @@
         },
         {
           "path": "sheet.js",
-          "sha256": "91c4d8f051fe2b93023c5ba207c52f43d41e69a3970beda707f9524f9d668016"
+          "sha256": "fabccc64b4d56b4275bc654e5884e38ec0ca10b6341fea9ba3cfa25c2d4c8252"
         },
         {
           "path": "sheet.manifest.json",
-          "sha256": "c28055cf43062eba744b77cc6933769582f24bdc85b153d2b7d13776652dd52c"
+          "sha256": "c008fa14441950023b8b1fde8e50b1e3abcedbb93a16e7c10c5983ba4e00f2fc"
         }
       ],
-      "hash": "708bc6e2b391f0c253d286a5a29fa26f11f761de92654360b979e09cf813d1e1",
+      "hash": "49f6b300fc9f9c78e2ff47df0476e8f2327758bcd3211e995f296c0f57e3cced",
       "deps": [
         "button"
       ]
@@ -1504,10 +1504,10 @@
         },
         {
           "path": "sidebar.manifest.json",
-          "sha256": "8cecf35c20c5215a1265a65412444a0e2945902190f14c2405c1d4cba3db52e6"
+          "sha256": "f39e5c6d28ea271fc113c419135c37203702fa859d47f61aa995004e8ac64d9d"
         }
       ],
-      "hash": "b165645ca5010e4426131a92967f1c75a3b83365e76acdd79e70e511289aed2b",
+      "hash": "3a14356f8cbcda3bb34b7c6c7854ebd49aa72e6d51416eacba831769f576466b",
       "deps": [
         "button",
         "badge",
@@ -1535,10 +1535,10 @@
         },
         {
           "path": "slider.manifest.json",
-          "sha256": "89dc9bf3e4a695ef626c5ca66dbbe25e282aeba250eccb305dbb789bb31f2753"
+          "sha256": "0b6890d605d8d75c5b467639bd4a9371c8e1b6e861b1ae87bed6276431ab4a72"
         }
       ],
-      "hash": "ff36efba9057e91e4afd29bdea0602c47736c754ad8e8f69bab569a8fd80215b",
+      "hash": "e7d29e1d8c25610d2713f7652787f24340ab349952cbccda46e0d36e5ddb3ca4",
       "deps": []
     },
     {
@@ -1561,10 +1561,10 @@
         },
         {
           "path": "table.manifest.json",
-          "sha256": "0378d4471e3114955c0ee8686ccc6dddcfccd7d3157f0f52b0972e6081deadca"
+          "sha256": "5a9ecf3f3adb0b5dc365154bc1f9820f14522c9b13a6bc384c030461c8515406"
         }
       ],
-      "hash": "52bf731149035c01fd014d1cc76829d8e48b65b2cd184ed4067e38b444e31eb9",
+      "hash": "e72cd8da35cfd344da71c73246e9893c4c2930ca70d49f5d773e5a68ca8e770d",
       "deps": [
         "checkbox",
         "badge",
@@ -1592,10 +1592,10 @@
         },
         {
           "path": "tabs.manifest.json",
-          "sha256": "9ac70787d83abfa9abb2be991a07e093c1f312927a9524f8f10b9f97e4c26038"
+          "sha256": "3d77833c0d3cb26aee66d8411b8f1eafe1817479e712b02bcee7090bac9196d6"
         }
       ],
-      "hash": "1cdc037a7d5c6160ed64eedbbba116d356bf8b5882615cfd65e6efdc84c155d1",
+      "hash": "7480581d29ac3386348e2e305ca826d7841675bd0d12029dc02817e43cbfe1cd",
       "deps": []
     },
     {
@@ -1618,10 +1618,10 @@
         },
         {
           "path": "tag-input.manifest.json",
-          "sha256": "c680ca3b89536bc65716f513e84926e8e9e7b6852d610497ec9befae53a35862"
+          "sha256": "3811927b158bbc2ddd6bc260375cfd1d7555b8bd188ff7e6578edda11e4e470b"
         }
       ],
-      "hash": "2723ff36e7934cf1ba53abd5c7f4a066eba545e8316785b6b0c0f3973a1686ee",
+      "hash": "cd201eaeafe4a4b1107d8d35715b8181f52f950d7326bc25c8f7472a015c80b2",
       "deps": [
         "chip"
       ]
@@ -1642,14 +1642,14 @@
         },
         {
           "path": "toast.js",
-          "sha256": "e51ecb5507829b7c6e99b83a25dfbeea6e3f1878d571c880cd91f12e49ee00cd"
+          "sha256": "58949ade11e703b365b1e364092d1d65a41ee148b94b8bc3cd829722ecdc5c7d"
         },
         {
           "path": "toast.manifest.json",
-          "sha256": "db722d84a1f18899528aadc821d1b4e937373f026f635449ed34822010bfce64"
+          "sha256": "6daf1d7e13ead72b767f6409d772e063194e6cc415e6f9eca36a44c62ddeb496"
         }
       ],
-      "hash": "8048a7aed42f31e6948838557251d22da386fdab84a580f86719a873a9ddb0b9",
+      "hash": "509edd6848ec0b8e3ed2efb1b503c08f50f99ee94f2e6419617d9e39c472c681",
       "deps": [
         "button"
       ]
@@ -1674,10 +1674,10 @@
         },
         {
           "path": "toggle-group.manifest.json",
-          "sha256": "73a063ef79afdd460c80f5ec737cfc07084be82ffd0b5f0eec8122d0256bc192"
+          "sha256": "633c4ca77f5cb3573295c9218aa3cc5bf7c504a3f5e7ee3d9236f2edb4bb02e9"
         }
       ],
-      "hash": "9eefa3ff766eecf073e397463b9964ad0a40d8d46233a591ccff3f3495453907",
+      "hash": "6926a2e089abb7477017bc37a59f703dc80deae99b9da232cd0278225a4972c6",
       "deps": []
     },
     {
@@ -1700,10 +1700,10 @@
         },
         {
           "path": "tooltip.manifest.json",
-          "sha256": "1ada8f1a4ebd60ce89acb857f44c1c3fa13b96aaa03d88446b975f8c513ab404"
+          "sha256": "089690355dbc6998bcf8fdfc73ef03a07c71126e9f094b3bc1d829bac1223c86"
         }
       ],
-      "hash": "8544229b59eb50a28d2d52364d0d062a4b81a9bbd17ed580ca72f5043192d066",
+      "hash": "7618247fca651c24c6ffeb9a92ba46ed226699a952bb2e6a30d0a57b31f53c2e",
       "deps": [
         "button"
       ]
@@ -1728,10 +1728,10 @@
         },
         {
           "path": "tree-view.manifest.json",
-          "sha256": "849c6406471a843fb8451f95df7c59a10848e56dcc42f0665c86cf35284512f2"
+          "sha256": "421884297721f8a6b6832925d2a8d6f9e9a49a40e71165cee63ba93a8ce15f21"
         }
       ],
-      "hash": "37c51473f8def91700e43526abb37f28f10edbc7ce5c24e146061f041c7b0b25",
+      "hash": "73061bd77f84f4a61c14699a0b903d6d032dcfdb9ba6f46d56501d60ce89ac4b",
       "deps": []
     },
     {

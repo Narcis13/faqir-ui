@@ -5,13 +5,11 @@
   "kind": "recipe",
   "category": "navigation",
   "description": "Page navigation with numbered controls, previous/next, and ellipsis",
-
   "anatomy": {
     "tag": "div",
     "selector": "[data-ui='pagination']",
     "content_model": "slots"
   },
-
   "slots": {
     "nav": {
       "selector": "[data-part='nav']",
@@ -35,7 +33,7 @@
       "selector": "[data-part='page']",
       "required": true,
       "tag_hint": "button",
-      "description": "Individual page number button"
+      "description": "Individual page number button. Carries data-page=\"<n>\" — the 1-based page it selects, which is how the controller derives the current page, the total, and what a click means. A page button without it is inert."
     },
     "ellipsis": {
       "selector": "[data-part='ellipsis']",
@@ -44,26 +42,64 @@
       "description": "Ellipsis indicator for skipped pages"
     }
   },
-
   "variants": {
     "size": {
-      "values": ["sm", "md", "lg"],
+      "values": [
+        "sm",
+        "md",
+        "lg"
+      ],
       "default": "md",
       "attr": "data-size",
       "applied_to": "root"
     }
   },
-
   "states": {
-    "default": { "attr": "", "default": true },
-    "active": { "attr": "data-state=\"active\"", "applied_to": "page" }
+    "default": {
+      "attr": "",
+      "default": true
+    },
+    "active": {
+      "attr": "data-state=\"active\"",
+      "applied_to": "page"
+    }
   },
-
+  "api": {
+    "methods": [
+      {
+        "name": "setPage",
+        "params": "n"
+      },
+      {
+        "name": "getPage",
+        "params": ""
+      },
+      {
+        "name": "setTotal",
+        "params": "n"
+      },
+      {
+        "name": "render",
+        "params": "current, total"
+      },
+      {
+        "name": "destroy",
+        "params": ""
+      }
+    ]
+  },
   "props": {
-    "currentPage": { "type": "number", "default": 1, "description": "Current active page number" },
-    "totalPages": { "type": "number", "default": 1, "description": "Total number of pages" }
+    "currentPage": {
+      "type": "number",
+      "default": 1,
+      "description": "Current active page number"
+    },
+    "totalPages": {
+      "type": "number",
+      "default": 1,
+      "description": "Total number of pages"
+    }
   },
-
   "a11y": {
     "required_attrs": [
       "role=\"navigation\" on nav",
@@ -77,19 +113,28 @@
       "Tab": "navigate between controls"
     }
   },
-
   "tokens_used": [
-    "color-bg", "color-bg-muted", "color-fg", "color-fg-muted",
-    "color-primary", "color-primary-fg", "color-border",
-    "radius-md", "space-1", "space-2", "space-3",
-    "text-xs", "text-sm", "text-base", "weight-medium",
-    "duration-fast", "ease-default"
+    "color-bg",
+    "color-bg-muted",
+    "color-fg",
+    "color-fg-muted",
+    "color-primary",
+    "color-primary-fg",
+    "color-border",
+    "radius-md",
+    "space-1",
+    "space-2",
+    "space-3",
+    "text-xs",
+    "text-sm",
+    "text-base",
+    "weight-medium",
+    "duration-fast",
+    "ease-default"
   ],
-
   "templates": {
     "html": "<div data-ui=\"pagination\" data-size=\"{size}\">\n  <nav data-part=\"nav\" role=\"navigation\" aria-label=\"Pagination\">\n    <button data-part=\"prev\" aria-label=\"Previous page\">&laquo; Prev</button>\n    <button data-part=\"page\" data-page=\"1\" data-state=\"active\" aria-current=\"page\">1</button>\n    <button data-part=\"page\" data-page=\"2\">2</button>\n    <span data-part=\"ellipsis\">&hellip;</span>\n    <button data-part=\"page\" data-page=\"{total}\">{total}</button>\n    <button data-part=\"next\" aria-label=\"Next page\">Next &raquo;</button>\n  </nav>\n</div>"
   },
-
   "safe_transforms": [
     "change-size",
     "add-page-buttons",
@@ -97,26 +142,27 @@
     "restyle-active-page",
     "change-prev-next-text"
   ],
-
   "unsafe_transforms": [
     "remove-navigation-role",
     "remove-aria-current",
     "remove-aria-labels",
     "remove-disabled-state"
   ],
-
   "composition": {
-    "contains": ["button"],
-    "used_in": ["crud-table", "search-results"]
+    "contains": [
+      "button"
+    ],
+    "used_in": [
+      "crud-table",
+      "search-results"
+    ]
   },
-
   "files": {
     "html": "pagination.html",
     "css": "pagination.css",
     "js": "pagination.js",
     "manifest": "pagination.manifest.json"
   },
-
   "tests": [
     "clicking-page-button-activates-it",
     "clicking-next-advances-page",

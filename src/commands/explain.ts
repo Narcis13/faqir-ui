@@ -7,6 +7,7 @@ import { emitJSON } from "../utils/json-output";
 import { configExists, readConfig } from "../utils/config";
 import { getRegistryPath } from "../utils/fs";
 import { loadManifest, type Manifest } from "../manifest";
+import { formatMethod } from "../utils/controller-api";
 
 const BOLD = "\x1b[1m";
 const RESET = "\x1b[0m";
@@ -79,6 +80,16 @@ interface Explanation {
   anatomy: string[];
   states: string;
   variants: string;
+  /**
+   * The controller's methods — `$ui.open()` from a page expression, or the
+   * object the factory returns to imperative code. [W2-4]
+   *
+   * Empty for a CSS-only primitive. For the 29 JS-backed recipes this key was
+   * simply absent until 1.0: the data existed in every controller's
+   * `@ui:provides` annotation, was inlined verbatim into the shipped engine, and
+   * appeared on no surface an agent could read.
+   */
+  api: string[];
   keyboard: string[];
   accessibility: string[];
   safe_to_modify: string[];
@@ -114,6 +125,12 @@ function buildExplanation(m: Manifest): Explanation {
   for (const [vName, v] of Object.entries(m.variants || {})) {
     variantParts.push(`${vName}: ${v.values.join(" | ")}`);
   }
+
+  // Build the controller API — signature first, then the sentence, so a scan
+  // down the column reads as a call list.
+  const api: string[] = (m.api?.methods ?? []).map((method) =>
+    method.description ? `${formatMethod(method)} — ${method.description}` : formatMethod(method),
+  );
 
   // Build keyboard shortcuts
   const keyboard: string[] = [];
@@ -158,6 +175,7 @@ function buildExplanation(m: Manifest): Explanation {
     anatomy,
     states: stateChain,
     variants: variantParts.join("  •  "),
+    api,
     keyboard,
     accessibility,
     safe_to_modify: m.safe_transforms || [],
@@ -204,6 +222,15 @@ function printExplanation(m: Manifest) {
   }
 
   if (ex.states || ex.variants) console.log();
+
+  // Controller API
+  if (ex.api.length > 0) {
+    console.log(`${CYAN}CONTROLLER API:${RESET}  ${DIM}$ui.<method>() in an expression, or the object the factory returns${RESET}`);
+    for (const method of ex.api) {
+      console.log(`  ${method}`);
+    }
+    console.log();
+  }
 
   // Keyboard
   if (ex.keyboard.length > 0) {

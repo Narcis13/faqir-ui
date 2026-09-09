@@ -71,15 +71,33 @@ export function printAuditReport(summary: AuditSummary): void {
     log.blank();
   }
 
-  // Summary counts
-  const { counts } = summary;
+  // Summary counts. Two lines when the framework's own installed files carry
+  // findings: they are reported in full and named as not-yours, because an agent
+  // gating on this command has to be able to tell what it can actually fix. [W2-3]
+  const { counts, vendor_counts: vendor } = summary;
+  const vendorTotal = vendor.critical + vendor.error + vendor.warning + vendor.info;
   const parts: string[] = [];
   if (counts.critical > 0) parts.push(`${SEVERITY_COLORS.critical}${counts.critical} critical${RESET}`);
   if (counts.error > 0) parts.push(`${SEVERITY_COLORS.error}${counts.error} error(s)${RESET}`);
   if (counts.warning > 0) parts.push(`${SEVERITY_COLORS.warning}${counts.warning} warning(s)${RESET}`);
   if (counts.info > 0) parts.push(`${SEVERITY_COLORS.info}${counts.info} info${RESET}`);
 
-  console.log(`${BOLD}Total: ${summary.results.length} issue(s)${RESET} — ${parts.join(", ")}`);
+  const authoredTotal = summary.results.length - vendorTotal;
+  console.log(
+    `${BOLD}Total: ${authoredTotal} issue(s) in your files${RESET}` +
+      (parts.length > 0 ? ` — ${parts.join(", ")}` : ""),
+  );
+  if (vendorTotal > 0) {
+    const vparts: string[] = [];
+    if (vendor.critical > 0) vparts.push(`${vendor.critical} critical`);
+    if (vendor.error > 0) vparts.push(`${vendor.error} error(s)`);
+    if (vendor.warning > 0) vparts.push(`${vendor.warning} warning(s)`);
+    if (vendor.info > 0) vparts.push(`${vendor.info} info`);
+    log.dim(
+      `Plus ${vendorTotal} in the installed components (${vparts.join(", ")}) — ` +
+        `Faqir's own files, not counted toward the exit code. Use --strict to include them.`,
+    );
+  }
   log.blank();
 
   if (summary.passed) {
@@ -117,7 +135,14 @@ export interface AuditReportJSON {
   passed: boolean;
   files_scanned: number;
   components_found: number;
+  /** Severity counts for the files the project authored — what `passed` reads. */
   counts: Record<Severity, number>;
+  /**
+   * Severity counts for findings in the installed component tree (`ui/`).
+   * Additive field: reported, and outside the exit-code decision unless
+   * `--strict`. [W2-3]
+   */
+  vendor_counts: Record<Severity, number>;
   results: AuditFindingJSON[];
 }
 
@@ -133,6 +158,7 @@ export function buildAuditReport(summary: AuditSummary): AuditReportJSON {
     files_scanned: summary.files_scanned,
     components_found: summary.components_found,
     counts: summary.counts,
+    vendor_counts: summary.vendor_counts,
     results: summary.results.map((r) => ({
       rule_id: r.rule_id,
       severity: r.severity,

@@ -5,13 +5,11 @@
   "kind": "recipe",
   "category": "navigation",
   "description": "Dropdown menu with keyboard navigation and click-outside-to-close",
-
   "anatomy": {
     "tag": "div",
     "selector": "[data-ui='dropdown']",
     "content_model": "slots"
   },
-
   "slots": {
     "trigger": {
       "selector": "[data-part='trigger']",
@@ -38,31 +36,63 @@
       "description": "Visual separator between menu item groups"
     }
   },
-
   "variants": {
     "align": {
-      "values": ["start", "end"],
+      "values": [
+        "start",
+        "end"
+      ],
       "default": "start",
       "attr": "data-variant",
       "applied_to": "menu"
     },
     "size": {
-      "values": ["sm", "md", "lg"],
+      "values": [
+        "sm",
+        "md",
+        "lg"
+      ],
       "default": "md",
       "attr": "data-size",
       "applied_to": "root"
     }
   },
-
   "states": {
-    "closed": { "attr": "data-state=\"closed\"", "default": true },
-    "open": { "attr": "data-state=\"open\"" }
+    "closed": {
+      "attr": "data-state=\"closed\"",
+      "default": true
+    },
+    "open": {
+      "attr": "data-state=\"open\""
+    }
   },
-
+  "api": {
+    "methods": [
+      {
+        "name": "open",
+        "params": "options = {}"
+      },
+      {
+        "name": "close",
+        "params": "options = {}"
+      },
+      {
+        "name": "toggle",
+        "params": ""
+      },
+      {
+        "name": "destroy",
+        "params": ""
+      }
+    ]
+  },
   "props": {
-    "triggerText": { "type": "string", "default": "Menu", "description": "Text for the trigger button" }
+    "triggerText": {
+      "type": "string",
+      "default": "Menu",
+      "description": "Text for the trigger button"
+    }
   },
-
   "a11y": {
     "required_attrs": [
       "role=\"menu\" on menu",
@@ -80,21 +110,30 @@
       "End": "focus last item"
     }
   },
-
   "tokens_used": [
-    "color-bg", "color-fg", "color-fg-muted", "color-border",
-    "color-primary-subtle", "color-primary",
-    "space-1", "space-2", "space-3", "space-4",
-    "radius-md", "radius-lg",
-    "shadow-md", "text-sm", "weight-medium",
-    "duration-fast", "ease-default", "ease-out",
+    "color-bg",
+    "color-fg",
+    "color-fg-muted",
+    "color-border",
+    "color-primary-subtle",
+    "color-primary",
+    "space-1",
+    "space-2",
+    "space-3",
+    "space-4",
+    "radius-md",
+    "radius-lg",
+    "shadow-md",
+    "text-sm",
+    "weight-medium",
+    "duration-fast",
+    "ease-default",
+    "ease-out",
     "z-dropdown"
   ],
-
   "templates": {
     "html": "<div data-ui=\"dropdown\" data-state=\"closed\">\n  <button data-part=\"trigger\" aria-haspopup=\"true\" aria-expanded=\"false\">{trigger_text}</button>\n  <div data-part=\"menu\" role=\"menu\" hidden>\n    <button data-part=\"item\" role=\"menuitem\">{item1}</button>\n    <button data-part=\"item\" role=\"menuitem\">{item2}</button>\n    <hr data-part=\"separator\">\n    <button data-part=\"item\" role=\"menuitem\">{item3}</button>\n  </div>\n</div>"
   },
-
   "safe_transforms": [
     "add-menu-item",
     "remove-menu-item",
@@ -103,7 +142,6 @@
     "change-size",
     "restyle-menu-background"
   ],
-
   "unsafe_transforms": [
     "remove-menu-role",
     "remove-menuitem-role",
@@ -111,19 +149,19 @@
     "remove-keyboard-navigation",
     "remove-click-outside-handler"
   ],
-
   "composition": {
     "contains": [],
-    "used_in": ["dashboard-shell", "crud-table"]
+    "used_in": [
+      "dashboard-shell",
+      "crud-table"
+    ]
   },
-
   "files": {
     "html": "dropdown.html",
     "css": "dropdown.css",
     "js": "dropdown.js",
     "manifest": "dropdown.manifest.json"
   },
-
   "tests": [
     "opens-on-trigger-click",
     "closes-on-escape",

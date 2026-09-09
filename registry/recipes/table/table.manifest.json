@@ -264,6 +264,137 @@
       "description": "The cell that carries the tree indentation (--table-level) and the expander, in a data-tree table"
     }
   },
+  "api": {
+    "methods": [
+      {
+        "name": "sort",
+        "params": "columnIndex, direction",
+        "description": "Legacy API: sort one column with an explicit direction."
+      },
+      {
+        "name": "sortBy",
+        "params": "specs",
+        "description": "Multi-sort API: sortBy([{ column, direction }...])."
+      },
+      {
+        "name": "clearSort",
+        "params": ""
+      },
+      {
+        "name": "selectRow",
+        "params": "index"
+      },
+      {
+        "name": "selectAll",
+        "params": ""
+      },
+      {
+        "name": "deselectAll",
+        "params": ""
+      },
+      {
+        "name": "getSelected",
+        "params": ""
+      },
+      {
+        "name": "getSelectedData",
+        "params": ""
+      },
+      {
+        "name": "setFilter",
+        "params": "query"
+      },
+      {
+        "name": "setColumnFilter",
+        "params": "colIndex, query"
+      },
+      {
+        "name": "clearFilters",
+        "params": ""
+      },
+      {
+        "name": "toggleGroup",
+        "params": "ghOrIndex, force"
+      },
+      {
+        "name": "toggleRow",
+        "params": "rowOrIndex, force"
+      },
+      {
+        "name": "toggleDetail",
+        "params": "rowOrIndex, force",
+        "description": "Master/detail: show or hide a row's [data-part='detail-row'] via the hidden attribute."
+      },
+      {
+        "name": "expandAll",
+        "params": ""
+      },
+      {
+        "name": "collapseAll",
+        "params": ""
+      },
+      {
+        "name": "startEdit",
+        "params": "a, b"
+      },
+      {
+        "name": "commitEdit",
+        "params": "focusBack"
+      },
+      {
+        "name": "cancelEdit",
+        "params": "focusBack"
+      },
+      {
+        "name": "moveRow",
+        "params": "from, to"
+      },
+      {
+        "name": "moveColumn",
+        "params": "from, to"
+      },
+      {
+        "name": "hideColumn",
+        "params": "i"
+      },
+      {
+        "name": "showColumn",
+        "params": "i"
+      },
+      {
+        "name": "toggleColumn",
+        "params": "i, force"
+      },
+      {
+        "name": "setColumnWidth",
+        "params": "i, width"
+      },
+      {
+        "name": "exportCsv",
+        "params": "o = {}"
+      },
+      {
+        "name": "getData",
+        "params": "o = {}"
+      },
+      {
+        "name": "getState",
+        "params": ""
+      },
+      {
+        "name": "setState",
+        "params": "state"
+      },
+      {
+        "name": "refresh",
+        "params": ""
+      },
+      {
+        "name": "destroy",
+        "params": ""
+      }
+    ]
+  },
   "props": {
     "selectable": {
       "type": "string",
@@ -409,6 +540,61 @@
       "default": "",
       "attr": "data-pin",
       "description": "Freeze a column against the inline-start or inline-end edge (on a th; the controller mirrors it onto that column's cells), or a row against the top of the scroll area (on a tr)"
+    },
+    "value": {
+      "type": "string",
+      "default": "",
+      "attr": "data-value",
+      "description": "On a td: the RAW value behind the rendered text. Sorting, filtering, aggregation and CSV export read this rather than the formatted cell text, so \"$21,980.00\" sorts and sums as 21980."
+    },
+    "row-id": {
+      "type": "string",
+      "default": "",
+      "attr": "data-row-id",
+      "description": "On a tr: a stable identity for the row, surfaced as `_id` by getSelectedData() and getData(). Without it a row is identified only by its position, which a sort or a filter changes."
+    },
+    "aggregate": {
+      "type": "enum",
+      "values": [
+        "sum",
+        "avg",
+        "min",
+        "max",
+        "count"
+      ],
+      "default": "",
+      "attr": "data-aggregate",
+      "description": "On a td in a footer or group row: the function to compute over the visible rows of that column. The cell's text is written by the controller."
+    },
+    "level": {
+      "type": "string",
+      "default": "0",
+      "attr": "data-level",
+      "description": "On a tr in a data-tree table: the row's depth, 0 for a root row. Drives indentation (--table-level) and which rows a collapse hides."
+    },
+    "col": {
+      "type": "string",
+      "default": "",
+      "attr": "data-col",
+      "description": "On a td whose colspan makes its column ambiguous: the explicit column index the cell belongs to, so an aggregate lands under the right header."
+    },
+    "label": {
+      "type": "string",
+      "default": "",
+      "attr": "data-label",
+      "description": "On a td: the header text the responsive stacked layout shows beside the value. Filled in from the column header by the controller when absent."
+    },
+    "no-resize": {
+      "type": "boolean",
+      "default": false,
+      "attr": "data-no-resize",
+      "description": "On a th in a data-resizable table: this column has no drag handle and keeps its width."
+    },
+    "csv-skip": {
+      "type": "boolean",
+      "default": false,
+      "attr": "data-csv-skip",
+      "description": "On a th: exclude this column from exportCsv() — for a selection checkbox or a row-actions column that has no value to export."
     }
   },
   "a11y": {

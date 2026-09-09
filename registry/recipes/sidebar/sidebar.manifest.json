@@ -5,7 +5,6 @@
   "kind": "recipe",
   "category": "navigation",
   "description": "Collapsible application sidebar with three modes — expanded, rail (icons only), and a mobile off-canvas drawer — switched responsively and toggled from the keyboard",
-
   "changes": [
     {
       "version": "1.1.0",
@@ -13,13 +12,11 @@
       "breaking": false
     }
   ],
-
   "anatomy": {
     "tag": "div",
     "selector": "[data-ui='sidebar']",
     "content_model": "slots"
   },
-
   "slots": {
     "overlay": {
       "selector": "[data-part='overlay']",
@@ -94,9 +91,7 @@
       "description": "Pinned bottom area (secondary links, user block)"
     }
   },
-
   "variants": {},
-
   "states": {
     "expanded": {
       "attr": "data-state=\"expanded\"",
@@ -113,7 +108,42 @@
       "transient": true
     }
   },
-
+  "api": {
+    "methods": [
+      {
+        "name": "toggle",
+        "params": ""
+      },
+      {
+        "name": "expand",
+        "params": ""
+      },
+      {
+        "name": "collapse",
+        "params": ""
+      },
+      {
+        "name": "open",
+        "params": ""
+      },
+      {
+        "name": "close",
+        "params": ""
+      },
+      {
+        "name": "isMobile",
+        "params": ""
+      },
+      {
+        "name": "getState",
+        "params": ""
+      },
+      {
+        "name": "destroy",
+        "params": ""
+      }
+    ]
+  },
   "props": {
     "breakpoint": {
       "type": "number",
@@ -122,7 +152,6 @@
       "description": "Max-width in px below which the sidebar switches to the mobile drawer (matchMedia (max-width: Npx))"
     }
   },
-
   "a11y": {
     "role": "navigation",
     "required_attrs": [
@@ -146,23 +175,37 @@
       "The mobile drawer traps focus, locks body scroll, closes on Escape or overlay click, and returns focus to the opener."
     ]
   },
-
   "tokens_used": [
-    "color-bg", "color-fg", "color-fg-muted", "color-border",
-    "color-primary", "color-primary-subtle", "color-bg-muted", "color-ring",
+    "color-bg",
+    "color-fg",
+    "color-fg-muted",
+    "color-border",
+    "color-primary",
+    "color-primary-subtle",
+    "color-bg-muted",
+    "color-ring",
     "shadow-xl",
-    "space-1", "space-2", "space-3", "space-4",
-    "radius-md", "radius-lg",
-    "z-overlay", "z-modal",
-    "text-sm", "text-lg", "weight-medium", "weight-semibold",
-    "duration-normal", "duration-slow", "ease-out", "ease-default"
+    "space-1",
+    "space-2",
+    "space-3",
+    "space-4",
+    "radius-md",
+    "radius-lg",
+    "z-overlay",
+    "z-modal",
+    "text-sm",
+    "text-lg",
+    "weight-medium",
+    "weight-semibold",
+    "duration-normal",
+    "duration-slow",
+    "ease-out",
+    "ease-default"
   ],
-
   "templates": {
     "html": "<div data-ui=\"sidebar\" data-state=\"{state}\" id=\"{id}\">\n  <div data-part=\"overlay\" hidden></div>\n  <aside data-part=\"panel\" aria-label=\"Primary navigation\">\n    <div data-part=\"header\">\n      <a data-part=\"brand\" href=\"#\"><span data-part=\"brand-icon\" aria-hidden=\"true\">{brand_icon}</span><span data-part=\"brand-label\">{brand}</span></a>\n      <button data-part=\"trigger\" aria-label=\"Toggle sidebar\" aria-expanded=\"true\" aria-controls=\"{id}\">{toggle_icon}</button>\n    </div>\n    <nav data-part=\"nav\" aria-label=\"Main\">\n      <a data-part=\"item\" href=\"#\" aria-current=\"page\"><span data-part=\"icon\" aria-hidden=\"true\">{icon}</span><span data-part=\"label\">{label}</span></a>\n    </nav>\n    <div data-part=\"footer\">{footer}</div>\n  </aside>\n</div>",
     "app_shell": "<div style=\"display: flex; min-block-size: 100dvh\">\n  <div data-ui=\"sidebar\" data-state=\"expanded\" id=\"app-sidebar\"> … </div>\n  <div style=\"flex: 1 1 auto; display: flex; flex-direction: column; min-inline-size: 0\">\n    <header role=\"banner\">\n      <button data-sidebar-toggle=\"app-sidebar\" aria-controls=\"app-sidebar\" aria-expanded=\"true\" aria-label=\"Toggle sidebar\">☰</button>\n    </header>\n    <main role=\"main\"> … </main>\n  </div>\n</div>"
   },
-
   "safe_transforms": [
     "change-initial-state",
     "change-breakpoint",
@@ -174,7 +217,6 @@
     "change-sidebar-width",
     "swap-brand"
   ],
-
   "unsafe_transforms": [
     "remove-panel",
     "remove-focus-trap",
@@ -184,19 +226,21 @@
     "remove-panel-aria-label",
     "invent-new-data-state-value"
   ],
-
   "composition": {
-    "contains": ["button", "badge", "avatar", "separator"],
+    "contains": [
+      "button",
+      "badge",
+      "avatar",
+      "separator"
+    ],
     "used_in": []
   },
-
   "files": {
     "html": "sidebar.html",
     "css": "sidebar.css",
     "js": "sidebar.js",
     "manifest": "sidebar.manifest.json"
   },
-
   "tests": [
     "desktop-toggle-transitions-expanded-to-rail",
     "desktop-toggle-transitions-rail-to-expanded",

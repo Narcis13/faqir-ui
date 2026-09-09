@@ -68,8 +68,12 @@ const GUIDE = `  <!--
 
     Edit the copy in place, or re-run the scaffold after customising the
     patterns under ui/patterns/. Keep the data-ui / data-part attributes intact
-    so \`faqir audit\` can keep checking the page. No script tag is needed until
-    you add reactive directives (l-data, l-for, …) — then include faqir-core.js.
+    so \`faqir audit\` can keep checking the page.
+
+    This page is static: every section is CSS-only, so it needs no JavaScript at
+    all. The moment you add a reactive directive (l-data, l-for, l-model, …) or a
+    recipe that opens, add the engine as the last thing in <body>:
+      <script src="ui/core/faqir-core.js" defer></script>
   -->`;
 
 /**
