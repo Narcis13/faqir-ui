@@ -2,7 +2,7 @@
 
 The cross-session cursor for the `/faqir-plan` slash command (`.claude/commands/faqir-plan.md`).
 
-**`FAQIR-PLAN.md`'s Status cells (⬜/✅) are the source of truth for what is done.** This
+**The plan file's Status cells (⬜/✅) are the source of truth for what is done.** This
 file is a pointer plus a log. When the two disagree, trust the plan's cells and repair this
 file — that is exactly what `/faqir-plan reset` does.
 
@@ -11,7 +11,7 @@ file — that is exactly what `/faqir-plan reset` does.
 | Field | Type | Meaning |
 |---|---|---|
 | `$schema` | string | Relative path to this document. Prose, not a JSON Schema — nothing validates against it. |
-| `plan` | string | The plan file this cursor tracks. Always `"FAQIR-PLAN.md"`. |
+| `plan` | string | The plan file this cursor tracks: `"FAQIR-PLAN.md"` for phases v0.3–1.0 (archived cursor: `state-1.0.json`), `"FAQIR-PLAN-1.1.md"` from 2026-09-10. The command reads the plan from here. |
 | `current` | string \| null | Task ID a session has started but not finished, else `null`. Written before work begins so a crash mid-session is recoverable. **Do not hand-edit while a session is running.** |
 | `last_completed` | string \| null | Task ID of the most recently finished task. |
 | `history` | array | Per-task log. See below. |
