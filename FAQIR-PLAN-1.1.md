@@ -136,6 +136,7 @@ plan is complete and is not consulted.
 
 | ID | Task | Origin | Status |
 |----|------|--------|--------|
+| 1.1A-21 | `--doc-heading-font` and `--doc-heading-weight` have no consumer: `tokens/document.css` declares them and three themes override them (`document`, `document-serif`, `paper` — the last specifically to get "sans headings on serif body"), but no stylesheet in the registry reads either, so a theme's document heading face does nothing. Wire the `document` pattern's heading surfaces to them, or delete the tokens. Found while re-pointing `--doc-heading-font` → `--font-heading`; it is exactly the drift §5.3's `token-coverage` test is meant to catch ("a theme axis has no consumer"), so land it with, or before, that gate. | 1.1A-01 | ⬜ |
 
 ---
 
