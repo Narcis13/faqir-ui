@@ -4,7 +4,7 @@
 
 The machine-readable contract shipped beside every Faqir component and theme. A file validates as either a component manifest (`<name>.manifest.json`) or a theme manifest (`<name>.theme.json`). FROZEN at 1.0: until 2.0 this schema may only gain optional fields and widened enums — no field is renamed, removed, or made required. See SPEC-1.0.md §6 and §8.
 
-Everything below is read out of `manifest.schema.json` — `schema_version` 1.0, `stability` frozen, published at `https://faqir.dev/manifest.schema.json`, amendment policy `https://faqir.dev/spec/1.0/#amendments`. Field names, types, descriptions and enums are the schema's own, so this file cannot drift from the contract it documents.
+Everything below is read out of `manifest.schema.json` — `schema_version` 1.0, `stability` frozen, published at `https://raw.githubusercontent.com/Narcis13/faqir-ui/main/manifest.schema.json`, amendment policy `https://github.com/Narcis13/faqir-ui/blob/v1.0.0/SPEC-1.0.md#8-stability-and-the-amendment-process`. Field names, types, descriptions and enums are the schema's own, so this file cannot drift from the contract it documents.
 
 A component manifest sits beside its HTML and CSS at `registry/<primitives|recipes|patterns>/<name>/<name>.manifest.json`; a theme manifest is `registry/themes/<name>.theme.json`. Every manifest carries a `$schema` — a path relative to its own directory, so it resolves at any depth. `faqir create` writes one, and `bun scripts/add-schema-refs.mjs --check` fails on any manifest whose value is missing or stale.
 

@@ -1,6 +1,6 @@
 {
   "name": "@faqir-ui/core",
-  "version": "0.2.4",
+  "version": "1.0.0",
   "description": "Faqir UI runtime engine — the Alpine-style reactive core (faqir-core.js), minified CDN build, and prebuilt per-theme CSS bundles. Zero dependencies.",
   "type": "module",
   "main": "./dist/faqir-core.mjs",

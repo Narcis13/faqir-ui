@@ -1,6 +1,6 @@
 {
   "name": "@faqir-ui/mcp",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Faqir UI MCP server — a stdio Model Context Protocol server exposing the Faqir registry, manifests, themes, and project context to any MCP host (Claude Code, Cursor, …). Wraps the same TypeScript internals as the CLI.",
   "type": "module",
   "bin": {

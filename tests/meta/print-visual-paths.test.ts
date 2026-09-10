@@ -21,11 +21,16 @@ import { fileURLToPath } from "node:url";
 import { DOCUMENT_SCAFFOLDS } from "../../src/scaffolds/documents";
 import { discoverRegistryPrintReferences } from "../visual/print/matrix";
 
+// Dormant while there is no CI: `671941e` removed every workflow, and this file
+// holds one of them to its own contract. It wakes up by itself if the workflow
+// returns. See the same note in `visual-baselines.test.ts`.
+
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../..");
 const WORKFLOW = join(ROOT, ".github", "workflows", "print-visual.yml");
 const REGISTRY = join(ROOT, "registry");
+const HAS_CI = existsSync(WORKFLOW);
 
-const source = readFileSync(WORKFLOW, "utf8");
+const source = HAS_CI ? readFileSync(WORKFLOW, "utf8") : "";
 
 /**
  * Every `paths:` block in the workflow, as a list of globs.
@@ -88,7 +93,21 @@ const WATCHED_WITHOUT_A_PAGE = [
   "registry/recipes/barcode/**",
 ];
 
-describe("print-visual workflow path filter", () => {
+describe.skipIf(HAS_CI)("print regression, with no CI to run it", () => {
+  it("is carried as a manual pre-release step in the checklist", () => {
+    const checklist = readFileSync(join(ROOT, "docs", "release-checklist.md"), "utf8");
+    expect(checklist).toContain("bun run test:visual:print");
+  });
+
+  it("still knows what the print job would have had to cover", () => {
+    // The derivation survives the workflow's deletion, so whoever restores CI
+    // gets the required path list rather than the hand-maintained one that was
+    // wrong by construction.
+    expect(REQUIRED.length).toBeGreaterThan(10);
+  });
+});
+
+describe.skipIf(!HAS_CI)("print-visual workflow path filter", () => {
   const blocks = pathBlocks(source);
 
   it("has both a pull_request and a push filter", () => {

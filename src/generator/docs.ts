@@ -80,6 +80,7 @@ import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Manifest } from "../manifest";
+import { SCHEMA_ID_URL, SITE_ORIGIN } from "../canonical";
 import { BREAKPOINT_LIST, TIERS, responsiveAttribute } from "../utils/breakpoints";
 import {
   ARCHETYPES,
@@ -327,9 +328,9 @@ export const DEMO_MESSAGES_API = "api/messages";
  * `tests/generator/docs-agents.test.ts` hard-codes them, so moving one fails CI
  * rather than silently 404-ing something already published in a prompt.
  *
- * `manifest.schema.json` sits at the root because that is literally its `$id`
- * (`https://faqir.dev/manifest.schema.json`); a `$ref` in any manifest resolves
- * to it, which is the one path here that is not a convention but an identifier.
+ * `manifest.schema.json` sits at the root because it mirrors the schema's `$id`
+ * path ({@link SCHEMA_ID_URL}); a `$ref` in any manifest resolves relative to the
+ * file, which is the one path here that is not a convention but an identifier.
  */
 export const LLMS_INDEX_FILE = "llms.txt";
 export const LLMS_FULL_FILE = "llms-full.txt";
@@ -544,7 +545,7 @@ const DEFAULT_SITE_CONFIG: SiteConfig = {
   title: "Faqir UI",
   tagline: "The agent-native UI framework",
   description: "Manifest-driven, zero-dependency UI components documented from their own manifests.",
-  url: "https://faqir.dev",
+  url: SITE_ORIGIN,
   theme: "default",
   footer: "Faqir UI — every page on this site is generated from the registry manifests.",
 };

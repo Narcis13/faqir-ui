@@ -480,50 +480,105 @@ data where it is emitted, and treat `--registry` installs as a review boundary.
 
 ## Wave 4 — Release engineering
 
-`scripts/release.mjs` is a 107-line single-package script scoring **1 of 8
+`scripts/release.mjs` was a 107-line single-package script scoring **1 of 8
 mechanics and 0 of 3 acceptance criteria** against plan task 1.0-04. Est. **3–4 days**.
+
+> **The premise changed after this document was written.** `671941e` removed all
+> five GitHub Actions workflows — no Actions minutes on the free plan — which
+> means the repository has **no automated gate of any kind**. Two 1.0-04
+> requirements become unmeetable rather than unmet, and the rest move onto the
+> release script, which is now the only thing standing between a working tree and
+> npm. Every "wire it into `ci.yml`" instruction elsewhere in this document
+> (W1-1's `check:core-package` gate foremost) should be read as "wire it into
+> `release.mjs --preflight`".
 
 | 1.0-04 requirement | Status |
 |---|---|
-| Workspace-aware version bump | unmet — bumps root only; the other five are never touched |
-| Ordered builds of all dists | unmet — no `build:core`, `build:core-package`, `build:mcp`, `gen:bindings` |
-| Size budget as precondition | unmet — never invoked by the release path |
-| Per-package `npm publish` | unmet — one bare publish of the root |
-| `--provenance` | unmet — no publish workflow, no `id-token: write` |
-| Git tag | **met** |
-| GitHub release with notes | unmet |
-| **Dry-run (mandatory)** | unmet — and `--dry-run` prints "Unsupported version bump" then **exits 0**, so a mistyped release looks like success |
+| Workspace-aware version bump | **met** — all six packages plus `src/version.ts`, in lockstep, asserted in `tests/build/release.test.ts` |
+| Ordered builds of all dists | **met** — `build:core` → `build:cli` → `build:core-package` → `build:bindings` → `build:mcp` |
+| Size budget as precondition | **met** — `size` is a preflight gate, alongside the other eleven |
+| Per-package `npm publish` | **met** — six, in order, root CLI last; a partial failure prints what published and how to finish |
+| `--provenance` | **unmeetable** — needs an OIDC token from a CI provider. No workflow, no `id-token: write`, nothing to attest with. Stated in the release notes rather than left looking unconsidered |
+| Git tag | **met** — annotated, and pushed *before* the publish |
+| GitHub release with notes | **met** — `gh release create`, degrading to a printed command if `gh` is absent |
+| **Dry-run (mandatory)** | **met** — a full rehearsal (guards, gates, bump, builds, packed-tarball smoke) that then restores every tracked file |
 
-Also in this wave:
+Landed alongside it: the release ordering (tag → publish → push became
+commit → tag → push → publish, so a rejected push can no longer strand a version
+on npm that exists in no pushed commit); a branch guard and an `origin` sync
+check; a packed-tarball smoke that installs the CLI and runs it **under `node`**,
+which is the check `check:package` never performed; and a rollback story and
+launch checklist in `docs/release-checklist.md`, which also carries the visual,
+print, a11y, browser and layout suites as manual pre-release steps — they baseline
+in a pinned Linux container and cannot gate anything from a developer machine.
+`tests/meta/visual-baselines.test.ts` and `tests/meta/print-visual-paths.test.ts`
+go dormant while `.github/workflows/` is absent and wake up on their own if CI
+returns.
+
+### Still open in this wave
 
 - **No committed lockfile.** `.gitignore:4` ignores `bun.lock`; 7 of 8 devDeps
   float, including `axe-core ^4.12.1` (the zero-violation gate — an axe minor
   turns CI red with no repo change) and `@types/bun`/`bun-types` at `latest`.
   `ci.yml:20-24` already documents this exact failure mode for the Bun runtime and
   pins it; the lesson was not applied to dependencies.
-- **`check:package` is inert** — proven: `dist/` deleted entirely, `npm pack
-  --dry-run` still exits 0 packing 365 files whose `bin` cannot resolve.
-- **Two independent size-budget implementations** that disagree today (43.12 vs
-  43.39 KB for the same target) with no test asserting they agree.
-- **Release ordering can diverge npm from git**: `git tag` → `npm publish` →
-  `git push`; a rejected push leaves a version live on npm that exists in no
-  pushed commit. It also pushes to the current branch with no branch check.
-- **No rollback story and no launch checklist** anywhere.
-- **`https://faqir.dev` does not resolve**, yet `manifest.schema.json:3` sets it as
-  `$id` and `SPEC-1.0.md:468-472` publishes four canonical URLs on it. The schema
-  ships inside the tarball, so the frozen protocol's canonical URL is a dead name.
-- **`Faqir.version` reports `0.1.0`** from a package versioned `0.2.4`
-  (`engine.js:2`), and the "one version, everywhere" suite never reads any
-  workspace `package.json` or the engine's own literal.
+- **`check:package` is still inert** — proven: `dist/` deleted entirely, `npm pack
+  --dry-run` still exits 0 packing 365 files whose `bin` cannot resolve. The check
+  it should have been now runs in the release path (`packedCliSmoke`), so nothing
+  ships unverified; the script itself remains a decorative `prepublishOnly` step
+  and is exempted by name, with the reason written down, in
+  `tests/build/release.test.ts`.
+- **Two independent size-budget implementations** that disagree today:
+  `scripts/check-size.mjs:47` budgets 46 KB and `scripts/build-core-package.mjs:83`
+  budgets 45 KB for the same artifact, with no test asserting they agree. The
+  artifact is currently 44.74 KB, so both pass and the disagreement is invisible.
+- **No committed lockfile** — `.gitignore:4` ignores `bun.lock` (the file exists
+  locally). With CI gone this matters *more*, not less: the release machine is now
+  the only build environment, so an unpinned `axe-core ^4.12.1` or a `@types/bun`
+  at `latest` changes what ships with no commit to point at.
 - **`@faqir-ui/mcp` ships ~11 MB of unused runtime deps** — the bundle imports only
   `node:*` builtins; move both to `devDependencies`.
+- **The suite is flaky under load.** Three consecutive full runs produced three
+  different results: `tree-view`/keyed-`l-for` once, `faqir context --json` and
+  `faqir conform --json` once, `faqir dev --help` once — every failure a
+  subprocess spawn hitting its 30-second budget, none reproducible in isolation.
+  This is the tail of W3-5: the budgets stop the suite *hanging*, but a loaded
+  machine still trips them. It now blocks releases, because `test` is a preflight
+  gate.
 
-### The version story
-Nothing is published yet (`npm view` → `E404` for all six names), so every
-packaging defect is fixable without a deprecation. Recommend: **publish all six at
-`1.0.0` in lockstep**, with `PROTOCOL_VERSION`/`SCHEMA_VERSION` staying `1.0` and
-independent. Lockstep is simpler to reason about at 1.0 and the current 0.2.4/0.1.0
-skew has no upside.
+### The version story — settled
+All six packages are at **1.0.0** in lockstep, with `PROTOCOL_VERSION` and
+`SCHEMA_VERSION` staying `1.0` and independent. Nothing was published yet
+(`npm view` → `E404` for all six names), so the 0.2.4/0.1.0 skew cost no
+deprecation to unwind.
+
+`Faqir.version` reported `0.1.0` from a package versioned `0.2.4` because the
+literal was hand-maintained in `src/core-src/engine.js` while the build wrote the
+real version into a *comment* beside it. It is now injected at assembly time from
+`package.json` through a `// @faqir:version` seam that fails the build if it goes
+missing — and the test that pinned the drift (`expect(Faqir.version).toBe("0.1.0")`)
+reads `package.json` instead. The "one version, everywhere" suite gained the two
+assertions whose absence made the skew invisible: every workspace `package.json`,
+and the built engine's runtime literal.
+
+### The canonical URLs — settled
+`https://faqir.dev` never resolved, and it was the schema's `$id`, the
+`amendment_policy`, all four of SPEC-1.0 §10's published locations, and the docs
+site's canonical origin. A frozen protocol's `$id` is an identity, so a dead name
+there is not a broken link to tidy up later — it is part of what 1.0 freezes.
+
+The contract now publishes from the repository itself, addressed by git ref
+(`src/canonical.ts`): `main` for the `$id` alias that always serves the newest 1.x
+schema, `v1.0.0` for the pinned copy that will still serve *this* schema after 1.1
+exists. The published bytes and the repository bytes are the same bytes by
+construction — no copy step to drift, no host to keep paid. The preflight refuses
+to release a spec whose pinned tag does not exist, which is the failure mode that
+produced the dead domain, caught this time before it ships.
+
+The docs site keeps a separate origin (`SITE_ORIGIN`, currently
+`https://faqir-ui.pages.dev` — `wrangler.toml` already names that Pages project).
+Conflating a deployment with an identity is what made a lapsed domain load-bearing
+for a frozen schema, and a test now asserts the two cannot converge again.
 
 ---
 

@@ -4,6 +4,11 @@
 //
 //   VERSION           the npm package / CLI release. Bumped on every release by
 //                     `scripts/release.mjs`, which rewrites the literal below.
+//                     All six published packages move in **lockstep** — the root
+//                     `faqir-ui-cli` and the five under `packages/` carry the
+//                     same number, and no package depends on another by range,
+//                     so lockstep costs nothing and makes "which versions go
+//                     together" a question nobody has to ask.
 //   PROTOCOL_VERSION  the DOM contract — the five attributes, their value
 //                     grammars, the sanctioned token modifiers and the responsive
 //                     tier suffix. Frozen at 1.0; see SPEC-1.0.md.
@@ -16,7 +21,7 @@
 // the published site paths — states the same one.
 
 /** The npm package and CLI version. Rewritten by `scripts/release.mjs`. */
-export const VERSION = "0.2.4";
+export const VERSION = "1.0.0";
 
 /**
  * The frozen attribute protocol. **Additive until 2.0** — see the amendment

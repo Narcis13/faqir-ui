@@ -41,8 +41,8 @@ A Faqir page is ordinary HTML with two additions: one stylesheet and one script.
 **No build step?** The same two tags from a CDN, no project required:
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@faqir-ui/core@0.2.4/dist/faqir.default.css">
-<script src="https://cdn.jsdelivr.net/npm/@faqir-ui/core@0.2.4/dist/faqir-core.min.js" defer></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.0.0/dist/faqir.default.css">
+<script src="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.0.0/dist/faqir-core.min.js" defer></script>
 ```
 
 Add `integrity`/`crossorigin` for production — `packages/core/cdn.json` carries the SHA-384 for every published file, beside the version it was computed for.

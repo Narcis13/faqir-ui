@@ -466,13 +466,31 @@ promised.
 
 ## 10. Published locations
 
+The contract is published from the repository itself, addressed by git ref. The
+published bytes and the repository bytes are therefore the same bytes by
+construction: there is no copy step that can drift, no host that can lapse, and no
+window in which a deployment is stale relative to the tag it claims to serve.
+
 | What | URL | Notes |
 |------|-----|-------|
-| This document | `https://faqir.dev/spec/1.0/` | Rendered. The version is in the path and stays there. |
-| This document, as markdown | `https://faqir.dev/spec/1.0/spec.md` | The same bytes as `SPEC-1.0.md` in the repository. |
-| Manifest schema 1.0 | `https://faqir.dev/spec/1.0/manifest.schema.json` | Versioned copy, byte-identical to the alias below. |
-| Manifest schema (alias) | `https://faqir.dev/manifest.schema.json` | The schema's own `$id`; always the newest 1.x schema. |
+| This document | `https://github.com/Narcis13/faqir-ui/blob/v1.0.0/SPEC-1.0.md` | Rendered. Pinned to the release tag that froze 1.0. |
+| This document, as markdown | `https://raw.githubusercontent.com/Narcis13/faqir-ui/v1.0.0/SPEC-1.0.md` | The same bytes as `SPEC-1.0.md` in the repository. |
+| Manifest schema 1.0 | `https://raw.githubusercontent.com/Narcis13/faqir-ui/v1.0.0/manifest.schema.json` | Pinned copy. Serves the schema 1.0 froze with, after 1.1 exists. |
+| Manifest schema (alias) | `https://raw.githubusercontent.com/Narcis13/faqir-ui/main/manifest.schema.json` | The schema's own `$id`; always the newest 1.x schema. |
 
-A 1.1 of this document would be published at `/spec/1.1/` and `/spec/1.0/` would stay
-exactly where it is, serving exactly what it serves today. That is what "stable URL"
-has to mean for a frozen contract: the version in the path is the promise.
+Two refs, doing two different jobs. `main` is the alias: an additive amendment
+under §8 appears there the moment it lands, which is what "always the newest 1.x
+schema" has to mean. `v1.0.0` is the pin, and it never moves — every release tag
+serves the contract as that release shipped it, so a consumer that recorded a
+version can always fetch the exact bytes it was written against.
+
+A 1.1 of this document would be `SPEC-1.1.md` at the tag that publishes it, and
+`SPEC-1.0.md` would stay exactly where it is, serving exactly what it serves today.
+That is what "stable URL" has to mean for a frozen contract: the ref in the path is
+the promise, and a git tag is the strongest form of that promise available.
+
+**On the `$id`.** A JSON Schema `$id` is an identity, not a link, and changing one
+means every consumer that cached the old identity now holds a different schema.
+That makes the origin above part of what 1.0 freezes: it is not a convenience URL
+to be tidied up later. Should the project ever publish from its own domain, the
+`$id` moves with it — and a schema-identity change is a 2.0 concern, not a 1.x one.

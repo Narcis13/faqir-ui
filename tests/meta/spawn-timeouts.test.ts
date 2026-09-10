@@ -273,11 +273,40 @@ describe("no synchronous spawn without a wall-clock budget", () => {
       expect(call.file.includes(".test."), call.file).toBe(false);
     }
     const SELF = "tests/meta/spawn-timeouts.test.ts";
+
+    // The invariant is that nothing under `bun run test` can **execute** an
+    // unbounded spawn — not that nothing may name the file containing one.
+    // `release.mjs` guards its entry point (`main()` runs only when the file is
+    // argv[1]), so importing it evaluates definitions and nothing else, which is
+    // what lets `tests/build/release.test.ts` unit-test the version arithmetic
+    // instead of re-implementing it beside the thing it is supposed to check.
+    //
+    // That exemption is only as good as the guard, so the guard is asserted here
+    // rather than assumed. Spawning the file is still forbidden outright: a
+    // subprocess would reach `main()` and, through it, an interactive `npm
+    // publish` that no budget bounds.
+    const RELEASE = "scripts/release.mjs";
+    const releaseSource = readFileSync(join(ROOT, RELEASE), "utf8");
+    expect(
+      releaseSource,
+      `${RELEASE} must guard main() behind an argv[1] check, or importing it starts a release`,
+    ).toContain("resolve(process.argv[1]) === fileURLToPath(import.meta.url)");
+
+    const importsOnly = /^\s*import\s[^;]*from\s+["'][^"']*release\.mjs["'];?\s*$/m;
     const suiteReaches = sourceFiles
       .filter((f) => f !== SELF && (f.includes(".test.") || f.includes(".spec.")))
       // A quoted path is how a test would spawn or import it; a mention in prose
       // is not. This file is excluded because it necessarily names the exemption.
-      .filter((f) => /["'`][^"'`]*release\.mjs/.test(readFileSync(join(ROOT, f), "utf8")));
+      .filter((f) => {
+        const text = readFileSync(join(ROOT, f), "utf8");
+        if (!/["'`][^"'`]*release\.mjs/.test(text)) return false;
+        // Every quoted reference must be either the guarded import or a plain
+        // `readFileSync` of the source — never an argument to a spawn.
+        const spawned = new RegExp(
+          `(spawnSync|execFileSync|execSync|runSync|Bun\\.spawnSync)[^;]*release\\.mjs`,
+        ).test(text);
+        return spawned || !importsOnly.test(text);
+      });
     expect(suiteReaches).toEqual([]);
     expect(sourceFiles).toContain(SELF);
   });

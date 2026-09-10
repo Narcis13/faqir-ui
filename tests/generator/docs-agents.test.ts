@@ -52,6 +52,7 @@ import { auditHtmlSource } from "../../src/audit/html-audit";
 import { loadRegistryManifestMap } from "../../src/utils/components";
 import { parseDocument } from "../../src/parser/html-parser";
 import { validateAgainstSchema } from "../../src/utils/json-schema";
+import { SCHEMA_ID_URL } from "../../src/canonical";
 
 const REPO = join(import.meta.dir, "../..");
 const REGISTRY = join(REPO, "registry");
@@ -269,11 +270,17 @@ describe("the hosted schema and registry index are the real ones", () => {
     expect(file(SCHEMA_FILE)).toBe(readFileSync(join(REPO, SCHEMA_FILE), "utf8"));
   });
 
-  it("serves the schema at the path its own $id claims", () => {
-    // `$id` is not a convention here, it is an identifier: every manifest's
-    // `$schema` resolves against it, so the hosted path has to match.
-    const schema = JSON.parse(file(SCHEMA_FILE)) as { $id: string };
-    expect(new URL(schema.$id).pathname).toBe(`/${SCHEMA_FILE}`);
+  it("serves the same schema file the $id identifies", () => {
+    // `$id` is an identifier, not a path on this host. It resolves to the
+    // repository (`src/canonical.ts`), because a frozen schema's identity must
+    // not depend on where the docs happen to be deployed — the `faqir.dev`
+    // domain the previous `$id` named never resolved at all. What the site owes
+    // is the *same file* under the same basename, so a reader who follows the
+    // site's copy and a reader who follows the `$id` get identical bytes.
+    const hosted = JSON.parse(file(SCHEMA_FILE)) as { $id: string };
+    expect(hosted.$id).toBe(SCHEMA_ID_URL);
+    expect(new URL(SCHEMA_ID_URL).pathname.endsWith(`/${SCHEMA_FILE}`)).toBe(true);
+    expect(file(SCHEMA_FILE)).toBe(readFileSync(join(REPO, SCHEMA_FILE), "utf8"));
   });
 
   it("validates every registry manifest against the hosted copy", () => {

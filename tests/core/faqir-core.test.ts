@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 
 // Import faqir-core.js — it's a UMD module that attaches Faqir to globalThis
 // We need to re-require it fresh for some tests
@@ -2093,8 +2095,14 @@ describe("Core Utilities (via Faqir API)", () => {
   });
 
   describe("Faqir.version", () => {
-    it("exposes version string", () => {
-      expect(Faqir.version).toBe("0.1.0");
+    // Asserted against package.json rather than a literal. The literal is what
+    // let `Faqir.version` sit at "0.1.0" inside a package versioned "0.2.4" for
+    // three minor releases: the test pinned the drift instead of catching it.
+    it("reports the package version", () => {
+      const pkg = JSON.parse(
+        readFileSync(join(import.meta.dir, "..", "..", "package.json"), "utf8"),
+      ) as { version: string };
+      expect(Faqir.version).toBe(pkg.version);
     });
   });
 });

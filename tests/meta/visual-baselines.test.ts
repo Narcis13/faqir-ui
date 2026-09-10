@@ -19,14 +19,48 @@
 // invariant it holds is one sentence long: nothing writes a baseline without
 // first comparing to one, and a stale comparison says so.
 
+// ── Dormant while there is no CI ────────────────────────────────────────────
+//
+// `671941e` removed every workflow (no Actions minutes on the free plan), which
+// removed the gate this file holds along with it. Deleting the file was the
+// alternative and it is worse: the invariant below is the reason the workflow
+// was written the way it was, and it would have to be rediscovered the day CI
+// returns. So the suite goes dormant instead — it wakes up by itself the moment
+// `.github/workflows/visual.yml` exists again.
+//
+// What replaces it in the meantime is not another gate. It is a line in
+// `docs/release-checklist.md` saying a human runs the visual suite before a
+// release, and the case below holds that line in place — because a manual step
+// nobody wrote down is not a manual step, it is a gap.
+
 import { describe, expect, it } from "bun:test";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../..");
-const WORKFLOW = readFileSync(join(ROOT, ".github", "workflows", "visual.yml"), "utf8");
+const WORKFLOW_PATH = join(ROOT, ".github", "workflows", "visual.yml");
+const HAS_CI = existsSync(WORKFLOW_PATH);
+const WORKFLOW = HAS_CI ? readFileSync(WORKFLOW_PATH, "utf8") : "";
 const GITIGNORE = readFileSync(join(ROOT, ".gitignore"), "utf8");
+const CHECKLIST = readFileSync(join(ROOT, "docs", "release-checklist.md"), "utf8");
+
+describe.skipIf(HAS_CI)("visual regression, with no CI to run it", () => {
+  it("is carried as a manual pre-release step in the checklist", () => {
+    expect(CHECKLIST).toContain("bun run test:visual");
+    expect(CHECKLIST).toContain("There is no CI");
+  });
+
+  it("the checklist warns against blessing baselines to go green", () => {
+    // The failure mode the deleted workflow existed to prevent, restated for a
+    // human: `--update-snapshots` makes any regression the new truth, and it is
+    // now one keystroke away with nothing between it and the release.
+    // Whitespace-normalised: the sentence wraps in the source, and a gate that
+    // breaks on reflowing a paragraph teaches people to stop editing the prose.
+    const flat = CHECKLIST.toLowerCase().replace(/\s+/g, " ");
+    expect(flat).toContain("never run an `:update` variant");
+  });
+});
 
 /** The step names, in file order — enough to assert what happens before what. */
 const STEPS = [...WORKFLOW.matchAll(/^\s*- name: (.+)$/gm)].map((m) => m[1].trim());
@@ -34,7 +68,7 @@ const STEPS = [...WORKFLOW.matchAll(/^\s*- name: (.+)$/gm)].map((m) => m[1].trim
 const indexOfStep = (fragment: string) =>
   STEPS.findIndex((name) => name.toLowerCase().includes(fragment.toLowerCase()));
 
-describe("visual baselines", () => {
+describe.skipIf(!HAS_CI)("visual baselines", () => {
   it("are still cache-borne, not committed", () => {
     // If this ever changes, the rest of this file is describing a gate that no
     // longer exists — the invariant would be "the committed PNGs are current".

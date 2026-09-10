@@ -2,7 +2,7 @@
   "title": "Faqir UI",
   "tagline": "Interfaces agents can understand",
   "description": "An agent-native, manifest-driven UI framework with accessible components, a zero-dependency reactive engine, and machine-readable contracts.",
-  "url": "https://faqir.dev",
+  "url": "https://faqir-ui.pages.dev",
   "theme": "aurora",
   "footer": "Faqir UI — the interface is the contract."
 }

@@ -1,13 +1,13 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://faqir.dev/manifest.schema.json",
+  "$id": "https://raw.githubusercontent.com/Narcis13/faqir-ui/main/manifest.schema.json",
   "schema_version": "1.0",
   "title": "Faqir manifest",
   "description": "The machine-readable contract shipped beside every Faqir component and theme. A file validates as either a component manifest (`<name>.manifest.json`) or a theme manifest (`<name>.theme.json`). FROZEN at 1.0: until 2.0 this schema may only gain optional fields and widened enums — no field is renamed, removed, or made required. See SPEC-1.0.md §6 and §8.",
   "stability": "frozen",
   "protocol_version": "1.0",
-  "amendment_policy": "https://faqir.dev/spec/1.0/#amendments",
-  "$comment": "The versioned copy of this file is published at https://faqir.dev/spec/1.0/manifest.schema.json; the $id above is the alias that always serves the newest 1.x schema. Both are byte-identical while 1.0 is current.",
+  "amendment_policy": "https://github.com/Narcis13/faqir-ui/blob/v1.0.0/SPEC-1.0.md#8-stability-and-the-amendment-process",
+  "$comment": "The copy of this file pinned to the 1.0 freeze is published at https://raw.githubusercontent.com/Narcis13/faqir-ui/v1.0.0/manifest.schema.json; the $id above tracks `main` and is the alias that always serves the newest 1.x schema. Both are byte-identical until an additive 1.x amendment lands, after which the pinned URL keeps serving the bytes 1.0 froze with — which is the whole point of pinning it. Every release tag serves the schema as that release shipped it.",
   "changelog": [
     {
       "version": "0.5",

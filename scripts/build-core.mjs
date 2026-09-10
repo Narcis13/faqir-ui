@@ -86,6 +86,30 @@ function pkgVersion() {
   }
 }
 
+// The one line in the engine that states the release version at runtime
+// (`Faqir.version`). It is generated, not authored: the marker below is the
+// seam, and the literal beside it is rewritten from the root package.json at
+// assembly time. Hand-maintaining it is what produced a `Faqir.version` of
+// `0.1.0` inside a package versioned `0.2.4` — reported by every consumer that
+// asked the engine what it was, and by no test, for three minor releases.
+export const VERSION_MARKER = "// @faqir:version";
+const VERSION_LINE_RE = /(\bversion:\s*)(['"])[^'"]*\2(\s*,?\s*\/\/ @faqir:version)/;
+
+/**
+ * Rewrite the engine's `Faqir.version` literal from the root package.json.
+ * Throws when the marker is absent — the same fail-loud contract as the
+ * `@faqir:controllers` and `@faqir:dev-diagnostics` seams, and for the same
+ * reason: a silently skipped substitution ships a wrong version number.
+ */
+export function injectVersion(engineSrc, engineRel, version = pkgVersion()) {
+  if (!VERSION_LINE_RE.test(engineSrc)) {
+    throw new Error(
+      `engine source ${engineRel} is missing the "${VERSION_MARKER}" marker on its Faqir.version line`,
+    );
+  }
+  return engineSrc.replace(VERSION_LINE_RE, `$1$2${version}$2$3`);
+}
+
 /** A repo-relative label, or the bare tail for paths outside the repo (fixtures). */
 function labelFor(absPath) {
   const rel = relative(ROOT, absPath);
@@ -288,7 +312,7 @@ export function buildCore(opts = {}) {
   const outPath = opts.outPath || (dev ? DEV_OUT : OUT);
   const write = opts.write !== false;
 
-  const engine = readFileSync(enginePath, "utf8");
+  const engine = injectVersion(readFileSync(enginePath, "utf8"), relative(ROOT, enginePath));
   const lines = engine.split("\n");
   const markerIdx = lines.findIndex((l) => l.trim() === MARKER);
   if (markerIdx === -1) {

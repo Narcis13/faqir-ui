@@ -1,6 +1,6 @@
 {
   "name": "@faqir-ui/forms",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Isomorphic, zero-dependency JSON Schema to audit-clean Faqir form renderer",
   "type": "module",
   "main": "./src/index.js",

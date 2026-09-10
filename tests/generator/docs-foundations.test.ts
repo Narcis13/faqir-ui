@@ -4,6 +4,7 @@
 
 import { describe, expect, it } from "bun:test";
 import { Window } from "happy-dom";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   buildDocsSite,
@@ -20,10 +21,15 @@ import {
   SITEMAP_FILE,
   TYPOGRAPHY_PAGE,
 } from "../../src/generator/docs";
+import { SITE_ORIGIN } from "../../src/canonical";
 
 const REPO = join(import.meta.dir, "../..");
 const REGISTRY = join(REPO, "registry");
-const SITE_URL = "https://faqir.dev";
+// Derived, not typed out: the docs host is a deployment setting that moved once
+// already (the `faqir.dev` domain the whole site was built around never
+// resolved). `src/canonical.ts` owns it, and the case below holds the committed
+// site config to the same value so the two cannot drift apart silently.
+const SITE_URL = SITE_ORIGIN;
 const files = buildDocsSite();
 const byPath = new Map(files.map((file) => [file.path, file.content]));
 const components = discoverDocsComponents(REGISTRY);
@@ -148,6 +154,13 @@ describe("static publishing surfaces", () => {
     theme: "aurora",
     footer: "Faqir UI",
   };
+
+  it("builds the committed site against the origin src/canonical.ts declares", () => {
+    const committed = JSON.parse(readFileSync(join(REPO, "site/site.config.json"), "utf8")) as {
+      url: string;
+    };
+    expect(committed.url).toBe(SITE_ORIGIN);
+  });
 
   it("gives every navigable document one canonical public URL", () => {
     for (const page of files.filter((candidate) => isShellPage(candidate.path))) {

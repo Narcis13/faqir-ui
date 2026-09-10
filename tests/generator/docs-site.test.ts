@@ -24,6 +24,7 @@ import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } fr
 import { createServer, request } from "node:http";
 import { dirname, join } from "node:path";
 import { SPAWN_TIMEOUT, runSyncBun } from "../helpers/spawn";
+import { SITE_ORIGIN } from "../../src/canonical";
 import {
   buildDocsSite,
   discoverDocsComponents,
@@ -654,7 +655,7 @@ describe("the scaffold gallery", () => {
       );
       expect(grownByPath.get("index.html")).toContain(`href="${scaffoldPagePath(probe)}"`);
       // The sitemap lists canonical URLs, which drop the `index.html`.
-      expect(grownByPath.get(SITEMAP_FILE)).toContain(`<loc>https://faqir.dev/scaffolds/${probe}/</loc>`);
+      expect(grownByPath.get(SITEMAP_FILE)).toContain(`<loc>${SITE_ORIGIN}/scaffolds/${probe}/</loc>`);
       expect(grownByPath.get(LLMS_INDEX_FILE)).toContain(`faqir scaffold ${probe}`);
       // Three files per scaffold, and nothing else moved.
       expect(grown.length).toBe(before + 3);

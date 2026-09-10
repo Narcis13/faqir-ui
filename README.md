@@ -142,7 +142,7 @@ One `<link>` tag. One `<script>` tag. That's the entire framework inclusion.
 Five data attributes form the stable DOM contract between HTML, CSS, JavaScript, and AI agents.
 
 > **Frozen at 1.0.** The normative specification is [`SPEC-1.0.md`](SPEC-1.0.md), published at
-> [faqir.dev/spec/1.0/](https://faqir.dev/spec/1.0/). It covers these five attributes and their
+> [the `v1.0.0` tag](https://github.com/Narcis13/faqir-ui/blob/v1.0.0/SPEC-1.0.md). It covers these five attributes and their
 > value grammars, the three sanctioned token modifiers (`data-theme`, `data-density`,
 > `data-motion`), the `data-<attr>-<tier>` responsive suffix, manifest schema 1.0, and the
 > amendment process — what may change in a 1.x release and what has to wait for 2.0. The

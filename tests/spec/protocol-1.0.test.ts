@@ -34,6 +34,14 @@ import { DRAFT_07_META_SCHEMA } from "../../src/utils/draft-07-meta";
 import { PROTOCOL_ATTRIBUTES, TIERS, BREAKPOINT_LIST } from "../../src/utils/breakpoints";
 import { VERSION, PROTOCOL_VERSION, SCHEMA_VERSION } from "../../src/version";
 import {
+  AMENDMENT_POLICY_URL,
+  PUBLISHED_LOCATIONS,
+  SCHEMA_ID_URL,
+  SITE_ORIGIN,
+  SPEC_MARKDOWN_URL,
+  SPEC_RENDERED_URL,
+} from "../../src/canonical";
+import {
   AMENDMENT_RULES,
   ATTRIBUTE_SPECS,
   FREEZE_STATEMENT,
@@ -362,6 +370,33 @@ describe("version constants agree across the CLI, the schema, the spec and the s
     expect(VERSION).toBe(pkg.version);
   });
 
+  // The gap this suite shipped with: it read the root package.json and stopped.
+  // Meanwhile `@faqir-ui/{forms,mcp,react,vue}` sat at 0.1.0 and the root at
+  // 0.2.4 — six packages published from one commit, four of them lying about
+  // which commit that was, and nothing here could see it.
+  it("every published workspace package moves in lockstep with the root", () => {
+    const skew: string[] = [];
+    for (const name of ["core", "forms", "mcp", "react", "vue"]) {
+      const wp = JSON.parse(
+        readFileSync(join(ROOT, "packages", name, "package.json"), "utf8"),
+      ) as { name: string; version: string };
+      if (wp.version !== pkg.version) skew.push(`${wp.name}@${wp.version}`);
+    }
+    expect(skew, `expected every package at ${pkg.version}`).toEqual([]);
+  });
+
+  // `Faqir.version` is what a consumer asks the engine at runtime. It is
+  // injected by `scripts/build-core.mjs` from package.json; this asserts the
+  // committed artifact carries the injection, so shipping without a rebuild
+  // fails here rather than in someone's console.
+  it("the built engine reports the package version at runtime", () => {
+    const built = readFileSync(join(ROOT, "registry/core/faqir-core.js"), "utf8");
+    const match = built.match(/version:\s*'([^']*)',\s*\/\/ @faqir:version/);
+    expect(match, "faqir-core.js has no @faqir:version marker — rebuild with `bun run build:core`")
+      .not.toBeNull();
+    expect(match![1]).toBe(pkg.version);
+  });
+
   it("the schema states the frozen schema and protocol versions", () => {
     expect(SCHEMA.schema_version).toBe(SCHEMA_VERSION);
     expect(SCHEMA.protocol_version).toBe(PROTOCOL_VERSION);
@@ -379,14 +414,53 @@ describe("version constants agree across the CLI, the schema, the spec and the s
     expect(SPEC_SCHEMA_FILE).toBe(`spec/${PROTOCOL_VERSION}/${SCHEMA_FILE}`);
   });
 
-  it("the amendment policy the schema points at is a section of the published spec", () => {
-    expect(SCHEMA.amendment_policy).toBe(`https://faqir.dev/spec/${PROTOCOL_VERSION}/#amendments`);
+  it("the schema's $id is the alias constant, not a hand-typed URL", () => {
+    expect(SCHEMA.$id).toBe(SCHEMA_ID_URL);
   });
 
-  it("the spec's published-locations table names the URLs the site actually serves", () => {
-    for (const path of [SPEC_PREFIX, SPEC_MARKDOWN_FILE, SPEC_SCHEMA_FILE, SCHEMA_FILE]) {
-      expect(SPEC, `${path} is served but not documented in §10`).toContain(`faqir.dev/${path}`);
+  it("the amendment policy the schema points at is a section of the published spec", () => {
+    expect(SCHEMA.amendment_policy).toBe(AMENDMENT_POLICY_URL);
+    // The anchor has to be a heading that exists, or the link lands at the top
+    // of a 500-line document and the reader is on their own.
+    const anchor = AMENDMENT_POLICY_URL.split("#")[1]!;
+    const headings = [...SPEC.matchAll(/^## (.+)$/gm)].map(([, h]) =>
+      h
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, "")
+        .trim()
+        .replace(/\s+/g, "-"),
+    );
+    expect(headings, `#${anchor} is not a heading in ${SPEC_FILE}`).toContain(anchor);
+  });
+
+  it("the spec's published-locations table names every canonical URL", () => {
+    for (const url of PUBLISHED_LOCATIONS) {
+      expect(SPEC, `${url} is canonical but not documented in §10`).toContain(url);
     }
+  });
+
+  it("the canonical spec URLs address the spec document this version names", () => {
+    expect(SPEC_MARKDOWN_URL).toContain(SPEC_FILE);
+    expect(SPEC_RENDERED_URL).toContain(SPEC_FILE);
+  });
+
+  it("the site the generator builds is a deployment, not the contract's identity", () => {
+    // The dead-domain lesson, pinned: the schema `$id` must never be derived
+    // from wherever the docs happen to be hosted. `https://faqir.dev` was both
+    // at once, and when it stopped resolving it took the frozen protocol's
+    // canonical URL with it.
+    expect(SCHEMA_ID_URL.startsWith(SITE_ORIGIN)).toBe(false);
+    for (const url of PUBLISHED_LOCATIONS) {
+      expect(url.startsWith(SITE_ORIGIN), `${url} is pinned to the docs host`).toBe(false);
+    }
+  });
+
+  it("the site still serves the spec and schema at their versioned paths", () => {
+    // Unchanged by the origin move: these are the generator's own output paths,
+    // and `docs-agents.test.ts` hard-codes them as the site's machine contract.
+    expect(SPEC_PREFIX).toBe(`spec/${PROTOCOL_VERSION}/`);
+    expect(SPEC_MARKDOWN_FILE).toBe(`${SPEC_PREFIX}spec.md`);
+    expect(SPEC_SCHEMA_FILE).toBe(`${SPEC_PREFIX}${SCHEMA_FILE}`);
   });
 });
 

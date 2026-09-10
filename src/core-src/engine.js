@@ -2779,7 +2779,12 @@
   // ═══════════════════════════════════════════════════════
 
   var Faqir = {
-    version: '0.1.0',
+    // @faqir:version — `scripts/build-core.mjs` rewrites this literal from the
+    // root package.json at assembly time. It drifted three minor versions the
+    // one time it was hand-maintained (0.1.0 in a package versioned 0.2.4), so
+    // the built artifact is now the only place the number is authoritative and
+    // the build fails if this marker goes missing.
+    version: '1.0.0', // @faqir:version
     reactive: reactive,
     effect: effect,
     batch: batch,

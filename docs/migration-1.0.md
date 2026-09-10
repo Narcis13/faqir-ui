@@ -333,7 +333,7 @@ is not loaded, and the accessibility and structure rules added since v0.2.4 —
 `duplicate-id`, `heading-order`, `landmark`, `field-wiring`, `contrast-tokens`,
 `logical-properties`, `undeclared-attribute` and `breakpoint-canon`. Several of
 these will fire on markup that was clean in 0.2.4 and is merely stricter now; all
-are documented on the [audit rules page](https://faqir.dev/playground/).
+are documented in the [audit rules table](../README.md#audit-rules).
 
 **What it will not tell you.** Behavioural changes with no vocabulary change —
 `grid`'s collapse, `table`'s thresholds, `auth-form`'s breakpoint. Those are
