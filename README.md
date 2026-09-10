@@ -17,7 +17,7 @@ The CLI is the conductor.
 
 ## Table of Contents
 
-- [Why Faqir?](#why-faqir)
+- [Why this project?](#why-this-project)
 - [Quick Start](#quick-start)
 - [The Attribute Protocol](#the-attribute-protocol)
 - [Component Library](#component-library)
@@ -41,7 +41,110 @@ The CLI is the conductor.
 
 ---
 
-## Why Faqir?
+## Why this project?
+
+Frontier models write excellent HTML. Hand one a brief and it returns a dialog
+with a focus trap, a form with its ARIA wired, a responsive grid — clean, modern,
+often better than what a rushed human ships. So the honest question, before
+anything else in this document, is: **why put a framework between a model that
+good and the page?**
+
+Because writing the page was never the hard part. Knowing it is right is. And
+knowing that the fiftieth page still matches the first is harder still.
+
+A language model is a brilliant, memoryless author. Every call starts from
+nothing, re-derives the design system from whatever is in the prompt, and
+re-solves the same problems — focus management, spacing rhythm, contrast,
+keyboard navigation — with a small, independent chance of getting each one
+subtly wrong. The page it writes today and the page it writes next Tuesday are
+both good and slightly different. Multiply that by fifty pages, four sessions,
+two model generations and one rebrand, and "good" has quietly become a patchwork
+that no one, human or machine, can audit.
+
+Faqir turns that open loop into a closed one. It is the harness a capable model
+needs, built as software instead of as a prompt: a frozen contract, a tested
+component library, a design-token system, and a deterministic auditor that says
+*yes* — or *no, line 14*. Here is what that buys, concretely.
+
+**1. Verification is the bottleneck, not generation.** A model produces text; it
+has no oracle. Faqir gives it one. Every component ships a manifest — its slots,
+variants, states and ARIA requirements as JSON — and `faqir audit` checks markup
+against those manifests with thirty-one rules, from `required-slot` and
+`focus-trap` to `duplicate-id`, `heading-order` and `contrast-tokens`. It reads
+from stdin, emits versioned JSON, and is the same code in the CLI, the MCP server
+and the browser. An agent can generate, audit, repair and re-audit with no
+filesystem, no browser and no human in the loop. A failure that would otherwise
+be silent becomes a finding with a rule id and a line number — and silence is the
+one failure an agent cannot recover from.
+
+**2. Consistency is a property of the system, not the author.** With Faqir the
+design system lives in files, not in a prompt: a three-layer token ladder, twelve
+themes, 86 components and one breakpoint canon. A page inherits them instead of
+re-deriving them, so a theme change moves every page at once, and a new agent in
+a new session lands on the same rhythm as the last one. No amount of model
+capability produces this, because the problem is not capability — it is that
+each call is independent, and consistency is precisely the thing independent
+calls do not have.
+
+**3. The model writes intent; the library owns mechanism.**
+`<button data-ui="button" data-variant="primary">` is a complete, correct,
+themed, accessible button. The model wrote one line of intent; the CSS that
+realizes it was written once, tested once, and is never regenerated. A Faqir page
+is a fraction of the size of the same page written from scratch, costs a fraction
+to generate, and offers a fraction of the surface on which to drift. *The AI is
+the compiler* means the model compiles intent into a protocol — not that it
+re-implements a modal on every page that needs one.
+
+**4. Accessibility is inherited, not re-derived.** A model gets a focus trap
+right most of the time. Return-focus-to-trigger, roving tabindex in a menubar,
+WAI keyboard navigation in a tree view, `aria-describedby` wiring across a form —
+each is a place where "most of the time" applies independently, and fifteen
+independent 95%s compound to under 50%. Faqir's recipes implement these once, in
+controllers whose test lists ship inside the manifest, and the accessibility gate
+runs the registry through 3,013 axe cases on every release. The page gets that
+floor for free, and the audit refuses markup that falls below it.
+
+**5. The DOM stays legible to the next agent.** A class name is a guess: is
+`.active` a state, a variant, or a layout helper? `data-ui="dialog"
+data-state="open"` is a statement. Any agent, in any session, on any model, can
+read a Faqir page it did not write and know what is there — what each element
+is, which slot it fills, what state it is in, and which transforms the manifest
+marks safe and which break the contract. This is what *agent-native* has to
+mean: not that a model *can* write it, but that a different model can *read* it
+back, months later, and repair it.
+
+**6. Some things should never be generated twice.** A Code 128 checksum, a QR
+code, an OKLCH theme with verified contrast ratios, a keyed list reconciler, a
+focus trap that returns focus to its trigger. These are not creative problems;
+they are correctness problems, and asking a probabilistic author to re-derive
+them inside a `<script>` tag on an invoice page is a poor use of intelligence and
+a real risk. Faqir draws the line where it belongs: the agent composes, the
+library computes.
+
+**7. The contract outlives the model.** The five-attribute protocol is frozen at
+1.0, with a published spec, an amendment process, and drift tests that fail the
+moment the spec and the implementation disagree. The framework's files live in
+your repository with zero runtime dependencies and no build step. When the model
+that wrote your pages is retired, the pages, the audit and the contract all
+still work. A prompt-only design system decays with every model change; a
+file-based one is versioned.
+
+**8. Constraints lower the intelligence floor.** This is the quiet economic
+argument. When the hard parts are pre-solved and every output is
+machine-verified, a smaller, cheaper, faster model produces a correct page — and
+a frontier model produces one on the first try instead of the third. The
+framework does not compete with the model's capability; it decides how much of
+that capability has to be spent re-proving things that were already proven.
+
+**The trade, stated plainly.** You give up the freedom to write any CSS you
+like — no classes, no hardcoded values, one grammar per attribute — and in
+exchange you get a DOM a machine can read, a contract a machine can check, and a
+design system that is the same on the fiftieth page as on the first. If you need
+one page, once, ask the model and be done. If you need a product that many
+agents and many people will build, inspect and repair over years, you need
+something that holds still while they do. That is what Faqir is for.
+
+### What that looks like in markup
 
 Traditional UI frameworks use class names: `.btn`, `.btn-primary`, `.card-header`. This creates naming collisions, specificity wars, and markup that no machine can reliably parse. A class name is ambiguous — is `.active` a state, a variant, or a layout helper?
 
