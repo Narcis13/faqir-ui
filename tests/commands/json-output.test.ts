@@ -8,6 +8,19 @@ import { SPAWN_TIMEOUT, runSync } from "../helpers/spawn";
 
 const SRC_INDEX = join(import.meta.dir, "../../src/index.ts");
 
+// File-wide, and deliberately above every spawn budget used below.
+//
+// `setDefaultTimeout` applies from the point it is called, so declaring it inside
+// a later `describe` left every test registered before that line — including all
+// ~30 `faqir <cmd> --json` cases — on bun's 5s default while the spawns they make
+// are budgeted at 30s (`SPAWN_TIMEOUT.CLI`). A spawn that stalled therefore
+// reported the runner's generic "test timed out after 5000ms", naming no command,
+// instead of the `SpawnTimeoutError` that names the command and its output. It
+// also left no room for the retry in `tests/helpers/spawn.ts` to do its job.
+//
+// 180s covers two full CLI budgets plus a cold `build:cli` in the block below.
+setDefaultTimeout(180_000);
+
 /** Run the CLI (via the same Bun runtime) and capture its stdout/exit code. */
 function runCli(args: string[], opts: { cwd?: string; input?: string } = {}) {
   const res = runSync(process.execPath, [SRC_INDEX, ...args], {
@@ -219,8 +232,8 @@ describe("universal --json guarantee · compiled bundle on Node, in a real proje
   let template: string;
   let workspace: string;
 
-  // A cold `build:cli` on a loaded runner outlives bun's default hook timeout.
-  setDefaultTimeout(180_000);
+  // A cold `build:cli` on a loaded runner outlives bun's default hook timeout;
+  // the file-level `setDefaultTimeout` at the top covers it.
 
   beforeAll(() => {
     if (!existsSync(DIST)) {

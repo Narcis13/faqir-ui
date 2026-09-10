@@ -59,6 +59,42 @@ export const SPAWN_TIMEOUT = {
   BUILD: scale(90_000),
 } as const;
 
+/**
+ * How many times to attempt a spawn of `command` before reporting a timeout.
+ *
+ * **Bun's `spawnSync` intermittently hangs when the child is also Bun.** The
+ * child never executes — no stdout, no stderr, not a byte — and is killed at the
+ * budget. Measured on Bun 1.3.8, spawning `bun src/index.ts doctor --json`:
+ *
+ *   | parent → child        | hangs   |
+ *   |-----------------------|---------|
+ *   | bun  → bun (source)   | 4 / 120 |
+ *   | node → bun (source)   | 0 / 120 |
+ *   | bun  → node (bundle)  | 0 / 40  |
+ *
+ * Neither runtime is at fault alone; it is the pairing. `bun test` is the runner,
+ * so the parent is always Bun and every test that shells out to `bun` is exposed
+ * at roughly 2-3% per spawn. A file spawning ~50 CLIs therefore failed about two
+ * runs in three — always a *different* command, which is what proved it was not a
+ * defect in any of them. It stalled the release preflight in exactly this way.
+ *
+ * The stdio shape is irrelevant: `["pipe","pipe","pipe"]` with no input — what
+ * the CLI tests use — hung 0/40 in one sample and `["ignore","pipe","pipe"]` hung
+ * 1/40, i.e. the same rate within noise. An open stdin pipe is not the cause.
+ *
+ * So a Bun child gets one retry, and only when the timeout was **silent**. A
+ * child that produced output and then stalled is a genuine hang, and reporting it
+ * on the first sighting is worth more than the retry would save. Two silent
+ * timeouts in a row still fail — a real infinite loop costs twice the budget and
+ * is then reported, which is the right trade for a flake this frequent.
+ *
+ * Revisit when Bun fixes it; delete this and the retry loops together.
+ */
+const SPAWN_ATTEMPTS = (command: string): number => {
+  const base = command.split("/").pop() ?? command;
+  return base === "bun" || base === "bun-debug" ? 2 : 1;
+};
+
 /** Thrown when a child outlives its budget; never for any other failure. */
 export class SpawnTimeoutError extends Error {
   readonly command: string;
@@ -127,25 +163,36 @@ export function runSync(
   options: RunSyncOptions = {},
 ): SpawnSyncReturns<string> {
   const timeout = options.timeout ?? SPAWN_TIMEOUT.CLI;
-  const started = Date.now();
-  const result = spawnSync(command, [...args], {
-    killSignal: "SIGKILL",
-    ...options,
-    timeout,
-  } as SpawnSyncOptions) as SpawnSyncReturns<string>;
-  const elapsed = Date.now() - started;
+  const attempts = SPAWN_ATTEMPTS(command);
+  let expiry: SpawnTimeoutError | undefined;
 
-  if ((result.error as NodeJS.ErrnoException | undefined)?.code === "ETIMEDOUT") {
-    throw new SpawnTimeoutError({
-      command: describe(command, args),
-      timeoutMs: timeout,
-      elapsedMs: elapsed,
-      cwd: typeof options.cwd === "string" ? options.cwd : undefined,
-      stdout: asText(result.stdout),
-      stderr: asText(result.stderr),
-    });
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    const started = Date.now();
+    const result = spawnSync(command, [...args], {
+      killSignal: "SIGKILL",
+      ...options,
+      timeout,
+    } as SpawnSyncOptions) as SpawnSyncReturns<string>;
+    const elapsed = Date.now() - started;
+
+    if ((result.error as NodeJS.ErrnoException | undefined)?.code === "ETIMEDOUT") {
+      const stdout = asText(result.stdout);
+      const stderr = asText(result.stderr);
+      expiry = new SpawnTimeoutError({
+        command: describe(command, args),
+        timeoutMs: timeout,
+        elapsedMs: elapsed,
+        cwd: typeof options.cwd === "string" ? options.cwd : undefined,
+        stdout,
+        stderr,
+      });
+      // Silent expiry of a Bun child only — see SPAWN_ATTEMPTS.
+      if (attempt < attempts && !stdout && !stderr) continue;
+      throw expiry;
+    }
+    return result;
   }
-  return result;
+  throw expiry as SpawnTimeoutError;
 }
 
 export type RunSyncBunOptions = NonNullable<Parameters<typeof Bun.spawnSync>[1]> & {
@@ -171,25 +218,36 @@ export function runSyncBun(
 ): Bun.SyncSubprocess<"pipe", "pipe"> {
   const timeout = options.timeout ?? SPAWN_TIMEOUT.CLI;
   const killSignal = options.killSignal ?? "SIGKILL";
-  const started = Date.now();
-  const result = Bun.spawnSync([...cmd], {
-    ...options,
-    killSignal,
-    timeout,
-  }) as Bun.SyncSubprocess<"pipe", "pipe">;
-  const elapsed = Date.now() - started;
+  const attempts = SPAWN_ATTEMPTS(cmd[0] ?? "");
+  let expiry: SpawnTimeoutError | undefined;
 
-  const expired = result.exitedDueToTimeout === true ||
-    (result.exitCode === null && result.signalCode === killSignal && elapsed >= timeout);
-  if (expired) {
-    throw new SpawnTimeoutError({
-      command: describe(cmd[0] ?? "", cmd.slice(1)),
-      timeoutMs: timeout,
-      elapsedMs: elapsed,
-      cwd: options.cwd,
-      stdout: asText(result.stdout),
-      stderr: asText(result.stderr),
-    });
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    const started = Date.now();
+    const result = Bun.spawnSync([...cmd], {
+      ...options,
+      killSignal,
+      timeout,
+    }) as Bun.SyncSubprocess<"pipe", "pipe">;
+    const elapsed = Date.now() - started;
+
+    const expired = result.exitedDueToTimeout === true ||
+      (result.exitCode === null && result.signalCode === killSignal && elapsed >= timeout);
+    if (expired) {
+      const stdout = asText(result.stdout);
+      const stderr = asText(result.stderr);
+      expiry = new SpawnTimeoutError({
+        command: describe(cmd[0] ?? "", cmd.slice(1)),
+        timeoutMs: timeout,
+        elapsedMs: elapsed,
+        cwd: options.cwd,
+        stdout,
+        stderr,
+      });
+      // Silent expiry of a Bun child only — see SPAWN_ATTEMPTS.
+      if (attempt < attempts && !stdout && !stderr) continue;
+      throw expiry;
+    }
+    return result;
   }
-  return result;
+  throw expiry as SpawnTimeoutError;
 }
