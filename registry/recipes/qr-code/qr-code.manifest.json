@@ -90,7 +90,7 @@
     "space-2",
     "space-3",
     "text-xs",
-    "font-sans"
+    "font-body"
   ],
   "templates": {
     "html": "<div data-ui=\"qr-code\" data-value=\"{url}\" data-size=\"{size}\" data-ecl=\"{ecl}\" role=\"img\" aria-label=\"QR code: {url}\"></div>",

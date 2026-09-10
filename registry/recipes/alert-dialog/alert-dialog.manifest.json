@@ -220,7 +220,8 @@
     "ease-default",
     "ease-out",
     "z-overlay",
-    "z-modal"
+    "z-modal",
+    "font-heading"
   ],
   "templates": {
     "html": "<div data-ui=\"alert-dialog\" data-state=\"closed\" id=\"{id}\"{confirm_required}>\n  <button data-part=\"trigger\">{trigger_text}</button>\n  <div data-part=\"overlay\" hidden></div>\n  <div data-part=\"panel\" role=\"alertdialog\" aria-modal=\"true\" aria-labelledby=\"{id}-title\" aria-describedby=\"{id}-desc\" data-variant=\"{tone}\" data-size=\"{size}\" hidden>\n    <div data-part=\"header\">\n      <h2 id=\"{id}-title\" data-part=\"title\">{title}</h2>\n    </div>\n    <div data-part=\"body\">\n      <p id=\"{id}-desc\" data-part=\"description\">{description}</p>\n    </div>\n    <div data-part=\"footer\">\n      <button data-ui=\"button\" data-part=\"cancel\" data-variant=\"outline\">{cancel_text}</button>\n      <button data-ui=\"button\" data-part=\"confirm\" data-variant=\"destructive\">{confirm_text}</button>\n    </div>\n  </div>\n</div>"

@@ -298,7 +298,7 @@ The shipped `button` manifest, verbatim. Not an illustration of one: this is the
     "color-bg", "color-bg-muted", "color-bg-subtle", "color-fg", "color-border", "color-ring",
     "radius-md", "radius-full",
     "space-2", "space-3", "space-4", "space-6",
-    "font-sans", "text-xs", "text-sm", "text-base", "weight-medium",
+    "font-ui", "text-xs", "text-sm", "text-base", "weight-medium",
     "duration-fast", "ease-default"
   ],
 
@@ -359,5 +359,5 @@ The manifest is the contract; the sources repeat the machine-readable part of it
 
 ```css
 /* @ui:component button */
-/* @ui:tokens color-primary color-primary-hover color-primary-fg color-secondary color-secondary-hover color-secondary-fg color-destructive color-destructive-hover color-destructive-fg color-bg color-bg-muted color-bg-subtle color-fg color-border color-ring radius-md space-2 space-3 space-4 space-6 font-sans text-xs text-sm text-base weight-medium duration-fast ease-default shadow-xs radius-full */
+/* @ui:tokens color-primary color-primary-hover color-primary-fg color-secondary color-secondary-hover color-secondary-fg color-destructive color-destructive-hover color-destructive-fg color-bg color-bg-muted color-bg-subtle color-fg color-border color-ring radius-md space-2 space-3 space-4 space-6 font-ui text-xs text-sm text-base weight-medium duration-fast ease-default shadow-xs radius-full */
 ```

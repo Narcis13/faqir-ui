@@ -1,5 +1,5 @@
 /* @ui:component input */
-/* @ui:tokens color-bg color-fg color-fg-muted color-border color-border-strong color-ring color-destructive radius-md space-2 space-3 space-4 font-sans text-xs text-sm text-base duration-fast ease-default */
+/* @ui:tokens color-bg color-fg color-fg-muted color-border color-border-strong color-ring color-destructive radius-md space-2 space-3 space-4 font-ui text-xs text-sm text-base duration-fast ease-default */
 
 /* ── Base ── */
 [data-ui="input"] {
@@ -11,7 +11,7 @@
   border-radius: var(--input-radius, var(--radius-md));
   background: var(--input-bg, var(--color-bg));
   color: var(--color-fg);
-  font-family: var(--input-font, var(--font-sans));
+  font-family: var(--font-ui);
   font-size: var(--text-sm);
   line-height: 1;
   transition: border-color var(--duration-fast) var(--ease-default),

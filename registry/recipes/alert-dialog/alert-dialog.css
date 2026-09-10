@@ -1,5 +1,5 @@
 /* @ui:component alert-dialog */
-/* @ui:tokens radius-xl shadow-xl space-2 space-3 space-6 color-bg color-fg color-border color-fg-muted color-destructive duration-normal ease-default ease-out z-overlay z-modal */
+/* @ui:tokens radius-xl shadow-xl space-2 space-3 space-6 color-bg color-fg color-border color-fg-muted color-destructive duration-normal ease-default ease-out z-overlay z-modal font-heading */
 
 /* ── Root ── */
 [data-ui="alert-dialog"] {
@@ -81,6 +81,7 @@
 /* ── Title ── */
 [data-ui="alert-dialog"] [data-part="title"] {
   margin: 0;
+  font-family: var(--font-heading);
   font-size: var(--text-lg, 1.125rem);
   font-weight: var(--weight-semibold, 600);
   color: var(--color-fg);

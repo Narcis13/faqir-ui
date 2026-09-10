@@ -114,7 +114,7 @@
     "color-fg",
     "color-fg-muted",
     "color-primary",
-    "font-sans",
+    "font-heading", "font-body", "heading-weight", "heading-tracking", "heading-transform", "heading-leading",
     "font-mono",
     "text-xs",
     "text-sm",

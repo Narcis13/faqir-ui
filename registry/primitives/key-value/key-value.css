@@ -1,5 +1,5 @@
 /* @ui:component key-value */
-/* @ui:tokens kv-label-color kv-label-weight kv-label-size kv-value-color kv-value-size kv-value-weight kv-gap kv-pair-gap kv-grid-gap text-xs text-sm text-base font-sans */
+/* @ui:tokens kv-label-color kv-label-weight kv-label-size kv-value-color kv-value-size kv-value-weight kv-gap kv-pair-gap kv-grid-gap text-xs text-sm text-base font-body */
 
 /* ── Base ── */
 [data-ui="key-value"] {
@@ -8,7 +8,7 @@
   gap: var(--kv-pair-gap);
   margin: 0;
   padding: 0;
-  font-family: var(--doc-font, var(--font-sans, system-ui, sans-serif));
+  font-family: var(--doc-font, var(--font-body));
 }
 
 /* ── Label ── */

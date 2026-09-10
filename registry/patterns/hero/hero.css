@@ -1,5 +1,5 @@
 /* @ui:component hero */
-/* @ui:tokens color-bg color-fg color-fg-muted space-3 space-4 space-6 space-8 space-12 space-16 space-20 text-sm text-base text-lg text-xl text-3xl text-4xl font-sans weight-bold weight-normal leading-tight leading-relaxed radius-lg */
+/* @ui:tokens color-bg color-fg color-fg-muted space-3 space-4 space-6 space-8 space-12 space-16 space-20 text-sm text-base text-lg text-xl text-3xl text-4xl font-heading font-body heading-weight heading-tracking heading-transform heading-leading weight-bold weight-normal leading-tight leading-relaxed radius-lg */
 
 /* ── Root ──
    A one-column grid by default; the layout variants only change how that grid
@@ -13,7 +13,7 @@
   gap: var(--space-4);
   padding-block: var(--space-12);
   padding-inline: var(--space-4);
-  font-family: var(--font-sans, system-ui, sans-serif);
+  font-family: var(--font-body);
   color: var(--color-fg);
   background: var(--color-bg);
 }
@@ -27,9 +27,12 @@
 /* ── Headline ── */
 [data-ui="hero"] [data-part="headline"] {
   margin: 0;
+  font-family: var(--font-heading);
   font-size: var(--text-3xl);
-  font-weight: var(--weight-bold);
-  line-height: var(--leading-tight);
+  font-weight: var(--heading-weight);
+  letter-spacing: var(--heading-tracking);
+  text-transform: var(--heading-transform);
+  line-height: var(--heading-leading);
   color: var(--color-fg);
   text-wrap: balance;
 }

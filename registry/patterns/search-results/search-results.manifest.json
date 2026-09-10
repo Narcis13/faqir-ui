@@ -128,7 +128,7 @@
     "color-border", "color-primary", "color-primary-fg",
     "radius-md", "radius-lg", "shadow-sm",
     "space-1", "space-2", "space-3", "space-4", "space-6", "space-8",
-    "font-sans", "text-xs", "text-sm", "text-base", "text-lg",
+    "font-body", "text-xs", "text-sm", "text-base", "text-lg",
     "weight-medium", "weight-semibold", "leading-tight", "leading-normal",
     "duration-fast", "duration-normal", "ease-default"
   ],

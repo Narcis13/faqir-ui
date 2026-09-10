@@ -1332,6 +1332,18 @@ function renderSwatchRules(tokenList: readonly TokenEntry[]): string {
 }
 
 /**
+ * The heading-voice tokens (1.1A-01) are the one typography family whose CSS
+ * property cannot be read off a name prefix — each of the four drives a
+ * different one. Named here so the preview rule and the specimen agree.
+ */
+const HEADING_VOICE_PROPERTY: Record<string, string> = {
+  "heading-weight": "font-weight",
+  "heading-tracking": "letter-spacing",
+  "heading-transform": "text-transform",
+  "heading-leading": "line-height",
+};
+
+/**
  * Live typography previews, generated from the same token list as the reference
  * page. The attribute value names the token; the prefix decides which CSS
  * property consumes it, so adding a new type-scale step makes it render without
@@ -1341,7 +1353,9 @@ function renderTypographyPreviewRules(tokenList: readonly TokenEntry[]): string 
   return tokenList
     .filter((entry) => entry.group === "typography")
     .map((entry) => {
-      const property = entry.name.startsWith("font-")
+      const property = HEADING_VOICE_PROPERTY[entry.name]
+        ? HEADING_VOICE_PROPERTY[entry.name]
+        : entry.name.startsWith("font-")
         ? "font-family"
         : entry.name.startsWith("text-")
           ? "font-size"
@@ -2237,7 +2251,14 @@ function renderTypographyPage(ctx: {
 }): SiteFile {
   const pagePath = TYPOGRAPHY_PAGE;
   const typography = ctx.tokenList.filter((entry) => entry.group === "typography");
-  const families = typography.filter((entry) => entry.name.startsWith("font-"));
+  const ROLE_NAMES = ["font-heading", "font-body", "font-ui"];
+  const families = typography.filter(
+    (entry) => entry.name.startsWith("font-") && !ROLE_NAMES.includes(entry.name),
+  );
+  const roles = ROLE_NAMES.map((name) => typography.find((entry) => entry.name === name)).filter(
+    (entry): entry is TokenEntry => entry !== undefined,
+  );
+  const voice = typography.filter((entry) => entry.name in HEADING_VOICE_PROPERTY);
   const sizes = typography.filter((entry) => entry.name.startsWith("text-"));
   const weights = typography.filter((entry) => entry.name.startsWith("weight-"));
   const leading = typography.filter((entry) => entry.name.startsWith("leading-"));
@@ -2257,6 +2278,31 @@ function renderTypographyPage(ctx: {
               <p data-docs-token-preview="${escAttr(entry.name)}" data-docs-type-display>Ag</p>
               <p data-docs-token-preview="${escAttr(entry.name)}">The interface is the contract. 0123456789</p>
             </div>
+          </div>`,
+    )
+    .join("\n");
+  const roleCards = roles
+    .map(
+      (entry) => `          <div data-ui="card" data-variant="outlined" data-docs-type-family>
+            <div data-part="header">
+              <span data-ui="text" data-size="xs" data-variant="mono">--${esc(entry.name)}</span>
+              <h3 data-part="title">${esc(entry.name.replace("font-", ""))}</h3>
+              <p data-part="description"><code>${esc(entry.value)}</code></p>
+            </div>
+            <div data-part="body">
+              <p data-docs-token-preview="${escAttr(entry.name)}" data-docs-type-display>Ag</p>
+              <p data-docs-token-preview="${escAttr(entry.name)}">The interface is the contract. 0123456789</p>
+            </div>
+          </div>`,
+    )
+    .join("\n");
+  const voiceRows = voice
+    .map(
+      (entry) => `          <div data-ui="surface" data-variant="flat" data-size="md">
+            <p data-docs-token-preview="${escAttr(entry.name)}">${esc(
+              entry.name.replace("heading-", ""),
+            )} — Build interfaces agents can understand.</p>
+            <code>--${esc(entry.name)} · ${esc(entry.value)}</code>
           </div>`,
     )
     .join("\n");
@@ -2292,7 +2338,7 @@ function renderTypographyPage(ctx: {
           <span data-ui="badge" data-variant="primary">System fonts · token scale</span>
           <h1>Typography</h1>
           <p>${esc(
-            `${families.length} font stacks, ${sizes.length} size steps, ${weights.length} weights, and ${leading.length} line-height choices form one portable type system with no font download.`,
+            `${families.length} font stacks behind ${roles.length} type roles, ${sizes.length} size steps, ${weights.length} weights, and ${leading.length} line-height choices form one portable type system with no font download.`,
           )}</p>
           <div data-ui="cluster" data-gap="3">
             <a data-ui="button" data-variant="primary" href="${escAttr(
@@ -2312,6 +2358,17 @@ function renderTypographyPage(ctx: {
           </div>
           <div data-ui="grid" data-cols="1" data-cols-lg="3" data-gap="4">
 ${familyCards}
+          </div>
+        </section>
+
+        <section aria-labelledby="font-roles-heading" data-docs-section>
+          <div data-docs-section-heading>
+            <span data-ui="badge" data-variant="primary">Font roles</span>
+            <h2 id="font-roles-heading">What components actually read.</h2>
+            <p>Components never name a family. They name a role — headings, body copy, controls — and a theme re-points the role once. Serif headings on a sans body is a single declaration, not an edit to every stylesheet.</p>
+          </div>
+          <div data-ui="grid" data-cols="1" data-cols-lg="3" data-gap="4">
+${roleCards}
           </div>
         </section>
 
@@ -2341,6 +2398,17 @@ ${sizeRows}
               <div data-part="header"><h3 data-part="title">Line heights</h3></div>
               <div data-part="body"><div data-ui="stack" data-gap="3">${leadingRows}</div></div>
             </div>
+          </div>
+        </section>
+
+        <section aria-labelledby="heading-voice-heading" data-docs-section>
+          <div data-docs-section-heading>
+            <span data-ui="badge" data-variant="secondary">Heading voice</span>
+            <h2 id="heading-voice-heading">Four knobs give headings a personality.</h2>
+            <p>Weight, tracking, case, and leading are what make a heading sound like the theme rather than like body copy one size up. They ship at the values the default heading already uses, so a page that sets none of them is unchanged — and a theme that sets them re-voices every heading at once.</p>
+          </div>
+          <div data-ui="stack" data-gap="3">
+${voiceRows}
           </div>
         </section>
 

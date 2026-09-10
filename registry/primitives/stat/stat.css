@@ -1,12 +1,12 @@
 /* @ui:component stat */
-/* @ui:tokens stat-value-size stat-value-weight stat-value-num-font stat-label-size stat-label-color stat-change-positive stat-change-negative color-fg color-fg-muted color-bg color-border space-1 space-2 space-4 radius-md shadow-sm font-sans text-xs text-sm text-lg text-3xl weight-semibold */
+/* @ui:tokens stat-value-size stat-value-weight stat-value-num-font stat-label-size stat-label-color stat-change-positive stat-change-negative color-fg color-fg-muted color-bg color-border space-1 space-2 space-4 radius-md shadow-sm font-heading font-body text-xs text-sm text-lg text-3xl weight-semibold */
 
 /* ── Base ── */
 [data-ui="stat"] {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
-  font-family: var(--doc-font, var(--font-sans, system-ui, sans-serif));
+  font-family: var(--doc-font, var(--font-body));
 }
 
 /* ── Label ── */
@@ -20,6 +20,7 @@
 
 /* ── Value ── */
 [data-ui="stat"] [data-part="value"] {
+  font-family: var(--font-heading);
   font-size: var(--stat-value-size);
   font-weight: var(--stat-value-weight);
   color: var(--color-fg);

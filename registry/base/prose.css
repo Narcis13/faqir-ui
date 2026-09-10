@@ -1,7 +1,7 @@
 /* @ui:base prose — typography defaults for long-form content */
 
 [data-ui="prose"] {
-  font-family: var(--font-sans);
+  font-family: var(--font-body);
   font-size: var(--text-base);
   line-height: var(--leading-relaxed);
   color: var(--color-fg);
@@ -9,29 +9,41 @@
 }
 
 [data-ui="prose"] h1 {
+  font-family: var(--font-heading);
   font-size: var(--text-4xl);
-  font-weight: var(--weight-bold);
-  line-height: var(--leading-tight);
+  font-weight: var(--heading-weight);
+  letter-spacing: var(--heading-tracking);
+  text-transform: var(--heading-transform);
+  line-height: var(--heading-leading);
   margin-block: var(--space-8) var(--space-4);
 }
 
 [data-ui="prose"] h2 {
+  font-family: var(--font-heading);
   font-size: var(--text-3xl);
   font-weight: var(--weight-semibold);
-  line-height: var(--leading-tight);
+  letter-spacing: var(--heading-tracking);
+  text-transform: var(--heading-transform);
+  line-height: var(--heading-leading);
   margin-block: var(--space-8) var(--space-3);
 }
 
 [data-ui="prose"] h3 {
+  font-family: var(--font-heading);
   font-size: var(--text-2xl);
   font-weight: var(--weight-semibold);
+  letter-spacing: var(--heading-tracking);
+  text-transform: var(--heading-transform);
   line-height: var(--leading-snug);
   margin-block: var(--space-6) var(--space-3);
 }
 
 [data-ui="prose"] h4 {
+  font-family: var(--font-heading);
   font-size: var(--text-xl);
   font-weight: var(--weight-semibold);
+  letter-spacing: var(--heading-tracking);
+  text-transform: var(--heading-transform);
   line-height: var(--leading-snug);
   margin-block: var(--space-6) var(--space-2);
 }

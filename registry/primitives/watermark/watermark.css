@@ -1,5 +1,5 @@
 /* @ui:component watermark */
-/* @ui:tokens color-fg-muted doc-font font-sans text-xl text-2xl text-4xl weight-bold leading-tight space-8 space-20 z-raised */
+/* @ui:tokens color-fg-muted doc-font font-body text-xl text-2xl text-4xl weight-bold leading-tight space-8 space-20 z-raised */
 
 [data-ui="watermark"] {
   position: fixed;
@@ -18,7 +18,7 @@
 
 [data-ui="watermark"] > [data-part="mark"] {
   color: var(--color-fg-muted);
-  font-family: var(--doc-font, var(--font-sans));
+  font-family: var(--doc-font, var(--font-body));
   font-size: var(--text-4xl);
   font-weight: var(--weight-bold);
   line-height: var(--leading-tight);

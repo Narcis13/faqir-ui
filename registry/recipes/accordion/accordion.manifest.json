@@ -126,7 +126,8 @@
     "weight-medium",
     "duration-normal",
     "ease-default",
-    "radius-lg"
+    "radius-lg",
+    "font-ui"
   ],
   "templates": {
     "html": "<div data-ui=\"accordion\" data-variant=\"{type}\" id=\"{id}\">\n  <div data-part=\"item\" data-state=\"collapsed\">\n    <button data-part=\"trigger\" id=\"{id}-trigger-1\" aria-expanded=\"false\" aria-controls=\"{id}-content-1\">\n      <span>{label1}</span>\n      <span data-part=\"icon\" aria-hidden=\"true\">▾</span>\n    </button>\n    <div data-part=\"content\" id=\"{id}-content-1\" role=\"region\" aria-labelledby=\"{id}-trigger-1\" hidden>{content1}</div>\n  </div>\n  <div data-part=\"item\" data-state=\"collapsed\">\n    <button data-part=\"trigger\" id=\"{id}-trigger-2\" aria-expanded=\"false\" aria-controls=\"{id}-content-2\">\n      <span>{label2}</span>\n      <span data-part=\"icon\" aria-hidden=\"true\">▾</span>\n    </button>\n    <div data-part=\"content\" id=\"{id}-content-2\" role=\"region\" aria-labelledby=\"{id}-trigger-2\" hidden>{content2}</div>\n  </div>\n</div>"

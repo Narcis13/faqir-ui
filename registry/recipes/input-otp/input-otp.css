@@ -1,5 +1,5 @@
 /* @ui:component input-otp */
-/* @ui:tokens color-bg color-fg color-fg-muted color-border color-border-strong color-ring color-primary color-destructive radius-md space-2 space-3 text-base text-lg font-sans duration-fast ease-default */
+/* @ui:tokens color-bg color-fg color-fg-muted color-border color-border-strong color-ring color-primary color-destructive radius-md space-2 space-3 text-base text-lg font-ui duration-fast ease-default */
 
 /* ── Root ── */
 [data-ui="input-otp"] {
@@ -14,7 +14,7 @@
      gutter. The transparent input is `inset: 0`, so it follows the box the
      segments settle into however many rows that takes. */
   max-inline-size: 100%;
-  font-family: var(--font-sans, system-ui, sans-serif);
+  font-family: var(--font-ui);
 }
 
 /* ── Real input ──

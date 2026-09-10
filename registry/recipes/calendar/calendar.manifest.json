@@ -222,7 +222,8 @@
     "text-base",
     "weight-medium",
     "duration-fast",
-    "ease-default"
+    "ease-default",
+    "font-ui"
   ],
   "templates": {
     "html": "<div data-ui=\"calendar\" data-size=\"{size}\">\n  <div data-part=\"header\">\n    <button data-part=\"nav-prev\" type=\"button\" aria-label=\"Previous month\">&lsaquo;</button>\n    <span data-part=\"month-label\"></span>\n    <button data-part=\"nav-next\" type=\"button\" aria-label=\"Next month\">&rsaquo;</button>\n  </div>\n  <table data-part=\"grid\" role=\"grid\" aria-label=\"Calendar\">\n    <thead><tr><th>Su</th><th>Mo</th><th>Tu</th><th>We</th><th>Th</th><th>Fr</th><th>Sa</th></tr></thead>\n    <tbody data-part=\"grid-body\"></tbody>\n  </table>\n</div>"

@@ -108,7 +108,7 @@
     "shadow-md",
     "text-sm",
     "weight-medium",
-    "font-sans",
+    "font-ui",
     "duration-fast",
     "ease-out",
     "z-dropdown"

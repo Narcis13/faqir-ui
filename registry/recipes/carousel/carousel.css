@@ -1,5 +1,5 @@
 /* @ui:component carousel */
-/* @ui:tokens color-bg color-bg-muted color-fg color-fg-muted color-border color-primary color-ring radius-md radius-lg space-1 space-2 space-3 space-4 text-sm font-sans duration-fast ease-default */
+/* @ui:tokens color-bg color-bg-muted color-fg color-fg-muted color-border color-primary color-ring radius-md radius-lg space-1 space-2 space-3 space-4 text-sm font-ui duration-fast ease-default */
 
 /* The sliding is CSS, not JavaScript: the viewport is a scroll-snap strip and
    every slide is a snap target. Everything below works with no controller
@@ -13,7 +13,7 @@
   inline-size: 100%;
   min-inline-size: 0;
   max-inline-size: 100%;
-  font-family: var(--carousel-font, var(--font-sans));
+  font-family: var(--font-ui);
 }
 
 /* ── Viewport: the scroll-snap strip ── */

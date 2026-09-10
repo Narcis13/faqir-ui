@@ -1,5 +1,5 @@
 /* @ui:component document */
-/* @ui:tokens doc-max-width doc-font doc-font-size doc-line-height doc-heading-font doc-heading-weight doc-heading-size doc-subheading-size doc-legal-size doc-legal-color doc-section-gap doc-component-gap doc-running-header-height doc-running-footer-height doc-running-gap doc-bg doc-fg doc-print-border-color doc-table-header-bg doc-table-header-fg doc-table-header-weight doc-table-border doc-table-cell-pad-y doc-table-cell-pad-x doc-table-font-size doc-table-num-font doc-table-footer-bg doc-table-footer-weight doc-table-stripe-bg page-format page-orientation page-margin page-margin-top page-margin-bottom page-margin-left page-margin-right color-bg color-fg color-fg-muted color-border space-4 space-6 space-8 space-12 shadow-lg radius-md font-serif z-raised */
+/* @ui:tokens doc-max-width doc-font doc-font-size doc-line-height doc-heading-font doc-heading-weight doc-heading-size doc-subheading-size doc-legal-size doc-legal-color doc-section-gap doc-component-gap doc-running-header-height doc-running-footer-height doc-running-gap doc-bg doc-fg doc-print-border-color doc-table-header-bg doc-table-header-fg doc-table-header-weight doc-table-border doc-table-cell-pad-y doc-table-cell-pad-x doc-table-font-size doc-table-num-font doc-table-footer-bg doc-table-footer-weight doc-table-stripe-bg page-format page-orientation page-margin page-margin-top page-margin-bottom page-margin-left page-margin-right color-bg color-fg color-fg-muted color-border space-4 space-6 space-8 space-12 shadow-lg radius-md font-body z-raised */
 
 /* ── Page Rules ── */
 @page {
@@ -41,7 +41,7 @@
   padding: var(--space-6) var(--space-4);
   background: var(--color-bg, #fff);
   color: var(--color-fg);
-  font-family: var(--doc-font, var(--font-sans, system-ui, sans-serif));
+  font-family: var(--doc-font, var(--font-body));
   font-size: var(--doc-font-size);
   line-height: var(--doc-line-height);
   box-shadow: var(--shadow-lg,
@@ -116,7 +116,13 @@
 
 /* ── Variant: Report ── */
 [data-ui="document"][data-variant="report"] {
-  font-family: var(--font-serif, Georgia, "Times New Roman", serif);
+  /* A report is serif-set by definition. It re-points the document's own font
+     ROLE rather than its `font-family`, so every doc primitive nested inside it
+     (key-value, callout, signature — all of which read --doc-font) follows the
+     report into serif instead of staying sans inside a serif page. `report` is
+     the author asking for serif; a theme that wants its own document face
+     declares --doc-font at :root, which this variant deliberately outranks. */
+  --doc-font: Georgia, 'Times New Roman', serif;
   line-height: 1.6;
 }
 

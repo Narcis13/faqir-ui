@@ -59,7 +59,7 @@
     "radius-md",
     "space-1", "space-1h", "space-2", "space-3", "space-4",
     "text-xs", "text-sm", "text-base",
-    "font-sans", "weight-medium",
+    "font-ui", "weight-medium",
     "duration-fast", "ease-default"
   ],
 

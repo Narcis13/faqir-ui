@@ -197,7 +197,8 @@
     "z-modal",
     "duration-fast",
     "duration-normal",
-    "ease-out"
+    "ease-out",
+    "font-ui"
   ],
   "templates": {
     "html": "<div data-ui=\"command-palette\" data-state=\"closed\">\n  <div data-part=\"overlay\" hidden></div>\n  <div data-part=\"panel\" role=\"dialog\" aria-modal=\"true\" aria-label=\"Command palette\" data-size=\"{size}\" hidden>\n    <div data-part=\"search-wrapper\">\n      <input data-part=\"search\" type=\"text\" role=\"combobox\" aria-expanded=\"true\" aria-autocomplete=\"list\" aria-controls=\"{id}-list\" placeholder=\"Type a command or search...\">\n    </div>\n    <div data-part=\"list\" role=\"listbox\" id=\"{id}-list\">\n      <div data-part=\"group\">\n        <div data-part=\"group-label\">{group_label}</div>\n        <div data-part=\"item\" role=\"option\" aria-selected=\"false\">\n          <span data-part=\"item-label\">{item_label}</span>\n          <kbd data-part=\"kbd\">{shortcut}</kbd>\n        </div>\n      </div>\n      <div data-part=\"empty\" hidden>No commands found</div>\n    </div>\n  </div>\n</div>"

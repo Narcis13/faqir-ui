@@ -58,7 +58,7 @@
   "tokens_used": [
     "color-bg-muted", "color-fg-muted",
     "radius-md", "space-2",
-    "text-xs", "font-sans"
+    "text-xs", "font-body"
   ],
 
   "templates": {

@@ -1,5 +1,5 @@
 /* @ui:component stats-dashboard */
-/* @ui:tokens color-bg color-fg color-fg-muted color-border space-1 space-2 space-3 space-4 space-6 space-8 space-12 space-px font-sans text-sm text-base text-lg text-3xl weight-semibold weight-bold leading-tight leading-normal leading-relaxed */
+/* @ui:tokens color-bg color-fg color-fg-muted color-border space-1 space-2 space-3 space-4 space-6 space-8 space-12 space-px font-heading font-body heading-tracking heading-transform heading-leading text-sm text-base text-lg text-3xl weight-semibold weight-bold leading-tight leading-normal leading-relaxed */
 
 /* ── Root ──
    A reporting page: title block, KPI row, then the panel region. The KPI row
@@ -12,7 +12,7 @@
   gap: var(--space-3);
   padding-block: var(--space-8);
   padding-inline: var(--space-4);
-  font-family: var(--font-sans, system-ui, sans-serif);
+  font-family: var(--font-body);
   color: var(--color-fg);
   background: var(--color-bg);
 }
@@ -86,9 +86,12 @@
 
 [data-ui="stats-dashboard"] [data-part="report"] [data-part="title"] {
   margin: 0;
+  font-family: var(--font-heading);
   font-size: var(--text-lg);
   font-weight: var(--weight-semibold);
-  line-height: var(--leading-tight);
+  letter-spacing: var(--heading-tracking);
+  text-transform: var(--heading-transform);
+  line-height: var(--heading-leading);
 }
 
 [data-ui="stats-dashboard"] [data-part="report"] [data-part="header"] [data-part="description"] {

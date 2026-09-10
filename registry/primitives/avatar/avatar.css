@@ -1,5 +1,5 @@
 /* @ui:component avatar */
-/* @ui:tokens color-bg-muted color-fg-muted radius-full font-sans text-xs text-sm weight-medium */
+/* @ui:tokens color-bg-muted color-fg-muted radius-full font-ui text-xs text-sm weight-medium */
 
 /* ── Base ── */
 [data-ui="avatar"] {
@@ -29,7 +29,7 @@
   height: 100%;
   background: var(--color-bg-muted);
   color: var(--color-fg-muted);
-  font-family: var(--font-sans);
+  font-family: var(--font-ui);
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
   text-transform: uppercase;

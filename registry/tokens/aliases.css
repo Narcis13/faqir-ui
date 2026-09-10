@@ -41,7 +41,7 @@
   --button-height-sm:  var(--control-height-sm);
   --button-height-md:  var(--control-height-md);
   --button-height-lg:  var(--control-height-lg);
-  --button-font:       var(--font-sans);
+  --button-font:       var(--font-ui);
   --button-weight:     var(--weight-medium);
 
   /* ── Card ── */
@@ -56,7 +56,7 @@
   --input-height:      var(--control-height-md);
   --input-border:      var(--color-border);
   --input-bg:          var(--color-bg);
-  --input-font:        var(--font-sans);
+  --input-font:        var(--font-ui);
 
   /* ── Dialog ── */
   --dialog-radius:     var(--radius-xl);
@@ -65,7 +65,7 @@
 
   /* ── Badge ── */
   --badge-radius:      var(--radius-full);
-  --badge-font:        var(--font-sans);
+  --badge-font:        var(--font-ui);
 
   /* ── Avatar ── */
   --avatar-radius:     var(--radius-full);

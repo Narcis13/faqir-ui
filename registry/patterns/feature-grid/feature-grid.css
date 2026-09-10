@@ -1,5 +1,5 @@
 /* @ui:component feature-grid */
-/* @ui:tokens color-bg color-fg color-fg-muted color-primary color-primary-subtle space-2 space-3 space-4 space-6 space-8 space-10 space-12 space-16 text-base text-lg text-xl text-3xl font-sans weight-semibold weight-bold leading-tight leading-normal leading-relaxed radius-md radius-lg */
+/* @ui:tokens color-bg color-fg color-fg-muted color-primary color-primary-subtle space-2 space-3 space-4 space-6 space-8 space-10 space-12 space-16 text-base text-lg text-xl text-3xl font-body weight-semibold weight-bold leading-tight leading-normal leading-relaxed radius-md radius-lg */
 
 /* ── Root ──
    Mobile-first (task 0.8-09): everything outside the two `@media` blocks at the
@@ -9,7 +9,7 @@
   gap: var(--space-4);
   padding-block: var(--space-12);
   padding-inline: var(--space-4);
-  font-family: var(--font-sans, system-ui, sans-serif);
+  font-family: var(--font-body);
   color: var(--color-fg);
   background: var(--color-bg);
 }

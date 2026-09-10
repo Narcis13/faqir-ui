@@ -60,7 +60,7 @@
     "radius-md",
     "space-2", "space-3",
     "text-sm", "text-base",
-    "font-sans", "weight-medium",
+    "font-ui", "weight-medium",
     "duration-fast", "duration-normal", "ease-default"
   ],
 

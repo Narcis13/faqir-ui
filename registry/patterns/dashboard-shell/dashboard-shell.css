@@ -1,5 +1,5 @@
 /* @ui:component dashboard-shell */
-/* @ui:tokens color-bg color-bg-subtle color-bg-muted color-fg color-fg-muted color-border color-border-strong color-primary color-primary-subtle color-primary-fg space-2 space-3 space-4 space-5 space-6 space-8 space-12 space-16 radius-md radius-lg shadow-sm shadow-md font-sans text-xs text-sm text-base text-lg weight-medium weight-semibold leading-tight leading-normal duration-normal duration-slow ease-default ease-out z-sticky */
+/* @ui:tokens color-bg color-bg-subtle color-bg-muted color-fg color-fg-muted color-border color-border-strong color-primary color-primary-subtle color-primary-fg space-2 space-3 space-4 space-5 space-6 space-8 space-12 space-16 radius-md radius-lg shadow-sm shadow-md font-body font-ui text-xs text-sm text-base text-lg weight-medium weight-semibold leading-tight leading-normal duration-normal duration-slow ease-default ease-out z-sticky */
 
 /* ── Shell Grid Layout ──
    Mobile-first (task 0.8-09): the base is the PHONE shell — one column, header
@@ -24,7 +24,7 @@
     "footer";
   min-height: 100vh;
   background: var(--color-bg);
-  font-family: var(--font-sans);
+  font-family: var(--font-body);
   color: var(--color-fg);
 }
 
@@ -143,7 +143,7 @@
   gap: var(--space-3);
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
-  font-family: var(--font-sans);
+  font-family: var(--font-ui);
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
   line-height: var(--leading-normal);

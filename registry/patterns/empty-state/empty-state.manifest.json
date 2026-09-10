@@ -78,7 +78,7 @@
     "space-6",
     "space-8",
     "space-10",
-    "font-sans",
+    "font-heading", "font-body", "heading-tracking", "heading-transform", "heading-leading",
     "text-sm",
     "text-base",
     "text-lg",

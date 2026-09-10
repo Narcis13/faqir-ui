@@ -10,7 +10,7 @@
   gap: var(--space-6);
   max-inline-size: var(--measure-narrow);
   margin-inline: auto;
-  font-family: var(--font-sans);
+  font-family: var(--font-body);
 }
 
 [data-ui="wizard"] [data-part="heading"] {

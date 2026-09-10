@@ -14,7 +14,7 @@
   max-inline-size: var(--measure-narrow);
   margin-inline: auto;
   padding-block: var(--space-8);
-  font-family: var(--font-sans);
+  font-family: var(--font-body);
 }
 
 :where(form[l-data]:not([data-ui]) > h1) {

@@ -1,5 +1,5 @@
 /* @ui:component slider */
-/* @ui:tokens color-bg color-fg-muted color-border color-primary color-primary-subtle color-ring color-bg-muted space-2 space-3 space-4 radius-full text-sm text-base shadow-sm duration-fast ease-default */
+/* @ui:tokens color-bg color-fg-muted color-border color-primary color-primary-subtle color-ring color-bg-muted space-2 space-3 space-4 radius-full text-sm text-base shadow-sm duration-fast ease-default font-ui */
 
 /* ── Root ── */
 [data-ui="slider"] {
@@ -78,7 +78,7 @@
   flex: 0 0 auto;
   min-inline-size: 3ch;
   color: var(--color-fg-muted);
-  font-family: var(--font-sans, system-ui, sans-serif);
+  font-family: var(--font-ui);
   font-size: var(--text-sm);
   font-variant-numeric: tabular-nums;
   text-align: end;

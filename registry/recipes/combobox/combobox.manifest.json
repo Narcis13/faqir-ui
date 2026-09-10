@@ -158,7 +158,8 @@
     "text-base",
     "z-dropdown",
     "duration-fast",
-    "ease-default"
+    "ease-default",
+    "font-ui"
   ],
   "templates": {
     "html": "<div data-ui=\"combobox\" data-state=\"closed\" data-size=\"{size}\">\n  <input data-part=\"input\" type=\"text\" role=\"combobox\" aria-expanded=\"false\" aria-autocomplete=\"list\" aria-controls=\"{id}-listbox\" placeholder=\"{placeholder}\">\n  <ul data-part=\"listbox\" role=\"listbox\" id=\"{id}-listbox\" hidden>\n    <li data-part=\"option\" role=\"option\" aria-selected=\"false\">{option1}</li>\n    <li data-part=\"option\" role=\"option\" aria-selected=\"false\">{option2}</li>\n    <li data-part=\"empty\" hidden>No results found</li>\n  </ul>\n</div>"

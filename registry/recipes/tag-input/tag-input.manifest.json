@@ -155,7 +155,7 @@
     "z-dropdown",
     "duration-fast",
     "ease-default",
-    "font-sans"
+    "font-ui"
   ],
   "templates": {
     "html": "<div data-ui=\"tag-input\" data-state=\"closed\">\n  <span data-part=\"taglist\" role=\"group\" aria-label=\"{label}\">\n    <input data-part=\"input\" type=\"text\" role=\"combobox\" aria-expanded=\"false\" aria-autocomplete=\"list\" placeholder=\"{placeholder}\">\n  </span>\n  <input data-part=\"value\" type=\"hidden\">\n</div>"

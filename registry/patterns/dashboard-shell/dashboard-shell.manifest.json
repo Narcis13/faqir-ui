@@ -175,7 +175,7 @@
     "radius-lg",
     "shadow-sm",
     "shadow-md",
-    "font-sans",
+    "font-body", "font-ui",
     "text-xs",
     "text-sm",
     "text-base",

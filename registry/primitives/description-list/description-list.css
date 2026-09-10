@@ -1,11 +1,11 @@
 /* @ui:component description-list */
-/* @ui:tokens color-fg color-fg-muted color-border doc-font doc-line-height space-1 space-2 space-3 space-4 space-6 text-xs text-sm text-base font-sans weight-semibold */
+/* @ui:tokens color-fg color-fg-muted color-border doc-font doc-line-height space-1 space-2 space-3 space-4 space-6 text-xs text-sm text-base font-body weight-semibold */
 
 /* ── Base ── */
 [data-ui="description-list"] {
   margin: 0;
   padding: 0;
-  font-family: var(--doc-font, var(--font-sans, system-ui, sans-serif));
+  font-family: var(--doc-font, var(--font-body));
 }
 
 /* ── Term ── */

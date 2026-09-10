@@ -80,7 +80,7 @@
     "space-1", "space-3", "space-4",
     "radius-sm", "radius-md",
     "text-sm", "text-xs",
-    "font-sans", "weight-semibold"
+    "font-heading", "font-body", "weight-semibold"
   ],
 
   "templates": {

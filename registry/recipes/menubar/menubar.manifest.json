@@ -136,7 +136,7 @@
     "duration-fast",
     "ease-out",
     "z-dropdown",
-    "font-sans"
+    "font-ui"
   ],
   "templates": {
     "html": "<div data-ui=\"menubar\" data-state=\"closed\" data-size=\"{size}\" role=\"menubar\" aria-label=\"{label}\">\n  <div data-part=\"group\" role=\"none\">\n    <button type=\"button\" data-part=\"trigger\" id=\"{id}-file\" role=\"menuitem\" tabindex=\"0\" aria-haspopup=\"menu\" aria-expanded=\"false\" aria-controls=\"{id}-file-menu\">{menu1}</button>\n    <div data-part=\"submenu\" id=\"{id}-file-menu\" role=\"menu\" aria-labelledby=\"{id}-file\" hidden>\n      <button type=\"button\" data-part=\"item\" role=\"menuitem\" tabindex=\"-1\">{item1}</button>\n      <button type=\"button\" data-part=\"item\" role=\"menuitem\" tabindex=\"-1\">{item2}</button>\n      <hr data-part=\"separator\" role=\"separator\">\n      <button type=\"button\" data-part=\"item\" role=\"menuitem\" tabindex=\"-1\">{item3}</button>\n    </div>\n  </div>\n  <div data-part=\"group\" role=\"none\">\n    <button type=\"button\" data-part=\"trigger\" id=\"{id}-edit\" role=\"menuitem\" tabindex=\"-1\" aria-haspopup=\"menu\" aria-expanded=\"false\" aria-controls=\"{id}-edit-menu\">{menu2}</button>\n    <div data-part=\"submenu\" id=\"{id}-edit-menu\" role=\"menu\" aria-labelledby=\"{id}-edit\" hidden>\n      <button type=\"button\" data-part=\"item\" role=\"menuitem\" tabindex=\"-1\">{item4}</button>\n      <button type=\"button\" data-part=\"item\" role=\"menuitem\" tabindex=\"-1\">{item5}</button>\n    </div>\n  </div>\n</div>"

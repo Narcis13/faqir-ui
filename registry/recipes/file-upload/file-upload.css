@@ -1,12 +1,12 @@
 /* @ui:component file-upload */
-/* @ui:tokens color-bg color-bg-subtle color-fg color-fg-muted color-border color-border-strong color-primary color-primary-subtle color-ring color-destructive color-destructive-subtle space-px space-1 space-2 space-3 space-4 space-8 radius-md radius-lg text-xs text-sm text-base weight-semibold font-sans duration-fast ease-default */
+/* @ui:tokens color-bg color-bg-subtle color-fg color-fg-muted color-border color-border-strong color-primary color-primary-subtle color-ring color-destructive color-destructive-subtle space-px space-1 space-2 space-3 space-4 space-8 radius-md radius-lg text-xs text-sm text-base weight-semibold font-ui duration-fast ease-default */
 
 [data-ui="file-upload"] {
   display: grid;
   gap: var(--space-4);
   inline-size: 100%;
   color: var(--color-fg);
-  font-family: var(--font-sans);
+  font-family: var(--font-ui);
 }
 
 [data-ui="file-upload"] [data-part="dropzone"] {

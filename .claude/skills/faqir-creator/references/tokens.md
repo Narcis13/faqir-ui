@@ -18,11 +18,11 @@ Cascade order, as `tokens/index.css` imports them: `palette.css` → `spacing.cs
 
 ## Token Groups
 
-301 tokens in 9 groups:
+308 tokens in 9 groups:
 
 - `palette` (67) — raw oklch color values, never referenced by components directly
 - `spacing` (23) — 4px base, harmonic scale
-- `typography` (20) — font families, sizes, line-heights, weights
+- `typography` (27) — font families, sizes, line-heights, weights
 - `effects` (20) — radii, shadows, z-index
 - `motion` (16) — easings and durations
 - `semantic` (31) — purpose-based tokens, referenced by components
@@ -168,7 +168,7 @@ _`registry/tokens/spacing.css` · 23 tokens_
 
 ## typography — font families, sizes, line-heights, weights
 
-_`registry/tokens/typography.css` · 20 tokens_
+_`registry/tokens/typography.css` · 27 tokens_
 
 ### Font Families
 
@@ -177,6 +177,14 @@ _`registry/tokens/typography.css` · 20 tokens_
 | `--font-sans` | `system-ui, -apple-system, 'Segoe UI', sans-serif` |
 | `--font-mono` | `ui-monospace, 'Cascadia Code', 'JetBrains Mono', monospace` |
 | `--font-serif` | `'Georgia', 'Times New Roman', serif` |
+
+### Font Roles
+
+| Token | Value | Notes |
+|---|---|---|
+| `--font-heading` | `var(--font-sans)` | h1–h6, hero headline, card/dialog titles, stat values, doc headings |
+| `--font-body` | `var(--font-sans)` | prose, text, document body, descriptions |
+| `--font-ui` | `var(--font-sans)` | controls: button, input, select, badge, chip, tabs, menus |
 
 ### Font Sizes
 
@@ -209,6 +217,15 @@ _`registry/tokens/typography.css` · 20 tokens_
 | `--weight-medium` | `500` |
 | `--weight-semibold` | `600` |
 | `--weight-bold` | `700` |
+
+### Heading Voice
+
+| Token | Value | Notes |
+|---|---|---|
+| `--heading-weight` | `var(--weight-bold)` | — |
+| `--heading-tracking` | `0em` | letter-spacing — carries a unit so it composes inside calc() where a heading already has its own optical tightening |
+| `--heading-transform` | `none` | text-transform |
+| `--heading-leading` | `var(--leading-tight)` | — |
 
 ## effects — radii, shadows, z-index
 
@@ -387,7 +404,7 @@ _`registry/tokens/aliases.css` · 36 tokens_
 | `--button-height-sm` | `var(--control-height-sm)` |
 | `--button-height-md` | `var(--control-height-md)` |
 | `--button-height-lg` | `var(--control-height-lg)` |
-| `--button-font` | `var(--font-sans)` |
+| `--button-font` | `var(--font-ui)` |
 | `--button-weight` | `var(--weight-medium)` |
 
 ### Card
@@ -408,7 +425,7 @@ _`registry/tokens/aliases.css` · 36 tokens_
 | `--input-height` | `var(--control-height-md)` |
 | `--input-border` | `var(--color-border)` |
 | `--input-bg` | `var(--color-bg)` |
-| `--input-font` | `var(--font-sans)` |
+| `--input-font` | `var(--font-ui)` |
 
 ### Dialog
 
@@ -423,7 +440,7 @@ _`registry/tokens/aliases.css` · 36 tokens_
 | Token | Value |
 |---|---|
 | `--badge-radius` | `var(--radius-full)` |
-| `--badge-font` | `var(--font-sans)` |
+| `--badge-font` | `var(--font-ui)` |
 
 ### Avatar
 
@@ -457,10 +474,10 @@ _`registry/tokens/document.css` · 42 tokens_
 
 | Token | Value | Notes |
 |---|---|---|
-| `--doc-font` | `var(--font-sans)` | — |
+| `--doc-font` | `var(--font-body)` | — |
 | `--doc-font-size` | `var(--text-sm)` | 14px — optimal for A4 |
 | `--doc-line-height` | `var(--leading-normal)` | 1.5 |
-| `--doc-heading-font` | `var(--font-sans)` | — |
+| `--doc-heading-font` | `var(--font-heading)` | — |
 | `--doc-heading-weight` | `var(--weight-bold)` | — |
 | `--doc-heading-size` | `var(--text-xl)` | 20px for doc titles |
 | `--doc-subheading-size` | `var(--text-lg)` | 18px for section titles |

@@ -1,5 +1,5 @@
 /* @ui:component site-footer */
-/* @ui:tokens color-bg-subtle color-fg color-fg-muted color-border space-1 space-2 space-3 space-4 space-6 space-8 space-10 space-12 text-sm text-base text-lg font-sans weight-semibold weight-bold leading-normal */
+/* @ui:tokens color-bg-subtle color-fg color-fg-muted color-border space-1 space-2 space-3 space-4 space-6 space-8 space-10 space-12 text-sm text-base text-lg font-body weight-semibold weight-bold leading-normal */
 
 /* ── Root ──
    Mobile-first (task 0.8-09): everything outside the two `@media` blocks at the
@@ -9,7 +9,7 @@
   gap: var(--space-8);
   padding-block: var(--space-10);
   padding-inline: var(--space-4);
-  font-family: var(--font-sans, system-ui, sans-serif);
+  font-family: var(--font-body);
   font-size: var(--text-sm);
   color: var(--color-fg-muted);
   background: var(--color-bg-subtle);

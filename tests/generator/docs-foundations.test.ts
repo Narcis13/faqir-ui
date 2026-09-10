@@ -128,13 +128,23 @@ describe("typography foundation page", () => {
     expect(tokens.length).toBeGreaterThan(15);
     for (const token of tokens) {
       expect(page, `typography page omits --${token.name}`).toContain(`--${token.name}`);
-      const property = token.name.startsWith("font-")
-        ? "font-family"
-        : token.name.startsWith("text-")
-          ? "font-size"
-          : token.name.startsWith("weight-")
-            ? "font-weight"
-            : "line-height";
+      // The heading-voice tokens (1.1A-01) are the one family whose property is
+      // not readable off a prefix — each of the four drives a different one.
+      const VOICE: Record<string, string> = {
+        "heading-weight": "font-weight",
+        "heading-tracking": "letter-spacing",
+        "heading-transform": "text-transform",
+        "heading-leading": "line-height",
+      };
+      const property =
+        VOICE[token.name] ??
+        (token.name.startsWith("font-")
+          ? "font-family"
+          : token.name.startsWith("text-")
+            ? "font-size"
+            : token.name.startsWith("weight-")
+              ? "font-weight"
+              : "line-height");
       expect(css, `--${token.name} has no live preview rule`).toContain(
         `[data-docs-token-preview="${token.name}"] { ${property}: var(--${token.name}); }`,
       );

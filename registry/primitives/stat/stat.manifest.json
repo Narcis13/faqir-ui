@@ -75,7 +75,7 @@
     "color-bg", "color-border",
     "space-1", "space-2", "space-3", "space-4",
     "radius-md", "shadow-sm",
-    "font-sans",
+    "font-heading", "font-body",
     "text-xs", "text-sm", "text-lg", "text-2xl", "text-3xl",
     "weight-semibold", "weight-bold"
   ],

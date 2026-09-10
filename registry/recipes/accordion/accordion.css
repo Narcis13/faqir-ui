@@ -1,5 +1,5 @@
 /* @ui:component accordion */
-/* @ui:tokens color-bg color-fg color-fg-muted color-border space-3 space-4 text-sm text-base weight-medium duration-normal ease-default radius-lg */
+/* @ui:tokens color-bg color-fg color-fg-muted color-border space-3 space-4 text-sm text-base weight-medium duration-normal ease-default radius-lg font-ui */
 
 /* ── Root ── */
 [data-ui="accordion"] {
@@ -25,7 +25,7 @@
   border: none;
   background: transparent;
   color: var(--color-fg);
-  font-family: var(--font-sans, system-ui, sans-serif);
+  font-family: var(--font-ui);
   font-size: var(--text-base);
   font-weight: var(--weight-medium);
   text-align: start;

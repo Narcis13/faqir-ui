@@ -1,5 +1,5 @@
 /* @ui:component page-break */
-/* @ui:tokens page-break-screen-color page-break-screen-style page-break-screen-label-color page-break-screen-label-size doc-font font-sans space-4 space-6 */
+/* @ui:tokens page-break-screen-color page-break-screen-style page-break-screen-label-color page-break-screen-label-size doc-font font-body space-4 space-6 */
 
 /* ── Base (Screen) ── */
 [data-ui="page-break"] {
@@ -19,7 +19,7 @@
 
 /* ── Label (Screen) ── */
 [data-ui="page-break"] {
-  font-family: var(--doc-font, var(--font-sans, system-ui, sans-serif));
+  font-family: var(--doc-font, var(--font-body));
   font-size: var(--page-break-screen-label-size);
   color: var(--page-break-screen-label-color);
   letter-spacing: 0.05em;

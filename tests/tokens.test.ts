@@ -45,6 +45,19 @@ describe("token files", () => {
     expect(content).toContain("--leading-normal:");
   });
 
+  it("typography.css publishes the type ROLES components read (1.1A-01)", async () => {
+    // The families above are the palette; these are what a component may name.
+    // Defaults and the no-family-in-components gate live in tokens/role-tokens.test.ts.
+    const content = await Bun.file(join(REGISTRY, "tokens/typography.css")).text();
+    expect(content).toContain("--font-heading:");
+    expect(content).toContain("--font-body:");
+    expect(content).toContain("--font-ui:");
+    expect(content).toContain("--heading-weight:");
+    expect(content).toContain("--heading-tracking:");
+    expect(content).toContain("--heading-transform:");
+    expect(content).toContain("--heading-leading:");
+  });
+
   it("effects.css has radii, shadows, and z-index", async () => {
     const content = await Bun.file(join(REGISTRY, "tokens/effects.css")).text();
     expect(content).toContain("--radius-md:");

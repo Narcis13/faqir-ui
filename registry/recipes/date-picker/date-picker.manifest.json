@@ -149,7 +149,8 @@
     "text-sm",
     "z-dropdown",
     "duration-fast",
-    "ease-default"
+    "ease-default",
+    "font-ui"
   ],
   "templates": {
     "html": "<div data-ui=\"date-picker\" data-state=\"closed\" data-size=\"{size}\">\n  <div data-part=\"trigger\">\n    <input data-part=\"input\" type=\"text\" placeholder=\"Select a date\" readonly aria-haspopup=\"dialog\" aria-expanded=\"false\" aria-label=\"Choose date\">\n    <span data-part=\"icon\" aria-hidden=\"true\">&#x1F4C5;</span>\n  </div>\n  <div data-part=\"calendar\" role=\"dialog\" aria-label=\"Date picker\" hidden>\n    <div data-ui=\"calendar\" data-size=\"{size}\">\n      <div data-part=\"header\">\n        <button data-part=\"nav-prev\" type=\"button\" aria-label=\"Previous month\">&lsaquo;</button>\n        <span data-part=\"month-label\"></span>\n        <button data-part=\"nav-next\" type=\"button\" aria-label=\"Next month\">&rsaquo;</button>\n      </div>\n      <table data-part=\"grid\" role=\"grid\" aria-label=\"Calendar\">\n        <thead><tr><th>Su</th><th>Mo</th><th>Tu</th><th>We</th><th>Th</th><th>Fr</th><th>Sa</th></tr></thead>\n        <tbody data-part=\"grid-body\"></tbody>\n      </table>\n    </div>\n  </div>\n</div>"

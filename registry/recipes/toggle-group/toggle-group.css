@@ -1,5 +1,5 @@
 /* @ui:component toggle-group */
-/* @ui:tokens color-bg color-bg-muted color-fg color-fg-muted color-border color-primary color-primary-subtle color-ring radius-md space-1 space-1h space-2 space-3 text-sm font-sans weight-medium duration-fast ease-default */
+/* @ui:tokens color-bg color-bg-muted color-fg color-fg-muted color-border color-primary color-primary-subtle color-ring radius-md space-1 space-1h space-2 space-3 text-sm font-ui weight-medium duration-fast ease-default */
 
 /* ── Root: a segmented row of toggle buttons ── */
 [data-ui="toggle-group"] {
@@ -21,7 +21,7 @@
   border-radius: var(--radius-md);
   background: transparent;
   color: var(--color-fg-muted);
-  font-family: var(--toggle-group-font, var(--font-sans));
+  font-family: var(--font-ui);
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
   line-height: 1;

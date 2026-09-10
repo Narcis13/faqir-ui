@@ -130,7 +130,8 @@
     "text-base",
     "weight-medium",
     "duration-fast",
-    "ease-default"
+    "ease-default",
+    "font-ui"
   ],
   "templates": {
     "html": "<div data-ui=\"pagination\" data-size=\"{size}\">\n  <nav data-part=\"nav\" role=\"navigation\" aria-label=\"Pagination\">\n    <button data-part=\"prev\" aria-label=\"Previous page\">&laquo; Prev</button>\n    <button data-part=\"page\" data-page=\"1\" data-state=\"active\" aria-current=\"page\">1</button>\n    <button data-part=\"page\" data-page=\"2\">2</button>\n    <span data-part=\"ellipsis\">&hellip;</span>\n    <button data-part=\"page\" data-page=\"{total}\">{total}</button>\n    <button data-part=\"next\" aria-label=\"Next page\">Next &raquo;</button>\n  </nav>\n</div>"

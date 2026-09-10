@@ -155,7 +155,7 @@
     "radius-lg",
     "shadow-sm",
     "shadow-md",
-    "font-sans",
+    "font-heading", "font-body", "heading-tracking", "heading-transform", "heading-leading",
     "text-sm",
     "text-base",
     "text-lg",

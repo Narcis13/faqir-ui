@@ -653,7 +653,8 @@
     "ease-default",
     "doc-table-footer-bg",
     "doc-table-footer-weight",
-    "doc-print-border-color"
+    "doc-print-border-color",
+    "font-body"
   ],
   "templates": {
     "html": "<div data-ui=\"table\" data-size=\"{size}\">\n  <table data-part=\"table\">\n    <thead data-part=\"thead\">\n      <tr data-part=\"tr\">\n        <th data-part=\"th\" scope=\"col\"><input data-part=\"checkbox\" type=\"checkbox\" aria-label=\"Select all rows\"></th>\n        <th data-part=\"th\" scope=\"col\" data-sortable aria-sort=\"none\">{col1}</th>\n        <th data-part=\"th\" scope=\"col\" data-sortable aria-sort=\"none\">{col2}</th>\n      </tr>\n    </thead>\n    <tbody data-part=\"tbody\">\n      <tr data-part=\"tr\">\n        <td data-part=\"td\"><input data-part=\"checkbox\" type=\"checkbox\" aria-label=\"Select row\"></td>\n        <td data-part=\"td\">{val1}</td>\n        <td data-part=\"td\">{val2}</td>\n      </tr>\n    </tbody>\n  </table>\n</div>",

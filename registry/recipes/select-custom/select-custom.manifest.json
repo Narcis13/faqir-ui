@@ -184,7 +184,8 @@
     "text-xs",
     "z-dropdown",
     "duration-fast",
-    "ease-default"
+    "ease-default",
+    "font-ui"
   ],
   "templates": {
     "html": "<div data-ui=\"select-custom\" data-state=\"closed\" data-size=\"{size}\">\n  <button data-part=\"trigger\" role=\"combobox\" aria-expanded=\"false\" aria-haspopup=\"listbox\" aria-controls=\"{id}-listbox\">\n    <span data-part=\"value\" data-placeholder>{placeholder}</span>\n    <span data-part=\"chevron\" aria-hidden=\"true\">&#x25BE;</span>\n  </button>\n  <div data-part=\"listbox\" role=\"listbox\" id=\"{id}-listbox\" hidden>\n    <div data-part=\"option\" role=\"option\" aria-selected=\"false\" data-value=\"{val1}\">{label1}</div>\n    <div data-part=\"option\" role=\"option\" aria-selected=\"false\" data-value=\"{val2}\">{label2}</div>\n  </div>\n</div>"

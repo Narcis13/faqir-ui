@@ -169,7 +169,8 @@
     "text-base",
     "shadow-sm",
     "duration-fast",
-    "ease-default"
+    "ease-default",
+    "font-ui"
   ],
   "templates": {
     "html": "<div data-ui=\"slider\" data-variant=\"single\" data-min=\"0\" data-max=\"100\" data-step=\"1\" data-value=\"{value}\" style=\"--slider-start: 0%; --slider-end: {value}%\">\n  <div data-part=\"track\">\n    <div data-part=\"range\"></div>\n    <div data-part=\"thumb\" role=\"slider\" tabindex=\"0\" aria-label=\"{label}\" aria-valuemin=\"0\" aria-valuemax=\"100\" aria-valuenow=\"{value}\" style=\"--pos: {value}%\"></div>\n  </div>\n  <output data-part=\"output\">{value}</output>\n</div>",

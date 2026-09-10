@@ -1,5 +1,5 @@
 /* @ui:component empty-state */
-/* @ui:tokens color-bg color-bg-subtle color-fg color-fg-muted color-border color-primary radius-lg shadow-sm space-2 space-3 space-4 space-6 space-8 space-10 font-sans text-sm text-base text-lg text-xl text-2xl weight-semibold leading-tight leading-normal duration-normal ease-default */
+/* @ui:tokens color-bg color-bg-subtle color-fg color-fg-muted color-border color-primary radius-lg shadow-sm space-2 space-3 space-4 space-6 space-8 space-10 font-heading font-body heading-tracking heading-transform heading-leading text-sm text-base text-lg text-xl text-2xl weight-semibold leading-tight leading-normal duration-normal ease-default */
 
 /* ── Root ── */
 [data-ui="empty-state"] {
@@ -10,7 +10,7 @@
   text-align: center;
   padding: var(--space-8) var(--space-6);
   gap: var(--space-3);
-  font-family: var(--font-sans, system-ui, sans-serif);
+  font-family: var(--font-body);
 }
 
 /* ── Icon ── */
@@ -33,10 +33,12 @@
 
 /* ── Title ── */
 [data-ui="empty-state"] [data-part="title"] {
-  font-family: var(--font-sans, system-ui, sans-serif);
+  font-family: var(--font-heading);
   font-size: var(--text-lg);
   font-weight: var(--weight-semibold);
-  line-height: var(--leading-tight);
+  letter-spacing: var(--heading-tracking);
+  text-transform: var(--heading-transform);
+  line-height: var(--heading-leading);
   color: var(--color-fg);
   margin: 0;
 }

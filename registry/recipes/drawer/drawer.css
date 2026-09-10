@@ -1,5 +1,5 @@
 /* @ui:component drawer */
-/* @ui:tokens color-bg color-fg color-border shadow-xl space-4 space-6 radius-none z-overlay z-modal duration-normal duration-slow ease-out ease-default */
+/* @ui:tokens color-bg color-fg color-border shadow-xl space-4 space-6 radius-none z-overlay z-modal duration-normal duration-slow ease-out ease-default font-heading */
 
 /* ── Root ── */
 [data-ui="drawer"] {
@@ -106,6 +106,7 @@
 /* ── Title ── */
 [data-ui="drawer"] [data-part="title"] {
   margin: 0;
+  font-family: var(--font-heading);
   font-size: var(--text-lg, 1.125rem);
   font-weight: var(--weight-semibold, 600);
   color: var(--color-fg);

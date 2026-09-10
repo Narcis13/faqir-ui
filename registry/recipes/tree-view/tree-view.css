@@ -1,5 +1,5 @@
 /* @ui:component tree-view */
-/* @ui:tokens color-bg-muted color-fg color-fg-muted color-fg-subtle color-primary color-primary-subtle color-ring space-px space-1 space-2 space-5 radius-md text-sm font-sans weight-medium duration-fast ease-default */
+/* @ui:tokens color-bg-muted color-fg color-fg-muted color-fg-subtle color-primary color-primary-subtle color-ring space-px space-1 space-2 space-5 radius-md text-sm font-ui weight-medium duration-fast ease-default */
 
 [data-ui="tree-view"],
 [data-ui="tree-view"] [data-part="group"] {
@@ -12,7 +12,7 @@
   inline-size: 100%;
   padding: var(--space-1);
   color: var(--color-fg);
-  font-family: var(--font-sans);
+  font-family: var(--font-ui);
   font-size: var(--text-sm);
 }
 

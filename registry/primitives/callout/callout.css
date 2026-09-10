@@ -1,5 +1,5 @@
 /* @ui:component callout */
-/* @ui:tokens callout-radius callout-padding-y callout-padding-x callout-border-left-width callout-font-size callout-icon-size callout-fg color-fg color-fg-muted color-info color-info-subtle color-warning color-warning-subtle color-destructive color-destructive-subtle color-success color-success-subtle color-bg-muted color-border color-ring space-1 radius-sm font-sans weight-semibold */
+/* @ui:tokens callout-radius callout-padding-y callout-padding-x callout-border-left-width callout-font-size callout-icon-size callout-fg color-fg color-fg-muted color-info color-info-subtle color-warning color-warning-subtle color-destructive color-destructive-subtle color-success color-success-subtle color-bg-muted color-border color-ring space-1 radius-sm font-heading font-body weight-semibold */
 
 /* ── Base ── */
 [data-ui="callout"] {
@@ -8,7 +8,7 @@
   padding: var(--callout-padding-y) var(--callout-padding-x);
   border-radius: var(--callout-radius);
   border-inline-start: var(--callout-border-left-width) solid;
-  font-family: var(--doc-font, var(--font-sans, system-ui, sans-serif));
+  font-family: var(--doc-font, var(--font-body));
   font-size: var(--callout-font-size);
   line-height: var(--doc-line-height, 1.5);
 }
@@ -39,6 +39,7 @@
 /* ── Title ── */
 [data-ui="callout"] [data-part="title"] {
   display: block;
+  font-family: var(--font-heading);
   font-weight: var(--weight-semibold);
   margin-bottom: var(--doc-label-gap, var(--space-1, 0.25rem));
 }

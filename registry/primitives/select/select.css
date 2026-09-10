@@ -1,5 +1,5 @@
 /* @ui:component select */
-/* @ui:tokens color-bg color-fg color-fg-muted color-border color-border-strong color-ring color-destructive radius-md space-2 space-3 space-4 font-sans text-xs text-sm text-base duration-fast ease-default */
+/* @ui:tokens color-bg color-fg color-fg-muted color-border color-border-strong color-ring color-destructive radius-md space-2 space-3 space-4 font-ui text-xs text-sm text-base duration-fast ease-default */
 
 /* -- Base -- */
 [data-ui="select"] {
@@ -12,7 +12,7 @@
   border-radius: var(--select-radius, var(--radius-md));
   background: var(--select-bg, var(--color-bg));
   color: var(--color-fg);
-  font-family: var(--select-font, var(--font-sans));
+  font-family: var(--font-ui);
   font-size: var(--text-sm);
   line-height: 1;
   cursor: pointer;

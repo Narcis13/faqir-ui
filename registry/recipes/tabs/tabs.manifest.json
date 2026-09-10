@@ -111,7 +111,8 @@
     "text-base",
     "weight-medium",
     "duration-fast",
-    "ease-default"
+    "ease-default",
+    "font-ui"
   ],
   "templates": {
     "html": "<div data-ui=\"tabs\" data-variant=\"{variant}\">\n  <div data-part=\"list\" role=\"tablist\">\n    <button data-part=\"trigger\" role=\"tab\" id=\"{id}-tab-1\" aria-controls=\"{id}-panel-1\" aria-selected=\"true\">{tab1}</button>\n    <button data-part=\"trigger\" role=\"tab\" id=\"{id}-tab-2\" aria-controls=\"{id}-panel-2\" aria-selected=\"false\" tabindex=\"-1\">{tab2}</button>\n  </div>\n  <div data-part=\"panel\" role=\"tabpanel\" id=\"{id}-panel-1\" aria-labelledby=\"{id}-tab-1\">{content1}</div>\n  <div data-part=\"panel\" role=\"tabpanel\" id=\"{id}-panel-2\" aria-labelledby=\"{id}-tab-2\" hidden>{content2}</div>\n</div>"

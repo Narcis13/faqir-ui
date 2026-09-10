@@ -28,10 +28,10 @@
      Separate from the base typography tokens because documents have
      different optimal sizes than screen UIs. 14px body + 12px legal
      is standard for A4 business documents. */
-  --doc-font:               var(--font-sans);
+  --doc-font:               var(--font-body);
   --doc-font-size:          var(--text-sm);           /* 14px — optimal for A4 */
   --doc-line-height:        var(--leading-normal);     /* 1.5 */
-  --doc-heading-font:       var(--font-sans);
+  --doc-heading-font:       var(--font-heading);
   --doc-heading-weight:     var(--weight-bold);
   --doc-heading-size:       var(--text-xl);            /* 20px for doc titles */
   --doc-subheading-size:    var(--text-lg);            /* 18px for section titles */

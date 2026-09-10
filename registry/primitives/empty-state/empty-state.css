@@ -1,5 +1,5 @@
 /* @ui:component empty-state */
-/* @ui:tokens color-fg-muted color-fg-subtle space-3 space-4 space-6 space-8 text-sm text-lg text-3xl */
+/* @ui:tokens color-fg-muted color-fg-subtle space-3 space-4 space-6 space-8 text-sm text-lg text-3xl font-heading */
 
 /* ── Base ── */
 [data-ui="empty-state"] {
@@ -20,6 +20,7 @@
 
 /* ── Title ── */
 [data-ui="empty-state"] [data-part="title"] {
+  font-family: var(--font-heading);
   font-size: var(--text-lg);
   font-weight: var(--weight-medium);
   color: var(--color-fg);

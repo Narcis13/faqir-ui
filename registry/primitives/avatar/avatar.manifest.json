@@ -60,7 +60,7 @@
   "tokens_used": [
     "color-bg-muted", "color-fg-muted",
     "radius-full",
-    "font-sans", "text-xs", "text-sm", "weight-medium"
+    "font-ui", "text-xs", "text-sm", "weight-medium"
   ],
 
   "templates": {

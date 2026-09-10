@@ -92,7 +92,8 @@
     "text-xs",
     "z-dropdown",
     "duration-fast",
-    "ease-default"
+    "ease-default",
+    "font-ui"
   ],
   "templates": {
     "html": "<div data-ui=\"tooltip\" data-variant=\"{position}\" data-state=\"hidden\">\n  <button data-part=\"trigger\" aria-describedby=\"{id}-content\">{trigger_text}</button>\n  <div data-part=\"content\" id=\"{id}-content\" role=\"tooltip\" hidden>{tooltip_text}</div>\n</div>"

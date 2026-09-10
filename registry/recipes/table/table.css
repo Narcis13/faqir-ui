@@ -1,5 +1,5 @@
 /* @ui:component table */
-/* @ui:tokens color-bg color-bg-subtle color-bg-muted color-fg color-fg-muted color-fg-subtle color-border color-border-strong color-primary color-primary-subtle color-ring color-destructive color-destructive-subtle space-0h space-1 space-2 space-3 space-4 space-5 space-8 text-xs text-sm weight-semibold weight-bold radius-sm radius-md radius-full duration-fast ease-default doc-table-footer-bg doc-table-footer-weight doc-print-border-color */
+/* @ui:tokens color-bg color-bg-subtle color-bg-muted color-fg color-fg-muted color-fg-subtle color-border color-border-strong color-primary color-primary-subtle color-ring color-destructive color-destructive-subtle space-0h space-1 space-2 space-3 space-4 space-5 space-8 text-xs text-sm weight-semibold weight-bold radius-sm radius-md radius-full duration-fast ease-default doc-table-footer-bg doc-table-footer-weight doc-print-border-color font-body */
 
 /* ── Root ── */
 [data-ui="table"] {
@@ -25,7 +25,7 @@
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  font-family: var(--font-sans, system-ui, sans-serif);
+  font-family: var(--font-body);
 }
 
 /* Once any column is resized the layout freezes so widths are exact. */

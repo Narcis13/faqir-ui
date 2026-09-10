@@ -1,5 +1,5 @@
 /* @ui:component tag-input */
-/* @ui:tokens color-bg color-fg color-fg-muted color-border color-primary-subtle color-ring radius-md radius-lg shadow-md space-1 space-1h space-2 space-3 text-sm z-dropdown duration-fast ease-default font-sans */
+/* @ui:tokens color-bg color-fg color-fg-muted color-border color-primary-subtle color-ring radius-md radius-lg shadow-md space-1 space-1h space-2 space-3 text-sm z-dropdown duration-fast ease-default font-ui */
 
 /* NOTE: the tags themselves are `data-ui="chip"` elements — their styling comes
    entirely from chip.css. This file styles only the field wrapper, the tag row,
@@ -41,7 +41,7 @@
   border: none;
   background: transparent;
   color: var(--color-fg);
-  font-family: var(--font-sans, system-ui, sans-serif);
+  font-family: var(--font-ui);
   font-size: var(--text-sm);
   line-height: 1.5;
   outline: none;

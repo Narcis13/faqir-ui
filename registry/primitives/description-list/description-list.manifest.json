@@ -57,7 +57,7 @@
     "color-fg", "color-fg-muted", "color-border",
     "space-2", "space-3", "space-4", "space-6",
     "text-xs", "text-sm", "text-base",
-    "font-sans", "weight-semibold"
+    "font-body", "weight-semibold"
   ],
 
   "templates": {

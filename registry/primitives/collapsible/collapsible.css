@@ -1,10 +1,10 @@
 /* @ui:component collapsible */
-/* @ui:tokens color-fg color-fg-muted color-bg-subtle color-border color-ring radius-md space-2 space-3 text-sm text-base font-sans weight-medium duration-fast duration-normal ease-default */
+/* @ui:tokens color-fg color-fg-muted color-bg-subtle color-border color-ring radius-md space-2 space-3 text-sm text-base font-ui weight-medium duration-fast duration-normal ease-default */
 
 /* ── Root — native <details>, so it opens/closes with zero JavaScript ── */
 [data-ui="collapsible"] {
   border-radius: var(--collapsible-radius, var(--radius-md));
-  font-family: var(--collapsible-font, var(--font-sans));
+  font-family: var(--font-ui);
   color: var(--color-fg);
 }
 

@@ -1,5 +1,5 @@
 /* @ui:component separator */
-/* @ui:tokens color-border space-4 text-xs color-fg-muted font-sans */
+/* @ui:tokens color-border space-4 text-xs color-fg-muted font-ui */
 
 /* ── Base (horizontal) ── */
 [data-ui="separator"] {
@@ -34,7 +34,7 @@ div[data-ui="separator"]::after {
 }
 
 [data-ui="separator"] [data-part="label"] {
-  font-family: var(--font-sans);
+  font-family: var(--font-ui);
   font-size: var(--text-xs);
   color: var(--color-fg-muted);
   white-space: nowrap;

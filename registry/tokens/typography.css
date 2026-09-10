@@ -6,6 +6,18 @@
   --font-mono:   ui-monospace, 'Cascadia Code', 'JetBrains Mono', monospace;
   --font-serif:  'Georgia', 'Times New Roman', serif;
 
+  /* ── Font Roles (task 1.1A-01) ──
+     The three families above are the PALETTE; these three are the ROLES that
+     components actually read. A theme re-points a role once and every heading,
+     every paragraph and every control follows — "serif headings on a sans body"
+     is one declaration rather than sixty-four stylesheet edits. Components never
+     read --font-sans / --font-serif directly (gated by
+     tests/tokens/role-tokens.test.ts); --font-mono stays readable by name,
+     because "this is code" is a semantic choice, not a stylistic one. */
+  --font-heading: var(--font-sans);   /* h1–h6, hero headline, card/dialog titles, stat values, doc headings */
+  --font-body:    var(--font-sans);   /* prose, text, document body, descriptions */
+  --font-ui:      var(--font-sans);   /* controls: button, input, select, badge, chip, tabs, menus */
+
   /* ── Font Sizes ── */
   --text-xs:     0.75rem;    /* 12px */
   --text-sm:     0.875rem;   /* 14px */
@@ -28,4 +40,19 @@
   --weight-medium:   500;
   --weight-semibold: 600;
   --weight-bold:     700;
+
+  /* ── Heading Voice (task 1.1A-01) ──
+     What makes a heading sound like the theme rather than like the body text one
+     size up: how heavy it is, how tightly the letters sit, whether it shouts, and
+     how close its own lines run. The defaults reproduce today's primary heading
+     exactly, so a project that sets none of them renders unchanged. A heading
+     that deliberately steps DOWN from the primary voice (prose h2–h4, a semibold
+     step below h1) keeps its own weight and leading and takes family, tracking
+     and case from the voice — the step is the design, not a value to re-derive. */
+  --heading-weight:    var(--weight-bold);
+  --heading-tracking:  0em;           /* letter-spacing — carries a unit so it
+                                         composes inside calc() where a heading
+                                         already has its own optical tightening */
+  --heading-transform: none;          /* text-transform */
+  --heading-leading:   var(--leading-tight);
 }

@@ -1,5 +1,5 @@
 /* @ui:component command-palette */
-/* @ui:tokens color-bg color-fg color-fg-muted color-border color-primary-subtle color-bg-muted shadow-xl radius-xl space-2 space-3 space-4 text-sm text-xs text-base weight-medium font-mono z-overlay z-modal duration-fast duration-normal ease-out */
+/* @ui:tokens color-bg color-fg color-fg-muted color-border color-primary-subtle color-bg-muted shadow-xl radius-xl space-2 space-3 space-4 text-sm text-xs text-base weight-medium font-mono z-overlay z-modal duration-fast duration-normal ease-out font-ui */
 
 /* ── Root ── */
 [data-ui="command-palette"] {
@@ -74,7 +74,7 @@
   border: none;
   background: transparent;
   color: var(--color-fg);
-  font-family: var(--font-sans, system-ui, sans-serif);
+  font-family: var(--font-ui);
   font-size: var(--text-base);
   outline: none;
 }

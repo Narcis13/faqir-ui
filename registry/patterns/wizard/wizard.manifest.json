@@ -100,7 +100,7 @@
     "measure-narrow",
     "radius-lg", "radius-full",
     "space-2", "space-3", "space-4", "space-5", "space-6", "space-8",
-    "font-sans", "text-sm", "text-base", "text-lg", "text-xl", "text-2xl",
+    "font-body", "text-sm", "text-base", "text-lg", "text-xl", "text-2xl",
     "weight-medium", "weight-semibold", "leading-tight", "leading-normal"
   ],
 

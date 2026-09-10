@@ -1,5 +1,5 @@
 /* @ui:component chip */
-/* @ui:tokens color-bg-muted color-fg color-fg-muted color-primary color-primary-subtle color-destructive color-destructive-subtle color-border color-ring radius-full space-1 space-2 space-3 font-sans text-xs text-sm weight-medium */
+/* @ui:tokens color-bg-muted color-fg color-fg-muted color-primary color-primary-subtle color-destructive color-destructive-subtle color-border color-ring radius-full space-1 space-2 space-3 font-ui text-xs text-sm weight-medium */
 
 /* ── Base ── */
 [data-ui="chip"] {
@@ -11,7 +11,7 @@
   border-radius: var(--chip-radius, var(--radius-full));
   background: var(--color-bg-muted);
   color: var(--color-fg);
-  font-family: var(--chip-font, var(--font-sans));
+  font-family: var(--font-ui);
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
   line-height: 1.2;

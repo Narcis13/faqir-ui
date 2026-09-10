@@ -99,6 +99,39 @@ describe("theme manifest · tokens are CSS-consistent (generated, then asserted)
   }
 });
 
+// ── The surface itself: what a theme may re-declare ──
+describe("theme manifest · the token surface", () => {
+  // 1.1A-01 added the three type ROLES plus the four heading-voice knobs. Pinned
+  // as a count so a token quietly added to (or dropped from) tokens/*.css shows
+  // up here as a number that moved, and as names so the 1.1 type contract cannot
+  // be renamed without this failing.
+  const ROLE_TOKENS = [
+    "font-heading",
+    "font-body",
+    "font-ui",
+    "heading-weight",
+    "heading-tracking",
+    "heading-transform",
+    "heading-leading",
+  ];
+
+  it("is 241 tokens — the 1.0 surface of 234 plus the seven type roles [1.1A-01]", () => {
+    expect(SURFACE.length).toBe(241);
+  });
+
+  it("contains every type role and voice token", () => {
+    expect(ROLE_TOKENS.filter((t) => !SURFACE.includes(t))).toEqual([]);
+  });
+
+  it("every theme accounts for them — inherited unless it overrides them", () => {
+    for (const file of THEME_FILES) {
+      const manifest = readManifestRaw(file).json as ThemeManifest;
+      const known = new Set([...manifest.tokens_inherited, ...manifest.tokens_overridden]);
+      expect({ [file]: ROLE_TOKENS.filter((t) => !known.has(t)) }).toEqual({ [file]: [] });
+    }
+  });
+});
+
 // ── Proof the schema gate has teeth ──
 describe("theme manifest · validator rejects malformed manifests", () => {
   const valid: ThemeManifest = {

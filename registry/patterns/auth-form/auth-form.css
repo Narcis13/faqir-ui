@@ -1,5 +1,5 @@
 /* @ui:component auth-form */
-/* @ui:tokens color-bg color-bg-subtle color-fg color-fg-muted color-border color-border-strong color-ring color-primary color-primary-hover color-primary-fg color-destructive color-destructive-subtle color-success color-success-subtle radius-lg radius-xl shadow-sm shadow-md space-1 space-2 space-3 space-4 space-5 space-6 space-8 font-sans text-xs text-sm text-base text-lg text-xl text-2xl weight-medium weight-semibold weight-bold leading-tight leading-normal duration-fast duration-normal ease-default */
+/* @ui:tokens color-bg color-bg-subtle color-fg color-fg-muted color-border color-border-strong color-ring color-primary color-primary-hover color-primary-fg color-destructive color-destructive-subtle color-success color-success-subtle radius-lg radius-xl shadow-sm shadow-md space-1 space-2 space-3 space-4 space-5 space-6 space-8 font-heading font-body heading-weight heading-tracking heading-transform heading-leading text-xs text-sm text-base text-lg text-xl text-2xl weight-medium weight-semibold weight-bold leading-tight leading-normal duration-fast duration-normal ease-default */
 
 /* ── Root Container ── */
 [data-ui="auth-form"] {
@@ -7,7 +7,7 @@
   align-items: center;
   justify-content: center;
   width: 100%;
-  font-family: var(--font-sans);
+  font-family: var(--font-body);
 }
 
 /* Mobile-first (task 0.8-09): on a phone the card IS the page — edge to edge,
@@ -39,9 +39,12 @@
 
 [data-ui="auth-form"] [data-part="title"] {
   margin: 0;
+  font-family: var(--font-heading);
   font-size: var(--text-xl);
-  font-weight: var(--weight-bold);
-  line-height: var(--leading-tight);
+  font-weight: var(--heading-weight);
+  letter-spacing: var(--heading-tracking);
+  text-transform: var(--heading-transform);
+  line-height: var(--heading-leading);
   color: var(--color-fg);
 }
 

@@ -161,7 +161,8 @@
     "z-toast",
     "duration-normal",
     "duration-slow",
-    "ease-out"
+    "ease-out",
+    "font-ui"
   ],
   "templates": {
     "html": "<div data-ui=\"toast\" data-variant=\"{position}\" data-part=\"container\" role=\"region\" aria-label=\"Notifications\" id=\"{id}\"></div>"

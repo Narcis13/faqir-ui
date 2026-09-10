@@ -206,7 +206,7 @@
     "text-sm",
     "text-base",
     "weight-semibold",
-    "font-sans",
+    "font-ui",
     "duration-fast",
     "ease-default"
   ],

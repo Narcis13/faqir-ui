@@ -1,5 +1,5 @@
 /* @ui:component sheet */
-/* @ui:tokens color-bg color-fg color-border shadow-xl radius-xl space-4 space-6 z-overlay z-modal duration-normal duration-slow ease-out */
+/* @ui:tokens color-bg color-fg color-border shadow-xl radius-xl space-4 space-6 z-overlay z-modal duration-normal duration-slow ease-out font-heading */
 
 /* ── Root ── */
 [data-ui="sheet"] {
@@ -150,6 +150,7 @@
 /* ── Title ── */
 [data-ui="sheet"] [data-part="title"] {
   margin: 0;
+  font-family: var(--font-heading);
   font-size: var(--text-lg, 1.125rem);
   font-weight: var(--weight-semibold, 600);
   color: var(--color-fg);

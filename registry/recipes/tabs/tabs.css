@@ -1,5 +1,5 @@
 /* @ui:component tabs */
-/* @ui:tokens color-bg color-fg color-fg-muted color-border color-primary color-primary-subtle space-1 space-2 space-3 space-4 radius-md radius-lg text-sm text-base weight-medium duration-fast ease-default */
+/* @ui:tokens color-bg color-fg color-fg-muted color-border color-primary color-primary-subtle space-1 space-2 space-3 space-4 radius-md radius-lg text-sm text-base weight-medium duration-fast ease-default font-ui */
 
 /* ── Root ── */
 [data-ui="tabs"] {
@@ -28,7 +28,7 @@
   border: none;
   background: transparent;
   color: var(--color-fg-muted);
-  font-family: var(--font-sans, system-ui, sans-serif);
+  font-family: var(--font-ui);
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
   cursor: pointer;

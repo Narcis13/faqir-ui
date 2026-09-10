@@ -1,5 +1,5 @@
 /* @ui:component card */
-/* @ui:tokens color-surface-1 color-surface-2 color-surface-1-border color-surface-2-border color-fg color-fg-muted radius-lg shadow-sm space-4 space-6 font-sans text-sm text-lg text-xl weight-semibold leading-tight */
+/* @ui:tokens color-surface-1 color-surface-2 color-surface-1-border color-surface-2-border color-fg color-fg-muted radius-lg shadow-sm space-4 space-6 font-heading text-sm text-lg text-xl weight-semibold leading-tight */
 
 /* ── Base ── */
 [data-ui="card"] {
@@ -33,7 +33,7 @@
 }
 
 [data-ui="card"] > [data-part="header"] > [data-part="title"] {
-  font-family: var(--font-sans);
+  font-family: var(--font-heading);
   font-size: var(--text-lg);
   font-weight: var(--weight-semibold);
   line-height: var(--leading-tight);

@@ -1,5 +1,5 @@
 /* @ui:component date-picker */
-/* @ui:tokens color-bg color-fg color-fg-muted color-border color-primary color-ring shadow-lg radius-md radius-lg space-1 space-2 space-3 space-4 text-xs text-sm z-dropdown duration-fast ease-default */
+/* @ui:tokens color-bg color-fg color-fg-muted color-border color-primary color-ring shadow-lg radius-md radius-lg space-1 space-2 space-3 space-4 text-xs text-sm z-dropdown duration-fast ease-default font-ui */
 /* The month grid inside the popup is the `calendar` recipe — see calendar.css */
 
 /* ── Root ── */
@@ -24,7 +24,7 @@
   border-radius: var(--radius-md);
   background: var(--color-bg);
   color: var(--color-fg);
-  font-family: var(--font-sans, system-ui, sans-serif);
+  font-family: var(--font-ui);
   font-size: var(--text-sm);
   line-height: 1.5;
   cursor: pointer;
