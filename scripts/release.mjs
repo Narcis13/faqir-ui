@@ -302,25 +302,43 @@ export function nextVersion(current, bump) {
   }
 }
 
-/** Rewrite the `version` field of one package.json, preserving formatting. */
+/**
+ * Rewrite the `version` field of one package.json, preserving formatting.
+ * Returns true if the file changed, false if it already declared `version`.
+ *
+ * The distinction matters because "already correct" and "the rewrite failed" are
+ * not the same thing, and collapsing them made the first publish impossible: the
+ * 1.0 prerelease commit put 1.0.0 into all six package.json files, so
+ * `release.mjs 1.0.0` produced a no-op replace and aborted with "failed to
+ * rewrite the version" — on the one release where nothing needed rewriting. A
+ * missing `version` field is still a hard failure; an unchanged one is not.
+ */
 function writePackageVersion(rel, version) {
   const path = join(ROOT, rel);
   const text = readFileSync(path, "utf8");
-  const next = text.replace(/^(\s*"version":\s*)"[^"]*"/m, `$1"${version}"`);
-  if (next === text) throw new Error(`failed to rewrite the version in ${rel}`);
-  writeFileSync(path, next);
+  const current = /^\s*"version":\s*"([^"]*)"/m.exec(text);
+  if (!current) throw new Error(`${rel} declares no "version" field`);
+  if (current[1] === version) return false;
+  writeFileSync(path, text.replace(/^(\s*"version":\s*)"[^"]*"/m, `$1"${version}"`));
+  return true;
 }
 
-/** Rewrite `VERSION` in src/version.ts — the CLI's own constant. */
+/**
+ * Rewrite `VERSION` in src/version.ts — the CLI's own constant.
+ * Returns true if the file changed. See `writePackageVersion` on why false is
+ * not an error.
+ */
 function writeCliVersion(version) {
   const path = join(ROOT, CLI_VERSION_FILE);
   const text = readFileSync(path, "utf8");
-  const next = text.replace(
-    /export const VERSION = "[^"]*";/,
-    `export const VERSION = "${version}";`,
+  const current = /export const VERSION = "([^"]*)";/.exec(text);
+  if (!current) throw new Error(`${CLI_VERSION_FILE} declares no VERSION constant`);
+  if (current[1] === version) return false;
+  writeFileSync(
+    path,
+    text.replace(/export const VERSION = "[^"]*";/, `export const VERSION = "${version}";`),
   );
-  if (next === text) throw new Error(`failed to rewrite VERSION in ${CLI_VERSION_FILE}`);
-  writeFileSync(path, next);
+  return true;
 }
 
 // ── 1. Repository guards ────────────────────────────────────────────────────
@@ -435,14 +453,34 @@ function preflight() {
 
 // ── 3-4. Version and builds ─────────────────────────────────────────────────
 
+/**
+ * Stamp the release version across every package, and return the set of files
+ * that actually changed.
+ *
+ * That set is what `commitAndPush` asserts on. Asserting on the whole list
+ * instead would fail the first publish and every retry of a partial one, where
+ * the correct number is already on disk; asserting on nothing would let a
+ * silently-failed bump through. The files not in the set are verified anyway —
+ * `verifyArtifacts` reads each package.json back and compares.
+ */
 function applyVersion(version) {
   heading(`Version — ${version}, in lockstep across ${VERSION_FILES.length} packages`);
+  const rewritten = new Set();
   for (const rel of VERSION_FILES) {
-    writePackageVersion(rel, version);
-    ok(`${rel}`);
+    if (writePackageVersion(rel, version)) {
+      rewritten.add(rel);
+      ok(rel);
+    } else {
+      ok(`${rel} — already at ${version}`);
+    }
   }
-  writeCliVersion(version);
-  ok(CLI_VERSION_FILE);
+  if (writeCliVersion(version)) {
+    rewritten.add(CLI_VERSION_FILE);
+    ok(CLI_VERSION_FILE);
+  } else {
+    ok(`${CLI_VERSION_FILE} — already at ${version}`);
+  }
+  return rewritten;
 }
 
 function build() {
@@ -536,7 +574,7 @@ function packedCliSmoke(version) {
 
 // ── 6-8. Publish ────────────────────────────────────────────────────────────
 
-function commitAndPush(version) {
+function commitAndPush(version, rewritten) {
   heading("Commit, tag, push");
 
   // `-u` rather than a hand-written path list: the worktree was verified clean
@@ -548,23 +586,48 @@ function commitAndPush(version) {
   run("git", ["add", "-u"]);
 
   const staged = capture("git", ["diff", "--cached", "--name-only"]).split("\n").filter(Boolean);
-  for (const rel of [...VERSION_FILES, CLI_VERSION_FILE]) {
+  // Assert on the files this run rewrote, not on all of them. A version file
+  // that already carried the release number has nothing to stage — and
+  // `verifyArtifacts` has already read it back and confirmed the number.
+  for (const rel of rewritten) {
     if (!staged.includes(rel)) fail(`${rel} is not in the release commit — the bump did not apply`);
   }
-  info(`${staged.length} file(s) in the release commit:`);
-  for (const rel of staged) info(`    ${rel}`);
 
-  run("git", ["commit", "-m", `release: v${version}`]);
-  ok(`committed release: v${version}`);
+  if (staged.length === 0) {
+    // Every tracked file already matches what the builds produce: the version
+    // was committed earlier and the artifacts are reproducible. Tag HEAD as it
+    // stands rather than manufacturing an empty commit to tag.
+    warn(`nothing to commit — HEAD already contains v${version} exactly`);
+  } else {
+    info(`${staged.length} file(s) in the release commit:`);
+    for (const rel of staged) info(`    ${rel}`);
+    run("git", ["commit", "-m", `release: v${version}`]);
+    ok(`committed release: v${version}`);
+  }
 
-  run("git", ["tag", "-a", `v${version}`, "-m", `v${version}`]);
-  ok(`tagged v${version}`);
+  // An existing tag is only acceptable if it names the commit being released —
+  // which is the shape of a retry after a publish failed partway. A tag pointing
+  // anywhere else describes the wrong code, so stop rather than force it over.
+  const tag = `v${version}`;
+  const tagged = capture("git", ["rev-list", "-n", "1", tag], { allowFailure: true });
+  if (!tagged) {
+    run("git", ["tag", "-a", tag, "-m", tag]);
+    ok(`tagged ${tag}`);
+  } else if (tagged === capture("git", ["rev-parse", "HEAD"])) {
+    ok(`${tag} already points at HEAD — reusing it`);
+  } else {
+    fail(
+      `tag ${tag} already exists and points at ${tagged.slice(0, 8)}, not HEAD.\n` +
+        "It describes different code than the one about to be published. Delete\n" +
+        "it deliberately, or release a different version.",
+    );
+  }
 
   // Push BEFORE publish. The old order was tag → publish → push, so a rejected
   // push left a version live on npm that existed in no pushed commit — and npm
   // versions cannot be reused once burnt.
   run("git", ["push", "origin", flags.branch]);
-  run("git", ["push", "origin", `v${version}`]);
+  run("git", ["push", "origin", tag]);
   ok("pushed commit and tag — npm is now the only thing that can diverge");
 }
 
@@ -673,7 +736,7 @@ function main() {
     assertSpecRefExists(version);
     preflight();
 
-    applyVersion(version);
+    const rewritten = applyVersion(version);
     restoreNeeded = true;
     build();
     verifyArtifacts(version);
@@ -695,7 +758,7 @@ function main() {
     }
 
     confirm(version);
-    commitAndPush(version);
+    commitAndPush(version, rewritten);
     restoreNeeded = false;
     publish(version);
     githubRelease(version);

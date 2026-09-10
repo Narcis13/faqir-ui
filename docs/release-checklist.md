@@ -68,6 +68,41 @@ They wake up on their own if CI returns.
 - [ ] `gh auth status` is green, if you want the GitHub release created for you.
 - [ ] `main` is clean, pushed, and identical to `origin/main`.
 
+## The first publish
+
+Nothing has been published yet: all six names 404 on the registry, and the `v0.1`
+–`v0.2.4` tags never reached npm. The first release differs from every later one
+in two ways.
+
+**The version is named, not bumped.** The 1.0 prerelease commit already put
+`1.0.0` into all six `package.json` files and `src/version.ts`, and
+`src/canonical.ts` pins `SPEC_REF = "v1.0.0"` — every canonical spec and schema
+URL resolves through that tag. So the first release *is* 1.0.0, and it is passed
+explicitly rather than derived:
+
+```bash
+node scripts/release.mjs 1.0.0 --dry-run   # rehearse
+node scripts/release.mjs 1.0.0             # publish
+```
+
+Re-stamping a version that is already on disk rewrites nothing, which is fine and
+expected — the script reports `already at 1.0.0` per file and asserts the release
+commit contains only what it actually changed. A bump keyword would be wrong
+here: `patch` resolves to 1.0.1 and would burn 1.0.0 without ever publishing it,
+leaving `SPEC_REF` pointing at a tag no release created.
+
+**The npm side does not exist yet.** Before the first run:
+
+- [ ] `npm login` — the machine has no token at all until this is done
+      (`npm whoami` currently errors `ENEEDAUTH`).
+- [ ] Create the **`faqir-ui` organisation** on npm. The five scoped packages
+      cannot publish into a scope that does not exist, and the error npm returns
+      for a missing scope (`404`) reads identically to a name that is taken.
+- [ ] Confirm the unscoped `faqir-ui-cli` is still free — an unscoped name is
+      first-come, and the whole publish order ends with it.
+
+Everything after the first release uses a bump keyword as normal.
+
 ## What the script does, in order
 
 1. **Guards** — clean worktree, on `main`, in sync with `origin/main`. Any
@@ -77,7 +112,9 @@ They wake up on their own if CI returns.
 3. **Version** — computes the next version and writes it to all six
    `package.json` files and `src/version.ts`. Lockstep, always: no package
    depends on another by range, so there is no reason for them to differ and one
-   good reason not to — "which versions go together" stops being a question.
+   good reason not to — "which versions go together" stops being a question. A
+   file already carrying the target version is reported and left alone; only a
+   *missing* version field is an error.
 4. **Ordered builds** — `build:core` (which injects `Faqir.version`) →
    `build:cli` → `build:core-package` (regenerates `cdn.json` and its 15 SRI
    hashes against the new version) → `build:bindings` → `build:mcp`.
@@ -87,7 +124,10 @@ They wake up on their own if CI returns.
    pack --dry-run` will happily pack 365 files whose `bin` cannot resolve.
 6. **Commit, tag, push** — in that order, and **push before publish**. The old
    ordering was tag → publish → push, so a rejected push left a version live on
-   npm that existed in no pushed commit.
+   npm that existed in no pushed commit. If the builds reproduce what is already
+   committed there is nothing to commit, and HEAD is tagged as it stands rather
+   than carrying an empty commit. An existing tag is reused only when it already
+   points at HEAD; one pointing elsewhere aborts the release.
 7. **Publish** — `@faqir-ui/core`, then the bindings, then `@faqir-ui/mcp`, then
    the root CLI last, so the package people actually install is the last thing to
    appear.

@@ -110,10 +110,16 @@ describe("the release script is the only gate there is", () => {
     // versions cannot be reused once burnt.
     const push = SOURCE.indexOf('run("git", ["push", "origin", flags.branch]);');
     const publish = SOURCE.indexOf("function publish(version)");
-    const call = SOURCE.indexOf("publish(version);", SOURCE.indexOf("commitAndPush(version);"));
+    // Locate the two call sites by name, inside main(), rather than by their full
+    // argument lists — the ordering is the invariant here, and pinning the
+    // signature made an unrelated change to commitAndPush() fail this test.
+    const main = SOURCE.indexOf("function main()");
+    const commitCall = SOURCE.indexOf("commitAndPush(", main);
+    const publishCall = SOURCE.indexOf("publish(version);", commitCall);
     expect(push).toBeGreaterThan(0);
     expect(publish).toBeGreaterThan(0);
-    expect(SOURCE.indexOf("commitAndPush(version);", call - 200)).toBeLessThan(call);
+    expect(commitCall).toBeGreaterThan(main);
+    expect(commitCall).toBeLessThan(publishCall);
   });
 
   it("publishes the root CLI last", () => {
