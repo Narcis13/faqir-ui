@@ -3247,12 +3247,12 @@ function renderSpecPage(ctx: {
         `It is published twice on purpose: ${monoLink(
           relUrl(pagePath, SPEC_SCHEMA_FILE),
           `/${SPEC_SCHEMA_FILE}`,
-        )} is the versioned address that will still serve <em>this</em> schema after a 1.1 ` +
-        `exists, and ${monoLink(
+        )} is the versioned address that sits beside <em>this</em> spec, and ${monoLink(
           relUrl(pagePath, SCHEMA_FILE),
           `/${SCHEMA_FILE}`,
         )} is the schema's own <code>$id</code> — the alias that always resolves to the newest ` +
-        `1.x. While 1.0 is current the two are byte-identical.</p>`,
+        `1.x. Both serve schema ${SCHEMA_VERSION}: the bytes the ${PROTOCOL_VERSION} freeze ` +
+        `shipped with stay pinned at the release tag, which is what §10's pinned URL is for.</p>`,
     ),
     section(
       "amendments",

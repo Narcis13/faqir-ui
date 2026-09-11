@@ -290,7 +290,7 @@ describe("SPEC-1.0.md and src/protocol.ts describe one protocol", () => {
     expect(major.some((c) => c.includes("required"))).toBe(true);
   });
 
-  it("carries the schema changelog, ending at the frozen version", () => {
+  it("carries the schema changelog, ending at the current schema version", () => {
     const rows = parseSpecChangelog(SPEC);
     expect(rows.map((r) => r.version)).toEqual(SCHEMA_CHANGELOG.map((c) => c.version));
     for (const [i, c] of SCHEMA_CHANGELOG.entries()) {
@@ -301,6 +301,29 @@ describe("SPEC-1.0.md and src/protocol.ts describe one protocol", () => {
     expect(rows.at(-1)!.version).toBe(SCHEMA_VERSION);
     // The 0.x history is what the freeze is measured from — it has to be there.
     expect(rows.filter((r) => r.version.startsWith("0.")).length).toBeGreaterThan(0);
+  });
+
+  // 1.1A-07: the schema moved to 1.1 and the protocol did not. The two numbers
+  // are separate precisely so this can happen, and §8 is what licenses it —
+  // which means a schema bump with no additive row behind it should read as a
+  // contradiction here rather than as a version number nobody checked.
+  it("only ever moves the schema version under an additive amendment", () => {
+    const rows = parseSpecChangelog(SPEC);
+    // Nothing after the freeze may be breaking; a breaking schema change is 2.0.
+    const afterFreeze = rows.slice(rows.findIndex((r) => r.version === PROTOCOL_VERSION));
+    expect(afterFreeze.length).toBeGreaterThan(1);
+    expect(afterFreeze.filter((r) => r.breaking)).toEqual([]);
+    // The document states one number for the protocol and another for the schema.
+    const versions = parseSpecVersions(SPEC);
+    expect(versions.protocol).toBe(PROTOCOL_VERSION);
+    expect(versions.schema).toBe(SCHEMA_VERSION);
+    expect(SCHEMA_VERSION).not.toBe(PROTOCOL_VERSION);
+    // …and §8 says which of the two may move: the optional-field row.
+    const optionalField = amendmentsAt("additive").find((r) =>
+      norm(r.change).toLowerCase().includes("optional field to the manifest schema"),
+    );
+    expect(optionalField, "§8 no longer licenses the amendment §9's last row claims").toBeDefined();
+    expect(amendmentsAt("major").some((r) => norm(r.change).toLowerCase().includes("required"))).toBe(true);
   });
 
   it("publishes every marker the parsers depend on", () => {

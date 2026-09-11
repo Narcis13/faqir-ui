@@ -12,8 +12,12 @@
 //   PROTOCOL_VERSION  the DOM contract — the five attributes, their value
 //                     grammars, the sanctioned token modifiers and the responsive
 //                     tier suffix. Frozen at 1.0; see SPEC-1.0.md.
-//   SCHEMA_VERSION    the manifest contract — `manifest.schema.json`. Frozen at
-//                     1.0 alongside the protocol.
+//   SCHEMA_VERSION    the manifest contract — `manifest.schema.json`. It moves
+//                     WITHIN the freeze: §8 lets the schema gain optional fields
+//                     in any 1.x release, so 1.1 adds the theme-manifest fields
+//                     while PROTOCOL_VERSION stays at 1.0. A manifest written
+//                     against 1.0 still validates — that is what the freeze
+//                     promises, and it is why these two are separate numbers.
 //
 // The CLI ships many releases per protocol version; that is the whole point of
 // separating them. `tests/spec/protocol-1.0.test.ts` asserts that every surface
@@ -29,5 +33,9 @@ export const VERSION = "1.0.0";
  */
 export const PROTOCOL_VERSION = "1.0";
 
-/** The frozen manifest schema — `manifest.schema.json`'s `schema_version`. */
-export const SCHEMA_VERSION = "1.0";
+/**
+ * The manifest schema — `manifest.schema.json`'s `schema_version`. Additive
+ * under the frozen protocol: 1.1 (task 1.1A-07) added five optional theme
+ * fields, and every 1.0 manifest still validates.
+ */
+export const SCHEMA_VERSION = "1.1";

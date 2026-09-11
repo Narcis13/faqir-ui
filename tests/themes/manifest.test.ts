@@ -22,6 +22,10 @@ import {
   inheritedTokens,
   surfaceTokens,
   isSurfaceTokenFile,
+  THEME_AXIS_VALUES,
+  THEME_DERIVED_AXES,
+  THEME_SEED_DEFAULTS,
+  type ThemeAxes,
   type ThemeManifest,
 } from "../../src/theme-manifest";
 
@@ -229,5 +233,150 @@ describe("theme manifest · validator rejects malformed manifests", () => {
 
   it("accepts a consistent light-only manifest", () => {
     expect(validateThemeManifest({ ...valid, scheme: "light", dark_mode: "none" })).toEqual([]);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Schema 1.1 — the five optional theme fields                      [1.1A-07]
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// "Optional" is a statement about absence, not about contents. A manifest
+// without any of them is exactly as valid as it was under 1.0 — that is the
+// freeze — and a manifest WITH one has it validated in full, because a seed
+// nobody checks is a theme that silently comes out wrong.
+
+describe("theme manifest · the optional 1.1 fields", () => {
+  const valid: ThemeManifest = {
+    name: "x",
+    version: "1.0.0",
+    mood: ["neutral"],
+    scheme: "both",
+    dark_mode: "native",
+    tokens_overridden: ["color-bg"],
+    tokens_inherited: ["space-4"],
+    pairs_with: [],
+    preview: "x.preview.html",
+  };
+
+  /** A complete derived block — every one of the fourteen keys. */
+  const axes: ThemeAxes = {
+    accent_hue: 250,
+    accent_chroma: 0.2,
+    neutral: "cool",
+    scheme: "both",
+    type: { pairing: "system", scale: 1.2, base: 16, voice: { weight: "bold", tracking: "normal", transform: "none" } },
+    shape: { radius: "soft", border: "hairline", corner: "round" },
+    depth: "soft",
+    material: "none",
+    motion: "smooth",
+    density: "comfortable",
+    focus: "ring",
+    decoration: { link: "offset", divider: "solid" },
+    controls: { button: "soft", input: "box", checkbox: "square", switch: "pill" },
+    contrast: "standard",
+  };
+
+  it("accepts a manifest with none of them — every shipped theme is one", () => {
+    expect(validateThemeManifest(valid)).toEqual([]);
+    for (const file of THEME_FILES) {
+      const manifest = readManifestRaw(file).json as ThemeManifest;
+      for (const field of ["seed", "axes", "fonts", "distinctiveness", "visual_matrix"] as const) {
+        expect(manifest[field], `${file} already declares ${field}`).toBeUndefined();
+      }
+    }
+  });
+
+  it("accepts a manifest with all five", () => {
+    expect(
+      validateThemeManifest({
+        ...valid,
+        seed: { name: "x", accent: "oklch(0.62 0.2 250)", neutral: "cool", shape: { radius: "round" } },
+        axes,
+        fonts: [{ family: "Fraunces", license: "OFL-1.1", role: "heading", source: "google-fonts" }],
+        distinctiveness: { nearest: "paper", axis_distance: 6, token_distance: 0.41 },
+        visual_matrix: false,
+      }),
+    ).toEqual([]);
+  });
+
+  it("takes `{ name, accent }` as a complete seed", () => {
+    // The acceptance criterion, made mechanical: every other axis defaults, so
+    // the shortest seed the generator can be handed is two fields.
+    expect(validateThemeManifest({ ...valid, seed: { name: "x", accent: "#3b82f6" } })).toEqual([]);
+    expect(new Set(Object.keys(THEME_SEED_DEFAULTS))).toEqual(
+      new Set([
+        ...Object.keys(THEME_AXIS_VALUES),
+        "document",
+      ]),
+    );
+  });
+
+  it("rejects a seed with no accent", () => {
+    const errors = validateThemeManifest({ ...valid, seed: { name: "x" } });
+    expect(errors.map((e) => e.field)).toContain("seed.accent");
+  });
+
+  it("rejects a value outside an axis vocabulary, however deep", () => {
+    const shallow = validateThemeManifest({ ...valid, seed: { name: "x", accent: "#333", depth: "fluffy" } });
+    expect(shallow.map((e) => e.field)).toEqual(["seed.depth"]);
+    expect(shallow[0].message).toContain("flat, soft, layered, hard, glass, inset");
+
+    const deep = validateThemeManifest({
+      ...valid,
+      seed: { name: "x", accent: "#333", type: { voice: { transform: "shouty" } } },
+    });
+    expect(deep.map((e) => e.field)).toEqual(["seed.type.voice.transform"]);
+  });
+
+  it("rejects a misspelled axis rather than ignoring it", () => {
+    // The failure mode this guards: a seed that generates a theme missing the
+    // axis its author thought they had set.
+    expect(
+      validateThemeManifest({ ...valid, seed: { name: "x", accent: "#333", raduis: "soft" } }).map((e) => e.field),
+    ).toEqual(["seed.raduis"]);
+    expect(
+      validateThemeManifest({ ...valid, seed: { name: "x", accent: "#333", shape: { rounding: "soft" } } }).map(
+        (e) => e.field,
+      ),
+    ).toEqual(["seed.shape.rounding"]);
+  });
+
+  it("requires every one of the fourteen derived axes", () => {
+    expect(validateThemeManifest({ ...valid, axes })).toEqual([]);
+    expect(THEME_DERIVED_AXES.length).toBe(14);
+    for (const axis of THEME_DERIVED_AXES) {
+      const { [axis]: _dropped, ...partial } = axes as unknown as Record<string, unknown>;
+      const errors = validateThemeManifest({ ...valid, axes: partial });
+      expect(errors.map((e) => e.field), `dropping axes.${axis} was accepted`).toContain(`axes.${axis}`);
+    }
+  });
+
+  it("holds the derived accent to the OKLCH ranges", () => {
+    expect(validateThemeManifest({ ...valid, axes: { ...axes, accent_hue: 400 } }).map((e) => e.field)).toEqual([
+      "axes.accent_hue",
+    ]);
+    expect(validateThemeManifest({ ...valid, axes: { ...axes, accent_chroma: -0.1 } }).map((e) => e.field)).toEqual([
+      "axes.accent_chroma",
+    ]);
+    expect(validateThemeManifest({ ...valid, axes: { ...axes, accent_hue: 0 } })).toEqual([]);
+  });
+
+  it("checks a font's licence and role", () => {
+    const bad = validateThemeManifest({ ...valid, fonts: [{ family: "Fraunces", role: "display" }] });
+    expect(bad.map((e) => e.field).sort()).toEqual(["fonts[0].license", "fonts[0].role"]);
+    expect(validateThemeManifest({ ...valid, fonts: [] })).toEqual([]);
+  });
+
+  it("counts axes in whole numbers", () => {
+    const errors = validateThemeManifest({
+      ...valid,
+      distinctiveness: { nearest: "paper", axis_distance: 6.5, token_distance: 0.41 },
+    });
+    expect(errors.map((e) => e.field)).toEqual(["distinctiveness.axis_distance"]);
+  });
+
+  it("rejects a non-boolean visual_matrix — absence is how a theme opts in", () => {
+    expect(validateThemeManifest({ ...valid, visual_matrix: "yes" }).map((e) => e.field)).toEqual(["visual_matrix"]);
+    expect(validateThemeManifest({ ...valid, visual_matrix: true })).toEqual([]);
   });
 });

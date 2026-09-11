@@ -351,10 +351,16 @@ export interface SchemaChange {
 }
 
 /**
- * The manifest schema's history, ending at the freeze. Mirrored into
+ * The manifest schema's history, through the freeze and past it. Mirrored into
  * `manifest.schema.json`'s own `changelog` — the schema carries its history so a
  * consumer who fetched only the schema still has it — and into SPEC-1.0 §9,
  * with the test asserting all three agree.
+ *
+ * The list does not end at 1.0, and that is the freeze working rather than
+ * leaking: §8 classifies "add an optional field to the manifest schema" as
+ * additive, so the schema version keeps moving inside a frozen protocol. The
+ * last row's version is {@link SCHEMA_VERSION}; {@link PROTOCOL_VERSION} is a
+ * different number and stays where 1.0 left it.
  *
  * One honest note the table records rather than tidies away: the file has
  * claimed `schema_version: "1.0.0"` since its first commit, before there was a
@@ -398,6 +404,18 @@ export const SCHEMA_CHANGELOG: readonly SchemaChange[] = Object.freeze([
       "annotation. Optional, so every 1.0 manifest still validates; additive under SPEC-1.0 §8. It " +
       "exists because the data was already in every controller and on no surface an agent reads: " +
       "`faqir explain <recipe> --json` returned no `api` for any of the 29 JS-backed recipes.",
+    breaking: false,
+  }),
+  Object.freeze({
+    version: "1.1",
+    task: "1.1A-07",
+    note:
+      "Five optional theme-manifest fields: `seed` (the generator input, absent on an authored " +
+      "theme), `axes` (the fourteen axes derived from the CSS, never hand-written), `fonts`, " +
+      "`distinctiveness` and `visual_matrix`. Optional, so every manifest written against 1.0 " +
+      "still validates; additive under SPEC-1.0 §8, which is why the protocol stays frozen at 1.0 " +
+      "while the schema moves to 1.1. The seed's vocabulary is stated in full — every axis, every " +
+      "enum, every default — because it is the generator's input contract, not a hint.",
     breaking: false,
   }),
 ]);

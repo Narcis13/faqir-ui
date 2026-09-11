@@ -13,6 +13,12 @@ import { validateAgainstSchema } from "../../src/utils/json-schema";
 import { MANIFEST_CATEGORIES, validateManifest } from "../../src/manifest";
 import { DRAFT_07_META_SCHEMA } from "../../src/utils/draft-07-meta";
 import { SCHEMA_VERSION } from "../../src/version";
+import {
+  THEME_AXIS_VALUES,
+  THEME_DERIVED_AXES,
+  THEME_SEED_AXES,
+  THEME_SEED_DEFAULTS,
+} from "../../src/theme-manifest";
 
 const ROOT = join(import.meta.dir, "../..");
 const SCHEMA_PATH = join(ROOT, "manifest.schema.json");
@@ -301,5 +307,239 @@ describe("json-schema validator", () => {
     const changeDef = { ...(schema.definitions as any).change };
     expect(validateAgainstSchema(changeDef, { version: "1.0.0", note: "x", breaking: false })).toEqual([]);
     expect(validateAgainstSchema(changeDef, { version: "1.0.0", note: "x" }).length).toBeGreaterThan(0);
+  });
+});
+
+// ── task 1.1A-07: schema 1.1 — the five optional theme-manifest fields ──
+//
+// The amendment SPEC-1.0 §8 classifies as `additive`, taken at its word: the
+// required set does not move, every shipped manifest still validates, and the
+// new fields are checked only when a manifest chooses to carry one.
+//
+// The second half of this block is a drift gate. The axis vocabulary exists
+// twice on purpose — once in `manifest.schema.json` for whatever resolves the
+// published contract, once in `src/theme-manifest.ts` for the CLI's own
+// validator — and two copies of a vocabulary are two vocabularies unless
+// something compares them. This does, in both directions.
+
+describe("schema 1.1 · the theme manifest's optional fields", () => {
+  /** The theme definition, carrying the document's `definitions` as its `$ref` root. */
+  async function themeDefinition(): Promise<Record<string, unknown>> {
+    const schema = await loadSchema();
+    const defs = schema.definitions as Record<string, Record<string, unknown>>;
+    return { ...defs.themeManifest, definitions: defs };
+  }
+
+  /** A shipped manifest, as the base every probe mutates. */
+  async function shippedTheme(): Promise<Record<string, unknown>> {
+    return (await Bun.file(join(ROOT, "registry/themes/midnight.theme.json")).json()) as Record<string, unknown>;
+  }
+
+  async function check(extra: Record<string, unknown>): Promise<string[]> {
+    const def = await themeDefinition();
+    const errors = validateAgainstSchema(def, { ...(await shippedTheme()), ...extra });
+    return errors.map((e) => `${e.path} ${e.message}`);
+  }
+
+  const AXES = {
+    accent_hue: 250,
+    accent_chroma: 0.2,
+    neutral: "cool",
+    scheme: "both",
+    type: { pairing: "system", scale: 1.2, base: 16, voice: { weight: "bold", tracking: "normal", transform: "none" } },
+    shape: { radius: "soft", border: "hairline", corner: "round" },
+    depth: "soft",
+    material: "none",
+    motion: "smooth",
+    density: "comfortable",
+    focus: "ring",
+    decoration: { link: "offset", divider: "solid" },
+    controls: { button: "soft", input: "box", checkbox: "square", switch: "pill" },
+    contrast: "standard",
+  };
+
+  it("declares all five, and none of them required — the freeze", async () => {
+    const schema = await loadSchema();
+    const theme = (schema.definitions as Record<string, any>).themeManifest;
+    for (const field of ["seed", "axes", "fonts", "distinctiveness", "visual_matrix"]) {
+      expect(theme.properties[field], `${field} is not declared`).toBeDefined();
+      expect(theme.required, `${field} was made required — that is a 2.0`).not.toContain(field);
+    }
+    // The 1.0 required set, verbatim. A manifest that validated then validates now.
+    expect(theme.required).toEqual([
+      "name",
+      "version",
+      "mood",
+      "scheme",
+      "dark_mode",
+      "tokens_overridden",
+      "tokens_inherited",
+      "pairs_with",
+      "preview",
+    ]);
+  });
+
+  it("records the amendment in its own changelog, as not breaking", async () => {
+    const schema = await loadSchema();
+    const rows = schema.changelog as { version: string; task: string; breaking: boolean }[];
+    const last = rows.at(-1)!;
+    expect(last.version).toBe("1.1");
+    expect(last.version).toBe(schema.schema_version as string);
+    expect(last.task).toBe("1.1A-07");
+    expect(last.breaking).toBe(false);
+    // The protocol did not move with it.
+    expect(schema.protocol_version).toBe("1.0");
+  });
+
+  it("validates a theme carrying all five", async () => {
+    expect(
+      await check({
+        seed: { name: "midnight", accent: "oklch(0.62 0.2 250)", neutral: "cool", shape: { radius: "round" } },
+        axes: AXES,
+        fonts: [{ family: "Fraunces", license: "OFL-1.1", role: "heading", source: "google-fonts" }],
+        distinctiveness: { nearest: "slate", axis_distance: 6, token_distance: 0.41 },
+        visual_matrix: false,
+      }),
+    ).toEqual([]);
+  });
+
+  it("takes an accent and a name as a complete seed", async () => {
+    expect(await check({ seed: { name: "x", accent: "oklch(0.62 0.2 40)" } })).toEqual([]);
+    expect(await check({ seed: { name: "x", accent: "#3b82f6" } })).toEqual([]);
+    expect(await check({ seed: { name: "x", accent: "white" } })).toEqual([]);
+    // …and nothing less than that.
+    expect((await check({ seed: { name: "x" } })).join(" ")).toContain("accent");
+    expect((await check({ seed: { accent: "#3b82f6" } })).join(" ")).toContain("name");
+    expect((await check({ seed: { name: "x", accent: "cornflowerblue" } })).join(" ")).toContain("pattern");
+  });
+
+  it("rejects a value outside an axis vocabulary, at any depth", async () => {
+    expect((await check({ seed: { name: "x", accent: "#333", neutral: "beige" } })).join(" ")).toContain("enum");
+    expect((await check({ seed: { name: "x", accent: "#333", type: { scale: 1.4 } } })).join(" ")).toContain("enum");
+    expect(
+      (await check({ seed: { name: "x", accent: "#333", type: { voice: { transform: "shouty" } } } })).join(" "),
+    ).toContain("enum");
+    expect(
+      (await check({ seed: { name: "x", accent: "#333", controls: { switch: "rounded" } } })).join(" "),
+    ).toContain("enum");
+  });
+
+  it("rejects a misspelled axis rather than ignoring it", async () => {
+    expect((await check({ seed: { name: "x", accent: "#333", raduis: "soft" } })).join(" ")).toContain(
+      "not allowed",
+    );
+    expect((await check({ axes: { ...AXES, extra: 1 } })).join(" ")).toContain("not allowed");
+  });
+
+  it("requires every derived axis, and holds the accent to its ranges", async () => {
+    expect(await check({ axes: AXES })).toEqual([]);
+    for (const axis of Object.keys(AXES)) {
+      const { [axis]: _dropped, ...partial } = AXES as Record<string, unknown>;
+      expect((await check({ axes: partial })).join(" "), `axes.${axis} is not required`).toContain(axis);
+    }
+    expect((await check({ axes: { ...AXES, accent_hue: 400 } })).join(" ")).toContain("maximum");
+    expect((await check({ axes: { ...AXES, accent_chroma: -1 } })).join(" ")).toContain("minimum");
+  });
+
+  it("rejects a non-boolean visual_matrix and a malformed font", async () => {
+    expect((await check({ visual_matrix: "yes" })).join(" ")).toContain("expected type boolean");
+    expect(await check({ visual_matrix: false })).toEqual([]);
+    expect((await check({ fonts: [{ family: "Fraunces", license: "OFL-1.1", role: "display" }] })).join(" ")).toContain(
+      "enum",
+    );
+    expect((await check({ fonts: [{ family: "Fraunces", role: "heading" }] })).join(" ")).toContain("license");
+    expect((await check({ distinctiveness: { nearest: "slate", axis_distance: 6.5, token_distance: 0.4 } })).join(" "))
+      .toContain("integer");
+  });
+});
+
+describe("schema 1.1 · the axis vocabulary exists twice and agrees", () => {
+  /** Resolve one level of local `$ref`. */
+  function deref(node: Record<string, any>, defs: Record<string, any>): Record<string, any> {
+    return typeof node.$ref === "string" ? defs[node.$ref.split("/").pop()!] : node;
+  }
+
+  /** Every enumerated leaf under an object definition, by dotted path. */
+  function vocabulary(
+    node: Record<string, any>,
+    defs: Record<string, any>,
+    prefix = "",
+    out: Record<string, unknown[]> = {},
+  ): Record<string, unknown[]> {
+    for (const [key, raw] of Object.entries((node.properties ?? {}) as Record<string, any>)) {
+      const path = prefix ? `${prefix}.${key}` : key;
+      const child = deref(raw, defs);
+      if (Array.isArray(child.enum)) out[path] = child.enum;
+      else if (child.type === "object") vocabulary(child, defs, path, out);
+    }
+    return out;
+  }
+
+  /** Every declared `default` under an object definition, by dotted path. */
+  function defaults(
+    node: Record<string, any>,
+    defs: Record<string, any>,
+    prefix = "",
+    out: Record<string, unknown> = {},
+  ): Record<string, unknown> {
+    for (const [key, raw] of Object.entries((node.properties ?? {}) as Record<string, any>)) {
+      const path = prefix ? `${prefix}.${key}` : key;
+      const child = deref(raw, defs);
+      if ("default" in child) out[path] = child.default;
+      if (child.type === "object") defaults(child, defs, path, out);
+    }
+    return out;
+  }
+
+  it("states the same vocabulary as src/theme-manifest.ts", async () => {
+    const defs = (await loadSchema()).definitions as Record<string, any>;
+    expect(vocabulary(defs.themeSeed, defs)).toEqual(
+      JSON.parse(JSON.stringify(THEME_AXIS_VALUES)) as Record<string, unknown[]>,
+    );
+  });
+
+  it("states the same vocabulary on the derived side as on the seed side", () => {
+    // What "themeAxes is the seed's vocabulary minus accent and document, plus
+    // accent_hue and accent_chroma" means, mechanically. The four composite
+    // axes cannot drift — one definition, two users — and this is what stops
+    // the ten scalar ones from drifting instead.
+    return loadSchema().then((schema) => {
+      const defs = schema.definitions as Record<string, any>;
+      expect(vocabulary(defs.themeAxes, defs)).toEqual(vocabulary(defs.themeSeed, defs));
+      expect(Object.keys(defs.themeSeed.properties).filter((k) => k !== "name")).toEqual([...THEME_SEED_AXES]);
+      expect(Object.keys(defs.themeAxes.properties)).toEqual([...THEME_DERIVED_AXES]);
+      expect(defs.themeAxes.required).toEqual([...THEME_DERIVED_AXES]);
+      // Fourteen axes, counted on both sides (FAQIR-VISION §5.2).
+      expect(THEME_SEED_AXES.length).toBe(14);
+      expect(THEME_DERIVED_AXES.length).toBe(14);
+    });
+  });
+
+  it("states the same defaults as src/theme-manifest.ts, on every optional axis", async () => {
+    const defs = (await loadSchema()).definitions as Record<string, any>;
+    expect(defaults(defs.themeSeed, defs)).toEqual(
+      JSON.parse(JSON.stringify(THEME_SEED_DEFAULTS)) as Record<string, unknown>,
+    );
+    // Every optional seed axis has one: that is what makes `{ name, accent }`
+    // complete, and what 1.1A-10 reads instead of inventing its own.
+    const missing = Object.keys(vocabulary(defs.themeSeed, defs)).filter(
+      (path) => !(path in defaults(defs.themeSeed, defs)),
+    );
+    expect(missing).toEqual([]);
+  });
+
+  it("documents every default in prose too, not only as a keyword", async () => {
+    // The acceptance criterion names the `description` strings specifically:
+    // an agent reading the generated reference sees the markdown, not the JSON.
+    const defs = (await loadSchema()).definitions as Record<string, any>;
+    const declared = defaults(defs.themeSeed, defs);
+    const undocumented: string[] = [];
+    for (const [path, value] of Object.entries(declared)) {
+      const node = path
+        .split(".")
+        .reduce<Record<string, any>>((n, key) => deref(n.properties[key], defs), defs.themeSeed);
+      if (!String(node.description ?? "").includes(`Default \`${value}\``)) undocumented.push(path);
+    }
+    expect(undocumented).toEqual([]);
   });
 });

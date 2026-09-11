@@ -1,6 +1,6 @@
 # Faqir Protocol 1.0
 
-**Status:** Frozen · **Protocol version:** 1.0 · **Manifest schema version:** 1.0
+**Status:** Frozen · **Protocol version:** 1.0 · **Manifest schema version:** 1.1
 
 This is the normative specification of the Faqir contract: the five DOM attributes,
 their value grammars, the three sanctioned token modifiers, the responsive tier
@@ -30,8 +30,9 @@ framework would reject.
    design tokens for a subtree and are part of the frozen surface, without being
    protocol attributes (§4).
 3. **The responsive tier suffix** — `data-<attr>-<tier>`, introduced in v0.8 (§5).
-4. **Manifest schema 1.0** — the machine-readable contract shipped beside every
-   component and theme (§6).
+4. **The manifest schema** — the machine-readable contract shipped beside every
+   component and theme (§6). It carries its own version, currently 1.1, which moves
+   inside the freeze: §8 lets it gain optional fields in any 1.x release.
 5. **The freeze and its amendment process** (§8) and the schema's history (§9).
 
 ### 1.2 What this does not specify
@@ -304,12 +305,18 @@ group — the suffix changes *when* a value applies, never *which* values exist.
 
 ---
 
-## 6. Manifest schema 1.0
+## 6. The manifest schema
 
 Every component ships `<name>.manifest.json`; every theme ships `<name>.theme.json`.
 Both validate against one document, `manifest.schema.json`, whose `schema_version` is
-`1.0`. The schema is JSON Schema draft-07 and is itself meta-validated on every test
+`1.1`. The schema is JSON Schema draft-07 and is itself meta-validated on every test
 run.
+
+The schema's version and the protocol's are two numbers, and only one of them is
+frozen. `protocol_version` is `1.0` and stays there until 2.0; `schema_version` moves
+whenever §8 permits — which, for a schema, means gaining an optional field or widening
+an enum. A manifest written against schema 1.0 validates against every 1.x schema; §9
+records each step.
 
 ### 6.1 Required fields — component manifest
 
@@ -367,6 +374,20 @@ rather than a convention a manifest may opt out of.
 A theme manifest declares `name`, `version`, `mood`, `scheme`, `dark_mode`,
 `tokens_overridden`, `tokens_inherited`, `pairs_with` and `preview`. `scheme` is
 `light`, `dark` or `both`; `dark_mode` is `native` or `none`.
+
+Schema 1.1 adds five **optional** fields, validated when present and absent without
+consequence: `seed` (the generator input a generated theme was produced from — every
+axis with its own enum and default, so an accent and a name are a complete seed),
+`axes` (the fourteen axes derived from the theme's CSS, written by the generator like
+`tokens_overridden` and never by hand), `fonts` (the self-hosted families the theme's
+role tokens name, each with its licence), `distinctiveness` (how far the theme sits
+from the nearest other, written by the gate that measures it) and `visual_matrix`
+(whether the theme enters the full screenshot and axe matrix — absent means `true`).
+
+Two of the nine required fields and two of the five optional ones are *derived*
+rather than authored. That is a property of the theme side specifically: a theme is a
+stylesheet, and anything a generator can read back out of the stylesheet is a fact
+about it rather than a claim about it.
 
 ---
 
@@ -455,6 +476,7 @@ Two cases the table does not cover, stated so nobody has to guess:
 | 0.8 | 0.8-02 | `props` — the non-variant attributes — declared; `variants.<group>.responsive` added for the tier suffix grammar; `category` closed to a documented enum, which retired the `form` spelling in favour of `forms`. | yes |
 | 1.0 | 1.0-01 | Frozen. `schema_version` is `1.0`, `stability` and `amendment_policy` are declared in the file, this changelog is carried in it, and the schema is published at a versioned URL beside the spec. No field changed shape. | no |
 | 1.0 | W2-4 | `api` — a component's controller surface, generated from the controller's `@ui:provides` annotation. Optional, so every 1.0 manifest still validates; additive under SPEC-1.0 §8. It exists because the data was already in every controller and on no surface an agent reads: `faqir explain <recipe> --json` returned no `api` for any of the 29 JS-backed recipes. | no |
+| 1.1 | 1.1A-07 | Five optional theme-manifest fields: `seed` (the generator input, absent on an authored theme), `axes` (the fourteen axes derived from the CSS, never hand-written), `fonts`, `distinctiveness` and `visual_matrix`. Optional, so every manifest written against 1.0 still validates; additive under SPEC-1.0 §8, which is why the protocol stays frozen at 1.0 while the schema moves to 1.1. The seed's vocabulary is stated in full — every axis, every enum, every default — because it is the generator's input contract, not a hint. | no |
 
 One thing this table records rather than tidies away: the schema file has carried
 `schema_version: "1.0.0"` since its first commit, before there was a freeze to back
@@ -475,7 +497,7 @@ window in which a deployment is stale relative to the tag it claims to serve.
 |------|-----|-------|
 | This document | `https://github.com/Narcis13/faqir-ui/blob/v1.0.0/SPEC-1.0.md` | Rendered. Pinned to the release tag that froze 1.0. |
 | This document, as markdown | `https://raw.githubusercontent.com/Narcis13/faqir-ui/v1.0.0/SPEC-1.0.md` | The same bytes as `SPEC-1.0.md` in the repository. |
-| Manifest schema 1.0 | `https://raw.githubusercontent.com/Narcis13/faqir-ui/v1.0.0/manifest.schema.json` | Pinned copy. Serves the schema 1.0 froze with, after 1.1 exists. |
+| Manifest schema 1.0 | `https://raw.githubusercontent.com/Narcis13/faqir-ui/v1.0.0/manifest.schema.json` | Pinned copy. Serves the schema 1.0 froze with — which, since 1.1 landed, is no longer what the alias serves. |
 | Manifest schema (alias) | `https://raw.githubusercontent.com/Narcis13/faqir-ui/main/manifest.schema.json` | The schema's own `$id`; always the newest 1.x schema. |
 
 Two refs, doing two different jobs. `main` is the alias: an additive amendment

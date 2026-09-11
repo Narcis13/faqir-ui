@@ -974,7 +974,9 @@ describe("shipped manifest reference", () => {
 
   it("carries every value of every closed enum", () => {
     const enums = declaredEnums(SCHEMA.definitions);
-    expect(enums.length).toBe(6);
+    // Six at 1.0; schema 1.1's theme seed and derived axes brought the rest —
+    // a vocabulary an agent cannot read is a vocabulary it will guess at.
+    expect(enums.length).toBe(38);
     for (const values of enums) {
       expect(REFERENCE, `an enum is missing: ${values.join(", ")}`).toContain(
         values.map((v) => `\`${v}\``).join(", "),
