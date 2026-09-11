@@ -7,7 +7,8 @@ discovery util (`../visual/matrix.ts`), so the two gates can never disagree abou
 which pages exist. The a11y matrix is:
 
 ```
-every component  ×  every registry theme  ×  { light, dark }
+every component  ×  every matrix theme  ×  { light, dark }
+every pattern    ×  every other theme   ×  { light, dark }
 ```
 
 At the current registry that is **86 components × 12 themes × 2 schemes = 2,064
@@ -15,6 +16,24 @@ scans** (plus a non-empty tripwire, the gate-bites fixture test and the density
 reference page). Adding a component
 (`registry/{primitives,recipes,patterns}/<name>/<name>.html` with an
 `@ui:component` header) grows the suite automatically — **zero edits** here.
+
+### Matrix membership (task 1.1A-13)
+
+The gate reads the **same manifest fact** as the screenshot matrix
+(`visual_matrix` in `registry/themes/<name>.theme.json`, absent = member), through
+the same imported `isMatrixTheme` — so the two gates can no more disagree about
+which themes are cheap than they can about which pages exist.
+
+One difference is deliberate and load-bearing: **`A11Y_THEMES` stays the complete
+theme axis.** Every theme is scanned; membership decides only *how much of the
+registry* each one is scanned against. `color-contrast` is the one axe rule a
+theme can break on its own, so a theme nobody scanned at all is a theme that can
+ship an AA failure — a reduced theme therefore gets its patterns, in both schemes,
+where nearly every semantic colour pair is rendered on a page. `A11Y_MATRIX_THEMES`
+is the narrowed list that takes the full component sweep; `default` and `contrast`
+are pinned members of it. The mobile sweep narrows identically: a reduced theme
+re-scans the *patterns* of the layout-bearing set, the layer that owns a page and
+therefore the one where a phone layout actually differs.
 
 ## The mobile sweep (task 0.8-11)
 
@@ -58,8 +77,9 @@ component *fragments*, not whole documents, so advisory rules like `region` or
 
 `color-contrast` is theme- and scheme-sensitive, so the gate discovers and sweeps
 every registry theme in both schemes; `default` and the WCAG-AAA `contrast` theme
-remain mandatory anchors. Nothing axe evaluates depends on text direction, so —
-unlike the visual suite — there is no RTL axis.
+remain mandatory anchors — and members of the full sweep, not just the axis.
+Nothing axe evaluates depends on text direction, so — unlike the visual suite —
+there is no RTL axis.
 
 ## Files
 
@@ -73,7 +93,7 @@ unlike the visual suite — there is no RTL axis.
 | `a11y.pw.ts` | Playwright spec: one axe scan per case + the gate-bites fixture test. |
 | `mobile.pw.ts` | Playwright spec (task 0.8-11): the same pipeline at 390px over the layout-bearing set, discovered via `../visual/responsive-matrix.ts`. |
 | `docs-site.pw.ts` | Playwright spec (task 0.7-13): the generated documentation site, served over plain HTTP, one scan per site page per scheme. Scans only the pages the generator authors — `examples/**` wrap registry reference markup that `a11y.pw.ts` already scans. See `docs/docs-site.md`. |
-| `a11y-matrix.test.ts` | `bun test` meta-tests: discovery parity with the visual suite, matrix shape, exemption + report contracts. |
+| `a11y-matrix.test.ts` | `bun test` meta-tests: discovery parity with the visual suite, matrix shape, the 1.1A-13 membership split (a reduced theme is scanned over its patterns, not dropped; ids unchanged by promotion), exemption + report contracts. |
 | `fixtures/known-violation.html` | Deliberately-broken page proving the gate actually fails. |
 | `../../playwright.a11y.config.ts` | Separate config (pass/fail, no snapshot machinery). |
 | `../../.github/workflows/a11y.yml` | CI gate — runs the scan in the pinned Playwright container. |

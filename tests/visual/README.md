@@ -5,13 +5,47 @@ there is no hand-maintained gallery to drift out of sync. The matrix is the full
 cross-product:
 
 ```
-every component  ×  every theme  ×  { light, dark }  ×  { ltr, rtl }
+every component  ×  every matrix theme  ×  { light, dark }  ×  { ltr, rtl }
 ```
 
 At the current registry that is **86 components × 12 themes × 2 schemes × 2 dirs =
 4 128 captures**. Adding a component (`registry/{primitives,recipes,patterns}/<name>/<name>.html`
 with an `@ui:component` header) or a theme (`registry/themes/<name>.css`) grows the
 matrix automatically — **zero edits** to the suite, the config, or the CI job.
+
+## Matrix membership is a manifest fact (task 1.1A-13)
+
+The cross-product is multiplicative and **themes are the axis that explodes**: 12
+themes are 4 128 captures, 24 would be 8 256. So a theme states its own
+membership, in its own manifest:
+
+| `registry/themes/<name>.theme.json` | Sweep | Captures |
+| --- | --- | --- |
+| `visual_matrix` absent (or `true`) | every component × both schemes × both dirs | **344** |
+| `visual_matrix: false` | **patterns only** × both schemes × ltr | **30** |
+
+**Absence means membership.** A theme opts *out* explicitly, so a new theme is
+covered by default and nothing can shrink the gate by omission — a missing or
+unreadable manifest is swept in full, because the expensive answer is the safe
+one. The twelve authored themes say nothing and are unchanged; the generated seed
+themes (1.1A-16/17) ship `visual_matrix: false`, and promotion to the full matrix
+is a one-line manifest edit made on purpose.
+
+The reduced sweep is patterns because **a pattern composes the registry**: the 15
+of them mount 47 of the 85 distinct component names, so a reduced theme still gets
+a structural render of most of what it ships for 8.7% of the captures. What they
+miss is mostly floating chrome a controller opens (toast, tooltip, popover,
+drawer, sheet, the overlay menus) and leaf primitives no pattern happens to use —
+all of which every matrix theme still sweeps in full. That trade is measured in
+`matrix.test.ts`, not asserted.
+
+Ids are built identically either way (`kind__name__theme__scheme__dir`), so
+promoting a theme **adds the cells the reduced sweep skipped and renames no
+existing baseline** — also pinned in the meta-test.
+
+`discoverThemes()` is still the complete list, and is what consumers that need
+every theme use (`frameworkCss`, the density page, the docs switcher, the a11y
+theme axis). `discoverThemes({ matrix: true })` is the narrowed one.
 
 ## The viewport axis (task 0.8-11)
 
@@ -243,6 +277,14 @@ zero suite edits" actually holds: it scans the registry directly and asserts eve
 `@ui:component` reference page appears in the generated matrix, that the matrix is
 the exact cross-product with unique ids, and that both RTL and dark cases are
 present. If the generator ever silently skips a page, this fails — loudly.
+
+It also holds the membership policy: that absence means membership in every
+spelling (`null`, `{}`, `true`), that no *authored* theme opts out, that the
+formula is `full × members + patterns × the rest`, that a reduced theme costs 30
+and not 344, that the reduced cells' ids are a subset of the full sweep's spelled
+identically, and — from both ends — that the filter actually removes something.
+Planting a `visual_matrix: false` on an authored theme was confirmed to turn it
+red, then reverted.
 
 `responsive-matrix.test.ts` does the same for the viewport axis: it re-derives the
 layout-bearing set from the manifests on disk, hands `discoverLayoutBearing` a

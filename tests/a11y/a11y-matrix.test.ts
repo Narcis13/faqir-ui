@@ -21,6 +21,7 @@ import {
   buildA11yMatrix,
   buildMobileA11yMatrix,
   A11Y_THEMES,
+  A11Y_MATRIX_THEMES,
   MOBILE_VIEWPORT,
   buildPageHtml as a11yBuildPageHtml,
   discoverComponents as a11yDiscoverComponents,
@@ -36,6 +37,7 @@ import {
   discoverThemes,
   buildMatrix as buildVisualMatrix,
   buildPageHtml as visualBuildPageHtml,
+  REDUCED_SWEEP_KIND,
   SCHEMES,
 } from "../visual/matrix";
 import { A11Y_EXEMPTIONS, findExemption, partitionViolations, ALL_COMPONENTS } from "./exemptions";
@@ -67,7 +69,13 @@ describe("a11y matrix generation", () => {
     const matrix = buildA11yMatrix();
 
     expect(components.length).toBeGreaterThan(0);
-    expect(matrix.length).toBe(components.length * A11Y_THEMES.length * SCHEMES.length);
+    // The 1.1A-13 split: full for matrix themes, patterns-only for the rest.
+    const patterns = components.filter((c) => c.kind === REDUCED_SWEEP_KIND);
+    const reducedThemes = A11Y_THEMES.length - A11Y_MATRIX_THEMES.length;
+    expect(matrix.length).toBe(
+      (components.length * A11Y_MATRIX_THEMES.length + patterns.length * reducedThemes) *
+        SCHEMES.length,
+    );
 
     const ids = new Set(matrix.map((c) => c.id));
     expect(ids.size).toBe(matrix.length); // no two cases collide
@@ -86,6 +94,12 @@ describe("a11y matrix generation", () => {
     // §12.3 minimum: a neutral baseline theme and the high-contrast theme.
     expect(A11Y_THEMES).toContain("default");
     expect(A11Y_THEMES).toContain("contrast");
+    // 1.1A-13 narrows *coverage*, never the theme axis: a reduced theme is still
+    // scanned, over its patterns. So no theme may ever leave this list, and the
+    // two anchors are members of the full sweep in particular.
+    expect(A11Y_MATRIX_THEMES).toContain("default");
+    expect(A11Y_MATRIX_THEMES).toContain("contrast");
+    expect(new Set(buildA11yMatrix().map((c) => c.theme))).toEqual(themes);
   });
 
   test("both schemes are represented for every component (light + dark swept)", () => {
@@ -132,8 +146,12 @@ describe("mobile sweep ↔ viewport-axis parity (task 0.8-11)", () => {
 
   test("mobile matrix is the layout-bearing set × a11y themes × schemes, unique ids", () => {
     const matrix = buildMobileA11yMatrix();
+    const layout = discoverLayoutBearing();
+    const patterns = layout.filter((c) => c.kind === REDUCED_SWEEP_KIND);
+    const reducedThemes = A11Y_THEMES.length - A11Y_MATRIX_THEMES.length;
     expect(matrix.length).toBe(
-      discoverLayoutBearing().length * A11Y_THEMES.length * SCHEMES.length,
+      (layout.length * A11Y_MATRIX_THEMES.length + patterns.length * reducedThemes) *
+        SCHEMES.length,
     );
     const ids = new Set(matrix.map((c) => c.id));
     expect(ids.size).toBe(matrix.length);
@@ -159,6 +177,70 @@ describe("mobile sweep ↔ viewport-axis parity (task 0.8-11)", () => {
       expect(Object.keys(e).sort()).toEqual(["component", "justification", "rule"]);
       // None of the waived components is even in the mobile set.
       expect(discoverLayoutBearing().some((c) => c.name === e.component)).toBe(false);
+    }
+  });
+});
+
+// ── matrix membership policy (task 1.1A-13) ──────────────────────────────────
+//
+// The a11y gate reads the *same* manifest fact as the screenshot matrix, so the
+// two can never disagree about which themes are cheap. One difference is
+// deliberate and load-bearing: `A11Y_THEMES` stays the COMPLETE theme axis. A
+// reduced theme is still scanned — over its patterns — because `color-contrast`
+// is the one axe rule a theme can break, and a theme nobody scanned at all is a
+// theme that can ship an AA failure. `A11Y_MATRIX_THEMES` is what narrows.
+
+describe("a11y matrix membership (1.1A-13)", () => {
+  const FIXTURE_THEMES = ["fixture-full", "fixture-reduced"];
+  const fixtureRead = (theme: string) =>
+    theme === "fixture-reduced" ? { visual_matrix: false } : null;
+
+  test("A11Y_THEMES is the axis, A11Y_MATRIX_THEMES is the membership", () => {
+    // The narrower list is always a subset of the axis, never the other way.
+    for (const t of A11Y_MATRIX_THEMES) expect(A11Y_THEMES).toContain(t);
+    expect(A11Y_MATRIX_THEMES.length).toBeLessThanOrEqual(A11Y_THEMES.length);
+    expect([...A11Y_MATRIX_THEMES]).toEqual(discoverThemes({ matrix: true }));
+    expect([...A11Y_THEMES]).toEqual(discoverThemes());
+  });
+
+  test("a reduced theme is scanned over its patterns, not dropped", () => {
+    const components = discoverComponents();
+    const patterns = components.filter((c) => c.kind === REDUCED_SWEEP_KIND);
+    const matrix = buildA11yMatrix(components, FIXTURE_THEMES, fixtureRead);
+
+    expect(matrix.length).toBe(
+      (components.length + patterns.length) * SCHEMES.length,
+    );
+    const reduced = matrix.filter((c) => c.theme === "fixture-reduced");
+    expect(reduced.length).toBe(patterns.length * SCHEMES.length);
+    expect(reduced.length).toBeGreaterThan(0); // scanned, not silently dropped
+    expect(new Set(reduced.map((c) => c.component.kind))).toEqual(
+      new Set([REDUCED_SWEEP_KIND]),
+    );
+    // Both schemes survive the narrowing — colour contrast is the whole point.
+    expect([...new Set(reduced.map((c) => c.scheme))].sort()).toEqual([...SCHEMES].sort());
+    // Ids are spelled identically, so promotion adds cases and renames none.
+    const promoted = new Set(
+      buildA11yMatrix(components, FIXTURE_THEMES, () => null).map((c) => c.id),
+    );
+    for (const c of reduced) expect(promoted.has(c.id)).toBe(true);
+  });
+
+  test("the mobile sweep narrows the same way, and stays a subset of the desktop scan", () => {
+    const layout = discoverLayoutBearing();
+    const patterns = layout.filter((c) => c.kind === REDUCED_SWEEP_KIND);
+    expect(patterns.length).toBeLessThan(layout.length); // the filter does work
+
+    const mobile = buildMobileA11yMatrix(layout, FIXTURE_THEMES, fixtureRead);
+    expect(mobile.length).toBe((layout.length + patterns.length) * SCHEMES.length);
+
+    const desktop = new Set(
+      buildA11yMatrix(discoverComponents(), FIXTURE_THEMES, fixtureRead).map(
+        (c) => `${c.theme}__${c.component.htmlRel}`,
+      ),
+    );
+    for (const c of mobile) {
+      expect(desktop.has(`${c.theme}__${c.component.htmlRel}`)).toBe(true);
     }
   });
 });

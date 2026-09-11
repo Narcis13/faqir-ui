@@ -4,14 +4,23 @@
  *
  * This module is the single source of truth for *what* the screenshot suite
  * captures. It scans the registry on disk — the reference `.html` files and the
- * theme `.css` files — and produces the full cross-product:
+ * theme `.css` files — and produces the cross-product:
  *
- *     every component  ×  every theme  ×  { light, dark }  ×  { ltr, rtl }
+ *     every component  ×  every matrix theme  ×  { light, dark }  ×  { ltr, rtl }
  *
  * Adding a component (a new `registry/{primitives,recipes,patterns}/<name>/<name>.html`)
  * or a theme (`registry/themes/<name>.css`) grows the matrix automatically — the
  * Playwright spec and the CI job need **zero** edits. That is the whole point:
  * there is no hand-maintained gallery to drift from the registry.
+ *
+ * **Matrix membership is a manifest fact** (task 1.1A-13). The cross-product is
+ * multiplicative, so themes are the axis that explodes: at 12 themes it is 4 128
+ * captures, at 24 it would be 8 256. A theme whose manifest says
+ * `visual_matrix: false` therefore takes a *patterns-only × both schemes × ltr*
+ * sweep instead — 30 captures rather than 344 — which still renders nearly every
+ * component, because a pattern composes them. Absence means full membership, so
+ * the twelve authored themes are unchanged and a new theme is covered by default;
+ * opting out is a deliberate line in the theme's own file.
  *
  * Deliberately dependency-free (only `node:fs` / `node:path`) so it runs
  * identically under Bun (the meta-test in `matrix.test.ts`) and under Node
@@ -103,29 +112,110 @@ export function discoverComponents(): Component[] {
 
 // ── theme discovery ──────────────────────────────────────────────────────────
 
+/** The theme-manifest fields this module reads. Everything else is ignored. */
+export interface ThemeMatrixFacts {
+  /** Does this theme enter the full sweep? Absent means yes (1.1A-13). */
+  visual_matrix?: boolean;
+}
+
+/** A theme manifest reader — injectable so the meta-tests can prove the policy
+ *  from a fixture set instead of writing manifests into the registry. */
+export type ThemeManifestReader = (theme: string) => ThemeMatrixFacts | null;
+
+/** Registry manifest for a theme — the sibling of its `.css`. */
+export function themeManifestPathFor(theme: string): string {
+  return join(REGISTRY, "themes", `${theme}.theme.json`);
+}
+
+/** Read a theme's manifest, or `null` if it has none. */
+export function readThemeManifest(theme: string): ThemeMatrixFacts | null {
+  const path = themeManifestPathFor(theme);
+  if (!existsSync(path)) return null;
+  return JSON.parse(readFileSync(path, "utf8")) as ThemeMatrixFacts;
+}
+
+/**
+ * Does this theme get the full cross-product? **Absence means yes** — a theme
+ * opts *out* with an explicit `visual_matrix: false`, so a new theme is covered
+ * by default and a reduced one carries the reason in its own file. A manifest
+ * that is missing entirely (or unreadable) is therefore swept in full: the
+ * expensive answer is the safe one, and nothing can shrink the gate by omission.
+ */
+export function isMatrixTheme(manifest: ThemeMatrixFacts | null): boolean {
+  return manifest?.visual_matrix !== false;
+}
+
+/** Options for {@link discoverThemes}. */
+export interface DiscoverThemeOptions {
+  /** `true` → only the themes that take the full cross-product. */
+  matrix?: boolean;
+}
+
 /**
  * Every theme is a `registry/themes/<name>.css`. Each file is self-contained for
  * both schemes (a `:root`/light block and a `[data-theme="dark"]` block), so the
  * scheme axis is driven purely by the `data-theme` attribute on <html>.
+ *
+ * `discoverThemes()` is the **complete** list and is what consumers that need
+ * every theme use (`frameworkCss`, the density page, the docs switcher, the a11y
+ * theme axis). `discoverThemes({ matrix: true })` narrows it to the themes whose
+ * manifest does not say `visual_matrix: false` — the matrix-membership policy of
+ * task 1.1A-13.
  */
-export function discoverThemes(): string[] {
+export function discoverThemes(
+  options: DiscoverThemeOptions = {},
+  read: ThemeManifestReader = readThemeManifest,
+): string[] {
   const dir = join(REGISTRY, "themes");
-  return readdirSync(dir)
+  const all = readdirSync(dir)
     .filter((f) => f.endsWith(".css") && !f.endsWith(".preview.css"))
     .map((f) => basename(f, ".css"))
     .sort();
+  return options.matrix ? all.filter((t) => isMatrixTheme(read(t))) : all;
 }
 
 // ── the matrix ───────────────────────────────────────────────────────────────
 
-export function buildMatrix(): Case[] {
-  const components = discoverComponents();
-  const themes = discoverThemes();
+/**
+ * The one component layer a **non-matrix** theme is still swept in. A pattern
+ * composes most primitives and recipes into a page, so a reduced theme still
+ * gets a structural render of nearly every component it ships — at a fraction of
+ * the cost of the cross-product.
+ */
+export const REDUCED_SWEEP_KIND = "pattern";
+
+/** The single direction a non-matrix theme is swept in (mirroring is not a
+ *  theme property — the matrix themes already prove both directions). */
+export const REDUCED_SWEEP_DIRECTION = "ltr" as const;
+
+/**
+ * The matrix, under the 1.1A-13 membership policy:
+ *
+ * - a **matrix theme** (manifest lacks `visual_matrix: false`) sweeps the full
+ *   cross-product — every component × both schemes × both directions;
+ * - every **other** theme sweeps *patterns only* × both schemes × ltr.
+ *
+ * At 86 components and 15 patterns that is 344 captures for a matrix theme and
+ * **30** for a reduced one, which is what keeps 24 themes affordable. Ids are
+ * built identically either way, so promoting a theme to the full matrix renames
+ * no existing baseline — it only adds the cells the reduced sweep skipped.
+ *
+ * All three arguments are injectable purely for the meta-test.
+ */
+export function buildMatrix(
+  components: Component[] = discoverComponents(),
+  themes: string[] = discoverThemes(),
+  read: ThemeManifestReader = readThemeManifest,
+): Case[] {
+  const full = new Set(themes.filter((t) => isMatrixTheme(read(t))));
   const cases: Case[] = [];
   for (const component of components) {
     for (const theme of themes) {
+      const sweepsAll = full.has(theme);
+      if (!sweepsAll && component.kind !== REDUCED_SWEEP_KIND) continue;
+      const dirs = sweepsAll ? DIRECTIONS : [REDUCED_SWEEP_DIRECTION];
       for (const scheme of SCHEMES) {
-        for (const dir of DIRECTIONS) {
+        for (const dir of dirs) {
           cases.push({
             component,
             theme,

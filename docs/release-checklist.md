@@ -50,6 +50,19 @@ Run them locally before a release that touched CSS, markup or the engine. Expect
 baseline noise on macOS: read the diffs, do not blanket-accept them, and never
 run an `:update` variant to make a release go green.
 
+**How big those two suites are is a manifest fact, not a constant** (task
+1.1A-13). The visual and a11y matrices are multiplicative in themes, so each theme
+declares its own membership in `registry/themes/<name>.theme.json`:
+`visual_matrix` absent (or `true`) buys the full sweep — every component × both
+schemes, × both directions for the screenshots — and `visual_matrix: false` buys a
+**patterns-only** sweep instead, 30 captures rather than 344. Absence means
+membership, so a new theme is covered by default and nothing shrinks the gate by
+omission. The twelve authored themes are all members; generated seed themes ship
+opted out, and promoting one is a one-line manifest edit that adds cells and
+renames no baseline. A release that adds themes should therefore check the
+membership lines before assuming the suites got slower — and a release that
+*promotes* a theme should expect a batch of new (not changed) baselines.
+
 `tests/meta/visual-baselines.test.ts` and `tests/meta/print-visual-paths.test.ts`
 hold the workflow invariants and go dormant while `.github/workflows/` is absent.
 They wake up on their own if CI returns.

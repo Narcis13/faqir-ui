@@ -12,14 +12,17 @@
  *
  * The a11y axes are narrower than the visual matrix on purpose:
  *
- *   every component  ×  every registry theme  ×  { light, dark }
+ *   every component  ×  every matrix theme  ×  { light, dark }
+ *   every pattern    ×  every other theme   ×  { light, dark }
  *
- * §12.3 requires "at least default + contrast themes, light+dark". The gate now
+ * §12.3 requires "at least default + contrast themes, light+dark". The gate
  * covers the full discovered theme axis: colour-contrast is scheme- and
  * theme-sensitive, but nothing axe
  * evaluates depends on text direction, so the RTL axis the visual suite sweeps
  * would only double the runtime without covering a new failure mode.
- * `A11Y_THEMES` is the complete discovered theme set, guarded by the meta-test.
+ * `A11Y_THEMES` is the complete discovered theme set, guarded by the meta-test —
+ * *every* theme is scanned; task 1.1A-13's `visual_matrix` decides only how much
+ * of the registry each one is scanned against.
  *
  * Task 0.8-11 adds a second, narrower matrix below — `buildMobileA11yMatrix` —
  * which re-scans only the layout-bearing set at 390px, where mobile layouts have
@@ -30,9 +33,13 @@ import {
   discoverComponents,
   discoverThemes,
   buildPageHtml,
+  isMatrixTheme,
+  readThemeManifest,
+  REDUCED_SWEEP_KIND,
   SCHEMES,
   type Case,
   type Component,
+  type ThemeManifestReader,
 } from "../visual/matrix";
 import { discoverLayoutBearing } from "../visual/responsive-matrix";
 
@@ -40,9 +47,24 @@ import { discoverLayoutBearing } from "../visual/responsive-matrix";
  * Themes the a11y gate sweeps. Discovery is the contract: every registry theme
  * enters automatically, including a thirteenth theme on arrival. The meta-test
  * also pins `default` and `contrast` as the required neutral/AAA anchors.
+ *
+ * This is the **axis**, not the membership. Every theme here is scanned — what
+ * the 1.1A-13 policy varies is *how much* of the registry each one is scanned
+ * against (see {@link A11Y_MATRIX_THEMES}), so a theme is never silently dropped
+ * from the a11y gate the way it could be from a screenshot set.
  */
 export const A11Y_THEMES: readonly string[] = Object.freeze(discoverThemes());
 export type A11yTheme = (typeof A11Y_THEMES)[number];
+
+/**
+ * The subset that takes the **full** component sweep — the same manifest fact the
+ * screenshot matrix reads (`visual_matrix`, absent = member). Every other theme is
+ * scanned over patterns only: axe's theme-sensitive rule is `color-contrast`, and
+ * a pattern renders nearly every component's colour pairs on one page.
+ */
+export const A11Y_MATRIX_THEMES: readonly string[] = Object.freeze(
+  discoverThemes({ matrix: true }),
+);
 
 // The a11y suite captures each page in one direction — axe evaluates roles,
 // names, and contrast, none of which change with `dir`. LTR is the canonical one.
@@ -53,14 +75,22 @@ export interface A11yCase extends Case {
 }
 
 /**
- * The full a11y cross-product: every discovered component × each a11y theme ×
- * both schemes. Each case is a visual-suite `Case` (so `buildPageHtml` consumes
- * it unchanged) with `dir` pinned to LTR and a stable, unique id.
+ * The a11y cross-product, under the same membership policy the screenshot matrix
+ * uses (task 1.1A-13): every discovered component × each **matrix** a11y theme,
+ * and patterns only × every other theme, both × both schemes. Each case is a
+ * visual-suite `Case` (so `buildPageHtml` consumes it unchanged) with `dir`
+ * pinned to LTR and a stable, unique id.
  *
  * Throws if a required a11y theme is missing from the registry, so a renamed or
  * deleted theme fails loudly here instead of silently shrinking the gate.
+ *
+ * The arguments are injectable purely for the meta-test.
  */
-export function buildA11yMatrix(components: Component[] = discoverComponents()): A11yCase[] {
+export function buildA11yMatrix(
+  components: Component[] = discoverComponents(),
+  themes: readonly string[] = A11Y_THEMES,
+  read: ThemeManifestReader = readThemeManifest,
+): A11yCase[] {
   const available = new Set(discoverThemes());
   const missing = A11Y_THEMES.filter((t) => !available.has(t));
   if (missing.length) {
@@ -69,9 +99,11 @@ export function buildA11yMatrix(components: Component[] = discoverComponents()):
     );
   }
 
+  const full = new Set(themes.filter((t) => isMatrixTheme(read(t))));
   const cases: A11yCase[] = [];
   for (const component of components) {
-    for (const theme of A11Y_THEMES) {
+    for (const theme of themes) {
+      if (!full.has(theme) && component.kind !== REDUCED_SWEEP_KIND) continue;
       for (const scheme of SCHEMES) {
         cases.push({
           component,
@@ -116,13 +148,21 @@ export interface MobileA11yCase extends A11yCase {
  * with no responsive behaviour render identically at both widths, so scanning
  * them again would double the job for zero new information — which is exactly
  * the set this filter excludes.
+ *
+ * The 1.1A-13 membership policy applies here too: a non-matrix theme re-scans
+ * only the patterns of that set — the layer that owns a page, and therefore the
+ * one where a phone layout actually differs.
  */
 export function buildMobileA11yMatrix(
   components: Component[] = discoverLayoutBearing(),
+  themes: readonly string[] = A11Y_THEMES,
+  read: ThemeManifestReader = readThemeManifest,
 ): MobileA11yCase[] {
+  const full = new Set(themes.filter((t) => isMatrixTheme(read(t))));
   const cases: MobileA11yCase[] = [];
   for (const component of components) {
-    for (const theme of A11Y_THEMES) {
+    for (const theme of themes) {
+      if (!full.has(theme) && component.kind !== REDUCED_SWEEP_KIND) continue;
       for (const scheme of SCHEMES) {
         cases.push({
           component,
