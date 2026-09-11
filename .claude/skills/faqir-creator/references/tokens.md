@@ -8,12 +8,13 @@ Cascade order, as `tokens/index.css` imports them: `palette.css` → `spacing.cs
 
 ## Sanctioned Token Modifiers
 
-3 attributes are part of the frozen contract without being protocol attributes: each re-declares design tokens for its subtree, and every descendant inherits the result. None names a component, fills a slot, or needs a manifest declaration.
+4 attributes are part of the frozen contract without being protocol attributes: each re-declares design tokens for its subtree, and every descendant inherits the result. None names a component, fills a slot, or needs a manifest declaration.
 
 | Attribute | Purpose | Values | Written by | Scope |
 |---|---|---|---|---|
-| `data-density` | Re-declares the spacing and control-height ramps for a subtree. | `compact`, `comfortable` | author | Any element. Nesting is supported: an inner value replaces the outer one for its own subtree. |
+| `data-density` | Re-declares the spacing and control-height ramps for a subtree. | `compact`, `comfortable`, `spacious` | author | Any element. Nesting is supported: an inner value replaces the outer one for its own subtree. |
 | `data-motion` | The transition phase of one enter/leave cycle, driven by the engine. | `enter`, `enter-active`, `leave`, `leave-active` | controller | The element being transitioned. Removed again when the cycle ends. |
+| `data-skin` | Selects which theme's token declarations a subtree resolves — the scope selector `faqir theme bundle` emits when it scopes a theme to part of a page. | `<theme-name>` | author | Legal on any element; scopes the theme it names to that element's subtree without switching the whole page. |
 | `data-theme` | Selects the colour scheme a theme's token blocks resolve to. | `light`, `dark`, `auto` | author | Conventionally the document root; legal on any element, which scopes the scheme to that subtree. |
 
 ## Token Groups
@@ -694,7 +695,7 @@ _`registry/tokens/doc-aliases.css` · 46 tokens_
 | `--stat-change-positive` | `var(--color-success)` |
 | `--stat-change-negative` | `var(--color-destructive)` |
 
-## density — [data-density] subtree modifier
+## density — [data-density] subtree modifier (task 0.7-11, FAQIR-NEXT §B6;
 
 _`registry/tokens/density.css` · 39 tokens re-declared per scope_
 

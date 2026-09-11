@@ -11,7 +11,7 @@
 //
 // What lives here and what deliberately does not:
 //
-//   • here — the five attributes, their value grammars and owners; the three
+//   • here — the five attributes, their value grammars and owners; the four
 //     sanctioned token modifiers; the freeze statement and the amendment
 //     taxonomy; the manifest-schema changelog.
 //   • NOT here — the breakpoint canon (`src/utils/breakpoints.ts` owns it, and
@@ -167,20 +167,28 @@ export const PROTOCOL_RULES: readonly string[] = Object.freeze([
 export interface TokenModifier {
   attr: string;
   purpose: string;
-  /** The closed value vocabulary. Adding a value is additive; removing one is not. */
+  /**
+   * The value vocabulary. Closed by default — adding a value is additive,
+   * removing one is not. When {@link open} is `true` this holds a single
+   * placeholder (`<theme-name>`) rather than an enumeration: the real
+   * vocabulary is open-ended and every value in it is already legal, so §8.2's
+   * "add a value to a sanctioned token modifier" row does not apply to it.
+   */
   values: readonly string[];
   /** Where it is conventionally written. */
   scope: string;
   /** Who writes it. */
   owner: AttributeOwner;
+  /** `true` when the vocabulary is open-ended rather than a closed enum. */
+  open?: boolean;
 }
 
-/** The three sanctioned token modifiers, alphabetical by attribute. */
+/** The four sanctioned token modifiers, alphabetical by attribute. */
 export const TOKEN_MODIFIERS: readonly TokenModifier[] = Object.freeze([
   Object.freeze({
     attr: "data-density",
     purpose: "Re-declares the spacing and control-height ramps for a subtree.",
-    values: Object.freeze(["compact", "comfortable"]),
+    values: Object.freeze(["compact", "comfortable", "spacious"]),
     scope: "Any element. Nesting is supported: an inner value replaces the outer one for its own subtree.",
     owner: "author" as AttributeOwner,
   }),
@@ -190,6 +198,15 @@ export const TOKEN_MODIFIERS: readonly TokenModifier[] = Object.freeze([
     values: Object.freeze(["enter", "enter-active", "leave", "leave-active"]),
     scope: "The element being transitioned. Removed again when the cycle ends.",
     owner: "controller" as AttributeOwner,
+  }),
+  Object.freeze({
+    attr: "data-skin",
+    purpose:
+      "Selects which theme's token declarations a subtree resolves — the scope selector `faqir theme bundle` emits when it scopes a theme to part of a page.",
+    values: Object.freeze(["<theme-name>"]),
+    scope: "Legal on any element; scopes the theme it names to that element's subtree without switching the whole page.",
+    owner: "author" as AttributeOwner,
+    open: true,
   }),
   Object.freeze({
     attr: "data-theme",
@@ -286,6 +303,11 @@ export const AMENDMENT_RULES: readonly AmendmentRule[] = Object.freeze([
     change: "Add a value to a sanctioned token modifier — a third density, say.",
     level: "additive" as AmendmentLevel,
     because: "The vocabulary grows; no existing value changes meaning.",
+  }),
+  Object.freeze({
+    change: "Add a sanctioned token modifier that re-declares tokens only and names no component.",
+    level: "additive" as AmendmentLevel,
+    because: "It behaves exactly like the existing ones: no manifest, no per-component vocabulary, nothing published stops validating.",
   }),
   Object.freeze({
     change: "Add an audit rule at `info` or `warning`.",

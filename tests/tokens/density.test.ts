@@ -71,6 +71,7 @@ function block(css: string, selector: string): Record<string, string> {
 
 const COMPACT = block(DENSITY_CSS, '[data-density="compact"]');
 const COMFORTABLE = block(DENSITY_CSS, '[data-density="comfortable"]');
+const SPACIOUS = block(DENSITY_CSS, '[data-density="spacious"]');
 const BASE_SPACING = block(SPACING_CSS, ":root");
 const BASE_ALIASES = block(ALIASES_CSS, ":root");
 const BASE_DOC_ALIASES = block(DOC_ALIASES_CSS, ":root");
@@ -127,6 +128,7 @@ function mount(bodyHtml: string) {
 }
 
 const SCALE = Number(COMPACT["--density-scale"]);
+const SPACIOUS_SCALE = Number(SPACIOUS["--density-scale"]);
 
 describe("density · subtree scoping", () => {
   it("compact tightens descendants and leaves a sibling subtree alone", () => {
@@ -191,6 +193,37 @@ describe("density · subtree scoping", () => {
     dom.close();
   });
 
+  it("spacious loosens descendants and leaves a sibling subtree alone", () => {
+    const dom = mount(`
+      <div data-density="spacious"><span id="roomy" data-probe></span></div>
+      <div><span id="default" data-probe></span></div>
+    `);
+
+    expect(dom.space("default")).toBe(16); // --space-4 base
+    expect(dom.space("roomy")).toBe(16 * SPACIOUS_SCALE);
+    expect(dom.space("roomy")).toBeGreaterThan(dom.space("default"));
+
+    expect(dom.control("default")).toBe(40); // --control-height-md base
+    expect(dom.control("roomy")).toBe(44);
+    expect(dom.control("roomy")).toBeGreaterThan(dom.control("default"));
+    dom.close();
+  });
+
+  it("nesting: compact inside spacious resets to compact's own ramp", () => {
+    const dom = mount(`
+      <div data-density="spacious">
+        <span id="roomy" data-probe></span>
+        <div data-density="compact">
+          <span id="dense" data-probe></span>
+        </div>
+      </div>
+    `);
+    expect(dom.space("roomy")).toBe(16 * SPACIOUS_SCALE);
+    expect(dom.space("dense")).toBe(16 * SCALE);
+    expect(dom.control("dense")).toBe(32);
+    dom.close();
+  });
+
   it("an unknown data-density value is inert (no partial remap)", () => {
     const dom = mount(`<div data-density="cozy"><span id="x" data-probe></span></div>`);
     expect(dom.space("x")).toBe(16);
@@ -241,25 +274,44 @@ describe("density · the remap is complete and derived", () => {
     }
   });
 
+  it("spacious scales every spacing step UP by --density-scale", () => {
+    expect(SPACIOUS_SCALE).toBeGreaterThan(1);
+    for (const token of SCALED_SPACE) {
+      expect(SPACIOUS[token]).toBeDefined();
+      expect(SPACIOUS[token]).toContain("var(--density-scale)");
+      expect(px(SPACIOUS[token].replace("var(--density-scale)", String(SPACIOUS_SCALE)))).toBeCloseTo(
+        px(BASE_SPACING[token]) * SPACIOUS_SCALE,
+        6,
+      );
+    }
+  });
+
   it("leaves --space-0 and --space-px alone (0 stays 0, a hairline stays a hairline)", () => {
     for (const token of INVARIANT) {
       expect(BASE_SPACING[token]).toBeDefined();
       expect(COMPACT[token]).toBeUndefined();
       expect(COMFORTABLE[token]).toBeUndefined();
+      expect(SPACIOUS[token]).toBeUndefined();
     }
   });
 
-  it("remaps the control ramp explicitly — shorter, but not by the spacing multiplier", () => {
+  it("remaps the control ramp explicitly — shorter or roomier, but not by the spacing multiplier", () => {
     for (const token of CONTROL_HEIGHTS) {
       const base = px(BASE_ALIASES[token]);
       const compact = px(COMPACT[token]);
       const comfortable = px(COMFORTABLE[token]);
+      const spacious = px(SPACIOUS[token]);
 
       expect(comfortable).toBe(base);
       expect(compact).toBeLessThan(base);
       // Deliberately gentler than × --density-scale: 40 × 0.75 = 30px is below a
       // usable hit target. Dense UIs tighten padding faster than controls.
       expect(compact).toBeGreaterThan(base * SCALE);
+
+      expect(spacious).toBeGreaterThan(base);
+      // Same asymmetry, mirrored: 40 × 1.25 = 50px grows the control faster than
+      // a roomy layout needs to. Spacious loosens padding faster than controls.
+      expect(spacious).toBeLessThan(base * SPACIOUS_SCALE);
     }
   });
 
@@ -280,6 +332,7 @@ describe("density · the remap is complete and derived", () => {
     for (const [token, value] of dependents) {
       expect(COMPACT[token]).toBe(value);
       expect(COMFORTABLE[token]).toBe(value);
+      expect(SPACIOUS[token]).toBe(value);
     }
   });
 
@@ -307,6 +360,7 @@ describe("density · the remap is complete and derived", () => {
       expect(derived.has(token), `${token} must be derived as density-dependent`).toBe(true);
       expect(COMPACT[token]).toBe(BASE_ALIASES[token]);
       expect(COMFORTABLE[token]).toBe(BASE_ALIASES[token]);
+      expect(SPACIOUS[token]).toBe(BASE_ALIASES[token]);
     }
   });
 
@@ -322,6 +376,10 @@ describe("density · the remap is complete and derived", () => {
         6,
       );
       expect(COMFORTABLE[token]).toBe(BASE_SPACING[token]);
+      expect(px(SPACIOUS[token].replace("var(--density-scale)", String(SPACIOUS_SCALE)))).toBeCloseTo(
+        px(BASE_SPACING[token]) * SPACIOUS_SCALE,
+        6,
+      );
     }
   });
 
@@ -331,11 +389,13 @@ describe("density · the remap is complete and derived", () => {
     for (const token of paged) {
       expect(COMPACT[token]).toBeUndefined();
       expect(COMFORTABLE[token]).toBeUndefined();
+      expect(SPACIOUS[token]).toBeUndefined();
     }
   });
 
-  it("both density blocks declare exactly the same token set", () => {
+  it("all three density blocks declare exactly the same token set", () => {
     expect(Object.keys(COMPACT).sort()).toEqual(Object.keys(COMFORTABLE).sort());
+    expect(Object.keys(SPACIOUS).sort()).toEqual(Object.keys(COMFORTABLE).sort());
   });
 
   it("aliases.css defines the shared control ramp and sizes button/input from it", () => {

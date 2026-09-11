@@ -3,7 +3,7 @@
 **Status:** Frozen · **Protocol version:** 1.0 · **Manifest schema version:** 1.1
 
 This is the normative specification of the Faqir contract: the five DOM attributes,
-their value grammars, the three sanctioned token modifiers, the responsive tier
+their value grammars, the four sanctioned token modifiers, the responsive tier
 suffix, and the manifest schema every component ships beside its markup.
 
 It is a *contract*, not a tour. `README.md` teaches the framework, `docs/layout.md`
@@ -26,7 +26,7 @@ framework would reject.
 
 1. **The attribute protocol** — the five `data-*` attributes that form the contract
    between HTML, CSS, JavaScript controllers, and tooling (§2, §3).
-2. **The sanctioned token modifiers** — three further attributes that re-declare
+2. **The sanctioned token modifiers** — four further attributes that re-declare
    design tokens for a subtree and are part of the frozen surface, without being
    protocol attributes (§4).
 3. **The responsive tier suffix** — `data-<attr>-<tier>`, introduced in v0.8 (§5).
@@ -226,7 +226,7 @@ changing what is on screen.
 
 ## 4. Sanctioned token modifiers
 
-Three attributes are part of the frozen surface without being protocol attributes.
+Four attributes are part of the frozen surface without being protocol attributes.
 Each re-declares design tokens for a subtree and is inherited by every descendant
 through the cascade; none of them names a component, fills a slot, or carries a
 per-component vocabulary. That is exactly why they are not a sixth attribute — and
@@ -236,13 +236,18 @@ why they need no manifest declaration, which the documentation cross-checks exem
 
 | Attribute | Purpose | Values | Written by |
 |-----------|---------|--------|------------|
-| `data-density` | Re-declares the spacing and control-height ramps for a subtree. | `compact` \| `comfortable` | author |
+| `data-density` | Re-declares the spacing and control-height ramps for a subtree. | `compact` \| `comfortable` \| `spacious` | author |
 | `data-motion` | The transition phase of one enter/leave cycle, driven by the engine. | `enter` \| `enter-active` \| `leave` \| `leave-active` | controller |
+| `data-skin` | Selects which theme's token declarations a subtree resolves — the scope selector `faqir theme bundle` emits when it scopes a theme to part of a page. | `<theme-name>` | author |
 | `data-theme` | Selects the colour scheme a theme's token blocks resolve to. | `light` \| `dark` \| `auto` | author |
 
-`data-density` and `data-theme` are legal on **any** element and scope their effect
-to that element's subtree; `data-theme` is conventionally written on the document
-root. Nesting is supported and resolves innermost-first:
+`data-skin`'s vocabulary is **open**: unlike the other three, its values are not a
+closed enum stated here — any installed theme's name is already legal, so adding one
+is not an amendment (§8.2's "add a value" row does not apply to it).
+
+`data-density`, `data-skin` and `data-theme` are legal on **any** element and scope
+their effect to that element's subtree; `data-theme` is conventionally written on the
+document root. Nesting is supported and resolves innermost-first:
 
 ```html
 <div data-theme="dark" data-density="comfortable">
@@ -265,7 +270,22 @@ reads it exactly as it reads `data-state`:
 </div>
 ```
 
-The values above are the complete vocabulary at 1.0. Adding one is additive (§8);
+`data-skin` scopes a subtree to another installed theme's tokens without switching
+the whole page's `data-theme`:
+
+```html
+<div data-skin="midnight">
+  <div data-ui="card">
+    <div data-part="body">
+      <p>This card resolves the "midnight" theme's tokens, not the page's.</p>
+    </div>
+  </div>
+</div>
+```
+
+The values above are the complete vocabulary for the three *closed* modifiers at 1.0
+— `data-skin`'s is open by design, and every value in it is already legal. Adding a
+closed value, or a whole new token modifier of this shape, is additive (§8);
 removing or renaming one is not.
 
 ---
@@ -431,6 +451,7 @@ has an escape clause for "we found a better name".
 | Add a value to a component's own variant group. | additive | Existing markup keeps validating; only the component's manifest and its minor version move. |
 | Add an optional field to the manifest schema. | additive | Every manifest written against 1.0 still validates, because the field is optional. |
 | Add a value to a sanctioned token modifier — a third density, say. | additive | The vocabulary grows; no existing value changes meaning. |
+| Add a sanctioned token modifier that re-declares tokens only and names no component. | additive | It behaves exactly like the existing ones: no manifest, no per-component vocabulary, nothing published stops validating. |
 | Add an audit rule at `info` or `warning`. | additive | It reports; it does not redefine what conforming markup is. |
 | Add, remove or rename one of the five attributes. | major | The five ARE the contract. A sixth is a different contract. |
 | Change a protocol attribute's value grammar — accept a space-separated list, say. | major | Every parser, selector and audit rule reads the grammar; widening it re-specifies all of them. |

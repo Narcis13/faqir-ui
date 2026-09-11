@@ -70,6 +70,7 @@ import {
   parseTokenReference,
 } from "../../src/generator/docs";
 import { generateShippedSkillFiles } from "../../src/generator/skill";
+import { SANCTIONED_ATTRIBUTES } from "../../src/protocol";
 
 const ROOT = join(import.meta.dir, "../..");
 const LAYOUT_DOC = readFileSync(join(ROOT, "docs/layout.md"), "utf8");
@@ -181,7 +182,7 @@ function declaredAttributes(m: Manifest): Declared {
 }
 
 /** Token modifiers that are sanctioned framework-wide, not per component. */
-const SANCTIONED = new Set([...PROTOCOL_ATTRIBUTES, "data-theme", "data-density", "data-motion"]);
+const SANCTIONED = new Set(SANCTIONED_ATTRIBUTES);
 
 /**
  * Findings for markup that uses a `data-*` attribute nothing declares. An

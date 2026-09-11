@@ -3180,7 +3180,7 @@ function renderSpecPage(ctx: {
       `protocol ${PROTOCOL_VERSION}`,
     )} ${badge("default", `manifest schema ${SCHEMA_VERSION}`)}</p>`,
     `      <p>${esc(FREEZE_STATEMENT)}</p>`,
-    `      <p>Five attributes, three token modifiers, one tier suffix, and one manifest schema. ` +
+    `      <p>Five attributes, ${TOKEN_MODIFIERS.length} token modifiers, one tier suffix, and one manifest schema. ` +
       `This page is generated from the same module the audit engine reads; the normative text is ` +
       `<a data-ui="link" href="${u(SPEC_MARKDOWN_FILE)}">${esc(SPEC_FILE)}</a>, published beside it.</p>`,
     section(
@@ -3215,7 +3215,7 @@ function renderSpecPage(ctx: {
     section(
       "modifiers",
       "Sanctioned token modifiers",
-      `      <p>Three attributes are part of the frozen surface without being protocol ` +
+      `      <p>${TOKEN_MODIFIERS.length} attributes are part of the frozen surface without being protocol ` +
         `attributes: each re-declares design tokens for a subtree and is inherited by every ` +
         `descendant. None names a component, fills a slot, or carries a per-component ` +
         `vocabulary — which is exactly why none of them needs a manifest declaration.</p>\n` +
@@ -4578,7 +4578,7 @@ function buildMachineFiles(ctx: {
       path: SPEC_MARKDOWN_FILE,
       content: readText(specPath),
       contentType: "text/markdown; charset=utf-8",
-      description: `The frozen protocol ${PROTOCOL_VERSION} specification, verbatim — five attributes, three token modifiers, one tier suffix, one schema.`,
+      description: `The frozen protocol ${PROTOCOL_VERSION} specification, verbatim — five attributes, ${TOKEN_MODIFIERS.length} token modifiers, one tier suffix, one schema.`,
     });
   }
 

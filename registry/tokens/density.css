@@ -1,11 +1,17 @@
-/* @ui:tokens density — [data-density] subtree modifier (task 0.7-11, FAQIR-NEXT §B6)
+/* @ui:tokens density — [data-density] subtree modifier (task 0.7-11, FAQIR-NEXT §B6;
+   `spacious` added 1.1A-09, SPEC-1.0.md §4)
 
    Put `data-density="compact"` on ANY container and its whole subtree renders
    tighter: spacing steps shrink by --density-scale and interactive controls drop
    to a shorter height ramp. `data-density="comfortable"` restores the base scale,
-   so density can be reset on an inner subtree.
+   so density can be reset on an inner subtree. `data-density="spacious"` is the
+   third point on the ladder, above comfortable: spacing grows and the control
+   ramp grows with it, gentler than the spacing multiplier for the same reason
+   compact's ramp shrinks gentler — a usable hit target has a ceiling as well as
+   a floor.
 
      <section data-density="compact">   … dense form / table / toolbar …   </section>
+     <section data-density="spacious">  … roomy landing hero, kiosk UI …   </section>
 
    This is 100% CSS. `data-density` is NOT a sixth protocol attribute: no
    component contract, manifest, controller or audit rule knows about it — CSS
@@ -124,6 +130,57 @@
   --control-height-sm: 32px;
   --control-height-md: 40px;
   --control-height-lg: 48px;
+
+  /* ── Aliases re-substituted in this scope (values identical to the base) ── */
+  --button-height-sm:  var(--control-height-sm);
+  --button-height-md:  var(--control-height-md);
+  --button-height-lg:  var(--control-height-lg);
+  --input-height:      var(--control-height-md);
+  --card-padding:      var(--space-6);
+  --kv-pair-gap:       var(--space-3);
+  --kv-grid-gap:       var(--space-4);
+  --callout-padding-y: var(--space-3);
+  --callout-padding-x: var(--space-4);
+  --field-gap:         var(--space-1h);
+  --section-gap-sm:    var(--space-12);
+  --section-gap-md:    var(--space-20);
+  --section-gap-lg:    var(--space-32);
+  --content-gutter:    var(--space-6);
+}
+
+/* The third density: roomier than the base scale, for a landing hero or a kiosk
+   UI meant to be read at arm's length. Control heights grow slower than the
+   spacing multiplier — the same asymmetry compact's ramp has, mirrored. */
+[data-density="spacious"] {
+  --density-scale: 1.25;
+
+  /* ── Spacing scale (× --density-scale) ── */
+  --space-0h:  calc(0.125rem * var(--density-scale));
+  --space-1:   calc(0.25rem  * var(--density-scale));
+  --space-1h:  calc(0.375rem * var(--density-scale));
+  --space-2:   calc(0.5rem   * var(--density-scale));
+  --space-2h:  calc(0.625rem * var(--density-scale));
+  --space-3:   calc(0.75rem  * var(--density-scale));
+  --space-3h:  calc(0.875rem * var(--density-scale));
+  --space-4:   calc(1rem     * var(--density-scale));
+  --space-5:   calc(1.25rem  * var(--density-scale));
+  --space-6:   calc(1.5rem   * var(--density-scale));
+  --space-7:   calc(1.75rem  * var(--density-scale));
+  --space-8:   calc(2rem     * var(--density-scale));
+  --space-10:  calc(2.5rem   * var(--density-scale));
+  --space-12:  calc(3rem     * var(--density-scale));
+  --space-16:  calc(4rem     * var(--density-scale));
+  --space-20:  calc(5rem     * var(--density-scale));
+  --space-24:  calc(6rem     * var(--density-scale));
+  --space-32:  calc(8rem     * var(--density-scale));
+  --space-40:  calc(10rem    * var(--density-scale));
+  --space-48:  calc(12rem    * var(--density-scale));
+  --space-64:  calc(16rem    * var(--density-scale));
+
+  /* ── Control height ramp ── */
+  --control-height-sm: 36px;
+  --control-height-md: 44px;
+  --control-height-lg: 52px;
 
   /* ── Aliases re-substituted in this scope (values identical to the base) ── */
   --button-height-sm:  var(--control-height-sm);

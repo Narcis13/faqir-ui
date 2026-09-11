@@ -256,7 +256,7 @@ describe("SPEC-1.0.md and src/protocol.ts describe one protocol", () => {
     expect(ladder).toContain(TIERS.join(", "));
   });
 
-  it("lists the three token modifiers with their complete vocabularies", () => {
+  it("lists the four token modifiers with their complete vocabularies", () => {
     const rows = parseSpecModifiers(SPEC);
     expect(rows.map((r) => r.attr)).toEqual(TOKEN_MODIFIERS.map((m) => m.attr));
     for (const [i, m] of TOKEN_MODIFIERS.entries()) {
@@ -264,6 +264,41 @@ describe("SPEC-1.0.md and src/protocol.ts describe one protocol", () => {
       expect(rows[i].purpose, `${m.attr} purpose`).toBe(norm(m.purpose));
       expect(rows[i].owner, `${m.attr} owner`).toBe(m.owner);
     }
+  });
+
+  it("handles data-skin as the open-vocabulary modifier", () => {
+    const skin = TOKEN_MODIFIERS.find((m) => m.attr === "data-skin");
+    expect(skin, "data-skin is not a sanctioned token modifier").toBeDefined();
+    expect(skin!.open).toBe(true);
+    // Every OTHER modifier is closed: the drift comparison above only makes
+    // sense for a real enumeration, so this pins that data-skin is the one
+    // exception rather than a silent loosening of the rest.
+    for (const m of TOKEN_MODIFIERS) {
+      if (m.attr === "data-skin") continue;
+      expect(m.open, `${m.attr} must not be open`).toBeFalsy();
+    }
+    expect(isTokenModifier("data-skin")).toBe(true);
+    expect(mayTakeTierSuffix("data-skin")).toBe(false);
+    // data-density's amendment (spacious) landed the same session — pinned here
+    // so a regression in one does not hide behind the other.
+    const density = TOKEN_MODIFIERS.find((m) => m.attr === "data-density")!;
+    expect(density.values).toContain("spacious");
+  });
+
+  it('a page using data-skin and data-density="spacious" audits clean — neither needs a manifest', () => {
+    const html =
+      `<div data-skin="midnight" data-density="spacious">\n` +
+      `  <div data-ui="card">\n    <div data-part="body">\n      <p>Scoped and roomy.</p>\n    </div>\n  </div>\n` +
+      `</div>`;
+    const findings = auditHtmlSource({ source: html, file: "1.1A-09-fixture.html", manifests }).map(
+      (r) => `${r.line} [${r.severity}/${r.rule_id}] ${r.message}`,
+    );
+    expect(findings.join("\n")).toBe("");
+  });
+
+  it("grew SANCTIONED_ATTRIBUTES by exactly one attribute (data-skin)", () => {
+    expect(SANCTIONED_ATTRIBUTES.length).toBe(PROTOCOL_ATTRIBUTES.length + 4);
+    expect(SANCTIONED_ATTRIBUTES).toContain("data-skin");
   });
 
   it("carries the amendment table row for row, both directions", () => {
@@ -338,7 +373,7 @@ describe("SPEC-1.0.md and src/protocol.ts describe one protocol", () => {
 });
 
 describe("the protocol module's own invariants", () => {
-  it("keeps the five and the three disjoint", () => {
+  it("keeps the five and the four disjoint", () => {
     for (const attr of PROTOCOL_ATTRIBUTES) expect(isTokenModifier(attr)).toBe(false);
     for (const m of TOKEN_MODIFIERS) expect(PROTOCOL_ATTRIBUTES).not.toContain(m.attr as never);
     expect(SANCTIONED_ATTRIBUTES.length).toBe(PROTOCOL_ATTRIBUTES.length + TOKEN_MODIFIERS.length);

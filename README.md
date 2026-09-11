@@ -246,10 +246,10 @@ Five data attributes form the stable DOM contract between HTML, CSS, JavaScript,
 
 > **Frozen at 1.0.** The normative specification is [`SPEC-1.0.md`](SPEC-1.0.md), published at
 > [the `v1.0.0` tag](https://github.com/Narcis13/faqir-ui/blob/v1.0.0/SPEC-1.0.md). It covers these five attributes and their
-> value grammars, the three sanctioned token modifiers (`data-theme`, `data-density`,
-> `data-motion`), the `data-<attr>-<tier>` responsive suffix, manifest schema 1.0, and the
-> amendment process — what may change in a 1.x release and what has to wait for 2.0. The
-> summary below is the friendly version; the spec is the contract.
+> value grammars, the four sanctioned token modifiers (`data-theme`, `data-density`,
+> `data-motion`, `data-skin`), the `data-<attr>-<tier>` responsive suffix, manifest schema
+> 1.0, and the amendment process — what may change in a 1.x release and what has to wait
+> for 2.0. The summary below is the friendly version; the spec is the contract.
 
 | Attribute | Purpose | Set By | Example |
 |-----------|---------|--------|---------|
