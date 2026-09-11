@@ -18,6 +18,7 @@ import { join } from "node:path";
 import { Glob } from "bun";
 import {
   validateThemeManifest,
+  validateThemeAxes,
   overriddenTokens,
   inheritedTokens,
   surfaceTokens,
@@ -28,6 +29,7 @@ import {
   type ThemeAxes,
   type ThemeManifest,
 } from "../../src/theme-manifest";
+import { axesFromCss } from "../../src/theme/axes";
 
 const REGISTRY = join(import.meta.dir, "../../registry");
 const THEMES_DIR = join(REGISTRY, "themes");
@@ -38,6 +40,13 @@ const BASE_SOURCES = [...new Glob("*.css").scanSync(TOKENS_DIR)]
   .filter(isSurfaceTokenFile)
   .map((f) => readFileSync(join(TOKENS_DIR, f), "utf8"));
 const SURFACE = surfaceTokens(BASE_SOURCES);
+
+// The axis resolver reads the WHOLE token layer, not just the themeable surface:
+// a token a theme may not re-declare is still a token its `var()` chains
+// terminate at. Same list `gen:theme-manifests` passes to `axesFromCss`.
+const AXIS_BASE = [...new Glob("*.css").scanSync(TOKENS_DIR)]
+  .sort()
+  .map((f) => readFileSync(join(TOKENS_DIR, f), "utf8"));
 
 // Themes discovered by globbing (no hand-maintained list).
 const THEME_FILES = [...new Glob("*.css").scanSync(THEMES_DIR)].sort();
@@ -93,6 +102,14 @@ describe("theme manifest · tokens are CSS-consistent (generated, then asserted)
       expect(manifest.tokens_inherited).toEqual(inheritedTokens(css, SURFACE));
     });
 
+    it(`${file} axes exactly match a fresh derivation from the CSS [1.1A-08]`, () => {
+      const css = readFileSync(join(THEMES_DIR, file), "utf8");
+      const manifest = readManifestRaw(file).json as ThemeManifest;
+      // The third derived field. A hand-edited axis is drift, exactly like a
+      // hand-edited `tokens_overridden` — regenerate with gen:theme-manifests.
+      expect(manifest.axes).toEqual(axesFromCss(css, AXIS_BASE));
+    });
+
     it(`${file} overridden and inherited never overlap`, () => {
       const { json } = readManifestRaw(file);
       const manifest = json as ThemeManifest;
@@ -101,6 +118,39 @@ describe("theme manifest · tokens are CSS-consistent (generated, then asserted)
       expect(overlap).toEqual([]);
     });
   }
+});
+
+// ── Proof the derived-axes gate has teeth ──
+describe("theme manifest · a hand-edited axis is drift [1.1A-08]", () => {
+  const file = THEME_FILES[0];
+  const css = readFileSync(join(THEMES_DIR, file), "utf8");
+  const stored = (readManifestRaw(file).json as ThemeManifest).axes!;
+
+  it("the stored block is what the CSS says, not what someone typed", () => {
+    expect(stored).toEqual(axesFromCss(css, AXIS_BASE));
+  });
+
+  it("changing one leaf breaks the comparison", () => {
+    // Every classifier the gate runs is only as good as this: edit a value the
+    // stylesheet does not support, and the re-derivation no longer matches.
+    const tampered = { ...stored, depth: stored.depth === "flat" ? "glass" : "flat" } as ThemeAxes;
+    expect(tampered).not.toEqual(axesFromCss(css, AXIS_BASE));
+    const nested = { ...stored, shape: { ...stored.shape, corner: "notch" } } as ThemeAxes;
+    expect(nested).not.toEqual(axesFromCss(css, AXIS_BASE));
+  });
+
+  it("dropping an axis breaks it too — a derived block is complete or it is wrong", () => {
+    const { contrast: _dropped, ...partial } = stored as unknown as Record<string, unknown>;
+    expect(partial).not.toEqual(axesFromCss(css, AXIS_BASE) as unknown as Record<string, unknown>);
+    expect(validateThemeAxes(partial).map((e) => e.field)).toContain("axes.contrast");
+  });
+
+  it("a CSS change the manifest has not caught up with fails the same way", () => {
+    // The other direction: the stylesheet moves, the manifest does not.
+    const edited = `${css}\n:root { --divider-style: dashed; }\n`;
+    expect(stored).not.toEqual(axesFromCss(edited, AXIS_BASE));
+    expect(axesFromCss(edited, AXIS_BASE).decoration.divider).toBe("dashed");
+  });
 });
 
 // ── The surface itself: what a theme may re-declare ──
@@ -276,13 +326,32 @@ describe("theme manifest · the optional 1.1 fields", () => {
     contrast: "standard",
   };
 
-  it("accepts a manifest with none of them — every shipped theme is one", () => {
+  it("accepts a manifest with none of them — absence is the freeze", () => {
     expect(validateThemeManifest(valid)).toEqual([]);
+  });
+
+  it("every shipped theme declares `axes` and nothing else from 1.1", () => {
+    // 1.1A-07 shipped the five fields and left every manifest without them.
+    // 1.1A-08 fills in exactly ONE of them, and it is the derived one — a
+    // shipped theme is authored, so it has no `seed`; `fonts` waits on the OFL
+    // catalog (1.1A-18), `distinctiveness` on the pair gate (1.1A-12), and
+    // `visual_matrix` on the matrix policy (1.1A-13).
     for (const file of THEME_FILES) {
       const manifest = readManifestRaw(file).json as ThemeManifest;
-      for (const field of ["seed", "axes", "fonts", "distinctiveness", "visual_matrix"] as const) {
+      expect(manifest.axes, `${file} has no derived axes`).toBeDefined();
+      for (const field of ["seed", "fonts", "distinctiveness", "visual_matrix"] as const) {
         expect(manifest[field], `${file} already declares ${field}`).toBeUndefined();
       }
+    }
+  });
+
+  it("holds every shipped theme's axes to the full derived-block rules", () => {
+    // The validator, not just the equality check above: every one of the
+    // fourteen keys present, every value inside its vocabulary, the accent
+    // inside the OKLCH ranges.
+    for (const file of THEME_FILES) {
+      const manifest = readManifestRaw(file).json as ThemeManifest;
+      expect({ [file]: validateThemeAxes(manifest.axes) }).toEqual({ [file]: [] });
     }
   });
 

@@ -299,5 +299,42 @@
     "brutalist",
     "midnight"
   ],
-  "preview": "terminal.preview.html"
+  "preview": "terminal.preview.html",
+  "axes": {
+    "accent_hue": 145,
+    "accent_chroma": 0.12,
+    "neutral": "tinted",
+    "scheme": "both",
+    "type": {
+      "pairing": "mono",
+      "scale": 1.2,
+      "base": 16,
+      "voice": {
+        "weight": "bold",
+        "tracking": "normal",
+        "transform": "none"
+      }
+    },
+    "shape": {
+      "radius": "sharp",
+      "border": "hairline",
+      "corner": "round"
+    },
+    "depth": "soft",
+    "material": "none",
+    "motion": "smooth",
+    "density": "comfortable",
+    "focus": "ring",
+    "decoration": {
+      "link": "offset",
+      "divider": "solid"
+    },
+    "controls": {
+      "button": "rect",
+      "input": "box",
+      "checkbox": "square",
+      "switch": "square"
+    },
+    "contrast": "standard"
+  }
 }

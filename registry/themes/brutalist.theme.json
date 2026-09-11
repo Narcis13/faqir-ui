@@ -297,5 +297,42 @@
   "pairs_with": [
     "midnight"
   ],
-  "preview": "brutalist.preview.html"
+  "preview": "brutalist.preview.html",
+  "axes": {
+    "accent_hue": 0,
+    "accent_chroma": 0,
+    "neutral": "gray",
+    "scheme": "both",
+    "type": {
+      "pairing": "system",
+      "scale": 1.2,
+      "base": 16,
+      "voice": {
+        "weight": "bold",
+        "tracking": "normal",
+        "transform": "none"
+      }
+    },
+    "shape": {
+      "radius": "sharp",
+      "border": "hairline",
+      "corner": "round"
+    },
+    "depth": "flat",
+    "material": "none",
+    "motion": "smooth",
+    "density": "comfortable",
+    "focus": "ring",
+    "decoration": {
+      "link": "offset",
+      "divider": "solid"
+    },
+    "controls": {
+      "button": "rect",
+      "input": "box",
+      "checkbox": "square",
+      "switch": "square"
+    },
+    "contrast": "high"
+  }
 }

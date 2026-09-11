@@ -300,5 +300,42 @@
     "default",
     "paper"
   ],
-  "preview": "soft.preview.html"
+  "preview": "soft.preview.html",
+  "axes": {
+    "accent_hue": 185,
+    "accent_chroma": 0.1,
+    "neutral": "warm",
+    "scheme": "both",
+    "type": {
+      "pairing": "system",
+      "scale": 1.2,
+      "base": 16,
+      "voice": {
+        "weight": "bold",
+        "tracking": "normal",
+        "transform": "none"
+      }
+    },
+    "shape": {
+      "radius": "pill",
+      "border": "hairline",
+      "corner": "round"
+    },
+    "depth": "layered",
+    "material": "none",
+    "motion": "smooth",
+    "density": "comfortable",
+    "focus": "ring",
+    "decoration": {
+      "link": "offset",
+      "divider": "solid"
+    },
+    "controls": {
+      "button": "pill",
+      "input": "box",
+      "checkbox": "square",
+      "switch": "pill"
+    },
+    "contrast": "standard"
+  }
 }

@@ -299,5 +299,42 @@
     "document",
     "paper"
   ],
-  "preview": "document-serif.preview.html"
+  "preview": "document-serif.preview.html",
+  "axes": {
+    "accent_hue": 25,
+    "accent_chroma": 0.07,
+    "neutral": "gray",
+    "scheme": "light",
+    "type": {
+      "pairing": "sans-grotesque",
+      "scale": 1.2,
+      "base": 16,
+      "voice": {
+        "weight": "bold",
+        "tracking": "normal",
+        "transform": "none"
+      }
+    },
+    "shape": {
+      "radius": "sharp",
+      "border": "hairline",
+      "corner": "round"
+    },
+    "depth": "flat",
+    "material": "none",
+    "motion": "smooth",
+    "density": "comfortable",
+    "focus": "ring",
+    "decoration": {
+      "link": "offset",
+      "divider": "solid"
+    },
+    "controls": {
+      "button": "rect",
+      "input": "box",
+      "checkbox": "square",
+      "switch": "square"
+    },
+    "contrast": "high"
+  }
 }

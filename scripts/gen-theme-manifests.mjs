@@ -3,12 +3,15 @@
  * Generate `registry/themes/{name}.theme.json` for every shipped theme  [task 0.4-12].
  *
  * Editorial metadata (mood, scheme, dark_mode, pairs_with, preview, version) is
- * seeded per theme below — that is the hand-authored part. The two token fields
- * (`tokens_overridden`, `tokens_inherited`) are DERIVED from the stylesheet and
- * the base token surface, never hand-written: `overriddenTokens` parses what the
- * theme's CSS defines, `inheritedTokens` is the surface minus that. The manifest
- * consistency test re-derives both and asserts they still match, so any drift
- * (a hand-edit, a new override) fails CI until this script is re-run.
+ * seeded per theme below — that is the hand-authored part. The three derived
+ * fields (`tokens_overridden`, `tokens_inherited`, `axes`) come from the
+ * stylesheet and are never hand-written: `overriddenTokens` parses what the
+ * theme's CSS defines, `inheritedTokens` is the surface minus that, and
+ * `axesFromCss` (task 1.1A-08) classifies the fourteen axes of FAQIR-VISION
+ * §5.2 out of the tokens the theme resolves to. The manifest consistency test
+ * re-derives all three and asserts they still match, so any drift (a hand-edit,
+ * a new override, a CSS change that moves an axis) fails CI until this script is
+ * re-run.
  *
  * Run: `bun run gen:theme-manifests` (or `bun scripts/gen-theme-manifests.mjs`).
  * Every theme stylesheet must have a seed entry here or the script fails — that
@@ -24,6 +27,7 @@ import {
   surfaceTokens,
   isSurfaceTokenFile,
 } from "../src/theme-manifest";
+import { axesFromCss } from "../src/theme/axes";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const THEMES_DIR = join(ROOT, "registry", "themes");
@@ -122,12 +126,22 @@ const SEED = {
   },
 };
 
-// Base token surface — every surface-bearing stylesheet minus raw palette
-// primitives (see `isSurfaceTokenFile` for what is excluded and why).
-const baseSources = [...new Glob("*.css").scanSync(TOKENS_DIR)]
-  .filter(isSurfaceTokenFile)
-  .map((f) => readFileSync(join(TOKENS_DIR, f), "utf8"));
-const SURFACE = surfaceTokens(baseSources);
+// The base token layer, read twice for two different questions.
+//
+// `SURFACE` is what a theme may re-declare: surface-bearing stylesheets only,
+// minus raw palette primitives (see `isSurfaceTokenFile` for what is excluded
+// and why).
+//
+// `AXIS_BASE` is what a theme's values RESOLVE through, which is every token
+// file there is — including the three the surface excludes. A token a theme
+// cannot re-declare is still a token its `var()` chains terminate at, so
+// narrowing the resolver to the surface would make an inherited axis read as a
+// blank rather than as what the registry actually renders.
+const tokenFiles = [...new Glob("*.css").scanSync(TOKENS_DIR)].sort();
+const AXIS_BASE = tokenFiles.map((f) => readFileSync(join(TOKENS_DIR, f), "utf8"));
+const SURFACE = surfaceTokens(
+  tokenFiles.filter(isSurfaceTokenFile).map((f) => readFileSync(join(TOKENS_DIR, f), "utf8")),
+);
 
 const themeFiles = [...new Glob("*.css").scanSync(THEMES_DIR)].sort();
 
@@ -174,12 +188,20 @@ for (const file of themeFiles) {
     pairs_with: meta.pairs_with,
     // Checked above: the file exists, so the field cannot dangle.
     preview: `${name}.preview.html`,
+    // DERIVED, exactly like the two token fields above (task 1.1A-08): the
+    // fourteen axes of FAQIR-VISION §5.2 read straight out of the stylesheet.
+    // `tests/themes/manifest.test.ts` re-derives and compares, so a hand-edited
+    // axis is drift that fails rather than a claim nobody checks.
+    axes: axesFromCss(css, AXIS_BASE),
   };
 
   const out = join(THEMES_DIR, `${name}.theme.json`);
   writeFileSync(out, JSON.stringify(manifest, null, 2) + "\n");
+  const a = manifest.axes;
   console.log(
-    `✓ ${name}.theme.json — ${manifest.tokens_overridden.length} overridden, ${manifest.tokens_inherited.length} inherited`,
+    `✓ ${name}.theme.json — ${manifest.tokens_overridden.length} overridden, ` +
+      `${manifest.tokens_inherited.length} inherited · ${a.neutral}/${a.type.pairing}/` +
+      `${a.shape.radius}/${a.depth}/${a.motion}/${a.contrast}`,
   );
   written++;
 }
