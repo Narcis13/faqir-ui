@@ -523,14 +523,14 @@ const THEME_TABLE: Row[] = [
   // theme            neutral   pairing           radius   border      depth      motion    focus   button  input
   ["aurora", "gray", "system", "soft", "hairline", "layered", "smooth", "ring", "soft", "standard"],
   ["brutalist", "gray", "system", "sharp", "heavy", "flat", "minimal", "bold", "rect", "high"],
-  ["contrast", "gray", "system", "soft", "hairline", "soft", "smooth", "ring", "soft", "high"],
+  ["contrast", "gray", "system", "soft", "regular", "soft", "smooth", "bold", "soft", "high"],
   ["default", "gray", "system", "soft", "hairline", "soft", "smooth", "ring", "soft", "standard"],
-  ["document", "gray", "sans-grotesque", "sharp", "hairline", "flat", "smooth", "ring", "rect", "high"],
-  ["document-serif", "gray", "sans-grotesque", "sharp", "hairline", "flat", "smooth", "ring", "rect", "high"],
+  ["document", "gray", "sans-grotesque", "sharp", "hairline", "flat", "none", "ring", "rect", "high"],
+  ["document-serif", "gray", "serif-editorial", "sharp", "hairline", "flat", "smooth", "ring", "rect", "high"],
   ["glass", "cool", "system", "round", "hairline", "glass", "smooth", "ring", "soft", "standard"],
-  ["midnight", "cool", "system", "soft", "hairline", "soft", "smooth", "ring", "soft", "standard"],
+  ["midnight", "cool", "system", "soft", "hairline", "layered", "smooth", "glow", "soft", "standard"],
   ["paper", "warm", "serif-editorial", "soft", "hairline", "flat", "smooth", "ring", "soft", "standard"],
-  ["slate", "gray", "system", "soft", "hairline", "soft", "smooth", "ring", "soft", "standard"],
+  ["slate", "cool", "sans-grotesque", "crisp", "hairline", "flat", "snappy", "ring", "soft", "standard"],
   ["soft", "warm", "system", "pill", "hairline", "layered", "springy", "glow", "pill", "standard"],
   ["terminal", "tinted", "mono", "sharp", "hairline", "soft", "snappy", "inset", "rect", "standard"],
 ];
@@ -600,29 +600,38 @@ describe("axesFromCss · the twelve shipped themes", () => {
   }
 
   it("says which themes have adopted a material or a heading case, and which have not", () => {
-    // Nothing in 1.0 declared a material, a corner shape or a heading voice, so
-    // until 1.1A-14 every shipped theme derived the base layer's answer for all
-    // four. Three of the six themes that batch adopted now say something; the
-    // rest are still the registry's own value, and 1.1A-15 is where the next
-    // ones move. Pinned per theme rather than as a blanket, so an adoption is a
-    // visible edit here and a drift is a failure.
+    // Nothing in 1.0 declared a material, a corner shape, a heading case or a
+    // density, so until 1.1A-14 every shipped theme derived the base layer's
+    // answer for all four. Four of the six 1.1A-14 adopted say something now,
+    // and 1.1A-15 adds two more: `midnight` takes the grid, `slate` takes the
+    // density it was designed at. Pinned per theme rather than as a blanket, so
+    // an adoption is a visible edit here and a drift is a failure.
     const ADOPTED: Record<string, string> = {
       aurora: "mesh/round/none/comfortable",
       paper: "paper/round/none/comfortable",
       terminal: "stripes/round/none/comfortable",
       brutalist: "none/round/uppercase/comfortable",
+      midnight: "grid/round/none/comfortable",
+      slate: "none/round/none/compact",
     };
     for (const [name] of THEME_TABLE) {
       const a = shippedAxes(name);
       const derived = [a.material, a.shape.corner, a.type.voice!.transform, a.density].join("/");
       expect({ [name]: derived }).toEqual({ [name]: ADOPTED[name] ?? "none/round/none/comfortable" });
     }
-    // `corner` and `density` are still nobody's: no theme ships a bevel, and a
-    // density is a `@ui:density` header directive none of the twelve carries.
+    // `corner` is still nobody's: no theme ships a bevel, a scoop or a notch,
+    // because `corner-shape` is a progressive property most engines still
+    // ignore and a theme whose silhouette only appears in one browser is not a
+    // silhouette. `density` stopped being nobody's with `slate` [1.1A-15].
     for (const [name] of THEME_TABLE) {
-      const a = shippedAxes(name);
-      expect({ [name]: `${a.shape.corner}/${a.density}` }).toEqual({ [name]: "round/comfortable" });
+      expect({ [name]: shippedAxes(name).shape.corner }).toEqual({ [name]: "round" });
     }
+    expect(shippedAxes("slate").density).toBe("compact");
+    // And it is a FACT about the stylesheet, not a line in this table: remove
+    // the header directive and the axis follows.
+    const slateCss = readFileSync(join(THEMES_DIR, "slate.css"), "utf8");
+    expect(axesFromCss(slateCss.replace("@ui:density compact", "@ui:densely compact"), BASE).density)
+      .toBe("comfortable");
   });
 
   it("the derived scheme agrees with the manifest's hand-authored one", () => {
@@ -672,6 +681,44 @@ describe("axesFromCss · the shipped default theme is THEME_SEED_DEFAULTS", () =
     };
     const { document: _document, ...expected } = THEME_SEED_DEFAULTS;
     expect(derived).toEqual(expected as Record<string, string | number>);
+  });
+
+  it("states none of the 1.1 families — it IS the token layer, not a theme resembling it", () => {
+    // FAQIR-PLAN-1.1's 1.1A-15 adoption table asks `default` to "declare" its
+    // axes "so they are explicit, not inherited by accident". It deliberately
+    // does not, and this is the assertion that makes the deviation a decision
+    // rather than an omission.
+    //
+    // Two reasons. First, the axes ARE explicit: `axesFromCss` resolves every
+    // token through the base layer (`axesFromCss(":root {}")` reports the
+    // registry's own answers, never blanks), so `default.theme.json` carries a
+    // complete derived block either way. Second, restating a base value here
+    // would FORK the two: `tokens/*.css` is what `default` renders as, and a
+    // later change to the token layer would then stop reaching the theme that
+    // is supposed to be its reference — silently, and only for this one theme.
+    //
+    // The one thing `default` did adopt is not a restated value: its dark
+    // shadow ramp is cast through `--shadow-color`, which replaces ten literal
+    // blacks with the channel every other theme tints. Asserted below.
+    const css = readFileSync(join(THEMES_DIR, "default.css"), "utf8");
+    const bare = css.replace(/\/\*[\s\S]*?\*\//g, " ");
+    const FAMILIES_1_1 = [
+      "font-heading", "font-body", "font-ui",
+      "heading-weight", "heading-tracking", "heading-transform", "heading-leading",
+      "border-width", "corner-shape",
+      "focus-ring-width", "focus-ring-offset", "focus-ring-style", "focus-ring-color", "focus-shadow",
+      "surface-backdrop", "texture-page", "texture-surface",
+      "ease-spring", "motion-hover-lift",
+      "link-decoration", "link-underline-offset", "link-thickness", "divider-style",
+      "selection-bg", "selection-fg", "marker-color", "disabled-opacity",
+      "input-fill", "checkbox-radius", "switch-radius", "button-text-transform",
+    ];
+    const declared = FAMILIES_1_1.filter((token) => new RegExp(`--${token}\\s*:`).test(bare));
+    expect(declared).toEqual([]);
+    // …and the one adoption, in both dark blocks.
+    expect(bare).toContain("oklch(var(--shadow-color) / 0.3)");
+    expect(bare).not.toMatch(/--shadow-(sm|md|lg|xl):[^;]*oklch\(\s*0\s+0\s+0/);
+    expect([...bare.matchAll(/oklch\(var\(--shadow-color\)/g)].length).toBe(8);
   });
 });
 
@@ -841,42 +888,52 @@ describe("axesFromCss · how alike the twelve shipped themes are [feeds 1.1A-12]
     ).length;
   }
 
-  it("four of the twenty-three leaves are the same in every shipped theme", () => {
-    // Fifteen when 1.1A-08 first counted them. 1.1A-14 moved eleven of those
-    // fifteen by giving six themes the families to say what they had always
-    // meant: a weight, a tracking, a heading case, an edge weight, a material, a
-    // motion personality, a focus treatment, a link rule, a divider style, an
-    // input silhouette and a checkbox shape are each now something at least one
-    // theme differs on. The four that remain are the two ramp shapes (nothing
-    // rescales type yet), the corner shape (no theme ships a bevel) and density
-    // (a header directive none of the twelve carries).
+  it("three of the twenty-three leaves are the same in every shipped theme", () => {
+    // Fifteen when 1.1A-08 first counted them, four after 1.1A-14, three now.
+    // 1.1A-14 moved eleven by giving six themes the families to say what they
+    // had always meant; 1.1A-15 moved the twelfth — `slate` carries the
+    // `@ui:density compact` header it was designed at, so density is no longer
+    // an axis nobody uses. What remains is the two ramp shapes (nothing
+    // rescales type until a seed theme does) and the corner shape, which stays
+    // constant on purpose: `corner-shape` is a progressive property most
+    // engines ignore, so a theme whose silhouette exists in one browser is not
+    // a silhouette.
     const constant = LEAVES.filter(
       (leaf) => new Set(NAMES.map((n) => JSON.stringify(at(DERIVED.get(n)!, leaf)))).size === 1,
     );
     expect(LEAVES.length).toBe(23);
-    expect(constant).toEqual(["type.scale", "type.base", "shape.corner", "density"]);
+    expect(constant).toEqual(["type.scale", "type.base", "shape.corner"]);
   });
 
-  it("two pairs are axis-identical — they differ only in accent", () => {
+  it("NO pair is axis-identical any more [1.1A-15]", () => {
     const identical: string[] = [];
     for (let i = 0; i < NAMES.length; i++) {
       for (let j = i + 1; j < NAMES.length; j++) {
         if (axisDistance(NAMES[i], NAMES[j]) === 0) identical.push(`${NAMES[i]} ↔ ${NAMES[j]}`);
       }
     }
-    // `aurora` left both of its pairs in 1.1A-14; the two that remain are
-    // 1.1A-15's, and `default` cannot be the one that moves (§5 below holds it
-    // equal to THEME_SEED_DEFAULTS).
-    expect(identical).toEqual(["default ↔ slate", "document ↔ document-serif"]);
+    // Four pairs when 1.1A-08 counted them, two after 1.1A-14 (`default ↔
+    // slate` and `document ↔ document-serif`), none after this batch — and
+    // `default` never moved for either, because §5 below holds it equal to
+    // THEME_SEED_DEFAULTS.
+    expect(identical).toEqual([]);
   });
 
-  it("10 of the 66 pairs sit below §5.2's four-axis minimum", () => {
-    let below = 0;
+  it("1 of the 66 pairs sits below four DIFFERING LEAVES — and it is not a gate failure", () => {
+    // This count is deliberately NOT the distinctiveness gate's. It compares the
+    // twenty-three enumerated leaves one by one, and the two ACCENT axes are
+    // continuous, so they are not in `THEME_AXIS_VALUES` and not counted here.
+    // `aurora`/`default` differ on three leaves (tracking, depth, material) plus
+    // an accent 36° apart, which is four of the fourteen axes §5.2 actually
+    // rules on — so the pair clears the gate in
+    // tests/themes/distinctiveness.test.ts while showing up in this stricter
+    // count. Ten pairs sat here after 1.1A-14; one does now.
+    const below: string[] = [];
     for (let i = 0; i < NAMES.length; i++) {
       for (let j = i + 1; j < NAMES.length; j++) {
-        if (axisDistance(NAMES[i], NAMES[j]) < 4) below++;
+        if (axisDistance(NAMES[i], NAMES[j]) < 4) below.push(`${NAMES[i]}/${NAMES[j]}`);
       }
     }
-    expect(below).toBe(10);
+    expect(below).toEqual(["aurora/default"]);
   });
 });

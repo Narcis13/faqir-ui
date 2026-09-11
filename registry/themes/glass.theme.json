@@ -102,6 +102,7 @@
     "dialog-overlay-bg",
     "dialog-radius",
     "dialog-shadow",
+    "disabled-opacity",
     "divider-style",
     "doc-bg",
     "doc-component-gap",
@@ -340,8 +341,8 @@
     "contrast": "standard"
   },
   "distinctiveness": {
-    "nearest": "slate",
+    "nearest": "aurora",
     "axis_distance": 6,
-    "token_distance": 0.0282
+    "token_distance": 0.0305
   }
 }

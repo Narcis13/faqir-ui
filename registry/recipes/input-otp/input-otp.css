@@ -1,5 +1,5 @@
 /* @ui:component input-otp */
-/* @ui:tokens color-bg color-fg color-fg-muted color-border color-border-strong color-ring color-primary color-destructive radius-md space-2 space-3 text-base text-lg font-ui duration-fast ease-default border-width */
+/* @ui:tokens color-bg color-fg color-fg-muted color-border color-border-strong color-ring color-primary color-destructive radius-md space-2 space-3 text-base text-lg font-ui duration-fast ease-default border-width disabled-opacity */
 
 /* ── Root ── */
 [data-ui="input-otp"] {
@@ -126,7 +126,7 @@
 
 /* ── Disabled ── */
 [data-ui="input-otp"][data-disabled] {
-  opacity: 0.5;
+  opacity: var(--disabled-opacity);
   cursor: not-allowed;
 }
 [data-ui="input-otp"][data-disabled] [data-part="input"] {

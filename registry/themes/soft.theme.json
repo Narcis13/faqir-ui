@@ -103,6 +103,7 @@
     "corner-shape",
     "dialog-overlay-bg",
     "dialog-shadow",
+    "disabled-opacity",
     "divider-style",
     "doc-bg",
     "doc-component-gap",
@@ -341,7 +342,7 @@
   },
   "distinctiveness": {
     "nearest": "slate",
-    "axis_distance": 7,
-    "token_distance": 0.0548
+    "axis_distance": 9,
+    "token_distance": 0.0693
   }
 }

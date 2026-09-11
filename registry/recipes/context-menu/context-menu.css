@@ -1,5 +1,5 @@
 /* @ui:component context-menu */
-/* @ui:tokens color-bg color-bg-muted color-fg color-fg-muted color-border color-primary color-primary-subtle color-ring space-px space-1 space-2 space-3 space-4 space-20 radius-md radius-lg shadow-md text-sm weight-medium font-ui duration-fast ease-out z-dropdown focus-ring-width focus-ring-style focus-ring-color focus-ring-offset */
+/* @ui:tokens color-bg color-bg-muted color-fg color-fg-muted color-border color-primary color-primary-subtle color-ring space-px space-1 space-2 space-3 space-4 space-20 radius-md radius-lg shadow-md text-sm weight-medium font-ui duration-fast ease-out z-dropdown focus-ring-width focus-ring-style focus-ring-color focus-ring-offset disabled-opacity */
 
 [data-ui="context-menu"] {
   position: relative;
@@ -81,7 +81,7 @@
 [data-ui="context-menu"] [data-part="item"][aria-disabled="true"] {
   color: var(--color-fg-muted);
   cursor: not-allowed;
-  opacity: 0.5;
+  opacity: var(--disabled-opacity);
 }
 
 [data-ui="context-menu"] [data-part="separator"] {

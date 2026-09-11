@@ -1,5 +1,5 @@
 /* @ui:component checkbox */
-/* @ui:tokens color-bg color-fg color-primary color-primary-fg color-border color-border-strong color-ring space-1 space-2 duration-fast ease-default border-width focus-ring-width focus-ring-offset focus-ring-style focus-ring-color focus-shadow checkbox-radius checkbox-size */
+/* @ui:tokens color-bg color-fg color-primary color-primary-fg color-border color-border-strong color-ring space-1 space-2 duration-fast ease-default border-width focus-ring-width focus-ring-offset focus-ring-style focus-ring-color focus-shadow checkbox-radius checkbox-size disabled-opacity */
 
 /* -- Label wrapper -- */
 [data-ui="checkbox-label"] {
@@ -11,7 +11,7 @@
 
 [data-ui="checkbox-label"]:has([data-ui="checkbox"]:disabled) {
   cursor: not-allowed;
-  opacity: 0.5;
+  opacity: var(--disabled-opacity);
 }
 
 /* -- Base -- */

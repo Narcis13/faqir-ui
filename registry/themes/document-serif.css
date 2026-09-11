@@ -66,6 +66,49 @@
   --font-serif:             'Georgia', 'Times New Roman', serif;
   --font-sans:              'Arial', 'Helvetica Neue', sans-serif;
   --font-mono:              'Courier New', ui-monospace, monospace;
+
+  /* ══════════════════════════════════════════════════════════════════════
+     The identity, in tokens. This theme has been serif since 0.6 — but only
+     INSIDE a `data-ui="document"`, through the `--doc-*` family. Everything
+     around the document (a card, a heading, prose on the screen it was
+     proofed on) still rendered in Arial, because the role tokens the
+     registry reads did not exist until 1.1A-01. [1.1A-15]
+     ══════════════════════════════════════════════════════════════════════ */
+
+  /* ── Type: serif in the roles, not just in the document ──
+     `--font-heading` and `--font-body` are what every heading, every piece of
+     prose and every description in the registry reads, so pointing them at
+     the serif palette is what makes this theme serif on the page as well as
+     on the paper — and what makes `type.pairing` derive `serif-editorial`
+     instead of `sans-grotesque`, which is what it has quietly been reporting.
+     `--font-ui` deliberately stays sans: a form control is furniture, not
+     text, and Arial at 11pt in a field label is legible where Georgia's
+     old-style figures are not. That is the pairing `paper` makes too. */
+  --font-heading:           var(--font-serif);
+  --font-body:              var(--font-serif);
+
+  /* ── Type voice: set tight, the way a titled clause is ──
+     Tracking is ADDITIVE (1.1A-01), so the heading primitive keeps its own
+     optical tightening and this rides on top of it. */
+  --heading-tracking:       -0.01em;
+
+  /* ── Decoration: a ruled divider ──
+     Dotted, and NOT the `double` rule a contract's section break traditionally
+     carries: `separator` draws its rule as `var(--border-width)
+     var(--divider-style) var(--color-border)`, this theme's edge is the
+     family's 1px hairline, and a 1px `double` border paints as a single solid
+     line — measured in Chrome 149, one black pixel row, indistinguishable
+     from `solid` (two rows appear only at 3px). Declaring `double` here would
+     be a theme asking for a mark it does not get, which §3 forbids; a dotted
+     leader is the other rule a legal form is full of, and it renders at the
+     weight this theme actually draws. */
+  --divider-style:          dotted;
+
+  /* ── Controls: fields are ruled lines ──
+     A printed form has no boxes — it has a rule you write on. The edge
+     collapses to the bottom side alone, which is what makes `controls.input`
+     derive `underline`, and `input`/`textarea`/`select` all read it. */
+  --input-border-width:     0 0 var(--border-width) 0;
   --doc-font:               'Georgia', 'Times New Roman', var(--font-serif);
   --doc-font-size:          11pt;
   --doc-line-height:        1.55;

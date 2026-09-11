@@ -42,11 +42,17 @@
     "color-surface-2-border",
     "color-warning",
     "color-warning-subtle",
+    "focus-shadow",
+    "heading-weight",
+    "selection-bg",
+    "selection-fg",
+    "shadow-color",
     "shadow-lg",
     "shadow-md",
     "shadow-sm",
     "shadow-xl",
-    "shadow-xs"
+    "shadow-xs",
+    "texture-page"
   ],
   "tokens_inherited": [
     "avatar-radius",
@@ -92,6 +98,7 @@
     "dialog-overlay-bg",
     "dialog-radius",
     "dialog-shadow",
+    "disabled-opacity",
     "divider-style",
     "doc-bg",
     "doc-component-gap",
@@ -155,7 +162,6 @@
     "focus-ring-offset",
     "focus-ring-style",
     "focus-ring-width",
-    "focus-shadow",
     "font-body",
     "font-heading",
     "font-mono",
@@ -165,7 +171,6 @@
     "heading-leading",
     "heading-tracking",
     "heading-transform",
-    "heading-weight",
     "image-border",
     "image-border-width",
     "image-caption-color",
@@ -230,9 +235,6 @@
     "section-gap-lg",
     "section-gap-md",
     "section-gap-sm",
-    "selection-bg",
-    "selection-fg",
-    "shadow-color",
     "space-0",
     "space-0h",
     "space-1",
@@ -280,7 +282,6 @@
     "text-sm",
     "text-xl",
     "text-xs",
-    "texture-page",
     "texture-surface",
     "weight-bold",
     "weight-medium",
@@ -309,7 +310,7 @@
       "scale": 1.2,
       "base": 16,
       "voice": {
-        "weight": "bold",
+        "weight": "semibold",
         "tracking": "normal",
         "transform": "none"
       }
@@ -319,11 +320,11 @@
       "border": "hairline",
       "corner": "round"
     },
-    "depth": "soft",
-    "material": "none",
+    "depth": "layered",
+    "material": "grid",
     "motion": "smooth",
     "density": "comfortable",
-    "focus": "ring",
+    "focus": "glow",
     "decoration": {
       "link": "offset",
       "divider": "solid"

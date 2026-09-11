@@ -110,6 +110,7 @@
     "dialog-overlay-bg",
     "dialog-radius",
     "dialog-shadow",
+    "disabled-opacity",
     "divider-style",
     "doc-bg",
     "doc-fg",
@@ -338,7 +339,7 @@
   },
   "distinctiveness": {
     "nearest": "slate",
-    "axis_distance": 6,
-    "token_distance": 0.0666
+    "axis_distance": 8,
+    "token_distance": 0.0697
   }
 }

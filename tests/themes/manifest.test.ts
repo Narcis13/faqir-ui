@@ -198,7 +198,7 @@ describe("theme manifest · the token surface", () => {
     "heading-leading",
   ];
 
-  it("is 281 tokens — 241 plus shape, focus, depth, material, motion, decoration, controls and the panel fill [1.1A-02 … 1.1A-14]", () => {
+  it("is 282 tokens — 241 plus shape, focus, depth, material, motion, decoration, controls, the panel fill and the disabled dim [1.1A-02 … 1.1A-15]", () => {
     // 1.1A-02 added five border-width steps/roles, --corner-shape, the five
     // focus tokens, and the two component silhouette aliases: 241 + 13.
     // 1.1A-04 added four: --shadow-color and --surface-backdrop (depth), and
@@ -219,7 +219,14 @@ describe("theme manifest · the token surface", () => {
     // directly, which left `glass` reaching into five components by selector to
     // make a floating surface differ from the page — and a backdrop filter
     // behind an opaque fill renders nothing, so the fill had to be a token too.
-    expect(SURFACE.length).toBe(281);
+    // 1.1A-15 added ONE: --disabled-opacity. Seventeen rules across the
+    // primitives and recipes each spelled `opacity: 0.5`, which left a theme
+    // with an opinion about disabled legibility no way to state it except by
+    // out-specifying all seventeen — which is exactly what `themes/contrast.css`
+    // did, with a blanket `:root [data-ui]:disabled` rule. It is the last
+    // component-selecting block in any shipped theme, and it is gone.
+    expect(SURFACE.length).toBe(282);
+    expect(SURFACE).toContain("disabled-opacity");
   });
 
   it("the depth and material tokens a theme can reach are exactly the four roles", () => {

@@ -215,3 +215,69 @@ describe("theme coverage · scheme parser", () => {
     expect(declaredSchemes(`/* @ui:schemes light dark */`)).toEqual(["light", "dark"]);
   });
 });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// A theme states VALUES. It does not state rules about components. [1.1A-15]
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// The permanent form of 1.1A-14's and 1.1A-15's first acceptance criterion,
+// stated once over all twelve rather than per theme. 1.0 shipped two themes
+// that reached into components by selector because the tokens they needed did
+// not exist: `glass` boosted five recipes to make them translucent (1.1A-04
+// gave every floating surface `--surface-backdrop`, and 1.1A-14 deleted the
+// fourteen lines), and `contrast` re-asserted a 3px ring on thirteen `data-ui`
+// values and dimmed every disabled `[data-ui]` (1.1A-02 gave the ring a width
+// token, this task gave the dim `--disabled-opacity`, and both blocks are
+// gone).
+//
+// Why it is a rule and not a preference: a theme that out-specifies a component
+// is a theme that breaks when that component's selector changes, that cannot be
+// scoped to a subtree (1.1A-19's `data-skin`), and whose effect no manifest
+// records — `tokens_overridden` cannot describe a rule. Keeping themes to
+// declarations is what makes the manifest a complete description of a theme.
+describe("theme CSS · declarations only — no theme selects a component", () => {
+  /** The five protocol attributes, as they appear in a selector. */
+  const PROTOCOL = /\[data-(?:ui|part|variant|size|state)[=\]~|^$*]/;
+
+  for (const file of THEME_FILES) {
+    it(`${file} mentions no protocol attribute`, () => {
+      const css = readFileSync(join(THEMES_DIR, file), "utf8").replace(/\/\*[\s\S]*?\*\//g, " ");
+      const hits = [...css.matchAll(new RegExp(PROTOCOL, "g"))].map((m) => m[0]);
+      expect({ [file]: hits }).toEqual({ [file]: [] });
+    });
+  }
+
+  it("every selector in every theme is a :root or a sanctioned modifier", () => {
+    // The converse, so a theme cannot smuggle a rule in under a selector that
+    // simply avoids the five attributes (`button:focus`, `.card`, `a`).
+    const ALLOWED = new Set([
+      ":root",
+      '[data-theme="dark"]',
+      '[data-theme="auto"]',
+      ':root [data-theme="dark"]',
+    ]);
+    const offenders: string[] = [];
+    for (const file of THEME_FILES) {
+      const css = readFileSync(join(THEMES_DIR, file), "utf8").replace(/\/\*[\s\S]*?\*\//g, " ");
+      for (const match of css.matchAll(/([^{}]+)\{/g)) {
+        const prelude = match[1].trim().replace(/\s+/g, " ");
+        // `@media`/`@supports` preludes open a nested block, not a rule.
+        if (prelude.startsWith("@")) continue;
+        for (const selector of prelude.split(",").map((s) => s.trim())) {
+          if (!ALLOWED.has(selector)) offenders.push(`${file}: ${selector}`);
+        }
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  it("is not vacuous: a planted rule is reported", () => {
+    const planted = `:root { --color-bg: white; }\n[data-ui="card"] { box-shadow: none; }\n`.replace(
+      /\/\*[\s\S]*?\*\//g,
+      " ",
+    );
+    expect(PROTOCOL.test(planted)).toBe(true);
+    const selectors = [...planted.matchAll(/([^{}]+)\{/g)].map((m) => m[1].trim());
+    expect(selectors).toContain('[data-ui="card"]');
+  });
+});

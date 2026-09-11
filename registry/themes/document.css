@@ -93,6 +93,34 @@
   /* ── Typography: optimize for print ── */
   --font-sans:              'Arial', 'Helvetica Neue', system-ui, sans-serif;
   --font-mono:              'Courier New', ui-monospace, monospace;
+
+  /* ══════════════════════════════════════════════════════════════════════
+     The identity, in tokens. Flat, sharp and untextured since 0.6; the two
+     things it could not state before 1.1 are below. [1.1A-15]
+     ══════════════════════════════════════════════════════════════════════ */
+
+  /* ── Motion: none ──
+     Paper does not animate. Every duration is zero, which is what makes the
+     `motion` axis derive `none` — and it is safe rather than merely quiet:
+     `registry/core/motion.js` reads the computed duration and resolves
+     immediately when there is none, and the engine's `runMotion` carries a
+     timeout fallback, so a controller that waits for a transition to finish
+     still completes. A PDF renderer never runs the transition either, so this
+     makes the screen render match the printed one instead of differing from
+     it for a fifth of a second. */
+  --duration-instant: 0ms;
+  --duration-fast:    0ms;
+  --duration-normal:  0ms;
+  --duration-slow:    0ms;
+  --duration-slower:  0ms;
+
+  /* ── Decoration: the underline sits on the baseline ──
+     `plain`, not the base layer's `offset`: a 0.2em gap is a screen
+     affordance, and in print a rule that floats below its text reads as a
+     separate mark rather than as an underline. Hairline thickness is kept, so
+     a link is still identifiable by its rule and not only by its colour. */
+  --link-underline-offset: 0.02em;
+  --link-thickness:        var(--border-width-sm);
 }
 
 /* Document theme has NO dark mode — documents are always light/white for print */

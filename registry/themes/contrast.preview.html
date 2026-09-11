@@ -70,10 +70,12 @@
 
     /* Focus demonstration: the theme's always-visible focus ring is normally
        shown only while a control is keyboard-focused (:focus-visible). Here we
-       paint the SAME ring (3px opaque outline + 2px offset) persistently on the
-       demo controls so every interactive component's focus indicator is visible
-       at a glance, without the reader having to Tab. This is the only place the
-       preview reproduces theme CSS — real focus is handled by contrast.css. */
+       paint the SAME ring persistently on the demo controls so every
+       interactive component's focus indicator is visible at a glance, without
+       the reader having to Tab. Since 1.1A-15 the theme states its ring as
+       `--focus-ring-*` tokens rather than as thirteen selectors, so this demo
+       READS those tokens: it cannot drift from what the theme actually draws,
+       and it is no longer a copy of theme CSS at all. */
     .focus-demo :is(
       [data-ui="button"], [data-ui="link"], [data-ui="input"], [data-ui="textarea"],
       [data-ui="select"], [data-ui="checkbox"], [data-ui="radio"], [data-ui="switch"],
@@ -83,8 +85,9 @@
     .focus-demo [data-ui="tabs"] [data-part="trigger"],
     .focus-demo [data-ui="select-custom"] [data-part="trigger"],
     .focus-demo [data-ui="date-picker"] [data-part="input"] {
-      outline: 3px solid var(--color-ring);
-      outline-offset: 2px;
+      outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+      outline-offset: var(--focus-ring-offset);
+      box-shadow: var(--focus-shadow);
     }
   </style>
 </head>

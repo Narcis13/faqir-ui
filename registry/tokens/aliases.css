@@ -69,6 +69,13 @@
   --selection-bg:          var(--color-primary-subtle);
   --selection-fg:          var(--color-fg);
   --marker-color:          currentColor;
+  /* How far a disabled control is dimmed. Seventeen rules across the primitives
+     and recipes each spelled `opacity: 0.5`, which left a theme with an opinion
+     about disabled legibility no way to state it except by out-specifying every
+     one of them — which is exactly what `themes/contrast.css` did, with a
+     blanket `:root [data-ui]:disabled` rule, until 1.1A-15 turned it into this
+     one declaration. `0.5` is the value those seventeen rules already held. */
+  --disabled-opacity:      0.5;
 
   /* ── Button ── */
   --button-radius:     var(--radius-md);

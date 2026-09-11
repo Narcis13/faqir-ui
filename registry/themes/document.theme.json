@@ -63,9 +63,16 @@
     "doc-table-footer-bg",
     "doc-table-header-bg",
     "doc-table-stripe-bg",
+    "duration-fast",
+    "duration-instant",
+    "duration-normal",
+    "duration-slow",
+    "duration-slower",
     "font-mono",
     "font-sans",
     "input-radius",
+    "link-thickness",
+    "link-underline-offset",
     "radius-2xl",
     "radius-full",
     "radius-lg",
@@ -117,6 +124,7 @@
     "dialog-overlay-bg",
     "dialog-radius",
     "dialog-shadow",
+    "disabled-opacity",
     "divider-style",
     "doc-bg",
     "doc-fg",
@@ -137,11 +145,6 @@
     "doc-table-header-fg",
     "doc-table-header-weight",
     "doc-table-num-font",
-    "duration-fast",
-    "duration-instant",
-    "duration-normal",
-    "duration-slow",
-    "duration-slower",
     "ease-bounce",
     "ease-default",
     "ease-in",
@@ -200,8 +203,6 @@
     "leading-snug",
     "leading-tight",
     "link-decoration",
-    "link-thickness",
-    "link-underline-offset",
     "marker-color",
     "measure-content",
     "measure-narrow",
@@ -321,11 +322,11 @@
     },
     "depth": "flat",
     "material": "none",
-    "motion": "smooth",
+    "motion": "none",
     "density": "comfortable",
     "focus": "ring",
     "decoration": {
-      "link": "offset",
+      "link": "plain",
       "divider": "solid"
     },
     "controls": {
@@ -338,7 +339,7 @@
   },
   "distinctiveness": {
     "nearest": "document-serif",
-    "axis_distance": 1,
+    "axis_distance": 5,
     "token_distance": 0.0482
   }
 }

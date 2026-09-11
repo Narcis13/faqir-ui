@@ -734,14 +734,14 @@ Themes override Layer 2 semantic tokens. Twelve built-in themes ship with Faqir:
 | Theme | Description |
 |-------|-------------|
 | `default` | Clean modern. Light mode + dark mode via `[data-theme="dark"]` |
-| `midnight` | Deep navy with cyan accents. High-contrast dark theme |
+| `midnight` | Deep navy with cyan accents. Layered depth, a glow around focus, a faint grid on the page |
 | `paper` | Warm cream backgrounds, earthy brown accents. Overrides document tokens for warmth |
 | `brutalist` | Black and white. No shadows. No border radius |
-| `document` | Clean, professional, PDF-optimized. No shadows, no radius, pt-based sizes |
-| `document-serif` | Formal contracts/legal theme with serif typography and print-safe oxblood accents |
+| `document` | Clean, professional, PDF-optimized. No shadows, no radius, no motion, pt-based sizes |
+| `document-serif` | Formal contracts/legal theme. Serif headings and body, dotted rules, ruled form fields |
 | `aurora` | Vibrant modern gradients for SaaS interfaces |
-| `slate` | Conservative cool-gray enterprise surfaces |
-| `contrast` | WCAG AAA-oriented high-contrast neutral theme |
+| `slate` | Enterprise console: steel surfaces, a grotesque face, crisp corners, no elevation, compact density |
+| `contrast` | WCAG AAA-oriented high-contrast neutral theme. 3px focus rings, 2px borders, thick link rules |
 | `glass` | Translucent, layered surfaces with an airy modern character |
 | `soft` | Calm pastel surfaces, generous radius, friendly consumer tone |
 | `terminal` | Technical monospaced interface with a dark retro-console voice |

@@ -1,5 +1,10 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<!-- `data-density="compact"` is the theme's `@ui:density` header, honoured: a
+     theme cannot declare a density at `:root` (density.css states each ramp
+     inside a `[data-density]` subtree scope), so without the attribute and the
+     sheet below this gallery would render slate at the comfortable ramp it was
+     not drawn for. Same wiring `faqir theme generate` emits. [1.1A-15] -->
+<html lang="en" data-theme="light" data-density="compact">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,6 +19,10 @@
   <link rel="stylesheet" href="../tokens/motion.css">
   <link rel="stylesheet" href="../tokens/semantic.css">
   <link rel="stylesheet" href="../tokens/aliases.css">
+  <!-- Last of the token sheets, as tokens/index.css and the bundler both
+       require: the density blocks re-declare alias tokens at the SAME
+       specificity as the `:root` ones, so a later `:root` sheet would win. -->
+  <link rel="stylesheet" href="../tokens/density.css">
 
   <!-- Base -->
   <link rel="stylesheet" href="../base/reset.css">

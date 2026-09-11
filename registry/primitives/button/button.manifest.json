@@ -74,7 +74,7 @@
     "space-2", "space-3", "space-4", "space-6",
     "font-ui", "text-xs", "text-sm", "text-base", "weight-medium",
     "duration-fast", "ease-default",
-    "border-width", "border-width-strong", "corner-shape", "focus-ring-width", "focus-ring-offset", "focus-ring-style", "focus-ring-color", "focus-shadow", "button-text-transform", "motion-hover-lift", "link-decoration"
+    "border-width", "border-width-strong", "corner-shape", "focus-ring-width", "focus-ring-offset", "focus-ring-style", "focus-ring-color", "focus-shadow", "button-text-transform", "motion-hover-lift", "link-decoration", "disabled-opacity"
   ],
 
   "templates": {

@@ -1,5 +1,5 @@
 /* @ui:component switch */
-/* @ui:tokens color-bg-muted color-primary color-primary-fg color-border color-ring shadow-xs space-0h space-1 duration-fast ease-default border-width focus-ring-width focus-ring-offset focus-ring-style focus-ring-color focus-shadow switch-radius switch-width switch-height switch-thumb switch-travel switch-bg switch-thumb-shadow */
+/* @ui:tokens color-bg-muted color-primary color-primary-fg color-border color-ring shadow-xs space-0h space-1 duration-fast ease-default border-width focus-ring-width focus-ring-offset focus-ring-style focus-ring-color focus-shadow switch-radius switch-width switch-height switch-thumb switch-travel switch-bg switch-thumb-shadow disabled-opacity */
 
 /* -- Label wrapper -- */
 [data-ui="switch-label"] {
@@ -11,7 +11,7 @@
 
 [data-ui="switch-label"]:has([data-ui="switch"]:disabled) {
   cursor: not-allowed;
-  opacity: 0.5;
+  opacity: var(--disabled-opacity);
 }
 
 /* -- Base (track) -- */

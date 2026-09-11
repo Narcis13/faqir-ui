@@ -1,5 +1,5 @@
 /* @ui:component calendar */
-/* @ui:tokens color-bg color-fg color-fg-muted color-fg-subtle color-border color-primary color-primary-fg color-primary-subtle color-ring radius-md radius-full space-0 space-1 space-2 text-xs text-sm text-base weight-medium duration-fast ease-default font-ui border-width focus-ring-width focus-ring-style focus-ring-color focus-ring-offset */
+/* @ui:tokens color-bg color-fg color-fg-muted color-fg-subtle color-border color-primary color-primary-fg color-primary-subtle color-ring radius-md radius-full space-0 space-1 space-2 text-xs text-sm text-base weight-medium duration-fast ease-default font-ui border-width focus-ring-width focus-ring-style focus-ring-color focus-ring-offset disabled-opacity */
 
 /* ── Root ── */
 [data-ui="calendar"] {
@@ -142,7 +142,7 @@
 /* ── Disabled days (aria-disabled keeps them focusable; :disabled for hard-disabled) ── */
 [data-ui="calendar"] [data-part="day"][aria-disabled="true"],
 [data-ui="calendar"] [data-part="day"]:disabled {
-  opacity: 0.5;
+  opacity: var(--disabled-opacity);
   cursor: not-allowed;
   text-decoration: line-through;
 }

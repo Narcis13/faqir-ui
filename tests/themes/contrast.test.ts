@@ -11,6 +11,7 @@
 import { describe, it, expect } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { Glob } from "bun";
 import {
   contrastOf,
   contrastRatio,
@@ -18,8 +19,20 @@ import {
   parseCssColor,
   parseThemeValues,
 } from "./contrast";
+import {
+  axesFromCss,
+  CONTRAST_HIGH_BORDER_MIN,
+  CONTRAST_HIGH_TEXT_MIN,
+  FOCUS_BOLD_MIN_WIDTH_PX,
+} from "../../src/theme/axes";
+import type { ThemeManifest } from "../../src/theme-manifest";
 
 const THEMES_DIR = join(import.meta.dir, "../../registry/themes");
+const TOKENS_DIR = join(import.meta.dir, "../../registry/tokens");
+/** The axis resolver reads the WHOLE token layer — see tests/themes/axes.test.ts. */
+const AXIS_BASE = [...new Glob("*.css").scanSync(TOKENS_DIR)]
+  .sort()
+  .map((f) => readFileSync(join(TOKENS_DIR, f), "utf8"));
 
 // ── The util itself: known-value sanity checks ───────────────────────────────
 describe("contrast util · oklch → WCAG pipeline", () => {
@@ -207,36 +220,77 @@ describe("contrast theme · auto scheme mirrors dark exactly", () => {
   });
 });
 
-// ── Focus visibility: an opaque :focus-visible ring for every interactive control ──
+// ── Focus visibility: an opaque, oversized ring on every focusable surface ──
 //
-// A CSS-level presence assertion (per §0.4-14): the theme re-asserts `:focus-visible`
-// on every interactive `data-ui` value. The canonical interactive set is kept in
-// sync with the focus block in registry/themes/contrast.css. The match tolerates a
-// descendant part (e.g. `[data-ui="slider"] [data-part="thumb"]:focus-visible`) but
-// not crossing a comma/brace, so the ui and the pseudo-class share one selector.
-describe("contrast theme · :focus-visible present for every interactive data-ui", () => {
-  const INTERACTIVE_UI = [
-    "button", "link", "input", "textarea", "select", "checkbox", "radio",
-    "switch", "toggle", "slider", "tabs", "select-custom", "date-picker",
-  ] as const;
+// Until 1.1A-15 this was a CSS-level presence assertion over thirteen
+// `[data-ui="…"]:focus-visible` selectors this theme wrote itself, because 1.0
+// had no token for a ring width. It has one now, so the claim is stated once
+// and the assertions below check the two things that make it TRUE rather than
+// the spelling of a selector list: the theme sets the width, and every surface
+// that draws a ring reads it.
+//
+// The set is not a list this file maintains any more — it is derived from the
+// registry, so a control added later is covered on the commit that adds it.
 
+const REGISTRY = join(import.meta.dir, "../../registry");
+
+/** Every stylesheet that draws a focus ring, from the registry itself. */
+function ringStylesheets(): string[] {
+  const found: string[] = [];
+  for (const kind of ["primitives", "recipes", "patterns"]) {
+    const dir = join(REGISTRY, kind);
+    for (const rel of new Glob("*/*.css").scanSync(dir)) {
+      const css = readFileSync(join(dir, rel), "utf8");
+      if (/:focus(-visible|-within)?\b/.test(css.replace(/\/\*[\s\S]*?\*\//g, ""))) {
+        found.push(`${kind}/${rel}`);
+      }
+    }
+  }
+  return found.sort();
+}
+
+describe("contrast theme · the ring is a token now, and it reaches further than the list did", () => {
   const stripped = contrastCss.replace(/\/\*[\s\S]*?\*\//g, "");
 
-  const hasFocusVisibleFor = (ui: string): boolean =>
-    new RegExp(`\\[data-ui="${ui}"\\][^{},]*:focus-visible`).test(stripped);
-
-  it("defines at least one :focus-visible rule", () => {
-    expect(stripped.includes(":focus-visible")).toBe(true);
+  it("states an oversized ring in ONE declaration, and selects no component to do it", () => {
+    // The thirteen-selector block and the blanket `:root [data-ui]:disabled`
+    // rule are both gone; nothing in this stylesheet mentions the protocol.
+    expect(stripped).not.toContain("[data-ui=");
+    expect(stripped).not.toContain("[data-part=");
+    expect(stripped).not.toContain(":focus-visible");
+    const blocks = [...stripped.matchAll(/([^{}]+)\{/g)]
+      .map((m) => m[1].trim())
+      .filter((sel) => !sel.startsWith("@"));
+    expect(blocks).toEqual([":root", '[data-theme="dark"]', "[data-theme=\"auto\"]"]);
+    // 3px — the shape ladder's widest — offset by the family's own 2px gap.
+    expect(contrastValues.light.get("focus-ring-width")).toBe("var(--border-width-lg)");
   });
 
-  for (const ui of INTERACTIVE_UI) {
-    it(`has a :focus-visible rule targeting data-ui="${ui}"`, () => {
-      expect(hasFocusVisibleFor(ui)).toBe(true);
-    });
-  }
+  it("is 3px in resolved pixels, which is what `focus: bold` means", () => {
+    const axes = axesFromCss(contrastCss, AXIS_BASE);
+    expect(axes.focus).toBe("bold");
+    expect(FOCUS_BOLD_MIN_WIDTH_PX).toBe(3);
+    const effects = readFileSync(join(REGISTRY, "tokens/effects.css"), "utf8");
+    expect(effects).toMatch(/--border-width-lg:\s*3px/);
+  });
+
+  it("every stylesheet in the registry that draws a ring reads the width token", () => {
+    // What the swap is worth: the old block named thirteen components, and the
+    // registry draws a focus ring in far more places than that. Each one reads
+    // `--focus-ring-width` since 1.1A-02/03, so one declaration reaches all of
+    // them — including `base/reset.css`, which owns the ring for a bare
+    // element no `data-ui` list could have covered.
+    const sheets = ringStylesheets();
+    expect(sheets.length).toBeGreaterThan(13);
+    const missing = sheets.filter(
+      (rel) => !readFileSync(join(REGISTRY, rel), "utf8").includes("var(--focus-ring-width)"),
+    );
+    expect(missing).toEqual([]);
+    expect(readFileSync(join(REGISTRY, "base/reset.css"), "utf8")).toContain("var(--focus-ring-width)");
+  });
 
   it("the focus ring is opaque (references --color-ring, no inline alpha)", () => {
-    // The rule uses the themed ring color; --color-ring itself is opaque in the
+    // The ring colour is the themed one; --color-ring itself is opaque in the
     // theme (no `/ <alpha>`), so the ring is never translucent.
     const ringLight = contrastValues.light.get("color-ring");
     const ringDark = contrastValues.dark.get("color-ring");
@@ -244,5 +298,52 @@ describe("contrast theme · :focus-visible present for every interactive data-ui
     expect(ringDark).toBeDefined();
     expect(ringLight).not.toContain("/");
     expect(ringDark).not.toContain("/");
+  });
+});
+
+// ── The rest of the accessibility statement, as derived axes [1.1A-15] ───────
+describe("contrast theme · the axes it claims", () => {
+  const axes = axesFromCss(contrastCss, AXIS_BASE);
+
+  it("derives the adoption table's row: high contrast, bold focus, regular border, thick link", () => {
+    expect({
+      contrast: axes.contrast,
+      focus: axes.focus,
+      border: axes.shape.border,
+      link: axes.decoration.link,
+    }).toEqual({ contrast: "high", focus: "bold", border: "regular", link: "thick" });
+    const manifest = JSON.parse(
+      readFileSync(join(THEMES_DIR, "contrast.theme.json"), "utf8"),
+    ) as ThemeManifest;
+    expect(manifest.axes).toEqual(axes);
+  });
+
+  it("`contrast: high` is derived from the ratios above, not declared", () => {
+    // The axis is a reading of the same two pairs this file gates — body text
+    // and the strong border, in BOTH schemes — so it cannot claim `high` for a
+    // theme whose colours stopped clearing the bar.
+    for (const scheme of ["light", "dark"] as const) {
+      const tokens = contrastValues[scheme];
+      expect(contrastOf(tokens.get("color-fg")!, tokens.get("color-bg")!)).toBeGreaterThanOrEqual(
+        CONTRAST_HIGH_TEXT_MIN,
+      );
+      expect(
+        contrastOf(tokens.get("color-border-strong")!, tokens.get("color-bg")!),
+      ).toBeGreaterThanOrEqual(CONTRAST_HIGH_BORDER_MIN);
+    }
+    // Dim the ink and the axis follows — the classifier is not reading a name.
+    const dimmed = contrastCss.replace("--color-fg:              oklch(0.18 0 0)", "--color-fg: oklch(0.42 0 0)");
+    expect(dimmed).not.toBe(contrastCss);
+    expect(axesFromCss(dimmed, AXIS_BASE).contrast).toBe("standard");
+  });
+
+  it("dims disabled controls through the token the registry reads", () => {
+    // 0.6 rather than the registry's 0.5 — "honestly dimmed, never faded to
+    // invisibility" — and it reaches the parts the blanket `[data-ui]` rule
+    // never matched, because a menu item and a calendar day carry a
+    // `data-part`, not a `data-ui`.
+    expect(contrastValues.light.get("disabled-opacity")).toBe("0.6");
+    const menu = readFileSync(join(REGISTRY, "recipes/context-menu/context-menu.css"), "utf8");
+    expect(menu).toContain("opacity: var(--disabled-opacity)");
   });
 });

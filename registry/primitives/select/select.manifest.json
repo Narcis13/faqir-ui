@@ -62,7 +62,7 @@
     "radius-md", "space-2", "space-3", "space-4",
     "font-ui", "text-xs", "text-sm", "text-base",
     "duration-fast", "ease-default",
-    "border-width", "focus-ring-width", "focus-ring-style", "focus-ring-color", "focus-shadow", "input-border-width", "input-fill"
+    "border-width", "focus-ring-width", "focus-ring-style", "focus-ring-color", "focus-shadow", "input-border-width", "input-fill", "disabled-opacity"
   ],
 
   "templates": {

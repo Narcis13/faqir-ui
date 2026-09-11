@@ -334,104 +334,114 @@ describe("thresholds · named, and argued for", () => {
  * what makes such a change deliberate rather than drift.
  *
  * Re-measured in 1.1A-14, when `glass`, `brutalist`, `terminal`, `paper`, `soft`
- * and `aurora` adopted the 1.1 token families. 47 of the 51 pairs that involve
- * one of the six rose, four held, and NOT ONE fell — the axis distances moved
- * and the colour distances did not, which is the shape of a structural change
- * rather than a recolour.
+ * and `aurora` adopted the 1.1 token families, and again in 1.1A-15, when
+ * `default`, `slate`, `midnight`, `contrast`, `document` and `document-serif`
+ * did. After the second batch EVERY pair clears both bars, which is what arms
+ * the gate below: the closest pair on axes is four apart (`aurora`/`default`,
+ * `aurora`/`midnight`, `default`/`glass` — exactly §5.2's minimum) and the
+ * closest on colour is `aurora`/`glass` at 0.0305, a hair above the 0.03 the
+ * framework demands between a card and the page under it.
+ *
+ * One pair moved on COLOUR rather than on axes, and deliberately:
+ * `glass`/`slate` was the single token failure at 0.0282 — slate's neutrals
+ * were a colourway of glass's — so slate's surfaces took the theme's own claim
+ * ("cool blue-gray", a dense console rather than a luminous page) and landed at
+ * 0.0397. Every other movement in this table is structural.
  */
 const SHIPPED_PAIRS: Array<[string, string, number, number]> = [
   ["aurora", "brutalist", 11, 0.1961],
-  ["aurora", "contrast", 6, 0.0888],
+  ["aurora", "contrast", 9, 0.0888],
   ["aurora", "default", 4, 0.0515],
-  ["aurora", "document", 9, 0.1238],
-  ["aurora", "document-serif", 9, 0.1459],
+  ["aurora", "document", 11, 0.1238],
+  ["aurora", "document-serif", 10, 0.1459],
   ["aurora", "glass", 6, 0.0305],
   ["aurora", "midnight", 4, 0.0416],
   ["aurora", "paper", 6, 0.0724],
-  ["aurora", "slate", 5, 0.0482],
+  ["aurora", "slate", 9, 0.0482],
   ["aurora", "soft", 9, 0.0882],
   ["aurora", "terminal", 11, 0.1035],
-  ["brutalist", "contrast", 9, 0.1811],
+  ["brutalist", "contrast", 7, 0.1811],
   ["brutalist", "default", 10, 0.2047],
   ["brutalist", "document", 8, 0.1184],
-  ["brutalist", "document-serif", 7, 0.1245],
+  ["brutalist", "document-serif", 8, 0.1245],
   ["brutalist", "glass", 11, 0.1995],
-  ["brutalist", "midnight", 11, 0.1942],
+  ["brutalist", "midnight", 12, 0.1942],
   ["brutalist", "paper", 11, 0.1999],
-  ["brutalist", "slate", 10, 0.1951],
+  ["brutalist", "slate", 11, 0.1926],
   ["brutalist", "soft", 11, 0.2092],
   ["brutalist", "terminal", 11, 0.1988],
-  ["contrast", "default", 2, 0.0731],
-  ["contrast", "document", 6, 0.0768],
-  ["contrast", "document-serif", 7, 0.0971],
-  ["contrast", "glass", 5, 0.0691],
-  ["contrast", "midnight", 4, 0.0925],
-  ["contrast", "paper", 6, 0.107],
-  ["contrast", "slate", 2, 0.0662],
-  ["contrast", "soft", 9, 0.0741],
+  ["contrast", "default", 5, 0.0731],
+  ["contrast", "document", 9, 0.0768],
+  ["contrast", "document-serif", 9, 0.0971],
+  ["contrast", "glass", 7, 0.0691],
+  ["contrast", "midnight", 10, 0.0925],
+  ["contrast", "paper", 9, 0.107],
+  ["contrast", "slate", 10, 0.0727],
+  ["contrast", "soft", 10, 0.0741],
   ["contrast", "terminal", 10, 0.0998],
-  ["default", "document", 7, 0.1221],
-  ["default", "document-serif", 8, 0.1516],
+  ["default", "document", 9, 0.1221],
+  ["default", "document-serif", 9, 0.1516],
   ["default", "glass", 4, 0.0415],
-  ["default", "midnight", 1, 0.0588],
+  ["default", "midnight", 5, 0.0588],
   ["default", "paper", 6, 0.0856],
-  ["default", "slate", 1, 0.0498],
+  ["default", "slate", 7, 0.0576],
   ["default", "soft", 8, 0.0794],
   ["default", "terminal", 10, 0.1057],
-  ["document", "document-serif", 1, 0.0482],
-  ["document", "glass", 8, 0.1176],
-  ["document", "midnight", 9, 0.122],
-  ["document", "paper", 9, 0.1314],
-  ["document", "slate", 6, 0.1028],
-  ["document", "soft", 10, 0.1246],
+  ["document", "document-serif", 5, 0.0482],
+  ["document", "glass", 10, 0.1176],
+  ["document", "midnight", 13, 0.122],
+  ["document", "paper", 11, 0.1314],
+  ["document", "slate", 8, 0.1063],
+  ["document", "soft", 11, 0.1246],
   ["document", "terminal", 11, 0.1125],
-  ["document-serif", "glass", 9, 0.1464],
-  ["document-serif", "midnight", 9, 0.1507],
-  ["document-serif", "paper", 8, 0.1299],
-  ["document-serif", "slate", 7, 0.1309],
-  ["document-serif", "soft", 10, 0.1436],
-  ["document-serif", "terminal", 10, 0.1239],
-  ["glass", "midnight", 3, 0.0443],
+  ["document-serif", "glass", 10, 0.1464],
+  ["document-serif", "midnight", 12, 0.1507],
+  ["document-serif", "paper", 9, 0.1299],
+  ["document-serif", "slate", 10, 0.1324],
+  ["document-serif", "soft", 11, 0.1436],
+  ["document-serif", "terminal", 11, 0.1239],
+  ["glass", "midnight", 6, 0.0443],
   ["glass", "paper", 8, 0.0781],
-  ["glass", "slate", 6, 0.0282],
+  ["glass", "slate", 8, 0.0397],
   ["glass", "soft", 8, 0.0701],
   ["glass", "terminal", 11, 0.0962],
-  ["midnight", "paper", 6, 0.0867],
-  ["midnight", "slate", 3, 0.052],
+  ["midnight", "paper", 7, 0.0867],
+  ["midnight", "slate", 9, 0.0486],
   ["midnight", "soft", 8, 0.0848],
-  ["midnight", "terminal", 10, 0.0966],
-  ["paper", "slate", 6, 0.0666],
+  ["midnight", "terminal", 11, 0.0966],
+  ["paper", "slate", 8, 0.0697],
   ["paper", "soft", 8, 0.072],
   ["paper", "terminal", 10, 0.0846],
-  ["slate", "soft", 7, 0.0548],
-  ["slate", "terminal", 9, 0.0809],
+  ["slate", "soft", 9, 0.0693],
+  ["slate", "terminal", 10, 0.0786],
   ["soft", "terminal", 10, 0.0771],
 ];
 
 /**
- * The pairs that do NOT meet the rule today, as `name/name: reason`.
+ * The pairs that do NOT meet the rule, as `name/name: reason`. **Empty since
+ * 1.1A-15**, and required to be: the gate below is ARMED, so this object being
+ * empty is the assertion rather than a note.
  *
- * This is the sameness problem, as a number that is coming down: 1.1A-12 counted
- * twenty-one failing pairs, 1.1A-14 left EIGHT, and every one of the eight has a
- * theme 1.1A-15 owns on at least one side — `contrast`, `default`, `midnight`,
- * `slate`, `document`, `document-serif`. That is not a coincidence: `default`
- * cannot move at all (`tests/themes/axes.test.ts` holds it equal to
- * `THEME_SEED_DEFAULTS`, which is what makes `{ name, accent }` a complete
- * seed), so every pair involving it had to be cleared from the OTHER side —
- * which is why `aurora` and `glass` each took one axis beyond their row of the
- * plan's adoption table. The remaining eight are batch 2's to clear, and the
- * gate is ARMED (the list required to be empty) when it lands.
+ * The sameness problem, as a number that came down: 1.1A-12 counted twenty-one
+ * failing pairs, 1.1A-14 left eight, 1.1A-15 leaves none. Every one of the
+ * eight had a batch-2 theme on at least one side, which is what made them
+ * clearable: `default` cannot move at all (`tests/themes/axes.test.ts` holds it
+ * equal to `THEME_SEED_DEFAULTS`, which is what makes `{ name, accent }` a
+ * complete seed), so each pair involving it was cleared from the other side —
+ * `aurora` and `glass` each took an axis in 1.1A-14, and `slate`, `midnight`
+ * and `contrast` took theirs here.
+ *
+ * The plan allowed up to two reasoned exemptions, "if a pair cannot honestly
+ * reach the bar (the two `document` themes may share many axes by design)".
+ * **None was needed, including for that pair**: `document` took `motion: none`
+ * and a baseline underline, `document-serif` took the serif roles it had only
+ * ever applied inside a `data-ui="document"`, a tight heading tracking, a
+ * dotted rule and ruled input fields — five axes apart, on two themes that are
+ * now distinguishable on a printed page rather than only in their accent.
+ * A future exemption belongs here with its reason string; the type is kept
+ * exactly so that adding one is a visible, argued edit.
  */
-const OBLIGATIONS: Record<string, "axis" | "token" | "axis+token"> = {
-  "contrast/default": "axis",
-  "contrast/slate": "axis",
-  "default/midnight": "axis",
-  "default/slate": "axis",
-  "document/document-serif": "axis",
-  "glass/midnight": "axis",
-  "glass/slate": "token",
-  "midnight/slate": "axis",
-};
+const OBLIGATIONS: Record<string, "axis" | "token" | "axis+token"> = {};
 
 describe("the 66 shipped pairs, measured and pinned", () => {
   const measured = new Map<string, ReturnType<typeof distinctiveness>>();
@@ -458,7 +468,8 @@ describe("the 66 shipped pairs, measured and pinned", () => {
     });
   }
 
-  it("enumerates the pairs that do not meet the rule yet — the 1.1A-14/15 obligation", () => {
+  /** Every pair that fails either bar, with which bar it failed. */
+  function failingPairs(): Record<string, "axis" | "token" | "axis+token"> {
     const failing: Record<string, "axis" | "token" | "axis+token"> = {};
     for (const [pair, result] of measured) {
       const reasons: string[] = [];
@@ -466,28 +477,46 @@ describe("the 66 shipped pairs, measured and pinned", () => {
       if (result.token_distance != null && result.token_distance < TOKEN_MIN) reasons.push("token");
       if (reasons.length > 0) failing[pair] = reasons.join("+") as "axis" | "token" | "axis+token";
     }
-    expect(failing).toEqual(OBLIGATIONS);
+    return failing;
+  }
+
+  it("EVERY pair meets the rule — the gate is armed [1.1A-15]", () => {
+    // Named as an equality against OBLIGATIONS rather than as `toEqual({})` so
+    // that a future exemption is a documented entry in that object with a
+    // reason beside it, not a threshold somebody lowered.
+    expect(failingPairs()).toEqual(OBLIGATIONS);
   });
 
-  it("is not armed yet, and says so in one place", () => {
-    // 1.1A-15 arms the gate by emptying OBLIGATIONS. This assertion is what
-    // turns that into a single visible edit rather than a test nobody notices
-    // has stopped meaning anything.
+  it("is armed, and says so in one place", () => {
+    // 1.1A-12 wrote this assertion as `armed === false` with a count of 21;
+    // 1.1A-14 brought the count to 8; this is the commit that flips it. The
+    // plan allows at most two reasoned exemptions — asserted, so the allowance
+    // cannot quietly become a habit.
     const armed = Object.keys(OBLIGATIONS).length === 0;
-    expect(armed).toBe(false);
-    expect(Object.keys(OBLIGATIONS).length).toBe(8);
+    expect(armed).toBe(true);
+    expect(Object.keys(OBLIGATIONS).length).toBeLessThanOrEqual(2);
   });
 
-  it("every pair still below the rule is one 1.1A-15 owns a side of", () => {
-    // What 1.1A-14 can prove about the work it did NOT do: the six themes it
-    // adopted no longer fail against each other, and each remaining failure has
-    // a batch-2 theme to fix it. If this ever went red, the plan would be
-    // handing 1.1A-15 a pair it has no theme to change.
-    const BATCH_2 = ["contrast", "default", "document", "document-serif", "midnight", "slate"];
-    for (const pair of Object.keys(OBLIGATIONS)) {
-      const sides = pair.split("/");
-      expect({ [pair]: sides.some((name) => BATCH_2.includes(name)) }).toEqual({ [pair]: true });
-    }
+  it("no pair clears by a hair it could lose to a rounding — the measured margins", () => {
+    // What "armed" is worth depends on how close the closest pair is. Both
+    // minima are recorded, so a later theme edit that eats the margin shows up
+    // here as a number rather than as a pass that happens to still hold.
+    const axisMin = Math.min(...[...measured.values()].map((r) => r.axis_distance));
+    const tokenMin = Math.min(
+      ...[...measured.values()].map((r) => r.token_distance).filter((d): d is number => d != null),
+    );
+    expect(axisMin).toBe(AXIS_MIN);
+    expect(tokenMin).toBe(0.0305);
+    expect(tokenMin).toBeGreaterThan(TOKEN_MIN);
+    // The three pairs sitting exactly on §5.2's four-axis floor. Each is a
+    // deliberate near-neighbour: `default` is the reference every theme departs
+    // from and cannot itself move, and `aurora`/`midnight` are the two themes
+    // whose subject is the same one (a lit surface in a dark room).
+    const onTheFloor = [...measured]
+      .filter(([, r]) => r.axis_distance === AXIS_MIN)
+      .map(([pair]) => pair)
+      .sort();
+    expect(onTheFloor).toEqual(["aurora/default", "aurora/midnight", "default/glass"]);
   });
 
   it("names each theme's nearest neighbour, deterministically", () => {
@@ -500,11 +529,11 @@ describe("the 66 shipped pairs, measured and pinned", () => {
     expect(neighbours).toEqual({
       aurora: "glass",
       brutalist: "document",
-      contrast: "slate",
+      contrast: "glass",
       default: "glass",
       document: "document-serif",
       "document-serif": "document",
-      glass: "slate",
+      glass: "aurora",
       midnight: "aurora",
       paper: "slate",
       slate: "glass",
@@ -525,12 +554,26 @@ describe("the 66 shipped pairs, measured and pinned", () => {
 // ═══════════════════════════════════════════════════════════════════════════
 
 describe("collisions · what the generator refuses, and what it says", () => {
+  it("finds NO collision anywhere in the shipped set — the armed gate, from the generator's side", () => {
+    // The same fact the 66-pair gate states, asked the way the CLI asks it:
+    // every shipped theme, against all eleven others. `default` alone reported
+    // six collisions when 1.1A-12 measured it, three after 1.1A-14, none now.
+    for (const subject of SHIPPED) {
+      expect({ [subject.name]: collisions(subject, SHIPPED, CONTEXT).map((r) => r.nearest) }).toEqual({
+        [subject.name]: [],
+      });
+    }
+  });
+
   it("reports every collision, worst first, and nothing that clears both bars", () => {
-    const subject = SHIPPED.find((t) => t.name === "default")!;
-    const found = collisions(subject, SHIPPED, CONTEXT);
-    // Six before 1.1A-14, three after: `glass`, `aurora` and `paper` moved out
-    // of `default`'s way, and what is left is the three themes 1.1A-15 owns.
-    expect(found.map((result) => result.nearest)).toEqual(["slate", "midnight", "contrast"]);
+    // Synthetic, now that the shipped set has no collisions to read: three
+    // near-clones of one subject, at three distances.
+    const subject = fixture("subject", { "color-bg": "oklch(1 0 0)", "color-primary": "oklch(0.55 0.22 264)" });
+    const near = fixture("near", { "color-bg": "oklch(0.995 0 0)", "color-primary": "oklch(0.55 0.22 264)" });
+    const mid = fixture("mid", { "color-bg": "oklch(0.985 0 0)", "color-primary": "oklch(0.55 0.22 264)" });
+    const apart = SHIPPED.find((t) => t.name === "terminal")!;
+    const found = collisions(subject, [subject, near, mid, apart], CONTEXT);
+    expect(found.map((result) => result.nearest)).toEqual(["near", "mid"]);
     expect(found.every((result) => !result.passes)).toBe(true);
     // Sorted by closeness, so the first sentence a user reads is the worst one.
     const distances = found.map((result) => result.token_distance!);
@@ -538,23 +581,43 @@ describe("collisions · what the generator refuses, and what it says", () => {
   });
 
   it("names the theme, the count and the axes that are identical", () => {
-    const subject = SHIPPED.find((t) => t.name === "default")!;
-    const slate = distinctiveness(subject, SHIPPED.find((t) => t.name === "slate")!, CONTEXT);
-    const message = collisionMessage("default", slate);
-    expect(message).toContain("'default' is too close to 'slate'");
-    expect(message).toContain(`1 of the ${THEME_DERIVED_AXES.length} axes`);
+    // `aurora` and `default` sit exactly on the four-axis floor, so dropping
+    // one of the four is the smallest honest way to make a failing pair out of
+    // two shipped themes — and it keeps the message's numbers real.
+    const aurora = SHIPPED.find((t) => t.name === "aurora")!;
+    const defaultCss = readFileSync(join(THEMES_DIR, "default.css"), "utf8");
+    const clone = prepareTheme(
+      {
+        name: "clone",
+        css: defaultCss,
+        scheme: "both",
+        axes: { ...axesFromCss(defaultCss, AXIS_BASE), material: aurora.axes.material },
+      },
+      CONTEXT,
+    );
+    const result = distinctiveness(aurora, clone, CONTEXT);
+    const message = collisionMessage("aurora", result);
+    expect(result.axis_distance).toBe(AXIS_MIN - 1);
+    expect(message).toContain("'aurora' is too close to 'clone'");
+    expect(message).toContain(`3 of the ${THEME_DERIVED_AXES.length} axes`);
     expect(message).toContain(`${AXIS_MIN} required`);
-    expect(message).toContain("accent_chroma");
+    expect(message).toContain("accent_hue");
   });
 
   it("states the colour measure when THAT is what failed", () => {
-    const glass = SHIPPED.find((t) => t.name === "glass")!;
-    const slate = SHIPPED.find((t) => t.name === "slate")!;
-    const result = distinctiveness(glass, slate, CONTEXT);
-    // The one shipped pair that clears the axis rule and fails on colour.
+    // No shipped pair fails on colour any more — `glass`/`slate` was the last
+    // one and 1.1A-15 separated it — so the case is made out of two fixtures
+    // that clear the axis rule on a stylesheet they share every colour with.
+    const css = { "color-bg": "oklch(0.97 0.01 250)", "color-primary": "oklch(0.5 0.2 250)" };
+    const a = fixture("twin-a", css);
+    const b = {
+      ...fixture("twin-b", css),
+      axes: { ...a.axes, depth: "hard" as const, motion: "playful" as const, focus: "glow" as const, material: "grain" as const },
+    };
+    const result = distinctiveness(a, b, CONTEXT);
     expect(result.axis_distance).toBeGreaterThanOrEqual(AXIS_MIN);
     expect(result.token_distance).toBeLessThan(TOKEN_MIN);
-    const message = collisionMessage("glass", result);
+    const message = collisionMessage("twin-a", result);
     expect(message).toContain("mean OKLab ΔE");
     expect(message).toContain(String(TOKEN_MIN));
     expect(message).not.toContain("axes (");

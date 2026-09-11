@@ -1,5 +1,5 @@
 /* @ui:component pagination */
-/* @ui:tokens color-bg color-bg-muted color-fg color-fg-muted color-primary color-primary-fg color-border radius-md space-1 space-2 space-3 text-xs text-sm text-base weight-medium duration-fast ease-default font-ui border-width focus-ring-width focus-ring-style focus-ring-color focus-ring-offset */
+/* @ui:tokens color-bg color-bg-muted color-fg color-fg-muted color-primary color-primary-fg color-border radius-md space-1 space-2 space-3 text-xs text-sm text-base weight-medium duration-fast ease-default font-ui border-width focus-ring-width focus-ring-style focus-ring-color focus-ring-offset disabled-opacity */
 
 /* ── Root ── */
 [data-ui="pagination"] {
@@ -85,7 +85,7 @@
 /* ── Disabled ── */
 [data-ui="pagination"] [data-part="prev"]:disabled,
 [data-ui="pagination"] [data-part="next"]:disabled {
-  opacity: 0.5;
+  opacity: var(--disabled-opacity);
   cursor: not-allowed;
   pointer-events: none;
 }

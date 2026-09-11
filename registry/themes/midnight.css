@@ -46,12 +46,56 @@
   --color-border-strong:   oklch(0.80 0.02 270);
   --color-ring:            oklch(0.50 0.24 280);
 
-  /* ── Shadows (cool blue-tinted) ── */
-  --shadow-xs:  0 1px 2px oklch(0.20 0.04 270 / 0.08);
-  --shadow-sm:  0 1px 3px oklch(0.20 0.04 270 / 0.10), 0 1px 2px oklch(0.20 0.04 270 / 0.06);
-  --shadow-md:  0 4px 6px oklch(0.20 0.04 270 / 0.08), 0 2px 4px oklch(0.20 0.04 270 / 0.06);
-  --shadow-lg:  0 10px 15px oklch(0.20 0.04 270 / 0.10), 0 4px 6px oklch(0.20 0.04 270 / 0.06);
-  --shadow-xl:  0 20px 25px oklch(0.20 0.04 270 / 0.12), 0 8px 10px oklch(0.20 0.04 270 / 0.06);
+  /* ══════════════════════════════════════════════════════════════════════
+     The identity, in tokens. This theme's subject is a lit interface in a
+     dark room; until 1.1A-15 it could only say so in colour. [1.1A-15]
+     ══════════════════════════════════════════════════════════════════════ */
+
+  /* ── Type voice: one weight lighter than the registry's ──
+     700 blooms on a luminous accent against a near-black surface — the
+     strokes thicken optically and a heading starts to smear. 600 is the
+     weight a dark-first product sets its titles at, and stating it here is
+     what makes `type.voice.weight` derive `semibold`. Light mode follows,
+     because a theme has one voice. */
+  --heading-weight: var(--weight-semibold);
+
+  /* ── Material: the grid behind the glass ──
+     A faint rule grid on the PAGE (`--texture-page`), not on the things
+     sitting on it: the subject is the instrument panel this UI is mounted in,
+     and a grid behind every card would fight the data on it. `currentColor`
+     at 12% alpha, so it tints itself from the page's own foreground and
+     disappears entirely on paper (the print rule in `document.css`
+     re-declares `background` as a shorthand). */
+  --texture-page: var(--texture-grid);
+
+  /* ── Decoration: selection wears the accent ──
+     Cyan in this theme's primary design target, blue-violet in light — one
+     declaration, because `--color-primary` already follows the scheme. */
+  --selection-bg: var(--color-primary);
+  --selection-fg: var(--color-primary-fg);
+
+  /* ── Focus: a glow, not just a ring ──
+     `--focus-shadow` is drawn BEHIND the outline by `base/reset.css` and by
+     all thirteen controls that paint their own ring (1.1A-02), so this one
+     declaration haloes every focusable surface. Mixed from `--color-ring`
+     rather than named, so the halo is the accent in whichever scheme is on
+     screen and can never drift from the ring it sits behind. */
+  --focus-shadow: 0 0 0 var(--space-1) color-mix(in oklch, var(--color-ring) 35%, transparent);
+
+  /* ── Depth: layered, and tinted through the channel ──
+     Every step is cast in `--shadow-color` (1.1A-04 — bare OKLCH channels, so
+     each step keeps its own alpha), which replaces twenty literal navies with
+     one declaration per scheme. The geometry is deliberately deeper than the
+     base ramp's: the md step blurs past the `layered` band, which is what a
+     lit panel floating over a dark room looks like, and it matches the dark
+     ramp this theme was designed in rather than contradicting it. */
+  --shadow-color: 0.20 0.05 275;
+
+  --shadow-xs:  0 1px 3px oklch(var(--shadow-color) / 0.08);
+  --shadow-sm:  0 2px 6px oklch(var(--shadow-color) / 0.10), 0 1px 2px oklch(var(--shadow-color) / 0.06);
+  --shadow-md:  0 6px 14px oklch(var(--shadow-color) / 0.10), 0 2px 4px oklch(var(--shadow-color) / 0.06);
+  --shadow-lg:  0 14px 28px oklch(var(--shadow-color) / 0.12), 0 4px 8px oklch(var(--shadow-color) / 0.06);
+  --shadow-xl:  0 28px 56px oklch(var(--shadow-color) / 0.14), 0 8px 16px oklch(var(--shadow-color) / 0.07);
 }
 
 /* ── Dark Mode (primary design target) ── */
@@ -100,12 +144,14 @@
   --color-border-strong:   oklch(0.34 0.06 275);
   --color-ring:            oklch(0.75 0.16 195);
 
-  /* ── Shadows (deep, dramatic, purple-tinted) ── */
-  --shadow-xs:  0 1px 3px oklch(0.08 0.06 285 / 0.4);
-  --shadow-sm:  0 2px 6px oklch(0.08 0.06 285 / 0.5);
-  --shadow-md:  0 6px 12px oklch(0.08 0.06 285 / 0.5), 0 2px 4px oklch(0.08 0.06 285 / 0.3);
-  --shadow-lg:  0 12px 24px oklch(0.08 0.06 285 / 0.6), 0 4px 8px oklch(0.08 0.06 285 / 0.3);
-  --shadow-xl:  0 24px 48px oklch(0.08 0.06 285 / 0.7), 0 8px 16px oklch(0.08 0.06 285 / 0.4);
+  /* ── Shadows (deep, dramatic, purple-tinted — cast in the channel) ── */
+  --shadow-color: 0.08 0.06 285;
+
+  --shadow-xs:  0 1px 3px oklch(var(--shadow-color) / 0.4);
+  --shadow-sm:  0 2px 6px oklch(var(--shadow-color) / 0.5);
+  --shadow-md:  0 6px 14px oklch(var(--shadow-color) / 0.5), 0 2px 4px oklch(var(--shadow-color) / 0.3);
+  --shadow-lg:  0 14px 28px oklch(var(--shadow-color) / 0.6), 0 4px 8px oklch(var(--shadow-color) / 0.3);
+  --shadow-xl:  0 28px 56px oklch(var(--shadow-color) / 0.7), 0 8px 16px oklch(var(--shadow-color) / 0.4);
 }
 
 /* ── Auto Dark Mode (system preference) ── */
@@ -154,11 +200,13 @@
     --color-border-strong:   oklch(0.34 0.06 275);
     --color-ring:            oklch(0.75 0.16 195);
 
-    /* ── Shadows (deep, dramatic, purple-tinted) ── */
-    --shadow-xs:  0 1px 3px oklch(0.08 0.06 285 / 0.4);
-    --shadow-sm:  0 2px 6px oklch(0.08 0.06 285 / 0.5);
-    --shadow-md:  0 6px 12px oklch(0.08 0.06 285 / 0.5), 0 2px 4px oklch(0.08 0.06 285 / 0.3);
-    --shadow-lg:  0 12px 24px oklch(0.08 0.06 285 / 0.6), 0 4px 8px oklch(0.08 0.06 285 / 0.3);
-    --shadow-xl:  0 24px 48px oklch(0.08 0.06 285 / 0.7), 0 8px 16px oklch(0.08 0.06 285 / 0.4);
+    /* ── Shadows (deep, dramatic, purple-tinted — cast in the channel) ── */
+    --shadow-color: 0.08 0.06 285;
+
+    --shadow-xs:  0 1px 3px oklch(var(--shadow-color) / 0.4);
+    --shadow-sm:  0 2px 6px oklch(var(--shadow-color) / 0.5);
+    --shadow-md:  0 6px 14px oklch(var(--shadow-color) / 0.5), 0 2px 4px oklch(var(--shadow-color) / 0.3);
+    --shadow-lg:  0 14px 28px oklch(var(--shadow-color) / 0.6), 0 4px 8px oklch(var(--shadow-color) / 0.3);
+    --shadow-xl:  0 28px 56px oklch(var(--shadow-color) / 0.7), 0 8px 16px oklch(var(--shadow-color) / 0.4);
   }
 }

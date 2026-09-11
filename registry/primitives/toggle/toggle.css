@@ -1,5 +1,5 @@
 /* @ui:component toggle */
-/* @ui:tokens color-bg color-bg-muted color-fg color-fg-muted color-border color-primary color-primary-subtle color-ring radius-md space-1 space-1h space-2 space-3 space-4 text-xs text-sm text-base font-ui weight-medium duration-fast ease-default border-width focus-ring-width focus-ring-offset focus-ring-style focus-ring-color focus-shadow */
+/* @ui:tokens color-bg color-bg-muted color-fg color-fg-muted color-border color-primary color-primary-subtle color-ring radius-md space-1 space-1h space-2 space-3 space-4 text-xs text-sm text-base font-ui weight-medium duration-fast ease-default border-width focus-ring-width focus-ring-offset focus-ring-style focus-ring-color focus-shadow disabled-opacity */
 
 /* ── Base (off / unpressed) ── */
 [data-ui="toggle"] {
@@ -48,7 +48,7 @@
 
 /* ── Disabled ── */
 [data-ui="toggle"]:disabled {
-  opacity: 0.5;
+  opacity: var(--disabled-opacity);
   cursor: not-allowed;
 }
 

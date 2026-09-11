@@ -115,7 +115,7 @@
     "focus-ring-width",
     "focus-ring-style",
     "focus-ring-color",
-    "focus-ring-offset"
+    "focus-ring-offset", "disabled-opacity"
   ],
   "templates": {
     "html": "<div data-ui=\"context-menu\" data-state=\"closed\">\n  <div data-part=\"target\" role=\"button\" tabindex=\"0\" aria-haspopup=\"menu\" aria-expanded=\"false\" aria-controls=\"{id}-menu\">{target_text}</div>\n  <div data-part=\"menu\" id=\"{id}-menu\" role=\"menu\" aria-label=\"Context actions\" hidden>\n    <button data-part=\"item\" type=\"button\" role=\"menuitem\" tabindex=\"-1\">{item1}</button>\n    <button data-part=\"item\" type=\"button\" role=\"menuitem\" tabindex=\"-1\">{item2}</button>\n    <hr data-part=\"separator\" role=\"separator\" aria-orientation=\"horizontal\">\n    <button data-part=\"item\" type=\"button\" role=\"menuitem\" tabindex=\"-1\">{item3}</button>\n  </div>\n</div>"
