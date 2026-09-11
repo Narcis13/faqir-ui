@@ -1,5 +1,5 @@
 /* @ui:component menubar */
-/* @ui:tokens color-bg color-border color-fg color-fg-muted color-primary color-primary-subtle color-ring space-px space-1 space-2 space-3 space-4 space-20 radius-md radius-lg shadow-md text-xs text-sm text-base weight-medium duration-fast ease-out z-dropdown font-ui */
+/* @ui:tokens color-bg color-border color-fg color-fg-muted color-primary color-primary-subtle space-px space-1 space-2 space-3 space-4 space-20 radius-md radius-lg shadow-md text-xs text-sm text-base weight-medium duration-fast ease-out z-dropdown font-ui focus-ring-color focus-ring-width */
 
 [data-ui="menubar"] {
   position: relative;
@@ -59,7 +59,7 @@
 
 [data-ui="menubar"] [data-part="trigger"]:focus-visible,
 [data-ui="menubar"] [data-part="item"]:focus-visible {
-  box-shadow: 0 0 0 calc(var(--space-px) * 2) var(--color-ring);
+  box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
 }
 
 [data-ui="menubar"] [data-part="submenu"] {

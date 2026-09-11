@@ -1,5 +1,5 @@
 /* @ui:component hero */
-/* @ui:tokens color-bg color-fg color-fg-muted space-3 space-4 space-6 space-8 space-12 space-16 space-20 text-sm text-base text-lg text-xl text-3xl text-4xl font-heading font-body heading-weight heading-tracking heading-transform heading-leading weight-bold weight-normal leading-tight leading-relaxed radius-lg */
+/* @ui:tokens color-bg color-fg color-fg-muted space-3 space-4 space-6 space-8 space-12 space-16 space-20 text-sm text-base text-lg text-xl text-3xl text-4xl font-heading font-body heading-weight heading-tracking heading-transform heading-leading weight-bold weight-normal leading-tight leading-relaxed radius-lg texture-surface */
 
 /* ── Root ──
    A one-column grid by default; the layout variants only change how that grid
@@ -15,7 +15,8 @@
   padding-inline: var(--space-4);
   font-family: var(--font-body);
   color: var(--color-fg);
-  background: var(--color-bg);
+  background-color: var(--color-bg);
+  background-image: var(--texture-surface);
 }
 
 /* ── Eyebrow ── */

@@ -101,7 +101,8 @@
     "field-validating-color", "field-disabled-opacity",
     "space-1", "space-2", "space-3", "space-4",
     "text-xs", "text-sm",
-    "font-body", "weight-medium"
+    "font-body", "weight-medium",
+    "border-width"
   ],
 
   "templates": {

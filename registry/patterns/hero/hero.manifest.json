@@ -86,7 +86,8 @@
     "space-3", "space-4", "space-6", "space-8", "space-12", "space-16", "space-20",
     "font-heading", "font-body", "heading-weight", "heading-tracking", "heading-transform", "heading-leading", "text-sm", "text-base", "text-lg", "text-xl", "text-3xl", "text-4xl",
     "weight-bold", "weight-normal", "leading-tight", "leading-relaxed",
-    "radius-lg"
+    "radius-lg",
+    "texture-surface"
   ],
 
   "templates": {

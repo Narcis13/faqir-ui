@@ -103,7 +103,13 @@ export function requiredTokens(semanticCss: string, effectsCss: string): {
   const shadows = uniq(
     extractTokenDefinitions(effectsCss)
       .map(d => d.name)
-      .filter(n => n.startsWith("shadow-")),
+      // --shadow-color [1.1A-04] is the CHANNEL the ramp is cast in, not a step
+      // of it. The rule above exists because a dark block that omits a token
+      // renders with the LIGHT value — which for the five steps is a shadow far
+      // too faint for a dark surface, and for the channel is `0 0 0`, exactly
+      // what an untinted dark theme wants anyway. Requiring it would force all
+      // twelve themes to restate black to say nothing.
+      .filter(n => n.startsWith("shadow-") && n !== "shadow-color"),
   );
   return { colors, shadows, all: [...colors, ...shadows] };
 }

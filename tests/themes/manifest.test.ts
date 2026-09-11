@@ -115,10 +115,24 @@ describe("theme manifest · the token surface", () => {
     "heading-leading",
   ];
 
-  it("is 254 tokens — 241 plus the shape and focus families [1.1A-02]", () => {
+  it("is 258 tokens — 241 plus shape, focus, depth and material [1.1A-02, 1.1A-04]", () => {
     // 1.1A-02 added five border-width steps/roles, --corner-shape, the five
     // focus tokens, and the two component silhouette aliases: 241 + 13.
-    expect(SURFACE.length).toBe(254);
+    // 1.1A-04 added four: --shadow-color and --surface-backdrop (depth), and
+    // the two --texture-* ROLES (material). The six named textures in
+    // tokens/textures.css are deliberately NOT here — that file is a palette no
+    // component reads, excluded via NON_SURFACE_TOKEN_FILES, so a theme
+    // re-points a role instead of inheriting six data URIs it cannot use.
+    expect(SURFACE.length).toBe(258);
+  });
+
+  it("the depth and material tokens a theme can reach are exactly the four roles", () => {
+    expect(SURFACE.filter((t) => t.startsWith("texture-"))).toEqual([
+      "texture-page",
+      "texture-surface",
+    ]);
+    expect(SURFACE).toContain("shadow-color");
+    expect(SURFACE).toContain("surface-backdrop");
   });
 
   it("contains every type role and voice token", () => {

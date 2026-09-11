@@ -169,8 +169,16 @@ describe("theme generate · pure deterministic generator", () => {
     const schemes = parseThemeSchemes(file.css);
     expect(file.manifest.scheme).toBe("dark");
     expect(file.manifest.dark_mode).toBe("native");
-    expect(schemes.dark.size).toBe(REQUIRED.all.length);
-    expect(schemes.auto.size).toBe(REQUIRED.all.length);
+    // Every required token, plus one: the generator also writes --shadow-color
+    // [1.1A-04], the channel its own ramp is cast in. It is deliberately not in
+    // REQUIRED (a theme that omits it inherits `0 0 0`, which is what an
+    // untinted theme wants), but a theme the generator WRITES states it, or the
+    // five steps it emits would read a channel from somewhere else.
+    for (const scheme of [schemes.dark, schemes.auto]) {
+      expect([...REQUIRED.all].filter((token) => !scheme.has(token))).toEqual([]);
+      expect(scheme.has("shadow-color")).toBe(true);
+      expect(scheme.size).toBe(REQUIRED.all.length + 1);
+    }
     expect(file.contrast.map((pair) => pair.scheme)).toEqual(
       Array(file.contrast.length).fill("dark"),
     );

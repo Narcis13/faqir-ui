@@ -1,5 +1,5 @@
 /* @ui:component file-upload */
-/* @ui:tokens color-bg color-bg-subtle color-fg color-fg-muted color-border color-border-strong color-primary color-primary-subtle color-ring color-destructive color-destructive-subtle space-px space-1 space-2 space-3 space-4 space-8 radius-md radius-lg text-xs text-sm text-base weight-semibold font-ui duration-fast ease-default focus-ring-width focus-ring-style focus-ring-color focus-ring-offset */
+/* @ui:tokens color-bg color-bg-subtle color-fg color-fg-muted color-border color-border-strong color-primary color-primary-subtle color-ring color-destructive color-destructive-subtle space-px space-1 space-2 space-3 space-4 space-8 radius-md radius-lg text-xs text-sm text-base weight-semibold font-ui duration-fast ease-default focus-ring-width focus-ring-style focus-ring-color focus-ring-offset border-width */
 
 [data-ui="file-upload"] {
   display: grid;
@@ -48,7 +48,7 @@
 [data-ui="file-upload"][data-state="dragging"] [data-part="dropzone"] {
   border-color: var(--color-primary);
   background: var(--color-primary-subtle);
-  box-shadow: 0 0 0 var(--space-px) var(--color-primary);
+  box-shadow: 0 0 0 var(--border-width) var(--color-primary);
 }
 
 [data-ui="file-upload"] [data-part="prompt"] {

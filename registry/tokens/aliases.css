@@ -36,6 +36,17 @@
   --section-gap-lg:  var(--space-32);  /* 8rem  — spacious, one idea per screen */
   --content-gutter:  var(--space-6);   /* 1.5rem — page padding-inline */
 
+  /* ── Material ── */
+  /* The two textures a theme actually points at. Components never name a
+     texture from `tokens/textures.css` directly — they read one of these, so a
+     theme re-points two tokens rather than every surface in the registry.
+     `--texture-page` dresses the page itself (body, document);
+     `--texture-surface` dresses the things that sit ON it (surface, card,
+     hero). Both `none`: the initial value of `background-image`, so the
+     default registry renders exactly as it did before they existed. */
+  --texture-page:    none;
+  --texture-surface: none;
+
   /* ── Button ── */
   --button-radius:     var(--radius-md);
   --button-height-sm:  var(--control-height-sm);

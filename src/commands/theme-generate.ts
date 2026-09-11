@@ -264,11 +264,14 @@ function lightDeclarations(
     // it is drawn on — below SC 1.4.11's 3:1, on a token whose only job is to be
     // seen. [W3-3]
     ["color-ring", oklch(ramp[primary.index].color)],
-    ["shadow-xs", "0 1px 2px oklch(0 0 0 / 0.04)"],
-    ["shadow-sm", "0 1px 3px oklch(0 0 0 / 0.06), 0 1px 2px oklch(0 0 0 / 0.04)"],
-    ["shadow-md", "0 4px 6px oklch(0 0 0 / 0.06), 0 2px 4px oklch(0 0 0 / 0.04)"],
-    ["shadow-lg", "0 10px 15px oklch(0 0 0 / 0.08), 0 4px 6px oklch(0 0 0 / 0.05)"],
-    ["shadow-xl", "0 20px 25px oklch(0 0 0 / 0.1), 0 8px 10px oklch(0 0 0 / 0.05)"],
+    // The depth axis [1.1A-04]: bare OKLCH channels, so every step below sets
+    // only its own alpha and a theme re-tints all five by moving this one value.
+    ["shadow-color", "0 0 0"],
+    ["shadow-xs", "0 1px 2px oklch(var(--shadow-color) / 0.04)"],
+    ["shadow-sm", "0 1px 3px oklch(var(--shadow-color) / 0.06), 0 1px 2px oklch(var(--shadow-color) / 0.04)"],
+    ["shadow-md", "0 4px 6px oklch(var(--shadow-color) / 0.06), 0 2px 4px oklch(var(--shadow-color) / 0.04)"],
+    ["shadow-lg", "0 10px 15px oklch(var(--shadow-color) / 0.08), 0 4px 6px oklch(var(--shadow-color) / 0.05)"],
+    ["shadow-xl", "0 20px 25px oklch(var(--shadow-color) / 0.1), 0 8px 10px oklch(var(--shadow-color) / 0.05)"],
   ];
 }
 
@@ -311,11 +314,12 @@ function darkDeclarations(
     ["color-border", neutralColor(neutral, 0.29)],
     ["color-border-strong", neutralColor(neutral, 0.38)],
     ["color-ring", oklch(ramp[primary.index].color)],
+    ["shadow-color", "0 0 0"],
     ["shadow-xs", "none"],
-    ["shadow-sm", "0 1px 3px oklch(0 0 0 / 0.3)"],
-    ["shadow-md", "0 4px 6px oklch(0 0 0 / 0.3)"],
-    ["shadow-lg", "0 10px 15px oklch(0 0 0 / 0.4)"],
-    ["shadow-xl", "0 20px 25px oklch(0 0 0 / 0.5)"],
+    ["shadow-sm", "0 1px 3px oklch(var(--shadow-color) / 0.3)"],
+    ["shadow-md", "0 4px 6px oklch(var(--shadow-color) / 0.3)"],
+    ["shadow-lg", "0 10px 15px oklch(var(--shadow-color) / 0.4)"],
+    ["shadow-xl", "0 20px 25px oklch(var(--shadow-color) / 0.5)"],
   ];
 }
 
@@ -329,6 +333,9 @@ function documentDeclarations(
     if (token === "color-bg") return [token, "white"] as const;
     if (token === "color-bg-subtle") return [token, neutralColor(neutral, 0.97, 0.2)] as const;
     if (token === "color-bg-muted") return [token, neutralColor(neutral, 0.94, 0.35)] as const;
+    // A printed page casts no shadow — but --shadow-color is the channel the
+    // ramp is cast IN, not a shadow itself: `oklch(none / 0.04)` is invalid CSS.
+    if (token === "shadow-color") return [token, value] as const;
     if (token.startsWith("shadow-")) return [token, "none"] as const;
     return [token, value] as const;
   });

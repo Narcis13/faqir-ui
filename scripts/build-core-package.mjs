@@ -90,6 +90,7 @@ const TOKEN_FILES_ORDERED = [
   "spacing.css",
   "typography.css",
   "effects.css",
+  "textures.css",
   "motion.css",
   "semantic.css",
   "aliases.css",

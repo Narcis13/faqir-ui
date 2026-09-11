@@ -1,9 +1,10 @@
 /* @ui:component surface */
-/* @ui:tokens color-bg color-surface-1 color-surface-2 color-surface-1-border color-surface-2-border measure-content measure-narrow measure-prose measure-wide radius-lg shadow-sm shadow-md shadow-lg space-3 space-4 space-6 border-width corner-shape */
+/* @ui:tokens color-bg color-surface-1 color-surface-2 color-surface-1-border color-surface-2-border measure-content measure-narrow measure-prose measure-wide radius-lg shadow-sm shadow-md shadow-lg space-3 space-4 space-6 border-width corner-shape surface-backdrop texture-surface */
 
 /* ── Base ── */
 [data-ui="surface"] {
-  background: var(--color-surface-1);
+  background-color: var(--color-surface-1);
+  background-image: var(--texture-surface);
   border-radius: var(--radius-lg);
   corner-shape: var(--corner-shape);
   border: var(--border-width) solid var(--color-surface-1-border);
@@ -11,7 +12,7 @@
 
 /* ── Elevation Variants ── */
 [data-ui="surface"][data-variant="flat"] {
-  background: var(--color-bg);
+  background-color: var(--color-bg);
   border: none;
   box-shadow: none;
 }
@@ -21,9 +22,20 @@
 }
 
 [data-ui="surface"][data-variant="overlay"] {
-  background: var(--color-surface-2);
+  background-color: var(--color-surface-2);
   box-shadow: var(--shadow-lg);
   border-color: var(--color-surface-2-border);
+}
+
+/* An overlay is the one surface variant that floats over other content, so it
+   is the one that can be frosted. Guarded exactly as themes/glass.css guards
+   its own: a browser without backdrop-filter renders the solid surface above
+   and never sees this rule. */
+@supports ((-webkit-backdrop-filter: blur(1rem)) or (backdrop-filter: blur(1rem))) {
+  [data-ui="surface"][data-variant="overlay"] {
+    -webkit-backdrop-filter: var(--surface-backdrop);
+    backdrop-filter: var(--surface-backdrop);
+  }
 }
 
 /* ── Padding Sizes ── */

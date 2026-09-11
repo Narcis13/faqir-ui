@@ -26,6 +26,11 @@ html {
 
 body {
   min-height: 100dvh;
+  /* The page's material. `none` by default (the initial value), so this is a
+     no-op until a theme points --texture-page at one of tokens/textures.css.
+     `html` keeps the background COLOUR; the texture rides on `body`, which
+     covers the viewport, so the two compose instead of overwriting. */
+  background-image: var(--texture-page);
 }
 
 img,

@@ -1,5 +1,5 @@
 /* @ui:component document */
-/* @ui:tokens doc-max-width doc-font doc-font-size doc-line-height doc-heading-font doc-heading-weight doc-heading-size doc-subheading-size doc-legal-size doc-legal-color doc-section-gap doc-component-gap doc-running-header-height doc-running-footer-height doc-running-gap doc-bg doc-fg doc-print-border-color doc-table-header-bg doc-table-header-fg doc-table-header-weight doc-table-border doc-table-cell-pad-y doc-table-cell-pad-x doc-table-font-size doc-table-num-font doc-table-footer-bg doc-table-footer-weight doc-table-stripe-bg page-format page-orientation page-margin page-margin-top page-margin-bottom page-margin-left page-margin-right color-bg color-fg color-fg-muted color-border space-4 space-6 space-8 space-12 shadow-lg radius-md font-body z-raised border-width */
+/* @ui:tokens doc-max-width doc-font doc-font-size doc-line-height doc-heading-font doc-heading-weight doc-heading-size doc-subheading-size doc-legal-size doc-legal-color doc-section-gap doc-component-gap doc-running-header-height doc-running-footer-height doc-running-gap doc-bg doc-fg doc-print-border-color doc-table-header-bg doc-table-header-fg doc-table-header-weight doc-table-border doc-table-cell-pad-y doc-table-cell-pad-x doc-table-font-size doc-table-num-font doc-table-footer-bg doc-table-footer-weight doc-table-stripe-bg page-format page-orientation page-margin page-margin-top page-margin-bottom page-margin-left page-margin-right color-bg color-fg color-fg-muted color-border space-4 space-6 space-8 space-12 shadow-lg radius-md font-body z-raised border-width texture-page */
 
 /* ── Page Rules ── */
 @page {
@@ -39,14 +39,17 @@
   max-width: var(--doc-max-width);
   margin: var(--space-4) auto;
   padding: var(--space-6) var(--space-4);
-  background: var(--color-bg, #fff);
+  background-color: var(--color-bg, #fff);
+  background-image: var(--texture-page);
   color: var(--color-fg);
   font-family: var(--doc-font, var(--font-body));
   font-size: var(--doc-font-size);
   line-height: var(--doc-line-height);
-  box-shadow: var(--shadow-lg,
-    0 10px 15px -3px rgba(0, 0, 0, 0.1),
-    0 4px 6px -4px rgba(0, 0, 0, 0.1));
+  /* The fallback here used to spell out two rgba() layers, which is a shadow
+     colour no theme could reach. --shadow-lg is always defined by the token
+     layer, and it now carries --shadow-color, so the fallback is gone rather
+     than re-tokenised. */
+  box-shadow: var(--shadow-lg);
   border-radius: 0;
   position: relative;
 }

@@ -78,7 +78,7 @@
 /* Active (caret / selected) segment while focused */
 [data-ui="input-otp"] [data-part="segment"][data-active] {
   border-color: var(--color-ring);
-  box-shadow: 0 0 0 1px var(--color-ring);
+  box-shadow: 0 0 0 var(--border-width) var(--color-ring);
 }
 
 /* Blinking caret in the next-to-fill empty slot */

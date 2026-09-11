@@ -168,7 +168,8 @@
     "focus-ring-width",
     "focus-ring-style",
     "focus-ring-color",
-    "focus-ring-offset"
+    "focus-ring-offset",
+    "surface-backdrop"
   ],
   "templates": {
     "html": "<div data-ui=\"toast\" data-variant=\"{position}\" data-part=\"container\" role=\"region\" aria-label=\"Notifications\" id=\"{id}\"></div>"

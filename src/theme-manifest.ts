@@ -72,8 +72,14 @@ const VALID_DARK_MODES: ThemeDarkMode[] = ["native", "none"];
  *   already owns inside `[data-density]` subtree scopes. A theme's `:root` block
  *   cannot override a subtree scope, so listing those as theme-inheritable would
  *   be a lie.
+ * - `textures.css` is a PALETTE, not a surface: six named SVG data URIs that no
+ *   component reads. The themeable part of the material family is the pair of
+ *   role tokens in `aliases.css` (`--texture-page`, `--texture-surface`) that
+ *   components do read, and those stay in the surface. Listing the palette too
+ *   would put six data URIs into every theme's `tokens_inherited` to say
+ *   nothing — the same reasoning as `density.css`, one level up.
  */
-export const NON_SURFACE_TOKEN_FILES = ["index.css", "density.css"] as const;
+export const NON_SURFACE_TOKEN_FILES = ["index.css", "density.css", "textures.css"] as const;
 
 /** Whether a `registry/tokens/<file>` contributes to the themeable surface. */
 export function isSurfaceTokenFile(file: string): boolean {

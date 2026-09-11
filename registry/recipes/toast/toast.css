@@ -1,5 +1,5 @@
 /* @ui:component toast */
-/* @ui:tokens color-bg color-fg color-fg-muted color-border color-success color-destructive color-warning shadow-lg radius-lg space-2 space-3 space-4 text-sm weight-medium z-toast duration-normal duration-slow ease-out font-ui border-width border-width-lg focus-ring-width focus-ring-style focus-ring-color focus-ring-offset */
+/* @ui:tokens color-bg color-fg color-fg-muted color-border color-success color-destructive color-warning shadow-lg radius-lg space-2 space-3 space-4 text-sm weight-medium z-toast duration-normal duration-slow ease-out font-ui border-width border-width-lg focus-ring-width focus-ring-style focus-ring-color focus-ring-offset surface-backdrop */
 
 /* ── Container ── */
 [data-ui="toast"][data-part="container"] {
@@ -57,6 +57,13 @@
   transform: translateY(0);
   transition: opacity var(--duration-normal) var(--ease-out),
               transform var(--duration-normal) var(--ease-out);
+}
+
+@supports ((-webkit-backdrop-filter: blur(1rem)) or (backdrop-filter: blur(1rem))) {
+  [data-ui="toast"] [data-part="toast"] {
+    -webkit-backdrop-filter: var(--surface-backdrop);
+    backdrop-filter: var(--surface-backdrop);
+  }
 }
 
 /* ── State: Entering ── */

@@ -1,5 +1,5 @@
 /* @ui:component dialog */
-/* @ui:tokens radius-xl shadow-xl space-4 space-6 space-8 color-bg color-fg color-border color-fg-muted duration-normal duration-slow ease-default ease-out z-overlay z-modal font-heading corner-shape border-width focus-ring-width focus-ring-style focus-ring-color focus-ring-offset */
+/* @ui:tokens radius-xl shadow-xl space-4 space-6 space-8 color-bg color-fg color-border color-fg-muted duration-normal duration-slow ease-default ease-out z-overlay z-modal font-heading corner-shape border-width focus-ring-width focus-ring-style focus-ring-color focus-ring-offset surface-backdrop */
 
 /* ── Root ── */
 [data-ui="dialog"] {
@@ -42,6 +42,13 @@
   opacity: 0;
   transition: opacity var(--duration-normal) var(--ease-out),
               transform var(--duration-normal) var(--ease-out);
+}
+
+@supports ((-webkit-backdrop-filter: blur(1rem)) or (backdrop-filter: blur(1rem))) {
+  [data-ui="dialog"] [data-part="panel"] {
+    -webkit-backdrop-filter: var(--surface-backdrop);
+    backdrop-filter: var(--surface-backdrop);
+  }
 }
 
 [data-ui="dialog"][data-state="open"] [data-part="panel"] {

@@ -1,5 +1,5 @@
 /* @ui:component dropdown */
-/* @ui:tokens color-bg color-fg color-fg-muted color-border color-primary-subtle color-primary space-1 space-2 space-3 space-4 radius-md radius-lg shadow-md text-sm weight-medium duration-fast ease-default ease-out z-dropdown font-ui border-width focus-ring-width focus-ring-style focus-ring-color focus-ring-offset */
+/* @ui:tokens color-bg color-fg color-fg-muted color-border color-primary-subtle color-primary space-1 space-2 space-3 space-4 radius-md radius-lg shadow-md text-sm weight-medium duration-fast ease-default ease-out z-dropdown font-ui border-width focus-ring-width focus-ring-style focus-ring-color focus-ring-offset surface-backdrop */
 
 /* ── Root ── */
 [data-ui="dropdown"] {
@@ -52,6 +52,13 @@
   transform: translateY(-4px);
   transition: opacity var(--duration-fast) var(--ease-out),
               transform var(--duration-fast) var(--ease-out);
+}
+
+@supports ((-webkit-backdrop-filter: blur(1rem)) or (backdrop-filter: blur(1rem))) {
+  [data-ui="dropdown"] [data-part="menu"] {
+    -webkit-backdrop-filter: var(--surface-backdrop);
+    backdrop-filter: var(--surface-backdrop);
+  }
 }
 
 [data-ui="dropdown"][data-state="open"] [data-part="menu"] {

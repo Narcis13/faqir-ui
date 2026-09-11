@@ -1,5 +1,5 @@
 /* @ui:component tooltip */
-/* @ui:tokens color-bg color-fg radius-md space-1h space-2 text-xs z-dropdown duration-fast ease-default font-ui */
+/* @ui:tokens color-bg color-fg radius-md space-1h space-2 text-xs z-dropdown duration-fast ease-default font-ui surface-backdrop */
 
 /* ── Root ── */
 [data-ui="tooltip"] {
@@ -29,6 +29,13 @@
   transform: scale(0.95);
   transition: opacity var(--duration-fast) var(--ease-default),
               transform var(--duration-fast) var(--ease-default);
+}
+
+@supports ((-webkit-backdrop-filter: blur(1rem)) or (backdrop-filter: blur(1rem))) {
+  [data-ui="tooltip"] [data-part="content"] {
+    -webkit-backdrop-filter: var(--surface-backdrop);
+    backdrop-filter: var(--surface-backdrop);
+  }
 }
 
 /* Default position (top) when no variant is specified */

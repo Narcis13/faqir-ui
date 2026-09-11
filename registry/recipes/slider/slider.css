@@ -51,15 +51,15 @@
   background: var(--color-bg, white);
   border: var(--border-width-strong) solid var(--color-primary);
   border-radius: var(--radius-full, 9999px);
-  box-shadow: var(--shadow-sm, 0 1px 3px oklch(0 0 0 / 0.1));
+  box-shadow: var(--shadow-sm);
   cursor: grab;
   touch-action: none;
   transition: box-shadow var(--duration-fast, 120ms) var(--ease-default, ease);
 }
 
 [data-ui="slider"] [data-part="thumb"]:hover {
-  box-shadow: var(--shadow-sm, 0 1px 3px oklch(0 0 0 / 0.1)),
-              0 0 0 4px var(--color-primary-subtle, oklch(0.95 0.03 264 / 0.6));
+  box-shadow: var(--shadow-sm),
+              0 0 0 4px var(--color-primary-subtle);
 }
 
 [data-ui="slider"] [data-part="thumb"]:focus-visible {
@@ -69,8 +69,8 @@
 
 [data-ui="slider"] [data-part="thumb"][data-state="dragging"] {
   cursor: grabbing;
-  box-shadow: var(--shadow-sm, 0 1px 3px oklch(0 0 0 / 0.1)),
-              0 0 0 5px var(--color-primary-subtle, oklch(0.95 0.03 264 / 0.6));
+  box-shadow: var(--shadow-sm),
+              0 0 0 5px var(--color-primary-subtle);
 }
 
 /* ── Value output ── */

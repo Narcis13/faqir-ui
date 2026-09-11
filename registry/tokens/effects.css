@@ -23,12 +23,27 @@
      value it does not know resolves to `round`, which is today's rendering. */
   --corner-shape: round;                           /* bevel | scoop | notch where supported */
 
-  /* ── Shadows ── */
-  --shadow-xs:  0 1px 2px oklch(0 0 0 / 0.04);
-  --shadow-sm:  0 1px 3px oklch(0 0 0 / 0.06), 0 1px 2px oklch(0 0 0 / 0.04);
-  --shadow-md:  0 4px 6px oklch(0 0 0 / 0.05), 0 2px 4px oklch(0 0 0 / 0.04);
-  --shadow-lg:  0 10px 15px oklch(0 0 0 / 0.06), 0 4px 6px oklch(0 0 0 / 0.04);
-  --shadow-xl:  0 20px 25px oklch(0 0 0 / 0.08), 0 8px 10px oklch(0 0 0 / 0.04);
+  /* ── Depth ── */
+  /* The colour every shadow is cast in, as BARE OKLCH channels (L C H, no
+     `oklch()` around them) so each step can still set its own alpha:
+     `oklch(var(--shadow-color) / 0.06)`. A theme tints its depth warm, or
+     removes it entirely, with one declaration instead of rewriting five
+     multi-layer values. `0 0 0` is black — today's rendering, exactly. */
+  --shadow-color: 0 0 0;
+
+  --shadow-xs:  0 1px 2px oklch(var(--shadow-color) / 0.04);
+  --shadow-sm:  0 1px 3px oklch(var(--shadow-color) / 0.06), 0 1px 2px oklch(var(--shadow-color) / 0.04);
+  --shadow-md:  0 4px 6px oklch(var(--shadow-color) / 0.05), 0 2px 4px oklch(var(--shadow-color) / 0.04);
+  --shadow-lg:  0 10px 15px oklch(var(--shadow-color) / 0.06), 0 4px 6px oklch(var(--shadow-color) / 0.04);
+  --shadow-xl:  0 20px 25px oklch(var(--shadow-color) / 0.08), 0 8px 10px oklch(var(--shadow-color) / 0.04);
+
+  /* What an elevated surface does to whatever shows through it. Every surface
+     that can float — card, surface[data-variant="overlay"] and the seven
+     floating recipes — declares `backdrop-filter: var(--surface-backdrop)`
+     inside the same `@supports` guard, so a frosted theme is a token rather
+     than a stylesheet that reaches into seven components by selector.
+     `none` is the initial value of the property: no-op until a theme speaks. */
+  --surface-backdrop: none;
 
   /* ── Focus ── */
   /* base/reset.css owns the default ring and reads only these. Every control

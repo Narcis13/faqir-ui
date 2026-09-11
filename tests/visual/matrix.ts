@@ -148,6 +148,7 @@ const TOKEN_ORDER = [
   "spacing",
   "typography",
   "effects",
+  "textures",
   "motion",
   "semantic",
   "aliases",

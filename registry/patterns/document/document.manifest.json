@@ -123,7 +123,8 @@
     "page-margin-bottom", "page-margin-left", "doc-running-header-height",
     "doc-running-footer-height", "doc-running-gap", "doc-print-border-color",
     "z-raised",
-    "border-width"
+    "border-width",
+    "texture-page"
   ],
 
   "templates": {

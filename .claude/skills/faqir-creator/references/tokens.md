@@ -4,7 +4,7 @@
 
 Every token the registry declares, read out of `registry/tokens/*.css` — the values below ARE the declarations. Never hardcode a colour, size, duration or shadow: reference one of these tokens through `var()`.
 
-Cascade order, as `tokens/index.css` imports them: `palette.css` → `spacing.css` → `typography.css` → `effects.css` → `motion.css` → `semantic.css` → `aliases.css` → `document.css` → `doc-aliases.css` → `density.css`. First declaration wins, and each heading below is the `@ui:tokens` group name its file carries — palette (raw values) feeds semantic (purpose) feeds aliases (per-component).
+Cascade order, as `tokens/index.css` imports them: `palette.css` → `spacing.css` → `typography.css` → `effects.css` → `textures.css` → `motion.css` → `semantic.css` → `aliases.css` → `document.css` → `doc-aliases.css` → `density.css`. First declaration wins, and each heading below is the `@ui:tokens` group name its file carries — palette (raw values) feeds semantic (purpose) feeds aliases (per-component).
 
 ## Sanctioned Token Modifiers
 
@@ -18,15 +18,16 @@ Cascade order, as `tokens/index.css` imports them: `palette.css` → `spacing.cs
 
 ## Token Groups
 
-321 tokens in 9 groups:
+331 tokens in 10 groups:
 
 - `palette` (67) — raw oklch color values, never referenced by components directly
 - `spacing` (23) — 4px base, harmonic scale
 - `typography` (27) — font families, sizes, line-heights, weights
-- `effects` (31) — radii, shape, shadows, focus, z-index
+- `effects` (33) — radii, shape, shadows, focus, z-index
+- `textures` (6) — named surface materials (SVG data URIs)
 - `motion` (16) — easings and durations
 - `semantic` (31) — purpose-based tokens, referenced by components
-- `aliases` (38) — per-component overrides mapping to semantic tokens
+- `aliases` (40) — per-component overrides mapping to semantic tokens
 - `document` (42) — structural tokens for document/print rendering
 - `doc-aliases` (46) — component-level document tokens
 
@@ -229,7 +230,7 @@ _`registry/tokens/typography.css` · 27 tokens_
 
 ## effects — radii, shape, shadows, focus, z-index
 
-_`registry/tokens/effects.css` · 31 tokens_
+_`registry/tokens/effects.css` · 33 tokens_
 
 ### Radii
 
@@ -254,15 +255,17 @@ _`registry/tokens/effects.css` · 31 tokens_
 | `--border-width-strong` | `var(--border-width-md)` | emphasis: keycap, thick rule, active tab |
 | `--corner-shape` | `round` | bevel | scoop | notch where supported |
 
-### Shadows
+### Depth
 
 | Token | Value |
 |---|---|
-| `--shadow-xs` | `0 1px 2px oklch(0 0 0 / 0.04)` |
-| `--shadow-sm` | `0 1px 3px oklch(0 0 0 / 0.06), 0 1px 2px oklch(0 0 0 / 0.04)` |
-| `--shadow-md` | `0 4px 6px oklch(0 0 0 / 0.05), 0 2px 4px oklch(0 0 0 / 0.04)` |
-| `--shadow-lg` | `0 10px 15px oklch(0 0 0 / 0.06), 0 4px 6px oklch(0 0 0 / 0.04)` |
-| `--shadow-xl` | `0 20px 25px oklch(0 0 0 / 0.08), 0 8px 10px oklch(0 0 0 / 0.04)` |
+| `--shadow-color` | `0 0 0` |
+| `--shadow-xs` | `0 1px 2px oklch(var(--shadow-color) / 0.04)` |
+| `--shadow-sm` | `0 1px 3px oklch(var(--shadow-color) / 0.06), 0 1px 2px oklch(var(--shadow-color) / 0.04)` |
+| `--shadow-md` | `0 4px 6px oklch(var(--shadow-color) / 0.05), 0 2px 4px oklch(var(--shadow-color) / 0.04)` |
+| `--shadow-lg` | `0 10px 15px oklch(var(--shadow-color) / 0.06), 0 4px 6px oklch(var(--shadow-color) / 0.04)` |
+| `--shadow-xl` | `0 20px 25px oklch(var(--shadow-color) / 0.08), 0 8px 10px oklch(var(--shadow-color) / 0.04)` |
+| `--surface-backdrop` | `none` |
 
 ### Focus
 
@@ -286,6 +289,19 @@ _`registry/tokens/effects.css` · 31 tokens_
 | `--z-modal` | `300` |
 | `--z-toast` | `400` |
 | `--z-max` | `9999` |
+
+## textures — named surface materials (SVG data URIs)
+
+_`registry/tokens/textures.css` · 6 tokens_
+
+| Token | Value |
+|---|---|
+| `--texture-grain` | `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Cmask id='m'%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/mask%3E%3Crect width='160' height='160' fill='currentColor' mask='url(%23m)' opacity='0.14'/%3E%3C/svg%3E")` |
+| `--texture-paper` | `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.04 0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Cmask id='m'%3E%3Crect width='200' height='200' filter='url(%23p)'/%3E%3C/mask%3E%3Crect width='200' height='200' fill='currentColor' mask='url(%23m)' opacity='0.1'/%3E%3C/svg%3E")` |
+| `--texture-dots` | `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Ccircle cx='2' cy='2' r='1' fill='currentColor' opacity='0.18'/%3E%3C/svg%3E")` |
+| `--texture-grid` | `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Cpath d='M24 0H0v24' fill='none' stroke='currentColor' stroke-width='1' opacity='0.12'/%3E%3C/svg%3E")` |
+| `--texture-stripes` | `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M-2 2 2-2M0 8 8 0M6 10l4-4' stroke='currentColor' stroke-width='1' opacity='0.12'/%3E%3C/svg%3E")` |
+| `--texture-mesh` | `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='640'%3E%3CradialGradient id='a' cx='20%25' cy='20%25' r='60%25'%3E%3Cstop offset='0%25' stop-color='currentColor' stop-opacity='0.18'/%3E%3Cstop offset='100%25' stop-color='currentColor' stop-opacity='0'/%3E%3C/radialGradient%3E%3CradialGradient id='b' cx='80%25' cy='30%25' r='55%25'%3E%3Cstop offset='0%25' stop-color='currentColor' stop-opacity='0.14'/%3E%3Cstop offset='100%25' stop-color='currentColor' stop-opacity='0'/%3E%3C/radialGradient%3E%3CradialGradient id='c' cx='50%25' cy='90%25' r='60%25'%3E%3Cstop offset='0%25' stop-color='currentColor' stop-opacity='0.12'/%3E%3Cstop offset='100%25' stop-color='currentColor' stop-opacity='0'/%3E%3C/radialGradient%3E%3Crect width='640' height='640' fill='url(%23a)'/%3E%3Crect width='640' height='640' fill='url(%23b)'/%3E%3Crect width='640' height='640' fill='url(%23c)'/%3E%3C/svg%3E")` |
 
 ## motion — easings and durations
 
@@ -389,7 +405,7 @@ _`registry/tokens/semantic.css` · 31 tokens_
 
 ## aliases — per-component overrides mapping to semantic tokens
 
-_`registry/tokens/aliases.css` · 38 tokens_
+_`registry/tokens/aliases.css` · 40 tokens_
 
 ### Controls
 
@@ -416,6 +432,13 @@ _`registry/tokens/aliases.css` · 38 tokens_
 | `--section-gap-md` | `var(--space-20)` | 5rem — the default marketing rhythm |
 | `--section-gap-lg` | `var(--space-32)` | 8rem — spacious, one idea per screen |
 | `--content-gutter` | `var(--space-6)` | 1.5rem — page padding-inline |
+
+### Material
+
+| Token | Value |
+|---|---|
+| `--texture-page` | `none` |
+| `--texture-surface` | `none` |
 
 ### Button
 
