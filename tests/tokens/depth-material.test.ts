@@ -184,16 +184,29 @@ describe("depth & material · no component hardcodes a shadow colour", () => {
     // A ring is `0 0 0 <width> <colour>` — an edge drawn as a shadow, whose
     // colour is the state's, not the depth axis's. Anything with real offset or
     // blur is depth and must come from --shadow-*, or a theme cannot lift it.
+    //
+    // Reaching it through ONE alias counts, and is resolved rather than
+    // pattern-matched: 1.1A-05 declared `--switch-thumb-shadow: var(--shadow-xs)`
+    // in aliases.css and dropped the component's now-unreachable
+    // `var(--switch-thumb-shadow, var(--shadow-xs))` fallback, which is exactly
+    // the indirection this gate should follow instead of reading as a literal.
+    const aliasOfRamp = new Set(
+      [...ALIASES.matchAll(/(--[\w-]+)\s*:\s*var\((--shadow-[\w-]+)\)/g)].map((m) => m[1]),
+    );
     const notFromRamp: string[] = [];
     for (const { rel, css } of REGISTRY_SHEETS) {
       for (const { line, value } of shadowValues(css)) {
         const isRing = /^(inset\s+)?0\s+0\s+0\s/.test(value);
         if (isRing || value.includes("var(--shadow")) continue;
         if (value.includes("var(--focus-shadow)")) continue;
+        if ([...aliasOfRamp].some((alias) => value.includes(`var(${alias})`))) continue;
         notFromRamp.push(`${rel}:${line} — ${value}`);
       }
     }
     expect(notFromRamp).toEqual([]);
+    // Non-vacuous in the new direction too: the alias set is real.
+    expect(aliasOfRamp.has("--switch-thumb-shadow")).toBe(true);
+    expect(aliasOfRamp.has("--card-shadow")).toBe(true);
   });
 });
 

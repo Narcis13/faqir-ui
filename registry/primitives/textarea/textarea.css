@@ -1,5 +1,5 @@
 /* @ui:component textarea */
-/* @ui:tokens color-bg color-fg color-fg-muted color-border color-border-strong color-ring color-destructive radius-md space-2 space-3 space-4 font-ui text-xs text-sm text-base duration-fast ease-default border-width focus-ring-width focus-ring-style focus-ring-color focus-shadow input-border-width */
+/* @ui:tokens color-fg color-fg-muted color-border color-border-strong color-ring color-destructive radius-md space-2 space-3 space-4 font-ui text-xs text-sm text-base duration-fast ease-default border-width focus-ring-width focus-ring-style focus-ring-color focus-shadow input-border-width input-fill */
 
 /* -- Base -- */
 [data-ui="textarea"] {
@@ -9,7 +9,7 @@
   padding: var(--space-2) var(--space-3);
   border: var(--input-border-width) solid var(--color-border);
   border-radius: var(--textarea-radius, var(--radius-md));
-  background: var(--textarea-bg, var(--color-bg));
+  background: var(--textarea-bg, var(--input-fill));
   color: var(--color-fg);
   font-family: var(--font-ui);
   font-size: var(--text-sm);

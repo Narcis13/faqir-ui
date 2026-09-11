@@ -18,16 +18,16 @@ Cascade order, as `tokens/index.css` imports them: `palette.css` → `spacing.cs
 
 ## Token Groups
 
-331 tokens in 10 groups:
+354 tokens in 10 groups:
 
 - `palette` (67) — raw oklch color values, never referenced by components directly
 - `spacing` (23) — 4px base, harmonic scale
 - `typography` (27) — font families, sizes, line-heights, weights
 - `effects` (33) — radii, shape, shadows, focus, z-index
 - `textures` (6) — named surface materials (SVG data URIs)
-- `motion` (16) — easings and durations
+- `motion` (19) — easings, durations and motion personality
 - `semantic` (31) — purpose-based tokens, referenced by components
-- `aliases` (40) — per-component overrides mapping to semantic tokens
+- `aliases` (60) — per-component overrides mapping to semantic tokens
 - `document` (42) — structural tokens for document/print rendering
 - `doc-aliases` (46) — component-level document tokens
 
@@ -303,9 +303,9 @@ _`registry/tokens/textures.css` · 6 tokens_
 | `--texture-stripes` | `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M-2 2 2-2M0 8 8 0M6 10l4-4' stroke='currentColor' stroke-width='1' opacity='0.12'/%3E%3C/svg%3E")` |
 | `--texture-mesh` | `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='640'%3E%3CradialGradient id='a' cx='20%25' cy='20%25' r='60%25'%3E%3Cstop offset='0%25' stop-color='currentColor' stop-opacity='0.18'/%3E%3Cstop offset='100%25' stop-color='currentColor' stop-opacity='0'/%3E%3C/radialGradient%3E%3CradialGradient id='b' cx='80%25' cy='30%25' r='55%25'%3E%3Cstop offset='0%25' stop-color='currentColor' stop-opacity='0.14'/%3E%3Cstop offset='100%25' stop-color='currentColor' stop-opacity='0'/%3E%3C/radialGradient%3E%3CradialGradient id='c' cx='50%25' cy='90%25' r='60%25'%3E%3Cstop offset='0%25' stop-color='currentColor' stop-opacity='0.12'/%3E%3Cstop offset='100%25' stop-color='currentColor' stop-opacity='0'/%3E%3C/radialGradient%3E%3Crect width='640' height='640' fill='url(%23a)'/%3E%3Crect width='640' height='640' fill='url(%23b)'/%3E%3Crect width='640' height='640' fill='url(%23c)'/%3E%3C/svg%3E")` |
 
-## motion — easings and durations
+## motion — easings, durations and motion personality
 
-_`registry/tokens/motion.css` · 16 tokens_
+_`registry/tokens/motion.css` · 19 tokens_
 
 ### Easings
 
@@ -337,6 +337,17 @@ _`registry/tokens/motion.css` · 16 tokens_
 | `--motion-leave-ease` | `var(--ease-in)` | — |
 | `--motion-slide-distance` | `0.5rem` | slide-up travel |
 | `--motion-scale-from` | `0.95` | scale start/end factor |
+
+### Personality (1.1A-05 · §5.2 `motion`)
+
+| Token | Value |
+|---|---|
+| `--ease-spring` | `cubic-bezier(0.34, 1.56, 0.64, 1)` |
+| `--motion-hover-lift` | `none` |
+
+| Token | Value |
+|---|---|
+| `--ease-spring` | `linear(0, 0.3 6%, 0.7 13%, 0.95 20%, 1.03 27%, 1 40%, 1)` |
 
 ## semantic — purpose-based tokens, referenced by components
 
@@ -405,7 +416,7 @@ _`registry/tokens/semantic.css` · 31 tokens_
 
 ## aliases — per-component overrides mapping to semantic tokens
 
-_`registry/tokens/aliases.css` · 40 tokens_
+_`registry/tokens/aliases.css` · 60 tokens_
 
 ### Controls
 
@@ -440,6 +451,19 @@ _`registry/tokens/aliases.css` · 40 tokens_
 | `--texture-page` | `none` |
 | `--texture-surface` | `none` |
 
+### Decoration (1.1A-05 · §5.2 `decoration`)
+
+| Token | Value |
+|---|---|
+| `--link-decoration` | `underline` |
+| `--link-underline-offset` | `0.2em` |
+| `--link-thickness` | `1px` |
+| `--divider-style` | `solid` |
+| `--stripe-bg` | `var(--color-bg-subtle)` |
+| `--selection-bg` | `var(--color-primary-subtle)` |
+| `--selection-fg` | `var(--color-fg)` |
+| `--marker-color` | `currentColor` |
+
 ### Button
 
 | Token | Value |
@@ -450,6 +474,7 @@ _`registry/tokens/aliases.css` · 40 tokens_
 | `--button-height-lg` | `var(--control-height-lg)` |
 | `--button-font` | `var(--font-ui)` |
 | `--button-weight` | `var(--weight-medium)` |
+| `--button-text-transform` | `none` |
 
 ### Card
 
@@ -471,7 +496,23 @@ _`registry/tokens/aliases.css` · 40 tokens_
 | `--input-border` | `var(--color-border)` |
 | `--input-border-width` | `var(--border-width)` |
 | `--input-bg` | `var(--color-bg)` |
+| `--input-bg-filled` | `var(--color-bg-subtle)` |
+| `--input-fill` | `var(--input-bg)` |
 | `--input-font` | `var(--font-ui)` |
+
+### Checkbox / Switch
+
+| Token | Value |
+|---|---|
+| `--checkbox-size` | `18px` |
+| `--checkbox-radius` | `var(--radius-sm)` |
+| `--switch-width` | `44px` |
+| `--switch-height` | `24px` |
+| `--switch-thumb` | `18px` |
+| `--switch-travel` | `20px` |
+| `--switch-radius` | `var(--radius-full)` |
+| `--switch-bg` | `var(--color-bg-muted)` |
+| `--switch-thumb-shadow` | `var(--shadow-xs)` |
 
 ### Dialog
 

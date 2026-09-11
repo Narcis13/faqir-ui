@@ -1,4 +1,4 @@
-/* @ui:tokens motion — easings and durations */
+/* @ui:tokens motion — easings, durations and motion personality */
 
 :root {
   /* ── Easings ── */
@@ -27,4 +27,33 @@
   /* Preset geometry */
   --motion-slide-distance: 0.5rem;  /* slide-up travel */
   --motion-scale-from:     0.95;    /* scale start/end factor */
+
+  /* ── Personality (1.1A-05 · §5.2 `motion`) ── */
+  /* The easing PALETTE gained a spring. Like --ease-bounce it has no consumer
+     of its own: a theme that wants everything to overshoot re-points
+     --ease-default at it, exactly as a serif theme re-points --font-body.
+     The declaration here is the cubic-bezier APPROXIMATION, because a custom
+     property stores whatever tokens it is given — a browser without `linear()`
+     would accept the spring happily and then drop every `transition` that used
+     it, landing on the initial easing rather than on a fallback. The @supports
+     block below is what makes the upgrade conditional. The approximation is
+     the bounce curve, deliberately: an overshoot-and-settle cubic-bezier is the
+     closest a browser without `linear()` can come to a spring. */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* How far an interactive surface rises under the pointer. A `translate`
+     VALUE, not a length: `none` is the initial value of that property, so the
+     default registry computes exactly what it computed before this token
+     existed, and a theme states the lift as `0 -1px`. `translate` rather than
+     `transform` so a component's own transform is never clobbered. */
+  --motion-hover-lift: none;
+}
+
+/* The real spring, where `linear()` is understood (Chrome 113+, Safari 17.2+,
+   Firefox 112+). Declared second so it wins; guarded so it is never declared at
+   all where it would be meaningless. */
+@supports (animation-timing-function: linear(0, 1)) {
+  :root {
+    --ease-spring: linear(0, 0.3 6%, 0.7 13%, 0.95 20%, 1.03 27%, 1 40%, 1);
+  }
 }

@@ -99,7 +99,7 @@
     "weight-semibold", "leading-tight",
     "border-width", "corner-shape", "card-border-width",
     "surface-backdrop",
-    "texture-surface"
+    "texture-surface", "motion-hover-lift", "duration-fast", "ease-default"
   ],
 
   "templates": {

@@ -1,5 +1,5 @@
 /* @ui:component auth-form */
-/* @ui:tokens color-bg color-bg-subtle color-fg color-fg-muted color-border color-border-strong color-ring color-primary color-primary-hover color-primary-fg color-destructive color-destructive-subtle color-success color-success-subtle radius-lg radius-xl shadow-sm shadow-md space-1 space-2 space-3 space-4 space-5 space-6 space-8 font-heading font-body heading-weight heading-tracking heading-transform heading-leading text-xs text-sm text-base text-lg text-xl text-2xl weight-medium weight-semibold weight-bold leading-tight leading-normal duration-fast duration-normal ease-default border-width focus-ring-width focus-ring-style focus-ring-color focus-ring-offset */
+/* @ui:tokens color-bg color-bg-subtle color-fg color-fg-muted color-border color-border-strong color-ring color-primary color-primary-hover color-primary-fg color-destructive color-destructive-subtle color-success color-success-subtle radius-lg radius-xl shadow-sm shadow-md space-1 space-2 space-3 space-4 space-5 space-6 space-8 font-heading font-body heading-weight heading-tracking heading-transform heading-leading text-xs text-sm text-base text-lg text-xl text-2xl weight-medium weight-semibold weight-bold leading-tight leading-normal duration-fast duration-normal ease-default border-width focus-ring-width focus-ring-style focus-ring-color focus-ring-offset link-decoration */
 
 /* ── Root Container ── */
 [data-ui="auth-form"] {
@@ -139,7 +139,7 @@
 }
 
 [data-ui="auth-form"] [data-part="footer"] a:hover {
-  text-decoration: underline;
+  text-decoration-line: var(--link-decoration);
   color: var(--color-primary-hover);
 }
 

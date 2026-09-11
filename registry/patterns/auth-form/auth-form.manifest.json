@@ -137,7 +137,7 @@
     "weight-medium", "weight-semibold", "weight-bold",
     "leading-tight", "leading-normal",
     "duration-fast", "duration-normal", "ease-default",
-    "border-width", "focus-ring-width", "focus-ring-style", "focus-ring-color", "focus-ring-offset"
+    "border-width", "focus-ring-width", "focus-ring-style", "focus-ring-color", "focus-ring-offset", "link-decoration"
   ],
 
   "templates": {

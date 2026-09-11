@@ -66,7 +66,7 @@
   font-size: var(--text-lg, 1.125rem);
   font-variant-numeric: tabular-nums;
   line-height: 1;
-  transition: border-color var(--duration-fast, 120ms) var(--ease-default, ease),
+  transition: border-color var(--duration-fast) var(--ease-default),
               box-shadow var(--duration-fast, 120ms) var(--ease-default, ease);
 }
 

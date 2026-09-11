@@ -300,7 +300,7 @@ The shipped `button` manifest, verbatim. Not an illustration of one: this is the
     "space-2", "space-3", "space-4", "space-6",
     "font-ui", "text-xs", "text-sm", "text-base", "weight-medium",
     "duration-fast", "ease-default",
-    "border-width", "border-width-strong", "corner-shape", "focus-ring-width", "focus-ring-offset", "focus-ring-style", "focus-ring-color", "focus-shadow"
+    "border-width", "border-width-strong", "corner-shape", "focus-ring-width", "focus-ring-offset", "focus-ring-style", "focus-ring-color", "focus-shadow", "button-text-transform", "motion-hover-lift", "link-decoration"
   ],
 
   "templates": {
@@ -360,5 +360,5 @@ The manifest is the contract; the sources repeat the machine-readable part of it
 
 ```css
 /* @ui:component button */
-/* @ui:tokens color-primary color-primary-hover color-primary-fg color-secondary color-secondary-hover color-secondary-fg color-destructive color-destructive-hover color-destructive-fg color-bg color-bg-muted color-bg-subtle color-fg color-border color-ring radius-md space-2 space-3 space-4 space-6 font-ui text-xs text-sm text-base weight-medium duration-fast ease-default shadow-xs radius-full border-width border-width-strong corner-shape focus-ring-width focus-ring-offset focus-ring-style focus-ring-color focus-shadow */
+/* @ui:tokens color-primary color-primary-hover color-primary-fg color-secondary color-secondary-hover color-secondary-fg color-destructive color-destructive-hover color-destructive-fg color-bg color-bg-muted color-bg-subtle color-fg color-border color-ring radius-md space-2 space-3 space-4 space-6 font-ui text-xs text-sm text-base weight-medium duration-fast ease-default shadow-xs radius-full border-width border-width-strong corner-shape focus-ring-width focus-ring-offset focus-ring-style focus-ring-color focus-shadow button-text-transform motion-hover-lift link-decoration */
 ```

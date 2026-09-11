@@ -54,7 +54,7 @@
   box-shadow: var(--shadow-sm);
   cursor: grab;
   touch-action: none;
-  transition: box-shadow var(--duration-fast, 120ms) var(--ease-default, ease);
+  transition: box-shadow var(--duration-fast) var(--ease-default);
 }
 
 [data-ui="slider"] [data-part="thumb"]:hover {

@@ -92,12 +92,11 @@
     "color-border",
     "color-ring",
     "shadow-xs",
-    "radius-full",
     "space-0h",
     "space-1",
     "duration-fast",
     "ease-default",
-    "border-width", "focus-ring-width", "focus-ring-offset", "focus-ring-style", "focus-ring-color", "focus-shadow"
+    "border-width", "focus-ring-width", "focus-ring-offset", "focus-ring-style", "focus-ring-color", "focus-shadow", "switch-radius", "switch-width", "switch-height", "switch-thumb", "switch-travel", "switch-bg", "switch-thumb-shadow"
   ],
   "templates": {
     "html": "<div data-ui=\"cluster\" data-gap=\"4\">\n  <label data-ui=\"switch-label\" for=\"{id1}\"><button data-ui=\"switch\" id=\"{id1}\" role=\"switch\" aria-checked=\"false\"><span data-part=\"thumb\"></span></button><span data-part=\"label\">{label1}</span></label>\n  <label data-ui=\"switch-label\" for=\"{id2}\"><button data-ui=\"switch\" id=\"{id2}\" role=\"switch\" aria-checked=\"false\"><span data-part=\"thumb\"></span></button><span data-part=\"label\">{label2}</span></label>\n</div>",

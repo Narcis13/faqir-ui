@@ -1,5 +1,5 @@
 /* @ui:component switch */
-/* @ui:tokens color-bg-muted color-primary color-primary-fg color-border color-ring shadow-xs radius-full space-0h space-1 duration-fast ease-default border-width focus-ring-width focus-ring-offset focus-ring-style focus-ring-color focus-shadow */
+/* @ui:tokens color-bg-muted color-primary color-primary-fg color-border color-ring shadow-xs space-0h space-1 duration-fast ease-default border-width focus-ring-width focus-ring-offset focus-ring-style focus-ring-color focus-shadow switch-radius switch-width switch-height switch-thumb switch-travel switch-bg switch-thumb-shadow */
 
 /* -- Label wrapper -- */
 [data-ui="switch-label"] {
@@ -36,12 +36,12 @@
   appearance: none;
   display: inline-flex;
   align-items: center;
-  width: var(--switch-width, 44px);
-  height: var(--switch-height, 24px);
+  width: var(--switch-width);
+  height: var(--switch-height);
   padding: var(--space-0h, 2px);
   border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-full);
-  background: var(--switch-bg, var(--color-bg-muted));
+  border-radius: var(--switch-radius);
+  background: var(--switch-bg);
   cursor: pointer;
   position: relative;
   transition: background var(--duration-fast) var(--ease-default),
@@ -59,11 +59,11 @@
 [data-ui="switch"]::after {
   content: "";
   display: block;
-  width: var(--switch-thumb, 18px);
-  height: var(--switch-thumb, 18px);
-  border-radius: var(--radius-full);
+  width: var(--switch-thumb);
+  height: var(--switch-thumb);
+  border-radius: var(--switch-radius);
   background: var(--color-primary-fg);
-  box-shadow: var(--switch-thumb-shadow, var(--shadow-xs));
+  box-shadow: var(--switch-thumb-shadow);
   transition: transform var(--duration-fast) var(--ease-default);
   pointer-events: none;
 }
@@ -71,11 +71,11 @@
 /* Child thumb (for non-input elements like <button>) */
 [data-ui="switch"] [data-part="thumb"] {
   display: block;
-  width: var(--switch-thumb, 18px);
-  height: var(--switch-thumb, 18px);
-  border-radius: var(--radius-full);
+  width: var(--switch-thumb);
+  height: var(--switch-thumb);
+  border-radius: var(--switch-radius);
   background: var(--color-primary-fg);
-  box-shadow: var(--switch-thumb-shadow, var(--shadow-xs));
+  box-shadow: var(--switch-thumb-shadow);
   transition: transform var(--duration-fast) var(--ease-default);
   pointer-events: none;
 }
@@ -96,12 +96,12 @@
 [data-ui="switch"]:checked::after,
 [data-ui="switch"][aria-checked="true"]::after,
 [data-ui="switch"][data-state="on"]::after {
-  transform: translateX(calc(var(--switch-travel, 20px) * var(--switch-dir, 1)));
+  transform: translateX(calc(var(--switch-travel) * var(--switch-dir, 1)));
 }
 
 [data-ui="switch"][aria-checked="true"] [data-part="thumb"],
 [data-ui="switch"][data-state="on"] [data-part="thumb"] {
-  transform: translateX(calc(var(--switch-travel, 20px) * var(--switch-dir, 1)));
+  transform: translateX(calc(var(--switch-travel) * var(--switch-dir, 1)));
 }
 
 /* -- Sizes -- */

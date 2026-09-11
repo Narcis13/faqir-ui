@@ -1,5 +1,5 @@
 /* @ui:component checkbox */
-/* @ui:tokens color-bg color-fg color-primary color-primary-fg color-border color-border-strong color-ring radius-sm space-1 space-2 duration-fast ease-default border-width focus-ring-width focus-ring-offset focus-ring-style focus-ring-color focus-shadow */
+/* @ui:tokens color-bg color-fg color-primary color-primary-fg color-border color-border-strong color-ring space-1 space-2 duration-fast ease-default border-width focus-ring-width focus-ring-offset focus-ring-style focus-ring-color focus-shadow checkbox-radius checkbox-size */
 
 /* -- Label wrapper -- */
 [data-ui="checkbox-label"] {
@@ -20,11 +20,11 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: var(--checkbox-size, 18px);
-  height: var(--checkbox-size, 18px);
+  width: var(--checkbox-size);
+  height: var(--checkbox-size);
   flex-shrink: 0;
   border: var(--border-width) solid var(--color-border);
-  border-radius: var(--checkbox-radius, var(--radius-sm));
+  border-radius: var(--checkbox-radius);
   background: var(--color-bg);
   cursor: pointer;
   transition: background var(--duration-fast) var(--ease-default),

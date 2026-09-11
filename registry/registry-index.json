@@ -76,7 +76,7 @@
       "files": [
         {
           "path": "breadcrumb.css",
-          "sha256": "243224ccfa0c07a04effeb63c19a8eff453a2f7cff3d1be814e490b968bea24a"
+          "sha256": "0c55428bcf73e95d244cb9d6991dff952f02e82c8178868a36aa9fd31d7256d1"
         },
         {
           "path": "breadcrumb.html",
@@ -84,10 +84,10 @@
         },
         {
           "path": "breadcrumb.manifest.json",
-          "sha256": "5bf7ea7bedbb118aee1a1cf5d0e53d6ca51c20df3ba2e50ee32515f477e75854"
+          "sha256": "fc28bfe310f02be6d8fb0a8cce6ac896d490a71329d80d906ccb63791f457bef"
         }
       ],
-      "hash": "109d4d3154f232aca1a9b89544fe61a5a3239aec98d9d5bd1b9ef7f1270fcaf7",
+      "hash": "2a41ecbdb069a4c2be1bc2589ce02fcdcb880ae70f31296296c4c056218a422c",
       "deps": []
     },
     {
@@ -98,7 +98,7 @@
       "files": [
         {
           "path": "button.css",
-          "sha256": "2fd86caf6058d54cb73227bbb0ab8fcdc309cc5b065675df8acfbacb05335b33"
+          "sha256": "876ca35e24c11f80d5ea3c11f140c8d202ab1e4e07a1660292021138faa05db7"
         },
         {
           "path": "button.html",
@@ -106,10 +106,10 @@
         },
         {
           "path": "button.manifest.json",
-          "sha256": "a95a3c2c61051d46638f852db651589cdec3115d5301484eb3bd168a36474d59"
+          "sha256": "6c662687705de338338d88c9c590e44b025a2c4ffceba95a139c9297d63741d3"
         }
       ],
-      "hash": "ea65d4243484dbe654b8f43f984792e11379353148730b58d5a9687c65e3b3b0",
+      "hash": "e0a7797940e1444e07432c486f190ba43f291ff31816067f48411eed9027d211",
       "deps": []
     },
     {
@@ -144,7 +144,7 @@
       "files": [
         {
           "path": "card.css",
-          "sha256": "63284b5820d246c0c508a2e8e6ac7b3c348643d6f4c088f8eea71354b922859e"
+          "sha256": "38c25601d4a569d6b5da6a65773409ba4a56ef477ec992dcb43d41b0b20c2a41"
         },
         {
           "path": "card.html",
@@ -152,10 +152,10 @@
         },
         {
           "path": "card.manifest.json",
-          "sha256": "c3f0e0d01274de3d86bf825dae41fbd44e450abf4896fde7a401592c079ffe7c"
+          "sha256": "4d18e3d39ad31e28ab3dcad6787ed845e81f515f429fc16e9e3314a0299be50e"
         }
       ],
-      "hash": "935343d679046570a472420e873d437d8f5c4552f404f66478ff176a10a4fe06",
+      "hash": "641c2b667916e0982d3f7c5eb6b6eaa8bad19fe375119ed0dbefd3a0ee988c55",
       "deps": [
         "button"
       ]
@@ -168,7 +168,7 @@
       "files": [
         {
           "path": "checkbox.css",
-          "sha256": "d1095c4cd0cf3017b3e28bbdd3c15437ee174639054e2bbd3711025700da25ea"
+          "sha256": "7dde9725233f8a9555696825b6dddc4d874309e727190dc3b3f36261a54ab819"
         },
         {
           "path": "checkbox.html",
@@ -176,10 +176,10 @@
         },
         {
           "path": "checkbox.manifest.json",
-          "sha256": "70e573c2c00ad97e3610928a1f38ee1340f50f57da2320803903205b3e99c43f"
+          "sha256": "1f036ff48dbcfd97a1c111ef87db1ae733f21af25e6cb911d96a4cfd5dca5a7f"
         }
       ],
-      "hash": "d12d42cc0d491c19787dda88b16efbf743947c978f9f1b30ed53dd8b77712405",
+      "hash": "25d818410ce611713b5c4be4e51622c0c362e9473e681abb60100fa5b43f015e",
       "deps": []
     },
     {
@@ -425,7 +425,7 @@
       "files": [
         {
           "path": "input.css",
-          "sha256": "5218b11a4bf092c8fd6fe74e78cea3f9b3fb95b28d9c760d54110741f379ed56"
+          "sha256": "0bbff0c2b07da36edb1ac0195cb62eb8741240bdf0e3d4a64867130f989ba45c"
         },
         {
           "path": "input.html",
@@ -433,10 +433,10 @@
         },
         {
           "path": "input.manifest.json",
-          "sha256": "cc1a966e162c59da395cea7e9928090d6ab9e066a902064a5dbdac12ee1a5e26"
+          "sha256": "76c179312bdb79be508919a09a3ef65a007d75dde49002376e5b775228147e91"
         }
       ],
-      "hash": "760d38952781148268a68bbd67cca4ef2b6d2ca4119c2e6db0880a421bcf2944",
+      "hash": "30c5aa5f7e81649d988de1886b7aab8935b3d0c9670845ec604bee72e5acd10d",
       "deps": []
     },
     {
@@ -513,7 +513,7 @@
       "files": [
         {
           "path": "link.css",
-          "sha256": "8f906a3cccace36d565ce72c236960be77e01feda0ec19dd0a52596811861346"
+          "sha256": "f1915d9c08f0625179845fdcafe3337a3cb1f2476ed92680dc4cf1100bdd9c28"
         },
         {
           "path": "link.html",
@@ -521,10 +521,10 @@
         },
         {
           "path": "link.manifest.json",
-          "sha256": "045eccae18bc676cd5ff3cdcf2608f8931cf37fcfcffc72801cb3d50b12b9a21"
+          "sha256": "9e5874f31079ee7b3540c70036ed0b78dd5b482ac4b2165155f7af22ac20e70a"
         }
       ],
-      "hash": "057dc07a5a3a49cb03fc0ed010d7cb358c38dc7d90f3e01247d0dba32b6e24e9",
+      "hash": "2c0daac57ea8c2d1ff30f989ea7c971200336a408757fc4b6a9779f0e88d75f9",
       "deps": []
     },
     {
@@ -623,7 +623,7 @@
       "files": [
         {
           "path": "select.css",
-          "sha256": "4de2fca88932a3d52ea426fee0ef9fc8a5e92023be182204712c0bb480e841e1"
+          "sha256": "5a695653e79e35dc0349d646b7c3da651c81f34bf7ec412ae178826182f47c1c"
         },
         {
           "path": "select.html",
@@ -631,10 +631,10 @@
         },
         {
           "path": "select.manifest.json",
-          "sha256": "2053a7730ceba68d13c3814201e4000ded8f1dd7cbb68c4937244274384a97c1"
+          "sha256": "476fa96da92a32a445feb68cae3070932c42f23101161181487093ab4cbed9b4"
         }
       ],
-      "hash": "b4ebc672a6b0f0754d7a6f1ab71e94dfbd9d2e903ee7b181b84487595af453ab",
+      "hash": "f32c46df0be55231aa014aad7fe00d0e1c334df897e8502498163113899a9b17",
       "deps": []
     },
     {
@@ -645,7 +645,7 @@
       "files": [
         {
           "path": "separator.css",
-          "sha256": "4eea154eecee7b9f161a084d83fa18cfa2217e4aac131420269937f00a9234f5"
+          "sha256": "8635a72b0230e66c2d656316992a7bf084f9a0fd33203e8c8fa68ecd2ef1d6a9"
         },
         {
           "path": "separator.html",
@@ -653,10 +653,10 @@
         },
         {
           "path": "separator.manifest.json",
-          "sha256": "97589cde36d2cda113b112126257460028ba7139fbef60ef0c3a389aa06d83d5"
+          "sha256": "215263b4510727c694527ea07be94a94ecd0f91e293c47dc7c4e32ff77613fc7"
         }
       ],
-      "hash": "d156102cad9d83697d407c87b79a1864e6bff0986fa317835287467e4ba6001a",
+      "hash": "96f86edf87e88a0c029b61afcb382a435853ec5ffb5cec248dd08392980cb61f",
       "deps": []
     },
     {
@@ -823,7 +823,7 @@
       "files": [
         {
           "path": "switch.css",
-          "sha256": "b66b179b79995d1d6078cddd8d3c91cd490a98729705664117a9b82373a5e0b6"
+          "sha256": "23e638b5b88857cb7cc2ae41d77d9ee2847b318fe454bec61716d1395de6fcbe"
         },
         {
           "path": "switch.html",
@@ -831,10 +831,10 @@
         },
         {
           "path": "switch.manifest.json",
-          "sha256": "398ca561b3337dfa49e08ece45522bfc1b5b27f8623279872367aa33a796ecc7"
+          "sha256": "24800c70f5d88cbcadab61239134db40daff9c38f2ba49e022af930f67129387"
         }
       ],
-      "hash": "e49d4c52eb6b163571e917e819538c3ce74d3216a845f9cfc22964461b712aa1",
+      "hash": "8a275b52fe87f59e1fb62520353054039ff64a01373e619b216b31d44b7bc712",
       "deps": []
     },
     {
@@ -889,7 +889,7 @@
       "files": [
         {
           "path": "textarea.css",
-          "sha256": "f2bc661e469fdba680055b8250061a2ad670b168e1d7b4366214e05cced64746"
+          "sha256": "4ad8f935943eebdb08d0fde91988838947f59545d514f336c34cb261b5fb5987"
         },
         {
           "path": "textarea.html",
@@ -897,10 +897,10 @@
         },
         {
           "path": "textarea.manifest.json",
-          "sha256": "5569b90fe6e205277e0910380dfa6c1a1abe01e3086f9d591c6663041d9bdb1a"
+          "sha256": "75a41e4e2df47d35027b4777fdc7aa81a0a361ae0b90a4b220c67fbe13a3c75a"
         }
       ],
-      "hash": "60c4b2ef40c0b7d42d2161141f32f83e304acc7e340de6dbe2e36b15f7ffc784",
+      "hash": "31a4da2ac2d4bec1b73dfe4312ceca0a3c820054f2e5dcba720712af565e3462",
       "deps": []
     },
     {
@@ -1304,7 +1304,7 @@
       "files": [
         {
           "path": "input-otp.css",
-          "sha256": "0555366a2fe31c1124fbd417aa5588caeb0dca9e397b28119d9d9879102938ed"
+          "sha256": "e41002a4f0ff8bed74f5588dd7bb34039735e43eda837783098740e73e03261b"
         },
         {
           "path": "input-otp.html",
@@ -1319,7 +1319,7 @@
           "sha256": "1ed4ce485c863e0ccd2a8be4a422a033cd6024626e8829a64b689a9c6086e8af"
         }
       ],
-      "hash": "1226bc3c1d91f3d5aae4aa18a3950ff3a795601536b77337baabca955230b9a8",
+      "hash": "84854b9ececb3c57b859712abe10076b05e8b3da2464840c547cfc91eeb6d4d8",
       "deps": []
     },
     {
@@ -1523,7 +1523,7 @@
       "files": [
         {
           "path": "slider.css",
-          "sha256": "473cad98066a7c398968482d5e2ec74908fe3fb1e86a875a96f7bda2bb891c8d"
+          "sha256": "e8319dd65ab12361b71000162362c328d96e0801969240cd99764c36eafef209"
         },
         {
           "path": "slider.html",
@@ -1538,7 +1538,7 @@
           "sha256": "b901d3d8859da2daa17f5befd8e414fb37a3494f2fbf6a311b05a59eb33ba7a0"
         }
       ],
-      "hash": "35bd29a974266012dcfc219e48f9a88cb4be1a9ad8417c36c0ce1a59d1c640ef",
+      "hash": "5603a366a1e3f0a0ae0c0213df05d76b0e1417f959fb15b8b118c480ca92c67f",
       "deps": []
     },
     {
@@ -1549,7 +1549,7 @@
       "files": [
         {
           "path": "table.css",
-          "sha256": "c6e714125d05e0aee8c6802a63f408cd91cf468a23c3248f8b32505d07ac778a"
+          "sha256": "6aea8b0ae97b2a6bedb72ba5bd59ca20b508cc653bee10d7042dc8aded7d5150"
         },
         {
           "path": "table.html",
@@ -1561,10 +1561,10 @@
         },
         {
           "path": "table.manifest.json",
-          "sha256": "d87c6a27a47ca6d6311b4148f57b0cefeac5ef47f141724123a6ce43dd340355"
+          "sha256": "6961c5e3193df900a2eb32a72a4ab5f69f46d739ffaea3934e90d37dbabc48f5"
         }
       ],
-      "hash": "79dda2b72bc822f1c4f58aa6d462c68ab70c029d74e9077f3ebbffa97761c20b",
+      "hash": "68ea5515cb3dab603982321fb4d755d0172fe8547c81ad96b7a18b6fde577f22",
       "deps": [
         "checkbox",
         "badge",
@@ -1742,7 +1742,7 @@
       "files": [
         {
           "path": "auth-form.css",
-          "sha256": "37caf7981d9ce73f9105fab3c92a280425c7c32764371201eac37cb1b539ddb0"
+          "sha256": "4fb6d0d817fbf2fe7e0bb6a16bbf679bc57ba9069cc01e762e66674d81ba7fb4"
         },
         {
           "path": "auth-form.html",
@@ -1750,10 +1750,10 @@
         },
         {
           "path": "auth-form.manifest.json",
-          "sha256": "97e276810e87af125da9a0154f57b56052d9f219f3b5e2bc563157079bfd1367"
+          "sha256": "e5e50b5fff59a15190a0cf7adbe97129e43ee606cb8646b434b36f2fb1648038"
         }
       ],
-      "hash": "c9a1886ce5e5259da1134fd0b58f7b0004e74b333a3dfe06c4371b0ed75f35e8",
+      "hash": "25f43e061dd77ac7f0557344e23920b87c7887393dd75acf28cb78e61564fd75",
       "deps": [
         "card",
         "input",

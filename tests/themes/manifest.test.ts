@@ -115,7 +115,7 @@ describe("theme manifest · the token surface", () => {
     "heading-leading",
   ];
 
-  it("is 258 tokens — 241 plus shape, focus, depth and material [1.1A-02, 1.1A-04]", () => {
+  it("is 280 tokens — 241 plus shape, focus, depth, material, motion, decoration and controls [1.1A-02 … 1.1A-05]", () => {
     // 1.1A-02 added five border-width steps/roles, --corner-shape, the five
     // focus tokens, and the two component silhouette aliases: 241 + 13.
     // 1.1A-04 added four: --shadow-color and --surface-backdrop (depth), and
@@ -123,7 +123,14 @@ describe("theme manifest · the token surface", () => {
     // tokens/textures.css are deliberately NOT here — that file is a palette no
     // component reads, excluded via NON_SURFACE_TOKEN_FILES, so a theme
     // re-points a role instead of inheriting six data URIs it cannot use.
-    expect(SURFACE.length).toBe(258);
+    // 1.1A-05 added twenty-two: two motion (--ease-spring, --motion-hover-lift),
+    // eight decoration (the three --link-*, --divider-style, --stripe-bg, the
+    // two --selection-* and --marker-color) and twelve controls
+    // (--button-text-transform, --input-fill, --input-bg-filled, and the
+    // checkbox/switch geometry that naming --checkbox-radius obliged — see
+    // tests/tokens/motion-decoration-controls.test.ts on why the zebra is
+    // --stripe-bg and not --table-stripe).
+    expect(SURFACE.length).toBe(280);
   });
 
   it("the depth and material tokens a theme can reach are exactly the four roles", () => {

@@ -1,13 +1,13 @@
 /* @ui:component link */
-/* @ui:tokens color-primary color-primary-hover color-primary-active color-fg color-fg-muted color-ring radius-sm space-1 focus-ring-width focus-ring-offset focus-ring-style focus-ring-color focus-shadow */
+/* @ui:tokens color-primary color-primary-hover color-primary-active color-fg color-fg-muted color-ring radius-sm space-1 focus-ring-width focus-ring-offset focus-ring-style focus-ring-color focus-shadow link-decoration link-thickness link-underline-offset */
 
 /* ── Base ── */
 [data-ui="link"] {
   color: var(--color-primary);
   font-family: inherit;
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.2em;
+  text-decoration-line: var(--link-decoration);
+  text-decoration-thickness: var(--link-thickness);
+  text-underline-offset: var(--link-underline-offset);
   border-radius: var(--radius-sm);
   cursor: pointer;
 }

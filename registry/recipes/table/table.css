@@ -1,5 +1,5 @@
 /* @ui:component table */
-/* @ui:tokens color-bg color-bg-subtle color-bg-muted color-fg color-fg-muted color-fg-subtle color-border color-border-strong color-primary color-primary-subtle color-ring color-destructive color-destructive-subtle space-0h space-1 space-2 space-3 space-4 space-5 space-8 text-xs text-sm weight-semibold weight-bold radius-sm radius-md radius-full duration-fast ease-default doc-table-footer-bg doc-table-footer-weight doc-print-border-color font-body border-width border-width-strong focus-ring-width focus-ring-style focus-ring-color focus-ring-offset */
+/* @ui:tokens color-bg color-bg-subtle color-bg-muted color-fg color-fg-muted color-fg-subtle color-border color-border-strong color-primary color-primary-subtle color-ring color-destructive color-destructive-subtle space-0h space-1 space-2 space-3 space-4 space-5 space-8 text-xs text-sm weight-semibold weight-bold radius-sm radius-md radius-full duration-fast ease-default doc-table-footer-bg doc-table-footer-weight doc-print-border-color font-body border-width border-width-strong focus-ring-width focus-ring-style focus-ring-color focus-ring-offset stripe-bg */
 
 /* ── Root ── */
 [data-ui="table"] {
@@ -143,19 +143,19 @@
    Static fallback via nth-child; once the controller stamps data-stripe on the
    visible rows (so hidden rows never break the pattern), the stamped rules win. */
 [data-ui="table"][data-variant="striped"] [data-part="tbody"] [data-part="tr"]:not([data-stripe]):nth-child(even):not([data-selected]) [data-part="td"] {
-  background: var(--color-bg-subtle, oklch(0.97 0.004 260));
+  background: var(--stripe-bg);
 }
 
 [data-ui="table"][data-variant="striped"] [data-part="tbody"] [data-part="tr"]:not([data-stripe]):nth-child(even):not([data-selected]):hover [data-part="td"] {
-  background: var(--color-bg-subtle, oklch(0.95 0.006 260));
+  background: var(--stripe-bg);
 }
 
 [data-ui="table"][data-variant="striped"] [data-part="tbody"] [data-part="tr"][data-stripe="even"]:not([data-selected]) [data-part="td"] {
-  background: var(--color-bg-subtle, oklch(0.97 0.004 260));
+  background: var(--stripe-bg);
 }
 
 [data-ui="table"][data-variant="striped"] [data-part="tbody"] [data-part="tr"][data-stripe="even"]:not([data-selected]):hover [data-part="td"] {
-  background: var(--color-bg-subtle, oklch(0.95 0.006 260));
+  background: var(--stripe-bg);
 }
 
 /* ── Bordered Variant ── */

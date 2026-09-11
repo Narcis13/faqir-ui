@@ -47,6 +47,29 @@
   --texture-page:    none;
   --texture-surface: none;
 
+  /* ── Decoration (1.1A-05 · §5.2 `decoration`) ── */
+  /* The marks a theme draws that are not edges, fills or type: how a link is
+     underlined, how a divider is dashed, what selected text looks like, what
+     colour a list bullet is. Every default is the value the registry already
+     rendered, so this section is a set of handles, not a restyle.
+     `--marker-color` is `currentColor` — the initial value of `::marker`'s
+     colour — rather than the accent, so a list only changes when a theme says
+     it should. */
+  --link-decoration:       underline;
+  --link-underline-offset: 0.2em;
+  --link-thickness:        1px;
+  --divider-style:         solid;
+  /* The zebra, so a theme dials the stripe without restating the four selectors
+     the table's striped variant needs (stamped and nth-child, each with a hover
+     twin). Deliberately NOT `--table-stripe`: `--table-level`,
+     `--table-thead-h` and `--table-pin-offset` are stamped and MEASURED per
+     element by the table controller, so claiming the `--table-*` namespace for
+     a theme token would put runtime state on the themeable surface. */
+  --stripe-bg:             var(--color-bg-subtle);
+  --selection-bg:          var(--color-primary-subtle);
+  --selection-fg:          var(--color-fg);
+  --marker-color:          currentColor;
+
   /* ── Button ── */
   --button-radius:     var(--radius-md);
   --button-height-sm:  var(--control-height-sm);
@@ -54,6 +77,7 @@
   --button-height-lg:  var(--control-height-lg);
   --button-font:       var(--font-ui);
   --button-weight:     var(--weight-medium);
+  --button-text-transform: none;
 
   /* ── Card ── */
   --card-radius:       var(--radius-lg);
@@ -64,12 +88,44 @@
   --card-padding:      var(--space-6);
 
   /* ── Input ── */
+  /* The text-control silhouette. `--input-border-width` (1.1A-02) is the edge;
+     `--input-fill` is what the control paints, and `input`, `textarea` and
+     `select` all read it, so one declaration fills every text control.
+     `--input-bg` stays the per-component override it has always been and
+     `--input-fill` defaults to it, which is why a project that set `--input-bg`
+     on one input still gets exactly that input filled. `--input-bg-filled` is
+     the value a "filled" theme points `--input-fill` at — named here so the
+     silhouette is a token a theme flips rather than a colour it has to pick. */
   --input-radius:       var(--radius-md);
   --input-height:       var(--control-height-md);
   --input-border:       var(--color-border);
   --input-border-width: var(--border-width);
   --input-bg:           var(--color-bg);
+  --input-bg-filled:    var(--color-bg-subtle);
+  --input-fill:         var(--input-bg);
   --input-font:         var(--font-ui);
+
+  /* ── Checkbox / Switch ── */
+  /* The two control shapes that do not follow `--radius-md`: a checkbox is a
+     small square with a small radius, a switch is a pill. Both were literal
+     `var(--radius-*)` reads in the components; named here, a theme squares its
+     switches without touching the radius ladder every other surface uses.
+
+     The geometry beside them is not decoration — it is the rest of the
+     namespace. Naming ONE token `--checkbox-radius` makes `--checkbox-*` a
+     token family, and the registry audit then (rightly) reads every other
+     `--checkbox-…`/`--switch-…` the components carried as a token wearing a
+     fallback as a disguise. They were always the default geometry; these are
+     the values the fallbacks already held, said once. */
+  --checkbox-size:      18px;
+  --checkbox-radius:    var(--radius-sm);
+  --switch-width:       44px;
+  --switch-height:      24px;
+  --switch-thumb:       18px;
+  --switch-travel:      20px;
+  --switch-radius:      var(--radius-full);
+  --switch-bg:          var(--color-bg-muted);
+  --switch-thumb-shadow: var(--shadow-xs);
 
   /* ── Dialog ── */
   --dialog-radius:     var(--radius-xl);

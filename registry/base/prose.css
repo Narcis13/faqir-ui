@@ -54,8 +54,8 @@
 
 [data-ui="prose"] a {
   color: var(--color-primary);
-  text-decoration: underline;
-  text-underline-offset: 2px;
+  text-decoration-line: var(--link-decoration);
+  text-underline-offset: var(--link-underline-offset);
 }
 
 [data-ui="prose"] a:hover {
@@ -112,6 +112,12 @@
 
 [data-ui="prose"] li {
   margin-block: var(--space-1);
+}
+
+/* The bullet. `currentColor` by default — the initial value — so a list looks
+   exactly as it did; a theme that wants accented markers sets --marker-color. */
+[data-ui="prose"] li::marker {
+  color: var(--marker-color);
 }
 
 [data-ui="prose"] hr {

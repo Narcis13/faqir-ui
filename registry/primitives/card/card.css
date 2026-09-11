@@ -1,5 +1,5 @@
 /* @ui:component card */
-/* @ui:tokens color-surface-1 color-surface-2 color-surface-1-border color-surface-2-border color-fg color-fg-muted radius-lg shadow-sm space-4 space-6 font-heading text-sm text-lg text-xl weight-semibold leading-tight border-width corner-shape card-border-width surface-backdrop texture-surface */
+/* @ui:tokens color-surface-1 color-surface-2 color-surface-1-border color-surface-2-border color-fg color-fg-muted radius-lg shadow-sm space-4 space-6 font-heading text-sm text-lg text-xl weight-semibold leading-tight border-width corner-shape card-border-width surface-backdrop texture-surface motion-hover-lift duration-fast ease-default */
 
 /* ── Base ── */
 [data-ui="card"] {
@@ -12,6 +12,14 @@
   background-image: var(--texture-surface);
   box-shadow: var(--card-shadow, var(--shadow-sm));
   overflow: hidden;
+  transition: translate var(--duration-fast) var(--ease-default);
+}
+
+/* The hover lift, the same axis `button` reads. `none` by default (the initial
+   value of `translate`), so a card sits exactly where it always sat until a
+   theme says surfaces rise under the pointer. */
+[data-ui="card"]:hover {
+  translate: var(--motion-hover-lift);
 }
 
 @supports ((-webkit-backdrop-filter: blur(1rem)) or (backdrop-filter: blur(1rem))) {
@@ -81,4 +89,14 @@
 }
 [data-ui="card"][data-size="sm"] > [data-part="footer"] {
   padding-top: 0;
+}
+
+/* ── Motion ── */
+/* The hover lift is the only thing a card animates, and it is `none` until a
+   theme states one — but the house rule is that a stylesheet which transitions
+   carries its own opt-out, so a reader never has to check the token first. */
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="card"] {
+    transition: none;
+  }
 }

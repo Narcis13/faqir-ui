@@ -62,7 +62,7 @@
     "color-border", "color-fg-muted",
     "space-4",
     "font-ui", "text-xs",
-    "border-width", "border-width-strong"
+    "border-width", "border-width-strong", "divider-style"
   ],
 
   "templates": {

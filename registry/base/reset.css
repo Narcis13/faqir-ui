@@ -100,6 +100,15 @@ table {
   }
 }
 
+/* Text selection — the decoration axis reaching the one surface no component
+   owns. Until 1.1 the highlight was whatever the OS drew, which is the one part
+   of a themed page that never matched the theme. Both values are tokens
+   (tokens/aliases.css § Decoration), so a theme states its selection once. */
+::selection {
+  background-color: var(--selection-bg);
+  color: var(--selection-fg);
+}
+
 /* Focus visible — the default ring, and the only place it is spelled out.
    Every value is a token (tokens/effects.css § Focus), so a theme states its
    focus once and every element that has not drawn its own ring follows. */

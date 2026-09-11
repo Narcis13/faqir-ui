@@ -1,5 +1,5 @@
 /* @ui:component breadcrumb */
-/* @ui:tokens color-fg color-fg-muted color-fg-subtle color-primary-hover color-ring radius-sm space-2 text-xs text-sm text-base font-ui weight-medium duration-fast ease-default focus-ring-width focus-ring-offset focus-ring-style focus-ring-color focus-shadow */
+/* @ui:tokens color-fg color-fg-muted color-fg-subtle color-primary-hover color-ring radius-sm space-2 text-xs text-sm text-base font-ui weight-medium duration-fast ease-default focus-ring-width focus-ring-offset focus-ring-style focus-ring-color focus-shadow link-decoration */
 
 /* ── Root ── */
 [data-ui="breadcrumb"] {
@@ -29,7 +29,7 @@
 
 [data-ui="breadcrumb"] [data-part="item"]:hover {
   color: var(--color-primary-hover);
-  text-decoration: underline;
+  text-decoration-line: var(--link-decoration);
 }
 
 [data-ui="breadcrumb"] [data-part="item"]:focus-visible {
