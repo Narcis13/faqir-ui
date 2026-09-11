@@ -1,5 +1,5 @@
 /* @ui:component auth-form */
-/* @ui:tokens color-bg color-bg-subtle color-fg color-fg-muted color-border color-border-strong color-ring color-primary color-primary-hover color-primary-fg color-destructive color-destructive-subtle color-success color-success-subtle radius-lg radius-xl shadow-sm shadow-md space-1 space-2 space-3 space-4 space-5 space-6 space-8 font-heading font-body heading-weight heading-tracking heading-transform heading-leading text-xs text-sm text-base text-lg text-xl text-2xl weight-medium weight-semibold weight-bold leading-tight leading-normal duration-fast duration-normal ease-default */
+/* @ui:tokens color-bg color-bg-subtle color-fg color-fg-muted color-border color-border-strong color-ring color-primary color-primary-hover color-primary-fg color-destructive color-destructive-subtle color-success color-success-subtle radius-lg radius-xl shadow-sm shadow-md space-1 space-2 space-3 space-4 space-5 space-6 space-8 font-heading font-body heading-weight heading-tracking heading-transform heading-leading text-xs text-sm text-base text-lg text-xl text-2xl weight-medium weight-semibold weight-bold leading-tight leading-normal duration-fast duration-normal ease-default border-width focus-ring-width focus-ring-style focus-ring-color focus-ring-offset */
 
 /* ── Root Container ── */
 [data-ui="auth-form"] {
@@ -61,7 +61,7 @@
   margin: var(--space-4) var(--space-6) 0;
   padding: var(--space-3);
   background: var(--color-destructive-subtle);
-  border: 1px solid var(--color-destructive);
+  border: var(--border-width) solid var(--color-destructive);
   border-radius: var(--radius-lg);
   color: var(--color-destructive);
   font-size: var(--text-sm);
@@ -144,8 +144,8 @@
 }
 
 [data-ui="auth-form"] [data-part="footer"] a:focus-visible {
-  outline: 2px solid var(--color-ring);
-  outline-offset: 2px;
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
   border-radius: var(--radius-sm, 0.25rem);
 }
 
@@ -273,8 +273,8 @@
     max-width: var(--auth-form-max-width, 400px);
     border-radius: var(--card-radius, var(--radius-lg));
     box-shadow: var(--card-shadow, var(--shadow-sm));
-    border-inline-start: 1px solid var(--card-border, var(--color-border));
-    border-inline-end: 1px solid var(--card-border, var(--color-border));
+    border-inline-start: var(--border-width) solid var(--card-border, var(--color-border));
+    border-inline-end: var(--border-width) solid var(--card-border, var(--color-border));
   }
 }
 

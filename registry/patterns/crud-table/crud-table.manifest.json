@@ -189,7 +189,8 @@
     "weight-semibold",
     "duration-fast",
     "duration-normal",
-    "ease-default"
+    "ease-default",
+    "border-width"
   ],
   "templates": {
     "html": "<div data-ui=\"crud-table\" data-state=\"default\" data-variant=\"default\">\n  <div data-part=\"toolbar\">...</div>\n  <div data-part=\"table-wrapper\">\n    <div data-ui=\"table\">...</div>\n  </div>\n  <div data-part=\"pagination\">\n    <div data-ui=\"pagination\">...</div>\n  </div>\n</div>"

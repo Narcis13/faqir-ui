@@ -1,5 +1,5 @@
 /* @ui:component crud-table */
-/* @ui:tokens color-bg color-bg-subtle color-bg-muted color-fg color-fg-muted color-border color-primary color-primary-fg color-destructive color-destructive-fg radius-md radius-lg shadow-sm space-1 space-2 space-3 space-4 space-6 space-8 font-body text-sm text-base text-lg weight-medium weight-semibold duration-fast duration-normal ease-default */
+/* @ui:tokens color-bg color-bg-subtle color-bg-muted color-fg color-fg-muted color-border color-primary color-primary-fg color-destructive color-destructive-fg radius-md radius-lg shadow-sm space-1 space-2 space-3 space-4 space-6 space-8 font-body text-sm text-base text-lg weight-medium weight-semibold duration-fast duration-normal ease-default border-width */
 
 /* ── Root ── */
 [data-ui="crud-table"] {
@@ -65,7 +65,7 @@
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
   background: var(--color-bg-subtle);
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-md);
 }
 
@@ -80,7 +80,7 @@
 [data-ui="crud-table"] [data-part="table-wrapper"] {
   width: 100%;
   overflow-x: auto;
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-lg);
   background: var(--color-bg);
 }
@@ -110,7 +110,7 @@
   padding: var(--space-8) var(--space-4);
   text-align: center;
   min-height: 240px;
-  border: 1px dashed var(--color-border);
+  border: var(--border-width) dashed var(--color-border);
   border-radius: var(--radius-lg);
   background: var(--color-bg);
 }

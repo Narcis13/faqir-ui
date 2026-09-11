@@ -136,7 +136,8 @@
     "font-heading", "font-body", "heading-weight", "heading-tracking", "heading-transform", "heading-leading", "text-xs", "text-sm", "text-base", "text-lg", "text-xl", "text-2xl",
     "weight-medium", "weight-semibold", "weight-bold",
     "leading-tight", "leading-normal",
-    "duration-fast", "duration-normal", "ease-default"
+    "duration-fast", "duration-normal", "ease-default",
+    "border-width", "focus-ring-width", "focus-ring-style", "focus-ring-color", "focus-ring-offset"
   ],
 
   "templates": {

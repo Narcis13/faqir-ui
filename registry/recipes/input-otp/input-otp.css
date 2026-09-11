@@ -1,5 +1,5 @@
 /* @ui:component input-otp */
-/* @ui:tokens color-bg color-fg color-fg-muted color-border color-border-strong color-ring color-primary color-destructive radius-md space-2 space-3 text-base text-lg font-ui duration-fast ease-default */
+/* @ui:tokens color-bg color-fg color-fg-muted color-border color-border-strong color-ring color-primary color-destructive radius-md space-2 space-3 text-base text-lg font-ui duration-fast ease-default border-width */
 
 /* ── Root ── */
 [data-ui="input-otp"] {
@@ -59,7 +59,7 @@
   justify-content: center;
   inline-size: var(--input-otp-segment-size);
   block-size: var(--input-otp-segment-size);
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-bg);
   color: var(--color-fg);

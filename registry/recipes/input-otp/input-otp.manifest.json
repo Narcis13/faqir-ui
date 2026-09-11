@@ -181,7 +181,8 @@
     "text-lg",
     "font-ui",
     "duration-fast",
-    "ease-default"
+    "ease-default",
+    "border-width"
   ],
   "templates": {
     "html": "<div data-ui=\"input-otp\" data-length=\"6\" data-mode=\"numeric\">\n  <input data-part=\"input\" type=\"text\" inputmode=\"numeric\" autocomplete=\"one-time-code\" pattern=\"[0-9]*\" maxlength=\"6\" autocapitalize=\"off\" autocorrect=\"off\" spellcheck=\"false\" aria-label=\"One-time code\" l-mask=\"999999\" />\n  <div data-part=\"segments\" aria-hidden=\"true\">\n    <div data-part=\"segment\"></div>\n    <div data-part=\"segment\"></div>\n    <div data-part=\"segment\"></div>\n    <div data-part=\"segment\"></div>\n    <div data-part=\"segment\"></div>\n    <div data-part=\"segment\"></div>\n  </div>\n</div>"

@@ -1,5 +1,5 @@
 /* @ui:component tabs */
-/* @ui:tokens color-bg color-fg color-fg-muted color-border color-primary color-primary-subtle space-1 space-2 space-3 space-4 radius-md radius-lg text-sm text-base weight-medium duration-fast ease-default font-ui */
+/* @ui:tokens color-bg color-fg color-fg-muted color-border color-primary color-primary-subtle space-1 space-2 space-3 space-4 radius-md radius-lg text-sm text-base weight-medium duration-fast ease-default font-ui border-width border-width-strong focus-ring-width focus-ring-style focus-ring-color focus-ring-offset */
 
 /* ── Root ── */
 [data-ui="tabs"] {
@@ -43,8 +43,8 @@
 }
 
 [data-ui="tabs"] [data-part="trigger"]:focus-visible {
-  outline: 2px solid var(--color-ring, oklch(0.55 0.22 264));
-  outline-offset: -2px;
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  outline-offset: calc(-1 * var(--focus-ring-offset));
   border-radius: var(--radius-md);
 }
 
@@ -54,12 +54,12 @@
 
 /* ── Underline Variant ── */
 [data-ui="tabs"][data-variant="underline"] [data-part="list"] {
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: var(--border-width) solid var(--color-border);
   gap: 0;
 }
 
 [data-ui="tabs"][data-variant="underline"] [data-part="trigger"] {
-  border-bottom: 2px solid transparent;
+  border-bottom: var(--border-width-strong) solid transparent;
   margin-bottom: -1px;
   border-radius: 0;
 }
@@ -96,12 +96,12 @@
 
 /* ── Enclosed Variant ── */
 [data-ui="tabs"][data-variant="enclosed"] [data-part="list"] {
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: var(--border-width) solid var(--color-border);
   gap: 0;
 }
 
 [data-ui="tabs"][data-variant="enclosed"] [data-part="trigger"] {
-  border: 1px solid transparent;
+  border: var(--border-width) solid transparent;
   border-bottom: none;
   border-radius: var(--radius-md) var(--radius-md) 0 0;
   margin-bottom: -1px;
@@ -146,8 +146,8 @@
 @media (forced-colors: active) {
   [data-ui="tabs"] [data-part="trigger"][aria-selected="true"] {
     /* An outline the OS preserves, on every variant. */
-    outline: 2px solid Highlight;
-    outline-offset: -2px;
+    outline: var(--border-width-strong) solid Highlight;
+    outline-offset: calc(-1 * var(--border-width-strong));
   }
 
   [data-ui="tabs"][data-variant="underline"] [data-part="trigger"][aria-selected="true"] {

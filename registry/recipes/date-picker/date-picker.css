@@ -1,5 +1,5 @@
 /* @ui:component date-picker */
-/* @ui:tokens color-bg color-fg color-fg-muted color-border color-primary color-ring shadow-lg radius-md radius-lg space-1 space-2 space-3 space-4 text-xs text-sm z-dropdown duration-fast ease-default font-ui */
+/* @ui:tokens color-bg color-fg color-fg-muted color-border color-primary color-ring shadow-lg radius-md radius-lg space-1 space-2 space-3 space-4 text-xs text-sm z-dropdown duration-fast ease-default font-ui border-width focus-ring-width focus-ring-style focus-ring-color focus-ring-offset */
 /* The month grid inside the popup is the `calendar` recipe — see calendar.css */
 
 /* ── Root ── */
@@ -20,7 +20,7 @@
   width: 100%;
   padding: var(--space-2, 0.5rem) var(--space-3);
   padding-inline-end: var(--space-8, 2.5rem);
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-bg);
   color: var(--color-fg);
@@ -36,8 +36,8 @@
 }
 
 [data-ui="date-picker"] [data-part="input"]:focus-visible {
-  outline: 2px solid var(--color-ring, oklch(0.55 0.22 264));
-  outline-offset: 2px;
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
   border-color: var(--color-primary);
 }
 
@@ -60,7 +60,7 @@
   z-index: var(--z-dropdown);
   margin-top: var(--space-1);
   padding: var(--space-3);
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-lg);
   background: var(--color-bg);
   box-shadow: var(--shadow-lg);

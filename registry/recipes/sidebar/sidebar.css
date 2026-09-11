@@ -1,5 +1,5 @@
 /* @ui:component sidebar */
-/* @ui:tokens color-bg color-fg color-fg-muted color-border color-primary color-primary-subtle color-bg-muted color-ring shadow-xl space-1 space-2 space-3 space-4 radius-md radius-lg z-overlay z-modal text-sm text-lg weight-medium weight-semibold duration-normal duration-slow ease-out ease-default */
+/* @ui:tokens color-bg color-fg color-fg-muted color-border color-primary color-primary-subtle color-bg-muted color-ring shadow-xl space-1 space-2 space-3 space-4 radius-md radius-lg z-overlay z-modal text-sm text-lg weight-medium weight-semibold duration-normal duration-slow ease-out ease-default border-width focus-ring-width focus-ring-style focus-ring-color focus-ring-offset */
 
 /* ── Root ──
    The root owns the layout column from `md` up; the panel is the visual surface.
@@ -43,7 +43,7 @@
   flex-direction: column;
   gap: var(--space-2);
   background: var(--sidebar-bg);
-  border-inline-end: 1px solid var(--color-border);
+  border-inline-end: var(--border-width) solid var(--color-border);
   border-start-end-radius: var(--radius-lg, 0.5rem);
   border-end-end-radius: var(--radius-lg, 0.5rem);
   box-shadow: var(--shadow-xl);
@@ -124,8 +124,8 @@
 }
 
 [data-ui="sidebar"] [data-part="trigger"]:focus-visible {
-  outline: 2px solid var(--color-ring, oklch(0.55 0.22 264));
-  outline-offset: 2px;
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
 }
 
 /* ── Navigation ── */
@@ -161,8 +161,8 @@
 }
 
 [data-ui="sidebar"] [data-part="item"]:focus-visible {
-  outline: 2px solid var(--color-ring, oklch(0.55 0.22 264));
-  outline-offset: -2px;
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  outline-offset: calc(-1 * var(--focus-ring-offset));
 }
 
 [data-ui="sidebar"] [data-part="item"][aria-current="page"] {
@@ -189,7 +189,7 @@
 [data-ui="sidebar"] [data-part="footer"] {
   flex-shrink: 0;
   padding: var(--space-3) var(--space-4);
-  border-block-start: 1px solid var(--color-border);
+  border-block-start: var(--border-width) solid var(--color-border);
 }
 
 /* ── Rail (icons only) ── */

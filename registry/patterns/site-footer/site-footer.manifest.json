@@ -103,7 +103,8 @@
     "color-bg-subtle", "color-fg", "color-fg-muted", "color-border",
     "space-1", "space-2", "space-3", "space-4", "space-6", "space-8", "space-10", "space-12",
     "font-body", "text-sm", "text-base", "text-lg",
-    "weight-semibold", "weight-bold", "leading-normal"
+    "weight-semibold", "weight-bold", "leading-normal",
+    "border-width"
   ],
 
   "templates": {

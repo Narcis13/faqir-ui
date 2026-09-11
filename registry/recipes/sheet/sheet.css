@@ -1,5 +1,5 @@
 /* @ui:component sheet */
-/* @ui:tokens color-bg color-fg color-border shadow-xl radius-xl space-4 space-6 z-overlay z-modal duration-normal duration-slow ease-out font-heading */
+/* @ui:tokens color-bg color-fg color-border shadow-xl radius-xl space-4 space-6 z-overlay z-modal duration-normal duration-slow ease-out font-heading border-width focus-ring-width focus-ring-style focus-ring-color focus-ring-offset */
 
 /* ── Root ── */
 [data-ui="sheet"] {
@@ -62,7 +62,7 @@
   bottom: 0;
   max-width: 100vw;
   border-radius: 0 var(--radius-xl) var(--radius-xl) 0;
-  border-inline-end: 1px solid var(--color-border);
+  border-inline-end: var(--border-width) solid var(--color-border);
   transform: translateX(-100%);
 }
 
@@ -73,7 +73,7 @@
   bottom: 0;
   max-width: 100vw;
   border-radius: var(--radius-xl) 0 0 var(--radius-xl);
-  border-inline-start: 1px solid var(--color-border);
+  border-inline-start: var(--border-width) solid var(--color-border);
   transform: translateX(100%);
 }
 
@@ -185,8 +185,8 @@
 }
 
 [data-ui="sheet"] [data-part="close"]:not([data-ui]):focus-visible {
-  outline: 2px solid var(--color-ring, oklch(0.55 0.22 264));
-  outline-offset: 2px;
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
 }
 
 /* ── Body ── */

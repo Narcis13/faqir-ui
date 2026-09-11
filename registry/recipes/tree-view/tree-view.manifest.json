@@ -161,7 +161,11 @@
     "font-ui",
     "weight-medium",
     "duration-fast",
-    "ease-default"
+    "ease-default",
+    "focus-ring-width",
+    "focus-ring-style",
+    "focus-ring-color",
+    "focus-ring-offset"
   ],
   "templates": {
     "html": "<ul data-ui=\"tree-view\" data-state=\"idle\" role=\"tree\" aria-label=\"Items\" aria-multiselectable=\"false\">\n  <li data-part=\"item\" data-state=\"expanded\" data-value=\"parent\" role=\"treeitem\" tabindex=\"0\" aria-selected=\"false\" aria-expanded=\"true\" aria-level=\"1\" aria-setsize=\"1\" aria-posinset=\"1\">\n    <span data-part=\"label\"><span data-part=\"toggle\" aria-hidden=\"true\">&#x203A;</span>Parent</span>\n    <ul data-part=\"group\" role=\"group\">\n      <li data-part=\"item\" data-value=\"child\" role=\"treeitem\" tabindex=\"-1\" aria-selected=\"false\" aria-level=\"2\" aria-setsize=\"1\" aria-posinset=\"1\">\n        <span data-part=\"label\"><span data-part=\"toggle\" aria-hidden=\"true\">&#x203A;</span>Child</span>\n      </li>\n    </ul>\n  </li>\n</ul>"

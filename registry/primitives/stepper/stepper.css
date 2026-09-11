@@ -1,5 +1,5 @@
 /* @ui:component stepper */
-/* @ui:tokens color-primary color-primary-fg color-bg-muted color-fg-muted color-success color-success-subtle color-border text-sm text-xs weight-medium radius-full space-2 space-3 space-1 */
+/* @ui:tokens color-primary color-primary-fg color-bg-muted color-fg-muted color-success color-success-subtle color-border text-sm text-xs weight-medium radius-full space-2 space-3 space-1 border-width-strong */
 
 /* ── Base ── */
 [data-ui="stepper"] {
@@ -78,7 +78,7 @@
    The tight phone metrics are the base; the roomier ones arrive at `sm`. */
 [data-ui="stepper"] [data-part="connector"] {
   flex: 1;
-  height: 2px;
+  height: var(--border-width-strong);
   background: var(--color-border);
   margin: 0 var(--space-1);
   min-width: var(--space-2);

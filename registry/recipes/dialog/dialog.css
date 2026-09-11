@@ -1,5 +1,5 @@
 /* @ui:component dialog */
-/* @ui:tokens radius-xl shadow-xl space-4 space-6 space-8 color-bg color-fg color-border color-fg-muted duration-normal duration-slow ease-default ease-out z-overlay z-modal font-heading corner-shape */
+/* @ui:tokens radius-xl shadow-xl space-4 space-6 space-8 color-bg color-fg color-border color-fg-muted duration-normal duration-slow ease-default ease-out z-overlay z-modal font-heading corner-shape border-width focus-ring-width focus-ring-style focus-ring-color focus-ring-offset */
 
 /* ── Root ── */
 [data-ui="dialog"] {
@@ -35,7 +35,7 @@
   max-height: 85vh;
   overflow-y: auto;
   background: var(--color-bg);
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--dialog-radius, var(--radius-xl));
   corner-shape: var(--corner-shape);
   box-shadow: var(--dialog-shadow, var(--shadow-xl));
@@ -127,8 +127,8 @@
 }
 
 [data-ui="dialog"] [data-part="close"]:not([data-ui]):focus-visible {
-  outline: 2px solid var(--color-ring);
-  outline-offset: 2px;
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
 }
 
 /* ── Description ── */

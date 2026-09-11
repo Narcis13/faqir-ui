@@ -200,7 +200,12 @@
     "duration-normal",
     "duration-slow",
     "ease-out",
-    "ease-default"
+    "ease-default",
+    "border-width",
+    "focus-ring-width",
+    "focus-ring-style",
+    "focus-ring-color",
+    "focus-ring-offset"
   ],
   "templates": {
     "html": "<div data-ui=\"sidebar\" data-state=\"{state}\" id=\"{id}\">\n  <div data-part=\"overlay\" hidden></div>\n  <aside data-part=\"panel\" aria-label=\"Primary navigation\">\n    <div data-part=\"header\">\n      <a data-part=\"brand\" href=\"#\"><span data-part=\"brand-icon\" aria-hidden=\"true\">{brand_icon}</span><span data-part=\"brand-label\">{brand}</span></a>\n      <button data-part=\"trigger\" aria-label=\"Toggle sidebar\" aria-expanded=\"true\" aria-controls=\"{id}\">{toggle_icon}</button>\n    </div>\n    <nav data-part=\"nav\" aria-label=\"Main\">\n      <a data-part=\"item\" href=\"#\" aria-current=\"page\"><span data-part=\"icon\" aria-hidden=\"true\">{icon}</span><span data-part=\"label\">{label}</span></a>\n    </nav>\n    <div data-part=\"footer\">{footer}</div>\n  </aside>\n</div>",

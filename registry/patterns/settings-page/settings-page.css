@@ -1,5 +1,5 @@
 /* @ui:component settings-page */
-/* @ui:tokens color-bg color-bg-subtle color-fg color-fg-muted color-border color-primary color-primary-fg space-1 space-2 space-3 space-4 space-6 space-8 space-10 space-12 space-48 radius-md radius-lg shadow-sm shadow-md font-heading font-body heading-tracking heading-transform heading-leading text-sm text-base text-lg text-xl weight-medium weight-semibold leading-tight leading-normal duration-fast duration-normal ease-default z-sticky */
+/* @ui:tokens color-bg color-bg-subtle color-fg color-fg-muted color-border color-primary color-primary-fg space-1 space-2 space-3 space-4 space-6 space-8 space-10 space-12 space-48 radius-md radius-lg shadow-sm shadow-md font-heading font-body heading-tracking heading-transform heading-leading text-sm text-base text-lg text-xl weight-medium weight-semibold leading-tight leading-normal duration-fast duration-normal ease-default z-sticky border-width border-width-strong */
 
 /* ── Root ── */
 [data-ui="settings-page"] {
@@ -92,7 +92,7 @@
   gap: var(--space-3, 0.75rem);
   padding: var(--space-4);
   background: var(--color-bg);
-  border-top: 1px solid var(--color-border);
+  border-top: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
   position: sticky;
@@ -156,7 +156,7 @@
   flex-direction: row;
   flex-wrap: wrap;
   border-inline-end: none;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: var(--border-width) solid var(--color-border);
   padding-inline-end: 0;
   position: static;
 }
@@ -175,7 +175,7 @@
   [data-ui="settings-page"][data-variant="horizontal"] [data-ui="tabs"] [data-part="list"] {
     flex-direction: column;
     border-bottom: none;
-    border-inline-end: 1px solid var(--color-border);
+    border-inline-end: var(--border-width) solid var(--color-border);
     padding-inline-end: var(--space-4);
     position: sticky;
     top: var(--space-4);
@@ -193,7 +193,7 @@
     justify-content: flex-start;
     text-align: start;
     border-bottom: none;
-    border-inline-start: 2px solid transparent;
+    border-inline-start: var(--border-width-strong) solid transparent;
     margin-bottom: 0;
     margin-inline-end: -1px;
     padding: var(--space-2) var(--space-3);

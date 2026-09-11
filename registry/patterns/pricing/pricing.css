@@ -1,5 +1,5 @@
 /* @ui:component pricing */
-/* @ui:tokens color-bg color-fg color-fg-muted color-border color-primary color-primary-subtle color-primary-fg space-1 space-2 space-3 space-4 space-6 space-8 space-10 space-12 space-16 text-sm text-base text-lg text-3xl font-heading font-body heading-tracking heading-transform heading-leading weight-semibold weight-bold leading-tight leading-normal leading-relaxed radius-lg shadow-md */
+/* @ui:tokens color-bg color-fg color-fg-muted color-border color-primary color-primary-subtle color-primary-fg space-1 space-2 space-3 space-4 space-6 space-8 space-10 space-12 space-16 text-sm text-base text-lg text-3xl font-heading font-body heading-tracking heading-transform heading-leading weight-semibold weight-bold leading-tight leading-normal leading-relaxed radius-lg shadow-md border-width-strong */
 
 /* ── Root ──
    Mobile-first (task 0.8-09): everything outside the two `@media` blocks at the
@@ -125,7 +125,7 @@
 [data-ui="pricing"] [data-part="tier"][data-state="featured"] {
   border-color: var(--color-primary);
   box-shadow: var(--shadow-md);
-  outline: var(--space-px, 1px) solid var(--color-primary);
+  outline: var(--border-width-strong) solid var(--color-primary);
 }
 
 /* ── Footnote ── */

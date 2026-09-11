@@ -227,9 +227,13 @@ describe("prose.css obeys the rules it teaches", () => {
 
   it("still says what it said before, in logical form", () => {
     // Behaviour, not spelling: the table is full-bleed, rules sit under the
-    // header row, and the first and last children have no outer margin.
+    // header row, and the first and last children have no outer margin. The
+    // header rule is `--border-width-strong` since 1.1A-03 — the same 2px, said
+    // in a way a shape theme can move.
     expect(PROSE).toContain("inline-size: 100%");
-    expect(PROSE).toContain("border-block-end: 2px solid var(--color-border-strong)");
+    expect(PROSE).toContain(
+      "border-block-end: var(--border-width-strong) solid var(--color-border-strong)",
+    );
     expect(PROSE).toContain("margin-block-start: 0");
     expect(PROSE).toContain("margin-block-end: 0");
   });

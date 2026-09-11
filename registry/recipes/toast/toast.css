@@ -1,5 +1,5 @@
 /* @ui:component toast */
-/* @ui:tokens color-bg color-fg color-fg-muted color-border color-success color-destructive color-warning shadow-lg radius-lg space-2 space-3 space-4 text-sm weight-medium z-toast duration-normal duration-slow ease-out font-ui */
+/* @ui:tokens color-bg color-fg color-fg-muted color-border color-success color-destructive color-warning shadow-lg radius-lg space-2 space-3 space-4 text-sm weight-medium z-toast duration-normal duration-slow ease-out font-ui border-width border-width-lg focus-ring-width focus-ring-style focus-ring-color focus-ring-offset */
 
 /* ── Container ── */
 [data-ui="toast"][data-part="container"] {
@@ -49,7 +49,7 @@
   width: max-content;
   padding: var(--space-3) var(--space-4);
   background: var(--color-bg);
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   pointer-events: auto;
@@ -98,7 +98,7 @@
 
 /* ── Tone Variants ── */
 [data-ui="toast"] [data-part="toast"][data-variant="success"] {
-  border-inline-start: 3px solid var(--color-success, oklch(0.55 0.18 145));
+  border-inline-start: var(--border-width-lg) solid var(--color-success, oklch(0.55 0.18 145));
 }
 
 [data-ui="toast"] [data-part="toast"][data-variant="success"] [data-part="icon"] {
@@ -106,7 +106,7 @@
 }
 
 [data-ui="toast"] [data-part="toast"][data-variant="error"] {
-  border-inline-start: 3px solid var(--color-destructive, oklch(0.55 0.22 25));
+  border-inline-start: var(--border-width-lg) solid var(--color-destructive, oklch(0.55 0.22 25));
 }
 
 [data-ui="toast"] [data-part="toast"][data-variant="error"] [data-part="icon"] {
@@ -114,7 +114,7 @@
 }
 
 [data-ui="toast"] [data-part="toast"][data-variant="warning"] {
-  border-inline-start: 3px solid var(--color-warning, oklch(0.7 0.18 85));
+  border-inline-start: var(--border-width-lg) solid var(--color-warning, oklch(0.7 0.18 85));
 }
 
 [data-ui="toast"] [data-part="toast"][data-variant="warning"] [data-part="icon"] {
@@ -147,7 +147,7 @@
 [data-ui="toast"] [data-part="action"] {
   flex-shrink: 0;
   padding: var(--space-1, 0.25rem) var(--space-2);
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-md, 0.375rem);
   background: transparent;
   color: var(--color-fg);
@@ -164,8 +164,8 @@
 }
 
 [data-ui="toast"] [data-part="action"]:focus-visible {
-  outline: 2px solid var(--color-ring, oklch(0.55 0.22 264));
-  outline-offset: 2px;
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
 }
 
 /* ── Close Button ── */
@@ -191,8 +191,8 @@
 }
 
 [data-ui="toast"] [data-part="close"]:focus-visible {
-  outline: 2px solid var(--color-ring, oklch(0.55 0.22 264));
-  outline-offset: 2px;
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
 }
 
 /* ── Motion ── */

@@ -1,5 +1,5 @@
 /* @ui:component drawer */
-/* @ui:tokens color-bg color-fg color-border shadow-xl space-4 space-6 radius-none z-overlay z-modal duration-normal duration-slow ease-out ease-default font-heading */
+/* @ui:tokens color-bg color-fg color-border shadow-xl space-4 space-6 radius-none z-overlay z-modal duration-normal duration-slow ease-out ease-default font-heading border-width focus-ring-width focus-ring-style focus-ring-color focus-ring-offset */
 
 /* ── Root ── */
 [data-ui="drawer"] {
@@ -44,7 +44,7 @@
 [data-ui="drawer"] [data-part="panel"][data-variant="left"] {
   inset-inline-start: 0;
   inset-inline-end: auto;
-  border-inline-end: 1px solid var(--color-border);
+  border-inline-end: var(--border-width) solid var(--color-border);
   border-radius: 0 var(--radius-none, 0) var(--radius-none, 0) 0;
   transform: translateX(-100%);
 }
@@ -52,7 +52,7 @@
 [data-ui="drawer"] [data-part="panel"][data-variant="right"] {
   inset-inline-end: 0;
   inset-inline-start: auto;
-  border-inline-start: 1px solid var(--color-border);
+  border-inline-start: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-none, 0) 0 0 var(--radius-none, 0);
   transform: translateX(100%);
 }
@@ -141,8 +141,8 @@
 }
 
 [data-ui="drawer"] [data-part="close"]:not([data-ui]):focus-visible {
-  outline: 2px solid var(--color-ring, oklch(0.55 0.22 264));
-  outline-offset: 2px;
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
 }
 
 /* ── Body ── */
@@ -161,7 +161,7 @@
   gap: var(--space-3, 0.75rem);
   padding: var(--space-6);
   padding-top: var(--space-4);
-  border-top: 1px solid var(--color-border);
+  border-top: var(--border-width) solid var(--color-border);
   flex-shrink: 0;
 }
 

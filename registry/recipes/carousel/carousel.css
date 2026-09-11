@@ -1,5 +1,5 @@
 /* @ui:component carousel */
-/* @ui:tokens color-bg color-bg-muted color-fg color-fg-muted color-border color-primary color-ring radius-md radius-lg space-1 space-2 space-3 space-4 text-sm font-ui duration-fast ease-default */
+/* @ui:tokens color-bg color-bg-muted color-fg color-fg-muted color-border color-primary color-ring radius-md radius-lg space-1 space-2 space-3 space-4 text-sm font-ui duration-fast ease-default border-width focus-ring-width focus-ring-style focus-ring-color focus-ring-offset */
 
 /* The sliding is CSS, not JavaScript: the viewport is a scroll-snap strip and
    every slide is a snap target. Everything below works with no controller
@@ -39,8 +39,8 @@
 }
 
 [data-ui="carousel"] [data-part="viewport"]:focus-visible {
-  outline: 2px solid var(--color-ring);
-  outline-offset: 2px;
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
 }
 
 /* ── Slide: one full-width snap target ── */
@@ -48,7 +48,7 @@
   flex: 0 0 var(--carousel-slide-size, 100%);
   min-inline-size: 0;
   padding: var(--space-4);
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-lg);
   background: var(--color-bg);
   color: var(--color-fg);
@@ -77,7 +77,7 @@
   min-inline-size: 2rem;
   min-block-size: 2rem;
   padding: var(--space-1) var(--space-2);
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-bg);
   color: var(--color-fg);
@@ -96,8 +96,8 @@
 [data-ui="carousel"] [data-part="prev"]:focus-visible,
 [data-ui="carousel"] [data-part="next"]:focus-visible,
 [data-ui="carousel"] [data-part="dot"]:focus-visible {
-  outline: 2px solid var(--color-ring);
-  outline-offset: 2px;
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
 }
 
 /* Boundary contract "stop" — the controller disables the end button. */
@@ -112,7 +112,7 @@
   inline-size: 0.625rem;
   block-size: 0.625rem;
   padding: 0;
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: 50%;
   background: var(--color-bg-muted);
   cursor: pointer;

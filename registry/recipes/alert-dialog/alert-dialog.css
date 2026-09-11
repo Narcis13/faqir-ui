@@ -1,5 +1,5 @@
 /* @ui:component alert-dialog */
-/* @ui:tokens radius-xl shadow-xl space-2 space-3 space-6 color-bg color-fg color-border color-fg-muted color-destructive duration-normal ease-default ease-out z-overlay z-modal font-heading */
+/* @ui:tokens radius-xl shadow-xl space-2 space-3 space-6 color-bg color-fg color-border color-fg-muted color-destructive duration-normal ease-default ease-out z-overlay z-modal font-heading border-width */
 
 /* ── Root ── */
 [data-ui="alert-dialog"] {
@@ -35,7 +35,7 @@
   max-height: 85vh;
   overflow-y: auto;
   background: var(--color-bg);
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--alert-dialog-radius, var(--radius-xl));
   box-shadow: var(--alert-dialog-shadow, var(--shadow-xl));
   opacity: 0;

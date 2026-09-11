@@ -110,7 +110,12 @@
     "z-dropdown",
     "duration-fast",
     "ease-default",
-    "font-ui"
+    "font-ui",
+    "border-width",
+    "focus-ring-width",
+    "focus-ring-style",
+    "focus-ring-color",
+    "focus-ring-offset"
   ],
   "templates": {
     "html": "<div data-ui=\"popover\" data-state=\"closed\">\n  <button data-part=\"trigger\" aria-haspopup=\"true\" aria-expanded=\"false\">{trigger_text}</button>\n  <div data-part=\"content\" data-variant=\"{position}\" data-align=\"{align}\" hidden>\n    {content}\n    <button data-part=\"close\" aria-label=\"Close popover\">✕</button>\n  </div>\n</div>"

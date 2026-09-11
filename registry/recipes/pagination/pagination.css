@@ -1,5 +1,5 @@
 /* @ui:component pagination */
-/* @ui:tokens color-bg color-bg-muted color-fg color-fg-muted color-primary color-primary-fg color-border radius-md space-1 space-2 space-3 text-xs text-sm text-base weight-medium duration-fast ease-default font-ui */
+/* @ui:tokens color-bg color-bg-muted color-fg color-fg-muted color-primary color-primary-fg color-border radius-md space-1 space-2 space-3 text-xs text-sm text-base weight-medium duration-fast ease-default font-ui border-width focus-ring-width focus-ring-style focus-ring-color focus-ring-offset */
 
 /* ── Root ── */
 [data-ui="pagination"] {
@@ -35,7 +35,7 @@
   min-width: 36px;
   height: 36px;
   padding: 0 var(--space-2);
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-bg);
   color: var(--color-fg);
@@ -60,8 +60,8 @@
 [data-ui="pagination"] [data-part="page"]:focus-visible,
 [data-ui="pagination"] [data-part="prev"]:focus-visible,
 [data-ui="pagination"] [data-part="next"]:focus-visible {
-  outline: 2px solid var(--color-ring, oklch(0.55 0.22 264));
-  outline-offset: 2px;
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
 }
 
 /* ── Active page ── */

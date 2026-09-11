@@ -161,7 +161,12 @@
     "text-sm",
     "font-ui",
     "duration-fast",
-    "ease-default"
+    "ease-default",
+    "border-width",
+    "focus-ring-width",
+    "focus-ring-style",
+    "focus-ring-color",
+    "focus-ring-offset"
   ],
   "templates": {
     "html": "<div data-ui=\"carousel\" role=\"group\" aria-roledescription=\"carousel\" aria-label=\"{label}\">\n  <div data-part=\"viewport\" tabindex=\"0\" role=\"group\" aria-label=\"Slides\">\n    <div data-part=\"slide\" role=\"group\" aria-roledescription=\"slide\" aria-label=\"1 of 2\">{slide1}</div>\n    <div data-part=\"slide\" role=\"group\" aria-roledescription=\"slide\" aria-label=\"2 of 2\">{slide2}</div>\n  </div>\n  <div data-part=\"controls\" hidden>\n    <button data-part=\"prev\" type=\"button\" aria-label=\"Previous slide\">&laquo;</button>\n    <button data-part=\"next\" type=\"button\" aria-label=\"Next slide\">&raquo;</button>\n  </div>\n  <div data-part=\"dots\" role=\"group\" aria-label=\"Choose slide\" hidden>\n    <button data-part=\"dot\" type=\"button\" aria-label=\"Slide 1\"></button>\n    <button data-part=\"dot\" type=\"button\" aria-label=\"Slide 2\"></button>\n  </div>\n  <p data-part=\"status\" role=\"status\" aria-live=\"polite\"></p>\n</div>"

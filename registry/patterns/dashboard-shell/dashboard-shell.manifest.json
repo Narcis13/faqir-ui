@@ -188,7 +188,12 @@
     "duration-slow",
     "ease-default",
     "ease-out",
-    "z-sticky"
+    "z-sticky",
+    "border-width",
+    "focus-ring-width",
+    "focus-ring-style",
+    "focus-ring-color",
+    "focus-ring-offset"
   ],
   "templates": {
     "html": "<div data-ui=\"dashboard-shell\">\n  <aside data-part=\"sidebar\" data-state=\"expanded\">\n    <div data-part=\"logo\">{logo}</div>\n    <nav data-part=\"nav\" aria-label=\"Main navigation\">\n      <a data-part=\"nav-item\" aria-current=\"page\">{item}</a>\n    </nav>\n  </aside>\n  <header data-part=\"header\">{header}</header>\n  <main data-part=\"content\">{content}</main>\n  <footer data-part=\"footer\">{footer}</footer>\n</div>"

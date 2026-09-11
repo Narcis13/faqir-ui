@@ -1,5 +1,5 @@
 /* @ui:component slider */
-/* @ui:tokens color-bg color-fg-muted color-border color-primary color-primary-subtle color-ring color-bg-muted space-2 space-3 space-4 radius-full text-sm text-base shadow-sm duration-fast ease-default font-ui */
+/* @ui:tokens color-bg color-fg-muted color-border color-primary color-primary-subtle color-ring color-bg-muted space-2 space-3 space-4 radius-full text-sm text-base shadow-sm duration-fast ease-default font-ui border-width border-width-strong focus-ring-width focus-ring-style focus-ring-color focus-ring-offset */
 
 /* ── Root ── */
 [data-ui="slider"] {
@@ -49,7 +49,7 @@
      value in both LTR and RTL (translateX is physical, so -50% always recentres). */
   transform: translate(-50%, -50%);
   background: var(--color-bg, white);
-  border: 2px solid var(--color-primary);
+  border: var(--border-width-strong) solid var(--color-primary);
   border-radius: var(--radius-full, 9999px);
   box-shadow: var(--shadow-sm, 0 1px 3px oklch(0 0 0 / 0.1));
   cursor: grab;
@@ -63,8 +63,8 @@
 }
 
 [data-ui="slider"] [data-part="thumb"]:focus-visible {
-  outline: 2px solid var(--color-ring, oklch(0.55 0.22 264));
-  outline-offset: 2px;
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
 }
 
 [data-ui="slider"] [data-part="thumb"][data-state="dragging"] {
@@ -115,7 +115,7 @@
    the substitution so the control still reads as "this much, up to here". [W3-3] */
 @media (forced-colors: active) {
   [data-ui="slider"] [data-part="track"] {
-    border: 1px solid ButtonText;
+    border: var(--border-width) solid ButtonText;
   }
 
   [data-ui="slider"] [data-part="range"] {
@@ -126,7 +126,7 @@
   [data-ui="slider"] [data-part="thumb"] {
     forced-color-adjust: none;
     background: ButtonText;
-    border: 1px solid ButtonFace;
+    border: var(--border-width) solid ButtonFace;
   }
 
   [data-ui="slider"] [data-part="thumb"]:focus-visible {

@@ -294,7 +294,9 @@ describe("auth-form · the card is the page below sm and a card above it", () =>
     expect(card("max-width", sm)).toBe("var(--auth-form-max-width, 400px)");
     expect(card("border-radius", sm)).toBe("var(--card-radius, var(--radius-lg))");
     expect(card("box-shadow", sm)).toBe("var(--card-shadow, var(--shadow-sm))");
-    expect(card("border-inline-start", sm)).toBe("1px solid var(--card-border, var(--color-border))");
+    expect(card("border-inline-start", sm)).toBe(
+      "var(--border-width) solid var(--card-border, var(--color-border))",
+    );
   });
 
   it("the retired 480px floor is inside the sm tier, not below a fifth one", () => {
