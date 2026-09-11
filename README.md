@@ -769,7 +769,16 @@ faqir theme set midnight
 faqir theme create my-brand
 
 # Generate a complete theme from one brand color
-faqir theme generate my-brand --accent "oklch(0.55 0.2 150)" --neutral cool --radius lg --scheme both
+faqir theme generate my-brand --accent "oklch(0.55 0.2 150)"
+
+# …or from a full seed: the accent plus any of the fourteen character axes
+faqir theme generate ember --accent "oklch(0.62 0.2 40)" --neutral warm \
+  --type serif-editorial --scale 1.25 --shape soft --border hairline \
+  --depth hard --material grain --motion springy --focus glow \
+  --input underline --button rect --density comfortable --contrast standard
+
+# Re-generate from the seed the last run wrote (flags still win over the file)
+faqir theme generate ember --seed themes/ember.seed.json --out registry/themes
 
 # Also generate a matching, print-optimized document theme
 faqir theme generate my-brand --accent "#168c5b" --document
@@ -779,20 +788,42 @@ faqir theme list
 ```
 
 `theme create` emits a scaffold with commented semantic-token overrides. `theme
-generate` instead writes a complete `themes/<name>.css` and adjacent
-`<name>.theme.json`. Its deterministic 11-step OKLCH ramp accepts opaque
-`oklch()`, `#rgb`, or `#rrggbb` accents; `--neutral` chooses `cool`, `warm`, or
-`gray`, `--radius` chooses `sm`, `md`, or `lg`, and `--scheme` chooses `light`,
-`dark`, or `both`.
+generate` instead writes four files per theme — `themes/<name>.css`, its
+`<name>.theme.json`, the resolved `<name>.seed.json`, and a self-contained
+`<name>.preview.html` — into `themes/`, or wherever `--out` says.
 
-Before either file is written, the generator derives the manifest, checks every
+**The seed is the input.** A theme is described by an accent colour and
+fourteen axes (§5.2 of `FAQIR-VISION.md`): `neutral`, `scheme`, `type`
+(pairing, scale, base size, heading voice), `shape` (radius, border weight,
+corner style), `depth`, `material`, `motion`, `density`, `focus`,
+`decoration`, `controls` (button, input, checkbox, switch silhouettes) and
+`contrast`. Every axis is optional and has a documented default, so
+`{ name, accent }` is a complete seed — the defaults together describe the
+shipped `default` theme. Each axis has one flag (`faqir theme generate --help`
+lists them with their vocabularies), a `--seed <file>` supplies any or all of
+them at once, and flags win where both speak. An unknown value is refused by
+name, with the axis's vocabulary in the message, before anything is written.
+
+The resolved seed is written beside the CSS and carried in the manifest's
+`seed`, so a generated theme can always be reproduced — and the manifest's
+`axes` block is *derived from the stylesheet itself* rather than copied from
+the seed: the generator reads its own output back and refuses to emit a theme
+whose CSS disagrees with what it was asked for.
+
+Before any file is written, the generator derives the manifest, checks every
 theme coverage token, and verifies the same foreground/background pairs used by
 the `contrast-tokens` audit. Light-mode primary actions use white text and move
 to a darker ramp step when needed; dark mode uses dark text on an inverted,
 lighter accent step. `--document` additionally writes
-`themes/<name>-document.css` and its light-only print manifest. Add `--json` to
-receive the generated paths, normalized accent, and every computed contrast
-ratio for automation.
+`themes/<name>-document.css` and its light-only print manifest, and
+`--legacy-blocks` emits a dual-scheme theme as three colour blocks instead of
+one `light-dark()` block.
+
+Add `--json` for the **scorecard**: the resolved seed, the derived axes, every
+generated path, every contrast ratio, the elevation ΔE of the surface ramp, the
+focus-ring ratio against each surface it lands on, and the tap-target heights
+the seed's density lands on. The MCP `faqir_generate_theme` tool takes the same
+seed and returns the same scorecard in memory, without touching the filesystem.
 
 ---
 
@@ -1338,6 +1369,7 @@ faqir bundle --dry-run            # Show what would be bundled
 faqir theme set midnight          # Switch active theme
 faqir theme create my-brand       # Scaffold custom theme
 faqir theme generate my-brand --accent "#168c5b" --document
+faqir theme generate my-brand --seed my-brand.seed.json --out registry/themes
 faqir theme list                  # Show available themes
 
 faqir variant add button visual=accent     # Add variant value

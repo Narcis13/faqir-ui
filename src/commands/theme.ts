@@ -15,12 +15,27 @@ import {
 } from "../theme-preview";
 import {
   generateThemeBundle,
+  themeScorecard,
+  THEME_SCORECARD_VERSION,
+  type GeneratedThemeFile,
   type ThemeGenerateInput,
-  type ThemeNeutral,
   type ThemeRadius,
 } from "./theme-generate";
+import { densityTokenCss, themeBaseSources } from "../theme/sources";
+import {
+  coerceSeedValue,
+  mergeSeeds,
+  SEED_FLAGS,
+  setSeedPath,
+  type ThemeSeedInput,
+} from "../theme/seed";
+import { validateThemeSeed, THEME_AXIS_VALUES } from "../theme-manifest";
 
-export const THEME_GENERATE_JSON_VERSION = 1;
+/** The `--json` payload's schema version — the scorecard's, so they cannot drift. */
+export const THEME_GENERATE_JSON_VERSION = THEME_SCORECARD_VERSION;
+
+/** Where `theme generate` writes, unless `--out` says otherwise. */
+export const DEFAULT_THEME_OUT_DIR = "themes";
 
 function printHelp() {
   log.heading("faqir theme <subcommand>");
@@ -42,26 +57,42 @@ function printHelp() {
   console.log("  faqir theme list");
 }
 
+/** The axis flags, rendered as a help table — derived, so a new axis appears here. */
+function axisFlagRows(): [string, string][] {
+  const vocabulary = THEME_AXIS_VALUES as Record<string, readonly (string | number)[] | undefined>;
+  return Object.entries(SEED_FLAGS)
+    .filter(([flag]) => flag !== "accent")
+    .map(([flag, path]): [string, string] => [
+      `--${flag} <value>`,
+      `${path}: ${(vocabulary[path] ?? []).join(", ")}`,
+    ]);
+}
+
 function printGenerateHelp() {
   log.heading("faqir theme generate <name>");
   log.blank();
-  console.log("Generate a complete, contrast-verified theme from one brand color.");
+  console.log("Generate a complete, contrast-verified theme from a seed — one brand colour");
+  console.log("plus as many of the fourteen character axes as you care to state.");
   log.blank();
   console.log("Usage:");
   console.log('  faqir theme generate my-brand --accent "oklch(0.55 0.2 150)" [options]');
+  console.log("  faqir theme generate my-brand --seed my-brand.seed.json [options]");
   log.blank();
   console.log("Options:");
   log.table([
     ["--accent <color>", "Opaque oklch(), #rgb, or #rrggbb brand color (required)"],
-    ["--neutral <tone>", "Neutral palette: cool, warm, or gray (default: cool)"],
-    ["--radius <size>", "Radius scale: sm, md, or lg (default: md)"],
-    ["--scheme <mode>", "Color scheme: light, dark, or both (default: both)"],
+    ["--seed <file>", "A .seed.json to start from; individual flags override it"],
+    ["--out <dir>", `Directory to write into (default: ${DEFAULT_THEME_OUT_DIR})`],
     ["--document", "Also emit a brand-matched print/document variant"],
+    ["--radius <size>", "1.0 compatibility flag for --shape: sm, md, or lg"],
     ["--legacy-blocks", "Dual themes: write three colour blocks instead of one light-dark() block"],
-    ["--json", "Report generated files and all computed contrast ratios"],
+    ["--json", "Print the full scorecard: seed, axes, contrast, elevation, focus, tap targets"],
   ]);
   log.blank();
-  log.dim("Outputs: themes/<name>.css + themes/<name>.theme.json + themes/<name>.preview.html");
+  console.log("Axes (every one optional — an unstated axis takes its documented default):");
+  log.table(axisFlagRows());
+  log.blank();
+  log.dim(`Outputs: ${DEFAULT_THEME_OUT_DIR}/<name>.{css,theme.json,seed.json,preview.html}`);
   log.dim("Contrast policy: white ink in light mode, dark ink in dark mode; the primary ramp step is adjusted automatically.");
 }
 
@@ -77,151 +108,210 @@ function optionValue(args: string[], index: number, flag: string): { value: stri
   return { value, next: index + 1 };
 }
 
-function parseThemeGenerateArgs(args: string[]): ThemeGenerateInput | null {
+/** What the command line asked for, before the seed file is read or merged. */
+interface ThemeGenerateArgs {
+  /** The positional theme name, if one was given. `--seed`'s may stand in. */
+  name: string | null;
+  /** Path to a `.seed.json`, if `--seed` was given. */
+  seedPath: string | null;
+  /** The axes the flags stated. Merged OVER the seed file: flags win. */
+  flagSeed: Record<string, unknown>;
+  radius: ThemeRadius | null;
+  legacyBlocks: boolean;
+  outDir: string;
+}
+
+/**
+ * Parse `theme generate`'s command line.
+ *
+ * The axis flags are NOT validated here, on purpose. A flag writes its value
+ * into the seed and `normalizeSeed` — i.e. `validateThemeSeed`, the same
+ * function that gates a shipped manifest — produces the error, so
+ * `--depth fluffy` prints the identical sentence whether it arrived from this
+ * CLI, from a `.seed.json`, or from the MCP tool. Validating twice is how two
+ * spellings of the same rule drift apart; the 1.0 parser's own
+ * `--neutral cool|warm|gray` check was already wrong, because 1.1 added
+ * `tinted`.
+ */
+function parseThemeGenerateArgs(args: string[]): ThemeGenerateArgs | null {
   if (args.includes("--help") || args.includes("-h")) return null;
 
-  let name: string | null = null;
-  let accent: string | null = null;
-  let neutral: ThemeNeutral = "cool";
-  let radius: ThemeRadius = "md";
-  let scheme: ThemeGenerateInput["scheme"] = "both";
-  let document = false;
-  let legacyBlocks = false;
+  const parsed: ThemeGenerateArgs = {
+    name: null,
+    seedPath: null,
+    flagSeed: {},
+    radius: null,
+    legacyBlocks: false,
+    outDir: DEFAULT_THEME_OUT_DIR,
+  };
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
     const flag = arg.split("=", 1)[0];
+    const axis = flag.startsWith("--") ? SEED_FLAGS[flag.slice(2)] : undefined;
+    if (axis) {
+      const option = optionValue(args, i, flag);
+      setSeedPath(parsed.flagSeed, axis, coerceSeedValue(axis, option.value));
+      i = option.next;
+      continue;
+    }
     switch (flag) {
-      case "--accent": {
-        const parsed = optionValue(args, i, "--accent");
-        accent = parsed.value;
-        i = parsed.next;
+      case "--seed": {
+        const option = optionValue(args, i, "--seed");
+        parsed.seedPath = option.value;
+        i = option.next;
         break;
       }
-      case "--neutral": {
-        const parsed = optionValue(args, i, "--neutral");
-        if (!(["cool", "warm", "gray"] as string[]).includes(parsed.value)) {
-          throw new Error(`Invalid --neutral '${parsed.value}'. Choose: cool, warm, or gray.`);
-        }
-        neutral = parsed.value as ThemeNeutral;
-        i = parsed.next;
+      case "--out": {
+        const option = optionValue(args, i, "--out");
+        parsed.outDir = option.value.replace(/[\\/]+$/, "");
+        i = option.next;
         break;
       }
       case "--radius": {
-        const parsed = optionValue(args, i, "--radius");
-        if (!(["sm", "md", "lg"] as string[]).includes(parsed.value)) {
-          throw new Error(`Invalid --radius '${parsed.value}'. Choose: sm, md, or lg.`);
-        }
-        radius = parsed.value as ThemeRadius;
-        i = parsed.next;
-        break;
-      }
-      case "--scheme": {
-        const parsed = optionValue(args, i, "--scheme");
-        if (!(["light", "dark", "both"] as string[]).includes(parsed.value)) {
-          throw new Error(`Invalid --scheme '${parsed.value}'. Choose: light, dark, or both.`);
-        }
-        scheme = parsed.value as ThemeGenerateInput["scheme"];
-        i = parsed.next;
+        const option = optionValue(args, i, "--radius");
+        parsed.radius = option.value as ThemeRadius;
+        i = option.next;
         break;
       }
       case "--document":
-        document = true;
+        parsed.flagSeed.document = true;
         break;
       case "--legacy-blocks":
-        legacyBlocks = true;
+        parsed.legacyBlocks = true;
         break;
       case "--json":
         break;
       default:
-        if (arg.startsWith("-")) throw new Error(`Unknown option '${arg}'. Run 'faqir theme generate --help'.`);
-        if (name) throw new Error(`Unexpected argument '${arg}'. Usage: faqir theme generate <name> --accent <color>`);
-        name = arg;
+        if (arg.startsWith("-")) {
+          throw new Error(`Unknown option '${arg}'. Run 'faqir theme generate --help'.`);
+        }
+        if (parsed.name) {
+          throw new Error(`Unexpected argument '${arg}'. Usage: faqir theme generate <name> --accent <color>`);
+        }
+        parsed.name = arg;
     }
   }
 
-  if (!name) throw new Error("Theme name required. Usage: faqir theme generate <name> --accent <color>");
-  if (!/^[a-z][a-z0-9-]*$/.test(name)) {
-    throw new Error("Theme name must be lowercase kebab-case (e.g., 'my-brand').");
+  return parsed;
+}
+
+/** Read a `--seed <file>`, failing with the path rather than with a parser message. */
+async function readSeedFile(path: string): Promise<Record<string, unknown>> {
+  const resolved = join(process.cwd(), path);
+  const source = existsSync(resolved) ? resolved : path;
+  if (!existsSync(source)) {
+    throw new Error(`Seed file '${path}' not found.`);
   }
-  if (!accent) {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(await Bun.file(source).text());
+  } catch (error) {
+    throw new Error(
+      `Seed file '${path}' is not valid JSON: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+    throw new Error(`Seed file '${path}' must contain a JSON object (a theme seed).`);
+  }
+  return parsed as Record<string, unknown>;
+}
+
+/**
+ * The seed the generator is actually run with: the file, the flags over it, and
+ * the two 1.0 options that are not axes.
+ */
+async function resolveSeedInput(parsed: ThemeGenerateArgs): Promise<ThemeGenerateInput> {
+  const fileSeed = parsed.seedPath ? await readSeedFile(parsed.seedPath) : {};
+  const merged = mergeSeeds(fileSeed, parsed.flagSeed);
+  // The positional name wins over the file's, so one seed can be re-generated
+  // under another name without editing it.
+  if (parsed.name) merged.name = parsed.name;
+  if (merged.name === undefined) {
+    throw new Error(
+      "Theme name required. Usage: faqir theme generate <name> --accent <color> " +
+        "(or name it in the --seed file).",
+    );
+  }
+  if (merged.accent === undefined) {
     throw new Error(
       '--accent is required. Use an opaque oklch() or hex brand color, for example --accent "oklch(0.55 0.2 150)".',
     );
   }
-
-  return { name, accent, neutral, radius, scheme, document, legacyBlocks };
+  return {
+    ...(merged as unknown as ThemeSeedInput),
+    ...(parsed.radius ? { radius: parsed.radius } : {}),
+    legacyBlocks: parsed.legacyBlocks,
+  };
 }
 
 async function themeGenerate(args: string[]): Promise<void> {
-  const input = parseThemeGenerateArgs(args);
-  if (!input) {
+  const parsed = parseThemeGenerateArgs(args);
+  if (!parsed) {
     printGenerateHelp();
     return;
   }
+  const input = await resolveSeedInput(parsed);
 
-  const tokensDir = join(getRegistryPath(), "tokens");
-  const tokenFiles = [...new Bun.Glob("*.css").scanSync(tokensDir)]
-    .filter((file) => file !== "index.css")
-    .sort();
-  const baseCssSources = await Promise.all(
-    tokenFiles.map((file) => Bun.file(join(tokensDir, file)).text()),
-  );
+  const registryPath = getRegistryPath();
+  const baseCssSources = themeBaseSources(registryPath);
 
-  // Generation, manifest derivation, and every contrast check happen before
-  // this point. No output directory exists yet if any verification throws.
+  // Generation, manifest derivation, the axis round trip and every contrast
+  // check happen before this point. No output directory exists yet if any
+  // verification throws.
   const result = generateThemeBundle(input, baseCssSources);
-  const outputDir = join(process.cwd(), "themes");
-  ensureDir(outputDir);
-  const previews = new Map<string, string>();
-  for (const file of result.generated) {
-    await Bun.write(join(process.cwd(), file.css_path), file.css);
-    await Bun.write(
-      join(process.cwd(), file.manifest_path),
-      JSON.stringify(file.manifest, null, 2) + "\n",
+  const report = themeScorecard(result, baseCssSources, {
+    outDir: parsed.outDir,
+    densityCss: densityTokenCss(registryPath),
+  });
+
+  // The seed is written beside the CSS, and it is the SAME object the manifest
+  // carries — so `faqir theme generate x --seed x.seed.json` reproduces the
+  // theme byte for byte, and a reader can see what the generator was told.
+  const seedErrors = validateThemeSeed(result.seed);
+  if (seedErrors.length > 0) {
+    throw new Error(
+      `The resolved seed does not validate against definitions.themeSeed: ` +
+        `${seedErrors.map((error) => `${error.field}: ${error.message}`).join("; ")}`,
     );
-    // The manifest declares `preview: "<name>.preview.html"`, so the file has to
-    // be there: a shipped manifest must not name a file that is not (1.0R-10).
-    // It is written self-contained — `themes/` here is a drop folder with no
-    // registry beside it, so a linking harness would resolve to nothing.
-    const preview = await renderGeneratedPreview(file.name, file.kind, file.manifest.scheme, file.css);
-    const previewPath = `themes/${file.name}.preview.html`;
-    await Bun.write(join(process.cwd(), previewPath), preview);
-    previews.set(file.name, previewPath);
   }
 
-  const report = {
-    theme_generate_schema_version: THEME_GENERATE_JSON_VERSION,
-    command: "theme generate",
-    name: result.name,
-    accent: result.accent,
-    options: {
-      neutral: result.neutral,
-      radius: result.radius,
-      scheme: result.scheme,
-      document: result.document,
-      legacy_blocks: result.legacyBlocks,
-    },
-    generated: result.generated.map((file) => ({
-      kind: file.kind,
-      name: file.name,
-      css: file.css_path,
-      manifest: file.manifest_path,
-      preview: previews.get(file.name)!,
-    })),
-    contrast: result.generated.flatMap((file) => file.contrast),
-  };
+  ensureDir(join(process.cwd(), parsed.outDir));
+  const written = new Map(report.generated.map((file) => [file.name, file]));
+  for (const file of result.generated) {
+    const paths = written.get(file.name)!;
+    await Bun.write(join(process.cwd(), paths.css), file.css);
+    await Bun.write(
+      join(process.cwd(), paths.manifest),
+      JSON.stringify(file.manifest, null, 2) + "\n",
+    );
+    if (paths.seed) {
+      await Bun.write(
+        join(process.cwd(), paths.seed),
+        JSON.stringify(result.seed, null, 2) + "\n",
+      );
+    }
+    // The manifest declares `preview: "<name>.preview.html"`, so the file has to
+    // be there: a shipped manifest must not name a file that is not (1.0R-10).
+    // It is written self-contained — the output directory is a drop folder with
+    // no registry beside it, so a linking harness would resolve to nothing.
+    await Bun.write(
+      join(process.cwd(), paths.preview),
+      await renderGeneratedPreview(file, result.axes.density),
+    );
+  }
 
   if (isJSONMode()) {
     emitJSON(report);
     return;
   }
 
-  log.success(`Generated contrast-verified theme '${input.name}'.`);
-  for (const file of result.generated) {
-    log.step(`${file.css_path}`);
-    log.step(`${file.manifest_path}`);
-    log.step(`${previews.get(file.name)}`);
+  log.success(`Generated contrast-verified theme '${result.name}'.`);
+  for (const file of report.generated) {
+    log.step(file.css);
+    log.step(file.manifest);
+    if (file.seed) log.step(file.seed);
+    log.step(file.preview);
   }
   const primaryRatios = report.contrast.filter(
     (pair) => pair.foreground === "color-primary-fg" && pair.background === "color-primary",
@@ -230,6 +320,9 @@ async function themeGenerate(args: string[]): Promise<void> {
     const adjusted = pair.auto_adjusted ? " (lightness auto-adjusted)" : "";
     log.dim(`${pair.theme} ${pair.scheme}: primary contrast ${pair.ratio.toFixed(2)}:1${adjusted}`);
   }
+  const tap = report.tap_targets.find((target) => target.control === "control-height-md");
+  if (tap?.height_px) log.dim(`${report.axes.density} density: ${tap.height_px}px default control height`);
+  log.dim("Run with --json for the full scorecard (axes, elevation ΔE, focus ratios, tap targets).");
 }
 
 /**
@@ -242,12 +335,11 @@ async function themeGenerate(args: string[]): Promise<void> {
  * renders, read from the registry the CLI ships and inlined in cascade order.
  */
 async function renderGeneratedPreview(
-  name: string,
-  kind: "theme" | "document",
-  scheme: ThemePreviewSpec["scheme"],
-  themeCss: string,
+  file: GeneratedThemeFile,
+  density: string,
 ): Promise<string> {
   const registryPath = getRegistryPath();
+  const { name, kind, css: themeCss } = file;
   const spec: ThemePreviewSpec = {
     name,
     tagline:
@@ -255,8 +347,16 @@ async function renderGeneratedPreview(
         ? "Generated print companion — light only, sized for the page."
         : "Generated from your brand accent, contrast-verified before it was written.",
     initials: name.replace(/[^a-z]/gi, "").slice(0, 2).toUpperCase() || "FA",
-    scheme,
+    scheme: file.manifest.scheme,
     extraTokens: kind === "document" ? ["tokens/document.css", "tokens/doc-aliases.css"] : undefined,
+    // The seed's density, stamped on the harness's root: a theme declares it in
+    // a `@ui:density` header rather than at `:root` (a `:root` block cannot
+    // override a `[data-density]` subtree scope), so without this a `compact`
+    // theme would preview at the comfortable ramp.
+    density,
+    // 1.1A-18 is what puts `fonts` on a generated manifest; the harness links
+    // whatever a manifest names, so the wiring is here rather than waiting.
+    ...(file.manifest.fonts?.length ? { fontsHref: "../ui/fonts.css" } : {}),
   };
   const ownSheet = `themes/${name}.css`;
   const sources: string[] = [];

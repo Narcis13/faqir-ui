@@ -42,6 +42,26 @@ export interface ThemePreviewSpec {
   signature?: string;
   /** Extra token stylesheets this theme needs, as registry-relative paths. */
   extraTokens?: string[];
+  /**
+   * The theme's `density` axis, stamped on the harness's own `<html>` [1.1A-11].
+   *
+   * A theme cannot declare density at `:root` — `density.css` states each ramp
+   * inside a `[data-density]` subtree scope, and a `:root` block cannot
+   * override a subtree scope (which is why `axesFromCss` reads the axis from a
+   * `@ui:density` header directive instead). The consequence for a preview is
+   * that a `compact` theme renders at the COMFORTABLE ramp unless the harness
+   * stamps the attribute, so a generated preview does — and pulls
+   * `tokens/density.css` in with it, since the attribute is inert without it.
+   */
+  density?: string;
+  /**
+   * A stylesheet of `@font-face` rules to link ahead of everything else — the
+   * `ui/fonts.css` that `faqir fonts add` (1.1A-18) installs, when a theme's
+   * manifest names self-hosted families. Linked rather than inlined: the font
+   * files are a project artefact, and a preview that inlined the CSS would
+   * still be pointing at `.woff2` files it does not carry.
+   */
+  fontsHref?: string;
   /** Extra scaffolding CSS for the harness itself (never component CSS). */
   bodyCss?: string;
   /**
@@ -83,6 +103,10 @@ export function previewStylesheets(spec: ThemePreviewSpec): string[] {
   return [
     ...TOKEN_SHEETS.map((token) => `tokens/${token}.css`),
     ...(spec.extraTokens ?? []),
+    // Last, as `registry/tokens/index.css` and the bundler both require: the
+    // density blocks re-declare alias tokens at the SAME specificity as the
+    // `:root` ones, so a later `:root` sheet would win over the scope.
+    ...(spec.density ? ["tokens/density.css"] : []),
     "base/reset.css",
     `themes/${spec.name}.css`,
     ...PRIMITIVES.map((name) => `primitives/${name}/${name}.css`),
@@ -92,8 +116,14 @@ export function previewStylesheets(spec: ThemePreviewSpec): string[] {
 
 /** Render the `<head>` stylesheet block: links for a registry preview, one inline `<style>` otherwise. */
 function headStyles(spec: ThemePreviewSpec): string {
+  // Self-hosted faces load the same way in both forms: a link to the project's
+  // own `ui/fonts.css`, never inlined (see `fontsHref`).
+  const fonts = spec.fontsHref
+    ? [`  <!-- Self-hosted families this theme names -->`, `  <link rel="stylesheet" href="${spec.fontsHref}">`, ""]
+    : [];
   if (spec.inlineCss !== undefined) {
     return [
+      ...fonts,
       "  <!-- Tokens, reset, theme and every component this gallery renders, inlined:",
       "       this file is written beside a generated theme with no registry to link. -->",
       "  <style>",
@@ -101,11 +131,12 @@ function headStyles(spec: ThemePreviewSpec): string {
       "  </style>",
     ].join("\n");
   }
-  const lines: string[] = [];
+  const lines: string[] = [...fonts];
   const rel = (path: string) => `  <link rel="stylesheet" href="../${path}">`;
   lines.push("  <!-- Tokens -->");
   for (const token of TOKEN_SHEETS) lines.push(rel(`tokens/${token}.css`));
   for (const extra of spec.extraTokens ?? []) lines.push(rel(extra));
+  if (spec.density) lines.push(rel("tokens/density.css"));
   lines.push("");
   lines.push("  <!-- Base -->");
   lines.push(rel("base/reset.css"));
@@ -349,8 +380,9 @@ export function renderThemePreview(spec: ThemePreviewSpec): string {
     .schemes iframe { border: 0; inline-size: 100%; block-size: 100%; }
 `
     : "";
+  const density = spec.density ? ` data-density="${spec.density}"` : "";
   return `<!DOCTYPE html>
-<html lang="en" data-theme="${spec.scheme === "dark" ? "dark" : "light"}">
+<html lang="en" data-theme="${spec.scheme === "dark" ? "dark" : "light"}"${density}>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">

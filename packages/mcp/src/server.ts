@@ -36,7 +36,14 @@ import {
 } from "./generate";
 import { applyRepairsToSource } from "../../../src/audit/repairer";
 import { auditHtmlSource } from "../../../src/audit/checker";
-import { generateThemeBundle } from "../../../src/commands/theme-generate";
+import {
+  generateThemeBundle,
+  themeScorecard,
+  type ThemeGenerateInput,
+} from "../../../src/commands/theme-generate";
+import { densityTokenCss, themeBaseSources } from "../../../src/theme/sources";
+import { mergeSeeds } from "../../../src/theme/seed";
+import { THEME_AXIS_VALUES } from "../../../src/theme-manifest";
 import {
   PROTOCOL_URI,
   TOKENS_URI,
@@ -116,6 +123,74 @@ const generatedContrastSchema = z.object({
   passes: z.boolean(),
   auto_adjusted: z.boolean(),
 });
+
+// ── Scorecard v2 [1.1A-11] ─────────────────────────────────────────────────
+//
+// The same object `faqir theme generate --json` prints, assembled by the same
+// `themeScorecard()`. Its `generated` paths are where the CLI WOULD write —
+// this tool writes nothing — while the css and manifests themselves come back
+// in the top-level `generated` array, as they always have.
+
+const scorecardFileSchema = z.object({
+  kind: z.enum(["theme", "document"]),
+  name: z.string(),
+  css: z.string(),
+  manifest: z.string(),
+  preview: z.string(),
+  seed: z.string().optional(),
+});
+
+const elevationSchema = z.object({
+  theme: z.string(),
+  scheme: z.enum(["light", "dark"]),
+  from: z.string(),
+  to: z.string(),
+  delta: z.number().nullable(),
+  threshold: z.number(),
+  passes: z.boolean(),
+});
+
+const focusRingSchema = z.object({
+  theme: z.string(),
+  scheme: z.enum(["light", "dark"]),
+  ring: z.string(),
+  surface: z.string(),
+  ratio: z.number().nullable(),
+  translucent: z.boolean(),
+  threshold: z.number(),
+  passes: z.boolean(),
+});
+
+const tapTargetSchema = z.object({
+  control: z.string(),
+  density: z.string(),
+  height_px: z.number().nullable(),
+  threshold_px: z.number(),
+  passes: z.boolean(),
+});
+
+const scorecardSchema = z
+  .object({
+    scorecard_version: z.number().int(),
+    theme_generate_schema_version: z.number().int(),
+    command: z.literal("theme generate"),
+    name: z.string(),
+    seed: z.record(z.string(), z.unknown()),
+    axes: z.record(z.string(), z.unknown()),
+    generated: z.array(scorecardFileSchema),
+    contrast: z.array(generatedContrastSchema),
+    elevation: z.array(elevationSchema),
+    focus_ring: z.array(focusRingSchema),
+    tap_targets: z.array(tapTargetSchema),
+    distinctiveness: z.null(),
+  })
+  .passthrough();
+
+/** One axis vocabulary, rendered for a tool description. */
+function axisChoices(path: string): string {
+  const values = (THEME_AXIS_VALUES as Record<string, readonly (string | number)[] | undefined>)[path];
+  return values ? values.join(", ") : "";
+}
 
 // ── Audit / repair schema fragments ────────────────────────────────────────
 const severitySchema = z.enum(["critical", "error", "warning", "info"]);
@@ -501,23 +576,34 @@ export function createFaqirMcpServer(options: FaqirMcpServerOptions = {}): McpSe
     {
       title: "Generate a contrast-verified theme",
       description:
-        "Generate a deterministic 11-step OKLCH theme from one accent color. Returns " +
-        "the CSS, derived manifest, and audited contrast ratios entirely in memory. " +
-        "Optionally includes a matching print/document variant.",
+        "Generate a deterministic theme from a SEED: one accent color plus any of the " +
+        "fourteen character axes (type, shape, depth, material, motion, density, focus, " +
+        "decoration, controls, contrast). Returns the CSS, derived manifest, and the same " +
+        "scorecard `faqir theme generate --json` prints — contrast ratios, elevation ΔE, " +
+        "focus-ring ratios and tap targets — entirely in memory. Optionally includes a " +
+        "matching print/document variant.",
       inputSchema: {
+        seed: z
+          .record(z.string(), z.unknown())
+          .optional()
+          .describe(
+            "A complete theme seed (manifest.schema.json definitions.themeSeed): " +
+              "{ name, accent, neutral, scheme, type, shape, depth, material, motion, " +
+              "density, focus, decoration, controls, contrast, document }. Every axis is " +
+              "optional and takes its documented default. The fields below override it.",
+          ),
         accent: z
           .string()
-          .default("oklch(0.55 0.2 250)")
+          .optional()
           .describe("Opaque oklch(), #rgb, or #rrggbb accent color."),
         name: z
           .string()
-          .regex(/^[a-z][a-z0-9-]*$/)
-          .default("generated-theme")
+          .optional()
           .describe("Lowercase kebab-case theme name."),
-        neutral: z.enum(["cool", "warm", "gray"]).default("cool"),
-        radius: z.enum(["sm", "md", "lg"]).default("md"),
-        scheme: z.enum(["light", "dark", "both"]).default("both"),
-        document: z.boolean().default(false),
+        neutral: z.string().optional().describe(`Neutral tone: ${axisChoices("neutral")}.`),
+        radius: z.string().optional().describe("1.0 compatibility flag for shape.radius: sm, md, lg."),
+        scheme: z.string().optional().describe(`Color scheme: ${axisChoices("scheme")}.`),
+        document: z.boolean().optional().describe("Also emit a print/document companion."),
       },
       outputSchema: {
         name: z.string(),
@@ -528,7 +614,7 @@ export function createFaqirMcpServer(options: FaqirMcpServerOptions = {}): McpSe
           chroma: z.number(),
           hue: z.number(),
         }),
-        neutral: z.enum(["cool", "warm", "gray"]),
+        neutral: z.string(),
         radius: z.enum(["sm", "md", "lg"]),
         scheme: z.enum(["light", "dark", "both"]),
         document: z.boolean(),
@@ -539,28 +625,48 @@ export function createFaqirMcpServer(options: FaqirMcpServerOptions = {}): McpSe
           manifest: themeEntrySchema,
           contrast: z.array(generatedContrastSchema),
         })),
+        scorecard: scorecardSchema,
       },
     },
-    async ({ accent, name, neutral, radius, scheme, document }) => {
+    async ({ seed, accent, name, neutral, radius, scheme, document }) => {
       try {
-        const generated = generateThemeBundle(
-          { accent, name, neutral, radius, scheme, document },
-          [readTokenReference(registryPath)],
+        // One code path with the CLI: the scalars are merged over the seed
+        // exactly as `--depth hard` is merged over `--seed x.seed.json`
+        // (flags win), and every validation error comes from `normalizeSeed`
+        // inside `generateThemeBundle` — so an invalid axis prints the same
+        // sentence here as it does in the terminal. The two defaults below are
+        // this tool's own, kept from 1.0 so an argument-free call still works.
+        const explicit: Record<string, unknown> = {};
+        for (const [key, value] of Object.entries({ name, accent, neutral, scheme, document })) {
+          if (value !== undefined) explicit[key] = value;
+        }
+        const input = mergeSeeds(seed ?? {}, explicit) as Record<string, unknown>;
+        if (input.name === undefined) input.name = "generated-theme";
+        if (input.accent === undefined) input.accent = "oklch(0.55 0.2 250)";
+
+        const baseCssSources = themeBaseSources(registryPath);
+        const bundle = generateThemeBundle(
+          { ...(input as unknown as ThemeGenerateInput), ...(radius ? { radius: radius as never } : {}) },
+          baseCssSources,
         );
+        const scorecard = themeScorecard(bundle, baseCssSources, {
+          densityCss: densityTokenCss(registryPath),
+        });
         return ok({
-          name: generated.name,
-          accent: generated.accent,
-          neutral: generated.neutral,
-          radius: generated.radius,
-          scheme: generated.scheme,
-          document: generated.document,
-          generated: generated.generated.map((file) => ({
+          name: bundle.name,
+          accent: bundle.accent,
+          neutral: bundle.neutral,
+          radius: bundle.radius,
+          scheme: bundle.scheme,
+          document: bundle.document,
+          generated: bundle.generated.map((file) => ({
             kind: file.kind,
             name: file.name,
             css: file.css,
             manifest: file.manifest,
             contrast: file.contrast,
           })),
+          scorecard,
         });
       } catch (error) {
         return fail(error instanceof Error ? error.message : String(error));

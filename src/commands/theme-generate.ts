@@ -3,11 +3,17 @@ import {
   checkThemeContrast,
   checkThemeElevation,
   CONTRAST_AA,
+  CONTRAST_NON_TEXT,
   CONTRAST_PAIRS,
+  ELEVATION_MIN_DELTA,
+  ELEVATION_PAIRS,
+  NON_TEXT_PAIRS,
+  perceptualDelta,
 } from "../audit/contrast-tokens";
 import {
   inheritedTokens,
   overriddenTokens,
+  stripCssComments,
   surfaceTokens,
   validateThemeManifest,
   type ThemeManifest,
@@ -630,6 +636,19 @@ ${renderDeclarations(root)}
 `;
 }
 
+/**
+ * The schema-1.1 blocks a GENERATED manifest carries that an authored one does
+ * not [1.1A-07]: the seed it came from, and the axes its own CSS derives back
+ * to. Only the primary theme carries them — the document companion is a print
+ * variant of that theme rather than a theme with a seed of its own, and writing
+ * the parent's axes onto a stylesheet nobody ran `axesFromCss` over would be a
+ * claim rather than a derivation.
+ */
+interface GeneratedProvenance {
+  seed?: ThemeSeed;
+  axes?: ThemeAxes;
+}
+
 function manifestFor(
   name: string,
   css: string,
@@ -637,6 +656,7 @@ function manifestFor(
   scheme: ThemeSchemeDecl,
   mood: string[],
   pairsWith: string[],
+  provenance: GeneratedProvenance = {},
 ): ThemeManifest & { $schema: string } {
   const manifest: ThemeManifest & { $schema: string } = {
     $schema: "../manifest.schema.json",
@@ -649,6 +669,8 @@ function manifestFor(
     tokens_inherited: inheritedTokens(css, surface),
     pairs_with: pairsWith,
     preview: `${name}.preview.html`,
+    ...(provenance.seed ? { seed: provenance.seed } : {}),
+    ...(provenance.axes ? { axes: provenance.axes } : {}),
   };
 
   const errors = validateThemeManifest(manifest);
@@ -861,6 +883,7 @@ export function generateThemeBundle(
     seed.scheme,
     ["generated", "brand", seed.neutral, seed.scheme],
     seed.document ? [documentName] : [],
+    { seed: seedRecord(seed), axes },
   );
   const generated = [
     verifiedFile(
@@ -921,5 +944,243 @@ export function generateThemeBundle(
     seed: seedRecord(seed),
     axes,
     generated,
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Scorecard v2 — what the generator knows about what it just made [1.1A-11]
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// v1 reported the paths, the normalised accent and the contrast ratios. A 1.1
+// theme states thirteen more axes than a 1.0 one, and three of the guarantees
+// that used to be invisible pass/fail gates inside `verifiedFile` are numbers a
+// reader (or an agent, or Night Shift's taste rubric) wants to SEE:
+//
+//   • elevation ΔE — how separable the surface ramp is, per scheme;
+//   • focus-ring ratios — SC 1.4.11's 3:1, on every surface the ring lands on;
+//   • tap targets — the control heights the seed's DENSITY lands on, which is
+//     the one axis whose consequence is a physical size rather than a colour.
+//
+// The scorecard is assembled from the bundle and the same base CSS the bundle
+// was generated from, so it performs no filesystem access and the MCP tool
+// returns exactly what the CLI prints.
+
+/** The scorecard's version. Also the `--json` payload's schema version. */
+export const THEME_SCORECARD_VERSION = 2;
+
+/** WCAG 2.2 SC 2.5.8 (Target Size, Minimum), in CSS pixels. */
+export const TAP_TARGET_MIN_PX = 24;
+
+/** Where one generated artefact was (or would be) written, relative to the cwd. */
+export interface ThemeScorecardFile {
+  kind: "theme" | "document";
+  name: string;
+  css: string;
+  manifest: string;
+  preview: string;
+  /** The resolved seed, written beside the primary theme only. */
+  seed?: string;
+}
+
+export interface ThemeElevationDelta {
+  theme: string;
+  scheme: "light" | "dark";
+  from: string;
+  to: string;
+  /** OKLab ΔE, or `null` when a translucent or unresolvable colour makes it unmeasurable. */
+  delta: number | null;
+  threshold: number;
+  passes: boolean;
+}
+
+export interface ThemeFocusRingRatio {
+  theme: string;
+  scheme: "light" | "dark";
+  ring: string;
+  surface: string;
+  /** `null` when the ring is translucent — see `translucent`, which is a finding, not a skip. */
+  ratio: number | null;
+  translucent: boolean;
+  threshold: number;
+  passes: boolean;
+}
+
+export interface ThemeTapTarget {
+  control: string;
+  density: string;
+  height_px: number | null;
+  threshold_px: number;
+  passes: boolean;
+}
+
+export interface ThemeScorecard {
+  /** The 1.0 key, kept so an automation reading v1 sees the number move. */
+  theme_generate_schema_version: number;
+  scorecard_version: number;
+  command: "theme generate";
+  name: string;
+  accent: GeneratedThemeBundle["accent"];
+  /** The 1.0 flags, reported as before. Every 1.1 axis is in `seed`/`axes`. */
+  options: {
+    neutral: ThemeSeed["neutral"];
+    radius: ThemeRadius;
+    scheme: ThemeSchemeDecl;
+    document: boolean;
+    legacy_blocks: boolean;
+  };
+  /** The seed filled out to every axis — byte-identical to `<name>.seed.json`. */
+  seed: ThemeSeed;
+  /** The fourteen axes the emitted CSS derives back to. */
+  axes: ThemeAxes;
+  generated: ThemeScorecardFile[];
+  contrast: GeneratedContrastRatio[];
+  elevation: ThemeElevationDelta[];
+  focus_ring: ThemeFocusRingRatio[];
+  tap_targets: ThemeTapTarget[];
+  /** Distance to the nearest shipped theme. `null` until 1.1A-12 lands. */
+  distinctiveness: null;
+}
+
+export interface ThemeScorecardOptions {
+  /** Directory the artefacts are written to, relative to the cwd. Default `themes`. */
+  outDir?: string;
+  /** `registry/tokens/density.css`, for the tap-target ramp. Omit for no tap targets. */
+  densityCss?: string;
+}
+
+/** The control heights one `[data-density]` block declares, in CSS pixels. */
+export function densityControlHeights(
+  densityCss: string,
+  density: string,
+): Record<string, number | null> {
+  const blocks = stripCssComments(densityCss).split(/(?=\[data-density=)/);
+  const block = blocks.find((chunk) => chunk.startsWith(`[data-density="${density}"]`)) ?? "";
+  const read = (token: string): number | null => {
+    const match = block.match(new RegExp(`--${token}\\s*:\\s*([0-9.]+)px`));
+    return match ? Number(match[1]) : null;
+  };
+  const md = read("control-height-md");
+  return {
+    "control-height-sm": read("control-height-sm"),
+    "control-height-md": md,
+    "control-height-lg": read("control-height-lg"),
+    // `--input-height: var(--control-height-md)` in every block, so it is the
+    // md rung by definition rather than by a second measurement.
+    "input-height": md,
+  };
+}
+
+/**
+ * Assemble the scorecard. Pure: `bundle` and `baseCssSources` are the same two
+ * values `generateThemeBundle` was called with, and `options.densityCss` is a
+ * string the caller read — nothing here touches the filesystem, which is what
+ * lets the MCP tool return the identical object in memory.
+ */
+export function themeScorecard(
+  bundle: GeneratedThemeBundle,
+  baseCssSources: string[],
+  options: ThemeScorecardOptions = {},
+): ThemeScorecard {
+  const outDir = options.outDir ?? "themes";
+  const baseCss = baseCssSources.join("\n");
+  const elevation: ThemeElevationDelta[] = [];
+  const focusRing: ThemeFocusRingRatio[] = [];
+
+  for (const file of bundle.generated) {
+    const lookups = buildSchemeLookups(file.css, baseCss);
+    const schemes: Array<"light" | "dark"> =
+      file.manifest.scheme === "both" ? ["light", "dark"] : [file.manifest.scheme];
+
+    for (const scheme of schemes) {
+      const lookup = lookups[scheme];
+      const resolve = (token: string): string | null => {
+        const raw = lookup.get(token);
+        return raw == null ? null : resolveColorString(raw, lookup);
+      };
+
+      for (const { fg, bg } of ELEVATION_PAIRS) {
+        const from = resolve(fg);
+        const to = resolve(bg);
+        const delta = from && to ? perceptualDelta(from, to) : null;
+        elevation.push({
+          theme: file.name,
+          scheme,
+          from: fg,
+          to: bg,
+          delta: delta == null ? null : Number(delta.toFixed(4)),
+          threshold: ELEVATION_MIN_DELTA,
+          passes: delta != null && delta + Number.EPSILON >= ELEVATION_MIN_DELTA,
+        });
+      }
+
+      for (const { fg, bg } of NON_TEXT_PAIRS) {
+        const ring = resolve(fg);
+        const surface = resolve(bg);
+        // A translucent ring is a finding, not a skip: "we cannot compute it"
+        // is exactly how an invisible ring passed the gate in 1.0 (see
+        // `checkNonTextContrast`). The scorecard says so rather than omitting
+        // the row.
+        const translucent = ring != null && !isOpaqueColor(ring);
+        const ringRgb = ring && !translucent ? parseCssColor(ring) : null;
+        const surfaceRgb = surface && isOpaqueColor(surface) ? parseCssColor(surface) : null;
+        const ratio = ringRgb && surfaceRgb ? contrastRatio(ringRgb, surfaceRgb) : null;
+        focusRing.push({
+          theme: file.name,
+          scheme,
+          ring: fg,
+          surface: bg,
+          ratio: ratio == null ? null : Number(ratio.toFixed(3)),
+          translucent,
+          threshold: CONTRAST_NON_TEXT,
+          passes: ratio != null && ratio >= CONTRAST_NON_TEXT,
+        });
+      }
+    }
+  }
+
+  const tapTargets: ThemeTapTarget[] = [];
+  if (options.densityCss) {
+    const density = bundle.axes.density;
+    for (const [control, height] of Object.entries(densityControlHeights(options.densityCss, density))) {
+      tapTargets.push({
+        control,
+        density,
+        height_px: height,
+        threshold_px: TAP_TARGET_MIN_PX,
+        passes: height != null && height >= TAP_TARGET_MIN_PX,
+      });
+    }
+  }
+
+  return {
+    theme_generate_schema_version: THEME_SCORECARD_VERSION,
+    scorecard_version: THEME_SCORECARD_VERSION,
+    command: "theme generate",
+    name: bundle.name,
+    accent: bundle.accent,
+    options: {
+      neutral: bundle.neutral,
+      radius: bundle.radius,
+      scheme: bundle.scheme,
+      document: bundle.document,
+      legacy_blocks: bundle.legacyBlocks,
+    },
+    seed: bundle.seed,
+    axes: bundle.axes,
+    generated: bundle.generated.map((file) => ({
+      kind: file.kind,
+      name: file.name,
+      css: `${outDir}/${file.name}.css`,
+      manifest: `${outDir}/${file.name}.theme.json`,
+      preview: `${outDir}/${file.name}.preview.html`,
+      // One seed per generation, beside the theme it describes: the document
+      // companion is derived from the same seed rather than from one of its own.
+      ...(file.kind === "theme" ? { seed: `${outDir}/${file.name}.seed.json` } : {}),
+    })),
+    contrast: bundle.generated.flatMap((file) => file.contrast),
+    elevation,
+    focus_ring: focusRing,
+    tap_targets: tapTargets,
+    distinctiveness: null,
   };
 }

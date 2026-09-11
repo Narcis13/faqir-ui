@@ -107,6 +107,46 @@ describe("shipped theme previews", () => {
     expect(renderThemePreview(both)).toContain("createElement(\"iframe\")");
   });
 
+  // ── What a GENERATED preview adds [1.1A-11] ──────────────────────────────
+
+  it("stamps a density on the root and pulls in the stylesheet that answers it", () => {
+    const spec = { ...GALLERY_PREVIEWS[0], density: "compact" };
+    const html = renderThemePreview(spec);
+    expect(html).toContain('data-density="compact"');
+    // The attribute is inert without `density.css`: each ramp lives inside a
+    // `[data-density]` subtree scope, which is also why a theme cannot state
+    // its density at `:root` and the harness has to stamp it.
+    // …and it is the LAST token sheet, as `registry/tokens/index.css` and the
+    // bundler both require: the density blocks re-declare alias tokens at the
+    // same specificity as the `:root` ones, so a later `:root` sheet wins.
+    const sheets = previewStylesheets(spec);
+    const tokens = sheets.filter((sheet) => sheet.startsWith("tokens/"));
+    expect(tokens[tokens.length - 1]).toBe("tokens/density.css");
+    expect(referencedFiles(html)).toContain("../tokens/density.css");
+    const documentSpec = { ...GALLERY_PREVIEWS.find((s) => s.extraTokens)!, density: "compact" };
+    const documentTokens = previewStylesheets(documentSpec).filter((s) => s.startsWith("tokens/"));
+    expect(documentTokens[documentTokens.length - 1]).toBe("tokens/density.css");
+    // A preview with no density says nothing — the registry galleries render
+    // exactly as they did, at the base ramp.
+    const plain = renderThemePreview(GALLERY_PREVIEWS[0]);
+    expect(plain).not.toContain("data-density");
+    expect(previewStylesheets(GALLERY_PREVIEWS[0])).not.toContain("tokens/density.css");
+  });
+
+  it("links the self-hosted faces a theme names, in both authoring forms", () => {
+    // `faqir fonts add` (1.1A-18) is what puts `fonts` on a generated manifest;
+    // the harness links whatever it is given, so the wiring is testable now.
+    const spec = { ...GALLERY_PREVIEWS[0], fontsHref: "../ui/fonts.css" };
+    expect(renderThemePreview(spec)).toContain('<link rel="stylesheet" href="../ui/fonts.css">');
+    // Inlined previews link it too: the faces point at `.woff2` files the
+    // preview does not carry, so inlining the CSS would resolve to nothing.
+    const inlined = renderThemePreview({ ...spec, inlineCss: "/* x */" });
+    expect(referencedFiles(inlined)).toEqual(["../ui/fonts.css"]);
+    // …and a theme that names no family links nothing extra.
+    expect(referencedFiles(renderThemePreview({ ...GALLERY_PREVIEWS[0], inlineCss: "/* x */" })))
+      .toEqual([]);
+  });
+
   it("links and inlines the same stylesheet list, in the same order", () => {
     const spec = GALLERY_PREVIEWS[0];
     const sheets = previewStylesheets(spec);
@@ -137,6 +177,10 @@ describe("faqir theme generate", () => {
         "acme-document.theme.json",
         "acme.css",
         "acme.preview.html",
+        // The resolved seed, written beside the theme it describes — one per
+        // generation, since the document companion has no seed of its own
+        // [1.1A-11].
+        "acme.seed.json",
         "acme.theme.json",
       ]);
 

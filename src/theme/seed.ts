@@ -336,6 +336,107 @@ export function expectedAxes(
   };
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// The seed, as a command line                                  [task 1.1A-11]
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * One flag per axis: the CLI spelling of every leaf a seed may state.
+ *
+ * The KEY is the flag (`--depth`), the VALUE is the dotted path into the seed
+ * (`depth`, `type.voice.weight`). Two things follow from stating it as data
+ * rather than as a `switch`:
+ *
+ *  - completeness is checkable — `tests/commands/theme-generate.test.ts`
+ *    asserts every path in `THEME_AXIS_VALUES` has exactly one flag, so an axis
+ *    added to the vocabulary cannot quietly become unreachable from the CLI;
+ *  - validation is not duplicated — a flag writes its raw string into the seed
+ *    and `normalizeSeed` (i.e. `validateThemeSeed`, the SAME function the
+ *    manifest gate runs) produces the error, which is why `faqir theme
+ *    generate --depth fluffy` and the MCP tool print the same sentence.
+ *
+ * The names are the ones §5.4's example uses: the flag is the LEAF, not its
+ * dotted path, because `--type serif-editorial --scale 1.25` is what a person
+ * types. `--input`/`--button`/`--checkbox`/`--switch` are the control
+ * silhouettes; `--shape` is the radius ramp (`--radius` remains the 1.0
+ * three-step flag, mapped on by `normalizeSeed`).
+ */
+export const SEED_FLAGS: Record<string, string> = {
+  accent: "accent",
+  neutral: "neutral",
+  scheme: "scheme",
+  type: "type.pairing",
+  scale: "type.scale",
+  base: "type.base",
+  weight: "type.voice.weight",
+  tracking: "type.voice.tracking",
+  transform: "type.voice.transform",
+  shape: "shape.radius",
+  border: "shape.border",
+  corner: "shape.corner",
+  depth: "depth",
+  material: "material",
+  motion: "motion",
+  density: "density",
+  focus: "focus",
+  link: "decoration.link",
+  divider: "decoration.divider",
+  button: "controls.button",
+  input: "controls.input",
+  checkbox: "controls.checkbox",
+  switch: "controls.switch",
+  contrast: "contrast",
+};
+
+/**
+ * A flag's raw string in the type the axis vocabulary uses.
+ *
+ * `type.scale` and `type.base` are numbers, so `--scale 1.25` must become
+ * `1.25` and not `"1.25"` — an axis validated against `[1.125, 1.2, 1.25,
+ * 1.333]` rejects the string, and the error would be about a value the user
+ * typed correctly. Anything that does not parse as a number is left as the
+ * string, so `--scale huge` still fails with the vocabulary listed.
+ */
+export function coerceSeedValue(path: string, raw: string): string | number {
+  const values = (THEME_AXIS_VALUES as Record<string, readonly (string | number)[] | undefined>)[path];
+  if (!values || typeof values[0] !== "number") return raw;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) ? parsed : raw;
+}
+
+/** Write `value` at a dotted `path`, creating the intermediate objects. */
+export function setSeedPath(seed: Record<string, unknown>, path: string, value: unknown): void {
+  const keys = path.split(".");
+  let node = seed;
+  for (const key of keys.slice(0, -1)) {
+    if (!isPlainObject(node[key])) node[key] = {};
+    node = node[key] as Record<string, unknown>;
+  }
+  node[keys[keys.length - 1]] = value;
+}
+
+/**
+ * Merge a flag-built seed over a `--seed <file>` one: **flags win**, per §5.4.
+ *
+ * Deep, because the groups are nested and a flag states a leaf: `--depth hard`
+ * beside a file that set `shape.corner` must keep the corner. A non-object
+ * value always replaces, so a malformed group in the file is still handed to
+ * the validator rather than merged into silence.
+ */
+export function mergeSeeds(
+  base: Record<string, unknown>,
+  override: Record<string, unknown>,
+): Record<string, unknown> {
+  const merged: Record<string, unknown> = { ...base };
+  for (const [key, value] of Object.entries(override)) {
+    const existing = merged[key];
+    merged[key] = isPlainObject(existing) && isPlainObject(value)
+      ? mergeSeeds(existing, value)
+      : value;
+  }
+  return merged;
+}
+
 /** The seed, as it is written into the manifest and the `<name>.seed.json`. */
 export function seedRecord(seed: NormalizedSeed): ThemeSeed {
   return {

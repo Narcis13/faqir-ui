@@ -51,6 +51,22 @@ if [ ! -f "$TMP/ui/primitives/button/button.css" ]; then
   exit 1
 fi
 
+echo "▶ node dist/faqir.mjs theme generate smoke-brand --accent '#168c5b' --depth hard --json"
+# The seed reaches the generator, the scorecard comes back versioned, and the
+# four artefacts land on disk — on Node, where `Bun.write`/`Bun.file` are the
+# runtime shim rather than the real thing. [1.1A-11]
+THEME_OUT="$( cd "$TMP" && node "$DIST" theme generate smoke-brand --accent '#168c5b' --depth hard --json )"
+if ! printf '%s' "$THEME_OUT" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const r=JSON.parse(s);if(r.scorecard_version!==2){console.error("bad scorecard version");process.exit(1)}if(r.seed.depth!=="hard"||r.axes.depth!=="hard"){console.error("seed/axes did not round-trip");process.exit(1)}if(!r.tap_targets.length||!r.tap_targets.every(t=>t.passes)){console.error("tap targets missing or failing");process.exit(1)}})'; then
+  echo "✗ theme generate --json did not emit a valid scorecard" >&2
+  exit 1
+fi
+for artefact in css theme.json seed.json preview.html; do
+  if [ ! -f "$TMP/themes/smoke-brand.$artefact" ]; then
+    echo "✗ theme generate did not write themes/smoke-brand.$artefact" >&2
+    exit 1
+  fi
+done
+
 echo "▶ echo '<button data-ui=\"button\" data-variant=\"neon\">…</button>' | node dist/faqir.mjs audit --stdin --json"
 # Piped HTML → audit against the registry, machine-readable output. The bad
 # variant must be reported (exit 1) and the payload must carry the schema version.

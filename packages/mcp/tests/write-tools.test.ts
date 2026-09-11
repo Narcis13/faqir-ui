@@ -9,6 +9,12 @@ import { createFaqirMcpServer } from "../src/server";
 import { loadManifestMap } from "../src/registry";
 import { auditHtmlSource } from "../../../src/audit/checker";
 import { applyRepairsToSource } from "../../../src/audit/repairer";
+import {
+  generateThemeBundle,
+  THEME_SCORECARD_VERSION,
+} from "../../../src/commands/theme-generate";
+import { themeBaseSources } from "../../../src/theme/sources";
+import { validateThemeAxes, validateThemeSeed } from "../../../src/theme-manifest";
 import type { Manifest } from "../../../src/manifest";
 
 const REPO_ROOT = resolve(import.meta.dir, "../../..");
@@ -264,6 +270,109 @@ describe("faqir_generate_theme", () => {
     });
     expect(res.isError).toBe(true);
     expect((res.content as any[])[0].text).toMatch(/Invalid accent.*oklch.*#rrggbb/s);
+  });
+
+  // ── Seed parity with the CLI [1.1A-11] ───────────────────────────────────
+
+  it("takes a full seed object and returns scorecard v2", async () => {
+    const { client } = await makeClient();
+    const res = await client.callTool({
+      name: "faqir_generate_theme",
+      arguments: {
+        seed: {
+          name: "agent-seeded",
+          accent: "oklch(0.55 0.2 150)",
+          depth: "hard",
+          density: "compact",
+          type: { pairing: "slab", scale: 1.25 },
+          controls: { input: "underline" },
+        },
+      },
+    });
+    expect(res.isError).toBeFalsy();
+    const data = res.structuredContent as any;
+    const card = data.scorecard;
+    expect(card.scorecard_version).toBe(THEME_SCORECARD_VERSION);
+    expect(card.command).toBe("theme generate");
+    // The seed comes back filled out, and validates against the same
+    // `definitions.themeSeed` the CLI writes to `<name>.seed.json`.
+    expect(validateThemeSeed(card.seed)).toEqual([]);
+    expect(card.seed.depth).toBe("hard");
+    expect(card.seed.type).toEqual({
+      pairing: "slab",
+      scale: 1.25,
+      base: 16,
+      voice: { weight: "bold", tracking: "normal", transform: "none" },
+    });
+    // …and the axes are DERIVED from the CSS this call returned.
+    expect(validateThemeAxes(card.axes)).toEqual([]);
+    expect(card.axes.controls.input).toBe("underline");
+    expect(card.axes.density).toBe("compact");
+    // The three guarantees v1 could not see, all present and all measured.
+    expect(card.elevation.every((row: any) => row.passes)).toBe(true);
+    expect(card.focus_ring.every((row: any) => row.passes)).toBe(true);
+    expect(card.tap_targets.length).toBeGreaterThan(0);
+    expect(card.tap_targets.every((row: any) => row.density === "compact" && row.passes)).toBe(true);
+    // This tool writes nothing: the paths say where the CLI WOULD write.
+    expect(card.generated[0].css).toBe("themes/agent-seeded.css");
+    expect(card.generated[0].seed).toBe("themes/agent-seeded.seed.json");
+    // The 1.0 shape is still there beside it, in memory as always.
+    expect(data.generated[0].css).toContain("--palette-agent-seeded-500");
+    expect(data.generated[0].manifest.seed).toEqual(card.seed);
+  });
+
+  it("a scalar argument overrides the seed it is passed with", async () => {
+    const { client } = await makeClient();
+    const res = await client.callTool({
+      name: "faqir_generate_theme",
+      arguments: {
+        seed: { name: "from-seed", accent: "#0ea5e9", depth: "hard" },
+        name: "overridden",
+        document: true,
+      },
+    });
+    expect(res.isError).toBeFalsy();
+    const data = res.structuredContent as any;
+    expect(data.name).toBe("overridden");
+    expect(data.scorecard.seed.depth).toBe("hard");
+    expect(data.generated.map((file: any) => file.kind)).toEqual(["theme", "document"]);
+  });
+
+  it("rejects an invalid axis with the SAME sentence the CLI prints", async () => {
+    const { client } = await makeClient();
+    const res = await client.callTool({
+      name: "faqir_generate_theme",
+      arguments: { seed: { name: "bad-axis", accent: "#0ea5e9", depth: "fluffy" } },
+    });
+    expect(res.isError).toBe(true);
+    // One code path, one error text: the message is `validateThemeSeed`'s,
+    // reached through `normalizeSeed` — exactly as `faqir theme generate
+    // --depth fluffy` reaches it. Quoted from the validator rather than
+    // retyped, so the two cannot drift apart silently.
+    const expected = validateThemeSeed({ name: "bad-axis", accent: "#0ea5e9", depth: "fluffy" });
+    expect(expected.length).toBe(1);
+    expect((res.content as any[])[0].text)
+      .toContain(`${expected[0].field}: ${expected[0].message}`);
+  });
+
+  it("generates from the same base layer the CLI does", async () => {
+    // `readTokenReference` hands over ONE concatenated string, so the surface
+    // derived from it used to include `density.css` and `textures.css` — the
+    // two files `NON_SURFACE_TOKEN_FILES` exists to keep out. Both callers now
+    // read through `themeBaseSources`, so `tokens_inherited` is the same set.
+    const { client } = await makeClient();
+    const res = await client.callTool({
+      name: "faqir_generate_theme",
+      arguments: { seed: { name: "parity-brand", accent: "#168c5b" } },
+    });
+    const data = res.structuredContent as any;
+    const local = generateThemeBundle(
+      { name: "parity-brand", accent: "#168c5b" },
+      themeBaseSources(REGISTRY),
+    );
+    expect(data.generated[0].css).toBe(local.generated[0].css);
+    expect(data.generated[0].manifest).toEqual(local.generated[0].manifest);
+    expect(data.generated[0].manifest.tokens_inherited).not.toContain("density-scale");
   });
 });
 

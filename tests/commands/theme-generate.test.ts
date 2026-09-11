@@ -1,17 +1,36 @@
 // faqir theme generate — deterministic parametric themes [task 0.6-11 · §C4]
 
-import { afterAll, beforeAll, describe, expect, it } from "bun:test";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "bun:test";
 import { CONTRAST_PAIRS } from "../../src/audit/contrast-tokens";
-import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Glob } from "bun";
 import {
   ACCENT_STEPS,
+  densityControlHeights,
   generateThemeBundle,
+  TAP_TARGET_MIN_PX,
+  themeScorecard,
+  THEME_SCORECARD_VERSION,
   type ThemeGenerateInput,
 } from "../../src/commands/theme-generate";
-import { checkThemeContrast, CONTRAST_AA } from "../../src/audit/contrast-tokens";
+import { theme } from "../../src/commands/theme";
+import {
+  coerceSeedValue,
+  mergeSeeds,
+  SEED_FLAGS,
+  setSeedPath,
+} from "../../src/theme/seed";
+import {
+  checkThemeContrast,
+  checkThemeElevation,
+  CONTRAST_AA,
+  CONTRAST_NON_TEXT,
+  ELEVATION_MIN_DELTA,
+  ELEVATION_PAIRS,
+  NON_TEXT_PAIRS,
+} from "../../src/audit/contrast-tokens";
 import { SPAWN_TIMEOUT, runSync } from "../helpers/spawn";
 import {
   inheritedTokens,
@@ -19,6 +38,7 @@ import {
   overriddenTokens,
   surfaceTokens,
   THEME_AXIS_VALUES,
+  THEME_SEED_AXES,
   validateThemeAxes,
   validateThemeManifest,
   validateThemeSeed,
@@ -516,8 +536,34 @@ describe("faqir theme generate · CLI", () => {
     ]);
     expect(result.status).toBe(0);
     const report = JSON.parse(result.stdout);
-    expect(report.theme_generate_schema_version).toBe(1);
+    expect(report.theme_generate_schema_version).toBe(2);
+    expect(report.scorecard_version).toBe(2);
     expect(report.command).toBe("theme generate");
+    // Scorecard v2, through the real CLI on the real runtime: the shape an
+    // agent parsing `--json` receives, asserted as a key set so a block that
+    // stops being emitted fails here rather than going quietly missing.
+    expect(Object.keys(report).sort()).toEqual([
+      "accent",
+      "axes",
+      "command",
+      "contrast",
+      "distinctiveness",
+      "elevation",
+      "focus_ring",
+      "generated",
+      "name",
+      "options",
+      "scorecard_version",
+      "seed",
+      "tap_targets",
+      "theme_generate_schema_version",
+    ]);
+    expect(validateThemeSeed(report.seed)).toEqual([]);
+    expect(validateThemeAxes(report.axes)).toEqual([]);
+    expect(report.elevation.every((row: { passes: boolean }) => row.passes)).toBe(true);
+    expect(report.focus_ring.every((row: { passes: boolean }) => row.passes)).toBe(true);
+    expect(report.tap_targets.every((row: { passes: boolean }) => row.passes)).toBe(true);
+    expect(report.distinctiveness).toBeNull();
     // `preview` is a REQUIRED field of every theme manifest, so the command that
     // writes the manifest writes the harness too — a shipped manifest must not
     // name a file that is not there (task 1.0R-10).
@@ -528,6 +574,7 @@ describe("faqir theme generate · CLI", () => {
         css: "themes/cli-brand.css",
         manifest: "themes/cli-brand.theme.json",
         preview: "themes/cli-brand.preview.html",
+        seed: "themes/cli-brand.seed.json",
       },
       {
         kind: "document",
@@ -575,5 +622,434 @@ describe("faqir theme generate · CLI", () => {
     } finally {
       rmSync(invalidDir, { recursive: true, force: true });
     }
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// The seed reaches the command line, and the scorecard reports it  [1.1A-11]
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe("theme generate · one flag per axis", () => {
+  it("names every enumerated axis exactly once, and nothing else", () => {
+    // The flag table is the CLI's half of the axis vocabulary. Derived
+    // completeness rather than a written-down list: an axis added to
+    // THEME_AXIS_VALUES that nobody gives a flag would silently be reachable
+    // only through a hand-written seed file.
+    const paths = Object.values(SEED_FLAGS);
+    expect(new Set(paths).size).toBe(paths.length);
+    expect(paths.filter((path) => path !== "accent").sort())
+      .toEqual(Object.keys(THEME_AXIS_VALUES).sort());
+    // `accent` is the one seed field with no vocabulary — it is a colour.
+    expect(SEED_FLAGS.accent).toBe("accent");
+    // `document` is a boolean and takes no value, so it is a flag rather than
+    // an axis flag; `radius` is the 1.0 compatibility spelling of `--shape`.
+    expect(SEED_FLAGS.document).toBeUndefined();
+    expect(SEED_FLAGS.radius).toBeUndefined();
+    expect(SEED_FLAGS.shape).toBe("shape.radius");
+  });
+
+  it("coerces the two numeric axes and leaves every other value a string", () => {
+    expect(coerceSeedValue("type.scale", "1.25")).toBe(1.25);
+    expect(coerceSeedValue("type.base", "18")).toBe(18);
+    // A value that is not a number stays a string, so the vocabulary — not a
+    // NaN — is what the error names.
+    expect(coerceSeedValue("type.scale", "huge")).toBe("huge");
+    expect(coerceSeedValue("depth", "glass")).toBe("glass");
+    for (const [path, values] of Object.entries(THEME_AXIS_VALUES)) {
+      const numeric = typeof values[0] === "number";
+      expect(typeof coerceSeedValue(path, String(values[0]))).toBe(numeric ? "number" : "string");
+    }
+  });
+
+  it("writes a dotted path into a nested seed, creating the groups", () => {
+    const seed: Record<string, unknown> = {};
+    setSeedPath(seed, "type.voice.weight", "black");
+    setSeedPath(seed, "type.pairing", "slab");
+    expect(seed).toEqual({ type: { voice: { weight: "black" }, pairing: "slab" } });
+  });
+
+  it("merges a seed file with flags, deeply, flags winning", () => {
+    const file = {
+      name: "from-file",
+      accent: "#123456",
+      type: { pairing: "slab", voice: { weight: "black", tracking: "wide" } },
+      shape: { radius: "sharp" },
+      depth: "hard",
+    };
+    const flags = { type: { voice: { weight: "regular" } }, depth: "glass" };
+    expect(mergeSeeds(file, flags)).toEqual({
+      name: "from-file",
+      accent: "#123456",
+      // The flag replaced one leaf and left its siblings alone…
+      type: { pairing: "slab", voice: { weight: "regular", tracking: "wide" } },
+      shape: { radius: "sharp" },
+      // …and replaced the scalar outright.
+      depth: "glass",
+    });
+    // Neither input is mutated: the CLI reuses the file object for its report.
+    expect(file.depth).toBe("hard");
+  });
+});
+
+describe("theme generate · scorecard v2", () => {
+  const DENSITY_CSS = readFileSync(join(TOKENS_DIR, "density.css"), "utf8");
+
+  function scorecardFor(input: ThemeGenerateInput, outDir?: string) {
+    const bundle = generateThemeBundle(input, BASE_SOURCES);
+    return themeScorecard(bundle, BASE_SOURCES, { outDir, densityCss: DENSITY_CSS });
+  }
+
+  it("is versioned, and the 1.0 key moves with it", () => {
+    const card = scorecardFor(DEFAULT_INPUT);
+    expect(card.scorecard_version).toBe(2);
+    // The 1.0 payload's own version key, kept so an automation reading v1 sees
+    // the number move rather than a field vanish. Derived from one constant.
+    expect(card.theme_generate_schema_version).toBe(THEME_SCORECARD_VERSION);
+    expect(card.command).toBe("theme generate");
+  });
+
+  it("carries the resolved seed and the derived axes, not a copy of the request", () => {
+    const card = scorecardFor({ ...DEFAULT_INPUT, depth: "glass", density: "compact" });
+    expect(validateThemeSeed(card.seed)).toEqual([]);
+    expect(validateThemeAxes(card.axes)).toEqual([]);
+    expect(card.seed.depth).toBe("glass");
+    expect(card.axes.depth).toBe("glass");
+    expect(card.axes.density).toBe("compact");
+    // Every absent axis is filled in — this object IS `<name>.seed.json`.
+    expect(Object.keys(card.seed).sort()).toEqual([...THEME_SEED_AXES, "name"].sort());
+  });
+
+  it("reports one elevation ΔE per ramp pair per scheme per file", () => {
+    const card = scorecardFor({ ...DEFAULT_INPUT, document: true });
+    // both (2 schemes) + the light-only document companion = 3 scheme-files.
+    expect(card.elevation.length).toBe(ELEVATION_PAIRS.length * 3);
+    expect(card.elevation.every((row) => row.passes)).toBe(true);
+    expect(card.elevation.every((row) => row.threshold === ELEVATION_MIN_DELTA)).toBe(true);
+    // The numbers are real measurements, not a pass flag with a shape.
+    for (const row of card.elevation) {
+      expect(row.delta).toBeGreaterThanOrEqual(ELEVATION_MIN_DELTA);
+    }
+    // …and the same deltas the elevation gate computes: the scorecard reads
+    // through `buildSchemeLookups`, which is the gate's own cascade model.
+    expect(checkThemeElevation({
+      themeName: card.name,
+      themeCss: generateThemeBundle({ ...DEFAULT_INPUT, document: true }, BASE_SOURCES).generated[0].css,
+      baseCss: BASE_CSS,
+    })).toEqual([]);
+  });
+
+  it("reports the focus ring against every surface it lands on", () => {
+    const card = scorecardFor(DEFAULT_INPUT);
+    expect(card.focus_ring.length).toBe(NON_TEXT_PAIRS.length * 2);
+    expect(card.focus_ring.every((row) => row.threshold === CONTRAST_NON_TEXT)).toBe(true);
+    expect(card.focus_ring.every((row) => row.ring === "color-ring")).toBe(true);
+    expect(card.focus_ring.every((row) => row.passes && !row.translucent)).toBe(true);
+    for (const row of card.focus_ring) expect(row.ratio).toBeGreaterThanOrEqual(CONTRAST_NON_TEXT);
+  });
+
+  it("a translucent ring is reported as a finding, not skipped", () => {
+    // The 1.0 default shipped `oklch(… / 0.4)` and passed the gate in 19 of 24
+    // theme × mode combinations because "we cannot compute it" read as a skip.
+    // The scorecard says so out loud instead of omitting the row.
+    const bundle = generateThemeBundle(DEFAULT_INPUT, BASE_SOURCES);
+    const translucent = {
+      ...bundle,
+      generated: bundle.generated.map((file) => ({
+        ...file,
+        css: file.css.replace(/--color-ring\s*:[^;]+;/g, "--color-ring: oklch(0.55 0.22 264 / 0.4);"),
+      })),
+    };
+    const card = themeScorecard(translucent, BASE_SOURCES, { densityCss: DENSITY_CSS });
+    expect(card.focus_ring.length).toBe(NON_TEXT_PAIRS.length * 2);
+    expect(card.focus_ring.every((row) => row.translucent)).toBe(true);
+    expect(card.focus_ring.every((row) => row.ratio === null && !row.passes)).toBe(true);
+  });
+
+  it("reports the tap targets the seed's density lands on", () => {
+    for (const density of THEME_AXIS_VALUES.density) {
+      const card = scorecardFor({ ...DEFAULT_INPUT, density });
+      expect(card.tap_targets.length).toBe(4);
+      expect(card.tap_targets.every((target) => target.density === density)).toBe(true);
+      expect(card.tap_targets.every((target) => target.threshold_px === TAP_TARGET_MIN_PX)).toBe(true);
+      // Every ramp the registry ships clears SC 2.5.8 — asserted rather than
+      // assumed, because a density axis whose controls are 20px tall is a
+      // personality that fails an accessibility criterion.
+      expect(card.tap_targets.every((target) => target.passes)).toBe(true);
+      // The heights are read out of density.css, not restated here.
+      const expected = densityControlHeights(DENSITY_CSS, density);
+      expect(Object.fromEntries(card.tap_targets.map((t) => [t.control, t.height_px])))
+        .toEqual(expected);
+      expect(expected["input-height"]).toBe(expected["control-height-md"]);
+    }
+  });
+
+  it("reads each density block's own ramp, and nothing when there is none", () => {
+    const compact = densityControlHeights(DENSITY_CSS, "compact");
+    const spacious = densityControlHeights(DENSITY_CSS, "spacious");
+    expect(compact["control-height-md"]).toBeLessThan(spacious["control-height-md"]!);
+    // A commented-out declaration is not a ramp, and an unknown density has no
+    // block at all — both come back null rather than as a wrong number.
+    expect(densityControlHeights("/* --control-height-md: 99px; */", "compact")["control-height-md"])
+      .toBeNull();
+    expect(densityControlHeights(DENSITY_CSS, "roomy")["control-height-md"]).toBeNull();
+    // …and with no density stylesheet at all the scorecard simply has no tap
+    // targets, rather than inventing a ramp.
+    const bundle = generateThemeBundle(DEFAULT_INPUT, BASE_SOURCES);
+    expect(themeScorecard(bundle, BASE_SOURCES).tap_targets).toEqual([]);
+  });
+
+  it("names every artefact under --out, and one seed per generation", () => {
+    const card = scorecardFor({ ...DEFAULT_INPUT, document: true }, "registry/themes");
+    expect(card.generated.map((file) => file.css)).toEqual([
+      "registry/themes/sample-brand.css",
+      "registry/themes/sample-brand-document.css",
+    ]);
+    expect(card.generated[0].seed).toBe("registry/themes/sample-brand.seed.json");
+    // The document companion is a print variant of the same seed rather than a
+    // theme with a seed of its own, so it gets no `.seed.json`.
+    expect(card.generated[1].seed).toBeUndefined();
+    expect(card.generated.every((file) => file.preview.endsWith(".preview.html"))).toBe(true);
+    // The default is `themes/`, which is where 1.0 wrote.
+    expect(scorecardFor(DEFAULT_INPUT).generated[0].css).toBe("themes/sample-brand.css");
+  });
+
+  it("flattens the contrast report the 1.0 payload already carried", () => {
+    const bundle = generateThemeBundle({ ...DEFAULT_INPUT, document: true }, BASE_SOURCES);
+    const card = themeScorecard(bundle, BASE_SOURCES, { densityCss: DENSITY_CSS });
+    expect(card.contrast).toEqual(bundle.generated.flatMap((file) => file.contrast));
+    expect(card.contrast.length).toBe(CONTRAST_PAIRS.length * 3);
+    expect(card.options).toEqual({
+      neutral: "cool",
+      radius: "md",
+      scheme: "both",
+      document: true,
+      legacy_blocks: false,
+    });
+    // 1.1A-12's number, and it says so rather than being absent.
+    expect(card.distinctiveness).toBeNull();
+  });
+
+  it("is pure — assembling a scorecard writes nothing", () => {
+    const before = readdirSync(ROOT).sort();
+    scorecardFor({ ...DEFAULT_INPUT, document: true });
+    expect(readdirSync(ROOT).sort()).toEqual(before);
+  });
+});
+
+describe("theme generate · the manifest carries its provenance", () => {
+  it("puts the seed and the axes on the generated theme, and neither on its document companion", () => {
+    const bundle = generateThemeBundle({ ...DEFAULT_INPUT, document: true, depth: "hard" }, BASE_SOURCES);
+    const [theme, document] = bundle.generated;
+    expect(theme.manifest.seed).toEqual(bundle.seed);
+    expect(theme.manifest.axes).toEqual(bundle.axes);
+    expect(validateThemeManifest(theme.manifest)).toEqual([]);
+    // The companion's CSS was never run through `axesFromCss`, so writing the
+    // parent's axes onto it would be a claim rather than a derivation.
+    expect(document.manifest.seed).toBeUndefined();
+    expect(document.manifest.axes).toBeUndefined();
+    expect(validateThemeManifest(document.manifest)).toEqual([]);
+  });
+});
+
+describe("theme generate · the CLI surface", () => {
+  let cwd: string;
+  let origCwd: string;
+
+  beforeEach(() => {
+    origCwd = process.cwd();
+    cwd = mkdtempSync(join(tmpdir(), "faqir-theme-cli-"));
+    process.chdir(cwd);
+  });
+
+  afterEach(() => {
+    process.chdir(origCwd);
+    rmSync(cwd, { recursive: true, force: true });
+  });
+
+  const read = (rel: string) => readFileSync(join(cwd, rel), "utf8");
+  const readJson = (rel: string) => JSON.parse(read(rel));
+
+  it("writes css, manifest, seed and preview, and the seed re-generates the theme", async () => {
+    await theme(["generate", "ember", "--accent", "#d97706", "--depth", "hard", "--motion", "springy"]);
+    expect(readdirSync(join(cwd, "themes")).sort()).toEqual([
+      "ember.css",
+      "ember.preview.html",
+      "ember.seed.json",
+      "ember.theme.json",
+    ]);
+
+    const seed = readJson("themes/ember.seed.json");
+    // The written seed is schema-valid — this is the file a user edits and
+    // hands back, so `definitions.themeSeed` is the contract it must meet.
+    expect(validateThemeSeed(seed)).toEqual([]);
+    expect(seed.depth).toBe("hard");
+    expect(seed.motion).toBe("springy");
+    expect(readJson("themes/ember.theme.json").seed).toEqual(seed);
+
+    // The round trip that makes a seed file worth writing: regenerating FROM it
+    // reproduces the stylesheet byte for byte.
+    const first = read("themes/ember.css");
+    await theme(["generate", "--seed", "themes/ember.seed.json", "--out", "again"]);
+    expect(read("again/ember.css")).toBe(first);
+  });
+
+  it("accepts every axis as its own flag", async () => {
+    // One generation stating a NON-DEFAULT value on every enumerated axis the
+    // generator can render, proving each flag reaches the seed and each seed
+    // value reaches the CSS — the manifest's `axes` block is derived from the
+    // stylesheet, so this is measured rather than echoed back.
+    const stated: Record<string, string> = {
+      neutral: "warm",
+      scheme: "both",
+      type: "serif-editorial",
+      scale: "1.25",
+      base: "18",
+      weight: "black",
+      tracking: "wide",
+      transform: "uppercase",
+      shape: "sharp",
+      border: "heavy",
+      corner: "bevel",
+      depth: "layered",
+      material: "grain",
+      motion: "snappy",
+      density: "spacious",
+      focus: "glow",
+      link: "thick",
+      divider: "dashed",
+      button: "rect",
+      input: "underline",
+      checkbox: "round",
+      switch: "square",
+      contrast: "high",
+    };
+    // Every axis flag is exercised: the table is what the CLI parses, so a new
+    // one shows up here as a missing key rather than as untested code.
+    expect(Object.keys(stated).sort())
+      .toEqual(Object.keys(SEED_FLAGS).filter((flag) => flag !== "accent").sort());
+
+    const args = Object.entries(stated).flatMap(([flag, value]) => [`--${flag}`, value]);
+    await theme(["generate", "full-axis", "--accent", "oklch(0.55 0.2 150)", ...args]);
+
+    const manifest = readJson("themes/full-axis.theme.json");
+    expect(manifest.axes).toEqual({
+      accent_hue: manifest.axes.accent_hue,
+      accent_chroma: manifest.axes.accent_chroma,
+      neutral: "warm",
+      scheme: "both",
+      type: {
+        pairing: "serif-editorial",
+        scale: 1.25,
+        base: 18,
+        voice: { weight: "black", tracking: "wide", transform: "uppercase" },
+      },
+      shape: { radius: "sharp", border: "heavy", corner: "bevel" },
+      depth: "layered",
+      material: "grain",
+      motion: "snappy",
+      density: "spacious",
+      focus: "glow",
+      decoration: { link: "thick", divider: "dashed" },
+      controls: { button: "rect", input: "underline", checkbox: "round", switch: "square" },
+      contrast: "high",
+    });
+    // The numeric axes arrived as numbers, not as the strings a shell hands over.
+    expect(manifest.seed.type.scale).toBe(1.25);
+    expect(manifest.seed.type.base).toBe(18);
+  });
+
+  it("lets a flag override the seed file it was given", async () => {
+    writeFileSync(join(cwd, "base.seed.json"), JSON.stringify({
+      name: "from-file",
+      accent: "#0ea5e9",
+      depth: "hard",
+      shape: { radius: "round", border: "heavy" },
+    }));
+    await theme(["generate", "--seed", "base.seed.json", "--depth", "glass"]);
+
+    const seed = readJson("themes/from-file.seed.json");
+    expect(seed.name).toBe("from-file");      // the file may name the theme…
+    expect(seed.depth).toBe("glass");          // …the flag wins on what both state…
+    expect(seed.shape.border).toBe("heavy");   // …and an untouched leaf survives.
+    expect(seed.shape.radius).toBe("round");
+
+    // A positional name overrides the file's, so one seed can be re-generated
+    // under another name without editing it.
+    await theme(["generate", "renamed", "--seed", "base.seed.json"]);
+    expect(readJson("themes/renamed.seed.json").name).toBe("renamed");
+  });
+
+  it("writes where --out says, and nowhere else", async () => {
+    await theme(["generate", "outdir", "--accent", "#2563eb", "--out", "registry/themes"]);
+    expect(existsSync(join(cwd, "themes"))).toBe(false);
+    expect(readdirSync(join(cwd, "registry/themes")).sort()).toEqual([
+      "outdir.css",
+      "outdir.preview.html",
+      "outdir.seed.json",
+      "outdir.theme.json",
+    ]);
+    // A trailing slash is the natural thing to type and must not double up.
+    await theme(["generate", "slashed", "--accent", "#2563eb", "--out", "out/"]);
+    expect(existsSync(join(cwd, "out/slashed.css"))).toBe(true);
+  });
+
+  it("rejects an invalid axis by naming its vocabulary, and writes nothing", async () => {
+    // The vocabulary is quoted from the table rather than retyped: the error a
+    // user reads is the axis list, so a value added to `depth` must show up in
+    // the message without anyone remembering to update it here.
+    await expect(theme(["generate", "bad", "--accent", "#2563eb", "--depth", "fluffy"]))
+      .rejects.toThrow(`seed.depth: 'seed.depth' must be one of: ${THEME_AXIS_VALUES.depth.join(", ")}`);
+    await expect(theme(["generate", "bad", "--accent", "#2563eb", "--scale", "1.4"]))
+      .rejects.toThrow(/seed\.type\.scale.*must be one of: 1\.125, 1\.2, 1\.25, 1\.333/s);
+    await expect(theme(["generate", "bad", "--accent", "#2563eb", "--type", "custom"]))
+      .rejects.toThrow(/type\.pairing: "custom" is a DERIVED value/);
+    expect(existsSync(join(cwd, "themes"))).toBe(false);
+  });
+
+  it("reports a missing, malformed or unusable seed file by name", async () => {
+    await expect(theme(["generate", "x", "--seed", "nope.seed.json"]))
+      .rejects.toThrow(/Seed file 'nope.seed.json' not found/);
+    writeFileSync(join(cwd, "broken.seed.json"), "{ not json");
+    await expect(theme(["generate", "x", "--seed", "broken.seed.json"]))
+      .rejects.toThrow(/Seed file 'broken.seed.json' is not valid JSON/);
+    writeFileSync(join(cwd, "array.seed.json"), "[]");
+    await expect(theme(["generate", "x", "--seed", "array.seed.json"]))
+      .rejects.toThrow(/must contain a JSON object/);
+    // An unknown KEY in an otherwise fine file is the seed validator's error,
+    // which is the same sentence a bad flag produces.
+    writeFileSync(join(cwd, "odd.seed.json"), JSON.stringify({ name: "x", accent: "#000", mood: "calm" }));
+    await expect(theme(["generate", "--seed", "odd.seed.json"]))
+      .rejects.toThrow(/Unknown seed axis 'mood'/);
+  });
+
+  it("still needs a name and an accent, from wherever they come", async () => {
+    await expect(theme(["generate", "--accent", "#2563eb"])).rejects.toThrow(/Theme name required/);
+    await expect(theme(["generate", "nameless"])).rejects.toThrow(/--accent is required/);
+    await expect(theme(["generate", "x", "--accent", "#2563eb", "--unknown"]))
+      .rejects.toThrow(/Unknown option '--unknown'/);
+    // …and a flag with no value is a flag with no value, not a swallowed name.
+    await expect(theme(["generate", "x", "--accent"])).rejects.toThrow(/--accent requires a value/);
+  });
+
+  it("keeps the 1.0 flags working, mapped onto the axes that replaced them", async () => {
+    await theme(["generate", "legacy", "--accent", "#168c5b", "--neutral", "warm", "--radius", "lg", "--scheme", "light"]);
+    const manifest = readJson("themes/legacy.theme.json");
+    expect(manifest.scheme).toBe("light");
+    expect(manifest.axes.shape.radius).toBe("round");
+    expect(manifest.axes.neutral).toBe("warm");
+    expect(manifest.seed.shape.radius).toBe("round");
+  });
+
+  it("stamps the seed's density on the preview it writes", async () => {
+    await theme(["generate", "dense", "--accent", "#2563eb", "--density", "compact"]);
+    const preview = read("themes/dense.preview.html");
+    // Without the attribute the harness would render a compact theme at the
+    // comfortable ramp: `density.css` states each ramp inside a
+    // `[data-density]` subtree scope that a theme's `:root` cannot reach.
+    expect(preview).toContain('data-density="compact"');
+    // …and the attribute is inert without the stylesheet that answers it, so
+    // the inlined CSS carries it.
+    expect(preview).toContain('[data-density="compact"]');
+    expect(preview).toContain("--control-height-md");
   });
 });
