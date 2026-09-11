@@ -16,6 +16,7 @@
 // for these three there were none to run.
 
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
+import { settle } from "../helpers/settle";
 
 const Faqir = require("../../registry/core/faqir-core.js");
 
@@ -355,10 +356,13 @@ describe("l-cloak is removed from content that arrives later", () => {
 
     const host = document.getElementById("host")!;
     host.innerHTML = `<div id="late" l-cloak><span id="deep" l-cloak>x</span></div>`;
-    // Two turns: the observer delivers on a microtask, and a queue left by an
-    // earlier test file can push this one turn further out.
-    await tick();
-    await tick();
+    // The observer delivers on a microtask, but a queue left by ~170 earlier
+    // test files sharing this realm can push delivery an unpredictable number of
+    // turns out — so wait for the sweep itself rather than for a turn count.
+    await settle(
+      () => !document.getElementById("late")!.hasAttribute("l-cloak"),
+      "the observer sweep to uncloak a node appended after bootstrap",
+    );
 
     // The sweep used to run once, at the end of bootstrap. Anything inserted
     // afterwards kept the attribute — and the injected

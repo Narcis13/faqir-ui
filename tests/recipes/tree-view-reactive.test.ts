@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "bun:test";
+import { settle } from "../helpers/settle";
 import { createTreeView } from "../../registry/recipes/tree-view/tree-view.js";
 
 const Faqir = require("../../registry/core/faqir-core.js");
@@ -120,6 +121,15 @@ describe("tree-view with keyed l-for nodes", () => {
     const originalNodes = [...root.__faqirScope.nodes];
     root.__faqirScope.nodes = [originalNodes[1], originalNodes[0], originalNodes[2]];
     await tick();
+
+    // Reconciliation is the engine's; the ARIA below is the controller's, and it
+    // arrives from the MutationObserver that reconciliation trips. In a shared
+    // realm holding ~170 files' worth of pending work that delivery can land a
+    // turn or more after this tick — so wait for the refresh, not for a turn.
+    await settle(
+      () => alpha.getAttribute("aria-posinset") === "2",
+      "the tree-view observer to refresh ARIA after the l-for reorder",
+    );
 
     expect(directValues(root)).toEqual(["beta", "alpha", "charlie"]);
     expect(byValue(root, "alpha")).toBe(alpha);
