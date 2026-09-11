@@ -1,7 +1,8 @@
 import { existsSync, readdirSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join, relative, resolve, sep } from "node:path";
 import { readConfig } from "./config";
 import { log } from "./logger";
+import { FONTS_CSS_FILENAME, FONTS_DIR } from "../fonts/install";
 
 export interface BundleOptions {
   output?: string;
@@ -49,13 +50,40 @@ export async function generateBundle(
 
   const isDryRun = options?.dryRun ?? false;
 
-  async function addFile(filePath: string, label: string): Promise<void> {
+  async function addFile(
+    filePath: string,
+    label: string,
+    transform?: (css: string) => string,
+  ): Promise<void> {
     if (!existsSync(filePath)) return;
     if (!isDryRun) {
       const content = await Bun.file(filePath).text();
-      sections.push(`/* === ${label} === */\n${content}`);
+      sections.push(`/* === ${label} === */\n${transform ? transform(content) : content}`);
     }
     includedFiles.push(label);
+  }
+
+  /**
+   * Re-base `fonts.css`'s `url("fonts/…")` references on the bundle's own
+   * directory.
+   *
+   * Inlining a stylesheet moves its relative urls: a `@font-face` resolves
+   * against the file it is written in, so `fonts.css`'s paths are correct in the
+   * bundle only while the bundle sits beside it — which is the default, and not
+   * the case for a configured `bundle.output` somewhere else. Fonts are the
+   * first asset reference the bundler has ever had to carry (component CSS has
+   * none), and a 404 for a font is invisible: the page just renders in the
+   * fallback face. So the paths are rewritten rather than left to break quietly.
+   */
+  function rebaseFontUrls(css: string): string {
+    // `bundle.output` may be configured relative to the project root, so it is
+    // resolved against `cwd` before the two directories are compared.
+    const prefix = relative(dirname(resolve(cwd, bundleOutput)), outputDir).split(sep).join("/");
+    if (!prefix) return css;
+    return css.replace(
+      new RegExp(`url\\((["']?)${FONTS_DIR}/`, "g"),
+      (_match, quote: string) => `url(${quote}${prefix}/${FONTS_DIR}/`,
+    );
   }
 
   if (isJS) {
@@ -80,6 +108,15 @@ export async function generateBundle(
 
     // 2. Theme
     await addFile(join(outputDir, "tokens", "theme.css"), "tokens/theme.css");
+
+    // 2b. Self-hosted fonts, AFTER the theme (task 1.1A-18).
+    //
+    // `fonts.css` sets the role tokens (`--font-heading`/`-body`/`-ui`) to the
+    // families `faqir fonts add` installed. Both it and the theme declare on
+    // `:root` at equal specificity, so the later one wins — which has to be this
+    // one: a reader who installed Fraunces asked for Fraunces headings whatever
+    // face the theme names. It is skipped when no family is installed.
+    await addFile(join(outputDir, FONTS_CSS_FILENAME), FONTS_CSS_FILENAME, rebaseFontUrls);
 
     // 3. Base
     await addFile(join(outputDir, "base", "reset.css"), "base/reset.css");

@@ -296,6 +296,7 @@ export async function init(args: string[]): Promise<void> {
   log.blank();
   console.log("  Next steps:");
   log.step("faqir add button card input   — add components");
+  log.step("faqir fonts list              — self-hostable OFL font families");
   log.step("faqir list                    — see available components");
   log.step("faqir dev                     — start dev server");
   log.step("faqir doctor                  — check project health");

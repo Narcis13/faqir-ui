@@ -212,6 +212,11 @@ describe("universal --json guarantee · compiled bundle on Node, in a real proje
     trace: null,
     conform: null,
     theme: null,
+    // `faqir fonts --json` carries no subcommand, so it prints help into the
+    // envelope; `fonts list|add|remove --json` have bespoke shapes of their own,
+    // asserted in tests/commands/fonts.test.ts (they cannot run here — an `add`
+    // would reach for the network, which that file's fetch seam is what avoids).
+    fonts: null,
     variant: null,
     scaffold: null,
     bundle: null,

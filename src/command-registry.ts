@@ -27,6 +27,7 @@ import { explain } from "./commands/explain";
 import { trace } from "./commands/trace";
 import { conform } from "./commands/conform";
 import { theme } from "./commands/theme";
+import { fonts } from "./commands/fonts";
 import { variant } from "./commands/variant";
 import { scaffold } from "./commands/scaffold";
 import { bundle } from "./commands/bundle";
@@ -179,6 +180,13 @@ export const COMMAND_DEFINITIONS: Record<string, CommandDefinition> = {
     summary: "Manage or generate contrast-verified themes",
     args: "set|list|create|generate <name>",
     skillNote: "manage themes, or generate one from a seed (--seed/--accent/one flag per axis)",
+  },
+  fonts: {
+    run: fonts,
+    category: "Development",
+    summary: "Install self-hosted OFL font families",
+    args: "list|add|remove <family> [--role <role>]",
+    skillNote: "install a hash-verified OFL family and point a role token at it",
   },
   variant: {
     run: variant,

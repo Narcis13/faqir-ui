@@ -282,10 +282,10 @@ const FAMILY_CLASSES: Array<[Axis<"type.pairing">, string[]]> = [
   // Old-style / transitional text serifs — made to be read at body size.
   [
     "serif-editorial",
-    ["ui-serif", "serif", "georgia", "charter", "iowan old style", "palatino", "lora", "newsreader", "source serif 4", "literata", "fraunces"],
+    ["ui-serif", "serif", "georgia", "charter", "iowan old style", "palatino", "lora", "newsreader", "source serif 4", "literata", "fraunces", "ibm plex serif"],
   ],
   // Didone / modern serifs — high contrast, vertical stress, display-leaning.
-  ["serif-modern", ["times new roman", "times", "playfair display", "didot", "bodoni moda"]],
+  ["serif-modern", ["times new roman", "times", "playfair display", "didot", "bodoni moda", "instrument serif"]],
   // Humanist sans — calligraphic skeleton, open apertures.
   [
     "sans-humanist",
@@ -296,7 +296,7 @@ const FAMILY_CLASSES: Array<[Axis<"type.pairing">, string[]]> = [
   // Grotesque / neo-grotesque sans — the default class for a plain sans.
   [
     "sans-grotesque",
-    ["helvetica neue", "helvetica", "arial", "inter", "roboto", "neue haas grotesk", "space grotesk", "manrope", "geist", "sans-serif"],
+    ["helvetica neue", "helvetica", "arial", "inter", "roboto", "neue haas grotesk", "space grotesk", "manrope", "geist", "bricolage grotesque", "ibm plex sans", "sans-serif"],
   ],
 ];
 

@@ -869,6 +869,64 @@ seed's density lands on, and the distinctiveness measurement above. The MCP
 `faqir_generate_theme` tool takes the same seed and returns the same scorecard
 in memory, without touching the filesystem.
 
+### Self-hosted fonts
+
+A theme states a *class* of face (`--type serif-editorial`) and the token stack
+names the faces a reader may already have. To ship an actual typeface, install
+it:
+
+```bash
+faqir fonts list                                # the 16-family OFL catalog
+faqir fonts add fraunces --role heading         # → ui/fonts/fraunces/*.woff2
+faqir fonts add inter --role body --role ui     # one family, two role tokens
+faqir fonts remove fraunces                     # and its files, and its block
+```
+
+**No Google Fonts link.** A `<link href="fonts.googleapis.com/…">` puts a
+second origin in the critical path of every page load and reports each visit to
+a host the project does not control. `faqir fonts add` instead downloads the
+WOFF2 files **once**, checks every byte against a SHA-256 pinned in the CLI
+(from an immutable, version-pinned URL — a mismatch, a dead link or a file that
+is not a WOFF2 refuses the install and writes nothing), and serves them from
+your own directory like any other asset. Every catalogued family is licensed
+under the SIL Open Font License, which is what makes that legal without asking
+anyone; nothing else is installable.
+
+What lands in the project is `<output_dir>/fonts/<family>/*.woff2` plus a
+managed `<output_dir>/fonts.css` holding one `@font-face` per Latin subset
+(`font-display: swap`, a `unicode-range` so a page that is all ASCII never
+downloads the extended file, and a variable-weight file where the family ships
+one) and a `:root` block pointing the **role tokens** at it:
+
+```css
+@font-face {
+  font-family: "Fraunces";
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("fonts/fraunces/fraunces-latin-wght-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF,…;
+}
+:root {
+  --font-heading: "Fraunces", 'Charter', 'Iowan Old Style', 'Georgia', ui-serif, serif;
+}
+```
+
+The **theme file is never edited** — `fonts.css` is a separate stylesheet that
+`faqir bundle` and `faqir init` place immediately after the theme, so its role
+tokens win, and removing the family restores whatever the theme said. A role
+has exactly one family (`--font-body` is one declaration), so pointing a role
+at a new family takes it off the one that held it, and re-running the same `add`
+changes nothing. `faqir doctor` re-hashes every file `fonts.css` names, because
+a missing or swapped font is otherwise invisible: the page simply renders in the
+fallback face.
+
+Fonts are the one thing in the catalog that cannot be *generated*, so the
+`--role` a family suits is advice from the catalog rather than a rule — asking
+for one it is not listed for warns and installs anyway. Italics, the non-Latin
+subsets and `size-adjust` fallback metrics are deliberately out: the first two
+are past what a curated list should decide for a project, and the third has to
+be measured out of the font binary.
+
 ---
 
 ## Faqir Core — Reactive Engine
@@ -1415,6 +1473,11 @@ faqir theme create my-brand       # Scaffold custom theme
 faqir theme generate my-brand --accent "#168c5b" --document
 faqir theme generate my-brand --seed my-brand.seed.json --out registry/themes
 faqir theme list                  # Show available themes
+
+faqir fonts list                  # The curated OFL catalog
+faqir fonts add fraunces --role heading    # Download, verify, self-host
+faqir fonts add inter --role body --role ui
+faqir fonts remove fraunces       # Remove the family and its files
 
 faqir variant add button visual=accent     # Add variant value
 faqir variant remove button visual=accent  # Remove variant value

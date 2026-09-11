@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { LEGACY_CONFIG_FILE, legacyConfigExists } from "../migration";
+import type { InstalledFont } from "../fonts/install";
 
 export interface FaqirConfig {
   version: string;
@@ -26,6 +27,13 @@ export interface FaqirConfig {
    * Absent by default — the bundled registry stays the offline-first source.
    */
   registries?: Record<string, string>;
+  /**
+   * Self-hosted OFL families `faqir fonts add` installed, and which role tokens
+   * each one is pointed at. This is the state `<output_dir>/fonts.css` is
+   * rendered from, so it is the record of what is installed — absent until the
+   * first `faqir fonts add` (task 1.1A-18).
+   */
+  fonts?: InstalledFont[];
 }
 
 export const DEFAULT_CONFIG: FaqirConfig = {

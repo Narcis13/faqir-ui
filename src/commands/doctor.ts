@@ -3,6 +3,12 @@ import { join } from "node:path";
 import { log } from "../utils/logger";
 import { configExists, readConfig, getConfigPath } from "../utils/config";
 import { validateManifest } from "../manifest";
+import {
+  FONTS_CSS_FILENAME,
+  checkReferences,
+  fontFilePath,
+  referencedFiles,
+} from "../fonts/install";
 
 interface CheckResult {
   name: string;
@@ -144,6 +150,46 @@ export async function doctor(args: string[]): Promise<void> {
       name: "Theme",
       passed: false,
       message: "tokens/theme.css not found",
+    });
+  }
+
+  // 6b. Check self-hosted fonts (task 1.1A-18)
+  //
+  // `fonts.css` is a stylesheet the browser loads and a set of files on disk
+  // that must still be the ones the catalog pinned. Neither failure is visible
+  // in a page — a missing WOFF2 renders in the fallback face — so it is exactly
+  // the kind of thing doctor exists to say out loud.
+  const fontsCssPath = join(outputDir, FONTS_CSS_FILENAME);
+  if (existsSync(fontsCssPath)) {
+    const css = await Bun.file(fontsCssPath).text();
+    const issues = await checkReferences(css, async (ref) => {
+      const path = fontFilePath(outputDir, ref.id, ref.file);
+      return existsSync(path) ? await Bun.file(path).bytes() : null;
+    });
+    const declared = referencedFiles(css).length;
+    if (issues.length === 0) {
+      results.push({
+        name: "Fonts",
+        passed: true,
+        message:
+          declared === 0
+            ? `${FONTS_CSS_FILENAME} present, no @font-face declared`
+            : `${declared} self-hosted file(s) present and hash-verified`,
+      });
+    } else {
+      results.push({
+        name: "Fonts",
+        passed: false,
+        message: `${issues.map((issue) => issue.message).join("; ")}. Run 'faqir fonts add <family>' to reinstall.`,
+      });
+    }
+  } else if ((config.fonts ?? []).length > 0) {
+    results.push({
+      name: "Fonts",
+      passed: false,
+      message:
+        `${config.fonts!.map((font) => font.id).join(", ")} recorded in faqir.config.json but ` +
+        `${config.output_dir}/${FONTS_CSS_FILENAME} is missing. Run 'faqir fonts add <family>' again.`,
     });
   }
 
