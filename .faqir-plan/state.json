@@ -121,7 +121,7 @@
     {
       "id": "1.1A-19",
       "completed": "2026-09-12",
-      "commit": "",
+      "commit": "bc16da0",
       "summary": "Scoped themes: `faqir theme bundle <name> --scope` rewrites a theme's :root and [data-theme] blocks onto a data-skin subtree \u2014 prelude-only edits over a parsed stylesheet, the scope root restating the five properties reset.css puts on :root/html/body, all 27 themes gated and three skins proved in Chromium to render exactly what they render at page level."
     }
   ],
