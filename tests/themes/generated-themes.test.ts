@@ -1,12 +1,13 @@
 // ═══════════════════════════════════════════════════════════════════════════
-// The generated themes — a stylesheet is a pure function of its seed [1.1A-16]
+// The generated themes — a stylesheet is a pure function of its seed [1.1A-16/17]
 // ═══════════════════════════════════════════════════════════════════════════
 //
-// 1.0's twelve themes were WRITTEN. 1.1A-16 ships the first six that were not:
-// `editorial`, `swiss`, `neo`, `luxe`, `candy` and `organic` are each the output
-// of `faqir theme generate <name> --seed registry/themes/<name>.seed.json`, and
-// two of them (`editorial`, `swiss`) bring the print companion a seed with
-// `document: true` produces.
+// 1.0's twelve themes were WRITTEN. 1.1A-16 shipped the first six that were not
+// — `editorial`, `swiss`, `neo`, `luxe`, `candy`, `organic` — and 1.1A-17 the
+// second six: `clinical`, `fintech`, `nordic`, `sunset`, `ink` and `neumorph`.
+// Each is the output of `faqir theme generate <name> --seed
+// registry/themes/<name>.seed.json`, and three of them (`editorial`, `swiss`,
+// `ink`) bring the print companion a seed with `document: true` produces.
 //
 // That makes them GENERATED ARTEFACTS, and this repository has one rule for
 // those: the committed file must equal a fresh generation, byte for byte, or it
@@ -23,9 +24,12 @@
 //      and its companion's — byte for byte.
 //   2. **Provenance.** The manifest's `seed` is the seed file, the manifest's
 //      `axes` are what the seed asked for, and `visual_matrix` is `false`.
-//   3. **The set.** The six are present, named, and each occupies a region of
-//      the axis space that was empty before it.
-//   4. **The corner-shape gate.** A measured refusal, in the shape 1.1A-15 used
+//   3. **The set.** The twelve are present, named, and each occupies a region
+//      of the axis space that was empty before it.
+//   4. **The population gate [1.1A-17].** Every value of the four STRUCTURAL
+//      axes — `depth`, `controls.input`, `material`, `motion` — is rendered by
+//      some shipped theme, and the values that hang on a single theme are named.
+//   5. **The corner-shape gate.** A measured refusal, in the shape 1.1A-15 used
 //      for `divider: double` under 3px — see `corner-shape` below.
 
 import { describe, expect, it } from "bun:test";
@@ -37,6 +41,7 @@ import { normalizeSeed } from "../../src/theme/seed";
 import { themeBaseSources } from "../../src/theme/sources";
 import { axesFromCss } from "../../src/theme/axes";
 import {
+  THEME_AXIS_VALUES,
   validateThemeSeed,
   type ThemeManifest,
   type ThemeSeed,
@@ -65,12 +70,16 @@ const SEEDED = [...new Glob("*.seed.json").scanSync(THEMES_DIR)]
   .map((f) => f.replace(/\.seed\.json$/, ""))
   .sort();
 
-/** The six this task shipped, named — so a deletion is a failure, not a smaller run. */
+/** The six 1.1A-16 shipped, named — so a deletion is a failure, not a smaller run. */
 const BATCH_ONE = ["candy", "editorial", "luxe", "neo", "organic", "swiss"];
+/** The six 1.1A-17 shipped, on the same terms. */
+const BATCH_TWO = ["clinical", "fintech", "ink", "neumorph", "nordic", "sunset"];
+/** Both batches, in the order `SEEDED` discovers them (sorted). */
+const GENERATED = [...BATCH_ONE, ...BATCH_TWO].sort();
 
 describe("the shipped generated themes", () => {
-  it("is exactly batch 1 — six themes, each with a seed on disk", () => {
-    expect(SEEDED).toEqual(BATCH_ONE);
+  it("is both batches — twelve themes, each with a seed on disk", () => {
+    expect(SEEDED).toEqual(GENERATED);
     for (const name of SEEDED) {
       expect(existsSync(join(THEMES_DIR, `${name}.css`)), `${name}.css`).toBe(true);
       expect(existsSync(join(THEMES_DIR, `${name}.theme.json`)), `${name}.theme.json`).toBe(true);
@@ -119,7 +128,7 @@ describe("a generated stylesheet equals a fresh generation, byte for byte", () =
     // A companion has no seed file: it is a second output of the parent's, which
     // is why `document: true` lives on the parent seed and why the companion
     // carries neither `seed` nor `axes` in its manifest [see distinctiveness].
-    const companions = ["editorial-document", "swiss-document"];
+    const companions = ["editorial-document", "ink-document", "swiss-document"];
     for (const companion of companions) {
       const parent = companion.replace(/-document$/, "");
       expect(existsSync(join(THEMES_DIR, `${companion}.seed.json`))).toBe(false);
@@ -245,6 +254,116 @@ describe("the six occupy regions of the axis space that were empty", () => {
     expect(axes("luxe").scheme).toBe("dark");
     expect(manifestOf("luxe").dark_mode).toBe("native");
     expect(manifestOf("luxe").distinctiveness!.token_distance).toBeGreaterThan(0.03);
+  });
+});
+
+describe("batch 2 fills the four axes the vocabulary had only defined [1.1A-17]", () => {
+  const axes = (name: string) => manifestOf(name).axes!;
+
+  it("ships the first `depth: inset` theme and the first `material: dots` one", () => {
+    // `inset` was the last unshipped depth and the reason `neumorph` is in the
+    // batch at all: a pressed surface is a look nothing in the registry had.
+    expect(axes("neumorph").depth).toBe("inset");
+    // `dots` was the last unshipped material. The plan's brief for `clinical`
+    // said `material: none`; it takes the dot field instead, because this
+    // task's own test asks the axis space to be POPULATED and `none` would have
+    // left one value of seven with no example anywhere in the registry.
+    expect(axes("clinical").material).toBe("dots");
+  });
+
+  it("`ink` is the first generated theme with an underline silhouette", () => {
+    // The plan calls this the proof of 1.1A-05's control tokens: `document-serif`
+    // authored the same silhouette by hand, and this is a SEED asking for it.
+    expect(axes("ink").controls.input).toBe("underline");
+    expect(manifestOf("ink").seed!.controls!.input).toBe("underline");
+    // …and the first light-only generated theme, measured rather than chosen:
+    // a warm near-monochrome dark page is `luxe`'s dark page (0.0192 ΔE at its
+    // closest), which no seed axis moves — see the distinctiveness suite.
+    expect(axes("ink").scheme).toBe("light");
+    expect(manifestOf("ink").dark_mode).toBe("none");
+  });
+
+  it("adds the two type pairings and the type voice nobody had shipped", () => {
+    // `sans-geometric` and `slab` were the last two text pairings with no
+    // example; `custom` is derived-only and `normalizeSeed` refuses it, so the
+    // vocabulary is now fully populated as far as a seed can populate it.
+    expect(axes("fintech").type.pairing).toBe("sans-geometric");
+    expect(axes("nordic").type.pairing).toBe("sans-geometric");
+    expect(axes("ink").type.pairing).toBe("slab");
+    // And `medium`, the one heading weight no theme had ever set — `clinical`
+    // and `neumorph` both want a heading that states itself without shouting.
+    // `nordic` reads at `regular`, which is what "geometric light" asks for.
+    expect(axes("clinical").type.voice!.weight).toBe("medium");
+    expect(axes("neumorph").type.voice!.weight).toBe("medium");
+    expect(axes("nordic").type.voice!.weight).toBe("regular");
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// The axis space is POPULATED, not just defined                    [1.1A-17]
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// The task's Tests block asks for this in as many words: "at least one shipped
+// theme per value of `depth`, `controls.input`, `material` and `motion`". These
+// are the four axes whose values are STRUCTURAL rather than a matter of taste —
+// each one changes what a component draws — so a value nobody ships is a value
+// nobody has ever seen rendered, which is how a dead axis survives a review.
+//
+// The assertion has two halves. The first is the requirement itself. The second
+// pins the values with exactly ONE example: those are the fragile ones, and a
+// theme edit that moves the only `inset` depth in the registry should be a
+// visible diff here rather than a silent loss of coverage.
+
+describe("every value of the four structural axes has a shipped example", () => {
+  const PEERS = [...new Glob("*.theme.json").scanSync(THEMES_DIR)]
+    .map((f) => f.replace(/\.theme\.json$/, ""))
+    .sort()
+    .filter((name) => manifestOf(name).axes != null);
+
+  /** `axis value → the themes that ship it`, for one dotted axis path. */
+  function examples(path: string): Record<string, string[]> {
+    const out: Record<string, string[]> = {};
+    for (const name of PEERS) {
+      const value = String(
+        path.split(".").reduce<unknown>((acc, key) => (acc as Record<string, unknown>)[key], manifestOf(name).axes!),
+      );
+      (out[value] ??= []).push(name);
+    }
+    return out;
+  }
+
+  for (const path of ["depth", "controls.input", "material", "motion"] as const) {
+    it(`${path} — every value in the vocabulary is rendered by some theme`, () => {
+      const shipped = examples(path);
+      const vocabulary = THEME_AXIS_VALUES[path] as readonly string[];
+      const missing = vocabulary.filter((value) => (shipped[value] ?? []).length === 0);
+      expect({ [path]: missing }).toEqual({ [path]: [] });
+      // Not vacuous: the sweep must have read the whole shipped set.
+      expect(PEERS.length).toBe(24);
+      expect(Object.values(shipped).flat().length).toBe(PEERS.length);
+    });
+  }
+
+  it("names the values that hang on a single theme", () => {
+    const sole: Record<string, string> = {};
+    for (const path of ["depth", "controls.input", "material", "motion"] as const) {
+      for (const [value, themes] of Object.entries(examples(path))) {
+        if (themes.length === 1) sole[`${path}=${value}`] = themes[0];
+      }
+    }
+    expect(sole).toEqual({
+      // Three depths, each the whole argument for the theme that carries it.
+      "depth=hard": "neo",
+      "depth=glass": "glass",
+      "depth=inset": "neumorph",
+      // Three materials. `grid`, `paper` and `mesh` have two or three each.
+      "material=grain": "organic",
+      "material=dots": "clinical",
+      "material=stripes": "terminal",
+      // A theme that does not animate, and one that animates the most.
+      "motion=none": "document",
+      "motion=playful": "neo",
+    });
   });
 });
 

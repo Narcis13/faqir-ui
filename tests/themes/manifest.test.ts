@@ -438,12 +438,16 @@ describe("theme manifest · the optional 1.1 fields", () => {
         expect(manifest.seed.name).toBe(name);
       }
     }
-    // The twelve authored themes of 1.0 are all still authored, and the six
-    // generated ones are named — so a hand-edit to a generated stylesheet
-    // cannot quietly reclassify it as authored by deleting its seed.
+    // The twelve authored themes of 1.0 are all still authored, and the twelve
+    // generated ones — six from 1.1A-16, six from 1.1A-17 — are named, so a
+    // hand-edit to a generated stylesheet cannot quietly reclassify it as
+    // authored by deleting its seed.
     expect(kinds.authored.length).toBe(12);
-    expect(kinds.generated).toEqual(["candy", "editorial", "luxe", "neo", "organic", "swiss"]);
-    expect(kinds.companion).toEqual(["editorial-document", "swiss-document"]);
+    expect(kinds.generated).toEqual([
+      "candy", "clinical", "editorial", "fintech", "ink", "luxe",
+      "neo", "neumorph", "nordic", "organic", "sunset", "swiss",
+    ]);
+    expect(kinds.companion).toEqual(["editorial-document", "ink-document", "swiss-document"]);
   });
 
   it("holds every shipped theme's axes to the full derived-block rules", () => {

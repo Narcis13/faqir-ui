@@ -388,9 +388,9 @@
     "contrast": "standard"
   },
   "distinctiveness": {
-    "nearest": "organic",
-    "axis_distance": 11,
-    "token_distance": 0.0361
+    "nearest": "fintech",
+    "axis_distance": 10,
+    "token_distance": 0.0318
   },
   "visual_matrix": false
 }

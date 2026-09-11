@@ -340,8 +340,8 @@
     "contrast": "standard"
   },
   "distinctiveness": {
-    "nearest": "neo",
+    "nearest": "fintech",
     "axis_distance": 8,
-    "token_distance": 0.0637
+    "token_distance": 0.0568
   }
 }

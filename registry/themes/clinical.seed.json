@@ -1,0 +1,38 @@
+{
+  "name": "clinical",
+  "accent": "#0f7b8a",
+  "neutral": "cool",
+  "scheme": "both",
+  "type": {
+    "pairing": "sans-humanist",
+    "scale": 1.2,
+    "base": 17,
+    "voice": {
+      "weight": "medium",
+      "tracking": "normal",
+      "transform": "none"
+    }
+  },
+  "shape": {
+    "radius": "soft",
+    "border": "hairline",
+    "corner": "round"
+  },
+  "depth": "flat",
+  "material": "dots",
+  "motion": "minimal",
+  "density": "comfortable",
+  "focus": "ring",
+  "decoration": {
+    "link": "offset",
+    "divider": "solid"
+  },
+  "controls": {
+    "button": "soft",
+    "input": "box",
+    "checkbox": "square",
+    "switch": "pill"
+  },
+  "contrast": "high",
+  "document": false
+}

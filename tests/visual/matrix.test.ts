@@ -210,15 +210,23 @@ describe("matrix membership policy (1.1A-13)", () => {
       expect(isMatrixTheme(manifest)).toBe(true);
     }
     // The twelve authored themes of 1.0 are all still here and all still
-    // members; 1.1A-16's six and their two companions are the ones that are not.
+    // members; the twelve generated ones (1.1A-16's six, 1.1A-17's six) and
+    // their three companions are the ones that are not.
     expect(authored.length).toBe(12);
     expect(generated.sort()).toEqual([
       "candy",
+      "clinical",
       "editorial",
       "editorial-document",
+      "fintech",
+      "ink",
+      "ink-document",
       "luxe",
       "neo",
+      "neumorph",
+      "nordic",
       "organic",
+      "sunset",
       "swiss",
       "swiss-document",
     ]);

@@ -195,6 +195,60 @@ const SEED = {
     dark_mode: "native",
     pairs_with: ["paper"],
   },
+  // ── Generated themes, batch 2 (task 1.1A-17) ──────────────────────────────
+  // Same rule as batch 1: the stylesheet is the seed's output and is never
+  // hand-edited; what is authored here is the mood vocabulary and the pairing.
+  // `ink` is the one that ships a print companion in this batch, and it is
+  // LIGHT-ONLY for a measured reason — see `tests/themes/generated-themes.test.ts`.
+  clinical: {
+    version: "1.0.0",
+    mood: ["clinical", "medical", "calm", "legible", "healthcare"],
+    scheme: "both",
+    dark_mode: "native",
+    pairs_with: ["slate", "document"],
+  },
+  fintech: {
+    version: "1.0.0",
+    mood: ["fintech", "dashboard", "dense", "dark", "data"],
+    scheme: "both",
+    dark_mode: "native",
+    pairs_with: ["midnight", "slate"],
+  },
+  nordic: {
+    version: "1.0.0",
+    mood: ["nordic", "airy", "cool", "geometric", "spacious"],
+    scheme: "both",
+    dark_mode: "native",
+    pairs_with: ["glass", "slate"],
+  },
+  sunset: {
+    version: "1.0.0",
+    mood: ["sunset", "warm", "gradient", "friendly", "consumer"],
+    scheme: "both",
+    dark_mode: "native",
+    pairs_with: ["organic", "aurora"],
+  },
+  ink: {
+    version: "1.0.0",
+    mood: ["letterpress", "monochrome", "sepia", "slab", "print"],
+    scheme: "light",
+    dark_mode: "none",
+    pairs_with: ["ink-document", "paper"],
+  },
+  "ink-document": {
+    version: "1.0.0",
+    mood: ["print", "letterpress", "monochrome", "document", "generated"],
+    scheme: "light",
+    dark_mode: "none",
+    pairs_with: ["ink"],
+  },
+  neumorph: {
+    version: "1.0.0",
+    mood: ["neumorphic", "soft-ui", "pressed", "tactile", "rounded"],
+    scheme: "both",
+    dark_mode: "native",
+    pairs_with: ["soft", "candy"],
+  },
 };
 
 // The base token layer, read twice for two different questions.

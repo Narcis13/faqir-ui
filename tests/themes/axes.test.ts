@@ -507,7 +507,7 @@ describe("axesFromCss · the two authoring forms agree", () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// 4 · The twenty shipped stylesheets, as a table
+// 4 · The twenty-seven shipped stylesheets, as a table
 // ═══════════════════════════════════════════════════════════════════════════
 //
 // The table this task's commit body records. Asserted here so that a later CSS
@@ -523,6 +523,7 @@ const THEME_TABLE: Row[] = [
   // theme            neutral   pairing           radius   border      depth      motion    focus   button  input
   ["aurora", "gray", "system", "soft", "hairline", "layered", "smooth", "ring", "soft", "standard"],
   ["brutalist", "gray", "system", "sharp", "heavy", "flat", "minimal", "bold", "rect", "high"],
+  ["clinical", "cool", "sans-humanist", "soft", "hairline", "flat", "minimal", "ring", "soft", "high"],
   ["candy", "tinted", "rounded", "pill", "hairline", "soft", "springy", "ring", "pill", "standard"],
   ["contrast", "gray", "system", "soft", "regular", "soft", "smooth", "bold", "soft", "high"],
   ["default", "gray", "system", "soft", "hairline", "soft", "smooth", "ring", "soft", "standard"],
@@ -530,14 +531,20 @@ const THEME_TABLE: Row[] = [
   ["document-serif", "gray", "serif-editorial", "sharp", "hairline", "flat", "smooth", "ring", "rect", "high"],
   ["editorial", "gray", "serif-editorial", "soft", "hairline", "flat", "minimal", "ring", "soft", "standard"],
   ["editorial-document", "gray", "sans-grotesque", "sharp", "hairline", "flat", "smooth", "ring", "rect", "standard"],
+  ["fintech", "tinted", "sans-geometric", "soft", "hairline", "layered", "snappy", "ring", "soft", "standard"],
   ["glass", "cool", "system", "round", "hairline", "glass", "smooth", "ring", "soft", "standard"],
+  ["ink", "warm", "slab", "sharp", "hairline", "flat", "minimal", "bold", "rect", "high"],
+  ["ink-document", "gray", "sans-grotesque", "sharp", "hairline", "flat", "smooth", "ring", "rect", "high"],
   ["luxe", "warm", "serif-modern", "soft", "hairline", "soft", "smooth", "ring", "soft", "high"],
   ["midnight", "cool", "system", "soft", "hairline", "layered", "smooth", "glow", "soft", "standard"],
   ["neo", "gray", "sans-grotesque", "sharp", "heavy", "hard", "playful", "bold", "rect", "standard"],
+  ["neumorph", "tinted", "rounded", "round", "hairline", "inset", "smooth", "inset", "soft", "standard"],
+  ["nordic", "cool", "sans-geometric", "round", "hairline", "flat", "smooth", "ring", "soft", "standard"],
   ["organic", "warm", "sans-humanist", "round", "hairline", "soft", "smooth", "ring", "soft", "standard"],
   ["paper", "warm", "serif-editorial", "soft", "hairline", "flat", "smooth", "ring", "soft", "standard"],
   ["slate", "cool", "sans-grotesque", "crisp", "hairline", "flat", "snappy", "ring", "soft", "standard"],
   ["soft", "warm", "system", "pill", "hairline", "layered", "springy", "glow", "pill", "standard"],
+  ["sunset", "warm", "sans-humanist", "soft", "hairline", "soft", "smooth", "glow", "soft", "standard"],
   ["swiss", "gray", "sans-grotesque", "sharp", "regular", "flat", "snappy", "ring", "rect", "high"],
   ["swiss-document", "gray", "sans-grotesque", "sharp", "hairline", "flat", "smooth", "ring", "rect", "high"],
   ["terminal", "tinted", "mono", "sharp", "hairline", "soft", "snappy", "inset", "rect", "standard"],
@@ -548,20 +555,27 @@ const THEME_ACCENTS: Record<string, { hue: number; chroma: number; scheme: strin
   aurora: { hue: 300, chroma: 0.24, scheme: "both", switch: "pill" },
   brutalist: { hue: 0, chroma: 0, scheme: "both", switch: "square" },
   candy: { hue: 351.5, chroma: 0.1788, scheme: "both", switch: "pill" },
+  clinical: { hue: 210.1, chroma: 0.0895, scheme: "both", switch: "pill" },
   contrast: { hue: 250, chroma: 0.16, scheme: "both", switch: "pill" },
   default: { hue: 264, chroma: 0.22, scheme: "both", switch: "pill" },
   document: { hue: 250, chroma: 0.06, scheme: "light", switch: "square" },
   "document-serif": { hue: 25, chroma: 0.07, scheme: "light", switch: "square" },
   editorial: { hue: 256, chroma: 0.0736, scheme: "both", switch: "pill" },
   "editorial-document": { hue: 256, chroma: 0.0736, scheme: "light", switch: "square" },
+  fintech: { hue: 172.1, chroma: 0.1054, scheme: "both", switch: "pill" },
   glass: { hue: 275, chroma: 0.2, scheme: "both", switch: "pill" },
+  ink: { hue: 60, chroma: 0.06, scheme: "light", switch: "square" },
+  "ink-document": { hue: 60, chroma: 0.06, scheme: "light", switch: "square" },
   luxe: { hue: 84, chroma: 0.0988, scheme: "dark", switch: "pill" },
   midnight: { hue: 280, chroma: 0.24, scheme: "both", switch: "pill" },
   neo: { hue: 121.1, chroma: 0.1676, scheme: "both", switch: "square" },
+  neumorph: { hue: 300, chroma: 0.2, scheme: "both", switch: "pill" },
+  nordic: { hue: 220, chroma: 0.184, scheme: "both", switch: "pill" },
   organic: { hue: 90, chroma: 0.0757, scheme: "both", switch: "pill" },
   paper: { hue: 45, chroma: 0.14, scheme: "both", switch: "pill" },
   slate: { hue: 245, chroma: 0.09, scheme: "both", switch: "pill" },
   soft: { hue: 185, chroma: 0.1, scheme: "both", switch: "pill" },
+  sunset: { hue: 45, chroma: 0.184, scheme: "both", switch: "pill" },
   swiss: { hue: 29.6, chroma: 0.2126, scheme: "both", switch: "pill" },
   "swiss-document": { hue: 29.6, chroma: 0.2126, scheme: "light", switch: "square" },
   terminal: { hue: 145, chroma: 0.12, scheme: "both", switch: "square" },
@@ -571,7 +585,7 @@ function shippedAxes(name: string): ThemeAxes {
   return axesFromCss(readFileSync(join(THEMES_DIR, `${name}.css`), "utf8"), BASE);
 }
 
-describe("axesFromCss · the twenty shipped stylesheets", () => {
+describe("axesFromCss · the twenty-seven shipped stylesheets", () => {
   it("covers every theme in the registry — no row may go missing", () => {
     const shipped = [...new Glob("*.css").scanSync(THEMES_DIR)].map((f) => f.replace(/\.css$/, "")).sort();
     expect(THEME_TABLE.map((r) => r[0]).sort()).toEqual(shipped);
@@ -635,6 +649,14 @@ describe("axesFromCss · the twenty shipped stylesheets", () => {
       swiss: "grid/round/uppercase/comfortable",
       luxe: "mesh/round/uppercase/spacious",
       organic: "grain/round/none/spacious",
+      // 1.1A-17's six. `dots` is the last material to get a shipped example
+      // (`clinical`'s measured ground), and `fintech` is the second theme —
+      // after `slate` — to say it was drawn at the compact ramp.
+      clinical: "dots/round/none/comfortable",
+      fintech: "none/round/none/compact",
+      nordic: "none/round/none/spacious",
+      sunset: "mesh/round/none/comfortable",
+      ink: "paper/round/none/comfortable",
     };
     for (const [name] of THEME_TABLE) {
       const a = shippedAxes(name);
@@ -908,7 +930,7 @@ describe("lengths, lists and shadows", () => {
 // again and 1.1A-12 arms the gate that forbids the low end. A theme edit that
 // makes the registry more varied must come here and say so.
 
-describe("axesFromCss · how alike the twenty shipped stylesheets are [feeds 1.1A-12]", () => {
+describe("axesFromCss · how alike the twenty-seven shipped stylesheets are [feeds 1.1A-12]", () => {
   const LEAVES = Object.keys(THEME_AXIS_VALUES);
   const NAMES = THEME_TABLE.map(([name]) => name);
   const DERIVED = new Map(NAMES.map((name) => [name, shippedAxes(name)]));
@@ -941,7 +963,7 @@ describe("axesFromCss · how alike the twenty shipped stylesheets are [feeds 1.1
     expect(constant).toEqual(["shape.corner"]);
   });
 
-  it("NO pair is axis-identical any more [1.1A-15]", () => {
+  it("the only axis-identical pair is two print companions [1.1A-17]", () => {
     const identical: string[] = [];
     for (let i = 0; i < NAMES.length; i++) {
       for (let j = i + 1; j < NAMES.length; j++) {
@@ -949,13 +971,25 @@ describe("axesFromCss · how alike the twenty shipped stylesheets are [feeds 1.1
       }
     }
     // Four pairs when 1.1A-08 counted them, two after 1.1A-14 (`default ↔
-    // slate` and `document ↔ document-serif`), none after this batch — and
+    // slate` and `document ↔ document-serif`), none after 1.1A-15 — and
     // `default` never moved for either, because §5 below holds it equal to
     // THEME_SEED_DEFAULTS.
-    expect(identical).toEqual([]);
+    //
+    // 1.1A-17 puts one back, and it is the strongest available statement of the
+    // rule 1.1A-16 wrote rather than a regression: `ink-document` and
+    // `swiss-document` derive the SAME twenty-three leaves, because
+    // `renderDocumentCss` emits none of the axis families and the two parents
+    // agree on the two leaves it does reach (`contrast: high`). They differ only
+    // on the accent, which is continuous and so not counted here. No seed could
+    // separate them — sepia ink and Swiss red produce byte-different colour
+    // ramps and the same character — which is exactly why a companion carries no
+    // `axes` block, is not a distinctiveness peer, and is skipped by the gate
+    // that judges themes. Follow-up 1.1A-28 is where that changes.
+    expect(identical).toEqual(["ink-document ↔ swiss-document"]);
+    expect(identical.every((pair) => pair.split(" ↔ ").every((n) => n.endsWith("-document")))).toBe(true);
   });
 
-  it("4 of the 190 pairs sit below four DIFFERING LEAVES — and none is a gate failure", () => {
+  it("7 of the 351 pairs sit below four DIFFERING LEAVES — and none is a gate failure", () => {
     // This count is deliberately NOT the distinctiveness gate's. It compares the
     // twenty-three enumerated leaves one by one, and the two ACCENT axes are
     // continuous, so they are not in `THEME_AXIS_VALUES` and not counted here.
@@ -973,21 +1007,30 @@ describe("axesFromCss · how alike the twenty shipped stylesheets are [feeds 1.1
     // authored theme that occupies the same corner. Nothing a seed could say
     // would move them, which is why the rule is "a companion carries no axes"
     // rather than "these pairs are exempt". The six generated THEMES add none.
+    //
+    // 1.1A-17 says the same thing again with a bigger sample: SIX more themes
+    // and one more companion take the count from 190 pairs to 351, and every
+    // one of the three new pairs below the line has `ink-document` on one side
+    // of it. Twelve generated themes, zero crowded pairs between themes.
     const below: string[] = [];
     for (let i = 0; i < NAMES.length; i++) {
       for (let j = i + 1; j < NAMES.length; j++) {
         if (axisDistance(NAMES[i], NAMES[j]) < 4) below.push(`${NAMES[i]}/${NAMES[j]}`);
       }
     }
-    expect(NAMES.length).toBe(20);
+    expect(NAMES.length).toBe(27);
     expect(below.sort()).toEqual([
       "aurora/default",
       "document/editorial-document",
+      "document/ink-document",
       "document/swiss-document",
+      "editorial-document/ink-document",
       "editorial-document/swiss-document",
+      "ink-document/swiss-document",
     ]);
-    // Every pair the GATE judges — the eighteen with an axes block — clears it.
-    const companions = new Set(["editorial-document", "swiss-document"]);
+    // Every pair the GATE judges — the twenty-four with an axes block — clears it.
+    const companions = new Set(NAMES.filter((name) => name.endsWith("-document")));
+    expect([...companions].sort()).toEqual(["editorial-document", "ink-document", "swiss-document"]);
     expect(below.filter((pair) => !pair.split("/").some((n) => companions.has(n)))).toEqual([
       "aurora/default",
     ]);

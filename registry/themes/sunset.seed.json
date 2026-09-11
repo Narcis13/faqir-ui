@@ -1,0 +1,38 @@
+{
+  "name": "sunset",
+  "accent": "oklch(0.7 0.2 45)",
+  "neutral": "tinted",
+  "scheme": "both",
+  "type": {
+    "pairing": "sans-humanist",
+    "scale": 1.2,
+    "base": 16,
+    "voice": {
+      "weight": "semibold",
+      "tracking": "normal",
+      "transform": "none"
+    }
+  },
+  "shape": {
+    "radius": "soft",
+    "border": "hairline",
+    "corner": "round"
+  },
+  "depth": "soft",
+  "material": "mesh",
+  "motion": "smooth",
+  "density": "comfortable",
+  "focus": "glow",
+  "decoration": {
+    "link": "offset",
+    "divider": "solid"
+  },
+  "controls": {
+    "button": "soft",
+    "input": "box",
+    "checkbox": "round",
+    "switch": "pill"
+  },
+  "contrast": "standard",
+  "document": false
+}

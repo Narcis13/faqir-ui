@@ -1,0 +1,38 @@
+{
+  "name": "neumorph",
+  "accent": "oklch(0.6 0.2 300)",
+  "neutral": "tinted",
+  "scheme": "both",
+  "type": {
+    "pairing": "rounded",
+    "scale": 1.2,
+    "base": 16,
+    "voice": {
+      "weight": "medium",
+      "tracking": "normal",
+      "transform": "none"
+    }
+  },
+  "shape": {
+    "radius": "round",
+    "border": "hairline",
+    "corner": "round"
+  },
+  "depth": "inset",
+  "material": "none",
+  "motion": "smooth",
+  "density": "comfortable",
+  "focus": "inset",
+  "decoration": {
+    "link": "offset",
+    "divider": "solid"
+  },
+  "controls": {
+    "button": "soft",
+    "input": "filled",
+    "checkbox": "round",
+    "switch": "pill"
+  },
+  "contrast": "standard",
+  "document": false
+}

@@ -1,0 +1,38 @@
+{
+  "name": "nordic",
+  "accent": "oklch(0.55 0.2 220)",
+  "neutral": "tinted",
+  "scheme": "both",
+  "type": {
+    "pairing": "sans-geometric",
+    "scale": 1.2,
+    "base": 16,
+    "voice": {
+      "weight": "regular",
+      "tracking": "normal",
+      "transform": "none"
+    }
+  },
+  "shape": {
+    "radius": "round",
+    "border": "hairline",
+    "corner": "round"
+  },
+  "depth": "flat",
+  "material": "none",
+  "motion": "smooth",
+  "density": "spacious",
+  "focus": "ring",
+  "decoration": {
+    "link": "offset",
+    "divider": "solid"
+  },
+  "controls": {
+    "button": "soft",
+    "input": "box",
+    "checkbox": "square",
+    "switch": "pill"
+  },
+  "contrast": "standard",
+  "document": false
+}

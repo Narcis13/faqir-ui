@@ -388,9 +388,9 @@
     "contrast": "standard"
   },
   "distinctiveness": {
-    "nearest": "editorial",
-    "axis_distance": 7,
-    "token_distance": 0.0334
+    "nearest": "sunset",
+    "axis_distance": 8,
+    "token_distance": 0.0333
   },
   "visual_matrix": false
 }

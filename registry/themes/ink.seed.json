@@ -1,0 +1,38 @@
+{
+  "name": "ink",
+  "accent": "oklch(0.3 0.06 60)",
+  "neutral": "tinted",
+  "scheme": "light",
+  "type": {
+    "pairing": "slab",
+    "scale": 1.2,
+    "base": 16,
+    "voice": {
+      "weight": "semibold",
+      "tracking": "normal",
+      "transform": "none"
+    }
+  },
+  "shape": {
+    "radius": "sharp",
+    "border": "hairline",
+    "corner": "round"
+  },
+  "depth": "flat",
+  "material": "paper",
+  "motion": "minimal",
+  "density": "comfortable",
+  "focus": "bold",
+  "decoration": {
+    "link": "plain",
+    "divider": "solid"
+  },
+  "controls": {
+    "button": "rect",
+    "input": "underline",
+    "checkbox": "square",
+    "switch": "square"
+  },
+  "contrast": "high",
+  "document": true
+}

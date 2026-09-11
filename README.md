@@ -729,9 +729,9 @@ theme.
 
 ## Theme System
 
-Themes override Layer 2 semantic tokens. Twenty built-in stylesheets ship with
-Faqir: twelve **authored** themes, six **generated** ones, and the two print
-companions those bring with them.
+Themes override Layer 2 semantic tokens. Twenty-seven built-in stylesheets ship
+with Faqir: twelve **authored** themes, twelve **generated** ones, and the three
+print companions those bring with them.
 
 ### Authored themes
 
@@ -766,12 +766,18 @@ your own instead.
 | `luxe` | Gold on near-black. A modern serif set wide and uppercase, dark only, high contrast, spacious and unhurried |
 | `candy` | Pill-shaped everything, a rounded face, a springy curve and a tinted pink page |
 | `organic` | Warm sand stock with a humanist face — softly rounded, grained, smooth and roomy |
+| `clinical` | Calm teal on a cool white, humanist at a 17px base — flat surfaces, a faint dot grid, high contrast, barely any motion |
+| `fintech` | A dense trading desk: geometric type, compact density, layered elevation, filled fields and one mint green |
+| `nordic` | Cold light and a lot of air — geometric type set light, round corners, no elevation, spacious density |
+| `sunset` | Warm amber over a soft gradient mesh — humanist, rounded checkboxes, a glow around focus |
+| `ink` | Sepia letterpress on laid paper: a slab face, square corners, ruled (underline) fields, light only |
+| `neumorph` | Soft UI — a rounded face on a tinted ground, every surface pressed into the page rather than raised off it |
 
-`editorial` and `swiss` each ship a print companion — `editorial-document` and
-`swiss-document` — which is the same brand on white paper, light only, sized for
-the page. A companion is a medium of its parent rather than a theme of its own:
-it carries no `seed` and no `axes` block, and `faqir theme set` treats it like
-any other theme.
+`editorial`, `swiss` and `ink` each ship a print companion —
+`editorial-document`, `swiss-document` and `ink-document` — which is the same
+brand on white paper, light only, sized for the page. A companion is a medium of
+its parent rather than a theme of its own: it carries no `seed` and no `axes`
+block, and `faqir theme set` treats it like any other theme.
 
 ### Using Themes
 

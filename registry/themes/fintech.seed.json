@@ -1,0 +1,38 @@
+{
+  "name": "fintech",
+  "accent": "#00b894",
+  "neutral": "tinted",
+  "scheme": "both",
+  "type": {
+    "pairing": "sans-geometric",
+    "scale": 1.2,
+    "base": 16,
+    "voice": {
+      "weight": "semibold",
+      "tracking": "normal",
+      "transform": "none"
+    }
+  },
+  "shape": {
+    "radius": "soft",
+    "border": "hairline",
+    "corner": "round"
+  },
+  "depth": "layered",
+  "material": "none",
+  "motion": "snappy",
+  "density": "compact",
+  "focus": "ring",
+  "decoration": {
+    "link": "offset",
+    "divider": "solid"
+  },
+  "controls": {
+    "button": "soft",
+    "input": "filled",
+    "checkbox": "square",
+    "switch": "pill"
+  },
+  "contrast": "standard",
+  "document": false
+}

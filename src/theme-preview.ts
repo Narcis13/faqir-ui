@@ -551,6 +551,68 @@ export const GALLERY_PREVIEWS: ThemePreviewSpec[] = [
     density: "spacious",
     signature: `<div style="height: var(--space-6); background-image: var(--texture-page); border-block-end: var(--border-width) solid var(--color-border-strong);" aria-hidden="true"></div>`,
   },
+  // ── Generated themes, batch 2 (task 1.1A-17) ──────────────────────────────
+  // Read the note above batch 1: the same reasoning applies to every entry
+  // here. `fintech` and `nordic` stamp the density their seed asks for, and
+  // `ink` renders one panel because it is a light-only theme.
+  {
+    name: "clinical",
+    tagline: "A calm teal on cool white, set humanist at 17px — flat surfaces, a faint dot grid, barely any motion.",
+    initials: "CL",
+    scheme: "both",
+    // The theme's own ground: the measured dot field it dresses every page in,
+    // ruled off with the hairline that replaces its shadows.
+    signature: `<div style="height: var(--space-6); background-image: var(--texture-page); border-block-end: var(--border-width) solid var(--color-border);" aria-hidden="true"></div>`,
+  },
+  {
+    name: "fintech",
+    tagline: "A dense trading-desk grid — geometric type, compact rows, layered elevation and one mint green.",
+    initials: "FI",
+    scheme: "both",
+    density: "compact",
+    // Layered depth is this theme's whole claim, so the strip is a surface that
+    // actually casts it rather than a block of accent.
+    signature: `<div style="height: var(--space-6); border-radius: var(--radius-md); background: var(--color-surface-1); box-shadow: var(--shadow-lg);" aria-hidden="true"></div>`,
+  },
+  {
+    name: "nordic",
+    tagline: "Cold light and a lot of air — geometric type set light, generously spaced, round corners, no shadows.",
+    initials: "NO",
+    scheme: "both",
+    density: "spacious",
+    signature: `<div style="height: var(--space-2); border-radius: var(--radius-full); background: var(--color-primary);" aria-hidden="true"></div>`,
+  },
+  {
+    name: "sunset",
+    tagline: "A warm amber over a soft gradient mesh — humanist, rounded checkboxes, and focus that glows.",
+    initials: "SU",
+    scheme: "both",
+    signature: `<div style="height: var(--space-6); background-image: var(--texture-page); border-block-end: var(--border-width) solid var(--color-primary);" aria-hidden="true"></div>`,
+  },
+  {
+    name: "ink",
+    tagline: "Sepia ink on laid paper — a slab face, square corners, ruled inputs and no dark mode to speak of.",
+    initials: "IN",
+    scheme: "light",
+    signature: `<div style="height: var(--space-6); background-image: var(--texture-page); border-block-end: var(--border-width-strong) solid var(--color-fg);" aria-hidden="true"></div>`,
+  },
+  {
+    name: "ink-document",
+    tagline: "Ink's print companion — light only, white stock, sized for the page.",
+    initials: "IN",
+    scheme: "light",
+    extraTokens: ["tokens/document.css", "tokens/doc-aliases.css"],
+    bodyCss: "body { margin: 0; background: var(--color-bg-muted); color: var(--color-fg); }",
+  },
+  {
+    name: "neumorph",
+    tagline: "Soft UI — a rounded face on a tinted ground, every surface pressed into the page rather than raised off it.",
+    initials: "NM",
+    scheme: "both",
+    // `inset` is the axis nothing else in the registry ships, so the strip is a
+    // well: the same pressed shadow every surface in this theme carries.
+    signature: `<div style="height: var(--space-6); border-radius: var(--radius-xl); background: var(--color-surface-1); box-shadow: var(--shadow-lg);" aria-hidden="true"></div>`,
+  },
 ];
 
 /**

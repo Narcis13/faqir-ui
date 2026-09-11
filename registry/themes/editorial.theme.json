@@ -389,9 +389,9 @@
     "contrast": "standard"
   },
   "distinctiveness": {
-    "nearest": "organic",
+    "nearest": "nordic",
     "axis_distance": 7,
-    "token_distance": 0.0334
+    "token_distance": 0.0324
   },
   "visual_matrix": false
 }
