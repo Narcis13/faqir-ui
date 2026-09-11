@@ -2,7 +2,7 @@
 
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { CONTRAST_PAIRS } from "../../src/audit/contrast-tokens";
-import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Glob } from "bun";
@@ -18,8 +18,13 @@ import {
   isSurfaceTokenFile,
   overriddenTokens,
   surfaceTokens,
+  THEME_AXIS_VALUES,
+  validateThemeAxes,
   validateThemeManifest,
+  validateThemeSeed,
 } from "../../src/theme-manifest";
+import { axesFromCss } from "../../src/theme/axes";
+import { NEUTRAL_TINT_MIN_CHROMA } from "../../src/theme/families";
 import {
   computeCoverage,
   parseThemeSchemes,
@@ -249,6 +254,81 @@ describe("theme generate · pure deterministic generator", () => {
     expectFullGauntlet(input);
   });
 
+  // ── The seed matrix, and the gauntlet over it [1.1A-10] ──────────────────
+  //
+  // The gauntlet is the same one the five hue samples above run — coverage,
+  // manifest consistency, every contrast pair, the elevation ramp. What is new
+  // is the breadth: one seed per value of every enumerated axis, so a family
+  // that emitted a colour the gate rejects fails here rather than on the day
+  // somebody generates that theme.
+  describe("the full seed matrix passes the gauntlet", () => {
+    const cases: Array<[string, ThemeGenerateInput]> = [];
+    for (const [path, values] of Object.entries(THEME_AXIS_VALUES)) {
+      for (const value of values) {
+        if (path === "type.pairing" && value === "custom") continue;
+        const slug = `${path.replace(/\./g, "-")}-${String(value).replace(/[^a-z0-9]+/gi, "-")}`.toLowerCase();
+        const input: Record<string, unknown> = { name: `seed-${slug}`, accent: DEFAULT_INPUT.accent };
+        const set = (p: string, v: unknown) => {
+          const parts = p.split(".");
+          let cursor = input;
+          for (const key of parts.slice(0, -1)) cursor = (cursor[key] ??= {}) as Record<string, unknown>;
+          cursor[parts[parts.length - 1]] = v;
+        };
+        set(path, value);
+        // The one coupling the classifier forces (see PILL_COUPLING).
+        if (path === "shape.radius" && value === "pill") set("controls.button", "pill");
+        if (path === "controls.button" && value === "pill") set("shape.radius", "pill");
+        cases.push([`${path} = ${value}`, input as unknown as ThemeGenerateInput]);
+      }
+    }
+
+    it(`covers every enumerated axis value (${cases.length} seeds)`, () => {
+      const covered = Object.values(THEME_AXIS_VALUES).reduce((n, values) => n + values.length, 0) - 1;
+      expect(cases.length).toBe(covered);
+    });
+
+    for (const [label, input] of cases) {
+      it(`${label} passes coverage, manifest consistency, contrast and elevation`, () => {
+        expectFullGauntlet(input);
+      });
+    }
+  });
+
+  it("carries the filled-out seed and the derived axes on the bundle", () => {
+    const bundle = generateThemeBundle({
+      ...DEFAULT_INPUT,
+      depth: "glass",
+      motion: "springy",
+      material: "grain",
+    }, BASE_SOURCES);
+    // The seed is complete — every axis, defaults filled in — because that is
+    // what 1.1A-11 writes to `<name>.seed.json` beside the stylesheet.
+    expect(validateThemeSeed(bundle.seed)).toEqual([]);
+    expect(bundle.seed.depth).toBe("glass");
+    expect(bundle.seed.shape).toEqual({ radius: "soft", border: "hairline", corner: "round" });
+    // …and the axes are what the CSS derives, not a copy of the seed: the
+    // generator refuses to return them otherwise.
+    expect(validateThemeAxes(bundle.axes)).toEqual([]);
+    expect(bundle.axes).toEqual(axesFromCss(bundle.generated[0].css, BASE_SOURCES));
+  });
+
+  it("refuses a theme name that would produce invalid custom properties", () => {
+    for (const name of ["My Brand", "brand.1", "1brand", ""]) {
+      expect(() => generateThemeBundle({ ...DEFAULT_INPUT, name }, BASE_SOURCES))
+        .toThrow(/Invalid theme name/);
+    }
+  });
+
+  it("stays pure: generating writes nothing to disk", () => {
+    // The MCP tool and Night Shift both call this function directly, with no
+    // output directory in sight, so a filesystem write here would be a
+    // behaviour change neither of them could see coming.
+    const before = readdirSync(ROOT).sort();
+    generateThemeBundle({ ...DEFAULT_INPUT, document: true, depth: "glass" }, BASE_SOURCES);
+    expect(readdirSync(ROOT).sort()).toEqual(before);
+    expect(existsSync(join(ROOT, "themes"))).toBe(false);
+  });
+
   it("emits a light-only, flat, print-ready brand document variant", () => {
     const bundle = generateThemeBundle({ ...DEFAULT_INPUT, document: true }, BASE_SOURCES);
     const document = bundle.generated.find((file) => file.kind === "document");
@@ -260,6 +340,112 @@ describe("theme generate · pure deterministic generator", () => {
     expect(document!.css).toMatch(/--shadow-xl\s*: none;/);
     expect(document!.css).toContain('--radius-2xl');
     expectFullGauntlet({ ...DEFAULT_INPUT, document: true });
+  });
+});
+
+// ── The 1.0 golden: a legacy input still gets 1.0's colours [1.1A-10] ───────
+//
+// `tests/fixtures/theme-generate/v1/` holds output captured from the v1.0.0
+// generator itself (see the README beside it). A project that has been running
+// `faqir theme generate` since 1.0 passes exactly those inputs, and 1.1's
+// seed-driven generator must not quietly restyle its brand.
+//
+// The comparison is COLOUR ONLY (`--palette-*`, `--color-*`), per scheme block.
+// Everything else moved on purpose: the type ramp, the silhouette tokens and
+// the axis families are new, and a 1.0 theme did not state them.
+describe("legacy inputs keep 1.0's colours", () => {
+  const GOLDEN_DIR = join(ROOT, "tests/fixtures/theme-generate/v1");
+  const CASES: Array<{ id: string; input: ThemeGenerateInput }> =
+    JSON.parse(readFileSync(join(GOLDEN_DIR, "cases.json"), "utf8"));
+
+  /** `<scope>/<token>` → value, where scope is the block the declaration is in. */
+  function colourDeclarations(css: string): Map<string, string> {
+    const out = new Map<string, string>();
+    let scope = "root";
+    for (const line of css.split("\n")) {
+      const text = line.trim();
+      if (/^\[data-theme="dark"\]/.test(text)) scope = "dark";
+      else if (/^\[data-theme="auto"\]/.test(text)) scope = "auto";
+      else if (/^:root/.test(text) && scope !== "auto") scope = "root";
+      const declaration = /^--([\w-]+)\s*:\s*(.+?);$/.exec(text);
+      if (declaration && /^(palette|color)-/.test(declaration[1])) {
+        out.set(`${scope}/${declaration[1]}`, declaration[2].trim());
+      }
+    }
+    return out;
+  }
+
+  /**
+   * The ONE deliberate colour change, enumerated so the gate fails in both
+   * directions: a tinted neutral's chroma is floored at
+   * `NEUTRAL_TINT_MIN_CHROMA`. At 1.0's per-step scale factors a `cool`/`warm`
+   * page landed at 0.0015 chroma — below `axesFromCss`'s own
+   * `NEUTRAL_GRAY_MAX_CHROMA` line — so `--neutral cool` produced a page the
+   * classifier called gray, and was right to. Six declarations move per
+   * cool/warm theme; a `gray` theme is untouched.
+   */
+  const FLOORED = new Set([
+    "root/color-bg",
+    "root/color-bg-subtle",
+    "root/color-bg-muted",
+    "root/color-secondary",
+    "root/color-fg",
+    "root/color-secondary-fg",
+    "dark/color-fg",
+    "dark/color-secondary-fg",
+    "auto/color-fg",
+    "auto/color-secondary-fg",
+  ]);
+
+  const chromaOf = (value: string) => Number(/^oklch\(\s*[\d.]+\s+([\d.]+)/.exec(value)?.[1] ?? NaN);
+
+  for (const { id, input } of CASES) {
+    it(`${id} reproduces v1.0.0's colours`, () => {
+      // `--legacy-blocks` is how the 1.1 generator spells 1.0's three-block
+      // shape; the one-block form is proven the same theme elsewhere in this file.
+      const bundle = generateThemeBundle({ ...input, legacyBlocks: true }, BASE_SOURCES);
+      for (const file of bundle.generated) {
+        const golden = colourDeclarations(readFileSync(join(GOLDEN_DIR, `${id}.${file.kind}.css`), "utf8"));
+        const now = colourDeclarations(file.css);
+        expect([...now.keys()].sort(), `${id}.${file.kind} token set`).toEqual([...golden.keys()].sort());
+        const moved: string[] = [];
+        for (const [key, value] of golden) {
+          if (now.get(key) === value) continue;
+          moved.push(key);
+          // A moved declaration is only allowed if it is a floored tint: same
+          // lightness and hue, chroma raised to exactly the floor.
+          expect(FLOORED.has(key), `${id}.${file.kind} ${key} moved`).toBe(true);
+          expect(chromaOf(value), `${id} ${key} was already above the floor`)
+            .toBeLessThan(NEUTRAL_TINT_MIN_CHROMA);
+          expect(chromaOf(now.get(key)!), `${id} ${key}`).toBe(NEUTRAL_TINT_MIN_CHROMA);
+          expect(now.get(key)!.replace(/\s[\d.]+\s/, " C "), `${id} ${key} lightness/hue`)
+            .toBe(value.replace(/\s[\d.]+\s/, " C "));
+        }
+        // …and the converse: a gray theme moves nothing at all.
+        if (input.neutral === "gray") expect(moved, `${id}.${file.kind}`).toEqual([]);
+      }
+    });
+  }
+
+  it("covers all three 1.0 neutrals, all three radii and all three schemes", () => {
+    const seen = (key: keyof ThemeGenerateInput) => new Set(CASES.map(({ input }) => input[key]));
+    expect([...seen("neutral")].sort()).toEqual(["cool", "gray", "warm"]);
+    expect([...seen("radius")].sort()).toEqual(["lg", "md", "sm"]);
+    expect([...seen("scheme")].sort()).toEqual(["both", "dark", "light"]);
+    expect(CASES.some(({ input }) => input.document)).toBe(true);
+  });
+
+  it("is not vacuous: the golden really does pin the accent ramp", () => {
+    // Prove the comparison has teeth by generating the same case with a
+    // different accent and watching the palette diverge.
+    const { id, input } = CASES[0];
+    const golden = readFileSync(join(GOLDEN_DIR, `${id}.theme.css`), "utf8");
+    const other = generateThemeBundle(
+      { ...input, accent: "oklch(0.55 0.2 20)", legacyBlocks: true },
+      BASE_SOURCES,
+    ).generated[0].css;
+    expect(other).not.toBe(golden);
+    expect(other).not.toContain("--palette-golden-500      : oklch(0.55 0.2 150)");
   });
 });
 

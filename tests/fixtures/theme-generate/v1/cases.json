@@ -1,0 +1,14 @@
+[
+  { "id": "cool-md-both",   "input": { "name": "golden", "accent": "oklch(0.55 0.2 150)", "neutral": "cool", "radius": "md", "scheme": "both",  "document": false } },
+  { "id": "cool-sm-both",   "input": { "name": "golden", "accent": "oklch(0.55 0.2 150)", "neutral": "cool", "radius": "sm", "scheme": "both",  "document": false } },
+  { "id": "cool-lg-both",   "input": { "name": "golden", "accent": "oklch(0.55 0.2 150)", "neutral": "cool", "radius": "lg", "scheme": "both",  "document": false } },
+  { "id": "warm-md-both",   "input": { "name": "golden", "accent": "oklch(0.55 0.2 150)", "neutral": "warm", "radius": "md", "scheme": "both",  "document": false } },
+  { "id": "gray-md-both",   "input": { "name": "golden", "accent": "oklch(0.55 0.2 150)", "neutral": "gray", "radius": "md", "scheme": "both",  "document": false } },
+  { "id": "cool-md-light",  "input": { "name": "golden", "accent": "oklch(0.55 0.2 150)", "neutral": "cool", "radius": "md", "scheme": "light", "document": false } },
+  { "id": "cool-md-dark",   "input": { "name": "golden", "accent": "oklch(0.55 0.2 150)", "neutral": "cool", "radius": "md", "scheme": "dark",  "document": false } },
+  { "id": "warm-lg-doc",    "input": { "name": "golden", "accent": "#d97706",             "neutral": "warm", "radius": "lg", "scheme": "both",  "document": true  } },
+  { "id": "hue-coral",      "input": { "name": "golden", "accent": "oklch(0.62 0.2 25)",  "neutral": "gray", "radius": "md", "scheme": "both",  "document": false } },
+  { "id": "hue-blue",       "input": { "name": "golden", "accent": "oklch(0.58 0.2 245)", "neutral": "cool", "radius": "md", "scheme": "both",  "document": false } },
+  { "id": "hue-violet",     "input": { "name": "golden", "accent": "oklch(0.6 0.2 310)",  "neutral": "warm", "radius": "md", "scheme": "both",  "document": false } },
+  { "id": "pale-accent",    "input": { "name": "golden", "accent": "oklch(0.96 0.16 95)", "neutral": "gray", "radius": "sm", "scheme": "both",  "document": false } }
+]

@@ -1,0 +1,100 @@
+/* @ui:theme golden-document — brand-matched, print-optimized document theme */
+/* @ui:schemes light */
+/* Generated from #d97706; white paper, flat surfaces, crisp edges, and ink-safe contrast. */
+
+:root {
+  --palette-golden-50       : oklch(0.9666 0.0283 58.32);
+  --palette-golden-100      : oklch(0.9265 0.0504 58.32);
+  --palette-golden-200      : oklch(0.873 0.0787 58.32);
+  --palette-golden-300      : oklch(0.8162 0.1102 58.32);
+  --palette-golden-400      : oklch(0.7494 0.1385 58.32);
+  --palette-golden-500      : oklch(0.6658 0.1574 58.32);
+  --palette-golden-600      : oklch(0.5859 0.1574 58.32);
+  --palette-golden-700      : oklch(0.4794 0.1448 58.32);
+  --palette-golden-800      : oklch(0.3729 0.1228 58.32);
+  --palette-golden-900      : oklch(0.2663 0.0945 58.32);
+  --palette-golden-950      : oklch(0.1665 0.0661 58.32);
+  --color-bg                : white;
+  --color-bg-subtle         : oklch(0.97 0.003 75);
+  --color-bg-muted          : oklch(0.94 0.0052 75);
+  --color-surface-1         : var(--color-bg-subtle);
+  --color-surface-2         : var(--color-bg-muted);
+  --color-surface-1-border  : var(--color-border);
+  --color-surface-2-border  : var(--color-border-strong);
+  --color-fg                : oklch(0.14 0.015 75);
+  --color-fg-muted          : oklch(0.4 0.015 75);
+  --color-fg-subtle         : oklch(0.53 0.015 75);
+  --color-primary           : var(--palette-golden-700);
+  --color-primary-hover     : var(--palette-golden-800);
+  --color-primary-active    : var(--palette-golden-900);
+  --color-primary-fg        : white;
+  --color-primary-subtle    : var(--palette-golden-50);
+  --color-secondary         : oklch(0.94 0.006 75);
+  --color-secondary-hover   : oklch(0.89 0.0083 75);
+  --color-secondary-fg      : oklch(0.16 0.015 75);
+  --color-destructive       : oklch(0.45 0.18 25);
+  --color-destructive-hover : oklch(0.39 0.19 25);
+  --color-destructive-fg    : white;
+  --color-destructive-subtle: oklch(0.96 0.03 25);
+  --color-success           : oklch(0.45 0.12 150);
+  --color-success-subtle    : oklch(0.96 0.02 150);
+  --color-warning           : oklch(0.52 0.14 75);
+  --color-warning-subtle    : oklch(0.96 0.03 75);
+  --color-info              : var(--palette-golden-700);
+  --color-info-subtle       : var(--palette-golden-50);
+  --color-border            : oklch(0.84 0.009 75);
+  --color-border-strong     : oklch(0.7 0.012 75);
+  --color-ring              : oklch(0.4794 0.1448 58.32);
+  --shadow-xs               : none;
+  --shadow-sm               : none;
+  --shadow-md               : none;
+  --shadow-lg               : none;
+  --shadow-xl               : none;
+  --radius-sm               : 0;
+  --radius-md               : 0;
+  --radius-lg               : 0;
+  --radius-xl               : 0;
+  --radius-2xl              : 0;
+  --radius-full             : 0;
+  --button-radius           : 0;
+  --card-radius             : 0;
+  --card-shadow             : none;
+  --input-radius            : 0;
+  --badge-radius            : 0.125rem;
+  --doc-font                : 'Arial', 'Helvetica Neue', var(--font-sans);
+  --doc-font-size           : 10pt;
+  --doc-line-height         : 1.4;
+  --doc-heading-font        : 'Arial', 'Helvetica Neue', var(--font-sans);
+  --doc-heading-weight      : var(--weight-bold);
+  --doc-heading-size        : 14pt;
+  --doc-subheading-size     : 12pt;
+  --doc-legal-size          : 8pt;
+  --doc-section-gap         : var(--space-6);
+  --doc-component-gap       : var(--space-3);
+  --doc-table-font-size     : 9pt;
+  --doc-table-header-bg     : var(--color-bg-muted);
+  --doc-table-border        : var(--color-border-strong);
+  --doc-table-footer-bg     : var(--color-bg-muted);
+  --doc-table-stripe-bg     : var(--color-bg-subtle);
+  --doc-max-width           : 210mm;
+  --font-sans               : 'Arial', 'Helvetica Neue', system-ui, sans-serif;
+  --font-mono               : 'Courier New', ui-monospace, monospace;
+}
+
+@page {
+  size: var(--page-format) var(--page-orientation);
+  margin: var(--page-margin);
+}
+
+@media print {
+  :root {
+    color-scheme: light;
+  }
+
+  [data-ui="document"] {
+    color: var(--color-fg);
+    background: var(--color-bg);
+    box-shadow: none;
+    print-color-adjust: exact;
+  }
+}

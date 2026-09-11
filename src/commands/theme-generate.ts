@@ -23,26 +23,46 @@ import {
   contrastRatio,
   type OklchColor,
 } from "../utils/oklch";
+import { axesFromCss } from "../theme/axes";
+import {
+  axisDeclarations,
+  densityDirective,
+  depthFamily,
+  neutralAxisFor,
+  neutralTint,
+  NEUTRAL_TINT_MIN_CHROMA,
+  type Declaration,
+  type NeutralTint,
+} from "../theme/families";
+import {
+  expectedAxes,
+  normalizeSeed,
+  SHAPE_LEGACY_RADIUS,
+  seedRecord,
+  type NormalizedSeed,
+  type ThemeRadius,
+  type ThemeSeedInput,
+} from "../theme/seed";
+import type { ThemeAxes, ThemeSeed } from "../theme-manifest";
 
+/** The 1.0 neutral flag. A 1.1 seed may also say `tinted`. */
 export type ThemeNeutral = "cool" | "warm" | "gray";
-export type ThemeRadius = "sm" | "md" | "lg";
+/** The `contrast` axis, which picks which neutral surface ramp is used. */
+export type ThemeContrast = "standard" | "high";
+export type { ThemeRadius };
 
-export interface ThemeGenerateInput {
-  name: string;
-  accent: string;
-  neutral: ThemeNeutral;
-  radius: ThemeRadius;
-  scheme: ThemeSchemeDecl;
-  document: boolean;
-  /**
-   * Emit a dual-scheme theme as three colour blocks (`:root`,
-   * `[data-theme="dark"]`, and the `prefers-color-scheme` mirror) instead of one
-   * `light-dark()` block [1.1A-06]. The default is the one-block form; this is
-   * the escape hatch for a project whose browser floor predates `light-dark()`.
-   * Ignored for single-scheme themes, which have nothing to collapse.
-   */
-  legacyBlocks?: boolean;
-}
+/**
+ * What `generateThemeBundle` accepts. This is the full 1.1 seed plus the two
+ * 1.0 flags that never became axes (`radius`, `legacyBlocks`) — so every 1.0
+ * call site keeps compiling and keeps producing the same colours, and a 1.1
+ * caller passes a `.seed.json` straight through.
+ *
+ * `legacyBlocks` emits a dual-scheme theme as three colour blocks (`:root`,
+ * `[data-theme="dark"]`, and the `prefers-color-scheme` mirror) instead of one
+ * `light-dark()` block [1.1A-06]. Ignored for single-scheme themes, which have
+ * nothing to collapse.
+ */
+export type ThemeGenerateInput = ThemeSeedInput;
 
 export interface GeneratedContrastRatio {
   theme: string;
@@ -76,12 +96,16 @@ export interface GeneratedThemeBundle {
     chroma: number;
     hue: number;
   };
-  neutral: ThemeNeutral;
+  neutral: ThemeSeed["neutral"];
   radius: ThemeRadius;
   scheme: ThemeSchemeDecl;
   document: boolean;
   /** Whether the dual-scheme output was written as three blocks [1.1A-06]. */
   legacyBlocks: boolean;
+  /** The seed, filled out to every axis — what 1.1A-11 writes to `<name>.seed.json`. */
+  seed: ThemeSeed;
+  /** The fourteen axes the emitted stylesheet actually derives to. */
+  axes: ThemeAxes;
   generated: GeneratedThemeFile[];
 }
 
@@ -109,38 +133,92 @@ interface PrimarySelection {
   ratio: number;
 }
 
-interface NeutralDefinition {
-  c: number;
-  h: number;
-}
+// ── The neutral surface ramp, per contrast level ────────────────────────────
+//
+// Every neutral surface and text weight, as `[lightness, chromaScale]`. The
+// `standard` rows are the 1.0 generator's own numbers, moved out of the
+// declaration lists so the `high` variant can state only what it changes and a
+// reader can see the two ramps side by side.
+//
+// `high` exists to make the 1.1A-08 `contrast` classifier return `high`, which
+// asks two things of EVERY shipped scheme: body text at least
+// CONTRAST_HIGH_TEXT_MIN (15:1) on the page, and a strong border that still
+// clears SC 1.4.11's 3:1. The 1.0 ramp already cleared the first (19.6:1 in
+// light) and missed the second at 2.7:1 — which is why `high` moves the
+// borders as much as it moves the text.
 
-const NEUTRALS: Record<ThemeNeutral, NeutralDefinition> = {
-  cool: { c: 0.015, h: 250 },
-  warm: { c: 0.015, h: 75 },
-  gray: { c: 0, h: 0 },
+type NeutralRole =
+  | "bg"
+  | "bg-subtle"
+  | "bg-muted"
+  | "fg"
+  | "fg-muted"
+  | "fg-subtle"
+  | "secondary"
+  | "secondary-hover"
+  | "secondary-fg"
+  | "border"
+  | "border-strong";
+
+type NeutralRamp = Record<NeutralRole, readonly [lightness: number, chromaScale: number]>;
+
+const LIGHT_SURFACES: Record<ThemeContrast, NeutralRamp> = {
+  standard: {
+    bg: [0.995, 0.1],
+    "bg-subtle": [0.96, 0.25],
+    "bg-muted": [0.92, 0.4],
+    fg: [0.14, 1],
+    "fg-muted": [0.4, 1],
+    "fg-subtle": [0.53, 1],
+    secondary: [0.94, 0.4],
+    "secondary-hover": [0.89, 0.55],
+    "secondary-fg": [0.16, 1],
+    border: [0.84, 0.6],
+    "border-strong": [0.7, 0.8],
+  },
+  high: {
+    bg: [1, 0.1],
+    "bg-subtle": [0.96, 0.25],
+    "bg-muted": [0.92, 0.4],
+    fg: [0.15, 1],
+    "fg-muted": [0.32, 1],
+    "fg-subtle": [0.4, 1],
+    secondary: [0.9, 0.4],
+    "secondary-hover": [0.85, 0.55],
+    "secondary-fg": [0.18, 1],
+    border: [0.78, 0.7],
+    // 5.4:1 on the page, where the standard ramp's 0.7 sits at 2.7:1.
+    "border-strong": [0.52, 0.8],
+  },
 };
 
-const RADIUS_VALUES: Record<ThemeRadius, Record<string, string>> = {
-  sm: {
-    "radius-sm": "0.125rem",
-    "radius-md": "0.25rem",
-    "radius-lg": "0.375rem",
-    "radius-xl": "0.5rem",
-    "radius-2xl": "0.75rem",
+const DARK_SURFACES: Record<ThemeContrast, NeutralRamp> = {
+  standard: {
+    bg: [0.13, 1],
+    "bg-subtle": [0.18, 1],
+    "bg-muted": [0.25, 1],
+    fg: [0.97, 0.25],
+    "fg-muted": [0.74, 0.7],
+    "fg-subtle": [0.64, 0.8],
+    secondary: [0.27, 1],
+    "secondary-hover": [0.34, 1],
+    "secondary-fg": [0.94, 0.3],
+    border: [0.29, 1],
+    "border-strong": [0.38, 1],
   },
-  md: {
-    "radius-sm": "0.25rem",
-    "radius-md": "0.375rem",
-    "radius-lg": "0.5rem",
-    "radius-xl": "0.75rem",
-    "radius-2xl": "1rem",
-  },
-  lg: {
-    "radius-sm": "0.375rem",
-    "radius-md": "0.625rem",
-    "radius-lg": "0.875rem",
-    "radius-xl": "1.25rem",
-    "radius-2xl": "1.75rem",
+  high: {
+    bg: [0.1, 1],
+    "bg-subtle": [0.16, 1],
+    "bg-muted": [0.22, 1],
+    fg: [0.99, 0.25],
+    "fg-muted": [0.84, 0.7],
+    "fg-subtle": [0.74, 0.8],
+    secondary: [0.24, 1],
+    "secondary-hover": [0.3, 1],
+    "secondary-fg": [0.97, 0.3],
+    border: [0.42, 1],
+    // 4.9:1 on the page, where the standard ramp's 0.38 is invisible to the gate.
+    "border-strong": [0.58, 1],
   },
 };
 
@@ -158,9 +236,33 @@ function oklch(color: OklchColor, alpha?: number): string {
   return alpha == null ? `${base})` : `${base} / ${decimal(alpha)})`;
 }
 
-function neutralColor(neutral: ThemeNeutral, lightness: number, chromaScale = 1): string {
-  const seed = NEUTRALS[neutral];
-  return oklch({ l: lightness, c: seed.c * chromaScale, h: seed.h });
+/**
+ * One step of the neutral ramp.
+ *
+ * The chroma floor is 1.1A-10's one deliberate departure from the 1.0 colours,
+ * and it is what makes `neutral` a derivable axis rather than a label. The
+ * light end of the ramp scales its chroma down hard — a page is near white —
+ * and at 1.0's factors the tint landed at 0.0015, BELOW the classifier's
+ * `NEUTRAL_GRAY_MAX_CHROMA` line for achromatic. So `--neutral cool` produced
+ * a page `axesFromCss` called gray, and was right to: a tint that weak is not
+ * a tint. Flooring it at `NEUTRAL_TINT_MIN_CHROMA` moves six declarations per
+ * cool/warm theme (the near-white surfaces and the two lightest text weights);
+ * `tests/commands/theme-generate.test.ts` names each one against its 1.0
+ * value, and every other colour stays byte-identical.
+ */
+function neutralColor(tint: NeutralTint | null, lightness: number, chromaScale = 1): string {
+  if (!tint) return oklch({ l: lightness, c: 0, h: 0 });
+  return oklch({
+    l: lightness,
+    c: Math.max(tint.c * chromaScale, NEUTRAL_TINT_MIN_CHROMA),
+    h: tint.h,
+  });
+}
+
+/** Resolve one role of a neutral ramp. */
+function surfaceColor(ramp: NeutralRamp, tint: NeutralTint | null, role: NeutralRole): string {
+  const [lightness, chromaScale] = ramp[role];
+  return neutralColor(tint, lightness, chromaScale);
 }
 
 function subtleColor(color: OklchColor, lightness: number): string {
@@ -230,34 +332,34 @@ function pickPrimary(
   );
 }
 
-type Declaration = readonly [name: string, value: string];
-
 function lightDeclarations(
-  name: string,
-  neutral: ThemeNeutral,
+  seed: NormalizedSeed,
+  tint: NeutralTint | null,
   ramp: AccentStep[],
   primary: PrimarySelection,
 ): Declaration[] {
-  const brand = (index: number) => `var(--palette-${name}-${ramp[index].step})`;
+  const brand = (index: number) => `var(--palette-${seed.name}-${ramp[index].step})`;
+  const surfaces = LIGHT_SURFACES[seed.contrast];
+  const surface = (role: NeutralRole) => surfaceColor(surfaces, tint, role);
   return [
-    ["color-bg", neutralColor(neutral, 0.995, 0.1)],
-    ["color-bg-subtle", neutralColor(neutral, 0.96, 0.25)],
-    ["color-bg-muted", neutralColor(neutral, 0.92, 0.4)],
+    ["color-bg", surface("bg")],
+    ["color-bg-subtle", surface("bg-subtle")],
+    ["color-bg-muted", surface("bg-muted")],
     ["color-surface-1", "var(--color-bg-subtle)"],
     ["color-surface-2", "var(--color-bg-muted)"],
     ["color-surface-1-border", "var(--color-border)"],
     ["color-surface-2-border", "var(--color-border-strong)"],
-    ["color-fg", neutralColor(neutral, 0.14)],
-    ["color-fg-muted", neutralColor(neutral, 0.4)],
-    ["color-fg-subtle", neutralColor(neutral, 0.53)],
+    ["color-fg", surface("fg")],
+    ["color-fg-muted", surface("fg-muted")],
+    ["color-fg-subtle", surface("fg-subtle")],
     ["color-primary", brand(primary.index)],
     ["color-primary-hover", brand(primary.hoverIndex)],
     ["color-primary-active", brand(primary.activeIndex)],
     ["color-primary-fg", primary.foreground],
     ["color-primary-subtle", brand(0)],
-    ["color-secondary", neutralColor(neutral, 0.94, 0.4)],
-    ["color-secondary-hover", neutralColor(neutral, 0.89, 0.55)],
-    ["color-secondary-fg", neutralColor(neutral, 0.16)],
+    ["color-secondary", surface("secondary")],
+    ["color-secondary-hover", surface("secondary-hover")],
+    ["color-secondary-fg", surface("secondary-fg")],
     ["color-destructive", "oklch(0.45 0.18 25)"],
     ["color-destructive-hover", "oklch(0.39 0.19 25)"],
     ["color-destructive-fg", "white"],
@@ -268,52 +370,50 @@ function lightDeclarations(
     ["color-warning-subtle", "oklch(0.96 0.03 75)"],
     ["color-info", brand(Math.max(primary.index, 6))],
     ["color-info-subtle", brand(0)],
-    ["color-border", neutralColor(neutral, 0.84, 0.6)],
-    ["color-border-strong", neutralColor(neutral, 0.7, 0.8)],
+    ["color-border", surface("border")],
+    ["color-border-strong", surface("border-strong")],
     // Opaque. A translucent ring composites down to 1.4–2.7:1 against the page
     // it is drawn on — below SC 1.4.11's 3:1, on a token whose only job is to be
     // seen. [W3-3]
     ["color-ring", oklch(ramp[primary.index].color)],
-    // The depth axis [1.1A-04]: bare OKLCH channels, so every step below sets
-    // only its own alpha and a theme re-tints all five by moving this one value.
-    ["shadow-color", "0 0 0"],
-    ["shadow-xs", "0 1px 2px oklch(var(--shadow-color) / 0.04)"],
-    ["shadow-sm", "0 1px 3px oklch(var(--shadow-color) / 0.06), 0 1px 2px oklch(var(--shadow-color) / 0.04)"],
-    ["shadow-md", "0 4px 6px oklch(var(--shadow-color) / 0.06), 0 2px 4px oklch(var(--shadow-color) / 0.04)"],
-    ["shadow-lg", "0 10px 15px oklch(var(--shadow-color) / 0.08), 0 4px 6px oklch(var(--shadow-color) / 0.05)"],
-    ["shadow-xl", "0 20px 25px oklch(var(--shadow-color) / 0.1), 0 8px 10px oklch(var(--shadow-color) / 0.05)"],
+    // The depth axis [1.1A-04, now the `depth` family of 1.1A-10]. Scheme-bound,
+    // which is why it renders here rather than in the one `:root` axis group:
+    // `light-dark()` is a <color> function and a shadow list is not a colour.
+    ...depthFamily(seed, "light"),
   ];
 }
 
 function darkDeclarations(
-  name: string,
-  neutral: ThemeNeutral,
+  seed: NormalizedSeed,
+  tint: NeutralTint | null,
   ramp: AccentStep[],
   primary: PrimarySelection,
 ): Declaration[] {
-  const brand = (index: number) => `var(--palette-${name}-${ramp[index].step})`;
+  const brand = (index: number) => `var(--palette-${seed.name}-${ramp[index].step})`;
+  const surfaces = DARK_SURFACES[seed.contrast];
+  const surface = (role: NeutralRole) => surfaceColor(surfaces, tint, role);
   return [
-    ["color-bg", neutralColor(neutral, 0.13)],
-    ["color-bg-subtle", neutralColor(neutral, 0.18)],
-    ["color-bg-muted", neutralColor(neutral, 0.25)],
+    ["color-bg", surface("bg")],
+    ["color-bg-subtle", surface("bg-subtle")],
+    ["color-bg-muted", surface("bg-muted")],
     ["color-surface-1", "var(--color-bg-subtle)"],
     ["color-surface-2", "var(--color-bg-muted)"],
     ["color-surface-1-border", "var(--color-border)"],
     ["color-surface-2-border", "var(--color-border-strong)"],
-    ["color-fg", neutralColor(neutral, 0.97, 0.25)],
-    ["color-fg-muted", neutralColor(neutral, 0.74, 0.7)],
-    ["color-fg-subtle", neutralColor(neutral, 0.64, 0.8)],
+    ["color-fg", surface("fg")],
+    ["color-fg-muted", surface("fg-muted")],
+    ["color-fg-subtle", surface("fg-subtle")],
     ["color-primary", brand(primary.index)],
     ["color-primary-hover", brand(primary.hoverIndex)],
     ["color-primary-active", brand(primary.activeIndex)],
     ["color-primary-fg", primary.foreground],
     ["color-primary-subtle", subtleColor(ramp[primary.index].color, 0.23)],
-    ["color-secondary", neutralColor(neutral, 0.27)],
-    ["color-secondary-hover", neutralColor(neutral, 0.34)],
-    ["color-secondary-fg", neutralColor(neutral, 0.94, 0.3)],
+    ["color-secondary", surface("secondary")],
+    ["color-secondary-hover", surface("secondary-hover")],
+    ["color-secondary-fg", surface("secondary-fg")],
     ["color-destructive", "oklch(0.68 0.2 25)"],
     ["color-destructive-hover", "oklch(0.72 0.18 25)"],
-    ["color-destructive-fg", neutralColor(neutral, 0.13)],
+    ["color-destructive-fg", darkForegroundColor(seed, tint)],
     ["color-destructive-subtle", "oklch(0.23 0.06 25)"],
     ["color-success", "oklch(0.72 0.16 155)"],
     ["color-success-subtle", "oklch(0.23 0.05 155)"],
@@ -321,28 +421,32 @@ function darkDeclarations(
     ["color-warning-subtle", "oklch(0.23 0.045 80)"],
     ["color-info", brand(Math.min(primary.index, 4))],
     ["color-info-subtle", subtleColor(ramp[Math.min(primary.index, 4)].color, 0.23)],
-    ["color-border", neutralColor(neutral, 0.29)],
-    ["color-border-strong", neutralColor(neutral, 0.38)],
+    ["color-border", surface("border")],
+    ["color-border-strong", surface("border-strong")],
     ["color-ring", oklch(ramp[primary.index].color)],
-    ["shadow-color", "0 0 0"],
-    ["shadow-xs", "none"],
-    ["shadow-sm", "0 1px 3px oklch(var(--shadow-color) / 0.3)"],
-    ["shadow-md", "0 4px 6px oklch(var(--shadow-color) / 0.3)"],
-    ["shadow-lg", "0 10px 15px oklch(var(--shadow-color) / 0.4)"],
-    ["shadow-xl", "0 20px 25px oklch(var(--shadow-color) / 0.5)"],
+    ...depthFamily(seed, "dark"),
   ];
 }
 
+/**
+ * The label colour a solid accent carries in dark mode: the darkest page the
+ * theme ships, so a bright accent's text is the page it sits on rather than an
+ * invented colour.
+ */
+function darkForegroundColor(seed: NormalizedSeed, tint: NeutralTint | null): string {
+  return surfaceColor(DARK_SURFACES[seed.contrast], tint, "bg");
+}
+
 function documentDeclarations(
-  name: string,
-  neutral: ThemeNeutral,
+  seed: NormalizedSeed,
+  tint: NeutralTint | null,
   ramp: AccentStep[],
   primary: PrimarySelection,
 ): Declaration[] {
-  const base = lightDeclarations(name, neutral, ramp, primary).map(([token, value]) => {
+  const base = lightDeclarations(seed, tint, ramp, primary).map(([token, value]) => {
     if (token === "color-bg") return [token, "white"] as const;
-    if (token === "color-bg-subtle") return [token, neutralColor(neutral, 0.97, 0.2)] as const;
-    if (token === "color-bg-muted") return [token, neutralColor(neutral, 0.94, 0.35)] as const;
+    if (token === "color-bg-subtle") return [token, neutralColor(tint, 0.97, 0.2)] as const;
+    if (token === "color-bg-muted") return [token, neutralColor(tint, 0.94, 0.35)] as const;
     // A printed page casts no shadow — but --shadow-color is the channel the
     // ramp is cast IN, not a shadow itself: `oklch(none / 0.04)` is invalid CSS.
     if (token === "shadow-color") return [token, value] as const;
@@ -363,16 +467,6 @@ function paletteDeclarations(name: string, ramp: AccentStep[]): Declaration[] {
   return ramp.map(({ step, css }) => [`palette-${name}-${step}`, css] as const);
 }
 
-function radiusDeclarations(radius: ThemeRadius): Declaration[] {
-  const values = RADIUS_VALUES[radius];
-  return [
-    ...Object.entries(values).map(([name, value]) => [name, value] as const),
-    ["button-radius", "var(--radius-md)"],
-    ["card-radius", "var(--radius-lg)"],
-    ["input-radius", "var(--radius-md)"],
-    ["dialog-radius", "var(--radius-xl)"],
-  ];
-}
 
 function renderDarkBlocks(declarations: Declaration[], heading: string): string {
   const body = renderDeclarations(declarations);
@@ -421,27 +515,31 @@ function mergeSchemes(light: Declaration[], dark: Declaration[]): Declaration[] 
 }
 
 function renderThemeCss(
-  input: ThemeGenerateInput,
+  seed: NormalizedSeed,
   ramp: AccentStep[],
   light: Declaration[],
   dark: Declaration[],
 ): string {
-  const schemes = input.scheme === "both" ? "light dark" : input.scheme;
+  const schemes = seed.scheme === "both" ? "light dark" : seed.scheme;
   // One block is the default for a dual-scheme theme: the colours state both
   // sides with light-dark(), which base/reset.css activates by mapping
   // `data-theme` onto `color-scheme`. --legacy-blocks restores the triple form.
-  const oneBlock = input.scheme === "both" && !input.legacyBlocks;
+  const oneBlock = seed.scheme === "both" && !seed.legacyBlocks;
   const rootSemantic = oneBlock
     ? [...mergeSchemes(light.filter((d) => !isShadow(d)), dark), ...light.filter(isShadow)]
-    : input.scheme === "dark"
+    : seed.scheme === "dark"
       ? dark
       : light;
   const root = [
-    ...paletteDeclarations(input.name, ramp),
+    ...paletteDeclarations(seed.name, ramp),
     ...rootSemantic,
-    ...radiusDeclarations(input.radius),
+    // The axis families (1.1A-10). Scheme-independent by construction: a
+    // silhouette, a type ramp and a motion curve are the same in both schemes,
+    // and the one family that is not — depth — renders above, beside the
+    // colours it has to share a block with.
+    ...axisDeclarations(seed),
   ];
-  const darkBlocks = input.scheme === "light"
+  const darkBlocks = seed.scheme === "light"
     ? ""
     : oneBlock
       ? renderDarkBlocks(dark.filter(isShadow), "Dark mode: the shadow ramp")
@@ -452,8 +550,9 @@ function renderThemeCss(
       "   --legacy-blocks for the three-block form if your browser floor predates it. */\n"
     : "";
 
-  return `/* @ui:theme ${input.name} — generated from ${input.accent} */
+  return `/* @ui:theme ${seed.name} — generated from ${seed.accent} */
 /* @ui:schemes ${schemes} */
+${densityDirective(seed)}
 /* Deterministic parametric theme. Regenerate instead of editing the accent ramp by hand. */
 ${note}
 :root {
@@ -665,45 +764,108 @@ function verifiedFile(
   };
 }
 
+/**
+ * Every token an axis family emits must already exist in the themeable
+ * surface. A theme that declares a token nothing reads is an axis with no
+ * consumer — the dead-axis drift 1.1A-21 tracks — and the cheapest place to
+ * catch it is here, on every generated theme, rather than in a test that only
+ * runs over the seeds someone thought to write down.
+ */
+function assertSurfaceOnly(declarations: Declaration[], surface: string[], name: string): void {
+  const known = new Set(surface);
+  const unknown = declarations.map(([token]) => token).filter((token) => !known.has(token));
+  if (unknown.length > 0) {
+    throw new Error(
+      `Generated theme '${name}' declares ${unknown.length} token(s) the base layer does not ` +
+        `define: ${[...new Set(unknown)].join(", ")}. A theme may only re-point the themeable surface.`,
+    );
+  }
+}
+
+/**
+ * The closed loop: read the fourteen axes back out of the stylesheet just
+ * written and compare them with what the seed asked for.
+ *
+ * This is not belt-and-braces over the tests — it is the property that makes
+ * the manifest's `axes` block trustworthy. `gen:theme-manifests` DERIVES that
+ * block from the CSS, so a family renderer that emits something the classifier
+ * reads differently would publish a theme whose manifest quietly contradicts
+ * the seed beside it. Running the real `axesFromCss` on the real output is the
+ * only check that cannot be fooled by the two sides sharing an assumption.
+ */
+export function assertAxesRoundTrip(css: string, baseSources: string[], expected: ThemeAxes, name: string): ThemeAxes {
+  const derived = axesFromCss(css, baseSources);
+  const mismatches: string[] = [];
+  const walk = (a: unknown, b: unknown, path: string): void => {
+    if (a !== null && typeof a === "object" && b !== null && typeof b === "object") {
+      for (const key of Object.keys(a as Record<string, unknown>)) {
+        walk((a as Record<string, unknown>)[key], (b as Record<string, unknown>)[key], path ? `${path}.${key}` : key);
+      }
+      return;
+    }
+    if (a !== b) mismatches.push(`${path}: seed says ${JSON.stringify(a)}, the CSS derives ${JSON.stringify(b)}`);
+  };
+  walk(expected, derived, "");
+  if (mismatches.length > 0) {
+    throw new Error(
+      `Generated theme '${name}' does not derive back to its own seed: ${mismatches.join("; ")}. ` +
+        `A family renderer and its axesFromCss classifier disagree.`,
+    );
+  }
+  return derived;
+}
+
 /** Build and verify every output in memory. This function performs no filesystem writes. */
 export function generateThemeBundle(
   input: ThemeGenerateInput,
   baseCssSources: string[],
 ): GeneratedThemeBundle {
-  const accent = cssColorToOklch(input.accent);
+  const seed = normalizeSeed(input);
+  const accent = cssColorToOklch(seed.accent);
   if (!accent) {
     throw new Error(
-      `Invalid accent '${input.accent}'. Use an opaque oklch() color or hex value (#rgb or #rrggbb), ` +
+      `Invalid accent '${seed.accent}'. Use an opaque oklch() color or hex value (#rgb or #rrggbb), ` +
         `for example --accent "oklch(0.55 0.2 150)" or --accent "#168c5b".`,
     );
   }
 
   const ramp = generateAccentRamp(accent);
-  const darkForeground = neutralColor(input.neutral, 0.13);
-  // The muted plate each mode's `--color-bg-muted` resolves to; kept beside the
-  // declaration lists below so the two cannot drift apart.
-  const lightMuted = neutralColor(input.neutral, 0.92, 0.4);
-  const darkMuted = neutralColor(input.neutral, 0.25);
+  const tint = neutralTint(seed.neutral, accent.h);
+  const darkForeground = darkForegroundColor(seed, tint);
+  // The muted plate each mode's `--color-bg-muted` resolves to; derived from
+  // the same ramp table the declaration lists read, so the two cannot drift.
+  const lightMuted = surfaceColor(LIGHT_SURFACES[seed.contrast], tint, "bg-muted");
+  const darkMuted = surfaceColor(DARK_SURFACES[seed.contrast], tint, "bg-muted");
   const lightPrimary = pickPrimary(ramp, "light", darkForeground, lightMuted);
   const darkPrimary = pickPrimary(ramp, "dark", darkForeground, darkMuted);
-  const light = lightDeclarations(input.name, input.neutral, ramp, lightPrimary);
-  const dark = darkDeclarations(input.name, input.neutral, ramp, darkPrimary);
+  const light = lightDeclarations(seed, tint, ramp, lightPrimary);
+  const dark = darkDeclarations(seed, tint, ramp, darkPrimary);
   const baseCss = baseCssSources.join("\n");
   const surface = surfaceTokens(baseCssSources);
-  const css = renderThemeCss(input, ramp, light, dark);
-  const documentName = `${input.name}-document`;
+  assertSurfaceOnly([...axisDeclarations(seed), ...depthFamily(seed, "light")], surface, seed.name);
+  const css = renderThemeCss(seed, ramp, light, dark);
+  // `axesFromCss` reads a theme's accent out of the block its `:root` states,
+  // which for a dark-only theme is the dark selection — a different ramp step.
+  const primaryStep = seed.scheme === "dark" ? darkPrimary : lightPrimary;
+  const axes = assertAxesRoundTrip(
+    css,
+    baseCssSources,
+    expectedAxes(seed, ramp[primaryStep.index].color, neutralAxisFor(tint)),
+    seed.name,
+  );
+  const documentName = `${seed.name}-document`;
   const manifest = manifestFor(
-    input.name,
+    seed.name,
     css,
     surface,
-    input.scheme,
-    ["generated", "brand", input.neutral, input.scheme],
-    input.document ? [documentName] : [],
+    seed.scheme,
+    ["generated", "brand", seed.neutral, seed.scheme],
+    seed.document ? [documentName] : [],
   );
   const generated = [
     verifiedFile(
       "theme",
-      input.name,
+      seed.name,
       css,
       manifest,
       baseCss,
@@ -711,21 +873,21 @@ export function generateThemeBundle(
     ),
   ];
 
-  if (input.document) {
+  if (seed.document) {
     const documentCss = renderDocumentCss(
       documentName,
-      input.name,
-      input.accent,
+      seed.name,
+      seed.accent,
       ramp,
-      documentDeclarations(input.name, input.neutral, ramp, lightPrimary),
+      documentDeclarations(seed, tint, ramp, lightPrimary),
     );
     const documentManifest = manifestFor(
       documentName,
       documentCss,
       surface,
       "light",
-      ["generated", "brand", "print", "document", input.neutral],
-      [input.name],
+      ["generated", "brand", "print", "document", seed.neutral],
+      [seed.name],
     );
     generated.push(
       verifiedFile(
@@ -740,19 +902,24 @@ export function generateThemeBundle(
   }
 
   return {
-    name: input.name,
+    name: seed.name,
     accent: {
-      input: input.accent,
+      input: seed.accent,
       oklch: oklch(accent),
       lightness: Number(accent.l.toFixed(6)),
       chroma: Number(accent.c.toFixed(6)),
       hue: Number(accent.h.toFixed(4)),
     },
-    neutral: input.neutral,
-    radius: input.radius,
-    scheme: input.scheme,
-    document: input.document,
-    legacyBlocks: input.legacyBlocks === true,
+    neutral: seed.neutral,
+    // The 1.0 flag the CLI still reports, mapped back out of the axis that
+    // replaced it — `sharp` and `pill` have no 1.0 spelling, so they report
+    // the nearest one the flag could express.
+    radius: input.radius ?? SHAPE_LEGACY_RADIUS[seed.shape.radius],
+    scheme: seed.scheme,
+    document: seed.document,
+    legacyBlocks: seed.legacyBlocks,
+    seed: seedRecord(seed),
+    axes,
     generated,
   };
 }
