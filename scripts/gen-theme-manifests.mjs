@@ -131,6 +131,70 @@ const SEED = {
     dark_mode: "native",
     pairs_with: ["default", "paper"],
   },
+  // ── Generated themes, batch 1 (task 1.1A-16) ──────────────────────────────
+  // Their CSS is NOT hand-written: each is `faqir theme generate <name> --seed
+  // registry/themes/<name>.seed.json --out registry/themes`, and
+  // `tests/themes/generated-themes.test.ts` regenerates and compares byte for
+  // byte. What is hand-authored is the same editorial half every other entry
+  // carries — the mood vocabulary an agent selects on, and who the theme pairs
+  // with. `swiss` and `editorial` each ship a print companion, which the seed's
+  // `document: true` produces.
+  editorial: {
+    version: "1.0.0",
+    mood: ["editorial", "serif", "reading", "magazine", "generous"],
+    scheme: "both",
+    dark_mode: "native",
+    pairs_with: ["editorial-document", "paper"],
+  },
+  "editorial-document": {
+    version: "1.0.0",
+    mood: ["print", "editorial", "serif", "document", "generated"],
+    scheme: "light",
+    dark_mode: "none",
+    pairs_with: ["editorial"],
+  },
+  swiss: {
+    version: "1.0.0",
+    mood: ["swiss", "grid", "typographic", "uppercase", "red"],
+    scheme: "both",
+    dark_mode: "native",
+    pairs_with: ["swiss-document", "slate"],
+  },
+  "swiss-document": {
+    version: "1.0.0",
+    mood: ["print", "swiss", "grid", "document", "generated"],
+    scheme: "light",
+    dark_mode: "none",
+    pairs_with: ["swiss"],
+  },
+  neo: {
+    version: "1.0.0",
+    mood: ["neo-brutalist", "loud", "playful", "electric", "graphic"],
+    scheme: "both",
+    dark_mode: "native",
+    pairs_with: ["brutalist"],
+  },
+  luxe: {
+    version: "1.0.0",
+    mood: ["luxury", "premium", "gold", "boutique", "dark"],
+    scheme: "dark",
+    dark_mode: "native",
+    pairs_with: ["midnight"],
+  },
+  candy: {
+    version: "1.0.0",
+    mood: ["candy", "sweet", "bubbly", "consumer", "rounded"],
+    scheme: "both",
+    dark_mode: "native",
+    pairs_with: ["soft"],
+  },
+  organic: {
+    version: "1.0.0",
+    mood: ["organic", "earthy", "natural", "warm", "calm"],
+    scheme: "both",
+    dark_mode: "native",
+    pairs_with: ["paper"],
+  },
 };
 
 // The base token layer, read twice for two different questions.
@@ -180,6 +244,40 @@ if (missingPreview.length > 0) {
   process.exit(1);
 }
 
+// ── Generated themes, and the print companions they bring with them ─────────
+//
+// A theme is GENERATED when a `<name>.seed.json` sits beside its stylesheet
+// (task 1.1A-16): the seed goes into the manifest, so the pair a reader sees is
+// the input and the output of one deterministic function, and `visual_matrix`
+// is `false` — the matrix-membership policy of 1.1A-13, where a theme somebody
+// WROTE earns the full screenshot cross-product and a theme a seed produced
+// takes the patterns-only sweep until it is deliberately promoted.
+//
+// A COMPANION is the `<name>-document` a seed with `document: true` emits. It is
+// not a theme in its own right and it carries no `axes` block, for the reason
+// `readPeerThemes` already states: `renderDocumentCss` emits none of the axis
+// families, so two companions agree on eleven of the fourteen axes by
+// construction and a companion agrees with its own PARENT on the entire colour
+// ramp. Measured, on the two this task ships: `editorial`/`editorial-document`
+// is 0.0021 mean OKLab ΔE apart and `editorial-document`/`swiss-document` is 3
+// axes apart — both below bars that no seed could lift, because they are facts
+// about the generator rather than about the seeds. So the companion is not a
+// PEER, exactly as the CLI has it: no axes, therefore not compared, therefore
+// no `distinctiveness` block either.
+const seedFor = (name) => {
+  const path = join(THEMES_DIR, `${name}.seed.json`);
+  return existsSync(path) ? JSON.parse(readFileSync(path, "utf8")) : null;
+};
+const SEEDS = Object.fromEntries(
+  themeFiles.map((f) => basename(f, ".css")).map((name) => [name, seedFor(name)]),
+);
+const COMPANIONS = new Set(
+  Object.entries(SEEDS)
+    .filter(([, seed]) => seed?.document === true)
+    .map(([name]) => `${name}-document`)
+    .filter((name) => name in SEEDS),
+);
+
 // Pass 1: derive every theme's axes. Distinctiveness is a relation BETWEEN
 // themes, so no manifest can be written until all of them have been read — and
 // the axes are taken from this pass rather than from the manifests on disk,
@@ -187,9 +285,16 @@ if (missingPreview.length > 0) {
 const derived = themeFiles.map((file) => {
   const name = basename(file, ".css");
   const css = readFileSync(join(THEMES_DIR, file), "utf8");
-  return { name, css, scheme: SEED[name].scheme, axes: axesFromCss(css, AXIS_BASE) };
+  return {
+    name,
+    css,
+    scheme: SEED[name].scheme,
+    axes: COMPANIONS.has(name) ? null : axesFromCss(css, AXIS_BASE),
+  };
 });
-const prepared = derived.map((theme) => prepareTheme(theme, DISTINCT));
+const prepared = derived
+  .filter((theme) => theme.axes !== null)
+  .map((theme) => prepareTheme(theme, DISTINCT));
 
 let written = 0;
 for (const theme of derived) {
@@ -198,7 +303,8 @@ for (const theme of derived) {
   // DERIVED like the axes above: the nearest OTHER shipped theme, and how far
   // away it is on both measures. `nearest` excludes the subject by name, so a
   // theme is never its own neighbour.
-  const closest = nearest(prepared.find((p) => p.name === name), prepared, DISTINCT);
+  const subject = prepared.find((p) => p.name === name);
+  const closest = subject ? nearest(subject, prepared, DISTINCT) : null;
 
   const manifest = {
     // Same rule as `add-schema-refs.mjs` and `faqir create`: the reference is
@@ -215,11 +321,16 @@ for (const theme of derived) {
     pairs_with: meta.pairs_with,
     // Checked above: the file exists, so the field cannot dangle.
     preview: `${name}.preview.html`,
+    // The generator's own input, carried verbatim (task 1.1A-16). Present iff a
+    // `<name>.seed.json` is on disk, which is what "this stylesheet is
+    // generated" means in this repository.
+    ...(SEEDS[name] ? { seed: SEEDS[name] } : {}),
     // DERIVED, exactly like the two token fields above (task 1.1A-08): the
     // fourteen axes of FAQIR-VISION §5.2 read straight out of the stylesheet.
     // `tests/themes/manifest.test.ts` re-derives and compares, so a hand-edited
-    // axis is drift that fails rather than a claim nobody checks.
-    axes: theme.axes,
+    // axis is drift that fails rather than a claim nobody checks. Omitted for a
+    // print companion — see COMPANIONS above.
+    ...(theme.axes ? { axes: theme.axes } : {}),
     // DERIVED too (task 1.1A-12): how far this theme sits from the nearest
     // OTHER one, on both measures. Omitted only when there is no other theme to
     // compare against, or when the nearest shares no colour scheme with it —
@@ -233,6 +344,11 @@ for (const theme of derived) {
           },
         }
       : {}),
+    // The matrix-membership policy of 1.1A-13, applied by provenance: a theme
+    // somebody WROTE earns the full screenshot cross-product, a theme a seed
+    // produced (and the companion it brings) takes the patterns-only sweep
+    // until a deliberate one-line edit here promotes it.
+    ...(SEEDS[name] || COMPANIONS.has(name) ? { visual_matrix: false } : {}),
   };
 
   const out = join(THEMES_DIR, `${name}.theme.json`);
@@ -241,8 +357,10 @@ for (const theme of derived) {
   const d = manifest.distinctiveness;
   console.log(
     `✓ ${name}.theme.json — ${manifest.tokens_overridden.length} overridden, ` +
-      `${manifest.tokens_inherited.length} inherited · ${a.neutral}/${a.type.pairing}/` +
-      `${a.shape.radius}/${a.depth}/${a.motion}/${a.contrast}` +
+      `${manifest.tokens_inherited.length} inherited · ` +
+      (a
+        ? `${a.neutral}/${a.type.pairing}/${a.shape.radius}/${a.depth}/${a.motion}/${a.contrast}`
+        : "print companion (no axes)") +
       (d ? ` · nearest ${d.nearest} (${d.axis_distance} axes, ΔE ${d.token_distance})` : ""),
   );
   written++;

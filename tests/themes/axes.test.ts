@@ -507,7 +507,7 @@ describe("axesFromCss · the two authoring forms agree", () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// 4 · The twelve shipped themes, as a table
+// 4 · The twenty shipped stylesheets, as a table
 // ═══════════════════════════════════════════════════════════════════════════
 //
 // The table this task's commit body records. Asserted here so that a later CSS
@@ -523,15 +523,23 @@ const THEME_TABLE: Row[] = [
   // theme            neutral   pairing           radius   border      depth      motion    focus   button  input
   ["aurora", "gray", "system", "soft", "hairline", "layered", "smooth", "ring", "soft", "standard"],
   ["brutalist", "gray", "system", "sharp", "heavy", "flat", "minimal", "bold", "rect", "high"],
+  ["candy", "tinted", "rounded", "pill", "hairline", "soft", "springy", "ring", "pill", "standard"],
   ["contrast", "gray", "system", "soft", "regular", "soft", "smooth", "bold", "soft", "high"],
   ["default", "gray", "system", "soft", "hairline", "soft", "smooth", "ring", "soft", "standard"],
   ["document", "gray", "sans-grotesque", "sharp", "hairline", "flat", "none", "ring", "rect", "high"],
   ["document-serif", "gray", "serif-editorial", "sharp", "hairline", "flat", "smooth", "ring", "rect", "high"],
+  ["editorial", "gray", "serif-editorial", "soft", "hairline", "flat", "minimal", "ring", "soft", "standard"],
+  ["editorial-document", "gray", "sans-grotesque", "sharp", "hairline", "flat", "smooth", "ring", "rect", "standard"],
   ["glass", "cool", "system", "round", "hairline", "glass", "smooth", "ring", "soft", "standard"],
+  ["luxe", "warm", "serif-modern", "soft", "hairline", "soft", "smooth", "ring", "soft", "high"],
   ["midnight", "cool", "system", "soft", "hairline", "layered", "smooth", "glow", "soft", "standard"],
+  ["neo", "gray", "sans-grotesque", "sharp", "heavy", "hard", "playful", "bold", "rect", "standard"],
+  ["organic", "warm", "sans-humanist", "round", "hairline", "soft", "smooth", "ring", "soft", "standard"],
   ["paper", "warm", "serif-editorial", "soft", "hairline", "flat", "smooth", "ring", "soft", "standard"],
   ["slate", "cool", "sans-grotesque", "crisp", "hairline", "flat", "snappy", "ring", "soft", "standard"],
   ["soft", "warm", "system", "pill", "hairline", "layered", "springy", "glow", "pill", "standard"],
+  ["swiss", "gray", "sans-grotesque", "sharp", "regular", "flat", "snappy", "ring", "rect", "high"],
+  ["swiss-document", "gray", "sans-grotesque", "sharp", "hairline", "flat", "smooth", "ring", "rect", "high"],
   ["terminal", "tinted", "mono", "sharp", "hairline", "soft", "snappy", "inset", "rect", "standard"],
 ];
 
@@ -539,15 +547,23 @@ const THEME_TABLE: Row[] = [
 const THEME_ACCENTS: Record<string, { hue: number; chroma: number; scheme: string; switch: string }> = {
   aurora: { hue: 300, chroma: 0.24, scheme: "both", switch: "pill" },
   brutalist: { hue: 0, chroma: 0, scheme: "both", switch: "square" },
+  candy: { hue: 351.5, chroma: 0.1788, scheme: "both", switch: "pill" },
   contrast: { hue: 250, chroma: 0.16, scheme: "both", switch: "pill" },
   default: { hue: 264, chroma: 0.22, scheme: "both", switch: "pill" },
   document: { hue: 250, chroma: 0.06, scheme: "light", switch: "square" },
   "document-serif": { hue: 25, chroma: 0.07, scheme: "light", switch: "square" },
+  editorial: { hue: 256, chroma: 0.0736, scheme: "both", switch: "pill" },
+  "editorial-document": { hue: 256, chroma: 0.0736, scheme: "light", switch: "square" },
   glass: { hue: 275, chroma: 0.2, scheme: "both", switch: "pill" },
+  luxe: { hue: 84, chroma: 0.0988, scheme: "dark", switch: "pill" },
   midnight: { hue: 280, chroma: 0.24, scheme: "both", switch: "pill" },
+  neo: { hue: 121.1, chroma: 0.1676, scheme: "both", switch: "square" },
+  organic: { hue: 90, chroma: 0.0757, scheme: "both", switch: "pill" },
   paper: { hue: 45, chroma: 0.14, scheme: "both", switch: "pill" },
   slate: { hue: 245, chroma: 0.09, scheme: "both", switch: "pill" },
   soft: { hue: 185, chroma: 0.1, scheme: "both", switch: "pill" },
+  swiss: { hue: 29.6, chroma: 0.2126, scheme: "both", switch: "pill" },
+  "swiss-document": { hue: 29.6, chroma: 0.2126, scheme: "light", switch: "square" },
   terminal: { hue: 145, chroma: 0.12, scheme: "both", switch: "square" },
 };
 
@@ -555,7 +571,7 @@ function shippedAxes(name: string): ThemeAxes {
   return axesFromCss(readFileSync(join(THEMES_DIR, `${name}.css`), "utf8"), BASE);
 }
 
-describe("axesFromCss · the twelve shipped themes", () => {
+describe("axesFromCss · the twenty shipped stylesheets", () => {
   it("covers every theme in the registry — no row may go missing", () => {
     const shipped = [...new Glob("*.css").scanSync(THEMES_DIR)].map((f) => f.replace(/\.css$/, "")).sort();
     expect(THEME_TABLE.map((r) => r[0]).sort()).toEqual(shipped);
@@ -613,16 +629,29 @@ describe("axesFromCss · the twelve shipped themes", () => {
       brutalist: "none/round/uppercase/comfortable",
       midnight: "grid/round/none/comfortable",
       slate: "none/round/none/compact",
+      // 1.1A-16's generated six. `density: spacious` had no shipped example at
+      // all before them, and `grain` had none either.
+      editorial: "paper/round/none/spacious",
+      swiss: "grid/round/uppercase/comfortable",
+      luxe: "mesh/round/uppercase/spacious",
+      organic: "grain/round/none/spacious",
     };
     for (const [name] of THEME_TABLE) {
       const a = shippedAxes(name);
       const derived = [a.material, a.shape.corner, a.type.voice!.transform, a.density].join("/");
       expect({ [name]: derived }).toEqual({ [name]: ADOPTED[name] ?? "none/round/none/comfortable" });
     }
-    // `corner` is still nobody's: no theme ships a bevel, a scoop or a notch,
-    // because `corner-shape` is a progressive property most engines still
-    // ignore and a theme whose silhouette only appears in one browser is not a
-    // silhouette. `density` stopped being nobody's with `slate` [1.1A-15].
+    // `corner` is still nobody's, and 1.1A-16 measured a second reason why.
+    // Two of that task's seeds carried one (`neo` a bevel, `organic` a scoop)
+    // and both were dropped after rendering them: MEASURED in Chrome 149, a box
+    // at `border-radius: 0` is pixel-identical under `round`, `bevel`, `scoop`
+    // and `notch` — there is no corner to shape — so `neo`, whose brief is a
+    // SHARP silhouette, would have declared an axis nothing draws, which is the
+    // quiet failure §3 forbids. At 4px and 12px all three differ from `round`,
+    // so a corner shape is only ever a statement a ROUNDED theme can make.
+    // `tests/themes/generated-themes.test.ts` keeps that as a gate.
+    // `density` stopped being nobody's with `slate` [1.1A-15], and 1.1A-16
+    // gives `spacious` its first three themes.
     for (const [name] of THEME_TABLE) {
       expect({ [name]: shippedAxes(name).shape.corner }).toEqual({ [name]: "round" });
     }
@@ -639,6 +668,9 @@ describe("axesFromCss · the twelve shipped themes", () => {
     // field in `gen-theme-manifests.mjs`, and the axis read out of the CSS.
     for (const [name] of THEME_TABLE) {
       const manifest = JSON.parse(readFileSync(join(THEMES_DIR, `${name}.theme.json`), "utf8"));
+      // A print companion publishes no axes block [1.1A-16] — there is nothing
+      // to agree with, and the table above still derives its axes from the CSS.
+      if (!manifest.axes) continue;
       expect({ [name]: manifest.axes.scheme }).toEqual({ [name]: manifest.scheme });
     }
   });
@@ -876,7 +908,7 @@ describe("lengths, lists and shadows", () => {
 // again and 1.1A-12 arms the gate that forbids the low end. A theme edit that
 // makes the registry more varied must come here and say so.
 
-describe("axesFromCss · how alike the twelve shipped themes are [feeds 1.1A-12]", () => {
+describe("axesFromCss · how alike the twenty shipped stylesheets are [feeds 1.1A-12]", () => {
   const LEAVES = Object.keys(THEME_AXIS_VALUES);
   const NAMES = THEME_TABLE.map(([name]) => name);
   const DERIVED = new Map(NAMES.map((name) => [name, shippedAxes(name)]));
@@ -888,21 +920,25 @@ describe("axesFromCss · how alike the twelve shipped themes are [feeds 1.1A-12]
     ).length;
   }
 
-  it("three of the twenty-three leaves are the same in every shipped theme", () => {
-    // Fifteen when 1.1A-08 first counted them, four after 1.1A-14, three now.
-    // 1.1A-14 moved eleven by giving six themes the families to say what they
-    // had always meant; 1.1A-15 moved the twelfth — `slate` carries the
-    // `@ui:density compact` header it was designed at, so density is no longer
-    // an axis nobody uses. What remains is the two ramp shapes (nothing
-    // rescales type until a seed theme does) and the corner shape, which stays
-    // constant on purpose: `corner-shape` is a progressive property most
-    // engines ignore, so a theme whose silhouette exists in one browser is not
-    // a silhouette.
+  it("ONE of the twenty-three leaves is the same in every shipped theme", () => {
+    // Fifteen when 1.1A-08 first counted them, four after 1.1A-14, three after
+    // 1.1A-15, one now. 1.1A-14 moved eleven by giving six themes the families
+    // to say what they had always meant; 1.1A-15 moved the twelfth — `slate`
+    // carries the `@ui:density compact` header it was designed at. 1.1A-16
+    // moved the two RAMP shapes, which is the thing only a generated theme was
+    // ever going to move: `editorial` and `luxe` set a 1.333 scale, `candy` a
+    // 1.125 one, and `editorial`/`organic` read at a 17px base.
+    //
+    // What remains is the corner shape, and it stays constant for a reason this
+    // task MEASURED rather than assumed — see the note in §4 above: at
+    // `border-radius: 0` every corner shape is pixel-identical to `round`, so
+    // the axis is only available to a theme that is already rounded, and none
+    // of the rounded ones wants a cut corner yet.
     const constant = LEAVES.filter(
       (leaf) => new Set(NAMES.map((n) => JSON.stringify(at(DERIVED.get(n)!, leaf)))).size === 1,
     );
     expect(LEAVES.length).toBe(23);
-    expect(constant).toEqual(["type.scale", "type.base", "shape.corner"]);
+    expect(constant).toEqual(["shape.corner"]);
   });
 
   it("NO pair is axis-identical any more [1.1A-15]", () => {
@@ -919,7 +955,7 @@ describe("axesFromCss · how alike the twelve shipped themes are [feeds 1.1A-12]
     expect(identical).toEqual([]);
   });
 
-  it("1 of the 66 pairs sits below four DIFFERING LEAVES — and it is not a gate failure", () => {
+  it("4 of the 190 pairs sit below four DIFFERING LEAVES — and none is a gate failure", () => {
     // This count is deliberately NOT the distinctiveness gate's. It compares the
     // twenty-three enumerated leaves one by one, and the two ACCENT axes are
     // continuous, so they are not in `THEME_AXIS_VALUES` and not counted here.
@@ -927,13 +963,33 @@ describe("axesFromCss · how alike the twelve shipped themes are [feeds 1.1A-12]
     // an accent 36° apart, which is four of the fourteen axes §5.2 actually
     // rules on — so the pair clears the gate in
     // tests/themes/distinctiveness.test.ts while showing up in this stricter
-    // count. Ten pairs sat here after 1.1A-14; one does now.
+    // count. Ten pairs sat here after 1.1A-14; one after 1.1A-15.
+    //
+    // The three added by 1.1A-16 are ALL print companions, and that is the
+    // whole argument for excluding them from the gate rather than a coincidence
+    // this test tolerates: `renderDocumentCss` emits none of the axis families,
+    // so a companion says almost nothing about type, shape, motion or controls
+    // and lands on top of every other companion — and of `document`, the
+    // authored theme that occupies the same corner. Nothing a seed could say
+    // would move them, which is why the rule is "a companion carries no axes"
+    // rather than "these pairs are exempt". The six generated THEMES add none.
     const below: string[] = [];
     for (let i = 0; i < NAMES.length; i++) {
       for (let j = i + 1; j < NAMES.length; j++) {
         if (axisDistance(NAMES[i], NAMES[j]) < 4) below.push(`${NAMES[i]}/${NAMES[j]}`);
       }
     }
-    expect(below).toEqual(["aurora/default"]);
+    expect(NAMES.length).toBe(20);
+    expect(below.sort()).toEqual([
+      "aurora/default",
+      "document/editorial-document",
+      "document/swiss-document",
+      "editorial-document/swiss-document",
+    ]);
+    // Every pair the GATE judges — the eighteen with an axes block — clears it.
+    const companions = new Set(["editorial-document", "swiss-document"]);
+    expect(below.filter((pair) => !pair.split("/").some((n) => companions.has(n)))).toEqual([
+      "aurora/default",
+    ]);
   });
 });

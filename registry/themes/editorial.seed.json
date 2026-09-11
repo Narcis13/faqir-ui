@@ -1,0 +1,38 @@
+{
+  "name": "editorial",
+  "accent": "#1e3a5f",
+  "neutral": "gray",
+  "scheme": "both",
+  "type": {
+    "pairing": "serif-editorial",
+    "scale": 1.333,
+    "base": 17,
+    "voice": {
+      "weight": "semibold",
+      "tracking": "tight",
+      "transform": "none"
+    }
+  },
+  "shape": {
+    "radius": "soft",
+    "border": "hairline",
+    "corner": "round"
+  },
+  "depth": "flat",
+  "material": "paper",
+  "motion": "minimal",
+  "density": "spacious",
+  "focus": "ring",
+  "decoration": {
+    "link": "offset",
+    "divider": "solid"
+  },
+  "controls": {
+    "button": "soft",
+    "input": "box",
+    "checkbox": "square",
+    "switch": "pill"
+  },
+  "contrast": "standard",
+  "document": true
+}

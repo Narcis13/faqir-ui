@@ -339,8 +339,8 @@
     "contrast": "high"
   },
   "distinctiveness": {
-    "nearest": "glass",
-    "axis_distance": 7,
-    "token_distance": 0.0691
+    "nearest": "editorial",
+    "axis_distance": 10,
+    "token_distance": 0.0597
   }
 }

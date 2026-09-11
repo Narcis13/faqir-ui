@@ -1,0 +1,38 @@
+{
+  "name": "neo",
+  "accent": "#c8f000",
+  "neutral": "gray",
+  "scheme": "both",
+  "type": {
+    "pairing": "sans-grotesque",
+    "scale": 1.25,
+    "base": 18,
+    "voice": {
+      "weight": "black",
+      "tracking": "normal",
+      "transform": "none"
+    }
+  },
+  "shape": {
+    "radius": "sharp",
+    "border": "heavy",
+    "corner": "round"
+  },
+  "depth": "hard",
+  "material": "none",
+  "motion": "playful",
+  "density": "comfortable",
+  "focus": "bold",
+  "decoration": {
+    "link": "offset",
+    "divider": "solid"
+  },
+  "controls": {
+    "button": "rect",
+    "input": "box",
+    "checkbox": "square",
+    "switch": "square"
+  },
+  "contrast": "standard",
+  "document": false
+}

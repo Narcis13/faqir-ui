@@ -175,27 +175,53 @@ describe("matrix membership policy (1.1A-13)", () => {
 
   test("no authored theme opts out — the field is for generated themes", () => {
     // The policy in one sentence: a theme someone *wrote* earns the full matrix;
-    // a theme a seed *generated* (1.1A-16/17) ships `visual_matrix: false` and is
-    // promoted by a deliberate one-line manifest edit. An authored theme is one
-    // with no `seed` block, so this reads the distinction rather than a name list.
+    // a theme a seed *generated* (1.1A-16/17), and the print companion it brings
+    // with it, ship `visual_matrix: false` and are promoted by a deliberate
+    // one-line manifest edit.
+    //
+    // "Authored" is read off the manifest rather than off a name list, and it
+    // takes BOTH derived facts: a generated theme is one with a `seed`, and a
+    // companion is one with no `axes` block — the same rule `readPeerThemes`
+    // and the distinctiveness gate use, so there is one definition of "a theme
+    // in its own right" in the repository rather than three.
     const themes = discoverThemes();
     expect(themes.length).toBeGreaterThanOrEqual(12);
-    let authored = 0;
+    const authored: string[] = [];
+    const generated: string[] = [];
     for (const theme of themes) {
       const manifest = readThemeManifest(theme) as
-        | (ReturnType<typeof readThemeManifest> & { seed?: unknown })
+        | (ReturnType<typeof readThemeManifest> & { seed?: unknown; axes?: unknown })
         | null;
       expect(manifest, `${theme} has a manifest at ${themeManifestPathFor(theme)}`).not.toBeNull();
-      if (manifest!.seed !== undefined) continue;
-      authored++;
+      if (manifest!.seed !== undefined || manifest!.axes === undefined) {
+        generated.push(theme);
+        expect(
+          manifest!.visual_matrix,
+          `generated theme ${theme} is in the full matrix`,
+        ).toBe(false);
+        expect(isMatrixTheme(manifest)).toBe(false);
+        continue;
+      }
+      authored.push(theme);
       expect(
         manifest!.visual_matrix,
         `authored theme ${theme} declares visual_matrix`,
       ).toBeUndefined();
       expect(isMatrixTheme(manifest)).toBe(true);
     }
-    // The twelve authored themes of 1.0 are all still here and all still members.
-    expect(authored).toBeGreaterThanOrEqual(12);
+    // The twelve authored themes of 1.0 are all still here and all still
+    // members; 1.1A-16's six and their two companions are the ones that are not.
+    expect(authored.length).toBe(12);
+    expect(generated.sort()).toEqual([
+      "candy",
+      "editorial",
+      "editorial-document",
+      "luxe",
+      "neo",
+      "organic",
+      "swiss",
+      "swiss-document",
+    ]);
   });
 
   test("case count equals the formula: full × members + patterns × the rest", () => {

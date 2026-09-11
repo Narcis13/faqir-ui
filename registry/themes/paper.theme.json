@@ -338,8 +338,8 @@
     "contrast": "standard"
   },
   "distinctiveness": {
-    "nearest": "slate",
-    "axis_distance": 8,
-    "token_distance": 0.0697
+    "nearest": "organic",
+    "axis_distance": 7,
+    "token_distance": 0.0529
   }
 }

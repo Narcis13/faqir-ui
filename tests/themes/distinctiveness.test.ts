@@ -13,14 +13,15 @@
 //      (identical, partially different, wholly different) and token distance
 //      over synthetic stylesheets, where identity and symmetry are properties
 //      that must hold rather than numbers someone typed.
-//   2. **The 66 shipped pairs, pinned.** Every pair of the twelve shipped
+//   2. **The 153 shipped pairs, pinned.** Every pair of the eighteen shipped
 //      themes, with the numbers MEASURED in this task's session. A theme CSS
 //      edit that moves a pair shows up here as a diff, which is the difference
-//      between a deliberate change and drift.
-//   3. **The obligations.** Twenty-one of those 66 pairs are below threshold
-//      TODAY — the sameness problem, finally quantified. They are enumerated,
-//      not tolerated: 1.1A-14/15 is the work that empties this list, and
-//      `armed` in the last describe flips when it is empty.
+//      between a deliberate change and drift. A generated theme's PRINT
+//      COMPANION is not among them — see `PEER_NAMES`, and the describe that
+//      measures why it cannot be.
+//   3. **The obligations.** Empty since 1.1A-15, and asserted to be: the
+//      sameness problem went 21 failing pairs (1.1A-12) → 8 (1.1A-14) → 0, and
+//      `armed` in that describe is the assertion rather than a note.
 //   4. **The refusal.** The generator declines to write a look-alike, names the
 //      collision, and writes it anyway under `--allow-similar` — with the
 //      scorecard recording that it did.
@@ -80,15 +81,33 @@ const CONTEXT = distinctivenessContext(BASE_SOURCES);
 // theme order.
 const THEME_NAMES = [...new Glob("*.css").scanSync(THEMES_DIR)].map((f) => f.replace(/\.css$/, "")).sort();
 
+const manifestOf = (name: string) =>
+  JSON.parse(readFileSync(join(THEMES_DIR, `${name}.theme.json`), "utf8")) as ThemeManifest;
+
+/**
+ * Which shipped stylesheets this gate judges.
+ *
+ * A theme with an `axes` block is a theme in its own right; one without is the
+ * print companion a seed with `document: true` emits (1.1A-16). That is not a
+ * carve-out invented here — it is the rule `readPeerThemes` has stated since
+ * 1.1A-12 ("a theme with no `axes` block is SKIPPED rather than guessed at"),
+ * read off the manifests the registry generator writes. `companionExclusion`
+ * below measures WHY it cannot be otherwise.
+ */
+const PEER_NAMES = THEME_NAMES.filter((name) => manifestOf(name).axes != null);
+const COMPANION_NAMES = THEME_NAMES.filter((name) => manifestOf(name).axes == null);
+
 /**
  * The shipped set as the gate reads it. The axes are DERIVED here rather than
  * read from the manifest, so this file measures the stylesheets and never
  * checks a stored block against itself.
  */
-const SHIPPED = THEME_NAMES.map((name) => {
+const SHIPPED = PEER_NAMES.map((name) => {
   const css = readFileSync(join(THEMES_DIR, `${name}.css`), "utf8");
-  const manifest = JSON.parse(readFileSync(join(THEMES_DIR, `${name}.theme.json`), "utf8")) as ThemeManifest;
-  return prepareTheme({ name, css, scheme: manifest.scheme, axes: axesFromCss(css, AXIS_BASE) }, CONTEXT);
+  return prepareTheme(
+    { name, css, scheme: manifestOf(name).scheme, axes: axesFromCss(css, AXIS_BASE) },
+    CONTEXT,
+  );
 });
 
 // ── Synthetic axes, for the arithmetic ──────────────────────────────────────
@@ -309,7 +328,7 @@ describe("token distance · the colour surface, compared", () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// The thresholds, and the 66 shipped pairs they judge
+// The thresholds, and the 153 shipped pairs they judge
 // ═══════════════════════════════════════════════════════════════════════════
 
 describe("thresholds · named, and argued for", () => {
@@ -329,18 +348,33 @@ describe("thresholds · named, and argued for", () => {
 });
 
 /**
- * The 66 shipped pairs, MEASURED and pinned here. The same table is in the
+ * The 153 shipped pairs, MEASURED and pinned here. The same table is in the
  * commit body. A theme CSS change that moves a pair fails this test, which is
  * what makes such a change deliberate rather than drift.
  *
  * Re-measured in 1.1A-14, when `glass`, `brutalist`, `terminal`, `paper`, `soft`
- * and `aurora` adopted the 1.1 token families, and again in 1.1A-15, when
- * `default`, `slate`, `midnight`, `contrast`, `document` and `document-serif`
- * did. After the second batch EVERY pair clears both bars, which is what arms
- * the gate below: the closest pair on axes is four apart (`aurora`/`default`,
- * `aurora`/`midnight`, `default`/`glass` — exactly §5.2's minimum) and the
- * closest on colour is `aurora`/`glass` at 0.0305, a hair above the 0.03 the
- * framework demands between a card and the page under it.
+ * and `aurora` adopted the 1.1 token families; again in 1.1A-15, when `default`,
+ * `slate`, `midnight`, `contrast`, `document` and `document-serif` did (and the
+ * gate was armed); and again here, in 1.1A-16, when six GENERATED themes —
+ * `editorial`, `swiss`, `neo`, `luxe`, `candy`, `organic` — joined them. Twelve
+ * themes were 66 pairs; eighteen are 153, and every one of the 87 new pairs
+ * cleared both bars on the first generation: the CLI refuses a look-alike
+ * before it writes, so a seed that collided never reached the registry.
+ *
+ * The margins did not move, which is the interesting part: the closest pair on
+ * axes is still four apart (`aurora`/`default`, `aurora`/`midnight`,
+ * `default`/`glass` — exactly §5.2's minimum, all three between 1.0 themes) and
+ * the closest on colour is still `aurora`/`glass` at 0.0305. The tightest NEW
+ * pair is `editorial`/`organic` at 0.0334 and five axes — two light reading
+ * themes, separated by their page (a neutral-gray stock against a tinted sand
+ * one), their face and their ramp.
+ *
+ * Two rows carry `null` where a ΔE would be, and they are the first in the
+ * shipped set to do so: `luxe` is the first DARK-ONLY theme and `document` /
+ * `document-serif` are light-only, so those pairs are never on screen in the
+ * same mode. `distinctiveness()` abstains rather than inventing a number, and
+ * the pairs are judged on the axis rule alone — 11 and 10 axes apart, so they
+ * clear it comfortably.
  *
  * One pair moved on COLOUR rather than on axes, and deliberately:
  * `glass`/`slate` was the single token failure at 0.0282 — slate's neutrals
@@ -348,73 +382,160 @@ describe("thresholds · named, and argued for", () => {
  * ("cool blue-gray", a dense console rather than a luminous page) and landed at
  * 0.0397. Every other movement in this table is structural.
  */
-const SHIPPED_PAIRS: Array<[string, string, number, number]> = [
+const SHIPPED_PAIRS: Array<[string, string, number, number | null]> = [
   ["aurora", "brutalist", 11, 0.1961],
+  ["aurora", "candy", 9, 0.063],
   ["aurora", "contrast", 9, 0.0888],
   ["aurora", "default", 4, 0.0515],
   ["aurora", "document", 11, 0.1238],
   ["aurora", "document-serif", 10, 0.1459],
+  ["aurora", "editorial", 7, 0.0582],
   ["aurora", "glass", 6, 0.0305],
+  ["aurora", "luxe", 8, 0.0997],
   ["aurora", "midnight", 4, 0.0416],
+  ["aurora", "neo", 9, 0.0927],
+  ["aurora", "organic", 8, 0.0808],
   ["aurora", "paper", 6, 0.0724],
   ["aurora", "slate", 9, 0.0482],
   ["aurora", "soft", 9, 0.0882],
+  ["aurora", "swiss", 9, 0.1039],
   ["aurora", "terminal", 11, 0.1035],
+  ["brutalist", "candy", 10, 0.1924],
   ["brutalist", "contrast", 7, 0.1811],
   ["brutalist", "default", 10, 0.2047],
   ["brutalist", "document", 8, 0.1184],
   ["brutalist", "document-serif", 8, 0.1245],
+  ["brutalist", "editorial", 10, 0.179],
   ["brutalist", "glass", 11, 0.1995],
+  ["brutalist", "luxe", 13, 0.1671],
   ["brutalist", "midnight", 12, 0.1942],
+  ["brutalist", "neo", 7, 0.1892],
+  ["brutalist", "organic", 13, 0.1873],
   ["brutalist", "paper", 11, 0.1999],
   ["brutalist", "slate", 11, 0.1926],
   ["brutalist", "soft", 11, 0.2092],
+  ["brutalist", "swiss", 8, 0.1808],
   ["brutalist", "terminal", 11, 0.1988],
+  ["candy", "contrast", 9, 0.0874],
+  ["candy", "default", 6, 0.0798],
+  ["candy", "document", 11, 0.1005],
+  ["candy", "document-serif", 11, 0.103],
+  ["candy", "editorial", 10, 0.0431],
+  ["candy", "glass", 7, 0.0723],
+  ["candy", "luxe", 11, 0.0738],
+  ["candy", "midnight", 10, 0.0857],
+  ["candy", "neo", 8, 0.0618],
+  ["candy", "organic", 9, 0.0492],
+  ["candy", "paper", 8, 0.0672],
+  ["candy", "slate", 9, 0.0746],
+  ["candy", "soft", 6, 0.091],
+  ["candy", "swiss", 10, 0.0571],
+  ["candy", "terminal", 9, 0.1026],
   ["contrast", "default", 5, 0.0731],
   ["contrast", "document", 9, 0.0768],
   ["contrast", "document-serif", 9, 0.0971],
+  ["contrast", "editorial", 10, 0.0597],
   ["contrast", "glass", 7, 0.0691],
+  ["contrast", "luxe", 10, 0.0794],
   ["contrast", "midnight", 10, 0.0925],
+  ["contrast", "neo", 8, 0.092],
+  ["contrast", "organic", 10, 0.0835],
   ["contrast", "paper", 9, 0.107],
   ["contrast", "slate", 10, 0.0727],
   ["contrast", "soft", 10, 0.0741],
+  ["contrast", "swiss", 10, 0.08],
   ["contrast", "terminal", 10, 0.0998],
   ["default", "document", 9, 0.1221],
   ["default", "document-serif", 9, 0.1516],
+  ["default", "editorial", 6, 0.0558],
   ["default", "glass", 4, 0.0415],
+  ["default", "luxe", 8, 0.0972],
   ["default", "midnight", 5, 0.0588],
+  ["default", "neo", 8, 0.0905],
+  ["default", "organic", 7, 0.0812],
   ["default", "paper", 6, 0.0856],
   ["default", "slate", 7, 0.0576],
   ["default", "soft", 8, 0.0794],
+  ["default", "swiss", 9, 0.1133],
   ["default", "terminal", 10, 0.1057],
   ["document", "document-serif", 5, 0.0482],
+  ["document", "editorial", 9, 0.0723],
   ["document", "glass", 10, 0.1176],
+  ["document", "luxe", 11, null],
   ["document", "midnight", 13, 0.122],
+  ["document", "neo", 10, 0.0964],
+  ["document", "organic", 12, 0.0937],
   ["document", "paper", 11, 0.1314],
   ["document", "slate", 8, 0.1063],
   ["document", "soft", 11, 0.1246],
+  ["document", "swiss", 8, 0.1046],
   ["document", "terminal", 11, 0.1125],
+  ["document-serif", "editorial", 10, 0.0955],
   ["document-serif", "glass", 10, 0.1464],
+  ["document-serif", "luxe", 10, null],
   ["document-serif", "midnight", 12, 0.1507],
+  ["document-serif", "neo", 11, 0.1048],
+  ["document-serif", "organic", 11, 0.0977],
   ["document-serif", "paper", 9, 0.1299],
   ["document-serif", "slate", 10, 0.1324],
   ["document-serif", "soft", 11, 0.1436],
+  ["document-serif", "swiss", 8, 0.0918],
   ["document-serif", "terminal", 11, 0.1239],
+  ["editorial", "glass", 9, 0.0542],
+  ["editorial", "luxe", 8, 0.0654],
+  ["editorial", "midnight", 8, 0.0654],
+  ["editorial", "neo", 10, 0.039],
+  ["editorial", "organic", 7, 0.0334],
+  ["editorial", "paper", 6, 0.0659],
+  ["editorial", "slate", 6, 0.0434],
+  ["editorial", "soft", 10, 0.0675],
+  ["editorial", "swiss", 10, 0.0734],
+  ["editorial", "terminal", 11, 0.0744],
+  ["glass", "luxe", 11, 0.1023],
   ["glass", "midnight", 6, 0.0443],
+  ["glass", "neo", 8, 0.0901],
+  ["glass", "organic", 8, 0.0798],
   ["glass", "paper", 8, 0.0781],
   ["glass", "slate", 8, 0.0397],
   ["glass", "soft", 8, 0.0701],
+  ["glass", "swiss", 10, 0.1098],
   ["glass", "terminal", 11, 0.0962],
+  ["luxe", "midnight", 10, 0.1063],
+  ["luxe", "neo", 13, 0.0597],
+  ["luxe", "organic", 5, 0.0545],
+  ["luxe", "paper", 7, 0.0819],
+  ["luxe", "slate", 10, 0.099],
+  ["luxe", "soft", 11, 0.0924],
+  ["luxe", "swiss", 12, 0.0344],
+  ["luxe", "terminal", 12, 0.1003],
+  ["midnight", "neo", 10, 0.0912],
+  ["midnight", "organic", 9, 0.0891],
   ["midnight", "paper", 7, 0.0867],
   ["midnight", "slate", 9, 0.0486],
   ["midnight", "soft", 8, 0.0848],
+  ["midnight", "swiss", 10, 0.1207],
   ["midnight", "terminal", 11, 0.0966],
+  ["neo", "organic", 11, 0.0361],
+  ["neo", "paper", 9, 0.0762],
+  ["neo", "slate", 10, 0.0767],
+  ["neo", "soft", 9, 0.0809],
+  ["neo", "swiss", 10, 0.079],
+  ["neo", "terminal", 8, 0.0637],
+  ["organic", "paper", 7, 0.0529],
+  ["organic", "slate", 8, 0.0684],
+  ["organic", "soft", 9, 0.0718],
+  ["organic", "swiss", 12, 0.0638],
+  ["organic", "terminal", 10, 0.069],
   ["paper", "slate", 8, 0.0697],
   ["paper", "soft", 8, 0.072],
+  ["paper", "swiss", 9, 0.0844],
   ["paper", "terminal", 10, 0.0846],
   ["slate", "soft", 9, 0.0693],
+  ["slate", "swiss", 10, 0.1043],
   ["slate", "terminal", 10, 0.0786],
+  ["soft", "swiss", 12, 0.1146],
   ["soft", "terminal", 10, 0.0771],
+  ["swiss", "terminal", 11, 0.1119],
 ];
 
 /**
@@ -443,7 +564,7 @@ const SHIPPED_PAIRS: Array<[string, string, number, number]> = [
  */
 const OBLIGATIONS: Record<string, "axis" | "token" | "axis+token"> = {};
 
-describe("the 66 shipped pairs, measured and pinned", () => {
+describe("the 153 shipped pairs, measured and pinned", () => {
   const measured = new Map<string, ReturnType<typeof distinctiveness>>();
   for (let i = 0; i < SHIPPED.length; i++) {
     for (let j = i + 1; j < SHIPPED.length; j++) {
@@ -451,9 +572,9 @@ describe("the 66 shipped pairs, measured and pinned", () => {
     }
   }
 
-  it("covers every pair exactly once — 12 themes is 66 pairs", () => {
-    expect(SHIPPED.length).toBe(12);
-    expect(measured.size).toBe((12 * 11) / 2);
+  it("covers every pair exactly once — 18 themes is 153 pairs", () => {
+    expect(SHIPPED.length).toBe(18);
+    expect(measured.size).toBe((18 * 17) / 2);
     expect(SHIPPED_PAIRS.length).toBe(measured.size);
     expect(SHIPPED_PAIRS.map(([a, b]) => `${a}/${b}`).sort()).toEqual([...measured.keys()].sort());
   });
@@ -517,6 +638,39 @@ describe("the 66 shipped pairs, measured and pinned", () => {
       .map(([pair]) => pair)
       .sort();
     expect(onTheFloor).toEqual(["aurora/default", "aurora/midnight", "default/glass"]);
+    // Both minima still belong to 1.0 pairs after 1.1A-16 added 87 of them:
+    // six generated themes went in without eating anyone's margin. The closest
+    // NEW pair is recorded beside them so the next batch has a number to beat.
+    const newest = new Set(["editorial", "swiss", "neo", "luxe", "candy", "organic"]);
+    const involvesNew = ([pair]: [string, unknown]) => pair.split("/").some((n) => newest.has(n));
+    const newMin = [...measured]
+      .filter(involvesNew)
+      .map(([pair, r]) => [pair, r.token_distance] as const)
+      .filter((row): row is readonly [string, number] => row[1] != null)
+      .sort((x, y) => x[1] - y[1])[0];
+    expect(newMin).toEqual(["editorial/organic", 0.0334]);
+    const newAxisMin = Math.min(
+      ...[...measured].filter(involvesNew).map(([, r]) => r.axis_distance),
+    );
+    expect(newAxisMin).toBe(5);
+  });
+
+  it("abstains rather than inventing a number when two themes share no scheme", () => {
+    // The property `distinctiveness()` documents, now exercised by the SHIPPED
+    // set rather than only by fixtures: `luxe` (dark only) against the two
+    // light-only document themes. Both pairs are judged on axes alone.
+    const abstained = [...measured]
+      .filter(([, r]) => r.token_distance == null)
+      .map(([pair]) => pair)
+      .sort();
+    expect(abstained).toEqual(["document-serif/luxe", "document/luxe"]);
+    for (const pair of abstained) {
+      const result = measured.get(pair)!;
+      expect(result.schemes).toEqual([]);
+      expect(result.samples).toBe(0);
+      expect(result.axis_distance).toBeGreaterThanOrEqual(AXIS_MIN);
+      expect(result.passes).toBe(true);
+    }
   });
 
   it("names each theme's nearest neighbour, deterministically", () => {
@@ -529,16 +683,22 @@ describe("the 66 shipped pairs, measured and pinned", () => {
     expect(neighbours).toEqual({
       aurora: "glass",
       brutalist: "document",
-      contrast: "glass",
+      candy: "editorial",
+      contrast: "editorial",
       default: "glass",
       document: "document-serif",
       "document-serif": "document",
+      editorial: "organic",
       glass: "aurora",
+      luxe: "swiss",
       midnight: "aurora",
-      paper: "slate",
+      neo: "organic",
+      organic: "editorial",
+      paper: "organic",
       slate: "glass",
-      soft: "slate",
-      terminal: "soft",
+      soft: "editorial",
+      swiss: "luxe",
+      terminal: "neo",
     });
     // A theme is never its own neighbour, however small the set.
     for (const subject of SHIPPED) {
@@ -546,6 +706,82 @@ describe("the 66 shipped pairs, measured and pinned", () => {
     }
     expect(nearest(SHIPPED[0], [SHIPPED[0]], CONTEXT)).toBeNull();
     expect(nearest(SHIPPED[0], [], CONTEXT)).toBeNull();
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// The print companions, and why they are not peers                 [1.1A-16]
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// The gate above judges eighteen themes, not the twenty stylesheets in
+// `registry/themes`. The two it leaves out are the `<name>-document` companions
+// a seed with `document: true` produces — and the exclusion is not a threshold
+// anybody lowered but a fact about the GENERATOR, measured here so that it stays
+// a fact rather than becoming a habit.
+
+describe("print companions are excluded, and the numbers say why [1.1A-16]", () => {
+  /** The companions, with their own axes derived so the numbers can be taken. */
+  const companions = COMPANION_NAMES.map((name) => {
+    const css = readFileSync(join(THEMES_DIR, `${name}.css`), "utf8");
+    return prepareTheme(
+      { name, css, scheme: manifestOf(name).scheme, axes: axesFromCss(css, AXIS_BASE) },
+      CONTEXT,
+    );
+  });
+
+  it("is exactly the set of manifests with no axes block, and they are all `<parent>-document`", () => {
+    expect(COMPANION_NAMES).toEqual(["editorial-document", "swiss-document"]);
+    for (const name of COMPANION_NAMES) {
+      const parent = name.replace(/-document$/, "");
+      expect(manifestOf(parent).seed?.document).toBe(true);
+      expect(manifestOf(name).seed).toBeUndefined();
+      expect(manifestOf(name).distinctiveness).toBeUndefined();
+    }
+    // The CLI's own reader agrees, on the same directory: it has skipped a
+    // manifest with no `axes` since 1.1A-12, so the registry and `faqir theme
+    // generate` compare the same set rather than two sets that happen to match.
+    expect(readPeerThemes(THEMES_DIR).map((peer) => peer.name).sort()).toEqual([...PEER_NAMES]);
+  });
+
+  it("a companion is its own PARENT's colour ramp — it can never clear the colour bar", () => {
+    // `renderDocumentCss` re-uses the parent's accent ramp and neutral surfaces
+    // and only whitens the page, so the two are the same theme in two media.
+    // Measured, not asserted in the abstract:
+    for (const companion of companions) {
+      const parent = SHIPPED.find((t) => t.name === companion.name.replace(/-document$/, ""))!;
+      const result = distinctiveness(parent, companion, CONTEXT);
+      expect(result.token_distance).toBeLessThan(TOKEN_MIN / 10);
+      expect(result.passes).toBe(false);
+    }
+  });
+
+  it("two companions agree on eleven of the fourteen axes, whatever their seeds said", () => {
+    // The deeper reason: `renderDocumentCss` emits NONE of the axis families —
+    // no type ramp, no silhouette, no motion curve — so everything except the
+    // accent and the contrast level comes from the base layer. Two companions
+    // can therefore differ on at most three axes no matter how far apart the
+    // themes that produced them are. `editorial` and `swiss` are 10 axes apart;
+    // their companions are 3.
+    const [a, b] = companions;
+    const parents = distinctiveness(
+      SHIPPED.find((t) => t.name === "editorial")!,
+      SHIPPED.find((t) => t.name === "swiss")!,
+      CONTEXT,
+    );
+    const children = distinctiveness(a, b, CONTEXT);
+    expect(parents.axis_distance).toBe(10);
+    expect(children.axis_distance).toBe(3);
+    expect(children.axes_differing).toEqual(["accent_hue", "accent_chroma", "contrast"]);
+    expect(children.passes).toBe(false);
+  });
+
+  it("the exclusion buys nothing else — every companion still passes every other theme gate", () => {
+    // What is waived is membership of the 153-pair table and nothing more: a
+    // companion is still a valid, schema-clean manifest whose tokens match its
+    // CSS, which `tests/themes/manifest.test.ts` checks for all twenty files.
+    for (const name of COMPANION_NAMES) {
+      expect({ [name]: validateThemeManifest(manifestOf(name)) }).toEqual({ [name]: [] });
+    }
   });
 });
 

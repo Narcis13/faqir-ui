@@ -1,0 +1,38 @@
+{
+  "name": "organic",
+  "accent": "#7d6a35",
+  "neutral": "tinted",
+  "scheme": "both",
+  "type": {
+    "pairing": "sans-humanist",
+    "scale": 1.2,
+    "base": 17,
+    "voice": {
+      "weight": "bold",
+      "tracking": "normal",
+      "transform": "none"
+    }
+  },
+  "shape": {
+    "radius": "round",
+    "border": "hairline",
+    "corner": "round"
+  },
+  "depth": "soft",
+  "material": "grain",
+  "motion": "smooth",
+  "density": "spacious",
+  "focus": "ring",
+  "decoration": {
+    "link": "offset",
+    "divider": "solid"
+  },
+  "controls": {
+    "button": "soft",
+    "input": "box",
+    "checkbox": "square",
+    "switch": "pill"
+  },
+  "contrast": "standard",
+  "document": false
+}

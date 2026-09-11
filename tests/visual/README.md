@@ -8,8 +8,9 @@ cross-product:
 every component  ×  every matrix theme  ×  { light, dark }  ×  { ltr, rtl }
 ```
 
-At the current registry that is **86 components × 12 themes × 2 schemes × 2 dirs =
-4 128 captures**. Adding a component (`registry/{primitives,recipes,patterns}/<name>/<name>.html`
+At the current registry that is **86 components × 12 matrix themes × 2 schemes × 2
+dirs = 4 128 captures**, plus a patterns-only sweep of the eight that are not
+members. Adding a component (`registry/{primitives,recipes,patterns}/<name>/<name>.html`
 with an `@ui:component` header) or a theme (`registry/themes/<name>.css`) grows the
 matrix automatically — **zero edits** to the suite, the config, or the CI job.
 
@@ -17,7 +18,9 @@ matrix automatically — **zero edits** to the suite, the config, or the CI job.
 
 The cross-product is multiplicative and **themes are the axis that explodes**: 12
 themes are 4 128 captures, 24 would be 8 256. So a theme states its own
-membership, in its own manifest:
+membership, in its own manifest. 1.1A-16 is where that policy first paid: it
+added eight stylesheets (six generated themes and two print companions) for
+**240 extra captures instead of 2 752**.
 
 | `registry/themes/<name>.theme.json` | Sweep | Captures |
 | --- | --- | --- |
@@ -28,8 +31,10 @@ membership, in its own manifest:
 covered by default and nothing can shrink the gate by omission — a missing or
 unreadable manifest is swept in full, because the expensive answer is the safe
 one. The twelve authored themes say nothing and are unchanged; the generated seed
-themes (1.1A-16/17) ship `visual_matrix: false`, and promotion to the full matrix
-is a one-line manifest edit made on purpose.
+themes (1.1A-16/17) and the print companions they bring ship
+`visual_matrix: false`, and promotion to the full matrix is a one-line manifest
+edit made on purpose — though for a generated theme it belongs in
+`scripts/gen-theme-manifests.mjs`, which is what writes the field.
 
 The reduced sweep is patterns because **a pattern composes the registry**: the 15
 of them mount 47 of the 85 distinct component names, so a reduced theme still gets

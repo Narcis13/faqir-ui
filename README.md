@@ -729,7 +729,11 @@ theme.
 
 ## Theme System
 
-Themes override Layer 2 semantic tokens. Twelve built-in themes ship with Faqir:
+Themes override Layer 2 semantic tokens. Twenty built-in stylesheets ship with
+Faqir: twelve **authored** themes, six **generated** ones, and the two print
+companions those bring with them.
+
+### Authored themes
 
 | Theme | Description |
 |-------|-------------|
@@ -745,6 +749,29 @@ Themes override Layer 2 semantic tokens. Twelve built-in themes ship with Faqir:
 | `glass` | Translucent, layered surfaces with an airy modern character |
 | `soft` | Calm pastel surfaces, generous radius, friendly consumer tone |
 | `terminal` | Technical monospaced interface with a dark retro-console voice |
+
+### Generated themes
+
+Each of these is the output of `faqir theme generate <name> --seed
+registry/themes/<name>.seed.json`. The seed is committed beside the stylesheet
+and the stylesheet is reproduced from it byte for byte, so **a generated theme is
+regenerated, never hand-edited** — copy its seed, change an axis and generate
+your own instead.
+
+| Theme | Description |
+|-------|-------------|
+| `editorial` | A serif reading page on a 1.333 ramp at a 17px base — navy ink, paper stock, flat surfaces, spacious density, barely any motion |
+| `swiss` | International Typographic Style: uppercase grotesque headings, square corners, 2px rules, a graph-paper ground and one red |
+| `neo` | Neo-brutalist — black-weight grotesque at an 18px base, heavy edges, hard un-blurred shadows, a playful curve and an electric lime |
+| `luxe` | Gold on near-black. A modern serif set wide and uppercase, dark only, high contrast, spacious and unhurried |
+| `candy` | Pill-shaped everything, a rounded face, a springy curve and a tinted pink page |
+| `organic` | Warm sand stock with a humanist face — softly rounded, grained, smooth and roomy |
+
+`editorial` and `swiss` each ship a print companion — `editorial-document` and
+`swiss-document` — which is the same brand on white paper, light only, sized for
+the page. A companion is a medium of its parent rather than a theme of its own:
+it carries no `seed` and no `axes` block, and `faqir theme set` treats it like
+any other theme.
 
 ### Using Themes
 

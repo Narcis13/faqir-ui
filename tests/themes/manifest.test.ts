@@ -19,6 +19,7 @@ import { Glob } from "bun";
 import {
   validateThemeManifest,
   validateThemeAxes,
+  validateThemeSeed,
   overriddenTokens,
   inheritedTokens,
   surfaceTokens,
@@ -52,12 +53,22 @@ const AXIS_BASE = [...new Glob("*.css").scanSync(TOKENS_DIR)]
 // Themes discovered by globbing (no hand-maintained list).
 const THEME_FILES = [...new Glob("*.css").scanSync(THEMES_DIR)].sort();
 
+// A generated theme's PRINT COMPANION carries no `axes` block, so it is not a
+// peer — the rule `readPeerThemes` has stated since 1.1A-12, and which
+// `tests/themes/distinctiveness.test.ts` measures the reason for. Here it means
+// three things: the companion is excluded from the comparison set, and its own
+// `axes` and `distinctiveness` fields are asserted ABSENT rather than equal.
+const isCompanion = (file: string) =>
+  (readManifestRaw(file).json as ThemeManifest).axes === undefined;
+const PEER_FILES = THEME_FILES.filter((file) => !isCompanion(file));
+const COMPANION_FILES = THEME_FILES.filter(isCompanion);
+
 // The shipped set as the distinctiveness gate reads it [1.1A-12]: the
 // stylesheet, the scheme the manifest declares, and the axes derived from the
 // CSS — NOT the axes the manifest carries, so the comparison never validates a
 // stored block against itself.
 const DISTINCT = distinctivenessContext(BASE_SOURCES);
-const SHIPPED = THEME_FILES.map((file) => {
+const SHIPPED = PEER_FILES.map((file) => {
   const css = readFileSync(join(THEMES_DIR, file), "utf8");
   const manifest = readManifestRaw(file).json as ThemeManifest;
   return prepareTheme(
@@ -122,7 +133,11 @@ describe("theme manifest · tokens are CSS-consistent (generated, then asserted)
       const manifest = readManifestRaw(file).json as ThemeManifest;
       // The third derived field. A hand-edited axis is drift, exactly like a
       // hand-edited `tokens_overridden` — regenerate with gen:theme-manifests.
-      expect(manifest.axes).toEqual(axesFromCss(css, AXIS_BASE));
+      // A print companion states none: it is a medium of its parent rather than
+      // a theme, and the block is what makes a stylesheet a peer [1.1A-16].
+      expect(manifest.axes).toEqual(
+        COMPANION_FILES.includes(file) ? undefined : axesFromCss(css, AXIS_BASE),
+      );
     });
 
     it(`${file} distinctiveness exactly matches a fresh computation [1.1A-12]`, () => {
@@ -130,7 +145,13 @@ describe("theme manifest · tokens are CSS-consistent (generated, then asserted)
       // stylesheets: a new theme landing next to an old one moves the old one's
       // block, which is drift the same way a hand-edit is.
       const manifest = readManifestRaw(file).json as ThemeManifest;
-      const subject = SHIPPED.find((theme) => theme.name === file.replace(/\.css$/, ""))!;
+      const subject = SHIPPED.find((theme) => theme.name === file.replace(/\.css$/, ""));
+      if (!subject) {
+        // A print companion is neither measured nor compared against — it has
+        // no axes to measure with [1.1A-16].
+        expect(manifest.distinctiveness).toBeUndefined();
+        return;
+      }
       const closest = nearest(subject, SHIPPED, DISTINCT);
       expect(manifest.distinctiveness).toEqual({
         nearest: closest!.nearest,
@@ -151,7 +172,7 @@ describe("theme manifest · tokens are CSS-consistent (generated, then asserted)
 
 // ── Proof the derived-axes gate has teeth ──
 describe("theme manifest · a hand-edited axis is drift [1.1A-08]", () => {
-  const file = THEME_FILES[0];
+  const file = PEER_FILES[0];
   const css = readFileSync(join(THEMES_DIR, file), "utf8");
   const stored = (readManifestRaw(file).json as ThemeManifest).axes!;
 
@@ -372,27 +393,64 @@ describe("theme manifest · the optional 1.1 fields", () => {
     expect(validateThemeManifest(valid)).toEqual([]);
   });
 
-  it("every shipped theme declares the two DERIVED 1.1 fields and nothing else", () => {
-    // 1.1A-07 shipped the five fields and left every manifest without them.
-    // The two that are DERIVED from the stylesheets are filled in — `axes` by
-    // 1.1A-08, `distinctiveness` by 1.1A-12. The other three are not: a shipped
-    // theme is authored, so it has no `seed`; `fonts` waits on the OFL catalog
-    // (1.1A-18) and `visual_matrix` on the matrix policy (1.1A-13).
+  it("the 1.1 fields a shipped manifest carries are exactly the ones its PROVENANCE earns", () => {
+    // 1.1A-07 shipped five optional fields; which of them a manifest carries is
+    // not editorial taste but a fact about where the stylesheet came from, and
+    // there are exactly three kinds of stylesheet in `registry/themes`:
+    //
+    //   • AUTHORED (the twelve of 1.0) — somebody wrote the CSS, so there is no
+    //     `seed`; the two DERIVED fields are filled in (`axes` by 1.1A-08,
+    //     `distinctiveness` by 1.1A-12); and `visual_matrix` is ABSENT, which
+    //     is how 1.1A-13 spells full membership of the screenshot matrix.
+    //   • GENERATED (1.1A-16's six) — the same two derived fields, plus the
+    //     `seed` they came from and `visual_matrix: false`.
+    //   • a generated theme's PRINT COMPANION — neither seed nor axes nor
+    //     distinctiveness (it is a medium of its parent, not a theme), and
+    //     `visual_matrix: false` like the theme that produced it.
+    //
+    // `fonts` is on none of them until the OFL catalog lands (1.1A-18).
+    const kinds: Record<string, string[]> = { authored: [], generated: [], companion: [] };
     for (const file of THEME_FILES) {
       const manifest = readManifestRaw(file).json as ThemeManifest;
+      const name = file.replace(/\.css$/, "");
+      expect(manifest.fonts, `${file} declares fonts`).toBeUndefined();
+
+      if (COMPANION_FILES.includes(file)) {
+        kinds.companion.push(name);
+        expect(manifest.seed, `${file} declares a seed`).toBeUndefined();
+        expect(manifest.axes, `${file} declares axes`).toBeUndefined();
+        expect(manifest.distinctiveness, `${file} declares distinctiveness`).toBeUndefined();
+        expect(manifest.visual_matrix, `${file} is in the full matrix`).toBe(false);
+        continue;
+      }
+
       expect(manifest.axes, `${file} has no derived axes`).toBeDefined();
       expect(manifest.distinctiveness, `${file} has no distinctiveness block`).toBeDefined();
-      for (const field of ["seed", "fonts", "visual_matrix"] as const) {
-        expect(manifest[field], `${file} already declares ${field}`).toBeUndefined();
+      if (manifest.seed === undefined) {
+        kinds.authored.push(name);
+        expect(manifest.visual_matrix, `${file} declares visual_matrix`).toBeUndefined();
+      } else {
+        kinds.generated.push(name);
+        expect(manifest.visual_matrix, `${file} is in the full matrix`).toBe(false);
+        // The seed is the generator's input, so it must be a legal one — the
+        // same validator `faqir theme generate` runs before it writes.
+        expect({ [file]: validateThemeSeed(manifest.seed) }).toEqual({ [file]: [] });
+        expect(manifest.seed.name).toBe(name);
       }
     }
+    // The twelve authored themes of 1.0 are all still authored, and the six
+    // generated ones are named — so a hand-edit to a generated stylesheet
+    // cannot quietly reclassify it as authored by deleting its seed.
+    expect(kinds.authored.length).toBe(12);
+    expect(kinds.generated).toEqual(["candy", "editorial", "luxe", "neo", "organic", "swiss"]);
+    expect(kinds.companion).toEqual(["editorial-document", "swiss-document"]);
   });
 
   it("holds every shipped theme's axes to the full derived-block rules", () => {
     // The validator, not just the equality check above: every one of the
     // fourteen keys present, every value inside its vocabulary, the accent
-    // inside the OKLCH ranges.
-    for (const file of THEME_FILES) {
+    // inside the OKLCH ranges. Peers only — a print companion has no block.
+    for (const file of PEER_FILES) {
       const manifest = readManifestRaw(file).json as ThemeManifest;
       expect({ [file]: validateThemeAxes(manifest.axes) }).toEqual({ [file]: [] });
     }

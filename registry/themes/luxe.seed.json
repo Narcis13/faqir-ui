@@ -1,0 +1,38 @@
+{
+  "name": "luxe",
+  "accent": "#b8913c",
+  "neutral": "warm",
+  "scheme": "dark",
+  "type": {
+    "pairing": "serif-modern",
+    "scale": 1.333,
+    "base": 16,
+    "voice": {
+      "weight": "regular",
+      "tracking": "wide",
+      "transform": "uppercase"
+    }
+  },
+  "shape": {
+    "radius": "soft",
+    "border": "hairline",
+    "corner": "round"
+  },
+  "depth": "soft",
+  "material": "mesh",
+  "motion": "smooth",
+  "density": "spacious",
+  "focus": "ring",
+  "decoration": {
+    "link": "offset",
+    "divider": "solid"
+  },
+  "controls": {
+    "button": "soft",
+    "input": "box",
+    "checkbox": "square",
+    "switch": "pill"
+  },
+  "contrast": "high",
+  "document": false
+}

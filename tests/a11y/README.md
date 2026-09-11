@@ -11,9 +11,10 @@ every component  ×  every matrix theme  ×  { light, dark }
 every pattern    ×  every other theme   ×  { light, dark }
 ```
 
-At the current registry that is **86 components × 12 themes × 2 schemes = 2,064
-scans** (plus a non-empty tripwire, the gate-bites fixture test and the density
-reference page). Adding a component
+At the current registry that is **86 components × 12 matrix themes × 2 schemes =
+2,064 scans**, plus the patterns-only sweep of the eight non-members 1.1A-16
+added (six generated themes and two print companions) — and a non-empty
+tripwire, the gate-bites fixture test and the density reference page. Adding a component
 (`registry/{primitives,recipes,patterns}/<name>/<name>.html` with an
 `@ui:component` header) grows the suite automatically — **zero edits** here.
 
@@ -49,7 +50,7 @@ axis captures at — over the **layout-bearing set**: manifest `category: "layou
 or `kind: "pattern"`, discovered by the *same imported function*
 (`discoverLayoutBearing`) the visual axis uses, so the two gates cannot disagree
 about which pages have responsive behaviour worth re-checking. That is
-**26 components × 12 themes × 2 schemes = 624 scans**. Components with no
+**26 components × 12 matrix themes × 2 schemes = 624 scans**. Components with no
 responsive behaviour render identically at both widths and are deliberately not
 re-scanned.
 

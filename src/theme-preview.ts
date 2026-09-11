@@ -8,8 +8,8 @@
  * from one function here and written to disk by `bun run gen:theme-previews`,
  * exactly as `gen:theme-manifests` writes the manifests beside it.
  *
- * Scope, stated so the split is not mistaken for an oversight: five themes are
- * GENERATED from `GALLERY_PREVIEWS` below; the other seven are BESPOKE files
+ * Scope, stated so the split is not mistaken for an oversight: thirteen themes
+ * are GENERATED from `GALLERY_PREVIEWS` below; the other seven are BESPOKE files
  * this module deliberately does not touch, because each one earns its hand
  * authoring — `contrast` paints every focus ring at once, `document-serif`
  * is a whole signed agreement rather than a component gallery, `glass` needs a
@@ -427,9 +427,14 @@ ${mountScript(spec)}
 }
 
 /**
- * The five themes whose preview this module renders. Each entry is the editorial
- * half — the tagline, the two initials, the optional signature flourish — that a
- * generator cannot derive; everything else comes from `renderThemePreview`.
+ * The thirteen themes whose preview this module renders. Each entry is the
+ * editorial half — the tagline, the two initials, the optional signature
+ * flourish — that a generator cannot derive; everything else comes from
+ * `renderThemePreview`.
+ *
+ * Every theme a SEED produced is here rather than in `BESPOKE_PREVIEWS`: its
+ * stylesheet is regenerated from the seed, so a hand-authored preview would be
+ * the one artefact of that theme nothing could reproduce.
  */
 export const GALLERY_PREVIEWS: ThemePreviewSpec[] = [
   {
@@ -468,6 +473,83 @@ export const GALLERY_PREVIEWS: ThemePreviewSpec[] = [
     scheme: "light",
     extraTokens: ["tokens/document.css", "tokens/doc-aliases.css"],
     bodyCss: "body { margin: 0; background: var(--color-bg-muted); color: var(--color-fg); }",
+  },
+  // ── Generated themes, batch 1 (task 1.1A-16) ──────────────────────────────
+  // A generated theme's stylesheet is not hand-written, but its preview is the
+  // same gallery every other theme gets — and it is rendered HERE, in the
+  // linked registry form, rather than kept as the self-contained file `faqir
+  // theme generate` drops into a bare folder: inside the registry the siblings
+  // exist, and a preview that inlined them would be a second copy of the token
+  // layer that no regeneration reaches.
+  //
+  // `density` is stamped on the three themes whose seed asks for a ramp the
+  // gallery would otherwise not show: a theme states its density in a
+  // `@ui:density` header, and a `:root` block cannot override the
+  // `[data-density]` subtree scope that declares the ramp.
+  {
+    name: "editorial",
+    tagline: "A serif reading page with a 1.333 ramp and room to breathe — navy ink, flat surfaces, barely any motion.",
+    initials: "ED",
+    scheme: "both",
+    density: "spacious",
+    // The two claims a reader should see before scrolling: the paper stock the
+    // theme dresses every page in, ruled off with its own hairline.
+    signature: `<div style="height: var(--space-6); background-image: var(--texture-page); border-block-end: var(--border-width) solid var(--color-border);" aria-hidden="true"></div>`,
+  },
+  {
+    name: "editorial-document",
+    tagline: "Editorial's print companion — light only, white stock, sized for the page.",
+    initials: "ED",
+    scheme: "light",
+    extraTokens: ["tokens/document.css", "tokens/doc-aliases.css"],
+    bodyCss: "body { margin: 0; background: var(--color-bg-muted); color: var(--color-fg); }",
+  },
+  {
+    name: "swiss",
+    tagline: "International Typographic Style — uppercase grotesque headings, square corners, a graph-paper ground and one red.",
+    initials: "SW",
+    scheme: "both",
+    signature: `<div style="height: var(--space-6); background-image: var(--texture-page); border-block-end: var(--border-width-strong) solid var(--color-primary);" aria-hidden="true"></div>`,
+  },
+  {
+    name: "swiss-document",
+    tagline: "Swiss's print companion — light only, white stock, sized for the page.",
+    initials: "SW",
+    scheme: "light",
+    extraTokens: ["tokens/document.css", "tokens/doc-aliases.css"],
+    bodyCss: "body { margin: 0; background: var(--color-bg-muted); color: var(--color-fg); }",
+  },
+  {
+    name: "neo",
+    tagline: "Neo-brutalist: black-weight grotesque, 3px edges, hard un-blurred shadows and an electric lime.",
+    initials: "NE",
+    scheme: "both",
+    // The theme's whole argument in one strip: a solid block of accent, thrown
+    // by the same hard, un-blurred shadow every surface carries.
+    signature: `<div style="height: var(--space-6); background: var(--color-primary); border: var(--border-width-strong) solid var(--color-fg); box-shadow: var(--shadow-md);" aria-hidden="true"></div>`,
+  },
+  {
+    name: "luxe",
+    tagline: "Gold on near-black — a modern serif set wide and uppercase, dark only, unhurried.",
+    initials: "LU",
+    scheme: "dark",
+    density: "spacious",
+    signature: `<div style="height: var(--space-6); background-image: var(--texture-page); border-block-end: var(--border-width) solid var(--color-primary);" aria-hidden="true"></div>`,
+  },
+  {
+    name: "candy",
+    tagline: "Pill-shaped everything, a rounded face and a springy curve — pink, tinted and sweet.",
+    initials: "CA",
+    scheme: "both",
+    signature: `<div style="height: var(--space-2); border-radius: var(--radius-full); background: var(--color-primary);" aria-hidden="true"></div>`,
+  },
+  {
+    name: "organic",
+    tagline: "Warm sand stock with a humanist face — softly rounded, grained, unhurried and roomy.",
+    initials: "OR",
+    scheme: "both",
+    density: "spacious",
+    signature: `<div style="height: var(--space-6); background-image: var(--texture-page); border-block-end: var(--border-width) solid var(--color-border-strong);" aria-hidden="true"></div>`,
   },
 ];
 

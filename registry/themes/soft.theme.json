@@ -341,8 +341,8 @@
     "contrast": "standard"
   },
   "distinctiveness": {
-    "nearest": "slate",
-    "axis_distance": 9,
-    "token_distance": 0.0693
+    "nearest": "editorial",
+    "axis_distance": 10,
+    "token_distance": 0.0675
   }
 }

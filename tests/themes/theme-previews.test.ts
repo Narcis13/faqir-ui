@@ -45,7 +45,7 @@ function referencedFiles(html: string): string[] {
 
 describe("shipped theme previews", () => {
   it("ships one for every theme, and every manifest points at a file that is there", () => {
-    expect(themeNames.length).toBe(12);
+    expect(themeNames.length).toBe(20);
     for (const name of themeNames) {
       const manifest = manifestOf(name);
       expect(validateThemeManifest(manifest)).toEqual([]);
@@ -57,7 +57,7 @@ describe("shipped theme previews", () => {
     }
   });
 
-  it("links only stylesheets that exist — for the generated seven and the bespoke five alike", () => {
+  it("links only stylesheets that exist — for the generated thirteen and the bespoke seven alike", () => {
     for (const name of themeNames) {
       const file = join(THEMES, `${name}.preview.html`);
       const refs = referencedFiles(readFileSync(file, "utf8"));

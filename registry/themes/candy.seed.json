@@ -1,0 +1,38 @@
+{
+  "name": "candy",
+  "accent": "#ef5da8",
+  "neutral": "tinted",
+  "scheme": "both",
+  "type": {
+    "pairing": "rounded",
+    "scale": 1.125,
+    "base": 16,
+    "voice": {
+      "weight": "bold",
+      "tracking": "normal",
+      "transform": "none"
+    }
+  },
+  "shape": {
+    "radius": "pill",
+    "border": "hairline",
+    "corner": "round"
+  },
+  "depth": "soft",
+  "material": "none",
+  "motion": "springy",
+  "density": "comfortable",
+  "focus": "ring",
+  "decoration": {
+    "link": "offset",
+    "divider": "solid"
+  },
+  "controls": {
+    "button": "pill",
+    "input": "box",
+    "checkbox": "round",
+    "switch": "pill"
+  },
+  "contrast": "standard",
+  "document": false
+}

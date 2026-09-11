@@ -307,21 +307,29 @@ Document scaffolds (`invoice`, `report`) default to the `document` theme and mar
 
 ## Themes
 
-12 themes ship with the registry. A theme redefines tokens only — no component markup changes, so switching one never invalidates a page. Pick by **mood**, then `faqir theme set <name>`.
+20 themes ship with the registry. A theme redefines tokens only — no component markup changes, so switching one never invalidates a page. Pick by **mood**, then `faqir theme set <name>`.
 
 | Theme | Mood | Schemes | Dark mode | Pairs with |
 |-------|------|---------|-----------|------------|
 | `aurora` | dark, vibrant, modern, saas, gradient | both | native | `midnight` |
 | `brutalist` | high-contrast, raw, minimal, bold | both | native | `midnight` |
+| `candy` | candy, sweet, bubbly, consumer, rounded | both | native | `soft` |
 | `contrast` | accessible, wcag-aaa, high-contrast, neutral | both | native | `default`, `document` |
 | `default` | neutral, professional, versatile | both | native | — |
 | `document-serif` | print, legal, formal, serif, traditional | light | none | `document`, `paper` |
 | `document` | print, professional, business, minimal | light | none | `paper` |
+| `editorial-document` | print, editorial, serif, document, generated | light | none | `editorial` |
+| `editorial` | editorial, serif, reading, magazine, generous | both | native | `editorial-document`, `paper` |
 | `glass` | translucent, glass, modern, layered, airy | both | native | `aurora`, `slate` |
+| `luxe` | luxury, premium, gold, boutique, dark | dark | native | `midnight` |
 | `midnight` | dark, technical, vibrant, cool | both | native | `brutalist` |
+| `neo` | neo-brutalist, loud, playful, electric, graphic | both | native | `brutalist` |
+| `organic` | organic, earthy, natural, warm, calm | both | native | `paper` |
 | `paper` | warm, natural, editorial, print | both | native | `document` |
 | `slate` | conservative, enterprise, professional, cool | both | native | `default`, `document` |
 | `soft` | pastel, friendly, consumer, health, calm, rounded | both | native | `default`, `paper` |
+| `swiss-document` | print, swiss, grid, document, generated | light | none | `swiss` |
+| `swiss` | swiss, grid, typographic, uppercase, red | both | native | `swiss-document`, `slate` |
 | `terminal` | dark, terminal, technical, mono, retro | both | native | `brutalist`, `midnight` |
 
 `scheme: both` means the theme ships a light and a dark rendering; `dark_mode: native` means it carries an explicit dark block, so `data-theme="dark"` on `<html>` is enough. `faqir theme create <name>` generates a new contrast-verified theme plus its manifest.

@@ -1,0 +1,94 @@
+/* @ui:theme editorial-document — brand-matched, print-optimized document theme */
+/* @ui:schemes light */
+/* Generated from #1e3a5f; white paper, flat surfaces, crisp edges, and ink-safe contrast. */
+
+:root {
+  --palette-editorial-50    : oklch(0.942 0.0132 256.04);
+  --palette-editorial-100   : oklch(0.8724 0.0235 256.04);
+  --palette-editorial-200   : oklch(0.7796 0.0368 256.04);
+  --palette-editorial-300   : oklch(0.681 0.0515 256.04);
+  --palette-editorial-400   : oklch(0.565 0.0647 256.04);
+  --palette-editorial-500   : oklch(0.42 0.0736 256.04);
+  --palette-editorial-600   : oklch(0.3696 0.0736 256.04);
+  --palette-editorial-700   : oklch(0.3024 0.0677 256.04);
+  --palette-editorial-800   : oklch(0.2352 0.0574 256.04);
+  --palette-editorial-900   : oklch(0.168 0.0441 256.04);
+  --palette-editorial-950   : oklch(0.105 0.0309 256.04);
+  --color-bg                : white;
+  --color-bg-subtle         : oklch(0.97 0 0);
+  --color-bg-muted          : oklch(0.94 0 0);
+  --color-surface-1         : var(--color-bg-subtle);
+  --color-surface-2         : var(--color-bg-muted);
+  --color-surface-1-border  : var(--color-border);
+  --color-surface-2-border  : var(--color-border-strong);
+  --color-fg                : oklch(0.14 0 0);
+  --color-fg-muted          : oklch(0.4 0 0);
+  --color-fg-subtle         : oklch(0.53 0 0);
+  --color-primary           : var(--palette-editorial-500);
+  --color-primary-hover     : var(--palette-editorial-600);
+  --color-primary-active    : var(--palette-editorial-700);
+  --color-primary-fg        : white;
+  --color-primary-subtle    : var(--palette-editorial-50);
+  --color-secondary         : oklch(0.94 0 0);
+  --color-secondary-hover   : oklch(0.89 0 0);
+  --color-secondary-fg      : oklch(0.16 0 0);
+  --color-destructive       : oklch(0.45 0.18 25);
+  --color-destructive-hover : oklch(0.39 0.19 25);
+  --color-destructive-fg    : white;
+  --color-destructive-subtle: oklch(0.96 0.03 25);
+  --color-success           : oklch(0.45 0.12 150);
+  --color-success-subtle    : oklch(0.96 0.02 150);
+  --color-warning           : oklch(0.52 0.14 75);
+  --color-warning-subtle    : oklch(0.96 0.03 75);
+  --color-info              : var(--palette-editorial-600);
+  --color-info-subtle       : var(--palette-editorial-50);
+  --color-border            : oklch(0.84 0 0);
+  --color-border-strong     : oklch(0.7 0 0);
+  --color-ring              : oklch(0.42 0.0736 256.04);
+  --shadow-color            : 0 0 0;
+  --shadow-xs               : none;
+  --shadow-sm               : none;
+  --shadow-md               : none;
+  --shadow-lg               : none;
+  --shadow-xl               : none;
+  --radius-sm               : 0;
+  --radius-md               : 0;
+  --radius-lg               : 0;
+  --radius-xl               : 0;
+  --radius-2xl              : 0;
+  --radius-full             : 0;
+  --button-radius           : 0;
+  --card-radius             : 0;
+  --card-shadow             : none;
+  --input-radius            : 0;
+  --badge-radius            : 0.125rem;
+  --doc-font                : 'Arial', 'Helvetica Neue', var(--font-sans);
+  --doc-font-size           : 10pt;
+  --doc-line-height         : 1.4;
+  --doc-heading-font        : 'Arial', 'Helvetica Neue', var(--font-sans);
+  --doc-heading-weight      : var(--weight-bold);
+  --doc-heading-size        : 14pt;
+  --doc-subheading-size     : 12pt;
+  --doc-legal-size          : 8pt;
+  --doc-section-gap         : var(--space-6);
+  --doc-component-gap       : var(--space-3);
+  --doc-table-font-size     : 9pt;
+  --doc-table-header-bg     : var(--color-bg-muted);
+  --doc-table-border        : var(--color-border-strong);
+  --doc-table-footer-bg     : var(--color-bg-muted);
+  --doc-table-stripe-bg     : var(--color-bg-subtle);
+  --doc-max-width           : 210mm;
+  --font-sans               : 'Arial', 'Helvetica Neue', system-ui, sans-serif;
+  --font-mono               : 'Courier New', ui-monospace, monospace;
+}
+
+@page {
+  size: var(--page-format) var(--page-orientation);
+  margin: var(--page-margin);
+}
+
+@media print {
+  :root {
+    color-scheme: light;
+  }
+}

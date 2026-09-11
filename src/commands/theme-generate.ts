@@ -575,6 +575,23 @@ ${renderDeclarations(root)}
 ${darkBlocks}`;
 }
 
+/**
+ * The print companion's stylesheet.
+ *
+ * It states tokens and two at-rules — `@page`, and a `@media print` block that
+ * pins `color-scheme` so a browser in dark mode still prints on white paper.
+ * What it deliberately does NOT state is a rule for `[data-ui="document"]`:
+ * 1.0 emitted one (`box-shadow: none; print-color-adjust: exact`), which made
+ * every generated companion a theme that SELECTS a component. That is the one
+ * thing a theme may not do — `tests/themes/coverage.test.ts` holds every
+ * selector in every shipped theme to `:root` or a sanctioned modifier, because
+ * a theme that out-specifies a component breaks when that component's selector
+ * moves, cannot be scoped to a subtree (1.1A-19), and has an effect no manifest
+ * can describe. Nothing is lost with it: `registry/patterns/document`'s own
+ * `@media print` block already drops the shadow and paints the page, which is
+ * why the two AUTHORED document themes never needed such a rule either. Found
+ * in 1.1A-16, the first task to ship a generated companion into the registry.
+ */
 function renderDocumentCss(
   name: string,
   sourceName: string,
@@ -632,13 +649,6 @@ ${renderDeclarations(root)}
 @media print {
   :root {
     color-scheme: light;
-  }
-
-  [data-ui="document"] {
-    color: var(--color-fg);
-    background: var(--color-bg);
-    box-shadow: none;
-    print-color-adjust: exact;
   }
 }
 `;
