@@ -71,7 +71,8 @@
     "measure-content", "measure-narrow", "measure-prose", "measure-wide",
     "radius-lg",
     "shadow-sm", "shadow-md", "shadow-lg",
-    "space-3", "space-4", "space-6"
+    "space-3", "space-4", "space-6",
+    "border-width", "corner-shape"
   ],
 
   "templates": {

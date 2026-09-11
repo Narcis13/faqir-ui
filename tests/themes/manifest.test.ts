@@ -115,8 +115,10 @@ describe("theme manifest · the token surface", () => {
     "heading-leading",
   ];
 
-  it("is 241 tokens — the 1.0 surface of 234 plus the seven type roles [1.1A-01]", () => {
-    expect(SURFACE.length).toBe(241);
+  it("is 254 tokens — 241 plus the shape and focus families [1.1A-02]", () => {
+    // 1.1A-02 added five border-width steps/roles, --corner-shape, the five
+    // focus tokens, and the two component silhouette aliases: 241 + 13.
+    expect(SURFACE.length).toBe(254);
   });
 
   it("contains every type role and voice token", () => {
@@ -128,6 +130,35 @@ describe("theme manifest · the token surface", () => {
       const manifest = readManifestRaw(file).json as ThemeManifest;
       const known = new Set([...manifest.tokens_inherited, ...manifest.tokens_overridden]);
       expect({ [file]: ROLE_TOKENS.filter((t) => !known.has(t)) }).toEqual({ [file]: [] });
+    }
+  });
+
+  // 1.1A-02: the two families a theme needs to state a silhouette and a ring.
+  const SHAPE_FOCUS_TOKENS = [
+    "border-width-sm",
+    "border-width-md",
+    "border-width-lg",
+    "border-width",
+    "border-width-strong",
+    "corner-shape",
+    "focus-ring-width",
+    "focus-ring-offset",
+    "focus-ring-style",
+    "focus-ring-color",
+    "focus-shadow",
+    "card-border-width",
+    "input-border-width",
+  ];
+
+  it("contains every shape and focus token [1.1A-02]", () => {
+    expect(SHAPE_FOCUS_TOKENS.filter((t) => !SURFACE.includes(t))).toEqual([]);
+  });
+
+  it("every theme accounts for the shape and focus families too", () => {
+    for (const file of THEME_FILES) {
+      const manifest = readManifestRaw(file).json as ThemeManifest;
+      const known = new Set([...manifest.tokens_inherited, ...manifest.tokens_overridden]);
+      expect({ [file]: SHAPE_FOCUS_TOKENS.filter((t) => !known.has(t)) }).toEqual({ [file]: [] });
     }
   });
 });

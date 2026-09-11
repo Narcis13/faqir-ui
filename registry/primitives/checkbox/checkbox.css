@@ -1,5 +1,5 @@
 /* @ui:component checkbox */
-/* @ui:tokens color-bg color-fg color-primary color-primary-fg color-border color-border-strong color-ring radius-sm space-1 space-2 duration-fast ease-default */
+/* @ui:tokens color-bg color-fg color-primary color-primary-fg color-border color-border-strong color-ring radius-sm space-1 space-2 duration-fast ease-default border-width focus-ring-width focus-ring-offset focus-ring-style focus-ring-color focus-shadow */
 
 /* -- Label wrapper -- */
 [data-ui="checkbox-label"] {
@@ -23,7 +23,7 @@
   width: var(--checkbox-size, 18px);
   height: var(--checkbox-size, 18px);
   flex-shrink: 0;
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--checkbox-radius, var(--radius-sm));
   background: var(--color-bg);
   cursor: pointer;
@@ -37,8 +37,9 @@
 }
 
 [data-ui="checkbox"]:focus-visible {
-  outline: 2px solid var(--color-ring);
-  outline-offset: 2px;
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+  box-shadow: var(--focus-shadow);
 }
 
 /* -- Checked -- */
@@ -129,7 +130,7 @@
    The mask has to opt out of the substitution to stay readable. [W3-3] */
 @media (forced-colors: active) {
   [data-ui="checkbox"] {
-    border: 1px solid ButtonText;
+    border: var(--border-width) solid ButtonText;
   }
 
   [data-ui="checkbox"]:checked,

@@ -1,5 +1,5 @@
 /* @ui:component stat */
-/* @ui:tokens stat-value-size stat-value-weight stat-value-num-font stat-label-size stat-label-color stat-change-positive stat-change-negative color-fg color-fg-muted color-bg color-border space-1 space-2 space-4 radius-md shadow-sm font-heading font-body text-xs text-sm text-lg text-3xl weight-semibold */
+/* @ui:tokens stat-value-size stat-value-weight stat-value-num-font stat-label-size stat-label-color stat-change-positive stat-change-negative color-fg color-fg-muted color-bg color-border space-1 space-2 space-4 radius-md shadow-sm font-heading font-body text-xs text-sm text-lg text-3xl weight-semibold border-width */
 
 /* ── Base ── */
 [data-ui="stat"] {
@@ -79,7 +79,7 @@
 /* ── Variant: Card ── */
 [data-ui="stat"][data-variant="card"] {
   padding: var(--space-4);
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-md, 0.375rem);
   background: var(--color-bg);
   box-shadow: var(--shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.05));
@@ -94,7 +94,7 @@
 @media print {
   [data-ui="stat"][data-variant="card"] {
     box-shadow: none;
-    border: 1px solid var(--doc-print-border-color, var(--color-border, #ccc));
+    border: var(--border-width) solid var(--doc-print-border-color, var(--color-border, #ccc));
   }
 
   [data-ui="stat"] {

@@ -48,15 +48,17 @@
   --card-radius:       var(--radius-lg);
   --card-shadow:       var(--shadow-sm);
   --card-border:       var(--color-surface-1-border);
+  --card-border-width: var(--border-width);
   --card-bg:           var(--color-surface-1);
   --card-padding:      var(--space-6);
 
   /* ── Input ── */
-  --input-radius:      var(--radius-md);
-  --input-height:      var(--control-height-md);
-  --input-border:      var(--color-border);
-  --input-bg:          var(--color-bg);
-  --input-font:        var(--font-ui);
+  --input-radius:       var(--radius-md);
+  --input-height:       var(--control-height-md);
+  --input-border:       var(--color-border);
+  --input-border-width: var(--border-width);
+  --input-bg:           var(--color-bg);
+  --input-font:         var(--font-ui);
 
   /* ── Dialog ── */
   --dialog-radius:     var(--radius-xl);

@@ -61,7 +61,8 @@
     "space-2", "space-3",
     "text-sm", "text-base",
     "font-ui", "weight-medium",
-    "duration-fast", "duration-normal", "ease-default"
+    "duration-fast", "duration-normal", "ease-default",
+    "border-width", "border-width-strong", "focus-ring-width", "focus-ring-offset", "focus-ring-style", "focus-ring-color", "focus-shadow"
   ],
 
   "templates": {

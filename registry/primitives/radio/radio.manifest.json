@@ -71,7 +71,8 @@
     "color-bg", "color-fg", "color-primary", "color-primary-fg",
     "color-border", "color-border-strong", "color-ring",
     "radius-full", "space-1", "space-2",
-    "duration-fast", "ease-default"
+    "duration-fast", "ease-default",
+    "border-width", "focus-ring-width", "focus-ring-offset", "focus-ring-style", "focus-ring-color", "focus-shadow"
   ],
 
   "templates": {

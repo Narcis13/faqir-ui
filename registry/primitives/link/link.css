@@ -1,5 +1,5 @@
 /* @ui:component link */
-/* @ui:tokens color-primary color-primary-hover color-primary-active color-fg color-fg-muted color-ring radius-sm space-1 */
+/* @ui:tokens color-primary color-primary-hover color-primary-active color-fg color-fg-muted color-ring radius-sm space-1 focus-ring-width focus-ring-offset focus-ring-style focus-ring-color focus-shadow */
 
 /* ── Base ── */
 [data-ui="link"] {
@@ -21,8 +21,9 @@
 }
 
 [data-ui="link"]:focus-visible {
-  outline: 2px solid var(--color-ring);
-  outline-offset: 2px;
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+  box-shadow: var(--focus-shadow);
 }
 
 /* ── Variants ── */

@@ -77,7 +77,8 @@
     "radius-md", "shadow-sm",
     "font-heading", "font-body",
     "text-xs", "text-sm", "text-lg", "text-2xl", "text-3xl",
-    "weight-semibold", "weight-bold"
+    "weight-semibold", "weight-bold",
+    "border-width"
   ],
 
   "templates": {

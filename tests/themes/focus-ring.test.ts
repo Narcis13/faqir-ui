@@ -86,6 +86,43 @@ for (const theme of THEMES) {
   });
 }
 
+// ── The ring's geometry, not just its colour  [1.1A-02] ────────────────────
+//
+// A theme could always re-colour the ring; until 1.1 it could not change its
+// weight, its gap or its style, because `base/reset.css` and 42 components
+// spelled `2px solid` out. `--focus-ring-width` is now part of the surface every
+// theme manifest accounts for, which is what makes "focus" a theme axis rather
+// than a constant.
+
+describe("focus geometry · the ring is a theme surface, not a constant", () => {
+  const FOCUS_TOKENS = [
+    "focus-ring-width",
+    "focus-ring-offset",
+    "focus-ring-style",
+    "focus-ring-color",
+    "focus-shadow",
+  ];
+
+  for (const theme of THEMES) {
+    it(`${theme}: accounts for every focus token — inherited or overridden`, () => {
+      const manifest = JSON.parse(
+        readFileSync(join(THEMES_DIR, `${theme}.theme.json`), "utf8"),
+      ) as { tokens_inherited: string[]; tokens_overridden: string[] };
+      const known = new Set([...manifest.tokens_inherited, ...manifest.tokens_overridden]);
+      expect(FOCUS_TOKENS.filter((t) => !known.has(t))).toEqual([]);
+    });
+  }
+
+  it("the base declares the ring's geometry, so a theme has something to override", () => {
+    const effects = readFileSync(join(TOKENS_DIR, "effects.css"), "utf8");
+    expect(effects).toContain("--focus-ring-width:");
+    expect(effects).toContain("--focus-ring-offset:");
+    expect(effects).toContain("--focus-ring-style:");
+    // The colour still resolves to the token this whole file gates.
+    expect(effects).toMatch(/--focus-ring-color:\s*var\(--color-ring\)/);
+  });
+});
+
 describe("the widened rule reports what it used to skip", () => {
   const themeCss = readFileSync(join(THEMES_DIR, "default.css"), "utf8");
 

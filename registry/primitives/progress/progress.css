@@ -1,5 +1,5 @@
 /* @ui:component progress */
-/* @ui:tokens color-primary color-bg-muted color-success color-warning color-destructive radius-full radius-md space-1 duration-normal ease-default */
+/* @ui:tokens color-primary color-bg-muted color-success color-warning color-destructive radius-full radius-md space-1 duration-normal ease-default border-width */
 
 /* ── Base ── */
 [data-ui="progress"] {
@@ -74,7 +74,7 @@
    substitution and paints `Highlight`; the track keeps a visible boundary. [W3-3] */
 @media (forced-colors: active) {
   [data-ui="progress"] [data-part="track"] {
-    border: 1px solid ButtonText;
+    border: var(--border-width) solid ButtonText;
   }
 
   [data-ui="progress"] [data-part="fill"],

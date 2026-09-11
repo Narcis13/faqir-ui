@@ -1,5 +1,5 @@
 /* @ui:component toggle */
-/* @ui:tokens color-bg color-bg-muted color-fg color-fg-muted color-border color-primary color-primary-subtle color-ring radius-md space-1 space-1h space-2 space-3 space-4 text-xs text-sm text-base font-ui weight-medium duration-fast ease-default */
+/* @ui:tokens color-bg color-bg-muted color-fg color-fg-muted color-border color-primary color-primary-subtle color-ring radius-md space-1 space-1h space-2 space-3 space-4 text-xs text-sm text-base font-ui weight-medium duration-fast ease-default border-width focus-ring-width focus-ring-offset focus-ring-style focus-ring-color focus-shadow */
 
 /* ── Base (off / unpressed) ── */
 [data-ui="toggle"] {
@@ -8,7 +8,7 @@
   justify-content: center;
   gap: var(--space-1h);
   padding: var(--toggle-pad-y, var(--space-1h)) var(--toggle-pad-x, var(--space-3));
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--toggle-radius, var(--radius-md));
   background: var(--color-bg);
   color: var(--color-fg-muted);
@@ -29,8 +29,9 @@
 }
 
 [data-ui="toggle"]:focus-visible {
-  outline: 2px solid var(--color-ring);
-  outline-offset: 2px;
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+  box-shadow: var(--focus-shadow);
 }
 
 /* ── Pressed / on — styled entirely off aria-pressed, no JS ── */

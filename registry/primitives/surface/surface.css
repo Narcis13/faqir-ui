@@ -1,11 +1,12 @@
 /* @ui:component surface */
-/* @ui:tokens color-bg color-surface-1 color-surface-2 color-surface-1-border color-surface-2-border measure-content measure-narrow measure-prose measure-wide radius-lg shadow-sm shadow-md shadow-lg space-3 space-4 space-6 */
+/* @ui:tokens color-bg color-surface-1 color-surface-2 color-surface-1-border color-surface-2-border measure-content measure-narrow measure-prose measure-wide radius-lg shadow-sm shadow-md shadow-lg space-3 space-4 space-6 border-width corner-shape */
 
 /* ── Base ── */
 [data-ui="surface"] {
   background: var(--color-surface-1);
   border-radius: var(--radius-lg);
-  border: 1px solid var(--color-surface-1-border);
+  corner-shape: var(--corner-shape);
+  border: var(--border-width) solid var(--color-surface-1-border);
 }
 
 /* ── Elevation Variants ── */

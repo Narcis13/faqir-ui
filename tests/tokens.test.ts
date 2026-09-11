@@ -65,6 +65,20 @@ describe("token files", () => {
     expect(content).toContain("--z-modal:");
   });
 
+  it("effects.css publishes the shape and focus families (1.1A-02)", async () => {
+    // What a theme states a silhouette and a ring with. Defaults and the
+    // no-literal-border gate live in tokens/shape-focus.test.ts.
+    const content = await Bun.file(join(REGISTRY, "tokens/effects.css")).text();
+    expect(content).toContain("--border-width:");
+    expect(content).toContain("--border-width-strong:");
+    expect(content).toContain("--corner-shape:");
+    expect(content).toContain("--focus-ring-width:");
+    expect(content).toContain("--focus-ring-offset:");
+    expect(content).toContain("--focus-ring-style:");
+    expect(content).toContain("--focus-ring-color:");
+    expect(content).toContain("--focus-shadow:");
+  });
+
   it("motion.css has easings and durations", async () => {
     const content = await Bun.file(join(REGISTRY, "tokens/motion.css")).text();
     expect(content).toContain("--ease-default:");

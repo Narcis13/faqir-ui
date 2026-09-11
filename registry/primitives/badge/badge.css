@@ -1,5 +1,5 @@
 /* @ui:component badge */
-/* @ui:tokens color-bg-muted color-fg color-primary color-primary-fg color-primary-subtle color-secondary color-secondary-fg color-destructive color-destructive-fg color-destructive-subtle color-success color-success-subtle color-warning color-warning-subtle radius-full space-1 space-2 font-ui text-xs text-sm weight-medium */
+/* @ui:tokens color-bg-muted color-fg color-primary color-primary-fg color-primary-subtle color-secondary color-secondary-fg color-destructive color-destructive-fg color-destructive-subtle color-success color-success-subtle color-warning color-warning-subtle radius-full space-1 space-2 font-ui text-xs text-sm weight-medium corner-shape */
 
 /* ── Base ── */
 [data-ui="badge"] {
@@ -9,6 +9,7 @@
   gap: var(--space-1);
   padding: 0.125rem var(--space-2);
   border-radius: var(--badge-radius, var(--radius-full));
+  corner-shape: var(--corner-shape);
   background: var(--color-bg-muted);
   color: var(--color-fg);
   font-family: var(--font-ui);

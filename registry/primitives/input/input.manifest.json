@@ -84,7 +84,8 @@
     "color-border", "color-border-strong", "color-ring", "color-destructive",
     "radius-md", "space-2", "space-3", "space-4",
     "font-ui", "text-xs", "text-sm", "text-base",
-    "duration-fast", "ease-default"
+    "duration-fast", "ease-default",
+    "border-width", "corner-shape", "focus-ring-width", "focus-ring-style", "focus-ring-color", "focus-shadow", "input-border-width"
   ],
 
   "templates": {

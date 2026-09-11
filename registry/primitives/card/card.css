@@ -1,12 +1,13 @@
 /* @ui:component card */
-/* @ui:tokens color-surface-1 color-surface-2 color-surface-1-border color-surface-2-border color-fg color-fg-muted radius-lg shadow-sm space-4 space-6 font-heading text-sm text-lg text-xl weight-semibold leading-tight */
+/* @ui:tokens color-surface-1 color-surface-2 color-surface-1-border color-surface-2-border color-fg color-fg-muted radius-lg shadow-sm space-4 space-6 font-heading text-sm text-lg text-xl weight-semibold leading-tight border-width corner-shape card-border-width */
 
 /* ── Base ── */
 [data-ui="card"] {
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--card-border, var(--color-surface-1-border));
+  border: var(--card-border-width) solid var(--card-border, var(--color-surface-1-border));
   border-radius: var(--card-radius, var(--radius-lg));
+  corner-shape: var(--corner-shape);
   background: var(--card-bg, var(--color-surface-1));
   box-shadow: var(--card-shadow, var(--shadow-sm));
   overflow: hidden;

@@ -1,5 +1,5 @@
 /* @ui:component signature */
-/* @ui:tokens doc-signature-width doc-signature-gap doc-signature-line-color doc-signature-label-size doc-signature-label-color doc-font font-body space-2 space-12 */
+/* @ui:tokens doc-signature-width doc-signature-gap doc-signature-line-color doc-signature-label-size doc-signature-label-color doc-font font-body space-2 space-12 border-width */
 
 /* ── Base ── */
 [data-ui="signature"] {
@@ -12,7 +12,7 @@
 
 /* ── Line ── */
 [data-ui="signature"] [data-part="line"] {
-  border-top: 1px solid var(--doc-signature-line-color);
+  border-top: var(--border-width) solid var(--doc-signature-line-color);
   min-height: 1px;
 }
 

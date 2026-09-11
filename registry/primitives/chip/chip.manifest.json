@@ -64,7 +64,8 @@
     "color-destructive", "color-destructive-subtle",
     "color-border", "color-ring",
     "radius-full", "space-1", "space-2", "space-3",
-    "font-ui", "text-xs", "text-sm", "weight-medium"
+    "font-ui", "text-xs", "text-sm", "weight-medium",
+    "border-width", "focus-ring-width", "focus-ring-offset", "focus-ring-style", "focus-ring-color", "focus-shadow"
   ],
 
   "templates": {

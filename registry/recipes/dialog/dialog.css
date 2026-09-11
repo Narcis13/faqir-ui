@@ -1,5 +1,5 @@
 /* @ui:component dialog */
-/* @ui:tokens radius-xl shadow-xl space-4 space-6 space-8 color-bg color-fg color-border color-fg-muted duration-normal duration-slow ease-default ease-out z-overlay z-modal font-heading */
+/* @ui:tokens radius-xl shadow-xl space-4 space-6 space-8 color-bg color-fg color-border color-fg-muted duration-normal duration-slow ease-default ease-out z-overlay z-modal font-heading corner-shape */
 
 /* ── Root ── */
 [data-ui="dialog"] {
@@ -37,6 +37,7 @@
   background: var(--color-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--dialog-radius, var(--radius-xl));
+  corner-shape: var(--corner-shape);
   box-shadow: var(--dialog-shadow, var(--shadow-xl));
   opacity: 0;
   transition: opacity var(--duration-normal) var(--ease-out),

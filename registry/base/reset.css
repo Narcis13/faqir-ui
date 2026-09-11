@@ -95,10 +95,13 @@ table {
   }
 }
 
-/* Focus visible — default ring */
+/* Focus visible — the default ring, and the only place it is spelled out.
+   Every value is a token (tokens/effects.css § Focus), so a theme states its
+   focus once and every element that has not drawn its own ring follows. */
 :focus-visible {
-  outline: 2px solid var(--color-ring);
-  outline-offset: 2px;
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+  box-shadow: var(--focus-shadow);
 }
 
 /* Hidden but accessible */

@@ -18,15 +18,15 @@ Cascade order, as `tokens/index.css` imports them: `palette.css` → `spacing.cs
 
 ## Token Groups
 
-308 tokens in 9 groups:
+321 tokens in 9 groups:
 
 - `palette` (67) — raw oklch color values, never referenced by components directly
 - `spacing` (23) — 4px base, harmonic scale
 - `typography` (27) — font families, sizes, line-heights, weights
-- `effects` (20) — radii, shadows, z-index
+- `effects` (31) — radii, shape, shadows, focus, z-index
 - `motion` (16) — easings and durations
 - `semantic` (31) — purpose-based tokens, referenced by components
-- `aliases` (36) — per-component overrides mapping to semantic tokens
+- `aliases` (38) — per-component overrides mapping to semantic tokens
 - `document` (42) — structural tokens for document/print rendering
 - `doc-aliases` (46) — component-level document tokens
 
@@ -227,9 +227,9 @@ _`registry/tokens/typography.css` · 27 tokens_
 | `--heading-transform` | `none` | text-transform |
 | `--heading-leading` | `var(--leading-tight)` | — |
 
-## effects — radii, shadows, z-index
+## effects — radii, shape, shadows, focus, z-index
 
-_`registry/tokens/effects.css` · 20 tokens_
+_`registry/tokens/effects.css` · 31 tokens_
 
 ### Radii
 
@@ -243,6 +243,17 @@ _`registry/tokens/effects.css` · 20 tokens_
 | `--radius-2xl` | `1rem` | 16px |
 | `--radius-full` | `9999px` | — |
 
+### Shape
+
+| Token | Value | Notes |
+|---|---|---|
+| `--border-width-sm` | `1px` | — |
+| `--border-width-md` | `2px` | — |
+| `--border-width-lg` | `3px` | — |
+| `--border-width` | `var(--border-width-sm)` | the default component border |
+| `--border-width-strong` | `var(--border-width-md)` | emphasis: keycap, thick rule, active tab |
+| `--corner-shape` | `round` | bevel | scoop | notch where supported |
+
 ### Shadows
 
 | Token | Value |
@@ -252,6 +263,16 @@ _`registry/tokens/effects.css` · 20 tokens_
 | `--shadow-md` | `0 4px 6px oklch(0 0 0 / 0.05), 0 2px 4px oklch(0 0 0 / 0.04)` |
 | `--shadow-lg` | `0 10px 15px oklch(0 0 0 / 0.06), 0 4px 6px oklch(0 0 0 / 0.04)` |
 | `--shadow-xl` | `0 20px 25px oklch(0 0 0 / 0.08), 0 8px 10px oklch(0 0 0 / 0.04)` |
+
+### Focus
+
+| Token | Value | Notes |
+|---|---|---|
+| `--focus-ring-width` | `2px` | — |
+| `--focus-ring-offset` | `2px` | — |
+| `--focus-ring-style` | `solid` | — |
+| `--focus-ring-color` | `var(--color-ring)` | — |
+| `--focus-shadow` | `none` | a glow theme puts a shadow behind the ring |
 
 ### Z-Index
 
@@ -368,7 +389,7 @@ _`registry/tokens/semantic.css` · 31 tokens_
 
 ## aliases — per-component overrides mapping to semantic tokens
 
-_`registry/tokens/aliases.css` · 36 tokens_
+_`registry/tokens/aliases.css` · 38 tokens_
 
 ### Controls
 
@@ -414,6 +435,7 @@ _`registry/tokens/aliases.css` · 36 tokens_
 | `--card-radius` | `var(--radius-lg)` |
 | `--card-shadow` | `var(--shadow-sm)` |
 | `--card-border` | `var(--color-surface-1-border)` |
+| `--card-border-width` | `var(--border-width)` |
 | `--card-bg` | `var(--color-surface-1)` |
 | `--card-padding` | `var(--space-6)` |
 
@@ -424,6 +446,7 @@ _`registry/tokens/aliases.css` · 36 tokens_
 | `--input-radius` | `var(--radius-md)` |
 | `--input-height` | `var(--control-height-md)` |
 | `--input-border` | `var(--color-border)` |
+| `--input-border-width` | `var(--border-width)` |
 | `--input-bg` | `var(--color-bg)` |
 | `--input-font` | `var(--font-ui)` |
 

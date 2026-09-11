@@ -1,4 +1,4 @@
-/* @ui:tokens effects — radii, shadows, z-index */
+/* @ui:tokens effects — radii, shape, shadows, focus, z-index */
 
 :root {
   /* ── Radii ── */
@@ -10,12 +10,34 @@
   --radius-2xl:  1rem;       /* 16px */
   --radius-full: 9999px;
 
+  /* ── Shape ── */
+  /* The weight of an edge. A component names the ROLE (--border-width, or
+     --border-width-strong where the design leans on a thicker rule), never a
+     step, so a theme re-points every edge it ships with one declaration. */
+  --border-width-sm: 1px;
+  --border-width-md: 2px;
+  --border-width-lg: 3px;
+  --border-width:        var(--border-width-sm);   /* the default component border */
+  --border-width-strong: var(--border-width-md);   /* emphasis: keycap, thick rule, active tab */
+  /* Progressive: CSS Borders 4. A browser without the property ignores it; a
+     value it does not know resolves to `round`, which is today's rendering. */
+  --corner-shape: round;                           /* bevel | scoop | notch where supported */
+
   /* ── Shadows ── */
   --shadow-xs:  0 1px 2px oklch(0 0 0 / 0.04);
   --shadow-sm:  0 1px 3px oklch(0 0 0 / 0.06), 0 1px 2px oklch(0 0 0 / 0.04);
   --shadow-md:  0 4px 6px oklch(0 0 0 / 0.05), 0 2px 4px oklch(0 0 0 / 0.04);
   --shadow-lg:  0 10px 15px oklch(0 0 0 / 0.06), 0 4px 6px oklch(0 0 0 / 0.04);
   --shadow-xl:  0 20px 25px oklch(0 0 0 / 0.08), 0 8px 10px oklch(0 0 0 / 0.04);
+
+  /* ── Focus ── */
+  /* base/reset.css owns the default ring and reads only these. Every control
+     that draws its own ring reads them too, so a theme changes focus once. */
+  --focus-ring-width:  2px;
+  --focus-ring-offset: 2px;
+  --focus-ring-style:  solid;
+  --focus-ring-color:  var(--color-ring);
+  --focus-shadow:      none;                       /* a glow theme puts a shadow behind the ring */
 
   /* ── Z-Index ── */
   --z-base:     0;

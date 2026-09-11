@@ -1,5 +1,5 @@
 /* @ui:component button */
-/* @ui:tokens color-primary color-primary-hover color-primary-fg color-secondary color-secondary-hover color-secondary-fg color-destructive color-destructive-hover color-destructive-fg color-bg color-bg-muted color-bg-subtle color-fg color-border color-ring radius-md space-2 space-3 space-4 space-6 font-ui text-xs text-sm text-base weight-medium duration-fast ease-default shadow-xs radius-full */
+/* @ui:tokens color-primary color-primary-hover color-primary-fg color-secondary color-secondary-hover color-secondary-fg color-destructive color-destructive-hover color-destructive-fg color-bg color-bg-muted color-bg-subtle color-fg color-border color-ring radius-md space-2 space-3 space-4 space-6 font-ui text-xs text-sm text-base weight-medium duration-fast ease-default shadow-xs radius-full border-width border-width-strong corner-shape focus-ring-width focus-ring-offset focus-ring-style focus-ring-color focus-shadow */
 
 /* ── Base ── */
 [data-ui="button"] {
@@ -9,8 +9,9 @@
   gap: var(--space-2);
   height: var(--button-height-md, 40px);
   padding-inline: var(--space-4);
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--button-radius, var(--radius-md));
+  corner-shape: var(--corner-shape);
   background: var(--color-bg);
   color: var(--color-fg);
   font-family: var(--font-ui);
@@ -32,8 +33,9 @@
 }
 
 [data-ui="button"]:focus-visible {
-  outline: 2px solid var(--color-ring);
-  outline-offset: 2px;
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+  box-shadow: var(--focus-shadow);
 }
 
 /* ── Variants ── */
@@ -123,7 +125,7 @@
   position: absolute;
   width: 1em;
   height: 1em;
-  border: 2px solid currentColor;
+  border: var(--border-width-strong) solid currentColor;
   border-inline-end-color: transparent;
   border-radius: var(--radius-full);
   animation: faqir-spin 0.6s linear infinite;

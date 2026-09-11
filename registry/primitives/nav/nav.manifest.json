@@ -58,7 +58,8 @@
     "color-bg-subtle", "color-bg", "color-border",
     "text-sm", "weight-medium", "radius-md",
     "space-0h", "space-1", "space-2", "space-3", "space-4",
-    "shadow-sm", "duration-fast", "ease-default"
+    "shadow-sm", "duration-fast", "ease-default",
+    "border-width", "border-width-strong"
   ],
 
   "templates": {

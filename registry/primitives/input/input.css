@@ -1,5 +1,5 @@
 /* @ui:component input */
-/* @ui:tokens color-bg color-fg color-fg-muted color-border color-border-strong color-ring color-destructive radius-md space-2 space-3 space-4 font-ui text-xs text-sm text-base duration-fast ease-default */
+/* @ui:tokens color-bg color-fg color-fg-muted color-border color-border-strong color-ring color-destructive radius-md space-2 space-3 space-4 font-ui text-xs text-sm text-base duration-fast ease-default border-width corner-shape focus-ring-width focus-ring-style focus-ring-color focus-shadow input-border-width */
 
 /* ── Base ── */
 [data-ui="input"] {
@@ -7,8 +7,9 @@
   width: 100%;
   height: var(--input-height, 40px);
   padding-inline: var(--space-3);
-  border: 1px solid var(--color-border);
+  border: var(--input-border-width) solid var(--color-border);
   border-radius: var(--input-radius, var(--radius-md));
+  corner-shape: var(--corner-shape);
   background: var(--input-bg, var(--color-bg));
   color: var(--color-fg);
   font-family: var(--font-ui);
@@ -27,8 +28,11 @@
 }
 
 [data-ui="input"]:focus {
-  outline: 2px solid var(--color-ring);
-  outline-offset: -1px;
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  /* The ring replaces the border rather than sitting outside it: inset by
+     exactly the edge it covers, so a heavier shape theme stays aligned. */
+  outline-offset: calc(-1 * var(--input-border-width));
+  box-shadow: var(--focus-shadow);
   border-color: transparent;
 }
 

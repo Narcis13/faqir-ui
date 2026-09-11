@@ -1,5 +1,5 @@
 /* @ui:component nav */
-/* @ui:tokens color-fg color-fg-muted color-primary color-primary-subtle color-bg-subtle color-border text-sm weight-medium radius-md space-1 space-2 space-3 space-4 duration-fast ease-default */
+/* @ui:tokens color-fg color-fg-muted color-primary color-primary-subtle color-bg-subtle color-border text-sm weight-medium radius-md space-1 space-2 space-3 space-4 duration-fast ease-default border-width border-width-strong */
 
 /* ── Base ── */
 [data-ui="nav"] {
@@ -49,14 +49,14 @@
 
 /* ── Underline variant ── */
 [data-ui="nav"][data-variant="underline"] {
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: var(--border-width) solid var(--color-border);
   gap: 0;
 }
 
 [data-ui="nav"][data-variant="underline"] [data-part="link"] {
   border-radius: 0;
   padding: var(--space-2) var(--space-4);
-  border-bottom: 2px solid transparent;
+  border-bottom: var(--border-width-strong) solid transparent;
   margin-bottom: -1px;
 }
 

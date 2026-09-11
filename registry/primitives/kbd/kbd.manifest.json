@@ -31,7 +31,8 @@
     "color-bg-subtle", "color-fg", "color-border",
     "radius-sm",
     "space-1h",
-    "font-mono", "text-xs"
+    "font-mono", "text-xs",
+    "border-width", "border-width-strong"
   ],
 
   "templates": {

@@ -80,7 +80,8 @@
     "space-1", "space-3", "space-4",
     "radius-sm", "radius-md",
     "text-sm", "text-xs",
-    "font-heading", "font-body", "weight-semibold"
+    "font-heading", "font-body", "weight-semibold",
+    "focus-ring-width", "focus-ring-offset", "focus-ring-style", "focus-ring-color", "focus-shadow"
   ],
 
   "templates": {

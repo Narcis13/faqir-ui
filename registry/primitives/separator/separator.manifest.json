@@ -61,7 +61,8 @@
   "tokens_used": [
     "color-border", "color-fg-muted",
     "space-4",
-    "font-ui", "text-xs"
+    "font-ui", "text-xs",
+    "border-width", "border-width-strong"
   ],
 
   "templates": {

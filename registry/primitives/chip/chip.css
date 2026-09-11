@@ -1,5 +1,5 @@
 /* @ui:component chip */
-/* @ui:tokens color-bg-muted color-fg color-fg-muted color-primary color-primary-subtle color-destructive color-destructive-subtle color-border color-ring radius-full space-1 space-2 space-3 font-ui text-xs text-sm weight-medium */
+/* @ui:tokens color-bg-muted color-fg color-fg-muted color-primary color-primary-subtle color-destructive color-destructive-subtle color-border color-ring radius-full space-1 space-2 space-3 font-ui text-xs text-sm weight-medium border-width focus-ring-width focus-ring-offset focus-ring-style focus-ring-color focus-shadow */
 
 /* ── Base ── */
 [data-ui="chip"] {
@@ -7,7 +7,7 @@
   align-items: center;
   gap: var(--space-1);
   padding: var(--space-1) var(--space-2);
-  border: 1px solid transparent;
+  border: var(--border-width) solid transparent;
   border-radius: var(--chip-radius, var(--radius-full));
   background: var(--color-bg-muted);
   color: var(--color-fg);
@@ -47,8 +47,11 @@
 }
 
 [data-ui="chip"] [data-part="dismiss"]:focus-visible {
-  outline: 2px solid var(--color-ring);
-  outline-offset: 1px;
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  /* Half the default gap — the dismiss target is small, and the full ring
+     would collide with the chip's own edge. */
+  outline-offset: calc(var(--focus-ring-offset) / 2);
+  box-shadow: var(--focus-shadow);
 }
 
 /* ── Variants ── */

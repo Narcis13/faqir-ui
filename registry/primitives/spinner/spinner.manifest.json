@@ -34,7 +34,8 @@
   "tokens_used": [
     "color-border", "color-primary",
     "radius-full",
-    "duration-normal", "ease-default"
+    "duration-normal", "ease-default",
+    "border-width-strong", "border-width-lg"
   ],
 
   "templates": {

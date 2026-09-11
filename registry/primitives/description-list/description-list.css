@@ -1,5 +1,5 @@
 /* @ui:component description-list */
-/* @ui:tokens color-fg color-fg-muted color-border doc-font doc-line-height space-1 space-2 space-3 space-4 space-6 text-xs text-sm text-base font-body weight-semibold */
+/* @ui:tokens color-fg color-fg-muted color-border doc-font doc-line-height space-1 space-2 space-3 space-4 space-6 text-xs text-sm text-base font-body weight-semibold border-width */
 
 /* ── Base ── */
 [data-ui="description-list"] {
@@ -61,7 +61,7 @@
 [data-ui="description-list"][data-divided][data-variant="vertical"] [data-part="details"],
 [data-ui="description-list"][data-divided]:not([data-variant]) [data-part="details"] {
   padding-bottom: var(--space-4);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: var(--border-width) solid var(--color-border);
 }
 
 [data-ui="description-list"][data-divided][data-variant="vertical"] [data-part="details"]:last-child,
@@ -73,7 +73,7 @@
 [data-ui="description-list"][data-divided][data-variant="horizontal"] [data-part="term"],
 [data-ui="description-list"][data-divided][data-variant="horizontal"] [data-part="details"] {
   padding-bottom: var(--space-3);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: var(--border-width) solid var(--color-border);
 }
 
 /* ── Size: Small ── */

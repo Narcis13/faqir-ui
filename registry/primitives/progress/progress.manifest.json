@@ -67,7 +67,8 @@
     "color-primary", "color-bg-muted", "color-success",
     "color-warning", "color-destructive", "color-fg-muted",
     "radius-full", "text-sm", "space-1", "space-2",
-    "duration-normal", "ease-default"
+    "duration-normal", "ease-default",
+    "border-width"
   ],
 
   "templates": {

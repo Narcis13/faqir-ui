@@ -147,6 +147,13 @@ function tokenValues(): Map<string, string[]> {
     // inside one, and a commented-out declaration is not a declared token.
     for (const def of extractTokenDefinitions(stripCssComments(readFileSync(join(dir, file), "utf8")))) {
       if (def.value.includes("var(")) continue;
+      // The shape and focus families (1.1A-02) are candidates for the border
+      // and outline properties only, and both are exempt below. Left in,
+      // `--border-width-md: 2px` and `--focus-ring-width: 2px` would claim
+      // every unrelated `2px` in the sheet — a `text-underline-offset` that
+      // read a focus token would be a worse stylesheet, not a more tokenised
+      // one.
+      if (/^(border-width|focus-ring-)/.test(def.name)) continue;
       byValue.set(def.value, [...(byValue.get(def.value) ?? []), def.name]);
     }
   }
@@ -193,12 +200,12 @@ describe("prose.css obeys the rules it teaches", () => {
     const byValue = tokenValues();
     const offenders: string[] = [];
     for (const { property, value } of decls) {
-      // Border WIDTHS are exempt, and by construction rather than by exception:
-      // this framework has no border-width ladder, and every rule in the
-      // registry that draws a hairline writes `1px solid var(--color-border)`.
-      // Matching `1px` against `--space-px` would swap a spacing token into a
-      // border, which is a worse stylesheet, not a more tokenised one.
-      if (/^border(?!.*radius)/.test(property)) continue;
+      // Border WIDTHS are exempt from THIS rule: matching `1px` against
+      // `--space-px` would swap a spacing token into a border. They are not
+      // unowned — 1.1A-02 added the `--border-width-*` ladder and 1.1A-03
+      // points base/ at it; the gate for that lives in
+      // tests/tokens/shape-focus.test.ts, which judges the width slot by name.
+      if (/^border(?!.*radius)/.test(property) || property.startsWith("outline")) continue;
       for (const length of value.matchAll(/(?<![\w.-])(\d*\.?\d+)(ch|rem|em|px|vh|vw|%)/g)) {
         const literal = length[0];
         const names = byValue.get(literal);

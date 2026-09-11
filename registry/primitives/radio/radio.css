@@ -1,5 +1,5 @@
 /* @ui:component radio */
-/* @ui:tokens color-bg color-fg color-primary color-primary-fg color-border color-border-strong color-ring radius-full space-1 space-2 duration-fast ease-default */
+/* @ui:tokens color-bg color-fg color-primary color-primary-fg color-border color-border-strong color-ring radius-full space-1 space-2 duration-fast ease-default border-width focus-ring-width focus-ring-offset focus-ring-style focus-ring-color focus-shadow */
 
 /* -- Radio group -- */
 [data-ui="radio-group"] {
@@ -33,7 +33,7 @@
   width: var(--radio-size, 18px);
   height: var(--radio-size, 18px);
   flex-shrink: 0;
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-full);
   background: var(--color-bg);
   cursor: pointer;
@@ -47,8 +47,9 @@
 }
 
 [data-ui="radio"]:focus-visible {
-  outline: 2px solid var(--color-ring);
-  outline-offset: 2px;
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+  box-shadow: var(--focus-shadow);
 }
 
 /* -- Checked -- */
@@ -101,7 +102,7 @@
    inside a `--color-primary` circle, and the OS collapses both to one colour. [W3-3] */
 @media (forced-colors: active) {
   [data-ui="radio"] {
-    border: 1px solid ButtonText;
+    border: var(--border-width) solid ButtonText;
   }
 
   [data-ui="radio"]:checked {
