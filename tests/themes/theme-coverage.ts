@@ -15,6 +15,7 @@
 // edits here.
 
 import { extractTokenDefinitions } from "../../src/parser/css-parser";
+import { parseThemeValues } from "../../src/utils/oklch";
 
 /** The color schemes a theme can ship, addressed by the DOM that activates them. */
 export type Scheme = "light" | "dark" | "auto";
@@ -29,60 +30,26 @@ export interface SchemeTokens {
   auto: Set<string>;
 }
 
-/** Strip `/* … *\/` block comments so selectors/values parse cleanly. */
-function stripComments(css: string): string {
-  return css.replace(/\/\*[\s\S]*?\*\//g, "");
+/** The two token families the coverage matrix is stated over. */
+function isCovered(name: string): boolean {
+  return name.startsWith("color-") || name.startsWith("shadow-");
 }
 
 /**
  * Parse a theme stylesheet into the set of custom properties it defines in each
- * scheme. Walks the source with brace matching so declarations are attributed to
- * their enclosing selector (and any enclosing `@media`), rather than by line.
+ * scheme. The walk itself is `parseThemeValues` (src/utils/oklch.ts) — one
+ * parser, so the coverage model and the contrast audit can never disagree about
+ * which block a declaration belongs to. This layer only drops the tokens the
+ * matrix does not range over.
+ *
+ * Since 1.1A-06 a scheme is not only a *block*: a one-block theme states its
+ * dark values with `light-dark()` in `:root`, and those declarations count for
+ * dark and auto exactly as a `[data-theme="dark"]` block does.
  */
 export function parseThemeSchemes(css: string): SchemeTokens {
-  const src = stripComments(css);
-  const light = new Set<string>();
-  const dark = new Set<string>();
-  const auto = new Set<string>();
-  const stack: string[] = []; // enclosing selector / at-rule preludes, outermost first
-  let buf = "";
-
-  const inDarkMedia = () =>
-    stack.some(h => /@media[^{]*prefers-color-scheme\s*:\s*dark/i.test(h));
-
-  const record = (decl: string) => {
-    const m = /^\s*--([a-zA-Z][\w-]*)\s*:\s*(.+?)\s*$/s.exec(decl);
-    if (!m) return;
-    const name = m[1];
-    if (!name.startsWith("color-") && !name.startsWith("shadow-")) return;
-    const selector = stack[stack.length - 1] ?? "";
-    if (inDarkMedia() && /\[data-theme\s*=\s*["']?auto["']?\s*\]/.test(selector)) {
-      auto.add(name);
-    } else if (/\[data-theme\s*=\s*["']?dark["']?\s*\]/.test(selector)) {
-      dark.add(name);
-    } else if (/(^|\s):root(\s|$)/.test(selector)) {
-      light.add(name);
-    }
-  };
-
-  for (let i = 0; i < src.length; i++) {
-    const c = src[i];
-    if (c === "{") {
-      stack.push(buf.trim());
-      buf = "";
-    } else if (c === "}") {
-      if (buf.trim()) record(buf); // flush a final declaration with no trailing ;
-      buf = "";
-      stack.pop();
-    } else if (c === ";") {
-      record(buf);
-      buf = "";
-    } else {
-      buf += c;
-    }
-  }
-
-  return { light, dark, auto };
+  const values = parseThemeValues(css);
+  const names = (scheme: Map<string, string>) => new Set([...scheme.keys()].filter(isCovered));
+  return { light: names(values.light), dark: names(values.dark), auto: names(values.auto) };
 }
 
 /**
@@ -191,8 +158,11 @@ export function computeCoverage(
       coverageOf("auto", '@media (prefers-color-scheme: dark) [data-theme="auto"]', required, schemes.auto),
     );
   } else {
-    // Single-scheme themes must not half-define a dark scheme.
-    const stray = [...schemes.dark, ...schemes.auto];
+    // Single-scheme themes must not half-define a dark scheme. Deduped: a token
+    // stated in both the dark block and its auto mirror — or, since 1.1A-06,
+    // reached through one `light-dark()` in `:root` — is one inconsistency, and
+    // reporting it twice only makes the message harder to read.
+    const stray = uniq([...schemes.dark, ...schemes.auto]);
     results.push({
       scheme: "dark",
       block: "(single-scheme: no dark block expected)",

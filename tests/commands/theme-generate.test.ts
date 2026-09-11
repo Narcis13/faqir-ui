@@ -97,7 +97,11 @@ describe("theme generate · pure deterministic generator", () => {
     expect(file.css).toContain("--color-primary-hover");
     expect(file.css).toContain("--color-primary-active");
     expect(file.css).toContain("--color-primary-subtle");
-    expect(file.css).toMatch(/--color-primary\s*: var\(--palette-sample-brand-\d+\);/);
+    // A dual-scheme theme states both ramp steps in one declaration [1.1A-06];
+    // the mapping asserted here is that each side still points at the ramp.
+    expect(file.css).toMatch(
+      /--color-primary\s*: light-dark\(var\(--palette-sample-brand-\d+\), var\(--palette-sample-brand-\d+\)\);/,
+    );
   });
 
   const HUE_SAMPLES = [
@@ -143,6 +147,66 @@ describe("theme generate · pure deterministic generator", () => {
       expect(() => generateThemeBundle({ ...DEFAULT_INPUT, accent }, BASE_SOURCES))
         .toThrow(/Invalid accent.*oklch.*#rrggbb/s);
     }
+  });
+
+  // ── The one-block default, and the flag that restores the old shape [1.1A-06] ──
+  describe("dual themes collapse to one light-dark() block", () => {
+    const oneBlock = generateThemeBundle(DEFAULT_INPUT, BASE_SOURCES).generated[0];
+    const legacy = generateThemeBundle(
+      { ...DEFAULT_INPUT, legacyBlocks: true },
+      BASE_SOURCES,
+    ).generated[0];
+
+    /** The declarations inside every `[data-theme=...]` block of a stylesheet. */
+    const inDarkBlocks = (css: string) =>
+      [...css.matchAll(/\[data-theme="(?:dark|auto)"\]\s*\{([^}]*)\}/g)]
+        .flatMap((m) => [...m[1].matchAll(/--([\w-]+)\s*:/g)].map((d) => d[1]));
+
+    it("writes no colour into a dark block by default", () => {
+      const colours = inDarkBlocks(oneBlock.css).filter((t) => t.startsWith("color-"));
+      expect(colours).toEqual([]);
+      // The shadow ramp is the deliberate exception: `light-dark()` is a <color>
+      // function and a shadow list is not a colour, so the ramp keeps its blocks
+      // in BOTH forms rather than being faked with alpha-0 layers.
+      expect(new Set(inDarkBlocks(oneBlock.css))).toEqual(
+        new Set(["shadow-color", "shadow-xs", "shadow-sm", "shadow-md", "shadow-lg", "shadow-xl"]),
+      );
+    });
+
+    it("--legacy-blocks restores the three-block colour form", () => {
+      const colours = new Set(inDarkBlocks(legacy.css).filter((t) => t.startsWith("color-")));
+      expect([...colours].sort()).toEqual([...REQUIRED.colors].sort());
+      expect(legacy.css).not.toContain("light-dark(");
+    });
+
+    it("the two forms are the same theme: identical manifest and scheme values", () => {
+      // The manifest is derived from the CSS, so a shape change that lost or
+      // gained a token would show up here before any renderer saw it.
+      expect(oneBlock.manifest).toEqual(legacy.manifest);
+      expect(oneBlock.contrast).toEqual(legacy.contrast);
+      for (const scheme of ["light", "dark", "auto"] as const) {
+        const one = parseThemeSchemes(oneBlock.css)[scheme];
+        const three = parseThemeSchemes(legacy.css)[scheme];
+        expect([...one].sort(), scheme).toEqual([...three].sort());
+      }
+    });
+
+    it("both forms pass the full gauntlet", () => {
+      expectFullGauntlet(DEFAULT_INPUT);
+      expectFullGauntlet({ ...DEFAULT_INPUT, legacyBlocks: true });
+    });
+
+    it("single-scheme themes are untouched by the flag", () => {
+      for (const scheme of ["light", "dark"] as const) {
+        const plain = generateThemeBundle({ ...DEFAULT_INPUT, scheme }, BASE_SOURCES).generated[0];
+        const flagged = generateThemeBundle(
+          { ...DEFAULT_INPUT, scheme, legacyBlocks: true },
+          BASE_SOURCES,
+        ).generated[0];
+        expect(flagged.css, scheme).toBe(plain.css);
+        expect(plain.css, scheme).not.toContain("light-dark(");
+      }
+    });
   });
 
   it("honors light-only output without stray dark declarations", () => {
@@ -227,6 +291,32 @@ describe("faqir theme generate · CLI", () => {
       stderr: result.stderr ?? "",
     };
   }
+
+  it("--legacy-blocks reaches the renderer and is reported back", () => {
+    // The flag is only a flag if it survives parsing: without the arm in
+    // parseThemeGenerateArgs it would be rejected as an unknown option, and
+    // without the field on the bundle the JSON hook would claim one shape while
+    // the CSS on disk had the other.
+    const result = run(["legacy-brand", "--accent", "#0ea5e9", "--legacy-blocks", "--json"]);
+    expect(result.stderr).toBe("");
+    expect(result.status).toBe(0);
+    const report = JSON.parse(result.stdout);
+    expect(report.options.legacy_blocks).toBe(true);
+    const css = readFileSync(join(tempDir, "themes/legacy-brand.css"), "utf8");
+    expect(css).not.toContain("light-dark(");
+    expect(css).toContain('[data-theme="dark"]');
+    expect(css).toContain("--color-bg");
+
+    // The unflagged shape is proven in-process above; spawning a second CLI for
+    // it would only widen this file's exposure to the bun-spawns-bun hang that
+    // tests/helpers/spawn.ts documents.
+  });
+
+  it("lists --legacy-blocks in its own help", () => {
+    const help = run(["--help"]);
+    expect(help.status).toBe(0);
+    expect(help.stdout).toContain("--legacy-blocks");
+  });
 
   it("writes web + document artifacts and returns the automation JSON hook", () => {
     const result = run([

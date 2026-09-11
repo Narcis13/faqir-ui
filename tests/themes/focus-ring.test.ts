@@ -126,6 +126,21 @@ describe("focus geometry · the ring is a theme surface, not a constant", () => 
 describe("the widened rule reports what it used to skip", () => {
   const themeCss = readFileSync(join(THEMES_DIR, "default.css"), "utf8");
 
+  /**
+   * Plant a regression into the theme's own `--color-ring` declaration by
+   * rewriting every `oklch()` inside it. Since 1.1A-06 that declaration is a
+   * `light-dark(oklch(…), oklch(…))` pair, so a plant aimed at one bare
+   * `oklch(…)` would silently match nothing — which would make these two
+   * non-vacuity proofs vacuous, the one failure they exist to rule out.
+   */
+  function plantRing(css: string, rewrite: (args: string) => string): string {
+    const planted = css.replace(/--color-ring:[^;]*;/g, (decl) =>
+      decl.replace(/oklch\(([^)]*)\)/g, (_, args: string) => `oklch(${rewrite(args)})`),
+    );
+    expect(planted).not.toBe(css);
+    return planted;
+  }
+
   it("passes on every shipped theme as authored", () => {
     for (const theme of THEMES) {
       const css = readFileSync(join(THEMES_DIR, `${theme}.css`), "utf8");
@@ -136,11 +151,7 @@ describe("the widened rule reports what it used to skip", () => {
 
   it("flags a translucent ring as a finding, not as unjudgeable", () => {
     // Exactly the value `default` shipped before W3-3.
-    const regressed = themeCss.replace(
-      /--color-ring:(\s*)oklch\(([^)]*)\)/g,
-      "--color-ring:$1oklch($2 / 0.4)",
-    );
-    expect(regressed).not.toBe(themeCss);
+    const regressed = plantRing(themeCss, (args) => `${args} / 0.4`);
 
     const findings = checkThemeContrast({
       themeName: "default",
@@ -156,12 +167,9 @@ describe("the widened rule reports what it used to skip", () => {
   });
 
   it("flags an opaque ring that is simply too faint", () => {
-    // `default` states its ring only in the dark blocks (light inherits the
-    // semantic base), so the faint stand-in has to be dark-on-dark.
-    const faint = themeCss.replace(
-      /--color-ring:(\s*)oklch\([^)]*\)/g,
-      "--color-ring:$1oklch(0.17 0.01 264)",
-    );
+    // `default` now states both schemes in one declaration, so the faint
+    // stand-in lands in both; it is the dark-on-dark side that must report.
+    const faint = plantRing(themeCss, () => "0.17 0.01 264");
     const findings = checkThemeContrast({ themeName: "default", themeCss: faint, baseCss: BASE_CSS });
     const ringFindings = findings.filter((f) => f.message.includes("--color-ring"));
     expect(ringFindings.length).toBeGreaterThan(0);

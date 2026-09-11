@@ -200,11 +200,54 @@ into `faqir context` as the active-theme block. Schema (validated by
 | `version` | string | Semver. |
 | `mood` | string[] | ≥ 1 agent-selectable descriptor (`dark`, `warm`, `high-contrast`, …). |
 | `scheme` | `"light"` \| `"dark"` \| `"both"` | Which color schemes ship. Source of truth for the coverage matrix. |
-| `dark_mode` | `"native"` \| `"none"` | `native` = explicit `[data-theme="dark"]` block; `none` requires `scheme: "light"`. |
+| `dark_mode` | `"native"` \| `"none"` | `native` = the theme ships a dark scheme, in either authoring form below; `none` requires `scheme: "light"`. |
 | `tokens_overridden` | string[] | **Generated** — every custom property the CSS defines. |
 | `tokens_inherited` | string[] | **Generated** — base surface tokens the theme leaves untouched. |
 | `pairs_with` | string[] | Themes that compose/read well together (may be empty). |
 | `preview` | string | A `{name}.preview.html` reference. |
+
+### Authoring the two schemes
+
+A dual-scheme theme may be written either way, and every gate treats the two as
+the same theme:
+
+**One block (preferred, since 1.1).** Each scheme-dependent token states both
+sides at once:
+
+```css
+:root {
+  --color-bg: light-dark(var(--palette-gray-25), var(--palette-gray-950));
+  --color-fg: light-dark(var(--palette-gray-950), var(--palette-gray-50));
+  /* No second spelling needed: the token this reads already has both sides. */
+  --color-surface-1: var(--color-bg-subtle);
+}
+```
+
+`light-dark()` reads `color-scheme`, not `data-theme`. `registry/base/reset.css`
+declares that mapping once — `:root` is `light`, `[data-theme="dark"]` is `dark`,
+`[data-theme="auto"]` is `light dark` — so a one-block theme needs no
+`prefers-color-scheme` mirror at all: `auto` follows the OS by itself. A theme
+loaded WITHOUT the base reset resolves every `light-dark()` to its light side, in
+every scheme, silently; that is the one thing to keep in mind when inlining a
+theme by hand.
+
+Two consequences worth knowing before migrating a theme:
+
+- The light side can no longer be inherited from `tokens/semantic.css`. A token
+  cannot read its own base value (`--color-bg: light-dark(var(--color-bg), …)` is
+  a cycle), so the one-block form restates it. `tests/themes/light-dark.test.ts`
+  compares every restated light value against the base and fails on drift, with
+  a short list of the deliberate overrides — keep that list current.
+- The **shadow ramp stays in blocks.** `light-dark()` is a `<color>` function and
+  a shadow list is not a colour, so a step whose two schemes differ in geometry
+  (`none` against two layers) has no honest one-block spelling.
+
+**Three blocks (still supported).** `:root`, `[data-theme="dark"]`, and a
+`@media (prefers-color-scheme: dark) { [data-theme="auto"] { … } }` mirror that
+must restate the dark block in full. Use this when your browser floor predates
+`light-dark()` (Chrome/Edge 123, Safari 17.5, Firefox 120). `faqir theme
+generate` emits the one-block form for `--scheme both`; pass `--legacy-blocks`
+for the three-block form. Single-scheme themes are unaffected by either.
 
 `tokens_overridden` and `tokens_inherited` are **derived from the CSS — never
 hand-write them.** Edit the editorial metadata seed in

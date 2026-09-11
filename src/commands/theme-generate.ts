@@ -34,6 +34,14 @@ export interface ThemeGenerateInput {
   radius: ThemeRadius;
   scheme: ThemeSchemeDecl;
   document: boolean;
+  /**
+   * Emit a dual-scheme theme as three colour blocks (`:root`,
+   * `[data-theme="dark"]`, and the `prefers-color-scheme` mirror) instead of one
+   * `light-dark()` block [1.1A-06]. The default is the one-block form; this is
+   * the escape hatch for a project whose browser floor predates `light-dark()`.
+   * Ignored for single-scheme themes, which have nothing to collapse.
+   */
+  legacyBlocks?: boolean;
 }
 
 export interface GeneratedContrastRatio {
@@ -72,6 +80,8 @@ export interface GeneratedThemeBundle {
   radius: ThemeRadius;
   scheme: ThemeSchemeDecl;
   document: boolean;
+  /** Whether the dual-scheme output was written as three blocks [1.1A-06]. */
+  legacyBlocks: boolean;
   generated: GeneratedThemeFile[];
 }
 
@@ -364,11 +374,11 @@ function radiusDeclarations(radius: ThemeRadius): Declaration[] {
   ];
 }
 
-function renderDarkBlocks(declarations: Declaration[]): string {
+function renderDarkBlocks(declarations: Declaration[], heading: string): string {
   const body = renderDeclarations(declarations);
   const autoBody = renderDeclarations(declarations, "    ");
   return `
-/* ── Dark mode: inverted accent steps and neutral surfaces ── */
+/* ── ${heading} ── */
 [data-theme="dark"] {
 ${body}
 }
@@ -382,25 +392,70 @@ ${autoBody}
 `;
 }
 
+/**
+ * The family `light-dark()` cannot collapse. It is a `<color>` function and a
+ * shadow list is not a colour, so a step whose two schemes differ in geometry
+ * — `none` against two layers, here — has no one-block spelling that isn't a
+ * fake: padding the dark ramp with alpha-0 layers writes a shadow where the
+ * theme says `none`. The ramp therefore keeps its blocks in BOTH forms, and
+ * `--shadow-color` travels with it so a dark block still owns the whole family.
+ */
+function isShadow([name]: Declaration): boolean {
+  return name.startsWith("shadow-");
+}
+
+/**
+ * Pair the two schemes' declarations into one `light-dark()` list. A token whose
+ * two values are identical is emitted once, plainly — `light-dark(x, x)` states
+ * nothing a browser does not already do, and a value built out of scheme-aware
+ * tokens (`--color-surface-1: var(--color-bg-subtle)`) is scheme-aware itself.
+ */
+function mergeSchemes(light: Declaration[], dark: Declaration[]): Declaration[] {
+  const byName = new Map(dark);
+  return light.map(([name, value]) => {
+    const other = byName.get(name);
+    return other == null || other === value
+      ? ([name, value] as const)
+      : ([name, `light-dark(${value}, ${other})`] as const);
+  });
+}
+
 function renderThemeCss(
   input: ThemeGenerateInput,
   ramp: AccentStep[],
   light: Declaration[],
   dark: Declaration[],
 ): string {
-  const rootSemantic = input.scheme === "dark" ? dark : light;
   const schemes = input.scheme === "both" ? "light dark" : input.scheme;
+  // One block is the default for a dual-scheme theme: the colours state both
+  // sides with light-dark(), which base/reset.css activates by mapping
+  // `data-theme` onto `color-scheme`. --legacy-blocks restores the triple form.
+  const oneBlock = input.scheme === "both" && !input.legacyBlocks;
+  const rootSemantic = oneBlock
+    ? [...mergeSchemes(light.filter((d) => !isShadow(d)), dark), ...light.filter(isShadow)]
+    : input.scheme === "dark"
+      ? dark
+      : light;
   const root = [
     ...paletteDeclarations(input.name, ramp),
     ...rootSemantic,
     ...radiusDeclarations(input.radius),
   ];
-  const darkBlocks = input.scheme === "light" ? "" : renderDarkBlocks(dark);
+  const darkBlocks = input.scheme === "light"
+    ? ""
+    : oneBlock
+      ? renderDarkBlocks(dark.filter(isShadow), "Dark mode: the shadow ramp")
+      : renderDarkBlocks(dark, "Dark mode: inverted accent steps and neutral surfaces");
+  const note = oneBlock
+    ? "/* Both schemes live in the :root block below, as light-dark(). That function reads\n" +
+      "   color-scheme, which base/reset.css derives from data-theme — regenerate with\n" +
+      "   --legacy-blocks for the three-block form if your browser floor predates it. */\n"
+    : "";
 
   return `/* @ui:theme ${input.name} — generated from ${input.accent} */
 /* @ui:schemes ${schemes} */
 /* Deterministic parametric theme. Regenerate instead of editing the accent ramp by hand. */
-
+${note}
 :root {
 ${renderDeclarations(root)}
 }
@@ -697,6 +752,7 @@ export function generateThemeBundle(
     radius: input.radius,
     scheme: input.scheme,
     document: input.document,
+    legacyBlocks: input.legacyBlocks === true,
     generated,
   };
 }

@@ -57,6 +57,7 @@ function printGenerateHelp() {
     ["--radius <size>", "Radius scale: sm, md, or lg (default: md)"],
     ["--scheme <mode>", "Color scheme: light, dark, or both (default: both)"],
     ["--document", "Also emit a brand-matched print/document variant"],
+    ["--legacy-blocks", "Dual themes: write three colour blocks instead of one light-dark() block"],
     ["--json", "Report generated files and all computed contrast ratios"],
   ]);
   log.blank();
@@ -85,6 +86,7 @@ function parseThemeGenerateArgs(args: string[]): ThemeGenerateInput | null {
   let radius: ThemeRadius = "md";
   let scheme: ThemeGenerateInput["scheme"] = "both";
   let document = false;
+  let legacyBlocks = false;
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
@@ -126,6 +128,9 @@ function parseThemeGenerateArgs(args: string[]): ThemeGenerateInput | null {
       case "--document":
         document = true;
         break;
+      case "--legacy-blocks":
+        legacyBlocks = true;
+        break;
       case "--json":
         break;
       default:
@@ -145,7 +150,7 @@ function parseThemeGenerateArgs(args: string[]): ThemeGenerateInput | null {
     );
   }
 
-  return { name, accent, neutral, radius, scheme, document };
+  return { name, accent, neutral, radius, scheme, document, legacyBlocks };
 }
 
 async function themeGenerate(args: string[]): Promise<void> {
@@ -195,6 +200,7 @@ async function themeGenerate(args: string[]): Promise<void> {
       radius: result.radius,
       scheme: result.scheme,
       document: result.document,
+      legacy_blocks: result.legacyBlocks,
     },
     generated: result.generated.map((file) => ({
       kind: file.kind,

@@ -136,6 +136,52 @@ describe("theme coverage · the gate fails loudly for under-covering themes", ()
     expect(single.every(c => c.covered)).toBe(true);
   });
 
+  // ── The one-block form covers the same schemes  [1.1A-06] ──
+  it("computes identical coverage for a theme written both ways", () => {
+    // The same theme, twice: once with `light-dark()` in a single `:root` block
+    // and once with the three blocks it replaces. Coverage must not be able to
+    // tell them apart — a gate that goes quiet on a migrated theme is worse than
+    // no gate, because the CSS looks tidier while nothing is checking it.
+    const decl = (token: string) => `--${token}: ${token.startsWith("shadow-") ? "none" : "black"};`;
+    const body = REQUIRED.all.map(decl).join("\n  ");
+    const tripleBlock = `/* @ui:theme twin */
+:root { ${REQUIRED.all.map((t) => `--${t}: ${t.startsWith("shadow-") ? "none" : "white"};`).join(" ")} }
+[data-theme="dark"] {
+  ${body}
+}
+@media (prefers-color-scheme: dark) {
+  [data-theme="auto"] {
+  ${body}
+  }
+}`;
+    const oneBlock = `/* @ui:theme twin */
+:root {
+  ${REQUIRED.all
+    .map((t) =>
+      t.startsWith("shadow-")
+        ? `--${t}: light-dark(none, none);`
+        : `--${t}: light-dark(white, black);`,
+    )
+    .join("\n  ")}
+}`;
+    const triple = computeCoverage(tripleBlock, REQUIRED.all, BASE, ["light", "dark"]);
+    const one = computeCoverage(oneBlock, REQUIRED.all, BASE, ["light", "dark"]);
+    expect(one).toEqual(triple);
+    expect(one.every(c => c.covered)).toBe(true);
+  });
+
+  it("reports light-dark() in a theme that claims a single scheme", () => {
+    // `light-dark()` in a light-only theme is a contradiction: the dark argument
+    // can never render. It surfaces through the same channel as a stray dark
+    // block — the single-scheme claim disagreeing with the CSS.
+    const contradiction = `/* @ui:schemes light */
+:root { --color-bg: light-dark(white, black); }`;
+    const cov = computeCoverage(contradiction, REQUIRED.all, BASE, ["light"]);
+    const dark = cov.find(c => c.scheme === "dark")!;
+    expect(dark.covered).toBe(false);
+    expect(dark.missing).toEqual(["color-bg"]);
+  });
+
   it("flags a single-scheme theme that still half-defines a dark block", () => {
     const inconsistent = `/* @ui:schemes light */
 :root { --color-bg: white; }

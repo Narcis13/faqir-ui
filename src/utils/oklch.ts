@@ -196,6 +196,96 @@ export function contrastOf(cssColor1: string, cssColor2: string): number {
   return contrastRatio(c1, c2);
 }
 
+// ── light-dark() authoring  [task 1.1A-06] ──────────────────────────────────
+//
+// A theme may state both schemes in ONE `:root` block by writing
+// `light-dark(<light>, <dark>)`, instead of repeating the whole token set in a
+// `[data-theme="dark"]` block and again in its `prefers-color-scheme` mirror.
+// The browser picks a side from the used `color-scheme`, which `base/reset.css`
+// derives from `data-theme` once, for the whole cascade.
+//
+// Everything below is the static half of that contract: the parsers the gates
+// run on must read a one-block theme exactly as a browser resolves it, or the
+// coverage, contrast and elevation gates would go quiet the moment a theme was
+// migrated — the worst possible failure mode for a gate.
+
+const LIGHT_DARK = "light-dark(";
+
+/** Start index of the next `light-dark(` call at or after `from`, or -1. */
+function findLightDark(value: string, from: number): number {
+  const lower = value.toLowerCase();
+  for (let at = lower.indexOf(LIGHT_DARK, from); at >= 0; at = lower.indexOf(LIGHT_DARK, at + 1)) {
+    // `--my-light-dark(` is not a call; a function name never continues an ident.
+    if (at === 0 || !/[\w-]/.test(value[at - 1])) return at;
+  }
+  return -1;
+}
+
+/** True when `value` contains at least one `light-dark()` call. */
+export function hasLightDark(value: string): boolean {
+  return findLightDark(value, 0) >= 0;
+}
+
+/** Index of the `)` closing the `(` at `open`, or -1 when unbalanced. */
+function matchParen(value: string, open: number): number {
+  let depth = 0;
+  for (let i = open; i < value.length; i++) {
+    if (value[i] === "(") depth++;
+    else if (value[i] === ")" && --depth === 0) return i;
+  }
+  return -1;
+}
+
+/**
+ * Split a `light-dark()` argument list at its single TOP-LEVEL comma. Depth
+ * matters: `light-dark(var(--a, red), var(--b))` has three commas and only the
+ * middle one separates the two schemes.
+ */
+function splitLightDarkArgs(args: string): [string, string] | null {
+  let depth = 0;
+  for (let i = 0; i < args.length; i++) {
+    const c = args[i];
+    if (c === "(") depth++;
+    else if (c === ")") depth--;
+    else if (c === "," && depth === 0) {
+      return [args.slice(0, i).trim(), args.slice(i + 1).trim()];
+    }
+  }
+  return null;
+}
+
+/**
+ * Resolve every `light-dark()` call in `value` for one scheme, the way a browser
+ * does at used-value time. Works on a whole declaration, not only on a value
+ * that IS the call, so a nested use (`0 1px 2px light-dark(a, b)`) resolves too.
+ * A malformed call (unbalanced, or missing its comma) is left verbatim rather
+ * than guessed at — the gates then see the value the browser would also reject.
+ */
+export function substituteLightDark(value: string, scheme: "light" | "dark"): string {
+  let out = value;
+  let from = 0;
+  for (;;) {
+    const at = findLightDark(out, from);
+    if (at < 0) return out;
+    const open = at + LIGHT_DARK.length - 1;
+    const close = matchParen(out, open);
+    if (close < 0) return out;
+    const args = splitLightDarkArgs(out.slice(open + 1, close));
+    if (!args) {
+      from = at + LIGHT_DARK.length;
+      continue;
+    }
+    // Re-scan from `at`: the argument we kept may itself be a light-dark() call.
+    out = out.slice(0, at) + args[scheme === "light" ? 0 : 1] + out.slice(close + 1);
+    from = at;
+  }
+}
+
+/** Every `--token` a value reads through `var()`, fallbacks included, in order. */
+function varReferences(value: string): string[] {
+  return [...value.matchAll(/var\(\s*--([\w-]+)/g)].map((m) => m[1]);
+}
+
 // ── Per-scheme token VALUES (the coverage model only tracks names) ──────────
 
 /** Token name → raw CSS value, per scheme block. Last declaration wins. */
@@ -206,6 +296,48 @@ export interface SchemeValues {
 }
 
 /**
+ * The `:root` declarations that carry a value for a NON-light scheme, folded
+ * into `explicit` (which wins, exactly as a `[data-theme="dark"]` block outranks
+ * `:root` in the cascade).
+ *
+ * A `:root` declaration is *scheme-aware* when it is one of:
+ *   • a `light-dark()` call — it states the other scheme itself; or
+ *   • a value built only out of `var()`s that are themselves scheme-aware —
+ *     `--color-surface-1: var(--color-bg-subtle)` needs no second spelling,
+ *     because the token it reads already has one.
+ * A literal is neither: `--color-bg: white` in `:root` is a LIGHT value, and a
+ * dark scheme that leans on it is exactly the gap the coverage gate exists for.
+ *
+ * Awareness is transitive, so this iterates to a fixpoint (the chains are three
+ * or four hops deep at most; the loop ends when a pass adds nothing).
+ */
+function deriveSchemeAware(
+  rootDecls: Map<string, string>,
+  explicit: Map<string, string>,
+): Map<string, string> {
+  const out = new Map(explicit);
+  const aware = new Set(explicit.keys());
+  for (let changed = true; changed; ) {
+    changed = false;
+    for (const [name, raw] of rootDecls) {
+      if (aware.has(name)) continue;
+      let value: string | null = null;
+      if (hasLightDark(raw)) {
+        value = substituteLightDark(raw, "dark");
+      } else {
+        const refs = varReferences(raw);
+        if (refs.length > 0 && refs.every((ref) => aware.has(ref))) value = raw;
+      }
+      if (value == null) continue;
+      aware.add(name);
+      out.set(name, value);
+      changed = true;
+    }
+  }
+  return out;
+}
+
+/**
  * Parse a theme/token stylesheet into name → value maps per scheme. It keeps
  * the values (unlike the coverage model, which only tracks names) and records
  * every custom property, so callers can resolve non-color tokens along a chain;
@@ -213,13 +345,17 @@ export interface SchemeValues {
  *
  * Scheme assignment mirrors the cascade themes rely on: `:root` is the light
  * (default) scheme, `[data-theme="dark"]` is dark, and a `[data-theme="auto"]`
- * block inside `@media (prefers-color-scheme: dark)` is auto.
+ * block inside `@media (prefers-color-scheme: dark)` is auto — plus, since
+ * 1.1A-06, any `:root` declaration that is scheme-aware (see above), which is
+ * how a one-block `light-dark()` theme covers dark and auto without a block.
  */
 export function parseThemeValues(css: string): SchemeValues {
   const src = css.replace(/\/\*[\s\S]*?\*\//g, "");
   const light = new Map<string, string>();
   const dark = new Map<string, string>();
   const auto = new Map<string, string>();
+  /** `:root` values as authored — the fixpoint needs the un-substituted text. */
+  const rootDecls = new Map<string, string>();
   const stack: string[] = [];
   let buf = "";
 
@@ -230,12 +366,15 @@ export function parseThemeValues(css: string): SchemeValues {
     const m = /^\s*--([a-zA-Z][\w-]*)\s*:\s*(.+?)\s*$/s.exec(decl);
     if (!m) return;
     const selector = stack[stack.length - 1] ?? "";
+    // A light-dark() inside a block that already names its scheme still resolves
+    // for that scheme; nothing says a migrated theme may not keep one block.
     if (inDarkMedia() && /\[data-theme\s*=\s*["']?auto["']?\s*\]/.test(selector)) {
-      auto.set(m[1], m[2]);
+      auto.set(m[1], substituteLightDark(m[2], "dark"));
     } else if (/\[data-theme\s*=\s*["']?dark["']?\s*\]/.test(selector)) {
-      dark.set(m[1], m[2]);
+      dark.set(m[1], substituteLightDark(m[2], "dark"));
     } else if (/(^|\s):root(\s|$)/.test(selector)) {
-      light.set(m[1], m[2]);
+      light.set(m[1], substituteLightDark(m[2], "light"));
+      rootDecls.set(m[1], m[2]);
     }
   };
 
@@ -256,7 +395,11 @@ export function parseThemeValues(css: string): SchemeValues {
     }
   }
 
-  return { light, dark, auto };
+  return {
+    light,
+    dark: deriveSchemeAware(rootDecls, dark),
+    auto: deriveSchemeAware(rootDecls, auto),
+  };
 }
 
 // ── Token-graph resolution (alias → semantic → palette) ─────────────────────
