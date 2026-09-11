@@ -69,11 +69,29 @@
   --radius-2xl:  2rem;
 
   /* ── Component Aliases (pill buttons, pillowy cards) ── */
-  --button-radius:  var(--radius-full);
-  --badge-radius:   var(--radius-full);
-  --card-radius:    var(--radius-xl);
-  --input-radius:   var(--radius-lg);
-  --dialog-radius:  var(--radius-2xl);
+  --button-radius:   var(--radius-full);
+  --badge-radius:    var(--radius-full);
+  --card-radius:     var(--radius-xl);
+  --input-radius:    var(--radius-lg);
+  --dialog-radius:   var(--radius-2xl);
+  --checkbox-radius: var(--radius-full);   /* even the tick box is round */
+
+  /* ── Motion: springy ──
+     The easing PALETTE carries a spring (`--ease-spring`, upgraded to a real
+     `linear()` curve where the browser has one); a theme with this personality
+     points the DEFAULT at it, and every transition in the registry inherits the
+     overshoot without a single component knowing about it. The hover lift stays
+     gentle: past -2px the axis (rightly) reads `playful`, and this theme is
+     calm, not bouncy. */
+  --ease-default:      var(--ease-spring);
+  --motion-hover-lift: 0 -1px;
+
+  /* ── Focus: a glow, not a hairline ──
+     `--focus-shadow` is drawn BEHIND the ring by reset and by all thirteen
+     controls that paint their own, so one declaration haloes every focusable
+     surface in the framework. The pastel subtle tint is the softest thing in
+     the palette that is still visible on both cream and cocoa. */
+  --focus-shadow: 0 0 0 var(--space-1) var(--color-primary-subtle);
 }
 
 /* ── Dark Mode ── */

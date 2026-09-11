@@ -1,5 +1,5 @@
 /* @ui:component toast */
-/* @ui:tokens color-bg color-fg color-fg-muted color-border color-success color-destructive color-warning shadow-lg radius-lg space-2 space-3 space-4 text-sm weight-medium z-toast duration-normal duration-slow ease-out font-ui border-width border-width-lg focus-ring-width focus-ring-style focus-ring-color focus-ring-offset surface-backdrop */
+/* @ui:tokens color-bg panel-bg color-fg color-fg-muted color-border color-success color-destructive color-warning shadow-lg radius-lg space-2 space-3 space-4 text-sm weight-medium z-toast duration-normal duration-slow ease-out font-ui border-width border-width-lg focus-ring-width focus-ring-style focus-ring-color focus-ring-offset surface-backdrop */
 
 /* ── Container ── */
 [data-ui="toast"][data-part="container"] {
@@ -48,7 +48,7 @@
   max-width: 380px;
   width: max-content;
   padding: var(--space-3) var(--space-4);
-  background: var(--color-bg);
+  background: var(--panel-bg);
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);

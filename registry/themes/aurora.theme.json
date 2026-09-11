@@ -44,11 +44,16 @@
     "color-warning",
     "color-warning-subtle",
     "gradient-accent",
+    "heading-tracking",
+    "selection-bg",
+    "selection-fg",
+    "shadow-color",
     "shadow-lg",
     "shadow-md",
     "shadow-sm",
     "shadow-xl",
-    "shadow-xs"
+    "shadow-xs",
+    "texture-page"
   ],
   "tokens_inherited": [
     "avatar-radius",
@@ -165,7 +170,6 @@
     "font-serif",
     "font-ui",
     "heading-leading",
-    "heading-tracking",
     "heading-transform",
     "heading-weight",
     "image-border",
@@ -221,6 +225,7 @@
     "page-margin-right",
     "page-margin-top",
     "page-orientation",
+    "panel-bg",
     "radius-2xl",
     "radius-full",
     "radius-lg",
@@ -231,9 +236,6 @@
     "section-gap-lg",
     "section-gap-md",
     "section-gap-sm",
-    "selection-bg",
-    "selection-fg",
-    "shadow-color",
     "space-0",
     "space-0h",
     "space-1",
@@ -281,7 +283,6 @@
     "text-sm",
     "text-xl",
     "text-xs",
-    "texture-page",
     "texture-surface",
     "weight-bold",
     "weight-medium",
@@ -311,7 +312,7 @@
       "base": 16,
       "voice": {
         "weight": "bold",
-        "tracking": "normal",
+        "tracking": "tight",
         "transform": "none"
       }
     },
@@ -320,8 +321,8 @@
       "border": "hairline",
       "corner": "round"
     },
-    "depth": "soft",
-    "material": "none",
+    "depth": "layered",
+    "material": "mesh",
     "motion": "smooth",
     "density": "comfortable",
     "focus": "ring",
@@ -339,7 +340,7 @@
   },
   "distinctiveness": {
     "nearest": "glass",
-    "axis_distance": 2,
+    "axis_distance": 6,
     "token_distance": 0.0305
   }
 }

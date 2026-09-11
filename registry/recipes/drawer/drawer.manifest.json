@@ -147,6 +147,7 @@
   },
   "tokens_used": [
     "color-bg",
+    "panel-bg",
     "color-fg",
     "color-border",
     "shadow-xl",

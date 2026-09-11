@@ -61,6 +61,33 @@
   --radius-2xl:  0;
   --radius-full: 0;
 
+  /* ── Shape (the theme's whole argument, finally in tokens) ──
+     Brutalism is a heavy rule around everything. Until the shape family existed
+     the theme could only say it in colour (`--color-border: black`) and every
+     edge in the registry stayed a hairline; now the ROLE is re-pointed and all
+     139 of them thicken together. */
+  --border-width:        var(--border-width-lg);   /* 3px — the default edge */
+  --border-width-strong: var(--border-width-lg);   /* nothing is emphasised: everything shouts */
+
+  /* ── Focus (bold, and flush against the edge it belongs to) ── */
+  --focus-ring-width:  var(--border-width-lg);
+  --focus-ring-offset: 0;
+
+  /* ── Type voice (a headline is a stencil) ── */
+  --heading-tracking:  0.06em;
+  --heading-transform: uppercase;
+  --button-text-transform: uppercase;
+
+  /* ── Decoration (a link is a link; you can see the line from across the room) ── */
+  --link-decoration:       underline;
+  --link-thickness:        var(--border-width-md);
+  --link-underline-offset: 0.1em;
+
+  /* ── Motion (minimal — the state changes, it does not travel) ── */
+  --duration-fast:   60ms;
+  --duration-normal: 100ms;
+  --duration-slow:   140ms;
+
   /* ── Component Aliases (enforce brutalist styling) ── */
   --button-radius:  0;
   --card-radius:    0;

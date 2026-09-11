@@ -1,5 +1,5 @@
 /* @ui:component popover */
-/* @ui:tokens color-bg color-fg color-border shadow-md radius-lg space-3 space-4 z-dropdown duration-fast ease-default font-ui border-width focus-ring-width focus-ring-style focus-ring-color focus-ring-offset surface-backdrop */
+/* @ui:tokens color-bg panel-bg color-fg color-border shadow-md radius-lg space-3 space-4 z-dropdown duration-fast ease-default font-ui border-width focus-ring-width focus-ring-style focus-ring-color focus-ring-offset surface-backdrop */
 
 /* ── Root ── */
 [data-ui="popover"] {
@@ -43,7 +43,7 @@
   padding: var(--space-4);
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-lg);
-  background: var(--color-bg);
+  background: var(--panel-bg);
   color: var(--color-fg);
   box-shadow: var(--shadow-md);
   opacity: 0;
@@ -146,7 +146,7 @@
   position: absolute;
   width: 8px;
   height: 8px;
-  background: var(--color-bg);
+  background: var(--panel-bg);
   border: var(--border-width) solid var(--color-border);
   transform: rotate(45deg);
 }

@@ -1,5 +1,5 @@
 /* @ui:component drawer */
-/* @ui:tokens color-bg color-fg color-border shadow-xl space-4 space-6 radius-none z-overlay z-modal duration-normal duration-slow ease-out ease-default font-heading border-width focus-ring-width focus-ring-style focus-ring-color focus-ring-offset surface-backdrop */
+/* @ui:tokens color-bg panel-bg color-fg color-border shadow-xl space-4 space-6 radius-none z-overlay z-modal duration-normal duration-slow ease-out ease-default font-heading border-width focus-ring-width focus-ring-style focus-ring-color focus-ring-offset surface-backdrop */
 
 /* ── Root ── */
 [data-ui="drawer"] {
@@ -34,7 +34,7 @@
   flex-direction: column;
   width: var(--drawer-width, 400px);
   max-width: 100vw;
-  background: var(--color-bg);
+  background: var(--panel-bg);
   border: none;
   box-shadow: var(--drawer-shadow, var(--shadow-xl));
   transition: transform var(--duration-slow) var(--ease-out);

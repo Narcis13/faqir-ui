@@ -19,7 +19,7 @@ Cascade order, as `tokens/index.css` imports them: `palette.css` → `spacing.cs
 
 ## Token Groups
 
-354 tokens in 10 groups:
+355 tokens in 10 groups:
 
 - `palette` (67) — raw oklch color values, never referenced by components directly
 - `spacing` (23) — 4px base, harmonic scale
@@ -28,7 +28,7 @@ Cascade order, as `tokens/index.css` imports them: `palette.css` → `spacing.cs
 - `textures` (6) — named surface materials (SVG data URIs)
 - `motion` (19) — easings, durations and motion personality
 - `semantic` (31) — purpose-based tokens, referenced by components
-- `aliases` (60) — per-component overrides mapping to semantic tokens
+- `aliases` (61) — per-component overrides mapping to semantic tokens
 - `document` (42) — structural tokens for document/print rendering
 - `doc-aliases` (46) — component-level document tokens
 
@@ -417,7 +417,7 @@ _`registry/tokens/semantic.css` · 31 tokens_
 
 ## aliases — per-component overrides mapping to semantic tokens
 
-_`registry/tokens/aliases.css` · 60 tokens_
+_`registry/tokens/aliases.css` · 61 tokens_
 
 ### Controls
 
@@ -514,6 +514,12 @@ _`registry/tokens/aliases.css` · 60 tokens_
 | `--switch-radius` | `var(--radius-full)` |
 | `--switch-bg` | `var(--color-bg-muted)` |
 | `--switch-thumb-shadow` | `var(--shadow-xs)` |
+
+### Floating panels
+
+| Token | Value |
+|---|---|
+| `--panel-bg` | `var(--color-bg)` |
 
 ### Dialog
 

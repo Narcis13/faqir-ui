@@ -1,5 +1,5 @@
 /* @ui:component sheet */
-/* @ui:tokens color-bg color-fg color-border shadow-xl radius-xl space-4 space-6 z-overlay z-modal duration-normal duration-slow ease-out font-heading border-width focus-ring-width focus-ring-style focus-ring-color focus-ring-offset surface-backdrop */
+/* @ui:tokens color-bg panel-bg color-fg color-border shadow-xl radius-xl space-4 space-6 z-overlay z-modal duration-normal duration-slow ease-out font-heading border-width focus-ring-width focus-ring-style focus-ring-color focus-ring-offset surface-backdrop */
 
 /* ── Root ── */
 [data-ui="sheet"] {
@@ -30,7 +30,7 @@
   z-index: var(--z-modal);
   display: flex;
   flex-direction: column;
-  background: var(--color-bg);
+  background: var(--panel-bg);
   box-shadow: var(--shadow-xl);
   transition: transform var(--duration-slow) var(--ease-out);
 }

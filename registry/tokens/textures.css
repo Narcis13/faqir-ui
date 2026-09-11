@@ -32,27 +32,21 @@
 :root {
   /* Film grain — fractal noise masking a flat currentColor fill. The mask is
      what makes this a tint rather than the turbulence's own rainbow. */
-  --texture-grain:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Cmask id='m'%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/mask%3E%3Crect width='160' height='160' fill='currentColor' mask='url(%23m)' opacity='0.14'/%3E%3C/svg%3E");
+  --texture-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Cmask id='m'%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/mask%3E%3Crect width='160' height='160' fill='currentColor' mask='url(%23m)' opacity='0.14'/%3E%3C/svg%3E");
 
   /* Paper fibre — lower frequency, more octaves, softer than grain. */
-  --texture-paper:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.04 0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Cmask id='m'%3E%3Crect width='200' height='200' filter='url(%23p)'/%3E%3C/mask%3E%3Crect width='200' height='200' fill='currentColor' mask='url(%23m)' opacity='0.1'/%3E%3C/svg%3E");
+  --texture-paper: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.04 0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Cmask id='m'%3E%3Crect width='200' height='200' filter='url(%23p)'/%3E%3C/mask%3E%3Crect width='200' height='200' fill='currentColor' mask='url(%23m)' opacity='0.1'/%3E%3C/svg%3E");
 
   /* Dot field — one dot per 16px cell. */
-  --texture-dots:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Ccircle cx='2' cy='2' r='1' fill='currentColor' opacity='0.18'/%3E%3C/svg%3E");
+  --texture-dots: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Ccircle cx='2' cy='2' r='1' fill='currentColor' opacity='0.18'/%3E%3C/svg%3E");
 
   /* Graph-paper grid — hairlines on a 24px cell. */
-  --texture-grid:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Cpath d='M24 0H0v24' fill='none' stroke='currentColor' stroke-width='1' opacity='0.12'/%3E%3C/svg%3E");
+  --texture-grid: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Cpath d='M24 0H0v24' fill='none' stroke='currentColor' stroke-width='1' opacity='0.12'/%3E%3C/svg%3E");
 
   /* Diagonal hatching — 45°, 8px pitch. */
-  --texture-stripes:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M-2 2 2-2M0 8 8 0M6 10l4-4' stroke='currentColor' stroke-width='1' opacity='0.12'/%3E%3C/svg%3E");
+  --texture-stripes: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M-2 2 2-2M0 8 8 0M6 10l4-4' stroke='currentColor' stroke-width='1' opacity='0.12'/%3E%3C/svg%3E");
 
   /* Soft gradient mesh — three offset radial blooms, the only non-tiling
      texture here (it is sized to cover, not to repeat). */
-  --texture-mesh:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='640'%3E%3CradialGradient id='a' cx='20%25' cy='20%25' r='60%25'%3E%3Cstop offset='0%25' stop-color='currentColor' stop-opacity='0.18'/%3E%3Cstop offset='100%25' stop-color='currentColor' stop-opacity='0'/%3E%3C/radialGradient%3E%3CradialGradient id='b' cx='80%25' cy='30%25' r='55%25'%3E%3Cstop offset='0%25' stop-color='currentColor' stop-opacity='0.14'/%3E%3Cstop offset='100%25' stop-color='currentColor' stop-opacity='0'/%3E%3C/radialGradient%3E%3CradialGradient id='c' cx='50%25' cy='90%25' r='60%25'%3E%3Cstop offset='0%25' stop-color='currentColor' stop-opacity='0.12'/%3E%3Cstop offset='100%25' stop-color='currentColor' stop-opacity='0'/%3E%3C/radialGradient%3E%3Crect width='640' height='640' fill='url(%23a)'/%3E%3Crect width='640' height='640' fill='url(%23b)'/%3E%3Crect width='640' height='640' fill='url(%23c)'/%3E%3C/svg%3E");
+  --texture-mesh: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='640'%3E%3CradialGradient id='a' cx='20%25' cy='20%25' r='60%25'%3E%3Cstop offset='0%25' stop-color='currentColor' stop-opacity='0.18'/%3E%3Cstop offset='100%25' stop-color='currentColor' stop-opacity='0'/%3E%3C/radialGradient%3E%3CradialGradient id='b' cx='80%25' cy='30%25' r='55%25'%3E%3Cstop offset='0%25' stop-color='currentColor' stop-opacity='0.14'/%3E%3Cstop offset='100%25' stop-color='currentColor' stop-opacity='0'/%3E%3C/radialGradient%3E%3CradialGradient id='c' cx='50%25' cy='90%25' r='60%25'%3E%3Cstop offset='0%25' stop-color='currentColor' stop-opacity='0.12'/%3E%3Cstop offset='100%25' stop-color='currentColor' stop-opacity='0'/%3E%3C/radialGradient%3E%3Crect width='640' height='640' fill='url(%23a)'/%3E%3Crect width='640' height='640' fill='url(%23b)'/%3E%3Crect width='640' height='640' fill='url(%23c)'/%3E%3C/svg%3E");
 }

@@ -72,12 +72,21 @@ export interface ThemePreviewSpec {
   inlineCss?: string;
 }
 
-/** Token stylesheets every preview loads, in `registry/tokens/index.css` order. */
+/**
+ * Token stylesheets every preview loads, in `registry/tokens/index.css` order.
+ *
+ * `textures` joined the list in 1.1A-14, when the first themes pointed
+ * `--texture-page` at one of its six named data URIs: without the sheet the role
+ * token resolves to nothing, `background-image` drops the declaration, and the
+ * preview shows a theme with its material silently missing — which is exactly
+ * the class of quiet failure §3 forbids.
+ */
 const TOKEN_SHEETS = [
   "palette",
   "spacing",
   "typography",
   "effects",
+  "textures",
   "motion",
   "semantic",
   "aliases",
@@ -438,16 +447,19 @@ export const GALLERY_PREVIEWS: ThemePreviewSpec[] = [
   },
   {
     name: "brutalist",
-    tagline: "Pure black on white — thick borders, no shadows, zero rounding.",
+    tagline: "Pure black on white — a 3px rule around everything, uppercase headings, no shadows, zero rounding.",
     initials: "BR",
     scheme: "both",
-    signature: `<div style="height: var(--space-2); background: var(--color-primary); border-block-end: var(--space-0h) solid var(--color-fg);" aria-hidden="true"></div>`,
+    signature: `<div style="height: var(--space-2); background: var(--color-primary); border-block-end: var(--border-width) solid var(--color-fg);" aria-hidden="true"></div>`,
   },
   {
     name: "paper",
-    tagline: "Warm cream surfaces, dark brown text, earthy accents — print-inspired.",
+    tagline: "Warm cream stock with a serif reading face — earthy accents, printed rules, no elevation.",
     initials: "PA",
     scheme: "both",
+    // The theme's two claims in one strip: the paper grain it dresses every
+    // page in, ruled off with the same warm tan edge that replaces its shadows.
+    signature: `<div style="height: var(--space-6); background-image: var(--texture-page); border-block-end: var(--border-width) solid var(--color-border-strong);" aria-hidden="true"></div>`,
   },
   {
     name: "document",

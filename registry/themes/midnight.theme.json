@@ -219,6 +219,7 @@
     "page-margin-right",
     "page-margin-top",
     "page-orientation",
+    "panel-bg",
     "radius-2xl",
     "radius-full",
     "radius-lg",
@@ -337,7 +338,7 @@
   },
   "distinctiveness": {
     "nearest": "aurora",
-    "axis_distance": 1,
+    "axis_distance": 4,
     "token_distance": 0.0416
   }
 }

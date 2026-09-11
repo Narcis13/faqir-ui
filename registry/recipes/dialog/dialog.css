@@ -1,5 +1,5 @@
 /* @ui:component dialog */
-/* @ui:tokens radius-xl shadow-xl space-4 space-6 space-8 color-bg color-fg color-border color-fg-muted duration-normal duration-slow ease-default ease-out z-overlay z-modal font-heading corner-shape border-width focus-ring-width focus-ring-style focus-ring-color focus-ring-offset surface-backdrop */
+/* @ui:tokens radius-xl shadow-xl space-4 space-6 space-8 color-bg panel-bg color-fg color-border color-fg-muted duration-normal duration-slow ease-default ease-out z-overlay z-modal font-heading corner-shape border-width focus-ring-width focus-ring-style focus-ring-color focus-ring-offset surface-backdrop */
 
 /* ── Root ── */
 [data-ui="dialog"] {
@@ -34,7 +34,7 @@
   width: 90%;
   max-height: 85vh;
   overflow-y: auto;
-  background: var(--color-bg);
+  background: var(--panel-bg);
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--dialog-radius, var(--radius-xl));
   corner-shape: var(--corner-shape);

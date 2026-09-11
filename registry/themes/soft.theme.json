@@ -16,6 +16,7 @@
     "badge-radius",
     "button-radius",
     "card-radius",
+    "checkbox-radius",
     "color-bg",
     "color-bg-muted",
     "color-bg-subtle",
@@ -48,7 +49,10 @@
     "color-warning",
     "color-warning-subtle",
     "dialog-radius",
+    "ease-default",
+    "focus-shadow",
     "input-radius",
+    "motion-hover-lift",
     "radius-2xl",
     "radius-lg",
     "radius-md",
@@ -91,7 +95,6 @@
     "card-border-width",
     "card-padding",
     "card-shadow",
-    "checkbox-radius",
     "checkbox-size",
     "content-gutter",
     "control-height-lg",
@@ -142,7 +145,6 @@
     "duration-slow",
     "duration-slower",
     "ease-bounce",
-    "ease-default",
     "ease-in",
     "ease-in-out",
     "ease-out",
@@ -163,7 +165,6 @@
     "focus-ring-offset",
     "focus-ring-style",
     "focus-ring-width",
-    "focus-shadow",
     "font-body",
     "font-heading",
     "font-mono",
@@ -210,7 +211,6 @@
     "measure-wide",
     "motion-enter-duration",
     "motion-enter-ease",
-    "motion-hover-lift",
     "motion-leave-duration",
     "motion-leave-ease",
     "motion-scale-from",
@@ -226,6 +226,7 @@
     "page-margin-right",
     "page-margin-top",
     "page-orientation",
+    "panel-bg",
     "radius-full",
     "radius-none",
     "section-gap-lg",
@@ -323,9 +324,9 @@
     },
     "depth": "layered",
     "material": "none",
-    "motion": "smooth",
+    "motion": "springy",
     "density": "comfortable",
-    "focus": "ring",
+    "focus": "glow",
     "decoration": {
       "link": "offset",
       "divider": "solid"
@@ -333,14 +334,14 @@
     "controls": {
       "button": "pill",
       "input": "box",
-      "checkbox": "square",
+      "checkbox": "round",
       "switch": "pill"
     },
     "contrast": "standard"
   },
   "distinctiveness": {
     "nearest": "slate",
-    "axis_distance": 5,
+    "axis_distance": 7,
     "token_distance": 0.0548
   }
 }

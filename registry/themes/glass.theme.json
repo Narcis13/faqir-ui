@@ -45,12 +45,19 @@
     "color-warning",
     "color-warning-subtle",
     "glass-blur",
-    "glass-panel",
+    "input-fill",
+    "panel-bg",
+    "radius-2xl",
+    "radius-lg",
+    "radius-md",
+    "radius-sm",
+    "radius-xl",
     "shadow-lg",
     "shadow-md",
     "shadow-sm",
     "shadow-xl",
-    "shadow-xs"
+    "shadow-xs",
+    "surface-backdrop"
   ],
   "tokens_inherited": [
     "avatar-radius",
@@ -178,7 +185,6 @@
     "input-bg-filled",
     "input-border",
     "input-border-width",
-    "input-fill",
     "input-font",
     "input-height",
     "input-radius",
@@ -222,13 +228,8 @@
     "page-margin-right",
     "page-margin-top",
     "page-orientation",
-    "radius-2xl",
     "radius-full",
-    "radius-lg",
-    "radius-md",
     "radius-none",
-    "radius-sm",
-    "radius-xl",
     "section-gap-lg",
     "section-gap-md",
     "section-gap-sm",
@@ -266,7 +267,6 @@
     "stat-value-size",
     "stat-value-weight",
     "stripe-bg",
-    "surface-backdrop",
     "switch-bg",
     "switch-height",
     "switch-radius",
@@ -318,11 +318,11 @@
       }
     },
     "shape": {
-      "radius": "soft",
+      "radius": "round",
       "border": "hairline",
       "corner": "round"
     },
-    "depth": "layered",
+    "depth": "glass",
     "material": "none",
     "motion": "smooth",
     "density": "comfortable",
@@ -333,7 +333,7 @@
     },
     "controls": {
       "button": "soft",
-      "input": "box",
+      "input": "filled",
       "checkbox": "square",
       "switch": "pill"
     },
@@ -341,7 +341,7 @@
   },
   "distinctiveness": {
     "nearest": "slate",
-    "axis_distance": 4,
+    "axis_distance": 6,
     "token_distance": 0.0282
   }
 }

@@ -56,11 +56,15 @@
     "doc-table-footer-bg",
     "doc-table-header-bg",
     "doc-table-stripe-bg",
+    "font-body",
+    "font-heading",
+    "heading-weight",
     "shadow-lg",
     "shadow-md",
     "shadow-sm",
     "shadow-xl",
-    "shadow-xs"
+    "shadow-xs",
+    "texture-page"
   ],
   "tokens_inherited": [
     "avatar-radius",
@@ -156,8 +160,6 @@
     "focus-ring-style",
     "focus-ring-width",
     "focus-shadow",
-    "font-body",
-    "font-heading",
     "font-mono",
     "font-sans",
     "font-serif",
@@ -165,7 +167,6 @@
     "heading-leading",
     "heading-tracking",
     "heading-transform",
-    "heading-weight",
     "image-border",
     "image-border-width",
     "image-caption-color",
@@ -219,6 +220,7 @@
     "page-margin-right",
     "page-margin-top",
     "page-orientation",
+    "panel-bg",
     "radius-2xl",
     "radius-full",
     "radius-lg",
@@ -279,7 +281,6 @@
     "text-sm",
     "text-xl",
     "text-xs",
-    "texture-page",
     "texture-surface",
     "weight-bold",
     "weight-medium",
@@ -304,11 +305,11 @@
     "neutral": "warm",
     "scheme": "both",
     "type": {
-      "pairing": "system",
+      "pairing": "serif-editorial",
       "scale": 1.2,
       "base": 16,
       "voice": {
-        "weight": "bold",
+        "weight": "semibold",
         "tracking": "normal",
         "transform": "none"
       }
@@ -318,8 +319,8 @@
       "border": "hairline",
       "corner": "round"
     },
-    "depth": "soft",
-    "material": "none",
+    "depth": "flat",
+    "material": "paper",
     "motion": "smooth",
     "density": "comfortable",
     "focus": "ring",
@@ -337,7 +338,7 @@
   },
   "distinctiveness": {
     "nearest": "slate",
-    "axis_distance": 3,
+    "axis_distance": 6,
     "token_distance": 0.0666
   }
 }

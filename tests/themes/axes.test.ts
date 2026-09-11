@@ -521,18 +521,18 @@ type Row = [string, string, string, string, string, string, string, string, stri
 
 const THEME_TABLE: Row[] = [
   // theme            neutral   pairing           radius   border      depth      motion    focus   button  input
-  ["aurora", "gray", "system", "soft", "hairline", "soft", "smooth", "ring", "soft", "standard"],
-  ["brutalist", "gray", "system", "sharp", "hairline", "flat", "smooth", "ring", "rect", "high"],
+  ["aurora", "gray", "system", "soft", "hairline", "layered", "smooth", "ring", "soft", "standard"],
+  ["brutalist", "gray", "system", "sharp", "heavy", "flat", "minimal", "bold", "rect", "high"],
   ["contrast", "gray", "system", "soft", "hairline", "soft", "smooth", "ring", "soft", "high"],
   ["default", "gray", "system", "soft", "hairline", "soft", "smooth", "ring", "soft", "standard"],
   ["document", "gray", "sans-grotesque", "sharp", "hairline", "flat", "smooth", "ring", "rect", "high"],
   ["document-serif", "gray", "sans-grotesque", "sharp", "hairline", "flat", "smooth", "ring", "rect", "high"],
-  ["glass", "cool", "system", "soft", "hairline", "layered", "smooth", "ring", "soft", "standard"],
+  ["glass", "cool", "system", "round", "hairline", "glass", "smooth", "ring", "soft", "standard"],
   ["midnight", "cool", "system", "soft", "hairline", "soft", "smooth", "ring", "soft", "standard"],
-  ["paper", "warm", "system", "soft", "hairline", "soft", "smooth", "ring", "soft", "standard"],
+  ["paper", "warm", "serif-editorial", "soft", "hairline", "flat", "smooth", "ring", "soft", "standard"],
   ["slate", "gray", "system", "soft", "hairline", "soft", "smooth", "ring", "soft", "standard"],
-  ["soft", "warm", "system", "pill", "hairline", "layered", "smooth", "ring", "pill", "standard"],
-  ["terminal", "tinted", "mono", "sharp", "hairline", "soft", "smooth", "ring", "rect", "standard"],
+  ["soft", "warm", "system", "pill", "hairline", "layered", "springy", "glow", "pill", "standard"],
+  ["terminal", "tinted", "mono", "sharp", "hairline", "soft", "snappy", "inset", "rect", "standard"],
 ];
 
 /** The accent and scheme each theme lands on — the rest of the pinned table. */
@@ -599,15 +599,29 @@ describe("axesFromCss · the twelve shipped themes", () => {
     });
   }
 
-  it("every theme leaves the axes it never mentions at the registry's own value", () => {
+  it("says which themes have adopted a material or a heading case, and which have not", () => {
     // Nothing in 1.0 declared a material, a corner shape or a heading voice, so
-    // every shipped theme must derive the base layer's answer for them. This is
-    // what 1.1A-14 and 1.1A-15 will change, one theme at a time.
+    // until 1.1A-14 every shipped theme derived the base layer's answer for all
+    // four. Three of the six themes that batch adopted now say something; the
+    // rest are still the registry's own value, and 1.1A-15 is where the next
+    // ones move. Pinned per theme rather than as a blanket, so an adoption is a
+    // visible edit here and a drift is a failure.
+    const ADOPTED: Record<string, string> = {
+      aurora: "mesh/round/none/comfortable",
+      paper: "paper/round/none/comfortable",
+      terminal: "stripes/round/none/comfortable",
+      brutalist: "none/round/uppercase/comfortable",
+    };
     for (const [name] of THEME_TABLE) {
       const a = shippedAxes(name);
-      expect({ [name]: [a.material, a.shape.corner, a.type.voice!.transform, a.density] }).toEqual({
-        [name]: ["none", "round", "none", "comfortable"],
-      });
+      const derived = [a.material, a.shape.corner, a.type.voice!.transform, a.density].join("/");
+      expect({ [name]: derived }).toEqual({ [name]: ADOPTED[name] ?? "none/round/none/comfortable" });
+    }
+    // `corner` and `density` are still nobody's: no theme ships a bevel, and a
+    // density is a `@ui:density` header directive none of the twelve carries.
+    for (const [name] of THEME_TABLE) {
+      const a = shippedAxes(name);
+      expect({ [name]: `${a.shape.corner}/${a.density}` }).toEqual({ [name]: "round/comfortable" });
     }
   });
 
@@ -804,14 +818,16 @@ describe("lengths, lists and shadows", () => {
 //
 // FAQIR-VISION §5.1 diagnoses twelve themes that read as one, and §5.2 answers
 // it with a rule: two shipped themes must differ on at least FOUR axes. Until
-// this task that rule had nothing to count. Now it does, and the count is the
+// 1.1A-08 that rule had nothing to count. When it first did, the count WAS the
 // diagnosis restated as a number: FIFTEEN of the twenty-three enumerated axis
-// leaves are IDENTICAL across all twelve themes, and four pairs are identical on
-// every one of them — they differ only in accent.
+// leaves identical across all twelve themes, four pairs identical on every one
+// of them, 26 of the 66 pairs below the minimum.
 //
-// This is pinned rather than merely observed because 1.1A-14 and 1.1A-15 exist
-// to move it, and 1.1A-12 arms the gate that will forbid the low end. A theme
-// edit that makes the registry more varied must come here and say so.
+// 1.1A-14 is the first task to move it, and the same three numbers now read
+// four, two and ten — six themes saying in tokens what they had only ever said
+// in colour. This is pinned rather than merely observed because 1.1A-15 moves it
+// again and 1.1A-12 arms the gate that forbids the low end. A theme edit that
+// makes the registry more varied must come here and say so.
 
 describe("axesFromCss · how alike the twelve shipped themes are [feeds 1.1A-12]", () => {
   const LEAVES = Object.keys(THEME_AXIS_VALUES);
@@ -825,52 +841,42 @@ describe("axesFromCss · how alike the twelve shipped themes are [feeds 1.1A-12]
     ).length;
   }
 
-  it("fifteen of the twenty-three leaves are the same in every shipped theme", () => {
+  it("four of the twenty-three leaves are the same in every shipped theme", () => {
+    // Fifteen when 1.1A-08 first counted them. 1.1A-14 moved eleven of those
+    // fifteen by giving six themes the families to say what they had always
+    // meant: a weight, a tracking, a heading case, an edge weight, a material, a
+    // motion personality, a focus treatment, a link rule, a divider style, an
+    // input silhouette and a checkbox shape are each now something at least one
+    // theme differs on. The four that remain are the two ramp shapes (nothing
+    // rescales type yet), the corner shape (no theme ships a bevel) and density
+    // (a header directive none of the twelve carries).
     const constant = LEAVES.filter(
       (leaf) => new Set(NAMES.map((n) => JSON.stringify(at(DERIVED.get(n)!, leaf)))).size === 1,
     );
     expect(LEAVES.length).toBe(23);
-    expect(constant).toEqual([
-      "type.scale",
-      "type.base",
-      "type.voice.weight",
-      "type.voice.tracking",
-      "type.voice.transform",
-      "shape.border",
-      "shape.corner",
-      "material",
-      "motion",
-      "density",
-      "focus",
-      "decoration.link",
-      "decoration.divider",
-      "controls.input",
-      "controls.checkbox",
-    ]);
+    expect(constant).toEqual(["type.scale", "type.base", "shape.corner", "density"]);
   });
 
-  it("four pairs are axis-identical — they differ only in accent", () => {
+  it("two pairs are axis-identical — they differ only in accent", () => {
     const identical: string[] = [];
     for (let i = 0; i < NAMES.length; i++) {
       for (let j = i + 1; j < NAMES.length; j++) {
         if (axisDistance(NAMES[i], NAMES[j]) === 0) identical.push(`${NAMES[i]} ↔ ${NAMES[j]}`);
       }
     }
-    expect(identical).toEqual([
-      "aurora ↔ default",
-      "aurora ↔ slate",
-      "default ↔ slate",
-      "document ↔ document-serif",
-    ]);
+    // `aurora` left both of its pairs in 1.1A-14; the two that remain are
+    // 1.1A-15's, and `default` cannot be the one that moves (§5 below holds it
+    // equal to THEME_SEED_DEFAULTS).
+    expect(identical).toEqual(["default ↔ slate", "document ↔ document-serif"]);
   });
 
-  it("26 of the 66 pairs sit below §5.2's four-axis minimum", () => {
+  it("10 of the 66 pairs sit below §5.2's four-axis minimum", () => {
     let below = 0;
     for (let i = 0; i < NAMES.length; i++) {
       for (let j = i + 1; j < NAMES.length; j++) {
         if (axisDistance(NAMES[i], NAMES[j]) < 4) below++;
       }
     }
-    expect(below).toBe(26);
+    expect(below).toBe(10);
   });
 });

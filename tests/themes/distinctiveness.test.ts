@@ -329,110 +329,108 @@ describe("thresholds · named, and argued for", () => {
 });
 
 /**
- * The 66 shipped pairs, MEASURED in this task's session and pinned here. The
- * same table is in the commit body. A theme CSS change that moves a pair fails
- * this test, which is what makes such a change deliberate rather than drift.
+ * The 66 shipped pairs, MEASURED and pinned here. The same table is in the
+ * commit body. A theme CSS change that moves a pair fails this test, which is
+ * what makes such a change deliberate rather than drift.
+ *
+ * Re-measured in 1.1A-14, when `glass`, `brutalist`, `terminal`, `paper`, `soft`
+ * and `aurora` adopted the 1.1 token families. 47 of the 51 pairs that involve
+ * one of the six rose, four held, and NOT ONE fell — the axis distances moved
+ * and the colour distances did not, which is the shape of a structural change
+ * rather than a recolour.
  */
 const SHIPPED_PAIRS: Array<[string, string, number, number]> = [
-  ["aurora", "brutalist", 6, 0.1961],
-  ["aurora", "contrast", 3, 0.0888],
-  ["aurora", "default", 1, 0.0515],
-  ["aurora", "document", 8, 0.1238],
-  ["aurora", "document-serif", 8, 0.1459],
-  ["aurora", "glass", 2, 0.0305],
-  ["aurora", "midnight", 1, 0.0416],
-  ["aurora", "paper", 3, 0.0724],
-  ["aurora", "slate", 2, 0.0482],
-  ["aurora", "soft", 6, 0.0882],
-  ["aurora", "terminal", 6, 0.1035],
-  ["brutalist", "contrast", 5, 0.1811],
-  ["brutalist", "default", 6, 0.2047],
-  ["brutalist", "document", 4, 0.1184],
-  ["brutalist", "document-serif", 3, 0.1245],
-  ["brutalist", "glass", 7, 0.1995],
-  ["brutalist", "midnight", 7, 0.1942],
-  ["brutalist", "paper", 7, 0.1999],
-  ["brutalist", "slate", 6, 0.1951],
-  ["brutalist", "soft", 7, 0.2092],
-  ["brutalist", "terminal", 6, 0.1988],
+  ["aurora", "brutalist", 11, 0.1961],
+  ["aurora", "contrast", 6, 0.0888],
+  ["aurora", "default", 4, 0.0515],
+  ["aurora", "document", 9, 0.1238],
+  ["aurora", "document-serif", 9, 0.1459],
+  ["aurora", "glass", 6, 0.0305],
+  ["aurora", "midnight", 4, 0.0416],
+  ["aurora", "paper", 6, 0.0724],
+  ["aurora", "slate", 5, 0.0482],
+  ["aurora", "soft", 9, 0.0882],
+  ["aurora", "terminal", 11, 0.1035],
+  ["brutalist", "contrast", 9, 0.1811],
+  ["brutalist", "default", 10, 0.2047],
+  ["brutalist", "document", 8, 0.1184],
+  ["brutalist", "document-serif", 7, 0.1245],
+  ["brutalist", "glass", 11, 0.1995],
+  ["brutalist", "midnight", 11, 0.1942],
+  ["brutalist", "paper", 11, 0.1999],
+  ["brutalist", "slate", 10, 0.1951],
+  ["brutalist", "soft", 11, 0.2092],
+  ["brutalist", "terminal", 11, 0.1988],
   ["contrast", "default", 2, 0.0731],
   ["contrast", "document", 6, 0.0768],
   ["contrast", "document-serif", 7, 0.0971],
-  ["contrast", "glass", 3, 0.0691],
+  ["contrast", "glass", 5, 0.0691],
   ["contrast", "midnight", 4, 0.0925],
-  ["contrast", "paper", 3, 0.107],
+  ["contrast", "paper", 6, 0.107],
   ["contrast", "slate", 2, 0.0662],
-  ["contrast", "soft", 7, 0.0741],
-  ["contrast", "terminal", 6, 0.0998],
+  ["contrast", "soft", 9, 0.0741],
+  ["contrast", "terminal", 10, 0.0998],
   ["default", "document", 7, 0.1221],
   ["default", "document-serif", 8, 0.1516],
-  ["default", "glass", 2, 0.0415],
+  ["default", "glass", 4, 0.0415],
   ["default", "midnight", 1, 0.0588],
-  ["default", "paper", 3, 0.0856],
+  ["default", "paper", 6, 0.0856],
   ["default", "slate", 1, 0.0498],
-  ["default", "soft", 6, 0.0794],
-  ["default", "terminal", 6, 0.1057],
+  ["default", "soft", 8, 0.0794],
+  ["default", "terminal", 10, 0.1057],
   ["document", "document-serif", 1, 0.0482],
   ["document", "glass", 8, 0.1176],
   ["document", "midnight", 9, 0.122],
   ["document", "paper", 9, 0.1314],
   ["document", "slate", 6, 0.1028],
-  ["document", "soft", 8, 0.1246],
-  ["document", "terminal", 7, 0.1125],
+  ["document", "soft", 10, 0.1246],
+  ["document", "terminal", 11, 0.1125],
   ["document-serif", "glass", 9, 0.1464],
   ["document-serif", "midnight", 9, 0.1507],
   ["document-serif", "paper", 8, 0.1299],
   ["document-serif", "slate", 7, 0.1309],
-  ["document-serif", "soft", 8, 0.1436],
-  ["document-serif", "terminal", 6, 0.1239],
-  ["glass", "midnight", 1, 0.0443],
-  ["glass", "paper", 4, 0.0781],
-  ["glass", "slate", 4, 0.0282],
-  ["glass", "soft", 5, 0.0701],
-  ["glass", "terminal", 7, 0.0962],
-  ["midnight", "paper", 3, 0.0867],
+  ["document-serif", "soft", 10, 0.1436],
+  ["document-serif", "terminal", 10, 0.1239],
+  ["glass", "midnight", 3, 0.0443],
+  ["glass", "paper", 8, 0.0781],
+  ["glass", "slate", 6, 0.0282],
+  ["glass", "soft", 8, 0.0701],
+  ["glass", "terminal", 11, 0.0962],
+  ["midnight", "paper", 6, 0.0867],
   ["midnight", "slate", 3, 0.052],
-  ["midnight", "soft", 6, 0.0848],
-  ["midnight", "terminal", 6, 0.0966],
-  ["paper", "slate", 3, 0.0666],
-  ["paper", "soft", 4, 0.072],
-  ["paper", "terminal", 5, 0.0846],
-  ["slate", "soft", 5, 0.0548],
-  ["slate", "terminal", 5, 0.0809],
-  ["soft", "terminal", 6, 0.0771],
+  ["midnight", "soft", 8, 0.0848],
+  ["midnight", "terminal", 10, 0.0966],
+  ["paper", "slate", 6, 0.0666],
+  ["paper", "soft", 8, 0.072],
+  ["paper", "terminal", 10, 0.0846],
+  ["slate", "soft", 7, 0.0548],
+  ["slate", "terminal", 9, 0.0809],
+  ["soft", "terminal", 10, 0.0771],
 ];
 
 /**
  * The pairs that do NOT meet the rule today, as `name/name: reason`.
  *
- * This is the sameness problem, finally a number: twenty of the twenty-one are
- * twelve themes that differ only in hue, and the twenty-first (`glass`/`slate`)
- * is two themes whose colours are closer together than one theme's own card is
- * to its own page. 1.1A-14 and 1.1A-15 are the tasks that empty this list; the
- * gate is ARMED (the list required to be empty) when they land.
+ * This is the sameness problem, as a number that is coming down: 1.1A-12 counted
+ * twenty-one failing pairs, 1.1A-14 left EIGHT, and every one of the eight has a
+ * theme 1.1A-15 owns on at least one side — `contrast`, `default`, `midnight`,
+ * `slate`, `document`, `document-serif`. That is not a coincidence: `default`
+ * cannot move at all (`tests/themes/axes.test.ts` holds it equal to
+ * `THEME_SEED_DEFAULTS`, which is what makes `{ name, accent }` a complete
+ * seed), so every pair involving it had to be cleared from the OTHER side —
+ * which is why `aurora` and `glass` each took one axis beyond their row of the
+ * plan's adoption table. The remaining eight are batch 2's to clear, and the
+ * gate is ARMED (the list required to be empty) when it lands.
  */
 const OBLIGATIONS: Record<string, "axis" | "token" | "axis+token"> = {
-  "aurora/contrast": "axis",
-  "aurora/default": "axis",
-  "aurora/glass": "axis",
-  "aurora/midnight": "axis",
-  "aurora/paper": "axis",
-  "aurora/slate": "axis",
-  "brutalist/document-serif": "axis",
   "contrast/default": "axis",
-  "contrast/glass": "axis",
-  "contrast/paper": "axis",
   "contrast/slate": "axis",
-  "default/glass": "axis",
   "default/midnight": "axis",
-  "default/paper": "axis",
   "default/slate": "axis",
   "document/document-serif": "axis",
   "glass/midnight": "axis",
   "glass/slate": "token",
-  "midnight/paper": "axis",
   "midnight/slate": "axis",
-  "paper/slate": "axis",
 };
 
 describe("the 66 shipped pairs, measured and pinned", () => {
@@ -477,7 +475,19 @@ describe("the 66 shipped pairs, measured and pinned", () => {
     // has stopped meaning anything.
     const armed = Object.keys(OBLIGATIONS).length === 0;
     expect(armed).toBe(false);
-    expect(Object.keys(OBLIGATIONS).length).toBe(21);
+    expect(Object.keys(OBLIGATIONS).length).toBe(8);
+  });
+
+  it("every pair still below the rule is one 1.1A-15 owns a side of", () => {
+    // What 1.1A-14 can prove about the work it did NOT do: the six themes it
+    // adopted no longer fail against each other, and each remaining failure has
+    // a batch-2 theme to fix it. If this ever went red, the plan would be
+    // handing 1.1A-15 a pair it has no theme to change.
+    const BATCH_2 = ["contrast", "default", "document", "document-serif", "midnight", "slate"];
+    for (const pair of Object.keys(OBLIGATIONS)) {
+      const sides = pair.split("/");
+      expect({ [pair]: sides.some((name) => BATCH_2.includes(name)) }).toEqual({ [pair]: true });
+    }
   });
 
   it("names each theme's nearest neighbour, deterministically", () => {
@@ -518,14 +528,9 @@ describe("collisions · what the generator refuses, and what it says", () => {
   it("reports every collision, worst first, and nothing that clears both bars", () => {
     const subject = SHIPPED.find((t) => t.name === "default")!;
     const found = collisions(subject, SHIPPED, CONTEXT);
-    expect(found.map((result) => result.nearest)).toEqual([
-      "glass",
-      "slate",
-      "aurora",
-      "midnight",
-      "contrast",
-      "paper",
-    ]);
+    // Six before 1.1A-14, three after: `glass`, `aurora` and `paper` moved out
+    // of `default`'s way, and what is left is the three themes 1.1A-15 owns.
+    expect(found.map((result) => result.nearest)).toEqual(["slate", "midnight", "contrast"]);
     expect(found.every((result) => !result.passes)).toBe(true);
     // Sorted by closeness, so the first sentence a user reads is the worst one.
     const distances = found.map((result) => result.token_distance!);

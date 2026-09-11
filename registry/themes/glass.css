@@ -7,10 +7,15 @@
       its own. This is what a browser without backdrop-filter renders.
    2. The `@supports ((-webkit-backdrop-filter: …) or (backdrop-filter: …))`
       block at the end is the only place translucency exists: it re-points the
-      elevated-surface tokens at `color-mix(… , transparent)` values and frosts
-      the floating panels with `backdrop-filter`. No color-mix or
-      backdrop-filter appears outside that block, so degradation is the solid
-      theme above, not a half-transparent one.
+      elevated-surface tokens at `color-mix(… , transparent)` values and names
+      the frost in `--surface-backdrop`. No color-mix or backdrop-filter value
+      appears outside that block, so degradation is the solid theme above, not a
+      half-transparent one.
+
+   Since 1.1A-14 that block declares TOKENS and nothing else: the components
+   carry the `backdrop-filter: var(--surface-backdrop)` declaration (1.1A-04)
+   and the panel fill is `--panel-bg`, so the theme no longer reaches into five
+   components by selector to say one thing about surfaces.
 
    Contrast is gated twice (tests/themes/glass.test.ts): the solid fallbacks
    through the standard `contrast-tokens` maths, and the translucent surfaces
@@ -64,6 +69,22 @@
   --color-border:          oklch(0.88 0.012 250);
   --color-border-strong:   oklch(0.79 0.016 250);
   --color-ring:            oklch(0.50 0.20 275);
+
+  /* ── Controls: filled wells ──
+     A text field on a frosted page is a recess, not an outlined box on the same
+     white as the page behind it. `--input-fill` (1.1A-05) is the one declaration
+     that fills `input`, `textarea` and `select` together. */
+  --input-fill: var(--input-bg-filled);
+
+  /* ── Radii (generous — a pane of glass has no sharp corner) ──
+     The silhouette this theme always had in the design and never in tokens:
+     every radius steps up one notch from the base ladder, which is what makes
+     `shape.radius` derive `round` rather than the registry's `soft`. */
+  --radius-sm:   0.375rem;   /* 6px  */
+  --radius-md:   0.625rem;   /* 10px */
+  --radius-lg:   0.875rem;   /* 14px */
+  --radius-xl:   1.125rem;   /* 18px */
+  --radius-2xl:  1.5rem;     /* 24px */
 
   /* ── Shadows (large, soft — surfaces float) ── */
   --shadow-xs:  0 1px 3px oklch(0.30 0.04 260 / 0.08);
@@ -190,33 +211,29 @@
    transparent)` premultiplies to C at alpha p/100, and the tokens mix from
    `var(--color-bg…)`, so one declaration follows both schemes.
 
-   Frosted targets: the card surface (via its `--card-bg` alias) and the four
-   floating panels that hardcode `background: var(--color-bg)` in their recipe
-   CSS — dialog/sheet panels, popover content, toast. Those need an element
-   rule to go translucent; the `:root` prefix lifts specificity above the
-   recipe's own `[data-ui] [data-part]` rule regardless of load order (same
-   trick as the contrast theme's focus rings). ── */
+   Three declarations now say what fourteen lines of component selectors said:
+
+     --surface-backdrop  the frost itself. Every surface that can float — card,
+                         surface[data-variant="overlay"] and the seven floating
+                         recipes — already declares
+                         `backdrop-filter: var(--surface-backdrop)` inside this
+                         same feature query, so the theme states the value and
+                         the components decide where it lands.
+     --card-bg           the card's own translucent fill (a 1.0 alias).
+     --panel-bg          the fill of everything that floats WITHOUT a surface of
+                         its own — dialog and sheet panels, drawer, popover
+                         content and its arrow, dropdown menu, toast. A frost
+                         behind an opaque fill renders nothing, which is why the
+                         fill has to be a token too (1.1A-14).
+
+   `--glass-blur` stays: it is this theme's own knob, and naming it keeps the
+   radius of the frost readable in one place. ── */
 @supports ((-webkit-backdrop-filter: blur(1rem)) or (backdrop-filter: blur(1rem))) {
   :root {
-    --glass-blur:   16px;
+    --glass-blur:       16px;
+    --surface-backdrop: blur(var(--glass-blur)) saturate(140%);
     /* Elevated surfaces: solid → frosted (scheme-aware via var()). */
-    --card-bg:      color-mix(in oklch, var(--color-surface-1) 82%, transparent);
-    --glass-panel:  color-mix(in oklch, var(--color-bg) 78%, transparent);
-  }
-
-  :root [data-ui="card"],
-  :root [data-ui="dialog"] [data-part="panel"],
-  :root [data-ui="sheet"] [data-part="panel"],
-  :root [data-ui="popover"] [data-part="content"],
-  :root [data-ui="toast"] [data-part="toast"] {
-    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
-    backdrop-filter: blur(var(--glass-blur)) saturate(140%);
-  }
-
-  :root [data-ui="dialog"] [data-part="panel"],
-  :root [data-ui="sheet"] [data-part="panel"],
-  :root [data-ui="popover"] [data-part="content"],
-  :root [data-ui="toast"] [data-part="toast"] {
-    background: var(--glass-panel);
+    --card-bg:          color-mix(in oklch, var(--color-surface-1) 82%, transparent);
+    --panel-bg:         color-mix(in oklch, var(--color-bg) 78%, transparent);
   }
 }

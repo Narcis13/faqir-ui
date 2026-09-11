@@ -48,7 +48,13 @@
     "color-warning",
     "color-warning-subtle",
     "dialog-radius",
-    "font-sans",
+    "divider-style",
+    "duration-normal",
+    "ease-default",
+    "focus-ring-offset",
+    "font-body",
+    "font-heading",
+    "font-ui",
     "input-radius",
     "radius-2xl",
     "radius-full",
@@ -60,7 +66,8 @@
     "shadow-md",
     "shadow-sm",
     "shadow-xl",
-    "shadow-xs"
+    "shadow-xs",
+    "texture-page"
   ],
   "tokens_inherited": [
     "avatar-size-lg",
@@ -101,7 +108,6 @@
     "corner-shape",
     "dialog-overlay-bg",
     "dialog-shadow",
-    "divider-style",
     "doc-bg",
     "doc-component-gap",
     "doc-fg",
@@ -139,11 +145,9 @@
     "doc-table-stripe-bg",
     "duration-fast",
     "duration-instant",
-    "duration-normal",
     "duration-slow",
     "duration-slower",
     "ease-bounce",
-    "ease-default",
     "ease-in",
     "ease-in-out",
     "ease-out",
@@ -161,15 +165,12 @@
     "field-required-marker",
     "field-validating-color",
     "focus-ring-color",
-    "focus-ring-offset",
     "focus-ring-style",
     "focus-ring-width",
     "focus-shadow",
-    "font-body",
-    "font-heading",
     "font-mono",
+    "font-sans",
     "font-serif",
-    "font-ui",
     "heading-leading",
     "heading-tracking",
     "heading-transform",
@@ -226,6 +227,7 @@
     "page-margin-right",
     "page-margin-top",
     "page-orientation",
+    "panel-bg",
     "radius-none",
     "section-gap-lg",
     "section-gap-md",
@@ -280,7 +282,6 @@
     "text-sm",
     "text-xl",
     "text-xs",
-    "texture-page",
     "texture-surface",
     "weight-bold",
     "weight-medium",
@@ -321,13 +322,13 @@
       "corner": "round"
     },
     "depth": "soft",
-    "material": "none",
-    "motion": "smooth",
+    "material": "stripes",
+    "motion": "snappy",
     "density": "comfortable",
-    "focus": "ring",
+    "focus": "inset",
     "decoration": {
       "link": "offset",
-      "divider": "solid"
+      "divider": "dashed"
     },
     "controls": {
       "button": "rect",
@@ -339,7 +340,7 @@
   },
   "distinctiveness": {
     "nearest": "soft",
-    "axis_distance": 6,
+    "axis_distance": 10,
     "token_distance": 0.0771
   }
 }

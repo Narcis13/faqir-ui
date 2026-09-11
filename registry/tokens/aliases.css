@@ -127,6 +127,17 @@
   --switch-bg:          var(--color-bg-muted);
   --switch-thumb-shadow: var(--shadow-xs);
 
+  /* ── Floating panels ── */
+  /* What a panel that floats above the page is filled with: the dialog and
+     sheet panels, the drawer, the popover content (and its arrow), the dropdown
+     menu and the toast. They all painted `var(--color-bg)` directly, which left
+     a theme no way to make a floating surface differ from the page — the frost
+     half of that pairing is `--surface-backdrop` (1.1A-04), and a blur behind an
+     opaque fill renders nothing, so the fill has to be a token too. `card` has
+     had `--card-bg` since 1.0; this is the same handle for the things that have
+     no surface of their own. [1.1A-14] */
+  --panel-bg:          var(--color-bg);
+
   /* ── Dialog ── */
   --dialog-radius:     var(--radius-xl);
   --dialog-shadow:     var(--shadow-xl);

@@ -3,10 +3,16 @@
 import { describe, expect, it } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { Glob } from "bun";
 import { parseThemeValues, parseOklch } from "../../src/utils/oklch";
+import { axesFromCss } from "../../src/theme/axes";
 import type { ThemeManifest } from "../../src/theme-manifest";
 
 const DIR = join(import.meta.dir, "../../registry/themes");
+const TOKENS = join(import.meta.dir, "../../registry/tokens");
+const AXIS_BASE = [...new Glob("*.css").scanSync(TOKENS)]
+  .sort()
+  .map((f) => readFileSync(join(TOKENS, f), "utf8"));
 const CSS = readFileSync(join(DIR, "soft.css"), "utf8");
 const MANIFEST = JSON.parse(
   readFileSync(join(DIR, "soft.theme.json"), "utf8"),
@@ -58,6 +64,41 @@ describe("soft theme", () => {
     expect(MANIFEST.mood.filter((m) => terminalMoods.has(m))).toEqual([]);
     expect(MANIFEST.mood.length).toBeGreaterThan(0);
     expect(TERMINAL_MANIFEST.mood.length).toBeGreaterThan(0);
+  });
+
+  // ── The identity it states in tokens [1.1A-14] ────────────────────────────
+  it("derives the adoption table's row: springy motion, glow focus, round tick boxes, pill buttons", () => {
+    const axes = axesFromCss(CSS, AXIS_BASE);
+    expect({
+      motion: axes.motion,
+      focus: axes.focus,
+      checkbox: axes.controls.checkbox,
+      button: axes.controls.button,
+      depth: axes.depth,
+    }).toEqual({ motion: "springy", focus: "glow", checkbox: "round", button: "pill", depth: "layered" });
+    expect(MANIFEST.axes).toEqual(axes);
+  });
+
+  it("is springy rather than playful: the easing overshoots, the surface barely moves", () => {
+    // The classifier separates the two by how far the hover LIFT travels: past
+    // -2px a theme is moving its surfaces, not just its curves. This one is
+    // calm, and the boundary is why the lift is -1px rather than a round -2px.
+    expect(VALUES.light.get("ease-default")).toBe("var(--ease-spring)");
+    expect(VALUES.light.get("motion-hover-lift")).toBe("0 -1px");
+    const playful = axesFromCss(`${CSS}\n:root { --motion-hover-lift: 0 -3px; }\n`, AXIS_BASE);
+    expect(playful.motion).toBe("playful");
+  });
+
+  it("the glow reaches every focusable surface, because reset and the controls both read it", () => {
+    // `--focus-shadow` is declared in `base/reset.css`'s `:focus-visible` AND in
+    // all thirteen controls that paint their own ring — a control's own rule
+    // out-specifies reset's, so a theme that could only reach reset would halo
+    // bare elements and no button.
+    expect(VALUES.light.get("focus-shadow")).toBe("0 0 0 var(--space-1) var(--color-primary-subtle)");
+    const reset = readFileSync(join(import.meta.dir, "../../registry/base/reset.css"), "utf8");
+    expect(reset).toContain("box-shadow: var(--focus-shadow)");
+    const button = readFileSync(join(import.meta.dir, "../../registry/primitives/button/button.css"), "utf8");
+    expect(button).toContain("var(--focus-shadow)");
   });
 
   it("ships a preview wired to soft.css", () => {

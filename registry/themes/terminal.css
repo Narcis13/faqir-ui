@@ -62,8 +62,36 @@
   --shadow-lg:  0 4px 10px oklch(0.25 0.05 145 / 0.14);
   --shadow-xl:  0 8px 16px oklch(0.25 0.05 145 / 0.16);
 
-  /* ── Mono type everywhere: the UI face IS the code face ── */
-  --font-sans:   var(--font-mono);
+  /* ── Mono type everywhere: the UI face IS the code face ──
+     Said in ROLES since 1.1A-14. The theme used to alias the whole `--font-sans`
+     PALETTE entry, which worked only because every role happened to point at it;
+     naming the three roles is the same rendering and an honest statement — the
+     palette still holds three faces, this theme just picks one for all of them. */
+  --font-heading: var(--font-mono);
+  --font-body:    var(--font-mono);
+  --font-ui:      var(--font-mono);
+
+  /* ── Material: scanlines ──
+     A CRT does not have a flat page. `--texture-stripes` is the registry's own
+     repeating rule, tinted with `currentColor`, so the phosphor scheme carries
+     its scanlines and the paper scheme gets the same ruling in ink. */
+  --texture-page: var(--texture-stripes);
+
+  /* ── Motion (snappy — a terminal answers, it does not glide) ──
+     A short duration ON an ease-out curve, which is what `snappy` names: the
+     easing is re-pointed at this theme's own `--ease-out` rather than a literal. */
+  --duration-normal: 140ms;
+  --ease-default:    var(--ease-out);
+
+  /* ── Focus: the cursor block, not a halo ──
+     A negative offset draws the ring INSIDE the cell, the way a terminal
+     highlights the field it is in. The literal is deliberate: a `calc()` here
+     resolves to an expression, and an axis that cannot be read is an axis a
+     theme cannot be selected by. */
+  --focus-ring-offset: -2px;
+
+  /* ── Decoration: dashed rules, like a printout's fold ── */
+  --divider-style: dashed;
 
   /* ── Radii (none — a terminal has sharp cells) ── */
   --radius-sm:   0;

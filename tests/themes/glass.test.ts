@@ -44,7 +44,9 @@ import {
   CONTRAST_PAIRS,
   CONTRAST_AA,
 } from "../../src/audit/contrast-tokens";
+import { axesFromCss } from "../../src/theme/axes";
 import type { ThemeManifest } from "../../src/theme-manifest";
+import { Glob } from "bun";
 
 const DIR = join(import.meta.dir, "../../registry/themes");
 const TOKENS = join(import.meta.dir, "../../registry/tokens");
@@ -55,6 +57,10 @@ const MANIFEST = JSON.parse(
 const BASE_CSS = ["palette", "semantic", "aliases"]
   .map((f) => readFileSync(join(TOKENS, `${f}.css`), "utf8"))
   .join("\n");
+/** The axis resolver reads the WHOLE token layer — see tests/themes/axes.test.ts. */
+const AXIS_BASE = [...new Glob("*.css").scanSync(TOKENS)]
+  .sort()
+  .map((f) => readFileSync(join(TOKENS, f), "utf8"));
 
 // ── Split the stylesheet into its fallback body and its @supports blocks ────
 // Comments are stripped first so prose mentioning @supports/color-mix never
@@ -109,7 +115,7 @@ const LOOKUPS = {
 type Scheme = keyof typeof LOOKUPS;
 
 const MIX_RE = /^color-mix\(in oklch,\s*(.+?)\s+(\d+(?:\.\d+)?)%\s*,\s*transparent\)$/;
-const FROSTED_TOKENS = ["card-bg", "glass-panel"] as const;
+const FROSTED_TOKENS = ["card-bg", "panel-bg"] as const;
 const BACKDROP_TOKENS = ["color-bg", "color-bg-subtle", "color-bg-muted"] as const;
 const TEXT_TOKENS = ["color-fg", "color-fg-muted"] as const;
 
@@ -132,13 +138,12 @@ describe("glass · @supports fallback structure", () => {
     );
   });
 
-  it("keeps every color-mix() and backdrop-filter inside the @supports block", () => {
+  it("keeps every color-mix() and translucent value inside the @supports block", () => {
     expect(FALLBACK_CSS).not.toContain("color-mix(");
-    expect(FALLBACK_CSS).not.toContain("backdrop-filter");
+    expect(FALLBACK_CSS).not.toContain("surface-backdrop");
     const frost = SUPPORTS_BLOCKS.join("\n");
     expect(frost).toContain("color-mix(");
-    expect(frost).toContain("-webkit-backdrop-filter: blur(var(--glass-blur))");
-    expect(frost).toContain("backdrop-filter: blur(var(--glass-blur))");
+    expect(frost).toContain("--surface-backdrop: blur(var(--glass-blur))");
   });
 
   it("defines the frosted surface tokens ONLY inside @supports — the fallback never sees them", () => {
@@ -148,20 +153,53 @@ describe("glass · @supports fallback structure", () => {
     }
   });
 
-  it("applies the frost to the floating panels with :root-boosted specificity", () => {
-    const frost = SUPPORTS_BLOCKS.join("\n");
-    // The recipes hardcode `background: var(--color-bg)` at (0,2,0); the theme
-    // needs the :root prefix to win regardless of stylesheet load order.
-    for (const selector of [
-      ':root [data-ui="card"]',
-      ':root [data-ui="dialog"] [data-part="panel"]',
-      ':root [data-ui="sheet"] [data-part="panel"]',
-      ':root [data-ui="popover"] [data-part="content"]',
-      ':root [data-ui="toast"] [data-part="toast"]',
-    ]) {
-      expect(frost).toContain(selector);
+  // ═══════════ 1b. The frost is tokens now, not selectors [1.1A-14] ═════════
+  //
+  // Until 1.1A-14 this theme reached into five components by selector to say one
+  // thing about surfaces: `backdrop-filter` on card and the four floating
+  // panels, plus a `background` for the panels, boosted with a `:root` prefix to
+  // out-specify the recipes. All of it is three token declarations now — the
+  // components carry the feature query and read `--surface-backdrop` (1.1A-04),
+  // and the panel fill is `--panel-bg`. A theme that selects a component is a
+  // theme that only themes the components it happened to name.
+  it("selects no component: the whole theme is token declarations", () => {
+    expect(CSS).not.toContain("[data-ui=");
+    expect(CSS).not.toContain("[data-part=");
+    // Every block in the file states tokens at :root (in or out of @supports).
+    const selectors = [...CSS.replace(/\/\*[\s\S]*?\*\//g, "").matchAll(/([^{}]+)\{/g)]
+      .map((m) => m[1].trim())
+      .filter((s) => !s.startsWith("@"));
+    expect(selectors).toEqual([":root", '[data-theme="dark"]', '[data-theme="auto"]', ":root"]);
+  });
+
+  it("names the frost once, and lets the components decide where it lands", () => {
+    // The nine surfaces that read `--surface-backdrop` — asserted against the
+    // registry rather than against a list here, so a component that gains or
+    // loses the hook shows up as a change in this count.
+    const surfaces = ["primitives/card/card", "primitives/surface/surface"].concat(
+      ["dialog", "sheet", "drawer", "popover", "dropdown", "toast", "tooltip"].map((r) => `recipes/${r}/${r}`),
+    );
+    for (const path of surfaces) {
+      const css = readFileSync(join(import.meta.dir, "../../registry", `${path}.css`), "utf8");
+      expect(`${path}: ${css.includes("backdrop-filter: var(--surface-backdrop)")}`).toBe(`${path}: true`);
     }
-    expect(frost).toContain("background: var(--glass-panel)");
+  });
+
+  it("fills every floating panel through --panel-bg, including the popover's arrow", () => {
+    // The half a backdrop filter cannot do: a blur behind an OPAQUE fill renders
+    // nothing, so the fill has to be a token too.
+    const panels: Array<[string, number]> = [
+      ["recipes/dialog/dialog", 1],
+      ["recipes/sheet/sheet", 1],
+      ["recipes/drawer/drawer", 1],
+      ["recipes/popover/popover", 2], // the content, and the arrow that must match it
+      ["recipes/dropdown/dropdown", 1],
+      ["recipes/toast/toast", 1],
+    ];
+    for (const [path, count] of panels) {
+      const css = readFileSync(join(import.meta.dir, "../../registry", `${path}.css`), "utf8");
+      expect(`${path}: ${css.split("background: var(--panel-bg);").length - 1}`).toBe(`${path}: ${count}`);
+    }
   });
 });
 
@@ -234,7 +272,34 @@ describe("glass · frosted surfaces clear WCAG AA composited over every opaque s
   }
 });
 
-// ═══════════ 4. Manifest: agent-facing character ═══════════════════════════
+// ═══════════ 4. The axes it claims, derived [1.1A-14] ══════════════════════
+describe("glass · the identity it states in tokens", () => {
+  const axes = axesFromCss(CSS, AXIS_BASE);
+
+  it("derives the adoption table's row: glass depth, round shape, filled controls", () => {
+    expect({
+      depth: axes.depth,
+      radius: axes.shape.radius,
+      input: axes.controls.input,
+      neutral: axes.neutral,
+    }).toEqual({ depth: "glass", radius: "round", input: "filled", neutral: "cool" });
+  });
+
+  it("the manifest carries the same block, because the generator derives it too", () => {
+    expect(MANIFEST.axes).toEqual(axes);
+  });
+
+  it("`depth: glass` is the backdrop speaking, not the shadows", () => {
+    // The classifier checks `flat` first, so a theme that removed its shadows
+    // would read flat however it frosts. Glass keeps a full, large ramp — the
+    // surfaces float AND they are translucent — which is why the axis lands on
+    // the backdrop. Remove the frost and the same stylesheet reads `layered`,
+    // which is what it derived before this task.
+    expect(axesFromCss(FALLBACK_CSS, AXIS_BASE).depth).toBe("layered");
+  });
+});
+
+// ═══════════ 5. Manifest: agent-facing character ═══════════════════════════
 describe("glass · manifest and preview", () => {
   it("declares both schemes and a translucent/glass mood vocabulary", () => {
     expect(MANIFEST.scheme).toBe("both");

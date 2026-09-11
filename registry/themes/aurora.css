@@ -49,12 +49,36 @@
   /* ── Signature gradient accent (decorative; violet → cyan) ── */
   --gradient-accent:       linear-gradient(135deg, oklch(0.51 0.24 300), oklch(0.60 0.14 220));
 
-  /* ── Shadows (violet-tinted) ── */
-  --shadow-xs:  0 1px 2px oklch(0.25 0.05 300 / 0.08);
-  --shadow-sm:  0 1px 3px oklch(0.25 0.05 300 / 0.10), 0 1px 2px oklch(0.25 0.05 300 / 0.06);
-  --shadow-md:  0 4px 6px oklch(0.25 0.05 300 / 0.08), 0 2px 4px oklch(0.25 0.05 300 / 0.06);
-  --shadow-lg:  0 10px 15px oklch(0.25 0.05 300 / 0.10), 0 4px 6px oklch(0.25 0.05 300 / 0.06);
-  --shadow-xl:  0 20px 25px oklch(0.25 0.05 300 / 0.12), 0 8px 10px oklch(0.25 0.05 300 / 0.06);
+  /* ── Type voice: display headings, set tight ──
+     The one thing every modern SaaS landing page does to its type and no token
+     could say before 1.1A-01. Tracking is additive — the heading primitive keeps
+     its own optical tightening and this rides on top of it. */
+  --heading-tracking: -0.02em;
+
+  /* ── Material: the aurora itself ──
+     A soft gradient mesh on the page, which is the one texture in the set that
+     is a light rather than a grain. It dresses the PAGE and not `surface`/`card`
+     (`--texture-surface`): a mesh behind every card would compete with the
+     content sitting on it, and the theme's subject is the sky behind the app. */
+  --texture-page: var(--texture-mesh);
+
+  /* ── Decoration: selection wears the accent ──
+     The one surface of a themed page that never matched the theme. */
+  --selection-bg: var(--color-primary);
+  --selection-fg: var(--color-primary-fg);
+
+  /* ── Depth: layered, and tinted through the channel ──
+     Every step is cast in `--shadow-color` (bare OKLCH channels), so the violet
+     cast is ONE declaration per scheme instead of ten literals, and the geometry
+     matches the dark ramp below: the md step blurs past the `layered` band,
+     which is what a stack of floating SaaS panels looks like. */
+  --shadow-color: 0.25 0.05 300;
+
+  --shadow-xs:  0 1px 3px oklch(var(--shadow-color) / 0.08);
+  --shadow-sm:  0 2px 6px oklch(var(--shadow-color) / 0.10), 0 1px 2px oklch(var(--shadow-color) / 0.06);
+  --shadow-md:  0 6px 12px oklch(var(--shadow-color) / 0.09), 0 2px 4px oklch(var(--shadow-color) / 0.06);
+  --shadow-lg:  0 12px 24px oklch(var(--shadow-color) / 0.11), 0 4px 8px oklch(var(--shadow-color) / 0.06);
+  --shadow-xl:  0 24px 48px oklch(var(--shadow-color) / 0.13), 0 8px 16px oklch(var(--shadow-color) / 0.07);
 }
 
 /* ── Dark Mode (primary design target) ── */
@@ -106,12 +130,14 @@
   /* ── Signature gradient accent (decorative; violet → cyan aurora) ── */
   --gradient-accent:       linear-gradient(135deg, oklch(0.72 0.18 307), oklch(0.78 0.14 195));
 
-  /* ── Shadows (deep, near-black violet) ── */
-  --shadow-xs:  0 1px 3px oklch(0.06 0.02 300 / 0.4);
-  --shadow-sm:  0 2px 6px oklch(0.06 0.02 300 / 0.5);
-  --shadow-md:  0 6px 12px oklch(0.06 0.02 300 / 0.5), 0 2px 4px oklch(0.06 0.02 300 / 0.3);
-  --shadow-lg:  0 12px 24px oklch(0.06 0.02 300 / 0.6), 0 4px 8px oklch(0.06 0.02 300 / 0.3);
-  --shadow-xl:  0 24px 48px oklch(0.06 0.02 300 / 0.7), 0 8px 16px oklch(0.06 0.02 300 / 0.4);
+  /* ── Shadows (deep, near-black violet — the same ramp, cast darker) ── */
+  --shadow-color: 0.06 0.02 300;
+
+  --shadow-xs:  0 1px 3px oklch(var(--shadow-color) / 0.4);
+  --shadow-sm:  0 2px 6px oklch(var(--shadow-color) / 0.5);
+  --shadow-md:  0 6px 12px oklch(var(--shadow-color) / 0.5), 0 2px 4px oklch(var(--shadow-color) / 0.3);
+  --shadow-lg:  0 12px 24px oklch(var(--shadow-color) / 0.6), 0 4px 8px oklch(var(--shadow-color) / 0.3);
+  --shadow-xl:  0 24px 48px oklch(var(--shadow-color) / 0.7), 0 8px 16px oklch(var(--shadow-color) / 0.4);
 }
 
 /* ── Auto Dark Mode (system preference) ── */
@@ -163,11 +189,13 @@
     /* ── Signature gradient accent (decorative; violet → cyan aurora) ── */
     --gradient-accent:       linear-gradient(135deg, oklch(0.72 0.18 307), oklch(0.78 0.14 195));
 
-    /* ── Shadows (deep, near-black violet) ── */
-    --shadow-xs:  0 1px 3px oklch(0.06 0.02 300 / 0.4);
-    --shadow-sm:  0 2px 6px oklch(0.06 0.02 300 / 0.5);
-    --shadow-md:  0 6px 12px oklch(0.06 0.02 300 / 0.5), 0 2px 4px oklch(0.06 0.02 300 / 0.3);
-    --shadow-lg:  0 12px 24px oklch(0.06 0.02 300 / 0.6), 0 4px 8px oklch(0.06 0.02 300 / 0.3);
-    --shadow-xl:  0 24px 48px oklch(0.06 0.02 300 / 0.7), 0 8px 16px oklch(0.06 0.02 300 / 0.4);
+    /* ── Shadows (deep, near-black violet — the same ramp, cast darker) ── */
+    --shadow-color: 0.06 0.02 300;
+
+    --shadow-xs:  0 1px 3px oklch(var(--shadow-color) / 0.4);
+    --shadow-sm:  0 2px 6px oklch(var(--shadow-color) / 0.5);
+    --shadow-md:  0 6px 12px oklch(var(--shadow-color) / 0.5), 0 2px 4px oklch(var(--shadow-color) / 0.3);
+    --shadow-lg:  0 12px 24px oklch(var(--shadow-color) / 0.6), 0 4px 8px oklch(var(--shadow-color) / 0.3);
+    --shadow-xl:  0 24px 48px oklch(var(--shadow-color) / 0.7), 0 8px 16px oklch(var(--shadow-color) / 0.4);
   }
 }

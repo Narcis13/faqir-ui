@@ -46,12 +46,29 @@
   --color-border-strong:   oklch(0.78 0.03 65);      /* stronger warm border */
   --color-ring:            oklch(0.52 0.14 45);
 
-  /* ── Shadows (warm, soft) ── */
-  --shadow-xs:  0 1px 2px oklch(0.30 0.04 50 / 0.06);
-  --shadow-sm:  0 1px 4px oklch(0.30 0.04 50 / 0.08);
-  --shadow-md:  0 4px 8px oklch(0.30 0.04 50 / 0.07), 0 1px 3px oklch(0.30 0.04 50 / 0.05);
-  --shadow-lg:  0 8px 16px oklch(0.30 0.04 50 / 0.08), 0 3px 6px oklch(0.30 0.04 50 / 0.05);
-  --shadow-xl:  0 16px 32px oklch(0.30 0.04 50 / 0.10), 0 6px 12px oklch(0.30 0.04 50 / 0.05);
+  /* ── Shadows: none. Paper does not float. ──
+     The theme is named for a printed page, and a printed page has no elevation:
+     a card is a ruled box, not a card lying on a desk. Depth therefore derives
+     `flat`, which is also what separates this theme from every other warm-light
+     one in the registry. The ruling that replaces the shadow is already there —
+     `--color-border` is a warm tan and every edge reads it. */
+  --shadow-xs:  none;
+  --shadow-sm:  none;
+  --shadow-md:  none;
+  --shadow-lg:  none;
+  --shadow-xl:  none;
+
+  /* ── Type: an editorial serif, said in roles ──
+     Georgia for what is READ (headings and body); the UI face stays sans, so
+     controls keep their platform voice while the page reads like print. This is
+     the pairing `--doc-font` has expressed for documents since 0.6 — the role
+     tokens let the whole theme say it, not just its invoices. */
+  --font-heading: 'Georgia', var(--font-serif);
+  --font-body:    'Georgia', var(--font-serif);
+  --heading-weight: var(--weight-semibold);   /* a serif headline does not need bold to carry */
+
+  /* ── Material: the paper itself ── */
+  --texture-page: var(--texture-paper);
 }
 
 /* ── Dark Mode ── */
@@ -100,12 +117,12 @@
   --color-border-strong:   oklch(0.36 0.04 55);
   --color-ring:            oklch(0.68 0.12 50);
 
-  /* ── Shadows (warm, diffuse) ── */
+  /* ── Shadows: none in dark either — see the light block ── */
   --shadow-xs:  none;
-  --shadow-sm:  0 1px 4px oklch(0.10 0.03 50 / 0.3);
-  --shadow-md:  0 4px 8px oklch(0.10 0.03 50 / 0.3), 0 1px 3px oklch(0.10 0.03 50 / 0.2);
-  --shadow-lg:  0 8px 20px oklch(0.10 0.03 50 / 0.35), 0 3px 8px oklch(0.10 0.03 50 / 0.2);
-  --shadow-xl:  0 16px 40px oklch(0.10 0.03 50 / 0.4), 0 6px 12px oklch(0.10 0.03 50 / 0.25);
+  --shadow-sm:  none;
+  --shadow-md:  none;
+  --shadow-lg:  none;
+  --shadow-xl:  none;
 }
 
 /* ── Auto Dark Mode (system preference) ── */
@@ -154,12 +171,12 @@
     --color-border-strong:   oklch(0.36 0.04 55);
     --color-ring:            oklch(0.68 0.12 50);
 
-    /* ── Shadows (warm, diffuse) ── */
+    /* ── Shadows: none in dark either — see the light block ── */
     --shadow-xs:  none;
-    --shadow-sm:  0 1px 4px oklch(0.10 0.03 50 / 0.3);
-    --shadow-md:  0 4px 8px oklch(0.10 0.03 50 / 0.3), 0 1px 3px oklch(0.10 0.03 50 / 0.2);
-    --shadow-lg:  0 8px 20px oklch(0.10 0.03 50 / 0.35), 0 3px 8px oklch(0.10 0.03 50 / 0.2);
-    --shadow-xl:  0 16px 40px oklch(0.10 0.03 50 / 0.4), 0 6px 12px oklch(0.10 0.03 50 / 0.25);
+    --shadow-sm:  none;
+    --shadow-md:  none;
+    --shadow-lg:  none;
+    --shadow-xl:  none;
   }
 }
 
@@ -168,8 +185,8 @@
    these override the structural document tokens for a warmer feel. */
 
 :root {
-  --doc-font:               'Georgia', var(--font-serif);   /* serif body text for warmth */
-  --doc-heading-font:       var(--font-sans);                /* sans headings on serif body */
+  --doc-font:               var(--font-body);                /* the theme's own reading face */
+  --doc-heading-font:       var(--font-heading);              /* …and its headline face */
   --doc-font-size:          var(--text-sm);                  /* 14px */
   --doc-heading-size:       var(--text-xl);
   --doc-subheading-size:    var(--text-lg);
