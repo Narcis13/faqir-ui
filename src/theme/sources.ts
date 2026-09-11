@@ -18,7 +18,8 @@
 
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { isSurfaceTokenFile } from "../theme-manifest";
+import { isSurfaceTokenFile, type ThemeManifest } from "../theme-manifest";
+import type { DistinctivenessTheme } from "./distinctiveness";
 
 /** `registry/tokens/density.css` — the file the density axis re-declares. */
 export const DENSITY_TOKEN_FILE = "density.css";
@@ -50,4 +51,47 @@ export function themeBaseSources(registryPath: string): string[] {
 export function densityTokenCss(registryPath: string): string {
   const path = join(registryPath, "tokens", DENSITY_TOKEN_FILE);
   return existsSync(path) ? readFileSync(path, "utf8") : "";
+}
+
+/**
+ * The themes already sitting in a directory, as the distinctiveness gate reads
+ * them [1.1A-12]: the stylesheet, the scheme its manifest declares, and the
+ * `axes` block that manifest carries.
+ *
+ * A theme with no `axes` block is SKIPPED rather than guessed at — that is a
+ * 1.0 manifest, or a generated theme's document companion (which deliberately
+ * carries neither seed nor axes, because its CSS was never run through
+ * `axesFromCss`). An axis distance needs both sides' axes to be derived facts;
+ * inferring one here would put a number on a comparison nobody measured.
+ *
+ * `exclude` is how a regeneration does not collide with the copy of itself it
+ * is about to overwrite.
+ */
+export function readPeerThemes(dir: string, exclude: readonly string[] = []): DistinctivenessTheme[] {
+  if (!existsSync(dir)) return [];
+  const skip = new Set(exclude);
+  const peers: DistinctivenessTheme[] = [];
+  for (const file of readdirSync(dir).sort()) {
+    if (!file.endsWith(".theme.json")) continue;
+    const name = file.slice(0, -".theme.json".length);
+    if (skip.has(name)) continue;
+    const css = join(dir, `${name}.css`);
+    if (!existsSync(css)) continue;
+    let manifest: ThemeManifest;
+    try {
+      manifest = JSON.parse(readFileSync(join(dir, file), "utf8")) as ThemeManifest;
+    } catch {
+      // A directory the user edits by hand is not a database. An unreadable
+      // manifest means "nothing to compare against", not a failed generation.
+      continue;
+    }
+    if (!manifest.axes || !manifest.scheme) continue;
+    peers.push({
+      name: manifest.name ?? name,
+      css: readFileSync(css, "utf8"),
+      scheme: manifest.scheme,
+      axes: manifest.axes,
+    });
+  }
+  return peers;
 }

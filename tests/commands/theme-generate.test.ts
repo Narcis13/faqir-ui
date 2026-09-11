@@ -1,6 +1,6 @@
 // faqir theme generate — deterministic parametric themes [task 0.6-11 · §C4]
 
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "bun:test";
+import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { CONTRAST_PAIRS } from "../../src/audit/contrast-tokens";
 import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -472,11 +472,17 @@ describe("legacy inputs keep 1.0's colours", () => {
 describe("faqir theme generate · CLI", () => {
   let tempDir: string;
 
-  beforeAll(() => {
+  // One directory PER TEST, not per file. These cases never meant to share a
+  // `themes/` folder — they only happened to, and 1.1A-12's distinctiveness
+  // gate made that accidental sharing visible: a second theme generated into
+  // the first one's directory is now measured against it and refused when it is
+  // a recolour. That refusal is tested on purpose in
+  // tests/themes/distinctiveness.test.ts; here it would be a fixture artefact.
+  beforeEach(() => {
     tempDir = mkdtempSync(join(tmpdir(), "faqir-theme-generate-"));
   });
 
-  afterAll(() => {
+  afterEach(() => {
     rmSync(tempDir, { recursive: true, force: true });
   });
 
@@ -974,8 +980,10 @@ describe("theme generate · the CLI surface", () => {
     expect(seed.shape.radius).toBe("round");
 
     // A positional name overrides the file's, so one seed can be re-generated
-    // under another name without editing it.
-    await theme(["generate", "renamed", "--seed", "base.seed.json"]);
+    // under another name without editing it. That is by definition a
+    // look-alike — same seed, same colours, a different name — so it is also
+    // the case `--allow-similar` exists for [1.1A-12].
+    await theme(["generate", "renamed", "--seed", "base.seed.json", "--allow-similar"]);
     expect(readJson("themes/renamed.seed.json").name).toBe("renamed");
   });
 

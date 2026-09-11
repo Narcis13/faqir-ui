@@ -334,5 +334,10 @@
       "switch": "square"
     },
     "contrast": "high"
+  },
+  "distinctiveness": {
+    "nearest": "document-serif",
+    "axis_distance": 1,
+    "token_distance": 0.0482
   }
 }

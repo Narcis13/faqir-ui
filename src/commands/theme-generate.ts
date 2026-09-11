@@ -31,6 +31,14 @@ import {
 } from "../utils/oklch";
 import { axesFromCss } from "../theme/axes";
 import {
+  AXIS_MIN,
+  TOKEN_MIN,
+  distinctivenessContext,
+  nearest,
+  prepareTheme,
+  type DistinctivenessTheme,
+} from "../theme/distinctiveness";
+import {
   axisDeclarations,
   densityDirective,
   depthFamily,
@@ -1013,6 +1021,31 @@ export interface ThemeTapTarget {
   passes: boolean;
 }
 
+/**
+ * How far the generated theme sits from the nearest theme it was compared
+ * against — the themes already in the output directory, since that is the set
+ * it would ship beside.
+ *
+ * The manifest carries three of these fields (`definitions.themeDistinctiveness`
+ * is `additionalProperties: false`); the scorecard carries the working too, so a
+ * reader who is refused can see WHICH axes are identical rather than only how
+ * many.
+ */
+export interface ThemeScorecardDistinctiveness {
+  nearest: string;
+  axis_distance: number;
+  /** `null` when the two themes share no colour scheme — see `distinctiveness.ts`. */
+  token_distance: number | null;
+  axes_differing: string[];
+  schemes: Array<"light" | "dark">;
+  /** Colour readings the mean is over. A mean over three is not a mean over sixty-two. */
+  samples: number;
+  thresholds: { axis_distance: number; token_distance: number };
+  passes: boolean;
+  /** True when a failing measure was written anyway, on `--allow-similar`. */
+  allow_similar: boolean;
+}
+
 export interface ThemeScorecard {
   /** The 1.0 key, kept so an automation reading v1 sees the number move. */
   theme_generate_schema_version: number;
@@ -1037,8 +1070,8 @@ export interface ThemeScorecard {
   elevation: ThemeElevationDelta[];
   focus_ring: ThemeFocusRingRatio[];
   tap_targets: ThemeTapTarget[];
-  /** Distance to the nearest shipped theme. `null` until 1.1A-12 lands. */
-  distinctiveness: null;
+  /** Distance to the nearest theme it was compared against; `null` when there were none. */
+  distinctiveness: ThemeScorecardDistinctiveness | null;
 }
 
 export interface ThemeScorecardOptions {
@@ -1046,6 +1079,15 @@ export interface ThemeScorecardOptions {
   outDir?: string;
   /** `registry/tokens/density.css`, for the tap-target ramp. Omit for no tap targets. */
   densityCss?: string;
+  /**
+   * The themes the new one would ship beside — whatever is already in the
+   * output directory. Read by the caller, because `themeScorecard` performs no
+   * filesystem access; omitted (an empty directory, or the MCP tool, which has
+   * no directory at all) means there is nothing to be distinct FROM.
+   */
+  peers?: DistinctivenessTheme[];
+  /** Record that a collision was overridden with `--allow-similar`. */
+  allowSimilar?: boolean;
 }
 
 /** The control heights one `[data-density]` block declares, in CSS pixels. */
@@ -1181,6 +1223,47 @@ export function themeScorecard(
     elevation,
     focus_ring: focusRing,
     tap_targets: tapTargets,
-    distinctiveness: null,
+    distinctiveness: scorecardDistinctiveness(bundle, baseCssSources, options),
+  };
+}
+
+/**
+ * The distinctiveness block, measured against the peers the caller read.
+ *
+ * Only the PRIMARY theme is measured: a document companion carries no `axes`
+ * block (its CSS was never run through `axesFromCss`), so there is no axis
+ * distance to compute for it and claiming one would be a fiction.
+ */
+function scorecardDistinctiveness(
+  bundle: GeneratedThemeBundle,
+  baseCssSources: string[],
+  options: ThemeScorecardOptions,
+): ThemeScorecardDistinctiveness | null {
+  const peers = options.peers ?? [];
+  if (peers.length === 0) return null;
+  const primary = bundle.generated.find((file) => file.kind === "theme");
+  if (!primary) return null;
+
+  const context = distinctivenessContext(baseCssSources);
+  const subject = prepareTheme(
+    { name: bundle.name, css: primary.css, scheme: primary.manifest.scheme, axes: bundle.axes },
+    context,
+  );
+  const closest = nearest(
+    subject,
+    peers.map((peer) => prepareTheme(peer, context)),
+    context,
+  );
+  if (!closest) return null;
+  return {
+    nearest: closest.nearest,
+    axis_distance: closest.axis_distance,
+    token_distance: closest.token_distance,
+    axes_differing: closest.axes_differing,
+    schemes: closest.schemes,
+    samples: closest.samples,
+    thresholds: { axis_distance: AXIS_MIN, token_distance: TOKEN_MIN },
+    passes: closest.passes,
+    allow_similar: options.allowSimilar === true,
   };
 }

@@ -1045,7 +1045,7 @@
         "token_distance": {
           "type": "number",
           "minimum": 0,
-          "description": "Mean perceptual distance (CIE ΔE) between the two themes' colour tokens. The axis count says they are described differently; this says they LOOK different."
+          "description": "Mean OKLab ΔE between the two themes' resolved colour tokens, over every scheme they both ship. The axis count says they are described differently; this says they LOOK different. The gate's floor is the same separation the framework demands between two adjacent surfaces inside one theme."
         }
       },
       "additionalProperties": false

@@ -30,6 +30,7 @@ import {
   type ThemeManifest,
 } from "../../src/theme-manifest";
 import { axesFromCss } from "../../src/theme/axes";
+import { distinctivenessContext, nearest, prepareTheme } from "../../src/theme/distinctiveness";
 
 const REGISTRY = join(import.meta.dir, "../../registry");
 const THEMES_DIR = join(REGISTRY, "themes");
@@ -50,6 +51,20 @@ const AXIS_BASE = [...new Glob("*.css").scanSync(TOKENS_DIR)]
 
 // Themes discovered by globbing (no hand-maintained list).
 const THEME_FILES = [...new Glob("*.css").scanSync(THEMES_DIR)].sort();
+
+// The shipped set as the distinctiveness gate reads it [1.1A-12]: the
+// stylesheet, the scheme the manifest declares, and the axes derived from the
+// CSS — NOT the axes the manifest carries, so the comparison never validates a
+// stored block against itself.
+const DISTINCT = distinctivenessContext(BASE_SOURCES);
+const SHIPPED = THEME_FILES.map((file) => {
+  const css = readFileSync(join(THEMES_DIR, file), "utf8");
+  const manifest = readManifestRaw(file).json as ThemeManifest;
+  return prepareTheme(
+    { name: file.replace(/\.css$/, ""), css, scheme: manifest.scheme, axes: axesFromCss(css, AXIS_BASE) },
+    DISTINCT,
+  );
+});
 
 function readManifestRaw(cssFile: string): { path: string; json: unknown } {
   const path = join(THEMES_DIR, cssFile.replace(/\.css$/, ".theme.json"));
@@ -108,6 +123,20 @@ describe("theme manifest · tokens are CSS-consistent (generated, then asserted)
       // The third derived field. A hand-edited axis is drift, exactly like a
       // hand-edited `tokens_overridden` — regenerate with gen:theme-manifests.
       expect(manifest.axes).toEqual(axesFromCss(css, AXIS_BASE));
+    });
+
+    it(`${file} distinctiveness exactly matches a fresh computation [1.1A-12]`, () => {
+      // The fourth derived field, and the only one that is a relation BETWEEN
+      // stylesheets: a new theme landing next to an old one moves the old one's
+      // block, which is drift the same way a hand-edit is.
+      const manifest = readManifestRaw(file).json as ThemeManifest;
+      const subject = SHIPPED.find((theme) => theme.name === file.replace(/\.css$/, ""))!;
+      const closest = nearest(subject, SHIPPED, DISTINCT);
+      expect(manifest.distinctiveness).toEqual({
+        nearest: closest!.nearest,
+        axis_distance: closest!.axis_distance,
+        token_distance: closest!.token_distance!,
+      });
     });
 
     it(`${file} overridden and inherited never overlap`, () => {
@@ -330,16 +359,17 @@ describe("theme manifest · the optional 1.1 fields", () => {
     expect(validateThemeManifest(valid)).toEqual([]);
   });
 
-  it("every shipped theme declares `axes` and nothing else from 1.1", () => {
+  it("every shipped theme declares the two DERIVED 1.1 fields and nothing else", () => {
     // 1.1A-07 shipped the five fields and left every manifest without them.
-    // 1.1A-08 fills in exactly ONE of them, and it is the derived one — a
-    // shipped theme is authored, so it has no `seed`; `fonts` waits on the OFL
-    // catalog (1.1A-18), `distinctiveness` on the pair gate (1.1A-12), and
-    // `visual_matrix` on the matrix policy (1.1A-13).
+    // The two that are DERIVED from the stylesheets are filled in — `axes` by
+    // 1.1A-08, `distinctiveness` by 1.1A-12. The other three are not: a shipped
+    // theme is authored, so it has no `seed`; `fonts` waits on the OFL catalog
+    // (1.1A-18) and `visual_matrix` on the matrix policy (1.1A-13).
     for (const file of THEME_FILES) {
       const manifest = readManifestRaw(file).json as ThemeManifest;
       expect(manifest.axes, `${file} has no derived axes`).toBeDefined();
-      for (const field of ["seed", "fonts", "distinctiveness", "visual_matrix"] as const) {
+      expect(manifest.distinctiveness, `${file} has no distinctiveness block`).toBeDefined();
+      for (const field of ["seed", "fonts", "visual_matrix"] as const) {
         expect(manifest[field], `${file} already declares ${field}`).toBeUndefined();
       }
     }

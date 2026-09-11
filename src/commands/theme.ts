@@ -21,7 +21,14 @@ import {
   type ThemeGenerateInput,
   type ThemeRadius,
 } from "./theme-generate";
-import { densityTokenCss, themeBaseSources } from "../theme/sources";
+import { densityTokenCss, readPeerThemes, themeBaseSources } from "../theme/sources";
+import {
+  assertDistinct,
+  AXIS_MIN,
+  distinctivenessContext,
+  prepareTheme,
+  TOKEN_MIN,
+} from "../theme/distinctiveness";
 import {
   coerceSeedValue,
   mergeSeeds,
@@ -29,7 +36,7 @@ import {
   setSeedPath,
   type ThemeSeedInput,
 } from "../theme/seed";
-import { validateThemeSeed, THEME_AXIS_VALUES } from "../theme-manifest";
+import { validateThemeSeed, THEME_AXIS_VALUES, THEME_DERIVED_AXES } from "../theme-manifest";
 
 /** The `--json` payload's schema version — the scorecard's, so they cannot drift. */
 export const THEME_GENERATE_JSON_VERSION = THEME_SCORECARD_VERSION;
@@ -86,6 +93,7 @@ function printGenerateHelp() {
     ["--document", "Also emit a brand-matched print/document variant"],
     ["--radius <size>", "1.0 compatibility flag for --shape: sm, md, or lg"],
     ["--legacy-blocks", "Dual themes: write three colour blocks instead of one light-dark() block"],
+    ["--allow-similar", `Write even when a theme in --out is within ${AXIS_MIN} axes / ${TOKEN_MIN} ΔE`],
     ["--json", "Print the full scorecard: seed, axes, contrast, elevation, focus, tap targets"],
   ]);
   log.blank();
@@ -119,6 +127,8 @@ interface ThemeGenerateArgs {
   radius: ThemeRadius | null;
   legacyBlocks: boolean;
   outDir: string;
+  /** Write a theme that collides with one already in `outDir` anyway. */
+  allowSimilar: boolean;
 }
 
 /**
@@ -143,6 +153,7 @@ function parseThemeGenerateArgs(args: string[]): ThemeGenerateArgs | null {
     radius: null,
     legacyBlocks: false,
     outDir: DEFAULT_THEME_OUT_DIR,
+    allowSimilar: false,
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -179,6 +190,9 @@ function parseThemeGenerateArgs(args: string[]): ThemeGenerateArgs | null {
         break;
       case "--legacy-blocks":
         parsed.legacyBlocks = true;
+        break;
+      case "--allow-similar":
+        parsed.allowSimilar = true;
         break;
       case "--json":
         break;
@@ -260,9 +274,35 @@ async function themeGenerate(args: string[]): Promise<void> {
   // check happen before this point. No output directory exists yet if any
   // verification throws.
   const result = generateThemeBundle(input, baseCssSources);
+
+  // Distinctiveness is measured against the themes already in the OUTPUT
+  // directory — the set this one would ship beside — and not against the twelve
+  // the CLI carries: generating one brand theme into an empty folder has
+  // nothing to be distinct from, while regenerating into a registry does.
+  // The theme's own artefacts are excluded so a regeneration never collides
+  // with the copy of itself it is about to overwrite.
+  const peers = readPeerThemes(
+    join(process.cwd(), parsed.outDir),
+    result.generated.map((file) => file.name),
+  );
+  if (!parsed.allowSimilar && peers.length > 0) {
+    const context = distinctivenessContext(baseCssSources);
+    const primary = result.generated.find((file) => file.kind === "theme")!;
+    assertDistinct(
+      prepareTheme(
+        { name: result.name, css: primary.css, scheme: primary.manifest.scheme, axes: result.axes },
+        context,
+      ),
+      peers.map((peer) => prepareTheme(peer, context)),
+      context,
+    );
+  }
+
   const report = themeScorecard(result, baseCssSources, {
     outDir: parsed.outDir,
     densityCss: densityTokenCss(registryPath),
+    peers,
+    allowSimilar: parsed.allowSimilar,
   });
 
   // The seed is written beside the CSS, and it is the SAME object the manifest
@@ -322,6 +362,15 @@ async function themeGenerate(args: string[]): Promise<void> {
   }
   const tap = report.tap_targets.find((target) => target.control === "control-height-md");
   if (tap?.height_px) log.dim(`${report.axes.density} density: ${tap.height_px}px default control height`);
+  const distinct = report.distinctiveness;
+  if (distinct) {
+    const colour = distinct.token_distance == null ? "no shared scheme" : `ΔE ${distinct.token_distance.toFixed(4)}`;
+    const verdict = distinct.passes ? "" : distinct.allow_similar ? " — written anyway (--allow-similar)" : "";
+    log.dim(
+      `nearest theme: ${distinct.nearest} ` +
+        `(${distinct.axis_distance}/${THEME_DERIVED_AXES.length} axes differ, ${colour})${verdict}`,
+    );
+  }
   log.dim("Run with --json for the full scorecard (axes, elevation ΔE, focus ratios, tap targets).");
 }
 

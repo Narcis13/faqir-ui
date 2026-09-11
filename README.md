@@ -819,11 +819,22 @@ lighter accent step. `--document` additionally writes
 `--legacy-blocks` emits a dual-scheme theme as three colour blocks instead of
 one `light-dark()` block.
 
+**Two themes may not be recolours of each other.** Before writing, the
+generator measures the new theme against the themes already in the output
+directory — the set it would ship beside — on two numbers: how many of the
+fourteen axes they land on differently, and the mean OKLab ΔE between their
+resolved colour surfaces. Fewer than four axes apart, or closer in colour than
+one theme's own card is to its own page, and the command refuses, naming the
+theme it collides with and what is identical about them. `--allow-similar`
+writes it anyway and the scorecard records that it did. Generating into an
+empty folder compares against nothing and never refuses.
+
 Add `--json` for the **scorecard**: the resolved seed, the derived axes, every
 generated path, every contrast ratio, the elevation ΔE of the surface ramp, the
-focus-ring ratio against each surface it lands on, and the tap-target heights
-the seed's density lands on. The MCP `faqir_generate_theme` tool takes the same
-seed and returns the same scorecard in memory, without touching the filesystem.
+focus-ring ratio against each surface it lands on, the tap-target heights the
+seed's density lands on, and the distinctiveness measurement above. The MCP
+`faqir_generate_theme` tool takes the same seed and returns the same scorecard
+in memory, without touching the filesystem.
 
 ---
 

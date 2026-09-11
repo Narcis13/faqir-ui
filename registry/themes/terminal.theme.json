@@ -336,5 +336,10 @@
       "switch": "square"
     },
     "contrast": "standard"
+  },
+  "distinctiveness": {
+    "nearest": "soft",
+    "axis_distance": 6,
+    "token_distance": 0.0771
   }
 }

@@ -169,6 +169,25 @@ const tapTargetSchema = z.object({
   passes: z.boolean(),
 });
 
+// Distinctiveness [1.1A-12] is measured against the themes already in the
+// OUTPUT DIRECTORY — the set the new theme would ship beside. This tool has no
+// output directory (it writes nothing), so the block is `null` here for exactly
+// the same reason it is null when the CLI generates into an empty folder: there
+// is nothing to be distinct FROM. The shape is declared in full so that a
+// caller which does supply peers gets a validated object rather than a
+// passthrough.
+const distinctivenessSchema = z.object({
+  nearest: z.string(),
+  axis_distance: z.number().int(),
+  token_distance: z.number().nullable(),
+  axes_differing: z.array(z.string()),
+  schemes: z.array(z.enum(["light", "dark"])),
+  samples: z.number().int(),
+  thresholds: z.object({ axis_distance: z.number(), token_distance: z.number() }),
+  passes: z.boolean(),
+  allow_similar: z.boolean(),
+});
+
 const scorecardSchema = z
   .object({
     scorecard_version: z.number().int(),
@@ -182,7 +201,7 @@ const scorecardSchema = z
     elevation: z.array(elevationSchema),
     focus_ring: z.array(focusRingSchema),
     tap_targets: z.array(tapTargetSchema),
-    distinctiveness: z.null(),
+    distinctiveness: distinctivenessSchema.nullable(),
   })
   .passthrough();
 

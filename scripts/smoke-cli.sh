@@ -67,6 +67,23 @@ for artefact in css theme.json seed.json preview.html; do
   fi
 done
 
+echo "▶ node dist/faqir.mjs theme generate smoke-clone …  (must be refused)"
+# The distinctiveness gate reads the OUTPUT DIRECTORY off disk, which is the one
+# part of it that is filesystem work — so it is proven on Node, not only under
+# Bun. Same seed, different name: a recolour of the theme just written. [1.1A-12]
+if ( cd "$TMP" && node "$DIST" theme generate smoke-clone --accent '#168c5b' --depth hard >/dev/null 2>&1 ); then
+  echo "✗ theme generate wrote a look-alike theme instead of refusing it" >&2
+  exit 1
+fi
+if [ -f "$TMP/themes/smoke-clone.css" ]; then
+  echo "✗ theme generate refused but wrote the stylesheet anyway" >&2
+  exit 1
+fi
+if ! ( cd "$TMP" && node "$DIST" theme generate smoke-clone --accent '#168c5b' --depth hard --allow-similar >/dev/null 2>&1 ); then
+  echo "✗ --allow-similar did not override the distinctiveness refusal" >&2
+  exit 1
+fi
+
 echo "▶ echo '<button data-ui=\"button\" data-variant=\"neon\">…</button>' | node dist/faqir.mjs audit --stdin --json"
 # Piped HTML → audit against the registry, machine-readable output. The bad
 # variant must be reported (exit 1) and the payload must carry the schema version.

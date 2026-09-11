@@ -303,7 +303,7 @@ How far this theme sits from the nearest other shipped theme, written by the dis
 |---|---|---|---|
 | `nearest` | `string` | yes | The name of the closest other shipped theme. · non-empty |
 | `axis_distance` | `integer` | yes | How many of the fourteen axes the two themes differ on. Two shipped themes must differ on at least four (FAQIR-VISION §5.2). |
-| `token_distance` | `number` | yes | Mean perceptual distance (CIE ΔE) between the two themes' colour tokens. The axis count says they are described differently; this says they LOOK different. |
+| `token_distance` | `number` | yes | Mean OKLab ΔE between the two themes' resolved colour tokens, over every scheme they both ship. The axis count says they are described differently; this says they LOOK different. The gate's floor is the same separation the framework demands between two adjacent surfaces inside one theme. |
 
 ## File Set Per Kind
 

@@ -334,5 +334,10 @@
       "switch": "pill"
     },
     "contrast": "standard"
+  },
+  "distinctiveness": {
+    "nearest": "aurora",
+    "axis_distance": 1,
+    "token_distance": 0.0416
   }
 }
