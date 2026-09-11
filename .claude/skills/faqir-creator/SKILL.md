@@ -365,7 +365,7 @@ faqir inspect <component>          # full manifest
 **Development**
 
 ```bash
-faqir theme set|list|create|generate <name>               # manage themes, or generate one from a seed (--seed/--accent/one flag per axis)
+faqir theme set|list|create|generate|bundle <name>        # manage themes, generate one from a seed (--seed/--accent/one flag per axis), or scope one to a subtree (bundle <name> --scope)
 faqir fonts list|add|remove <family> [--role <role>]      # install a hash-verified OFL family and point a role token at it
 faqir variant add|remove <component> <group>=<value>      # add/remove a variant value (manifest + CSS together)
 faqir scaffold <name> [--output <path>] [--theme <name>]  # generate a whole page — see the Scaffolds table

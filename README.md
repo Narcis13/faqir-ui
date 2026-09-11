@@ -816,6 +816,9 @@ faqir theme generate ember --seed themes/ember.seed.json --out registry/themes
 # Also generate a matching, print-optimized document theme
 faqir theme generate my-brand --accent "#168c5b" --document
 
+# Scope a theme to a subtree so two themes can live on one page
+faqir theme bundle aurora --scope
+
 # List available themes
 faqir theme list
 ```
@@ -926,6 +929,51 @@ for one it is not listed for warns and installs anyway. Italics, the non-Latin
 subsets and `size-adjust` fallback metrics are deliberately out: the first two
 are past what a curated list should decide for a project, and the third has to
 be measured out of the font binary.
+
+### Scoped themes
+
+A theme declares its tokens on `:root`, which is the whole page. Sometimes one
+page needs two: a forms platform previewing a customer's brand inside its own
+admin, a gallery showing every theme at once, a design review putting two
+candidates side by side. `faqir theme bundle` rewrites a theme onto
+`data-skin` — the token modifier `SPEC-1.0` §4 reserves for exactly this — so it
+applies to a subtree instead:
+
+```bash
+faqir theme bundle aurora --scope                 # → aurora.scoped.css
+faqir theme bundle aurora --scope=".brand-preview"  # your own convention
+faqir theme bundle aurora --scope --out dist/skins
+```
+
+```html
+<link rel="stylesheet" href="faqir/faqir.bundle.css">
+<link rel="stylesheet" href="faqir/aurora.scoped.css">
+
+<div data-skin="aurora">
+  <!-- everything in here resolves aurora's tokens, whatever the page is set to -->
+  <button data-ui="button" data-variant="primary">Submit</button>
+</div>
+```
+
+Every `:root` block becomes the scope selector and every `[data-theme]` block is
+scoped to that subtree in both its forms — `[data-skin="aurora"][data-theme="dark"]`
+for a skin root that also carries the attribute, and
+`[data-skin="aurora"] [data-theme="dark"]` for one written further down — so a
+`data-theme` *inside* the island switches the island, not the page. Both are one
+specificity step above the host theme's own `[data-theme="dark"]`, so the island
+wins for its subtree whatever order the stylesheets are linked in, and nesting
+resolves innermost-first. Declarations are copied through untouched, including
+`light-dark()`: it resolves against `color-scheme`, which the scope root
+re-declares along with the ink, the ground, the page face and the material that
+`base/reset.css` puts on `:root`, `html` and `body` — elements a subtree is not.
+A `:root` inside `@media print` or `@supports` is scoped where it stands; `@page`
+is left as authored, because it sizes the printed page rather than a subtree.
+
+A theme with a print companion (`editorial` → `editorial-document`) bundles both,
+each to its own `data-skin`; with an explicit `--scope` selector — which names
+one subtree — the companion is left to a second run. `--json` prints the rewrite
+report: every selector before and after, with the line it was on, and every
+at-rule deliberately left alone with the reason.
 
 ---
 

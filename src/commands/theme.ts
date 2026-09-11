@@ -23,6 +23,11 @@ import {
 } from "./theme-generate";
 import { densityTokenCss, readPeerThemes, themeBaseSources } from "../theme/sources";
 import {
+  defaultScopeSelector,
+  scopeThemeCss,
+  type ScopedTheme,
+} from "../theme/scope";
+import {
   assertDistinct,
   AXIS_MIN,
   distinctivenessContext,
@@ -44,6 +49,9 @@ export const THEME_GENERATE_JSON_VERSION = THEME_SCORECARD_VERSION;
 /** Where `theme generate` writes, unless `--out` says otherwise. */
 export const DEFAULT_THEME_OUT_DIR = "themes";
 
+/** The `theme bundle --json` payload's schema version. */
+export const THEME_BUNDLE_JSON_VERSION = 1;
+
 function printHelp() {
   log.heading("faqir theme <subcommand>");
   log.blank();
@@ -54,6 +62,7 @@ function printHelp() {
     ["set <name>", "Switch the active theme"],
     ["create <name>", "Scaffold a new custom theme"],
     ["generate <name>", "Generate a complete theme from one brand color"],
+    ["bundle <name>", "Emit a theme scoped to a subtree (data-skin)"],
     ["list", "Show available and active themes"],
   ]);
   log.blank();
@@ -61,6 +70,7 @@ function printHelp() {
   console.log("  faqir theme set midnight");
   console.log("  faqir theme create my-brand");
   console.log('  faqir theme generate my-brand --accent "oklch(0.55 0.2 150)"');
+  console.log("  faqir theme bundle aurora --scope");
   console.log("  faqir theme list");
 }
 
@@ -423,6 +433,250 @@ async function renderGeneratedPreview(
   return renderThemePreview({ ...spec, inlineCss: sources.join("\n") });
 }
 
+// ── theme bundle --scope ────────────────────────────────────────────────────
+
+function printBundleHelp() {
+  log.heading("faqir theme bundle <name> --scope [selector]");
+  log.blank();
+  console.log("Emit a theme scoped to a subtree, so two themes can be live on one page:");
+  console.log("a customer's brand previewed inside your admin, a gallery, a side-by-side");
+  console.log("comparison. Every `:root` block becomes the scope selector; every");
+  console.log("`[data-theme]` block is scoped to that subtree, in both its compound and");
+  console.log("its descendant form. Declarations are copied through untouched — including");
+  console.log("`light-dark()`, which follows the `color-scheme` the scope root re-declares.");
+  log.blank();
+  console.log("Usage:");
+  console.log("  faqir theme bundle aurora --scope");
+  console.log('  faqir theme bundle aurora --scope=".brand-preview"');
+  log.blank();
+  console.log("Options:");
+  log.table([
+    ["--scope [selector]", `Required. Defaults to ${defaultScopeSelector("<name>")}`],
+    ["--out <dir>", "Directory to write into (default: the project's output dir, else .)"],
+    ["--json", "Print the rewrite report instead of the human summary"],
+  ]);
+  log.blank();
+  log.dim("Outputs: <name>.scoped.css — link it after the page's own theme.");
+  log.dim("A selector that is a bare kebab-case word must use the --scope=<selector> form.");
+}
+
+/** What `theme bundle`'s command line asked for. */
+interface ThemeBundleArgs {
+  name: string | null;
+  /** `--scope` was given at all — it is what asks for the rewrite. */
+  scope: boolean;
+  /** An explicit selector, or null for `[data-skin="<name>"]`. */
+  selector: string | null;
+  outDir: string | null;
+}
+
+/**
+ * A value that follows a bare `--scope` is a selector only if it cannot be the
+ * theme name — otherwise `faqir theme bundle --scope aurora` would silently
+ * scope an unnamed theme to a selector spelled `aurora`. A CSS selector for this
+ * purpose always carries a `[`, `.`, `#`, `:`, a combinator or a space; a theme
+ * name is the kebab-case word `theme create` already enforces. The `--scope=…`
+ * form is unambiguous and accepts anything.
+ */
+function looksLikeSelector(value: string): boolean {
+  return !/^[a-z][a-z0-9-]*$/.test(value.trim());
+}
+
+function parseThemeBundleArgs(args: string[]): ThemeBundleArgs | null {
+  if (args.includes("--help") || args.includes("-h")) return null;
+
+  const parsed: ThemeBundleArgs = { name: null, scope: false, selector: null, outDir: null };
+
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    const flag = arg.split("=", 1)[0];
+    switch (flag) {
+      case "--scope": {
+        parsed.scope = true;
+        const equal = arg.indexOf("=");
+        if (equal !== -1) {
+          const value = arg.slice(equal + 1);
+          if (!value) throw new Error("--scope= requires a selector, or use a bare --scope.");
+          parsed.selector = value;
+          break;
+        }
+        const next = args[i + 1];
+        if (next && !next.startsWith("-") && looksLikeSelector(next)) {
+          parsed.selector = next;
+          i += 1;
+        }
+        break;
+      }
+      case "--out": {
+        const option = optionValue(args, i, "--out");
+        parsed.outDir = option.value.replace(/[\\/]+$/, "");
+        i = option.next;
+        break;
+      }
+      case "--json":
+        break;
+      default:
+        if (arg.startsWith("-")) {
+          throw new Error(`Unknown option '${arg}'. Run 'faqir theme bundle --help'.`);
+        }
+        if (parsed.name) {
+          throw new Error(`Unexpected argument '${arg}'. Usage: faqir theme bundle <name> --scope`);
+        }
+        parsed.name = arg;
+    }
+  }
+
+  return parsed;
+}
+
+/** One theme stylesheet found on disk, with the path a reader would recognise. */
+interface ThemeSource {
+  name: string;
+  /** Absolute path. */
+  path: string;
+  /** How the path is described in output — registry-relative or project-relative. */
+  label: string;
+  css: string;
+}
+
+/**
+ * Find a theme's stylesheet the way `theme set` does: the registry first, then
+ * the project's own `tokens/theme-<name>.css`. Returns null rather than throwing
+ * so the companion lookup can use the same function.
+ */
+async function findThemeSource(
+  name: string,
+  registryPath: string,
+  projectTokensDir: string | null,
+): Promise<ThemeSource | null> {
+  const registryFile = join(registryPath, "themes", `${name}.css`);
+  if (existsSync(registryFile)) {
+    return {
+      name,
+      path: registryFile,
+      label: `registry/themes/${name}.css`,
+      css: await Bun.file(registryFile).text(),
+    };
+  }
+  if (projectTokensDir) {
+    const projectFile = join(projectTokensDir, `theme-${name}.css`);
+    if (existsSync(projectFile)) {
+      return {
+        name,
+        path: projectFile,
+        label: `tokens/theme-${name}.css`,
+        css: await Bun.file(projectFile).text(),
+      };
+    }
+  }
+  return null;
+}
+
+async function themeBundle(args: string[]): Promise<void> {
+  const parsed = parseThemeBundleArgs(args);
+  if (!parsed) {
+    printBundleHelp();
+    return;
+  }
+  if (!parsed.name) {
+    throw new Error("Theme name required. Usage: faqir theme bundle <name> --scope");
+  }
+  if (!parsed.scope) {
+    throw new Error(
+      `'faqir theme bundle' emits scoped stylesheets — pass --scope to write ` +
+        `${parsed.name}.scoped.css on ${defaultScopeSelector(parsed.name)}, or ` +
+        `--scope=<selector> for your own convention.`,
+    );
+  }
+
+  const cwd = process.cwd();
+  const registryPath = getRegistryPath();
+  const config = configExists(cwd) ? await readConfig(cwd) : null;
+  const projectTokensDir = config ? join(cwd, config.output_dir, "tokens") : null;
+
+  const primary = await findThemeSource(parsed.name, registryPath, projectTokensDir);
+  if (!primary) {
+    throw new Error(
+      `Theme '${parsed.name}' not found. Run 'faqir theme list' to see available themes.`,
+    );
+  }
+
+  // A print companion is a theme in its own right, named `<theme>-document`, and
+  // it is selected by that name — so under the default convention it takes its
+  // OWN `data-skin` scope and both files are written. An explicit selector names
+  // one subtree and cannot address two themes at once, so the companion is
+  // reported rather than silently given a selector the caller did not choose.
+  const companion = await findThemeSource(
+    `${parsed.name}-document`,
+    registryPath,
+    projectTokensDir,
+  );
+  const skipped: Array<{ theme: string; reason: string }> = [];
+  const sources: ThemeSource[] = [primary];
+  if (companion) {
+    if (parsed.selector) {
+      skipped.push({
+        theme: companion.name,
+        reason:
+          `an explicit --scope names one subtree; bundle it with ` +
+          `'faqir theme bundle ${companion.name} --scope=<selector>'`,
+      });
+    } else {
+      sources.push(companion);
+    }
+  }
+
+  const outDir = parsed.outDir ?? (config ? config.output_dir : ".");
+  ensureDir(join(cwd, outDir));
+
+  const written: Array<{ source: ThemeSource; scoped: ScopedTheme; rel: string }> = [];
+  for (const source of sources) {
+    const selector = parsed.selector ?? defaultScopeSelector(source.name);
+    const scoped = scopeThemeCss(source.css, { selector, name: source.name });
+    const rel = join(outDir, `${source.name}.scoped.css`);
+    await Bun.write(join(cwd, rel), scoped.css);
+    written.push({ source, scoped, rel });
+  }
+
+  if (isJSONMode()) {
+    emitJSON({
+      json_schema_version: THEME_BUNDLE_JSON_VERSION,
+      theme: primary.name,
+      scope: written[0].scoped.selector,
+      files: written.map(({ source, scoped, rel }) => ({
+        theme: source.name,
+        source: source.label,
+        path: rel,
+        scope: scoped.selector,
+        color_scheme: scoped.colorScheme,
+        tokens: scoped.tokens.length,
+        rewrites: scoped.rewrites,
+        untouched: scoped.untouched,
+      })),
+      skipped,
+    });
+    return;
+  }
+
+  log.success(`Scoped '${primary.name}' to ${written[0].scoped.selector}.`);
+  for (const { source, scoped, rel } of written) {
+    log.step(`${rel}  (${source.label} → ${scoped.selector})`);
+    log.dim(
+      `  ${scoped.rewrites.length} selector${scoped.rewrites.length === 1 ? "" : "s"} rewritten, ` +
+        `${scoped.tokens.length} tokens, color-scheme: ${scoped.colorScheme}`,
+    );
+    for (const skip of scoped.untouched) {
+      log.dim(`  left as authored — ${skip.prelude} (${skip.reason})`);
+    }
+  }
+  for (const skip of skipped) {
+    log.dim(`skipped ${skip.theme}: ${skip.reason}`);
+  }
+  log.blank();
+  log.dim(`Link it after the page's own theme, then mark the subtree:`);
+  log.dim(`  <div ${written[0].scoped.selector.replace(/^\[|\]$/g, "")}> … </div>`);
+}
+
 function listProjectThemes(outputDir: string): string[] {
   const tokensDir = join(outputDir, "tokens");
   if (!existsSync(tokensDir)) return [];
@@ -697,6 +951,9 @@ export async function theme(args: string[]): Promise<void> {
     }
     case "generate":
       await themeGenerate(args.slice(1));
+      break;
+    case "bundle":
+      await themeBundle(args.slice(1));
       break;
     case "list":
       await themeList();

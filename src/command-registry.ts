@@ -178,8 +178,10 @@ export const COMMAND_DEFINITIONS: Record<string, CommandDefinition> = {
     run: theme,
     category: "Development",
     summary: "Manage or generate contrast-verified themes",
-    args: "set|list|create|generate <name>",
-    skillNote: "manage themes, or generate one from a seed (--seed/--accent/one flag per axis)",
+    args: "set|list|create|generate|bundle <name>",
+    skillNote:
+      "manage themes, generate one from a seed (--seed/--accent/one flag per axis), " +
+      "or scope one to a subtree (bundle <name> --scope)",
   },
   fonts: {
     run: fonts,
