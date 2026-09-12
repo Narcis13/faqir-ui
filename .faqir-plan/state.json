@@ -181,7 +181,7 @@
     {
       "id": "1.1N-02",
       "completed": "2026-09-12",
-      "commit": "PENDING",
+      "commit": "409d990",
       "summary": "Cadence: nightly.sh runs one dream in a disposable worktree (the branch survives, the bundle is harvested, a dirty worktree is kept rather than deleting a discard's row); digest.mjs renders DREAMS.md from the ledger unioned with every unmerged dream branch; docs/dream-rubric.md v1.0 is the versioned five-criterion rubric, with its prose and its code asserted against each other."
     }
   ],
