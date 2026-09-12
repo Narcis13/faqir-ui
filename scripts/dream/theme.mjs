@@ -323,20 +323,42 @@ export async function runThemeDream(options = {}) {
 
   const seedPath = options.seedPath ?? join(SEEDS_DIR, `${brief.id}.seed.json`);
   const absoluteSeed = resolve(root, seedPath);
-  const seed = readSeed(absoluteSeed, root);
-  const theme = seed.name;
   const branch = `dream/theme-${brief.id}`;
-  const ctx = { id: brief.id, theme, seedPath, branch, root };
 
+  // A rehearsal has to work BEFORE the seed exists, because "can the shift run
+  // at all tonight?" is the question it is asked first — the skill's own Step 0
+  // runs it before Step 2 writes the seed. So a missing seed is reported here
+  // rather than thrown; a seed that exists is still validated, because a
+  // rehearsal that skips the check is a rehearsal of the wrong run.
   if (dryRun) {
+    const seed = existsSync(absoluteSeed) ? readSeed(absoluteSeed, root) : null;
+    const theme = seed?.name ?? `<${brief.id}>`;
+    const ctx = { id: brief.id, theme, seedPath, branch, root };
     log(`— dry run: brief '${brief.id}' → theme '${theme}' on ${branch}`);
+    log(
+      seed
+        ? `    seed: ${seedPath} ✓`
+        : `    seed: ${seedPath} — NOT WRITTEN YET (the dream's one hand-written input)`,
+    );
     for (const gate of THEME_GATES) {
       const [command, args] = gate.command(ctx);
       log(`    ${gate.name}: ${[command, ...args].join(" ")}`);
     }
     log("— no branch created, no gate run, no file written.");
-    return { outcome: "dry-run", brief, theme, branch, gates: THEME_GATES.map((g) => g.name) };
+    return {
+      outcome: "dry-run",
+      brief,
+      theme: seed?.name ?? null,
+      branch,
+      seedPath,
+      seedExists: Boolean(seed),
+      gates: THEME_GATES.map((g) => g.name),
+    };
   }
+
+  const seed = readSeed(absoluteSeed, root);
+  const theme = seed.name;
+  const ctx = { id: brief.id, theme, seedPath, branch, root };
 
   // 3 ── mark the brief, so a crash is distinguishable from a night that never ran
   transition(brief, "dreaming");

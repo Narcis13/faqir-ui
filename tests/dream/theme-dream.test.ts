@@ -506,6 +506,8 @@ describe("--dry-run", () => {
 
     expect(result.outcome).toBe("dry-run");
     expect(result.gates).toEqual(theme.THEME_GATES.map((g) => g.name));
+    expect(result.seedExists).toBe(true);
+    expect(result.theme).toBe("arcade");
     expect(existsSync(join(fake.root, "dreams.tsv"))).toBe(false);
     expect(existsSync(join(fake.root, "registry", "themes", "arcade.css"))).toBe(false);
     expect(existsSync(join(fake.root, ".faqir-dreams", "out"))).toBe(false);
@@ -523,6 +525,24 @@ describe("--dry-run", () => {
   it("still refuses a dirty tree, so the rehearsal rehearses the refusal too", async () => {
     const fake = fakeRepo({ startDirty: ["README.md"] });
     await expect(dream(fake, { dryRun: true })).rejects.toThrow(/dirty tree/);
+  });
+
+  it("rehearses before the seed exists, which is when it is actually asked", async () => {
+    // The skill runs a dry run at Step 0 and writes the seed at Step 2. A
+    // rehearsal that needs the seed is a rehearsal that cannot answer the
+    // question it is run to answer: can the shift run at all tonight?
+    const fake = fakeRepo({ seed: null });
+    const result = await dream(fake, { dryRun: true });
+    expect(result.outcome).toBe("dry-run");
+    expect(result.seedExists).toBe(false);
+    expect(result.theme).toBeNull();
+    expect(result.branch).toBe("dream/theme-arcade");
+    expect(result.seedPath).toBe(".faqir-dreams/seeds/arcade.seed.json");
+  });
+
+  it("still validates a seed that IS there — rehearsing the wrong run helps nobody", async () => {
+    const fake = fakeRepo({ seed: { name: "Arcade Cabinet", accent: "#d926a9" } });
+    await expect(dream(fake, { dryRun: true })).rejects.toThrow(/lowercase kebab-case "name"/);
   });
 });
 

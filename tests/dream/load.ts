@@ -136,6 +136,8 @@ export interface DreamResult {
   nearest?: string | null;
   gates?: string[];
   bundleDir?: string;
+  seedPath?: string;
+  seedExists?: boolean;
   violations?: Violation[];
   output?: string;
 }
