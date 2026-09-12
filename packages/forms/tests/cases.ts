@@ -107,6 +107,79 @@ export const FORM_PAGE_UI: UISchema = {
 
 export const FORM_PAGE_OPTS: RenderFormOptions = { idPrefix: "form-page" };
 
+/**
+ * The rules-carrying reference (1.1B-06): everything a definition can be
+ * DERIVED from in one schema — an `if/then/else` pair, a second conditional
+ * through `allOf`, and a `dependentRequired` — plus an author's own
+ * cross-field rule and its message. Pinned as a golden so the emitted
+ * definition is reviewed as bytes, and audited like every other case.
+ */
+export const BILLING_RULES_SCHEMA: ObjectSchema = {
+  type: "object",
+  title: "Billing details",
+  properties: {
+    accountType: { type: "string", title: "Account type", enum: ["personal", "business"] },
+    company: { type: "string", title: "Company", minLength: 2 },
+    vatNumber: { type: "string", title: "VAT number", pattern: "[A-Z]{2}[0-9]+" },
+    invoiceEmail: { type: "string", format: "email", title: "Invoice email" },
+    seats: { type: "integer", title: "Seats", minimum: 1, maximum: 500 },
+    startsOn: { type: "string", format: "date", title: "Starts on" },
+    endsOn: { type: "string", format: "date", title: "Ends on" },
+  },
+  required: ["accountType", "invoiceEmail"],
+  if: { properties: { accountType: { const: "business" } } },
+  then: { properties: { company: {}, vatNumber: {} }, required: ["company"] },
+  allOf: [
+    {
+      if: { properties: { accountType: { enum: ["business"] } } },
+      then: { properties: { seats: {} } },
+    },
+  ],
+  dependentRequired: { startsOn: ["endsOn"] },
+};
+
+export const BILLING_RULES_OPTS: RenderFormOptions = {
+  idPrefix: "billing",
+  rules: {
+    rules: [
+      {
+        id: "ends-after-start",
+        validate: { date: [{ var: "startsOn" }, "<", { var: "endsOn" }] },
+        path: "endsOn",
+        message: "ends-after-start",
+      },
+    ],
+    messages: { en: { "ends-after-start": "The end date must come after the start date." } },
+    defaultLocale: "en",
+  },
+};
+
+/**
+ * A wizard whose middle step applies only to teams: the `when` becomes a
+ * `jump` rule, and the navigation reads `$rules.next` instead of counting.
+ */
+export const PLAN_WIZARD_SCHEMA: ObjectSchema = {
+  type: "object",
+  title: "Choose a plan",
+  properties: {
+    plan: { type: "string", title: "Plan", enum: ["solo", "team"] },
+    seats: { type: "integer", title: "Seats", minimum: 2 },
+    email: { type: "string", format: "email", title: "Billing email" },
+  },
+  required: ["plan", "email"],
+};
+
+export const PLAN_WIZARD_UI: UISchema = {
+  "ui:wizard": {
+    label: "Plan steps",
+    steps: [
+      { title: "Plan", fields: ["plan"] },
+      { title: "Team", description: "Only for team plans.", fields: ["seats"], when: { "==": [{ var: "plan" }, "team"] } },
+      { title: "Billing", fields: ["email"] },
+    ],
+  },
+};
+
 export const GOLDEN_CASES: GoldenCase[] = [
   {
     name: "string-input",
@@ -442,5 +515,16 @@ export const GOLDEN_CASES: GoldenCase[] = [
     schema: PATIENT_INTAKE_SCHEMA,
     uiSchema: PATIENT_INTAKE_UI,
     opts: { idPrefix: "intake" },
+  },
+  {
+    name: "conditional-rules",
+    schema: BILLING_RULES_SCHEMA,
+    opts: BILLING_RULES_OPTS,
+  },
+  {
+    name: "wizard-jump",
+    schema: PLAN_WIZARD_SCHEMA,
+    uiSchema: PLAN_WIZARD_UI,
+    opts: { idPrefix: "plan" },
   },
 ];

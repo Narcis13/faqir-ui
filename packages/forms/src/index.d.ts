@@ -63,6 +63,31 @@ export interface ObjectArraySchema {
 
 export type FieldSchema = ScalarSchema | ObjectFieldSchema | EnumArraySchema | ObjectArraySchema;
 
+/**
+ * A JSONLogic expression, as `@faqir-ui/rules` defines it. Opaque here: the
+ * renderer emits it, it never evaluates it.
+ */
+export type RulesLogic = Record<string, unknown>;
+
+/** An `if` subschema: a value test per property, plus presence via `required`. */
+export interface SchemaCondition {
+  properties?: Record<string, { const?: string | number | boolean } | { enum?: Array<string | number | boolean> }>;
+  required?: string[];
+}
+
+/** A `then` / `else` branch: `properties` is visibility (each entry `{}`), `required` is requiredness. */
+export interface SchemaConsequent {
+  properties?: Record<string, Record<string, never>>;
+  required?: string[];
+}
+
+/** One conditional. `allOf` entries take this shape — conditionals only, never composition. */
+export interface SchemaConditional {
+  if: SchemaCondition;
+  then?: SchemaConsequent;
+  else?: SchemaConsequent;
+}
+
 export interface ObjectSchema {
   $schema?: string;
   $id?: string;
@@ -71,6 +96,14 @@ export interface ObjectSchema {
   description?: string;
   properties: Record<string, FieldSchema>;
   required?: string[];
+  /** Conditional visibility/requiredness → `show` / `require` rules. */
+  if?: SchemaCondition;
+  then?: SchemaConsequent;
+  else?: SchemaConsequent;
+  /** More than one conditional. Every entry must be one; `allOf` is not composition here. */
+  allOf?: SchemaConditional[];
+  /** `{ trigger: [dependents] }` → a `require` rule per dependent. */
+  dependentRequired?: Record<string, string[]>;
 }
 
 export interface FieldUISchema {
@@ -112,6 +145,13 @@ export interface UIWizardStep {
   title: string;
   description?: string;
   fields: string[];
+  /**
+   * The condition under which this step applies. When it does not hold the
+   * wizard jumps over the step — a derived `jump` rule the page and the server
+   * both read. Not available on the first or last step, and not on two steps in
+   * a row: one jump steps over one page.
+   */
+  when?: RulesLogic;
 }
 
 /** Multi-step wizard: stepper + card panels + Back/Next/Submit, per-step validation. */
@@ -141,6 +181,30 @@ export interface RenderFormI18n {
   wizardNavLabel?: string;
 }
 
+/**
+ * One rule, as `@faqir-ui/rules` defines it: an `id` plus exactly one verb
+ * (`show`, `require`, `validate`, `compute`, `jump`) and its keys. Passed
+ * through verbatim — this package owns the emission, not the vocabulary.
+ */
+export interface FormRule {
+  id: string;
+  [key: string]: unknown;
+}
+
+/**
+ * A rules definition, or the parts of one written by hand. `fields` is always
+ * derived from the JSON Schema; entries given here are merged over the derived
+ * map (a `compute` target with no control of its own, say).
+ */
+export interface RulesDefinitionInput {
+  version?: "1";
+  fields?: Record<string, unknown>;
+  required?: string[];
+  messages?: Record<string, Record<string, string>>;
+  defaultLocale?: string;
+  rules?: FormRule[];
+}
+
 export interface RenderFormOptions {
   idPrefix?: string;
   /** Maximum enum cardinality rendered as radios / checkbox groups. Defaults to 4. */
@@ -148,6 +212,12 @@ export interface RenderFormOptions {
   theme?: string;
   density?: string;
   i18n?: RenderFormI18n;
+  /**
+   * Rules the form carries. Emitted as a JSON script beside the form and bound
+   * with `l-rules`; merged with everything derived from the schema's
+   * `if/then/else`, `dependentRequired` and wizard step `when`.
+   */
+  rules?: RulesDefinitionInput;
 }
 
 /** Enums with this many values or fewer render as radio groups (single) or checkbox groups (arrays) by default. */

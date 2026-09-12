@@ -16,7 +16,12 @@
 
 export const DEFAULT_RADIO_THRESHOLD = 4;
 
-const ROOT_KEYS = new Set(["$schema", "$id", "type", "title", "description", "properties", "required"]);
+const ROOT_KEYS = new Set([
+  "$schema", "$id", "type", "title", "description", "properties", "required",
+  // The conditional keywords (1.1B-06): understood, and turned into rules —
+  // never rendered as markup, and never ignored.
+  "if", "then", "else", "allOf", "dependentRequired",
+]);
 const SCALAR_TYPES = new Set(["string", "number", "integer", "boolean"]);
 const FIELD_KEYS = new Set([
   "type", "title", "description", "enum", "format", "default",
@@ -35,8 +40,8 @@ const ENUM_ARRAY_UI_KEYS = new Set(["widget", "ui:widget", "enumLabels", "ui:enu
 const OBJECT_ARRAY_UI_KEYS = new Set(["items", "addLabel", "ui:addLabel", "removeLabel", "ui:removeLabel"]);
 const GROUP_KEYS = new Set(["title", "description", "fields"]);
 const WIZARD_KEYS = new Set(["label", "steps"]);
-const STEP_KEYS = new Set(["title", "description", "fields"]);
-const OPTION_KEYS = new Set(["idPrefix", "radioThreshold", "theme", "density", "i18n"]);
+const STEP_KEYS = new Set(["title", "description", "fields", "when"]);
+const OPTION_KEYS = new Set(["idPrefix", "radioThreshold", "theme", "density", "i18n", "rules"]);
 const I18N_KEYS = new Set([
   "requiredMarker", "selectPlaceholder", "datePickerLabel", "calendarLabel",
   "addRowLabel", "removeRowLabel", "backLabel", "nextLabel", "submitLabel", "wizardNavLabel",
@@ -208,7 +213,9 @@ function normalizeOptions(raw) {
     if (i18nRaw[key] !== undefined) i18n[key] = assertString(i18nRaw[key], `opts.i18n.${key}`);
   }
 
-  return { prefix, threshold, theme, density, i18n };
+  const rules = raw.rules === undefined ? null : normalizeRulesOption(raw.rules);
+
+  return { prefix, threshold, theme, density, i18n, rules };
 }
 
 /**
@@ -583,10 +590,416 @@ function normalizeWizard(raw, properties) {
     const title = assertString(step.title, `${path}.title`);
     const description = step.description === undefined ? undefined : assertString(step.description, `${path}.description`);
     const fields = assertStringArray(step.fields, `${path}.fields`);
-    return { title, description, fields };
+    // A step's `when` is logic, not markup: it becomes a `jump` rule, and the
+    // rules package is what reads it. Only its shape is checked here.
+    const when = step.when === undefined ? undefined : assertRecord(step.when, `${path}.when`);
+    return { title, description, fields, when };
   });
   assertFieldPartition(steps.map((step) => step.fields), properties, 'uiSchema["ui:wizard"].steps');
   return { label, steps };
+}
+
+// ── Rules: the definition a form carries beside its markup [1.1B-06 · §8.3] ──
+//
+// The renderer EMITS a `@faqir-ui/rules` definition; it never evaluates one, so
+// this package still depends on nothing. The definition is written into a
+// `<script type="application/json">` beside the form and pointed at by
+// `l-rules`, which the `faqir-rules` plugin reads in the page and a server
+// re-reads before it writes anything down — one document, two readers.
+//
+// Two sources feed it. `opts.rules` is what the author wrote (verbs, messages,
+// extra fields); the rest is DERIVED from the JSON Schema the renderer already
+// understands, so `if/then/else`, `dependentRequired` and a wizard step's
+// `when` stop being keywords that throw and become rules that run. The `fields`
+// map is always derived, never authored from scratch: it carries the same
+// coercion types the widgets were chosen from, which is what makes the page's
+// `data` and the server's `data` the same object.
+
+/** The definition format `@faqir-ui/rules` implements. */
+const RULES_VERSION = "1";
+
+const RULES_OPTION_KEYS = new Set(["version", "fields", "required", "messages", "defaultLocale", "rules"]);
+const CONDITIONAL_KEYS = new Set(["if", "then", "else"]);
+const CONDITION_KEYS = new Set(["properties", "required"]);
+const CONSEQUENT_KEYS = new Set(["properties", "required"]);
+const CONDITION_TEST_KEYS = new Set(["const", "enum"]);
+
+/** @param {Record<string, unknown>} properties @param {string} name @param {string} path */
+function assertKnownProperty(properties, name, path) {
+  if (!Object.prototype.hasOwnProperty.call(properties, name)) {
+    throw new Error(`@faqir-ui/forms: ${path} references unknown property "${name}".`);
+  }
+  return name;
+}
+
+/** A value a condition may compare against. @param {unknown} value @param {string} path */
+function assertJsonScalar(value, path) {
+  const type = typeof value;
+  if (type !== "string" && type !== "number" && type !== "boolean") {
+    throw new TypeError(`@faqir-ui/forms: ${path} must be a string, number, or boolean.`);
+  }
+  return /** @type {string | number | boolean} */ (value);
+}
+
+/**
+ * One field's rules schema — the JSON Schema subset `@faqir-ui/rules` accepts,
+ * built from the same schema the widget was chosen from. Keywords the rules
+ * package has no reading for (`default`, the `step` alias's UI half) are left
+ * out rather than renamed into something it would enforce differently.
+ * @param {Record<string, unknown>} schema
+ * @param {string} path
+ * @returns {Record<string, unknown>}
+ */
+function rulesFieldSchema(schema, path) {
+  const kind = classifyField(schema, path);
+  /** @type {Record<string, unknown>} */
+  const out = {};
+
+  if (kind === "scalar") {
+    out.type = schema.type;
+    if (schema.title !== undefined) out.title = schema.title;
+    if (schema.enum !== undefined) out.enum = schema.enum;
+    if (schema.format !== undefined) out.format = schema.format;
+    if (schema.pattern !== undefined) out.pattern = schema.pattern;
+    if (schema.minLength !== undefined) out.minLength = schema.minLength;
+    if (schema.maxLength !== undefined) out.maxLength = schema.maxLength;
+    if (schema.minimum !== undefined) out.minimum = schema.minimum;
+    if (schema.maximum !== undefined) out.maximum = schema.maximum;
+    // `step` is documented as the HTML-oriented alias for `multipleOf`, and the
+    // browser enforces it as one, so the server is told the same thing.
+    const multipleOf = schema.multipleOf === undefined ? schema.step : schema.multipleOf;
+    if (multipleOf !== undefined) out.multipleOf = multipleOf;
+    return out;
+  }
+
+  if (kind === "object") {
+    out.type = "object";
+    if (schema.title !== undefined) out.title = schema.title;
+    /** @type {Record<string, unknown>} */
+    const properties = {};
+    for (const [name, child] of Object.entries(assertRecord(schema.properties, `${path}.properties`))) {
+      properties[name] = rulesFieldSchema(assertRecord(child, `${path}.properties.${name}`), `${path}.properties.${name}`);
+    }
+    out.properties = properties;
+    if (Array.isArray(schema.required) && schema.required.length > 0) out.required = [...schema.required];
+    return out;
+  }
+
+  const items = assertRecord(schema.items, `${path}.items`);
+  out.type = "array";
+  if (schema.title !== undefined) out.title = schema.title;
+  if (kind === "enum-array") {
+    out.items = { type: "string", enum: [...(/** @type {string[]} */ (items.enum))] };
+    if (schema.uniqueItems === true) out.uniqueItems = true;
+    return out;
+  }
+
+  /** @type {Record<string, unknown>} */
+  const rowProperties = {};
+  for (const [name, child] of Object.entries(assertRecord(items.properties, `${path}.items.properties`))) {
+    rowProperties[name] = rulesFieldSchema(assertRecord(child, `${path}.items.properties.${name}`), `${path}.items.properties.${name}`);
+  }
+  /** @type {Record<string, unknown>} */
+  const rowSchema = { type: "object", properties: rowProperties };
+  if (Array.isArray(items.required) && items.required.length > 0) rowSchema.required = [...items.required];
+  out.items = rowSchema;
+  if (schema.minItems !== undefined) out.minItems = schema.minItems;
+  if (schema.maxItems !== undefined) out.maxItems = schema.maxItems;
+  return out;
+}
+
+/**
+ * The whole `fields` map, in schema order.
+ * @param {Record<string, unknown>} properties
+ */
+function rulesFieldsFrom(properties) {
+  /** @type {Record<string, unknown>} */
+  const fields = {};
+  for (const [name, schema] of Object.entries(properties)) {
+    const path = `jsonSchema.properties.${name}`;
+    fields[name] = rulesFieldSchema(assertRecord(schema, path), path);
+  }
+  return fields;
+}
+
+/**
+ * The JSONLogic condition an `if` subschema states. A property test is a value
+ * test (`const` or `enum`); a bare `required` name is a presence test, which is
+ * what `dependentRequired` means too.
+ * @param {unknown} raw
+ * @param {Record<string, unknown>} properties
+ * @param {string} path
+ */
+function conditionFromIf(raw, properties, path) {
+  const condition = assertRecord(raw, path);
+  assertKnownKeys(condition, CONDITION_KEYS, path);
+  /** @type {unknown[]} */
+  const terms = [];
+  const tested = new Set();
+
+  const tests = condition.properties === undefined ? {} : assertRecord(condition.properties, `${path}.properties`);
+  for (const [name, rawTest] of Object.entries(tests)) {
+    const testPath = `${path}.properties.${name}`;
+    assertKnownProperty(properties, name, `${path}.properties`);
+    const test = assertRecord(rawTest, testPath);
+    assertKnownKeys(test, CONDITION_TEST_KEYS, testPath);
+    if (test.const !== undefined && test.enum !== undefined) {
+      throw new Error(`@faqir-ui/forms: ${testPath} cannot combine const with enum.`);
+    }
+    tested.add(name);
+    if (test.const !== undefined) {
+      terms.push({ "==": [{ var: name }, assertJsonScalar(test.const, `${testPath}.const`)] });
+      continue;
+    }
+    if (!Array.isArray(test.enum) || test.enum.length === 0) {
+      throw new Error(
+        `@faqir-ui/forms: ${testPath} must state a "const" or a non-empty "enum" — a conditional tests a value.`,
+      );
+    }
+    terms.push({ in: [{ var: name }, test.enum.map((value, index) => assertJsonScalar(value, `${testPath}.enum[${index}]`))] });
+  }
+
+  const present = condition.required === undefined ? [] : assertStringArray(condition.required, `${path}.required`);
+  for (const name of present) {
+    assertKnownProperty(properties, name, `${path}.required`);
+    if (tested.has(name)) continue; // a value test already implies presence
+    terms.push({ "!": { missing: [name] } });
+  }
+
+  if (terms.length === 0) {
+    throw new Error(`@faqir-ui/forms: ${path} states no condition; an "if" needs a "properties" test or a "required" name.`);
+  }
+  return terms.length === 1 ? terms[0] : { and: terms };
+}
+
+/**
+ * A `then` / `else` branch, as rules: `properties` is what the branch makes
+ * visible, `required` is what it demands. A conditional CONSTRAINT (a `then`
+ * property carrying keywords) is refused rather than dropped — the rules
+ * package expresses it as a `validate` rule, and `opts.rules` is where that
+ * goes.
+ * @param {unknown} raw
+ * @param {unknown} condition
+ * @param {Record<string, unknown>} properties
+ * @param {string} path
+ * @param {(base: string) => string} allocateId
+ */
+function rulesFromConsequent(raw, condition, properties, path, allocateId) {
+  const branch = assertRecord(raw, path);
+  assertKnownKeys(branch, CONSEQUENT_KEYS, path);
+  /** @type {Record<string, unknown>[]} */
+  const rules = [];
+
+  const shown = branch.properties === undefined ? {} : assertRecord(branch.properties, `${path}.properties`);
+  for (const [name, rawEntry] of Object.entries(shown)) {
+    const entryPath = `${path}.properties.${name}`;
+    assertKnownProperty(properties, name, `${path}.properties`);
+    const entry = assertRecord(rawEntry, entryPath);
+    if (Object.keys(entry).length > 0) {
+      throw new Error(
+        `@faqir-ui/forms: ${entryPath} carries constraints; a conditional branch decides visibility only ` +
+        `(write it as {}). Express a conditional constraint as a "validate" rule in opts.rules.`,
+      );
+    }
+    rules.push({ id: allocateId(`show-${idToken(name) || "field"}`), show: name, when: condition });
+  }
+
+  const required = branch.required === undefined ? [] : assertStringArray(branch.required, `${path}.required`);
+  for (const name of required) {
+    assertKnownProperty(properties, name, `${path}.required`);
+    rules.push({ id: allocateId(`require-${idToken(name) || "field"}`), require: name, when: condition });
+  }
+
+  if (rules.length === 0) {
+    throw new Error(`@faqir-ui/forms: ${path} changes nothing; a branch needs "properties" (visibility) or "required".`);
+  }
+  return rules;
+}
+
+/**
+ * Every conditional the root schema carries: its own `if/then/else`, plus each
+ * `allOf` entry, which is the standard way to write more than one. `allOf` is
+ * accepted for conditionals ONLY — it is not schema composition here, and an
+ * entry that is not a conditional throws rather than being merged in silently.
+ * @param {Record<string, unknown>} root
+ */
+function conditionalsOf(root) {
+  /** @type {Array<{ node: Record<string, unknown>, path: string }>} */
+  const out = [];
+  if (root.if !== undefined || root.then !== undefined || root.else !== undefined) {
+    if (root.if === undefined) {
+      throw new Error('@faqir-ui/forms: jsonSchema has a "then"/"else" with no "if".');
+    }
+    out.push({ node: { if: root.if, then: root.then, else: root.else }, path: "jsonSchema" });
+  }
+  if (root.allOf !== undefined) {
+    if (!Array.isArray(root.allOf) || root.allOf.length === 0) {
+      throw new TypeError("@faqir-ui/forms: jsonSchema.allOf must be a non-empty array of conditionals.");
+    }
+    root.allOf.forEach((entry, index) => {
+      const path = `jsonSchema.allOf[${index}]`;
+      const node = assertRecord(entry, path);
+      assertKnownKeys(node, CONDITIONAL_KEYS, path);
+      if (node.if === undefined) {
+        throw new Error(
+          `@faqir-ui/forms: ${path} must be a conditional ("if" with "then" and/or "else"); ` +
+          "allOf is not supported for schema composition.",
+        );
+      }
+      out.push({ node, path });
+    });
+  }
+  return out;
+}
+
+/**
+ * @param {Record<string, unknown>} root
+ * @param {Record<string, unknown>} properties
+ * @param {(base: string) => string} allocateId
+ */
+function conditionalRules(root, properties, allocateId) {
+  /** @type {Record<string, unknown>[]} */
+  const rules = [];
+  for (const { node, path } of conditionalsOf(root)) {
+    const condition = conditionFromIf(node.if, properties, `${path}.if`);
+    if (node.then === undefined && node.else === undefined) {
+      throw new Error(`@faqir-ui/forms: ${path}.if decides nothing; add a "then" or an "else".`);
+    }
+    if (node.then !== undefined) {
+      rules.push(...rulesFromConsequent(node.then, condition, properties, `${path}.then`, allocateId));
+    }
+    if (node.else !== undefined) {
+      rules.push(...rulesFromConsequent(node.else, { "!": condition }, properties, `${path}.else`, allocateId));
+    }
+  }
+  return rules;
+}
+
+/**
+ * `dependentRequired` — "if this one was filled in, those become required".
+ * `{"!": {"missing": [trigger]}}` is presence in the rules package's own terms:
+ * an unchecked box and an empty input are both absent from a form's data, so
+ * both read false.
+ * @param {Record<string, unknown>} root
+ * @param {Record<string, unknown>} properties
+ * @param {(base: string) => string} allocateId
+ */
+function dependentRequiredRules(root, properties, allocateId) {
+  if (root.dependentRequired === undefined) return [];
+  const map = assertRecord(root.dependentRequired, "jsonSchema.dependentRequired");
+  /** @type {Record<string, unknown>[]} */
+  const rules = [];
+  for (const [trigger, rawList] of Object.entries(map)) {
+    const path = `jsonSchema.dependentRequired.${trigger}`;
+    assertKnownProperty(properties, trigger, "jsonSchema.dependentRequired");
+    for (const name of assertStringArray(rawList, path)) {
+      assertKnownProperty(properties, name, path);
+      if (name === trigger) throw new Error(`@faqir-ui/forms: ${path} cannot make "${trigger}" depend on itself.`);
+      rules.push({
+        id: allocateId(`require-${idToken(name) || "field"}-with-${idToken(trigger) || "field"}`),
+        require: name,
+        when: { "!": { missing: [trigger] } },
+      });
+    }
+  }
+  return rules;
+}
+
+/**
+ * A wizard step's `when` is the condition under which the step APPLIES; the
+ * rule derived from it is the jump that steps over the page when it does not.
+ * Page ids are the step indices, which is what the emitted wizard's `step`
+ * scope variable holds, so `$rules.next` can be read without a lookup table.
+ *
+ * One jump steps over one page, so two conditional steps in a row are refused
+ * rather than silently mis-navigated, and the first and last steps — which have
+ * nowhere to jump from, or to — are refused too.
+ * @param {{ steps: Array<{ when?: Record<string, unknown> }> }} wizard
+ * @param {(base: string) => string} allocateId
+ */
+function wizardJumpRules(wizard, allocateId) {
+  /** @type {Record<string, unknown>[]} */
+  const rules = [];
+  const last = wizard.steps.length - 1;
+  wizard.steps.forEach((step, index) => {
+    if (step.when === undefined) return;
+    const path = `uiSchema["ui:wizard"].steps[${index}].when`;
+    if (index === 0) {
+      throw new Error(`@faqir-ui/forms: ${path} — the first step is always reached, so it cannot be conditional.`);
+    }
+    if (index === last) {
+      throw new Error(`@faqir-ui/forms: ${path} — the last step cannot be skipped; there is nowhere to jump to.`);
+    }
+    if (wizard.steps[index - 1].when !== undefined) {
+      throw new Error(`@faqir-ui/forms: ${path} — two consecutive steps cannot both be conditional; one jump steps over one page.`);
+    }
+    rules.push({
+      id: allocateId(`skip-step-${index + 1}`),
+      jump: String(index + 1),
+      from: String(index - 1),
+      when: { "!": step.when },
+    });
+  });
+  return rules;
+}
+
+/**
+ * `opts.rules`: a definition, or the parts of one an author writes by hand. The
+ * verbs are passed through verbatim — this package does not own the rules
+ * vocabulary and will not grow a second, drifting copy of it — but an `id` is
+ * checked here, because a rule with none is a rule no message can address and
+ * the emitter is what makes the ids unique.
+ * @param {unknown} raw
+ */
+function normalizeRulesOption(raw) {
+  const definition = assertRecord(raw, "opts.rules");
+  assertKnownKeys(definition, RULES_OPTION_KEYS, "opts.rules");
+  if (definition.version !== undefined && definition.version !== RULES_VERSION) {
+    throw new Error(`@faqir-ui/forms: opts.rules.version must be "${RULES_VERSION}".`);
+  }
+  const fields = definition.fields === undefined ? undefined : assertRecord(definition.fields, "opts.rules.fields");
+  const required = definition.required === undefined ? [] : assertStringArray(definition.required, "opts.rules.required");
+  const messages = definition.messages === undefined ? undefined : assertRecord(definition.messages, "opts.rules.messages");
+  const defaultLocale = definition.defaultLocale === undefined
+    ? undefined
+    : assertString(definition.defaultLocale, "opts.rules.defaultLocale");
+
+  /** @type {Record<string, unknown>[]} */
+  const rules = [];
+  if (definition.rules !== undefined) {
+    if (!Array.isArray(definition.rules)) {
+      throw new TypeError("@faqir-ui/forms: opts.rules.rules must be an array of rules.");
+    }
+    definition.rules.forEach((rawRule, index) => {
+      const rule = assertRecord(rawRule, `opts.rules.rules[${index}]`);
+      if (typeof rule.id !== "string" || rule.id.length === 0) {
+        throw new Error(
+          `@faqir-ui/forms: opts.rules.rules[${index}].id must be a non-empty string — it is what a message is addressed to.`,
+        );
+      }
+      rules.push(rule);
+    });
+  }
+  return { fields, required, messages, defaultLocale, rules };
+}
+
+/**
+ * The definition, as the `<script type="application/json">` a page embeds.
+ *
+ * `<` is escaped to `<` — still JSON, and mandatory rather than careful: a
+ * script element is raw text, `</script` ends it, and the operators a rules
+ * definition is made of (`{"<=": …}`) are full of the character that starts
+ * that sequence. Without this the parser eats the rest of the page.
+ * @param {string} id
+ * @param {Record<string, unknown>} definition
+ */
+function rulesScriptLines(id, definition) {
+  const json = JSON.stringify(definition, null, 2).replaceAll("<", "\\u003c");
+  return [
+    `<script type="application/json" id="${attrValue(id)}">`,
+    ...json.split("\n"),
+    "</script>",
+  ];
 }
 
 /** @param {string[]} attrs */
@@ -1130,8 +1543,10 @@ function renderField(name, schema, ui, state, spec) {
  * @param {{ label: string | undefined, steps: Array<{ title: string, description: string | undefined, fields: string[] }> }} wizard
  * @param {(name: string, disabledExpr: string | null) => string[]} renderNamedField
  * @param {Record<string, string>} i18n
+ * @param {boolean} [jumps] The definition carries `jump` rules, so navigation
+ *   asks `$rules.next` which page comes next instead of counting by one.
  */
-function renderWizard(wizard, renderNamedField, i18n) {
+function renderWizard(wizard, renderNamedField, i18n, jumps = false) {
   const last = wizard.steps.length - 1;
   /** @type {string[]} */
   const lines = [];
@@ -1174,8 +1589,14 @@ function renderWizard(wizard, renderNamedField, i18n) {
     lines.push("</section>");
   });
 
+  // Back is the forward jump read in reverse: a page the wizard stepped OVER
+  // announces itself as `next[step - 2] === step`, so Back steps over it too
+  // rather than landing on a page the rules skipped.
+  const backExpr = jumps
+    ? "step = $rules.next[step - 2] == step ? step - 2 : step - 1"
+    : "step = step - 1";
   lines.push("<div>");
-  lines.push(`  <button type="button" data-ui="button" data-variant="outline" :disabled="${attrValue("step === 0")}" @click="${attrValue("step = step - 1")}">${escapeHtml(i18n.backLabel)}</button>`);
+  lines.push(`  <button type="button" data-ui="button" data-variant="outline" :disabled="${attrValue("step === 0")}" @click="${attrValue(backExpr)}">${escapeHtml(i18n.backLabel)}</button>`);
   lines.push(`  <button type="submit" data-ui="button" data-variant="primary" :hidden="${attrValue(`step === ${last}`)}">${escapeHtml(i18n.nextLabel)}</button>`);
   lines.push(`  <button type="submit" data-ui="button" data-variant="primary" :hidden="${attrValue(`step !== ${last}`)}">${escapeHtml(i18n.submitLabel)}</button>`);
   lines.push("</div>");
@@ -1262,10 +1683,35 @@ export function renderForm(jsonSchema, uiSchema = {}, opts = {}) {
   const wizard = wizardRaw === undefined ? undefined : normalizeWizard(wizardRaw, properties);
   const groups = groupsRaw === undefined ? undefined : normalizeGroups(groupsRaw, properties);
 
+  // Rules, part one: everything the wizard's own markup depends on. Ids are
+  // allocated against the author's own, which are reserved first, so a derived
+  // rule can never take an id a message is already addressed to.
+  const rulesOption = normalizedOptions.rules;
+  /** @type {Set<string>} */
+  const ruleIds = new Set();
+  for (const rule of rulesOption ? rulesOption.rules : []) {
+    const id = /** @type {string} */ (rule.id);
+    if (ruleIds.has(id)) {
+      throw new Error(`@faqir-ui/forms: opts.rules.rules has two rules with the id "${id}"; an id is what a message is addressed to.`);
+    }
+    ruleIds.add(id);
+  }
+  /** @param {string} base */
+  const allocateRuleId = (base) => {
+    let candidate = base;
+    let n = 2;
+    while (ruleIds.has(candidate)) candidate = `${base}-${n++}`;
+    ruleIds.add(candidate);
+    return candidate;
+  };
+  const jumpRules = wizard ? wizardJumpRules(wizard, allocateRuleId) : [];
+  const hasJumps = jumpRules.length > 0 ||
+    (rulesOption ? rulesOption.rules.some((rule) => typeof rule.jump === "string") : false);
+
   /** @type {string[]} */
   const bodyLines = [];
   if (wizard) {
-    bodyLines.push(...renderWizard(wizard, renderNamedField, normalizedOptions.i18n));
+    bodyLines.push(...renderWizard(wizard, renderNamedField, normalizedOptions.i18n, hasJumps));
   } else if (groups) {
     for (const group of groups) {
       /** @type {string[]} */
@@ -1281,9 +1727,38 @@ export function renderForm(jsonSchema, uiSchema = {}, opts = {}) {
     for (const name of Object.keys(properties)) bodyLines.push(...renderNamedField(name, null));
   }
 
-  const dependencies = state.flags.usesDatePicker
-    ? "faqir-core.js faqir-validate.js date-picker.js calendar.js"
-    : "faqir-core.js faqir-validate.js";
+  // Rules, part two: the rest of the definition, derived from a schema every
+  // field of which has now been validated by the render above.
+  const derivedRules = [
+    ...conditionalRules(root, properties, allocateRuleId),
+    ...dependentRequiredRules(root, properties, allocateRuleId),
+    // Derived last, allocated first: the wizard's markup had to know about them.
+    ...jumpRules,
+  ];
+  /** @type {Record<string, unknown> | null} */
+  let rulesDefinition = null;
+  if (rulesOption || derivedRules.length > 0) {
+    /** @type {Record<string, unknown>} */
+    const definition = { version: RULES_VERSION };
+    definition.fields = { ...rulesFieldsFrom(properties), ...(rulesOption && rulesOption.fields) };
+    const requiredPaths = [...new Set([...required, ...(rulesOption ? rulesOption.required : [])])];
+    if (requiredPaths.length > 0) definition.required = requiredPaths;
+    if (rulesOption && rulesOption.messages !== undefined) definition.messages = rulesOption.messages;
+    if (rulesOption && rulesOption.defaultLocale !== undefined) definition.defaultLocale = rulesOption.defaultLocale;
+    // The author's rules come first: a `jump` contest is won by the first rule
+    // that matches, and the author outranks the schema.
+    const allRules = [...(rulesOption ? rulesOption.rules : []), ...derivedRules];
+    if (allRules.length > 0) definition.rules = allRules;
+    rulesDefinition = definition;
+  }
+  const rulesId = `${normalizedOptions.prefix}-rules`;
+
+  const dependencies = [
+    "faqir-core.js",
+    "faqir-validate.js",
+    ...(rulesDefinition ? ["faqir-rules.js"] : []),
+    ...(state.flags.usesDatePicker ? ["date-picker.js", "calendar.js"] : []),
+  ].join(" ");
   // The form itself carries `l-data`: faqir-core only walks scope roots
   // ([l-data]/[data-ui]), so without it a bare rendered form would never get
   // its `l-validate` processed — the §7.2 contract is that the output works
@@ -1295,20 +1770,30 @@ export function renderForm(jsonSchema, uiSchema = {}, opts = {}) {
     // so a :data-state binding on the form itself would never run.
     const last = wizard.steps.length - 1;
     const entries = ["step: 0", ...state.scopeEntries];
+    // With `jump` rules in play the next page is the definition's answer, not
+    // the next integer: `$rules.next` is keyed by the page being left, and its
+    // value is the page id (a step index) to go to.
+    const advance = hasJumps
+      ? "step = $rules.next[step] === undefined ? step + 1 : +$rules.next[step]"
+      : "step = step + 1";
     formAttrs.push(`l-data="${attrValue(`{ ${entries.join(", ")} }`)}"`);
-    formAttrs.push(`l-validate="${attrValue(`step < ${last} ? (step = step + 1) : ($el.dataset.state = 'submitted')`)}"`);
+    formAttrs.push(`l-validate="${attrValue(`step < ${last} ? (${advance}) : ($el.dataset.state = 'submitted')`)}"`);
   } else {
     formAttrs.push(state.scopeEntries.length
       ? `l-data="${attrValue(`{ ${state.scopeEntries.join(", ")} }`)}"`
       : "l-data");
     formAttrs.push("l-validate");
   }
+  if (rulesDefinition) formAttrs.push(`l-rules="#${attrValue(rulesId)}"`);
   if (root.title !== undefined) formAttrs.push(`aria-label="${attrValue(/** @type {string} */ (root.title))}"`);
   if (root.description !== undefined) formAttrs.push(`aria-describedby="${attrValue(`${normalizedOptions.prefix}-form-description`)}"`);
   if (normalizedOptions.theme !== undefined) formAttrs.push(`data-theme="${attrValue(normalizedOptions.theme)}"`);
   if (normalizedOptions.density !== undefined) formAttrs.push(`data-density="${attrValue(normalizedOptions.density)}"`);
 
-  const output = [`<!-- @ui:requires ${dependencies} -->`, `<form${renderAttrs(formAttrs)}>`];
+  /** @type {string[]} */
+  const output = [`<!-- @ui:requires ${dependencies} -->`];
+  if (rulesDefinition) output.push(...rulesScriptLines(rulesId, rulesDefinition));
+  output.push(`<form${renderAttrs(formAttrs)}>`);
   if (root.title !== undefined) output.push(`  <h1>${escapeHtml(/** @type {string} */ (root.title))}</h1>`);
   if (root.description !== undefined) {
     output.push(`  <p id="${attrValue(`${normalizedOptions.prefix}-form-description`)}">${escapeHtml(/** @type {string} */ (root.description))}</p>`);

@@ -1,0 +1,117 @@
+<!-- @ui:requires faqir-core.js faqir-validate.js faqir-rules.js -->
+<script type="application/json" id="plan-rules">
+{
+  "version": "1",
+  "fields": {
+    "plan": {
+      "type": "string",
+      "title": "Plan",
+      "enum": [
+        "solo",
+        "team"
+      ]
+    },
+    "seats": {
+      "type": "integer",
+      "title": "Seats",
+      "minimum": 2
+    },
+    "email": {
+      "type": "string",
+      "title": "Billing email",
+      "format": "email"
+    }
+  },
+  "required": [
+    "plan",
+    "email"
+  ],
+  "rules": [
+    {
+      "id": "skip-step-2",
+      "jump": "2",
+      "from": "0",
+      "when": {
+        "!": {
+          "==": [
+            {
+              "var": "plan"
+            },
+            "team"
+          ]
+        }
+      }
+    }
+  ]
+}
+</script>
+<form id="plan-form" l-data="{ step: 0 }" l-validate="step &lt; 2 ? (step = $rules.next[step] === undefined ? step + 1 : +$rules.next[step]) : ($el.dataset.state = &#39;submitted&#39;)" l-rules="#plan-rules" aria-label="Choose a plan">
+  <h1>Choose a plan</h1>
+  <div data-ui="stepper" role="navigation" aria-label="Plan steps">
+    <div data-part="step" data-state="active" :data-state="step &gt; 0 ? &#39;completed&#39; : (step === 0 ? &#39;active&#39; : null)">
+      <span data-part="indicator">1</span>
+      <span data-part="label">Plan</span>
+    </div>
+    <div data-part="connector"></div>
+    <div data-part="step" :data-state="step &gt; 1 ? &#39;completed&#39; : (step === 1 ? &#39;active&#39; : null)">
+      <span data-part="indicator">2</span>
+      <span data-part="label">Team</span>
+    </div>
+    <div data-part="connector"></div>
+    <div data-part="step" :data-state="step &gt; 2 ? &#39;completed&#39; : (step === 2 ? &#39;active&#39; : null)">
+      <span data-part="indicator">3</span>
+      <span data-part="label">Billing</span>
+    </div>
+  </div>
+  <section data-ui="card" data-variant="outlined" :hidden="step !== 0" :data-state="step === 0 ? &#39;active&#39; : null">
+    <h2 data-part="title">Plan</h2>
+    <div data-part="body">
+      <div data-ui="field-group">
+        <label data-part="label" id="plan-field-plan-label" for="plan-field-plan-option-1">Plan <span data-part="required">*</span></label>
+        <div data-part="input">
+          <div data-ui="radio-group" role="radiogroup" aria-labelledby="plan-field-plan-label" aria-describedby="plan-field-plan-error">
+            <label data-ui="radio-label">
+              <input data-ui="radio" type="radio" id="plan-field-plan-option-1" name="plan" value="solo" required aria-required="true" aria-describedby="plan-field-plan-error" :disabled="step !== 0">
+              <span data-part="label">solo</span>
+            </label>
+            <label data-ui="radio-label">
+              <input data-ui="radio" type="radio" id="plan-field-plan-option-2" name="plan" value="team" required aria-required="true" aria-describedby="plan-field-plan-error" :disabled="step !== 0">
+              <span data-part="label">team</span>
+            </label>
+          </div>
+        </div>
+        <p data-part="error" id="plan-field-plan-error" aria-live="polite"></p>
+      </div>
+    </div>
+  </section>
+  <section data-ui="card" data-variant="outlined" :hidden="step !== 1" :data-state="step === 1 ? &#39;active&#39; : null">
+    <h2 data-part="title">Team</h2>
+    <p data-part="description">Only for team plans.</p>
+    <div data-part="body">
+      <div data-ui="field-group">
+        <label data-part="label" for="plan-field-seats">Seats</label>
+        <div data-part="input">
+          <input data-ui="input" id="plan-field-seats" name="seats" aria-describedby="plan-field-seats-error" :disabled="step !== 1" type="number" min="2" step="1">
+        </div>
+        <p data-part="error" id="plan-field-seats-error" aria-live="polite"></p>
+      </div>
+    </div>
+  </section>
+  <section data-ui="card" data-variant="outlined" :hidden="step !== 2" :data-state="step === 2 ? &#39;active&#39; : null">
+    <h2 data-part="title">Billing</h2>
+    <div data-part="body">
+      <div data-ui="field-group">
+        <label data-part="label" for="plan-field-email">Billing email <span data-part="required">*</span></label>
+        <div data-part="input">
+          <input data-ui="input" id="plan-field-email" name="email" required aria-required="true" aria-describedby="plan-field-email-error" :disabled="step !== 2" type="email">
+        </div>
+        <p data-part="error" id="plan-field-email-error" aria-live="polite"></p>
+      </div>
+    </div>
+  </section>
+  <div>
+    <button type="button" data-ui="button" data-variant="outline" :disabled="step === 0" @click="step = $rules.next[step - 2] == step ? step - 2 : step - 1">Back</button>
+    <button type="submit" data-ui="button" data-variant="primary" :hidden="step === 2">Next</button>
+    <button type="submit" data-ui="button" data-variant="primary" :hidden="step !== 2">Submit</button>
+  </div>
+</form>

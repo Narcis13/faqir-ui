@@ -1,0 +1,253 @@
+<!-- @ui:requires faqir-core.js faqir-validate.js faqir-rules.js date-picker.js calendar.js -->
+<script type="application/json" id="billing-rules">
+{
+  "version": "1",
+  "fields": {
+    "accountType": {
+      "type": "string",
+      "title": "Account type",
+      "enum": [
+        "personal",
+        "business"
+      ]
+    },
+    "company": {
+      "type": "string",
+      "title": "Company",
+      "minLength": 2
+    },
+    "vatNumber": {
+      "type": "string",
+      "title": "VAT number",
+      "pattern": "[A-Z]{2}[0-9]+"
+    },
+    "invoiceEmail": {
+      "type": "string",
+      "title": "Invoice email",
+      "format": "email"
+    },
+    "seats": {
+      "type": "integer",
+      "title": "Seats",
+      "minimum": 1,
+      "maximum": 500
+    },
+    "startsOn": {
+      "type": "string",
+      "title": "Starts on",
+      "format": "date"
+    },
+    "endsOn": {
+      "type": "string",
+      "title": "Ends on",
+      "format": "date"
+    }
+  },
+  "required": [
+    "accountType",
+    "invoiceEmail"
+  ],
+  "messages": {
+    "en": {
+      "ends-after-start": "The end date must come after the start date."
+    }
+  },
+  "defaultLocale": "en",
+  "rules": [
+    {
+      "id": "ends-after-start",
+      "validate": {
+        "date": [
+          {
+            "var": "startsOn"
+          },
+          "\u003c",
+          {
+            "var": "endsOn"
+          }
+        ]
+      },
+      "path": "endsOn",
+      "message": "ends-after-start"
+    },
+    {
+      "id": "show-company",
+      "show": "company",
+      "when": {
+        "==": [
+          {
+            "var": "accountType"
+          },
+          "business"
+        ]
+      }
+    },
+    {
+      "id": "show-vatnumber",
+      "show": "vatNumber",
+      "when": {
+        "==": [
+          {
+            "var": "accountType"
+          },
+          "business"
+        ]
+      }
+    },
+    {
+      "id": "require-company",
+      "require": "company",
+      "when": {
+        "==": [
+          {
+            "var": "accountType"
+          },
+          "business"
+        ]
+      }
+    },
+    {
+      "id": "show-seats",
+      "show": "seats",
+      "when": {
+        "in": [
+          {
+            "var": "accountType"
+          },
+          [
+            "business"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "require-endson-with-startson",
+      "require": "endsOn",
+      "when": {
+        "!": {
+          "missing": [
+            "startsOn"
+          ]
+        }
+      }
+    }
+  ]
+}
+</script>
+<form id="billing-form" l-data l-validate l-rules="#billing-rules" aria-label="Billing details">
+  <h1>Billing details</h1>
+  <div data-ui="field-group">
+    <label data-part="label" id="billing-field-accounttype-label" for="billing-field-accounttype-option-1">Account type <span data-part="required">*</span></label>
+    <div data-part="input">
+      <div data-ui="radio-group" role="radiogroup" aria-labelledby="billing-field-accounttype-label" aria-describedby="billing-field-accounttype-error">
+        <label data-ui="radio-label">
+          <input data-ui="radio" type="radio" id="billing-field-accounttype-option-1" name="accountType" value="personal" required aria-required="true" aria-describedby="billing-field-accounttype-error">
+          <span data-part="label">personal</span>
+        </label>
+        <label data-ui="radio-label">
+          <input data-ui="radio" type="radio" id="billing-field-accounttype-option-2" name="accountType" value="business" required aria-required="true" aria-describedby="billing-field-accounttype-error">
+          <span data-part="label">business</span>
+        </label>
+      </div>
+    </div>
+    <p data-part="error" id="billing-field-accounttype-error" aria-live="polite"></p>
+  </div>
+  <div data-ui="field-group">
+    <label data-part="label" for="billing-field-company">Company</label>
+    <div data-part="input">
+      <input data-ui="input" id="billing-field-company" name="company" aria-describedby="billing-field-company-error" type="text" minlength="2">
+    </div>
+    <p data-part="error" id="billing-field-company-error" aria-live="polite"></p>
+  </div>
+  <div data-ui="field-group">
+    <label data-part="label" for="billing-field-vatnumber">VAT number</label>
+    <div data-part="input">
+      <input data-ui="input" id="billing-field-vatnumber" name="vatNumber" aria-describedby="billing-field-vatnumber-error" type="text" pattern="[A-Z]{2}[0-9]+">
+    </div>
+    <p data-part="error" id="billing-field-vatnumber-error" aria-live="polite"></p>
+  </div>
+  <div data-ui="field-group">
+    <label data-part="label" for="billing-field-invoiceemail">Invoice email <span data-part="required">*</span></label>
+    <div data-part="input">
+      <input data-ui="input" id="billing-field-invoiceemail" name="invoiceEmail" required aria-required="true" aria-describedby="billing-field-invoiceemail-error" type="email">
+    </div>
+    <p data-part="error" id="billing-field-invoiceemail-error" aria-live="polite"></p>
+  </div>
+  <div data-ui="field-group">
+    <label data-part="label" for="billing-field-seats">Seats</label>
+    <div data-part="input">
+      <input data-ui="input" id="billing-field-seats" name="seats" aria-describedby="billing-field-seats-error" type="number" min="1" max="500" step="1">
+    </div>
+    <p data-part="error" id="billing-field-seats-error" aria-live="polite"></p>
+  </div>
+  <div data-ui="field-group">
+    <label data-part="label" for="billing-field-startson">Starts on</label>
+    <div data-part="input">
+      <div data-ui="date-picker" data-state="closed" data-size="md">
+        <div data-part="trigger">
+          <input data-part="input" id="billing-field-startson" name="startsOn" aria-describedby="billing-field-startson-error" type="text" role="combobox" readonly aria-haspopup="dialog" aria-expanded="false" aria-label="Choose Starts on">
+          <span data-part="icon" aria-hidden="true">&#x1F4C5;</span>
+        </div>
+        <div data-part="calendar" role="dialog" aria-label="Calendar" hidden>
+          <div data-ui="calendar" data-size="md">
+            <div data-part="header">
+              <button data-part="nav-prev" type="button" aria-label="Previous month">&lsaquo;</button>
+              <span data-part="month-label"></span>
+              <button data-part="nav-next" type="button" aria-label="Next month">&rsaquo;</button>
+            </div>
+            <table data-part="grid" role="grid" aria-label="Calendar">
+              <thead>
+                <tr>
+                  <th scope="col" abbr="Sunday">Su</th>
+                  <th scope="col" abbr="Monday">Mo</th>
+                  <th scope="col" abbr="Tuesday">Tu</th>
+                  <th scope="col" abbr="Wednesday">We</th>
+                  <th scope="col" abbr="Thursday">Th</th>
+                  <th scope="col" abbr="Friday">Fr</th>
+                  <th scope="col" abbr="Saturday">Sa</th>
+                </tr>
+              </thead>
+              <tbody data-part="grid-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p data-part="error" id="billing-field-startson-error" aria-live="polite"></p>
+  </div>
+  <div data-ui="field-group">
+    <label data-part="label" for="billing-field-endson">Ends on</label>
+    <div data-part="input">
+      <div data-ui="date-picker" data-state="closed" data-size="md">
+        <div data-part="trigger">
+          <input data-part="input" id="billing-field-endson" name="endsOn" aria-describedby="billing-field-endson-error" type="text" role="combobox" readonly aria-haspopup="dialog" aria-expanded="false" aria-label="Choose Ends on">
+          <span data-part="icon" aria-hidden="true">&#x1F4C5;</span>
+        </div>
+        <div data-part="calendar" role="dialog" aria-label="Calendar" hidden>
+          <div data-ui="calendar" data-size="md">
+            <div data-part="header">
+              <button data-part="nav-prev" type="button" aria-label="Previous month">&lsaquo;</button>
+              <span data-part="month-label"></span>
+              <button data-part="nav-next" type="button" aria-label="Next month">&rsaquo;</button>
+            </div>
+            <table data-part="grid" role="grid" aria-label="Calendar">
+              <thead>
+                <tr>
+                  <th scope="col" abbr="Sunday">Su</th>
+                  <th scope="col" abbr="Monday">Mo</th>
+                  <th scope="col" abbr="Tuesday">Tu</th>
+                  <th scope="col" abbr="Wednesday">We</th>
+                  <th scope="col" abbr="Thursday">Th</th>
+                  <th scope="col" abbr="Friday">Fr</th>
+                  <th scope="col" abbr="Saturday">Sa</th>
+                </tr>
+              </thead>
+              <tbody data-part="grid-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p data-part="error" id="billing-field-endson-error" aria-live="polite"></p>
+  </div>
+</form>
