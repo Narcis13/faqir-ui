@@ -133,7 +133,7 @@
     {
       "id": "1.1B-01",
       "completed": "2026-09-12",
-      "commit": "PENDING",
+      "commit": "f206c8c",
       "summary": "@faqir-ui/rules: the zero-dependency, isomorphic shape validator \u2014 closed JSON Schema subset, nine format checkers, the message chain shared with faqir-validate, and a coercion pass that un-flattens the dotted names forms emit. A 93-case authored golden corpus is replayed in a happy-dom realm and in plain Bun and diffed case by case. Also reconciled the 14 typecheck errors inherited from 1.1A-20, output-neutrally."
     }
   ],
