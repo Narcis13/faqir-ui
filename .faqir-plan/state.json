@@ -1,8 +1,8 @@
 {
   "$schema": "./state.schema.md",
   "plan": "FAQIR-PLAN-1.1.md",
-  "current": "1.1B-04",
-  "last_completed": "1.1B-03",
+  "current": null,
+  "last_completed": "1.1B-04",
   "history": [
     {
       "id": "1.1A-01",
@@ -147,6 +147,12 @@
       "completed": "2026-09-12",
       "commit": "2b3a00c",
       "summary": "Faqir.validate registry + async validators; l-validate:<name>.async, the validating state, and the plugin reporting seam"
+    },
+    {
+      "id": "1.1B-04",
+      "completed": "2026-09-12",
+      "commit": "c1db0fc",
+      "summary": "The rules a form obeys in the page, from the same evaluator a server runs. `l-rules` reads a definition (a selector to a `<script type=\"application/json\">`, or an expression in scope), compiles it once, and applies the six verbs to the DOM on init and on every delegated `input`/`change`: a hidden field's field-group takes `hidden` and its controls `disabled` — which is what makes the two verdicts comparable, since `FormData` then carries exactly what a server receives — `require` toggles `required`/`aria-required`, `compute` writes the scope and the control, `jump` lands in a reactive `$rules.next`, and both `validate` forms go through `Faqir.validate.register` so they run at faqir-validate's moments with its messages and its `validating` state; the plugin owns no message and paints no error of its own. Every attribute it touches is OWNED rather than assumed (three WeakSets and a WeakMap): a `hidden` the page wrote survives a rule that says \"shown\", and `required` is the OR of the markup's own and the rule's — a rule may add a demand, never lift one. The plugin IS `@faqir-ui/rules`, bundled: `scripts/build-rules-plugin.mjs` compiles `packages/rules/src/plugin.js` into the committed, byte-compare-gated `registry/core/plugins/faqir-rules.js`, header lifted from the source so the skill documents it from one place. 38 golden-corpus cases are replayed through rendered forms in two halves — the data round-trip read off the real `FormData` before the plugin writes anything, then `visible`/`required`/`computed`/`next`/findings as applied to the DOM — which is the browser/server parity claim made literal rather than asserted. Two deliberate deviations, both measured: the gzip budget is 11 KB and not the plan's 6 (the evaluator alone is 8.29 KB, the glue 1.93, total 10.31; the 6 predates the evaluator and the only way under it is a second implementation), enforced from both sides in `tests/build/check-size.test.ts`; and there is no `module.exports = install`, because `bun build --format=iife` resolves the free `module` identifier in its own scope and the line survived as dead code that looked alive (`require()` answered `{}`) — bundlers use the new `@faqir-ui/rules/plugin` export instead. Three real bugs fell out of writing it: a frozen `Object.freeze` constant behind `$rules` threw a TypeError under the scope Proxy (a Proxy may not wrap a non-configurable, non-writable property) in exactly the case it existed to make harmless; the first draft reported a documented form-level check as an absent field, i.e. flagged correct markup; and a definition embedded in a `<script type=\"application/json\">` needs `<` escaped as `\\u003c` or the element's raw text is truncated — filed as follow-up 1.1B-09 for the emitter to own. `l-rules` joined `PLUGIN_DIRECTIVES` so the audit does not call it unknown, the isomorphism gate now names `plugin.js` as the one host-coupled module in `src/` with the exemption asserted to be in use, `check:rules-plugin` joined the preflight, and the skill, docs site and `cdn.json` were regenerated. Full suite green (6,503 + 58 pass, 0 fail, the same 12 pre-existing skips); `check:manifest-api` is still red on the same nine recipe manifests, untouched here and tracked as 1.1B-08."
     }
   ],
   "note": "Pointer file for the /faqir-plan slash command. FAQIR-PLAN-1.1.md status cells (⬜/✅) are the source of truth; this file records the cross-session cursor and a per-task log. Do not hand-edit `current` while a session is running. The 1.0 plan's cursor (61 history entries, phases v0.3–1.0) is archived unchanged at state-1.0.json."
