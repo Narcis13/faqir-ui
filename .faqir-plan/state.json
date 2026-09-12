@@ -2,7 +2,7 @@
   "$schema": "./state.schema.md",
   "plan": "FAQIR-PLAN-1.1.md",
   "current": null,
-  "last_completed": "1.1A-20",
+  "last_completed": "1.1B-01",
   "history": [
     {
       "id": "1.1A-01",
@@ -129,6 +129,12 @@
       "completed": "2026-09-12",
       "commit": "9a6d5bc",
       "summary": "Every surface an agent reads now describes a theme by its fourteen derived axes instead of by adjective, and all of them render through one module: src/theme/describe.ts turns a manifest's axes block into table cells (twelve columns that with scheme make the fourteen), a vocabulary table (every leaf once, with its generate flag, values and default), a one-line summary, and the chips/attributes the gallery filters on. README's Theme System section was rewritten around two generated blocks kept current by a new gen:theme-docs / check:theme-docs gate (wired into release preflight and the regeneration map) plus a light-dark() subsection; CONTRIBUTING documents the five schema-1.1 fields and the seed workflow; the skill's theme table gained the axis columns and a 'Choosing a Theme by Axes' section the frontmatter promises; faqir context writes Axes/Seed/Nearest lines into context.md, llms.txt, llms-full.txt and the cursor rules; faqir_theme_info summaries carry kind, axes and distinctiveness and a new faqir_theme_list filters by dotted axis path, mood and kind, refusing unknown paths or values with the vocabulary named rather than returning an empty list a typo could hide in; the docs gallery shows nine axis chips per card and nine native selects that offer only values some shipped theme lands on, with a live count and an empty state, in gallery.js by attribute comparison alone. The a11y suite's new docs__themes_axis_filter case was run in local Chromium (2 passed) alongside axe scans of the gallery and home pages; the faqir audit gate caught one real mistake on the way (a five-column grid the vocabulary does not allow). Full suite 5822 pass / 12 skip / 0 fail, typecheck green."
+    },
+    {
+      "id": "1.1B-01",
+      "completed": "2026-09-12",
+      "commit": "PENDING",
+      "summary": "@faqir-ui/rules: the zero-dependency, isomorphic shape validator \u2014 closed JSON Schema subset, nine format checkers, the message chain shared with faqir-validate, and a coercion pass that un-flattens the dotted names forms emit. A 93-case authored golden corpus is replayed in a happy-dom realm and in plain Bun and diffed case by case. Also reconciled the 14 typecheck errors inherited from 1.1A-20, output-neutrally."
     }
   ],
   "note": "Pointer file for the /faqir-plan slash command. FAQIR-PLAN-1.1.md status cells (\u2b1c/\u2705) are the source of truth; this file records the cross-session cursor and a per-task log. Do not hand-edit `current` while a session is running. The 1.0 plan's cursor (61 history entries, phases v0.3\u20131.0) is archived unchanged at state-1.0.json."

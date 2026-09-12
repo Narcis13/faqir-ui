@@ -1,0 +1,50 @@
+{
+  "name": "@faqir-ui/rules",
+  "version": "1.0.0",
+  "description": "Isomorphic, zero-dependency form rules — JSON Schema subset shape validation, formats, messages and coercion",
+  "type": "module",
+  "main": "./src/index.js",
+  "module": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "import": "./src/index.js",
+      "default": "./src/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "test": "bun test",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "keywords": [
+    "faqir",
+    "rules",
+    "validation",
+    "json-schema",
+    "zero-dependency",
+    "isomorphic"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Narcis13/faqir-ui.git",
+    "directory": "packages/rules"
+  },
+  "homepage": "https://github.com/Narcis13/faqir-ui/tree/main/packages/rules#readme",
+  "bugs": {
+    "url": "https://github.com/Narcis13/faqir-ui/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

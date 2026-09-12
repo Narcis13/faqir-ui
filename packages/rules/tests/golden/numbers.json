@@ -1,0 +1,119 @@
+[
+  {
+    "name": "number: a plain value passes",
+    "definition": { "version": "1", "fields": { "score": { "type": "number" } } },
+    "data": { "score": 7.5 },
+    "expected": { "valid": true, "findings": [] }
+  },
+  {
+    "name": "number: an un-coerced form string is a type finding, not a silent parse",
+    "definition": { "version": "1", "fields": { "score": { "type": "number" } } },
+    "data": { "score": "7.5" },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "score", "rule": "type", "message": "Please enter a valid value.", "params": { "type": "number" } }
+      ]
+    }
+  },
+  {
+    "name": "number: zero is a value, not a blank",
+    "definition": { "version": "1", "fields": { "score": { "type": "number", "required": true } } },
+    "data": { "score": 0 },
+    "expected": { "valid": true, "findings": [] }
+  },
+  {
+    "name": "integer: a fraction is a type finding",
+    "definition": { "version": "1", "fields": { "age": { "type": "integer" } } },
+    "data": { "age": 3.5 },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "age", "rule": "type", "message": "Please enter a valid value.", "params": { "type": "integer" } }
+      ]
+    }
+  },
+  {
+    "name": "number: minimum is inclusive",
+    "definition": { "version": "1", "fields": { "age": { "type": "integer", "minimum": 18 } } },
+    "data": { "age": 18 },
+    "expected": { "valid": true, "findings": [] }
+  },
+  {
+    "name": "number: below minimum",
+    "definition": { "version": "1", "fields": { "age": { "type": "integer", "minimum": 18 } } },
+    "data": { "age": 17 },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "age", "rule": "minimum", "message": "Value is too small.", "params": { "limit": 18 } }
+      ]
+    }
+  },
+  {
+    "name": "number: above maximum",
+    "definition": { "version": "1", "fields": { "age": { "type": "integer", "maximum": 120 } } },
+    "data": { "age": 121 },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "age", "rule": "maximum", "message": "Value is too large.", "params": { "limit": 120 } }
+      ]
+    }
+  },
+  {
+    "name": "number: exclusiveMinimum rejects the boundary",
+    "definition": { "version": "1", "fields": { "price": { "type": "number", "exclusiveMinimum": 0 } } },
+    "data": { "price": 0 },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "price", "rule": "exclusiveMinimum", "message": "Value is too small.", "params": { "limit": 0 } }
+      ]
+    }
+  },
+  {
+    "name": "number: exclusiveMaximum rejects the boundary",
+    "definition": { "version": "1", "fields": { "ratio": { "type": "number", "exclusiveMaximum": 1 } } },
+    "data": { "ratio": 1 },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "ratio", "rule": "exclusiveMaximum", "message": "Value is too large.", "params": { "limit": 1 } }
+      ]
+    }
+  },
+  {
+    "name": "number: multipleOf survives binary floating point (0.3 is three 0.1s)",
+    "definition": { "version": "1", "fields": { "amount": { "type": "number", "multipleOf": 0.1 } } },
+    "data": { "amount": 0.3 },
+    "expected": { "valid": true, "findings": [] }
+  },
+  {
+    "name": "number: multipleOf",
+    "definition": { "version": "1", "fields": { "amount": { "type": "number", "multipleOf": 2 } } },
+    "data": { "amount": 7 },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "amount", "rule": "multipleOf", "message": "Please enter a valid value.", "params": { "multipleOf": 2 } }
+      ]
+    }
+  },
+  {
+    "name": "number: bounds and multipleOf all report, in rule order",
+    "definition": {
+      "version": "1",
+      "fields": { "amount": { "type": "integer", "minimum": 10, "exclusiveMinimum": 10, "multipleOf": 4 } }
+    },
+    "data": { "amount": 5 },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "amount", "rule": "minimum", "message": "Value is too small.", "params": { "limit": 10 } },
+        { "path": "amount", "rule": "exclusiveMinimum", "message": "Value is too small.", "params": { "limit": 10 } },
+        { "path": "amount", "rule": "multipleOf", "message": "Please enter a valid value.", "params": { "multipleOf": 4 } }
+      ]
+    }
+  }
+]

@@ -1,0 +1,157 @@
+[
+  {
+    "name": "array: a list of scalars passes",
+    "definition": {
+      "version": "1",
+      "fields": { "channels": { "type": "array", "items": { "type": "string", "enum": ["email", "sms"] } } }
+    },
+    "data": { "channels": ["email", "sms"] },
+    "expected": { "valid": true, "findings": [] }
+  },
+  {
+    "name": "array: an empty list is blank, so a required checkbox group reports",
+    "definition": { "version": "1", "fields": { "channels": { "type": "array", "required": true, "items": { "type": "string" } } } },
+    "data": { "channels": [] },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "channels", "rule": "required", "message": "This field is required.", "params": {} }
+      ]
+    }
+  },
+  {
+    "name": "array: minItems",
+    "definition": { "version": "1", "fields": { "channels": { "type": "array", "minItems": 2, "items": { "type": "string" } } } },
+    "data": { "channels": ["email"] },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "channels", "rule": "minItems", "message": "Please choose more items.", "params": { "limit": 2, "actual": 1 } }
+      ]
+    }
+  },
+  {
+    "name": "array: maxItems",
+    "definition": { "version": "1", "fields": { "channels": { "type": "array", "maxItems": 1, "items": { "type": "string" } } } },
+    "data": { "channels": ["email", "sms"] },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "channels", "rule": "maxItems", "message": "Please choose fewer items.", "params": { "limit": 1, "actual": 2 } }
+      ]
+    }
+  },
+  {
+    "name": "array: uniqueItems names the first repeat",
+    "definition": { "version": "1", "fields": { "channels": { "type": "array", "uniqueItems": true, "items": { "type": "string" } } } },
+    "data": { "channels": ["email", "sms", "email"] },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "channels", "rule": "uniqueItems", "message": "Please remove the duplicate entries.", "params": { "index": 2 } }
+      ]
+    }
+  },
+  {
+    "name": "array: an item's constraint reports at its index",
+    "definition": {
+      "version": "1",
+      "fields": { "channels": { "type": "array", "items": { "type": "string", "enum": ["email", "sms"] } } }
+    },
+    "data": { "channels": ["email", "pigeon"] },
+    "expected": {
+      "valid": false,
+      "findings": [
+        {
+          "path": "channels.1",
+          "rule": "enum",
+          "message": "Please choose one of the allowed values.",
+          "params": { "allowed": ["email", "sms"] }
+        }
+      ]
+    }
+  },
+  {
+    "name": "array: an item of the wrong type reports at its index",
+    "definition": { "version": "1", "fields": { "scores": { "type": "array", "items": { "type": "integer" } } } },
+    "data": { "scores": [1, "2", 3] },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "scores.1", "rule": "type", "message": "Please enter a valid value.", "params": { "type": "integer" } }
+      ]
+    }
+  },
+  {
+    "name": "array: a repeatable group reports per row and per property",
+    "definition": {
+      "version": "1",
+      "fields": {
+        "contacts": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "properties": { "name": { "type": "string" }, "phone": { "type": "string", "format": "phone" } },
+            "required": ["name", "phone"]
+          }
+        }
+      }
+    },
+    "data": { "contacts": [{ "name": "Ada", "phone": "+40721123456" }, { "phone": "nope" }] },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "contacts.1.name", "rule": "required", "message": "This field is required.", "params": {} },
+        { "path": "contacts.1.phone", "rule": "format", "message": "Please enter a valid value.", "params": { "format": "phone" } }
+      ]
+    }
+  },
+  {
+    "name": "array: the list's own constraints report before its items'",
+    "definition": {
+      "version": "1",
+      "fields": { "scores": { "type": "array", "maxItems": 1, "items": { "type": "integer", "minimum": 0 } } }
+    },
+    "data": { "scores": [-1, -2] },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "scores", "rule": "maxItems", "message": "Please choose fewer items.", "params": { "limit": 1, "actual": 2 } },
+        { "path": "scores.0", "rule": "minimum", "message": "Value is too small.", "params": { "limit": 0 } },
+        { "path": "scores.1", "rule": "minimum", "message": "Value is too small.", "params": { "limit": 0 } }
+      ]
+    }
+  },
+  {
+    "name": "array: uniqueItems compares by value, so two equal rows are a duplicate",
+    "definition": {
+      "version": "1",
+      "fields": {
+        "contacts": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "object", "properties": { "name": { "type": "string" } } }
+        }
+      }
+    },
+    "data": { "contacts": [{ "name": "Ada" }, { "name": "Ada" }] },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "contacts", "rule": "uniqueItems", "message": "Please remove the duplicate entries.", "params": { "index": 1 } }
+      ]
+    }
+  },
+  {
+    "name": "array: a scalar where a list belongs is a type finding",
+    "definition": { "version": "1", "fields": { "channels": { "type": "array", "items": { "type": "string" } } } },
+    "data": { "channels": "email" },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "channels", "rule": "type", "message": "Please enter a valid value.", "params": { "type": "array" } }
+      ]
+    }
+  }
+]

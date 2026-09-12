@@ -1,0 +1,197 @@
+[
+  {
+    "name": "coercion: numeric strings become numbers",
+    "definition": {
+      "version": "1",
+      "fields": { "age": { "type": "integer", "minimum": 18 }, "price": { "type": "number" } }
+    },
+    "raw": { "age": "42", "price": "19.99" },
+    "coerced": { "age": 42, "price": 19.99 },
+    "expected": { "valid": true, "findings": [] }
+  },
+  {
+    "name": "coercion: a string that is not a number is left alone, so the type finding names the field",
+    "definition": { "version": "1", "fields": { "age": { "type": "integer" } } },
+    "raw": { "age": "forty" },
+    "coerced": { "age": "forty" },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "age", "rule": "type", "message": "Please enter a valid value.", "params": { "type": "integer" } }
+      ]
+    }
+  },
+  {
+    "name": "coercion: a blank numeric input becomes absent, so required reports rather than type",
+    "definition": { "version": "1", "fields": { "age": { "type": "integer", "required": true } } },
+    "raw": { "age": "" },
+    "coerced": {},
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "age", "rule": "required", "message": "This field is required.", "params": {} }
+      ]
+    }
+  },
+  {
+    "name": "coercion: a ticked checkbox arrives as \"on\" and becomes true",
+    "definition": { "version": "1", "fields": { "terms": { "type": "boolean", "const": true } } },
+    "raw": { "terms": "on" },
+    "coerced": { "terms": true },
+    "expected": { "valid": true, "findings": [] }
+  },
+  {
+    "name": "coercion: the other spellings of a boolean",
+    "definition": {
+      "version": "1",
+      "fields": {
+        "a": { "type": "boolean" },
+        "b": { "type": "boolean" },
+        "c": { "type": "boolean" },
+        "d": { "type": "boolean" },
+        "e": { "type": "boolean" }
+      }
+    },
+    "raw": { "a": "true", "b": "YES", "c": "1", "d": "false", "e": "off" },
+    "coerced": { "a": true, "b": true, "c": true, "d": false, "e": false },
+    "expected": { "valid": true, "findings": [] }
+  },
+  {
+    "name": "coercion: one ticked box in a checkbox group arrives as a scalar and becomes a one-item list",
+    "definition": {
+      "version": "1",
+      "fields": { "channels": { "type": "array", "items": { "type": "string", "enum": ["email", "sms"] }, "minItems": 1 } }
+    },
+    "raw": { "channels": "email" },
+    "coerced": { "channels": ["email"] },
+    "expected": { "valid": true, "findings": [] }
+  },
+  {
+    "name": "coercion: an untouched checkbox group is an empty list, not a one-item list of \"\"",
+    "definition": {
+      "version": "1",
+      "fields": { "channels": { "type": "array", "required": true, "items": { "type": "string" } } }
+    },
+    "raw": { "channels": "" },
+    "coerced": { "channels": [] },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "channels", "rule": "required", "message": "This field is required.", "params": {} }
+      ]
+    }
+  },
+  {
+    "name": "coercion: a list's items are typed one by one",
+    "definition": { "version": "1", "fields": { "scores": { "type": "array", "items": { "type": "integer" } } } },
+    "raw": { "scores": ["1", "2", "3"] },
+    "coerced": { "scores": [1, 2, 3] },
+    "expected": { "valid": true, "findings": [] }
+  },
+  {
+    "name": "coercion: the dotted names @faqir-ui/forms emits are un-flattened into nested data",
+    "definition": {
+      "version": "1",
+      "fields": {
+        "address": {
+          "type": "object",
+          "properties": {
+            "street": { "type": "string" },
+            "geo": { "type": "object", "properties": { "lat": { "type": "number" } } }
+          },
+          "required": ["street"]
+        }
+      }
+    },
+    "raw": { "address.street": "12 Main", "address.geo.lat": "45.75" },
+    "coerced": { "address": { "street": "12 Main", "geo": { "lat": 45.75 } } },
+    "expected": { "valid": true, "findings": [] }
+  },
+  {
+    "name": "coercion: bracketed row names become real array indices",
+    "definition": {
+      "version": "1",
+      "fields": {
+        "contacts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": { "name": { "type": "string" }, "age": { "type": "integer" } },
+            "required": ["name"]
+          }
+        }
+      }
+    },
+    "raw": { "contacts[0].name": "Ada", "contacts[0].age": "36", "contacts[1].age": "7" },
+    "coerced": { "contacts": [{ "name": "Ada", "age": 36 }, { "age": 7 }] },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "contacts.1.name", "rule": "required", "message": "This field is required.", "params": {} }
+      ]
+    }
+  },
+  {
+    "name": "coercion: keys the definition knows nothing about are carried through untouched",
+    "definition": { "version": "1", "fields": { "age": { "type": "integer" } } },
+    "raw": { "age": "42", "csrf": "t0ken", "notes": "" },
+    "coerced": { "age": 42, "csrf": "t0ken", "notes": "" },
+    "expected": { "valid": true, "findings": [] }
+  },
+  {
+    "name": "coercion: a whitespace-only entry counts as blank",
+    "definition": { "version": "1", "fields": { "name": { "type": "string", "required": true } } },
+    "raw": { "name": "   " },
+    "coerced": {},
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "name", "rule": "required", "message": "This field is required.", "params": {} }
+      ]
+    }
+  },
+  {
+    "name": "coercion: a string field keeps its value verbatim — no silent trimming",
+    "definition": { "version": "1", "fields": { "passphrase": { "type": "string", "minLength": 8 } } },
+    "raw": { "passphrase": " correct horse " },
+    "coerced": { "passphrase": " correct horse " },
+    "expected": { "valid": true, "findings": [] }
+  },
+  {
+    "name": "coercion: already-typed data passes through unchanged, so coerce is safe to run twice",
+    "definition": {
+      "version": "1",
+      "fields": {
+        "age": { "type": "integer" },
+        "terms": { "type": "boolean" },
+        "channels": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "raw": { "age": 42, "terms": true, "channels": ["email"] },
+    "coerced": { "age": 42, "terms": true, "channels": ["email"] },
+    "expected": { "valid": true, "findings": [] }
+  },
+  {
+    "name": "coercion: a blank row value inside a repeatable group is dropped, not typed",
+    "definition": {
+      "version": "1",
+      "fields": {
+        "contacts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": { "name": { "type": "string" }, "phone": { "type": "string", "required": true } }
+          }
+        }
+      }
+    },
+    "raw": { "contacts[0].name": "Ada", "contacts[0].phone": "" },
+    "coerced": { "contacts": [{ "name": "Ada" }] },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "contacts.0.phone", "rule": "required", "message": "This field is required.", "params": {} }
+      ]
+    }
+  }
+]

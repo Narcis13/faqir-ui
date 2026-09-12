@@ -1,0 +1,101 @@
+[
+  {
+    "name": "boolean: true passes",
+    "definition": { "version": "1", "fields": { "terms": { "type": "boolean" } } },
+    "data": { "terms": true },
+    "expected": { "valid": true, "findings": [] }
+  },
+  {
+    "name": "boolean: false is present, so a required checkbox that is explicitly false passes shape",
+    "definition": { "version": "1", "fields": { "terms": { "type": "boolean", "required": true } } },
+    "data": { "terms": false },
+    "expected": { "valid": true, "findings": [] }
+  },
+  {
+    "name": "boolean: an unticked checkbox is absent, so required reports",
+    "definition": { "version": "1", "fields": { "terms": { "type": "boolean", "required": true } } },
+    "data": {},
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "terms", "rule": "required", "message": "This field is required.", "params": {} }
+      ]
+    }
+  },
+  {
+    "name": "boolean: an un-coerced \"on\" is a type finding",
+    "definition": { "version": "1", "fields": { "terms": { "type": "boolean" } } },
+    "data": { "terms": "on" },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "terms", "rule": "type", "message": "Please enter a valid value.", "params": { "type": "boolean" } }
+      ]
+    }
+  },
+  {
+    "name": "enum: an allowed value passes",
+    "definition": { "version": "1", "fields": { "plan": { "type": "string", "enum": ["free", "pro", "team"] } } },
+    "data": { "plan": "pro" },
+    "expected": { "valid": true, "findings": [] }
+  },
+  {
+    "name": "enum: a value outside the list",
+    "definition": { "version": "1", "fields": { "plan": { "type": "string", "enum": ["free", "pro", "team"] } } },
+    "data": { "plan": "enterprise" },
+    "expected": {
+      "valid": false,
+      "findings": [
+        {
+          "path": "plan",
+          "rule": "enum",
+          "message": "Please choose one of the allowed values.",
+          "params": { "allowed": ["free", "pro", "team"] }
+        }
+      ]
+    }
+  },
+  {
+    "name": "enum: on an integer field",
+    "definition": { "version": "1", "fields": { "rating": { "type": "integer", "enum": [1, 2, 3] } } },
+    "data": { "rating": 4 },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "rating", "rule": "enum", "message": "Please choose one of the allowed values.", "params": { "allowed": [1, 2, 3] } }
+      ]
+    }
+  },
+  {
+    "name": "const: the required value passes",
+    "definition": { "version": "1", "fields": { "accepted": { "type": "boolean", "const": true } } },
+    "data": { "accepted": true },
+    "expected": { "valid": true, "findings": [] }
+  },
+  {
+    "name": "const: anything else reports",
+    "definition": { "version": "1", "fields": { "accepted": { "type": "boolean", "const": true } } },
+    "data": { "accepted": false },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "accepted", "rule": "const", "message": "Please enter the required value.", "params": { "const": true } }
+      ]
+    }
+  },
+  {
+    "name": "const: equality is by value, so key order in an object does not matter",
+    "definition": {
+      "version": "1",
+      "fields": {
+        "point": {
+          "type": "object",
+          "const": { "x": 1, "y": 2 },
+          "properties": { "x": { "type": "integer" }, "y": { "type": "integer" } }
+        }
+      }
+    },
+    "data": { "point": { "y": 2, "x": 1 } },
+    "expected": { "valid": true, "findings": [] }
+  }
+]

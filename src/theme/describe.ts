@@ -99,9 +99,13 @@ export function accentCell(axes: ThemeAxes): string {
 /** `serif-editorial · 1.333/17px · semibold tight` — the pairing, ramp and heading voice. */
 export function typeCell(axes: ThemeAxes): string {
   const { pairing, scale, base, voice } = axes.type;
-  const voiceWords = [voice.weight];
-  if (voice.tracking !== "normal") voiceWords.push(voice.tracking);
-  if (voice.transform !== "none") voiceWords.push(voice.transform);
+  // Every leaf of `axes` is optional in the schema — a manifest may carry a
+  // partial block — so each is read defensively rather than assumed present.
+  // A complete block renders exactly as it did before.
+  const voiceWords: string[] = [];
+  if (voice?.weight) voiceWords.push(voice.weight);
+  if (voice?.tracking && voice.tracking !== "normal") voiceWords.push(voice.tracking);
+  if (voice?.transform && voice.transform !== "none") voiceWords.push(voice.transform);
   return `${pairing} · ${scale}/${base}px · ${voiceWords.join(" ")}`;
 }
 
@@ -119,7 +123,8 @@ export interface AxisColumn {
   cell: (axes: ThemeAxes) => string;
 }
 
-const dotted = (...values: string[]) => values.join(" · ");
+const dotted = (...values: (string | undefined)[]) =>
+  values.filter((value) => value !== undefined).join(" · ");
 
 export const AXIS_COLUMNS: readonly AxisColumn[] = [
   { key: "accent", label: "Accent", cell: accentCell },
@@ -185,7 +190,7 @@ export function renderAxisVocabularyTable(): string[] {
   lines.push("| `accent` | `--accent` | any CSS colour — the one required input | — |");
   for (const path of AXIS_PATHS) {
     const values = THEME_AXIS_VALUES[path].map((v) => `\`${v}\``).join(" · ");
-    const fallback = (THEME_SEED_DEFAULTS as Record<string, string | number>)[path];
+    const fallback = (THEME_SEED_DEFAULTS as Record<string, string | number | boolean>)[path];
     const flag = axisFlag(path);
     lines.push(`| \`${path}\` | ${flag ? `\`${flag}\`` : "—"} | ${values} | \`${fallback}\` |`);
   }

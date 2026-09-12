@@ -1,0 +1,145 @@
+[
+  {
+    "name": "formats: one realistic record satisfies every built-in checker at once",
+    "definition": {
+      "version": "1",
+      "fields": {
+        "email": { "type": "string", "format": "email" },
+        "homepage": { "type": "string", "format": "uri" },
+        "birthday": { "type": "string", "format": "date" },
+        "arrival": { "type": "string", "format": "time" },
+        "bookedAt": { "type": "string", "format": "date-time" },
+        "phone": { "type": "string", "format": "phone" },
+        "iban": { "type": "string", "format": "iban" },
+        "reference": { "type": "string", "format": "uuid" },
+        "postcode": { "type": "string", "format": "postal-code" }
+      }
+    },
+    "data": {
+      "email": "ada@example.com",
+      "homepage": "https://example.com/a?b=1#c",
+      "birthday": "2024-02-29",
+      "arrival": "09:30",
+      "bookedAt": "2026-09-12T09:30:00Z",
+      "phone": "+40 (721) 123-456",
+      "iban": "GB82 WEST 1234 5698 7654 32",
+      "reference": "8f14e45f-ceea-467a-9575-1a0dbf2a2f6e",
+      "postcode": "SW1A 1AA"
+    },
+    "expected": { "valid": true, "findings": [] }
+  },
+  {
+    "name": "formats: email without a dotted domain",
+    "definition": { "version": "1", "fields": { "email": { "type": "string", "format": "email" } } },
+    "data": { "email": "ada@localhost" },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "email", "rule": "format", "message": "Please enter a valid value.", "params": { "format": "email" } }
+      ]
+    }
+  },
+  {
+    "name": "formats: uri without a scheme",
+    "definition": { "version": "1", "fields": { "homepage": { "type": "string", "format": "uri" } } },
+    "data": { "homepage": "example.com" },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "homepage", "rule": "format", "message": "Please enter a valid value.", "params": { "format": "uri" } }
+      ]
+    }
+  },
+  {
+    "name": "formats: date is calendar-checked, not shape-checked",
+    "definition": { "version": "1", "fields": { "birthday": { "type": "string", "format": "date" } } },
+    "data": { "birthday": "2025-02-29" },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "birthday", "rule": "format", "message": "Please enter a valid value.", "params": { "format": "date" } }
+      ]
+    }
+  },
+  {
+    "name": "formats: an out-of-range hour is not a time",
+    "definition": { "version": "1", "fields": { "arrival": { "type": "string", "format": "time" } } },
+    "data": { "arrival": "24:00" },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "arrival", "rule": "format", "message": "Please enter a valid value.", "params": { "format": "time" } }
+      ]
+    }
+  },
+  {
+    "name": "formats: date-time without a time half",
+    "definition": { "version": "1", "fields": { "bookedAt": { "type": "string", "format": "date-time" } } },
+    "data": { "bookedAt": "2026-09-12" },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "bookedAt", "rule": "format", "message": "Please enter a valid value.", "params": { "format": "date-time" } }
+      ]
+    }
+  },
+  {
+    "name": "formats: a phone with too few digits",
+    "definition": { "version": "1", "fields": { "phone": { "type": "string", "format": "phone" } } },
+    "data": { "phone": "12-34" },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "phone", "rule": "format", "message": "Please enter a valid value.", "params": { "format": "phone" } }
+      ]
+    }
+  },
+  {
+    "name": "formats: an IBAN that is well-shaped but fails the mod-97 check",
+    "definition": { "version": "1", "fields": { "iban": { "type": "string", "format": "iban" } } },
+    "data": { "iban": "GB82 WEST 1234 5698 7654 33" },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "iban", "rule": "format", "message": "Please enter a valid value.", "params": { "format": "iban" } }
+      ]
+    }
+  },
+  {
+    "name": "formats: a UUID with a short group",
+    "definition": { "version": "1", "fields": { "reference": { "type": "string", "format": "uuid" } } },
+    "data": { "reference": "8f14e45f-ceea-467a-9575-1a0dbf2a2f6" },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "reference", "rule": "format", "message": "Please enter a valid value.", "params": { "format": "uuid" } }
+      ]
+    }
+  },
+  {
+    "name": "formats: a postal code long enough to be an address line",
+    "definition": { "version": "1", "fields": { "postcode": { "type": "string", "format": "postal-code" } } },
+    "data": { "postcode": "12 Main Street" },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "postcode", "rule": "format", "message": "Please enter a valid value.", "params": { "format": "postal-code" } }
+      ]
+    }
+  },
+  {
+    "name": "formats: format and length both report on the same value",
+    "definition": {
+      "version": "1",
+      "fields": { "email": { "type": "string", "format": "email", "maxLength": 5 } }
+    },
+    "data": { "email": "not-an-email" },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "email", "rule": "format", "message": "Please enter a valid value.", "params": { "format": "email" } },
+        { "path": "email", "rule": "maxLength", "message": "Please shorten this value.", "params": { "limit": 5, "actual": 12 } }
+      ]
+    }
+  }
+]

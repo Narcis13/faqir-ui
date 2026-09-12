@@ -1,0 +1,177 @@
+[
+  {
+    "name": "object: a nested record passes",
+    "definition": {
+      "version": "1",
+      "fields": {
+        "address": {
+          "type": "object",
+          "properties": { "street": { "type": "string" }, "city": { "type": "string" } },
+          "required": ["street", "city"]
+        }
+      }
+    },
+    "data": { "address": { "street": "12 Main", "city": "Cluj" } },
+    "expected": { "valid": true, "findings": [] }
+  },
+  {
+    "name": "object: a required child reports at its dotted path",
+    "definition": {
+      "version": "1",
+      "fields": {
+        "address": {
+          "type": "object",
+          "properties": { "street": { "type": "string" }, "city": { "type": "string" } },
+          "required": ["street", "city"]
+        }
+      }
+    },
+    "data": { "address": { "street": "12 Main" } },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "address.city", "rule": "required", "message": "This field is required.", "params": {} }
+      ]
+    }
+  },
+  {
+    "name": "object: a child may declare its own requiredness",
+    "definition": {
+      "version": "1",
+      "fields": {
+        "address": {
+          "type": "object",
+          "properties": { "street": { "type": "string", "required": true }, "city": { "type": "string" } }
+        }
+      }
+    },
+    "data": { "address": {} },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "address.street", "rule": "required", "message": "This field is required.", "params": {} }
+      ]
+    }
+  },
+  {
+    "name": "object: an absent optional object does not drag its children into the verdict",
+    "definition": {
+      "version": "1",
+      "fields": {
+        "address": {
+          "type": "object",
+          "properties": { "street": { "type": "string" } },
+          "required": ["street"]
+        }
+      }
+    },
+    "data": {},
+    "expected": { "valid": true, "findings": [] }
+  },
+  {
+    "name": "object: the object itself is required",
+    "definition": {
+      "version": "1",
+      "fields": {
+        "address": {
+          "type": "object",
+          "required": true,
+          "properties": { "street": { "type": "string" } }
+        }
+      }
+    },
+    "data": {},
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "address", "rule": "required", "message": "This field is required.", "params": {} }
+      ]
+    }
+  },
+  {
+    "name": "object: an empty object is present, so its required children report rather than the object",
+    "definition": {
+      "version": "1",
+      "fields": {
+        "address": {
+          "type": "object",
+          "required": true,
+          "properties": { "street": { "type": "string", "required": true } }
+        }
+      }
+    },
+    "data": { "address": {} },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "address.street", "rule": "required", "message": "This field is required.", "params": {} }
+      ]
+    }
+  },
+  {
+    "name": "object: a string where an object belongs is a type finding, and the children are not visited",
+    "definition": {
+      "version": "1",
+      "fields": {
+        "address": {
+          "type": "object",
+          "properties": { "street": { "type": "string", "required": true } }
+        }
+      }
+    },
+    "data": { "address": "12 Main" },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "address", "rule": "type", "message": "Please enter a valid value.", "params": { "type": "object" } }
+      ]
+    }
+  },
+  {
+    "name": "object: three levels deep",
+    "definition": {
+      "version": "1",
+      "fields": {
+        "address": {
+          "type": "object",
+          "properties": {
+            "geo": {
+              "type": "object",
+              "properties": { "lat": { "type": "number", "minimum": -90, "maximum": 90 } }
+            }
+          }
+        }
+      }
+    },
+    "data": { "address": { "geo": { "lat": 91 } } },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "address.geo.lat", "rule": "maximum", "message": "Value is too large.", "params": { "limit": 90 } }
+      ]
+    }
+  },
+  {
+    "name": "object: a dotted field key reads through nested data",
+    "definition": {
+      "version": "1",
+      "fields": { "contact.email": { "type": "string", "format": "email", "required": true } }
+    },
+    "data": { "contact": { "email": "nope" } },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "contact.email", "rule": "format", "message": "Please enter a valid value.", "params": { "format": "email" } }
+      ]
+    }
+  },
+  {
+    "name": "object: a dotted field key also reads a literal flat key, without a coercion pass",
+    "definition": {
+      "version": "1",
+      "fields": { "contact.email": { "type": "string", "format": "email", "required": true } }
+    },
+    "data": { "contact.email": "ada@example.com" },
+    "expected": { "valid": true, "findings": [] }
+  }
+]

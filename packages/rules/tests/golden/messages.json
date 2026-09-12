@@ -1,0 +1,165 @@
+[
+  {
+    "name": "messages: a per-rule override replaces the built-in sentence",
+    "definition": {
+      "version": "1",
+      "fields": { "email": { "type": "string", "required": true } },
+      "messages": { "en": { "required": "Don't leave this empty." } }
+    },
+    "data": {},
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "email", "rule": "required", "message": "Don't leave this empty.", "params": {} }
+      ]
+    }
+  },
+  {
+    "name": "messages: a per-path key beats a per-rule key",
+    "definition": {
+      "version": "1",
+      "fields": {
+        "email": { "type": "string", "required": true },
+        "name": { "type": "string", "required": true }
+      },
+      "messages": { "en": { "required": "Required.", "email.required": "We need an address to reply to." } }
+    },
+    "data": {},
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "email", "rule": "required", "message": "We need an address to reply to.", "params": {} },
+        { "path": "name", "rule": "required", "message": "Required.", "params": {} }
+      ]
+    }
+  },
+  {
+    "name": "messages: the requested locale wins",
+    "locale": "ro",
+    "definition": {
+      "version": "1",
+      "fields": { "email": { "type": "string", "required": true } },
+      "messages": { "en": { "required": "This is required." }, "ro": { "required": "Acest câmp este obligatoriu." } }
+    },
+    "data": {},
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "email", "rule": "required", "message": "Acest câmp este obligatoriu.", "params": {} }
+      ]
+    }
+  },
+  {
+    "name": "messages: a locale with no entry for the rule falls back to the default locale",
+    "locale": "ro",
+    "definition": {
+      "version": "1",
+      "fields": { "email": { "type": "string", "required": true, "maxLength": 3 } },
+      "messages": { "en": { "maxLength": "Too long." }, "ro": { "required": "Obligatoriu." } }
+    },
+    "data": { "email": "ada@example.com" },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "email", "rule": "maxLength", "message": "Too long.", "params": { "limit": 3, "actual": 15 } }
+      ]
+    }
+  },
+  {
+    "name": "messages: a locale nobody defined falls through to the built-in English",
+    "locale": "fr",
+    "definition": {
+      "version": "1",
+      "fields": { "email": { "type": "string", "required": true } },
+      "messages": { "ro": { "required": "Obligatoriu." } },
+      "defaultLocale": "ro"
+    },
+    "data": {},
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "email", "rule": "required", "message": "Obligatoriu.", "params": {} }
+      ]
+    }
+  },
+  {
+    "name": "messages: params interpolate by name",
+    "definition": {
+      "version": "1",
+      "fields": { "pin": { "type": "string", "minLength": 6 } },
+      "messages": { "en": { "minLength": "Use at least {limit} characters — you typed {actual}." } }
+    },
+    "data": { "pin": "123" },
+    "expected": {
+      "valid": false,
+      "findings": [
+        {
+          "path": "pin",
+          "rule": "minLength",
+          "message": "Use at least 6 characters — you typed 3.",
+          "params": { "limit": 6, "actual": 3 }
+        }
+      ]
+    }
+  },
+  {
+    "name": "messages: {title} and {path} are offered to the sentence but stay out of params",
+    "definition": {
+      "version": "1",
+      "fields": { "email": { "type": "string", "title": "Work email", "required": true } },
+      "messages": { "en": { "required": "{title} ({path}) is required." } }
+    },
+    "data": {},
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "email", "rule": "required", "message": "Work email (email) is required.", "params": {} }
+      ]
+    }
+  },
+  {
+    "name": "messages: a placeholder nothing fills is left standing, not blanked",
+    "definition": {
+      "version": "1",
+      "fields": { "email": { "type": "string", "required": true } },
+      "messages": { "en": { "required": "Fill in {lable}." } }
+    },
+    "data": {},
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "email", "rule": "required", "message": "Fill in {lable}.", "params": {} }
+      ]
+    }
+  },
+  {
+    "name": "messages: a list param renders as a comma-separated list",
+    "definition": {
+      "version": "1",
+      "fields": { "plan": { "type": "string", "enum": ["free", "pro"] } },
+      "messages": { "en": { "enum": "Choose one of: {allowed}." } }
+    },
+    "data": { "plan": "team" },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "plan", "rule": "enum", "message": "Choose one of: free, pro.", "params": { "allowed": ["free", "pro"] } }
+      ]
+    }
+  },
+  {
+    "name": "messages: a definition may carry rules, which this release accepts and ignores",
+    "definition": {
+      "version": "1",
+      "fields": { "email": { "type": "string", "required": true } },
+      "rules": [{ "id": "r1", "show": "email", "when": { "var": "subscribed" } }]
+    },
+    "data": {},
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "email", "rule": "required", "message": "This field is required.", "params": {} }
+      ]
+    }
+  }
+]

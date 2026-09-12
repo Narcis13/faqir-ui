@@ -450,7 +450,7 @@ describe("shipped skill theme gallery", () => {
       if (manifest.axes) {
         // Spot-check that the cells are the manifest's values, not a paraphrase.
         expect(axisPart[headers.indexOf("Depth") - (headers.length - AXIS_COLUMNS.length)]).toBe(manifest.axes.depth);
-        expect(row).toContain(manifest.axes.type.pairing);
+        expect(row).toContain(manifest.axes.type.pairing!);
         expect(row).toContain(manifest.axes.density);
         expect(row).toContain(String(manifest.axes.type.scale));
       } else {

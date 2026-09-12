@@ -1,0 +1,147 @@
+[
+  {
+    "name": "string: a plain value passes",
+    "definition": { "version": "1", "fields": { "name": { "type": "string" } } },
+    "data": { "name": "Ada" },
+    "expected": { "valid": true, "findings": [] }
+  },
+  {
+    "name": "string: an absent optional field is not a finding",
+    "definition": { "version": "1", "fields": { "name": { "type": "string" } } },
+    "data": {},
+    "expected": { "valid": true, "findings": [] }
+  },
+  {
+    "name": "string: required and absent",
+    "definition": { "version": "1", "fields": { "name": { "type": "string", "required": true } } },
+    "data": {},
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "name", "rule": "required", "message": "This field is required.", "params": {} }
+      ]
+    }
+  },
+  {
+    "name": "string: required and blank — an empty string is blank, not a short string",
+    "definition": { "version": "1", "fields": { "name": { "type": "string", "required": true, "minLength": 2 } } },
+    "data": { "name": "" },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "name", "rule": "required", "message": "This field is required.", "params": {} }
+      ]
+    }
+  },
+  {
+    "name": "string: required declared in the top-level array instead of on the field",
+    "definition": {
+      "version": "1",
+      "fields": { "name": { "type": "string" } },
+      "required": ["name"]
+    },
+    "data": {},
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "name", "rule": "required", "message": "This field is required.", "params": {} }
+      ]
+    }
+  },
+  {
+    "name": "string: a number is a type finding, and nothing else is checked",
+    "definition": { "version": "1", "fields": { "name": { "type": "string", "minLength": 10 } } },
+    "data": { "name": 42 },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "name", "rule": "type", "message": "Please enter a valid value.", "params": { "type": "string" } }
+      ]
+    }
+  },
+  {
+    "name": "string: minLength",
+    "definition": { "version": "1", "fields": { "name": { "type": "string", "minLength": 3 } } },
+    "data": { "name": "ab" },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "name", "rule": "minLength", "message": "Please lengthen this value.", "params": { "limit": 3, "actual": 2 } }
+      ]
+    }
+  },
+  {
+    "name": "string: minLength is satisfied exactly at the limit",
+    "definition": { "version": "1", "fields": { "name": { "type": "string", "minLength": 3 } } },
+    "data": { "name": "abc" },
+    "expected": { "valid": true, "findings": [] }
+  },
+  {
+    "name": "string: maxLength",
+    "definition": { "version": "1", "fields": { "name": { "type": "string", "maxLength": 3 } } },
+    "data": { "name": "abcd" },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "name", "rule": "maxLength", "message": "Please shorten this value.", "params": { "limit": 3, "actual": 4 } }
+      ]
+    }
+  },
+  {
+    "name": "string: length counts code points, so one emoji fits a maxLength of 1",
+    "definition": { "version": "1", "fields": { "reaction": { "type": "string", "maxLength": 1 } } },
+    "data": { "reaction": "🙂" },
+    "expected": { "valid": true, "findings": [] }
+  },
+  {
+    "name": "string: pattern",
+    "definition": { "version": "1", "fields": { "code": { "type": "string", "pattern": "^[A-Z]{3}$" } } },
+    "data": { "code": "ab" },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "code", "rule": "pattern", "message": "Please match the requested format.", "params": { "pattern": "^[A-Z]{3}$" } }
+      ]
+    }
+  },
+  {
+    "name": "string: pattern is unanchored unless the author anchors it",
+    "definition": { "version": "1", "fields": { "code": { "type": "string", "pattern": "[0-9]" } } },
+    "data": { "code": "abc1def" },
+    "expected": { "valid": true, "findings": [] }
+  },
+  {
+    "name": "string: every failing constraint on one value is reported, in rule order",
+    "definition": {
+      "version": "1",
+      "fields": { "code": { "type": "string", "pattern": "^[0-9]+$", "minLength": 5, "maxLength": 2 } }
+    },
+    "data": { "code": "abc" },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "code", "rule": "pattern", "message": "Please match the requested format.", "params": { "pattern": "^[0-9]+$" } },
+        { "path": "code", "rule": "minLength", "message": "Please lengthen this value.", "params": { "limit": 5, "actual": 3 } },
+        { "path": "code", "rule": "maxLength", "message": "Please shorten this value.", "params": { "limit": 2, "actual": 3 } }
+      ]
+    }
+  },
+  {
+    "name": "string: findings come out in the definition's field order",
+    "definition": {
+      "version": "1",
+      "fields": {
+        "zulu": { "type": "string", "required": true },
+        "alpha": { "type": "string", "required": true }
+      }
+    },
+    "data": {},
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "zulu", "rule": "required", "message": "This field is required.", "params": {} },
+        { "path": "alpha", "rule": "required", "message": "This field is required.", "params": {} }
+      ]
+    }
+  }
+]

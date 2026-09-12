@@ -140,7 +140,7 @@ describe("describe.ts — markdown tables", () => {
       expect(table.split(`\`${path}\``).length - 1, path).toBe(1);
       for (const value of THEME_AXIS_VALUES[path]) expect(table).toContain(`\`${value}\``);
       expect(table).toContain(`\`${axisFlag(path)}\``);
-      expect(table).toContain(`\`${(THEME_SEED_DEFAULTS as Record<string, string | number>)[path]}\``);
+      expect(table).toContain(`\`${(THEME_SEED_DEFAULTS as Record<string, string | number | boolean>)[path]}\``);
     }
     expect(table).toContain("| `accent` | `--accent` |");
   });
@@ -183,7 +183,7 @@ describe("README.md carries the generated theme blocks", () => {
       expect(row, m.name).toBeDefined();
       expect(row).toContain(`| ${themeKind(m)} |`);
       expect(row).toContain(m.axes!.depth);
-      expect(row).toContain(m.axes!.type.pairing);
+      expect(row).toContain(m.axes!.type.pairing!);
     }
     for (const m of manifests.filter((x) => !x.axes)) {
       expect(rows.some((l) => l.startsWith(`| \`${m.name}\` |`))).toBe(false);
