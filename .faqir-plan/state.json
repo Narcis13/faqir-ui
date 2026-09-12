@@ -169,7 +169,7 @@
     {
       "id": "1.1B-07",
       "completed": "2026-09-12",
-      "commit": "PENDING",
+      "commit": "e5133df",
       "summary": "Rules documented from generated data, not restated: $rules joins the plugin's @ui:provides, plugins declare their modifiers the way the engine does, README gains a Validation section, security.md \u00a74.1 says what a remote rule actually sends, and @faqir-ui/rules joins the release lockstep."
     }
   ],
