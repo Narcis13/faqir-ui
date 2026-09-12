@@ -128,6 +128,17 @@ export const PLUGIN_DIRECTIVES: readonly DirectiveSpec[] = Object.freeze([
   { name: "mask", attribute: "l-mask", shorthand: null, arg: "none", modifiers: [], plugin: "faqir-mask" },
   { name: "persist", attribute: "l-persist", shorthand: null, arg: "none", modifiers: [], plugin: "faqir-persist" },
   {
+    // `l-rules` on the form, pointing at a definition — a selector to a JSON
+    // script, or an expression in scope. It takes no argument and no modifier:
+    // everything conditional lives inside the definition, not in the attribute.
+    name: "rules",
+    attribute: "l-rules",
+    shorthand: null,
+    arg: "none",
+    modifiers: [],
+    plugin: "faqir-rules",
+  },
+  {
     // `l-validate` on the form; `l-validate:<name>` on a control declares a
     // custom validator, so the argument is optional rather than required.
     // `.async` marks a validator whose expression answers with a promise.

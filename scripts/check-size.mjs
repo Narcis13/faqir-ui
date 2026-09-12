@@ -49,13 +49,26 @@ export const BUDGETS = {
   plugin: 2 * KB,
 };
 
-// Per-plugin exceptions to BUDGETS.plugin, by file name. One entry, and it is
-// named for the feature that bought the kilobyte: 1.1B-03 gave faqir-validate
-// the programmatic registry (`Faqir.validate.register/unregister/run`) and
-// async validators — the debounce, the last-wins token, the `validating` state
-// and the submit that waits on an in-flight check. Everything else stays at 2 KB.
+// Per-plugin exceptions to BUDGETS.plugin, by file name. Each is named for the
+// feature that bought the kilobytes, and each is enforced from both sides in
+// `tests/build/check-size.test.ts` — a budget nothing fills is a hole.
+//
+// · faqir-validate, 2 → 3 KB: 1.1B-03 gave it the programmatic registry
+//   (`Faqir.validate.register/unregister/run`) and async validators — the
+//   debounce, the last-wins token, the `validating` state and the submit that
+//   waits on an in-flight check.
+//
+// · faqir-rules, 2 → 11 KB: the plugin IS `@faqir-ui/rules`, bundled. 1.1B-04's
+//   plan budgeted 6 KB, written before the evaluator existed; the evaluator
+//   alone measures 8.29 KB minified+gzip (JSON Schema subset, the format table,
+//   the JSONLogic subset, the message resolver and the six verbs — 2,400 lines
+//   of `packages/rules/src`), and the browser glue adds 1.93 KB for 10.22 KB
+//   total. That weight is the point rather than an overrun: the page and the
+//   server reach a verdict through the same compiled bytes, so the alternative
+//   to shipping the evaluator is shipping a second implementation of it.
 export const PLUGIN_BUDGETS = {
   "faqir-validate.js": 3 * KB,
+  "faqir-rules.js": 11 * KB,
 };
 
 // ── Pure budget logic (no I/O, no Bun) ───────────────────────────────────────

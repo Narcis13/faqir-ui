@@ -32,6 +32,21 @@ const RUNNER = join(import.meta.dir, "support", "run-corpus.mjs");
 
 const SOURCES = readdirSync(SRC_DIR).filter((f) => f.endsWith(".js")).sort();
 
+/**
+ * The one module in `src/` that is ALLOWED to name a host global, and the
+ * reason the split is stated here rather than assumed: `plugin.js` is the
+ * browser glue 1.1B-04 bundles into `registry/core/plugins/faqir-rules.js`, so
+ * `document`, `FormData` and `fetch` are its entire job. Everything else in the
+ * package is the evaluator, and the evaluator is what the isomorphism claim is
+ * about — a verdict must not depend on which realm computed it.
+ *
+ * Naming it costs the gate nothing: the exact module list below still fails
+ * when a file appears, so a second host-coupled module has to be argued for
+ * here before it can exist, and the tests below prove this exemption is used
+ * (the file really does reach for the host) rather than left idle.
+ */
+const HOST_MODULES = new Set(["plugin.js"]);
+
 /** Source with comments removed. */
 function stripComments(source: string): string {
   return source.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/\/\/[^\n]*/g, " ");
@@ -47,11 +62,27 @@ describe("@faqir-ui/rules is isomorphic by construction", () => {
   it("ships the modules the package promises", () => {
     expect(SOURCES).toEqual([
       "errors.js", "formats.js", "index.js", "limits.js",
-      "logic.js", "messages.js", "rules.js", "shape.js",
+      "logic.js", "messages.js", "plugin.js", "rules.js", "shape.js",
     ]);
   });
 
-  for (const file of SOURCES) {
+  it("the host-coupled module is exactly plugin.js, and it really is coupled", () => {
+    expect([...HOST_MODULES]).toEqual(["plugin.js"]);
+    // An exemption nothing uses is a hole waiting for a second file to fall
+    // into it: this one is only sound while the file it names genuinely needs
+    // the host — the same both-sides rule the size budgets are held to.
+    const plugin = executable(readFileSync(join(SRC_DIR, "plugin.js"), "utf8"));
+    for (const host of ["document", "FormData", "fetch"]) {
+      expect(plugin, `plugin.js no longer needs ${host}`).toMatch(new RegExp(`\\b${host}\\b`));
+    }
+    // …and it must still be the thin layer: no evaluation of its own, only the
+    // package's. Every verdict in the page comes from these four functions.
+    // (String literals are blanked by `executable`, so the identifiers are what
+    // there is to match on — which is the half that matters here anyway.)
+    expect(plugin).toMatch(/import\s*\{\s*coerce,\s*compile,\s*evaluate,\s*validate\s*\}/);
+  });
+
+  for (const file of SOURCES.filter((f) => !HOST_MODULES.has(f))) {
     it(`${file} names no host global`, () => {
       const source = executable(readFileSync(join(SRC_DIR, file), "utf8"));
       for (const host of ["window", "document", "process", "globalThis", "navigator", "localStorage"]) {
@@ -61,7 +92,11 @@ describe("@faqir-ui/rules is isomorphic by construction", () => {
         expect(source, `${file} refers to ${dom}`).not.toMatch(new RegExp(`\\b${dom}\\b`));
       }
     });
+  }
 
+  // The zero-dependency claim covers every module, plugin.js included: the
+  // shipped drop must bundle from this package and nothing else.
+  for (const file of SOURCES) {
     it(`${file} imports nothing from outside the package`, () => {
       const source = readFileSync(join(SRC_DIR, file), "utf8");
       // Comments are stripped first: the header of `index.js` shows the usage

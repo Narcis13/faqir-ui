@@ -38,6 +38,7 @@
     "plugins/faqir-intersect.js": "sha384-AfbB6icyS1ngl1JdiAMZ9//m5lHTMdgXXHWCdi5INfE9FmLbYRUeiyKTv4E4g6ri",
     "plugins/faqir-mask.js": "sha384-cSq2DpUnoJCxEDAQjsbzAa+jSuHf4WsOaKT8t7b9p8pA7MaaRhA1DLzjMNChSa/I",
     "plugins/faqir-persist.js": "sha384-o0jfddebC8QZ3S26VXUlOme723BNMlb/N7vqpn+fWpSeEFXzpq+3MoeXhVL/0PSv",
+    "plugins/faqir-rules.js": "sha384-Yq+KthmDYpnw/xFLDgjlpUSAKDFlnFxvUmKU+8Qu9f9Z467pbOLxKdO6Q5auImTW",
     "plugins/faqir-validate.js": "sha384-0DPnT3y4EWBIDw2aq5EZF0+MrzFQd+sUc3T+tqREi7yDa04rFyxCvf0aqG/LOHds"
   }
 }

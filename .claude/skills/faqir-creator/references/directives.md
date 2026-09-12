@@ -170,7 +170,7 @@ Modifiers: `.lazy`, `.optimistic`, `.poll`, `.key` — see the table above. Tear
 
 ## Plugin Vocabulary
 
-5 official plugins add directives and magics to the same expression language. Load one after `faqir-core.js` (`<script src="core/plugins/faqir-persist.js"></script>`), or bundle core plus every plugin with `faqir bundle --js`. Each self-registers, is dependency-free and is ≤ 2 KB gzip (`faqir-validate`, which carries the programmatic `Faqir.validate` API, ≤ 3 KB).
+6 official plugins add directives and magics to the same expression language. Load one after `faqir-core.js` (`<script src="core/plugins/faqir-persist.js"></script>`), or bundle core plus every plugin with `faqir bundle --js`. Each self-registers, is dependency-free and is ≤ 2 KB gzip (`faqir-validate`, which carries the programmatic `Faqir.validate` API, ≤ 3 KB).
 
 | Plugin | Provides | File | What it does |
 |---|---|---|---|
@@ -178,6 +178,7 @@ Modifiers: `.lazy`, `.optimistic`, `.poll`, `.key` — see the table above. Tear
 | `faqir-intersect` | `l-intersect` | `registry/core/plugins/faqir-intersect.js` | declarative IntersectionObserver hooks. |
 | `faqir-mask` | `l-mask` | `registry/core/plugins/faqir-mask.js` | caret-safe input masking. |
 | `faqir-persist` | `l-persist`, `$persist()` | `registry/core/plugins/faqir-persist.js` | localStorage-backed reactive state. |
+| `faqir-rules` | `l-rules` | `registry/core/plugins/faqir-rules.js` | a form's conditional logic, from one JSON definition. |
 | `faqir-validate` | `l-validate` | `registry/core/plugins/faqir-validate.js` | declarative + programmatic form validation. |
 
 ### `faqir-collapse`
@@ -214,6 +215,20 @@ Pattern tokens are `9` (digit), `a` (ASCII letter), and `*` (any character); eve
 <div l-data="{ count: 0 }" l-persist="count">
   <button @click="count++" l-text="count"></button>
 </div>
+```
+
+### `faqir-rules`
+
+On init and on every `input`/`change`, the form's own `FormData` is coerced through the definition and handed to `evaluate`, and the answer is applied to the DOM: a hidden field's `[data-ui="field-group"]` takes `hidden` and its controls take `disabled`, so it neither validates nor submits; `require` toggles `required` + `aria-required`; `compute` writes its value into the scope and into any control of that name; and `jump` lands in `$rules.next` for a wizard to read. Cross-field and remote `validate` rules are registered through `Faqir.validate.register`, so they run at faqir-validate's moments, with faqir-validate's messages and its `validating` state — this plugin owns no message and paints no error of its own.
+
+```html
+<script type="application/json" id="signup-rules">
+  { "version": "1",
+    "fields": { "plan": { "type": "string" }, "seats": { "type": "integer" } },
+    "rules": [{ "id": "seats-for-teams", "show": "seats",
+                "when": { "==": [{ "var": "plan" }, "team"] } }] }
+</script>
+<form l-validate l-rules="#signup-rules"> … </form>
 ```
 
 ### `faqir-validate`

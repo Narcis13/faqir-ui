@@ -163,12 +163,17 @@ describe("BUDGETS", () => {
     expect(mod.BUDGETS.plugin).toBe(2 * KB);
   });
 
-  // 1.1B-03 bought faqir-validate a kilobyte for the programmatic registry and
-  // the async validators. It is the only exception, and it is enforced — not a
-  // hole in the gate.
-  test("faqir-validate is the one per-plugin exception, at 3 KB", () => {
-    expect(Object.keys(mod.PLUGIN_BUDGETS)).toEqual(["faqir-validate.js"]);
+  // Two plugins are over the 2 KB default, each for a named feature: 1.1B-03
+  // bought faqir-validate a kilobyte for the programmatic registry and the
+  // async validators, and 1.1B-04 bought faqir-rules nine for the evaluator it
+  // bundles. Both are enforced from both sides below — not holes in the gate.
+  test("the per-plugin exceptions are exactly these two", () => {
+    expect(Object.keys(mod.PLUGIN_BUDGETS).sort()).toEqual([
+      "faqir-rules.js",
+      "faqir-validate.js",
+    ]);
     expect(mod.PLUGIN_BUDGETS["faqir-validate.js"]).toBe(3 * KB);
+    expect(mod.PLUGIN_BUDGETS["faqir-rules.js"]).toBe(11 * KB);
     const targets = mod.collectDefaultTargets();
     for (const t of targets) {
       if (!t.label.startsWith("plugin: ")) continue;
@@ -186,6 +191,18 @@ describe("BUDGETS", () => {
     // …and the exception is not idle headroom: it does not fit in 2 KB either,
     // so deleting the entry would go red rather than pass unnoticed.
     expect(measured).toBeGreaterThan(2 * KB);
+  });
+
+  test("faqir-rules is really inside its 11 KB, and really needs 11", () => {
+    const measured = mod.measureGzip({
+      label: "plugin: faqir-rules.js",
+      entry: join(ROOT, "registry", "core", "plugins", "faqir-rules.js"),
+    });
+    expect(measured).toBeLessThanOrEqual(11 * KB);
+    // The same both-sides rule: the entry is not headroom to grow into. If the
+    // bundle ever drops under 10 KB the budget should come down with it, and
+    // this test is what says so.
+    expect(measured).toBeGreaterThan(10 * KB);
   });
 });
 

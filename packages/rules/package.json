@@ -12,13 +12,21 @@
       "import": "./src/index.js",
       "default": "./src/index.js"
     },
+    "./plugin": {
+      "types": "./src/plugin.d.ts",
+      "import": "./src/plugin.js",
+      "default": "./src/plugin.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
     "src",
     "README.md"
   ],
-  "sideEffects": false,
+  "//sideEffects": "./src/plugin.js self-registers with a global Faqir on import — that IS its purpose, so it may never be tree-shaken away. Everything else in src/ is pure.",
+  "sideEffects": [
+    "./src/plugin.js"
+  ],
   "scripts": {
     "test": "bun test",
     "typecheck": "tsc --noEmit -p tsconfig.json"

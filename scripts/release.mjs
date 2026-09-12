@@ -88,6 +88,7 @@ const PREFLIGHT = [
   ["check:manifest-api", "every controller's @ui:provides is in its manifest"],
   ["check:core-package", "packages/core/dist and cdn.json's 15 SRI hashes"],
   ["check:audit-browser", "site/lib/faqir-audit.js matches src/audit/browser.ts"],
+  ["check:rules-plugin", "registry/core/plugins/faqir-rules.js matches @faqir-ui/rules"],
   ["check:schema-refs", "every manifest carries a current $schema"],
   ["check:bindings", "the generated Vue and React components are current"],
   ["check:skill", "the shipped faqir-creator skill matches its generator"],
