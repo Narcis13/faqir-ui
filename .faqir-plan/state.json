@@ -157,7 +157,7 @@
     {
       "id": "1.1B-05",
       "completed": "2026-09-12",
-      "commit": "",
+      "commit": "60c0738",
       "summary": "`faqir rules lint` and a published `rules.schema.json`: seven lint rules in the package, the schema as code beside it, and an accept/reject corpus that holds the two readings together."
     }
   ],
