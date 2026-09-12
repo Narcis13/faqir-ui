@@ -19,6 +19,16 @@ declare module "@faqir-ui/core" {
   }
 }
 
+// ── 1b. a magic whose SHAPE the declaration already carries ────────────────
+// `plugins/faqir-rules.js` registers `$rules`, and `RulesState` types what it
+// answers — so the augmentation names the exported interface rather than
+// restating it. If `RulesState` stops being exported, this stops compiling.
+declare module "@faqir-ui/core" {
+  interface PluginMagics {
+    $rules: Faqir.RulesState;
+  }
+}
+
 // ── 2. a controller of your own ────────────────────────────────────────────
 interface SparklineApi extends Faqir.ControllerApi {
   update(points: number[]): void;
@@ -56,6 +66,15 @@ Faqir.controller("sparkline", () => ({ destroy() {} }));
 
 Faqir.directive("uses-plugin-magic", (_el, _dir, scope) => {
   void scope.$persist("draft");
+  // The rules verdict is typed all the way down: a wizard reads the page it
+  // should show next by the page it is on.
+  const nextPage: string | undefined = scope.$rules.next["billing"];
+  void nextPage;
+  const seatsVisible: boolean | undefined = scope.$rules.visible["seats"];
+  void seatsVisible;
+  // @ts-expect-error — `next` maps page to page; a number is not a page name.
+  const wrong: number = scope.$rules.next["billing"];
+  void wrong;
   const user: string | null = scope.$store.session.user;
   void user;
   // @ts-expect-error — the augmentation types the store; `roles` is not on it.

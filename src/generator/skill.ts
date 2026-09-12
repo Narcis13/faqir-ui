@@ -1494,6 +1494,18 @@ function renderPluginVocabulary(plugins: PluginMetadata[]): string[] {
     lines.push(p.example);
     lines.push("```");
     lines.push("");
+    // A plugin's dot-suffixes, from its own `@ui:modifier` lines. Without this
+    // the example was the only place `.async` appeared, with nothing saying
+    // what it buys — the engine's modifiers have had a table since 1.0 and a
+    // plugin's had nothing.
+    if (p.modifiers.length > 0) {
+      lines.push("| Modifier | Effect |");
+      lines.push("|---|---|");
+      for (const m of p.modifiers) {
+        lines.push(`| \`${m.attribute}${m.modifier}\` | ${md(m.description)} |`);
+      }
+      lines.push("");
+    }
   }
   return lines;
 }

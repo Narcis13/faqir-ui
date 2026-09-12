@@ -178,7 +178,7 @@ Modifiers: `.lazy`, `.optimistic`, `.poll`, `.key` — see the table above. Tear
 | `faqir-intersect` | `l-intersect` | `registry/core/plugins/faqir-intersect.js` | declarative IntersectionObserver hooks. |
 | `faqir-mask` | `l-mask` | `registry/core/plugins/faqir-mask.js` | caret-safe input masking. |
 | `faqir-persist` | `l-persist`, `$persist()` | `registry/core/plugins/faqir-persist.js` | localStorage-backed reactive state. |
-| `faqir-rules` | `l-rules` | `registry/core/plugins/faqir-rules.js` | a form's conditional logic, from one JSON definition. |
+| `faqir-rules` | `l-rules`, `$rules` | `registry/core/plugins/faqir-rules.js` | a form's conditional logic, from one JSON definition. |
 | `faqir-validate` | `l-validate` | `registry/core/plugins/faqir-validate.js` | declarative + programmatic form validation. |
 
 ### `faqir-collapse`
@@ -198,6 +198,11 @@ The base directive runs on enter; `.leave` runs when the element leaves; `.once`
          l-intersect.leave="visible = false"></section>
 <div l-intersect.once="loadMore()"></div>
 ```
+
+| Modifier | Effect |
+|---|---|
+| `l-intersect.leave` | Runs when the element leaves the viewport instead of when it enters. |
+| `l-intersect.once` | Disconnects the observer after its first matching observation. |
 
 ### `faqir-mask`
 
@@ -248,6 +253,10 @@ Reflects each control's native `ValidityState` (plus any custom validators) into
   </div>
 </form>
 ```
+
+| Modifier | Effect |
+|---|---|
+| `l-validate.async` | On `l-validate:<name>`, marks a validator whose expression answers with a promise: the field-group sits in `data-state="validating"` while it is out, runs are debounced 250ms and the newest wins, and a rejection is a failure rather than a silent pass. |
 
 ## Global API
 

@@ -1,5 +1,7 @@
 // @ui:plugin faqir-intersect
 // @ui:provides l-intersect
+// @ui:modifier l-intersect .leave | Runs when the element leaves the viewport instead of when it enters.
+// @ui:modifier l-intersect .once | Disconnects the observer after its first matching observation.
 /**
  * faqir-intersect — declarative IntersectionObserver hooks. [0.6-05 · §A5]
  *

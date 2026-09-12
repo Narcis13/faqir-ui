@@ -137,8 +137,41 @@ export interface Magics {
  * The interfaces are module-level exports, so an augmentation names one
  * directly — there is no `namespace Faqir` wrapper to reach through. The same
  * form opens {@link ControllerApis} and {@link Stores}.
+ *
+ * A magic whose SHAPE is fixed by the plugin gets its shape declared here even
+ * though the property is not: `plugins/faqir-rules.js` registers `$rules`, and
+ * {@link RulesState} is what it answers, so the augmentation is one line rather
+ * than a re-description —
+ *
+ *     declare module "@faqir-ui/core" {
+ *       interface PluginMagics { $rules: RulesState }
+ *     }
  */
 export interface PluginMagics {}
+
+/**
+ * What `$rules` answers — the live verdict of the `l-rules` definition bound to
+ * the form in this scope, installed by `plugins/faqir-rules.js`.  [1.1B-07]
+ *
+ * Reactive, so an expression that reads it re-runs when the form changes; and
+ * never undefined — a scope with no rules form gets the same shape with every
+ * map empty, so `$rules.next[step]` is safe to read anywhere.
+ *
+ * The keys of `visible`, `required` and `computed` are field paths as the
+ * definition spells them (`"seats"`, `"address.city"`); `next` is keyed by the
+ * page a `jump` rule fires ON and valued with the page it sends the form to, so
+ * a wizard reads `$rules.next[currentPage]` instead of counting by one.
+ */
+export interface RulesState {
+  /** path → whether a `show` rule leaves the field on screen. */
+  readonly visible: Readonly<Record<string, boolean>>;
+  /** path → whether a `require` rule makes the field mandatory right now. */
+  readonly required: Readonly<Record<string, boolean>>;
+  /** path → the value its `compute` rule derived. */
+  readonly computed: Readonly<Record<string, unknown>>;
+  /** from-page → to-page, for every `jump` rule whose `when` currently holds. */
+  readonly next: Readonly<Record<string, string>>;
+}
 
 /** What one programmatic validator answers: pass, fail, or a message. */
 export type ValidatorResult = boolean | string;
@@ -869,7 +902,7 @@ declare namespace Faqir {
     ToggleGroupApi, TooltipApi, TreeViewApi, ControllerApis, ProtocolState,
     Inspection, DevtoolsScope, DevtoolsComponent, DevtoolsWarning, Devtools,
     ValidatorResult, ValidatorContext, FieldValidator, ValidateApi,
-    FaqirGlobal };
+    RulesState, FaqirGlobal };
 }
 
 export default Faqir;
@@ -918,7 +951,7 @@ declare global {
       TagInputApi, ToastApi, ToggleGroupApi, TooltipApi, TreeViewApi,
       ControllerApis, ProtocolState, Inspection, DevtoolsScope,
       DevtoolsComponent, DevtoolsWarning, Devtools, ValidatorResult,
-      ValidatorContext, FieldValidator, ValidateApi, FaqirGlobal };
+      ValidatorContext, FieldValidator, ValidateApi, RulesState, FaqirGlobal };
   }
   interface Window {
     /** Set by the classic-script build; absent under a bundler import. */

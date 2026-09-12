@@ -8,6 +8,10 @@ in an agent sandbox — which is the point, because the `faqir-rules` plugin
 enforces it in the browser and your handler re-checks it before writing anything
 down.
 
+```sh
+npm i @faqir-ui/rules
+```
+
 ```js
 import { coerce, validate } from "@faqir-ui/rules";
 
@@ -312,6 +316,66 @@ the verdict names the field. A `string` field keeps its value verbatim — no
 silent trimming, because a passphrase may legitimately contain spaces.
 
 `coerce` is a fixed point: running it twice changes nothing.
+
+## In the browser — `l-rules`
+
+The `faqir-rules` plugin is this package with a DOM around it. It binds a
+definition to a form, runs the same `coerce` → `evaluate` pass on every
+`input`/`change`, and applies the answer to the markup:
+
+```html
+<script src="ui/core/faqir-core.js"></script>
+<script src="ui/core/plugins/faqir-validate.js"></script>
+<script src="ui/core/plugins/faqir-rules.js"></script>
+
+<script type="application/json" id="signup-rules">
+  { "version": "1",
+    "fields": { "plan": { "type": "string" }, "seats": { "type": "integer" } },
+    "rules": [{ "id": "seats-for-teams", "show": "seats",
+                "when": { "==": [{ "var": "plan" }, "team"] } }] }
+</script>
+
+<form l-validate l-rules="#signup-rules"> … </form>
+```
+
+`l-rules="#id"` — any selector — reads a `<script type="application/json">`;
+anything else is an expression evaluated in the form's scope, so
+`l-rules="rulesDef"` takes an object (or a JSON string) the page already holds.
+The definition is compiled once, at bind.
+
+| Verb | What the plugin does with it |
+| --- | --- |
+| `show` | the field's `[data-ui="field-group"]` takes `hidden` and its controls `disabled`, so it neither validates nor submits |
+| `require` | toggles `required` + `aria-required` on the control |
+| `compute` | writes the value into the scope and into any control of that name |
+| `validate` | registered through `Faqir.validate.register`, so it runs at `faqir-validate`'s moments and wears its messages |
+| `jump` | lands in `$rules.next`, keyed by the page it fires on, for a wizard to read |
+
+`$rules` is the live verdict — `{ visible, required, computed, next }`, reactive
+and never undefined, so `$rules.next[page]` is safe to read in any expression.
+Everything else the plugin touches is `hidden`, `disabled`, `required`,
+`aria-required` and a computed control's `value`: it owns no message, paints no
+error of its own, and leaves the five-attribute protocol alone.
+
+Two loading notes. A definition carrying `validate` rules needs `faqir-validate`
+on the page — a presence requirement, not a script order, and a page missing it
+is told so rather than quietly skipping the checks. And a definition embedded in
+a `<script type="application/json">` must escape `<` as `<`, because a
+script element is raw text and `{"<=": …}` is an ordinary operator;
+[`@faqir-ui/forms`](../forms) does it when it emits the script, and by hand it is
+yours to remember.
+
+Distribution: the plugin ships in the CLI's registry as
+`core/plugins/faqir-rules.js`, on the CDN as
+`@faqir-ui/core/dist/plugins/faqir-rules.js`, and here as
+`@faqir-ui/rules/plugin` for a bundler (importing it self-registers against a
+global `Faqir`; `install(Faqir)` is exported for an explicit one). All three are
+built from `src/plugin.js` with this evaluator bundled in, so **the verdict in
+the page is the verdict on the server by construction** rather than by
+agreement. The page's is still advisory — re-run `validate()` in your handler,
+which is the whole reason the package is isomorphic. A `remote` rule POSTs
+`{ path, value, data }`, where `data` is every coerced field, to the URL the
+definition names: see [`docs/security.md` §4.1](../../docs/security.md).
 
 ## The schema, and the lint
 

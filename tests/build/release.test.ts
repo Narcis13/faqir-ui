@@ -124,7 +124,7 @@ describe("the release script is the only gate there is", () => {
 
   it("publishes the root CLI last", () => {
     const order = [...SOURCE.matchAll(/\{ name: "([^"]+)", dir:/g)].map((m) => m[1]);
-    expect(order.length).toBe(6);
+    expect(order.length).toBe(7);
     expect(order[order.length - 1]).toBe("faqir-ui-cli");
     expect(order[0]).toBe("@faqir-ui/core");
   });
@@ -132,7 +132,14 @@ describe("the release script is the only gate there is", () => {
   it("bumps every published package, not just the root", () => {
     // The defect: the old script bumped `package.json` and nothing else, so four
     // of the six packages sat at 0.1.0 while the root moved to 0.2.4.
-    for (const dir of ["packages/core", "packages/forms", "packages/mcp", "packages/react", "packages/vue"]) {
+    for (const dir of [
+      "packages/core",
+      "packages/forms",
+      "packages/mcp",
+      "packages/react",
+      "packages/rules",
+      "packages/vue",
+    ]) {
       expect(SOURCE, `${dir} is not in the lockstep set`).toContain(`dir: "${dir}"`);
     }
     expect(SOURCE).toContain('const CLI_VERSION_FILE = "src/version.ts"');

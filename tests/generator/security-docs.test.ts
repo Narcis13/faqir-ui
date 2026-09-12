@@ -31,6 +31,7 @@ import {
   type ContextData,
 } from "../../src/generator/context";
 import { parseEngineVocabulary } from "../../src/generator/skill";
+import { loadPluginMetadata } from "../../src/generator/plugins";
 
 const ROOT = resolve(fileURLToPath(new URL(".", import.meta.url)), "../..");
 const DOC_PATH = "docs/security.md";
@@ -57,6 +58,11 @@ describe("the doc covers §A6's list", () => {
     ["the user-supplied threat model", /user-supplied|user-authored|did not author/],
     ["the supply-chain posture", /[Ss]ubresource [Ii]ntegrity/],
     ["how to report a vulnerability", /security\/advisories/],
+    // 1.1B-07 — rules land in §4 because they are the one surface whose value
+    // is NOT code, and the one that makes a request of its own.
+    ["that a rules definition is data, not code", /definition is JSON|Rules are data/],
+    ["that a remote rule sends the whole form", /POSTs the whole form|every.{0,20}coerced field/],
+    ["that the page's verdict is advisory", /verdict is advisory/],
   ];
 
   for (const [what, pattern] of required) {
@@ -97,17 +103,30 @@ describe("the doc's claims still hold against the engine", () => {
     expect([...ENGINE.matchAll(/createElement\('style'\)/g)].length).toBe(1);
   });
 
-  it("names only directives the engine actually declares", () => {
+  it("names only directives the engine or an official plugin actually declares", () => {
     const vocab = parseEngineVocabulary(ENGINE);
     const known = new Set(vocab.directives.map((d) => d.name));
     expect(known.size).toBeGreaterThanOrEqual(15);
+    // §4 reaches past the engine now — `l-rules` and `l-validate` are the two
+    // surfaces whose handling of untrusted values differs from every core
+    // directive's, so the doc has to name them. They are still DERIVED, from
+    // the same `@ui:provides` headers the skill reads: a plugin renamed without
+    // its doc line moving fails here.
+    const provided = loadPluginMetadata(join(ROOT, "registry", "core", "plugins"))
+      .flatMap((p) => p.provides)
+      .filter((token) => token.startsWith("l-"));
+    expect(provided).toContain("l-rules");
+    for (const name of provided) known.add(name);
     // Every `l-…` token the doc writes in backticks must be a real directive.
     const cited = new Set(
       [...DOC.matchAll(/`(l-[a-z]+)(?::[^`]*)?`/g)].map((m) => m[1]),
     );
     expect(cited.size).toBeGreaterThanOrEqual(8);
     for (const name of cited) {
-      expect(known.has(name), `${DOC_PATH} cites \`${name}\`, which the engine does not declare`).toBe(true);
+      expect(
+        known.has(name),
+        `${DOC_PATH} cites \`${name}\`, which neither the engine nor a plugin declares`,
+      ).toBe(true);
     }
   });
 
@@ -142,6 +161,34 @@ describe("the doc's claims still hold against the engine", () => {
       expect(claim, `${DOC_PATH} §6 claims "${name}" needs the evaluator, but it carries no expression`)
         .not.toContain(`\`${name}\``);
     }
+  });
+
+  it("is right that the rules evaluator compiles nothing", () => {
+    // §4.1's central claim, and the reason `l-rules` sits in the SAFE table
+    // beside `l-text`: the definition is interpreted, never compiled. If the
+    // package ever grows an evaluator seam, the doc is wrong the same day.
+    const src = join(ROOT, "packages", "rules", "src");
+    const files = readdirSync(src).filter((f) => f.endsWith(".js"));
+    expect(files.length).toBeGreaterThanOrEqual(8);
+    for (const file of files) {
+      const code = readFileSync(join(src, file), "utf8");
+      expect(code, `packages/rules/src/${file}`).not.toMatch(/new Function\(|\beval\(/);
+    }
+  });
+
+  it("is right that a remote rule POSTs the whole form to the definition's URL", () => {
+    // The claim a reader acts on — "a definition you did not author is an
+    // exfiltration channel" — is only true if the body really carries every
+    // field and the URL really comes from the definition.
+    const plugin = readFileSync(join(ROOT, "packages", "rules", "src", "plugin.js"), "utf8");
+    const call = /return fetch\([\s\S]*?\}\)/.exec(plugin)?.[0] ?? "";
+    expect(call, "the remote validator's fetch call moved").toContain('method: "POST"');
+    expect(call).toContain("rule.remote");
+    expect(call).toMatch(/path:\s*rule\.path/);
+    expect(call).toMatch(/data:\s*collect\(form/);
+    // No `credentials` option — which is what makes the doc's "fetch's default
+    // same-origin credentials" sentence the accurate one.
+    expect(call).not.toContain("credentials");
   });
 
   it("ships no JavaScript with primitives or patterns, as §6 promises", () => {
@@ -208,6 +255,16 @@ describe("the generated context carries the doc", () => {
     expect(Object.keys(data.security.safe)).toContain("l-text");
     expect(data.security.rules.length).toBeGreaterThanOrEqual(4);
     expect(formatContextJSON(data)).toContain(DOC_PATH);
+  });
+
+  it("classifies the rules surfaces the way §4 does", () => {
+    // An agent reads context.json, not the prose. The two files must agree on
+    // which side of the line each surface falls: `l-rules` carries data, an
+    // attribute validator carries code.
+    expect(Object.keys(data.security.safe)).toContain("l-rules");
+    expect(Object.keys(data.security.unsafe)).toContain("l-validate:<name>");
+    expect(data.security.safe["l-rules"]).toMatch(/never compiled as JavaScript/);
+    expect(data.security.rules.join(" ")).toMatch(/remote rule sends the whole/);
   });
 
   it("reaches every generated surface an agent may read", () => {

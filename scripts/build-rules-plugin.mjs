@@ -65,7 +65,7 @@ function header(source) {
         "/** … */ header comment — that header is what documents the plugin in the skill.",
     );
   }
-  for (const line of ["// @ui:plugin faqir-rules", "// @ui:provides l-rules"]) {
+  for (const line of ["// @ui:plugin faqir-rules", "// @ui:provides l-rules, $rules"]) {
     if (!match[1].includes(`${line}\n`)) {
       throw new Error(`packages/rules/src/plugin.js is missing its \`${line}\` line.`);
     }

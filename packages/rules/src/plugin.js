@@ -1,5 +1,5 @@
 // @ui:plugin faqir-rules
-// @ui:provides l-rules
+// @ui:provides l-rules, $rules
 /**
  * faqir-rules — a form's conditional logic, from one JSON definition. [1.1B-04 · §8.3]
  * The browser half of `@faqir-ui/rules`: the same evaluator a server runs.

@@ -1,5 +1,6 @@
 // @ui:plugin faqir-validate
 // @ui:provides l-validate
+// @ui:modifier l-validate .async | On `l-validate:<name>`, marks a validator whose expression answers with a promise: the field-group sits in `data-state="validating"` while it is out, runs are debounced 250ms and the newest wins, and a rejection is a failure rather than a silent pass.
 /**
  * faqir-validate — declarative + programmatic form validation. [0.6-02 · 1.1B-03 · §7.1, §A5, §8.3]
  * Everything the field-group contract needs, driven from markup or from JS.

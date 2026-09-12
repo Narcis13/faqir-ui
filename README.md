@@ -25,6 +25,7 @@ The CLI is the conductor.
 - [Design Token System](#design-token-system)
 - [Theme System](#theme-system)
 - [Faqir Core — Reactive Engine](#faqir-core--reactive-engine)
+- [Validation](#validation)
 - [The Manifest System](#the-manifest-system)
 - [JavaScript Controllers](#javascript-controllers)
 - [Data-Driven Rendering](#data-driven-rendering)
@@ -1112,10 +1113,10 @@ agent with no shell, `@faqir-ui/core` publishes a prebuilt runtime instead:
 
 ```html
 <!-- A theme's full CSS bundle: tokens + theme + base + every component -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@faqir-ui/core@0.2/dist/faqir.default.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.0/dist/faqir.default.css">
 
 <!-- The engine, minified — sets window.Faqir and boots on DOMContentLoaded -->
-<script src="https://cdn.jsdelivr.net/npm/@faqir-ui/core@0.2/dist/faqir-core.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.0/dist/faqir-core.min.js" defer></script>
 ```
 
 Swap the stylesheet to change theme — every theme in [Theme System](#theme-system)
@@ -1180,6 +1181,11 @@ A custom time belongs to the modifier itself (`.debounce300ms`); a dotted
 | `$nextTick` | Run after DOM update |
 | `$watch` | Watch reactive value changes |
 | `$id` | Generate unique IDs |
+
+Those are the engine's. A plugin adds its own to the same namespace —
+`$persist()` from `faqir-persist`, `$rules` from `faqir-rules` — and they exist
+only on a page that loaded it; see [the plugin
+table](#javascript-bundle-and-official-plugins).
 
 ### Examples
 
@@ -1254,6 +1260,125 @@ Full reference: [docs/devtools.md](docs/devtools.md).
 The engine compiles expressions with `new Function` and `l-html` is unsanitized
 by design — see [Security](#security) and [docs/security.md](docs/security.md)
 before pointing either at anything a user typed.
+
+---
+
+## Validation
+
+Form validation is three layers, each one usable without the ones above it. All
+three paint the same UI — the enclosing `[data-ui="field-group"]` takes
+`data-state="invalid"`, its `[data-part="error"]` takes the message, and the
+control takes `aria-invalid` — so a page never has two error styles.
+
+### 1. Native constraints, reflected
+
+`l-validate` on the form is the whole setup. The plugin reflects each control's
+own `ValidityState`; you write no JavaScript.
+
+```html
+<script src="ui/core/plugins/faqir-validate.js"></script>
+
+<form l-validate>
+  <div data-ui="field-group">
+    <label data-part="label" for="email">Work email</label>
+    <input data-part="input" id="email" name="email" type="email" required>
+    <p data-part="error"></p>
+  </div>
+</form>
+```
+
+### 2. Attribute validators, including async
+
+`l-validate:<name>` on a control adds a check of your own; its value is an
+expression, with the control's `value` in scope. `.async` marks one that answers
+with a promise — the field-group sits in `data-state="validating"` until it
+settles. `data-error-<name>` supplies the message.
+
+```html
+<input data-part="input" name="email" type="email" required
+       l-validate:company="isCompanyEmail(value)"
+       l-validate:taken.async="isFree(value)"
+       data-error-company="Use your company address."
+       data-error-taken="That address is already registered.">
+```
+
+### 3. The programmatic registry
+
+`Faqir.validate` is installed by the same plugin, for checks that belong in
+JavaScript rather than in an attribute. Registered validators run after the
+native constraints and after the attribute validators, in registration order,
+first failure wins.
+
+```js
+const off = Faqir.validate.register('#signup', 'email', 'taken', async (value) => {
+  const res = await fetch(`/api/email-free?q=${encodeURIComponent(value)}`);
+  return res.ok || 'That address is already registered.';
+});
+
+await Faqir.validate.run('#signup');   // true when the whole form is clean
+off();                                 // remove just this one
+```
+
+Return `true` to pass, `false` to fail with the registered message, or a string
+to fail with that one. `unregister(form, field, name?)` drops one validator, or
+all of the field's.
+
+### Rules — one JSON definition for the whole form
+
+Everything above judges one field at a time. A **rules definition** is the
+cross-field half: what is on screen, what is required *today*, what agrees with
+what, what is derived, and which wizard page comes next — as data, in one JSON
+document, evaluated by [`@faqir-ui/rules`](packages/rules).
+
+```html
+<script type="application/json" id="signup-rules">
+  { "version": "1",
+    "fields": { "plan": { "type": "string" }, "seats": { "type": "integer" } },
+    "rules": [{ "id": "seats-for-teams", "show": "seats",
+                "when": { "==": [{ "var": "plan" }, "team"] } }] }
+</script>
+
+<form l-validate l-rules="#signup-rules"> … </form>
+```
+
+On init and on every `input`/`change`, the form's own `FormData` is coerced
+through the definition and re-evaluated. A hidden field's field-group takes
+`hidden` and its controls take `disabled`, so it neither validates nor submits;
+`require` toggles `required` + `aria-required`; `compute` writes its value into
+the scope and into any control of that name; and `jump` lands in `$rules.next`
+for a wizard to read. `validate` rules are handed to the registry above, so they
+run at `faqir-validate`'s moments and wear its messages — the rules plugin owns
+no message and paints no error of its own.
+
+The magic `$rules` exposes the live verdict — `{ visible, required, computed,
+next }`, reactive, and never undefined:
+
+```html
+<button data-ui="button" @click="page = $rules.next[page] || page + 1">Next</button>
+```
+
+The point of writing it as data is that the **same evaluator runs on your
+server**: `import { coerce, validate } from "@faqir-ui/rules"` re-checks the
+submission against the identical definition, so the page's verdict and the
+handler's agree by construction rather than by agreement. The page's is
+advisory; the handler's is the one that counts.
+
+Two commands and one schema go with it:
+
+```bash
+faqir rules lint signup.rules.json    # seven checks a JSON Schema cannot make
+faqir rules lint --stdin --json       # same, for tooling
+```
+
+`packages/rules/rules.schema.json` is the definition format as Draft-07 JSON
+Schema — the document to hand a model as a structured-output schema.
+[`@faqir-ui/forms`](packages/forms) emits both halves at once: a schema's
+`if/then/else`, `dependentRequired` and wizard-page `when` become rules beside
+the markup they govern.
+
+Full reference: [`packages/rules/README.md`](packages/rules/README.md). The
+security posture — a definition is data, but a `remote` rule sends the whole
+form to the URL inside it — is [docs/security.md §4.1](docs/security.md).
 
 ---
 
@@ -1665,6 +1790,10 @@ faqir conform --exclude "vendor/**"  # Skip more than the built-in exclusions
 
 faqir trace dialog                # Show dependency graph, file tree, token usage
 faqir trace dialog --json         # Machine-readable output
+
+faqir rules lint signup.rules.json   # Lint a form-rules definition
+faqir rules lint --stdin             # …read from stdin instead
+faqir rules lint f.json --locales en,ro  # These translations must be complete
 ```
 
 ### AI / Agent
@@ -1735,9 +1864,17 @@ you prefer one classic script:
 ```
 
 Plugins can also be loaded individually after the core script from
-`ui/core/plugins/`. `faqir-persist` provides `l-persist` and `$persist()` for
-namespaced, JSON-serialized reactive state; `faqir-intersect` provides enter,
-leave, and once-only IntersectionObserver hooks:
+`ui/core/plugins/`. Each self-registers, depends on nothing, and adds directives
+and magics to the same expression language:
+
+| Plugin | Provides | What it does |
+|---|---|---|
+| `faqir-collapse` | `l-collapse` | Height auto-animation for a boolean expression; honours `prefers-reduced-motion` |
+| `faqir-intersect` | `l-intersect` | Enter, `.leave` and `.once` IntersectionObserver hooks |
+| `faqir-mask` | `l-mask` | Caret-safe input masking; `l-model` still receives the raw characters |
+| `faqir-persist` | `l-persist`, `$persist()` | Namespaced, JSON-serialized reactive state in `localStorage` |
+| `faqir-rules` | `l-rules`, `$rules` | A form's conditional logic, from one JSON definition — see [Validation](#validation) |
+| `faqir-validate` | `l-validate` | Declarative + programmatic form validation — see [Validation](#validation) |
 
 ```html
 <script src="ui/core/faqir-core.js"></script>
@@ -1748,6 +1885,12 @@ leave, and once-only IntersectionObserver hooks:
 <section l-intersect="visible = true" l-intersect.leave="visible = false">…</section>
 <div l-intersect.once="loadMore()">…</div>
 ```
+
+One pairing to know: `faqir-rules` registers its cross-field and remote checks
+through `Faqir.validate.register`, so a definition carrying `validate` rules
+needs `faqir-validate` on the page too. It is a presence requirement, not a
+script order — both plugins install before the engine boots — and a page that
+loads one without the other is told so rather than quietly skipping the checks.
 
 ---
 

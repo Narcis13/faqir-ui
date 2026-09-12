@@ -35,10 +35,10 @@
     "faqir.swiss.css": "sha384-WDktN+ThexX6jQmBFkQdncXqml/mivy2ziy8VUv8QE0nYI3iTf8bAdyf6gnoU22b",
     "faqir.terminal.css": "sha384-l4d1m1KyNdr6kgcm0WEe85Gm5dmIasBRP8QeGm/yGF/ffU7L8qkxMu3nM41V658+",
     "plugins/faqir-collapse.js": "sha384-y16PnFkcJiJLQIxuQMtdS+QalrC6lJ0EsPT/oceZWpLMGdqASXq3HhVHebfUWktm",
-    "plugins/faqir-intersect.js": "sha384-AfbB6icyS1ngl1JdiAMZ9//m5lHTMdgXXHWCdi5INfE9FmLbYRUeiyKTv4E4g6ri",
+    "plugins/faqir-intersect.js": "sha384-Q/akZjAcnTnGYPKBP7b8c3iyYbHTIW1IPjBivzOH9dE7Nflr9Cu6adjeDXU2bhk6",
     "plugins/faqir-mask.js": "sha384-cSq2DpUnoJCxEDAQjsbzAa+jSuHf4WsOaKT8t7b9p8pA7MaaRhA1DLzjMNChSa/I",
     "plugins/faqir-persist.js": "sha384-o0jfddebC8QZ3S26VXUlOme723BNMlb/N7vqpn+fWpSeEFXzpq+3MoeXhVL/0PSv",
-    "plugins/faqir-rules.js": "sha384-8ok3mMCCoVM38sYM2JRiPF11RJyZbSNvEdyzhwtg7AGVYX3Ok/o4nLldNunva9Gd",
-    "plugins/faqir-validate.js": "sha384-0DPnT3y4EWBIDw2aq5EZF0+MrzFQd+sUc3T+tqREi7yDa04rFyxCvf0aqG/LOHds"
+    "plugins/faqir-rules.js": "sha384-lqg+Ie666jvpn9dvFewNZjXvznLX/5KG6H31PfDATvCWk3mjlMtqh+Y3Fp+PZP3G",
+    "plugins/faqir-validate.js": "sha384-X2uenWK3FAg+5atZfyzkqh9hcKfk8ztbvC23klFeeqUddf9E0LLhnw45qmn2FeIf"
   }
 }

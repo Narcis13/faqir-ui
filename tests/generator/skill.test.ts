@@ -47,6 +47,7 @@ import {
   type KindFileSet,
 } from "../../src/generator/skill";
 import { loadPluginMetadata } from "../../src/generator/plugins";
+import { PLUGIN_DIRECTIVES } from "../../src/utils/directives";
 import { COMMAND_DEFINITIONS, COMMAND_NAMES } from "../../src/command-registry";
 import { SCAFFOLDS } from "../../src/scaffolds/registry";
 import { validateManifest } from "../../src/manifest";
@@ -869,6 +870,51 @@ describe("shipped directive reference", () => {
       expect(REFERENCE, `${p.name} has no row`).toContain(`| \`${p.name}\` |`);
       expect(REFERENCE).toContain(`registry/core/plugins/${p.file}`);
       for (const provided of p.provides) expect(REFERENCE).toContain(`\`${provided}\``);
+    }
+  });
+
+  it("renders every declared plugin modifier, and only the declared ones", () => {
+    // [1.1B-07] A plugin's dot-suffixes used to reach the reference only if its
+    // prose happened to mention them — `l-validate.async` was in the example
+    // with nothing saying what it buys. They are declared now, the same way the
+    // engine declares its own, and derived from those lines here.
+    const declared = plugins.flatMap((p) => p.modifiers);
+    expect(declared.length).toBeGreaterThanOrEqual(3);
+    for (const m of declared) {
+      const row = REFERENCE.split("\n").find((line) =>
+        line.startsWith(`| \`${m.attribute}${m.modifier}\` |`),
+      );
+      expect(row, `${m.attribute}${m.modifier} has no row in the reference`).toBeDefined();
+      expect(row).toContain(m.description);
+    }
+    // …and the modifiers the audit's own table knows about are the same set, so
+    // a modifier accepted by `faqir audit` but documented nowhere fails here.
+    for (const spec of PLUGIN_DIRECTIVES) {
+      for (const modifier of spec.modifiers) {
+        expect(
+          declared.some((m) => m.attribute === spec.attribute && m.modifier === `.${modifier}`),
+          `${spec.attribute}.${modifier} is a known modifier that no plugin header declares`,
+        ).toBe(true);
+      }
+    }
+  });
+
+  it("leaves the modifier table out for a plugin that declares none", () => {
+    const fixture = join(TEST_DIR, "fixture-no-modifiers");
+    rmSync(TEST_DIR, { recursive: true, force: true });
+    mkdirSync(fixture, { recursive: true });
+    try {
+      writeFileSync(
+        join(fixture, "faqir-plain.js"),
+        "// @ui:plugin faqir-plain\n// @ui:provides l-plain\n" +
+          "/**\n * faqir-plain — a plugin with no modifiers. [9.9-98]\n *\n" +
+          ' *   <div l-plain="x"></div>\n *\n * Nothing dotted here.\n */\n',
+      );
+      const md = renderDirectivesReference(ENGINE, fixture, SCHEMA_VERSION);
+      expect(md).toContain("### `faqir-plain`");
+      expect(md.slice(md.indexOf("### `faqir-plain`"))).not.toContain("| Modifier | Effect |");
+    } finally {
+      rmSync(TEST_DIR, { recursive: true, force: true });
     }
   });
 

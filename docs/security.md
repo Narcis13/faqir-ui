@@ -141,7 +141,9 @@ Not everything is `l-html`. These carry **data**, and data is safe:
 | `data-prop-*` | `JSON.parse`, falling back to the raw string | Yes — parsed as data, never evaluated |
 | `l-source:<name>` | `fetch` + `res.json()` | Yes — the response is parsed as JSON and never evaluated |
 | `l-teleport` | value is a **CSS selector**, not an expression | Moves an element; crosses no security boundary |
+| `l-rules` | the **definition** is JSON, run through `@faqir-ui/rules`' own operators | Yes for the *data* it judges — but see §4.1 for the definition itself |
 | `l-html` | `innerHTML` | **No** |
+| `l-validate:<name>` | the validator's value is an **expression**, compiled like any other `l-*` | **No** — `.async` changes when the answer is awaited, not whether it is code |
 | `toast.add({ iconHtml })` | `innerHTML` | **No** — the one controller option that writes markup; `message`, `icon` and `actionLabel` beside it are `textContent` |
 
 Two attribute cases deserve the underline: `:href="url"` and `:src="url"` with
@@ -152,6 +154,42 @@ equivalent to writing the handler inline.
 `l-source` sends whatever the browser's default `fetch` credentials mode sends
 (`same-origin`), so a same-origin endpoint receives the user's cookies. The URL
 comes from the attribute in your own markup, not from the scope.
+
+### 4.1 Rules are data, and a remote rule is a request
+
+`l-rules` is the one directive whose value is not, in the end, JavaScript. It
+resolves to a **definition** — either a selector pointing at a
+`<script type="application/json">` or an expression yielding the object a page
+already holds — and `@faqir-ui/rules` runs that definition with its own closed
+set of operators. There is no `new Function` anywhere in the evaluator, no
+property access outside the form's own coerced data, and a definition naming an
+operator the package does not implement is refused at compile time rather than
+reached at runtime. A definition is therefore as safe to hand around as the
+JSON body of a request, and the same evaluator runs it on your server.
+
+Two things that follow, and the second is the one worth stopping on:
+
+1. **The page's verdict is advisory.** A field the definition hides is
+   `hidden` + `disabled`, so it does not submit — but that is a UI decision made
+   in a document the user controls. Re-run `validate()` against the same
+   definition in your handler before you write anything down; that the two
+   answers agree by construction is the whole reason the package is isomorphic.
+2. **A `remote` rule POSTs the whole form.** `{ "validate": "remote", "path":
+   "email", "remote": "/api/check" }` becomes an async validator that sends
+   `{ path, value, data }` — where `data` is *every* coerced field, not just the
+   one being checked — to the URL **inside the definition**, with `fetch`'s
+   default `same-origin` credentials. The URL is not something the page author
+   states at the binding site, so a definition you did not author is an
+   exfiltration channel for the whole form. Bind definitions you wrote or
+   generated; if one arrives over the wire, read its `remote` URLs before you
+   bind it, the way you would read a `<script src>`.
+
+The escaping footnote, because it bites at parse time rather than at evaluation
+time: a `<script type="application/json">` is **raw text**, so a `<` inside the
+definition — `{"<=": [...]}` is an ordinary operator — must be written
+`<`. `@faqir-ui/forms` does this when it emits the script; by hand it is
+yours to remember, and the failure is a silent one (the parser eats the rest of
+the element, and the plugin reports a definition that resolved to nothing).
 
 ## 5. Threat model: generated-trusted vs user-supplied markup
 

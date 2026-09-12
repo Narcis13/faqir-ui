@@ -10,6 +10,28 @@ export interface PluginMetadata {
   example?: string;
   /** The prose paragraph following that example, collapsed onto one line. */
   notes?: string;
+  /** `@ui:modifier` lines, in header order. */
+  modifiers: PluginModifier[];
+}
+
+/**
+ * One dot-suffix a plugin's directive accepts, declared the way the engine
+ * declares its own (`@ui:modifier <attribute> <.modifier> | <what it does>`).
+ *
+ * A plugin's modifiers were invisible to every generated surface before this:
+ * the header renderer takes the summary, the example and ONE paragraph, so
+ * `l-validate.async` was in the example with nothing saying what it means, and
+ * an agent copying the example had no way to learn that it is what buys
+ * `data-state="validating"`. Declaring them makes them derived rather than
+ * re-described — the same contract the engine's own modifier tables run on.
+ */
+export interface PluginModifier {
+  /** The directive it attaches to, e.g. `l-validate`. */
+  attribute: string;
+  /** The modifier, leading dot included, e.g. `.async`. */
+  modifier: string;
+  /** One line: what it does. */
+  description: string;
 }
 
 /**
@@ -67,12 +89,18 @@ export function loadPluginMetadata(pluginsDir: string): PluginMetadata[] {
       ?.replace(new RegExp(`^${name}\\s+[—-]\\s+`), "")
       .replace(/\s*\[[^\]]*\]\s*$/, "");
 
+    const modifiers: PluginModifier[] = [];
+    for (const line of source.matchAll(/^\/\/ @ui:modifier\s+(\S+)\s+(\.\S+)\s*\|\s*(.+)$/gm)) {
+      modifiers.push({ attribute: line[1], modifier: line[2], description: line[3].trim() });
+    }
+
     plugins.push({
       name,
       file,
       provides,
       ...(description ? { description } : {}),
       ...readHeaderBody(source),
+      modifiers,
     });
   }
   return plugins;

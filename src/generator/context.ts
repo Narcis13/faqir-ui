@@ -565,6 +565,8 @@ export function composeContextData(input: ContextComposition): ContextData {
           "compiled as JavaScript. Interpolating user input into one is remote code execution, l-html or not.",
         "l-bind:href / l-bind:src":
           "a javascript: URL runs. Check the scheme before binding a value you did not author.",
+        "l-validate:<name>":
+          "an attribute validator's value is an expression, compiled like any other. `.async` changes when the answer is awaited, not whether it is code.",
       },
       safe: {
         "l-text": "textContent — markup in the value is inert.",
@@ -572,6 +574,8 @@ export function composeContextData(input: ContextComposition): ContextData {
         "data-prop-*": "JSON.parse, falling back to the raw string. Parsed as data, never evaluated.",
         "l-source:<name>": "fetch + res.json(). The response is parsed as JSON, never evaluated.",
         "l-teleport": "the value is a CSS selector, not an expression.",
+        "l-rules":
+          "the DEFINITION is JSON, evaluated by @faqir-ui/rules' own operators and never compiled as JavaScript — data the way a JSON body is. Its `remote` rules POST the whole coerced form to the URL the definition names, so only bind a definition you authored.",
       },
       rules: [
         "Faqir assumes the markup is yours — generated, reviewed and committed like source.",
@@ -579,6 +583,7 @@ export function composeContextData(input: ContextComposition): ContextData {
         "HTML-escaping is not enough: &#39; is decoded back to ' before the evaluator sees the attribute.",
         "Without 'unsafe-eval' the engine still loads and mounts controllers — expressions just silently yield undefined, so l-text writes empty strings.",
         "Primitives and patterns are markup and CSS only (inbox and wizard excepted); a page that uses no l-* attributes needs no 'unsafe-eval'.",
+        "A rules definition is data, not code — l-rules never evaluates it as JavaScript — but a remote rule sends the whole coerced form to the URL inside the definition, so a definition you did not author is an exfiltration channel; re-check every verdict on the server, because the page's is advisory.",
       ],
     },
     components,
@@ -1059,7 +1064,11 @@ export function formatContextCursorRules(data: ContextData): string {
     lines.push("");
     lines.push("- Load a plugin after `core/faqir-core.js`, or use `faqir bundle --js`");
     for (const [name, plugin] of Object.entries(data.plugins)) {
-      lines.push(`- ${name}: ${plugin.provides.join(", ")} (${plugin.file})`);
+      // The description is the plugin's one-line contract, from its own header.
+      // Every other generated surface carries it; this one used to print the
+      // name and the file and leave an agent to guess what the plugin is for.
+      const summary = plugin.description ? ` — ${plugin.description}` : "";
+      lines.push(`- ${name}: ${plugin.provides.join(", ")} (${plugin.file})${summary}`);
     }
     lines.push("");
   }

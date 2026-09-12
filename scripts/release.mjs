@@ -65,6 +65,7 @@ const PACKAGES = [
   { name: "@faqir-ui/react", dir: "packages/react", dist: "packages/react/dist/index.js" },
   { name: "@faqir-ui/vue", dir: "packages/vue", dist: "packages/vue/dist/index.js" },
   { name: "@faqir-ui/forms", dir: "packages/forms", dist: "packages/forms/src/index.js" },
+  { name: "@faqir-ui/rules", dir: "packages/rules", dist: "packages/rules/src/index.js" },
   { name: "@faqir-ui/mcp", dir: "packages/mcp", dist: "packages/mcp/dist/index.mjs" },
   { name: "faqir-ui-cli", dir: ".", dist: "dist/faqir.mjs" },
 ];

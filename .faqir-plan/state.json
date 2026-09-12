@@ -2,7 +2,7 @@
   "$schema": "./state.schema.md",
   "plan": "FAQIR-PLAN-1.1.md",
   "current": null,
-  "last_completed": "1.1B-06",
+  "last_completed": "1.1B-07",
   "history": [
     {
       "id": "1.1A-01",
@@ -165,6 +165,12 @@
       "completed": "2026-09-12",
       "commit": "80ab4a3",
       "summary": "The form and the rules it obeys, emitted together. `renderForm` gains `opts.rules` \u2014 a definition or the parts of one \u2014 and writes it beside the form as `<script type=\"application/json\" id=\"<idPrefix>-rules\">` with `l-rules=\"#<idPrefix>-rules\"` on the `<form>` and `faqir-rules.js` in the `@ui:requires` line. Four conditional keywords the root schema may now carry stop throwing and become rules instead of being ignored: `if`/`then`/`else` and an `allOf` of conditionals derive `show` + `require`, `dependentRequired` derives one `require` per dependent (`{\"!\": {\"missing\": [trigger]}}` \u2014 presence in the package's own terms, so an unchecked box and an empty box both read false), and a wizard step's `when` derives the `jump` that steps over the page. `fields` is always DERIVED, never authored: the coercion type is the one the widget was chosen from, `step` arrives as the `multipleOf` the types always said it aliased, and `default` is dropped rather than handed over \u2014 the rules package would enforce it as a constraint. Author fields merge over the derived map, author rules come first (a `jump` contest is won by the first match), and their ids are reserved before a derived one is allocated. Three shapes are refused rather than half-honoured: a `then` property carrying keywords (a conditional CONSTRAINT, which `show` cannot express \u2014 it points at `opts.rules`), an `allOf` entry that is not a conditional, and a `when` on the first step, the last step, or two steps running. The wizard's navigation moved with the jumps, because emitting one nothing reads would be a new feature failing silently: with any jump in the definition `l-validate` asks `$rules.next[step]` instead of adding one, and Back reads the same answer in reverse (`next[step - 2] == step`) so it steps over a skipped page rather than landing on it. `<` is escaped to `\\u003c` in the emitted JSON \u2014 the emitter half of follow-up 1.1B-09, and mandatory: a script element is raw text and `{\"<=\": \u2026}` is what a definition is made of. 26 new tests in `packages/forms/tests/rules.test.ts`: emission shape, one case per derived construct, ten refusal paths, `lintDefinition` (the function behind `faqir rules lint`) asserted to report an EMPTY finding list for every definition emitted, and an end-to-end trio booting the generated drops \u2014 core, validate, rules, evaluated rather than require()d so `tests/core/faqir-rules.test.ts` keeps the first-require registration it asserts on \u2014 that watches a conditional field flip hidden/disabled/required, a dependent become required as its trigger is typed into, and a submit carry step 0 to step 2 with Back returning over the skip. Two golden files pin the bytes (`conditional-rules.html`, `wizard-jump.html`), both at zero audit findings with the `<script>` in them; the eighteen existing goldens and the `form-page` pattern are byte-identical, since nothing is emitted unless a form has rules. 6941 pass / 0 fail; no dependency added \u2014 the renderer writes the definition, it never evaluates one."
+    },
+    {
+      "id": "1.1B-07",
+      "completed": "2026-09-12",
+      "commit": "PENDING",
+      "summary": "Rules documented from generated data, not restated: $rules joins the plugin's @ui:provides, plugins declare their modifiers the way the engine does, README gains a Validation section, security.md \u00a74.1 says what a remote rule actually sends, and @faqir-ui/rules joins the release lockstep."
     }
   ],
   "note": "Pointer file for the /faqir-plan slash command. FAQIR-PLAN-1.1.md status cells (\u2b1c/\u2705) are the source of truth; this file records the cross-session cursor and a per-task log. Do not hand-edit `current` while a session is running. The 1.0 plan's cursor (61 history entries, phases v0.3\u20131.0) is archived unchanged at state-1.0.json."

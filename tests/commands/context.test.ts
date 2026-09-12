@@ -459,3 +459,82 @@ describe("skill generator", () => {
     expect(existsSync(join(TEST_DIR, ".faqir", "SKILL.md"))).toBe(true);
   });
 });
+
+// ── the rules vocabulary, on every surface an agent reads ──────────────────
+//
+// [1.1B-07] Rules are a plugin, a directive, a magic and a package, and an
+// agent meets them through generated text rather than through this repo. What
+// is asserted here is not the wording — that comes from the plugin's own header
+// and moves with it — but that each surface carries the NAME and a contract
+// beside it, so nothing in the set can be added to the registry and left
+// undocumented on the way out.
+describe("rules reach the generated agent surfaces", () => {
+  beforeEach(() => {
+    rmSync(TEST_DIR, { recursive: true, force: true });
+    mkdirSync(TEST_DIR, { recursive: true });
+    process.chdir(TEST_DIR);
+  });
+
+  afterEach(() => {
+    process.chdir(join(import.meta.dir, "../.."));
+    rmSync(TEST_DIR, { recursive: true, force: true });
+  });
+
+  it("context.json names the plugin, both of the things it provides, and its contract", async () => {
+    await init([]);
+    const data = await generateContext(TEST_DIR);
+
+    const plugin = data.plugins["faqir-rules"];
+    expect(plugin).toBeDefined();
+    expect(plugin.file).toBe("core/plugins/faqir-rules.js");
+    // `$rules` is registered by the plugin, so it belongs in `provides` beside
+    // the directive — `$persist()` has been there since 0.6 and this is the
+    // same case. Derived from the `@ui:provides` header, not restated here.
+    expect(plugin.provides).toEqual(["l-rules", "$rules"]);
+    expect(plugin.description).toContain("one JSON definition");
+    // The counter is what an agent reads first; six plugins, not four.
+    expect(data.meta.plugin_count).toBe(Object.keys(data.plugins).length);
+    expect(data.meta.plugin_count).toBeGreaterThanOrEqual(6);
+  });
+
+  it("every text surface carries the plugin with its one-line contract", async () => {
+    await init([]);
+    const data = await generateContext(TEST_DIR);
+    const skill = await generateSkill(TEST_DIR);
+
+    for (const [label, output] of [
+      ["context.md", formatContextMarkdown(data)],
+      [".cursorrules", formatContextCursorRules(data)],
+      ["llms-full.txt", formatContextLlmsFull(data)],
+      ["SKILL.md", skill],
+    ] as const) {
+      expect(output, `${label} does not name faqir-rules`).toContain("faqir-rules");
+      expect(output, `${label} does not name l-rules`).toContain("l-rules");
+      expect(output, `${label} does not name $rules`).toContain("$rules");
+      expect(output, `${label} states no contract for it`).toContain("one JSON definition");
+    }
+  });
+
+  it("documents `.async` as a validate modifier, in the skill's own directive reference", async () => {
+    // The modifier half of the task: an agent writing an async check needs to
+    // be told the spelling AND what it costs (`data-state="validating"`).
+    const reference = await Bun.file(
+      join(import.meta.dir, "../../.claude/skills/faqir-creator/references/directives.md"),
+    ).text();
+    expect(reference).toContain("l-validate:taken.async");
+    // Not just present in an example — carried in the modifier table with the
+    // sentence the plugin's own `@ui:modifier` line declares.
+    const row = reference.split("\n").find((line) => line.startsWith("| `l-validate.async` |"));
+    expect(row, "the directives reference has no modifier row for `.async`").toBeDefined();
+    expect(row).toContain("promise");
+    expect(row).toContain("validating");
+    expect(reference).toContain("l-rules");
+  });
+
+  it("classifies l-rules as a data surface in the security block", async () => {
+    await init([]);
+    const data = await generateContext(TEST_DIR);
+    expect(Object.keys(data.security.safe)).toContain("l-rules");
+    expect(data.security.safe["l-rules"]).toContain("never compiled as JavaScript");
+  });
+});
