@@ -148,17 +148,58 @@
     }
   },
   {
-    "name": "messages: a definition may carry rules, which this release accepts and ignores",
+    "name": "messages: a rule's own message beats the generic sentence",
     "definition": {
       "version": "1",
-      "fields": { "email": { "type": "string", "required": true } },
-      "rules": [{ "id": "r1", "show": "email", "when": { "var": "subscribed" } }]
+      "fields": { "start": { "type": "integer" }, "end": { "type": "integer" } },
+      "rules": [
+        { "id": "span", "validate": { "<": [{ "var": "start" }, { "var": "end" }] }, "path": "end",
+          "message": "The end must come after the start." },
+        { "id": "positive", "validate": { ">": [{ "var": "start" }, 0] }, "path": "start" }
+      ]
     },
-    "data": {},
+    "data": { "start": 5, "end": 3 },
     "expected": {
       "valid": false,
       "findings": [
-        { "path": "email", "rule": "required", "message": "This field is required.", "params": {} }
+        { "path": "end", "rule": "span", "message": "The end must come after the start.", "params": {} }
+      ]
+    }
+  },
+  {
+    "name": "messages: the locale table answers for a rule id, keyed <path>.<id>",
+    "definition": {
+      "version": "1",
+      "fields": { "start": { "type": "integer" }, "end": { "type": "integer" } },
+      "messages": { "fr": { "end.span": "La fin doit suivre le début." } },
+      "rules": [
+        { "id": "span", "validate": { "<": [{ "var": "start" }, { "var": "end" }] }, "path": "end",
+          "message": "The end must come after the start." }
+      ]
+    },
+    "data": { "start": 5, "end": 3 },
+    "locale": "fr",
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "end", "rule": "span", "message": "La fin doit suivre le début.", "params": {} }
+      ]
+    }
+  },
+  {
+    "name": "messages: a rule with neither a message nor a table gets the generic sentence",
+    "definition": {
+      "version": "1",
+      "fields": { "quantity": { "type": "integer" } },
+      "rules": [
+        { "id": "in-stock", "validate": { "<=": [{ "var": "quantity" }, 10] }, "path": "quantity" }
+      ]
+    },
+    "data": { "quantity": 40 },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "quantity", "rule": "in-stock", "message": "Please check this value.", "params": {} }
       ]
     }
   }

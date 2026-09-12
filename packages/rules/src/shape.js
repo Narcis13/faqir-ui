@@ -1,7 +1,7 @@
 /**
  * @faqir-ui/rules — the shape validator and the coercion pass. [1.1B-01 · §8.2]
  *
- * Imports only its two sibling leaves. Touches no DOM, no filesystem, no
+ * Imports only sibling leaves. Touches no DOM, no filesystem, no
  * process: the same source runs in Bun, Node, a browser, a worker and an agent
  * sandbox, and is required to produce byte-identical verdicts in all of them.
  *
@@ -13,7 +13,7 @@
  *     required: ["<dotted.path>", …],          // optional, top level
  *     messages: { en: { "email.format": "…" } },
  *     defaultLocale: "en",
- *     rules: [ … ]                             // accepted, ignored until 1.1B-02
+ *     rules: [ … ]                             // the verbs; see rules.js
  *   }
  *
  * A field schema is the JSON Schema 2020-12 subset listed in `FIELD_KEYS`
@@ -23,14 +23,14 @@
  * silently ignored one, because "my `maxlength` did nothing" is the single
  * worst failure mode a validator can have.
  *
- * ── Verdict ─────────────────────────────────────────────────────────────────
+ * ── The two halves of a verdict ──────────────────────────────────────────────
  *
- *   { valid, findings: [{ path, rule, message, params }],
- *     computed: {}, visible: {}, required: {} }
- *
- * The last three are the rules engine's half of the answer (1.1B-02). They are
- * present and empty from the first release so that every consumer — the plugin,
- * a server handler, a test — can be written against the final shape today.
+ * This module answers the shape half — `shapeFindings`, every finding the data
+ * earns against its declared fields. `rules.js` owns the public `validate`: it
+ * runs the definition's verbs, hands the requiredness they decided back here,
+ * and adds the cross-field findings on top. The split is a dependency, not a
+ * layer: only the rules engine knows whether a field is visible at all, and a
+ * finding about a hidden field is noise.
  *
  * ── Order ───────────────────────────────────────────────────────────────────
  *
@@ -41,8 +41,12 @@
  * `minLength` on a number answers a question nobody asked.
  */
 
+import { DefinitionError } from "./errors.js";
 import { checkFormat, formatNames, hasFormat } from "./formats.js";
+import { MAX_PATTERN_LENGTH } from "./limits.js";
 import { DEFAULT_LOCALE, resolveMessage } from "./messages.js";
+
+export { DefinitionError, MAX_PATTERN_LENGTH };
 
 /** The definition format this module implements. */
 export const DEFINITION_VERSION = "1";
@@ -67,34 +71,11 @@ export const DEFINITION_VERSION = "1";
  */
 
 /**
- * @typedef {object} Verdict
- * @property {boolean} valid
- * @property {Finding[]} findings
- * @property {Record<string, unknown>} computed filled by 1.1B-02
- * @property {Record<string, boolean>} visible filled by 1.1B-02
- * @property {Record<string, boolean>} required filled by 1.1B-02
- */
-
-/**
- * Thrown for anything wrong with the *definition* — an unknown keyword, a bad
- * type name, an uncompilable pattern. Never thrown for bad *data*: that is what
- * findings are for. `path` names the place in the definition, so the message is
- * actionable without a stack trace.
- */
-export class DefinitionError extends Error {
-  /** @param {string} message @param {string} [path] */
-  constructor(message, path) {
-    super(`@faqir-ui/rules: ${message}`);
-    this.name = "DefinitionError";
-    /** @type {string | undefined} */
-    this.path = path;
-  }
-}
-
-/**
  * A definition with every regex compiled, every property map built and every
  * required path resolved. Produced by `compile`, accepted by `validate` and
- * `coerce` in place of a raw definition so a hot caller pays for it once.
+ * `coerce` in place of a raw definition so a hot caller pays for it once. The
+ * verbs in `rules` are compiled by `rules.js`, which memoises that work against
+ * this instance.
  */
 export class CompiledDefinition {
   /**
@@ -110,7 +91,7 @@ export class CompiledDefinition {
     this.required = required;
     this.messages = messages;
     this.defaultLocale = defaultLocale;
-    /** Handed to 1.1B-02 untouched. */
+    /** The verbs, as authored; `rules.js` compiles and memoises them. */
     this.rules = rules;
   }
 }
@@ -138,14 +119,6 @@ const FIELD_KEYS = {
 
 const NUMERIC_KEYWORDS = ["minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum", "multipleOf"];
 
-/**
- * A `pattern` longer than this is refused at compile time. A regex is the one
- * keyword whose *cost* is author-controlled, and a definition is often
- * user-supplied data one layer up; a bound here is cheaper than a bound on
- * every subject string.
- */
-export const MAX_PATTERN_LENGTH = 1000;
-
 /** `multipleOf` on IEEE doubles: 0.3 / 0.1 is 2.9999999999999996, not 3. */
 const MULTIPLE_OF_EPSILON = 1e-9;
 
@@ -156,7 +129,7 @@ function isRecord(value) {
 
 /** `a[0].b` and `a.0.b` are the same path; the first is what HTML `name` uses. */
 /** @param {string} path */
-function normalizePath(path) {
+export function normalizePath(path) {
   return path.replace(/\[(\d+)\]/g, ".$1");
 }
 
@@ -172,7 +145,7 @@ function splitPath(path) {
  *
  * @param {unknown} data @param {string} path @returns {unknown}
  */
-function getPath(data, path) {
+export function getPath(data, path) {
   /** @type {unknown} */
   let current = data;
   let rest = path;
@@ -479,7 +452,7 @@ export function compile(definition) {
  *
  * @param {unknown} value
  */
-function isMissing(value) {
+export function isMissing(value) {
   if (value === undefined || value === null) return true;
   if (typeof value === "string" && value.length === 0) return true;
   if (Array.isArray(value) && value.length === 0) return true;
@@ -653,15 +626,18 @@ function checkValue(field, value, path, required, ctx) {
 }
 
 /**
- * The verdict for `data` under `definition`.
+ * The shape half of a verdict: every finding `data` earns against the declared
+ * fields, in definition order. `rules.js` owns the public `validate`, which
+ * calls this and then adds the cross-field half — the split exists so that the
+ * rules engine can hand in the requiredness its `require` verbs decided, which
+ * only it knows.
  *
- * @param {unknown} definition a definition, or the result of `compile`
+ * @param {CompiledDefinition} compiled
  * @param {unknown} data
- * @param {{ locale?: string }} [options]
- * @returns {Verdict}
+ * @param {{ locale?: string, required?: Set<string> }} [options]
+ * @returns {Finding[]}
  */
-export function validate(definition, data, options) {
-  const compiled = compile(definition);
+export function shapeFindings(compiled, data, options) {
   /** @type {CheckContext} */
   const ctx = {
     findings: [],
@@ -669,20 +645,15 @@ export function validate(definition, data, options) {
     locale: options?.locale,
     defaultLocale: compiled.defaultLocale,
   };
+  const extra = options?.required;
 
   for (const [path, field] of compiled.fields) {
-    const required = field.selfRequired === true || compiled.required.has(path);
+    const required = field.selfRequired === true || compiled.required.has(path) ||
+      (extra !== undefined && extra.has(path));
     checkValue(field, getPath(data, path), path, required, ctx);
   }
 
-  return {
-    valid: ctx.findings.length === 0,
-    findings: ctx.findings,
-    // 1.1B-02 fills these. Present and empty so the verdict shape never moves.
-    computed: {},
-    visible: {},
-    required: {},
-  };
+  return ctx.findings;
 }
 
 // ── Coercion ────────────────────────────────────────────────────────────────

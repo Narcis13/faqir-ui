@@ -21,14 +21,23 @@
  *   const data = coerce(def, Object.fromEntries(new FormData(form)));
  *   const { valid, findings } = validate(def, data);
  *
- * This release ships the **shape** half — the JSON Schema 2020-12 subset, the
- * formats registry, the message chain and coercion. `rules` is accepted in a
- * definition and ignored; 1.1B-02 gives it meaning and fills the verdict's
- * `visible`, `required` and `computed` maps, which are present and empty here
- * so that consumers can be written against the final shape today.
+ * A definition also carries `rules` — the six verbs (`show`, `require`,
+ * `validate`, a remote `validate`, `compute`, `jump`) over a JSONLogic subset,
+ * which is what fills the verdict's `computed`, `visible`, `required` and
+ * `next` maps:
  *
- * See `README.md` for the definition format and `tests/golden/` for the corpus
- * that pins every verdict in this file.
+ *   const definition = {
+ *     version: "1",
+ *     fields: { start: { type: "string", format: "date" },
+ *               end:   { type: "string", format: "date" } },
+ *     rules: [
+ *       { id: "end-after-start", validate: { "date": [{ var: "start" }, "<", { var: "end" }] },
+ *         path: "end", message: "The end date must come after the start date." },
+ *     ],
+ *   };
+ *
+ * See `README.md` for the definition format, the operators and the verbs, and
+ * `tests/golden/` for the corpus that pins every verdict in this package.
  */
 
 export {
@@ -37,9 +46,30 @@ export {
   DefinitionError,
   MAX_PATTERN_LENGTH,
   coerce,
-  compile,
-  validate,
 } from "./shape.js";
+
+export {
+  REMOTE,
+  RULE_VERBS,
+  compile,
+  evaluate,
+  validate,
+  validateAsync,
+} from "./rules.js";
+
+export {
+  DATE_COMPARATORS,
+  LOGIC_OPS,
+  evaluateLogic,
+  parseInstant,
+  truthy,
+} from "./logic.js";
+
+export {
+  MAX_LOGIC_DEPTH,
+  MAX_LOGIC_NODES,
+  MAX_REGEX_SUBJECT_LENGTH,
+} from "./limits.js";
 
 export {
   BUILT_IN_FORMATS,
@@ -52,6 +82,7 @@ export {
 export {
   DEFAULT_LOCALE,
   DEFAULT_MESSAGES,
+  RULE_MESSAGES,
   SHAPE_RULES,
   interpolate,
   resolveMessage,

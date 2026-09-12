@@ -9,7 +9,7 @@
 
 import { describe, expect, it } from "bun:test";
 import { coerce, validate } from "../src/index.js";
-import { loadCorpus } from "./corpus";
+import { expectedVerdict, loadCorpus } from "./corpus";
 
 const CORPUS = loadCorpus();
 
@@ -41,21 +41,18 @@ describe("@faqir-ui/rules golden corpus", () => {
       }
 
       const verdict = validate(testCase.definition, data, { locale: testCase.locale });
-      expect(verdict).toEqual({
-        valid: testCase.expected.valid,
-        findings: testCase.expected.findings,
-        // 1.1B-02's half of the verdict. Pinned empty so the day it fills is a
-        // deliberate corpus change and not an unnoticed shape drift.
-        computed: {},
-        visible: {},
-        required: {},
-      });
+      // The whole verdict, both halves. A case that says nothing about the
+      // rules maps is asserting they are empty — so a rule leaking into a
+      // shape-only case is a failure, not a silent extra key.
+      expect(verdict).toEqual(expectedVerdict(testCase));
     });
   }
 
-  it("agrees with itself: `valid` is exactly `findings.length === 0`", () => {
+  it("agrees with itself: `valid` means no findings and nothing left to check", () => {
     for (const testCase of CORPUS) {
-      expect(testCase.expected.valid, testCase.name).toBe(testCase.expected.findings.length === 0);
+      const expected = expectedVerdict(testCase);
+      expect(expected.valid, testCase.name)
+        .toBe(expected.findings.length === 0 && expected.pending.length === 0);
     }
   });
 

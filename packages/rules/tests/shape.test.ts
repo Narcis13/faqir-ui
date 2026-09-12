@@ -491,12 +491,15 @@ describe("messages", () => {
 });
 
 describe("the verdict's shape", () => {
-  it("is the full 1.1 shape from the first release, with the rules half empty", () => {
+  it("carries both halves, and a definition with no rules leaves the rules half empty", () => {
     const verdict = validate(oneField({ type: "string" }), { value: "ok" });
-    expect(Object.keys(verdict).sort()).toEqual(["computed", "findings", "required", "valid", "visible"]);
+    expect(Object.keys(verdict).sort())
+      .toEqual(["computed", "findings", "next", "pending", "required", "valid", "visible"]);
     expect(verdict.computed).toEqual({});
     expect(verdict.visible).toEqual({});
     expect(verdict.required).toEqual({});
+    expect(verdict.next).toEqual({});
+    expect(verdict.pending).toEqual([]);
   });
 
   it("gives every finding a path, a rule, a message and params", () => {

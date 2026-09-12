@@ -31,6 +31,9 @@ process.stdout.write(JSON.stringify({
     // What separates the two runs: the test process has happy-dom registered
     // globally by `tests/setup.ts`; a bare `bun <file>` has nothing of the sort.
     hasDom: typeof globalThis.document !== "undefined" && typeof globalThis.window !== "undefined",
+    // …and the caller runs this child in a different time zone, so that the
+    // `date` operator's zone-independence is proved rather than assumed.
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   },
   results,
 }));

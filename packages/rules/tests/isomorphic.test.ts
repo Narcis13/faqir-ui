@@ -14,7 +14,9 @@
 //   2. **No host coupling, by execution.** The whole golden corpus is run in two
 //      realms and diffed: this process, where `tests/setup.ts` has registered
 //      happy-dom's `Window` globally, and a bare `bun` child with no preload and
-//      therefore no DOM at all. Identical output, case by case.
+//      therefore no DOM at all — and in a different time zone, which is what
+//      proves the `date` operator reads a zoneless timestamp as UTC rather than
+//      as wherever the process happens to be. Identical output, case by case.
 
 import { describe, expect, it } from "bun:test";
 import { readFileSync, readdirSync } from "node:fs";
@@ -43,7 +45,10 @@ function executable(source: string): string {
 
 describe("@faqir-ui/rules is isomorphic by construction", () => {
   it("ships the modules the package promises", () => {
-    expect(SOURCES).toEqual(["formats.js", "index.js", "messages.js", "shape.js"]);
+    expect(SOURCES).toEqual([
+      "errors.js", "formats.js", "index.js", "limits.js",
+      "logic.js", "messages.js", "rules.js", "shape.js",
+    ]);
   });
 
   for (const file of SOURCES) {
@@ -61,8 +66,12 @@ describe("@faqir-ui/rules is isomorphic by construction", () => {
       const source = readFileSync(join(SRC_DIR, file), "utf8");
       // Comments are stripped first: the header of `index.js` shows the usage
       // example, whose `from "@faqir-ui/rules"` is documentation, not an import.
-      const specifiers = [...stripComments(source).matchAll(/(?:from|import|require\()\s*["']([^"']+)["']/g)]
-        .map((match) => match[1]);
+      // The lookbehind keeps a *string* ending in one of these words out of it —
+      // `["id", "jump", "from", "when"]` is a key list, not an import of `, `.
+      const importRe =
+        /(?<!["'\w])(?:from|import)\s+["']([^"']+)["']|(?<!["'\w])(?:import|require)\s*\(\s*["']([^"']+)["']/g;
+      const specifiers = [...stripComments(source).matchAll(importRe)]
+        .map((match) => match[1] ?? match[2]);
       for (const specifier of specifiers) {
         expect(specifier, `${file} imports ${specifier}`).toMatch(/^\.\/[a-z-]+\.js$/);
       }
@@ -111,21 +120,27 @@ describe("@faqir-ui/rules gives one answer in every realm", () => {
       };
     });
 
-    // Realm B: a bare `bun <file>`. No bunfig preload applies to a run like
-    // this, so nothing has registered a DOM — which the child reports back and
-    // this test asserts, so the comparison cannot quietly become A against A.
+    // Realm B: a bare `bun <file>`, in another time zone. No bunfig preload
+    // applies to a run like this, so nothing has registered a DOM — which the
+    // child reports back and this test asserts, so the comparison cannot
+    // quietly become A against A.
+    const hostZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const childZone = hostZone === "Asia/Tokyo" ? "America/Los_Angeles" : "Asia/Tokyo";
     const child = runSync("bun", [RUNNER], {
       cwd: ROOT,
       encoding: "utf8",
       timeout: SPAWN_TIMEOUT.CLI,
+      env: { ...process.env, TZ: childZone },
     });
     expect(child.status, child.stderr).toBe(0);
     const there = JSON.parse(child.stdout) as {
-      realm: { hasDom: boolean };
+      realm: { hasDom: boolean; timeZone: string };
       results: typeof here;
     };
 
     expect(there.realm.hasDom).toBe(false);
+    expect(there.realm.timeZone).toBe(childZone);
+    expect(there.realm.timeZone).not.toBe(hostZone);
     expect(there.results).toHaveLength(here.length);
     // Compare case by case: a whole-array diff on 90-odd verdicts names the
     // array, where this names the case.

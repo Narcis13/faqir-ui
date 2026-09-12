@@ -2,7 +2,7 @@
   "$schema": "./state.schema.md",
   "plan": "FAQIR-PLAN-1.1.md",
   "current": null,
-  "last_completed": "1.1B-01",
+  "last_completed": "1.1B-02",
   "history": [
     {
       "id": "1.1A-01",
@@ -135,6 +135,12 @@
       "completed": "2026-09-12",
       "commit": "f206c8c",
       "summary": "@faqir-ui/rules: the zero-dependency, isomorphic shape validator \u2014 closed JSON Schema subset, nine format checkers, the message chain shared with faqir-validate, and a coercion pass that un-flattens the dotted names forms emit. A 93-case authored golden corpus is replayed in a happy-dom realm and in plain Bun and diffed case by case. Also reconciled the 14 typecheck errors inherited from 1.1A-20, output-neutrally."
+    },
+    {
+      "id": "1.1B-02",
+      "completed": "2026-09-12",
+      "commit": "PENDING",
+      "summary": "The verbs and the logic under them. logic.js implements the 31-operator JSONLogic subset plus the two Faqir ops (date, regex) and refuses everything else by name; conformance is run, not claimed \u2014 the public suite is vendored (tests/vendor/jsonlogic-tests.json, SHA-256 and provenance recorded) and its 278 vectors partitioned: 249 implementable ones each get a case and must match, 29 naming map/filter/reduce/merge/?: must be refused with an error naming the operator, both halves asserted non-empty so nothing drifts into the ignored bucket. rules.js adds the five verbs with one documented pass order \u2014 computes in dependency order (the DAG comes from literal var paths, sorted once at compile time, a cycle naming its ids), then show (AND) and require (OR), then shape validation with that requiredness folded in, then hidden-field suppression by path prefix, then cross-field rules in document order, then jump as { from: to }. Two decisions carry the no-silent-failure invariant: a cross-field rule is SKIPPED while its own declared field is blank (required is the rule that should complain) but always runs on an undeclared path; and sync validate cannot run remote rules and does not pretend to \u2014 their ids come back in the verdict's new `pending`, a pending verdict is not valid, and validateAsync throws rather than skipping when no resolver was given, with a rejection or any non-verdict answer becoming a remote-error finding. The verdict gained `next` and `pending`; the corpus went 93 \u2192 136 cases (golden/rules.json is 41, authored not captured). DefinitionError moved to errors.js and the bounds to limits.js so logic/rules can report without importing the shape validator; shape.js's validate became shapeFindings and rules.js owns the public compile/validate. The isomorphism gate now runs the bare-bun child under a different TZ, which is what proves date parses ISO 8601 itself rather than through Date.parse \u2014 and its import scan needed a lookbehind, since [\"id\", \"jump\", \"from\", \"when\"] was matching as an import of \", \" (re-proved non-vacuous by planting a node:fs import). 360 new tests; full suite 6396 pass / 12 skip (unchanged) / 0 fail."
     }
   ],
   "note": "Pointer file for the /faqir-plan slash command. FAQIR-PLAN-1.1.md status cells (\u2b1c/\u2705) are the source of truth; this file records the cross-session cursor and a per-task log. Do not hand-edit `current` while a session is running. The 1.0 plan's cursor (61 history entries, phases v0.3\u20131.0) is archived unchanged at state-1.0.json."

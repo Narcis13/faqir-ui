@@ -1,0 +1,641 @@
+[
+  {
+    "name": "show: a hidden field's findings go with it",
+    "definition": {
+      "version": "1",
+      "fields": { "plan": { "type": "string" }, "seats": { "type": "integer", "minimum": 1, "required": true } },
+      "rules": [{ "id": "seats-for-teams", "show": "seats", "when": { "==": [{ "var": "plan" }, "team"] } }]
+    },
+    "data": { "plan": "solo" },
+    "expected": { "valid": true, "findings": [], "visible": { "seats": false } }
+  },
+  {
+    "name": "show: the same field, shown, reports as usual",
+    "definition": {
+      "version": "1",
+      "fields": { "plan": { "type": "string" }, "seats": { "type": "integer", "minimum": 1, "required": true } },
+      "rules": [{ "id": "seats-for-teams", "show": "seats", "when": { "==": [{ "var": "plan" }, "team"] } }]
+    },
+    "data": { "plan": "team" },
+    "expected": {
+      "valid": false,
+      "visible": { "seats": true },
+      "findings": [
+        { "path": "seats", "rule": "required", "message": "This field is required.", "params": {} }
+      ]
+    }
+  },
+  {
+    "name": "show: two rules on one path AND together — either may hide it",
+    "definition": {
+      "version": "1",
+      "fields": { "role": { "type": "string" }, "region": { "type": "string" }, "audit": { "type": "string" } },
+      "rules": [
+        { "id": "audit-for-admins", "show": "audit", "when": { "==": [{ "var": "role" }, "admin"] } },
+        { "id": "audit-in-eu", "show": "audit", "when": { "==": [{ "var": "region" }, "eu"] } }
+      ]
+    },
+    "data": { "role": "admin", "region": "us" },
+    "expected": { "valid": true, "findings": [], "visible": { "audit": false } }
+  },
+  {
+    "name": "show: hiding a parent hides what is nested inside it",
+    "definition": {
+      "version": "1",
+      "fields": {
+        "ship": { "type": "boolean" },
+        "address": { "type": "object", "properties": { "city": { "type": "string", "required": true } } }
+      },
+      "rules": [{ "id": "address-when-shipping", "show": "address", "when": { "var": "ship" } }]
+    },
+    "data": { "ship": false, "address": {} },
+    "expected": { "valid": true, "findings": [], "visible": { "address": false } }
+  },
+  {
+    "name": "require: a condition that holds makes the field required",
+    "definition": {
+      "version": "1",
+      "fields": { "kind": { "type": "string" }, "vat": { "type": "string", "minLength": 4 } },
+      "rules": [{ "id": "vat-for-companies", "require": "vat", "when": { "==": [{ "var": "kind" }, "company"] } }]
+    },
+    "data": { "kind": "company" },
+    "expected": {
+      "valid": false,
+      "required": { "vat": true },
+      "findings": [
+        { "path": "vat", "rule": "required", "message": "This field is required.", "params": {} }
+      ]
+    }
+  },
+  {
+    "name": "require: a condition that does not hold leaves the field optional",
+    "definition": {
+      "version": "1",
+      "fields": { "kind": { "type": "string" }, "vat": { "type": "string", "minLength": 4 } },
+      "rules": [{ "id": "vat-for-companies", "require": "vat", "when": { "==": [{ "var": "kind" }, "company"] } }]
+    },
+    "data": { "kind": "person" },
+    "expected": { "valid": true, "findings": [], "required": { "vat": false } }
+  },
+  {
+    "name": "require: two rules on one path OR together — either may demand it",
+    "definition": {
+      "version": "1",
+      "fields": { "kind": { "type": "string" }, "invoice": { "type": "boolean" }, "vat": { "type": "string" } },
+      "rules": [
+        { "id": "vat-for-companies", "require": "vat", "when": { "==": [{ "var": "kind" }, "company"] } },
+        { "id": "vat-for-invoices", "require": "vat", "when": { "var": "invoice" } }
+      ]
+    },
+    "data": { "kind": "person", "invoice": true },
+    "expected": {
+      "valid": false,
+      "required": { "vat": true },
+      "findings": [
+        { "path": "vat", "rule": "required", "message": "This field is required.", "params": {} }
+      ]
+    }
+  },
+  {
+    "name": "require: a hidden field is never required",
+    "definition": {
+      "version": "1",
+      "fields": { "vat": { "type": "string" } },
+      "rules": [
+        { "id": "hide-vat", "show": "vat", "when": false },
+        { "id": "need-vat", "require": "vat", "when": true }
+      ]
+    },
+    "data": {},
+    "expected": { "valid": true, "findings": [], "visible": { "vat": false }, "required": { "vat": false } }
+  },
+  {
+    "name": "compute: a product lands in `computed`",
+    "definition": {
+      "version": "1",
+      "fields": { "qty": { "type": "integer" }, "price": { "type": "number" }, "total": { "type": "number" } },
+      "rules": [{ "id": "total", "compute": "total", "value": { "*": [{ "var": "qty" }, { "var": "price" }] } }]
+    },
+    "data": { "qty": 3, "price": 2.5 },
+    "expected": { "valid": true, "findings": [], "computed": { "total": 7.5 } }
+  },
+  {
+    "name": "compute: a chain runs in dependency order, not in document order",
+    "definition": {
+      "version": "1",
+      "fields": {
+        "qty": { "type": "integer" }, "price": { "type": "number" },
+        "subtotal": { "type": "number" }, "total": { "type": "number" }
+      },
+      "rules": [
+        { "id": "total", "compute": "total", "value": { "+": [{ "var": "subtotal" }, 5] } },
+        { "id": "subtotal", "compute": "subtotal", "value": { "*": [{ "var": "qty" }, { "var": "price" }] } }
+      ]
+    },
+    "data": { "qty": 2, "price": 10 },
+    "expected": { "valid": true, "findings": [], "computed": { "subtotal": 20, "total": 25 } }
+  },
+  {
+    "name": "compute: a computed value is validated like any other",
+    "definition": {
+      "version": "1",
+      "fields": {
+        "qty": { "type": "integer" }, "price": { "type": "number" },
+        "total": { "type": "number", "maximum": 100 }
+      },
+      "rules": [{ "id": "total", "compute": "total", "value": { "*": [{ "var": "qty" }, { "var": "price" }] } }]
+    },
+    "data": { "qty": 30, "price": 5 },
+    "expected": {
+      "valid": false,
+      "computed": { "total": 150 },
+      "findings": [
+        { "path": "total", "rule": "maximum", "message": "Value is too large.", "params": { "limit": 100 } }
+      ]
+    }
+  },
+  {
+    "name": "compute: a computed value can drive a `show`",
+    "definition": {
+      "version": "1",
+      "fields": {
+        "qty": { "type": "integer" }, "bulk": { "type": "boolean" },
+        "bulk_contact": { "type": "string", "required": true }
+      },
+      "rules": [
+        { "id": "bulk", "compute": "bulk", "value": { ">=": [{ "var": "qty" }, 100] } },
+        { "id": "contact-for-bulk", "show": "bulk_contact", "when": { "var": "bulk" } }
+      ]
+    },
+    "data": { "qty": 5 },
+    "expected": { "valid": true, "findings": [], "computed": { "bulk": false }, "visible": { "bulk_contact": false } }
+  },
+  {
+    "name": "compute: the same definition, over the threshold",
+    "definition": {
+      "version": "1",
+      "fields": {
+        "qty": { "type": "integer" }, "bulk": { "type": "boolean" },
+        "bulk_contact": { "type": "string", "required": true }
+      },
+      "rules": [
+        { "id": "bulk", "compute": "bulk", "value": { ">=": [{ "var": "qty" }, 100] } },
+        { "id": "contact-for-bulk", "show": "bulk_contact", "when": { "var": "bulk" } }
+      ]
+    },
+    "data": { "qty": 500 },
+    "expected": {
+      "valid": false,
+      "computed": { "bulk": true },
+      "visible": { "bulk_contact": true },
+      "findings": [
+        { "path": "bulk_contact", "rule": "required", "message": "This field is required.", "params": {} }
+      ]
+    }
+  },
+  {
+    "name": "jump: the first rule whose condition holds wins for a page",
+    "definition": {
+      "version": "1",
+      "fields": { "amount": { "type": "number" } },
+      "rules": [
+        { "id": "to-review", "jump": "review", "from": "amount", "when": { ">": [{ "var": "amount" }, 1000] } },
+        { "id": "to-done", "jump": "done", "from": "amount" }
+      ]
+    },
+    "data": { "amount": 5000 },
+    "expected": { "valid": true, "findings": [], "next": { "amount": "review" } }
+  },
+  {
+    "name": "jump: a rule with no condition is the page's default next",
+    "definition": {
+      "version": "1",
+      "fields": { "amount": { "type": "number" } },
+      "rules": [
+        { "id": "to-review", "jump": "review", "from": "amount", "when": { ">": [{ "var": "amount" }, 1000] } },
+        { "id": "to-done", "jump": "done", "from": "amount" }
+      ]
+    },
+    "data": { "amount": 50 },
+    "expected": { "valid": true, "findings": [], "next": { "amount": "done" } }
+  },
+  {
+    "name": "remote: a sync verdict leaves the rule pending, and pending is not valid",
+    "definition": {
+      "version": "1",
+      "fields": { "email": { "type": "string", "format": "email" } },
+      "rules": [{ "id": "email-free", "validate": "remote", "path": "email", "remote": "/api/email-free" }]
+    },
+    "data": { "email": "ada@example.com" },
+    "expected": { "valid": false, "findings": [], "pending": ["email-free"] }
+  },
+  {
+    "name": "remote: a hidden field's remote rule is not pending — there is nothing to ask about",
+    "definition": {
+      "version": "1",
+      "fields": { "subscribe": { "type": "boolean" }, "email": { "type": "string", "format": "email" } },
+      "rules": [
+        { "id": "email-when-subscribing", "show": "email", "when": { "var": "subscribe" } },
+        { "id": "email-free", "validate": "remote", "path": "email", "remote": "/api/email-free" }
+      ]
+    },
+    "data": { "email": "ada@example.com" },
+    "expected": { "valid": true, "findings": [], "visible": { "email": false } }
+  },
+  {
+    "name": "remote: a blank field's remote rule is not pending either",
+    "definition": {
+      "version": "1",
+      "fields": { "email": { "type": "string", "format": "email" } },
+      "rules": [{ "id": "email-free", "validate": "remote", "path": "email", "remote": "/api/email-free" }]
+    },
+    "data": {},
+    "expected": { "valid": true, "findings": [] }
+  },
+  {
+    "name": "validate: a cross-field rule is skipped while its own field is blank",
+    "definition": {
+      "version": "1",
+      "fields": { "start": { "type": "string", "format": "date" }, "end": { "type": "string", "format": "date" } },
+      "rules": [
+        { "id": "end-after-start", "validate": { "date": [{ "var": "start" }, "<", { "var": "end" }] },
+          "path": "end", "message": "The end date must come after the start date." }
+      ]
+    },
+    "data": { "start": "2026-01-01" },
+    "expected": { "valid": true, "findings": [] }
+  },
+  {
+    "name": "validate: the `date` operator compares two ISO dates",
+    "definition": {
+      "version": "1",
+      "fields": { "start": { "type": "string", "format": "date" }, "end": { "type": "string", "format": "date" } },
+      "rules": [
+        { "id": "end-after-start", "validate": { "date": [{ "var": "start" }, "<", { "var": "end" }] },
+          "path": "end", "message": "The end date must come after the start date." }
+      ]
+    },
+    "data": { "start": "2026-05-01", "end": "2026-04-01" },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "end", "rule": "end-after-start",
+          "message": "The end date must come after the start date.", "params": {} }
+      ]
+    }
+  },
+  {
+    "name": "validate: a date comparison against something that is not a date is false, and the shape says why",
+    "definition": {
+      "version": "1",
+      "fields": { "when": { "type": "string", "format": "date" } },
+      "rules": [
+        { "id": "after-launch", "validate": { "date": [{ "var": "when" }, ">=", "2026-01-01"] },
+          "path": "when", "message": "Pick a date on or after 1 January 2026." }
+      ]
+    },
+    "data": { "when": "sometime in spring" },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "when", "rule": "format", "message": "Please enter a valid value.", "params": { "format": "date" } },
+        { "path": "when", "rule": "after-launch", "message": "Pick a date on or after 1 January 2026.", "params": {} }
+      ]
+    }
+  },
+  {
+    "name": "validate: a rule whose path is not a declared field always runs",
+    "definition": {
+      "version": "1",
+      "fields": { "password": { "type": "string" }, "confirm": { "type": "string" } },
+      "rules": [
+        { "id": "match", "validate": { "==": [{ "var": "password" }, { "var": "confirm" }] },
+          "path": "form", "message": "The two passwords must match." }
+      ]
+    },
+    "data": { "password": "hunter2" },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "form", "rule": "match", "message": "The two passwords must match.", "params": {} }
+      ]
+    }
+  },
+  {
+    "name": "validate: the `regex` operator checks a shape the format registry has no name for",
+    "definition": {
+      "version": "1",
+      "fields": { "code": { "type": "string" } },
+      "rules": [
+        { "id": "code-shape", "validate": { "regex": ["^[A-Z]{2}\\d{3}$", { "var": "code" }] },
+          "path": "code", "message": "A code is two letters and three digits." }
+      ]
+    },
+    "data": { "code": "AB12" },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "code", "rule": "code-shape", "message": "A code is two letters and three digits.", "params": {} }
+      ]
+    }
+  },
+  {
+    "name": "logic: `var` takes a default for a path the data does not have",
+    "definition": {
+      "version": "1",
+      "fields": { "tier": { "type": "string" }, "discount": { "type": "number" } },
+      "rules": [{ "id": "discount", "compute": "discount", "value": { "var": ["rate", 0] } }]
+    },
+    "data": { "tier": "free" },
+    "expected": { "valid": true, "findings": [], "computed": { "discount": 0 } }
+  },
+  {
+    "name": "logic: `and` with a negation decides a visibility",
+    "definition": {
+      "version": "1",
+      "fields": {
+        "age": { "type": "integer" }, "emancipated": { "type": "boolean" },
+        "guardian": { "type": "string", "required": true }
+      },
+      "rules": [
+        { "id": "guardian-for-minors", "show": "guardian",
+          "when": { "and": [{ "<": [{ "var": "age" }, 18] }, { "!": [{ "var": "emancipated" }] }] } }
+      ]
+    },
+    "data": { "age": 15 },
+    "expected": {
+      "valid": false,
+      "visible": { "guardian": true },
+      "findings": [
+        { "path": "guardian", "rule": "required", "message": "This field is required.", "params": {} }
+      ]
+    }
+  },
+  {
+    "name": "logic: the same `and`, with the second half now false",
+    "definition": {
+      "version": "1",
+      "fields": {
+        "age": { "type": "integer" }, "emancipated": { "type": "boolean" },
+        "guardian": { "type": "string", "required": true }
+      },
+      "rules": [
+        { "id": "guardian-for-minors", "show": "guardian",
+          "when": { "and": [{ "<": [{ "var": "age" }, 18] }, { "!": [{ "var": "emancipated" }] }] } }
+      ]
+    },
+    "data": { "age": 15, "emancipated": true },
+    "expected": { "valid": true, "findings": [], "visible": { "guardian": false } }
+  },
+  {
+    "name": "logic: `if` with an else-if chain picks a band",
+    "definition": {
+      "version": "1",
+      "fields": { "score": { "type": "integer" }, "band": { "type": "string" } },
+      "rules": [
+        { "id": "band", "compute": "band",
+          "value": { "if": [{ ">=": [{ "var": "score" }, 90] }, "gold", { ">=": [{ "var": "score" }, 50] }, "silver", "bronze"] } }
+      ]
+    },
+    "data": { "score": 70 },
+    "expected": { "valid": true, "findings": [], "computed": { "band": "silver" } }
+  },
+  {
+    "name": "logic: `in` over a list decides a visibility",
+    "definition": {
+      "version": "1",
+      "fields": { "country": { "type": "string" }, "iban": { "type": "string", "format": "iban" } },
+      "rules": [{ "id": "iban-in-sepa", "show": "iban", "when": { "in": [{ "var": "country" }, ["de", "fr", "nl"]] } }]
+    },
+    "data": { "country": "us" },
+    "expected": { "valid": true, "findings": [], "visible": { "iban": false } }
+  },
+  {
+    "name": "logic: `in` over a string is a substring check",
+    "definition": {
+      "version": "1",
+      "fields": { "email": { "type": "string", "format": "email" } },
+      "rules": [
+        { "id": "no-plus-addressing", "validate": { "!": [{ "in": ["+", { "var": "email" }] }] },
+          "path": "email", "message": "Plus addressing is not accepted here." }
+      ]
+    },
+    "data": { "email": "ada+news@example.com" },
+    "expected": {
+      "valid": false,
+      "findings": [
+        { "path": "email", "rule": "no-plus-addressing",
+          "message": "Plus addressing is not accepted here.", "params": {} }
+      ]
+    }
+  },
+  {
+    "name": "logic: `missing` answers with a list, and an empty list is falsy",
+    "definition": {
+      "version": "1",
+      "fields": {
+        "vin": { "type": "string" }, "apr": { "type": "number" }, "incomplete": { "type": "boolean" }
+      },
+      "rules": [
+        { "id": "incomplete", "compute": "incomplete", "value": { "if": [{ "missing": ["vin", "apr"] }, true, false] } }
+      ]
+    },
+    "data": { "vin": "1M8GDM9AXKP042788" },
+    "expected": { "valid": true, "findings": [], "computed": { "incomplete": true } }
+  },
+  {
+    "name": "logic: `missing_some` is satisfied by one of three ways to be reached",
+    "definition": {
+      "version": "1",
+      "fields": {
+        "phone": { "type": "string" }, "email": { "type": "string" },
+        "telegram": { "type": "string" }, "contactable": { "type": "boolean" }
+      },
+      "rules": [
+        { "id": "contactable", "compute": "contactable",
+          "value": { "!": [{ "missing_some": [1, ["phone", "email", "telegram"]] }] } }
+      ]
+    },
+    "data": { "email": "ada@example.com" },
+    "expected": { "valid": true, "findings": [], "computed": { "contactable": true } }
+  },
+  {
+    "name": "logic: `missing_some` with nothing filled in at all",
+    "definition": {
+      "version": "1",
+      "fields": {
+        "phone": { "type": "string" }, "email": { "type": "string" },
+        "telegram": { "type": "string" }, "contactable": { "type": "boolean" }
+      },
+      "rules": [
+        { "id": "contactable", "compute": "contactable",
+          "value": { "!": [{ "missing_some": [1, ["phone", "email", "telegram"]] }] } }
+      ]
+    },
+    "data": {},
+    "expected": { "valid": true, "findings": [], "computed": { "contactable": false } }
+  },
+  {
+    "name": "logic: `some` scopes its test to each item",
+    "definition": {
+      "version": "1",
+      "fields": {
+        "lines": { "type": "array", "items": { "type": "object", "properties": { "qty": { "type": "integer" } } } },
+        "backordered": { "type": "boolean" }
+      },
+      "rules": [
+        { "id": "backordered", "compute": "backordered",
+          "value": { "some": [{ "var": "lines" }, { "<": [{ "var": "qty" }, 0] }] } }
+      ]
+    },
+    "data": { "lines": [{ "qty": 2 }, { "qty": -1 }] },
+    "expected": { "valid": true, "findings": [], "computed": { "backordered": true } }
+  },
+  {
+    "name": "logic: `all` over an empty list is false — all of nothing is not a pass",
+    "definition": {
+      "version": "1",
+      "fields": {
+        "lines": { "type": "array", "items": { "type": "object", "properties": { "qty": { "type": "integer" } } } },
+        "shippable": { "type": "boolean" }
+      },
+      "rules": [
+        { "id": "shippable", "compute": "shippable",
+          "value": { "all": [{ "var": "lines" }, { ">": [{ "var": "qty" }, 0] }] } }
+      ]
+    },
+    "data": { "lines": [] },
+    "expected": { "valid": true, "findings": [], "computed": { "shippable": false } }
+  },
+  {
+    "name": "logic: `none` over a list that has no offender",
+    "definition": {
+      "version": "1",
+      "fields": {
+        "lines": { "type": "array", "items": { "type": "object", "properties": { "qty": { "type": "integer" } } } },
+        "clean": { "type": "boolean" }
+      },
+      "rules": [
+        { "id": "clean", "compute": "clean", "value": { "none": [{ "var": "lines" }, { "<": [{ "var": "qty" }, 0] }] } }
+      ]
+    },
+    "data": { "lines": [{ "qty": 2 }, { "qty": 1 }] },
+    "expected": { "valid": true, "findings": [], "computed": { "clean": true } }
+  },
+  {
+    "name": "logic: the four arithmetic operators, computed side by side",
+    "definition": {
+      "version": "1",
+      "fields": {
+        "a": { "type": "number" }, "b": { "type": "number" }, "sum": { "type": "number" },
+        "diff": { "type": "number" }, "ratio": { "type": "number" }, "rest": { "type": "number" }
+      },
+      "rules": [
+        { "id": "sum", "compute": "sum", "value": { "+": [{ "var": "a" }, { "var": "b" }] } },
+        { "id": "diff", "compute": "diff", "value": { "-": [{ "var": "a" }, { "var": "b" }] } },
+        { "id": "ratio", "compute": "ratio", "value": { "/": [{ "var": "a" }, { "var": "b" }] } },
+        { "id": "rest", "compute": "rest", "value": { "%": [{ "var": "a" }, { "var": "b" }] } }
+      ]
+    },
+    "data": { "a": 7, "b": 2 },
+    "expected": {
+      "valid": true, "findings": [],
+      "computed": { "sum": 9, "diff": 5, "ratio": 3.5, "rest": 1 }
+    }
+  },
+  {
+    "name": "logic: `max` over indexed paths",
+    "definition": {
+      "version": "1",
+      "fields": { "bids": { "type": "array", "items": { "type": "number" } }, "best": { "type": "number" } },
+      "rules": [
+        { "id": "best", "compute": "best",
+          "value": { "max": [{ "var": "bids.0" }, { "var": "bids.1" }, { "var": "bids.2" }] } }
+      ]
+    },
+    "data": { "bids": [3, 9, 5] },
+    "expected": { "valid": true, "findings": [], "computed": { "best": 9 } }
+  },
+  {
+    "name": "logic: `cat` and `substr` build a string",
+    "definition": {
+      "version": "1",
+      "fields": {
+        "first": { "type": "string" }, "last": { "type": "string" }, "initials": { "type": "string" }
+      },
+      "rules": [
+        { "id": "initials", "compute": "initials",
+          "value": { "cat": [{ "substr": [{ "var": "first" }, 0, 1] }, { "substr": [{ "var": "last" }, 0, 1] }] } }
+      ]
+    },
+    "data": { "first": "Ada", "last": "Lovelace" },
+    "expected": { "valid": true, "findings": [], "computed": { "initials": "AL" } }
+  },
+  {
+    "name": "logic: `==` is loose and `===` is strict, which is why both are here",
+    "definition": {
+      "version": "1",
+      "fields": {
+        "answer": { "type": "string" }, "loose": { "type": "boolean" }, "strict": { "type": "boolean" }
+      },
+      "rules": [
+        { "id": "loose", "compute": "loose", "value": { "==": [{ "var": "answer" }, 1] } },
+        { "id": "strict", "compute": "strict", "value": { "===": [{ "var": "answer" }, 1] } }
+      ]
+    },
+    "data": { "answer": "1" },
+    "expected": { "valid": true, "findings": [], "computed": { "loose": true, "strict": false } }
+  },
+  {
+    "name": "logic: an empty array is falsy, so an empty checkbox group hides its hint",
+    "definition": {
+      "version": "1",
+      "fields": {
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "tag_hint": { "type": "string", "required": true }
+      },
+      "rules": [
+        { "id": "hint-when-tagged", "show": "tag_hint", "when": { "var": "tags" } },
+        { "id": "tagged", "compute": "tagged", "value": { "!!": [{ "var": "tags" }] } }
+      ]
+    },
+    "data": { "tags": [] },
+    "expected": {
+      "valid": true, "findings": [],
+      "visible": { "tag_hint": false },
+      "computed": { "tagged": false }
+    }
+  },
+  {
+    "name": "rules: every map at once — computed drives a require, a rule fails, a remote waits, a page points on",
+    "definition": {
+      "version": "1",
+      "fields": {
+        "qty": { "type": "integer" }, "price": { "type": "number" },
+        "total": { "type": "number" }, "po_number": { "type": "string" },
+        "email": { "type": "string", "format": "email" }
+      },
+      "rules": [
+        { "id": "total", "compute": "total", "value": { "*": [{ "var": "qty" }, { "var": "price" }] } },
+        { "id": "po-for-large-orders", "require": "po_number", "when": { ">": [{ "var": "total" }, 500] } },
+        { "id": "under-credit-limit", "validate": { "<=": [{ "var": "total" }, 900] }, "path": "total",
+          "message": "This order is over your credit limit." },
+        { "id": "email-free", "validate": "remote", "path": "email", "remote": "/api/email-free" },
+        { "id": "to-approval", "jump": "approval", "from": "cart", "when": { ">": [{ "var": "total" }, 500] } }
+      ]
+    },
+    "data": { "qty": 100, "price": 10, "email": "ada@example.com" },
+    "expected": {
+      "valid": false,
+      "computed": { "total": 1000 },
+      "required": { "po_number": true },
+      "next": { "cart": "approval" },
+      "pending": ["email-free"],
+      "findings": [
+        { "path": "po_number", "rule": "required", "message": "This field is required.", "params": {} },
+        { "path": "total", "rule": "under-credit-limit",
+          "message": "This order is over your credit limit.", "params": {} }
+      ]
+    }
+  }
+]

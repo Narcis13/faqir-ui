@@ -68,9 +68,89 @@ export interface RulesDefinition {
   required?: string[];
   messages?: MessageTable;
   defaultLocale?: string;
-  /** Accepted and ignored until 1.1B-02 gives the verbs meaning. */
-  rules?: unknown[];
+  /** The verbs: visibility, requiredness, cross-field checks, computed values, wizard jumps. */
+  rules?: Rule[];
 }
+
+/**
+ * A JSONLogic expression: a literal, an array of expressions, or a one-key
+ * `{ "<op>": <args> }` object. `LOGIC_OPS` lists the operators implemented.
+ */
+export type LogicExpression =
+  | string
+  | number
+  | boolean
+  | null
+  | LogicExpression[]
+  | { [op: string]: unknown };
+
+interface RuleBase {
+  /** Unique in the definition; it is the `rule` a finding reports and the key a message is addressed to. */
+  id: string;
+}
+
+/** `{ show: path, when }` — the field is on screen only while `when` holds. */
+export interface ShowRule extends RuleBase {
+  show: string;
+  when: LogicExpression;
+}
+
+/** `{ require: path, when }` — the field must be filled in while `when` holds. */
+export interface RequireRule extends RuleBase {
+  require: string;
+  when: LogicExpression;
+}
+
+/** `{ validate: logic, path }` — a finding on `path` when the logic is falsy. */
+export interface ValidateRule extends RuleBase {
+  validate: LogicExpression;
+  path: string;
+  /** This rule's own sentence; a `messages` entry still wins over it. */
+  message?: string;
+}
+
+/** `{ validate: "remote", path, remote }` — resolved only by `validateAsync`. */
+export interface RemoteRule extends RuleBase {
+  validate: "remote";
+  path: string;
+  /** A url or a name; the resolver decides what it means. */
+  remote: string;
+  message?: string;
+}
+
+/** `{ compute: path, value }` — a derived value, computed in dependency order. */
+export interface ComputeRule extends RuleBase {
+  compute: string;
+  value: LogicExpression;
+}
+
+/** `{ jump: toPage, from: fromPage, when }` — a wizard's next page. */
+export interface JumpRule extends RuleBase {
+  jump: string;
+  from: string;
+  /** Omitted means unconditional. */
+  when?: LogicExpression;
+}
+
+export type Rule = ShowRule | RequireRule | ValidateRule | RemoteRule | ComputeRule | JumpRule;
+
+/** What a remote resolver is handed. */
+export interface RemoteRuleView {
+  id: string;
+  path: string;
+  remote: string;
+  message?: string;
+}
+
+/**
+ * `true` passes, `false` fails with the rule's message, a string fails with
+ * that message. A rejection — or anything else — is a `remote-error` finding.
+ */
+export type RemoteResolver = (
+  rule: RemoteRuleView,
+  value: unknown,
+  data: unknown,
+) => boolean | string | Promise<boolean | string>;
 
 export interface Finding {
   /** Dotted path of the offending value. */
@@ -84,19 +164,37 @@ export interface Finding {
 }
 
 export interface Verdict {
+  /** No findings, and nothing still to check. */
   valid: boolean;
   findings: Finding[];
-  /** Computed values. Empty until 1.1B-02. */
+  /** What the `compute` verbs produced, by path. */
   computed: Record<string, unknown>;
-  /** Per-path visibility. Empty until 1.1B-02. */
+  /** What the `show` verbs decided, by path. Paths no rule mentions are absent. */
   visible: Record<string, boolean>;
-  /** Per-path requiredness. Empty until 1.1B-02. */
+  /** What the `require` verbs decided, by path. A hidden field is never required. */
   required: Record<string, boolean>;
+  /** `{ <fromPage>: <toPage> }` from the `jump` verbs. */
+  next: Record<string, string>;
+  /** Ids of remote rules that have not run. Sync `validate` leaves them here. */
+  pending: string[];
+}
+
+/** What `evaluate` answers: the verbs' decisions, with nothing validated. */
+export interface RuleState {
+  visible: Record<string, boolean>;
+  required: Record<string, boolean>;
+  computed: Record<string, unknown>;
+  next: Record<string, string>;
 }
 
 export interface ValidateOptions {
   /** Preferred locale for message resolution; falls back to `defaultLocale`. */
   locale?: string;
+}
+
+export interface ValidateAsyncOptions extends ValidateOptions {
+  /** Required when the definition has remote rules; without it `validateAsync` throws. */
+  remote?: RemoteResolver;
 }
 
 /** Anything wrong with the *definition*. Bad data produces findings, not throws. */
@@ -111,21 +209,56 @@ export declare class CompiledDefinition {
   readonly version: DefinitionVersion;
   readonly defaultLocale: string;
   readonly messages: MessageTable;
-  readonly rules: unknown[];
+  readonly rules: Rule[];
 }
 
 export declare const DEFINITION_VERSION: DefinitionVersion;
 export declare const MAX_PATTERN_LENGTH: number;
+export declare const MAX_REGEX_SUBJECT_LENGTH: number;
+export declare const MAX_LOGIC_NODES: number;
+export declare const MAX_LOGIC_DEPTH: number;
+/** The reserved `validate` value that makes a rule remote. */
+export declare const REMOTE: "remote";
+/** The five verbs, in the order the README documents them. */
+export declare const RULE_VERBS: readonly string[];
+/** Every JSONLogic operator implemented; anything else is a `DefinitionError`. */
+export declare const LOGIC_OPS: readonly string[];
+/** The comparators a `date` operator accepts as its middle argument. */
+export declare const DATE_COMPARATORS: readonly string[];
+/** Sentences for findings that come from a rule rather than a field's shape. */
+export declare const RULE_MESSAGES: Readonly<Record<string, string>>;
 
 /** Validate and pre-compile a definition. Idempotent. Throws `DefinitionError`. */
 export declare function compile(definition: RulesDefinition | CompiledDefinition): CompiledDefinition;
 
-/** The verdict for `data` under `definition`. */
+/** The verdict for `data` under `definition`. Remote rules land in `pending`. */
 export declare function validate(
   definition: RulesDefinition | CompiledDefinition,
   data: unknown,
   options?: ValidateOptions,
 ): Verdict;
+
+/** `validate`, with the remote rules resolved. Throws if one needs a resolver and none was given. */
+export declare function validateAsync(
+  definition: RulesDefinition | CompiledDefinition,
+  data: unknown,
+  options?: ValidateAsyncOptions,
+): Promise<Verdict>;
+
+/** What the verbs decide for `data`, with nothing validated. */
+export declare function evaluate(
+  definition: RulesDefinition | CompiledDefinition,
+  data: unknown,
+): RuleState;
+
+/** The value of a JSONLogic expression. Throws `DefinitionError` for an unknown operator. */
+export declare function evaluateLogic(expr: LogicExpression, data: unknown): unknown;
+
+/** JSONLogic truthiness: JavaScript's, except that an empty array is falsy. */
+export declare function truthy(value: unknown): boolean;
+
+/** An ISO 8601 date or date-time as a UTC instant, zone-independent; `null` if it is not one. */
+export declare function parseInstant(value: unknown): number | null;
 
 /** Un-flatten dotted form keys and narrow form strings to the declared types. */
 export declare function coerce(
