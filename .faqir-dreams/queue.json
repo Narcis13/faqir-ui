@@ -1,0 +1,229 @@
+{
+  "version": 1,
+  "briefs": [
+    {
+      "id": "blueprint",
+      "kind": "theme",
+      "brief": "A drafting table at 2am: cyan ink on a gridded ground, everything measured. The 24 shipped themes leave the 190-205 hue band empty and use the grid material twice; nothing at all pairs a mono face with a compact, technical page that is not also a terminal.",
+      "axes_hint": {
+        "accent": "#0e7490",
+        "neutral": "cool",
+        "scheme": "both",
+        "type": { "pairing": "mono", "scale": 1.125, "base": 15 },
+        "material": "grid",
+        "density": "compact",
+        "focus": "inset",
+        "controls": { "input": "underline" }
+      },
+      "added": "2026-09-12",
+      "status": "pending"
+    },
+    {
+      "id": "arcade",
+      "kind": "theme",
+      "brief": "A cabinet in a dark room: magenta light on a mesh of colour, everything a lozenge, motion that overshoots on purpose, text packed tight the way a score panel is. Exactly one shipped theme is dark-only and exactly one is playful, and no theme at all sits between 300 and 350 degrees. The nearest neighbour is candy, which is the same hue family on a soft, roomy, light page — this one is its night shift, and has to read as one.",
+      "axes_hint": {
+        "accent": "#d926a9",
+        "neutral": "tinted",
+        "scheme": "dark",
+        "type": { "pairing": "sans-geometric", "scale": 1.25, "voice": { "weight": "black", "tracking": "wide", "transform": "uppercase" } },
+        "shape": { "radius": "pill" },
+        "material": "mesh",
+        "depth": "glass",
+        "motion": "playful",
+        "density": "compact",
+        "focus": "glow",
+        "contrast": "high",
+        "controls": { "button": "pill", "input": "filled", "checkbox": "round" }
+      },
+      "added": "2026-09-12",
+      "status": "pending"
+    },
+    {
+      "id": "ledger",
+      "kind": "theme",
+      "brief": "A bound accounts book: small type set tight, ruled lines, fields that are underlines rather than boxes. Nothing ships at 15px base — the smallest step in the vocabulary has never been used — and the slab pairing has exactly one theme.",
+      "axes_hint": {
+        "accent": "#8a5a1f",
+        "neutral": "warm",
+        "scheme": "light",
+        "type": { "pairing": "slab", "scale": 1.125, "base": 15 },
+        "shape": { "radius": "sharp", "border": "hairline" },
+        "depth": "flat",
+        "density": "compact",
+        "decoration": { "divider": "dashed", "link": "plain" },
+        "controls": { "input": "underline", "button": "rect" }
+      },
+      "added": "2026-09-12",
+      "status": "pending"
+    },
+    {
+      "id": "mineral",
+      "kind": "theme",
+      "brief": "Cut stone: large calm type on a tinted, grainy ground, corners scooped out rather than rounded off. Every one of the 24 shipped themes has shape.corner round — the other three values have never shipped — and grain has one theme.",
+      "axes_hint": {
+        "accent": "#5b6b5a",
+        "neutral": "tinted",
+        "scheme": "both",
+        "type": { "pairing": "sans-humanist", "scale": 1.25, "base": 18 },
+        "shape": { "radius": "round", "corner": "scoop" },
+        "material": "grain",
+        "depth": "soft",
+        "density": "spacious"
+      },
+      "added": "2026-09-12",
+      "status": "pending"
+    },
+    {
+      "id": "moss",
+      "kind": "theme",
+      "brief": "Damp woodland green, the hue band nothing occupies: the shipped accents jump from 90 degrees to 121 with nothing between. A field notebook — generous, quiet, dotted rules, fields that are underlines. The nearest shipped theme is clinical, which is the same humanist face on a cool, tight, clinical page; this one has to be the warm, slow, roomy version or it is a recolour of it.",
+      "axes_hint": {
+        "accent": "#5c7a29",
+        "neutral": "warm",
+        "scheme": "both",
+        "type": { "pairing": "sans-humanist", "scale": 1.25, "base": 17, "voice": { "weight": "regular", "tracking": "wide" } },
+        "shape": { "radius": "round", "border": "hairline" },
+        "material": "dots",
+        "motion": "minimal",
+        "density": "spacious",
+        "focus": "glow",
+        "decoration": { "divider": "dotted", "link": "plain" },
+        "controls": { "input": "underline", "checkbox": "round" },
+        "depth": "flat"
+      },
+      "added": "2026-09-12",
+      "status": "pending"
+    },
+    {
+      "id": "signal",
+      "kind": "theme",
+      "brief": "A control room annunciator: amber on near-black, hard shadows with no blur, bevelled edges, nothing that moves without being told to. Hard depth ships on one theme and motion none on one; the two have never met.",
+      "axes_hint": {
+        "accent": "#e8a317",
+        "neutral": "cool",
+        "scheme": "dark",
+        "type": { "pairing": "sans-grotesque", "voice": { "weight": "bold", "tracking": "wide" } },
+        "shape": { "radius": "crisp", "corner": "bevel", "border": "regular" },
+        "depth": "hard",
+        "motion": "none",
+        "focus": "bold",
+        "contrast": "high"
+      },
+      "added": "2026-09-12",
+      "status": "pending"
+    },
+    {
+      "id": "vellum",
+      "kind": "theme",
+      "brief": "A page meant to be read for an hour: light only, modern serif at 18px on a warm ground, no shadows, links that stay out of the way. serif-modern has one theme, 18px base has one, and light-only has three — none of them a long-form reading surface.",
+      "axes_hint": {
+        "accent": "#7a4a2b",
+        "neutral": "warm",
+        "scheme": "light",
+        "type": { "pairing": "serif-modern", "scale": 1.333, "base": 18, "voice": { "weight": "regular" } },
+        "shape": { "radius": "crisp", "border": "hairline" },
+        "depth": "flat",
+        "material": "paper",
+        "motion": "minimal",
+        "density": "spacious",
+        "decoration": { "link": "plain" },
+        "document": true
+      },
+      "added": "2026-09-12",
+      "status": "pending"
+    },
+    {
+      "id": "porcelain",
+      "kind": "theme",
+      "brief": "Glazed ceramic: a pale cool page, large calm type, every control pressed into the surface instead of raised off it. Inset depth ships on exactly one theme — neumorph — and that one is a tinted, rounded, comfortable soft-UI toy. This is the grown-up version: light only, grotesque, spacious, square-edged controls on a surface that still recedes.",
+      "axes_hint": {
+        "accent": "#3f7f8f",
+        "neutral": "cool",
+        "scheme": "light",
+        "type": { "pairing": "sans-grotesque", "scale": 1.333, "base": 17, "voice": { "weight": "regular", "tracking": "wide" } },
+        "shape": { "radius": "crisp", "border": "regular" },
+        "depth": "inset",
+        "material": "grain",
+        "focus": "inset",
+        "motion": "smooth",
+        "density": "spacious",
+        "decoration": { "divider": "dotted" },
+        "controls": { "button": "rect", "input": "filled", "switch": "square" }
+      },
+      "added": "2026-09-12",
+      "status": "pending"
+    },
+    {
+      "id": "tape",
+      "kind": "theme",
+      "brief": "Magnetic tape and hazard stripes: the striped material has one theme and it is not a dark one. Orange-red on charcoal, snappy, boxy, deliberately mechanical.",
+      "axes_hint": {
+        "accent": "#e2562a",
+        "neutral": "gray",
+        "scheme": "dark",
+        "type": { "pairing": "sans-grotesque", "voice": { "weight": "black", "transform": "uppercase" } },
+        "shape": { "radius": "sharp", "border": "regular" },
+        "material": "stripes",
+        "motion": "snappy",
+        "controls": { "button": "rect", "switch": "square" }
+      },
+      "added": "2026-09-12",
+      "status": "pending"
+    },
+    {
+      "id": "ember",
+      "kind": "theme",
+      "brief": "Low firelight: a warm dark page where the accent glows rather than shouts. Of the 24 shipped themes only one is dark-only, and none of the dual themes is built warm-first — the warm accents all belong to light pages.",
+      "axes_hint": {
+        "accent": "#c2410c",
+        "neutral": "warm",
+        "scheme": "dark",
+        "type": { "pairing": "serif-editorial", "scale": 1.25 },
+        "depth": "layered",
+        "material": "grain",
+        "focus": "glow",
+        "motion": "smooth",
+        "density": "spacious"
+      },
+      "added": "2026-09-12",
+      "status": "pending"
+    },
+    {
+      "id": "kiosk",
+      "kind": "theme",
+      "brief": "A public terminal seen from a metre away: everything large, high contrast, tap targets you cannot miss. Spacious density ships on four themes and high contrast on eight, but no theme combines them with the rounded pairing a touch surface wants.",
+      "axes_hint": {
+        "accent": "#1d4ed8",
+        "neutral": "gray",
+        "scheme": "both",
+        "type": { "pairing": "rounded", "scale": 1.333, "base": 18, "voice": { "weight": "bold" } },
+        "shape": { "radius": "round" },
+        "density": "spacious",
+        "contrast": "high",
+        "focus": "bold",
+        "controls": { "button": "pill", "input": "filled", "checkbox": "round" }
+      },
+      "added": "2026-09-12",
+      "status": "pending"
+    },
+    {
+      "id": "cutout",
+      "kind": "theme",
+      "brief": "Paper cut with a knife: notched corners, heavy edges, flat colour, links that are not decorated at all because the layout does the pointing. Notch has never shipped, heavy borders ship on two themes, and decoration.link none on none.",
+      "axes_hint": {
+        "accent": "#b91c4c",
+        "neutral": "gray",
+        "scheme": "light",
+        "type": { "pairing": "sans-geometric", "voice": { "weight": "bold", "tracking": "tight" } },
+        "shape": { "radius": "soft", "corner": "notch", "border": "heavy" },
+        "depth": "flat",
+        "motion": "snappy",
+        "decoration": { "link": "none" },
+        "controls": { "button": "rect", "switch": "square" }
+      },
+      "added": "2026-09-12",
+      "status": "pending"
+    }
+  ]
+}

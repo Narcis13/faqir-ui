@@ -1,0 +1,3 @@
+# metric_direction: higher_is_better
+iteration	date	kind	id	branch	commit	metric	delta	guard	gates	taste	status	description
+0	2026-09-12	theme	baseline	-	-	4	0	pass	-	-	baseline	24 shipped themes; the closest shipped pair differs on 4 of the 14 axes, so a dream keeps only above that

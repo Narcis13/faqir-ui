@@ -32,6 +32,8 @@
     "test": "bun scripts/test.mjs",
     "test:bun": "bun test",
     "fuzz:parser": "bun scripts/fuzz-parser.ts",
+    "dream": "node scripts/dream/theme.mjs",
+    "dream:snapshot": "node scripts/dream/snapshot.mjs",
     "typecheck": "node scripts/install-type-fixture.mjs && tsc --noEmit && tsc --noEmit -p tests/fixtures/types/tsconfig.json && tsc --noEmit -p tests/fixtures/types/tsconfig.node16.json && tsc --noEmit -p packages/mcp/tsconfig.json && tsc --noEmit -p packages/forms/tsconfig.json && tsc --noEmit -p packages/rules/tsconfig.json && packages/vue/node_modules/.bin/vue-tsc --noEmit -p packages/vue/tsconfig.json && tsc --noEmit -p packages/react/tsconfig.json",
     "gen:bindings": "bun src/index.ts bindings vue && bun src/index.ts bindings react",
     "build:bindings": "node scripts/build-bindings-packages.mjs",
