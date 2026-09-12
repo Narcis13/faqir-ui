@@ -1,14 +1,17 @@
 // @ui:plugin faqir-validate
 // @ui:provides l-validate
 /**
- * faqir-validate — declarative form validation for the field-group contract. [0.6-02 · §7.1, §A5]
+ * faqir-validate — declarative + programmatic form validation. [0.6-02 · 1.1B-03 · §7.1, §A5, §8.3]
+ * Everything the field-group contract needs, driven from markup or from JS.
  *
  *   <form l-validate>
  *     <div data-ui="field-group">
  *       <label data-part="label" for="email">Work email</label>
  *       <input data-part="input" id="email" name="email" type="email" required
  *              l-validate:company="isCompanyEmail(value)"
- *              data-error-company="Use your company address.">
+ *              l-validate:taken.async="isFree(value)"
+ *              data-error-company="Use your company address."
+ *              data-error-taken="That address is already registered.">
  *       <p data-part="error"></p>
  *     </div>
  *   </form>
@@ -29,6 +32,10 @@
  *     live — on `blur` (error surfaces when you leave it) and on `input` (error
  *     clears as you fix it). Before that first attempt, typing is never
  *     interrupted with errors. (`blur` doesn't bubble, so both are captured.)
+ *   • A submit that has to wait on an async check is blocked, not abandoned:
+ *     when every check has answered it either focuses the first offender or
+ *     completes — the on-valid hook if the form declares one, otherwise a
+ *     native `form.submit()`, which fires no submit event and cannot re-enter.
  *
  * ── Custom validators ───────────────────────────────────────────────────────
  *   `l-validate:<name>="expr"` on a control runs only after native constraints
@@ -37,6 +44,30 @@
  *   `data-error-<name>`, then `data-error`, then a default. Multiple named
  *   validators may coexist on one control; the first to fail wins.
  *
+ *   `l-validate:<name>.async="expr"` is the same thing for an expression that
+ *   answers with a promise. The field-group enters `data-state="validating"`
+ *   while it is out, the run is debounced 250 ms as you type and the newest run
+ *   wins, and a rejected promise is a failure with a built-in message — never a
+ *   silent pass. (An `.async`-less validator that returns a promise is awaited
+ *   too, because a promise is truthy and would otherwise pass everything; the
+ *   dev build says so.)
+ *
+ * ── Programmatic validators ─────────────────────────────────────────────────
+ *   `Faqir.validate.register(form, field, name, fn, message?)` adds a validator
+ *   to the control(s) named `field`, and returns a function that removes it
+ *   again (as does `unregister(form, field, name?)` — no `name` drops the
+ *   field's lot). `fn(value, { el, form, data })` answers `true`, `false`, a
+ *   message string, or a promise of those; `data` is the form's `l-data` scope.
+ *   Registered validators run after native constraints and after the attribute
+ *   validators, in registration order, first failure wins. Their message chain
+ *   is: the string `fn` returned → the `message` argument → `data-error-<name>`
+ *   → `data-error` → a default.
+ *
+ *   `Faqir.validate.run(form)` validates the whole form and resolves to whether
+ *   it is clean. It flushes any pending debounce, waits for every async check,
+ *   and — like a submit attempt — turns live revalidation on, so the errors it
+ *   surfaces can be cleared by typing. Both take a form element or a selector.
+ *
  * ── Message resolution (when a field is invalid) ────────────────────────────
  *   custom-validator message → `data-error-<constraint>` → `data-error`
  *   → the browser's native `validationMessage` → a built-in default.
@@ -44,16 +75,22 @@
  * Escape hatch: `data-validate-ignore` on a control opts it out entirely.
  *
  * Self-registers via `Faqir.plugin` when a global `Faqir` is present (load it
- * after faqir-core) and is also exported for bundlers/tests. Zero dependencies,
- * ≤ 2 KB gzip. The only attributes it owns are `data-state="invalid"` on the
- * group and `aria-invalid`/`aria-describedby` on the control — the frozen
- * five-attribute protocol is untouched.
+ * after faqir-core) and is also exported for bundlers/tests. It installs the
+ * optional `Faqir.validate` member — plugin-installed surface, declared in
+ * `faqir-core.d.ts` as optional for exactly that reason. Zero dependencies,
+ * ≤ 3 KB gzip. The only attributes it owns are `data-state="invalid"` and
+ * `data-state="validating"` on the group and `aria-invalid`/`aria-describedby`
+ * on the control — the frozen five-attribute protocol is untouched.
  */
 (function () {
   "use strict";
 
   // Non-field / non-validatable input types — skipped when scanning a form.
   var SKIP_TYPES = { submit: 1, button: 1, reset: 1, image: 1, hidden: 1 };
+
+  // The two `data-state` values this plugin owns. Any other state on the group
+  // is the author's (or a controller's) and is never cleared by a verdict.
+  var OWNED = { invalid: 1, validating: 1 };
 
   // ValidityState flag → (author-message attribute suffix, built-in fallback).
   // Checked in order; the first failing flag decides the message.
@@ -68,6 +105,19 @@
     ["stepMismatch", "step", "Please enter a valid value."],
     ["badInput", "input", "Please enter a valid value."]
   ];
+
+  var ATTR = "l-validate:";
+  var ASYNC = ".async";
+  var DEBOUNCE_MS = 250;
+  var INVALID = "This field is invalid.";
+  // A check that throws or rejects never answered, so it is not the author's
+  // message — and it is certainly not a pass.
+  var CHECK_FAILED = "Could not check this field. Please try again.";
+
+  var F = null; // the engine, from install()
+  var contexts = new WeakMap(); // form → { scope, submitted }
+  var registered = new WeakMap(); // form → Map(field name → [{ name, fn, message }])
+  var runs = new WeakMap(); // control → { seq, timer, async }
 
   function isFormField(el) {
     var tag = el.tagName;
@@ -85,20 +135,25 @@
     return out;
   }
 
-  // Suffixes of the custom `l-validate:<name>` validators declared on a control.
-  function customNames(el) {
-    var names = [];
-    for (var i = 0; i < el.attributes.length; i++) {
-      var n = el.attributes[i].name;
-      if (n.indexOf("l-validate:") === 0) names.push(n.slice(11));
+  // Per-control bookkeeping: `seq` is the last-wins token, `timer` the pending
+  // debounce, `async` whether this control has ever been seen to go async.
+  function slot(el) {
+    var s = runs.get(el);
+    if (!s) {
+      s = { seq: 0, timer: 0, async: false };
+      runs.set(el, s);
     }
-    return names;
+    return s;
+  }
+
+  function valueOf(el) {
+    return "value" in el ? el.value : null;
   }
 
   // Message shown once a control is invalid — see header for the priority order.
   function messageFor(el) {
     var v = el.validity;
-    if (v.customError) return el.validationMessage || "This field is invalid.";
+    if (v.customError) return el.validationMessage || INVALID;
     for (var i = 0; i < CONSTRAINTS.length; i++) {
       if (v[CONSTRAINTS[i][0]]) {
         return (
@@ -109,22 +164,36 @@
         );
       }
     }
-    return el.validationMessage || "This field is invalid.";
+    return el.validationMessage || INVALID;
   }
 
   function group(el) {
     return el.closest('[data-ui="field-group"]');
   }
 
+  // Dev-build diagnostic. The production engine's `report` is an empty function,
+  // so this costs one call and says nothing in a shipped page.
+  function report(message, el) {
+    if (F && F.devtools && F.devtools.report) F.devtools.report(message, el);
+  }
+
+  // Set (or clear) the group state this plugin owns. An author's "disabled"
+  // survives a clear; a verdict still overwrites it, as it always has.
+  function setGroupState(el, next) {
+    var g = group(el);
+    if (!g) return;
+    if (next) g.setAttribute("data-state", next);
+    else if (OWNED[g.getAttribute("data-state")]) g.removeAttribute("data-state");
+  }
+
   // Reflect a control's verdict onto itself + its field-group. The plugin owns
-  // the group's `[data-part="error"]` text and toggles `data-state` only between
-  // "invalid" and cleared (an author's "disabled"/"validating" state is left be).
+  // the group's `[data-part="error"]` text.
   function applyState(el, valid, message) {
     var g = group(el);
     var err = g && g.querySelector('[data-part="error"]');
     if (valid) {
       el.removeAttribute("aria-invalid");
-      if (g && g.getAttribute("data-state") === "invalid") g.removeAttribute("data-state");
+      setGroupState(el, null);
       if (err) {
         err.textContent = "";
         if (err.id && el.getAttribute("aria-describedby") === err.id)
@@ -132,7 +201,7 @@
       }
     } else {
       el.setAttribute("aria-invalid", "true");
-      if (g) g.setAttribute("data-state", "invalid");
+      setGroupState(el, "invalid");
       if (err) {
         err.textContent = message;
         if (err.id && !el.getAttribute("aria-describedby"))
@@ -141,57 +210,376 @@
     }
   }
 
-  function install(Faqir) {
-    Faqir.directive("validate", function (form, dir, scope) {
-      var submitted = false;
+  // Waiting on an async check: the previous verdict is gone and the new one has
+  // not arrived. `validating` is the state the field-group contract already
+  // declares for exactly this moment.
+  function markValidating(el) {
+    applyState(el, true, "");
+    setGroupState(el, "validating");
+  }
 
-      // Run a control's custom validators (native constraints already passed).
-      // `value` and `$el` are exposed so `l-validate:x="fn(value)"` resolves; the
-      // first falsy verdict sets a custom validity message and stops.
-      function runCustom(el) {
-        var names = customNames(el);
-        if (!names.length) return;
-        var local = Object.create(scope);
-        local.value = "value" in el ? el.value : null;
-        local.$el = el;
-        for (var i = 0; i < names.length; i++) {
-          var ok = !!Faqir.evaluate(el.getAttribute("l-validate:" + names[i]), local, el);
-          if (!ok) {
-            el.setCustomValidity(
-              el.getAttribute("data-error-" + names[i]) ||
-                el.getAttribute("data-error") ||
-                "This field is invalid."
-            );
-            return;
+  // ── Checks ────────────────────────────────────────────────────────────────
+  // A check is a thunk returning true / false / a message / a promise of those,
+  // carrying the message to show when it answers falsy.
+
+  function check(el, name, run, message) {
+    run.msg =
+      message ||
+      el.getAttribute("data-error-" + name) ||
+      el.getAttribute("data-error") ||
+      INVALID;
+    return run;
+  }
+
+  // The custom validators declared on a control, in attribute order.
+  function attrChecks(el, ctx) {
+    var out = [];
+    for (var i = 0; i < el.attributes.length; i++) {
+      var attr = el.attributes[i];
+      if (attr.name.indexOf(ATTR) !== 0) continue;
+      var name = attr.name.slice(ATTR.length);
+      var declared = name.length > ASYNC.length && name.slice(-ASYNC.length) === ASYNC;
+      if (declared) name = name.slice(0, -ASYNC.length);
+      out.push(check(el, name, expressionCheck(el, attr.value, ctx, declared), null));
+    }
+    return out;
+  }
+
+  // `Object.create(scope)` inherits from the engine's reactive PROXY, and a
+  // plain assignment on a child object still runs that proxy's `set` trap
+  // (`receiver` is the child, the trap is the prototype's): `local.value = …`
+  // would write into the page's data, and `local.$el = …` is refused outright —
+  // a TypeError under "use strict" in a real browser, which is where this was
+  // found. happy-dom never showed it. `defineProperty` writes the own property
+  // directly and consults no trap. [1.1B-03]
+  function define(obj, key, value) {
+    Object.defineProperty(obj, key, {
+      value: value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+  }
+
+  function expressionCheck(el, expression, ctx, declared) {
+    return function () {
+      var local = Object.create((ctx && ctx.scope) || Object.prototype);
+      define(local, "value", valueOf(el));
+      define(local, "$el", el);
+      var answer = F.evaluate(expression, local, el);
+      if (!declared && thenable(answer)) {
+        report(
+          'l-validate:… ="' + expression + '" returned a promise. A promise is ' +
+            "truthy, so the field would always pass — write it as " +
+            "l-validate:<name>.async so the verdict is awaited.",
+          el
+        );
+      }
+      return answer;
+    };
+  }
+
+  // The validators registered for this control's `name`, in registration order.
+  function registeredChecks(form, el, ctx) {
+    var byField = registered.get(form);
+    var list = byField && el.name ? byField.get(el.name) : null;
+    var out = [];
+    for (var i = 0; list && i < list.length; i++) {
+      out.push(registeredCheck(form, el, list[i], ctx));
+    }
+    return out;
+  }
+
+  function registeredCheck(form, el, entry, ctx) {
+    return check(
+      el,
+      entry.name,
+      function () {
+        return entry.fn(valueOf(el), {
+          el: el,
+          form: form,
+          data: (ctx && ctx.scope) || null
+        });
+      },
+      entry.message
+    );
+  }
+
+  function thenable(value) {
+    return !!value && typeof value.then === "function";
+  }
+
+  // null when the check passed, otherwise the message to show.
+  function verdict(c, value) {
+    if (value === true) return null;
+    if (typeof value === "string") return value || c.msg;
+    return value ? null : c.msg;
+  }
+
+  // Run checks in order, first failure wins. Returns null (all passed) or a
+  // message — or a promise of either, the moment a check answers with one.
+  function runChecks(checks, i) {
+    for (; i < checks.length; i++) {
+      var c = checks[i];
+      var value;
+      try {
+        value = c();
+      } catch (e) {
+        return CHECK_FAILED;
+      }
+      if (thenable(value)) {
+        var next = i + 1;
+        return value.then(
+          function (settled) {
+            var m = verdict(c, settled);
+            return m === null ? runChecks(checks, next) : m;
+          },
+          function () {
+            return CHECK_FAILED;
           }
-        }
+        );
       }
+      var message = verdict(c, value);
+      if (message !== null) return message;
+    }
+    return null;
+  }
 
-      function validateField(el) {
-        el.setCustomValidity(""); // clear any prior custom verdict
-        if (el.validity.valid) runCustom(el); // native ok → try custom
-        var valid = el.validity.valid;
-        applyState(el, valid, valid ? "" : messageFor(el));
-        return valid;
+  // A custom check has answered. The message also goes onto the control as its
+  // custom validity, so `el.validity.valid` and `form.checkValidity()` agree
+  // with what the field-group is showing.
+  function settle(el, message) {
+    if (message !== null) el.setCustomValidity(message);
+    applyState(el, message === null, message || "");
+  }
+
+  // Validate one control and reflect the verdict. Returns true/false, or a
+  // Promise<boolean> when a check went async. Cancels any pending debounce on
+  // this control, so a submit flushes what typing had deferred.
+  function validateField(form, el, ctx) {
+    var s = slot(el);
+    if (s.timer) {
+      clearTimeout(s.timer);
+      s.timer = 0;
+    }
+    var token = ++s.seq;
+
+    el.setCustomValidity(""); // clear any prior custom verdict
+    if (!el.validity.valid) {
+      applyState(el, false, messageFor(el));
+      return false;
+    }
+
+    var out = runChecks(attrChecks(el, ctx).concat(registeredChecks(form, el, ctx)), 0);
+    if (!thenable(out)) {
+      settle(el, out);
+      return out === null;
+    }
+
+    s.async = true; // from now on this control's live runs are debounced
+    markValidating(el);
+    return out.then(function (message) {
+      // A newer run owns the DOM — answer, but touch nothing.
+      if (s.seq !== token) return message === null;
+      settle(el, message);
+      return message === null;
+    });
+  }
+
+  // True when this control is known to take time: it declares an `.async`
+  // validator, or a previous run of it went async (a registered `fn` only
+  // reveals that by returning a promise).
+  function isSlow(el) {
+    var s = slot(el);
+    if (s.async) return true;
+    for (var i = 0; i < el.attributes.length; i++) {
+      var n = el.attributes[i].name;
+      if (n.indexOf(ATTR) === 0 && n.slice(-ASYNC.length) === ASYNC) {
+        s.async = true;
+        return true;
       }
+    }
+    return false;
+  }
+
+  // Typing into a slow control: hold the run for 250 ms and let the newest one
+  // win, rather than firing a request per keystroke. Sync-only controls still
+  // answer on the keystroke — that is the "error clears as you fix it" half of
+  // the revalidation policy.
+  function schedule(form, el, ctx) {
+    var s = slot(el);
+    if (s.timer) clearTimeout(s.timer);
+    markValidating(el);
+    s.timer = setTimeout(function () {
+      s.timer = 0;
+      validateField(form, el, ctx);
+    }, DEBOUNCE_MS);
+  }
+
+  function firstInvalid(list, verdicts) {
+    for (var i = 0; i < list.length; i++) if (!verdicts[i]) return list[i];
+    return null;
+  }
+
+  function focusField(el) {
+    if (typeof el.focus === "function") el.focus();
+  }
+
+  function hookExpression(dir) {
+    return dir.expression && dir.expression.trim() ? dir.expression : null;
+  }
+
+  // Every check has answered after a submit that had to wait. Either focus the
+  // first offender, or finish the submit the wait interrupted.
+  function finishSubmit(form, list, verdicts, ctx, dir) {
+    var bad = firstInvalid(list, verdicts);
+    if (bad) {
+      focusField(bad);
+      return;
+    }
+    if (hookExpression(dir)) {
+      F.evaluateAssignment(dir.expression, ctx.scope, form);
+      return;
+    }
+    // Native submit: fires no submit event, so the listener below cannot
+    // re-enter and the async pass cannot loop.
+    if (typeof form.submit === "function") form.submit();
+  }
+
+  // Validate every control of a form, whoever asked. Returns a Promise<boolean>
+  // so a caller that does not care whether any check was async can just wait.
+  function validateAll(form, ctx) {
+    var list = fields(form);
+    var results = [];
+    for (var i = 0; i < list.length; i++) results.push(validateField(form, list[i], ctx));
+    return Promise.all(results).then(function (verdicts) {
+      return firstInvalid(list, verdicts) === null;
+    });
+  }
+
+  // ── The programmatic surface, installed as `Faqir.validate` ───────────────
+
+  function host(target, what) {
+    var el = typeof target === "string" ? document.querySelector(target) : target;
+    if (!el || !el.querySelectorAll) {
+      throw new TypeError(
+        "Faqir.validate." + what + ": no form element matched " + JSON.stringify(target)
+      );
+    }
+    return el;
+  }
+
+  function indexOfName(list, name) {
+    for (var i = 0; i < list.length; i++) if (list[i].name === name) return i;
+    return -1;
+  }
+
+  var api = {
+    register: function (form, field, name, fn, message) {
+      var el = host(form, "register");
+      if (typeof fn !== "function") {
+        throw new TypeError("Faqir.validate.register: `fn` must be a function");
+      }
+      var byField = registered.get(el);
+      if (!byField) {
+        byField = new Map();
+        registered.set(el, byField);
+      }
+      var list = byField.get(field);
+      if (!list) {
+        list = [];
+        byField.set(field, list);
+      }
+      var entry = { name: name, fn: fn, message: message || null };
+      var at = indexOfName(list, name);
+      // Re-registering a name replaces it in place, so registration ORDER is
+      // the order the names were first seen — not the order they were last set.
+      if (at === -1) list.push(entry);
+      else list[at] = entry;
+
+      if (!el.querySelector('[name="' + field + '"]')) {
+        report(
+          'Faqir.validate.register("' + field + '", "' + name + '") matches no ' +
+            "control in this form — it will never run.",
+          el
+        );
+      }
+      return function () {
+        api.unregister(el, field, name);
+      };
+    },
+
+    unregister: function (form, field, name) {
+      var el = host(form, "unregister");
+      var byField = registered.get(el);
+      if (!byField) return;
+      if (name === undefined) {
+        byField.delete(field);
+        return;
+      }
+      var list = byField.get(field);
+      var at = list ? indexOfName(list, name) : -1;
+      if (at !== -1) list.splice(at, 1);
+    },
+
+    run: function (form) {
+      var el = host(form, "run");
+      var ctx = contexts.get(el) || null;
+      if (ctx) ctx.submitted = true; // the errors are on screen — let typing clear them
+      else {
+        report(
+          "Faqir.validate.run() on a form with no l-validate. Native constraints " +
+            "and registered validators still run, but its l-validate:<name> " +
+            "expressions have no scope to read and are skipped.",
+          el
+        );
+      }
+      return validateAll(el, ctx);
+    }
+  };
+
+  function install(Faqir) {
+    F = Faqir;
+    // Plugin-installed surface. Declared optional in faqir-core.d.ts because a
+    // page that never loads this file does not have it.
+    if (!Faqir.validate) Faqir.validate = api;
+
+    Faqir.directive("validate", function (form, dir, scope) {
+      var ctx = { scope: scope, submitted: false };
+      contexts.set(form, ctx);
 
       // Submit: validate everything; block + focus the first offender when dirty.
       form.addEventListener("submit", function (e) {
-        submitted = true;
-        var list = fields(form),
-          firstBad = null;
+        ctx.submitted = true;
+        var list = fields(form);
+        var results = [];
+        var waiting = false;
         for (var i = 0; i < list.length; i++) {
-          if (!validateField(list[i]) && !firstBad) firstBad = list[i];
+          var r = validateField(form, list[i], ctx);
+          results.push(r);
+          if (thenable(r)) waiting = true;
         }
+
+        // A check is still out: this turn cannot decide the submit, so block it
+        // and resume once every answer is in.
+        if (waiting) {
+          e.preventDefault();
+          Promise.all(results).then(function (verdicts) {
+            finishSubmit(form, list, verdicts, ctx, dir);
+          });
+          return;
+        }
+
+        var firstBad = firstInvalid(list, results);
         if (firstBad) {
           e.preventDefault();
-          if (typeof firstBad.focus === "function") firstBad.focus();
+          focusField(firstBad);
           return;
         }
         // Clean. A non-empty `l-validate` expression is an on-valid hook (SPA
         // submit): run it and keep the browser from navigating. Otherwise let
         // the native submit proceed.
-        if (dir.expression && dir.expression.trim()) {
+        if (hookExpression(dir)) {
           e.preventDefault();
           Faqir.evaluateAssignment(dir.expression, scope, form);
         }
@@ -199,7 +587,9 @@
 
       // After the first submit attempt, revalidate the touched field live.
       function live(e) {
-        if (submitted && isFormField(e.target)) validateField(e.target);
+        if (!ctx.submitted || !isFormField(e.target)) return;
+        if (e.type === "input" && isSlow(e.target)) schedule(form, e.target, ctx);
+        else validateField(form, e.target, ctx);
       }
       form.addEventListener("blur", live, true);
       form.addEventListener("input", live, true);
@@ -212,10 +602,10 @@
   }
 
   // Browser self-registration: attach as soon as a global Faqir exists.
-  var F =
+  var G =
     (typeof globalThis !== "undefined" && globalThis.Faqir) ||
     (typeof window !== "undefined" && window.Faqir);
-  if (F && typeof F.plugin === "function") {
-    F.plugin(install);
+  if (G && typeof G.plugin === "function") {
+    G.plugin(install);
   }
 })();

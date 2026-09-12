@@ -234,6 +234,9 @@ describe("window.__FAQIR_DEVTOOLS__", () => {
       "dev",
       "faqir",
       "inspect",
+      // The seam a plugin file reports through — a no-op here, live in the dev
+      // build. [1.1B-03]
+      "report",
       "scopes",
       "stores",
       "version",

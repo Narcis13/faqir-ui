@@ -126,7 +126,8 @@ describe("minified engine artifact", () => {
     expect(tools.dev).toBe(false);
     expect(tools.faqir).toBe(Faqir);
     expect(Object.keys(tools).sort()).toEqual([
-      "components", "dev", "faqir", "inspect", "scopes", "stores", "version", "warnings",
+      "components", "dev", "faqir", "inspect", "report", "scopes", "stores", "version",
+      "warnings",
     ]);
 
     const span = document.querySelector("span")!;
@@ -282,6 +283,28 @@ describe("the published `import` shape actually imports", () => {
     expect(result.stdout).toContain("ok");
   });
 
+  // Members a PLUGIN installs on the engine object, read out of the declaration
+  // that marks them optional for exactly that reason. This realm is shared, so
+  // another test file may already have loaded a plugin onto the same engine
+  // singleton — and the ESM entry describes the ENGINE, not whatever a page
+  // happens to have loaded beside it.  [1.1B-03]
+  function pluginInstalled(): Set<string> {
+    const dts = readFileSync(join(ROOT, "packages", "core", "faqir-core.d.ts"), "utf8");
+    const block = /export interface FaqirGlobal \{([\s\S]*?)\n\}/.exec(dts)?.[1] ?? "";
+    const names = [...block.matchAll(/^\s{2}(?:readonly\s+)?(\w+)\?[:(]/gm)].map((m) => m[1]);
+    expect(names, "the declaration must still mark the plugin surface optional").toContain(
+      "validate",
+    );
+    return new Set(names);
+  }
+
+  /** The engine's OWN members — what both entries are supposed to mirror. */
+  function engineMembers(): string[] {
+    const engine = require("../../registry/core/faqir-core.js") as Record<string, unknown>;
+    const installed = pluginInstalled();
+    return Object.keys(engine).filter((key) => !installed.has(key)).sort();
+  }
+
   test("the ESM entry's named exports match the live engine, both directions", () => {
     // The entry is hand-written, so it can fall behind the engine silently —
     // a member added to `Faqir` with no line in esm-entry.js is simply absent
@@ -297,8 +320,7 @@ describe("the published `import` shape actually imports", () => {
       })
       .sort();
 
-    const engine = require("../../registry/core/faqir-core.js") as Record<string, unknown>;
-    expect(exported).toEqual(Object.keys(engine).sort());
+    expect(exported).toEqual(engineMembers());
   });
 
   test("the declaration's named exports match the ESM entry's", () => {
@@ -309,7 +331,6 @@ describe("the published `import` shape actually imports", () => {
         return m[1];
       })
       .sort();
-    const engine = require("../../registry/core/faqir-core.js") as Record<string, unknown>;
-    expect(declared).toEqual(Object.keys(engine).sort());
+    expect(declared).toEqual(engineMembers());
   });
 });

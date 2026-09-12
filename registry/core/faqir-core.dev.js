@@ -11571,7 +11571,19 @@ function createTreeView(root) {
      * Diagnostics recorded so far, oldest first. Always an array: the
      * production engine records nothing, so it is always empty there.
      */
-    warnings: function() { return devHooks ? devHooks.warnings() : []; }
+    warnings: function() { return devHooks ? devHooks.warnings() : []; },
+    /**
+     * Record one diagnostic on a plugin's behalf. The dev build prints it and
+     * keeps it in `warnings()` (deduped like every other); production does
+     * nothing and answers `false`. A plugin is a separate file with no reach
+     * into this seam's other side, so without it a plugin can only be silent
+     * or noisy in a shipped page — and "silent" is what the contract forbids.
+     * [1.1B-03]
+     */
+    report: function(message, el) {
+      if (devHooks) return devHooks.pluginWarning(message, el);
+      return false;
+    }
   };
 
   // ── dev diagnostics ── (src/core-src/dev-diagnostics.js)
@@ -11689,6 +11701,13 @@ function createTreeView(root) {
      * custom directive — silently inert in production. Once per element+attribute.
      */
     unknownDirective: function(el, dir) {
+      // `l-validate:company` parses as the TYPE "validate:company" — the engine
+      // dispatches on nothing, but the attribute is not a typo: faqir-validate
+      // reads it off the control itself. A registered directive followed by a
+      // free-form `:suffix` is that shape, and reporting it would flag correct
+      // markup as broken, which is worse than saying nothing. [1.1B-03]
+      var colon = dir.type.indexOf(':');
+      if (colon > 0 && customDirectives.has(dir.type.slice(0, colon))) return;
       devReport(
         'directive',
         'directive:' + dir.raw + ':' + describeElement(el),
@@ -11710,6 +11729,16 @@ function createTreeView(root) {
         el,
         { expression: expression }
       );
+    },
+
+    /**
+     * A plugin reporting through `Faqir.devtools.report()`. The message is the
+     * plugin's own — it is a separate file and its strings ship either way — so
+     * this hook only routes it into the same log everything else lands in. Once
+     * per message+element. [1.1B-03]
+     */
+    pluginWarning: function(message, el) {
+      return devReport('plugin', 'plugin:' + message + ':' + describeElement(el), message, el);
     },
 
     /** `l-html` assigns unsanitized markup. Once per element. */

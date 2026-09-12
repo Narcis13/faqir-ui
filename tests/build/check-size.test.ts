@@ -37,6 +37,13 @@ type SizeModule = {
     err?: (m: string) => void;
   }) => number;
   BUDGETS: { engine: number; engineWithControllers: number; plugin: number };
+  PLUGIN_BUDGETS: Record<string, number>;
+  collectDefaultTargets: (root?: string) => Array<{
+    label: string;
+    entry: string;
+    budgetBytes: number | null;
+  }>;
+  measureGzip: (t: { label: string; entry: string; minify?: boolean }) => number;
 };
 
 let mod: SizeModule;
@@ -154,6 +161,31 @@ describe("BUDGETS", () => {
     // 45 → 46 in Wave 3; the ledger for every move is in scripts/check-size.mjs.
     expect(mod.BUDGETS.engineWithControllers).toBe(46 * KB);
     expect(mod.BUDGETS.plugin).toBe(2 * KB);
+  });
+
+  // 1.1B-03 bought faqir-validate a kilobyte for the programmatic registry and
+  // the async validators. It is the only exception, and it is enforced — not a
+  // hole in the gate.
+  test("faqir-validate is the one per-plugin exception, at 3 KB", () => {
+    expect(Object.keys(mod.PLUGIN_BUDGETS)).toEqual(["faqir-validate.js"]);
+    expect(mod.PLUGIN_BUDGETS["faqir-validate.js"]).toBe(3 * KB);
+    const targets = mod.collectDefaultTargets();
+    for (const t of targets) {
+      if (!t.label.startsWith("plugin: ")) continue;
+      const file = t.label.slice("plugin: ".length);
+      expect(t.budgetBytes, t.label).toBe(mod.PLUGIN_BUDGETS[file] ?? mod.BUDGETS.plugin);
+    }
+  });
+
+  test("faqir-validate is really inside its 3 KB", () => {
+    const measured = mod.measureGzip({
+      label: "plugin: faqir-validate.js",
+      entry: join(ROOT, "registry", "core", "plugins", "faqir-validate.js"),
+    });
+    expect(measured).toBeLessThanOrEqual(3 * KB);
+    // …and the exception is not idle headroom: it does not fit in 2 KB either,
+    // so deleting the entry would go red rather than pass unnoticed.
+    expect(measured).toBeGreaterThan(2 * KB);
   });
 });
 

@@ -140,6 +140,59 @@ export interface Magics {
  */
 export interface PluginMagics {}
 
+/** What one programmatic validator answers: pass, fail, or a message. */
+export type ValidatorResult = boolean | string;
+
+/** The second argument every registered validator receives. */
+export interface ValidatorContext {
+  /** The control being validated. */
+  el: Element;
+  /** The form it was registered against. */
+  form: Element;
+  /** The form's `l-data` scope, or null when the form carries no `l-validate`. */
+  data: Scope | null;
+}
+
+/**
+ * A programmatic validator. Return `true` to pass, `false` to fail with the
+ * registered message, or a string to fail with that message — or a promise of
+ * any of those, which puts the field-group in `data-state="validating"` until
+ * it settles. Throwing or rejecting is a failure with a built-in message.
+ */
+export type FieldValidator = (
+  value: string | null,
+  ctx: ValidatorContext,
+) => ValidatorResult | Promise<ValidatorResult>;
+
+/**
+ * `Faqir.validate` — installed by `plugins/faqir-validate.js`, which is why the
+ * member is optional on {@link FaqirGlobal}. A page that does not load the
+ * plugin does not have it.  [1.1B-03]
+ */
+export interface ValidateApi {
+  /**
+   * Add a named validator to the control(s) named `field` in `form` (an element
+   * or a selector). Registered validators run after native constraints and
+   * after the `l-validate:<name>` attribute validators, in registration order,
+   * first failure wins. Returns a function that removes this one again.
+   */
+  register(
+    form: Element | string,
+    field: string,
+    name: string,
+    fn: FieldValidator,
+    message?: string,
+  ): Disposer;
+  /** Remove one named validator — or, with no `name`, all of the field's. */
+  unregister(form: Element | string, field: string, name?: string): void;
+  /**
+   * Validate every control of `form` and resolve to whether it is clean.
+   * Flushes any pending debounce, waits for every async check, and turns live
+   * revalidation on the way a submit attempt does.
+   */
+  run(form: Element | string): Promise<boolean>;
+}
+
 /**
  * A live reactive scope: the `l-data` object, the `data-prop-*` values merged
  * over it, whatever `l-source` injected, and the magics on its prototype.
@@ -656,7 +709,7 @@ export interface DevtoolsComponent {
  * `faqir-core.dev.js`.
  */
 export interface DevtoolsWarning {
-  kind: "expression" | "directive" | "reorder" | "html";
+  kind: "expression" | "directive" | "reorder" | "html" | "plugin";
   message: string;
   /** The offending element, as a short label. */
   element: string | null;
@@ -687,6 +740,14 @@ export interface Devtools {
   stores(): Record<string, Record<string, unknown>>;
   /** Diagnostics recorded so far, oldest first. */
   warnings(): DevtoolsWarning[];
+  /**
+   * Record one diagnostic on a plugin's behalf — the seam a plugin file uses to
+   * be as loud in the dev build as the engine is, having no reach into the
+   * engine's own hooks. `true` when it was recorded, `false` in the production
+   * build (which records nothing) and for a repeat the dev build has already
+   * printed.  [1.1B-03]
+   */
+  report(message: string, el?: Element | null): boolean;
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -777,6 +838,16 @@ export interface FaqirGlobal {
    * than whichever engine touched the global last.
    */
   readonly devtools: Devtools;
+
+  // ── Plugin-installed ──
+  /**
+   * The programmatic validation surface `plugins/faqir-validate.js` installs.
+   * Optional because it is a plugin's, not the engine's: on a page that never
+   * loads the file it is simply absent, so reach it as `Faqir.validate?.run(f)`.
+   * The reflective drift test knows an optional member here may be missing from
+   * the engine for exactly this reason.  [1.1B-03]
+   */
+  readonly validate?: ValidateApi;
 }
 
 declare const Faqir: FaqirGlobal;
@@ -797,6 +868,7 @@ declare namespace Faqir {
     TableSort, TableState, TableApi, TabsApi, TagInputApi, ToastApi,
     ToggleGroupApi, TooltipApi, TreeViewApi, ControllerApis, ProtocolState,
     Inspection, DevtoolsScope, DevtoolsComponent, DevtoolsWarning, Devtools,
+    ValidatorResult, ValidatorContext, FieldValidator, ValidateApi,
     FaqirGlobal };
 }
 
@@ -845,7 +917,8 @@ declare global {
       SidebarApi, SliderApi, TableSort, TableState, TableApi, TabsApi,
       TagInputApi, ToastApi, ToggleGroupApi, TooltipApi, TreeViewApi,
       ControllerApis, ProtocolState, Inspection, DevtoolsScope,
-      DevtoolsComponent, DevtoolsWarning, Devtools, FaqirGlobal };
+      DevtoolsComponent, DevtoolsWarning, Devtools, ValidatorResult,
+      ValidatorContext, FieldValidator, ValidateApi, FaqirGlobal };
   }
   interface Window {
     /** Set by the classic-script build; absent under a bundler import. */

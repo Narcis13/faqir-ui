@@ -170,7 +170,7 @@ Modifiers: `.lazy`, `.optimistic`, `.poll`, `.key` — see the table above. Tear
 
 ## Plugin Vocabulary
 
-5 official plugins add directives and magics to the same expression language. Load one after `faqir-core.js` (`<script src="core/plugins/faqir-persist.js"></script>`), or bundle core plus every plugin with `faqir bundle --js`. Each self-registers, is dependency-free and is ≤ 2 KB gzip.
+5 official plugins add directives and magics to the same expression language. Load one after `faqir-core.js` (`<script src="core/plugins/faqir-persist.js"></script>`), or bundle core plus every plugin with `faqir bundle --js`. Each self-registers, is dependency-free and is ≤ 2 KB gzip (`faqir-validate`, which carries the programmatic `Faqir.validate` API, ≤ 3 KB).
 
 | Plugin | Provides | File | What it does |
 |---|---|---|---|
@@ -178,7 +178,7 @@ Modifiers: `.lazy`, `.optimistic`, `.poll`, `.key` — see the table above. Tear
 | `faqir-intersect` | `l-intersect` | `registry/core/plugins/faqir-intersect.js` | declarative IntersectionObserver hooks. |
 | `faqir-mask` | `l-mask` | `registry/core/plugins/faqir-mask.js` | caret-safe input masking. |
 | `faqir-persist` | `l-persist`, `$persist()` | `registry/core/plugins/faqir-persist.js` | localStorage-backed reactive state. |
-| `faqir-validate` | `l-validate` | `registry/core/plugins/faqir-validate.js` | declarative form validation for the field-group contract. |
+| `faqir-validate` | `l-validate` | `registry/core/plugins/faqir-validate.js` | declarative + programmatic form validation. |
 
 ### `faqir-collapse`
 
@@ -226,7 +226,9 @@ Reflects each control's native `ValidityState` (plus any custom validators) into
     <label data-part="label" for="email">Work email</label>
     <input data-part="input" id="email" name="email" type="email" required
            l-validate:company="isCompanyEmail(value)"
-           data-error-company="Use your company address.">
+           l-validate:taken.async="isFree(value)"
+           data-error-company="Use your company address."
+           data-error-taken="That address is already registered.">
     <p data-part="error"></p>
   </div>
 </form>

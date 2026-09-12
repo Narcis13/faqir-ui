@@ -206,5 +206,28 @@ tasks.stopPolling();
 // @ts-expect-error — create takes a payload, not a whole request options bag.
 void tasks.create({ method: "POST" });
 
+// ── 22. the plugin-installed validate surface ──────────────────────────────
+// Optional on FaqirGlobal because `plugins/faqir-validate.js` installs it and
+// a page may never load the file — so it is only reachable behind a `?.`.
+const formEl = document.querySelector("form") as HTMLFormElement;
+const dropRule: Faqir.Disposer | undefined = Faqir.validate?.register(
+  formEl,
+  "email",
+  "unique",
+  async (value, ctx) => {
+    const scope: Faqir.Scope | null = ctx.data;
+    void [scope, ctx.el, ctx.form];
+    return value === "taken" ? "That address is taken." : true;
+  },
+  "Could not use that address.",
+);
+dropRule?.();
+Faqir.validate?.unregister("#signup", "email");
+const clean: Promise<boolean> | undefined = Faqir.validate?.run(formEl);
+// @ts-expect-error — plugin-installed and optional: it is not there unconditionally.
+Faqir.validate.run(formEl);
+// @ts-expect-error — a validator answers with a verdict, not with a number.
+Faqir.validate?.register(formEl, "email", "bad", () => 42);
+
 void [total, sum, untracked, wrongUntrack, bareSum, stop, variant, directiveTypes, firstArg];
-void [selectedRows, version, badKind];
+void [selectedRows, version, badKind, dropRule, clean];

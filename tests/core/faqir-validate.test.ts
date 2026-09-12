@@ -1,6 +1,7 @@
-import { describe, it, expect, beforeEach } from "bun:test";
+import { describe, it, expect, beforeEach, afterEach } from "bun:test";
+import { settle, tick } from "../helpers/settle";
 
-// faqir-validate — l-validate declarative form validation plugin. [0.6-02 · §7.1, §A5]
+// faqir-validate — l-validate form validation plugin. [0.6-02 · 1.1B-03 · §7.1, §A5, §8.3]
 const Faqir = require("../../registry/core/faqir-core.js");
 
 // Simulate browser load order (core, then plugin): expose a global Faqir and spy
@@ -15,8 +16,20 @@ Faqir.plugin = function (fn: any) {
 const install = require("../../registry/core/plugins/faqir-validate.js");
 Faqir.plugin = origPlugin;
 
-function tick(): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, 0));
+/** Real time, for the 250 ms async debounce. */
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** A promise plus the handles to settle it from the test. */
+function deferred<T>(): { promise: Promise<T>; resolve: (v: T) => void; reject: (e?: any) => void } {
+  let resolve!: (v: T) => void;
+  let reject!: (e?: any) => void;
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  return { promise, resolve, reject };
 }
 
 // A field-group + control + error part, exactly the markup @faqir-ui/forms emits.
@@ -30,21 +43,38 @@ function group(inner: string, groupAttrs = ""): string {
     </div>`;
 }
 
-// Build a page with the given form body and optional l-data scope, then boot.
+// Every test mounts into its own container and tears it down again: this suite
+// shares one happy-dom realm with every other engine file, so `Faqir.start()`
+// on the shared document would leave a MutationObserver on `body` per boot.
+// `initTree` binds exactly the subtree we built. (AGENTS.md, "Setup".)
+let container: HTMLElement | null = null;
+
+function unmount(): void {
+  if (!container) return;
+  Faqir.destroy(container);
+  container.remove();
+  container = null;
+}
+
+// Build a page with the given form body and optional l-data scope, then bind it.
 async function boot(formBody: string, opts: { data?: string; formAttr?: string } = {}) {
   const data = opts.data ? opts.data : "{}";
   const formAttr = opts.formAttr === undefined ? "l-validate" : opts.formAttr;
-  document.body.innerHTML = `
+  unmount();
+  container = document.createElement("div");
+  container.innerHTML = `
     <div l-data="${data.replace(/"/g, "&quot;")}">
       <form ${formAttr}>
         ${formBody}
         <button type="submit" id="submit">Save</button>
       </form>
     </div>`;
-  Faqir.start();
+  document.body.appendChild(container);
+  Faqir.initTree(container.firstElementChild as Element);
   await tick();
-  const form = document.querySelector("form") as HTMLFormElement;
-  return { form };
+  const form = container.querySelector("form") as HTMLFormElement;
+  const scope = (container.querySelector("[l-data]") as any).__faqirScope;
+  return { form, scope };
 }
 
 function submit(form: HTMLFormElement): Event {
@@ -61,8 +91,12 @@ function errorOf(control: Element): HTMLElement {
 }
 
 beforeEach(async () => {
-  document.body.innerHTML = "";
+  unmount();
   await tick();
+});
+
+afterEach(() => {
+  unmount();
 });
 
 describe("faqir-validate · registration", () => {
@@ -195,14 +229,40 @@ describe("faqir-validate · custom expression validators", () => {
   });
 });
 
+describe("faqir-validate · a validator's locals are its own", () => {
+  it("does not write `value` or `$el` into the page's scope", async () => {
+    // The locals hang off `Object.create(scope)`, and the scope is a reactive
+    // PROXY, so a plain assignment on the child runs the prototype's `set` trap
+    // rather than creating an own property: it can write into page data, and
+    // for a magic it is refused outright — a TypeError under "use strict" that
+    // made every custom validator fail in Chromium while this suite stayed
+    // green. They are `defineProperty`'d for that reason. This case pins the
+    // realm-independent half (nothing leaks); the throw is pinned in a real
+    // browser by tests/browser/directives.pw.ts. [1.1B-03]
+    const { form, scope } = await boot(
+      group(
+        `<input data-part="input" name="e" value="alice@gmail.com"
+                l-validate:company="isCompanyEmail(value)"
+                data-error-company="Use your company address.">`
+      ),
+      { data: "{ isCompanyEmail: (v) => /@acme\\.com$/.test(v) }" }
+    );
+    const input = form.querySelector("input") as HTMLInputElement;
+
+    submit(form);
+    expect(errorOf(input).textContent).toBe("Use your company address.");
+    expect(scope.value).toBeUndefined();
+    expect(scope.$el).not.toBe(input);
+  });
+});
+
 describe("faqir-validate · submit gating + on-valid hook", () => {
   it("blocks submit while invalid, then fires the on-valid hook when clean", async () => {
-    const { form } = await boot(
+    const { form, scope } = await boot(
       group(`<input data-part="input" name="a" required>`),
       { data: "{ saved: false }", formAttr: 'l-validate="saved = true"' }
     );
     const input = form.querySelector("input") as HTMLInputElement;
-    const scope = (document.querySelector("[l-data]") as any).__faqirScope;
 
     const bad = submit(form);
     expect(bad.defaultPrevented).toBe(true);
@@ -283,5 +343,436 @@ describe("faqir-validate · aria wiring", () => {
     expect(ev.defaultPrevented).toBe(false);
     expect(fieldGroupOf(a).getAttribute("data-state")).toBe(null);
     expect(fieldGroupOf(b).getAttribute("data-state")).toBe(null);
+  });
+});
+
+// ───────────────────────────────────────────────────────────────────────────
+// 1.1B-03 — the programmatic registry and async validators
+// ───────────────────────────────────────────────────────────────────────────
+
+const validate = () => (Faqir as any).validate as any;
+
+describe("faqir-validate · Faqir.validate is a plugin-installed member", () => {
+  it("is installed by the plugin, not by the engine", () => {
+    expect(typeof validate()).toBe("object");
+    expect(typeof validate().register).toBe("function");
+    expect(typeof validate().unregister).toBe("function");
+    expect(typeof validate().run).toBe("function");
+  });
+
+  it("resolves a form by selector as well as by element", async () => {
+    const { form } = await boot(group(`<input data-part="input" id="by-sel" name="a" value="x">`));
+    form.id = "the-form";
+    let seen = 0;
+    validate().register("#the-form", "a", "counts", () => {
+      seen++;
+      return true;
+    });
+    await validate().run("#the-form");
+    expect(seen).toBe(1);
+    validate().unregister(form, "a");
+  });
+
+  it("throws rather than silently doing nothing on a bad target or a non-function", async () => {
+    const { form } = await boot(group(`<input data-part="input" name="a">`));
+    expect(() => validate().register("#nope", "a", "x", () => true)).toThrow(TypeError);
+    expect(() => validate().register(form, "a", "x", "not a function" as any)).toThrow(TypeError);
+  });
+});
+
+describe("faqir-validate · registered validators", () => {
+  it("fails the field with the registered message and makes run() resolve false", async () => {
+    const { form } = await boot(group(`<input data-part="input" name="a" value="bob">`));
+    const input = form.querySelector("input") as HTMLInputElement;
+    validate().register(form, "a", "known", (v: string) => v === "alice", "Unknown user.");
+
+    expect(await validate().run(form)).toBe(false);
+    expect(fieldGroupOf(input).getAttribute("data-state")).toBe("invalid");
+    expect(errorOf(input).textContent).toBe("Unknown user.");
+    expect(input.getAttribute("aria-invalid")).toBe("true");
+
+    input.value = "alice";
+    expect(await validate().run(form)).toBe(true);
+    expect(fieldGroupOf(input).getAttribute("data-state")).toBe(null);
+    expect(errorOf(input).textContent).toBe("");
+  });
+
+  it("hands the validator the value and { el, form, data }", async () => {
+    const { form, scope } = await boot(
+      group(`<input data-part="input" name="a" value="v1">`),
+      { data: "{ tenant: 'acme' }" }
+    );
+    const input = form.querySelector("input") as HTMLInputElement;
+    let seen: any = null;
+    validate().register(form, "a", "ctx", (value: string, ctx: any) => {
+      seen = { value, ...ctx };
+      return true;
+    });
+    await validate().run(form);
+    expect(seen.value).toBe("v1");
+    expect(seen.el).toBe(input);
+    expect(seen.form).toBe(form);
+    expect(seen.data).toBe(scope);
+    expect(seen.data.tenant).toBe("acme");
+  });
+
+  it("unregister removes one by name, and the disposer register() returns removes it too", async () => {
+    const { form } = await boot(group(`<input data-part="input" name="a" value="x">`));
+    validate().register(form, "a", "no", () => false, "nope");
+    expect(await validate().run(form)).toBe(false);
+
+    validate().unregister(form, "a", "no");
+    expect(await validate().run(form)).toBe(true);
+
+    const dispose = validate().register(form, "a", "no", () => false, "nope");
+    expect(await validate().run(form)).toBe(false);
+    dispose();
+    expect(await validate().run(form)).toBe(true);
+  });
+
+  it("unregister with no name drops every validator on the field", async () => {
+    const { form } = await boot(group(`<input data-part="input" name="a" value="x">`));
+    validate().register(form, "a", "one", () => true);
+    validate().register(form, "a", "two", () => false, "no");
+    expect(await validate().run(form)).toBe(false);
+    validate().unregister(form, "a");
+    expect(await validate().run(form)).toBe(true);
+  });
+
+  it("runs after native constraints and after the attribute validators", async () => {
+    const { form } = await boot(
+      group(
+        `<input data-part="input" name="a" required
+                l-validate:shape="ok"
+                data-error-required="Required." data-error-shape="Bad shape.">`
+      ),
+      { data: "{ ok: false }" }
+    );
+    const input = form.querySelector("input") as HTMLInputElement;
+    const order: string[] = [];
+    validate().register(form, "a", "reg", () => {
+      order.push("registered");
+      return false;
+    }, "Registered says no.");
+
+    // Empty: the native constraint decides, nothing else is consulted.
+    expect(await validate().run(form)).toBe(false);
+    expect(errorOf(input).textContent).toBe("Required.");
+    expect(order).toEqual([]);
+
+    // Filled but the attribute validator fails: still ahead of the registered one.
+    input.value = "x";
+    expect(await validate().run(form)).toBe(false);
+    expect(errorOf(input).textContent).toBe("Bad shape.");
+    expect(order).toEqual([]);
+
+    // Attribute validator passes: now the registered one is reached.
+    (form.closest("[l-data]") as any).__faqirScope.ok = true;
+    expect(await validate().run(form)).toBe(false);
+    expect(errorOf(input).textContent).toBe("Registered says no.");
+    expect(order).toEqual(["registered"]);
+  });
+
+  it("runs registered validators in registration order, first failure winning", async () => {
+    const { form } = await boot(group(`<input data-part="input" name="a" value="x">`));
+    const input = form.querySelector("input") as HTMLInputElement;
+    const seen: string[] = [];
+    validate().register(form, "a", "first", () => {
+      seen.push("first");
+      return false;
+    }, "First.");
+    validate().register(form, "a", "second", () => {
+      seen.push("second");
+      return false;
+    }, "Second.");
+
+    expect(await validate().run(form)).toBe(false);
+    expect(errorOf(input).textContent).toBe("First.");
+    expect(seen).toEqual(["first"]);
+
+    // Re-registering a name replaces it IN PLACE — order is where a name was
+    // first seen, not where it was last set.
+    validate().register(form, "a", "first", () => {
+      seen.push("first");
+      return true;
+    });
+    seen.length = 0;
+    expect(await validate().run(form)).toBe(false);
+    expect(errorOf(input).textContent).toBe("Second.");
+    expect(seen).toEqual(["first", "second"]);
+  });
+
+  it("takes the message from the return value, then the registered one, then data-error-<name>", async () => {
+    const { form } = await boot(
+      group(`<input data-part="input" name="a" value="x" data-error-rule="From the attribute." data-error="Generic.">`)
+    );
+    const input = form.querySelector("input") as HTMLInputElement;
+
+    validate().register(form, "a", "rule", () => "From the return value.", "From the argument.");
+    await validate().run(form);
+    expect(errorOf(input).textContent).toBe("From the return value.");
+
+    validate().register(form, "a", "rule", () => false, "From the argument.");
+    await validate().run(form);
+    expect(errorOf(input).textContent).toBe("From the argument.");
+
+    validate().register(form, "a", "rule", () => false);
+    await validate().run(form);
+    expect(errorOf(input).textContent).toBe("From the attribute.");
+
+    validate().unregister(form, "a");
+    validate().register(form, "b", "unused", () => false);
+    validate().register(form, "a", "other", () => false);
+    await validate().run(form);
+    expect(errorOf(input).textContent).toBe("Generic.");
+    validate().unregister(form, "a");
+    validate().unregister(form, "b");
+  });
+
+  it("a validator that throws is a failure with the built-in message, never a pass", async () => {
+    const { form } = await boot(group(`<input data-part="input" name="a" value="x">`));
+    const input = form.querySelector("input") as HTMLInputElement;
+    validate().register(form, "a", "boom", () => {
+      throw new Error("network down");
+    }, "Author message.");
+
+    expect(await validate().run(form)).toBe(false);
+    expect(errorOf(input).textContent).toBe("Could not check this field. Please try again.");
+  });
+
+  it("run() turns live revalidation on, so its errors can be typed away", async () => {
+    const { form } = await boot(group(`<input data-part="input" name="a" required>`));
+    const input = form.querySelector("input") as HTMLInputElement;
+
+    expect(await validate().run(form)).toBe(false);
+    expect(fieldGroupOf(input).getAttribute("data-state")).toBe("invalid");
+
+    input.value = "typed";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    await tick();
+    expect(fieldGroupOf(input).getAttribute("data-state")).toBe(null);
+  });
+
+  it("keeps registries per form", async () => {
+    const { form } = await boot(group(`<input data-part="input" name="a" value="x">`));
+    const other = document.createElement("form");
+    other.innerHTML = `<input name="a" value="x">`;
+    container!.appendChild(other);
+
+    validate().register(form, "a", "no", () => false, "no");
+    expect(await validate().run(form)).toBe(false);
+    expect(await validate().run(other)).toBe(true);
+    validate().unregister(form, "a");
+  });
+});
+
+describe("faqir-validate · async validators", () => {
+  it("l-validate:<name>.async: validating while out, invalid with its message when it fails", async () => {
+    const gate = deferred<boolean>();
+    const { form } = await boot(
+      group(
+        `<input data-part="input" name="u" value="taken"
+                l-validate:free.async="isFree(value)"
+                data-error-free="That name is taken.">`
+      ),
+      { data: "{ isFree: () => null }" }
+    );
+    const input = form.querySelector("input") as HTMLInputElement;
+    (form.closest("[l-data]") as any).__faqirScope.isFree = () => gate.promise;
+
+    const verdict = validate().run(form);
+    await tick();
+    expect(fieldGroupOf(input).getAttribute("data-state")).toBe("validating");
+    expect(errorOf(input).textContent).toBe("");
+
+    gate.resolve(false);
+    expect(await verdict).toBe(false);
+    expect(fieldGroupOf(input).getAttribute("data-state")).toBe("invalid");
+    expect(errorOf(input).textContent).toBe("That name is taken.");
+    expect(input.getAttribute("aria-invalid")).toBe("true");
+  });
+
+  it("clears the validating state when the check passes", async () => {
+    const gate = deferred<boolean>();
+    const { form } = await boot(
+      group(`<input data-part="input" name="u" value="free" l-validate:free.async="check(value)">`),
+      { data: "{ check: () => null }" }
+    );
+    const input = form.querySelector("input") as HTMLInputElement;
+    (form.closest("[l-data]") as any).__faqirScope.check = () => gate.promise;
+
+    const verdict = validate().run(form);
+    await tick();
+    expect(fieldGroupOf(input).getAttribute("data-state")).toBe("validating");
+    gate.resolve(true);
+    expect(await verdict).toBe(true);
+    expect(fieldGroupOf(input).getAttribute("data-state")).toBe(null);
+    expect(input.getAttribute("aria-invalid")).toBe(null);
+  });
+
+  it("a rejected check is a failure with a built-in message — never a silent pass", async () => {
+    const gate = deferred<boolean>();
+    const { form } = await boot(group(`<input data-part="input" name="a" value="x">`));
+    const input = form.querySelector("input") as HTMLInputElement;
+    validate().register(form, "a", "remote", () => gate.promise, "Author message.");
+
+    const verdict = validate().run(form);
+    await tick();
+    expect(fieldGroupOf(input).getAttribute("data-state")).toBe("validating");
+
+    gate.reject(new Error("500"));
+    expect(await verdict).toBe(false);
+    expect(fieldGroupOf(input).getAttribute("data-state")).toBe("invalid");
+    expect(errorOf(input).textContent).toBe("Could not check this field. Please try again.");
+    validate().unregister(form, "a");
+  });
+
+  it("awaits a promise from a validator that forgot .async, rather than passing on truthiness", async () => {
+    const { form } = await boot(
+      group(
+        `<input data-part="input" name="u" value="x" l-validate:free="check(value)"
+                data-error-free="Taken.">`
+      ),
+      { data: "{ check: () => Promise.resolve(false) }" }
+    );
+    const input = form.querySelector("input") as HTMLInputElement;
+    expect(await validate().run(form)).toBe(false);
+    expect(errorOf(input).textContent).toBe("Taken.");
+  });
+
+  it("debounces live runs 250 ms and lets the newest win", async () => {
+    const calls: string[] = [];
+    const gates: Record<string, ReturnType<typeof deferred<boolean>>> = {};
+    const { form } = await boot(
+      group(`<input data-part="input" name="u" value="a" l-validate:free.async="check(value)" data-error-free="Taken.">`),
+      { data: "{ check: () => null }" }
+    );
+    const input = form.querySelector("input") as HTMLInputElement;
+    (form.closest("[l-data]") as any).__faqirScope.check = (v: string) => {
+      calls.push(v);
+      gates[v] = deferred<boolean>();
+      return gates[v].promise;
+    };
+
+    // First attempt arms live revalidation; its own check resolves clean.
+    submit(form);
+    await tick();
+    gates["a"].resolve(true);
+    await tick();
+    expect(calls).toEqual(["a"]);
+
+    // Three keystrokes inside one debounce window → exactly one more run.
+    input.value = "ab";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    await wait(60);
+    input.value = "abc";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    await wait(60);
+    input.value = "abcd";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    expect(fieldGroupOf(input).getAttribute("data-state")).toBe("validating");
+    expect(calls).toEqual(["a"]);
+
+    await wait(320);
+    expect(calls).toEqual(["a", "abcd"]);
+    gates["abcd"].resolve(false);
+    await tick();
+    expect(errorOf(input).textContent).toBe("Taken.");
+  });
+
+  it("ignores a superseded run: the last verdict owns the field", async () => {
+    const gates: Record<string, ReturnType<typeof deferred<boolean>>> = {};
+    const { form } = await boot(group(`<input data-part="input" name="a" value="one">`));
+    const input = form.querySelector("input") as HTMLInputElement;
+    validate().register(form, "a", "slow", (v: string) => {
+      gates[v] = deferred<boolean>();
+      return gates[v].promise;
+    }, "Rejected.");
+
+    const first = validate().run(form);
+    await tick();
+    input.value = "two";
+    const second = validate().run(form);
+    await tick();
+
+    // The stale run answers LAST and says "invalid" — and is ignored.
+    gates["two"].resolve(true);
+    expect(await second).toBe(true);
+    gates["one"].resolve(false);
+    expect(await first).toBe(false); // it still reports its own verdict…
+    await tick();
+    expect(fieldGroupOf(input).getAttribute("data-state")).toBe(null); // …but not on screen
+    expect(errorOf(input).textContent).toBe("");
+    validate().unregister(form, "a");
+  });
+
+  it("blocks the submit until every check has settled, then runs the on-valid hook", async () => {
+    const gate = deferred<boolean>();
+    const { form, scope } = await boot(
+      group(`<input data-part="input" name="a" value="x">`),
+      { data: "{ saved: false }", formAttr: 'l-validate="saved = true"' }
+    );
+    validate().register(form, "a", "remote", () => gate.promise);
+
+    const ev = submit(form);
+    expect(ev.defaultPrevented).toBe(true);
+    await tick();
+    expect(scope.saved).toBe(false); // still out — the hook has not run
+
+    gate.resolve(true);
+    await settle(() => scope.saved === true, "the on-valid hook after the awaited check");
+    validate().unregister(form, "a");
+  });
+
+  it("does not submit, and focuses the offender, when a waited-for check fails", async () => {
+    const gate = deferred<boolean>();
+    const { form, scope } = await boot(
+      group(`<input data-part="input" id="waited" name="a" value="x">`),
+      { data: "{ saved: false }", formAttr: 'l-validate="saved = true"' }
+    );
+    validate().register(form, "a", "remote", () => gate.promise, "Rejected by the server.");
+
+    submit(form);
+    await tick();
+    gate.resolve(false);
+    await settle(
+      () => document.activeElement === document.getElementById("waited"),
+      "focus moving to the offender once the awaited check answered",
+    );
+
+    expect(scope.saved).toBe(false);
+    expect(errorOf(form.querySelector("input")!).textContent).toBe("Rejected by the server.");
+    validate().unregister(form, "a");
+  });
+
+  it("a submit flushes a pending debounce instead of waiting it out", async () => {
+    const calls: string[] = [];
+    const { form } = await boot(
+      group(`<input data-part="input" name="u" value="a" l-validate:free.async="check(value)">`),
+      { data: "{ check: () => null }" }
+    );
+    const input = form.querySelector("input") as HTMLInputElement;
+    (form.closest("[l-data]") as any).__faqirScope.check = (v: string) => {
+      calls.push(v);
+      return Promise.resolve(true);
+    };
+
+    submit(form); // arms live revalidation, one run
+    await tick();
+    input.value = "ab";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    expect(calls).toEqual(["a"]); // debounced, not yet run
+
+    submit(form);
+    await tick();
+    expect(calls).toEqual(["a", "ab"]); // flushed by the submit, not 250 ms later
+  });
+});
+
+describe("faqir-validate · the production engine reports nothing", () => {
+  it("devtools.report() is a no-op that records nothing outside the dev build", () => {
+    expect(Faqir.devtools.dev).toBe(false);
+    expect(Faqir.devtools.report("anything at all", document.body)).toBe(false);
+    expect(Faqir.devtools.warnings()).toEqual([]);
   });
 });

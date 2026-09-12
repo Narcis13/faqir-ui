@@ -12,7 +12,8 @@
  *   - dev engine           registry/core/faqir-core.dev.js  no budget
  *     (development build — measured and printed, never enforced; task 0.7-12)
  *   - each plugin          registry/core/plugins/*.js      ≤  2 KB gzip
- *     (official plugins, each self-registering via Faqir.plugin)
+ *     (official plugins, each self-registering via Faqir.plugin), except the
+ *     per-plugin overrides in PLUGIN_BUDGETS below
  *
  * Minification uses `bun build --minify` — the exact minifier that produces the
  * shipped `faqir-core.min.js` — so the numbers reflect the real artifact. Bun
@@ -46,6 +47,15 @@ export const BUDGETS = {
   engine: 14 * KB,
   engineWithControllers: 46 * KB,
   plugin: 2 * KB,
+};
+
+// Per-plugin exceptions to BUDGETS.plugin, by file name. One entry, and it is
+// named for the feature that bought the kilobyte: 1.1B-03 gave faqir-validate
+// the programmatic registry (`Faqir.validate.register/unregister/run`) and
+// async validators — the debounce, the last-wins token, the `validating` state
+// and the submit that waits on an in-flight check. Everything else stays at 2 KB.
+export const PLUGIN_BUDGETS = {
+  "faqir-validate.js": 3 * KB,
 };
 
 // ── Pure budget logic (no I/O, no Bun) ───────────────────────────────────────
@@ -192,7 +202,7 @@ export function collectDefaultTargets(root = ROOT) {
       targets.push({
         label: `plugin: ${file}`,
         entry: join("registry", "core", "plugins", file),
-        budgetBytes: BUDGETS.plugin,
+        budgetBytes: PLUGIN_BUDGETS[file] ?? BUDGETS.plugin,
       });
     }
   }

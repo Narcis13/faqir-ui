@@ -1473,7 +1473,7 @@ function renderPluginVocabulary(plugins: PluginMetadata[]): string[] {
     `${plugins.length} official plugins add directives and magics to the same expression language. ` +
       "Load one after `faqir-core.js` (`<script src=\"core/plugins/faqir-persist.js\"></script>`), or " +
       "bundle core plus every plugin with `faqir bundle --js`. Each self-registers, is dependency-free " +
-      "and is ≤ 2 KB gzip.",
+      "and is ≤ 2 KB gzip (`faqir-validate`, which carries the programmatic `Faqir.validate` API, ≤ 3 KB).",
   );
   lines.push("");
   lines.push("| Plugin | Provides | File | What it does |");

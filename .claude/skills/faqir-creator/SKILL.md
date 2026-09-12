@@ -185,7 +185,7 @@ Load a plugin after `faqir-core.js`, or combine core plus every plugin with `faq
 - `faqir-intersect` (`l-intersect`): `registry/core/plugins/faqir-intersect.js` — declarative IntersectionObserver hooks.
 - `faqir-mask` (`l-mask`): `registry/core/plugins/faqir-mask.js` — caret-safe input masking.
 - `faqir-persist` (`l-persist`, `$persist()`): `registry/core/plugins/faqir-persist.js` — localStorage-backed reactive state.
-- `faqir-validate` (`l-validate`): `registry/core/plugins/faqir-validate.js` — declarative form validation for the field-group contract.
+- `faqir-validate` (`l-validate`): `registry/core/plugins/faqir-validate.js` — declarative + programmatic form validation.
 
 ## Canonical Compositions
 

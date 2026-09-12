@@ -11541,7 +11541,18 @@ function createTreeView(root) {
      * Diagnostics recorded so far, oldest first. Always an array: the
      * production engine records nothing, so it is always empty there.
      */
-    warnings: function() { return devHooks ? devHooks.warnings() : []; }
+    warnings: function() { return devHooks ? devHooks.warnings() : []; },
+    /**
+     * Record one diagnostic on a plugin's behalf. The dev build prints it and
+     * keeps it in `warnings()` (deduped like every other); production does
+     * nothing and answers `false`. A plugin is a separate file with no reach
+     * into this seam's other side, so without it a plugin can only be silent
+     * or noisy in a shipped page — and "silent" is what the contract forbids.
+     * [1.1B-03]
+     */
+    report: function(message, el) {
+      return false;
+    }
   };
 
 

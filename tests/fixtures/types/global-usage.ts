@@ -38,4 +38,11 @@ if (el) {
   void scopeId;
 }
 
+// ── the plugin-installed validate surface ──────────────────────────────────
+const signup = document.querySelector("form");
+if (signup) {
+  void Faqir.validate?.run(signup);
+  Faqir.validate?.register(signup, "email", "unique", (value) => value !== "taken");
+}
+
 void engineVersion;

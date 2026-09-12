@@ -293,6 +293,103 @@ test.describe("plugin directives", () => {
     await expect(page.locator("#flag")).toHaveText("submitted");
   });
 
+  test("a custom l-validate:<name> expression runs against the page's own scope", async ({
+    page,
+  }) => {
+    // This is the one happy-dom could not see. The plugin builds the validator's
+    // locals on `Object.create(scope)`, and the scope is a reactive PROXY: a
+    // plain `local.$el = el` runs that proxy's `set` trap, which refuses the
+    // magic — a TypeError under "use strict" that made every custom validator
+    // fail in a real browser while the unit suite stayed green. [1.1B-03]
+    const diagnostics = collectDiagnostics(page);
+    await mount(
+      page,
+      `
+      <div l-data="{ isCompanyEmail: (v) => /@acme\\.com$/.test(v) }">
+        <form id="custom-form" l-validate novalidate>
+          <div data-ui="field-group">
+            <input data-part="input" id="work" name="work" type="email"
+                   value="alice@gmail.com"
+                   l-validate:company="isCompanyEmail(value)"
+                   data-error-company="Use your company address.">
+            <p data-part="error" id="work-error"></p>
+          </div>
+          <button type="submit" id="send">Send</button>
+        </form>
+      </div>
+      `,
+      ["validate"],
+    );
+
+    await page.locator("#send").click();
+    await expect(page.locator("#work-error")).toHaveText("Use your company address.");
+
+    await page.locator("#work").fill("alice@acme.com");
+    await expect(page.locator("#work-error")).toHaveText("");
+    await expect(page.locator("#custom-form [data-ui='field-group']")).not.toHaveAttribute(
+      "data-state",
+      "invalid",
+    );
+
+    // The validator's locals are its own: nothing was written into page data.
+    const leaked = await page.evaluate(() => {
+      const scope = (document.querySelector("[l-data]") as any).__faqirScope;
+      return { value: scope.value, el: scope.$el === undefined };
+    });
+    expect(leaked.value).toBeUndefined();
+
+    expect(diagnostics).toEqual([]);
+  });
+
+  test("an async validator holds the field in validating, on real timers", async ({ page }) => {
+    // Real clock, real debounce, real promise — the three things a happy-dom
+    // unit test fakes. [1.1B-03]
+    const diagnostics = collectDiagnostics(page);
+    await mount(
+      page,
+      `
+      <div l-data="{ check: (value) =>
+             new Promise((resolve) => setTimeout(() => resolve(value !== 'ada'), 600)) }">
+        <form id="async-form" l-validate novalidate>
+          <div data-ui="field-group">
+            <input data-part="input" id="handle" name="handle"
+                   l-validate:free.async="check(value)"
+                   data-error-free="That handle is taken.">
+            <p data-part="error" id="handle-error"></p>
+          </div>
+          <button type="submit" id="claim">Claim</button>
+        </form>
+      </div>
+      `,
+      ["validate"],
+    );
+
+    const group = page.locator("#async-form [data-ui='field-group']");
+
+    // A submit waits for the check rather than deciding without it.
+    await page.locator("#handle").fill("ada");
+    await page.locator("#claim").click();
+    await expect(group).toHaveAttribute("data-state", "validating");
+    await expect(group).toHaveAttribute("data-state", "invalid");
+    await expect(page.locator("#handle-error")).toHaveText("That handle is taken.");
+
+    // Typing debounces: the state goes back to validating and settles clean
+    // once the 250 ms window and the 200 ms check have both elapsed.
+    await page.locator("#handle").fill("grace");
+    await expect(group).toHaveAttribute("data-state", "validating");
+    await expect(group).not.toHaveAttribute("data-state", "validating");
+    await expect(page.locator("#handle-error")).toHaveText("");
+    await expect(page.locator("#handle")).not.toHaveAttribute("aria-invalid", "true");
+
+    // And the programmatic surface is on the global the plugin installed.
+    const clean = await page.evaluate(
+      () => (window as any).Faqir.validate.run("#async-form") as Promise<boolean>,
+    );
+    expect(clean).toBe(true);
+
+    expect(diagnostics).toEqual([]);
+  });
+
   test("l-collapse animates height and leaves no inline residue", async ({ page }) => {
     await mount(
       page,

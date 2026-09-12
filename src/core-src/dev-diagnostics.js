@@ -112,6 +112,13 @@ devHooks = {
    * custom directive — silently inert in production. Once per element+attribute.
    */
   unknownDirective: function(el, dir) {
+    // `l-validate:company` parses as the TYPE "validate:company" — the engine
+    // dispatches on nothing, but the attribute is not a typo: faqir-validate
+    // reads it off the control itself. A registered directive followed by a
+    // free-form `:suffix` is that shape, and reporting it would flag correct
+    // markup as broken, which is worse than saying nothing. [1.1B-03]
+    var colon = dir.type.indexOf(':');
+    if (colon > 0 && customDirectives.has(dir.type.slice(0, colon))) return;
     devReport(
       'directive',
       'directive:' + dir.raw + ':' + describeElement(el),
@@ -133,6 +140,16 @@ devHooks = {
       el,
       { expression: expression }
     );
+  },
+
+  /**
+   * A plugin reporting through `Faqir.devtools.report()`. The message is the
+   * plugin's own — it is a separate file and its strings ship either way — so
+   * this hook only routes it into the same log everything else lands in. Once
+   * per message+element. [1.1B-03]
+   */
+  pluginWarning: function(message, el) {
+    return devReport('plugin', 'plugin:' + message + ':' + describeElement(el), message, el);
   },
 
   /** `l-html` assigns unsanitized markup. Once per element. */

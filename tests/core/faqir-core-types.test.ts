@@ -35,11 +35,19 @@ const ENGINE_SRC = join(ROOT, "src", "core-src", "engine.js");
 const RECIPES = join(ROOT, "registry", "recipes");
 
 const Faqir = require("../../registry/core/faqir-core.js");
+// `Faqir.validate` is PLUGIN-installed: it exists on a page that loaded
+// `plugins/faqir-validate.js` and nowhere else. Install it here so the drift
+// assertions below are about what the declaration says, not about which file in
+// this shared realm happened to require the plugin first.  [1.1B-03]
+(globalThis as any).Faqir = Faqir;
+require("../../registry/core/plugins/faqir-validate.js")(Faqir);
 
 // ── reading the declaration ────────────────────────────────────────────────
 
 interface Declared {
   members: string[];
+  /** Members written with a `?` — the plugin-installed ones. */
+  optional: string[];
   extends: string[];
   /** For `ControllerApis`-style maps: member name → the interface it points at. */
   refs: Map<string, string>;
@@ -53,6 +61,7 @@ function readInterfaces(source: string): Map<string, Declared> {
   const visit = (node: ts.Node): void => {
     if (ts.isInterfaceDeclaration(node)) {
       const members: string[] = [];
+      const optional: string[] = [];
       const refs = new Map<string, string>();
       for (const member of node.members) {
         if (!member.name) continue;
@@ -62,6 +71,13 @@ function readInterfaces(source: string): Map<string, Declared> {
         if (name === null) continue;
         // Overloads (`controller`) declare the same name twice.
         if (!members.includes(name)) members.push(name);
+        if (
+          (ts.isPropertySignature(member) || ts.isMethodSignature(member)) &&
+          member.questionToken &&
+          !optional.includes(name)
+        ) {
+          optional.push(name);
+        }
         if (
           ts.isPropertySignature(member) &&
           member.type &&
@@ -73,6 +89,7 @@ function readInterfaces(source: string): Map<string, Declared> {
       }
       out.set(node.name.text, {
         members,
+        optional,
         extends: (node.heritageClauses ?? []).flatMap((clause) =>
           clause.types.map((t) => (ts.isIdentifier(t.expression) ? t.expression.text : "")),
         ).filter(Boolean),
@@ -95,6 +112,17 @@ function membersOf(name: string, seen = new Set<string>()): string[] {
   if (!entry) throw new Error(`faqir-core.d.ts declares no interface "${name}"`);
   const all = new Set(entry.members);
   for (const parent of entry.extends) for (const m of membersOf(parent, seen)) all.add(m);
+  return [...all].sort();
+}
+
+/** The members written with a `?`, an interface's own plus everything inherited. */
+function optionalOf(name: string, seen = new Set<string>()): string[] {
+  if (seen.has(name)) return [];
+  seen.add(name);
+  const entry = DECLARED.get(name);
+  if (!entry) throw new Error(`faqir-core.d.ts declares no interface "${name}"`);
+  const all = new Set(entry.optional);
+  for (const parent of entry.extends) for (const m of optionalOf(parent, seen)) all.add(m);
   return [...all].sort();
 }
 
@@ -124,7 +152,14 @@ function mount(): void {
 
 describe("FaqirGlobal matches the live engine", () => {
   it("declares exactly the keys the engine exposes", () => {
-    expect(sorted(Object.keys(Faqir))).toEqual(membersOf("FaqirGlobal"));
+    // A member written `validate?:` is one a PLUGIN installs, so it may be
+    // absent from a bare engine — but never present and undeclared, and a
+    // required member is still required. Both directions, as before.
+    const declared = membersOf("FaqirGlobal");
+    const optional = optionalOf("FaqirGlobal");
+    const live = sorted(Object.keys(Faqir));
+    expect(live.filter((key) => !declared.includes(key))).toEqual([]);
+    expect(declared.filter((m) => !optional.includes(m) && !live.includes(m))).toEqual([]);
   });
 
   it("is not vacuous — the surface is the documented one", () => {
@@ -133,13 +168,26 @@ describe("FaqirGlobal matches the live engine", () => {
     expect(membersOf("FaqirGlobal")).toContain("inspect");
     expect(membersOf("FaqirGlobal")).toContain("plugin");
     expect(membersOf("FaqirGlobal").length).toBeGreaterThanOrEqual(19);
+    // …and the optional-member rule is not a hole either: everything the ENGINE
+    // itself defines is declared as required.
+    expect(optionalOf("FaqirGlobal")).toEqual(["validate"]);
   });
 
   it("declares every member as the kind the engine implements", () => {
+    const optional = optionalOf("FaqirGlobal");
     for (const key of membersOf("FaqirGlobal")) {
-      const expected = key === "version" ? "string" : key === "devtools" ? "object" : "function";
-      expect(typeof (Faqir as Record<string, unknown>)[key], `Faqir.${key}`).toBe(expected);
+      const value = (Faqir as Record<string, unknown>)[key];
+      if (value === undefined && optional.includes(key)) continue; // plugin absent
+      const expected =
+        key === "version" ? "string" : key === "devtools" || key === "validate" ? "object" : "function";
+      expect(typeof value, `Faqir.${key}`).toBe(expected);
     }
+  });
+
+  it("declares the plugin-installed validate surface the plugin actually installs", () => {
+    expect(sorted(Object.keys((Faqir as Record<string, any>).validate))).toEqual(
+      membersOf("ValidateApi"),
+    );
   });
 });
 
@@ -150,7 +198,7 @@ describe("Devtools matches window.__FAQIR_DEVTOOLS__", () => {
     expect(sorted(Object.keys(Faqir.devtools))).toEqual(membersOf("Devtools"));
   });
 
-  it("declares the handle's four diagnostic classes and no others", () => {
+  it("declares the handle's diagnostic classes and no others", () => {
     const source = readFileSync(DTS, "utf8");
     const union = /kind:\s*([^;]+);/.exec(source)?.[1] ?? "";
     const declared = sorted([...union.matchAll(/"([a-z]+)"/g)].map((m) => m[1]));
@@ -159,7 +207,9 @@ describe("Devtools matches window.__FAQIR_DEVTOOLS__", () => {
     const emitted = sorted(
       [...dev.matchAll(/devReport\(\s*'([a-z]+)'/g)].map((m) => m[1]),
     );
-    expect(emitted.length).toBe(4);
+    // Four engine classes plus `plugin`, the seam a plugin file reports through.
+    expect(emitted.length).toBe(5);
+    expect(emitted).toContain("plugin");
     expect(declared).toEqual(emitted);
   });
 

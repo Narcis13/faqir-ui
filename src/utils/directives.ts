@@ -130,11 +130,12 @@ export const PLUGIN_DIRECTIVES: readonly DirectiveSpec[] = Object.freeze([
   {
     // `l-validate` on the form; `l-validate:<name>` on a control declares a
     // custom validator, so the argument is optional rather than required.
+    // `.async` marks a validator whose expression answers with a promise.
     name: "validate",
     attribute: "l-validate",
     shorthand: null,
     arg: "none",
-    modifiers: [],
+    modifiers: ["async"],
     plugin: "faqir-validate",
   },
 ] as const) as readonly DirectiveSpec[];
