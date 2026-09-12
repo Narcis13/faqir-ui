@@ -1047,10 +1047,10 @@
         },
         {
           "path": "calendar.manifest.json",
-          "sha256": "bc1ad7a82154c63a0d59bb6f0a31a326f4074ea4e1250725730346b47399c6a7"
+          "sha256": "8a7c677c8bd63e02dc7ddbd674e5ca84665d6470eb3c6733d4c71c79244ceeaf"
         }
       ],
-      "hash": "dafdc38ab43e3b072c12e3af67999dc5eb00f3307496544c16c0853b7b373985",
+      "hash": "3f66c8403891823e52f38c92206cd2fab8c3602afb05a0906d43f2cbfd8fbd24",
       "deps": []
     },
     {
@@ -1153,10 +1153,10 @@
         },
         {
           "path": "context-menu.manifest.json",
-          "sha256": "abe9e55ba09849365a5660fcfa76b059e31dab2c20f5b8e4cec1ac53ad5d6518"
+          "sha256": "4167d034dc9e2876830d575fe11cdc5e0f1c96e8d9c2df31ca9fce53930e7230"
         }
       ],
-      "hash": "05ab15f181e168d4a3aa19a92f32d26dda7a055e7514322900326369fc7b5286",
+      "hash": "7d7944b656030e7eba6688d92b2da8c9b7a4355e8a5e09fa7699938b58904c8a",
       "deps": []
     },
     {
@@ -1264,10 +1264,10 @@
         },
         {
           "path": "dropdown.manifest.json",
-          "sha256": "b60cbb8f8b1123258b3e2a9ae7073029c0b796167ace7581f07a36a6408d8be6"
+          "sha256": "f72e63cb0235db995d9cfe847ea5f5bfa327d14c32bcbfb8d67e611511261fce"
         }
       ],
-      "hash": "152aca1a25ffbb078ed4181a79ed913f7e5fdc7301b84d8715c4cb1371bcc4c0",
+      "hash": "3ddea418d875b0d066530b275a719417ea7fb118b8aec414a2cb828e0320f6c6",
       "deps": []
     },
     {
@@ -1290,10 +1290,10 @@
         },
         {
           "path": "file-upload.manifest.json",
-          "sha256": "44e630d356bdb1eb98ab28998aa40e3ccd2fd26b375f9e3beadbe81f0e30422b"
+          "sha256": "746d78a2559415e83778d6d24eb0d386192f0c6479860f7edfabd48233b6c350"
         }
       ],
-      "hash": "246f2dcee0001769a40eb889e971f745ad592a42ef94cb997522d4e2194cd948",
+      "hash": "2c11279813609db5944580b244eae425942f07572174e21924dcc11472b4d1d8",
       "deps": []
     },
     {
@@ -1316,10 +1316,10 @@
         },
         {
           "path": "input-otp.manifest.json",
-          "sha256": "7ed91a96938eab6ad7fa0a5657b5e92826610fc8ca9191fd9423d34324f3106b"
+          "sha256": "e78f3dd865c4c6d5fec662770102b392453c330e0eef257bfddd61432107f224"
         }
       ],
-      "hash": "8539d4e9cd5d3040a637e5585eaf64335b015cc3a4477ddd130e196054eed69d",
+      "hash": "48a78d6b5ee6e0e0008744af017b5bcbc9e30d171f345412fb6d1a1ddb520dd9",
       "deps": []
     },
     {
@@ -1368,10 +1368,10 @@
         },
         {
           "path": "pagination.manifest.json",
-          "sha256": "5ebed05bd9b62b6d21b5ef4a9f2b2bc9fdb0a02dc0f232912dd7d13b5aaaa114"
+          "sha256": "49cede75077da99d0ad3278c4f2774bf9c6980775c375c47da6244d2579b83c6"
         }
       ],
-      "hash": "2081befeda5fb128cc8313dc036ce8e3e8b54f285b9776e244e314a8cf8be173",
+      "hash": "4c2670871a37d53e6034ec3f703522a014bdda10739de17d8948024df1961a6a",
       "deps": [
         "button"
       ]
@@ -1535,10 +1535,10 @@
         },
         {
           "path": "slider.manifest.json",
-          "sha256": "73b036ad6c73e98837209e83ca9f886c052e38618d656a1d574b52b03a534af0"
+          "sha256": "cbc00b7fea24e11bf5ff9638ce15defad67396bbf1cdf3b352a41119ad7392f3"
         }
       ],
-      "hash": "ddb3cfbc7b5df19d7b87ef75c2b559926bdca0810e55dc824bd47896368c6f5d",
+      "hash": "d7b097b3cccb6a1e10c8b7ed2009d14618d6d23e9cab9c9b7a7854d75e61f99b",
       "deps": []
     },
     {
@@ -1561,10 +1561,10 @@
         },
         {
           "path": "table.manifest.json",
-          "sha256": "6961c5e3193df900a2eb32a72a4ab5f69f46d739ffaea3934e90d37dbabc48f5"
+          "sha256": "ee8024eadb4ee15184812f2154c9bf616cfb88023f373a73413c88c1e53013eb"
         }
       ],
-      "hash": "68ea5515cb3dab603982321fb4d755d0172fe8547c81ad96b7a18b6fde577f22",
+      "hash": "0f70a8d4e0ca5c011d4ce7e86c810f107adb2a7a581e667397db10622a2e806a",
       "deps": [
         "checkbox",
         "badge",
@@ -1674,10 +1674,10 @@
         },
         {
           "path": "toggle-group.manifest.json",
-          "sha256": "b84416a9ab17993f6d036f7063697f1f0c077fa0f8de97b3d0ab5817ca1d1054"
+          "sha256": "74cb42f5f119373191ec1e0e88acafb50d4d9eddbb2ff12a19b3be02cc24b921"
         }
       ],
-      "hash": "0df71c4caaf72fee25024ffc0ebca4db14cbe563f2c7d7b7fff064c114ed73be",
+      "hash": "c8b6cbb1633330b799b2f2b3be3028d15e37c802373000fef7d70ac9fc7da193",
       "deps": []
     },
     {

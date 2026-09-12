@@ -137,7 +137,8 @@
     "focus-ring-style",
     "focus-ring-color",
     "focus-ring-offset",
-    "surface-backdrop", "disabled-opacity"
+    "surface-backdrop",
+    "disabled-opacity"
   ],
   "templates": {
     "html": "<div data-ui=\"dropdown\" data-state=\"closed\">\n  <button data-part=\"trigger\" aria-haspopup=\"true\" aria-expanded=\"false\">{trigger_text}</button>\n  <div data-part=\"menu\" role=\"menu\" hidden>\n    <button data-part=\"item\" role=\"menuitem\">{item1}</button>\n    <button data-part=\"item\" role=\"menuitem\">{item2}</button>\n    <hr data-part=\"separator\">\n    <button data-part=\"item\" role=\"menuitem\">{item3}</button>\n  </div>\n</div>"

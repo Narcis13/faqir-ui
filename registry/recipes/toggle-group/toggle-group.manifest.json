@@ -126,7 +126,8 @@
     "focus-ring-width",
     "focus-ring-style",
     "focus-ring-color",
-    "focus-ring-offset", "disabled-opacity"
+    "focus-ring-offset",
+    "disabled-opacity"
   ],
   "templates": {
     "html": "<div data-ui=\"toggle-group\" data-mode=\"{mode}\" role=\"radiogroup\" aria-label=\"{label}\">\n  <label data-part=\"item\" data-state=\"off\"><input data-part=\"control\" type=\"radio\" name=\"{id}\" value=\"{value1}\"><span data-part=\"label\">{option1}</span></label>\n  <label data-part=\"item\" data-state=\"off\"><input data-part=\"control\" type=\"radio\" name=\"{id}\" value=\"{value2}\"><span data-part=\"label\">{option2}</span></label>\n</div>"
