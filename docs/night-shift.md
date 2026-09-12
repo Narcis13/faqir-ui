@@ -8,8 +8,9 @@ Night Shift is **a skill plus a ledger plus a queue**. No new infrastructure and
 no new dependency: the generators, the gates and the browser it screenshots with
 all shipped before it did.
 
-**Status: v0 (task 1.1N-01).** One dream kind — `theme`. Invoked by hand;
-`1.1N-02` adds the nightly runner and the weekly digest.
+**Status: v0 (tasks 1.1N-01, 1.1N-02).** One dream kind — `theme`. Run by hand
+or by `scripts/dream/nightly.sh` on a schedule; scored against a versioned
+rubric; summarized weekly into `DREAMS.md`.
 
 ---
 
@@ -36,6 +37,9 @@ scripts/dream/theme.mjs --brief <id>
 dreams.tsv                        append-only, one row per dream
       │
       ▼
+DREAMS.md                         the week of it, regenerated from the ledger
+      │
+      ▼
 morning: a human merges, edits, or closes. The ledger already knows.
 ```
 
@@ -49,7 +53,10 @@ morning: a human merges, edits, or closes. The ledger already knows.
 | `.faqir-dreams/seeds/<id>.seed.json` | the seed the dream was written from — a kept theme is reproducible from it | yes |
 | `.faqir-dreams/out/<id>/` | the scorecard and the light/dark PNG pair | **no** (`.gitignore`) |
 | `dreams.tsv` | the ledger | yes |
-| `scripts/dream/{theme,guards,queue,ledger,snapshot}.mjs` | the shift | yes |
+| `docs/dream-rubric.md` | the taste rubric, versioned — the prose half | yes |
+| `DREAMS.md` | the weekly digest, generated from the ledger | yes |
+| `scripts/dream/{theme,guards,queue,ledger,snapshot,rubric,digest}.mjs` | the shift | yes |
+| `scripts/dream/nightly.sh` | the runner a scheduler invokes | yes |
 
 The bundle is the one thing not committed. It is a local review artefact: two
 PNGs per dream in the repository history is a repository that doubles in a year,
@@ -138,6 +145,10 @@ iteration  date  kind  id  branch  commit  metric  delta  guard  gates  taste  s
   distance and a future component dream's size budget are not on the same scale.
 - `gates` reads `9/9` on a keep and `4/9 (gen:theme-previews)` on a discard.
 - `status` is `keep`, `discard` or `baseline` (row 0).
+- `taste` is one cell carrying all three facts — `4.0 rubric-1.0 claude-opus-5` —
+  because the column count is frozen by append-only. It is usually `-`: the row
+  is written the moment the gates pass and the pictures are scored afterwards,
+  so the scorecard is where a score lands. See *The taste rubric* below.
 - `-` means "no value". A tab or a newline in a cell is a refusal, not an escape:
   a mangled row would still parse, into something that is not what was written.
 
@@ -145,9 +156,120 @@ A kept dream lands **two commits** on its branch: the theme, then a row citing
 that theme's hash — a row cannot cite a hash it is inside. (`/faqir-plan` records
 its own task hashes the same way.)
 
+## The cadence
+
+Nothing above needs a schedule to work — `/faqir-dream` is a command a human can
+run. The schedule is what makes it a *shift*.
+
+```bash
+bun run dream:nightly --dry-run     # create a worktree, print the plan, remove it
+bun run dream:nightly               # one dream, in a worktree of its own
+bun run dream:digest                # rewrite DREAMS.md from the ledger
+```
+
+### `scripts/dream/nightly.sh` — one night, one worktree
+
+A scheduled run cannot use your checkout: the shift refuses to start on a dirty
+tree, which is right for a human and fatal at 3am. So the runner gives the
+pipeline a checkout of its own — `git worktree add --detach` from `main` — and
+takes it away afterwards. **The branch survives**: a worktree shares one `.git`,
+so `dream/theme-<id>` is still there when the checkout is gone. The checkout is
+scaffolding; the branch is the output.
+
+Three details that are not obvious:
+
+- **`node_modules` is symlinked in.** It is not in the tree and every gate needs
+  it; the link is removed before the worktree is.
+- **The bundle is harvested before the worktree goes.** The scorecard and the
+  PNGs are gitignored, so they live nowhere else — they are copied back to
+  `.faqir-dreams/out/` first.
+- **A dirty worktree is KEPT, not removed.** A discarded dream deletes its branch
+  and leaves the ledger row and the queue update uncommitted (see the morning
+  review below); removing the worktree would delete the only record of a night
+  that produced a reason. The runner prints where it is.
+
+It runs `git worktree`, `git branch --list` and `git status` and nothing else —
+`tests/dream/nightly.test.ts` greps for the verbs §10.2 forbids and runs the
+whole thing against a disposable repository, so "never touches main" is measured
+rather than promised.
+
+Scheduling it, the two ways §10.6 names:
+
+```bash
+# local — crontab -e
+0 3 * * * cd /path/to/faqir && bash scripts/dream/nightly.sh >> /tmp/faqir-night.log 2>&1
+
+# local — launchd (macOS), ~/Library/LaunchAgents/dev.faqir.night.plist
+#   ProgramArguments: /bin/bash -lc 'cd /path/to/faqir && bash scripts/dream/nightly.sh'
+#   StartCalendarInterval: { Hour: 3, Minute: 0 }
+```
+
+In the cloud, a Claude Code scheduled routine (`/schedule`) brings its own
+checkout, so schedule the **skill** rather than this script — `every day at
+03:00 — /faqir-dream`. The runner and the routine are two ways to the same
+place, which is why everything that decides anything lives in the pipeline and
+not in either of them.
+
+`DREAM_CMD` is what the runner runs inside the worktree; it defaults to
+`claude -p "/faqir-dream next"` and is an environment variable so the script
+itself never needs editing:
+
+```bash
+DREAM_CMD='node scripts/dream/theme.mjs --brief arcade' bash scripts/dream/nightly.sh
+```
+
+### The taste rubric
+
+`docs/dream-rubric.md`, version 1.0: five criteria — hierarchy, rhythm,
+contrast, restraint, fit — scored 1–5 from the light/dark pair, each with one
+sentence. The threshold for a PR is **nothing below 3 and a mean of at least
+3.5**; it decides what is worth a human's minute and deletes nothing.
+
+Two copies of a rubric is drift waiting to happen, so there are two halves that
+cannot move apart: the prose a model reads, and `scripts/dream/rubric.mjs`, which
+validates what a scorer wrote. `tests/dream/rubric.test.ts` parses the document
+and asserts it against the module — the version, the five questions, the scale,
+the threshold and the ledger cell's spelling.
+
+The version and the judge travel WITH the score, in the scorecard's `taste`
+block, because a 4 from one model under one rubric is not a 4 from another. The
+pipeline writes that block empty and the scorer fills it in: the pictures are
+scored after the gates pass, which is why the ledger's `taste` cell is usually
+`-` and the scorecard is the record.
+
+### `DREAMS.md` — the weekly digest
+
+```bash
+bun run dream:digest                      # this week
+bun run dream:digest --week 2026-09-07    # an older one
+bun run dream:digest --print              # to stdout, writing nothing
+```
+
+Kept dreams with their distinctiveness, their taste scores and links to their
+snapshots; discards with the gate that stopped them; what is still queued; and a
+line per earlier week. Open PRs are included when `gh` answers and the section
+is absent when it does not — an absence the digest did not measure is not
+reported.
+
+The nightly runner regenerates it after every run — **in your checkout, not in
+the worktree**, since that is where the file lives. So a night that produced a
+dream leaves `DREAMS.md` modified and uncommitted for the morning, the same way
+a discard leaves its row. Commit it, or `git checkout -- DREAMS.md`; the next
+hand-run of `/faqir-dream` refuses to start until you have.
+
+It reads **unmerged `dream/*` branches too**, because a kept dream commits its
+ledger row on its own branch: a digest that only read `dreams.tsv` at HEAD would
+report last night as nothing at all, which is backwards for a file whose job is
+to help you decide what to merge. Every number in it is read from the ledger,
+the manifest or the scorecard — the digest computes nothing of its own, and
+re-running it on an unchanged week rewrites nothing.
+
 ## The morning review
 
 A kept dream leaves you a branch, a bundle and a row.
+
+Start with the digest — `DREAMS.md` is the week in one page, and it already
+includes tonight's dream even though its branch is unmerged.
 
 ```bash
 git log --oneline main..dream/theme-arcade
@@ -170,12 +292,12 @@ start until you have done one or the other.
 
 ## What is not here yet
 
-- **The nightly runner and the weekly digest** — `1.1N-02`: `scripts/dream/nightly.sh`
-  (a worktree per run, for cron/launchd or a `/schedule` cloud routine) and
-  `scripts/dream/digest.mjs` → `DREAMS.md`.
-- **The versioned taste rubric** — `1.1N-02`: `docs/dream-rubric.md`, five criteria
-  scored 1–5 with the judge model named in the row so scores stay comparable. v0
-  is three questions the agent answers in the scorecard's `taste` block.
+- **A judge inside the pipeline.** §10.5 imagines the vision model scoring before
+  the PR is opened; today the scorer is the agent driving the skill, which runs
+  *after* `theme.mjs` has appended the row. So the ledger's `taste` cell is
+  written by nobody (`-`) and the scorecard carries the score. The day the judge
+  can be called from the script, the row is written already knowing it — the
+  cell's spelling and its parser are in `rubric.mjs` waiting for that.
 - **The other five dream kinds** — component, motion, dogfood, wish, docs. The
   vocabulary is already in `queue.mjs` and `ledger.mjs` so adding one does not
   move the schema; each waits on its own gates (§10.3).

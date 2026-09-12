@@ -28,9 +28,11 @@ import { dirname, join } from "node:path";
 import {
   loadLedger,
   loadQueue,
+  loadRubric,
   loadTheme,
   type LedgerModule,
   type QueueModule,
+  type RubricModule,
   type RunResult,
   type Runner,
   type ThemeModule,
@@ -39,10 +41,12 @@ import {
 let theme: ThemeModule;
 let ledger: LedgerModule;
 let queueMod: QueueModule;
+let rubric: RubricModule;
 beforeAll(async () => {
   theme = await loadTheme();
   ledger = await loadLedger();
   queueMod = await loadQueue();
+  rubric = await loadRubric();
 });
 
 const ok = (stdout = ""): RunResult => ({ status: 0, stdout, stderr: "" });
@@ -344,9 +348,14 @@ describe("a dream that keeps", () => {
     expect(card.gates).toEqual(theme.THEME_GATES.map((g) => g.name));
     expect(card.distinctiveness).toEqual({ nearest: "candy", axis_distance: 9, token_distance: 0.0812 });
     expect(card.snapshots).toEqual(["arcade-light.png", "arcade-dark.png"]);
-    // The taste block exists from the first row rather than appearing in 1.1N-02,
-    // so a scorecard written tonight is readable by next month's digest.
-    expect(card.taste.rubric).toBe("v0");
+    // The taste block is the versioned rubric, empty: the scorer looks at the
+    // PNGs after this row is written, so what a fresh scorecard carries is the
+    // rubric's identity and one null per criterion (1.1N-02).
+    expect(card.taste).toEqual(rubric.emptyTaste());
+    expect(card.taste.rubric).toBe(rubric.RUBRIC_VERSION);
+    expect(card.taste.rubric_doc).toBe("docs/dream-rubric.md");
+    expect(Object.keys(card.taste.scores)).toEqual(rubric.RUBRIC_KEYS);
+    expect(rubric.validateTaste(card.taste)).toEqual([]);
   });
 
   it("marks the brief kept, and never picks it again", async () => {

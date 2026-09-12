@@ -38,6 +38,7 @@ import {
 } from "./guards.mjs";
 import { appendRow, nextPosition, readLedger } from "./ledger.mjs";
 import { findBrief, pickNext, readQueue, releaseStale, transition, writeQueue } from "./queue.mjs";
+import { RUBRIC_PATH, RUBRIC_VERSION, emptyTaste } from "./rubric.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 
@@ -478,10 +479,12 @@ export async function runThemeDream(options = {}) {
         gates: passed,
         distinctiveness: { nearest, axis_distance: metric, token_distance: tokenDistance ?? null },
         snapshots: [`${theme}-light.png`, `${theme}-dark.png`],
-        // 1.1N-02 replaces this with the versioned rubric; v0 is the three
-        // questions the agent answers in the PR body, recorded here as nulls so
-        // the field exists from the first row rather than appearing later.
-        taste: { rubric: "v0", hierarchy: null, restraint: null, fit: null, notes: null },
+        // The versioned rubric, empty (1.1N-02). The scorer fills it in after
+        // looking at the two PNGs — which is after this row is written, which is
+        // why the ledger's `taste` cell is `-` and this block is the record.
+        // `docs/dream-rubric.md` is the prose; `rubric.mjs` validates what lands
+        // here, so a half-filled block is a refusal rather than a mean of three.
+        taste: emptyTaste(),
       },
       null,
       2,
@@ -525,6 +528,10 @@ export async function runThemeDream(options = {}) {
 
   log(`✓ ${theme} kept on ${branch}${commit ? ` (${commit})` : ""} — ${nearestText}`);
   log(`  scorecard + snapshots: ${OUT_DIR}/${brief.id}/`);
+  log(
+    `  now score the pair against ${RUBRIC_PATH} (rubric ${RUBRIC_VERSION}) and write the five ` +
+      `scores into the scorecard's taste block — the gates cannot see what it looks like (§10.5).`,
+  );
   log(
     canOpenPullRequest(run)
       ? `  open the PR with: gh pr create --title "${theme}" --body-file ${OUT_DIR}/${brief.id}/scorecard.json`

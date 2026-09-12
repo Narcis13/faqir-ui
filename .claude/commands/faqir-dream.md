@@ -107,19 +107,41 @@ no generated file behind, and appends a `discard` row naming the gate.
 green run bought by editing the test that was red is the loop broken. If the
 distinctiveness gate refuses the theme, that is the answer to the brief.
 
-## Step 4 — Score it, and say so
+## Step 4 — Score it against the rubric, and say so
 
-Look at both PNGs in `.faqir-dreams/out/<id>/`. Answer the v0 rubric's three
-questions in one sentence each, and write them into the scorecard's `taste`
-block (`1.1N-02` replaces this with the versioned rubric in `docs/dream-rubric.md`):
+**Read `docs/dream-rubric.md` first** — it is the versioned rubric, and the
+version travels with every score. Then look at BOTH PNGs in
+`.faqir-dreams/out/<id>/` (not just the light one; three of the five questions
+ask about the dark scheme) and score the five criteria 1–5, each with one
+sentence:
 
-- **hierarchy** — does the eye land on the right thing first, in both schemes?
-- **restraint** — is any axis shouting over the others?
-- **fit** — is this the theme the brief asked for, or a different good theme?
+| criterion | the question |
+|---|---|
+| `hierarchy` | does the eye land on the right thing first, in both schemes? |
+| `rhythm` | do spacing and type repeat on a scale, or is the page a pile? |
+| `contrast` | is loud-versus-quiet clear, and does it survive dark? |
+| `restraint` | is any one axis shouting over the others? |
+| `fit` | is this the theme the brief asked for, or a different good theme? |
 
-If the answer to any of them is bad, say so in the report and leave the branch
-for the human to close. A theme that passes every gate and looks wrong is
-exactly what §10.5 says the deterministic gates cannot catch.
+Write them into the scorecard's `taste` block — the block the pipeline left
+empty, in the shape `docs/dream-rubric.md` shows — naming **yourself as the
+judge** (the model id, e.g. `claude-opus-5`) and the date. Score what the
+pictures show, not what the seed intended: the seed is in the same file, and the
+two disagreeing is information, not an error to smooth over.
+
+`.faqir-dreams/out/<id>/` is not committed, so the scorecard is a local artefact:
+put the same five scores and sentences in the PR body (or the report, with no
+remote), which is where a human reads them.
+
+Then check the threshold — **nothing below 3, and a mean of at least 3.5**. Below
+it, say so plainly in the report and leave the branch for the human to close. A
+theme that passes every deterministic gate and looks wrong is exactly what §10.5
+says the gates cannot catch, and it is the one judgement no script in this
+repository makes for you.
+
+A half-filled block is refused rather than averaged (`scripts/dream/rubric.mjs`
+validates it, and `bun run dream:digest` reports an invalid one as *unscored*) —
+five criteria or none.
 
 ## Step 5 — Report and stop
 
@@ -129,8 +151,12 @@ Print:
 - the distinctiveness (`N axes from <nearest>`, ΔE);
 - the branch and the commit, or "no branch — discarded at `<gate>`";
 - the ledger row that was appended;
-- the three rubric answers;
+- the five rubric scores, their sentences, and whether the threshold was met;
 - **Next up:** the brief the next run would take.
+
+Refresh the weekly digest last — `bun run dream:digest` rewrites `DREAMS.md`
+from the ledger and every unmerged `dream/*` branch, so tonight's dream is in it
+before it merges. Unchanged bytes are not rewritten.
 
 Then **stop.** One dream per run is the whole point.
 

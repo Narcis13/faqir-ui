@@ -181,8 +181,82 @@ export interface SnapshotModule {
   parseSnapshotArgs: (argv: string[]) => { theme: string; outDir: string } | null;
 }
 
+export interface TasteEntry {
+  score: number;
+  why: string;
+}
+
+export interface TasteBlock {
+  rubric: string;
+  rubric_doc?: string;
+  judge: string | null;
+  scored?: string | null;
+  scores: Record<string, TasteEntry | null>;
+  notes?: string | null;
+}
+
+export interface RubricModule {
+  RUBRIC_VERSION: string;
+  RUBRIC_PATH: string;
+  RUBRIC_CRITERIA: { key: string; question: string }[];
+  RUBRIC_KEYS: string[];
+  RUBRIC_SCALE: { min: number; max: number };
+  RUBRIC_THRESHOLD: { floor: number; mean: number };
+  emptyTaste: () => TasteBlock;
+  validateTaste: (taste: unknown) => { field: string; message: string }[];
+  isScored: (taste: unknown) => boolean;
+  tasteScore: (taste: unknown) => number | null;
+  meetsThreshold: (taste: unknown) => { ok: boolean; mean: number | null; below: string[] };
+  parseTasteCell: (cell: unknown) => { score: number; rubric: string; judge: string } | null;
+  rubricLines: () => string[];
+}
+
+export interface DigestWeek {
+  start: string;
+  end: string;
+}
+
+export interface DigestData {
+  week: DigestWeek;
+  rows: LedgerRow[];
+  briefs?: Brief[];
+  scorecards?: Record<string, Record<string, unknown>>;
+  pulls?: Record<string, { number: number; title: string; url: string; headRefName: string }> | null;
+}
+
+export interface DigestModule {
+  DIGEST_FILE: string;
+  weekOf: (date: Date | string) => DigestWeek;
+  isoDate: (value: Date | string) => string;
+  inWeek: (date: unknown, week: DigestWeek) => boolean;
+  collectRows: (options?: { root?: string; run?: Runner }) => LedgerRow[];
+  collectPulls: (options?: { root?: string; run?: Runner }) => Record<string, unknown> | null;
+  readScorecard: (root: string, id: string) => Record<string, unknown> | null;
+  tasteOf: (row: LedgerRow, scorecard: unknown) => Record<string, unknown> | null;
+  renderDigest: (data: DigestData) => string;
+  weekSummaries: (
+    rows: LedgerRow[],
+  ) => { start: string; end: string; total: number; kept: number; discarded: number }[];
+  collectDigest: (options?: {
+    root?: string;
+    run?: Runner;
+    now?: Date;
+    week?: string | null;
+  }) => DigestData;
+  writeDigest: (options?: {
+    root?: string;
+    run?: Runner;
+    now?: Date;
+    week?: string | null;
+    out?: string;
+  }) => { path: string; markdown: string; changed: boolean };
+  parseDigestArgs: (argv: string[]) => { week: string | null; out: string; print: boolean } | null;
+}
+
 export const loadLedger = () => load("ledger.mjs") as Promise<LedgerModule>;
 export const loadQueue = () => load("queue.mjs") as Promise<QueueModule>;
 export const loadGuards = () => load("guards.mjs") as Promise<GuardsModule>;
 export const loadTheme = () => load("theme.mjs") as Promise<ThemeModule>;
 export const loadSnapshot = () => load("snapshot.mjs") as Promise<SnapshotModule>;
+export const loadRubric = () => load("rubric.mjs") as Promise<RubricModule>;
+export const loadDigest = () => load("digest.mjs") as Promise<DigestModule>;
