@@ -1,7 +1,7 @@
 {
   "name": "@faqir-ui/rules",
   "version": "1.0.0",
-  "description": "Isomorphic, zero-dependency form rules — JSON Schema subset shape validation, formats, messages and coercion",
+  "description": "Isomorphic, zero-dependency form rules \u2014 JSON Schema subset shape validation, formats, messages and coercion",
   "type": "module",
   "main": "./src/index.js",
   "module": "./src/index.js",
@@ -17,13 +17,15 @@
       "import": "./src/plugin.js",
       "default": "./src/plugin.js"
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./rules.schema.json": "./rules.schema.json"
   },
   "files": [
     "src",
+    "rules.schema.json",
     "README.md"
   ],
-  "//sideEffects": "./src/plugin.js self-registers with a global Faqir on import — that IS its purpose, so it may never be tree-shaken away. Everything else in src/ is pure.",
+  "//sideEffects": "./src/plugin.js self-registers with a global Faqir on import \u2014 that IS its purpose, so it may never be tree-shaken away. Everything else in src/ is pure.",
   "sideEffects": [
     "./src/plugin.js"
   ],

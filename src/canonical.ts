@@ -86,6 +86,27 @@ export const PUBLISHED_LOCATIONS = [
   SCHEMA_ID_URL,
 ] as const;
 
+// ── The rules definition schema (1.1B-05, §8.4) ─────────────────────────────
+
+/** The rules schema's path in the repository, and in the published package. */
+export const RULES_SCHEMA_DOC = "packages/rules/rules.schema.json";
+
+/**
+ * `rules.schema.json`'s own `$id` — the document a platform hands a model as
+ * the structured-output schema for a form-rules definition.
+ *
+ * Deliberately **not** in {@link PUBLISHED_LOCATIONS}: that array is the four
+ * locations SPEC-1.0 §10 froze, and this is a 1.1 package artifact under the
+ * spec's own amendment process rather than part of the frozen contract. It
+ * tracks {@link ALIAS_REF} for the same reason the manifest schema's alias
+ * does — "the newest 1.x rules schema" is what a reader of a `$id` wants, and
+ * the definition format carries its own `version` field for the rest.
+ *
+ * `packages/rules/tests/schema.test.ts` holds the shipped file's `$id` against
+ * this constant, so the JSON and the code cannot disagree about where it lives.
+ */
+export const RULES_SCHEMA_ID_URL = `${RAW_ORIGIN}/${ALIAS_REF}/${RULES_SCHEMA_DOC}`;
+
 // ── The documentation site ──────────────────────────────────────────────────
 
 /**

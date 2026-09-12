@@ -33,6 +33,7 @@ import { scaffold } from "./commands/scaffold";
 import { bundle } from "./commands/bundle";
 import { dev } from "./commands/dev";
 import { bindings } from "./commands/bindings";
+import { rules } from "./commands/rules";
 
 /** The headings `faqir help` groups commands under, in display order. */
 export const COMMAND_CATEGORIES = [
@@ -138,6 +139,13 @@ export const COMMAND_DEFINITIONS: Record<string, CommandDefinition> = {
     summary: "Validate components against manifests",
     args: "[--json] [--skip-rules <ids>]",
     skillNote: "validate markup against manifests",
+  },
+  rules: {
+    run: rules,
+    category: "Quality",
+    summary: "Lint a form-rules definition",
+    args: "lint <def.json> [--stdin] [--locales <a,b>] [--json]",
+    skillNote: "lint a rules definition (refs, cycles, messages, ops, reachability)",
   },
   repair: {
     run: repair,

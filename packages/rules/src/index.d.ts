@@ -306,3 +306,50 @@ export interface ResolveMessageOptions {
 
 /** `messages[locale]` → `messages[defaultLocale]` → built-in default → the key. */
 export declare function resolveMessage(options: ResolveMessageOptions): string;
+
+// ── The lint and the published schema ───────────────────────────────────────
+
+/** One lint finding. `severity: "error"` is what makes `faqir rules lint` exit non-zero. */
+export interface LintFinding {
+  /** One of `LINT_RULES`. */
+  rule: string;
+  severity: "error" | "warning";
+  /** Where in the definition — `rules[2].when`, `fields.email`, `messages.ro`. */
+  path: string;
+  message: string;
+  /** The offending rule's own id, when the finding is about a rule. */
+  id?: string;
+}
+
+export interface LintReport {
+  /** No `error`-severity findings. */
+  ok: boolean;
+  counts: { error: number; warning: number };
+  findings: LintFinding[];
+}
+
+export interface LintOptions {
+  /** Locales that must be complete, on top of the ones `messages` declares. */
+  locales?: string[];
+}
+
+/** The seven lint rules, in the order `lintDefinition` reports them. */
+export declare const LINT_RULES: readonly string[];
+/** The keys a definition may carry — the schema's root, as a list. */
+export declare const DEFINITION_KEYWORDS: readonly string[];
+/** The closed keyword set per field type, sorted; the schema's field branches. */
+export declare const FIELD_KEYWORDS: Readonly<Record<string, readonly string[]>>;
+/** The closed key set per verb; the schema's rule branches. */
+export declare const RULE_KEYS: Readonly<Record<string, readonly string[]>>;
+
+/**
+ * Does this match `rules.schema.json`? The reference implementation of that
+ * document — every shape problem, not just the first, since a definition being
+ * checked is usually being fixed rather than run.
+ */
+export declare function validateDefinition(
+  definition: unknown,
+): { valid: boolean; findings: LintFinding[] };
+
+/** The shape, plus the six things a schema cannot say. `faqir rules lint` is this. */
+export declare function lintDefinition(definition: unknown, options?: LintOptions): LintReport;

@@ -79,15 +79,22 @@ export const RULE_VERBS = Object.freeze(["show", "require", "validate", "compute
 /** `validate: "remote"` is the one reserved string; anything else is logic. */
 export const REMOTE = "remote";
 
-/** The closed key set per verb — anything else in a rule is a definition error. */
+/**
+ * The closed key set per verb — anything else in a rule is a definition error.
+ * Published (1.1B-05) so `rules.schema.json` and the lint state one vocabulary:
+ * a key added here is a key the schema's branch accepts, checked by
+ * `tests/schema.test.ts` rather than kept in step by hand.
+ */
 /** @type {Record<string, string[]>} */
-const RULE_KEYS = {
+export const RULE_KEYS = {
   show: ["id", "show", "when"],
   require: ["id", "require", "when"],
   validate: ["id", "validate", "path", "message", "remote"],
   compute: ["id", "compute", "value"],
   jump: ["id", "jump", "from", "when"],
 };
+Object.freeze(RULE_KEYS);
+for (const keys of Object.values(RULE_KEYS)) Object.freeze(keys);
 
 /**
  * @typedef {object} CompiledRule

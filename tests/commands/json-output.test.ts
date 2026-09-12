@@ -206,6 +206,10 @@ describe("universal --json guarantee · compiled bundle on Node, in a real proje
       "results",
       "vendor_counts",
     ],
+    // `faqir rules --json` carries no subcommand, so it prints help into the
+    // envelope; `rules lint --json` has a bespoke shape of its own, asserted in
+    // tests/commands/rules-lint.test.ts.
+    rules: null,
     repair: null,
     context: ["command", "formats"],
     explain: null,

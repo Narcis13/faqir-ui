@@ -61,7 +61,7 @@ function executable(source: string): string {
 describe("@faqir-ui/rules is isomorphic by construction", () => {
   it("ships the modules the package promises", () => {
     expect(SOURCES).toEqual([
-      "errors.js", "formats.js", "index.js", "limits.js",
+      "errors.js", "formats.js", "index.js", "limits.js", "lint.js",
       "logic.js", "messages.js", "plugin.js", "rules.js", "shape.js",
     ]);
   });

@@ -39,7 +39,6 @@ which page comes next. Both halves answer into one verdict.
   messages: { en: { "<key>": "…" } },    // optional
   defaultLocale: "en",                   // optional
   rules: [ <rule>, … ],                  // optional; the verbs, below
-  rules: [ … ],                          // accepted, ignored until 1.1B-02
 }
 ```
 
@@ -314,6 +313,64 @@ silent trimming, because a passphrase may legitimately contain spaces.
 
 `coerce` is a fixed point: running it twice changes nothing.
 
+## The schema, and the lint
+
+`rules.schema.json` sits beside this README and is the definition format as a
+JSON Schema (Draft-07). It is the document to hand a platform as the
+**structured-output schema** when a model is writing a definition: every field
+keyword, every verb and every closed key set, with the descriptions a generator
+reads. Its `$id` is
+
+```
+https://raw.githubusercontent.com/Narcis13/faqir-ui/main/packages/rules/rules.schema.json
+```
+
+and the package publishes the file itself, so `@faqir-ui/rules/rules.schema.json`
+resolves in a bundler or a `require.resolve`.
+
+`validateDefinition(def)` is that schema as code — the reference implementation,
+because this package takes no dependency, not even to read its own schema.
+`tests/schema.test.ts` replays an accept/reject corpus through both and requires
+the same verdict case by case, and it pins each branch's key list against
+`FIELD_KEYWORDS` and `RULE_KEYS`, so a keyword added to the validator and not to
+the schema fails there rather than in whatever a model generates six months
+later.
+
+A schema cannot say whether a definition will **do** what it says, which is what
+`lintDefinition(def, { locales })` is for — and `faqir rules lint <def.json>`
+is that function behind a CLI, with `--stdin`, `--json` and `--locales en,ro`:
+
+| Rule | What it reports |
+| --- | --- |
+| `schema` | the definition does not match `rules.schema.json` — or the engine refuses it for something a schema cannot express (an unknown format, an uncompilable pattern, a `required` naming no field) |
+| `rule-verb` | a rule with zero or two verbs |
+| `rule-ops` | an unsupported operator, a bad arity, a node with two operators |
+| `rule-refs` | a target or a `var` naming no declared field |
+| `rule-cycles` | `compute` rules that depend on each other in a cycle |
+| `rule-unreachable` | a `when` — or a `validate` — that folds to a constant |
+| `rule-messages` | a message key that addresses nothing, or a locale gap |
+
+Each finding carries `rule`, `severity`, `path` and a sentence. **`error`** is a
+rule that cannot do what it was written to do, and `faqir rules lint` exits
+non-zero on one. **`warning`** is a rule that works and is worth a second look:
+a form-level `validate` whose path names no field (legitimate — a server reports
+it, the page has no field-group to paint it into), a `compute` writing a value
+nothing validates, a condition folded flat, a half-finished translation. The
+message fallback chain is documented behaviour, so a locale gap is only a
+warning — unless you named the locale with `--locales`, which is how you say
+"these must be complete" and get an error when they are not.
+
+Two things the lint is deliberately quiet about, because both are correct code:
+a `var` inside the test of `some` / `all` / `none` (those re-bind the data to
+each item, so the name is a property of the item, not a field), and a `var` with
+a default (`{"var": ["rate", 0]}` is an author saying what absent means).
+
+```
+$ faqir rules lint signup.rules.json
+✗ rule-refs  rules[0].when ("seats-for-teams")
+  this reads "plna", which no field declares and no rule computes — it will always be undefined.
+```
+
 ## API
 
 | Export | What it is |
@@ -329,6 +386,9 @@ silent trimming, because a passphrase may legitimately contain spaces.
 | `resolveMessage`, `interpolate`, `DEFAULT_MESSAGES`, `RULE_MESSAGES`, `DEFAULT_LOCALE`, `SHAPE_RULES` | the message layer |
 | `truthy`, `parseInstant`, `LOGIC_OPS`, `DATE_COMPARATORS`, `RULE_VERBS`, `REMOTE` | the logic vocabulary |
 | `DEFINITION_VERSION`, `MAX_PATTERN_LENGTH`, `MAX_LOGIC_NODES`, `MAX_LOGIC_DEPTH`, `MAX_REGEX_SUBJECT_LENGTH` | the limits above, as values |
+| `lintDefinition(def, { locales })` | the seven lint rules; `{ ok, counts, findings }` |
+| `validateDefinition(def)` | `rules.schema.json` as code; `{ valid, findings }` |
+| `LINT_RULES`, `DEFINITION_KEYWORDS`, `FIELD_KEYWORDS`, `RULE_KEYS` | the vocabularies the schema and the lint share |
 
 ## Tests
 

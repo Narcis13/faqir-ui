@@ -1,0 +1,238 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/Narcis13/faqir-ui/main/packages/rules/rules.schema.json",
+  "title": "Faqir rules definition",
+  "description": "A form's contract: what each value must look like (fields) and everything that depends on the other values (rules). The same document is enforced in the page by the faqir-rules plugin and re-checked on the server by @faqir-ui/rules, so one definition means one thing. Hand this schema to a model as the structured-output schema; `faqir rules lint` then reports what a schema cannot say — a var naming no field, a compute cycle, an untranslated message, a condition that folds to a constant.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": "1",
+      "description": "The definition format. \"1\" is the only value."
+    },
+    "fields": {
+      "type": "object",
+      "description": "Dotted paths to field schemas: \"email\", \"address.city\", \"rows[0].qty\".",
+      "propertyNames": { "type": "string", "minLength": 1 },
+      "additionalProperties": { "$ref": "#/definitions/field" }
+    },
+    "required": {
+      "type": "array",
+      "description": "Field paths that must be present — the alternative to `required: true` on the field.",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "messages": {
+      "type": "object",
+      "description": "{ locale: { key: sentence } }. A key is \"<rule>\" or \"<path>.<rule>\"; a cross-field rule is addressed by its id. Placeholders in braces are filled from the finding's params.",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": { "type": "string" }
+      }
+    },
+    "defaultLocale": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The locale a message falls back to. Defaults to \"en\"."
+    },
+    "rules": {
+      "type": "array",
+      "description": "The verbs. Each rule carries a unique id and exactly one of them.",
+      "items": { "$ref": "#/definitions/rule" }
+    }
+  },
+  "definitions": {
+    "logic": {
+      "description": "A JSONLogic expression: a literal, an array of expressions, or a one-key { \"<op>\": <args> } object. Implemented operators: var, missing, missing_some, if, and, or, !, !!, ==, ===, !=, !==, <, <=, >, >=, +, -, *, /, %, min, max, cat, substr, in, some, all, none, date, regex. Anything else is refused when the definition is compiled."
+    },
+    "field": {
+      "description": "A JSON Schema 2020-12 subset, plus `required: true` as sugar for listing the path in the definition's `required`. The keyword set is closed per type: an unrecognised keyword is an error, never a constraint that silently does nothing.",
+      "oneOf": [
+        { "$ref": "#/definitions/stringField" },
+        { "$ref": "#/definitions/numericField" },
+        { "$ref": "#/definitions/booleanField" },
+        { "$ref": "#/definitions/objectField" },
+        { "$ref": "#/definitions/arrayField" }
+      ]
+    },
+    "stringField": {
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "required": { "const": true },
+        "enum": { "type": "array", "minItems": 1 },
+        "const": {},
+        "pattern": { "type": "string" },
+        "format": {
+          "type": "string",
+          "description": "A built-in name (email, uri, date, time, date-time, phone, iban, uuid, postal-code) or one added with registerFormat."
+        },
+        "minLength": { "type": "number" },
+        "maxLength": { "type": "number" }
+      }
+    },
+    "numericField": {
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "enum": ["number", "integer"] },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "required": { "const": true },
+        "enum": { "type": "array", "minItems": 1 },
+        "const": {},
+        "minimum": { "type": "number" },
+        "maximum": { "type": "number" },
+        "exclusiveMinimum": { "type": "number" },
+        "exclusiveMaximum": { "type": "number" },
+        "multipleOf": { "type": "number" }
+      }
+    },
+    "booleanField": {
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "boolean" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "required": { "const": true },
+        "enum": { "type": "array", "minItems": 1 },
+        "const": {}
+      }
+    },
+    "objectField": {
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "object" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "required": {
+          "description": "true — the object itself is required; an array — these properties are.",
+          "oneOf": [
+            { "const": true },
+            { "type": "array", "items": { "type": "string" } }
+          ]
+        },
+        "enum": { "type": "array", "minItems": 1 },
+        "const": {},
+        "properties": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/definitions/field" }
+        }
+      }
+    },
+    "arrayField": {
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "array" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "required": { "const": true },
+        "enum": { "type": "array", "minItems": 1 },
+        "const": {},
+        "items": { "$ref": "#/definitions/field" },
+        "minItems": { "type": "number" },
+        "maxItems": { "type": "number" },
+        "uniqueItems": { "type": "boolean" }
+      }
+    },
+    "rule": {
+      "description": "Exactly one verb per rule. A rule with none, or with two, matches no branch here — which is what `faqir rules lint` reports as rule-verb.",
+      "oneOf": [
+        { "$ref": "#/definitions/showRule" },
+        { "$ref": "#/definitions/requireRule" },
+        { "$ref": "#/definitions/validateRule" },
+        { "$ref": "#/definitions/remoteRule" },
+        { "$ref": "#/definitions/computeRule" },
+        { "$ref": "#/definitions/jumpRule" }
+      ]
+    },
+    "ruleId": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unique in the definition. It is the `rule` a finding reports and the key a message is addressed to."
+    },
+    "showRule": {
+      "description": "The field is on screen only while `when` holds. A hidden field is never required and its findings are dropped.",
+      "type": "object",
+      "required": ["id", "show", "when"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/definitions/ruleId" },
+        "show": { "type": "string", "minLength": 1, "description": "The field path this rule governs." },
+        "when": { "$ref": "#/definitions/logic" }
+      }
+    },
+    "requireRule": {
+      "description": "The field must be filled in while `when` holds.",
+      "type": "object",
+      "required": ["id", "require", "when"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/definitions/ruleId" },
+        "require": { "type": "string", "minLength": 1, "description": "The field path this rule demands. It must be a key of `fields`." },
+        "when": { "$ref": "#/definitions/logic" }
+      }
+    },
+    "validateRule": {
+      "description": "A cross-field check: a finding on `path` when the logic is falsy.",
+      "type": "object",
+      "required": ["id", "validate", "path"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/definitions/ruleId" },
+        "validate": {
+          "description": "A JSONLogic expression — anything but the string \"remote\", which is the other branch.",
+          "not": { "const": "remote" }
+        },
+        "path": { "type": "string", "minLength": 1, "description": "The field the finding is reported on." },
+        "message": { "type": "string", "description": "This rule's sentence; a `messages` entry still wins over it." }
+      }
+    },
+    "remoteRule": {
+      "description": "A check only the network can answer. Sync `validate` leaves its id in `pending`; `validateAsync` resolves it.",
+      "type": "object",
+      "required": ["id", "validate", "path", "remote"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/definitions/ruleId" },
+        "validate": { "const": "remote" },
+        "path": { "type": "string", "minLength": 1 },
+        "remote": { "type": "string", "minLength": 1, "description": "A url or a name; the resolver decides what it means." },
+        "message": { "type": "string" }
+      }
+    },
+    "computeRule": {
+      "description": "A derived value, written into the data the rest of the pass reads. Computes run first, in dependency order.",
+      "type": "object",
+      "required": ["id", "compute", "value"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/definitions/ruleId" },
+        "compute": { "type": "string", "minLength": 1, "description": "The path the value is written to." },
+        "value": { "$ref": "#/definitions/logic" }
+      }
+    },
+    "jumpRule": {
+      "description": "A wizard's next page: the first rule whose `when` holds wins for a given `from`. No `when` means unconditional.",
+      "type": "object",
+      "required": ["id", "jump", "from"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/definitions/ruleId" },
+        "jump": { "type": "string", "minLength": 1, "description": "The page to go to." },
+        "from": { "type": "string", "minLength": 1, "description": "The page this rule leaves." },
+        "when": { "$ref": "#/definitions/logic" }
+      }
+    }
+  }
+}

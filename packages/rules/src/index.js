@@ -36,6 +36,13 @@
  *     ],
  *   };
  *
+ * A definition is also a *document*: `rules.schema.json` beside this file is the
+ * schema a platform hands a model for structured output, `validateDefinition`
+ * is that schema as code, and `lintDefinition` reports the seven things a
+ * schema cannot say — a `var` naming no field, a compute cycle, an untranslated
+ * message, a condition that folds to a constant. `faqir rules lint` is the same
+ * function behind a CLI.
+ *
  * See `README.md` for the definition format, the operators and the verbs, and
  * `tests/golden/` for the corpus that pins every verdict in this package.
  */
@@ -44,12 +51,21 @@ export {
   CompiledDefinition,
   DEFINITION_VERSION,
   DefinitionError,
+  FIELD_KEYWORDS,
   MAX_PATTERN_LENGTH,
   coerce,
 } from "./shape.js";
 
 export {
+  DEFINITION_KEYWORDS,
+  LINT_RULES,
+  lintDefinition,
+  validateDefinition,
+} from "./lint.js";
+
+export {
   REMOTE,
+  RULE_KEYS,
   RULE_VERBS,
   compile,
   evaluate,

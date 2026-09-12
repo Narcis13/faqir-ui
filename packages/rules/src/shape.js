@@ -117,6 +117,19 @@ const FIELD_KEYS = {
   array: new Set([...META_KEYS, "items", "minItems", "maxItems", "uniqueItems"]),
 };
 
+/**
+ * The same closed sets, as sorted lists. Published (1.1B-05) so that
+ * `rules.schema.json` and `lint.js` can state the vocabulary without
+ * re-typing it: a keyword added above appears in the schema's branch and in
+ * the lint's sentence by construction, and `tests/schema.test.ts` fails if the
+ * published schema falls behind them.
+ */
+export const FIELD_KEYWORDS = Object.freeze(
+  /** @type {Record<string, readonly string[]>} */ (Object.fromEntries(
+    Object.entries(FIELD_KEYS).map(([type, keys]) => [type, Object.freeze([...keys].sort())]),
+  )),
+);
+
 const NUMERIC_KEYWORDS = ["minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum", "multipleOf"];
 
 /** `multipleOf` on IEEE doubles: 0.3 / 0.1 is 2.9999999999999996, not 3. */
