@@ -28,6 +28,15 @@ import type { Manifest } from "../../../src/manifest";
 export type { ComponentSummary } from "../../../src/utils/components";
 export type { Manifest } from "../../../src/manifest";
 export type { ThemeManifest } from "../../../src/theme-manifest";
+import {
+  AXIS_PATHS,
+  axisMatches,
+  axisVocabulary,
+  isAxisPath,
+  themeKind,
+  type ThemeKind,
+} from "../../../src/theme/describe";
+import { coerceSeedValue } from "../../../src/theme/seed";
 
 /**
  * Resolve where the bundled registry lives. Precedence: an explicit path, the
@@ -120,10 +129,16 @@ export interface ThemeSummary {
   dark_mode: ThemeManifest["dark_mode"];
   pairs_with: string[];
   preview: string;
+  /** `authored`, `generated` (a seed is committed beside it) or `companion` (a print medium, no axes). */
+  kind: ThemeKind;
+  /** The fourteen character axes, derived from the stylesheet [1.1A-20]. Absent on a companion. */
+  axes?: ThemeManifest["axes"];
+  /** Distance to the nearest other shipped theme, when the gate measured it. */
+  distinctiveness?: ThemeManifest["distinctiveness"];
 }
 
 function toThemeSummary(m: ThemeManifest): ThemeSummary {
-  return {
+  const summary: ThemeSummary = {
     name: m.name,
     version: m.version,
     mood: m.mood,
@@ -131,7 +146,11 @@ function toThemeSummary(m: ThemeManifest): ThemeSummary {
     dark_mode: m.dark_mode,
     pairs_with: m.pairs_with,
     preview: m.preview,
+    kind: themeKind(m),
   };
+  if (m.axes) summary.axes = m.axes;
+  if (m.distinctiveness) summary.distinctiveness = m.distinctiveness;
+  return summary;
 }
 
 /** Summaries for every registry theme, sorted by name. */
@@ -142,6 +161,59 @@ export async function listThemeSummaries(registryPath: string): Promise<ThemeSum
     if (m) summaries.push(toThemeSummary(m));
   }
   return summaries;
+}
+
+// ── Choosing by axes [1.1A-20] ──────────────────────────────────────────────
+
+/** An axis filter: dotted leaf paths (`depth`, `type.pairing`) to the value a theme must land on. */
+export type AxisFilter = Record<string, string | number>;
+
+export interface ThemeListFilter {
+  axes?: AxisFilter;
+  /** A mood adjective the manifest must list. */
+  mood?: string;
+  /** Restrict to one kind of theme. */
+  kind?: ThemeKind;
+}
+
+/**
+ * Why an axis filter cannot be applied, or `null` when it can: an unknown path
+ * names the paths, and a value outside a leaf's vocabulary names the vocabulary
+ * — so an agent that misspells `glas` learns `glass` rather than getting an
+ * empty list it might read as "no such theme".
+ */
+export function axisFilterError(axes: AxisFilter): string | null {
+  for (const [path, raw] of Object.entries(axes)) {
+    if (!isAxisPath(path)) {
+      return `Unknown axis '${path}'. Axes: ${AXIS_PATHS.join(", ")}.`;
+    }
+    const vocabulary = axisVocabulary(path)!;
+    const value = typeof raw === "string" ? coerceSeedValue(path, raw) : raw;
+    if (!vocabulary.includes(value)) {
+      return `'${raw}' is not a value of '${path}'. Values: ${vocabulary.join(", ")}.`;
+    }
+  }
+  return null;
+}
+
+/**
+ * The summaries that satisfy every clause of `filter`. A theme with no `axes`
+ * (a print companion) matches no axis clause, so any axis filter excludes it —
+ * it has no character of its own to land on.
+ */
+export function filterThemeSummaries(summaries: ThemeSummary[], filter: ThemeListFilter): ThemeSummary[] {
+  return summaries.filter((s) => {
+    if (filter.kind && s.kind !== filter.kind) return false;
+    if (filter.mood && !s.mood.includes(filter.mood)) return false;
+    if (filter.axes) {
+      if (!s.axes) return false;
+      for (const [path, raw] of Object.entries(filter.axes)) {
+        const value = typeof raw === "string" ? coerceSeedValue(path, raw) : raw;
+        if (!axisMatches(s.axes, path, value)) return false;
+      }
+    }
+    return true;
+  });
 }
 
 /**

@@ -205,6 +205,11 @@ into `faqir context` as the active-theme block. Schema (validated by
 | `tokens_inherited` | string[] | **Generated** — base surface tokens the theme leaves untouched. |
 | `pairs_with` | string[] | Themes that compose/read well together (may be empty). |
 | `preview` | string | A `{name}.preview.html` reference. |
+| `seed` | object | *Schema 1.1, optional.* The generator input a generated theme was produced from — `name`, `accent`, and any of the fourteen axes. Present only on a generated theme; identical to its `{name}.seed.json`. |
+| `axes` | object | *Schema 1.1.* **Generated** — the fourteen character axes (`accent_hue`, `accent_chroma`, `neutral`, `scheme`, `type`, `shape`, `depth`, `material`, `motion`, `density`, `focus`, `decoration`, `controls`, `contrast`) as `axesFromCss()` reads them out of the stylesheet. Every key is required when the block is present; a print companion carries none. Vocabulary: `THEME_AXIS_VALUES` in `src/theme-manifest.ts`, mirrored by `manifest.schema.json`. |
+| `fonts` | object[] | *Schema 1.1, optional.* Self-hosted families the role tokens name (`family`, `license`, `role`). No shipped theme sets it yet — see follow-up 1.1A-30. |
+| `distinctiveness` | object | *Schema 1.1.* **Generated** — `nearest`, `axis_distance` and `token_distance` to the closest other shipped theme, written by the pair gate (1.1A-12). |
+| `visual_matrix` | boolean | *Schema 1.1, optional.* `false` opts the theme out of the full screenshot/axe cross-product into the patterns-only sweep (1.1A-13). Absent means the full sweep. |
 
 ### Authoring the two schemes
 
@@ -259,8 +264,52 @@ bun run gen:theme-manifests
 
 The registry self-audit (`bun run audit:registry`) and the manifest consistency
 test fail if a theme is missing a manifest, has a schema-invalid one, or if its
-token fields drift from the stylesheet. To add a new theme: drop the `.css` in
-`registry/themes/`, add a seed entry to the generator, and run it.
+token fields drift from the stylesheet. To add an **authored** theme: drop the
+`.css` in `registry/themes/`, add an editorial entry to the generator, and run
+it — its `axes` are measured out of the CSS on the same run.
+
+### The seed workflow (a generated theme)
+
+Since 1.1A-16 a theme may be **generated** rather than written: the committed
+stylesheet is the output of `faqir theme generate` and the input — the seed —
+is committed beside it. A generated theme is never hand-edited; a change is a
+change to the seed followed by a regeneration, and
+`tests/themes/generated-themes.test.ts` fails the moment the two disagree.
+The steps, in order:
+
+1. **Write the seed.** `registry/themes/<name>.seed.json`: `name`, `accent`,
+   and whichever of the fourteen axes the theme should land on (every axis has
+   a default; `faqir theme generate --help` lists the vocabulary, and the same
+   table is in README § Theme System). `document: true` asks for a print
+   companion, `<name>-document`.
+2. **Generate into the registry.**
+   `bun src/index.ts theme generate <name> --seed registry/themes/<name>.seed.json --out registry/themes`.
+   The generator derives the manifest, checks every coverage token and every
+   contrast pair, reads its own CSS back to confirm the axes it asked for, and
+   **refuses a recolour**: fewer than four axes from a theme already in
+   `registry/themes/`, or closer in colour than one theme's own card is to its
+   page, and nothing is written (1.1A-12). Change the seed rather than passing
+   `--allow-similar` — the shipped set is the one place similarity must not be
+   waved through.
+3. **Add the editorial half.** In `scripts/gen-theme-manifests.mjs`, a `SEED`
+   entry for the theme (and its companion): `mood`, `scheme`, `dark_mode`,
+   `pairs_with`. That is the only hand-authored text a generated theme has. A
+   preview spec in `src/theme-preview.ts` gives it the gallery page every
+   other theme gets.
+4. **Regenerate everything downstream** — the regeneration map in
+   `FAQIR-PLAN-1.1.md` is the checklist: `gen:theme-manifests` (writes `seed`,
+   `axes`, `distinctiveness`, `visual_matrix: false`), `gen:theme-previews`,
+   `build:core-package`, `gen:skill`, `gen:theme-docs`, `build:registry-index`,
+   `build:docs`. Each has a `check:*` gate and `release.mjs --preflight` runs
+   them all.
+5. **Run the gates.** `bun run test` covers reproducibility (the seed
+   regenerates the CSS byte for byte), provenance (the manifest's `seed` IS
+   the seed file), the pair gate (every shipped pair at least four axes and
+   the elevation ΔE apart), the population gate (every value of the four
+   structural axes is rendered by some theme), and the manifest gate.
+
+A generated theme ships `visual_matrix: false` — the patterns-only screenshot
+sweep — until someone promotes it deliberately (`docs/release-checklist.md`).
 
 ## Commit Messages
 

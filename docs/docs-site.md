@@ -30,7 +30,7 @@ registry copy with one extra component in it.
 | `site/content/playground.html` | you | Hand-written: the playground's sample markup. |
 | `site/styles/docs.css` | you | Documentation presentation layer: attribute selectors, tokens, responsive rules, reduced-motion fallback. |
 | `site/lib/playground.js` | you | The playground and live-preview wiring. |
-| `site/lib/gallery.js` | you | Shared theme persistence, frame sync, mobile navigation, component/icon filters, icon copying, and preview controls. |
+| `site/lib/gallery.js` | you | Shared theme persistence, frame sync, mobile navigation, component/icon filters, the theme gallery's axis filter, icon copying, and preview controls. |
 | `site/lib/copy-snippet.js` | you | The copy-for-agents button. |
 | `site/lib/faqir-audit.js` | generated | The audit engine, compiled for the browser. **Committed** — `bun run build:audit-browser`. |
 | `scripts/build-docs.mjs` | — | The writer: builds in memory, clears `site/dist`, writes. |

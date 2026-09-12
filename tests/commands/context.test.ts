@@ -6,6 +6,7 @@ import { add } from "../../src/commands/add";
 import { context } from "../../src/commands/context";
 import { generateContext, formatContextJSON, formatContextMarkdown, formatContextCursorRules, formatContextLlms, formatContextLlmsFull } from "../../src/generator/context";
 import { generateSkill, writeSkillFile } from "../../src/generator/skill";
+import { axisSummary } from "../../src/theme/describe";
 
 const TEST_DIR = join(import.meta.dir, "../.tmp-context-test");
 
@@ -183,6 +184,79 @@ describe("faqir context", () => {
     expect(md).toContain("## Active Theme");
     expect(md).toContain("Name: default");
     expect(md).toContain("Scheme: both");
+  });
+
+  // ── Axes reach every surface [1.1A-20] ──────────────────────────────────
+  //
+  // The theme block embeds the manifest, so the fourteen derived axes (and the
+  // seed, on a generated theme) must reach context.json as data and the prose
+  // surfaces as words — an agent reading any one of them learns the theme is
+  // flat, spacious and serif, not only "editorial".
+
+  it("carries a generated theme's axes and seed into context.json, context.md and llms.txt", async () => {
+    await init(["--theme", "editorial"]);
+    await add(["button"]);
+
+    const data = await generateContext(TEST_DIR);
+    const theme = data.theme as any;
+    expect(theme.name).toBe("editorial");
+    expect(theme.axes).toBeDefined();
+    expect(theme.axes.depth).toBe("flat");
+    expect(theme.axes.type.pairing).toBe("serif-editorial");
+    expect(theme.axes.density).toBe("spacious");
+    expect(theme.seed).toBeDefined();
+    expect(theme.seed.name).toBe("editorial");
+    expect(theme.seed.accent).toBe("#1e3a5f");
+
+    const parsed = JSON.parse(formatContextJSON(data));
+    expect(parsed.theme.axes.depth).toBe("flat");
+    expect(parsed.theme.seed.type.pairing).toBe("serif-editorial");
+
+    const expected = axisSummary(theme.axes);
+    const md = formatContextMarkdown(data);
+    expect(md).toContain(`- Axes: ${expected}`);
+    expect(md).toContain("- Seed: generated — `faqir theme generate editorial --seed editorial.seed.json`");
+    expect(md).toContain("- Nearest theme: nordic (7 axes apart");
+
+    const llms = formatContextLlms(data);
+    expect(llms).toContain("Active theme `editorial`:");
+    expect(llms).toContain(`- Axes: ${expected}`);
+    expect(llms).toContain("- Seed: generated");
+
+    const full = formatContextLlmsFull(data);
+    expect(full).toContain(`- Axes: ${expected}`);
+
+    const rules = formatContextCursorRules(data);
+    expect(rules).toContain(`Theme axes: ${expected}.`);
+  });
+
+  it("carries an authored theme's axes (and no seed) into every surface", async () => {
+    await init(["--theme", "glass"]);
+    await add(["button"]);
+
+    const data = await generateContext(TEST_DIR);
+    const theme = data.theme as any;
+    expect(theme.name).toBe("glass");
+    expect(theme.axes.depth).toBe("glass");
+    expect(theme.seed).toBeUndefined();
+
+    const expected = axisSummary(theme.axes);
+    expect(formatContextMarkdown(data)).toContain(`- Axes: ${expected}`);
+    expect(formatContextMarkdown(data)).not.toContain("- Seed:");
+    expect(formatContextLlms(data)).toContain(`- Axes: ${expected}`);
+    expect(formatContextLlmsFull(data)).toContain(`- Axes: ${expected}`);
+    expect(formatContextCursorRules(data)).toContain(`Theme axes: ${expected}.`);
+  });
+
+  it("says a print companion has no axes rather than leaving the block short", async () => {
+    await init(["--theme", "editorial-document"]);
+    await add(["button"]);
+
+    const data = await generateContext(TEST_DIR);
+    expect((data.theme as any).axes).toBeUndefined();
+    const md = formatContextMarkdown(data);
+    expect(md).toContain("- Axes: none — a print companion");
+    expect(formatContextLlms(data)).toContain("- Axes: none — a print companion");
   });
 
   it("llms output is derived only from the installed set", async () => {

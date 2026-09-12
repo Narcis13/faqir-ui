@@ -17,6 +17,8 @@ import {
   getManifest,
   listComponents,
   listThemeSummaries,
+  filterThemeSummaries,
+  axisFilterError,
   getTheme,
   readProjectContext,
   resolveProjectRoot,
@@ -44,6 +46,7 @@ import {
 import { densityTokenCss, themeBaseSources } from "../../../src/theme/sources";
 import { mergeSeeds } from "../../../src/theme/seed";
 import { THEME_AXIS_VALUES } from "../../../src/theme-manifest";
+import { AXIS_PATHS, GALLERY_AXES } from "../../../src/theme/describe";
 import {
   PROTOCOL_URI,
   TOKENS_URI,
@@ -97,6 +100,40 @@ const manifestSchema = z
   })
   .passthrough();
 
+// The fourteen axes a manifest carries, derived from its CSS [1.1A-08]. Stated
+// loosely here — the vocabulary is validated by the CLI's `validateThemeAxes`
+// when the manifest is generated, and restating each enum in zod would be a
+// second copy of `THEME_AXIS_VALUES` for the schema drift test to chase.
+const themeAxesSchema = z
+  .object({
+    accent_hue: z.number(),
+    accent_chroma: z.number(),
+    neutral: z.string(),
+    scheme: z.string(),
+    type: z.object({
+      pairing: z.string(),
+      scale: z.number(),
+      base: z.number(),
+      voice: z.object({ weight: z.string(), tracking: z.string(), transform: z.string() }),
+    }),
+    shape: z.object({ radius: z.string(), border: z.string(), corner: z.string() }),
+    depth: z.string(),
+    material: z.string(),
+    motion: z.string(),
+    density: z.string(),
+    focus: z.string(),
+    decoration: z.object({ link: z.string(), divider: z.string() }),
+    controls: z.object({ button: z.string(), input: z.string(), checkbox: z.string(), switch: z.string() }),
+    contrast: z.string(),
+  })
+  .passthrough();
+
+const themeDistinctivenessSchema = z.object({
+  nearest: z.string(),
+  axis_distance: z.number().int(),
+  token_distance: z.number(),
+});
+
 const themeEntrySchema = z
   .object({
     name: z.string(),
@@ -106,6 +143,9 @@ const themeEntrySchema = z
     dark_mode: z.string(),
     pairs_with: z.array(z.string()),
     preview: z.string(),
+    kind: z.enum(["authored", "generated", "companion"]).optional(),
+    axes: themeAxesSchema.optional(),
+    distinctiveness: themeDistinctivenessSchema.optional(),
     tokens_overridden: z.array(z.string()).optional(),
     tokens_inherited: z.array(z.string()).optional(),
   })
@@ -364,9 +404,12 @@ export function createFaqirMcpServer(options: FaqirMcpServerOptions = {}): McpSe
       title: "Theme information",
       description:
         "Without `theme`: list every registry theme as a summary (mood, scheme, dark " +
-        "mode, pairings). With `theme`: return that theme's full manifest including its " +
-        "overridden/inherited token sets. `active_theme` reflects the host project's " +
-        "configured theme when run inside one, else 'default'.",
+        "mode, pairings, kind, and the fourteen character `axes` derived from its stylesheet — " +
+        "type, shape, depth, material, motion, density, focus, decoration, controls, contrast). " +
+        "With `theme`: return that theme's full manifest including its seed, axes, distinctiveness " +
+        "and overridden/inherited token sets. `active_theme` reflects the host project's " +
+        "configured theme when run inside one, else 'default'. To choose by axes, use " +
+        "`faqir_theme_list` with an `axes` filter.",
       annotations: { readOnlyHint: true },
       inputSchema: {
         theme: z
@@ -397,6 +440,64 @@ export function createFaqirMcpServer(options: FaqirMcpServerOptions = {}): McpSe
 
       const themes = await listThemeSummaries(registryPath);
       return ok({ themes, active_theme, count: themes.length });
+    }
+  );
+
+  // ── faqir_theme_list [1.1A-20] ──────────────────────────────────────────
+  //
+  // Choosing by axes rather than by adjective. `axes` is a map of dotted leaf
+  // paths to the value a theme must land on; every clause must hold. An unknown
+  // path or a value outside the vocabulary is a clean tool error naming the
+  // options, never an empty list — an empty list here means "no shipped theme
+  // is like that", which is an answer, and it must not be confused with a typo.
+  server.registerTool(
+    "faqir_theme_list",
+    {
+      title: "List themes by axes",
+      description:
+        "List registry themes filtered by character axes, mood and kind. `axes` maps dotted axis " +
+        `paths (${GALLERY_AXES.map((p) => `\`${p}\``).join(", ")}, …) to the required value — ` +
+        "e.g. `{ \"depth\": \"glass\" }` or `{ \"type.pairing\": \"serif-editorial\", \"density\": \"spacious\" }`. " +
+        "A theme must match every clause; a print companion (no axes of its own) matches no axis " +
+        "clause. Unknown paths and out-of-vocabulary values error with the options listed. " +
+        "Returns summaries with their `axes`; `total` is the unfiltered count.",
+      annotations: { readOnlyHint: true },
+      inputSchema: {
+        axes: z
+          .record(z.string(), z.union([z.string(), z.number()]))
+          .optional()
+          .describe(`Axis clauses: dotted path → value. Paths: ${AXIS_PATHS.join(", ")}.`),
+        mood: z.string().optional().describe("A mood adjective the theme's manifest must list."),
+        kind: z
+          .enum(["authored", "generated", "companion"])
+          .optional()
+          .describe("Restrict to hand-authored themes, seed-generated ones, or print companions."),
+      },
+      outputSchema: {
+        themes: z.array(themeEntrySchema),
+        count: z.number().int(),
+        total: z.number().int(),
+        filter: z.object({
+          axes: z.record(z.string(), z.union([z.string(), z.number()])).optional(),
+          mood: z.string().optional(),
+          kind: z.string().optional(),
+        }),
+        active_theme: z.string(),
+      },
+    },
+    async ({ axes, mood, kind }) => {
+      if (axes) {
+        const problem = axisFilterError(axes);
+        if (problem) return fail(problem);
+      }
+      const all = await listThemeSummaries(registryPath);
+      const filter: { axes?: Record<string, string | number>; mood?: string; kind?: typeof kind } = {};
+      if (axes) filter.axes = axes;
+      if (mood) filter.mood = mood;
+      if (kind) filter.kind = kind;
+      const themes = filterThemeSummaries(all, filter);
+      const active_theme = await activeThemeName(projectRoot);
+      return ok({ themes, count: themes.length, total: all.length, filter, active_theme });
     }
   );
 

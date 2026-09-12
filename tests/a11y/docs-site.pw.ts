@@ -27,7 +27,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import AxeBuilder from "@axe-core/playwright";
-import { buildDocsSite, isSitePage } from "../../src/generator/docs";
+import { buildDocsSite, isSitePage, THEMES_PAGE } from "../../src/generator/docs";
 import { WCAG_TAGS } from "./axe-config";
 import { formatViolations } from "./report";
 import type { AxeViolation } from "./axe-types";
@@ -113,4 +113,45 @@ for (const path of pages) {
       expect(report, `Accessibility violations on ${path} (${scheme})`).toBe("");
     });
   }
+}
+
+// The theme gallery's axis filter (task 1.1A-20): driven the way a reader drives
+// it — pick a value in one native select — then scanned in that state. The
+// static scan above covers the unfiltered page; this one covers the page with
+// cards hidden and the live-region count updated, which is where an
+// aria-live/hidden mistake would show. Manual on this machine, like the rest
+// of the suite (docs/release-checklist.md).
+for (const scheme of SCHEMES) {
+  test(`docs__themes_axis_filter__${scheme}`, async ({ page }) => {
+    await page.goto(`${origin}/${THEMES_PAGE}`, { waitUntil: "load" });
+    await page.addStyleTag({
+      content: "*, *::before, *::after { transition: none !important; animation: none !important; }",
+    });
+    await page.evaluate((s) => document.documentElement.setAttribute("data-theme", s), scheme);
+    await page.evaluate(() => document.fonts.ready);
+
+    const cards = page.locator("[data-docs-theme-card]");
+    const total = await cards.count();
+    expect(total).toBeGreaterThan(1);
+
+    await page.locator('[data-theme-axis-filter="depth"]').selectOption("glass");
+    const visible = page.locator("[data-docs-theme-card]:not([hidden])");
+    const shown = await visible.count();
+    expect(shown).toBeGreaterThan(0);
+    expect(shown).toBeLessThan(total);
+    for (let i = 0; i < shown; i++) {
+      expect(await visible.nth(i).getAttribute("data-theme-axis-depth")).toBe("glass");
+    }
+    await expect(page.locator("#theme-result-count")).toHaveText(`${shown} of ${total} themes`);
+
+    const results = await new AxeBuilder({ page }).withTags([...WCAG_TAGS]).exclude("iframe").analyze();
+    const violations = results.violations as unknown as AxeViolation[];
+    const report = violations.length ? formatViolations(`${THEMES_PAGE} · axis filter · ${scheme}`, violations) : "";
+    expect(report, `Accessibility violations on the filtered theme gallery (${scheme})`).toBe("");
+
+    // Clearing the filter restores every card and the count.
+    await page.locator('[data-theme-axis-filter="depth"]').selectOption("");
+    expect(await visible.count()).toBe(total);
+    await expect(page.locator("#theme-result-count")).toHaveText(`${total} of ${total} themes`);
+  });
 }

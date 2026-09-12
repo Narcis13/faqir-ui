@@ -731,9 +731,98 @@ theme.
 
 Themes override Layer 2 semantic tokens. Twenty-seven built-in stylesheets ship
 with Faqir: twelve **authored** themes, twelve **generated** ones, and the three
-print companions those bring with them.
+print companions those bring with them. Every theme is described the same way —
+by an accent colour and **fourteen character axes** that are *derived from its
+stylesheet* and written into its manifest — so a theme is chosen for what it
+measurably is (flat, spacious, serif, barely any motion) rather than for the
+adjectives it was given. The two tables below are generated from the manifests
+(`bun run gen:theme-docs`, gated by `check:theme-docs`); the `faqir-creator`
+skill, `faqir context`, the MCP `faqir_theme_info` and `faqir_theme_list` tools
+and the docs-site gallery render the same derivation, so no surface can
+describe a theme differently from another.
 
-### Authored themes
+### The fourteen axes
+
+`gen:theme-manifests` reads each theme's axes out of its CSS — never out of a
+hand-written field — and validates them against a closed vocabulary, the same
+vocabulary `faqir theme generate` accepts as flags. Every axis has a default,
+and the defaults together describe the shipped `default` theme, which is what
+makes `{ name, accent }` a complete seed. `accent_hue` and `accent_chroma` in a
+manifest are the accent's two numbers; with `scheme` and the twelve families
+below they are the fourteen.
+
+<!-- @faqir:theme-axes start -->
+| Axis | Flag | Values | Default |
+|------|------|--------|---------|
+| `accent` | `--accent` | any CSS colour — the one required input | — |
+| `neutral` | `--neutral` | `gray` · `cool` · `warm` · `tinted` | `gray` |
+| `scheme` | `--scheme` | `light` · `dark` · `both` | `both` |
+| `type.pairing` | `--type` | `system` · `sans-humanist` · `sans-grotesque` · `sans-geometric` · `rounded` · `serif-editorial` · `serif-modern` · `slab` · `mono` · `custom` | `system` |
+| `type.scale` | `--scale` | `1.125` · `1.2` · `1.25` · `1.333` | `1.2` |
+| `type.base` | `--base` | `15` · `16` · `17` · `18` | `16` |
+| `type.voice.weight` | `--weight` | `regular` · `medium` · `semibold` · `bold` · `black` | `bold` |
+| `type.voice.tracking` | `--tracking` | `tight` · `normal` · `wide` | `normal` |
+| `type.voice.transform` | `--transform` | `none` · `uppercase` · `small-caps` | `none` |
+| `shape.radius` | `--shape` | `sharp` · `crisp` · `soft` · `round` · `pill` | `soft` |
+| `shape.border` | `--border` | `hairline` · `regular` · `heavy` | `hairline` |
+| `shape.corner` | `--corner` | `round` · `bevel` · `scoop` · `notch` | `round` |
+| `depth` | `--depth` | `flat` · `soft` · `layered` · `hard` · `glass` · `inset` | `soft` |
+| `material` | `--material` | `none` · `grain` · `paper` · `dots` · `grid` · `stripes` · `mesh` | `none` |
+| `motion` | `--motion` | `none` · `minimal` · `smooth` · `snappy` · `springy` · `playful` | `smooth` |
+| `density` | `--density` | `compact` · `comfortable` · `spacious` | `comfortable` |
+| `focus` | `--focus` | `ring` · `glow` · `inset` · `bold` | `ring` |
+| `decoration.link` | `--link` | `none` · `plain` · `offset` · `thick` | `offset` |
+| `decoration.divider` | `--divider` | `solid` · `dashed` · `dotted` · `double` | `solid` |
+| `controls.button` | `--button` | `rect` · `pill` · `soft` | `soft` |
+| `controls.input` | `--input` | `box` · `filled` · `underline` | `box` |
+| `controls.checkbox` | `--checkbox` | `square` · `round` | `square` |
+| `controls.switch` | `--switch` | `pill` · `square` | `pill` |
+| `contrast` | `--contrast` | `standard` · `high` | `standard` |
+<!-- @faqir:theme-axes end -->
+
+### Every theme, by axis
+
+One row per theme, cells straight from its manifest's `axes` block. A
+`generated` theme is reproduced byte for byte from the `<name>.seed.json`
+beside it; an `authored` one was written by hand and its axes measured
+afterwards. To choose: read the request as axis values — "dark" is a
+`scheme` that ships `dark` or `both`; "calm and readable" is minimal motion,
+spacious density and a serif pairing; "a dense trading desk" is compact
+density with layered depth — and find the row that lands there, or generate
+one. The MCP `faqir_theme_list` tool does the same lookup by `axes`.
+
+<!-- @faqir:theme-table start -->
+| Theme | Kind | Scheme | Accent | Neutral | Type | Shape | Depth | Material | Motion | Density | Focus | Decoration | Controls | Contrast |
+|-------|------|--------|--------|---------|------|-------|-------|----------|--------|---------|-------|------------|----------|----------|
+| `aurora` | authored | both | 300° · 0.24 | gray | system · 1.2/16px · bold tight | soft · hairline · round | layered | mesh | smooth | comfortable | ring | offset · solid | soft · box · square · pill | standard |
+| `brutalist` | authored | both | 0° · 0.00 | gray | system · 1.2/16px · bold wide uppercase | sharp · heavy · round | flat | none | minimal | comfortable | bold | thick · solid | rect · box · square · square | high |
+| `candy` | generated | both | 352° · 0.18 | tinted | rounded · 1.125/16px · bold | pill · hairline · round | soft | none | springy | comfortable | ring | offset · solid | pill · box · round · pill | standard |
+| `clinical` | generated | both | 210° · 0.09 | cool | sans-humanist · 1.2/17px · medium | soft · hairline · round | flat | dots | minimal | comfortable | ring | offset · solid | soft · box · square · pill | high |
+| `contrast` | authored | both | 250° · 0.16 | gray | system · 1.2/16px · bold | soft · regular · round | soft | none | smooth | comfortable | bold | thick · solid | soft · box · square · pill | high |
+| `default` | authored | both | 264° · 0.22 | gray | system · 1.2/16px · bold | soft · hairline · round | soft | none | smooth | comfortable | ring | offset · solid | soft · box · square · pill | standard |
+| `document-serif` | authored | light | 25° · 0.07 | gray | serif-editorial · 1.2/16px · bold tight | sharp · hairline · round | flat | none | smooth | comfortable | ring | offset · dotted | rect · underline · square · square | high |
+| `document` | authored | light | 250° · 0.06 | gray | sans-grotesque · 1.2/16px · bold | sharp · hairline · round | flat | none | none | comfortable | ring | plain · solid | rect · box · square · square | high |
+| `editorial` | generated | both | 256° · 0.07 | gray | serif-editorial · 1.333/17px · semibold tight | soft · hairline · round | flat | paper | minimal | spacious | ring | offset · solid | soft · box · square · pill | standard |
+| `fintech` | generated | both | 172° · 0.11 | tinted | sans-geometric · 1.2/16px · semibold | soft · hairline · round | layered | none | snappy | compact | ring | offset · solid | soft · filled · square · pill | standard |
+| `glass` | authored | both | 275° · 0.20 | cool | system · 1.2/16px · bold | round · hairline · round | glass | none | smooth | comfortable | ring | offset · solid | soft · filled · square · pill | standard |
+| `ink` | generated | light | 60° · 0.06 | warm | slab · 1.2/16px · semibold | sharp · hairline · round | flat | paper | minimal | comfortable | bold | plain · solid | rect · underline · square · square | high |
+| `luxe` | generated | dark | 84° · 0.10 | warm | serif-modern · 1.333/16px · regular wide uppercase | soft · hairline · round | soft | mesh | smooth | spacious | ring | offset · solid | soft · box · square · pill | high |
+| `midnight` | authored | both | 280° · 0.24 | cool | system · 1.2/16px · semibold | soft · hairline · round | layered | grid | smooth | comfortable | glow | offset · solid | soft · box · square · pill | standard |
+| `neo` | generated | both | 121° · 0.17 | gray | sans-grotesque · 1.25/18px · black | sharp · heavy · round | hard | none | playful | comfortable | bold | offset · solid | rect · box · square · square | standard |
+| `neumorph` | generated | both | 300° · 0.20 | tinted | rounded · 1.2/16px · medium | round · hairline · round | inset | none | smooth | comfortable | inset | offset · solid | soft · filled · round · pill | standard |
+| `nordic` | generated | both | 220° · 0.18 | cool | sans-geometric · 1.2/16px · regular | round · hairline · round | flat | none | smooth | spacious | ring | offset · solid | soft · box · square · pill | standard |
+| `organic` | generated | both | 90° · 0.08 | warm | sans-humanist · 1.2/17px · bold | round · hairline · round | soft | grain | smooth | spacious | ring | offset · solid | soft · box · square · pill | standard |
+| `paper` | authored | both | 45° · 0.14 | warm | serif-editorial · 1.2/16px · semibold | soft · hairline · round | flat | paper | smooth | comfortable | ring | offset · solid | soft · box · square · pill | standard |
+| `slate` | authored | both | 245° · 0.09 | cool | sans-grotesque · 1.2/16px · bold | crisp · hairline · round | flat | none | snappy | compact | ring | offset · solid | soft · box · square · pill | standard |
+| `soft` | authored | both | 185° · 0.10 | warm | system · 1.2/16px · bold | pill · hairline · round | layered | none | springy | comfortable | glow | offset · solid | pill · box · round · pill | standard |
+| `sunset` | generated | both | 45° · 0.18 | warm | sans-humanist · 1.2/16px · semibold | soft · hairline · round | soft | mesh | smooth | comfortable | glow | offset · solid | soft · box · round · pill | standard |
+| `swiss` | generated | both | 30° · 0.21 | gray | sans-grotesque · 1.25/16px · bold tight uppercase | sharp · regular · round | flat | grid | snappy | comfortable | ring | plain · solid | rect · box · square · pill | high |
+| `terminal` | authored | both | 145° · 0.12 | tinted | mono · 1.2/16px · bold | sharp · hairline · round | soft | stripes | snappy | comfortable | inset | offset · dashed | rect · box · square · square | standard |
+
+3 print companions — `editorial-document`, `ink-document`, `swiss-document` — carry no axes of their own: each is its parent theme on white paper, light only.
+<!-- @faqir:theme-table end -->
+
+### Authored themes — character notes
 
 | Theme | Description |
 |-------|-------------|
@@ -750,7 +839,7 @@ print companions those bring with them.
 | `soft` | Calm pastel surfaces, generous radius, friendly consumer tone |
 | `terminal` | Technical monospaced interface with a dark retro-console voice |
 
-### Generated themes
+### Generated themes — character notes
 
 Each of these is the output of `faqir theme generate <name> --seed
 registry/themes/<name>.seed.json`. The seed is committed beside the stylesheet
@@ -792,6 +881,30 @@ block, and `faqir theme set` treats it like any other theme.
 <html data-theme="auto">
 ```
 
+### Light and dark in one declaration
+
+A dual-scheme theme states both sides of every scheme-dependent token at once:
+
+```css
+:root {
+  --color-bg: light-dark(var(--palette-gray-25), var(--palette-gray-950));
+  --color-fg: light-dark(var(--palette-gray-950), var(--palette-gray-50));
+}
+```
+
+`light-dark()` reads `color-scheme`, not `data-theme`, and `registry/base/reset.css`
+declares that mapping once — `:root` is `light`, `[data-theme="dark"]` is
+`dark`, `[data-theme="auto"]` is `light dark` — so a one-block theme follows the
+OS with no `prefers-color-scheme` mirror of its own. A theme loaded *without*
+the base reset resolves every `light-dark()` to its light side, silently; keep
+that in mind when inlining a theme by hand. `faqir theme generate` emits this
+form for `--scheme both` and `--legacy-blocks` writes the three-block form
+(`:root`, `[data-theme="dark"]`, and a media-query mirror) for a browser floor
+older than Chrome 123 / Safari 17.5 / Firefox 120. The shadow ramp stays in
+blocks either way — a shadow list is not a `<color>`. The authoring rules, the
+deliberate-override list and the drift gate are in `CONTRIBUTING.md` § Theme
+Manifests.
+
 ### Managing Themes via CLI
 
 ```bash
@@ -828,17 +941,14 @@ generate` instead writes four files per theme — `themes/<name>.css`, its
 `<name>.theme.json`, the resolved `<name>.seed.json`, and a self-contained
 `<name>.preview.html` — into `themes/`, or wherever `--out` says.
 
-**The seed is the input.** A theme is described by an accent colour and
-fourteen axes (§5.2 of `FAQIR-VISION.md`): `neutral`, `scheme`, `type`
-(pairing, scale, base size, heading voice), `shape` (radius, border weight,
-corner style), `depth`, `material`, `motion`, `density`, `focus`,
-`decoration`, `controls` (button, input, checkbox, switch silhouettes) and
-`contrast`. Every axis is optional and has a documented default, so
-`{ name, accent }` is a complete seed — the defaults together describe the
-shipped `default` theme. Each axis has one flag (`faqir theme generate --help`
-lists them with their vocabularies), a `--seed <file>` supplies any or all of
-them at once, and flags win where both speak. An unknown value is refused by
-name, with the axis's vocabulary in the message, before anything is written.
+**The seed is the input.** A theme is described by an accent colour and the
+fourteen axes of [the table above](#the-fourteen-axes) (§5.2 of
+`FAQIR-VISION.md`). Every axis is optional and has a documented default, so
+`{ name, accent }` is a complete seed. Each leaf has one flag (`faqir theme
+generate --help` lists them with their vocabularies), a `--seed <file>`
+supplies any or all of them at once, and flags win where both speak. An
+unknown value is refused by name, with the axis's vocabulary in the message,
+before anything is written.
 
 The resolved seed is written beside the CSS and carried in the manifest's
 `seed`, so a generated theme can always be reproduced — and the manifest's

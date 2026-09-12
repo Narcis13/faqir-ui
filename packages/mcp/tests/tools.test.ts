@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from "bun:test";
-import { mkdirSync, rmSync } from "node:fs";
+import { mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { join, resolve } from "node:path";
 
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
@@ -245,6 +245,146 @@ describe("faqir_theme_info", () => {
     const res = await client.callTool({ name: "faqir_theme_info", arguments: {} });
     const data = res.structuredContent as any;
     expect(data.active_theme).toBe("default");
+  });
+
+  // ── Axes [1.1A-20] ──────────────────────────────────────────────────────
+
+  it("includes each theme's derived axes, distinctiveness and kind in the summary list", async () => {
+    const { client } = await makeClient();
+    const res = await client.callTool({ name: "faqir_theme_info", arguments: {} });
+    const data = res.structuredContent as any;
+
+    const glass = data.themes.find((t: any) => t.name === "glass");
+    expect(glass.kind).toBe("authored");
+    expect(glass.axes.depth).toBe("glass");
+    expect(glass.axes.type.pairing).toBe("system");
+    expect(glass.distinctiveness.nearest).toBe("aurora");
+    expect(typeof glass.distinctiveness.axis_distance).toBe("number");
+
+    const editorial = data.themes.find((t: any) => t.name === "editorial");
+    expect(editorial.kind).toBe("generated");
+    expect(editorial.axes.type.pairing).toBe("serif-editorial");
+    // The summary stays light: no seed, no token arrays — the named call has them.
+    expect(editorial.seed).toBeUndefined();
+    expect(editorial.tokens_overridden).toBeUndefined();
+
+    const companion = data.themes.find((t: any) => t.name === "editorial-document");
+    expect(companion.kind).toBe("companion");
+    expect(companion.axes).toBeUndefined();
+  });
+
+  it("returns seed, axes and distinctiveness on the full manifest", async () => {
+    const { client } = await makeClient();
+    const res = await client.callTool({ name: "faqir_theme_info", arguments: { theme: "editorial" } });
+    const data = res.structuredContent as any;
+    expect(data.themes[0].seed.name).toBe("editorial");
+    expect(data.themes[0].axes.density).toBe("spacious");
+    expect(data.themes[0].distinctiveness.nearest).toBe("nordic");
+  });
+});
+
+describe("faqir_theme_list", () => {
+  /** Every shipped manifest, read straight off disk — the oracle the filter is held to. */
+  function manifests(): any[] {
+    return readdirSync(join(REGISTRY, "themes"))
+      .filter((f) => f.endsWith(".theme.json"))
+      .sort()
+      .map((f) => JSON.parse(readFileSync(join(REGISTRY, "themes", f), "utf8")));
+  }
+
+  it("is registered with schemas", async () => {
+    const { client } = await makeClient();
+    const { tools } = await client.listTools();
+    const tool = tools.find((t) => t.name === "faqir_theme_list")!;
+    expect(tool).toBeDefined();
+    expect((tool.inputSchema as { type?: string }).type).toBe("object");
+    expect((tool.outputSchema as { type?: string }).type).toBe("object");
+  });
+
+  it("lists every theme with its axes when unfiltered", async () => {
+    const { client } = await makeClient();
+    const res = await client.callTool({ name: "faqir_theme_list", arguments: {} });
+    const data = res.structuredContent as any;
+    expect(data.count).toBe(data.total);
+    expect(data.count).toBe(manifests().length);
+    expect(data.filter).toEqual({});
+    expect(data.themes.filter((t: any) => t.axes).length).toBe(manifests().filter((m) => m.axes).length);
+  });
+
+  it("returns exactly the themes whose axes land on depth=glass", async () => {
+    const { client } = await makeClient();
+    const res = await client.callTool({
+      name: "faqir_theme_list",
+      arguments: { axes: { depth: "glass" } },
+    });
+    const data = res.structuredContent as any;
+    const expected = manifests()
+      .filter((m) => m.axes?.depth === "glass")
+      .map((m) => m.name);
+    expect(expected).toContain("glass");
+    expect(data.themes.map((t: any) => t.name)).toEqual(expected);
+    expect(data.count).toBe(expected.length);
+    expect(data.total).toBe(manifests().length);
+    expect(data.filter.axes).toEqual({ depth: "glass" });
+    for (const t of data.themes) expect(t.axes.depth).toBe("glass");
+  });
+
+  it("conjoins clauses, coerces numeric leaves, and never matches a companion", async () => {
+    const { client } = await makeClient();
+    const res = await client.callTool({
+      name: "faqir_theme_list",
+      arguments: { axes: { "type.pairing": "serif-editorial", "type.scale": "1.333", density: "spacious" } },
+    });
+    const data = res.structuredContent as any;
+    const expected = manifests()
+      .filter(
+        (m) =>
+          m.axes?.type.pairing === "serif-editorial" && m.axes?.type.scale === 1.333 && m.axes?.density === "spacious",
+      )
+      .map((m) => m.name);
+    expect(expected).toContain("editorial");
+    expect(data.themes.map((t: any) => t.name)).toEqual(expected);
+
+    // A companion has no axes, so any axis clause excludes it — even one its parent satisfies.
+    const light = await client.callTool({ name: "faqir_theme_list", arguments: { axes: { scheme: "light" } } });
+    const names = (light.structuredContent as any).themes.map((t: any) => t.name);
+    expect(names).toContain("ink");
+    expect(names).not.toContain("ink-document");
+    expect(names).not.toContain("editorial-document");
+
+    // …while `kind` finds them by name.
+    const companions = await client.callTool({ name: "faqir_theme_list", arguments: { kind: "companion" } });
+    expect((companions.structuredContent as any).themes.map((t: any) => t.name)).toEqual(
+      manifests()
+        .filter((m) => !m.axes)
+        .map((m) => m.name),
+    );
+
+    // And mood still works, on its own or beside an axis.
+    const dark = await client.callTool({ name: "faqir_theme_list", arguments: { mood: "dark", axes: { depth: "layered" } } });
+    const darkNames = (dark.structuredContent as any).themes.map((t: any) => t.name);
+    expect(darkNames).toEqual(
+      manifests()
+        .filter((m) => m.mood.includes("dark") && m.axes?.depth === "layered")
+        .map((m) => m.name),
+    );
+  });
+
+  it("errors cleanly on an unknown axis or a value outside the vocabulary, naming the options", async () => {
+    const { client } = await makeClient();
+    const badPath = await client.callTool({ name: "faqir_theme_list", arguments: { axes: { deepness: "glass" } } });
+    expect(badPath.isError).toBe(true);
+    const pathText = (badPath.content as any[])[0].text as string;
+    expect(pathText).toContain("Unknown axis 'deepness'");
+    expect(pathText).toContain("depth");
+    expect(pathText).toContain("type.pairing");
+
+    const badValue = await client.callTool({ name: "faqir_theme_list", arguments: { axes: { depth: "glas" } } });
+    expect(badValue.isError).toBe(true);
+    const valueText = (badValue.content as any[])[0].text as string;
+    expect(valueText).toContain("'glas' is not a value of 'depth'");
+    expect(valueText).toContain("glass");
+    expect(valueText).toContain("flat");
   });
 });
 

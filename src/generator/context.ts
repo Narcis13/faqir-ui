@@ -23,6 +23,7 @@ import {
   spacingLadderLine,
 } from "../utils/layout";
 import { loadThemeManifest, type ThemeManifest } from "../theme-manifest";
+import { axisSummary, themeKind } from "../theme/describe";
 import { readConfig, type FaqirConfig } from "../utils/config";
 import { ensureDir, getRegistryPath } from "../utils/fs";
 import { loadPluginMetadata, type PluginMetadata } from "./plugins";
@@ -208,6 +209,35 @@ export async function loadActiveTheme(config: FaqirConfig): Promise<ContextTheme
     return await loadThemeManifest(manifestPath);
   }
   return { name: config.theme, manifest_found: false };
+}
+
+/**
+ * The active theme's character, as bullet lines [1.1A-20]: the fourteen axes
+ * derived from its stylesheet and, for a generated theme, the seed it came
+ * from. Rendered through `src/theme/describe.ts` so the wording here is the
+ * wording of the README table and the skill. A print companion has no axes
+ * and says so, rather than leaving the reader to wonder whether the block is
+ * incomplete.
+ */
+export function themeCharacterLines(theme: ContextTheme): string[] {
+  if (!("mood" in theme)) return [];
+  const lines: string[] = [];
+  if (theme.axes) {
+    lines.push(`- Axes: ${axisSummary(theme.axes)}`);
+  } else if (themeKind(theme) === "companion") {
+    lines.push("- Axes: none — a print companion carries its parent's brand on white paper");
+  }
+  if (theme.seed) {
+    lines.push(
+      `- Seed: generated — \`faqir theme generate ${theme.name} --seed ${theme.name}.seed.json\` reproduces it byte for byte; ` +
+        "copy the seed and change an axis rather than editing the CSS",
+    );
+  }
+  if (theme.distinctiveness) {
+    const d = theme.distinctiveness;
+    lines.push(`- Nearest theme: ${d.nearest} (${d.axis_distance} axes apart, token ΔE ${d.token_distance})`);
+  }
+  return lines;
 }
 
 /**
@@ -734,6 +764,7 @@ export function formatContextMarkdown(data: ContextData): string {
     lines.push(`- Scheme: ${t.scheme} (dark mode: ${t.dark_mode})`);
     lines.push(`- Overrides ${t.tokens_overridden.length} tokens, inherits ${t.tokens_inherited.length} from base`);
     if (t.pairs_with.length > 0) lines.push(`- Pairs with: ${t.pairs_with.join(", ")}`);
+    lines.push(...themeCharacterLines(t));
   } else {
     lines.push(`- Name: ${t.name} (custom theme — no manifest)`);
   }
@@ -985,6 +1016,7 @@ export function formatContextCursorRules(data: ContextData): string {
   const t = data.theme;
   if ("mood" in t) {
     lines.push(`Active theme: \`${t.name}\` — ${t.mood.join(", ")} (${t.scheme} scheme, dark mode: ${t.dark_mode}).`);
+    if (t.axes) lines.push(`Theme axes: ${axisSummary(t.axes)}.`);
   } else {
     lines.push(`Active theme: \`${t.name}\` (custom).`);
   }
@@ -1156,6 +1188,15 @@ export function formatContextLlms(data: ContextData): string {
   lines.push("");
   lines.push(`> ${llmsBlurb(data)}`);
   lines.push("");
+  // The theme's character, stated where the index names the theme: an agent
+  // that reads llms.txt and stops still knows the page is flat, spacious and
+  // serif rather than only "editorial" [1.1A-20].
+  const themeLines = themeCharacterLines(data.theme);
+  if (themeLines.length > 0) {
+    lines.push(`Active theme \`${data.meta.theme}\`:`);
+    lines.push(...themeLines);
+    lines.push("");
+  }
   lines.push(
     "Components carry their contract in `data-ui`/`data-part`/`data-state` attributes; " +
       "CSS targets those attributes (`[data-ui=\"button\"]`) and every value comes from a " +
@@ -1372,6 +1413,7 @@ export function formatContextLlmsFull(data: ContextData): string {
     lines.push(`- Scheme: ${t.scheme} (dark mode: ${t.dark_mode})`);
     lines.push(`- Overrides ${t.tokens_overridden.length} tokens, inherits ${t.tokens_inherited.length} from base`);
     if (t.pairs_with.length > 0) lines.push(`- Pairs with: ${t.pairs_with.join(", ")}`);
+    lines.push(...themeCharacterLines(t));
   } else {
     lines.push(`- Name: ${t.name} (custom theme — no manifest)`);
   }

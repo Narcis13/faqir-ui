@@ -64,6 +64,7 @@ browser-free gates (token drift, distinctiveness, coverage) for everything it ch
 | a theme's preview spec in `src/theme-preview.ts` | `bun run gen:theme-previews` | `tests/themes/theme-previews.test.ts` |
 | a theme's CSS (bundles `faqir.<theme>.css` into the CDN package) | `bun run build:core-package` | `bun run check:core-package` |
 | a component manifest, `registry/tokens/*.css`, the engine's `@ui:` declarations, a plugin header, or a generator | `bun run gen:skill` | `bun run check:skill` |
+| a theme manifest's `axes`/`seed`, or `src/theme/describe.ts` (README's theme tables, from 1.1A-20) | `bun run gen:theme-docs` | `bun run check:theme-docs` |
 | any manifest's presence/name | `bun run build:registry-index` | `bun run check:registry-index` |
 | `manifest.schema.json` | `bun run gen:schema-refs` | `bun run check:schema-refs` |
 | `src/core-src/engine.js` or a recipe controller | `bun run build:core` | committed `registry/core/faqir-core{,.dev}.js` |
@@ -103,7 +104,7 @@ plan is complete and is not consulted.
 | 1.1A-17 | New seed themes, batch 2: `clinical`, `fintech`, `nordic`, `sunset`, `ink`, `neumorph` | ✅ |
 | 1.1A-18 | `faqir fonts add`: OFL catalog, self-hosted install, `ui/fonts.css`, bundle + doctor integration | ✅ |
 | 1.1A-19 | Scoped themes: `faqir theme bundle <name> --scope` on `data-skin` | ✅ |
-| 1.1A-20 | Docs & agent surfaces for Theme System 2.0 | ⬜ |
+| 1.1A-20 | Docs & agent surfaces for Theme System 2.0 | ✅ |
 
 ### Lane B — Rules (Platform)
 
@@ -810,8 +811,8 @@ one.
 - `check:docs` after `build:docs`; the gallery's axis filter is exercised by an a11y docs-site case (`tests/a11y/docs-site.pw.ts`) — manual on this machine, recorded in the release checklist.
 
 **Acceptance criteria**
-- [ ] README, CONTRIBUTING, skill, context, MCP and the docs-site gallery all describe themes by axes and document seeds, fonts and scoped bundles.
-- [ ] Every surface is generated from the manifests and drift-tested; `check:skill`, `check:docs` green.
+- [x] README, CONTRIBUTING, skill, context, MCP and the docs-site gallery all describe themes by axes and document seeds, fonts and scoped bundles. (One derivation, `src/theme/describe.ts`, feeds every surface: README § Theme System rewritten — "The fourteen axes" vocabulary table and "Every theme, by axis" 24-row table generated between `<!-- @faqir:theme-axes/theme-table -->` markers, plus a `light-dark()` subsection beside the existing seed, fonts and `--scope` prose; CONTRIBUTING § Theme Manifests gains the five schema-1.1 fields and "The seed workflow" (seed → generate → editorial SEED entry → regenerate → gates); the skill's `## Themes` table carries the twelve axis columns and a new `## Choosing a Theme by Axes` section names every leaf once with its flag, values and default, promised in the frontmatter; `faqir context` writes `- Axes:` / `- Seed:` / `- Nearest theme:` into context.md, llms.txt, llms-full.txt and the cursor rules, and context.json already embedded the manifest; `faqir_theme_info` summaries carry `kind`, `axes`, `distinctiveness` and a new `faqir_theme_list` filters by dotted axis path, mood and kind, refusing unknown paths/values with the vocabulary named; the docs gallery shows nine axis chips per card, nine native selects offering only values a shipped theme lands on, a live count and an empty state, driven by `gallery.js` with attribute comparison only.)
+- [x] Every surface is generated from the manifests and drift-tested; `check:skill`, `check:docs` green. (New `gen:theme-docs` / `check:theme-docs` gate for README's blocks, added to `release.mjs --preflight` and the regeneration map; `tests/themes/theme-docs.test.ts` (16 cases) holds the renderers and README's blocks; `tests/generator/skill.test.ts` +2, `tests/commands/context.test.ts` +3, `packages/mcp/tests/tools.test.ts` +7, `tests/generator/docs-themes.test.ts` +4; `check:skill`, `check:docs`, `check:theme-docs` green; the a11y suite's `docs__themes_axis_filter__{light,dark}` drives the filter and axe-scans the result — run on this machine in local Chromium, 2 passed, recorded as manual in docs/release-checklist.md. Full suite 5822 pass / 12 skip (unchanged) / 0 fail.)
 
 ---
 

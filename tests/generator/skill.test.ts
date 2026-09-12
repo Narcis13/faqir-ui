@@ -50,6 +50,8 @@ import { loadPluginMetadata } from "../../src/generator/plugins";
 import { COMMAND_DEFINITIONS, COMMAND_NAMES } from "../../src/command-registry";
 import { SCAFFOLDS } from "../../src/scaffolds/registry";
 import { validateManifest } from "../../src/manifest";
+import { THEME_AXIS_VALUES, type ThemeManifest } from "../../src/theme-manifest";
+import { AXIS_COLUMNS, AXIS_PATHS, NO_AXES_CELL, axisCells, axisFlag, themeTableHeaders } from "../../src/theme/describe";
 import { validateAgainstSchema } from "../../src/utils/json-schema";
 
 const REPO = join(import.meta.dir, "../..");
@@ -407,12 +409,76 @@ describe("shipped skill theme gallery", () => {
         }),
       );
       const rendered = renderThemes(dir).join("\n");
-      expect(tableKeys(rendered)).toEqual(["sepia"]);
+      expect(tableKeys(section(rendered, "## Themes"))).toEqual(["sepia"]);
       expect(rendered).toContain("warm, archival");
       expect(rendered).toContain("`paper`");
+      // A manifest with no `axes` block (a print companion, or a 1.0 manifest)
+      // still gets its row — every axis cell is the no-axes mark, never blank.
+      const row = section(rendered, "## Themes")
+        .split("\n")
+        .find((line) => line.startsWith("| `sepia` |"))!;
+      expect(row.split("|").slice(1, -1).map((c) => c.trim()).filter((c) => c === NO_AXES_CELL).length).toBe(
+        AXIS_COLUMNS.length,
+      );
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
+  });
+
+  // ── Axes [1.1A-20] ──────────────────────────────────────────────────────
+  //
+  // The framework's agent surfaces must describe themes by axes, or agents keep
+  // choosing by adjective. The table renders one row per theme with the twelve
+  // axis columns (`src/theme/describe.ts`'s AXIS_COLUMNS; with `Scheme` they are
+  // the fourteen), each cell derived from the manifest's `axes` block.
+
+  it("renders one row per theme with the axis columns, each cell from the manifest's axes", () => {
+    const themes = section(skill, "## Themes");
+    const header = themes.split("\n").find((line) => line.startsWith("| Theme |"))!;
+    const headers = header.split("|").slice(1, -1).map((h) => h.trim());
+    expect(headers).toEqual(themeTableHeaders({ mood: true, extended: true }));
+    for (const label of AXIS_COLUMNS.map((c) => c.label)) expect(headers).toContain(label);
+
+    for (const name of shippedThemes()) {
+      const manifest = JSON.parse(readFileSync(join(THEMES_DIR, `${name}.theme.json`), "utf8")) as ThemeManifest;
+      const row = themes.split("\n").find((line) => line.startsWith(`| \`${name}\` |`))!;
+      const cells = row.split("|").slice(1, -1).map((c) => c.trim());
+      expect(cells.length).toBe(headers.length);
+      // The axis cells are the last twelve, in AXIS_COLUMNS order.
+      const axisPart = cells.slice(-AXIS_COLUMNS.length);
+      expect(axisPart).toEqual(axisCells(manifest));
+      if (manifest.axes) {
+        // Spot-check that the cells are the manifest's values, not a paraphrase.
+        expect(axisPart[headers.indexOf("Depth") - (headers.length - AXIS_COLUMNS.length)]).toBe(manifest.axes.depth);
+        expect(row).toContain(manifest.axes.type.pairing);
+        expect(row).toContain(manifest.axes.density);
+        expect(row).toContain(String(manifest.axes.type.scale));
+      } else {
+        expect(axisPart.every((c) => c === NO_AXES_CELL)).toBe(true);
+      }
+    }
+  });
+
+  it("teaches choosing by axes, naming every axis exactly once with its vocabulary and flag", () => {
+    const guidance = section(skill, "## Choosing a Theme by Axes");
+    expect(guidance.length).toBeGreaterThan(0);
+    // Every enumerated leaf of the vocabulary appears exactly once, in backticks.
+    for (const path of AXIS_PATHS) {
+      const hits = guidance.split(`\`${path}\``).length - 1;
+      expect(hits, `axis \`${path}\` named ${hits} times`).toBe(1);
+      for (const value of THEME_AXIS_VALUES[path]) expect(guidance).toContain(`\`${value}\``);
+      const flag = axisFlag(path);
+      expect(flag, `${path} has no generate flag`).not.toBeNull();
+      expect(guidance).toContain(`\`${flag}\``);
+    }
+    // The accent is the one required input, named once as well.
+    expect(guidance.split("`accent`").length - 1).toBe(1);
+    // The guidance points at the three CLI surfaces a choice leads to.
+    expect(guidance).toContain("faqir theme generate");
+    expect(guidance).toContain("faqir theme bundle <name> --scope");
+    expect(guidance).toContain("faqir fonts add");
+    // And the routing surface promises it.
+    expect(FRONTMATTER_CAPABILITIES.some((c) => c.section === "## Choosing a Theme by Axes")).toBe(true);
   });
 });
 

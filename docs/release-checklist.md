@@ -50,6 +50,14 @@ Run them locally before a release that touched CSS, markup or the engine. Expect
 baseline noise on macOS: read the diffs, do not blanket-accept them, and never
 run an `:update` variant to make a release go green.
 
+The a11y suite also carries the docs site's one *interactive* case (task
+1.1A-20): `docs__themes_axis_filter__{light,dark}` in
+`tests/a11y/docs-site.pw.ts` drives the theme gallery's axis filter — selects
+`depth = glass`, checks that only the cards whose derived axes say so remain and
+that the live count follows — then runs axe on the filtered page. The filter's
+markup is gated without a browser (`tests/generator/docs-themes.test.ts`); its
+behaviour is this case, and it is as manual as the rest of the suite.
+
 **How big those two suites are is a manifest fact, not a constant** (task
 1.1A-13). The visual and a11y matrices are multiplicative in themes, so each theme
 declares its own membership in `registry/themes/<name>.theme.json`:

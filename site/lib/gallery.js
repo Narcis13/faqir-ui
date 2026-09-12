@@ -4,7 +4,7 @@
  * small progressive enhancements shared by the generated shell:
  *
  *   • persistent theme + colour-scheme controls on every page;
- *   • theme-gallery buttons and preview-frame broadcasts;
+ *   • theme-gallery buttons, the axis filter, and preview-frame broadcasts;
  *   • responsive component-preview widths;
  *   • the mobile documentation drawer;
  *   • component, icon, and sidebar filtering;
@@ -309,6 +309,44 @@
     run();
   }
 
+  /**
+   * The theme gallery's axis filter (task 1.1A-20). Each card carries its
+   * derived axes as `data-theme-axis-<path>` attributes and each select names
+   * one path; a card stays visible while every chosen value agrees with its
+   * attribute. A print companion has no axis attributes, so any active filter
+   * hides it — it has no character of its own to land on. Nothing is fetched
+   * and nothing reloads: with JavaScript off the page is the full list.
+   */
+  function startThemeGalleryFilter() {
+    var selects = all("[data-theme-axis-filter]");
+    var cards = all("[data-docs-theme-card]");
+    var count = document.getElementById("theme-result-count");
+    var empty = document.querySelector("[data-theme-empty]");
+    if (selects.length === 0 || cards.length === 0) return;
+
+    function run() {
+      var active = selects.filter(function (select) {
+        return select.value !== "";
+      });
+      var visible = 0;
+      cards.forEach(function (card) {
+        var show = active.every(function (select) {
+          var path = select.getAttribute("data-theme-axis-filter") || "";
+          return card.getAttribute("data-theme-axis-" + path.replace(/\./g, "-")) === select.value;
+        });
+        card.hidden = !show;
+        if (show) visible++;
+      });
+      if (count) count.textContent = visible + " of " + cards.length + " themes";
+      if (empty) empty.hidden = visible !== 0;
+    }
+
+    selects.forEach(function (select) {
+      select.addEventListener("change", run);
+    });
+    run();
+  }
+
   function startIconLibrary() {
     var search = document.querySelector("[data-docs-icon-search]");
     var cards = all("[data-docs-icon-card]");
@@ -419,6 +457,7 @@
     startMobileNavigation();
     startSidebarFilter();
     startComponentFilter();
+    startThemeGalleryFilter();
     startIconLibrary();
     startPreviewControls();
     broadcastAppearance();

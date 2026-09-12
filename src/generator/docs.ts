@@ -133,6 +133,14 @@ import {
   type DocumentedBreak,
 } from "../migration";
 import type { ThemeManifest } from "../theme-manifest";
+import {
+  GALLERY_AXES,
+  axisSlug,
+  galleryAxisAttribute,
+  galleryChips,
+  galleryFilterOptions,
+  themeKind,
+} from "../theme/describe";
 // The playground's rule legend is derived from the engine's own rule lists, so it
 // cannot describe a rule the shipped browser bundle does not run.
 import { getHtmlRuleInventory } from "../audit/rules";
@@ -3536,7 +3544,7 @@ function renderHomePage(ctx: {
     `            <h2 id="home-themes-heading">One interface. ${esc(
       String(ctx.themes.length),
     )} distinct voices.</h2>\n` +
-    `            <p>Pick any theme below. This entire page—and every live component frame—restyles in place from token declarations alone.</p>\n` +
+    `            <p>Pick any theme below. This entire page—and every live component frame—restyles in place from token declarations alone. Every theme is described by the same fourteen character axes, derived from its stylesheet; <a data-ui="link" href="${escAttr(THEMES_PAGE)}#gallery">filter by them in the gallery</a>.</p>\n` +
     `          </div>\n` +
     `          <div data-docs-theme-actions>\n` +
     `            <div data-ui="cluster" data-gap="2" role="group" aria-label="Choose a Faqir theme">\n` +
@@ -4083,15 +4091,42 @@ function renderThemeGalleryPage(ctx: {
     )
     .join("\n");
 
+  // Every card carries its gallery axes twice [1.1A-20]: as `data-theme-axis-*`
+  // attributes the filter compares on, and as visible chips a reader compares
+  // on. Both come from the manifest's derived `axes` block, so a card cannot
+  // claim a character its stylesheet does not have. A print companion has no
+  // axes: no attributes, one chip saying whose medium it is.
   const cards = themes
     .map((t) => {
       const m = t.manifest;
       const frame = themePreviewPath(t.name);
+      const chips = m ? galleryChips(m) : [];
+      const axisAttrs = chips
+        .map(([path, value]) => ` ${galleryAxisAttribute(path)}="${escAttr(value)}"`)
+        .join("");
+      const kind = m ? themeKind(m) : "authored";
+      const chipMarkup = chips.length
+        ? chips
+            .map(
+              ([path, value]) =>
+                `              <span data-ui="badge" data-variant="default" data-docs-theme-chip="${escAttr(
+                  path,
+                )}" title="${escAttr(path)}">${esc(value)}</span>`,
+            )
+            .join("\n")
+        : `              <span data-ui="badge" data-variant="default" data-docs-theme-chip="kind">print companion of ${esc(
+            m?.pairs_with?.[0] ?? "its parent",
+          )}</span>`;
       return (
-        `        <div data-ui="card" data-variant="outlined" data-docs-theme-card>\n` +
+        `        <div data-ui="card" data-variant="outlined" data-docs-theme-card data-theme-kind="${escAttr(
+          kind,
+        )}"${axisAttrs}>\n` +
         `          <div data-part="header">\n` +
         `            <h3 data-part="title">${esc(t.name)}</h3>\n` +
         `            <p data-part="description">${esc(m?.mood?.join(" · ") ?? "")}</p>\n` +
+        `            <div data-ui="cluster" data-gap="1" data-docs-theme-axes aria-label="${escAttr(
+          `${t.name} axes`,
+        )}">\n${chipMarkup}\n            </div>\n` +
         `          </div>\n` +
         `          <div data-part="body">\n` +
         `            <iframe src="${u(frame)}" title="${escAttr(
@@ -4113,13 +4148,50 @@ function renderThemeGalleryPage(ctx: {
     const m = t.manifest;
     return [
       code(t.name),
+      esc(m ? themeKind(m) : "—"),
       esc(m?.scheme ?? "—"),
       esc(m?.dark_mode ?? "—"),
       m?.mood?.length ? m.mood.map((x) => code(x)).join(" ") : "—",
+      m?.axes
+        ? galleryChips(m)
+            .map(([, value]) => code(value))
+            .join(" ")
+        : "—",
       esc(String(m?.tokens_overridden?.length ?? 0)),
       monoLink(u(t.stylePath), `${t.name}.css`),
     ];
   });
+
+  // The axis filter [1.1A-20]: one select per gallery axis, offering only the
+  // values some shipped theme lands on, so no option selects nothing. Native
+  // selects — the page works as a list of cards with JavaScript off, and
+  // `gallery.js` only hides the cards whose attributes disagree.
+  const filterControls = galleryFilterOptions(themes.map((t) => t.manifest ?? { axes: undefined }))
+    .map(({ path, values }) => {
+      const id = `theme-axis-${axisSlug(path)}`;
+      const options = values
+        .map((value) => `<option value="${escAttr(value)}">${esc(value)}</option>`)
+        .join("");
+      return (
+        `          <div data-docs-filter-control>\n` +
+        `            <label data-ui="label" for="${id}">${esc(path)}</label>\n` +
+        `            <select data-ui="select" id="${id}" data-theme-axis-filter="${escAttr(path)}">` +
+        `<option value="">any</option>${options}</select>\n` +
+        `          </div>`
+      );
+    })
+    .join("\n");
+  const filterPanel =
+    `      <div data-docs-filter-panel data-theme-filter-panel>\n` +
+    `        <div data-ui="grid" data-cols="2" data-cols-md="3" data-gap="3">\n${filterControls}\n        </div>\n` +
+    `        <div data-docs-filter-meta>\n` +
+    `          <strong id="theme-result-count" role="status" aria-live="polite">${esc(
+      `${themes.length} of ${themes.length} themes`,
+    )}</strong>\n` +
+    `          <span>Axes derived from each stylesheet · a print companion carries none · no request leaves this page</span>\n` +
+    `        </div>\n` +
+    `        <p data-theme-empty hidden>No shipped theme lands on those axes together. <code>faqir theme generate</code> will make one.</p>\n` +
+    `      </div>`;
 
   const body = [
     `      <h1>Themes</h1>`,
@@ -4146,15 +4218,21 @@ function renderThemeGalleryPage(ctx: {
       "Every theme, side by side",
       `      <p>Each frame is the same manifest-derived document — one button per declared ` +
         `<code>button</code> variant and one swatch per semantic colour token, the surface a theme ` +
-        `re-declares — loaded with a different theme stylesheet.</p>\n` +
-        `      <div data-ui="grid" data-cols="1" data-cols-lg="2" data-gap="4">\n${cards}\n      </div>`,
+        `re-declares — loaded with a different theme stylesheet. The chips on each card are the ` +
+        `theme's character <em>axes</em>, derived from its stylesheet rather than declared: ` +
+        `${GALLERY_AXES.map((p) => `<code>${esc(p)}</code>`).join(", ")}. Filter by them to find ` +
+        `the theme that is flat, spacious and serif rather than the one that sounds like it.</p>\n` +
+        filterPanel +
+        `\n      <div data-ui="grid" data-cols="1" data-cols-lg="2" data-gap="4">\n${cards}\n      </div>`,
     ),
     section(
       "reference",
       "Theme reference",
-      `      <p>Derived from each theme's <code>{name}.theme.json</code> manifest.</p>\n` +
+      `      <p>Derived from each theme's <code>{name}.theme.json</code> manifest. A <em>generated</em> theme ` +
+        `is reproduced byte for byte from the <code>{name}.seed.json</code> beside it; a <em>companion</em> ` +
+        `is a generated theme's print medium and carries no axes of its own.</p>\n` +
         table(
-          ["Theme", "Ships", "Dark mode", "Mood", "Tokens re-declared", "Stylesheet"],
+          ["Theme", "Kind", "Ships", "Dark mode", "Mood", "Axes", "Tokens re-declared", "Stylesheet"],
           rows,
           "No themes in this registry.",
         ),

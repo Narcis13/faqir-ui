@@ -38,6 +38,7 @@ import { BASE_LAYER_BLURB, baseLayerUiValues, loadBaseLayer } from "../base-laye
 import { COMMAND_CATEGORIES, commandsInCategory } from "../command-registry";
 import { DOCUMENT_SCAFFOLD_NAMES, SCAFFOLDS } from "../scaffolds/registry";
 import type { ThemeManifest } from "../theme-manifest";
+import { renderAxisVocabularyTable, renderThemeTable, themeKind } from "../theme/describe";
 import { getSchemaVersion, loadManifestSchema } from "../utils/schema";
 import { loadPluginMetadata, type PluginMetadata } from "./plugins";
 
@@ -644,13 +645,18 @@ export function renderScaffolds(): string[] {
 }
 
 /**
- * The shipped theme gallery (task 1.0R-05) — read out of
+ * The shipped theme gallery (task 1.0R-05, axes on 1.1A-20) — read out of
  * `registry/themes/*.theme.json`, the same manifests `faqir theme list` and the
  * docs gallery use.
  *
  * The skill named `faqir theme set|list|create` without naming a single theme,
  * so "make it dark" had nothing to choose from. `mood` is the agent-selectable
- * axis the manifest exists for; `scheme` says which color schemes ship.
+ * adjective list; since 1.1A-08 every manifest also carries the fourteen
+ * character axes DERIVED from its stylesheet, and an agent choosing by axes
+ * ("flat, spacious, serif, barely any motion") lands on a theme for what it
+ * measurably is rather than for what its adjectives suggest. The table and the
+ * vocabulary below render through `src/theme/describe.ts`, the same module the
+ * README and the context files use, so the surfaces cannot disagree.
  */
 export function renderThemes(registryPath: string): string[] {
   const themesDir = join(registryPath, "themes");
@@ -665,27 +671,44 @@ export function renderThemes(registryPath: string): string[] {
   }
   if (manifests.length === 0) return [];
 
+  const generated = manifests.filter((m) => themeKind(m) === "generated").length;
+  const companions = manifests.filter((m) => themeKind(m) === "companion").length;
   const lines: string[] = ["## Themes", ""];
   lines.push(
-    `${manifests.length} themes ship with the registry. A theme redefines tokens only — no component ` +
-      "markup changes, so switching one never invalidates a page. Pick by **mood**, then " +
-      "`faqir theme set <name>`.",
+    `${manifests.length} themes ship with the registry` +
+      (generated || companions
+        ? ` — ${manifests.length - generated - companions} authored, ${generated} generated from a committed seed` +
+          (companions ? `, and ${companions} print companion${companions === 1 ? "" : "s"} those bring with them` : "") +
+          "."
+        : ".") +
+      " A theme redefines tokens only — no component " +
+      "markup changes, so switching one never invalidates a page. Pick by **axes** (the columns " +
+      "below, derived from each stylesheet) or by **mood**, then `faqir theme set <name>`.",
   );
   lines.push("");
-  lines.push("| Theme | Mood | Schemes | Dark mode | Pairs with |");
-  lines.push("|-------|------|---------|-----------|------------|");
-  for (const m of manifests) {
-    const pairs = m.pairs_with.length > 0 ? m.pairs_with.map((t) => `\`${t}\``).join(", ") : "—";
-    lines.push(
-      `| \`${m.name}\` | ${m.mood.join(", ")} | ${m.scheme} | ${m.dark_mode} | ${pairs} |`,
-    );
-  }
+  lines.push(...renderThemeTable(manifests, { mood: true, extended: true }));
   lines.push("");
   lines.push(
     "`scheme: both` means the theme ships a light and a dark rendering; `dark_mode: native` means it " +
-      "carries an explicit dark block, so `data-theme=\"dark\"` on `<html>` is enough. " +
-      "`faqir theme create <name>` generates a new contrast-verified theme plus its manifest.",
+      "carries an explicit dark block, so `data-theme=\"dark\"` on `<html>` is enough. A print companion " +
+      "(`<name>-document`) is its parent on white paper and carries no axes of its own. " +
+      "`faqir theme create <name>` scaffolds a theme with every token commented out; " +
+      "`faqir theme generate <name> --accent <colour>` generates a contrast-verified one from a seed.",
   );
+  lines.push("");
+  lines.push("## Choosing a Theme by Axes");
+  lines.push("");
+  lines.push(
+    "A theme is described by an accent colour and the character axes below, each with a closed " +
+      "vocabulary. Read a request as axis values — \"calm and readable\" is minimal motion plus " +
+      "spacious density and a serif pairing; \"a dense trading desk\" is compact density with " +
+      "layered depth — then find the row above that lands there, or generate one: every leaf " +
+      "is a flag on `faqir theme generate`, and `--seed <file>` states any or all of them at once. " +
+      "A theme scopes to a subtree as `data-skin=\"<name>\"` via `faqir theme bundle <name> --scope`, " +
+      "and `faqir fonts add <family> --role heading|body|ui` self-hosts an OFL face for a role token.",
+  );
+  lines.push("");
+  lines.push(...renderAxisVocabularyTable());
   lines.push("");
   return lines;
 }
@@ -704,6 +727,7 @@ export const FRONTMATTER_CAPABILITIES: { claim: string; section: string }[] = [
   { claim: "printable documents (invoices, reports, forms)", section: "## Scaffolds — Whole Pages and Documents" },
   { claim: "document/print layout", section: "## Scaffolds — Whole Pages and Documents" },
   { claim: "theme selection", section: "## Themes" },
+  { claim: "choosing a theme by axes", section: "## Choosing a Theme by Axes" },
   { claim: "CLI operations", section: "## CLI Reference" },
   { claim: "generating page layouts using Faqir tokens and primitives", section: "## Layout System" },
   { claim: "data-driven rendering", section: "## Data-Driven Rendering" },
@@ -2230,7 +2254,7 @@ export async function writeSkillFile(cwd: string): Promise<string> {
  * manifest-derived — Claude Code matches on it to route Faqir tasks here.
  */
 const SHIPPED_FRONTMATTER_DESCRIPTION =
-  "Expert agent for the Faqir UI framework — generates, audits, repairs, and explains zero-class, manifest-driven UI components and pages. Use when building HTML pages or components with Faqir UI, when the user asks to create/modify/audit Faqir UI markup, when working with data-ui/data-part/data-variant/data-state attributes, when generating page layouts using Faqir tokens and primitives, when creating new registry components (primitives, recipes, patterns), when connecting pages to server data via l-source directive or apiSource(), when picking or switching the visual theme of a page, or when building printable documents (invoices, reports, forms). Triggers on any Faqir UI task including component creation, page scaffolding, code auditing, token usage, theme selection, reactive directive usage (l-data, l-model, l-for, l-source), data-driven rendering, document/print layout, and CLI operations.";
+  "Expert agent for the Faqir UI framework — generates, audits, repairs, and explains zero-class, manifest-driven UI components and pages. Use when building HTML pages or components with Faqir UI, when the user asks to create/modify/audit Faqir UI markup, when working with data-ui/data-part/data-variant/data-state attributes, when generating page layouts using Faqir tokens and primitives, when creating new registry components (primitives, recipes, patterns), when connecting pages to server data via l-source directive or apiSource(), when picking or switching the visual theme of a page (choosing a theme by axes — type, shape, depth, material, motion, density — or generating one from a seed), or when building printable documents (invoices, reports, forms). Triggers on any Faqir UI task including component creation, page scaffolding, code auditing, token usage, theme selection, reactive directive usage (l-data, l-model, l-for, l-source), data-driven rendering, document/print layout, and CLI operations.";
 
 /** A single generated file destined for the shipped skill directory. */
 export interface GeneratedFile {

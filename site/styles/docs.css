@@ -923,6 +923,25 @@ body {
   border-block: 1px solid var(--color-border);
 }
 
+[data-docs-theme-axes] {
+  margin-block-start: var(--space-2);
+}
+
+[data-docs-theme-axes] [data-ui="badge"] {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+[data-theme-filter-panel] {
+  margin-block: var(--space-4) var(--space-6);
+}
+
+[data-theme-filter-panel] [data-ui="label"] {
+  font-family: var(--font-mono);
+}
+
 /* ── Layout lab ──────────────────────────────────────────────────────────── */
 
 [data-docs-layouts] {

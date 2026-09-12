@@ -91,6 +91,7 @@ const PREFLIGHT = [
   ["check:schema-refs", "every manifest carries a current $schema"],
   ["check:bindings", "the generated Vue and React components are current"],
   ["check:skill", "the shipped faqir-creator skill matches its generator"],
+  ["check:theme-docs", "README's theme tables match the theme manifests"],
   ["check:docs", "the generated documentation site is current"],
   ["audit:registry", "the registry audits clean against its own rules"],
   ["size", "the engine and plugin gzip budgets"],

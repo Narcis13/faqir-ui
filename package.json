@@ -41,6 +41,8 @@
     "gen:theme-manifests": "bun scripts/gen-theme-manifests.mjs",
     "gen:v024-surface": "bun scripts/gen-v024-surface.mjs",
     "gen:theme-previews": "bun scripts/gen-theme-previews.mjs",
+    "gen:theme-docs": "bun scripts/gen-theme-docs.mjs",
+    "check:theme-docs": "bun scripts/gen-theme-docs.mjs --check",
     "gen:skill": "bun scripts/gen-skill.mjs",
     "check:skill": "bun scripts/gen-skill.mjs --check",
     "gen:schema-refs": "bun scripts/add-schema-refs.mjs",

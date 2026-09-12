@@ -39,6 +39,7 @@ import {
   SITE_SCRIPTS,
 } from "../../src/generator/docs";
 import { parseDocument } from "../../src/parser/html-parser";
+import { GALLERY_AXES, galleryAxisAttribute, galleryChips, galleryFilterOptions, themeKind } from "../../src/theme/describe";
 import { SCAFFOLD_NAMES } from "../../src/scaffolds";
 
 const REPO = join(import.meta.dir, "../..");
@@ -178,6 +179,89 @@ describe("theme coverage", () => {
 });
 
 // ── the switcher's mechanism is the site's mechanism ────────────────────────
+
+// ── axes: chips and the filter [1.1A-20] ────────────────────────────────────
+//
+// The gallery describes each theme by the axes its manifest derives, and lets a
+// reader filter on them. Both are generated from the same `axes` block through
+// `src/theme/describe.ts`, so a chip cannot claim a character the stylesheet
+// lacks and a filter option cannot select nothing.
+
+describe("theme axes in the gallery", () => {
+  const gallery = page(THEMES_PAGE);
+
+  /** The opening tag of one theme's card. */
+  function cardTag(name: string): string {
+    const title = gallery.indexOf(`<h3 data-part="title">${name}</h3>`);
+    expect(title, `${name} has no card`).toBeGreaterThan(-1);
+    const open = gallery.lastIndexOf("<div data-ui=\"card\"", title);
+    return gallery.slice(open, gallery.indexOf(">", open) + 1);
+  }
+
+  it("carries every gallery axis on each card, as an attribute and as a chip, from the manifest", () => {
+    for (const theme of themes) {
+      const m = theme.manifest!;
+      const tag = cardTag(theme.name);
+      expect(tag).toContain(`data-theme-kind="${themeKind(m)}"`);
+      const chips = galleryChips(m);
+      if (m.axes) {
+        expect(chips.length).toBe(GALLERY_AXES.length);
+        for (const [path, value] of chips) {
+          expect(tag, `${theme.name} ${path}`).toContain(`${galleryAxisAttribute(path)}="${value}"`);
+          expect(gallery).toContain(`data-docs-theme-chip="${path}" title="${path}">${value}</span>`);
+        }
+      } else {
+        // A companion has no axes: no filter attributes, one chip naming its parent.
+        expect(tag).not.toContain("data-theme-axis-");
+        expect(gallery).toContain(`print companion of ${m.pairs_with[0]}</span>`);
+      }
+    }
+  });
+
+  it("offers one native select per gallery axis, with only values a shipped theme lands on", () => {
+    const options = galleryFilterOptions(themes.map((t) => t.manifest!));
+    for (const { path, values } of options) {
+      const select = gallery.match(
+        new RegExp(`<select data-ui="select" id="theme-axis-[a-z-]+" data-theme-axis-filter="${path}">([^]*?)</select>`),
+      );
+      expect(select, `no filter for ${path}`).not.toBeNull();
+      const offered = [...select![1]!.matchAll(/<option value="([^"]*)">/g)].map((x) => x[1]);
+      expect(offered).toEqual(["", ...values]);
+      // The label is the axis path, tied to the control.
+      const id = gallery.match(new RegExp(`id="(theme-axis-[a-z-]+)" data-theme-axis-filter="${path}"`))![1];
+      expect(gallery).toContain(`<label data-ui="label" for="${id}">${path}</label>`);
+      for (const value of values) {
+        expect(gallery, `${path}=${value} would select nothing`).toContain(
+          `${galleryAxisAttribute(path)}="${value}"`,
+        );
+      }
+    }
+    expect(gallery).toContain('id="theme-result-count" role="status" aria-live="polite"');
+    expect(gallery).toContain("data-theme-empty hidden");
+  });
+
+  it("tables each theme's kind and axis chips in the reference", () => {
+    for (const theme of themes) {
+      const m = theme.manifest!;
+      const row = gallery
+        .split("\n")
+        .find((line) => line.includes(`<tr><td><code>${theme.name}</code></td><td>${themeKind(m)}</td>`));
+      expect(row, `${theme.name} reference row`).toBeDefined();
+      if (m.axes) for (const [, value] of galleryChips(m)) expect(row).toContain(`<code>${value}</code>`);
+      else expect(row).toContain("<td>—</td>");
+    }
+  });
+
+  it("filters in gallery.js by attribute comparison only — no fetch, no reload, hidden not removed", () => {
+    const script = readFileSync(join(REPO, "site", "lib", "gallery.js"), "utf8");
+    expect(script).toContain("startThemeGalleryFilter");
+    expect(script).toContain('all("[data-theme-axis-filter]")');
+    expect(script).toContain('"data-theme-axis-" + path.replace(/\\./g, "-")');
+    expect(script).toContain("card.hidden = !show");
+    expect(script).toContain('" of " + cards.length + " themes"');
+    expect(script).not.toMatch(/\bfetch\s*\(|XMLHttpRequest|location\s*=|location\.(?:reload|href)/);
+  });
+});
 
 describe("the theme link", () => {
   it("is on every page of the site, under one stable id", () => {
