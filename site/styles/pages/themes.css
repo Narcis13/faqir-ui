@@ -1,0 +1,170 @@
+/* ── Theme System 2.0 — themes/axes, themes/<name>, themes/authoring ─────────
+ * Attribute selectors and design tokens only, like every other sheet on the
+ * site. Hooks are `data-docs-themes-*`; the frame reuses the gallery's
+ * `data-docs-theme-frame` name so a reader's scripts see one attribute.
+ */
+
+/* The lede under each h1 — one measured paragraph, a little larger. */
+[data-docs-themes-lede] {
+  max-inline-size: var(--measure-prose);
+  font-size: var(--text-lg);
+  line-height: var(--leading-relaxed);
+  color: var(--color-fg-muted);
+}
+
+/* "On this page" — a compact inline list of anchors. */
+[data-docs-themes-toc] {
+  margin-block: var(--space-4) var(--space-8);
+  padding: var(--space-3) var(--space-4);
+  border-inline-start: var(--border-width-md) solid var(--color-primary);
+  background: color-mix(in oklch, var(--color-primary) 6%, transparent);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+
+[data-docs-themes-toc] ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+[data-docs-themes-toc] li {
+  margin: 0;
+  font-size: var(--text-sm);
+}
+
+/* Theme name chips — a link that reads as a small monospace tag. */
+[data-docs-themes-chips] {
+  display: inline-flex;
+}
+
+[data-docs-themes-chip] {
+  display: inline-block;
+  padding: var(--space-0h) var(--space-2);
+  border: var(--border-width-sm) solid var(--color-border);
+  border-radius: var(--radius-full);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  text-decoration: none;
+  background: var(--color-bg-subtle);
+  color: var(--color-fg);
+  transition: border-color var(--duration-fast) var(--ease-default),
+    background-color var(--duration-fast) var(--ease-default);
+}
+
+[data-docs-themes-chip]:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-subtle);
+}
+
+/* ── The specimen sheet ─────────────────────────────────────────────────── */
+
+[data-docs-themes-meta] {
+  margin-block: var(--space-2) var(--space-4);
+}
+
+[data-docs-themes-mood] {
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* The big frame: full width, tall, the theme's own page ground behind it. */
+[data-docs-themes-frame] {
+  margin-block: var(--space-4) var(--space-3);
+  border: var(--border-width-sm) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  background: var(--color-bg);
+}
+
+[data-docs-themes-frame] iframe {
+  display: block;
+  inline-size: 100%;
+  block-size: 40rem;
+  border: 0;
+  background: var(--color-bg);
+}
+
+/* Axis grid — small labelled cells, each a link into the axes reference. */
+[data-docs-themes-axis-grid] {
+  margin-block: var(--space-4) var(--space-2);
+}
+
+[data-docs-themes-axis-cell] {
+  display: grid;
+  gap: var(--space-0h);
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width-sm) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-1);
+  text-decoration: none;
+  color: var(--color-fg);
+  transition: border-color var(--duration-fast) var(--ease-default),
+    box-shadow var(--duration-fast) var(--ease-default);
+}
+
+[data-docs-themes-axis-cell]:hover {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+[data-docs-themes-axis-path] {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-fg-subtle);
+}
+
+[data-docs-themes-axis-value] {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  overflow-wrap: anywhere;
+}
+
+/* Scorecard — a stat row. */
+[data-docs-themes-scorecard] {
+  margin-block: var(--space-4) var(--space-3);
+}
+
+[data-docs-themes-scorecard] [data-part="value"] {
+  font-family: var(--font-mono);
+}
+
+/* Token lists inside the collapsibles wrap as a dense mono cloud. */
+[data-docs-themes-token-list] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin: 0;
+  font-size: var(--text-xs);
+}
+
+/* Prev / all / next. */
+[data-docs-themes-sequence] {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-block-start: var(--space-8);
+  padding-block-start: var(--space-4);
+  border-block-start: var(--border-width-sm) solid var(--color-border);
+}
+
+@media (max-width: 48rem) {
+  [data-docs-themes-frame] iframe {
+    block-size: 28rem;
+  }
+
+  [data-docs-themes-toc] ul {
+    flex-direction: column;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-docs-themes-chip],
+  [data-docs-themes-axis-cell] {
+    transition: none;
+  }
+}

@@ -13,162 +13,69 @@ The AI is the compiler.
 The CLI is the conductor.
 ```
 
+Docs site: **[faqir-ui.pages.dev](https://faqir-ui.pages.dev)** · npm: `faqir-ui-cli` · Spec: [`SPEC-1.0.md`](SPEC-1.0.md) · License: MIT
+
 ---
 
 ## Table of Contents
 
-- [Why this project?](#why-this-project)
+- [What's new in 1.1 "Personality"](#whats-new-in-11-personality)
 - [Quick Start](#quick-start)
+- [Why Faqir](#why-faqir)
 - [The Attribute Protocol](#the-attribute-protocol)
 - [Component Library](#component-library)
 - [Layout System](#layout-system)
-- [Design Token System](#design-token-system)
+- [Design Tokens](#design-tokens)
 - [Theme System](#theme-system)
 - [Faqir Core — Reactive Engine](#faqir-core--reactive-engine)
-- [Validation](#validation)
-- [The Manifest System](#the-manifest-system)
-- [JavaScript Controllers](#javascript-controllers)
+- [Forms, Validation and Rules](#forms-validation-and-rules)
 - [Data-Driven Rendering](#data-driven-rendering)
+- [The Manifest System](#the-manifest-system)
+- [Audit, Repair and Conform](#audit-repair-and-conform)
 - [CLI Reference](#cli-reference)
-- [CSS Bundle](#css-bundle)
-- [Audit and Repair](#audit-and-repair)
-- [Scaffolding and Code Generation](#scaffolding-and-code-generation)
+- [Packages](#packages)
 - [AI Agent Integration](#ai-agent-integration)
-- [CSS Conventions](#css-conventions)
+- [Night Shift](#night-shift)
 - [Security](#security)
-- [Project Structure](#project-structure)
-- [Development](#development)
+- [Documentation](#documentation)
+- [Contributing and Development](#contributing-and-development)
 - [License](#license)
 
 ---
 
-## Why this project?
+## What's new in 1.1 "Personality"
 
-Frontier models write excellent HTML. Hand one a brief and it returns a dialog
-with a focus trap, a form with its ARIA wired, a responsive grid — clean, modern,
-often better than what a rushed human ships. So the honest question, before
-anything else in this document, is: **why put a framework between a model that
-good and the page?**
+1.0 froze the contract. 1.1 gives it a voice. The protocol did not move: every
+1.0 page still audits clean, and every change below is additive under
+[`SPEC-1.0.md` §8](SPEC-1.0.md).
 
-Because writing the page was never the hard part. Knowing it is right is. And
-knowing that the fiftieth page still matches the first is harder still.
-
-A language model is a brilliant, memoryless author. Every call starts from
-nothing, re-derives the design system from whatever is in the prompt, and
-re-solves the same problems — focus management, spacing rhythm, contrast,
-keyboard navigation — with a small, independent chance of getting each one
-subtly wrong. The page it writes today and the page it writes next Tuesday are
-both good and slightly different. Multiply that by fifty pages, four sessions,
-two model generations and one rebrand, and "good" has quietly become a patchwork
-that no one, human or machine, can audit.
-
-Faqir turns that open loop into a closed one. It is the harness a capable model
-needs, built as software instead of as a prompt: a frozen contract, a tested
-component library, a design-token system, and a deterministic auditor that says
-*yes* — or *no, line 14*. Here is what that buys, concretely.
-
-**1. Verification is the bottleneck, not generation.** A model produces text; it
-has no oracle. Faqir gives it one. Every component ships a manifest — its slots,
-variants, states and ARIA requirements as JSON — and `faqir audit` checks markup
-against those manifests with thirty-one rules, from `required-slot` and
-`focus-trap` to `duplicate-id`, `heading-order` and `contrast-tokens`. It reads
-from stdin, emits versioned JSON, and is the same code in the CLI, the MCP server
-and the browser. An agent can generate, audit, repair and re-audit with no
-filesystem, no browser and no human in the loop. A failure that would otherwise
-be silent becomes a finding with a rule id and a line number — and silence is the
-one failure an agent cannot recover from.
-
-**2. Consistency is a property of the system, not the author.** With Faqir the
-design system lives in files, not in a prompt: a three-layer token ladder, twelve
-themes, 86 components and one breakpoint canon. A page inherits them instead of
-re-deriving them, so a theme change moves every page at once, and a new agent in
-a new session lands on the same rhythm as the last one. No amount of model
-capability produces this, because the problem is not capability — it is that
-each call is independent, and consistency is precisely the thing independent
-calls do not have.
-
-**3. The model writes intent; the library owns mechanism.**
-`<button data-ui="button" data-variant="primary">` is a complete, correct,
-themed, accessible button. The model wrote one line of intent; the CSS that
-realizes it was written once, tested once, and is never regenerated. A Faqir page
-is a fraction of the size of the same page written from scratch, costs a fraction
-to generate, and offers a fraction of the surface on which to drift. *The AI is
-the compiler* means the model compiles intent into a protocol — not that it
-re-implements a modal on every page that needs one.
-
-**4. Accessibility is inherited, not re-derived.** A model gets a focus trap
-right most of the time. Return-focus-to-trigger, roving tabindex in a menubar,
-WAI keyboard navigation in a tree view, `aria-describedby` wiring across a form —
-each is a place where "most of the time" applies independently, and fifteen
-independent 95%s compound to under 50%. Faqir's recipes implement these once, in
-controllers whose test lists ship inside the manifest, and the accessibility gate
-runs the registry through 3,013 axe cases on every release. The page gets that
-floor for free, and the audit refuses markup that falls below it.
-
-**5. The DOM stays legible to the next agent.** A class name is a guess: is
-`.active` a state, a variant, or a layout helper? `data-ui="dialog"
-data-state="open"` is a statement. Any agent, in any session, on any model, can
-read a Faqir page it did not write and know what is there — what each element
-is, which slot it fills, what state it is in, and which transforms the manifest
-marks safe and which break the contract. This is what *agent-native* has to
-mean: not that a model *can* write it, but that a different model can *read* it
-back, months later, and repair it.
-
-**6. Some things should never be generated twice.** A Code 128 checksum, a QR
-code, an OKLCH theme with verified contrast ratios, a keyed list reconciler, a
-focus trap that returns focus to its trigger. These are not creative problems;
-they are correctness problems, and asking a probabilistic author to re-derive
-them inside a `<script>` tag on an invoice page is a poor use of intelligence and
-a real risk. Faqir draws the line where it belongs: the agent composes, the
-library computes.
-
-**7. The contract outlives the model.** The five-attribute protocol is frozen at
-1.0, with a published spec, an amendment process, and drift tests that fail the
-moment the spec and the implementation disagree. The framework's files live in
-your repository with zero runtime dependencies and no build step. When the model
-that wrote your pages is retired, the pages, the audit and the contract all
-still work. A prompt-only design system decays with every model change; a
-file-based one is versioned.
-
-**8. Constraints lower the intelligence floor.** This is the quiet economic
-argument. When the hard parts are pre-solved and every output is
-machine-verified, a smaller, cheaper, faster model produces a correct page — and
-a frontier model produces one on the first try instead of the third. The
-framework does not compete with the model's capability; it decides how much of
-that capability has to be spent re-proving things that were already proven.
-
-**The trade, stated plainly.** You give up the freedom to write any CSS you
-like — no classes, no hardcoded values, one grammar per attribute — and in
-exchange you get a DOM a machine can read, a contract a machine can check, and a
-design system that is the same on the fiftieth page as on the first. If you need
-one page, once, ask the model and be done. If you need a product that many
-agents and many people will build, inspect and repair over years, you need
-something that holds still while they do. That is what Faqir is for.
-
-### What that looks like in markup
-
-Traditional UI frameworks use class names: `.btn`, `.btn-primary`, `.card-header`. This creates naming collisions, specificity wars, and markup that no machine can reliably parse. A class name is ambiguous — is `.active` a state, a variant, or a layout helper?
-
-Faqir replaces all of it with a five-attribute protocol where every attribute has a single, unambiguous purpose:
-
-```html
-<!-- Traditional -->
-<button class="btn btn-primary btn-lg is-loading">Save</button>
-
-<!-- Faqir -->
-<button data-ui="button" data-variant="primary" data-size="lg" data-state="loading">Save</button>
-```
-
-Every component is machine-readable. Every variant is auditable. Every state change is traceable. The CSS targets data attributes — never classes.
-
-This makes Faqir **agent-native**: AI coding agents can read manifests, generate valid markup, audit it against contracts, and auto-repair violations. But it's equally good for developers — you get a complete component library, a dev server, CSS bundling, and full ownership of every file.
-
-### What Faqir Is NOT
-
-- Not a JavaScript framework (no virtual DOM, no JSX, no compile step)
-- Not a utility-first CSS library (not Tailwind)
-- Not a package you import at runtime (no `node_modules` dependency)
-- Not a design system only for humans to browse — it's a design system for agents to parse and developers to own
+- **Theme System 2.0.** A theme is a seed: one accent colour plus fourteen
+  character axes. `faqir theme generate` turns it into a contrast-verified
+  stylesheet, manifest, preview and scorecard, and refuses a recolour of a theme
+  already shipped. Twelve generated themes and three print companions join the
+  twelve authored ones. Dual-scheme themes are one `light-dark()` block.
+- **New token families.** Typography roles (`--font-heading/-body/-ui`,
+  `--heading-*`), shape (`--border-width-*`, `--corner-shape`), focus
+  (`--focus-ring-*`), depth (`--shadow-color`, `--surface-backdrop`), motion
+  personality (`--ease-spring`, `--motion-*`) and six SVG surface textures.
+- **Self-hosted fonts.** `faqir fonts add fraunces --role heading` downloads a
+  hash-pinned WOFF2 from a 16-family OFL catalog and serves it from your own
+  directory. No Google Fonts link, ever.
+- **Scoped themes.** `faqir theme bundle aurora --scope` rewrites a theme onto
+  `data-skin="aurora"`, so two themes live on one page. `data-skin` and
+  `data-density="spacious"` are the 1.1 amendments to the sanctioned modifiers.
+- **Rules platform.** [`@faqir-ui/rules`](packages/rules/README.md) evaluates a
+  form's cross-field logic from one JSON definition, in the browser through
+  `l-rules` and on the server through the same evaluator. `faqir rules lint`
+  checks a definition; [`@faqir-ui/forms`](packages/forms/README.md) emits rules
+  beside the markup they govern.
+- **Vocabulary audit.** Four new rules (`attribute-vocabulary`,
+  `unknown-attribute`, `directive-name`, `part-element`) catch a near-miss
+  attribute, an unknown directive or a slot on the wrong element.
+- **Night Shift.** The framework generates themes while nobody is watching and a
+  human decides in the morning. See [Night Shift](#night-shift),
+  [`docs/night-shift.md`](docs/night-shift.md), [`docs/dream-rubric.md`](docs/dream-rubric.md)
+  and the weekly digest in [`DREAMS.md`](DREAMS.md).
 
 ---
 
@@ -176,12 +83,11 @@ This makes Faqir **agent-native**: AI coding agents can read manifests, generate
 
 ### Prerequisites
 
-- **Node.js 18 or newer.** That is the whole requirement — `faqir` ships as a
-  Node-compatible bundle and its launcher runs under plain `node`.
-- [Bun](https://bun.sh) is optional. The launcher prefers it when it is on your
-  PATH (it starts faster), and it is required only to develop *this repository*.
+Node.js 18 or newer. That is the whole requirement: `faqir` ships as a
+Node-compatible bundle. [Bun](https://bun.sh) is optional; the launcher prefers
+it when it is on your PATH, and it is required only to develop this repository.
 
-### Install and Initialize
+### Install and initialize
 
 ```bash
 # Install globally (or use npx)
@@ -197,27 +103,20 @@ faqir add button input card dialog tabs stack grid surface
 faqir dev
 ```
 
-### What `faqir init` Creates
+### What `faqir init` creates
 
 ```
 your-project/
 ├── ui/
-│   ├── tokens/          Design tokens (CSS custom properties)
-│   ├── base/            CSS reset and prose styles
-│   ├── core/            Reactive engine + recipe controllers
-│   ├── primitives/      (empty — add components with `faqir add`)
-│   ├── recipes/         (empty — add components with `faqir add`)
-│   ├── patterns/        (empty — add components with `faqir add`)
-│   └── faqir.bundle.css  Single CSS bundle (auto-generated)
-├── faqir.config.json     Project configuration
-└── .faqir/
-    ├── context.json     AI agent context (auto-generated)
-    └── README.md        This document, copied in for offline/agent reference
+│   ├── tokens/  base/  core/        tokens, reset and prose, engine + controllers + plugins
+│   ├── primitives/  recipes/  patterns/   empty until `faqir add`
+│   ├── fonts/  fonts.css            appear after `faqir fonts add`
+│   └── faqir.bundle.css             single CSS bundle (auto-generated)
+├── faqir.config.json                project configuration
+└── .faqir/context.json, README.md   agent context, and this document for offline reference
 ```
 
 ### Use in HTML
-
-After adding components, include one CSS file and the reactive engine:
 
 ```html
 <!DOCTYPE html>
@@ -237,22 +136,79 @@ After adding components, include one CSS file and the reactive engine:
 </html>
 ```
 
-One `<link>` tag. One `<script>` tag. That's the entire framework inclusion.
+One `<link>` tag. One `<script>` tag. That is the entire framework inclusion.
+
+### CDN: two tags, no install
+
+The CLI is the *ownership* path: it copies files into your project so you can
+read, audit, theme and upgrade them. For a scratch page, a CodePen, or an agent
+with no shell, [`@faqir-ui/core`](packages/core/README.md) publishes a prebuilt runtime:
+
+```html
+<!-- A theme's full CSS bundle: tokens + theme + base + every component -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.0/dist/faqir.default.css">
+
+<!-- The engine, minified — sets window.Faqir and boots on DOMContentLoaded -->
+<script src="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.0/dist/faqir-core.min.js" defer></script>
+```
+
+Swap the stylesheet to change theme; every theme ships a bundle. Every `dist/`
+file has a SHA-384 hash in `dist/sri.json` for `integrity=` pinning.
+
+---
+
+## Why Faqir
+
+Frontier models write excellent HTML. So why put a framework between a model
+that good and the page? Because writing the page was never the hard part.
+Knowing it is right is, and knowing that the fiftieth page still matches the
+first is harder still. A model is a brilliant, memoryless author: every call
+re-derives the design system from the prompt, with a small, independent chance
+of getting each part subtly wrong. Faqir turns that open loop into a closed one:
+the harness a capable model needs, built as software instead of as a prompt.
+
+**Verification is the bottleneck, not generation.** A model produces text; it
+has no oracle. Faqir gives it one. Every component ships a manifest, and
+`faqir audit` checks markup against those manifests with 35 rules, from
+`required-slot` and `focus-trap` to `duplicate-id`, `heading-order` and
+`contrast-tokens`. It reads from stdin, emits versioned JSON, and is the same
+code in the CLI, the MCP server and the browser. A failure that would otherwise
+be silent becomes a finding with a rule id and a line number.
+
+**Consistency is a property of the system, not the author.** The design system
+lives in files, not in a prompt: a three-layer token ladder, 27 theme
+stylesheets, 86 components and one breakpoint canon. A page inherits them
+instead of re-deriving them, so a theme change moves every page at once, and a
+new agent in a new session lands on the same rhythm as the last one.
+
+**The contract outlives the model.** The five-attribute protocol is frozen at
+1.0, with a published spec, an amendment process, and drift tests that fail the
+moment the spec and the implementation disagree. The files live in your
+repository with zero runtime dependencies and no build step. When the model that
+wrote your pages is retired, the pages, the audit and the contract still work.
+
+**The trade, stated plainly.** You give up the freedom to write any CSS you like
+(no classes, no hardcoded values, one grammar per attribute) and in exchange you
+get a DOM a machine can read, a contract a machine can check, and a design
+system that is the same on the fiftieth page as on the first.
+
+```html
+<!-- Traditional -->
+<button class="btn btn-primary btn-lg is-loading">Save</button>
+
+<!-- Faqir -->
+<button data-ui="button" data-variant="primary" data-size="lg" data-state="loading">Save</button>
+```
 
 ---
 
 ## The Attribute Protocol
 
-Five data attributes form the stable DOM contract between HTML, CSS, JavaScript, and AI agents.
+Five data attributes form the stable DOM contract between HTML, CSS, JavaScript
+and AI agents. **Frozen at 1.0.** The normative text is [`SPEC-1.0.md`](SPEC-1.0.md),
+published at [the `v1.0.0` tag](https://github.com/Narcis13/faqir-ui/blob/v1.0.0/SPEC-1.0.md).
 
-> **Frozen at 1.0.** The normative specification is [`SPEC-1.0.md`](SPEC-1.0.md), published at
-> [the `v1.0.0` tag](https://github.com/Narcis13/faqir-ui/blob/v1.0.0/SPEC-1.0.md). It covers these five attributes and their
-> value grammars, the four sanctioned token modifiers (`data-theme`, `data-density`,
-> `data-motion`, `data-skin`), the `data-<attr>-<tier>` responsive suffix, manifest schema
-> 1.0, and the amendment process — what may change in a 1.x release and what has to wait
-> for 2.0. The summary below is the friendly version; the spec is the contract.
-
-| Attribute | Purpose | Set By | Example |
+| Attribute | Purpose | Set by | Example |
 |-----------|---------|--------|---------|
 | `data-ui` | Component identity | Markup | `data-ui="button"` |
 | `data-part` | Named slot within parent | Markup | `data-part="trigger"` |
@@ -260,141 +216,61 @@ Five data attributes form the stable DOM contract between HTML, CSS, JavaScript,
 | `data-variant` | Visual variant | Markup (set once) | `data-variant="primary"` |
 | `data-size` | Size variant | Markup (set once) | `data-size="lg"` |
 
-### Rules
+Rules: `data-ui` goes on the root element of every instance. `data-part` names a
+child slot. `data-state` is the only attribute controllers modify, and CSS reacts
+to it. Components never use class names. Standard HTML attributes (`role`,
+`aria-*`, `hidden`, `disabled`) work alongside. A responsive value is a suffixed
+attribute, `data-<attr>-<tier>`, on groups a manifest marks responsive; the five
+protocol attributes never take a suffix.
 
-1. `data-ui` goes on the **root element** of every component instance.
-2. `data-part` identifies **child slots** within a parent component.
-3. `data-state` is the **only** attribute JavaScript controllers modify. CSS reacts to it.
-4. `data-variant` and `data-size` are set in markup and rarely change at runtime.
-5. Components **never** use CSS class names. State lives in `data-state`. Identity lives in `data-ui`.
-6. Standard HTML attributes (`role`, `aria-*`, `hidden`, `disabled`) work alongside data attributes.
+### Sanctioned token modifiers
 
-### How CSS Targets the Protocol
+Four attributes re-declare tokens for a subtree without naming a component.
+They need no manifest and are not a sixth attribute (SPEC §4).
 
-```css
-[data-ui="button"] { }                                         /* base styles */
-[data-ui="button"][data-variant="primary"] { }                  /* variant */
-[data-ui="button"][data-size="lg"] { }                          /* size */
-[data-ui="dialog"][data-state="open"] [data-part="panel"] { }   /* state + part */
-[data-ui="card"] [data-part="header"] { }                       /* scoped part */
-```
+| Attribute | Purpose | Values | Written by |
+|-----------|---------|--------|------------|
+| `data-theme` | Selects the colour scheme a theme resolves to | `light` · `dark` · `auto` | author |
+| `data-density` | Re-declares the spacing and control-height ramps | `compact` · `comfortable` · `spacious` | author |
+| `data-motion` | Transition phase of one enter/leave cycle | `enter` · `enter-active` · `leave` · `leave-active` | engine |
+| `data-skin` | Which theme's tokens a subtree resolves (scoped themes) | any installed theme name | author |
 
-No specificity wars. No naming conventions to memorize. The selector **is** the documentation.
+CSS targets the protocol directly: `[data-ui="dialog"][data-state="open"] [data-part="panel"]`.
+No specificity wars. No naming conventions to memorize. The selector is the documentation.
 
 ---
 
 ## Component Library
 
-Faqir ships 86 components across three layers, from simple CSS-only primitives to full interactive recipes and page-level patterns.
+Faqir ships 86 components across three layers. Every one has a page on the
+[docs site](https://faqir-ui.pages.dev), generated from its manifest.
 
-### Primitives (42 components) — CSS Only
+**Primitives (42, CSS only).** `aspect-ratio` `avatar` `badge` `breadcrumb`
+`button` `callout` `card` `checkbox` `chip` `cluster` `collapsible` `container`
+`description-list` `empty-state` `field-group` `grid` `icon` `image` `input`
+`kbd` `key-value` `label` `link` `nav` `page-break` `progress` `radio` `select`
+`separator` `signature` `skeleton` `spinner` `stack` `stat` `stepper` `surface`
+`switch` `switcher` `text` `textarea` `toggle` `watermark`
 
-Pure CSS components. No JavaScript required. Drop in the HTML and it works.
+**Recipes (29, CSS + JavaScript controller).** `accordion` `alert-dialog`
+`barcode` `calendar` `carousel` `combobox` `command-palette` `context-menu`
+`date-picker` `dialog` `drawer` `dropdown` `file-upload` `input-otp` `menubar`
+`pagination` `popover` `qr-code` `select-custom` `sheet` `sidebar` `slider`
+`table` `tabs` `tag-input` `toast` `toggle-group` `tooltip` `tree-view`
 
-| Component | Description | Variants |
-|-----------|-------------|----------|
-| `button` | Action trigger | primary, secondary, destructive, ghost, outline, link + sm/md/lg |
-| `input` | Text input field | error, disabled states |
-| `textarea` | Multi-line text | error, disabled states |
-| `select` | Native select dropdown | error, disabled states |
-| `checkbox` | Form checkbox | checked, indeterminate |
-| `radio` | Radio button | checked state |
-| `switch` | Toggle switch | checked state |
-| `label` | Form label | required indicator |
-| `card` | Container with slots | header, body, footer parts |
-| `badge` | Status indicator | primary, secondary, success, warning, destructive |
-| `avatar` | Profile image/initials | sm, md, lg sizes |
-| `separator` | Horizontal/vertical divider | horizontal, vertical + solid, dashed, dotted, thick styles |
-| `spinner` | Loading animation | sm, md, lg sizes |
-| `kbd` | Keyboard key display | — |
-| `progress` | Progress bar | determinate, indeterminate |
-| `stepper` | Multi-step indicator | active, completed states |
-| `empty-state` | Placeholder for empty content | — |
-| `nav` | Navigation container | — |
-| `text` | Text with semantic styles | muted, sm/lg/xl sizes |
-| `stack` | Flexbox layout | vertical (default), horizontal |
-| `grid` | CSS Grid layout | 1–12 columns, responsive |
-| `cluster` | Intrinsic wrapping row | responsive gap, alignment and justification; no breakpoint required |
-| `switcher` | Container-aware peer layout | equal-width row → single column at sm/md/lg/xl container thresholds |
-| `container` | Centred measure column | narrow, content, wide, prose and full measures with responsive overrides |
-| `surface` | Container with elevation | flat, raised, overlay |
-| `callout` | Notice/warning box | info, warning, destructive, success, muted |
-| `description-list` | Styled dl/dt/dd pairs | vertical, horizontal + sm/md/lg |
-| `field-group` | Form field wrapper (label + input + error) | vertical, horizontal + error/valid states |
-| `image` | Responsive image with caption | responsive, thumbnail, cover, contain + xs–full sizes |
-| `key-value` | Labeled data pair | horizontal, vertical, inline + grid columns |
-| `page-break` | Print page break | after (default), before |
-| `signature` | Signing line for documents | sm/md/lg + left/center/right alignment |
-| `stat` | Metric display with trend | default, card + up/down/neutral trend |
-| `icon` | CSS-mask icon (120 Lucide glyphs) | any of 120 `data-icon` names; inherits `currentColor`, sizes with `font-size` |
-| `skeleton` | Loading placeholder | text, circle, rect |
-| `chip` | Compact label with optional dismissal | default, primary, success, warning, destructive |
-| `link` | Styled anchor | default, external, muted |
-| `breadcrumb` | Hierarchical navigation trail | sm/md/lg sizes |
-| `toggle` | Native two-state button | pressed state + sm/md/lg sizes |
-| `collapsible` | Native disclosure container | default, bordered |
-| `aspect-ratio` | Media ratio wrapper | square, 16:9, 4:3, 3:2, 21:9, portrait |
-| `watermark` | Non-interactive document overlay | fixed/absolute + single/repeated + diagonal/horizontal |
+**Patterns (15, compositions with no custom JS).** `auth-form` `crud-table`
+`dashboard-shell` `document` `empty-state` `feature-grid` `form-page` `hero`
+`inbox` `pricing` `search-results` `settings-page` `site-footer`
+`stats-dashboard` `wizard`
 
-> **Icons** render from CSS alone — each glyph is a data-URI SVG applied as a `mask-image` on a `background-color: currentColor` box, so they inherit text color and size with `font-size` (`1em`). No icon fonts, no runtime SVG fetch, zero JavaScript. The full 120-glyph `icons.css` is **44.76 KB raw / 6.26 KB gzip**; `faqir add icons --only check,x,chevron-down` trims it to just the icons a project uses (e.g. 5 common glyphs → **≈1.84 KB**). Re-running `--only` with more names merges rather than clobbers, and the `icon-name` audit rule flags any unknown `data-icon` value with a nearest-match "did you mean …" hint. Glyphs are the MIT/ISC-licensed [Lucide](https://lucide.dev) set — attribution ships in `icon/LICENSE.lucide`. Usage: `<span data-ui="icon" data-icon="check" aria-hidden="true"></span>` (decorative) or add `role="img"` + `aria-label` when meaningful.
+Recipes auto-initialize when `faqir-core.js` is loaded; the engine scans for
+`[data-ui]` roots, calls each `create{Name}` factory and watches for elements
+added later. A controller expresses state through `data-state` only, never
+fetches data, and returns an API with at least `destroy()`.
 
-### Recipes (29 components) — CSS + JavaScript
-
-Interactive components with JavaScript controllers. Auto-initialize when `faqir-core.js` is loaded.
-
-| Component | Description | Key Features |
-|-----------|-------------|-------------|
-| `dialog` | Modal dialog | Focus trap, escape-to-close, ARIA modal |
-| `drawer` | Side panel | Slides from left/right, overlay |
-| `sheet` | Full/partial overlay panel | Bottom sheet pattern |
-| `dropdown` | Action menu | Keyboard navigation, click-outside-close |
-| `context-menu` | Pointer-invoked action menu | Right-click positioning, keyboard navigation, outside-click close |
-| `menubar` | Desktop-style application menu | Roving tabindex, horizontal navigation, accessible submenus |
-| `tree-view` | Hierarchical single-select tree | WAI keyboard navigation, keyed rendering, lazy children |
-| `file-upload` | Native file picker and drag-drop zone | FileList events, local validation, removable file list |
-| `popover` | Floating content | Positioned relative to trigger |
-| `tooltip` | Hover information | Delay, positioning |
-| `tabs` | Tab panel switcher | Arrow key navigation, ARIA tabs |
-| `accordion` | Expandable sections | Single/multi open modes |
-| `combobox` | Searchable select | Filtering, keyboard selection |
-| `select-custom` | Custom-styled select | Full keyboard support |
-| `command-palette` | Command menu (Cmd+K) | Fuzzy search, sections |
-| `table` | Data table | Sortable, row selection, footer, alignment, grouped rows, print compact |
-| `pagination` | Page navigation | Previous/next, page numbers |
-| `toast` | Notification messages | Auto-dismiss, stacking |
-| `date-picker` | Calendar date selection | Month navigation, range selection |
-| `qr-code` | SVG QR code generator | sm/md/lg sizes, error correction levels (L/M/Q/H) |
-| `alert-dialog` | Destructive action confirmation | Focus trap, escape-to-close, return focus |
-| `slider` | Range input with custom track/thumb | Keyboard control, orientation, value updates |
-| `sidebar` | Responsive application navigation | Collapsible groups, mobile state |
-| `input-otp` | One-time-code input group | Focus movement, paste distribution, masking |
-| `calendar` | Standalone date grid | Month navigation, single/range selection |
-| `barcode` | SVG Code 128-B generator | Printable ASCII, modulo-103 checksum, print-safe quiet zones |
-| `carousel` | Slide carousel | Previous/next controls, indicators, keyboard navigation |
-| `tag-input` | Multi-value text input | Token creation/removal, keyboard control, accessible announcements |
-| `toggle-group` | Coordinated toggle set | Single/multiple selection and roving keyboard focus |
-
-### Patterns (15 compositions) — No Custom JS
-
-Pre-built page-level compositions that combine primitives and recipes.
-
-| Pattern | Composes |
-|---------|----------|
-| `auth-form` | card, input, button, separator, label |
-| `dashboard-shell` | card, grid, avatar, dropdown, button, nav |
-| `settings-page` | tabs, card, input, switch, button |
-| `crud-table` | table, button, dropdown, dialog, pagination |
-| `empty-state` | button, card |
-| `search-results` | grid, input, button, badge, pagination |
-| `document` | Full-page print/PDF container (invoice, form, report) with A4/letter formats |
-| `form-page` | field-group, input, radio-group, textarea, checkbox |
-| `wizard` | stepper, card, field-group, input, radio-group, button |
-| `feature-grid` | icon, heading, description in responsive feature collections |
-| `hero` | headline, description, actions, media and trust content |
-| `inbox` | declarative list-detail view with responsive pane switching |
-| `pricing` | tier cards, stats, badges, separators and calls to action |
-| `site-footer` | responsive navigation groups, brand, legal links and social actions |
-| `stats-dashboard` | KPI grid, cards and a live sortable/aggregating table |
+Icons are 120 Lucide glyphs rendered from CSS alone (a data-URI SVG mask that
+inherits `currentColor`). `faqir add icons --only check,x,chevron-down` trims
+the sheet to the glyphs a project uses.
 
 ---
 
@@ -632,125 +508,55 @@ no tier suffix on purpose — a viewport tier would undo exactly that property.
 
 ---
 
-## Design Token System
+## Design Tokens
 
-All styling uses CSS custom properties organized in three layers. Components reference **only** semantic tokens — never raw palette values.
+All styling uses CSS custom properties in three layers. Components reference
+only semantic tokens, never raw palette values.
 
-### Layer 1: Palette (raw values)
+| Layer | Example | Who touches it |
+|-------|---------|----------------|
+| 1. Palette | `--palette-indigo-500: oklch(0.51 0.22 264)` | nobody, directly |
+| 2. Semantic | `--color-primary`, `--color-surface-1`, `--font-heading` | themes override these |
+| 3. Aliases | `--button-radius`, `--card-shadow`, `--control-height-md` | per-component fine-tuning |
 
-Never referenced by components directly. These define the color space:
+The elevation ramp is `--color-bg` → `--color-surface-1` → `--color-surface-2`,
+and a gate holds adjacent steps 0.03 OKLab ΔE apart in every theme. Controls
+size from one ramp, `--control-height-sm|md|lg`, so they line up in a row.
 
-```css
---palette-indigo-500: oklch(0.55 0.22 264);
---palette-red-500:    oklch(0.55 0.22 27);
---palette-gray-200:   oklch(0.91 0.004 264);
-```
+### Token families (`registry/tokens/`)
 
-### Layer 2: Semantic (what components use)
-
-Purpose-based tokens that map to palette values. Themes override these.
-
-```css
-/* Surfaces */
---color-bg              --color-surface-1        --color-surface-2
---color-surface-1-border                         --color-surface-2-border
---color-bg-subtle       --color-bg-muted
---color-fg              --color-fg-muted         --color-fg-subtle
-
-/* Interactive */
---color-primary         --color-primary-hover     --color-primary-fg
---color-secondary       --color-destructive       --color-success
---color-warning         --color-info
-
-/* Borders */
---color-border          --color-border-strong     --color-ring
-```
-
-The canonical elevation ramp is `--color-bg` → `--color-surface-1` →
-`--color-surface-2`. Adjacent fills, and each surface against its matching
-`-border`, must differ by at least **0.03 OKLab ΔE** in both light and dark
-schemes. The generated theme gate enforces all four pairs for every stylesheet in
-`registry/themes/`, so a new theme enters the check automatically. Cards map
-default/outlined to surface 1 and filled to surface 2; `surface` maps flat,
-raised, and overlay to background, surface 1, and surface 2 respectively.
-
-Semantic soft fills are text-bearing, not decorative: `--color-primary` on
-`--color-primary-subtle` (and destructive/success/warning/info equivalents) must
-be opaque and clear WCAG AA 4.5:1.
-
-### Layer 3: Aliases (component-specific)
-
-Optional overrides for fine-tuning individual components:
-
-```css
---button-radius         --button-height-md
---card-shadow           --card-padding
---input-radius          --input-height
---dialog-radius         --dialog-shadow
-```
-
-Interactive controls size from one shared ramp — `--control-height-sm|md|lg`
-(32/40/48px) — so buttons, inputs and selects line up in a row and density mode
-has a single ramp to remap.
-
-### Density Mode
-
-Put `data-density="compact"` on any container and its whole subtree renders
-tighter — spacing steps through `--space-64` shrink by `--density-scale` (0.75),
-the `--section-gap-*` / `--content-gutter` rhythm aliases re-substitute in that
-scope, and controls drop to a 28/32/40px ramp. `data-density="comfortable"`
-restores the base scale, so an inner subtree can reset out of a compact ancestor.
-
-```html
-<section data-density="compact">
-  <!-- dense form / table / toolbar -->
-</section>
-```
-
-It is 100% CSS (`tokens/density.css`) and **not** a sixth protocol attribute: no
-component contract, manifest, controller or audit rule knows about it — it only
-re-declares tokens. Components need no changes to support it; keep authoring
-against `var(--space-*)` and `var(--control-height-*)`. Paged-media tokens
-(`--doc-*`, `--page-*`) are deliberately left alone — print density belongs to the
-theme.
-
-### Other Token Categories
-
-| File | Key Tokens |
-|------|------------|
-| `spacing.css` | `--space-0` through `--space-64` (4px base scale with half steps and page-rhythm rungs) |
-| `typography.css` | `--font-sans`, `--font-mono`, `--text-xs` through `--text-4xl`, `--weight-*`, `--leading-*` |
-| `effects.css` | `--radius-sm` through `--radius-2xl`, `--shadow-xs` through `--shadow-xl`, `--z-*` |
-| `motion.css` | `--ease-default`, `--ease-in-out`, `--duration-fast` (150ms), `--duration-normal` (250ms), `--duration-slow` (350ms) |
-| `document.css` | `--page-format`, `--page-margin`, `--doc-font`, `--doc-heading-size`, `--doc-table-*`, `--doc-signature-*`, `--doc-max-width` |
-| `doc-aliases.css` | `--kv-*`, `--callout-*`, `--image-*`, `--field-*`, `--page-break-*`, `--stat-*` (component-level document aliases) |
-| `density.css` | `[data-density="compact"\|"comfortable"]` subtree remap of `--space-*` and `--control-height-*` (see above) |
+| File | Key tokens |
+|------|-----------|
+| `palette.css` | `--palette-<hue>-<step>` raw oklch values |
+| `semantic.css` | `--color-bg/-fg/-surface-*/-primary/-secondary/-destructive/-success/-warning/-info/-border/-ring` |
+| `spacing.css` | `--space-0` through `--space-64`, 4px base with half steps and page-rhythm rungs |
+| `typography.css` | `--font-sans/-mono/-serif`; roles `--font-heading/-body/-ui`; `--heading-weight/-tracking/-transform/-leading`; `--text-*`, `--weight-*`, `--leading-*` |
+| `effects.css` | `--radius-*`, `--border-width-sm/md/lg` and `--border-width/-strong`, `--corner-shape`, `--shadow-*`, `--shadow-color`, `--surface-backdrop`, `--focus-ring-width/-offset/-color/-style`, `--focus-shadow`, `--z-*` |
+| `motion.css` | `--ease-default/-in/-out/-in-out/-bounce/-spring`, `--duration-instant` through `--duration-slower`, `--motion-enter-*`, `--motion-leave-*`, `--motion-hover-lift`, `--motion-scale-from`, `--motion-slide-distance` |
+| `textures.css` | Six SVG surface materials (grain, paper, dots, grid, stripes, mesh), applied through `--texture-page` and `--texture-surface` |
+| `aliases.css` | Component aliases, `--control-height-*`, `--measure-narrow/-content/-wide/-prose` |
+| `density.css` | `[data-density]` subtree remap of `--space-*` and `--control-height-*` |
+| `document.css` | `--page-format`, `--page-margin`, `--doc-*` paged-media tokens |
+| `doc-aliases.css` | `--kv-*`, `--callout-*`, `--image-*`, `--field-*`, `--stat-*` document aliases |
 
 ---
 
 ## Theme System
 
-Themes override Layer 2 semantic tokens. Twenty-seven built-in stylesheets ship
-with Faqir: twelve **authored** themes, twelve **generated** ones, and the three
-print companions those bring with them. Every theme is described the same way —
-by an accent colour and **fourteen character axes** that are *derived from its
-stylesheet* and written into its manifest — so a theme is chosen for what it
-measurably is (flat, spacious, serif, barely any motion) rather than for the
-adjectives it was given. The two tables below are generated from the manifests
-(`bun run gen:theme-docs`, gated by `check:theme-docs`); the `faqir-creator`
-skill, `faqir context`, the MCP `faqir_theme_info` and `faqir_theme_list` tools
-and the docs-site gallery render the same derivation, so no surface can
-describe a theme differently from another.
+Themes override Layer 2 tokens. Twenty-seven stylesheets ship in
+`registry/themes/`: twelve **authored** themes, twelve **generated** ones, and
+the three print companions those bring with them. Every theme is described by
+an accent colour and fourteen character axes *derived from its stylesheet* and
+written into its manifest, so a theme is chosen for what it measurably is. The
+two tables below are generated from the manifests (`bun run gen:theme-docs`,
+gated by `check:theme-docs`); the skill, `faqir context`, the MCP theme tools
+and the docs-site gallery render the same derivation.
 
 ### The fourteen axes
 
-`gen:theme-manifests` reads each theme's axes out of its CSS — never out of a
-hand-written field — and validates them against a closed vocabulary, the same
-vocabulary `faqir theme generate` accepts as flags. Every axis has a default,
-and the defaults together describe the shipped `default` theme, which is what
-makes `{ name, accent }` a complete seed. `accent_hue` and `accent_chroma` in a
-manifest are the accent's two numbers; with `scheme` and the twelve families
-below they are the fourteen.
+Every axis has a default, and the defaults together describe the shipped
+`default` theme, which is what makes `{ name, accent }` a complete seed. In a
+manifest, `accent_hue` and `accent_chroma` are the accent's two numbers.
 
 <!-- @faqir:theme-axes start -->
 | Axis | Flag | Values | Default |
@@ -783,14 +589,10 @@ below they are the fourteen.
 
 ### Every theme, by axis
 
-One row per theme, cells straight from its manifest's `axes` block. A
-`generated` theme is reproduced byte for byte from the `<name>.seed.json`
-beside it; an `authored` one was written by hand and its axes measured
-afterwards. To choose: read the request as axis values — "dark" is a
-`scheme` that ships `dark` or `both`; "calm and readable" is minimal motion,
-spacious density and a serif pairing; "a dense trading desk" is compact
-density with layered depth — and find the row that lands there, or generate
-one. The MCP `faqir_theme_list` tool does the same lookup by `axes`.
+A `generated` theme is reproduced byte for byte from the `<name>.seed.json`
+beside it and is never hand-edited. To choose, read the request as axis values
+("calm and readable" is minimal motion, spacious density and a serif pairing)
+and find the row that lands there, or generate one.
 
 <!-- @faqir:theme-table start -->
 | Theme | Kind | Scheme | Accent | Neutral | Type | Shape | Depth | Material | Motion | Density | Focus | Decoration | Controls | Contrast |
@@ -823,512 +625,146 @@ one. The MCP `faqir_theme_list` tool does the same lookup by `axes`.
 3 print companions — `editorial-document`, `ink-document`, `swiss-document` — carry no axes of their own: each is its parent theme on white paper, light only.
 <!-- @faqir:theme-table end -->
 
-### Authored themes — character notes
-
-| Theme | Description |
-|-------|-------------|
-| `default` | Clean modern. Light mode + dark mode via `[data-theme="dark"]` |
-| `midnight` | Deep navy with cyan accents. Layered depth, a glow around focus, a faint grid on the page |
-| `paper` | Warm cream backgrounds, earthy brown accents. Overrides document tokens for warmth |
-| `brutalist` | Black and white. No shadows. No border radius |
-| `document` | Clean, professional, PDF-optimized. No shadows, no radius, no motion, pt-based sizes |
-| `document-serif` | Formal contracts/legal theme. Serif headings and body, dotted rules, ruled form fields |
-| `aurora` | Vibrant modern gradients for SaaS interfaces |
-| `slate` | Enterprise console: steel surfaces, a grotesque face, crisp corners, no elevation, compact density |
-| `contrast` | WCAG AAA-oriented high-contrast neutral theme. 3px focus rings, 2px borders, thick link rules |
-| `glass` | Translucent, layered surfaces with an airy modern character |
-| `soft` | Calm pastel surfaces, generous radius, friendly consumer tone |
-| `terminal` | Technical monospaced interface with a dark retro-console voice |
-
-### Generated themes — character notes
-
-Each of these is the output of `faqir theme generate <name> --seed
-registry/themes/<name>.seed.json`. The seed is committed beside the stylesheet
-and the stylesheet is reproduced from it byte for byte, so **a generated theme is
-regenerated, never hand-edited** — copy its seed, change an axis and generate
-your own instead.
-
-| Theme | Description |
-|-------|-------------|
-| `editorial` | A serif reading page on a 1.333 ramp at a 17px base — navy ink, paper stock, flat surfaces, spacious density, barely any motion |
-| `swiss` | International Typographic Style: uppercase grotesque headings, square corners, 2px rules, a graph-paper ground and one red |
-| `neo` | Neo-brutalist — black-weight grotesque at an 18px base, heavy edges, hard un-blurred shadows, a playful curve and an electric lime |
-| `luxe` | Gold on near-black. A modern serif set wide and uppercase, dark only, high contrast, spacious and unhurried |
-| `candy` | Pill-shaped everything, a rounded face, a springy curve and a tinted pink page |
-| `organic` | Warm sand stock with a humanist face — softly rounded, grained, smooth and roomy |
-| `clinical` | Calm teal on a cool white, humanist at a 17px base — flat surfaces, a faint dot grid, high contrast, barely any motion |
-| `fintech` | A dense trading desk: geometric type, compact density, layered elevation, filled fields and one mint green |
-| `nordic` | Cold light and a lot of air — geometric type set light, round corners, no elevation, spacious density |
-| `sunset` | Warm amber over a soft gradient mesh — humanist, rounded checkboxes, a glow around focus |
-| `ink` | Sepia letterpress on laid paper: a slab face, square corners, ruled (underline) fields, light only |
-| `neumorph` | Soft UI — a rounded face on a tinted ground, every surface pressed into the page rather than raised off it |
-
-`editorial`, `swiss` and `ink` each ship a print companion —
-`editorial-document`, `swiss-document` and `ink-document` — which is the same
-brand on white paper, light only, sized for the page. A companion is a medium of
-its parent rather than a theme of its own: it carries no `seed` and no `axes`
-block, and `faqir theme set` treats it like any other theme.
-
-### Using Themes
+### Using and generating themes
 
 ```html
-<!-- Light mode (default) -->
-<html data-theme="light">
-
-<!-- Dark mode -->
-<html data-theme="dark">
-
-<!-- Auto (follows system preference) -->
-<html data-theme="auto">
+<html data-theme="light">   <!-- or "dark", or "auto" to follow the OS -->
 ```
-
-### Light and dark in one declaration
-
-A dual-scheme theme states both sides of every scheme-dependent token at once:
-
-```css
-:root {
-  --color-bg: light-dark(var(--palette-gray-25), var(--palette-gray-950));
-  --color-fg: light-dark(var(--palette-gray-950), var(--palette-gray-50));
-}
-```
-
-`light-dark()` reads `color-scheme`, not `data-theme`, and `registry/base/reset.css`
-declares that mapping once — `:root` is `light`, `[data-theme="dark"]` is
-`dark`, `[data-theme="auto"]` is `light dark` — so a one-block theme follows the
-OS with no `prefers-color-scheme` mirror of its own. A theme loaded *without*
-the base reset resolves every `light-dark()` to its light side, silently; keep
-that in mind when inlining a theme by hand. `faqir theme generate` emits this
-form for `--scheme both` and `--legacy-blocks` writes the three-block form
-(`:root`, `[data-theme="dark"]`, and a media-query mirror) for a browser floor
-older than Chrome 123 / Safari 17.5 / Firefox 120. The shadow ramp stays in
-blocks either way — a shadow list is not a `<color>`. The authoring rules, the
-deliberate-override list and the drift gate are in `CONTRIBUTING.md` § Theme
-Manifests.
-
-### Managing Themes via CLI
 
 ```bash
-# Switch active theme
-faqir theme set midnight
-
-# Create a custom theme (generates a CSS file with all tokens commented out)
-faqir theme create my-brand
-
-# Generate a complete theme from one brand color
-faqir theme generate my-brand --accent "oklch(0.55 0.2 150)"
-
-# …or from a full seed: the accent plus any of the fourteen character axes
+faqir theme list                                   # every registry and project theme
+faqir theme set midnight                           # switch the active theme
+faqir theme create my-brand                        # scaffold with commented overrides
+faqir theme generate my-brand --accent "#168c5b"   # a complete theme from one colour
 faqir theme generate ember --accent "oklch(0.62 0.2 40)" --neutral warm \
-  --type serif-editorial --scale 1.25 --shape soft --border hairline \
-  --depth hard --material grain --motion springy --focus glow \
-  --input underline --button rect --density comfortable --contrast standard
-
-# Re-generate from the seed the last run wrote (flags still win over the file)
-faqir theme generate ember --seed themes/ember.seed.json --out registry/themes
-
-# Also generate a matching, print-optimized document theme
-faqir theme generate my-brand --accent "#168c5b" --document
-
-# Scope a theme to a subtree so two themes can live on one page
-faqir theme bundle aurora --scope
-
-# List available themes
-faqir theme list
+  --type serif-editorial --depth hard --material grain --motion springy
+faqir theme generate ember --seed themes/ember.seed.json --document --json
+faqir theme bundle aurora --scope                  # → aurora.scoped.css on data-skin="aurora"
+faqir fonts add fraunces --role heading            # self-host a catalog family
 ```
 
-`theme create` emits a scaffold with commented semantic-token overrides. `theme
-generate` instead writes four files per theme — `themes/<name>.css`, its
-`<name>.theme.json`, the resolved `<name>.seed.json`, and a self-contained
-`<name>.preview.html` — into `themes/`, or wherever `--out` says.
+`theme generate` writes `<name>.css`, `<name>.theme.json`, `<name>.seed.json`
+and `<name>.preview.html`. Before any file is written it verifies every
+foreground/background pair the `contrast-tokens` audit checks, reads its own CSS
+back to confirm the axes it was asked for, and measures the result against the
+themes already in the output directory: fewer than four axes apart, or too close
+in colour, and it refuses by name (`--allow-similar` overrides). `--json` prints
+the scorecard, `--document` adds a print companion, and `--legacy-blocks` writes
+three colour blocks instead of one `light-dark()` block for browsers older than
+Chrome 123 / Safari 17.5 / Firefox 120. `light-dark()` reads `color-scheme`,
+which `base/reset.css` maps from `data-theme`, so a one-block theme follows the
+OS with no media query of its own.
 
-**The seed is the input.** A theme is described by an accent colour and the
-fourteen axes of [the table above](#the-fourteen-axes) (§5.2 of
-`FAQIR-VISION.md`). Every axis is optional and has a documented default, so
-`{ name, accent }` is a complete seed. Each leaf has one flag (`faqir theme
-generate --help` lists them with their vocabularies), a `--seed <file>`
-supplies any or all of them at once, and flags win where both speak. An
-unknown value is refused by name, with the axis's vocabulary in the message,
-before anything is written.
+**Fonts.** `faqir fonts list` prints the 16-family OFL catalog. `fonts add`
+downloads WOFF2 files once, verifies each against a SHA-256 pinned in the CLI,
+and writes `ui/fonts/<family>/` plus a managed `ui/fonts.css` that points the
+role tokens (`--font-heading/-body/-ui/-mono`) at it. The theme file is never edited.
 
-The resolved seed is written beside the CSS and carried in the manifest's
-`seed`, so a generated theme can always be reproduced — and the manifest's
-`axes` block is *derived from the stylesheet itself* rather than copied from
-the seed: the generator reads its own output back and refuses to emit a theme
-whose CSS disagrees with what it was asked for.
+**From an agent.** The MCP server exposes the same surface: `faqir_theme_list`
+returns every theme with its axes, `faqir_theme_info` one theme's manifest, and
+`faqir_generate_theme` runs the generator with the same scorecard and gates.
 
-Before any file is written, the generator derives the manifest, checks every
-theme coverage token, and verifies the same foreground/background pairs used by
-the `contrast-tokens` audit. Light-mode primary actions use white text and move
-to a darker ramp step when needed; dark mode uses dark text on an inverted,
-lighter accent step. `--document` additionally writes
-`themes/<name>-document.css` and its light-only print manifest, and
-`--legacy-blocks` emits a dual-scheme theme as three colour blocks instead of
-one `light-dark()` block.
+**Scoped themes.** `faqir theme bundle <name> --scope` rewrites every `:root`
+onto `[data-skin="<name>"]` and scopes every `[data-theme]` block beneath it, so
+a `data-theme` inside the island switches the island, not the page.
 
-**Two themes may not be recolours of each other.** Before writing, the
-generator measures the new theme against the themes already in the output
-directory — the set it would ship beside — on two numbers: how many of the
-fourteen axes they land on differently, and the mean OKLab ΔE between their
-resolved colour surfaces. Fewer than four axes apart, or closer in colour than
-one theme's own card is to its own page, and the command refuses, naming the
-theme it collides with and what is identical about them. `--allow-similar`
-writes it anyway and the scorecard records that it did. Generating into an
-empty folder compares against nothing and never refuses.
-
-Add `--json` for the **scorecard**: the resolved seed, the derived axes, every
-generated path, every contrast ratio, the elevation ΔE of the surface ramp, the
-focus-ring ratio against each surface it lands on, the tap-target heights the
-seed's density lands on, and the distinctiveness measurement above. The MCP
-`faqir_generate_theme` tool takes the same seed and returns the same scorecard
-in memory, without touching the filesystem.
-
-### Self-hosted fonts
-
-A theme states a *class* of face (`--type serif-editorial`) and the token stack
-names the faces a reader may already have. To ship an actual typeface, install
-it:
-
-```bash
-faqir fonts list                                # the 16-family OFL catalog
-faqir fonts add fraunces --role heading         # → ui/fonts/fraunces/*.woff2
-faqir fonts add inter --role body --role ui     # one family, two role tokens
-faqir fonts remove fraunces                     # and its files, and its block
-```
-
-**No Google Fonts link.** A `<link href="fonts.googleapis.com/…">` puts a
-second origin in the critical path of every page load and reports each visit to
-a host the project does not control. `faqir fonts add` instead downloads the
-WOFF2 files **once**, checks every byte against a SHA-256 pinned in the CLI
-(from an immutable, version-pinned URL — a mismatch, a dead link or a file that
-is not a WOFF2 refuses the install and writes nothing), and serves them from
-your own directory like any other asset. Every catalogued family is licensed
-under the SIL Open Font License, which is what makes that legal without asking
-anyone; nothing else is installable.
-
-What lands in the project is `<output_dir>/fonts/<family>/*.woff2` plus a
-managed `<output_dir>/fonts.css` holding one `@font-face` per Latin subset
-(`font-display: swap`, a `unicode-range` so a page that is all ASCII never
-downloads the extended file, and a variable-weight file where the family ships
-one) and a `:root` block pointing the **role tokens** at it:
-
-```css
-@font-face {
-  font-family: "Fraunces";
-  font-weight: 100 900;
-  font-display: swap;
-  src: url("fonts/fraunces/fraunces-latin-wght-normal.woff2") format("woff2");
-  unicode-range: U+0000-00FF,…;
-}
-:root {
-  --font-heading: "Fraunces", 'Charter', 'Iowan Old Style', 'Georgia', ui-serif, serif;
-}
-```
-
-The **theme file is never edited** — `fonts.css` is a separate stylesheet that
-`faqir bundle` and `faqir init` place immediately after the theme, so its role
-tokens win, and removing the family restores whatever the theme said. A role
-has exactly one family (`--font-body` is one declaration), so pointing a role
-at a new family takes it off the one that held it, and re-running the same `add`
-changes nothing. `faqir doctor` re-hashes every file `fonts.css` names, because
-a missing or swapped font is otherwise invisible: the page simply renders in the
-fallback face.
-
-Fonts are the one thing in the catalog that cannot be *generated*, so the
-`--role` a family suits is advice from the catalog rather than a rule — asking
-for one it is not listed for warns and installs anyway. Italics, the non-Latin
-subsets and `size-adjust` fallback metrics are deliberately out: the first two
-are past what a curated list should decide for a project, and the third has to
-be measured out of the font binary.
-
-### Scoped themes
-
-A theme declares its tokens on `:root`, which is the whole page. Sometimes one
-page needs two: a forms platform previewing a customer's brand inside its own
-admin, a gallery showing every theme at once, a design review putting two
-candidates side by side. `faqir theme bundle` rewrites a theme onto
-`data-skin` — the token modifier `SPEC-1.0` §4 reserves for exactly this — so it
-applies to a subtree instead:
-
-```bash
-faqir theme bundle aurora --scope                 # → aurora.scoped.css
-faqir theme bundle aurora --scope=".brand-preview"  # your own convention
-faqir theme bundle aurora --scope --out dist/skins
-```
-
-```html
-<link rel="stylesheet" href="faqir/faqir.bundle.css">
-<link rel="stylesheet" href="faqir/aurora.scoped.css">
-
-<div data-skin="aurora">
-  <!-- everything in here resolves aurora's tokens, whatever the page is set to -->
-  <button data-ui="button" data-variant="primary">Submit</button>
-</div>
-```
-
-Every `:root` block becomes the scope selector and every `[data-theme]` block is
-scoped to that subtree in both its forms — `[data-skin="aurora"][data-theme="dark"]`
-for a skin root that also carries the attribute, and
-`[data-skin="aurora"] [data-theme="dark"]` for one written further down — so a
-`data-theme` *inside* the island switches the island, not the page. Both are one
-specificity step above the host theme's own `[data-theme="dark"]`, so the island
-wins for its subtree whatever order the stylesheets are linked in, and nesting
-resolves innermost-first. Declarations are copied through untouched, including
-`light-dark()`: it resolves against `color-scheme`, which the scope root
-re-declares along with the ink, the ground, the page face and the material that
-`base/reset.css` puts on `:root`, `html` and `body` — elements a subtree is not.
-A `:root` inside `@media print` or `@supports` is scoped where it stands; `@page`
-is left as authored, because it sizes the printed page rather than a subtree.
-
-A theme with a print companion (`editorial` → `editorial-document`) bundles both,
-each to its own `data-skin`; with an explicit `--scope` selector — which names
-one subtree — the companion is left to a second run. `--json` prints the rewrite
-report: every selector before and after, with the line it was on, and every
-at-rule deliberately left alone with the reason.
+Authoring rules, the deliberate-override list, the seed workflow and the drift
+gate are in [`CONTRIBUTING.md` § Theme Manifests](CONTRIBUTING.md#theme-manifests).
 
 ---
 
 ## Faqir Core — Reactive Engine
 
-`faqir-core.js` is a zero-dependency reactive engine. Drop it in with a single
-script tag — no build step required.
+`faqir-core.js` is a zero-dependency reactive engine with Alpine-style
+directives, automatic recipe initialization and a global store. Sizes are
+checked by `bun run size` (`scripts/check-size.mjs`):
 
-Sizes, since they are the first thing worth knowing:
+| File | What it is | Minified + gzip | Budget |
+|------|-----------|-----------------|--------|
+| the engine alone | directives, reactivity, store | 10.26 KB | 14 KB |
+| `faqir-core.js` | engine + all 29 recipe controllers | 44.49 KB | 46 KB |
 
-| File | What it is | Minified + gzip |
-|------|-----------|-----------------|
-| the engine alone | directives, reactivity, store | **9.5 KB** |
-| `faqir-core.js` | engine **+ all 29 recipe controllers** | **43 KB** |
-
-`faqir add` and `faqir init` install the *unminified* `faqir-core.js` (≈350 KB on
-disk, ≈88 KB gzipped over the wire) so it stays readable and debuggable in your
-project. For production, serve the minified build from the CDN below, or minify
-the file yourself — the CLI does not minify JavaScript.
-
-### CDN — two tags, no install
-
-The CLI is the *ownership* path: it copies component files into your project so
-you can read, audit, theme and upgrade them. For a scratch page, a CodePen, or an
-agent with no shell, `@faqir-ui/core` publishes a prebuilt runtime instead:
-
-```html
-<!-- A theme's full CSS bundle: tokens + theme + base + every component -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.0/dist/faqir.default.css">
-
-<!-- The engine, minified — sets window.Faqir and boots on DOMContentLoaded -->
-<script src="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.0/dist/faqir-core.min.js" defer></script>
-```
-
-Swap the stylesheet to change theme — every theme in [Theme System](#theme-system)
-ships a bundle. Every `dist/` file has a SHA-384 hash in `dist/sri.json` for
-`integrity=` pinning. Full details: [`packages/core/README.md`](packages/core/README.md).
-
-```html
-<script src="ui/core/faqir-core.js" defer></script>
-```
-
-It provides Alpine.js-style reactive directives, automatic recipe controller initialization, and a global store.
+`faqir add` installs the *unminified* file so it stays readable in your project;
+for production serve the CDN build or minify it yourself.
 
 ### Directives
 
 | Directive | Shorthand | Purpose |
 |-----------|-----------|---------|
-| `l-data` | — | Create reactive scope with initial state |
-| `l-text` | — | Set text content reactively |
-| `l-html` | — | Set inner HTML reactively |
+| `l-data` | | Create reactive scope with initial state |
+| `l-init` | | Run code once on initialization |
+| `l-text` / `l-html` | | Set text content / inner HTML reactively |
 | `l-bind:attr` | `:attr` | Bind element attributes |
 | `l-on:event` | `@event` | Event listeners |
-| `l-model` | — | Two-way form binding |
-| `l-show` | — | Toggle visibility (with transitions) |
-| `l-if` | — | Conditional rendering (on `<template>`) |
-| `l-for` | — | List rendering (on `<template>`) |
-| `l-key` | — | Reconciliation key (on the same `<template>` as `l-for`) |
-| `l-ref` | — | Named element reference |
-| `l-init` | — | Run code once on initialization |
-| `l-effect` | — | Tracked reactive side effect |
-| `l-cloak` | — | Hide element until Faqir initializes |
-| `l-transition` | — | Motion preset for an `l-show` / `l-if` element (drives `data-motion`) |
-| `l-teleport` | — | Move the element to another part of the document |
-| `l-source:name` | — | Declarative REST data binding (injects array + CRUD controller) |
+| `l-model` | | Two-way form binding (`.number` `.trim` `.lazy` `.debounce`) |
+| `l-show` / `l-if` | | Toggle visibility / conditional render (on `<template>`) |
+| `l-for` / `l-key` | | List rendering with a reconciliation key |
+| `l-ref` | | Named element reference |
+| `l-effect` | | Tracked reactive side effect |
+| `l-cloak` | | Hide element until Faqir initializes |
+| `l-transition` | | Motion preset (`fade`, `slide-up`, `scale`) for `l-show` / `l-if` |
+| `l-teleport` | | Move the element elsewhere in the document |
+| `l-source:name` | | Declarative REST binding (see [Data-Driven Rendering](#data-driven-rendering)) |
 
-Every directive, modifier and magic — plus the plugin vocabulary — is generated
-into
-[`.claude/skills/faqir-creator/references/directives.md`](.claude/skills/faqir-creator/references/directives.md)
-from the engine's own declarations.
+Event modifiers: `.prevent` `.stop` `.self` `.once` `.capture` `.passive`
+`.window` `.document` `.debounce300ms` `.throttle100ms`, plus key aliases such
+as `@keydown.enter` and `@keydown.escape.window`.
 
-### Event Modifiers
-
-`@click.prevent`, `@submit.stop`, `@keydown.enter`, `@click.once`, `@input.debounce300ms`, `@resize.throttle100ms`, `@click.self`, `@keydown.escape.window`
-
-A custom time belongs to the modifier itself (`.debounce300ms`); a dotted
-`.debounce.300ms` is two modifiers and falls back to the 250ms default.
-
-### Model Modifiers
-
-`l-model.number`, `l-model.trim`, `l-model.lazy`, `l-model.debounce` (fixed 300ms)
-
-### Magic Properties
-
-| Property | Description |
-|----------|-------------|
-| `$el` | Current element |
-| `$refs` | Named element references |
-| `$store` | Global reactive store |
-| `$state` | Sync reactive state with `data-state` |
-| `$variant` | Sync with `data-variant` |
-| `$ui` | The controller of the enclosing `[data-ui]` — `$ui.open()`. Callable to reach another component's: `$ui('#detail-drawer').open()`, `null` when nothing matches. |
-| `$dispatch` | Dispatch custom events |
-| `$nextTick` | Run after DOM update |
-| `$watch` | Watch reactive value changes |
-| `$id` | Generate unique IDs |
-
-Those are the engine's. A plugin adds its own to the same namespace —
-`$persist()` from `faqir-persist`, `$rules` from `faqir-rules` — and they exist
-only on a page that loaded it; see [the plugin
-table](#javascript-bundle-and-official-plugins).
-
-### Examples
+Magics: `$el` `$refs` `$store` `$state` `$variant` `$ui` `$dispatch`
+`$nextTick` `$watch` `$id`, and `$event` inside `l-on`. `$ui` is the enclosing
+component's controller (`$ui.open()`) and is callable to reach another's
+(`$ui('#detail-drawer').open()`).
 
 ```html
-<!-- Counter -->
 <div l-data="{ count: 0 }">
   <span l-text="count"></span>
   <button data-ui="button" @click="count++">+1</button>
 </div>
-
-<!-- Two-way binding -->
-<div l-data="{ name: '' }">
-  <input data-ui="input" l-model="name" placeholder="Your name">
-  <p>Hello, <span l-text="name || 'stranger'"></span>!</p>
-</div>
-
-<!-- Conditional list -->
-<div l-data="{ items: ['Apple', 'Banana', 'Cherry'], show: true }">
-  <button data-ui="button" @click="show = !show">Toggle</button>
-  <template l-if="show">
-    <div data-ui="stack" data-gap="2">
-      <template l-for="item in items">
-        <span data-ui="badge" l-text="item"></span>
-      </template>
-    </div>
-  </template>
-</div>
-
-<!-- Global store -->
-<script>
-  Faqir.store('app', { theme: 'light', user: 'Agent' });
-</script>
-<div l-data="{}">
-  <span l-text="$store.app.user"></span>
-  <button data-ui="button" @click="$store.app.theme = $store.app.theme === 'light' ? 'dark' : 'light'">
-    Toggle Theme
-  </button>
-</div>
 ```
 
-### Inspecting a Live Page
+Every directive, modifier and magic, plus the plugin vocabulary, is generated
+into [`references/directives.md`](.claude/skills/faqir-creator/references/directives.md)
+from the engine's own declarations.
 
-`Faqir.inspect(elementOrSelector)` returns one plain object describing what the
-engine is doing to an element — its scope, its directives, its controller and
-its protocol attributes:
+### Official plugins
 
-```js
-Faqir.inspect('#total')
-// {
-//   el, scopeRoot, scopeId,
-//   scope:       { total: 42, currency: 'EUR' },   // a copy; magics excluded
-//   directives:  [{ type: 'text', arg: null, expression: 'total', modifiers: [], raw: 'l-text' }],
-//   controller:  { ui: 'tabs', el, api, methods: ['activate', 'destroy', 'getActiveIndex'] },
-//   state:       { ui: 'tabs', part: 'panel', variant: 'underline', size: null, state: 'ready' }
-// }
-```
+`faqir bundle --js` writes `ui/faqir.bundle.js` with the core followed by every
+plugin; or load them individually from `ui/core/plugins/` after the core script.
 
-The same function — plus `scopes()`, `components()`, `stores()` and
-`warnings()` — is on `window.__FAQIR_DEVTOOLS__`, which both engine builds
-install. Two development aids build on it:
+| Plugin | Provides | What it does |
+|---|---|---|
+| `faqir-collapse` | `l-collapse` | Height auto-animation for a boolean; honours `prefers-reduced-motion` |
+| `faqir-intersect` | `l-intersect` | Enter, `.leave` and `.once` IntersectionObserver hooks |
+| `faqir-mask` | `l-mask` | Caret-safe input masking; `l-model` still receives the raw characters |
+| `faqir-persist` | `l-persist`, `$persist()` | Namespaced, JSON-serialized reactive state in `localStorage` |
+| `faqir-rules` | `l-rules`, `$rules` | A form's conditional logic from one JSON definition |
+| `faqir-validate` | `l-validate`, `Faqir.validate` | Declarative and programmatic form validation |
 
-- **`core/faqir-core.dev.js`** — the development engine. Same behaviour, plus
-  warnings for failed expressions (with the offending element's `outerHTML`),
-  unknown directives, unkeyed `l-for` reorders and unsanitized `l-html`. The
-  production engine carries none of those strings.
-- **The `faqir dev` overlay** — a live panel of scopes, components and
-  diagnostics, toggled with `Ctrl/Cmd + Shift + F`. It is injected by the dev
-  server only and never written into your project (`--no-overlay` to disable).
-
-Full reference: [docs/devtools.md](docs/devtools.md).
-
-The engine compiles expressions with `new Function` and `l-html` is unsanitized
-by design — see [Security](#security) and [docs/security.md](docs/security.md)
-before pointing either at anything a user typed.
+**Inspecting a live page.** `Faqir.inspect(elementOrSelector)` returns one
+plain object describing an element's scope, directives, controller and protocol
+attributes; `window.__FAQIR_DEVTOOLS__` adds `scopes()`, `components()`,
+`stores()` and `warnings()`. `core/faqir-core.dev.js` warns on failed
+expressions and unkeyed reorders, and the `faqir dev` overlay (`Ctrl/Cmd +
+Shift + F`) is a live panel of both. Full reference: [`docs/devtools.md`](docs/devtools.md).
 
 ---
 
-## Validation
+## Forms, Validation and Rules
 
-Form validation is three layers, each one usable without the ones above it. All
-three paint the same UI — the enclosing `[data-ui="field-group"]` takes
-`data-state="invalid"`, its `[data-part="error"]` takes the message, and the
-control takes `aria-invalid` — so a page never has two error styles.
+Validation is three layers, each usable without the ones above it, and all three
+paint the same UI: the enclosing `field-group` takes `data-state="invalid"`, its
+`error` part takes the message, and the control takes `aria-invalid`.
 
-### 1. Native constraints, reflected
+1. **Native constraints, reflected.** `<form l-validate>` mirrors each control's
+   own `ValidityState`. No JavaScript.
+2. **Attribute validators, including async.** `l-validate:company="isCompanyEmail(value)"`
+   and `l-validate:taken.async="isFree(value)"`, with `data-error-<name>` for the message.
+3. **The programmatic registry.** `Faqir.validate.register(form, field, name, fn)` and
+   `Faqir.validate.run(form)`.
 
-`l-validate` on the form is the whole setup. The plugin reflects each control's
-own `ValidityState`; you write no JavaScript.
-
-```html
-<script src="ui/core/plugins/faqir-validate.js"></script>
-
-<form l-validate>
-  <div data-ui="field-group">
-    <label data-part="label" for="email">Work email</label>
-    <input data-part="input" id="email" name="email" type="email" required>
-    <p data-part="error"></p>
-  </div>
-</form>
-```
-
-### 2. Attribute validators, including async
-
-`l-validate:<name>` on a control adds a check of your own; its value is an
-expression, with the control's `value` in scope. `.async` marks one that answers
-with a promise — the field-group sits in `data-state="validating"` until it
-settles. `data-error-<name>` supplies the message.
-
-```html
-<input data-part="input" name="email" type="email" required
-       l-validate:company="isCompanyEmail(value)"
-       l-validate:taken.async="isFree(value)"
-       data-error-company="Use your company address."
-       data-error-taken="That address is already registered.">
-```
-
-### 3. The programmatic registry
-
-`Faqir.validate` is installed by the same plugin, for checks that belong in
-JavaScript rather than in an attribute. Registered validators run after the
-native constraints and after the attribute validators, in registration order,
-first failure wins.
-
-```js
-const off = Faqir.validate.register('#signup', 'email', 'taken', async (value) => {
-  const res = await fetch(`/api/email-free?q=${encodeURIComponent(value)}`);
-  return res.ok || 'That address is already registered.';
-});
-
-await Faqir.validate.run('#signup');   // true when the whole form is clean
-off();                                 // remove just this one
-```
-
-Return `true` to pass, `false` to fail with the registered message, or a string
-to fail with that one. `unregister(form, field, name?)` drops one validator, or
-all of the field's.
-
-### Rules — one JSON definition for the whole form
-
-Everything above judges one field at a time. A **rules definition** is the
-cross-field half: what is on screen, what is required *today*, what agrees with
-what, what is derived, and which wizard page comes next — as data, in one JSON
-document, evaluated by [`@faqir-ui/rules`](packages/rules).
+A **rules definition** is the cross-field half: what is on screen, what is
+required today, what is derived, and which wizard page comes next, as one JSON
+document evaluated by [`@faqir-ui/rules`](packages/rules/README.md).
 
 ```html
 <script type="application/json" id="signup-rules">
@@ -1341,853 +777,296 @@ document, evaluated by [`@faqir-ui/rules`](packages/rules).
 <form l-validate l-rules="#signup-rules"> … </form>
 ```
 
-On init and on every `input`/`change`, the form's own `FormData` is coerced
-through the definition and re-evaluated. A hidden field's field-group takes
-`hidden` and its controls take `disabled`, so it neither validates nor submits;
-`require` toggles `required` + `aria-required`; `compute` writes its value into
-the scope and into any control of that name; and `jump` lands in `$rules.next`
-for a wizard to read. `validate` rules are handed to the registry above, so they
-run at `faqir-validate`'s moments and wear its messages — the rules plugin owns
-no message and paints no error of its own.
-
-The magic `$rules` exposes the live verdict — `{ visible, required, computed,
-next }`, reactive, and never undefined:
-
-```html
-<button data-ui="button" @click="page = $rules.next[page] || page + 1">Next</button>
-```
-
-The point of writing it as data is that the **same evaluator runs on your
-server**: `import { coerce, validate } from "@faqir-ui/rules"` re-checks the
-submission against the identical definition, so the page's verdict and the
-handler's agree by construction rather than by agreement. The page's is
-advisory; the handler's is the one that counts.
-
-Two commands and one schema go with it:
-
-```bash
-faqir rules lint signup.rules.json    # seven checks a JSON Schema cannot make
-faqir rules lint --stdin --json       # same, for tooling
-```
-
-`packages/rules/rules.schema.json` is the definition format as Draft-07 JSON
-Schema — the document to hand a model as a structured-output schema.
-[`@faqir-ui/forms`](packages/forms) emits both halves at once: a schema's
-`if/then/else`, `dependentRequired` and wizard-page `when` become rules beside
-the markup they govern.
-
-Full reference: [`packages/rules/README.md`](packages/rules/README.md). The
-security posture — a definition is data, but a `remote` rule sends the whole
-form to the URL inside it — is [docs/security.md §4.1](docs/security.md).
-
----
-
-## The Manifest System
-
-Every component ships with a `.manifest.json` — a machine-readable contract that drives audit, repair, AI context generation, and code generation.
-
-### Manifest Structure
-
-```json
-{
-  "name": "dialog",
-  "version": "1.0.0",
-  "kind": "recipe",
-  "category": "overlay",
-  "description": "Modal dialog with focus trap and escape-to-close",
-
-  "anatomy": {
-    "tag": "div",
-    "selector": "[data-ui='dialog']",
-    "content_model": "slots"
-  },
-
-  "slots": {
-    "trigger": { "selector": "[data-part='trigger']", "required": true },
-    "overlay": { "selector": "[data-part='overlay']", "required": true },
-    "panel":   { "selector": "[data-part='panel']",   "required": true },
-    "title":   { "selector": "[data-part='title']",   "required": true },
-    "close":   { "selector": "[data-part='close']",   "required": true },
-    "body":    { "selector": "[data-part='body']",     "required": false }
-  },
-
-  "variants": {},
-  "states": {
-    "open": { "attr": "data-state=\"open\"" }
-  },
-
-  "a11y": {
-    "role": "dialog",
-    "aria-modal": true,
-    "focus_trap": true,
-    "escape_closes": true,
-    "keyboard": { "Escape": "Close dialog", "Tab": "Cycle focus within dialog" }
-  },
-
-  "tokens_used": ["color-bg", "shadow-xl", "radius-xl", "duration-normal"],
-  "templates": { "html": "<div data-ui=\"dialog\">..." },
-  "safe_transforms": ["Change title text", "Add body content", "Change trigger text"],
-  "unsafe_transforms": ["Remove data-ui attribute", "Remove overlay", "Remove focus trap"],
-  "composition": { "contains": ["button"], "used_in": ["crud-table"] },
-  "files": { "html": "dialog.html", "css": "dialog.css", "js": "dialog.js", "manifest": "dialog.manifest.json" },
-  "tests": ["opens on trigger click", "traps focus", "closes on Escape"]
-}
-```
-
-### What Manifests Enable
-
-| Capability | How It Works |
-|-----------|-------------|
-| **Audit** | Validate HTML against slot requirements, variant values, ARIA attributes |
-| **Repair** | Auto-fix missing slots, add required ARIA, remove class attributes |
-| **Context** | Generate structured JSON/Markdown for AI agents to read |
-| **Explain** | Produce human-readable component descriptions with anatomy trees |
-| **Trace** | Show dependency graphs, file trees, token usage |
-| **Create** | Generate valid component skeletons from the schema |
-
----
-
-## JavaScript Controllers
-
-Every recipe has a JavaScript controller following the `create{Name}` factory pattern:
-
-```js
-import { createDialog } from "./ui/recipes/dialog/dialog.js";
-
-const el = document.querySelector('[data-ui="dialog"]');
-const dialog = createDialog(el);
-
-dialog.open();
-dialog.close();
-dialog.destroy();
-```
-
-### Controller Conventions
-
-1. **Prevent double-init** via `root._faqir{Name}` guard
-2. **Find parts** via `root.querySelector('[data-part="..."]')` selectors
-3. **Express state** through `data-state` only — never class names
-4. **Return API object** with at minimum a `destroy()` method
-5. **Import only** from `core/` modules (dom, events, focus, motion, store)
-6. **No data fetching** — controllers manage UI state, not data
-
-### Auto-Initialization
-
-Include `faqir-core.js` and all recipes auto-initialize:
-
-```html
-<script src="ui/core/faqir-core.js" defer></script>
-```
-
-The engine scans for `[data-ui]` elements matching known recipes, calls their factories, and watches for dynamically added elements via MutationObserver. You never need to call `createDialog()` manually unless you want the return API.
+Five verbs: `show`, `require`, `validate`, `compute`, `jump`. `$rules` exposes
+the live verdict (`{ visible, required, computed, next }`). The same evaluator
+runs on your server (`import { coerce, validate } from "@faqir-ui/rules"`), so
+the page's verdict and the handler's agree by construction. `faqir rules lint`
+makes seven checks a JSON Schema cannot, and
+[`@faqir-ui/forms`](packages/forms/README.md) renders a JSON Schema into
+audit-clean markup with its rules beside it. A `remote` rule sends the whole
+form to the URL inside it; read [`docs/security.md` §4](docs/security.md) first.
 
 ---
 
 ## Data-Driven Rendering
 
-Faqir provides two approaches for connecting UI to REST APIs:
-
-1. **`l-source` directive** (built into faqir-core.js) — declarative, attribute-based
-2. **`apiSource()` factory** (separate script) — imperative, spread into `l-data`
-
-### `l-source` Directive (Recommended)
-
-Declare a data source directly on any `l-data` element. Faqir injects a reactive array and a CRUD controller into the scope.
+`l-source` declares a REST data source on any `l-data` element. Faqir injects a
+reactive array, loading and error flags, and a CRUD controller into the scope.
 
 ```html
-<div l-data="{ newTitle: '' }"
-     l-source:tasks="/api/tasks">
-
-  <!-- tasks (array), tasksLoading (bool), tasksError (string|null) are auto-injected -->
-  <!-- $tasks (controller) provides: load, create, update, remove, refresh, startPolling, stopPolling -->
-
-  <template l-if="tasksLoading">
-    <div data-ui="spinner" data-size="sm"></div>
-  </template>
-
+<div l-data="{ newTitle: '' }" l-source:tasks="/api/tasks">
+  <template l-if="tasksLoading"><div data-ui="spinner" data-size="sm"></div></template>
   <template l-for="task in tasks">
-    <div data-ui="card" data-size="sm">
-      <div data-part="body">
-        <span l-text="task.title"></span>
-        <button data-ui="button" data-variant="ghost" data-size="sm"
-                @click="$tasks.remove(task.id)">Delete</button>
-      </div>
-    </div>
+    <div data-ui="card"><div data-part="body">
+      <span l-text="task.title"></span>
+      <button data-ui="button" data-variant="ghost" @click="$tasks.remove(task.id)">Delete</button>
+    </div></div>
   </template>
-
   <form @submit.prevent="$tasks.create({ title: newTitle }).then(() => newTitle = '')">
-    <input data-ui="input" l-model="newTitle" placeholder="New task...">
-    <button data-ui="button" data-variant="primary">Add</button>
+    <input data-ui="input" l-model="newTitle"> <button data-ui="button" data-variant="primary">Add</button>
   </form>
 </div>
 ```
 
-#### Modifiers
+Injected: `tasks`, `tasksLoading`, `tasksError` and `$tasks` with `load`,
+`create`, `update`, `remove`, `refresh`, `startPolling`, `stopPolling`.
+Modifiers: `.lazy` (no auto-load), `.optimistic` (rollback on error),
+`.poll.5000`, `.key.uuid`.
 
-| Modifier | Effect |
-|----------|--------|
-| `.lazy` | Don't auto-load on init (call `$name.load()` manually) |
-| `.optimistic` | Update UI before server confirms (rollback on error) |
-| `.poll.5000` | Auto-refresh every 5000ms (default 30000ms) |
-| `.key.uuid` | Use `uuid` as the ID key instead of `id` |
+The boundary rule: data fetching is application code. Recipe controllers never
+call `fetch`, and the `no-fetch` audit rule holds them to it. The imperative
+`apiSource()` factory (`ui/core/api-source.js`), the playground server on port
+5555 and the full comparison are in
+[`docs/data-driven-rendering.md`](docs/data-driven-rendering.md).
 
-Example with modifiers: `l-source:tasks.optimistic.poll.10000="/api/tasks"`
+---
 
-#### Injected Into Scope
+## The Manifest System
 
-| Name | Type | Description |
-|------|------|-------------|
-| `{name}` | `Array` | The data array |
-| `{name}Loading` | `boolean` | True during fetch |
-| `{name}Error` | `string\|null` | Error message |
-| `${name}` | `object` | CRUD controller |
+Every component ships a `.manifest.json`: its anatomy, slots, variants, states,
+ARIA requirements, tokens used, a template, safe and unsafe transforms, and
+test names. Every theme ships a `.theme.json`. The schema is
+[`manifest.schema.json`](manifest.schema.json) (schema 1.1, additive over 1.0).
 
-Controller methods: `load()`, `create(payload)`, `update(id, payload)`, `remove(id)`, `refresh()`, `startPolling(ms?)`, `stopPolling()`
-
-### `apiSource()` Factory (Legacy)
-
-Faqir also ships with `apiSource()` — a thin data service layer that connects `l-data` scopes to REST endpoints. It's application-level code (not a Faqir controller), so it lives outside the `no-fetch` audit boundary.
-
-### Include
-
-```html
-<script src="ui/core/api-source.js"></script>
-<script src="ui/core/faqir-core.js" defer></script>
+```json
+{ "name": "dialog", "kind": "recipe",
+  "slots": { "panel": { "selector": "[data-part='panel']", "required": true } },
+  "states": { "open": { "attr": "data-state=\"open\"" } },
+  "a11y": { "role": "dialog", "focus_trap": true, "escape_closes": true },
+  "safe_transforms": ["Change title text"], "unsafe_transforms": ["Remove focus trap"] }
 ```
 
-### The `apiSource()` Factory
+Schema 1.1 adds five optional theme-manifest fields: `seed` (the generator
+input), `axes` (derived from the CSS, never hand-written), `fonts`,
+`distinctiveness` and `visual_matrix`. Manifests drive **audit**, **repair**,
+**context**, **explain**, **trace**, **create**, the docs site, the skill and
+the framework bindings.
 
-```js
-apiSource(endpoint, options?)
-```
+---
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `idKey` | `"id"` | Primary key field name |
-| `pollInterval` | `0` | Auto-refresh interval in ms (0 = off) |
-| `optimistic` | `true` | Update UI before server confirms |
+## Audit, Repair and Conform
 
-Returns an object meant to be spread into `l-data`:
-
-| Property | Type | Description |
-|----------|------|-------------|
-| `items` | `Array` | Fetched data |
-| `loading` | `boolean` | True during initial fetch |
-| `submitting` | `boolean` | True during a mutation |
-| `error` | `string\|null` | Error message or null |
-| `load()` | `async` | GET — fetch all items |
-| `create(payload)` | `async` | POST — create new item |
-| `update(id, payload)` | `async` | PATCH — update item by id |
-| `remove(id)` | `async` | DELETE — remove item by id |
-| `startPolling(ms?)` | — | Start auto-refresh |
-| `stopPolling()` | — | Stop auto-refresh |
-| `refresh()` | `async` | Alias for `load()` |
-
-### Usage
-
-Spread `apiSource()` into any `l-data` scope and call `load()` on init:
-
-```html
-<div l-data="{
-       ...apiSource('/api/tasks', { idKey: 'id', optimistic: true }),
-       newTitle: ''
-     }"
-     l-init="load()">
-
-  <!-- Loading state -->
-  <template l-if="loading">
-    <div data-ui="spinner" data-size="sm"></div>
-  </template>
-
-  <!-- Error state -->
-  <template l-if="error">
-    <span data-ui="text" data-variant="destructive" l-text="error"></span>
-    <button data-ui="button" data-size="sm" @click="load()">Retry</button>
-  </template>
-
-  <!-- Data-driven list -->
-  <template l-if="!loading && !error">
-    <template l-for="task in items">
-      <div data-ui="card" data-size="sm">
-        <div data-part="body">
-          <span l-text="task.title"></span>
-          <button data-ui="button" data-variant="ghost" data-size="sm"
-                  @click="remove(task.id)">Delete</button>
-        </div>
-      </div>
-    </template>
-  </template>
-
-  <!-- Create -->
-  <form @submit.prevent="create({ title: newTitle }).then(() => newTitle = '')">
-    <input data-ui="input" l-model="newTitle" placeholder="New task...">
-    <button data-ui="button" data-variant="primary">Add</button>
-  </form>
-</div>
-```
-
-### Optimistic Updates
-
-When `optimistic: true` (default), the UI updates immediately before the server responds. If the server request fails, the change is rolled back automatically. This makes CRUD operations feel instant.
-
-### Polling
-
-```html
-<div l-data="{ ...apiSource('/api/notifications', { pollInterval: 15000 }) }"
-     l-init="load(); startPolling()">
-  <template l-for="notif in items">
-    <span l-text="notif.message"></span>
-  </template>
-</div>
-```
-
-### Multiple Sources
-
-Each `apiSource()` call is independent — different endpoints, different state:
-
-```html
-<script>
-  const menuSource  = apiSource('/api/menus');
-  const userSource  = apiSource('/api/users', { optimistic: false });
-</script>
-
-<div l-data="{ ...menuSource }" l-init="load()">
-  <template l-for="menu in items">
-    <span l-text="menu.name"></span>
-  </template>
-</div>
-
-<div l-data="{ ...userSource }" l-init="load()">
-  <template l-for="user in items">
-    <span l-text="user.email"></span>
-  </template>
-</div>
-```
-
-### Boundary Rules
-
-- `apiSource()` is **application code** — lives in a `<script>` tag or a shared `.js` file
-- Faqir **recipe controllers** never call `fetch` — the `no-fetch` audit rule still applies to them
-- The `l-data` / `l-init` / `l-for` directives bridge data to DOM
-- Error and loading states use standard Faqir components (spinner, card, empty-state)
-
-### Dev Server
-
-A Bun-based dev server is included for testing data-driven pages:
+The audit validates HTML against manifests: structure, accessibility, vocabulary
+and anti-patterns. It needs no project, no browser and no filesystem.
 
 ```bash
-bun playground/server.js
-# Serves on http://localhost:5555
-# API: GET/POST /api/tasks, GET/PATCH/DELETE /api/tasks/:id
-# Static: serves playground/ and registry/ files
+faqir audit                       # every HTML file in the project
+faqir audit --file index.html     # one file
+faqir audit --skip-rules unknown-component,no-class-attribute
+faqir repair                      # apply deterministic fixes, then re-audit
+faqir conform                     # canonical attribute order, machine comments
+
+echo '<button data-ui="button" data-variant="neon">x</button>' | faqir audit --stdin --json
 ```
 
-See `playground/task-manager.html` for a full CRUD example using `apiSource()`.
+Every command accepts `--json`; stdout is then a single JSON document even on
+error. The audit payload is versioned by `audit_schema_version` and each finding
+carries `rule_id`, `severity` (`critical` · `error` · `warning` · `info`),
+`file`, `line`, `message` and `fixable`. Findings in framework-installed files
+are reported separately from authored ones, and only authored errors gate the
+exit code.
+
+### Audit rules
+
+`faqir audit --rules` prints the live registry, which is the source of truth
+(35 rules today). The ids below are the ones `--skip-rules` accepts.
+
+| Rule | Severity | Scope | What it checks |
+|------|----------|-------|----------------|
+| `required-slot` | critical | markup vs manifest | Required slot is missing from component |
+| `required-aria` | critical | markup vs manifest | Required ARIA attribute is missing |
+| `focus-trap` | critical | markup vs manifest | Component with `focus_trap` requires its controller |
+| `valid-variant` | error | markup vs manifest | `data-variant` value not defined in manifest |
+| `valid-state` | error | markup vs manifest | `data-state` value not defined in manifest |
+| `valid-size` | error | markup vs manifest | `data-size` value not defined in manifest |
+| `icon-name` | error | markup vs manifest | `data-icon` must be a known icon name |
+| `controller-loaded` | error | markup vs manifest | Recipe controller is not referenced |
+| `orphan-part` | warning | markup vs manifest | `data-part` value is not a slot in the manifest |
+| `aria-describedby` | warning | markup vs manifest | Description slot exists but panel lacks `aria-describedby` |
+| `close-label` | warning | markup vs manifest | Close button has no accessible name |
+| `no-class-attribute` | warning | markup vs manifest | Element uses a `class` attribute |
+| `token-aware-style` | info | markup vs manifest | Inline style uses hardcoded values instead of tokens |
+| `duplicate-id` | error | HTML document | Every id must be unique within a document |
+| `heading-order` | warning | HTML document | Heading levels must not skip when going deeper |
+| `landmark` | warning | HTML document | A page needs `main`; dialogs not inside it; named navs |
+| `field-wiring` | error | HTML document | `field-group` ARIA contract: `for`, `aria-describedby`, `aria-invalid` |
+| `unknown-component` | warning | data-ui vs registry | A `data-ui` value must name something Faqir defines |
+| `attribute-vocabulary` | error | vocabulary | A declared attribute carries a value from its set; tier suffix only where responsive |
+| `unknown-attribute` | warning | vocabulary | A `data-*` near-miss of a declared attribute, or one owned by another component |
+| `directive-name` | error | vocabulary | An `l-*` attribute names a real directive with legal argument and modifiers |
+| `part-element` | warning | vocabulary | A slot with a `tag_hint` expects that element |
+| `no-important` | error | component CSS | No `!important` |
+| `no-class-selector` | error | component CSS | No class selectors |
+| `no-id-selector` | error | component CSS | No ID selectors |
+| `no-hardcoded-values` | error | component CSS | Colours via `var(--token)`, never literals |
+| `logical-properties` | warning | component CSS | Prefer logical properties (`margin-inline-start`) |
+| `no-external-import` | error | recipe controller JS | Import only from `../../core/` or relative paths |
+| `no-fetch` | error | recipe controller JS | No fetch/XHR/router in controllers |
+| `undeclared-attribute` | error | CSS vs manifest | Every `data-*` the CSS selects on is declared in the manifest |
+| `breakpoint-canon` | warning | CSS preludes | A width prelude is exactly one canon `min-width` floor |
+| `trigger-contract` | error | markup vs stylesheet | Every `[data-part="trigger"]` is styled by something |
+| `single-fixed-region` | error | markup vs stylesheet | One visible fixed region of a kind per viewport anchor |
+| `contrast-tokens` | error | theme tokens | Every declared foreground/background pair clears WCAG AA |
+| `surface-elevation` | error | theme tokens | The bg → surface-1 → surface-2 ramp keeps 0.03 OKLab ΔE |
+
+**Repair** runs the audit, applies deterministic fixes (missing ARIA, controller
+scripts, close labels, duplicate ids, field wiring, logical properties) and
+re-audits. **Conform** reorders attributes to `data-ui`, `data-part`,
+`data-state`, `data-variant`, `data-size`, ARIA, then others, touching only
+elements that already carry a protocol attribute and preserving their quoting.
 
 ---
 
 ## CLI Reference
 
-The CLI is organized into five categories. Run `faqir help` for the full list or `faqir <command> --help` for options.
+Twenty-four commands in five categories, one table in
+[`src/command-registry.ts`](src/command-registry.ts) that renders both
+`faqir help` and the skill's CLI reference. Run `faqir <command> --help` for
+options. Every command accepts `--json`.
 
 ### Project Setup
 
 ```bash
-faqir init                        # Initialize new project (creates ui/, config, bundle)
-faqir init --theme midnight       # Initialize with a specific theme
-faqir init --tokens-split         # Keep token files separate (not merged)
-faqir init --no-core              # Skip JS modules (static CSS-only projects)
-faqir init --dir ./styles         # Custom output directory
-
-faqir doctor                      # Health check (config, files, manifests)
+faqir init [--theme <name>] [--dir <path>] [--tokens-split] [--no-core]
+faqir doctor [--json]                  # config, files, manifests, font hashes
 ```
 
-### Component Management
+### Components
 
 ```bash
-faqir add button card dialog      # Add components (auto-resolves dependencies)
-faqir add --all                   # Add every component
-faqir add --layer primitives      # Add all primitives
-faqir add --dry-run               # Preview without writing
-
-faqir remove dialog toast         # Remove components (checks dependencies)
-faqir remove button --force       # Remove even if others depend on it
-faqir remove card --dry-run       # Preview removal
-
-faqir list                        # Show installed and available components (incl. aliases)
-
-faqir search alert                # Find components by name, alias, or description
-faqir add alert                   # Aliases resolve to their canonical component (callout)
-
-faqir create my-widget --kind primitive    # Scaffold a new custom component
-faqir create data-grid --kind recipe       # Scaffold with JS controller
-faqir create pricing-block --kind pattern  # Scaffold a composition
-faqir create status --kind primitive --category layout
-
-faqir inspect button              # Show manifest details
-faqir inspect dialog --json       # Raw JSON output
-
-faqir diff button                 # Your copy against its pristine baseline
-faqir upgrade                     # Three-way merge every component up to the registry
-faqir upgrade table --dry-run     # Preview the merge and read the changelog first
+faqir add <component...> [--all] [--layer primitives] [--dry-run]
+faqir add icons --only check,x,chevron-down    # trim the icon sheet; re-runs merge
+faqir add @scope/name --registry <url>          # remote registry, SHA-256 verified
+faqir remove <component...> [--force] [--dry-run]
+faqir upgrade [component...] [--dry-run]        # three-way merge to the registry's latest
+faqir list                                      # installed and available, with aliases
+faqir search <query>
+faqir create <name> --kind primitive|recipe|pattern [--category <name>]
+faqir inspect <component> [--json]
 ```
-
-Coming from a v0.x project? [docs/migration-1.0.md](docs/migration-1.0.md) is the
-whole path: the rename the framework went through, the seven steps that carry a
-v0.2.4 project to 1.0, and every breaking component change shipped since.
 
 ### Development
 
 ```bash
-faqir dev                         # Start dev server (default: port 3000)
-faqir dev --port 8080             # Custom port
-faqir dev --open                  # Open browser automatically
-faqir dev --bundle                # Auto-rebuild CSS bundle on changes
-faqir dev --no-overlay            # Skip the injected inspector overlay
-
-faqir bundle                      # Generate/regenerate CSS bundle
-faqir bundle --minify             # Strip comments and whitespace
-faqir bundle --watch              # Watch and rebuild on changes
-faqir bundle --output dist/s.css  # Custom output path
-faqir bundle --dry-run            # Show what would be bundled
-
-faqir theme set midnight          # Switch active theme
-faqir theme create my-brand       # Scaffold custom theme
-faqir theme generate my-brand --accent "#168c5b" --document
-faqir theme generate my-brand --seed my-brand.seed.json --out registry/themes
-faqir theme list                  # Show available themes
-
-faqir fonts list                  # The curated OFL catalog
-faqir fonts add fraunces --role heading    # Download, verify, self-host
-faqir fonts add inter --role body --role ui
-faqir fonts remove fraunces       # Remove the family and its files
-
-faqir variant add button visual=accent     # Add variant value
-faqir variant remove button visual=accent  # Remove variant value
-
-faqir scaffold landing-page       # Generate landing page HTML
-faqir scaffold admin-dashboard    # Generate dashboard layout
-faqir scaffold internal-tool      # Generate settings/forms page
-faqir scaffold invoice            # Generate a print-ready invoice
-faqir scaffold report             # Generate a print-ready business report
+faqir theme set|list|create|generate|bundle <name>
+faqir theme generate <name> --accent <color> [--<axis> <value>...] [--seed <file>] [--out <dir>] [--document] [--legacy-blocks] [--allow-similar] [--json]
+faqir theme bundle <name> --scope[=<selector>] [--out <dir>] [--json]
+faqir fonts list|add|remove <family> [--role heading|body|ui|mono]
+faqir variant add|remove <component> <group>=<value>
+faqir scaffold landing-page|admin-dashboard|internal-tool|invoice|report [--output <path>] [--theme <name>] [--no-add]
+faqir bundle [--minify] [--watch] [--js] [--output <path>] [--dry-run]
+faqir dev [--port <n>] [--dir <path>] [--host <addr>] [--open] [--bundle] [--no-overlay]   # default port 3000
+faqir bindings vue|react [--out <dir>] [--check]  # generate framework packages from manifests
 ```
 
-### Quality and Validation
+### Quality
 
 ```bash
-faqir audit                       # Validate all HTML against manifests
-faqir audit --file index.html     # Audit specific file
-faqir audit --stdin               # Audit HTML piped on stdin (no project)
-faqir audit --json                # JSON output for tooling (any command accepts --json)
-faqir audit --fix                 # Alias for repair
-
-faqir repair                      # Auto-fix audit issues
-
-faqir conform                     # Normalize attribute order, add machine comments
-faqir conform --dry-run           # Preview changes
-faqir conform --include "src/**"  # Restrict the project-wide HTML scan
-faqir conform --exclude "vendor/**"  # Skip more than the built-in exclusions
-
-faqir trace dialog                # Show dependency graph, file tree, token usage
-faqir trace dialog --json         # Machine-readable output
-
-faqir rules lint signup.rules.json   # Lint a form-rules definition
-faqir rules lint --stdin             # …read from stdin instead
-faqir rules lint f.json --locales en,ro  # These translations must be complete
+faqir audit [--file <path>] [--stdin] [--json] [--rules] [--skip-rules <ids>] [--strict] [--fix]
+faqir repair
+faqir conform [--dry-run] [--include <glob>] [--exclude <glob>]
+faqir diff [component...]                       # your copy against its pristine baseline
+faqir trace <component> [--json]                # dependency graph, file tree, token usage
+faqir rules lint <def.json> [--stdin] [--locales <a,b>] [--json]
 ```
 
 ### AI / Agent
 
 ```bash
-faqir context                     # Generate .faqir/context.json
-faqir context --format md         # Markdown format for LLM prompts
-faqir context --format cursorrules # Cursor IDE format
-faqir context --skill             # Also generate .faqir/SKILL.md
-faqir context --stdout            # Print to stdout
-
-faqir explain dialog              # Human/agent-readable component explanation
-faqir explain dialog --json       # Structured output
+faqir context [--format json|md|cursorrules|llms] [--skill] [--stdout]
+faqir explain <component> [--json]
 ```
+
+Coming from a v0.x project? [`docs/migration-1.0.md`](docs/migration-1.0.md) is
+the whole path.
+
+### The CSS bundle
+
+`faqir bundle` concatenates tokens, theme, fonts, base, primitives, recipes and
+patterns in that cascade order into `ui/faqir.bundle.css`, with a comment
+marking each file. It regenerates on `add`, `remove`, `theme set`, `fonts add`
+and `create`; set `bundle.auto` to `false` in `faqir.config.json` to stop that.
 
 ---
 
-## CSS Bundle
-
-The CSS bundle solves the multi-file problem. Without it, a page using all components would need 40-50+ `<link>` tags. The bundle concatenates everything into one file with correct cascade order.
-
-### How It Works
-
-`faqir bundle` reads your `faqir.config.json`, finds all installed components, and concatenates their CSS in this order:
-
-1. **Tokens** — design token custom properties
-2. **Theme** — active theme overrides
-3. **Base** — reset.css, prose.css, rhythm.css, motion-presets.css
-4. **Primitives** — installed primitive CSS (alphabetical)
-5. **Recipes** — installed recipe CSS (alphabetical)
-6. **Patterns** — installed pattern CSS (alphabetical)
-
-Each section is separated by a `/* === primitives/button.css === */` comment for debuggability.
-
-### Auto-Bundling
-
-The bundle regenerates automatically when you:
-- `faqir add` — new components are included
-- `faqir remove` — removed components are excluded
-- `faqir theme set` — new theme CSS is swapped in
-- `faqir create` — custom component CSS is included
-- `faqir init` — initial bundle created on project setup
-
-### Configuration
-
-After first bundle generation, `faqir.config.json` gains a `bundle` section:
-
-```json
-{
-  "bundle": {
-    "output": "./ui/faqir.bundle.css",
-    "auto": true,
-    "minify": false
-  }
-}
-```
-
-Set `auto: false` to disable auto-regeneration on add/remove/theme changes.
-
-### JavaScript Bundle and Official Plugins
-
-`faqir bundle --js` writes `ui/faqir.bundle.js` with the assembled core first,
-followed by every official plugin in deterministic filename order. Use it when
-you prefer one classic script:
-
-```html
-<script src="ui/faqir.bundle.js"></script>
-```
-
-Plugins can also be loaded individually after the core script from
-`ui/core/plugins/`. Each self-registers, depends on nothing, and adds directives
-and magics to the same expression language:
-
-| Plugin | Provides | What it does |
-|---|---|---|
-| `faqir-collapse` | `l-collapse` | Height auto-animation for a boolean expression; honours `prefers-reduced-motion` |
-| `faqir-intersect` | `l-intersect` | Enter, `.leave` and `.once` IntersectionObserver hooks |
-| `faqir-mask` | `l-mask` | Caret-safe input masking; `l-model` still receives the raw characters |
-| `faqir-persist` | `l-persist`, `$persist()` | Namespaced, JSON-serialized reactive state in `localStorage` |
-| `faqir-rules` | `l-rules`, `$rules` | A form's conditional logic, from one JSON definition — see [Validation](#validation) |
-| `faqir-validate` | `l-validate` | Declarative + programmatic form validation — see [Validation](#validation) |
-
-```html
-<script src="ui/core/faqir-core.js"></script>
-<script src="ui/core/plugins/faqir-persist.js"></script>
-<script src="ui/core/plugins/faqir-intersect.js"></script>
-
-<div l-data="{ count: 0 }" l-persist="count">…</div>
-<section l-intersect="visible = true" l-intersect.leave="visible = false">…</section>
-<div l-intersect.once="loadMore()">…</div>
-```
-
-One pairing to know: `faqir-rules` registers its cross-field and remote checks
-through `Faqir.validate.register`, so a definition carrying `validate` rules
-needs `faqir-validate` on the page too. It is a presence requirement, not a
-script order — both plugins install before the engine boots — and a page that
-loads one without the other is told so rather than quietly skipping the checks.
-
----
-
-## Audit and Repair
-
-The audit system validates your HTML against component manifests. It catches structural errors, missing accessibility attributes, invalid variants, and anti-patterns.
-
-```bash
-faqir audit              # Run all checks
-faqir repair             # Auto-fix what can be fixed
-
-# Audit HTML piped on stdin against the registry — no project required:
-echo '<button data-ui="button" data-variant="neon">x</button>' \
-  | faqir audit --stdin --json
-```
-
-### JSON Output
-
-Every CLI command accepts `--json` and, in that mode, stdout is guaranteed to be
-a single machine-readable JSON document — including on error (a failing command
-still emits parseable JSON and a non-zero exit code). Commands with a stable,
-documented schema (`audit`, `diff`, `upgrade`, `inspect`, `explain`, `trace`,
-`context`) emit that schema directly; every other command emits a generic
-envelope carrying its captured messages, the resolved exit code, and any error.
-
-The `faqir audit --json` (and `--stdin --json`) payload is versioned via
-`audit_schema_version` — the stable contract the MCP audit tools and the 1.0
-freeze depend on:
-
-```jsonc
-{
-  "audit_schema_version": 1,       // bumped only on a breaking shape change
-  "passed": false,                 // no critical/error findings
-  "files_scanned": 1,
-  "components_found": 1,
-  "counts": { "critical": 0, "error": 1, "warning": 0, "info": 0 },
-  "results": [
-    {
-      "rule_id": "valid-variant",
-      "severity": "error",         // critical | error | warning | info
-      "component_name": "button",
-      "file": "<stdin>",           // "<stdin>" for --stdin, else the scanned path
-      "line": 1,
-      "column": 9,                 // present only when a rule pins an exact column
-      "message": "Invalid variant \"neon\" on [data-ui=\"button\"]. …",
-      "fixable": false             // true when `faqir repair` can auto-fix it
-    }
-  ]
-}
-```
-
-### Audit Rules
-
-Thirty-one rules across nine scopes. `faqir audit --rules` prints this list from
-the live rule registry — that command is the source of truth, and the IDs below
-are the ones `--skip-rules` accepts.
-
-**Scope: component markup vs manifest**
-
-| Rule | Severity | What it checks |
-|------|----------|----------------|
-| `required-slot` | critical | Required slot is missing from component |
-| `required-aria` | critical | Required ARIA attribute is missing |
-| `focus-trap` | critical | Component with focus_trap requires its JS controller to be loaded |
-| `valid-variant` | error | Invalid data-variant value not defined in manifest |
-| `valid-state` | error | Invalid data-state value not defined in manifest |
-| `valid-size` | error | Invalid data-size value not defined in manifest |
-| `icon-name` | error | data-icon value must be a known icon name from the manifest's icon set |
-| `controller-loaded` | error | Recipe component JS controller is not referenced |
-| `orphan-part` | warning | data-part value is not a recognized slot name in the manifest |
-| `aria-describedby` | warning | Description slot exists but aria-describedby is missing on panel |
-| `close-label` | warning | Close button has no accessible name |
-| `no-class-attribute` | warning | Element uses class attribute — Faqir components use data-ui, data-variant, data-state instead |
-| `token-aware-style` | info | Inline style uses hardcoded values instead of design tokens |
-
-**Scope: HTML document**
-
-| Rule | Severity | What it checks |
-|------|----------|----------------|
-| `duplicate-id` | error | Every id must be unique within a document — duplicates break ARIA references… |
-| `heading-order` | warning | Heading levels must not skip when going deeper (h2 → h4 is a skip) — jumping levels breaks the document… |
-| `landmark` | warning | Landmark hygiene: full pages must have a main landmark; dialogs must not be nested inside <main>; and when… |
-| `field-wiring` | error | field-group ARIA contract (§7.1): the control's aria-describedby must reference the existing… |
-
-**Scope: data-ui values vs every component the registry defines**
-
-| Rule | Severity | What it checks |
-|------|----------|----------------|
-| `unknown-component` | warning | A data-ui value must name something Faqir defines — a component in the registry (installed or not), one of… |
-
-**Scope: component CSS**
-
-| Rule | Severity | What it checks |
-|------|----------|----------------|
-| `no-important` | error | Component CSS must not use !important |
-| `no-class-selector` | error | Component CSS must not use class selectors — use data-ui/data-part/data-variant/data-state |
-| `no-id-selector` | error | Component CSS must not use ID selectors |
-| `no-hardcoded-values` | error | Component CSS must reference tokens via var(--token) instead of hardcoded color values |
-| `logical-properties` | warning | Component CSS should use logical properties (margin-inline-start, inset-inline-end,… |
-
-**Scope: recipe controller JS (registry/recipes/<name>/<name>.js)**
-
-| Rule | Severity | What it checks |
-|------|----------|----------------|
-| `no-external-import` | error | Recipe controllers may only import from ../../core/ or relative paths — no external/bare package specifiers |
-| `no-fetch` | error | Recipe component controllers must not fetch data or manage routing (fetch/XHR/axios/history/router) |
-
-**Scope: component CSS vs its manifest**
-
-| Rule | Severity | What it checks |
-|------|----------|----------------|
-| `undeclared-attribute` | error | Every data-* attribute a component's CSS selects on must be declared in its manifest as a variant attr, a… |
-
-**Scope: component CSS (@media / @container preludes)**
-
-| Rule | Severity | What it checks |
-|------|----------|----------------|
-| `breakpoint-canon` | warning | A width prelude may only be one canon min-width floor — sm 40rem · md 48rem · lg 64rem · xl 80rem |
-
-**Scope: component markup vs its own stylesheet**
-
-| Rule | Severity | What it checks |
-|------|----------|----------------|
-| `trigger-contract` | error | Every [data-part="trigger"] must be styled by something: either it carries a data-ui (delegating its look… |
-| `single-fixed-region` | error | A component may expose only one visible fixed region of the same kind at a resolved viewport anchor |
-
-**Scope: theme token CSS (the active theme + base palette/semantic tokens)**
-
-| Rule | Severity | What it checks |
-|------|----------|----------------|
-| `contrast-tokens` | error | Every declared foreground/background token pair (body text on surfaces, and each semantic color on its… |
-| `surface-elevation` | error | The bg → surface-1 → surface-2 elevation ramp, including each surface's border, must keep an adjacent… |
-
-Skip a rule by ID when a page deliberately steps outside the contract — for
-example a page that mixes Faqir with another framework's `data-ui` values:
-
-```bash
-faqir audit --skip-rules unknown-component
-faqir audit --skip-rules no-class-attribute,token-aware-style
-```
-
-### Repair
-
-`faqir repair` runs the audit, identifies auto-fixable issues, applies deterministic fixes, then re-audits to verify. Fixable issues include missing ARIA attributes, incorrect attribute order, and missing required slots with obvious defaults.
-
-### Conform
-
-`faqir conform` normalizes markup without fixing semantic issues:
-- Reorders attributes to canonical order: `data-ui`, `data-part`, `data-state`, `data-variant`, `data-size`, ARIA, then others
-- Adds machine comments at the top of component CSS files
-- Ensures consistent formatting across all HTML files
-
-It rewrites only elements that already carry a Faqir protocol attribute, and it
-rewrites them **as authored**: the quote character on every attribute is
-preserved, so `l-data='{ "msg": "hi" }'` and `title='He said "no"'` survive
-unchanged, and content inside `<script>`, `<style>`, `<textarea>` and `<title>`
-is never treated as markup.
-
-The project-wide scan skips `node_modules`, `.git`, `.faqir`, `dist`, `build`,
-`vendor`, `coverage`, `.next` and `.orig`/`.bak`/`.rej` backups. `--exclude <glob>` adds to that list and `--include <glob>` narrows the
-scan to matching paths; both are repeatable and accept comma-separated lists.
-Files installed under `output_dir` are always processed.
-
----
-
-## Scaffolding and Code Generation
-
-### Page Scaffolds
-
-Generate complete, working HTML pages with all required CSS and components:
-
-```bash
-faqir scaffold landing-page       # Hero + features + CTA sections
-faqir scaffold admin-dashboard    # Sidebar + header + stats + data table
-faqir scaffold internal-tool      # Tab-based settings with forms
-faqir scaffold invoice            # Invoice, totals, payment QR, signatures
-faqir scaffold report             # Summary, metrics, details, and imagery
-```
-
-Scaffolds auto-install any missing components and use the bundle when one exists (single `<link>` tag instead of per-component links).
-
-The `invoice` and `report` scaffolds default to the print-optimized `document`
-theme. Pass `--theme <name>` while scaffolding, or run `faqir theme set <name>`
-later, to apply another installed or registry theme. Their sample content is
-marked with `<!-- FAQIR_REPLACE: path.to.value -->` comments: replace the value
-immediately following each marker while preserving the `data-ui` and `data-part`
-attributes. Both templates include canonical `doc-header` and `doc-footer` parts
-for repeating print furniture and use only theme/component tokens, so switching
-themes does not require changing their markup.
-
-### Custom Components
-
-Create your own components that integrate with the full Faqir workflow:
-
-```bash
-faqir create sidebar --kind primitive
-```
-
-This generates a complete component directory:
-
-```
-ui/primitives/sidebar/
-├── sidebar.manifest.json    Valid manifest skeleton, with a resolvable $schema
-├── sidebar.css              CSS with [data-ui="sidebar"] selector
-└── sidebar.html             Reference markup
-```
-
-`--kind` takes `primitive`, `recipe` or `pattern`, which chooses the layer directory. For
-recipes (`--kind recipe`), a JavaScript controller stub is also generated with the
-`create{Name}` pattern.
-
-The manifest carries every field the schema requires plus a `$schema` pointing at the
-project root's `manifest.schema.json`, relative to the component's own directory — so an
-editor validates it as you type and it passes the same check the registry does.
-
-Custom components are immediately registered in `faqir.config.json`, included in the CSS bundle, and visible to `faqir audit`, `faqir context`, and all other CLI tools.
+## Packages
+
+Seven publishables live in this repository. The CLI is the root package; the
+rest are workspaces under `packages/`.
+
+| Package | What it is | README |
+|---------|-----------|--------|
+| `faqir-ui-cli` | The `faqir` CLI and the registry it installs from | this file |
+| `@faqir-ui/core` | Prebuilt runtime: minified engine, per-theme CSS bundles, SRI hashes, ESM entry with 19 named exports | [packages/core](packages/core/README.md) |
+| `@faqir-ui/rules` | Isomorphic, zero-dependency form rules: shape validation, formats, logic, the `faqir-rules` plugin | [packages/rules](packages/rules/README.md) |
+| `@faqir-ui/forms` | JSON Schema to audit-clean Faqir form markup, rules included | [packages/forms](packages/forms/README.md) |
+| `@faqir-ui/mcp` | Stdio MCP server exposing the registry, manifests, themes, audit and generation to any MCP host | [packages/mcp](packages/mcp/README.md) |
+| `@faqir-ui/react` | React bindings generated from manifests by `faqir bindings react` | [packages/react](packages/react/README.md) |
+| `@faqir-ui/vue` | Vue 3 bindings generated from manifests by `faqir bindings vue` | [packages/vue](packages/vue/README.md) |
 
 ---
 
 ## AI Agent Integration
 
-Faqir is designed as an **agent-native** framework. Every design decision optimizes for AI agents being able to reliably generate, inspect, and repair UI code.
+Every design decision optimizes for an agent being able to generate, inspect
+and repair UI reliably. The loop: read manifests, generate from their
+templates, `faqir audit`, `faqir repair`, re-audit, and respect
+`safe_transforms` and `unsafe_transforms`.
 
-### How Agents Use Faqir
+**Context.** `faqir context` aggregates every installed manifest, the protocol,
+the active theme's axes and seed, the nearest shipped themes and the audit
+constraints into `.faqir/context.json`; `--format md`, `cursorrules` or `llms`
+write the other shapes, and `--skill` writes `.faqir/SKILL.md`.
 
-1. **Read manifests** — JSON contracts describe every component's anatomy, slots, variants, states, and ARIA requirements
-2. **Generate markup** — Use `templates.html` from manifests as starting points
-3. **Audit results** — Run `faqir audit` to validate generated HTML
-4. **Auto-repair** — Run `faqir repair` to fix common mistakes
-5. **Understand constraints** — `safe_transforms` and `unsafe_transforms` tell agents what they can and cannot modify
+**Claude Code skill.** [`.claude/skills/faqir-creator/`](.claude/skills/faqir-creator/)
+is generated by `bun run gen:skill` and gated by `check:skill`. Its references:
 
-### Context Generation
+- `primitives.md`: all 42 primitives with full HTML anatomy
+- `recipes.md`: all 29 recipes with HTML and controller patterns
+- `patterns.md`: all 15 compositions
+- `tokens.md`, `manifest.md`, `directives.md`: tokens, schema, and every directive, modifier, magic and plugin
 
-```bash
-faqir context                    # Generate .faqir/context.json
-faqir context --format md        # Markdown for LLM system prompts
-faqir context --skill            # Generate Claude Code SKILL.md
-```
+**MCP server.** [`@faqir-ui/mcp`](packages/mcp/README.md) serves ten tools
+(`faqir_list_components`, `faqir_get_manifest`, `faqir_theme_info`, `faqir_theme_list`,
+`faqir_project_context`, `faqir_generate`, `faqir_scaffold_page`, `faqir_audit_html`,
+`faqir_repair_html`, `faqir_generate_theme`) and four resources (`faqir://protocol`,
+`faqir://tokens`, `faqir://manifests`, `faqir://manifest/{name}`), through the
+same audit, repair and generation functions the CLI uses.
 
-The context file aggregates all installed component manifests into a single JSON file that agents can read at the start of a session. It includes:
-
-- Framework version and theme
-- The five-attribute protocol
-- All component kinds, variants, slots, states, templates
-- Safe/unsafe transform rules
-- Linting constraints
-
-### Claude Code Integration
-
-Faqir ships with a [faqir-creator skill](.claude/skills/faqir-creator/) for Claude Code. When active, Claude can:
-
-- Generate pages using the correct attribute protocol
-- Read manifests to understand component contracts
-- Apply the CSS bundle pattern (single `<link>` tag)
-- Follow the strict rules (no classes, tokens only, ARIA compliance)
-- Use reactive directives (`l-data`, `l-model`, `l-for`, etc.)
-
-The skill references are in `.claude/skills/faqir-creator/references/`:
-- `primitives.md` — All 22 primitives with full HTML anatomy
-- `recipes.md` — All 15 recipes with HTML, JS controller patterns
-- `patterns.md` — All 6 composition patterns
-- `tokens.md` — Complete design token reference
-- `manifest.md` — Manifest JSON schema and examples
-- `directives.md` — Every directive, modifier and magic the engine declares, plus the plugin vocabulary
+**Scaffolds.** `faqir scaffold` composes five complete pages from registry
+patterns, auto-installing what they need; the print scaffolds mark sample
+content with `<!-- FAQIR_REPLACE: path -->` comments.
 
 ---
 
-## CSS Conventions
+## Night Shift
 
-Seven rules govern all component CSS in Faqir:
+Night Shift is the framework generating while nobody is watching, with a human
+deciding in the morning. A queue of briefs (`.faqir-dreams/queue.json`) is
+worked one dream at a time: the agent reads a brief, writes a seed, and
+`scripts/dream/theme.mjs` turns it into a theme branch that has to pass nine
+gates in order. A kept dream is a branch plus a scorecard and a light/dark
+screenshot pair, waiting for a merge; a discarded one leaves a ledger row saying
+why. Every dream is scored 1 to 5 on five criteria (`hierarchy`, `rhythm`,
+`contrast`, `restraint`, `fit`) against a versioned rubric.
 
-1. **Semantic CSS, not utility-first.** Button styling belongs in `button.css`, not scattered across utility classes.
-2. **Attribute selectors only.** `[data-ui="button"]`, never `.btn`.
-3. **Token references only.** `var(--color-primary)`, never `#4f46e5`.
-4. **State via `data-state`, never classes.** `[data-state="open"]`, never `.is-open`.
-5. **No `!important`.** Low specificity via single attribute selectors makes it unnecessary.
-6. **No IDs as CSS selectors.** IDs exist for ARIA relationships only (`aria-labelledby`, `aria-controls`).
-7. **Respect `prefers-reduced-motion`.** Every animation has a reduced-motion fallback.
-
-### Component CSS Header Convention
-
-```css
-/* @ui:component button */
-/* @ui:tokens color-primary, color-primary-hover, radius-md, space-4, duration-fast */
-
-[data-ui="button"] {
-  /* base styles */
-}
-
-[data-ui="button"][data-variant="primary"] {
-  /* variant override */
-}
-
-[data-ui="button"][data-state="loading"] {
-  /* state style */
-}
 ```
+.faqir-dreams/queue.json  →  /faqir-dream  →  scripts/dream/theme.mjs --brief <id>
+        branch dream/theme-<id>  →  nine gates  →  keep (branch + bundle) | discard (row)
+                    →  dreams.tsv (ledger)  →  DREAMS.md (weekly digest)  →  a human, in the morning
+```
+
+```bash
+/faqir-dream                            # the next pending brief, from Claude Code
+node scripts/dream/theme.mjs --dry-run  # what would happen, without doing any of it
+bun run dream:nightly                   # the scheduled runner
+bun run dream:digest                    # regenerate DREAMS.md from the ledger
+```
+
+How to run it, what stops it and what to do with what it leaves behind:
+[`docs/night-shift.md`](docs/night-shift.md). The rubric:
+[`docs/dream-rubric.md`](docs/dream-rubric.md). This week:
+[`DREAMS.md`](DREAMS.md).
 
 ---
 
@@ -2196,13 +1075,10 @@ Seven rules govern all component CSS in Faqir:
 Two engine behaviours are deliberate and worth knowing before you deploy:
 
 - **`l-*` expressions are compiled with `new Function`**, so a page that uses
-  them needs `script-src 'unsafe-eval'`. Without it the engine still loads and
-  mounts controllers — expressions just silently yield `undefined`, so `l-text`
-  writes empty strings and `@click` does nothing.
+  them needs `script-src 'unsafe-eval'`. Without it the engine still mounts
+  controllers; expressions silently yield `undefined`.
 - **`l-html` writes `innerHTML` unsanitized**, exactly like Alpine's `x-html`.
   Use `l-text` for anything you did not author.
-
-A policy that works:
 
 ```
 Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-eval';
@@ -2210,134 +1086,64 @@ Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-eval';
   base-uri 'self'; frame-ancestors 'self'
 ```
 
-`style-src 'unsafe-inline'` buys one thing only — the `<style>` element that
-makes `l-cloak` work. `l-show` and `l-bind:style` write through the CSSOM, which
-CSP does not govern.
-
 The threat model is *generated, trusted markup*: an `l-*` attribute value is
-JavaScript, so interpolating user input into one is remote code execution
-whether or not `l-html` is involved. Put untrusted values in the scope
-(`l-data`, `data-prop-*`, `l-source`) and render them with `l-text`.
-
-Primitives and patterns are markup and CSS only — a page that uses no `l-*`
-attributes needs no `'unsafe-eval'` at all.
-
-Full reference, including the CSP-restricted playbook and the supply-chain
-posture: [docs/security.md](docs/security.md).
+JavaScript, so interpolating user input into one is remote code execution. Put
+untrusted values in the scope and render them with `l-text`. A page with no
+`l-*` attributes needs no `'unsafe-eval'` at all. Full reference, including how
+to report a vulnerability: [docs/security.md](docs/security.md).
 
 ---
 
-## Project Structure
+## Documentation
 
-```
-faqir-ui/
-├── src/                      CLI source (TypeScript)
-│   ├── index.ts              Entry point — command router
-│   ├── manifest.ts           Manifest types and validation
-│   ├── commands/             CLI command implementations
-│   │   ├── init.ts           Project initialization
-│   │   ├── add.ts            Component installation
-│   │   ├── remove.ts         Component uninstallation
-│   │   ├── create.ts         Custom component scaffolding
-│   │   ├── bundle.ts         CSS bundle composition
-│   │   ├── dev.ts            Development server
-│   │   ├── list.ts           Component listing
-│   │   ├── inspect.ts        Manifest viewer
-│   │   ├── audit.ts          HTML validation
-│   │   ├── repair.ts         Auto-fix engine
-│   │   ├── doctor.ts         Health checker
-│   │   ├── context.ts        AI context generator
-│   │   ├── explain.ts        Component explainer
-│   │   ├── trace.ts          Dependency tracer
-│   │   ├── conform.ts        Markup normalizer
-│   │   ├── theme.ts          Theme manager
-│   │   ├── variant.ts        Variant editor
-│   │   └── scaffold.ts       Page generator
-│   ├── audit/                Audit subsystem
-│   │   ├── rules.ts          audit rule registry (`faqir audit --rules`)
-│   │   ├── checker.ts        DOM contract checker
-│   │   ├── reporter.ts       Formatted output
-│   │   └── repairer.ts       Auto-fix logic
-│   ├── parser/               Code parsers
-│   │   ├── html-parser.ts    Component instance extraction
-│   │   ├── css-parser.ts     Token and selector extraction
-│   │   └── js-parser.ts      Import and pattern detection
-│   ├── generator/            Code generators
-│   │   ├── context.ts        .faqir/context.json generator
-│   │   ├── manifest.ts       Manifest aggregator
-│   │   └── skill.ts          Claude Code skill generator
-│   └── utils/                Shared utilities
-│       ├── config.ts         faqir.config.json reader/writer
-│       ├── fs.ts             File system helpers
-│       ├── logger.ts         Colored terminal output
-│       ├── components.ts     Component lookup and registry helpers
-│       ├── codegen.ts        Shared code generators (faqir.js, context.json)
-│       └── bundler.ts        CSS bundle generator
-│
-├── registry/                 Component library (shipped with CLI)
-│   ├── tokens/               CSS token layers (incl. document.css, doc-aliases.css)
-│   ├── base/                 reset.css, prose.css, rhythm.css, motion-presets.css
-│   ├── core/                 faqir-core.js, api-source.js + utility modules
-│   ├── themes/               12 built-in themes
-│   ├── primitives/           CSS-only components
-│   ├── recipes/              29 CSS+JS interactive components
-│   └── patterns/             15 page-level compositions
-│
-├── tests/                    Bun test suite
-├── playground/               example pages + dev server (server.js, db.json)
-├── package.json
-├── tsconfig.json
-└── faqir.config.json          (generated per-project)
-```
+The docs site at **[faqir-ui.pages.dev](https://faqir-ui.pages.dev)** is a
+Faqir project and a live proof of the framework: plain HTML built once by
+`bun run build:docs` into `site/dist`, one page per component generated from
+its manifest, a theme gallery with axis filters, and no runtime build step.
+How it is built and deployed: [`docs/docs-site.md`](docs/docs-site.md).
+
+| Document | What it covers |
+|----------|----------------|
+| [`SPEC-1.0.md`](SPEC-1.0.md) | The frozen protocol, sanctioned modifiers, manifest schema and amendment process |
+| [`FAQIR-VISION.md`](FAQIR-VISION.md) | Where 1.x is going and why |
+| [`docs/layout.md`](docs/layout.md) | Layout primitives, rhythm, density and five page archetypes |
+| [`docs/data-driven-rendering.md`](docs/data-driven-rendering.md) | `l-source`, `apiSource()`, the playground server |
+| [`docs/devtools.md`](docs/devtools.md) | `Faqir.inspect`, the dev engine and the overlay |
+| [`docs/security.md`](docs/security.md) | CSP, threat model, supply chain, reporting |
+| [`docs/migration-1.0.md`](docs/migration-1.0.md) | Moving a v0.x project to 1.0 |
+| [`docs/remote-registry.md`](docs/remote-registry.md) | Installing components from a remote, hash-verified registry |
+| [`docs/pristine-store.md`](docs/pristine-store.md) | The baseline `diff` and `upgrade` merge against |
+| [`docs/docs-site.md`](docs/docs-site.md) | Building and deploying the documentation site |
+| [`docs/night-shift.md`](docs/night-shift.md) | Running the nightly theme generator |
+| [`docs/dream-rubric.md`](docs/dream-rubric.md) | The five-criteria taste rubric |
+| [`docs/release-checklist.md`](docs/release-checklist.md) | Cutting a release |
+| [`packages/*/README.md`](packages/) | Each publishable package |
 
 ---
 
-## Development
+## Contributing and Development
 
-### Prerequisites
-
-- [Bun](https://bun.sh) (runtime, package manager, test runner)
-
-### Setup
+Developing this repository needs Bun 1.3+ and Node 18+. The four commands that
+matter:
 
 ```bash
-git clone <repo-url>
-cd faqir-ui
 bun install
+bun run test          # the partitioned suite (scripts/test.mjs)
+bun run typecheck     # eight tsconfig projects plus the type fixture
+bun run smoke         # the packed CLI under plain node
 ```
 
-### Commands
-
-```bash
-bun test                         # Run the full suite
-bun run src/index.ts help        # CLI help
-bun run src/index.ts dev         # Start dev server for playground
-tsc --noEmit                     # Type check
-```
-
-### Adding a New Primitive
-
-1. Create `registry/primitives/{name}/` with `.html`, `.css`, `.manifest.json`
-2. Follow the manifest schema in `src/manifest.ts`
-3. Use attribute selectors and token references in CSS
-4. Add tests in `tests/`
-
-### Adding a New Recipe
-
-Same as primitive, plus:
-1. Add a `.js` controller with `export function create{Name}(root) { ... }`
-2. Follow the controller conventions (double-init guard, data-state only, destroy API)
-3. The controller is auto-registered in `faqir-core.js`
-
-### Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Runtime | Bun (TypeScript-first, ESM) |
-| Testing | Bun test + Happy-DOM |
-| Styling | Pure CSS with custom properties (oklch colors) |
-| Reactivity | Custom proxy-based engine (faqir-core.js, ~3000 lines) |
-| Dependencies | Zero at runtime. TypeScript + Happy-DOM for development |
+Generated artifacts are gated: `check:theme-docs`, `check:skill`,
+`check:manifest-api`, `check:bindings`, `check:docs` and the rest fail when a
+committed output is stale, and each has a matching `gen:` or `build:` script.
+Project structure, adding a primitive or recipe, CSS conventions (attribute
+selectors only, tokens only, no `!important`, no ID selectors, a
+`prefers-reduced-motion` fallback for every animation, `/* @ui:component <name> */`
+headers), manifest and theme authoring, and the build pipeline are in
+[`CONTRIBUTING.md`](CONTRIBUTING.md). Conventions for agents working in this
+repository are in [`AGENTS.md`](AGENTS.md). The stack is Bun, TypeScript and
+happy-dom for development; pure CSS with oklch custom properties and a
+proxy-based engine of about 3,000 lines at runtime; zero runtime dependencies.
 
 ---
 

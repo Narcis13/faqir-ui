@@ -24,7 +24,7 @@ registry copy with one extra component in it.
 | Path | Written by | What it is |
 |---|---|---|
 | `site/site.config.json` | you | Title, tagline, description, canonical URL, theme, footer. |
-| `site/content/home.html` | you | Hand-written homepage narrative; generated stats, patterns, and theme controls are inserted at markers. |
+| `site/content/home.html` | you | Hand-written homepage: hero and specimen, the 1.1 release story, the agent loop, the site map and quick start. The theme runway with its spec plate, the numbers row and the scaffold frames are inserted at markers. |
 | `site/content/responsive.html` | you | Hand-written responsive layout lab (published at `responsive/`). |
 | `site/content/engine.html` | you | Hand-written reactive-engine guide; the vocabulary tables are inserted at markers, read out of the engine itself. |
 | `site/content/playground.html` | you | Hand-written: the playground's sample markup. |
@@ -35,7 +35,9 @@ registry copy with one extra component in it.
 | `site/lib/faqir-audit.js` | generated | The audit engine, compiled for the browser. **Committed** — `bun run build:audit-browser`. |
 | `scripts/build-docs.mjs` | — | The writer: builds in memory, clears `site/dist`, writes. |
 | `scripts/build-audit-browser.mjs` | — | The bundler for `site/lib/faqir-audit.js`. |
-| `src/generator/docs.ts` | — | The generator. Pure, `node:fs` only, zero dependencies. |
+| `src/generator/docs.ts` | — | The generator: shell, navigation, home and the 1.0 pages. Pure, `node:fs` only, zero dependencies. |
+| `src/generator/docs-pages/*.ts` | — | The 1.1 sections, one module each (`audit`, `rules`, `tooling`, `night-shift`, `themes`), sharing `PageContext` from `context.ts` and the shell from `docs.ts`. |
+| `site/styles/pages/*.css` | you | One presentation sheet per 1.1 section, concatenated into `styles/faqir.css` after `docs.css`. Same rules: attribute selectors and tokens only. |
 | `site/dist/**` | generated | The static site. Git-ignored — rebuild, never commit. |
 
 Output shape:
@@ -53,6 +55,15 @@ layouts/index.html                signpost for the retired responsive-lab URL
 tokens/index.html                 token reference, grouped by token file
 playground/index.html             in-browser audit playground
 themes/index.html                 theme gallery + instant switcher
+themes/axes/index.html            the fourteen axes, value by value (1.1)
+themes/authoring/index.html       seeds, light-dark(), scopes, fonts, manifest fields (1.1)
+themes/<name>/index.html          one specimen sheet per registry theme (1.1)
+audit/index.html                  every audit rule, one anchor per id (1.1)
+rules/index.html                  rules & validation: @faqir-ui/rules, l-rules, lint, forms (1.1)
+rules/rules.schema.json           the rules definition schema, verbatim (1.1)
+cli/index.html                    the CLI reference, from the command registry (1.1)
+integrations/index.html           MCP, React/Vue bindings, CDN, the skill, packages (1.1)
+night-shift/index.html            the nightly theme loop: queue, rubric, ledger, digest (1.1)
 agents/index.html                 the machine surfaces, documented
 spec/<version>/index.html         the frozen protocol, rendered
 spec/<version>/spec.md            the same spec, verbatim markdown

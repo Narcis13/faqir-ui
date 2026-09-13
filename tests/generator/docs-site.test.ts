@@ -150,7 +150,12 @@ describe("docs site coverage", () => {
     // reactive engine, the signpost at the retired lab URL, protocol spec,
     // migration guide, spacing, density, tokens, playground, theme gallery,
     // agents, 404, and the scaffold gallery — plus one page per scaffold
-    expect(shellPages.length).toBe(components.length + 18 + SCAFFOLD_NAMES.length);
+    // …the 1.1 sections: audit rules, rules & validation, CLI reference,
+    // integrations, Night Shift, the fourteen axes, theme authoring (7) — plus
+    // one specimen page per theme (see src/generator/docs-pages/).
+    expect(shellPages.length).toBe(
+      components.length + 18 + 7 + SCAFFOLD_NAMES.length + themes.length,
+    );
     // one gallery frame per theme, and one live document per scaffold
     expect(framePages.length).toBe(themes.length + SCAFFOLD_NAMES.length);
     const assets = files.filter((f) => !f.path.endsWith(".html")).map((f) => f.path);
@@ -165,6 +170,8 @@ describe("docs site coverage", () => {
         "migration/migration-1.0.md",
         "registry-index.json",
         "robots.txt",
+        // The rules definition schema, verbatim beside its page (1.1B-07).
+        "rules/rules.schema.json",
         "scripts/copy-snippet.js",
         "scripts/faqir-audit.js",
         "scripts/faqir-core.js",

@@ -1,0 +1,281 @@
+/* ── Rules & validation (rules/index.html) ─────────────────────────────────
+ * Presentation for `src/generator/docs-pages/rules.ts`. Attribute selectors
+ * and design tokens only; every hook is `data-docs-rules-*`.
+ */
+
+[data-docs-rules-lede] {
+  font-size: var(--text-lg);
+  line-height: var(--leading-normal);
+  color: var(--color-fg-muted);
+  max-inline-size: var(--measure-prose);
+}
+
+/* ── On this page ─────────────────────────────────────────────────────────── */
+
+[data-docs-rules] [data-docs-toc] {
+  margin-block: var(--space-4) var(--space-8);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: color-mix(in oklch, var(--color-primary) 4%, var(--color-bg));
+}
+
+[data-docs-rules] [data-docs-toc] ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+}
+
+[data-docs-rules] [data-docs-toc] li {
+  margin: 0;
+}
+
+[data-docs-rules] [data-docs-toc] a {
+  font-size: var(--text-sm);
+  color: var(--color-fg);
+  text-decoration: none;
+  border-block-end: 1px solid transparent;
+  transition: border-color var(--duration-fast) var(--ease-default);
+}
+
+[data-docs-rules] [data-docs-toc] a:hover,
+[data-docs-rules] [data-docs-toc] a:focus-visible {
+  border-block-end-color: var(--color-primary);
+}
+
+/* ── Three realms diagram ─────────────────────────────────────────────────
+ * The definition node spans the row; a spine drops from it to a crossbar that
+ * each card draws its own segment of (`::after`), and each card hangs from
+ * that bar by its own drop (`::before`). Pure CSS: no script, no image, and
+ * the geometry is all in `--docs-rules-gap`, so nothing has to know a height.
+ */
+
+[data-docs-rules-realms] {
+  --docs-rules-line: color-mix(in oklch, var(--color-primary) 55%, var(--color-border));
+  --docs-rules-gap: var(--space-4);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--docs-rules-gap);
+  margin-block: var(--space-6) var(--space-8);
+}
+
+/* The definition node, centred over the row. */
+[data-docs-rules-source] {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  text-align: center;
+}
+
+/* The spine: from the node down through the grid gap to the crossbar. */
+[data-docs-rules-source]::after {
+  content: "";
+  display: block;
+  inline-size: 2px;
+  block-size: var(--docs-rules-gap);
+  margin-block-end: calc(-1 * var(--docs-rules-gap));
+  background: var(--docs-rules-line);
+}
+
+[data-docs-rules-realm] {
+  position: relative;
+  margin: var(--docs-rules-gap) 0 0;
+  border-block-start: 3px solid var(--docs-rules-accent, var(--color-border-strong));
+}
+
+/* Each card's own drop from the crossbar. */
+[data-docs-rules-realm]::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 50%;
+  inset-block-start: calc(-1 * var(--docs-rules-gap) - 3px);
+  inline-size: 2px;
+  block-size: var(--docs-rules-gap);
+  background: var(--docs-rules-line);
+  transform: translateX(-50%);
+}
+
+/* Each card's segment of the crossbar, reaching half a gap past its edges
+ * so neighbouring segments meet. The outer cards stop at their own centre. */
+[data-docs-rules-realm]::after {
+  content: "";
+  position: absolute;
+  inset-block-start: calc(-1 * var(--docs-rules-gap) - 3px);
+  inset-inline: calc(-1 * var(--docs-rules-gap) / 2);
+  block-size: 2px;
+  background: var(--docs-rules-line);
+}
+
+[data-docs-rules-realm="browser"]::after {
+  inset-inline-start: 50%;
+}
+
+[data-docs-rules-realm="cli"]::after {
+  inset-inline-end: 50%;
+}
+
+[data-docs-rules-realm] [data-part="title"] {
+  margin: 0;
+  font-size: var(--text-base);
+}
+
+[data-docs-rules-realm] [data-part="body"] ul {
+  margin: 0;
+  padding-inline-start: var(--space-4);
+  font-size: var(--text-sm);
+}
+
+[data-docs-rules-realm] [data-part="body"] li {
+  margin-block: var(--space-1);
+}
+
+[data-docs-rules-realm] [data-part="footer"] {
+  color: var(--color-fg-muted);
+}
+
+[data-docs-rules-realm="browser"] {
+  --docs-rules-accent: var(--color-primary);
+}
+
+[data-docs-rules-realm="server"] {
+  --docs-rules-accent: color-mix(in oklch, var(--color-primary) 60%, var(--color-fg));
+}
+
+[data-docs-rules-realm="cli"] {
+  --docs-rules-accent: color-mix(in oklch, var(--color-primary) 35%, var(--color-fg-muted));
+}
+
+/* Stacked: the cards chain down one spine; no crossbar. */
+@media (max-width: 48rem) {
+  [data-docs-rules-realms] {
+    grid-template-columns: 1fr;
+  }
+
+  [data-docs-rules-realm] {
+    margin-block-start: 0;
+  }
+
+  [data-docs-rules-realm]::before {
+    inset-block-start: calc(-1 * var(--docs-rules-gap) - 3px);
+  }
+
+  [data-docs-rules-realm]::after {
+    content: none;
+  }
+}
+
+/* ── Tables: operators, keyword matrix ────────────────────────────────────── */
+
+[data-docs-rules-operators] table,
+[data-docs-rules-matrix] table {
+  font-size: var(--text-sm);
+}
+
+[data-docs-rules-operators] td:first-child code,
+[data-docs-rules-matrix] td:first-child code {
+  font-weight: var(--weight-semibold);
+}
+
+[data-docs-rules-operators] td:last-child {
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
+[data-docs-rules-operators] th:last-child {
+  text-align: end;
+}
+
+[data-docs-rules-matrix] table {
+  table-layout: fixed;
+  inline-size: 100%;
+}
+
+[data-docs-rules-matrix] th:first-child {
+  inline-size: 8rem;
+}
+
+[data-docs-rules-matrix] th:last-child {
+  inline-size: 24%;
+}
+
+[data-docs-rules-matrix] td:first-child,
+[data-docs-rules-matrix] th {
+  white-space: nowrap;
+}
+
+[data-docs-rules-matrix] td {
+  overflow-wrap: anywhere;
+}
+
+[data-docs-rules-matrix] td:last-child {
+  font-size: var(--text-xs);
+  color: var(--color-fg-muted);
+}
+
+[data-docs-rules-yes] {
+  display: inline-block;
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-primary);
+  background: color-mix(in oklch, var(--color-primary) 10%, transparent);
+}
+
+[data-docs-rules-no] {
+  color: var(--color-fg-subtle);
+}
+
+/* ── Rendered output block ────────────────────────────────────────────────── */
+
+[data-docs-rules-output] pre {
+  max-block-size: 36rem;
+  overflow: auto;
+  border-inline-start: 3px solid var(--color-primary);
+}
+
+/* ── Packages strip ───────────────────────────────────────────────────────── */
+
+/* Specific enough to beat the prose link rule, which would underline the whole card. */
+[data-ui="prose"] a[data-docs-rules-package] {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+  transition:
+    border-color var(--duration-fast) var(--ease-default),
+    box-shadow var(--duration-fast) var(--ease-default);
+}
+
+[data-ui="prose"] a[data-docs-rules-package]:hover,
+[data-ui="prose"] a[data-docs-rules-package]:focus-visible {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+[data-docs-rules-package] [data-part="title"] {
+  margin: 0;
+  font-size: var(--text-base);
+}
+
+[data-docs-rules-package] [data-part="body"] p {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-fg-muted);
+}
+
+[data-docs-rules-package] [data-part="footer"] {
+  margin-block-start: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-docs-rules] [data-docs-toc] a,
+  [data-docs-rules-package] {
+    transition: none;
+  }
+}

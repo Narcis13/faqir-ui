@@ -10,7 +10,7 @@
 import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
-import pkg from "../package.json";
+import pkg from "../package.json" with { type: "json" };
 import {
   COMPONENT_KINDS,
   activeThemeName,

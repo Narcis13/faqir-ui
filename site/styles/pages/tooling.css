@@ -1,0 +1,189 @@
+/* ── Tooling section: CLI reference + Integrations ────────────────────────
+ * Attribute selectors and design tokens only. Hooks: data-docs-tooling-*,
+ * data-docs-cmd, data-docs-toc.
+ */
+
+[data-docs-tooling-lede] {
+  font-size: var(--text-lg);
+  color: var(--color-fg-muted);
+  max-inline-size: var(--measure-content);
+}
+
+/* On this page */
+[data-docs-tooling-toc] {
+  margin-block: var(--space-4) var(--space-8);
+  padding: var(--space-3) var(--space-4);
+  border-inline-start: 3px solid var(--color-primary);
+  background: color-mix(in oklch, var(--color-primary) 6%, transparent);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+
+[data-docs-tooling-toc] ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+}
+
+[data-docs-tooling-toc] li {
+  margin: 0;
+}
+
+/* Quick-start strip */
+[data-docs-tooling-quickstart] {
+  margin-block: var(--space-4) var(--space-6);
+}
+
+[data-docs-tooling-quickstart] [data-ui="card"] {
+  overflow: visible;
+}
+
+[data-docs-tooling-quickstart] [data-part="header"] {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+[data-docs-tooling-quickstart] [data-part="title"] {
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  margin: 0;
+}
+
+[data-docs-tooling-quickstart] pre {
+  margin-block: 0 var(--space-2);
+  font-size: var(--text-sm);
+}
+
+/* Category jump-nav */
+[data-docs-tooling-cmdnav] {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: var(--space-4);
+  margin-block: var(--space-6) var(--space-10);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-subtle);
+}
+
+[data-docs-tooling-cmdnav-group] > [data-ui="link"] {
+  font-weight: var(--weight-semibold);
+}
+
+[data-docs-tooling-cmdnav-group] > [data-ui="cluster"] {
+  margin-block-start: var(--space-2);
+}
+
+[data-docs-tooling-cmdnav-group] [data-ui="cluster"] > [data-ui="link"] {
+  padding: var(--space-0h) var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-bg);
+  text-decoration: none;
+  transition: border-color var(--duration-normal) var(--ease-default),
+    background-color var(--duration-normal) var(--ease-default);
+}
+
+[data-docs-tooling-cmdnav-group] [data-ui="cluster"] > [data-ui="link"]:hover {
+  border-color: var(--color-primary);
+  background: color-mix(in oklch, var(--color-primary) 8%, transparent);
+}
+
+/* Command cards */
+[data-docs-cmd] {
+  margin-block: var(--space-6) var(--space-8);
+  padding: var(--space-5) var(--space-6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg);
+  scroll-margin-block-start: calc(var(--docs-header-height) + var(--space-4));
+}
+
+[data-docs-cmd] > h3,
+[data-docs-cmd] > h4 {
+  margin-block-start: 0;
+}
+
+[data-docs-cmd] > h3 {
+  font-family: var(--font-mono);
+  font-size: var(--text-xl);
+}
+
+[data-docs-cmd] > p:first-of-type {
+  margin-block-start: 0;
+}
+
+/* The mono usage bar */
+[data-docs-tooling-usage] {
+  margin-block: var(--space-3) var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-inline-start: 3px solid var(--color-primary);
+  background: color-mix(in oklch, var(--color-primary) 7%, var(--color-bg-muted));
+  font-size: var(--text-sm);
+}
+
+[data-docs-tooling-subtable] {
+  margin-block: var(--space-3) var(--space-4);
+}
+
+[data-docs-tooling-caption] {
+  margin-block: 0 var(--space-1);
+}
+
+[data-docs-tooling-subtable] table {
+  margin-block: 0;
+  font-size: var(--text-sm);
+}
+
+[data-docs-tooling-subtable] td:first-child {
+  white-space: nowrap;
+}
+
+[data-docs-tooling-noflags] {
+  margin-block: var(--space-2);
+}
+
+[data-docs-tooling-notes] {
+  font-size: var(--text-sm);
+  color: var(--color-fg-muted);
+}
+
+/* MCP tool cards */
+[data-docs-tooling-tools] {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+}
+
+[data-docs-tooling-tool] {
+  margin-block: 0;
+}
+
+[data-docs-tooling-tool] > h4 {
+  font-size: var(--text-lg);
+}
+
+[data-docs-tooling-skill] {
+  columns: 2;
+  column-gap: var(--space-8);
+  font-size: var(--text-sm);
+}
+
+@media (max-width: 40rem) {
+  [data-docs-tooling-skill] {
+    columns: 1;
+  }
+
+  [data-docs-cmd] {
+    padding: var(--space-4);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-docs-tooling-cmdnav-group] [data-ui="cluster"] > [data-ui="link"] {
+    transition: none;
+  }
+}

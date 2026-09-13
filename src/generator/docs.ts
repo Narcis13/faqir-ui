@@ -143,7 +143,7 @@ import {
 } from "../theme/describe";
 // The playground's rule legend is derived from the engine's own rule lists, so it
 // cannot describe a rule the shipped browser bundle does not run.
-import { getHtmlRuleInventory } from "../audit/rules";
+import { getHtmlRuleInventory, getRuleInventory } from "../audit/rules";
 // The hosted llms.txt pair is the CLI's own `--format llms` generator pointed at
 // the whole registry instead of at one project (task 0.7-15).
 import { formatContextLlms, formatContextLlmsFull } from "./context";
@@ -163,6 +163,15 @@ import {
 import { loadPluginMetadata, type PluginMetadata } from "./plugins";
 import { buildRegistryContext } from "./registry-context";
 import { SCAFFOLDS, SCAFFOLD_NAMES, scaffoldBody, scaffoldCommand, type ScaffoldDef } from "../scaffolds";
+// The 1.1 sections. Each module renders one part of the site from its own
+// source of truth and receives the shared `PageContext`; they import the shell
+// and helpers from this file, so nothing from them may be used at top level here.
+import { renderAuditPages } from "./docs-pages/audit";
+import { renderRulesPages } from "./docs-pages/rules";
+import { renderToolingPages } from "./docs-pages/tooling";
+import { renderNightShiftPages } from "./docs-pages/night-shift";
+import { renderThemeSystemPages } from "./docs-pages/themes";
+import type { PageContext } from "./docs-pages/context";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 /** Repository root — `src/generator/` is two levels down. */
@@ -208,6 +217,26 @@ export const LAYOUT_PAGE = "layout/index.html";
  * implements.
  */
 export const ENGINE_PAGE = "engine/index.html";
+
+// ── 1.1 sections (rendered by the modules under `./docs-pages/`) ───────────
+/** The audit-rule reference: every rule the engine runs, one anchor per id. */
+export const AUDIT_PAGE = "audit/index.html";
+/** Rules & validation: `@faqir-ui/rules`, `l-rules`, `faqir rules lint`, forms. */
+export const RULES_PAGE = "rules/index.html";
+/** The CLI reference, generated from the command registry. */
+export const CLI_PAGE = "cli/index.html";
+/** MCP, React/Vue bindings, CDN, the skill, the package family. */
+export const INTEGRATIONS_PAGE = "integrations/index.html";
+/** The nightly theme loop: queue, dream, gate, ledger, digest. */
+export const NIGHT_SHIFT_PAGE = "night-shift/index.html";
+/** Theme System 2.0: the fourteen axes explained. */
+export const THEME_AXES_PAGE = "themes/axes/index.html";
+/** Theme System 2.0: authoring, generating, scoping, fonts. */
+export const THEME_AUTHORING_PAGE = "themes/authoring/index.html";
+/** One specimen page per registry theme. */
+export function themeDetailPath(theme: string): string {
+  return `themes/${theme}/index.html`;
+}
 
 /**
  * A published URL that no longer holds a page, and the page it became.
@@ -576,7 +605,7 @@ export function escAttr(value: string): string {
 }
 
 /** `data-part="x"` → a filesystem/anchor-safe slug. */
-function slug(value: string): string {
+export function slug(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
@@ -602,7 +631,7 @@ export function canonicalUrl(config: SiteConfig, pagePath: string): string {
 // Registry reading (node:fs only)
 // ---------------------------------------------------------------------------
 
-function readText(path: string): string {
+export function readText(path: string): string {
   return readFileSync(path, "utf8");
 }
 
@@ -1270,7 +1299,7 @@ export function parseGuideExamples(authored: string): GuideExample[] {
   return scanGuideExamples(authored).map(({ id, title, html }) => ({ id, title, html }));
 }
 
-function renderGuideExamples(authored: string): string {
+export function renderGuideExamples(authored: string): string {
   const parts: string[] = [];
   let cursor = 0;
   for (const example of scanGuideExamples(authored)) {
@@ -1384,7 +1413,7 @@ function renderTypographyPreviewRules(tokenList: readonly TokenEntry[]): string 
 // Page shell
 // ---------------------------------------------------------------------------
 
-interface ShellInput {
+export interface ShellInput {
   /** Site-relative path of the page being rendered (drives every relative URL). */
   pagePath: string;
   title: string;
@@ -1426,6 +1455,60 @@ function renderThemeLink(pagePath: string, theme: string): string {
   );
 }
 
+/** The primary navigation, in reading order: what a page is made of, how it
+// looks, what makes it move, what checks it, and what a machine reads. */
+const NAV_SECTIONS: { heading: string; items: [string, string][] }[] = [
+  { heading: "Start", items: [["index.html", "Overview"]] },
+  {
+    heading: "Foundations",
+    items: [
+      ["components/index.html", "Components"],
+      [ICONS_PAGE, "Icons"],
+      [TYPOGRAPHY_PAGE, "Typography"],
+      [LAYOUT_PAGE, "Layout guide"],
+      [RESPONSIVE_PAGE, "Responsive lab"],
+      [SPACING_PAGE, "Spacing & rhythm"],
+      [DENSITY_PAGE, "Density"],
+      ["tokens/index.html", "Design tokens"],
+    ],
+  },
+  {
+    heading: "Themes",
+    items: [
+      [THEMES_PAGE, "Theme gallery"],
+      [THEME_AXES_PAGE, "The fourteen axes"],
+      [THEME_AUTHORING_PAGE, "Authoring themes"],
+    ],
+  },
+  {
+    heading: "Engine",
+    items: [
+      [ENGINE_PAGE, "Reactive engine"],
+      [RULES_PAGE, "Rules & validation"],
+    ],
+  },
+  {
+    heading: "Tooling",
+    items: [
+      [CLI_PAGE, "CLI reference"],
+      [AUDIT_PAGE, "Audit rules"],
+      [PLAYGROUND_PAGE, "Audit playground"],
+      [SCAFFOLDS_PAGE, "Scaffolds"],
+      [INTEGRATIONS_PAGE, "Integrations"],
+    ],
+  },
+  {
+    heading: "Agents",
+    items: [
+      [AGENTS_PAGE, "For agents"],
+      [NIGHT_SHIFT_PAGE, "Night Shift"],
+      [SPEC_PAGE, `Protocol ${PROTOCOL_VERSION}`],
+      [MIGRATION_PAGE, `Migrating to ${PROTOCOL_VERSION}`],
+    ],
+  },
+];
+
+
 /**
  * The navigation shell every site page shares: the `dashboard-shell` pattern,
  * with a searchable, disclosure-grouped component index and persistent
@@ -1437,12 +1520,25 @@ function renderThemeLink(pagePath: string, theme: string): string {
  * adds `data-state="expanded"` only after the reader activates the menu button.
  * Without JavaScript, the compact header navigation still reaches every section.
  */
-function renderShell(input: ShellInput): string {
+export function renderShell(input: ShellInput): string {
   const { pagePath, config, components, current } = input;
   const themes = input.themes ?? [];
   const u = (to: string) => escAttr(relUrl(pagePath, to));
   const canonical = canonicalUrl(config, pagePath);
-  const currentAttr = (key: string) => (key === current ? ' aria-current="page"' : "");
+  // A page with no nav entry of its own (a theme specimen sheet, say) marks the
+  // nearest listed ancestor route as current, so every page marks exactly one.
+  const navPaths = new Set<string>([
+    ...components.map((c) => c.pagePath),
+    ...SCAFFOLD_NAMES.map((name) => scaffoldPagePath(name)),
+    ...NAV_SECTIONS.flatMap((group) => group.items.map(([path]) => path)),
+  ]);
+  const navCurrent = navPaths.has(current)
+    ? current
+    : [...navPaths]
+        .filter((path) => path.endsWith("/index.html"))
+        .filter((path) => current.startsWith(path.slice(0, -"index.html".length)))
+        .sort((a, b) => b.length - a.length)[0] ?? current;
+  const currentAttr = (key: string) => (key === navCurrent ? ' aria-current="page"' : "");
   const themeLink = renderThemeLink(pagePath, config.theme);
   const scripts = ["scripts/gallery.js", ...(input.scripts ?? [])].filter(
     (src, index, list) => list.indexOf(src) === index,
@@ -1509,22 +1605,18 @@ function renderShell(input: ShellInput): string {
   const topActive = (section: string): string => {
     const active =
       section === "components"
-        ? current.startsWith("components/")
-        : section === "icons"
-          ? current === ICONS_PAGE
-          : section === "typography"
-            ? current === TYPOGRAPHY_PAGE
-            : section === "layouts"
-              ? [LAYOUT_PAGE, RESPONSIVE_PAGE, SPACING_PAGE, DENSITY_PAGE].includes(current)
-              : section === "scaffolds"
-                ? current.startsWith("scaffolds/")
-                : section === "themes"
-                  ? current === THEMES_PAGE
-                  : section === "agents"
-                    ? current === AGENTS_PAGE
-                    : section === "spec"
-                      ? current === SPEC_PAGE
-                      : false;
+        ? current.startsWith("components/") ||
+          [ICONS_PAGE, TYPOGRAPHY_PAGE, LAYOUT_PAGE, RESPONSIVE_PAGE, SPACING_PAGE, DENSITY_PAGE, "tokens/index.html"].includes(current)
+        : section === "themes"
+          ? current.startsWith("themes/")
+          : section === "engine"
+            ? [ENGINE_PAGE, RULES_PAGE].includes(current)
+            : section === "tooling"
+              ? [CLI_PAGE, AUDIT_PAGE, PLAYGROUND_PAGE, INTEGRATIONS_PAGE].includes(current) ||
+                current.startsWith("scaffolds/")
+              : section === "agents"
+                ? [AGENTS_PAGE, NIGHT_SHIFT_PAGE, SPEC_PAGE, MIGRATION_PAGE].includes(current)
+                : false;
     return active ? ' data-state="active"' : "";
   };
 
@@ -1567,52 +1659,20 @@ ${scripts.map((src) => `<script src="${u(src)}" defer></script>`).join("\n")}
     </div>
     <nav data-part="nav" role="navigation" aria-label="Documentation">
       <div data-docs-nav-primary>
-        <a data-part="nav-item" href="${u("index.html")}"${currentAttr("index.html")}>Overview</a>
-        <a data-part="nav-item" href="${u("components/index.html")}"${currentAttr(
-          "components/index.html",
-        )}>All components</a>
-        <a data-part="nav-item" href="${u(ICONS_PAGE)}"${currentAttr(
-          ICONS_PAGE,
-        )}>Icons</a>
-        <a data-part="nav-item" href="${u(TYPOGRAPHY_PAGE)}"${currentAttr(
-          TYPOGRAPHY_PAGE,
-        )}>Typography</a>
-        <a data-part="nav-item" href="${u(LAYOUT_PAGE)}"${currentAttr(
-          LAYOUT_PAGE,
-        )}>Layout guide</a>
-        <a data-part="nav-item" href="${u(RESPONSIVE_PAGE)}"${currentAttr(
-          RESPONSIVE_PAGE,
-        )}>Responsive lab</a>
-        <a data-part="nav-item" href="${u(SPACING_PAGE)}"${currentAttr(
-          SPACING_PAGE,
-        )}>Spacing &amp; rhythm</a>
-        <a data-part="nav-item" href="${u(DENSITY_PAGE)}"${currentAttr(
-          DENSITY_PAGE,
-        )}>Density</a>
-        <a data-part="nav-item" href="${u(ENGINE_PAGE)}"${currentAttr(
-          ENGINE_PAGE,
-        )}>Reactive engine</a>
-        <a data-part="nav-item" href="${u("tokens/index.html")}"${currentAttr(
-          "tokens/index.html",
-        )}>Design tokens</a>
-        <a data-part="nav-item" href="${u(THEMES_PAGE)}"${currentAttr(
-          THEMES_PAGE,
-        )}>Theme gallery</a>
-        <a data-part="nav-item" href="${u(SCAFFOLDS_PAGE)}"${currentAttr(
-          SCAFFOLDS_PAGE,
-        )}>Scaffolds</a>
-        <a data-part="nav-item" href="${u(PLAYGROUND_PAGE)}"${currentAttr(
-          PLAYGROUND_PAGE,
-        )}>Audit playground</a>
-        <a data-part="nav-item" href="${u(AGENTS_PAGE)}"${currentAttr(
-          AGENTS_PAGE,
-        )}>For agents</a>
-        <a data-part="nav-item" href="${u(SPEC_PAGE)}"${currentAttr(
-          SPEC_PAGE,
-        )}>Protocol ${esc(PROTOCOL_VERSION)}</a>
-        <a data-part="nav-item" href="${u(MIGRATION_PAGE)}"${currentAttr(
-          MIGRATION_PAGE,
-        )}>Migrating to ${esc(PROTOCOL_VERSION)}</a>
+${NAV_SECTIONS
+  .map(
+    (group) =>
+      `        <div data-docs-nav-section>\n` +
+      `          <p data-docs-nav-heading>${esc(group.heading)}</p>\n` +
+      group.items
+        .map(
+          ([path, label]) =>
+            `          <a data-part="nav-item" href="${u(path)}"${currentAttr(path)}>${esc(label)}</a>`,
+        )
+        .join("\n") +
+      `\n        </div>`,
+  )
+  .join("\n")}
       </div>
       <div data-docs-nav-groups>
 ${[scaffoldNav, navGroups].filter(Boolean).join("\n")}
@@ -1629,14 +1689,11 @@ ${[scaffoldNav, navGroups].filter(Boolean).join("\n")}
       <span data-docs-brand-name>${esc(config.title)}</span>
     </a>
     <nav data-ui="nav" aria-label="Site sections" data-docs-top-nav>
-      <a data-part="link"${topActive("components")} href="${u("components/index.html")}">Components</a>
-      <a data-part="link"${topActive("icons")} href="${u(ICONS_PAGE)}">Icons</a>
-      <a data-part="link"${topActive("typography")} href="${u(TYPOGRAPHY_PAGE)}">Typography</a>
-      <a data-part="link"${topActive("layouts")} href="${u(LAYOUT_PAGE)}">Layout</a>
+      <a data-part="link"${topActive("components")} href="${u("components/index.html")}">Foundations</a>
       <a data-part="link"${topActive("themes")} href="${u(THEMES_PAGE)}">Themes</a>
-      <a data-part="link"${topActive("scaffolds")} href="${u(SCAFFOLDS_PAGE)}">Scaffolds</a>
-      <a data-part="link"${topActive("agents")} href="${u(AGENTS_PAGE)}">For agents</a>
-      <a data-part="link"${topActive("spec")} href="${u(SPEC_PAGE)}">Protocol</a>
+      <a data-part="link"${topActive("engine")} href="${u(ENGINE_PAGE)}">Engine</a>
+      <a data-part="link"${topActive("tooling")} href="${u(CLI_PAGE)}">Tooling</a>
+      <a data-part="link"${topActive("agents")} href="${u(AGENTS_PAGE)}">Agents</a>
       <a data-part="link" href="${u(PLAYGROUND_PAGE)}">Playground</a>
     </nav>
     <div data-docs-appearance>
@@ -1683,7 +1740,7 @@ ${input.body}
 // ---------------------------------------------------------------------------
 
 /** A `<table>` with a header row, or an italic note when there is nothing to show. */
-function table(headers: string[], rows: string[][], emptyNote: string): string {
+export function table(headers: string[], rows: string[][], emptyNote: string): string {
   if (rows.length === 0) return `      <p><em>${esc(emptyNote)}</em></p>`;
   const head = headers.map((h) => `<th scope="col">${esc(h)}</th>`).join("");
   const body = rows
@@ -1692,7 +1749,7 @@ function table(headers: string[], rows: string[][], emptyNote: string): string {
   return `      <table>\n        <thead><tr>${head}</tr></thead>\n        <tbody>\n${body}\n        </tbody>\n      </table>`;
 }
 
-function code(value: string): string {
+export function code(value: string): string {
   return `<code>${esc(value)}</code>`;
 }
 
@@ -1704,7 +1761,7 @@ function code(value: string): string {
  * `text` primitive's `mono` variant supplies the typeface and nothing else, so
  * the link keeps its own colour on the page background.
  */
-function monoLink(href: string, label: string): string {
+export function monoLink(href: string, label: string): string {
   return (
     `<a data-ui="link" href="${escAttr(href)}">` +
     `<span data-ui="text" data-variant="mono">${esc(label)}</span></a>`
@@ -1875,7 +1932,7 @@ function renderComposition(
 // Pages
 // ---------------------------------------------------------------------------
 
-function section(id: string, heading: string, body: string): string {
+export function section(id: string, heading: string, body: string): string {
   return `      <h2 id="${escAttr(id)}">${esc(heading)}</h2>\n${body}`;
 }
 
@@ -2975,7 +3032,7 @@ function renderRetiredPage(ctx: {
  * we write, and anything unrecognised passes through escaped rather than
  * rendering as an accidental tag.
  */
-function inlineMarkdown(value: string): string {
+export function inlineMarkdown(value: string): string {
   return esc(value)
     .replace(/`([^`]+)`/g, "<code>$1</code>")
     .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
@@ -2989,7 +3046,7 @@ function inlineMarkdown(value: string): string {
  * tables and `+`-prefixed diff lines inside fences. A relative link (`../SPEC-1.0.md`)
  * loses its anchor rather than pointing at a path the site does not serve.
  */
-function renderMarkdownBlocks(markdown: string): string {
+export function renderMarkdownBlocks(markdown: string): string {
   const out: string[] = [];
   const lines = markdown.split("\n");
   let i = 0;
@@ -3326,7 +3383,7 @@ const DENSITY_REMAP_MARKER = "<!-- @faqir:density-remaps -->";
  * controller is literally called that. Passing the block as a string silently
  * ate it (task 1.0R-09).
  */
-function replaceGuideMarker(authored: string, marker: string, generated: string): string {
+export function replaceGuideMarker(authored: string, marker: string, generated: string): string {
   return authored.includes(marker) ? authored.replace(marker, () => generated) : `${authored}\n${generated}`;
 }
 
@@ -3445,6 +3502,8 @@ function renderHomePage(ctx: {
   themes: DocsTheme[];
   authored: string;
   tokenCount: number;
+  /** `registry/core/plugins`, counted for the numbers row. */
+  pluginCount: number;
 }): SiteFile {
   const pagePath = "index.html";
   const counts = LAYERS.map((layer) => ({
@@ -3453,105 +3512,122 @@ function renderHomePage(ctx: {
   })).filter((g) => g.n > 0);
   const total = ctx.components.length;
 
+  const ruleCount = getRuleInventory().length;
+  const numbers: [string, string, string, string][] = [
+    [String(total), "components", counts.map((g) => `${g.n} ${g.layer}`).join(", "), "components/index.html"],
+    [String(ctx.themes.length), "themes", "authored, generated and print companions", THEMES_PAGE],
+    [String(ruleCount), "audit rules", "one engine in the CLI, MCP and browser", AUDIT_PAGE],
+    [String(ctx.tokenCount), "design tokens", "one semantic cascade", "tokens/index.html"],
+    [String(ctx.pluginCount), "engine plugins", "collapse, intersect, mask, persist, rules, validate", ENGINE_PAGE],
+    ["0", "runtime dependencies", "plain HTML, CSS and JavaScript", "agents/index.html"],
+  ];
   const stats =
-    `      <section aria-label="Faqir registry statistics" data-docs-stats>\n` +
-    `        <div data-ui="grid" data-cols="2" data-cols-lg="4" data-gap="3">\n` +
-    `          <div data-ui="stat" data-variant="card" data-size="lg" aria-label="${escAttr(
-      `${total} components in the registry`,
-    )}"><span data-part="label">Components</span><span data-part="value">${esc(
-      String(total),
-    )}</span><span data-part="change">${esc(
-      counts.map((g) => `${g.n} ${g.layer}`).join(" · "),
-    )}</span></div>\n` +
-    `          <div data-ui="stat" data-variant="card" data-size="lg" aria-label="${escAttr(
-      `${ctx.tokenCount} design tokens`,
-    )}"><span data-part="label">Design tokens</span><span data-part="value">${esc(
-      String(ctx.tokenCount),
-    )}</span><span data-part="change">one semantic cascade</span></div>\n` +
-    `          <div data-ui="stat" data-variant="card" data-size="lg" aria-label="${escAttr(
-      `${ctx.themes.length} built-in themes`,
-    )}"><span data-part="label">Built-in themes</span><span data-part="value">${esc(
-      String(ctx.themes.length),
-    )}</span><span data-part="change">light · dark · print</span></div>\n` +
-    `          <div data-ui="stat" data-variant="card" data-size="lg" aria-label="Zero core runtime dependencies"><span data-part="label">Runtime dependencies</span><span data-part="value">0</span><span data-part="change">plain HTML, CSS, and JavaScript</span></div>\n` +
-    `        </div>\n` +
-    `      </section>`;
+    `      <section aria-label="Faqir registry in numbers" data-docs-numbers>\n` +
+    numbers
+      .map(
+        ([value, label, note, href]) =>
+          `        <a data-docs-number href="${escAttr(href)}"><span data-docs-number-value>${esc(
+            value,
+          )}</span><span data-docs-number-label>${esc(label)}</span><span data-docs-number-note>${esc(
+            note,
+          )}</span></a>`,
+      )
+      .join("\n") +
+    `\n      </section>`;
 
-  const editorial = [
-    ["patterns", "stats-dashboard"],
-    ["patterns", "pricing"],
-    ["patterns", "auth-form"],
-    ["patterns", "inbox"],
-  ] as const;
-  const featured = editorial
-    .map(([layer, name]) =>
-      ctx.components.find((c) => c.layer === layer && c.name === name),
-    )
-    .filter((c): c is DocsComponent => !!c);
-  const featuredCards = featured
-    .map(
-      (c) =>
+  const featuredScaffolds = SCAFFOLD_NAMES.filter((name) =>
+    ["landing-page", "invoice"].includes(name),
+  );
+  const featuredCards = featuredScaffolds
+    .map((name) => {
+      const def = SCAFFOLDS[name];
+      return (
         `        <div data-ui="card" data-variant="outlined">\n` +
         `          <div data-part="header">\n` +
-        `            <span data-ui="badge" data-variant="secondary" data-size="sm">${esc(
-          c.manifest.kind,
-        )}</span>\n` +
-        `            <h3 data-part="title">${esc(c.name)}</h3>\n` +
-        `            <p data-part="description">${esc(c.manifest.description ?? "")}</p>\n` +
+        `            <h3 data-part="title">${esc(def.title ?? name)}</h3>\n` +
+        `            <p data-part="description">${esc(def.description ?? "")}</p>\n` +
         `          </div>\n` +
         `          <div data-part="body">\n` +
-        `            <iframe src="${escAttr(c.examplePath)}" title="${escAttr(
-          `${c.name} pattern preview`,
+        `            <iframe src="${escAttr(scaffoldFramePath(name))}" title="${escAttr(
+          `${name} scaffold, live`,
         )}" loading="lazy" data-component-frame></iframe>\n` +
         `          </div>\n` +
         `          <div data-part="footer">\n` +
-        `            <a data-ui="link" href="${escAttr(c.pagePath)}">Inspect the manifest <span data-ui="icon" data-icon="arrow-right" aria-hidden="true"></span></a>\n` +
+        `            <a data-ui="link" href="${escAttr(scaffoldPagePath(name))}">Open the scaffold</a>\n` +
         `          </div>\n` +
-        `        </div>`,
-    )
+        `        </div>`
+      );
+    })
     .join("\n");
   const components =
     `      <section aria-labelledby="featured-heading" data-docs-section>\n` +
     `        <div data-docs-section-heading>\n` +
-    `          <span data-ui="badge" data-variant="secondary">Patterns in action</span>\n` +
-    `          <h2 id="featured-heading">From tiny primitives to complete product surfaces.</h2>\n` +
-    `          <p>These are the registry's canonical examples, running live—not screenshots. Every one is composed from the same contracts an agent reads.</p>\n` +
+    `          <h2 id="featured-heading">Whole pages, running live</h2>\n` +
+    `          <p>Two of the five scaffolds the CLI can write for you, in frames rather than screenshots. Every element inside is a registry component, and each frame follows the theme you pick above.</p>\n` +
     `        </div>\n` +
     `        <div data-ui="grid" data-cols="1" data-cols-lg="2" data-gap="4" data-docs-featured-grid>\n` +
     `${featuredCards}\n` +
     `        </div>\n` +
-    `        <p><a data-ui="button" data-variant="outline" href="components/index.html">Explore all ${esc(
+    `        <div data-ui="cluster" data-gap="3"><a data-ui="button" data-variant="outline" href="${escAttr(
+      SCAFFOLDS_PAGE,
+    )}">All five scaffolds</a><a data-ui="link" href="components/index.html">All ${esc(
       String(total),
-    )} components <span data-ui="icon" data-icon="arrow-right" aria-hidden="true"></span></a></p>\n` +
+    )} components</a></div>\n` +
     `      </section>`;
 
+  const axisLabel = (path: string): string => path.split(".").pop() ?? path;
+  const plateFor = (theme: DocsTheme): [string, string][] =>
+    theme.manifest ? galleryChips(theme.manifest) : [];
+  const active = ctx.themes.find((t) => t.name === ctx.config.theme) ?? ctx.themes[0];
   const themeButtons = ctx.themes
-    .map(
-      (theme) =>
+    .map((theme) => {
+      const m = theme.manifest;
+      const axes = plateFor(theme)
+        .map(([path, value]) => `${path}=${value}`)
+        .join(";");
+      return (
         `            <button data-ui="button" data-variant="outline" data-size="sm" type="button" ` +
         `data-theme-pick="${escAttr(theme.name)}" data-theme-scheme="${escAttr(
-          theme.manifest?.scheme ?? "both",
-        )}" aria-pressed="${theme.name === ctx.config.theme}">${esc(theme.name)}</button>`,
-    )
+          m?.scheme ?? "both",
+        )}" data-theme-kind="${escAttr(m ? themeKind(m) : "authored")}" data-theme-mood="${escAttr(
+          (m?.mood ?? []).join(", "),
+        )}" data-theme-axes="${escAttr(axes)}" aria-pressed="${
+          theme.name === ctx.config.theme
+        }">${esc(theme.name)}</button>`
+      );
+    })
     .join("\n");
+  const plateAxes = active
+    ? plateFor(active)
+        .map(
+          ([path, value]) =>
+            `              <div><dt>${esc(axisLabel(path))}</dt><dd data-docs-plate-axis="${escAttr(
+              path,
+            )}">${esc(value)}</dd></div>`,
+        )
+        .join("\n")
+    : "";
   const themes =
-    `      <section aria-labelledby="home-themes-heading" data-docs-section>\n` +
-    `        <div data-docs-theme-runway>\n` +
-    `          <div data-docs-theme-copy>\n` +
-    `            <span data-ui="badge" data-variant="primary">All ${esc(
-      String(ctx.themes.length),
-    )} themes, live</span>\n` +
-    `            <h2 id="home-themes-heading">One interface. ${esc(
-      String(ctx.themes.length),
-    )} distinct voices.</h2>\n` +
-    `            <p>Pick any theme below. This entire page—and every live component frame—restyles in place from token declarations alone. Every theme is described by the same fourteen character axes, derived from its stylesheet; <a data-ui="link" href="${escAttr(THEMES_PAGE)}#gallery">filter by them in the gallery</a>.</p>\n` +
-    `          </div>\n` +
-    `          <div data-docs-theme-actions>\n` +
-    `            <div data-ui="cluster" data-gap="2" role="group" aria-label="Choose a Faqir theme">\n` +
+    `      <section aria-labelledby="home-themes-heading" data-docs-runway>\n` +
+    `        <div data-docs-runway-head>\n` +
+    `          <h2 id="home-themes-heading">${esc(String(ctx.themes.length))} themes. One page. Pick one.</h2>\n` +
+    `          <p>Every theme is a stylesheet of token declarations and nothing else, so the whole site changes voice from one link swap. The plate reads the theme's axes, derived from its CSS. <a data-ui="link" href="${escAttr(
+      THEMES_PAGE,
+    )}">Filter all of them by axis in the gallery.</a></p>\n` +
+    `        </div>\n` +
+    `        <div data-ui="cluster" data-gap="2" role="group" aria-label="Choose a Faqir theme" data-docs-runway-strip>\n` +
     `${themeButtons}\n` +
-    `            </div>\n` +
-    `            <p><a data-ui="link" href="${escAttr(THEMES_PAGE)}">Compare every theme side by side</a></p>\n` +
+    `        </div>\n` +
+    `        <div data-docs-plate aria-live="polite">\n` +
+    `          <div data-docs-plate-head>\n` +
+    `            <span data-docs-plate-name>${esc(active?.name ?? "")}</span>\n` +
+    `            <span data-docs-plate-kind>${esc(active?.manifest ? themeKind(active.manifest) : "")}</span>\n` +
+    `            <span data-docs-plate-mood>${esc((active?.manifest?.mood ?? []).join(", "))}</span>\n` +
+    `            <a data-ui="link" data-docs-plate-link href="${escAttr(
+      active ? themeDetailPath(active.name) : THEMES_PAGE,
+    )}">Specimen sheet</a>\n` +
     `          </div>\n` +
+    `          <dl data-docs-plate-axes>\n${plateAxes}\n          </dl>\n` +
     `        </div>\n` +
     `      </section>`;
 
@@ -4941,6 +5017,18 @@ export function buildSiteStylesheet(
     parts.push(readText(docsCss));
   }
 
+  // Per-section presentation sheets (`site/styles/pages/*.css`), sorted so the
+  // bundle is deterministic. Each docs-page module owns one; the same rules
+  // apply as to docs.css: attribute selectors and tokens only.
+  const pagesDir = join(siteRoot, "styles", "pages");
+  if (existsSync(pagesDir)) {
+    for (const entry of readdirSync(pagesDir).sort()) {
+      if (!entry.endsWith(".css")) continue;
+      parts.push(`/* ── documentation presentation: ${entry} ── */`);
+      parts.push(readText(join(pagesDir, entry)));
+    }
+  }
+
   // One rule per swatchable token. The *shape* of a swatch (size, border, radius)
   // is authored in docs.css; only its colour is per-token, and a colour that
   // varies per element is the one thing an attribute selector cannot express
@@ -5047,6 +5135,7 @@ export function buildDocsSite(options: DocsSiteOptions = {}): SiteFile[] {
       themes,
       authored: existsSync(authoredHome) ? readText(authoredHome).trim() : "",
       tokenCount: tokenList.length,
+      pluginCount: loadPluginMetadata(join(registryRoot, "core", "plugins")).length,
     }),
   );
   files.push(renderComponentIndex({ config, components, themes, registryRoot }));
@@ -5160,6 +5249,25 @@ export function buildDocsSite(options: DocsSiteOptions = {}): SiteFile[] {
       files.push(renderThemePreviewPage({ theme: t, config, byName, tokenList }));
     }
   }
+
+  // The 1.1 sections (audit rules, rules & validation, CLI + integrations,
+  // Night Shift, Theme System 2.0), each from its own module.
+  const pageContext: PageContext = {
+    config,
+    components,
+    themes,
+    byName,
+    tokenList,
+    registryRoot,
+    packageRoot,
+    siteRoot,
+    pin,
+  };
+  files.push(...renderAuditPages(pageContext));
+  files.push(...renderRulesPages(pageContext));
+  files.push(...renderToolingPages(pageContext));
+  files.push(...renderNightShiftPages(pageContext));
+  if (themes.length > 0) files.push(...renderThemeSystemPages(pageContext));
 
   // The scaffold gallery (task 1.0R-08). Driven by SCAFFOLD_NAMES — the CLI's own
   // catalogue — so registering a sixth scaffold publishes its page, its frame,

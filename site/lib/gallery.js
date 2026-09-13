@@ -102,6 +102,36 @@
 
     var status = document.getElementById("appearance-status");
     if (status) status.textContent = state.theme + " theme · " + state.scheme + " scheme";
+    syncPlate();
+  }
+
+  /**
+   * The home page's spec plate: the active theme's name, kind, mood and gallery
+   * axes, copied off the pressed runway button so the plate never guesses.
+   */
+  function syncPlate() {
+    var plate = document.querySelector("[data-docs-plate]");
+    if (!plate) return;
+    var button = document.querySelector('[data-theme-pick="' + state.theme + '"]');
+    if (!button) return;
+    var name = plate.querySelector("[data-docs-plate-name]");
+    var kind = plate.querySelector("[data-docs-plate-kind]");
+    var mood = plate.querySelector("[data-docs-plate-mood]");
+    var link = plate.querySelector("[data-docs-plate-link]");
+    if (name) name.textContent = state.theme;
+    if (kind) kind.textContent = button.getAttribute("data-theme-kind") || "";
+    if (mood) mood.textContent = button.getAttribute("data-theme-mood") || "";
+    if (link) {
+      var href = link.getAttribute("href") || "";
+      link.setAttribute("href", href.replace(/themes\/[^/]+\/index\.html$/, "themes/" + state.theme + "/index.html"));
+    }
+    var axes = button.getAttribute("data-theme-axes") || "";
+    axes.split(";").forEach(function (pair) {
+      var eq = pair.indexOf("=");
+      if (eq < 1) return;
+      var cell = plate.querySelector('[data-docs-plate-axis="' + pair.slice(0, eq) + '"]');
+      if (cell) cell.textContent = pair.slice(eq + 1);
+    });
   }
 
   function appearanceEvent() {
