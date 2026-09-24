@@ -35,3 +35,14 @@ export const MAX_LOGIC_NODES = 1000;
 
 /** How deeply one logic expression may nest. Deep enough for any hand-written condition. */
 export const MAX_LOGIC_DEPTH = 64;
+
+/**
+ * The largest array index a flat form key may un-flatten into: `contacts[9999].name`
+ * is written into position 9999 by `coerce`, and `contacts[10000].name` is not —
+ * it is carried through as a flat key the definition does not know, like any
+ * other. The key is attacker-chosen on a server, and without this bound
+ * `contacts[100000000].name` alone builds a sparse array that every later pass
+ * walks the whole length of. Ten thousand rows is already more than any form
+ * renders; a list longer than that arrives as JSON, not as `FormData`.
+ */
+export const MAX_ARRAY_INDEX = 9999;

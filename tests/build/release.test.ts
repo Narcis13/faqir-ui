@@ -18,10 +18,20 @@
 // during a release, which is the worst possible moment to discover it.
 
 import { describe, expect, it } from "bun:test";
-import { readFileSync } from "node:fs";
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { isExplicitVersion, nextVersion } from "../../scripts/release.mjs";
+import {
+  CLI_VERSION_FILE,
+  PACKAGES,
+  PREFLIGHT,
+  VERSION_FILES,
+  isExplicitVersion,
+  nextVersion,
+  parseReleaseArgs,
+  stampVersion,
+} from "../../scripts/release.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../..");
 const SOURCE = readFileSync(join(ROOT, "scripts/release.mjs"), "utf8");
@@ -69,6 +79,103 @@ describe("version arithmetic", () => {
 
   it("refuses a version it cannot parse rather than guessing", () => {
     expect(() => nextVersion("not-a-version", "patch")).toThrow(/semver/);
+  });
+});
+
+describe("argument parsing", () => {
+  it("a value flag consumes its value instead of leaving it as the target", () => {
+    // The defect: `--otp 123456 patch` made `123456` the version target, because
+    // every argument not starting with `-` was treated as positional.
+    const parsed = parseReleaseArgs(["--otp", "123456", "patch"]);
+    expect(parsed.errors).toEqual([]);
+    expect(parsed.target).toBe("patch");
+    expect(parsed.flags.otp).toBe("123456");
+
+    const branch = parseReleaseArgs(["minor", "--branch", "release/1.1", "--dry-run"]);
+    expect(branch.target).toBe("minor");
+    expect(branch.flags.branch).toBe("release/1.1");
+    expect(branch.flags.dryRun).toBe(true);
+  });
+
+  it("accepts the --flag=value spelling too", () => {
+    const parsed = parseReleaseArgs(["--otp=654321", "1.1.0", "--yes", "--no-github"]);
+    expect(parsed.target).toBe("1.1.0");
+    expect(parsed.flags.otp).toBe("654321");
+    expect(parsed.flags.yes).toBe(true);
+    expect(parsed.flags.github).toBe(false);
+  });
+
+  it("refuses what it cannot interpret rather than guessing", () => {
+    expect(parseReleaseArgs(["patch", "--otp"]).errors).toEqual(["--otp needs a value"]);
+    expect(parseReleaseArgs(["--otp", "--dry-run", "patch"]).errors).toEqual(["--otp needs a value"]);
+    expect(parseReleaseArgs(["patch", "--bogus"]).errors[0]).toContain('unknown option "--bogus"');
+    expect(parseReleaseArgs(["patch", "minor"]).errors[0]).toContain("one version target");
+  });
+});
+
+describe("a dry-run version bump reaches every version file", () => {
+  it("propagates 1.1.0 to all seven package.json files and src/version.ts", () => {
+    // Runs the same function `applyVersion` calls, against a copy of the real
+    // version files — so a package added to PACKAGES without its package.json in
+    // the lockstep set, or a version.ts whose literal stops matching, fails here
+    // instead of mid-release.
+    const tmp = mkdtempSync(join(tmpdir(), "faqir-release-stamp-"));
+    try {
+      for (const rel of [...VERSION_FILES, CLI_VERSION_FILE]) {
+        mkdirSync(dirname(join(tmp, rel)), { recursive: true });
+        cpSync(join(ROOT, rel), join(tmp, rel));
+      }
+      stampVersion("1.1.0", tmp);
+
+      expect(VERSION_FILES.length).toBe(7);
+      expect(VERSION_FILES.length).toBe(PACKAGES.length);
+      for (const rel of VERSION_FILES) {
+        const pkg = JSON.parse(readFileSync(join(tmp, rel), "utf8"));
+        expect(pkg.version, rel).toBe("1.1.0");
+      }
+      expect(readFileSync(join(tmp, CLI_VERSION_FILE), "utf8")).toContain(
+        'export const VERSION = "1.1.0";',
+      );
+
+      // A second stamp at the same version is a no-op, not a failure.
+      const again = stampVersion("1.1.0", tmp);
+      expect([...again.rewritten]).toEqual([]);
+      expect(again.unchanged.length).toBe(8);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it("the package list includes rules and the preflight includes its gate", () => {
+    expect(PACKAGES.map((p: { name: string }) => p.name)).toContain("@faqir-ui/rules");
+    const gates = PREFLIGHT.map(([script]: string[]) => script);
+    expect(gates).toContain("check:rules-plugin");
+    expect(gates).toContain("check:theme-docs");
+  });
+
+  it("no stale package count survives in the script", () => {
+    // The count was written out by hand in five places — including the GitHub
+    // release body — and went stale the moment @faqir-ui/rules joined.
+    expect(SOURCE).not.toMatch(/\b(six|Six) packages\b/);
+    expect(SOURCE).not.toContain("5 workspace packages");
+    expect(SOURCE).not.toMatch(/\d+ SRI hashes"/);
+  });
+});
+
+describe("failure paths clean up", () => {
+  it("fail() throws instead of exiting, so finally blocks run", () => {
+    // packedCliSmoke called fail() — then process.exit — inside a try whose
+    // finally removes its temp directory. process.exit skips finally.
+    const body = SOURCE.slice(SOURCE.indexOf("function fail(message)"));
+    const fn = body.slice(0, body.indexOf("\n}\n"));
+    expect(fn).toContain("throw new ReleaseAbort");
+    expect(fn).not.toContain("process.exit");
+  });
+
+  it("the packed smoke pins each runtime rather than trusting the launcher", () => {
+    expect(SOURCE).toContain('FAQIR_FORCE_NODE: "1"');
+    expect(SOURCE).toContain("FAQIR_BUN: bun");
+    expect(SOURCE).toContain('"context", "--skill"');
   });
 });
 
@@ -168,6 +275,21 @@ describe("the release checklist", () => {
   it("exists and covers the rollback story", () => {
     expect(CHECKLIST).toContain("If a publish fails partway");
     expect(CHECKLIST).toContain("un-publish");
+  });
+
+  it("lists the preflight the script actually runs, in its order", () => {
+    // The checklist's list went stale twice — it lacked check:rules-plugin and
+    // check:theme-docs while the script ran both. Read it back and compare.
+    const start = CHECKLIST.indexOf("`typecheck` ·");
+    const block = CHECKLIST.slice(start, CHECKLIST.indexOf("\n\n", start));
+    const listed = [...block.matchAll(/`([a-z:-]+)`/g)].map((m) => m[1]);
+    expect(listed).toEqual(PREFLIGHT.map(([script]: string[]) => script));
+  });
+
+  it("counts the packages the script publishes", () => {
+    expect(CHECKLIST).toContain("seven packages on npm");
+    expect(CHECKLIST).not.toMatch(/\bsix packages\b/);
+    expect(CHECKLIST).toContain("@faqir-ui/rules");
   });
 
   it("names the suites that cannot run without a Linux container", () => {

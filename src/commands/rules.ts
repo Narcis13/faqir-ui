@@ -133,15 +133,36 @@ function printReport(report: RulesLintReport): void {
   else console.log(`${SEVERITY_COLOR.error}${summary}${RESET}`);
 }
 
+/**
+ * A lint that could not look at the definition at all — no path, an unreadable
+ * file, bytes that are not JSON — still answers in the report's own shape under
+ * `--json`: an agent asking "is this definition good" parses one document
+ * whatever went wrong, and `ok: false` with exit 1 is the answer.
+ */
+function refuse(jsonMode: boolean, source: string, message: string, human?: () => void): never {
+  const report: RulesLintReport = {
+    rules_lint_schema_version: RULES_LINT_SCHEMA_VERSION,
+    source,
+    ok: false,
+    counts: { error: 1, warning: 0 },
+    findings: [{ rule: "schema", severity: "error", path: "", message }],
+  };
+  if (jsonMode) emitJSON(report);
+  else if (human) human();
+  else printReport(report);
+  process.exit(1);
+}
+
 async function lint(args: string[]): Promise<void> {
   const jsonMode = args.includes("--json");
   const fromStdin = args.includes("--stdin");
   const path = definitionPath(args);
 
   if (!fromStdin && !path) {
-    log.error("faqir rules lint needs a definition: a file path, or --stdin.");
-    log.step("Try: faqir rules lint form.rules.json");
-    process.exit(1);
+    refuse(jsonMode, "", "no definition given: pass a file path, or --stdin.", () => {
+      log.error("faqir rules lint needs a definition: a file path, or --stdin.");
+      log.step("Try: faqir rules lint form.rules.json");
+    });
   }
 
   const source = fromStdin ? "<stdin>" : (path as string);
@@ -151,33 +172,18 @@ async function lint(args: string[]): Promise<void> {
       ? await readStdin()
       : readFileSync(isAbsolute(source) ? source : resolve(process.cwd(), source), "utf8");
   } catch (err) {
-    log.error(`Could not read ${source}: ${err instanceof Error ? err.message : String(err)}`);
-    process.exit(1);
-    return;
+    const why = err instanceof Error ? err.message : String(err);
+    refuse(jsonMode, source, `could not read the definition: ${why}`, () => {
+      log.error(`Could not read ${source}: ${why}`);
+    });
   }
 
   let definition: unknown;
   try {
     definition = JSON.parse(text);
   } catch (err) {
-    // A file that is not JSON is still a lint answer, not a crash: an agent
-    // asking "is this definition good" gets the same document shape either way.
-    const report: RulesLintReport = {
-      rules_lint_schema_version: RULES_LINT_SCHEMA_VERSION,
-      source,
-      ok: false,
-      counts: { error: 1, warning: 0 },
-      findings: [{
-        rule: "schema",
-        severity: "error",
-        path: "",
-        message: `not valid JSON: ${err instanceof Error ? err.message : String(err)}`,
-      }],
-    };
-    if (jsonMode) emitJSON(report);
-    else printReport(report);
-    process.exit(1);
-    return;
+    // A file that is not JSON is still a lint answer, not a crash.
+    refuse(jsonMode, source, `not valid JSON: ${err instanceof Error ? err.message : String(err)}`);
   }
 
   const result = lintDefinition(definition, { locales: parseLocales(args) });

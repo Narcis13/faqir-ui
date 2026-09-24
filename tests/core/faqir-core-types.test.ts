@@ -207,9 +207,11 @@ describe("Devtools matches window.__FAQIR_DEVTOOLS__", () => {
     const emitted = sorted(
       [...dev.matchAll(/devReport\(\s*'([a-z]+)'/g)].map((m) => m[1]),
     );
-    // Four engine classes plus `plugin`, the seam a plugin file reports through.
-    expect(emitted.length).toBe(5);
+    // Five engine classes (`key` — a duplicate l-key — joined in 1.1) plus
+    // `plugin`, the seam a plugin file reports through.
+    expect(emitted.length).toBe(6);
     expect(emitted).toContain("plugin");
+    expect(emitted).toContain("key");
     expect(declared).toEqual(emitted);
   });
 

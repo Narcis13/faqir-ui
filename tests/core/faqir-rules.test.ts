@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from "bun:test";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "bun:test";
 import { tick } from "../helpers/settle";
 import { coerce, validate } from "../../packages/rules/src/index.js";
 import { expectedVerdict, loadCorpus, type GoldenCase } from "../../packages/rules/tests/corpus";
@@ -927,4 +927,296 @@ describe("faqir-rules · the browser's verdict is the server's verdict", () => {
       }
     });
   }
+});
+
+// ── The 1.1 release review ───────────────────────────────────────────────────
+//
+// Each block below was a reproduced bug before the package first shipped: a
+// control someone else disabled read as blank, a hidden control revived by a
+// wizard, a rule path spelled `contacts[0]` matching nothing, a reset the plugin
+// never saw, listeners that outlived their form, a remote answer read two ways,
+// and a pattern the markup could not carry enforced by nobody.
+
+/**
+ * happy-dom holds each MutationObserver's delivery callback in a `WeakRef`
+ * (`MutationObserverListener.js`), so a garbage collection between a mutation
+ * and its delivery drops the record — nondeterministically, a few rounds in
+ * twenty. A browser holds it strongly. The blocks whose subject IS that
+ * delivery — another party's writes to `disabled` — hold it strongly too, for
+ * their own duration only.
+ */
+function withReliableMutationObservers(): void {
+  let saved: typeof WeakRef;
+  beforeAll(() => {
+    saved = globalThis.WeakRef;
+    (globalThis as any).WeakRef = class<T> {
+      #target: T;
+      constructor(target: T) {
+        this.#target = target;
+      }
+      deref(): T {
+        return this.#target;
+      }
+    };
+  });
+  afterAll(() => {
+    (globalThis as any).WeakRef = saved;
+  });
+}
+
+describe("faqir-rules · someone else's disabled", () => {
+  withReliableMutationObservers();
+  const definition = {
+    version: "1",
+    fields: { plan: { type: "string" }, seats: { type: "integer", required: true } },
+    rules: [{ id: "seats-for-teams", show: "seats", when: { "==": [{ var: "plan" }, "team"] } }],
+  };
+
+  it("still reads a control another party disabled — its answer did not stop existing", async () => {
+    const { form, scope } = await boot({
+      body:
+        group(`<input data-part="input" name="plan" value="team" disabled>`) +
+        group(`<input data-part="input" name="seats" type="number">`),
+      rules: definition,
+    });
+    const seats = control(form, "seats");
+    expect(scope.$rules.visible).toEqual({ seats: true });
+    expect(groupOf(seats).hasAttribute("hidden")).toBe(false);
+    expect(seats.disabled).toBe(false);
+  });
+
+  it("holds a hidden control disabled when someone else enables it", async () => {
+    const { form } = await boot({
+      body:
+        group(`<input data-part="input" name="plan" value="solo">`) +
+        group(`<input data-part="input" name="seats" type="number">`),
+      rules: definition,
+    });
+    const seats = control(form, "seats");
+    expect(seats.disabled).toBe(true);
+
+    seats.required = true; // so a check that reached it would fail
+    seats.disabled = false; // a wizard reaching this step, say
+    await tick();
+    expect(seats.disabled).toBe(true);
+    expect(groupOf(seats).hasAttribute("hidden")).toBe(true);
+
+    // Nothing blocks a submit on the field nobody can see — even when the
+    // other party re-enables it in the same task as the submit.
+    seats.disabled = false;
+    const submit = new Event("submit", { bubbles: true, cancelable: true });
+    form.dispatchEvent(submit);
+    await tick();
+    expect(seats.disabled).toBe(true);
+    expect(groupOf(seats).getAttribute("data-state")).toBe(null);
+    expect(errorOf(seats)).toBe("");
+    seats.required = false;
+
+    // Shown again, it takes the other party's last wish: enabled.
+    await type(control(form, "plan"), "team");
+    expect(seats.disabled).toBe(false);
+  });
+
+  it("gives a revealed control back to the party that disabled it meanwhile, in either order", async () => {
+    const { form } = await boot({
+      body:
+        group(`<input data-part="input" name="plan" value="solo">`) +
+        group(`<input data-part="input" name="seats" type="number">`),
+      rules: definition,
+    });
+    const seats = control(form, "seats");
+    // The plugin disabled it first; now another party disables it too — the
+    // wizard's binding for a step that is not current.
+    seats.setAttribute("disabled", "");
+    await tick();
+    await type(control(form, "plan"), "team");
+    expect(groupOf(seats).hasAttribute("hidden")).toBe(false);
+    expect(seats.disabled).toBe(true);
+
+    // That party lets go; the rule has nothing more to say about it.
+    seats.removeAttribute("disabled");
+    await tick();
+    expect(seats.disabled).toBe(false);
+  });
+});
+
+describe("faqir-rules · indexed paths", () => {
+  it("matches `contacts[0]` in a rule to a control named `contacts[0].name`", async () => {
+    const { form, scope } = await boot({
+      body:
+        group(`<input data-part="input" name="solo" value="yes">`) +
+        group(`<input data-part="input" name="contacts[0].name" value="Ada">`),
+      rules: {
+        version: "1",
+        fields: {
+          solo: { type: "string" },
+          contacts: { type: "array", items: { type: "object", properties: { name: { type: "string" } } } },
+        },
+        rules: [{ id: "first-contact", show: "contacts[0]", when: { "!=": [{ var: "solo" }, "yes"] } }],
+      },
+    });
+    const name = control(form, "contacts[0].name");
+    expect(scope.$rules.visible).toEqual({ "contacts.0": false });
+    expect(groupOf(name).hasAttribute("hidden")).toBe(true);
+    expect(name.disabled).toBe(true);
+
+    await type(control(form, "solo"), "no");
+    expect(groupOf(name).hasAttribute("hidden")).toBe(false);
+    expect(name.disabled).toBe(false);
+  });
+
+  it("registers a validate rule on `contacts.0.name` under the control's own name", async () => {
+    const { form } = await boot({
+      body: group(`<input data-part="input" name="contacts[0].name" value="x">`),
+      rules: {
+        version: "1",
+        fields: {
+          contacts: { type: "array", items: { type: "object", properties: { name: { type: "string" } } } },
+        },
+        rules: [{
+          id: "long-name",
+          validate: { ">=": [{ var: "contacts.0.name.length" }, 2] },
+          path: "contacts.0.name",
+          message: "Too short.",
+        }],
+      },
+    });
+    expect(await Faqir.validate.run(form)).toBe(false);
+    expect(errorOf(control(form, "contacts[0].name"))).toBe("Too short.");
+  });
+
+  it("lets a hidden parent win over a shown child, whichever rule comes first", async () => {
+    const { form } = await boot({
+      body:
+        group(`<input data-part="input" name="ship" value="">`) +
+        group(`<input data-part="input" name="address.city" value="Cluj">`),
+      rules: {
+        version: "1",
+        fields: {
+          ship: { type: "string" },
+          address: { type: "object", properties: { city: { type: "string" } } },
+        },
+        rules: [
+          { id: "city", show: "address.city", when: true },
+          { id: "address", show: "address", when: { var: "ship" } },
+        ],
+      },
+    });
+    const city = control(form, "address.city");
+    expect(groupOf(city).hasAttribute("hidden")).toBe(true);
+    expect(city.disabled).toBe(true);
+  });
+});
+
+describe("faqir-rules · reset and teardown", () => {
+  const definition = {
+    version: "1",
+    fields: { plan: { type: "string" }, seats: { type: "integer" } },
+    rules: [
+      { id: "seats-for-teams", show: "seats", when: { "==": [{ var: "plan" }, "team"] } },
+      { id: "seats-set", validate: { ">": [{ var: "seats" }, 1] }, path: "seats", message: "Two or more." },
+    ],
+  };
+  const body =
+    group(`<input data-part="input" name="plan" value="solo">`) +
+    group(`<input data-part="input" name="seats" value="1">`);
+
+  it("repaints after a reset has put the values back", async () => {
+    const { form } = await boot({ body, rules: definition });
+    const seats = control(form, "seats");
+    await type(control(form, "plan"), "team");
+    expect(seats.disabled).toBe(false);
+
+    form.reset();
+    await tick();
+    await tick();
+    expect(control(form, "plan").value).toBe("solo");
+    expect(seats.disabled).toBe(true);
+    expect(groupOf(seats).hasAttribute("hidden")).toBe(true);
+  });
+
+  it("removes its listeners and its validators when the form's scope is destroyed", async () => {
+    const { form } = await boot({
+      body:
+        group(`<input data-part="input" name="plan" value="team">`) +
+        group(`<input data-part="input" name="seats" value="1">`),
+      rules: definition,
+    });
+    const seats = control(form, "seats");
+    expect(await Faqir.validate.run(form)).toBe(false);
+    expect(errorOf(seats)).toBe("Two or more.");
+
+    Faqir.destroy(container);
+    // The rule would hide seats now — nothing is listening any more.
+    const plan = control(form, "plan");
+    plan.value = "solo";
+    plan.dispatchEvent(new Event("input", { bubbles: true }));
+    await tick();
+    expect(groupOf(seats).hasAttribute("hidden")).toBe(false);
+    // …and the rule's validator is gone from faqir-validate's registry.
+    expect(await Faqir.validate.run(form)).toBe(true);
+  });
+});
+
+describe("faqir-rules · a remote answer means what it means on the server", () => {
+  const realFetch = globalThis.fetch;
+  afterEach(() => {
+    (globalThis as any).fetch = realFetch;
+  });
+  const answer = (payload: unknown) => {
+    (globalThis as any).fetch = async () => ({ ok: true, status: 200, json: async () => payload });
+  };
+  const definition = {
+    version: "1",
+    fields: { email: { type: "string" } },
+    messages: { en: { "email.email-free": "Someone has that one." } },
+    rules: [{ id: "email-free", validate: "remote", path: "email", remote: "/api/free", message: "Taken." }],
+  };
+  const body = group(`<input data-part="input" name="email" value="ada@example.com">`);
+
+  it("an empty message is no message: the definition's own sentence, resolved like the server does", async () => {
+    answer({ ok: false, message: "" });
+    const { form } = await boot({ body, rules: definition });
+    expect(await Faqir.validate.run(form)).toBe(false);
+    expect(errorOf(control(form, "email"))).toBe("Someone has that one.");
+  });
+
+  it("a message that is not a string is not a message either", async () => {
+    answer({ ok: false, message: 42 });
+    const { form } = await boot({ body, rules: definition });
+    expect(await Faqir.validate.run(form)).toBe(false);
+    expect(errorOf(control(form, "email"))).toBe("Someone has that one.");
+  });
+
+  it("a body with no boolean ok is a check that could not run", async () => {
+    answer({ ok: "yes" });
+    const { form } = await boot({ body, rules: definition });
+    expect(await Faqir.validate.run(form)).toBe(false);
+    expect(errorOf(control(form, "email"))).toBe("Could not check this field. Please try again.");
+  });
+});
+
+describe("faqir-rules · a pattern the markup does not carry", () => {
+  const definition = {
+    version: "1",
+    fields: { code: { type: "string", pattern: "^[A-Z]{2}$" } },
+  };
+
+  it("is enforced through faqir-validate with the package's sentence", async () => {
+    const { form } = await boot({ body: group(`<input data-part="input" name="code" value="abc">`), rules: definition });
+    expect(await Faqir.validate.run(form)).toBe(false);
+    expect(errorOf(control(form, "code"))).toBe("Please match the requested format.");
+    await type(control(form, "code"), "AB");
+    expect(await Faqir.validate.run(form)).toBe(true);
+  });
+
+  it("is left to the browser when the control carries the attribute", async () => {
+    const { form } = await boot({
+      body: group(`<input data-part="input" name="code" value="AB" pattern="[A-Z]+">`),
+      rules: definition,
+    });
+    // The attribute says something looser than the definition; the plugin
+    // does not second-guess markup that states its own constraint.
+    expect(await Faqir.validate.run(form)).toBe(true);
+  });
 });

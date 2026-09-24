@@ -62,11 +62,6 @@
      content sitting on it, and the theme's subject is the sky behind the app. */
   --texture-page: var(--texture-mesh);
 
-  /* ── Decoration: selection wears the accent ──
-     The one surface of a themed page that never matched the theme. */
-  --selection-bg: var(--color-primary);
-  --selection-fg: var(--color-primary-fg);
-
   /* ── Depth: layered, and tinted through the channel ──
      Every step is cast in `--shadow-color` (bare OKLCH channels), so the violet
      cast is ONE declaration per scheme instead of ten literals, and the geometry
@@ -79,6 +74,17 @@
   --shadow-md:  0 6px 12px oklch(var(--shadow-color) / 0.09), 0 2px 4px oklch(var(--shadow-color) / 0.06);
   --shadow-lg:  0 12px 24px oklch(var(--shadow-color) / 0.11), 0 4px 8px oklch(var(--shadow-color) / 0.06);
   --shadow-xl:  0 24px 48px oklch(var(--shadow-color) / 0.13), 0 8px 16px oklch(var(--shadow-color) / 0.07);
+}
+
+:root,
+[data-theme] {
+  /* ── Decoration: selection wears the accent ──
+     The one surface of a themed page that never matched the theme.
+     On `:root, [data-theme]`: the token layer re-resolves these aliases on
+     every scheme island (tokens/aliases.css), so a `:root`-only override
+     would fall back to the default inside a nested `data-theme` region. */
+  --selection-bg: var(--color-primary);
+  --selection-fg: var(--color-primary-fg);
 }
 
 /* ── Dark Mode (primary design target) ── */

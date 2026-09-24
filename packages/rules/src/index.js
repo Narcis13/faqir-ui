@@ -18,11 +18,14 @@
  *     },
  *   };
  *
- *   const data = coerce(def, Object.fromEntries(new FormData(form)));
+ *   const data = coerce(def, fromFormData(new FormData(form)));
  *   const { valid, findings } = validate(def, data);
  *
- * A definition also carries `rules` — the six verbs (`show`, `require`,
- * `validate`, a remote `validate`, `compute`, `jump`) over a JSONLogic subset,
+ * (`fromFormData`, not `Object.fromEntries`: the latter keeps one value of a
+ * repeated name, and a checkbox group is exactly that.)
+ *
+ * A definition also carries `rules` — the five verbs (`show`, `require`,
+ * `validate` in its logic and remote forms, `compute`, `jump`) over a JSONLogic subset,
  * which is what fills the verdict's `computed`, `visible`, `required` and
  * `next` maps:
  *
@@ -52,8 +55,10 @@ export {
   DEFINITION_VERSION,
   DefinitionError,
   FIELD_KEYWORDS,
+  MAX_ARRAY_INDEX,
   MAX_PATTERN_LENGTH,
   coerce,
+  fromFormData,
 } from "./shape.js";
 
 export {

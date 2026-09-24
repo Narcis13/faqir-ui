@@ -64,3 +64,15 @@
   --z-toast:    400;
   --z-max:      9999;
 }
+
+/* ── Scheme islands ── */
+/* The ring colour, restated where a scheme can change below the root: declared
+   on `:root` alone it resolves `--color-ring` once, from the page, and a nested
+   `data-theme="dark"` region would draw the light ring. See the same block in
+   tokens/aliases.css. `--focus-shadow` is deliberately NOT restated — it is a
+   depth value a theme owns, and restating it would replace the theme's glow
+   with `none` inside every island. */
+[data-theme],
+[data-skin] {
+  --focus-ring-color:  var(--color-ring);
+}

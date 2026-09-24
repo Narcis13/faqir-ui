@@ -1,6 +1,6 @@
 # Release checklist
 
-Everything between a clean `main` and six packages on npm. `scripts/release.mjs`
+Everything between a clean `main` and seven packages on npm. `scripts/release.mjs`
 automates the parts that can be automated and refuses to proceed past the parts
 that cannot; this document is the list of what it does, what it deliberately does
 not, and what a human has to do around it.
@@ -24,13 +24,17 @@ The GitHub Actions workflows were removed in `671941e` (no Actions minutes on th
 free plan). That decision moves real work onto this checklist, and the honest
 accounting is:
 
-**Moved into `release.mjs --preflight`** — these now run on the release machine,
-which is stricter than CI ever was, because they cannot be skipped by pushing to
-a branch:
+**Moved into the release script's preflight** (`PREFLIGHT` in
+`scripts/release.mjs`) — these now run on the release machine, which is stricter
+than CI ever was, because they cannot be skipped by pushing to a branch:
 
 `typecheck` · `check:registry-index` · `check:manifest-api` · `check:core-package`
-· `check:audit-browser` · `check:docs` · `check:skill` · `check:schema-refs`
-· `check:bindings` · `size` · `test` · `audit:registry`
+· `check:audit-browser` · `check:rules-plugin` · `check:schema-refs`
+· `check:bindings` · `check:skill` · `check:theme-docs` · `check:docs`
+· `audit:registry` · `size` · `test`
+
+`tests/build/release.test.ts` fails when a `check:*` script exists that the
+preflight does not run, and when this list stops matching it.
 
 **Cannot be automated on this machine, and are therefore manual** — the visual,
 print and a11y suites baseline inside a pinned Linux container, because font
@@ -80,49 +84,28 @@ They wake up on their own if CI returns.
 ## Before you start
 
 - [ ] The `faqir-ui` npm **organisation exists** and you are a member with publish
-      rights. All five scoped packages publish under it (`publishConfig.access` is
+      rights. All six scoped packages publish under it (`publishConfig.access` is
       `public`); the root `faqir-ui-cli` is unscoped. `npm org ls faqir-ui` should
       list you.
 - [ ] `npm whoami` is the account you intend to publish as.
 - [ ] Two-factor is set up and you have the authenticator to hand — `npm publish`
-      blocks on the OTP prompt. Pass `--otp=<code>` to avoid six prompts.
+      blocks on the OTP prompt. Pass `--otp <code>` to avoid seven prompts — a
+      TOTP code lasts about 30 seconds, so a slow publish may still ask again.
 - [ ] `gh auth status` is green, if you want the GitHub release created for you.
 - [ ] `main` is clean, pushed, and identical to `origin/main`.
 
-## The first publish
+## New on npm in 1.1
 
-Nothing has been published yet: all six names 404 on the registry, and the `v0.1`
-–`v0.2.4` tags never reached npm. The first release differs from every later one
-in two ways.
+`@faqir-ui/rules` is the one package 1.1 adds. It is a first publish of a new
+name into the existing `faqir-ui` organisation — no org setup, nothing to
+reserve — but it is the only name in the lockstep set npm has never seen, so:
 
-**The version is named, not bumped.** The 1.0 prerelease commit already put
-`1.0.0` into all six `package.json` files and `src/version.ts`, and
-`src/canonical.ts` pins `SPEC_REF = "v1.0.0"` — every canonical spec and schema
-URL resolves through that tag. So the first release *is* 1.0.0, and it is passed
-explicitly rather than derived:
+- [ ] `npm view @faqir-ui/rules` 404s before the release (the name is free and
+      unclaimed), and your account can publish into the org.
+- [ ] After the release, `npm view @faqir-ui/rules version` reports it like the
+      other six.
 
-```bash
-node scripts/release.mjs 1.0.0 --dry-run   # rehearse
-node scripts/release.mjs 1.0.0             # publish
-```
-
-Re-stamping a version that is already on disk rewrites nothing, which is fine and
-expected — the script reports `already at 1.0.0` per file and asserts the release
-commit contains only what it actually changed. A bump keyword would be wrong
-here: `patch` resolves to 1.0.1 and would burn 1.0.0 without ever publishing it,
-leaving `SPEC_REF` pointing at a tag no release created.
-
-**The npm side does not exist yet.** Before the first run:
-
-- [ ] `npm login` — the machine has no token at all until this is done
-      (`npm whoami` currently errors `ENEEDAUTH`).
-- [ ] Create the **`faqir-ui` organisation** on npm. The five scoped packages
-      cannot publish into a scope that does not exist, and the error npm returns
-      for a missing scope (`404`) reads identically to a name that is taken.
-- [ ] Confirm the unscoped `faqir-ui-cli` is still free — an unscoped name is
-      first-come, and the whole publish order ends with it.
-
-Everything after the first release uses a bump keyword as normal.
+Every other package is an ordinary version bump: `node scripts/release.mjs minor`.
 
 ## What the script does, in order
 
@@ -130,28 +113,32 @@ Everything after the first release uses a bump keyword as normal.
    failure stops before anything is written.
 2. **Preflight** — the gate list above. `--skip-preflight` exists for a retry
    after a partial publish and prints a loud warning; do not use it otherwise.
-3. **Version** — computes the next version and writes it to all six
+3. **Version** — computes the next version and writes it to all seven
    `package.json` files and `src/version.ts`. Lockstep, always: no package
    depends on another by range, so there is no reason for them to differ and one
    good reason not to — "which versions go together" stops being a question. A
    file already carrying the target version is reported and left alone; only a
    *missing* version field is an error.
 4. **Ordered builds** — `build:core` (which injects `Faqir.version`) →
-   `build:cli` → `build:core-package` (regenerates `cdn.json` and its 15 SRI
+   `build:cli` → `build:core-package` (regenerates `cdn.json` and its SRI
    hashes against the new version) → `build:bindings` → `build:mcp`.
 5. **Artifact verification** — every dist exists and is non-empty, and the packed
-   CLI tarball installs into a temp directory and answers `faqir --version`
-   **under `node`**, not Bun. This is the check `check:package` never was: `npm
-   pack --dry-run` will happily pack 365 files whose `bin` cannot resolve.
+   CLI tarball installs into a temp directory and answers `faqir --version` and
+   `faqir context --skill` **under `node`** (pinned with `FAQIR_FORCE_NODE=1`, since
+   the launcher prefers Bun whenever Bun is on PATH) **and under Bun** when Bun is
+   installed. This is the check `check:package` never was: `npm pack --dry-run`
+   will happily pack 365 files whose `bin` cannot resolve. The Bun leg is the one
+   that catches a bundle Bun decodes as Latin-1 (a stray `// @bun` pragma turned
+   every `—` into `â€”`).
 6. **Commit, tag, push** — in that order, and **push before publish**. The old
    ordering was tag → publish → push, so a rejected push left a version live on
    npm that existed in no pushed commit. If the builds reproduce what is already
    committed there is nothing to commit, and HEAD is tagged as it stands rather
    than carrying an empty commit. An existing tag is reused only when it already
    points at HEAD; one pointing elsewhere aborts the release.
-7. **Publish** — `@faqir-ui/core`, then the bindings, then `@faqir-ui/mcp`, then
-   the root CLI last, so the package people actually install is the last thing to
-   appear.
+7. **Publish** — `@faqir-ui/core`, then the bindings (`react`, `vue`), then
+   `@faqir-ui/forms` and `@faqir-ui/rules`, then `@faqir-ui/mcp`, then the root
+   CLI last, so the package people actually install is the last thing to appear.
 8. **GitHub release** — via `gh release create`, with notes. Skipped with a
    printed command if `gh` is missing.
 
@@ -162,7 +149,7 @@ Everything after the first release uses a bump keyword as normal.
   attestation to sign. This is a genuine gap in the 1.0 release and it is a
   consequence of the CI decision, not an oversight — say so in the release notes
   rather than leaving it looking unconsidered.
-- **No automatic rollback.** npm has no transaction across six packages. See
+- **No automatic rollback.** npm has no transaction across seven packages. See
   below.
 
 ## If a publish fails partway

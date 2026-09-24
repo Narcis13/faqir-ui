@@ -1,9 +1,45 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { loadManifest } from "../manifest";
-import { ensureDir } from "./fs";
+import { ensureDir, getRegistryPath } from "./fs";
 import { controllerName } from "./components";
 import type { FaqirConfig } from "./config";
+
+/**
+ * The runtime half of `core/faqir.js` — everything after the `controllers`
+ * table: mount on DOM ready, init controllers on added nodes, destroy them on
+ * removed ones. Read from the registry's own `core/faqir.js` (shipped in the
+ * npm package next to the CLI) so the file `faqir add` writes into a project
+ * can never drift from the one the registry tests exercise. It once did: the
+ * registry copy learned to tear down removed controllers and this template
+ * kept the added-only observer.
+ */
+export function faqirInitRuntime(registryPath: string = getRegistryPath()): string {
+  const source = readFileSync(join(registryPath, "core", "faqir.js"), "utf8");
+  const start = source.indexOf("\nconst controllers = {");
+  const end = start < 0 ? -1 : source.indexOf("\n};\n", start);
+  if (end < 0) {
+    throw new Error("registry/core/faqir.js has no `const controllers = { … };` table to split at");
+  }
+  return source.slice(end + "\n};\n".length);
+}
+
+/**
+ * The factory a recipe controller actually exports — read from the installed
+ * source the same way scripts/build-core.mjs reads it, because the name is not
+ * derivable from the recipe name: `toast` exports `createToastContainer`,
+ * `input-otp` `createInputOTP`, `qr-code` `createQRCode`. Deriving it imported
+ * names that do not exist, which is a SyntaxError that takes the whole
+ * auto-init module down. Falls back to the derived name if the file is absent.
+ */
+function factoryName(outputDir: string, recipe: string): string {
+  const file = join(outputDir, "recipes", recipe, `${recipe}.js`);
+  if (existsSync(file)) {
+    const m = readFileSync(file, "utf8").match(/export\s+function\s+([A-Za-z0-9_$]+)\s*\(/);
+    if (m) return m[1];
+  }
+  return controllerName(recipe);
+}
 
 export async function regenerateFaqirInit(
   config: { installed: { recipes: string[] } },
@@ -15,12 +51,14 @@ export async function regenerateFaqirInit(
   const recipes = config.installed.recipes;
   if (recipes.length === 0) return;
 
+  const factories = recipes.map((r) => factoryName(outputDir, r));
+
   const imports = recipes
-    .map((r) => `import { ${controllerName(r)} } from "../recipes/${r}/${r}.js";`)
+    .map((r, i) => `import { ${factories[i]} } from "../recipes/${r}/${r}.js";`)
     .join("\n");
 
   const entries = recipes
-    .map((r) => `  ${JSON.stringify(r)}: ${controllerName(r)},`)
+    .map((r, i) => `  ${JSON.stringify(r)}: ${factories[i]},`)
     .join("\n");
 
   const content = `// @ui:core faqir
@@ -32,39 +70,7 @@ ${imports}
 const controllers = {
 ${entries}
 };
-
-function init() {
-  for (const [name, factory] of Object.entries(controllers)) {
-    document.querySelectorAll(\`[data-ui="\${name}"]\`).forEach(factory);
-  }
-}
-
-// Auto-init on DOM ready
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", init);
-} else {
-  init();
-}
-
-// Re-init on dynamic content (MutationObserver)
-const observer = new MutationObserver((mutations) => {
-  for (const mutation of mutations) {
-    for (const node of mutation.addedNodes) {
-      if (node.nodeType !== 1) continue;
-      const ui = node.getAttribute?.("data-ui");
-      if (ui && controllers[ui]) controllers[ui](node);
-      if (node.querySelectorAll) {
-        for (const [name, factory] of Object.entries(controllers)) {
-          node.querySelectorAll(\`[data-ui="\${name}"]\`).forEach(factory);
-        }
-      }
-    }
-  }
-});
-observer.observe(document.body, { childList: true, subtree: true });
-
-export { init, controllers };
-`;
+${faqirInitRuntime()}`;
 
   await Bun.write(join(coreDir, "faqir.js"), content);
 }

@@ -45,6 +45,7 @@ import {
   BUTTON_RECT_MAX_PX,
   CONTRAST_HIGH_TEXT_MIN,
   DEPTH_LAYERED_MIN_BLUR_PX,
+  DIVIDER_DOUBLE_MIN_PX,
   FOCUS_BOLD_MIN_WIDTH_PX,
   HEADING_TRACKING_EM,
   HEADING_WEIGHT_MAX,
@@ -181,7 +182,8 @@ const FIXTURES: Fixture[] = [
   { path: "type.voice.tracking", value: "wide", decls: { "heading-tracking": "0.05em" } },
   { path: "type.voice.transform", value: "none", decls: { "heading-transform": "none" } },
   { path: "type.voice.transform", value: "uppercase", decls: { "heading-transform": "uppercase" } },
-  { path: "type.voice.transform", value: "small-caps", decls: { "heading-transform": "small-caps" } },
+  // Small caps are `font-variant-caps`, read off their own token [1.1A-25].
+  { path: "type.voice.transform", value: "small-caps", decls: { "heading-caps": "small-caps" } },
 
   // ── shape ──
   { path: "shape.radius", value: "sharp", decls: { "radius-md": "0" } },
@@ -247,10 +249,13 @@ const FIXTURES: Fixture[] = [
   { path: "decoration.link", value: "plain", decls: { "link-underline-offset": "0" } },
   { path: "decoration.link", value: "offset", decls: { "link-underline-offset": "0.2em" } },
   { path: "decoration.link", value: "thick", decls: { "link-thickness": "2px" } },
-  ...THEME_AXIS_VALUES["decoration.divider"].map((style) => ({
+  // `double` is only a double rule on a divider wide enough to split [1.1A-26].
+  ...THEME_AXIS_VALUES["decoration.divider"].map((style): Fixture => ({
     path: "decoration.divider",
     value: style,
-    decls: { "divider-style": style },
+    decls: style === "double"
+      ? { "divider-style": style, "divider-width": `${DIVIDER_DOUBLE_MIN_PX}px` }
+      : { "divider-style": style },
   })),
 
   // ── controls ──
@@ -308,6 +313,28 @@ describe("axesFromCss · one fixture per axis value", () => {
 // which side of the line a value falls on.
 
 describe("axesFromCss · thresholds, from both sides", () => {
+  it("DIVIDER_DOUBLE_MIN_PX: a double rule narrower than it renders as one line, so reads solid", () => {
+    const at = (width: string) =>
+      axes({ "divider-style": "double", "divider-width": width }).decoration.divider;
+    expect(at(`${DIVIDER_DOUBLE_MIN_PX}px`)).toBe("double");
+    expect(at(`${DIVIDER_DOUBLE_MIN_PX - 1}px`)).toBe("solid");
+    // Unraised, the divider follows the 1px edge — the trap 1.1A-15 measured.
+    expect(axes({ "divider-style": "double" }).decoration.divider).toBe("solid");
+    // …and a heavy EDGE is wide enough on its own, because the width follows it.
+    expect(axes({ "divider-style": "double", "border-width": "4px" }).decoration.divider).toBe("double");
+  });
+
+  it("small caps live on --heading-caps; a transform spelled small-caps renders nothing and reads none", () => {
+    const voice = (decls: Record<string, string>) => axes(decls).type.voice!.transform;
+    expect(voice({ "heading-caps": "small-caps" })).toBe("small-caps");
+    expect(voice({ "heading-caps": "all-small-caps" })).toBe("small-caps");
+    // Not a `text-transform` value — the browser drops it, so nothing renders.
+    expect(voice({ "heading-transform": "small-caps" })).toBe("none");
+    // Uppercase renders OVER small caps (they only restyle lowercase letters).
+    expect(voice({ "heading-transform": "uppercase", "heading-caps": "small-caps" })).toBe("uppercase");
+    expect(voice({ "heading-caps": "normal" })).toBe("none");
+  });
+
   it("NEUTRAL_GRAY_MAX_CHROMA separates gray from a tint", () => {
     const under = NEUTRAL_GRAY_MAX_CHROMA - 0.001;
     const over = NEUTRAL_GRAY_MAX_CHROMA + 0.001;

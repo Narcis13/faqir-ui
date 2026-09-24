@@ -67,8 +67,14 @@ export async function context(args: string[]): Promise<void> {
   // Parse format
   let format: ContextFormat = "json";
   const fmtIdx = args.indexOf("--format");
-  if (fmtIdx >= 0 && args[fmtIdx + 1]) {
+  if (fmtIdx >= 0) {
     const val = args[fmtIdx + 1];
+    // `--format` alone used to fall through to json silently, and
+    // `--format --stdout` reported "--stdout" as an invalid format.
+    if (val === undefined || val.startsWith("-")) {
+      log.error(`Missing value for --format. Must be: ${FORMATS.map((f) => f.format).join(", ")}`);
+      process.exit(1);
+    }
     if (FORMATS.some((f) => f.format === val)) {
       format = val as ContextFormat;
     } else {

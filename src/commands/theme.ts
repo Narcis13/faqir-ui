@@ -1,13 +1,16 @@
 // faqir theme — manage themes (set, create, generate, list)
 
-import { existsSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, readFileSync } from "node:fs";
+import { isAbsolute, join, relative, resolve } from "node:path";
 import { log } from "../utils/logger";
 import { configExists, readConfig, writeConfig, missingConfigMessage } from "../utils/config";
+import { regenerateContext } from "../utils/codegen";
 import { copyFile, ensureDir, getRegistryPath } from "../utils/fs";
 import { generateBundle } from "../utils/bundler";
 import { emitJSON, isJSONMode } from "../utils/json-output";
-import { listRegistryThemes } from "../theme-manifest";
+import { listRegistryThemes, type ThemeManifest } from "../theme-manifest";
+import { densityFromCss } from "../theme/axes";
+import { findFamily } from "../fonts/catalog";
 import {
   previewStylesheets,
   renderThemePreview,
@@ -36,9 +39,13 @@ import {
 } from "../theme/distinctiveness";
 import {
   coerceSeedValue,
+  LEGACY_NEUTRAL_DEFAULT,
+  LEGACY_RADIUS_SHAPE,
   mergeSeeds,
+  radiusConflict,
   SEED_FLAGS,
   setSeedPath,
+  THEME_NAME_PATTERN,
   type ThemeSeedInput,
 } from "../theme/seed";
 import { validateThemeSeed, THEME_AXIS_VALUES, THEME_DERIVED_AXES } from "../theme-manifest";
@@ -101,7 +108,7 @@ function printGenerateHelp() {
     ["--seed <file>", "A .seed.json to start from; individual flags override it"],
     ["--out <dir>", `Directory to write into (default: ${DEFAULT_THEME_OUT_DIR})`],
     ["--document", "Also emit a brand-matched print/document variant"],
-    ["--radius <size>", "1.0 compatibility flag for --shape: sm, md, or lg"],
+    ["--radius <size>", "1.0 compatibility flag for --shape: sm, md, or lg (not both)"],
     ["--legacy-blocks", "Dual themes: write three colour blocks instead of one light-dark() block"],
     ["--allow-similar", `Write even when a theme in --out is within ${AXIS_MIN} axes / ${TOKEN_MIN} ΔE`],
     ["--json", "Print the full scorecard: seed, axes, contrast, elevation, focus, tap targets"],
@@ -109,6 +116,7 @@ function printGenerateHelp() {
   log.blank();
   console.log("Axes (every one optional — an unstated axis takes its documented default):");
   log.table(axisFlagRows());
+  log.dim(`Without --seed, --neutral defaults to ${LEGACY_NEUTRAL_DEFAULT} (the 1.0 default); a seed file's unstated neutral is gray.`);
   log.blank();
   log.dim(`Outputs: ${DEFAULT_THEME_OUT_DIR}/<name>.{css,theme.json,seed.json,preview.html}`);
   log.dim("Contrast policy: white ink in light mode, dark ink in dark mode; the primary ramp step is adjusted automatically.");
@@ -191,6 +199,9 @@ function parseThemeGenerateArgs(args: string[]): ThemeGenerateArgs | null {
       }
       case "--radius": {
         const option = optionValue(args, i, "--radius");
+        if (!(option.value in LEGACY_RADIUS_SHAPE)) {
+          throw new Error(`Invalid --radius '${option.value}'. Choose: sm, md, or lg.`);
+        }
         parsed.radius = option.value as ThemeRadius;
         i = option.next;
         break;
@@ -217,13 +228,49 @@ function parseThemeGenerateArgs(args: string[]): ThemeGenerateArgs | null {
     }
   }
 
+  // `--radius` is the 1.0 spelling of `--shape`, so it is written where
+  // `--shape` would be — as a FLAG, which wins over a `--seed` file like every
+  // other flag. Both flags given and disagreeing is an error, not a silent
+  // winner: the 1.0 flag used to vanish without a word whenever `--shape` or a
+  // seed's `shape.radius` was present.
+  if (parsed.radius) {
+    const shape = (parsed.flagSeed.shape ?? {}) as Record<string, unknown>;
+    const mapped = LEGACY_RADIUS_SHAPE[parsed.radius];
+    if (shape.radius !== undefined && shape.radius !== mapped) {
+      throw new Error(radiusConflict(parsed.radius, String(shape.radius)));
+    }
+    setSeedPath(parsed.flagSeed, "shape.radius", mapped);
+  }
+
   return parsed;
+}
+
+/**
+ * Resolve a user-given output directory against the working directory.
+ *
+ * An absolute path is the user saying exactly where, and is honoured as given
+ * (it used to be glued onto the cwd, so `--out /tmp/x` wrote `./tmp/x`). A
+ * RELATIVE path must stay inside the working directory — the same containment
+ * `add` asserts before it writes — so a stray `../..` cannot put files
+ * somewhere the command line does not visibly name.
+ */
+export function resolveOutDir(cwd: string, dir: string, flag = "--out"): string {
+  if (isAbsolute(dir)) return resolve(dir);
+  const root = resolve(cwd);
+  const target = resolve(root, dir);
+  const rel = relative(root, target);
+  if (rel.startsWith("..") || isAbsolute(rel)) {
+    throw new Error(
+      `Refusing to write outside the project: ${flag} '${dir}' resolves to ${target}. ` +
+        `Pass an absolute path if that is really where it should go.`,
+    );
+  }
+  return target;
 }
 
 /** Read a `--seed <file>`, failing with the path rather than with a parser message. */
 async function readSeedFile(path: string): Promise<Record<string, unknown>> {
-  const resolved = join(process.cwd(), path);
-  const source = existsSync(resolved) ? resolved : path;
+  const source = resolve(process.cwd(), path);
   if (!existsSync(source)) {
     throw new Error(`Seed file '${path}' not found.`);
   }
@@ -262,9 +309,11 @@ async function resolveSeedInput(parsed: ThemeGenerateArgs): Promise<ThemeGenerat
       '--accent is required. Use an opaque oklch() or hex brand color, for example --accent "oklch(0.55 0.2 150)".',
     );
   }
+  // The 1.0 command line keeps its 1.0 default; a seed file is the 1.1 form and
+  // takes the seed table's (see LEGACY_NEUTRAL_DEFAULT).
+  if (!parsed.seedPath && merged.neutral === undefined) merged.neutral = LEGACY_NEUTRAL_DEFAULT;
   return {
     ...(merged as unknown as ThemeSeedInput),
-    ...(parsed.radius ? { radius: parsed.radius } : {}),
     legacyBlocks: parsed.legacyBlocks,
   };
 }
@@ -276,6 +325,9 @@ async function themeGenerate(args: string[]): Promise<void> {
     return;
   }
   const input = await resolveSeedInput(parsed);
+  // Resolved (and contained) before anything is generated, so a refused --out
+  // costs nothing and writes nothing.
+  const outAbs = resolveOutDir(process.cwd(), parsed.outDir);
 
   const registryPath = getRegistryPath();
   const baseCssSources = themeBaseSources(registryPath);
@@ -292,7 +344,7 @@ async function themeGenerate(args: string[]): Promise<void> {
   // The theme's own artefacts are excluded so a regeneration never collides
   // with the copy of itself it is about to overwrite.
   const peers = readPeerThemes(
-    join(process.cwd(), parsed.outDir),
+    outAbs,
     result.generated.map((file) => file.name),
   );
   if (!parsed.allowSimilar && peers.length > 0) {
@@ -326,18 +378,18 @@ async function themeGenerate(args: string[]): Promise<void> {
     );
   }
 
-  ensureDir(join(process.cwd(), parsed.outDir));
-  const written = new Map(report.generated.map((file) => [file.name, file]));
+  ensureDir(outAbs);
   for (const file of result.generated) {
-    const paths = written.get(file.name)!;
-    await Bun.write(join(process.cwd(), paths.css), file.css);
+    // The report's paths are `--out` as typed, for display; the writes go to
+    // the resolved directory, so an absolute --out is honoured exactly.
+    await Bun.write(join(outAbs, `${file.name}.css`), file.css);
     await Bun.write(
-      join(process.cwd(), paths.manifest),
+      join(outAbs, `${file.name}.theme.json`),
       JSON.stringify(file.manifest, null, 2) + "\n",
     );
-    if (paths.seed) {
+    if (file.kind === "theme") {
       await Bun.write(
-        join(process.cwd(), paths.seed),
+        join(outAbs, `${file.name}.seed.json`),
         JSON.stringify(result.seed, null, 2) + "\n",
       );
     }
@@ -346,7 +398,7 @@ async function themeGenerate(args: string[]): Promise<void> {
     // It is written self-contained — the output directory is a drop folder with
     // no registry beside it, so a linking harness would resolve to nothing.
     await Bun.write(
-      join(process.cwd(), paths.preview),
+      join(outAbs, `${file.name}.preview.html`),
       await renderGeneratedPreview(file, result.axes.density),
     );
   }
@@ -539,37 +591,69 @@ interface ThemeSource {
   css: string;
 }
 
+/** Where `set`, `bundle` and `list` look for a theme, in precedence order. */
+interface ThemeLocations {
+  registryPath: string;
+  /** `<output_dir>/tokens` — `theme create`'s `theme-<name>.css`. Null without a project. */
+  projectTokensDir: string | null;
+  /** `<cwd>/themes` — where `theme generate` writes by default. */
+  generatedDir: string;
+}
+
+function themeLocations(cwd: string, config: { output_dir: string } | null): ThemeLocations {
+  return {
+    registryPath: getRegistryPath(),
+    projectTokensDir: config ? join(cwd, config.output_dir, "tokens") : null,
+    generatedDir: join(cwd, DEFAULT_THEME_OUT_DIR),
+  };
+}
+
 /**
- * Find a theme's stylesheet the way `theme set` does: the registry first, then
- * the project's own `tokens/theme-<name>.css`. Returns null rather than throwing
- * so the companion lookup can use the same function.
+ * A theme name is a path segment in every lookup below and in the file `bundle`
+ * writes, so it is held to the kebab-case `theme generate` already enforces
+ * before it is joined onto anything — `../../x` is not a theme.
  */
-async function findThemeSource(
-  name: string,
-  registryPath: string,
-  projectTokensDir: string | null,
-): Promise<ThemeSource | null> {
-  const registryFile = join(registryPath, "themes", `${name}.css`);
-  if (existsSync(registryFile)) {
-    return {
-      name,
-      path: registryFile,
-      label: `registry/themes/${name}.css`,
-      css: await Bun.file(registryFile).text(),
-    };
+function assertThemeName(name: string, usage: string): void {
+  if (!THEME_NAME_PATTERN.test(name)) {
+    throw new Error(`Invalid theme name '${name}': a theme name is lowercase kebab-case (e.g. 'my-brand'). ${usage}`);
   }
-  if (projectTokensDir) {
-    const projectFile = join(projectTokensDir, `theme-${name}.css`);
-    if (existsSync(projectFile)) {
-      return {
-        name,
-        path: projectFile,
-        label: `tokens/theme-${name}.css`,
-        css: await Bun.file(projectFile).text(),
-      };
+}
+
+/**
+ * Find a theme's stylesheet: the registry first, then the project's own
+ * `tokens/theme-<name>.css` (`theme create`), then `themes/<name>.css` — what
+ * `theme generate` writes by default, so a generated theme is usable by name
+ * the moment it exists. Returns null rather than throwing so the companion
+ * lookup can use the same function.
+ */
+async function findThemeSource(name: string, where: ThemeLocations): Promise<ThemeSource | null> {
+  const candidates: Array<[path: string | null, label: string]> = [
+    [join(where.registryPath, "themes", `${name}.css`), `registry/themes/${name}.css`],
+    [where.projectTokensDir && join(where.projectTokensDir, `theme-${name}.css`), `tokens/theme-${name}.css`],
+    [join(where.generatedDir, `${name}.css`), `${DEFAULT_THEME_OUT_DIR}/${name}.css`],
+  ];
+  for (const [path, label] of candidates) {
+    if (path && existsSync(path)) {
+      return { name, path, label, css: await Bun.file(path).text() };
     }
   }
   return null;
+}
+
+/**
+ * The manifest beside a theme's stylesheet, if it has one: a registry theme's
+ * `<name>.theme.json`, or the one `theme generate` wrote next to its CSS. A
+ * `theme create` stylesheet has none. Unreadable means absent — it only feeds
+ * hints.
+ */
+function themeManifestFor(source: ThemeSource): ThemeManifest | null {
+  const path = source.path.replace(/\.css$/, ".theme.json");
+  if (path === source.path || !existsSync(path)) return null;
+  try {
+    return JSON.parse(readFileSync(path, "utf8")) as ThemeManifest;
+  } catch {
+    return null;
+  }
 }
 
 async function themeBundle(args: string[]): Promise<void> {
@@ -581,6 +665,7 @@ async function themeBundle(args: string[]): Promise<void> {
   if (!parsed.name) {
     throw new Error("Theme name required. Usage: faqir theme bundle <name> --scope");
   }
+  assertThemeName(parsed.name, "Usage: faqir theme bundle <name> --scope");
   if (!parsed.scope) {
     throw new Error(
       `'faqir theme bundle' emits scoped stylesheets — pass --scope to write ` +
@@ -590,11 +675,10 @@ async function themeBundle(args: string[]): Promise<void> {
   }
 
   const cwd = process.cwd();
-  const registryPath = getRegistryPath();
   const config = configExists(cwd) ? await readConfig(cwd) : null;
-  const projectTokensDir = config ? join(cwd, config.output_dir, "tokens") : null;
+  const where = themeLocations(cwd, config);
 
-  const primary = await findThemeSource(parsed.name, registryPath, projectTokensDir);
+  const primary = await findThemeSource(parsed.name, where);
   if (!primary) {
     throw new Error(
       `Theme '${parsed.name}' not found. Run 'faqir theme list' to see available themes.`,
@@ -606,11 +690,7 @@ async function themeBundle(args: string[]): Promise<void> {
   // OWN `data-skin` scope and both files are written. An explicit selector names
   // one subtree and cannot address two themes at once, so the companion is
   // reported rather than silently given a selector the caller did not choose.
-  const companion = await findThemeSource(
-    `${parsed.name}-document`,
-    registryPath,
-    projectTokensDir,
-  );
+  const companion = await findThemeSource(`${parsed.name}-document`, where);
   const skipped: Array<{ theme: string; reason: string }> = [];
   const sources: ThemeSource[] = [primary];
   if (companion) {
@@ -627,14 +707,15 @@ async function themeBundle(args: string[]): Promise<void> {
   }
 
   const outDir = parsed.outDir ?? (config ? config.output_dir : ".");
-  ensureDir(join(cwd, outDir));
+  const outAbs = resolveOutDir(cwd, outDir);
+  ensureDir(outAbs);
 
   const written: Array<{ source: ThemeSource; scoped: ScopedTheme; rel: string }> = [];
   for (const source of sources) {
     const selector = parsed.selector ?? defaultScopeSelector(source.name);
     const scoped = scopeThemeCss(source.css, { selector, name: source.name });
     const rel = join(outDir, `${source.name}.scoped.css`);
-    await Bun.write(join(cwd, rel), scoped.css);
+    await Bun.write(join(outAbs, `${source.name}.scoped.css`), scoped.css);
     written.push({ source, scoped, rel });
   }
 
@@ -677,6 +758,7 @@ async function themeBundle(args: string[]): Promise<void> {
   log.dim(`  <div ${written[0].scoped.selector.replace(/^\[|\]$/g, "")}> … </div>`);
 }
 
+/** `theme create`'s stylesheets: `<output_dir>/tokens/theme-<name>.css`. */
 function listProjectThemes(outputDir: string): string[] {
   const tokensDir = join(outputDir, "tokens");
   if (!existsSync(tokensDir)) return [];
@@ -686,42 +768,74 @@ function listProjectThemes(outputDir: string): string[] {
   for (const file of glob.scanSync({ cwd: tokensDir })) {
     themes.push(file.replace(/^theme-/, "").replace(/\.css$/, ""));
   }
-
-  // Also check for the active theme.css
-  if (existsSync(join(tokensDir, "theme.css"))) {
-    // The active theme is already applied
-  }
-
   return themes.sort();
+}
+
+/**
+ * `theme generate`'s stylesheets: every `themes/<name>.css` with a kebab-case
+ * name. A `*.scoped.css` from `theme bundle --out themes` is a derived file,
+ * not a theme, and is left out.
+ */
+function listGeneratedThemes(generatedDir: string): string[] {
+  if (!existsSync(generatedDir)) return [];
+  const themes: string[] = [];
+  for (const file of new Bun.Glob("*.css").scanSync({ cwd: generatedDir })) {
+    if (file.endsWith(".scoped.css")) continue;
+    const name = file.replace(/\.css$/, "");
+    if (THEME_NAME_PATTERN.test(name)) themes.push(name);
+  }
+  return themes.sort();
+}
+
+/**
+ * What `theme set` cannot apply for the user, said out loud [1.1A-30].
+ *
+ *  - DENSITY is a subtree modifier (`data-density`), not a token a theme can
+ *    declare at `:root`, so a theme states the density it was designed for in
+ *    an `@ui:density` header and the page has to opt in on `<html>`.
+ *  - FONTS: a manifest names the self-hosted families it was designed for, and
+ *    `faqir fonts add` is what installs them — the theme's own stack falls back
+ *    to faces the reader already has until then.
+ */
+export function themeSetHints(css: string, manifest: ThemeManifest | null): string[] {
+  const hints: string[] = [];
+  if (/@ui:density\s+[a-z]+/i.test(css)) {
+    const density = densityFromCss(css);
+    if (density !== "comfortable") {
+      hints.push(`Designed for ${density} density — add data-density="${density}" to <html> to apply it.`);
+    }
+  }
+  const byFamily = new Map<string, string[]>();
+  for (const font of manifest?.fonts ?? []) {
+    const id = findFamily(font.source ?? font.family)?.id;
+    if (!id) continue;
+    byFamily.set(id, [...(byFamily.get(id) ?? []), font.role]);
+  }
+  for (const [id, roles] of byFamily) {
+    hints.push(
+      `Designed for a self-hosted face — run: faqir fonts add ${id} ${roles.map((role) => `--role ${role}`).join(" ")}`,
+    );
+  }
+  return hints;
 }
 
 async function themeSet(name: string): Promise<void> {
   const cwd = process.cwd();
 
   if (!configExists(cwd)) {
-    log.error(missingConfigMessage(cwd));
-    process.exit(1);
+    throw new Error(missingConfigMessage(cwd));
   }
 
   const config = await readConfig(cwd);
-  const registryPath = getRegistryPath();
   const outputDir = join(cwd, config.output_dir);
 
-  // Check registry first
-  let themePath = join(registryPath, "themes", `${name}.css`);
-
-  if (!existsSync(themePath)) {
-    // Check project custom themes
-    themePath = join(outputDir, "tokens", `theme-${name}.css`);
-    if (!existsSync(themePath)) {
-      log.error(`Theme '${name}' not found.`);
-      log.dim("Run 'faqir theme list' to see available themes.");
-      process.exit(1);
-    }
+  const source = await findThemeSource(name, themeLocations(cwd, config));
+  if (!source) {
+    throw new Error(`Theme '${name}' not found. Run 'faqir theme list' to see available themes.`);
   }
 
   // Copy theme to output as theme.css
-  await copyFile(themePath, join(outputDir, "tokens", "theme.css"));
+  await copyFile(source.path, join(outputDir, "tokens", "theme.css"));
 
   // Update config
   config.theme = name;
@@ -734,16 +848,26 @@ async function themeSet(name: string): Promise<void> {
     log.step("Bundle regenerated.");
   }
 
+  // `.faqir/context.json` records the active theme, and an agent reads it
+  // before it writes markup — refreshed the way `add`/`remove` refresh it, but
+  // only where one exists, so `theme set` never creates a file nobody asked for.
+  if (existsSync(join(cwd, ".faqir", "context.json"))) {
+    await regenerateContext(config, outputDir, cwd);
+    log.step("Context refreshed.");
+  }
+
   log.success(`Theme set to '${name}'.`);
-  log.dim(`Theme file: ${config.output_dir}/tokens/theme.css`);
+  log.dim(`Theme file: ${config.output_dir}/tokens/theme.css  (from ${source.label})`);
+  for (const hint of themeSetHints(source.css, themeManifestFor(source))) {
+    log.info(hint);
+  }
 }
 
 async function themeCreate(name: string): Promise<void> {
   const cwd = process.cwd();
 
   if (!configExists(cwd)) {
-    log.error(missingConfigMessage(cwd));
-    process.exit(1);
+    throw new Error(missingConfigMessage(cwd));
   }
 
   const config = await readConfig(cwd);
@@ -751,8 +875,7 @@ async function themeCreate(name: string): Promise<void> {
   const themePath = join(outputDir, "tokens", `theme-${name}.css`);
 
   if (existsSync(themePath)) {
-    log.error(`Theme '${name}' already exists at ${config.output_dir}/tokens/theme-${name}.css`);
-    process.exit(1);
+    throw new Error(`Theme '${name}' already exists at ${config.output_dir}/tokens/theme-${name}.css`);
   }
 
   ensureDir(join(outputDir, "tokens"));
@@ -878,42 +1001,32 @@ async function themeList(): Promise<void> {
   const registryPath = getRegistryPath();
 
   const registryThemes = listRegistryThemes(registryPath);
-  let activeTheme = "default";
+  const config = configExists(cwd) ? await readConfig(cwd) : null;
+  const activeTheme = config?.theme ?? "default";
+  const customThemes = config ? listProjectThemes(join(cwd, config.output_dir)) : [];
+  // Shadowed names are listed once, under the location `theme set` resolves.
+  const taken = new Set([...registryThemes, ...customThemes]);
+  const generatedThemes = listGeneratedThemes(join(cwd, DEFAULT_THEME_OUT_DIR))
+    .filter((name) => !taken.has(name));
 
-  if (configExists(cwd)) {
-    const config = await readConfig(cwd);
-    activeTheme = config.theme;
-    const outputDir = join(cwd, config.output_dir);
-    const customThemes = listProjectThemes(outputDir);
-
-    log.heading("Themes");
+  const line = (t: string) =>
+    config && t === activeTheme ? `  ${"\x1b[32m"}✓ ${t} (active)${"\x1b[0m"}` : `    ${t}`;
+  const section = (title: string, themes: string[]) => {
+    if (themes.length === 0) return;
     log.blank();
+    console.log(`  ${title}:`);
+    for (const t of themes) console.log(line(t));
+  };
 
-    console.log("  Built-in:");
-    for (const t of registryThemes) {
-      const marker = t === activeTheme ? `  ${"\x1b[32m"}✓ ${t} (active)${"\x1b[0m"}` : `    ${t}`;
-      console.log(marker);
-    }
-
-    if (customThemes.length > 0) {
-      log.blank();
-      console.log("  Custom:");
-      for (const t of customThemes) {
-        const marker = t === activeTheme ? `  ${"\x1b[32m"}✓ ${t} (active)${"\x1b[0m"}` : `    ${t}`;
-        console.log(marker);
-      }
-    }
-  } else {
-    log.heading("Available Themes");
-    log.blank();
-    for (const t of registryThemes) {
-      console.log(`    ${t}`);
-    }
-    log.blank();
-    log.dim("Run 'faqir init --theme <name>' to use a theme.");
-  }
+  log.heading(config ? "Themes" : "Available Themes");
+  log.blank();
+  console.log("  Built-in:");
+  for (const t of registryThemes) console.log(line(t));
+  section("Custom", customThemes);
+  section(`Generated (${DEFAULT_THEME_OUT_DIR}/)`, generatedThemes);
 
   log.blank();
+  if (!config) log.dim("Run 'faqir init --theme <name>' to use a theme.");
   log.dim("Run 'faqir theme create <name>' to create a custom theme.");
 }
 
@@ -928,24 +1041,15 @@ export async function theme(args: string[]): Promise<void> {
   switch (subcommand) {
     case "set": {
       const name = args[1];
-      if (!name) {
-        log.error("Theme name required. Usage: faqir theme set <name>");
-        process.exit(1);
-      }
+      if (!name) throw new Error("Theme name required. Usage: faqir theme set <name>");
+      assertThemeName(name, "Usage: faqir theme set <name>");
       await themeSet(name);
       break;
     }
     case "create": {
       const name = args[1];
-      if (!name) {
-        log.error("Theme name required. Usage: faqir theme create <name>");
-        process.exit(1);
-      }
-      // Validate name: kebab-case, no spaces
-      if (!/^[a-z][a-z0-9-]*$/.test(name)) {
-        log.error("Theme name must be lowercase kebab-case (e.g., 'my-brand').");
-        process.exit(1);
-      }
+      if (!name) throw new Error("Theme name required. Usage: faqir theme create <name>");
+      assertThemeName(name, "Usage: faqir theme create <name>");
       await themeCreate(name);
       break;
     }
@@ -959,8 +1063,6 @@ export async function theme(args: string[]): Promise<void> {
       await themeList();
       break;
     default:
-      log.error(`Unknown subcommand: ${subcommand}`);
-      log.dim("Run 'faqir theme --help' for available subcommands.");
-      process.exit(1);
+      throw new Error(`Unknown subcommand: ${subcommand}. Run 'faqir theme --help' for available subcommands.`);
   }
 }

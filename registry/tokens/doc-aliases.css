@@ -43,7 +43,10 @@
   --field-error-size:       var(--doc-legal-size);
   --field-error-color:      var(--color-destructive);
   --field-validating-color: var(--color-fg-muted);     /* async validation in flight */
-  --field-disabled-opacity: 0.55;                       /* honest disabled affordance */
+  /* The role `--disabled-opacity` sets for every control, nudged 10% lighter:
+     0.55 at the 0.5 default, which is the value this alias always held, and it
+     follows a theme that states the role (1.1A-27). */
+  --field-disabled-opacity: calc(var(--disabled-opacity) * 1.1);
   --field-required-color:   var(--color-destructive);
   --field-required-marker:  ' *';                      /* appended to required labels */
 
@@ -58,6 +61,32 @@
   --stat-value-weight:      var(--weight-bold);
   --stat-value-num-font:    tabular-nums;
   --stat-label-size:        var(--doc-legal-size);
+  --stat-label-color:       var(--color-fg-muted);
+  --stat-change-positive:   var(--color-success);
+  --stat-change-negative:   var(--color-destructive);
+}
+
+/* ── Scheme islands ── */
+/* The colour aliases above, restated where a scheme can change below the root —
+   a custom property resolves its var() on the element that declares it, so a
+   `:root`-only alias would carry the page's light value into a nested
+   `data-theme="dark"` region. See the same block in tokens/aliases.css; the
+   values must match the `:root` declarations above exactly. */
+[data-theme],
+[data-skin] {
+  --kv-label-color:         var(--doc-legal-color);
+  --kv-value-color:         var(--color-fg);
+  --callout-bg:             var(--color-bg-subtle);
+  --callout-fg:             var(--color-fg);
+  --image-border:           var(--color-border);
+  --image-caption-color:    var(--doc-legal-color);
+  --field-label-color:      var(--color-fg);
+  --field-description-color: var(--color-fg-muted);
+  --field-error-color:      var(--color-destructive);
+  --field-validating-color: var(--color-fg-muted);
+  --field-required-color:   var(--color-destructive);
+  --page-break-screen-color: var(--color-border);
+  --page-break-screen-label-color: var(--color-fg-muted);
   --stat-label-color:       var(--color-fg-muted);
   --stat-change-positive:   var(--color-success);
   --stat-change-negative:   var(--color-destructive);

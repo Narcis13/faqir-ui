@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeAll, afterAll } from "bun:test";
-import { mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs";
+import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 
-import { createFaqirMcpServer, type FaqirMcpServerOptions } from "../src/server";
+import { containedProjectRoot, createFaqirMcpServer, type FaqirMcpServerOptions } from "../src/server";
 import { init } from "../../../src/commands/init";
 import { add } from "../../../src/commands/add";
 import { context } from "../../../src/commands/context";
@@ -413,15 +413,63 @@ describe("faqir_project_context", () => {
     expect(data.message).toContain("Not a Faqir project");
   });
 
-  it("honours a per-call root override", async () => {
-    // Server defaults to the in-project root, but the call overrides it.
-    const { client } = await makeClient({ projectRoot: IN_PROJECT });
-    const res = await client.callTool({
+  it("honours a per-call root inside the server's project root", async () => {
+    // A monorepo-shaped server: its root holds two sub-projects, and a call
+    // can point at either — relative to the root, or absolute.
+    const { client } = await makeClient({ projectRoot: TMP });
+    const relative = await client.callTool({
       name: "faqir_project_context",
-      arguments: { root: NO_PROJECT },
+      arguments: { root: "no-project" },
     });
-    const data = res.structuredContent as any;
-    expect(data.in_project).toBe(false);
-    expect(data.root).toBe(NO_PROJECT);
+    expect((relative.structuredContent as any).in_project).toBe(false);
+    expect((relative.structuredContent as any).root).toBe(NO_PROJECT);
+
+    const absolute = await client.callTool({
+      name: "faqir_project_context",
+      arguments: { root: IN_PROJECT },
+    });
+    expect((absolute.structuredContent as any).in_project).toBe(true);
+    expect((absolute.structuredContent as any).root).toBe(IN_PROJECT);
+  });
+
+  it("refuses a root outside the server's project root", async () => {
+    // The tool returns faqir.config.json and .faqir/context.json verbatim, so
+    // an unconstrained root read those files out of any directory at all.
+    const { client } = await makeClient({ projectRoot: IN_PROJECT });
+    for (const root of [NO_PROJECT, "../no-project", "/"]) {
+      const res = await client.callTool({ name: "faqir_project_context", arguments: { root } });
+      expect(res.isError, root).toBe(true);
+      expect((res.content as any[])[0].text).toContain("outside the server's project root");
+    }
+  });
+
+  it("containedProjectRoot resolves inside and rejects outside", () => {
+    expect(containedProjectRoot("/a/b", "c")).toBe("/a/b/c");
+    expect(containedProjectRoot("/a/b", "/a/b/c/d")).toBe("/a/b/c/d");
+    expect(containedProjectRoot("/a/b", ".")).toBe("/a/b");
+    expect(containedProjectRoot("/a/b", "../c")).toBeNull();
+    expect(containedProjectRoot("/a/b", "/a/bc")).toBeNull();
+    expect(containedProjectRoot("/a/b", "/etc")).toBeNull();
+  });
+});
+
+describe("every tool fails as a tool error, never a protocol crash", () => {
+  it("a handler that throws returns isError with the reason", async () => {
+    // A registry holding one unparseable manifest makes the manifest map —
+    // which the audit and repair tools load lazily — throw inside the handler.
+    // Before, that throw escaped as a protocol-level error.
+    const badRegistry = join(TMP, "bad-registry");
+    mkdirSync(join(badRegistry, "primitives", "bad"), { recursive: true });
+    writeFileSync(join(badRegistry, "primitives", "bad", "bad.manifest.json"), "{not json");
+
+    const server = createFaqirMcpServer({ registryPath: badRegistry });
+    const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+    const client = new Client({ name: "faqir-mcp-test", version: "0.0.0" });
+    await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
+    for (const name of ["faqir_audit_html", "faqir_repair_html"]) {
+      const res = await client.callTool({ name, arguments: { html: "<div></div>" } });
+      expect(res.isError, name).toBe(true);
+      expect((res.content as any[])[0].text, name).toContain("JSON");
+    }
   });
 });

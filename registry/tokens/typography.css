@@ -54,5 +54,9 @@
                                          composes inside calc() where a heading
                                          already has its own optical tightening */
   --heading-transform: none;          /* text-transform */
+  --heading-caps:      normal;        /* font-variant-caps — small caps are a
+                                         variant, not a transform (1.1A-25), so
+                                         they get a knob of their own that sits
+                                         beside --heading-transform */
   --heading-leading:   var(--leading-tight);
 }

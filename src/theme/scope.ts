@@ -251,7 +251,54 @@ interface Edit {
 }
 
 /**
- * What the scope root restates from `base/reset.css`.
+ * The colour aliases the token layer restates on `[data-theme]` and
+ * `[data-skin]` (the "Scheme islands" blocks in `tokens/aliases.css`,
+ * `effects.css`, `document.css` and `doc-aliases.css`), with the values those
+ * blocks give them.
+ *
+ * Each is a `var()` over a scheme colour, and a custom property resolves its
+ * var() on the element that DECLARES it — declared on `:root` alone, it is
+ * computed from the host page's colours and an island inherits that. The token
+ * layer's own `[data-skin]` block covers the default selector; the scope root
+ * restates them too so an island scoped to ANY selector (`--scope .preview`)
+ * resolves them against its own colours. They go first in the block, so a
+ * theme that overrides one of them still wins. `tests/tokens/scheme-islands.test.ts`
+ * keeps this list equal to the token files.
+ */
+export const SCHEME_ALIASES: ReadonlyArray<readonly [name: string, value: string]> = [
+  ["--focus-ring-color", "var(--color-ring)"],
+  ["--stripe-bg", "var(--color-bg-subtle)"],
+  ["--selection-bg", "var(--color-primary-subtle)"],
+  ["--selection-fg", "var(--color-fg)"],
+  ["--card-border", "var(--color-surface-1-border)"],
+  ["--card-bg", "var(--color-surface-1)"],
+  ["--input-border", "var(--color-border)"],
+  ["--input-bg", "var(--color-bg)"],
+  ["--input-bg-filled", "var(--color-bg-subtle)"],
+  ["--input-fill", "var(--input-bg)"],
+  ["--switch-bg", "var(--color-bg-muted)"],
+  ["--panel-bg", "var(--color-bg)"],
+  ["--doc-legal-color", "var(--color-fg-muted)"],
+  ["--kv-label-color", "var(--doc-legal-color)"],
+  ["--kv-value-color", "var(--color-fg)"],
+  ["--callout-bg", "var(--color-bg-subtle)"],
+  ["--callout-fg", "var(--color-fg)"],
+  ["--image-border", "var(--color-border)"],
+  ["--image-caption-color", "var(--doc-legal-color)"],
+  ["--field-label-color", "var(--color-fg)"],
+  ["--field-description-color", "var(--color-fg-muted)"],
+  ["--field-error-color", "var(--color-destructive)"],
+  ["--field-validating-color", "var(--color-fg-muted)"],
+  ["--field-required-color", "var(--color-destructive)"],
+  ["--page-break-screen-color", "var(--color-border)"],
+  ["--page-break-screen-label-color", "var(--color-fg-muted)"],
+  ["--stat-label-color", "var(--color-fg-muted)"],
+  ["--stat-change-positive", "var(--color-success)"],
+  ["--stat-change-negative", "var(--color-destructive)"],
+];
+
+/**
+ * What the scope root restates from `base/reset.css` and the token layer.
  *
  * Four of reset's declarations are theme-driven and land on elements a scoped
  * island is not: `color-scheme` on `:root`, `color` / `background` /
@@ -260,7 +307,8 @@ interface Edit {
  * page theme's computed values and would render the host's ink, ground, face and
  * material with the skin's component colours — legible only by accident. The
  * scope root declares them again, which is what makes the island a theme rather
- * than a palette.
+ * than a palette. The colour aliases ({@link SCHEME_ALIASES}) follow, for the
+ * same reason.
  */
 function rootDeclarations(colorScheme: ScopeRootScheme, indent: string): string {
   return [
@@ -274,7 +322,31 @@ function rootDeclarations(colorScheme: ScopeRootScheme, indent: string): string 
     `${indent}background-color: var(--color-bg);`,
     `${indent}background-image: var(--texture-page);`,
     `${indent}font-family: var(--font-body);`,
+    `${indent}/* The token layer's colour aliases, for the same reason: declared on \`:root\``,
+    `${indent}   they hold the host page's colours. The theme's own values below win. */`,
+    ...SCHEME_ALIASES.map(([name, value]) => `${indent}${name}: ${value};`),
   ].join("\n");
+}
+
+/**
+ * The rules that let a `data-theme` ON the scope root choose its scheme.
+ *
+ * `base/reset.css` maps `[data-theme="dark"]` to `color-scheme: dark` at
+ * (0,1,0) — the same specificity as the scope selector's own `color-scheme`,
+ * and the skin is linked later, so on `<div data-skin="x" data-theme="dark">`
+ * the skin's `light` won and a one-block (`light-dark()`) skin rendered light.
+ * The compound forms are (0,2,0) and win on that element. A skin whose root is
+ * dark already is dark under `data-theme="dark"`, and a dark-only theme has no
+ * light side to hand `auto`, so it needs none.
+ */
+function schemeRules(selector: string, colorScheme: ScopeRootScheme): string {
+  if (colorScheme !== "light") return "";
+  return (
+    `\n\n/* A data-theme on the scope root picks its scheme, as base/reset.css does for\n` +
+    `   :root — without these the scope root's own color-scheme above wins. */\n` +
+    `${selector}[data-theme="dark"] {\n  color-scheme: dark;\n}\n\n` +
+    `${selector}[data-theme="auto"] {\n  color-scheme: light dark;\n}\n`
+  );
 }
 
 /** The generated banner. Deliberately carries no `@ui:` directive of its own. */
@@ -355,6 +427,9 @@ export function scopeThemeCss(source: string, options: ScopeThemeOptions): Scope
       end: block.braceAt + 1,
       text: `\n${rootDeclarations(colorScheme, indent)}\n`,
     });
+    // Right after the scope root's block, beside the declaration it outranks.
+    const after = Math.min(block.closeAt + 1, source.length);
+    edits.push({ start: after, end: after, text: schemeRules(selector, colorScheme) });
   }
 
   let css = source;
@@ -363,10 +438,21 @@ export function scopeThemeCss(source: string, options: ScopeThemeOptions): Scope
   }
   css = header(name, selector, css);
 
+  // The restated aliases are the one deliberate addition, so they come off the
+  // scoped sheet's declarations before the two token sets are compared — one
+  // occurrence each, which keeps a theme's own declaration of the same name.
+  const withoutRestated = (text: string): string[] => {
+    const defs = extractTokenDefinitions(stripCssComments(text)).map((def) => `--${def.name}: ${def.value}`);
+    for (const [name, value] of SCHEME_ALIASES) {
+      const at = defs.indexOf(`${name}: ${value}`);
+      if (at >= 0) defs.splice(at, 1);
+    }
+    return defs.map((decl) => decl.slice(2, decl.indexOf(":")));
+  };
   const tokens = (text: string): string[] =>
     [...new Set(extractTokenDefinitions(stripCssComments(text)).map((def) => def.name))].sort();
   const before = tokens(source);
-  const after = tokens(css);
+  const after = scopeRoot ? [...new Set(withoutRestated(css))].sort() : tokens(css);
   if (before.join("\n") !== after.join("\n")) {
     const lost = before.filter((token) => !after.includes(token));
     const gained = after.filter((token) => !before.includes(token));

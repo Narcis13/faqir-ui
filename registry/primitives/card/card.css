@@ -8,8 +8,10 @@
   border: var(--card-border-width) solid var(--card-border, var(--color-surface-1-border));
   border-radius: var(--card-radius, var(--radius-lg));
   corner-shape: var(--corner-shape);
-  background-color: var(--card-bg, var(--color-surface-1));
-  background-image: var(--texture-surface);
+  /* One shorthand, two layers: the material on top, the fill beneath. The fill
+     is the final layer, so `--card-bg` may be a colour OR a gradient — what 1.0
+     projects set it to — and the texture (`none` by default) never clobbers it. */
+  background: var(--texture-surface), var(--card-bg, var(--color-surface-1));
   box-shadow: var(--card-shadow, var(--shadow-sm));
   overflow: hidden;
   transition: translate var(--duration-fast) var(--ease-default);
@@ -35,7 +37,7 @@
 }
 
 [data-ui="card"][data-variant="filled"] {
-  background-color: var(--color-surface-2);
+  background: var(--texture-surface), var(--color-surface-2);
   border-color: var(--color-surface-2-border);
   box-shadow: none;
 }

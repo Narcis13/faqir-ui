@@ -57,7 +57,6 @@
   --radius-full:            0;
   --card-radius:            0;
   --card-shadow:            none;
-  --card-border:            var(--color-border-strong);
   --button-radius:          0;
   --input-radius:           0;
   --badge-radius:           0;
@@ -94,14 +93,16 @@
 
   /* ── Decoration: a ruled divider ──
      Dotted, and NOT the `double` rule a contract's section break traditionally
-     carries: `separator` draws its rule as `var(--border-width)
-     var(--divider-style) var(--color-border)`, this theme's edge is the
-     family's 1px hairline, and a 1px `double` border paints as a single solid
-     line — measured in Chrome 149, one black pixel row, indistinguishable
-     from `solid` (two rows appear only at 3px). Declaring `double` here would
-     be a theme asking for a mark it does not get, which §3 forbids; a dotted
-     leader is the other rule a legal form is full of, and it renders at the
-     weight this theme actually draws. */
+     carries. When this theme shipped (1.1A-15) `separator` drew its rule at
+     `--border-width`, this theme's edge is the family's 1px hairline, and a
+     1px `double` border paints as a single solid line — measured in Chrome
+     149, one black pixel row, indistinguishable from `solid` (two rows appear
+     only at 3px). A dotted leader is the other rule a legal form is full of,
+     and it renders at the weight this theme draws. Since 1.1A-26 the divider
+     has its own `--divider-width`, so a double rule is one declaration away
+     (`--divider-style: double; --divider-width: 3px`) — a visual change this
+     theme's screenshots would have to be re-approved for, so it is not made
+     here. */
   --divider-style:          dotted;
 
   /* ── Controls: fields are ruled lines ──
@@ -117,7 +118,6 @@
   --doc-heading-size:       16pt;
   --doc-subheading-size:    13pt;
   --doc-legal-size:         8.5pt;
-  --doc-legal-color:        var(--color-fg-muted);
   --doc-section-gap:        var(--space-8);
   --doc-component-gap:      var(--space-4);
   --doc-table-font-size:    9pt;
@@ -131,6 +131,15 @@
   --doc-bg:                 white;
   --doc-fg:                 oklch(0.10 0.008 55);
   --doc-print-border-color: oklch(0.42 0.015 55);
+}
+
+:root,
+[data-theme] {
+  /* The token layer re-resolves these aliases on every scheme island
+     (tokens/aliases.css), so a `:root`-only override would fall back to the
+     default inside a nested `data-theme` region. */
+  --card-border:            var(--color-border-strong);
+  --doc-legal-color:        var(--color-fg-muted);
 }
 
 @media print {

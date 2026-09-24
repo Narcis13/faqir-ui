@@ -7,6 +7,8 @@
 //     manifests. Filesystem-free per call (the shared `auditHtmlSource` engine,
 //     the same one the MCP `faqir_audit_html` tool drives) and needs no project.
 
+import { existsSync, statSync } from "node:fs";
+import { resolve } from "node:path";
 import { configExists, missingConfigMessage } from "../utils/config";
 import { log } from "../utils/logger";
 import { getRegistryPath } from "../utils/fs";
@@ -31,13 +33,80 @@ export function parseSkipRules(args: string[]): string[] | undefined {
   const at = args.indexOf("--skip-rules");
   if (at < 0) return undefined;
   const ids: string[] = [];
-  for (let i = at + 1; i < args.length && !args[i].startsWith("--"); i++) {
+  for (const i of skipRuleValueIndices(args)) {
     for (const id of args[i].split(",")) {
       const trimmed = id.trim();
       if (trimmed) ids.push(trimmed);
     }
   }
   return ids;
+}
+
+/**
+ * The argument positions `--skip-rules` consumes: every value up to the next
+ * flag — or up to the first one that is a path rather than a rule id, so
+ * `faqir audit --skip-rules a page.html` audits `page.html` with `a` skipped
+ * instead of trying to skip a rule called "page.html". Rule ids are kebab-case
+ * and never contain a `.` or a `/`.
+ */
+function skipRuleValueIndices(args: string[]): number[] {
+  const at = args.indexOf("--skip-rules");
+  if (at < 0) return [];
+  const out: number[] = [];
+  for (let i = at + 1; i < args.length && !args[i].startsWith("-"); i++) {
+    if (/[./\\]/.test(args[i])) break;
+    out.push(i);
+  }
+  return out;
+}
+
+/**
+ * The one file an audit or repair is scoped to: `--file <path>` or a bare
+ * positional path (`faqir audit page.html`). Shared by `audit`, `audit --fix`
+ * and `repair`, so all three read the same arguments the same way.
+ *
+ * The positional form used to be ignored outright — `faqir audit page.html`
+ * audited the whole project and said nothing. An error is returned rather than
+ * a guess for `--file` with no value, two different targets, or more than one.
+ */
+export function parseAuditTarget(args: string[]): { file?: string; error?: string } {
+  const consumed = new Set(skipRuleValueIndices(args));
+  let flagFile: string | undefined;
+  const at = args.indexOf("--file");
+  if (at >= 0) {
+    const value = args[at + 1];
+    if (value === undefined || value.startsWith("-")) return { error: "--file needs a path" };
+    flagFile = value;
+    consumed.add(at + 1);
+  }
+  const positional = args.filter((a, i) => !a.startsWith("-") && !consumed.has(i));
+  if (positional.length > 1) {
+    return { error: `expected one file to audit, got ${positional.join(", ")}` };
+  }
+  if (flagFile && positional.length === 1 && positional[0] !== flagFile) {
+    return { error: `two targets given: --file ${flagFile} and ${positional[0]}` };
+  }
+  return { file: flagFile ?? positional[0] };
+}
+
+/**
+ * Resolve a target from {@link parseAuditTarget} against `cwd`, or exit 1 with
+ * the reason. A path that does not exist is an error, not an empty audit that
+ * passes.
+ */
+export function resolveAuditTarget(args: string[], cwd: string): string | undefined {
+  const target = parseAuditTarget(args);
+  if (target.error) {
+    log.error(target.error);
+    process.exit(1);
+  }
+  if (!target.file) return undefined;
+  const path = resolve(cwd, target.file);
+  if (!existsSync(path) || !statSync(path).isFile()) {
+    log.error(`No such file: ${target.file}`);
+    process.exit(1);
+  }
+  return path;
 }
 
 /** Build an AuditSummary from a flat result list (used by the stdin path). */
@@ -95,8 +164,11 @@ export async function audit(args: string[]): Promise<void> {
     log.blank();
     console.log("Validate components and pages against their manifests.");
     log.blank();
+    console.log("Usage: faqir audit [file.html] [options]");
+    log.blank();
     console.log("Options:");
     log.table([
+      ["<file>, --file <file>", "Audit one HTML file instead of the whole project"],
       ["--stdin", "Audit HTML read from stdin — no project required"],
       ["--rules", "List the rule inventory instead of auditing"],
       ["--skip-rules <ids>", "Comma-separated rule IDs to skip"],
@@ -126,10 +198,10 @@ export async function audit(args: string[]): Promise<void> {
     process.exit(1);
   }
 
-  const fileArg = args.indexOf("--file");
-  const file = fileArg >= 0 ? args[fileArg + 1] : undefined;
+  const file = resolveAuditTarget(args, cwd);
 
-  // --fix is an alias for faqir repair
+  // --fix is an alias for faqir repair, which reads the same target and
+  // --skip-rules this command does — and refuses the flags it cannot honour.
   if (args.includes("--fix")) {
     const { repair } = await import("./repair");
     return repair(args.filter(a => a !== "--fix"));

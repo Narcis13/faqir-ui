@@ -1,0 +1,75 @@
+/* @ui:base motion-presets — l-transition presets (Transitions 2.0 · 0.4-11 · §A4)
+ *
+ * The engine (faqir-core) drives l-show / l-if transitions through a single
+ * `data-motion` attribute — "enter" → "enter-active" on show, "leave" →
+ * "leave-active" on hide — instead of per-stage CSS classes. These rules give
+ * each named preset (`fade`, `slide-up`, `scale`) its from/to styles, sourced
+ * entirely from motion tokens (see tokens/motion.css). Nothing here hardcodes a
+ * duration or easing.
+ *
+ * Lifecycle contract:
+ *   data-motion="enter"         from-state, no transition (snaps into place)
+ *   data-motion="enter-active"  to-state (natural) + transition → animates in
+ *   data-motion="leave"         from-state (natural) + transition armed
+ *   data-motion="leave-active"  to-state (exit) → animates out
+ *
+ * Reduced motion is handled by the engine, which never stamps `data-motion`
+ * when `prefers-reduced-motion: reduce` — so no !important guard is needed here.
+ */
+
+/* ── fade ── */
+[l-transition="fade"][data-motion="enter"] {
+  opacity: 0;
+}
+[l-transition="fade"][data-motion="enter-active"] {
+  transition: opacity var(--motion-enter-duration) var(--motion-enter-ease);
+}
+[l-transition="fade"][data-motion="leave"],
+[l-transition="fade"][data-motion="leave-active"] {
+  transition: opacity var(--motion-leave-duration) var(--motion-leave-ease);
+}
+[l-transition="fade"][data-motion="leave-active"] {
+  opacity: 0;
+}
+
+/* ── slide-up ── */
+[l-transition="slide-up"][data-motion="enter"] {
+  opacity: 0;
+  transform: translateY(var(--motion-slide-distance));
+}
+[l-transition="slide-up"][data-motion="enter-active"] {
+  transition:
+    opacity var(--motion-enter-duration) var(--motion-enter-ease),
+    transform var(--motion-enter-duration) var(--motion-enter-ease);
+}
+[l-transition="slide-up"][data-motion="leave"],
+[l-transition="slide-up"][data-motion="leave-active"] {
+  transition:
+    opacity var(--motion-leave-duration) var(--motion-leave-ease),
+    transform var(--motion-leave-duration) var(--motion-leave-ease);
+}
+[l-transition="slide-up"][data-motion="leave-active"] {
+  opacity: 0;
+  transform: translateY(var(--motion-slide-distance));
+}
+
+/* ── scale ── */
+[l-transition="scale"][data-motion="enter"] {
+  opacity: 0;
+  transform: scale(var(--motion-scale-from));
+}
+[l-transition="scale"][data-motion="enter-active"] {
+  transition:
+    opacity var(--motion-enter-duration) var(--motion-enter-ease),
+    transform var(--motion-enter-duration) var(--motion-enter-ease);
+}
+[l-transition="scale"][data-motion="leave"],
+[l-transition="scale"][data-motion="leave-active"] {
+  transition:
+    opacity var(--motion-leave-duration) var(--motion-leave-ease),
+    transform var(--motion-leave-duration) var(--motion-leave-ease);
+}
+[l-transition="scale"][data-motion="leave-active"] {
+  opacity: 0;
+  transform: scale(var(--motion-scale-from));
+}

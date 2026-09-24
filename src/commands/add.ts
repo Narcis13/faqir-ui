@@ -8,6 +8,8 @@ import { findComponentInRegistry, listRegistryComponents, type Layer } from "../
 import { regenerateFaqirInit, regenerateContext } from "../utils/codegen";
 import { generateBundle } from "../utils/bundler";
 import { readPristineIndex, savePristine, readComponentFiles } from "../utils/pristine";
+import { missingTokens, syncFramework } from "../utils/framework-assets";
+import { VERSION } from "../version";
 import { addIcons } from "./icons";
 import {
   parseScopedName,
@@ -181,6 +183,47 @@ async function backfillLocalPristine(
       `No pristine snapshot for '${comp.name}' — captured one from your installed copy at ` +
         `${version} as the upgrade baseline (edits made before the pristine store existed are ` +
         `part of it; run 'faqir diff ${comp.name}' after upgrading to review).`
+    );
+  }
+}
+
+/**
+ * Bring the token layer up to date when a component just installed reads a
+ * token it does not define.
+ *
+ * `init` writes the token layer once, so a project initialized by an older CLI
+ * has the tokens of THAT version, and a component added today reads today's:
+ * a 1.1 `switch` in a 1.0 project read `--switch-width` and eleven other
+ * custom properties nothing defined. When that is the case the framework files
+ * are synced exactly as `faqir upgrade` syncs them — merged against their
+ * baseline, the theme untouched — and when it is not, nothing is touched.
+ */
+async function refreshStaleTokens(
+  installed: Array<{ name: string; layer: Layer }>,
+  config: FaqirConfig,
+  cwd: string,
+  outputDir: string,
+): Promise<void> {
+  const sheets = installed.map((c) => `${c.layer}/${c.name}/${c.name}.css`);
+  const missing = missingTokens(outputDir, sheets);
+  if (missing.length === 0) return;
+
+  log.info(
+    `${missing.length} token${missing.length === 1 ? "" : "s"} the new component${installed.length === 1 ? "" : "s"} ` +
+      `read ${missing.length === 1 ? "is" : "are"} not in ${config.output_dir}/tokens ` +
+      `(${missing.slice(0, 4).map((m) => m.token).join(", ")}${missing.length > 4 ? ", …" : ""}) — updating the token layer.`,
+  );
+  const report = syncFramework(cwd, outputDir, getRegistryPath(), config, { version: `faqir ${VERSION}` });
+  for (const f of report.files) {
+    if (f.status === "unchanged" || f.status === "deleted") continue;
+    if (f.status === "conflict") log.warn(`${f.path} — ${f.note ?? "conflict"}: resolve the <<<<<<< markers, then run 'faqir bundle'.`);
+    else if (f.status === "skipped") log.warn(`${f.path} — ${f.note}`);
+    else log.step(`${f.path} — ${f.status}`);
+  }
+  const still = missingTokens(outputDir, sheets);
+  if (still.length > 0) {
+    log.warn(
+      `Still undefined: ${still.map((m) => m.token).join(", ")}. Run 'faqir doctor' for details.`,
     );
   }
 }
@@ -369,6 +412,7 @@ async function addLocal(
     log.success(`${comp.name} → ${comp.layer}/${comp.name}/`);
   }
 
+  await refreshStaleTokens(toInstall, config, cwd, outputDir);
   await finalizeInstall(config, cwd, outputDir);
 
   log.blank();
@@ -549,6 +593,7 @@ async function addRemote(
     log.success(`${entry.name} → ${entry.layer}/${entry.name}/`);
   }
 
+  await refreshStaleTokens(toInstall, config, cwd, outputDir);
   await finalizeInstall(config, cwd, outputDir);
 
   log.blank();

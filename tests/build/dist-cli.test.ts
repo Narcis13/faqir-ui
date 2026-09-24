@@ -85,6 +85,43 @@ describe("compiled dist/faqir.mjs runs on plain Node", () => {
   });
 });
 
+// ── The bundle must not carry Bun's `// @bun` pragma ─────────────────────────
+//
+// `bin/launcher.mjs` runs the bundle with Bun whenever Bun is on PATH. `bun
+// build` stamps `// @bun` on its output, and Bun treats a file with that pragma
+// as its own pre-transpiled code and decodes it as Latin-1: `—` printed as
+// `â€”`, and `context --skill` exited 1 because its header regex (which contains
+// an em-dash) no longer matched anything. build-cli strips the pragma.
+describe("dist/faqir.mjs decodes as UTF-8 under Bun too", () => {
+  test("the bundle carries no @bun pragma", () => {
+    const head = readFileSync(DIST, "utf8").split("\n").slice(0, 5);
+    expect(head[0]).toBe("#!/usr/bin/env node");
+    expect(head.some((l) => l.startsWith("// @bun"))).toBe(false);
+  });
+
+  test("running it under bun prints non-ASCII text intact", () => {
+    const r = runSync("bun", [DIST, "help"], { cwd: tmp, encoding: "utf8", timeout: SPAWN_TIMEOUT.CLI });
+    expect(r.status).toBe(0);
+    expect(r.stdout).toContain("faqir — Agent-Native UI Framework CLI");
+    expect(r.stdout).not.toContain("â");
+  });
+
+  test("context --skill exits 0 under bun and under node", () => {
+    const cwd = mkdtempSync(join(tmp, "skill-"));
+    expect(runNode(["init", "--yes"], cwd).status).toBe(0);
+    const viaBun = runSync("bun", [DIST, "context", "--skill"], {
+      cwd,
+      encoding: "utf8",
+      timeout: SPAWN_TIMEOUT.CLI,
+    });
+    expect(viaBun.status, viaBun.stderr).toBe(0);
+    expect(viaBun.stdout).not.toContain("â");
+    const viaNode = runNode(["context", "--skill"], cwd);
+    expect(viaNode.status, viaNode.stderr).toBe(0);
+    expect(viaBun.stdout).toBe(viaNode.stdout);
+  });
+});
+
 // ── Large JSON payloads must survive a piped stdout ──────────────────────────
 //
 // `console.log` writes through Node's async stdout stream. When stdout is a pipe

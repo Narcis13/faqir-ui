@@ -1377,6 +1377,7 @@ const HEADING_VOICE_PROPERTY: Record<string, string> = {
   "heading-weight": "font-weight",
   "heading-tracking": "letter-spacing",
   "heading-transform": "text-transform",
+  "heading-caps": "font-variant-caps",
   "heading-leading": "line-height",
 };
 

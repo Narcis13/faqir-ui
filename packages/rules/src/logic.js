@@ -57,7 +57,9 @@
  *
  * `regex` takes a literal pattern (checked and compiled once, at definition
  * time) and answers `false` for a non-string subject or one longer than
- * `MAX_REGEX_SUBJECT_LENGTH` — see `limits.js` for why the bounds exist.
+ * `MAX_REGEX_SUBJECT_LENGTH` — see `limits.js` for why the bounds exist. A
+ * pattern whose shape backtracks catastrophically (`(a+)+`) is refused at that
+ * same moment; `pattern.js` says which shapes, and why a length cap cannot.
  */
 
 import { DefinitionError } from "./errors.js";
@@ -67,6 +69,7 @@ import {
   MAX_PATTERN_LENGTH,
   MAX_REGEX_SUBJECT_LENGTH,
 } from "./limits.js";
+import { catastrophicMessage, patternRisk } from "./pattern.js";
 
 /** Minimum argument count per operator; `0` means "any number, including none". */
 const OP_ARITY = Object.freeze({
@@ -234,6 +237,9 @@ function compilePattern(pattern, where) {
       where,
     );
   }
+  if (patternRisk(pattern) === "catastrophic") {
+    throw new DefinitionError(catastrophicMessage(`the "regex" pattern at ${site}`), where);
+  }
   if (REGEX_CACHE.size >= REGEX_CACHE_LIMIT) REGEX_CACHE.clear();
   REGEX_CACHE.set(pattern, compiled);
   return compiled;
@@ -260,7 +266,10 @@ function readVar(data, name, fallback) {
       const index = Number(segment);
       current = Number.isInteger(index) ? current[index] : undefined;
     } else if (isRecord(current)) {
-      current = current[segment];
+      // Own properties only: `{"var": "constructor"}` over plain data reads a
+      // field, and there is none, so it is absent — not `Object`, which is
+      // truthy and would show a field nobody's data asked for.
+      current = Object.prototype.hasOwnProperty.call(current, segment) ? current[segment] : undefined;
     } else {
       return fallback ?? null;
     }

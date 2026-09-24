@@ -169,6 +169,25 @@ describe("faqir rules lint --json", () => {
     expect(report.findings.some((f: { rule: string }) => f.rule === "rule-refs")).toBe(true);
   });
 
+  it("still prints the document when the file cannot be read", () => {
+    const { stdout, status } = runCli(["rules", "lint", "--json", join(dir, "absent.json")]);
+    expect(status).toBe(1);
+    const report = JSON.parse(stdout);
+    expect(report.ok).toBe(false);
+    expect(report.source).toBe(join(dir, "absent.json"));
+    expect(report.findings).toHaveLength(1);
+    expect(report.findings[0].rule).toBe("schema");
+    expect(report.findings[0].message).toContain("could not read");
+  });
+
+  it("still prints the document when no definition was named", () => {
+    const { stdout, status } = runCli(["rules", "lint", "--json"]);
+    expect(status).toBe(1);
+    const report = JSON.parse(stdout);
+    expect(report.ok).toBe(false);
+    expect(report.findings[0].message).toContain("no definition given");
+  });
+
   it("signals failure the way the --json contract requires", () => {
     // The meta-test in tests/commands/json-output.test.ts accepts `ok: false`
     // as a bespoke command's machine-readable failure signal; this is the one

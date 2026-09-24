@@ -769,6 +769,115 @@ describe("faqir-validate · async validators", () => {
   });
 });
 
+// ── The 1.1 release review ───────────────────────────────────────────────────
+
+describe("faqir-validate · what an answer means", () => {
+  it("an attribute expression keeps 1.0's truthiness: a non-empty string passes", async () => {
+    const { form } = await boot(
+      group(`<input data-part="input" name="a" value="  hi  " l-validate:nonblank="value.trim()" data-error-nonblank="Say something.">`)
+    );
+    const input = form.querySelector("input") as HTMLInputElement;
+    expect(await validate().run(form)).toBe(true);
+    expect(errorOf(input).textContent).toBe("");
+
+    input.value = "   ";
+    expect(await validate().run(form)).toBe(false);
+    expect(errorOf(input).textContent).toBe("Say something.");
+  });
+
+  it("a registered validator's string is its message, and an empty one falls back", async () => {
+    const { form } = await boot(group(`<input data-part="input" name="a" value="x">`));
+    const input = form.querySelector("input") as HTMLInputElement;
+    const off = validate().register(form, "a", "said", () => "Not like that.");
+    expect(await validate().run(form)).toBe(false);
+    expect(errorOf(input).textContent).toBe("Not like that.");
+    off();
+
+    validate().register(form, "a", "blank", () => "", "The registered message.");
+    expect(await validate().run(form)).toBe(false);
+    expect(errorOf(input).textContent).toBe("The registered message.");
+    validate().unregister(form, "a");
+  });
+});
+
+describe("faqir-validate · run() on a form with no l-validate", () => {
+  it("skips the attribute validators, as documented, instead of failing on a missing scope", async () => {
+    const { form } = await boot(
+      group(`<input data-part="input" name="a" value="x" l-validate:ok="isOk(value)">`),
+      { formAttr: "" }
+    );
+    const input = form.querySelector("input") as HTMLInputElement;
+    expect(await validate().run(form)).toBe(true);
+    expect(fieldGroupOf(input).getAttribute("data-state")).toBe(null);
+    expect(input.getAttribute("aria-invalid")).toBe(null);
+  });
+
+  it("still runs native constraints and registered validators there", async () => {
+    const { form } = await boot(
+      group(`<input data-part="input" name="a" value="x">`) + group(`<input data-part="input" name="b" required>`),
+      { formAttr: "" }
+    );
+    validate().register(form, "a", "never", () => false, "Registered says no.");
+    expect(await validate().run(form)).toBe(false);
+    expect(errorOf(form.querySelector('[name="a"]')!).textContent).toBe("Registered says no.");
+    expect(fieldGroupOf(form.querySelector('[name="b"]')!).getAttribute("data-state")).toBe("invalid");
+    validate().unregister(form, "a");
+  });
+});
+
+describe("faqir-validate · an async submit the page cancelled", () => {
+  function counting(form: HTMLFormElement): () => number {
+    let calls = 0;
+    (form as any).submit = () => {
+      calls++;
+    };
+    return () => calls;
+  }
+
+  it("does not navigate when a handler after it called preventDefault (@submit.prevent)", async () => {
+    const gate = deferred<boolean>();
+    const { form } = await boot(group(`<input data-part="input" name="a" value="x">`));
+    const submits = counting(form);
+    form.addEventListener("submit", (e) => e.preventDefault()); // registered after l-validate's
+    validate().register(form, "a", "remote", () => gate.promise);
+
+    submit(form);
+    gate.resolve(true);
+    await tick();
+    await tick();
+    expect(submits()).toBe(0);
+    validate().unregister(form, "a");
+  });
+
+  it("does not navigate when a handler before it had already cancelled", async () => {
+    const gate = deferred<boolean>();
+    const { form } = await boot(group(`<input data-part="input" name="a" value="x">`));
+    const submits = counting(form);
+    form.addEventListener("submit", (e) => e.preventDefault(), true); // capture: runs first
+    validate().register(form, "a", "remote", () => gate.promise);
+
+    submit(form);
+    gate.resolve(true);
+    await tick();
+    await tick();
+    expect(submits()).toBe(0);
+    validate().unregister(form, "a");
+  });
+
+  it("still completes a plain native submit that nobody cancelled", async () => {
+    const gate = deferred<boolean>();
+    const { form } = await boot(group(`<input data-part="input" name="a" value="x">`));
+    const submits = counting(form);
+    validate().register(form, "a", "remote", () => gate.promise);
+
+    const ev = submit(form);
+    expect(ev.defaultPrevented).toBe(true); // held while the check is out
+    gate.resolve(true);
+    await settle(() => submits() === 1, "the native submit once the check passed");
+    validate().unregister(form, "a");
+  });
+});
+
 describe("faqir-validate · the production engine reports nothing", () => {
   it("devtools.report() is a no-op that records nothing outside the dev build", () => {
     expect(Faqir.devtools.dev).toBe(false);

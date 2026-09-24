@@ -146,3 +146,68 @@ describe("dialog controller", () => {
     expect(closeBtn?.getAttribute("aria-label")).toBeTruthy();
   });
 });
+
+// open() while already open (trigger plus an external [data-open] trigger, or
+// an API call on an open dialog) armed a SECOND focus trap and overwrote the
+// element to restore focus to. close() released only the last trap, so Tab
+// stayed trapped inside a closed panel, and focus went back to the panel
+// instead of the trigger.  [1.1 runtime fixes]
+describe("dialog controller · open() while open", () => {
+  beforeEach(() => {
+    document.body.innerHTML = "";
+  });
+
+  /** Count the panel's live keydown listeners — trapFocus adds exactly one. */
+  function countKeydownListeners(panel: HTMLElement) {
+    const live = new Set<unknown>();
+    const add = panel.addEventListener.bind(panel);
+    const remove = panel.removeEventListener.bind(panel);
+    panel.addEventListener = ((type: string, fn: any, opts?: any) => {
+      if (type === "keydown") live.add(fn);
+      return add(type, fn, opts);
+    }) as any;
+    panel.removeEventListener = ((type: string, fn: any, opts?: any) => {
+      if (type === "keydown") live.delete(fn);
+      return remove(type, fn, opts);
+    }) as any;
+    return live;
+  }
+
+  it("does not stack a second focus trap", () => {
+    const { root, api } = setupDialog();
+    const panel = root.querySelector("[data-part='panel']") as HTMLElement;
+    const traps = countKeydownListeners(panel);
+    api.open();
+    api.open();
+    expect(traps.size).toBe(1);
+
+    api.close();
+    expect(root.dataset.state).toBe("closed");
+    expect(traps.size).toBe(0); // fully released once closed
+  });
+
+  it("re-opening mid-exit keeps the one trap it already holds", () => {
+    const { root, api } = setupDialog();
+    const panel = root.querySelector("[data-part='panel']") as HTMLElement;
+    const traps = countKeydownListeners(panel);
+    api.open();
+    // A declared exit transition keeps the dialog in "closing" until it ends.
+    panel.style.transitionDuration = "1s";
+    api.close();
+    expect(root.dataset.state).toBe("closing");
+    api.open();
+    expect(root.dataset.state).toBe("open");
+    expect(traps.size).toBe(1);
+  });
+
+  it("restores focus to the original opener, not to the panel", () => {
+    const { root, api } = setupDialog();
+    const trigger = root.querySelector("[data-part='trigger']") as HTMLElement;
+    trigger.focus();
+    api.open();
+    (root.querySelector("[data-part='close']") as HTMLElement).focus();
+    api.open();
+    api.close();
+    expect(document.activeElement).toBe(trigger);
+  });
+});

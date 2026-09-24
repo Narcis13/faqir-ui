@@ -148,6 +148,39 @@ export const PILL_COUPLING =
   "a pill theme is one whose buttons are pills, which is the only thing " +
   "--button-radius can say. Set both, or neither.";
 
+/**
+ * `shape.corner` shapes a corner, so it needs one [1.1A-16]. Rendered in
+ * Chrome 149, a box with `border-radius: 0` is pixel-identical under every
+ * `corner-shape` — a `sharp` theme that asked for `bevel` would ship an axis
+ * nothing draws, so the seed is refused rather than silently emptied.
+ */
+export const SHARP_CORNER_REFUSAL =
+  "shape.corner only shapes a rounded corner — at shape.radius: \"sharp\" every " +
+  "corner has radius 0 and bevel, scoop and notch all render as a square. Pick " +
+  "shape.radius crisp, soft or round for a shaped corner, or leave shape.corner at \"round\".";
+
+/**
+ * The 1.0 `--radius` flag and the 1.1 `shape.radius` axis are one knob. Both
+ * stated and disagreeing used to mean `--radius` was silently dropped; it is
+ * now an error that names both values.
+ */
+export function radiusConflict(radius: ThemeRadius, shape: string): string {
+  return (
+    `--radius ${radius} (shape.radius "${LEGACY_RADIUS_SHAPE[radius]}") contradicts ` +
+    `shape.radius "${shape}". --radius is the 1.0 spelling of --shape; state one of them.`
+  );
+}
+
+/**
+ * What `neutral` means on the 1.0 entry points — `faqir theme generate
+ * --accent …` and the MCP `faqir_generate_theme` tool called without a
+ * `seed` — when nothing names one. 1.0 defaulted to `cool` there, and a script
+ * that ran 1.0's command must keep getting 1.0's theme. A SEED (a `--seed`
+ * file, or the MCP `seed` argument) is the 1.1 form and takes
+ * `THEME_SEED_DEFAULTS.neutral` like every other unstated axis.
+ */
+export const LEGACY_NEUTRAL_DEFAULT: Axis<"neutral"> = "cool";
+
 /** `type.pairing: "custom"` is an observation, not an instruction. */
 export const CUSTOM_PAIRING_REFUSAL =
   "type.pairing: \"custom\" is a DERIVED value — it is what axesFromCss reports " +
@@ -215,6 +248,8 @@ export function normalizeSeed(input: ThemeSeedInput): NormalizedSeed {
     }
     if (seed.shape?.radius === undefined) {
       seed.shape = { ...seed.shape, radius: LEGACY_RADIUS_SHAPE[radius] };
+    } else if (seed.shape.radius !== LEGACY_RADIUS_SHAPE[radius]) {
+      throw new Error(radiusConflict(radius, String(seed.shape.radius)));
     }
   }
 
@@ -242,6 +277,8 @@ export function normalizeSeed(input: ThemeSeedInput): NormalizedSeed {
   const button: Axis<"controls.button"> =
     statedButton ?? BUTTON_FOLLOWS_SHAPE[shapeRadius] ?? withDefault("controls.button", undefined);
   if ((shapeRadius === "pill") !== (button === "pill")) throw new Error(PILL_COUPLING);
+  const corner = withDefault("shape.corner", shape.corner);
+  if (shapeRadius === "sharp" && corner !== "round") throw new Error(SHARP_CORNER_REFUSAL);
 
   return {
     name: seed.name,
@@ -261,7 +298,7 @@ export function normalizeSeed(input: ThemeSeedInput): NormalizedSeed {
     shape: {
       radius: shapeRadius,
       border: withDefault("shape.border", shape.border),
-      corner: withDefault("shape.corner", shape.corner),
+      corner,
     },
     depth: withDefault("depth", seed.depth),
     material: withDefault("material", seed.material),

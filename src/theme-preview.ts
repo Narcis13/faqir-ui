@@ -197,14 +197,14 @@ function gallery(spec: ThemePreviewSpec): string {
         <h2 data-ui="heading" data-size="4">Form controls</h2>
         <div data-ui="grid" data-cols="2" data-gap="4">
           <div data-ui="field-group">
-            <label data-part="label">Email address</label>
-            <div data-part="input"><input data-ui="input" type="email" placeholder="you@example.com"></div>
-            <p data-part="description">We'll never share your email.</p>
+            <label data-part="label" for="preview-email">Email address</label>
+            <div data-part="input"><input data-ui="input" id="preview-email" type="email" placeholder="you@example.com" aria-describedby="preview-email-help"></div>
+            <p data-part="description" id="preview-email-help">We'll never share your email.</p>
           </div>
-          <div data-ui="field-group" data-invalid>
-            <label data-part="label">Password</label>
-            <div data-part="input"><input data-ui="input" type="password" value="123" aria-invalid="true"></div>
-            <p data-part="error">Password must be at least 8 characters.</p>
+          <div data-ui="field-group" data-state="invalid">
+            <label data-part="label" for="preview-password">Password</label>
+            <div data-part="input"><input data-ui="input" id="preview-password" type="password" value="123" aria-invalid="true" aria-describedby="preview-password-error"></div>
+            <p data-part="error" id="preview-password-error">Password must be at least 8 characters.</p>
           </div>
         </div>
         <div data-ui="grid" data-cols="2" data-gap="4">
@@ -343,10 +343,10 @@ function mountScript(spec: ThemePreviewSpec): string {
     // there is one panel and no split to offer: a half showing a scheme the
     // theme does not have would be a preview of the base tokens, not of it.
     document.addEventListener("DOMContentLoaded", () => {
-      const panel = document.createElement("main");
+      const panel = document.createElement("div");
       panel.className = "scheme-panel";
       panel.appendChild(document.getElementById("gallery").content.cloneNode(true));
-      document.body.appendChild(panel);
+      document.querySelector("main").appendChild(panel);
     });`;
   }
   return `    // ?scheme=light|dark → render the gallery under that scheme (data-theme on
@@ -356,11 +356,11 @@ function mountScript(spec: ThemePreviewSpec): string {
     if (scheme === "light" || scheme === "dark") {
       document.documentElement.setAttribute("data-theme", scheme);
       document.addEventListener("DOMContentLoaded", () => {
-        const panel = document.createElement("main");
+        const panel = document.createElement("div");
         panel.className = "scheme-panel";
         panel.innerHTML = \`<div class="scheme-tag"><span data-ui="badge" data-variant="secondary">\${scheme}</span></div>\`;
         panel.appendChild(document.getElementById("gallery").content.cloneNode(true));
-        document.body.appendChild(panel);
+        document.querySelector("main").appendChild(panel);
       });
     } else {
       document.addEventListener("DOMContentLoaded", () => {
@@ -372,7 +372,7 @@ function mountScript(spec: ThemePreviewSpec): string {
           frame.title = \`\${s} scheme\`;
           split.appendChild(frame);
         }
-        document.body.appendChild(split);
+        document.querySelector("main").appendChild(split);
       });
     }`;
 }
@@ -417,6 +417,10 @@ ${gallery(spec)}
 
     </div>
   </template>
+
+  <!-- The landmark is static so a reader (and \`faqir audit\`) finds it before
+       the script runs; the panel or the scheme split is mounted inside it. -->
+  <main></main>
 
   <script>
 ${mountScript(spec)}

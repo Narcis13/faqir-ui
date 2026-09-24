@@ -1,5 +1,5 @@
 /* @ui:component menubar */
-/* @ui:tokens color-bg color-border color-fg color-fg-muted color-primary color-primary-subtle space-px space-1 space-2 space-3 space-4 space-20 radius-md radius-lg shadow-md text-xs text-sm text-base weight-medium duration-fast ease-out z-dropdown font-ui focus-ring-color focus-ring-width */
+/* @ui:tokens color-bg color-border color-fg color-fg-muted color-primary color-primary-subtle space-px space-1 space-2 space-3 space-4 space-20 radius-md radius-lg shadow-md text-xs text-sm text-base weight-medium duration-fast ease-out z-dropdown font-ui focus-ring-color focus-ring-width disabled-opacity */
 
 [data-ui="menubar"] {
   position: relative;
@@ -94,7 +94,10 @@
 [data-ui="menubar"] [role="menuitem"][aria-disabled="true"] {
   color: var(--color-fg-muted);
   cursor: not-allowed;
-  opacity: 0.6;
+  /* 0.6 at the 0.5 default — lighter than a control, since the muted colour
+     already carries half the signal — and a theme's `--disabled-opacity` moves
+     it (1.1A-27). */
+  opacity: calc(var(--disabled-opacity) * 1.2);
 }
 
 [data-ui="menubar"] [data-part="separator"] {

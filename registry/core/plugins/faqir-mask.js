@@ -19,8 +19,10 @@
 
   var TOKENS = { "9": /[0-9]/, a: /[A-Za-z]/, "*": /[^]/ };
 
+  // `in` is safe: callers pass one character, and no inherited Object
+  // property has a one-character name.
   function isToken(ch) {
-    return Object.prototype.hasOwnProperty.call(TOKENS, ch);
+    return ch in TOKENS;
   }
 
   function tokenTypes(mask) {
@@ -128,14 +130,26 @@
     var caretRaw = start;
 
     if (inputType.indexOf("delete") === 0) {
-      if (start !== end) {
-        raw = raw.slice(0, start) + raw.slice(end);
-      } else if (inputType === "deleteContentBackward" && start > 0) {
-        raw = raw.slice(0, start - 1) + raw.slice(start);
-        caretRaw = start - 1;
-      } else if (inputType === "deleteContentForward") {
-        raw = raw.slice(0, start) + raw.slice(start + 1);
+      // Every delete* is prevented by the directive, so every one is handled
+      // here: a collapsed caret deletes by character, by mask group (a "word":
+      // tokens with no literal between them), or by line (all before/after the
+      // caret, or everything for an undirected line delete). Undirected
+      // content deletes (deleteContent, a collapsed cut) are no-ops.
+      var back = /Backward$/.test(inputType);
+      var fwd = /Forward$/.test(inputType);
+      var line = /Line/.test(inputType);
+      var word = line || /Word/.test(inputType);
+      var from = start;
+      var to = end;
+      // Whether a word/line step may continue past slot boundary i: a literal
+      // between token slots i-1 and i ends a word; nothing ends a line.
+      var more = function (i) { return line || prior.starts[i] === prior.ends[i - 1]; };
+      if (start === end) {
+        if (back && from > 0) do from--; while (word && from > 0 && more(from));
+        if (fwd && to < raw.length) do to++; while (word && to < raw.length && more(to));
       }
+      raw = raw.slice(0, from) + raw.slice(to);
+      caretRaw = from;
     } else {
       var inserted = readRaw(mask, edit.data == null ? "" : edit.data, start);
       raw = (raw.slice(0, start) + inserted + raw.slice(end)).slice(0, types.length);
@@ -163,7 +177,7 @@
       }
       if (el._faqirMask) {
         if (el._faqirMask._scope === scope) return;
-        if (typeof el._faqirMask.destroy === "function") el._faqirMask.destroy();
+        el._faqirMask.destroy();
       }
 
       var pattern = String(dir.expression || "").trim();
@@ -178,18 +192,14 @@
       var destroyed = false;
       var renderId = 0;
       var pendingCaret = null;
-      var initial = maskEdit(pattern, "", {
-        inputType: "insertFromPaste",
-        data: el.value,
-        selectionStart: 0,
-        selectionEnd: 0,
-      });
+      var initial = formatResult(el.value);
       var raw = initial.raw;
 
       function paint(result, caret) {
         raw = result.raw;
         if (el.value !== result.value) el.value = result.value;
-        if (caret !== false && typeof el.setSelectionRange === "function") {
+        if (caret !== false) {
+          // try: some input types (email, number) throw on selection APIs.
           try {
             el.setSelectionRange(result.caret, result.caret);
           } catch (e) {}
@@ -293,7 +303,7 @@
         el.removeEventListener("beforeinput", onBeforeInput, true);
         el.removeEventListener("paste", onPaste, true);
         el.removeEventListener("input", onInput, true);
-        if (typeof stopModel === "function") stopModel();
+        if (stopModel) stopModel();
         if (el._faqirMask === api) delete el._faqirMask;
       }
 

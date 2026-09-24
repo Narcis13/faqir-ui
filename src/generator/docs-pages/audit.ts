@@ -15,6 +15,7 @@ import {
   ALL_RULES,
   ANTIPATTERN_RULES,
   DOCUMENT_RULES,
+  PROJECT_SWEEP_RULES,
   SINGLE_FIXED_REGION_RULE,
   TRIGGER_CONTRACT_RULE,
   UNKNOWN_COMPONENT_RULE,
@@ -36,41 +37,14 @@ import type { PageContext, SiteFile } from "./context";
 
 export const AUDIT_PAGE = "audit/index.html";
 
-// ── Rules the checker runs but never describes ──────────────────────────────
+// ── Rules the project sweep decides ─────────────────────────────────────────
 //
 // `checkTokens` and `checkReducedMotion` in `src/audit/checker.ts` emit findings
-// under these ids straight from the on-disk sweep. They have no `RuleInfo`
-// in the engine, so `getRuleInventory()` — and therefore `faqir audit --rules`
-// — never lists them. The descriptors here are derived from that code.
+// straight from the on-disk sweep. They used to have no `RuleInfo`, so this
+// page carried its own descriptors for them while `faqir audit --rules` never
+// listed them; the descriptors now live in the engine and are in the inventory.
 
-export const CHECKER_ONLY_RULES: RuleInfo[] = [
-  {
-    id: "token-exists",
-    severity: "warning",
-    applies_to: "installed component CSS (<output_dir>/<layer>/<name>/<name>.css)",
-    exempt: [
-      "custom properties the component's own stylesheet declares (component knobs such as --sidebar-width)",
-      "author/runtime knobs nothing in the registry declares, when read with a fallback (var(--shell-sidebar-width, 16rem))",
-    ],
-    description:
-      "Every var(--x) a component stylesheet reads must resolve: to a design token " +
-      "declared in the token layer, to a custom property the sheet itself declares, or " +
-      "to an author knob read with a fallback. A name in a token family the token layer " +
-      "defines (--space-*, --color-*, --z-* …) that the layer never declares is reported " +
-      "even when it carries a fallback — it reads as a token, so an undefined one is a " +
-      "typo or a missing scale step.",
-  },
-  {
-    id: "reduced-motion",
-    severity: "info",
-    applies_to: "installed component CSS (<output_dir>/<layer>/<name>/<name>.css)",
-    exempt: ["stylesheets that declare no animation or transition at all"],
-    description:
-      "A component stylesheet that declares an animation or a transition must also " +
-      "carry a @media (prefers-reduced-motion: reduce) block, so motion can be switched " +
-      "off for people who ask for that.",
-  },
-];
+export const CHECKER_ONLY_RULES: RuleInfo[] = PROJECT_SWEEP_RULES;
 
 // ── Fixes ───────────────────────────────────────────────────────────────────
 //
@@ -90,15 +64,22 @@ export const AUTO_FIXES: Record<string, FixNote> = {
     type: "add-attribute",
     note:
       "Inserts the missing role or aria-* attribute on the part. aria-labelledby is " +
-      "inserted without a value — you point it at the title id.",
+      "fixed only when the component has one title carrying an id, and points at it; " +
+      "otherwise the finding carries no fix — an empty IDREF is never written.",
   },
   "aria-describedby": {
     type: "add-attribute",
-    note: "Inserts aria-describedby on the panel without a value — you fill in the description id.",
+    note:
+      "Points the panel's aria-describedby at the description part's id — only when " +
+      "there is exactly one description and it carries an id; otherwise no fix is offered.",
   },
   "close-label": {
     type: "add-attribute",
     note: 'Adds aria-label="Close" to the close part.',
+  },
+  "trigger-contract": {
+    type: "add-attribute",
+    note: 'Adds data-ui="button" to the unstyled trigger, delegating its styling to the button primitive.',
   },
   "controller-loaded": {
     type: "add-script",
@@ -128,11 +109,7 @@ export const AUTO_FIXES: Record<string, FixNote> = {
  * Rules whose findings carry a `fix` the repairer cannot apply. The JSON report
  * says `fixable: true` for them; `faqir repair` skips them.
  */
-export const UNAPPLIED_FIXES: Record<string, string> = {
-  "trigger-contract":
-    'The finding carries an add-attribute fix (data-ui="button"), but the repairer ' +
-    "reads a different detail key and skips it — reported as fixable, applied by hand.",
-};
+export const UNAPPLIED_FIXES: Record<string, string> = {};
 
 // ── Skip and exemption notes, derived from each rule's check() ──────────────
 
@@ -287,9 +264,9 @@ export function ruleGroups(): RuleGroup[] {
   ];
 }
 
-/** Every rule the page documents: the engine inventory plus the checker-only pair. */
+/** Every rule the page documents: the engine inventory, whole. */
 export function documentedRules(): RuleInfo[] {
-  return [...getRuleInventory(), ...CHECKER_ONLY_RULES];
+  return getRuleInventory();
 }
 
 // ── Severity presentation ───────────────────────────────────────────────────

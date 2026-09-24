@@ -11,7 +11,10 @@ export interface BundleOptions {
   js?: boolean;
 }
 
-const TOKEN_FILES_ORDERED = [
+/** The token files, in cascade order — the order `faqir init` concatenates them into
+ * `tokens/index.css` and the bundle links them. `density.css` re-declares alias
+ * tokens at `:root` specificity, so it must stay last. */
+export const TOKEN_FILES_ORDERED = [
   "palette.css",
   "spacing.css",
   "typography.css",
@@ -25,13 +28,63 @@ const TOKEN_FILES_ORDERED = [
   "density.css",
 ];
 
+/** Functions whose `+` / `-` are arithmetic, where CSS REQUIRES the spaces. */
+const MATH_FUNCTIONS = new Set(["calc", "min", "max", "clamp", "round", "mod", "rem", "sin", "cos", "tan", "asin", "acos", "atan", "atan2", "pow", "sqrt", "hypot", "log", "exp", "abs", "sign"]);
+
+/**
+ * Whitespace-and-comment minifier. A scanner rather than a chain of regexes,
+ * because the space around a character means different things in different
+ * places: `calc(1em + 2px)` is invalid as `calc(1em+2px)`, `a :hover` (any
+ * hovered descendant) is not `a:hover`, and a string's contents are not CSS at
+ * all. So strings are copied verbatim, comments dropped, whitespace runs
+ * collapsed to one space, and a space is removed only where no reading of the
+ * sheet can depend on it: around `{ } ; ,`, after `:` and `(`, before `)`, and
+ * around the `> ~ +` combinators outside a math function.
+ */
 export function minifyCSS(css: string): string {
-  return css
-    .replace(/\/\*[\s\S]*?\*\//g, "")
-    .replace(/\s+/g, " ")
-    .replace(/\s*([{}:;,>+~])\s*/g, "$1")
-    .replace(/;}/g, "}")
-    .trim();
+  let out = "";
+  let pendingSpace = false;
+  /** The function each open parenthesis belongs to ("" for a bare group). */
+  const parens: string[] = [];
+  const inMath = () => parens.some((fn) => MATH_FUNCTIONS.has(fn));
+  const last = () => out[out.length - 1];
+
+  for (let i = 0; i < css.length; i++) {
+    const c = css[i];
+
+    if (c === "/" && css[i + 1] === "*") {
+      const end = css.indexOf("*/", i + 2);
+      i = end === -1 ? css.length : end + 1;
+      pendingSpace = pendingSpace || out.length > 0;
+      continue;
+    }
+
+    if (/\s/.test(c)) {
+      pendingSpace = out.length > 0;
+      continue;
+    }
+
+    const tight = "{};,)".includes(c) || (">~+".includes(c) && !inMath());
+    const afterTight = "{};,:(".includes(last() ?? "") || (">~+".includes(last() ?? "") && !inMath());
+    if (pendingSpace && !tight && !afterTight) out += " ";
+    pendingSpace = false;
+
+    if (c === '"' || c === "'") {
+      let j = i + 1;
+      while (j < css.length && css[j] !== c) j += css[j] === "\\" ? 2 : 1;
+      out += css.slice(i, j + 1);
+      i = j;
+      continue;
+    }
+
+    if (c === "(") parens.push(/([\w-]*)$/.exec(out)![1].toLowerCase());
+    else if (c === ")") parens.pop();
+
+    if (c === "}" && last() === ";") out = out.slice(0, -1);
+    out += c;
+  }
+
+  return out.trim();
 }
 
 export async function generateBundle(

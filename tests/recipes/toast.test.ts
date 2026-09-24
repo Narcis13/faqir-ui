@@ -355,3 +355,40 @@ describe("toast enter transition (real frames)", () => {
     api.destroy();
   });
 });
+
+// A second dismiss() while the first exit was still running (close clicked as
+// the auto-dismiss timer fired, say) armed a second exit wait — more listeners,
+// a second fallback timer, and a cancel handle that lost track of the first.
+// [1.1 runtime fixes]
+describe("toast dismiss while exiting", () => {
+  beforeEach(() => {
+    document.body.innerHTML = "";
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it("arms exactly one exit wait and removes the toast once", () => {
+    const { root, api } = setupToast();
+    const id = api.add({ message: "a", duration: 0 });
+    const el = toasts(root)[0];
+    el.style.transitionDuration = "1s"; // a running exit keeps it "exiting"
+    let armed = 0;
+    const add = el.addEventListener.bind(el);
+    el.addEventListener = ((type: string, fn: any, opts?: any) => {
+      if (type === "transitionend") armed++;
+      return add(type, fn, opts);
+    }) as any;
+
+    api.dismiss(id);
+    expect(el.dataset.state).toBe("exiting");
+    api.dismiss(id);
+    expect(armed).toBe(1);
+
+    jest.advanceTimersByTime(1100);
+    expect(toasts(root).length).toBe(0);
+    expect(el.isConnected).toBe(false);
+  });
+});

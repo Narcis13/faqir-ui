@@ -134,6 +134,7 @@ describe("typography foundation page", () => {
         "heading-weight": "font-weight",
         "heading-tracking": "letter-spacing",
         "heading-transform": "text-transform",
+        "heading-caps": "font-variant-caps",
         "heading-leading": "line-height",
       };
       const property =

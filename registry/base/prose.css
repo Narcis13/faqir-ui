@@ -14,6 +14,7 @@
   font-weight: var(--heading-weight);
   letter-spacing: var(--heading-tracking);
   text-transform: var(--heading-transform);
+  font-variant-caps: var(--heading-caps);
   line-height: var(--heading-leading);
   margin-block: var(--space-8) var(--space-4);
 }
@@ -24,6 +25,7 @@
   font-weight: var(--weight-semibold);
   letter-spacing: var(--heading-tracking);
   text-transform: var(--heading-transform);
+  font-variant-caps: var(--heading-caps);
   line-height: var(--heading-leading);
   margin-block: var(--space-8) var(--space-3);
 }
@@ -34,6 +36,7 @@
   font-weight: var(--weight-semibold);
   letter-spacing: var(--heading-tracking);
   text-transform: var(--heading-transform);
+  font-variant-caps: var(--heading-caps);
   line-height: var(--leading-snug);
   margin-block: var(--space-6) var(--space-3);
 }
@@ -44,6 +47,7 @@
   font-weight: var(--weight-semibold);
   letter-spacing: var(--heading-tracking);
   text-transform: var(--heading-transform);
+  font-variant-caps: var(--heading-caps);
   line-height: var(--leading-snug);
   margin-block: var(--space-6) var(--space-2);
 }

@@ -52,6 +52,7 @@ import {
   controlsFamily,
   decorationFamily,
   densityDirective,
+  DIVIDER_DOUBLE_MIN_PX,
   depthFamily,
   DURATION_RAMPS,
   FAMILY_ORDER,
@@ -77,6 +78,8 @@ import {
 } from "../../src/theme/families";
 import {
   CUSTOM_PAIRING_REFUSAL,
+  SHARP_CORNER_REFUSAL,
+  radiusConflict,
   LEGACY_RADIUS_SHAPE,
   normalizeSeed,
   PILL_COUPLING,
@@ -158,8 +161,20 @@ describe("normalizeSeed · every axis present, the two 1.0 flags mapped", () => 
     for (const [flag, axis] of Object.entries(LEGACY_RADIUS_SHAPE)) {
       expect(seedFor({ radius: flag as "sm" | "md" | "lg" }).shape.radius).toBe(axis);
     }
-    // An explicit axis outranks the legacy flag rather than fighting it.
-    expect(seedFor({ radius: "sm", shape: { radius: "round" } }).shape.radius).toBe("round");
+    // Both spellings stated and agreeing is one statement…
+    expect(seedFor({ radius: "sm", shape: { radius: "crisp" } }).shape.radius).toBe("crisp");
+    // …and disagreeing is an error naming both, not a silently dropped flag.
+    expect(() => seedFor({ radius: "sm", shape: { radius: "round" } }))
+      .toThrow(radiusConflict("sm", "round"));
+  });
+
+  it("refuses a shaped corner on a sharp shape, where there is no corner to shape", () => {
+    for (const corner of THEME_AXIS_VALUES["shape.corner"]) {
+      if (corner === "round") continue;
+      expect(() => seedFor({ shape: { radius: "sharp", corner } })).toThrow(SHARP_CORNER_REFUSAL);
+      expect(seedFor({ shape: { radius: "crisp", corner } }).shape.corner).toBe(corner);
+    }
+    expect(seedFor({ shape: { radius: "sharp", corner: "round" } }).shape.corner).toBe("round");
   });
 
   it("refuses type.pairing: custom, which is an observation and not an input", () => {
@@ -297,11 +312,18 @@ describe("type family", () => {
     expect(lengthEm(HEADING_TRACKINGS.wide)!).toBeGreaterThan(HEADING_TRACKING_EM * 3);
   });
 
-  it("passes the transform keyword through verbatim, small-caps included", () => {
-    for (const transform of THEME_AXIS_VALUES["type.voice.transform"]) {
-      expect(byName(typeFamily(seedFor({ type: { voice: { transform } } }))).get("heading-transform"))
-        .toBe(transform);
+  it("spells none and uppercase on --heading-transform, and small-caps on --heading-caps [1.1A-25]", () => {
+    for (const transform of ["none", "uppercase"] as const) {
+      const decls = byName(typeFamily(seedFor({ type: { voice: { transform } } })));
+      expect(decls.get("heading-transform")).toBe(transform);
+      // Left at its `normal` default, so pre-1.1A-25 themes regenerate unchanged.
+      expect(decls.has("heading-caps")).toBe(false);
     }
+    // `small-caps` is not a text-transform value: the transform stays `none`
+    // and the variant goes on the token `font-variant-caps` reads.
+    const caps = byName(typeFamily(seedFor({ type: { voice: { transform: "small-caps" } } })));
+    expect(caps.get("heading-transform")).toBe("none");
+    expect(caps.get("heading-caps")).toBe("small-caps");
   });
 });
 
@@ -609,6 +631,14 @@ describe("decoration family", () => {
         .toBe(divider);
     }
   });
+
+  it("raises --divider-width for a double rule, and only for one [1.1A-26]", () => {
+    const double = byName(decorationFamily(seedFor({ decoration: { divider: "double" } })));
+    expect(lengthPx(double.get("divider-width"))!).toBeGreaterThanOrEqual(DIVIDER_DOUBLE_MIN_PX);
+    for (const divider of ["solid", "dashed", "dotted"] as const) {
+      expect(byName(decorationFamily(seedFor({ decoration: { divider } }))).has("divider-width")).toBe(false);
+    }
+  });
 });
 
 // ── 6 · The neutral tint, and the one collapse it allows ────────────────────
@@ -664,13 +694,20 @@ function setPath(target: Record<string, unknown>, path: string, value: unknown):
   cursor[parts[parts.length - 1]] = value;
 }
 
-/** The pill coupling, applied so a matrix entry is a legal seed by construction. */
+/**
+ * The pill coupling and the sharp-corner refusal, applied so a matrix entry is
+ * a legal seed by construction. A shaped corner keeps its shape and takes the
+ * `crisp` ramp, so the corner values stay covered.
+ */
 function couple(input: Record<string, unknown>): void {
   const shape = (input.shape ?? {}) as Record<string, unknown>;
   const controls = (input.controls ?? {}) as Record<string, unknown>;
   if (shape.radius === "pill" || controls.button === "pill") {
     setPath(input, "shape.radius", "pill");
     setPath(input, "controls.button", "pill");
+  }
+  if (shape.radius === "sharp" && shape.corner !== undefined && shape.corner !== "round") {
+    setPath(input, "shape.radius", "crisp");
   }
 }
 
@@ -774,7 +811,7 @@ describe("axis declarations reach the stylesheet", () => {
   it("writes every family's tokens into the one :root block", () => {
     const seed = seedFor({
       type: { pairing: "serif-editorial", scale: 1.25, base: 18, voice: { weight: "black", tracking: "wide", transform: "uppercase" } },
-      shape: { radius: "sharp", border: "heavy", corner: "bevel" },
+      shape: { radius: "crisp", border: "heavy", corner: "bevel" },
       depth: "hard",
       material: "grain",
       motion: "playful",

@@ -44,8 +44,10 @@ import {
   SINGLE_FIXED_REGION_RULE,
   TRIGGER_CONTRACT_RULE,
   UNKNOWN_COMPONENT_RULE,
+  getHtmlRuleInventory,
   type AuditResult,
 } from "../../src/audit/rules";
+import { VOCABULARY_RULES } from "../../src/audit/vocabulary";
 import {
   CSS_RULES,
   buildBreakpointCanonResults,
@@ -220,6 +222,7 @@ describe("the browser audit bundle", () => {
         severity: UNKNOWN_COMPONENT_RULE.severity,
         scope: "markup+registry",
       },
+      ...VOCABULARY_RULES.map((r) => ({ id: r.id, severity: r.severity, scope: "component" })),
       ...CSS_RULES.map((r) => ({ id: r.id, severity: r.severity, scope: "css" })),
       {
         id: TRIGGER_CONTRACT_RULE.id,
@@ -256,6 +259,14 @@ describe("the browser audit bundle", () => {
     expect(api.rules.filter((r) => r.scope === "markup+registry").map((r) => r.id)).toEqual([
       "unknown-component",
     ]);
+    // Every rule the markup auditor can report is in the legend. The vocabulary
+    // rules ran in the bundle from the day they landed, and the legend omitted
+    // them — the playground showed findings under ids it never described.
+    const advertised = new Set(api.rules.map((r) => r.id));
+    const missing = getHtmlRuleInventory()
+      .map((r) => r.id)
+      .filter((id) => !advertised.has(id));
+    expect(missing).toEqual([]);
   });
 
   it("reports its size", () => {

@@ -191,7 +191,6 @@
   --doc-heading-size:       var(--text-xl);
   --doc-subheading-size:    var(--text-lg);
   --doc-legal-size:         var(--text-xs);
-  --doc-legal-color:        var(--color-fg-muted);            /* follows the active paper scheme */
   --doc-section-gap:        var(--space-8);
   --doc-component-gap:      var(--space-4);
   --doc-table-header-bg:    var(--color-bg-muted);            /* warm parchment headers */
@@ -199,4 +198,12 @@
   --doc-table-footer-bg:    var(--color-bg-muted);
   --doc-table-stripe-bg:    var(--color-bg-subtle);           /* subtle cream stripes */
   --doc-signature-line-color: var(--color-border-strong);     /* warm gray signing line */
+}
+
+:root,
+[data-theme] {
+  /* The token layer re-resolves this alias on every scheme island
+     (tokens/document.css), so a `:root`-only override would fall back to the
+     default inside a nested `data-theme` region. */
+  --doc-legal-color:        var(--color-fg-muted);            /* follows the active paper scheme */
 }

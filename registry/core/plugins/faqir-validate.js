@@ -232,9 +232,13 @@
     return run;
   }
 
-  // The custom validators declared on a control, in attribute order.
+  // The custom validators declared on a control, in attribute order. With no
+  // `l-validate` context (a bare `Faqir.validate.run`) there is no scope for
+  // their expressions to read, so they are skipped rather than run into a
+  // ReferenceError that would mark every field invalid.
   function attrChecks(el, ctx) {
     var out = [];
+    if (!ctx) return out;
     for (var i = 0; i < el.attributes.length; i++) {
       var attr = el.attributes[i];
       if (attr.name.indexOf(ATTR) !== 0) continue;
@@ -292,7 +296,7 @@
   }
 
   function registeredCheck(form, el, entry, ctx) {
-    return check(
+    var c = check(
       el,
       entry.name,
       function () {
@@ -304,16 +308,21 @@
       },
       entry.message
     );
+    c.speaks = true; // a string answer is its message, not a truthy pass
+    return c;
   }
 
   function thenable(value) {
     return !!value && typeof value.then === "function";
   }
 
-  // null when the check passed, otherwise the message to show.
+  // null when the check passed, otherwise the message to show. Only a
+  // registered validator may answer with its own sentence; an attribute
+  // expression keeps 1.0's reading, where any truthy value — a non-empty string
+  // included, as in l-validate:nonblank="value.trim()" — is a pass.
   function verdict(c, value) {
     if (value === true) return null;
-    if (typeof value === "string") return value || c.msg;
+    if (c.speaks && typeof value === "string") return value || c.msg;
     return value ? null : c.msg;
   }
 
@@ -431,8 +440,10 @@
   }
 
   // Every check has answered after a submit that had to wait. Either focus the
-  // first offender, or finish the submit the wait interrupted.
-  function finishSubmit(form, list, verdicts, ctx, dir) {
+  // first offender, or finish the submit the wait interrupted — unless the
+  // page's own submit handler cancelled it (`@submit.prevent` on an SPA form):
+  // that submit was never going to navigate, and a native one now would.
+  function finishSubmit(form, list, verdicts, ctx, dir, cancelled) {
     var bad = firstInvalid(list, verdicts);
     if (bad) {
       focusField(bad);
@@ -442,6 +453,7 @@
       F.evaluateAssignment(dir.expression, ctx.scope, form);
       return;
     }
+    if (cancelled()) return;
     // Native submit: fires no submit event, so the listener below cannot
     // re-enter and the async pass cannot loop.
     if (typeof form.submit === "function") form.submit();
@@ -562,11 +574,21 @@
         }
 
         // A check is still out: this turn cannot decide the submit, so block it
-        // and resume once every answer is in.
+        // and resume once every answer is in. Blocking sets `defaultPrevented`
+        // for everyone, so whether ANOTHER handler cancelled it — before this
+        // one, or after — is kept by watching this event's preventDefault.
         if (waiting) {
-          e.preventDefault();
+          var cancelledByPage = e.defaultPrevented;
+          var prevent = e.preventDefault;
+          e.preventDefault = function () {
+            cancelledByPage = true;
+            return prevent.call(e);
+          };
+          prevent.call(e);
           Promise.all(results).then(function (verdicts) {
-            finishSubmit(form, list, verdicts, ctx, dir);
+            finishSubmit(form, list, verdicts, ctx, dir, function () {
+              return cancelledByPage;
+            });
           });
           return;
         }

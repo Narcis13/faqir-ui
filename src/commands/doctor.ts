@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { log } from "../utils/logger";
 import { configExists, readConfig, getConfigPath } from "../utils/config";
 import { validateManifest } from "../manifest";
+import { installedStylesheets, missingTokens } from "../utils/framework-assets";
 import {
   FONTS_CSS_FILENAME,
   checkReferences,
@@ -286,6 +287,37 @@ export async function doctor(args: string[]): Promise<void> {
         name: "Manifest validation",
         passed: false,
         message: invalidManifests.join("; "),
+      });
+    }
+  }
+
+  // 8c. Every token the installed components read is defined
+  //
+  // `init` writes the token layer once; a component added or upgraded later
+  // reads the tokens of the version it came from. A 1.0 project upgraded to 1.1
+  // components read ~54 custom properties its tokens never defined — a switch
+  // with no width, a dialog with no fill, focus with no ring — and every check
+  // above still passed, because each file was present and valid. This one reads
+  // what the stylesheets actually reference.
+  if (existsSync(outputDir)) {
+    const missing = missingTokens(outputDir, installedStylesheets(config, outputDir));
+    if (missing.length === 0) {
+      results.push({
+        name: "Token coverage",
+        passed: true,
+        message: "Every custom property the installed components read is defined",
+      });
+    } else {
+      const shown = missing.slice(0, 8).map((m) => `${m.token} (${m.readBy[0]}${m.readBy.length > 1 ? ` +${m.readBy.length - 1}` : ""})`);
+      results.push({
+        name: "Token coverage",
+        passed: false,
+        message:
+          `${missing.length} custom propert${missing.length === 1 ? "y" : "ies"} read by installed components ` +
+          `${missing.length === 1 ? "is" : "are"} not defined by ${config.output_dir}/tokens: ` +
+          `${shown.join(", ")}${missing.length > shown.length ? `, … ${missing.length - shown.length} more` : ""}. ` +
+          `Your token layer is older than your components — run 'faqir upgrade' to bring ` +
+          `${config.output_dir}/tokens and base up to date (your theme is not touched).`,
       });
     }
   }

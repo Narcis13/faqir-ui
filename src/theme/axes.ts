@@ -374,6 +374,16 @@ export const MOTION_PLAYFUL_LIFT_MAX_PX = -2;
 /** A focus ring this wide is `bold` — the 1.1A-02 ladder's `--border-width-lg`. */
 export const FOCUS_BOLD_MIN_WIDTH_PX = 3;
 
+/**
+ * The narrowest rule a browser splits into two lines under `border-style:
+ * double` — measured in Chrome 149: 1px paints one row, 2px two ADJACENT rows,
+ * and only 3px paints line / gap / line. A theme's `double` divider therefore
+ * reads as `double` only when `--divider-width` clears this; below it the rule
+ * renders as one line and the axis says `solid`, which is what a reader sees
+ * [1.1A-26].
+ */
+export const DIVIDER_DOUBLE_MIN_PX = 3;
+
 /** A link rule this thick is `thick`, whatever its offset. */
 export const LINK_THICK_MIN_PX = 2;
 /** An underline lifted at least this far off the baseline (em) is `offset`. */
@@ -593,7 +603,21 @@ function typeAxis(lookup: Map<string, string>): Required<ThemeAxisType> & { voic
   // A `text-transform` the vocabulary does not name (`capitalize`, `lowercase`)
   // is reported as `none`: the axis has three values, and `none` is the one that
   // means "no heading case the model names".
-  const transform = keyword("type.voice.transform", token(lookup, "heading-transform"), "none");
+  //
+  // `small-caps` is read off `--heading-caps` (`font-variant-caps`), never off
+  // `--heading-transform`: it is not a `text-transform` value, so a transform
+  // spelled `small-caps` is a declaration the browser drops and headings that
+  // render unchanged — reported as `none`, which is what a reader sees
+  // [1.1A-25]. `uppercase` wins over small caps because it renders over them:
+  // small caps only restyle LOWERCASE letters, and an uppercased heading has none.
+  const rawTransform = token(lookup, "heading-transform")?.trim().toLowerCase() ?? null;
+  const caps = token(lookup, "heading-caps")?.trim().toLowerCase() ?? null;
+  const transform: Axis<"type.voice.transform"> =
+    rawTransform === "uppercase"
+      ? "uppercase"
+      : caps === "small-caps" || caps === "all-small-caps"
+        ? "small-caps"
+        : "none";
 
   return { pairing, scale, base, voice: { weight, tracking, transform } };
 }
@@ -720,7 +744,14 @@ function decorationAxis(lookup: Map<string, string>): Required<ThemeAxisDecorati
     else if (offset != null && offset >= LINK_OFFSET_MIN_EM) link = "offset";
     else link = "plain";
   }
-  return { link, divider: keyword("decoration.divider", token(lookup, "divider-style"), "solid") };
+  // `double` needs a rule wide enough to split (DIVIDER_DOUBLE_MIN_PX); under it
+  // the browser paints one line, so the axis reports the `solid` a reader sees.
+  let divider = keyword("decoration.divider", token(lookup, "divider-style"), "solid");
+  if (divider === "double") {
+    const width = tokenPx(lookup, "divider-width") ?? tokenPx(lookup, "border-width");
+    if (width == null || width < DIVIDER_DOUBLE_MIN_PX) divider = "solid";
+  }
+  return { link, divider };
 }
 
 function controlsAxis(lookup: Map<string, string>): Required<ThemeAxisControls> {

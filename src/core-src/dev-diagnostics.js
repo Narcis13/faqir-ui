@@ -14,14 +14,16 @@
  * `devHooks` is what arms the guarded call sites in the engine — until then
  * every one of them is a dead `if (devHooks)`.
  *
- * Four warning classes, all routed through `devReport` so each is both printed
- * once and retained for `window.__FAQIR_DEVTOOLS__.warnings()`:
+ * The warning classes below (plus plugin reports) are all routed through
+ * `devReport`, so each is both printed once and retained for
+ * `window.__FAQIR_DEVTOOLS__.warnings()`:
  *
  *   expression   — an l-* expression threw; prints the offending element's
  *                  outerHTML so the failure is locatable in a big page.
  *   directive    — `l-something` nobody registered (typo, or a plugin that was
  *                  never loaded).
  *   reorder      — an unkeyed l-for list was reordered.
+ *   key          — a keyed l-for list produced the same l-key twice.
  *   html         — `l-html` writes unsanitized markup, once per element.
  *
  * Repeats are collapsed by a dedupe token so a diagnostic inside an effect that
@@ -150,6 +152,22 @@ devHooks = {
    */
   pluginWarning: function(message, el) {
     return devReport('plugin', 'plugin:' + message + ':' + describeElement(el), message, el);
+  },
+
+  /**
+   * Two items of a keyed `l-for` produced the same `l-key`. Rendering stays
+   * correct (duplicates pair up with old rows in order), but DOM state follows
+   * whichever duplicate comes first, not the item it belonged to. Once per list.
+   */
+  duplicateKey: function(el, keyExpr, key) {
+    devReport(
+      'key',
+      'key:' + keyExpr + ':' + describeElement(el),
+      'l-for has duplicate l-key "' + keyExpr + '" = ' + String(key) + ' — keys ' +
+        'must be unique per item, or rows with the same key swap DOM state.',
+      el,
+      { expression: keyExpr, key: String(key) }
+    );
   },
 
   /** `l-html` assigns unsanitized markup. Once per element. */

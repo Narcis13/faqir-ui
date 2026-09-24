@@ -66,9 +66,15 @@ export const BUDGETS = {
 //   total. That weight is the point rather than an overrun: the page and the
 //   server reach a verdict through the same compiled bytes, so the alternative
 //   to shipping the evaluator is shipping a second implementation of it.
+//   11 → 13 KB in the 1.1 release hardening, measured at 12.44 KB: the
+//   catastrophic-regex check the page must share with the server
+//   (`pattern.js`), the prototype and array-index guards, the control reader
+//   that still reads a wizard's disabled steps, the observer that holds
+//   rule-hidden controls disabled, reset and teardown, and the pattern check
+//   for controls whose markup carries no `pattern` attribute.
 export const PLUGIN_BUDGETS = {
   "faqir-validate.js": 3 * KB,
-  "faqir-rules.js": 11 * KB,
+  "faqir-rules.js": 13 * KB,
 };
 
 // ── Pure budget logic (no I/O, no Bun) ───────────────────────────────────────

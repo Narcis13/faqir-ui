@@ -50,8 +50,16 @@ if (result.status !== 0) {
 }
 
 // Normalize to a Node shebang and make the bundle directly executable.
+//
+// Bun also stamps a `// @bun` pragma on the bundle. The launcher runs the
+// bundle with Bun whenever Bun is on PATH, and Bun reads a file carrying that
+// pragma as its own pre-transpiled output — decoding it as Latin-1, so every
+// non-ASCII byte comes out mangled (`—` prints as `â€”`, and any regex that
+// matches one stops matching). The bundle targets Node; it must not claim to be
+// Bun's.
 let output = readFileSync(OUTFILE, "utf8");
 output = output.replace(/^#![^\n]*\n/, "");
+output = output.replace(/^\/\/ @bun[^\n]*\n/, "");
 writeFileSync(OUTFILE, NODE_SHEBANG + output);
 chmodSync(OUTFILE, 0o755);
 

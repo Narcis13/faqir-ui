@@ -21,7 +21,7 @@
   border-radius: var(--radius-md);
   background: transparent;
   color: var(--color-fg-muted);
-  font-family: var(--font-ui);
+  font-family: var(--toggle-group-font, var(--font-ui));
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
   line-height: 1;

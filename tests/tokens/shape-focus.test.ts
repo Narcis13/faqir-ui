@@ -142,10 +142,16 @@ describe("shape & focus · base/reset.css is the single owner of the default rin
       "--focus-ring-style",
       "--focus-ring-color",
       "--focus-ring-offset",
-      "--focus-shadow",
     ]) {
       expect(focusRule!.body).toContain(`var(${token})`);
     }
+    // The glow sits at zero specificity, apart from the ring: `box-shadow` is
+    // also where an element's RESTING shadow lives, and at (0,1,0) the default
+    // `none` wiped it on every keyboard focus. Under `:where()` any rule that
+    // sets a shadow outranks it.
+    const glow = rules(read("base/reset.css")).find((r) => r.selector === ":where(:focus-visible)");
+    expect(glow?.body).toContain("box-shadow: var(--focus-shadow)");
+    expect(focusRule!.body).not.toContain("box-shadow");
   });
 
   it("no other base stylesheet draws a competing default ring", () => {

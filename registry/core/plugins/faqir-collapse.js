@@ -54,7 +54,7 @@
     Faqir.directive("collapse", function (el, dir, scope) {
       var open = null; // unknown until the first effect run
 
-      Faqir.effect(function () {
+      return Faqir.effect(function () {
         var next = !!Faqir.evaluate(dir.expression, scope, el);
         if (next === open) return;
         var firstRun = open === null;

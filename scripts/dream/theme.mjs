@@ -195,6 +195,26 @@ export function currentBranch(run) {
   return r.status === 0 ? r.stdout.trim() : "HEAD";
 }
 
+/**
+ * Where the dream started, as `git checkout` arguments that return there.
+ *
+ * On a branch that is the branch. Detached — which is how `nightly.sh` runs
+ * every dream, in a `worktree add --detach` checkout — `rev-parse --abbrev-ref`
+ * says the literal `HEAD`, and `git checkout HEAD` after `checkout -b <dream>`
+ * stays ON the dream branch: the `branch -D` that follows then fails (git will
+ * not delete the checked-out branch) and a discarded dream left its branch
+ * behind. So a detached start is captured as its commit and returned to with
+ * `--detach <sha>`.
+ */
+export function startPoint(run) {
+  const branch = currentBranch(run);
+  if (branch !== "HEAD") return { label: branch, checkout: [branch] };
+  const head = run("git", ["rev-parse", "HEAD"], { timeout: GATE_TIMEOUT.GIT });
+  if (head.status !== 0) throw new Error(`git rev-parse HEAD failed: ${tail(head.stderr)}`);
+  const sha = head.stdout.trim();
+  return { label: `detached at ${sha.slice(0, 12)}`, checkout: ["--detach", sha] };
+}
+
 /** Every path with an uncommitted change, tracked or not. */
 export function dirtyPaths(run) {
   const r = run("git", ["status", "--porcelain"], { timeout: GATE_TIMEOUT.GIT });
@@ -297,9 +317,9 @@ export async function runThemeDream(options = {}) {
   const date = now.toISOString().slice(0, 10);
 
   // 1 ── the tree the dream starts from
-  const startBranch = currentBranch(run);
+  const start = startPoint(run);
   const dirty = dirtyPaths(run);
-  assertCleanStart({ branch: startBranch, dirty: dirty.length > 0, files: dirty });
+  assertCleanStart({ branch: start.label, dirty: dirty.length > 0, files: dirty });
 
   // 2 ── the brief
   const queue = readQueue(queuePath);
@@ -415,14 +435,31 @@ export async function runThemeDream(options = {}) {
     throw new Error(`Failed to create ${branch}: ${tail(created.stderr)}`);
   }
 
-  /** Undo everything the dream did and return to where it started. */
+  /**
+   * Undo everything the dream did and return to where it started. Every step's
+   * exit status is checked: a cleanup that silently fails leaves a dream
+   * branch — or its files — behind while the ledger says "discarded". The
+   * failures come back as text, for the log and the discard row.
+   */
   const abandon = () => {
-    run("git", ["checkout", "--", "."], { timeout: GATE_TIMEOUT.GIT });
-    run("git", ["clean", "-fd"], { timeout: GATE_TIMEOUT.GIT });
-    run("git", ["checkout", startBranch], { timeout: GATE_TIMEOUT.GIT });
-    run("git", ["branch", "-D", branch], { timeout: GATE_TIMEOUT.GIT });
+    const problems = [];
+    const step = (args) => {
+      const r = run("git", args, { timeout: GATE_TIMEOUT.GIT });
+      if (r.status !== 0) problems.push(`git ${args.join(" ")}: ${firstProblem(r)}`);
+      return r.status === 0;
+    };
+    step(["checkout", "--", "."]);
+    step(["clean", "-fd"]);
+    // Only delete the branch once HEAD is off it — git refuses otherwise, and
+    // the refusal is the leak this is here to report.
+    if (step(["checkout", ...start.checkout])) step(["branch", "-D", branch]);
+    else problems.push(`branch ${branch} left in place: could not leave it`);
     rmSync(join(root, OUT_DIR, brief.id), { recursive: true, force: true });
+    if (problems.length > 0) log(`⚠ cleanup incomplete:\n${problems.map((p) => `    ${p}`).join("\n")}`);
+    return problems;
   };
+  const cleanupNote = (problems) =>
+    problems.length > 0 ? ` [cleanup incomplete: ${problems[0]}]` : "";
 
   // 5 ── the gates
   const passed = [];
@@ -432,10 +469,10 @@ export async function runThemeDream(options = {}) {
     const result = run(command, args, { timeout: gate.timeout });
     if (result.status !== 0) {
       log(`✗ ${gate.name} failed:\n${tail(result.stderr || result.stdout)}`);
-      abandon();
+      const leftovers = abandon();
       discard({
         gates: `${passed.length}/${THEME_GATES.length} (${gate.name})`,
-        description: `${theme}: ${gate.name} failed — ${firstProblem(result)}`,
+        description: `${theme}: ${gate.name} failed — ${firstProblem(result)}${cleanupNote(leftovers)}`,
       });
       return {
         outcome: "discard",
@@ -454,10 +491,10 @@ export async function runThemeDream(options = {}) {
   const verdict = checkDiffPaths(changed);
   if (!verdict.ok) {
     log(`✗ the diff touches paths a dream may not:\n${verdict.violations.map((v) => `    ${v.path} — ${v.reason}`).join("\n")}`);
-    abandon();
+    const leftovers = abandon();
     discard({
       gates: `${passed.length}/${THEME_GATES.length}`,
-      description: `${theme}: ${diffViolationSummary(verdict.violations)}`,
+      description: `${theme}: ${diffViolationSummary(verdict.violations)}${cleanupNote(leftovers)}`,
     });
     return { outcome: "discard", reason: "guard", brief, theme, violations: verdict.violations };
   }

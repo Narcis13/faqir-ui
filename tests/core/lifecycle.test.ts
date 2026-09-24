@@ -424,6 +424,25 @@ describe("Faqir.start() is safe to call again", () => {
     expect(document.querySelector("#first span")!.textContent).toBe("one");
     expect(document.querySelector("#second em")!.textContent).toBe("two");
   });
+
+  it("does not let the observer re-initialize a scope start() already built", async () => {
+    let clicks = 0;
+    (globalThis as any).__lateSpy = () => { clicks++; };
+
+    // An observed body, then markup and start() in the same task: start() binds
+    // the new scope synchronously, and the observer's record for the SAME node
+    // arrives a microtask later. It used to run initTree again — a second scope,
+    // every handler bound twice. [1.1A-23]
+    Faqir.start();
+    await tick();
+    document.body.insertAdjacentHTML("beforeend", `<div id="late-root" l-data="{}"><button id="late-btn" @click="__lateSpy()">go</button></div>`);
+    Faqir.start();
+    await tick();
+
+    document.getElementById("late-btn")!.dispatchEvent(new Event("click"));
+    expect(clicks).toBe(1);
+    delete (globalThis as any).__lateSpy;
+  });
 });
 
 // ───────────────────────────────────────────────────────────────────────────

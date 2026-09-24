@@ -1,5 +1,5 @@
 /**
- * Faqir Core v0.1.0
+ * Faqir Core — the running version is `Faqir.version` (stamped at build time).
  * Alpine-style reactivity for the Faqir UI component system.
  * Zero dependencies. CDN-ready. Agent-native.
  *
@@ -162,7 +162,11 @@
     flushScheduled = false;
     var iterations = 0;
     while (pendingEffects.size > 0) {
+      // Effects that keep re-triggering each other (a writes b, b writes a)
+      // would loop forever. The cap stops that, but dropping work silently
+      // hides the bug, so it is reported in every build.
       if (++iterations > 100) {
+        console.warn('[Faqir] Effect loop: dropped ' + pendingEffects.size + ' effect(s) after 100 flushes; effects keep re-triggering each other');
         pendingEffects.clear();
         break;
       }
@@ -905,6 +909,16 @@
     function signalOf(ac) {
       return ac ? ac.signal : undefined;
     }
+    // Where a row is NOW — `row` by identity, else the row whose idKey is `id`.
+    // Never an index saved before the request: an interleaved load()/remove()
+    // shifts or replaces the list, and a stale index writes over a real row.
+    function locate(id, row) {
+      var items = scope[name];
+      for (var i = 0; i < items.length; i++) {
+        if (row ? items[i] === row : items[i] && items[i][idKey] === id) return i;
+      }
+      return -1;
+    }
 
     // Inject reactive data properties into scope
     scope[name] = [];
@@ -947,12 +961,12 @@
       create: function(payload) {
         if (destroyed) return Promise.resolve(null);
         scope[name + 'Error'] = null;
-        var tempIndex = -1;
+        var temp = null;
 
         if (isOptimistic) {
-          var temp = Object.assign({}, payload, { _pending: true });
-          scope[name].push(temp);
-          tempIndex = scope[name].length - 1;
+          scope[name].push(Object.assign({}, payload, { _pending: true }));
+          // Read back through the list: that is the handle `locate` compares.
+          temp = scope[name][scope[name].length - 1];
         }
 
         var ac = beginRequest();
@@ -969,9 +983,12 @@
         .then(function(created) {
           endRequest(ac);
           if (destroyed) return null;
-          if (isOptimistic && tempIndex >= 0) {
-            scope[name][tempIndex] = created;
-          } else {
+          var at = temp ? locate(null, temp) : -1;
+          if (at >= 0) {
+            scope[name][at] = created;
+          } else if (!temp || !created || created[idKey] == null || locate(created[idKey]) < 0) {
+            // The temp row is gone when a load() replaced the list meanwhile;
+            // that list may already hold the created row.
             scope[name].push(created);
           }
           return created;
@@ -980,9 +997,8 @@
           endRequest(ac);
           if (destroyed) return null;
           scope[name + 'Error'] = e.message;
-          if (isOptimistic && tempIndex >= 0) {
-            scope[name].splice(tempIndex, 1);
-          }
+          var at = temp ? locate(null, temp) : -1;
+          if (at >= 0) scope[name].splice(at, 1);
           return null;
         });
       },
@@ -991,10 +1007,7 @@
         if (destroyed) return Promise.resolve(null);
         scope[name + 'Error'] = null;
         var items = scope[name];
-        var idx = -1;
-        for (var i = 0; i < items.length; i++) {
-          if (items[i][idKey] === id) { idx = i; break; }
-        }
+        var idx = locate(id);
         var snapshot = null;
 
         if (isOptimistic && idx >= 0) {
@@ -1003,7 +1016,7 @@
         }
 
         var ac = beginRequest();
-        return fetch(endpoint + '/' + id, {
+        return fetch(endpoint + '/' + encodeURIComponent(id), {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
@@ -1016,16 +1029,16 @@
         .then(function(updated) {
           endRequest(ac);
           if (destroyed) return null;
-          if (idx >= 0) scope[name][idx] = updated;
+          var at = locate(id);
+          if (at >= 0) scope[name][at] = updated;
           return updated;
         })
         .catch(function(e) {
           endRequest(ac);
           if (destroyed) return null;
           scope[name + 'Error'] = e.message;
-          if (isOptimistic && snapshot && idx >= 0) {
-            scope[name][idx] = snapshot;
-          }
+          var at = snapshot ? locate(id) : -1;
+          if (at >= 0) scope[name][at] = snapshot;
           return null;
         });
       },
@@ -1034,10 +1047,7 @@
         if (destroyed) return Promise.resolve();
         scope[name + 'Error'] = null;
         var items = scope[name];
-        var idx = -1;
-        for (var i = 0; i < items.length; i++) {
-          if (items[i][idKey] === id) { idx = i; break; }
-        }
+        var idx = locate(id);
         var snapshot = null;
 
         if (isOptimistic && idx >= 0) {
@@ -1046,20 +1056,20 @@
         }
 
         var ac = beginRequest();
-        return fetch(endpoint + '/' + id, { method: 'DELETE', signal: signalOf(ac) })
+        return fetch(endpoint + '/' + encodeURIComponent(id), { method: 'DELETE', signal: signalOf(ac) })
         .then(function(res) {
           if (!res.ok) throw new Error(res.status + ' ' + res.statusText);
           endRequest(ac);
           if (destroyed) return;
-          if (!isOptimistic && idx >= 0) {
-            scope[name].splice(idx, 1);
-          }
+          var at = isOptimistic ? -1 : locate(id);
+          if (at >= 0) scope[name].splice(at, 1);
         })
         .catch(function(e) {
           endRequest(ac);
           if (destroyed) return;
           scope[name + 'Error'] = e.message;
-          if (isOptimistic && snapshot) {
+          // `idx` is only a position hint here; skip if a reload restored it.
+          if (snapshot && locate(id) < 0) {
             scope[name].splice(idx, 0, snapshot);
           }
         });
@@ -1590,14 +1600,11 @@
       });
 
       var inputHandler = function() {
+        // Trim first: `.number.trim` must not call trim() on the parsed number.
         var value = el.value;
-        if (modifiers.has('number')) value = parseFloat(value) || 0;
         if (modifiers.has('trim')) value = value.trim();
-        if (typeof value === 'number') {
-          writeModel(prop, value, scope, el);
-        } else {
-          writeModel(prop, value, scope, el);
-        }
+        if (modifiers.has('number')) value = parseFloat(value) || 0;
+        writeModel(prop, value, scope, el);
       };
 
       if (modifiers.has('debounce')) {
@@ -1924,22 +1931,36 @@
       }
       // @faqir:dev-end
 
-      // old key -> entry, consumed as matched so duplicate keys fall through to
-      // fresh nodes and leftovers are stale. source[i] = reused entry's old
-      // position + 1, or 0 for a fresh entry (the getSequence sentinel).
+      // old key -> entries holding it, in order, consumed as matched; the
+      // leftovers are stale. A list rather than one entry because keys can
+      // repeat: a Map of single entries overwrote the first row of a duplicate
+      // pair, which then was neither reused nor removed and leaked a row per
+      // render. source[i] = reused entry's old position + 1, or 0 for a fresh
+      // entry (the getSequence sentinel).
       var oldMap = new Map();
       for (var i = 0; i < currentEntries.length; i++) {
-        oldMap.set(currentEntries[i].key, currentEntries[i]);
+        var k = currentEntries[i].key;
+        if (oldMap.has(k)) oldMap.get(k).push(currentEntries[i]);
+        else oldMap.set(k, [currentEntries[i]]);
       }
 
       var n = items.length;
       var newEntries = new Array(n);
       var source = new Array(n);
+      // @faqir:dev-start
+      var seenKeys = keyExpr && devHooks ? new Set() : null;
+      // @faqir:dev-end
       for (var i = 0; i < n; i++) {
         var key = keyFor(items[i], i);
-        var entry = oldMap.get(key);
+        // @faqir:dev-start
+        if (seenKeys) {
+          if (seenKeys.has(key)) { devHooks.duplicateKey(el, keyExpr, key); seenKeys = null; }
+          else seenKeys.add(key);
+        }
+        // @faqir:dev-end
+        var olds = oldMap.get(key);
+        var entry = olds && olds.shift();
         if (entry !== undefined) {
-          oldMap.delete(key);
           // Reuse in place: one write per slot, re-renders only on change.
           entry.scope[itemName] = items[i];
           entry.scope[indexName] = i;
@@ -1952,10 +1973,12 @@
       }
 
       // Remove stale entries first so the DOM holds only reused nodes.
-      oldMap.forEach(function(stale) {
-        for (var j = 0; j < stale.nodes.length; j++) {
-          destroyScope(stale.nodes[j]);
-          stale.nodes[j].remove();
+      oldMap.forEach(function(olds) {
+        for (var e = 0; e < olds.length; e++) {
+          for (var j = 0; j < olds[e].nodes.length; j++) {
+            destroyScope(olds[e].nodes[j]);
+            olds[e].nodes[j].remove();
+          }
         }
       });
 
@@ -2734,7 +2757,14 @@
             initController(uiName, node);
           }
 
-          if (node.hasAttribute && node.hasAttribute('l-data')) {
+          // Already initialized — by `Faqir.start()` / `Faqir.initTree()` in the
+          // same task that inserted it (the record is only delivered on the
+          // next microtask), or by the l-for / l-if render that stamped it.
+          // Re-running `initTree` would build a second scope and bind every
+          // directive twice — the same guard `bootstrap` applies. [1.1A-23]
+          if (node.__faqirScope) {
+            // fall through to the descendant sweep below
+          } else if (node.hasAttribute && node.hasAttribute('l-data')) {
             initTree(node, findParentScope(node));
           } else if (node.hasAttribute && node.hasAttribute('data-ui') && !findParentScope(node)) {
             // Standalone data-ui (no parent scope) — create its own scope

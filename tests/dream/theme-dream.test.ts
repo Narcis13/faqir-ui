@@ -65,6 +65,8 @@ const BRIEF = {
   status: "pending",
 };
 
+const START_SHA = "0123456789abcdef0123456789abcdef01234567";
+
 const SEED = {
   name: "arcade",
   accent: "#d926a9",
@@ -105,6 +107,10 @@ function fakeRepo(options: {
   startDirty?: string[];
   ledgerRows?: string[];
   hasRemote?: boolean;
+  /** Start detached, as `nightly.sh`'s `worktree add --detach` checkout does. */
+  detached?: boolean;
+  /** A git subcommand (e.g. "clean") the fake fails, to exercise cleanup reporting. */
+  failGit?: string;
 } = {}): Fake {
   const root = mkdtempSync(join(tmpdir(), "faqir-dream-"));
   temps.push(root);
@@ -139,7 +145,8 @@ function fakeRepo(options: {
     ...(options.extraWrites ?? []),
   ];
 
-  let branch = "main";
+  // Detached HEAD reads as the literal "HEAD" from `rev-parse --abbrev-ref`.
+  let branch = options.detached ? "HEAD" : "main";
   const branches = new Set<string>();
   const changed = new Set<string>(options.startDirty ?? []);
   const calls: string[] = [];
@@ -160,7 +167,12 @@ function fakeRepo(options: {
 
     if (command === "git") {
       const sub = args[0];
-      if (sub === "rev-parse") return ok(args.includes("--short") ? "deadbee" : branch);
+      if (sub === options.failGit) return failed(`fatal: ${sub} refused`);
+      if (sub === "rev-parse") {
+        if (args.includes("--short")) return ok("deadbee");
+        if (args.includes("--abbrev-ref")) return ok(branch);
+        return ok(`${START_SHA}\n`);
+      }
       if (sub === "status") return ok([...changed].map((p) => ` M ${p}`).join("\n"));
       if (sub === "checkout" && args[1] === "-b") {
         branch = args[2];
@@ -173,8 +185,14 @@ function fakeRepo(options: {
         for (const p of [...changed]) if (!p.startsWith("registry/themes/")) changed.delete(p);
         return ok();
       }
+      if (sub === "checkout" && args[1] === "--detach") {
+        branch = "HEAD";
+        return ok();
+      }
       if (sub === "checkout" || sub === "switch") {
-        branch = args[args.length - 1];
+        // `git checkout HEAD` names the current commit, not a branch: it moves
+        // nothing, which is exactly why a detached start needs its sha.
+        if (args[args.length - 1] !== "HEAD") branch = args[args.length - 1];
         return ok();
       }
       if (sub === "clean") {
@@ -182,7 +200,10 @@ function fakeRepo(options: {
         return ok();
       }
       if (sub === "branch" && args.includes("-D")) {
-        branches.delete(args[args.length - 1]);
+        const target = args[args.length - 1];
+        // Real git refuses to delete the branch HEAD is on.
+        if (target === branch) return failed(`error: Cannot delete branch '${target}' checked out`);
+        branches.delete(target);
         return ok();
       }
       if (sub === "remote") return options.hasRemote ? ok("origin") : ok("");
@@ -405,6 +426,27 @@ describe("a dream that is discarded", () => {
     expect(fake.calls).toContain("git branch -D dream/theme-arcade");
     expect(fake.calls).toContain("git clean -fd");
     expect(existsSync(join(fake.root, ".faqir-dreams/out/arcade"))).toBe(false);
+  });
+
+  it("returns to a detached start by its commit, so the dream branch can be deleted", async () => {
+    // nightly.sh runs every dream in a `worktree add --detach` checkout, where
+    // the start "branch" is the literal HEAD. `git checkout HEAD` stayed on the
+    // dream branch, `branch -D` was refused, and the discard left it behind.
+    const fake = fakeRepo({ failAt: "audit:registry", detached: true });
+    await dream(fake);
+    expect(fake.calls).toContain(`git checkout --detach ${START_SHA}`);
+    expect(fake.calls).not.toContain("git checkout HEAD");
+    expect(fake.liveBranches()).toEqual([]);
+    expect(fake.branch()).toBe("HEAD");
+  });
+
+  it("reports a cleanup step that failed, instead of claiming a clean discard", async () => {
+    const logged: string[] = [];
+    const fake = fakeRepo({ failAt: "gauntlet", failGit: "clean" });
+    await dream(fake, { log: (line: string) => logged.push(line) });
+    expect(logged.join("\n")).toContain("cleanup incomplete");
+    expect(logged.join("\n")).toContain("git clean -fd");
+    expect(rows(fake)[0].description).toContain("[cleanup incomplete: git clean -fd");
   });
 
   it("marks the brief discarded, which is terminal", async () => {

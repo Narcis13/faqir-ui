@@ -20,8 +20,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: var(--checkbox-size);
-  height: var(--checkbox-size);
+  width: var(--checkbox-size, 18px);
+  height: var(--checkbox-size, 18px);
   flex-shrink: 0;
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--checkbox-radius);

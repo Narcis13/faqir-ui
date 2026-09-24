@@ -19,7 +19,8 @@ export interface RulesPluginEngine {
   magic(name: string, callback: (el: unknown, scope: unknown) => unknown): void;
   directive(
     name: string,
-    handler: (el: any, dir: { expression?: string }, scope: any) => void,
+    /** The `l-rules` handler returns its cleanup, which the engine runs when the form's scope is destroyed. */
+    handler: (el: any, dir: { expression?: string }, scope: any) => unknown,
   ): void;
   devtools?: { report?(message: string, el?: unknown): boolean };
   validate?: {
@@ -29,7 +30,7 @@ export interface RulesPluginEngine {
       name: string,
       fn: (value: unknown, ctx: unknown) => unknown,
       message?: string,
-    ): unknown;
+    ): unknown; // faqir-validate answers with the function that undoes it
   };
 }
 

@@ -81,3 +81,13 @@
   --doc-fg:                 oklch(0.10 0 0);           /* near-black for print */
   --doc-print-border-color: oklch(0.60 0 0);           /* medium gray borders in print */
 }
+
+/* ── Scheme islands ── */
+/* `--doc-legal-color` is the one document colour screen components read (the
+   key-value label and the image caption), so it is restated where a scheme can
+   change below the root — see the same block in tokens/aliases.css. The rest
+   of this file is print ink, which does not follow the scheme. */
+[data-theme],
+[data-skin] {
+  --doc-legal-color:        var(--color-fg-muted);
+}

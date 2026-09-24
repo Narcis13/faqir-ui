@@ -4,8 +4,8 @@
 //
 //   VERSION           the npm package / CLI release. Bumped on every release by
 //                     `scripts/release.mjs`, which rewrites the literal below.
-//                     All six published packages move in **lockstep** — the root
-//                     `faqir-ui-cli` and the five under `packages/` carry the
+//                     All seven published packages move in **lockstep** — the root
+//                     `faqir-ui-cli` and the six under `packages/` carry the
 //                     same number, and no package depends on another by range,
 //                     so lockstep costs nothing and makes "which versions go
 //                     together" a question nobody has to ask.

@@ -165,11 +165,19 @@ describe("glass · @supports fallback structure", () => {
   it("selects no component: the whole theme is token declarations", () => {
     expect(CSS).not.toContain("[data-ui=");
     expect(CSS).not.toContain("[data-part=");
-    // Every block in the file states tokens at :root (in or out of @supports).
+    // Every block in the file states tokens at :root (in or out of @supports);
+    // the aliases the token layer restates per island also on [data-theme].
     const selectors = [...CSS.replace(/\/\*[\s\S]*?\*\//g, "").matchAll(/([^{}]+)\{/g)]
-      .map((m) => m[1].trim())
+      .map((m) => m[1].trim().replace(/\s+/g, " "))
       .filter((s) => !s.startsWith("@"));
-    expect(selectors).toEqual([":root", '[data-theme="dark"]', '[data-theme="auto"]', ":root"]);
+    expect(selectors).toEqual([
+      ":root",
+      ":root, [data-theme]",
+      '[data-theme="dark"]',
+      '[data-theme="auto"]',
+      ":root",
+      ":root, [data-theme]",
+    ]);
   });
 
   it("names the frost once, and lets the components decide where it lands", () => {

@@ -50,6 +50,7 @@
 
 import { DefinitionError } from "./errors.js";
 import { assertLogic, evaluateLogic, truthy, varPaths } from "./logic.js";
+import { catastrophicMessage, nestedMessage, patternRisk } from "./pattern.js";
 import { RULE_MESSAGES, SHAPE_RULES } from "./messages.js";
 import { DEFINITION_VERSION, FIELD_KEYWORDS, normalizePath } from "./shape.js";
 import { RULE_KEYS, RULE_VERBS, REMOTE, compile } from "./rules.js";
@@ -577,17 +578,17 @@ function lintComputeCycles(rules, out) {
   const computes = rules
     .map((rule, index) => ({ rule, index }))
     .filter(({ rule }) => typeof rule.compute === "string" && rule.value !== undefined);
-  if (computes.length < 2) return;
+  if (computes.length === 0) return;
 
   const targets = computes.map(({ rule }) => normalizePath(/** @type {string} */ (rule.compute)));
   // The same graph `rules.js` orders the computes with: a compute depends on
-  // another when it reads that one's target, its parent or one of its children.
-  const dependsOn = computes.map(({ rule }, i) => {
+  // another when it reads that one's target, its parent or one of its children
+  // — and on itself when it reads its own, which is a cycle of one.
+  const dependsOn = computes.map(({ rule }) => {
     const reads = varPaths(rule.value).map(normalizePath);
     /** @type {number[]} */
     const edges = [];
     for (let j = 0; j < computes.length; j++) {
-      if (i === j) continue;
       const target = targets[j];
       if (reads.some((read) => read === target || read.startsWith(`${target}.`) || target.startsWith(`${read}.`))) {
         edges.push(j);
@@ -616,7 +617,9 @@ function lintComputeCycles(rules, out) {
     out.push(error(
       "rule-cycles",
       `rules[${index}]`,
-      `the "compute" rules ${ids} depend on each other in a cycle, so none of them can run.`,
+      stuck.length === 1
+        ? `the "compute" rule ${ids} reads "${String(rule.compute)}", the value it writes, so it can never settle.`
+        : `the "compute" rules ${ids} depend on each other in a cycle, so none of them can run.`,
       { id: typeof rule.id === "string" ? rule.id : undefined },
     ));
   }
@@ -718,6 +721,114 @@ function lintMessages(definition, rules, extraLocales, oracle, out) {
         ));
       }
     }
+  }
+}
+
+/**
+ * Every `pattern` a field schema carries, and every literal `regex` operand,
+ * read for the backtracking shapes `pattern.js` describes. A catastrophic one
+ * is an **error** — `compile` refuses it, so nothing would ever run the
+ * definition — and is reported here, under the rule that owns the bytes, so it
+ * is named even beside other errors. The milder nested shape is a **warning**:
+ * usually fine, occasionally slow, and worth a second look before a definition
+ * someone else wrote goes live.
+ *
+ * @param {Record<string, unknown>} definition
+ * @param {Record<string, unknown>[]} rules
+ * @param {LintFinding[]} out
+ */
+function lintPatterns(definition, rules, out) {
+  /** @param {string} pattern @param {string} rule @param {string} at @param {string} what @param {string} [id] */
+  const judge = (pattern, rule, at, what, id) => {
+    const risk = patternRisk(pattern);
+    if (risk === "catastrophic" && rule === "schema") {
+      out.push(error(rule, at, catastrophicMessage(what), { id }));
+    } else if (risk === "nested") {
+      out.push(warning(rule, at, nestedMessage(what), { id }));
+    }
+  };
+
+  /** @param {unknown} schema @param {string} at */
+  const walkField = (schema, at) => {
+    if (!isRecord(schema)) return;
+    if (typeof schema.pattern === "string") judge(schema.pattern, "schema", `${at}.pattern`, `"pattern" at ${at}`);
+    if (schema.items !== undefined) walkField(schema.items, `${at}[]`);
+    if (isRecord(schema.properties)) {
+      for (const [name, child] of Object.entries(schema.properties)) walkField(child, `${at}.${name}`);
+    }
+  };
+  if (isRecord(definition.fields)) {
+    for (const [path, schema] of Object.entries(definition.fields)) walkField(schema, `fields.${path}`);
+  }
+
+  // A catastrophic `regex` is already a `rule-ops` error — `assertLogic`
+  // refuses it — so only the warning is added here.
+  rules.forEach((rule, index) => {
+    const id = typeof rule.id === "string" ? rule.id : undefined;
+    for (const [key, expr] of expressionsOf(rule)) {
+      /** @param {unknown} node */
+      const walk = (node) => {
+        if (Array.isArray(node)) {
+          node.forEach(walk);
+          return;
+        }
+        if (!isRecord(node)) return;
+        for (const [op, raw] of Object.entries(node)) {
+          const args = Array.isArray(raw) ? raw : [raw];
+          if (op === "regex" && typeof args[0] === "string") {
+            judge(args[0], "rule-ops", `rules[${index}].${key}`, `the "regex" pattern at rules[${index}].${key}`, id);
+          }
+          args.forEach(walk);
+        }
+      };
+      walk(expr);
+    }
+  });
+}
+
+/**
+ * A definition is embedded in a page as `<script type="application/json">`,
+ * which is raw text: `</script` inside any string in it ends the element early
+ * and hands the rest of the definition to the HTML parser, and `<!--` switches
+ * the script into an escaped state where a later `</script>` is not the end.
+ * Both are only safe when every `<` is written `\u003c` — which
+ * `@faqir-ui/forms` does, and which a hand-embedded definition has to do too.
+ * One warning, at the first string that needs it.
+ *
+ * @param {unknown} definition
+ * @param {LintFinding[]} out
+ */
+function lintEmbedding(definition, out) {
+  /** @param {string} text */
+  const breaks = (text) => /<\/script|<!--/i.test(text);
+  /** @param {unknown} node @param {string} at @returns {string | null} */
+  const find = (node, at) => {
+    if (typeof node === "string") return breaks(node) ? at : null;
+    if (Array.isArray(node)) {
+      for (let i = 0; i < node.length; i++) {
+        const hit = find(node[i], `${at}[${i}]`);
+        if (hit !== null) return hit;
+      }
+      return null;
+    }
+    if (!isRecord(node)) return null;
+    for (const [key, value] of Object.entries(node)) {
+      const where = at ? `${at}.${key}` : key;
+      if (breaks(key)) return where;
+      const hit = find(value, where);
+      if (hit !== null) return hit;
+    }
+    return null;
+  };
+  const hit = find(definition, "");
+  if (hit !== null) {
+    out.push(warning(
+      "schema",
+      hit,
+      'this contains "</script" or "<!--", which ends or derails a <script type="application/json"> ' +
+        "that embeds the definition as written; escape every < as \\u003c when you embed it " +
+        "(@faqir-ui/forms does).",
+    ));
   }
 }
 
@@ -855,6 +966,7 @@ export function lintDefinition(definition, options) {
     }
 
     lintComputeCycles(rules, specific);
+    lintPatterns(/** @type {Record<string, unknown>} */ (definition), rules, specific);
     lintMessages(
       /** @type {Record<string, unknown>} */ (definition),
       rules,
@@ -875,6 +987,7 @@ export function lintDefinition(definition, options) {
     return true;
   });
   const findings = [...kept, ...specific];
+  lintEmbedding(definition, findings);
   if (!findings.some((finding) => finding.severity === "error")) {
     try {
       compile(definition);

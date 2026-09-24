@@ -1,7 +1,7 @@
-import { afterAll, beforeEach, describe, expect, it } from "bun:test";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { lintDefinition } from "../../rules/src/index.js";
+import { coerce, fromFormData, lintDefinition, validate } from "../../rules/src/index.js";
 import { renderForm } from "../src/index.js";
 import type { ObjectSchema, RenderFormOptions, UISchema } from "../src/index.js";
 import {
@@ -272,6 +272,9 @@ describe("renderForm derives rules from the schema", () => {
         from: "0",
         when: { "!": { "==": [{ var: "plan" }, "team"] } },
       },
+      // …and the skipped page's fields are hidden on the same condition, so
+      // a server's validate() never demands what the skip path never showed.
+      { id: "show-step-2-seats", show: "seats", when: { "==": [{ var: "plan" }, "team"] } },
     ]);
     // Forward: the definition answers which page comes next.
     expect(html).toContain(
@@ -548,5 +551,214 @@ describe("a rendered form under faqir-core + faqir-validate + faqir-rules", () =
     back!.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
     await tick();
     expect(scope.step).toBe(0);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// A real multi-step wizard, forward and back, on both paths — and the server's
+// verdict on what the skip path submits. Every assertion here was a reproduced
+// bug before 1.1 shipped: the plugin read the other steps' (disabled) answers
+// as blank, so Back jumped over a page that had been filled in; a field a rule
+// hid on a later step was re-enabled by the wizard and blocked Next with an
+// error nobody could see; and the server rejected every skip-path submission
+// because nothing told it the skipped page's fields were never shown.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * happy-dom holds each MutationObserver's delivery callback in a `WeakRef`, so
+ * a garbage collection can drop a record; a browser never does. The wizard's
+ * step bindings are exactly the writes the plugin observes, so these tests hold
+ * the callbacks strongly for their own duration.
+ */
+let savedWeakRef: typeof WeakRef;
+
+async function submit(form: HTMLFormElement): Promise<void> {
+  form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+  await tick();
+  await tick();
+}
+
+async function back(form: HTMLFormElement): Promise<void> {
+  const button = [...form.querySelectorAll("button")].find((b) => b.textContent?.trim() === "Back");
+  button!.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+  await tick();
+  await tick();
+}
+
+async function choose(form: HTMLFormElement, value: string): Promise<void> {
+  for (const radio of form.querySelectorAll<HTMLInputElement>('input[type="radio"]')) {
+    radio.checked = radio.value === value;
+  }
+  form.querySelector<HTMLInputElement>(`input[value="${value}"]`)!
+    .dispatchEvent(new Event("change", { bubbles: true }));
+  await tick();
+}
+
+async function fill(el: HTMLInputElement, value: string): Promise<void> {
+  el.value = value;
+  el.dispatchEvent(new Event("input", { bubbles: true }));
+  await tick();
+}
+
+/** What a server receives when the page serializes the whole wizard. */
+function submission(form: HTMLFormElement): [string, string][] {
+  const pairs: [string, string][] = [];
+  for (const el of form.querySelectorAll<HTMLInputElement>("input[name]")) {
+    if (el.closest('[data-ui="field-group"]')?.hasAttribute("hidden")) continue; // a rule hid it
+    if ((el.type === "radio" || el.type === "checkbox") && !el.checked) continue;
+    if (el.value !== "") pairs.push([el.name, el.value]);
+  }
+  return pairs;
+}
+
+describe("a multi-step wizard under faqir-rules", () => {
+  beforeAll(() => {
+    savedWeakRef = globalThis.WeakRef;
+    (globalThis as any).WeakRef = class<T> {
+      #target: T;
+      constructor(target: T) {
+        this.#target = target;
+      }
+      deref(): T {
+        return this.#target;
+      }
+    };
+  });
+  afterAll(() => {
+    (globalThis as any).WeakRef = savedWeakRef;
+  });
+
+  // `seats` is required, but only on the team path: its step is conditional.
+  const TEAM: ObjectSchema = {
+    type: "object",
+    properties: {
+      plan: { type: "string", title: "Plan", enum: ["solo", "team"] },
+      seats: { type: "integer", title: "Seats", minimum: 2 },
+      email: { type: "string", format: "email", title: "Billing email" },
+    },
+    required: ["plan", "seats", "email"],
+  };
+  const TEAM_UI: UISchema = {
+    "ui:wizard": {
+      steps: [
+        { title: "Plan", fields: ["plan"] },
+        { title: "Team", fields: ["seats"], when: { "==": [{ var: "plan" }, "team"] } },
+        { title: "Billing", fields: ["email"] },
+      ],
+    },
+  };
+
+  it("goes forward and back through every step on the team path", async () => {
+    const form = await boot(renderForm(TEAM, TEAM_UI, { idPrefix: "team" }));
+    const scope = (form as any).__faqirScope;
+    const seats = control(form, "seats");
+
+    await choose(form, "team");
+    await submit(form);
+    expect(scope.step).toBe(1);
+
+    // The later step's required field blocks Next until it is filled in.
+    await submit(form);
+    expect(scope.step).toBe(1);
+    expect(groupOf(seats).getAttribute("data-state")).toBe("invalid");
+    await fill(seats, "3");
+    await submit(form);
+    expect(scope.step).toBe(2);
+
+    // Back returns to the page that was filled in — step 0's answer is still
+    // "team" although its control is disabled while step 2 is showing.
+    expect(scope.$rules.next).toEqual({});
+    await back(form);
+    expect(scope.step).toBe(1);
+    await back(form);
+    expect(scope.step).toBe(0);
+  });
+
+  it("skips the conditional step on the solo path, both ways, and completes", async () => {
+    const form = await boot(renderForm(TEAM, TEAM_UI, { idPrefix: "solo" }));
+    const scope = (form as any).__faqirScope;
+    const seats = control(form, "seats");
+
+    await choose(form, "solo");
+    expect(scope.$rules.next).toEqual({ "0": "2" });
+    await submit(form);
+    expect(scope.step).toBe(2);
+    expect(groupOf(seats).hasAttribute("hidden")).toBe(true);
+
+    await back(form);
+    expect(scope.step).toBe(0);
+    await submit(form);
+    expect(scope.step).toBe(2);
+
+    // The hidden, required `seats` does not stand in the way of finishing.
+    await fill(control(form, "email"), "ada@example.com");
+    await submit(form);
+    expect(form.dataset.state).toBe("submitted");
+    expect(seats.disabled).toBe(true);
+    expect(groupOf(seats).getAttribute("data-state")).toBe(null);
+
+    // And the server, re-checking the same submission with the same
+    // definition, agrees — the skipped page's field is not required there.
+    const definition = definitionOf(renderForm(TEAM, TEAM_UI, { idPrefix: "solo" }), "solo");
+    const data = coerce(definition, fromFormData(submission(form)));
+    expect(data).toEqual({ plan: "solo", email: "ada@example.com" });
+    const verdict = validate(definition, data);
+    expect(verdict.findings).toEqual([]);
+    expect(verdict.valid).toBe(true);
+    expect(verdict.visible).toEqual({ seats: false });
+  });
+
+  it("the server still requires the conditional step's field on the team path", () => {
+    const definition = definitionOf(renderForm(TEAM, TEAM_UI, { idPrefix: "srv" }), "srv");
+    const verdict = validate(definition, { plan: "team", email: "ada@example.com" });
+    expect(verdict.valid).toBe(false);
+    expect(verdict.findings.map((finding) => `${finding.path} ${finding.rule}`)).toEqual(["seats required"]);
+  });
+
+  it("never lets a field a rule hid on a later step block Next once the wizard reaches it", async () => {
+    // The reviewer's repro: `company` sits on step B and is shown — and
+    // required — only for a business. For a person it stays hidden, and the
+    // wizard enabling step B's controls must not bring it back.
+    const schema: ObjectSchema = {
+      type: "object",
+      required: ["kind"],
+      properties: {
+        kind: { type: "string", enum: ["person", "business"] },
+        company: { type: "string" },
+        email: { type: "string" },
+      },
+      if: { properties: { kind: { const: "business" } } },
+      then: { properties: { company: {} }, required: ["company"] },
+    };
+    const ui: UISchema = {
+      "ui:wizard": { steps: [{ title: "A", fields: ["kind"] }, { title: "B", fields: ["company", "email"] }] },
+    };
+    const form = await boot(renderForm(schema, ui, { idPrefix: "biz" }));
+    const scope = (form as any).__faqirScope;
+    const company = control(form, "company");
+
+    await choose(form, "person");
+    await submit(form);
+    expect(scope.step).toBe(1);
+    expect(groupOf(company).hasAttribute("hidden")).toBe(true);
+    expect(company.disabled).toBe(true);
+
+    await fill(control(form, "email"), "x@example.com");
+    await submit(form);
+    expect(form.dataset.state).toBe("submitted");
+    expect(groupOf(company).getAttribute("data-state")).toBe(null);
+
+    // And for a business it is there, and required, on step B.
+    const second = await boot(renderForm(schema, ui, { idPrefix: "biz2" }));
+    const secondScope = (second as any).__faqirScope;
+    await choose(second, "business");
+    await submit(second);
+    expect(secondScope.step).toBe(1);
+    const secondCompany = control(second, "company");
+    expect(groupOf(secondCompany).hasAttribute("hidden")).toBe(false);
+    expect(secondCompany.disabled).toBe(false);
+    await submit(second);
+    expect(second.dataset.state).toBeUndefined();
+    expect(groupOf(secondCompany).getAttribute("data-state")).toBe("invalid");
   });
 });

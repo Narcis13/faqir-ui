@@ -30,6 +30,7 @@ import {
   type OklchColor,
 } from "../utils/oklch";
 import { axesFromCss } from "../theme/axes";
+import { SCHEME_ALIASES } from "../theme/scope";
 import {
   AXIS_MIN,
   TOKEN_MIN,
@@ -477,6 +478,45 @@ function renderDeclarations(declarations: Declaration[], indent = "  "): string 
     .join("\n");
 }
 
+/**
+ * The colour aliases the token layer RESTATES on `[data-theme]` and
+ * `[data-skin]` (`SCHEME_ALIASES`), without their leading `--`.
+ *
+ * A custom property resolves its `var()` on the element that declares it, so
+ * the token layer re-declares these on every scheme island to make a nested
+ * `<div data-theme="dark">` compute them from ITS colours. The flip side is
+ * that the island's re-declaration also replaces a theme's `:root` override
+ * with the default — a filled-input theme would draw boxed inputs inside a
+ * dark island. So a theme that re-points one of these says it on the same
+ * selector the token layer does.
+ */
+export const ISLAND_ALIASES: ReadonlySet<string> = new Set(SCHEME_ALIASES.map(([name]) => name.replace(/^--/, "")));
+
+/**
+ * Render a theme's root declarations: everything on `:root`, except the island
+ * aliases, which go on `:root, [data-theme]` in a block of their own right after
+ * it — before any `[data-theme="dark"]` block, which has the same specificity
+ * and so still wins for the dark side when it states one.
+ */
+function renderRootBlocks(declarations: Declaration[]): string {
+  const root = declarations.filter(([name]) => !ISLAND_ALIASES.has(name));
+  const island = declarations.filter(([name]) => ISLAND_ALIASES.has(name));
+  const islandBlock = island.length === 0
+    ? ""
+    : `
+/* Aliases the token layer re-resolves on every [data-theme] island — restated
+   there so a nested scheme island keeps this theme's value, not the default. */
+:root,
+[data-theme] {
+${renderDeclarations(island)}
+}
+`;
+  return `:root {
+${renderDeclarations(root)}
+}
+${islandBlock}`;
+}
+
 function paletteDeclarations(name: string, ramp: AccentStep[]): Declaration[] {
   return ramp.map(({ step, css }) => [`palette-${name}-${step}`, css] as const);
 }
@@ -569,10 +609,7 @@ function renderThemeCss(
 ${densityDirective(seed)}
 /* Deterministic parametric theme. Regenerate instead of editing the accent ramp by hand. */
 ${note}
-:root {
-${renderDeclarations(root)}
-}
-${darkBlocks}`;
+${renderRootBlocks(root)}${darkBlocks}`;
 }
 
 /**
@@ -637,10 +674,7 @@ function renderDocumentCss(
 /* @ui:schemes light */
 /* Generated from ${accent}; white paper, flat surfaces, crisp edges, and ink-safe contrast. */
 
-:root {
-${renderDeclarations(root)}
-}
-
+${renderRootBlocks(root)}
 @page {
   size: var(--page-format) var(--page-orientation);
   margin: var(--page-margin);

@@ -31,6 +31,7 @@ import {
   buildBreakpointCanonResults,
   buildUndeclaredAttributeResults,
 } from "./css-rules";
+import { VOCABULARY_RULES } from "./vocabulary";
 import type { Manifest } from "../manifest";
 import { VERSION } from "../version";
 
@@ -230,6 +231,14 @@ export function ruleInventory(): BrowserRuleInfo[] {
       // it is the one markup rule that can fire for a component nobody installed.
       scope: "markup+registry" as const,
     },
+    // The silent-failure rules: markup against its manifest's vocabulary, run by
+    // `createAuditor` through the same `auditHtmlSource` as everything above.
+    ...VOCABULARY_RULES.map((r) => ({
+      id: r.id,
+      severity: r.severity,
+      description: r.description,
+      scope: "component" as const,
+    })),
     ...CSS_RULES.map((r) => ({
       id: r.id,
       severity: r.severity,

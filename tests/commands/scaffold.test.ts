@@ -9,6 +9,10 @@ import {
 } from "../../src/scaffolds/documents";
 import { findAllUIElements } from "../../src/parser/html-parser";
 import { loadRegistryManifestMap } from "../../src/utils/components";
+import { getPristineEntry, readPristineIndex } from "../../src/utils/pristine";
+import { SCAFFOLD_NAMES, scaffoldBody, scaffoldDocument } from "../../src/scaffolds";
+import { SPAWN_TIMEOUT, runSync } from "../helpers/spawn";
+import { tmpdir } from "node:os";
 
 const ROOT = join(import.meta.dir, "../..");
 const REGISTRY = join(ROOT, "registry");
@@ -171,5 +175,85 @@ describe("faqir scaffold invoice/report", () => {
     expect(html).toContain('href="./ui/primitives/key-value/key-value.css"');
     expect(html).toContain('href="./ui/recipes/qr-code/qr-code.css"');
     expect(existsSync(join(UI_DIR, "patterns/document/document.css"))).toBe(true);
+  });
+});
+
+// ── install path, output path, flag values ─────────────────────────────────
+//
+// Scaffold used to install by raw copy: no pristine snapshot (so `faqir diff`
+// and `faqir upgrade` had no baseline), no dependency resolution. Its
+// `--output` was `join(cwd, arg)`, so an absolute path landed under the project
+// and `../..` escaped it. And `--output` with no value was read as absent.
+describe("faqir scaffold installs, writes and parses like the rest of the CLI", () => {
+  const ENTRY = join(ROOT, "src", "index.ts");
+
+  function cli(args: string[]) {
+    return runSync("bun", [ENTRY, "scaffold", ...args], {
+      cwd: TEST_DIR,
+      encoding: "utf8",
+      timeout: SPAWN_TIMEOUT.CLI,
+    });
+  }
+
+  beforeEach(async () => {
+    rmSync(TEST_DIR, { recursive: true, force: true });
+    await writeProject();
+  });
+
+  afterEach(() => {
+    rmSync(TEST_DIR, { recursive: true, force: true });
+  });
+
+  it("installs through `faqir add`, so every component has a pristine baseline", async () => {
+    await runScaffold(["report"]);
+    const index = await readPristineIndex(TEST_DIR);
+    const config = await Bun.file(join(TEST_DIR, "faqir.config.json")).json();
+    const installed: string[] = [
+      ...config.installed.primitives,
+      ...config.installed.recipes,
+      ...config.installed.patterns,
+    ];
+    expect(installed.length).toBeGreaterThan(0);
+    for (const name of installed) {
+      expect(getPristineEntry(index, name), `${name} has no pristine snapshot`).not.toBeNull();
+    }
+  });
+
+  it("an absolute --output inside the project is honoured as that path", async () => {
+    const target = join(TEST_DIR, "out", "page.html");
+    await runScaffold(["report", "--output", target]);
+    expect(existsSync(target)).toBe(true);
+  });
+
+  it("refuses an --output outside the project, absolute or relative", () => {
+    for (const out of ["../../escaped.html", join(tmpdir(), "faqir-escaped.html")]) {
+      const r = cli(["report", "--output", out, "--no-add"]);
+      expect(r.status, out).toBe(1);
+      expect(`${r.stdout}${r.stderr}`).toContain("Refusing to write outside the project");
+    }
+    expect(existsSync(join(TEST_DIR, "..", "..", "escaped.html"))).toBe(false);
+    expect(existsSync(join(tmpdir(), "faqir-escaped.html"))).toBe(false);
+  });
+
+  it("a flag with no value is an error, not the next flag", () => {
+    for (const args of [["report", "--output"], ["report", "--output", "--no-add"], ["report", "--theme"]]) {
+      const r = cli(args);
+      expect(r.status, args.join(" ")).toBe(1);
+      expect(`${r.stdout}${r.stderr}`).toMatch(/Missing value for --(output|theme)/);
+    }
+    expect(existsSync(join(TEST_DIR, "--no-add"))).toBe(false);
+  });
+
+  it("the command and the docs gallery share one dispatcher", () => {
+    for (const name of SCAFFOLD_NAMES) {
+      const page = scaffoldDocument(name, {
+        title: "T",
+        stylesheets: "",
+        registryPath: REGISTRY,
+        engineSrc: "./ui/core/faqir-core.js",
+        includeCore: true,
+      });
+      expect(page, name).toContain(scaffoldBody(name, REGISTRY).trim().split("\n")[0]);
+    }
   });
 });

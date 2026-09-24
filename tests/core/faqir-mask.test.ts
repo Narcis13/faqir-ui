@@ -152,6 +152,39 @@ describe("faqir-mask · pure mask engine", () => {
     })).toEqual({ raw: "12", value: "12", caret: 2 });
     expect(() => maskEdit("--", "", {})).toThrow("at least one 9, a, or * token");
   });
+
+  // The directive prevents EVERY delete* beforeinput, but only the two
+  // character deletes used to be handled — Alt/Ctrl+Backspace and
+  // Cmd+Backspace were prevented no-ops. A "word" is a mask group: tokens with
+  // no literal between them.  [1.1 runtime fixes]
+  const PHONE = "(999) 999-9999";
+  const FULL = "(555) 123-4567";
+  const at = (inputType: string, pos: number) =>
+    maskEdit(PHONE, FULL, { inputType, selectionStart: pos, selectionEnd: pos });
+
+  it("deletes a mask group backward and forward by word", () => {
+    // The formatter keeps the literal that follows a full group.
+    expect(at("deleteWordBackward", 14)).toEqual({ raw: "555123", value: "(555) 123-", caret: 10 });
+    // Mid-value: the group before the caret goes, the rest reflows.
+    expect(at("deleteWordBackward", 9)).toEqual({ raw: "5554567", value: "(555) 456-7", caret: 6 });
+    expect(at("deleteWordForward", 0)).toEqual({ raw: "1234567", value: "(123) 456-7", caret: 1 });
+    expect(at("deleteWordBackward", 0).raw).toBe("5551234567");
+    expect(at("deleteWordForward", 14).raw).toBe("5551234567");
+  });
+
+  it("deletes to the start or end of the value by line", () => {
+    expect(at("deleteSoftLineBackward", 9)).toEqual({ raw: "4567", value: "(456) 7", caret: 1 });
+    expect(at("deleteHardLineBackward", 9).raw).toBe("4567");
+    expect(at("deleteSoftLineForward", 6)).toEqual({ raw: "555", value: "(555) ", caret: 6 });
+    expect(at("deleteHardLineForward", 6).raw).toBe("555");
+  });
+
+  it("treats an undirected collapsed delete as a no-op, and any delete of a selection as a range delete", () => {
+    expect(at("deleteContent", 6).raw).toBe("5551234567");
+    expect(maskEdit(PHONE, FULL, {
+      inputType: "deleteWordBackward", selectionStart: 6, selectionEnd: 9,
+    })).toEqual({ raw: "5554567", value: "(555) 456-7", caret: 6 });
+  });
 });
 
 describe("faqir-mask · DOM and l-model bridge", () => {
@@ -208,6 +241,21 @@ describe("faqir-mask · DOM and l-model bridge", () => {
     expect(root.__faqirScope.phone).toBe("5551234567");
     expect(input.value).toBe("(555) 123-4567");
     expect((input as any)._faqirMask.getRaw()).toBe("5551234567");
+  });
+
+  it("routes a prevented word delete through the model", async () => {
+    const root = await boot(`
+      <div id="root" l-data="{ phone: '5551234567' }">
+        <input id="masked" l-mask="(999) 999-9999" l-model="phone" />
+      </div>`);
+    const input = document.getElementById("masked") as HTMLInputElement;
+    await tick();
+    input.setSelectionRange(14, 14);
+    beforeInput(input, "deleteWordBackward");
+    await tick();
+
+    expect(input.value).toBe("(555) 123-");
+    expect(root.__faqirScope.phone).toBe("555123");
   });
 
   it("removes its listeners and private bridge on scope teardown", async () => {

@@ -67,7 +67,6 @@
   /* ── Component overrides ── */
   --card-radius:            0;
   --card-shadow:            none;
-  --card-border:            var(--color-border);
   --button-radius:          0;
   --input-radius:           0;
   --badge-radius:           var(--space-1);            /* slight rounding for badges only */
@@ -121,6 +120,14 @@
      a link is still identifiable by its rule and not only by its colour. */
   --link-underline-offset: 0.02em;
   --link-thickness:        var(--border-width-sm);
+}
+
+:root,
+[data-theme] {
+  /* The token layer re-resolves these aliases on every scheme island
+     (tokens/aliases.css), so a `:root`-only override would fall back to the
+     default inside a nested `data-theme` region. */
+  --card-border:            var(--color-border);
 }
 
 /* Document theme has NO dark mode — documents are always light/white for print */

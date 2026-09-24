@@ -1,0 +1,6 @@
+# Bun configuration for `bun test` run from inside this package. The suite
+# shares the repository's happy-dom preload; this file is not published
+# (package.json "files" lists only what ships).
+
+[test]
+preload = ["../../tests/setup.ts"]

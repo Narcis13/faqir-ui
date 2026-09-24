@@ -308,3 +308,80 @@ describe("§7.2 audit quality gate", () => {
     }
   });
 });
+
+// A browser and a server must read one `pattern` the same way. JSON Schema's is
+// unanchored; HTML's attribute is anchored and compiled with the `v` flag; and
+// a pattern the `v` flag refuses is silently dropped by the browser. [1.1 review]
+describe("pattern: the attribute means what the schema means", () => {
+  const withPattern = (pattern: string) =>
+    renderForm({ type: "object", properties: { f: { type: "string", pattern } } });
+  const attrOf = (html: string): string | null => {
+    const match = /pattern="([^"]*)"/.exec(html);
+    return match
+      ? match[1].replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&")
+      : null;
+  };
+  /** What the browser does with the attribute: anchor it, compile it with `v`. */
+  const browserAccepts = (attr: string, value: string) => new RegExp(`^(?:${attr})$`, "v").test(value);
+
+  it("emits a pattern pinned at both ends as written", () => {
+    expect(attrOf(withPattern("^[A-Z]{2}\\d{3}$"))).toBe("^[A-Z]{2}\\d{3}$");
+  });
+
+  it("wraps an unanchored pattern so the browser accepts what the server accepts", () => {
+    const attr = attrOf(withPattern("[A-Z]{2}"))!;
+    expect(attr).toBe("[\\s\\S]*(?:[A-Z]{2})[\\s\\S]*");
+    for (const value of ["AB", "xxABxx", "ab", "A"]) {
+      expect(browserAccepts(attr, value), value).toBe(new RegExp("[A-Z]{2}").test(value));
+    }
+    // A top-level alternation is not "anchored at both ends", however it looks.
+    const alt = attrOf(withPattern("^a|b$"))!;
+    for (const value of ["a", "ax", "xb", "x"]) {
+      expect(browserAccepts(alt, value), value).toBe(/^a|b$/.test(value));
+    }
+  });
+
+  it("leaves the attribute off a pattern the v flag rejects, and ships the definition instead", () => {
+    // Each of these throws under `new RegExp(p, "v")` in V8 (Chrome, Node 20+)
+    // — or, for `&&`, means an intersection there and a literal here.
+    for (const pattern of ["[a-z0-9.-]+", "[-a]", "[a-]", "[\\w-]", "[(]", "[a&&b]", "[a-z--b]", "[{]"]) {
+      const html = withPattern(pattern);
+      expect(attrOf(html), pattern).toBeNull();
+      expect(html, pattern).toContain('l-rules="#faqir-rules"');
+      expect(html, pattern).toContain("faqir-rules.js");
+      expect(html, pattern).toContain(JSON.stringify(pattern).slice(1, -1));
+    }
+  });
+
+  it("keeps a v-safe escaped hyphen, and forms with no pattern trouble carry no definition", () => {
+    const html = withPattern("[\\-a]+");
+    expect(attrOf(html)).toBe("[\\s\\S]*(?:[\\-a]+)[\\s\\S]*");
+    expect(html).not.toContain("l-rules");
+  });
+
+  it("never emits an attribute the v flag cannot compile", () => {
+    for (const pattern of ["[A-Za-z ]+", "^\\p{L}+$", "a{2,3}", "(?:ab)+", "[^@\\s]+@[^@\\s]+", "\\d+\\.\\d+"]) {
+      const attr = attrOf(withPattern(pattern));
+      expect(attr, pattern).not.toBeNull();
+      expect(() => new RegExp(`^(?:${attr})$`, "v"), pattern).not.toThrow();
+    }
+  });
+});
+
+describe("number step", () => {
+  it("lets a plain number take decimals, and keeps integer and multipleOf steps", () => {
+    const html = renderForm({
+      type: "object",
+      properties: {
+        amount: { type: "number" },
+        count: { type: "integer" },
+        half: { type: "number", multipleOf: 0.5 },
+        label: { type: "string" },
+      },
+    });
+    expect(html).toMatch(/name="amount"[^>]*step="any"/);
+    expect(html).toMatch(/name="count"[^>]*step="1"/);
+    expect(html).toMatch(/name="half"[^>]*step="0.5"/);
+    expect(html).not.toMatch(/name="label"[^>]*step=/);
+  });
+});

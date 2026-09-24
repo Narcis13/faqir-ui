@@ -137,3 +137,30 @@ describe("faqir-collapse · l-collapse", () => {
     }
   });
 });
+
+describe("faqir-collapse · teardown", () => {
+  // The directive handler never returned its effect, so the engine had no
+  // disposer to run: once `l-if` removed the section, toggling the flag still
+  // drove the detached node's height and display.  [1.1 runtime fixes]
+  it("stops driving the element once its scope is torn down", async () => {
+    document.body.innerHTML = `
+      <div l-data="{ show: true, open: false }">
+        <template l-if="show"><section id="c" l-collapse="open">body</section></template>
+      </div>`;
+    Faqir.start();
+    await tick();
+    const scope = (document.querySelector("[l-data]") as any).__faqirScope;
+    const c = document.getElementById("c")!;
+    expect(c.style.display).toBe("none");
+
+    scope.show = false;
+    await tick();
+    expect(c.isConnected).toBe(false);
+
+    scope.open = true;
+    await tick();
+    expect(c.style.display).toBe("none"); // untouched: the effect is gone
+    expect(c.style.height).toBe("");
+    expect(c.style.transition).toBe("");
+  });
+});

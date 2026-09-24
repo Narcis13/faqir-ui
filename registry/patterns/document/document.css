@@ -1,5 +1,5 @@
 /* @ui:component document */
-/* @ui:tokens doc-max-width doc-font doc-font-size doc-line-height doc-heading-font doc-heading-weight doc-heading-size doc-subheading-size doc-legal-size doc-legal-color doc-section-gap doc-component-gap doc-running-header-height doc-running-footer-height doc-running-gap doc-bg doc-fg doc-print-border-color doc-table-header-bg doc-table-header-fg doc-table-header-weight doc-table-border doc-table-cell-pad-y doc-table-cell-pad-x doc-table-font-size doc-table-num-font doc-table-footer-bg doc-table-footer-weight doc-table-stripe-bg page-format page-orientation page-margin page-margin-top page-margin-bottom page-margin-left page-margin-right color-bg color-fg color-fg-muted color-border space-4 space-6 space-8 space-12 shadow-lg radius-md font-body z-raised border-width texture-page */
+/* @ui:tokens doc-max-width doc-font doc-font-size doc-line-height doc-heading-font doc-heading-weight doc-heading-size doc-subheading-size doc-legal-size doc-legal-color doc-section-gap doc-component-gap doc-running-header-height doc-running-footer-height doc-running-gap doc-bg doc-fg doc-print-border-color doc-table-header-bg doc-table-header-fg doc-table-header-weight doc-table-border doc-table-cell-pad-y doc-table-cell-pad-x doc-table-font-size doc-table-num-font doc-table-footer-bg doc-table-footer-weight doc-table-stripe-bg page-format page-orientation page-margin page-margin-top page-margin-bottom page-margin-left page-margin-right color-bg color-fg color-fg-muted color-border space-4 space-6 space-8 space-12 shadow-lg radius-md font-body weight-bold z-raised border-width texture-page */
 
 /* ── Page Rules ── */
 @page {
@@ -73,6 +73,18 @@
   display: flex;
   flex-direction: column;
   gap: var(--doc-section-gap);
+}
+
+/* ── Headings ──
+   The document's own heading face and weight (1.1A-21): a print theme sets
+   --doc-heading-font / --doc-heading-weight to give its titles a voice apart
+   from the body copy (document-serif's Times titles over Georgia text). Both
+   default to the page's heading role in tokens/document.css, and each falls
+   back to what a heading rendered before the tokens had a reader. A heading
+   that carries its own data-weight keeps it — that is the author asking. */
+[data-ui="document"] :is(h1, h2, h3, h4, h5, h6) {
+  font-family: var(--doc-heading-font, var(--font-body));
+  font-weight: var(--doc-heading-weight, var(--weight-bold));
 }
 
 /* ── Running footer ──

@@ -1,10 +1,10 @@
 /* @ui:component separator */
-/* @ui:tokens color-border space-4 text-xs color-fg-muted font-ui border-width border-width-strong divider-style */
+/* @ui:tokens color-border space-4 text-xs color-fg-muted font-ui border-width-strong divider-width divider-style */
 
 /* ── Base (horizontal) ── */
 [data-ui="separator"] {
   border: none;
-  border-top: var(--border-width) var(--divider-style) var(--color-border);
+  border-top: var(--divider-width) var(--divider-style) var(--color-border);
   margin: 0;
   width: 100%;
 }
@@ -12,7 +12,7 @@
 /* ── Vertical ── */
 [data-ui="separator"][data-variant="vertical"] {
   border-top: none;
-  border-inline-start: var(--border-width) var(--divider-style) var(--color-border);
+  border-inline-start: var(--divider-width) var(--divider-style) var(--color-border);
   width: auto;
   height: 100%;
   align-self: stretch;
@@ -30,7 +30,7 @@ div[data-ui="separator"]::before,
 div[data-ui="separator"]::after {
   content: "";
   flex: 1;
-  border-top: var(--border-width) var(--divider-style) var(--color-border);
+  border-top: var(--divider-width) var(--divider-style) var(--color-border);
 }
 
 [data-ui="separator"] [data-part="label"] {

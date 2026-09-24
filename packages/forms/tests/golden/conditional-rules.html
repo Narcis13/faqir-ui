@@ -162,7 +162,7 @@
   <div data-ui="field-group">
     <label data-part="label" for="billing-field-vatnumber">VAT number</label>
     <div data-part="input">
-      <input data-ui="input" id="billing-field-vatnumber" name="vatNumber" aria-describedby="billing-field-vatnumber-error" type="text" pattern="[A-Z]{2}[0-9]+">
+      <input data-ui="input" id="billing-field-vatnumber" name="vatNumber" aria-describedby="billing-field-vatnumber-error" type="text" pattern="[\s\S]*(?:[A-Z]{2}[0-9]+)[\s\S]*">
     </div>
     <p data-part="error" id="billing-field-vatnumber-error" aria-live="polite"></p>
   </div>

@@ -8,6 +8,7 @@
  * free-form. All Faqir logic lives in `core.ts`, which wraps the CLI internals.
  */
 import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { isAbsolute, relative, resolve } from "node:path";
 import { z } from "zod";
 
 import pkg from "../package.json" with { type: "json" };
@@ -44,7 +45,7 @@ import {
   type ThemeGenerateInput,
 } from "../../../src/commands/theme-generate";
 import { densityTokenCss, themeBaseSources } from "../../../src/theme/sources";
-import { mergeSeeds } from "../../../src/theme/seed";
+import { LEGACY_NEUTRAL_DEFAULT, mergeSeeds } from "../../../src/theme/seed";
 import { THEME_AXIS_VALUES } from "../../../src/theme-manifest";
 import { AXIS_PATHS, GALLERY_AXES } from "../../../src/theme/describe";
 import {
@@ -315,6 +316,40 @@ function fail(message: string) {
 }
 
 /**
+ * Run a tool handler, turning anything it throws into a tool-level error.
+ *
+ * An exception escaping a handler reaches the client as a protocol error with
+ * none of the tool's context; `faqir_generate_theme` already caught its own,
+ * and the rest did not — so a malformed manifest or an unreadable file made
+ * some tools fail cleanly and others fail as a transport crash. Every tool now
+ * fails the same way: `isError: true` and the reason, as text.
+ */
+function guarded<A, R>(handler: (args: A) => Promise<R>): (args: A) => Promise<R | ReturnType<typeof fail>> {
+  return async (args: A) => {
+    try {
+      return await handler(args);
+    } catch (error) {
+      return fail(error instanceof Error ? error.message : String(error));
+    }
+  };
+}
+
+/**
+ * The directory `faqir_project_context` may inspect for a requested `root`:
+ * the server's project root or something beneath it, resolved relative to it.
+ * Null for anything else. The tool reads `faqir.config.json` and
+ * `.faqir/context.json` and returns them verbatim, so an unconstrained `root`
+ * let any client read those names out of any directory the server could reach.
+ */
+export function containedProjectRoot(projectRoot: string, requested: string): string | null {
+  const base = resolve(projectRoot);
+  const target = resolve(base, requested);
+  const rel = relative(base, target);
+  if (rel.startsWith("..") || isAbsolute(rel)) return null;
+  return target;
+}
+
+/**
  * Build the Faqir MCP server with the read tools registered. Pure and
  * transport-agnostic — connect it to any transport with `.connect(transport)`.
  */
@@ -356,14 +391,14 @@ export function createFaqirMcpServer(options: FaqirMcpServerOptions = {}): McpSe
         }),
       },
     },
-    async ({ kind, category }) => {
+    guarded(async ({ kind, category }) => {
       const components = await listComponents(registryPath, { kind, category });
       return ok({
         components,
         count: components.length,
         filter: { ...(kind ? { kind } : {}), ...(category ? { category } : {}) },
       });
-    }
+    })
   );
 
   // ── faqir_get_manifest ───────────────────────────────────────────────────
@@ -384,7 +419,7 @@ export function createFaqirMcpServer(options: FaqirMcpServerOptions = {}): McpSe
         manifest: manifestSchema,
       },
     },
-    async ({ component }) => {
+    guarded(async ({ component }) => {
       const manifest = await getManifest(registryPath, component);
       if (!manifest) {
         const hint = await suggestComponent(registryPath, component);
@@ -394,7 +429,7 @@ export function createFaqirMcpServer(options: FaqirMcpServerOptions = {}): McpSe
         );
       }
       return ok({ component: manifest.name, manifest });
-    }
+    })
   );
 
   // ── faqir_theme_info ─────────────────────────────────────────────────────
@@ -423,7 +458,7 @@ export function createFaqirMcpServer(options: FaqirMcpServerOptions = {}): McpSe
         count: z.number().int(),
       },
     },
-    async ({ theme }) => {
+    guarded(async ({ theme }) => {
       const active_theme = await activeThemeName(projectRoot);
 
       if (theme) {
@@ -440,7 +475,7 @@ export function createFaqirMcpServer(options: FaqirMcpServerOptions = {}): McpSe
 
       const themes = await listThemeSummaries(registryPath);
       return ok({ themes, active_theme, count: themes.length });
-    }
+    })
   );
 
   // ── faqir_theme_list [1.1A-20] ──────────────────────────────────────────
@@ -485,7 +520,7 @@ export function createFaqirMcpServer(options: FaqirMcpServerOptions = {}): McpSe
         active_theme: z.string(),
       },
     },
-    async ({ axes, mood, kind }) => {
+    guarded(async ({ axes, mood, kind }) => {
       if (axes) {
         const problem = axisFilterError(axes);
         if (problem) return fail(problem);
@@ -498,7 +533,7 @@ export function createFaqirMcpServer(options: FaqirMcpServerOptions = {}): McpSe
       const themes = filterThemeSummaries(all, filter);
       const active_theme = await activeThemeName(projectRoot);
       return ok({ themes, count: themes.length, total: all.length, filter, active_theme });
-    }
+    })
   );
 
   // ── faqir_project_context ────────────────────────────────────────────────
@@ -516,7 +551,11 @@ export function createFaqirMcpServer(options: FaqirMcpServerOptions = {}): McpSe
         root: z
           .string()
           .optional()
-          .describe("Override the project root to inspect (defaults to the server's cwd)."),
+          .describe(
+            "A directory inside the server's project root to inspect instead — a sub-project " +
+              "in a monorepo, say. Relative paths resolve against the project root; a path " +
+              "outside it is refused.",
+          ),
       },
       outputSchema: {
         in_project: z.boolean(),
@@ -526,8 +565,16 @@ export function createFaqirMcpServer(options: FaqirMcpServerOptions = {}): McpSe
         message: z.string(),
       },
     },
-    async ({ root }) => {
-      const result = await readProjectContext(root ?? projectRoot);
+    guarded(async ({ root }) => {
+      const target = root === undefined ? projectRoot : containedProjectRoot(projectRoot, root);
+      if (target === null) {
+        return fail(
+          `root '${root}' is outside the server's project root (${projectRoot}). ` +
+            "Pass a directory inside it, relative or absolute, or start the server in the project " +
+            "you want to inspect (FAQIR_PROJECT_ROOT).",
+        );
+      }
+      const result = await readProjectContext(target);
       return ok({
         in_project: result.in_project,
         root: result.root,
@@ -535,7 +582,7 @@ export function createFaqirMcpServer(options: FaqirMcpServerOptions = {}): McpSe
         context: result.context,
         message: result.message,
       });
-    }
+    })
   );
 
   // The manifest map that backs every write/verify tool. Loaded once, lazily, and
@@ -577,7 +624,7 @@ export function createFaqirMcpServer(options: FaqirMcpServerOptions = {}): McpSe
         audit: auditReportSchema,
       },
     },
-    async (input) => {
+    guarded(async (input) => {
       try {
         const result = generateComponent(input, await manifests());
         return ok({ ...result });
@@ -585,7 +632,7 @@ export function createFaqirMcpServer(options: FaqirMcpServerOptions = {}): McpSe
         if (err instanceof GenerateError) return fail(err.message);
         throw err;
       }
-    }
+    })
   );
 
   // ── faqir_scaffold_page ──────────────────────────────────────────────────
@@ -611,7 +658,7 @@ export function createFaqirMcpServer(options: FaqirMcpServerOptions = {}): McpSe
         audit: auditReportSchema,
       },
     },
-    async (input) => {
+    guarded(async (input) => {
       try {
         const result = scaffoldPage(
           { ...input, sections: input.sections as ScaffoldSection[] },
@@ -622,7 +669,7 @@ export function createFaqirMcpServer(options: FaqirMcpServerOptions = {}): McpSe
         if (err instanceof GenerateError) return fail(err.message);
         throw err;
       }
-    }
+    })
   );
 
   // ── faqir_audit_html ─────────────────────────────────────────────────────
@@ -645,10 +692,10 @@ export function createFaqirMcpServer(options: FaqirMcpServerOptions = {}): McpSe
         findings: z.array(findingSchema),
       },
     },
-    async ({ html, skip_rules }) => {
+    guarded(async ({ html, skip_rules }) => {
       const report = auditHtml(html, await manifests(), skip_rules);
       return ok({ ...report });
-    }
+    })
   );
 
   // ── faqir_repair_html ────────────────────────────────────────────────────
@@ -674,7 +721,7 @@ export function createFaqirMcpServer(options: FaqirMcpServerOptions = {}): McpSe
         after: auditReportSchema,
       },
     },
-    async ({ html, skip_rules }) => {
+    guarded(async ({ html, skip_rules }) => {
       const manifestMap = await manifests();
       const before = auditHtmlSource({ source: html, manifests: manifestMap, skipRules: skip_rules });
       const repaired = applyRepairsToSource(html, before);
@@ -687,7 +734,7 @@ export function createFaqirMcpServer(options: FaqirMcpServerOptions = {}): McpSe
         before: toAuditReport(before),
         after: toAuditReport(after),
       });
-    }
+    })
   );
 
   // ── faqir_generate_theme ─────────────────────────────────────────────────
@@ -748,14 +795,15 @@ export function createFaqirMcpServer(options: FaqirMcpServerOptions = {}): McpSe
         scorecard: scorecardSchema,
       },
     },
-    async ({ seed, accent, name, neutral, radius, scheme, document }) => {
+    guarded(async ({ seed, accent, name, neutral, radius, scheme, document }) => {
       try {
         // One code path with the CLI: the scalars are merged over the seed
         // exactly as `--depth hard` is merged over `--seed x.seed.json`
         // (flags win), and every validation error comes from `normalizeSeed`
         // inside `generateThemeBundle` — so an invalid axis prints the same
-        // sentence here as it does in the terminal. The two defaults below are
-        // this tool's own, kept from 1.0 so an argument-free call still works.
+        // sentence here as it does in the terminal. The defaults below are
+        // this tool's own, kept from 1.0 so an argument-free call still works
+        // and a 1.0 caller keeps getting 1.0's theme.
         const explicit: Record<string, unknown> = {};
         for (const [key, value] of Object.entries({ name, accent, neutral, scheme, document })) {
           if (value !== undefined) explicit[key] = value;
@@ -763,6 +811,12 @@ export function createFaqirMcpServer(options: FaqirMcpServerOptions = {}): McpSe
         const input = mergeSeeds(seed ?? {}, explicit) as Record<string, unknown>;
         if (input.name === undefined) input.name = "generated-theme";
         if (input.accent === undefined) input.accent = "oklch(0.55 0.2 250)";
+        // 1.0's schema defaulted `neutral` to "cool"; 1.1 dropped the default,
+        // so the same call silently produced a different theme. Without a
+        // `seed` this is the 1.0 entry point and keeps 1.0's default — the
+        // same constant `faqir theme generate --accent` uses. A seed is the 1.1
+        // form and takes the seed defaults like every other unstated axis.
+        if (seed === undefined && input.neutral === undefined) input.neutral = LEGACY_NEUTRAL_DEFAULT;
 
         const baseCssSources = themeBaseSources(registryPath);
         const bundle = generateThemeBundle(
@@ -791,7 +845,7 @@ export function createFaqirMcpServer(options: FaqirMcpServerOptions = {}): McpSe
       } catch (error) {
         return fail(error instanceof Error ? error.message : String(error));
       }
-    }
+    })
   );
 
   // ── Resources: protocol spec, token reference, manifests ──────────────────

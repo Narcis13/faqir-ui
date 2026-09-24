@@ -20,6 +20,20 @@ interface DevOptions {
   overlay: boolean;
 }
 
+/**
+ * The value after the flag at `args[i]`. A flag with nothing after it, or with
+ * another flag after it, is an error: `--port --open` used to parse `--open` as
+ * a port, fall back to 3000, and swallow the `--open`.
+ */
+function valueAt(args: string[], i: number): string {
+  const value = args[i + 1];
+  if (value === undefined || value.startsWith("-")) {
+    log.error(`Missing value for ${args[i]}.`);
+    process.exit(1);
+  }
+  return value;
+}
+
 function parseArgs(args: string[]): DevOptions {
   const opts: DevOptions = {
     port: 3000,
@@ -35,14 +49,21 @@ function parseArgs(args: string[]): DevOptions {
 
   for (let i = 0; i < args.length; i++) {
     switch (args[i]) {
-      case "--port":
-        opts.port = parseInt(args[++i], 10) || 3000;
+      case "--port": {
+        const raw = valueAt(args, i++);
+        const port = Number(raw);
+        if (!/^\d+$/.test(raw) || port < 1 || port > 65535) {
+          log.error(`Invalid port '${raw}'. Use a number from 1 to 65535.`);
+          process.exit(1);
+        }
+        opts.port = port;
         break;
+      }
       case "--dir":
-        opts.dir = args[++i] || ".";
+        opts.dir = valueAt(args, i++);
         break;
       case "--host":
-        opts.host = args[++i] || "127.0.0.1";
+        opts.host = valueAt(args, i++);
         break;
       case "--open":
         opts.open = true;

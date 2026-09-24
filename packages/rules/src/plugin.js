@@ -12,10 +12,12 @@
  *   </script>
  *   <form l-validate l-rules="#signup-rules"> … </form>
  *
- * On init and on every `input`/`change`, the form's own `FormData` is coerced
- * through the definition and handed to `evaluate`, and the answer is applied to
- * the DOM: a hidden field's `[data-ui="field-group"]` takes `hidden` and its
- * controls take `disabled`, so it neither validates nor submits; `require`
+ * On init and on every `input`/`change`/`reset`, the form's controls are read
+ * (a control someone else disabled, like a wizard's other steps, still
+ * answers), coerced through the definition and handed to `evaluate`, and the
+ * answer is applied to the DOM: a hidden field's `[data-ui="field-group"]`
+ * takes `hidden` and its controls take `disabled` — held there even if
+ * something else enables them — so it neither validates nor submits; `require`
  * toggles `required` + `aria-required`; `compute` writes its value into the
  * scope and into any control of that name; and `jump` lands in `$rules.next`
  * for a wizard to read. Cross-field and remote `validate` rules are registered
@@ -32,9 +34,11 @@
  * ── Remote rules ────────────────────────────────────────────────────────────
  *   `{ "id": …, "validate": "remote", "path": "email", "remote": "/api/check" }`
  *   becomes an async validator that POSTs `{ path, value, data }` and expects
- *   `{ ok: boolean, message?: string }`. Anything else — a non-2xx, a body that
- *   is not JSON, a network failure — is a failed check wearing faqir-validate's
- *   built-in sentence, never a silent pass.
+ *   `{ ok: boolean, message?: string }`. `ok: false` with no non-empty string
+ *   `message` wears the rule's own sentence, resolved exactly as a server's
+ *   `validateAsync` resolves it. Anything else — a non-2xx, a body that is not
+ *   JSON, an `ok` that is not a boolean, a network failure — is a failed check
+ *   wearing faqir-validate's built-in sentence, never a silent pass.
  *
  * ── Nothing fails quietly ───────────────────────────────────────────────────
  *   An `l-rules` that resolves to nothing, a definition the package refuses (an
@@ -53,7 +57,7 @@
  * `aria-required` on a control it was told to own, and a computed control's
  * `value` — the frozen five-attribute protocol is untouched.
  */
-import { coerce, compile, evaluate, validate } from "./index.js";
+import { RULE_MESSAGES, coerce, compile, evaluate, fromFormData, resolveMessage, validate } from "./index.js";
 
 /** @typedef {import("./index.js").CompiledDefinition} CompiledDefinition */
 /** @typedef {HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement} Control */
@@ -66,7 +70,7 @@ import { coerce, compile, evaluate, validate } from "./index.js";
  * @property {(target: Record<string, unknown>) => Record<string, unknown>} reactive
  * @property {(expression: string, scope: unknown, el: unknown) => unknown} evaluate
  * @property {(name: string, callback: (el: unknown, scope: unknown) => unknown) => void} magic
- * @property {(name: string, handler: (el: any, dir: { expression?: string }, scope: any) => void) => void} directive
+ * @property {(name: string, handler: (el: any, dir: { expression?: string }, scope: any) => unknown) => void} directive
  * @property {{ report?: (message: string, el?: unknown) => boolean }} [devtools]
  * @property {{ register: (form: unknown, field: string, name: string,
  *              fn: (value: unknown, ctx: unknown) => unknown, message?: string) => unknown }} [validate]
@@ -96,6 +100,10 @@ import { coerce, compile, evaluate, validate } from "./index.js";
  * @property {any} scope the reactive scope the form sits in
  * @property {Record<string, unknown>} state the reactive `$rules` object
  * @property {string | undefined} locale
+ * @property {Set<Element>} hidden controls a `show` rule is hiding right now
+ * @property {Map<Element, boolean>} foreign for each of those, the `disabled`
+ *   everyone else wants — what it goes back to when the rule shows it again
+ * @property {MutationObserver | null} observer watches `disabled` on the form's controls
  */
 
 /** The engine, from `install()`. @type {Engine | null} */
@@ -107,9 +115,6 @@ const states = new WeakMap();
 /** Field-groups this plugin hid, so an author's own `hidden` is never cleared. */
 /** @type {WeakSet<Element>} */
 const ownHidden = new WeakSet();
-/** Controls this plugin disabled, for the same reason. */
-/** @type {WeakSet<Element>} */
-const ownDisabled = new WeakSet();
 /** control → the requiredness its markup declared, captured before we touch it. */
 /** @type {WeakMap<Element, { required: boolean, aria: boolean }>} */
 const authored = new WeakMap();
@@ -153,24 +158,35 @@ function report(full, el, terse) {
 }
 
 /**
+ * `contacts[0].name` and `contacts.0.name` are one path — the first is how
+ * HTML names it, the second how a compiled definition does.
+ *
+ * @param {string} path
+ */
+function normal(path) {
+  return path.replace(/\[(\d+)\]/g, ".$1");
+}
+
+/**
  * The controls a rule path speaks for: the one named exactly, plus anything
  * nested inside it — `show: "address"` hides `address.city` and `address[0].zip`
- * even though nothing is named `address`.
+ * even though nothing is named `address`. Both sides are compared normalized,
+ * so `show: "contacts[0]"` finds `contacts[0].name`.
  *
  * @param {HTMLFormElement} form
  * @param {string} path
+ * @param {boolean} [exact] only the control named for `path` itself
  * @returns {Control[]}
  */
-function controlsFor(form, path) {
+function controlsFor(form, path, exact) {
   const all = /** @type {NodeListOf<Control>} */ (form.querySelectorAll("input, select, textarea"));
+  const want = normal(path);
   /** @type {Control[]} */
   const out = [];
   for (let i = 0; i < all.length; i++) {
-    const name = all[i].name;
-    if (!name) continue;
-    if (name === path || name.indexOf(path + ".") === 0 || name.indexOf(path + "[") === 0) {
-      out.push(all[i]);
-    }
+    if (!all[i].name) continue;
+    const name = normal(all[i].name);
+    if (name === want || (!exact && name.indexOf(want + ".") === 0)) out.push(all[i]);
   }
   return out;
 }
@@ -187,58 +203,152 @@ function groupOf(el) {
 }
 
 /**
- * The form's data, exactly as its own submission would carry it: `FormData`
- * (which already drops disabled controls, so a hidden field is absent here as
- * well as on the wire), repeated names collected into a list, then `coerce` —
- * the same function a server runs over the body it receives.
+ * The form's data: every named control, the way `FormData` reads one (checked
+ * boxes only, every selected option, no buttons) — then `fromFormData` and
+ * `coerce`, the same two functions a server runs over the body it receives.
+ *
+ * One deliberate difference from `FormData`: a control someone else disabled
+ * still answers. A wizard disables every step but the current one, and the
+ * answers on the other steps did not stop existing because the page is showing
+ * something else — reading them as blank sent Back over a step the person had
+ * filled in. A control a `show` rule is hiding is the one thing absent here, as
+ * it is on the wire.
  *
  * @param {HTMLFormElement} form
- * @param {CompiledDefinition} definition
+ * @param {FormContext} ctx
  * @returns {Record<string, unknown>}
  */
-function collect(form, definition) {
-  /** @type {Record<string, unknown>} */
-  const raw = {};
-  new FormData(form).forEach(function (value, key) {
-    if (!Object.prototype.hasOwnProperty.call(raw, key)) raw[key] = value;
-    else if (Array.isArray(raw[key])) /** @type {unknown[]} */ (raw[key]).push(value);
-    else raw[key] = [raw[key], value];
+function collect(form, ctx) {
+  /** @type {[string, unknown][]} */
+  const pairs = [];
+  const all = /** @type {NodeListOf<Control>} */ (form.querySelectorAll("input, select, textarea"));
+  for (let i = 0; i < all.length; i++) {
+    const el = all[i];
+    const name = el.name;
+    if (!name || ctx.hidden.has(el)) continue;
+    if (el.tagName === "SELECT") {
+      const options = /** @type {HTMLSelectElement} */ (el).options;
+      for (let j = 0; j < options.length; j++) {
+        if (options[j].selected && !options[j].disabled) pairs.push([name, options[j].value]);
+      }
+      continue;
+    }
+    if (el.tagName === "INPUT") {
+      const type = el.type;
+      if (type === "submit" || type === "button" || type === "reset" || type === "image") continue;
+      if ((type === "checkbox" || type === "radio") && !(/** @type {HTMLInputElement} */ (el).checked)) continue;
+      if (type === "file") {
+        const files = /** @type {HTMLInputElement} */ (el).files;
+        for (let j = 0; files && j < files.length; j++) pairs.push([name, files[j]]);
+        continue;
+      }
+    }
+    pairs.push([name, el.value]);
+  }
+  return coerce(ctx.definition, fromFormData(pairs));
+}
+
+/**
+ * Read what everyone else has done to `disabled` since we last looked.
+ *
+ * A control a `show` rule hides is disabled and HELD disabled: a wizard that
+ * enables its step's controls must not revive a field nobody can see, or Next
+ * stops on a "required" error for something invisible. So every foreign write
+ * to a held control is noted — it is what the control goes back to when the
+ * rule shows it — and the control is disabled again. Our own writes never
+ * reach here: each is followed by `takeRecords()`, which discards them.
+ *
+ * @param {FormContext} ctx
+ * @param {MutationRecord[]} records
+ */
+function noteForeign(ctx, records) {
+  for (let i = 0; i < records.length; i++) {
+    const el = /** @type {Element} */ (records[i].target);
+    if (ctx.hidden.has(el)) ctx.foreign.set(el, /** @type {Control} */ (el).disabled);
+  }
+  let wrote = false;
+  ctx.hidden.forEach(function (el) {
+    const control = /** @type {Control} */ (el);
+    if (!control.disabled) {
+      ctx.foreign.set(el, false);
+      control.disabled = true;
+      wrote = true;
+    }
   });
-  return coerce(definition, raw);
+  if (wrote && ctx.observer) ctx.observer.takeRecords();
+}
+
+/** Settle pending foreign writes before this plugin writes, or anyone reads. @param {FormContext} ctx */
+function flush(ctx) {
+  noteForeign(ctx, ctx.observer ? ctx.observer.takeRecords() : []);
+}
+
+/**
+ * Set `disabled` as this plugin, without it reading as someone else's wish.
+ *
+ * @param {FormContext} ctx @param {Control} el @param {boolean} value
+ */
+function writeDisabled(ctx, el, value) {
+  if (el.disabled === value) return;
+  el.disabled = value;
+  if (ctx.observer) ctx.observer.takeRecords();
 }
 
 /**
  * `hidden` on the group, `disabled` on the controls — and only ever ours back.
  *
+ * Decided per control, not per rule path: a control is hidden when ANY path
+ * the verdict decided about — its own, or one it sits inside — is hidden, so
+ * `show: "address"` false and `show: "address.city"` true leave the city
+ * hidden whichever rule came first. A group is hidden when any control in it
+ * is.
+ *
  * @param {HTMLFormElement} form
- * @param {string} path
- * @param {boolean} shown
+ * @param {FormContext} ctx
+ * @param {Record<string, boolean>} visible
  */
-function applyVisible(form, path, shown) {
-  const list = controlsFor(form, path);
-  for (let i = 0; i < list.length; i++) {
-    const el = list[i];
-    const group = groupOf(el);
-    if (shown === false) {
-      if (!group.hasAttribute("hidden")) {
-        group.setAttribute("hidden", "");
-        ownHidden.add(group);
-      }
-      if (!el.disabled) {
-        el.disabled = true;
-        ownDisabled.add(el);
-      }
-    } else {
-      if (ownHidden.has(group)) {
-        group.removeAttribute("hidden");
-        ownHidden.delete(group);
-      }
-      if (ownDisabled.has(el)) {
-        el.disabled = false;
-        ownDisabled.delete(el);
+function applyVisible(form, ctx, visible) {
+  const keys = Object.keys(visible);
+  if (keys.length === 0) return;
+  flush(ctx);
+  /** @type {Map<Element, boolean>} group → hidden */
+  const groups = new Map();
+  const all = /** @type {NodeListOf<Control>} */ (form.querySelectorAll("input, select, textarea"));
+  for (let i = 0; i < all.length; i++) {
+    const el = all[i];
+    if (!el.name) continue;
+    const name = normal(el.name);
+    let matched = false;
+    let shown = true;
+    for (let k = 0; k < keys.length; k++) {
+      if (name === keys[k] || name.indexOf(keys[k] + ".") === 0) {
+        matched = true;
+        if (visible[keys[k]] === false) shown = false;
       }
     }
+    if (!matched) continue;
+    const group = groupOf(el);
+    groups.set(group, groups.get(group) === true || !shown);
+    if (!shown && !ctx.hidden.has(el)) {
+      ctx.foreign.set(el, el.disabled);
+      ctx.hidden.add(el);
+      writeDisabled(ctx, el, true);
+    } else if (shown && ctx.hidden.has(el)) {
+      const want = ctx.foreign.get(el) === true;
+      ctx.hidden.delete(el);
+      ctx.foreign.delete(el);
+      writeDisabled(ctx, el, want);
+    }
   }
+  groups.forEach(function (hide, group) {
+    if (hide && !group.hasAttribute("hidden")) {
+      group.setAttribute("hidden", "");
+      ownHidden.add(group);
+    } else if (!hide && ownHidden.has(group)) {
+      group.removeAttribute("hidden");
+      ownHidden.delete(group);
+    }
+  });
 }
 
 /**
@@ -289,9 +399,9 @@ function applyComputed(form, scope, path, value) {
     if (reachable && target[leaf] !== value) target[leaf] = value;
   }
   const text = value === undefined || value === null ? "" : String(value);
-  const list = controlsFor(form, path);
+  const list = controlsFor(form, path, true);
   for (let i = 0; i < list.length; i++) {
-    if (list[i].name === path && list[i].value !== text) list[i].value = text;
+    if (list[i].value !== text) list[i].value = text;
   }
 }
 
@@ -305,13 +415,14 @@ function repaint(form, ctx) {
   /** @type {ReturnType<typeof evaluate>} */
   let out;
   try {
-    out = evaluate(ctx.definition, collect(form, ctx.definition));
+    flush(ctx);
+    out = evaluate(ctx.definition, collect(form, ctx));
   } catch (error) {
     const why = error instanceof Error ? error.message : String(error);
     report("l-rules could not evaluate its rules: " + why, form, why);
     return;
   }
-  for (const path in out.visible) applyVisible(form, path, out.visible[path]);
+  applyVisible(form, ctx, out.visible);
   for (const path in out.required) applyRequired(form, path, out.required[path]);
   for (const path in out.computed) applyComputed(form, ctx.scope, path, out.computed[path]);
   ctx.state.visible = out.visible;
@@ -321,102 +432,184 @@ function repaint(form, ctx) {
 }
 
 /**
- * A cross-field rule, as a validator faqir-validate can run: re-judge the whole
- * form with the package and answer for this rule alone. The shape findings
- * belong to the native constraints the markup already carries, and a rule whose
- * field is blank produces nothing here — `required` is what should be speaking.
+ * The first finding the package reports for `rule` (a rule id or a shape
+ * constraint) at `path`, judged over the whole form — as a faqir-validate
+ * answer: `true`, or the sentence.
+ *
+ * @param {ReturnType<typeof validate>} verdict @param {string} rule @param {string} [path]
+ * @returns {true | string}
+ */
+function answerFor(verdict, rule, path) {
+  for (let i = 0; i < verdict.findings.length; i++) {
+    const finding = verdict.findings[i];
+    if (finding.rule === rule && (path === undefined || finding.path === path)) return finding.message;
+  }
+  return true;
+}
+
+/**
+ * A package check as a validator faqir-validate can run: re-judge the whole
+ * form and answer for this one rule. A cross-field rule answers under its id;
+ * a field `pattern` the markup could not carry answers under `pattern`. The
+ * other shape findings belong to the native constraints the markup already
+ * carries, and a rule whose field is blank produces nothing here — `required`
+ * is what should be speaking.
  *
  * @param {HTMLFormElement} form
  * @param {FormContext} ctx
- * @param {RawRule} rule
+ * @param {string} rule
+ * @param {string} [path]
  * @returns {() => true | string}
  */
-function logicCheck(form, ctx, rule) {
+function packageCheck(form, ctx, rule, path) {
   return function () {
-    /** @type {ReturnType<typeof validate>} */
-    let verdict;
     try {
-      verdict = validate(ctx.definition, collect(form, ctx.definition), { locale: ctx.locale });
+      return answerFor(validate(ctx.definition, collect(form, ctx), { locale: ctx.locale }), rule, path);
     } catch (error) {
       const why = error instanceof Error ? error.message : String(error);
       report("l-rules could not evaluate its rules: " + why, form, why);
       return true;
     }
-    for (let i = 0; i < verdict.findings.length; i++) {
-      if (verdict.findings[i].rule === rule.id) return verdict.findings[i].message;
-    }
-    return true;
   };
 }
 
 /**
  * A remote rule, as an async validator. The resolver is the one §8.3 names:
- * POST `{ path, value, data }`, expect `{ ok, message? }`. Every other outcome
+ * POST `{ path, value, data }`, expect `{ ok, message? }`. A missing or empty
+ * message resolves through the package's own `resolveMessage` with the chain
+ * `validateAsync` uses on a server — the definition's `messages`, then the
+ * rule's `message` — so both report the same sentence. Every other outcome
  * rejects, and faqir-validate turns a rejection into a failed check — a check
  * that could not run has not passed.
  *
  * @param {HTMLFormElement} form
  * @param {FormContext} ctx
  * @param {RawRule} rule
- * @returns {(value: unknown) => Promise<true | string | false>}
+ * @returns {(value: unknown) => Promise<true | string>}
  */
 function remoteCheck(form, ctx, rule) {
   return function (value) {
+    const data = collect(form, ctx);
     return fetch(/** @type {string} */ (rule.remote), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ path: rule.path, value: value, data: collect(form, ctx.definition) }),
+      body: JSON.stringify({ path: rule.path, value: value, data: data }),
     })
       .then(function (response) {
         if (!response.ok) throw new Error("remote check answered " + response.status);
         return response.json();
       })
       .then(function (body) {
-        if (body && body.ok === true) return true;
-        return (body && body.message) || rule.message || false;
+        if (!body || typeof body !== "object" || typeof body.ok !== "boolean") {
+          throw new Error("remote check answered without a boolean `ok`");
+        }
+        if (body.ok) return true;
+        if (typeof body.message === "string" && body.message) return body.message;
+        const path = normal(/** @type {string} */ (rule.path));
+        return resolveMessage({
+          messages: ctx.definition.messages,
+          locale: ctx.locale,
+          defaultLocale: ctx.definition.defaultLocale,
+          path: path,
+          rule: rule.id,
+          params: { path: path, remote: rule.remote },
+          fallback: rule.message || RULE_MESSAGES.rule,
+        });
       });
   };
 }
 
 /**
- * Hand every `validate` rule to faqir-validate, and say so when there is no
+ * The compiled field a control's (normalized) name lands on, if it declares a
+ * `pattern`: the longest declared path that prefixes it, then down through
+ * `properties` and `items`.
+ *
+ * @param {CompiledDefinition} definition @param {string} path
+ * @returns {boolean}
+ */
+function hasPattern(definition, path) {
+  const segments = path.split(".");
+  for (let n = segments.length; n > 0; n--) {
+    /** @type {any} */
+    let field = definition.fields.get(segments.slice(0, n).join("."));
+    if (!field) continue;
+    for (let i = n; i < segments.length && field; i++) {
+      field = field.type === "object" && field.properties ? field.properties.get(segments[i])
+        : field.type === "array" && /^\d+$/.test(segments[i]) ? field.items : null;
+    }
+    return !!(field && field.regex);
+  }
+  return false;
+}
+
+/**
+ * Hand every `validate` rule to faqir-validate — registered under the name of
+ * each control it speaks for, so `validate` on `contacts.0.name` reaches the
+ * control named `contacts[0].name` — plus a `pattern` check for any control
+ * whose field declares one its markup does not carry. Say so when there is no
  * faqir-validate to hand them to: without it the rules evaluate and nothing
  * ever asks them, which looks exactly like a form with no rules at all.
  *
  * @param {HTMLFormElement} form
  * @param {FormContext} ctx
  * @param {RawRule[]} rules
+ * @returns {Array<() => void>} what undoes each registration
  */
 function registerValidators(form, ctx, rules) {
-  const checks = rules.filter(function (rule) {
-    return rule && rule.validate !== undefined;
-  });
-  if (checks.length === 0) return;
+  /** @type {Array<{ field: string, name: string, fn: (value: unknown) => unknown, message?: string }>} */
+  const wanted = [];
+  for (let i = 0; i < rules.length; i++) {
+    const rule = rules[i];
+    if (!rule || rule.validate === undefined) continue;
+    const fn = rule.validate === "remote" ? remoteCheck(form, ctx, rule) : packageCheck(form, ctx, rule.id);
+    const path = /** @type {string} */ (rule.path);
+    /** @type {string[]} */
+    const names = [];
+    const list = controlsFor(form, path, true);
+    for (let j = 0; j < list.length; j++) if (names.indexOf(list[j].name) === -1) names.push(list[j].name);
+    // No control: the form-level check. faqir-validate is still told, under
+    // the path itself, so the registration is visible to its diagnostics.
+    if (names.length === 0) names.push(path);
+    for (let j = 0; j < names.length; j++) wanted.push({ field: names[j], name: rule.id, fn: fn, message: rule.message });
+  }
+  const checks = wanted.length;
+  const all = /** @type {NodeListOf<Control>} */ (form.querySelectorAll("input, textarea"));
+  for (let i = 0; i < all.length; i++) {
+    const el = all[i];
+    if (!el.name || el.hasAttribute("pattern")) continue;
+    const path = normal(el.name);
+    if (hasPattern(ctx.definition, path)) {
+      wanted.push({ field: el.name, name: "pattern", fn: packageCheck(form, ctx, "pattern", path) });
+    }
+  }
+  if (wanted.length === 0) return [];
+
   const engine = /** @type {Engine} */ (F);
   if (!engine.validate) {
     report(
-      "l-rules has " + checks.length + " validate rule(s) but faqir-validate is not " +
+      "l-rules has " + wanted.length + " check(s) to run but faqir-validate is not " +
         "loaded, so none of them can run. Load faqir-validate.js before faqir-rules.js.",
       form,
       "faqir-validate is not loaded; validate rules cannot run.",
     );
-    return;
+    return [];
   }
-  if (!form.hasAttribute("l-validate")) {
+  if (checks > 0 && !form.hasAttribute("l-validate")) {
     report(
-      "l-rules has " + checks.length + " validate rule(s) on a form with no l-validate, " +
+      "l-rules has " + checks + " validate rule(s) on a form with no l-validate, " +
         "so nothing validates them on submit. Add l-validate to the form.",
       form,
       "a form with validate rules has no l-validate.",
     );
   }
-  for (let i = 0; i < checks.length; i++) {
-    const rule = checks[i];
-    const fn = rule.validate === "remote"
-      ? remoteCheck(form, ctx, rule)
-      : logicCheck(form, ctx, rule);
-    engine.validate.register(form, /** @type {string} */ (rule.path), rule.id, fn, rule.message);
+  /** @type {Array<() => void>} */
+  const undo = [];
+  for (let i = 0; i < wanted.length; i++) {
+    const w = wanted[i];
+    const off = engine.validate.register(form, w.field, w.name, w.fn, w.message);
+    if (typeof off === "function") undo.push(/** @type {() => void} */ (off));
   }
+  return undo;
 }
 
 /**
@@ -561,20 +754,57 @@ export function install(Faqir) {
       // table inside it is addressed by exactly this.
       locale: (typeof document !== "undefined" && document.documentElement &&
         document.documentElement.lang) || undefined,
+      hidden: new Set(),
+      foreign: new Map(),
+      observer: null,
     };
+    if (typeof MutationObserver === "function") {
+      ctx.observer = new MutationObserver(function (records) {
+        noteForeign(ctx, records);
+      });
+      ctx.observer.observe(form, { subtree: true, attributes: true, attributeFilter: ["disabled"] });
+    }
 
     const rules = /** @type {RawRule[]} */ (/** @type {unknown} */ (compiled.rules || []));
     reportMissingControls(form, rules);
-    registerValidators(form, ctx, rules);
+    const unregister = registerValidators(form, ctx, rules);
     repaint(form, ctx);
 
+    let live = true;
     // Capture, so the DOM is already repainted — a field hidden by this
     // keystroke is disabled — before faqir-validate's live pass reads it.
     function onEdit() {
       repaint(form, ctx);
     }
+    // A reset event fires BEFORE the controls are reset, so the repaint waits
+    // a task for the values it has to read.
+    function onReset() {
+      setTimeout(function () {
+        if (live) repaint(form, ctx);
+      }, 0);
+    }
+    // Capture, so a control something else re-enabled since the last repaint
+    // is held disabled again before faqir-validate decides what to check.
+    function onSubmit() {
+      flush(ctx);
+    }
     form.addEventListener("input", onEdit, true);
     form.addEventListener("change", onEdit, true);
+    form.addEventListener("reset", onReset, true);
+    form.addEventListener("submit", onSubmit, true);
+
+    // The engine runs this when the form's scope is destroyed: nothing of the
+    // plugin's — a listener, the observer, a registered validator — outlives it.
+    return function () {
+      live = false;
+      form.removeEventListener("input", onEdit, true);
+      form.removeEventListener("change", onEdit, true);
+      form.removeEventListener("reset", onReset, true);
+      form.removeEventListener("submit", onSubmit, true);
+      if (ctx.observer) ctx.observer.disconnect();
+      for (let i = 0; i < unregister.length; i++) unregister[i]();
+      if (states.get(scope) === state) states.delete(scope);
+    };
   });
 }
 

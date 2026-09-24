@@ -528,3 +528,85 @@ describe("apiSource · destroy()", () => {
     expect(intervals[0].cleared).toBe(true);
   });
 });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Row identity across interleaved requests, and id encoding  [1.1 runtime fixes]
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// create() used to remember the temp row's INDEX and splice that index when the
+// POST failed. A load() or remove() that landed while the POST was in flight
+// shifted or replaced the list, so the saved index named a real row — and a
+// failed create deleted it. Rows are now located when the response lands.
+
+describe("apiSource · interleaved requests", () => {
+  it("a failed create after an interleaved load() deletes no real row", async () => {
+    const post = deferred();
+    installFetch((_url, opts) =>
+      opts && opts.method === "POST" ? post.promise : response([{ id: 1 }, { id: 2 }]),
+    );
+    const s = apiSource("/api/items");
+    s.items = [{ id: 1 }];
+
+    const p = s.create({ title: "draft" }); // temp at index 1
+    await s.load(); // index 1 is now a real row
+    post.resolve(response(null, 500, "Server Error"));
+    await p;
+
+    expect(s.items).toEqual([{ id: 1 }, { id: 2 }]);
+    expect(s.error).toBe("500 Server Error");
+  });
+
+  it("a failed create after an interleaved remove() drops only its own temp row", async () => {
+    const post = deferred();
+    installFetch((_url, opts) => (opts && opts.method === "POST" ? post.promise : response({})));
+    const s = apiSource("/api/items");
+    s.items = [{ id: 1 }, { id: 2 }];
+
+    const p = s.create({ title: "draft" }); // temp at index 2
+    await s.remove(1); // temp shifts to index 1
+    s.items.push({ id: 3 }); // index 2 is a real row
+    post.resolve(response(null, 500, "Server Error"));
+    await p;
+
+    expect(s.items).toEqual([{ id: 2 }, { id: 3 }]);
+  });
+
+  it("a successful create after an interleaved load() that already holds the row adds no duplicate", async () => {
+    const post = deferred();
+    installFetch((_url, opts) =>
+      opts && opts.method === "POST" ? post.promise : response([{ id: 1 }, { id: 7 }]),
+    );
+    const s = apiSource("/api/items");
+
+    const p = s.create({ title: "draft" });
+    await s.load();
+    post.resolve(response({ id: 7 }));
+    await p;
+
+    expect(s.items).toEqual([{ id: 1 }, { id: 7 }]);
+  });
+
+  it("a non-optimistic remove splices by id at resolution, not its old index", async () => {
+    const del = deferred();
+    installFetch(() => del.promise);
+    const s = apiSource("/api/items", { optimistic: false });
+    s.items = [{ id: 1 }, { id: 2 }, { id: 3 }];
+
+    const p = s.remove(2); // index 1 at call time
+    s.items.splice(0, 1); // row 2 is index 0 now
+    del.resolve(response({}));
+    await p;
+
+    expect(s.items).toEqual([{ id: 3 }]);
+  });
+
+  it("encodes the id path segment for update and remove", async () => {
+    installFetch(() => response({ id: "a/b?c" }));
+    const s = apiSource("/api/items");
+
+    await s.update("a/b?c", { t: 1 });
+    await s.remove("a/b?c");
+
+    expect(calls.map((c) => c.url)).toEqual(["/api/items/a%2Fb%3Fc", "/api/items/a%2Fb%3Fc"]);
+  });
+});

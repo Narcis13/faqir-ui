@@ -134,10 +134,12 @@ export function resolveMessage(options) {
 
   for (const layer of [locale, defaultLocale]) {
     if (!layer) continue;
-    const table = messages && messages[layer];
+    // Own keys only: a locale or a key spelled like an Object.prototype member
+    // (`lang="constructor"`) must find nothing rather than a function.
+    const table = messages && Object.prototype.hasOwnProperty.call(messages, layer) ? messages[layer] : undefined;
     if (!table) continue;
     for (const key of keys) {
-      const text = table[key];
+      const text = Object.prototype.hasOwnProperty.call(table, key) ? table[key] : undefined;
       if (typeof text === "string") return interpolate(text, params);
     }
   }

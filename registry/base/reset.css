@@ -142,6 +142,16 @@ table {
 :focus-visible {
   outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
   outline-offset: var(--focus-ring-offset);
+}
+
+/* The glow a theme may put behind the ring, at zero specificity. `box-shadow`
+   is not a property focus owns: an element's resting shadow — a card's depth,
+   an author's own — lives there too, and a (0,1,0) rule here replaced it with
+   `none` (the default) on every keyboard focus. Under `:where()` ANY rule that
+   sets a shadow outranks this one, so it lands only on an element nothing else
+   shadows, and it never takes a shadow away. The controls that draw their own
+   ring read `--focus-shadow` in their own `:focus-visible` rules. */
+:where(:focus-visible) {
   box-shadow: var(--focus-shadow);
 }
 

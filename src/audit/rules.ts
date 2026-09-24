@@ -15,7 +15,12 @@ export type Severity = "critical" | "error" | "warning" | "info";
 
 export interface RepairAction {
   type: "add-attribute" | "rename-attribute" | "remove-element" | "add-element" | "add-script" | "rewrite-css" | "rename-id" | "wire-field-group";
-  /** Byte offset in source where the fix applies */
+  /**
+   * Offset in the file source where the fix applies. For the tag-local fixes
+   * (`add-attribute`, `rename-id`) it is the opening `<` of the target element —
+   * the repairer edits exactly that tag, so two components of the same kind in
+   * one file each get their own fix.
+   */
   offset: number;
   details: Record<string, string>;
 }
@@ -154,11 +159,18 @@ export const requiredAriaRule: AuditRule = {
               file: component.file,
               line: el.start ? countLineFromEl(component, el) : component.line,
               message: `Missing ${attrName}="${attrValue}" on [data-part="${partName}"]`,
-              fix: {
-                type: "add-attribute",
-                offset: el.tagEnd - 1, // Before the closing >
-                details: { attr: attrName, value: attrValue },
-              },
+              // An empty value is not a repair — a bare `aria-*` attribute is
+              // at best meaningless and at worst an empty IDREF — so a
+              // requirement that names no value is reported, not "fixed".
+              ...(attrValue
+                ? {
+                    fix: {
+                      type: "add-attribute" as const,
+                      offset: el.start, // the tag's opening "<" — see RepairAction.offset
+                      details: { attr: attrName, value: attrValue },
+                    },
+                  }
+                : {}),
             });
           } else if (attrValue && el.attrs[attrName] !== attrValue) {
             results.push({
@@ -177,6 +189,7 @@ export const requiredAriaRule: AuditRule = {
       // Parse patterns like 'aria-labelledby pointing to title id'
       if (lower.includes("aria-labelledby") && lower.includes("title")) {
         const panels = component.parts["panel"] || [];
+        const titleId = soleIdOf(component.parts["title"]);
         for (const panel of panels) {
           if (!("aria-labelledby" in panel.attrs)) {
             results.push({
@@ -186,11 +199,18 @@ export const requiredAriaRule: AuditRule = {
               file: component.file,
               line: countLineFromEl(component, panel),
               message: `Missing aria-labelledby on [data-part="panel"] — should point to title element id`,
-              fix: {
-                type: "add-attribute",
-                offset: panel.tagEnd - 1,
-                details: { attr: "aria-labelledby", value: "" },
-              },
+              // Fixable only when there is an id to point at. Writing
+              // `aria-labelledby=""` names nothing, and a bare attribute is not
+              // a repair — the finding stays, for a human or an agent to wire.
+              ...(titleId
+                ? {
+                    fix: {
+                      type: "add-attribute" as const,
+                      offset: panel.start,
+                      details: { attr: "aria-labelledby", value: titleId },
+                    },
+                  }
+                : {}),
             });
           }
         }
@@ -211,7 +231,7 @@ export const requiredAriaRule: AuditRule = {
               message: `[data-part="close"] button has no accessible name`,
               fix: {
                 type: "add-attribute",
-                offset: btn.tagEnd - 1,
+                offset: btn.start,
                 details: { attr: "aria-label", value: "Close" },
               },
             });
@@ -234,7 +254,7 @@ export const requiredAriaRule: AuditRule = {
               message: `Missing aria-expanded on [data-part="trigger"]`,
               fix: {
                 type: "add-attribute",
-                offset: trigger.tagEnd - 1,
+                offset: trigger.start,
                 details: { attr: "aria-expanded", value: "false" },
               },
             });
@@ -257,7 +277,7 @@ export const requiredAriaRule: AuditRule = {
               message: `Missing aria-haspopup on [data-part="trigger"]`,
               fix: {
                 type: "add-attribute",
-                offset: trigger.tagEnd - 1,
+                offset: trigger.start,
                 details: { attr: "aria-haspopup", value: "true" },
               },
             });
@@ -282,7 +302,7 @@ export const requiredAriaRule: AuditRule = {
               message: `Missing role="${roleValue}" on [data-part="${partName}"]`,
               fix: {
                 type: "add-attribute",
-                offset: el.tagEnd - 1,
+                offset: el.start,
                 details: { attr: "role", value: roleValue },
               },
             });
@@ -725,6 +745,7 @@ export const ariaDescribedbyRule: AuditRule = {
     if (descriptionParts.length === 0) return results;
 
     const panels = component.parts["panel"] || [];
+    const descriptionId = soleIdOf(descriptionParts);
     for (const panel of panels) {
       if (!("aria-describedby" in panel.attrs)) {
         results.push({
@@ -734,11 +755,16 @@ export const ariaDescribedbyRule: AuditRule = {
           file: component.file,
           line: countLineFromEl(component, panel),
           message: `Description slot exists but [data-part="panel"] is missing aria-describedby`,
-          fix: {
-            type: "add-attribute",
-            offset: panel.tagEnd - 1,
-            details: { attr: "aria-describedby", value: "" },
-          },
+          // Same stance as `aria-labelledby` above: only an id is a repair.
+          ...(descriptionId
+            ? {
+                fix: {
+                  type: "add-attribute" as const,
+                  offset: panel.start,
+                  details: { attr: "aria-describedby", value: descriptionId },
+                },
+              }
+            : {}),
         });
       }
     }
@@ -746,6 +772,18 @@ export const ariaDescribedbyRule: AuditRule = {
     return results;
   },
 };
+
+/**
+ * The id an IDREF fix may point at: the `id` of the one element in `parts`, or
+ * null when there is none, it carries no id, or there are several — with two
+ * titles in one component, which one labels the panel is a judgement, not a
+ * repair.
+ */
+function soleIdOf(parts: ParsedElement[] | undefined): string | null {
+  if (!parts || parts.length !== 1) return null;
+  const id = parts[0].attrs.id?.trim();
+  return id ? id : null;
+}
 
 /**
  * True when `el` has an accessible name a screen reader can announce: an
@@ -787,7 +825,7 @@ export const closeLabelRule: AuditRule = {
           message: `[data-part="close"] button has no accessible name — give it text content or aria-label`,
           fix: {
             type: "add-attribute",
-            offset: btn.tagEnd - 1,
+            offset: btn.start,
             details: { attr: "aria-label", value: "Close" },
           },
         });
@@ -1103,7 +1141,7 @@ export function buildTriggerContractResults(
       fix: {
         type: "add-attribute",
         offset: el.start,
-        details: { attribute: "data-ui", value: "button", part: TRIGGER_PART },
+        details: { attr: "data-ui", value: "button", part: TRIGGER_PART },
       },
     });
   }
@@ -2051,6 +2089,40 @@ export const LOGICAL_PROPERTIES_RULE: RuleInfo = {
     "`faqir repair` (all mappings are 1:1); rules scoped to an explicit [dir=…] are exempt.",
 };
 
+// The two rules `runAudit` (src/audit/checker.ts) decides straight from the
+// on-disk sweep of installed component CSS — `checkTokens` and
+// `checkReducedMotion`. They have no `check()` of their own, which is how they
+// came to be missing from `getRuleInventory()` — and so from `faqir audit
+// --rules` — while the audit reported findings under both ids.
+//
+// Each description is ONE string literal, not a `+` chain: the browser bundle
+// imports this module, and its minifier keeps a top-level constant whose
+// initializer concatenates — so a chain would ship these two descriptors to the
+// playground, which never runs either rule.
+export const TOKEN_EXISTS_RULE: RuleInfo = {
+  id: "token-exists",
+  severity: "warning",
+  applies_to: "installed component CSS (<output_dir>/<layer>/<name>/<name>.css)",
+  exempt: [
+    "custom properties the component's own stylesheet declares (component knobs such as --sidebar-width)",
+    "author/runtime knobs nothing in the registry declares, when read with a fallback (var(--shell-sidebar-width, 16rem))",
+  ],
+  description:
+    "Every var(--x) a component stylesheet reads must resolve: to a design token declared in the token layer, to a custom property the sheet itself declares, or to an author knob read with a fallback. A name in a token family the token layer defines (--space-*, --color-*, --z-* …) that the layer never declares is reported even when it carries a fallback — it reads as a token, so an undefined one is a typo or a missing scale step.",
+};
+
+export const REDUCED_MOTION_RULE: RuleInfo = {
+  id: "reduced-motion",
+  severity: "info",
+  applies_to: "installed component CSS (<output_dir>/<layer>/<name>/<name>.css)",
+  exempt: ["stylesheets that declare no animation or transition at all"],
+  description:
+    "A component stylesheet that declares an animation or a transition must also carry a @media (prefers-reduced-motion: reduce) block, so motion can be switched off for people who ask for that.",
+};
+
+/** The rules the project sweep in `runAudit` decides directly. */
+export const PROJECT_SWEEP_RULES: RuleInfo[] = [TOKEN_EXISTS_RULE, REDUCED_MOTION_RULE];
+
 /** Every source-scanning anti-pattern rule, for inventory/description output. */
 export const ANTIPATTERN_RULES: RuleInfo[] = [
   { id: "no-important", severity: "error", applies_to: "component CSS",
@@ -2123,6 +2195,7 @@ export function getRuleInventory(): RuleInfo[] {
     ...VOCABULARY_RULES,
     ...ANTIPATTERN_RULES,
     ...CSS_RULES,
+    ...PROJECT_SWEEP_RULES,
     TRIGGER_CONTRACT_RULE,
     SINGLE_FIXED_REGION_RULE,
     CONTRAST_TOKENS_RULE,

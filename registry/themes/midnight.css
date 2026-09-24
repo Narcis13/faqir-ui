@@ -68,12 +68,6 @@
      re-declares `background` as a shorthand). */
   --texture-page: var(--texture-grid);
 
-  /* ── Decoration: selection wears the accent ──
-     Cyan in this theme's primary design target, blue-violet in light — one
-     declaration, because `--color-primary` already follows the scheme. */
-  --selection-bg: var(--color-primary);
-  --selection-fg: var(--color-primary-fg);
-
   /* ── Focus: a glow, not just a ring ──
      `--focus-shadow` is drawn BEHIND the outline by `base/reset.css` and by
      all thirteen controls that paint their own ring (1.1A-02), so this one
@@ -96,6 +90,18 @@
   --shadow-md:  0 6px 14px oklch(var(--shadow-color) / 0.10), 0 2px 4px oklch(var(--shadow-color) / 0.06);
   --shadow-lg:  0 14px 28px oklch(var(--shadow-color) / 0.12), 0 4px 8px oklch(var(--shadow-color) / 0.06);
   --shadow-xl:  0 28px 56px oklch(var(--shadow-color) / 0.14), 0 8px 16px oklch(var(--shadow-color) / 0.07);
+}
+
+:root,
+[data-theme] {
+  /* ── Decoration: selection wears the accent ──
+     Cyan in this theme's primary design target, blue-violet in light — one
+     declaration, because `--color-primary` already follows the scheme.
+     On `:root, [data-theme]`: the token layer re-resolves these aliases on
+     every scheme island (tokens/aliases.css), so a `:root`-only override
+     would fall back to the default inside a nested `data-theme` region. */
+  --selection-bg: var(--color-primary);
+  --selection-fg: var(--color-primary-fg);
 }
 
 /* ── Dark Mode (primary design target) ── */

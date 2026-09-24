@@ -41,13 +41,22 @@ BRIEF=""
 BASE="${DREAM_BASE:-main}"
 WORKTREE=""
 
+# A value flag with nothing after it, or another flag after it, is an error —
+# not an empty string that quietly means "the default".
+value_of() {
+  if [ $# -lt 2 ] || [ -z "$2" ] || [ "${2#-}" != "$2" ]; then
+    echo "✗ $1 needs a value — see --help" >&2
+    exit 2
+  fi
+}
+
 while [ $# -gt 0 ]; do
   case "$1" in
     --dry-run) DRY_RUN=1 ;;
     --keep) KEEP=1 ;;
-    --brief) BRIEF="${2:-}"; shift ;;
-    --base) BASE="${2:-}"; shift ;;
-    --worktree) WORKTREE="${2:-}"; shift ;;
+    --brief) value_of "$@"; BRIEF="$2"; shift ;;
+    --base) value_of "$@"; BASE="$2"; shift ;;
+    --worktree) value_of "$@"; WORKTREE="$2"; shift ;;
     -h|--help)
       sed -n '2,40p' "${BASH_SOURCE[0]}" | sed 's/^#\{1,2\} \{0,1\}//'
       exit 0
@@ -56,6 +65,14 @@ while [ $# -gt 0 ]; do
   esac
   shift
 done
+
+# A brief id is a queue key — lowercase kebab-case, the same shape the queue
+# validates. It is spliced into the command the dream runs, so anything else
+# (a quote, a `;`, a `$(…)`) is refused here rather than handed to a shell.
+if [ -n "$BRIEF" ] && ! [[ "$BRIEF" =~ ^[a-z][a-z0-9-]*$ ]]; then
+  echo "✗ --brief '$BRIEF' is not a brief id (lowercase letters, digits and '-', starting with a letter)" >&2
+  exit 2
+fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel)"
@@ -72,13 +89,21 @@ TMPROOT="${TMPDIR:-/tmp}"
 #
 #   DREAM_CMD='node scripts/dream/theme.mjs --brief arcade' bash scripts/dream/nightly.sh
 #
-DREAM_CMD="${DREAM_CMD:-claude -p \"/faqir-dream ${BRIEF:-next}\" --permission-mode acceptEdits}"
+# The default runs as an argument vector, never through `eval`: the brief id is
+# the one piece of it that comes from the command line. A DREAM_CMD you set
+# yourself is a shell command by design, and is evaluated as one.
+DREAM_ARGV=(claude -p "/faqir-dream ${BRIEF:-next}" --permission-mode acceptEdits)
+if [ -n "${DREAM_CMD:-}" ]; then
+  DREAM_SHOWN="$DREAM_CMD"
+else
+  DREAM_SHOWN="${DREAM_ARGV[*]}"
+fi
 
 echo "▶ Night Shift — $STAMP"
 echo "  repository: $ROOT"
 echo "  base:       $BASE"
 echo "  worktree:   $WORKTREE"
-echo "  command:    $DREAM_CMD"
+echo "  command:    $DREAM_SHOWN"
 
 if ! git -C "$ROOT" rev-parse --verify --quiet "$BASE" >/dev/null; then
   echo "✗ no ref '$BASE' to start from (set DREAM_BASE or pass --base)" >&2
@@ -106,7 +131,11 @@ if [ "$DRY_RUN" -eq 1 ]; then
   echo "— dry run: the worktree was created and will be removed; the dream was not run."
 else
   set +e
-  ( cd "$WORKTREE" && eval "$DREAM_CMD" )
+  if [ -n "${DREAM_CMD:-}" ]; then
+    ( cd "$WORKTREE" && eval "$DREAM_CMD" )
+  else
+    ( cd "$WORKTREE" && "${DREAM_ARGV[@]}" )
+  fi
   STATUS=$?
   set -e
   echo "· dream command exited $STATUS"

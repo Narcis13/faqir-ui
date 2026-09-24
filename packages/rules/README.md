@@ -13,7 +13,7 @@ npm i @faqir-ui/rules
 ```
 
 ```js
-import { coerce, validate } from "@faqir-ui/rules";
+import { coerce, fromFormData, validate } from "@faqir-ui/rules";
 
 const definition = {
   version: "1",
@@ -23,10 +23,17 @@ const definition = {
   },
 };
 
-const data = coerce(definition, Object.fromEntries(new FormData(form)));
+const data = coerce(definition, fromFormData(new FormData(form)));
 const { valid, findings } = validate(definition, data);
 // findings → [{ path: "age", rule: "minimum", message: "Value is too small.", params: { limit: 18 } }]
 ```
+
+`fromFormData`, not `Object.fromEntries`: the latter keeps only the last value
+of a repeated name, so a checkbox group with three boxes ticked reaches the
+server as one string and fails `minItems` there while the page accepted it. On
+a server it is the same line — `coerce(definition, fromFormData(await
+request.formData()))` — and it takes a `URLSearchParams`, a `Map` or an array of
+pairs too.
 
 A definition has two halves. **Fields** say what each value must look like, on
 its own. **Rules** say everything that depends on the other fields — what is on
@@ -81,7 +88,10 @@ Notes that are easier to state than to discover:
 - **Equality is by value** for `enum`, `const` and `uniqueItems`: object key
   order does not matter.
 - **`pattern` is unanchored** unless you anchor it, and is capped at 1000
-  characters (`MAX_PATTERN_LENGTH`).
+  characters (`MAX_PATTERN_LENGTH`). A pattern whose shape backtracks
+  catastrophically — an unbounded repeat of a group that can itself repeat with
+  nothing in between, `(a+)+` or `(\w+\s?)+` — is a `DefinitionError`; see
+  [Security](#security).
 
 ## Verdict
 
@@ -186,7 +196,9 @@ rules: [
 **The order a pass runs in**
 
 1. `compute`, in dependency order — the graph comes from the literal `var`
-   paths, and a cycle is a `DefinitionError`. Each value is written into the
+   paths, and a cycle is a `DefinitionError` — including a compute that reads
+   its own target (`total = total + 1`), whose answer would depend on how many
+   times the page had repainted. Each value is written into the
    data the rest of the pass reads, so a computed total can be validated and can
    drive a `show`. The caller's data is never mutated.
 2. `show`, then `require`. Several `show` rules on one path **AND** together
@@ -233,7 +245,8 @@ const verdict = await validateAsync(definition, data, {
 ```
 
 The resolver answers `true` (pass), `false` (fail with the rule's message), or a
-string (fail with that sentence) — or a promise of one of those. A rejection, or
+non-empty string (fail with that sentence; `""` is `false`) — or a promise of
+one of those. A rejection, or
 anything else, is a finding under `remote-error`: **a check that could not run
 never passes.** Resolvers run concurrently and the findings still come out in
 rule order, so two runs over the same data read the same.
@@ -315,13 +328,21 @@ A string that is not a number is left alone rather than turned into `NaN`, so
 the verdict names the field. A `string` field keeps its value verbatim — no
 silent trimming, because a passphrase may legitimately contain spaces.
 
+Two bounds, because on a server the keys come from whoever sent the body. An
+array index past `MAX_ARRAY_INDEX` (9999) is not un-flattened —
+`contacts[100000000].name` is carried as a flat key the definition does not
+know, rather than building a hundred-million-slot array — and a key that names
+`__proto__`, `constructor` or `prototype` anywhere in its path is dropped. A
+definition may not name those three in a field path or a rule target either;
+`compile` refuses it.
+
 `coerce` is a fixed point: running it twice changes nothing.
 
 ## In the browser — `l-rules`
 
 The `faqir-rules` plugin is this package with a DOM around it. It binds a
 definition to a form, runs the same `coerce` → `evaluate` pass on every
-`input`/`change`, and applies the answer to the markup:
+`input`/`change` (and after a `reset`), and applies the answer to the markup:
 
 ```html
 <script src="ui/core/faqir-core.js"></script>
@@ -348,8 +369,32 @@ The definition is compiled once, at bind.
 | `show` | the field's `[data-ui="field-group"]` takes `hidden` and its controls `disabled`, so it neither validates nor submits |
 | `require` | toggles `required` + `aria-required` on the control |
 | `compute` | writes the value into the scope and into any control of that name |
-| `validate` | registered through `Faqir.validate.register`, so it runs at `faqir-validate`'s moments and wears its messages |
+| `validate` | registered through `Faqir.validate.register` under each control it names, so it runs at `faqir-validate`'s moments and wears its messages |
+
+Paths match however they are spelled: `show: "contacts[0]"` and a control named
+`contacts[0].name` are the same place (`contacts.0`). A field `pattern` whose
+control carries no `pattern` attribute — `@faqir-ui/forms` leaves one off when
+the browser could not read it the same way — is registered as a check too, so
+the page still enforces it with the server's evaluator. The pass reruns on
+`input`, `change` and after a `reset`, and everything the plugin set up — its
+listeners, its registrations — is removed when the form's scope is destroyed.
+
+A `remote` rule's server answers `{ ok: boolean, message?: string }`. `ok:
+false` with a non-empty string `message` fails with that sentence; with none,
+it fails with the rule's own message, resolved through the definition's
+`messages` exactly as `validateAsync` on the server resolves it. A body with no
+boolean `ok`, a non-2xx, or a network failure is a failed check, never a pass.
 | `jump` | lands in `$rules.next`, keyed by the page it fires on, for a wizard to read |
+
+The form's data is read from its controls the way `FormData` reads them, with
+one difference: a control **someone else** disabled still answers. A wizard
+disables every step but the current one, and the answers on the other steps
+did not stop existing because the page is showing another — reading them as
+blank sent Back over a step that had been filled in. A field a `show` rule
+hides is the one thing absent, and it is **held** disabled: if a wizard (or
+anything else) enables it, the plugin disables it again and remembers what the
+other party wanted, which is what it goes back to when the rule shows it. A
+hidden field therefore never blocks a step with an error nobody can see.
 
 `$rules` is the live verdict — `{ visible, required, computed, next }`, reactive
 and never undefined, so `$rules.next[page]` is safe to read in any expression.
@@ -360,7 +405,7 @@ error of its own, and leaves the five-attribute protocol alone.
 Two loading notes. A definition carrying `validate` rules needs `faqir-validate`
 on the page — a presence requirement, not a script order, and a page missing it
 is told so rather than quietly skipping the checks. And a definition embedded in
-a `<script type="application/json">` must escape `<` as `<`, because a
+a `<script type="application/json">` must escape `<` as `\u003c`, because a
 script element is raw text and `{"<=": …}` is an ordinary operator;
 [`@faqir-ui/forms`](../forms) does it when it emits the script, and by hand it is
 yours to remember.
@@ -406,11 +451,11 @@ is that function behind a CLI, with `--stdin`, `--json` and `--locales en,ro`:
 
 | Rule | What it reports |
 | --- | --- |
-| `schema` | the definition does not match `rules.schema.json` — or the engine refuses it for something a schema cannot express (an unknown format, an uncompilable pattern, a `required` naming no field) |
+| `schema` | the definition does not match `rules.schema.json` — or the engine refuses it for something a schema cannot express (an unknown format, an uncompilable or catastrophically backtracking pattern, a `required` naming no field); as warnings, a `pattern` that nests quantifiers, and a string containing `</script` or `<!--` |
 | `rule-verb` | a rule with zero or two verbs |
-| `rule-ops` | an unsupported operator, a bad arity, a node with two operators |
+| `rule-ops` | an unsupported operator, a bad arity, a node with two operators, a catastrophic `regex` pattern (a nested-quantifier one is a warning) |
 | `rule-refs` | a target or a `var` naming no declared field |
-| `rule-cycles` | `compute` rules that depend on each other in a cycle |
+| `rule-cycles` | `compute` rules that depend on each other in a cycle, or one that reads its own target |
 | `rule-unreachable` | a `when` — or a `validate` — that folds to a constant |
 | `rule-messages` | a message key that addresses nothing, or a locale gap |
 
@@ -419,7 +464,10 @@ rule that cannot do what it was written to do, and `faqir rules lint` exits
 non-zero on one. **`warning`** is a rule that works and is worth a second look:
 a form-level `validate` whose path names no field (legitimate — a server reports
 it, the page has no field-group to paint it into), a `compute` writing a value
-nothing validates, a condition folded flat, a half-finished translation. The
+nothing validates, a condition folded flat, a half-finished translation, a
+pattern that nests quantifiers with a separator between the repeats (usually
+fine, occasionally slow), and a string that would end a `<script>` embedding it
+unescaped. The
 message fallback chain is documented behaviour, so a locale gap is only a
 warning — unless you named the locale with `--locales`, which is how you say
 "these must be complete" and get an error when they are not.
@@ -435,6 +483,33 @@ $ faqir rules lint signup.rules.json
   this reads "plna", which no field declares and no rule computes — it will always be undefined.
 ```
 
+## Security
+
+A definition is code. It decides what a server accepts, and two of its parts
+spend CPU in proportion to what the author wrote: the logic, which the limits
+above bound, and regular expressions, which no length limit can. `^(a+)+$` is
+seven characters and takes seconds against thirty `a`s and a `b`.
+
+- **Definitions must be trusted or authored.** Write them yourself, generate
+  them with `@faqir-ui/forms`, or have a model produce them against
+  `rules.schema.json` — and review them like the code they are.
+- **A definition from anyone else must be linted before it runs.** A form
+  builder that lets users write rules, a CMS field, an agent's output: run
+  `lintDefinition(def)` (or `faqir rules lint`) and refuse anything that is not
+  `ok`; treat its pattern warnings as worth a human look before going live.
+  `compile` refuses the textbook catastrophic shapes — an unbounded repeat of a
+  group that can repeat with nothing in between, `(a+)+`, `(\w+\s?)+` — but
+  that check is a pragmatic heuristic, not a proof: overlapping alternation
+  (`(a|a)+`) is not detected.
+- **Data is not trusted, and does not need to be.** Everything `coerce` and
+  `validate` do with submitted data is bounded: keys cannot reach an object's
+  prototype, array indices from flat keys stop at `MAX_ARRAY_INDEX`, a `regex`
+  subject stops at `MAX_REGEX_SUBJECT_LENGTH`, and a `var` reads only the data's
+  own properties.
+- **Embedding.** A definition in `<script type="application/json">` must have
+  every `<` written as `\u003c`; the lint warns about a string that would end
+  the element otherwise.
+
 ## API
 
 | Export | What it is |
@@ -444,12 +519,13 @@ $ faqir rules lint signup.rules.json
 | `evaluate(def, data)` | `{ visible, required, computed, next }` — the verbs, nothing validated |
 | `evaluateLogic(expr, data)` | one JSONLogic expression |
 | `coerce(def, rawData)` | form strings → declared types |
+| `fromFormData(formData)` | a submission as the record `coerce` reads, repeated names as lists |
 | `compile(def)` | pre-compiled definition; idempotent, pass it to `validate` in a hot path |
 | `DefinitionError` | thrown for a bad *definition*; bad *data* produces findings |
 | `registerFormat`, `hasFormat`, `formatNames`, `checkFormat`, `BUILT_IN_FORMATS` | the format registry |
 | `resolveMessage`, `interpolate`, `DEFAULT_MESSAGES`, `RULE_MESSAGES`, `DEFAULT_LOCALE`, `SHAPE_RULES` | the message layer |
 | `truthy`, `parseInstant`, `LOGIC_OPS`, `DATE_COMPARATORS`, `RULE_VERBS`, `REMOTE` | the logic vocabulary |
-| `DEFINITION_VERSION`, `MAX_PATTERN_LENGTH`, `MAX_LOGIC_NODES`, `MAX_LOGIC_DEPTH`, `MAX_REGEX_SUBJECT_LENGTH` | the limits above, as values |
+| `DEFINITION_VERSION`, `MAX_PATTERN_LENGTH`, `MAX_LOGIC_NODES`, `MAX_LOGIC_DEPTH`, `MAX_REGEX_SUBJECT_LENGTH`, `MAX_ARRAY_INDEX` | the limits above, as values |
 | `lintDefinition(def, { locales })` | the seven lint rules; `{ ok, counts, findings }` |
 | `validateDefinition(def)` | `rules.schema.json` as code; `{ valid, findings }` |
 | `LINT_RULES`, `DEFINITION_KEYWORDS`, `FIELD_KEYWORDS`, `RULE_KEYS` | the vocabularies the schema and the lint share |

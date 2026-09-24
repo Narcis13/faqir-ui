@@ -54,7 +54,9 @@
 
 [data-ui="calendar"] [data-part="nav-prev"]:disabled,
 [data-ui="calendar"] [data-part="nav-next"]:disabled {
-  opacity: 0.4;
+  /* Dimmer than a disabled control — 0.4 at the 0.5 default — and it follows a
+     theme's `--disabled-opacity` like every other disabled dim (1.1A-27). */
+  opacity: calc(var(--disabled-opacity) * 0.8);
   cursor: not-allowed;
 }
 

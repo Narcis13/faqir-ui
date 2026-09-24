@@ -1,8 +1,8 @@
 // Audit rules reference page (docs-site refactor, `audit/index.html`).
 //
 // The page is derived from the engine's own rule lists, and these tests hold it
-// to that: one article per rule the engine can report (the `--rules` inventory
-// PLUS the two checker-only ids), a stable anchor per rule id, every `rule_id`
+// to that: one article per rule the engine can report (the `--rules` inventory,
+// which now includes the two project-sweep ids), a stable anchor per rule id, every `rule_id`
 // literal the audit sources emit documented, and the page itself audit-clean
 // with no class or style attribute anywhere in it.
 
@@ -90,16 +90,15 @@ describe("audit rules page", () => {
     expect(page).toContain("data-docs-audit-stats");
   });
 
-  it("documents every rule the inventory lists plus the two checker-only ids, once each", () => {
+  it("documents every rule the inventory lists, once each — the project-sweep pair included", () => {
     const documented = documentedRules().map((r) => r.id);
     const inventory = getRuleInventory().map((r) => r.id);
     expect(new Set(documented).size).toBe(documented.length);
-    for (const id of inventory) expect(documented).toContain(id);
-    for (const r of CHECKER_ONLY_RULES) {
-      expect(inventory).not.toContain(r.id);
-      expect(documented).toContain(r.id);
-    }
+    expect(documented.sort()).toEqual([...inventory].sort());
+    // `token-exists` and `reduced-motion` are decided by the on-disk sweep and
+    // used to be documented only here, never listed by `faqir audit --rules`.
     expect(CHECKER_ONLY_RULES.map((r) => r.id).sort()).toEqual(["reduced-motion", "token-exists"]);
+    for (const r of CHECKER_ONLY_RULES) expect(inventory).toContain(r.id);
   });
 
   it("the groups partition the documented rules exactly", () => {

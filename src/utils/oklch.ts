@@ -349,6 +349,16 @@ function deriveSchemeAware(
  * 1.1A-06, any `:root` declaration that is scheme-aware (see above), which is
  * how a one-block `light-dark()` theme covers dark and auto without a block.
  */
+/**
+ * A selector LIST that names `:root` as one of its branches — `:root,
+ * [data-theme] { … }`, which is how a theme re-points an alias the token layer
+ * restates on every scheme island. Its declarations are root declarations like
+ * any other; the extra branch only carries them into nested islands too.
+ */
+export function isRootSelectorList(selector: string): boolean {
+  return selector.split(",").some((branch) => branch.trim() === ":root");
+}
+
 export function parseThemeValues(css: string): SchemeValues {
   const src = css.replace(/\/\*[\s\S]*?\*\//g, "");
   const light = new Map<string, string>();
@@ -372,7 +382,7 @@ export function parseThemeValues(css: string): SchemeValues {
       auto.set(m[1], substituteLightDark(m[2], "dark"));
     } else if (/\[data-theme\s*=\s*["']?dark["']?\s*\]/.test(selector)) {
       dark.set(m[1], substituteLightDark(m[2], "dark"));
-    } else if (/(^|\s):root(\s|$)/.test(selector)) {
+    } else if (/(^|\s):root(\s|$)/.test(selector) || isRootSelectorList(selector)) {
       light.set(m[1], substituteLightDark(m[2], "light"));
       rootDecls.set(m[1], m[2]);
     }

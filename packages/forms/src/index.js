@@ -907,14 +907,19 @@ function dependentRequiredRules(root, properties, allocateId) {
 
 /**
  * A wizard step's `when` is the condition under which the step APPLIES; the
- * rule derived from it is the jump that steps over the page when it does not.
- * Page ids are the step indices, which is what the emitted wizard's `step`
- * scope variable holds, so `$rules.next` can be read without a lookup table.
+ * rules derived from it are the jump that steps over the page when it does not,
+ * and a `show` per field on that page with the same condition. The second half
+ * is what makes the jump honest on the server: a skipped page's fields were
+ * never on screen, so `validate()` must not report them required — without the
+ * `show`, every submission down the skip path was rejected by the handler the
+ * page had just satisfied. Page ids are the step indices, which is what the
+ * emitted wizard's `step` scope variable holds, so `$rules.next` can be read
+ * without a lookup table.
  *
  * One jump steps over one page, so two conditional steps in a row are refused
  * rather than silently mis-navigated, and the first and last steps — which have
  * nowhere to jump from, or to — are refused too.
- * @param {{ steps: Array<{ when?: Record<string, unknown> }> }} wizard
+ * @param {{ steps: Array<{ when?: Record<string, unknown>, fields: string[] }> }} wizard
  * @param {(base: string) => string} allocateId
  */
 function wizardJumpRules(wizard, allocateId) {
@@ -939,6 +944,9 @@ function wizardJumpRules(wizard, allocateId) {
       from: String(index - 1),
       when: { "!": step.when },
     });
+    for (const name of step.fields) {
+      rules.push({ id: allocateId(`show-step-${index + 1}-${idToken(name) || "field"}`), show: name, when: step.when });
+    }
   });
   return rules;
 }
@@ -986,7 +994,7 @@ function normalizeRulesOption(raw) {
 /**
  * The definition, as the `<script type="application/json">` a page embeds.
  *
- * `<` is escaped to `<` — still JSON, and mandatory rather than careful: a
+ * `<` is escaped to `\u003c` — still JSON, and mandatory rather than careful: a
  * script element is raw text, `</script` ends it, and the operators a rules
  * definition is made of (`{"<=": …}`) are full of the character that starts
  * that sequence. Without this the parser eats the rest of the page.
@@ -1039,6 +1047,110 @@ function commonControlAttrs(ctx) {
   return attrs;
 }
 
+// ── `pattern`: one regular expression, two readers ─────────────────────────
+//
+// JSON Schema's `pattern` is UNANCHORED — `[A-Z]+` accepts "abcD" — and is what
+// `@faqir-ui/rules` enforces on a server. HTML's `pattern` attribute is
+// implicitly anchored (`^(?:p)$`) and compiled with the `v` flag. Writing the
+// schema's string into the attribute verbatim therefore made the browser
+// stricter than the server, and a pattern the `v` flag rejects (`[a-z.-]`,
+// whose bare `-` is a syntax error there) is silently ignored by the browser
+// altogether. So the attribute is DERIVED: an already whole-anchored pattern
+// goes through as it is, anything else is wrapped to match anywhere, and one
+// that is not `v`-safe is left off — the definition then travels with the form
+// and the `faqir-rules` plugin enforces it with the server's own evaluator.
+
+/** Characters the `v` flag reserves as doubled punctuation inside a class. */
+const V_DOUBLE_PUNCTUATORS = "&!#$%*+,.:;<=>?@^`~";
+/** Characters the `v` flag refuses unescaped inside a class. */
+const V_CLASS_SYNTAX = "()[{}/|";
+
+/**
+ * Would a browser compile this under the `v` flag? Decided without `v` — Node
+ * 18 has no such flag, and the same schema must render the same bytes on every
+ * runtime — by compiling it under `u` (whose grammar `v` extends everywhere but
+ * inside a character class) and then reading every class for the syntax `v`
+ * adds. Conservative: when in doubt, the answer is no.
+ * @param {string} pattern
+ */
+function vFlagSafe(pattern) {
+  try {
+    new RegExp(pattern, "u");
+  } catch {
+    return false;
+  }
+  for (let i = 0; i < pattern.length; i++) {
+    if (pattern[i] === "\\") {
+      i += 1;
+      continue;
+    }
+    if (pattern[i] !== "[") continue;
+    let j = i + 1;
+    if (pattern[j] === "^") j += 1;
+    let atom = false; // the last thing read was a single class character
+    for (; j < pattern.length && pattern[j] !== "]"; j++) {
+      const c = pattern[j];
+      if (c === "\\") {
+        j += 1;
+        atom = true;
+        continue;
+      }
+      if (V_CLASS_SYNTAX.includes(c)) return false;
+      if (V_DOUBLE_PUNCTUATORS.includes(c) && pattern[j + 1] === c) return false;
+      if (c === "-") {
+        if (!atom || pattern[j + 1] === "]" || pattern[j + 1] === "-") return false;
+        j += pattern[j + 1] === "\\" ? 2 : 1; // the range's upper end
+        atom = false;
+        continue;
+      }
+      atom = true;
+    }
+    i = j;
+  }
+  return true;
+}
+
+/**
+ * Is the whole pattern pinned at both ends — `^…$` with no top-level `|`? Then
+ * HTML's implicit anchoring adds nothing and it can be emitted as written.
+ * @param {string} pattern
+ */
+function wholeAnchored(pattern) {
+  if (!pattern.startsWith("^") || !pattern.endsWith("$")) return false;
+  let depth = 0;
+  let inClass = false;
+  for (let i = 0; i < pattern.length; i++) {
+    const c = pattern[i];
+    if (c === "\\") {
+      if (i === pattern.length - 2) return false; // the closing `$` is escaped
+      i += 1;
+    } else if (inClass) {
+      if (c === "]") inClass = false;
+    } else if (c === "[") inClass = true;
+    else if (c === "(") depth += 1;
+    else if (c === ")") depth -= 1;
+    else if (c === "|" && depth === 0) return false;
+  }
+  return true;
+}
+
+/**
+ * The HTML `pattern` attribute meaning what the schema's `pattern` means, or
+ * `null` when no attribute can.
+ * @param {string} pattern
+ */
+function htmlPattern(pattern) {
+  if (!vFlagSafe(pattern)) return null;
+  return wholeAnchored(pattern) ? pattern : `[\\s\\S]*(?:${pattern})[\\s\\S]*`;
+}
+
+/** @param {string[]} attrs @param {Record<string, unknown>} schema */
+function pushPattern(attrs, schema) {
+  if (schema.pattern === undefined) return;
+  const html = htmlPattern(/** @type {string} */ (schema.pattern));
+  if (html !== null) attrs.push(`pattern="${attrValue(html)}"`);
+}
+
 /**
  * @param {Record<string, unknown>} schema
  * @param {{ widget?: string, placeholder?: string, rows?: number, enumLabels?: string[] }} ui
@@ -1075,7 +1187,7 @@ function renderControl(schema, ui, ctx) {
     if (ui.placeholder !== undefined) attrs.push(`placeholder="${attrValue(ui.placeholder)}"`);
     if (schema.minLength !== undefined) attrs.push(`minlength="${attrValue(/** @type {number} */ (schema.minLength))}"`);
     if (schema.maxLength !== undefined) attrs.push(`maxlength="${attrValue(/** @type {number} */ (schema.maxLength))}"`);
-    if (schema.pattern !== undefined) attrs.push(`pattern="${attrValue(/** @type {string} */ (schema.pattern))}"`);
+    pushPattern(attrs, schema);
     const value = schema.default === undefined ? "" : escapeHtml(/** @type {string} */ (schema.default));
     return [`<textarea${renderAttrs(attrs)}>${value}</textarea>`];
   }
@@ -1088,11 +1200,13 @@ function renderControl(schema, ui, ctx) {
   if (schema.default !== undefined) attrs.push(`value="${attrValue(/** @type {string | number | boolean} */ (schema.default))}"`);
   if (schema.minLength !== undefined) attrs.push(`minlength="${attrValue(/** @type {number} */ (schema.minLength))}"`);
   if (schema.maxLength !== undefined) attrs.push(`maxlength="${attrValue(/** @type {number} */ (schema.maxLength))}"`);
-  if (schema.pattern !== undefined) attrs.push(`pattern="${attrValue(/** @type {string} */ (schema.pattern))}"`);
+  pushPattern(attrs, schema);
   if (schema.minimum !== undefined) attrs.push(`min="${attrValue(/** @type {number} */ (schema.minimum))}"`);
   if (schema.maximum !== undefined) attrs.push(`max="${attrValue(/** @type {number} */ (schema.maximum))}"`);
-  const step = schema.multipleOf ?? schema.step ?? (type === "integer" ? 1 : undefined);
-  if (step !== undefined) attrs.push(`step="${attrValue(/** @type {number} */ (step))}"`);
+  // A number input with no `step` steps by 1, so the browser refuses `2.5` as
+  // a step mismatch the schema never asked for: a plain `number` says "any".
+  const step = schema.multipleOf ?? schema.step ?? (type === "integer" ? 1 : "any");
+  if (htmlType === "number") attrs.push(`step="${attrValue(/** @type {number | string} */ (step))}"`);
   return [`<input${renderAttrs(attrs)}>`];
 }
 
@@ -1248,7 +1362,7 @@ function renderDatePicker(schema, ui, common, ctx) {
  *   prefix: string, threshold: number, i18n: Record<string, string>,
  *   idCounts: Map<string, number>, scopeNames: Set<string>,
  *   scopeEntries: string[],
- *   flags: { usesDatePicker: boolean },
+ *   flags: { usesDatePicker: boolean, patternInRules: boolean },
  * }} FormState
  */
 
@@ -1356,6 +1470,7 @@ function buildFieldGroup(schema, ui, state, spec) {
           : schema.type === "boolean" ? "checkbox" : "input"
     );
     if (chosenWidget === "date-picker") state.flags.usesDatePicker = true;
+    if (typeof schema.pattern === "string" && htmlPattern(schema.pattern) === null) state.flags.patternInRules = true;
     control = renderControl(schema, ui, ctx);
   }
 
@@ -1666,7 +1781,7 @@ export function renderForm(jsonSchema, uiSchema = {}, opts = {}) {
     idCounts: new Map(),
     scopeNames: new Set(),
     scopeEntries: [],
-    flags: { usesDatePicker: false },
+    flags: { usesDatePicker: false, patternInRules: false },
   };
 
   /** @param {string} name @param {string | null} disabledExpr */
@@ -1737,7 +1852,9 @@ export function renderForm(jsonSchema, uiSchema = {}, opts = {}) {
   ];
   /** @type {Record<string, unknown> | null} */
   let rulesDefinition = null;
-  if (rulesOption || derivedRules.length > 0) {
+  // A `pattern` no HTML attribute can carry is enforced by the plugin from the
+  // definition, so such a form carries one even with no rules of its own.
+  if (rulesOption || derivedRules.length > 0 || state.flags.patternInRules) {
     /** @type {Record<string, unknown>} */
     const definition = { version: RULES_VERSION };
     definition.fields = { ...rulesFieldsFrom(properties), ...(rulesOption && rulesOption.fields) };

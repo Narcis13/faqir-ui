@@ -28,6 +28,7 @@ import {
   BORDER_HAIRLINE_MAX_PX,
   BORDER_REGULAR_MAX_PX,
   DEPTH_LAYERED_MIN_BLUR_PX,
+  DIVIDER_DOUBLE_MIN_PX,
   FOCUS_BOLD_MIN_WIDTH_PX,
   HEADING_TRACKING_EM,
   HEADING_WEIGHT_MAX,
@@ -146,14 +147,22 @@ export function typeFamily(seed: NormalizedSeed): Declaration[] {
     ...typeRamp(seed.type.base, seed.type.scale),
     ["heading-weight", HEADING_WEIGHTS[seed.type.voice.weight]],
     ["heading-tracking", HEADING_TRACKINGS[seed.type.voice.tracking]],
-    // `small-caps` is in the frozen 1.1A-07 vocabulary but is not a
-    // `text-transform` value, and `--heading-transform` is read as one by the
-    // three pattern headlines that consume it — so a `small-caps` theme's
-    // headings render unchanged today. The value is emitted rather than
-    // silently rewritten (the axis must say what the seed asked for); giving it
-    // a real consumer is follow-up 1.1A-25.
-    ["heading-transform", seed.type.voice.transform],
+    ...headingCase(seed.type.voice.transform),
   ];
+}
+
+/**
+ * One axis, two tokens [1.1A-25]. `small-caps` is in the frozen 1.1A-07
+ * vocabulary but is not a `text-transform` value — it is `font-variant-caps` —
+ * so it is spelled on `--heading-caps`, which every heading that reads
+ * `--heading-transform` reads beside it. `none` and `uppercase` leave
+ * `--heading-caps` at its `normal` default rather than restating it, so the
+ * themes generated before the token existed regenerate byte for byte.
+ */
+export function headingCase(transform: Axis<"type.voice.transform">): Declaration[] {
+  return transform === "small-caps"
+    ? [["heading-transform", "none"], ["heading-caps", "small-caps"]]
+    : [["heading-transform", transform]];
 }
 
 // ── Shape ───────────────────────────────────────────────────────────────────
@@ -496,7 +505,13 @@ export function decorationFamily(seed: NormalizedSeed): Declaration[] {
             seed.decoration.link === "plain" ? "0" : "0.2em",
           ],
         ];
-  return [...link, ["divider-style", seed.decoration.divider]];
+  // A double rule needs its own width [1.1A-26]: `separator` draws at
+  // `--divider-width`, which follows `--border-width` — a hairline in most
+  // themes, and a 1px `double` paints one line. Any other style leaves the
+  // width following the edge, so it is not restated.
+  const width: Declaration[] =
+    seed.decoration.divider === "double" ? [["divider-width", `${DIVIDER_DOUBLE_MIN_PX}px`]] : [];
+  return [...link, ["divider-style", seed.decoration.divider], ...width];
 }
 
 // ── Controls ────────────────────────────────────────────────────────────────
@@ -669,6 +684,7 @@ export {
   BORDER_HAIRLINE_MAX_PX,
   BORDER_REGULAR_MAX_PX,
   DEPTH_LAYERED_MIN_BLUR_PX,
+  DIVIDER_DOUBLE_MIN_PX,
   FOCUS_BOLD_MIN_WIDTH_PX,
   HEADING_TRACKING_EM,
   HEADING_WEIGHT_MAX,

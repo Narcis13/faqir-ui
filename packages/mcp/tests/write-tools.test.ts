@@ -14,6 +14,7 @@ import {
   THEME_SCORECARD_VERSION,
 } from "../../../src/commands/theme-generate";
 import { themeBaseSources } from "../../../src/theme/sources";
+import { LEGACY_NEUTRAL_DEFAULT } from "../../../src/theme/seed";
 import { validateThemeAxes, validateThemeSeed } from "../../../src/theme-manifest";
 import type { Manifest } from "../../../src/manifest";
 
@@ -260,6 +261,28 @@ describe("faqir_generate_theme", () => {
     expect(ratios.length).toBe(CONTRAST_PAIRS.length * 3);
     expect(ratios.every((pair: any) => pair.passes && pair.ratio >= 4.5)).toBe(true);
     expect(ratios.some((pair: any) => pair.auto_adjusted)).toBe(true);
+  });
+
+  it("keeps 1.0's neutral default when called without a seed", async () => {
+    // 1.0's schema said `neutral: z.enum([...]).default("cool")`; 1.1 dropped
+    // the default, and the same argument list silently produced a different
+    // theme. The CLI's `theme generate --accent` keeps "cool" for the same
+    // reason, from the same constant.
+    const { client } = await makeClient();
+    const res = await client.callTool({
+      name: "faqir_generate_theme",
+      arguments: { accent: "oklch(0.55 0.2 250)" },
+    });
+    expect(res.isError).toBeFalsy();
+    expect((res.structuredContent as any).neutral).toBe(LEGACY_NEUTRAL_DEFAULT);
+    expect(LEGACY_NEUTRAL_DEFAULT).toBe("cool");
+
+    // An explicit neutral still wins.
+    const warm = await client.callTool({
+      name: "faqir_generate_theme",
+      arguments: { accent: "oklch(0.55 0.2 250)", neutral: "warm" },
+    });
+    expect((warm.structuredContent as any).neutral).toBe("warm");
   });
 
   it("rejects an invalid accent as a clean tool error", async () => {

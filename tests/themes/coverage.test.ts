@@ -255,6 +255,9 @@ describe("theme CSS · declarations only — no theme selects a component", () =
       '[data-theme="dark"]',
       '[data-theme="auto"]',
       ':root [data-theme="dark"]',
+      // Every scheme island, beside `:root`: where a theme re-points an alias
+      // the token layer restates per island (tests/themes/scheme-islands.test.ts).
+      "[data-theme]",
     ]);
     const offenders: string[] = [];
     for (const file of THEME_FILES) {

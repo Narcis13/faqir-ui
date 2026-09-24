@@ -19,6 +19,7 @@
 
 import { describe, expect, it, beforeAll, afterAll } from "bun:test";
 import {
+  chmodSync,
   copyFileSync,
   existsSync,
   mkdirSync,
@@ -262,6 +263,50 @@ describe("refusals", () => {
     const { status, out } = nightly(root, ["--merge-it"]);
     expect(status).toBe(2);
     expect(out).toContain("unknown option '--merge-it'");
+  });
+
+  it("refuses a brief id that is not one, before building any command from it", () => {
+    // The id is spliced into the command the dream runs; the default used to
+    // reach the shell through `eval`, so a crafted id was a command.
+    const { root } = fakeRepo();
+    const marker = join(root, "pwned");
+    for (const brief of [`x"; touch ${marker}; echo "`, "$(touch pwned)", "Arcade", "-x"]) {
+      const { status, out } = nightly(root, ["--dry-run", "--brief", brief]);
+      expect(status, brief).toBe(2);
+      expect(out, brief).toMatch(/is not a brief id|needs a value/);
+    }
+    expect(existsSync(marker)).toBe(false);
+    expect(existsSync(join(root, "pwned"))).toBe(false);
+    expect(worktrees(root)).toEqual([root]);
+  });
+
+  it("refuses a value flag with no value", () => {
+    const { root } = fakeRepo();
+    for (const flag of ["--brief", "--base", "--worktree"]) {
+      const { status, out } = nightly(root, ["--dry-run", flag]);
+      expect(status, flag).toBe(2);
+      expect(out, flag).toContain(`${flag} needs a value`);
+    }
+  });
+
+  it("runs the default dream command as an argument vector, not through eval", () => {
+    // A stand-in `claude` on PATH records the argv it was given.
+    const { root } = fakeRepo();
+    const bin = join(root, ".bin");
+    mkdirSync(bin, { recursive: true });
+    const record = join(root, "argv.txt");
+    writeFileSync(join(bin, "claude"), `#!/bin/sh\nprintf '%s\\n' "$@" > ${JSON.stringify(record)}\n`);
+    chmodSync(join(bin, "claude"), 0o755);
+    const env: Record<string, string> = { PATH: `${bin}:${process.env.PATH ?? ""}` };
+    const { status } = nightly(root, ["--brief", "arcade"], { ...env, DREAM_CMD: "" });
+    expect(status).toBe(0);
+    expect(readFileSync(record, "utf8").split("\n").filter(Boolean)).toEqual([
+      "-p",
+      "/faqir-dream arcade",
+      "--permission-mode",
+      "acceptEdits",
+    ]);
+    expect(source).toContain('"${DREAM_ARGV[@]}"');
   });
 
   it("prints its own header for --help and does nothing", () => {

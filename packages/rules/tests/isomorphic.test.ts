@@ -62,7 +62,7 @@ describe("@faqir-ui/rules is isomorphic by construction", () => {
   it("ships the modules the package promises", () => {
     expect(SOURCES).toEqual([
       "errors.js", "formats.js", "index.js", "limits.js", "lint.js",
-      "logic.js", "messages.js", "plugin.js", "rules.js", "shape.js",
+      "logic.js", "messages.js", "pattern.js", "plugin.js", "rules.js", "shape.js",
     ]);
   });
 
@@ -72,14 +72,16 @@ describe("@faqir-ui/rules is isomorphic by construction", () => {
     // into it: this one is only sound while the file it names genuinely needs
     // the host — the same both-sides rule the size budgets are held to.
     const plugin = executable(readFileSync(join(SRC_DIR, "plugin.js"), "utf8"));
-    for (const host of ["document", "FormData", "fetch"]) {
+    for (const host of ["document", "MutationObserver", "fetch"]) {
       expect(plugin, `plugin.js no longer needs ${host}`).toMatch(new RegExp(`\\b${host}\\b`));
     }
     // …and it must still be the thin layer: no evaluation of its own, only the
-    // package's. Every verdict in the page comes from these four functions.
+    // package's. Every verdict in the page comes from these functions.
     // (String literals are blanked by `executable`, so the identifiers are what
     // there is to match on — which is the half that matters here anyway.)
-    expect(plugin).toMatch(/import\s*\{\s*coerce,\s*compile,\s*evaluate,\s*validate\s*\}/);
+    expect(plugin).toMatch(
+      /import\s*\{\s*RULE_MESSAGES,\s*coerce,\s*compile,\s*evaluate,\s*fromFormData,\s*resolveMessage,\s*validate\s*\}/,
+    );
   });
 
   for (const file of SOURCES.filter((f) => !HOST_MODULES.has(f))) {

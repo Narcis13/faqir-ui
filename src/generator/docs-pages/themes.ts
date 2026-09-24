@@ -47,6 +47,7 @@ import {
   CONTRAST_HIGH_TEXT_MIN,
   DEPTH_LAYERED_MIN_BLUR_PX,
   FOCUS_BOLD_MIN_WIDTH_PX,
+  DIVIDER_DOUBLE_MIN_PX,
   HEADING_TRACKING_EM,
   HEADING_WEIGHT_MAX,
   LINK_OFFSET_MIN_EM,
@@ -168,7 +169,7 @@ const VALUE_NOTES: Record<AxisPath, Record<string, string>> = {
   "type.voice.transform": {
     none: "--heading-transform is none.",
     uppercase: "--heading-transform is uppercase; the pattern headlines that read it set in capitals.",
-    "small-caps": "--heading-transform is small-caps; emitted as asked, though no consumer renders it yet (follow-up 1.1A-25).",
+    "small-caps": "--heading-caps is small-caps (read as font-variant-caps beside every text-transform: var(--heading-transform)); --heading-transform stays none, because small-caps is not a text-transform value.",
   },
   "shape.radius": {
     sharp: `The --radius-sm…2xl ramp is ${ramp(RADIUS_RAMPS.sharp)}; --radius-md at 0 is what the classifier reads as sharp.`,
@@ -234,7 +235,7 @@ const VALUE_NOTES: Record<AxisPath, Record<string, string>> = {
     solid: "--divider-style: solid.",
     dashed: "--divider-style: dashed.",
     dotted: "--divider-style: dotted.",
-    double: "--divider-style: double.",
+    double: `--divider-style: double, with --divider-width raised to ${DIVIDER_DOUBLE_MIN_PX}px — a double rule only splits into two lines from ${DIVIDER_DOUBLE_MIN_PX}px, and under it the classifier reads the single line a reader sees as solid.`,
   },
   "controls.button": {
     rect: `--button-radius: 0 — a corner at or under ${BUTTON_RECT_MAX_PX}px reads as rect.`,

@@ -70,12 +70,6 @@
   --color-border-strong:   oklch(0.79 0.016 250);
   --color-ring:            oklch(0.50 0.20 275);
 
-  /* ── Controls: filled wells ──
-     A text field on a frosted page is a recess, not an outlined box on the same
-     white as the page behind it. `--input-fill` (1.1A-05) is the one declaration
-     that fills `input`, `textarea` and `select` together. */
-  --input-fill: var(--input-bg-filled);
-
   /* ── Radii (generous — a pane of glass has no sharp corner) ──
      The silhouette this theme always had in the design and never in tokens:
      every radius steps up one notch from the base ladder, which is what makes
@@ -92,6 +86,18 @@
   --shadow-md:  0 6px 16px oklch(0.30 0.04 260 / 0.12), 0 2px 4px oklch(0.30 0.04 260 / 0.06);
   --shadow-lg:  0 12px 32px oklch(0.30 0.04 260 / 0.14), 0 4px 8px oklch(0.30 0.04 260 / 0.06);
   --shadow-xl:  0 24px 56px oklch(0.30 0.04 260 / 0.18), 0 8px 16px oklch(0.30 0.04 260 / 0.08);
+}
+
+:root,
+[data-theme] {
+  /* ── Controls: filled wells ──
+     A text field on a frosted page is a recess, not an outlined box on the same
+     white as the page behind it. `--input-fill` (1.1A-05) is the one declaration
+     that fills `input`, `textarea` and `select` together.
+     On `:root, [data-theme]`: the token layer re-resolves these aliases on
+     every scheme island (tokens/aliases.css), so a `:root`-only override
+     would fall back to the default inside a nested `data-theme` region. */
+  --input-fill: var(--input-bg-filled);
 }
 
 /* ── Dark Mode ── */
@@ -232,7 +238,13 @@
   :root {
     --glass-blur:       16px;
     --surface-backdrop: blur(var(--glass-blur)) saturate(140%);
-    /* Elevated surfaces: solid → frosted (scheme-aware via var()). */
+  }
+
+  /* Elevated surfaces: solid → frosted (scheme-aware via var()). On every
+     `[data-theme]` island too: the token layer re-resolves both aliases there,
+     so a `:root`-only frost would turn opaque inside a nested scheme region. */
+  :root,
+  [data-theme] {
     --card-bg:          color-mix(in oklch, var(--color-surface-1) 82%, transparent);
     --panel-bg:         color-mix(in oklch, var(--color-bg) 78%, transparent);
   }

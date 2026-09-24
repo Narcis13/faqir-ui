@@ -1,5 +1,5 @@
 /* @ui:component empty-state */
-/* @ui:tokens color-bg color-bg-subtle color-fg color-fg-muted color-border color-primary radius-lg shadow-sm space-2 space-3 space-4 space-6 space-8 space-10 font-heading font-body heading-tracking heading-transform heading-leading text-sm text-base text-lg text-xl text-2xl weight-semibold leading-tight leading-normal duration-normal ease-default */
+/* @ui:tokens color-bg color-bg-subtle color-fg color-fg-muted color-border color-primary radius-lg shadow-sm space-2 space-3 space-4 space-6 space-8 space-10 font-heading font-body heading-tracking heading-transform heading-caps heading-leading text-sm text-base text-lg text-xl text-2xl weight-semibold leading-tight leading-normal duration-normal ease-default */
 
 /* ── Root ── */
 [data-ui="empty-state"] {
@@ -38,6 +38,7 @@
   font-weight: var(--weight-semibold);
   letter-spacing: var(--heading-tracking);
   text-transform: var(--heading-transform);
+  font-variant-caps: var(--heading-caps);
   line-height: var(--heading-leading);
   color: var(--color-fg);
   margin: 0;

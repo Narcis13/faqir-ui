@@ -144,7 +144,8 @@ export function createToastContainer(root) {
    */
   function dismiss(id) {
     const entry = toasts.get(id);
-    if (!entry) return;
+    // Already exiting (close clicked while the timer fires, say): one exit wait.
+    if (!entry || entry.cancelExitWait) return;
 
     const { el, timer, closeBtn, onCloseClick, actionBtn, onActionClick } = entry;
 

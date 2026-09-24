@@ -12,7 +12,7 @@
   corner-shape: var(--corner-shape);
   background: var(--color-bg-muted);
   color: var(--color-fg);
-  font-family: var(--font-ui);
+  font-family: var(--badge-font, var(--font-ui));
   font-size: var(--text-xs);
   font-weight: var(--weight-medium);
   line-height: 1.5;

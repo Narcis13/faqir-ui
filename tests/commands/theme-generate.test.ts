@@ -16,11 +16,14 @@ import {
   type ThemeGenerateInput,
 } from "../../src/commands/theme-generate";
 import { theme } from "../../src/commands/theme";
+import { runAudit } from "../../src/audit/checker";
 import {
   coerceSeedValue,
+  LEGACY_NEUTRAL_DEFAULT,
   mergeSeeds,
   SEED_FLAGS,
   setSeedPath,
+  SHARP_CORNER_REFUSAL,
 } from "../../src/theme/seed";
 import {
   checkThemeContrast,
@@ -912,8 +915,12 @@ describe("theme generate · the CLI surface", () => {
       base: "18",
       weight: "black",
       tracking: "wide",
-      transform: "uppercase",
-      shape: "sharp",
+      // The two values 1.1A-25/26 gave a real consumer: small caps on
+      // --heading-caps, and a double rule on a raised --divider-width.
+      transform: "small-caps",
+      // Not `sharp`: a corner shape needs a radius to shape, and sharp + bevel
+      // is refused (see "refuses a corner shape…" below).
+      shape: "crisp",
       border: "heavy",
       corner: "bevel",
       depth: "layered",
@@ -922,7 +929,7 @@ describe("theme generate · the CLI surface", () => {
       density: "spacious",
       focus: "glow",
       link: "thick",
-      divider: "dashed",
+      divider: "double",
       button: "rect",
       input: "underline",
       checkbox: "round",
@@ -947,18 +954,23 @@ describe("theme generate · the CLI surface", () => {
         pairing: "serif-editorial",
         scale: 1.25,
         base: 18,
-        voice: { weight: "black", tracking: "wide", transform: "uppercase" },
+        voice: { weight: "black", tracking: "wide", transform: "small-caps" },
       },
-      shape: { radius: "sharp", border: "heavy", corner: "bevel" },
+      shape: { radius: "crisp", border: "heavy", corner: "bevel" },
       depth: "layered",
       material: "grain",
       motion: "snappy",
       density: "spacious",
       focus: "glow",
-      decoration: { link: "thick", divider: "dashed" },
+      decoration: { link: "thick", divider: "double" },
       controls: { button: "rect", input: "underline", checkbox: "round", switch: "square" },
       contrast: "high",
     });
+    // …measured off the stylesheet, which spells each on the token that renders it.
+    const css = read("themes/full-axis.css");
+    expect(css).toMatch(/--heading-caps\s*:\s*small-caps/);
+    expect(css).toMatch(/--heading-transform\s*:\s*none/);
+    expect(css).toMatch(/--divider-width\s*:\s*3px/);
     // The numeric axes arrived as numbers, not as the strings a shell hands over.
     expect(manifest.seed.type.scale).toBe(1.25);
     expect(manifest.seed.type.base).toBe(18);
@@ -1046,6 +1058,59 @@ describe("theme generate · the CLI surface", () => {
     expect(manifest.axes.shape.radius).toBe("round");
     expect(manifest.axes.neutral).toBe("warm");
     expect(manifest.seed.shape.radius).toBe("round");
+  });
+
+  it("defaults --neutral to the 1.0 cool without a seed file, and to the seed table's gray with one", async () => {
+    // 1.0's `theme generate x --accent y` produced a COOL neutral; a script
+    // written against 1.0 must keep getting the theme it got.
+    await theme(["generate", "plain", "--accent", "#2563eb"]);
+    expect(readJson("themes/plain.seed.json").neutral).toBe(LEGACY_NEUTRAL_DEFAULT);
+    expect(LEGACY_NEUTRAL_DEFAULT).toBe("cool");
+    // A seed file is the 1.1 form: an unstated neutral is THEME_SEED_DEFAULTS'.
+    writeFileSync(join(cwd, "bare.seed.json"), JSON.stringify({ name: "bare", accent: "#2563eb" }));
+    await theme(["generate", "--seed", "bare.seed.json", "--allow-similar"]);
+    expect(readJson("themes/bare.seed.json").neutral).toBe("gray");
+    // …and a stated one always wins.
+    await theme(["generate", "warm", "--accent", "#2563eb", "--neutral", "warm", "--allow-similar"]);
+    expect(readJson("themes/warm.seed.json").neutral).toBe("warm");
+  });
+
+  it("maps --radius as a flag that beats the seed file, and refuses it against a different --shape", async () => {
+    writeFileSync(join(cwd, "round.seed.json"), JSON.stringify({
+      name: "round-file", accent: "#0ea5e9", shape: { radius: "round" },
+    }));
+    await theme(["generate", "--seed", "round.seed.json", "--radius", "sm"]);
+    expect(readJson("themes/round-file.seed.json").shape.radius).toBe("crisp");
+
+    // Used to drop --radius without a word whenever --shape was present.
+    await expect(theme(["generate", "both", "--accent", "#2563eb", "--shape", "round", "--radius", "sm"]))
+      .rejects.toThrow(/--radius sm \(shape\.radius "crisp"\) contradicts shape\.radius "round"/);
+    // Agreeing spellings are one statement.
+    await theme(["generate", "agree", "--accent", "#2563eb", "--shape", "crisp", "--radius", "sm", "--allow-similar"]);
+    expect(readJson("themes/agree.seed.json").shape.radius).toBe("crisp");
+    await expect(theme(["generate", "bad", "--accent", "#2563eb", "--radius", "xl"]))
+      .rejects.toThrow(/Invalid --radius 'xl'/);
+    expect(existsSync(join(cwd, "themes/both.css"))).toBe(false);
+  });
+
+  it("refuses a corner shape on a sharp theme instead of writing a bevel nothing draws", async () => {
+    await expect(theme(["generate", "bevelled", "--accent", "#2563eb", "--shape", "sharp", "--corner", "bevel"]))
+      .rejects.toThrow(SHARP_CORNER_REFUSAL);
+    expect(existsSync(join(cwd, "themes"))).toBe(false);
+  });
+
+  it("writes a preview that passes `faqir audit` in the project it lands in", async () => {
+    writeFileSync(join(cwd, "faqir.config.json"), JSON.stringify({
+      version: "1.0.0",
+      output_dir: "ui",
+      theme: "default",
+      installed: { primitives: [], recipes: [], patterns: [] },
+    }));
+    await theme(["generate", "audited", "--accent", "#2563eb"]);
+    const summary = await runAudit({ cwd, file: "themes/audited.preview.html" });
+    const blocking = summary.results.filter((r) => r.severity === "error" || r.severity === "critical");
+    expect(blocking.map((r) => r.message)).toEqual([]);
+    expect(summary.results.filter((r) => /main landmark/i.test(r.message))).toEqual([]);
   });
 
   it("stamps the seed's density on the preview it writes", async () => {

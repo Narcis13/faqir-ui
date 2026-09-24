@@ -14,6 +14,11 @@
 // apply the pristine store advances to the new version so the next `diff`/
 // `upgrade` measures drift from it.
 //
+// Before the components, the same merge runs over the framework-owned files
+// `faqir init` wrote — the token layer and the base styles, never the theme —
+// because an upgraded component reads the tokens of the version it came from
+// (see src/utils/framework-assets.ts). `--json` reports them under `framework`.
+//
 // Exit codes: 0 = clean (or nothing to do), 2 = completed with conflicts that
 // need resolution, 1 = usage/setup error. `--json` always emits a stable
 // `faqir-upgrade@1` envelope listing every file and conflict.
@@ -38,6 +43,8 @@ import {
   type PristineIndex,
 } from "../utils/pristine";
 import { mergeFile, type FileMergeOutcome, type FileMergeStatus } from "../utils/merge";
+import { syncFramework, type FrameworkReport } from "../utils/framework-assets";
+import { VERSION } from "../version";
 
 /** Stable schema id for the `--json` envelope. */
 const UPGRADE_JSON_SCHEMA = "faqir-upgrade@1";
@@ -99,8 +106,10 @@ function parseArgs(args: string[]): { components: string[]; options: UpgradeOpti
 function printHelp(): void {
   log.heading("faqir upgrade [components...]");
   log.blank();
-  console.log("Three-way merge installed components up to the registry's current version,");
-  console.log("keeping your edits. Conflicts are written with standard git markers.");
+  console.log("Three-way merge installed components — and the token layer and base styles");
+  console.log("`faqir init` wrote — up to the registry's current version, keeping your edits.");
+  console.log("Your theme (tokens/theme.css) is never touched. Conflicts are written with");
+  console.log("standard git markers.");
   log.blank();
   console.log("Usage:");
   console.log("  faqir upgrade button           # upgrade one component");
@@ -370,6 +379,24 @@ function printComponentHuman(report: ComponentReport): void {
   }
 }
 
+function printFrameworkHuman(report: FrameworkReport): void {
+  const touched = report.files.filter((f) => f.status !== "unchanged" && f.status !== "deleted");
+  if (touched.length === 0) {
+    log.success("Framework tokens & base styles — nothing to update.");
+    return;
+  }
+  log.heading("Framework tokens & base styles");
+  for (const f of touched) {
+    if (f.status === "conflict") {
+      console.log(`  ${RED}✗ ${f.path}${RESET}  ${f.note ?? "conflict"} (${f.conflicts} hunk${f.conflicts === 1 ? "" : "s"})`);
+    } else if (f.status === "skipped") {
+      log.warn(`${f.path} — ${f.note}`);
+    } else {
+      log.step(`${f.path} — ${f.status}${f.note ? ` (${f.note})` : ""}`);
+    }
+  }
+}
+
 // ── Command entry ────────────────────────────────────────────────────────────
 
 /**
@@ -418,22 +445,19 @@ export async function upgrade(args: string[], internal?: { registryPath?: string
     targets = installedAll;
   }
 
-  if (targets.length === 0) {
-    if (options.json) {
-      emitJSON({ schema: UPGRADE_JSON_SCHEMA, dryRun: options.dryRun, components: [], hasConflicts: false });
-    } else {
-      log.info("No components installed — nothing to upgrade.");
-    }
-    return;
-  }
+  // The framework first: a component is only as current as the tokens it reads.
+  const framework = syncFramework(cwd, ctx.outputDir, ctx.registryPath, config, {
+    dryRun: options.dryRun,
+    version: `faqir ${VERSION}`,
+  });
 
   const reports: ComponentReport[] = [];
   for (const name of targets) {
     reports.push(await upgradeComponent(name, config, ctx, index, options.dryRun));
   }
 
-  const applied = reports.some((r) => r.status === "upgraded" || r.status === "conflicted");
-  const hasConflicts = reports.some((r) => r.status === "conflicted");
+  const applied = framework.changed || reports.some((r) => r.status === "upgraded" || r.status === "conflicted");
+  const hasConflicts = framework.conflictedFiles.length > 0 || reports.some((r) => r.status === "conflicted");
 
   // Regenerate derived artifacts (context, bundle) only from a clean tree —
   // a working copy that still carries conflict markers is invalid JSON/CSS, so
@@ -444,8 +468,10 @@ export async function upgrade(args: string[], internal?: { registryPath?: string
   }
 
   if (options.json) {
-    emitJSON({ schema: UPGRADE_JSON_SCHEMA, dryRun: options.dryRun, components: reports, hasConflicts });
+    emitJSON({ schema: UPGRADE_JSON_SCHEMA, dryRun: options.dryRun, framework, components: reports, hasConflicts });
   } else {
+    printFrameworkHuman(framework);
+    if (targets.length === 0) log.info("No components installed.");
     for (const r of reports) printComponentHuman(r);
     log.blank();
     if (options.dryRun) {

@@ -7,7 +7,7 @@
  * The previous script bumped one package, published one package, and scored 1 of
  * 8 mechanics against its own plan task. It also tagged, then published, then
  * pushed — so a rejected push left a version live on npm that existed in no
- * pushed commit. Six packages now move in lockstep, the push happens before the
+ * pushed commit. Every package in `PACKAGES` now moves in lockstep, the push happens before the
  * publish, and `--dry-run` is a real rehearsal rather than an error message.
  *
  * The larger change is that **this script is the CI**. The GitHub Actions
@@ -33,13 +33,14 @@
  *
  *     --dry-run          Rehearse everything, restore every tracked file, exit.
  *     --skip-preflight   Skip the gate run. For retrying a partial publish only.
- *     --otp=<code>       npm one-time password, passed to every publish.
- *     --branch=<name>    Release from a branch other than `main`.
+ *     --otp <code>       npm one-time password, passed to every publish.
+ *     --branch <name>    Release from a branch other than `main`.
+ *                        (Both also accept the `--flag=value` spelling.)
  *     --no-github        Skip `gh release create`.
  *     --yes              Do not pause for confirmation before publishing.
  */
 import { execFileSync, spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -51,7 +52,7 @@ const ROOT = resolve(scriptDir, "..");
 // ── What ships ──────────────────────────────────────────────────────────────
 
 /**
- * The six published packages, in publish order. The root CLI is last on purpose:
+ * The published packages, in publish order. The root CLI is last on purpose:
  * it is the one people actually install, so if anything ahead of it fails, the
  * name that gets advertised has not moved.
  *
@@ -87,7 +88,7 @@ const PREFLIGHT = [
   ["typecheck", "TypeScript across the CLI, both bindings, forms and mcp"],
   ["check:registry-index", "registry-index.json matches the registry"],
   ["check:manifest-api", "every controller's @ui:provides is in its manifest"],
-  ["check:core-package", "packages/core/dist and cdn.json's 15 SRI hashes"],
+  ["check:core-package", "packages/core/dist and cdn.json's SRI hashes"],
   ["check:audit-browser", "site/lib/faqir-audit.js matches src/audit/browser.ts"],
   ["check:rules-plugin", "registry/core/plugins/faqir-rules.js matches @faqir-ui/rules"],
   ["check:schema-refs", "every manifest carries a current $schema"],
@@ -126,28 +127,71 @@ const VALID_BUMPS = new Set([
 
 // ── Argument parsing ────────────────────────────────────────────────────────
 
-const argv = process.argv.slice(2);
-const flags = {
-  dryRun: argv.includes("--dry-run"),
-  skipPreflight: argv.includes("--skip-preflight"),
-  yes: argv.includes("--yes") || argv.includes("-y"),
-  github: !argv.includes("--no-github"),
-  otp: valueOf("--otp"),
-  branch: valueOf("--branch") || "main",
-};
-const positional = argv.filter((a) => !a.startsWith("-"));
-const target = positional[0];
+const VALUE_FLAGS = new Set(["--otp", "--branch"]);
+const BOOLEAN_FLAGS = new Set(["--dry-run", "--skip-preflight", "--yes", "-y", "--no-github", "--help", "-h"]);
 
-function valueOf(name) {
-  const inline = argv.find((a) => a.startsWith(`${name}=`));
-  if (inline) return inline.slice(name.length + 1);
-  const idx = argv.indexOf(name);
-  return idx !== -1 && argv[idx + 1] && !argv[idx + 1].startsWith("-") ? argv[idx + 1] : "";
+/**
+ * Parse the command line. Pure and exported for `tests/build/release.test.ts`.
+ *
+ * A value flag consumes the argument after it, so `--otp 123456 patch` is an OTP
+ * of 123456 and a bump of `patch` — the previous filter took every argument not
+ * starting with `-` as positional, which made `123456` the version target. An
+ * unknown flag, a value flag with no value, or a second positional is an error
+ * rather than something to guess about: this is the one command whose mistakes
+ * cannot be taken back.
+ */
+export function parseReleaseArgs(argv) {
+  const values = {};
+  const bools = new Set();
+  const positional = [];
+  const errors = [];
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i];
+    const eq = arg.indexOf("=");
+    const name = arg.startsWith("--") && eq !== -1 ? arg.slice(0, eq) : arg;
+    if (VALUE_FLAGS.has(name)) {
+      let value;
+      if (name !== arg) value = arg.slice(eq + 1);
+      else if (i + 1 < argv.length && !argv[i + 1].startsWith("-")) value = argv[++i];
+      if (!value) errors.push(`${name} needs a value`);
+      else values[name] = value;
+    } else if (BOOLEAN_FLAGS.has(arg)) {
+      bools.add(arg);
+    } else if (arg.startsWith("-")) {
+      errors.push(`unknown option "${arg}"`);
+    } else {
+      positional.push(arg);
+    }
+  }
+  if (positional.length > 1) {
+    errors.push(`expected one version target, got ${positional.map((p) => `"${p}"`).join(" ")}`);
+  }
+  return {
+    target: positional[0],
+    help: bools.has("--help") || bools.has("-h"),
+    errors,
+    flags: {
+      dryRun: bools.has("--dry-run"),
+      skipPreflight: bools.has("--skip-preflight"),
+      yes: bools.has("--yes") || bools.has("-y"),
+      github: !bools.has("--no-github"),
+      otp: values["--otp"] ?? "",
+      branch: values["--branch"] ?? "main",
+    },
+  };
 }
+
+const parsed = parseReleaseArgs(process.argv.slice(2));
+const flags = parsed.flags;
+const target = parsed.target;
 
 /** Validate the target. Deferred into `main()` so importing this file is inert. */
 function validateTarget() {
-  if (!target || argv.includes("--help") || argv.includes("-h")) {
+  if (parsed.errors.length > 0) {
+    process.stderr.write(`\nRelease aborted: ${parsed.errors.join("; ")}.\n\n`);
+    printUsage(1);
+  }
+  if (!target || parsed.help) {
     printUsage(target ? 0 : 1);
   }
   if (!isExplicitVersion(target) && !VALID_BUMPS.has(target)) {
@@ -176,17 +220,23 @@ function ok(text) {
 function warn(text) {
   process.stdout.write(`   ! ${text}\n`);
 }
+/**
+ * Abort the release. Throws rather than calling `process.exit` so every
+ * `finally` on the way out still runs — `packedCliSmoke` used to leak its temp
+ * directory on every failure because `process.exit` skips them — and so
+ * `main()` can still print the restore hint. `main()` turns it into exit 1.
+ */
+class ReleaseAbort extends Error {}
 function fail(message) {
-  process.stderr.write(`\nRelease aborted: ${message}\n`);
-  process.exit(1);
+  throw new ReleaseAbort(message);
 }
 function printUsage(exitCode) {
   process.stdout.write(
     "Usage: node scripts/release.mjs <patch|minor|major|prepatch|preminor|premajor|prerelease|x.y.z> [options]\n\n" +
       "  --dry-run          rehearse everything, restore every file, publish nothing\n" +
       "  --skip-preflight   skip the gate run (only to finish a partial publish)\n" +
-      "  --otp=<code>       npm one-time password\n" +
-      "  --branch=<name>    release from a branch other than main\n" +
+      "  --otp <code>       npm one-time password\n" +
+      "  --branch <name>    release from a branch other than main\n" +
       "  --no-github        skip the GitHub release\n" +
       "  --yes              do not pause before publishing\n\n" +
       "See docs/release-checklist.md.\n",
@@ -311,13 +361,13 @@ export function nextVersion(current, bump) {
  *
  * The distinction matters because "already correct" and "the rewrite failed" are
  * not the same thing, and collapsing them made the first publish impossible: the
- * 1.0 prerelease commit put 1.0.0 into all six package.json files, so
+ * 1.0 prerelease commit put 1.0.0 into every package.json, so
  * `release.mjs 1.0.0` produced a no-op replace and aborted with "failed to
  * rewrite the version" — on the one release where nothing needed rewriting. A
  * missing `version` field is still a hard failure; an unchanged one is not.
  */
-function writePackageVersion(rel, version) {
-  const path = join(ROOT, rel);
+function writePackageVersion(rel, version, root = ROOT) {
+  const path = join(root, rel);
   const text = readFileSync(path, "utf8");
   const current = /^\s*"version":\s*"([^"]*)"/m.exec(text);
   if (!current) throw new Error(`${rel} declares no "version" field`);
@@ -331,8 +381,8 @@ function writePackageVersion(rel, version) {
  * Returns true if the file changed. See `writePackageVersion` on why false is
  * not an error.
  */
-function writeCliVersion(version) {
-  const path = join(ROOT, CLI_VERSION_FILE);
+function writeCliVersion(version, root = ROOT) {
+  const path = join(root, CLI_VERSION_FILE);
   const text = readFileSync(path, "utf8");
   const current = /export const VERSION = "([^"]*)";/.exec(text);
   if (!current) throw new Error(`${CLI_VERSION_FILE} declares no VERSION constant`);
@@ -468,23 +518,32 @@ function preflight() {
  */
 function applyVersion(version) {
   heading(`Version — ${version}, in lockstep across ${VERSION_FILES.length} packages`);
-  const rewritten = new Set();
-  for (const rel of VERSION_FILES) {
-    if (writePackageVersion(rel, version)) {
-      rewritten.add(rel);
-      ok(rel);
-    } else {
-      ok(`${rel} — already at ${version}`);
-    }
-  }
-  if (writeCliVersion(version)) {
-    rewritten.add(CLI_VERSION_FILE);
-    ok(CLI_VERSION_FILE);
-  } else {
-    ok(`${CLI_VERSION_FILE} — already at ${version}`);
+  const { rewritten, unchanged } = stampVersion(version);
+  for (const rel of [...VERSION_FILES, CLI_VERSION_FILE]) {
+    ok(unchanged.includes(rel) ? `${rel} — already at ${version}` : rel);
   }
   return rewritten;
 }
+
+/**
+ * The I/O half of `applyVersion`, with the tree it writes to as a parameter so
+ * `tests/build/release.test.ts` can run it against a copy of the repository's
+ * version files instead of the real ones. Returns the files it rewrote and the
+ * ones that already carried `version`.
+ */
+export function stampVersion(version, root = ROOT) {
+  const rewritten = new Set();
+  const unchanged = [];
+  for (const rel of VERSION_FILES) {
+    if (writePackageVersion(rel, version, root)) rewritten.add(rel);
+    else unchanged.push(rel);
+  }
+  if (writeCliVersion(version, root)) rewritten.add(CLI_VERSION_FILE);
+  else unchanged.push(CLI_VERSION_FILE);
+  return { rewritten, unchanged };
+}
+
+export { CLI_VERSION_FILE, PACKAGES, PREFLIGHT, VERSION_FILES, packedCliSmoke };
 
 function build() {
   heading("Ordered builds");
@@ -538,13 +597,22 @@ function verifyArtifacts(version) {
 
 /**
  * Pack the CLI, install the tarball into a temp directory, and run it **under
- * `node`** — the interpreter `bin/faqir` actually declares. The suite runs under
- * Bun, which is how a `--json` truncation on all 22 commands survived to a
- * release audit: the file guarding that contract spawned `process.execPath`,
- * which under `bun test` is Bun, whose stdout is synchronous.
+ * `node`** — the interpreter `bin/faqir` actually declares — and then under Bun
+ * as well when Bun is installed. The suite runs under Bun, which is how a
+ * `--json` truncation on all 22 commands survived to a release audit: the file
+ * guarding that contract spawned `process.execPath`, which under `bun test` is
+ * Bun, whose stdout is synchronous.
+ *
+ * Both runtimes, because `bin/launcher.mjs` picks one at run time: it prefers Bun
+ * whenever Bun is on PATH. Invoking the bin with `node` therefore did NOT pin the
+ * runtime — on a machine with Bun the old "under node" smoke ran Bun, and never
+ * saw what a Bun-less user sees. `FAQIR_FORCE_NODE=1` pins Node; `FAQIR_BUN`
+ * pins Bun. The Bun leg is the one that would have caught the bundle's
+ * `// @bun` pragma making Bun decode the file as Latin-1 (`—` → `â€”`, and
+ * `context --skill` exiting 1 because its em-dash regex stopped matching).
  */
 function packedCliSmoke(version) {
-  info("packed-tarball smoke, under node");
+  info("packed-tarball smoke, under node (and bun, when installed)");
   const dir = mkdtempSync(join(tmpdir(), "faqir-release-"));
   try {
     const packed = capture("npm", ["pack", "--pack-destination", dir, "--silent"]);
@@ -561,15 +629,46 @@ function packedCliSmoke(version) {
     const bin = join(dir, "node_modules", ".bin", "faqir");
     if (!existsSync(bin)) fail("the installed tarball has no `faqir` bin — the `bin` map is wrong");
 
-    const reported = execFileSync(process.execPath, [bin, "--version"], {
-      cwd: dir,
-      encoding: "utf8",
-      timeout: BUILD_TIMEOUT_MS,
-    }).trim();
-    if (!reported.includes(version)) {
-      fail(`the installed CLI reports "${reported}", expected ${version}`);
+    const bun = capture("bun", ["--version"], { allowFailure: true }) !== null ? "bun" : null;
+    const runtimes = [["node", { FAQIR_FORCE_NODE: "1" }]];
+    if (bun) runtimes.push(["bun", { FAQIR_BUN: bun }]);
+    else warn("bun is not installed — the Bun leg of the smoke is skipped");
+
+    for (const [runtime, pin] of runtimes) {
+      const env = { ...process.env, FAQIR_FORCE_NODE: "", FAQIR_BUN: "", ...pin };
+      const project = join(dir, `project-${runtime}`);
+      mkdirSync(project);
+      const cli = (args) =>
+        spawnSync(process.execPath, [bin, ...args], {
+          cwd: project,
+          env,
+          encoding: "utf8",
+          timeout: BUILD_TIMEOUT_MS,
+          killSignal: "SIGKILL",
+        });
+
+      const reported = cli(["--version"]);
+      if (reported.status !== 0 || !reported.stdout.includes(version)) {
+        fail(
+          `the installed CLI under ${runtime} reports "${(reported.stdout ?? "").trim()}" ` +
+            `(exit ${reported.status}), expected ${version}\n${reported.stderr ?? ""}`,
+        );
+      }
+
+      // `context --skill` reads the shipped skill and matches its headers with
+      // a regex containing an em-dash — the cheapest end-to-end check that the
+      // bundle is decoded as UTF-8 on this runtime.
+      const init = cli(["init", "--yes"]);
+      if (init.status !== 0) fail(`\`faqir init --yes\` failed under ${runtime}\n${init.stderr ?? ""}`);
+      const skill = cli(["context", "--skill"]);
+      if (skill.status !== 0) {
+        fail(`\`faqir context --skill\` exited ${skill.status} under ${runtime}\n${skill.stderr ?? ""}`);
+      }
+      if (skill.stdout.includes("\u00e2\u20ac")) {
+        fail(`\`faqir context --skill\` printed mojibake under ${runtime} — the bundle is not read as UTF-8`);
+      }
+      ok(`installed tarball runs under ${runtime}, reports ${version}, and context --skill exits 0`);
     }
-    ok(`installed tarball runs under node ${process.versions.node} and reports ${version}`);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
@@ -688,7 +787,7 @@ function githubRelease(version) {
     allowFailure: true,
   });
   const notes =
-    `Six packages published at ${version}, in lockstep.\n\n` +
+    `${PACKAGES.length} packages published at ${version}, in lockstep.\n\n` +
     PACKAGES.map((p) => `- \`${p.name}@${version}\``).join("\n") +
     "\n\n**No npm provenance attestation.** It requires an OIDC token from a CI " +
     "provider, and this repository runs no CI workflows. Verify the artifacts " +
@@ -721,13 +820,18 @@ function confirm(version) {
 // ── Main ────────────────────────────────────────────────────────────────────
 
 function main() {
-  validateTarget();
+  try {
+    validateTarget();
+  } catch (error) {
+    process.stderr.write(`\nRelease aborted: ${error.message}\n`);
+    process.exit(1);
+  }
 
   const current = readJSON("package.json").version;
   const version = nextVersion(current, target);
 
   process.stdout.write(
-    `\n${DRY}Releasing faqir-ui-cli and 5 workspace packages\n` +
+    `\n${DRY}Releasing faqir-ui-cli and ${PACKAGES.length - 1} workspace packages\n` +
       `  ${current} → ${version}\n` +
       (flags.dryRun ? "  Nothing will be committed, tagged or published.\n" : ""),
   );
@@ -772,7 +876,7 @@ function main() {
     );
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    process.stderr.write(`\nRelease failed: ${message}\n`);
+    process.stderr.write(`\nRelease ${error instanceof ReleaseAbort ? "aborted" : "failed"}: ${message}\n`);
 
     if (restoreNeeded) {
       process.stderr.write(

@@ -192,7 +192,7 @@ describe("universal --json guarantee · compiled bundle on Node, in a real proje
     add: null,
     remove: null,
     diff: ["components", "schema"],
-    upgrade: ["components", "dryRun", "hasConflicts", "schema"],
+    upgrade: ["components", "dryRun", "framework", "hasConflicts", "schema"],
     list: null,
     search: null,
     create: null,
@@ -210,7 +210,15 @@ describe("universal --json guarantee · compiled bundle on Node, in a real proje
     // envelope; `rules lint --json` has a bespoke shape of its own, asserted in
     // tests/commands/rules-lint.test.ts.
     rules: null,
-    repair: null,
+    repair: [
+      "dry_run",
+      "files_modified",
+      "fixes",
+      "fixes_applied",
+      "fixes_skipped",
+      "remaining",
+      "repair_schema_version",
+    ],
     context: ["command", "formats"],
     explain: null,
     trace: null,

@@ -59,6 +59,11 @@
   --link-underline-offset: 0.2em;
   --link-thickness:        1px;
   --divider-style:         solid;
+  /* The divider's own width, following the edge by default (1.1A-26). A theme
+     that asks for a `double` divider raises it to at least 3px: a double rule
+     only splits into two lines from 3px, and the family's 1px hairline would
+     paint it as one. */
+  --divider-width:         var(--border-width);
   /* The zebra, so a theme dials the stripe without restating the four selectors
      the table's striped variant needs (stamped and nth-child, each with a hover
      twin). Deliberately NOT `--table-stripe`: `--table-level`,
@@ -98,9 +103,13 @@
   /* The text-control silhouette. `--input-border-width` (1.1A-02) is the edge;
      `--input-fill` is what the control paints, and `input`, `textarea` and
      `select` all read it, so one declaration fills every text control.
-     `--input-bg` stays the per-component override it has always been and
-     `--input-fill` defaults to it, which is why a project that set `--input-bg`
-     on one input still gets exactly that input filled. `--input-bg-filled` is
+     `--input-fill` defaults to `--input-bg`, so a project that sets `--input-bg`
+     on `:root` — the 1.0 way to fill every input — still gets it. Set BELOW the
+     root, `--input-bg` no longer reaches the control: `--input-fill` has already
+     resolved it on `:root`, which is where a theme flips the fill, and a
+     per-element `--input-bg` winning over that would need the component to tell
+     "set here" from "inherited", which CSS cannot. To fill one input, or every
+     input in a region, set `--input-fill` there instead. `--input-bg-filled` is
      the value a "filled" theme points `--input-fill` at — named here so the
      silhouette is a token a theme flips rather than a colour it has to pick. */
   --input-radius:       var(--radius-md);
@@ -159,4 +168,37 @@
   --avatar-size-sm:    32px;
   --avatar-size-md:    40px;
   --avatar-size-lg:    56px;
+}
+
+/* ── Scheme islands ── */
+/* The colour aliases above, restated wherever a scheme can change below the
+   root. A custom property resolves its var() on the element that DECLARES it,
+   so `--panel-bg: var(--color-bg)` on `:root` is computed once, from the page's
+   colours, and a nested `<div data-theme="dark">` inherits that light value
+   even though its own `--color-bg` is dark — a white dialog on a dark island.
+   Components that read `var(--color-bg)` directly never had the problem; the
+   aliases 1.1 routed them through did. Restating the declaration on
+   `[data-theme]` and `[data-skin]` makes it resolve again there.
+
+   Only colours are restated. Geometry does not change with the scheme, and
+   shadows are the depth axis every theme owns on `:root`: restating either here
+   would replace a theme's own value with the default inside every island. A
+   theme that overrides one of THESE on `:root` and wants it honoured in an
+   island says so on the same selectors.
+
+   The values must match the `:root` declarations above exactly;
+   `tests/tokens/scheme-islands.test.ts` fails if they drift. */
+[data-theme],
+[data-skin] {
+  --stripe-bg:         var(--color-bg-subtle);
+  --selection-bg:      var(--color-primary-subtle);
+  --selection-fg:      var(--color-fg);
+  --card-border:       var(--color-surface-1-border);
+  --card-bg:           var(--color-surface-1);
+  --input-border:      var(--color-border);
+  --input-bg:          var(--color-bg);
+  --input-bg-filled:   var(--color-bg-subtle);
+  --input-fill:        var(--input-bg);
+  --switch-bg:         var(--color-bg-muted);
+  --panel-bg:          var(--color-bg);
 }

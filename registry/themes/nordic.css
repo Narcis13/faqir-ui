@@ -85,7 +85,6 @@
   --focus-ring-width        : 2px;
   --focus-ring-offset       : 2px;
   --focus-ring-style        : solid;
-  --focus-ring-color        : var(--color-ring);
   --link-decoration         : underline;
   --link-thickness          : 1px;
   --link-underline-offset   : 0.2em;
@@ -97,7 +96,14 @@
   --checkbox-radius         : var(--radius-sm);
   --switch-radius           : var(--radius-full);
   --input-border-width      : var(--border-width);
-  --input-fill              : var(--input-bg);
+}
+
+/* Aliases the token layer re-resolves on every [data-theme] island — restated
+   there so a nested scheme island keeps this theme's value, not the default. */
+:root,
+[data-theme] {
+  --focus-ring-color: var(--color-ring);
+  --input-fill      : var(--input-bg);
 }
 
 /* ── Dark mode: the shadow ramp ── */

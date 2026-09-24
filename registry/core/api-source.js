@@ -44,6 +44,20 @@ function apiSource(endpoint, options = {}) {
     }
   }
 
+  /** `${endpoint}/${id}` with the id encoded — ids are data, not path syntax. */
+  function itemUrl(id) {
+    return `${endpoint}/${encodeURIComponent(id)}`;
+  }
+
+  /**
+   * Where a row is NOW. Never keep an index across an await: an interleaved
+   * load() or remove() shifts or replaces `items`, and a stale index writes
+   * over (or deletes) a real row.
+   */
+  function locate(items, id) {
+    return items.findIndex(i => i && i[idKey] === id);
+  }
+
   /** True for the exception an abort raises — never an error worth showing. */
   function aborted(e) {
     return destroyed || (e && (e.name === 'AbortError' || e.code === 20));
@@ -82,11 +96,12 @@ function apiSource(endpoint, options = {}) {
       this.submitting = true;
       this.error = null;
 
-      let tempIndex = -1;
+      let temp = null;
       if (optimistic) {
-        const temp = { ...payload, _pending: true };
-        this.items.push(temp);
-        tempIndex = this.items.length - 1;
+        this.items.push({ ...payload, _pending: true });
+        // Read back through the list: inside an l-data scope that is the
+        // reactive handle, the one an identity search later compares against.
+        temp = this.items[this.items.length - 1];
       }
 
       try {
@@ -99,18 +114,20 @@ function apiSource(endpoint, options = {}) {
         const created = await res.json();
         if (destroyed) return null;
 
-        if (optimistic) {
-          this.items[tempIndex] = created;
-        } else {
+        const at = temp ? this.items.indexOf(temp) : -1;
+        if (at >= 0) {
+          this.items[at] = created;
+        } else if (!temp || !created || created[idKey] == null || locate(this.items, created[idKey]) < 0) {
+          // The temp row is gone when a load() replaced the list meanwhile;
+          // that list may already hold the created row.
           this.items.push(created);
         }
         return created;
       } catch (e) {
         if (aborted(e)) return null;
         this.error = e.message;
-        if (optimistic && tempIndex >= 0) {
-          this.items.splice(tempIndex, 1);
-        }
+        const at = temp ? this.items.indexOf(temp) : -1;
+        if (at >= 0) this.items.splice(at, 1);
         return null;
       } finally {
         if (!destroyed) this.submitting = false;
@@ -122,7 +139,7 @@ function apiSource(endpoint, options = {}) {
     async update(id, payload) {
       if (destroyed) return null;
       this.error = null;
-      const idx = this.items.findIndex(i => i[idKey] === id);
+      const idx = locate(this.items, id);
       let snapshot = null;
 
       if (optimistic && idx >= 0) {
@@ -131,7 +148,7 @@ function apiSource(endpoint, options = {}) {
       }
 
       try {
-        const res = await request(`${endpoint}/${id}`, {
+        const res = await request(itemUrl(id), {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
@@ -140,14 +157,14 @@ function apiSource(endpoint, options = {}) {
         const updated = await res.json();
         if (destroyed) return null;
 
-        if (idx >= 0) this.items[idx] = updated;
+        const at = locate(this.items, id);
+        if (at >= 0) this.items[at] = updated;
         return updated;
       } catch (e) {
         if (aborted(e)) return null;
         this.error = e.message;
-        if (optimistic && snapshot && idx >= 0) {
-          this.items[idx] = snapshot;
-        }
+        const at = snapshot ? locate(this.items, id) : -1;
+        if (at >= 0) this.items[at] = snapshot;
         return null;
       }
     },
@@ -157,7 +174,7 @@ function apiSource(endpoint, options = {}) {
     async remove(id) {
       if (destroyed) return;
       this.error = null;
-      const idx = this.items.findIndex(i => i[idKey] === id);
+      const idx = locate(this.items, id);
       let snapshot = null;
 
       if (optimistic && idx >= 0) {
@@ -166,17 +183,17 @@ function apiSource(endpoint, options = {}) {
       }
 
       try {
-        const res = await request(`${endpoint}/${id}`, { method: 'DELETE' });
+        const res = await request(itemUrl(id), { method: 'DELETE' });
         if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
         if (destroyed) return;
 
-        if (!optimistic && idx >= 0) {
-          this.items.splice(idx, 1);
-        }
+        const at = optimistic ? -1 : locate(this.items, id);
+        if (at >= 0) this.items.splice(at, 1);
       } catch (e) {
         if (aborted(e)) return;
         this.error = e.message;
-        if (optimistic && snapshot) {
+        // `idx` is only a position hint; skip if a reload already restored it.
+        if (snapshot && locate(this.items, id) < 0) {
           this.items.splice(idx, 0, snapshot);
         }
       }

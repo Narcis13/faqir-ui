@@ -3,7 +3,7 @@
 
 /* ── Root ── */
 [data-ui="breadcrumb"] {
-  font-family: var(--font-ui);
+  font-family: var(--breadcrumb-font, var(--font-ui));
   font-size: var(--breadcrumb-size, var(--text-sm));
   color: var(--color-fg-muted);
 }

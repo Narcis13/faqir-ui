@@ -18,7 +18,7 @@
   corner-shape: var(--corner-shape);
   background: var(--input-fill);
   color: var(--color-fg);
-  font-family: var(--font-ui);
+  font-family: var(--input-font, var(--font-ui));
   font-size: var(--text-sm);
   line-height: 1;
   transition: border-color var(--duration-fast) var(--ease-default),

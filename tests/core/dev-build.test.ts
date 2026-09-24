@@ -234,6 +234,38 @@ describe("warning class: unkeyed l-for reorder", () => {
   });
 });
 
+describe("warning class: duplicate l-key", () => {
+  it("reports a keyed list whose items share a key, once per list", async () => {
+    document.body.innerHTML = `
+      <div l-data="{ items: [{id:1,t:'a'},{id:1,t:'b'}] }">
+        <ul><template l-for="item in items" l-key="item.id"><li l-text="item.t"></li></template></ul>
+        <button @click="items = [{id:1,t:'c'},{id:1,t:'d'}]">again</button>
+      </div>`;
+    Faqir.start();
+    await tick();
+    expect(fresh("key").length).toBe(1);
+    expect(fresh("key")[0].message).toContain('duplicate l-key "item.id"');
+    expect(fresh("key")[0].key).toBe("1");
+    // Rendering is still correct: one row per item.
+    expect(document.querySelectorAll("li").length).toBe(2);
+
+    (document.querySelector("button") as HTMLElement).click();
+    await tick();
+    expect(fresh("key").length).toBe(1);
+    expect(document.querySelectorAll("li").length).toBe(2);
+  });
+
+  it("stays silent for unique keys", async () => {
+    document.body.innerHTML = `
+      <div l-data="{ items: [{id:1},{id:2}] }">
+        <ul><template l-for="item in items" l-key="item.id"><li></li></template></ul>
+      </div>`;
+    Faqir.start();
+    await tick();
+    expect(fresh("key")).toEqual([]);
+  });
+});
+
 describe("warning class: l-html notices", () => {
   it("notes that l-html is unsanitized, once per element", async () => {
     document.body.innerHTML = `

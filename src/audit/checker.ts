@@ -1,12 +1,12 @@
 // DOM contract checker — walks HTML files and runs audit rules against manifests
 
 import { existsSync } from "node:fs";
-import { join, relative } from "node:path";
+import { join, relative, resolve } from "node:path";
 import { extractComponents, parseDocument } from "../parser/html-parser";
 import { extractTokenReferences, extractTokenDefinitions, collectDefinedTokens, hasReducedMotionQuery, hasAnimationProperties, findImportantDeclarations, findClassSelectors, findIdSelectors, findHardcodedColorValues, findLogicalPropertyViolations } from "../parser/css-parser";
 import { findExternalImports, findDataFetching } from "../parser/js-parser";
 import { loadManifest, type Manifest } from "../manifest";
-import { type AuditResult, type Severity, ALL_RULES, DOCUMENT_RULES, NO_FETCH_RULE, NO_EXTERNAL_IMPORT_RULE, LOGICAL_PROPERTIES_RULE } from "./rules";
+import { type AuditResult, type Severity, ALL_RULES, DOCUMENT_RULES, NO_FETCH_RULE, NO_EXTERNAL_IMPORT_RULE, LOGICAL_PROPERTIES_RULE, REDUCED_MOTION_RULE, TOKEN_EXISTS_RULE } from "./rules";
 import {
   checkThemeContrast,
   checkThemeElevation,
@@ -160,7 +160,9 @@ export async function runAudit(options: AuditOptions = {}): Promise<AuditSummary
   // Find HTML files to scan
   const htmlFiles: string[] = [];
   if (options.file) {
-    htmlFiles.push(options.file);
+    // Resolved against the project, not the process: `relative(cwd, …)` below
+    // and the repairer's `join(cwd, result.file)` both assume it.
+    htmlFiles.push(resolve(cwd, options.file));
   } else {
     // Scan project for HTML files (excluding node_modules, .faqir, ui/ component source)
     const glob = new Bun.Glob("**/*.html");
@@ -303,8 +305,8 @@ async function checkTokens(
     // reach green is a gate it learns to ignore. [W2-3]
     for (const finding of findDanglingTokenReferences(cssSource, definedTokens)) {
       results.push({
-        rule_id: "token-exists",
-        severity: "warning",
+        rule_id: TOKEN_EXISTS_RULE.id,
+        severity: TOKEN_EXISTS_RULE.severity,
         component_name: name,
         file: relPath,
         line: finding.line,
@@ -632,8 +634,8 @@ async function checkReducedMotion(
 
     if (hasAnimationProperties(cssSource) && !hasReducedMotionQuery(cssSource)) {
       results.push({
-        rule_id: "reduced-motion",
-        severity: "info",
+        rule_id: REDUCED_MOTION_RULE.id,
+        severity: REDUCED_MOTION_RULE.severity,
         component_name: name,
         file: relative(cwd, cssPath),
         line: 1,

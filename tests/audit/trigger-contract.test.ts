@@ -27,6 +27,7 @@ import {
   stylesheetStylesPart,
 } from "../../src/audit/rules";
 import { auditHtmlSource } from "../../src/audit/html-audit";
+import { applyRepairsToSource } from "../../src/audit/repairer";
 import { loadRegistryManifestMap, loadRegistryStylesheetMap } from "../../src/utils/components";
 
 const REGISTRY = join(import.meta.dir, "../../registry");
@@ -65,8 +66,28 @@ describe("the trigger contract", () => {
     expect(results[0].fix).toEqual({
       type: "add-attribute",
       offset: results[0].fix!.offset,
-      details: { attribute: "data-ui", value: "button", part: TRIGGER_PART },
+      details: { attr: "data-ui", value: "button", part: TRIGGER_PART },
     });
+    // The offset is the trigger's own opening `<`, so the repairer edits it.
+    expect(BARE.slice(results[0].fix!.offset)).toStartWith('<button data-part="trigger"');
+  });
+
+  it("the fix actually applies — the repairer reads the same key the rule writes", () => {
+    // The rule emitted `details.attribute` and the repairer read `details.attr`,
+    // so every trigger-contract fix was silently skipped.
+    const source =
+      '<div data-ui="dialog"><button data-part="trigger">a</button></div>\n' +
+      '<div data-ui="dialog"><button data-part="trigger">b</button></div>\n';
+    const results = extractComponents(source, "f.html").flatMap((c) =>
+      buildTriggerContractResults(c, ""),
+    );
+    expect(results.length).toBe(2);
+    const repaired = applyRepairsToSource(source, results);
+    expect(repaired.applied).toBe(2);
+    expect(repaired.source).toBe(
+      '<div data-ui="dialog"><button data-part="trigger" data-ui="button">a</button></div>\n' +
+        '<div data-ui="dialog"><button data-part="trigger" data-ui="button">b</button></div>\n',
+    );
   });
 
   it("is silent when the trigger delegates to a primitive", () => {

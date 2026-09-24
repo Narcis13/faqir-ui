@@ -43,10 +43,11 @@
 
 import { DefinitionError } from "./errors.js";
 import { checkFormat, formatNames, hasFormat } from "./formats.js";
-import { MAX_PATTERN_LENGTH } from "./limits.js";
+import { MAX_ARRAY_INDEX, MAX_PATTERN_LENGTH } from "./limits.js";
 import { DEFAULT_LOCALE, resolveMessage } from "./messages.js";
+import { catastrophicMessage, patternRisk } from "./pattern.js";
 
-export { DefinitionError, MAX_PATTERN_LENGTH };
+export { DefinitionError, MAX_ARRAY_INDEX, MAX_PATTERN_LENGTH };
 
 /** The definition format this module implements. */
 export const DEFINITION_VERSION = "1";
@@ -140,6 +141,39 @@ function isRecord(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+/** @param {unknown} target @param {string} key */
+export function hasOwn(target, key) {
+  return Object.prototype.hasOwnProperty.call(target, key);
+}
+
+/**
+ * Path segments that reach an object's machinery instead of its data. Writing
+ * through `__proto__` rewires a prototype — `coerce(def, { "a.__proto__.x": 1 })`
+ * would otherwise set `x` on every object in the process — and reading
+ * `constructor` off plain data answers a function. A definition may not name
+ * them and a form key that does is not un-flattened.
+ */
+const UNSAFE_SEGMENTS = new Set(["__proto__", "constructor", "prototype"]);
+
+/** @param {string} path */
+export function hasUnsafeSegment(path) {
+  return splitPath(path).some((segment) => UNSAFE_SEGMENTS.has(segment));
+}
+
+/**
+ * Refuse a definition path that names `__proto__`, `constructor` or `prototype`.
+ *
+ * @param {string} path @param {string} where
+ */
+export function assertSafePath(path, where) {
+  if (hasUnsafeSegment(path)) {
+    throw new DefinitionError(
+      `the path "${path}" at ${where} names __proto__, constructor or prototype.`,
+      where,
+    );
+  }
+}
+
 /** `a[0].b` and `a.0.b` are the same path; the first is what HTML `name` uses. */
 /** @param {string} path */
 export function normalizePath(path) {
@@ -164,7 +198,7 @@ export function getPath(data, path) {
   let rest = path;
   while (rest.length > 0) {
     if (current === undefined || current === null) return undefined;
-    if (isRecord(current) && Object.prototype.hasOwnProperty.call(current, rest)) {
+    if (isRecord(current) && hasOwn(current, rest)) {
       return current[rest];
     }
     const segments = splitPath(rest);
@@ -175,7 +209,8 @@ export function getPath(data, path) {
       if (!Number.isInteger(index)) return undefined;
       current = current[index];
     } else if (isRecord(current)) {
-      current = current[head];
+      // Own properties only: `constructor` on plain data is not a value.
+      current = hasOwn(current, head) ? current[head] : undefined;
     } else {
       return undefined;
     }
@@ -185,8 +220,25 @@ export function getPath(data, path) {
 }
 
 /**
+ * Can `setPath` write here? Not through `__proto__` / `constructor` /
+ * `prototype`, and not at an array index past `MAX_ARRAY_INDEX` — a key is
+ * frequently attacker-chosen, and one index is enough to allocate a sparse
+ * array a hundred million slots long.
+ *
+ * @param {string} path
+ */
+function writable(path) {
+  for (const segment of splitPath(path)) {
+    if (UNSAFE_SEGMENTS.has(segment)) return false;
+    if (/^\d+$/.test(segment) && Number(segment) > MAX_ARRAY_INDEX) return false;
+  }
+  return true;
+}
+
+/**
  * Write `value` at `path`, creating objects — or arrays, where the next segment
- * is an index — along the way.
+ * is an index — along the way. Only ever through own properties, and only for a
+ * path `writable` allows; the caller has checked.
  *
  * @param {Record<string, unknown>} target @param {string} path @param {unknown} value
  */
@@ -197,7 +249,7 @@ function setPath(target, path, value) {
   for (let i = 0; i < segments.length - 1; i++) {
     const key = segments[i];
     const nextIsIndex = /^\d+$/.test(segments[i + 1]);
-    const existing = current[key];
+    const existing = hasOwn(current, key) ? current[key] : undefined;
     const next = isRecord(existing) || Array.isArray(existing) ? existing : nextIsIndex ? [] : {};
     current[key] = next;
     current = next;
@@ -216,7 +268,7 @@ function deletePath(target, path) {
   /** @type {any} */
   let current = target;
   for (let i = 0; i < segments.length - 1; i++) {
-    current = current[segments[i]];
+    current = hasOwn(current, segments[i]) ? current[segments[i]] : undefined;
     if (!isRecord(current) && !Array.isArray(current)) return;
   }
   const last = segments[segments.length - 1];
@@ -309,6 +361,9 @@ function compileField(schema, where) {
           where,
         );
       }
+      if (patternRisk(schema.pattern) === "catastrophic") {
+        throw new DefinitionError(catastrophicMessage(`"pattern" at ${where}`), where);
+      }
     }
     if (schema.format !== undefined) {
       if (typeof schema.format !== "string" || !hasFormat(schema.format)) {
@@ -339,6 +394,7 @@ function compileField(schema, where) {
         throw new DefinitionError(`"properties" at ${where} must be an object.`, where);
       }
       for (const [name, child] of Object.entries(schema.properties)) {
+        assertSafePath(name, `${where}.properties`);
         properties.set(name, compileField(child, `${where}.${name}`));
       }
     }
@@ -422,6 +478,7 @@ export function compile(definition) {
     if (splitPath(path).length === 0) {
       throw new DefinitionError('"fields" has an empty path key.', "fields");
     }
+    assertSafePath(path, "fields");
     fields.set(normalizePath(path), compileField(schema, path));
   }
 
@@ -724,6 +781,46 @@ function coerceValue(field, value) {
 }
 
 /**
+ * A form submission as the record `coerce` reads: `FormData` — or anything
+ * that iterates `[name, value]` pairs (`URLSearchParams`, a `Map`, an array of
+ * pairs), or that has `forEach((value, name) => …)` — with every REPEATED name
+ * collected into a list, in submission order.
+ *
+ * `Object.fromEntries(formData)` is the obvious spelling and the wrong one: it
+ * keeps only the last value of a repeated name, so a checkbox group with three
+ * boxes ticked arrives as one string and fails `minItems` on the server while
+ * the page accepted it. Dotted and indexed names are left flat here; `coerce`
+ * is what writes `contacts[0].name` into place, against the definition.
+ *
+ *   const data = coerce(definition, fromFormData(await request.formData()));
+ *
+ * A name that reaches `__proto__`, `constructor` or `prototype` is dropped.
+ *
+ * @param {unknown} entries
+ * @returns {Record<string, unknown>}
+ */
+export function fromFormData(entries) {
+  /** @type {Record<string, unknown>} */
+  const out = {};
+  /** @param {unknown} value @param {unknown} name */
+  const add = (value, name) => {
+    if (typeof name !== "string" || hasUnsafeSegment(name)) return;
+    if (!hasOwn(out, name)) out[name] = value;
+    else if (Array.isArray(out[name])) /** @type {unknown[]} */ (out[name]).push(value);
+    else out[name] = [out[name], value];
+  };
+  const source = /** @type {any} */ (entries);
+  if (source && typeof source[Symbol.iterator] === "function") {
+    for (const pair of source) {
+      if (Array.isArray(pair)) add(pair[1], pair[0]);
+    }
+  } else if (source && typeof source.forEach === "function") {
+    source.forEach(add);
+  }
+  return out;
+}
+
+/**
  * Turn the strings a form produces into the types a definition declares, so a
  * server reading `FormData` and the browser plugin reading the same controls
  * hand `validate` identical data.
@@ -734,7 +831,11 @@ function coerceValue(field, value) {
  *     `address.geo.lat`, `contacts[0].name` is what `@faqir-ui/forms` emits —
  *     so any own key whose first segment names a declared field is written into
  *     its nested position. Keys the definition knows nothing about are copied
- *     through untouched: coercion narrows types, it never drops data.
+ *     through untouched: coercion narrows types, it never drops data. Two
+ *     bounds apply, because a server's keys come from whoever sent the body:
+ *     an index past `MAX_ARRAY_INDEX` is not un-flattened (the key is carried
+ *     flat, like an unknown one), and a key naming `__proto__`, `constructor`
+ *     or `prototype` anywhere is dropped.
  *  2. **Typing.** Per field: numeric strings become numbers, `"on"`/`"true"`
  *     become `true`, a lone value for an array field becomes a one-item list,
  *     and a blank string becomes *absent* — so a blank required field reports
@@ -756,8 +857,12 @@ export function coerce(definition, rawData) {
   /** @type {Record<string, unknown>} */
   const out = {};
   for (const [key, value] of Object.entries(rawData)) {
+    // `__proto__` / `constructor` / `prototype` are not data, wherever they
+    // sit in a key: such a key is dropped rather than carried, because carrying
+    // `__proto__` through is itself the write that rewires a prototype.
+    if (hasUnsafeSegment(key)) continue;
     const segments = splitPath(key);
-    if (segments.length > 1 && roots.has(segments[0])) setPath(out, key, value);
+    if (segments.length > 1 && roots.has(segments[0]) && writable(key)) setPath(out, key, value);
     else out[key] = value;
   }
 

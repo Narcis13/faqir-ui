@@ -738,11 +738,11 @@ export interface DevtoolsComponent {
 
 /**
  * One recorded diagnostic. The production engine records none, so
- * `warnings()` is always `[]` there — the four classes exist only in
- * `faqir-core.dev.js`.
+ * `warnings()` is always `[]` there — every class exists only in
+ * `faqir-core.dev.js`. `key` is a duplicate `l-key` in a keyed `l-for`.
  */
 export interface DevtoolsWarning {
-  kind: "expression" | "directive" | "reorder" | "html" | "plugin";
+  kind: "expression" | "directive" | "reorder" | "key" | "html" | "plugin";
   message: string;
   /** The offending element, as a short label. */
   element: string | null;

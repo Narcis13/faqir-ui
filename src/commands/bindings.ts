@@ -59,11 +59,18 @@ export async function bindings(args: string[]): Promise<void> {
     return;
   }
 
-  const positional = args.filter((a) => !a.startsWith("-"));
-  const target = positional[0] as Target | undefined;
   const check = args.includes("--check");
   const outFlag = args.indexOf("--out");
   const outArg = outFlag !== -1 ? args[outFlag + 1] : undefined;
+  // `--out` with no value, or with a flag after it, is an error rather than an
+  // `undefined` that silently means the default directory.
+  if (outFlag !== -1 && (outArg === undefined || outArg.startsWith("-"))) {
+    log.error("Missing value for --out.");
+    process.exit(1);
+  }
+  // The `--out` value is not a target: `--out dist vue` targets vue.
+  const positional = args.filter((a, i) => !a.startsWith("-") && !(outFlag !== -1 && i === outFlag + 1));
+  const target = positional[0] as Target | undefined;
 
   if (!target || !TARGETS.includes(target)) {
     log.error(

@@ -28,7 +28,7 @@ const controllers = {
   dropdown: createDropdown,
   accordion: createAccordion,
   tooltip: createTooltip,
-  "toast-container": createToastContainer,
+  toast: createToastContainer,
   combobox: createCombobox,
   "command-palette": createCommandPalette,
   table: createTable,
@@ -39,10 +39,33 @@ const controllers = {
   "date-picker": createDatePicker,
 };
 
+// Live controller APIs by root, so a root that leaves the DOM can be torn down.
+const apis = new WeakMap();
+
+function mount(el) {
+  const factory = controllers[el.getAttribute("data-ui")];
+  // Added then removed in the same batch: never initialise a detached root.
+  if (factory && el.isConnected) apis.set(el, factory(el));
+}
+
+function unmount(el) {
+  const api = apis.get(el);
+  // Still connected means it was moved (removed and re-added in one batch),
+  // not removed: keep its controller.
+  if (!api || el.isConnected) return;
+  apis.delete(el);
+  api.destroy?.();
+}
+
+/** Run `fn` on `node` and every `[data-ui]` inside it. */
+function each(node, fn) {
+  if (node.nodeType !== 1) return;
+  if (node.hasAttribute("data-ui")) fn(node);
+  node.querySelectorAll("[data-ui]").forEach(fn);
+}
+
 function init() {
-  for (const [name, factory] of Object.entries(controllers)) {
-    document.querySelectorAll(`[data-ui="${name}"]`).forEach(factory);
-  }
+  each(document.body, mount);
 }
 
 // Auto-init on DOM ready
@@ -52,20 +75,13 @@ if (document.readyState === "loading") {
   init();
 }
 
-// Re-init on dynamic content (MutationObserver)
+// Init controllers on added content and destroy those on removed content, so a
+// component an SPA swaps out does not leave its document listeners behind.
+// Records are processed after the batch, so isConnected is the final state.
 const observer = new MutationObserver((mutations) => {
   for (const mutation of mutations) {
-    for (const node of mutation.addedNodes) {
-      if (node.nodeType !== 1) continue;
-      const ui = node.getAttribute?.("data-ui");
-      if (ui && controllers[ui]) controllers[ui](node);
-      // Also check children
-      if (node.querySelectorAll) {
-        for (const [name, factory] of Object.entries(controllers)) {
-          node.querySelectorAll(`[data-ui="${name}"]`).forEach(factory);
-        }
-      }
-    }
+    mutation.removedNodes.forEach((node) => each(node, unmount));
+    mutation.addedNodes.forEach((node) => each(node, mount));
   }
 });
 observer.observe(document.body, { childList: true, subtree: true });

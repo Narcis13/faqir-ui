@@ -101,65 +101,73 @@ describe("document-serif theme", () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// The `double` divider, and why no shipped theme may ask for one [1.1A-15]
+// The `double` divider needs a rule it can split        [1.1A-15 → 1.1A-26]
 // ═══════════════════════════════════════════════════════════════════════════
 //
 // A contract's section break is traditionally a DOUBLE rule, and that is what
-// FAQIR-PLAN-1.1's adoption table asks this theme for. It cannot have one, and
-// the reason is a measurement rather than an opinion: `separator` draws its
-// rule as `var(--border-width) var(--divider-style) var(--color-border)`, and a
-// `double` border only splits into two lines at 3px or more. Measured in Chrome
-// 149 against a white page, sampling the darkest pixel per row:
+// FAQIR-PLAN-1.1's adoption table asks this theme for. A `double` border only
+// splits into two lines at 3px or more. Measured in Chrome 149 against a white
+// page, sampling the darkest pixel per row:
 //
 //     1px double → ONE black row  (indistinguishable from `solid`)
 //     2px double → two ADJACENT black rows (still one visual rule)
 //     3px double → black / white / black — the double rule finally appears
 //
-// So a theme with a hairline edge that declares `double` is asking for a mark
-// the browser will not draw: a new feature failing silently, which
-// FAQIR-VISION §3 forbids. This theme takes `dotted` — the other rule a legal
-// form is full of, and one that renders at the weight it actually draws — and
-// the gate below keeps the trap shut for 1.1A-16/17's seed themes too.
+// 1.1A-15 found `separator` drawing its rule at `--border-width`, so the style
+// and the width were one knob and a hairline theme could not ask for a double
+// rule at all; this theme took `dotted` and a gate refused `double` under 3px.
+// 1.1A-26 gave the divider its own width — `--divider-width`, following
+// `--border-width` by default — so the gate is now the rule it always meant:
+// a theme that declares `double` must raise `--divider-width` to 3px, and the
+// generator does exactly that for a `double` seed.
 
-describe("divider · `double` needs an edge it can split", () => {
+describe("divider · `double` needs a rule it can split", () => {
   const THEMES = [...new Glob("*.css").scanSync(DIR)].map((f) => f.replace(/\.css$/, "")).sort();
 
   /** The px width `separator` draws for a theme, through its own token chain. */
-  function edgePx(themeCss: string): number | null {
-    return lengthPx(resolveValue("var(--border-width)", lightLookup(themeCss)));
+  function dividerPx(themeCss: string): number | null {
+    return lengthPx(resolveValue("var(--divider-width)", lightLookup(themeCss)));
   }
 
   /** The minimum border width at which Chrome renders `double` as two rules. */
   const DOUBLE_MIN_PX = 3;
 
-  it("separator draws its rule at --border-width, which is what makes this a rule at all", () => {
+  it("separator draws its rule at --divider-width, the knob a double rule raises", () => {
     const separator = readFileSync(
       join(import.meta.dir, "../../registry/primitives/separator/separator.css"),
       "utf8",
     );
-    expect(separator).toContain("var(--border-width) var(--divider-style) var(--color-border)");
+    expect(separator).toContain("var(--divider-width) var(--divider-style) var(--color-border)");
+    expect(separator).not.toContain("var(--border-width) var(--divider-style)");
   });
 
-  it("no shipped theme declares `double` at under 3px", () => {
+  it("no shipped theme declares `double` without raising --divider-width to 3px", () => {
     const offenders: string[] = [];
     for (const name of THEMES) {
       const css = readFileSync(join(DIR, `${name}.css`), "utf8");
       const style = parseThemeValues(css).light.get("divider-style");
       if (style?.trim() !== "double") continue;
-      const px = edgePx(css);
+      const px = dividerPx(css);
       if (px == null || px < DOUBLE_MIN_PX) offenders.push(`${name} (${px}px)`);
     }
     expect(offenders).toEqual([]);
   });
 
-  it("the gate is not vacuous: document-serif WOULD be an offender", () => {
-    // Proof the sweep can fail — this theme's own edge is the family's 1px
-    // hairline, so asking it for a double rule is exactly the case above.
-    expect(edgePx(CSS)).toBe(1);
+  it("the gate is not vacuous: document-serif asking for double WITHOUT the width would offend", () => {
+    // The divider follows this theme's own 1px hairline edge, so a bare
+    // `double` is exactly the case above…
+    expect(dividerPx(CSS)).toBe(1);
     const wishful = `${CSS}\n:root { --divider-style: double; }\n`;
     expect(parseThemeValues(wishful).light.get("divider-style")).toBe("double");
-    expect(edgePx(wishful)! < DOUBLE_MIN_PX).toBe(true);
-    // …and `dotted`, which it actually ships, is a style a 1px rule can draw.
+    expect(dividerPx(wishful)! < DOUBLE_MIN_PX).toBe(true);
+    // …which the classifier reports as the single line it renders…
+    expect(axesFromCss(wishful, AXIS_BASE).decoration.divider).toBe("solid");
+    // …while raising the divider's OWN width, and nothing else, makes it real.
+    const raised = `${CSS}\n:root { --divider-style: double; --divider-width: 3px; }\n`;
+    expect(dividerPx(raised)).toBe(3);
+    expect(lengthPx(resolveValue("var(--border-width)", lightLookup(raised)))).toBe(1);
+    expect(axesFromCss(raised, AXIS_BASE).decoration.divider).toBe("double");
+    // `dotted`, which it actually ships, is a style a 1px rule can draw.
     expect(axesFromCss(CSS, AXIS_BASE).decoration.divider).toBe("dotted");
   });
 });

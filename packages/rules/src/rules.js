@@ -66,8 +66,10 @@ import { DefinitionError } from "./errors.js";
 import { runLogic, truthy, varPaths, assertLogic } from "./logic.js";
 import { RULE_MESSAGES, resolveMessage } from "./messages.js";
 import {
+  assertSafePath,
   compile as compileShape,
   getPath,
+  hasOwn,
   isMissing,
   normalizePath,
   shapeFindings,
@@ -201,6 +203,7 @@ function compileRule(raw, index, fields) {
 
   if (verb === "show" || verb === "require") {
     const path = normalizePath(requireString(raw[verb], verb, where));
+    assertSafePath(path, where);
     if (raw.when === undefined) {
       throw new DefinitionError(
         `"${verb}" at ${where} needs a "when" condition; a rule with no condition never changes anything.`,
@@ -222,6 +225,7 @@ function compileRule(raw, index, fields) {
 
   if (verb === "compute") {
     const path = normalizePath(requireString(raw.compute, "compute", where));
+    assertSafePath(path, where);
     if (raw.value === undefined) {
       throw new DefinitionError(`"compute" at ${where} needs a "value" expression.`, where);
     }
@@ -232,12 +236,16 @@ function compileRule(raw, index, fields) {
   if (verb === "jump") {
     const to = requireString(raw.jump, "jump", where);
     const from = requireString(raw.from, "from", where);
+    // Page ids key the verdict's `next` map, so they are held to the same rule.
+    assertSafePath(to, where);
+    assertSafePath(from, where);
     if (raw.when !== undefined) assertLogic(raw.when, where);
     return { id, verb, path: to, from, when: raw.when };
   }
 
   // `validate`, in its two forms.
   const path = normalizePath(requireString(raw.path, "path", where));
+  assertSafePath(path, where);
   const message = raw.message === undefined ? undefined : requireString(raw.message, "message", where);
   if (raw.validate === REMOTE) {
     const remote = requireString(raw.remote, "remote", where);
@@ -262,11 +270,15 @@ function compileRule(raw, index, fields) {
  * compute writing `line`. Ties are broken by document order, so the order is a
  * property of the definition rather than of the traversal.
  *
+ * A compute that reads its own target (`total = total + 1`) is a cycle of one:
+ * each pass would feed it the value the last pass wrote, so the answer depends
+ * on how many times the page has been repainted rather than on the data.
+ *
  * @param {CompiledRule[]} computes
  * @returns {CompiledRule[]}
  */
 function orderComputes(computes) {
-  if (computes.length < 2) return computes.slice();
+  if (computes.length === 0) return [];
 
   const targets = computes.map((rule) => rule.path);
   /** @type {number[][]} */
@@ -274,7 +286,6 @@ function orderComputes(computes) {
   for (let i = 0; i < computes.length; i++) {
     const reads = varPaths(computes[i].value).map(normalizePath);
     for (let j = 0; j < computes.length; j++) {
-      if (i === j) continue;
       const target = targets[j];
       const touches = reads.some((read) =>
         read === target || read.startsWith(`${target}.`) || target.startsWith(`${read}.`));
@@ -296,9 +307,11 @@ function orderComputes(computes) {
     }
   }
   if (ordered.length < computes.length) {
-    const stuck = computes.filter((_, i) => !done[i]).map((rule) => rule.id);
+    const stuck = computes.filter((_, i) => !done[i]);
     throw new DefinitionError(
-      `the "compute" rules ${stuck.map((id) => `"${id}"`).join(", ")} depend on each other in a cycle.`,
+      stuck.length === 1
+        ? `the "compute" rule "${stuck[0].id}" reads "${stuck[0].path}", the value it writes, so it can never settle.`
+        : `the "compute" rules ${stuck.map((rule) => `"${rule.id}"`).join(", ")} depend on each other in a cycle.`,
       "rules",
     );
   }
@@ -367,7 +380,7 @@ function setIn(target, segments, value) {
   }
   /** @type {Record<string, unknown>} */
   const copy = isRecord(target) ? { ...target } : {};
-  copy[head] = rest.length === 0 ? value : setIn(copy[head], rest, value);
+  copy[head] = rest.length === 0 ? value : setIn(hasOwn(copy, head) ? copy[head] : undefined, rest, value);
   return copy;
 }
 
@@ -377,10 +390,12 @@ function setIn(target, segments, value) {
  * @param {Record<string, boolean>} visible @param {string} path @returns {boolean}
  */
 function isHidden(visible, path) {
-  if (visible[path] === false) return true;
+  /** @param {string} key */
+  const hidden = (key) => hasOwn(visible, key) && visible[key] === false;
+  if (hidden(path)) return true;
   const segments = splitPath(path);
   for (let i = 1; i < segments.length; i++) {
-    if (visible[segments.slice(0, i).join(".")] === false) return true;
+    if (hidden(segments.slice(0, i).join("."))) return true;
   }
   return false;
 }
@@ -413,13 +428,13 @@ function runRules(compiled, data) {
   for (const rule of rules) {
     if (rule.verb === "show") {
       const shown = truthy(runLogic(rule.when, current));
-      visible[rule.path] = (visible[rule.path] ?? true) && shown;
+      visible[rule.path] = (hasOwn(visible, rule.path) ? visible[rule.path] : true) && shown;
     }
   }
   for (const rule of rules) {
     if (rule.verb === "require") {
       const demanded = truthy(runLogic(rule.when, current));
-      required[rule.path] = (required[rule.path] ?? false) || demanded;
+      required[rule.path] = (hasOwn(required, rule.path) ? required[rule.path] : false) || demanded;
     }
   }
   for (const path of Object.keys(required)) {
@@ -428,7 +443,7 @@ function runRules(compiled, data) {
   for (const rule of rules) {
     if (rule.verb !== "jump") continue;
     const from = /** @type {string} */ (rule.from);
-    if (Object.prototype.hasOwnProperty.call(next, from)) continue;
+    if (hasOwn(next, from)) continue;
     if (rule.when === undefined || truthy(runLogic(rule.when, current))) next[from] = rule.path;
   }
 
@@ -555,8 +570,9 @@ export function validate(definition, data, options) {
  *
  * `remote(rule, value, data)` is the caller's — `fetch` in the browser plugin,
  * a query on a server. It answers `true`, `false`, a message string, or a
- * promise of one of those. Anything else, including a rejection, is a finding
- * under `remote-error`: a check that could not run never passes.
+ * promise of one of those; `""` is `false` (the rule's own message). Anything
+ * else, including a rejection, is a finding under `remote-error`: a check that
+ * could not run never passes.
  *
  * The resolvers run concurrently, but the findings come out in rule order, so
  * two runs of the same data read the same however the network behaved.
@@ -607,11 +623,14 @@ export async function validateAsync(definition, data, options) {
       continue;
     }
     if (answer.value === true) continue;
-    if (typeof answer.value === "string") {
+    // A non-empty string is the resolver's own sentence. An empty one is a
+    // failure with nothing to say, which is what `false` means — so it wears
+    // the rule's message, exactly as the browser plugin does.
+    if (typeof answer.value === "string" && answer.value !== "") {
       findings.push(ruleFinding(compiled, rule, rule.id, locale, params, answer.value));
       continue;
     }
-    if (answer.value === false) {
+    if (answer.value === false || answer.value === "") {
       findings.push(ruleFinding(compiled, rule, rule.id, locale, params));
       continue;
     }

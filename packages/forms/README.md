@@ -29,7 +29,7 @@ runtime requirements.
 | `string` + `format: "date"` | `date-picker` + `calendar` |
 | `string` + `enum` (1–4 values) | radio group |
 | `string` + `enum` (5+ values) | select |
-| `number` | `input[type=number]` |
+| `number` | `input[type=number][step=any]` |
 | `integer` | `input[type=number][step=1]` |
 | `boolean` | checkbox (or `switch` via uiSchema) |
 | `object` (nested) | fieldset card (`card` + `legend`), children recurse |
@@ -140,7 +140,7 @@ next (`show-company-2`).
 | `if` + `then`/`else` | `then.properties` → `show`, `then.required` → `require`; the `else` branch takes the negated condition |
 | `allOf: [{ if, then, else }, …]` | the same, once per entry (conditionals only — `allOf` is not schema composition here) |
 | `dependentRequired: { trigger: [names] }` | one `require` per name, conditioned on the trigger being filled in |
-| `ui:wizard` step `when` | a `jump` that steps over the page when the condition does not hold |
+| `ui:wizard` step `when` | a `jump` that steps over the page when the condition does not hold, and a `show` per field on that page with the same condition — so a server's `validate()` never demands a field the skip path never showed |
 
 An `if` states value tests (`{ const: … }` or `{ enum: […] }`) and presence
 tests (a name in its `required`); a `then`/`else` property entry must be `{}`,
@@ -169,8 +169,21 @@ always render as selects.
 
 Numeric `minimum`/`maximum` become `min`/`max`. Standard JSON Schema
 `multipleOf` becomes `step`; the HTML-oriented `step` alias is also accepted,
-but the two cannot be combined. String `minLength`, `maxLength`, and `pattern`
-map to their native constraints.
+but the two cannot be combined. With neither, an `integer` gets `step="1"` and
+a `number` gets `step="any"` — without it a browser refuses `2.5` as a step
+mismatch the schema never asked for. String `minLength` and `maxLength` map to
+their native constraints.
+
+`pattern` needs translating, because the two readers disagree about what it
+means: JSON Schema's is **unanchored** (`[A-Z]+` accepts `"abcD"`), and it is
+what the server enforces; HTML's `pattern` attribute is implicitly anchored and
+compiled with the `v` flag. So a pattern already pinned at both ends (`^…$`, no
+top-level `|`) is emitted as written, any other is wrapped to match anywhere
+(`[\s\S]*(?:…)[\s\S]*`), and one the `v` flag would reject — a bare `-` at
+the edge of a class, as in `[a-z0-9.-]`, is the common one — gets no attribute
+at all, because a browser silently ignores a pattern it cannot compile. That
+form then carries its rules definition even with no rules of its own, and the
+`faqir-rules` plugin enforces the pattern with the server's evaluator.
 
 Every field receives a deterministic label/control ID pair, an always-present
 error part for `faqir-validate`, description/error `aria-describedby` wiring, and

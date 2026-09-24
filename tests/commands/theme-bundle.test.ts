@@ -30,6 +30,7 @@ import {
   scopeBranch,
   scopeRootScheme,
   scopeThemeCss,
+  SCHEME_ALIASES,
 } from "../../src/theme/scope";
 import { listRegistryThemes, stripCssComments } from "../../src/theme-manifest";
 import { extractTokenDefinitions } from "../../src/parser/css-parser";
@@ -132,17 +133,24 @@ describe("scopeThemeCss · every shipped theme scopes", () => {
       });
 
       it("declares exactly the tokens the theme declared, with the same values", () => {
+        // Plus the restated colour aliases, which open the scope root — and only
+        // those, once each, ahead of anything the theme itself says.
         const before = extractTokenDefinitions(stripCssComments(source));
         const after = extractTokenDefinitions(stripCssComments(scoped.css));
-        expect(after.map((d) => `${d.name}: ${d.value}`)).toEqual(
+        const restated = SCHEME_ALIASES.map(([token, value]) => `${token.slice(2)}: ${value}`);
+        const all = after.map((d) => `${d.name}: ${d.value}`);
+        const first = all.indexOf(restated[0]);
+        expect(all.slice(first, first + restated.length)).toEqual(restated);
+        expect([...all.slice(0, first), ...all.slice(first + restated.length)]).toEqual(
           before.map((d) => `${d.name}: ${d.value}`),
         );
       });
 
       it("copies every declaration through — only preludes and the scope root moved", () => {
-        // The scope root's five restated properties are the entire delta; every
-        // other declaration, `light-dark()` included, is byte-identical and in
-        // the same order.
+        // The scope root's five restated properties and the colour aliases open
+        // the sheet, and a light skin's two data-theme scheme rules follow its
+        // root block; every other declaration, `light-dark()` included, is
+        // byte-identical and in the same order.
         const before = declarations(source);
         const after = declarations(scoped.css);
         const added = [
@@ -151,8 +159,16 @@ describe("scopeThemeCss · every shipped theme scopes", () => {
           "background-color: var(--color-bg)",
           "background-image: var(--texture-page)",
           "font-family: var(--font-body)",
+          ...SCHEME_ALIASES.map(([token, value]) => `${token}: ${value}`),
         ];
-        expect(after).toEqual([...added, ...before]);
+        const scheme = scoped.colorScheme === "light" ? ["color-scheme: dark", "color-scheme: light dark"] : [];
+        const rootCount = before.length - declarations(source.slice(source.indexOf("}") + 1)).length;
+        expect(after).toEqual([
+          ...added,
+          ...before.slice(0, rootCount),
+          ...scheme,
+          ...before.slice(rootCount),
+        ]);
       });
 
       it("reports every rewrite it made, with the line it was on", () => {
@@ -230,6 +246,45 @@ describe("scopeThemeCss · the scope root re-declares what reset.css puts on :ro
     expect(root).toContain("background-color: var(--color-bg);");
     expect(root).toContain("background-image: var(--texture-page);");
     expect(root).toContain("font-family: var(--font-body);");
+  });
+
+  it("a data-theme ON the scope root picks its scheme over the root's own", () => {
+    // reset.css maps `[data-theme="dark"]` to `color-scheme: dark` at (0,1,0) —
+    // the scope selector's own specificity — and the skin is linked later, so
+    // without the compound rules `<div data-skin="x" data-theme="dark">` kept
+    // `light` and a one-block skin rendered its light side.
+    const selector = defaultScopeSelector("aurora");
+    const css = scopeThemeCss(themeCss("aurora"), { selector }).css;
+    expect(css).toContain(`${selector}[data-theme="dark"] {\n  color-scheme: dark;\n}`);
+    expect(css).toContain(`${selector}[data-theme="auto"] {\n  color-scheme: light dark;\n}`);
+
+    const reset = readFileSync(join(REGISTRY, "base/reset.css"), "utf8");
+    const w = new Window();
+    try {
+      const d = w.document;
+      const style = d.createElement("style");
+      style.textContent = reset + css;
+      d.head.appendChild(style);
+      d.body.innerHTML = `<div id="both" ${selector.slice(1, -1)} data-theme="dark"></div><div id="skin" ${selector.slice(1, -1)}></div>`;
+      expect(w.getComputedStyle(d.getElementById("both")!).colorScheme).toBe("dark");
+      expect(w.getComputedStyle(d.getElementById("skin")!).colorScheme).toBe("light");
+    } finally {
+      w.close();
+    }
+  });
+
+  it("a dark-only skin needs no scheme rules — its root is dark already", () => {
+    const css = scopeThemeCss(themeCss("luxe"), { selector: defaultScopeSelector("luxe") }).css;
+    expect(css).not.toContain('[data-skin="luxe"][data-theme="dark"] {\n  color-scheme');
+  });
+
+  it("restates the token layer's colour aliases, ahead of the theme's own values", () => {
+    // Under a custom selector the token layer's `[data-skin]` block does not
+    // match, so the scope root is what makes `--panel-bg` resolve to the skin.
+    const css = scopeThemeCss(`:root {\n  --panel-bg: red;\n}\n`, { selector: ".preview" }).css;
+    const root = css.slice(css.indexOf(".preview {"));
+    for (const [name, value] of SCHEME_ALIASES) expect(root).toContain(`${name}: ${value};`);
+    expect(root.lastIndexOf("--panel-bg: var(--color-bg);")).toBeLessThan(root.indexOf("--panel-bg: red;"));
   });
 
   it("restates them once — a second top-level :root block is only scoped", () => {
@@ -391,6 +446,9 @@ describe("faqir theme bundle --json", () => {
     expect(primary.tokens).toBeGreaterThan(50);
     expect(primary.rewrites.map((r: { from: string }) => r.from)).toEqual([
       ":root",
+      // The aliases a theme re-points on every scheme island (see
+      // tests/themes/scheme-islands.test.ts) — scoped like any other list.
+      ":root, [data-theme]",
       '[data-theme="dark"]',
       '[data-theme="auto"]',
     ]);

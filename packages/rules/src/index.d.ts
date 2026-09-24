@@ -143,8 +143,9 @@ export interface RemoteRuleView {
 }
 
 /**
- * `true` passes, `false` fails with the rule's message, a string fails with
- * that message. A rejection — or anything else — is a `remote-error` finding.
+ * `true` passes, `false` fails with the rule's message, a non-empty string
+ * fails with that message (`""` is `false`). A rejection — or anything else —
+ * is a `remote-error` finding.
  */
 export type RemoteResolver = (
   rule: RemoteRuleView,
@@ -214,6 +215,8 @@ export declare class CompiledDefinition {
 
 export declare const DEFINITION_VERSION: DefinitionVersion;
 export declare const MAX_PATTERN_LENGTH: number;
+/** The largest array index a flat form key (`rows[9999].qty`) is un-flattened into by `coerce`. */
+export declare const MAX_ARRAY_INDEX: number;
 export declare const MAX_REGEX_SUBJECT_LENGTH: number;
 export declare const MAX_LOGIC_NODES: number;
 export declare const MAX_LOGIC_DEPTH: number;
@@ -259,6 +262,18 @@ export declare function truthy(value: unknown): boolean;
 
 /** An ISO 8601 date or date-time as a UTC instant, zone-independent; `null` if it is not one. */
 export declare function parseInstant(value: unknown): number | null;
+
+/**
+ * A form submission as the record `coerce` reads, with every repeated name
+ * (a checkbox group) collected into a list — unlike `Object.fromEntries`,
+ * which keeps only the last value. Accepts `FormData`, `URLSearchParams`, a
+ * `Map`, an array of pairs, or anything with `forEach((value, name) => …)`.
+ */
+export declare function fromFormData(
+  entries:
+    | Iterable<readonly [string, unknown]>
+    | { forEach(callback: (value: unknown, name: string) => void): void },
+): Record<string, unknown>;
 
 /** Un-flatten dotted form keys and narrow form strings to the declared types. */
 export declare function coerce(

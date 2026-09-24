@@ -37,7 +37,7 @@ import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { Glob } from "bun";
 import { generateThemeBundle } from "../../src/commands/theme-generate";
-import { normalizeSeed } from "../../src/theme/seed";
+import { normalizeSeed, SHARP_CORNER_REFUSAL } from "../../src/theme/seed";
 import { themeBaseSources } from "../../src/theme/sources";
 import { axesFromCss } from "../../src/theme/axes";
 import {
@@ -404,16 +404,23 @@ describe("no shipped theme declares a corner shape it cannot draw", () => {
   });
 
   it("is not vacuous: the combination neo was about to ship is refused", () => {
-    // Planted on the real seed, so the gate is proven against the exact thing
-    // it exists to stop rather than against a fixture that resembles it.
+    // Planted on the real stylesheet, so the gate is proven against the exact
+    // thing it exists to stop rather than against a fixture that resembles it.
     const seed = JSON.parse(read("neo.seed.json")) as ThemeSeed;
     expect(seed.shape!.radius).toBe("sharp");
     expect(seed.shape!.corner).toBe("round");
-    const planted = { ...seed, shape: { ...seed.shape, corner: "bevel" } } as ThemeSeed;
-    const css = generateThemeBundle(planted as never, BASE).generated[0].css;
-    const derived = axesFromCss(css, AXIS_BASE);
+    const planted = `${read("neo.css")}\n:root { --corner-shape: bevel; }\n`;
+    const derived = axesFromCss(planted, AXIS_BASE);
     expect(derived.shape).toEqual({ radius: "sharp", border: "heavy", corner: "bevel" });
     expect(derived.shape.corner !== "round" && derived.shape.radius === "sharp").toBe(true);
+  });
+
+  it("the generator refuses the same seed rather than writing a corner nothing draws", () => {
+    // `--shape sharp --corner bevel` used to generate a theme whose bevel was
+    // invisible; the seed is now refused with the sentence that says why.
+    const seed = JSON.parse(read("neo.seed.json")) as ThemeSeed;
+    const planted = { ...seed, shape: { ...seed.shape, corner: "bevel" } } as ThemeSeed;
+    expect(() => generateThemeBundle(planted as never, BASE)).toThrow(SHARP_CORNER_REFUSAL);
   });
 
   it("a rounded theme may still state one — the axis is not banned, only the no-op", () => {

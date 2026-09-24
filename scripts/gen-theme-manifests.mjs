@@ -35,6 +35,7 @@ import {
 } from "../src/theme-manifest";
 import { axesFromCss } from "../src/theme/axes";
 import { distinctivenessContext, nearest, prepareTheme } from "../src/theme/distinctiveness";
+import { findFamily } from "../src/fonts/catalog";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const THEMES_DIR = join(ROOT, "registry", "themes");
@@ -43,6 +44,18 @@ const TOKENS_DIR = join(ROOT, "registry", "tokens");
 // ── Editorial metadata seed (hand-authored; tokens are NOT here) ─────────────
 // One entry per registry/themes/*.css. `scheme: "light"` pairs with
 // `dark_mode: "none"`; every other theme ships an explicit dark block ("native").
+//
+// `fonts` (task 1.1A-30) is the self-hosted face a theme was DESIGNED for, as
+// `{ role: catalogId }` — curated knowledge like `mood`, which is why it lives
+// here rather than being derived. Which families a PROJECT installed is not a
+// property of the theme; the family it was drawn for is. Only families in the
+// `faqir fonts` catalog (`src/fonts/catalog.ts`) may be named, each in a role
+// the catalog offers it for, and the manifest entry's family and licence are
+// read out of the catalog so the two cannot disagree. `theme set` turns the
+// field into a `faqir fonts add <id> --role <role>` hint. A theme whose stack
+// names a face the catalog does not carry (luxe's Playfair Display, ink's
+// Roboto Slab, fintech/nordic's Poppins, the Lato themes) has no entry: until
+// the catalog carries its face there is nothing honest to point at.
 const SEED = {
   aurora: {
     version: "1.0.0",
@@ -116,6 +129,7 @@ const SEED = {
     scheme: "both",
     dark_mode: "native",
     pairs_with: ["brutalist", "midnight"],
+    fonts: { mono: "jetbrains-mono" },
   },
   glass: {
     version: "1.0.0",
@@ -145,6 +159,7 @@ const SEED = {
     scheme: "both",
     dark_mode: "native",
     pairs_with: ["editorial-document", "paper"],
+    fonts: { heading: "fraunces", body: "source-serif-4" },
   },
   "editorial-document": {
     version: "1.0.0",
@@ -159,6 +174,7 @@ const SEED = {
     scheme: "both",
     dark_mode: "native",
     pairs_with: ["swiss-document", "slate"],
+    fonts: { heading: "inter", body: "inter", ui: "inter" },
   },
   "swiss-document": {
     version: "1.0.0",
@@ -173,6 +189,7 @@ const SEED = {
     scheme: "both",
     dark_mode: "native",
     pairs_with: ["brutalist"],
+    fonts: { heading: "inter", body: "inter", ui: "inter" },
   },
   luxe: {
     version: "1.0.0",
@@ -187,6 +204,7 @@ const SEED = {
     scheme: "both",
     dark_mode: "native",
     pairs_with: ["soft"],
+    fonts: { heading: "nunito", body: "nunito", ui: "nunito" },
   },
   organic: {
     version: "1.0.0",
@@ -248,6 +266,7 @@ const SEED = {
     scheme: "both",
     dark_mode: "native",
     pairs_with: ["soft", "candy"],
+    fonts: { heading: "nunito", body: "nunito", ui: "nunito" },
   },
 };
 
@@ -275,6 +294,23 @@ const SURFACE = surfaceTokens(SURFACE_SOURCES);
 const DISTINCT = distinctivenessContext(SURFACE_SOURCES);
 
 const themeFiles = [...new Glob("*.css").scanSync(THEMES_DIR)].sort();
+
+/** A seed's `{ role: catalogId }`, as the schema's `themeFont[]`, or null. */
+function themeFonts(name, fonts) {
+  if (!fonts) return null;
+  return Object.entries(fonts).map(([role, id]) => {
+    const entry = findFamily(id);
+    if (!entry || entry.id !== id) {
+      console.error(`✗ ${name}: fonts.${role} names '${id}', which is not a catalog id (src/fonts/catalog.ts).`);
+      process.exit(1);
+    }
+    if (!entry.roles.includes(role)) {
+      console.error(`✗ ${name}: ${entry.family} is catalogued for ${entry.roles.join(", ")}, not '${role}'.`);
+      process.exit(1);
+    }
+    return { family: entry.family, license: entry.license, role, source: entry.id };
+  });
+}
 
 const missingSeed = themeFiles
   .map((f) => basename(f, ".css"))
@@ -385,6 +421,9 @@ for (const theme of derived) {
     // axis is drift that fails rather than a claim nobody checks. Omitted for a
     // print companion — see COMPANIONS above.
     ...(theme.axes ? { axes: theme.axes } : {}),
+    // Curated, not derived (task 1.1A-30): the self-hosted faces the theme was
+    // designed for, expanded out of the font catalog — see `fonts` in SEED.
+    ...(meta.fonts ? { fonts: themeFonts(name, meta.fonts) } : {}),
     // DERIVED too (task 1.1A-12): how far this theme sits from the nearest
     // OTHER one, on both measures. Omitted only when there is no other theme to
     // compare against, or when the nearest shares no colour scheme with it —

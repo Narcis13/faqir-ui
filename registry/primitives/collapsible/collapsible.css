@@ -4,7 +4,7 @@
 /* ── Root — native <details>, so it opens/closes with zero JavaScript ── */
 [data-ui="collapsible"] {
   border-radius: var(--collapsible-radius, var(--radius-md));
-  font-family: var(--font-ui);
+  font-family: var(--collapsible-font, var(--font-ui));
   color: var(--color-fg);
 }
 

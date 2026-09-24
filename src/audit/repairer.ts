@@ -9,12 +9,24 @@ import { log } from "../utils/logger";
 
 // Fix types whose `offset` indexes into the file source and must be applied
 // high-to-low so earlier edits never invalidate later offsets. See `applyRepairs`.
-const OFFSET_SENSITIVE = new Set<RepairAction["type"]>(["rename-id", "wire-field-group"]);
+const OFFSET_SENSITIVE = new Set<RepairAction["type"]>(["add-attribute", "rename-id", "wire-field-group"]);
 
 export interface RepairSummary {
   files_modified: number;
   fixes_applied: number;
   fixes_skipped: number;
+  /** Every fix offered, in file order, and whether it applied (`repair --json`). */
+  fixes: RepairRecord[];
+}
+
+/** One offered fix and its outcome. On a dry run, `applied` means "would apply". */
+export interface RepairRecord {
+  file: string;
+  line: number;
+  rule_id: string;
+  type: RepairAction["type"];
+  message: string;
+  applied: boolean;
 }
 
 /** One applied repair, for a machine-readable change log. */
@@ -39,11 +51,26 @@ export interface SourceRepairResult {
  * behind both `faqir repair` (per file) and the MCP `faqir_repair_html` tool
  * (per string). Pure: no reads, no writes, no logging.
  *
- * Offset-sensitive fixes (`rename-id`, `wire-field-group`) index into the source
- * and are applied high-offset-first so earlier edits never invalidate later
- * offsets; other fix types search/use line numbers and are order-independent.
+ * Offset-sensitive fixes (`add-attribute`, `rename-id`, `wire-field-group`) name
+ * a tag by its offset in the ORIGINAL source. They are applied high-offset-first,
+ * and every applied tag edit is recorded as (original tag start, length delta),
+ * so each later offset is mapped through the edits before it — a field-group's
+ * edits interleave with an `add-attribute` inside the same group, and ordering
+ * alone cannot keep both right. Tag edits never cross a tag boundary, so an edit
+ * at original position `p` moves exactly the tags that start after `p`. The
+ * remaining fix types search or use line numbers (tag edits add no newlines)
+ * and run last.
  */
 export function applyRepairsToSource(source: string, results: AuditResult[]): SourceRepairResult {
+  const { source: repaired, applied, skipped, changes } = repairSource(source, results);
+  return { source: repaired, applied, skipped, changes };
+}
+
+/** {@link applyRepairsToSource}, plus each fix's outcome for the change log. */
+function repairSource(
+  source: string,
+  results: AuditResult[],
+): SourceRepairResult & { outcomes: Array<{ result: AuditResult; applied: boolean }> } {
   const fixable = results.filter((r) => r.fix);
   const ordered = [...fixable].sort((a, b) => {
     const ar = OFFSET_SENSITIVE.has(a.fix!.type) ? 0 : 1;
@@ -57,20 +84,30 @@ export function applyRepairsToSource(source: string, results: AuditResult[]): So
   let applied = 0;
   let skipped = 0;
   const changes: SourceRepairChange[] = [];
+  const outcomes: Array<{ result: AuditResult; applied: boolean }> = [];
+  const shifts: Array<[position: number, delta: number]> = [];
+  const shift: OffsetShift = {
+    map: (offset) => shifts.reduce((n, [p, d]) => (p < offset ? n + d : n), offset),
+    record: (offset, delta) => {
+      if (delta !== 0) shifts.push([offset, delta]);
+    },
+  };
 
   for (const result of ordered) {
     const fix = result.fix!;
-    const next = applyFix(current, fix, result);
+    const next = applyFix(current, fix, result, shift);
     if (next !== null && next !== current) {
       current = next;
       applied++;
       changes.push({ rule_id: result.rule_id, type: fix.type, message: result.message });
+      outcomes.push({ result, applied: true });
     } else {
       skipped++;
+      outcomes.push({ result, applied: false });
     }
   }
 
-  return { source: current, applied, skipped, changes };
+  return { source: current, applied, skipped, changes, outcomes };
 }
 
 /**
@@ -84,8 +121,18 @@ export async function applyRepairs(
 ): Promise<RepairSummary> {
   const fixable = results.filter(r => r.fix);
   if (fixable.length === 0) {
-    return { files_modified: 0, fixes_applied: 0, fixes_skipped: 0 };
+    return { files_modified: 0, fixes_applied: 0, fixes_skipped: 0, fixes: [] };
   }
+  const fixes: RepairRecord[] = [];
+  const record = (result: AuditResult, applied: boolean) =>
+    fixes.push({
+      file: result.file,
+      line: result.line,
+      rule_id: result.rule_id,
+      type: result.fix!.type,
+      message: result.message,
+      applied,
+    });
 
   // Group fixes by file
   const byFile = new Map<string, AuditResult[]>();
@@ -103,11 +150,14 @@ export async function applyRepairs(
   for (const [filePath, fileResults] of byFile) {
     if (!existsSync(filePath)) {
       fixesSkipped += fileResults.length;
+      for (const result of fileResults) record(result, false);
       continue;
     }
 
     const source = await Bun.file(filePath).text();
-    const repaired = applyRepairsToSource(source, fileResults);
+    const repaired = repairSource(source, fileResults);
+    const byLine = [...repaired.outcomes].sort((a, b) => a.result.line - b.result.line);
+    for (const { result, applied } of byLine) record(result, applied);
 
     fixesApplied += repaired.applied;
     fixesSkipped += repaired.skipped;
@@ -120,28 +170,52 @@ export async function applyRepairs(
     }
   }
 
-  return { files_modified: filesModified, fixes_applied: fixesApplied, fixes_skipped: fixesSkipped };
+  return { files_modified: filesModified, fixes_applied: fixesApplied, fixes_skipped: fixesSkipped, fixes };
 }
 
 /**
  * Apply a single fix to an HTML source string.
  * Returns the modified source, or null if the fix could not be applied.
  */
-function applyFix(source: string, fix: RepairAction, result: AuditResult): string | null {
+function applyFix(
+  source: string,
+  fix: RepairAction,
+  result: AuditResult,
+  shift: OffsetShift,
+): string | null {
   switch (fix.type) {
     case "add-attribute":
-      return addAttribute(source, fix, result);
+      return atShiftedOffset(source, fix, shift, (f) => addAttribute(source, f, result));
     case "add-script":
       return addScript(source, fix, result);
     case "rewrite-css":
       return rewriteCss(source, fix, result);
     case "rename-id":
-      return renameId(source, fix);
+      return atShiftedOffset(source, fix, shift, (f) => renameId(source, f));
     case "wire-field-group":
-      return applyWireFieldGroup(source, fix);
+      return applyWireFieldGroup(source, fix, shift);
     default:
       return null;
   }
+}
+
+/** Maps original-source offsets through the tag edits already applied. */
+interface OffsetShift {
+  map(offset: number): number;
+  record(offset: number, delta: number): void;
+}
+
+/** Run a single-tag fix at its offset as mapped into the current source, and
+ * record the length it added at its original position. */
+function atShiftedOffset(
+  source: string,
+  fix: RepairAction,
+  shift: OffsetShift,
+  apply: (fix: RepairAction) => string | null,
+): string | null {
+  const next = apply({ ...fix, offset: shift.map(fix.offset) });
+  if (next !== null) shift.record(fix.offset, next.length - source.length);
+  return next;
 }
 
 /**
@@ -153,7 +227,7 @@ function applyFix(source: string, fix: RepairAction, result: AuditResult): strin
  * length change never shifts a still-pending (lower) offset. The whole thing is
  * idempotent — re-running on already-canonical markup makes no change.
  */
-function applyWireFieldGroup(source: string, fix: RepairAction): string | null {
+function applyWireFieldGroup(source: string, fix: RepairAction, shift: OffsetShift): string | null {
   let edits: TagEdit[];
   try {
     edits = JSON.parse(fix.details.edits) as TagEdit[];
@@ -163,8 +237,11 @@ function applyWireFieldGroup(source: string, fix: RepairAction): string | null {
   const ordered = [...edits].sort((a, b) => b.offset - a.offset);
   let out = source;
   for (const edit of ordered) {
-    const next = editTagAt(out, edit.offset, edit.set || {}, edit.remove || []);
-    if (next !== null) out = next;
+    const next = editTagAt(out, shift.map(edit.offset), edit.set || {}, edit.remove || []);
+    if (next !== null) {
+      shift.record(edit.offset, next.length - out.length);
+      out = next;
+    }
   }
   return out === source ? null : out;
 }
@@ -182,7 +259,7 @@ function editTagAt(
   remove: string[],
 ): string | null {
   if (tagStart < 0 || tagStart >= source.length || source[tagStart] !== "<") return null;
-  const gt = source.indexOf(">", tagStart);
+  const gt = findTagEnd(source, tagStart);
   if (gt === -1) return null;
 
   const original = source.slice(tagStart, gt + 1);
@@ -229,7 +306,7 @@ function renameId(source: string, fix: RepairAction): string | null {
   if (!from || !to) return null;
   if (start < 0 || start >= source.length || source[start] !== "<") return null;
 
-  const gt = source.indexOf(">", start);
+  const gt = findTagEnd(source, start);
   if (gt === -1) return null;
 
   const tag = source.slice(start, gt + 1);
@@ -279,56 +356,70 @@ function rewriteCss(source: string, fix: RepairAction, result: AuditResult): str
 }
 
 /**
- * Add an attribute to an element found by its component/part context.
+ * Add an attribute to the element whose tag starts at `fix.offset`.
+ *
+ * Located by offset, as `renameId` is. It used to search the source for the
+ * first `data-part="…"` (or `data-ui="…"`) named in the message, so with two
+ * dialogs in one file the fix for the second was written into the first — and,
+ * the first now carrying the attribute, the second's own fix was then "skipped"
+ * as already present. Offsets from before the tag-start convention (pointing at
+ * the tag's closing `>`) are walked back to their `<`.
+ *
+ * Never writes an empty `aria-*` value: a bare `aria-labelledby` names nothing,
+ * and reporting it as "Fixed" hides a finding that still needs a human.
  */
-function addAttribute(source: string, fix: RepairAction, result: AuditResult): string | null {
-  const { attr, value } = fix.details;
+function addAttribute(source: string, fix: RepairAction, _result: AuditResult): string | null {
+  const attr = fix.details.attr ?? fix.details.attribute;
+  const value = fix.details.value ?? "";
   if (!attr) return null;
+  if (!value && /^aria-/i.test(attr)) return null;
 
-  // Find the element in the source by its data-ui/data-part context
-  const componentName = result.component_name;
-  const message = result.message;
-
-  // Determine the target element: look for the part mentioned in the message
-  let searchPattern: string;
-  const partMatch = message.match(/\[data-part="(\w+)"\]/);
-  if (partMatch) {
-    searchPattern = `data-part="${partMatch[1]}"`;
-  } else {
-    searchPattern = `data-ui="${componentName}"`;
-  }
-
-  // Find the tag containing this pattern
-  const idx = source.indexOf(searchPattern);
-  if (idx === -1) return null;
-
-  // Find the end of this tag (the closing >)
-  const tagEnd = source.indexOf(">", idx);
+  const tagStart = tagStartAt(source, fix.offset);
+  if (tagStart === null) return null;
+  const tagEnd = findTagEnd(source, tagStart);
   if (tagEnd === -1) return null;
 
-  // Check if the attribute already exists on this element
-  // Walk back to find the opening < of this tag
-  let tagStart = idx;
-  while (tagStart > 0 && source[tagStart] !== "<") tagStart--;
-  const tagContent = source.slice(tagStart, tagEnd + 1);
+  const tag = source.slice(tagStart, tagEnd + 1);
+  // Already present — valued or boolean — is not something to add again.
+  if (new RegExp(`\\s${escapeRegExp(attr)}(?=[\\s=/>])`, "i").test(tag)) return null;
 
-  // If the attribute already exists, skip
-  const attrPattern = new RegExp(`\\b${attr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*=`);
-  if (attrPattern.test(tagContent)) return null;
-
-  // Also check for boolean attribute (no value)
-  const boolPattern = new RegExp(`\\b${attr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:\\s|>|/)`);
-  if (boolPattern.test(tagContent)) return null;
-
-  // Insert the attribute before the closing >
   const insertion = value ? ` ${attr}="${value}"` : ` ${attr}`;
+  const closeAt = tag.endsWith("/>") ? tagEnd - 1 : tagEnd;
+  const before = source.slice(0, closeAt).replace(/\s+$/, "");
+  const spacer = closeAt !== tagEnd ? " " : "";
+  return before + insertion + spacer + source.slice(closeAt);
+}
 
-  // Handle self-closing tags
-  if (source[tagEnd - 1] === "/") {
-    return source.slice(0, tagEnd - 1) + insertion + " />" + source.slice(tagEnd + 1);
+/**
+ * The opening `<` of the element tag at `offset`: the offset itself when it is
+ * one, else the nearest `<` before it (an offset at the tag's closing `>`).
+ * Null when that is not the start of an element tag.
+ */
+function tagStartAt(source: string, offset: number): number | null {
+  if (!Number.isInteger(offset) || offset < 0 || offset >= source.length) return null;
+  const start = source[offset] === "<" ? offset : source.lastIndexOf("<", offset);
+  if (start === -1 || !/^<[a-zA-Z]/.test(source.slice(start, start + 2))) return null;
+  return start;
+}
+
+/**
+ * Index of the `>` that closes the tag opened at `tagStart`, skipping quoted
+ * attribute values — a directive like `l-show="count > 0"` carries a `>` that
+ * does not end the tag. -1 when the tag never closes.
+ */
+function findTagEnd(source: string, tagStart: number): number {
+  let quote: string | null = null;
+  for (let i = tagStart + 1; i < source.length; i++) {
+    const ch = source[i];
+    if (quote) {
+      if (ch === quote) quote = null;
+    } else if (ch === '"' || ch === "'") {
+      quote = ch;
+    } else if (ch === ">") {
+      return i;
+    }
   }
-
-  return source.slice(0, tagEnd) + insertion + source.slice(tagEnd);
+  return -1;
 }
 
 /**
