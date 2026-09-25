@@ -20,6 +20,13 @@
 // is the accumulated queue, which is exactly the thing a fixed tick count cannot
 // be calibrated against.
 //
+// (Postscript, 1.1A-23: the two failures quoted above turned out NOT to be
+// lateness. happy-dom < 20.11.2 held observer callbacks through an orphaned
+// WeakRef, so a GC between `observe()` and the mutation unhooked the observer
+// and the delivery never came — which no wait can fix. The realm is pinned in
+// `package.json` and guarded by `tests/meta/happy-dom-realm.test.ts`. Waiting
+// on a condition is still right for everything genuinely asynchronous.)
+//
 // Counting ticks harder is not the fix: `await tick(); await tick()` (which
 // lifecycle.test.ts used, with a comment predicting this) just moves the cliff.
 // `settle()` waits for the *condition* instead, one turn at a time, bounded. A

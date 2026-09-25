@@ -131,12 +131,9 @@ describe("tree-view with keyed l-for nodes", () => {
     const originalNodes = [...root.__faqirScope.nodes];
     root.__faqirScope.nodes = [originalNodes[1], originalNodes[0], originalNodes[2]];
     await tick();
-    // Same reason as the nested reorder below: happy-dom loses an ancestor's
-    // subtree observation after moving that ancestor, so the ARIA that the
-    // browser gets from the MutationObserver has to be asked for explicitly
-    // here. The observer-driven path is covered by the quarantined case at the
-    // bottom of this file (1.1A-23) — everything else about the reconciliation
-    // is deterministic and is asserted below.
+    // This case exercises the explicit `refresh()` hook — the deterministic path
+    // for DOM reconcilers that do not want to wait for an observer. The
+    // observer-driven path is asserted on its own by the last case in this file.
     api.refresh();
 
     expect(directValues(root)).toEqual(["beta", "alpha", "charlie"]);
@@ -152,9 +149,7 @@ describe("tree-view with keyed l-for nodes", () => {
     const alphaData = root.__faqirScope.nodes.find((node) => node.id === "alpha");
     alphaData.children = [alphaData.children[1], alphaData.children[0]];
     await tick();
-    // happy-dom loses an ancestor's subtree observation after moving that
-    // ancestor. The browser path is observer-driven; refresh() is the explicit
-    // deterministic hook for non-browser DOM reconcilers.
+    // Explicit hook again; the observer would get here on its own too.
     api.refresh();
 
     const alphaGroup = alpha.querySelector(":scope > [data-part='group']")!;
@@ -196,25 +191,16 @@ describe("tree-view with keyed l-for nodes", () => {
     Faqir.destroy(root);
   });
 
-  // QUARANTINED — see follow-up 1.1A-23 in FAQIR-PLAN-1.1.md. Un-skip it there.
-  //
-  // This is the one assertion in the file that depends on the controller's
-  // `MutationObserver` firing, and in the shared happy-dom realm that delivery
-  // is dropped rather than delayed. Measured at 6daf84f: 6 of 11 full-suite
-  // runs red, green in isolation every time; raising `settle()`'s budget from
-  // 50 to 400 turns does not help (575 ms burned, `aria-posinset` still "1"),
-  // while a passing run settles at 0 turns — bimodal, so no budget reaches it.
-  // In the failing mode the engine HAS reconciled (`directValues` is
-  // ["beta","alpha","charlie"]) and keying held, but all 12 items still carry
-  // their pre-reorder `aria-posinset`: `onMutation` was never called. It is the
-  // same shim limitation the running case above works around — happy-dom loses
-  // an ancestor's subtree observation once that ancestor is moved.
+  // The one assertion in the file that depends on the controller's
+  // `MutationObserver` firing. It was quarantined for 1.1A-23: the delivery was
+  // dropped, not late, and the cause was happy-dom < 20.11.2 holding each
+  // observer's callback only through a WeakRef, so a GC between `observe()` and
+  // the reorder unhooked the observer for good. `tests/meta/happy-dom-realm.test.ts`
+  // now pins the fixed behaviour.
   //
   // Do not "fix" this by calling `api.refresh()` here: that is what the case
-  // above already does, and it would leave the observer wiring untested rather
-  // than quarantined. The fix belongs in the realm (or in giving this file its
-  // own partition in `scripts/test.mjs`), not in the assertion.
-  it.skip("refreshes ARIA from its MutationObserver after an l-for reorder", async () => {
+  // above already does, and it would leave the observer wiring untested.
+  it("refreshes ARIA from its MutationObserver after an l-for reorder", async () => {
     const { root, api } = await mount();
 
     const alpha = byValue(root, "alpha");

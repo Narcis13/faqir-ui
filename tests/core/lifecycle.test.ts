@@ -356,9 +356,10 @@ describe("l-cloak is removed from content that arrives later", () => {
 
     const host = document.getElementById("host")!;
     host.innerHTML = `<div id="late" l-cloak><span id="deep" l-cloak>x</span></div>`;
-    // The observer delivers on a microtask, but a queue left by ~170 earlier
-    // test files sharing this realm can push delivery an unpredictable number of
-    // turns out — so wait for the sweep itself rather than for a turn count.
+    // The observer delivers on a microtask; wait for the sweep itself rather
+    // than for a turn count. (This case flaked in the full suite for 1.1A-23 —
+    // not lateness: happy-dom < 20.11.2 let a GC unhook the observer outright.
+    // `tests/meta/happy-dom-realm.test.ts` guards the realm against that.)
     await settle(
       () => !document.getElementById("late")!.hasAttribute("l-cloak"),
       "the observer sweep to uncloak a node appended after bootstrap",
