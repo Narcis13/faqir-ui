@@ -129,7 +129,7 @@ plan is complete and is not consulted.
 
 | ID | Task | Status |
 |----|------|--------|
-| 1.1R-01 | Release 1.1 "Personality" | ⬜ |
+| 1.1R-01 | Release 1.1 "Personality" | ✅ |
 
 ---
 
@@ -1118,5 +1118,5 @@ deploy the docs site.
 - `tests/migration/*`: the surface extractor reports **no** vocabulary loss against `v1.0.0` (additive release proven, not asserted).
 
 **Acceptance criteria**
-- [ ] `release.mjs minor --dry-run` green with all seven packages; release notes written; README and VISION updated.
-- [ ] v1.1.0 tagged and published; docs deployed; `.faqir-plan/state.json` records the release.
+- [x] `release.mjs minor --dry-run` green with all seven packages; release notes written; README and VISION updated. (Green at `cc4bf57` on 2026-09-25: 14/14 gates including the full suite, 264 files; seven packages stamped 1.1.0; the packed CLI answering under Node and Bun. It took a review (`docs/code-evaluation-1.1.md`) and a fix pass to get there — 26 of the review's 29 findings fixed before the tag, four more found on re-verification, the rest deferred to 1.1.x. The notes record the manual suites honestly: a11y 4,060, browser 48 and layout 8 passed; the two pixel suites were not run, because their baselines live in a container the release machine did not have.)
+- [x] v1.1.0 tagged and published; docs deployed; `.faqir-plan/state.json` records the release. (Published by `node scripts/release.mjs minor`; `state.json` records it with the `v1.1.0` tag in place of a hash, because the release commit is written by the script after this entry.)

@@ -1,9 +1,5 @@
 # Faqir UI 1.1 "Personality" — release notes
 
-> **Draft.** Written ahead of the tag. The release-verification section is
-> completed by whoever cuts the release, from the rehearsal and the manual
-> suites; nothing else here should need to change.
-
 1.0 froze the contract. 1.1 gives it a voice. The protocol did not move: every
 1.0 page still audits clean, and everything below is additive under
 [`SPEC-1.0.md` §8](../SPEC-1.0.md).
@@ -224,13 +220,24 @@ pass that followed it. None of these changes the protocol or a manifest contract
 
 ## Release verification
 
-> **TO FILL** — recorded as `docs/release-checklist.md` asks.
+Recorded on 2026-09-25 at `cc4bf57`, the last code change before the tag (only
+these notes and the plan's bookkeeping follow it), on macOS with Bun 1.3.8 — the
+version `.bun-version` pins, and `release.mjs` refuses any other.
 
-- `node scripts/release.mjs minor --dry-run`: <!-- result -->
+- `node scripts/release.mjs minor --dry-run`: **green.** All 14 preflight gates
+  passed, the full suite included (264 test files across the two engine
+  partitions). All seven packages were stamped 1.1.0 in lockstep, and
+  `Faqir.version` and the 37 SRI hashes in `cdn.json` read 1.1.0. The packed CLI
+  tarball installs and answers `--version` and `context --skill` under Node and
+  under Bun. Every tracked file was restored afterwards.
 - Manual suites (they baseline in a pinned Linux container, so they are run by
   hand; see the checklist):
-  - `bun run test:visual` (under the 1.1A-13 matrix policy): <!-- result -->
-  - `bun run test:visual:print`: <!-- result -->
-  - `bun run test:a11y`: <!-- result -->
-  - `bun run test:browser`: <!-- result -->
-  - `bun run lint:layout`: <!-- result -->
+  - `bun run test:visual` (under the 1.1A-13 matrix policy): **not run.** Its
+    baselines exist only in the pinned container, which was not available on the
+    release machine. The visual changes since 1.1A-13 are token additions and
+    preview markup, which the accessibility suite below renders in every theme.
+  - `bun run test:visual:print`: **not run**, for the same reason.
+  - `bun run test:a11y`: **4,060 passed**, zero axe violations.
+  - `bun run test:browser`: **48 passed.**
+  - `bun run lint:layout`: **8 passed.**
+- `bun run smoke`: the Node-only CLI bundle runs with no Bun runtime.

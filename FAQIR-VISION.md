@@ -1,6 +1,6 @@
 # FAQIR-VISION — The 1.x Direction
 
-**Status:** proposal for ratification · **Written:** 2026-09-10 · **Baseline:** v1.0.0 (`676bb9f`)
+**Status:** ratified — 1.1 shipped 2026-09-25 (`v1.1.0`) · **Written:** 2026-09-10 · **Baseline:** v1.0.0 (`676bb9f`)
 **Companion documents:** `FAQIR-NEXT.md` (the 0.x → 1.0 overhaul, executed), `SPEC-1.0.md`
 (frozen protocol), `FAQIR-PROTO-INTEGRATION.md` (proto adoption), `FAQIR-1.0-READINESS.md`
 (the audit that shaped 1.0's last mile).
@@ -870,7 +870,7 @@ modifier, which goes through §8.
 
 | Release | Lane A — Look | Lane B — Platform | Night Shift |
 |---|---|---|---|
-| **1.1 Personality** | role tokens, 14 axes, component re-pointing, `light-dark()` authoring, seed generator + scorecard + distinctiveness, `faqir fonts`, 12 seeds re-expressed, 12 new themes, manifest 1.1 (theme), `data-skin` amendment | `@faqir-ui/rules` (shape + logic, isomorphic, golden parity), `faqir-rules` plugin, async validators, `faqir rules lint` | theme dreams nightly; `dreams.tsv` |
+| **1.1 Personality** — shipped 2026-09-25 (`v1.1.0`) | role tokens, 14 axes, component re-pointing, `light-dark()` authoring, seed generator + scorecard + distinctiveness, `faqir fonts`, 12 seeds re-expressed, 12 new themes, manifest 1.1 (theme), `data-skin` amendment | `@faqir-ui/rules` (shape + logic, isomorphic, golden parity), `faqir-rules` plugin, async validators, `faqir rules lint` | theme dreams nightly; `dreams.tsv` |
 | **1.2 Surface** | collections, `list`, `testimonial(s)`, marketing/content set, icon packs, decorative SVG, `gallery`/`lightbox`/`video`, `site-header`; `template-complete` gate | forms question types in the widget map; `/forms` gains `rules`, `pages`, conversational variant | component dreams from the gap ranking |
 | **1.3 Motion** | motion axis tokens, preset expansion, `reveal`/`parallax`/`scroll-progress`/`scrolly`/`marquee`/`counter`/`flip-card`/`tilt`, `data-effect`, `faqir-pointer`, `l-transition.view`, `Faqir.supports`, motion audit rules | `@faqir-ui/render` + generated definition schema; `faqir render` / `faqir lint`; `page` profile; micro-site scaffolds; `faqir theme seed --from-color` | motion dreams |
 | **1.4 Definitions** | `chat`, `activity-feed`, commerce set, `bento`, `error-page` | `form` profile complete on `/render`; `faqir snapshot`; MCP tools; `faqir_wish`; structured-output schemas published | wish dreams; dogfood dreams begin |
@@ -916,3 +916,5 @@ Four decisions change what gets planned; everything else follows from them.
 
 With those four signed, the next document is `FAQIR-PLAN-1.1.md`: Lane A and Lane B as
 one-session tasks, in the format the `faqir-plan` skill already executes.
+All four were signed; `FAQIR-PLAN-1.1.md` was written and executed, and shipped as
+`v1.1.0` on 2026-09-25.

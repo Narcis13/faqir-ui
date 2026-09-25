@@ -2,7 +2,7 @@
   "$schema": "./state.schema.md",
   "plan": "FAQIR-PLAN-1.1.md",
   "current": null,
-  "last_completed": "1.1N-02",
+  "last_completed": "1.1R-01",
   "history": [
     {
       "id": "1.1A-01",
@@ -183,6 +183,12 @@
       "completed": "2026-09-12",
       "commit": "409d990",
       "summary": "Cadence: nightly.sh runs one dream in a disposable worktree (the branch survives, the bundle is harvested, a dirty worktree is kept rather than deleting a discard's row); digest.mjs renders DREAMS.md from the ledger unioned with every unmerged dream branch; docs/dream-rubric.md v1.0 is the versioned five-criterion rubric, with its prose and its code asserted against each other."
+    },
+    {
+      "id": "1.1R-01",
+      "completed": "2026-09-25",
+      "commit": "v1.1.0",
+      "summary": "Release 1.1 \"Personality\": seven packages at 1.1.0 in lockstep, @faqir-ui/rules published for the first time. Getting there took a whole-tree review (docs/code-evaluation-1.1.md, 29 findings) and a fix pass: prototype pollution in coerce, catastrophic `pattern` regexes (nested and bounded repeats, overlapping alternation, plus a 10,000-character subject cap), repair fixes that never applied or hit the wrong element, output paths that escaped the project (now one helper, src/utils/paths.ts), the l-for duplicate-key leak, and the 1.0 upgrade path, where `faqir upgrade` now merges the token layer and base styles as well as the components. Re-verification found four more, all fixed before the tag: doctor rejecting content_model \"empty\", bundle --output / init --dir containment, the Night Shift worktree always dirty, and typecheck rewriting cdn.json. The long-running flake 1.1A-23 was happy-dom < 20.11.2 dropping a MutationObserver on GC, not lateness. Bun is pinned in .bun-version (1.3.8), and release.mjs refuses any other version, because three committed artifacts byte-compare a fresh `bun build`. The rehearsal was green at cc4bf57: 14/14 gates, 264 test files, and the packed CLI answering under Node and Bun. Manual suites: a11y 4,060, browser 48, layout 8; the visual and print pixel suites were not run, since they need the pinned container. Deferred to 1.1.x: review items 27/28 (duplication, oversized units) and the follow-ups still marked ⬜. `commit` holds the tag rather than a hash, because the release commit is written by the script after this entry."
     }
   ],
   "note": "Pointer file for the /faqir-plan slash command. FAQIR-PLAN-1.1.md status cells (⬜/✅) are the source of truth; this file records the cross-session cursor and a per-task log. Do not hand-edit `current` while a session is running. The 1.0 plan's cursor (61 history entries, phases v0.3–1.0) is archived unchanged at state-1.0.json."
