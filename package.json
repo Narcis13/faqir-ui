@@ -1,6 +1,6 @@
 {
   "name": "faqir-ui-cli",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Agent-native UI framework — CLI-distributed, manifest-driven, zero-dependency components",
   "type": "module",
   "workspaces": [

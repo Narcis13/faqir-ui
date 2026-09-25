@@ -1,12 +1,12 @@
 {
   "package": "@faqir-ui/core",
-  "version": "1.0.0",
-  "base": "https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.0.0/dist/",
+  "version": "1.1.0",
+  "base": "https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.1.0/dist/",
   "integrity": {
-    "faqir-core.js": "sha384-FsLAtH2R6Wv0q5TGuj3ejUD+D/AtcENeNVoj943IpuBur2p3D9RkOgvsc0oKup6P",
-    "faqir-core.min.js": "sha384-Eo/s4XXGxSwKhRVTBgOH8OA6FTOK6fF78TyrecbchJ9rMuwhQBenqH3q3lhbbv1r",
-    "faqir-core.min.js.map": "sha384-E/uDf2SVHdSrN7qkzL0lwqfhJqtXYnkZ9PiXwv8z2CWxR1NGFfxm2IRFotmVCrFj",
-    "faqir-core.mjs": "sha384-hodNYpxtZX0UsvtEmUr4im5pbEg1srirGnujd/FrQhXEFaol+bE2IHG5BXKcYm1w",
+    "faqir-core.js": "sha384-Ehw+8Knrsxpt9enram44fdKrZh9cJoKDO8WeN7+gZ4DDJEH/RwHiceK7lgfiGprw",
+    "faqir-core.min.js": "sha384-+FqfiMSc4+AeDam5DHWdByfqFpegDaGaYGsKVFeKqrV2YHahZla6egt04qPvvHSc",
+    "faqir-core.min.js.map": "sha384-eMfL8gnKtbSNBDSDa8FvuTsbIe5QFjcgaMktueIfzLSGL48HzFBmCA6Wt4mMKapj",
+    "faqir-core.mjs": "sha384-GIAWwY5wDRhwHb3/yKRvQ7D8oSmMI4PZKI0IsSMye5K1mnIwtCbgG20zphtOCn2x",
     "faqir.aurora.css": "sha384-TrPBHGXGxwY6sLypt3kbjbhEHz87wsYgqQhzPqi5zghmsiqewgykQx6aS+WP2O0h",
     "faqir.brutalist.css": "sha384-N/VfEAEdOZ2PGFX4xsPzlHEmDkXtjzmkXXW1Ta3PCtBV/RZm1rF4EYsfwLEvwqPZ",
     "faqir.candy.css": "sha384-/lk9HAr46O2pYwsM8vE8MBVkPLB1t2otA3Edfux98b564DvNkWqpsD4DSVdcmHAX",

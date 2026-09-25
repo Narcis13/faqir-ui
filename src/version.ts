@@ -25,7 +25,7 @@
 // the published site paths — states the same one.
 
 /** The npm package and CLI version. Rewritten by `scripts/release.mjs`. */
-export const VERSION = "1.0.0";
+export const VERSION = "1.1.0";
 
 /**
  * The frozen attribute protocol. **Additive until 2.0** — see the amendment
