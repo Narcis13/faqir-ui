@@ -54,7 +54,9 @@ function run(cmd, args, opts = {}) {
 }
 
 // ── 1. The package must be built: `npm pack` copies dist/, it does not make it.
-run("node", [join(ROOT, "scripts", "build-core-package.mjs")], { stdio: ["ignore", "ignore", "inherit"] });
+// `--no-pin`: the tarball needs dist/, not a rewritten cdn.json — that stays the
+// author's to regenerate and commit (`bun run build:core-package`).
+run("node", [join(ROOT, "scripts", "build-core-package.mjs"), "--no-pin"], { stdio: ["ignore", "ignore", "inherit"] });
 
 // ── 2. Skip when nothing that shapes the tarball has moved.
 const INPUTS = [

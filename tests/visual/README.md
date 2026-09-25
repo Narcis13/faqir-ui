@@ -12,7 +12,7 @@ At the current registry that is **86 components × 12 matrix themes × 2 schemes
 dirs = 4 128 captures**, plus a patterns-only sweep of the eight that are not
 members. Adding a component (`registry/{primitives,recipes,patterns}/<name>/<name>.html`
 with an `@ui:component` header) or a theme (`registry/themes/<name>.css`) grows the
-matrix automatically — **zero edits** to the suite, the config, or the CI job.
+matrix automatically — **zero edits** to the suite or the config.
 
 ## Matrix membership is a manifest fact (task 1.1A-13)
 
@@ -107,7 +107,6 @@ rule with an injected override and prove the check bites in the browser too.
 | `variant-consistency.pw.ts` | Computed geometry for the 0.9-11 consistency sweep: mixed-size baselines, callout accents, progress-label bounds, and contained-but-reachable carousel overflow. |
 | `../../src/utils/layout-lint.ts` | The four conditions as pure geometry, proven from literal rectangles in `tests/utils/layout-lint.test.ts`. |
 | `../../playwright.config.ts` | One default viewport, chromium, single platform-agnostic baseline set, `testMatch: **/*.pw.ts`. The responsive and layout-lint specs set their own viewport. |
-| `../../.github/workflows/visual.yml` | CI: seed baselines on `main`, diff PRs (sharded ×4), upload a merged HTML diff report. |
 | `__screenshots__/` | Baselines. Git-ignored — see the baseline strategy below. |
 
 ## How a page is captured
@@ -232,33 +231,32 @@ npm run lint:layout                             # the layout gate only
 > laptop). This is what 0.8-14 turned out to be, alongside six genuinely stale
 > captures; nothing is excluded from the matrix on purpose.
 
-To reproduce CI's exact renders locally, run inside the pinned container:
+To produce the authoritative Linux renders, run inside the pinned container:
 
 ```bash
 docker run --rm -v "$PWD":/work -w /work mcr.microsoft.com/playwright:v1.61.1-noble \
   sh -c "npm install && npx playwright test --update-snapshots"
 ```
 
-## Baseline strategy (CI)
+## Baseline strategy
 
-Everything runs in the pinned container `mcr.microsoft.com/playwright:v1.61.1-noble`
-(the tag **must** match `@playwright/test` in `package.json`), so baselines and the
-comparison are byte-stable. Rather than commit ~2 000 PNGs to git, baselines use
-the **CI cache strategy** (§12.2 explicitly allows this):
+Canonical renders come from the pinned container
+`mcr.microsoft.com/playwright:v1.61.1-noble` (the tag **must** match
+`@playwright/test` in `package.json`), so baselines and the comparison are
+byte-stable. Baselines are not committed: `tests/visual/__screenshots__/` is
+git-ignored.
 
-- **`push` to `main` / manual dispatch →** the `baselines` job regenerates the set
-  and seeds the Actions cache, keyed by a hash of the registry + the harness.
-- **`pull_request` →** the `visual` job restores that set and diffs, sharded ×4.
-  A regression fails the shard; the `merge-report` job always publishes a single
-  **`visual-diff-report`** HTML artifact (with expected/actual/diff images).
-
-Intended visual changes therefore show up as diffs to approve in the PR artifact,
-then regenerate automatically when the PR merges to `main`.
+There is no CI to hold them. The GitHub Actions workflow that used to seed a
+baseline cache on `main` and diff pull requests against it was removed with the
+rest of `.github/workflows/` in `671941e`. The suite is now a manual pre-release
+step, run locally (`docs/release-checklist.md`); use the container above when the
+renders have to match another machine's. Read the diffs; never run an `:update`
+variant to make a release go green. `tests/meta/visual-baselines.test.ts` keeps
+the old workflow's invariants and goes dormant until a `visual.yml` exists again.
 
 > Switching to **committed baselines** instead is a two-line change: drop
 > `tests/visual/__screenshots__/` from `.gitignore` and commit the set produced by
-> the `docker run … --update-snapshots` command above. The CI container already
-> matches, so the committed set will diff cleanly.
+> the `docker run … --update-snapshots` command above.
 
 ## Runtime budget
 
@@ -267,13 +265,11 @@ Measured on an 8-core Apple Silicon laptop (chromium, default workers):
 | | 264 tests (one theme) | viewport axis (90) | full 2 112 |
 | --- | --- | --- | --- |
 | generate (`--update-snapshots`) | 20.7 s | 8.1 s | ~2.5 min |
-| diff (CI path) | 14.5 s | 5.7 s | ~2 min |
+| diff | 14.5 s | 5.7 s | ~2 min |
 
-Comfortably under the §12.2 ~10-min budget even unsharded. CI still shards **×4**
-(≈1 min/shard on a 4-core runner) for headroom as the registry grows and to
-parallelise the diff artifacts. The viewport axis adds 90 tests (≈+2%), so the
-existing ×4 sharding stands; to reshard, change the `matrix.shard` list **and**
-the `--shard=k/N` denominator in `.github/workflows/visual.yml`.
+Comfortably under the §12.2 ~10-min budget even unsharded. The viewport axis
+adds 90 tests (≈+2%). To split a run, `npx playwright test --shard=k/N` still
+works; nothing shards it by default now that the workflow is gone.
 
 ## Meta-test
 

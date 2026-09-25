@@ -15,7 +15,7 @@
  * `site/lib/faqir-audit.js`: `faqir add` copies registry files with `node:fs`
  * and never invokes a bundler, so the plugin has to exist on disk. `--check` is
  * the drift gate that keeps the committed bytes honest — it is byte-for-byte,
- * so it is pinned to the `BUN_VERSION` in `.github/workflows/ci.yml` exactly as
+ * so it is pinned to the Bun version in `.bun-version` exactly as
  * `check:core-package` and `check:audit-browser` are.
  *
  * The header is not written here: it is the `@ui:` lines and the doc comment at
@@ -133,7 +133,8 @@ if (checkOnly) {
     process.stderr.write(
       current === null
         ? "registry/core/plugins/faqir-rules.js is missing — run `bun run build:rules-plugin`.\n"
-        : "registry/core/plugins/faqir-rules.js is stale — run `bun run build:rules-plugin`.\n",
+        : "registry/core/plugins/faqir-rules.js is stale — run `bun run build:rules-plugin`.\n" +
+          "If `bun --version` differs from .bun-version, that is the likely cause.\n",
     );
     process.exit(1);
   }

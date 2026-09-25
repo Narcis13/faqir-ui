@@ -9,7 +9,7 @@
  *
  * Run:      npx playwright test                     (compares against baselines)
  * Update:   npx playwright test --update-snapshots  (regenerate baselines)
- * Shard:    npx playwright test --shard=1/4         (see .github/workflows/visual.yml)
+ * Shard:    npx playwright test --shard=1/4         (optional; nothing shards by default)
  *
  * Baselines are platform-specific — generate/update them in the pinned Linux
  * container, never on a developer laptop. See tests/visual/README.md.

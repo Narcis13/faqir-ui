@@ -27,6 +27,7 @@
  * Usage:
  *   bun run build:core-package            → write dist/* and packages/core/cdn.json
  *   bun run check:core-package            → exit 1 if the committed cdn.json is stale
+ *   node scripts/build-core-package.mjs --no-pin → write dist/* only
  *
  * `--check` is the drift gate, and it is not optional cosmetics. `cdn.json` is
  * the ONLY committed generated artifact whose staleness is silently fatal at
@@ -39,10 +40,11 @@
  *
  * CAVEAT — same shape as `check:audit-browser`, and for the same reason. The
  * minified bundle comes from `bun build --minify`, whose output is not stable
- * across Bun releases, so this gate binds `cdn.json` to the `BUN_VERSION` pinned
- * in `.github/workflows/ci.yml`. Bumping Bun therefore requires re-running
+ * across Bun releases, so this gate binds `cdn.json` to the Bun version pinned
+ * in `.bun-version` (which `scripts/release.mjs` enforces before it runs any
+ * gate). Bumping Bun therefore requires updating `.bun-version`, re-running
  * `bun run build:core-package` and committing the new `cdn.json` in the same
- * change — otherwise CI goes red with no source edit at all.
+ * change — otherwise the release preflight goes red with no source edit at all.
  *
  * Runnable via `bun run build:core-package` or `node scripts/build-core-package.mjs`.
  */
@@ -75,6 +77,12 @@ const pkg = JSON.parse(readFileSync(join(PKG, "package.json"), "utf8"));
 
 /** `--check`: compare the committed cdn.json against a fresh build, write nothing. */
 const checkOnly = process.argv.slice(2).includes("--check");
+/**
+ * `--no-pin`: build `dist/` but leave the committed cdn.json alone — for callers
+ * that only need the package's files (the type fixture), so a typecheck never
+ * rewrites a tracked file behind the author's back.
+ */
+const noPin = process.argv.slice(2).includes("--no-pin");
 
 // Shipped engine + controller budget (§10.4), kept aligned with
 // scripts/check-size.mjs. The engine-only 14 KB budget applies to
@@ -279,8 +287,9 @@ if (checkOnly) {
         "Every hash in that file is emitted verbatim as `integrity=\"sha384-…\"` into the\n" +
         "docs site's CDN snippets. SRI is fail-closed: a stale hash does not degrade the\n" +
         "page, it stops the browser executing the file at all.\n" +
-        "If you just bumped Bun, that is the cause — `bun build --minify` output is not\n" +
-        "stable across releases; regenerate and commit alongside the BUN_VERSION bump.\n",
+        "If `bun --version` differs from .bun-version, that is the cause — `bun build\n" +
+        "--minify` output is not stable across releases. Build with the pinned Bun, or,\n" +
+        "to bump Bun on purpose, regenerate and commit alongside the .bun-version change.\n",
     );
     process.exit(1);
   }
@@ -291,7 +300,7 @@ if (checkOnly) {
   process.exit(0);
 }
 
-writeFileSync(CDN_PIN, cdnText);
+if (!noPin) writeFileSync(CDN_PIN, cdnText);
 
 // 6. Report + size budget.
 const minPath = join(DIST, "faqir-core.min.js");

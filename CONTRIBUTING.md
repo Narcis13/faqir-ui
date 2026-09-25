@@ -447,8 +447,10 @@ auto-discovered from `registry/recipes/*/*.js` and registered automatically.
 The build is deterministic (controllers sorted by name, no timestamp in the
 generated header), so the same sources always produce byte-identical output. The
 generated file carries a provenance header listing the engine source, every
-controller, and the package version. CI treats the committed `faqir-core.js` as
-fresh — regenerate and commit it whenever you touch the engine or a controller.
+controller, and the package version. The test suite (and so the release
+preflight) treats the committed `faqir-core.js` as fresh
+(`tests/build/core-assembly.test.ts` fails if it drifts) — regenerate and commit
+it whenever you touch the engine or a controller.
 
 ## Building the icon set (`build:icons`)
 
@@ -470,8 +472,9 @@ Each glyph becomes a `[data-icon="{name}"] { --icon: url("data:image/svg+xml,…
 rule; the base `[data-ui="icon"]` rule paints `currentColor` through that data-URI
 as a `mask`, so icons inherit color and size with `font-size` (`1em`) — no fonts,
 no fetch, zero JS. The build is deterministic (names sorted, SVGs normalized, no
-timestamp), so identical inputs produce byte-identical `icons.css`; CI treats the
-committed artifacts as fresh (`tests/build/build-icons.test.ts` fails if they drift).
+timestamp), so identical inputs produce byte-identical `icons.css`; the test suite
+(and so the release preflight) treats the committed artifacts as fresh
+(`tests/build/build-icons.test.ts` fails if they drift).
 
 **To change the set:** edit `curated-icons.txt`, vendor any new SVG into
 `scripts/icons/lucide/` (`curl -sSL https://unpkg.com/lucide-static@1.24.0/icons/<name>.svg -o scripts/icons/lucide/<name>.svg`),
@@ -505,7 +508,14 @@ is ≤ 14KB gzip; today it runs slightly over because recipe controllers are sti
 in the engine. The engine/controller split (0.3-03) and de-duplication (0.3-04) bring it
 under budget — the build prints an explicit NOTE meanwhile.
 
-Requires Bun to *build* the minified bundle (not to run the artifacts).
+Requires Bun to *build* the minified bundle (not to run the artifacts) — and
+exactly the version pinned in `.bun-version`, because `bun build --minify` output
+is not stable across Bun releases and `bun run check:core-package` byte-compares
+`cdn.json`'s SRI hashes against a fresh build. The same pin holds
+`check:audit-browser` and `check:rules-plugin`. To bump Bun, update
+`.bun-version`, run `bun run build:core-package`, `bun run build:audit-browser`
+and `bun run build:rules-plugin`, and commit the results together;
+`scripts/release.mjs` refuses to run on any other Bun.
 
 ## Type Checking
 

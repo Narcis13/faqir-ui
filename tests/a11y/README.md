@@ -97,7 +97,6 @@ there is no RTL axis.
 | `a11y-matrix.test.ts` | `bun test` meta-tests: discovery parity with the visual suite, matrix shape, the 1.1A-13 membership split (a reduced theme is scanned over its patterns, not dropped; ids unchanged by promotion), exemption + report contracts. |
 | `fixtures/known-violation.html` | Deliberately-broken page proving the gate actually fails. |
 | `../../playwright.a11y.config.ts` | Separate config (pass/fail, no snapshot machinery). |
-| `../../.github/workflows/a11y.yml` | CI gate — runs the scan in the pinned Playwright container. |
 
 ## Running locally
 
@@ -111,6 +110,11 @@ Each page is the identical self-contained, network-free document the visual suit
 captures (all framework CSS inlined, no controller JS), so a scan is
 deterministic and touches nothing external. axe evaluates the DOM/CSS, so results
 are platform-independent — no baselines, no pinned container needed to reproduce.
+
+There is no CI gate for it: the GitHub Actions workflow that ran this scan was
+removed with the rest of `.github/workflows/` in `671941e`, and the release
+preflight cannot run a browser suite. It is a manual pre-release step, run
+locally — see `docs/release-checklist.md`.
 
 ## The exemption mechanism
 

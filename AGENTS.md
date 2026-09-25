@@ -16,9 +16,10 @@ contains:
 - package workspaces in `packages/`;
 - tests in `tests/`, generally mirroring the source layout.
 
-Development uses Bun 1.3 or newer. The compiled CLI and published packages must
-continue to run on Node.js 18 or newer. The codebase uses ESM and strict
-TypeScript.
+Development uses Bun 1.3 or newer; releasing, and regenerating the
+byte-compared bundles below, needs exactly the version pinned in
+`.bun-version`. The compiled CLI and published packages must continue to run
+on Node.js 18 or newer. The codebase uses ESM and strict TypeScript.
 
 ## Sources of truth
 
@@ -60,18 +61,29 @@ bun run check:package
 bun run check:registry-index
 bun run check:skill
 bun run check:schema-refs
+bun run check:manifest-api
+bun run check:bindings
+bun run check:theme-docs
+bun run check:docs
 bun run check:audit-browser
+bun run check:rules-plugin
 bun run check:core-package
 ```
 
-The last two byte-compare a committed artifact against a fresh `bun build
---minify`, so they are pinned to the `BUN_VERSION` in
-`.github/workflows/ci.yml`. Bumping Bun means re-running `bun run
-build:audit-browser` **and** `bun run build:core-package` and committing what
-they write; nothing else in the repo changes, but both gates go red until you
-do. `check:core-package` guards `packages/core/cdn.json`, whose SHA-384 hashes
-are emitted as `integrity="…"` into every CDN snippet on the docs site — SRI is
-fail-closed, so a stale hash there is a blank page, not a degraded one.
+The last three byte-compare a committed artifact against a fresh `bun build
+--minify`, so they are pinned to the Bun version in `.bun-version`, and
+`scripts/release.mjs` refuses to run on any other Bun. Bumping Bun means updating
+`.bun-version`, re-running `bun run build:audit-browser`, `bun run
+build:rules-plugin` **and** `bun run build:core-package`, and committing what
+they write together with the pin; nothing else in the repo changes, but all
+three gates go red until you do. `check:core-package` guards
+`packages/core/cdn.json`, whose SHA-384 hashes are emitted as `integrity="…"`
+into every CDN snippet on the docs site — SRI is fail-closed, so a stale hash
+there is a blank page, not a degraded one.
+
+There is no CI: the GitHub Actions workflows were removed, and
+`node scripts/release.mjs` runs every `check:*` above (except `check:package`)
+as its preflight. Run the relevant ones locally before handing off.
 
 Use `bun run test` for the full suite, never a bare `bun test`. The two engine
 builds each bootstrap on `require` and install a permanent MutationObserver, so
@@ -93,8 +105,8 @@ Run the smallest relevant test while iterating. Before handing off a broad
 change, run `bun run test` and `bun run typecheck`; add build, smoke, registry,
 accessibility, or visual checks when the affected area requires them. Do not
 update visual snapshots unless the visual change is intentional. Local visual
-baselines are ignored because canonical rendering happens in the pinned CI
-environment.
+baselines are ignored because canonical rendering happens in the pinned Linux
+Playwright container.
 
 ## Implementation conventions
 

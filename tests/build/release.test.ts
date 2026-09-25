@@ -23,10 +23,12 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  BUN_VERSION_FILE,
   CLI_VERSION_FILE,
   PACKAGES,
   PREFLIGHT,
   VERSION_FILES,
+  checkBunVersion,
   isExplicitVersion,
   nextVersion,
   parseReleaseArgs,
@@ -159,6 +161,78 @@ describe("a dry-run version bump reaches every version file", () => {
     expect(SOURCE).not.toMatch(/\b(six|Six) packages\b/);
     expect(SOURCE).not.toContain("5 workspace packages");
     expect(SOURCE).not.toMatch(/\d+ SRI hashes"/);
+  });
+});
+
+describe("the Bun pin", () => {
+  // Three committed artifacts — cdn.json's SRI hashes, the audit-browser bundle
+  // and the faqir-rules plugin — are byte-compared against a fresh
+  // `bun build --minify`, so they are only reproducible on one Bun. The pin used
+  // to live in the deleted ci.yml; it now lives in `.bun-version`, and the
+  // release guards refuse to run on any other Bun.
+  const PIN = readFileSync(join(ROOT, ".bun-version"), "utf8");
+
+  it("is one plain version in .bun-version", () => {
+    expect(BUN_VERSION_FILE).toBe(".bun-version");
+    expect(PIN).toMatch(/^\d+\.\d+\.\d+\n?$/);
+    expect(checkBunVersion(PIN, PIN.trim())).toEqual({ ok: true, version: PIN.trim() });
+  });
+
+  it("accepts an exact match, ignoring surrounding whitespace", () => {
+    expect(checkBunVersion("1.3.8\n", "1.3.8\n")).toEqual({ ok: true, version: "1.3.8" });
+    expect(checkBunVersion("  1.3.8  ", "1.3.8")).toEqual({ ok: true, version: "1.3.8" });
+  });
+
+  it("rejects any other Bun, patch releases included", () => {
+    for (const actual of ["1.3.9", "1.3.7", "1.4.0", "1.3.8-canary.1", "1.3"]) {
+      const result = checkBunVersion("1.3.8", actual);
+      expect(result.ok, actual).toBe(false);
+      expect(result.reason).toContain(`is ${actual}, but .bun-version pins 1.3.8`);
+    }
+  });
+
+  it("explains the byte-compared artifacts and the intentional-bump path", () => {
+    const { ok, reason } = checkBunVersion("1.3.8", "1.3.9");
+    expect(ok).toBe(false);
+    for (const needle of [
+      "packages/core/cdn.json",
+      "SRI is fail-closed",
+      "site/lib/faqir-audit.js",
+      "registry/core/plugins/faqir-rules.js",
+      "bun run build:core-package",
+      "bun run build:audit-browser",
+      "bun run build:rules-plugin",
+      "commit .bun-version together",
+    ]) {
+      expect(reason, needle).toContain(needle);
+    }
+  });
+
+  it("fails when bun cannot be run", () => {
+    for (const actual of [null, undefined, "", "  "]) {
+      const result = checkBunVersion("1.3.8", actual);
+      expect(result.ok).toBe(false);
+      expect(result.reason).toContain("could not run `bun --version`");
+    }
+  });
+
+  it("fails on a missing or malformed pin rather than matching anything", () => {
+    for (const pinned of ["", "   ", "latest", "1.3", "1.3.8\n1.3.9", ">=1.3.8"]) {
+      const result = checkBunVersion(pinned, "1.3.8");
+      expect(result.ok, JSON.stringify(pinned)).toBe(false);
+      expect(result.reason).toContain(".bun-version must contain exactly one version");
+    }
+  });
+
+  it("is a repository guard, so --dry-run and --skip-preflight are held to it", () => {
+    // guards() runs unconditionally in main(); the preflight is the part
+    // --skip-preflight skips, so the pin must not live there.
+    const body = SOURCE.slice(SOURCE.indexOf("function guards()"));
+    const fn = body.slice(0, body.indexOf("\n}\n"));
+    expect(fn).toContain("checkBunVersion(");
+    const main = SOURCE.slice(SOURCE.indexOf("function main()"));
+    expect(main.indexOf("guards();")).toBeGreaterThan(0);
+    expect(main.indexOf("guards();")).toBeLessThan(main.indexOf("if (flags.dryRun)"));
   });
 });
 

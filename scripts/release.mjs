@@ -355,6 +355,61 @@ export function nextVersion(current, bump) {
   }
 }
 
+// ── The Bun pin ─────────────────────────────────────────────────────────────
+
+/**
+ * The one place the repository's Bun version is written down. It used to be
+ * `BUN_VERSION` in `.github/workflows/ci.yml`, which went with the workflows in
+ * 671941e and left the version pinned nowhere at all.
+ */
+const BUN_VERSION_FILE = ".bun-version";
+
+/**
+ * Compare the pinned Bun version (the contents of `.bun-version`) with what
+ * `bun --version` printed. Pure and exported for `tests/build/release.test.ts`.
+ *
+ * Returns `{ ok: true, version }` on an exact match, otherwise
+ * `{ ok: false, reason }` with the reason ready to print. Exact means exact:
+ * three committed artifacts are byte-compared against a fresh
+ * `bun build --minify`, whose output is not stable across Bun releases, so
+ * "close enough" is how a release ships a `cdn.json` whose SRI hashes match no
+ * file anybody can rebuild.
+ *
+ * `actual` is null when `bun` could not be run at all.
+ */
+export function checkBunVersion(pinned, actual) {
+  const want = String(pinned ?? "").trim();
+  const have = actual == null ? null : String(actual).trim();
+  if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(want)) {
+    return {
+      ok: false,
+      reason: `${BUN_VERSION_FILE} must contain exactly one version like 1.3.8, found "${want}".`,
+    };
+  }
+  const rebuild =
+    "These committed artifacts are byte-compared against a fresh `bun build --minify`,\n" +
+    "whose output is not stable across Bun releases:\n" +
+    "  - packages/core/cdn.json (check:core-package) — its SHA-384 hashes become the\n" +
+    "    integrity=\"…\" of every CDN snippet on the docs site, and SRI is fail-closed:\n" +
+    "    a stale hash is a blank page, not a degraded one\n" +
+    "  - site/lib/faqir-audit.js (check:audit-browser)\n" +
+    "  - registry/core/plugins/faqir-rules.js (check:rules-plugin)\n\n" +
+    `Install Bun ${want} to release as pinned. To move to another Bun on purpose:\n` +
+    `write the new version to ${BUN_VERSION_FILE}, then run\n` +
+    "  bun run build:core-package && bun run build:audit-browser && bun run build:rules-plugin\n" +
+    `and commit ${BUN_VERSION_FILE} together with everything those three rewrite.`;
+  if (have === null || have === "") {
+    return { ok: false, reason: `could not run \`bun --version\`; ${BUN_VERSION_FILE} pins Bun ${want}.\n\n${rebuild}` };
+  }
+  if (have.replace(/^v/, "") !== want) {
+    return {
+      ok: false,
+      reason: `\`bun --version\` is ${have}, but ${BUN_VERSION_FILE} pins ${want}.\n\n${rebuild}`,
+    };
+  }
+  return { ok: true, version: want };
+}
+
 /**
  * Rewrite the `version` field of one package.json, preserving formatting.
  * Returns true if the file changed, false if it already declared `version`.
@@ -437,6 +492,16 @@ function guards() {
       ok(`in sync with origin/${branch}`);
     }
   }
+
+  // Before the preflight, not inside it: `check:core-package` and friends would
+  // fail on a Bun mismatch too, but as "cdn.json is stale" — true, and pointing
+  // at the wrong fix. It also holds under --skip-preflight and --dry-run, because
+  // the builds below regenerate cdn.json with whatever Bun is on PATH.
+  const pinPath = join(ROOT, BUN_VERSION_FILE);
+  const pinned = existsSync(pinPath) ? readFileSync(pinPath, "utf8") : "";
+  const bun = checkBunVersion(pinned, capture("bun", ["--version"], { allowFailure: true }));
+  if (!bun.ok) fail(bun.reason);
+  ok(`bun ${bun.version}, as pinned in ${BUN_VERSION_FILE}`);
 }
 
 /**
@@ -543,7 +608,7 @@ export function stampVersion(version, root = ROOT) {
   return { rewritten, unchanged };
 }
 
-export { CLI_VERSION_FILE, PACKAGES, PREFLIGHT, VERSION_FILES, packedCliSmoke };
+export { BUN_VERSION_FILE, CLI_VERSION_FILE, PACKAGES, PREFLIGHT, VERSION_FILES, packedCliSmoke };
 
 function build() {
   heading("Ordered builds");

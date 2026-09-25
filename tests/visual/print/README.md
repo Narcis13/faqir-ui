@@ -21,7 +21,6 @@ the diff.
 | `matrix.test.ts` | Fast Bun meta-test proving the generated matrix includes every independent source-of-truth page. |
 | `print.pw.ts` | Chromium PDF render, Poppler rasterization, page-count assertions, and PNG image diffs. |
 | `../../../playwright.print.config.ts` | Dedicated Chromium runner and strict image threshold. |
-| `../../../.github/workflows/print-visual.yml` | Path-filtered PR diff and main/manual baseline seeding in the pinned Linux image. |
 
 ## Run locally
 
@@ -35,23 +34,28 @@ npm run test:visual:print         # compare without changing baselines
 ```
 
 Local output is useful for iteration only. Font and PDF rasterization differ by
-platform, so `tests/visual/print/__screenshots__/` is git-ignored and CI uses the
-authoritative baseline cache produced in the pinned Linux container.
+platform, so `tests/visual/print/__screenshots__/` is git-ignored; the
+authoritative baselines are the ones produced in the pinned Linux container
+(below).
 
 ## Bless an intentional print change
 
-1. Run the PR normally and download `print-visual-diffs`. Review the expected,
-   actual, and diff PNGs plus the attached PDFs. Confirm every changed margin,
-   page break, repeated header/footer, and page number is intentional.
-2. In GitHub Actions, open **Print visual regression**, choose **Run workflow**,
-   select the PR branch, and run it. The manual `baselines` job regenerates the
-   exact Linux PNG set and saves it under the content-addressed branch cache key.
-3. Re-run the PR workflow. It restores that exact cache and must pass without
-   `--update-snapshots`.
-4. After merge, the path-filtered `main` job seeds the default-branch cache for
-   future PRs. Never make the PR comparison job update snapshots automatically.
+There is no CI for this suite: the path-filtered GitHub Actions workflow that
+diffed PRs and seeded a baseline cache was removed with the rest of
+`.github/workflows/` in `671941e`. It is a manual pre-release step, run locally
+(`docs/release-checklist.md`), and `tests/meta/print-visual-paths.test.ts` keeps
+the path list that workflow would need.
 
-To reproduce the authoritative generation outside Actions, use the same image:
+1. Generate baselines from the commit before the change, in the pinned image
+   (below), so every PNG comes from the same rasteriser.
+2. Apply the change and run `npm run test:visual:print` in the same image —
+   without `--update-snapshots`. Review the expected, actual and diff PNGs plus
+   the attached PDFs. Confirm every changed margin, page break, repeated
+   header/footer and page number is intentional.
+3. Only then regenerate with `npm run test:visual:print:update`. Never update
+   snapshots to make a comparison pass.
+
+To reproduce the authoritative generation, use the pinned image:
 
 ```bash
 docker run --rm -v "$PWD":/work -w /work \

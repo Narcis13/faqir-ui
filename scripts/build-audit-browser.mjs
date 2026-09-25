@@ -13,7 +13,10 @@
  * `src/generator/docs.ts` is pure and `node:fs`-only — it copies the bundle into
  * the site rather than invoking a bundler — so `bun test`, the Playwright runner
  * and `bun run build:docs` all see the same bytes without a build ordering rule.
- * `--check` is the drift gate that keeps the committed bytes honest.
+ * `--check` is the drift gate that keeps the committed bytes honest. It is
+ * byte-for-byte against a fresh `bun build --minify`, whose output is not stable
+ * across Bun releases, so it is pinned to the Bun version in `.bun-version`
+ * exactly as `check:core-package` and `check:rules-plugin` are.
  *
  * Usage:
  *   bun run build:audit-browser            → write site/lib/faqir-audit.js
@@ -99,7 +102,8 @@ if (checkOnly) {
     process.stderr.write(
       current === null
         ? `site/lib/faqir-audit.js is missing — run \`bun run build:audit-browser\`.\n`
-        : `site/lib/faqir-audit.js is stale — run \`bun run build:audit-browser\`.\n`,
+        : `site/lib/faqir-audit.js is stale — run \`bun run build:audit-browser\`.\n` +
+          `If \`bun --version\` differs from .bun-version, that is the likely cause.\n`,
     );
     process.exit(1);
   }
