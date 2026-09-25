@@ -27,6 +27,7 @@ import {
   readFileSync,
   realpathSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -315,5 +316,26 @@ describe("refusals", () => {
     expect(status).toBe(0);
     expect(out).toContain("The nightly runner");
     expect(worktrees(root)).toEqual([root]);
+  });
+});
+
+// The runner symlinks the checkout's node_modules into the dream worktree. A
+// `node_modules/` pattern matches directories only, so git reported the symlink
+// as untracked: every dream refused to start on a "dirty" tree, and every
+// discard was kept for the same reason. The ignore rule must cover a symlink.
+describe("the repository's ignore rules", () => {
+  it("ignore a node_modules symlink, not just a node_modules directory", () => {
+    const root = realpathSync(mkdtempSync(join(tmpdir(), "faqir-ignore-")));
+    temps.push(root);
+    git(root, ["init", "-b", "main", "--quiet"]);
+    copyFileSync(join(ROOT, ".gitignore"), join(root, ".gitignore"));
+    git(root, ["add", ".gitignore"]);
+    git(root, ["-c", "user.email=n@example.invalid", "-c", "user.name=N", "-c", "commit.gpgsign=false", "commit", "-qm", "init"]);
+    mkdirSync(join(root, "elsewhere"));
+    writeFileSync(join(root, "elsewhere", ".keep"), "");
+    git(root, ["add", "elsewhere/.keep"]);
+    git(root, ["-c", "user.email=n@example.invalid", "-c", "user.name=N", "-c", "commit.gpgsign=false", "commit", "-qm", "dir"]);
+    symlinkSync(join(root, "elsewhere"), join(root, "node_modules"));
+    expect(git(root, ["status", "--porcelain"]).stdout).toBe("");
   });
 });
