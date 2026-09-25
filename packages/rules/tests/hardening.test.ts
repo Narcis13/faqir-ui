@@ -10,6 +10,7 @@ import { afterEach, describe, expect, it } from "bun:test";
 import {
   DefinitionError,
   MAX_ARRAY_INDEX,
+  MAX_REGEX_SUBJECT_LENGTH,
   coerce,
   compile,
   evaluate,
@@ -102,7 +103,7 @@ describe("a pattern that backtracks catastrophically is refused", () => {
   it("as a field pattern, at compile time", () => {
     for (const pattern of ["^(a+)+$", "(a*)*", "(\\w+\\s?)+", "((\\d+)-?)*", "(a+|b)+"]) {
       expect(() => compile(asDefinition({ fields: { a: { type: "string", pattern } } })), pattern)
-        .toThrow("nests unbounded repeats");
+        .toThrow("backtrack catastrophically");
     }
   });
 
@@ -110,7 +111,7 @@ describe("a pattern that backtracks catastrophically is refused", () => {
     expect(() => compile(asDefinition({
       fields: { a: { type: "string" } },
       rules: [{ id: "r", validate: { regex: ["^(a+)+$", { var: "a" }] }, path: "a" }],
-    }))).toThrow("nests unbounded repeats");
+    }))).toThrow("backtrack catastrophically");
     expect(() => evaluateLogic({ regex: ["(x*)*y", { var: "a" }] }, {})).toThrow(DefinitionError);
   });
 
@@ -147,6 +148,90 @@ describe("a pattern that backtracks catastrophically is refused", () => {
     expect(regex.findings).toEqual([expect.objectContaining({
       rule: "rule-ops", severity: "warning", path: "rules[0].validate", id: "r",
     })]);
+  });
+});
+
+// The review's second finding: shapes the first detector let through, each
+// reproduced as slow — `^(a+){20}$` took 1.9 s on 41 characters, `^(a|a)+$`
+// and `^(\w|\d)+$` over 400 ms on 26 — and a field `pattern` that ran against a
+// subject of any length, where the `regex` operator stopped at the cap.
+describe("the shapes the first detector missed are refused too", () => {
+  const BYPASSES = [
+    "^(a+){20}$", "^(a+){11,}$", "^(a{1,5})+$",
+    "^(a|a)+$", "^(\\w|\\d)+$", "(a|ab)*", "^(.|\\s)*$", "^((a|a)b?)+$", "^(a|a){11,20}$",
+  ];
+  const SAFE = [
+    "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$",
+    "^\\d{5}(-\\d{4})?$",
+    "^[A-Z]{2}\\d{2}[A-Z0-9]{11,30}$",
+    "^(\\+\\d{1,3})?\\d{6,14}$",
+    "^[a-z0-9-]+$",
+    "^(https?):\\/\\/[^\\s]+$",
+    "^(red|green|blue)$",
+    "^(mr|mrs|ms)\\.?$",
+    "^(\\d|[a-f])+$",
+    "^(\\w|-)+$",
+    "^(?:\\\\.|[^\"\\\\])*$",
+    "^(\\d{2})+$",
+    "^(a+){5}$",
+  ];
+  const fieldWith = (pattern: string) => asDefinition({ fields: { a: { type: "string", pattern } } });
+
+  it("each bypass is refused at compile, as a field pattern and as a regex operand", () => {
+    for (const pattern of BYPASSES) {
+      expect(() => compile(fieldWith(pattern)), pattern).toThrow("backtrack catastrophically");
+      expect(() => evaluateLogic({ regex: [pattern, { var: "a" }] }, {}), pattern).toThrow(DefinitionError);
+    }
+  });
+
+  it("while the everyday patterns still compile", () => {
+    for (const pattern of SAFE) expect(() => compile(fieldWith(pattern)), pattern).not.toThrow();
+  });
+
+  it("no refused pattern can be reached: every entry point refuses before matching", () => {
+    const evil = `${"a".repeat(40)}!`;
+    const started = performance.now();
+    for (const pattern of BYPASSES) {
+      expect(() => validate(fieldWith(pattern), { a: evil }), pattern).toThrow(DefinitionError);
+      expect(() => evaluate(fieldWith(pattern), { a: evil }), pattern).toThrow(DefinitionError);
+      expect(() => evaluateLogic({ regex: [pattern, evil] }, {}), pattern).toThrow(DefinitionError);
+    }
+    expect(performance.now() - started).toBeLessThan(50);
+  });
+
+  it("a subject longer than MAX_REGEX_SUBJECT_LENGTH fails the pattern unread, like the regex operator", () => {
+    // Quadratic on a near-miss, so not refused — the cap is what bounds it.
+    const compiled = compile(asDefinition({ fields: { a: { type: "string", pattern: "^(\\s*a)*$" } } }));
+    const long = `${"a".repeat(MAX_REGEX_SUBJECT_LENGTH)}a`;
+    const started = performance.now();
+    const verdict = validate(compiled, { a: long });
+    expect(performance.now() - started).toBeLessThan(50);
+    expect(verdict.valid).toBe(false);
+    expect(verdict.findings).toEqual([expect.objectContaining({ path: "a", rule: "pattern" })]);
+    expect(evaluateLogic({ regex: ["^(\\s*a)*$", long] }, {})).toBe(false);
+    // One character shorter is matched as before.
+    expect(validate(compiled, { a: long.slice(1) }).valid).toBe(true);
+  });
+
+  it("the lint reports each bypass as the same error compile throws", () => {
+    for (const pattern of BYPASSES) {
+      const report = lintDefinition({ fields: { a: { type: "string", pattern } } });
+      expect(report.ok, pattern).toBe(false);
+      expect(report.findings, pattern).toContainEqual(expect.objectContaining({
+        rule: "schema", severity: "error", path: "fields.a.pattern",
+        message: expect.stringContaining("backtrack catastrophically"),
+      }));
+      const regex = lintDefinition({
+        fields: { a: { type: "string" } },
+        rules: [{ id: "r", validate: { regex: [pattern, { var: "a" }] }, path: "a" }],
+      });
+      expect(regex.ok, pattern).toBe(false);
+      expect(regex.findings, pattern).toContainEqual(expect.objectContaining({ rule: "rule-ops", severity: "error" }));
+    }
+    for (const pattern of SAFE) {
+      const report = lintDefinition({ fields: { a: { type: "string", pattern } } });
+      expect(report.findings.filter((f) => f.severity === "error"), pattern).toEqual([]);
+    }
   });
 });
 

@@ -89,9 +89,12 @@ Notes that are easier to state than to discover:
   order does not matter.
 - **`pattern` is unanchored** unless you anchor it, and is capped at 1000
   characters (`MAX_PATTERN_LENGTH`). A pattern whose shape backtracks
-  catastrophically — an unbounded repeat of a group that can itself repeat with
-  nothing in between, `(a+)+` or `(\w+\s?)+` — is a `DefinitionError`; see
-  [Security](#security).
+  catastrophically — a group repeated without a small bound (`*`, `+`, `{n,}`,
+  or more than 10 times) that can itself repeat with nothing in between,
+  `(a+)+`, `(\w+\s?)+`, `(a+){20}`, or that holds an alternation whose branches
+  can start with the same character, `(a|a)+`, `(\w|\d)+`, `(a|ab)*` — is a
+  `DefinitionError`. A value longer than `MAX_REGEX_SUBJECT_LENGTH` (10,000)
+  fails `pattern` without being matched; see [Security](#security).
 
 ## Verdict
 
@@ -497,14 +500,16 @@ seven characters and takes seconds against thirty `a`s and a `b`.
   builder that lets users write rules, a CMS field, an agent's output: run
   `lintDefinition(def)` (or `faqir rules lint`) and refuse anything that is not
   `ok`; treat its pattern warnings as worth a human look before going live.
-  `compile` refuses the textbook catastrophic shapes — an unbounded repeat of a
-  group that can repeat with nothing in between, `(a+)+`, `(\w+\s?)+` — but
-  that check is a pragmatic heuristic, not a proof: overlapping alternation
-  (`(a|a)+`) is not detected.
+  `compile` refuses the textbook catastrophic shapes — a group repeated without
+  a small bound that can repeat with nothing in between, `(a+)+`, `(\w+\s?)+`,
+  `(a+){20}`, or whose alternation has branches starting alike, `(a|a)+`,
+  `(\w|\d)+` — but that check is a pragmatic heuristic, not a proof: it errs
+  towards refusing (`(ab|ac)+` is refused), and backreference tricks are not
+  read.
 - **Data is not trusted, and does not need to be.** Everything `coerce` and
   `validate` do with submitted data is bounded: keys cannot reach an object's
   prototype, array indices from flat keys stop at `MAX_ARRAY_INDEX`, a `regex`
-  subject stops at `MAX_REGEX_SUBJECT_LENGTH`, and a `var` reads only the data's
+  or `pattern` subject stops at `MAX_REGEX_SUBJECT_LENGTH`, and a `var` reads only the data's
   own properties.
 - **Embedding.** A definition in `<script type="application/json">` must have
   every `<` written as `\u003c`; the lint warns about a string that would end

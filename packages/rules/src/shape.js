@@ -43,7 +43,7 @@
 
 import { DefinitionError } from "./errors.js";
 import { checkFormat, formatNames, hasFormat } from "./formats.js";
-import { MAX_ARRAY_INDEX, MAX_PATTERN_LENGTH } from "./limits.js";
+import { MAX_ARRAY_INDEX, MAX_PATTERN_LENGTH, MAX_REGEX_SUBJECT_LENGTH } from "./limits.js";
 import { DEFAULT_LOCALE, resolveMessage } from "./messages.js";
 import { catastrophicMessage, patternRisk } from "./pattern.js";
 
@@ -619,7 +619,10 @@ function checkValue(field, value, path, required, ctx) {
 
   if (type === "string") {
     const text = /** @type {string} */ (value);
-    if (field.regex && !field.regex.test(text)) {
+    // A subject past MAX_REGEX_SUBJECT_LENGTH fails the pattern unread, as the
+    // `regex` operator answers false for one: the pattern's shape is checked,
+    // but the product of pattern and subject is bounded only here.
+    if (field.regex && (text.length > MAX_REGEX_SUBJECT_LENGTH || !field.regex.test(text))) {
       add("pattern", { pattern: schema.pattern });
     }
     if (typeof schema.format === "string" && !checkFormat(schema.format, text)) {
