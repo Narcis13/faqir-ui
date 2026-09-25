@@ -146,10 +146,10 @@ with no shell, [`@faqir-ui/core`](packages/core/README.md) publishes a prebuilt 
 
 ```html
 <!-- A theme's full CSS bundle: tokens + theme + base + every component -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.0/dist/faqir.default.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.1/dist/faqir.default.css">
 
 <!-- The engine, minified — sets window.Faqir and boots on DOMContentLoaded -->
-<script src="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.0/dist/faqir-core.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.1/dist/faqir-core.min.js" defer></script>
 ```
 
 Swap the stylesheet to change theme; every theme ships a bundle. Every `dist/`
@@ -169,7 +169,7 @@ the harness a capable model needs, built as software instead of as a prompt.
 
 **Verification is the bottleneck, not generation.** A model produces text; it
 has no oracle. Faqir gives it one. Every component ships a manifest, and
-`faqir audit` checks markup against those manifests with 35 rules, from
+`faqir audit` checks markup against those manifests with 37 rules, from
 `required-slot` and `focus-trap` to `duplicate-id`, `heading-order` and
 `contrast-tokens`. It reads from stdin, emits versioned JSON, and is the same
 code in the CLI, the MCP server and the browser. A failure that would otherwise
@@ -869,7 +869,7 @@ exit code.
 ### Audit rules
 
 `faqir audit --rules` prints the live registry, which is the source of truth
-(35 rules today). The ids below are the ones `--skip-rules` accepts.
+(37 rules today). The ids below are the ones `--skip-rules` accepts.
 
 | Rule | Severity | Scope | What it checks |
 |------|----------|-------|----------------|
@@ -904,6 +904,8 @@ exit code.
 | `no-fetch` | error | recipe controller JS | No fetch/XHR/router in controllers |
 | `undeclared-attribute` | error | CSS vs manifest | Every `data-*` the CSS selects on is declared in the manifest |
 | `breakpoint-canon` | warning | CSS preludes | A width prelude is exactly one canon `min-width` floor |
+| `token-exists` | warning | component CSS | Every `var(--x)` resolves to a declared token, a property the sheet declares, or a knob read with a fallback |
+| `reduced-motion` | info | component CSS | A sheet that animates or transitions carries a `prefers-reduced-motion: reduce` block |
 | `trigger-contract` | error | markup vs stylesheet | Every `[data-part="trigger"]` is styled by something |
 | `single-fixed-region` | error | markup vs stylesheet | One visible fixed region of a kind per viewport anchor |
 | `contrast-tokens` | error | theme tokens | Every declared foreground/background pair clears WCAG AA |

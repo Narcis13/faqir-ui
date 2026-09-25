@@ -14,6 +14,10 @@ recipe controllers, so this layer lives outside that boundary.
 
 ### The Service Factory
 
+This is the function `faqir init` writes to `ui/core/api-source.js`. Row ids
+are URI-encoded into item URLs, and optimistic rows are found again by identity
+or id after every `await`, never by an index saved before it.
+
 ```html
 <script>
   /**
@@ -30,11 +34,44 @@ recipe controllers, so this layer lives outside that boundary.
     const { idKey = 'id', pollInterval = 0, optimistic = true } = options;
     let pollTimer = null;
 
-    // Abbreviated here. The shipped file (`ui/core/api-source.js`, written by
-    // `faqir init`) also tracks in-flight requests for `destroy()` and latches
-    // itself closed so a late response cannot write into a torn-down scope —
-    // see "Teardown" below.
-    return {
+    // Latched by destroy(). Every method checks it before starting work and again
+    // before writing back, because a response can land after teardown.
+    let destroyed = false;
+
+    // One AbortController per in-flight request, so destroy() can cancel them all.
+    const inflight = new Set();
+
+    /** `fetch` with an abort handle registered for the lifetime of the request. */
+    async function request(url, init) {
+      const ac = typeof AbortController === 'function' ? new AbortController() : null;
+      if (ac) inflight.add(ac);
+      try {
+        return await fetch(url, ac ? { ...init, signal: ac.signal } : init);
+      } finally {
+        if (ac) inflight.delete(ac);
+      }
+    }
+
+    /** `${endpoint}/${id}` with the id encoded — ids are data, not path syntax. */
+    function itemUrl(id) {
+      return `${endpoint}/${encodeURIComponent(id)}`;
+    }
+
+    /**
+     * Where a row is NOW. Never keep an index across an await: an interleaved
+     * load() or remove() shifts or replaces `items`, and a stale index writes
+     * over (or deletes) a real row.
+     */
+    function locate(items, id) {
+      return items.findIndex(i => i && i[idKey] === id);
+    }
+
+    /** True for the exception an abort raises — never an error worth showing. */
+    function aborted(e) {
+      return destroyed || (e && (e.name === 'AbortError' || e.code === 20));
+    }
+
+    const source = {
       items: [],
       loading: true,
       submitting: false,
@@ -43,66 +80,74 @@ recipe controllers, so this layer lives outside that boundary.
       // ---- Read ----
 
       async load() {
+        if (destroyed) return;
         this.loading = true;
         this.error = null;
         try {
-          const res = await fetch(endpoint);
+          const res = await request(endpoint);
           if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-          this.items = await res.json();
+          const data = await res.json();
+          if (destroyed) return;
+          this.items = data;
         } catch (e) {
+          if (aborted(e)) return;
           this.error = e.message;
         } finally {
-          this.loading = false;
+          if (!destroyed) this.loading = false;
         }
       },
 
       // ---- Create ----
 
       async create(payload) {
+        if (destroyed) return null;
         this.submitting = true;
         this.error = null;
 
-        // Optimistic: add a temporary item immediately
-        let tempIndex = -1;
+        let temp = null;
         if (optimistic) {
-          const temp = { ...payload, _pending: true };
-          this.items.push(temp);
-          tempIndex = this.items.length - 1;
+          this.items.push({ ...payload, _pending: true });
+          // Read back through the list: inside an l-data scope that is the
+          // reactive handle, the one an identity search later compares against.
+          temp = this.items[this.items.length - 1];
         }
 
         try {
-          const res = await fetch(endpoint, {
+          const res = await request(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
           });
           if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
           const created = await res.json();
+          if (destroyed) return null;
 
-          if (optimistic) {
-            // Replace the temp item with the real server response
-            this.items[tempIndex] = created;
-          } else {
+          const at = temp ? this.items.indexOf(temp) : -1;
+          if (at >= 0) {
+            this.items[at] = created;
+          } else if (!temp || !created || created[idKey] == null || locate(this.items, created[idKey]) < 0) {
+            // The temp row is gone when a load() replaced the list meanwhile;
+            // that list may already hold the created row.
             this.items.push(created);
           }
           return created;
         } catch (e) {
+          if (aborted(e)) return null;
           this.error = e.message;
-          // Roll back optimistic insert
-          if (optimistic && tempIndex >= 0) {
-            this.items.splice(tempIndex, 1);
-          }
+          const at = temp ? this.items.indexOf(temp) : -1;
+          if (at >= 0) this.items.splice(at, 1);
           return null;
         } finally {
-          this.submitting = false;
+          if (!destroyed) this.submitting = false;
         }
       },
 
       // ---- Update ----
 
       async update(id, payload) {
+        if (destroyed) return null;
         this.error = null;
-        const idx = this.items.findIndex(i => i[idKey] === id);
+        const idx = locate(this.items, id);
         let snapshot = null;
 
         if (optimistic && idx >= 0) {
@@ -111,22 +156,23 @@ recipe controllers, so this layer lives outside that boundary.
         }
 
         try {
-          const res = await fetch(`${endpoint}/${id}`, {
+          const res = await request(itemUrl(id), {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
           });
           if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
           const updated = await res.json();
+          if (destroyed) return null;
 
-          if (idx >= 0) this.items[idx] = updated;
+          const at = locate(this.items, id);
+          if (at >= 0) this.items[at] = updated;
           return updated;
         } catch (e) {
+          if (aborted(e)) return null;
           this.error = e.message;
-          // Roll back
-          if (optimistic && snapshot && idx >= 0) {
-            this.items[idx] = snapshot;
-          }
+          const at = snapshot ? locate(this.items, id) : -1;
+          if (at >= 0) this.items[at] = snapshot;
           return null;
         }
       },
@@ -134,8 +180,9 @@ recipe controllers, so this layer lives outside that boundary.
       // ---- Delete ----
 
       async remove(id) {
+        if (destroyed) return;
         this.error = null;
-        const idx = this.items.findIndex(i => i[idKey] === id);
+        const idx = locate(this.items, id);
         let snapshot = null;
 
         if (optimistic && idx >= 0) {
@@ -144,16 +191,17 @@ recipe controllers, so this layer lives outside that boundary.
         }
 
         try {
-          const res = await fetch(`${endpoint}/${id}`, { method: 'DELETE' });
+          const res = await request(itemUrl(id), { method: 'DELETE' });
           if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+          if (destroyed) return;
 
-          if (!optimistic && idx >= 0) {
-            this.items.splice(idx, 1);
-          }
+          const at = optimistic ? -1 : locate(this.items, id);
+          if (at >= 0) this.items.splice(at, 1);
         } catch (e) {
+          if (aborted(e)) return;
           this.error = e.message;
-          // Roll back
-          if (optimistic && snapshot) {
+          // `idx` is only a position hint; skip if a reload already restored it.
+          if (snapshot && locate(this.items, id) < 0) {
             this.items.splice(idx, 0, snapshot);
           }
         }
@@ -163,6 +211,7 @@ recipe controllers, so this layer lives outside that boundary.
 
       startPolling(interval) {
         this.stopPolling();
+        if (destroyed) return;
         const ms = interval || pollInterval;
         if (ms > 0) {
           pollTimer = setInterval(() => this.load(), ms);
@@ -176,12 +225,40 @@ recipe controllers, so this layer lives outside that boundary.
         }
       },
 
+      // ---- Teardown ----
+
+      /**
+       * Stop everything this source owns and close it permanently.
+       *
+       * Idempotent. After it, polling is stopped, in-flight requests are aborted,
+       * and no method starts new work or writes back — a response that was already
+       * on the wire cannot resurrect a dead scope.
+       */
+      destroy() {
+        if (destroyed) return;
+        destroyed = true;
+        this.stopPolling();
+        inflight.forEach((ac) => {
+          try { ac.abort(); } catch (e) { /* already settled */ }
+        });
+        inflight.clear();
+      },
+
       // ---- Refetch shorthand ----
 
       async refresh() {
         return this.load();
       },
     };
+
+    // The engine's teardown hook: `initScope` runs any own `__faqirTeardown`
+    // function on the scope data when that scope is destroyed, so a source spread
+    // into `l-data` is torn down without the page having to remember. Bound,
+    // because `destroy()` calls `this.stopPolling()`, and enumerable, because the
+    // spread that installs the source copies own enumerable properties only.
+    source.__faqirTeardown = source.destroy.bind(source);
+
+    return source;
   }
 </script>
 ```
@@ -464,8 +541,8 @@ plus a controller. State lives on the scope (so bindings like
 $items.load()                     // GET endpoint, replace items (aliased as refresh())
 $items.refresh()                  // alias for load()
 $items.create(payload)            // POST payload, append result to items
-$items.update(id, payload)        // PATCH endpoint/id, replace matched row
-$items.remove(id)                 // DELETE endpoint/id, splice from items
+$items.update(id, payload)        // PATCH endpoint/<encoded id>, replace matched row
+$items.remove(id)                 // DELETE endpoint/<encoded id>, splice from items
 $items.startPolling(ms?)          // Start auto-refresh
 $items.stopPolling()              // Stop auto-refresh
 ```
@@ -692,8 +769,8 @@ function setupSource(scope, root, name, endpoint, opts) {
         .then(() => { inflight.delete(ac); if (!destroyed && mySeq === loadSeq) scope[name + 'Loading'] = false; });
     },
     create(payload) { /* POST; .optimistic pushes a _pending row first, rolls back on failure */ },
-    update(id, payload) { /* PATCH endpoint/id, by opts.idKey */ },
-    remove(id) { /* DELETE endpoint/id */ },
+    update(id, payload) { /* PATCH endpoint + '/' + encodeURIComponent(id), by opts.idKey */ },
+    remove(id) { /* DELETE endpoint + '/' + encodeURIComponent(id) */ },
     refresh() { return ctrl.load(); },
     startPolling(ms) { /* setInterval(load, ms || pollInterval || 30000) — no-op once destroyed */ },
     stopPolling() { /* clearInterval */ },

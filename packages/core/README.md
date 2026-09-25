@@ -12,10 +12,10 @@ any HTML file and you have a styled, interactive Faqir page. No build step, no i
 
 ```html
 <!-- 1. A theme's full CSS bundle (tokens + theme + base + every component) -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.0/dist/faqir.default.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.1/dist/faqir.default.css">
 
 <!-- 2. The reactive engine — sets window.Faqir and auto-boots on DOMContentLoaded -->
-<script src="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.0/dist/faqir-core.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.1/dist/faqir-core.min.js" defer></script>
 ```
 
 That's it. Now write Faqir markup:
@@ -38,10 +38,10 @@ for tamper-proof loads:
 
 ```html
 <link rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.0/dist/faqir.default.css"
+      href="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.1/dist/faqir.default.css"
       integrity="sha384-…paste from sri.json…"
       crossorigin="anonymous">
-<script src="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.0/dist/faqir-core.min.js"
+<script src="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.1/dist/faqir-core.min.js"
         integrity="sha384-…paste from sri.json…"
         crossorigin="anonymous" defer></script>
 ```
@@ -72,9 +72,9 @@ Each file in `dist/plugins/` is a self-registering classic script: load it
 | `faqir-validate.js` | `l-validate` | declarative + programmatic form validation |
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.0/dist/faqir-core.min.js" defer></script>
-<script src="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.0/dist/plugins/faqir-validate.js" defer></script>
-<script src="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.0/dist/plugins/faqir-rules.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.1/dist/faqir-core.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.1/dist/plugins/faqir-validate.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.1/dist/plugins/faqir-rules.js" defer></script>
 ```
 
 One pairing to know: `faqir-rules` registers its cross-field and remote checks
@@ -87,7 +87,7 @@ Pin the plugin drops the same way as the engine — their hashes are in
 `dist/sri.json` beside the rest:
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.0/dist/plugins/faqir-rules.js"
+<script src="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.1/dist/plugins/faqir-rules.js"
         integrity="sha384-…paste from sri.json…"
         crossorigin="anonymous" defer></script>
 ```

@@ -917,7 +917,7 @@ function renderBindingsSection(ctx: PageContext): string {
     `<li><strong>Slots</strong> — React: one <code>ReactNode</code> prop per manifest slot; Vue: one named slot per manifest slot, each projected inside <code>&lt;tag_hint data-part="name"&gt;</code>.</li>` +
     `<li><strong>Recipes</strong> — the manifest reference markup, a vendored controller attached on mount and destroyed on unmount, the controller API exposed on the ref, and <code>faqir:*</code> events re-emitted as callbacks (React) or component events (Vue).</li>` +
     `</ul>\n` +
-    `<p>The generated sources are gated in CI: ${code("bun run check:bindings")} runs ${code(gate)}, which regenerates both packages and fails on any byte of difference, so the components cannot drift from the manifests.</p>\n` +
+    `<p>The generated sources are gated by the release preflight: ${code("bun run check:bindings")} runs ${code(gate)}, which regenerates both packages and fails on any byte of difference, so the components cannot drift from the manifests.</p>\n` +
     targets
       .map(
         (t) =>
@@ -1012,7 +1012,7 @@ function renderSkillSection(ctx: PageContext): string {
   }).scripts ?? {};
   return (
     `<p>The repository ships a Claude Code skill, ${code(name)}, under ${code(".claude/skills/faqir-creator/")}. ` +
-    `It is generated from the registry manifests by ${code("bun run gen:skill")} (${code(scripts["gen:skill"] ?? "scripts/gen-skill.mjs")}), deterministic and gated in CI, so an agent reading it sees the same anatomy, variants and CLI reference this site does. ` +
+    `It is generated from the registry manifests by ${code("bun run gen:skill")} (${code(scripts["gen:skill"] ?? "scripts/gen-skill.mjs")}), deterministic and gated by the release preflight, so an agent reading it sees the same anatomy, variants and CLI reference this site does. ` +
     `Its CLI section is rendered from the same command registry as the <a data-ui="link" href="${escAttr(relUrl(INTEGRATIONS_PAGE, CLI_PAGE))}">CLI reference</a>.</p>\n` +
     `<p>${code("SKILL.md")} carries ${headings.length} sections:</p>\n` +
     `<ol data-docs-tooling-skill>${headings.map((h) => `<li>${esc(h)}</li>`).join("")}</ol>\n` +

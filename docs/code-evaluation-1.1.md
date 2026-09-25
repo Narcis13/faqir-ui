@@ -6,6 +6,30 @@ A review of the repository at `main` after the 1.1 lanes landed (Theme System
 docs site generator, and README accuracy. Every claim below was verified at the
 cited line; two engine issues and two rules-package issues were reproduced.
 
+## Status after the fix pass (2026-09-25)
+
+Every item below was re-verified against the code, not taken from the fix
+commits. Items 1–26 and 29 are **fixed**, each with a test. Item 2 was only
+partly fixed at first: nested bounded repeats (`(a+){20}`) and overlapping
+alternation (`(a|a)+`) still got past the check. It is now closed on both sides,
+by the compile-time check and by a subject-length cap before a field `pattern`
+runs. Items 27 (duplication) and 28 (oversized units) are refactors and are
+deferred to 1.1.x.
+
+The re-verification found four issues this review missed, all fixed before the
+tag:
+
+- `faqir doctor` rejected `content_model: "empty"` (`page-break`, `spinner`),
+  which the schema allows.
+- `faqir bundle --output` and `faqir init --dir` had item 5's containment gap.
+  Every containment check now goes through one helper, `src/utils/paths.ts`,
+  which also stops refusing an in-project name like `..drafts`.
+- The Night Shift worktree always looked dirty: `node_modules/` did not match
+  the `node_modules` symlink the runner creates.
+- `bun run typecheck` rewrote the committed `packages/core/cdn.json`.
+
+The original findings follow unchanged.
+
 ## Verdict in one paragraph
 
 The architecture is sound and unusually disciplined for a framework this size:

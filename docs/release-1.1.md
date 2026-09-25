@@ -1,6 +1,6 @@
 # Faqir UI 1.1 "Personality" — release notes
 
-> **Draft.** Written ahead of the tag. The sections marked **TO FILL** are
+> **Draft.** Written ahead of the tag. The release-verification section is
 > completed by whoever cuts the release, from the rehearsal and the manual
 > suites; nothing else here should need to change.
 
@@ -123,30 +123,102 @@ Verify the published artifacts against the `v1.1.0` tag instead.
 
 ## UPGRADING FROM 1.0
 
-> **TO FILL** — the specifics come from the token-refresh fix.
-
-The short version: run
+Run, in the project:
 
 ```bash
+faqir upgrade --dry-run   # preview
 faqir upgrade
+faqir doctor
 ```
 
-in the project (`faqir upgrade --dry-run` previews it). It three-way merges the
-installed components — and the token layer and base styles `faqir init` wrote —
+**What `faqir upgrade` changes.** It three-way merges every installed component
 up to the 1.1 registry, keeping local edits; a conflict is written with standard
-git markers. The project's theme (`tokens/theme.css`) is never touched.
+git markers and reported. New in 1.1, it does the same for the files `faqir init`
+wrote and nothing used to refresh: the token layer (`tokens/index.css` and
+`tokens/imports.css`, or every token file under `--tokens-split`) and
+`base/{reset,prose,rhythm,motion-presets}.css`. This matters: 1.1 components read
+about fifty custom properties 1.0's token layer never defined (`--border-width`,
+`--focus-ring-*`, `--switch-width`, `--panel-bg`, …). Upgrading the components
+without the tokens would render a switch with no width and a focus with no ring.
 
-<!-- TO FILL: what `faqir upgrade` changes for a 1.0 project (token files, role
-tokens, the theme stylesheet), what it leaves alone, and anything a project
-must do by hand. -->
+- A 1.0 file you never edited is recognized by its hash against what 1.0 shipped,
+  so it is replaced cleanly.
+- A token file you edited before 1.1 has no recorded baseline, so it is not
+  rewritten. It only gains the declarations it is missing, appended at zero
+  specificity (`:where(:root)`), so every value you chose still wins.
+- A base stylesheet in that state is left alone and reported.
+
+**What it never touches.** `tokens/theme.css` is yours — the theme you chose,
+possibly edited — and so is anything else you put under `tokens/`.
+
+**By hand, in one case.** Components that 1.0's `faqir scaffold` installed were
+copied without a baseline, so `upgrade` reports them as `no-baseline` and skips
+them. Run `faqir add <name>` for each one it lists (this records your current
+copy as the baseline), then `faqir upgrade` again.
+
+**Afterwards.** `faqir doctor` now fails a project whose installed components read
+a token its token layer does not define, and names the tokens. `faqir add` checks
+the same thing when it installs a component and refreshes the token layer if it
+must.
+
+The 1.0 → 1.1 path was exercised end to end before the tag: a project created by
+the `v1.0.0` CLI (init, five components and an invoice scaffold) upgraded with no
+conflicts, and audited clean.
 
 ---
 
 ## Fixes since the 1.1 lanes
 
-> **TO FILL** — the fixes that landed between the last 1.1 lane task and the tag.
+A review of the finished 1.1 tree (`docs/code-evaluation-1.1.md`) and the fix
+pass that followed it. None of these changes the protocol or a manifest contract.
 
-<!-- TO FILL -->
+**Security**
+- `@faqir-ui/rules` `coerce` no longer lets a submitted key such as
+  `profile.__proto__.x` write onto `Object.prototype`.
+- A field `pattern` that can backtrack catastrophically is refused when the
+  definition compiles — nested repeats like `(a+)+` and `(a+){20}`, and repeated
+  alternations whose branches overlap, like `(a|a)+` and `(\w|\d)+`. A value
+  longer than 10,000 characters is never matched against a pattern at all.
+- `faqir scaffold --output`, `theme generate/bundle --out`, `bundle --output`
+  and `init --dir` can no longer write outside the project through a relative
+  path; theme names are validated before they reach a path.
+- `apiSource` and `l-source` encode item ids in the URL they build.
+- `faqir_project_context` (MCP) reads only inside the project root.
+- The Night Shift runner no longer `eval`s a brief name.
+
+**Runtime**
+- `l-for` with duplicate keys no longer leaks rows.
+- `l-model.number.trim` no longer throws.
+- Optimistic `apiSource.create` / `l-source` rows are found by identity after an
+  interleaved `load()` or `remove()`.
+- The collapse plugin's effect is disposed with its scope.
+- `faqir.js` destroys the controllers of removed subtrees and keeps moved ones.
+- The observer no longer re-initializes a scope `Faqir.start()` already built.
+- A dialog opened twice keeps one focus trap; a toast dismissed twice arms one
+  exit.
+- The mask plugin handles every delete input type.
+- A remote validator must answer a boolean `ok` and a string `message`.
+- `@faqir-ui/forms` emits `step="any"` on a decimal number field.
+
+**CLI**
+- `faqir repair` applies the fixes it advertises: the `trigger-contract` fix,
+  fixes located by offset (the second of two dialogs, not the first), and no
+  empty ARIA attributes. `repair --json` and `audit <file> --fix` work as
+  documented.
+- `faqir doctor` accepts components whose content model is `empty`
+  (`page-break`, `spinner`), so invoice and report projects no longer fail it.
+- `faqir scaffold` installs through `faqir add`, so scaffolded components have a
+  baseline for `diff` and `upgrade`.
+- A flag given no value is an error rather than the next flag.
+- The rule inventory lists every rule the audit runs: 37.
+- The CLI bundle no longer prints garbled output when run under Bun.
+
+**Themes and tokens**
+- `--heading-caps` makes the small-caps heading voice render.
+- `--divider-width` makes a `double` divider drawable.
+- Theme alias overrides apply under `[data-theme]` as well as `:root`.
+- A theme `faqir theme generate` wrote is listed by `faqir theme list` and can be
+  set by name.
 
 ---
 

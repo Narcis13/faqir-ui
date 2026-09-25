@@ -3,10 +3,10 @@
  *
  * Every rule on the page is read from the engine's own rule lists, so a rule
  * added to `ALL_RULES`, `DOCUMENT_RULES`, `VOCABULARY_RULES`, `CSS_RULES` or
- * `ANTIPATTERN_RULES` appears here with no edit to the generator. Two rules the
- * checker runs without ever describing (`token-exists`, `reduced-motion`) are
- * declared below as `RuleInfo` so the page documents everything `faqir audit`
- * can actually report — the inventory `faqir audit --rules` prints omits them.
+ * `ANTIPATTERN_RULES` appears here with no edit to the generator. The two rules
+ * the project sweep decides (`token-exists`, `reduced-motion`) come from
+ * `PROJECT_SWEEP_RULES`, the same descriptors the inventory `faqir audit
+ * --rules` prints, so the page and the CLI list the same rules.
  *
  * Import discipline (see `context.ts`): nothing from `../docs` is used at
  * module top level, because `docs.ts` imports this file.

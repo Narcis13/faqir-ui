@@ -93,6 +93,13 @@ They wake up on their own if CI returns.
       TOTP code lasts about 30 seconds, so a slow publish may still ask again.
 - [ ] `gh auth status` is green, if you want the GitHub release created for you.
 - [ ] `main` is clean, pushed, and identical to `origin/main`.
+- [ ] `bun --version` prints exactly what `.bun-version` pins. `cdn.json`'s SRI
+      hashes, `site/lib/faqir-audit.js` and `registry/core/plugins/faqir-rules.js`
+      are byte-compared against a fresh `bun build --minify`, which is not stable
+      across Bun releases, so the script refuses any other Bun. Bumping Bun on
+      purpose is its own commit: update `.bun-version`, run
+      `bun run build:core-package`, `bun run build:audit-browser` and
+      `bun run build:rules-plugin`, and commit all of it together.
 
 ## New on npm in 1.1
 
@@ -109,8 +116,9 @@ Every other package is an ordinary version bump: `node scripts/release.mjs minor
 
 ## What the script does, in order
 
-1. **Guards** — clean worktree, on `main`, in sync with `origin/main`. Any
-   failure stops before anything is written.
+1. **Guards** — clean worktree, on `main`, in sync with `origin/main`, and
+   `bun --version` equal to `.bun-version`. Any failure stops before anything is
+   written, `--dry-run` and `--skip-preflight` included.
 2. **Preflight** — the gate list above. `--skip-preflight` exists for a retry
    after a partial publish and prints a loud warning; do not use it otherwise.
 3. **Version** — computes the next version and writes it to all seven
@@ -146,7 +154,7 @@ Every other package is an ordinary version bump: `node scripts/release.mjs minor
 
 - **No `--provenance`.** npm provenance requires an OIDC token from a CI
   provider. With no Actions workflow there is no `id-token: write` and no
-  attestation to sign. This is a genuine gap in the 1.0 release and it is a
+  attestation to sign. This is a genuine gap in every 1.x release so far and a
   consequence of the CI decision, not an oversight — say so in the release notes
   rather than leaving it looking unconsidered.
 - **No automatic rollback.** npm has no transaction across seven packages. See
@@ -186,6 +194,8 @@ forward, not backward:
 - [ ] The canonical spec URLs resolve. They are git refs
       (`src/canonical.ts`), so this means the tag is pushed:
       `https://github.com/Narcis13/faqir-ui/blob/v1.0.0/SPEC-1.0.md` and
-      `https://raw.githubusercontent.com/Narcis13/faqir-ui/main/manifest.schema.json`.
-      The preflight refuses to release a spec whose pinned tag does not exist, but
+      `https://raw.githubusercontent.com/Narcis13/faqir-ui/main/manifest.schema.json`
+      (`SPEC_REF` stays `v1.0.0` in 1.x: those URLs keep serving the frozen text).
+      Also open the new tag's copy, `…/blob/v<version>/SPEC-1.0.md`, which carries
+      this release's amendments. The preflight refuses to release a spec whose pinned tag does not exist, but
       it cannot verify that you pushed it.

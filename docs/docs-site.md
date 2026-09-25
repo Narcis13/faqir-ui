@@ -297,9 +297,9 @@ complete, standalone document — the component's registry reference markup unde
 the two-tag CDN preamble, version-pinned with subresource integrity:
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@faqir-ui/core@0.2.4/dist/faqir.aurora.css"
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.1.0/dist/faqir.aurora.css"
       integrity="sha384-…" crossorigin="anonymous">
-<script src="https://cdn.jsdelivr.net/npm/@faqir-ui/core@0.2.4/dist/faqir-core.min.js"
+<script src="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.1.0/dist/faqir-core.min.js"
         integrity="sha384-…" crossorigin="anonymous" defer></script>
 ```
 
@@ -317,8 +317,9 @@ site. It is the one artifact here that points at a CDN, and keeping it out of th
 page classes keeps the site's own claim absolute — **no page the site serves
 reaches the network.**
 
-One release prerequisite is stated plainly: `@faqir-ui/core@0.2.4` must be
-published to npm before jsDelivr can resolve these URLs. Until then, the preamble
+One release prerequisite is stated plainly: `@faqir-ui/core` at the version
+`cdn.json` pins must be published to npm before jsDelivr can resolve these URLs.
+Until then, the preamble
 is correct in form and pinned to the version this repository declares, but the
 standalone document cannot load its assets. The tests assert what can be
 asserted offline: the URLs, exact version pin, and integrity hashes matching the
