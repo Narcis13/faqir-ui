@@ -99,14 +99,14 @@
         <h2 data-ui="heading" data-size="4">Form controls</h2>
         <div data-ui="grid" data-cols="2" data-gap="4">
           <div data-ui="field-group">
-            <label data-part="label">Email address</label>
-            <div data-part="input"><input data-ui="input" type="email" placeholder="you@example.com"></div>
-            <p data-part="description">We'll never share your email.</p>
+            <label data-part="label" for="preview-email">Email address</label>
+            <div data-part="input"><input data-ui="input" id="preview-email" type="email" placeholder="you@example.com" aria-describedby="preview-email-help"></div>
+            <p data-part="description" id="preview-email-help">We'll never share your email.</p>
           </div>
-          <div data-ui="field-group" data-invalid>
-            <label data-part="label">Password</label>
-            <div data-part="input"><input data-ui="input" type="password" value="123" aria-invalid="true"></div>
-            <p data-part="error">Password must be at least 8 characters.</p>
+          <div data-ui="field-group" data-state="invalid">
+            <label data-part="label" for="preview-password">Password</label>
+            <div data-part="input"><input data-ui="input" id="preview-password" type="password" value="123" aria-invalid="true" aria-describedby="preview-password-error"></div>
+            <p data-part="error" id="preview-password-error">Password must be at least 8 characters.</p>
           </div>
         </div>
         <div data-ui="grid" data-cols="2" data-gap="4">
@@ -236,15 +236,19 @@
     </div>
   </template>
 
+  <!-- The landmark is static so a reader (and `faqir audit`) finds it before
+       the script runs; the panel or the scheme split is mounted inside it. -->
+  <main></main>
+
   <script>
     // This theme ships one scheme (`scheme: "dark"` in its manifest), so
     // there is one panel and no split to offer: a half showing a scheme the
     // theme does not have would be a preview of the base tokens, not of it.
     document.addEventListener("DOMContentLoaded", () => {
-      const panel = document.createElement("main");
+      const panel = document.createElement("div");
       panel.className = "scheme-panel";
       panel.appendChild(document.getElementById("gallery").content.cloneNode(true));
-      document.body.appendChild(panel);
+      document.querySelector("main").appendChild(panel);
     });
   </script>
 </body>

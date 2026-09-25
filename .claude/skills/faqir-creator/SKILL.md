@@ -410,9 +410,9 @@ faqir bindings vue|react [--out <dir>] [--check]          # generate typed Vue/R
 
 ```bash
 faqir diff [component...]                                         # user drift vs pristine baseline
-faqir audit [--json] [--skip-rules <ids>]                         # validate markup against manifests
+faqir audit [file] [--json] [--fix] [--skip-rules <ids>]          # validate markup against manifests
 faqir rules lint <def.json> [--stdin] [--locales <a,b>] [--json]  # lint a rules definition (refs, cycles, messages, ops, reachability)
-faqir repair                                                      # auto-fix audit issues
+faqir repair [file] [--dry-run] [--json] [--skip-rules <ids>]     # auto-fix audit issues
 faqir trace <component> [--json]                                  # dependency graph
 faqir conform [--dry-run]                                         # normalize markup
 ```

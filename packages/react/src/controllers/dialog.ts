@@ -76,13 +76,17 @@ export function createDialog(root) {
   let cancelExitWait = null;
 
   function open() {
+    // A second open() (trigger plus an external trigger, say) must not stack
+    // another focus trap or overwrite the focus to restore on close.
+    if (root.dataset.state === "open" && focusCleanup) return;
     cancelExitWait?.();
     cancelExitWait = null;
-    previouslyFocused = document.activeElement;
+    // Re-opened mid-exit: the trap and the focus to restore are still live.
+    if (!focusCleanup) previouslyFocused = document.activeElement;
     root.dataset.state = "open";
     overlay.hidden = false;
     panel.hidden = false;
-    focusCleanup = trapFocus(panel);
+    if (!focusCleanup) focusCleanup = trapFocus(panel);
     focusInitial();
   }
 

@@ -224,7 +224,7 @@ Pattern tokens are `9` (digit), `a` (ASCII letter), and `*` (any character); eve
 
 ### `faqir-rules`
 
-On init and on every `input`/`change`, the form's own `FormData` is coerced through the definition and handed to `evaluate`, and the answer is applied to the DOM: a hidden field's `[data-ui="field-group"]` takes `hidden` and its controls take `disabled`, so it neither validates nor submits; `require` toggles `required` + `aria-required`; `compute` writes its value into the scope and into any control of that name; and `jump` lands in `$rules.next` for a wizard to read. Cross-field and remote `validate` rules are registered through `Faqir.validate.register`, so they run at faqir-validate's moments, with faqir-validate's messages and its `validating` state — this plugin owns no message and paints no error of its own.
+On init and on every `input`/`change`/`reset`, the form's controls are read (a control someone else disabled, like a wizard's other steps, still answers), coerced through the definition and handed to `evaluate`, and the answer is applied to the DOM: a hidden field's `[data-ui="field-group"]` takes `hidden` and its controls take `disabled` — held there even if something else enables them — so it neither validates nor submits; `require` toggles `required` + `aria-required`; `compute` writes its value into the scope and into any control of that name; and `jump` lands in `$rules.next` for a wizard to read. Cross-field and remote `validate` rules are registered through `Faqir.validate.register`, so they run at faqir-validate's moments, with faqir-validate's messages and its `validating` state — this plugin owns no message and paints no error of its own.
 
 ```html
 <script type="application/json" id="signup-rules">

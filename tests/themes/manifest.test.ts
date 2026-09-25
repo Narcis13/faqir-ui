@@ -31,6 +31,7 @@ import {
   type ThemeManifest,
 } from "../../src/theme-manifest";
 import { axesFromCss } from "../../src/theme/axes";
+import { findFamily } from "../../src/fonts/catalog";
 import { distinctivenessContext, nearest, prepareTheme } from "../../src/theme/distinctiveness";
 
 const REGISTRY = join(import.meta.dir, "../../registry");
@@ -414,12 +415,26 @@ describe("theme manifest · the optional 1.1 fields", () => {
     //     distinctiveness (it is a medium of its parent, not a theme), and
     //     `visual_matrix: false` like the theme that produced it.
     //
-    // `fonts` is on none of them until the OFL catalog lands (1.1A-18).
+    // `fonts` is orthogonal to the three kinds: the face a theme was DESIGNED
+    // for, curated in gen-theme-manifests.mjs's editorial seed (1.1A-30). Where a
+    // theme names one, every entry must be a catalog family in a role the catalog
+    // offers it for, with the catalog's own name and licence — so the
+    // `faqir fonts add` hint `theme set` prints from it always resolves.
     const kinds: Record<string, string[]> = { authored: [], generated: [], companion: [] };
+    const withFonts: string[] = [];
     for (const file of THEME_FILES) {
       const manifest = readManifestRaw(file).json as ThemeManifest;
       const name = file.replace(/\.css$/, "");
-      expect(manifest.fonts, `${file} declares fonts`).toBeUndefined();
+      for (const font of manifest.fonts ?? []) {
+        const entry = findFamily(font.source);
+        expect(entry?.id, `${file} names '${font.source}', not a catalog id`).toBe(font.source);
+        expect(entry!.roles, `${file}: ${font.source} as ${font.role}`).toContain(font.role);
+        expect({ family: font.family, license: font.license }).toEqual({
+          family: entry!.family,
+          license: entry!.license,
+        });
+      }
+      if (manifest.fonts?.length) withFonts.push(name);
 
       if (COMPANION_FILES.includes(file)) {
         kinds.companion.push(name);
@@ -454,6 +469,8 @@ describe("theme manifest · the optional 1.1 fields", () => {
       "neo", "neumorph", "nordic", "organic", "sunset", "swiss",
     ]);
     expect(kinds.companion).toEqual(["editorial-document", "ink-document", "swiss-document"]);
+    // The field has a writer: exactly the themes the editorial seed gives a face.
+    expect(withFonts.sort()).toEqual(["candy", "editorial", "neo", "neumorph", "swiss", "terminal"]);
   });
 
   it("holds every shipped theme's axes to the full derived-block rules", () => {

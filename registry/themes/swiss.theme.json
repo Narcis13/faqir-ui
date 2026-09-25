@@ -144,6 +144,7 @@
     "dialog-overlay-bg",
     "dialog-shadow",
     "disabled-opacity",
+    "divider-width",
     "doc-bg",
     "doc-component-gap",
     "doc-fg",
@@ -200,6 +201,7 @@
     "font-mono",
     "font-sans",
     "font-serif",
+    "heading-caps",
     "heading-leading",
     "image-border",
     "image-border-width",
@@ -388,6 +390,26 @@
     },
     "contrast": "high"
   },
+  "fonts": [
+    {
+      "family": "Inter",
+      "license": "OFL-1.1",
+      "role": "heading",
+      "source": "inter"
+    },
+    {
+      "family": "Inter",
+      "license": "OFL-1.1",
+      "role": "body",
+      "source": "inter"
+    },
+    {
+      "family": "Inter",
+      "license": "OFL-1.1",
+      "role": "ui",
+      "source": "inter"
+    }
+  ],
   "distinctiveness": {
     "nearest": "luxe",
     "axis_distance": 12,

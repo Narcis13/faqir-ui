@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "base": "https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.0.0/dist/",
   "integrity": {
-    "faqir-core.js": "sha384-55E2dYEBQK28MmGcrk4JDS3zDbaVihu1FVmqxN7BZBrIqztIOuKY+q6DwqjtxPWp",
-    "faqir-core.min.js": "sha384-1KO2Sv+NMPBtPeENNxmi8Co9i4nI9cswaINu5s8TMC0sXdb6bORjgNItir6bLzGr",
-    "faqir-core.min.js.map": "sha384-Oe0+FQwsRicZX4vZBVLc41F/NpFjdkR3sPk2XHPs6Qkbjnqwd7LaFzwgYrVl4So7",
-    "faqir-core.mjs": "sha384-ZAFBH2eRRBcAFpuif3rvxsA25VRhokBI7XZnepuSesvwELq8WfHFXKSRP8MJfNrO",
+    "faqir-core.js": "sha384-FsLAtH2R6Wv0q5TGuj3ejUD+D/AtcENeNVoj943IpuBur2p3D9RkOgvsc0oKup6P",
+    "faqir-core.min.js": "sha384-Eo/s4XXGxSwKhRVTBgOH8OA6FTOK6fF78TyrecbchJ9rMuwhQBenqH3q3lhbbv1r",
+    "faqir-core.min.js.map": "sha384-E/uDf2SVHdSrN7qkzL0lwqfhJqtXYnkZ9PiXwv8z2CWxR1NGFfxm2IRFotmVCrFj",
+    "faqir-core.mjs": "sha384-hodNYpxtZX0UsvtEmUr4im5pbEg1srirGnujd/FrQhXEFaol+bE2IHG5BXKcYm1w",
     "faqir.aurora.css": "sha384-TrPBHGXGxwY6sLypt3kbjbhEHz87wsYgqQhzPqi5zghmsiqewgykQx6aS+WP2O0h",
     "faqir.brutalist.css": "sha384-N/VfEAEdOZ2PGFX4xsPzlHEmDkXtjzmkXXW1Ta3PCtBV/RZm1rF4EYsfwLEvwqPZ",
     "faqir.candy.css": "sha384-/lk9HAr46O2pYwsM8vE8MBVkPLB1t2otA3Edfux98b564DvNkWqpsD4DSVdcmHAX",
@@ -38,7 +38,7 @@
     "plugins/faqir-intersect.js": "sha384-Q/akZjAcnTnGYPKBP7b8c3iyYbHTIW1IPjBivzOH9dE7Nflr9Cu6adjeDXU2bhk6",
     "plugins/faqir-mask.js": "sha384-7yA/VdjGdg/6vwX+zUbughO6ERyV2rEsVyNYBO5ghqJbAhj9912F9qMPTkLc55B6",
     "plugins/faqir-persist.js": "sha384-o0jfddebC8QZ3S26VXUlOme723BNMlb/N7vqpn+fWpSeEFXzpq+3MoeXhVL/0PSv",
-    "plugins/faqir-rules.js": "sha384-DDt8Q5HZABEDIev8o+wjQSrkzrod7fsypj0e2FI7naN9GcSj5Ykn+7rQNp8AhVsc",
+    "plugins/faqir-rules.js": "sha384-xE90r5W3AlWKu+idcwx6NAkVUcRWMgM9ZJ1VgJLOguj/0GYP0jfflCojiCWt4FVq",
     "plugins/faqir-validate.js": "sha384-TIyGNL8dHBnFdV56LAhdklvhQLsClQqGuQ7DT0Zgxva8DIzfONXZSJYTXhQxJcN0"
   }
 }

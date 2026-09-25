@@ -109,6 +109,7 @@
     "dialog-overlay-bg",
     "dialog-shadow",
     "disabled-opacity",
+    "divider-width",
     "doc-bg",
     "doc-component-gap",
     "doc-fg",
@@ -172,6 +173,7 @@
     "font-mono",
     "font-sans",
     "font-serif",
+    "heading-caps",
     "heading-leading",
     "heading-tracking",
     "heading-transform",
@@ -339,6 +341,14 @@
     },
     "contrast": "standard"
   },
+  "fonts": [
+    {
+      "family": "JetBrains Mono",
+      "license": "OFL-1.1",
+      "role": "mono",
+      "source": "jetbrains-mono"
+    }
+  ],
   "distinctiveness": {
     "nearest": "fintech",
     "axis_distance": 8,

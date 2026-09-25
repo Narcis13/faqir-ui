@@ -19,16 +19,16 @@ Cascade order, as `tokens/index.css` imports them: `palette.css` → `spacing.cs
 
 ## Token Groups
 
-356 tokens in 10 groups:
+358 tokens in 10 groups:
 
 - `palette` (67) — raw oklch color values, never referenced by components directly
 - `spacing` (23) — 4px base, harmonic scale
-- `typography` (27) — font families, sizes, line-heights, weights
+- `typography` (28) — font families, sizes, line-heights, weights
 - `effects` (33) — radii, shape, shadows, focus, z-index
 - `textures` (6) — named surface materials (SVG data URIs)
 - `motion` (19) — easings, durations and motion personality
 - `semantic` (31) — purpose-based tokens, referenced by components
-- `aliases` (62) — per-component overrides mapping to semantic tokens
+- `aliases` (63) — per-component overrides mapping to semantic tokens
 - `document` (42) — structural tokens for document/print rendering
 - `doc-aliases` (46) — component-level document tokens
 
@@ -170,7 +170,7 @@ _`registry/tokens/spacing.css` · 23 tokens_
 
 ## typography — font families, sizes, line-heights, weights
 
-_`registry/tokens/typography.css` · 27 tokens_
+_`registry/tokens/typography.css` · 28 tokens_
 
 ### Font Families
 
@@ -227,6 +227,7 @@ _`registry/tokens/typography.css` · 27 tokens_
 | `--heading-weight` | `var(--weight-bold)` | — |
 | `--heading-tracking` | `0em` | letter-spacing — carries a unit so it composes inside calc() where a heading already has its own optical tightening |
 | `--heading-transform` | `none` | text-transform |
+| `--heading-caps` | `normal` | font-variant-caps — small caps are a variant, not a transform (1.1A-25), so they get a knob of their own that sits beside --heading-transform |
 | `--heading-leading` | `var(--leading-tight)` | — |
 
 ## effects — radii, shape, shadows, focus, z-index
@@ -417,7 +418,7 @@ _`registry/tokens/semantic.css` · 31 tokens_
 
 ## aliases — per-component overrides mapping to semantic tokens
 
-_`registry/tokens/aliases.css` · 62 tokens_
+_`registry/tokens/aliases.css` · 63 tokens_
 
 ### Controls
 
@@ -460,6 +461,7 @@ _`registry/tokens/aliases.css` · 62 tokens_
 | `--link-underline-offset` | `0.2em` |
 | `--link-thickness` | `1px` |
 | `--divider-style` | `solid` |
+| `--divider-width` | `var(--border-width)` |
 | `--stripe-bg` | `var(--color-bg-subtle)` |
 | `--selection-bg` | `var(--color-primary-subtle)` |
 | `--selection-fg` | `var(--color-fg)` |
@@ -677,7 +679,7 @@ _`registry/tokens/doc-aliases.css` · 46 tokens_
 | `--field-error-size` | `var(--doc-legal-size)` | — |
 | `--field-error-color` | `var(--color-destructive)` | — |
 | `--field-validating-color` | `var(--color-fg-muted)` | async validation in flight |
-| `--field-disabled-opacity` | `0.55` | honest disabled affordance |
+| `--field-disabled-opacity` | `calc(var(--disabled-opacity) * 1.1)` | — |
 | `--field-required-color` | `var(--color-destructive)` | — |
 | `--field-required-marker` | `' *'` | appended to required labels |
 
