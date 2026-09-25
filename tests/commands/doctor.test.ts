@@ -3,6 +3,7 @@ import { existsSync, rmSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { init } from "../../src/commands/init";
 import { doctor } from "../../src/commands/doctor";
+import { add } from "../../src/commands/add";
 
 const TEST_DIR = join(import.meta.dir, "../.tmp-doctor-test");
 
@@ -132,6 +133,25 @@ describe("faqir doctor exit code", () => {
     process.chdir(TEST_DIR);
     try {
       await init(["--yes"]);
+      process.exitCode = 0;
+      await doctor([]);
+      expect(process.exitCode ?? 0).toBe(0);
+    } finally {
+      process.exitCode = typeof origExit === "number" ? origExit : 0;
+      process.chdir(origCwd);
+    }
+  });
+
+  // `page-break` and `spinner` declare `content_model: "empty"`, which the schema
+  // allows; the validator's own list once omitted it, so every invoice or report
+  // scaffold failed doctor on a registry manifest it had installed verbatim.
+  it("accepts components whose content model is empty", async () => {
+    const origCwd = process.cwd();
+    const origExit: typeof process.exitCode = process.exitCode;
+    process.chdir(TEST_DIR);
+    try {
+      await init(["--yes"]);
+      await add(["page-break", "spinner"]);
       process.exitCode = 0;
       await doctor([]);
       expect(process.exitCode ?? 0).toBe(0);

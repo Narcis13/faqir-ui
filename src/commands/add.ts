@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
-import { dirname, join, resolve, relative, isAbsolute } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { log } from "../utils/logger";
+import { isInside } from "../utils/paths";
 import { configExists, readConfig, writeConfig, type FaqirConfig, missingConfigMessage } from "../utils/config";
 import { copyDir, ensureDir, getRegistryPath } from "../utils/fs";
 import { loadManifest, type Manifest } from "../manifest";
@@ -568,8 +569,7 @@ async function addRemote(
     // path that could escape, but this is the line that actually writes bytes to
     // the user's disk from a remote description, so it asserts containment
     // itself rather than trusting a check made three modules away.
-    const rel = relative(installRoot, dest);
-    if (rel.startsWith("..") || isAbsolute(rel)) {
+    if (!isInside(installRoot, dest)) {
       log.error(`Refusing to write outside the project: '${write.destRel}'`);
       process.exit(1);
     }

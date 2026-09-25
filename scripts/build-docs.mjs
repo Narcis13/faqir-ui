@@ -19,9 +19,10 @@
  */
 import { mkdirSync, rmSync, writeFileSync, readFileSync, existsSync, statSync, readdirSync } from "node:fs";
 import { spawnSync } from "node:child_process";
-import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
+import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildDocsSite } from "../src/generator/docs";
+import { isInside } from "../src/utils/paths";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -49,7 +50,7 @@ export function resolveOutDir(argv, root = ROOT, trackedUnder = gitTrackedUnder)
   const outDir = resolve(root, value);
   const rel = relative(root, outDir);
   if (rel === "") return { error: "--out must not be the repository root" };
-  if (rel.startsWith("..") || isAbsolute(rel)) {
+  if (!isInside(root, outDir)) {
     return { error: `--out must be inside the repository (${root}); got ${outDir}` };
   }
   const [top, second = ""] = rel.split(sep);

@@ -1,8 +1,9 @@
 // faqir scaffold — generate full page templates
 
 import { existsSync, readFileSync } from "node:fs";
-import { dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { log } from "../utils/logger";
+import { isInside } from "../utils/paths";
 import { configExists, readConfig, writeConfig, missingConfigMessage } from "../utils/config";
 import { copyFile, ensureDir, getRegistryPath } from "../utils/fs";
 import { generateBundle } from "../utils/bundler";
@@ -152,8 +153,7 @@ function flagValue(args: string[], name: string): string | undefined {
 function resolveOutputPath(cwd: string, arg: string): string {
   const root = resolve(cwd);
   const path = resolve(root, arg);
-  const rel = relative(root, path);
-  if (rel === "" || rel.startsWith("..") || isAbsolute(rel)) {
+  if (path === root || !isInside(root, path)) {
     log.error(`Refusing to write outside the project: '${arg}'`);
     log.dim("--output takes a path inside the project directory.");
     process.exit(1);

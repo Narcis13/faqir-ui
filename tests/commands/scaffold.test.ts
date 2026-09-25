@@ -235,6 +235,12 @@ describe("faqir scaffold installs, writes and parses like the rest of the CLI", 
     expect(existsSync(join(tmpdir(), "faqir-escaped.html"))).toBe(false);
   });
 
+  it("a directory inside the project whose name starts with two dots is not an escape", async () => {
+    const target = join(TEST_DIR, "..drafts", "page.html");
+    await runScaffold(["report", "--output", "..drafts/page.html"]);
+    expect(existsSync(target)).toBe(true);
+  });
+
   it("a flag with no value is an error, not the next flag", () => {
     for (const args of [["report", "--output"], ["report", "--output", "--no-add"], ["report", "--theme"]]) {
       const r = cli(args);

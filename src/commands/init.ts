@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
-import { join } from "node:path";
+import { isAbsolute, join } from "node:path";
 import { log } from "../utils/logger";
+import { isInside } from "../utils/paths";
 import { configExists, readConfig, writeConfig, DEFAULT_CONFIG, type FaqirConfig } from "../utils/config";
 import { ensureDir, copyDir, copyFile, getRegistryPath, getPackageRoot } from "../utils/fs";
 import { generateBundle } from "../utils/bundler";
@@ -69,6 +70,15 @@ export async function init(args: string[]): Promise<void> {
   const opts = parseArgs(args);
   const cwd = process.cwd();
   const registryPath = getRegistryPath();
+  // `--dir` is persisted as `output_dir`, which every later command joins onto
+  // the project root — so it must be a relative path that stays inside it.
+  // `join(cwd, "/abs")` silently wrote `<cwd>/abs`, and `../x` escaped.
+  if (isAbsolute(opts.dir) || !isInside(cwd, opts.dir)) {
+    throw new Error(
+      `Refusing to install outside the project: --dir '${opts.dir}'. ` +
+        `--dir takes a path relative to the project root, such as ./ui.`,
+    );
+  }
   const outputDir = join(cwd, opts.dir);
 
   log.heading("Initializing Faqir project");

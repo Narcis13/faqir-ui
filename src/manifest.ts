@@ -102,7 +102,7 @@ export interface ManifestA11y {
 export interface ManifestAnatomy {
   tag: string;
   selector: string;
-  content_model: "inline" | "block" | "slots" | "text";
+  content_model: "inline" | "block" | "slots" | "text" | "empty";
 }
 
 export interface ManifestComposition {
@@ -192,7 +192,7 @@ export interface ManifestValidationError {
 }
 
 const VALID_KINDS = ["primitive", "recipe", "pattern", "scaffold"] as const;
-const VALID_CONTENT_MODELS = ["inline", "block", "slots", "text"] as const;
+const VALID_CONTENT_MODELS = ["inline", "block", "slots", "text", "empty"] as const;
 
 /**
  * The closed category vocabulary (task 0.8-02).

@@ -1,6 +1,7 @@
 import { existsSync, watch } from "node:fs";
-import { join, extname, resolve, relative, isAbsolute } from "node:path";
+import { join, extname, resolve } from "node:path";
 import { log } from "../utils/logger";
+import { isInside } from "../utils/paths";
 import { emitJSON } from "../utils/json-output";
 import { configExists, readConfig } from "../utils/config";
 import { generateBundle } from "../utils/bundler";
@@ -82,18 +83,6 @@ function parseArgs(args: string[]): DevOptions {
   }
 
   return opts;
-}
-
-/**
- * Whether `candidate` resolves to `root` itself or something beneath it.
- *
- * Used to contain the static file server: the request path is attacker-supplied
- * and reaches us percent-encoded, so containment is asserted on the resolved
- * path rather than inferred from the URL looking well-formed.
- */
-function isInside(root: string, candidate: string): boolean {
-  const rel = relative(root, resolve(candidate));
-  return rel === "" || (!rel.startsWith("..") && !isAbsolute(rel));
 }
 
 function printHelp() {

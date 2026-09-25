@@ -210,4 +210,21 @@ describe("faqir init", () => {
     const config = await Bun.file(join(TEST_DIR, "faqir.config.json")).json();
     expect(config.output_dir).toBe("./components");
   });
+
+  // `--dir` is persisted as `output_dir` and joined onto the root by every later
+  // command, so it must be relative and stay inside the project.
+  it("refuses a --dir that is absolute or climbs out of the project", async () => {
+    const origCwd = process.cwd();
+    process.chdir(TEST_DIR);
+    try {
+      for (const dir of ["../escaped-ui", join(TEST_DIR, "abs-ui")]) {
+        await expect(init(["--dir", dir])).rejects.toThrow("Refusing to install outside the project");
+      }
+    } finally {
+      process.chdir(origCwd);
+    }
+    expect(existsSync(join(TEST_DIR, "..", "escaped-ui"))).toBe(false);
+    expect(existsSync(join(TEST_DIR, "abs-ui"))).toBe(false);
+    expect(existsSync(join(TEST_DIR, "faqir.config.json"))).toBe(false);
+  });
 });

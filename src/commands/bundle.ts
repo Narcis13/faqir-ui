@@ -1,6 +1,7 @@
 import { existsSync, watch } from "node:fs";
-import { join } from "node:path";
+import { isAbsolute, join, resolve } from "node:path";
 import { log } from "../utils/logger";
+import { isInside } from "../utils/paths";
 import { configExists, readConfig, writeConfig, missingConfigMessage } from "../utils/config";
 import { generateBundle, type BundleOptions } from "../utils/bundler";
 
@@ -88,7 +89,16 @@ export async function bundle(args: string[]): Promise<void> {
   }
 
   const bundleOpts: BundleOptions = {};
-  if (opts.output) bundleOpts.output = join(cwd, opts.output);
+  if (opts.output) {
+    // An absolute path is honoured as given (`join` used to glue it onto the
+    // cwd); a relative one must stay inside the project, as `theme --out` does.
+    if (!isAbsolute(opts.output) && !isInside(cwd, opts.output)) {
+      log.error(`Refusing to write outside the project: --output '${opts.output}'`);
+      log.dim("Pass an absolute path if that is really where it should go.");
+      process.exit(1);
+    }
+    bundleOpts.output = resolve(cwd, opts.output);
+  }
   if (opts.minify) bundleOpts.minify = true;
   if (opts.js) bundleOpts.js = true;
 

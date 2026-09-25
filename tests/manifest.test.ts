@@ -5,6 +5,16 @@ import { join } from "node:path";
 const REGISTRY = join(import.meta.dir, "../registry");
 
 describe("manifest validation", () => {
+  it("accepts every content model the schema allows", async () => {
+    const schema = await Bun.file(join(import.meta.dir, "../manifest.schema.json")).json();
+    const models: string[] = schema.definitions.anatomy.properties.content_model.enum;
+    expect(models).toContain("empty");
+    for (const content_model of models) {
+      const errors = validateManifest({ anatomy: { tag: "hr", selector: "[data-ui='x']", content_model } });
+      expect(errors.filter((e) => e.field === "anatomy.content_model")).toEqual([]);
+    }
+  });
+
   it("returns errors for empty object", () => {
     const errors = validateManifest({});
     expect(errors.length).toBeGreaterThan(0);

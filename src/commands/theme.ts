@@ -1,8 +1,9 @@
 // faqir theme — manage themes (set, create, generate, list)
 
 import { existsSync, readFileSync } from "node:fs";
-import { isAbsolute, join, relative, resolve } from "node:path";
+import { isAbsolute, join, resolve } from "node:path";
 import { log } from "../utils/logger";
+import { isInside } from "../utils/paths";
 import { configExists, readConfig, writeConfig, missingConfigMessage } from "../utils/config";
 import { regenerateContext } from "../utils/codegen";
 import { copyFile, ensureDir, getRegistryPath } from "../utils/fs";
@@ -258,8 +259,7 @@ export function resolveOutDir(cwd: string, dir: string, flag = "--out"): string 
   if (isAbsolute(dir)) return resolve(dir);
   const root = resolve(cwd);
   const target = resolve(root, dir);
-  const rel = relative(root, target);
-  if (rel.startsWith("..") || isAbsolute(rel)) {
+  if (!isInside(root, target)) {
     throw new Error(
       `Refusing to write outside the project: ${flag} '${dir}' resolves to ${target}. ` +
         `Pass an absolute path if that is really where it should go.`,
