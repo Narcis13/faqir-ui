@@ -23,6 +23,7 @@ import { add } from "../../src/commands/add";
 import { upgrade } from "../../src/commands/upgrade";
 import { doctor } from "../../src/commands/doctor";
 import { getRegistryPath } from "../../src/utils/fs";
+import { SPAWN_TIMEOUT } from "../helpers/spawn";
 import { RELEASED_FRAMEWORK_HASHES } from "../../src/utils/framework-history";
 import {
   appendMissingDeclarations,
@@ -290,12 +291,12 @@ describe("the helpers", () => {
   it("the released-hash table matches the tags it names (when the tags are present)", () => {
     let tags: string[] = [];
     try {
-      tags = execFileSync("git", ["tag"], { cwd: ROOT, encoding: "utf8" }).split("\n").filter(Boolean);
+      tags = execFileSync("git", ["tag"], { cwd: ROOT, encoding: "utf8", timeout: SPAWN_TIMEOUT.QUICK }).split("\n").filter(Boolean);
     } catch {
       // not a git checkout — nothing to recompute against
     }
     if (!tags.includes("v1.0.0")) return;
-    const git = (...a: string[]) => execFileSync("git", a, { cwd: ROOT, encoding: "utf8", maxBuffer: 1 << 26 });
+    const git = (...a: string[]) => execFileSync("git", a, { cwd: ROOT, encoding: "utf8", maxBuffer: 1 << 26, timeout: SPAWN_TIMEOUT.QUICK });
     const sha = (s: string) => createHash("sha256").update(s).digest("hex");
     for (const rel of ["base/reset.css", "base/prose.css", "base/rhythm.css", "base/motion-presets.css", "tokens/aliases.css"]) {
       expect(RELEASED_FRAMEWORK_HASHES[rel], rel).toContain(sha(git("show", `v1.0.0:registry/${rel}`)));

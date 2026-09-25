@@ -1,5 +1,5 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "bun:test";
-import { tick } from "../helpers/settle";
+import { settle, tick } from "../helpers/settle";
 import { coerce, validate } from "../../packages/rules/src/index.js";
 import { expectedVerdict, loadCorpus, type GoldenCase } from "../../packages/rules/tests/corpus";
 
@@ -1128,8 +1128,7 @@ describe("faqir-rules · reset and teardown", () => {
     expect(seats.disabled).toBe(false);
 
     form.reset();
-    await tick();
-    await tick();
+    await settle(() => seats.disabled, "the repaint a reset defers by one task");
     expect(control(form, "plan").value).toBe("solo");
     expect(seats.disabled).toBe(true);
     expect(groupOf(seats).hasAttribute("hidden")).toBe(true);

@@ -181,11 +181,15 @@ describe("the doc's claims still hold against the engine", () => {
     // exfiltration channel" — is only true if the body really carries every
     // field and the URL really comes from the definition.
     const plugin = readFileSync(join(ROOT, "packages", "rules", "src", "plugin.js"), "utf8");
-    const call = /return fetch\([\s\S]*?\}\)/.exec(plugin)?.[0] ?? "";
+    const check = /function remoteCheck\([\s\S]*?\n\}\n/.exec(plugin)?.[0] ?? "";
+    const call = /return fetch\([\s\S]*?\}\)/.exec(check)?.[0] ?? "";
     expect(call, "the remote validator's fetch call moved").toContain('method: "POST"');
     expect(call).toContain("rule.remote");
     expect(call).toMatch(/path:\s*rule\.path/);
-    expect(call).toMatch(/data:\s*collect\(form/);
+    // The body's `data` is the collected form — every named control a rule
+    // has not hidden.
+    expect(call).toMatch(/data:\s*data\b/);
+    expect(check).toMatch(/const data = collect\(form/);
     // No `credentials` option — which is what makes the doc's "fetch's default
     // same-origin credentials" sentence the accurate one.
     expect(call).not.toContain("credentials");

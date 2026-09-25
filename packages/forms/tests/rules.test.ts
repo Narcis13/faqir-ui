@@ -572,16 +572,16 @@ describe("a rendered form under faqir-core + faqir-validate + faqir-rules", () =
  */
 let savedWeakRef: typeof WeakRef;
 
+// The wizard's step change, the rules plugin's observer delivery and its repaint
+// are all microtasks; one macrotask turn drains every one of them.
 async function submit(form: HTMLFormElement): Promise<void> {
   form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
-  await tick();
   await tick();
 }
 
 async function back(form: HTMLFormElement): Promise<void> {
   const button = [...form.querySelectorAll("button")].find((b) => b.textContent?.trim() === "Back");
   button!.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
-  await tick();
   await tick();
 }
 

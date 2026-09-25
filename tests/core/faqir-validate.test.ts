@@ -843,7 +843,9 @@ describe("faqir-validate · an async submit the page cancelled", () => {
 
     submit(form);
     gate.resolve(true);
-    await tick();
+    // The verdict is decided in a `Promise.all(...).then` — microtasks, which
+    // one macrotask turn drains completely — so after it, a native submit
+    // either happened or never will.
     await tick();
     expect(submits()).toBe(0);
     validate().unregister(form, "a");
@@ -858,7 +860,9 @@ describe("faqir-validate · an async submit the page cancelled", () => {
 
     submit(form);
     gate.resolve(true);
-    await tick();
+    // The verdict is decided in a `Promise.all(...).then` — microtasks, which
+    // one macrotask turn drains completely — so after it, a native submit
+    // either happened or never will.
     await tick();
     expect(submits()).toBe(0);
     validate().unregister(form, "a");
