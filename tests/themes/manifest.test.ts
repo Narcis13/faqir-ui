@@ -426,7 +426,8 @@ describe("theme manifest · the optional 1.1 fields", () => {
       const manifest = readManifestRaw(file).json as ThemeManifest;
       const name = file.replace(/\.css$/, "");
       for (const font of manifest.fonts ?? []) {
-        const entry = findFamily(font.source);
+        const entry = findFamily(font.source ?? "");
+        expect(entry, `${file} names no catalog family`).not.toBeNull();
         expect(entry?.id, `${file} names '${font.source}', not a catalog id`).toBe(font.source);
         expect(entry!.roles, `${file}: ${font.source} as ${font.role}`).toContain(font.role);
         expect({ family: font.family, license: font.license }).toEqual({
