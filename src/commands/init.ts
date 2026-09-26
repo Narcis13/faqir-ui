@@ -297,7 +297,7 @@ export async function init(args: string[]): Promise<void> {
   log.step(`${opts.dir}/tokens/   — design tokens`);
   log.step(`${opts.dir}/base/     — CSS reset, prose & motion presets`);
   if (!opts.noCore) {
-    log.step(`${opts.dir}/core/     — faqir-core.js, api-source.js, utility modules`);
+    log.step(`${opts.dir}/core/     — faqir-core.js (+ faqir-core.mjs for bundlers), api-source.js, utility modules`);
   }
   log.step(`${opts.dir}/primitives/ — CSS-only components`);
   log.step(`${opts.dir}/recipes/   — interactive components`);

@@ -4,17 +4,18 @@
 //   • project scan (default) — walk the project's HTML files against installed
 //     manifests. Requires faqir.config.json.
 //   • `--stdin` — audit an HTML document piped on stdin against the *registry*
-//     manifests. Filesystem-free per call (the shared `auditHtmlSource` engine,
-//     the same one the MCP `faqir_audit_html` tool drives) and needs no project.
+//     manifests (the shared `auditHtmlSource` engine, the same one the MCP
+//     `faqir_audit_html` tool drives). It needs no project; inside one, the
+//     project's installed manifests are laid over the registry's.
 
 import { existsSync, statSync } from "node:fs";
-import { resolve } from "node:path";
-import { configExists, missingConfigMessage } from "../utils/config";
+import { join, resolve } from "node:path";
+import { configExists, missingConfigMessage, readConfig } from "../utils/config";
 import { log } from "../utils/logger";
 import { getRegistryPath } from "../utils/fs";
 import { knownUiValues, loadRegistryManifestMap } from "../utils/components";
 import { extractComponents } from "../parser/html-parser";
-import { runAudit, auditHtmlSource, type AuditSummary } from "../audit/checker";
+import { runAudit, auditHtmlSource, loadInstalledAuditInputs, type AuditSummary } from "../audit/checker";
 import type { AuditResult, Severity } from "../audit/rules";
 import { printAuditReport, printAuditJSON, printRuleInventory } from "../audit/reporter";
 import { readStdin } from "../utils/stdin";
@@ -124,22 +125,43 @@ function summarize(results: AuditResult[], filesScanned: number, componentsFound
   };
 }
 
-/** Audit HTML piped on stdin against the registry manifests. */
-async function auditStdin(args: string[]): Promise<void> {
+/**
+ * Audit HTML piped on stdin against the registry manifests — and, run inside a
+ * project, against that project's installed ones laid over them.
+ *
+ * Without the overlay a project's own components (`faqir create`) were
+ * `unknown-component` on stdin while `--file` in the same directory knew them,
+ * and an installed manifest the project had edited was ignored for the
+ * registry's copy.
+ */
+async function auditStdin(args: string[], cwd: string): Promise<void> {
   const jsonMode = args.includes("--json");
   const source = await readStdin();
 
   const registryPath = getRegistryPath();
   const manifests = await loadRegistryManifestMap(registryPath);
+  // `unknown-component` (task 1.0R-11) is decided from the registry the
+  // manifests came from — plus the aliases and base-layer values that have no
+  // manifest of their own, and the project's installed names.
+  const known = new Set(knownUiValues(registryPath));
+  let styles: Map<string, string> | undefined;
 
-  // Here the manifests ARE the registry, so `unknown-component` (task 1.0R-11)
-  // is decided from the same registry the manifests came from — plus the aliases
-  // and base-layer values that have no manifest of their own.
+  if (configExists(cwd)) {
+    const config = await readConfig(cwd);
+    const installed = await loadInstalledAuditInputs(config, join(cwd, config.output_dir));
+    for (const [name, manifest] of installed.manifests) {
+      manifests.set(name, manifest);
+      known.add(name);
+    }
+    styles = installed.styles;
+  }
+
   const results = auditHtmlSource({
     source,
     file: "<stdin>",
     manifests,
-    knownUiValues: knownUiValues(registryPath),
+    styles,
+    knownUiValues: [...known],
     skipRules: parseSkipRules(args),
   });
   const componentsFound = extractComponents(source, "<stdin>").length;
@@ -169,7 +191,7 @@ export async function audit(args: string[]): Promise<void> {
     console.log("Options:");
     log.table([
       ["<file>, --file <file>", "Audit one HTML file instead of the whole project"],
-      ["--stdin", "Audit HTML read from stdin — no project required"],
+      ["--stdin", "Audit HTML read from stdin — no project required; inside one, its components count"],
       ["--rules", "List the rule inventory instead of auditing"],
       ["--skip-rules <ids>", "Comma-separated rule IDs to skip"],
       ["--strict", "Fail on findings in ui/ too — the framework's own installed files"],
@@ -190,7 +212,7 @@ export async function audit(args: string[]): Promise<void> {
 
   // `--stdin` reads HTML from stdin and audits against the registry — no project.
   if (args.includes("--stdin")) {
-    return auditStdin(args);
+    return auditStdin(args, cwd);
   }
 
   if (!configExists(cwd)) {

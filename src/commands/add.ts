@@ -287,6 +287,37 @@ export async function add(args: string[]): Promise<void> {
   return addLocal(components, options, config, cwd, outputDir);
 }
 
+/**
+ * The component names `--all` / `--layer` install, each exactly once.
+ *
+ * A name is resolved by layer precedence everywhere in the CLI (primitives,
+ * then recipes, then patterns), so when two layers ship the same name only the
+ * first is reachable — the registry's `empty-state` is both a primitive and a
+ * pattern, and both style `[data-ui="empty-state"]`. Listing directories
+ * blindly resolved that name twice: the primitive was installed twice, counted
+ * twice in "Added N components", and the pattern was dropped without a word.
+ * Now the shadowed directory is named, with the reason, and skipped.
+ */
+function listInstallable(registryPath: string, layer?: Layer): string[] {
+  const names: string[] = [];
+  const layers: Layer[] = layer ? [layer] : ["primitives", "recipes", "patterns"];
+  for (const l of layers) {
+    for (const name of listRegistryComponents(registryPath, l)) {
+      const winner = findComponentInRegistry(name, registryPath);
+      if (winner && winner.layer !== l) {
+        log.warn(
+          `Skipping ${l}/${name}: ${winner.layer}/${name} has the same name, and a project ` +
+            `holds one component per name (both are [data-ui="${name}"]) — '${name}' ` +
+            `resolves to ${winner.layer}/${name}.`,
+        );
+        continue;
+      }
+      if (!names.includes(name)) names.push(name);
+    }
+  }
+  return names;
+}
+
 async function addLocal(
   components: string[],
   options: AddOptions,
@@ -299,10 +330,8 @@ async function addLocal(
   // Determine which components to add
   let toAdd: string[] = [];
 
-  if (options.all) {
-    toAdd = listRegistryComponents(registryPath);
-  } else if (options.layer) {
-    toAdd = listRegistryComponents(registryPath, options.layer);
+  if (options.all || options.layer) {
+    toAdd = listInstallable(registryPath, options.all ? undefined : options.layer ?? undefined);
   } else {
     if (components.length === 0) {
       log.error("No components specified. Usage: faqir add <component...>");

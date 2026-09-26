@@ -19,8 +19,8 @@ import {
   buildBreakpointCanonResults,
   buildUndeclaredAttributeResults,
 } from "./css-rules";
-import { readConfig } from "../utils/config";
-import { knownUiValues } from "../utils/components";
+import { readConfig, type FaqirConfig } from "../utils/config";
+import { installedStylesheetFile, knownUiValues } from "../utils/components";
 import { getRegistryPath } from "../utils/fs";
 import { auditHtmlSource, type HtmlAuditInput } from "./html-audit";
 
@@ -99,6 +99,38 @@ export function splitCounts(
 }
 
 /**
+ * A project's installed manifests and stylesheets, keyed by component name —
+ * the per-project half of what the rules decide from. Shared by the project
+ * audit and `audit --stdin` run inside a project, so both know the same
+ * components, the project's own custom ones included.
+ */
+export async function loadInstalledAuditInputs(
+  config: Pick<FaqirConfig, "installed">,
+  outputDir: string,
+): Promise<{ manifests: Map<string, Manifest>; styles: Map<string, string> }> {
+  const manifests = new Map<string, Manifest>();
+  const styles = new Map<string, string>();
+  for (const [layer, names] of [
+    ["primitives", config.installed.primitives],
+    ["recipes", config.installed.recipes],
+    ["patterns", config.installed.patterns],
+  ] as const) {
+    for (const name of names) {
+      const dir = join(outputDir, layer, name);
+      const manifestPath = join(dir, `${name}.manifest.json`);
+      if (existsSync(manifestPath)) manifests.set(name, await loadManifest(manifestPath));
+      // The installed stylesheets — the second half of the input the
+      // markup+css rules decide from (`trigger-contract`, task 0.9-05;
+      // `single-fixed-region`, task 0.9-06). A component with no sheet on disk
+      // is simply absent, and those rules skip it.
+      const cssPath = join(dir, installedStylesheetFile(dir, name));
+      if (existsSync(cssPath)) styles.set(name, await Bun.file(cssPath).text());
+    }
+  }
+  return { manifests, styles };
+}
+
+/**
  * Run a full audit on the project.
  */
 export async function runAudit(options: AuditOptions = {}): Promise<AuditSummary> {
@@ -107,42 +139,7 @@ export async function runAudit(options: AuditOptions = {}): Promise<AuditSummary
   const outputDir = join(cwd, config.output_dir);
   const registryPath = getRegistryPath();
 
-  // Load all installed manifests
-  const manifests = new Map<string, Manifest>();
-  for (const name of config.installed.primitives) {
-    const manifestPath = join(outputDir, "primitives", name, `${name}.manifest.json`);
-    if (existsSync(manifestPath)) {
-      manifests.set(name, await loadManifest(manifestPath));
-    }
-  }
-  for (const name of config.installed.recipes) {
-    const manifestPath = join(outputDir, "recipes", name, `${name}.manifest.json`);
-    if (existsSync(manifestPath)) {
-      manifests.set(name, await loadManifest(manifestPath));
-    }
-  }
-  for (const name of config.installed.patterns) {
-    const manifestPath = join(outputDir, "patterns", name, `${name}.manifest.json`);
-    if (existsSync(manifestPath)) {
-      manifests.set(name, await loadManifest(manifestPath));
-    }
-  }
-
-  // The installed stylesheets, keyed like the manifests — the second half of the
-  // input the markup+css rules decide from (`trigger-contract`, task 0.9-05;
-  // `single-fixed-region`, task 0.9-06). A component with no sheet on disk is
-  // simply absent, and those rules skip it.
-  const styles = new Map<string, string>();
-  for (const [layer, names] of [
-    ["primitives", config.installed.primitives],
-    ["recipes", config.installed.recipes],
-    ["patterns", config.installed.patterns],
-  ] as const) {
-    for (const name of names) {
-      const cssPath = join(outputDir, layer, name, `${name}.css`);
-      if (existsSync(cssPath)) styles.set(name, await Bun.file(cssPath).text());
-    }
-  }
+  const { manifests, styles } = await loadInstalledAuditInputs(config, outputDir);
 
   // Every `data-ui` value the registry defines, installed here or not — the
   // input `unknown-component` is decided from (task 1.0R-11). The manifests
@@ -283,7 +280,7 @@ async function checkTokens(
   ];
 
   for (const { name, layer } of allComponents) {
-    const cssPath = join(outputDir, layer, name, `${name}.css`);
+    const cssPath = join(outputDir, layer, name, installedStylesheetFile(join(outputDir, layer, name), name));
     if (!existsSync(cssPath)) continue;
 
     const cssSource = await Bun.file(cssPath).text();
@@ -378,7 +375,7 @@ async function checkCssAntiPatterns(
   ];
 
   for (const { name, layer } of allComponents) {
-    const cssPath = join(outputDir, layer, name, `${name}.css`);
+    const cssPath = join(outputDir, layer, name, installedStylesheetFile(join(outputDir, layer, name), name));
     if (!existsSync(cssPath)) continue;
 
     const source = await Bun.file(cssPath).text();
@@ -627,7 +624,7 @@ async function checkReducedMotion(
   ];
 
   for (const { name, layer } of allComponents) {
-    const cssPath = join(outputDir, layer, name, `${name}.css`);
+    const cssPath = join(outputDir, layer, name, installedStylesheetFile(join(outputDir, layer, name), name));
     if (!existsSync(cssPath)) continue;
 
     const cssSource = await Bun.file(cssPath).text();

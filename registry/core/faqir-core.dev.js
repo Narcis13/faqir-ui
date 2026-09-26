@@ -11854,7 +11854,7 @@ function createTreeView(root) {
       // to call `start()` again. [W3-1]
       if (rootEl.__faqirScope) {
         processed.add(rootEl);
-        var seen = rootEl.querySelectorAll('[l-data]');
+        var seen = rootEl.querySelectorAll('[l-data], [data-ui]');
         for (var sd = 0; sd < seen.length; sd++) processed.add(seen[sd]);
         continue;
       }
@@ -11886,7 +11886,13 @@ function createTreeView(root) {
 
       if (!skipThis) {
         initTree(rootEl, null);
-        var descendants = rootEl.querySelectorAll('[l-data]');
+        // `initTree` walked the whole subtree, so every root candidate inside it
+        // — nested `[l-data]` scopes AND nested `[data-ui]` components — is
+        // bound already. Claiming only the `[l-data]` ones left a `[data-ui]`
+        // inside a standalone `[data-ui]` looking standalone too: it became a
+        // root of its own and re-bound its subtree, so a button four components
+        // deep fired its `@click` four times.
+        var descendants = rootEl.querySelectorAll('[l-data], [data-ui]');
         for (var d = 0; d < descendants.length; d++) processed.add(descendants[d]);
         processed.add(rootEl);
       }
@@ -11988,14 +11994,35 @@ function createTreeView(root) {
   }
 
   // Auto-start logic
+  //
+  // `data-manual` opts out. A classic script is its own `currentScript`; a
+  // module (or anything a bundler emitted) has none, so there the attribute is
+  // honoured on the page's module `<script>` instead.
   var currentScript = typeof document !== 'undefined' ? document.currentScript : null;
-  var isManual = currentScript && currentScript.hasAttribute('data-manual');
+  var isManual = currentScript
+    ? currentScript.hasAttribute('data-manual')
+    : typeof document !== 'undefined' && !!document.querySelector('script[type="module"][data-manual]');
+
+  // Once the document is parsed — always true for a module, a `defer` script
+  // or a bundler import — booting right here ran before the importing code
+  // got past its `import`, so every `Faqir.data()` / `Faqir.directive()` it
+  // registered next was never seen. The boot waits one task instead: long
+  // enough for the rest of the module graph and any `import().then(...)`, and
+  // `DOMContentLoaded` still wins if it has not fired yet. `bootstrap` is
+  // re-entry safe, so an explicit `Faqir.start()` before then costs nothing.
+  var autoStarted = false;
+  function autoStart() {
+    if (autoStarted) return;
+    autoStarted = true;
+    bootstrap();
+  }
 
   if (!isManual && typeof document !== 'undefined') {
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', bootstrap);
+      document.addEventListener('DOMContentLoaded', autoStart);
     } else {
-      bootstrap();
+      if (document.readyState === 'interactive') document.addEventListener('DOMContentLoaded', autoStart);
+      setTimeout(autoStart, 0);
     }
   }
 

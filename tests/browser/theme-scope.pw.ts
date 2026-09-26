@@ -124,10 +124,11 @@ test.describe("scoped themes coexist on one page", () => {
         expect(seen[`island-${skin}.color`]).not.toBe(seen.page);
       }
 
-      // The scope root pins `color-scheme`, which is what `light-dark()` reads:
-      // a dual theme's island stays light inside a dark page, `luxe` stays dark.
-      expect(seen["island-aurora.color-scheme"]).toBe("light");
-      expect(seen["island-swiss.color-scheme"]).toBe("light");
+      // `color-scheme` is what `light-dark()` reads. A dual skin inherits the
+      // page's — SPEC-1.0 §3 cascades `data-theme` to every descendant — so its
+      // island is dark on a dark page (1.1 pinned it light); `luxe` has one side.
+      expect(seen["island-aurora.color-scheme"]).toBe(scheme);
+      expect(seen["island-swiss.color-scheme"]).toBe(scheme);
       expect(seen["island-luxe.color-scheme"]).toBe("dark");
     });
   }
@@ -172,13 +173,45 @@ test.describe("scoped themes coexist on one page", () => {
     expect(light["inner-dark"]).toBe(auroraDark);
   });
 
-  test("a scoped theme renders what it renders at page level", async ({ page }) => {
-    // The claim the whole feature rests on: scoping changes WHERE a theme
-    // applies, never WHAT it renders. Read at page level, then in an island.
-    const inIsland = await read(page, "light");
+  test("an island marked light stays light inside a dark page", async ({ page }) => {
+    await page.setContent(
+      `<!DOCTYPE html><html data-theme="dark"><head><style>${PAGE_CSS}\n${SCOPED_CSS}</style></head><body>` +
+        `<div id="marked" data-skin="aurora" data-theme="light">${button("marked-btn")}</div>` +
+        `<div id="swiss-marked" data-skin="swiss" data-theme="light">${button("swiss-btn")}</div>` +
+        `</body></html>`,
+      { waitUntil: "load" },
+    );
+    const seen = await page.evaluate(() => ({
+      aurora: getComputedStyle(document.getElementById("marked")!).colorScheme,
+      swiss: getComputedStyle(document.getElementById("swiss-marked")!).colorScheme,
+      auroraBtn: getComputedStyle(document.getElementById("marked-btn")!).backgroundColor,
+      swissBtn: getComputedStyle(document.getElementById("swiss-btn")!).backgroundColor,
+    }));
+    expect(seen.aurora).toBe("light");
+    expect(seen.swiss).toBe("light");
+    const light = await read(page, "light");
+    expect(seen.auroraBtn).toBe(light["btn-aurora"]);
+    expect(seen.swissBtn).toBe(light["btn-swiss"]);
+  });
+
+  for (const scheme of ["light", "dark"] as const) {
+    test(`a scoped theme renders what it renders at page level, in a ${scheme} page`, async ({ page }) => {
+      await expectSameAsPageLevel(page, scheme);
+    });
+  }
+});
+
+/**
+ * The claim the whole feature rests on: scoping changes WHERE a theme applies,
+ * never WHAT it renders. Read at page level, then in an island — under both
+ * schemes, now that a dual island follows the page's.
+ */
+async function expectSameAsPageLevel(page: import("@playwright/test").Page, scheme: "light" | "dark") {
+  {
+    const inIsland = await read(page, scheme);
     for (const skin of SKINS) {
       await page.setContent(
-        `<!DOCTYPE html><html data-theme="light"><head><style>${frameworkCss(skin)}</style></head>` +
+        `<!DOCTYPE html><html data-theme="${scheme}"><head><style>${frameworkCss(skin)}</style></head>` +
           `<body>${button("page")}</body></html>`,
         { waitUntil: "load" },
       );
@@ -194,5 +227,5 @@ test.describe("scoped themes coexist on one page", () => {
       expect(inIsland[`island-${skin}.background`], `${skin} ground`).toBe(atRoot.background);
       expect(inIsland[`island-${skin}.color`], `${skin} ink`).toBe(atRoot.color);
     }
-  });
-});
+  }
+}

@@ -1,8 +1,8 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { log } from "../utils/logger";
 import { configExists, readConfig, writeConfig, missingConfigMessage } from "../utils/config";
-import { ensureDir } from "../utils/fs";
+import { ensureDir, getPackageRoot } from "../utils/fs";
 import { controllerName } from "../utils/components";
 import { regenerateContext } from "../utils/codegen";
 import { generateBundle } from "../utils/bundler";
@@ -88,6 +88,36 @@ function schemaRefFor(manifestDir: string, projectRoot: string): string {
   return rel.startsWith(".") ? rel : `./${rel}`;
 }
 
+/**
+ * Put the schema the `$schema` above points at where it points.
+ *
+ * The reference resolves to `<project>/manifest.schema.json`, and nothing ever
+ * wrote that file: the created manifest named a schema that was not there, so
+ * an editor validated nothing and reported the dangling reference instead. The
+ * CLI's own copy is written when the project has none, and refreshed when the
+ * one there is a CLI copy (same `$id`) from an older release; a schema file of
+ * the project's own is never touched.
+ */
+async function ensureProjectSchema(projectRoot: string): Promise<void> {
+  const source = join(getPackageRoot(), "manifest.schema.json");
+  if (!existsSync(source)) return;
+  const target = join(projectRoot, "manifest.schema.json");
+  const shipped = readFileSync(source, "utf8");
+  if (existsSync(target)) {
+    const current = readFileSync(target, "utf8");
+    if (current === shipped) return;
+    let ours = false;
+    try {
+      ours = (JSON.parse(current) as { $id?: unknown }).$id === (JSON.parse(shipped) as { $id?: unknown }).$id;
+    } catch {
+      // Not JSON we wrote — the project's own file.
+    }
+    if (!ours) return;
+  }
+  await Bun.write(target, shipped);
+  log.success("manifest.schema.json");
+}
+
 function generateManifest(name: string, kind: Kind, category: string, schemaRef: string): object {
   const manifest: Record<string, unknown> = {
     // First property, as `add-schema-refs.mjs` inserts it — editors resolve it
@@ -157,34 +187,29 @@ function generateCSS(name: string): string {
 `;
 }
 
+/**
+ * The canonical reference FRAGMENT — the shape every registry component's
+ * `<name>.html` has: `@ui:*` header comments, then labelled examples. It used
+ * to be a whole `<!DOCTYPE html>` document, which is not a fragment: nothing
+ * that reads reference markup (the audit, `explain`, the context generator,
+ * docs) expects `<html>`/`<head>` around it, so every created component had its
+ * reference rewritten by hand.
+ */
 function generateHTML(name: string, kind: Kind): string {
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>${name} — Reference</title>
-  <style>
-    body { font-family: system-ui, sans-serif; padding: 2rem; }
-    section { margin-bottom: 2rem; }
-    h2 { font-size: 1.25rem; margin-bottom: 0.5rem; }
-  </style>
-  <!-- Include your project's faqir.bundle.css or individual token/base/component CSS -->
-</head>
-<body>
+  const header = [
+    `<!-- @ui:component ${name} -->`,
+    `<!-- @ui:kind ${kind} -->`,
+    `<!-- @ui:slots -->`,
+    `<!-- @ui:variants -->`,
+    ...(kind === "recipe" ? [`<!-- @ui:controller ${name}.js -->`] : []),
+  ];
+  return `${header.join("\n")}
 
-  <h1>${name}</h1>
-  <p>Custom ${kind} component.</p>
-
-  <section>
-    <h2>Default</h2>
-    <div data-ui="${name}">
-      Content goes here.
-    </div>
-  </section>
-
-${kind === "recipe" ? `  <script type="module" src="${name}.js"><\/script>\n` : ""}
-</body>
-</html>`;
+<!-- Default -->
+<div data-ui="${name}">
+  Content goes here.
+</div>
+`;
 }
 
 function generateController(name: string): string {
@@ -258,6 +283,7 @@ export async function create(args: string[]): Promise<void> {
   ensureDir(compDir);
 
   // Generate files
+  await ensureProjectSchema(cwd);
   const manifest = generateManifest(name, options.kind, options.category, schemaRefFor(compDir, cwd));
   await Bun.write(join(compDir, `${name}.manifest.json`), JSON.stringify(manifest, null, 2) + "\n");
   log.success(`${name}.manifest.json`);

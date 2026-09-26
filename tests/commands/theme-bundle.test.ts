@@ -90,14 +90,20 @@ describe("scopeThemeCss · the block walker", () => {
     // The root itself IS the scope — one branch, no descendant form.
     expect(scopeBranch(":root", s)).toEqual([s]);
     // A modifier can be on the scope root or under it: both forms, both (0,2,0).
+    // A scheme can also sit OVER it — the page's own data-theme (SPEC-1.0 §3) —
+    // except on a scope root that states its own.
     expect(scopeBranch('[data-theme="dark"]', s)).toEqual([
       '[data-skin=x][data-theme="dark"]',
       '[data-skin=x] [data-theme="dark"]',
+      '[data-theme="dark"] [data-skin=x]:not([data-theme])',
     ]);
     expect(scopeBranch(':root[data-theme="dark"]', s)).toEqual([
       '[data-skin=x][data-theme="dark"]',
       '[data-skin=x] [data-theme="dark"]',
+      '[data-theme="dark"] [data-skin=x]:not([data-theme])',
     ]);
+    // Only a scheme cascades in from outside; any other compound does not.
+    expect(scopeBranch(".a", s)).toEqual(["[data-skin=x].a", "[data-skin=x] .a"]);
     // A combinator after :root keeps its shape.
     expect(scopeBranch(":root > .a", s)).toEqual(["[data-skin=x] > .a"]);
     // A type selector cannot be concatenated — `[data-skin=x]html` is not a
@@ -154,14 +160,20 @@ describe("scopeThemeCss · every shipped theme scopes", () => {
         const before = declarations(source);
         const after = declarations(scoped.css);
         const added = [
-          `color-scheme: ${scoped.colorScheme}`,
+          // A dual theme declares no color-scheme: it inherits the page's.
+          ...(scoped.colorScheme === "inherit" ? [] : [`color-scheme: ${scoped.colorScheme}`]),
           "color: var(--color-fg)",
           "background-color: var(--color-bg)",
           "background-image: var(--texture-page)",
           "font-family: var(--font-body)",
           ...SCHEME_ALIASES.map(([token, value]) => `${token}: ${value}`),
         ];
-        const scheme = scoped.colorScheme === "light" ? ["color-scheme: dark", "color-scheme: light dark"] : [];
+        const scheme =
+          scoped.colorScheme === "light"
+            ? ["color-scheme: dark", "color-scheme: light dark"]
+            : scoped.colorScheme === "inherit"
+              ? ["color-scheme: light"]
+              : [];
         const rootCount = before.length - declarations(source.slice(source.indexOf("}") + 1)).length;
         expect(after).toEqual([
           ...added,
@@ -190,15 +202,17 @@ describe("scopeThemeCss · the four block shapes a theme uses", () => {
     expect(scoped("aurora")).toContain('[data-skin="aurora"] {');
   });
 
-  it('`[data-theme="dark"]` becomes the compound AND the descendant form', () => {
+  it('`[data-theme="dark"]` becomes the compound, the descendant AND the ancestor form', () => {
     expect(scoped("aurora")).toContain(
-      '[data-skin="aurora"][data-theme="dark"],\n[data-skin="aurora"] [data-theme="dark"] {',
+      '[data-skin="aurora"][data-theme="dark"],\n[data-skin="aurora"] [data-theme="dark"],\n' +
+        '[data-theme="dark"] [data-skin="aurora"]:not([data-theme]) {',
     );
   });
 
   it("the auto media block is scoped the same way, indentation kept", () => {
     expect(scoped("aurora")).toContain(
-      '  [data-skin="aurora"][data-theme="auto"],\n  [data-skin="aurora"] [data-theme="auto"] {',
+      '  [data-skin="aurora"][data-theme="auto"],\n  [data-skin="aurora"] [data-theme="auto"],\n' +
+        '  [data-theme="auto"] [data-skin="aurora"]:not([data-theme]) {',
     );
     expect(scoped("aurora")).toContain("@media (prefers-color-scheme: dark) {");
   });
@@ -222,18 +236,24 @@ describe("scopeThemeCss · the four block shapes a theme uses", () => {
 });
 
 describe("scopeThemeCss · the scope root re-declares what reset.css puts on :root", () => {
-  it("pins color-scheme from the theme's own @ui:schemes header", () => {
-    // `light-dark()` reads `color-scheme`, and an island inherits the HOST
-    // page's — so without this a light skin inside a dark page renders dark.
+  it("pins a single-scheme theme's one scheme, and lets a dual theme inherit", () => {
+    // `light-dark()` reads `color-scheme`. A single-scheme skin has one side to
+    // show, so it pins it; a dual skin follows the page around it — SPEC-1.0 §3
+    // cascades `data-theme` to every descendant. 1.1 pinned `light` on dual
+    // skins too, which kept every island light on a dark page.
     expect(scopeRootScheme(themeCss("luxe"))).toBe("dark");
     expect(scopeRootScheme(themeCss("ink"))).toBe("light");
-    expect(scopeRootScheme(themeCss("clinical"))).toBe("light"); // "light dark"
-    expect(scopeRootScheme(themeCss("aurora"))).toBe("light"); // no header at all
+    expect(scopeRootScheme(themeCss("clinical"))).toBe("inherit"); // "light dark"
+    expect(scopeRootScheme(themeCss("aurora"))).toBe("inherit"); // no header, a dark block
+    expect(scopeRootScheme(":root { --a: red; }")).toBe("light"); // nothing dark to show
   });
 
-  it("every dual theme's scope root pins light, and only `luxe` pins dark", () => {
-    const dark = THEMES.filter((name) => scopeRootScheme(themeCss(name)) === "dark");
-    expect(dark).toEqual(["luxe"]);
+  it("only `luxe` pins dark, and only single-scheme light themes pin light", () => {
+    const by = (scheme: string) => THEMES.filter((name) => scopeRootScheme(themeCss(name)) === scheme);
+    expect(by("dark")).toEqual(["luxe"]);
+    for (const name of by("light")) {
+      expect(themeCss(name), `${name} pins light`).toMatch(/@ui:schemes\s+light(?!\s*,?\s*dark)/);
+    }
   });
 
   it("restates the ink, the ground, the face and the material too", () => {
@@ -241,22 +261,20 @@ describe("scopeThemeCss · the scope root re-declares what reset.css puts on :ro
     // puts them on `html`/`body`, which an island is not.
     const css = scopeThemeCss(themeCss("midnight"), { selector: ".preview" }).css;
     const root = css.slice(css.indexOf(".preview {"), css.indexOf("}"));
-    expect(root).toContain("color-scheme: light;");
+    // Dual, so no color-scheme of its own; a light-only skin pins light.
+    expect(root).not.toMatch(/^\s*color-scheme:/m);
+    const ink = scopeThemeCss(themeCss("ink"), { selector: ".preview" }).css;
+    expect(ink.slice(ink.indexOf(".preview {"), ink.indexOf("}"))).toContain("color-scheme: light;");
     expect(root).toContain("color: var(--color-fg);");
     expect(root).toContain("background-color: var(--color-bg);");
     expect(root).toContain("background-image: var(--texture-page);");
     expect(root).toContain("font-family: var(--font-body);");
   });
 
-  it("a data-theme ON the scope root picks its scheme over the root's own", () => {
-    // reset.css maps `[data-theme="dark"]` to `color-scheme: dark` at (0,1,0) —
-    // the scope selector's own specificity — and the skin is linked later, so
-    // without the compound rules `<div data-skin="x" data-theme="dark">` kept
-    // `light` and a one-block skin rendered its light side.
+  it("a data-theme on the scope root, or around it, picks a dual skin's scheme", () => {
     const selector = defaultScopeSelector("aurora");
     const css = scopeThemeCss(themeCss("aurora"), { selector }).css;
-    expect(css).toContain(`${selector}[data-theme="dark"] {\n  color-scheme: dark;\n}`);
-    expect(css).toContain(`${selector}[data-theme="auto"] {\n  color-scheme: light dark;\n}`);
+    const attr = selector.slice(1, -1);
 
     const reset = readFileSync(join(REGISTRY, "base/reset.css"), "utf8");
     const w = new Window();
@@ -265,12 +283,34 @@ describe("scopeThemeCss · the scope root re-declares what reset.css puts on :ro
       const style = d.createElement("style");
       style.textContent = reset + css;
       d.head.appendChild(style);
-      d.body.innerHTML = `<div id="both" ${selector.slice(1, -1)} data-theme="dark"></div><div id="skin" ${selector.slice(1, -1)}></div>`;
-      expect(w.getComputedStyle(d.getElementById("both")!).colorScheme).toBe("dark");
-      expect(w.getComputedStyle(d.getElementById("skin")!).colorScheme).toBe("light");
+      d.body.innerHTML =
+        `<div id="both" ${attr} data-theme="dark"></div><div id="skin" ${attr}></div>` +
+        `<div data-theme="dark"><div id="in-dark" ${attr}></div>` +
+        `<div id="marked-light" ${attr} data-theme="light"></div></div>`;
+      // Only what is DECLARED on each element is read here: happy-dom does not
+      // inherit `color-scheme`, so the unmarked islands following the page
+      // around them is proved in tests/browser/theme-scope.pw.ts.
+      const scheme = (id: string) => w.getComputedStyle(d.getElementById(id)!).colorScheme;
+      expect(scheme("both")).toBe("dark");
+      // An island that says light stays light inside a dark page — reset.css has
+      // no light rule, so without the skin's own it inherited dark.
+      expect(scheme("marked-light")).toBe("light");
+      expect(css).toContain(`${selector}[data-theme="light"] {\n  color-scheme: light;\n}`);
+      expect(css).not.toContain(`${selector}[data-theme="dark"] {\n  color-scheme`);
     } finally {
       w.close();
     }
+  });
+
+  it("a light-only skin keeps the compound rules that let a data-theme on its root win", () => {
+    // reset.css maps `[data-theme="dark"]` to `color-scheme: dark` at (0,1,0) —
+    // the scope selector's own specificity — and the skin is linked later, so
+    // without the compound rules `<div data-skin="x" data-theme="dark">` kept
+    // the pinned `light`.
+    const selector = defaultScopeSelector("ink");
+    const css = scopeThemeCss(themeCss("ink"), { selector }).css;
+    expect(css).toContain(`${selector}[data-theme="dark"] {\n  color-scheme: dark;\n}`);
+    expect(css).toContain(`${selector}[data-theme="auto"] {\n  color-scheme: light dark;\n}`);
   });
 
   it("a dark-only skin needs no scheme rules — its root is dark already", () => {
@@ -442,7 +482,8 @@ describe("faqir theme bundle --json", () => {
     const primary = report.files[0];
     expect(primary.source).toBe("registry/themes/editorial.css");
     expect(primary.path).toBe("editorial.scoped.css");
-    expect(primary.color_scheme).toBe("light");
+    // `editorial` is dual: the island follows the page's scheme.
+    expect(primary.color_scheme).toBe("inherit");
     expect(primary.tokens).toBeGreaterThan(50);
     expect(primary.rewrites.map((r: { from: string }) => r.from)).toEqual([
       ":root",
@@ -549,6 +590,28 @@ describe("scoped themes render as islands", () => {
       expect(midnight).not.toBe(tokenValue("aurora", "color-fg"));
     } finally {
       dom.close();
+    }
+  });
+
+  it("a dark page reaches the skin's dark block — the island follows the page", () => {
+    // SPEC-1.0 §3: `data-theme` cascades to every descendant. The scoped dark
+    // block used to match only the island itself or something inside it, so a
+    // dual skin stayed light on a dark page.
+    const w = new Window();
+    const d = w.document;
+    d.head.innerHTML = `<style>${hexify(read("tokens/palette.css"))}${hexify(read("tokens/semantic.css"))}
+      ${hexify(read("primitives/badge/badge.css"))}${scoped("aurora")}</style>`;
+    d.body.innerHTML = `
+      <div data-theme="dark">
+        <div data-skin="aurora"><span id="followed" data-ui="badge">a</span></div>
+        <div data-skin="aurora" data-theme="light"><span id="marked" data-ui="badge">b</span></div>
+      </div>`;
+    const colorOf = (id: string) => w.getComputedStyle(d.getElementById(id)!).getPropertyValue("color");
+    try {
+      expect(colorOf("followed")).toBe(tokenValue("aurora", "color-fg", 1));
+      expect(colorOf("marked")).toBe(tokenValue("aurora", "color-fg"));
+    } finally {
+      w.close();
     }
   });
 

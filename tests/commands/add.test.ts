@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "bun:test";
+import { describe, it, expect, beforeEach, afterEach, spyOn } from "bun:test";
 import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { init } from "../../src/commands/init";
@@ -115,5 +115,32 @@ describe("faqir add", () => {
     expect(config.installed.primitives).toContain("avatar");
     expect(config.installed.primitives).toContain("separator");
     expect(config.installed.primitives).toContain("label");
+  });
+
+  it("--all installs each name once and names the directory a collision shadows", async () => {
+    // `empty-state` is both a primitive and a pattern. Listing directories
+    // resolved the name twice to the primitive — installed twice, counted twice
+    // in "Added N components" — and dropped the pattern without a word.
+    await init([]);
+    const lines: string[] = [];
+    const spy = spyOn(console, "log").mockImplementation((...args: unknown[]) => {
+      lines.push(args.map(String).join(" "));
+    });
+    try {
+      await add(["--all"]);
+    } finally {
+      spy.mockRestore();
+    }
+    const out = lines.join("\n");
+    const installs = lines.filter((l) => l.includes("empty-state → "));
+    expect(installs).toHaveLength(1);
+    expect(installs[0]).toContain("primitives/empty-state/");
+    expect(out).toContain("Skipping patterns/empty-state: primitives/empty-state has the same name");
+
+    const config = await readConfig(TEST_DIR);
+    const all = [...config.installed.primitives, ...config.installed.recipes, ...config.installed.patterns];
+    expect(new Set(all).size).toBe(all.length);
+    const added = /Added (\d+) components/.exec(out);
+    expect(Number(added?.[1])).toBe(all.length);
   });
 });

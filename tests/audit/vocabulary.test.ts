@@ -17,6 +17,8 @@ import {
   PART_ELEMENT_RULE,
   UNKNOWN_ATTRIBUTE_RULE,
 } from "../../src/audit/vocabulary";
+import { TOKEN_MODIFIER_ATTRIBUTES } from "../../src/utils/breakpoints";
+import { TOKEN_MODIFIERS } from "../../src/protocol";
 
 const ROOT = join(import.meta.dir, "../..");
 
@@ -165,6 +167,23 @@ describe("W2-2 · what these rules deliberately do NOT report", () => {
       UNKNOWN_ATTRIBUTE_RULE.id,
     );
     expect(found).toEqual([]);
+  });
+
+  it("exempts exactly the protocol's token modifiers — the list restated for the browser bundle", () => {
+    expect([...TOKEN_MODIFIER_ATTRIBUTES].sort()).toEqual(TOKEN_MODIFIERS.map((m) => m.attr).sort());
+  });
+
+  it("the protocol's token modifiers, on or under a component", () => {
+    // SPEC-1.0 §3 makes them legal on any element. `data-skin` is two edits
+    // from `data-size`, and was reported as a near-miss of it.
+    const found = messages(
+      `<div data-ui="stack" data-skin="midnight" data-density="compact">
+         <div data-ui="card" data-theme="dark"><p data-skin="paper">x</p></div>
+       </div>`,
+      UNKNOWN_ATTRIBUTE_RULE.id,
+    );
+    expect(found).toEqual([]);
+    expect(messages(`<div data-ui="stack" data-skin="midnight"></div>`, ATTRIBUTE_VOCABULARY_RULE.id)).toEqual([]);
   });
 
   it("a presentational tag_hint — <div> for a <span> is the author's call", () => {

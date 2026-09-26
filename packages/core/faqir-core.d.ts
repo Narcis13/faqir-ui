@@ -837,7 +837,14 @@ export interface FaqirGlobal {
   ): void;
 
   // ── Lifecycle ──
-  /** Bootstrap. Runs automatically unless the script tag carries `data-manual`. */
+  /**
+   * Bootstrap. Runs automatically — on `DOMContentLoaded`, or one task after the
+   * engine is evaluated when the document is already parsed (a module, `defer`
+   * script or bundler import), so `data()` / `directive()` calls made right after
+   * importing it are seen. Opt out with `data-manual` on the engine's `<script>`,
+   * or on the page's `<script type="module">` when the engine is imported.
+   * Safe to call again: already-bound markup is not re-bound.
+   */
   start(): void;
   /** Initialize one subtree, optionally inside an existing scope. */
   initTree(root: Element, parentScope?: Scope | null): void;

@@ -1687,7 +1687,9 @@ export function renderDirectivesReference(
       "`src/core-src/engine.js` — plus the vocabulary the official plugins add. " +
       "Load the engine with `<script src=\"core/faqir-core.js\" defer></script>`: it binds on " +
       "`DOMContentLoaded` and needs no build step. Add `data-manual` to that tag to bootstrap " +
-      "yourself with `Faqir.start()`.",
+      "yourself with `Faqir.start()` (when the engine is imported as a module, put `data-manual` " +
+      "on the page's `<script type=\"module\">`). Imported, it boots one task after evaluation, " +
+      "so `Faqir.data()` calls made right after the `import` are seen.",
   );
   lines.push("");
   lines.push(

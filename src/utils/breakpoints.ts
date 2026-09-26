@@ -86,6 +86,20 @@ export const PROTOCOL_ATTRIBUTES = Object.freeze([
   "data-size",
 ] as const);
 
+/**
+ * The protocol's token modifiers (SPEC-1.0 §3) — legal on any element and owned
+ * by no manifest, so the attribute-vocabulary rules exempt them. The names of
+ * `TOKEN_MODIFIERS` in `src/protocol.ts`, restated rather than imported because
+ * the audit is bundled for the browser and the protocol module is not small;
+ * `tests/audit/vocabulary.test.ts` holds the two lists equal.
+ */
+export const TOKEN_MODIFIER_ATTRIBUTES: ReadonlySet<string> = new Set([
+  "data-density",
+  "data-motion",
+  "data-skin",
+  "data-theme",
+]);
+
 /** `true` if `name` is one of the five frozen protocol attributes. */
 export function isProtocolAttribute(name: string): boolean {
   return (PROTOCOL_ATTRIBUTES as readonly string[]).includes(normalizeAttribute(name));

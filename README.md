@@ -634,6 +634,7 @@ and find the row that lands there, or generate one.
 ```bash
 faqir theme list                                   # every registry and project theme
 faqir theme set midnight                           # switch the active theme
+faqir theme set resources/themes/my-brand.css      # …or to a theme generated with --out
 faqir theme create my-brand                        # scaffold with commented overrides
 faqir theme generate my-brand --accent "#168c5b"   # a complete theme from one colour
 faqir theme generate ember --accent "oklch(0.62 0.2 40)" --neutral warm \
@@ -686,6 +687,20 @@ checked by `bun run size` (`scripts/check-size.mjs`):
 
 `faqir add` installs the *unminified* file so it stays readable in your project;
 for production serve the CDN build or minify it yourself.
+
+In a module or a bundler (Vite, Rollup, esbuild, webpack), import
+`ui/core/faqir-core.mjs` rather than the UMD file. It works the same served raw
+and bundled, and it also sets `window.Faqir` for the plugins. The engine boots
+one task after it is imported, so registrations on the following lines are
+seen:
+
+```js
+import Faqir from "./ui/core/faqir-core.mjs";
+Faqir.data("counter", () => ({ n: 0 }));
+```
+
+Add `data-manual` to that `<script type="module">` to boot it yourself with
+`Faqir.start()`.
 
 ### Directives
 

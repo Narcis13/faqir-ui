@@ -27,8 +27,12 @@
 import { extractTokenDefinitions } from "../parser/css-parser";
 import { stripCssComments } from "../theme-manifest";
 
-/** The `color-scheme` a scope root declares — what `light-dark()` reads. */
-export type ScopeRootScheme = "light" | "dark";
+/**
+ * The `color-scheme` a scope root declares — what `light-dark()` reads. A
+ * single-scheme theme pins its one scheme; a dual theme declares none and
+ * `inherit`s the page's, the way every other element does.
+ */
+export type ScopeRootScheme = "light" | "dark" | "inherit";
 
 /** One prelude the transform rewrote, for the report and the `--json` payload. */
 export interface ScopeRewrite {
@@ -79,21 +83,30 @@ export function defaultScopeSelector(name: string): string {
 }
 
 /**
- * Which `color-scheme` the scope root pins.
+ * Which `color-scheme` the scope root declares.
  *
- * `:root` is the light side of every theme in the registry — except a
- * single-scheme dark theme, which says so in its `@ui:schemes` header (`luxe`).
- * The header is the same one `schemeFromCss` reads, so the two cannot disagree
- * about a theme that states it; a theme that states nothing is dual or light,
- * and `light` is what `base/reset.css` puts on a bare `:root`.
+ * A single-scheme theme pins the one it has: `luxe` is dark-only, a document
+ * theme light-only, and neither has another side to show. A DUAL theme pins
+ * nothing, so the island inherits the scheme of the page around it — SPEC-1.0
+ * §3: `data-theme` cascades to every descendant and nesting resolves
+ * innermost-first. Pinning `light` there (1.1) kept every island light on a
+ * dark page, and a page had to mirror its scheme onto each island by script.
+ *
+ * The `@ui:schemes` header decides, the same one `schemeFromCss` reads, so the
+ * two cannot disagree about a theme that states it. A theme that states none
+ * is dual if it has a dark side to show — a `light-dark()` value or a
+ * `[data-theme="dark"]` block — and light otherwise.
  */
 export function scopeRootScheme(css: string): ScopeRootScheme {
   const declared = /@ui:schemes\s+([a-z ,]+)/i.exec(css);
   if (declared) {
     const schemes = new Set(declared[1].toLowerCase().split(/[\s,]+/).filter(Boolean));
-    if (schemes.has("dark") && !schemes.has("light")) return "dark";
+    if (schemes.has("dark") && schemes.has("light")) return "inherit";
+    if (schemes.has("dark")) return "dark";
+    return "light";
   }
-  return "light";
+  const body = stripCssComments(css);
+  return body.includes("light-dark(") || /\[data-theme=["']?dark/.test(body) ? "inherit" : "light";
 }
 
 // ── The block walker ────────────────────────────────────────────────────────
@@ -204,20 +217,32 @@ const SKIP_REASONS: Record<string, string> = {
  * the descendant form for a modifier written further down the subtree. Both are
  * (0,2,0), so either beats the page theme's own (0,1,0) `[data-theme="dark"]`
  * inside the island whatever order the two stylesheets are linked in.
+ *
+ * A `data-theme` compound also takes a third, ANCESTOR form, for the page's own
+ * scheme reaching the island (`<html data-theme="dark">` around a
+ * `data-skin`), which SPEC-1.0 §3 cascades to every descendant. It is held off a
+ * scope root that states its own `data-theme` — the compound form decides that
+ * one — so an island marked light stays light on a dark page. (A lighter
+ * ancestor between a dark page and the island cannot be told apart in a
+ * selector; the colours still follow it, because `color-scheme` inherits
+ * innermost-first — only a theme's non-colour dark block would not.)
  */
 export function scopeBranch(branch: string, scope: string): string[] {
   const selector = branch.trim().replace(/\s+/g, " ");
   if (!selector) return [];
   if (selector === ":root") return [scope];
+  const ancestor = (compound: string): string[] =>
+    /^\[data-theme\b/.test(compound) ? [`${compound} ${scope}:not([data-theme])`] : [];
   if (selector.startsWith(":root")) {
     const rest = selector.slice(":root".length);
-    // `:root[data-theme="dark"]` — a compound, so the two forms apply as above.
-    if (/^[[.#:]/.test(rest)) return [scope + rest, `${scope} ${rest}`];
+    // `:root[data-theme="dark"]` — a compound, so the forms apply as above.
+    if (/^[[.#:]/.test(rest)) return [scope + rest, `${scope} ${rest}`, ...ancestor(rest)];
     // `:root > x`, `:root x` — the root is the scope, the combinator is kept.
     return [scope + rest];
   }
-  // A compound that can attach directly to the scope root, or sit under it.
-  if (/^[[.#:]/.test(selector)) return [scope + selector, `${scope} ${selector}`];
+  // A compound that can attach directly to the scope root, sit under it, or —
+  // for a scheme — over it.
+  if (/^[[.#:]/.test(selector)) return [scope + selector, `${scope} ${selector}`, ...ancestor(selector)];
   // A type selector (`html`, `body`) or a complex selector: descendant only —
   // `[data-skin="x"]html` is not a selector.
   return [`${scope} ${selector}`];
@@ -311,13 +336,20 @@ export const SCHEME_ALIASES: ReadonlyArray<readonly [name: string, value: string
  * same reason.
  */
 function rootDeclarations(colorScheme: ScopeRootScheme, indent: string): string {
+  const scheme =
+    colorScheme === "inherit"
+      ? [
+          `${indent}/* No color-scheme: a dual theme follows the page's, inherited like any`,
+          `${indent}   element's — a data-theme on the island, or around it, picks the side. */`,
+        ]
+      : [`${indent}color-scheme: ${colorScheme};`];
   return [
     `${indent}/* Restated from base/reset.css, which declares these on \`:root\`, \`html\` and`,
     `${indent}   \`body\` — elements a scoped subtree is not. Each resolves its var() at the`,
     `${indent}   element that declares it, so without this the island would inherit the host`,
     `${indent}   page's ink, ground, face and material. \`color-scheme\` is what light-dark()`,
     `${indent}   reads; a \`data-theme\` inside the island still overrides it. */`,
-    `${indent}color-scheme: ${colorScheme};`,
+    ...scheme,
     `${indent}color: var(--color-fg);`,
     `${indent}background-color: var(--color-bg);`,
     `${indent}background-image: var(--texture-page);`,
@@ -331,6 +363,9 @@ function rootDeclarations(colorScheme: ScopeRootScheme, indent: string): string 
 /**
  * The rules that let a `data-theme` ON the scope root choose its scheme.
  *
+ * For a dual skin that is the one light rule below; for a light-only one, the
+ * dark and auto rules:
+ *
  * `base/reset.css` maps `[data-theme="dark"]` to `color-scheme: dark` at
  * (0,1,0) — the same specificity as the scope selector's own `color-scheme`,
  * and the skin is linked later, so on `<div data-skin="x" data-theme="dark">`
@@ -340,6 +375,16 @@ function rootDeclarations(colorScheme: ScopeRootScheme, indent: string): string 
  * light side to hand `auto`, so it needs none.
  */
 function schemeRules(selector: string, colorScheme: ScopeRootScheme): string {
+  // A dual skin declares no scheme and inherits the page's — so it needs the one
+  // rule reset.css does not have: `data-theme="light"` on an island inside a
+  // dark page would otherwise inherit dark.
+  if (colorScheme === "inherit") {
+    return (
+      `\n\n/* A data-theme="light" on the scope root keeps the island light inside a dark\n` +
+      `   page — reset.css has no light rule, so it would inherit the page's dark. */\n` +
+      `${selector}[data-theme="light"] {\n  color-scheme: light;\n}\n`
+    );
+  }
   if (colorScheme !== "light") return "";
   return (
     `\n\n/* A data-theme on the scope root picks its scheme, as base/reset.css does for\n` +

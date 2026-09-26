@@ -167,6 +167,41 @@ describe("faqir create", () => {
     }
   });
 
+  it("puts the schema its `$schema` names at the project root", async () => {
+    // The reference resolved to a file nothing ever wrote.
+    await runCreate(TEST_DIR, ["schema-widget", "--kind", "primitive"]);
+    const target = join(TEST_DIR, "manifest.schema.json");
+    expect(readFileSync(target, "utf8")).toBe(readFileSync(join(REPO, "manifest.schema.json"), "utf8"));
+  });
+
+  it("never overwrites a manifest.schema.json of the project's own", async () => {
+    const target = join(TEST_DIR, "manifest.schema.json");
+    await Bun.write(target, '{ "$id": "https://example.test/mine.json" }\n');
+    await runCreate(TEST_DIR, ["own-schema", "--kind", "primitive"]);
+    expect(readFileSync(target, "utf8")).toBe('{ "$id": "https://example.test/mine.json" }\n');
+  });
+
+  it("refreshes a stale copy of the CLI's own schema", async () => {
+    const target = join(TEST_DIR, "manifest.schema.json");
+    const stale = { ...SCHEMA, schema_version: "1.0" };
+    await Bun.write(target, JSON.stringify(stale));
+    await runCreate(TEST_DIR, ["stale-schema", "--kind", "primitive"]);
+    expect(readFileSync(target, "utf8")).toBe(readFileSync(join(REPO, "manifest.schema.json"), "utf8"));
+  });
+
+  it("writes a reference fragment in the registry's shape, not a document", async () => {
+    for (const kind of Object.keys(LAYERS) as Kind[]) {
+      const name = `fragment-${kind}`;
+      await runCreate(TEST_DIR, [name, "--kind", kind]);
+      const html = readFileSync(join(TEST_DIR, "ui", LAYERS[kind], name, `${name}.html`), "utf8");
+      expect(html).not.toMatch(/<!DOCTYPE|<html|<head|<body|<script/i);
+      expect(html.split("\n")[0]).toBe(`<!-- @ui:component ${name} -->`);
+      expect(html).toContain(`<!-- @ui:kind ${kind} -->`);
+      expect(html).toContain(`<div data-ui="${name}">`);
+      expect(html.includes(`<!-- @ui:controller ${name}.js -->`)).toBe(kind === "recipe");
+    }
+  });
+
   it("registers the component in the layer its kind names", async () => {
     for (const kind of Object.keys(LAYERS) as Kind[]) {
       await runCreate(TEST_DIR, [`registered-${kind}`, "--kind", kind]);

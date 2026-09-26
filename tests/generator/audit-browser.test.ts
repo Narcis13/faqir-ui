@@ -276,8 +276,10 @@ describe("the browser audit bundle", () => {
       `browser audit bundle: ${(raw / 1024).toFixed(2)} KB raw · ${(gzip / 1024).toFixed(2)} KB gzip`,
     );
     // A tripwire, not a budget: a bundle this size cannot have pulled in a
-    // filesystem shim or a second copy of the rules.
-    expect(raw).toBeLessThan(64 * 1024);
+    // filesystem shim or a second copy of the rules. (64 KB until the bundle
+    // grew past it by a few dozen bytes of real rule; importing `src/protocol.ts`
+    // by accident adds ~16 KB and still trips it.)
+    expect(raw).toBeLessThan(72 * 1024);
   });
 
   it("is the current build of src/audit/browser.ts", () => {

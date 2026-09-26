@@ -117,6 +117,33 @@ describe("theme set / list / bundle · a generated theme is a theme", () => {
     await captured(() => theme(["set", "mine"]));
     expect(read("ui/tokens/theme.css")).toContain("rebeccapurple");
   });
+
+  it("sets a theme generated into another --out by its stylesheet's path", async () => {
+    // Name lookup reaches only the default `themes/`; `generate --out` put the
+    // theme where `set` could not find it, short of a copy into tokens/ by hand.
+    const gen = await captured(() =>
+      theme(["generate", "acme", "--accent", "#168c5b", "--out", "resources/themes"]),
+    );
+    expect(gen).toContain("Apply it: faqir theme set resources/themes/acme.css");
+    await expect(theme(["set", "acme"])).rejects.toThrow(/faqir theme set <dir>\/acme\.css/);
+
+    const out = await captured(() => theme(["set", "resources/themes/acme.css"]));
+    expect(read("ui/tokens/theme.css")).toBe(read("resources/themes/acme.css"));
+    expect(JSON.parse(read("faqir.config.json")).theme).toBe("acme");
+    expect(out).toContain("from resources/themes/acme.css");
+  });
+
+  it("names the plain `theme set <name>` after a default generate", async () => {
+    const gen = await captured(() => theme(["generate", "acme", "--accent", "#168c5b"]));
+    expect(gen).toContain("Apply it: faqir theme set acme");
+  });
+
+  it("holds a stylesheet path to a kebab-case file name, and to a file that exists", async () => {
+    await expect(theme(["set", "resources/missing.css"])).rejects.toThrow(/not found: resources\/missing\.css/);
+    mkdirSync(join(cwd, "resources"));
+    writeFileSync(join(cwd, "resources/My Theme.css"), ":root {}\n");
+    await expect(theme(["set", "resources/My Theme.css"])).rejects.toThrow(/Invalid theme name 'My Theme'/);
+  });
 });
 
 describe("theme set / bundle / create · a theme name is not a path", () => {

@@ -44,6 +44,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync
 import { dirname, join } from "node:path";
 import type { FaqirConfig } from "./config";
 import { TOKEN_FILES_ORDERED } from "./bundler";
+import { installedStylesheetFile } from "./components";
 import { mergeFile, type FileMergeStatus } from "./merge";
 import { RELEASED_FRAMEWORK_HASHES } from "./framework-history";
 import { parseBlocks, type CssBlock } from "../theme/scope";
@@ -511,7 +512,9 @@ export function missingTokens(outputDir: string, stylesheets: string[]): Missing
 export function installedStylesheets(config: Pick<FaqirConfig, "installed">, outputDir: string): string[] {
   const out: string[] = [];
   for (const layer of ["primitives", "recipes", "patterns"] as const) {
-    for (const name of config.installed[layer]) out.push(`${layer}/${name}/${name}.css`);
+    for (const name of config.installed[layer]) {
+      out.push(`${layer}/${name}/${installedStylesheetFile(join(outputDir, layer, name), name)}`);
+    }
   }
   for (const file of BASE_FILES) if (existsSync(join(outputDir, "base", file))) out.push(`base/${file}`);
   return out;

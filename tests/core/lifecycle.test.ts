@@ -447,6 +447,53 @@ describe("Faqir.start() is safe to call again", () => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────
+// Nested standalone components
+// ───────────────────────────────────────────────────────────────────────────
+
+describe("nested [data-ui] components with no l-data", () => {
+  // Only the outermost standalone `[data-ui]` is a scope root; its walk binds
+  // everything below it. Bootstrap used to claim only the nested `[l-data]`
+  // elements, so each nested component became a root too and re-bound its
+  // subtree — one extra `@click` per level of nesting.
+  const NESTED = `
+    <div data-ui="stack" id="outer">
+      <div data-ui="switcher">
+        <div data-ui="surface">
+          <button data-ui="button" id="deep" @click="__nestedSpy()">go</button>
+        </div>
+      </div>
+    </div>`;
+
+  it("binds a deeply nested handler exactly once", async () => {
+    let clicks = 0;
+    (globalThis as any).__nestedSpy = () => { clicks++; };
+
+    document.body.innerHTML = NESTED;
+    Faqir.start();
+    await tick();
+
+    document.getElementById("deep")!.dispatchEvent(new Event("click"));
+    expect(clicks).toBe(1);
+    expect((document.querySelector('[data-ui="switcher"]') as any).__faqirScope).toBeUndefined();
+    delete (globalThis as any).__nestedSpy;
+  });
+
+  it("still binds it once across a second start()", async () => {
+    let clicks = 0;
+    (globalThis as any).__nestedSpy = () => { clicks++; };
+
+    document.body.innerHTML = NESTED;
+    Faqir.start();
+    Faqir.start();
+    await tick();
+
+    document.getElementById("deep")!.dispatchEvent(new Event("click"));
+    expect(clicks).toBe(1);
+    delete (globalThis as any).__nestedSpy;
+  });
+});
+
+// ───────────────────────────────────────────────────────────────────────────
 // A data source spread into l-data
 // ───────────────────────────────────────────────────────────────────────────
 

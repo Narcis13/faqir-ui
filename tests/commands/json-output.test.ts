@@ -57,6 +57,24 @@ describe("faqir audit --stdin", () => {
     expect(status).toBe(1);
   });
 
+  it("inside a project, knows the project's own components as --file does", () => {
+    // A `faqir create` component was `unknown-component` on stdin, while
+    // `--file` in the same directory knew it from the installed manifests.
+    const dir = mkdtempSync(join(tmpdir(), "faqir-stdin-project-"));
+    try {
+      expect(runCli(["init"], { cwd: dir }).status).toBe(0);
+      expect(runCli(["create", "promo-card", "--kind", "pattern"], { cwd: dir }).status).toBe(0);
+      const html = '<div data-ui="promo-card">x</div><div data-ui="not-a-thing">y</div>';
+      const report = JSON.parse(runCli(["audit", "--stdin", "--json"], { cwd: dir, input: html }).stdout);
+      const unknown = report.results
+        .filter((r: { rule_id: string }) => r.rule_id === "unknown-component")
+        .map((r: { component_name: string }) => r.component_name);
+      expect(unknown).toEqual(["not-a-thing"]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   it("works without a project (uses registry manifests)", () => {
     const dir = mkdtempSync(join(tmpdir(), "faqir-stdin-"));
     try {

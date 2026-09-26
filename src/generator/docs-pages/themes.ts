@@ -890,19 +890,19 @@ function renderAuthoringPage(ctx: PageContext, themes: ThemeEntry[]): SiteFile {
           ":root",
         )} becomes the scope selector; every ${code("[data-theme]")} block becomes both the compound form ${code(
           '[data-skin="x"][data-theme="dark"]',
-        )} and the descendant form ${code('[data-skin="x"] [data-theme="dark"]')}, so a scheme switch inside an island switches the island. ${code(
+        )}, the descendant form ${code('[data-skin="x"] [data-theme="dark"]')} and the ancestor form ${code(
+          '[data-theme="dark"] [data-skin="x"]:not([data-theme])',
+        )}, so a scheme switch on, inside or around an island switches the island. ${code(
           "@media",
         )}, ${code("@supports")}, ${code("@container")}, ${code("@layer")} and ${code(
           "@scope",
-        )} are descended; ${code("@page")} is left as authored and reported. The scope root restates ${code(
-          "color-scheme",
-        )}, ${code("color")}, ${code("background-color")}, ${code("background-image")} and ${code(
-          "font-family",
-        )} — the five the reset declares on the document — and ${code(
+        )} are descended; ${code("@page")} is left as authored and reported. The scope root restates ${code("color")}, ${code("background-color")}, ${code(
+          "background-image",
+        )} and ${code("font-family")} — which the reset declares on the document — and ${code(
           "light-dark()",
-        )} passes through untouched because it resolves against that ${code(
+        )} passes through untouched because it resolves against the island's ${code(
           "color-scheme",
-        )}. The token set before and after must be identical or the transform throws. A theme with a print companion bundles both, each to its own ${code(
+        )}: a single-scheme theme's scope root pins the one it has, and a dual theme's declares none, so the island inherits the page's scheme like any other element. The token set before and after must be identical or the transform throws. A theme with a print companion bundles both, each to its own ${code(
           "data-skin",
         )}; an explicit selector names one subtree and leaves the companion to a second run.</p>`,
     ),

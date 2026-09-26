@@ -312,6 +312,25 @@ export async function loadRegistryStylesheetMap(registryPath: string): Promise<M
   return map;
 }
 
+/**
+ * The stylesheet filename of a component installed at `componentDir` — the one
+ * its manifest's `files.css` names, else `{name}.css`. The two differ for `icon`
+ * (whose sheet is `icons.css`), so anything that reads an installed component's
+ * CSS goes through here rather than assuming the convention.
+ */
+export function installedStylesheetFile(componentDir: string, name: string): string {
+  const manifestPath = join(componentDir, `${name}.manifest.json`);
+  if (existsSync(manifestPath)) {
+    try {
+      const css = (JSON.parse(readFileSync(manifestPath, "utf8")) as Manifest).files?.css;
+      if (typeof css === "string" && css && !/[\\/]/.test(css)) return css;
+    } catch {
+      // A malformed manifest is audit's to report; fall back to the convention.
+    }
+  }
+  return `${name}.css`;
+}
+
 export function controllerName(recipe: string): string {
   return "create" + recipe.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join("");
 }

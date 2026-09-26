@@ -23,7 +23,7 @@
 
 import type { ParsedDocument, ParsedElement } from "../parser/html-parser";
 import type { Manifest, ManifestVariant, ManifestProp } from "../manifest";
-import { TIERS, isTier, isProtocolAttribute, PROTOCOL_ATTRIBUTES } from "../utils/breakpoints";
+import { TIERS, isTier, isProtocolAttribute, PROTOCOL_ATTRIBUTES, TOKEN_MODIFIER_ATTRIBUTES } from "../utils/breakpoints";
 import {
   DIRECTIVE_NAMES,
   KEY_MODIFIERS,
@@ -197,8 +197,10 @@ function attributeOwners(manifests: Map<string, Manifest>): Map<string, string[]
  * read on an element whose own manifest does not declare them — a drawer's
  * external `data-open`, a sidebar's external toggle.
  *
- * Page-level token switches are deliberately NOT listed: they are written on
- * `<html>`/`<body>`, which no component encloses, so this rule never sees them.
+ * The protocol's token modifiers are not listed either: SPEC-1.0 §3 makes them
+ * legal on ANY element, so the walk below exempts all of them
+ * (`TOKEN_MODIFIER_ATTRIBUTES`) — a `data-skin` island inside a component is
+ * correct markup, not a near-miss of `data-size`.
  */
 const CONVENTION_PREFIXES = ["data-prop-", "data-error-", "data-persist-", "data-testid"];
 const CONVENTION_ATTRIBUTES = new Set([
@@ -353,6 +355,12 @@ export function buildAttributeVocabularyResults(
       // `attr` and would otherwise answer with "this group is not responsive"
       // when the real answer is that the five never take a suffix at all.
       if (isProtocolAttribute(name)) continue;
+
+      // ── the token modifiers ─────────────────────────────────────────────
+      // Legal on any element by SPEC, owned by no manifest. `data-skin`'s
+      // vocabulary is open (any installed theme), and without this it read as a
+      // near-miss of `data-size` wherever it sat on or under a component.
+      if (TOKEN_MODIFIER_ATTRIBUTES.has(name)) continue;
 
       const protocolSuffix = splitProtocolSuffix(name);
       if (protocolSuffix) {

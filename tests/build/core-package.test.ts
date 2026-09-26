@@ -305,23 +305,26 @@ describe("the published `import` shape actually imports", () => {
     return Object.keys(engine).filter((key) => !installed.has(key)).sort();
   }
 
-  test("the ESM entry's named exports match the live engine, both directions", () => {
-    // The entry is hand-written, so it can fall behind the engine silently —
-    // a member added to `Faqir` with no line in esm-entry.js is simply absent
-    // from every bundler import of it, with no error anywhere.
-    const entry = readFileSync(
-      join(ROOT, "packages", "core", "src", "esm-entry.js"),
-      "utf8",
-    );
-    const exported = [...entry.matchAll(/^export const (\w+) = Faqir\.(\w+);$/gm)]
-      .map((m) => {
-        expect(m[1], "the export name must match the engine member it aliases").toBe(m[2]);
-        return m[1];
-      })
-      .sort();
+  // Both entries are hand-written, so either can fall behind the engine
+  // silently — a member added to `Faqir` with no line in the entry is simply
+  // absent from every bundler import of it, with no error anywhere. The second
+  // is the one `faqir init` installs as `ui/core/faqir-core.mjs`.
+  for (const [label, path] of [
+    ["the ESM entry", join(ROOT, "packages", "core", "src", "esm-entry.js")],
+    ["the installed ui/core ESM entry", join(ROOT, "registry", "core", "faqir-core.mjs")],
+  ] as const) {
+    test(`${label}'s named exports match the live engine, both directions`, () => {
+      const entry = readFileSync(path, "utf8");
+      const exported = [...entry.matchAll(/^export const (\w+) = Faqir\.(\w+);$/gm)]
+        .map((m) => {
+          expect(m[1], "the export name must match the engine member it aliases").toBe(m[2]);
+          return m[1];
+        })
+        .sort();
 
-    expect(exported).toEqual(engineMembers());
-  });
+      expect(exported).toEqual(engineMembers());
+    });
+  }
 
   test("the declaration's named exports match the ESM entry's", () => {
     const dts = readFileSync(join(ROOT, "packages", "core", "faqir-core.d.ts"), "utf8");

@@ -2,7 +2,7 @@
 
 # Faqir-Core Reactive Directives Reference
 
-Every directive, modifier and magic the engine implements, read out of `src/core-src/engine.js` — plus the vocabulary the official plugins add. Load the engine with `<script src="core/faqir-core.js" defer></script>`: it binds on `DOMContentLoaded` and needs no build step. Add `data-manual` to that tag to bootstrap yourself with `Faqir.start()`.
+Every directive, modifier and magic the engine implements, read out of `src/core-src/engine.js` — plus the vocabulary the official plugins add. Load the engine with `<script src="core/faqir-core.js" defer></script>`: it binds on `DOMContentLoaded` and needs no build step. Add `data-manual` to that tag to bootstrap yourself with `Faqir.start()` (when the engine is imported as a module, put `data-manual` on the page's `<script type="module">`). Imported, it boots one task after evaluation, so `Faqir.data()` calls made right after the `import` are seen.
 
 Expressions are plain JavaScript evaluated against the nearest scope: any name the scope declares is in scope unqualified, and the `$…` magics below are always available.
 

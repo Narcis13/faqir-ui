@@ -3,6 +3,7 @@ import { dirname, join, relative, resolve, sep } from "node:path";
 import { readConfig } from "./config";
 import { log } from "./logger";
 import { FONTS_CSS_FILENAME, FONTS_DIR } from "../fonts/install";
+import { installedStylesheetFile } from "./components";
 
 export interface BundleOptions {
   output?: string;
@@ -179,17 +180,23 @@ export async function generateBundle(
 
     // 4. Primitives (alphabetical)
     for (const name of [...config.installed.primitives].sort()) {
-      await addFile(join(outputDir, "primitives", name, `${name}.css`), `primitives/${name}.css`);
+      const dir = join(outputDir, "primitives", name);
+      const file = installedStylesheetFile(dir, name);
+      await addFile(join(dir, file), `primitives/${file}`);
     }
 
     // 5. Recipes (alphabetical)
     for (const name of [...config.installed.recipes].sort()) {
-      await addFile(join(outputDir, "recipes", name, `${name}.css`), `recipes/${name}.css`);
+      const dir = join(outputDir, "recipes", name);
+      const file = installedStylesheetFile(dir, name);
+      await addFile(join(dir, file), `recipes/${file}`);
     }
 
     // 6. Patterns (alphabetical)
     for (const name of [...config.installed.patterns].sort()) {
-      await addFile(join(outputDir, "patterns", name, `${name}.css`), `patterns/${name}.css`);
+      const dir = join(outputDir, "patterns", name);
+      const file = installedStylesheetFile(dir, name);
+      await addFile(join(dir, file), `patterns/${file}`);
     }
   }
 

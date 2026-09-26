@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
-import { existsSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { init } from "../../src/commands/init";
@@ -9,8 +9,8 @@ const ROOT = join(import.meta.dir, "../..");
 const ENTRY = join(ROOT, "src", "index.ts");
 const TEST_DIR = join(import.meta.dir, "../.tmp-bundle-output-test");
 
-function cli(args: string[]) {
-  return runSync("bun", [ENTRY, "bundle", ...args], {
+function cli(args: string[], command = "bundle") {
+  return runSync("bun", [ENTRY, command, ...args], {
     cwd: TEST_DIR,
     encoding: "utf8",
     timeout: SPAWN_TIMEOUT.CLI,
@@ -59,5 +59,35 @@ describe("faqir bundle --output", () => {
     expect(r.status).toBe(1);
     expect(`${r.stdout}${r.stderr}`).toContain("Refusing to write outside the project");
     expect(existsSync(join(TEST_DIR, "..", "escaped.css"))).toBe(false);
+  });
+});
+
+// The bundler assumed every component's sheet is `{name}.css`; `icon`'s is
+// `icons.css` (its manifest's `files.css`), so no glyph reached the bundle.
+describe("faqir bundle — manifest-named stylesheets", () => {
+  beforeAll(async () => {
+    rmSync(TEST_DIR, { recursive: true, force: true });
+    mkdirSync(TEST_DIR, { recursive: true });
+    const origCwd = process.cwd();
+    process.chdir(TEST_DIR);
+    try {
+      await init(["--yes"]);
+    } finally {
+      process.chdir(origCwd);
+    }
+    const r = cli(["icon", "--yes"], "add");
+    expect(r.status, `${r.stdout}${r.stderr}`).toBe(0);
+  });
+
+  afterAll(() => {
+    rmSync(TEST_DIR, { recursive: true, force: true });
+  });
+
+  it("inlines the icon primitive's icons.css", () => {
+    const r = cli([]);
+    expect(r.status, `${r.stdout}${r.stderr}`).toBe(0);
+    const bundle = readFileSync(join(TEST_DIR, "ui", "faqir.bundle.css"), "utf8");
+    expect(bundle).toContain("/* === primitives/icons.css === */");
+    expect(bundle).toContain('[data-icon="arrow-right"]');
   });
 });

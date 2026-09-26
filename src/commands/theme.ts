@@ -1,7 +1,7 @@
 // faqir theme — manage themes (set, create, generate, list)
 
 import { existsSync, readFileSync } from "node:fs";
-import { isAbsolute, join, resolve } from "node:path";
+import { basename, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { log } from "../utils/logger";
 import { isInside } from "../utils/paths";
 import { configExists, readConfig, writeConfig, missingConfigMessage } from "../utils/config";
@@ -67,7 +67,7 @@ function printHelp() {
   log.blank();
   console.log("Subcommands:");
   log.table([
-    ["set <name>", "Switch the active theme"],
+    ["set <name|path.css>", "Switch the active theme (a name, or a generated theme's stylesheet)"],
     ["create <name>", "Scaffold a new custom theme"],
     ["generate <name>", "Generate a complete theme from one brand color"],
     ["bundle <name>", "Emit a theme scoped to a subtree (data-skin)"],
@@ -76,6 +76,7 @@ function printHelp() {
   log.blank();
   console.log("Examples:");
   console.log("  faqir theme set midnight");
+  console.log("  faqir theme set resources/themes/my-brand.css");
   console.log("  faqir theme create my-brand");
   console.log('  faqir theme generate my-brand --accent "oklch(0.55 0.2 150)"');
   console.log("  faqir theme bundle aurora --scope");
@@ -434,6 +435,14 @@ async function themeGenerate(args: string[]): Promise<void> {
     );
   }
   log.dim("Run with --json for the full scorecard (axes, elevation ΔE, focus ratios, tap targets).");
+  // `theme set <name>` finds the default `themes/` by itself; anywhere else it
+  // needs the stylesheet's path, so say which one.
+  const applyWith =
+    outAbs === resolve(process.cwd(), DEFAULT_THEME_OUT_DIR)
+      ? result.name
+      : (isInside(process.cwd(), outAbs) ? relative(process.cwd(), outAbs).split(sep).join("/") : outAbs) +
+        `/${result.name}.css`;
+  log.info(`Apply it: faqir theme set ${applyWith}`);
 }
 
 /**
@@ -493,9 +502,10 @@ function printBundleHelp() {
   console.log("Emit a theme scoped to a subtree, so two themes can be live on one page:");
   console.log("a customer's brand previewed inside your admin, a gallery, a side-by-side");
   console.log("comparison. Every `:root` block becomes the scope selector; every");
-  console.log("`[data-theme]` block is scoped to that subtree, in both its compound and");
-  console.log("its descendant form. Declarations are copied through untouched — including");
-  console.log("`light-dark()`, which follows the `color-scheme` the scope root re-declares.");
+  console.log("`[data-theme]` block is scoped to that subtree — on the scope root, inside it,");
+  console.log("and around it, so an island follows the page's scheme. Declarations are copied");
+  console.log("through untouched — including `light-dark()`, which reads the island's");
+  console.log("`color-scheme`: inherited for a dual theme, pinned for a single-scheme one.");
   log.blank();
   console.log("Usage:");
   console.log("  faqir theme bundle aurora --scope");
@@ -819,7 +829,34 @@ export function themeSetHints(css: string, manifest: ThemeManifest | null): stri
   return hints;
 }
 
-async function themeSet(name: string): Promise<void> {
+/**
+ * `theme set`'s argument is a stylesheet rather than a name when it ends in
+ * `.css` — which a kebab-case theme name cannot. Anything else is a name, and
+ * a name with a path in it is still refused as one.
+ */
+function isThemePath(arg: string): boolean {
+  return arg.endsWith(".css");
+}
+
+/**
+ * A theme stylesheet named by path — what `theme generate --out <dir>` wrote.
+ * Name lookup only reaches the default `themes/`, so a theme generated anywhere
+ * else was unusable by `theme set` until copied into `tokens/` by hand. The
+ * theme's name is the file's, held to the same kebab-case as any other.
+ */
+async function themeSourceFromPath(arg: string): Promise<ThemeSource> {
+  const cwd = process.cwd();
+  const path = resolve(cwd, arg);
+  if (!existsSync(path)) {
+    throw new Error(`Theme stylesheet not found: ${arg}`);
+  }
+  const name = basename(path, ".css");
+  assertThemeName(name, "The stylesheet's file name is the theme's name.");
+  const label = isInside(cwd, path) ? relative(cwd, path).split(sep).join("/") : path;
+  return { name, path, label, css: await Bun.file(path).text() };
+}
+
+async function themeSet(nameOrSource: string | ThemeSource): Promise<void> {
   const cwd = process.cwd();
 
   if (!configExists(cwd)) {
@@ -829,10 +866,17 @@ async function themeSet(name: string): Promise<void> {
   const config = await readConfig(cwd);
   const outputDir = join(cwd, config.output_dir);
 
-  const source = await findThemeSource(name, themeLocations(cwd, config));
+  const source =
+    typeof nameOrSource === "string"
+      ? await findThemeSource(nameOrSource, themeLocations(cwd, config))
+      : nameOrSource;
   if (!source) {
-    throw new Error(`Theme '${name}' not found. Run 'faqir theme list' to see available themes.`);
+    throw new Error(
+      `Theme '${nameOrSource}' not found. Run 'faqir theme list' to see available themes, ` +
+        `or pass a generated theme's stylesheet: faqir theme set <dir>/${nameOrSource}.css`,
+    );
   }
+  const name = source.name;
 
   // Copy theme to output as theme.css
   await copyFile(source.path, join(outputDir, "tokens", "theme.css"));
@@ -1041,8 +1085,12 @@ export async function theme(args: string[]): Promise<void> {
   switch (subcommand) {
     case "set": {
       const name = args[1];
-      if (!name) throw new Error("Theme name required. Usage: faqir theme set <name>");
-      assertThemeName(name, "Usage: faqir theme set <name>");
+      if (!name) throw new Error("Theme name required. Usage: faqir theme set <name|path.css>");
+      if (isThemePath(name)) {
+        await themeSet(await themeSourceFromPath(name));
+        break;
+      }
+      assertThemeName(name, "Usage: faqir theme set <name|path.css>");
       await themeSet(name);
       break;
     }
