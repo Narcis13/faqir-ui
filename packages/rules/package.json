@@ -1,6 +1,6 @@
 {
   "name": "@faqir-ui/rules",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Isomorphic, zero-dependency form rules \u2014 JSON Schema subset shape validation, formats, messages and coercion",
   "type": "module",
   "main": "./src/index.js",
