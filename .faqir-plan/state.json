@@ -7,7 +7,7 @@
     {
       "id": "1.1F-01",
       "completed": "2026-10-01",
-      "commit": "PENDING",
+      "commit": "651f348",
       "summary": "Refs register on the scope root `$refs` reads: a module WeakMap `scopeRoots` (scope → root element), filled by initScope, getStrayScope (body) and each l-for row scope (inherits its parent's root). handleRef resolves through it before falling back to findScopeRoot, so refs inside l-if clones, l-for rows, l-teleport and stray elements are no longer stranded on the clone/element. Refs are now reactive: __faqirRefs is created on first read and written through reactive(), so effects reading $refs.x re-run when it appears or goes; l-for is last-row-wins, cleared when that row goes. +~30 B gzip. Six regressions in runtime-fixes.test.ts. Session also fixed a red baseline: the v1.1.1 release left SKILL.md's CDN pin and site/lib/faqir-audit.js's version at 1.1.0 (588c30e)."
     }
   ],
