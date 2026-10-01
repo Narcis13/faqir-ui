@@ -13,7 +13,7 @@
     {
       "id": "1.1F-02",
       "completed": "2026-10-01",
-      "commit": "pending",
+      "commit": "0fd2ccd",
       "summary": "Property-aware bindings: engine helper writeProp (writes only when different; checked/selected dispatch a bubbling faqir:model, never a native change); handleBind sets the property for checked/selected/muted/indeterminate/value, and handleModel routes its switch/checkbox/radio/select writes through it. toggle-group re-syncs on faqir:model and form reset without faqir:change (listeners removed in destroy); manifest 1.1.1. l-model tests moved off Faqir.start() into a container. +0.41 KB gzip. Session also rebuilt the Bun-pinned artifacts: this machine's 1.4.2 fails check:audit-browser/CDN-pin tests, so the suite was run with Bun 1.3.8 first on PATH."
     }
   ],
