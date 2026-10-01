@@ -1,14 +1,16 @@
 ---
-description: Execute the next single task from the active plan file (the `plan` named in .faqir-plan/state.json — currently FAQIR-PLAN-1.1.md), one task per session, tracked across sessions via .faqir-plan/state.json
+description: Execute the next single task from the active plan file (the `plan` named in .faqir-plan/state.json — currently FAQIR-PLAN-1.1-FIXES.md), one task per session, tracked across sessions via .faqir-plan/state.json
 argument-hint: "[task-id | next | status | reset]"
 allowed-tools: Read, Edit, Write, Bash, Glob, Grep, TodoWrite
 ---
 
 # /faqir-plan — one task per session, traversed in order
 
-The plan file is whatever `plan` names in `.faqir-plan/state.json` — `FAQIR-PLAN-1.1.md` since
-2026-09-10. (The 1.0 plan, `FAQIR-PLAN.md`, is complete; its cursor is archived unchanged at
-`.faqir-plan/state-1.0.json`.) Every mention of "the plan" or "the plan file" below means that file.
+The plan file is whatever `plan` names in `.faqir-plan/state.json` — `FAQIR-PLAN-1.1-FIXES.md`
+since 2026-10-01. (The 1.0 plan, `FAQIR-PLAN.md`, is complete; its cursor is archived unchanged at
+`.faqir-plan/state-1.0.json`. The 1.1 plan, `FAQIR-PLAN-1.1.md`, shipped as 1.1.0; its cursor is
+archived unchanged at `.faqir-plan/state-1.1.json`, and its remaining follow-up rows are reached by
+pointing `plan` back at it.) Every mention of "the plan" or "the plan file" below means that file.
 
 You are executing **the plan file** one task at a time. Each invocation of this command
 does **exactly one task**, then stops. A pointer file at `.faqir-plan/state.json` records
@@ -35,7 +37,7 @@ Argument: `$ARGUMENTS`
 ## Step 0 — Load the cursor and the plan
 
 1. Read `.faqir-plan/state.json`. If it is missing or malformed, recreate it with:
-   `{ "plan": "FAQIR-PLAN-1.1.md", "current": null, "last_completed": null, "history": [] }`.
+   `{ "plan": "FAQIR-PLAN-1.1-FIXES.md", "current": null, "last_completed": null, "history": [] }`.
 2. If `state.json.current` is non-null, a previous session started a task and did not
    finish it. **Resume that task** rather than picking a new one. Re-read the task, run
    `bun run test`, and check which acceptance boxes are already ticked before continuing.
