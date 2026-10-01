@@ -24,7 +24,7 @@ Expressions are plain JavaScript evaluated against the nearest scope: any name t
 | `l-if` | — | a `<template>` element | `<template l-if="open">` | Inserts and removes the template's content. Removal tears the subtree down: cleanups run and in-flight `l-source` requests abort. |
 | `l-for` | — | a `<template>` element | `<template l-for="(task, i) in tasks">` | Repeats the template's content once per item, with the item and index names bound in a child scope. |
 | `l-key` | — | the same `<template>` as `l-for` | `l-key="task.id"` | The reconciliation key. Without it items are matched by position, so a reorder re-renders rather than moves; the dev engine reports that case. |
-| `l-ref` | — | any element | `l-ref="field"` | Registers the element on the scope's `$refs` under that name. |
+| `l-ref` | — | any element | `l-ref="field"` | Registers the element on the scope's `$refs` under that name — also from inside `l-if`, `l-for` and `l-teleport`, where the scope is the enclosing one. In an `l-for` the last row rendered wins, and the ref is cleared when that row goes. Effects that read it re-run when it appears or goes. |
 | `l-effect` | — | any element | `l-effect="document.title = title"` | Runs the expression immediately, then again whenever a value it read changes. |
 | `l-cloak` | — | any element | `l-cloak` | Removed from every element once the tree is initialized. Pair with `[l-cloak] { display: none }` to hide markup before it binds. |
 | `l-transition` | — | an `l-show` element, or a top-level element inside a `<template l-if>` | `l-transition="slide-up"` | Names the motion preset for that element's enter/leave cycle. The engine only stamps `data-motion`; the CSS animates. |

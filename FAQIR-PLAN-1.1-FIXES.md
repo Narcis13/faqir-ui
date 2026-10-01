@@ -97,7 +97,7 @@ wait for document order. Task 1.1F-32 releases the additive set; its version is 
 
 | ID | Task | Entries | Class | Status |
 |----|------|---------|-------|--------|
-| 1.1F-01 | Refs register on the real scope root (`l-if`, `l-for`, `l-teleport`, stray) | 1 | patch | ⬜ |
+| 1.1F-01 | Refs register on the real scope root (`l-if`, `l-for`, `l-teleport`, stray) | 1 | patch | ✅ |
 | 1.1F-02 | Property-aware bindings + `faqir:model` notification; toggle-group follows the store | 16, 4 | patch | ⬜ |
 | 1.1F-03 | Inserted content: controllers start before `l-init` / first `l-effect` | 3 | patch | ⬜ |
 | 1.1F-04 | `:style` / `:class` merge instead of replace | 31 | patch | ⬜ |
@@ -239,8 +239,8 @@ resolve, because the stray root is `body` while `findScopeRoot` returns the elem
 - (Optional) an outside effect re-runs when the ref appears.
 
 **Acceptance**
-- [ ] Every case above green; existing `l-ref` tests (`tests/core/faqir-core.test.ts:1726`, `:1833`) unchanged.
-- [ ] `build:core`, `build:core-package` (pinned Bun), `bun run size` within budget; `gen:skill` if the `l-ref` line changed.
+- [x] Every case above green; existing `l-ref` tests (`tests/core/faqir-core.test.ts:1726`, `:1833`) unchanged. (Six cases in `tests/core/runtime-fixes.test.ts` › "l-ref registers on the scope root that $refs reads", all six red against the pre-fix engine: `l-if` + `l-effect`, hide/show with an outside `l-text` following both ways, `l-for` last-row-wins and cleared on `pop()`, a row expression reading its own row's ref, `l-teleport` to a target outside the root (the teleported element and a ref inside it), and a stray ref, booted on a private happy-dom `Window` because only bootstrap's unscoped sweep reaches strays. `faqir-core.test.ts` untouched. The optional reactivity went in at no extra mechanism: `getScopeRefs` creates `__faqirRefs` on first read and `handleRef` writes through `reactive(refs)`, so the existing proxy dep for `$refs.name` re-runs readers. The cleanup reads `refs.__target`, not the proxy, so the structural effect tearing the row down never subscribes to it.)
+- [x] `build:core`, `build:core-package` (pinned Bun), `bun run size` within budget; `gen:skill` if the `l-ref` line changed. (All under Bun 1.3.8. Size: engine 10.55 → 10.58 KB, engine+controllers 44.73 → 44.77 / 46 KB gzip. Note: `build:core-package` now prints an advisory "OVER — 45.02 KB > 45.00 KB" from its stale `ASSEMBLED_GZIP_BUDGET = 45 * 1024`. The baseline was already 44.99, and the enforced budget is 46 KB in `check-size.mjs` and `tests/build/core-package.test.ts`. The `@ui:directive l-ref` line now documents the `l-if`/`l-for`/`l-teleport` resolution, last row wins, and reactivity; `gen:skill` rewrote `references/directives.md`. `check:skill`, `check:core-package`, `check:docs` green.)
 
 ### 1.1F-02 · Property-aware bindings + `faqir:model`; toggle-group follows the store
 

@@ -332,7 +332,7 @@
   // @ui:directive l-if | — | a `<template>` element | <template l-if="open"> | Inserts and removes the template's content. Removal tears the subtree down: cleanups run and in-flight `l-source` requests abort.
   // @ui:directive l-for | — | a `<template>` element | <template l-for="(task, i) in tasks"> | Repeats the template's content once per item, with the item and index names bound in a child scope.
   // @ui:directive l-key | — | the same `<template>` as `l-for` | l-key="task.id" | The reconciliation key. Without it items are matched by position, so a reorder re-renders rather than moves; the dev engine reports that case.
-  // @ui:directive l-ref | — | any element | l-ref="field" | Registers the element on the scope's `$refs` under that name.
+  // @ui:directive l-ref | — | any element | l-ref="field" | Registers the element on the scope's `$refs` under that name — also from inside `l-if`, `l-for` and `l-teleport`, where the scope is the enclosing one. In an `l-for` the last row rendered wins, and the ref is cleared when that row goes. Effects that read it re-run when it appears or goes.
   // @ui:directive l-effect | — | any element | l-effect="document.title = title" | Runs the expression immediately, then again whenever a value it read changes.
   // @ui:directive l-cloak | — | any element | l-cloak | Removed from every element once the tree is initialized. Pair with `[l-cloak] { display: none }` to hide markup before it binds.
   // @ui:directive l-transition | — | an `l-show` element, or a top-level element inside a `<template l-if>` | l-transition="slide-up" | Names the motion preset for that element's enter/leave cycle. The engine only stamps `data-motion`; the CSS animates.
@@ -562,6 +562,17 @@
   // at `<body>`. Created once, on first use, so a page with no stray directive
   // pays nothing for it.
   var strayScope = null;
+
+  // The element a scope's `$refs` live on, keyed by the scope object. Not
+  // `findScopeRoot`: `__faqirScope` also marks "already initialised", so an
+  // `l-if` clone or an `l-for` row carries it too, and a ref resolved by walking
+  // up landed on the clone while `$refs` read the real root — invisible. A
+  // teleported element has left the root's subtree, and a stray element has no
+  // stamped ancestor at all. A WeakMap rather than a scope property, because a
+  // read through the reactive scope inside a structural effect would subscribe
+  // it. [1.1F-01]
+  var scopeRoots = new WeakMap();
+
   function getStrayScope() {
     if (!strayScope) {
       if (!document.body.__scopeId) document.body.__scopeId = ++scopeCounter;
@@ -571,6 +582,7 @@
       // MutationObserver would stop giving standalone `[data-ui]` islands their
       // own scope.
       strayScope = createScopeWithMagics({}, document.body, document.body);
+      scopeRoots.set(strayScope, document.body);
     }
     return strayScope;
   }
@@ -623,6 +635,7 @@
 
     var scopeId = ++scopeCounter;
     var scope = createScopeWithMagics(userData, root, root);
+    scopeRoots.set(scope, root);
     root.__faqirScope = scope;
     root.__scopeId = scopeId;
     root.__faqirCleanups = [];
@@ -755,8 +768,10 @@
 
   // --- Scope utilities ---
 
+  // Created on first read, so an effect that reads a ref before it exists
+  // subscribes to the same object `handleRef` later writes through.
   function getScopeRefs(root) {
-    return root.__faqirRefs || {};
+    return root.__faqirRefs || (root.__faqirRefs = {});
   }
 
   function findScopeRoot(el) {
@@ -1350,13 +1365,17 @@
 
   function handleRef(el, dir, scope) {
     var name = dir.expression;
-    var root = findScopeRoot(el);
-    if (!root.__faqirRefs) root.__faqirRefs = {};
-    root.__faqirRefs[name] = el;
+    // Written through the reactive proxy, so an effect that read `$refs.name`
+    // re-runs when the ref appears or goes. [1.1F-01]
+    var refs = reactive(getScopeRefs(scopeRoots.get(scope) || findScopeRoot(el)));
+    refs[name] = el;
 
     addCleanup(el, function() {
-      if (root.__faqirRefs && root.__faqirRefs[name] === el) {
-        delete root.__faqirRefs[name];
+      // `__target`: a tracked read here would subscribe whichever structural
+      // effect is tearing this element down.
+      if (refs.__target[name] === el) {
+        refs[name] = undefined;
+        delete refs.__target[name];
       }
     });
   }
@@ -1898,6 +1917,7 @@
       own[itemName] = item;
       own[indexName] = i;
       var childScope = createForItemScope(own, scope);
+      scopeRoots.set(childScope, scopeRoots.get(scope));
       for (var j = 0; j < nodes.length; j++) {
         if (nodes[j].nodeType !== 1) continue;
         // A row whose top node declares `l-data` is a scope root: build it with

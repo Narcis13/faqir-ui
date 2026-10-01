@@ -265,3 +265,99 @@ describe("effect flush cap", () => {
     }
   });
 });
+
+// ───────────────────────────────────────────────────────────────────────────
+// l-ref registers on the real scope root  [1.1F-01]
+// ───────────────────────────────────────────────────────────────────────────
+
+describe("l-ref registers on the scope root that $refs reads", () => {
+  // `__faqirScope` also marks an `l-if` clone or an `l-for` row as initialised,
+  // so `findScopeRoot` stopped there and the ref landed on the clone — never in
+  // `$refs`. Teleported and stray elements had no stamped ancestor at all.
+
+  it("finds a ref inside <template l-if>, and an l-effect can read it", async () => {
+    const { scope } = await mount(`<div l-data="{ seen: '' }">
+      <template l-if="true"><input l-ref="field" value="typed"></template>
+      <span l-effect="seen = $refs.field ? $refs.field.value : 'none'"></span>
+    </div>`);
+    expect(scope.$refs.field).toBeInstanceOf(HTMLInputElement);
+    expect(scope.seen).toBe("typed");
+  });
+
+  it("removes the ref when the l-if hides, and an outside effect follows it both ways", async () => {
+    const { root, scope } = await mount(`<div l-data="{ open: false, seen: '' }">
+      <p l-text="$refs.field ? $refs.field.value : 'none'"></p>
+      <template l-if="open"><input l-ref="field" value="typed"></template>
+    </div>`);
+    const p = root.querySelector("p")!;
+    expect(p.textContent).toBe("none");
+
+    scope.open = true;
+    await tick();
+    expect(scope.$refs.field).toBe(root.querySelector("input"));
+    expect(p.textContent).toBe("typed");
+
+    scope.open = false;
+    await tick();
+    expect("field" in scope.$refs).toBe(false);
+    expect(p.textContent).toBe("none");
+  });
+
+  it("in an l-for the last row wins, and removing that row clears it", async () => {
+    const { root, scope } = await mount(`<div l-data="{ items: ['a', 'b', 'c'] }">
+      <ul><template l-for="item in items"><li l-ref="row" l-text="item"></li></template></ul>
+      <p l-text="$refs.row ? $refs.row.textContent : 'none'"></p>
+    </div>`);
+    expect(scope.$refs.row.textContent).toBe("c");
+    expect(root.querySelector("p")!.textContent).toBe("c");
+
+    scope.items.pop();
+    await tick();
+    expect(scope.$refs.row).toBeUndefined();
+    expect(root.querySelector("p")!.textContent).toBe("none");
+  });
+
+  it("reads a row ref from inside the row's own expressions", async () => {
+    const { root } = await mount(`<div l-data="{ items: ['x'] }">
+      <template l-for="item in items"><b l-ref="cell" l-text="item"></b><i l-text="$refs.cell ? 'found' : 'missing'"></i></template>
+    </div>`);
+    expect(root.querySelector("i")!.textContent).toBe("found");
+  });
+
+  it("registers a ref under l-teleport on the scope that wrote it", async () => {
+    const dest = document.createElement("div");
+    dest.id = "ref-teleport-dest";
+    document.body.appendChild(dest);
+    try {
+      const { root, scope } = await mount(`<div l-data="{}">
+        <section l-teleport="#ref-teleport-dest" l-ref="panel"><input l-ref="inner"></section>
+        <p l-text="$refs.inner ? 'found' : 'missing'"></p>
+      </div>`);
+      expect(dest.querySelector("section")).not.toBeNull();
+      expect(scope.$refs.panel).toBe(dest.querySelector("section"));
+      expect(scope.$refs.inner).toBe(dest.querySelector("input"));
+      expect(root.querySelector("p")!.textContent).toBe("found");
+    } finally {
+      dest.remove();
+    }
+  });
+
+  it("resolves a ref on a stray element against the document scope", async () => {
+    // A stray element is only reached by bootstrap's unscoped sweep, so this
+    // boots a private engine on a private window — never the shared document.
+    const { Window } = await import("happy-dom");
+    const win = new Window({ url: "https://faqir.test/" });
+    try {
+      win.document.body.innerHTML =
+        `<output l-text="$refs.query ? $refs.query.value : 'none'"></output><input l-ref="query" value="hi">`;
+      const source = readFileSync(join(import.meta.dir, "../../registry/core/faqir-core.js"), "utf8");
+      new Function("window", "document", "globalThis", "setTimeout", "clearTimeout", source)(
+        win, win.document, win, win.setTimeout.bind(win), win.clearTimeout.bind(win),
+      );
+      await new Promise((resolve) => win.setTimeout(resolve, 10));
+      expect(win.document.querySelector("output")!.textContent).toBe("hi");
+    } finally {
+      await win.happyDOM.close();
+    }
+  });
+});
