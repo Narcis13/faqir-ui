@@ -19,7 +19,7 @@
     {
       "id": "1.1F-03",
       "completed": "2026-10-02",
-      "commit": "PENDING",
+      "commit": "9bc36a8",
       "summary": "Inserted content starts its controllers before l-init / first l-effect. l-if and l-for render through renderThenInit: l-init (handleInit and initScope's) and l-effect's first run go through runInit into a module-level pendingInits queue while a structural render is open; after insertion the inserted nodes' controllers start (connected nodes only) and the queue flushes, untracked. Nested renders join the outermost. Faqir.initTree starts a connected root's controllers first; the observer calls startControllers(node) before initTree. Bootstrap/observer sweeps share startControllers. README + @ui:directive l-init line state the order. +80 B gzip. Six regressions in runtime-fixes.test.ts. Follow-up 1.1F-36 (l-teleport inside inserted content; root l-init ordering asymmetry)."
     }
   ],
