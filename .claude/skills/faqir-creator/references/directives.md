@@ -13,7 +13,7 @@ Expressions are plain JavaScript evaluated against the nearest scope: any name t
 | Directive | Shorthand | Goes on | Example | What it does |
 |---|---|---|---|---|
 | `l-data` | — | any element, which becomes the scope root | `l-data="{ count: 0 }"` | Declares a reactive scope from an object literal, or from a name registered with `Faqir.data()`. `data-prop-*` attributes are JSON-parsed and merged over it. Descendants share the scope until the next `l-data`. |
-| `l-init` | — | a scope root, beside `l-data` | `l-init="load()"` | Runs once, after the scope exists and its `l-source` bindings are injected. |
+| `l-init` | — | a scope root, beside `l-data` | `l-init="load()"` | Runs once, after the scope exists and its `l-source` bindings are injected, with the subtree's controllers already started. In `l-if` / `l-for` content it runs after insertion: bindings, insert, controllers, then `l-init` / first `l-effect`. |
 | `l-source:<name>` | — | a scope root, beside `l-data` | `l-source:tasks="/api/tasks"` | Binds a REST collection into the scope as `<name>`, `<name>Loading`, `<name>Error` and the `$<name>` CRUD controller. See below. |
 | `l-text` | — | any element | `l-text="count"` | Writes the value to `textContent`; `null` and `undefined` write an empty string. |
 | `l-html` | — | any element | `l-html="body"` | Writes the value to `innerHTML`, unsanitized — never pass user input. The dev engine reports every use. |

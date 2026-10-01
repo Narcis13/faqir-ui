@@ -721,6 +721,14 @@ Add `data-manual` to that `<script type="module">` to boot it yourself with
 | `l-teleport` | | Move the element elsewhere in the document |
 | `l-source:name` | | Declarative REST binding (see [Data-Driven Rendering](#data-driven-rendering)) |
 
+`l-init` and an `l-effect`'s first run find the controllers inside their
+subtree already started, so `$ui('#x')` there is not null. On a page, and for
+`Faqir.initTree(el)` on an element already in the document, controllers start
+first and the directives bind after. (A subtree bound while detached gets its
+controllers only when it is inserted.) Content that `l-if` / `l-for` inserts is
+bound first, then inserted, then its controllers start, and only then do its
+`l-init` and first `l-effect` run.
+
 Event modifiers: `.prevent` `.stop` `.self` `.once` `.capture` `.passive`
 `.window` `.document` `.debounce300ms` `.throttle100ms`, plus key aliases such
 as `@keydown.enter` and `@keydown.escape.window`.

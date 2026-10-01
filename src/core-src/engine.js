@@ -305,7 +305,7 @@
   // repeated here.
   //
   // @ui:directive l-data | — | any element, which becomes the scope root | l-data="{ count: 0 }" | Declares a reactive scope from an object literal, or from a name registered with `Faqir.data()`. `data-prop-*` attributes are JSON-parsed and merged over it. Descendants share the scope until the next `l-data`.
-  // @ui:directive l-init | — | a scope root, beside `l-data` | l-init="load()" | Runs once, after the scope exists and its `l-source` bindings are injected.
+  // @ui:directive l-init | — | a scope root, beside `l-data` | l-init="load()" | Runs once, after the scope exists and its `l-source` bindings are injected, with the subtree's controllers already started. In `l-if` / `l-for` content it runs after insertion: bindings, insert, controllers, then `l-init` / first `l-effect`.
   // @ui:directive l-source:<name> | — | a scope root, beside `l-data` | l-source:tasks="/api/tasks" | Binds a REST collection into the scope as `<name>`, `<name>Loading`, `<name>Error` and the `$<name>` CRUD controller. See below.
   // @ui:directive l-text | — | any element | l-text="count" | Writes the value to `textContent`; `null` and `undefined` write an empty string.
   // @ui:directive l-html | — | any element | l-html="body" | Writes the value to `innerHTML`, unsanitized — never pass user input. The dev engine reports every use.
@@ -465,6 +465,37 @@
   // `l-model` and `l-ref` inert — with no error — on the one element the docs
   // point authors at ("a scope root, beside `l-data`"). [W2-1]
   var ROOT_CONSUMED = { data: 1, source: 1, init: 1 };
+
+  // `l-init` and each `l-effect`'s first run, held back while a structural
+  // render builds content that is not in the document yet. [1.1F-03]
+  var pendingInits = null;
+
+  function runInit(fn) {
+    if (pendingInits) pendingInits.push(fn); else fn();
+  }
+
+  // `l-if` / `l-for` content ran its `l-init` and its effects' first pass while
+  // still detached — before insertion, and before any controller inside it had
+  // started — so `$ui('#x')` there was null, and an effect that read nothing
+  // reactive never ran again. `render` binds and inserts, and returns the nodes
+  // it inserted; their controllers start next, and only then does the held work
+  // run: bindings → insertion → controllers → `l-init` / `l-effect`. A render
+  // nested inside another (an `l-if` in an `l-for` row) joins the outer one,
+  // which alone knows when the content is attached. Controllers are not started
+  // on content that is still detached. Untracked, so nothing the held work reads
+  // subscribes the structural effect that rendered it. [1.1F-03]
+  function renderThenInit(render) {
+    if (pendingInits) return render();
+    var queue = pendingInits = [];
+    var nodes;
+    try { nodes = render(); } finally { pendingInits = null; }
+    untrack(function() {
+      for (var i = 0; i < nodes.length; i++) {
+        if (nodes[i].nodeType === 1 && nodes[i].isConnected) startControllers(nodes[i]);
+      }
+      for (var q = 0; q < queue.length; q++) queue[q]();
+    });
+  }
 
   function initTree(root, parentScope) {
     var scope = initScope(root, parentScope);
@@ -644,7 +675,7 @@
 
     var initExpr = root.getAttribute('l-init');
     if (initExpr) {
-      evaluateAssignment(initExpr, scope, root);
+      runInit(function() { evaluateAssignment(initExpr, scope, root); });
     }
 
     return scope;
@@ -1389,16 +1420,17 @@
   // --- 3.11 l-init ---
 
   function handleInit(el, dir, scope) {
-    evaluateAssignment(dir.expression, scope, el);
+    runInit(function() { evaluateAssignment(dir.expression, scope, el); });
   }
 
   // --- 3.12 l-effect ---
 
   function handleEffect(el, dir, scope) {
-    var cl = effect(function() {
-      evaluateAssignment(dir.expression, scope, el);
+    runInit(function() {
+      addCleanup(el, effect(function() {
+        evaluateAssignment(dir.expression, scope, el);
+      }));
     });
-    addCleanup(el, cl);
   }
 
   // --- 3.13 l-cloak ---
@@ -1713,7 +1745,7 @@
       var value = evaluate(dir.expression, scope, el);
 
       if (value) {
-        if (insertedNodes.length === 0) {
+        if (insertedNodes.length === 0) renderThenInit(function() {
           var fragment = el.content.cloneNode(true);
           var nodes = [].slice.call(fragment.childNodes);
 
@@ -1756,7 +1788,8 @@
               runEnterTransition(insertedNodes[i]);
             }
           }
-        }
+          return insertedNodes;
+        });
       } else {
         for (var i = 0; i < insertedNodes.length; i++) {
           var node = insertedNodes[i];
@@ -1952,7 +1985,9 @@
     var warnedReorder = false;
     // @faqir:dev-end
 
-    var cl = effect(function() {
+    // One reconciliation. Returns the rows it built, for `renderThenInit` to
+    // start their controllers and run their held inits. [1.1F-03]
+    function renderList() {
       var list = evaluate(listExpr, scope, el);
       var items = Array.isArray(list) ? list :
                   typeof list === 'number' ? Array.from({ length: list }, function(_, i) { return i + 1; }) :
@@ -2043,7 +2078,12 @@
       }
 
       currentEntries = newEntries;
-    });
+      var fresh = [];
+      for (var i = 0; i < n; i++) if (!source[i]) fresh.push.apply(fresh, newEntries[i].nodes);
+      return fresh;
+    }
+
+    var cl = effect(function() { renderThenInit(renderList); });
 
     addCleanup(el, cl, anchor);
   }
@@ -2675,6 +2715,27 @@
     }
   }
 
+  // Every controller inside `root` (a document or an element), `root` included.
+  // Controllers are double-init guarded, so a second call is a no-op.
+  function startControllers(root) {
+    var own = root.getAttribute && root.getAttribute('data-ui');
+    if (own && controllerRegistry[own]) initController(own, root);
+    var names = Object.keys(controllerRegistry);
+    for (var n = 0; n < names.length; n++) {
+      var els = root.querySelectorAll('[data-ui="' + names[n] + '"]');
+      for (var e = 0; e < els.length; e++) initController(names[n], els[e]);
+    }
+  }
+
+  // `Faqir.initTree` — the same order bootstrap uses: a connected subtree's
+  // controllers start first, so its `l-init` / first `l-effect` reach them
+  // through `$ui`. A detached subtree's controllers wait for the
+  // MutationObserver, as before. [1.1F-03]
+  function publicInitTree(root, parentScope) {
+    if (root.isConnected) startControllers(root);
+    initTree(root, parentScope);
+  }
+
   // The document's one MutationObserver, or null before the first bootstrap,
   // and the <body> it is currently watching.
   var mutationObserver = null;
@@ -2684,13 +2745,7 @@
     injectCloakStyle();
 
     // Auto-init controllers for all [data-ui] elements
-    var names = Object.keys(controllerRegistry);
-    for (var n = 0; n < names.length; n++) {
-      var els = document.querySelectorAll('[data-ui="' + names[n] + '"]');
-      for (var e = 0; e < els.length; e++) {
-        initController(names[n], els[e]);
-      }
-    }
+    startControllers(document);
 
     // Find all scope roots.
     // l-data elements always create a scope.
@@ -2763,12 +2818,7 @@
     // after the first sweep ran and before the MutationObserver below starts.
     // Controllers are double-init guarded, so re-invoking is a no-op for
     // elements initialized by the first sweep.
-    for (var n2 = 0; n2 < names.length; n2++) {
-      var els2 = document.querySelectorAll('[data-ui="' + names[n2] + '"]');
-      for (var e2 = 0; e2 < els2.length; e2++) {
-        initController(names[n2], els2[e2]);
-      }
-    }
+    startControllers(document);
 
     removeCloaks();
 
@@ -2798,10 +2848,10 @@
           // it forever. [W3-1]
           removeCloaks(node);
 
-          var uiName = node.getAttribute ? node.getAttribute('data-ui') : null;
-          if (uiName && controllerRegistry[uiName]) {
-            initController(uiName, node);
-          }
+          // Controllers first — the node's own and every one inside it — so
+          // the `l-init` / first `l-effect` that `initTree` runs below reach
+          // them through `$ui`. They used to start after it. [1.1F-03]
+          startControllers(node);
 
           // Already initialized — by `Faqir.start()` / `Faqir.initTree()` in the
           // same task that inserted it (the record is only delivered on the
@@ -2818,11 +2868,6 @@
           }
 
           if (node.querySelectorAll) {
-            var cNames = Object.keys(controllerRegistry);
-            for (var cn = 0; cn < cNames.length; cn++) {
-              var cEls = node.querySelectorAll('[data-ui="' + cNames[cn] + '"]');
-              for (var ce = 0; ce < cEls.length; ce++) initController(cNames[cn], cEls[ce]);
-            }
             var scopeEls = node.querySelectorAll('[l-data]');
             for (var se = 0; se < scopeEls.length; se++) {
               if (!scopeEls[se].__faqirScope) {
@@ -2908,7 +2953,7 @@
     plugin: function(fn) { fn(Faqir); },
     controller: function(name, factory) { controllerRegistry[name] = factory; },
     start: bootstrap,
-    initTree: initTree,
+    initTree: publicInitTree,
     // Snapshot of Faqir's view of one element — scope, directives, controller,
     // protocol attributes. [0.7-12]
     inspect: inspect,

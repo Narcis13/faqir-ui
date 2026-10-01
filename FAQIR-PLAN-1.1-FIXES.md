@@ -99,7 +99,7 @@ wait for document order. Task 1.1F-32 releases the additive set; its version is 
 |----|------|---------|-------|--------|
 | 1.1F-01 | Refs register on the real scope root (`l-if`, `l-for`, `l-teleport`, stray) | 1 | patch | ✅ |
 | 1.1F-02 | Property-aware bindings + `faqir:model` notification; toggle-group follows the store | 16, 4 | patch | ✅ |
-| 1.1F-03 | Inserted content: controllers start before `l-init` / first `l-effect` | 3 | patch | ⬜ |
+| 1.1F-03 | Inserted content: controllers start before `l-init` / first `l-effect` | 3 | patch | ✅ |
 | 1.1F-04 | `:style` / `:class` merge instead of replace | 31 | patch | ⬜ |
 | 1.1F-05 | Methods keep their component's `this` when called from a row (+ dev warning) | 29 | patch | ⬜ |
 | 1.1F-06 | `$this` magic — the element the directive is on | 2 | additive | ⬜ |
@@ -157,6 +157,7 @@ wait for document order. Task 1.1F-32 releases the additive set; its version is 
 | 1.1F-33 | `inspect()` / `devtools.scopes()` misreport `l-if`/`l-for` clone top nodes as scopes (`ownScopeRoot` ~2450, `scopes` ~2543). A `[data-ui]` at the top of an `l-if` is listed with `id:null`, and `l-for` row snapshots show only item and index. Resolve through the 1.1F-01 `scopeRoots` map. | verification of entry 1 | ⬜ |
 | 1.1F-34 | Nested `l-data` scopes do not inherit parent data (`createScopeWithMagics(userData, root, root)` has no parent fallback; only the literal is evaluated against the parent). Decide whether this is intended, then document it or fix it. | verification of entry 29 | ⬜ |
 | 1.1F-35 | `site/styles/docs.css:446-456,1046-1050` hand-roll pressed buttons. Delete what 1.1F-17 makes redundant, or confirm it went in that task. | verification of entry 14 | ⬜ |
+| 1.1F-36 | An `l-teleport` inside `l-if` / `l-for` content moves its element out before insertion, so `renderThenInit` never sees it: its held `l-init` runs before its controllers, which only the MutationObserver starts. Start controllers on teleported nodes in `handleTeleport` while `pendingInits` is open, or document the gap. Also: a scope root's own `l-init` in inserted content now runs after its children bind (static pages: before) — confirm that asymmetry is acceptable. | 1.1F-03 | ⬜ |
 
 ---
 
@@ -333,9 +334,9 @@ resolve, because the stray root is `body` while `findScopeRoot` returns the elem
   green.
 
 **Acceptance**
-- [ ] `$ui()` is non-null in `l-init` for controllers inside inserted content, on all three paths.
-- [ ] The `l-init` line in `docs/` / README states the order: bindings, then insertion, then controllers, then `l-init`/`l-effect`.
-- [ ] `build:core`, `build:core-package`, size within budget.
+- [x] `$ui()` is non-null in `l-init` for controllers inside inserted content, on all three paths. (`renderThenInit` holds `l-init` / first `l-effect` in a module-level `pendingInits` list while `l-if` / `l-for` render, then starts the inserted nodes' controllers and flushes; nested renders join the outermost. `Faqir.initTree` starts a connected root's controllers first; the observer calls `startControllers(node)` before `initTree`. Six regressions in `tests/core/runtime-fixes.test.ts` "1.1F-03": l-if, l-if `$el.querySelector` effect (D8c), l-for rows, nested l-if, `initTree`, observer — all six fail on the `c2f0f2f` engine)
+- [x] The `l-init` line in `docs/` / README states the order: bindings, then insertion, then controllers, then `l-init`/`l-effect`. (README § Directives paragraph after the table; the `@ui:directive l-init` line in engine.js, regenerated into the skill's `directives.md` by `gen:skill`)
+- [x] `build:core`, `build:core-package`, size within budget. (also `gen:skill`, `build:docs`; engine 10.74/14 KB, engine+controllers 44.98/46 KB gzip, +80 B; bootstrap/observer sweeps now share `startControllers`)
 
 ### 1.1F-04 · `:style` / `:class` merge instead of replace
 

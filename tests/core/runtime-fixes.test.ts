@@ -10,6 +10,7 @@
 import { afterEach, describe, expect, it } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { settle } from "../helpers/settle";
 
 const Faqir = require("../../registry/core/faqir-core.js");
 
@@ -429,5 +430,92 @@ describe("1.1F-02 property-aware bindings", () => {
     await tick();
     expect(model).toBeGreaterThan(0);
     expect(change).toBe(0);
+  });
+});
+
+// ───────────────────────────────────────────────────────────────────────────
+// 1.1F-03 — inserted content starts its controllers before `l-init` and the
+// first `l-effect` run, on every path: `l-if` / `l-for`, `Faqir.initTree`, and
+// the MutationObserver. Order: bindings → insertion → controllers → inits.
+// ───────────────────────────────────────────────────────────────────────────
+
+// `id` is left off when the caller binds `:id`: happy-dom reads a `:id`
+// attribute beside a static `id` as the same attribute (the `:style` trap).
+const tgMarkup = (id: string, extra = "", staticId = true) => `
+  <div data-ui="toggle-group" ${staticId ? `id="${id}"` : ""} data-mode="single" role="radiogroup" aria-label="Align" ${extra}>
+    <label data-part="item"><input data-part="control" type="radio" name="${id}" value="left" l-model="align"><span data-part="label">Left</span></label>
+    <label data-part="item"><input data-part="control" type="radio" name="${id}" value="center" l-model="align"><span data-part="label">Center</span></label>
+  </div>`;
+
+describe("1.1F-03 controllers start before l-init / l-effect in inserted content", () => {
+  it("l-if: a toggle-group's l-init reaches $ui, and its data-state reflects the bound checked", async () => {
+    const { root, scope } = await mount(`
+      <div l-data='{ "show": false, "align": "center", "got": "unset", "atInit": "" }'>
+        <template l-if="show">${tgMarkup("tg-if", `l-init="got = $ui('#tg-if') ? $ui('#tg-if').getValue() : null; atInit = $el.querySelector('#tg-if') ? 'in-doc' : 'detached'"`)}</template>
+      </div>`);
+    scope.show = true;
+    await tick();
+    expect(scope.got).toBe("center");
+    expect(scope.atInit).toBe("in-doc");
+    const items = [...root.querySelectorAll("#tg-if [data-part=item]")] as HTMLElement[];
+    expect(items.map((i) => i.dataset.state)).toEqual(["off", "on"]);
+  });
+
+  it("l-if: an l-effect reading only $el.querySelector finds the content on its first run", async () => {
+    const { scope } = await mount(`
+      <div l-data='{ "show": false, "found": "unset" }'>
+        <template l-if="show"><section l-effect="found = $el.querySelector('#x-if') ? 'yes' : 'no'"><span id="x-if"></span></section></template>
+      </div>`);
+    scope.show = true;
+    await tick();
+    expect(scope.found).toBe("yes");
+  });
+
+  it("l-for: each fresh row's l-init reaches its own controller", async () => {
+    const { root, scope } = await mount(`
+      <div l-data='{ "rows": [1], "align": "left", "seen": [] }'>
+        <template l-for="r in rows">${tgMarkup("tg-row", `:id="'tg-row-' + r" l-init="seen.push($ui('#tg-row-' + r) ? r : 0)"`, false)}</template>
+      </div>`);
+    expect([...scope.seen]).toEqual([1]);
+    scope.rows.push(2);
+    await tick();
+    expect([...scope.seen]).toEqual([1, 2]);
+    expect(root.querySelectorAll("[data-ui=toggle-group]").length).toBe(2);
+  });
+
+  it("an l-if nested in an l-if runs its inits once the outer content is attached", async () => {
+    const { scope } = await mount(`
+      <div l-data='{ "a": false, "align": "left", "got": "unset" }'>
+        <template l-if="a"><div><template l-if="true">${tgMarkup("tg-nest", `l-init="got = $ui('#tg-nest') ? 'api' : 'null'"`)}</template></div></template>
+      </div>`);
+    scope.a = true;
+    await tick();
+    expect(scope.got).toBe("api");
+  });
+
+  it("Faqir.initTree on a connected subtree starts its controllers before l-init", async () => {
+    // A scope root's own `l-init` still runs before its children bind (as on a
+    // static page), so the controller is there but nothing is checked yet.
+    const { scope } = await mount(`
+      <div l-data='{ "align": "center", "got": "unset" }' l-init="got = $ui('#tg-tree') ? 'api' : 'null'">${tgMarkup("tg-tree")}</div>`);
+    expect(scope.got).toBe("api");
+  });
+
+  it("observer: content appended after boot reaches $ui in l-init", async () => {
+    // No `initTree`, no `start()`: the engine auto-booted on `require`, and its
+    // one MutationObserver picks the node up.
+    // The appended node must be the scope root itself, in a record of its own:
+    // under a plain wrapper the old descendant sweep happened to start the
+    // controllers first.
+    unmount();
+    container = document.createElement("div");
+    document.body.appendChild(container);
+    await tick(); // deliver the container's own record first
+    const tpl = document.createElement("div");
+    tpl.innerHTML = `<div l-data='{ "align": "left", "got": "unset" }' l-init="got = $ui('#tg-obs') ? 'api' : 'null'">${tgMarkup("tg-obs")}</div>`;
+    const root = tpl.firstElementChild as HTMLElement & { __faqirScope: any };
+    container.appendChild(root);
+    await settle(() => !!root.__faqirScope, "the observer to bind the appended scope");
+    expect(root.__faqirScope.got).toBe("api");
   });
 });
