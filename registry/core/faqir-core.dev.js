@@ -1206,6 +1206,23 @@
     'open', 'novalidate', 'formnovalidate', 'inert'
   ]);
 
+  // Properties whose live state stops following the attribute once the user
+  // has touched the control (the "dirty" flag), so an attribute-only write
+  // leaves a stale control. `muted` and `indeterminate` have no attribute at all.
+  var PROPS = new Set(['checked', 'selected', 'muted', 'indeterminate', 'value']);
+
+  // Write a DOM property only when it differs. `checked`/`selected` writes
+  // notify with a bubbling `faqir:model` — never a native `change`, which would
+  // re-enter l-model's own listener and fire user `@change` handlers on a
+  // store-driven write.
+  function writeProp(el, name, value) {
+    if (!(name in el) || el[name] === value) return;
+    el[name] = value;
+    if (name === 'checked' || name === 'selected') {
+      el.dispatchEvent(new CustomEvent('faqir:model', { bubbles: true }));
+    }
+  }
+
   function handleBind(el, dir, scope) {
     var attrName = dir.arg;
 
@@ -1228,6 +1245,11 @@
         } else {
           el.setAttribute(attrName, String(value));
         }
+      }
+      if (PROPS.has(attrName)) {
+        writeProp(el, attrName, attrName === 'value'
+          ? (value == null || value === false ? '' : String(value))
+          : !!value);
       }
     });
 
@@ -1571,7 +1593,7 @@
     if (isFaqirSwitch) {
       var cl = effect(function() {
         var value = evaluate(prop, scope, el);
-        el.checked = !!value;
+        writeProp(el, 'checked', !!value);
         el.dataset.state = value ? 'on' : 'off';
         el.setAttribute('aria-checked', value ? 'true' : 'false');
       });
@@ -1583,11 +1605,9 @@
     } else if (tag === 'input' && type === 'checkbox') {
       var cl = effect(function() {
         var current = evaluate(prop, scope, el);
-        if (Array.isArray(current)) {
-          el.checked = current.indexOf(el.value) >= 0;
-        } else {
-          el.checked = !!current;
-        }
+        writeProp(el, 'checked', Array.isArray(current)
+          ? current.indexOf(el.value) >= 0
+          : !!current);
       });
       bind('change', function() {
         var current = evaluate(prop, scope, el);
@@ -1605,7 +1625,7 @@
 
     } else if (tag === 'input' && type === 'radio') {
       var cl = effect(function() {
-        el.checked = evaluate(prop, scope, el) === el.value;
+        writeProp(el, 'checked', evaluate(prop, scope, el) === el.value);
       });
       bind('change', function() {
         if (el.checked) {
@@ -1616,7 +1636,7 @@
 
     } else if (tag === 'select') {
       var cl = effect(function() {
-        el.value = evaluate(prop, scope, el) || '';
+        writeProp(el, 'value', evaluate(prop, scope, el) || '');
       });
       bind('change', function() {
         writeModel(prop, el.value, scope, el);
@@ -10620,8 +10640,11 @@ function createToastContainer(root) {
  * exclusivity when the controls are used standalone (no `l-model`), the
  * `[data-state]` styling hook, and a `faqir:change` notification.
  *
- * Every state mutation funnels through a native `change` event on the affected
+ * Every user mutation funnels through a native `change` event on the affected
  * input, so the engine's `l-model` listener and this controller stay in lockstep.
+ * Store-driven `l-model` writes arrive as the engine's `faqir:model` event (and
+ * a form `reset`); both re-sync state without a `faqir:change`. A plain script
+ * write (`input.checked = x`) is silent and is not observed — use `setValue()`.
  */
 function createToggleGroup(root) {
   // Prevent double-init.
@@ -10782,13 +10805,23 @@ function createToggleGroup(root) {
     if (el) select(el);
   }
 
+  // A store-driven `l-model` write sets `.checked` silently and announces it
+  // with `faqir:model`; follow it without re-emitting `faqir:change` (the user
+  // did not act). A form reset restores defaults silently the same way.
+  const form = root.closest("form");
+  const onReset = () => setTimeout(syncState, 0);
+
   root.addEventListener("change", onChange);
+  root.addEventListener("faqir:model", syncState);
   root.addEventListener("keydown", onKeyDown);
+  if (form) form.addEventListener("reset", onReset);
   syncState();
 
   function destroy() {
     root.removeEventListener("change", onChange);
+    root.removeEventListener("faqir:model", syncState);
     root.removeEventListener("keydown", onKeyDown);
+    if (form) form.removeEventListener("reset", onReset);
     delete root._faqirToggleGroup;
   }
 

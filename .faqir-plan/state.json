@@ -2,13 +2,19 @@
   "$schema": "./state.schema.md",
   "plan": "FAQIR-PLAN-1.1-FIXES.md",
   "current": null,
-  "last_completed": "1.1F-01",
+  "last_completed": "1.1F-02",
   "history": [
     {
       "id": "1.1F-01",
       "completed": "2026-10-01",
       "commit": "651f348",
       "summary": "Refs register on the scope root `$refs` reads: a module WeakMap `scopeRoots` (scope → root element), filled by initScope, getStrayScope (body) and each l-for row scope (inherits its parent's root). handleRef resolves through it before falling back to findScopeRoot, so refs inside l-if clones, l-for rows, l-teleport and stray elements are no longer stranded on the clone/element. Refs are now reactive: __faqirRefs is created on first read and written through reactive(), so effects reading $refs.x re-run when it appears or goes; l-for is last-row-wins, cleared when that row goes. +~30 B gzip. Six regressions in runtime-fixes.test.ts. Session also fixed a red baseline: the v1.1.1 release left SKILL.md's CDN pin and site/lib/faqir-audit.js's version at 1.1.0 (588c30e)."
+    },
+    {
+      "id": "1.1F-02",
+      "completed": "2026-10-01",
+      "commit": "pending",
+      "summary": "Property-aware bindings: engine helper writeProp (writes only when different; checked/selected dispatch a bubbling faqir:model, never a native change); handleBind sets the property for checked/selected/muted/indeterminate/value, and handleModel routes its switch/checkbox/radio/select writes through it. toggle-group re-syncs on faqir:model and form reset without faqir:change (listeners removed in destroy); manifest 1.1.1. l-model tests moved off Faqir.start() into a container. +0.41 KB gzip. Session also rebuilt the Bun-pinned artifacts: this machine's 1.4.2 fails check:audit-browser/CDN-pin tests, so the suite was run with Bun 1.3.8 first on PATH."
     }
   ],
   "note": "Pointer file for the /faqir-plan slash command. FAQIR-PLAN-1.1-FIXES.md status cells (⬜/✅) are the source of truth; this file records the cross-session cursor and a per-task log. Do not hand-edit `current` while a session is running. The 1.1 plan's cursor (31 history entries, through 1.1R-01) is archived unchanged at state-1.1.json; FAQIR-PLAN-1.1.md still has six open follow-up rows (1.1A-21, 1.1A-24, 1.1A-27, 1.1A-28, 1.1A-29, 1.1N-03), reachable by pointing `plan` back at it. The 1.0 cursor is at state-1.0.json."

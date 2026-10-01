@@ -1658,7 +1658,7 @@
       "name": "toggle-group",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "files": [
         {
           "path": "toggle-group.css",
@@ -1670,14 +1670,14 @@
         },
         {
           "path": "toggle-group.js",
-          "sha256": "8725a7b13a089d1b00d28d856af0e1db9f050a9f3bffd718a688e26fa0ad56b8"
+          "sha256": "0c881b6a580e545861d6047f10a5001fe6f74721743ae7fda7ea39594779db96"
         },
         {
           "path": "toggle-group.manifest.json",
-          "sha256": "74cb42f5f119373191ec1e0e88acafb50d4d9eddbb2ff12a19b3be02cc24b921"
+          "sha256": "98803535112e40c82721f69fb3655f7d801b8a838553f29bac65d7a0b7319361"
         }
       ],
-      "hash": "0ad9e2eb2c6c1aa26e34045faea2bfffc9b5c3e9297a23e6ee39550b99b13c35",
+      "hash": "a3469422564678a878c47158e255558fa6d9c73405986d6291562d23864aafae",
       "deps": []
     },
     {

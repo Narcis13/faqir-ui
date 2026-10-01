@@ -361,3 +361,73 @@ describe("l-ref registers on the scope root that $refs reads", () => {
     }
   });
 });
+
+// ───────────────────────────────────────────────────────────────────────────
+// 1.1F-02 — property-aware bindings + faqir:model
+// ───────────────────────────────────────────────────────────────────────────
+
+describe("1.1F-02 property-aware bindings", () => {
+  it("a dirty radio follows the store after the user checked another", async () => {
+    const { root, scope } = await mount(`
+      <div l-data='{ "v": "a" }'>
+        <input type="radio" name="g" value="a" l-model="v">
+        <input type="radio" name="g" value="b" l-model="v">
+      </div>`);
+    const [a, b] = [...root.querySelectorAll("input")] as HTMLInputElement[];
+    expect(a.checked).toBe(true);
+    b.checked = true;
+    b.dispatchEvent(new Event("change", { bubbles: true }));
+    await tick();
+    expect(scope.v).toBe("b");
+    scope.v = "a";
+    await tick();
+    expect(a.checked).toBe(true);
+    expect(b.checked).toBe(false);
+  });
+
+  it(":checked sets the property on a dirty checkbox", async () => {
+    const { root, scope } = await mount(`<div l-data='{ "on": false }'><input type="checkbox" :checked="on"></div>`);
+    const box = root.querySelector("input") as HTMLInputElement;
+    box.checked = true; // the user's click: marks the control dirty
+    scope.on = true;
+    await tick();
+    box.checked = false; // the user unchecks it
+    scope.on = false;
+    scope.on = true;
+    await tick();
+    expect(box.checked).toBe(true);
+    scope.on = false;
+    await tick();
+    expect(box.checked).toBe(false);
+  });
+
+  it(":indeterminate sets the property", async () => {
+    const { root, scope } = await mount(`<div l-data='{ "i": true }'><input type="checkbox" :indeterminate="i"></div>`);
+    const box = root.querySelector("input") as HTMLInputElement;
+    expect(box.indeterminate).toBe(true);
+    scope.i = false;
+    await tick();
+    expect(box.indeterminate).toBe(false);
+  });
+
+  it(":value on a dirty input follows the store", async () => {
+    const { root, scope } = await mount(`<div l-data='{ "t": "x" }'><input :value="t"></div>`);
+    const input = root.querySelector("input") as HTMLInputElement;
+    expect(input.value).toBe("x");
+    input.value = "typed"; // dirty
+    scope.t = "from-store";
+    await tick();
+    expect(input.value).toBe("from-store");
+  });
+
+  it("a store-driven l-model write announces faqir:model, not change", async () => {
+    const { root, scope } = await mount(`<div l-data='{ "v": "a" }'><input type="radio" name="m" value="a" l-model="v"><input type="radio" name="m" value="b" l-model="v"></div>`);
+    let model = 0, change = 0;
+    root.addEventListener("faqir:model", () => model++);
+    root.addEventListener("change", () => change++);
+    scope.v = "b";
+    await tick();
+    expect(model).toBeGreaterThan(0);
+    expect(change).toBe(0);
+  });
+});

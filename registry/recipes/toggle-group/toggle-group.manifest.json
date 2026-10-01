@@ -1,11 +1,16 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "toggle-group",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "kind": "recipe",
   "category": "forms",
   "description": "Single- or multi-select group of toggle buttons over native radio/checkbox controls, with roving-tabindex keyboard navigation and native l-model binding",
   "changes": [
+    {
+      "version": "1.1.1",
+      "note": "The group now follows store-driven l-model writes. l-model sets a control's checked property silently, so data-state and the roving tabindex used to go stale (the checked radio kept tabindex=-1). The engine now announces checked/selected writes with a bubbling faqir:model event; the controller re-syncs on it and on a form reset, without emitting faqir:change. A plain script write (input.checked = x) is still not observed — use setValue().",
+      "breaking": false
+    },
     {
       "version": "1.1.0",
       "note": "data-state=\"on\" / \"off\" on the items is now declared. The controller has always reflected every control's checked property onto its item wrapper (that is the whole styling hook — the real radio/checkbox is visually hidden), but the manifest declared no states at all. 0.8-10's undeclared-attribute rule now makes this class of drift impossible: an attribute a component's CSS selects on that its manifest never declares fails the registry gate.",
@@ -52,7 +57,7 @@
     "off": {
       "attr": "data-state=\"off\"",
       "applied_to": "item",
-      "description": "The item's control is unchecked. The controller reflects it on init and on every change; it is the default, so an item that has never been touched still carries it"
+      "description": "The item's control is unchecked. The controller reflects it on init and whenever a control's checked state changes, including l-model writes and a form reset; it is the default, so an item that has never been touched still carries it"
     },
     "on": {
       "attr": "data-state=\"on\"",
@@ -101,7 +106,7 @@
       "Home/End": "focus the first/last enabled control",
       "Space/Enter": "toggle the focused control (select in single mode)"
     },
-    "notes": "The controls are REAL <input type=\"radio\"|\"checkbox\"> elements, so the platform provides the pressed/checked semantics and l-model binds through the engine's native radio (string) / checkbox-array (array) paths with no engine changes. The controller adds only roving tabindex, single-mode exclusivity for uncontrolled use, the [data-state] styling hook, and a faqir:change notification. Design note: multi mode uses native checkbox aria-checked rather than button aria-pressed specifically so array l-model works natively."
+    "notes": "The controls are REAL <input type=\"radio\"|\"checkbox\"> elements, so the platform provides the pressed/checked semantics and l-model binds through the engine's native radio (string) / checkbox-array (array) paths with no engine changes. Do not combine :checked with l-model on one control (two writers). The controller adds only roving tabindex, single-mode exclusivity for uncontrolled use, the [data-state] styling hook, and a faqir:change notification. Design note: multi mode uses native checkbox aria-checked rather than button aria-pressed specifically so array l-model works natively."
   },
   "tokens_used": [
     "color-bg",

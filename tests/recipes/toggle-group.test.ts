@@ -200,22 +200,40 @@ describe("toggle-group controller", () => {
   });
 
   // ── l-model integration (real engine, native paths) ─────────────────────────
-  it("l-model binds a string in single mode", async () => {
-    document.body.innerHTML = `
-      <div l-data='{ "align": "left" }'>
-        <div data-ui="toggle-group" data-mode="single" role="radiogroup" aria-label="Align">
-          <label data-part="item"><input data-part="control" type="radio" value="left" l-model="align"><span data-part="label">Left</span></label>
-          <label data-part="item"><input data-part="control" type="radio" value="center" l-model="align"><span data-part="label">Center</span></label>
-          <label data-part="item"><input data-part="control" type="radio" value="right" l-model="align"><span data-part="label">Right</span></label>
-        </div>
-        <output id="out" l-text="align"></output>
-      </div>`;
-    Faqir.start();
-    const root = document.querySelector("[data-ui='toggle-group']") as HTMLElement;
+  // Mounted into a disposable container — never `Faqir.start()` /
+  // `initTree(document.body)`, which would leak into every later file.
+  let box: HTMLElement | null = null;
+  async function mountModel(markup: string) {
+    box = document.createElement("div");
+    box.innerHTML = markup;
+    document.body.appendChild(box);
+    Faqir.initTree(box.firstElementChild as Element);
+    await tick();
+    const root = box.querySelector("[data-ui='toggle-group']") as HTMLElement;
     const api = createToggleGroup(root);
     mounted.push(api);
+    return { root, api, scope: (box.firstElementChild as any).__faqirScope };
+  }
+  afterEach(() => {
+    if (!box) return;
+    Faqir.destroy(box);
+    box.remove();
+    box = null;
+  });
+
+  const alignMarkup = (wrap = (x: string) => x) => `
+      <div l-data='{ "align": "left" }'>${wrap(`
+        <div data-ui="toggle-group" data-mode="single" role="radiogroup" aria-label="Align">
+          <label data-part="item"><input data-part="control" type="radio" name="al" value="left" l-model="align"><span data-part="label">Left</span></label>
+          <label data-part="item"><input data-part="control" type="radio" name="al" value="center" l-model="align"><span data-part="label">Center</span></label>
+          <label data-part="item"><input data-part="control" type="radio" name="al" value="right" l-model="align"><span data-part="label">Right</span></label>
+        </div>`)}
+        <output id="out" l-text="align"></output>
+      </div>`;
+
+  it("l-model binds a string in single mode", async () => {
+    const { api } = await mountModel(alignMarkup());
     const out = document.querySelector("#out")!;
-    await tick();
     expect(out.textContent).toBe("left");
 
     api.toggle("center"); // dispatches native change → l-model updates the model
@@ -225,7 +243,7 @@ describe("toggle-group controller", () => {
   });
 
   it("l-model binds an array in multi mode", async () => {
-    document.body.innerHTML = `
+    const { api } = await mountModel(`
       <div l-data='{ "marks": [] }'>
         <div data-ui="toggle-group" data-mode="multi" role="group" aria-label="Format">
           <label data-part="item"><input data-part="control" type="checkbox" value="bold" l-model="marks"><span data-part="label">Bold</span></label>
@@ -233,13 +251,8 @@ describe("toggle-group controller", () => {
           <label data-part="item"><input data-part="control" type="checkbox" value="underline" l-model="marks"><span data-part="label">Underline</span></label>
         </div>
         <output id="out" l-text="marks.join(',')"></output>
-      </div>`;
-    Faqir.start();
-    const root = document.querySelector("[data-ui='toggle-group']") as HTMLElement;
-    const api = createToggleGroup(root);
-    mounted.push(api);
+      </div>`);
     const out = document.querySelector("#out")!;
-    await tick();
     expect(out.textContent).toBe("");
 
     api.toggle("bold");
@@ -254,5 +267,53 @@ describe("toggle-group controller", () => {
     api.toggle("bold");
     await tick();
     expect(out.textContent).toBe("underline");
+  });
+
+  it("follows a store write: data-state and the roving tab stop move, no faqir:change", async () => {
+    const { root, api, scope } = await mountModel(alignMarkup());
+    const controls = [...root.querySelectorAll("[data-part='control']")] as HTMLInputElement[];
+    const states = () => controls.map((c) => (c.closest("[data-part='item']") as HTMLElement).dataset.state);
+    expect(states()).toEqual(["on", "off", "off"]);
+
+    let changes = 0;
+    root.addEventListener("faqir:change", () => changes++);
+    scope.align = "right";
+    await tick();
+    expect(api.getValue()).toBe("right");
+    expect(states()).toEqual(["off", "off", "on"]);
+    // The checked radio is the Tab stop (it used to keep tabindex=-1).
+    expect(controls.map((c) => c.getAttribute("tabindex"))).toEqual(["-1", "-1", "0"]);
+    expect(changes).toBe(0);
+  });
+
+  it("re-syncs after form.reset() without emitting faqir:change", async () => {
+    const { root, api, scope } = await mountModel(`
+      <form l-data='{ "align": "center" }'>
+        <div data-ui="toggle-group" data-mode="single" role="radiogroup" aria-label="Align">
+          <label data-part="item"><input data-part="control" type="radio" name="al" value="left" l-model="align"><span data-part="label">Left</span></label>
+          <label data-part="item"><input data-part="control" type="radio" name="al" value="center" l-model="align" checked><span data-part="label">Center</span></label>
+        </div>
+      </form>`);
+    const form = box!.firstElementChild as HTMLFormElement;
+    let changes = 0;
+    root.addEventListener("faqir:change", () => changes++);
+    api.toggle("left");
+    await tick();
+    changes = 0;
+    form.reset();
+    await tick();
+    const items = [...root.querySelectorAll("[data-part='item']")] as HTMLElement[];
+    expect(items.map((i) => i.dataset.state)).toEqual(["off", "on"]);
+    expect(changes).toBe(0);
+    expect(scope).toBeDefined();
+  });
+
+  it("destroy() removes the faqir:model and reset listeners", async () => {
+    const { root, api, scope } = await mountModel(alignMarkup());
+    api.destroy();
+    scope.align = "right";
+    await tick();
+    const items = [...root.querySelectorAll("[data-part='item']")] as HTMLElement[];
+    expect(items.map((i) => i.dataset.state)).toEqual(["on", "off", "off"]); // frozen
   });
 });

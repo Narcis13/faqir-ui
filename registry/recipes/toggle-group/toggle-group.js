@@ -23,8 +23,11 @@
  * exclusivity when the controls are used standalone (no `l-model`), the
  * `[data-state]` styling hook, and a `faqir:change` notification.
  *
- * Every state mutation funnels through a native `change` event on the affected
+ * Every user mutation funnels through a native `change` event on the affected
  * input, so the engine's `l-model` listener and this controller stay in lockstep.
+ * Store-driven `l-model` writes arrive as the engine's `faqir:model` event (and
+ * a form `reset`); both re-sync state without a `faqir:change`. A plain script
+ * write (`input.checked = x`) is silent and is not observed — use `setValue()`.
  */
 export function createToggleGroup(root) {
   // Prevent double-init.
@@ -185,13 +188,23 @@ export function createToggleGroup(root) {
     if (el) select(el);
   }
 
+  // A store-driven `l-model` write sets `.checked` silently and announces it
+  // with `faqir:model`; follow it without re-emitting `faqir:change` (the user
+  // did not act). A form reset restores defaults silently the same way.
+  const form = root.closest("form");
+  const onReset = () => setTimeout(syncState, 0);
+
   root.addEventListener("change", onChange);
+  root.addEventListener("faqir:model", syncState);
   root.addEventListener("keydown", onKeyDown);
+  if (form) form.addEventListener("reset", onReset);
   syncState();
 
   function destroy() {
     root.removeEventListener("change", onChange);
+    root.removeEventListener("faqir:model", syncState);
     root.removeEventListener("keydown", onKeyDown);
+    if (form) form.removeEventListener("reset", onReset);
     delete root._faqirToggleGroup;
   }
 

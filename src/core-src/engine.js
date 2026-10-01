@@ -1190,6 +1190,23 @@
     'open', 'novalidate', 'formnovalidate', 'inert'
   ]);
 
+  // Properties whose live state stops following the attribute once the user
+  // has touched the control (the "dirty" flag), so an attribute-only write
+  // leaves a stale control. `muted` and `indeterminate` have no attribute at all.
+  var PROPS = new Set(['checked', 'selected', 'muted', 'indeterminate', 'value']);
+
+  // Write a DOM property only when it differs. `checked`/`selected` writes
+  // notify with a bubbling `faqir:model` — never a native `change`, which would
+  // re-enter l-model's own listener and fire user `@change` handlers on a
+  // store-driven write.
+  function writeProp(el, name, value) {
+    if (!(name in el) || el[name] === value) return;
+    el[name] = value;
+    if (name === 'checked' || name === 'selected') {
+      el.dispatchEvent(new CustomEvent('faqir:model', { bubbles: true }));
+    }
+  }
+
   function handleBind(el, dir, scope) {
     var attrName = dir.arg;
 
@@ -1212,6 +1229,11 @@
         } else {
           el.setAttribute(attrName, String(value));
         }
+      }
+      if (PROPS.has(attrName)) {
+        writeProp(el, attrName, attrName === 'value'
+          ? (value == null || value === false ? '' : String(value))
+          : !!value);
       }
     });
 
@@ -1555,7 +1577,7 @@
     if (isFaqirSwitch) {
       var cl = effect(function() {
         var value = evaluate(prop, scope, el);
-        el.checked = !!value;
+        writeProp(el, 'checked', !!value);
         el.dataset.state = value ? 'on' : 'off';
         el.setAttribute('aria-checked', value ? 'true' : 'false');
       });
@@ -1567,11 +1589,9 @@
     } else if (tag === 'input' && type === 'checkbox') {
       var cl = effect(function() {
         var current = evaluate(prop, scope, el);
-        if (Array.isArray(current)) {
-          el.checked = current.indexOf(el.value) >= 0;
-        } else {
-          el.checked = !!current;
-        }
+        writeProp(el, 'checked', Array.isArray(current)
+          ? current.indexOf(el.value) >= 0
+          : !!current);
       });
       bind('change', function() {
         var current = evaluate(prop, scope, el);
@@ -1589,7 +1609,7 @@
 
     } else if (tag === 'input' && type === 'radio') {
       var cl = effect(function() {
-        el.checked = evaluate(prop, scope, el) === el.value;
+        writeProp(el, 'checked', evaluate(prop, scope, el) === el.value);
       });
       bind('change', function() {
         if (el.checked) {
@@ -1600,7 +1620,7 @@
 
     } else if (tag === 'select') {
       var cl = effect(function() {
-        el.value = evaluate(prop, scope, el) || '';
+        writeProp(el, 'value', evaluate(prop, scope, el) || '');
       });
       bind('change', function() {
         writeModel(prop, el.value, scope, el);

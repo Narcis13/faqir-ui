@@ -98,7 +98,7 @@ wait for document order. Task 1.1F-32 releases the additive set; its version is 
 | ID | Task | Entries | Class | Status |
 |----|------|---------|-------|--------|
 | 1.1F-01 | Refs register on the real scope root (`l-if`, `l-for`, `l-teleport`, stray) | 1 | patch | ✅ |
-| 1.1F-02 | Property-aware bindings + `faqir:model` notification; toggle-group follows the store | 16, 4 | patch | ⬜ |
+| 1.1F-02 | Property-aware bindings + `faqir:model` notification; toggle-group follows the store | 16, 4 | patch | ✅ |
 | 1.1F-03 | Inserted content: controllers start before `l-init` / first `l-effect` | 3 | patch | ⬜ |
 | 1.1F-04 | `:style` / `:class` merge instead of replace | 31 | patch | ⬜ |
 | 1.1F-05 | Methods keep their component's `this` when called from a row (+ dev warning) | 29 | patch | ⬜ |
@@ -288,9 +288,9 @@ resolve, because the stray root is `body` while `findScopeRoot` returns the elem
   instead of `Faqir.start()`.
 
 **Acceptance**
-- [ ] Downstream workarounds become unnecessary: the trace page's `checkView` and the per-item `:data-state` binds.
-- [ ] toggle-group manifest `states` wording: "whenever a control's checked state changes, including `l-model` writes"; `changes` entry; `gen:skill`.
-- [ ] Standard controller regeneration set; `bun run size` within budget.
+- [x] Downstream workarounds become unnecessary: the trace page's `checkView` and the per-item `:data-state` binds. (`checkView` and the per-item `:data-state` binds are now redundant: a store write moves `data-state` and the tab stop — the toggle-group store-write test in `tests/recipes/toggle-group.test.ts`; downstream removal is in 1.1F-32's checklist)
+- [x] toggle-group manifest `states` wording: "whenever a control's checked state changes, including `l-model` writes"; `changes` entry; `gen:skill`. (manifest 1.1.1: `changes` entry, `states.off` wording, and a notes line against `:checked` + `l-model`; `gen:skill` run, `check:skill` green)
+- [x] Standard controller regeneration set; `bun run size` within budget. (`build:core`, `gen:bindings`, `build:registry-index`, `build:core-package`, `build:audit-browser`, `build:docs` run; engine 10.68/14 KB, engine+controllers 44.90/46 KB gzip, +0.41 KB)
 
 ### 1.1F-03 · Inserted content: controllers start before `l-init` / first `l-effect`
 
