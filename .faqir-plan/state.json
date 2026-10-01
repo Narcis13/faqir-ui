@@ -1,8 +1,8 @@
 {
   "$schema": "./state.schema.md",
   "plan": "FAQIR-PLAN-1.1-FIXES.md",
-  "current": "1.1F-04",
-  "last_completed": "1.1F-03",
+  "current": null,
+  "last_completed": "1.1F-04",
   "history": [
     {
       "id": "1.1F-01",
@@ -21,6 +21,12 @@
       "completed": "2026-10-02",
       "commit": "9bc36a8",
       "summary": "Inserted content starts its controllers before l-init / first l-effect. l-if and l-for render through renderThenInit: l-init (handleInit and initScope's) and l-effect's first run go through runInit into a module-level pendingInits queue while a structural render is open; after insertion the inserted nodes' controllers start (connected nodes only) and the queue flushes, untracked. Nested renders join the outermost. Faqir.initTree starts a connected root's controllers first; the observer calls startControllers(node) before initTree. Bootstrap/observer sweeps share startControllers. README + @ui:directive l-init line state the order. +80 B gzip. Six regressions in runtime-fixes.test.ts. Follow-up 1.1F-36 (l-teleport inside inserted content; root l-init ordering asymmetry)."
+    },
+    {
+      "id": "1.1F-04",
+      "completed": "2026-10-02",
+      "commit": "4fed55a",
+      "summary": "`:style` / `:class` merge instead of replace. handleBind keeps `prev` (what its last run set) per binding and removes only keys it set and has since dropped. styleMap normalises a string (via a detached element's CSSOM: custom properties, !important, shorthands), an object (`--customProps` no longer lowercased) or an array (now honoured), and applies them with setProperty(k, v, priority). classMap diffs `:class` tokens the same way; a falsy object entry still removes a markup class. Static style/class, l-show's display and controller writes now survive re-runs. New dev diagnostic `style` (`:style` declares display beside l-show) in dev-diagnostics.js, faqir-core.d.ts and docs/devtools.md (which also gained the missing `key` row). +0.17 KB gzip (45.15/46). Seven tests in faqir-core.test.ts (one production-silent), two in dev-build.test.ts. happy-dom trap refined: a static class/style breaks only when it precedes its binding."
     }
   ],
   "note": "Pointer file for the /faqir-plan slash command. FAQIR-PLAN-1.1-FIXES.md status cells (⬜/✅) are the source of truth; this file records the cross-session cursor and a per-task log. Do not hand-edit `current` while a session is running. The 1.1 plan's cursor (31 history entries, through 1.1R-01) is archived unchanged at state-1.1.json; FAQIR-PLAN-1.1.md still has six open follow-up rows (1.1A-21, 1.1A-24, 1.1A-27, 1.1A-28, 1.1A-29, 1.1N-03), reachable by pointing `plan` back at it. The 1.0 cursor is at state-1.0.json."
