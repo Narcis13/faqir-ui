@@ -25,6 +25,7 @@
  *   reorder      — an unkeyed l-for list was reordered.
  *   key          — a keyed l-for list produced the same l-key twice.
  *   html         — `l-html` writes unsanitized markup, once per element.
+ *   style        — `:style` declares `display` beside `l-show`, once per element.
  *
  * Repeats are collapsed by a dedupe token so a diagnostic inside an effect that
  * re-runs 500 times still prints once.
@@ -167,6 +168,23 @@ devHooks = {
         'must be unique per item, or rows with the same key swap DOM state.',
       el,
       { expression: keyExpr, key: String(key) }
+    );
+  },
+
+  /**
+   * A `:style` that declares `display` on an element that also has `l-show`.
+   * Both own the same property, so whichever ran last wins: a `:style` re-run
+   * can show an element `l-show` hid. Once per element. [1.1F-04]
+   */
+  styleShow: function(el, expression) {
+    devReport(
+      'style',
+      'style:' + expression + ':' + describeElement(el),
+      ':style="' + expression + '" sets display on an element with l-show — ' +
+        'both write display, so a :style re-run can undo l-show. Move display ' +
+        'to a wrapper, or out of :style.',
+      el,
+      { expression: expression }
     );
   },
 

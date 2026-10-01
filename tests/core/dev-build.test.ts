@@ -297,6 +297,48 @@ describe("warning class: l-html notices", () => {
   });
 });
 
+describe("warning class: :style display beside l-show [1.1F-04]", () => {
+  // Mounted into a disposable container rather than `start()`.
+  async function mount(markup: string) {
+    const box = document.createElement("div");
+    box.innerHTML = markup;
+    document.body.appendChild(box);
+    Faqir.initTree(box.firstElementChild);
+    await tick();
+    return box;
+  }
+
+  it("warns once per element when :style declares display and l-show is present", async () => {
+    const box = await mount(`
+      <div l-data="{ on: true, s: 'display: flex; color: red' }">
+        <section id="both" :style="s" l-show="on"></section>
+      </div>`);
+    const entry = fresh("style")[0];
+    expect(entry).toBeDefined();
+    expect(entry.expression).toBe("s");
+    expect(entry.element).toBe("section#both");
+    expect(entry.message).toContain("l-show");
+
+    const scope = (box.firstElementChild as any).__faqirScope;
+    scope.s = "display: grid";
+    await tick();
+    expect(fresh("style").length).toBe(1);
+    Faqir.destroy(box);
+    box.remove();
+  });
+
+  it("says nothing for a :style without display, or without l-show", async () => {
+    const box = await mount(`
+      <div l-data="{ on: true }">
+        <p :style="{ color: 'red' }" l-show="on"></p>
+        <p :style="'display: flex'"></p>
+      </div>`);
+    expect(fresh("style")).toEqual([]);
+    Faqir.destroy(box);
+    box.remove();
+  });
+});
+
 describe("recorded diagnostics", () => {
   it("every entry carries the documented keys", async () => {
     document.body.innerHTML = `<div l-data="{}"><p id="e" l-text="a.b"></p></div>`;

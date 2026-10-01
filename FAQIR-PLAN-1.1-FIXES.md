@@ -39,7 +39,10 @@ as was done with `state-1.0.json`).
 - **happy-dom traps found during verification:**
   - An attribute named `:style`/`l-bind:style` is read as the element's own `style`
     attribute. With a static `style="…"` beside it, `cssText` writes are silently ignored.
-    Write `:style` tests **without** a static `style` attribute.
+    Write `:style` tests **without** a static `style` attribute. (1.1F-04 narrowed this: it
+    only bites when the static attribute comes **before** the binding, and `:class` +
+    `class` behave the same way. With `<span :style="s" style="…">`, binding first,
+    reads and writes are both correct.)
   - happy-dom focuses a `<div>` with no `tabindex`. A focus test must assert the
     attribute, not `document.activeElement`.
   - It drops border shorthands that resolve to `oklch()`, and mis-splits
@@ -100,7 +103,7 @@ wait for document order. Task 1.1F-32 releases the additive set; its version is 
 | 1.1F-01 | Refs register on the real scope root (`l-if`, `l-for`, `l-teleport`, stray) | 1 | patch | ✅ |
 | 1.1F-02 | Property-aware bindings + `faqir:model` notification; toggle-group follows the store | 16, 4 | patch | ✅ |
 | 1.1F-03 | Inserted content: controllers start before `l-init` / first `l-effect` | 3 | patch | ✅ |
-| 1.1F-04 | `:style` / `:class` merge instead of replace | 31 | patch | ⬜ |
+| 1.1F-04 | `:style` / `:class` merge instead of replace | 31 | patch | ✅ |
 | 1.1F-05 | Methods keep their component's `this` when called from a row (+ dev warning) | 29 | patch | ⬜ |
 | 1.1F-06 | `$this` magic — the element the directive is on | 2 | additive | ⬜ |
 | 1.1F-07 | Drop the injected `l-cloak` style; CSP docs | 13 | patch | ⬜ |
@@ -375,8 +378,8 @@ resolve, because the stray root is `body` while `findScopeRoot` returns the elem
   mount, not as markup.
 
 **Acceptance**
-- [ ] Downstream `pages/namespace.html` workaround (`:style` moved to the section) becomes unnecessary.
-- [ ] `l-bind` directive line updated; `gen:skill`; `build:core`, `build:core-package`, size.
+- [x] Downstream `pages/namespace.html` workaround (`:style` moved to the section) becomes unnecessary. (Its failure is reproduced by `tests/core/faqir-core.test.ts` › "merge instead of replace" › "a string :style re-run keeps a controller's custom property and l-show's display": a re-run keeps `--table-thead-h` and `display:none`, and the test fails on the old engine. `handleBind` keeps `prev` per binding. `styleMap` normalises a string through a detached element's CSSOM, an object (custom properties are no longer lowercased), or an array of either. `applyStyleBinding` calls `setProperty` with priority and removes only the keys its previous run set. `:class` diffs tokens the same way, and a falsy object entry still removes a markup class. The six tests in that block all fail on the old engine. Dev build: new `style` class (`devHooks.styleShow`, once per element), tested in `tests/core/dev-build.test.ts`, with a production-silent check in `faqir-core.test.ts`. Declared in `packages/core/faqir-core.d.ts` and `docs/devtools.md`; that table also gained its missing `key` row. `handleShow` needed no change.)
+- [x] `l-bind` directive line updated; `gen:skill`; `build:core`, `build:core-package`, size. (All under Bun 1.3.8. The line now says `class`/`style` merge, and `gen:skill` rewrote `references/directives.md`. Size: engine 10.74 → 10.92 KB, engine+controllers 44.98 → 45.15 / 46 KB gzip (+0.17 KB). `check:skill`, `check:core-package`, `check:docs` (after a local `build:docs`; `site/dist` is ignored), `check:registry-index`, `check:bindings`, `check:audit-browser` and `check:rules-plugin` are green. Testing found the happy-dom trap depends on attribute order; the header note now says so.)
 
 ### 1.1F-05 · Methods keep their component's `this` when called from a row
 

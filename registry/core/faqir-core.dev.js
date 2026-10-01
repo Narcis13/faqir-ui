@@ -325,7 +325,7 @@
   // @ui:directive l-source:<name> | — | a scope root, beside `l-data` | l-source:tasks="/api/tasks" | Binds a REST collection into the scope as `<name>`, `<name>Loading`, `<name>Error` and the `$<name>` CRUD controller. See below.
   // @ui:directive l-text | — | any element | l-text="count" | Writes the value to `textContent`; `null` and `undefined` write an empty string.
   // @ui:directive l-html | — | any element | l-html="body" | Writes the value to `innerHTML`, unsanitized — never pass user input. The dev engine reports every use.
-  // @ui:directive l-bind:<attr> | :<attr> | any element | :disabled="loading" | Binds one attribute. `class` and `style` take a string, an array or an object; boolean attributes are added or removed; `null`, `undefined` and `false` remove the attribute.
+  // @ui:directive l-bind:<attr> | :<attr> | any element | :disabled="loading" | Binds one attribute. `class` and `style` take a string, an array or an object and merge with what is there: each run removes only what its previous run set, so static markup, `l-show` and controllers keep theirs. Boolean attributes are added or removed; `null`, `undefined` and `false` remove the attribute.
   // @ui:directive l-on:<event> | @<event> | any element | @click="count++" | Adds a listener for `<event>`. Inside the expression `$event` is the DOM event.
   // @ui:directive l-model | — | an input, textarea or select, or `[data-ui="switch"]` | l-model="name" | Two-way binding. A checkbox bound to an array is a checkbox group; radios bind by value; `<select multiple>` is not handled. The modifiers below apply to the text-like branch (input, textarea, number) only.
   // @ui:directive l-show | — | any element | l-show="open" | Toggles `display: none`, leaving the element in the DOM. Runs `l-transition` on each flip.
@@ -1256,14 +1256,20 @@
 
   function handleBind(el, dir, scope) {
     var attrName = dir.arg;
+    // What this binding's last run set on `class`/`style`. Both merge: a run
+    // applies its own classes/declarations and removes only the ones its
+    // previous run set and this one dropped, so static markup, `l-show` and
+    // controller writes survive a re-run. [1.1F-04]
+    var prev = {};
 
     var cl = effect(function() {
       var value = evaluate(dir.expression, scope, el);
 
       if (attrName === 'class') {
-        applyClassBinding(el, value);
+        prev = applyClassBinding(el, value, prev);
       } else if (attrName === 'style') {
-        applyStyleBinding(el, value);
+        prev = applyStyleBinding(el, value, prev);
+        if (devHooks && 'display' in prev && el.hasAttribute('l-show')) devHooks.styleShow(el, dir.expression);
       } else if (BOOLEAN_ATTRS.has(attrName)) {
         if (value) {
           el.setAttribute(attrName, '');
@@ -1287,36 +1293,56 @@
     addCleanup(el, cl);
   }
 
-  function applyClassBinding(el, value) {
-    if (typeof value === 'string') {
-      el.className = value;
-    } else if (Array.isArray(value)) {
-      el.className = value.filter(Boolean).join(' ');
-    } else if (typeof value === 'object' && value !== null) {
-      for (var cls in value) {
-        if (value.hasOwnProperty(cls)) {
-          el.classList.toggle(cls, !!value[cls]);
-        }
-      }
+  // A `:class` value as { class: on }. Strings and arrays turn classes on; an
+  // object entry sets its own, so a falsy one removes a class markup set.
+  function classMap(v, out, on) {
+    if (typeof v === 'string') {
+      v.split(/\s+/).forEach(function(c) { if (c) out[c] = on; });
+    } else if (Array.isArray(v)) {
+      v.forEach(function(x) { if (x) classMap(x, out, true); });
+    } else if (v && typeof v === 'object') {
+      for (var k in v) classMap(k, out, !!v[k]);
     }
+    return out;
   }
 
-  function applyStyleBinding(el, value) {
-    if (typeof value === 'string') {
-      el.style.cssText = value;
-    } else if (typeof value === 'object' && value !== null) {
-      for (var prop in value) {
-        if (value.hasOwnProperty(prop)) {
-          var cssProp = prop.replace(/[A-Z]/g, function(m) { return '-' + m.toLowerCase(); });
-          var val = value[prop];
-          if (val === null || val === undefined || val === false) {
-            el.style.removeProperty(cssProp);
-          } else {
-            el.style.setProperty(cssProp, String(val));
-          }
-        }
+  function applyClassBinding(el, value, prev) {
+    var next = classMap(value, {}, true), c;
+    for (c in prev) if (prev[c] && !(c in next)) el.classList.remove(c);
+    for (c in next) el.classList.toggle(c, next[c]);
+    return next;
+  }
+
+  // A `:style` value as { property: [value, priority] }, or null to remove it.
+  // A string is parsed by a detached element's CSSOM, which handles custom
+  // properties, `!important`, shorthands and `;` inside `url()`.
+  var styleScratch;
+  function styleMap(v, out) {
+    if (typeof v === 'string') {
+      var s = (styleScratch || (styleScratch = document.createElement('div'))).style;
+      s.cssText = v;
+      for (var i = 0; i < s.length; i++) {
+        out[s[i]] = [s.getPropertyValue(s[i]), s.getPropertyPriority(s[i])];
+      }
+    } else if (Array.isArray(v)) {
+      v.forEach(function(x) { styleMap(x, out); });
+    } else if (v && typeof v === 'object') {
+      for (var k in v) {
+        out[/^--/.test(k) ? k : k.replace(/[A-Z]/g, '-$&').toLowerCase()] =
+          v[k] == null || v[k] === false ? null : [String(v[k]), ''];
       }
     }
+    return out;
+  }
+
+  function applyStyleBinding(el, value, prev) {
+    var next = styleMap(value, {}), p;
+    for (p in prev) if (prev[p] && !(p in next)) el.style.removeProperty(p);
+    for (p in next) {
+      if (next[p]) el.style.setProperty(p, next[p][0], next[p][1]);
+      else el.style.removeProperty(p);
+    }
+    return next;
   }
 
   // --- 3.9 l-on / @event ---
@@ -11731,6 +11757,7 @@ function createTreeView(root) {
    *   reorder      — an unkeyed l-for list was reordered.
    *   key          — a keyed l-for list produced the same l-key twice.
    *   html         — `l-html` writes unsanitized markup, once per element.
+   *   style        — `:style` declares `display` beside `l-show`, once per element.
    *
    * Repeats are collapsed by a dedupe token so a diagnostic inside an effect that
    * re-runs 500 times still prints once.
@@ -11873,6 +11900,23 @@ function createTreeView(root) {
           'must be unique per item, or rows with the same key swap DOM state.',
         el,
         { expression: keyExpr, key: String(key) }
+      );
+    },
+
+    /**
+     * A `:style` that declares `display` on an element that also has `l-show`.
+     * Both own the same property, so whichever ran last wins: a `:style` re-run
+     * can show an element `l-show` hid. Once per element. [1.1F-04]
+     */
+    styleShow: function(el, expression) {
+      devReport(
+        'style',
+        'style:' + expression + ':' + describeElement(el),
+        ':style="' + expression + '" sets display on an element with l-show — ' +
+          'both write display, so a :style re-run can undo l-show. Move display ' +
+          'to a wrapper, or out of :style.',
+        el,
+        { expression: expression }
       );
     },
 

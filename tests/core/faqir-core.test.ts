@@ -449,6 +449,116 @@ describe("Directives", () => {
       expect(document.querySelector("span")!.style.cssText).toContain("color: blue");
     });
 
+    // `:style` / `:class` merge instead of replace [1.1F-04]. Mounted into a
+    // disposable container, never `start()`. happy-dom trap: a static `class` /
+    // `style` written BEFORE `:class` / `:style` is shadowed by it — reads go
+    // stale and writes are lost. Directive first, static second works, so every
+    // static attribute below follows its binding.
+    describe("merge instead of replace", () => {
+      let box: HTMLElement | null = null;
+      afterEach(() => {
+        if (box) { Faqir.destroy(box); box.remove(); box = null; }
+      });
+      async function mount(markup: string) {
+        box = document.createElement("div");
+        box.innerHTML = markup;
+        document.body.appendChild(box);
+        const root = box.firstElementChild as HTMLElement & { __faqirScope: any };
+        Faqir.initTree(root);
+        await tick();
+        return { root, scope: root.__faqirScope, el: root.querySelector("span") as HTMLElement };
+      }
+
+      it("a string :style re-run keeps a controller's custom property and l-show's display", async () => {
+        const { scope, el } = await mount(`
+          <div l-data="{ s: 'color: red', open: true }">
+            <span :style="s" l-show="open">x</span>
+          </div>`);
+        expect(el.style.color).toBe("red");
+        el.style.setProperty("--table-thead-h", "40px"); // what a controller writes
+        scope.open = false;
+        await tick();
+        expect(el.style.display).toBe("none");
+        scope.s = "color: blue";
+        await tick();
+        expect(el.style.color).toBe("blue");
+        expect(el.style.display).toBe("none");
+        expect(el.style.getPropertyValue("--table-thead-h")).toBe("40px");
+      });
+
+      it("removes a declaration the string form dropped, keeps !important", async () => {
+        const { scope, el } = await mount(`
+          <div l-data="{ s: 'color: red; margin-top: 4px' }"><span :style="s">x</span></div>`);
+        expect(el.style.marginTop).toBe("4px");
+        scope.s = "color: green !important";
+        await tick();
+        expect(el.style.marginTop).toBe("");
+        expect(el.style.color).toBe("green");
+        expect(el.style.getPropertyPriority("color")).toBe("important");
+      });
+
+      it("removes an object key dropped since the last run", async () => {
+        const { scope, el } = await mount(`
+          <div l-data="{ s: { color: 'red', fontSize: '16px', '--gap': '2px' } }">
+            <span :style="s">x</span>
+          </div>`);
+        expect(el.style.fontSize).toBe("16px");
+        expect(el.style.getPropertyValue("--gap")).toBe("2px");
+        scope.s = { color: "red" };
+        await tick();
+        expect(el.style.color).toBe("red");
+        expect(el.style.fontSize).toBe("");
+        expect(el.style.getPropertyValue("--gap")).toBe("");
+      });
+
+      it("applies the array form", async () => {
+        const { el } = await mount(`
+          <div l-data="{ base: { color: 'red' } }">
+            <span :style="[base, 'font-weight: 700', null, { fontSize: '12px' }]">x</span>
+          </div>`);
+        expect(el.style.color).toBe("red");
+        expect(el.style.fontWeight).toBe("700");
+        expect(el.style.fontSize).toBe("12px");
+      });
+
+      it("a static style survives the first run and every re-run", async () => {
+        const { scope, el } = await mount(`
+          <div l-data="{ s: 'color: red' }"><span :style="s" style="padding-top: 3px">x</span></div>`);
+        expect(el.style.paddingTop).toBe("3px");
+        expect(el.style.color).toBe("red");
+        scope.s = "color: blue";
+        await tick();
+        expect(el.style.paddingTop).toBe("3px");
+        expect(el.style.color).toBe("blue");
+      });
+
+      it("a :class string keeps a controller-added class and markup classes", async () => {
+        const { scope, el } = await mount(`
+          <div l-data="{ c: 'a b' }"><span :class="c" class="static">x</span></div>`);
+        expect([...el.classList].sort()).toEqual(["a", "b", "static"]);
+        el.classList.add("is-ctrl");
+        scope.c = "b c";
+        await tick();
+        expect([...el.classList].sort()).toEqual(["b", "c", "is-ctrl", "static"]);
+      });
+
+      it("a :class array and object diff the same way; a falsy object entry still removes", async () => {
+        const { scope, el } = await mount(`
+          <div l-data="{ c: ['x', { y: true, 'z w': true }], on: true }">
+            <span :class="c" class="keep active"></span><i :class="{ active: on }"></i>
+          </div>`);
+        expect([...el.classList].sort()).toEqual(["active", "keep", "w", "x", "y", "z"]);
+        scope.c = [{ y: false }];
+        await tick();
+        expect([...el.classList].sort()).toEqual(["active", "keep"]);
+        const i = box!.querySelector("i")!;
+        expect(i.classList.contains("active")).toBe(true);
+        scope.on = false;
+        await tick();
+        expect(i.classList.contains("active")).toBe(false);
+      });
+    });
+
     it("handles boolean attributes", async () => {
       document.body.innerHTML = `
         <div l-data="{ isDisabled: true }">
@@ -3101,5 +3211,23 @@ describe("dev-only diagnostics are absent from the production engine", () => {
     );
     expect(document.querySelector("article")!.innerHTML).toBe("<b>hi</b>"); // still works
     expect(warnings.filter((w) => w.includes("unsanitized"))).toEqual([]);
+  });
+
+  it("says nothing about a :style display beside l-show [1.1F-04]", async () => {
+    const box = document.createElement("div");
+    box.innerHTML = `<div l-data="{ on: true }"><span :style="'display: flex'" l-show="on"></span></div>`;
+    document.body.appendChild(box);
+    const warnings: string[] = [];
+    const orig = console.warn;
+    console.warn = (...a: any[]) => { warnings.push(a.join(" ")); };
+    try {
+      Faqir.initTree(box.firstElementChild);
+      await tick();
+    } finally {
+      console.warn = orig;
+      Faqir.destroy(box);
+      box.remove();
+    }
+    expect(warnings.filter((w) => w.includes("l-show"))).toEqual([]);
   });
 });

@@ -88,7 +88,7 @@ developing:
 <script src="ui/core/faqir-core.dev.js"></script>
 ```
 
-It adds four diagnostic classes. Each is printed once (`[Faqir dev] …`, with the
+It adds these diagnostic classes. Each is printed once (`[Faqir dev] …`, with the
 offending element's `outerHTML`) and retained for `warnings()`:
 
 | `kind` | Fires when |
@@ -96,7 +96,9 @@ offending element's `outerHTML`) and retained for `warnings()`:
 | `expression` | an `l-*` expression or statement threw |
 | `directive` | an `l-…` attribute matched no built-in and no registered plugin directive |
 | `reorder` | an unkeyed `l-for` list was reordered — DOM state is bound to position, not identity |
+| `key` | a keyed `l-for` produced the same `l-key` twice (once per list) |
 | `html` | `l-html` wrote unsanitized markup (once per element) |
+| `style` | a `:style` declares `display` on an element that also has `l-show` — both write `display` (once per element) |
 
 Every entry carries `{ kind, message, element, html }` plus class-specific extras
 (`expression`, `directive`, `error`).
