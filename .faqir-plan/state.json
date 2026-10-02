@@ -1,7 +1,7 @@
 {
   "$schema": "./state.schema.md",
   "plan": "FAQIR-PLAN-1.1-FIXES.md",
-  "current": null,
+  "current": "1.1F-09",
   "last_completed": "1.1F-08",
   "history": [
     {

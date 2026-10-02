@@ -919,6 +919,94 @@ describe("table 2.0 · selection & keyboard navigation", () => {
   });
 });
 
+// ── Roving Tab stop never strands (1.1F-09) ─────────────────────────────────
+
+describe("table · the roving Tab stop never strands", () => {
+  const stops = (root: HTMLElement) => [...root.querySelectorAll("[tabindex='0']")] as HTMLElement[];
+
+  // Park the Tab stop on a body cell the way a pointer or Tab does: focus it.
+  function park(cell: HTMLElement) {
+    cell.focus();
+    expect(cell.getAttribute("tabindex")).toBe("0");
+  }
+
+  // Exactly one cell keeps tabindex="0", it is visible, and ArrowDown moves on from it.
+  function expectOneLiveStop(root: HTMLElement) {
+    const [stop, ...rest] = stops(root);
+    expect(rest).toEqual([]);
+    expect(stop).toBeDefined();
+    expect(stop.hasAttribute("data-col-hidden")).toBe(false);
+    const row = stop.parentElement!;
+    expect(row.hasAttribute("data-filtered") || row.hasAttribute("data-collapsed")).toBe(false);
+    stop.focus();
+    key(stop, "ArrowDown");
+    expect(document.activeElement).not.toBe(stop);
+    expect(document.activeElement!.getAttribute("tabindex")).toBe("0");
+    expect(stops(root)).toEqual([document.activeElement as HTMLElement]);
+  }
+
+  it("removing the active row hands the stop to a visible cell", async () => {
+    const { root } = setup(LEDGER("data-navigable"));
+    const row = bodyRows(root)[1];
+    park(row.querySelector("[data-part='td']") as HTMLElement);
+    row.remove();
+    await tick(60); // mutation observer + rAF refresh
+    expectOneLiveStop(root);
+  });
+
+  it("filtering the active row out hands the stop on", () => {
+    const { root, api } = setup(LEDGER("data-navigable"));
+    const row = bodyRows(root)[1]; // Consulting
+    park(row.querySelector("[data-part='td']") as HTMLElement);
+    api.setFilter("Rent");
+    expect(row.hasAttribute("data-filtered")).toBe(true);
+    expectOneLiveStop(root);
+  });
+
+  it("hiding the active cell's column hands the stop on", () => {
+    const { root, api } = setup(LEDGER("data-navigable"));
+    const cell = bodyRows(root)[2].querySelectorAll("[data-part='td']")[1] as HTMLElement;
+    park(cell);
+    api.hideColumn(1);
+    expect(cell.getAttribute("tabindex")).toBe("-1");
+    expectOneLiveStop(root);
+  });
+
+  it("a hidden column's cells never keep a stale stop at init", () => {
+    const { root, api } = setup(LEDGER("data-navigable"));
+    api.hideColumn(0); // the first header held the initial stop
+    expect(th(root, 0).getAttribute("tabindex")).toBe("-1");
+    expect(stops(root)).toEqual([th(root, 1)]);
+  });
+
+  it("collapsing the active row's group hands the stop on", () => {
+    const { root, api } = setup(GROUPED.replace("data-groupable", "data-groupable data-navigable"));
+    park(bodyRows(root)[0].querySelector("[data-part='td']") as HTMLElement); // Platform
+    api.toggleGroup(0, false);
+    expect(bodyRows(root)[0].hasAttribute("data-collapsed")).toBe(true);
+    expectOneLiveStop(root);
+  });
+
+  it("collapsing the active row's tree parent hands the stop on", () => {
+    const { root, api } = setup(TREE.replace("data-tree", "data-tree data-navigable"));
+    park(bodyRows(root)[2].querySelector("[data-part='td']") as HTMLElement); // Checking
+    api.toggleRow(1, false); // Cash
+    expect(bodyRows(root)[2].hasAttribute("data-collapsed")).toBe(true);
+    expectOneLiveStop(root);
+  });
+
+  it("restoring the stop never moves focus", () => {
+    const { root, api } = setup(LEDGER("data-navigable"));
+    const other = document.createElement("button");
+    document.body.appendChild(other);
+    park(bodyRows(root)[1].querySelector("[data-part='td']") as HTMLElement);
+    other.focus();
+    api.setFilter("Rent");
+    expect(document.activeElement).toBe(other);
+    expect(stops(root)).toHaveLength(1);
+  });
+});
+
 // ── Mutation-observer refresh ────────────────────────────────────────────────
 
 describe("table 2.0 · auto-refresh on external row changes", () => {

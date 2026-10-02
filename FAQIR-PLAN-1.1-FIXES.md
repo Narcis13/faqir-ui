@@ -116,7 +116,7 @@ wait for document order. Task 1.1F-32 releases the additive set; its version is 
 | ID | Task | Entries | Class | Status |
 |----|------|---------|-------|--------|
 | 1.1F-08 | Overlay focus: focusable panel + no late focus theft (dialog, alert-dialog, drawer, sheet) | 18, 19 | patch | ✅ |
-| 1.1F-09 | Table: the roving Tab stop never strands | 20 | patch | ⬜ |
+| 1.1F-09 | Table: the roving Tab stop never strands | 20 | patch | ✅ |
 | 1.1F-10 | Command palette: case/layout-proof ⌘K, one owner, `data-no-shortcut` | 23, 32 | additive | ⬜ |
 | 1.1F-11 | Sidebar: rail chevron flips, trigger label stays stable | 7 | patch | ⬜ |
 | 1.1F-12 | Nesting, controllers I: tabs, accordion, dialog family, sidebar, context-menu + nesting matrix | 5, 6 | patch | ⬜ |
@@ -555,8 +555,8 @@ ways to strand it that the downstream patch misses:
 cell has `tabindex="0"`, and ArrowDown from it works.
 
 **Acceptance**
-- [ ] `changes` entry; standard controller regeneration set; size.
-- [ ] Downstream `indirect:` patch in `recipes/table/table.js` and the core copies can be dropped on upgrade.
+- [x] `changes` entry; standard controller regeneration set; size. (table.manifest.json 3.1.1 with a `changes` note; `build:core`, `gen:bindings`, `build:registry-index`, `build:core-package`, `gen:skill` rerun and their `check:*` gates green. `setupNavigability` drops a stale stop whose row is not in `navMatrix()` (which covers removed, filtered and collapsed rows) or whose column is hidden, sets it to `-1`, and gives hidden-column cells `-1`. It now also runs at the end of `applyFilters`, `toggleGroup`, `toggleRow` and `setColumnHidden`; removal was already covered by the observer's `refresh`. Falls back to the first visible cell, not the nearest. Never moves focus. Seven tests in `tests/recipes/table-advanced.test.ts` "the roving Tab stop never strands": a removed row, a filtered row, a hidden column, a hidden column at init, a collapsed group, a collapsed tree parent, and a check that focus is never moved. Six of them fail on the old controller. Engine+controllers 45.56 → 45.60/46 KB gzip.)
+- [x] Downstream `indirect:` patch in `recipes/table/table.js` and the core copies can be dropped on upgrade. (The downstream patch only covered a row leaving the DOM. This fix covers that case plus filtered and collapsed rows and hidden columns, so the patch is redundant once the downstream project upgrades.)
 
 ### 1.1F-10 · Command palette: case/layout-proof ⌘K, one owner, `data-no-shortcut`
 

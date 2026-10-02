@@ -1,11 +1,16 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "table",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "kind": "recipe",
   "category": "data-display",
   "description": "Advanced data table: multi-column type-aware sorting, global + per-column filtering, tree data and collapsible row groups with live aggregates, inline cell editing with Intl number/currency formatting, drag-and-drop row and column reordering, column resize/hide/pin, sticky header/footer/rows, grid keyboard navigation, CSV export, responsive stacked mode, and state persistence — every feature opt-in via data attributes",
   "changes": [
+    {
+      "version": "3.1.1",
+      "note": "A navigable table no longer loses its Tab stop. The roving tabindex=\"0\" stayed on the last active cell after that cell's row was removed, filtered out or collapsed into its group or tree parent, or after its column was hidden, so no visible cell could be reached with Tab and the arrow keys did nothing. The controller now re-checks the stop after every refresh, filter, collapse and column hide, and hands it to the first visible cell when the old one is gone. Hidden-column cells get tabindex=\"-1\". Only the Tab stop moves; focus is never moved.",
+      "breaking": false
+    },
     {
       "version": "3.1.0",
       "note": "Twenty attributes table.css has always selected on are now declared. Seventeen are runtime states the controller writes — the set its own header comment lists (data-selected, data-collapsed, data-filtered, data-editing, data-dragging, data-drop-target/-pos, data-col-hidden, data-negative, data-stripe, data-resized, plus data-sort-order, data-pin-edge, data-leaf, data-tree-cell, data-invalid and data-stacked) — and three are authored column configuration, so they are props: data-sortable, data-readonly and data-pin. data-collapsed is declared as the state \"row-collapsed\" because the group-header's data-state=\"collapsed\" already holds that name. No CSS, controller or behaviour change; the table's surface is now visible to the docs site, the skill, faqir context and the bindings. 0.8-10's undeclared-attribute rule now makes this class of drift impossible: an attribute a component's CSS selects on that its manifest never declares fails the registry gate.",

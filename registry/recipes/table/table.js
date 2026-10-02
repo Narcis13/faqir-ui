@@ -728,6 +728,7 @@ export function createTable(root) {
     refreshStripes();
     updateHeaderCheckbox();
     computeAggregates();
+    setupNavigability();
     emit("filter", { query: globalFilter, visible, total: rows.length });
     scheduleStateSave();
   }
@@ -771,6 +772,7 @@ export function createTable(root) {
     for (const m of groupMembers(gh)) toggleAttr(m, "data-collapsed", !expand);
     refreshStripes();
     updateHeaderCheckbox();
+    setupNavigability();
     emit("group-toggle", { group: gh, expanded: expand });
   }
 
@@ -799,6 +801,7 @@ export function createTable(root) {
     }
     refreshStripes();
     updateHeaderCheckbox();
+    setupNavigability();
     emit("tree-toggle", { row, expanded: expand });
   }
 
@@ -1104,6 +1107,7 @@ export function createTable(root) {
     if (!th) return;
     forEachColumnCell(i, (cell) => toggleAttr(cell, "data-col-hidden", hidden));
     refreshPins();
+    setupNavigability();
     emit("col-visibility", { column: i, hidden: !!hidden });
     scheduleStateSave();
   }
@@ -1666,13 +1670,21 @@ export function createTable(root) {
     return rows;
   }
 
+  // Re-run after anything that can take the Tab stop away (refresh, filter,
+  // collapse, column hide): only the Tab stop moves, never focus.
   function setupNavigability() {
     if (opts.navigable) {
+      const rows = navMatrix();
+      // A stale stop — its row removed, filtered or collapsed, or its column hidden —
+      // is dropped so the first visible cell takes over.
+      if (activeCell && (!rows.includes(activeCell.parentElement) || activeCell.hasAttribute("data-col-hidden"))) {
+        activeCell.setAttribute("tabindex", "-1");
+        activeCell = null;
+      }
       let first = null;
-      for (const row of navMatrix()) {
+      for (const row of rows) {
         for (const cell of cellsOf(row)) {
-          if (cell.hasAttribute("data-col-hidden")) continue;
-          if (!first && !activeCell) first = cell;
+          if (!first && !activeCell && !cell.hasAttribute("data-col-hidden")) first = cell;
           cell.setAttribute("tabindex", cell === (activeCell || first) ? "0" : "-1");
         }
       }
