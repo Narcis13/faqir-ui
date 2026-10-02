@@ -1,8 +1,8 @@
 {
   "$schema": "./state.schema.md",
   "plan": "FAQIR-PLAN-1.1-FIXES.md",
-  "current": "1.1F-06",
-  "last_completed": "1.1F-05",
+  "current": null,
+  "last_completed": "1.1F-06",
   "history": [
     {
       "id": "1.1F-01",
@@ -33,6 +33,12 @@
       "completed": "2026-10-02",
       "commit": "7024a65",
       "summary": "Methods keep their component's `this` when called from a row. createScopeWithMagics binds every own writable function-valued data property to the reactive scope (written to the target, nothing triggers). Getters keep their receiver; late-assigned functions stay unbound (documented on the l-data directive line). snapshotValue strips `bound `, so inspect() is unchanged. New dev class `shadow` (devHooks.loopShadow, from a dev-marked line in handleFor): an author-written loop variable or index that shadows a scope name, once per list and name; d.ts, devtools.md and the 8-class count test updated. +0.06 KB gzip (45.50/46 under the pinned Bun). Four regressions in runtime-fixes.test.ts (incl. apiSource load() from a row named `items`), one in inspect.test.ts, two in dev-build.test.ts. Session first fixed a red baseline (3492d2c): faqir-mask.js was 2049/2048 B under Bun 1.3.8."
+    },
+    {
+      "id": "1.1F-06",
+      "completed": "2026-10-02",
+      "commit": "e994d90",
+      "summary": "`$this` magic: the compiled expression/statement function gains a third parameter `$this`, and evaluate/evaluateAssignment call fn.call(scope, scope, el, el). It is the directive element in handlers, the root in l-data and a root's l-init, the <template> in l-for's list and l-key expressions. The `$el` parameter stays (top-level l-data still reads it). Faqir.magic('this') throws. @ui:magic line + gen:skill; Magics type, README, security.md, devtools.md. Five tests in faqir-core.test.ts. +0.05 KB gzip (45.55/46)."
     }
   ],
   "note": "Pointer file for the /faqir-plan slash command. FAQIR-PLAN-1.1-FIXES.md status cells (⬜/✅) are the source of truth; this file records the cross-session cursor and a per-task log. Do not hand-edit `current` while a session is running. The 1.1 plan's cursor (31 history entries, through 1.1R-01) is archived unchanged at state-1.1.json; FAQIR-PLAN-1.1.md still has six open follow-up rows (1.1A-21, 1.1A-24, 1.1A-27, 1.1A-28, 1.1A-29, 1.1N-03), reachable by pointing `plan` back at it. The 1.0 cursor is at state-1.0.json."
