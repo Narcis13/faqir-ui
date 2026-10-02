@@ -61,7 +61,7 @@
     {
       "id": "1.1F-10",
       "completed": "2026-10-02",
-      "commit": "pending",
+      "commit": "b0cb6a0",
       "summary": "Command palette Cmd/Ctrl+K: matched case-insensitively with a KeyK fallback for non-Latin layouts; ignores Alt, Shift (D3), repeat and IME composition; one owner per press (stands down on defaultPrevented, prevents when it acts, and a detached palette never claims it); new data-no-shortcut prop (noShortcut, read live) on two of the three example palettes; undo-history note. command-palette manifest 1.2.0, typed noShortcut in React/Vue bindings. Twelve tests (eight fail on the old controller). +90 B gzip (45.69/46)."
     }
   ],
