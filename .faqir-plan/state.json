@@ -79,7 +79,7 @@
     {
       "id": "1.1F-13",
       "completed": "2026-10-02",
-      "commit": "",
+      "commit": "83c1d08",
       "summary": "Nesting, controllers II. carousel: slides are the viewport's :scope > children; prev/next/status/dots/containers via ownParts; click matches own buttons by identity (a nested carousel counted as 4 slides and its buttons moved both). popover close and tooltip content via ownParts. table: mine(el) = nearest [data-ui='table'] is root, wrapping the 7 delegated listeners plus the tfoot and quick-filter lookups (a table in a detail row stole focus/Tab stop, arrows, double-toggled row-toggles, filtered the outer). Leaf widgets left as-is with reasons in the commit body. Packaged min.js 46,961 -> 47,015/47,104 B; carousel standalone 1535/1536 B. Manifests: carousel 1.1.1, popover 1.0.1, tooltip 1.0.1, table 3.1.2. 6 new matrix rows, all red at HEAD."
     }
   ],
