@@ -105,6 +105,9 @@ const INTENDED_ROOT_CHANGES: Record<string, string> = {
   // The pressed state and link + size (1.1F-17): neither had a rule, so neither
   // had an example. Five buttons were added and nothing was recomposed.
   "primitives/button/button.html": "5 added buttons: a sized link, and four toggle buttons (aria-pressed)",
+  // Text as a link (1.1F-18): an anchor root had no rule, so it had no example.
+  // Three anchors were added and nothing was recomposed.
+  "primitives/text/text.html": "3 added anchors: a linked text, a mono id link, a done link",
 };
 
 describe("the registry's own markup satisfies its own rules", () => {

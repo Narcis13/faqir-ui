@@ -863,22 +863,22 @@
       "name": "text",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.1.2",
+      "version": "1.1.3",
       "files": [
         {
           "path": "text.css",
-          "sha256": "d526209c089dc32647d4be9d7dd8cb4d57f9743c9de10bd3c2cd426fd9b48d38"
+          "sha256": "3c7a3425e016736723efc06ee25e75cb0c5b8f15e43b8cb83fcba0709eec2ad6"
         },
         {
           "path": "text.html",
-          "sha256": "a937efd05118c1480a02f58e5ab6d8903acfa55123cfff09b01dc278e6f5e9e1"
+          "sha256": "d8526ae6503498f2c906aea509ff667c5a6e242185356ca5c2cebb4c6fce5746"
         },
         {
           "path": "text.manifest.json",
-          "sha256": "e40269db25098c7496c84db636c22145e6ef55aa575dc8744d2c3c4d512d1a18"
+          "sha256": "097060c63263014f36a9a5c457e4ad52e1143a3bc3bf40d111bfe8737d27a673"
         }
       ],
-      "hash": "d60278f44b76de6579e5fe8c9127820d65d7af0c94e5f54d2dbd68bfa901d581",
+      "hash": "b01a60c86c949e752b067104936f36787893b79208fc33c8378dd957e693c6a0",
       "deps": []
     },
     {

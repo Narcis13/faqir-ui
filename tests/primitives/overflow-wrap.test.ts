@@ -96,7 +96,8 @@ describe("overflow-wrap — unbreakable tokens break instead of widening the pag
     ] as const) {
       const m = manifest(kind, name);
       expect(validateManifest(m), name).toEqual([]);
-      expect(m.version, name).toBe(version);
+      // The entry, not the current version: a later change bumps the manifest
+      // past this one (text is 1.1.3 since 1.1F-18) and the record must stay.
       const entry = (m.changes ?? []).find((c) => c.version === version);
       expect(entry?.breaking, name).toBe(false);
       expect(entry?.note, name).toContain("overflow-wrap");

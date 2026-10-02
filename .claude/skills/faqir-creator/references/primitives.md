@@ -1157,8 +1157,9 @@ Text and heading primitives with size, color, weight, alignment, and truncation 
 | align | `left`, `center`, `right` | `left` | `data-align` | root |
 | leading | `tight`, `snug`, `normal`, `relaxed` | `normal` | `data-leading` | root |
 
-- **Safe transforms:** `Change data-size to any listed value`, `Change data-variant to any listed value`, `Change data-weight to any listed value`, `Change data-align to any listed value`, `Change text content`, `Add or remove data-truncate attribute`
+- **Safe transforms:** `Change data-size to any listed value`, `Change data-variant to any listed value`, `Change data-weight to any listed value`, `Change data-align to any listed value`, `Change text content`, `Add or remove data-truncate attribute`, `Make the root an <a href> when the text itself is the link`
 - **Unsafe (never do):** `Remove data-ui attribute`
+- **A11y:** keys: Enter
 
 ## textarea
 

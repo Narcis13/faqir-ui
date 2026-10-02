@@ -145,7 +145,7 @@ wait for document order. Task 1.1F-32 releases the additive set; its version is 
 | 1.1F-15 | `gen:component-tokens` + registry gate: `tokens_used` and `@ui:tokens` derived from CSS | 17, 30 | patch | ✅ |
 | 1.1F-16 | Overflow: stack `min-inline-size`, grid `minmax(0,1fr)`, `overflow-wrap` on ids | 25, 26, 27 | patch | ✅ |
 | 1.1F-17 | Button: `aria-pressed` state; link variant keeps its box under a size | 14, 24 | additive | ✅ |
-| 1.1F-18 | Text: an anchor carrying `data-ui="text"` reads as a link | 28 | patch | ⬜ |
+| 1.1F-18 | Text: an anchor carrying `data-ui="text"` reads as a link | 28 | patch | ✅ |
 | 1.1F-19 | `--mono-ligatures` token; every mono surface turns ligatures off | 12 | additive | ⬜ |
 | 1.1F-20 | Nesting, CSS I: tabs, collapsible, accordion, description-list, progress, key-value, callout, empty-state | 5, 17, 30 | patch | ⬜ |
 | 1.1F-21 | Nesting, CSS II: dialog family, popover, tooltip, sidebar, carousel, menus | 5 | patch | ⬜ |
@@ -891,8 +891,8 @@ header and the manifest; 1.1F-15 fixes that.
 focus tokens. Manifest: an `html_link` template exists.
 
 **Acceptance**
-- [ ] Manifest template + note + `changes`; tokens via `gen:component-tokens`; `gen:skill`, `gen:bindings` (template), `build:registry-index`, `build:core-package`.
-- [ ] Downstream `indirect:` text-link patch and the matching `diff-view`/`form-block` rules can be dropped.
+- [x] Manifest template + note + `changes`; tokens via `gen:component-tokens`; `gen:skill`, `gen:bindings` (template), `build:registry-index`, `build:core-package`. (text 1.1.3: `templates.html_link` (`<a data-ui="text" … href="{href}">`), `a11y.notes` (when an anchor root is right, that an anchor with no href is not styled, when `data-ui="link"` fits better) and `a11y.keyboard.Enter`, one safe transform, a `changes` entry. CSS: the two rules exactly as specified, placed before the done state. `gen:component-tokens` added the three link and five focus tokens to `tokens_used` and the header. text.html gained three anchors (plain, mono `sm`, muted done), recorded in `reference-contract.test.ts`'s `INTENDED_ROOT_CHANGES`; the Linux visual baselines for text's reference will therefore differ, intentionally. Tests: new `tests/primitives/text-link.test.ts` (13 cases, 11 red on the old tree: the rule and its declarations, no colour/face/size, no `--color-fg-subtle`, the focus rule equal to link.css's, link and focus tokens only, before the done rule, no `[href]` selector, headings untouched, template, tokens, notes, changes, reference) and two Chromium cases in `variant-consistency.pw.ts` (computed underline at 1px in the text's own colour for default, mono, muted and primary, same colour/face/size as the non-anchor twin, an anchor without href and a `<span>` not underlined, a done link `line-through`; the focus ring equal to the link primitive's. The first fails on the old stylesheet; the second is a guard, since the reset's `:focus-visible` already drew that ring). Regenerated on Bun 1.3.8 in the documented order: `build:registry-index`, `gen:skill` (primitives.md), `gen:bindings` (no diff: primitive bindings read `anatomy.tag`, not templates, so `LText` still renders a `<p>`), `build:core-package` (`cdn.json` re-hashed the 27 theme bundles), `build:docs`. All 13 `check:*` / `audit:registry` / `size` gates and `typecheck` green; `faqir audit --stdin` on text.html clean; `bun run test` 7,811 pass / 0 fail. `overflow-wrap.test.ts` pinned text's *current* version at 1.1.2; it now asserts the 1.1.2 `changes` entry only. No engine or controller change.)
+- [x] Downstream `indirect:` text-link patch and the matching `diff-view`/`form-block` rules can be dropped. (The `a[data-ui="text"][href]` patch in `text.css` is superseded: same three `--link-*` tokens, on `:any-link`, with the underline in `currentColor` at rest instead of a faint colour that darkens on hover. Row 28 of the un-patch checklist already names it. Two parts stay downstream's own: `diff-view` and `form-block` are its components, so their copies go only where the link is an `<a data-ui="text">` (it then inherits this rule); and the patch's second selector, a `text` child of an `a[data-ui="cluster"][href]`, is not covered here, because the anchor there is the cluster, not the text.)
 
 ### 1.1F-19 · `--mono-ligatures` token
 
@@ -1289,7 +1289,7 @@ patch. That is why 1.1F-12/16/20 (tabs, collapsible, stack, grid, text, table) a
 | 23, 32 | nothing yet (Search button), op picker built as a dialog (can stay) | 10 |
 | 24 | pointer buttons without `data-size` in `pages/editor.html` | 17 |
 | 25, 26, 27 | `indirect:` patches in `stack.css`, `grid.css`, `text.css`, `breadcrumb.css`, `table.css`, and the hand-edited `faqir.bundle.css` | 16 |
-| 28 | `indirect:` text-link patch in `text.css`; matching rules in `diff-view`/`form-block` | 18 |
+| 28 | `indirect:` text-link patch in `text.css`; matching rules in `diff-view`/`form-block` where the link is an `<a data-ui="text">`. Keep the rule for a `text` inside `a[data-ui="cluster"][href]`: the anchor there is the cluster | 18 |
 | 29 | the `finding` loop-variable rename in `pages/editor.html` | 05 |
 | 31 | `:style` moved to the enclosing section in `pages/namespace.html` | 04 |
 | 15 | the custom Try-it DOM builder (may stay; `buildForm` is an option) | 29, 30 |

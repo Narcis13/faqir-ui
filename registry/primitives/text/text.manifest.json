@@ -1,11 +1,16 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "text",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "kind": "primitive",
   "category": "typography",
   "description": "Text and heading primitives with size, color, weight, alignment, and truncation via data attributes",
   "changes": [
+    {
+      "version": "1.1.3",
+      "note": "An anchor carrying data-ui=\"text\" reads as a link. The reset takes every anchor's colour and underline away and text.css gave nothing back, so <a data-ui=\"text\" href> could not be told from the text beside it. A [data-ui=\"text\"]:any-link rule now draws the underline from the link tokens (--link-decoration, --link-thickness, --link-underline-offset) in currentColor, and a :focus-visible twin draws the focus ring. The text keeps its own colour, variant and size, so a table of mono id links does not turn primary; an anchor with no href and every non-anchor root are untouched, and data-state=\"done\" still strikes a link through. New html_link template. :any-link selects on no attribute, so nothing new is declared.",
+      "breaking": false
+    },
     {
       "version": "1.1.2",
       "note": "Headings and data-variant=\"mono\" text set overflow-wrap: anywhere, so a heading or mono run that is one unbreakable token (an id, a hash, a path) breaks instead of widening its flex or grid parent past the page. anywhere rather than break-word, because only anywhere lowers the min-content width a parent sizes the element by. Text with ordinary break opportunities wraps where it always did. Inside a table cell the table's own wrapping applies instead (table 3.2.1). data-truncate is unchanged.",
@@ -113,17 +118,23 @@
     }
   },
   "a11y": {
-    "keyboard": {}
+    "keyboard": {
+      "Enter": "Follows the link (anchor root with an href only)"
+    },
+    "notes": "The root may be an <a href> when the text itself is the link: an id, a ref, a version or a timestamp in a table or a list. It keeps the text's colour, variant and size and gains the theme's link underline and the focus ring. Without an href an anchor is not a link and is not styled as one. Link text must say where it goes. For a link in running prose, or one that should stand out in the primary colour, use data-ui=\"link\" instead."
   },
   "tokens_used": [
     "color-fg", "color-fg-muted", "color-primary", "color-destructive", "font-heading", "font-body",
     "font-mono", "heading-weight", "heading-tracking", "heading-transform", "heading-caps",
     "heading-leading", "text-xs", "text-sm", "text-base", "text-lg", "text-xl", "text-2xl",
     "text-3xl", "text-4xl", "weight-normal", "weight-medium", "weight-semibold", "weight-bold",
-    "leading-tight", "leading-snug", "leading-normal", "leading-relaxed"
+    "leading-tight", "leading-snug", "leading-normal", "leading-relaxed", "link-decoration",
+    "link-thickness", "link-underline-offset", "focus-ring-width", "focus-ring-style",
+    "focus-ring-color", "focus-ring-offset", "focus-shadow"
   ],
   "templates": {
-    "html": "<p data-ui=\"text\" data-size=\"{size}\" data-variant=\"{variant}\">{content}</p>"
+    "html": "<p data-ui=\"text\" data-size=\"{size}\" data-variant=\"{variant}\">{content}</p>",
+    "html_link": "<a data-ui=\"text\" data-size=\"{size}\" data-variant=\"{variant}\" href=\"{href}\">{content}</a>"
   },
   "safe_transforms": [
     "Change data-size to any listed value",
@@ -131,7 +142,8 @@
     "Change data-weight to any listed value",
     "Change data-align to any listed value",
     "Change text content",
-    "Add or remove data-truncate attribute"
+    "Add or remove data-truncate attribute",
+    "Make the root an <a href> when the text itself is the link"
   ],
   "unsafe_transforms": [
     "Remove data-ui attribute"
@@ -150,6 +162,7 @@
     "Text variants change color",
     "Weight attribute applies font-weight",
     "Alignment attribute sets text-align",
-    "Truncate attribute clips overflow"
+    "Truncate attribute clips overflow",
+    "Anchor root with an href is underlined in its own colour; a done link is struck through"
   ]
 }

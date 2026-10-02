@@ -8,6 +8,9 @@
  * Task 1.1F-17 adds button: what `aria-pressed="true"` computes to per variant
  * (and under the pointer, and in forced colors), and the box a link button
  * keeps when it also carries a size.
+ *
+ * Task 1.1F-18 adds text: what an anchor carrying `data-ui="text"` computes to —
+ * the underline it gets back from the reset, in the text's own colour.
  */
 
 import { expect, test, type Page } from "@playwright/test";
@@ -332,4 +335,93 @@ test("a link button with a size keeps the text's own box", async ({ page }) => {
   }
   expect((await box("link-sm")).fontSize).toBeLessThan((await box("link")).fontSize);
   expect((await box("link-lg")).fontSize).toBeGreaterThan((await box("link")).fontSize);
+});
+
+test("an anchor carrying data-ui=\"text\" is underlined in the text's own colour", async ({ page }) => {
+  await mount(
+    page,
+    `<p><a data-ui="text" href="#x" data-case="link">Linked</a>
+    <span data-ui="text" data-case="plain">Plain</span>
+    <a data-ui="text" data-variant="mono" data-size="sm" href="#x" data-case="mono-link">run-7f3a9c</a>
+    <span data-ui="text" data-variant="mono" data-size="sm" data-case="mono-plain">run-7f3a9c</span>
+    <a data-ui="text" data-variant="muted" href="#x" data-case="muted-link">Muted</a>
+    <span data-ui="text" data-variant="muted" data-case="muted-plain">Muted</span>
+    <a data-ui="text" data-variant="primary" href="#x" data-case="primary-link">Primary</a>
+    <span data-ui="text" data-variant="primary" data-case="primary-plain">Primary</span>
+    <a data-ui="text" data-case="no-href">No href</a>
+    <a data-ui="text" data-state="done" href="#x" data-case="done-link">Done</a></p>`,
+  );
+
+  const paint = (name: string) =>
+    page.locator(`[data-case="${name}"]`).evaluate((element) => {
+      const style = getComputedStyle(element);
+      return {
+        line: style.textDecorationLine,
+        decorationColor: style.textDecorationColor,
+        thickness: style.textDecorationThickness,
+        offset: style.textUnderlineOffset,
+        color: style.color,
+        fontFamily: style.fontFamily,
+        fontSize: style.fontSize,
+        cursor: style.cursor,
+      };
+    });
+
+  for (const variant of ["", "mono-", "muted-", "primary-"]) {
+    const link = await paint(`${variant}link`);
+    const plain = await paint(`${variant}plain`);
+    expect(link.line, `${variant}link is not underlined`).toBe("underline");
+    expect(link.thickness).toBe("1px");
+    expect(link.offset).not.toBe("auto");
+    expect(link.cursor).toBe("pointer");
+    // The link is the same text: its colour, face and size are the variant's.
+    expect(link.color, `${variant}link changed colour`).toBe(plain.color);
+    expect(link.decorationColor, `${variant}link underline is not its text colour`).toBe(link.color);
+    expect(link.fontFamily).toBe(plain.fontFamily);
+    expect(link.fontSize).toBe(plain.fontSize);
+    expect(plain.line, `${variant}plain gained an underline`).toBe("none");
+  }
+  // The variants really differ, so "same as plain" is not vacuous.
+  expect((await paint("muted-link")).color).not.toBe((await paint("link")).color);
+  expect((await paint("primary-link")).color).not.toBe((await paint("link")).color);
+
+  // An anchor with no href is not a link, and is not drawn as one.
+  const placeholder = await paint("no-href");
+  expect(placeholder.line).toBe("none");
+  expect(placeholder.cursor).not.toBe("pointer");
+
+  // A done link is struck through, not underlined.
+  expect((await paint("done-link")).line).toBe("line-through");
+});
+
+test("a linked text draws the focus ring on keyboard focus", async ({ page }) => {
+  await mount(
+    page,
+    `<p><a data-ui="text" href="#x" data-case="text-link">Linked</a>
+    <a data-ui="link" href="#x" data-case="link">Link</a></p>`,
+  );
+
+  const ring = () =>
+    page.evaluate(() => {
+      const style = getComputedStyle(document.activeElement as Element);
+      return {
+        focused: (document.activeElement as HTMLElement).dataset.case,
+        style: style.outlineStyle,
+        width: style.outlineWidth,
+        color: style.outlineColor,
+        offset: style.outlineOffset,
+      };
+    });
+
+  await page.keyboard.press("Tab");
+  const text = await ring();
+  await page.keyboard.press("Tab");
+  const link = await ring();
+
+  expect(text.focused).toBe("text-link");
+  expect(link.focused).toBe("link");
+  expect(text.style).toBe("solid");
+  expect(Number.parseFloat(text.width)).toBeGreaterThan(0);
+  // The same ring the link primitive draws.
+  expect({ ...text, focused: "" }).toEqual({ ...link, focused: "" });
 });

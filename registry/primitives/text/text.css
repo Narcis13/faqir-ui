@@ -1,5 +1,5 @@
 /* @ui:component text */
-/* @ui:tokens color-fg color-fg-muted color-primary color-destructive font-heading font-body font-mono heading-weight heading-tracking heading-transform heading-caps heading-leading text-xs text-sm text-base text-lg text-xl text-2xl text-3xl text-4xl weight-normal weight-medium weight-semibold weight-bold leading-tight leading-snug leading-normal leading-relaxed */
+/* @ui:tokens color-fg color-fg-muted color-primary color-destructive font-heading font-body font-mono heading-weight heading-tracking heading-transform heading-caps heading-leading text-xs text-sm text-base text-lg text-xl text-2xl text-3xl text-4xl weight-normal weight-medium weight-semibold weight-bold leading-tight leading-snug leading-normal leading-relaxed link-decoration link-thickness link-underline-offset focus-ring-width focus-ring-style focus-ring-color focus-ring-offset focus-shadow */
 
 /* ── Heading ── */
 [data-ui="heading"] {
@@ -111,6 +111,25 @@
 
 /* Destructive variant */
 [data-ui="text"][data-variant="destructive"] { color: var(--color-destructive); }
+
+/* Link — an anchor carrying data-ui="text". The reset takes every anchor's
+   colour and underline away; this hands the underline back and nothing else, so
+   an id or a ref in a table reads as a link in the text's own colour, variant
+   and size. `:any-link`, not `[href]`: it selects on no attribute. It sits
+   before the done state so a done link keeps its strikethrough. */
+[data-ui="text"]:any-link {
+  text-decoration-line: var(--link-decoration);
+  text-decoration-thickness: var(--link-thickness);
+  text-underline-offset: var(--link-underline-offset);
+  text-decoration-color: currentColor;
+  cursor: pointer;
+}
+
+[data-ui="text"]:any-link:focus-visible {
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+  box-shadow: var(--focus-shadow);
+}
 
 /* Done state */
 [data-ui="text"][data-state="done"] {
