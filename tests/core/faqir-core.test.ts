@@ -1940,6 +1940,88 @@ describe("Magic Properties", () => {
     });
   });
 
+  describe("$this [1.1F-06]", () => {
+    // Mounted into a disposable container, never `document.body` (AGENTS.md).
+    async function mount(html: string): Promise<HTMLElement> {
+      const box = document.createElement("div");
+      box.innerHTML = html;
+      document.body.appendChild(box);
+      Faqir.initTree(box.firstElementChild);
+      await tick();
+      return box;
+    }
+    function unmount(box: HTMLElement) {
+      Faqir.destroy(box);
+      box.remove();
+    }
+
+    it("is the directive element where $el is the scope root", async () => {
+      const box = await mount(`
+        <section l-data="{ mine: '', root: '' }">
+          <input l-init="mine = $this.tagName; root = $el.tagName" />
+          <span l-text="mine + '/' + root"></span>
+        </section>
+      `);
+      try {
+        expect(box.querySelector("span")!.textContent).toBe("INPUT/SECTION");
+      } finally {
+        unmount(box);
+      }
+    });
+
+    it("is the button in an @click handler", async () => {
+      const box = await mount(`
+        <div l-data="{ got: null }">
+          <button id="the-button" @click="got = $this"></button>
+          <span l-text="got && got.id"></span>
+        </div>
+      `);
+      try {
+        const button = box.querySelector("button")!;
+        button.click();
+        await tick();
+        expect(box.querySelector("span")!.textContent).toBe("the-button");
+      } finally {
+        unmount(box);
+      }
+    });
+
+    it("is the row element inside l-for, and the <template> in its list expression", async () => {
+      const box = await mount(`
+        <div l-data="{ seen: [], listOwner: '' }">
+          <ul><template l-for="n in (listOwner = $this.tagName, [1, 2])">
+            <li :data-n="n" @click="seen.push($this.dataset.n)"></li>
+          </template></ul>
+          <span l-text="listOwner + ':' + seen.join(',')"></span>
+        </div>
+      `);
+      try {
+        const items = box.querySelectorAll("li");
+        expect(items.length).toBe(2);
+        (items[1] as HTMLElement).click();
+        await tick();
+        expect(box.querySelector("span")!.textContent).toBe("TEMPLATE:2");
+      } finally {
+        unmount(box);
+      }
+    });
+
+    it("is the root in l-data, where $el keeps working", async () => {
+      const box = await mount(`
+        <div id="data-root" l-data="{ x: $el.id, y: $this.id }"><span l-text="x + '/' + y"></span></div>
+      `);
+      try {
+        expect(box.querySelector("span")!.textContent).toBe("data-root/data-root");
+      } finally {
+        unmount(box);
+      }
+    });
+
+    it("cannot be registered by Faqir.magic()", () => {
+      expect(() => Faqir.magic("this", () => null)).toThrow(/reserved/);
+    });
+  });
+
   describe("$refs", () => {
     it("provides access to ref'd elements", async () => {
       document.body.innerHTML = `

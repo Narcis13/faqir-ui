@@ -76,6 +76,12 @@ export interface Magics {
    * expression is written on. Every magic that walks the DOM starts here.
    */
   readonly $el: Element;
+  /**
+   * The element the directive is written on — the `<input>` carrying `l-init`,
+   * the button carrying `@click`. The root in `l-data` and a root's `l-init`;
+   * the `<template>` in `l-for`'s list and `l-key` expressions. [1.1F-06]
+   */
+  readonly $this: Element;
   /** The scope's `l-ref` elements, keyed by name. */
   readonly $refs: Record<string, Element>;
   /** Every store registered with `Faqir.store()`. */

@@ -213,7 +213,7 @@
   function evaluate(expression, scope, el) {
     try {
       const fn = compileExpression(expression);
-      return fn.call(scope, scope, el);
+      return fn.call(scope, scope, el, el);
     } catch (e) {
       /* @faqir:dev */ if (devHooks) { devHooks.expressionError('expression', expression, el, e); return undefined; }
       console.warn('[Faqir] Expression error: "' + expression + '"', e);
@@ -224,7 +224,7 @@
   function evaluateAssignment(expression, scope, el) {
     try {
       const fn = compileStatement(expression);
-      fn.call(scope, scope, el);
+      fn.call(scope, scope, el, el);
     } catch (e) {
       /* @faqir:dev */ if (devHooks) { devHooks.expressionError('statement', expression, el, e); return; }
       console.warn('[Faqir] Statement error: "' + expression + '"', e);
@@ -249,12 +249,17 @@
     }
   }
 
+  // `$el` and `$this` are both the element the directive is written on. Inside
+  // `with($scope)` the scope's own `$el` magic (the root) wins, so `$el` only
+  // reaches this parameter where nothing shadows it: a top-level `l-data`,
+  // evaluated against `{}`. `$this` is never a scope key, so it always reaches
+  // it. [1.1F-06]
   function compileExpression(expr) {
     var key = 'expr:' + expr;
     if (expressionCache.has(key)) return expressionCache.get(key);
 
     var fn = new Function(
-      '$scope', '$el',
+      '$scope', '$el', '$this',
       'with($scope) { return (' + expr + ') }'
     );
     expressionCache.set(key, fn);
@@ -266,7 +271,7 @@
     if (expressionCache.has(key)) return expressionCache.get(key);
 
     var fn = new Function(
-      '$scope', '$el',
+      '$scope', '$el', '$this',
       'with($scope) { ' + expr + ' }'
     );
     expressionCache.set(key, fn);
@@ -342,6 +347,7 @@
   // @ui:modifier l-source .key | Names the identity property, `id` by default: `.key.uuid`.
   //
   // @ui:magic $el | every expression | The scope ROOT — the element carrying `l-data`, not the element the expression is written on. Every magic that walks the DOM starts from here.
+  // @ui:magic $this | every expression | The element the directive is written on — the `<input>` carrying `l-init`, the button carrying `@click`. In `l-data` and a root's `l-init` it is the root; in `l-for`'s list and `l-key` expressions, the `<template>`. Not a scope key, so `Faqir.magic()` cannot shadow it.
   // @ui:magic $refs | every expression | The scope's `l-ref` elements, keyed by name. Cleared entry by entry as elements are destroyed.
   // @ui:magic $store | every expression | Every store registered with `Faqir.store()`.
   // @ui:magic $state | every expression | `data-state` of the `[data-ui]` closest to the scope root. Writable — assigning sets the attribute — and reads re-run when a controller changes it.
@@ -2989,7 +2995,10 @@
     data: function(name, factory) { dataRegistry.set(name, factory); },
     store: function(name, obj) { globalStores[name] = reactive(obj); },
     directive: function(name, handler) { customDirectives.set(name, handler); },
-    magic: function(name, callback) { customMagics.set(name, callback); },
+    magic: function(name, callback) {
+      if (name === 'this') throw new Error('[Faqir] "this" is reserved: $this is the directive element');
+      customMagics.set(name, callback);
+    },
     plugin: function(fn) { fn(Faqir); },
     controller: function(name, factory) { controllerRegistry[name] = factory; },
     start: bootstrap,

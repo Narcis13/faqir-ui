@@ -41,7 +41,8 @@ Notes that matter in practice:
   the walk stops at four levels deep with `"[Depth]"`.
 - **Magics are excluded.** `$el`, `$refs`, `$store`, `$state`, `$variant`, `$ui`,
   `$dispatch`, `$watch`, `$id` are non-enumerable and never appear — a snapshot
-  is the author's data, nothing else.
+  is the author's data, nothing else. `$this` is not on the scope at all: it is
+  a parameter of each compiled expression.
 - **Inspecting registers no reactive dependency.** Calling it inside or outside
   an effect never causes a re-run.
 - `controller.api` is the *same object* the component's controller returned, so

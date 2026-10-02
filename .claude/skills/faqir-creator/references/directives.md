@@ -102,6 +102,7 @@ Available on every scope without declaring them. They are non-enumerable, so `l-
 | Magic | Available in | What it is |
 |---|---|---|
 | `$el` | every expression | The scope ROOT — the element carrying `l-data`, not the element the expression is written on. Every magic that walks the DOM starts from here. |
+| `$this` | every expression | The element the directive is written on — the `<input>` carrying `l-init`, the button carrying `@click`. In `l-data` and a root's `l-init` it is the root; in `l-for`'s list and `l-key` expressions, the `<template>`. Not a scope key, so `Faqir.magic()` cannot shadow it. |
 | `$refs` | every expression | The scope's `l-ref` elements, keyed by name. Cleared entry by entry as elements are destroyed. |
 | `$store` | every expression | Every store registered with `Faqir.store()`. |
 | `$state` | every expression | `data-state` of the `[data-ui]` closest to the scope root. Writable — assigning sets the attribute — and reads re-run when a controller changes it. |

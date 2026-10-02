@@ -26,7 +26,7 @@ The short version:
 Every `l-*` expression is compiled once and cached:
 
 ```js
-new Function('$scope', '$el', 'with($scope) { return (' + expr + ') }')
+new Function('$scope', '$el', '$this', 'with($scope) { return (' + expr + ') }')
 ```
 
 That is a string compiled to a function, which is exactly what CSP's

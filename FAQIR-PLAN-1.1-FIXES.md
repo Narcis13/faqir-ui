@@ -108,7 +108,7 @@ wait for document order. Task 1.1F-32 releases the additive set; its version is 
 | 1.1F-03 | Inserted content: controllers start before `l-init` / first `l-effect` | 3 | patch | ✅ |
 | 1.1F-04 | `:style` / `:class` merge instead of replace | 31 | patch | ✅ |
 | 1.1F-05 | Methods keep their component's `this` when called from a row (+ dev warning) | 29 | patch | ✅ |
-| 1.1F-06 | `$this` magic — the element the directive is on | 2 | additive | ⬜ |
+| 1.1F-06 | `$this` magic — the element the directive is on | 2 | additive | ✅ |
 | 1.1F-07 | Drop the injected `l-cloak` style; CSP docs | 13 | patch | ⬜ |
 
 ### Lane C — Recipe controllers
@@ -451,9 +451,9 @@ directive element as `$el`, but the scope's `$el` magic (the root, 660) is found
 - The types drift test passes with `readonly $this: Element`.
 
 **Acceptance**
-- [ ] `@ui:magic $this | every expression | The element the directive is written on…`; `gen:skill` + `check:skill`.
-- [ ] README magics list, `security.md` (the `new Function` signature), `devtools.md` updated; `check:docs`.
-- [ ] `build:core`, `build:core-package`, size.
+- [x] `@ui:magic $this | every expression | The element the directive is written on…`; `gen:skill` + `check:skill`. (The line also names what `$this` is in `l-data`, a root's `l-init` and `l-for`'s list/`l-key` expressions, and that it is not a scope key. `gen:skill` rewrote `references/directives.md`; `check:skill` green. `Magics` in `faqir-core.d.ts` gained `readonly $this: Element`; `faqir-core-types.test.ts` passes unchanged. `Faqir.magic('this')` throws `"this" is reserved`.)
+- [x] README magics list, `security.md` (the `new Function` signature), `devtools.md` updated; `check:docs`. (README now contrasts `$el` (scope root) with `$this` (`<input l-init="$this.focus()">`); `security.md` shows the three-parameter `new Function`; `devtools.md` notes `$this` is a compiled-function parameter, not on the scope. `check:docs` green after a local `build:docs`.)
+- [x] `build:core`, `build:core-package`, size. (All under Bun 1.3.8. Both evaluators call `fn.call(scope, scope, el, el)`; the `$el` parameter stays, so a top-level `l-data="{ x: $el.id }"` still works. Five tests in `faqir-core.test.ts` `$this [1.1F-06]`, mounted in a container: `<input>` vs `<section>` in `l-init`, the button in `@click`, the row element in an `l-for` handler and the `<template>` in its list expression, `l-data` with `$el`/`$this`, and `Faqir.magic('this')`. Size: engine 11.06 → 11.10 KB, engine+controllers 45.50 → 45.55 / 46 KB gzip. `check:core-package`, `check:docs`, `check:registry-index`, `check:bindings`, `check:audit-browser`, `check:rules-plugin` green.)
 
 ### 1.1F-07 · Drop the injected `l-cloak` style; CSP docs
 

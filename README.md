@@ -733,8 +733,10 @@ Event modifiers: `.prevent` `.stop` `.self` `.once` `.capture` `.passive`
 `.window` `.document` `.debounce300ms` `.throttle100ms`, plus key aliases such
 as `@keydown.enter` and `@keydown.escape.window`.
 
-Magics: `$el` `$refs` `$store` `$state` `$variant` `$ui` `$dispatch`
-`$nextTick` `$watch` `$id`, and `$event` inside `l-on`. `$ui` is the enclosing
+Magics: `$el` `$this` `$refs` `$store` `$state` `$variant` `$ui` `$dispatch`
+`$nextTick` `$watch` `$id`, and `$event` inside `l-on`. `$el` is the scope root
+(the `l-data` element); `$this` is the element the directive is written on, so
+`<input l-init="$this.focus()">` focuses the input. `$ui` is the enclosing
 component's controller (`$ui.open()`) and is callable to reach another's
 (`$ui('#detail-drawer').open()`).
 
