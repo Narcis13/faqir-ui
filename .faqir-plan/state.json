@@ -67,7 +67,7 @@
     {
       "id": "1.1F-11",
       "completed": "2026-10-02",
-      "commit": "",
+      "commit": "d8617e0",
       "summary": "Sidebar trigger glyph follows the state: sidebar.css mirrors `[data-part=\"trigger\"] > :is(svg,[data-ui=\"icon\"])` with `scale: -1 1` in rail (transition + reduced-motion fallback); both canonical examples use the left chevron and one stable aria-label \"Toggle sidebar\" (APG: an aria-expanded button keeps its name). Manifest 1.1.1 (trigger slot description, a11y note, changes). sidebar.test.ts +4; new tests/browser/sidebar-rail.pw.ts reads computed scale in Chromium through a real click. All 48 sidebar visual cases match HEAD baselines locally. No controller change, no size change."
     }
   ],
