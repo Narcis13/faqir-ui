@@ -11,8 +11,16 @@
   font-family: var(--doc-font, var(--font-body));
 }
 
+/* A label or value is the list's child, or the child of a plain <div> that
+   groups one pair (HTML allows `dl > div > dt + dd`). Never a descendant
+   further down: `label` is a common part name, and a progress bar in a value
+   used to take this list's label size and weight. The <div> hop is `:where()`,
+   so both shapes weigh the same, and `:not([data-ui])` keeps a component out
+   of the grouping role. [1.1F-20] */
+
 /* ── Label ── */
-[data-ui="key-value"] [data-part="label"] {
+[data-ui="key-value"] > [data-part="label"],
+[data-ui="key-value"] > :where(div:not([data-ui])) > [data-part="label"] {
   font-size: var(--kv-label-size);
   font-weight: var(--kv-label-weight);
   color: var(--kv-label-color);
@@ -28,7 +36,8 @@
    than a phone window and every later row bleeds with it. `anywhere` (not
    `break-word`, which is ignored when min-content is computed) lets the track
    floor drop, and `min-inline-size: 0` removes the grid item's own floor. */
-[data-ui="key-value"] [data-part="value"] {
+[data-ui="key-value"] > [data-part="value"],
+[data-ui="key-value"] > :where(div:not([data-ui])) > [data-part="value"] {
   font-size: var(--kv-value-size);
   font-weight: var(--kv-value-weight);
   color: var(--kv-value-color);
@@ -47,8 +56,10 @@
   align-items: baseline;
 }
 
-[data-ui="key-value"][data-variant="horizontal"] [data-part="value"],
-[data-ui="key-value"]:not([data-variant]) [data-part="value"] {
+[data-ui="key-value"][data-variant="horizontal"] > [data-part="value"],
+[data-ui="key-value"][data-variant="horizontal"] > :where(div:not([data-ui])) > [data-part="value"],
+[data-ui="key-value"]:not([data-variant]) > [data-part="value"],
+[data-ui="key-value"]:not([data-variant]) > :where(div:not([data-ui])) > [data-part="value"] {
   text-align: end;
 }
 
@@ -59,7 +70,8 @@
   gap: var(--kv-pair-gap);
 }
 
-[data-ui="key-value"][data-variant="vertical"] [data-part="label"] {
+[data-ui="key-value"][data-variant="vertical"] > [data-part="label"],
+[data-ui="key-value"][data-variant="vertical"] > :where(div:not([data-ui])) > [data-part="label"] {
   margin-bottom: calc(-1 * var(--kv-gap));
 }
 
@@ -72,11 +84,13 @@
   align-items: baseline;
 }
 
-[data-ui="key-value"][data-variant="inline"] [data-part="label"]::after {
+[data-ui="key-value"][data-variant="inline"] > [data-part="label"]::after,
+[data-ui="key-value"][data-variant="inline"] > :where(div:not([data-ui])) > [data-part="label"]::after {
   content: ":";
 }
 
-[data-ui="key-value"][data-variant="inline"] [data-part="value"] {
+[data-ui="key-value"][data-variant="inline"] > [data-part="value"],
+[data-ui="key-value"][data-variant="inline"] > :where(div:not([data-ui])) > [data-part="value"] {
   margin-inline-end: var(--kv-grid-gap);
 }
 
@@ -102,7 +116,8 @@
   align-items: baseline;
 }
 
-[data-ui="key-value"][data-cols] [data-part="value"] {
+[data-ui="key-value"][data-cols] > [data-part="value"],
+[data-ui="key-value"][data-cols] > :where(div:not([data-ui])) > [data-part="value"] {
   text-align: end;
 }
 
@@ -111,8 +126,10 @@
   gap: var(--space-1) var(--space-2);
 }
 
-[data-ui="key-value"][data-size="sm"] [data-part="label"],
-[data-ui="key-value"][data-size="sm"] [data-part="value"] {
+[data-ui="key-value"][data-size="sm"] > [data-part="label"],
+[data-ui="key-value"][data-size="sm"] > :where(div:not([data-ui])) > [data-part="label"],
+[data-ui="key-value"][data-size="sm"] > [data-part="value"],
+[data-ui="key-value"][data-size="sm"] > :where(div:not([data-ui])) > [data-part="value"] {
   font-size: var(--text-xs);
 }
 
@@ -121,11 +138,13 @@
   gap: var(--kv-pair-gap) var(--kv-grid-gap);
 }
 
-[data-ui="key-value"][data-size="lg"] [data-part="label"] {
+[data-ui="key-value"][data-size="lg"] > [data-part="label"],
+[data-ui="key-value"][data-size="lg"] > :where(div:not([data-ui])) > [data-part="label"] {
   font-size: var(--text-sm);
 }
 
-[data-ui="key-value"][data-size="lg"] [data-part="value"] {
+[data-ui="key-value"][data-size="lg"] > [data-part="value"],
+[data-ui="key-value"][data-size="lg"] > :where(div:not([data-ui])) > [data-part="value"] {
   font-size: var(--text-base, 1rem);
 }
 

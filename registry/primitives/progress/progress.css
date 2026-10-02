@@ -10,8 +10,12 @@
   min-inline-size: 0;
 }
 
+/* Child combinators: `label` is a common part name, and a descendant rule
+   would style the label of whatever a bespoke progress indicator nests. The
+   `track` hop is `:where()` so the fill rules keep their specificity. [1.1F-20] */
+
 /* ── Track ── */
-[data-ui="progress"] [data-part="track"] {
+[data-ui="progress"] > [data-part="track"] {
   flex: 1;
   min-inline-size: 0;
   height: 0.5rem;
@@ -21,7 +25,7 @@
 }
 
 /* ── Fill ── */
-[data-ui="progress"] [data-part="fill"] {
+[data-ui="progress"] > :where([data-part="track"]) > [data-part="fill"] {
   height: 100%;
   background: var(--color-primary);
   border-radius: var(--radius-full);
@@ -29,29 +33,29 @@
 }
 
 /* ── Variants ── */
-[data-ui="progress"][data-variant="success"] [data-part="fill"] {
+[data-ui="progress"][data-variant="success"] > :where([data-part="track"]) > [data-part="fill"] {
   background: var(--color-success);
 }
 
-[data-ui="progress"][data-variant="warning"] [data-part="fill"] {
+[data-ui="progress"][data-variant="warning"] > :where([data-part="track"]) > [data-part="fill"] {
   background: var(--color-warning);
 }
 
-[data-ui="progress"][data-variant="destructive"] [data-part="fill"] {
+[data-ui="progress"][data-variant="destructive"] > :where([data-part="track"]) > [data-part="fill"] {
   background: var(--color-destructive);
 }
 
 /* ── Sizes ── */
-[data-ui="progress"][data-size="sm"] [data-part="track"] {
+[data-ui="progress"][data-size="sm"] > [data-part="track"] {
   height: 0.25rem;
 }
 
-[data-ui="progress"][data-size="lg"] [data-part="track"] {
+[data-ui="progress"][data-size="lg"] > [data-part="track"] {
   height: 0.75rem;
 }
 
 /* ── Label ── */
-[data-ui="progress"] [data-part="label"] {
+[data-ui="progress"] > [data-part="label"] {
   flex: 0 0 auto;
   font-size: var(--text-sm);
   color: var(--color-fg-muted);
@@ -62,7 +66,7 @@
 
 /* ── Reduced Motion ── */
 @media (prefers-reduced-motion: reduce) {
-  [data-ui="progress"] [data-part="fill"] {
+  [data-ui="progress"] > :where([data-part="track"]) > [data-part="fill"] {
     transition: none;
   }
 }
@@ -73,14 +77,14 @@
    the one element here that MUST keep a colour, so it opts out of the
    substitution and paints `Highlight`; the track keeps a visible boundary. [W3-3] */
 @media (forced-colors: active) {
-  [data-ui="progress"] [data-part="track"] {
+  [data-ui="progress"] > [data-part="track"] {
     border: var(--border-width) solid ButtonText;
   }
 
-  [data-ui="progress"] [data-part="fill"],
-  [data-ui="progress"][data-variant="success"] [data-part="fill"],
-  [data-ui="progress"][data-variant="warning"] [data-part="fill"],
-  [data-ui="progress"][data-variant="destructive"] [data-part="fill"] {
+  [data-ui="progress"] > :where([data-part="track"]) > [data-part="fill"],
+  [data-ui="progress"][data-variant="success"] > :where([data-part="track"]) > [data-part="fill"],
+  [data-ui="progress"][data-variant="warning"] > :where([data-part="track"]) > [data-part="fill"],
+  [data-ui="progress"][data-variant="destructive"] > :where([data-part="track"]) > [data-part="fill"] {
     forced-color-adjust: none;
     background: Highlight;
   }

@@ -381,7 +381,7 @@ Styled description list (dl/dt/dd) for longer descriptive key-value content
 ```text
 [data-ui='description-list']  ·  <dl> · content: slots
 ├─ [data-part='term']  <dt>  required  — The term or key (dt element)
-└─ [data-part='details']  <dd>  required  — The description or value (dd element)
+└─ [data-part='details']  <dd>  required  — The description or value (dd element). A nested text should omit data-size so it inherits the list's size
 ```
 
 **Variants**

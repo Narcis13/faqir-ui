@@ -13,8 +13,15 @@
   line-height: var(--doc-line-height, 1.5);
 }
 
+/* Parts are reached by child combinators: a callout nested in another's
+   content keeps its own icon colour (a warning used to recolour the icon of
+   an info callout inside it), and so does any component with an `icon` or a
+   `title`. The `content` hop before the title is `:where()` so the rule keeps
+   its specificity. Paragraph spacing stays a descendant rule on purpose: it
+   targets prose, not a part. [1.1F-20] */
+
 /* ── Icon ── */
-[data-ui="callout"] [data-part="icon"] {
+[data-ui="callout"] > [data-part="icon"] {
   flex-shrink: 0;
   display: flex;
   align-items: flex-start;
@@ -23,21 +30,21 @@
 }
 
 /* ── Content ── */
-[data-ui="callout"] [data-part="content"] {
+[data-ui="callout"] > [data-part="content"] {
   flex: 1;
   min-width: 0;
 }
 
-[data-ui="callout"] [data-part="content"] p {
+[data-ui="callout"] > [data-part="content"] p {
   margin: 0;
 }
 
-[data-ui="callout"] [data-part="content"] p + p {
+[data-ui="callout"] > [data-part="content"] p + p {
   margin-top: var(--space-2, 0.5rem);
 }
 
 /* ── Title ── */
-[data-ui="callout"] [data-part="title"] {
+[data-ui="callout"] > :where([data-part="content"]) > [data-part="title"] {
   display: block;
   font-family: var(--font-heading);
   font-weight: var(--weight-semibold);
@@ -45,7 +52,7 @@
 }
 
 /* ── Dismiss (optional close button) ── */
-[data-ui="callout"] [data-part="dismiss"] {
+[data-ui="callout"] > [data-part="dismiss"] {
   flex-shrink: 0;
   align-self: flex-start;
   margin-inline-start: auto;
@@ -61,11 +68,11 @@
   cursor: pointer;
 }
 
-[data-ui="callout"] [data-part="dismiss"]:hover {
+[data-ui="callout"] > [data-part="dismiss"]:hover {
   opacity: 1;
 }
 
-[data-ui="callout"] [data-part="dismiss"]:focus-visible {
+[data-ui="callout"] > [data-part="dismiss"]:focus-visible {
   outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
   outline-offset: var(--focus-ring-offset);
   box-shadow: var(--focus-shadow);
@@ -80,8 +87,8 @@
   color: var(--callout-fg);
 }
 
-[data-ui="callout"][data-variant="info"] [data-part="icon"],
-[data-ui="callout"]:not([data-variant]) [data-part="icon"] {
+[data-ui="callout"][data-variant="info"] > [data-part="icon"],
+[data-ui="callout"]:not([data-variant]) > [data-part="icon"] {
   color: var(--color-info, oklch(0.55 0.18 240));
 }
 
@@ -92,7 +99,7 @@
   color: var(--callout-fg);
 }
 
-[data-ui="callout"][data-variant="warning"] [data-part="icon"] {
+[data-ui="callout"][data-variant="warning"] > [data-part="icon"] {
   color: var(--color-warning, oklch(0.72 0.17 70));
 }
 
@@ -103,7 +110,7 @@
   color: var(--callout-fg);
 }
 
-[data-ui="callout"][data-variant="destructive"] [data-part="icon"] {
+[data-ui="callout"][data-variant="destructive"] > [data-part="icon"] {
   color: var(--color-destructive, oklch(0.58 0.22 27));
 }
 
@@ -114,7 +121,7 @@
   color: var(--callout-fg);
 }
 
-[data-ui="callout"][data-variant="success"] [data-part="icon"] {
+[data-ui="callout"][data-variant="success"] > [data-part="icon"] {
   color: var(--color-success, oklch(0.62 0.19 145));
 }
 
@@ -127,7 +134,7 @@
   color: var(--color-fg-muted);
 }
 
-[data-ui="callout"][data-variant="muted"] [data-part="icon"] {
+[data-ui="callout"][data-variant="muted"] > [data-part="icon"] {
   color: var(--color-fg-muted);
 }
 
@@ -147,7 +154,7 @@
   }
 
   /* Interactive dismiss control is meaningless on paper. */
-  [data-ui="callout"] [data-part="dismiss"] {
+  [data-ui="callout"] > [data-part="dismiss"] {
     display: none;
   }
 }

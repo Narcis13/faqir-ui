@@ -117,7 +117,7 @@ describe("description-list — the horizontal details track may shrink", () => {
   it("records the change in its manifest", () => {
     const m = manifest("primitives", "description-list");
     expect(validateManifest(m)).toEqual([]);
-    expect(m.version).toBe("1.0.1");
+    // The entry, not the current version: 1.1F-20 took the manifest to 1.0.2.
     const entry = (m.changes ?? []).find((c) => c.version === "1.0.1");
     expect(entry?.breaking).toBe(false);
     expect(entry?.note).toContain("minmax(0, 1fr)");

@@ -11,15 +11,19 @@
   gap: var(--space-3);
 }
 
+/* Child combinators: `icon`, `title` and `description` are part names half
+   the registry shares, and a descendant rule here restyled the title of a
+   callout or a card placed inside the empty state. [1.1F-20] */
+
 /* ── Icon ── */
-[data-ui="empty-state"] [data-part="icon"] {
+[data-ui="empty-state"] > [data-part="icon"] {
   font-size: var(--text-3xl);
   color: var(--color-fg-subtle);
   line-height: 1;
 }
 
 /* ── Title ── */
-[data-ui="empty-state"] [data-part="title"] {
+[data-ui="empty-state"] > [data-part="title"] {
   font-family: var(--font-heading);
   font-size: var(--text-lg);
   font-weight: var(--weight-medium);
@@ -27,7 +31,7 @@
 }
 
 /* ── Description ── */
-[data-ui="empty-state"] [data-part="description"] {
+[data-ui="empty-state"] > [data-part="description"] {
   font-size: var(--text-sm);
   color: var(--color-fg-muted);
   max-width: 40ch;
@@ -39,7 +43,7 @@
    window symmetrically, past BOTH edges, and the inline-start half is
    unreachable at any scroll position. Wrapping is the whole fix; the ceiling
    keeps a single very wide button honest too. */
-[data-ui="empty-state"] [data-part="actions"] {
+[data-ui="empty-state"] > [data-part="actions"] {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -54,14 +58,14 @@
   gap: var(--space-2);
 }
 
-[data-ui="empty-state"][data-size="sm"] [data-part="icon"] {
+[data-ui="empty-state"][data-size="sm"] > [data-part="icon"] {
   font-size: var(--text-xl);
 }
 
-[data-ui="empty-state"][data-size="sm"] [data-part="title"] {
+[data-ui="empty-state"][data-size="sm"] > [data-part="title"] {
   font-size: var(--text-sm);
 }
 
-[data-ui="empty-state"][data-size="sm"] [data-part="description"] {
+[data-ui="empty-state"][data-size="sm"] > [data-part="description"] {
   font-size: var(--text-xs);
 }

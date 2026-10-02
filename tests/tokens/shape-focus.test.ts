@@ -338,7 +338,7 @@ describe("shape & focus · the registry consumes the families, never a literal",
       // The active tab's underline.
       [
         "recipes/tabs/tabs.css",
-        `[data-ui="tabs"][data-variant="underline"] [data-part="trigger"]`,
+        `[data-ui="tabs"][data-variant="underline"] > :where([data-part="list"]) > [data-part="trigger"]`,
         "border-bottom",
       ],
       // The stepper's markers: the rule between two steps is a rule, drawn as a
@@ -635,7 +635,7 @@ describe("shape & focus · recipes and patterns resolve to the same edge", () =>
     // recipes
     [
       "recipes/accordion/accordion.css",
-      `[data-ui="accordion"] [data-part="item"]`,
+      `[data-ui="accordion"] > [data-part="item"]`,
       "border-bottom",
       "1px",
     ],
@@ -650,7 +650,7 @@ describe("shape & focus · recipes and patterns resolve to the same edge", () =>
     ["recipes/table/table.css", `[data-ui="table"] [data-part="td"]`, "border-bottom", "1px"],
     [
       "recipes/tabs/tabs.css",
-      `[data-ui="tabs"][data-variant="underline"] [data-part="trigger"]`,
+      `[data-ui="tabs"][data-variant="underline"] > :where([data-part="list"]) > [data-part="trigger"]`,
       "border-bottom",
       "2px",
     ],
@@ -732,7 +732,7 @@ describe("shape & focus · recipes and patterns resolve to the same edge", () =>
     d.head.innerHTML = `<style>
       ${TOKEN_FILES.map(read).map(shimColors).join("\n")}
       :root { --border-width-sm: 4px; --border-width-md: 6px; --border-width-lg: 8px; }
-      #a { border-top: ${widthSlot(declaration("recipes/accordion/accordion.css", `[data-ui="accordion"] [data-part="item"]`, "border-bottom"))} solid #cccccc; }
+      #a { border-top: ${widthSlot(declaration("recipes/accordion/accordion.css", `[data-ui="accordion"] > [data-part="item"]`, "border-bottom"))} solid #cccccc; }
       #b { border-top: ${widthSlot(declaration("recipes/table/table.css", `[data-ui="table"] [data-part="th"]`, "border-bottom"))} solid #cccccc; }
       #c { border-top: ${widthSlot(declaration("recipes/toast/toast.css", `[data-ui="toast"] [data-part="toast"][data-variant="success"]`, "border-inline-start"))} solid #cccccc; }
       #d { border-top: ${widthSlot(declaration("base/prose.css", `[data-ui="prose"] blockquote`, "border-inline-start"))} solid #cccccc; }
@@ -760,7 +760,12 @@ describe("shape & focus · recipes and patterns resolve to the same edge", () =>
         "recipes/tree-view/tree-view.css",
         `[data-ui="tree-view"] [data-part="item"]:focus-visible > [data-part="label"]`,
       ],
-      ["recipes/accordion/accordion.css", `[data-ui="accordion"] [data-part="trigger"]:focus-visible`],
+      // The whole prelude: a trigger is its item's child, or a heading's (1.1F-20).
+      [
+        "recipes/accordion/accordion.css",
+        `[data-ui="accordion"] > :where([data-part="item"]) > [data-part="trigger"]:focus-visible, ` +
+          `[data-ui="accordion"] > :where([data-part="item"]) > :where(h1, h2, h3, h4, h5, h6) > [data-part="trigger"]:focus-visible`,
+      ],
     ] as const;
     for (const [rel, selector] of RINGS) {
       const value = declaration(rel, selector, "outline");

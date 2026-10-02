@@ -8,8 +8,15 @@
   font-family: var(--doc-font, var(--font-body));
 }
 
+/* A term or details is the list's child, or the child of a plain <div> that
+   groups one pair (HTML allows `dl > div > dt + dd`). Never a descendant
+   further down: a list nested in a <dd> is its own, and a `sm` list used to
+   shrink it too. The <div> hop is `:where()`, so both shapes weigh the same,
+   and `:not([data-ui])` keeps a component out of the grouping role. [1.1F-20] */
+
 /* ── Term ── */
-[data-ui="description-list"] [data-part="term"] {
+[data-ui="description-list"] > [data-part="term"],
+[data-ui="description-list"] > :where(div:not([data-ui])) > [data-part="term"] {
   font-size: var(--text-sm);
   font-weight: var(--weight-semibold);
   color: var(--color-fg);
@@ -18,7 +25,8 @@
 }
 
 /* ── Details ── */
-[data-ui="description-list"] [data-part="details"] {
+[data-ui="description-list"] > [data-part="details"],
+[data-ui="description-list"] > :where(div:not([data-ui])) > [data-part="details"] {
   font-size: var(--text-sm);
   color: var(--color-fg-muted);
   margin: 0;
@@ -34,18 +42,24 @@
   gap: var(--space-4);
 }
 
-[data-ui="description-list"][data-variant="vertical"] [data-part="term"],
-[data-ui="description-list"]:not([data-variant]) [data-part="term"] {
+[data-ui="description-list"][data-variant="vertical"] > [data-part="term"],
+[data-ui="description-list"][data-variant="vertical"] > :where(div:not([data-ui])) > [data-part="term"],
+[data-ui="description-list"]:not([data-variant]) > [data-part="term"],
+[data-ui="description-list"]:not([data-variant]) > :where(div:not([data-ui])) > [data-part="term"] {
   margin-bottom: var(--space-1, 0.25rem);
 }
 
-[data-ui="description-list"][data-variant="vertical"] [data-part="details"],
-[data-ui="description-list"]:not([data-variant]) [data-part="details"] {
+[data-ui="description-list"][data-variant="vertical"] > [data-part="details"],
+[data-ui="description-list"][data-variant="vertical"] > :where(div:not([data-ui])) > [data-part="details"],
+[data-ui="description-list"]:not([data-variant]) > [data-part="details"],
+[data-ui="description-list"]:not([data-variant]) > :where(div:not([data-ui])) > [data-part="details"] {
   margin-bottom: var(--space-4);
 }
 
-[data-ui="description-list"][data-variant="vertical"] [data-part="details"]:last-child,
-[data-ui="description-list"]:not([data-variant]) [data-part="details"]:last-child {
+[data-ui="description-list"][data-variant="vertical"] > [data-part="details"]:last-child,
+[data-ui="description-list"][data-variant="vertical"] > :where(div:not([data-ui])) > [data-part="details"]:last-child,
+[data-ui="description-list"]:not([data-variant]) > [data-part="details"]:last-child,
+[data-ui="description-list"]:not([data-variant]) > :where(div:not([data-ui])) > [data-part="details"]:last-child {
   margin-bottom: 0;
 }
 
@@ -58,20 +72,26 @@
 }
 
 /* ── Divided ── */
-[data-ui="description-list"][data-divided][data-variant="vertical"] [data-part="details"],
-[data-ui="description-list"][data-divided]:not([data-variant]) [data-part="details"] {
+[data-ui="description-list"][data-divided][data-variant="vertical"] > [data-part="details"],
+[data-ui="description-list"][data-divided][data-variant="vertical"] > :where(div:not([data-ui])) > [data-part="details"],
+[data-ui="description-list"][data-divided]:not([data-variant]) > [data-part="details"],
+[data-ui="description-list"][data-divided]:not([data-variant]) > :where(div:not([data-ui])) > [data-part="details"] {
   padding-bottom: var(--space-4);
   border-bottom: var(--border-width) solid var(--color-border);
 }
 
-[data-ui="description-list"][data-divided][data-variant="vertical"] [data-part="details"]:last-child,
-[data-ui="description-list"][data-divided]:not([data-variant]) [data-part="details"]:last-child {
+[data-ui="description-list"][data-divided][data-variant="vertical"] > [data-part="details"]:last-child,
+[data-ui="description-list"][data-divided][data-variant="vertical"] > :where(div:not([data-ui])) > [data-part="details"]:last-child,
+[data-ui="description-list"][data-divided]:not([data-variant]) > [data-part="details"]:last-child,
+[data-ui="description-list"][data-divided]:not([data-variant]) > :where(div:not([data-ui])) > [data-part="details"]:last-child {
   border-bottom: none;
   padding-bottom: 0;
 }
 
-[data-ui="description-list"][data-divided][data-variant="horizontal"] [data-part="term"],
-[data-ui="description-list"][data-divided][data-variant="horizontal"] [data-part="details"] {
+[data-ui="description-list"][data-divided][data-variant="horizontal"] > [data-part="term"],
+[data-ui="description-list"][data-divided][data-variant="horizontal"] > :where(div:not([data-ui])) > [data-part="term"],
+[data-ui="description-list"][data-divided][data-variant="horizontal"] > [data-part="details"],
+[data-ui="description-list"][data-divided][data-variant="horizontal"] > :where(div:not([data-ui])) > [data-part="details"] {
   padding-bottom: var(--space-3);
   border-bottom: var(--border-width) solid var(--color-border);
 }
@@ -81,11 +101,13 @@
   gap: var(--space-2);
 }
 
-[data-ui="description-list"][data-size="sm"] [data-part="term"] {
+[data-ui="description-list"][data-size="sm"] > [data-part="term"],
+[data-ui="description-list"][data-size="sm"] > :where(div:not([data-ui])) > [data-part="term"] {
   font-size: var(--text-xs);
 }
 
-[data-ui="description-list"][data-size="sm"] [data-part="details"] {
+[data-ui="description-list"][data-size="sm"] > [data-part="details"],
+[data-ui="description-list"][data-size="sm"] > :where(div:not([data-ui])) > [data-part="details"] {
   font-size: var(--text-xs);
 }
 
@@ -94,11 +116,13 @@
   gap: var(--space-6);
 }
 
-[data-ui="description-list"][data-size="lg"] [data-part="term"] {
+[data-ui="description-list"][data-size="lg"] > [data-part="term"],
+[data-ui="description-list"][data-size="lg"] > :where(div:not([data-ui])) > [data-part="term"] {
   font-size: var(--text-base, 1rem);
 }
 
-[data-ui="description-list"][data-size="lg"] [data-part="details"] {
+[data-ui="description-list"][data-size="lg"] > [data-part="details"],
+[data-ui="description-list"][data-size="lg"] > :where(div:not([data-ui])) > [data-part="details"] {
   font-size: var(--text-base, 1rem);
 }
 

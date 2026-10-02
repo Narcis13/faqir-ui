@@ -8,8 +8,13 @@
   color: var(--color-fg);
 }
 
+/* Child combinators throughout: <summary> is always a direct child of its
+   <details>, and a collapsible nested in the content keeps its own trigger —
+   the `[open]` rule below used to rotate the chevron of a closed one inside
+   an open one. [1.1F-20] */
+
 /* ── Trigger — the <summary> ── */
-[data-ui="collapsible"] [data-part="trigger"] {
+[data-ui="collapsible"] > [data-part="trigger"] {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -25,22 +30,22 @@
 }
 
 /* Strip the native disclosure marker (WebKit + standard list-item marker) */
-[data-ui="collapsible"] [data-part="trigger"]::-webkit-details-marker {
+[data-ui="collapsible"] > [data-part="trigger"]::-webkit-details-marker {
   display: none;
 }
 
-[data-ui="collapsible"] [data-part="trigger"]:hover {
+[data-ui="collapsible"] > [data-part="trigger"]:hover {
   background: var(--color-bg-subtle);
 }
 
-[data-ui="collapsible"] [data-part="trigger"]:focus-visible {
+[data-ui="collapsible"] > [data-part="trigger"]:focus-visible {
   outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
   outline-offset: var(--focus-ring-offset);
   box-shadow: var(--focus-shadow);
 }
 
 /* Chevron indicator — rotates when open, CSS-only */
-[data-ui="collapsible"] [data-part="trigger"]::after {
+[data-ui="collapsible"] > [data-part="trigger"]::after {
   content: "";
   flex: none;
   width: 0.5em;
@@ -51,12 +56,12 @@
   transition: transform var(--duration-normal) var(--ease-default);
 }
 
-[data-ui="collapsible"][open] [data-part="trigger"]::after {
+[data-ui="collapsible"][open] > [data-part="trigger"]::after {
   transform: rotate(-135deg);
 }
 
 /* ── Content ── */
-[data-ui="collapsible"] [data-part="content"] {
+[data-ui="collapsible"] > [data-part="content"] {
   padding: 0 var(--space-3) var(--space-3);
   font-size: var(--text-sm);
   line-height: 1.6;
@@ -89,8 +94,8 @@
 
 /* ── Motion ── */
 @media (prefers-reduced-motion: reduce) {
-  [data-ui="collapsible"] [data-part="trigger"],
-  [data-ui="collapsible"] [data-part="trigger"]::after,
+  [data-ui="collapsible"] > [data-part="trigger"],
+  [data-ui="collapsible"] > [data-part="trigger"]::after,
   [data-ui="collapsible"]::details-content {
     transition: none;
   }

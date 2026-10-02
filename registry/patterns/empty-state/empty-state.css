@@ -13,8 +13,13 @@
   font-family: var(--font-body);
 }
 
+/* Child combinators: `icon`, `title` and `description` are part names half
+   the registry shares, and a descendant rule here restyled the title of a
+   callout or a card placed inside the empty state. Same change as the
+   primitive of the same name — both style `[data-ui="empty-state"]`. [1.1F-20] */
+
 /* ── Icon ── */
-[data-ui="empty-state"] [data-part="icon"] {
+[data-ui="empty-state"] > [data-part="icon"] {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -26,13 +31,13 @@
   animation: empty-state-fade-in var(--duration-normal) var(--ease-default) forwards;
 }
 
-[data-ui="empty-state"] [data-part="icon"] svg {
+[data-ui="empty-state"] > [data-part="icon"] svg {
   width: 100%;
   height: 100%;
 }
 
 /* ── Title ── */
-[data-ui="empty-state"] [data-part="title"] {
+[data-ui="empty-state"] > [data-part="title"] {
   font-family: var(--font-heading);
   font-size: var(--text-lg);
   font-weight: var(--weight-semibold);
@@ -45,7 +50,7 @@
 }
 
 /* ── Description ── */
-[data-ui="empty-state"] [data-part="description"] {
+[data-ui="empty-state"] > [data-part="description"] {
   font-size: var(--text-base);
   line-height: var(--leading-normal);
   color: var(--color-fg-muted);
@@ -60,7 +65,7 @@
    with no rule of its own. Centred by the root's `align-items: center`, an
    unwrapped row of two buttons overflows past BOTH window edges on a phone, and
    the inline-start half cannot be scrolled to. */
-[data-ui="empty-state"] [data-part="actions"] {
+[data-ui="empty-state"] > [data-part="actions"] {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -87,17 +92,17 @@
   gap: var(--space-2);
 }
 
-[data-ui="empty-state"][data-size="sm"] [data-part="icon"] {
+[data-ui="empty-state"][data-size="sm"] > [data-part="icon"] {
   width: 32px;
   height: 32px;
   margin-bottom: var(--space-1, 0.25rem);
 }
 
-[data-ui="empty-state"][data-size="sm"] [data-part="title"] {
+[data-ui="empty-state"][data-size="sm"] > [data-part="title"] {
   font-size: var(--text-base);
 }
 
-[data-ui="empty-state"][data-size="sm"] [data-part="description"] {
+[data-ui="empty-state"][data-size="sm"] > [data-part="description"] {
   font-size: var(--text-sm);
   max-width: 28ch;
 }
@@ -108,28 +113,28 @@
   gap: var(--space-4);
 }
 
-[data-ui="empty-state"][data-size="lg"] [data-part="icon"] {
+[data-ui="empty-state"][data-size="lg"] > [data-part="icon"] {
   width: 64px;
   height: 64px;
   margin-bottom: var(--space-3);
 }
 
-[data-ui="empty-state"][data-size="lg"] [data-part="title"] {
+[data-ui="empty-state"][data-size="lg"] > [data-part="title"] {
   font-size: var(--text-2xl);
 }
 
-[data-ui="empty-state"][data-size="lg"] [data-part="description"] {
+[data-ui="empty-state"][data-size="lg"] > [data-part="description"] {
   font-size: var(--text-lg);
   max-width: 44ch;
 }
 
-[data-ui="empty-state"][data-size="lg"] [data-part="actions"] {
+[data-ui="empty-state"][data-size="lg"] > [data-part="actions"] {
   margin-top: var(--space-4);
 }
 
 /* ── Motion ── */
 @media (prefers-reduced-motion: reduce) {
-  [data-ui="empty-state"] [data-part="icon"] {
+  [data-ui="empty-state"] > [data-part="icon"] {
     animation: none;
     opacity: 1;
   }

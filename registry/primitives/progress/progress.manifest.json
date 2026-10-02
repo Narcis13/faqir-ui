@@ -1,12 +1,17 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "progress",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "kind": "primitive",
   "category": "feedback",
   "description": "Progress bar with animated fill, color variants, and an optional percentage label",
 
   "changes": [
+    {
+      "version": "1.1.1",
+      "note": "Nested components keep their own parts. The track, fill and label rules were descendant selectors. label is a common part name, so anything nested in a bespoke progress indicator with a label of its own took this component's label size, colour and reserved width. They are child chains now (root > track > fill, root > label), with the track hop in :where() so no rule changes specificity.",
+      "breaking": false
+    },
     {
       "version": "1.1.0",
       "note": "Render the percentage label in every canonical visual variant, reserve four characters plus an inline-end inset for 100%, give the progressbar an accessible name, and complete the reference's visual-variant set. The label remains an explicitly optional slot for bespoke progress indicators.",

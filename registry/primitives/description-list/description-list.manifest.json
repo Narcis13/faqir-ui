@@ -1,12 +1,17 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "description-list",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "kind": "primitive",
   "category": "data-display",
   "description": "Styled description list (dl/dt/dd) for longer descriptive key-value content",
 
   "changes": [
+    {
+      "version": "1.0.2",
+      "note": "Nested components keep their own parts. The term and details rules were descendant selectors, so a list nested in a <dd> took the outer list's size and dividers, and so would any component with a term or details part. They now match a direct child of the list, or a child of a plain <div> grouping one pair (dl > div > dt + dd, which HTML allows); the <div> hop is in :where(), so both shapes keep the old specificity. Also documented on the details slot: data-size=\"sm\" maps to --text-xs by the registry-wide convention for components whose md is --text-sm, so a nested text should omit data-size to inherit the list's size.",
+      "breaking": false
+    },
     {
       "version": "1.0.1",
       "note": "The horizontal variant's details track is minmax(0, 1fr) instead of 1fr. A bare 1fr cannot be narrower than its widest item's min-content, so details holding a scrolling block or a wide table widened the list past its container. The term track keeps its minmax(8rem, auto) floor.",
@@ -31,7 +36,7 @@
       "selector": "[data-part='details']",
       "required": true,
       "tag_hint": "dd",
-      "description": "The description or value (dd element)"
+      "description": "The description or value (dd element). A nested text should omit data-size so it inherits the list's size"
     }
   },
 

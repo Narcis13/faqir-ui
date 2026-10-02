@@ -138,7 +138,7 @@ describe("0.4-03 · alias resolution maps alert → callout", () => {
 describe("0.4-03 · dismiss part CSS is contract-clean", () => {
   it("styles [data-part='dismiss'] and hides it in print", async () => {
     const css = await calloutCss();
-    expect(css).toContain('[data-ui="callout"] [data-part="dismiss"]');
+    expect(css).toContain('[data-ui="callout"] > [data-part="dismiss"]');
     // Print block hides the interactive control.
     expect(css).toMatch(/@media print[\s\S]*\[data-part="dismiss"\][\s\S]*display:\s*none/);
   });

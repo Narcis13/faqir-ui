@@ -34,7 +34,7 @@ Expandable section panels with single or multiple expand modes
 ```text
 [data-ui='accordion']  ·  <div> · content: slots
 ├─ [data-part='item']  <div>  required  — Individual accordion section container
-├─ [data-part='trigger']  <button>  required  — Button that toggles the section, has aria-expanded and aria-controls
+├─ [data-part='trigger']  <button>  required  — Button that toggles the section, has aria-expanded and aria-controls. A direct child of its item, or of a heading (h1-h6) that is
 ├─ [data-part='content']  <div>  required  — Collapsible content region with role=region and aria-labelledby
 └─ [data-part='icon']  <span>  optional  — Chevron icon that rotates when expanded
 ```
