@@ -49,7 +49,7 @@
     {
       "id": "1.1F-08",
       "completed": "2026-10-02",
-      "commit": "PENDING",
+      "commit": "22bbd8b",
       "summary": "Overlay focus. dialog/drawer/sheet (and alert-dialog via createDialog) give the panel tabindex=\"-1\" at init when it has none (also in the canonical HTML), so panel.focus() on open lands and the trap and Escape work. Focus returns through a shared returnFocus(root, target, active) in registry/core/focus.js, mirrored in engine.js's focus section: active is read in onEnd before the panel hides, and focus goes back only if it is still on body or inside the overlay, and only to a connected opener not under [hidden]. command-palette's close uses the same helper. dialog/drawer/sheet CSS: `> [data-part=panel]:focus { outline: none }` (not the plan's :focus:not(:focus-visible), which misses the keyboard-open case); alert-dialog.css left alone (contrast.test ring gate, fallback-only target). Manifests 1.0.1 (cp 1.1.1) with required_attrs/notes/changes; gen:skill. Seventeen tests in overlay-family.test.ts § 4, eleven red on the old code. Engine+controllers 45.48 → 45.56 KB gzip."
     }
   ],
