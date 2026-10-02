@@ -1545,7 +1545,7 @@
       "name": "table",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "3.1.2",
+      "version": "3.2.0",
       "files": [
         {
           "path": "table.css",
@@ -1557,14 +1557,14 @@
         },
         {
           "path": "table.js",
-          "sha256": "2fa0b842130a4a0256ff4287f435f743c91809403acca7f61223d7a344e77697"
+          "sha256": "506839be87ccf1c700feb61b8d642be91766deac614d1a73de1aa66aecda39f1"
         },
         {
           "path": "table.manifest.json",
-          "sha256": "0c6fa8d2394c896c95748713f731c011e140d5393274cf8b3e70ed347eba9daa"
+          "sha256": "a970cdbe150751c92aefc4df5b490e869d0b5bf4502f46c29d8da39b461812e0"
         }
       ],
-      "hash": "ac0edd735c77c40c05a26bb6b72bfc98407c564aac63d9a2d8b96d76cd1a59f6",
+      "hash": "9b8187369b9d216dced87694334b2c47bfc25c328813c9247e4f8cf2753b1563",
       "deps": [
         "checkbox",
         "badge",

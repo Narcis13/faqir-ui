@@ -1,11 +1,16 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "table",
-  "version": "3.1.2",
+  "version": "3.2.0",
   "kind": "recipe",
   "category": "data-display",
   "description": "Advanced data table: multi-column type-aware sorting, global + per-column filtering, tree data and collapsible row groups with live aggregates, inline cell editing with Intl number/currency formatting, drag-and-drop row and column reordering, column resize/hide/pin, sticky header/footer/rows, grid keyboard navigation, CSV export, responsive stacked mode, and state persistence — every feature opt-in via data attributes",
   "changes": [
+    {
+      "version": "3.2.0",
+      "note": "Behaviour change: a navigable table (data-navigable, or data-editable) now follows the ARIA grid pattern for links, buttons and fields inside its cells. They used to stay in the Tab order beside the grid's single roving stop, and arrow keys did nothing while one had focus. The controller now gives them tabindex=\"-1\" (re-checked on every refresh, so rows added later are covered; call refresh() after changing a cell's content in place). Enter or F2 on a cell with no editor or toggle focuses its first control, and Escape in that control returns focus to the cell. Focus landing on one of them (a pointer click) moves the Tab stop to its cell. The table's own controls stay in the Tab order: selection checkboxes, filter inputs, drag handles, expanders and row toggles. destroy() puts back each control's original tabindex. A table without data-navigable is unchanged.",
+      "breaking": false
+    },
     {
       "version": "3.1.2",
       "note": "A table nested in a detail row keeps its own parts and events. The outer table's delegated handlers reacted to it: focus in an inner cell moved the outer's Tab stop into the inner table, arrow keys there drove the outer grid, an inner row-toggle was toggled twice (by both tables), and the inner quick filter filtered the outer rows. The outer also took the inner's tfoot when it had none (so hiding a column hid the inner's footer cell), and clearFilters()/setState() wrote into the inner's quick-filter input. Delegated handlers now ignore events whose nearest [data-ui='table'] is another table, and the tfoot and quick-filter lookups do the same.",
@@ -479,7 +484,7 @@
     "navigable": {
       "type": "boolean",
       "default": false,
-      "description": "data-navigable on root (implied by data-editable): roving-focus grid keyboard navigation (arrows, Home/End, PageUp/Down, Space selects, Enter/F2 edits or toggles)"
+      "description": "data-navigable on root (implied by data-editable): roving-focus grid keyboard navigation (arrows, Home/End, PageUp/Down, Space selects, Enter/F2 edits or toggles, else focuses the cell's first link or button; Escape returns to the cell). Links, buttons and fields inside cells leave the Tab order (tabindex=-1, restored on destroy); selection checkboxes, filter inputs, drag handles, expanders and row toggles stay focusable"
     },
     "responsive": {
       "type": "string",
@@ -622,7 +627,8 @@
       "Click checkbox": "toggle row selection",
       "Shift+Click checkbox or row": "range selection from last selected",
       "Arrow keys / Home / End / PageUp / PageDown": "move cell focus in navigable grids (Ctrl+Home/End jumps to grid corners)",
-      "Enter / F2 on a cell": "start inline editing (editable) or toggle a tree/group row",
+      "Enter / F2 on a cell": "start inline editing (editable) or toggle a tree/group row; otherwise focus the cell's first link, button or field (navigable)",
+      "Escape in a link, button or field inside a cell": "return focus to the cell (navigable)",
       "Enter / Escape / Tab in the editor": "commit / cancel / commit-and-edit-next",
       "Space on a row cell": "toggle row selection; toggles group headers",
       "Ctrl/Cmd+A": "select all visible rows in selectable navigable grids",

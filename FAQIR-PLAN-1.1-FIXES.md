@@ -37,8 +37,14 @@ as was done with `state-1.0.json`).
   45.50/46 KB gzip, leaving about 0.5 KB for the rest of the plan. **But `bun run size` is
   not the tightest gate.** `tests/build/core-package.test.ts` gzips the *packaged*
   `packages/core/dist/faqir-core.min.js` (IIFE wrapper + sourcemap comment) against the same
-  47,104 B. That figure runs about 0.27 KB above `size`'s. After 1.1F-13 it is 47,015 B,
-  so about 90 B is left. Check it after every E/C task.
+  47,104 B. That figure runs about 0.27 KB above `size`'s. After 1.1F-14 it is 47,095 B,
+  so **9 B** is left: the next E/C task has to free bytes before it can add any (1.1F-14's
+  commit body lists the trims that paid for it). Check it after every E/C task.
+- **Bun 1.3.8 `bun build` sometimes hangs** on this machine at 100% CPU (seen in
+  `build:core-package`, `check:skill`, and the MCP build that `packages/mcp/tests/e2e.test.ts`
+  runs). In a full `bun run test` it shows up as an unrelated 5 s or 30 s timeout, a different
+  one each run, and it leaves an orphaned `bun build` running. Run `pkill -f 'bun build'`
+  and rerun the suite.
 - **happy-dom.** If `realm-guard`/`tree-view` flake, the lockfile has pinned happy-dom 20.10.6;
   run `bun add -d happy-dom@20.11.2 @happy-dom/global-registrator@20.11.2 --no-save`
   first. It leaves `bun.lock` and `package.json` untouched; refreshing the lockfile is a
@@ -125,7 +131,7 @@ wait for document order. Task 1.1F-32 releases the additive set; its version is 
 | 1.1F-11 | Sidebar: rail chevron flips, trigger label stays stable | 7 | patch | ✅ |
 | 1.1F-12 | Nesting, controllers I: tabs, accordion, dialog family, sidebar, context-menu + nesting matrix | 5, 6 | patch | ✅ |
 | 1.1F-13 | Nesting, controllers II: carousel, popover, table delegation, `:scope` pass | 5 | patch | ✅ |
-| 1.1F-14 | Table: ARIA grid handling of links/buttons inside navigable cells | 21 | additive (behaviour change) | ⬜ |
+| 1.1F-14 | Table: ARIA grid handling of links/buttons inside navigable cells | 21 | additive (behaviour change) | ✅ |
 
 ### Lane S — Styles and tokens
 
@@ -722,9 +728,9 @@ makes arrow keys dead while focus is on a link inside a cell.
 - A row checkbox still toggles with Space.
 
 **Acceptance**
-- [ ] Manifest `a11y.keyboard` gains the Enter/F2 and Escape rows; the `navigable` prop description is updated; `changes` flags the behaviour change; `gen:skill`.
-- [ ] Standard controller regeneration set; size.
-- [ ] Downstream: `app/keys.mjs`'s Enter-opens-first-link becomes redundant for cells with a single link.
+- [x] Manifest `a11y.keyboard` gains the Enter/F2 and Escape rows; the `navigable` prop description is updated; `changes` flags the behaviour change; `gen:skill`. *(table.manifest.json 3.1.2 → 3.2.0. The "Enter / F2 on a cell" row now ends "otherwise focus the cell's first link, button or field (navigable)", and there is a new "Escape in a link, button or field inside a cell" row. The `navigable` prop description names the Enter/F2/Escape behaviour, the tabindex=-1 demotion and its restore, and the controls that stay focusable. The 3.2.0 `changes` note opens with "Behaviour change:". `gen:skill` rewrote `references/recipes.md`.)*
+- [x] Standard controller regeneration set; size. *(`setupNavigability` gives every `input,select,textarea,button,a[href],[tabindex]` inside a navMatrix cell `tabindex="-1"`. It skips the table's own checkbox, drag-handle, expander and row-toggle parts, and anything owned by a nested table (`mine`). Originals go in a `WeakMap`, which `destroy()` reads to put each one back. It runs on every refresh, filter, collapse and column hide, so the observer's refresh covers rows added later. Header filter inputs live in the filter row, which is outside navMatrix, so they are never touched. Enter/F2, after the group, tree and editable branches, focuses the cell's first such control. Escape on a demoted control returns focus to its cell, and that check runs before the input/button/link early return. `onFocusIn` now moves the Tab stop to a cell when focus lands on one of its demoted controls, e.g. from a pointer click. The inline editor's `stopPropagation` is unchanged. Ten tests in `tests/recipes/table-advanced.test.ts` "links and buttons inside navigable cells": demotion; own controls kept; non-navigable untouched; Enter → link, Escape → cell, then ArrowDown works; F2 picks the first of two buttons; Enter on a cell with no controls; pointer focus moves the stop; destroy restores absent and authored `tabindex="2"`; a row added later is demoted; a row checkbox's Space is not prevented and its click selects. Five of them fail on the old controller. Regenerated: `faqir-core{,.dev}.js`, react/vue controllers, `registry-index.json`, `packages/core/cdn.json`, the skill. `gen:schema-refs` was a no-op, and `site/dist` was rebuilt (ignored). **Budget:** the feature cost 185 B on the packaged `faqir-core.min.js` (47,013 → 47,198 / 47,104). Behaviour-preserving trims in table.js brought it back to **47,095** (9 B left): shared `sortChanged()`/`selectionChanged()` epilogues, a two-line `updateHeaderCheckbox`, `setAllExpanded`, one `Intl.NumberFormat` call in `formatValue`, `cellFormatOf` reused in `writeAggregate`, a single `dropPos(e, el, horizontal)`, the editor's `stopPropagation` hoisted, and the dead guards dropped from `elementAt`/`focusCell`. `size`: engine + controllers 45.64 → 45.74 / 46 KB. `audit:registry` zero findings; every `check:*` green; `bun run test` 7680 + 64 pass / 0 fail; typecheck green. Markup and CSS untouched, so visual baselines were not re-run.)*
+- [x] Downstream: `app/keys.mjs`'s Enter-opens-first-link becomes redundant for cells with a single link. *(Partly. The controller follows APG: Enter **focuses** the cell's first link, and a second Enter follows it natively. Downstream can drop its handler if two presses are acceptable. If one press must still open the link, keep the handler. It now only needs to call `.click()`, because focus, Escape and the Tab order are handled.)*
 
 ---
 

@@ -8133,23 +8133,14 @@ function createTable(root) {
 
   // ── Intl formatting ──
   function formatValue(n, fmt) {
+    const o =
+      fmt === "currency"
+        ? { style: fmt, currency: opts.currency, currencySign: accounting ? "accounting" : "standard" }
+        : fmt === "percent"
+          ? { style: fmt, maximumFractionDigits: 2 }
+          : fmt === "number" && { maximumFractionDigits: 2 };
     try {
-      if (fmt === "currency") {
-        return new Intl.NumberFormat(opts.locale, {
-          style: "currency",
-          currency: opts.currency,
-          currencySign: accounting ? "accounting" : "standard",
-        }).format(n);
-      }
-      if (fmt === "percent") {
-        return new Intl.NumberFormat(opts.locale, {
-          style: "percent",
-          maximumFractionDigits: 2,
-        }).format(n / 100);
-      }
-      if (fmt === "number") {
-        return new Intl.NumberFormat(opts.locale, { maximumFractionDigits: 2 }).format(n);
-      }
+      if (o) return new Intl.NumberFormat(opts.locale, o).format(fmt === "percent" ? n / 100 : n);
     } catch {
       /* unknown locale/currency — fall through to raw */
     }
@@ -8390,13 +8381,17 @@ function createTable(root) {
     refreshStripes();
   }
 
+  function sortChanged() {
+    applySorts();
+    emit("sort", { sorts: sorts.map((s) => ({ column: s.index, direction: s.dir })) });
+    scheduleStateSave();
+  }
+
   /** Legacy API: sort one column with an explicit direction. */
   function sort(columnIndex, direction) {
     if (!tbody || bodyRows().length === 0) return;
     sorts = [{ index: columnIndex, dir: direction }];
-    applySorts();
-    emit("sort", { sorts: sorts.map((s) => ({ column: s.index, direction: s.dir })) });
-    scheduleStateSave();
+    sortChanged();
   }
 
   /** Multi-sort API: sortBy([{ column, direction }...]). */
@@ -8408,17 +8403,13 @@ function createTable(root) {
         dir: s.direction || s.dir || "ascending",
       }))
       .filter((s) => Number.isInteger(s.index) && s.index >= 0 && s.index < columnCount());
-    applySorts();
-    emit("sort", { sorts: sorts.map((s) => ({ column: s.index, direction: s.dir })) });
-    scheduleStateSave();
+    sortChanged();
   }
 
   function clearSort() {
     if (!sorts.length) return;
     sorts = [];
-    applySorts();
-    emit("sort", { sorts: [] });
-    scheduleStateSave();
+    sortChanged();
   }
 
   function handleSortRequest(idx, additive) {
@@ -8435,9 +8426,7 @@ function createTable(root) {
     } else {
       sorts = dir === null ? [] : [{ index: idx, dir }];
     }
-    applySorts();
-    emit("sort", { sorts: sorts.map((s) => ({ column: s.index, direction: s.dir })) });
-    scheduleStateSave();
+    sortChanged();
   }
 
   // ── Selection ──
@@ -8453,8 +8442,7 @@ function createTable(root) {
     const row = rows[index];
     setRowSelected(row, !row.hasAttribute("data-selected"));
     lastSelectedIndex = index;
-    updateHeaderCheckbox();
-    emit("selection-change", { selected: getSelected() });
+    selectionChanged();
   }
 
   function selectAll() {
@@ -8463,15 +8451,13 @@ function createTable(root) {
       if (filtered && row.hasAttribute("data-filtered")) continue;
       setRowSelected(row, true);
     }
-    updateHeaderCheckbox();
-    emit("selection-change", { selected: getSelected() });
+    selectionChanged();
   }
 
   function deselectAll() {
     for (const row of bodyRows()) setRowSelected(row, false);
     lastSelectedIndex = -1;
-    updateHeaderCheckbox();
-    emit("selection-change", { selected: getSelected() });
+    selectionChanged();
   }
 
   function getSelected() {
@@ -8488,23 +8474,19 @@ function createTable(root) {
     for (let i = start; i <= end; i++) {
       if (i >= 0 && i < rows.length && isRowVisible(rows[i])) setRowSelected(rows[i], true);
     }
+  }
+
+  function selectionChanged() {
     updateHeaderCheckbox();
+    emit("selection-change", { selected: getSelected() });
   }
 
   function updateHeaderCheckbox() {
     if (!headerCheckbox) return;
     const rows = visibleBodyRows();
-    const selected = rows.filter((r) => r.hasAttribute("data-selected"));
-    if (selected.length === 0) {
-      headerCheckbox.checked = false;
-      headerCheckbox.indeterminate = false;
-    } else if (selected.length === rows.length) {
-      headerCheckbox.checked = true;
-      headerCheckbox.indeterminate = false;
-    } else {
-      headerCheckbox.checked = false;
-      headerCheckbox.indeterminate = true;
-    }
+    const n = rows.filter((r) => r.hasAttribute("data-selected")).length;
+    headerCheckbox.checked = n > 0 && n === rows.length;
+    headerCheckbox.indeterminate = n > 0 && n < rows.length;
   }
 
   // ── Filtering ──
@@ -8681,20 +8663,15 @@ function createTable(root) {
     emit("row-expand", { row, detail, expanded: expand });
   }
 
-  function expandAll() {
+  function setAllExpanded(expand) {
     mutedRun(() => {
-      for (const gh of groupHeaders()) toggleGroup(gh, true);
-      if (opts.tree) for (const r of bodyRows()) if (isTreeParent(r)) toggleRow(r, true);
+      for (const gh of groupHeaders()) toggleGroup(gh, expand);
+      if (opts.tree) for (const r of bodyRows()) if (isTreeParent(r)) toggleRow(r, expand);
     });
     refreshStripes();
   }
-  function collapseAll() {
-    mutedRun(() => {
-      for (const gh of groupHeaders()) toggleGroup(gh, false);
-      if (opts.tree) for (const r of bodyRows()) if (isTreeParent(r)) toggleRow(r, false);
-    });
-    refreshStripes();
-  }
+  const expandAll = () => setAllExpanded(true);
+  const collapseAll = () => setAllExpanded(false);
 
   // ── Aggregates (tfoot, group headers, tree parents) ──
   function writeAggregate(cell, rows, ownIndex) {
@@ -8729,7 +8706,7 @@ function createTable(root) {
     const fmt =
       fn === "count"
         ? cell.getAttribute("data-format")
-        : cell.getAttribute("data-format") || headerCells()[col]?.getAttribute("data-format") || "number";
+        : cellFormatOf(cell, col) || "number";
     cell.textContent = fmt ? formatValue(out, fmt) : String(out);
     applyNegativeFlag(cell);
   }
@@ -8913,17 +8890,15 @@ function createTable(root) {
 
   function onEditorKeydown(e) {
     if (!editing) return;
+    e.stopPropagation(); // keep grid navigation away from typing
     if (e.key === "Enter") {
       e.preventDefault();
-      e.stopPropagation();
       commitEdit(true);
     } else if (e.key === "Escape") {
       e.preventDefault();
-      e.stopPropagation();
       cancelEdit(true);
     } else if (e.key === "Tab") {
       e.preventDefault();
-      e.stopPropagation();
       const from = editing.cell;
       if (commitEdit()) {
         const next = nextEditableCell(from, e.shiftKey ? -1 : 1);
@@ -8931,7 +8906,6 @@ function createTable(root) {
       }
     } else {
       e.target.removeAttribute("data-invalid");
-      e.stopPropagation(); // keep grid navigation away from typing
     }
   }
   function onEditorBlur(e) {
@@ -9084,14 +9058,11 @@ function createTable(root) {
   }
 
   function elementAt(e) {
-    if (document.elementFromPoint) {
-      try {
-        return document.elementFromPoint(e.clientX, e.clientY);
-      } catch {
-        return null;
-      }
+    try {
+      return document.elementFromPoint(e.clientX, e.clientY);
+    } catch {
+      return null; // elementFromPoint missing or throwing (headless)
     }
-    return null;
   }
 
   function resolveRowAt(e) {
@@ -9100,16 +9071,13 @@ function createTable(root) {
     return row && tbody?.contains(row) ? row : null;
   }
 
-  function dropPos(e, el) {
+  /** "before"/"after" the pointer's half of el: vertical for rows, horizontal (RTL-aware) for columns. */
+  function dropPos(e, el, horizontal) {
     const rect = el.getBoundingClientRect?.();
-    if (!rect || !rect.height) return "after";
-    return e.clientY < rect.top + rect.height / 2 ? "before" : "after";
-  }
-  function dropPosX(e, el) {
-    const rect = el.getBoundingClientRect?.();
-    if (!rect || !rect.width) return "after";
-    const before = e.clientX < rect.left + rect.width / 2;
-    return before !== isRTL ? "before" : "after";
+    const size = rect && (horizontal ? rect.width : rect.height);
+    if (!size) return "after";
+    const before = horizontal ? e.clientX < rect.left + size / 2 !== isRTL : e.clientY < rect.top + size / 2;
+    return before ? "before" : "after";
   }
 
   function bindDocDrag() {
@@ -9209,7 +9177,7 @@ function createTable(root) {
       if (!th) th = e.target?.closest?.("[data-part='th']");
       if (!th || th === drag.th || !headerRowEl()?.contains(th)) return;
       th.setAttribute("data-drop-target", "");
-      th.setAttribute("data-drop-pos", dropPosX(e, th));
+      th.setAttribute("data-drop-pos", dropPos(e, th, true));
     }
   }
 
@@ -9431,15 +9399,11 @@ function createTable(root) {
       existing.remove();
       existing = null;
     }
-    let el;
-    if (isParent) {
-      el = document.createElement("button");
-      el.type = "button";
-      el.setAttribute("data-part", "expander");
-      el.setAttribute("aria-label", "Toggle");
-    } else {
-      el = document.createElement("span");
-      el.setAttribute("data-part", "expander");
+    const el = document.createElement(isParent ? "button" : "span");
+    if (isParent) el.type = "button";
+    el.setAttribute("data-part", "expander");
+    if (isParent) el.setAttribute("aria-label", "Toggle");
+    else {
       el.setAttribute("data-leaf", "");
       el.setAttribute("aria-hidden", "true");
     }
@@ -9535,6 +9499,15 @@ function createTable(root) {
     return rows;
   }
 
+  // APG grid: links, buttons and fields inside a navigable grid's cells leave the
+  // Tab order (Enter/F2 reaches them, Escape comes back). The table's own controls
+  // stay focusable. destroy() puts the original tabindex back.
+  const demoted = new WeakMap();
+  const cellControls = (cell) =>
+    [...cell.querySelectorAll("input,select,textarea,button,a[href],[tabindex]")].filter(
+      (el) => mine(el) && !el.closest("[data-part='checkbox'],[data-part='drag-handle'],[data-part='expander'],[data-part='row-toggle']")
+    );
+
   // Re-run after anything that can take the Tab stop away (refresh, filter,
   // collapse, column hide): only the Tab stop moves, never focus.
   function setupNavigability() {
@@ -9551,6 +9524,10 @@ function createTable(root) {
         for (const cell of cellsOf(row)) {
           if (!first && !activeCell && !cell.hasAttribute("data-col-hidden")) first = cell;
           cell.setAttribute("tabindex", cell === (activeCell || first) ? "0" : "-1");
+          for (const el of cellControls(cell)) {
+            if (!demoted.has(el)) demoted.set(el, el.getAttribute("tabindex"));
+            el.setAttribute("tabindex", "-1");
+          }
         }
       }
       if (!activeCell) activeCell = first;
@@ -9565,11 +9542,7 @@ function createTable(root) {
     if (activeCell && activeCell !== cell) activeCell.setAttribute("tabindex", "-1");
     activeCell = cell;
     cell.setAttribute("tabindex", "0");
-    try {
-      cell.focus();
-    } catch {
-      /* unfocusable */
-    }
+    cell.focus();
   }
 
   function moveFocus(rowDelta, colDelta, edge) {
@@ -9609,7 +9582,7 @@ function createTable(root) {
     if (!opts.navigable) return;
     const cell = e.target.closest("[data-part='td'],[data-part='th']");
     if (!cell || cell === activeCell || !root.contains(cell)) return;
-    if (e.target !== cell) return; // focus landed on inner control, not the cell
+    if (e.target !== cell && !demoted.has(e.target)) return; // the table's own control, not the cell
     if (activeCell) activeCell.setAttribute("tabindex", "-1");
     activeCell = cell;
     cell.setAttribute("tabindex", "0");
@@ -9644,13 +9617,12 @@ function createTable(root) {
     if (e.shiftKey && lastSelectedIndex >= 0) {
       e.preventDefault();
       selectRange(lastSelectedIndex, index);
-      emit("selection-change", { selected: getSelected() });
+      selectionChanged();
       return;
     }
     toggleAttr(row, "data-selected", checkbox.checked);
     lastSelectedIndex = index;
-    updateHeaderCheckbox();
-    emit("selection-change", { selected: getSelected() });
+    selectionChanged();
   }
 
   function onRootClick(e) {
@@ -9690,7 +9662,7 @@ function createTable(root) {
     if (index < 0) return;
     if (e.shiftKey && lastSelectedIndex >= 0) {
       selectRange(lastSelectedIndex, index);
-      emit("selection-change", { selected: getSelected() });
+      selectionChanged();
       return;
     }
     if (opts.selectable != null) {
@@ -9702,8 +9674,7 @@ function createTable(root) {
         setRowSelected(row, !row.hasAttribute("data-selected"));
       }
       lastSelectedIndex = index;
-      updateHeaderCheckbox();
-      emit("selection-change", { selected: getSelected() });
+      selectionChanged();
     }
   }
 
@@ -9763,10 +9734,18 @@ function createTable(root) {
       return;
     }
 
+    const cell = target.closest?.("[data-part='td'],[data-part='th']");
+
+    // Escape in a cell's control returns to the cell.
+    if (e.key === "Escape" && demoted.has(target)) {
+      e.preventDefault();
+      focusCell(cell);
+      return;
+    }
+
     // Never hijack typing or native control activation (buttons own Enter/Space via click).
     if (target.closest?.("input,select,textarea,button,a")) return;
 
-    const cell = target.closest?.("[data-part='td'],[data-part='th']");
     const inHeader = cell && thead?.contains(cell);
 
     // Sortable header keyboard activation.
@@ -9857,6 +9836,12 @@ function createTable(root) {
         if (isCellEditable(cell)) {
           e.preventDefault();
           startEdit(cell);
+          return;
+        }
+        const ctl = cellControls(cell)[0];
+        if (ctl) {
+          e.preventDefault();
+          ctl.focus();
         }
         return;
       }
@@ -9943,6 +9928,12 @@ function createTable(root) {
     cleanups.length = 0;
     observer?.disconnect();
     observer = null;
+    for (const el of root.querySelectorAll("[tabindex]")) {
+      if (demoted.has(el)) {
+        const t = demoted.get(el);
+        t == null ? el.removeAttribute("tabindex") : el.setAttribute("tabindex", t);
+      }
+    }
     for (const t of timers) clearTimeout(t);
     timers.clear();
     clearTimeout(saveTimer);

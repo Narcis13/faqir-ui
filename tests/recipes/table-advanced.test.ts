@@ -1007,6 +1007,135 @@ describe("table · the roving Tab stop never strands", () => {
   });
 });
 
+// ── ARIA grid: interactive cell content (1.1F-14) ───────────────────────────
+
+describe("table · links and buttons inside navigable cells", () => {
+  const LINKED = (rootAttrs = "data-navigable data-selectable") => `
+    <div data-ui="table" ${rootAttrs}>
+      <table data-part="table">
+        <thead data-part="thead">
+          <tr data-part="tr">
+            <th data-part="th" scope="col"><input type="checkbox" data-part="checkbox" aria-label="Select all"></th>
+            <th data-part="th" scope="col">Name</th>
+            <th data-part="th" scope="col">Actions</th>
+          </tr>
+          <tr data-part="filter-row">
+            <td data-part="td"></td>
+            <td data-part="td"><input data-part="filter-input" aria-label="Filter Name"></td>
+            <td data-part="td"></td>
+          </tr>
+        </thead>
+        <tbody data-part="tbody">
+          <tr data-part="tr">
+            <td data-part="td"><input type="checkbox" data-part="checkbox" aria-label="Select Ada"></td>
+            <td data-part="td"><a href="#ada">Ada</a></td>
+            <td data-part="td"><button type="button">Edit</button><button type="button" tabindex="2">Delete</button></td>
+          </tr>
+          <tr data-part="tr">
+            <td data-part="td"><input type="checkbox" data-part="checkbox" aria-label="Select Grace"></td>
+            <td data-part="td"><a href="#grace">Grace</a></td>
+            <td data-part="td"><button type="button" data-part="drag-handle" aria-label="Reorder"></button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>`;
+
+  const cell = (root: HTMLElement, r: number, c: number) =>
+    bodyRows(root)[r].querySelectorAll("[data-part='td']")[c] as HTMLElement;
+  const link = (root: HTMLElement, r: number) => cell(root, r, 1).querySelector("a") as HTMLAnchorElement;
+
+  it("takes links and buttons in cells out of the Tab order", () => {
+    const { root } = setup(LINKED());
+    expect(link(root, 0).getAttribute("tabindex")).toBe("-1");
+    expect(link(root, 1).getAttribute("tabindex")).toBe("-1");
+    for (const b of cell(root, 0, 2).querySelectorAll("button")) expect(b.getAttribute("tabindex")).toBe("-1");
+    // The grid stays a single Tab stop.
+    expect([...root.querySelectorAll("[data-part='td'][tabindex='0'],[data-part='th'][tabindex='0']")]).toHaveLength(1);
+  });
+
+  it("keeps the table's own controls focusable", () => {
+    const { root } = setup(LINKED());
+    for (const el of root.querySelectorAll("[data-part='checkbox'],[data-part='filter-input'],[data-part='drag-handle']")) {
+      expect(el.hasAttribute("tabindex")).toBe(false);
+    }
+  });
+
+  it("leaves a table without data-navigable alone", () => {
+    const { root } = setup(LINKED("data-selectable"));
+    expect(link(root, 0).hasAttribute("tabindex")).toBe(false);
+    expect(cell(root, 0, 2).querySelector("[tabindex='2']")).not.toBeNull();
+  });
+
+  it("Enter on a cell focuses its first control; Escape returns to the cell", () => {
+    const { root } = setup(LINKED());
+    const c = cell(root, 0, 1);
+    c.focus();
+    key(c, "Enter");
+    expect(document.activeElement).toBe(link(root, 0));
+    const esc = new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true });
+    link(root, 0).dispatchEvent(esc);
+    expect(esc.defaultPrevented).toBe(true);
+    expect(document.activeElement).toBe(c);
+    expect(c.getAttribute("tabindex")).toBe("0");
+    // Back in the grid: arrows move again.
+    key(c, "ArrowDown");
+    expect(document.activeElement).toBe(cell(root, 1, 1));
+  });
+
+  it("F2 does the same, and picks the first of several controls", () => {
+    const { root } = setup(LINKED());
+    const c = cell(root, 0, 2);
+    c.focus();
+    key(c, "F2");
+    expect(document.activeElement!.textContent).toBe("Edit");
+  });
+
+  it("Enter on a cell with no controls does nothing", () => {
+    const { root } = setup(LINKED());
+    const c = th(root, 1);
+    c.focus();
+    key(c, "Enter");
+    expect(document.activeElement).toBe(c);
+  });
+
+  it("focus landing on a cell's control moves the Tab stop to that cell", () => {
+    const { root } = setup(LINKED());
+    link(root, 1).focus(); // a pointer click
+    expect(cell(root, 1, 1).getAttribute("tabindex")).toBe("0");
+    expect(th(root, 0).getAttribute("tabindex")).toBe("-1");
+  });
+
+  it("destroy() restores the original tabindex", () => {
+    const { root, api } = setup(LINKED());
+    api.destroy();
+    expect(link(root, 0).hasAttribute("tabindex")).toBe(false);
+    const [edit, del] = cell(root, 0, 2).querySelectorAll("button");
+    expect(edit.hasAttribute("tabindex")).toBe(false);
+    expect(del.getAttribute("tabindex")).toBe("2");
+  });
+
+  it("a row added later has its links demoted too", async () => {
+    const { root } = setup(LINKED());
+    const row = bodyRows(root)[1].cloneNode(true) as HTMLElement;
+    const a = row.querySelector("a")!;
+    a.removeAttribute("tabindex");
+    root.querySelector("[data-part='tbody']")!.appendChild(row);
+    await tick(60); // mutation observer + rAF refresh
+    expect(a.getAttribute("tabindex")).toBe("-1");
+  });
+
+  it("a row checkbox still toggles with Space", () => {
+    const { root, api } = setup(LINKED());
+    const box = cell(root, 1, 0).querySelector("input") as HTMLInputElement;
+    box.focus();
+    const space = new KeyboardEvent("keydown", { key: " ", bubbles: true, cancelable: true });
+    box.dispatchEvent(space);
+    expect(space.defaultPrevented).toBe(false); // the table leaves native activation alone
+    box.click(); // what the browser does on Space's keyup
+    expect(api.getSelected()).toEqual([1]);
+  });
+});
+
 // ── Mutation-observer refresh ────────────────────────────────────────────────
 
 describe("table 2.0 · auto-refresh on external row changes", () => {
