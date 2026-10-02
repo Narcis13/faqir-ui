@@ -73,7 +73,7 @@
     {
       "id": "1.1F-12",
       "completed": "2026-10-02",
-      "commit": "",
+      "commit": "caa8247",
       "summary": "Nested components keep their own parts. New registry/core/dom.js owns(root, el)/ownParts(root, part): the nearest [data-ui] above a part, looking through layout primitives (stack, cluster, grid, container, surface, switcher, aspect-ratio), via one closest(:not(...)) selector mirrored in engine.js §6. tabs takes :scope > list > trigger and :scope > panel; accordion takes :scope > item and toggles only from an item’s own trigger; dialog/alert-dialog/drawer/sheet take overlay/panel as direct children and trigger/close/confirm/cancel by owner; sidebar triggers and context-menu target/menu by owner (entry 6: a footer dropdown no longer gets aria-expanded forced or rails the sidebar). Eight manifests bumped. New tests/recipes/nesting.test.ts (15 rows, 14 red on HEAD) + dom.test.ts +3. Budget: the packaged faqir-core.min.js test had only 50 B free at HEAD, not the 0.31 KB `size` shows. Engine §6 dropped five dead private helpers ($, create, delegate, once, waitForTransition) to fit. Engine+controllers 45.69 → 45.58 KB; packaged 46,961/47,104 B."
     }
   ],
