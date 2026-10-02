@@ -347,7 +347,7 @@ _kind: recipe · category: navigation · controller: createCommandPalette()_
 Cmd+K style modal command interface with search and keyboard navigation
 
 ```html
-<div data-ui="command-palette" data-state="closed">
+<div data-ui="command-palette" data-state="closed"{no_shortcut}>
   <div data-part="overlay" hidden></div>
   <div data-part="panel" role="dialog" aria-modal="true" aria-label="Command palette" data-size="{size}" hidden>
     <div data-part="search-wrapper">

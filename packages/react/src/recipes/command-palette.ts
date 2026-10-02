@@ -11,9 +11,11 @@ import { createCommandPalette } from "../controllers/command-palette.js";
 /** Allowed `size` values (manifest variant group "size", attr `data-size` on panel). */
 export type LCommandPaletteSize = "sm" | "md" | "lg";
 
-export interface LCommandPaletteProps extends Omit<ComponentPropsWithoutRef<"div">, "id" | "size" | "overlay" | "panel" | "search" | "list" | "group" | "item" | "empty" | "kbd" | "search-wrapper" | "group-label" | "item-label"> {
+export interface LCommandPaletteProps extends Omit<ComponentPropsWithoutRef<"div">, "id" | "noShortcut" | "size" | "overlay" | "panel" | "search" | "list" | "group" | "item" | "empty" | "kbd" | "search-wrapper" | "group-label" | "item-label"> {
   /** Root/ARIA id base; auto-generated per instance when unset. */
   id?: string;
+  /** Toggles the template's bare data attribute. */
+  noShortcut?: boolean;
   /** `data-size` on panel; omitted when unset (manifest default: "md"). */
   size?: LCommandPaletteSize;
   /** Content projected into the `[data-part="overlay"]` element. */
@@ -48,11 +50,11 @@ export const LCommandPalette = createFaqirRecipe<LCommandPaletteProps>({
   events: [],
   slots: ["overlay", "panel", "search", "list", "group", "item", "empty", "kbd", "search-wrapper", "group-label", "item-label"],
   stringProps: [],
-  boolProps: [],
+  boolProps: ["noShortcut"],
   variantProps: [
     { prop: "size", values: ["sm", "md", "lg"] },
   ],
-  tree: {"tag":"div","attrs":[["data-ui",["command-palette"]],["data-state",["closed"]]],"children":[{"tag":"div","attrs":[["data-part",["overlay"]],["hidden",true]],"children":[],"slot":"overlay"},{"tag":"div","attrs":[["data-part",["panel"]],["role",["dialog"]],["aria-modal",["true"]],["aria-label",["Command palette"]],["hidden",true]],"children":[{"tag":"div","attrs":[["data-part",["search-wrapper"]]],"children":[{"tag":"input","attrs":[["data-part",["search"]],["type",["text"]],["role",["combobox"]],["aria-expanded",["true"]],["aria-autocomplete",["list"]],["aria-controls",[{"p":"id"},"-list"]],["placeholder",["Type a command or search..."]]],"children":[],"slot":"search"}],"slot":"search-wrapper"},{"tag":"div","attrs":[["data-part",["list"]],["role",["listbox"]],["id",[{"p":"id"},"-list"]]],"children":[{"tag":"div","attrs":[["data-part",["group"]]],"children":[{"tag":"div","attrs":[["data-part",["group-label"]]],"children":[],"slot":"group-label"},{"tag":"div","attrs":[["data-part",["item"]],["role",["option"]],["aria-selected",["false"]]],"children":[{"tag":"span","attrs":[["data-part",["item-label"]]],"children":[],"slot":"item-label"},{"tag":"kbd","attrs":[["data-part",["kbd"]]],"children":[],"slot":"kbd"}],"slot":"item"}],"slot":"group"},{"tag":"div","attrs":[["data-part",["empty"]],["hidden",true]],"children":["No commands found"],"slot":"empty"}],"slot":"list"}],"slot":"panel","dyn":[["size","data-size"]]}]} as unknown as RecipeNode,
+  tree: {"tag":"div","attrs":[["data-ui",["command-palette"]],["data-state",["closed"]],["data-no-shortcut",{"b":"noShortcut"}]],"children":[{"tag":"div","attrs":[["data-part",["overlay"]],["hidden",true]],"children":[],"slot":"overlay"},{"tag":"div","attrs":[["data-part",["panel"]],["role",["dialog"]],["aria-modal",["true"]],["aria-label",["Command palette"]],["hidden",true]],"children":[{"tag":"div","attrs":[["data-part",["search-wrapper"]]],"children":[{"tag":"input","attrs":[["data-part",["search"]],["type",["text"]],["role",["combobox"]],["aria-expanded",["true"]],["aria-autocomplete",["list"]],["aria-controls",[{"p":"id"},"-list"]],["placeholder",["Type a command or search..."]]],"children":[],"slot":"search"}],"slot":"search-wrapper"},{"tag":"div","attrs":[["data-part",["list"]],["role",["listbox"]],["id",[{"p":"id"},"-list"]]],"children":[{"tag":"div","attrs":[["data-part",["group"]]],"children":[{"tag":"div","attrs":[["data-part",["group-label"]]],"children":[],"slot":"group-label"},{"tag":"div","attrs":[["data-part",["item"]],["role",["option"]],["aria-selected",["false"]]],"children":[{"tag":"span","attrs":[["data-part",["item-label"]]],"children":[],"slot":"item-label"},{"tag":"kbd","attrs":[["data-part",["kbd"]]],"children":[],"slot":"kbd"}],"slot":"item"}],"slot":"group"},{"tag":"div","attrs":[["data-part",["empty"]],["hidden",true]],"children":["No commands found"],"slot":"empty"}],"slot":"list"}],"slot":"panel","dyn":[["size","data-size"]]}]} as unknown as RecipeNode,
 }, "LCommandPalette");
 
 export default LCommandPalette;

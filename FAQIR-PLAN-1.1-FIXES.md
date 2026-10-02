@@ -117,7 +117,7 @@ wait for document order. Task 1.1F-32 releases the additive set; its version is 
 |----|------|---------|-------|--------|
 | 1.1F-08 | Overlay focus: focusable panel + no late focus theft (dialog, alert-dialog, drawer, sheet) | 18, 19 | patch | ✅ |
 | 1.1F-09 | Table: the roving Tab stop never strands | 20 | patch | ✅ |
-| 1.1F-10 | Command palette: case/layout-proof ⌘K, one owner, `data-no-shortcut` | 23, 32 | additive | ⬜ |
+| 1.1F-10 | Command palette: case/layout-proof ⌘K, one owner, `data-no-shortcut` | 23, 32 | additive | ✅ |
 | 1.1F-11 | Sidebar: rail chevron flips, trigger label stays stable | 7 | patch | ⬜ |
 | 1.1F-12 | Nesting, controllers I: tabs, accordion, dialog family, sidebar, context-menu + nesting matrix | 5, 6 | patch | ⬜ |
 | 1.1F-13 | Nesting, controllers II: carousel, popover, table delegation, `:scope` pass | 5 | patch | ⬜ |
@@ -591,7 +591,7 @@ cell has `tabindex="0"`, and ArrowDown from it works.
 - A pre-prevented event opens nothing.
 
 **Acceptance**
-- [ ] `props.noShortcut`, version bump, `changes`, a11y keyboard text "Cmd/Ctrl+K (case-insensitive)"; `gen:skill`, `gen:bindings` (typed prop), `build:registry-index`; standard controller set; size.
+- [x] `props.noShortcut`, version bump, `changes`, a11y keyboard text "Cmd/Ctrl+K (case-insensitive)"; `gen:skill`, `gen:bindings` (typed prop), `build:registry-index`; standard controller set; size. (command-palette.manifest.json 1.1.1 → 1.2.0: `props.noShortcut` (boolean, `data-no-shortcut`), a `changes` entry, the `Cmd+K / Ctrl+K` keyboard line now reads "toggle command palette (case-insensitive; not with Shift or Alt; off under data-no-shortcut)", and the undo-history note as `a11y.notes`. `onGlobalKeyDown` returns on `e.defaultPrevented`, `data-no-shortcut` (read on each press), Alt/Shift/repeat/`isComposing`, and matches `(e.key || "").toLowerCase() === "k"` or, for a non-Latin key, `e.code === "KeyK"`. Beyond the plan, it also returns when `!root.isConnected`: with one owner per press, a palette removed without `destroy()` would otherwise swallow ⌘K for the live one. The full suite caught exactly that, because earlier test files leave palettes undestroyed in the shared realm. The typed prop comes from a positional `{no_shortcut}` placeholder on the template root, which is how the bindings IR derives boolean props (alert-dialog's `{confirm_required}` is the precedent). React and Vue both gain `noShortcut?: boolean`, and the Vue codegen snapshot was updated for it. The Small and Large example palettes in `command-palette.html` carry `data-no-shortcut`. Twelve tests in `command-palette.test.ts` "the Cmd/Ctrl+K shortcut (1.1F-10)": `K`, `л`+`KeyK`, a Latin non-k on `KeyK`, no `key`, Alt/⌘⇧/Ctrl⇧/repeat/composing, first-of-two owns it, `data-no-shortcut` hands it on, live removal of the attribute, a detached palette, a pre-prevented event, an app handler pre-empting it, and the example page. Eight of them fail on the old controller. Bun 1.3.8: `build:core`, `gen:bindings`, `build:registry-index`, `build:core-package`, `gen:skill` (recipes.md template line) and `build:docs`, with every `check:*`, `audit:registry` and `size` gate green. Engine+controllers 45.60 → 45.69/46 KB gzip.)
 
 ### 1.1F-11 · Sidebar: rail chevron flips, trigger label stays stable
 

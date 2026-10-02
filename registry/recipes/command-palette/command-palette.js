@@ -260,14 +260,29 @@ export function createCommandPalette(root) {
     }
   }
 
+  /**
+   * Cmd/Ctrl+K — one owner per press.
+   *
+   * Every instance listens on `document`, so a page with three palettes used to
+   * open three stacked focus traps. The first instance to act prevents default
+   * and every later one (or one an app handler pre-empted) stands down;
+   * `data-no-shortcut` opts an instance out entirely, read live, and a palette
+   * whose root has left the document without `destroy()` (an SPA route change)
+   * no longer claims the press from the live one. The key is
+   * matched case-insensitively (Caps Lock sends "K"), falling back to the
+   * physical key on a non-Latin layout; Shift is left alone because Cmd+Shift+K
+   * is a browser and app chord of its own.
+   */
   function onGlobalKeyDown(e) {
-    if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-      e.preventDefault();
-      if (root.dataset.state === "open") {
-        close();
-      } else {
-        open();
-      }
+    if (e.defaultPrevented || !root.isConnected || root.hasAttribute("data-no-shortcut")) return;
+    if (!(e.metaKey || e.ctrlKey) || e.altKey || e.shiftKey || e.repeat || e.isComposing) return;
+    const k = (e.key || "").toLowerCase();
+    if (k !== "k" && (/^[a-z]$/.test(k) || e.code !== "KeyK")) return;
+    e.preventDefault();
+    if (root.dataset.state === "open") {
+      close();
+    } else {
+      open();
     }
   }
 

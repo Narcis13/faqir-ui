@@ -1,11 +1,16 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "command-palette",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "kind": "recipe",
   "category": "navigation",
   "description": "Cmd+K style modal command interface with search and keyboard navigation",
   "changes": [
+    {
+      "version": "1.2.0",
+      "note": "Cmd/Ctrl+K is matched case-insensitively and has one owner. The shortcut compared e.key to \"k\", so Caps Lock (\"K\") missed it; it now lowercases the key and falls back to the physical KeyK on a non-Latin layout, and ignores Alt, Shift (Cmd+Shift+K is a browser and app chord of its own), auto-repeat and IME composition. Every instance listened on document with no opt-out, so a page with three palettes opened three stacked focus traps: the handler now stands down on an event something else already prevented, so the first palette in listener order (or an app handler that pre-empts it) owns the press, and a palette whose root has left the document without destroy() no longer claims it. New boolean prop data-no-shortcut opts an instance out entirely; it is read on each press, so it can be toggled at runtime.",
+      "breaking": false
+    },
     {
       "version": "1.1.1",
       "note": "Closing no longer sends focus to an opener that has gone or is hidden. The palette restored focus to whatever was focused when it opened, even an element that had since left the document or sat inside another overlay that had closed underneath it (a palette opened from inside a dialog, say). Focus now returns only to an opener that is still in the document and not under [hidden], and only if focus is still in the palette or on body when it closes.",
@@ -154,6 +159,12 @@
       "type": "string",
       "default": "Type a command...",
       "description": "Search input placeholder"
+    },
+    "noShortcut": {
+      "type": "boolean",
+      "default": false,
+      "attr": "data-no-shortcut",
+      "description": "This palette does not listen for Cmd/Ctrl+K; open it from code with open(). Use it on every palette but one when a page has several. Read on each key press"
     }
   },
   "a11y": {
@@ -171,14 +182,15 @@
     "focus_trap": true,
     "escape_closes": true,
     "keyboard": {
-      "Cmd+K / Ctrl+K": "toggle command palette",
+      "Cmd+K / Ctrl+K": "toggle command palette (case-insensitive; not with Shift or Alt; off under data-no-shortcut)",
       "Escape": "close command palette",
       "ArrowDown": "highlight next item",
       "ArrowUp": "highlight previous item",
       "Enter": "activate selected item",
       "Home": "highlight first item",
       "End": "highlight last item"
-    }
+    },
+    "notes": "A search field kept in the page joins the page's undo history, so Cmd/Ctrl+Z after closing the palette can undo the search text instead of the user's last edit. Render the palette with l-if if that matters."
   },
   "tokens_used": [
     "color-bg",
@@ -207,7 +219,7 @@
     "border-width"
   ],
   "templates": {
-    "html": "<div data-ui=\"command-palette\" data-state=\"closed\">\n  <div data-part=\"overlay\" hidden></div>\n  <div data-part=\"panel\" role=\"dialog\" aria-modal=\"true\" aria-label=\"Command palette\" data-size=\"{size}\" hidden>\n    <div data-part=\"search-wrapper\">\n      <input data-part=\"search\" type=\"text\" role=\"combobox\" aria-expanded=\"true\" aria-autocomplete=\"list\" aria-controls=\"{id}-list\" placeholder=\"Type a command or search...\">\n    </div>\n    <div data-part=\"list\" role=\"listbox\" id=\"{id}-list\">\n      <div data-part=\"group\">\n        <div data-part=\"group-label\">{group_label}</div>\n        <div data-part=\"item\" role=\"option\" aria-selected=\"false\">\n          <span data-part=\"item-label\">{item_label}</span>\n          <kbd data-part=\"kbd\">{shortcut}</kbd>\n        </div>\n      </div>\n      <div data-part=\"empty\" hidden>No commands found</div>\n    </div>\n  </div>\n</div>"
+    "html": "<div data-ui=\"command-palette\" data-state=\"closed\"{no_shortcut}>\n  <div data-part=\"overlay\" hidden></div>\n  <div data-part=\"panel\" role=\"dialog\" aria-modal=\"true\" aria-label=\"Command palette\" data-size=\"{size}\" hidden>\n    <div data-part=\"search-wrapper\">\n      <input data-part=\"search\" type=\"text\" role=\"combobox\" aria-expanded=\"true\" aria-autocomplete=\"list\" aria-controls=\"{id}-list\" placeholder=\"Type a command or search...\">\n    </div>\n    <div data-part=\"list\" role=\"listbox\" id=\"{id}-list\">\n      <div data-part=\"group\">\n        <div data-part=\"group-label\">{group_label}</div>\n        <div data-part=\"item\" role=\"option\" aria-selected=\"false\">\n          <span data-part=\"item-label\">{item_label}</span>\n          <kbd data-part=\"kbd\">{shortcut}</kbd>\n        </div>\n      </div>\n      <div data-part=\"empty\" hidden>No commands found</div>\n    </div>\n  </div>\n</div>"
   },
   "safe_transforms": [
     "add-command-item",

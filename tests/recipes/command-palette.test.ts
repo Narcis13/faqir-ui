@@ -507,3 +507,147 @@ describe("command-palette controller", () => {
     expect(search.getAttribute("aria-activedescendant")).toBe("authored-command");
   });
 });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 1.1F-10 — Cmd/Ctrl+K is case/layout-proof and has one owner (entries 23, 32)
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// The shortcut compared `e.key === "k"`, so Caps Lock ("K") missed it, and
+// every instance listened on document with no opt-out: the registry's own
+// example page opened three stacked focus traps on one press.
+
+describe("command-palette — the Cmd/Ctrl+K shortcut (1.1F-10)", () => {
+  beforeEach(() => {
+    document.body.innerHTML = "";
+  });
+  afterEach(() => {
+    while (mounted.length) mounted.pop()!.destroy();
+  });
+
+  const press = (init: KeyboardEventInit) => {
+    const e = new KeyboardEvent("keydown", { bubbles: true, cancelable: true, ...init });
+    document.dispatchEvent(e);
+    return e;
+  };
+
+  // A second palette after the first, in listener order.
+  function setupTwo() {
+    const first = setup();
+    const secondRoot = first.root.cloneNode(true) as HTMLElement;
+    document.body.appendChild(secondRoot);
+    const second = createCommandPalette(secondRoot);
+    mounted.push(second);
+    return { first: first.root, second: secondRoot };
+  }
+
+  it('opens on key "K" (Caps Lock)', () => {
+    const { root } = setup();
+    const e = press({ key: "K", code: "KeyK", metaKey: true });
+    expect(root.dataset.state).toBe("open");
+    expect(e.defaultPrevented).toBe(true);
+  });
+
+  it("opens on a non-Latin layout through the physical key", () => {
+    const { root } = setup();
+    press({ key: "л", code: "KeyK", ctrlKey: true });
+    expect(root.dataset.state).toBe("open");
+  });
+
+  it("a Latin letter that is not k never matches, whatever the physical key", () => {
+    const { root } = setup();
+    // AZERTY-style remap: the KeyK position types another Latin letter.
+    press({ key: "j", code: "KeyK", metaKey: true });
+    expect(root.dataset.state).toBe("closed");
+  });
+
+  it("a keydown with no key (Chrome autofill) does not throw or open", () => {
+    const { root } = setup();
+    expect(() => press({ metaKey: true })).not.toThrow();
+    expect(root.dataset.state).toBe("closed");
+  });
+
+  it("Alt+K, Cmd+Shift+K, auto-repeat and IME composition do nothing", () => {
+    const { root } = setup();
+    for (const init of [
+      { key: "k", metaKey: true, altKey: true },
+      { key: "K", metaKey: true, shiftKey: true },
+      { key: "k", ctrlKey: true, shiftKey: true },
+      { key: "k", metaKey: true, repeat: true },
+      { key: "k", metaKey: true, isComposing: true },
+    ]) {
+      const e = press(init);
+      expect(root.dataset.state).toBe("closed");
+      expect(e.defaultPrevented).toBe(false);
+    }
+  });
+
+  it("with two palettes, only the first opens", () => {
+    const { first, second } = setupTwo();
+    press({ key: "k", metaKey: true });
+    expect(first.dataset.state).toBe("open");
+    expect(second.dataset.state).toBe("closed");
+    // …and the next press closes that same one, still leaving the other alone.
+    press({ key: "k", metaKey: true });
+    expect(first.dataset.state).toBe("closed");
+    expect(second.dataset.state).toBe("closed");
+  });
+
+  it("data-no-shortcut on the first hands the shortcut to the second", () => {
+    const { first, second } = setupTwo();
+    first.setAttribute("data-no-shortcut", "");
+    press({ key: "k", metaKey: true });
+    expect(first.dataset.state).toBe("closed");
+    expect(second.dataset.state).toBe("open");
+  });
+
+  it("data-no-shortcut is read live, so it can be removed at runtime", () => {
+    const { root } = setup();
+    root.setAttribute("data-no-shortcut", "");
+    press({ key: "k", metaKey: true });
+    expect(root.dataset.state).toBe("closed");
+    root.removeAttribute("data-no-shortcut");
+    press({ key: "k", metaKey: true });
+    expect(root.dataset.state).toBe("open");
+  });
+
+  it("a palette removed without destroy() does not take the press from the live one", () => {
+    const { first, second } = setupTwo();
+    // An SPA route change that drops the markup but never calls destroy().
+    first.remove();
+    const e = press({ key: "k", metaKey: true });
+    expect(second.dataset.state).toBe("open");
+    expect(first.dataset.state).toBe("closed");
+    expect(e.defaultPrevented).toBe(true);
+  });
+
+  it("an event something else already prevented opens nothing", () => {
+    const { root } = setup();
+    const e = new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true, cancelable: true });
+    e.preventDefault();
+    document.dispatchEvent(e);
+    expect(root.dataset.state).toBe("closed");
+  });
+
+  it("an app handler that pre-empts the press wins", () => {
+    const { root } = setup();
+    const appHandler = (e: Event) => e.preventDefault();
+    document.body.addEventListener("keydown", appHandler);
+    try {
+      document.body.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true, cancelable: true }),
+      );
+      expect(root.dataset.state).toBe("closed");
+    } finally {
+      document.body.removeEventListener("keydown", appHandler);
+    }
+  });
+
+  it("the shipped example page marks every palette but one with data-no-shortcut", async () => {
+    const html = await Bun.file(
+      new URL("../../registry/recipes/command-palette/command-palette.html", import.meta.url),
+    ).text();
+    const roots = html.match(/<div data-ui="command-palette"[^>]*>/g) ?? [];
+    expect(roots.length).toBeGreaterThan(1);
+    expect(roots.filter((r) => !r.includes("data-no-shortcut")).length).toBe(1);
+  });
+});

@@ -1109,7 +1109,7 @@
       "name": "command-palette",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.1.1",
+      "version": "1.2.0",
       "files": [
         {
           "path": "command-palette.css",
@@ -1117,18 +1117,18 @@
         },
         {
           "path": "command-palette.html",
-          "sha256": "2181a2aeb95453bdb6d1adb2e414c82c16e3ee761f6468074bf843ac7bcb11e2"
+          "sha256": "391760729ea534594853f1c209a3abf552ef455a1d0999fff7742d942d78969c"
         },
         {
           "path": "command-palette.js",
-          "sha256": "39afb17f795f1632f5578493db888f3ae4346efa10909a18ca3b0746f120f5b3"
+          "sha256": "b95639249ef894b6de7da541137fcf9b2d2bbecdc0139a1044a952c4cfe8332d"
         },
         {
           "path": "command-palette.manifest.json",
-          "sha256": "4e0877d9166daf56498c9953e46e637ebc1bb6909a493f0108778f3c5d2a2562"
+          "sha256": "035a59e204818dcf6595250b6ffc9dce9d82abc8cf178e769b4007a60da0b135"
         }
       ],
-      "hash": "e3b37f77132ef5502eaad1af411a6a35efaefe89651621cfb44780b911ac3e4a",
+      "hash": "c36dc168290d143c9f4580c9c2b5a18d4a88d18708ca2866b7052a4e024245df",
       "deps": [
         "kbd"
       ]

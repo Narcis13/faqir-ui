@@ -62,8 +62,8 @@
   </div>
 </div>
 
-<!-- Small panel -->
-<div data-ui="command-palette" data-state="closed">
+<!-- Small panel — opened from code: only one palette on a page should own Cmd/Ctrl+K -->
+<div data-ui="command-palette" data-state="closed" data-no-shortcut>
   <div data-part="overlay" hidden></div>
 
   <div
@@ -104,8 +104,8 @@
   </div>
 </div>
 
-<!-- Large panel -->
-<div data-ui="command-palette" data-state="closed">
+<!-- Large panel — opened from code: only one palette on a page should own Cmd/Ctrl+K -->
+<div data-ui="command-palette" data-state="closed" data-no-shortcut>
   <div data-part="overlay" hidden></div>
 
   <div
