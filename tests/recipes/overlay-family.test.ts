@@ -437,3 +437,162 @@ describe("a component missing a part says so instead of throwing", () => {
     });
   }
 });
+
+// ───────────────────────────────────────────────────────────────────────────
+// 4 · modal focus: a focusable panel, and no late focus theft  [1.1F-08]
+// ───────────────────────────────────────────────────────────────────────────
+//
+// Entry 19: `panel.focus()` on open did nothing on a panel with no tabindex,
+// so focus stayed on `body` — outside the trap, and out of reach of the root's
+// Escape listener. The fixtures above all carry `tabindex="-1"` by hand; these
+// do not, so the controller has to add it.
+//
+// Entry 18: focus went back to the opener when the exit animation ENDED, even
+// if the user had moved it somewhere else while the panel slid away.
+
+describe("modal overlays own focus on open and give it back only if nobody took it", () => {
+  const MODALS: Array<[string, (root: HTMLElement) => any, string]> = [
+    ["dialog", createDialog, "opacity"],
+    ["drawer", createDrawer, "transform"],
+    ["sheet", createSheet, "transform"],
+  ];
+
+  function mountModal(name: string, create: (root: HTMLElement) => any) {
+    document.body.innerHTML = `
+      <button id="opener">Open</button>
+      <input id="elsewhere" type="text">
+      <div data-ui="${name}" data-state="closed">
+        <div data-part="overlay" hidden></div>
+        <div data-part="panel" role="dialog" aria-modal="true" hidden>
+          <button data-part="close">Close</button>
+        </div>
+      </div>`;
+    const root = document.querySelector("[data-ui]") as HTMLElement;
+    const panel = root.querySelector("[data-part='panel']") as HTMLElement;
+    const opener = document.getElementById("opener") as HTMLElement;
+    const elsewhere = document.getElementById("elsewhere") as HTMLElement;
+    return { root, panel, opener, elsewhere, api: create(root) };
+  }
+
+  function endExit(panel: HTMLElement, propertyName: string) {
+    const ev = new Event("transitionend", { bubbles: true });
+    Object.defineProperty(ev, "propertyName", { value: propertyName });
+    panel.dispatchEvent(ev);
+  }
+
+  for (const [name, create, exitProperty] of MODALS) {
+    it(`${name}: the panel is focusable once the controller starts`, () => {
+      const { panel, api } = mountModal(name, create);
+      // happy-dom focuses any element, tabindex or not, so assert the attribute.
+      expect(panel.getAttribute("tabindex")).toBe("-1");
+      api.open();
+      expect(panel.getAttribute("tabindex")).toBe("-1");
+      api.destroy();
+    });
+
+    it(`${name}: an author's own panel tabindex is left alone`, () => {
+      document.body.innerHTML = `
+        <div data-ui="${name}" data-state="closed">
+          <div data-part="overlay" hidden></div>
+          <div data-part="panel" role="dialog" tabindex="0" hidden></div>
+        </div>`;
+      const root = document.querySelector("[data-ui]") as HTMLElement;
+      const api = create(root);
+      expect(root.querySelector("[data-part='panel']")!.getAttribute("tabindex")).toBe("0");
+      api.destroy();
+    });
+
+    it(`${name}: focus moved elsewhere during a slow close stays there`, () => {
+      const { root, panel, opener, elsewhere, api } = mountModal(name, create);
+      opener.focus();
+      api.open();
+      panel.style.transitionDuration = "1s";
+      api.close();
+      expect(root.dataset.state).toBe("closing");
+
+      elsewhere.focus();
+      endExit(panel, exitProperty);
+
+      expect(root.dataset.state).toBe("closed");
+      expect(document.activeElement).toBe(elsewhere);
+    });
+
+    it(`${name}: focus still in the panel when the exit ends goes back to the opener`, () => {
+      const { root, panel, opener, api } = mountModal(name, create);
+      opener.focus();
+      api.open();
+      (root.querySelector("[data-part='close']") as HTMLElement).focus();
+      panel.style.transitionDuration = "1s";
+      api.close();
+      endExit(panel, exitProperty);
+
+      expect(root.dataset.state).toBe("closed");
+      expect(document.activeElement).toBe(opener);
+    });
+
+    it(`${name}: an opener removed while closing is not focused`, () => {
+      const { root, opener, api } = mountModal(name, create);
+      opener.focus();
+      api.open();
+      (root.querySelector("[data-part='close']") as HTMLElement).focus();
+      opener.remove();
+      // happy-dom (like a browser) ignores focus() on a detached node, so watch
+      // the call itself: the controller must not even try.
+      let focused = false;
+      opener.focus = () => void (focused = true);
+      api.close();
+
+      expect(root.dataset.state).toBe("closed");
+      expect(focused).toBe(false);
+    });
+  }
+
+  it("alert-dialog still focuses its least-destructive action, not the panel", () => {
+    document.body.innerHTML = `
+      <div data-ui="alert-dialog" data-state="closed">
+        <div data-part="overlay" hidden></div>
+        <div data-part="panel" role="alertdialog" aria-modal="true" hidden>
+          <button data-part="cancel">Cancel</button>
+          <button data-part="confirm">Delete</button>
+        </div>
+      </div>`;
+    const root = document.querySelector("[data-ui]") as HTMLElement;
+    const api = createDialog(root);
+    api.open();
+    expect(root.querySelector("[data-part='panel']")!.getAttribute("tabindex")).toBe("-1");
+    expect(document.activeElement).toBe(root.querySelector("[data-part='cancel']"));
+    api.destroy();
+  });
+
+  it("command-palette: an opener inside a since-hidden overlay is not focused on close", () => {
+    // The downstream repro: a palette opened from a button inside a dialog that
+    // then closed underneath it. Restoring to that button lands focus inside a
+    // hidden panel — focus nobody can see, on a control nobody can reach.
+    document.body.innerHTML = `
+      <div id="other-panel"><button id="opener">Open palette</button></div>
+      <div data-ui="command-palette" data-state="closed">
+        <div data-part="overlay" hidden></div>
+        <div data-part="panel" role="dialog" hidden>
+          <input data-part="search" type="text">
+          <div data-part="list" role="listbox"></div>
+          <div data-part="empty" hidden>No results</div>
+        </div>
+      </div>`;
+    const root = document.querySelector("[data-ui]") as HTMLElement;
+    const opener = document.getElementById("opener") as HTMLElement;
+    const api = createCommandPalette(root);
+    opener.focus();
+    api.open();
+    document.getElementById("other-panel")!.hidden = true;
+    api.close();
+    expect(document.activeElement).not.toBe(opener);
+
+    // …while a visible, connected opener still gets focus back.
+    document.getElementById("other-panel")!.hidden = false;
+    opener.focus();
+    api.open();
+    api.close();
+    expect(document.activeElement).toBe(opener);
+    api.destroy();
+  });
+});

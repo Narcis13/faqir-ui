@@ -127,7 +127,7 @@ Reach it as `$ui.<method>()` from any expression inside this component, or as th
 - **Safe transforms:** `change-variant-size`, `change-variant-tone`, `swap-close-animation`, `restyle-panel-background`, `customize-overlay-opacity`, `relabel-actions`, `toggle-confirm-required`
 - **Unsafe (never do):** `remove-focus-trap`, `change-panel-role`, `remove-aria-modal`, `remove-aria-labelledby`, `remove-aria-describedby`, `remove-confirm-action`, `enable-overlay-dismiss`, `remove-overlay`
 - **A11y:** role=alertdialog · aria-modal · focus-trap · escape-closes · return-focus→trigger · keys: Escape, Tab, Shift+Tab
-- **Required ARIA:** `role="alertdialog" on panel`; `aria-modal="true" on panel`; `aria-labelledby pointing to title id`; `aria-describedby pointing to description id`
+- **Required ARIA:** `role="alertdialog" on panel`; `aria-modal="true" on panel`; `aria-labelledby pointing to title id`; `aria-describedby pointing to description id`; `tabindex="-1" on panel (controller adds it if missing)`
 
 ## barcode
 
@@ -575,7 +575,7 @@ Reach it as `$ui.<method>()` from any expression inside this component, or as th
 - **Safe transforms:** `change-variant-size`, `change-variant-tone`, `add-description-slot`, `swap-close-animation`, `restyle-panel-background`, `add-form-to-body`, `customize-overlay-opacity`, `add-header-slot`, `modify-footer-buttons`
 - **Unsafe (never do):** `remove-focus-trap`, `remove-escape-handler`, `remove-aria-labelledby`, `remove-overlay`, `remove-close-button`, `change-panel-role`, `remove-aria-modal`
 - **A11y:** role=dialog · aria-modal · focus-trap · escape-closes · return-focus→trigger · keys: Escape, Tab, Shift+Tab
-- **Required ARIA:** `role="dialog" on panel`; `aria-modal="true" on panel`; `aria-labelledby pointing to title id`; `aria-label on close button`
+- **Required ARIA:** `role="dialog" on panel`; `aria-modal="true" on panel`; `aria-labelledby pointing to title id`; `aria-label on close button`; `tabindex="-1" on panel (controller adds it if missing)`
 
 ## drawer
 
@@ -633,7 +633,7 @@ Reach it as `$ui.<method>()` from any expression inside this component, or as th
 - **Safe transforms:** `change-variant-side`, `change-variant-size`, `restyle-panel-background`, `add-form-to-body`, `customize-overlay-opacity`, `modify-footer-buttons`, `swap-slide-animation`
 - **Unsafe (never do):** `remove-focus-trap`, `remove-escape-handler`, `remove-aria-labelledby`, `remove-overlay`, `remove-close-button`, `change-panel-role`, `remove-aria-modal`
 - **A11y:** role=dialog · aria-modal · focus-trap · escape-closes · return-focus→trigger · keys: Escape, Tab, Shift+Tab
-- **Required ARIA:** `role="dialog" on panel`; `aria-modal="true" on panel`; `aria-labelledby pointing to title id`; `aria-label on close button`
+- **Required ARIA:** `role="dialog" on panel`; `aria-modal="true" on panel`; `aria-labelledby pointing to title id`; `aria-label on close button`; `tabindex="-1" on panel (controller adds it if missing)`
 
 ## dropdown
 
@@ -1108,7 +1108,7 @@ Reach it as `$ui.<method>()` from any expression inside this component, or as th
 - **Safe transforms:** `change-variant-side`, `change-variant-size`, `restyle-panel-background`, `add-content-to-body`, `customize-overlay-opacity`, `modify-border-radius`, `swap-slide-animation`
 - **Unsafe (never do):** `remove-focus-trap`, `remove-escape-handler`, `remove-aria-labelledby`, `remove-overlay`, `remove-close-button`, `change-panel-role`, `remove-aria-modal`
 - **A11y:** role=dialog · aria-modal · focus-trap · escape-closes · return-focus→trigger · keys: Escape, Tab, Shift+Tab
-- **Required ARIA:** `role="dialog" on panel`; `aria-modal="true" on panel`; `aria-labelledby pointing to title id`; `aria-label on close button`
+- **Required ARIA:** `role="dialog" on panel`; `aria-modal="true" on panel`; `aria-labelledby pointing to title id`; `aria-label on close button`; `tabindex="-1" on panel (controller adds it if missing)`
 
 ## sidebar
 

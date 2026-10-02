@@ -115,7 +115,7 @@ wait for document order. Task 1.1F-32 releases the additive set; its version is 
 
 | ID | Task | Entries | Class | Status |
 |----|------|---------|-------|--------|
-| 1.1F-08 | Overlay focus: focusable panel + no late focus theft (dialog, alert-dialog, drawer, sheet) | 18, 19 | patch | ⬜ |
+| 1.1F-08 | Overlay focus: focusable panel + no late focus theft (dialog, alert-dialog, drawer, sheet) | 18, 19 | patch | ✅ |
 | 1.1F-09 | Table: the roving Tab stop never strands | 20 | patch | ⬜ |
 | 1.1F-10 | Command palette: case/layout-proof ⌘K, one owner, `data-no-shortcut` | 23, 32 | additive | ⬜ |
 | 1.1F-11 | Sidebar: rail chevron flips, trigger label stays stable | 7 | patch | ⬜ |
@@ -526,9 +526,9 @@ directive element as `$el`, but the scope's `$el` magic (the root, 660) is found
 - An opener removed during close is not focused.
 
 **Acceptance**
-- [ ] Manifests: `a11y.required_attrs` gains `tabindex="-1" on panel (controller adds it if missing)`; a11y note "focus returns to the opener unless focus moved elsewhere while closing"; `changes` + version bumps; `gen:skill`.
-- [ ] Standard controller regeneration set (HTML changed → `gen:bindings`); size.
-- [ ] Downstream: `index.html` legend panel's own `tabindex="-1"` becomes optional.
+- [x] Manifests: `a11y.required_attrs` gains `tabindex="-1" on panel (controller adds it if missing)`; a11y note "focus returns to the opener unless focus moved elsewhere while closing"; `changes` + version bumps; `gen:skill`. (dialog, drawer, sheet, alert-dialog 1.0.0 → 1.0.1, each with the `required_attrs` line, an `a11y.notes` sentence and a first `changes` entry; command-palette 1.1.0 → 1.1.1 with a `changes` entry for the hidden/disconnected-opener skip. `tabindex="-1"` added to every panel in the four canonical HTML files. The check is a shared `returnFocus(root, target, active)` in `registry/core/focus.js` (mirrored in engine.js's focus section, which the built core inlines instead of the module); `active` is read in `onEnd` before the panel hides. The no-ring rule is `> [data-part="panel"]:focus { outline: none }` on dialog, drawer and sheet, **not** the plan's `:focus:not(:focus-visible)`: that one never matches on a keyboard open, which is the case it was meant for. alert-dialog.css is unchanged because `tests/themes/contrast.test.ts` counts every `:focus` stylesheet as drawing a ring, and the alert panel is only a fallback target (Cancel takes focus). Seventeen tests in `overlay-family.test.ts` § 4: the 1s-transition race, focus still in the panel, a removed opener (asserts `focus()` is never called, since happy-dom ignores it on a detached node), the tabindex attribute and an author's own tabindex for dialog/drawer/sheet, alert-dialog still focusing Cancel, and the palette's hidden opener. Eleven of them fail on the old controllers.)
+- [x] Standard controller regeneration set (HTML changed → `gen:bindings`); size. (Bun 1.3.8: `build:core`, `gen:bindings` (react/vue `_core-focus.ts` + four controllers), `build:registry-index`, `build:core-package`, `gen:skill` (recipes.md Required ARIA lines), `build:docs`. Engine 11.04 → 11.08 KB, engine+controllers 45.48 → 45.56 / 46 KB gzip. All twelve `check:*`/`audit:registry`/`size` gates green.)
+- [x] Downstream: `index.html` legend panel's own `tabindex="-1"` becomes optional. (The controller writes it at init when it is missing and leaves an author's own value alone; both are asserted in `overlay-family.test.ts`. Already the "18, 19" row of the 1.1F-32 un-patch checklist.)
 
 ### 1.1F-09 · Table: the roving Tab stop never strands
 

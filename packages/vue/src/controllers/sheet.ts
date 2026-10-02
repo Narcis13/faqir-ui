@@ -6,7 +6,7 @@
 // @ui:controller sheet
 // @ui:provides open close toggle destroy
 
-import { trapFocus } from "./_core-focus.js";
+import { trapFocus, returnFocus } from "./_core-focus.js";
 import { whenExitDone } from "./_core-motion.js";
 
 export function createSheet(root) {
@@ -17,6 +17,10 @@ export function createSheet(root) {
   const overlay = root.querySelector("[data-part='overlay']");
   const panel = root.querySelector("[data-part='panel']");
   const closeButtons = root.querySelectorAll("[data-part='close']");
+
+  // `panel.focus()` on open does nothing without a tabindex: focus stayed on
+  // `body`, out of reach of the trap and the root's Escape listener.
+  if (panel && !panel.hasAttribute("tabindex")) panel.setAttribute("tabindex", "-1");
 
   let focusCleanup = null;
   let previouslyFocused = null;
@@ -60,13 +64,14 @@ export function createSheet(root) {
 
     const onEnd = () => {
       cancelExitWait = null;
+      const active = document.activeElement;
       root.dataset.state = "closed";
       overlay.hidden = true;
       panel.hidden = true;
       unlockScroll();
       if (focusCleanup) focusCleanup();
       focusCleanup = null;
-      previouslyFocused?.focus();
+      returnFocus(root, previouslyFocused, active);
     };
 
     // The panel's OWN `transform` — not a close button's `background`, which

@@ -1,7 +1,7 @@
 // @ui:controller dialog
 // @ui:provides open close toggle destroy
 
-import { trapFocus } from "../../core/focus.js";
+import { trapFocus, returnFocus } from "../../core/focus.js";
 import { whenExitDone } from "../../core/motion.js";
 
 /**
@@ -34,6 +34,10 @@ export function createDialog(root) {
   // The role is the seam between `dialog` and `alert-dialog` — read it from the
   // markup so a single controller serves both recipes.
   const isAlert = !!panel && panel.getAttribute("role") === "alertdialog";
+
+  // `panel.focus()` on open does nothing without a tabindex: focus stayed on
+  // `body`, out of reach of the trap and the root's Escape listener.
+  if (panel && !panel.hasAttribute("tabindex")) panel.setAttribute("tabindex", "-1");
 
   let focusCleanup = null;
   let previouslyFocused = null;
@@ -94,12 +98,13 @@ export function createDialog(root) {
 
     const onEnd = () => {
       cancelExitWait = null;
+      const active = document.activeElement;
       root.dataset.state = "closed";
       overlay.hidden = true;
       panel.hidden = true;
       if (focusCleanup) focusCleanup();
       focusCleanup = null;
-      previouslyFocused?.focus();
+      returnFocus(root, previouslyFocused, active);
     };
 
     // The panel's own exit motion. A footer button's `background` transitionend

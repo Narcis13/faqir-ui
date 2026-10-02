@@ -2339,6 +2339,13 @@
     return function() { container.removeEventListener('keydown', onKeyDown); };
   }
 
+  // Back to the opener once an overlay has closed, unless focus moved on while
+  // it closed (`active` was read before the panel hid) or the opener is gone.
+  function returnFocus(root, target, active) {
+    if ((!active || active === document.body || root.contains(active)) &&
+        target && target.isConnected && !target.closest('[hidden]')) target.focus();
+  }
+
   // --- From motion.js (prefersReducedMotion already defined in Section 3.14) ---
   function waitForTransition(el) {
     if (prefersReducedMotion()) return Promise.resolve();

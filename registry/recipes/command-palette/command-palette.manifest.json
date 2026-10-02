@@ -1,11 +1,16 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "command-palette",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "kind": "recipe",
   "category": "navigation",
   "description": "Cmd+K style modal command interface with search and keyboard navigation",
   "changes": [
+    {
+      "version": "1.1.1",
+      "note": "Closing no longer sends focus to an opener that has gone or is hidden. The palette restored focus to whatever was focused when it opened, even an element that had since left the document or sat inside another overlay that had closed underneath it (a palette opened from inside a dialog, say). Focus now returns only to an opener that is still in the document and not under [hidden], and only if focus is still in the palette or on body when it closes.",
+      "breaking": false
+    },
     {
       "version": "1.1.0",
       "note": "data-highlighted and data-hidden are now declared. The controller has always written both onto the options (active descendant and filtered-out respectively) and the CSS has always styled them, but no manifest named them. They are states rather than props because a controller writes them: a state is the runtime's vocabulary, a prop is what an author types. 0.8-10's undeclared-attribute rule now makes this class of drift impossible: an attribute a component's CSS selects on that its manifest never declares fails the registry gate.",

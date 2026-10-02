@@ -1,5 +1,5 @@
 // @ui:core focus
-// @ui:provides trapFocus releaseFocus focusFirst getFocusableElements
+// @ui:provides trapFocus releaseFocus focusFirst getFocusableElements returnFocus
 
 const FOCUSABLE = [
   'a[href]:not([tabindex="-1"])',
@@ -72,4 +72,25 @@ export function trapFocus(container) {
  */
 export function releaseFocus(cleanup) {
   if (typeof cleanup === "function") cleanup();
+}
+
+/**
+ * Return focus to `target` once an overlay has closed — unless focus moved on
+ * while it was closing, or `target` has gone. `active` is
+ * `document.activeElement` read before the overlay hid its panel (hiding it
+ * drops focus to `body`): left on `body` or inside `root`, nobody took it.
+ * Otherwise a slow exit animation would yank focus back from whatever the user
+ * moved to in the meantime. A `target` that left the document, or sits under
+ * `[hidden]` (an opener inside another overlay that has since closed), is
+ * skipped too.
+ * @param {Element} root
+ * @param {Element|null} target
+ * @param {Element|null} active
+ */
+export function returnFocus(root, target, active) {
+  if (
+    (!active || active === document.body || root.contains(active)) &&
+    target?.isConnected &&
+    !target.closest("[hidden]")
+  ) target.focus?.();
 }

@@ -2345,6 +2345,13 @@
     return function() { container.removeEventListener('keydown', onKeyDown); };
   }
 
+  // Back to the opener once an overlay has closed, unless focus moved on while
+  // it closed (`active` was read before the panel hid) or the opener is gone.
+  function returnFocus(root, target, active) {
+    if ((!active || active === document.body || root.contains(active)) &&
+        target && target.isConnected && !target.closest('[hidden]')) target.focus();
+  }
+
   // --- From motion.js (prefersReducedMotion already defined in Section 3.14) ---
   function waitForTransition(el) {
     if (prefersReducedMotion()) return Promise.resolve();
@@ -3977,8 +3984,11 @@ function createCommandPalette(root) {
   }
 
   function close() {
+    const active = document.activeElement;
     dismiss();
-    previouslyFocused?.focus();
+    // The opener may have left with another overlay — the downstream palette
+    // was opened from inside a dialog that closed underneath it.
+    returnFocus(root, previouslyFocused, active);
   }
 
   /**
@@ -4531,6 +4541,10 @@ function createDialog(root) {
   // markup so a single controller serves both recipes.
   const isAlert = !!panel && panel.getAttribute("role") === "alertdialog";
 
+  // `panel.focus()` on open does nothing without a tabindex: focus stayed on
+  // `body`, out of reach of the trap and the root's Escape listener.
+  if (panel && !panel.hasAttribute("tabindex")) panel.setAttribute("tabindex", "-1");
+
   let focusCleanup = null;
   let previouslyFocused = null;
 
@@ -4590,12 +4604,13 @@ function createDialog(root) {
 
     const onEnd = () => {
       cancelExitWait = null;
+      const active = document.activeElement;
       root.dataset.state = "closed";
       overlay.hidden = true;
       panel.hidden = true;
       if (focusCleanup) focusCleanup();
       focusCleanup = null;
-      previouslyFocused?.focus();
+      returnFocus(root, previouslyFocused, active);
     };
 
     // The panel's own exit motion. A footer button's `background` transitionend
@@ -4733,6 +4748,10 @@ function createDrawer(root) {
   const panel = root.querySelector("[data-part='panel']");
   const closeButtons = root.querySelectorAll("[data-part='close']");
 
+  // `panel.focus()` on open does nothing without a tabindex: focus stayed on
+  // `body`, out of reach of the trap and the root's Escape listener.
+  if (panel && !panel.hasAttribute("tabindex")) panel.setAttribute("tabindex", "-1");
+
   let focusCleanup = null;
   let previouslyFocused = null;
   let prevBodyOverflow = null;
@@ -4775,13 +4794,14 @@ function createDrawer(root) {
 
     const onEnd = () => {
       cancelExitWait = null;
+      const active = document.activeElement;
       root.dataset.state = "closed";
       overlay.hidden = true;
       panel.hidden = true;
       unlockScroll();
       if (focusCleanup) focusCleanup();
       focusCleanup = null;
-      previouslyFocused?.focus();
+      returnFocus(root, previouslyFocused, active);
     };
 
     // The panel's OWN `transform` — not the close button's `background`, which
@@ -7153,6 +7173,10 @@ function createSheet(root) {
   const panel = root.querySelector("[data-part='panel']");
   const closeButtons = root.querySelectorAll("[data-part='close']");
 
+  // `panel.focus()` on open does nothing without a tabindex: focus stayed on
+  // `body`, out of reach of the trap and the root's Escape listener.
+  if (panel && !panel.hasAttribute("tabindex")) panel.setAttribute("tabindex", "-1");
+
   let focusCleanup = null;
   let previouslyFocused = null;
   let prevBodyOverflow = null;
@@ -7195,13 +7219,14 @@ function createSheet(root) {
 
     const onEnd = () => {
       cancelExitWait = null;
+      const active = document.activeElement;
       root.dataset.state = "closed";
       overlay.hidden = true;
       panel.hidden = true;
       unlockScroll();
       if (focusCleanup) focusCleanup();
       focusCleanup = null;
-      previouslyFocused?.focus();
+      returnFocus(root, previouslyFocused, active);
     };
 
     // The panel's OWN `transform` — not a close button's `background`, which

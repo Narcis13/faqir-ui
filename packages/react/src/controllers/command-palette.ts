@@ -6,7 +6,7 @@
 // @ui:controller command-palette
 // @ui:provides open close filter selectItem registerCommand destroy
 
-import { trapFocus } from "./_core-focus.js";
+import { trapFocus, returnFocus } from "./_core-focus.js";
 import { uid } from "./_core-utils.js";
 
 export function createCommandPalette(root) {
@@ -67,8 +67,11 @@ export function createCommandPalette(root) {
   }
 
   function close() {
+    const active = document.activeElement;
     dismiss();
-    previouslyFocused?.focus();
+    // The opener may have left with another overlay — the downstream palette
+    // was opened from inside a dialog that closed underneath it.
+    returnFocus(root, previouslyFocused, active);
   }
 
   /**

@@ -35,6 +35,14 @@
   transition: transform var(--duration-slow) var(--ease-out);
 }
 
+/* The panel is focused on open (tabindex="-1") only so the focus trap and the
+   Escape key have somewhere to start. It is not a control, so it draws no ring:
+   the global :focus-visible would otherwise outline the whole panel when the
+   overlay is opened from the keyboard. */
+[data-ui="sheet"] > [data-part="panel"]:focus {
+  outline: none;
+}
+
 @supports ((-webkit-backdrop-filter: blur(1rem)) or (backdrop-filter: blur(1rem))) {
   [data-ui="sheet"] [data-part="panel"] {
     -webkit-backdrop-filter: var(--surface-backdrop);
