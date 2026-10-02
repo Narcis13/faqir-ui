@@ -1,5 +1,5 @@
 /* @ui:component watermark */
-/* @ui:tokens color-fg-muted doc-font font-body text-xl text-2xl text-4xl weight-bold leading-tight space-8 space-20 z-raised */
+/* @ui:tokens color-fg-muted doc-font font-body text-xl text-4xl weight-bold leading-tight space-8 space-20 z-raised */
 
 [data-ui="watermark"] {
   position: fixed;

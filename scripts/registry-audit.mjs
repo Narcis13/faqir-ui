@@ -4,7 +4,7 @@
  * registry remediated in 0.3-10; theme-manifest gate added in 0.4-12;
  * document-rule gate added in 0.4-15). See FAQIR-PLAN §10.4.
  *
- * Six gates, all fatal on a single finding:
+ * Eight gates, all fatal on a single finding:
  *
  *  1. **logical-properties** — runs the framework's own audit rule engine
  *     (`buildLogicalPropertyResults`, the same one `faqir audit` runs per
@@ -50,6 +50,13 @@
  *     no width at all (reduced motion, colour scheme, forced colours, print) are
  *     exempt by construction.
  *
+ *  7. **full rule set** (task 0.9-04) — every per-component rule over the
+ *     reference markup, at zero. Its contract is written out where it runs.
+ *
+ *  8. **component tokens** (task 1.1F-15) — each component's `tokens_used`, its
+ *     stylesheet's `@ui:tokens` header and the `var()`s its CSS reads agree.
+ *     Regenerate with `bun run gen:component-tokens`.
+ *
  * Bun-only: imports the TypeScript rule engine from `src/`. Run via
  * `bun run audit:registry` (or `bun scripts/registry-audit.mjs`).
  */
@@ -63,6 +70,7 @@ import { parseDocument } from "../src/parser/html-parser";
 import { DOCUMENT_RULES } from "../src/audit/rules";
 import { auditHtmlSource } from "../src/audit/html-audit";
 import { knownUiValues, loadRegistryManifestMap, loadRegistryStylesheetMap } from "../src/utils/components";
+import { checkComponentTokens, readTokenLayer } from "../src/component-tokens";
 import {
   buildBreakpointCanonResults,
   buildUndeclaredAttributeResults,
@@ -346,6 +354,48 @@ if (fullRuleOffenders.length > 0) {
   failed = true;
 } else {
   console.log(`✓ Zero findings — every reference fragment satisfies every rule it can.`);
+}
+
+// ── Gate 8: tokens_used, the @ui:tokens header and the CSS agree (1.1F-15) ───
+// Three lists name a component's tokens and nothing compared them: 65 of 86
+// manifests disagreed with their own CSS (187 tokens read but undeclared, 121
+// declared but never read) and 70 headers did. `tokens_used` is the tokens the
+// CSS references directly (CONTRIBUTING, decision D5); an entry it reaches only
+// through an alias (`color-ring` via `--focus-ring-color`) may stay; the header
+// is `tokens_used` verbatim. `bun run gen:component-tokens` writes all of it.
+const tokenLayer = readTokenLayer(tokenDefSources);
+const tokenOffenders = [];
+let tokenComponents = 0;
+for (const { rel } of componentDirs) {
+  const manifestText = readFileSync(join(REGISTRY, rel), "utf8");
+  const manifest = JSON.parse(manifestText);
+  const cssRel = join(dirname(rel), manifest.files?.css ?? `${manifest.name}.css`);
+  if (!existsSync(join(REGISTRY, cssRel))) continue;
+  tokenComponents++;
+  const findings = checkComponentTokens(
+    {
+      name: manifest.name,
+      manifestRel: rel,
+      manifestText,
+      tokensUsed: manifest.tokens_used ?? [],
+      cssRel,
+      css: readFileSync(join(REGISTRY, cssRel), "utf8"),
+    },
+    tokenLayer,
+  );
+  for (const f of findings) tokenOffenders.push(`  ${f.file}:${f.line} — [${f.kind}] ${f.message}`);
+}
+
+console.log(`\n▶ Registry self-audit — tokens_used vs @ui:tokens vs CSS over registry component CSS`);
+console.log(`  scanned ${tokenComponents} component(s)`);
+
+if (tokenOffenders.length > 0) {
+  console.error(`\n✗ ${tokenOffenders.length} finding(s) — component token metadata drifted from the CSS:`);
+  console.error(tokenOffenders.join("\n"));
+  console.error(`\nRegenerate with \`bun run gen:component-tokens\` — never hand-edit either list.`);
+  failed = true;
+} else {
+  console.log(`✓ Zero findings — every component declares exactly the tokens its CSS reads.`);
 }
 
 process.exit(failed ? 1 : 0);

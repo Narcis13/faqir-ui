@@ -108,13 +108,17 @@
   },
   "tokens_used": [
     "color-bg",
-    "panel-bg",
     "color-fg",
     "color-border",
+    "color-bg-muted",
+    "color-fg-muted",
+    "panel-bg",
     "shadow-md",
     "radius-lg",
+    "radius-md",
     "space-3",
     "space-4",
+    "space-2",
     "z-dropdown",
     "duration-fast",
     "ease-default",
@@ -124,7 +128,10 @@
     "focus-ring-style",
     "focus-ring-color",
     "focus-ring-offset",
-    "surface-backdrop"
+    "surface-backdrop",
+    "text-sm",
+    "text-xs",
+    "weight-medium"
   ],
   "templates": {
     "html": "<div data-ui=\"popover\" data-state=\"closed\">\n  <button data-part=\"trigger\" aria-haspopup=\"true\" aria-expanded=\"false\">{trigger_text}</button>\n  <div data-part=\"content\" data-variant=\"{position}\" data-align=\"{align}\" hidden>\n    {content}\n    <button data-part=\"close\" aria-label=\"Close popover\">✕</button>\n  </div>\n</div>"

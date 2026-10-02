@@ -1,5 +1,5 @@
 /* @ui:component slider */
-/* @ui:tokens color-bg color-fg-muted color-border color-primary color-primary-subtle color-ring color-bg-muted space-2 space-3 space-4 radius-full text-sm text-base shadow-sm duration-fast ease-default font-ui border-width border-width-strong focus-ring-width focus-ring-style focus-ring-color focus-ring-offset disabled-opacity */
+/* @ui:tokens color-bg color-fg-muted color-primary color-primary-subtle color-ring color-bg-muted space-3 radius-full text-sm shadow-sm duration-fast ease-default font-ui border-width border-width-strong focus-ring-width focus-ring-style focus-ring-color focus-ring-offset disabled-opacity */
 
 /* ── Root ── */
 [data-ui="slider"] {

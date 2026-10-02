@@ -64,11 +64,10 @@
   },
 
   "tokens_used": [
-    "color-bg", "color-fg", "color-primary", "color-primary-fg",
-    "color-border", "color-border-strong", "color-ring",
-    "space-1", "space-2",
-    "duration-fast", "ease-default",
-    "border-width", "focus-ring-width", "focus-ring-offset", "focus-ring-style", "focus-ring-color", "focus-shadow", "checkbox-radius", "checkbox-size", "disabled-opacity"
+    "color-bg", "color-primary", "color-primary-fg", "color-border", "color-border-strong",
+    "color-ring", "space-2", "duration-fast", "ease-default", "border-width", "focus-ring-width",
+    "focus-ring-offset", "focus-ring-style", "focus-ring-color", "focus-shadow", "checkbox-radius",
+    "checkbox-size", "disabled-opacity"
   ],
 
   "templates": {

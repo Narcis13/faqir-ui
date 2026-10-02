@@ -74,9 +74,12 @@ as was done with `state-1.0.json`).
   (`packages/{react,vue}` vendor the controllers verbatim), `bun run build:registry-index`
   (sha256 per file), `bun run build:core-package` (SRI in `packages/core/cdn.json`;
   fail-closed), plus `bun run gen:skill` if a manifest changed.
-- **What to regenerate after a CSS edit** (`registry/**/*.css`): `build:registry-index`,
-  `build:core-package` (27 theme bundles carry SRI), and `check:docs`. The engine is
-  unaffected.
+- **What to regenerate after a CSS edit** (`registry/**/*.css`): `gen:component-tokens`
+  first (since 1.1F-15 it owns `tokens_used` and the `@ui:tokens` header — never hand-edit
+  either), then `build:registry-index`, `gen:skill` (it quotes button's manifest and header
+  verbatim), `build:core-package` (27 theme bundles carry SRI), and **then** `build:docs`:
+  every docs page embeds `cdn.json`'s SRI hashes, so docs built before the package go
+  stale. The engine is unaffected.
 - **After an `src/core-src/engine.js` edit:** `build:core`, `build:core-package`, plus
   `gen:skill` if a `@ui:directive`/`@ui:magic` line changed (`tests/generator/skill.test.ts:755-785`
   requires every `$token` written anywhere in engine.js, comments included, to have a
@@ -137,7 +140,7 @@ wait for document order. Task 1.1F-32 releases the additive set; its version is 
 
 | ID | Task | Entries | Class | Status |
 |----|------|---------|-------|--------|
-| 1.1F-15 | `gen:component-tokens` + registry gate: `tokens_used` and `@ui:tokens` derived from CSS | 17, 30 | patch | ⬜ |
+| 1.1F-15 | `gen:component-tokens` + registry gate: `tokens_used` and `@ui:tokens` derived from CSS | 17, 30 | patch | ✅ |
 | 1.1F-16 | Overflow: stack `min-inline-size`, grid `minmax(0,1fr)`, `overflow-wrap` on ids | 25, 26, 27 | patch | ⬜ |
 | 1.1F-17 | Button: `aria-pressed` state; link variant keeps its box under a size | 14, 24 | additive | ⬜ |
 | 1.1F-18 | Text: an anchor carrying `data-ui="text"` reads as a link | 28 | patch | ⬜ |
@@ -777,9 +780,9 @@ three lists:
 - `color-ring` reached through an alias is accepted.
 
 **Acceptance**
-- [ ] `bun run check:component-tokens` and `audit:registry` green; `release.mjs` preflight runs it; CONTRIBUTING and AGENTS list the generator.
-- [ ] `gen:skill`, `build:registry-index`, `check:schema-refs` green.
-- [ ] Later Lane S tasks use the generator instead of hand-editing headers.
+- [x] `bun run check:component-tokens` and `audit:registry` green; `release.mjs` preflight runs it; CONTRIBUTING and AGENTS list the generator. (Rules in new `src/component-tokens.ts`, shared by `scripts/gen-component-tokens.mjs` and **gate 8** of `registry-audit.mjs` — the file already had a gate 7, so the new one is 8 and the header now lists all eight. The extractor reproduces this section's verified numbers exactly (86 / 358 / 70 / 65 / 187 across 40 / 121 / 72). On the old tree gate 8 reports 337 findings with file:line; after `gen:component-tokens` it reports zero: 55 manifests and 63 stylesheets rewritten, and form-page and wizard, which had no machine header, got one. Order: existing entries kept, new reads appended, then grouped by family, so a rerun is a fixed point. Manifests in `JSON.stringify(…, 2)` form, which are the 22 recipe manifests `build:manifest-api` byte-compares, keep one entry per line. The rest are wrapped before 100 columns. `conform` now writes its header through the shared `cssTokensHeader`. `check:component-tokens` is in `PREFLIGHT` and `docs/release-checklist.md`, the CONTRIBUTING `tokens_used` entry carries D5's definition, and AGENTS lists the generator under generated artifacts. Version decision: **no bump and no `changes` line.** `changes[].version` is the component's own version, so a line without a bump would file the note under a release that never had it.)
+- [x] `gen:skill`, `build:registry-index`, `check:schema-refs` green. (`gen:skill` rewrote `references/manifest.md`, which quotes button's manifest and header verbatim. `build:core-package` (pinned 1.3.8) re-hashed 27 theme bundles in `cdn.json`. `build:docs` has to run **after** it, because every page embeds those hashes. All 13 `check:*`/`audit:registry`/`size` gates green.)
+- [x] Later Lane S tasks use the generator instead of hand-editing headers. (The environment-facts note "What to regenerate after a CSS edit" now starts with `gen:component-tokens` and gives the order index → skill → core-package → docs. `check:component-tokens` and gate 8 fail any hand-edit that drifts.)
 
 ### 1.1F-16 · Overflow: stack, grid, and unbreakable tokens
 

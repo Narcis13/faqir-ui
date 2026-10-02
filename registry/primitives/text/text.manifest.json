@@ -111,27 +111,11 @@
     "keyboard": {}
   },
   "tokens_used": [
-    "color-fg",
-    "color-fg-muted",
-    "color-primary",
-    "font-heading", "font-body", "heading-weight", "heading-tracking", "heading-transform", "heading-caps", "heading-leading",
-    "font-mono",
-    "text-xs",
-    "text-sm",
-    "text-base",
-    "text-lg",
-    "text-xl",
-    "text-2xl",
-    "text-3xl",
-    "text-4xl",
-    "weight-normal",
-    "weight-medium",
-    "weight-semibold",
-    "weight-bold",
-    "leading-tight",
-    "leading-snug",
-    "leading-normal",
-    "leading-relaxed"
+    "color-fg", "color-fg-muted", "color-primary", "color-destructive", "font-heading", "font-body",
+    "font-mono", "heading-weight", "heading-tracking", "heading-transform", "heading-caps",
+    "heading-leading", "text-xs", "text-sm", "text-base", "text-lg", "text-xl", "text-2xl",
+    "text-3xl", "text-4xl", "weight-normal", "weight-medium", "weight-semibold", "weight-bold",
+    "leading-tight", "leading-snug", "leading-normal", "leading-relaxed"
   ],
   "templates": {
     "html": "<p data-ui=\"text\" data-size=\"{size}\" data-variant=\"{variant}\">{content}</p>"

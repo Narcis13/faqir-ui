@@ -1,5 +1,5 @@
 /* @ui:component image */
-/* @ui:tokens image-radius image-border image-border-width image-caption-size image-caption-color color-bg-muted font-body */
+/* @ui:tokens color-bg-muted color-fg-muted radius-md space-2 text-xs font-body image-radius image-border-width image-border image-caption-size image-caption-color doc-font */
 
 /* ── Base ── */
 [data-ui="image"] {

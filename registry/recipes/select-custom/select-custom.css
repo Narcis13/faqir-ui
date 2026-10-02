@@ -1,5 +1,5 @@
 /* @ui:component select-custom */
-/* @ui:tokens color-bg color-fg color-fg-muted color-border color-border-strong color-primary color-primary-subtle color-ring radius-md radius-lg shadow-md space-1 space-2 space-3 space-4 text-sm text-xs z-dropdown duration-fast ease-default font-ui border-width focus-ring-width focus-ring-style focus-ring-color focus-ring-offset */
+/* @ui:tokens color-bg color-fg color-fg-muted color-border color-border-strong color-primary color-primary-subtle color-ring radius-md radius-lg shadow-md space-1 space-2 space-3 space-4 text-sm text-xs z-dropdown duration-fast ease-default font-ui border-width focus-ring-width focus-ring-style focus-ring-color focus-ring-offset weight-medium */
 
 /* ── Root ── */
 [data-ui="select-custom"] {

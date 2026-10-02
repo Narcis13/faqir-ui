@@ -58,9 +58,8 @@
   },
 
   "tokens_used": [
-    "color-bg-muted", "color-fg-muted",
-    "radius-full",
-    "font-ui", "text-xs", "text-sm", "weight-medium"
+    "color-bg-muted", "color-fg-muted", "radius-full", "font-ui", "text-xs", "text-sm", "text-base",
+    "weight-medium", "avatar-size-md", "avatar-radius", "avatar-size-sm", "avatar-size-lg"
   ],
 
   "templates": {

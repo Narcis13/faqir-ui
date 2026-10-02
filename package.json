@@ -45,6 +45,8 @@
     "size": "node scripts/check-size.mjs",
     "audit:registry": "bun scripts/registry-audit.mjs",
     "gen:theme-manifests": "bun scripts/gen-theme-manifests.mjs",
+    "gen:component-tokens": "bun scripts/gen-component-tokens.mjs",
+    "check:component-tokens": "bun scripts/gen-component-tokens.mjs --check",
     "gen:v024-surface": "bun scripts/gen-v024-surface.mjs",
     "gen:v100-surface": "bun scripts/gen-v100-surface.mjs",
     "gen:theme-previews": "bun scripts/gen-theme-previews.mjs",

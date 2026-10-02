@@ -1,5 +1,5 @@
 /* @ui:component key-value */
-/* @ui:tokens kv-label-color kv-label-weight kv-label-size kv-value-color kv-value-size kv-value-weight kv-gap kv-pair-gap kv-grid-gap text-xs text-sm text-base font-body */
+/* @ui:tokens color-fg color-fg-muted space-1 space-2 space-3 space-4 text-xs text-sm text-base font-body weight-medium kv-pair-gap kv-label-size kv-label-weight kv-label-color kv-value-size kv-value-weight kv-value-color kv-gap kv-grid-gap doc-font */
 
 /* ── Base ── */
 [data-ui="key-value"] {

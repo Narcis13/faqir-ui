@@ -56,9 +56,9 @@
   },
 
   "tokens_used": [
-    "color-bg-muted", "color-fg-muted",
-    "radius-md", "space-2",
-    "text-xs", "font-body"
+    "color-bg-muted", "color-fg-muted", "radius-md", "space-2", "text-xs", "font-body",
+    "image-radius", "image-border-width", "image-border", "image-caption-size",
+    "image-caption-color", "doc-font"
   ],
 
   "templates": {

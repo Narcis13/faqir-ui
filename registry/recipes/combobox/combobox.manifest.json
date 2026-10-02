@@ -155,6 +155,7 @@
     "space-3",
     "text-sm",
     "text-base",
+    "text-xs",
     "z-dropdown",
     "duration-fast",
     "ease-default",

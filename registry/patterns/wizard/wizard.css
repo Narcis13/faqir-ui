@@ -1,3 +1,5 @@
+/* @ui:component wizard */
+/* @ui:tokens color-fg color-success-subtle measure-narrow radius-lg space-3 space-4 space-6 font-body text-sm text-2xl weight-semibold leading-tight leading-normal */
 /* wizard — multi-step form pattern.
    Layout only: the stepper, card panels, field-groups and buttons carry their
    own look from their primitives. This sheet stacks the pieces, lays out the

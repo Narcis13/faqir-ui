@@ -5,6 +5,7 @@ import { join, relative } from "node:path";
 import { log } from "../utils/logger";
 import { configExists, readConfig, missingConfigMessage } from "../utils/config";
 import { loadManifest, type Manifest } from "../manifest";
+import { cssTokensHeader } from "../component-tokens";
 import { tokenizeHTML, RAW_TEXT_ELEMENTS, type RawAttr } from "../parser/html-tokenizer";
 
 /** Canonical attribute order for Faqir component elements. */
@@ -80,7 +81,7 @@ function buildCSSMachineComments(manifest: Manifest): string {
   const lines: string[] = [];
   lines.push(`/* @ui:component ${manifest.name} */`);
   if (manifest.tokens_used && manifest.tokens_used.length > 0) {
-    lines.push(`/* @ui:tokens ${manifest.tokens_used.join(" ")} */`);
+    lines.push(cssTokensHeader(manifest.tokens_used));
   }
   return lines.join("\n");
 }

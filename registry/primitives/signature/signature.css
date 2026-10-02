@@ -1,5 +1,5 @@
 /* @ui:component signature */
-/* @ui:tokens doc-signature-width doc-signature-gap doc-signature-line-color doc-signature-label-size doc-signature-label-color doc-font font-body space-2 space-12 border-width */
+/* @ui:tokens color-fg-muted space-2 space-12 text-xs font-body weight-medium border-width doc-font doc-signature-gap doc-signature-line-color doc-signature-label-size doc-signature-label-color doc-signature-width */
 
 /* ── Base ── */
 [data-ui="signature"] {

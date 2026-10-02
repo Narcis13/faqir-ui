@@ -60,8 +60,8 @@
   },
 
   "tokens_used": [
-    "color-fg", "color-fg-muted", "color-destructive",
-    "font-ui", "text-xs", "text-sm", "text-base", "weight-medium", "disabled-opacity"
+    "color-fg", "color-fg-muted", "color-destructive", "font-ui", "text-xs", "text-sm", "text-base",
+    "weight-medium", "weight-normal", "disabled-opacity"
   ],
 
   "templates": {

@@ -1,5 +1,5 @@
 /* @ui:component callout */
-/* @ui:tokens callout-radius callout-padding-y callout-padding-x callout-border-left-width callout-font-size callout-icon-size callout-fg color-fg color-fg-muted color-info color-info-subtle color-warning color-warning-subtle color-destructive color-destructive-subtle color-success color-success-subtle color-bg-muted color-border color-ring space-1 radius-sm font-heading font-body weight-semibold focus-ring-width focus-ring-offset focus-ring-style focus-ring-color focus-shadow */
+/* @ui:tokens color-fg color-fg-muted color-info color-info-subtle color-warning color-warning-subtle color-destructive color-destructive-subtle color-success color-success-subtle color-border color-ring space-1 space-3 space-4 space-2 radius-sm radius-md text-sm font-heading font-body weight-semibold focus-ring-width focus-ring-offset focus-ring-style focus-ring-color focus-shadow callout-padding-y callout-padding-x callout-radius callout-border-left-width callout-font-size callout-icon-size callout-fg callout-bg callout-border-width doc-font doc-line-height doc-label-gap doc-print-border-color */
 
 /* ── Base ── */
 [data-ui="callout"] {

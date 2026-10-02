@@ -1,5 +1,5 @@
 /* @ui:component spinner */
-/* @ui:tokens color-border color-primary radius-full duration-normal ease-default border-width-strong border-width-lg */
+/* @ui:tokens color-border color-primary radius-full border-width-strong border-width-lg */
 
 /* ── Base ── */
 [data-ui="spinner"] {

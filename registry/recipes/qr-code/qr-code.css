@@ -1,5 +1,5 @@
 /* @ui:component qr-code */
-/* @ui:tokens color-fg color-bg doc-legal-color doc-legal-size doc-font font-body space-2 */
+/* @ui:tokens color-fg-muted space-2 text-xs font-body doc-font doc-legal-size doc-legal-color */
 
 /* ── Base ── */
 [data-ui="qr-code"] {

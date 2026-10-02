@@ -1,5 +1,5 @@
 /* @ui:component surface */
-/* @ui:tokens color-bg color-surface-1 color-surface-2 color-surface-1-border color-surface-2-border measure-content measure-narrow measure-prose measure-wide radius-lg shadow-sm shadow-md shadow-lg space-3 space-4 space-6 border-width corner-shape surface-backdrop texture-surface */
+/* @ui:tokens color-bg color-surface-1 color-surface-2 color-surface-1-border color-surface-2-border measure-content measure-narrow measure-prose measure-wide radius-lg shadow-sm shadow-lg space-3 space-4 space-6 border-width corner-shape surface-backdrop texture-surface */
 
 /* ── Base ── */
 [data-ui="surface"] {

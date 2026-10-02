@@ -78,8 +78,6 @@
     "keyboard": {}
   },
   "tokens_used": [
-    "color-fg",
-    "color-bg",
     "color-fg-muted",
     "doc-font",
     "doc-legal-color",

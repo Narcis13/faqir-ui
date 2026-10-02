@@ -1,5 +1,5 @@
 /* @ui:component barcode */
-/* @ui:tokens color-fg color-bg color-fg-muted doc-font doc-legal-color doc-legal-size font-mono font-body space-2 space-12 space-16 space-20 */
+/* @ui:tokens color-fg-muted doc-font doc-legal-color doc-legal-size font-mono font-body leading-normal space-2 space-12 space-16 space-20 */
 
 [data-ui="barcode"] {
   display: inline-flex;

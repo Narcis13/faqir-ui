@@ -1,5 +1,5 @@
 /* @ui:component tabs */
-/* @ui:tokens color-bg color-fg color-fg-muted color-border color-primary color-primary-subtle space-1 space-2 space-3 space-4 radius-md radius-lg text-sm text-base weight-medium duration-fast ease-default font-ui border-width border-width-strong focus-ring-width focus-ring-style focus-ring-color focus-ring-offset */
+/* @ui:tokens color-bg color-fg color-fg-muted color-border color-primary color-border-strong color-bg-muted space-1 space-2 space-3 space-4 space-6 radius-md radius-lg text-sm text-base text-xs weight-medium duration-fast ease-default font-ui border-width border-width-strong focus-ring-width focus-ring-style focus-ring-color focus-ring-offset shadow-xs */
 
 /* ── Root ── */
 [data-ui="tabs"] {

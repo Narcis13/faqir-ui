@@ -1,3 +1,5 @@
+/* @ui:component form-page */
+/* @ui:tokens color-fg color-fg-muted measure-narrow space-5 space-8 font-body text-sm text-2xl weight-semibold leading-tight leading-normal */
 /* form-page — page-level framing for a schema-rendered form.
    The markup is emitted verbatim by @faqir-ui/forms (this reference page is the
    pinned golden target for that generator), so every field's look comes from the

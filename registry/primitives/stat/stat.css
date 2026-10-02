@@ -1,5 +1,5 @@
 /* @ui:component stat */
-/* @ui:tokens stat-value-size stat-value-weight stat-value-num-font stat-label-size stat-label-color stat-change-positive stat-change-negative color-fg color-fg-muted color-bg color-border space-1 space-2 space-4 radius-md shadow-sm font-heading font-body text-xs text-sm text-lg text-3xl weight-semibold border-width */
+/* @ui:tokens color-fg color-fg-muted color-success color-destructive color-bg color-border space-1 space-4 radius-md shadow-sm font-heading font-body text-xs text-sm text-lg text-2xl text-3xl weight-semibold weight-bold border-width doc-font doc-print-border-color stat-label-size stat-label-color stat-value-size stat-value-weight stat-value-num-font stat-change-positive stat-change-negative */
 
 /* ── Base ── */
 [data-ui="stat"] {

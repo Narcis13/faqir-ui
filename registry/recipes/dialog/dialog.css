@@ -1,5 +1,5 @@
 /* @ui:component dialog */
-/* @ui:tokens radius-xl shadow-xl space-4 space-6 space-8 color-bg panel-bg color-fg color-border color-fg-muted duration-normal duration-slow ease-default ease-out z-overlay z-modal font-heading corner-shape border-width focus-ring-width focus-ring-style focus-ring-color focus-ring-offset surface-backdrop */
+/* @ui:tokens radius-xl radius-lg radius-md shadow-xl space-6 space-8 space-3 color-bg color-fg color-border color-fg-muted color-destructive color-bg-muted panel-bg duration-normal ease-default ease-out z-overlay z-modal font-heading corner-shape border-width focus-ring-width focus-ring-style focus-ring-color focus-ring-offset surface-backdrop dialog-overlay-bg dialog-radius dialog-shadow text-lg text-base text-sm weight-semibold */
 
 /* ── Root ── */
 [data-ui="dialog"] {

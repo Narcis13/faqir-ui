@@ -64,31 +64,10 @@
     "keyboard": {}
   },
   "tokens_used": [
-    "color-bg",
-    "color-bg-subtle",
-    "color-fg",
-    "color-fg-muted",
-    "color-border",
-    "color-primary",
-    "radius-lg",
-    "shadow-sm",
-    "space-2",
-    "space-3",
-    "space-4",
-    "space-6",
-    "space-8",
-    "space-10",
-    "font-heading", "font-body", "heading-tracking", "heading-transform", "heading-caps", "heading-leading",
-    "text-sm",
-    "text-base",
-    "text-lg",
-    "text-xl",
-    "text-2xl",
-    "weight-semibold",
-    "leading-tight",
-    "leading-normal",
-    "duration-normal",
-    "ease-default"
+    "color-fg", "color-fg-muted", "space-2", "space-3", "space-4", "space-6", "space-8", "space-10",
+    "space-1", "font-heading", "font-body", "heading-tracking", "heading-transform", "heading-caps",
+    "heading-leading", "text-sm", "text-base", "text-lg", "text-2xl", "weight-semibold",
+    "leading-tight", "leading-normal", "duration-normal", "ease-default"
   ],
   "templates": {
     "html": "<div data-ui=\"empty-state\" data-size=\"{size}\">\n  <div data-part=\"icon\">{icon}</div>\n  <h3 data-part=\"title\">{title}</h3>\n  <p data-part=\"description\">{description}</p>\n  <div data-part=\"actions\">\n    <button data-ui=\"button\" data-variant=\"primary\">{action_label}</button>\n    <button data-ui=\"button\" data-variant=\"ghost\">{secondary_label}</button>\n  </div>\n</div>"

@@ -54,11 +54,9 @@
   },
 
   "tokens_used": [
-    "color-fg", "color-fg-muted", "color-border",
-    "space-2", "space-3", "space-4", "space-6",
-    "text-xs", "text-sm", "text-base",
-    "font-body", "weight-semibold",
-    "border-width"
+    "color-fg", "color-fg-muted", "color-border", "space-2", "space-3", "space-4", "space-6",
+    "space-1", "text-xs", "text-sm", "text-base", "font-body", "weight-semibold", "border-width",
+    "doc-font", "doc-line-height"
   ],
 
   "templates": {

@@ -1,5 +1,5 @@
 /* @ui:component sidebar */
-/* @ui:tokens color-bg color-fg color-fg-muted color-border color-primary color-primary-subtle color-bg-muted color-ring shadow-xl space-1 space-2 space-3 space-4 radius-md radius-lg z-overlay z-modal text-sm text-lg weight-medium weight-semibold duration-normal duration-slow ease-out ease-default border-width focus-ring-width focus-ring-style focus-ring-color focus-ring-offset */
+/* @ui:tokens color-bg color-fg color-fg-muted color-border color-primary color-primary-subtle color-bg-muted color-ring shadow-xl space-1 space-2 space-3 space-4 radius-md radius-lg z-overlay z-modal text-sm weight-medium weight-semibold duration-normal duration-slow ease-out ease-default border-width focus-ring-width focus-ring-style focus-ring-color focus-ring-offset */
 
 /* ── Root ──
    The root owns the layout column from `md` up; the panel is the visual surface.

@@ -30,8 +30,8 @@ than CI ever was, because they cannot be skipped by pushing to a branch:
 
 `typecheck` · `check:registry-index` · `check:manifest-api` · `check:core-package`
 · `check:audit-browser` · `check:rules-plugin` · `check:schema-refs`
-· `check:bindings` · `check:skill` · `check:theme-docs` · `check:docs`
-· `audit:registry` · `size` · `test`
+· `check:component-tokens` · `check:bindings` · `check:skill` · `check:theme-docs`
+· `check:docs` · `audit:registry` · `size` · `test`
 
 `tests/build/release.test.ts` fails when a `check:*` script exists that the
 preflight does not run, and when this list stops matching it.

@@ -1,5 +1,5 @@
 /* @ui:component separator */
-/* @ui:tokens color-border space-4 text-xs color-fg-muted font-ui border-width-strong divider-width divider-style */
+/* @ui:tokens color-border color-fg-muted space-4 font-ui text-xs border-width-strong divider-width divider-style */
 
 /* ── Base (horizontal) ── */
 [data-ui="separator"] {

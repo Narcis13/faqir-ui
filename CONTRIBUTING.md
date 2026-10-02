@@ -120,7 +120,9 @@ violations, both colour schemes). Full reference: [`docs/docs-site.md`](docs/doc
    - Include `@media (prefers-reduced-motion: reduce)` if animated
    - Add machine comments at the top: `/* @ui:component {name} */`
 
-3. Follow the manifest schema — see `button.manifest.json` as a reference.
+3. Follow the manifest schema — see `button.manifest.json` as a reference. Leave
+   `tokens_used` and the `/* @ui:tokens … */` header to the generator: run
+   `bun run gen:component-tokens` after every CSS change.
 
 4. Add test fixtures in `tests/fixtures/` if needed.
 
@@ -180,7 +182,12 @@ Every manifest must include:
   small enums, each with `type` + `description` (and optionally `default`, `attr`, `values`)
 - `states` — component states with data-state mappings
 - `a11y` — ARIA requirements, keyboard shortcuts, focus trap info
-- `tokens_used` — token names referenced in CSS
+- `tokens_used` — the design tokens the component's CSS references directly: every
+  `var(--x)` (fallbacks included) whose `--x` is defined in `registry/tokens/`. A token the
+  CSS reaches only through an alias may stay listed (`color-ring`, reached through
+  `--focus-ring-color`); nothing else may. The stylesheet's `/* @ui:tokens … */` header
+  repeats the list verbatim. Both are written by `bun run gen:component-tokens` and
+  gated by `check:component-tokens` and `audit:registry` — never edit them by hand.
 - `templates` — HTML templates with placeholders
 - `safe_transforms` / `unsafe_transforms` — what agents can and cannot modify
 - `files` — relative paths to component files

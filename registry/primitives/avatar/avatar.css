@@ -1,5 +1,5 @@
 /* @ui:component avatar */
-/* @ui:tokens color-bg-muted color-fg-muted radius-full font-ui text-xs text-sm weight-medium */
+/* @ui:tokens color-bg-muted color-fg-muted radius-full font-ui text-xs text-sm text-base weight-medium avatar-size-md avatar-radius avatar-size-sm avatar-size-lg */
 
 /* ── Base ── */
 [data-ui="avatar"] {

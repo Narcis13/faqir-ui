@@ -1,5 +1,5 @@
 /* @ui:component badge */
-/* @ui:tokens color-bg-muted color-fg color-primary color-primary-fg color-primary-subtle color-secondary color-secondary-fg color-destructive color-destructive-fg color-destructive-subtle color-success color-success-subtle color-warning color-warning-subtle radius-full space-1 space-2 font-ui text-xs text-sm weight-medium corner-shape */
+/* @ui:tokens color-bg-muted color-fg color-primary color-primary-subtle color-secondary color-secondary-fg color-destructive color-destructive-subtle color-success color-success-subtle color-warning color-warning-subtle radius-full space-1 space-2 space-3 font-ui text-xs text-sm weight-medium corner-shape badge-radius badge-font */
 
 /* ── Base ── */
 [data-ui="badge"] {

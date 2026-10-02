@@ -1,5 +1,5 @@
 /* @ui:component crud-table */
-/* @ui:tokens color-bg color-bg-subtle color-bg-muted color-fg color-fg-muted color-border color-primary color-primary-fg color-destructive color-destructive-fg radius-md radius-lg shadow-sm space-1 space-2 space-3 space-4 space-6 space-8 font-body text-sm text-base text-lg weight-medium weight-semibold duration-fast duration-normal ease-default border-width */
+/* @ui:tokens color-bg color-bg-subtle color-fg color-fg-muted color-border color-destructive radius-md radius-lg space-1 space-2 space-3 space-4 space-6 space-8 font-body text-sm text-base text-lg weight-medium weight-semibold duration-fast ease-default border-width */
 
 /* ── Root ── */
 [data-ui="crud-table"] {

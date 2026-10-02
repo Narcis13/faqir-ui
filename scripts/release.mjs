@@ -92,6 +92,7 @@ const PREFLIGHT = [
   ["check:audit-browser", "site/lib/faqir-audit.js matches src/audit/browser.ts"],
   ["check:rules-plugin", "registry/core/plugins/faqir-rules.js matches @faqir-ui/rules"],
   ["check:schema-refs", "every manifest carries a current $schema"],
+  ["check:component-tokens", "tokens_used and @ui:tokens match each component's CSS"],
   ["check:bindings", "the generated Vue and React components are current"],
   ["check:skill", "the shipped faqir-creator skill matches its generator"],
   ["check:theme-docs", "README's theme tables match the theme manifests"],

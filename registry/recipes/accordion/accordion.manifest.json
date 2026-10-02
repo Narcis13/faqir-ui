@@ -122,11 +122,10 @@
     }
   },
   "tokens_used": [
-    "color-bg",
     "color-fg",
     "color-fg-muted",
     "color-border",
-    "space-3",
+    "color-bg-muted",
     "space-4",
     "text-sm",
     "text-base",
@@ -134,6 +133,7 @@
     "duration-normal",
     "ease-default",
     "radius-lg",
+    "radius-sm",
     "font-ui",
     "border-width",
     "focus-ring-width",

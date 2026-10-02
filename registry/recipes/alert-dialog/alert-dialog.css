@@ -1,5 +1,5 @@
 /* @ui:component alert-dialog */
-/* @ui:tokens radius-xl shadow-xl space-2 space-3 space-6 color-bg color-fg color-border color-fg-muted color-destructive duration-normal ease-default ease-out z-overlay z-modal font-heading border-width */
+/* @ui:tokens radius-xl shadow-xl space-2 space-3 space-6 color-bg color-fg color-border color-fg-muted color-destructive duration-normal ease-default ease-out z-overlay z-modal font-heading border-width text-lg text-sm weight-semibold */
 
 /* ── Root ── */
 [data-ui="alert-dialog"] {

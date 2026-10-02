@@ -32,10 +32,7 @@
   },
 
   "tokens_used": [
-    "color-border", "color-primary",
-    "radius-full",
-    "duration-normal", "ease-default",
-    "border-width-strong", "border-width-lg"
+    "color-border", "color-primary", "radius-full", "border-width-strong", "border-width-lg"
   ],
 
   "templates": {

@@ -161,13 +161,17 @@
   },
   "tokens_used": [
     "color-bg",
-    "panel-bg",
     "color-fg",
     "color-border",
+    "color-fg-muted",
+    "color-bg-muted",
+    "panel-bg",
     "shadow-xl",
     "space-4",
     "space-6",
+    "space-3",
     "radius-none",
+    "radius-md",
     "z-overlay",
     "z-modal",
     "duration-normal",
@@ -180,7 +184,10 @@
     "focus-ring-style",
     "focus-ring-color",
     "focus-ring-offset",
-    "surface-backdrop"
+    "surface-backdrop",
+    "text-lg",
+    "text-base",
+    "weight-semibold"
   ],
   "templates": {
     "html": "<div data-ui=\"drawer\" data-state=\"closed\" id=\"{id}\">\n  <button data-part=\"trigger\">{trigger_text}</button>\n  <div data-part=\"overlay\" hidden></div>\n  <div data-part=\"panel\" data-variant=\"{side}\" data-size=\"{size}\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"{id}-title\" hidden>\n    <div data-part=\"header\">\n      <h2 id=\"{id}-title\" data-part=\"title\">{title}</h2>\n      <button data-part=\"close\" aria-label=\"Close drawer\">✕</button>\n    </div>\n    <div data-part=\"body\">{body}</div>\n    <div data-part=\"footer\">{footer}</div>\n  </div>\n</div>"

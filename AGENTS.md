@@ -61,6 +61,7 @@ bun run check:package
 bun run check:registry-index
 bun run check:skill
 bun run check:schema-refs
+bun run check:component-tokens
 bun run check:manifest-api
 bun run check:bindings
 bun run check:theme-docs
@@ -182,6 +183,10 @@ Do not hand-edit generated outputs. Change their source and regenerate them:
   and gated by `bun run check:skill`; never hand-edit them.
 - Manifest `$schema` references: run `bun run gen:schema-refs`; use
   `bun run check:schema-refs` to verify drift.
+- Component `tokens_used` arrays and the `/* @ui:tokens … */` stylesheet
+  headers: edit the component CSS, then run `bun run gen:component-tokens`
+  (gated by `bun run check:component-tokens` and gate 8 of
+  `audit:registry`). Never hand-edit either list.
 - `tests/fixtures/v024/surface.json`: the v0.2.4 release's honoured component
   surface, read out of the release tag by `bun run gen:v024-surface`. It is the
   "before" side of the migration gate in `tests/migration/migration-doc.test.ts`;
