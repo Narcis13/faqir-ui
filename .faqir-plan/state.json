@@ -115,7 +115,7 @@
     {
       "id": "1.1F-19",
       "completed": "2026-10-03",
-      "commit": "PENDING",
+      "commit": "03af482",
       "summary": "`--mono-ligatures` token (default none; theme surface 284 → 285). The six rules that set the mono stack (text mono, kbd, prose code and pre, command-palette's kbd part, barcode's caption) declare font-variant-ligatures: var(--mono-ligatures) beside it, so Cascadia Code and JetBrains Mono no longer join !=, => and ->; command-palette's carries a none fallback. Manifests: text 1.2.0, kbd 1.1.0, command-palette 1.3.0, barcode 1.1.0. 27 theme manifests gained one tokens_inherited line. Docs generator: CODE_FACE_PROPERTY map and a Code face section on the Typography page (docs-foundations.test.ts requires every typography token to have a live preview). Tests: role-tokens.test.ts §5 (7 cases, 4 red on the old stylesheets), surface count 285, one Chromium case in variant-consistency.pw.ts (red on the old stylesheets). Known gap documented: terminal's role-driven mono body text. Follow-up 1.1F-38: the docs site's own 13 mono rules. No engine change. Ran on Bun 1.3.8 via `npm i bun@1.3.8`. 7,818 pass / 0 fail."
     }
   ],
