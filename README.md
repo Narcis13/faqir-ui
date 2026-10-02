@@ -1109,9 +1109,12 @@ Two engine behaviours are deliberate and worth knowing before you deploy:
 
 ```
 Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-eval';
-  style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none';
+  style-src 'self'; img-src 'self' data:; object-src 'none';
   base-uri 'self'; frame-ancestors 'self'
 ```
+
+The engine injects no inline style, so `style-src 'self'` is enough; the
+`l-cloak` rule ships in Faqir's CSS.
 
 The threat model is *generated, trusted markup*: an `l-*` attribute value is
 JavaScript, so interpolating user input into one is remote code execution. Put

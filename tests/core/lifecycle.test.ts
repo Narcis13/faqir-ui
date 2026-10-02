@@ -372,11 +372,18 @@ describe("l-cloak is removed from content that arrives later", () => {
     expect(document.getElementById("deep")!.hasAttribute("l-cloak")).toBe(false);
   });
 
-  it("injects the cloak style exactly once across repeated starts", async () => {
+  it("uncloaks without injecting a style", async () => {
+    // The `[l-cloak]` rule ships in base/reset.css; the engine used to append
+    // an identical <style> at boot, the one inline style a CSP had to allow.
+    // It only removes the attribute now. [1.1F-07]
+    const styles = document.querySelectorAll("style").length;
+    document.body.innerHTML = `<div id="root" l-data="{}"><p id="c" l-cloak>hi</p></div>`;
     Faqir.start();
     Faqir.start();
     await tick();
-    expect(document.querySelectorAll("style[data-faqir-cloak]").length).toBe(1);
+    expect(document.getElementById("c")!.hasAttribute("l-cloak")).toBe(false);
+    expect(document.querySelectorAll("style[data-faqir-cloak]").length).toBe(0);
+    expect(document.querySelectorAll("style").length).toBe(styles);
   });
 });
 

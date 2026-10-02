@@ -554,9 +554,9 @@ export function composeContextData(input: ContextComposition): ContextData {
           "A page that uses l-* directives needs 'unsafe-eval' — the evaluator compiles every expression with new Function.",
         script_src: "'self' 'unsafe-eval'",
         style_src:
-          "'self' 'unsafe-inline' — only l-cloak's injected <style> needs it; l-show and l-bind:style write through the CSSOM, which CSP does not govern.",
+          "'self' — the engine injects no <style>; the l-cloak rule ships in Faqir's CSS (base/reset.css), and l-show and l-bind:style write through the CSSOM, which CSP does not govern.",
         policy:
-          "default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; base-uri 'self'; frame-ancestors 'self'",
+          "default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'self'; frame-ancestors 'self'",
       },
       unsafe: {
         "l-html":

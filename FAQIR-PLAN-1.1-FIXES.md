@@ -109,7 +109,7 @@ wait for document order. Task 1.1F-32 releases the additive set; its version is 
 | 1.1F-04 | `:style` / `:class` merge instead of replace | 31 | patch | ✅ |
 | 1.1F-05 | Methods keep their component's `this` when called from a row (+ dev warning) | 29 | patch | ✅ |
 | 1.1F-06 | `$this` magic — the element the directive is on | 2 | additive | ✅ |
-| 1.1F-07 | Drop the injected `l-cloak` style; CSP docs | 13 | patch | ⬜ |
+| 1.1F-07 | Drop the injected `l-cloak` style; CSP docs | 13 | patch | ✅ |
 
 ### Lane C — Recipe controllers
 
@@ -484,9 +484,9 @@ directive element as `$el`, but the scope's `$el` magic (the root, 660) is found
 - A docs test that `security.md` no longer demands `'unsafe-inline'` for `l-cloak`.
 
 **Acceptance**
-- [ ] Engine creates no inline style; docs and README CSP examples consistent; `check:docs`.
-- [ ] `build:core`, `build:core-package`, size (shrinks).
-- [ ] Downstream note: drop the hash from `kernel/static.mjs`'s CSP once on this version.
+- [x] Engine creates no inline style; docs and README CSP examples consistent; `check:docs`. (`injectCloakStyle` and its `bootstrap` call are gone; `security-docs.test.ts` now asserts the engine has no `createElement('style')`/`insertRule`/`adoptedStyleSheets`, that `base/reset.css` carries the `[l-cloak]` rule, that `security.md` mentions `'unsafe-inline'` only to say Faqir does not need it, and that the README policy equals the doc's (and neither lists `'unsafe-inline'`). `security.md` §2 is rewritten (`style-src 'self'` is enough; engine-only pages add their own rule), its summary row and §1 policy drop `'unsafe-inline'`. The generated context (`context.ts` `security.csp`) said the same wrong thing and is fixed, with a test. The `@ui:directive l-cloak` line now names `base/reset.css`; `gen:skill` rewrote `references/directives.md`. `lifecycle.test.ts`'s "injected exactly once" is now "uncloaks without injecting a style". `auto-start.test.ts`'s stub detected boot through `document.querySelector`, the removed function's first call; it now watches `querySelectorAll`. `check:docs` green after a local `build:docs`; `site/`'s own `_headers` CSP keeps `'unsafe-inline'` for the docs site's inline styles, not for faqir.)
+- [x] `build:core`, `build:core-package`, size (shrinks). (Bun 1.3.8. Engine 11.10 → 11.04 KB, engine+controllers 45.55 → 45.48 / 46 KB gzip (−75 B on the minified bundle). `check:core-package`, `check:skill`, `check:bindings`, `check:registry-index`, `check:audit-browser`, `check:rules-plugin` green.)
+- [x] Downstream note: drop the hash from `kernel/static.mjs`'s CSP once on this version. (Row 13 of the un-patch checklist below; `security.md` §2 names the old hash, `sha256-TK7YunP/5zK/OzmXN4Sius1ld5L9fMfv6o9LFcB+vmk=` (recomputed), as droppable from 1.1.2.)
 
 ---
 

@@ -12,7 +12,7 @@ The short version:
 
 | | Requirement |
 |---|---|
-| Content-Security-Policy | `script-src` must include **`'unsafe-eval'`**; `style-src` must include **`'unsafe-inline'`** (or you lose `l-cloak` only) |
+| Content-Security-Policy | `script-src` must include **`'unsafe-eval'`**; `style-src 'self'` is enough — Faqir needs no `'unsafe-inline'` and no hash (§2) |
 | Untrusted markup | Never let it reach the page Faqir initializes — `l-*` attribute values are code |
 | Untrusted **data** | Safe in `l-text`, `l-model`, `data-prop-*` and `l-source` responses; **never** in `l-html` |
 | CSP-restricted environments | Load Faqir's CSS and components, skip the engine — see [Running without the engine](#running-without-the-engine) |
@@ -55,7 +55,7 @@ A working policy for a page that uses the engine:
 Content-Security-Policy:
   default-src 'self';
   script-src 'self' 'unsafe-eval';
-  style-src 'self' 'unsafe-inline';
+  style-src 'self';
   img-src 'self' data:;
   object-src 'none';
   base-uri 'self';
@@ -82,28 +82,31 @@ constraint is hard, the engine is the optional part — see §6.
 
 ## 2. `style-src` and `l-cloak`
 
-The engine injects one stylesheet at bootstrap:
+The engine injects no stylesheet and writes no `<style>` element, so
+`style-src 'self'` is enough: Faqir needs neither `'unsafe-inline'` nor a hash.
 
-```js
-var style = document.createElement('style');
-style.textContent = '[l-cloak] { display: none !important; }';
-document.head.appendChild(style);
+`l-cloak` is hidden by a rule in Faqir's own CSS (`base/reset.css`, so in every
+bundle and every `faqir.<theme>.css`):
+
+```css
+[l-cloak] { display: none !important; }
 ```
 
-A `<style>` element is an *inline* style to CSP no matter who created it, so
-under `style-src 'self'` the element lands in the DOM and its rules are never
-parsed. Verified in Chrome: the element is present, `style.sheet.cssRules` is
-empty, `l-cloak` hides nothing, and un-bound markup flashes before the engine
-runs.
+The engine only removes the attribute — at bootstrap, as each element binds,
+and on content inserted later. A page that loads the engine **without**
+Faqir's CSS needs that rule in a stylesheet of its own; otherwise `l-cloak`
+hides nothing and un-bound markup flashes before the engine runs.
 
-That is the whole cost. Everything else the engine writes goes through the
-CSSOM — `l-show` setting `el.style.display`, `l-bind:style` assigning
-properties, `data-motion` transitions — and **CSSOM writes are not subject to
-CSP**. Confirmed on the same page: with `style-src 'self'`, `l-show` and
-`:style` both applied normally while only the cloak rule was dropped.
+Engines before 1.1.2 also appended an identical `<style data-faqir-cloak>` to
+`<head>` at boot. Under `style-src 'self'` its rules were never parsed, which
+cost nothing because the shipped rule already did the work; a policy that
+allowed it by hash (`sha256-TK7YunP/5zK/OzmXN4Sius1ld5L9fMfv6o9LFcB+vmk=`) or
+by `'unsafe-inline'` can drop that once on 1.1.2.
 
-So: add `'unsafe-inline'` to `style-src` if you want `l-cloak`; leave it off and
-accept a flash of unbound content. Faqir supports no CSP nonce for this element.
+Everything else the engine writes goes through the CSSOM — `l-show` setting
+`el.style.display`, `l-bind:style` assigning properties, `data-motion`
+transitions — and **CSSOM writes are not subject to CSP**. Verified in Chrome
+under `style-src 'self'`: `l-show` and `:style` both applied normally.
 
 ## 3. `l-html` is unsanitized, by design
 

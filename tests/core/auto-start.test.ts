@@ -38,7 +38,13 @@ function load(opts: { readyState: string; currentScript?: { manual: boolean }; m
       : null,
     querySelector(selector: string) {
       if (selector === 'script[type="module"][data-manual]') return opts.manualModule ? {} : null;
-      // The first thing `bootstrap()` touches — record the boot and abort it.
+      booted = true;
+      throw BOOTED;
+    },
+    // The first thing `bootstrap()` touches (starting the controllers) —
+    // record the boot and abort it. It used to be `querySelector`, from the
+    // injected l-cloak style, which 1.1F-07 removed.
+    querySelectorAll() {
       booted = true;
       throw BOOTED;
     },

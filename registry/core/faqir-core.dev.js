@@ -339,7 +339,7 @@
   // @ui:directive l-key | — | the same `<template>` as `l-for` | l-key="task.id" | The reconciliation key. Without it items are matched by position, so a reorder re-renders rather than moves; the dev engine reports that case.
   // @ui:directive l-ref | — | any element | l-ref="field" | Registers the element on the scope's `$refs` under that name — also from inside `l-if`, `l-for` and `l-teleport`, where the scope is the enclosing one. In an `l-for` the last row rendered wins, and the ref is cleared when that row goes. Effects that read it re-run when it appears or goes.
   // @ui:directive l-effect | — | any element | l-effect="document.title = title" | Runs the expression immediately, then again whenever a value it read changes.
-  // @ui:directive l-cloak | — | any element | l-cloak | Removed from every element once the tree is initialized. Pair with `[l-cloak] { display: none }` to hide markup before it binds.
+  // @ui:directive l-cloak | — | any element | l-cloak | Removed from every element once the tree is initialized. Faqir's CSS (`base/reset.css`) hides `[l-cloak]` until then; the engine injects no style, so a page without that CSS needs its own `[l-cloak] { display: none }` rule.
   // @ui:directive l-transition | — | an `l-show` element, or a top-level element inside a `<template l-if>` | l-transition="slide-up" | Names the motion preset for that element's enter/leave cycle. The engine only stamps `data-motion`; the CSS animates.
   // @ui:directive l-teleport | — | any element | l-teleport="body" | Moves the element into the first element matching the value, which is a plain CSS selector rather than an expression.
   //
@@ -1491,16 +1491,10 @@
   }
 
   // --- 3.13 l-cloak ---
-
-  function injectCloakStyle() {
-    // Once per document. A second `Faqir.start()` used to append another
-    // identical <style> to <head>, and nothing ever removed either. [W3-1]
-    if (document.querySelector('style[data-faqir-cloak]')) return;
-    var style = document.createElement('style');
-    style.setAttribute('data-faqir-cloak', '');
-    style.textContent = '[l-cloak] { display: none !important; }';
-    document.head.appendChild(style);
-  }
+  //
+  // The engine injects no stylesheet. The `[l-cloak]` rule ships in
+  // `base/reset.css` (so in every bundle); the injected copy it used to append
+  // at boot was redundant, and the only inline style a CSP had to allow. [1.1F-07]
 
   /**
    * Strip `l-cloak` from `within` and everything under it (the whole document
@@ -1509,7 +1503,7 @@
    * The sweep used to run exactly once, at the end of bootstrap, against a
    * document-wide selector. Anything inserted afterwards — an `l-if` branch, an
    * `l-for` row, a fragment an application appended — kept the attribute, and
-   * the injected `[l-cloak] { display: none !important }` rule then hid it
+   * the `[l-cloak] { display: none !important }` rule then hid it
    * permanently: content that had bound correctly and could never be seen. The
    * MutationObserver runs this over every node it is handed. [W3-1]
    */
@@ -12022,8 +12016,6 @@ function createTreeView(root) {
   var observedBody = null;
 
   function bootstrap() {
-    injectCloakStyle();
-
     // Auto-init controllers for all [data-ui] elements
     startControllers(document);
 
@@ -12124,8 +12116,8 @@ function createTreeView(root) {
           if (node.nodeType !== 1) continue;
 
           // Content that arrives after bootstrap has already bound by the time
-          // it is here; leaving `l-cloak` on it means the injected rule hides
-          // it forever. [W3-1]
+          // it is here; leaving `l-cloak` on it means the cloak rule hides it
+          // forever. [W3-1]
           removeCloaks(node);
 
           // Controllers first — the node's own and every one inside it — so

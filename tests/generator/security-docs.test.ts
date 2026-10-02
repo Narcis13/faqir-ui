@@ -6,8 +6,8 @@
  * nothing when it drifts: a reader who checks it and finds a stale answer stops
  * checking. So the claims that CAN be derived are derived here rather than
  * trusted — the directive names it lists against the engine's own `@ui:directive`
- * vocabulary, the `new Function` claim against the evaluator, the `l-cloak`
- * stylesheet claim against the bootstrap, and the "which patterns need the
+ * vocabulary, the `new Function` claim against the evaluator, the "no injected
+ * stylesheet" claim against the engine and `base/reset.css`, and the "which patterns need the
  * evaluator" claim against the registry, which is the one most likely to go
  * stale without anybody noticing.
  *
@@ -38,6 +38,14 @@ const DOC_PATH = "docs/security.md";
 const DOC = readFileSync(join(ROOT, DOC_PATH), "utf8");
 const README = readFileSync(join(ROOT, "README.md"), "utf8");
 const ENGINE = readFileSync(join(ROOT, "src", "core-src", "engine.js"), "utf8");
+
+/** A policy's directives as a sorted set, whitespace-normalised. */
+const directives = (policy: string) =>
+  policy
+    .split(";")
+    .map((d) => d.trim().replace(/\s+/g, " "))
+    .filter(Boolean)
+    .sort();
 
 // ── 1. every risk §A6 names is actually covered ────────────────────────────
 
@@ -71,6 +79,22 @@ describe("the doc covers §A6's list", () => {
     });
   }
 
+  it("does not demand 'unsafe-inline' for l-cloak", () => {
+    // §2 used to say "add 'unsafe-inline' to style-src if you want l-cloak".
+    // The engine injects no <style> now (1.1F-07), so every mention of
+    // 'unsafe-inline' must be the doc saying Faqir does NOT need it, or the
+    // note about what pre-1.1.2 policies may drop.
+    for (const line of DOC.split("\n").filter((l) => l.includes("'unsafe-inline'"))) {
+      expect(line, `${DOC_PATH}: ${line}`).toMatch(/no `'unsafe-inline'`|neither[\s\S]*'unsafe-inline'|by `'unsafe-inline'`/);
+    }
+    const section = DOC.slice(DOC.indexOf("## 2."), DOC.indexOf("## 3."));
+    expect(section).toMatch(/style-src 'self'` is enough/);
+    // No policy block in the doc lists it either.
+    for (const [, body] of DOC.matchAll(/Content-Security-Policy:\s*\n?([\s\S]*?)\n```/g)) {
+      expect(body).not.toContain("unsafe-inline");
+    }
+  });
+
   it("says plainly that the failure without 'unsafe-eval' is silent", () => {
     // The measured behaviour: the engine loads, controllers mount, expressions
     // yield undefined. A doc that only said "it needs unsafe-eval" would leave
@@ -94,13 +118,21 @@ describe("the doc's claims still hold against the engine", () => {
     expect(handler).not.toMatch(/sanitiz|DOMPurify|escape/i);
   });
 
-  it("is right that the only stylesheet the engine injects is l-cloak's", () => {
-    const inject = /function injectCloakStyle\(\)[\s\S]*?\n  \}/.exec(ENGINE)?.[0] ?? "";
-    expect(inject).toContain("createElement('style')");
-    expect(inject).toContain("l-cloak");
-    // If a second <style> injection ever appears, the "one stylesheet" framing
-    // in §2 of the doc stops being true.
-    expect([...ENGINE.matchAll(/createElement\('style'\)/g)].length).toBe(1);
+  it("is right that the engine injects no stylesheet", () => {
+    // §2 tells a reader `style-src 'self'` is enough. That holds only while the
+    // engine creates no <style>: under CSP any <style> element is inline,
+    // whoever created it. The l-cloak copy it used to inject is gone. [1.1F-07]
+    expect(ENGINE).not.toMatch(/createElement\(\s*['"]style['"]\s*\)/);
+    expect(ENGINE).not.toMatch(/insertRule|adoptedStyleSheets|new CSSStyleSheet/);
+    expect(ENGINE).not.toContain("injectCloakStyle");
+  });
+
+  it("is right that the l-cloak rule ships in Faqir's CSS", () => {
+    // The engine leaves the hiding to `base/reset.css`; §2 says so. If the rule
+    // ever leaves reset.css, `l-cloak` silently stops hiding anything.
+    const reset = readFileSync(join(ROOT, "registry", "base", "reset.css"), "utf8");
+    expect(reset).toMatch(/\[l-cloak\]\s*\{\s*display:\s*none/);
+    expect(DOC).toContain("base/reset.css");
   });
 
   it("names only directives the engine or an official plugin actually declares", () => {
@@ -223,6 +255,14 @@ describe("the README carries the doc", () => {
     expect(engineSection).toContain(DOC_PATH);
   });
 
+  it("recommends the same policy the doc does", () => {
+    const fromReadme = /Content-Security-Policy:\s*([\s\S]*?)\n```/.exec(README)?.[1] ?? "";
+    const fromDoc = /Content-Security-Policy:\s*\n?([\s\S]*?)\n```/.exec(DOC)?.[1] ?? "";
+    expect(fromReadme).not.toBe("");
+    expect(directives(fromReadme)).toEqual(directives(fromDoc));
+    expect(fromReadme).not.toContain("unsafe-inline");
+  });
+
   it("states the same requirement the doc does", () => {
     const section = README.slice(README.indexOf("\n## Security"), README.indexOf("\n## Project Structure"));
     expect(section).toContain("'unsafe-eval'");
@@ -283,15 +323,16 @@ describe("the generated context carries the doc", () => {
     }
   });
 
+  it("does not ask for 'unsafe-inline' in style-src", () => {
+    // The engine injects no <style> (1.1F-07), so neither the generated context
+    // nor any policy a reader copies may demand 'unsafe-inline' for Faqir.
+    expect(data.security.csp.style_src).not.toContain("unsafe-inline");
+    expect(data.security.csp.policy).toMatch(/style-src 'self';/);
+  });
+
   it("agrees with the doc on the policy it recommends", () => {
     // Two places state a policy; a reader who copies either must get the same
     // one. Compare the directives as a set, not the whitespace.
-    const directives = (policy: string) =>
-      policy
-        .split(";")
-        .map((d) => d.trim().replace(/\s+/g, " "))
-        .filter(Boolean)
-        .sort();
     const fromDoc = /Content-Security-Policy:\s*\n?([\s\S]*?)\n```/.exec(DOC)?.[1] ?? "";
     expect(fromDoc).not.toBe("");
     expect(directives(fromDoc)).toEqual(directives(data.security.csp.policy));
