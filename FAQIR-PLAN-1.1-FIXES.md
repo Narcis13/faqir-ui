@@ -118,7 +118,7 @@ wait for document order. Task 1.1F-32 releases the additive set; its version is 
 | 1.1F-08 | Overlay focus: focusable panel + no late focus theft (dialog, alert-dialog, drawer, sheet) | 18, 19 | patch | ✅ |
 | 1.1F-09 | Table: the roving Tab stop never strands | 20 | patch | ✅ |
 | 1.1F-10 | Command palette: case/layout-proof ⌘K, one owner, `data-no-shortcut` | 23, 32 | additive | ✅ |
-| 1.1F-11 | Sidebar: rail chevron flips, trigger label stays stable | 7 | patch | ⬜ |
+| 1.1F-11 | Sidebar: rail chevron flips, trigger label stays stable | 7 | patch | ✅ |
 | 1.1F-12 | Nesting, controllers I: tabs, accordion, dialog family, sidebar, context-menu + nesting matrix | 5, 6 | patch | ⬜ |
 | 1.1F-13 | Nesting, controllers II: carousel, popover, table delegation, `:scope` pass | 5 | patch | ⬜ |
 | 1.1F-14 | Table: ARIA grid handling of links/buttons inside navigable cells | 21 | additive (behaviour change) | ⬜ |
@@ -619,7 +619,7 @@ cell has `tabindex="0"`, and ArrowDown from it works.
 - Playwright: in rail, `scale` computes to `-1 1`.
 
 **Acceptance**
-- [ ] Manifest `slots.trigger.description` updated, `changes`; `gen:skill`, `gen:bindings` (HTML), `build:registry-index`, `build:core-package`. LTR baselines pixel-identical.
+- [x] Manifest `slots.trigger.description` updated, `changes`; `gen:skill`, `gen:bindings` (HTML), `build:registry-index`, `build:core-package`. LTR baselines pixel-identical. *(sidebar manifest 1.1.0 → 1.1.1: the trigger slot now prescribes one stable name and an inline-start glyph, plus an a11y note and a `changes` entry. `sidebar.css` mirrors `[data-part="trigger"] > :is(svg, [data-ui="icon"])` with `scale: -1 1` in rail, with a `--duration-normal` transition and a reduced-motion `transition: none`. Both examples carry "Toggle sidebar" and the left chevron, and the rail example's right chevron is replaced by its exact mirror. `sidebar.test.ts` +4: the name is unchanged across `toggle()` on desktop (trigger and external button) and through the drawer, the canonical HTML has one label and one glyph, and the rule and its reduced-motion fallback are present. New `tests/browser/sidebar-rail.pw.ts`: the computed `scale` is `-1 1` in a declared rail and `none` when expanded, and it flips both ways under a real click while `toHaveAccessibleName` stays "Toggle sidebar". The spec goes red with the rule neutralised. All 48 `recipe__sidebar__*` visual cases, LTR **and** RTL, match baselines rendered from HEAD on this machine; the Linux container was not run. Regenerated: `references/recipes.md`, `registry-index.json`, `packages/core/cdn.json`. `gen:bindings` and `build:core` were no-ops because the controller is untouched. The size budget is unchanged. The playground pages `playground/{dashboard,index}-v2.html` still hard-code the old labels; they are out of scope.)*
 
 ### 1.1F-12 · Nesting, controllers I (high risk) + nesting matrix
 

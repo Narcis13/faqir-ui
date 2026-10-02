@@ -128,6 +128,19 @@
   outline-offset: var(--focus-ring-offset);
 }
 
+/* The trigger's glyph is authored once, pointing at the collapse (inline-start),
+   and mirrored in rail so it points at the expand. The markup can't carry the
+   direction: it is written once and the state changes under it. Its
+   accessible name stays "Toggle sidebar" in both states; `aria-expanded` says
+   which way it goes (APG: an expanded-state button must not rename itself). */
+[data-ui="sidebar"] [data-part="trigger"] > :is(svg, [data-ui="icon"]) {
+  transition: scale var(--duration-normal) var(--ease-default);
+}
+
+[data-ui="sidebar"][data-state="rail"] [data-part="trigger"] > :is(svg, [data-ui="icon"]) {
+  scale: -1 1;
+}
+
 /* ── Navigation ── */
 [data-ui="sidebar"] [data-part="nav"] {
   display: flex;
@@ -275,7 +288,8 @@
 @media (prefers-reduced-motion: reduce) {
   [data-ui="sidebar"],
   [data-ui="sidebar"] [data-part="panel"],
-  [data-ui="sidebar"] [data-part="overlay"] {
+  [data-ui="sidebar"] [data-part="overlay"],
+  [data-ui="sidebar"] [data-part="trigger"] > :is(svg, [data-ui="icon"]) {
     transition: none;
   }
 }

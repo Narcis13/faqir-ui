@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import { createSidebar } from "../../registry/recipes/sidebar/sidebar.js";
 import { getFocusableElements } from "../../registry/core/focus.js";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 
 // The controller reads `window.matchMedia` once at init, so the breakpoint mock
 // must be installed BEFORE createSidebar. `setup()` does that. The mock returns a
@@ -142,6 +144,56 @@ describe("sidebar · aria-expanded tracks state", () => {
     // and driving via the API keeps the external button in sync
     api.expand();
     expect(expandedOf(ext!)).toBe("true");
+  });
+});
+
+// ── Stable trigger name (1.1F-11) ──────────────────────────────────────────────
+// An aria-expanded button must not rename itself (APG): the reader announces the
+// name, then the state. The canonical markup used to hard-code "Collapse sidebar"
+// / "Expand sidebar" per instance, so one toggle later it read "Collapse sidebar,
+// collapsed". The direction is aria-expanded's job; the glyph flips in CSS.
+
+describe("sidebar · trigger label stays stable", () => {
+  it("toggle() changes aria-expanded but never the trigger's or the external button's name", () => {
+    const { api, trigger, ext } = setup({ mobile: false, state: "expanded", external: true });
+    const names = () => [trigger.getAttribute("aria-label"), ext!.getAttribute("aria-label")];
+    const before = names();
+    api.toggle();
+    expect(expandedOf(trigger)).toBe("false");
+    expect(names()).toEqual(before);
+    api.toggle();
+    expect(expandedOf(trigger)).toBe("true");
+    expect(names()).toEqual(before);
+  });
+
+  it("the drawer round-trip leaves the name alone too", () => {
+    const { api, trigger } = setup({ mobile: true });
+    api.toggle();
+    expect(expandedOf(trigger)).toBe("true");
+    api.toggle();
+    expect(trigger.getAttribute("aria-label")).toBe("Toggle sidebar");
+  });
+
+  it("the canonical examples share one stable label and one glyph", () => {
+    const html = readFileSync(join(import.meta.dir, "../../registry/recipes/sidebar/sidebar.html"), "utf8");
+    const host = document.createElement("div");
+    host.innerHTML = html;
+    const triggers = [...host.querySelectorAll("[data-ui='sidebar'] [data-part='trigger']")];
+    expect(triggers.length).toBe(2);
+    for (const t of triggers) expect(t.getAttribute("aria-label")).toBe("Toggle sidebar");
+    // Both glyphs point inline-start; the rail one is mirrored by the stylesheet,
+    // not by different markup that would go stale after a toggle.
+    const paths = triggers.map((t) => t.querySelector("svg path")!.getAttribute("d"));
+    expect(new Set(paths).size).toBe(1);
+    expect(html).not.toMatch(/(Collapse|Expand) sidebar/);
+  });
+
+  it("the stylesheet mirrors the trigger glyph in rail only, with a reduced-motion fallback", () => {
+    const css = readFileSync(join(import.meta.dir, "../../registry/recipes/sidebar/sidebar.css"), "utf8");
+    const glyph = String.raw`\[data-part="trigger"\] > :is\(svg, \[data-ui="icon"\]\)`;
+    expect(css).toMatch(new RegExp(String.raw`\[data-ui="sidebar"\]\[data-state="rail"\] ${glyph} \{\s*scale: -1 1;`));
+    const reduced = css.slice(css.indexOf("@media (prefers-reduced-motion: reduce)"));
+    expect(reduced).toMatch(new RegExp(glyph + String.raw`[^{]*\{\s*transition: none;`));
   });
 });
 

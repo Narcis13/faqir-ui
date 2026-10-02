@@ -1142,7 +1142,7 @@ Collapsible application sidebar with three modes — expanded, rail (icons only)
 ├─ [data-part='brand']  <a>  optional  — Product/brand lockup (icon + label)
 ├─ [data-part='brand-icon']  <span>  optional  — Brand glyph; stays visible in rail mode
 ├─ [data-part='brand-label']  <span>  optional  — Brand wordmark; hidden in rail mode
-├─ [data-part='trigger']  <button>  optional  — Toggle button inside the panel. Its aria-expanded tracks the live state. External buttons may also target the sidebar via data-sidebar-toggle="{id}"
+├─ [data-part='trigger']  <button>  optional  — Toggle button inside the panel. Give it one stable aria-label ("Toggle sidebar") — its aria-expanded tracks the live state, and a button with aria-expanded must not change its name. Author its glyph (an svg or data-ui="icon" child) pointing inline-start, at the collapse; the stylesheet mirrors it in rail. External buttons may also target the sidebar via data-sidebar-toggle="{id}"
 ├─ [data-part='nav']  <nav>  optional  — Navigation region; should carry aria-label
 ├─ [data-part='item']  <a>  optional  — A navigation entry (icon + label). Mark the current page with aria-current="page". In rail mode give it an aria-label since the text label is hidden
 ├─ [data-part='icon']  <span>  optional  — Item glyph; stays visible in rail mode

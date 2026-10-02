@@ -1488,15 +1488,15 @@
       "name": "sidebar",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "files": [
         {
           "path": "sidebar.css",
-          "sha256": "ad261540ada3c26421a8203bba581bd55b03a7bf96e71b0e90ba250d4a39b0c6"
+          "sha256": "5f384f25ec8ced4226c5343bb52b14ca8f7e1025c41504a037fc7c89462d4ae3"
         },
         {
           "path": "sidebar.html",
-          "sha256": "cfec253004d25b981b771aa597023e319ff1f0236464c8f19056d9dd4e40f1f2"
+          "sha256": "2970af24641dc53e25711329f7ea069a603c60cf316160420e61b1523f23f7ae"
         },
         {
           "path": "sidebar.js",
@@ -1504,10 +1504,10 @@
         },
         {
           "path": "sidebar.manifest.json",
-          "sha256": "bb2e739fec5dc4bf54d7cda6b38ab102f5edfd72d57a3447ef89ff8b4333df96"
+          "sha256": "d6f475be4e79787b7dc808f293b896d2d112eb5d3e4888f770b6fcde19042064"
         }
       ],
-      "hash": "aeb6484fdfd974250d648c73fb838514f5f8bdb1aad178c73f7e79e3affae7cb",
+      "hash": "1cb56851017906af6d3854059fc88e6d36bb3e71dfa08e0df4a9f75b40eb35b5",
       "deps": [
         "button",
         "badge",
