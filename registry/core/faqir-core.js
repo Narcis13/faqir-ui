@@ -316,7 +316,7 @@
   // (§3.9) and MOTION_PRESETS (§3.14) — are read from the code itself, not
   // repeated here.
   //
-  // @ui:directive l-data | — | any element, which becomes the scope root | l-data="{ count: 0 }" | Declares a reactive scope from an object literal, or from a name registered with `Faqir.data()`. `data-prop-*` attributes are JSON-parsed and merged over it. Descendants share the scope until the next `l-data`.
+  // @ui:directive l-data | — | any element, which becomes the scope root | l-data="{ count: 0 }" | Declares a reactive scope from an object literal, or from a name registered with `Faqir.data()`. `data-prop-*` attributes are JSON-parsed and merged over it. Descendants share the scope until the next `l-data`. Its methods are bound to the scope, so `this` is the component even when an `l-for` row calls them; a function assigned later is not bound.
   // @ui:directive l-init | — | a scope root, beside `l-data` | l-init="load()" | Runs once, after the scope exists and its `l-source` bindings are injected, with the subtree's controllers already started. In `l-if` / `l-for` content it runs after insertion: bindings, insert, controllers, then `l-init` / first `l-effect`.
   // @ui:directive l-source:<name> | — | a scope root, beside `l-data` | l-source:tasks="/api/tasks" | Binds a REST collection into the scope as `<name>`, `<name>Loading`, `<name>Error` and the `$<name>` CRUD controller. See below.
   // @ui:directive l-text | — | any element | l-text="count" | Writes the value to `textContent`; `null` and `undefined` write an empty string.
@@ -777,6 +777,15 @@
     Object.defineProperties(target, descriptors);
 
     var scope = reactive(target);
+    // A bare call `pick()` inside `with(rowScope)` gets the l-for row scope as
+    // `this`, and that scope owns the loop variable and index: `this.item = x`
+    // wrote the row instead of the component. Bind each own method to the
+    // scope. Getters keep their receiver; functions assigned later stay
+    // unbound. Written to the target, so nothing is triggered. [1.1F-05]
+    for (var k in descriptors) {
+      var d = descriptors[k];
+      if (d.writable && typeof d.value === 'function') target[k] = d.value.bind(scope);
+    }
     return scope;
   }
 
@@ -1940,6 +1949,8 @@
     var indexName = match[2] || 'index';
     var listExpr = match[3];
     var keyExpr = el.getAttribute('l-key');
+    // Dev hint: a loop variable that shadows a name the scope already has. Only
+    // names the author wrote; `in` reads no reactive dependency. [1.1F-05]
 
     var anchor = document.createComment('l-for');
     el.parentNode.insertBefore(anchor, el);
@@ -11470,7 +11481,9 @@ function createTreeView(root) {
   /** One value, deep-copied into something plain, finite and printable. */
   function snapshotValue(value, stack, depth) {
     if (typeof value === 'function') {
-      return '[Function' + (value.name ? ' ' + value.name : '') + ']';
+      // Scope methods are bound [1.1F-05]; report the name the author wrote.
+      var name = String(value.name || '').replace(/^bound /, '');
+      return '[Function' + (name ? ' ' + name : '') + ']';
     }
     if (value === null || typeof value !== 'object') return value;
     if (value.nodeType === 1 && value.tagName) {

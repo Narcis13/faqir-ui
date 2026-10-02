@@ -339,6 +339,56 @@ describe("warning class: :style display beside l-show [1.1F-04]", () => {
   });
 });
 
+describe("warning class: l-for variable shadows a scope name [1.1F-05]", () => {
+  // Mounted into a disposable container rather than `start()`.
+  async function mount(markup: string) {
+    const box = document.createElement("div");
+    box.innerHTML = markup;
+    document.body.appendChild(box);
+    Faqir.initTree(box.firstElementChild);
+    await tick();
+    return box;
+  }
+
+  it("warns once per list when the loop variable or index shadows a scope name", async () => {
+    const box = await mount(`
+      <div l-data="{ problem: null, i: 0, problems: [1, 2, 3], groups: [[1], [2]] }">
+        <template l-for="(problem, i) in problems"><b l-text="problem"></b></template>
+        <template l-for="g in groups">
+          <template l-for="problem in g"><i></i></template>
+        </template>
+      </div>`);
+    const shadows = fresh("shadow");
+    expect(shadows.map((w: any) => [w.name, w.expression])).toEqual([
+      ["problem", "(problem, i) in problems"],
+      ["i", "(problem, i) in problems"],
+      // The nested list runs once per outer row but reports once.
+      ["problem", "problem in g"],
+    ]);
+    expect(shadows[0].message).toContain('l-for variable "problem" shadows');
+
+    const scope = (box.firstElementChild as any).__faqirScope;
+    scope.problems = [4, 5];
+    await tick();
+    expect(fresh("shadow").length).toBe(3);
+    Faqir.destroy(box);
+    box.remove();
+  });
+
+  it("says nothing for fresh names, or for the default names nobody wrote", async () => {
+    const box = await mount(`
+      <div l-data="{ item: 'x', index: 3, rows: [[1]] }">
+        <template l-for="row in rows">
+          <template l-for="cell in row"><i></i></template>
+        </template>
+        <template l-for="rows"><i></i></template>
+      </div>`);
+    expect(fresh("shadow")).toEqual([]);
+    Faqir.destroy(box);
+    box.remove();
+  });
+});
+
 describe("recorded diagnostics", () => {
   it("every entry carries the documented keys", async () => {
     document.body.innerHTML = `<div l-data="{}"><p id="e" l-text="a.b"></p></div>`;

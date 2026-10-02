@@ -28,10 +28,13 @@ as was done with `state-1.0.json`).
 
 ### Environment facts every session needs
 
-- **Bun pin.** `.bun-version` is `1.3.8`; this machine runs 1.4.2. `build:audit-browser`,
-  `build:rules-plugin` and `build:core-package` byte-compare against a minified build, so
-  regenerate them **with Bun 1.3.8** (e.g. `npx bun@1.3.8 run build:core-package`) or their
-  `check:*` gate goes red for an unrelated reason.
+- **Bun pin.** `.bun-version` is `1.3.8`. `build:audit-browser`, `build:rules-plugin` and
+  `build:core-package` byte-compare against a minified build, so regenerate them **with Bun
+  1.3.8** or their `check:*` gate goes red for an unrelated reason. Since 1.1F-05 the only Bun
+  on this machine is 1.3.8, at `~/.bun/bin/bun`, which is not on the default PATH, so run
+  `export PATH=$HOME/.bun/bin:$PATH` first. Sizes measured with it are about 0.3 KB higher
+  than the 1.4.2 numbers recorded by 1.1F-01–04: after 1.1F-05, engine+controllers is
+  45.50/46 KB gzip, leaving about 0.5 KB for the rest of the plan.
 - **happy-dom.** If `realm-guard`/`tree-view` flake, the lockfile has pinned happy-dom 20.10.6;
   run `bun add -d happy-dom@20.11.2 @happy-dom/global-registrator@20.11.2 --no-save`
   first. It leaves `bun.lock` and `package.json` untouched; refreshing the lockfile is a
@@ -104,7 +107,7 @@ wait for document order. Task 1.1F-32 releases the additive set; its version is 
 | 1.1F-02 | Property-aware bindings + `faqir:model` notification; toggle-group follows the store | 16, 4 | patch | ✅ |
 | 1.1F-03 | Inserted content: controllers start before `l-init` / first `l-effect` | 3 | patch | ✅ |
 | 1.1F-04 | `:style` / `:class` merge instead of replace | 31 | patch | ✅ |
-| 1.1F-05 | Methods keep their component's `this` when called from a row (+ dev warning) | 29 | patch | ⬜ |
+| 1.1F-05 | Methods keep their component's `this` when called from a row (+ dev warning) | 29 | patch | ✅ |
 | 1.1F-06 | `$this` magic — the element the directive is on | 2 | additive | ⬜ |
 | 1.1F-07 | Drop the injected `l-cloak` style; CSP docs | 13 | patch | ⬜ |
 
@@ -413,8 +416,8 @@ variable or index) to the row. Reproduced. The same trap is latent in `apiSource
   `scripts/test.mjs` routes any file that `require`s `faqir-core.dev.js` there.
 
 **Acceptance**
-- [ ] Downstream's `finding` rename in `pages/editor.html` no longer needed.
-- [ ] `build:core`, `build:core-package`, size (warning text in dev build only).
+- [x] Downstream's `finding` rename in `pages/editor.html` no longer needed. (`createScopeWithMagics` binds every own writable function-valued data property to the reactive scope, writing to the target so nothing triggers. Getters keep their receiver, and functions assigned later stay unbound; the `@ui:directive l-data` line says so. Four cases in `tests/core/runtime-fixes.test.ts` › "1.1F-05": `this.<loopVar>` and `this.<index>` written from a row reach the component while the rows keep their own values; the same from a nested row; `apiSource` `load()` from a row named `items` fills the component's `items`; and a guard that getters and late-assigned functions are untouched. The first three fail on the pre-fix engine. `snapshotValue` strips the `bound ` prefix, so `inspect()` still prints `[Function pause]` (`tests/core/inspect.test.ts`).)
+- [x] `build:core`, `build:core-package`, size (warning text in dev build only). (All under Bun 1.3.8. New dev class `shadow` (`devHooks.loopShadow`, once per list and name), called from a `/* @faqir:dev */` line in `handleFor`. It warns only for loop names the author wrote, not the default `item`/`index`, because every nested list with an unnamed index would otherwise warn. Tested in `tests/core/dev-build.test.ts`; `tests/build/dev-build.test.ts` confirms production has no call site. Declared in `faqir-core.d.ts` and `docs/devtools.md`; `faqir-core-types.test.ts` now counts 8 classes. Size under the pinned Bun: engine 10.97 → 11.06 KB, engine+controllers 45.44 → 45.50 / 46 KB gzip. `gen:skill` and `build:docs` run. `check:skill`, `check:core-package`, `check:docs`, `check:registry-index`, `check:bindings`, `check:audit-browser` and `check:rules-plugin` are green. Before starting, the session fixed a red baseline in `3492d2c`: under Bun 1.3.8, `faqir-mask.js` measured 2049 B against its 2048 B budget.)
 
 ### 1.1F-06 · `$this` magic
 

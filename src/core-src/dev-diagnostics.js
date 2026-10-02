@@ -24,6 +24,7 @@
  *                  never loaded).
  *   reorder      — an unkeyed l-for list was reordered.
  *   key          — a keyed l-for list produced the same l-key twice.
+ *   shadow       — an l-for loop variable shadows a name its scope already has.
  *   html         — `l-html` writes unsanitized markup, once per element.
  *   style        — `:style` declares `display` beside `l-show`, once per element.
  *
@@ -142,6 +143,25 @@ devHooks = {
         'items across reorders.',
       el,
       { expression: expression }
+    );
+  },
+
+  /**
+   * An `l-for` loop variable (or index) shadows a name its scope already has.
+   * Inside the row, the bare name reads the row's value, and before 1.1F-05 a
+   * component method called from the row that wrote `this.<name>` wrote the
+   * row instead. Methods are bound now, but the shadowing still confuses
+   * readers. Once per list and name.
+   */
+  loopShadow: function(el, name) {
+    devReport(
+      'shadow',
+      'shadow:' + name + ':' + el.getAttribute('l-for') + ':' + describeElement(el),
+      'l-for variable "' + name + '" shadows a name its scope already has — ' +
+        'inside the row, "' + name + '" is the row\'s value. Rename the loop ' +
+        'variable.',
+      el,
+      { name: name, expression: el.getAttribute('l-for') }
     );
   },
 

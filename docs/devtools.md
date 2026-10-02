@@ -99,9 +99,10 @@ offending element's `outerHTML`) and retained for `warnings()`:
 | `key` | a keyed `l-for` produced the same `l-key` twice (once per list) |
 | `html` | `l-html` wrote unsanitized markup (once per element) |
 | `style` | a `:style` declares `display` on an element that also has `l-show` — both write `display` (once per element) |
+| `shadow` | an `l-for` loop variable or index the author named shadows a name its scope already has (once per list and name) |
 
 Every entry carries `{ kind, message, element, html }` plus class-specific extras
-(`expression`, `directive`, `error`).
+(`expression`, `directive`, `error`, `key`, `name`).
 
 The production engine is byte-free of all of this: the messages exist only in
 `dev-diagnostics.js`, which is never injected into `faqir-core.js`. Production

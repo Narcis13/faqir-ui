@@ -207,10 +207,11 @@ describe("Devtools matches window.__FAQIR_DEVTOOLS__", () => {
     const emitted = sorted(
       [...dev.matchAll(/devReport\(\s*'([a-z]+)'/g)].map((m) => m[1]),
     );
-    // Six engine classes (`key` — a duplicate l-key — joined in 1.1; `style`
-    // — a :style display beside l-show — in 1.1F-04) plus `plugin`, the seam
-    // a plugin file reports through.
-    expect(emitted.length).toBe(7);
+    // Seven engine classes (`key` — a duplicate l-key — joined in 1.1; `style`
+    // — a :style display beside l-show — in 1.1F-04; `shadow` — an l-for
+    // variable shadowing a scope name — in 1.1F-05) plus `plugin`, the seam a
+    // plugin file reports through.
+    expect(emitted.length).toBe(8);
     expect(emitted).toContain("plugin");
     expect(emitted).toContain("key");
     expect(declared).toEqual(emitted);

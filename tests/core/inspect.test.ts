@@ -151,6 +151,19 @@ describe("Faqir.inspect() — scope", () => {
     expect(snap.deep.a.b.c).toEqual({ d: "[Depth]" });
     expect(snap.when).toBe("2026-07-25T00:00:00.000Z");
   });
+
+  it("names an l-data method as written, though the engine binds it [1.1F-05]", async () => {
+    const box = document.createElement("div");
+    box.innerHTML = `<div id="methods" l-data="{ n: 1, pause() { this.n = 0; }, run: function go() {} }"></div>`;
+    document.body.appendChild(box);
+    Faqir.initTree(box.firstElementChild);
+    await tick();
+    const snap = Faqir.inspect("#methods").scope;
+    expect(snap.pause).toBe("[Function pause]");
+    expect(snap.run).toBe("[Function go]");
+    Faqir.destroy(box);
+    box.remove();
+  });
 });
 
 describe("Faqir.inspect() — directives", () => {

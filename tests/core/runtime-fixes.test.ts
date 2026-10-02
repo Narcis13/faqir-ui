@@ -519,3 +519,90 @@ describe("1.1F-03 controllers start before l-init / l-effect in inserted content
     expect(root.__faqirScope.got).toBe("api");
   });
 });
+
+// ───────────────────────────────────────────────────────────────────────────
+// Methods keep their component's `this` when called from a row  [1.1F-05]
+// ───────────────────────────────────────────────────────────────────────────
+//
+// Inside `with(rowScope)`, a bare call `pick()` gets the row scope as `this`.
+// The row scope owns the loop variable and index, so `this.<loopVar> = x`
+// wrote the ROW's variable instead of the component's field. Component
+// methods are now bound to the component scope.
+
+describe("1.1F-05 methods called from an l-for row", () => {
+  const SOURCE = readFileSync(join(import.meta.dir, "../../registry/core/api-source.js"), "utf8");
+  // eslint-disable-next-line @typescript-eslint/no-implied-eval
+  const apiSource = new Function(`${SOURCE}\nreturn apiSource;`)();
+
+  it("a method writing this.<loop variable> writes the component, not the row", async () => {
+    const { root, scope } = await mount(`
+      <div l-data="{ problem: null, i: -1, problems: [{ id: 1 }, { id: 2 }],
+                     pick(p, n) { this.problem = { id: p.id * 10 }; this.i = n; } }">
+        <template l-for="(problem, i) in problems">
+          <button @click="pick(problem, i)" l-text="problem.id + ':' + i"></button>
+        </template>
+        <output l-text="problem ? problem.id : 'none'"></output>
+      </div>`);
+    const buttons = root.querySelectorAll("button");
+    (buttons[1] as HTMLElement).click();
+    await tick();
+    expect(scope.problem.id).toBe(20);
+    expect(scope.i).toBe(1);
+    expect(root.querySelector("output")!.textContent).toBe("20");
+    // The rows still show their own item and index.
+    expect([...root.querySelectorAll("button")].map((b) => b.textContent)).toEqual(["1:0", "2:1"]);
+  });
+
+  it("a method keeps the component's this from a nested row, and a plain call is unchanged", async () => {
+    const { root, scope } = await mount(`
+      <div l-data="{ item: 'none', groups: [{ items: ['a', 'b'] }],
+                     set(v) { this.item = v; }, label() { return this.item; } }">
+        <template l-for="group in groups">
+          <template l-for="item in group.items">
+            <button @click="set(item)" l-text="item"></button>
+          </template>
+        </template>
+        <span id="out" l-text="label()"></span>
+      </div>`);
+    (root.querySelectorAll("button")[1] as HTMLElement).click();
+    await tick();
+    expect(scope.item).toBe("b");
+    expect(root.querySelector("#out")!.textContent).toBe("b");
+    expect([...root.querySelectorAll("button")].map((b) => b.textContent)).toEqual(["a", "b"]);
+    // Called directly, `this` is still the reactive scope: the write re-renders.
+    scope.set("c");
+    await tick();
+    expect(root.querySelector("#out")!.textContent).toBe("c");
+  });
+
+  it("apiSource load() from a row whose loop variable is named `items`", async () => {
+    (globalThis as any).fetch = () => Promise.resolve(json([{ id: 7 }, { id: 8 }]));
+    Faqir.data("rowSource1105", () => ({ ...apiSource("/api/things"), groups: [["x"]] }));
+    const { root, scope } = await mount(`
+      <div l-data="rowSource1105">
+        <template l-for="items in groups">
+          <button @click="load()" l-text="items.length"></button>
+        </template>
+        <ul><template l-for="row in items"><li l-text="row.id"></li></template></ul>
+      </div>`);
+    (root.querySelector("button") as HTMLElement).click();
+    await settle(() => scope.loading === false, "load() to finish");
+    await tick();
+    expect(scope.items.map((r: any) => r.id)).toEqual([7, 8]);
+    expect(scope.error).toBe(null);
+    expect([...root.querySelectorAll("li")].map((li) => li.textContent)).toEqual(["7", "8"]);
+    // The row's own `items` (the group ['x']) is untouched.
+    expect(root.querySelector("button")!.textContent).toBe("1");
+  });
+
+  it("a getter still reads the live scope, and a function assigned later stays unbound", async () => {
+    const { scope } = await mount(`
+      <div l-data="{ n: 2, get double() { return this.n * 2; } }"></div>`);
+    expect(scope.double).toBe(4);
+    scope.n = 5;
+    expect(scope.double).toBe(10);
+    const late = function (this: any) { return this; };
+    scope.late = late;
+    expect(scope.late).toBe(late);
+  });
+});
