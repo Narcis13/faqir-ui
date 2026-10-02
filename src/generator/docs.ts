@@ -1382,6 +1382,16 @@ const HEADING_VOICE_PROPERTY: Record<string, string> = {
 };
 
 /**
+ * The code-face tokens (1.1F-19): what a mono run does besides naming a family.
+ * Kept apart from the heading voice because the typography page lists them
+ * under the font stacks, and apart from the `font-` prefix because a `--font-*`
+ * token is a family and would be drawn as one.
+ */
+const CODE_FACE_PROPERTY: Record<string, string> = {
+  "mono-ligatures": "font-variant-ligatures",
+};
+
+/**
  * Live typography previews, generated from the same token list as the reference
  * page. The attribute value names the token; the prefix decides which CSS
  * property consumes it, so adding a new type-scale step makes it render without
@@ -1393,6 +1403,8 @@ function renderTypographyPreviewRules(tokenList: readonly TokenEntry[]): string 
     .map((entry) => {
       const property = HEADING_VOICE_PROPERTY[entry.name]
         ? HEADING_VOICE_PROPERTY[entry.name]
+        : CODE_FACE_PROPERTY[entry.name]
+        ? CODE_FACE_PROPERTY[entry.name]
         : entry.name.startsWith("font-")
         ? "font-family"
         : entry.name.startsWith("text-")
@@ -2325,6 +2337,7 @@ function renderTypographyPage(ctx: {
     (entry): entry is TokenEntry => entry !== undefined,
   );
   const voice = typography.filter((entry) => entry.name in HEADING_VOICE_PROPERTY);
+  const codeFace = typography.filter((entry) => entry.name in CODE_FACE_PROPERTY);
   const sizes = typography.filter((entry) => entry.name.startsWith("text-"));
   const weights = typography.filter((entry) => entry.name.startsWith("weight-"));
   const leading = typography.filter((entry) => entry.name.startsWith("leading-"));
@@ -2368,6 +2381,16 @@ function renderTypographyPage(ctx: {
             <p data-docs-token-preview="${escAttr(entry.name)}">${esc(
               entry.name.replace("heading-", ""),
             )} — Build interfaces agents can understand.</p>
+            <code>--${esc(entry.name)} · ${esc(entry.value)}</code>
+          </div>`,
+    )
+    .join("\n");
+  const codeFaceRows = codeFace
+    .map(
+      (entry) => `          <div data-ui="surface" data-variant="flat" data-size="md">
+            <p data-ui="text" data-variant="mono" data-docs-token-preview="${escAttr(
+              entry.name,
+            )}">a != b =&gt; c -&gt; d === e &lt;= f :: g</p>
             <code>--${esc(entry.name)} · ${esc(entry.value)}</code>
           </div>`,
     )
@@ -2435,6 +2458,17 @@ ${familyCards}
           </div>
           <div data-ui="grid" data-cols="1" data-cols-lg="3" data-gap="4">
 ${roleCards}
+          </div>
+        </section>
+
+        <section aria-labelledby="code-face-heading" data-docs-section>
+          <div data-docs-section-heading>
+            <span data-ui="badge">Code face</span>
+            <h2 id="code-face-heading">Monospace text shows every character.</h2>
+            <p>Code is read character by character. Cascadia Code and JetBrains Mono join <code>!=</code>, <code>=&gt;</code> and <code>-&gt;</code> into single glyphs by default, so every component that sets the monospace stack also reads one token that turns ligatures off. Set it to <code>normal</code> to get a face's ligatures back. A theme that points a type role at the monospace stack, as terminal does, sets its body text through the role, which this token does not reach.</p>
+          </div>
+          <div data-ui="stack" data-gap="3">
+${codeFaceRows}
           </div>
         </section>
 

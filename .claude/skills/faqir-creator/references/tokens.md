@@ -19,11 +19,11 @@ Cascade order, as `tokens/index.css` imports them: `palette.css` → `spacing.cs
 
 ## Token Groups
 
-358 tokens in 10 groups:
+359 tokens in 10 groups:
 
 - `palette` (67) — raw oklch color values, never referenced by components directly
 - `spacing` (23) — 4px base, harmonic scale
-- `typography` (28) — font families, sizes, line-heights, weights
+- `typography` (29) — font families, sizes, line-heights, weights
 - `effects` (33) — radii, shape, shadows, focus, z-index
 - `textures` (6) — named surface materials (SVG data URIs)
 - `motion` (19) — easings, durations and motion personality
@@ -170,7 +170,7 @@ _`registry/tokens/spacing.css` · 23 tokens_
 
 ## typography — font families, sizes, line-heights, weights
 
-_`registry/tokens/typography.css` · 28 tokens_
+_`registry/tokens/typography.css` · 29 tokens_
 
 ### Font Families
 
@@ -187,6 +187,12 @@ _`registry/tokens/typography.css` · 28 tokens_
 | `--font-heading` | `var(--font-sans)` | h1–h6, hero headline, card/dialog titles, stat values, doc headings |
 | `--font-body` | `var(--font-sans)` | prose, text, document body, descriptions |
 | `--font-ui` | `var(--font-sans)` | controls: button, input, select, badge, chip, tabs, menus |
+
+### Code Face
+
+| Token | Value |
+|---|---|
+| `--mono-ligatures` | `none` |
 
 ### Font Sizes
 

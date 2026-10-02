@@ -1,5 +1,5 @@
 /* @ui:component kbd */
-/* @ui:tokens color-bg-subtle color-fg color-border radius-sm space-1h font-mono text-xs border-width border-width-strong */
+/* @ui:tokens color-bg-subtle color-fg color-border radius-sm space-1h font-mono text-xs border-width border-width-strong mono-ligatures */
 
 /* ── Base ── */
 [data-ui="kbd"] {
@@ -15,6 +15,7 @@
   background: var(--color-bg-subtle);
   color: var(--color-fg);
   font-family: var(--font-mono);
+  font-variant-ligatures: var(--mono-ligatures);
   font-size: var(--text-xs);
   line-height: 1;
   white-space: nowrap;

@@ -72,6 +72,7 @@
 
 [data-ui="prose"] code {
   font-family: var(--font-mono);
+  font-variant-ligatures: var(--mono-ligatures);
   font-size: 0.875em;
   background: var(--color-bg-muted);
   padding: var(--space-0h) var(--space-1);
@@ -80,6 +81,7 @@
 
 [data-ui="prose"] pre {
   font-family: var(--font-mono);
+  font-variant-ligatures: var(--mono-ligatures);
   font-size: var(--text-sm);
   line-height: var(--leading-relaxed);
   background: var(--color-bg-muted);

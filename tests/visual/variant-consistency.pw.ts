@@ -11,6 +11,9 @@
  *
  * Task 1.1F-18 adds text: what an anchor carrying `data-ui="text"` computes to —
  * the underline it gets back from the reset, in the text's own colour.
+ *
+ * Task 1.1F-19 adds the code face: every surface that sets the mono stack
+ * computes `font-variant-ligatures: none`, and follows `--mono-ligatures`.
  */
 
 import { expect, test, type Page } from "@playwright/test";
@@ -29,10 +32,13 @@ const COMPONENTS: Array<["primitives" | "recipes", string]> = [
   ["primitives", "badge"],
   ["primitives", "button"],
   ["primitives", "callout"],
+  ["primitives", "kbd"],
   ["primitives", "progress"],
   ["primitives", "text"],
   ["primitives", "toggle"],
+  ["recipes", "barcode"],
   ["recipes", "carousel"],
+  ["recipes", "command-palette"],
 ];
 
 const read = (...parts: string[]): string => readFileSync(join(REGISTRY, ...parts), "utf8");
@@ -424,4 +430,40 @@ test("a linked text draws the focus ring on keyboard focus", async ({ page }) =>
   expect(Number.parseFloat(text.width)).toBeGreaterThan(0);
   // The same ring the link primitive draws.
   expect({ ...text, focused: "" }).toEqual({ ...link, focused: "" });
+});
+
+test("every mono surface turns ligatures off, and follows --mono-ligatures", async ({ page }) => {
+  const surfaces = (wrap: string) => `<div ${wrap}>
+    <span data-ui="text" data-variant="mono" data-case="text">a != b => c</span>
+    <kbd data-ui="kbd" data-case="kbd">-></kbd>
+    <div data-ui="prose"><p data-case="prose-p">a != b <code data-case="prose-code">a != b</code></p>
+      <pre data-case="prose-pre">if (a !== b) return c => d;</pre></div>
+    <div data-ui="command-palette"><span data-part="kbd" data-case="palette-kbd">-></span></div>
+    <div data-ui="barcode"><span data-part="caption" data-case="barcode-caption">A->B!=C</span></div>
+    <span data-ui="text" data-case="plain">a != b => c</span>
+  </div>`;
+  await mount(
+    page,
+    `${surfaces('data-set="default"')}${surfaces('data-set="opt-in" style="--mono-ligatures: normal"')}`,
+  );
+
+  const read = (set: string, name: string) =>
+    page.locator(`[data-set="${set}"] [data-case="${name}"]`).evaluate((element) => {
+      const style = getComputedStyle(element);
+      return { ligatures: style.fontVariantLigatures, family: style.fontFamily };
+    });
+
+  const MONO = ["text", "kbd", "prose-code", "prose-pre", "palette-kbd", "barcode-caption"];
+  for (const name of MONO) {
+    const off = await read("default", name);
+    expect(off.family, `${name} is not set in the mono stack`).toContain("monospace");
+    expect(off.ligatures, `${name} still ligates`).toBe("none");
+    // The token is the switch: one declaration gives a face its ligatures back.
+    expect((await read("opt-in", name)).ligatures, `${name} ignores the token`).toBe("normal");
+  }
+
+  // Text that is not code is left alone.
+  for (const name of ["plain", "prose-p"]) {
+    expect((await read("default", name)).ligatures, `${name} lost its ligatures`).toBe("normal");
+  }
 });

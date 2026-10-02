@@ -29,6 +29,12 @@
  *    resolve to byte-identical font-family strings before and after the
  *    re-pointing pass. The literal below was measured against the pre-1.1A-01
  *    tree (`git show 50e64d5:registry/…`), not copied from the token file.
+ *
+ * 5. **The code face turns ligatures off** [1.1F-19]. `--font-mono` names
+ *    Cascadia Code and JetBrains Mono, which both ligate by default, so every
+ *    rule that sets the mono stack also reads `--mono-ligatures` (default
+ *    `none`) as `font-variant-ligatures`. Gated per rule, so a seventh mono
+ *    surface cannot be added without it.
  */
 import { describe, it, expect } from "bun:test";
 import { Glob } from "bun";
@@ -276,5 +282,85 @@ describe("role tokens · the default chain still resolves to the same stack", ()
     } finally {
       w.close();
     }
+  });
+});
+
+// ── 5. the code face turns ligatures off ─────────────────────────────────────
+
+describe("role tokens · every mono surface reads --mono-ligatures [1.1F-19]", () => {
+  const MONO_FAMILY = /^var\(\s*--font-mono\b/;
+  const LIGATURES = /^var\(\s*--mono-ligatures\b/;
+  const monoRules = ALL_COMPONENT_CSS.flatMap(({ rel, css }) =>
+    rules(css)
+      .filter((r) => MONO_FAMILY.test(declaration(r.body, "font-family") ?? ""))
+      .map((r) => ({ rel, ...r })),
+  );
+
+  it("typography.css defines --mono-ligatures as none", () => {
+    const m = /--mono-ligatures\s*:\s*([^;]+);/.exec(stripComments(TYPOGRAPHY));
+    expect(m?.[1].trim()).toBe("none");
+  });
+
+  it("is not a --font-* token — the docs generator draws every one of those as a family", () => {
+    const declared = [...stripComments(TYPOGRAPHY).matchAll(/(--[a-z0-9-]+)\s*:/g)].map((m) => m[1]);
+    expect(declared).toContain("--mono-ligatures");
+    expect(declared.filter((name) => name.startsWith("--font-") && name.includes("ligature"))).toEqual(
+      [],
+    );
+  });
+
+  it("the sweep finds the six mono rules it is meant to gate", () => {
+    expect(monoRules.map((r) => `${r.rel} · ${r.selector}`).sort()).toEqual([
+      'base/prose.css · [data-ui="prose"] code',
+      'base/prose.css · [data-ui="prose"] pre',
+      'primitives/kbd/kbd.css · [data-ui="kbd"]',
+      'primitives/text/text.css · [data-ui="text"][data-variant="mono"]',
+      'recipes/barcode/barcode.css · [data-ui="barcode"] > [data-part="caption"]',
+      'recipes/command-palette/command-palette.css · [data-ui="command-palette"] [data-part="kbd"]',
+    ]);
+  });
+
+  it("every rule whose font-family reads --font-mono declares font-variant-ligatures from the token", () => {
+    const missing = monoRules
+      .filter((r) => !LIGATURES.test(declaration(r.body, "font-variant-ligatures") ?? ""))
+      .map((r) => `${r.rel} · ${r.selector}`);
+    expect(missing).toEqual([]);
+  });
+
+  it("no rule sets ligatures any other way — the token is the only switch", () => {
+    const offenders = ALL_COMPONENT_CSS.flatMap(({ rel, css }) =>
+      rules(css)
+        .filter((r) => {
+          const value = declaration(r.body, "font-variant-ligatures");
+          if (value === undefined) return /font-feature-settings\s*:[^;]*(liga|calt)/.test(r.body);
+          return !LIGATURES.test(value) || !MONO_FAMILY.test(declaration(r.body, "font-family") ?? "");
+        })
+        .map((r) => `${rel} · ${r.selector}`),
+    );
+    expect(offenders).toEqual([]);
+  });
+
+  it("the four components declare the token and say why in a changes note", () => {
+    const VERSIONS: Record<string, string> = {
+      "primitives/text/text": "1.2.0",
+      "primitives/kbd/kbd": "1.1.0",
+      "recipes/command-palette/command-palette": "1.3.0",
+      "recipes/barcode/barcode": "1.1.0",
+    };
+    for (const [component, version] of Object.entries(VERSIONS)) {
+      const manifest = JSON.parse(read(`${component}.manifest.json`));
+      expect(manifest.tokens_used, component).toContain("mono-ligatures");
+      const change = manifest.changes.find((c: { version: string }) => c.version === version);
+      expect(change?.note, `${component} has no ${version} note`).toContain("--mono-ligatures");
+      expect(change.breaking).toBe(false);
+    }
+  });
+
+  it("no shipped theme re-declares it — the terminal theme's mono body text is a known gap", () => {
+    for (const file of new Glob("*.css").scanSync(join(REGISTRY, "themes"))) {
+      expect(stripComments(read(`themes/${file}`)), file).not.toContain("--mono-ligatures");
+    }
+    // The gap is stated where the token is defined, not left to be found.
+    expect(TYPOGRAPHY).toMatch(/terminal[\s\S]*not covered/);
   });
 });

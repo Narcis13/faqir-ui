@@ -1,11 +1,16 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "command-palette",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "kind": "recipe",
   "category": "navigation",
   "description": "Cmd+K style modal command interface with search and keyboard navigation",
   "changes": [
+    {
+      "version": "1.3.0",
+      "note": "The kbd part sets font-variant-ligatures: var(--mono-ligatures, none). --mono-ligatures is a new typography token that defaults to none; Cascadia Code and JetBrains Mono, both named by --font-mono, ligate by default, so a shortcut hint such as -> was drawn as one joined glyph. Set --mono-ligatures: normal to get a face's ligatures back.",
+      "breaking": false
+    },
     {
       "version": "1.2.0",
       "note": "Cmd/Ctrl+K is matched case-insensitively and has one owner. The shortcut compared e.key to \"k\", so Caps Lock (\"K\") missed it; it now lowercases the key and falls back to the physical KeyK on a non-Latin layout, and ignores Alt, Shift (Cmd+Shift+K is a browser and app chord of its own), auto-repeat and IME composition. Every instance listened on document with no opt-out, so a page with three palettes opened three stacked focus traps: the handler now stands down on an event something else already prevented, so the first palette in listener order (or an app handler that pre-empts it) owns the press, and a palette whose root has left the document without destroy() no longer claims it. New boolean prop data-no-shortcut opts an instance out entirely; it is read on each press, so it can be toggled at runtime.",
@@ -218,7 +223,8 @@
     "duration-fast",
     "duration-normal",
     "ease-out",
-    "border-width"
+    "border-width",
+    "mono-ligatures"
   ],
   "templates": {
     "html": "<div data-ui=\"command-palette\" data-state=\"closed\"{no_shortcut}>\n  <div data-part=\"overlay\" hidden></div>\n  <div data-part=\"panel\" role=\"dialog\" aria-modal=\"true\" aria-label=\"Command palette\" data-size=\"{size}\" hidden>\n    <div data-part=\"search-wrapper\">\n      <input data-part=\"search\" type=\"text\" role=\"combobox\" aria-expanded=\"true\" aria-autocomplete=\"list\" aria-controls=\"{id}-list\" placeholder=\"Type a command or search...\">\n    </div>\n    <div data-part=\"list\" role=\"listbox\" id=\"{id}-list\">\n      <div data-part=\"group\">\n        <div data-part=\"group-label\">{group_label}</div>\n        <div data-part=\"item\" role=\"option\" aria-selected=\"false\">\n          <span data-part=\"item-label\">{item_label}</span>\n          <kbd data-part=\"kbd\">{shortcut}</kbd>\n        </div>\n      </div>\n      <div data-part=\"empty\" hidden>No commands found</div>\n    </div>\n  </div>\n</div>"

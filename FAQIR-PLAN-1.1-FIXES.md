@@ -146,7 +146,7 @@ wait for document order. Task 1.1F-32 releases the additive set; its version is 
 | 1.1F-16 | Overflow: stack `min-inline-size`, grid `minmax(0,1fr)`, `overflow-wrap` on ids | 25, 26, 27 | patch | ✅ |
 | 1.1F-17 | Button: `aria-pressed` state; link variant keeps its box under a size | 14, 24 | additive | ✅ |
 | 1.1F-18 | Text: an anchor carrying `data-ui="text"` reads as a link | 28 | patch | ✅ |
-| 1.1F-19 | `--mono-ligatures` token; every mono surface turns ligatures off | 12 | additive | ⬜ |
+| 1.1F-19 | `--mono-ligatures` token; every mono surface turns ligatures off | 12 | additive | ✅ |
 | 1.1F-20 | Nesting, CSS I: tabs, collapsible, accordion, description-list, progress, key-value, callout, empty-state | 5, 17, 30 | patch | ⬜ |
 | 1.1F-21 | Nesting, CSS II: dialog family, popover, tooltip, sidebar, carousel, menus | 5 | patch | ⬜ |
 | 1.1F-22 | Nesting, CSS III: table | 5 | patch | ⬜ |
@@ -180,6 +180,7 @@ wait for document order. Task 1.1F-32 releases the additive set; its version is 
 | 1.1F-35 | `site/styles/docs.css:446-456,1046-1050` hand-roll pressed buttons. Delete what 1.1F-17 makes redundant, or confirm it went in that task. (Went in 1.1F-17: two of the three rules deleted, the theme pick kept solid at one more attribute; `tests/primitives/button.test.ts` pins it.) | verification of entry 14 | ✅ |
 | 1.1F-36 | An `l-teleport` inside `l-if` / `l-for` content moves its element out before insertion, so `renderThenInit` never sees it: its held `l-init` runs before its controllers, which only the MutationObserver starts. Start controllers on teleported nodes in `handleTeleport` while `pendingInits` is open, or document the gap. Also: a scope root's own `l-init` in inserted content now runs after its children bind (static pages: before) — confirm that asymmetry is acceptable. | 1.1F-03 | ⬜ |
 | 1.1F-37 | `tests/visual/docs-switcher.pw.ts` › "the scheme reaches every preview frame at once" fails on macOS Chromium at `3f7d5fb`, before 1.1F-17 touched anything: 12 of the 27 lazy theme frames take the scheme within the 10 s poll. Not part of `bun run test`. Find out whether the frames never load (lazy loading below the fold) or load and miss the message, and fix the page or the test. | 1.1F-17 | ⬜ |
+| 1.1F-38 | The docs site's own stylesheets set `font-family: var(--font-mono)` in 13 rules (`site/styles/docs.css` 523, 668, 1093, 1104; `pages/{rules,tooling,night-shift,themes}.css`) and none reads `--mono-ligatures`, so code samples on the site still ligate on a machine with Cascadia Code or JetBrains Mono. Add the declaration beside each, and extend the sweep in `tests/tokens/role-tokens.test.ts` §5 (or a site test) to `site/styles/`. | 1.1F-19 | ⬜ |
 
 ---
 
@@ -919,8 +920,8 @@ ignored by Chrome and Safari, and would not reach system fonts anyway.
 Update the surface count to 285.
 
 **Acceptance**
-- [ ] `gen:theme-manifests` (27 files, `tokens_inherited` only), `gen:component-tokens`, `gen:skill`, `build:core-package`, `check:docs`.
-- [ ] Downstream `form-block` and Kernel op-reference ligature workarounds can be dropped.
+- [x] `gen:theme-manifests` (27 files, `tokens_inherited` only), `gen:component-tokens`, `gen:skill`, `build:core-package`, `check:docs`. (`typography.css` defines `--mono-ligatures: none` under a new "Code Face" block whose comment states the terminal gap. The six rules in five files (`text` mono, `kbd`, prose `code` and `pre`, command-palette's `kbd` part, barcode's caption) declare `font-variant-ligatures: var(--mono-ligatures)` beside the mono `font-family`; command-palette's carries a `none` fallback, as that file's other declarations do. Manifests, each with a `changes` note: text 1.2.0, kbd 1.1.0, command-palette 1.3.0, barcode 1.1.0 (minor, since each reads a new themable token; kbd and barcode had no `changes` array until now). `gen:theme-manifests` added one `tokens_inherited` line to each of the 27 theme manifests and nothing else; `gen:component-tokens` wrote the four manifests and four headers. Tests: a fifth block in `tests/tokens/role-tokens.test.ts` (7 cases: the default, not a `--font-*` name, the sweep finds exactly the six rules, each declares the token, no rule sets ligatures any other way, the four manifests, no theme re-declares it; 4 red on the old stylesheets), the surface count at 285 in `tests/themes/manifest.test.ts`, and one Chromium case in `variant-consistency.pw.ts` (all six surfaces compute `none`, a wrapper setting `--mono-ligatures: normal` gives `normal` back, non-mono text and a prose paragraph stay `normal`; red on the old stylesheets). **The docs generator needed the token too**, which the Touches list did not name: `docs-foundations.test.ts` requires every typography token on the Typography page with a live preview rule, so `src/generator/docs.ts` has a `CODE_FACE_PROPERTY` map and a "Code face" section with a mono specimen, checked in Chromium on the built page. Regenerated on Bun 1.3.8 in the documented order: `build:registry-index`, `gen:skill` (tokens.md: 359 tokens, typography 29), `gen:bindings` and `build:manifest-api` (no diff), `build:core-package` (`cdn.json` re-hashed the 27 theme bundles only), `build:docs`. All 13 `check:*` / `audit:registry` / `size` gates and `typecheck` green; `faqir audit --stdin` clean on the four reference pages; `bun run test` 7,818 pass / 0 fail. No canonical HTML, engine or controller change. macOS's `ui-monospace` has no ligatures, so nothing moves there; the Linux-container visual run was not done. The docs site's own 13 mono rules in `site/styles/` are not registry surfaces and still ligate: follow-up 1.1F-38.)
+- [x] Downstream `form-block` and Kernel op-reference ligature workarounds can be dropped. (The Kernel op reference is `text` spans with `data-variant="mono"`, which now compute `font-variant-ligatures: none` themselves, so the `:style` on its container can go. `form-block`, `source-view` and `json-view` are the downstream's own components: a registry rule does not reach their stylesheets, so `form-block` keeps a ligature declaration and the other two gain one, written as `font-variant-ligatures: var(--mono-ligatures)` so all three follow the same switch. Row 12 of the un-patch checklist now says so.)
 
 ### 1.1F-20 · Nesting, CSS I: content containers
 
@@ -1278,7 +1279,7 @@ patch. That is why 1.1F-12/16/20 (tabs, collapsible, stack, grid, text, table) a
 | 8 | manual stray-file deletion / `$schema` correction after `create`/`add` | 26 |
 | 9, 10 | `--skip-rules focus-trap,controller-loaded`; "never run repair on index.html" | 24, 25 |
 | 11 | grep for `l-html` at code gates (or keep it, plus the config key) | 27 |
-| 12 | `font-variant-ligatures: none` in `form-block.css`; `:style` on the Kernel op reference | 19 |
+| 12 | `:style` on the Kernel op reference. In `form-block.css` (and `source-view`, `json-view`, which still ligate) write `font-variant-ligatures: var(--mono-ligatures)`: they are downstream components, so the registry rule does not reach them | 19 |
 | 13 | the `l-cloak` hash in `kernel/static.mjs`'s CSP | 07 |
 | 14 | Tail button's `data-variant` swap | 17 |
 | 17, 30 | nothing (the downstream's local `sm` → `--text-sm` patch is a project choice; D6) | 15, 20 |

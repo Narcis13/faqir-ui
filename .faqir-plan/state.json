@@ -2,7 +2,7 @@
   "$schema": "./state.schema.md",
   "plan": "FAQIR-PLAN-1.1-FIXES.md",
   "current": null,
-  "last_completed": "1.1F-18",
+  "last_completed": "1.1F-19",
   "history": [
     {
       "id": "1.1F-01",
@@ -111,6 +111,12 @@
       "completed": "2026-10-02",
       "commit": "1c3ed04",
       "summary": "Text anchor reads as a link. text.css: `[data-ui=\"text\"]:any-link` (underline from --link-decoration/-thickness/-underline-offset in currentColor, cursor: pointer) and a :focus-visible twin equal to link.css's ring, both before the done state so a done link stays struck through; the text keeps its colour, variant and size, and an anchor without href is untouched. `:any-link` selects on no attribute, so nothing new is declared. Manifest 1.1.3 (html_link template, a11y notes + Enter, safe transform, changes); tokens via gen:component-tokens. text.html +3 anchors (INTENDED_ROOT_CHANGES; Linux visual baselines for text's reference differ intentionally). Tests: tests/primitives/text-link.test.ts (13, 11 red on the old tree), 2 Chromium cases in variant-consistency.pw.ts (one red on the old stylesheet, the focus one a guard). overflow-wrap.test.ts no longer pins text's current version. gen:bindings: no diff (LText still a <p>). Un-patch row 28 notes the downstream's `a[data-ui=\"cluster\"][href]` text rule stays. Ran on Bun 1.3.8 via `npm i bun@1.3.8`. 7,811 pass / 0 fail."
+    },
+    {
+      "id": "1.1F-19",
+      "completed": "2026-10-03",
+      "commit": "PENDING",
+      "summary": "`--mono-ligatures` token (default none; theme surface 284 → 285). The six rules that set the mono stack (text mono, kbd, prose code and pre, command-palette's kbd part, barcode's caption) declare font-variant-ligatures: var(--mono-ligatures) beside it, so Cascadia Code and JetBrains Mono no longer join !=, => and ->; command-palette's carries a none fallback. Manifests: text 1.2.0, kbd 1.1.0, command-palette 1.3.0, barcode 1.1.0. 27 theme manifests gained one tokens_inherited line. Docs generator: CODE_FACE_PROPERTY map and a Code face section on the Typography page (docs-foundations.test.ts requires every typography token to have a live preview). Tests: role-tokens.test.ts §5 (7 cases, 4 red on the old stylesheets), surface count 285, one Chromium case in variant-consistency.pw.ts (red on the old stylesheets). Known gap documented: terminal's role-driven mono body text. Follow-up 1.1F-38: the docs site's own 13 mono rules. No engine change. Ran on Bun 1.3.8 via `npm i bun@1.3.8`. 7,818 pass / 0 fail."
     }
   ],
   "note": "Pointer file for the /faqir-plan slash command. FAQIR-PLAN-1.1-FIXES.md status cells (⬜/✅) are the source of truth; this file records the cross-session cursor and a per-task log. Do not hand-edit `current` while a session is running. The 1.1 plan's cursor (31 history entries, through 1.1R-01) is archived unchanged at state-1.1.json; FAQIR-PLAN-1.1.md still has six open follow-up rows (1.1A-21, 1.1A-24, 1.1A-27, 1.1A-28, 1.1A-29, 1.1N-03), reachable by pointing `plan` back at it. The 1.0 cursor is at state-1.0.json."

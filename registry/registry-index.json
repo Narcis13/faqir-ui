@@ -443,11 +443,11 @@
       "name": "kbd",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "files": [
         {
           "path": "kbd.css",
-          "sha256": "800cfc4cf442d7c09121a97e3e61e748cc369a8720eb600f44a605c6a43eb266"
+          "sha256": "ece68d5e22ec075ff1061bd2995251806d438b29fefe7962530f43296ca46f96"
         },
         {
           "path": "kbd.html",
@@ -455,10 +455,10 @@
         },
         {
           "path": "kbd.manifest.json",
-          "sha256": "6c5ccefc5cfa8cf4452bd7d9b11be9b63f711abf4e8fa0826127f0a35cee2a4b"
+          "sha256": "d43a84f85d9fdd00f5ce2a6db83a2d8f22fb2ff32804c90bd1ba3cfc3f20f9c2"
         }
       ],
-      "hash": "14972eb0a79045d8aa8dae67f10117a2ea96740ad596cf7e8da0373eeb051e48",
+      "hash": "798e9c359756b5da5d6105b0c7a4f3dbf3d5ac7f105524dbcad7cec0713c4ae8",
       "deps": []
     },
     {
@@ -863,11 +863,11 @@
       "name": "text",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.1.3",
+      "version": "1.2.0",
       "files": [
         {
           "path": "text.css",
-          "sha256": "3c7a3425e016736723efc06ee25e75cb0c5b8f15e43b8cb83fcba0709eec2ad6"
+          "sha256": "724297effd7446fa60bdaf704ddd7469605a3868d7cb6cbc6442aef54aa95ccf"
         },
         {
           "path": "text.html",
@@ -875,10 +875,10 @@
         },
         {
           "path": "text.manifest.json",
-          "sha256": "097060c63263014f36a9a5c457e4ad52e1143a3bc3bf40d111bfe8737d27a673"
+          "sha256": "f106ae9ca87668d42a504122676ab7bbaeb34e2a2f96d45311f655088ea511b2"
         }
       ],
-      "hash": "b01a60c86c949e752b067104936f36787893b79208fc33c8378dd957e693c6a0",
+      "hash": "00cb2cf0fadb37b222f883d7cccf4ef26223b65b816aa01ea9e272cd6c960ee6",
       "deps": []
     },
     {
@@ -1005,11 +1005,11 @@
       "name": "barcode",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "files": [
         {
           "path": "barcode.css",
-          "sha256": "5aecc671004f0577233fa7af6255d47fae81468fe38ffd0a5214d6c437d5d45d"
+          "sha256": "f19d303e37e3d7dcadd3ab7f17ff0bfef0b2b1e4ebf2c6cb004ec510d6f2c553"
         },
         {
           "path": "barcode.html",
@@ -1021,10 +1021,10 @@
         },
         {
           "path": "barcode.manifest.json",
-          "sha256": "b193c6b4e24facf6ea40458653f494f09e41b28273f99e48e648aa8c2adc35cc"
+          "sha256": "9f9633c0ecafb1ecab16e0eaa22451f076b65ff04a51183cf5fbc92e7936ae82"
         }
       ],
-      "hash": "67feb9d8e13e8fd01c028ea5fa8815a200d7b4c0eaff5efe66b163905965f08c",
+      "hash": "e1d52468e5d417ce219f798d90d384fa3dc11a5d5e1b3bf0a8a38adce39f9fdb",
       "deps": []
     },
     {
@@ -1109,11 +1109,11 @@
       "name": "command-palette",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "files": [
         {
           "path": "command-palette.css",
-          "sha256": "0261609a455da73797b27a665927cb6f026958a65c68a5dcca2f9e456552bb67"
+          "sha256": "dcd0b42f77e464dd41457d0d4ef3752e0ab572cfd320519c277ed1df5c244213"
         },
         {
           "path": "command-palette.html",
@@ -1125,10 +1125,10 @@
         },
         {
           "path": "command-palette.manifest.json",
-          "sha256": "ee11b1d86a3e94aa08da4250d2e4479d11d934eed0d8317f5eda1957fab83366"
+          "sha256": "cf77dce8c8a8b5d1a19f7c5782cbfe5cd9969a8af6ecacc0a924bd21031da510"
         }
       ],
-      "hash": "50dc9d37f23e81f2be49ab749db0cb1bfcbef5af746a7ee28bfec59fe66c04b2",
+      "hash": "bec85a021002d8bd92a0243b0e0a5ed5823947b8653cce1fea876051b2997f83",
       "deps": [
         "kbd"
       ]

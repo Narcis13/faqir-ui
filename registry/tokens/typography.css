@@ -18,6 +18,19 @@
   --font-body:    var(--font-sans);   /* prose, text, document body, descriptions */
   --font-ui:      var(--font-sans);   /* controls: button, input, select, badge, chip, tabs, menus */
 
+  /* ── Code Face (task 1.1F-19) ──
+     Cascadia Code and JetBrains Mono both ligate by default, so `!=`, `=>` and
+     `->` in an id, a keyboard hint or a code sample were drawn as single glyphs
+     on any machine that has either face installed. Every rule that sets
+     `font-family: var(--font-mono)` reads this beside it as
+     `font-variant-ligatures` (gated by tests/tokens/role-tokens.test.ts).
+     `none` also turns contextual alternates off, which is how JetBrains Mono
+     ligates. Set it to `normal` to get a face's ligatures back. A theme that
+     points a ROLE at --font-mono (terminal does, for all three) is not covered:
+     its body text is set by the role, and keeps the face's defaults. Not named
+     --font-mono-ligatures, because a --font-* token is a family. */
+  --mono-ligatures: none;
+
   /* ── Font Sizes ── */
   --text-xs:     0.75rem;    /* 12px */
   --text-sm:     0.875rem;   /* 14px */

@@ -1,11 +1,16 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "text",
-  "version": "1.1.3",
+  "version": "1.2.0",
   "kind": "primitive",
   "category": "typography",
   "description": "Text and heading primitives with size, color, weight, alignment, and truncation via data attributes",
   "changes": [
+    {
+      "version": "1.2.0",
+      "note": "data-variant=\"mono\" text sets font-variant-ligatures: var(--mono-ligatures), a new typography token that defaults to none. --font-mono names Cascadia Code and JetBrains Mono, and both ligate by default, so on any machine with either installed an id, an operator or a path containing !=, => or -> was drawn as one joined glyph. none also turns contextual alternates off, which is how JetBrains Mono ligates. Set --mono-ligatures: normal to get a face's ligatures back. Text that is mono only because a theme points a type role at --font-mono (terminal) is not covered.",
+      "breaking": false
+    },
     {
       "version": "1.1.3",
       "note": "An anchor carrying data-ui=\"text\" reads as a link. The reset takes every anchor's colour and underline away and text.css gave nothing back, so <a data-ui=\"text\" href> could not be told from the text beside it. A [data-ui=\"text\"]:any-link rule now draws the underline from the link tokens (--link-decoration, --link-thickness, --link-underline-offset) in currentColor, and a :focus-visible twin draws the focus ring. The text keeps its own colour, variant and size, so a table of mono id links does not turn primary; an anchor with no href and every non-anchor root are untouched, and data-state=\"done\" still strikes a link through. New html_link template. :any-link selects on no attribute, so nothing new is declared.",
@@ -130,7 +135,7 @@
     "text-3xl", "text-4xl", "weight-normal", "weight-medium", "weight-semibold", "weight-bold",
     "leading-tight", "leading-snug", "leading-normal", "leading-relaxed", "link-decoration",
     "link-thickness", "link-underline-offset", "focus-ring-width", "focus-ring-style",
-    "focus-ring-color", "focus-ring-offset", "focus-shadow"
+    "focus-ring-color", "focus-ring-offset", "focus-shadow", "mono-ligatures"
   ],
   "templates": {
     "html": "<p data-ui=\"text\" data-size=\"{size}\" data-variant=\"{variant}\">{content}</p>",

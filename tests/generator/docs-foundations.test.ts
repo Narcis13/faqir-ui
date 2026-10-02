@@ -136,6 +136,8 @@ describe("typography foundation page", () => {
         "heading-transform": "text-transform",
         "heading-caps": "font-variant-caps",
         "heading-leading": "line-height",
+        // 1.1F-19: the code face. Not a `font-` token, so it is not a family.
+        "mono-ligatures": "font-variant-ligatures",
       };
       const property =
         VOICE[token.name] ??
