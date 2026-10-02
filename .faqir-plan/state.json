@@ -85,7 +85,7 @@
     {
       "id": "1.1F-14",
       "completed": "2026-10-02",
-      "commit": "",
+      "commit": "fd6fb7c",
       "summary": "ARIA grid handling of interactive cell content (behaviour change, D4). setupNavigability demotes input/select/textarea/button/a[href]/[tabindex] inside navMatrix cells to tabindex=-1 (WeakMap of originals, restored by destroy()), skipping the table's checkbox, drag-handle, expander and row-toggle parts and nested tables. Re-run on every refresh/filter/collapse/hide. Enter/F2 (after group/tree/editable) focuses the cell's first control; Escape on a demoted control returns to the cell (before the input/link early return); onFocusIn moves the stop to a demoted control's cell. Manifest 3.2.0 (keyboard rows, navigable description, changes). 10 tests, 5 red at HEAD. Feature cost 185 B packaged; behaviour-preserving table.js trims bring min.js to 47,095/47,104 B (9 B left). Plan env facts now note the intermittent Bun 1.3.8 `bun build` hang behind flaky suite timeouts."
     }
   ],
