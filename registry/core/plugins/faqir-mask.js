@@ -254,7 +254,6 @@
             selectionStart: selectionStart == null ? el.selectionStart : selectionStart,
             selectionEnd: selectionEnd == null ? el.selectionEnd : selectionEnd,
           }),
-          true,
         );
       }
 
@@ -289,7 +288,7 @@
         var caret = el.selectionStart;
         var result = formatResult(el.value);
         result.caret = Math.min(caret == null ? result.value.length : caret, result.value.length);
-        commit(result, true);
+        commit(result);
       }
 
       el.addEventListener("beforeinput", onBeforeInput, true);
