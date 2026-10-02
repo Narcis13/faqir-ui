@@ -1,8 +1,8 @@
 {
   "$schema": "./state.schema.md",
   "plan": "FAQIR-PLAN-1.1-FIXES.md",
-  "current": "1.1F-05",
-  "last_completed": "1.1F-04",
+  "current": null,
+  "last_completed": "1.1F-05",
   "history": [
     {
       "id": "1.1F-01",
@@ -27,6 +27,12 @@
       "completed": "2026-10-02",
       "commit": "4fed55a",
       "summary": "`:style` / `:class` merge instead of replace. handleBind keeps `prev` (what its last run set) per binding and removes only keys it set and has since dropped. styleMap normalises a string (via a detached element's CSSOM: custom properties, !important, shorthands), an object (`--customProps` no longer lowercased) or an array (now honoured), and applies them with setProperty(k, v, priority). classMap diffs `:class` tokens the same way; a falsy object entry still removes a markup class. Static style/class, l-show's display and controller writes now survive re-runs. New dev diagnostic `style` (`:style` declares display beside l-show) in dev-diagnostics.js, faqir-core.d.ts and docs/devtools.md (which also gained the missing `key` row). +0.17 KB gzip (45.15/46). Seven tests in faqir-core.test.ts (one production-silent), two in dev-build.test.ts. happy-dom trap refined: a static class/style breaks only when it precedes its binding."
+    },
+    {
+      "id": "1.1F-05",
+      "completed": "2026-10-02",
+      "commit": "7024a65",
+      "summary": "Methods keep their component's `this` when called from a row. createScopeWithMagics binds every own writable function-valued data property to the reactive scope (written to the target, nothing triggers). Getters keep their receiver; late-assigned functions stay unbound (documented on the l-data directive line). snapshotValue strips `bound `, so inspect() is unchanged. New dev class `shadow` (devHooks.loopShadow, from a dev-marked line in handleFor): an author-written loop variable or index that shadows a scope name, once per list and name; d.ts, devtools.md and the 8-class count test updated. +0.06 KB gzip (45.50/46 under the pinned Bun). Four regressions in runtime-fixes.test.ts (incl. apiSource load() from a row named `items`), one in inspect.test.ts, two in dev-build.test.ts. Session first fixed a red baseline (3492d2c): faqir-mask.js was 2049/2048 B under Bun 1.3.8."
     }
   ],
   "note": "Pointer file for the /faqir-plan slash command. FAQIR-PLAN-1.1-FIXES.md status cells (⬜/✅) are the source of truth; this file records the cross-session cursor and a per-task log. Do not hand-edit `current` while a session is running. The 1.1 plan's cursor (31 history entries, through 1.1R-01) is archived unchanged at state-1.1.json; FAQIR-PLAN-1.1.md still has six open follow-up rows (1.1A-21, 1.1A-24, 1.1A-27, 1.1A-28, 1.1A-29, 1.1N-03), reachable by pointing `plan` back at it. The 1.0 cursor is at state-1.0.json."
