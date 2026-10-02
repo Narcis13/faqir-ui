@@ -180,7 +180,9 @@ Every manifest must include:
   (`data-cols-md="6"` = "6 from md up"). Generators expand it; never mark a protocol attribute responsive.
 - `props` — attributes that are not variant groups: boolean toggles, free-form strings/numbers and
   small enums, each with `type` + `description` (and optionally `default`, `attr`, `values`)
-- `states` — component states with data-state mappings
+- `states` — component states with data-state mappings. A bare `aria-*` attr (`"attr": "aria-pressed"`)
+  becomes a boolean binding prop that is absent until set; declare a prop of the same name with a
+  `default` (toggle's `pressed: false`) when the attribute must always be rendered
 - `a11y` — ARIA requirements, keyboard shortcuts, focus trap info
 - `tokens_used` — the design tokens the component's CSS references directly: every
   `var(--x)` (fallbacks included) whose `--x` is defined in `registry/tokens/`. A token the

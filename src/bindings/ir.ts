@@ -62,6 +62,15 @@ export interface IRState {
   value: string | null;
   kind: "value" | "presence" | "aria";
   /**
+   * Set on an `aria` state whose attribute is absent until the prop is given:
+   * `true`/`false` then write `"true"`/`"false"`, and unset writes nothing.
+   * `aria-pressed` on a button is the case — every button rendering
+   * `aria-pressed="false"` would announce every button as a toggle. Left unset
+   * when the manifest also declares a prop of the state's name with a default
+   * (toggle's `pressed: false`): that attribute always has a value.
+   */
+  optional?: true;
+  /**
    * Prose for the generated doc comment, when the manifest supplies one — a
    * boolean `prop` carries a required `description`, a `state` does not. Absent
    * ⇒ the emitters fall back to describing the attribute they write.
@@ -212,7 +221,11 @@ export function manifestToIR(manifest: Manifest, manifestPath: string): Componen
       throw new Error(`${manifest.name}: state "${stateName}" collides with an existing prop`);
     }
     usedProps.add(stateName);
-    states.push({ prop: stateName, ...parseStateAttr(stateName, s.attr) });
+    const state: IRState = { prop: stateName, ...parseStateAttr(stateName, s.attr) };
+    if (state.kind === "aria" && manifest.props?.[stateName]?.default === undefined) {
+      state.optional = true;
+    }
+    states.push(state);
   }
 
   // Boolean props carrying an explicit attribute (task 0.8-03). Same emitted

@@ -4,6 +4,10 @@
  * Structural parity is proved under Bun. These are the properties only a real
  * layout engine can answer: mixed-size baselines, visible callout accents,
  * progress-label containment, and carousel scroll containment/reachability.
+ *
+ * Task 1.1F-17 adds button: what `aria-pressed="true"` computes to per variant
+ * (and under the pointer, and in forced colors), and the box a link button
+ * keeps when it also carries a size.
  */
 
 import { expect, test, type Page } from "@playwright/test";
@@ -20,9 +24,11 @@ const BASE = ["reset", "prose", "rhythm", "motion-presets"];
 const COMPONENTS: Array<["primitives" | "recipes", string]> = [
   ["primitives", "avatar"],
   ["primitives", "badge"],
+  ["primitives", "button"],
   ["primitives", "callout"],
   ["primitives", "progress"],
   ["primitives", "text"],
+  ["primitives", "toggle"],
   ["recipes", "carousel"],
 ];
 
@@ -184,4 +190,146 @@ test("carousel overflow stays in its viewport and every slide remains reachable"
     expect(result.initiallyOffscreen).toBeGreaterThan(0);
     expect(result.reachable).toEqual(result.reachable.map(() => true));
   }
+});
+
+/** Paint-relevant computed colours of one element. */
+const PAINT = (element: Element) => {
+  const style = getComputedStyle(element);
+  return {
+    background: style.backgroundColor,
+    border: style.borderTopColor,
+    color: style.color,
+  };
+};
+
+/** What the pressed tokens resolve to, read off probes the cascade cannot touch. */
+const PRESSED_PROBES = `<span data-probe="subtle" style="background: var(--color-primary-subtle)"></span>
+<span data-probe="primary" style="background: var(--color-primary)"></span>`;
+
+test("a pressed button shows it in default, outline and ghost — and stays pressed under the pointer", async ({ page }) => {
+  const variants = [null, "default", "outline", "ghost"];
+  await mount(
+    page,
+    `${PRESSED_PROBES}
+    ${variants.map((variant) => {
+      const attr = variant ? ` data-variant="${variant}"` : "";
+      return `<p><button data-ui="button"${attr} type="button" aria-pressed="true" data-case="${variant ?? "none"}-on">On</button>
+      <button data-ui="button"${attr} type="button" aria-pressed="false" data-case="${variant ?? "none"}-off">Off</button></p>`;
+    }).join("\n")}`,
+  );
+
+  const subtle = await page.locator('[data-probe="subtle"]').evaluate((el) => getComputedStyle(el).backgroundColor);
+  const primary = await page.locator('[data-probe="primary"]').evaluate((el) => getComputedStyle(el).backgroundColor);
+  expect(subtle).not.toBe(primary);
+
+  for (const variant of variants) {
+    const name = variant ?? "none";
+    const on = page.locator(`[data-case="${name}-on"]`);
+    const off = page.locator(`[data-case="${name}-off"]`);
+    // Transitions would report a colour mid-flight.
+    await page.addStyleTag({ content: `[data-ui="button"] { transition: none !important; }` });
+
+    expect(await on.evaluate(PAINT), `${name}: pressed`).toEqual({
+      background: subtle,
+      border: primary,
+      color: primary,
+    });
+    const released = await off.evaluate(PAINT);
+    expect(released.background, `${name}: aria-pressed="false" is not styled as pressed`).not.toBe(subtle);
+    expect(released.color).not.toBe(primary);
+
+    // The variant's own :hover fill is the more specific rule without the twin.
+    await on.hover();
+    expect((await on.evaluate(PAINT)).background, `${name}: pressed + hover`).toBe(subtle);
+    await page.mouse.move(0, 0);
+  }
+});
+
+test("a filled or link button gets no pressed style", async ({ page }) => {
+  const variants = ["primary", "secondary", "destructive", "link"];
+  await mount(
+    page,
+    variants.map((variant) =>
+      `<p><button data-ui="button" data-variant="${variant}" type="button" aria-pressed="true" data-case="${variant}-on">On</button>
+      <button data-ui="button" data-variant="${variant}" type="button" data-case="${variant}-plain">Plain</button></p>`,
+    ).join("\n"),
+  );
+  for (const variant of variants) {
+    expect(
+      await page.locator(`[data-case="${variant}-on"]`).evaluate(PAINT),
+      `${variant}: aria-pressed changed its paint`,
+    ).toEqual(await page.locator(`[data-case="${variant}-plain"]`).evaluate(PAINT));
+  }
+});
+
+test("forced colors: a pressed button and a pressed toggle are Highlight / HighlightText", async ({ page }) => {
+  await mount(
+    page,
+    `<span data-probe="highlight" style="background: Highlight; color: HighlightText"></span>
+    <button data-ui="button" data-variant="outline" type="button" aria-pressed="true" data-case="button-on">On</button>
+    <button data-ui="button" data-variant="outline" type="button" aria-pressed="false" data-case="button-off">Off</button>
+    <button data-ui="toggle" type="button" aria-pressed="true" data-case="toggle-on">On</button>
+    <button data-ui="toggle" type="button" aria-pressed="false" data-case="toggle-off">Off</button>`,
+  );
+  await page.emulateMedia({ forcedColors: "active" });
+  await page.addStyleTag({ content: `[data-ui] { transition: none !important; }` });
+
+  const system = await page.locator('[data-probe="highlight"]').evaluate((el) => {
+    const style = getComputedStyle(el);
+    return { background: style.backgroundColor, color: style.color };
+  });
+
+  for (const component of ["button", "toggle"]) {
+    const on = page.locator(`[data-case="${component}-on"]`);
+    expect(await on.evaluate(PAINT), `${component}: pressed`).toEqual({
+      background: system.background,
+      border: system.background,
+      color: system.color,
+    });
+    // Without the rule the OS palette paints both the same.
+    const off = await page.locator(`[data-case="${component}-off"]`).evaluate(PAINT);
+    expect(off.background, `${component}: released`).not.toBe(system.background);
+
+    await on.hover();
+    expect((await on.evaluate(PAINT)).background, `${component}: pressed + hover`).toBe(system.background);
+    await page.mouse.move(0, 0);
+  }
+});
+
+test("a link button with a size keeps the text's own box", async ({ page }) => {
+  await mount(
+    page,
+    `<p><button data-ui="button" data-variant="link" data-case="link">Link</button>
+    <button data-ui="button" data-variant="link" data-size="sm" data-case="link-sm">Link</button>
+    <button data-ui="button" data-variant="link" data-size="lg" data-case="link-lg">Link</button>
+    <button data-ui="button" data-size="sm" data-case="default-sm">Default</button>
+    <button data-ui="button" data-size="lg" data-case="default-lg">Default</button></p>`,
+  );
+
+  const box = (name: string) =>
+    page.locator(`[data-case="${name}"]`).evaluate((element) => {
+      const style = getComputedStyle(element);
+      const px = (value: string) => Number.parseFloat(value);
+      return {
+        height: element.getBoundingClientRect().height,
+        // `line-height: 1` computes to the font size; the box is that plus its border.
+        text: px(style.lineHeight) + px(style.borderTopWidth) + px(style.borderBottomWidth),
+        paddingStart: px(style.paddingInlineStart),
+        paddingEnd: px(style.paddingInlineEnd),
+        fontSize: px(style.fontSize),
+      };
+    });
+
+  for (const size of ["sm", "lg"]) {
+    const link = await box(`link-${size}`);
+    const sized = await box(`default-${size}`);
+    expect(link.height, `link/${size} is taller than its line of text`).toBeCloseTo(link.text, 1);
+    expect(link.paddingStart).toBe(0);
+    expect(link.paddingEnd).toBe(0);
+    // The size still means something: its font size.
+    expect(link.fontSize).toBe(sized.fontSize);
+    expect(link.height).toBeLessThan(sized.height);
+  }
+  expect((await box("link-sm")).fontSize).toBeLessThan((await box("link")).fontSize);
+  expect((await box("link-lg")).fontSize).toBeGreaterThan((await box("link")).fontSize);
 });

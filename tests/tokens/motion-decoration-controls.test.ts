@@ -344,7 +344,7 @@ describe("no component spells an easing of its own", () => {
     expect(exempt.sort()).toEqual([
       "patterns/dashboard-shell/dashboard-shell.css:65",
       "patterns/dashboard-shell/dashboard-shell.css:81",
-      "primitives/button/button.css:137",
+      "primitives/button/button.css:164",
       "primitives/spinner/spinner.css:12",
       "recipes/sidebar/sidebar.css:54",
       "recipes/sidebar/sidebar.css:65",

@@ -31,8 +31,8 @@ as was done with `state-1.0.json`).
 - **Bun pin.** `.bun-version` is `1.3.8`. `build:audit-browser`, `build:rules-plugin` and
   `build:core-package` byte-compare against a minified build, so regenerate them **with Bun
   1.3.8** or their `check:*` gate goes red for an unrelated reason. Since 1.1F-05 the only Bun
-  on this machine is 1.3.8, at `~/.bun/bin/bun`, which is not on the default PATH, so run
-  `export PATH=$HOME/.bun/bin:$PATH` first. Sizes measured with it are about 0.3 KB higher
+  on this machine was 1.3.8, at `~/.bun/bin/bun`; by 1.1F-16 that binary is 1.4.2 again, so
+  check `bun --version` and use the `npm i bun@1.3.8` route below when it is not the pin. Sizes measured with it are about 0.3 KB higher
   than the 1.4.2 numbers recorded by 1.1F-01–04: after 1.1F-05, engine+controllers is
   45.50/46 KB gzip, leaving about 0.5 KB for the rest of the plan. (A machine whose own Bun
   is newer can get the pin without touching it: `npm i bun@1.3.8` in a scratch directory,
@@ -144,7 +144,7 @@ wait for document order. Task 1.1F-32 releases the additive set; its version is 
 |----|------|---------|-------|--------|
 | 1.1F-15 | `gen:component-tokens` + registry gate: `tokens_used` and `@ui:tokens` derived from CSS | 17, 30 | patch | ✅ |
 | 1.1F-16 | Overflow: stack `min-inline-size`, grid `minmax(0,1fr)`, `overflow-wrap` on ids | 25, 26, 27 | patch | ✅ |
-| 1.1F-17 | Button: `aria-pressed` state; link variant keeps its box under a size | 14, 24 | additive | ⬜ |
+| 1.1F-17 | Button: `aria-pressed` state; link variant keeps its box under a size | 14, 24 | additive | ✅ |
 | 1.1F-18 | Text: an anchor carrying `data-ui="text"` reads as a link | 28 | patch | ⬜ |
 | 1.1F-19 | `--mono-ligatures` token; every mono surface turns ligatures off | 12 | additive | ⬜ |
 | 1.1F-20 | Nesting, CSS I: tabs, collapsible, accordion, description-list, progress, key-value, callout, empty-state | 5, 17, 30 | patch | ⬜ |
@@ -177,8 +177,9 @@ wait for document order. Task 1.1F-32 releases the additive set; its version is 
 |----|------|--------|--------|
 | 1.1F-33 | `inspect()` / `devtools.scopes()` misreport `l-if`/`l-for` clone top nodes as scopes (`ownScopeRoot` ~2450, `scopes` ~2543). A `[data-ui]` at the top of an `l-if` is listed with `id:null`, and `l-for` row snapshots show only item and index. Resolve through the 1.1F-01 `scopeRoots` map. | verification of entry 1 | ⬜ |
 | 1.1F-34 | Nested `l-data` scopes do not inherit parent data (`createScopeWithMagics(userData, root, root)` has no parent fallback; only the literal is evaluated against the parent). Decide whether this is intended, then document it or fix it. | verification of entry 29 | ⬜ |
-| 1.1F-35 | `site/styles/docs.css:446-456,1046-1050` hand-roll pressed buttons. Delete what 1.1F-17 makes redundant, or confirm it went in that task. | verification of entry 14 | ⬜ |
+| 1.1F-35 | `site/styles/docs.css:446-456,1046-1050` hand-roll pressed buttons. Delete what 1.1F-17 makes redundant, or confirm it went in that task. (Went in 1.1F-17: two of the three rules deleted, the theme pick kept solid at one more attribute; `tests/primitives/button.test.ts` pins it.) | verification of entry 14 | ✅ |
 | 1.1F-36 | An `l-teleport` inside `l-if` / `l-for` content moves its element out before insertion, so `renderThenInit` never sees it: its held `l-init` runs before its controllers, which only the MutationObserver starts. Start controllers on teleported nodes in `handleTeleport` while `pendingInits` is open, or document the gap. Also: a scope root's own `l-init` in inserted content now runs after its children bind (static pages: before) — confirm that asymmetry is acceptable. | 1.1F-03 | ⬜ |
+| 1.1F-37 | `tests/visual/docs-switcher.pw.ts` › "the scheme reaches every preview frame at once" fails on macOS Chromium at `3f7d5fb`, before 1.1F-17 touched anything: 12 of the 27 lazy theme frames take the scheme within the 10 s poll. Not part of `bun run test`. Find out whether the frames never load (lazy loading below the fold) or load and miss the message, and fix the page or the test. | 1.1F-17 | ⬜ |
 
 ---
 
@@ -862,9 +863,9 @@ viewport. No registry reference page moves with any of these fixes.
 - Playwright geometry: link+sm height equals line height.
 
 **Acceptance**
-- [ ] Manifest: `states.pressed`, a11y note (`type="button"`, the label must not change with state), `html_pressed` template, version 1.2.0, `changes`; tokens via `gen:component-tokens`.
-- [ ] `gen:skill`, `gen:bindings`/`check:bindings` (new state), `build:registry-index`, `build:core-package`, `check:docs`.
-- [ ] Downstream: the Tail button's variant swap and the editor pointers' missing `data-size` are no longer needed.
+- [x] Manifest: `states.pressed`, a11y note (`type="button"`, the label must not change with state), `html_pressed` template, version 1.2.0, `changes`; tokens via `gen:component-tokens`. (button 1.2.0: `states.pressed` (`attr: "aria-pressed"`, with a description), a `required_attrs` line and `a11y.notes` (`type="button"`; keep `aria-pressed="false"` when off instead of removing it; the label does not change), `html_pressed` on the outline variant, two safe and one unsafe transform, a `changes` entry covering both fixes. `gen:component-tokens` added `color-primary-subtle` to `tokens_used` and the header. CSS: one pressed rule and a `:hover` twin for `:where(:not([data-variant]), default, outline, ghost)`, placed after the variants and before `loading`, so both sit at a variant rule's specificity and win on order; the `link` + `[data-size]` rule after the sizes; a forced-colors block (`Highlight`/`HighlightText`, twin included) in button and toggle (toggle 1.1.1). button.html gained five examples, recorded in `reference-contract.test.ts`'s `INTENDED_ROOT_CHANGES`. Tests: new `tests/primitives/button.test.ts` (18 cases: rules, order, forced colors, manifest, docs.css; 9 fail on the old stylesheets) and four Chromium cases in `variant-consistency.pw.ts` (computed pressed paint per variant and under hover, no pressed paint on primary/secondary/destructive/link, forced colors for button and toggle, link + sm/lg height = one line of text with 0 padding and the size's font size; 3 fail on the old stylesheets, the fourth is a guard). Docs site: the preview-width and scheme-pick rules are deleted and the theme pick is `[data-ui="button"][data-theme-pick][aria-pressed="true"]`, checked in Chromium to stay solid under hover. That closes follow-up 1.1F-35.)
+- [x] `gen:skill`, `gen:bindings`/`check:bindings` (new state), `build:registry-index`, `build:core-package`, `check:docs`. (All run on Bun 1.3.8 in the documented order; `cdn.json` re-hashed the 27 theme bundles only. All 13 `check:*` / `audit:registry` / `size` gates and `typecheck` green; `bun run test` 7,798 pass / 0 fail. **The bindings needed more than regeneration.** Their runtimes rendered every `aria-*` state as `"true"`/`"false"` always, so `LButton` would have put `aria-pressed="false"` on every button and announced each one as a toggle. An aria state is now *optional* (absent until the prop is given) unless the manifest also declares a prop of the same name with a default, which is how toggle keeps always rendering it: `IRState.optional` in `src/bindings/ir.ts`, `optional: true` in the emitted spec, and both hand-written runtimes (Vue needs an explicit `default: undefined` to stop Boolean casting). Tests: `tests/bindings/aria-state.test.ts`, one case each in the react and vue `components.test`, codegen snapshots (button only). CONTRIBUTING and both binding READMEs say so. No engine or controller change, so the packaged `min.js` budget is untouched.)
+- [x] Downstream: the Tail button's variant swap and the editor pointers' missing `data-size` are no longer needed. (Tail is an outline button with `aria-pressed`, which is one of the three styled variants, so the swap to `secondary` can go; rows 14 and 24 of the un-patch checklist already name both. A link button now takes `data-size` and keeps a 0-padding, one-line box, measured in Chromium. Pause still needs its downstream change: its label flips to Resume, which the new a11y note says a toggle button must not do.)
 
 ### 1.1F-18 · Text: an anchor carrying `data-ui="text"` reads as a link
 

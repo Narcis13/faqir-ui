@@ -378,12 +378,17 @@ The shipped `button` manifest, verbatim. Not an illustration of one: this is the
 {
   "$schema": "../../../manifest.schema.json",
   "name": "button",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "kind": "primitive",
   "category": "actions",
   "description": "Interactive button with multiple visual variants and sizes",
 
   "changes": [
+    {
+      "version": "1.2.0",
+      "note": "New state `pressed` (aria-pressed=\"true\"): a toggle button in the default, outline or ghost variant now shows that it is on (--color-primary-subtle fill, --color-primary border and text), with a :hover twin and a forced-colors rule (Highlight / HighlightText). Filled variants get no pressed style; use the toggle primitive there. Also fixed: a link button with data-size kept the size's control height and inline padding (32px tall, 12px padding at sm), because the size rules have the link rule's specificity and come later. Link + size now means the size's font size in the text's own box.",
+      "breaking": false
+    },
     {
       "version": "1.1.0",
       "note": "data-full is now declared (it was in button.css and in no manifest, so the docs site, the skill, faqir context and the vue/react bindings did not know it existed). It is a boolean prop rather than a variant or a state, by the reasoning stack's data-wrap settled in 0.8-03: it is authored, static, and valueless presence. No CSS or behaviour change. 0.8-10's undeclared-attribute rule now makes this class of drift impossible: an attribute a component's CSS selects on that its manifest never declares fails the registry gate.",
@@ -424,7 +429,11 @@ The shipped `button` manifest, verbatim. Not an illustration of one: this is the
   "states": {
     "default": { "attr": "data-state=\"default\"", "default": true },
     "loading": { "attr": "data-state=\"loading\"" },
-    "disabled": { "attr": "disabled" }
+    "disabled": { "attr": "disabled" },
+    "pressed": {
+      "attr": "aria-pressed",
+      "description": "A toggle button that is on: aria-pressed=\"true\". Styled for the default, outline and ghost variants; primary, secondary, destructive and link have no pressed style (use the toggle primitive). A button that is not a toggle carries no aria-pressed at all, and the page flips the value: button ships no controller."
+    }
   },
 
   "props": {
@@ -435,21 +444,25 @@ The shipped `button` manifest, verbatim. Not an illustration of one: this is the
   },
 
   "a11y": {
-    "required_attrs": ["aria-label required when icon-only (no text content)"],
+    "required_attrs": [
+      "aria-label required when icon-only (no text content)",
+      "type=\"button\" and aria-pressed=\"true|false\" on a toggle button"
+    ],
     "keyboard": {
       "Enter": "activate",
       "Space": "activate"
-    }
+    },
+    "notes": "A button carrying aria-pressed is a toggle button. Give it type=\"button\" so it never submits a form, and keep aria-pressed present in both states: \"false\" when off, not removed, or assistive technology stops announcing it as a toggle. The label must not change with the state (\"Mute\", pressed or not, never \"Mute\" / \"Unmute\"): the pressed state already says which one it is, and a label that flips as well announces the opposite. An action whose label does change is a plain button with no aria-pressed."
   },
 
   "tokens_used": [
     "color-primary", "color-primary-hover", "color-primary-fg", "color-secondary",
     "color-secondary-hover", "color-secondary-fg", "color-destructive", "color-destructive-hover",
     "color-destructive-fg", "color-bg", "color-bg-muted", "color-bg-subtle", "color-fg",
-    "color-border", "color-ring", "radius-md", "radius-full", "space-2", "space-3", "space-4",
-    "space-6", "font-ui", "text-xs", "text-sm", "text-base", "weight-medium", "duration-fast",
-    "ease-default", "border-width", "border-width-strong", "corner-shape", "focus-ring-width",
-    "focus-ring-offset", "focus-ring-style", "focus-ring-color", "focus-shadow",
+    "color-border", "color-ring", "color-primary-subtle", "radius-md", "radius-full", "space-2",
+    "space-3", "space-4", "space-6", "font-ui", "text-xs", "text-sm", "text-base", "weight-medium",
+    "duration-fast", "ease-default", "border-width", "border-width-strong", "corner-shape",
+    "focus-ring-width", "focus-ring-offset", "focus-ring-style", "focus-ring-color", "focus-shadow",
     "button-text-transform", "button-height-md", "button-radius", "button-height-sm",
     "button-height-lg", "motion-hover-lift", "link-decoration", "disabled-opacity"
   ],
@@ -457,7 +470,8 @@ The shipped `button` manifest, verbatim. Not an illustration of one: this is the
   "templates": {
     "html": "<button data-ui=\"button\" data-variant=\"{variant}\" data-size=\"{size}\">{text}</button>",
     "html_with_icon": "<button data-ui=\"button\" data-variant=\"{variant}\" data-size=\"{size}\"><span data-part=\"icon\">{icon}</span>{text}</button>",
-    "html_icon_only": "<button data-ui=\"button\" data-variant=\"{variant}\" data-size=\"{size}\" aria-label=\"{label}\">{icon}</button>"
+    "html_icon_only": "<button data-ui=\"button\" data-variant=\"{variant}\" data-size=\"{size}\" aria-label=\"{label}\">{icon}</button>",
+    "html_pressed": "<button data-ui=\"button\" data-variant=\"outline\" data-size=\"{size}\" type=\"button\" aria-pressed=\"true\">{text}</button>"
   },
 
   "safe_transforms": [
@@ -465,6 +479,8 @@ The shipped `button` manifest, verbatim. Not an illustration of one: this is the
     "change-size",
     "add-icon",
     "add-loading-state",
+    "set-pressed-true",
+    "set-pressed-false",
     "wrap-in-button-group",
     "change-text-content"
   ],
@@ -472,7 +488,8 @@ The shipped `button` manifest, verbatim. Not an illustration of one: this is the
   "unsafe_transforms": [
     "remove-button-element",
     "change-to-div-without-role",
-    "remove-disabled-state-handling"
+    "remove-disabled-state-handling",
+    "remove-aria-pressed-when-off"
   ],
 
   "composition": {
@@ -493,7 +510,9 @@ The shipped `button` manifest, verbatim. Not an illustration of one: this is the
     "sm-size-sets-data-size-sm",
     "disabled-state-has-disabled-attribute",
     "loading-state-sets-data-state-loading",
-    "icon-only-requires-aria-label"
+    "icon-only-requires-aria-label",
+    "pressed-state-styles-off-aria-pressed-true",
+    "link-variant-keeps-its-text-box-under-a-size"
   ]
 }
 ```
@@ -511,5 +530,5 @@ The manifest is the contract; the sources repeat the machine-readable part of it
 
 ```css
 /* @ui:component button */
-/* @ui:tokens color-primary color-primary-hover color-primary-fg color-secondary color-secondary-hover color-secondary-fg color-destructive color-destructive-hover color-destructive-fg color-bg color-bg-muted color-bg-subtle color-fg color-border color-ring radius-md radius-full space-2 space-3 space-4 space-6 font-ui text-xs text-sm text-base weight-medium duration-fast ease-default border-width border-width-strong corner-shape focus-ring-width focus-ring-offset focus-ring-style focus-ring-color focus-shadow button-text-transform button-height-md button-radius button-height-sm button-height-lg motion-hover-lift link-decoration disabled-opacity */
+/* @ui:tokens color-primary color-primary-hover color-primary-fg color-secondary color-secondary-hover color-secondary-fg color-destructive color-destructive-hover color-destructive-fg color-bg color-bg-muted color-bg-subtle color-fg color-border color-ring color-primary-subtle radius-md radius-full space-2 space-3 space-4 space-6 font-ui text-xs text-sm text-base weight-medium duration-fast ease-default border-width border-width-strong corner-shape focus-ring-width focus-ring-offset focus-ring-style focus-ring-color focus-shadow button-text-transform button-height-md button-radius button-height-sm button-height-lg motion-hover-lift link-decoration disabled-opacity */
 ```

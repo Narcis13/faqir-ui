@@ -141,10 +141,10 @@ Interactive button with multiple visual variants and sizes
 | visual | `default`, `primary`, `secondary`, `destructive`, `ghost`, `outline`, `link` | `default` | `data-variant` | root |
 | size | `sm`, `md`, `lg` | `md` | `data-size` | root |
 
-- **Safe transforms:** `change-variant`, `change-size`, `add-icon`, `add-loading-state`, `wrap-in-button-group`, `change-text-content`
-- **Unsafe (never do):** `remove-button-element`, `change-to-div-without-role`, `remove-disabled-state-handling`
+- **Safe transforms:** `change-variant`, `change-size`, `add-icon`, `add-loading-state`, `set-pressed-true`, `set-pressed-false`, `wrap-in-button-group`, `change-text-content`
+- **Unsafe (never do):** `remove-button-element`, `change-to-div-without-role`, `remove-disabled-state-handling`, `remove-aria-pressed-when-off`
 - **A11y:** keys: Enter, Space
-- **Required ARIA:** `aria-label required when icon-only (no text content)`
+- **Required ARIA:** `aria-label required when icon-only (no text content)`; `type="button" and aria-pressed="true|false" on a toggle button`
 
 ## callout
 

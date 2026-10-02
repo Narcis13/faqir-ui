@@ -63,6 +63,19 @@
   font-size: var(--text-base);
 }
 
+/* ── Forced colors (Windows High Contrast) ──
+   Pressed is carried by colour alone, and the OS replaces all three colours
+   with the ones an unpressed toggle gets. System colours are the ones it
+   keeps; the :hover twin is listed because it is the more specific rule. */
+@media (forced-colors: active) {
+  [data-ui="toggle"][aria-pressed="true"],
+  [data-ui="toggle"][aria-pressed="true"]:hover {
+    background: Highlight;
+    border-color: Highlight;
+    color: HighlightText;
+  }
+}
+
 /* ── Motion ── */
 @media (prefers-reduced-motion: reduce) {
   [data-ui="toggle"] {

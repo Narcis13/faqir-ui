@@ -40,7 +40,11 @@ function memberName(name: string): string {
 
 function stateDoc(s: IRState): string {
   if (s.doc) return s.doc.replace(/\*\//g, "*\\/");
-  if (s.kind === "aria") return `Reflected as \`${s.attr}="true"|"false"\`.`;
+  if (s.kind === "aria") {
+    return s.optional
+      ? `Reflected as \`${s.attr}="true"|"false"\`; the attribute is omitted while the prop is unset.`
+      : `Reflected as \`${s.attr}="true"|"false"\`.`;
+  }
   if (s.kind === "presence") return `Sets the \`${s.attr}\` attribute.`;
   return `Sets \`${s.attr}="${s.value}"\`.`;
 }
@@ -126,7 +130,8 @@ export function emitReactComponent(ir: ComponentIR): string {
     lines.push(`  states: [`);
     for (const s of ir.states) {
       const value = s.value === null ? "null" : quote(s.value);
-      lines.push(`    { prop: ${quote(s.prop)}, attr: ${quote(s.attr)}, value: ${value}, kind: ${quote(s.kind)} },`);
+      const optional = s.optional ? ", optional: true" : "";
+      lines.push(`    { prop: ${quote(s.prop)}, attr: ${quote(s.attr)}, value: ${value}, kind: ${quote(s.kind)}${optional} },`);
     }
     lines.push(`  ],`);
   }

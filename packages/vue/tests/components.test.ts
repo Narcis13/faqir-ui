@@ -76,6 +76,14 @@ describe("state semantics", () => {
     expect(mount(LToggle, { props: { pressed: true } }).attributes("aria-pressed")).toBe("true");
   });
 
+  // [1.1F-17] `aria-pressed="false"` on every button would announce every
+  // button as a toggle, so button's aria state is absent until the prop is set.
+  it("an optional aria state is absent until its prop is given (button aria-pressed)", () => {
+    expect(mount(LButton).attributes()).not.toHaveProperty("aria-pressed");
+    expect(mount(LButton, { props: { pressed: false } }).attributes("aria-pressed")).toBe("false");
+    expect(mount(LButton, { props: { pressed: true } }).attributes("aria-pressed")).toBe("true");
+  });
+
   it("presence states render bare attributes (checkbox checked + disabled)", () => {
     const wrapper = mount(LCheckbox, { props: { checked: true, disabled: true } });
     expect(wrapper.attributes()).toHaveProperty("checked");

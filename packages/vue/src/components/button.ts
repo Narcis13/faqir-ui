@@ -18,6 +18,8 @@ export interface LButtonProps {
   loading?: boolean;
   /** Sets the `disabled` attribute. */
   disabled?: boolean;
+  /** Reflected as `aria-pressed="true"|"false"`; the attribute is omitted while the prop is unset. */
+  pressed?: boolean;
   /** Stretch the button to the full inline size of its container (display: flex; width: 100%) */
   full?: boolean;
 }
@@ -33,6 +35,7 @@ export const LButton = defineFaqirPrimitive<LButtonProps>({
   states: [
     { prop: "loading", attr: "data-state", value: "loading", kind: "value" },
     { prop: "disabled", attr: "disabled", value: null, kind: "presence" },
+    { prop: "pressed", attr: "aria-pressed", value: null, kind: "aria", optional: true },
     { prop: "full", attr: "data-full", value: null, kind: "presence" },
   ],
   slots: [

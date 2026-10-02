@@ -35,6 +35,12 @@ export interface SpecState {
    * aria     → always rendered as `"true"`/`"false"` (e.g. `aria-pressed`)
    */
   kind: "value" | "presence" | "aria";
+  /**
+   * An `aria` state whose attribute is absent until the prop is given: button's
+   * `pressed`, where rendering `aria-pressed="false"` on every button would
+   * announce each one as a toggle.
+   */
+  optional?: boolean;
 }
 
 /** One named slot, projected inside a `data-part` wrapper element. */
@@ -90,8 +96,9 @@ export function createFaqirPrimitive<Props extends object>(
     let dataState: string | undefined;
     for (const s of spec.states) {
       const on = props[s.prop] === true;
-      if (s.kind === "aria") attrs[s.attr] = String(on);
-      else if (!on) continue;
+      if (s.kind === "aria") {
+        if (!s.optional || props[s.prop] != null) attrs[s.attr] = String(on);
+      } else if (!on) continue;
       else if (s.attr === "data-state") dataState ??= s.value ?? undefined;
       else if (s.kind === "presence") attrs[s.attr] = true;
       else attrs[s.attr] = s.value;

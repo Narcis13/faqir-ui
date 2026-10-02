@@ -59,7 +59,9 @@ describe("bindings vue codegen", () => {
     // `full` rides the state channel because it is a boolean prop with an explicit
     // attr (0.8-03's mechanism); it was declared in 0.8-10, when the
     // undeclared-attribute rule found data-full in button.css and in no manifest.
-    expect(button.states.map((s) => s.prop)).toEqual(["loading", "disabled", "full"]);
+    // `pressed` (1.1F-17) is an optional aria state: absent until the prop is set.
+    expect(button.states.map((s) => s.prop)).toEqual(["loading", "disabled", "pressed", "full"]);
+    expect(button.states.find((s) => s.prop === "pressed")!.optional).toBe(true);
   });
 
   it("reserved attr names get the Variant suffix (separator data-style)", () => {

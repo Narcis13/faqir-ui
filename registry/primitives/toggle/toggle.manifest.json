@@ -1,12 +1,17 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "toggle",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "kind": "primitive",
   "category": "actions",
   "description": "Two-state toggle button whose pressed appearance is driven entirely by aria-pressed; compose sibling toggles in a cluster with data-gap=4 while one may stand alone",
 
   "changes": [
+    {
+      "version": "1.1.1",
+      "note": "Forced colors (Windows High Contrast): a pressed toggle is now Highlight / HighlightText. Pressed was carried by colour alone, so the OS palette made it look like an unpressed one.",
+      "breaking": false
+    },
     {
       "version": "1.1.0",
       "note": "Canonical toggle rows now use cluster data-gap='4' so adjacent buttons cannot read as one control; a single toggle remains valid without a cluster.",

@@ -160,8 +160,11 @@ Derived deterministically from each primitive's manifest
   convention.
 - **States → boolean props.** `data-state="loading"` states write that value
   (first truthy state wins); bare attributes (`disabled`, `open`, `checked`)
-  render as boolean attributes; bare `aria-*` states always render
-  `"true"`/`"false"` (`<LToggle pressed />` → `aria-pressed`). States applied to
+  render as boolean attributes; bare `aria-*` states render
+  `"true"`/`"false"` (`<LToggle pressed />` → `aria-pressed`). Toggle always
+  renders it; where the attribute is optional it is absent until the prop is
+  given (`<LButton />` has no `aria-pressed`, `<LButton pressed={on} />` is a
+  toggle button in both states). States applied to
   a named part (e.g. stepper's `active`) belong to your children, not to props.
 - **Named slots → `ReactNode` props.** Each manifest slot is a prop projected
   inside `<tag_hint data-part="name">`; required slots always render their

@@ -98,6 +98,16 @@ describe("state semantics", () => {
     expect(renderRoot(LToggle, { pressed: true }).getAttribute("aria-pressed")).toBe("true");
   });
 
+  // [1.1F-17] `aria-pressed="false"` on every button would announce every
+  // button as a toggle, so button's aria state is absent until the prop is set.
+  it("an optional aria state is absent until its prop is given (button aria-pressed)", () => {
+    expect(renderRoot(LButton).hasAttribute("aria-pressed")).toBe(false);
+    cleanup();
+    expect(renderRoot(LButton, { pressed: false }).getAttribute("aria-pressed")).toBe("false");
+    cleanup();
+    expect(renderRoot(LButton, { pressed: true }).getAttribute("aria-pressed")).toBe("true");
+  });
+
   it("presence states reflect (checkbox checked + disabled)", () => {
     // readOnly silences React's controlled-input warning; the contract is the
     // reflected checked/disabled state, not interactivity.

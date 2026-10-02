@@ -94,22 +94,22 @@
       "name": "button",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "files": [
         {
           "path": "button.css",
-          "sha256": "9425def261703c3e11edf68095a78970af8d3847ec237f721747f4b9e4d21d47"
+          "sha256": "708b7921a3d12a324ebe10422e4b39db888200694a191794e6636b40c3c7545b"
         },
         {
           "path": "button.html",
-          "sha256": "fbedc6b47693d7413b30a9404d4d157f1d7e946b5207f408dae8c17453620067"
+          "sha256": "9c13ace6d1ff8027775335ebb386a1d3e6a87404c0cd8ccd6656f3d04e311692"
         },
         {
           "path": "button.manifest.json",
-          "sha256": "89bc9dde750ec4ad2112e7147fef568194a7778f2e31f950f239262921e9c8d8"
+          "sha256": "a510a396e68354f6b6a2b42986e7749ff0b16831eeec3993ee441d8a805003e2"
         }
       ],
-      "hash": "b98bc600957dd7a6feee6f7575f02e61d267a9897a038caf9dd6f97228a40b82",
+      "hash": "132dc0e0b5397d4421209f4b24d226a48b7784c237ae318743648ceeaddadbac",
       "deps": []
     },
     {
@@ -907,11 +907,11 @@
       "name": "toggle",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "files": [
         {
           "path": "toggle.css",
-          "sha256": "bf741f381a8e22dd4d14eb2a2f34ca03b492669a6925c4a49b032e226736cb1c"
+          "sha256": "b5ea7431b83acf1dc2a56d91bea583b527e650d854527a8b536a78702a7c5f1e"
         },
         {
           "path": "toggle.html",
@@ -919,10 +919,10 @@
         },
         {
           "path": "toggle.manifest.json",
-          "sha256": "6e24289cde283164de46dc1d0fcb87ead939afdd6fdc78bf5b0c7f45613111b6"
+          "sha256": "970c6c60754afa82f4f800f84a0f3e75faf019f92899f6f2512f41ebbcfd9278"
         }
       ],
-      "hash": "a7718d0cca5693afa7a6b072af219ec7ba8b49444ced8ee489430120843a2124",
+      "hash": "1af2d54579701f0e939e8d1a5044a20b589576bed1ef516a091da676057b6569",
       "deps": []
     },
     {

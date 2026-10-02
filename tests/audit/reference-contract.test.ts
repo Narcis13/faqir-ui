@@ -102,6 +102,9 @@ const INTENDED_ROOT_CHANGES: Record<string, string> = {
   // containers. The reference now has exactly four roots — one per position —
   // and the top-right root contains two toasts to demonstrate the real stack.
   "recipes/toast/toast.html": "5 colliding containers → 4 unique positions with one stacked pair",
+  // The pressed state and link + size (1.1F-17): neither had a rule, so neither
+  // had an example. Five buttons were added and nothing was recomposed.
+  "primitives/button/button.html": "5 added buttons: a sized link, and four toggle buttons (aria-pressed)",
 };
 
 describe("the registry's own markup satisfies its own rules", () => {

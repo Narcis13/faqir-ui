@@ -10,7 +10,7 @@ export type LButtonVariant = "default" | "primary" | "secondary" | "destructive"
 /** Allowed `size` values (manifest variant group "size", attr `data-size`). */
 export type LButtonSize = "sm" | "md" | "lg";
 
-export interface LButtonProps extends Omit<ComponentPropsWithoutRef<"button">, "variant" | "size" | "loading" | "disabled" | "full" | "icon"> {
+export interface LButtonProps extends Omit<ComponentPropsWithoutRef<"button">, "variant" | "size" | "loading" | "disabled" | "pressed" | "full" | "icon"> {
   /** `data-variant`; omitted when unset (manifest default: "default"). */
   variant?: LButtonVariant;
   /** `data-size`; omitted when unset (manifest default: "md"). */
@@ -19,6 +19,8 @@ export interface LButtonProps extends Omit<ComponentPropsWithoutRef<"button">, "
   loading?: boolean;
   /** Sets the `disabled` attribute. */
   disabled?: boolean;
+  /** Reflected as `aria-pressed="true"|"false"`; the attribute is omitted while the prop is unset. */
+  pressed?: boolean;
   /** Stretch the button to the full inline size of its container (display: flex; width: 100%) */
   full?: boolean;
   /** Projected into `<span data-part="icon">`. */
@@ -36,6 +38,7 @@ export const LButton = createFaqirPrimitive<LButtonProps>({
   states: [
     { prop: "loading", attr: "data-state", value: "loading", kind: "value" },
     { prop: "disabled", attr: "disabled", value: null, kind: "presence" },
+    { prop: "pressed", attr: "aria-pressed", value: null, kind: "aria", optional: true },
     { prop: "full", attr: "data-full", value: null, kind: "presence" },
   ],
   slots: [
