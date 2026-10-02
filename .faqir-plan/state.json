@@ -43,7 +43,7 @@
     {
       "id": "1.1F-07",
       "completed": "2026-10-02",
-      "commit": "PENDING",
+      "commit": "aae0ed4",
       "summary": "Engine injects no l-cloak <style>: injectCloakStyle and its bootstrap call removed; the [l-cloak] rule already ships in base/reset.css, so style-src 'self' is enough with no hash or 'unsafe-inline'. security.md §2/summary/§1 policy, the README policy and the generated context (context.ts security.csp) rewritten to match; @ui:directive l-cloak names reset.css (gen:skill). Tests: no style injection in engine, reset.css rule, doc never demands 'unsafe-inline', README policy == doc policy, context style_src, lifecycle 'uncloaks without injecting'; auto-start stub now detects boot via querySelectorAll. Engine+controllers 45.55 → 45.48 KB gzip."
     }
   ],
