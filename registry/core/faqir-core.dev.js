@@ -2266,41 +2266,20 @@
   // ═══════════════════════════════════════════════════════
 
   // --- From dom.js ---
-  var $ = function(selector, scope) { return (scope || document).querySelector(selector); };
   var $$ = function(selector, scope) { return [].slice.call((scope || document).querySelectorAll(selector)); };
 
-  function create(tag, attrs) {
-    var el = document.createElement(tag);
-    if (attrs) {
-      var keys = Object.keys(attrs);
-      for (var i = 0; i < keys.length; i++) {
-        el.setAttribute(keys[i], attrs[keys[i]]);
-      }
-    }
-    for (var j = 2; j < arguments.length; j++) {
-      var child = arguments[j];
-      el.append(typeof child === 'string' ? document.createTextNode(child) : child);
-    }
-    return el;
+  // A part's owner is its nearest [data-ui] above it that is not a layout
+  // primitive, starting from the parent since a part may carry data-ui itself.
+  // Same selector as registry/core/dom.js `owns`.
+  var OWNER = '[data-ui]:not([data-ui=stack],[data-ui=cluster],[data-ui=grid],[data-ui=container],[data-ui=surface],[data-ui=switcher],[data-ui=aspect-ratio])';
+
+  function ownParts(root, part) {
+    return $$("[data-part='" + part + "']", root).filter(function(el) {
+      return el.parentElement.closest(OWNER) === root;
+    });
   }
 
   // --- From events.js ---
-  function delegate(root, event, selector, handler) {
-    function listener(e) {
-      var target = e.target.closest(selector);
-      if (target && root.contains(target)) handler(e, target);
-    }
-    root.addEventListener(event, listener);
-    return function() { root.removeEventListener(event, listener); };
-  }
-
-  function once(el, event, handler) {
-    function listener(e) { cleanupOnce(); handler(e); }
-    function cleanupOnce() { el.removeEventListener(event, listener); }
-    el.addEventListener(event, listener);
-    return cleanupOnce;
-  }
-
   function onOutsideClick(el, handler) {
     function listener(e) { if (!el.contains(e.target)) handler(e); }
     document.addEventListener('pointerdown', listener);
@@ -2353,24 +2332,6 @@
   }
 
   // --- From motion.js (prefersReducedMotion already defined in Section 3.14) ---
-  function waitForTransition(el) {
-    if (prefersReducedMotion()) return Promise.resolve();
-    var style = getComputedStyle(el);
-    var hasDuration = parseFloat(style.transitionDuration) > 0 ||
-      (style.animationName !== 'none' && parseFloat(style.animationDuration) > 0);
-    if (!hasDuration) return Promise.resolve();
-    return new Promise(function(resolve) {
-      function done(e) {
-        if (e.target !== el) return;
-        el.removeEventListener('transitionend', done);
-        el.removeEventListener('animationend', done);
-        resolve();
-      }
-      el.addEventListener('transitionend', done);
-      el.addEventListener('animationend', done);
-    });
-  }
-
   // The four events an exit can end with, in one list: bound and unbound
   // together, so neither half can drift from the other.
   var EXIT_EVENTS = ['transitionend', 'transitioncancel', 'animationend', 'animationcancel'];
@@ -2673,7 +2634,8 @@ function createAccordion(root) {
   // Prevent double-init
   if (root._faqirAccordion) return root._faqirAccordion;
 
-  const getItems = () => [...root.querySelectorAll("[data-part='item']")];
+  // Direct children only: a nested accordion's items are its own.
+  const getItems = () => [...root.querySelectorAll(":scope > [data-part='item']")];
   const isSingle = () => root.dataset.variant === "single";
 
   function expand(index) {
@@ -2733,26 +2695,30 @@ function createAccordion(root) {
     if (content) content.hidden = true;
   }
 
-  function onTriggerClick(e) {
+  /**
+   * The index of the item whose own trigger `e` came from, or -1. A trigger of
+   * a component nested in the content (a dropdown, another accordion) is not
+   * the item's: an item's own trigger is the first one in it, since it comes
+   * before the content.
+   */
+  function triggerIndex(e) {
     const trigger = e.target.closest("[data-part='trigger']");
-    if (!trigger) return;
-    const item = trigger.closest("[data-part='item']");
-    if (!item) return;
-    const items = getItems();
-    const index = items.indexOf(item);
+    const item = trigger?.closest("[data-part='item']");
+    if (!item || item.querySelector("[data-part='trigger']") !== trigger) return -1;
+    return getItems().indexOf(item);
+  }
+
+  function onTriggerClick(e) {
+    const index = triggerIndex(e);
     if (index >= 0) toggle(index);
   }
 
   function onKeyDown(e) {
     if (e.key === "Enter" || e.key === " ") {
-      const trigger = e.target.closest("[data-part='trigger']");
-      if (trigger) {
+      const index = triggerIndex(e);
+      if (index >= 0) {
         e.preventDefault();
-        const item = trigger.closest("[data-part='item']");
-        if (!item) return;
-        const items = getItems();
-        const index = items.indexOf(item);
-        if (index >= 0) toggle(index);
+        toggle(index);
       }
     }
   }
@@ -4240,8 +4206,10 @@ function createCommandPalette(root) {
 function createContextMenu(root) {
   if (root._faqirContextMenu) return root._faqirContextMenu;
 
-  const target = root.querySelector("[data-part='target']");
-  const menu = root.querySelector("[data-part='menu']");
+  // Matched by owner: a dropdown inside the target has a `menu` part too, and
+  // it comes first in document order.
+  const [target] = ownParts(root, "target");
+  const [menu] = ownParts(root, "menu");
 
   // Same as `dropdown`: a missing part must name itself rather than throwing a
   // TypeError out of `createMenuNavigation(null)`. [W3-2]
@@ -4545,12 +4513,15 @@ function createDialog(root) {
   // Prevent double-init
   if (root._faqirDialog) return root._faqirDialog;
 
-  const trigger = root.querySelector("[data-part='trigger']");
-  const overlay = root.querySelector("[data-part='overlay']");
-  const panel = root.querySelector("[data-part='panel']");
-  const closeButtons = root.querySelectorAll("[data-part='close']");
-  const confirmButtons = root.querySelectorAll("[data-part='confirm']");
-  const cancelButtons = root.querySelectorAll("[data-part='cancel']");
+  // Overlay and panel are direct children. Trigger and actions may be wrapped
+  // in layout primitives, so they are matched by owner: a popover's close
+  // button inside the panel belongs to the popover and must not close this.
+  const [trigger] = ownParts(root, "trigger");
+  const overlay = root.querySelector(":scope > [data-part='overlay']");
+  const panel = root.querySelector(":scope > [data-part='panel']");
+  const closeButtons = ownParts(root, "close");
+  const confirmButtons = ownParts(root, "confirm");
+  const cancelButtons = ownParts(root, "cancel");
 
   // The role is the seam between `dialog` and `alert-dialog` — read it from the
   // markup so a single controller serves both recipes.
@@ -4582,10 +4553,7 @@ function createDialog(root) {
   /** On open, focus the least-destructive action for an alert, else the panel. */
   function focusInitial() {
     if (isAlert) {
-      const target =
-        root.querySelector("[data-part='cancel']") ||
-        root.querySelector("[data-part='close']") ||
-        panel;
+      const target = cancelButtons[0] || closeButtons[0] || panel;
       target?.focus?.();
     } else {
       panel?.focus?.();
@@ -4758,10 +4726,12 @@ function createDrawer(root) {
   // Prevent double-init
   if (root._faqirDrawer) return root._faqirDrawer;
 
-  const trigger = root.querySelector("[data-part='trigger']");
-  const overlay = root.querySelector("[data-part='overlay']");
-  const panel = root.querySelector("[data-part='panel']");
-  const closeButtons = root.querySelectorAll("[data-part='close']");
+  // Overlay and panel are direct children; trigger and close buttons are
+  // matched by owner, so a nested component's close leaves this one alone.
+  const [trigger] = ownParts(root, "trigger");
+  const overlay = root.querySelector(":scope > [data-part='overlay']");
+  const panel = root.querySelector(":scope > [data-part='panel']");
+  const closeButtons = ownParts(root, "close");
 
   // `panel.focus()` on open does nothing without a tabindex: focus stayed on
   // `body`, out of reach of the trap and the root's Escape listener.
@@ -7183,10 +7153,12 @@ function createSheet(root) {
   // Prevent double-init
   if (root._faqirSheet) return root._faqirSheet;
 
-  const trigger = root.querySelector("[data-part='trigger']");
-  const overlay = root.querySelector("[data-part='overlay']");
-  const panel = root.querySelector("[data-part='panel']");
-  const closeButtons = root.querySelectorAll("[data-part='close']");
+  // Overlay and panel are direct children; trigger and close buttons are
+  // matched by owner, so a nested component's close leaves this one alone.
+  const [trigger] = ownParts(root, "trigger");
+  const overlay = root.querySelector(":scope > [data-part='overlay']");
+  const panel = root.querySelector(":scope > [data-part='panel']");
+  const closeButtons = ownParts(root, "close");
 
   // `panel.focus()` on open does nothing without a tabindex: focus stayed on
   // `body`, out of reach of the trap and the root's Escape listener.
@@ -7351,12 +7323,14 @@ function createSidebar(root) {
   // Prevent double-init.
   if (root._faqirSidebar) return root._faqirSidebar;
 
-  const overlay = root.querySelector("[data-part='overlay']");
-  const panel = root.querySelector("[data-part='panel']") || root;
+  const overlay = root.querySelector(":scope > [data-part='overlay']");
+  const panel = root.querySelector(":scope > [data-part='panel']") || root;
 
-  // Toggle buttons: any `[data-part='trigger']` inside the sidebar, plus external
-  // triggers in the app shell that point at this sidebar by id. Both call toggle().
-  const internalTriggers = [...root.querySelectorAll("[data-part='trigger']")];
+  // Toggle buttons: the sidebar's own `[data-part='trigger']`s, plus external
+  // triggers in the app shell that point at this sidebar by id. Both call
+  // toggle(). A dropdown's trigger in the footer belongs to the dropdown: it
+  // used to have its aria-expanded forced and its click rail the sidebar.
+  const internalTriggers = ownParts(root, "trigger");
   const externalTriggers = root.id
     ? [...document.querySelectorAll(`[data-sidebar-toggle="${root.id}"]`)]
     : [];
@@ -10099,9 +10073,14 @@ function createTabs(root) {
   // Prevent double-init
   if (root._faqirTabs) return root._faqirTabs;
 
-  const list = root.querySelector("[data-part='list']");
-  const triggers = () => [...root.querySelectorAll("[data-part='trigger']")];
-  const panels = () => [...root.querySelectorAll("[data-part='panel']")];
+  // Direct children only: a component nested in a panel (a collapsible's
+  // summary, another tabs) has parts of the same names, and a deep query took
+  // them for this component's tabs and shifted the trigger↔panel pairing.
+  const list = root.querySelector(":scope > [data-part='list']");
+  const triggers = () => [
+    ...root.querySelectorAll(":scope > [data-part='list'] > [data-part='trigger']"),
+  ];
+  const panels = () => [...root.querySelectorAll(":scope > [data-part='panel']")];
 
   function activate(index) {
     const allTriggers = triggers();

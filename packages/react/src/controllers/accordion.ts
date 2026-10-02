@@ -10,7 +10,8 @@ export function createAccordion(root) {
   // Prevent double-init
   if (root._faqirAccordion) return root._faqirAccordion;
 
-  const getItems = () => [...root.querySelectorAll("[data-part='item']")];
+  // Direct children only: a nested accordion's items are its own.
+  const getItems = () => [...root.querySelectorAll(":scope > [data-part='item']")];
   const isSingle = () => root.dataset.variant === "single";
 
   function expand(index) {
@@ -70,26 +71,30 @@ export function createAccordion(root) {
     if (content) content.hidden = true;
   }
 
-  function onTriggerClick(e) {
+  /**
+   * The index of the item whose own trigger `e` came from, or -1. A trigger of
+   * a component nested in the content (a dropdown, another accordion) is not
+   * the item's: an item's own trigger is the first one in it, since it comes
+   * before the content.
+   */
+  function triggerIndex(e) {
     const trigger = e.target.closest("[data-part='trigger']");
-    if (!trigger) return;
-    const item = trigger.closest("[data-part='item']");
-    if (!item) return;
-    const items = getItems();
-    const index = items.indexOf(item);
+    const item = trigger?.closest("[data-part='item']");
+    if (!item || item.querySelector("[data-part='trigger']") !== trigger) return -1;
+    return getItems().indexOf(item);
+  }
+
+  function onTriggerClick(e) {
+    const index = triggerIndex(e);
     if (index >= 0) toggle(index);
   }
 
   function onKeyDown(e) {
     if (e.key === "Enter" || e.key === " ") {
-      const trigger = e.target.closest("[data-part='trigger']");
-      if (trigger) {
+      const index = triggerIndex(e);
+      if (index >= 0) {
         e.preventDefault();
-        const item = trigger.closest("[data-part='item']");
-        if (!item) return;
-        const items = getItems();
-        const index = items.indexOf(item);
-        if (index >= 0) toggle(index);
+        toggle(index);
       }
     }
   }

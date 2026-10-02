@@ -8,6 +8,7 @@
 
 import { trapFocus, returnFocus } from "./_core-focus.js";
 import { whenExitDone } from "./_core-motion.js";
+import { ownParts } from "./_core-dom.js";
 
 /**
  * Shared modal-dialog controller.
@@ -29,12 +30,15 @@ export function createDialog(root) {
   // Prevent double-init
   if (root._faqirDialog) return root._faqirDialog;
 
-  const trigger = root.querySelector("[data-part='trigger']");
-  const overlay = root.querySelector("[data-part='overlay']");
-  const panel = root.querySelector("[data-part='panel']");
-  const closeButtons = root.querySelectorAll("[data-part='close']");
-  const confirmButtons = root.querySelectorAll("[data-part='confirm']");
-  const cancelButtons = root.querySelectorAll("[data-part='cancel']");
+  // Overlay and panel are direct children. Trigger and actions may be wrapped
+  // in layout primitives, so they are matched by owner: a popover's close
+  // button inside the panel belongs to the popover and must not close this.
+  const [trigger] = ownParts(root, "trigger");
+  const overlay = root.querySelector(":scope > [data-part='overlay']");
+  const panel = root.querySelector(":scope > [data-part='panel']");
+  const closeButtons = ownParts(root, "close");
+  const confirmButtons = ownParts(root, "confirm");
+  const cancelButtons = ownParts(root, "cancel");
 
   // The role is the seam between `dialog` and `alert-dialog` — read it from the
   // markup so a single controller serves both recipes.
@@ -66,10 +70,7 @@ export function createDialog(root) {
   /** On open, focus the least-destructive action for an alert, else the panel. */
   function focusInitial() {
     if (isAlert) {
-      const target =
-        root.querySelector("[data-part='cancel']") ||
-        root.querySelector("[data-part='close']") ||
-        panel;
+      const target = cancelButtons[0] || closeButtons[0] || panel;
       target?.focus?.();
     } else {
       panel?.focus?.();

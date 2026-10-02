@@ -10,9 +10,14 @@ export function createTabs(root) {
   // Prevent double-init
   if (root._faqirTabs) return root._faqirTabs;
 
-  const list = root.querySelector("[data-part='list']");
-  const triggers = () => [...root.querySelectorAll("[data-part='trigger']")];
-  const panels = () => [...root.querySelectorAll("[data-part='panel']")];
+  // Direct children only: a component nested in a panel (a collapsible's
+  // summary, another tabs) has parts of the same names, and a deep query took
+  // them for this component's tabs and shifted the trigger↔panel pairing.
+  const list = root.querySelector(":scope > [data-part='list']");
+  const triggers = () => [
+    ...root.querySelectorAll(":scope > [data-part='list'] > [data-part='trigger']"),
+  ];
+  const panels = () => [...root.querySelectorAll(":scope > [data-part='panel']")];
 
   function activate(index) {
     const allTriggers = triggers();

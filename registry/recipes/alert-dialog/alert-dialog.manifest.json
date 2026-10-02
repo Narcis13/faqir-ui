@@ -1,11 +1,16 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "alert-dialog",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "kind": "recipe",
   "category": "overlay",
   "description": "Interruptive confirmation dialog (role=alertdialog) for destructive or irreversible actions",
   "changes": [
+    {
+      "version": "1.0.2",
+      "note": "Nested components keep their own parts (shared dialog controller). Overlay and panel are taken as direct children, and the trigger and the close, confirm and cancel actions by owner, looking through layout primitives. A nested popover's close no longer closes or cancels the alert dialog, and initial focus goes to its own cancel or close action, never a nested component's.",
+      "breaking": false
+    },
     {
       "version": "1.0.1",
       "note": "Focus on open and close is fixed. The panel had no tabindex, so the panel.focus() call on open did nothing: focus stayed on body, outside the focus trap and out of reach of the root's Escape listener. tabindex=\"-1\" is now in the canonical markup, and the controller adds it when it is missing. Closing also took focus back too late: focus returned to the opener only after the exit animation ended, even if the user had moved focus to another control in the meantime. Focus now returns only if it is still inside the alert dialog or on body, and only to an opener that is still in the document. alert-dialog shares the dialog controller; on open it still focuses the least-destructive action, and focuses the panel only when there is none.",

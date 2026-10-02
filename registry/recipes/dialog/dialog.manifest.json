@@ -1,11 +1,16 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "dialog",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "kind": "recipe",
   "category": "overlay",
   "description": "Modal dialog with focus trap, escape-to-close, and overlay backdrop",
   "changes": [
+    {
+      "version": "1.0.2",
+      "note": "Nested components keep their own parts. Overlay and panel are taken as direct children, and the trigger and the close, confirm and cancel actions by owner: a part counts only when the nearest data-ui above it, looking through layout primitives (stack, cluster, grid, container, surface, switcher, aspect-ratio), is this dialog. A popover's close button inside the panel no longer closes the dialog; a close button wrapped in a stack or cluster still does.",
+      "breaking": false
+    },
     {
       "version": "1.0.1",
       "note": "Focus on open and close is fixed. The panel had no tabindex, so the panel.focus() call on open did nothing: focus stayed on body, outside the focus trap and out of reach of the root's Escape listener. tabindex=\"-1\" is now in the canonical markup, and the controller adds it when it is missing. Closing also took focus back too late: focus returned to the opener only after the exit animation ended, even if the user had moved focus to another control in the meantime. Focus now returns only if it is still inside the dialog or on body, and only to an opener that is still in the document. The panel draws no focus ring of its own.",

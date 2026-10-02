@@ -2260,41 +2260,20 @@
   // ═══════════════════════════════════════════════════════
 
   // --- From dom.js ---
-  var $ = function(selector, scope) { return (scope || document).querySelector(selector); };
   var $$ = function(selector, scope) { return [].slice.call((scope || document).querySelectorAll(selector)); };
 
-  function create(tag, attrs) {
-    var el = document.createElement(tag);
-    if (attrs) {
-      var keys = Object.keys(attrs);
-      for (var i = 0; i < keys.length; i++) {
-        el.setAttribute(keys[i], attrs[keys[i]]);
-      }
-    }
-    for (var j = 2; j < arguments.length; j++) {
-      var child = arguments[j];
-      el.append(typeof child === 'string' ? document.createTextNode(child) : child);
-    }
-    return el;
+  // A part's owner is its nearest [data-ui] above it that is not a layout
+  // primitive, starting from the parent since a part may carry data-ui itself.
+  // Same selector as registry/core/dom.js `owns`.
+  var OWNER = '[data-ui]:not([data-ui=stack],[data-ui=cluster],[data-ui=grid],[data-ui=container],[data-ui=surface],[data-ui=switcher],[data-ui=aspect-ratio])';
+
+  function ownParts(root, part) {
+    return $$("[data-part='" + part + "']", root).filter(function(el) {
+      return el.parentElement.closest(OWNER) === root;
+    });
   }
 
   // --- From events.js ---
-  function delegate(root, event, selector, handler) {
-    function listener(e) {
-      var target = e.target.closest(selector);
-      if (target && root.contains(target)) handler(e, target);
-    }
-    root.addEventListener(event, listener);
-    return function() { root.removeEventListener(event, listener); };
-  }
-
-  function once(el, event, handler) {
-    function listener(e) { cleanupOnce(); handler(e); }
-    function cleanupOnce() { el.removeEventListener(event, listener); }
-    el.addEventListener(event, listener);
-    return cleanupOnce;
-  }
-
   function onOutsideClick(el, handler) {
     function listener(e) { if (!el.contains(e.target)) handler(e); }
     document.addEventListener('pointerdown', listener);
@@ -2347,24 +2326,6 @@
   }
 
   // --- From motion.js (prefersReducedMotion already defined in Section 3.14) ---
-  function waitForTransition(el) {
-    if (prefersReducedMotion()) return Promise.resolve();
-    var style = getComputedStyle(el);
-    var hasDuration = parseFloat(style.transitionDuration) > 0 ||
-      (style.animationName !== 'none' && parseFloat(style.animationDuration) > 0);
-    if (!hasDuration) return Promise.resolve();
-    return new Promise(function(resolve) {
-      function done(e) {
-        if (e.target !== el) return;
-        el.removeEventListener('transitionend', done);
-        el.removeEventListener('animationend', done);
-        resolve();
-      }
-      el.addEventListener('transitionend', done);
-      el.addEventListener('animationend', done);
-    });
-  }
-
   // The four events an exit can end with, in one list: bound and unbound
   // together, so neither half can drift from the other.
   var EXIT_EVENTS = ['transitionend', 'transitioncancel', 'animationend', 'animationcancel'];

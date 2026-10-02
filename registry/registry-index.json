@@ -951,7 +951,7 @@
       "name": "accordion",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "files": [
         {
           "path": "accordion.css",
@@ -963,21 +963,21 @@
         },
         {
           "path": "accordion.js",
-          "sha256": "4ba894ff464626e11d46172c023a096151ddcb79b80bc99f2878d7e07086bc3e"
+          "sha256": "94cfda73848a45c9853de55a7bedcd98b14c51ba3209d3df83d6179908d072e4"
         },
         {
           "path": "accordion.manifest.json",
-          "sha256": "9cc447e9bca011c547fdd6b2d1a943988c75d4421bb86d610a57d0a5b5a3d73b"
+          "sha256": "24c3698e1becbd2dce0275b22ae617559d1b89121eda241f8efcb5bd37be5bfe"
         }
       ],
-      "hash": "2c9537dc90f018ef20251c738878ce55fc157affdd4500fa639ddc750fbf86ec",
+      "hash": "e1f9307fda72528ec7a6f4a136e2bccb0caefad2bd7142218475b3163b1df0b6",
       "deps": []
     },
     {
       "name": "alert-dialog",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "files": [
         {
           "path": "alert-dialog.css",
@@ -993,10 +993,10 @@
         },
         {
           "path": "alert-dialog.manifest.json",
-          "sha256": "5a47b0cd252c0781704342d9e0a95037b8cd1f3d92e702e11884679a2a9d9915"
+          "sha256": "d785430bd332c3dc32911f40c51e00b3f12f09153db66f031b4aab97f2c73b30"
         }
       ],
-      "hash": "f0424e703d57cb1d53e3caa2f1395086234e3ad063f7d92489c5da587d153e06",
+      "hash": "bf7b6e0430789f290194d96f8535c09af4eaacb1db6909c769f159e67f161de9",
       "deps": [
         "button"
       ]
@@ -1137,7 +1137,7 @@
       "name": "context-menu",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "files": [
         {
           "path": "context-menu.css",
@@ -1149,14 +1149,14 @@
         },
         {
           "path": "context-menu.js",
-          "sha256": "c1d4f2a22b69ec7220a586d7b566b6a9b471cea501f458083fc2d696f45bfbdf"
+          "sha256": "3c641af0809df941cdaeddd607cb57efd3dc6fb66e5798cb94236b98364f6974"
         },
         {
           "path": "context-menu.manifest.json",
-          "sha256": "4167d034dc9e2876830d575fe11cdc5e0f1c96e8d9c2df31ca9fce53930e7230"
+          "sha256": "a3994931227281b71159679e54a0fcca359146e06dff12776054be69c2b9867b"
         }
       ],
-      "hash": "7d7944b656030e7eba6688d92b2da8c9b7a4355e8a5e09fa7699938b58904c8a",
+      "hash": "6e98884d92e6a2c22f515a9447a5f5fff1fd277cf50474e28642310b58ba292e",
       "deps": []
     },
     {
@@ -1192,7 +1192,7 @@
       "name": "dialog",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "files": [
         {
           "path": "dialog.css",
@@ -1204,14 +1204,14 @@
         },
         {
           "path": "dialog.js",
-          "sha256": "948f7677cd7802a4011acca87b994f2f6057584a0fa710220a8fec6b90419c3f"
+          "sha256": "ddb2e97277510d08e899512ba1146c85829d130a2aedca5401b8ad46ceef6f02"
         },
         {
           "path": "dialog.manifest.json",
-          "sha256": "e0c100386f06ed2f730fbbb3c52c194e502da8ac5296846262ad2dd90aac4b66"
+          "sha256": "5d13da3e194634f1871cdc272ece1fd68d83cfbe01f14031a262560ffb0e2f1a"
         }
       ],
-      "hash": "9a024968abb0205d26b6d910910503881ac6acede5cac64cc16987b3faf19998",
+      "hash": "de7ca1458ff5aa5a56bac767dcbcc0b6dd6f4a6958fb856c8eaef8a6530b01c6",
       "deps": [
         "button"
       ]
@@ -1220,7 +1220,7 @@
       "name": "drawer",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "files": [
         {
           "path": "drawer.css",
@@ -1232,14 +1232,14 @@
         },
         {
           "path": "drawer.js",
-          "sha256": "d33d37706bca2043cb86aea01d2981affbf6802e5a5a27a5338836b50292ba8a"
+          "sha256": "7567fc3c310ca7f973d81e843a20ce66e9e6bcf1cc246fc775ed28d5835f2a14"
         },
         {
           "path": "drawer.manifest.json",
-          "sha256": "b7186e446e3e330064393a2f2c1b81dbe64ed882f14b28fa99225bbc8f72b40d"
+          "sha256": "4a399337c2dab101c8f8303326ade37e4c8cf6426c1fd4f0b4c2e37d7723f0b8"
         }
       ],
-      "hash": "db05080713179723466f681b379f2441f3706e5014b76fdc2c4dbff310a4ff39",
+      "hash": "fdb3ac4a98c77c177360ea885efc3d7ee0257a92be1fee6b3567a1ba4c48fb40",
       "deps": [
         "button"
       ]
@@ -1460,7 +1460,7 @@
       "name": "sheet",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "files": [
         {
           "path": "sheet.css",
@@ -1472,14 +1472,14 @@
         },
         {
           "path": "sheet.js",
-          "sha256": "e7be96caf6304047d03a77b76b71b3f217d0e70b74e2f71114c55d7d036d9490"
+          "sha256": "e76c594ec14df69a38b076a2a4b5e4aa508993663fa231844bb89e8e1b354d66"
         },
         {
           "path": "sheet.manifest.json",
-          "sha256": "b4cb9280645dd2ffe80dcdd4b275c0c7ef468325fc12d16d8414f09df157b4a4"
+          "sha256": "65b60b6d0f37097b816b374abf05989ca5216ab044b32be90ef61dde8fc6f51d"
         }
       ],
-      "hash": "6c9d95931796ce1995d2dd10300d6a6b6cb3b5779fb4d0468e537f7c38546db4",
+      "hash": "d8dfa89aac3bbd1fdd560dd6ad35b536b2b2e8d14b6056743056c6c8ba6f97b0",
       "deps": [
         "button"
       ]
@@ -1488,7 +1488,7 @@
       "name": "sidebar",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.1.1",
+      "version": "1.1.2",
       "files": [
         {
           "path": "sidebar.css",
@@ -1500,14 +1500,14 @@
         },
         {
           "path": "sidebar.js",
-          "sha256": "809dc1f4aee07240ac9c9af127506ce46fe46387bf22b8ee559724f6c5403fc3"
+          "sha256": "484d1557e6eaf634d8db28233ae41d358f3ad37fec328f0f7cf2da8c3e0a49f3"
         },
         {
           "path": "sidebar.manifest.json",
-          "sha256": "d6f475be4e79787b7dc808f293b896d2d112eb5d3e4888f770b6fcde19042064"
+          "sha256": "a8a14b4b7151ef8f01164b12f80f1da3264589d5aa7998c65a2ebd9e6f4b35fe"
         }
       ],
-      "hash": "1cb56851017906af6d3854059fc88e6d36bb3e71dfa08e0df4a9f75b40eb35b5",
+      "hash": "b228b916e1b0f34e7b9138b0d256af2169b08942d80a36834abb3e693492b4aa",
       "deps": [
         "button",
         "badge",
@@ -1576,7 +1576,7 @@
       "name": "tabs",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "files": [
         {
           "path": "tabs.css",
@@ -1588,14 +1588,14 @@
         },
         {
           "path": "tabs.js",
-          "sha256": "06440a032279979d36671beb6e7c13c44421d0e421c810a6835c2cdc5a99def3"
+          "sha256": "3686ae3b2262e713f37b1aa00928975b24bdd688cd87a48242e108003f9d68e2"
         },
         {
           "path": "tabs.manifest.json",
-          "sha256": "85ad32c1cb4ceb643b4a5c138fe85dcf2a25dfcfee2169bc31c0ee97b226d54d"
+          "sha256": "4e983b684427b04fa5ccf2a41a92f4a436119e5c325bbf36316ef87fbe7ef92b"
         }
       ],
-      "hash": "bc57a830d76c4a674f291208d3ce3ab2430a0b7cf5d08ac0cf92ac532bdb6834",
+      "hash": "63900b34cd1b103192981ef21414464d5dbf3873c30539c904fa1c57d02268cd",
       "deps": []
     },
     {

@@ -226,7 +226,7 @@ describe("recipe codegen (task 0.6-13)", () => {
     expect(generated.get("controllers/dialog.ts")!).toContain('from "./_core-focus.js"');
     expect(generated.get("controllers/alert-dialog.ts")!).toContain('from "./dialog.js"');
     expect(generated.get("controllers/date-picker.ts")!).toContain('from "./calendar.js"');
-    for (const helper of ["focus", "events", "utils"]) {
+    for (const helper of ["focus", "events", "utils", "dom"]) {
       expect(generated.has(`controllers/_core-${helper}.ts`)).toBe(true);
     }
   });

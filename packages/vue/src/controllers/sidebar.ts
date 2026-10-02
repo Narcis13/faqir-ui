@@ -7,6 +7,7 @@
 // @ui:provides toggle expand collapse open close isMobile getState destroy
 
 import { trapFocus, focusFirst } from "./_core-focus.js";
+import { ownParts } from "./_core-dom.js";
 
 /**
  * sidebar — a collapsible application sidebar with three modes:
@@ -36,12 +37,14 @@ export function createSidebar(root) {
   // Prevent double-init.
   if (root._faqirSidebar) return root._faqirSidebar;
 
-  const overlay = root.querySelector("[data-part='overlay']");
-  const panel = root.querySelector("[data-part='panel']") || root;
+  const overlay = root.querySelector(":scope > [data-part='overlay']");
+  const panel = root.querySelector(":scope > [data-part='panel']") || root;
 
-  // Toggle buttons: any `[data-part='trigger']` inside the sidebar, plus external
-  // triggers in the app shell that point at this sidebar by id. Both call toggle().
-  const internalTriggers = [...root.querySelectorAll("[data-part='trigger']")];
+  // Toggle buttons: the sidebar's own `[data-part='trigger']`s, plus external
+  // triggers in the app shell that point at this sidebar by id. Both call
+  // toggle(). A dropdown's trigger in the footer belongs to the dropdown: it
+  // used to have its aria-expanded forced and its click rail the sidebar.
+  const internalTriggers = ownParts(root, "trigger");
   const externalTriggers = root.id
     ? [...document.querySelectorAll(`[data-sidebar-toggle="${root.id}"]`)]
     : [];

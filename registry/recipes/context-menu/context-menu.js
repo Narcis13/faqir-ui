@@ -3,12 +3,15 @@
 
 import { onOutsideClick } from "../../core/events.js";
 import { createMenuNavigation } from "../../core/menu-navigation.js";
+import { ownParts } from "../../core/dom.js";
 
 export function createContextMenu(root) {
   if (root._faqirContextMenu) return root._faqirContextMenu;
 
-  const target = root.querySelector("[data-part='target']");
-  const menu = root.querySelector("[data-part='menu']");
+  // Matched by owner: a dropdown inside the target has a `menu` part too, and
+  // it comes first in document order.
+  const [target] = ownParts(root, "target");
+  const [menu] = ownParts(root, "menu");
 
   // Same as `dropdown`: a missing part must name itself rather than throwing a
   // TypeError out of `createMenuNavigation(null)`. [W3-2]

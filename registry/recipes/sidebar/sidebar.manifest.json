@@ -1,11 +1,16 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "sidebar",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "kind": "recipe",
   "category": "navigation",
   "description": "Collapsible application sidebar with three modes — expanded, rail (icons only), and a mobile off-canvas drawer — switched responsively and toggled from the keyboard",
   "changes": [
+    {
+      "version": "1.1.2",
+      "note": "Only the sidebar's own triggers toggle it. The controller took every [data-part=\"trigger\"] inside the root, so a dropdown in the footer had its aria-expanded overwritten on every render and its click put the sidebar in rail. Triggers are now matched by owner, looking through layout primitives, and overlay and panel are taken as direct children.",
+      "breaking": false
+    },
     {
       "version": "1.1.1",
       "note": "The trigger glyph follows the state: authored once pointing inline-start, the stylesheet mirrors it (`scale: -1 1`, reduced-motion safe) in rail, so a toggled sidebar no longer shows a stale chevron. Both examples carry the one stable label \"Toggle sidebar\" instead of \"Collapse sidebar\" / \"Expand sidebar\", which went stale on the first toggle and contradicted aria-expanded.",

@@ -1,11 +1,16 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "sheet",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "kind": "recipe",
   "category": "overlay",
   "description": "Mobile-friendly bottom or side sheet that slides in from screen edge",
   "changes": [
+    {
+      "version": "1.0.2",
+      "note": "Nested components keep their own parts. Overlay and panel are taken as direct children, and the trigger and close buttons by owner, looking through layout primitives. A popover's close button inside the panel no longer closes the sheet; a close button wrapped in a stack or cluster still does.",
+      "breaking": false
+    },
     {
       "version": "1.0.1",
       "note": "Focus on open and close is fixed. The panel had no tabindex, so the panel.focus() call on open did nothing: focus stayed on body, outside the focus trap and out of reach of the root's Escape listener. tabindex=\"-1\" is now in the canonical markup, and the controller adds it when it is missing. Closing also took focus back too late: focus returned to the opener only after the exit animation ended, even if the user had moved focus to another control in the meantime. Focus now returns only if it is still inside the sheet or on body, and only to an opener that is still in the document. The panel draws no focus ring of its own.",

@@ -8,15 +8,18 @@
 
 import { trapFocus, returnFocus } from "./_core-focus.js";
 import { whenExitDone } from "./_core-motion.js";
+import { ownParts } from "./_core-dom.js";
 
 export function createSheet(root) {
   // Prevent double-init
   if (root._faqirSheet) return root._faqirSheet;
 
-  const trigger = root.querySelector("[data-part='trigger']");
-  const overlay = root.querySelector("[data-part='overlay']");
-  const panel = root.querySelector("[data-part='panel']");
-  const closeButtons = root.querySelectorAll("[data-part='close']");
+  // Overlay and panel are direct children; trigger and close buttons are
+  // matched by owner, so a nested component's close leaves this one alone.
+  const [trigger] = ownParts(root, "trigger");
+  const overlay = root.querySelector(":scope > [data-part='overlay']");
+  const panel = root.querySelector(":scope > [data-part='panel']");
+  const closeButtons = ownParts(root, "close");
 
   // `panel.focus()` on open does nothing without a tabindex: focus stayed on
   // `body`, out of reach of the trap and the root's Escape listener.

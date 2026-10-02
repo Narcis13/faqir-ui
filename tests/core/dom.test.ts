@@ -1,5 +1,5 @@
 import { describe, it, expect } from "bun:test";
-import { $, $$, closest, create } from "../../registry/core/dom.js";
+import { $, $$, closest, create, owns, ownParts } from "../../registry/core/dom.js";
 
 describe("dom", () => {
   describe("$", () => {
@@ -89,6 +89,42 @@ describe("dom", () => {
       const el = create("button", { "data-ui": "button" }, icon, "Click me");
       expect(el.childNodes.length).toBe(2);
       expect(el.textContent).toBe("*Click me");
+    });
+  });
+
+  describe("owns / ownParts", () => {
+    const markup = `
+      <div data-ui="dialog" id="root">
+        <button data-part="close" id="direct"></button>
+        <div data-ui="stack"><div data-ui="cluster">
+          <button data-ui="button" data-part="close" id="wrapped"></button>
+        </div></div>
+        <div data-ui="popover"><button data-part="close" id="nested"></button></div>
+        <div data-ui="card"><button data-part="close" id="in-card"></button></div>
+      </div>
+      <button data-part="close" id="outside"></button>`;
+
+    it("owns a part directly inside, or inside layout primitives", () => {
+      document.body.innerHTML = markup;
+      const root = document.getElementById("root")!;
+      expect(owns(root, document.getElementById("direct")!)).toBe(true);
+      // The part carries data-ui itself: ownership starts at its parent.
+      expect(owns(root, document.getElementById("wrapped")!)).toBe(true);
+    });
+
+    it("does not own a nested component's part, or one outside it", () => {
+      document.body.innerHTML = markup;
+      const root = document.getElementById("root")!;
+      expect(owns(root, document.getElementById("nested")!)).toBe(false);
+      expect(owns(root, document.getElementById("in-card")!)).toBe(false);
+      expect(owns(root, document.getElementById("outside")!)).toBe(false);
+    });
+
+    it("ownParts lists only the owned parts, in document order", () => {
+      document.body.innerHTML = markup;
+      const root = document.getElementById("root")!;
+      expect(ownParts(root, "close").map((el) => el.id)).toEqual(["direct", "wrapped"]);
+      expect(ownParts(root, "trigger")).toEqual([]);
     });
   });
 });

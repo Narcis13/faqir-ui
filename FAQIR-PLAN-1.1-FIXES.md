@@ -34,7 +34,11 @@ as was done with `state-1.0.json`).
   on this machine is 1.3.8, at `~/.bun/bin/bun`, which is not on the default PATH, so run
   `export PATH=$HOME/.bun/bin:$PATH` first. Sizes measured with it are about 0.3 KB higher
   than the 1.4.2 numbers recorded by 1.1F-01–04: after 1.1F-05, engine+controllers is
-  45.50/46 KB gzip, leaving about 0.5 KB for the rest of the plan.
+  45.50/46 KB gzip, leaving about 0.5 KB for the rest of the plan. **But `bun run size` is
+  not the tightest gate.** `tests/build/core-package.test.ts` gzips the *packaged*
+  `packages/core/dist/faqir-core.min.js` (IIFE wrapper + sourcemap comment) against the same
+  47,104 B. That figure runs about 0.27 KB above `size`'s. After 1.1F-12 it is 46,961 B,
+  so about 140 B is left. Check it after every E/C task.
 - **happy-dom.** If `realm-guard`/`tree-view` flake, the lockfile has pinned happy-dom 20.10.6;
   run `bun add -d happy-dom@20.11.2 @happy-dom/global-registrator@20.11.2 --no-save`
   first. It leaves `bun.lock` and `package.json` untouched; refreshing the lockfile is a
@@ -119,7 +123,7 @@ wait for document order. Task 1.1F-32 releases the additive set; its version is 
 | 1.1F-09 | Table: the roving Tab stop never strands | 20 | patch | ✅ |
 | 1.1F-10 | Command palette: case/layout-proof ⌘K, one owner, `data-no-shortcut` | 23, 32 | additive | ✅ |
 | 1.1F-11 | Sidebar: rail chevron flips, trigger label stays stable | 7 | patch | ✅ |
-| 1.1F-12 | Nesting, controllers I: tabs, accordion, dialog family, sidebar, context-menu + nesting matrix | 5, 6 | patch | ⬜ |
+| 1.1F-12 | Nesting, controllers I: tabs, accordion, dialog family, sidebar, context-menu + nesting matrix | 5, 6 | patch | ✅ |
 | 1.1F-13 | Nesting, controllers II: carousel, popover, table delegation, `:scope` pass | 5 | patch | ⬜ |
 | 1.1F-14 | Table: ARIA grid handling of links/buttons inside navigable cells | 21 | additive (behaviour change) | ⬜ |
 
@@ -666,9 +670,9 @@ injection in `scripts/build-core.mjs` plus vendored copies in the bindings.
 - Also: a wrapped close button (inside a `stack`) still closes the dialog.
 
 **Acceptance**
-- [ ] Every matrix row green; existing recipe tests unchanged.
-- [ ] Downstream `indirect:` patch in `tabs.js` (and core copies) can be dropped.
-- [ ] Standard controller regeneration set; size checked. The guard is duplicated per controller, so watch the 46 KB budget; if it is tight, move `owner` into `registry/core/dom.js` and accept the packaging work.
+- [x] Every matrix row green; existing recipe tests unchanged. *(New `tests/recipes/nesting.test.ts`, 15 rows: tabs ⊃ collapsible (End stops at the last tab; the summary gets no `aria-selected`/`tabindex`), tabs ⊃ tabs (outer pairs its own panels, inner untouched both ways), accordion ⊃ dropdown (click and Enter stay with the dropdown), accordion ⊃ accordion (one toggle, outer unmoved, `expand(1)` hits the outer's second item), dialog/drawer/sheet ⊃ popover-with-close (closes the popover only) and ⊃ popover-trigger (not taken as the overlay's own trigger), a close wrapped in `stack > cluster` still closes, alert-dialog with wrapped confirm/cancel plus a nested close (initial focus on its own cancel, no stray `faqir:cancel`), sidebar ⊃ footer dropdown (no forced `aria-expanded`, no rail), context-menu target ⊃ dropdown (opens its own menu), and one row through the built `faqir-core.js` via `initTree` on a container. 14 of 15 fail against HEAD's controllers; the wrapped-close row is the regression guard and passes on both. `tests/core/dom.test.ts` +3 for `owns`/`ownParts`. No existing recipe test changed: tabs 17, accordion 21, dialog 18, alert-dialog 15, drawer 26, sheet 24, sidebar 24, context-menu 13 all pass.)*
+- [x] Downstream `indirect:` patch in `tabs.js` (and core copies) can be dropped. *(tabs takes `:scope > list`, `:scope > list > trigger` and `:scope > panel`, in the module, in both engine builds and in the vendored React/Vue copies. The two tabs rows prove the downstream symptom (nested parts shifting the pairing) is gone.)*
+- [x] Standard controller regeneration set; size checked. The guard is duplicated per controller, so watch the 46 KB budget; if it is tight, move `owner` into `registry/core/dom.js` and accept the packaging work. *(It was tight from the start, so the guard went into `registry/core/dom.js` as `owns(root, el)` / `ownParts(root, part)`: one `closest('[data-ui]:not([data-ui=stack],…,[data-ui=aspect-ratio])')` from the part's parent, with the same selector mirrored in engine.js §6. `gen:bindings` now vendors `_core-dom.ts` into react and vue; `packages/vue/tests/codegen.test.ts` asserts it. **Budget:** `bun run size` showed 0.31 KB free at HEAD, but the binding constraint is `tests/build/core-package.test.ts`, which gzips the packaged `faqir-core.min.js` (IIFE + sourcemap comment): about 47,054 of 47,104 B at HEAD, so 50 B free. The first cut cost about 180 B and failed that test. To fit, engine §6 dropped five private helpers that nothing in the bundle calls (`$`, `create`, `delegate`, `once`, `waitForTransition`); their ES-module originals in `registry/core/` are unchanged. Result: engine + controllers 45.69 → 45.58 KB, packaged min.js 46,961/47,104 B. Regenerated: `faqir-core{,.dev}.js`, react/vue controllers, `registry-index.json`, `packages/core/cdn.json`; `gen:skill` was a no-op. Eight manifests bumped with `changes`: tabs 1.0.1, accordion 1.0.1, dialog 1.0.2, alert-dialog 1.0.2 (shared controller), drawer 1.0.2, sheet 1.0.2, sidebar 1.1.2, context-menu 1.0.1. `audit:registry` zero findings; every `check:*` green; `bun run test` 7664 + 64 pass / 0 fail; typecheck green. Markup and CSS untouched, so visual baselines were not re-run.)*
 
 ### 1.1F-13 · Nesting, controllers II (medium/low risk)
 
