@@ -1,11 +1,16 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "table",
-  "version": "3.1.1",
+  "version": "3.1.2",
   "kind": "recipe",
   "category": "data-display",
   "description": "Advanced data table: multi-column type-aware sorting, global + per-column filtering, tree data and collapsible row groups with live aggregates, inline cell editing with Intl number/currency formatting, drag-and-drop row and column reordering, column resize/hide/pin, sticky header/footer/rows, grid keyboard navigation, CSV export, responsive stacked mode, and state persistence — every feature opt-in via data attributes",
   "changes": [
+    {
+      "version": "3.1.2",
+      "note": "A table nested in a detail row keeps its own parts and events. The outer table's delegated handlers reacted to it: focus in an inner cell moved the outer's Tab stop into the inner table, arrow keys there drove the outer grid, an inner row-toggle was toggled twice (by both tables), and the inner quick filter filtered the outer rows. The outer also took the inner's tfoot when it had none (so hiding a column hid the inner's footer cell), and clearFilters()/setState() wrote into the inner's quick-filter input. Delegated handlers now ignore events whose nearest [data-ui='table'] is another table, and the tfoot and quick-filter lookups do the same.",
+      "breaking": false
+    },
     {
       "version": "3.1.1",
       "note": "A navigable table no longer loses its Tab stop. The roving tabindex=\"0\" stayed on the last active cell after that cell's row was removed, filtered out or collapsed into its group or tree parent, or after its column was hidden, so no visible cell could be reached with Tab and the arrow keys did nothing. The controller now re-checks the stop after every refresh, filter, collapse and column hide, and hands it to the first visible cell when the old one is gone. Hidden-column cells get tabindex=\"-1\". Only the Tab stop moves; focus is never moved.",

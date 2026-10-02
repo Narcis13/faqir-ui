@@ -7,13 +7,15 @@
 // @ui:provides show hide destroy
 
 import { debounce } from "./_core-utils.js";
+import { ownParts } from "./_core-dom.js";
 
 export function createTooltip(root) {
   // Prevent double-init
   if (root._faqirTooltip) return root._faqirTooltip;
 
   const trigger = root.querySelector("[data-part='trigger']");
-  const content = root.querySelector("[data-part='content']");
+  // Not the content of a collapsible or popover used as the trigger.
+  const [content] = ownParts(root, "content");
 
   let showTimer = null;
   let hideTimer = null;

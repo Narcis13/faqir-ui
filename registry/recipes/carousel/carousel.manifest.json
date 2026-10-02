@@ -1,11 +1,16 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "carousel",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "kind": "recipe",
   "category": "layout",
   "description": "Horizontally scrolling slide strip built on CSS scroll-snap, progressively enhanced with prev/next buttons, dot indicators and a polite live region",
   "changes": [
+    {
+      "version": "1.1.1",
+      "note": "Nested components keep their own parts. A carousel in a slide supplied the outer carousel's slides (it counted 4 instead of 2), its prev/next buttons, dots and status, and a click on its buttons moved both. Slides are now the viewport's direct children; prev, next, dots, status and the controls/dots containers go through the owner guard, and a click acts only on the carousel's own buttons.",
+      "breaking": false
+    },
     {
       "version": "1.1.0",
       "note": "Constrain the root and scroll viewport to their containing inline size. Slides still overflow intentionally inside the live scroller, but the viewport itself can no longer bleed from a narrow grid or flex item.",

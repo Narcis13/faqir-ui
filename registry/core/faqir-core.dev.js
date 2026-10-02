@@ -3493,12 +3493,14 @@ function createCarousel(root) {
   if (!viewport) return null;
 
   const loop = root.hasAttribute("data-loop");
-  const slides = () => [...viewport.querySelectorAll("[data-part='slide']")];
-  const dots = () => [...root.querySelectorAll("[data-part='dot']")];
-  const prevBtn = root.querySelector("[data-part='prev']");
-  const nextBtn = root.querySelector("[data-part='next']");
-  const status = root.querySelector("[data-part='status']");
-  const enhanced = [...root.querySelectorAll("[data-part='controls'], [data-part='dots']")];
+  // A carousel nested in a slide brings its own slides, buttons and dots:
+  // slides are the viewport's children, the rest go through the owner guard.
+  const slides = () => [...viewport.querySelectorAll(":scope > [data-part='slide']")];
+  const dots = () => ownParts(root, "dot");
+  const [prevBtn] = ownParts(root, "prev");
+  const [nextBtn] = ownParts(root, "next");
+  const [status] = ownParts(root, "status");
+  const enhanced = [...ownParts(root, "controls"), ...ownParts(root, "dots")];
 
   let index = 0;
 
@@ -3594,12 +3596,13 @@ function createCarousel(root) {
 
   // ── events ──────────────────────────────────────────────────────────────────
   function onClick(e) {
-    const btn = e.target.closest && e.target.closest("[data-part]");
-    if (!btn || !root.contains(btn)) return;
-    const part = btn.dataset.part;
-    if (part === "next") next();
-    else if (part === "prev") prev();
-    else if (part === "dot") goTo(dots().indexOf(btn));
+    // Matched by identity, so a nested carousel's buttons are not these. A
+    // missing button is `undefined`, never equal to a `null` miss here.
+    const btn = e.target.closest("[data-part]");
+    const dot = dots().indexOf(btn);
+    if (btn === nextBtn) next();
+    else if (btn === prevBtn) prev();
+    else if (dot >= 0) goTo(dot);
   }
 
   // One rAF-throttled measurement per scroll burst keeps tracking cheap.
@@ -6261,7 +6264,8 @@ function createPopover(root) {
 
   const trigger = root.querySelector("[data-part='trigger']");
   const content = root.querySelector("[data-part='content']");
-  const closeBtn = root.querySelector("[data-part='close']");
+  // Not a close button belonging to a dialog or popover inside the content.
+  const [closeBtn] = ownParts(root, "close");
 
   let outsideClickCleanup = null;
 
@@ -7940,10 +7944,13 @@ function createTable(root) {
   // Prevent double-init
   if (root._faqirTable) return root._faqirTable;
 
+  // A table nested in a detail row keeps its own parts and events: `tbody`
+  // contains it, so every deep lookup and delegated handler checks `mine`.
+  const mine = (el) => el.closest("[data-ui='table']") === root;
   const table = root.querySelector("[data-part='table']");
   const thead = root.querySelector("[data-part='thead']");
   const tbody = root.querySelector("[data-part='tbody']");
-  const tfoot = root.querySelector("[data-part='tfoot']");
+  const tfoot = [...root.querySelectorAll("[data-part='tfoot']")].find(mine);
   const headerCheckbox = thead?.querySelector("[data-part='checkbox']");
 
   // ── Options (read once from the root's opt-in attributes) ──
@@ -8644,7 +8651,7 @@ function createTable(root) {
     applyFilters();
   }
   function syncFilterInputs() {
-    const g = root.querySelector("[data-part='filter']");
+    const g = [...root.querySelectorAll("[data-part='filter']")].find(mine);
     if (g && g.value !== globalFilter) g.value = globalFilter;
     const fr = filterRowEl();
     if (!fr) return;
@@ -9934,7 +9941,7 @@ function createTable(root) {
 
   function measureSticky() {
     const needsHeaderVar =
-      root.hasAttribute("data-sticky-header") || !!tbody?.querySelector("[data-part='tr'][data-pin='top']");
+      root.hasAttribute("data-sticky-header") || bodyRows().some((r) => r.dataset.pin === "top");
     if (needsHeaderVar && thead && thead.offsetHeight) {
       root.style.setProperty("--table-thead-h", thead.offsetHeight + "px");
     }
@@ -9982,13 +9989,14 @@ function createTable(root) {
   // ── Wire up ──
   if (thead) on(thead, "click", onHeaderClick);
   if (headerCheckbox) on(headerCheckbox, "change", onHeaderCheckboxChange);
-  if (tbody) on(tbody, "change", onRowCheckboxChange);
-  on(root, "click", onRootClick);
-  on(root, "dblclick", onDblClick);
-  on(root, "keydown", onKeydown);
-  on(root, "input", onFilterInput);
-  on(root, "pointerdown", onPointerDown);
-  on(root, "focusin", onFocusIn);
+  const onOwn = (target, ev, fn) => on(target, ev, (e) => mine(e.target) && fn(e));
+  if (tbody) onOwn(tbody, "change", onRowCheckboxChange);
+  onOwn(root, "click", onRootClick);
+  onOwn(root, "dblclick", onDblClick);
+  onOwn(root, "keydown", onKeydown);
+  onOwn(root, "input", onFilterInput);
+  onOwn(root, "pointerdown", onPointerDown);
+  onOwn(root, "focusin", onFocusIn);
   if (typeof window !== "undefined") {
     let resizeTimer = null;
     const onWinResize = () => {
@@ -10951,7 +10959,8 @@ function createTooltip(root) {
   if (root._faqirTooltip) return root._faqirTooltip;
 
   const trigger = root.querySelector("[data-part='trigger']");
-  const content = root.querySelector("[data-part='content']");
+  // Not the content of a collapsible or popover used as the trigger.
+  const [content] = ownParts(root, "content");
 
   let showTimer = null;
   let hideTimer = null;

@@ -2,6 +2,7 @@
 // @ui:provides open close toggle destroy
 
 import { onOutsideClick } from "../../core/events.js";
+import { ownParts } from "../../core/dom.js";
 
 export function createPopover(root) {
   // Prevent double-init
@@ -9,7 +10,8 @@ export function createPopover(root) {
 
   const trigger = root.querySelector("[data-part='trigger']");
   const content = root.querySelector("[data-part='content']");
-  const closeBtn = root.querySelector("[data-part='close']");
+  // Not a close button belonging to a dialog or popover inside the content.
+  const [closeBtn] = ownParts(root, "close");
 
   let outsideClickCleanup = null;
 

@@ -1057,7 +1057,7 @@
       "name": "carousel",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "files": [
         {
           "path": "carousel.css",
@@ -1069,14 +1069,14 @@
         },
         {
           "path": "carousel.js",
-          "sha256": "62498327849a3f274daa410538a78d841c03b0da10500fc131ff51cd3ab4bb96"
+          "sha256": "33f0d8edc88352081ae2de4fe924e6b909752aca160e6912fda3da26e57b0e04"
         },
         {
           "path": "carousel.manifest.json",
-          "sha256": "647fc791e11f2cddb49b0c3218c88201dea8295c5c3f66c38f75480ace3b9918"
+          "sha256": "3eb39eed78753392bee8864b96148749debdb9d1ecf08208f81540bbc7ca47ce"
         }
       ],
-      "hash": "c1e4a0a88e829d01b39b344a48cc040aea12aceae3fd059ba063e48e2b4bbf3f",
+      "hash": "73fe62ee60d1ae4639cd18a5340665ab28f60ab38e5f6d549b6f70daa3b0aa75",
       "deps": []
     },
     {
@@ -1380,7 +1380,7 @@
       "name": "popover",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "files": [
         {
           "path": "popover.css",
@@ -1392,14 +1392,14 @@
         },
         {
           "path": "popover.js",
-          "sha256": "e57475df31e72312a4fcd18306c5c45dcffb93905b19087fa1f842f8e4a30507"
+          "sha256": "106dcfe72785666e15006cf1ea8d4dc8805b4d8571c1ea2dbd4922d90adce58d"
         },
         {
           "path": "popover.manifest.json",
-          "sha256": "a2c71e0a030dbc655caee6a2ea6494d47b3c7f01fa5250458fa26e6641ea38b5"
+          "sha256": "b351fb1c6da76a92672730e1359d1ae3f1859666b91b23e87e6a364bb4eed871"
         }
       ],
-      "hash": "e7f6de4946b09760e4daf2d73e7b2fea658d803f1caeaa7630b2dcb98a2c8f82",
+      "hash": "51623a777245db133f35644b8594c0685dbe4322ddb136596d0e05f5d6bce342",
       "deps": [
         "button"
       ]
@@ -1545,7 +1545,7 @@
       "name": "table",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "3.1.1",
+      "version": "3.1.2",
       "files": [
         {
           "path": "table.css",
@@ -1557,14 +1557,14 @@
         },
         {
           "path": "table.js",
-          "sha256": "cdc210ca576bd369a7c9cfae9f3250906e1e54b08fa23204f032dd5f6563a6af"
+          "sha256": "2fa0b842130a4a0256ff4287f435f743c91809403acca7f61223d7a344e77697"
         },
         {
           "path": "table.manifest.json",
-          "sha256": "4541c65b1d7d5b13431aeebe006fd3fa44cbf6b3ae820d4616e3a5aea8623782"
+          "sha256": "0c6fa8d2394c896c95748713f731c011e140d5393274cf8b3e70ed347eba9daa"
         }
       ],
-      "hash": "8cd5704510f8039fe6e916a3973369c8d1c2dec2a2f40c9774eb343ccc1d9dcc",
+      "hash": "ac0edd735c77c40c05a26bb6b72bfc98407c564aac63d9a2d8b96d76cd1a59f6",
       "deps": [
         "checkbox",
         "badge",
@@ -1684,7 +1684,7 @@
       "name": "tooltip",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "files": [
         {
           "path": "tooltip.css",
@@ -1696,14 +1696,14 @@
         },
         {
           "path": "tooltip.js",
-          "sha256": "2b88f0e36be226942fde4e06b9089fc2312c327f58554d79de7f2a9844771f56"
+          "sha256": "b377a88b42e6379a3a31bc48dafab5397379c21e055a83cb87e008f608300715"
         },
         {
           "path": "tooltip.manifest.json",
-          "sha256": "08ecbdd55d06db1dc4345edf2453f244cbd5de809b27d72deb798d2f965ddc9a"
+          "sha256": "238f86bdb0d72d08e61132037559eb1bf7507b0114f58ae0925e52eebb82ae87"
         }
       ],
-      "hash": "ab1c22e8c2b532bec5ec7a5f3c53dca377b6ab252e32bfa2e44a92445c523ded",
+      "hash": "b91f23809f403e9444d6874cbc260c35ae8f0cca9b191a8a412100ec34b04a8e",
       "deps": [
         "button"
       ]

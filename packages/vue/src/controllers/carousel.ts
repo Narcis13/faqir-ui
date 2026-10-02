@@ -6,6 +6,8 @@
 // @ui:controller carousel
 // @ui:provides next prev goTo getIndex getCount destroy
 
+import { ownParts } from "./_core-dom.js";
+
 /**
  * carousel — a CSS scroll-snap strip with a deliberately tiny enhancement layer.
  *
@@ -40,12 +42,14 @@ export function createCarousel(root) {
   if (!viewport) return null;
 
   const loop = root.hasAttribute("data-loop");
-  const slides = () => [...viewport.querySelectorAll("[data-part='slide']")];
-  const dots = () => [...root.querySelectorAll("[data-part='dot']")];
-  const prevBtn = root.querySelector("[data-part='prev']");
-  const nextBtn = root.querySelector("[data-part='next']");
-  const status = root.querySelector("[data-part='status']");
-  const enhanced = [...root.querySelectorAll("[data-part='controls'], [data-part='dots']")];
+  // A carousel nested in a slide brings its own slides, buttons and dots:
+  // slides are the viewport's children, the rest go through the owner guard.
+  const slides = () => [...viewport.querySelectorAll(":scope > [data-part='slide']")];
+  const dots = () => ownParts(root, "dot");
+  const [prevBtn] = ownParts(root, "prev");
+  const [nextBtn] = ownParts(root, "next");
+  const [status] = ownParts(root, "status");
+  const enhanced = [...ownParts(root, "controls"), ...ownParts(root, "dots")];
 
   let index = 0;
 
@@ -141,12 +145,13 @@ export function createCarousel(root) {
 
   // ── events ──────────────────────────────────────────────────────────────────
   function onClick(e) {
-    const btn = e.target.closest && e.target.closest("[data-part]");
-    if (!btn || !root.contains(btn)) return;
-    const part = btn.dataset.part;
-    if (part === "next") next();
-    else if (part === "prev") prev();
-    else if (part === "dot") goTo(dots().indexOf(btn));
+    // Matched by identity, so a nested carousel's buttons are not these. A
+    // missing button is `undefined`, never equal to a `null` miss here.
+    const btn = e.target.closest("[data-part]");
+    const dot = dots().indexOf(btn);
+    if (btn === nextBtn) next();
+    else if (btn === prevBtn) prev();
+    else if (dot >= 0) goTo(dot);
   }
 
   // One rAF-throttled measurement per scroll burst keeps tracking cheap.

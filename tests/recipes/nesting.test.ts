@@ -8,10 +8,13 @@ import { createSidebar } from "../../registry/recipes/sidebar/sidebar.js";
 import { createContextMenu } from "../../registry/recipes/context-menu/context-menu.js";
 import { createDropdown } from "../../registry/recipes/dropdown/dropdown.js";
 import { createPopover } from "../../registry/recipes/popover/popover.js";
+import { createCarousel } from "../../registry/recipes/carousel/carousel.js";
+import { createTooltip } from "../../registry/recipes/tooltip/tooltip.js";
+import { createTable } from "../../registry/recipes/table/table.js";
 
 const Faqir = require("../../registry/core/faqir-core.js");
 
-// Nesting matrix (1.1F-12): one row per outer × inner pair. In every row the
+// Nesting matrix (1.1F-12, 1.1F-13): one row per outer × inner pair. In every row the
 // inner component keeps its own state, ARIA and tabindex, and the outer ignores
 // the inner's parts. Each row mounts into a disposable container — never
 // `document.body` — and destroys every controller it started.
@@ -353,6 +356,189 @@ describe("nesting matrix", () => {
   });
 });
 
+const carousel = (id: string, slides: string, p: string) => `
+  <div data-ui="carousel" id="${id}">
+    <div data-part="viewport" tabindex="0">${slides}</div>
+    <div data-part="controls" hidden>
+      <button data-part="prev" type="button" id="${p}prev">‹</button>
+      <button data-part="next" type="button" id="${p}next">›</button>
+    </div>
+    <div data-part="dots" hidden>
+      <button data-part="dot" type="button" id="${p}d1"></button>
+      <button data-part="dot" type="button" id="${p}d2"></button>
+    </div>
+    <p data-part="status" id="${p}status"></p>
+  </div>`;
+const nestedCarousels = () =>
+  carousel(
+    "outer",
+    `<div data-part="slide">${carousel(
+      "inner",
+      `<div data-part="slide">a</div><div data-part="slide">b</div>`,
+      "i"
+    )}</div><div data-part="slide">two</div>`,
+    "o"
+  );
+
+describe("nesting matrix II (1.1F-13)", () => {
+  it("carousel ⊃ carousel: each counts and drives its own slides, buttons and dots", () => {
+    mount(nestedCarousels());
+    const outer = start(createCarousel(q("#outer")));
+    const inner = start(createCarousel(q("#inner")));
+
+    expect(outer.getCount()).toBe(2);
+    expect(inner.getCount()).toBe(2);
+    expect(q("#ostatus").textContent).toBe("Slide 1 of 2");
+    expect(q("#istatus").textContent).toBe("Slide 1 of 2");
+
+    // The inner buttons and dots move the inner carousel only.
+    q("#inext").click();
+    expect(inner.getIndex()).toBe(1);
+    expect(outer.getIndex()).toBe(0);
+    expect(q("#ostatus").textContent).toBe("Slide 1 of 2");
+    expect(q<HTMLButtonElement>("#onext").disabled).toBe(false);
+    q("#id1").click();
+    expect(inner.getIndex()).toBe(0);
+    expect(outer.getIndex()).toBe(0);
+
+    // The outer's own controls still work, and leave the inner alone.
+    q("#onext").click();
+    expect(outer.getIndex()).toBe(1);
+    expect(inner.getIndex()).toBe(0);
+    expect(q("#od2").dataset.state).toBe("active");
+    expect(q("#id2").dataset.state).toBe("inactive");
+    q("#od1").click();
+    expect(outer.getIndex()).toBe(0);
+
+    // Destroying the outer re-hides its own controls only.
+    outer.destroy();
+    apis.splice(apis.indexOf(outer), 1);
+    expect(q("#outer > [data-part='controls']").hidden).toBe(true);
+    expect(q("#inner > [data-part='controls']").hidden).toBe(false);
+  });
+
+  it("popover ⊃ dialog-with-close: the dialog's close closes the dialog only", () => {
+    mount(`
+      <div data-ui="popover" data-state="closed" id="pop">
+        <button data-part="trigger" aria-expanded="false">Info</button>
+        <div data-part="content" hidden>
+          <div data-ui="dialog" data-state="closed" id="dlg">
+            <div data-part="overlay" hidden></div>
+            <div data-part="panel" role="dialog" aria-modal="true" hidden>
+              <button data-part="close" id="dlg-close">Close</button>
+            </div>
+          </div>
+          <button data-part="close" id="pop-close">✕</button>
+        </div>
+      </div>`);
+    const pop = start(createPopover(q("#pop")));
+    const dlg = start(createDialog(q("#dlg")));
+
+    pop.open();
+    dlg.open();
+    q("#dlg-close").click();
+    expect(q("#dlg").dataset.state).toBe("closed");
+    expect(q("#pop").dataset.state).toBe("open");
+
+    q("#pop-close").click();
+    expect(q("#pop").dataset.state).toBe("closed");
+  });
+
+  it("tooltip ⊃ collapsible trigger: the tooltip shows its own content, not the collapsible's", () => {
+    mount(`
+      <div data-ui="tooltip" data-state="hidden" id="tip">
+        <details data-ui="collapsible" data-part="trigger">
+          <summary data-part="trigger">More</summary>
+          <div data-part="content" id="col-content">Body</div>
+        </details>
+        <div data-part="content" role="tooltip" id="tip-content" hidden>Hint</div>
+      </div>`);
+    const tip = start(createTooltip(q("#tip"))) as any;
+    tip.show();
+    expect(q("#tip-content").hidden).toBe(false);
+    tip.hide();
+    expect(q("#tip-content").hidden).toBe(true);
+    expect(q("#col-content").hidden).toBe(false);
+  });
+
+  const nestedTables = () => `
+    <div data-ui="table" data-navigable id="outer">
+      <table data-part="table">
+        <thead data-part="thead"><tr data-part="tr"><th data-part="th" id="oh">Order</th><th data-part="th">More</th></tr></thead>
+        <tbody data-part="tbody">
+          <tr data-part="tr" id="o1"><td data-part="td">A-1</td><td data-part="td"><button type="button" data-part="row-toggle" aria-expanded="true" id="otoggle"></button></td></tr>
+          <tr data-part="detail-row" id="od"><td data-part="td" colspan="2">
+            <div data-ui="table" data-navigable id="inner">
+              <input data-part="filter" aria-label="Filter lines" id="ifilter">
+              <table data-part="table">
+                <thead data-part="thead"><tr data-part="tr"><th data-part="th">Line</th><th data-part="th">More</th></tr></thead>
+                <tbody data-part="tbody">
+                  <tr data-part="tr" id="i1"><td data-part="td" id="i1a">widget</td><td data-part="td"><button type="button" data-part="row-toggle" aria-expanded="false" id="itoggle"></button></td></tr>
+                  <tr data-part="detail-row" id="idetail" hidden><td data-part="td" colspan="2">Specs</td></tr>
+                  <tr data-part="tr" id="i2"><td data-part="td" id="i2a">gadget</td><td data-part="td"></td></tr>
+                </tbody>
+                <tfoot data-part="tfoot"><tr data-part="tr"><td data-part="td">2 lines</td><td data-part="td" id="ifoot">—</td></tr></tfoot>
+              </table>
+            </div>
+          </td></tr>
+          <tr data-part="tr" id="o2"><td data-part="td">B-2</td><td data-part="td"></td></tr>
+        </tbody>
+      </table>
+    </div>`;
+
+  it("table ⊃ table: keyboard focus in the inner table leaves the outer's Tab stop alone", () => {
+    mount(nestedTables());
+    start(createTable(q("#outer")));
+    start(createTable(q("#inner")));
+    expect(q("#oh").getAttribute("tabindex")).toBe("0");
+
+    q("#i1a").focus();
+    key(q("#i1a"), "ArrowDown");
+    expect(document.activeElement).toBe(q("#i2a"));
+    expect(q("#i2a").getAttribute("tabindex")).toBe("0");
+    // The outer's roving stop never moved into the inner table.
+    expect(q("#oh").getAttribute("tabindex")).toBe("0");
+    expect([...q("#outer").querySelectorAll("[tabindex='0']")].filter((el) => !q("#inner").contains(el))).toEqual([q("#oh")]);
+
+    // The outer still navigates its own grid.
+    q("#oh").focus();
+    key(q("#oh"), "ArrowDown");
+    expect(document.activeElement).toBe(q("#o1 [data-part='td']"));
+  });
+
+  it("table ⊃ table: clicks and filters stay with the table they happen in", async () => {
+    mount(nestedTables());
+    const outer = start(createTable(q("#outer"))) as any;
+    const inner = start(createTable(q("#inner"))) as any;
+
+    // An inner row-toggle toggles the inner detail once; the outer's is untouched.
+    q("#itoggle").click();
+    expect(q("#idetail").hasAttribute("hidden")).toBe(false);
+    expect(q("#itoggle").getAttribute("aria-expanded")).toBe("true");
+    expect(q("#od").hasAttribute("hidden")).toBe(false);
+    q("#otoggle").click();
+    expect(q("#od").hasAttribute("hidden")).toBe(true);
+
+    // The inner quick filter filters the inner rows only.
+    const f = q<HTMLInputElement>("#ifilter");
+    f.value = "gad";
+    f.dispatchEvent(new Event("input", { bubbles: true }));
+    await new Promise((r) => setTimeout(r, 200));
+    expect(q("#i1").hasAttribute("data-filtered")).toBe(true);
+    expect(inner.getState().filter).toBe("gad");
+    expect(outer.getState().filter).toBe("");
+    expect(q("#o1").hasAttribute("data-filtered")).toBe(false);
+
+    // Restoring the outer's state does not write into the inner's filter input.
+    outer.clearFilters();
+    expect(f.value).toBe("gad");
+
+    // The outer's columns are its own: no footer borrowed from the inner table.
+    outer.hideColumn(1);
+    expect(q("#ifoot").hasAttribute("data-col-hidden")).toBe(false);
+  });
+});
+
 describe("nesting in the built engine", () => {
   // The bundled engine carries its own copy of `ownParts` (engine.js §6), so the
   // guard is exercised through the inlined controllers too.
@@ -375,5 +561,16 @@ describe("nesting in the built engine", () => {
     expect(root.dataset.state).toBe("open");
     q("#own-close").click();
     expect(root.dataset.state).toBe("closed");
+  });
+
+  it("an inlined carousel counts its own slides and ignores a nested carousel's buttons", () => {
+    mount(nestedCarousels());
+    Faqir.initTree(box!);
+    const outer = (q("#outer") as any)._faqirCarousel;
+    const inner = (q("#inner") as any)._faqirCarousel;
+    expect(outer.getCount()).toBe(2);
+    q("#inext").click();
+    expect(inner.getIndex()).toBe(1);
+    expect(outer.getIndex()).toBe(0);
   });
 });

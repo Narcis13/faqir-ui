@@ -45,10 +45,13 @@ export function createTable(root) {
   // Prevent double-init
   if (root._faqirTable) return root._faqirTable;
 
+  // A table nested in a detail row keeps its own parts and events: `tbody`
+  // contains it, so every deep lookup and delegated handler checks `mine`.
+  const mine = (el) => el.closest("[data-ui='table']") === root;
   const table = root.querySelector("[data-part='table']");
   const thead = root.querySelector("[data-part='thead']");
   const tbody = root.querySelector("[data-part='tbody']");
-  const tfoot = root.querySelector("[data-part='tfoot']");
+  const tfoot = [...root.querySelectorAll("[data-part='tfoot']")].find(mine);
   const headerCheckbox = thead?.querySelector("[data-part='checkbox']");
 
   // ── Options (read once from the root's opt-in attributes) ──
@@ -749,7 +752,7 @@ export function createTable(root) {
     applyFilters();
   }
   function syncFilterInputs() {
-    const g = root.querySelector("[data-part='filter']");
+    const g = [...root.querySelectorAll("[data-part='filter']")].find(mine);
     if (g && g.value !== globalFilter) g.value = globalFilter;
     const fr = filterRowEl();
     if (!fr) return;
@@ -2039,7 +2042,7 @@ export function createTable(root) {
 
   function measureSticky() {
     const needsHeaderVar =
-      root.hasAttribute("data-sticky-header") || !!tbody?.querySelector("[data-part='tr'][data-pin='top']");
+      root.hasAttribute("data-sticky-header") || bodyRows().some((r) => r.dataset.pin === "top");
     if (needsHeaderVar && thead && thead.offsetHeight) {
       root.style.setProperty("--table-thead-h", thead.offsetHeight + "px");
     }
@@ -2087,13 +2090,14 @@ export function createTable(root) {
   // ── Wire up ──
   if (thead) on(thead, "click", onHeaderClick);
   if (headerCheckbox) on(headerCheckbox, "change", onHeaderCheckboxChange);
-  if (tbody) on(tbody, "change", onRowCheckboxChange);
-  on(root, "click", onRootClick);
-  on(root, "dblclick", onDblClick);
-  on(root, "keydown", onKeydown);
-  on(root, "input", onFilterInput);
-  on(root, "pointerdown", onPointerDown);
-  on(root, "focusin", onFocusIn);
+  const onOwn = (target, ev, fn) => on(target, ev, (e) => mine(e.target) && fn(e));
+  if (tbody) onOwn(tbody, "change", onRowCheckboxChange);
+  onOwn(root, "click", onRootClick);
+  onOwn(root, "dblclick", onDblClick);
+  onOwn(root, "keydown", onKeydown);
+  onOwn(root, "input", onFilterInput);
+  onOwn(root, "pointerdown", onPointerDown);
+  onOwn(root, "focusin", onFocusIn);
   if (typeof window !== "undefined") {
     let resizeTimer = null;
     const onWinResize = () => {

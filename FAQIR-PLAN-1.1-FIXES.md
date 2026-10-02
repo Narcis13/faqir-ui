@@ -37,8 +37,8 @@ as was done with `state-1.0.json`).
   45.50/46 KB gzip, leaving about 0.5 KB for the rest of the plan. **But `bun run size` is
   not the tightest gate.** `tests/build/core-package.test.ts` gzips the *packaged*
   `packages/core/dist/faqir-core.min.js` (IIFE wrapper + sourcemap comment) against the same
-  47,104 B. That figure runs about 0.27 KB above `size`'s. After 1.1F-12 it is 46,961 B,
-  so about 140 B is left. Check it after every E/C task.
+  47,104 B. That figure runs about 0.27 KB above `size`'s. After 1.1F-13 it is 47,015 B,
+  so about 90 B is left. Check it after every E/C task.
 - **happy-dom.** If `realm-guard`/`tree-view` flake, the lockfile has pinned happy-dom 20.10.6;
   run `bun add -d happy-dom@20.11.2 @happy-dom/global-registrator@20.11.2 --no-save`
   first. It leaves `bun.lock` and `package.json` untouched; refreshing the lockfile is a
@@ -124,7 +124,7 @@ wait for document order. Task 1.1F-32 releases the additive set; its version is 
 | 1.1F-10 | Command palette: case/layout-proof ⌘K, one owner, `data-no-shortcut` | 23, 32 | additive | ✅ |
 | 1.1F-11 | Sidebar: rail chevron flips, trigger label stays stable | 7 | patch | ✅ |
 | 1.1F-12 | Nesting, controllers I: tabs, accordion, dialog family, sidebar, context-menu + nesting matrix | 5, 6 | patch | ✅ |
-| 1.1F-13 | Nesting, controllers II: carousel, popover, table delegation, `:scope` pass | 5 | patch | ⬜ |
+| 1.1F-13 | Nesting, controllers II: carousel, popover, table delegation, `:scope` pass | 5 | patch | ✅ |
 | 1.1F-14 | Table: ARIA grid handling of links/buttons inside navigable cells | 21 | additive (behaviour change) | ⬜ |
 
 ### Lane S — Styles and tokens
@@ -694,7 +694,7 @@ commit body.
 detail row (keyboard, click and filter stay on the outer table).
 
 **Acceptance**
-- [ ] Matrix green; the standard controller regeneration set; size.
+- [x] Matrix green; the standard controller regeneration set; size. *(`tests/recipes/nesting.test.ts` gains a "nesting matrix II" block. Its rows are carousel ⊃ carousel (each counts 2 slides; inner prev/next/dots move only the inner; the outer's own controls still work; destroy re-hides only its own controls), popover ⊃ dialog-with-close (the dialog's close leaves the popover open; the popover's own close still works), tooltip ⊃ collapsible-as-trigger (the tooltip shows its own content and leaves the collapsible's alone), and two table ⊃ table-in-a-detail-row rows. The first: focus and ArrowDown in the inner grid leave the outer's roving stop on its header, and the outer still navigates. The second: an inner row-toggle toggles once; the inner quick filter filters only inner rows; `clearFilters()` on the outer leaves the inner's input alone; `hideColumn` does not reach the inner's tfoot. One more row runs through the built engine via `initTree`. All 5 module rows and the built-engine row fail against HEAD's controllers. Fixes: carousel takes `:scope > [data-part='slide']` from the viewport, gets prev/next/status/dot and the controls/dots containers through `ownParts`, and its click handler matches buttons by identity. Popover `close` and tooltip `content` go through `ownParts`; popover trigger and content stay first-in-document-order, which is always the popover's own. Table adds `mine(el)` (nearest `[data-ui='table']` is this root). It wraps the seven delegated root/tbody listeners and is used for the tfoot and quick-filter lookups; the pinned-row probe in `measureSticky` reads `bodyRows()`. Left as-is, with reasons in the commit body: command-palette, combobox, select-custom, tag-input, pagination, file-upload, input-otp, slider, toast, toggle-group, qr-code (no slot that holds a component, and `:scope >` would break authored wrappers), calendar (in legacy flat date-picker markup its root is the popup, so an owner check would find nothing), and date-picker (it reaches into its nested calendar on purpose). A scan of every repo page, example and binding template found no in-scope part owned by a non-layout wrapper. **Budget:** packaged `faqir-core.min.js` 46,961 → 47,015 / 47,104 B; `size` engine + controllers 45.58 → 45.64 KB. Carousel's standalone `js_budget` is 1535 / 1536 B after the `ownParts` import, which needed the click-handler trim. A carousel-local "outside the viewport" helper fitted with room to spare but cost the engine 26 B more. Regenerated: `faqir-core{,.dev}.js`, react/vue controllers, `registry-index.json`, `packages/core/cdn.json`; `gen:skill` and `gen:schema-refs` no-ops; `site/dist` rebuilt (ignored). Manifests bumped with `changes`: carousel 1.1.1, popover 1.0.1, tooltip 1.0.1, table 3.1.2. `audit:registry` zero findings; every `check:*` green; `bun run test` 7670 + 64 pass / 0 fail; typecheck green. Markup and CSS untouched, so visual baselines were not re-run.)*
 
 ### 1.1F-14 · Table: ARIA grid handling of interactive cell content
 

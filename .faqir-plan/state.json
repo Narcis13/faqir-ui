@@ -2,7 +2,7 @@
   "$schema": "./state.schema.md",
   "plan": "FAQIR-PLAN-1.1-FIXES.md",
   "current": null,
-  "last_completed": "1.1F-12",
+  "last_completed": "1.1F-13",
   "history": [
     {
       "id": "1.1F-01",
@@ -75,6 +75,12 @@
       "completed": "2026-10-02",
       "commit": "caa8247",
       "summary": "Nested components keep their own parts. New registry/core/dom.js owns(root, el)/ownParts(root, part): the nearest [data-ui] above a part, looking through layout primitives (stack, cluster, grid, container, surface, switcher, aspect-ratio), via one closest(:not(...)) selector mirrored in engine.js §6. tabs takes :scope > list > trigger and :scope > panel; accordion takes :scope > item and toggles only from an item’s own trigger; dialog/alert-dialog/drawer/sheet take overlay/panel as direct children and trigger/close/confirm/cancel by owner; sidebar triggers and context-menu target/menu by owner (entry 6: a footer dropdown no longer gets aria-expanded forced or rails the sidebar). Eight manifests bumped. New tests/recipes/nesting.test.ts (15 rows, 14 red on HEAD) + dom.test.ts +3. Budget: the packaged faqir-core.min.js test had only 50 B free at HEAD, not the 0.31 KB `size` shows. Engine §6 dropped five dead private helpers ($, create, delegate, once, waitForTransition) to fit. Engine+controllers 45.69 → 45.58 KB; packaged 46,961/47,104 B."
+    },
+    {
+      "id": "1.1F-13",
+      "completed": "2026-10-02",
+      "commit": "",
+      "summary": "Nesting, controllers II. carousel: slides are the viewport's :scope > children; prev/next/status/dots/containers via ownParts; click matches own buttons by identity (a nested carousel counted as 4 slides and its buttons moved both). popover close and tooltip content via ownParts. table: mine(el) = nearest [data-ui='table'] is root, wrapping the 7 delegated listeners plus the tfoot and quick-filter lookups (a table in a detail row stole focus/Tab stop, arrows, double-toggled row-toggles, filtered the outer). Leaf widgets left as-is with reasons in the commit body. Packaged min.js 46,961 -> 47,015/47,104 B; carousel standalone 1535/1536 B. Manifests: carousel 1.1.1, popover 1.0.1, tooltip 1.0.1, table 3.1.2. 6 new matrix rows, all red at HEAD."
     }
   ],
   "note": "Pointer file for the /faqir-plan slash command. FAQIR-PLAN-1.1-FIXES.md status cells (⬜/✅) are the source of truth; this file records the cross-session cursor and a per-task log. Do not hand-edit `current` while a session is running. The 1.1 plan's cursor (31 history entries, through 1.1R-01) is archived unchanged at state-1.1.json; FAQIR-PLAN-1.1.md still has six open follow-up rows (1.1A-21, 1.1A-24, 1.1A-27, 1.1A-28, 1.1A-29, 1.1N-03), reachable by pointing `plan` back at it. The 1.0 cursor is at state-1.0.json."
