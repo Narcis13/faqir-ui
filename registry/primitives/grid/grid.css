@@ -41,29 +41,34 @@
   align-items: stretch;
 }
 
-/* ── Columns — the base, at every width ── */
+/* ── Columns — the base, at every width ──
+ * Tracks are `minmax(0, 1fr)`, not `1fr`: a bare `1fr` is `minmax(auto, 1fr)`,
+ * whose floor is the widest item's min-content, so one wide table or an
+ * unbreakable id widened the whole grid past its container. The floor is on
+ * the track rather than on the items (`> * { min-inline-size: 0 }`) because
+ * the `data-scroll` restore below sets the items' `min-inline-size` itself. */
 [data-ui="grid"][data-cols="1"] {
-  grid-template-columns: repeat(1, 1fr);
+  grid-template-columns: repeat(1, minmax(0, 1fr));
 }
 
 [data-ui="grid"][data-cols="2"] {
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 [data-ui="grid"][data-cols="3"] {
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 [data-ui="grid"][data-cols="4"] {
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 [data-ui="grid"][data-cols="6"] {
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(6, minmax(0, 1fr));
 }
 
 [data-ui="grid"][data-cols="12"] {
-  grid-template-columns: repeat(12, 1fr);
+  grid-template-columns: repeat(12, minmax(0, 1fr));
 }
 
 /* ── Intrinsic mode — as many columns as fit, no query at all ── */
@@ -155,12 +160,12 @@
 
 /* ── Tier `sm` — from 40rem up ── */
 @media (min-width: 40rem) {
-  [data-ui="grid"][data-ui="grid"][data-cols-sm="1"] { grid-template-columns: repeat(1, 1fr); }
-  [data-ui="grid"][data-ui="grid"][data-cols-sm="2"] { grid-template-columns: repeat(2, 1fr); }
-  [data-ui="grid"][data-ui="grid"][data-cols-sm="3"] { grid-template-columns: repeat(3, 1fr); }
-  [data-ui="grid"][data-ui="grid"][data-cols-sm="4"] { grid-template-columns: repeat(4, 1fr); }
-  [data-ui="grid"][data-ui="grid"][data-cols-sm="6"] { grid-template-columns: repeat(6, 1fr); }
-  [data-ui="grid"][data-ui="grid"][data-cols-sm="12"] { grid-template-columns: repeat(12, 1fr); }
+  [data-ui="grid"][data-ui="grid"][data-cols-sm="1"] { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+  [data-ui="grid"][data-ui="grid"][data-cols-sm="2"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  [data-ui="grid"][data-ui="grid"][data-cols-sm="3"] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  [data-ui="grid"][data-ui="grid"][data-cols-sm="4"] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  [data-ui="grid"][data-ui="grid"][data-cols-sm="6"] { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  [data-ui="grid"][data-ui="grid"][data-cols-sm="12"] { grid-template-columns: repeat(12, minmax(0, 1fr)); }
   [data-ui="grid"][data-ui="grid"][data-cols-sm="auto"] { grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--grid-min)), 1fr)); }
 
   [data-ui="grid"][data-ui="grid"][data-gap-sm="0"] { gap: var(--space-0, 0px); }
@@ -191,12 +196,12 @@
 
 /* ── Tier `md` — from 48rem up ── */
 @media (min-width: 48rem) {
-  [data-ui="grid"][data-ui="grid"][data-ui="grid"][data-cols-md="1"] { grid-template-columns: repeat(1, 1fr); }
-  [data-ui="grid"][data-ui="grid"][data-ui="grid"][data-cols-md="2"] { grid-template-columns: repeat(2, 1fr); }
-  [data-ui="grid"][data-ui="grid"][data-ui="grid"][data-cols-md="3"] { grid-template-columns: repeat(3, 1fr); }
-  [data-ui="grid"][data-ui="grid"][data-ui="grid"][data-cols-md="4"] { grid-template-columns: repeat(4, 1fr); }
-  [data-ui="grid"][data-ui="grid"][data-ui="grid"][data-cols-md="6"] { grid-template-columns: repeat(6, 1fr); }
-  [data-ui="grid"][data-ui="grid"][data-ui="grid"][data-cols-md="12"] { grid-template-columns: repeat(12, 1fr); }
+  [data-ui="grid"][data-ui="grid"][data-ui="grid"][data-cols-md="1"] { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+  [data-ui="grid"][data-ui="grid"][data-ui="grid"][data-cols-md="2"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  [data-ui="grid"][data-ui="grid"][data-ui="grid"][data-cols-md="3"] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  [data-ui="grid"][data-ui="grid"][data-ui="grid"][data-cols-md="4"] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  [data-ui="grid"][data-ui="grid"][data-ui="grid"][data-cols-md="6"] { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  [data-ui="grid"][data-ui="grid"][data-ui="grid"][data-cols-md="12"] { grid-template-columns: repeat(12, minmax(0, 1fr)); }
   [data-ui="grid"][data-ui="grid"][data-ui="grid"][data-cols-md="auto"] { grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--grid-min)), 1fr)); }
 
   [data-ui="grid"][data-ui="grid"][data-ui="grid"][data-gap-md="0"] { gap: var(--space-0, 0px); }
@@ -213,12 +218,12 @@
 
 /* ── Tier `lg` — from 64rem up ── */
 @media (min-width: 64rem) {
-  [data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-cols-lg="1"] { grid-template-columns: repeat(1, 1fr); }
-  [data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-cols-lg="2"] { grid-template-columns: repeat(2, 1fr); }
-  [data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-cols-lg="3"] { grid-template-columns: repeat(3, 1fr); }
-  [data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-cols-lg="4"] { grid-template-columns: repeat(4, 1fr); }
-  [data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-cols-lg="6"] { grid-template-columns: repeat(6, 1fr); }
-  [data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-cols-lg="12"] { grid-template-columns: repeat(12, 1fr); }
+  [data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-cols-lg="1"] { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+  [data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-cols-lg="2"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  [data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-cols-lg="3"] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  [data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-cols-lg="4"] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  [data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-cols-lg="6"] { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  [data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-cols-lg="12"] { grid-template-columns: repeat(12, minmax(0, 1fr)); }
   [data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-cols-lg="auto"] { grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--grid-min)), 1fr)); }
 
   [data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-gap-lg="0"] { gap: var(--space-0, 0px); }
@@ -235,12 +240,12 @@
 
 /* ── Tier `xl` — from 80rem up ── */
 @media (min-width: 80rem) {
-  [data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-cols-xl="1"] { grid-template-columns: repeat(1, 1fr); }
-  [data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-cols-xl="2"] { grid-template-columns: repeat(2, 1fr); }
-  [data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-cols-xl="3"] { grid-template-columns: repeat(3, 1fr); }
-  [data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-cols-xl="4"] { grid-template-columns: repeat(4, 1fr); }
-  [data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-cols-xl="6"] { grid-template-columns: repeat(6, 1fr); }
-  [data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-cols-xl="12"] { grid-template-columns: repeat(12, 1fr); }
+  [data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-cols-xl="1"] { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+  [data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-cols-xl="2"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  [data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-cols-xl="3"] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  [data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-cols-xl="4"] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  [data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-cols-xl="6"] { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  [data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-cols-xl="12"] { grid-template-columns: repeat(12, minmax(0, 1fr)); }
   [data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-cols-xl="auto"] { grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--grid-min)), 1fr)); }
 
   [data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-ui="grid"][data-gap-xl="0"] { gap: var(--space-0, 0px); }

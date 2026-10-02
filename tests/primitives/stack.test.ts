@@ -239,9 +239,12 @@ const DESKTOP = BREAKPOINTS.xl.px + 100;
 // ── 1 · Completeness ─────────────────────────────────────────────────────────
 
 describe("stack — manifest declares everything the CSS selects on", () => {
-  it("validates, and is the 2.0 release with a breaking changelog entry", () => {
+  it("validates, and is the 2.0 line with its breaking changelog entry", () => {
     expect(validateManifest(MANIFEST)).toEqual([]);
-    expect(MANIFEST.version).toBe("2.0.0");
+    expect(MANIFEST.version).toBe("2.0.1");
+    const fix = (MANIFEST.changes ?? []).find((c) => c.version === "2.0.1");
+    expect(fix?.breaking).toBe(false);
+    expect(fix?.note).toContain("min-inline-size");
     const entry = (MANIFEST.changes ?? []).find((c) => c.version === "2.0.0");
     expect(entry, "stack 2.0 must record its own changelog entry").toBeDefined();
     expect(entry!.breaking).toBe(true);
@@ -446,6 +449,20 @@ describe("stack — responsive resolution against the shipped rules", () => {
       r.selectors.some((s) => s.startsWith('[data-ui="stack"] > [data-flex=')),
     );
     expect(childRules.map((r) => r.decls["flex"])).toEqual(["1", "auto", "none"]);
+  });
+
+  it("lets a growing child shrink below its content — min-inline-size: 0 (1.1F-16)", () => {
+    // The flex default `min-inline-size: auto` kept a `data-flex` child as wide
+    // as a table or an unbreakable id inside it, so the row overflowed its
+    // container instead of the content scrolling in its own box. `none` is
+    // content-sized on purpose and keeps the default.
+    const minOf = (flex: string) =>
+      RULES.find((r) => r.selectors.includes(`[data-ui="stack"] > [data-flex="${flex}"]`))!.decls[
+        "min-inline-size"
+      ];
+    expect(minOf("1")).toBe("0");
+    expect(minOf("auto")).toBe("0");
+    expect(minOf("none")).toBeUndefined();
   });
 
   it("aligns text logically — `right` is text-align: end, so it flips under RTL", () => {

@@ -360,22 +360,24 @@ describe("stats-dashboard — responsive behaviour", () => {
     const columnsAt = (width: number) =>
       resolve(rules, "grid", attrs, "grid-template-columns", width);
 
-    expect(columnsAt(390)).toBe("repeat(1, 1fr)");
+    expect(columnsAt(390)).toBe("repeat(1, minmax(0, 1fr))");
     // The 1.x range pair (max-width: 640px / min-width: 641px) matched neither
     // at 640.5px; the min-width canon leaves no such dead zone.
-    expect(columnsAt(640.5)).toBe("repeat(1, 1fr)");
-    expect(columnsAt(BREAKPOINTS.md.px)).toBe("repeat(2, 1fr)");
-    expect(columnsAt(BREAKPOINTS.lg.px)).toBe("repeat(4, 1fr)");
-    expect(columnsAt(1440)).toBe("repeat(4, 1fr)");
+    expect(columnsAt(640.5)).toBe("repeat(1, minmax(0, 1fr))");
+    expect(columnsAt(BREAKPOINTS.md.px)).toBe("repeat(2, minmax(0, 1fr))");
+    expect(columnsAt(BREAKPOINTS.lg.px)).toBe("repeat(4, minmax(0, 1fr))");
+    expect(columnsAt(1440)).toBe("repeat(4, minmax(0, 1fr))");
 
     // The support page's shorter ladder: 1 on a phone, 3 from md up.
     const support = componentsNamed("stats-dashboard")[1].parts["metrics"][0];
     const supportAttrs = Object.fromEntries(
       Object.entries(support.attrs).filter(([name]) => name.startsWith("data-cols")),
     );
-    expect(resolve(rules, "grid", supportAttrs, "grid-template-columns", 390)).toBe("repeat(1, 1fr)");
+    expect(resolve(rules, "grid", supportAttrs, "grid-template-columns", 390)).toBe(
+      "repeat(1, minmax(0, 1fr))",
+    );
     expect(resolve(rules, "grid", supportAttrs, "grid-template-columns", BREAKPOINTS.md.px)).toBe(
-      "repeat(3, 1fr)",
+      "repeat(3, minmax(0, 1fr))",
     );
   });
 

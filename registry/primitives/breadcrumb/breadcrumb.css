@@ -6,6 +6,9 @@
   font-family: var(--breadcrumb-font, var(--font-ui));
   font-size: var(--breadcrumb-size, var(--text-sm));
   color: var(--color-fg-muted);
+  /* A crumb that is one unbreakable token (an id, a slug) breaks instead of
+     widening the page; `anywhere` also lowers the list items' min-content. */
+  overflow-wrap: anywhere;
 }
 
 /* ── List ── */

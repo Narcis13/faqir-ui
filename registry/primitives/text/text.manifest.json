@@ -1,11 +1,16 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "text",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "kind": "primitive",
   "category": "typography",
   "description": "Text and heading primitives with size, color, weight, alignment, and truncation via data attributes",
   "changes": [
+    {
+      "version": "1.1.2",
+      "note": "Headings and data-variant=\"mono\" text set overflow-wrap: anywhere, so a heading or mono run that is one unbreakable token (an id, a hash, a path) breaks instead of widening its flex or grid parent past the page. anywhere rather than break-word, because only anywhere lowers the min-content width a parent sizes the element by. Text with ordinary break opportunities wraps where it always did. Inside a table cell the table's own wrapping applies instead (table 3.2.1). data-truncate is unchanged.",
+      "breaking": false
+    },
     {
       "version": "1.1.1",
       "note": "Keep visible subtle and completed text on the AA-gated muted foreground; color-fg-subtle remains reserved for decorative, placeholder, and disabled content.",

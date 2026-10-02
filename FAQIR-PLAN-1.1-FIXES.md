@@ -34,7 +34,9 @@ as was done with `state-1.0.json`).
   on this machine is 1.3.8, at `~/.bun/bin/bun`, which is not on the default PATH, so run
   `export PATH=$HOME/.bun/bin:$PATH` first. Sizes measured with it are about 0.3 KB higher
   than the 1.4.2 numbers recorded by 1.1F-01–04: after 1.1F-05, engine+controllers is
-  45.50/46 KB gzip, leaving about 0.5 KB for the rest of the plan. **But `bun run size` is
+  45.50/46 KB gzip, leaving about 0.5 KB for the rest of the plan. (A machine whose own Bun
+  is newer can get the pin without touching it: `npm i bun@1.3.8` in a scratch directory,
+  then put that `node_modules/.bin` first on PATH. 1.1F-16 ran that way.) **But `bun run size` is
   not the tightest gate.** `tests/build/core-package.test.ts` gzips the *packaged*
   `packages/core/dist/faqir-core.min.js` (IIFE wrapper + sourcemap comment) against the same
   47,104 B. That figure runs about 0.27 KB above `size`'s. After 1.1F-14 it is 47,095 B,
@@ -141,7 +143,7 @@ wait for document order. Task 1.1F-32 releases the additive set; its version is 
 | ID | Task | Entries | Class | Status |
 |----|------|---------|-------|--------|
 | 1.1F-15 | `gen:component-tokens` + registry gate: `tokens_used` and `@ui:tokens` derived from CSS | 17, 30 | patch | ✅ |
-| 1.1F-16 | Overflow: stack `min-inline-size`, grid `minmax(0,1fr)`, `overflow-wrap` on ids | 25, 26, 27 | patch | ⬜ |
+| 1.1F-16 | Overflow: stack `min-inline-size`, grid `minmax(0,1fr)`, `overflow-wrap` on ids | 25, 26, 27 | patch | ✅ |
 | 1.1F-17 | Button: `aria-pressed` state; link variant keeps its box under a size | 14, 24 | additive | ⬜ |
 | 1.1F-18 | Text: an anchor carrying `data-ui="text"` reads as a link | 28 | patch | ⬜ |
 | 1.1F-19 | `--mono-ligatures` token; every mono surface turns ligatures off | 12 | additive | ⬜ |
@@ -821,9 +823,9 @@ viewport. No registry reference page moves with any of these fixes.
   within 390px; a long-id table scrolls inside its box.
 
 **Acceptance**
-- [ ] Manifests: stack 2.0.1, grid 2.2.0, text/breadcrumb/table/description-list `changes`.
-- [ ] `build:registry-index`, `build:core-package` (pinned Bun), `check:docs`; reference-page baselines unchanged.
-- [ ] Downstream `indirect:` patches in stack/grid/text/breadcrumb/table/`faqir.bundle.css` can be dropped.
+- [x] Manifests: stack 2.0.1, grid 2.2.0, text/breadcrumb/table/description-list `changes`. (stack 2.0.1 and grid 2.2.0 as named. The other four each took a patch bump with their `changes` line, because `changes[].version` is the component's own version (the 1.1F-15 decision): text 1.1.2, breadcrumb 1.0.1, description-list 1.0.1, table 3.2.1. Breadcrumb and description-list had no `changes` array until now. Stylesheet assertions: `stack.test.ts` (`min-inline-size: 0` on `data-flex="1"` and `"auto"`, absent on `"none"`), `grid.test.ts` (no `repeat(N, 1fr)` left, exactly 30 `minmax(0, 1fr)` tracks; 13 expectations updated, plus 7 in `stats-dashboard.test.ts`, which resolves against `grid.css`), and new `tests/primitives/overflow-wrap.test.ts` (the three `anywhere` selectors, the table exception, the description-list template, the four manifests). The exception is `td` only, as written: header cells are `white-space: nowrap`, so nothing in a `th` can break, and a test pins that.)
+- [x] `build:registry-index`, `build:core-package` (pinned Bun), `check:docs`; reference-page baselines unchanged. (Regenerated in the documented order; `gen:component-tokens`, `build:manifest-api` and `gen:skill` wrote nothing. `cdn.json` re-hashed the 27 theme bundles and no engine file. All 13 `check:*` / `audit:registry` / `size` gates and `typecheck` green on Bun 1.3.8; `bun run test` 7,707 pass / 0 fail. Baselines: 250 captures (every component in the default theme, light, LTR and RTL at 1280px, plus the whole responsive matrix at 390/768/1280) were taken on the unfixed tree and compared after the fix on macOS Chromium: 250 identical. The canonical Linux-container run was not done in this session. New `tests/visual/wide-content.pw.ts`: the six fixtures above, plus a `data-flex="auto"` one, stay within 390px; a table of ids scrolls in its root with no id broken; and each fix is reverted by an injected override to prove the assertion fails without it. All 7 fixtures failed on the unfixed tree; 16 of 16 pass now. `narrow-fit`, `layout-lint`, `rhythm` and the other geometry specs: 76 pass.)
+- [x] Downstream `indirect:` patches in stack/grid/text/breadcrumb/table/`faqir.bundle.css` can be dropped. (Each patch `faqir_bugs.md` entries 25–27 describe is now upstream or superseded. Stack: `min-inline-size: 0` on both rules. Grid: the downstream item rule `> * { min-width: 0 }` is replaced by `minmax(0, 1fr)` tracks, which also survive `data-scroll`. Text and breadcrumb: the same `anywhere` on the same three selectors. Table: the downstream rule covered `th` and `td`; upstream covers `td`, and `th` cannot wrap. description-list's horizontal track is fixed as well, which the downstream had not patched.)
 
 ### 1.1F-17 · Button: `aria-pressed` state; link variant keeps its box under a size
 

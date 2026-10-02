@@ -52,7 +52,7 @@
 /* ── Variant: Horizontal ── */
 [data-ui="description-list"][data-variant="horizontal"] {
   display: grid;
-  grid-template-columns: minmax(8rem, auto) 1fr;
+  grid-template-columns: minmax(8rem, auto) minmax(0, 1fr);
   gap: var(--space-3) var(--space-6);
   align-items: baseline;
 }

@@ -98,9 +98,12 @@ function declaredAttributes(): Set<string> {
 // ── 1 · Completeness ─────────────────────────────────────────────────────────
 
 describe("grid — manifest declares everything the CSS selects on", () => {
-  it("validates as 2.1 while retaining the breaking 2.0 mobile-first entry", () => {
+  it("validates as 2.2 while retaining the breaking 2.0 mobile-first entry", () => {
     expect(validateManifest(MANIFEST)).toEqual([]);
-    expect(MANIFEST.version).toBe("2.1.0");
+    expect(MANIFEST.version).toBe("2.2.0");
+    const tracks = (MANIFEST.changes ?? []).find((c) => c.version === "2.2.0");
+    expect(tracks?.breaking).toBe(false);
+    expect(tracks?.note).toContain("minmax(0, 1fr)");
     const alignment = (MANIFEST.changes ?? []).find((c) => c.version === "2.1.0");
     expect(alignment?.breaking).toBe(false);
     expect(alignment?.note).toContain("data-align-rows");
@@ -240,15 +243,26 @@ describe("grid — manifest declares everything the CSS selects on", () => {
 describe("grid — responsive resolution against the shipped rules", () => {
   it("holds the unsuffixed base at every width — the forced collapse is gone", () => {
     for (const width of [PHONE, DEAD_ZONE, TABLET, DESKTOP]) {
-      expect(grid({ "data-cols": "4" }, "grid-template-columns", width)).toBe("repeat(4, 1fr)");
-      expect(grid({ "data-cols": "12" }, "grid-template-columns", width)).toBe("repeat(12, 1fr)");
+      expect(grid({ "data-cols": "4" }, "grid-template-columns", width)).toBe("repeat(4, minmax(0, 1fr))");
+      expect(grid({ "data-cols": "12" }, "grid-template-columns", width)).toBe("repeat(12, minmax(0, 1fr))");
     }
+  });
+
+  it("gives every fixed-count track a zero floor — no bare repeat(N, 1fr) (1.1F-16)", () => {
+    // `1fr` is `minmax(auto, 1fr)`: the track can never be narrower than its
+    // widest item's min-content, so one wide table widened the whole grid.
+    const rules = CSS.replace(/\/\*[^]*?\*\//g, "");
+    expect(rules).not.toMatch(/repeat\(\d+,\s*1fr\)/);
+    // Six counts on the base and on each of the four tiers.
+    expect([...rules.matchAll(/repeat\(\d+, minmax\(0, 1fr\)\)/g)].length).toBe(
+      6 * (TIERS.length + 1),
+    );
   });
 
   it("lands a 640.5px viewport in the sm tier — min-width floors leave no dead zone", () => {
     const attrs: ElementAttrs = { "data-cols": "1", "data-cols-sm": "2" };
-    expect(grid(attrs, "grid-template-columns", BREAKPOINTS.sm.px - 0.5)).toBe("repeat(1, 1fr)");
-    expect(grid(attrs, "grid-template-columns", DEAD_ZONE)).toBe("repeat(2, 1fr)");
+    expect(grid(attrs, "grid-template-columns", BREAKPOINTS.sm.px - 0.5)).toBe("repeat(1, minmax(0, 1fr))");
+    expect(grid(attrs, "grid-template-columns", DEAD_ZONE)).toBe("repeat(2, minmax(0, 1fr))");
   });
 
   it("resolves the mobile-first KPI ladder 1 → 2 → 4", () => {
@@ -257,19 +271,19 @@ describe("grid — responsive resolution against the shipped rules", () => {
       "data-cols-md": "2",
       "data-cols-lg": "4",
     };
-    expect(grid(attrs, "grid-template-columns", PHONE)).toBe("repeat(1, 1fr)");
-    expect(grid(attrs, "grid-template-columns", DEAD_ZONE)).toBe("repeat(1, 1fr)");
-    expect(grid(attrs, "grid-template-columns", BREAKPOINTS.md.px)).toBe("repeat(2, 1fr)");
-    expect(grid(attrs, "grid-template-columns", BREAKPOINTS.lg.px)).toBe("repeat(4, 1fr)");
-    expect(grid(attrs, "grid-template-columns", DESKTOP)).toBe("repeat(4, 1fr)");
+    expect(grid(attrs, "grid-template-columns", PHONE)).toBe("repeat(1, minmax(0, 1fr))");
+    expect(grid(attrs, "grid-template-columns", DEAD_ZONE)).toBe("repeat(1, minmax(0, 1fr))");
+    expect(grid(attrs, "grid-template-columns", BREAKPOINTS.md.px)).toBe("repeat(2, minmax(0, 1fr))");
+    expect(grid(attrs, "grid-template-columns", BREAKPOINTS.lg.px)).toBe("repeat(4, minmax(0, 1fr))");
+    expect(grid(attrs, "grid-template-columns", DESKTOP)).toBe("repeat(4, minmax(0, 1fr))");
   });
 
   it("lets each tier take over from the one below it", () => {
     const attrs: ElementAttrs = { "data-cols-sm": "2", "data-cols-lg": "6" };
     expect(grid(attrs, "grid-template-columns", PHONE)).toBeUndefined();
-    expect(grid(attrs, "grid-template-columns", BREAKPOINTS.sm.px)).toBe("repeat(2, 1fr)");
-    expect(grid(attrs, "grid-template-columns", BREAKPOINTS.lg.px)).toBe("repeat(6, 1fr)");
-    expect(grid(attrs, "grid-template-columns", DESKTOP)).toBe("repeat(6, 1fr)");
+    expect(grid(attrs, "grid-template-columns", BREAKPOINTS.sm.px)).toBe("repeat(2, minmax(0, 1fr))");
+    expect(grid(attrs, "grid-template-columns", BREAKPOINTS.lg.px)).toBe("repeat(6, minmax(0, 1fr))");
+    expect(grid(attrs, "grid-template-columns", DESKTOP)).toBe("repeat(6, minmax(0, 1fr))");
   });
 
   it("resolves identically against a deliberately re-ordered stylesheet", () => {
@@ -358,7 +372,7 @@ describe("grid — responsive resolution against the shipped rules", () => {
       expect(grid(attrs, "overflow-x", width)).toBe("visible");
     }
     // The columns still come from the cols vocabulary once the grid is back.
-    expect(grid(attrs, "grid-template-columns", DESKTOP)).toBe("repeat(4, 1fr)");
+    expect(grid(attrs, "grid-template-columns", DESKTOP)).toBe("repeat(4, minmax(0, 1fr))");
 
     // Children: a floor + snap alignment below sm, both released from sm up.
     const child = RULES.find(

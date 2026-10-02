@@ -1,12 +1,17 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "stack",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "kind": "primitive",
   "category": "layout",
   "description": "Flexbox layout container for vertical or horizontal stacking with configurable gap, alignment, justification and wrapping — every group responsive on the canon breakpoint tiers",
 
   "changes": [
+    {
+      "version": "2.0.1",
+      "note": "A data-flex=\"1\" or data-flex=\"auto\" child now sets min-inline-size: 0. The flex default (auto) kept a growing child at least as wide as its content, so a wide table or an unbreakable id inside it widened the whole row past its container; the child now takes the space it is given and the content scrolls or wraps in its own box. data-flex=\"none\" is content-sized by design and is unchanged. A child that relied on never being narrower than its content can set min-inline-size itself.",
+      "breaking": false
+    },
     {
       "version": "2.0.0",
       "note": "BREAKING: direction moves from data-variant to data-direction. data-variant=\"horizontal\" is a deprecated 0.x alias — it selects exactly the same CSS rules and keeps working through 0.x, and is removed in 1.0. The move is what makes direction responsive: the responsive grammar (data-<attr>-<tier>) may not suffix the five frozen protocol attributes, so data-variant-md could never exist. Migration: data-variant=\"horizontal\" → data-direction=\"horizontal\"; data-responsive (also deprecated, also removed in 1.0) → data-direction=\"vertical\" data-direction-sm=\"horizontal\", which reads mobile-first. The deprecated collapse no longer forces align-items: stretch below sm, so a stack that sets data-align keeps its alignment in the collapsed column. Newly declared, previously undeclared in the manifest but always present in the CSS: data-justify, data-wrap, data-align-text, child data-flex, gaps 10|12|16 and align baseline.",

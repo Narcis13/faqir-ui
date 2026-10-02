@@ -134,12 +134,17 @@
 }
 
 /* ── Child Flex ── */
+/* A growing child may also shrink below its content: the flex default
+   `min-inline-size: auto` kept it as wide as a table or an id inside it, and
+   the whole row overflowed instead of the content scrolling in its own box. */
 [data-ui="stack"] > [data-flex="1"] {
   flex: 1;
+  min-inline-size: 0;
 }
 
 [data-ui="stack"] > [data-flex="auto"] {
   flex: auto;
+  min-inline-size: 0;
 }
 
 [data-ui="stack"] > [data-flex="none"] {

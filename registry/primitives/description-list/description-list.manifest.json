@@ -1,10 +1,18 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "description-list",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "kind": "primitive",
   "category": "data-display",
   "description": "Styled description list (dl/dt/dd) for longer descriptive key-value content",
+
+  "changes": [
+    {
+      "version": "1.0.1",
+      "note": "The horizontal variant's details track is minmax(0, 1fr) instead of 1fr. A bare 1fr cannot be narrower than its widest item's min-content, so details holding a scrolling block or a wide table widened the list past its container. The term track keeps its minmax(8rem, auto) floor.",
+      "breaking": false
+    }
+  ],
 
   "anatomy": {
     "tag": "dl",

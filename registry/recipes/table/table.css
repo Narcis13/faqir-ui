@@ -119,6 +119,15 @@
   transition: background var(--duration-fast) var(--ease-default);
 }
 
+/* Text, headings and breadcrumbs break anywhere on their own, so an id never
+   widens a page. In a data cell that would let auto layout squeeze every
+   column to one character per line; here the cell's own wrapping applies, the
+   table keeps its width and scrolls in its root. Header cells need no such
+   rule: they are `white-space: nowrap`, so nothing in them breaks at all. */
+[data-ui="table"] [data-part="td"] :is([data-ui="text"], [data-ui="heading"], [data-ui="breadcrumb"]) {
+  overflow-wrap: inherit;
+}
+
 /* ── Checkbox Cell ── */
 [data-ui="table"] [data-part="checkbox"] {
   cursor: pointer;

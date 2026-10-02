@@ -14,6 +14,10 @@
      headings sets --heading-tracking once and every size follows, instead of
      each size having to re-derive its own number. */
   letter-spacing: calc(-0.01em + var(--heading-tracking));
+  /* A heading that is one unbreakable token (an id, a path) may break anywhere.
+     `anywhere`, not `break-word`: only it lowers the min-content width a flex
+     or grid parent sizes the heading by. */
+  overflow-wrap: anywhere;
 }
 
 [data-ui="heading"][data-size="1"] {
@@ -89,6 +93,8 @@
 /* Monospace variant */
 [data-ui="text"][data-variant="mono"] {
   font-family: var(--font-mono);
+  /* Mono text is where ids and hashes live; see the heading rule above. */
+  overflow-wrap: anywhere;
 }
 
 /* Truncate */

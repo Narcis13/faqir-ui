@@ -1,10 +1,18 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "breadcrumb",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "kind": "primitive",
   "category": "navigation",
   "description": "Breadcrumb trail — a <nav aria-label=\"Breadcrumb\"> with link items, presentational separators, and the current page marked aria-current=\"page\"",
+
+  "changes": [
+    {
+      "version": "1.0.1",
+      "note": "The root sets overflow-wrap: anywhere, so a crumb that is one unbreakable token (an id, a slug) breaks onto further lines instead of widening the page. Crumbs with ordinary break opportunities wrap where they always did. Inside a table cell the table's own wrapping applies instead (table 3.2.1).",
+      "breaking": false
+    }
+  ],
 
   "anatomy": {
     "tag": "nav",

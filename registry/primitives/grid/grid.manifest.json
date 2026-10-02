@@ -1,12 +1,17 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "grid",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "kind": "primitive",
   "category": "layout",
   "description": "CSS Grid container with configurable columns and gap — mobile-first responsive column tiers on the canon breakpoints, plus an intrinsic auto mode that needs no media query at all",
 
   "changes": [
+    {
+      "version": "2.2.0",
+      "note": "Every fixed-count track is now repeat(N, minmax(0, 1fr)) instead of repeat(N, 1fr), on the base and on all four tiers. A bare 1fr is minmax(auto, 1fr): its floor is the widest item's min-content, so one wide table or one unbreakable id widened the whole grid past its container. With a zero floor the columns are always equal shares of the space the grid has, and wide content scrolls or wraps inside its item. Layout change to expect: a column that used to grow to fit an unbreakable item now stays at its share, so that item overflows its cell unless it scrolls or wraps. data-cols=\"auto\" is unchanged (its floor is data-min), and so is data-scroll.",
+      "breaking": false
+    },
     {
       "version": "2.1.0",
       "note": "Added the declared data-align-rows mode for direct card children. Supporting engines make every card a four-row subgrid (header, divider, body, footer), aligning corresponding rows across each visual grid row even when one card carries extra content. Engines without subgrid take the documented correct fallback: every participating card spans the full grid width and retains its intrinsic card layout, trading density for truthful layout rather than leaving misaligned peers side by side.",

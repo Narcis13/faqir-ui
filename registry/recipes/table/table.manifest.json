@@ -1,11 +1,16 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "table",
-  "version": "3.2.0",
+  "version": "3.2.1",
   "kind": "recipe",
   "category": "data-display",
   "description": "Advanced data table: multi-column type-aware sorting, global + per-column filtering, tree data and collapsible row groups with live aggregates, inline cell editing with Intl number/currency formatting, drag-and-drop row and column reordering, column resize/hide/pin, sticky header/footer/rows, grid keyboard navigation, CSV export, responsive stacked mode, and state persistence — every feature opt-in via data attributes",
   "changes": [
+    {
+      "version": "3.2.1",
+      "note": "text, heading and breadcrumb components inside a data cell keep the cell's own wrapping (overflow-wrap: inherit). Those three now break anywhere by default so an unbreakable id cannot widen a page; in an auto-layout table that would squeeze every column to one character per line, so here an id stays on one line, the table keeps its width and scrolls inside its root. Header cells never wrapped (white-space: nowrap) and are unaffected. A data-resized table still breaks long words in its cells.",
+      "breaking": false
+    },
     {
       "version": "3.2.0",
       "note": "Behaviour change: a navigable table (data-navigable, or data-editable) now follows the ARIA grid pattern for links, buttons and fields inside its cells. They used to stay in the Tab order beside the grid's single roving stop, and arrow keys did nothing while one had focus. The controller now gives them tabindex=\"-1\" (re-checked on every refresh, so rows added later are covered; call refresh() after changing a cell's content in place). Enter or F2 on a cell with no editor or toggle focuses its first control, and Escape in that control returns focus to the cell. Focus landing on one of them (a pointer click) moves the Tab stop to its cell. The table's own controls stay in the Tab order: selection checkboxes, filter inputs, drag handles, expanders and row toggles. destroy() puts back each control's original tabindex. A table without data-navigable is unchanged.",
