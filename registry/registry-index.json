@@ -977,11 +977,11 @@
       "name": "alert-dialog",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.0.2",
+      "version": "1.0.3",
       "files": [
         {
           "path": "alert-dialog.css",
-          "sha256": "b664bd6f36706622f02c3d42fded35593c4b247f585a5a35b4b9d4be69cfe83d"
+          "sha256": "d1759998896060662849640530580fd72a083b706f90560fda93e151ad9b4547"
         },
         {
           "path": "alert-dialog.html",
@@ -993,10 +993,10 @@
         },
         {
           "path": "alert-dialog.manifest.json",
-          "sha256": "36618c4070289a29a9c8f88d4ee8dbb8fcbb2e1a2b29ae22c9640cce1a146fc7"
+          "sha256": "824b0f983cd3fcb93976e90096b3b7c8b21e8ac749ccdf59d42bee1e8474c6e9"
         }
       ],
-      "hash": "b537705da3cfef9940daedd06ae17eb130757519138387f1e0e92684286f2a16",
+      "hash": "c8962b23bec5f0bb183e4f4fbfeee73622692dfe653dbb9f03007633cf0432c7",
       "deps": [
         "button"
       ]
@@ -1057,11 +1057,11 @@
       "name": "carousel",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.1.1",
+      "version": "1.1.2",
       "files": [
         {
           "path": "carousel.css",
-          "sha256": "98d939b53df87b821e5068a6ef4012ba9dbd15a6f014b1b6821b458d66065003"
+          "sha256": "ffbe3432c74cdd5f00e0475488886772ca26f870d63e5c6a3eec8745b50cf62c"
         },
         {
           "path": "carousel.html",
@@ -1073,10 +1073,10 @@
         },
         {
           "path": "carousel.manifest.json",
-          "sha256": "3eb39eed78753392bee8864b96148749debdb9d1ecf08208f81540bbc7ca47ce"
+          "sha256": "bf67f7d9b3cb0e372526612a46913593c04418c60f3c3c19e008af08fe8d22ef"
         }
       ],
-      "hash": "73fe62ee60d1ae4639cd18a5340665ab28f60ab38e5f6d549b6f70daa3b0aa75",
+      "hash": "187d650d82deba5ffd4523b63c4ac99d1b39cea434e236af1114203d944458b0",
       "deps": []
     },
     {
@@ -1137,11 +1137,11 @@
       "name": "context-menu",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "files": [
         {
           "path": "context-menu.css",
-          "sha256": "209a1bad00b18a555d04f8f438238f6f2f7b18528e7fe5a633326dadc9e19fc1"
+          "sha256": "82b8f3c9ef84db6834f8273774781e505ee0c3d4ee8c9933ecdfe99c06969b6a"
         },
         {
           "path": "context-menu.html",
@@ -1153,10 +1153,10 @@
         },
         {
           "path": "context-menu.manifest.json",
-          "sha256": "a3994931227281b71159679e54a0fcca359146e06dff12776054be69c2b9867b"
+          "sha256": "125d6045cd5bc4d13789f58cb89af2dce96c26640dfe65eaf514d0e7cebba6e9"
         }
       ],
-      "hash": "6e98884d92e6a2c22f515a9447a5f5fff1fd277cf50474e28642310b58ba292e",
+      "hash": "f1d3660bf030e054d9c7ddc5f192477df7e65a6a072a1bee321d8fc6f4e9d27c",
       "deps": []
     },
     {
@@ -1192,11 +1192,11 @@
       "name": "dialog",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.0.2",
+      "version": "1.0.3",
       "files": [
         {
           "path": "dialog.css",
-          "sha256": "8f958cbc3ad415a796e16037eb18320a992c445fe1b2c6a89f17ac751ebf6a90"
+          "sha256": "fe537cfbd770bff3e0d723a8b3383c300b380f2aa343d93f97ac6469abe32bb3"
         },
         {
           "path": "dialog.html",
@@ -1208,10 +1208,10 @@
         },
         {
           "path": "dialog.manifest.json",
-          "sha256": "2a9a191e283921a950baeab2a6e5104fd90e2785004acc3be0a9cc9a1944f281"
+          "sha256": "43ce9248f24c85cc03f9ea6cb4c46cb5a198b7b8dfa0aaddf8d9bffb9a74e16f"
         }
       ],
-      "hash": "21456d6c9cf041c95246a7e0751f9b4b6c1e44e0a3903b4ddea444eadfb36fe5",
+      "hash": "45631587df3d421d3f5adf4c7f286c275a3ff5501073c0a9b552efab813b1ca4",
       "deps": [
         "button"
       ]
@@ -1220,11 +1220,11 @@
       "name": "drawer",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.0.2",
+      "version": "1.0.3",
       "files": [
         {
           "path": "drawer.css",
-          "sha256": "59d9aa64cd0ef4816d62af648b35989f9a10657d51523e206f4eb31871ccf113"
+          "sha256": "25ea35f8c878a29d84794230f4bf51034fd6b49341081a3941ab0b6cfe2c53ed"
         },
         {
           "path": "drawer.html",
@@ -1236,10 +1236,10 @@
         },
         {
           "path": "drawer.manifest.json",
-          "sha256": "1a91e6504b0eab403c2757b83b8d0c831eb21c3f03c58938c877f5cc05c5bb69"
+          "sha256": "d6aa588eb5a34258a3bec27e89887884b7992f60834ff9e5b45bef05fd5b9ea3"
         }
       ],
-      "hash": "ff8dd9f1f0b5a2e16c06de601abba233c7ef3c50f96fb4679d8aa57a91d28987",
+      "hash": "757109855dbdd9bd9c358af1a6d3b10aa57bcad62320ac2a28344693af225cc4",
       "deps": [
         "button"
       ]
@@ -1248,11 +1248,11 @@
       "name": "dropdown",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "files": [
         {
           "path": "dropdown.css",
-          "sha256": "20b4cfd16b2a19786f88e66ca9909e2161eb636af230624298e0ca54db890043"
+          "sha256": "676d7a2c24453368efd656d9038d45e3b4999e9a6bf2ca386671946e506f1c6d"
         },
         {
           "path": "dropdown.html",
@@ -1264,10 +1264,10 @@
         },
         {
           "path": "dropdown.manifest.json",
-          "sha256": "06323148a8750063139474f982aa7024dcc330877ff93d87320b9db299e520fb"
+          "sha256": "b07fea3e112cdc62c6df42cdff72a62ce6508b78fb50b0ea9d966ca6ecf85ef5"
         }
       ],
-      "hash": "1f5c469651fe2a806451adf373af69afa4d246508f6dc90efeaec32a3878500a",
+      "hash": "0ad787507c3038b1729e665b7fb5e5edf2d5f24f78924484e50f4cc8f42383e4",
       "deps": []
     },
     {
@@ -1326,11 +1326,11 @@
       "name": "menubar",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "files": [
         {
           "path": "menubar.css",
-          "sha256": "678cca5e632ac822a52543a4a06456a8c55abcd097ab2c132419120f7cd80801"
+          "sha256": "0417f3884465cf759e78aae10e296ce634b476a048d1ef6896ed69158f72854f"
         },
         {
           "path": "menubar.html",
@@ -1342,10 +1342,10 @@
         },
         {
           "path": "menubar.manifest.json",
-          "sha256": "a24d975f3f7a524c4f3a42ea045c0c9c185db5caad5386f7872ef8d1f801af61"
+          "sha256": "126cdfdcf5de95633d322dc4056c79568dac1964ec3e853356156ccf61928477"
         }
       ],
-      "hash": "b38a4aadaac50128b6b53477769ae02eff0879751fbaa1eee1a20e0a8b29783f",
+      "hash": "de3599b79e71ef2c23e008622f2c0f07bd4bb1f6be7576b2e096ba28f9c63eee",
       "deps": []
     },
     {
@@ -1380,11 +1380,11 @@
       "name": "popover",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "files": [
         {
           "path": "popover.css",
-          "sha256": "53b6ce73d3ef5d59bf6bf74588dd330d96822c739b2828a35a4717a205a67da3"
+          "sha256": "a7accb8644815146718c8e7174f97a00bf5f985a2570efe4430e179adecf3577"
         },
         {
           "path": "popover.html",
@@ -1396,10 +1396,10 @@
         },
         {
           "path": "popover.manifest.json",
-          "sha256": "eda409c8b473639ec0260f5b2256f9e394e7588b3535f5c0ae65189ff5c5b976"
+          "sha256": "ae41999166cfe86b9d3514eed9269d71d385eef113a78b9cdc26bc22c0a10d79"
         }
       ],
-      "hash": "077d26775250e8070ab07e76224bc5bd18722e5494ccfbcbde5458e94de15787",
+      "hash": "d5ed21656f3ecbc9e6c6f620d7143649aec8aac3d4f9c57dc6344549fbbef7c8",
       "deps": [
         "button"
       ]
@@ -1460,11 +1460,11 @@
       "name": "sheet",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.0.2",
+      "version": "1.0.3",
       "files": [
         {
           "path": "sheet.css",
-          "sha256": "dadd11fbb78551564f32c559e28cfc18ea3eeebca38f26db4ba8803517e13d6c"
+          "sha256": "8d316141445234d237da30f4a424665b8945d4cae6df10a2e49296b22c51281b"
         },
         {
           "path": "sheet.html",
@@ -1476,10 +1476,10 @@
         },
         {
           "path": "sheet.manifest.json",
-          "sha256": "3c061cd4b118c5e6adfff9acd7193461d92197e6ebacd82b044f8c8c5c4956c9"
+          "sha256": "8df74552a1ff20cdd130940d1b02d47ae361f7c651cce310801b9fca3f2eaac4"
         }
       ],
-      "hash": "911f1b8baad7a2d813d71e32d2e2ea1957d0474c6693754bd27668b00bb6b005",
+      "hash": "969d2dd00a1224fd2e91c8bf51f688976843cf954514330b8fdcf44be8a6bf56",
       "deps": [
         "button"
       ]
@@ -1488,11 +1488,11 @@
       "name": "sidebar",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.1.2",
+      "version": "1.1.3",
       "files": [
         {
           "path": "sidebar.css",
-          "sha256": "a899b589fc0ec3518091e01d5758d165779ed29aa29171e976ab35b799419740"
+          "sha256": "aad4b246fe5b6a6953480ab0530aa8f4bd165cc918dd5a23172dc51a38279a02"
         },
         {
           "path": "sidebar.html",
@@ -1504,10 +1504,10 @@
         },
         {
           "path": "sidebar.manifest.json",
-          "sha256": "4eba231d7d40c4e409c0644fa07b21f9d8acb6910a74623175f7aad199d622e2"
+          "sha256": "e08a583981d4a29363ff695e84a992444fd4df79ccdd22a8150aebd225cf2322"
         }
       ],
-      "hash": "f730f1ed87451e52b4fa9559e0e9e55e30c15da9992abd2994f767e5ad01a486",
+      "hash": "8a9d4e6eb4240eee89f8b9a711c0bc30d9d0e9213c24cffc351775af54b6ddf5",
       "deps": [
         "button",
         "badge",
@@ -1684,11 +1684,11 @@
       "name": "tooltip",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "files": [
         {
           "path": "tooltip.css",
-          "sha256": "c2853ce1ff29b5dae1be4a3276e504a39c17e9e75f89c3281c9ab6b22631ed8d"
+          "sha256": "5ce8602e0df666667dc17d976db18201fcd526623e350853a19cd9ec9c5979de"
         },
         {
           "path": "tooltip.html",
@@ -1700,10 +1700,10 @@
         },
         {
           "path": "tooltip.manifest.json",
-          "sha256": "238f86bdb0d72d08e61132037559eb1bf7507b0114f58ae0925e52eebb82ae87"
+          "sha256": "20ad664459bd57a17d302025cde3be0d0550a0da798b7646062e0dd224b2ca78"
         }
       ],
-      "hash": "b91f23809f403e9444d6874cbc260c35ae8f0cca9b191a8a412100ec34b04a8e",
+      "hash": "e387867c1f608d4e78541e804f2c30839137f098ef206434e80d6f0d7ef6ca6f",
       "deps": [
         "button"
       ]

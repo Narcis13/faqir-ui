@@ -921,8 +921,11 @@ describe("forced-open overlay previews", () => {
         expect(fragment).toMatch(new RegExp(`data-part="${part}"[^>]*hidden|hidden[^>]*data-part="${part}"`));
         // …and the display matches what the recipe lays the part out as, which
         // the reset's `[hidden] { display: none !important }` otherwise erases.
+        // The part must be the rule's subject — only attributes and
+        // pseudo-classes may follow it — not a `:where()` hop on the way to a
+        // child part (1.1F-21).
         const declared = new RegExp(
-          `\\[data-part="${part}"\\][^{]*\\{[^}]*?display:\\s*([a-z-]+)`,
+          `\\[data-part="${part}"\\](?:\\[[^\\]]*\\]|:[\\w-]+(?:\\([^)]*\\))?)*\\s*(?:,[^{]*)?\\{[^}]*?display:\\s*([a-z-]+)`,
         ).exec(css);
         expect(declared?.[1] ?? "block", `${name}/${part} display`).toBe(display);
       }

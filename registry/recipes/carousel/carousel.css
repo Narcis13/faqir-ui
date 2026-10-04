@@ -17,7 +17,7 @@
 }
 
 /* ── Viewport: the scroll-snap strip ── */
-[data-ui="carousel"] [data-part="viewport"] {
+[data-ui="carousel"] > [data-part="viewport"] {
   display: flex;
   gap: var(--space-3);
   inline-size: 100%;
@@ -34,17 +34,17 @@
   scrollbar-width: none;
 }
 
-[data-ui="carousel"] [data-part="viewport"]::-webkit-scrollbar {
+[data-ui="carousel"] > [data-part="viewport"]::-webkit-scrollbar {
   display: none;
 }
 
-[data-ui="carousel"] [data-part="viewport"]:focus-visible {
+[data-ui="carousel"] > [data-part="viewport"]:focus-visible {
   outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
   outline-offset: var(--focus-ring-offset);
 }
 
 /* ── Slide: one full-width snap target ── */
-[data-ui="carousel"] [data-part="slide"] {
+[data-ui="carousel"] > :where([data-part="viewport"]) > [data-part="slide"] {
   flex: 0 0 var(--carousel-slide-size, 100%);
   min-inline-size: 0;
   padding: var(--space-4);
@@ -57,20 +57,20 @@
 }
 
 /* ── Controls + dots: enhancement-only, `hidden` until the controller runs ── */
-[data-ui="carousel"] [data-part="controls"]:not([hidden]),
-[data-ui="carousel"] [data-part="dots"]:not([hidden]) {
+[data-ui="carousel"] > [data-part="controls"]:not([hidden]),
+[data-ui="carousel"] > [data-part="dots"]:not([hidden]) {
   display: flex;
   align-items: center;
   gap: var(--space-2);
 }
 
-[data-ui="carousel"] [data-part="dots"]:not([hidden]) {
+[data-ui="carousel"] > [data-part="dots"]:not([hidden]) {
   justify-content: center;
   gap: var(--space-1);
 }
 
-[data-ui="carousel"] [data-part="prev"],
-[data-ui="carousel"] [data-part="next"] {
+[data-ui="carousel"] > :where([data-part="controls"]) > [data-part="prev"],
+[data-ui="carousel"] > :where([data-part="controls"]) > [data-part="next"] {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -88,28 +88,28 @@
               color var(--duration-fast) var(--ease-default);
 }
 
-[data-ui="carousel"] [data-part="prev"]:hover:not(:disabled),
-[data-ui="carousel"] [data-part="next"]:hover:not(:disabled) {
+[data-ui="carousel"] > :where([data-part="controls"]) > [data-part="prev"]:hover:not(:disabled),
+[data-ui="carousel"] > :where([data-part="controls"]) > [data-part="next"]:hover:not(:disabled) {
   background: var(--color-bg-muted);
 }
 
-[data-ui="carousel"] [data-part="prev"]:focus-visible,
-[data-ui="carousel"] [data-part="next"]:focus-visible,
-[data-ui="carousel"] [data-part="dot"]:focus-visible {
+[data-ui="carousel"] > :where([data-part="controls"]) > [data-part="prev"]:focus-visible,
+[data-ui="carousel"] > :where([data-part="controls"]) > [data-part="next"]:focus-visible,
+[data-ui="carousel"] > :where([data-part="dots"]) > [data-part="dot"]:focus-visible {
   outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
   outline-offset: var(--focus-ring-offset);
 }
 
 /* Boundary contract "stop" — the controller disables the end button. */
-[data-ui="carousel"] [data-part="prev"]:disabled,
-[data-ui="carousel"] [data-part="next"]:disabled {
+[data-ui="carousel"] > :where([data-part="controls"]) > [data-part="prev"]:disabled,
+[data-ui="carousel"] > :where([data-part="controls"]) > [data-part="next"]:disabled {
   /* 0.4 at the 0.5 default, and a theme's `--disabled-opacity` moves it (1.1A-27). */
   opacity: calc(var(--disabled-opacity) * 0.8);
   cursor: not-allowed;
 }
 
 /* ── Dot: current-slide indicator and jump target ── */
-[data-ui="carousel"] [data-part="dot"] {
+[data-ui="carousel"] > :where([data-part="dots"]) > [data-part="dot"] {
   inline-size: 0.625rem;
   block-size: 0.625rem;
   padding: 0;
@@ -120,13 +120,13 @@
   transition: background var(--duration-fast) var(--ease-default);
 }
 
-[data-ui="carousel"] [data-part="dot"][data-state="active"] {
+[data-ui="carousel"] > :where([data-part="dots"]) > [data-part="dot"][data-state="active"] {
   border-color: var(--color-primary);
   background: var(--color-primary);
 }
 
 /* ── Status: the polite live region announcing "Slide 2 of 3" ── */
-[data-ui="carousel"] [data-part="status"] {
+[data-ui="carousel"] > [data-part="status"] {
   margin: 0;
   color: var(--color-fg-muted);
   font-size: var(--text-sm);
@@ -136,13 +136,13 @@
 /* ── Motion: reduced motion stops the animated snap-scroll; the controller
       additionally passes an explicit `behavior: "instant"`. ── */
 @media (prefers-reduced-motion: reduce) {
-  [data-ui="carousel"] [data-part="viewport"] {
+  [data-ui="carousel"] > [data-part="viewport"] {
     scroll-behavior: auto;
   }
 
-  [data-ui="carousel"] [data-part="prev"],
-  [data-ui="carousel"] [data-part="next"],
-  [data-ui="carousel"] [data-part="dot"] {
+  [data-ui="carousel"] > :where([data-part="controls"]) > [data-part="prev"],
+  [data-ui="carousel"] > :where([data-part="controls"]) > [data-part="next"],
+  [data-ui="carousel"] > :where([data-part="dots"]) > [data-part="dot"] {
     transition: none;
   }
 }

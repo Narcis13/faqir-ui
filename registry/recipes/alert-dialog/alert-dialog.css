@@ -7,7 +7,7 @@
 }
 
 /* ── Overlay (backdrop only — an alertdialog never dismisses on overlay click) ── */
-[data-ui="alert-dialog"] [data-part="overlay"] {
+[data-ui="alert-dialog"] > [data-part="overlay"] {
   position: fixed;
   inset: 0;
   z-index: var(--z-overlay);
@@ -16,16 +16,16 @@
   transition: opacity var(--duration-normal) var(--ease-default);
 }
 
-[data-ui="alert-dialog"][data-state="open"] [data-part="overlay"] {
+[data-ui="alert-dialog"][data-state="open"] > [data-part="overlay"] {
   opacity: 1;
 }
 
-[data-ui="alert-dialog"][data-state="closing"] [data-part="overlay"] {
+[data-ui="alert-dialog"][data-state="closing"] > [data-part="overlay"] {
   opacity: 0;
 }
 
 /* ── Panel ── */
-[data-ui="alert-dialog"] [data-part="panel"] {
+[data-ui="alert-dialog"] > [data-part="panel"] {
   position: fixed;
   z-index: var(--z-modal);
   top: 50%;
@@ -43,27 +43,27 @@
               transform var(--duration-normal) var(--ease-out);
 }
 
-[data-ui="alert-dialog"][data-state="open"] [data-part="panel"] {
+[data-ui="alert-dialog"][data-state="open"] > [data-part="panel"] {
   opacity: 1;
   transform: translate(-50%, -50%) scale(1);
 }
 
-[data-ui="alert-dialog"][data-state="closing"] [data-part="panel"] {
+[data-ui="alert-dialog"][data-state="closing"] > [data-part="panel"] {
   opacity: 0;
   transform: translate(-50%, -50%) scale(0.95);
 }
 
 /* ── Size Variants (alerts stay compact) ── */
-[data-ui="alert-dialog"] [data-part="panel"][data-size="sm"] {
+[data-ui="alert-dialog"] > [data-part="panel"][data-size="sm"] {
   max-width: 400px;
 }
 
-[data-ui="alert-dialog"] [data-part="panel"][data-size="md"] {
+[data-ui="alert-dialog"] > [data-part="panel"][data-size="md"] {
   max-width: 520px;
 }
 
 /* ── Tone Variant ── */
-[data-ui="alert-dialog"] [data-part="panel"][data-variant="destructive"] {
+[data-ui="alert-dialog"] > [data-part="panel"][data-variant="destructive"] {
   border-color: var(--color-destructive, oklch(0.55 0.22 25));
 }
 
@@ -72,14 +72,24 @@
    `dialog`'s danger variant already signalled tone this way; the two recipes now
    agree, and both stay readable (task 0.9-05, found by rendering the panel). */
 
-/* ── Header ── */
-[data-ui="alert-dialog"] [data-part="header"] {
+/* ── Header ──
+   Every part is reached from the root by child combinators, so a component in
+   the body keeps its own header, title and description (1.1F-21); the hops are
+   in :where(), so every rule keeps the weight it had. Beyond direct children:
+   the header, body and footer may sit in a <form> that is the panel's child (a
+   form dialog), and a title or description may sit in one plain div, stack or
+   cluster inside its section. */
+[data-ui="alert-dialog"] > :where([data-part="panel"]) > [data-part="header"],
+[data-ui="alert-dialog"] > :where([data-part="panel"]) > :where(form) > [data-part="header"] {
   padding: var(--space-6);
   padding-bottom: 0;
 }
 
 /* ── Title ── */
-[data-ui="alert-dialog"] [data-part="title"] {
+[data-ui="alert-dialog"] > :where([data-part="panel"]) > :where([data-part="header"]) > [data-part="title"],
+[data-ui="alert-dialog"] > :where([data-part="panel"]) > :where([data-part="header"]) > :where(div:not([data-ui]), [data-ui="stack"], [data-ui="cluster"]) > [data-part="title"],
+[data-ui="alert-dialog"] > :where([data-part="panel"]) > :where(form) > :where([data-part="header"]) > [data-part="title"],
+[data-ui="alert-dialog"] > :where([data-part="panel"]) > :where(form) > :where([data-part="header"]) > :where(div:not([data-ui]), [data-ui="stack"], [data-ui="cluster"]) > [data-part="title"] {
   margin: 0;
   font-family: var(--font-heading);
   font-size: var(--text-lg, 1.125rem);
@@ -88,13 +98,17 @@
 }
 
 /* ── Description / Body ── */
-[data-ui="alert-dialog"] [data-part="body"] {
+[data-ui="alert-dialog"] > :where([data-part="panel"]) > [data-part="body"],
+[data-ui="alert-dialog"] > :where([data-part="panel"]) > :where(form) > [data-part="body"] {
   padding: var(--space-6);
   padding-top: var(--space-2);
   color: var(--color-fg);
 }
 
-[data-ui="alert-dialog"] [data-part="description"] {
+[data-ui="alert-dialog"] > :where([data-part="panel"]) > :where([data-part="header"], [data-part="body"]) > [data-part="description"],
+[data-ui="alert-dialog"] > :where([data-part="panel"]) > :where([data-part="header"], [data-part="body"]) > :where(div:not([data-ui]), [data-ui="stack"], [data-ui="cluster"]) > [data-part="description"],
+[data-ui="alert-dialog"] > :where([data-part="panel"]) > :where(form) > :where([data-part="header"], [data-part="body"]) > [data-part="description"],
+[data-ui="alert-dialog"] > :where([data-part="panel"]) > :where(form) > :where([data-part="header"], [data-part="body"]) > :where(div:not([data-ui]), [data-ui="stack"], [data-ui="cluster"]) > [data-part="description"] {
   margin: 0;
   color: var(--color-fg-muted);
   font-size: var(--text-sm, 0.875rem);
@@ -102,7 +116,8 @@
 }
 
 /* ── Footer (actions — least-destructive first in the reading order) ── */
-[data-ui="alert-dialog"] [data-part="footer"] {
+[data-ui="alert-dialog"] > :where([data-part="panel"]) > [data-part="footer"],
+[data-ui="alert-dialog"] > :where([data-part="panel"]) > :where(form) > [data-part="footer"] {
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -113,8 +128,8 @@
 
 /* ── Motion ── */
 @media (prefers-reduced-motion: reduce) {
-  [data-ui="alert-dialog"] [data-part="overlay"],
-  [data-ui="alert-dialog"] [data-part="panel"] {
+  [data-ui="alert-dialog"] > [data-part="overlay"],
+  [data-ui="alert-dialog"] > [data-part="panel"] {
     transition: none;
   }
 }

@@ -1,11 +1,16 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "carousel",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "kind": "recipe",
   "category": "layout",
   "description": "Horizontally scrolling slide strip built on CSS scroll-snap, progressively enhanced with prev/next buttons, dot indicators and a polite live region",
   "changes": [
+    {
+      "version": "1.1.2",
+      "note": "Nested components keep their own parts. The stylesheet reached its parts with descendant selectors, so a component in a slide with a part of the same name (an inner carousel's viewport, dots and controls, any status) took the outer carousel's styles. Parts are now root > viewport > slide, root > controls > prev and next, root > dots > dot, root > status. Every part rule is now a child chain from the root, with the hops in :where(), so no rule changes specificity. No change for markup that follows the template.",
+      "breaking": false
+    },
     {
       "version": "1.1.1",
       "note": "Nested components keep their own parts. A carousel in a slide supplied the outer carousel's slides (it counted 4 instead of 2), its prev/next buttons, dots and status, and a click on its buttons moved both. Slides are now the viewport's direct children; prev, next, dots, status and the controls/dots containers go through the owner guard, and a click acts only on the carousel's own buttons.",

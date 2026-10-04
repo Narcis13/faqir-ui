@@ -31,7 +31,7 @@
    it to the flow. `visibility` rather than transform alone, so a closed drawer
    is neither painted outside the viewport nor reachable by tab: it used to be
    both. It is delayed off (not on) so the slide-out animation still plays. */
-[data-ui="sidebar"] [data-part="panel"] {
+[data-ui="sidebar"] > [data-part="panel"] {
   --sidebar-offscreen: -100%;
   position: fixed;
   inset-block: 0;
@@ -55,11 +55,11 @@
               visibility 0s linear var(--duration-slow);
 }
 
-[dir="rtl"] [data-ui="sidebar"] [data-part="panel"] {
+[dir="rtl"] [data-ui="sidebar"] > [data-part="panel"] {
   --sidebar-offscreen: 100%;
 }
 
-[data-ui="sidebar"][data-state="drawer-open"] [data-part="panel"] {
+[data-ui="sidebar"][data-state="drawer-open"] > [data-part="panel"] {
   transform: translateX(0);
   visibility: visible;
   transition: transform var(--duration-slow) var(--ease-out),
@@ -67,7 +67,7 @@
 }
 
 /* ── Header (brand + toggle) ── */
-[data-ui="sidebar"] [data-part="header"] {
+[data-ui="sidebar"] > :where([data-part="panel"]) > [data-part="header"] {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -76,7 +76,7 @@
   flex-shrink: 0;
 }
 
-[data-ui="sidebar"] [data-part="brand"] {
+[data-ui="sidebar"] > :where([data-part="panel"]) > :where([data-part="header"]) > [data-part="brand"] {
   display: inline-flex;
   align-items: center;
   gap: var(--space-3);
@@ -86,7 +86,7 @@
   text-decoration: none;
 }
 
-[data-ui="sidebar"] [data-part="brand-icon"] {
+[data-ui="sidebar"] > :where([data-part="panel"]) > :where([data-part="header"]) > :where([data-part="brand"]) > [data-part="brand-icon"] {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -96,14 +96,18 @@
   color: var(--color-primary);
 }
 
-[data-ui="sidebar"] [data-part="brand-label"] {
+[data-ui="sidebar"] > :where([data-part="panel"]) > :where([data-part="header"]) > :where([data-part="brand"]) > [data-part="brand-label"] {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* ── Toggle button ── */
-[data-ui="sidebar"] [data-part="trigger"] {
+/* ── Toggle button ──
+   In the panel's header, or the root's own child: a drawer that is off-canvas
+   is opened from outside its panel. Every part rule is a child chain (1.1F-21),
+   so a dropdown in the footer keeps its own trigger and items. */
+[data-ui="sidebar"] > [data-part="trigger"],
+[data-ui="sidebar"] > :where([data-part="panel"]) > :where([data-part="header"]) > [data-part="trigger"] {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -118,12 +122,14 @@
   cursor: pointer;
 }
 
-[data-ui="sidebar"] [data-part="trigger"]:hover {
+[data-ui="sidebar"] > [data-part="trigger"]:hover,
+[data-ui="sidebar"] > :where([data-part="panel"]) > :where([data-part="header"]) > [data-part="trigger"]:hover {
   background: var(--color-bg-muted, oklch(0.96 0.004 260));
   color: var(--color-fg);
 }
 
-[data-ui="sidebar"] [data-part="trigger"]:focus-visible {
+[data-ui="sidebar"] > [data-part="trigger"]:focus-visible,
+[data-ui="sidebar"] > :where([data-part="panel"]) > :where([data-part="header"]) > [data-part="trigger"]:focus-visible {
   outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
   outline-offset: var(--focus-ring-offset);
 }
@@ -133,16 +139,18 @@
    direction: it is written once and the state changes under it. Its
    accessible name stays "Toggle sidebar" in both states; `aria-expanded` says
    which way it goes (APG: an expanded-state button must not rename itself). */
-[data-ui="sidebar"] [data-part="trigger"] > :is(svg, [data-ui="icon"]) {
+[data-ui="sidebar"] > [data-part="trigger"] > :is(svg, [data-ui="icon"]),
+[data-ui="sidebar"] > :where([data-part="panel"]) > :where([data-part="header"]) > [data-part="trigger"] > :is(svg, [data-ui="icon"]) {
   transition: scale var(--duration-normal) var(--ease-default);
 }
 
-[data-ui="sidebar"][data-state="rail"] [data-part="trigger"] > :is(svg, [data-ui="icon"]) {
+[data-ui="sidebar"][data-state="rail"] > [data-part="trigger"] > :is(svg, [data-ui="icon"]),
+[data-ui="sidebar"][data-state="rail"] > :where([data-part="panel"]) > :where([data-part="header"]) > [data-part="trigger"] > :is(svg, [data-ui="icon"]) {
   scale: -1 1;
 }
 
 /* ── Navigation ── */
-[data-ui="sidebar"] [data-part="nav"] {
+[data-ui="sidebar"] > :where([data-part="panel"]) > [data-part="nav"] {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
@@ -151,7 +159,7 @@
   padding: var(--space-2) var(--space-3);
 }
 
-[data-ui="sidebar"] [data-part="item"] {
+[data-ui="sidebar"] > :where([data-part="panel"]) > :where([data-part="nav"], [data-part="footer"]) > [data-part="item"] {
   display: flex;
   align-items: center;
   gap: var(--space-3);
@@ -168,22 +176,22 @@
   cursor: pointer;
 }
 
-[data-ui="sidebar"] [data-part="item"]:hover {
+[data-ui="sidebar"] > :where([data-part="panel"]) > :where([data-part="nav"], [data-part="footer"]) > [data-part="item"]:hover {
   background: var(--color-bg-muted, oklch(0.96 0.004 260));
   color: var(--color-fg);
 }
 
-[data-ui="sidebar"] [data-part="item"]:focus-visible {
+[data-ui="sidebar"] > :where([data-part="panel"]) > :where([data-part="nav"], [data-part="footer"]) > [data-part="item"]:focus-visible {
   outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
   outline-offset: calc(-1 * var(--focus-ring-offset));
 }
 
-[data-ui="sidebar"] [data-part="item"][aria-current="page"] {
+[data-ui="sidebar"] > :where([data-part="panel"]) > :where([data-part="nav"], [data-part="footer"]) > [data-part="item"][aria-current="page"] {
   background: var(--color-primary-subtle, oklch(0.95 0.03 264 / 0.6));
   color: var(--color-primary);
 }
 
-[data-ui="sidebar"] [data-part="icon"] {
+[data-ui="sidebar"] > :where([data-part="panel"]) > :where([data-part="nav"], [data-part="footer"]) > :where([data-part="item"]) > [data-part="icon"] {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -192,47 +200,47 @@
   block-size: 1.25rem;
 }
 
-[data-ui="sidebar"] [data-part="label"] {
+[data-ui="sidebar"] > :where([data-part="panel"]) > :where([data-part="nav"], [data-part="footer"]) > :where([data-part="item"]) > [data-part="label"] {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 /* ── Footer ── */
-[data-ui="sidebar"] [data-part="footer"] {
+[data-ui="sidebar"] > :where([data-part="panel"]) > [data-part="footer"] {
   flex-shrink: 0;
   padding: var(--space-3) var(--space-4);
   border-block-start: var(--border-width) solid var(--color-border);
 }
 
 /* ── Rail (icons only) ── */
-[data-ui="sidebar"][data-state="rail"] [data-part="brand-label"],
-[data-ui="sidebar"][data-state="rail"] [data-part="label"] {
+[data-ui="sidebar"][data-state="rail"] > :where([data-part="panel"]) > :where([data-part="header"]) > :where([data-part="brand"]) > [data-part="brand-label"],
+[data-ui="sidebar"][data-state="rail"] > :where([data-part="panel"]) > :where([data-part="nav"], [data-part="footer"]) > :where([data-part="item"]) > [data-part="label"] {
   display: none;
 }
 
-[data-ui="sidebar"][data-state="rail"] [data-part="header"],
-[data-ui="sidebar"][data-state="rail"] [data-part="nav"],
-[data-ui="sidebar"][data-state="rail"] [data-part="footer"] {
+[data-ui="sidebar"][data-state="rail"] > :where([data-part="panel"]) > [data-part="header"],
+[data-ui="sidebar"][data-state="rail"] > :where([data-part="panel"]) > [data-part="nav"],
+[data-ui="sidebar"][data-state="rail"] > :where([data-part="panel"]) > [data-part="footer"] {
   padding-inline: var(--space-2);
 }
 
 /* The brand glyph (28px) and trigger (32px) cannot share one inline row inside
    the rail's 44px content box. Stack them so both stay fully reachable. */
-[data-ui="sidebar"][data-state="rail"] [data-part="header"] {
+[data-ui="sidebar"][data-state="rail"] > :where([data-part="panel"]) > [data-part="header"] {
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
 }
 
-[data-ui="sidebar"][data-state="rail"] [data-part="brand"],
-[data-ui="sidebar"][data-state="rail"] [data-part="item"] {
+[data-ui="sidebar"][data-state="rail"] > :where([data-part="panel"]) > :where([data-part="header"]) > [data-part="brand"],
+[data-ui="sidebar"][data-state="rail"] > :where([data-part="panel"]) > :where([data-part="nav"], [data-part="footer"]) > [data-part="item"] {
   justify-content: center;
   gap: 0;
 }
 
 /* ── Mobile drawer (off-canvas) ── */
-[data-ui="sidebar"] [data-part="overlay"] {
+[data-ui="sidebar"] > [data-part="overlay"] {
   position: fixed;
   inset: 0;
   z-index: var(--z-overlay);
@@ -241,7 +249,7 @@
   transition: opacity var(--duration-normal) var(--ease-default);
 }
 
-[data-ui="sidebar"][data-state="drawer-open"] [data-part="overlay"] {
+[data-ui="sidebar"][data-state="drawer-open"] > [data-part="overlay"] {
   opacity: 1;
 }
 
@@ -265,7 +273,7 @@
     inline-size: 0;
   }
 
-  [data-ui="sidebar"]:not([data-state="drawer"]):not([data-state="drawer-open"]) [data-part="panel"] {
+  [data-ui="sidebar"]:not([data-state="drawer"]):not([data-state="drawer-open"]) > [data-part="panel"] {
     position: sticky;
     inset-block-start: 0;
     inset-inline-start: auto;
@@ -279,7 +287,7 @@
     transition: transform var(--duration-slow) var(--ease-out);
   }
 
-  [data-ui="sidebar"]:not([data-state="drawer"]):not([data-state="drawer-open"]) [data-part="overlay"] {
+  [data-ui="sidebar"]:not([data-state="drawer"]):not([data-state="drawer-open"]) > [data-part="overlay"] {
     display: none;
   }
 }
@@ -287,9 +295,10 @@
 /* ── Motion ── */
 @media (prefers-reduced-motion: reduce) {
   [data-ui="sidebar"],
-  [data-ui="sidebar"] [data-part="panel"],
-  [data-ui="sidebar"] [data-part="overlay"],
-  [data-ui="sidebar"] [data-part="trigger"] > :is(svg, [data-ui="icon"]) {
+  [data-ui="sidebar"] > [data-part="panel"],
+  [data-ui="sidebar"] > [data-part="overlay"],
+  [data-ui="sidebar"] > [data-part="trigger"] > :is(svg, [data-ui="icon"]),
+  [data-ui="sidebar"] > :where([data-part="panel"]) > :where([data-part="header"]) > [data-part="trigger"] > :is(svg, [data-ui="icon"]) {
     transition: none;
   }
 }

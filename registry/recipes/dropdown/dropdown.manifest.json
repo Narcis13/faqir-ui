@@ -1,10 +1,17 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "dropdown",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "kind": "recipe",
   "category": "navigation",
   "description": "Dropdown menu with keyboard navigation and click-outside-to-close",
+  "changes": [
+    {
+      "version": "1.0.1",
+      "note": "Nested components keep their own parts. The stylesheet reached the trigger, menu and items with descendant selectors, so a component in a menu with parts of the same name (another dropdown, a popover's trigger) took this dropdown's styles and size. Parts are now root > trigger, root > menu > item and separator. Every part rule is now a child chain from the root, with the hops in :where(), so no rule changes specificity. No change for markup that follows the template.",
+      "breaking": false
+    }
+  ],
   "anatomy": {
     "tag": "div",
     "selector": "[data-ui='dropdown']",

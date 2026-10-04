@@ -191,9 +191,13 @@ describe("sidebar · trigger label stays stable", () => {
   it("the stylesheet mirrors the trigger glyph in rail only, with a reduced-motion fallback", () => {
     const css = readFileSync(join(import.meta.dir, "../../registry/recipes/sidebar/sidebar.css"), "utf8");
     const glyph = String.raw`\[data-part="trigger"\] > :is\(svg, \[data-ui="icon"\]\)`;
-    expect(css).toMatch(new RegExp(String.raw`\[data-ui="sidebar"\]\[data-state="rail"\] ${glyph} \{\s*scale: -1 1;`));
+    // The trigger is the root's child or in the panel's header (1.1F-21): both
+    // positions mirror, and neither reaches a nested component's trigger.
+    const inHeader = String.raw` > :where\(\[data-part="panel"\]\) > :where\(\[data-part="header"\]\)`;
+    const both = (root: string) => String.raw`${root} > ${glyph},\s*${root}${inHeader} > ${glyph}`;
+    expect(css).toMatch(new RegExp(both(String.raw`\[data-ui="sidebar"\]\[data-state="rail"\]`) + String.raw` \{\s*scale: -1 1;`));
     const reduced = css.slice(css.indexOf("@media (prefers-reduced-motion: reduce)"));
-    expect(reduced).toMatch(new RegExp(glyph + String.raw`[^{]*\{\s*transition: none;`));
+    expect(reduced).toMatch(new RegExp(both(String.raw`\[data-ui="sidebar"\]`) + String.raw`[^{]*\{\s*transition: none;`));
   });
 });
 

@@ -50,6 +50,18 @@ const CONVERTED = [
   ["primitives", "empty-state", "1.1.1"],
   // The pattern of the same name styles the same `[data-ui="empty-state"]`.
   ["patterns", "empty-state", "2.0.1"],
+  // 1.1F-21: overlays and menus.
+  ["recipes", "dialog", "1.0.3"],
+  ["recipes", "alert-dialog", "1.0.3"],
+  ["recipes", "drawer", "1.0.3"],
+  ["recipes", "sheet", "1.0.3"],
+  ["recipes", "popover", "1.0.2"],
+  ["recipes", "tooltip", "1.0.2"],
+  ["recipes", "sidebar", "1.1.3"],
+  ["recipes", "carousel", "1.1.2"],
+  ["recipes", "context-menu", "1.0.2"],
+  ["recipes", "dropdown", "1.0.1"],
+  ["recipes", "menubar", "1.0.1"],
 ] as const;
 
 const read = (kind: string, name: string, ext: string) =>
@@ -119,6 +131,7 @@ describe("part-selectors — the reader the gate is built on", () => {
         `[data-ui="a"][data-variant="pill"] > :where([data-part="list"]) > [data-part="trigger"][aria-selected="true"]:hover { }
          [data-ui="a"] > :where(div:not([data-ui])) > [data-part="term"]::after { }
          [data-ui="a"] > :where([data-part="item"]) > :where(h2, h3) > [data-part="trigger"] { }
+         [data-ui="a"] > :where([data-part="head"]) > :where(div:not([data-ui]), [data-ui="stack"]) > [data-part="title"] { }
          [data-ui="a"] [data-part="label"] { }
          [data-ui="a"] > [data-part="content"] p { }
          [data-ui="a"][open] { }`,
@@ -128,6 +141,7 @@ describe("part-selectors — the reader the gate is built on", () => {
       'ROOT > [data-part="list"] > [data-part="trigger"]',
       'ROOT > div:not([data-ui]) > [data-part="term"]',
       'ROOT > [data-part="item"] > :is(h2, h3) > [data-part="trigger"]',
+      'ROOT > [data-part="head"] > :is(div:not([data-ui]), [data-ui="stack"]) > [data-part="title"]',
       'ROOT [data-part="label"]',
     ]);
   });
@@ -194,10 +208,16 @@ describe("nesting, CSS — a component's part rules stop at its own parts", () =
         const roots = mountReference(kind, name);
         for (const root of roots) root.setAttribute("data-outer", "");
         const reached = new Set<Element>();
-        for (const path of partSkeletons(sheet, "[data-outer]")) {
+        const skeletons = partSkeletons(sheet, "[data-outer]");
+        for (const path of skeletons) {
           for (const el of box!.querySelectorAll(path)) reached.add(el);
         }
+        // Only the parts the sheet styles at all: a dialog's trigger is a
+        // `button` and an alert-dialog's cancel/confirm are styled by theirs.
+        const styled = new Set(skeletons.map((p) => /\[data-part="([^"]+)"\]$/.exec(p)![1]));
+        expect(styled.size).toBeGreaterThan(0);
         const orphans = [...box!.querySelectorAll("[data-part]")]
+          .filter((el) => styled.has(el.getAttribute("data-part")!))
           .filter((el) => !reached.has(el))
           .map((el) => `${el.tagName.toLowerCase()}[data-part="${el.getAttribute("data-part")}"]`);
         expect(box!.querySelectorAll("[data-part]").length).toBeGreaterThan(0);
@@ -262,6 +282,133 @@ describe("nesting, CSS — markup HTML and APG sanction beyond direct children",
   });
 });
 
+describe("nesting, CSS — overlay and menu shapes beyond direct children (1.1F-21)", () => {
+  const FAMILY = ["dialog", "alert-dialog", "drawer", "sheet"] as const;
+
+  it("the dialog family styles header, body and footer inside a <form> in the panel", () => {
+    // A form dialog: <div data-part="panel"><form> header body footer </form>.
+    for (const name of FAMILY) {
+      const sheet = read("recipes", name, "css");
+      const root = mount(
+        `<div data-ui="${name}"><div data-part="panel"><form>
+           <div data-part="header"><h2 data-part="title">Edit</h2></div>
+           <div data-part="body">…</div>
+           <div data-part="footer">…</div>
+         </form></div></div>`,
+      );
+      // A sheet has no footer part.
+      for (const part of ["header", "body", "title", ...(name === "sheet" ? [] : ["footer"])]) {
+        expect(reaches(sheet, root, root.querySelector(`[data-part="${part}"]`)!), `${name} ${part}`).toBe(true);
+      }
+      box!.remove();
+    }
+  });
+
+  it("…and a title in one plain div, stack or cluster inside the header", () => {
+    for (const name of FAMILY) {
+      const sheet = read("recipes", name, "css");
+      for (const wrapper of ["<div>", '<div data-ui="stack">', '<div data-ui="cluster">']) {
+        const root = mount(
+          `<div data-ui="${name}"><div data-part="panel"><div data-part="header">
+             ${wrapper}<span>In Backlog</span><h2 data-part="title">Fix login</h2></div>
+           </div></div></div>`,
+        );
+        expect(reaches(sheet, root, root.querySelector("h2")!), `${name} ${wrapper}`).toBe(true);
+        box!.remove();
+      }
+    }
+  });
+
+  it("…but not in a component that has parts of its own, nor two wrappers deep", () => {
+    for (const name of FAMILY) {
+      const sheet = read("recipes", name, "css");
+      for (const inner of [
+        '<div data-ui="card"><h3 data-part="title">Plan</h3></div>',
+        '<div data-ui="stack"><div data-ui="stack"><h3 data-part="title">Plan</h3></div></div>',
+      ]) {
+        const root = mount(
+          `<div data-ui="${name}"><div data-part="panel"><div data-part="header">${inner}</div></div></div>`,
+        );
+        expect(reaches(sheet, root, root.querySelector("h3")!), `${name} ${inner}`).toBe(false);
+        box!.remove();
+      }
+    }
+  });
+
+  it("dialog, drawer and sheet style a close button in the panel, or wrapped in the header or footer", () => {
+    for (const name of ["dialog", "drawer", "sheet"]) {
+      const sheet = read("recipes", name, "css");
+      for (const [where, html] of [
+        ["panel", `<button data-part="close">x</button>`],
+        ["cluster in header", `<div data-part="header"><div data-ui="cluster"><button data-part="close">x</button></div></div>`],
+        ["form footer", `<form><div data-part="footer"><button data-part="close">x</button></div></form>`],
+      ]) {
+        const root = mount(`<div data-ui="${name}"><div data-part="panel">${html}</div></div>`);
+        expect(reaches(sheet, root, root.querySelector("button")!), `${name}: ${where}`).toBe(true);
+        box!.remove();
+      }
+      // A popover's close in the body is the popover's.
+      const root = mount(
+        `<div data-ui="${name}"><div data-part="panel"><div data-part="body">
+           <div data-ui="popover"><div data-part="content"><button data-part="close">x</button></div></div>
+         </div></div></div>`,
+      );
+      expect(reaches(sheet, root, root.querySelector("button")!), name).toBe(false);
+      box!.remove();
+    }
+  });
+
+  it("sidebar styles a trigger outside the panel — an off-canvas drawer is opened from there", () => {
+    const sheet = read("recipes", "sidebar", "css");
+    const root = mount(
+      `<div data-ui="sidebar"><button data-part="trigger"><svg></svg></button><aside data-part="panel"></aside></div>`,
+    );
+    expect(reaches(sheet, root, root.querySelector("button")!)).toBe(true);
+  });
+
+  it("sidebar does not style a dropdown's trigger and items in its footer", () => {
+    const sheet = read("recipes", "sidebar", "css");
+    const root = mount(
+      `<div data-ui="sidebar"><aside data-part="panel"><div data-part="footer">
+         <div data-ui="dropdown"><button data-part="trigger">Me</button>
+           <div data-part="menu"><a data-part="item"><span data-part="label">Out</span></a></div></div>
+       </div></aside></div>`,
+    );
+    for (const el of root.querySelectorAll('[data-ui="dropdown"] [data-part]')) {
+      expect(reaches(sheet, root, el), el.getAttribute("data-part")!).toBe(false);
+    }
+  });
+
+  it("menubar styles a trigger, its submenu and items with or without a group", () => {
+    const sheet = read("recipes", "menubar", "css");
+    const pair = `<button data-part="trigger" role="menuitem" aria-disabled="true">File</button>
+      <div data-part="submenu" role="menu"><button data-part="item" role="menuitem">New</button><hr data-part="separator"></div>`;
+    for (const markup of [pair, `<div data-part="group">${pair}</div>`]) {
+      const root = mount(`<div data-ui="menubar">${markup}</div>`);
+      for (const el of root.querySelectorAll("[data-part]")) {
+        expect(reaches(sheet, root, el), `${el.getAttribute("data-part")} in ${markup.slice(0, 20)}`).toBe(true);
+      }
+      box!.remove();
+    }
+  });
+
+  it("menubar's disabled-menuitem rule stops at its own menuitems", () => {
+    const sheet = read("recipes", "menubar", "css");
+    const disabled = sheetSelectors(sheet)
+      .map((s) => s.selector)
+      .filter((s) => s.includes('[role="menuitem"][aria-disabled="true"]'));
+    expect(disabled.length).toBe(4);
+    const root = mount(
+      `<div data-ui="menubar"><div data-part="group"><div data-part="submenu">
+         <div data-ui="dropdown"><div data-part="menu"><button role="menuitem" aria-disabled="true">x</button></div></div>
+       </div></div></div>`,
+    );
+    const nested = root.querySelector("button")!;
+    expect(disabled.some((s) => nested.matches(s))).toBe(false);
+    for (const s of disabled) expect(specificity(s), s).toEqual([0, 3, 0]);
+  });
+});
+
 // ── the cascade does not move ────────────────────────────────────────────────
 
 describe("nesting, CSS — the conversion moves no rule in the cascade", () => {
@@ -288,7 +435,7 @@ describe("nesting, CSS — the conversion moves no rule in the cascade", () => {
     }
   });
 
-  it("gives a grouped or heading-wrapped part the same weight as a direct one", () => {
+  it("gives a grouped, wrapped or form-held part the same weight as a direct one", () => {
     for (const [kind, name, direct, wrapped] of [
       [
         "primitives",
@@ -301,6 +448,24 @@ describe("nesting, CSS — the conversion moves no rule in the cascade", () => {
         "key-value",
         '[data-ui="key-value"] > [data-part="label"]',
         '[data-ui="key-value"] > :where(div:not([data-ui])) > [data-part="label"]',
+      ],
+      [
+        "recipes",
+        "dialog",
+        '[data-ui="dialog"] > :where([data-part="panel"]) > :where([data-part="header"]) > [data-part="title"]',
+        '[data-ui="dialog"] > :where([data-part="panel"]) > :where(form) > :where([data-part="header"]) > :where(div:not([data-ui]), [data-ui="stack"], [data-ui="cluster"]) > [data-part="title"]',
+      ],
+      [
+        "recipes",
+        "sidebar",
+        '[data-ui="sidebar"] > [data-part="trigger"]',
+        '[data-ui="sidebar"] > :where([data-part="panel"]) > :where([data-part="header"]) > [data-part="trigger"]',
+      ],
+      [
+        "recipes",
+        "menubar",
+        '[data-ui="menubar"] > :where([data-part="submenu"]) > [data-part="item"]',
+        '[data-ui="menubar"] > :where([data-part="group"]) > :where([data-part="submenu"]) > [data-part="item"]',
       ],
       [
         "recipes",

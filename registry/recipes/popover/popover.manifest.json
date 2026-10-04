@@ -1,11 +1,16 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "popover",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "kind": "recipe",
   "category": "overlay",
   "description": "Content popup anchored to a trigger element with click toggle",
   "changes": [
+    {
+      "version": "1.0.2",
+      "note": "Nested components keep their own parts. The stylesheet reached the trigger, content and close button with descendant selectors, so a dropdown or dialog inside the content had its trigger styled as the popover's and its close button as the popover's. Parts are now root > trigger, root > content, root > content > close. Every part rule is now a child chain from the root, with the hops in :where(), so no rule changes specificity. No change for markup that follows the template.",
+      "breaking": false
+    },
     {
       "version": "1.0.1",
       "note": "Nested components keep their own parts. A close button belonging to a dialog or popover inside the content was bound as this popover's close, so closing the nested component closed the popover too. The close button now goes through the owner guard.",

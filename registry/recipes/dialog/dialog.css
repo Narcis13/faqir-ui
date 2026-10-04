@@ -7,7 +7,7 @@
 }
 
 /* ── Overlay ── */
-[data-ui="dialog"] [data-part="overlay"] {
+[data-ui="dialog"] > [data-part="overlay"] {
   position: fixed;
   inset: 0;
   z-index: var(--z-overlay);
@@ -16,16 +16,16 @@
   transition: opacity var(--duration-normal) var(--ease-default);
 }
 
-[data-ui="dialog"][data-state="open"] [data-part="overlay"] {
+[data-ui="dialog"][data-state="open"] > [data-part="overlay"] {
   opacity: 1;
 }
 
-[data-ui="dialog"][data-state="closing"] [data-part="overlay"] {
+[data-ui="dialog"][data-state="closing"] > [data-part="overlay"] {
   opacity: 0;
 }
 
 /* ── Panel ── */
-[data-ui="dialog"] [data-part="panel"] {
+[data-ui="dialog"] > [data-part="panel"] {
   position: fixed;
   z-index: var(--z-modal);
   top: 50%;
@@ -53,36 +53,36 @@
 }
 
 @supports ((-webkit-backdrop-filter: blur(1rem)) or (backdrop-filter: blur(1rem))) {
-  [data-ui="dialog"] [data-part="panel"] {
+  [data-ui="dialog"] > [data-part="panel"] {
     -webkit-backdrop-filter: var(--surface-backdrop);
     backdrop-filter: var(--surface-backdrop);
   }
 }
 
-[data-ui="dialog"][data-state="open"] [data-part="panel"] {
+[data-ui="dialog"][data-state="open"] > [data-part="panel"] {
   opacity: 1;
   transform: translate(-50%, -50%) scale(1);
 }
 
-[data-ui="dialog"][data-state="closing"] [data-part="panel"] {
+[data-ui="dialog"][data-state="closing"] > [data-part="panel"] {
   opacity: 0;
   transform: translate(-50%, -50%) scale(0.95);
 }
 
 /* ── Size Variants ── */
-[data-ui="dialog"] [data-part="panel"][data-size="sm"] {
+[data-ui="dialog"] > [data-part="panel"][data-size="sm"] {
   max-width: 400px;
 }
 
-[data-ui="dialog"] [data-part="panel"][data-size="md"] {
+[data-ui="dialog"] > [data-part="panel"][data-size="md"] {
   max-width: 520px;
 }
 
-[data-ui="dialog"] [data-part="panel"][data-size="lg"] {
+[data-ui="dialog"] > [data-part="panel"][data-size="lg"] {
   max-width: 680px;
 }
 
-[data-ui="dialog"] [data-part="panel"][data-size="full"] {
+[data-ui="dialog"] > [data-part="panel"][data-size="full"] {
   width: calc(100vw - var(--space-8));
   max-width: none;
   height: calc(100vh - var(--space-8));
@@ -91,12 +91,19 @@
 }
 
 /* ── Tone Variants ── */
-[data-ui="dialog"] [data-part="panel"][data-variant="danger"] {
+[data-ui="dialog"] > [data-part="panel"][data-variant="danger"] {
   border-color: var(--color-destructive, oklch(0.55 0.22 25));
 }
 
-/* ── Header ── */
-[data-ui="dialog"] [data-part="header"] {
+/* ── Header ──
+   Every part is reached from the root by child combinators, so a component in
+   the body keeps its own header, title and close (1.1F-21); the hops are in
+   :where(), so every rule keeps the weight it had. Beyond direct children: the
+   header, body and footer may sit in a <form> that is the panel's child (a form
+   dialog), and a title, description or close button may sit in one plain div,
+   stack or cluster inside its section. */
+[data-ui="dialog"] > :where([data-part="panel"]) > [data-part="header"],
+[data-ui="dialog"] > :where([data-part="panel"]) > :where(form) > [data-part="header"] {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -105,7 +112,10 @@
 }
 
 /* ── Title ── */
-[data-ui="dialog"] [data-part="title"] {
+[data-ui="dialog"] > :where([data-part="panel"]) > :where([data-part="header"]) > [data-part="title"],
+[data-ui="dialog"] > :where([data-part="panel"]) > :where([data-part="header"]) > :where(div:not([data-ui]), [data-ui="stack"], [data-ui="cluster"]) > [data-part="title"],
+[data-ui="dialog"] > :where([data-part="panel"]) > :where(form) > :where([data-part="header"]) > [data-part="title"],
+[data-ui="dialog"] > :where([data-part="panel"]) > :where(form) > :where([data-part="header"]) > :where(div:not([data-ui]), [data-ui="stack"], [data-ui="cluster"]) > [data-part="title"] {
   margin: 0;
   font-family: var(--font-heading);
   font-size: var(--text-lg, 1.125rem);
@@ -120,7 +130,11 @@
    `<button data-ui="button" data-part="close">Cancel</button>` and squashed it to
    a 32px borderless square — invisible for as long as the panel was, and the
    first thing the forced-open preview showed. */
-[data-ui="dialog"] [data-part="close"]:not([data-ui]) {
+[data-ui="dialog"] > :where([data-part="panel"]) > [data-part="close"]:not([data-ui]),
+[data-ui="dialog"] > :where([data-part="panel"]) > :where([data-part="header"], [data-part="footer"]) > [data-part="close"]:not([data-ui]),
+[data-ui="dialog"] > :where([data-part="panel"]) > :where([data-part="header"], [data-part="footer"]) > :where(div:not([data-ui]), [data-ui="stack"], [data-ui="cluster"]) > [data-part="close"]:not([data-ui]),
+[data-ui="dialog"] > :where([data-part="panel"]) > :where(form) > :where([data-part="header"], [data-part="footer"]) > [data-part="close"]:not([data-ui]),
+[data-ui="dialog"] > :where([data-part="panel"]) > :where(form) > :where([data-part="header"], [data-part="footer"]) > :where(div:not([data-ui]), [data-ui="stack"], [data-ui="cluster"]) > [data-part="close"]:not([data-ui]) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -136,31 +150,44 @@
   flex-shrink: 0;
 }
 
-[data-ui="dialog"] [data-part="close"]:not([data-ui]):hover {
+[data-ui="dialog"] > :where([data-part="panel"]) > [data-part="close"]:not([data-ui]):hover,
+[data-ui="dialog"] > :where([data-part="panel"]) > :where([data-part="header"], [data-part="footer"]) > [data-part="close"]:not([data-ui]):hover,
+[data-ui="dialog"] > :where([data-part="panel"]) > :where([data-part="header"], [data-part="footer"]) > :where(div:not([data-ui]), [data-ui="stack"], [data-ui="cluster"]) > [data-part="close"]:not([data-ui]):hover,
+[data-ui="dialog"] > :where([data-part="panel"]) > :where(form) > :where([data-part="header"], [data-part="footer"]) > [data-part="close"]:not([data-ui]):hover,
+[data-ui="dialog"] > :where([data-part="panel"]) > :where(form) > :where([data-part="header"], [data-part="footer"]) > :where(div:not([data-ui]), [data-ui="stack"], [data-ui="cluster"]) > [data-part="close"]:not([data-ui]):hover {
   background: var(--color-bg-muted, oklch(0.96 0.004 260));
   color: var(--color-fg);
 }
 
-[data-ui="dialog"] [data-part="close"]:not([data-ui]):focus-visible {
+[data-ui="dialog"] > :where([data-part="panel"]) > [data-part="close"]:not([data-ui]):focus-visible,
+[data-ui="dialog"] > :where([data-part="panel"]) > :where([data-part="header"], [data-part="footer"]) > [data-part="close"]:not([data-ui]):focus-visible,
+[data-ui="dialog"] > :where([data-part="panel"]) > :where([data-part="header"], [data-part="footer"]) > :where(div:not([data-ui]), [data-ui="stack"], [data-ui="cluster"]) > [data-part="close"]:not([data-ui]):focus-visible,
+[data-ui="dialog"] > :where([data-part="panel"]) > :where(form) > :where([data-part="header"], [data-part="footer"]) > [data-part="close"]:not([data-ui]):focus-visible,
+[data-ui="dialog"] > :where([data-part="panel"]) > :where(form) > :where([data-part="header"], [data-part="footer"]) > :where(div:not([data-ui]), [data-ui="stack"], [data-ui="cluster"]) > [data-part="close"]:not([data-ui]):focus-visible {
   outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
   outline-offset: var(--focus-ring-offset);
 }
 
 /* ── Description ── */
-[data-ui="dialog"] [data-part="description"] {
+[data-ui="dialog"] > :where([data-part="panel"]) > :where([data-part="header"], [data-part="body"]) > [data-part="description"],
+[data-ui="dialog"] > :where([data-part="panel"]) > :where([data-part="header"], [data-part="body"]) > :where(div:not([data-ui]), [data-ui="stack"], [data-ui="cluster"]) > [data-part="description"],
+[data-ui="dialog"] > :where([data-part="panel"]) > :where(form) > :where([data-part="header"], [data-part="body"]) > [data-part="description"],
+[data-ui="dialog"] > :where([data-part="panel"]) > :where(form) > :where([data-part="header"], [data-part="body"]) > :where(div:not([data-ui]), [data-ui="stack"], [data-ui="cluster"]) > [data-part="description"] {
   color: var(--color-fg-muted);
   font-size: var(--text-sm, 0.875rem);
   margin: 0;
 }
 
 /* ── Body ── */
-[data-ui="dialog"] [data-part="body"] {
+[data-ui="dialog"] > :where([data-part="panel"]) > [data-part="body"],
+[data-ui="dialog"] > :where([data-part="panel"]) > :where(form) > [data-part="body"] {
   padding: var(--space-6);
   color: var(--color-fg);
 }
 
 /* ── Footer ── */
-[data-ui="dialog"] [data-part="footer"] {
+[data-ui="dialog"] > :where([data-part="panel"]) > [data-part="footer"],
+[data-ui="dialog"] > :where([data-part="panel"]) > :where(form) > [data-part="footer"] {
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -171,8 +198,8 @@
 
 /* ── Motion ── */
 @media (prefers-reduced-motion: reduce) {
-  [data-ui="dialog"] [data-part="overlay"],
-  [data-ui="dialog"] [data-part="panel"] {
+  [data-ui="dialog"] > [data-part="overlay"],
+  [data-ui="dialog"] > [data-part="panel"] {
     transition: none;
   }
 }

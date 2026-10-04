@@ -6,7 +6,7 @@
   display: block;
 }
 
-[data-ui="context-menu"] [data-part="target"] {
+[data-ui="context-menu"] > [data-part="target"] {
   padding: var(--space-4);
   border: var(--space-px) dashed var(--color-border);
   border-radius: var(--radius-lg);
@@ -15,12 +15,12 @@
   font-family: var(--font-ui);
 }
 
-[data-ui="context-menu"] [data-part="target"]:focus-visible {
+[data-ui="context-menu"] > [data-part="target"]:focus-visible {
   outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
   outline-offset: var(--focus-ring-offset);
 }
 
-[data-ui="context-menu"] [data-part="menu"] {
+[data-ui="context-menu"] > [data-part="menu"] {
   position: fixed;
   z-index: var(--z-dropdown);
   min-inline-size: calc(var(--space-20) * 2);
@@ -35,12 +35,12 @@
               transform var(--duration-fast) var(--ease-out);
 }
 
-[data-ui="context-menu"][data-state="open"] [data-part="menu"] {
+[data-ui="context-menu"][data-state="open"] > [data-part="menu"] {
   opacity: 1;
   transform: translateY(0);
 }
 
-[data-ui="context-menu"] [data-part="item"] {
+[data-ui="context-menu"] > :where([data-part="menu"]) > [data-part="item"] {
   display: flex;
   align-items: center;
   inline-size: 100%;
@@ -59,8 +59,8 @@
               color var(--duration-fast) var(--ease-out);
 }
 
-[data-ui="context-menu"] [data-part="item"]:hover,
-[data-ui="context-menu"] [data-part="item"]:focus-visible {
+[data-ui="context-menu"] > :where([data-part="menu"]) > [data-part="item"]:hover,
+[data-ui="context-menu"] > :where([data-part="menu"]) > [data-part="item"]:focus-visible {
   background: var(--color-primary-subtle);
   color: var(--color-primary);
 }
@@ -72,19 +72,19 @@
    tint stays (it is the menu's active-item affordance, shared by both), and
    focus additionally draws the ring, inset so it does not overlap the item
    above. [W3-3] */
-[data-ui="context-menu"] [data-part="item"]:focus-visible {
+[data-ui="context-menu"] > :where([data-part="menu"]) > [data-part="item"]:focus-visible {
   outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
   outline-offset: calc(-1 * var(--focus-ring-offset));
 }
 
-[data-ui="context-menu"] [data-part="item"]:disabled,
-[data-ui="context-menu"] [data-part="item"][aria-disabled="true"] {
+[data-ui="context-menu"] > :where([data-part="menu"]) > [data-part="item"]:disabled,
+[data-ui="context-menu"] > :where([data-part="menu"]) > [data-part="item"][aria-disabled="true"] {
   color: var(--color-fg-muted);
   cursor: not-allowed;
   opacity: var(--disabled-opacity);
 }
 
-[data-ui="context-menu"] [data-part="separator"] {
+[data-ui="context-menu"] > :where([data-part="menu"]) > [data-part="separator"] {
   block-size: var(--space-px);
   margin: var(--space-1) 0;
   border: none;
@@ -92,8 +92,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  [data-ui="context-menu"] [data-part="menu"],
-  [data-ui="context-menu"] [data-part="item"] {
+  [data-ui="context-menu"] > [data-part="menu"],
+  [data-ui="context-menu"] > :where([data-part="menu"]) > [data-part="item"] {
     transition: none;
   }
 }

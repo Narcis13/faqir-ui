@@ -639,10 +639,10 @@ describe("shape & focus · recipes and patterns resolve to the same edge", () =>
       "border-bottom",
       "1px",
     ],
-    ["recipes/dialog/dialog.css", `[data-ui="dialog"] [data-part="panel"]`, "border", "1px"],
+    ["recipes/dialog/dialog.css", `[data-ui="dialog"] > [data-part="panel"]`, "border", "1px"],
     [
       "recipes/drawer/drawer.css",
-      `[data-ui="drawer"] [data-part="panel"][data-variant="left"]`,
+      `[data-ui="drawer"] > [data-part="panel"][data-variant="left"]`,
       "border-inline-end",
       "1px",
     ],
@@ -663,7 +663,7 @@ describe("shape & focus · recipes and patterns resolve to the same edge", () =>
     ["recipes/slider/slider.css", `[data-ui="slider"] [data-part="thumb"]`, "border", "2px"],
     [
       "recipes/sidebar/sidebar.css",
-      `[data-ui="sidebar"] [data-part="panel"]`,
+      `[data-ui="sidebar"] > [data-part="panel"]`,
       "border-inline-end",
       "1px",
     ],
@@ -755,7 +755,7 @@ describe("shape & focus · recipes and patterns resolve to the same edge", () =>
     // with a 1px ring while every other control had 2px. They are on the focus
     // family now — which is both why they match and why they are reachable.
     const RINGS = [
-      ["recipes/context-menu/context-menu.css", `[data-ui="context-menu"] [data-part="target"]:focus-visible`],
+      ["recipes/context-menu/context-menu.css", `[data-ui="context-menu"] > [data-part="target"]:focus-visible`],
       [
         "recipes/tree-view/tree-view.css",
         `[data-ui="tree-view"] [data-part="item"]:focus-visible > [data-part="label"]`,

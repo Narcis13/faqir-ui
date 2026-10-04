@@ -1,11 +1,16 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "tooltip",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "kind": "recipe",
   "category": "overlay",
   "description": "Informational popup shown on hover or focus of trigger element",
   "changes": [
+    {
+      "version": "1.0.2",
+      "note": "Nested components keep their own parts. The content rule was a descendant selector, so a component used as the trigger lost its own content part: a collapsible's content was positioned and hidden as the tooltip. It is now root > content. Every part rule is now a child chain from the root, with the hops in :where(), so no rule changes specificity. No change for markup that follows the template.",
+      "breaking": false
+    },
     {
       "version": "1.0.1",
       "note": "Nested components keep their own parts. When the trigger was itself a component with a content part (a collapsible, a popover), the tooltip took that content as its own and showed and hid it. The tooltip's content now goes through the owner guard.",

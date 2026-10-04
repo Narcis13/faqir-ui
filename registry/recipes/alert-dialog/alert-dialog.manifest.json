@@ -1,11 +1,16 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "alert-dialog",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "kind": "recipe",
   "category": "overlay",
   "description": "Interruptive confirmation dialog (role=alertdialog) for destructive or irreversible actions",
   "changes": [
+    {
+      "version": "1.0.3",
+      "note": "Nested components keep their own parts. The stylesheet reached every part with descendant selectors, so a component in the body with a title, description, header or footer of its own took the alert dialog's styles. Kept beyond direct children: the header, body and footer may be children of a <form> that is the panel's child (a form dialog); the title and description may sit in one plain div, stack or cluster inside its section (an eyebrow above the title). Every part rule is now a child chain from the root, with the hops in :where(), so no rule changes specificity. No change for markup that follows the template.",
+      "breaking": false
+    },
     {
       "version": "1.0.2",
       "note": "Nested components keep their own parts (shared dialog controller). Overlay and panel are taken as direct children, and the trigger and the close, confirm and cancel actions by owner, looking through layout primitives. A nested popover's close no longer closes or cancels the alert dialog, and initial focus goes to its own cancel or close action, never a nested component's.",
@@ -52,7 +57,7 @@
       "selector": "[data-part='panel']",
       "required": true,
       "tag_hint": "div",
-      "description": "The alert box; carries role=alertdialog and aria-modal"
+      "description": "The alert box; carries role=alertdialog and aria-modal. Its header, body and footer are its children, or children of a <form> that is (a form dialog)."
     },
     "header": {
       "selector": "[data-part='header']",
@@ -63,13 +68,13 @@
       "selector": "[data-part='title']",
       "required": true,
       "tag_hint": "h2",
-      "description": "Linked via aria-labelledby to the panel"
+      "description": "Linked via aria-labelledby to the panel. Sits in the header, directly or inside one plain div, stack or cluster (an eyebrow above the title)."
     },
     "description": {
       "selector": "[data-part='description']",
       "required": true,
       "tag_hint": "p",
-      "description": "The alert message; REQUIRED and linked via aria-describedby to the panel"
+      "description": "The alert message; REQUIRED and linked via aria-describedby to the panel. Sits in the header or the body, directly or inside one plain div, stack or cluster."
     },
     "body": {
       "selector": "[data-part='body']",

@@ -1,10 +1,17 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "menubar",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "kind": "recipe",
   "category": "navigation",
   "description": "Horizontal application menubar with roving focus and keyboard-operated submenus",
+  "changes": [
+    {
+      "version": "1.0.1",
+      "note": "Nested components keep their own parts. The stylesheet reached its parts with descendant selectors, so a dropdown or popover inside a submenu had its trigger and items restyled as the menubar's. Parts are now root > group > trigger and submenu > item and separator; the group is optional, so a trigger and its submenu may also be the root's own children. The disabled-menuitem rule reaches the same positions. Every part rule is now a child chain from the root, with the hops in :where(), so no rule changes specificity. No change for markup that follows the template.",
+      "breaking": false
+    }
+  ],
   "anatomy": {
     "tag": "div",
     "selector": "[data-ui='menubar']",
@@ -15,7 +22,7 @@
       "selector": "[data-part='group']",
       "required": false,
       "tag_hint": "div",
-      "description": "Role-none structural wrapper pairing a parent menuitem with its submenu"
+      "description": "Role-none structural wrapper pairing a parent menuitem with its submenu. Without it, the trigger and its submenu are the menubar's own children."
     },
     "trigger": {
       "selector": "[data-part='trigger']",

@@ -192,7 +192,8 @@ export function specificity(selector: string): [number, number, number] {
 /**
  * What a compound requires structurally: its part, or else its tag. A
  * `:not([data-ui])` is structural too — it says "no component starts here" —
- * so it is kept; every other condition is state and is dropped.
+ * so it is kept, and so is a `[data-ui="stack"]` hop, which says which one may;
+ * every other condition is state and is dropped.
  */
 function core(compound: string): string {
   const fns = functionalArgs(compound);
@@ -204,8 +205,10 @@ function core(compound: string): string {
   }
   const part = /\[data-part="[^"]*"\]/.exec(compound);
   if (part) return part[0];
-  const tag = /^[a-zA-Z][\w-]*/.exec(compound)?.[0] ?? "*";
-  return tag + (fns.some((f) => f.name === "not" && f.arg === "[data-ui]") ? ":not([data-ui])" : "");
+  const tag = /^[a-zA-Z][\w-]*/.exec(compound)?.[0];
+  const ui = /\[data-ui="[^"]*"\]/.exec(compound)?.[0];
+  if (ui) return (tag ?? "") + ui;
+  return (tag ?? "*") + (fns.some((f) => f.name === "not" && f.arg === "[data-ui]") ? ":not([data-ui])" : "");
 }
 
 /**

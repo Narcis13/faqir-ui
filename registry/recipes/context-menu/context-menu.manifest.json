@@ -1,11 +1,16 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "context-menu",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "kind": "recipe",
   "category": "navigation",
   "description": "Context menu opened at the pointer or from the keyboard with complete menu navigation",
   "changes": [
+    {
+      "version": "1.0.2",
+      "note": "Nested components keep their own parts. The stylesheet reached the menu and its items with descendant selectors, so a dropdown inside the target had its menu fixed to the viewport as the context menu's and its items restyled. Parts are now root > target, root > menu > item and separator. Every part rule is now a child chain from the root, with the hops in :where(), so no rule changes specificity. No change for markup that follows the template.",
+      "breaking": false
+    },
     {
       "version": "1.0.1",
       "note": "Nested components keep their own parts. The target and menu are matched by owner, looking through layout primitives, so a dropdown inside the target is no longer taken for the context menu's menu.",

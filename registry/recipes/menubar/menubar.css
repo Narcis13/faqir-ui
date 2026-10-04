@@ -20,12 +20,17 @@
   font-family: var(--font-ui);
 }
 
-[data-ui="menubar"] [data-part="group"] {
+/* Parts are child chains (1.1F-21), so a dropdown in a submenu keeps its own
+   trigger and items. The group is optional: a trigger and its submenu may be
+   the menubar's own children, and every trigger and item rule reaches both. */
+[data-ui="menubar"] > [data-part="group"] {
   position: relative;
 }
 
-[data-ui="menubar"] [data-part="trigger"],
-[data-ui="menubar"] [data-part="item"] {
+[data-ui="menubar"] > [data-part="trigger"],
+[data-ui="menubar"] > :where([data-part="group"]) > [data-part="trigger"],
+[data-ui="menubar"] > :where([data-part="submenu"]) > [data-part="item"],
+[data-ui="menubar"] > :where([data-part="group"]) > :where([data-part="submenu"]) > [data-part="item"] {
   display: flex;
   align-items: center;
   gap: var(--space-2);
@@ -41,28 +46,37 @@
               color var(--duration-fast) var(--ease-out);
 }
 
-[data-ui="menubar"] [data-part="trigger"] {
+[data-ui="menubar"] > [data-part="trigger"],
+[data-ui="menubar"] > :where([data-part="group"]) > [data-part="trigger"] {
   padding: var(--space-2) var(--space-3);
   font-weight: var(--weight-medium);
   white-space: nowrap;
 }
 
-[data-ui="menubar"] [data-part="trigger"]:hover,
-[data-ui="menubar"] [data-part="trigger"]:focus-visible,
-[data-ui="menubar"] [data-part="trigger"][aria-expanded="true"],
-[data-ui="menubar"] [data-part="item"]:hover,
-[data-ui="menubar"] [data-part="item"]:focus-visible {
+[data-ui="menubar"] > [data-part="trigger"]:hover,
+[data-ui="menubar"] > :where([data-part="group"]) > [data-part="trigger"]:hover,
+[data-ui="menubar"] > [data-part="trigger"]:focus-visible,
+[data-ui="menubar"] > :where([data-part="group"]) > [data-part="trigger"]:focus-visible,
+[data-ui="menubar"] > [data-part="trigger"][aria-expanded="true"],
+[data-ui="menubar"] > :where([data-part="group"]) > [data-part="trigger"][aria-expanded="true"],
+[data-ui="menubar"] > :where([data-part="submenu"]) > [data-part="item"]:hover,
+[data-ui="menubar"] > :where([data-part="group"]) > :where([data-part="submenu"]) > [data-part="item"]:hover,
+[data-ui="menubar"] > :where([data-part="submenu"]) > [data-part="item"]:focus-visible,
+[data-ui="menubar"] > :where([data-part="group"]) > :where([data-part="submenu"]) > [data-part="item"]:focus-visible {
   background: var(--color-primary-subtle);
   color: var(--color-primary);
   outline: none;
 }
 
-[data-ui="menubar"] [data-part="trigger"]:focus-visible,
-[data-ui="menubar"] [data-part="item"]:focus-visible {
+[data-ui="menubar"] > [data-part="trigger"]:focus-visible,
+[data-ui="menubar"] > :where([data-part="group"]) > [data-part="trigger"]:focus-visible,
+[data-ui="menubar"] > :where([data-part="submenu"]) > [data-part="item"]:focus-visible,
+[data-ui="menubar"] > :where([data-part="group"]) > :where([data-part="submenu"]) > [data-part="item"]:focus-visible {
   box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
 }
 
-[data-ui="menubar"] [data-part="submenu"] {
+[data-ui="menubar"] > [data-part="submenu"],
+[data-ui="menubar"] > :where([data-part="group"]) > [data-part="submenu"] {
   position: absolute;
   inset-block-start: 100%;
   inset-inline-start: 0;
@@ -80,18 +94,23 @@
               transform var(--duration-fast) var(--ease-out);
 }
 
-[data-ui="menubar"] [data-part="submenu"]:not([hidden]) {
+[data-ui="menubar"] > [data-part="submenu"]:not([hidden]),
+[data-ui="menubar"] > :where([data-part="group"]) > [data-part="submenu"]:not([hidden]) {
   opacity: 1;
   transform: translateY(0);
 }
 
-[data-ui="menubar"] [data-part="item"] {
+[data-ui="menubar"] > :where([data-part="submenu"]) > [data-part="item"],
+[data-ui="menubar"] > :where([data-part="group"]) > :where([data-part="submenu"]) > [data-part="item"] {
   inline-size: 100%;
   padding: var(--space-2) var(--space-3);
   white-space: nowrap;
 }
 
-[data-ui="menubar"] [role="menuitem"][aria-disabled="true"] {
+[data-ui="menubar"] > [role="menuitem"][aria-disabled="true"],
+[data-ui="menubar"] > :where([data-part="group"]) > [role="menuitem"][aria-disabled="true"],
+[data-ui="menubar"] > :where([data-part="submenu"]) > [role="menuitem"][aria-disabled="true"],
+[data-ui="menubar"] > :where([data-part="group"]) > :where([data-part="submenu"]) > [role="menuitem"][aria-disabled="true"] {
   color: var(--color-fg-muted);
   cursor: not-allowed;
   /* 0.6 at the 0.5 default — lighter than a control, since the muted colour
@@ -100,29 +119,37 @@
   opacity: calc(var(--disabled-opacity) * 1.2);
 }
 
-[data-ui="menubar"] [data-part="separator"] {
+[data-ui="menubar"] > :where([data-part="submenu"]) > [data-part="separator"],
+[data-ui="menubar"] > :where([data-part="group"]) > :where([data-part="submenu"]) > [data-part="separator"] {
   block-size: var(--space-px);
   margin: var(--space-1) 0;
   border: none;
   background: var(--color-border);
 }
 
-[data-ui="menubar"][data-size="sm"] [data-part="trigger"],
-[data-ui="menubar"][data-size="sm"] [data-part="item"] {
+[data-ui="menubar"][data-size="sm"] > [data-part="trigger"],
+[data-ui="menubar"][data-size="sm"] > :where([data-part="group"]) > [data-part="trigger"],
+[data-ui="menubar"][data-size="sm"] > :where([data-part="submenu"]) > [data-part="item"],
+[data-ui="menubar"][data-size="sm"] > :where([data-part="group"]) > :where([data-part="submenu"]) > [data-part="item"] {
   padding: var(--space-1) var(--space-2);
   font-size: var(--text-xs);
 }
 
-[data-ui="menubar"][data-size="lg"] [data-part="trigger"],
-[data-ui="menubar"][data-size="lg"] [data-part="item"] {
+[data-ui="menubar"][data-size="lg"] > [data-part="trigger"],
+[data-ui="menubar"][data-size="lg"] > :where([data-part="group"]) > [data-part="trigger"],
+[data-ui="menubar"][data-size="lg"] > :where([data-part="submenu"]) > [data-part="item"],
+[data-ui="menubar"][data-size="lg"] > :where([data-part="group"]) > :where([data-part="submenu"]) > [data-part="item"] {
   padding: var(--space-3) var(--space-4);
   font-size: var(--text-base);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  [data-ui="menubar"] [data-part="trigger"],
-  [data-ui="menubar"] [data-part="item"],
-  [data-ui="menubar"] [data-part="submenu"] {
+  [data-ui="menubar"] > [data-part="trigger"],
+  [data-ui="menubar"] > :where([data-part="group"]) > [data-part="trigger"],
+  [data-ui="menubar"] > :where([data-part="submenu"]) > [data-part="item"],
+  [data-ui="menubar"] > :where([data-part="group"]) > :where([data-part="submenu"]) > [data-part="item"],
+  [data-ui="menubar"] > [data-part="submenu"],
+  [data-ui="menubar"] > :where([data-part="group"]) > [data-part="submenu"] {
     transition: none;
   }
 }

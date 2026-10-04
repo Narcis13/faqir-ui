@@ -1,11 +1,16 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "sidebar",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "kind": "recipe",
   "category": "navigation",
   "description": "Collapsible application sidebar with three modes — expanded, rail (icons only), and a mobile off-canvas drawer — switched responsively and toggled from the keyboard",
   "changes": [
+    {
+      "version": "1.1.3",
+      "note": "Nested components keep their own parts. The stylesheet reached every part with descendant selectors, so a dropdown in the footer had its trigger styled as the sidebar toggle and its items as nav entries, and rail mode hid every label below the root. Parts are now root > panel > header / nav / footer, header > brand and trigger, nav or footer > item > icon and label. The trigger may also be the root's own child: a drawer that is off-canvas is opened from outside its panel. The rail chevron rule follows the trigger. Every part rule is now a child chain from the root, with the hops in :where(), so no rule changes specificity. No change for markup that follows the template.",
+      "breaking": false
+    },
     {
       "version": "1.1.2",
       "note": "Only the sidebar's own triggers toggle it. The controller took every [data-part=\"trigger\"] inside the root, so a dropdown in the footer had its aria-expanded overwritten on every render and its click put the sidebar in rail. Triggers are now matched by owner, looking through layout primitives, and overlay and panel are taken as direct children.",
@@ -68,7 +73,7 @@
       "selector": "[data-part='trigger']",
       "required": false,
       "tag_hint": "button",
-      "description": "Toggle button inside the panel. Give it one stable aria-label (\"Toggle sidebar\") — its aria-expanded tracks the live state, and a button with aria-expanded must not change its name. Author its glyph (an svg or data-ui=\"icon\" child) pointing inline-start, at the collapse; the stylesheet mirrors it in rail. External buttons may also target the sidebar via data-sidebar-toggle=\"{id}\""
+      "description": "Toggle button, in the panel's header or as the root's own child (outside the panel, so an off-canvas drawer can be opened). Give it one stable aria-label (\"Toggle sidebar\") — its aria-expanded tracks the live state, and a button with aria-expanded must not change its name. Author its glyph (an svg or data-ui=\"icon\" child) pointing inline-start, at the collapse; the stylesheet mirrors it in rail. External buttons may also target the sidebar via data-sidebar-toggle=\"{id}\"."
     },
     "nav": {
       "selector": "[data-part='nav']",

@@ -2,7 +2,7 @@
   "$schema": "./state.schema.md",
   "plan": "FAQIR-PLAN-1.1-FIXES.md",
   "current": null,
-  "last_completed": "1.1F-20",
+  "last_completed": "1.1F-21",
   "history": [
     {
       "id": "1.1F-01",
@@ -123,6 +123,12 @@
       "completed": "2026-10-03",
       "commit": "be264d7",
       "summary": "Nesting, CSS I. 149 part rules in nine stylesheets reach their parts by child combinators, with the hops in `:where()` so no rule changes specificity (script-checked against HEAD: same declarations, same specificity, every selector flattens back to one old one): tabs (root > list > trigger, root > panel), collapsible, accordion (root > item > trigger > icon; a trigger may sit in a heading, the APG shape), description-list and key-value (direct child, or a pair grouped in a plain `<div>`: `:where(div:not([data-ui]))`), progress, callout (the `content p` rule stays descendant), empty-state — the primitive and, beyond the Touches, the pattern of the same name. Manifests: tabs 1.0.2, collapsible 1.0.1, accordion 1.0.2, description-list 1.0.2 (D6 note on the `details` slot: a variant has no prose field), progress 1.1.1, key-value 1.0.1, callout 1.2.1, empty-state 1.1.1 / 2.0.1. Tests: tests/helpers/part-selectors.ts + tests/registry/nesting-css.test.ts (39 cases, 23 red on the old tree; later nesting tasks add a row to CONVERTED), tests/visual/nesting.pw.ts (22 Chromium cases, 8 red on the old stylesheets). 1,554 reference captures compared with HEAD at zero tolerance on macOS Chromium: 1,398 identical; the 156 crud-table/search-results captures carry spinner noise at HEAD too. Follow-up 1.1F-39: the other 13 pattern stylesheets are in no nesting task. No engine change. Ran on Bun 1.3.8 via `npm i bun@1.3.8`. 7,857 pass / 0 fail."
+    },
+    {
+      "id": "1.1F-21",
+      "completed": "2026-10-04",
+      "commit": "PENDING",
+      "summary": "Nesting, CSS II. 244 rules in eleven stylesheets (dialog, alert-dialog, drawer, sheet, popover, tooltip, sidebar, carousel, context-menu, dropdown, menubar) reach their parts by child combinators with `:where()` hops (script-checked against HEAD: same declarations, same specificity for all 393 selectors, each flattens back to one old one). Kept beyond direct children, at the same weight: dialog-family sections in a `<form>` in the panel; a title, description or close in one plain div, stack or cluster inside its section; a close that is the panel's child; sidebar's trigger as the root's child (off-canvas drawer); menubar without its optional group. Menubar's disabled-menuitem rule and the 1.1F-11 chevron rule converted too. Manifests: dialog/alert-dialog/drawer/sheet 1.0.3, popover/tooltip/context-menu 1.0.2, sidebar 1.1.3, carousel 1.1.2, dropdown/menubar 1.0.1, slot descriptions say where parts may sit. Tests: nesting-css.test.ts 80 cases (27 red on the old tree), nesting.pw.ts 39 Chromium cases (5 of 6 new leak fixtures red on the old stylesheets: popover close in a dialog, card header in a dialog, dropdown items and trigger in the sidebar footer, collapsible content under a tooltip); shape-focus, sidebar and docs-site tests updated for the new selector text. 1,794 captures compared with HEAD at zero tolerance on macOS Chromium: 1,763 identical, the rest spinner/load noise that matched on re-run plus one outlier baseline that differs under HEAD's own CSS. No engine change. Ran on Bun 1.3.8 via `npm i bun@1.3.8`. 7,834 + 64 pass / 0 fail."
     }
   ],
   "note": "Pointer file for the /faqir-plan slash command. FAQIR-PLAN-1.1-FIXES.md status cells (⬜/✅) are the source of truth; this file records the cross-session cursor and a per-task log. Do not hand-edit `current` while a session is running. The 1.1 plan's cursor (31 history entries, through 1.1R-01) is archived unchanged at state-1.1.json; FAQIR-PLAN-1.1.md still has six open follow-up rows (1.1A-21, 1.1A-24, 1.1A-27, 1.1A-28, 1.1A-29, 1.1N-03), reachable by pointing `plan` back at it. The 1.0 cursor is at state-1.0.json."

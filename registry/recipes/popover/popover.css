@@ -8,7 +8,7 @@
 }
 
 /* ── Trigger ── */
-[data-ui="popover"] [data-part="trigger"] {
+[data-ui="popover"] > [data-part="trigger"] {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2, 0.5rem);
@@ -26,17 +26,17 @@
               border-color var(--duration-fast) var(--ease-default);
 }
 
-[data-ui="popover"] [data-part="trigger"]:hover {
+[data-ui="popover"] > [data-part="trigger"]:hover {
   background: var(--color-bg-muted, oklch(0.96 0.004 260));
 }
 
-[data-ui="popover"] [data-part="trigger"]:focus-visible {
+[data-ui="popover"] > [data-part="trigger"]:focus-visible {
   outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
   outline-offset: var(--focus-ring-offset);
 }
 
 /* ── Content ── */
-[data-ui="popover"] [data-part="content"] {
+[data-ui="popover"] > [data-part="content"] {
   position: absolute;
   z-index: var(--z-dropdown);
   min-width: 200px;
@@ -53,95 +53,95 @@
 }
 
 @supports ((-webkit-backdrop-filter: blur(1rem)) or (backdrop-filter: blur(1rem))) {
-  [data-ui="popover"] [data-part="content"] {
+  [data-ui="popover"] > [data-part="content"] {
     -webkit-backdrop-filter: var(--surface-backdrop);
     backdrop-filter: var(--surface-backdrop);
   }
 }
 
-[data-ui="popover"][data-state="open"] [data-part="content"] {
+[data-ui="popover"][data-state="open"] > [data-part="content"] {
   opacity: 1;
   transform: scale(1);
 }
 
 /* ── Position: Bottom (default) ── */
-[data-ui="popover"] [data-part="content"][data-variant="bottom"] {
+[data-ui="popover"] > [data-part="content"][data-variant="bottom"] {
   top: 100%;
   margin-top: var(--space-2, 0.5rem);
 }
 
 /* ── Position: Top ── */
-[data-ui="popover"] [data-part="content"][data-variant="top"] {
+[data-ui="popover"] > [data-part="content"][data-variant="top"] {
   bottom: 100%;
   margin-bottom: var(--space-2, 0.5rem);
 }
 
 /* ── Position: Left ── */
-[data-ui="popover"] [data-part="content"][data-variant="left"] {
+[data-ui="popover"] > [data-part="content"][data-variant="left"] {
   inset-inline-end: 100%;
   top: 0;
   margin-inline-end: var(--space-2, 0.5rem);
 }
 
 /* ── Position: Right ── */
-[data-ui="popover"] [data-part="content"][data-variant="right"] {
+[data-ui="popover"] > [data-part="content"][data-variant="right"] {
   inset-inline-start: 100%;
   top: 0;
   margin-inline-start: var(--space-2, 0.5rem);
 }
 
 /* ── Align: Start ── */
-[data-ui="popover"] [data-part="content"][data-align="start"][data-variant="bottom"],
-[data-ui="popover"] [data-part="content"][data-align="start"][data-variant="top"] {
+[data-ui="popover"] > [data-part="content"][data-align="start"][data-variant="bottom"],
+[data-ui="popover"] > [data-part="content"][data-align="start"][data-variant="top"] {
   inset-inline-start: 0;
 }
 
 /* ── Align: Center ── */
-[data-ui="popover"] [data-part="content"][data-align="center"][data-variant="bottom"],
-[data-ui="popover"] [data-part="content"][data-align="center"][data-variant="top"] {
+[data-ui="popover"] > [data-part="content"][data-align="center"][data-variant="bottom"],
+[data-ui="popover"] > [data-part="content"][data-align="center"][data-variant="top"] {
   inset-inline-start: 50%;
   transform: translateX(-50%) scale(0.95);
 }
 
-[data-ui="popover"][data-state="open"] [data-part="content"][data-align="center"][data-variant="bottom"],
-[data-ui="popover"][data-state="open"] [data-part="content"][data-align="center"][data-variant="top"] {
+[data-ui="popover"][data-state="open"] > [data-part="content"][data-align="center"][data-variant="bottom"],
+[data-ui="popover"][data-state="open"] > [data-part="content"][data-align="center"][data-variant="top"] {
   transform: translateX(-50%) scale(1);
 }
 
 /* ── Align: End ── */
-[data-ui="popover"] [data-part="content"][data-align="end"][data-variant="bottom"],
-[data-ui="popover"] [data-part="content"][data-align="end"][data-variant="top"] {
+[data-ui="popover"] > [data-part="content"][data-align="end"][data-variant="bottom"],
+[data-ui="popover"] > [data-part="content"][data-align="end"][data-variant="top"] {
   inset-inline-start: auto;
   inset-inline-end: 0;
 }
 
 /* ── Align for Left/Right positions: Start ── */
-[data-ui="popover"] [data-part="content"][data-align="start"][data-variant="left"],
-[data-ui="popover"] [data-part="content"][data-align="start"][data-variant="right"] {
+[data-ui="popover"] > [data-part="content"][data-align="start"][data-variant="left"],
+[data-ui="popover"] > [data-part="content"][data-align="start"][data-variant="right"] {
   top: 0;
 }
 
 /* ── Align for Left/Right positions: Center ── */
-[data-ui="popover"] [data-part="content"][data-align="center"][data-variant="left"],
-[data-ui="popover"] [data-part="content"][data-align="center"][data-variant="right"] {
+[data-ui="popover"] > [data-part="content"][data-align="center"][data-variant="left"],
+[data-ui="popover"] > [data-part="content"][data-align="center"][data-variant="right"] {
   top: 50%;
   transform: translateY(-50%) scale(0.95);
 }
 
-[data-ui="popover"][data-state="open"] [data-part="content"][data-align="center"][data-variant="left"],
-[data-ui="popover"][data-state="open"] [data-part="content"][data-align="center"][data-variant="right"] {
+[data-ui="popover"][data-state="open"] > [data-part="content"][data-align="center"][data-variant="left"],
+[data-ui="popover"][data-state="open"] > [data-part="content"][data-align="center"][data-variant="right"] {
   transform: translateY(-50%) scale(1);
 }
 
 /* ── Align for Left/Right positions: End ── */
-[data-ui="popover"] [data-part="content"][data-align="end"][data-variant="left"],
-[data-ui="popover"] [data-part="content"][data-align="end"][data-variant="right"] {
+[data-ui="popover"] > [data-part="content"][data-align="end"][data-variant="left"],
+[data-ui="popover"] > [data-part="content"][data-align="end"][data-variant="right"] {
   top: auto;
   bottom: 0;
 }
 
 /* ── Arrow ── */
-[data-ui="popover"] [data-part="content"]::before {
+[data-ui="popover"] > [data-part="content"]::before {
   content: "";
   position: absolute;
   width: 8px;
@@ -152,79 +152,79 @@
 }
 
 /* Arrow for bottom position */
-[data-ui="popover"] [data-part="content"][data-variant="bottom"]::before {
+[data-ui="popover"] > [data-part="content"][data-variant="bottom"]::before {
   top: -5px;
   inset-inline-start: var(--space-4);
   border-inline-end: none;
   border-bottom: none;
 }
 
-[data-ui="popover"] [data-part="content"][data-align="center"][data-variant="bottom"]::before {
+[data-ui="popover"] > [data-part="content"][data-align="center"][data-variant="bottom"]::before {
   inset-inline-start: 50%;
   margin-inline-start: -4px;
 }
 
-[data-ui="popover"] [data-part="content"][data-align="end"][data-variant="bottom"]::before {
+[data-ui="popover"] > [data-part="content"][data-align="end"][data-variant="bottom"]::before {
   inset-inline-start: auto;
   inset-inline-end: var(--space-4);
 }
 
 /* Arrow for top position */
-[data-ui="popover"] [data-part="content"][data-variant="top"]::before {
+[data-ui="popover"] > [data-part="content"][data-variant="top"]::before {
   bottom: -5px;
   inset-inline-start: var(--space-4);
   border-inline-start: none;
   border-top: none;
 }
 
-[data-ui="popover"] [data-part="content"][data-align="center"][data-variant="top"]::before {
+[data-ui="popover"] > [data-part="content"][data-align="center"][data-variant="top"]::before {
   inset-inline-start: 50%;
   margin-inline-start: -4px;
 }
 
-[data-ui="popover"] [data-part="content"][data-align="end"][data-variant="top"]::before {
+[data-ui="popover"] > [data-part="content"][data-align="end"][data-variant="top"]::before {
   inset-inline-start: auto;
   inset-inline-end: var(--space-4);
 }
 
 /* Arrow for left position */
-[data-ui="popover"] [data-part="content"][data-variant="left"]::before {
+[data-ui="popover"] > [data-part="content"][data-variant="left"]::before {
   inset-inline-end: -5px;
   top: var(--space-4);
   border-inline-start: none;
   border-bottom: none;
 }
 
-[data-ui="popover"] [data-part="content"][data-align="center"][data-variant="left"]::before {
+[data-ui="popover"] > [data-part="content"][data-align="center"][data-variant="left"]::before {
   top: 50%;
   margin-top: -4px;
 }
 
-[data-ui="popover"] [data-part="content"][data-align="end"][data-variant="left"]::before {
+[data-ui="popover"] > [data-part="content"][data-align="end"][data-variant="left"]::before {
   top: auto;
   bottom: var(--space-4);
 }
 
 /* Arrow for right position */
-[data-ui="popover"] [data-part="content"][data-variant="right"]::before {
+[data-ui="popover"] > [data-part="content"][data-variant="right"]::before {
   inset-inline-start: -5px;
   top: var(--space-4);
   border-inline-end: none;
   border-top: none;
 }
 
-[data-ui="popover"] [data-part="content"][data-align="center"][data-variant="right"]::before {
+[data-ui="popover"] > [data-part="content"][data-align="center"][data-variant="right"]::before {
   top: 50%;
   margin-top: -4px;
 }
 
-[data-ui="popover"] [data-part="content"][data-align="end"][data-variant="right"]::before {
+[data-ui="popover"] > [data-part="content"][data-align="end"][data-variant="right"]::before {
   top: auto;
   bottom: var(--space-4);
 }
 
 /* ── Close Button ── */
-[data-ui="popover"] [data-part="close"] {
+[data-ui="popover"] > :where([data-part="content"]) > [data-part="close"] {
   position: absolute;
   top: var(--space-2, 0.5rem);
   inset-inline-end: var(--space-2, 0.5rem);
@@ -242,20 +242,20 @@
   cursor: pointer;
 }
 
-[data-ui="popover"] [data-part="close"]:hover {
+[data-ui="popover"] > :where([data-part="content"]) > [data-part="close"]:hover {
   background: var(--color-bg-muted, oklch(0.96 0.004 260));
   color: var(--color-fg);
 }
 
-[data-ui="popover"] [data-part="close"]:focus-visible {
+[data-ui="popover"] > :where([data-part="content"]) > [data-part="close"]:focus-visible {
   outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
   outline-offset: var(--focus-ring-offset);
 }
 
 /* ── Motion ── */
 @media (prefers-reduced-motion: reduce) {
-  [data-ui="popover"] [data-part="content"],
-  [data-ui="popover"] [data-part="trigger"] {
+  [data-ui="popover"] > [data-part="content"],
+  [data-ui="popover"] > [data-part="trigger"] {
     transition: none;
   }
 }

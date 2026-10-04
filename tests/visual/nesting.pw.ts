@@ -88,6 +88,64 @@ const descriptionList = (attrs: string, mark: string, details: string) =>
   <dd data-part="details">${details}</dd>
 </dl>`;
 
+// ── 1.1F-21: overlays and menus ──
+
+const CLOSE = `<button data-part="close" aria-label="Close">&#x2715;</button>`;
+
+/** An open dialog; `sections` is the panel's content, header first. */
+const dialog = (sections: string) =>
+  `<div data-ui="dialog" data-state="open">
+  <div data-part="overlay"></div>
+  <div data-part="panel" role="dialog" aria-label="Settings" data-size="md">${sections}</div>
+</div>`;
+
+const header = (inner: string) => `<div data-part="header">${inner}</div>`;
+const dialogBody = (inner: string) => `<div data-part="body">${inner}</div>`;
+
+const popover = (mark: string) =>
+  `<div data-ui="popover" data-state="open">
+  <button data-part="trigger" aria-expanded="true">Info</button>
+  <div data-part="content" data-variant="bottom" role="dialog" aria-label="Info">
+    <button data-part="close" aria-label="Close" ${mark}>&#x2715;</button>
+    <p>Details.</p>
+  </div>
+</div>`;
+
+const card = (on: "header" | "body", mark: string) =>
+  `<div data-ui="card">
+  <div data-part="header" ${on === "header" ? mark : ""}><h3 data-part="title">Plan</h3></div>
+  <div data-part="body" ${on === "body" ? mark : ""}><p>Team, billed yearly.</p></div>
+</div>`;
+
+const dropdown = (on: "trigger" | "menu" | "item", mark: string) =>
+  `<div data-ui="dropdown" data-state="open">
+  <button data-part="trigger" aria-haspopup="true" aria-expanded="true" ${on === "trigger" ? mark : ""}>Account</button>
+  <div data-part="menu" role="menu" ${on === "menu" ? mark : ""}>
+    <button data-part="item" role="menuitem" ${on === "item" ? mark : ""}>Sign out</button>
+  </div>
+</div>`;
+
+const sidebar = (footer: string, outside = "", head = "") =>
+  `<div data-ui="sidebar" data-state="expanded">${outside}
+  <aside data-part="panel" aria-label="Main">
+    <div data-part="header">${head}</div>
+    <nav data-part="nav" aria-label="Sections"><a data-part="item" href="#"><span data-part="label">Home</span></a></nav>
+    <div data-part="footer">${footer}</div>
+  </aside>
+</div>`;
+
+const toggle = (mark: string) => `<button data-part="trigger" aria-label="Toggle sidebar" aria-expanded="true" ${mark}>&#x2039;</button>`;
+
+const menubar = (grouped: boolean, mark: string) => {
+  const pair = `<button type="button" data-part="trigger" id="mb-${grouped}" role="menuitem" aria-haspopup="menu" aria-expanded="true" aria-controls="mb-${grouped}-m">File</button>
+    <div data-part="submenu" id="mb-${grouped}-m" role="menu" aria-labelledby="mb-${grouped}">
+      <button type="button" data-part="item" role="menuitem" tabindex="-1" ${mark}>New</button>
+    </div>`;
+  return `<div data-ui="menubar" data-state="open" role="menubar" aria-label="App">
+  ${grouped ? `<div data-part="group" role="none">${pair}</div>` : pair}
+</div>`;
+};
+
 const FIXTURES: readonly Fixture[] = [
   {
     name: "an open collapsible holding a closed one keeps the inner chevron unrotated",
@@ -179,6 +237,64 @@ const FIXTURES: readonly Fixture[] = [
     props: ["font-size", "font-weight", "font-family", "color", "display", "margin-bottom"],
     revert: `[data-ui="empty-state"] [data-part="title"] { font-size: var(--text-lg); font-weight: var(--weight-medium); color: var(--color-fg); }`,
   },
+  // ── 1.1F-21: overlays and menus ──
+  {
+    name: "a popover inside a dialog keeps its own close button",
+    nested: dialog(header(`<h2 data-part="title">Settings</h2>${CLOSE}`) + dialogBody(popover("data-probe"))),
+    alone: popover("data-ref"),
+    props: ["width", "height", "font-size", "position", "top"],
+    revert: `[data-ui="dialog"] [data-part="close"]:not([data-ui]) { width: 32px; height: 32px; font-size: var(--text-base); }`,
+  },
+  {
+    name: "a card inside a dialog keeps its own header",
+    nested: dialog(header(`<h2 data-part="title">Settings</h2>${CLOSE}`) + dialogBody(card("header", "data-probe"))),
+    alone: card("header", "data-ref"),
+    props: ["display", "justify-content", "align-items", "padding-top", "padding-left", "padding-bottom"],
+    revert: `[data-ui="dialog"] [data-part="header"] { display: flex; align-items: center; justify-content: space-between; padding: var(--space-6); padding-bottom: 0; }`,
+  },
+  {
+    name: "a dropdown inside the sidebar footer keeps its item styles",
+    nested: sidebar(dropdown("item", "data-probe")),
+    alone: dropdown("item", "data-ref"),
+    props: ["display", "gap", "padding-top", "padding-left", "color", "font-size", "font-weight", "border-top-left-radius"],
+    revert: `[data-ui="sidebar"] [data-part="item"] { display: flex; gap: var(--space-3); padding: var(--space-2) var(--space-3); color: var(--color-fg-muted); font-size: var(--text-sm); font-weight: var(--weight-medium); }`,
+  },
+  {
+    name: "a dropdown inside the sidebar footer keeps its own trigger",
+    nested: sidebar(dropdown("trigger", "data-probe")),
+    alone: dropdown("trigger", "data-ref"),
+    props: ["width", "height", "padding-left", "border-top-width", "background-color"],
+    revert: `[data-ui="sidebar"] [data-part="trigger"] { inline-size: 2rem; block-size: 2rem; padding: 0; border: none; background: transparent; }`,
+  },
+  {
+    // The trigger of a tooltip may be a component; its own content is not the tip.
+    name: "a collapsible used as a tooltip's trigger keeps its own content",
+    nested: `<div data-ui="tooltip" data-state="hidden">
+  <details data-ui="collapsible" data-part="trigger" open aria-describedby="tip">
+    <summary data-part="trigger">Advanced</summary>
+    <div data-part="content" data-probe>More detail.</div>
+  </details>
+  <div data-part="content" id="tip" role="tooltip" hidden>Tip</div>
+</div>`,
+    alone: `<details data-ui="collapsible" open>
+  <summary data-part="trigger">Advanced</summary>
+  <div data-part="content" data-ref>More detail.</div>
+</details>`,
+    props: ["position", "opacity", "white-space", "font-size", "pointer-events"],
+    revert: `[data-ui="tooltip"] [data-part="content"] { position: absolute; opacity: 0; white-space: nowrap; font-size: var(--text-xs); pointer-events: none; }`,
+  },
+  {
+    // A guard: the old rule weighed the same as dropdown's, which comes later in
+    // the bundle and won the tie. Now it is out of reach, whatever the order.
+    name: "a dropdown inside a context-menu target keeps its own menu",
+    nested: `<div data-ui="context-menu" data-state="closed">
+  <div data-part="target" tabindex="0">${dropdown("menu", "data-probe")}</div>
+  <div data-part="menu" role="menu" aria-label="Row" hidden><button data-part="item" role="menuitem">Copy</button></div>
+</div>`,
+    alone: dropdown("menu", "data-ref"),
+    props: ["position", "min-width", "padding-top", "border-top-left-radius"],
+    revert: `[data-ui="context-menu"] [data-part="menu"] { position: fixed; min-inline-size: calc(var(--space-20) * 2); }`,
+  },
   // ── shapes that are not direct children, and must keep working ──
   {
     // HTML lets a <dl> wrap each pair in a <div>; the child chain allows it.
@@ -230,6 +346,39 @@ const FIXTURES: readonly Fixture[] = [
       "background-color",
       "cursor",
     ],
+  },  {
+    // A form dialog: the sections sit in a <form> that is the panel's child.
+    name: "a dialog header inside a <form> is styled like a bare one",
+    nested: dialog(`<form>${header(`<h2 data-part="title">Edit</h2>${CLOSE}`).replace('data-part="header"', 'data-part="header" data-probe')}${dialogBody("…")}</form>`),
+    alone: dialog(header(`<h2 data-part="title">Edit</h2>${CLOSE}`).replace('data-part="header"', 'data-part="header" data-ref') + dialogBody("…")),
+    props: ["display", "justify-content", "align-items", "padding-top", "padding-left", "padding-bottom"],
+  },
+  {
+    // An eyebrow above the title needs a column inside the header's row.
+    name: "a dialog title in a stack inside the header is styled like a bare one",
+    nested: dialog(header(`<div data-ui="stack" data-gap="1"><span>In Backlog</span><h2 data-part="title" data-probe>Fix login</h2></div>${CLOSE}`)),
+    alone: dialog(header(`<h2 data-part="title" data-ref>Fix login</h2>${CLOSE}`)),
+    props: ["font-size", "font-weight", "font-family", "margin-top", "margin-bottom", "color"],
+  },
+  {
+    name: "a dialog close button in a cluster inside the header is styled like a bare one",
+    nested: dialog(header(`<h2 data-part="title">Settings</h2><div data-ui="cluster"><button data-ui="button" data-variant="ghost">Help</button>${CLOSE.replace("<button", "<button data-probe")}</div>`)),
+    alone: dialog(header(`<h2 data-part="title">Settings</h2>${CLOSE.replace("<button", "<button data-ref")}`)),
+    props: ["width", "height", "padding-left", "border-top-width", "background-color", "font-size"],
+  },
+  {
+    // A drawer that is off-canvas is opened from outside its panel.
+    name: "a sidebar trigger outside the panel is styled like one in its header",
+    nested: sidebar("", toggle("data-probe")),
+    alone: sidebar("", "", toggle("data-ref")),
+    props: ["width", "height", "padding-left", "border-top-width", "background-color", "color"],
+  },
+  {
+    // The menubar's group is optional.
+    name: "a menubar item without a group is styled like a grouped one",
+    nested: menubar(false, "data-probe"),
+    alone: menubar(true, "data-ref"),
+    props: ["display", "padding-top", "padding-left", "font-size", "width", "white-space"],
   },
 ];
 

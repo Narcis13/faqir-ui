@@ -95,10 +95,10 @@ Interruptive confirmation dialog (role=alertdialog) for destructive or irreversi
 [data-ui='alert-dialog']  ·  <div> · content: slots
 ├─ [data-part='trigger']  <button>  required  — Button that opens the alert dialog. Carries data-ui="button": a trigger part is either a component in its own right or styled by its own recipe (the trigger contract, audit rule `trigger-contract`).
 ├─ [data-part='overlay']  <div>  required  — Backdrop overlay — visual only; clicking it does NOT close an alertdialog
-├─ [data-part='panel']  <div>  required  — The alert box; carries role=alertdialog and aria-modal
+├─ [data-part='panel']  <div>  required  — The alert box; carries role=alertdialog and aria-modal. Its header, body and footer are its children, or children of a <form> that is (a form dialog).
 ├─ [data-part='header']  <div>  optional
-├─ [data-part='title']  <h2>  required  — Linked via aria-labelledby to the panel
-├─ [data-part='description']  <p>  required  — The alert message; REQUIRED and linked via aria-describedby to the panel
+├─ [data-part='title']  <h2>  required  — Linked via aria-labelledby to the panel. Sits in the header, directly or inside one plain div, stack or cluster (an eyebrow above the title).
+├─ [data-part='description']  <p>  required  — The alert message; REQUIRED and linked via aria-describedby to the panel. Sits in the header or the body, directly or inside one plain div, stack or cluster.
 ├─ [data-part='body']  <div>  required
 ├─ [data-part='footer']  <div>  required  — Action row; least-destructive action first in reading order
 ├─ [data-part='cancel']  <button>  optional  — Least-destructive action; receives focus on open and emits faqir:cancel
@@ -545,13 +545,13 @@ Modal dialog with focus trap, escape-to-close, and overlay backdrop
 [data-ui='dialog']  ·  <div> · content: slots
 ├─ [data-part='trigger']  <button>  optional  — Button that opens the dialog. A dialog is opened by whatever the application decides — a row button in a table, a menu item, a route change — so the trigger is not always inside the dialog. Optional since 0.9-04. Carries data-ui="button": a trigger part is either a component in its own right or styled by its own recipe (the trigger contract, audit rule `trigger-contract`).
 ├─ [data-part='overlay']  <div>  required  — Backdrop overlay, click to close
-├─ [data-part='panel']  <div>  required  — The dialog box container
+├─ [data-part='panel']  <div>  required  — The dialog box container. Its header, body and footer are its children, or children of a <form> that is (a form dialog).
 ├─ [data-part='header']  <div>  optional
-├─ [data-part='title']  <h2>  required  — Linked via aria-labelledby to panel
-├─ [data-part='description']  <p>  optional  — Optional, linked via aria-describedby if present
+├─ [data-part='title']  <h2>  required  — Linked via aria-labelledby to panel. Sits in the header, directly or inside one plain div, stack or cluster (an eyebrow above the title).
+├─ [data-part='description']  <p>  optional  — Optional, linked via aria-describedby if present. Sits in the header or the body, directly or inside one plain div, stack or cluster.
 ├─ [data-part='body']  <div>  required
 ├─ [data-part='footer']  <div>  optional  — Action buttons area
-└─ [data-part='close']  <button>  required  — Close button, must have aria-label
+└─ [data-part='close']  <button>  required  — Close button, must have aria-label. Sits in the panel, or in its header or footer, directly or inside one plain div, stack or cluster.
 ```
 
 **Variants**
@@ -604,12 +604,12 @@ Side panel that slides in from screen edge with overlay backdrop
 [data-ui='drawer']  ·  <div> · content: slots
 ├─ [data-part='trigger']  <button>  required  — Button that opens the drawer. Carries data-ui="button": a trigger part is either a component in its own right or styled by its own recipe (the trigger contract, audit rule `trigger-contract`).
 ├─ [data-part='overlay']  <div>  required  — Backdrop overlay, click to close
-├─ [data-part='panel']  <div>  required  — The drawer panel container
+├─ [data-part='panel']  <div>  required  — The drawer panel container. Its header, body and footer are its children, or children of a <form> that is (a form dialog).
 ├─ [data-part='header']  <div>  optional  — Header area containing title and close button
-├─ [data-part='title']  <h2>  required  — Linked via aria-labelledby to panel
+├─ [data-part='title']  <h2>  required  — Linked via aria-labelledby to panel. Sits in the header, directly or inside one plain div, stack or cluster (an eyebrow above the title).
 ├─ [data-part='body']  <div>  required  — Scrollable content area
 ├─ [data-part='footer']  <div>  optional  — Action buttons area
-└─ [data-part='close']  <button>  required  — Close button, must have aria-label
+└─ [data-part='close']  <button>  required  — Close button, must have aria-label. Sits in the panel, or in its header or footer, directly or inside one plain div, stack or cluster.
 ```
 
 **Variants**
@@ -829,7 +829,7 @@ Horizontal application menubar with roving focus and keyboard-operated submenus
 
 ```text
 [data-ui='menubar']  ·  <div> · content: slots
-├─ [data-part='group']  <div>  optional  — Role-none structural wrapper pairing a parent menuitem with its submenu
+├─ [data-part='group']  <div>  optional  — Role-none structural wrapper pairing a parent menuitem with its submenu. Without it, the trigger and its submenu are the menubar's own children.
 ├─ [data-part='trigger']  <button>  required  — Top-level menuitem participating in the horizontal roving tabindex
 ├─ [data-part='submenu']  <div>  required  — Vertical popup menu controlled by a top-level menuitem
 ├─ [data-part='item']  <button>  required  — Action inside a vertical submenu
@@ -1080,11 +1080,11 @@ Mobile-friendly bottom or side sheet that slides in from screen edge
 [data-ui='sheet']  ·  <div> · content: slots
 ├─ [data-part='trigger']  <button>  required  — Button that opens the sheet. Carries data-ui="button": a trigger part is either a component in its own right or styled by its own recipe (the trigger contract, audit rule `trigger-contract`).
 ├─ [data-part='overlay']  <div>  required  — Backdrop overlay, click to close
-├─ [data-part='panel']  <div>  required  — The sheet panel container
+├─ [data-part='panel']  <div>  required  — The sheet panel container. Its header and body are its children, or children of a <form> that is (a form dialog).
 ├─ [data-part='header']  <div>  optional  — Header area containing title and close button
-├─ [data-part='title']  <h2>  required  — Linked via aria-labelledby to panel
+├─ [data-part='title']  <h2>  required  — Linked via aria-labelledby to panel. Sits in the header, directly or inside one plain div, stack or cluster (an eyebrow above the title).
 ├─ [data-part='body']  <div>  required  — Scrollable content area
-└─ [data-part='close']  <button>  required  — Close button, must have aria-label
+└─ [data-part='close']  <button>  required  — Close button, must have aria-label. Sits in the panel, or in its header or footer, directly or inside one plain div, stack or cluster.
 ```
 
 **Variants**
@@ -1142,7 +1142,7 @@ Collapsible application sidebar with three modes — expanded, rail (icons only)
 ├─ [data-part='brand']  <a>  optional  — Product/brand lockup (icon + label)
 ├─ [data-part='brand-icon']  <span>  optional  — Brand glyph; stays visible in rail mode
 ├─ [data-part='brand-label']  <span>  optional  — Brand wordmark; hidden in rail mode
-├─ [data-part='trigger']  <button>  optional  — Toggle button inside the panel. Give it one stable aria-label ("Toggle sidebar") — its aria-expanded tracks the live state, and a button with aria-expanded must not change its name. Author its glyph (an svg or data-ui="icon" child) pointing inline-start, at the collapse; the stylesheet mirrors it in rail. External buttons may also target the sidebar via data-sidebar-toggle="{id}"
+├─ [data-part='trigger']  <button>  optional  — Toggle button, in the panel's header or as the root's own child (outside the panel, so an off-canvas drawer can be opened). Give it one stable aria-label ("Toggle sidebar") — its aria-expanded tracks the live state, and a button with aria-expanded must not change its name. Author its glyph (an svg or data-ui="icon" child) pointing inline-start, at the collapse; the stylesheet mirrors it in rail. External buttons may also target the sidebar via data-sidebar-toggle="{id}".
 ├─ [data-part='nav']  <nav>  optional  — Navigation region; should carry aria-label
 ├─ [data-part='item']  <a>  optional  — A navigation entry (icon + label). Mark the current page with aria-current="page". In rail mode give it an aria-label since the text label is hidden
 ├─ [data-part='icon']  <span>  optional  — Item glyph; stays visible in rail mode
