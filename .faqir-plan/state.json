@@ -127,7 +127,7 @@
     {
       "id": "1.1F-21",
       "completed": "2026-10-04",
-      "commit": "PENDING",
+      "commit": "badf7c1",
       "summary": "Nesting, CSS II. 244 rules in eleven stylesheets (dialog, alert-dialog, drawer, sheet, popover, tooltip, sidebar, carousel, context-menu, dropdown, menubar) reach their parts by child combinators with `:where()` hops (script-checked against HEAD: same declarations, same specificity for all 393 selectors, each flattens back to one old one). Kept beyond direct children, at the same weight: dialog-family sections in a `<form>` in the panel; a title, description or close in one plain div, stack or cluster inside its section; a close that is the panel's child; sidebar's trigger as the root's child (off-canvas drawer); menubar without its optional group. Menubar's disabled-menuitem rule and the 1.1F-11 chevron rule converted too. Manifests: dialog/alert-dialog/drawer/sheet 1.0.3, popover/tooltip/context-menu 1.0.2, sidebar 1.1.3, carousel 1.1.2, dropdown/menubar 1.0.1, slot descriptions say where parts may sit. Tests: nesting-css.test.ts 80 cases (27 red on the old tree), nesting.pw.ts 39 Chromium cases (5 of 6 new leak fixtures red on the old stylesheets: popover close in a dialog, card header in a dialog, dropdown items and trigger in the sidebar footer, collapsible content under a tooltip); shape-focus, sidebar and docs-site tests updated for the new selector text. 1,794 captures compared with HEAD at zero tolerance on macOS Chromium: 1,763 identical, the rest spinner/load noise that matched on re-run plus one outlier baseline that differs under HEAD's own CSS. No engine change. Ran on Bun 1.3.8 via `npm i bun@1.3.8`. 7,834 + 64 pass / 0 fail."
     }
   ],
