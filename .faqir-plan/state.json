@@ -133,7 +133,7 @@
     {
       "id": "1.1F-22",
       "completed": "2026-10-05",
-      "commit": "PENDING",
+      "commit": "a813e95",
       "summary": "Nesting, CSS III: table. 100 rules (146 selectors, 142 before) walk the table's own structure, root > table > thead/tbody/tfoot > row > cell > control, with tag hops in `:where()` and every section, row or cell the old selector named kept at its weight (script-checked against HEAD: same declarations and at-rule context, same specificity, each selector flattens back to one old one). The non-part cell attributes (data-align, data-format, data-pin, data-hide-below, data-col-hidden, data-negative), the stacked [data-pin] rule, the hidden-rows rule and the :has([data-dragging]) guard converted too. Kept shape: the quick filter as the root's child or in one plain div, stack or cluster (slot description says so). Manifest 3.2.2. Tests: nesting-css.test.ts 87 cases (7 red on the old sheet; a nested table matches the same rules nested as alone), nesting.pw.ts 53 Chromium cases (6 table leak fixtures — striped, selected, pinned, stacked, responsive outer tables and a stack's data-align — all red on the old sheet). css-cascade.ts now splits with part-selectors' paren-aware readers; overflow-wrap, shape-focus and responsive-canon tests follow the new selector text. Beyond Touches: docs/data-driven-rendering.md put data-ui on the <table>; now canonical. 1,302 captures compared with HEAD at zero tolerance on macOS Chromium: 1,275 identical, the rest crud-table/search-results spinner noise whose remaining diffs sit only in the scrollbar gutter (x 1277-1279). No engine change. Ran on Bun 1.3.8 via `npm i bun@1.3.8`. 7,841 + 64 pass / 0 fail."
     }
   ],
