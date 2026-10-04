@@ -1,11 +1,16 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "table",
-  "version": "3.2.1",
+  "version": "3.2.2",
   "kind": "recipe",
   "category": "data-display",
   "description": "Advanced data table: multi-column type-aware sorting, global + per-column filtering, tree data and collapsible row groups with live aggregates, inline cell editing with Intl number/currency formatting, drag-and-drop row and column reordering, column resize/hide/pin, sticky header/footer/rows, grid keyboard navigation, CSV export, responsive stacked mode, and state persistence — every feature opt-in via data attributes",
   "changes": [
+    {
+      "version": "3.2.2",
+      "note": "Nested components keep their own parts. The stylesheet reached its parts with descendant selectors, so a table nested in a detail row (or in any cell) took the outer table's rules: a striped outer table striped the inner rows, a selected or top-pinned outer row painted and stuck every inner cell, a stacked outer table stacked the inner one and unpinned its columns, and a responsive outer table hid the inner table's data-hide-below columns. The cell attributes leaked into other components too: a stack with data-align=\"center\" in a cell was text-aligned by the table. Every rule now walks the table's own structure, root > table > thead/tbody/tfoot > row > cell > control, with each hop in :where() so no rule changes specificity, and data-align, data-format, data-pin, data-hide-below, data-col-hidden and data-negative are read on the table's own cells only. The quick filter is styled as the root's child or inside one plain div, stack or cluster in it (a toolbar); the controller still binds it anywhere inside the root. Canonical markup is unchanged.",
+      "breaking": false
+    },
     {
       "version": "3.2.1",
       "note": "text, heading and breadcrumb components inside a data cell keep the cell's own wrapping (overflow-wrap: inherit). Those three now break anywhere by default so an unbreakable id cannot widen a page; in an auto-layout table that would squeeze every column to one character per line, so here an id stays on one line, the table keeps its width and scrolls inside its root. Header cells never wrapped (white-space: nowrap) and are unaffected. A data-resized table still breaks long words in its cells.",
@@ -118,7 +123,7 @@
       "selector": "[data-part='filter']",
       "required": false,
       "tag_hint": "input",
-      "description": "Global quick-filter input anywhere inside the root (auto-bound, debounced)"
+      "description": "Global quick-filter input anywhere inside the root (auto-bound, debounced). Styled when it is the root's own child or sits in one plain div, stack or cluster there, such as a toolbar above the table"
     },
     "expander": {
       "selector": "[data-part='expander']",

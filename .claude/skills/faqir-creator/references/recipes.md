@@ -1266,7 +1266,7 @@ Advanced data table: multi-column type-aware sorting, global + per-column filter
 ├─ [data-part='group-header']  <tr>  optional  — Category header row within grouped data; collapsible when the root has data-groupable, cells with data-aggregate + data-col show per-group totals
 ├─ [data-part='filter-row']  <tr>  optional  — Second thead row holding per-column filter inputs
 ├─ [data-part='filter-input']  <input>  optional  — Per-column filter input inside the filter row (auto-bound, debounced; numeric columns accept >, >=, <, <=, =, !=, and a..b ranges)
-├─ [data-part='filter']  <input>  optional  — Global quick-filter input anywhere inside the root (auto-bound, debounced)
+├─ [data-part='filter']  <input>  optional  — Global quick-filter input anywhere inside the root (auto-bound, debounced). Styled when it is the root's own child or sits in one plain div, stack or cluster there, such as a toolbar above the table
 ├─ [data-part='expander']  <button>  optional  — Expand/collapse control for tree parents and group headers (auto-injected; leaf rows get an aligned placeholder span)
 ├─ [data-part='drag-handle']  <button>  optional  — Row drag handle for pointer reordering; ArrowUp/ArrowDown on the focused handle moves the row
 ├─ [data-part='detail-row']  <tr>  optional  — Master/detail expansion row placed immediately after its data row; it moves with the row through sorts and drags

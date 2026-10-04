@@ -77,7 +77,7 @@ describe("overflow-wrap — unbreakable tokens break instead of widening the pag
   it("hands the cell's own wrapping back inside a table data cell", () => {
     const exception = declsOf(
       TABLE,
-      '[data-ui="table"] [data-part="td"] :is([data-ui="text"], [data-ui="heading"], [data-ui="breadcrumb"])',
+      '[data-ui="table"] > :where([data-part="table"]) > :where(thead, tbody, tfoot) > :where(tr) > [data-part="td"] :is([data-ui="text"], [data-ui="heading"], [data-ui="breadcrumb"])',
     );
     expect(exception).toEqual({ "overflow-wrap": "inherit" });
   });
@@ -85,7 +85,7 @@ describe("overflow-wrap — unbreakable tokens break instead of widening the pag
   it("needs no exception for header cells — they never wrap at all", () => {
     // `white-space: nowrap` leaves `overflow-wrap` nothing to break, so an id in
     // a header keeps its column wide without a rule of its own.
-    expect(declsOf(TABLE, '[data-ui="table"] [data-part="th"]')["white-space"]).toBe("nowrap");
+    expect(declsOf(TABLE, '[data-ui="table"] > :where([data-part="table"]) > :where(thead, tbody, tfoot) > :where(tr) > [data-part="th"]')["white-space"]).toBe("nowrap");
   });
 
   it("records the change in each manifest", () => {

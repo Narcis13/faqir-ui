@@ -62,6 +62,8 @@ const CONVERTED = [
   ["recipes", "context-menu", "1.0.2"],
   ["recipes", "dropdown", "1.0.1"],
   ["recipes", "menubar", "1.0.1"],
+  // 1.1F-22: table.
+  ["recipes", "table", "3.2.2"],
 ] as const;
 
 const read = (kind: string, name: string, ext: string) =>
@@ -214,7 +216,8 @@ describe("nesting, CSS — a component's part rules stop at its own parts", () =
         }
         // Only the parts the sheet styles at all: a dialog's trigger is a
         // `button` and an alert-dialog's cancel/confirm are styled by theirs.
-        const styled = new Set(skeletons.map((p) => /\[data-part="([^"]+)"\]$/.exec(p)![1]));
+        // (table's hidden-rows rule ends in `tr[data-part]`, which names no part.)
+        const styled = new Set(skeletons.map((p) => /\[data-part="([^"]+)"\]$/.exec(p)?.[1]).filter(Boolean));
         expect(styled.size).toBeGreaterThan(0);
         const orphans = [...box!.querySelectorAll("[data-part]")]
           .filter((el) => styled.has(el.getAttribute("data-part")!))
@@ -409,6 +412,119 @@ describe("nesting, CSS — overlay and menu shapes beyond direct children (1.1F-
   });
 });
 
+describe("nesting, CSS — a table in a table (1.1F-22)", () => {
+  const sheet = read("recipes", "table", "css");
+  /** Every selector of the sheet, with the states a DOM query cannot hold dropped. */
+  const queries = sheetSelectors(sheet)
+    .map((s) => s.selector)
+    .filter((s) => !s.includes(":has("))
+    .map((s) => s.replace(/::?(before|after|hover|focus-visible|focus|active)\b/g, ""));
+
+  // Every flag the outer root can carry, and every state its rows and cells can.
+  const OUTER = `data-variant="striped" data-size="sm" data-responsive="stack" data-stacked data-negatives="red"
+    data-selectable data-editable data-resized data-groupable data-sticky-header data-sticky-footer`;
+  const STATES = `<tr data-part="tr" data-stripe="even" data-selected data-pin="top" data-dragging data-drop-target data-drop-pos="before" data-collapsed>
+      <td data-part="td" data-align="right" data-format="currency" data-negative data-pin="start" data-pin-edge data-hide-below="md"
+          data-col-hidden data-tree-cell data-editing data-label="Qty"><input data-part="cell-input" data-invalid></td>
+      <td data-part="td"><input data-part="checkbox" type="checkbox"><button data-part="expander" aria-expanded="true"></button>
+        <button data-part="row-toggle" aria-expanded="true"></button><button data-part="drag-handle"></button></td>
+    </tr>`;
+  const inner = `<div data-ui="table" id="inner">
+    <input data-part="filter">
+    <table data-part="table">
+      <thead data-part="thead"><tr data-part="tr"><th data-part="th" data-sortable aria-sort="ascending" data-sort-order="1"
+        data-pin="end" data-dragging>Line<span data-part="resize-handle"></span></th><th data-part="th">Qty</th></tr>
+        <tr data-part="filter-row"><td data-part="td"><input data-part="filter-input"></td><td data-part="td"></td></tr></thead>
+      <tbody data-part="tbody">
+        <tr data-part="group-header"><td colspan="2">Group</td></tr>
+        <tr data-part="tr"><td data-part="td">A</td><td data-part="td">1</td></tr>
+        ${STATES}
+        <tr data-part="detail-row"><td data-part="td" colspan="2">Notes</td></tr>
+        <tr data-part="empty" hidden><td data-part="td" colspan="2">None</td></tr>
+      </tbody>
+      <tfoot data-part="tfoot"><tr data-part="tr"><td data-part="td">Total</td><td data-part="td">2</td></tr></tfoot>
+    </table>
+  </div>`;
+
+  /** For each selector, the indices of the inner table's elements it matches. */
+  function matched(inner: Element): string[] {
+    const all = [inner, ...inner.querySelectorAll("*")];
+    return queries.map((q) => {
+      const hits = new Set(inner.ownerDocument.querySelectorAll(q));
+      return all.map((el, i) => (hits.has(el) ? i : -1)).filter((i) => i >= 0).join(",");
+    });
+  }
+
+  it("a table in a detail row matches the same rules nested as it does alone", () => {
+    // Nested: in the detail row of a table that has every flag set, inside a
+    // row that has every state. Alone: the same inner table, standing apart.
+    const root = mount(
+      `<div data-ui="table" ${OUTER}><table data-part="table"><tbody data-part="tbody">
+         ${STATES.replace("</tr>", "")}<td data-part="td" data-align="center">${inner}</td></tr>
+         <tr data-part="detail-row"><td data-part="td" colspan="2">${inner}</td></tr>
+       </tbody></table></div>`,
+    );
+    const nested = root.querySelectorAll("#inner");
+    expect(nested.length).toBe(2);
+    const alone = document.createElement("div");
+    alone.innerHTML = inner;
+    box!.appendChild(alone);
+    const own = matched(alone.firstElementChild!);
+    // Not vacuous: given the outer root's flags, the same inner table matches
+    // differently — so those flags are what the nested copies must not see.
+    const flagged = document.createElement("div");
+    flagged.innerHTML = inner.replace('id="inner"', OUTER);
+    box!.appendChild(flagged);
+    expect(matched(flagged.firstElementChild!).filter((m, i) => m !== own[i]).length).toBeGreaterThan(30);
+    for (const el of nested) {
+      const diff = queries.filter((q, i) => matched(el)[i] !== own[i]);
+      expect(diff).toEqual([]);
+    }
+  });
+
+  it("reads the cell attributes on its own cells only — a stack's data-align is the stack's", () => {
+    const root = mount(
+      `<div data-ui="table" data-responsive="stack" data-negatives="red"><table data-part="table"><tbody data-part="tbody">
+         <tr data-part="tr"><td data-part="td"><span data-ui="stack" data-align="center" data-hide-below="md" data-pin="start"
+           data-col-hidden data-negative data-format="number">Alice</span></td></tr>
+       </tbody></table></div>`,
+    );
+    const stack = root.querySelector('[data-ui="stack"]')!;
+    expect(queries.filter((q) => stack.matches(q))).toEqual([]);
+    // …while the same attributes on a cell are read.
+    const td = root.querySelector("td")!;
+    for (const attr of ["data-align", "data-hide-below", "data-pin", "data-col-hidden", "data-negative", "data-format"]) {
+      td.setAttribute(attr, stack.getAttribute(attr)!);
+    }
+    const read = queries.filter((q) => td.matches(q)).join(" ");
+    for (const attr of ["data-align", "data-hide-below", "data-pin", "data-col-hidden", "data-negative", "data-format"]) {
+      expect(read, attr).toContain(`[${attr}`);
+    }
+  });
+
+  it("the drag guard asks only about its own rows and header cells", () => {
+    // The one rule happy-dom cannot parse: a relative :has(). Its arguments are child chains.
+    const has = sheetSelectors(sheet).filter((s) => s.selector.includes(":has("));
+    expect(has.map((s) => s.selector)).toEqual([
+      '[data-ui="table"]:has(> :where([data-part="table"]) > :where(thead, tbody, tfoot) > [data-dragging], > :where([data-part="table"]) > :where(thead, tbody, tfoot) > :where(tr) > [data-dragging])',
+    ]);
+    expect(specificity(has[0].selector)).toEqual([0, 2, 0]);
+  });
+
+  it("styles the quick filter as the root's child or in one plain div, stack or cluster", () => {
+    for (const wrap of ["", "<div>", '<div data-ui="stack">', '<div data-ui="cluster">']) {
+      const root = mount(`<div data-ui="table">${wrap}<input data-part="filter">${wrap ? "</div>" : ""}</div>`);
+      expect(reaches(sheet, root, root.querySelector("input")!), wrap || "bare").toBe(true);
+      box!.remove();
+    }
+    for (const wrap of ['<div data-ui="card">', "<div><div>"]) {
+      const root = mount(`<div data-ui="table">${wrap}<input data-part="filter"></div>${wrap === "<div><div>" ? "</div>" : ""}</div>`);
+      expect(reaches(sheet, root, root.querySelector("input")!), wrap).toBe(false);
+      box!.remove();
+    }
+  });
+});
+
 // ── the cascade does not move ────────────────────────────────────────────────
 
 describe("nesting, CSS — the conversion moves no rule in the cascade", () => {
@@ -466,6 +582,12 @@ describe("nesting, CSS — the conversion moves no rule in the cascade", () => {
         "menubar",
         '[data-ui="menubar"] > :where([data-part="submenu"]) > [data-part="item"]',
         '[data-ui="menubar"] > :where([data-part="group"]) > :where([data-part="submenu"]) > [data-part="item"]',
+      ],
+      [
+        "recipes",
+        "table",
+        '[data-ui="table"] > [data-part="filter"]',
+        '[data-ui="table"] > :where(div:not([data-ui]), [data-ui="stack"], [data-ui="cluster"]) > [data-part="filter"]',
       ],
       [
         "recipes",

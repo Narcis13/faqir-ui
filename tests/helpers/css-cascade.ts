@@ -21,6 +21,8 @@
 // Descendant combinators are still skipped; suites assert those by inspecting
 // the rule list directly.
 
+import { splitSelectorList, steps } from "./part-selectors";
+
 export interface CascadeRule {
   selectors: string[];
   decls: Record<string, string>;
@@ -83,7 +85,7 @@ function flatRules(
   const rules: CascadeRule[] = [];
   for (const m of css.matchAll(/([^{}]+)\{([^}]*)\}/g)) {
     rules.push({
-      selectors: m[1].split(",").map((s) => s.trim().replace(/\s+/g, " ")).filter(Boolean),
+      selectors: splitSelectorList(m[1]),
       decls: parseDecls(m[2]),
       media: scope.media,
       container: scope.container,
@@ -139,7 +141,8 @@ export function collectRules(source: string): CascadeRule[] {
 /** Conditions of ONE compound selector — `null` if it uses syntax this subset does not model. */
 function compoundConditions(part: string): AttrCondition[] | null {
   if (part === "*") return [];
-  if (/\s/.test(part)) return null;
+  // Whitespace inside a `:where(a, b)` hop is part of the compound.
+  if (/\s/.test(part.replace(/\([^]*\)/g, "()"))) return null;
   const conds: AttrCondition[] = [];
   for (const where of part.matchAll(/:where\(([^)]*)\)/g)) {
     for (const a of where[1].matchAll(ATTR_RE)) {
@@ -387,7 +390,7 @@ function deepSpecificity(
   chain: ElementAttrs[],
   subject: ElementAttrs,
 ): number | null {
-  const parts = selector.split(/\s*>\s*|\s+/).filter(Boolean);
+  const parts = steps(selector).map((s) => s.compound);
   if (parts.length < 2) return null; // root-only rules do not style descendants
 
   const compounds = parts.map(compoundConditions);

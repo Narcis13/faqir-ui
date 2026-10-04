@@ -595,50 +595,52 @@ cleared, and late resolutions can no longer write into the dead scope.
 <div l-data="{ editingId: null, editName: '' }"
      l-source:rows.key.product_id="/api/products">
 
-  <table data-ui="table">
-    <thead data-part="thead">
-      <tr data-part="tr">
-        <th data-part="th">Name</th>
-        <th data-part="th">Price</th>
-        <th data-part="th">Actions</th>
-      </tr>
-    </thead>
-    <tbody data-part="tbody">
-      <template l-for="row in rows">
+  <div data-ui="table">
+    <table data-part="table">
+      <thead data-part="thead">
         <tr data-part="tr">
-          <td data-part="td">
-            <template l-if="editingId === row.product_id">
-              <input data-ui="input" data-size="sm" l-model="editName">
-            </template>
-            <template l-if="editingId !== row.product_id">
-              <span l-text="row.name"></span>
-            </template>
-          </td>
-          <td data-part="td" l-text="'$' + row.price"></td>
-          <td data-part="td">
-            <template l-if="editingId === row.product_id">
-              <button data-ui="button" data-size="sm" data-variant="primary"
-                      @click="$rows.update(row.product_id, { name: editName }); editingId = null">
-                Save
-              </button>
-            </template>
-            <template l-if="editingId !== row.product_id">
-              <div data-ui="stack" data-variant="horizontal" data-gap="1">
-                <button data-ui="button" data-size="sm" data-variant="ghost"
-                        @click="editingId = row.product_id; editName = row.name">
-                  Edit
-                </button>
-                <button data-ui="button" data-size="sm" data-variant="ghost"
-                        @click="$rows.remove(row.product_id)">
-                  Delete
-                </button>
-              </div>
-            </template>
-          </td>
+          <th data-part="th">Name</th>
+          <th data-part="th">Price</th>
+          <th data-part="th">Actions</th>
         </tr>
-      </template>
-    </tbody>
-  </table>
+      </thead>
+      <tbody data-part="tbody">
+        <template l-for="row in rows">
+          <tr data-part="tr">
+            <td data-part="td">
+              <template l-if="editingId === row.product_id">
+                <input data-ui="input" data-size="sm" l-model="editName">
+              </template>
+              <template l-if="editingId !== row.product_id">
+                <span l-text="row.name"></span>
+              </template>
+            </td>
+            <td data-part="td" l-text="'$' + row.price"></td>
+            <td data-part="td">
+              <template l-if="editingId === row.product_id">
+                <button data-ui="button" data-size="sm" data-variant="primary"
+                        @click="$rows.update(row.product_id, { name: editName }); editingId = null">
+                  Save
+                </button>
+              </template>
+              <template l-if="editingId !== row.product_id">
+                <div data-ui="stack" data-variant="horizontal" data-gap="1">
+                  <button data-ui="button" data-size="sm" data-variant="ghost"
+                          @click="editingId = row.product_id; editName = row.name">
+                    Edit
+                  </button>
+                  <button data-ui="button" data-size="sm" data-variant="ghost"
+                          @click="$rows.remove(row.product_id)">
+                    Delete
+                  </button>
+                </div>
+              </template>
+            </td>
+          </tr>
+        </template>
+      </tbody>
+    </table>
+  </div>
 </div>
 ```
 

@@ -462,10 +462,13 @@ describe("stepper · labels are hidden on a phone and revealed at canon sm", () 
 describe("table · data-hide-below reveals from its canon tier up", () => {
   const rules = rulesOf(join(RECIPES, "table", "table.css"));
   const responsive = { "data-responsive": "stack" };
+  // A body cell sits root > table > tbody > row (1.1F-22: the rules walk that chain).
+  const between = [{ "data-part": "table" }, { "data-part": "tbody" }, { "data-part": "tr" }];
   /** `display` for a body cell of a prioritised column, in a container of `containerPx`. */
   const cell = (tier: string, containerPx: number | undefined, extra: Record<string, string | true> = {}) =>
     resolveDeepValue(rules, "table", "display", {
       root: responsive,
+      between,
       subject: { "data-part": "td", "data-hide-below": tier, ...extra },
       containerPx,
     });
@@ -491,6 +494,7 @@ describe("table · data-hide-below reveals from its canon tier up", () => {
     // is scoped to `[data-responsive]`. Both halves matter.
     expect(
       resolveDeepValue(rules, "table", "display", {
+        between,
         subject: { "data-part": "td", "data-hide-below": "lg" },
       }),
     ).toBeUndefined();
@@ -512,6 +516,7 @@ describe("table · data-hide-below reveals from its canon tier up", () => {
       expect(
         resolveDeepValue(rules, "table", "display", {
           root: { ...responsive, "data-stacked": true },
+          between,
           subject: { "data-part": "td", "data-hide-below": "md" },
           containerPx,
         }),

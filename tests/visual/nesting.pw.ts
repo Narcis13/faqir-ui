@@ -146,6 +146,34 @@ const menubar = (grouped: boolean, mark: string) => {
 </div>`;
 };
 
+// ── 1.1F-22: table ──
+
+/** A table: `attrs` on the root, `rows` its body rows, `before` ahead of the <table>. */
+const table = (attrs: string, rows: string, before = "") =>
+  `<div data-ui="table" ${attrs}>${before}
+  <table data-part="table">
+    <thead data-part="thead"><tr data-part="tr"><th data-part="th" scope="col">Line</th><th data-part="th" scope="col">Qty</th></tr></thead>
+    <tbody data-part="tbody">${rows}</tbody>
+  </table>
+</div>`;
+
+const row = (a: string, b: string, attrs = "") =>
+  `<tr data-part="tr" ${attrs}><td data-part="td">${a}</td><td data-part="td">${b}</td></tr>`;
+
+/** Two lines; `mark` goes on the second line's first cell (an even row), `cell` on both its cells. */
+const lines = (mark: string, cell = "", attrs = "") =>
+  table(attrs, row("Widget", "2") + `<tr data-part="tr"><td data-part="td" ${cell} ${mark}>Gadget</td><td data-part="td" ${cell}>1</td></tr>`);
+
+/** An outer table whose first row opens a detail row holding `inner`. */
+const master = (attrs: string, inner: string, rowAttrs = "") =>
+  table(
+    attrs,
+    row("INV-1", "3", rowAttrs) +
+      `<tr data-part="detail-row"><td data-part="td" colspan="2">${inner}</td></tr>` +
+      row("INV-2", "1") +
+      row("INV-3", "4"),
+  );
+
 const FIXTURES: readonly Fixture[] = [
   {
     name: "an open collapsible holding a closed one keeps the inner chevron unrotated",
@@ -295,6 +323,51 @@ const FIXTURES: readonly Fixture[] = [
     props: ["position", "min-width", "padding-top", "border-top-left-radius"],
     revert: `[data-ui="context-menu"] [data-part="menu"] { position: fixed; min-inline-size: calc(var(--space-20) * 2); }`,
   },
+  // ── 1.1F-22: table ──
+  {
+    name: "a table in the detail row of a striped table does not take its stripes",
+    nested: master('data-variant="striped"', lines("data-probe")),
+    alone: lines("data-ref"),
+    props: ["background-color"],
+    revert: `[data-ui="table"][data-variant="striped"] [data-part="tbody"] [data-part="tr"]:not([data-stripe]):nth-child(even):not([data-selected]) [data-part="td"] { background: var(--stripe-bg); }`,
+  },
+  {
+    // A detail row is not a data row, so the table sits in a cell of a selected one here.
+    name: "a table in a selected row's cell does not take the selection",
+    nested: table("data-selectable", `<tr data-part="tr" data-selected><td data-part="td" colspan="2">${lines("data-probe")}</td></tr>`),
+    alone: lines("data-ref"),
+    props: ["background-color"],
+    revert: `[data-ui="table"] [data-part="tr"][data-selected] [data-part="td"] { background: var(--color-primary-subtle); }`,
+  },
+  {
+    name: "a table in a pinned row's cell does not stick with it",
+    nested: table("data-sticky-header", `<tr data-part="tr" data-pin="top"><td data-part="td" colspan="2">${lines("data-probe")}</td></tr>`),
+    alone: lines("data-ref"),
+    props: ["position", "z-index", "background-color"],
+    revert: `[data-ui="table"] [data-part="tbody"] [data-part="tr"][data-pin="top"] [data-part="td"] { position: sticky; z-index: 2; background: var(--color-bg-subtle); }`,
+  },
+  {
+    name: "a table in the detail row of a stacked table keeps its rows and pinned column",
+    nested: master('data-responsive="stack" data-stacked', lines("data-probe", 'data-pin="start"')),
+    alone: lines("data-ref", 'data-pin="start"'),
+    props: ["display", "position", "border-bottom-width"],
+    revert: `[data-ui="table"][data-stacked] [data-part="td"] { display: flex; } [data-ui="table"][data-stacked] [data-pin] { position: static; }`,
+  },
+  {
+    // The outer table measures itself as a container; the inner one is not responsive.
+    name: "a table in the detail row of a responsive table keeps its prioritised column",
+    nested: `<div style="inline-size: 20rem">${master('data-responsive="scroll"', lines("data-probe", 'data-hide-below="lg"'))}</div>`,
+    alone: lines("data-ref", 'data-hide-below="lg"'),
+    props: ["display"],
+    revert: `[data-ui="table"][data-responsive] [data-hide-below] { display: none; }`,
+  },
+  {
+    name: "a stack in a table cell is not text-aligned by its data-align",
+    nested: table("", row(`<span data-ui="stack" data-align="center" data-probe><span>Alice</span><span>admin</span></span>`, "2")),
+    alone: `<div><span data-ui="stack" data-align="center" data-ref><span>Alice</span><span>admin</span></span></div>`,
+    props: ["text-align"],
+    revert: `[data-ui="table"] [data-align="center"] { text-align: center; }`,
+  },
   // ── shapes that are not direct children, and must keep working ──
   {
     // HTML lets a <dl> wrap each pair in a <div>; the child chain allows it.
@@ -380,6 +453,13 @@ const FIXTURES: readonly Fixture[] = [
     alone: menubar(true, "data-ref"),
     props: ["display", "padding-top", "padding-left", "font-size", "width", "white-space"],
   },
+  {
+    // The quick filter may sit in a toolbar inside the root.
+    name: "a table quick filter in a toolbar is styled like a bare one",
+    nested: table("", row("Widget", "2"), `<div data-ui="cluster"><input data-part="filter" aria-label="Filter" data-probe></div>`),
+    alone: table("", row("Widget", "2"), `<input data-part="filter" aria-label="Filter" data-ref>`),
+    props: ["width", "padding-top", "padding-left", "font-size", "border-top-width", "border-top-left-radius"],
+  },
 ];
 
 /** The shipped stylesheet around the two renders, with an optional override after it. */
@@ -459,6 +539,12 @@ test.describe("the outer component's own state rule still applies", () => {
     );
     const { nested, alone } = await measure(page, ["transform"]);
     expect(nested.transform).not.toBe(alone.transform);
+  });
+
+  test("a striped table stripes its own even rows", async ({ page }) => {
+    await mount(page, documentFor(lines("data-probe", "", 'data-variant="striped"'), lines("data-ref")));
+    const { nested, alone } = await measure(page, ["background-color"]);
+    expect(nested["background-color"]).not.toBe(alone["background-color"]);
   });
 });
 

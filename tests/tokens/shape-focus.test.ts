@@ -187,10 +187,10 @@ const LITERAL_OUTLINE_OFFSET = /outline-offset\s*:\s*(-?[0-9.]+(?:px|rem|em))/g;
  * the exclusion cannot quietly grow.
  */
 const GLYPH_RULES = new Set([
-  `recipes/table/table.css [data-ui="table"] [data-part="th"][data-sortable]::after`,
-  `recipes/table/table.css [data-ui="table"] [data-part="th"][aria-sort="ascending"]::after`,
-  `recipes/table/table.css [data-ui="table"] [data-part="th"][aria-sort="descending"]::after`,
-  `recipes/table/table.css [data-ui="table"] [data-part="expander"]::before, [data-ui="table"] [data-part="row-toggle"]::before`,
+  `recipes/table/table.css [data-ui="table"] > :where([data-part="table"]) > :where(thead, tbody, tfoot) > :where(tr) > [data-part="th"][data-sortable]::after`,
+  `recipes/table/table.css [data-ui="table"] > :where([data-part="table"]) > :where(thead, tbody, tfoot) > :where(tr) > [data-part="th"][aria-sort="ascending"]::after`,
+  `recipes/table/table.css [data-ui="table"] > :where([data-part="table"]) > :where(thead, tbody, tfoot) > :where(tr) > [data-part="th"][aria-sort="descending"]::after`,
+  `recipes/table/table.css [data-ui="table"] > :where([data-part="table"]) > :where(thead, tbody, tfoot) > :where(tr) > :where(th, td) > [data-part="expander"]::before, [data-ui="table"] > :where([data-part="table"]) > :where(thead, tbody, tfoot) > :where(tr) > :where(th, td) > [data-part="row-toggle"]::before`,
 ]);
 
 /** Every `selector { … }` in a sheet, with the offset its body starts at. */
@@ -299,8 +299,8 @@ describe("shape & focus · the registry consumes the families, never a literal",
     // The two base rules size the box to nothing and let the legs be the shape;
     // the two `aria-sort` rules only swap which leg is drawn.
     for (const selector of [
-      `[data-ui="table"] [data-part="th"][data-sortable]::after`,
-      `[data-ui="table"] [data-part="expander"]::before, [data-ui="table"] [data-part="row-toggle"]::before`,
+      `[data-ui="table"] > :where([data-part="table"]) > :where(thead, tbody, tfoot) > :where(tr) > [data-part="th"][data-sortable]::after`,
+      `[data-ui="table"] > :where([data-part="table"]) > :where(thead, tbody, tfoot) > :where(tr) > :where(th, td) > [data-part="expander"]::before, [data-ui="table"] > :where([data-part="table"]) > :where(thead, tbody, tfoot) > :where(tr) > :where(th, td) > [data-part="row-toggle"]::before`,
     ]) {
       const body = ruleSpans(read("recipes/table/table.css")).find((r) => r.selector === selector)!.body;
       expect({ [selector]: /width:\s*0;/.test(body) && /height:\s*0;/.test(body) }).toEqual({
@@ -345,10 +345,10 @@ describe("shape & focus · the registry consumes the families, never a literal",
       // box because it has to carry its own colour.
       ["primitives/stepper/stepper.css", `[data-ui="stepper"] [data-part="connector"]`, "height"],
       // The table's header rule, and the footer rule that answers it.
-      ["recipes/table/table.css", `[data-ui="table"] [data-part="th"]`, "border-bottom"],
+      ["recipes/table/table.css", `[data-ui="table"] > :where([data-part="table"]) > :where(thead, tbody, tfoot) > :where(tr) > [data-part="th"]`, "border-bottom"],
       [
         "recipes/table/table.css",
-        `[data-ui="table"] [data-part="tfoot"] [data-part="td"]`,
+        `[data-ui="table"] > :where([data-part="table"]) > [data-part="tfoot"] > :where(tr) > [data-part="td"]`,
         "border-top",
       ],
       // The settings rail's start-edge marker, and the slider thumb's ring.
@@ -646,8 +646,8 @@ describe("shape & focus · recipes and patterns resolve to the same edge", () =>
       "border-inline-end",
       "1px",
     ],
-    ["recipes/table/table.css", `[data-ui="table"] [data-part="th"]`, "border-bottom", "2px"],
-    ["recipes/table/table.css", `[data-ui="table"] [data-part="td"]`, "border-bottom", "1px"],
+    ["recipes/table/table.css", `[data-ui="table"] > :where([data-part="table"]) > :where(thead, tbody, tfoot) > :where(tr) > [data-part="th"]`, "border-bottom", "2px"],
+    ["recipes/table/table.css", `[data-ui="table"] > :where([data-part="table"]) > :where(thead, tbody, tfoot) > :where(tr) > [data-part="td"]`, "border-bottom", "1px"],
     [
       "recipes/tabs/tabs.css",
       `[data-ui="tabs"][data-variant="underline"] > :where([data-part="list"]) > [data-part="trigger"]`,
@@ -733,7 +733,7 @@ describe("shape & focus · recipes and patterns resolve to the same edge", () =>
       ${TOKEN_FILES.map(read).map(shimColors).join("\n")}
       :root { --border-width-sm: 4px; --border-width-md: 6px; --border-width-lg: 8px; }
       #a { border-top: ${widthSlot(declaration("recipes/accordion/accordion.css", `[data-ui="accordion"] > [data-part="item"]`, "border-bottom"))} solid #cccccc; }
-      #b { border-top: ${widthSlot(declaration("recipes/table/table.css", `[data-ui="table"] [data-part="th"]`, "border-bottom"))} solid #cccccc; }
+      #b { border-top: ${widthSlot(declaration("recipes/table/table.css", `[data-ui="table"] > :where([data-part="table"]) > :where(thead, tbody, tfoot) > :where(tr) > [data-part="th"]`, "border-bottom"))} solid #cccccc; }
       #c { border-top: ${widthSlot(declaration("recipes/toast/toast.css", `[data-ui="toast"] [data-part="toast"][data-variant="success"]`, "border-inline-start"))} solid #cccccc; }
       #d { border-top: ${widthSlot(declaration("base/prose.css", `[data-ui="prose"] blockquote`, "border-inline-start"))} solid #cccccc; }
     </style>`;

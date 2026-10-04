@@ -1545,11 +1545,11 @@
       "name": "table",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "3.2.1",
+      "version": "3.2.2",
       "files": [
         {
           "path": "table.css",
-          "sha256": "f6c5c0570b9c7d66419ddcb7d920f82d08dad28e296fe56f93ffb3f35f1ecde0"
+          "sha256": "dda3197225a381528a227f6e93ccb5c78cab9eaa0f9c181530a0a183a86e6929"
         },
         {
           "path": "table.html",
@@ -1561,10 +1561,10 @@
         },
         {
           "path": "table.manifest.json",
-          "sha256": "165a26e426925d844d3120c98c71a1f72ba61f1d9f491da28959d33d026d323e"
+          "sha256": "5fdb630cd565fcbc4373e4d0899170c1ea3e229a256d61e0fea59c24bbd530cb"
         }
       ],
-      "hash": "f802f7985ecf16cb587047050fca0c932808f2420fd4ad3e4878aa61145915fc",
+      "hash": "cbc53642a91ac583f43c03c700e8d0ffb485ad4f4743975824ebce25e9b85aee",
       "deps": [
         "checkbox",
         "badge",
