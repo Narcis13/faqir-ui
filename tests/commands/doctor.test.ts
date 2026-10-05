@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
-import { existsSync, rmSync, mkdirSync } from "node:fs";
+import { existsSync, rmSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { init } from "../../src/commands/init";
-import { doctor } from "../../src/commands/doctor";
+import { checkForbidDirectives, doctor } from "../../src/commands/doctor";
 import { add } from "../../src/commands/add";
 
 const TEST_DIR = join(import.meta.dir, "../.tmp-doctor-test");
@@ -159,5 +159,51 @@ describe("faqir doctor exit code", () => {
       process.exitCode = typeof origExit === "number" ? origExit : 0;
       process.chdir(origCwd);
     }
+  });
+
+  // Task 1.1F-27. There is no config schema, so `audit.forbid_directives` is
+  // validated here: an entry that names no directive bans nothing, silently.
+  async function doctorWithForbid(forbid: unknown): Promise<number> {
+    const origCwd = process.cwd();
+    const origExit: typeof process.exitCode = process.exitCode;
+    process.chdir(TEST_DIR);
+    try {
+      await init(["--yes"]);
+      const path = join(TEST_DIR, "faqir.config.json");
+      const config = JSON.parse(readFileSync(path, "utf8"));
+      writeFileSync(path, JSON.stringify({ ...config, audit: { forbid_directives: forbid } }, null, 2));
+      process.exitCode = 0;
+      await doctor([]);
+      return process.exitCode ?? 0;
+    } finally {
+      process.exitCode = typeof origExit === "number" ? origExit : 0;
+      process.chdir(origCwd);
+    }
+  }
+
+  it('flags audit.forbid_directives: ["l-nope"]', async () => {
+    expect(await doctorWithForbid(["l-nope"])).toBe(1);
+  });
+
+  it("accepts a forbid list of real directives, however written", async () => {
+    expect(await doctorWithForbid(["l-html", ":src", "@click", "teleport"])).toBe(0);
+  });
+});
+
+describe("checkForbidDirectives", () => {
+  it("names each entry that is no directive", () => {
+    const result = checkForbidDirectives(["l-html", "l-nope", "x-html"]);
+    expect(result.passed).toBe(false);
+    expect(result.message).toContain('names no directive: "l-nope", "x-html".');
+  });
+
+  it("rejects a value that is not a list of strings", () => {
+    expect(checkForbidDirectives("l-html").passed).toBe(false);
+    expect(checkForbidDirectives([1]).passed).toBe(false);
+  });
+
+  it("passes real directives and an empty list", () => {
+    expect(checkForbidDirectives(["l-html", "l-on"]).passed).toBe(true);
+    expect(checkForbidDirectives([]).passed).toBe(true);
   });
 });

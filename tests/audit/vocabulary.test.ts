@@ -14,8 +14,11 @@ import { loadManifest, type Manifest } from "../../src/manifest";
 import {
   ATTRIBUTE_VOCABULARY_RULE,
   DIRECTIVE_NAME_RULE,
+  FORBIDDEN_DIRECTIVE_RULE,
   PART_ELEMENT_RULE,
   UNKNOWN_ATTRIBUTE_RULE,
+  VOCABULARY_RULES,
+  forbiddenDirectiveName,
 } from "../../src/audit/vocabulary";
 import { TOKEN_MODIFIER_ATTRIBUTES } from "../../src/utils/breakpoints";
 import { TOKEN_MODIFIERS } from "../../src/protocol";
@@ -276,5 +279,87 @@ describe("directive-name · arguments, modifiers and empty expressions", () => {
 
   it("says nothing about l-cloak, which legitimately has no expression", () => {
     expect(messages(`<div l-data="{}"><span l-cloak></span></div>`, DIRECTIVE_NAME_RULE.id)).toEqual([]);
+  });
+});
+
+// ── forbidden-directive (task 1.1F-27) ──────────────────────────────────────
+//
+// `faqir.config.json` → `audit.forbid_directives` bans a directive in markup.
+// The ban is on the directive, not on one spelling of it: a shorthand, an
+// argument or a modifier is the same directive to the engine, so it is the
+// same finding here.
+
+describe("forbidden-directive · audit.forbid_directives", () => {
+  function forbidden(source: string, forbidDirectives?: string[]): string[] {
+    return auditHtmlSource({ source, file: "page.html", manifests, forbidDirectives })
+      .filter((r) => r.rule_id === FORBIDDEN_DIRECTIVE_RULE.id)
+      .map((r) => r.message);
+  }
+
+  const HTML_PAGE =
+    `<div l-data="{ body: '' }">` +
+    `<div l-html="body"></div>` +
+    `<div l-html.camel="body"></div>` +
+    `<div l-text="body"></div>` +
+    `</div>`;
+
+  it("is an error-severity rule listed in the inventory", () => {
+    expect(FORBIDDEN_DIRECTIVE_RULE.severity).toBe("error");
+    expect(VOCABULARY_RULES.map((r) => r.id)).toContain("forbidden-directive");
+  });
+
+  it('["l-html"] fails l-html under every spelling, and nothing else', () => {
+    const found = forbidden(HTML_PAGE, ["l-html"]);
+    expect(found).toHaveLength(2);
+    expect(found[0]).toContain("l-html on <div> uses l-html");
+    expect(found[0]).toContain("audit.forbid_directives");
+    expect(found[1]).toContain("l-html.camel on <div>");
+  });
+
+  it("a bare name bans the same directive", () => {
+    expect(forbidden(HTML_PAGE, ["html"])).toHaveLength(2);
+  });
+
+  it("a ban on l-on reaches @ and l-on: alike, arguments and modifiers included", () => {
+    const page =
+      `<div l-data="{ n: 0 }">` +
+      `<button @click="n++">a</button>` +
+      `<button @click.prevent="n++">b</button>` +
+      `<button l-on:keydown.enter="n++">c</button>` +
+      `<button :disabled="n > 3">d</button>` +
+      `</div>`;
+    expect(forbidden(page, ["l-on"])).toHaveLength(3);
+    // The entry may be written the way the markup is, too.
+    expect(forbidden(page, ["@click"])).toHaveLength(3);
+    const bind = forbidden(page, [":src"]);
+    expect(bind).toHaveLength(1);
+    expect(bind[0]).toContain(":disabled on <button> uses l-bind");
+  });
+
+  it("without the key, nothing changes", () => {
+    const base = auditHtmlSource({ source: HTML_PAGE, file: "page.html", manifests });
+    expect(base.filter((r) => r.rule_id === FORBIDDEN_DIRECTIVE_RULE.id)).toEqual([]);
+    expect(auditHtmlSource({ source: HTML_PAGE, file: "page.html", manifests, forbidDirectives: [] })).toEqual(base);
+  });
+
+  it("--skip-rules forbidden-directive turns it off", () => {
+    const results = auditHtmlSource({
+      source: HTML_PAGE,
+      file: "page.html",
+      manifests,
+      forbidDirectives: ["l-html"],
+      skipRules: [FORBIDDEN_DIRECTIVE_RULE.id],
+    });
+    expect(results.filter((r) => r.rule_id === FORBIDDEN_DIRECTIVE_RULE.id)).toEqual([]);
+  });
+
+  it("an entry naming no directive bans nothing (doctor reports it)", () => {
+    expect(forbidden(HTML_PAGE, ["l-nope"])).toEqual([]);
+    expect(forbiddenDirectiveName("l-nope")).toBeNull();
+    expect(forbiddenDirectiveName("l-html")).toBe("html");
+    expect(forbiddenDirectiveName(" html ")).toBe("html");
+    expect(forbiddenDirectiveName(":src")).toBe("bind");
+    expect(forbiddenDirectiveName("l-bind:src")).toBe("bind");
+    expect(forbiddenDirectiveName("@click")).toBe("on");
   });
 });

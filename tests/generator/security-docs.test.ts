@@ -227,6 +227,19 @@ describe("the doc's claims still hold against the engine", () => {
     expect(call).not.toContain("credentials");
   });
 
+  // Task 1.1F-27: §3 points at the audit knob, names the rule it turns on, and
+  // says it does not see script — and the rule it names is in the inventory.
+  it("§3 points at audit.forbid_directives, and the rule it names exists", async () => {
+    const start = DOC.indexOf("## 3.");
+    const section = DOC.slice(start, DOC.indexOf("\n## 4.", start));
+    expect(section).toContain("forbid_directives");
+    expect(section).toContain("`forbidden-directive`");
+    expect(section).toMatch(/markup\s+only/);
+    expect(section).toContain("innerHTML");
+    const { getRuleInventory } = await import("../../src/audit/rules");
+    expect(getRuleInventory().map((r) => r.id)).toContain("forbidden-directive");
+  });
+
   it("ships no JavaScript with primitives or patterns, as §6 promises", () => {
     for (const layer of ["primitives", "patterns"] as const) {
       const dir = join(ROOT, "registry", layer);

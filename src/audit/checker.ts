@@ -224,6 +224,7 @@ export async function runAudit(options: AuditOptions = {}): Promise<AuditSummary
         runtimeReferences: await moduleImportReferences(source, filePath, cwd),
         engineControllers,
         runtimeScript: hasProjectRuntime ? pageRelativeSrc(filePath, projectRuntime) : undefined,
+        forbidDirectives: config.audit?.forbid_directives,
         skipRules: options.skipRules,
       }),
     );

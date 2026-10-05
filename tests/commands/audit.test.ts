@@ -264,6 +264,28 @@ describe("faqir audit", () => {
     expect(runtimeResults).toEqual([]);
   });
 
+  // Task 1.1F-27: the project's config bans a directive, and runAudit reads it.
+  it("audit.forbid_directives turns a banned directive into an error", async () => {
+    await setupProject(["button"]);
+    const page = `<div l-data="{ body: '' }"><div l-html="body"></div><div l-text="body"></div></div>`;
+    await Bun.write(join(TEST_DIR, "page.html"), page);
+
+    const before = await runAudit({ cwd: TEST_DIR, file: "page.html" });
+    expect(before.results.filter((r) => r.rule_id === "forbidden-directive")).toEqual([]);
+    expect(before.passed).toBe(true);
+
+    const configPath = join(TEST_DIR, "faqir.config.json");
+    const config = JSON.parse(readFileSync(configPath, "utf8"));
+    await Bun.write(configPath, JSON.stringify({ ...config, audit: { forbid_directives: ["l-html"] } }, null, 2));
+
+    const after = await runAudit({ cwd: TEST_DIR, file: "page.html" });
+    const found = after.results.filter((r) => r.rule_id === "forbidden-directive");
+    expect(found).toHaveLength(1);
+    expect(found[0].severity).toBe("error");
+    expect(found[0].file).toBe("page.html");
+    expect(after.passed).toBe(false);
+  });
+
   it("audit --file scopes to a single file", async () => {
     await setupProject(["button"]);
 

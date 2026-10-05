@@ -34,6 +34,16 @@ export interface FaqirConfig {
    * first `faqir fonts add` (task 1.1A-18).
    */
   fonts?: InstalledFont[];
+  /**
+   * Project policy for `faqir audit` (task 1.1F-27). `forbid_directives` bans
+   * directives in markup — `["l-html"]` turns every `l-html` on a page into a
+   * `forbidden-directive` error. Entries are directives as written (`l-html`,
+   * `:src`, `@click`) or bare names; `faqir doctor` rejects one that names no
+   * directive. Markup only: it does not see `innerHTML` in a script.
+   */
+  audit?: {
+    forbid_directives?: string[];
+  };
 }
 
 export const DEFAULT_CONFIG: FaqirConfig = {

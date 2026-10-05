@@ -151,6 +151,12 @@ export const RULE_NOTES: Record<string, string[]> = {
     "Fragments skip it: a fragment cannot carry the runtime.",
   ],
   "orphan-part": ["Only data-part values the manifest does not name as a slot."],
+  "forbidden-directive": [
+    "Off unless faqir.config.json sets audit.forbid_directives, a list such as [\"l-html\"]. faqir doctor rejects an entry that names no directive.",
+    "Matched on the directive, not its spelling: a ban on l-on catches @click, l-on:keydown and their modifiers; :src falls to a ban on l-bind.",
+    "Markup only. An innerHTML assignment in the page's own script is not an attribute, and the audit does not see it.",
+    "faqir audit and faqir audit --stdin inside a project read the list; the MCP tool and the playground have no project config, so they never report it.",
+  ],
   "aria-describedby": [
     "Only components whose manifest declares a description slot, and only when the markup fills it.",
   ],

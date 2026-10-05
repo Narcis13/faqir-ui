@@ -176,7 +176,7 @@ the harness a capable model needs, built as software instead of as a prompt.
 
 **Verification is the bottleneck, not generation.** A model produces text; it
 has no oracle. Faqir gives it one. Every component ships a manifest, and
-`faqir audit` checks markup against those manifests with 37 rules, from
+`faqir audit` checks markup against those manifests with 38 rules, from
 `required-slot` and `focus-trap` to `duplicate-id`, `heading-order` and
 `contrast-tokens`. It reads from stdin, emits versioned JSON, and is the same
 code in the CLI, the MCP server and the browser. A failure that would otherwise
@@ -898,10 +898,22 @@ carries `rule_id`, `severity` (`critical` · `error` · `warning` · `info`),
 are reported separately from authored ones, and only authored errors gate the
 exit code.
 
+A project can ban directives outright. With
+
+```json
+{ "audit": { "forbid_directives": ["l-html"] } }
+```
+
+in `faqir.config.json`, every `l-html` on a page is a `forbidden-directive`
+error. The ban covers every spelling — list `l-on` and `@click` falls to it too —
+and `faqir doctor` rejects an entry that names no directive. It checks markup
+only: an `innerHTML` assignment in your own script is not an attribute, and the
+audit does not see it.
+
 ### Audit rules
 
 `faqir audit --rules` prints the live registry, which is the source of truth
-(37 rules today). The ids below are the ones `--skip-rules` accepts.
+(38 rules today). The ids below are the ones `--skip-rules` accepts.
 
 | Rule | Severity | Scope | What it checks |
 |------|----------|-------|----------------|
@@ -926,6 +938,7 @@ exit code.
 | `attribute-vocabulary` | error | vocabulary | A declared attribute carries a value from its set; tier suffix only where responsive |
 | `unknown-attribute` | warning | vocabulary | A `data-*` near-miss of a declared attribute, or one owned by another component |
 | `directive-name` | error | vocabulary | An `l-*` attribute names a real directive with legal argument and modifiers |
+| `forbidden-directive` | error | vocabulary | A directive the project bans in `audit.forbid_directives` appears in markup |
 | `part-element` | warning | vocabulary | A slot with a `tag_hint` expects that element |
 | `no-important` | error | component CSS | No `!important` |
 | `no-class-selector` | error | component CSS | No class selectors |

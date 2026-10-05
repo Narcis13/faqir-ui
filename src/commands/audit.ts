@@ -145,9 +145,12 @@ async function auditStdin(args: string[], cwd: string): Promise<void> {
   // manifest of their own, and the project's installed names.
   const known = new Set(knownUiValues(registryPath));
   let styles: Map<string, string> | undefined;
+  let forbidDirectives: string[] | undefined;
 
   if (configExists(cwd)) {
     const config = await readConfig(cwd);
+    // A project's banned directives hold for markup piped in from it too (task 1.1F-27).
+    forbidDirectives = config.audit?.forbid_directives;
     const installed = await loadInstalledAuditInputs(config, join(cwd, config.output_dir));
     for (const [name, manifest] of installed.manifests) {
       manifests.set(name, manifest);
@@ -163,6 +166,7 @@ async function auditStdin(args: string[], cwd: string): Promise<void> {
     styles,
     knownUiValues: [...known],
     engineControllers: engineControllerNames(registryPath),
+    forbidDirectives,
     skipRules: parseSkipRules(args),
   });
   const componentsFound = extractComponents(source, "<stdin>").length;

@@ -108,6 +108,14 @@ export interface HtmlAuditInput {
    * finding carries no fix.
    */
   runtimeScript?: string;
+  /**
+   * Directives the project bans in markup — `faqir.config.json` →
+   * `audit.forbid_directives` (task 1.1F-27). Each entry is a directive as it
+   * would be written (`l-html`, `:src`, `@click`) or its bare name, and the
+   * `forbidden-directive` rule fires on every spelling of it. Omitted or empty,
+   * the rule finds nothing.
+   */
+  forbidDirectives?: readonly string[];
   /** Rule IDs to skip. */
   skipRules?: string[];
 }
@@ -190,7 +198,7 @@ export function auditHtmlSource(input: HtmlAuditInput): AuditResult[] {
   // attributes they check are not all written on a component root or on a part
   // (`data-span` lives on a plain grid CHILD), and a directive attribute is
   // normally on an element carrying no `data-ui` at all.
-  results.push(...buildVocabularyResults(doc, manifests, file, skipRules));
+  results.push(...buildVocabularyResults(doc, manifests, file, skipRules, input.forbidDirectives));
 
   // File-level controller-loaded: replace the generic per-component reminders
   // (emitted by controllerLoadedRule) with the precise "is the script actually

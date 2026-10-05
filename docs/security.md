@@ -131,6 +131,14 @@ worse than one that is absent.
 - The development engine (`core/faqir-core.dev.js`) reports every `l-html` use
   once per element; the report is visible in the `faqir dev` overlay and in
   `window.__FAQIR_DEVTOOLS__.warnings()`.
+- A project that never wants `l-html` can make the audit enforce it. Add
+  `"audit": { "forbid_directives": ["l-html"] }` to `faqir.config.json` and
+  every `l-html` in markup becomes a `forbidden-directive` error in
+  `faqir audit` (and in `faqir audit --stdin` run inside the project).
+  `faqir doctor` rejects an entry that names no directive. **This checks markup
+  only.** It does not see an `innerHTML` assignment in your own JavaScript, or
+  markup that a server or a script builds at runtime, so it is a guard against
+  a generated page reaching for `l-html`, not a sanitizer.
 
 ## 4. What the rest of the surface does with untrusted values
 

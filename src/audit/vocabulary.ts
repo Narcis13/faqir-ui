@@ -80,11 +80,23 @@ export const PART_ELEMENT_RULE: RuleInfo = {
     "in its place is invisible to the document outline and to assistive tech.",
 };
 
+export const FORBIDDEN_DIRECTIVE_RULE: RuleInfo = {
+  id: "forbidden-directive",
+  severity: "error",
+  applies_to: "every l-* / : / @ attribute in HTML, when faqir.config.json sets audit.forbid_directives",
+  description:
+    "A directive the project has banned in `audit.forbid_directives` must not " +
+    "appear in markup, under any spelling — `:x` is `l-bind`, `@x` is `l-on`, " +
+    "and an argument or modifier does not change which directive it is. Off " +
+    "unless the project configures it.",
+};
+
 /** Every rule this module contributes, for the rule inventory. */
 export const VOCABULARY_RULES: RuleInfo[] = [
   ATTRIBUTE_VOCABULARY_RULE,
   UNKNOWN_ATTRIBUTE_RULE,
   DIRECTIVE_NAME_RULE,
+  FORBIDDEN_DIRECTIVE_RULE,
   PART_ELEMENT_RULE,
 ];
 
@@ -627,6 +639,58 @@ export function buildDirectiveNameResults(doc: ParsedDocument, file: string): Au
   return results;
 }
 
+// ---------------------------------------------------------------------------
+// forbidden-directive
+// ---------------------------------------------------------------------------
+
+/**
+ * The base directive name an `audit.forbid_directives` entry means (task
+ * 1.1F-27), or null when it names no directive. An entry is read the way the
+ * markup is — `l-html`, `l-bind:src`, `:src` and `@click` go through
+ * `parseDirectiveName` — and a bare `html` is accepted too, so the list bans a
+ * directive however it is spelled on the page.
+ */
+export function forbiddenDirectiveName(entry: string): string | null {
+  const trimmed = entry.trim();
+  const name = parseDirectiveName(trimmed)?.name ?? trimmed;
+  return directiveByName(name) ? name : null;
+}
+
+/**
+ * Every attribute that dispatches on a forbidden directive. Matched on the
+ * parsed base name, so `l-on:click`, `@click.prevent` and `l-on` all fall to a
+ * ban on `l-on`. Markup only: an `innerHTML` assignment in the page's own
+ * script is not an attribute, and nothing here sees it.
+ */
+export function buildForbiddenDirectiveResults(
+  doc: ParsedDocument,
+  file: string,
+  forbidden: ReadonlySet<string>,
+): AuditResult[] {
+  const results: AuditResult[] = [];
+  if (forbidden.size === 0) return results;
+
+  for (const el of doc.elements) {
+    for (const attr of Object.keys(el.attrs)) {
+      const parsed = parseDirectiveName(attr);
+      if (!parsed || !forbidden.has(parsed.name)) continue;
+      results.push(
+        finding(
+          FORBIDDEN_DIRECTIVE_RULE.id,
+          "error",
+          componentOf(el),
+          file,
+          el,
+          `${attr} on <${el.tag}> uses l-${parsed.name}, which this project forbids ` +
+            `(faqir.config.json → audit.forbid_directives).`,
+        ),
+      );
+    }
+  }
+
+  return results;
+}
+
 /** Directives that do nothing at all without an expression. */
 const REQUIRES_EXPRESSION = new Set([
   "text", "html", "bind", "on", "model", "show", "if", "for", "key", "ref", "effect",
@@ -897,11 +961,18 @@ export function buildVocabularyResults(
   manifests: Map<string, Manifest>,
   file: string,
   skipRules: Set<string> = new Set(),
+  forbidDirectives: readonly string[] = [],
 ): AuditResult[] {
   const results: AuditResult[] = [];
   results.push(...buildAttributeVocabularyResults(doc, manifests, file, skipRules));
   if (!skipRules.has(DIRECTIVE_NAME_RULE.id)) {
     results.push(...buildDirectiveNameResults(doc, file));
+  }
+  if (!skipRules.has(FORBIDDEN_DIRECTIVE_RULE.id)) {
+    const forbidden = new Set(
+      forbidDirectives.map(forbiddenDirectiveName).filter((n): n is string => n !== null),
+    );
+    results.push(...buildForbiddenDirectiveResults(doc, file, forbidden));
   }
   if (!skipRules.has(PART_ELEMENT_RULE.id)) {
     results.push(...buildPartElementResults(doc, manifests, file));

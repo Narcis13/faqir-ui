@@ -11,6 +11,7 @@ import {
   referencedFiles,
 } from "../fonts/install";
 import { PROJECT_SCHEMA_FILE } from "../utils/schema-ref";
+import { forbiddenDirectiveName } from "../audit/vocabulary";
 
 interface CheckResult {
   name: string;
@@ -75,6 +76,14 @@ export async function doctor(args: string[]): Promise<void> {
     printResults(results);
     return;
   }
+
+  // 2b. `audit.forbid_directives` names real directives (task 1.1F-27)
+  //
+  // There is no config schema — `readConfig` casts — so this one key is checked
+  // here. A misspelt entry bans nothing, and the audit cannot say so without
+  // failing every page; a health check is where a dead policy gets reported.
+  const forbid = config.audit?.forbid_directives;
+  if (forbid !== undefined) results.push(checkForbidDirectives(forbid));
 
   const outputDir = join(cwd, config.output_dir);
 
@@ -353,6 +362,34 @@ export async function doctor(args: string[]): Promise<void> {
   }
 
   printResults(results);
+}
+
+/** The `audit.forbid_directives` check: a list of strings, each naming a directive. */
+export function checkForbidDirectives(forbid: unknown): CheckResult {
+  const name = "Audit config";
+  if (!Array.isArray(forbid) || forbid.some((d) => typeof d !== "string")) {
+    return {
+      name,
+      passed: false,
+      message: 'audit.forbid_directives must be an array of directive names, e.g. ["l-html"]',
+    };
+  }
+  const unknown = forbid.filter((d) => forbiddenDirectiveName(d) === null);
+  if (unknown.length > 0) {
+    return {
+      name,
+      passed: false,
+      message:
+        `audit.forbid_directives names no directive: ${unknown.map((d) => JSON.stringify(d)).join(", ")}. ` +
+        `An entry bans nothing unless it is a directive the engine or an official plugin implements ` +
+        `(written as in markup — "l-html", ":src", "@click" — or bare, "html").`,
+    };
+  }
+  return {
+    name,
+    passed: true,
+    message: forbid.length === 0 ? "audit.forbid_directives is empty" : `forbids ${forbid.join(", ")}`,
+  };
 }
 
 function printResults(results: CheckResult[]) {
