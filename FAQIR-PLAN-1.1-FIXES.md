@@ -168,7 +168,7 @@ wait for document order. Task 1.1F-32 releases the additive set; its version is 
 
 | ID | Task | Status |
 |----|------|--------|
-| 1.1F-31 | Release 1.1.2: the patch set | ⬜ |
+| 1.1F-31 | Release 1.1.2: the patch set | ✅ |
 | 1.1F-32 | Release the additive set (version per D1); downstream un-patch checklist | ⬜ |
 
 ## Follow-up tasks (added by sessions per protocol rule 4)
@@ -1249,7 +1249,7 @@ two serialisers) is out of scope; add a follow-up row if wanted.
 - In `faqir_bugs.md`, strike every fixed entry with the version.
 
 **Acceptance**
-- [ ] Tagged, published, `cdn.json` SRI verified; `faqir_bugs.md` entries struck.
+- [x] Tagged, published, `cdn.json` SRI verified; `faqir_bugs.md` entries struck. (Released 2026-10-05 as **1.1.2**, with the additive set (D1, confirmed by the owner). Release commit `2d58e6d`, tag `v1.1.2` pushed, and the GitHub release is at `github.com/Narcis13/faqir-ui/releases/tag/v1.1.2`. The `release.mjs` publish stopped after `@faqir-ui/core` and `@faqir-ui/react`. The owner finished `vue`, `forms`, `rules`, `mcp` and the root CLI by hand, as the checklist's "If a publish fails partway" section describes, so all seven read `latest = 1.1.2` on the registry. Fetched from jsDelivr, all 37 files under `@faqir-ui/core@1.1.2/dist/` hash to `cdn.json`'s SHA-384 values; two themes answered 503 on the first fetch while jsDelivr was still warming the new version, and matched on retry. Installed into a clean folder, `faqir-ui-cli@1.1.2` reports 1.1.2 and passes `init --yes` and `context --skill` (no mojibake) under Node and under Bun. `npx faqir-ui-cli@latest --version` prints 1.1.2. All 33 `faqir_bugs.md` entries are struck: 32 fixed, and 30 closed by D6. Notes: `docs/release-1.1.2.md`. Before the release, the Bun pin moved to 1.4.2 (`5cfd533`). Still owed: the Linux-container visual run (no container runtime here; the `text` and `form-page` baselines are intentional changes).)
 
 **Progress (2026-10-05, session 1 — prepared, not yet published).** *Scope changed by the
 owner:* every additive task was already on `main`, with its commits interleaved among the

@@ -222,5 +222,10 @@ runs are green. The numbers below are from the 1.4.2 run, except where marked.
     reference page gained three anchors (1.1F-18), and `form-page` options lost
     the field label's typography (1.1F-23, entry 5). Regenerate both; do not
     read them as regressions.
-- Published, tagged and SRI-checked against jsDelivr: *pending; the owner runs
-  `node scripts/release.mjs 1.1.2 --otp <code>`.*
+- **Released 2026-10-05.** Release commit `2d58e6d`, tag `v1.1.2`. The script's
+  publish stopped after `@faqir-ui/core` and `@faqir-ui/react`. The other five
+  were published by hand, as the checklist describes, and all seven read
+  `latest = 1.1.2`. All 37 jsDelivr files under `@faqir-ui/core@1.1.2/dist/`
+  match `cdn.json`'s SRI hashes. Installed into a clean folder, `faqir-ui-cli@1.1.2`
+  reports 1.1.2 and passes `init --yes` and `context --skill` under Node and
+  under Bun.
