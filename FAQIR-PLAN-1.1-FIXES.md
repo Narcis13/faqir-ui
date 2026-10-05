@@ -28,7 +28,7 @@ as was done with `state-1.0.json`).
 
 ### Environment facts every session needs
 
-- **Bun pin.** `.bun-version` is `1.3.8`. `build:audit-browser`, `build:rules-plugin` and
+- **Bun pin.** *(2026-10-05: the pin is now **`1.4.2`**, the machine's own Bun, and the three pinned bundles were regenerated with it. No scratch install is needed any more, so read "1.3.8" below as history.)* `.bun-version` was `1.3.8`. `build:audit-browser`, `build:rules-plugin` and
   `build:core-package` byte-compare against a minified build, so regenerate them **with Bun
   1.3.8** or their `check:*` gate goes red for an unrelated reason. Since 1.1F-05 the only Bun
   on this machine was 1.3.8, at `~/.bun/bin/bun`; by 1.1F-16 that binary is 1.4.2 again, so
