@@ -13,7 +13,9 @@ or workaround named under **Here**, and strike the entry.
 
 ## Engine (`ui/core/faqir-core.js`, `faqir-core.dev.js`, `faqir-core.mjs`)
 
-### 1. `l-ref` inside `l-if` content is never visible in `$refs`
+### ~~1. `l-ref` inside `l-if` content is never visible in `$refs`~~
+
+> **Fixed in 1.1.2** (1.1F-01). After `faqir upgrade`, drop what **Here** names; the un-patch checklist is in `docs/release-1.1.2.md`.
 
 - **Seen:** D3a, session 6. `l-ref="render"` on an element inside `<template l-if>`;
   `$refs.render` is `undefined` in the same scope's expressions, so
@@ -48,7 +50,9 @@ or workaround named under **Here**, and strike the entry.
   root element on the scope object, or mark clone top nodes differently from `l-data`
   roots so `findScopeRoot` skips them).
 
-### 2. No way for an expression to reach the element it is written on
+### ~~2. No way for an expression to reach the element it is written on~~
+
+> **Fixed in 1.1.2** (1.1F-06). After `faqir upgrade`, drop what **Here** names; the un-patch checklist is in `docs/release-1.1.2.md`.
 
 - **Seen:** D3a, while working around entry 1. Expressions compile to
   `new Function('$scope', '$el', 'with($scope) { … }')` and are called with the
@@ -64,7 +68,9 @@ or workaround named under **Here**, and strike the entry.
   (`$this` or `$self`: the element the directive is on). It would also have made entry 1
   a non-issue for `l-effect` hosts.
 
-### 3. Controllers inside inserted content start after its directives are bound
+### ~~3. Controllers inside inserted content start after its directives are bound~~
+
+> **Fixed in 1.1.2** (1.1F-03). After `faqir upgrade`, drop what **Here** names; the un-patch checklist is in `docs/release-1.1.2.md`.
 
 - **Seen:** D1, session 2. For a fragment inserted into the document (the router's
   pages), the engine binds `l-*` directives first and initialises the recipe controllers
@@ -75,7 +81,9 @@ or workaround named under **Here**, and strike the entry.
 - **Suggested fix:** initialise controllers of an inserted subtree before binding its
   directives, or document the order and offer a hook that runs after both.
 
-### 4. `l-model` on a radio/checkbox does not tell the controller
+### ~~4. `l-model` on a radio/checkbox does not tell the controller~~
+
+> **Fixed in 1.1.2** (1.1F-02). After `faqir upgrade`, drop what **Here** names; the un-patch checklist is in `docs/release-1.1.2.md`.
 
 - **Seen:** D1, session 2, with `toggle-group`. `l-model` sets `.checked` directly and
   fires no `change` event, so a controller that moves `data-state` only on `change`
@@ -86,7 +94,9 @@ or workaround named under **Here**, and strike the entry.
   control, or have the toggle-group controller derive `data-state` from `checked`
   (observe the property, or re-read it on `input`/`change` and on a store-driven update).
 
-### 16. `:checked` (and every boolean binding) sets the attribute, not the property
+### ~~16. `:checked` (and every boolean binding) sets the attribute, not the property~~
+
+> **Fixed in 1.1.2** (1.1F-02). After `faqir upgrade`, drop what **Here** names; the un-patch checklist is in `docs/release-1.1.2.md`.
 
 - **Seen:** D8b, session 31 (tested in Chrome). The trace page's Conversation |
   Waterfall toggle-group bound each radio with `:checked="view === '…'"`. After a click
@@ -108,7 +118,9 @@ or workaround named under **Here**, and strike the entry.
   set the property as well as the attribute (`el[attrName] = !!value`), as `l-model`
   already does for its own writes.
 
-### 29. A method called from an `l-for` row writes the row's loop variable, not its own field
+### ~~29. A method called from an `l-for` row writes the row's loop variable, not its own field~~
+
+> **Fixed in 1.1.2** (1.1F-05). After `faqir upgrade`, drop what **Here** names; the un-patch checklist is in `docs/release-1.1.2.md`.
 
 - **Seen:** D14f, session 55 (tested in Chrome). The editor's Errors and Warnings lists
   were `l-for="(problem, i) in …"`, and the page has a field `problem` of its own. A row's
@@ -133,7 +145,9 @@ or workaround named under **Here**, and strike the entry.
   `this`, not the row's (bind them when the scope is created), or at least warn in the
   dev build when a row's set trap writes its loop variable from inside a method.
 
-### 31. A `:style` binding replaces the whole inline style
+### ~~31. A `:style` binding replaces the whole inline style~~
+
+> **Fixed in 1.1.2** (1.1F-04). After `faqir upgrade`, drop what **Here** names; the un-patch checklist is in `docs/release-1.1.2.md`.
 
 - **Seen:** D15e, session 57, building the windowed entries table of a namespace page.
   `:style` on the table's root set `--table-max-height`; the table controller writes
@@ -154,7 +168,9 @@ or workaround named under **Here**, and strike the entry.
 
 ## Recipes and primitives
 
-### 5. Descendant selectors take nested components' parts for their own
+### ~~5. Descendant selectors take nested components' parts for their own~~
+
+> **Fixed in 1.1.2** (1.1F-12, 1.1F-13, 1.1F-20–23). After `faqir upgrade`, drop what **Here** names; the un-patch checklist is in `docs/release-1.1.2.md`.
 
 The same bug in three places, found in D2c (session 5) when a `collapsible` was put
 inside a `tabs` panel and inside another `collapsible`. Each is patched here with an
@@ -176,7 +192,9 @@ They must be re-applied after any `faqir upgrade` until fixed upstream.
   component's own parts (`:scope >` in controllers, `>` chains or `:not([data-ui] [data-ui] *)`
   style guards in CSS), and add a nesting case to faqir's own tests.
 
-### 6. sidebar controller: the same unscoped selector, not yet harmful
+### ~~6. sidebar controller: the same unscoped selector, not yet harmful~~
+
+> **Fixed in 1.1.2** (1.1F-12). After `faqir upgrade`, drop what **Here** names; the un-patch checklist is in `docs/release-1.1.2.md`.
 
 - **Seen:** D2c review. `recipes/sidebar/sidebar.js:39` collects
   `root.querySelectorAll("[data-part='trigger']")`, so any component with a `trigger`
@@ -185,13 +203,17 @@ They must be re-applied after any `faqir upgrade` until fixed upstream.
 - **Here:** not patched.
 - **Suggested fix:** as entry 5.
 
-### 7. sidebar: the trigger's chevron does not flip in rail mode
+### ~~7. sidebar: the trigger's chevron does not flip in rail mode~~
+
+> **Fixed in 1.1.2** (1.1F-11). After `faqir upgrade`, drop what **Here** names; the un-patch checklist is in `docs/release-1.1.2.md`.
 
 - **Seen:** D1, session 2. Collapsing the sidebar to its rail leaves the trigger's
   chevron pointing the same way.
 - **Here:** not patched.
 
-### 14. button: `aria-pressed` is not styled
+### ~~14. button: `aria-pressed` is not styled~~
+
+> **Fixed in 1.1.2** (1.1F-17). After `faqir upgrade`, drop what **Here** names; the un-patch checklist is in `docs/release-1.1.2.md`.
 
 - **Seen:** D6d, session 22. The Requests page's *Tail* toggle is a `button` with
   `aria-pressed`; pressed and not pressed look the same (`data-variant="outline"`
@@ -206,7 +228,9 @@ They must be re-applied after any `faqir upgrade` until fixed upstream.
   `outline` and `ghost`, the `secondary` fill), and `aria-pressed` in the manifest as a
   state, so a toggle button needs no variant swapping.
 
-### 17. description-list: tokens the manifest does not declare, and descendant part selectors
+### ~~17. description-list: tokens the manifest does not declare, and descendant part selectors~~
+
+> **Fixed in 1.1.2** (1.1F-15, 1.1F-20). After `faqir upgrade`, drop what **Here** names; the un-patch checklist is in `docs/release-1.1.2.md`.
 
 - **Seen:** D11a, session 38, reading the files `faqir add description-list` installed.
   `description-list.css` reads `--doc-font`, `--doc-line-height` and `--space-1`
@@ -230,7 +254,9 @@ They must be re-applied after any `faqir upgrade` until fixed upstream.
 - **Suggested fix:** generate `tokens_used` from the CSS (or have the audit compare the
   two), and scope the part rules with `>` as in entry 5.
 
-### 18. dialog: the focus restored after the exit motion takes focus from what opened meanwhile
+### ~~18. dialog: the focus restored after the exit motion takes focus from what opened meanwhile~~
+
+> **Fixed in 1.1.2** (1.1F-08). After `faqir upgrade`, drop what **Here** names; the un-patch checklist is in `docs/release-1.1.2.md`.
 
 - **Seen:** D13a, session 42. With an alert-dialog closing (Cancel clicked, state
   `closing`), ⌘K opened the command palette and focused its search field; when the
@@ -248,7 +274,9 @@ They must be re-applied after any `faqir upgrade` until fixed upstream.
   or on `document.body` (nothing else took it during the exit), as a menu or popover
   closing late should do too.
 
-### 19. dialog: a plain dialog focuses a panel that cannot take focus
+### ~~19. dialog: a plain dialog focuses a panel that cannot take focus~~
+
+> **Fixed in 1.1.2** (1.1F-08). After `faqir upgrade`, drop what **Here** names; the un-patch checklist is in `docs/release-1.1.2.md`.
 
 - **Seen:** D13b, session 43. The shortcuts' legend (a plain `dialog`, opened by `?`
   through `$ui('#shortcuts').open()`) opened with focus left on `<body>`: Escape did not
@@ -264,7 +292,9 @@ They must be re-applied after any `faqir upgrade` until fixed upstream.
   none (or focus the first focusable element, then the panel), and put the attribute in
   the example markup.
 
-### 20. table: a navigable grid loses its Tab stop when the focused row is removed
+### ~~20. table: a navigable grid loses its Tab stop when the focused row is removed~~
+
+> **Fixed in 1.1.2** (1.1F-09). After `faqir upgrade`, drop what **Here** names; the un-patch checklist is in `docs/release-1.1.2.md`.
 
 - **Seen:** D13c, session 44, first by reading the controller while making every table
   `data-navigable`, then in Chrome: on Requests, focus on a `/hello` row's cell, then
@@ -287,7 +317,9 @@ They must be re-applied after any `faqir upgrade` until fixed upstream.
   null;`), so the first cell takes the Tab stop again; `refresh()` already runs after
   every row change through the MutationObserver.
 
-### 21. table: links and buttons in a navigable grid keep their own Tab stops
+### ~~21. table: links and buttons in a navigable grid keep their own Tab stops~~
+
+> **Fixed in 1.1.2** (1.1F-14). **Behaviour change:** links and buttons in a navigable table's cells leave the Tab order (the ARIA grid pattern); Enter or F2 reaches them. After `faqir upgrade`, drop what **Here** names; the un-patch checklist is in `docs/release-1.1.2.md`.
 
 - **Seen:** D13c, session 44, reading the controller. With `data-navigable` the grid has
   one roving Tab stop among its cells, but a link or button inside a cell stays in the
@@ -300,7 +332,9 @@ They must be re-applied after any `faqir upgrade` until fixed upstream.
   navigable cells `tabindex="-1"`, move focus into a cell's single control on Enter (or
   F2 for several), and back to the cell on Escape.
 
-### 23. command-palette: ⌘K / Ctrl+K does nothing with Caps Lock or Shift
+### ~~23. command-palette: ⌘K / Ctrl+K does nothing with Caps Lock or Shift~~
+
+> **Fixed in 1.1.2** (1.1F-10). After `faqir upgrade`, drop what **Here** names; the un-patch checklist is in `docs/release-1.1.2.md`.
 
 - **Seen:** D13a, session 42, reading the controller while wiring the palette; written
   down in D13e, session 46. With Caps Lock on, or Shift held, ⌘K neither opens nor closes
@@ -314,7 +348,9 @@ They must be re-applied after any `faqir upgrade` until fixed upstream.
 - **Suggested fix:** compare `e.key.toLowerCase() === "k"`, or `e.code === "KeyK"` to
   follow the key's place rather than its character, as editors do for ⌘ shortcuts.
 
-### 24. button: a size undoes the link variant's padding and height
+### ~~24. button: a size undoes the link variant's padding and height~~
+
+> **Fixed in 1.1.2** (1.1F-17). After `faqir upgrade`, drop what **Here** names; the un-patch checklist is in `docs/release-1.1.2.md`.
 
 - **Seen:** D14a, session 50 (tested in Chrome). The editor's pointers are
   `data-variant="link" data-size="sm"` buttons; each stood 9 px right of the badge before
@@ -328,7 +364,9 @@ They must be re-applied after any `faqir upgrade` until fixed upstream.
   (`[data-variant="link"][data-size] { padding: 0; height: auto; }`) and have sizes set
   only the font size for it, or have the manifest and the audit refuse the pair.
 
-### 25. stack: a `data-flex="1"` child cannot shrink below its content
+### ~~25. stack: a `data-flex="1"` child cannot shrink below its content~~
+
+> **Fixed in 1.1.2** (1.1F-16). After `faqir upgrade`, drop what **Here** names; the un-patch checklist is in `docs/release-1.1.2.md`.
 
 - **Seen:** D14c, session 52 (measured in Chrome, a popup window at 390, 768 and 1280
   px). The shell is a horizontal stack of the sidebar and a `data-flex="1"` column holding
@@ -347,7 +385,9 @@ They must be re-applied after any `faqir upgrade` until fixed upstream.
   `"auto"` children, which is what a child that is meant to take the remaining space
   needs; a vertical stack is unaffected.
 
-### 26. grid: a `1fr` column grows past the grid for a wide child
+### ~~26. grid: a `1fr` column grows past the grid for a wide child~~
+
+> **Fixed in 1.1.2** (1.1F-16). After `faqir upgrade`, drop what **Here** names; the un-patch checklist is in `docs/release-1.1.2.md`.
 
 - **Seen:** D14c, session 52, as entry 25. The four `data-cols="1" data-cols-lg="2"`
   grids (the Overview's spend tables, the editor, the trace page, a namespace and its
@@ -363,7 +403,9 @@ They must be re-applied after any `faqir upgrade` until fixed upstream.
   the intrinsic mode already uses `minmax(min(100%, …), 1fr)` for the same reason.
   `description-list`'s horizontal variant (`minmax(8rem, auto) 1fr`) has the same `1fr`.
 
-### 27. text, heading, breadcrumb: a long token never breaks
+### ~~27. text, heading, breadcrumb: a long token never breaks~~
+
+> **Fixed in 1.1.2** (1.1F-16). After `faqir upgrade`, drop what **Here** names; the un-patch checklist is in `docs/release-1.1.2.md`.
 
 - **Seen:** D14c, session 52, as entry 25. Once 25 and 26 were patched, what still
   widened pages at 390 and 768 px were unbroken strings: an artifact id in the page's
@@ -383,7 +425,9 @@ They must be re-applied after any `faqir upgrade` until fixed upstream.
   where unbroken tokens live) and `break-word` or `anywhere` on headings and the
   breadcrumb, with the table exception above; or a `data-break` prop on text.
 
-### 28. text: an anchor carrying `data-ui="text"` looks like plain text
+### ~~28. text: an anchor carrying `data-ui="text"` looks like plain text~~
+
+> **Fixed in 1.1.2** (1.1F-18). After `faqir upgrade`, drop what **Here** names; the un-patch checklist is in `docs/release-1.1.2.md`.
 
 - **Seen:** D14e, session 54; open in `LOG-UI.md` since D2a (session 3). Most of the
   dashboard's links are `<a data-ui="text" data-variant="mono" data-size="sm">`: ids, refs,
@@ -410,7 +454,9 @@ They must be re-applied after any `faqir upgrade` until fixed upstream.
   `--color-fg-subtle` in `text.css`, `diff-view.css` and `form-block.css`: in the dark
   theme the first was too faint to read as a link.
 
-### 30. description-list: `data-size="sm"` sets text a step below `text`'s `sm`
+### ~~30. description-list: `data-size="sm"` sets text a step below `text`'s `sm`~~
+
+> **Closed in 1.1.2** (1.1F-15, 1.1F-20). Won't fix in CSS (by design, plan decision D6): every component whose `md` is `--text-sm` maps `sm` to `--text-xs`; the details slot now says so. The stale `@ui:tokens` header is fixed (generated from the CSS since 1.1F-15). The local `sm` → `--text-sm` patch is a project choice: keep it or drop it.
 
 - **Seen:** D15e, session 57. On the Kernel page's Status tab the terms of a
   `data-size="sm"` description list were smaller than the `data-ui="text"
@@ -425,7 +471,9 @@ They must be re-applied after any `faqir upgrade` until fixed upstream.
 - **Suggested fix:** map every size to the same step `text` uses for it, and generate
   the header from the CSS (entry 17).
 
-### 32. command-palette: every instance takes ⌘K, and its search keeps the page's undo
+### ~~32. command-palette: every instance takes ⌘K, and its search keeps the page's undo~~
+
+> **Fixed in 1.1.2** (1.1F-10). The ⌘K half is fixed (`data-no-shortcut`, one owner per press); the undo half is a docs note on the manifest, since browsers keep one undo history per page. After `faqir upgrade`, drop what **Here** names; the un-patch checklist is in `docs/release-1.1.2.md`.
 
 - **Seen:** D15d, session 57, building the block editor's op picker. A second
   `command-palette` on the page would open and close with the shell's on ⌘K / Ctrl+K.
@@ -447,7 +495,9 @@ They must be re-applied after any `faqir upgrade` until fixed upstream.
 
 ## CLI (`faqir-ui-cli`)
 
-### 8. `faqir create` writes a stray `manifest.schema.json` and a wrong `$schema` path
+### ~~8. `faqir create` writes a stray `manifest.schema.json` and a wrong `$schema` path~~
+
+> **Fixed in 1.1.2** (1.1F-26). After `faqir upgrade`, drop what **Here** names; the un-patch checklist is in `docs/release-1.1.2.md`.
 
 - **Seen:** every `create` (source-view, json-view, form-block). It writes
   `manifest.schema.json` into the working directory (the repository root here), and the
@@ -458,7 +508,9 @@ They must be re-applied after any `faqir upgrade` until fixed upstream.
 - **Here:** the stray file is deleted and `$schema` corrected by hand after each create.
 - **Suggested fix:** resolve both from `faqir.config.json`'s `output_dir`.
 
-### 9. `faqir audit` only recognises the classic engine tag
+### ~~9. `faqir audit` only recognises the classic engine tag~~
+
+> **Fixed in 1.1.2** (1.1F-24). After `faqir upgrade`, drop what **Here** names; the un-patch checklist is in `docs/release-1.1.2.md`.
 
 - **Seen:** D1. The dashboard loads the engine as an ES module
   (`import Faqir from '../ui/core/faqir-core.mjs'` in `app/main.mjs`, which is the safe
@@ -469,7 +521,9 @@ They must be re-applied after any `faqir upgrade` until fixed upstream.
 - **Suggested fix:** recognise a module script that imports `faqir-core.mjs` (directly,
   or let the config declare the entry module).
 
-### 10. `faqir repair` would add controller scripts the bundle already contains
+### ~~10. `faqir repair` would add controller scripts the bundle already contains~~
+
+> **Fixed in 1.1.2** (1.1F-25). After `faqir upgrade`, drop what **Here** names; the un-patch checklist is in `docs/release-1.1.2.md`.
 
 - **Seen:** D1. Because of entry 9, `faqir repair` on `index.html` adds the recipes' own
   controller `<script>` tags next to the bundled engine, loading every controller twice.
@@ -477,7 +531,9 @@ They must be re-applied after any `faqir upgrade` until fixed upstream.
 - **Suggested fix:** fixed with entry 9; repair should also check whether the engine
   bundle already provides a controller.
 
-### 11. `faqir audit` does not know `l-html` is forbidden here
+### ~~11. `faqir audit` does not know `l-html` is forbidden here~~
+
+> **Fixed in 1.1.2** (1.1F-27). After `faqir upgrade`, drop what **Here** names; the un-patch checklist is in `docs/release-1.1.2.md`.
 
 - **Seen:** D1. Not a faqir bug: `l-html` is a valid directive, and the audit's
   `directive-name` rule accepts it. The dashboard forbids it (VISION-UI §10) and checks
@@ -485,7 +541,9 @@ They must be re-applied after any `faqir upgrade` until fixed upstream.
 - **Suggested feature:** a project-level rule list in `faqir.config.json`
   (`"forbid_directives": ["l-html"]`).
 
-### 22. `@faqir-ui/mcp`'s `faqir_audit_html` passes names and attributes it does not know
+### ~~22. `@faqir-ui/mcp`'s `faqir_audit_html` passes names and attributes it does not know~~
+
+> **Fixed in 1.1.2** (1.1F-28). After `faqir upgrade`, drop what **Here** names; the un-patch checklist is in `docs/release-1.1.2.md`.
 
 - **Seen:** D13c, session 44. The CLI was not to be run, so the MCP server's
   `faqir_audit_html` was tried as the audit. On a table missing `thead` and with
@@ -502,7 +560,9 @@ They must be re-applied after any `faqir upgrade` until fixed upstream.
   server's working directory) so project components are known; report an unknown
   `data-ui` name and an attribute no manifest declares, at least under a `strict` flag.
 
-### 33. The audit gives a part to its nearest component, not to the one that declares it
+### ~~33. The audit gives a part to its nearest component, not to the one that declares it~~
+
+> **Fixed in 1.1.2** (1.1F-28). After `faqir upgrade`, drop what **Here** names; the un-patch checklist is in `docs/release-1.1.2.md`.
 
 - **Seen:** D15d, session 57: `faqir_audit_html` (MCP) on the block editor's markup warned
   `orphan-part` for `[data-part="patches"]`, a part of `block-edit` placed inside a
@@ -516,7 +576,9 @@ They must be re-applied after any `faqir upgrade` until fixed upstream.
 
 ## Themes and fonts
 
-### 12. The mono font draws ligatures by default
+### ~~12. The mono font draws ligatures by default~~
+
+> **Fixed in 1.1.2** (1.1F-19). After `faqir upgrade`, drop what **Here** names; the un-patch checklist is in `docs/release-1.1.2.md`.
 
 - **Seen:** D3a, session 6. JetBrains Mono (installed with `faqir fonts add
   jetbrains-mono --role mono`) joins `>=`, `!=`, `=>` into single glyphs. In a code or
@@ -530,7 +592,9 @@ They must be re-applied after any `faqir upgrade` until fixed upstream.
   `mono` variant, sets `font-variant-ligatures: none` (or exposes a
   `--font-mono-ligatures` token defaulting to none).
 
-### 13. The CSP hash of the injected `l-cloak` style is tied to its exact text
+### ~~13. The CSP hash of the injected `l-cloak` style is tied to its exact text~~
+
+> **Fixed in 1.1.2** (1.1F-07). The engine no longer injects the style, so `style-src 'self'` needs no hash. After `faqir upgrade`, drop what **Here** names; the un-patch checklist is in `docs/release-1.1.2.md`.
 
 - **Seen:** K1. The engine injects `<style>[l-cloak] { display: none !important; }</style>`;
   a strict CSP must allow it by its sha256 hash (VISION-UI §10). Any change to that text
@@ -542,7 +606,9 @@ They must be re-applied after any `faqir upgrade` until fixed upstream.
 
 ## Forms (`@faqir-ui/forms` 1.1.0)
 
-### 15. `renderForm` cannot take an untrusted schema, and refuses `additionalProperties`
+### ~~15. `renderForm` cannot take an untrusted schema, and refuses `additionalProperties`~~
+
+> **Fixed in 1.1.2** (1.1F-29, 1.1F-30). After `faqir upgrade`, drop what **Here** names; the un-patch checklist is in `docs/release-1.1.2.md`.
 
 - **Seen:** D7a spec, session 25, reading `packages/forms/src/index.js` to plan the Try it
   form (VISION-UI §5.5). Two things stop it from drawing a flow's `input` schema:
