@@ -343,7 +343,7 @@ describe("shape & focus · the registry consumes the families, never a literal",
       ],
       // The stepper's markers: the rule between two steps is a rule, drawn as a
       // box because it has to carry its own colour.
-      ["primitives/stepper/stepper.css", `[data-ui="stepper"] [data-part="connector"]`, "height"],
+      ["primitives/stepper/stepper.css", `[data-ui="stepper"] > [data-part="connector"]`, "height"],
       // The table's header rule, and the footer rule that answers it.
       ["recipes/table/table.css", `[data-ui="table"] > :where([data-part="table"]) > :where(thead, tbody, tfoot) > :where(tr) > [data-part="th"]`, "border-bottom"],
       [
@@ -357,7 +357,7 @@ describe("shape & focus · the registry consumes the families, never a literal",
         `[data-ui="settings-page"][data-variant="horizontal"] [data-ui="tabs"] [data-part="trigger"]`,
         "border-inline-start",
       ],
-      ["recipes/slider/slider.css", `[data-ui="slider"] [data-part="thumb"]`, "border"],
+      ["recipes/slider/slider.css", `[data-ui="slider"] > :where([data-part="track"]) > [data-part="thumb"]`, "border"],
     ];
     for (const [rel, selector, prop] of NAMED) {
       const value = declaration(rel, selector, prop);
@@ -656,11 +656,11 @@ describe("shape & focus · recipes and patterns resolve to the same edge", () =>
     ],
     [
       "recipes/toast/toast.css",
-      `[data-ui="toast"] [data-part="toast"][data-variant="success"]`,
+      `[data-ui="toast"] > [data-part="toast"][data-variant="success"]`,
       "border-inline-start",
       "3px",
     ],
-    ["recipes/slider/slider.css", `[data-ui="slider"] [data-part="thumb"]`, "border", "2px"],
+    ["recipes/slider/slider.css", `[data-ui="slider"] > :where([data-part="track"]) > [data-part="thumb"]`, "border", "2px"],
     [
       "recipes/sidebar/sidebar.css",
       `[data-ui="sidebar"] > [data-part="panel"]`,
@@ -734,7 +734,7 @@ describe("shape & focus · recipes and patterns resolve to the same edge", () =>
       :root { --border-width-sm: 4px; --border-width-md: 6px; --border-width-lg: 8px; }
       #a { border-top: ${widthSlot(declaration("recipes/accordion/accordion.css", `[data-ui="accordion"] > [data-part="item"]`, "border-bottom"))} solid #cccccc; }
       #b { border-top: ${widthSlot(declaration("recipes/table/table.css", `[data-ui="table"] > :where([data-part="table"]) > :where(thead, tbody, tfoot) > :where(tr) > [data-part="th"]`, "border-bottom"))} solid #cccccc; }
-      #c { border-top: ${widthSlot(declaration("recipes/toast/toast.css", `[data-ui="toast"] [data-part="toast"][data-variant="success"]`, "border-inline-start"))} solid #cccccc; }
+      #c { border-top: ${widthSlot(declaration("recipes/toast/toast.css", `[data-ui="toast"] > [data-part="toast"][data-variant="success"]`, "border-inline-start"))} solid #cccccc; }
       #d { border-top: ${widthSlot(declaration("base/prose.css", `[data-ui="prose"] blockquote`, "border-inline-start"))} solid #cccccc; }
     </style>`;
     d.body.innerHTML = `<i id="a"></i><i id="b"></i><i id="c"></i><i id="d"></i>`;
@@ -758,7 +758,9 @@ describe("shape & focus · recipes and patterns resolve to the same edge", () =>
       ["recipes/context-menu/context-menu.css", `[data-ui="context-menu"] > [data-part="target"]:focus-visible`],
       [
         "recipes/tree-view/tree-view.css",
-        `[data-ui="tree-view"] [data-part="item"]:focus-visible > [data-part="label"]`,
+        // The whole prelude: an item is the root's child or a group's (1.1F-23).
+        `[data-ui="tree-view"] > [data-part="item"]:focus-visible > [data-part="label"], ` +
+          `[data-ui="tree-view"] :where([data-part="group"]) > [data-part="item"]:focus-visible > [data-part="label"]`,
       ],
       // The whole prelude: a trigger is its item's child, or a heading's (1.1F-20).
       [

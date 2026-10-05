@@ -198,13 +198,14 @@ describe("button — link variant under a size", () => {
 describe("button manifest — the pressed state is declared", () => {
   const m = manifest("button");
 
-  it("is schema-valid at 1.2.0 with a changes entry for it", () => {
+  it("is schema-valid, with a 1.2.0 changes entry for it", () => {
     expect(validateManifest(m)).toEqual([]);
-    expect(m.version).toBe("1.2.0");
-    expect(m.changes?.[0].version).toBe("1.2.0");
-    expect(m.changes?.[0].note).toContain("pressed");
-    expect(m.changes?.[0].note).toContain("link");
-    expect(m.changes?.[0].breaking).toBe(false);
+    // 1.2.x: a later patch bumps the version past the entry (1.1F-23 did).
+    expect(m.version).toMatch(/^1\.2\.\d+$/);
+    const entry = m.changes?.find((c) => c.version === "1.2.0");
+    expect(entry?.note).toContain("pressed");
+    expect(entry?.note).toContain("link");
+    expect(entry?.breaking).toBe(false);
   });
 
   it("declares states.pressed off aria-pressed", () => {

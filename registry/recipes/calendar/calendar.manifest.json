@@ -1,11 +1,16 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "calendar",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "kind": "recipe",
   "category": "forms",
   "description": "Standalone month-grid calendar with roving-tabindex keyboard navigation, min/max/disabled dates, and single or range selection — extracted from date-picker so availability grids and range pickers can use it directly",
   "changes": [
+    {
+      "version": "1.1.1",
+      "note": "Nested components keep their own parts. The stylesheet reached the header, month navigation, grid and days with descendant selectors, so a component nested inside with parts of the same name took this one's styles. Parts are root > header > month-label, nav-prev and nav-next (the header is optional, so they may also be the root's children), root > grid, and root > grid > tbody > tr > td > day for the days the controller renders. Every part rule is now a child chain from the root, with the hops in :where(), so no rule changes specificity. No change for markup that follows the template.",
+      "breaking": false
+    },
     {
       "version": "1.1.0",
       "note": "data-today=\"true\" and data-outside=\"true\" are now declared. calendar.js has always written both onto the day buttons it renders and calendar.css has always styled them, but no manifest named them, so nothing generated from manifests knew a day cell carries them. 0.8-10's undeclared-attribute rule now makes this class of drift impossible: an attribute a component's CSS selects on that its manifest never declares fails the registry gate.",
@@ -22,7 +27,7 @@
       "selector": "[data-part='header']",
       "required": false,
       "tag_hint": "div",
-      "description": "Row holding the month navigation buttons and the month label"
+      "description": "Row holding the month navigation buttons and the month label. Without it, the label and buttons are the root's own children"
     },
     "nav-prev": {
       "selector": "[data-part='nav-prev']",

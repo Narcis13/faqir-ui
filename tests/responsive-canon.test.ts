@@ -425,8 +425,13 @@ describe("input · data-width=\"fixed\" caps from the canon sm tier up", () => {
 
 describe("stepper · labels are hidden on a phone and revealed at canon sm", () => {
   const rules = rulesOf(join(PRIMITIVES, "stepper", "stepper.css"));
+  // A label is its step's child, a connector the root's (1.1F-23).
   const at = (property: string, widthPx: number, part: string) =>
-    resolveDeepValue(rules, "stepper", property, { subject: { "data-part": part }, widthPx });
+    resolveDeepValue(rules, "stepper", property, {
+      between: part === "label" ? [{ "data-part": "step" }] : [],
+      subject: { "data-part": part },
+      widthPx,
+    });
 
   it("the label flips exactly at the sm floor", () => {
     expect(at("display", 390, "label")).toBe("none");

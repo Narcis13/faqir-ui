@@ -550,7 +550,12 @@ describe("inbox — collapses to a single pane on a phone", () => {
 
   it("reveals the back button only in the collapsed layout", () => {
     const back = (widthPx: number) =>
-      resolveDeepValue(RULES, "inbox", "display", { subject: { "data-part": "back" }, widthPx });
+      resolveDeepValue(RULES, "inbox", "display", {
+        // The back button is the detail pane's child (1.1F-23: no rule reaches past it).
+        between: [{ "data-part": "detail-pane" }],
+        subject: { "data-part": "back" },
+        widthPx,
+      });
     mockViewport(390);
     expect(back(390)).toBe("inline-flex");
     mockViewport(1280);

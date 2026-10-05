@@ -438,7 +438,8 @@ test("every mono surface turns ligatures off, and follows --mono-ligatures", asy
     <kbd data-ui="kbd" data-case="kbd">-></kbd>
     <div data-ui="prose"><p data-case="prose-p">a != b <code data-case="prose-code">a != b</code></p>
       <pre data-case="prose-pre">if (a !== b) return c => d;</pre></div>
-    <div data-ui="command-palette"><span data-part="kbd" data-case="palette-kbd">-></span></div>
+    <div data-ui="command-palette"><div data-part="panel"><div data-part="list"><div data-part="item">
+      <span data-part="kbd" data-case="palette-kbd">-></span></div></div></div></div>
     <div data-ui="barcode"><span data-part="caption" data-case="barcode-caption">A->B!=C</span></div>
     <span data-ui="text" data-case="plain">a != b => c</span>
   </div>`;

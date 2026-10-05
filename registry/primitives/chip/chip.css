@@ -18,13 +18,13 @@
   white-space: nowrap;
 }
 
-[data-ui="chip"] [data-part="label"] {
+[data-ui="chip"] > [data-part="label"] {
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 /* ── Dismiss ── */
-[data-ui="chip"] [data-part="dismiss"] {
+[data-ui="chip"] > [data-part="dismiss"] {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -41,12 +41,12 @@
   cursor: pointer;
 }
 
-[data-ui="chip"] [data-part="dismiss"]:hover {
+[data-ui="chip"] > [data-part="dismiss"]:hover {
   background: var(--color-border);
   color: var(--color-fg);
 }
 
-[data-ui="chip"] [data-part="dismiss"]:focus-visible {
+[data-ui="chip"] > [data-part="dismiss"]:focus-visible {
   outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
   /* Half the default gap — the dismiss target is small, and the full ring
      would collide with the chip's own edge. */
@@ -60,7 +60,7 @@
   color: var(--color-primary);
 }
 
-[data-ui="chip"][data-variant="primary"] [data-part="dismiss"] {
+[data-ui="chip"][data-variant="primary"] > [data-part="dismiss"] {
   color: var(--color-primary);
 }
 
@@ -74,7 +74,7 @@
   color: var(--color-destructive);
 }
 
-[data-ui="chip"][data-variant="destructive"] [data-part="dismiss"] {
+[data-ui="chip"][data-variant="destructive"] > [data-part="dismiss"] {
   color: var(--color-destructive);
 }
 

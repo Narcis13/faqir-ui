@@ -13,7 +13,7 @@
 }
 
 /* ── Tag row: the chips + the text input share one field-like box ── */
-[data-ui="tag-input"] [data-part="taglist"] {
+[data-ui="tag-input"] > [data-part="taglist"] {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -28,13 +28,13 @@
               box-shadow var(--duration-fast) var(--ease-default);
 }
 
-[data-ui="tag-input"] [data-part="taglist"]:focus-within {
+[data-ui="tag-input"] > [data-part="taglist"]:focus-within {
   border-color: var(--focus-ring-color);
   box-shadow: 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
 }
 
 /* ── Text input: borderless, grows to fill the remaining row space ── */
-[data-ui="tag-input"] [data-part="input"] {
+[data-ui="tag-input"] > :where([data-part="taglist"]) > [data-part="input"] {
   flex: 1 1 6ch;
   min-width: 6ch;
   padding: var(--space-1) 0;
@@ -47,12 +47,12 @@
   outline: none;
 }
 
-[data-ui="tag-input"] [data-part="input"]::placeholder {
+[data-ui="tag-input"] > :where([data-part="taglist"]) > [data-part="input"]::placeholder {
   color: var(--color-fg-muted);
 }
 
 /* ── Suggestions listbox (mirrors the combobox listbox contract) ── */
-[data-ui="tag-input"] [data-part="listbox"] {
+[data-ui="tag-input"] > [data-part="listbox"] {
   position: absolute;
   top: 100%;
   inset-inline-start: 0;
@@ -69,7 +69,7 @@
   list-style: none;
 }
 
-[data-ui="tag-input"] [data-part="option"] {
+[data-ui="tag-input"] > :where([data-part="listbox"]) > [data-part="option"] {
   display: flex;
   align-items: center;
   padding: var(--space-2) var(--space-3);
@@ -81,16 +81,16 @@
   transition: background var(--duration-fast) var(--ease-default);
 }
 
-[data-ui="tag-input"] [data-part="option"]:hover,
-[data-ui="tag-input"] [data-part="option"][data-highlighted] {
+[data-ui="tag-input"] > :where([data-part="listbox"]) > [data-part="option"]:hover,
+[data-ui="tag-input"] > :where([data-part="listbox"]) > [data-part="option"][data-highlighted] {
   background: var(--color-primary-subtle, oklch(0.96 0.04 264));
 }
 
-[data-ui="tag-input"] [data-part="option"][data-hidden] {
+[data-ui="tag-input"] > :where([data-part="listbox"]) > [data-part="option"][data-hidden] {
   display: none;
 }
 
-[data-ui="tag-input"] [data-part="empty"] {
+[data-ui="tag-input"] > :where([data-part="listbox"]) > [data-part="empty"] {
   padding: var(--space-2) var(--space-3);
   color: var(--color-fg-muted);
   font-size: var(--text-sm);
@@ -99,8 +99,8 @@
 
 /* ── Motion ── */
 @media (prefers-reduced-motion: reduce) {
-  [data-ui="tag-input"] [data-part="taglist"],
-  [data-ui="tag-input"] [data-part="option"] {
+  [data-ui="tag-input"] > [data-part="taglist"],
+  [data-ui="tag-input"] > :where([data-part="listbox"]) > [data-part="option"] {
     transition: none;
   }
 }

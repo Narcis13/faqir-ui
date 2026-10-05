@@ -21,7 +21,7 @@
 // Descendant combinators are still skipped; suites assert those by inspecting
 // the rule list directly.
 
-import { splitSelectorList, steps } from "./part-selectors";
+import { splitSelectorList, steps } from "../../src/audit/part-selectors";
 
 export interface CascadeRule {
   selectors: string[];

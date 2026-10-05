@@ -1,11 +1,16 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "toggle-group",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "kind": "recipe",
   "category": "forms",
   "description": "Single- or multi-select group of toggle buttons over native radio/checkbox controls, with roving-tabindex keyboard navigation and native l-model binding",
   "changes": [
+    {
+      "version": "1.1.2",
+      "note": "Nested components keep their own parts. The stylesheet reached the items and controls with descendant selectors, so a component nested inside with parts of the same name took this one's styles. Parts are root > item > control, and the checked, focus and disabled rules ask :has(> control). Every part rule is now a child chain from the root, with the hops in :where(), so no rule changes specificity. No change for markup that follows the template.",
+      "breaking": false
+    },
     {
       "version": "1.1.1",
       "note": "The group now follows store-driven l-model writes. l-model sets a control's checked property silently, so data-state and the roving tabindex used to go stale (the checked radio kept tabindex=-1). The engine now announces checked/selected writes with a bubbling faqir:model event; the controller re-syncs on it and on a form reset, without emitting faqir:change. A plain script write (input.checked = x) is still not observed — use setValue().",

@@ -12,7 +12,7 @@
 }
 
 /* ── List ── */
-[data-ui="breadcrumb"] [data-part="list"] {
+[data-ui="breadcrumb"] > [data-part="list"] {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -23,26 +23,26 @@
 }
 
 /* ── Item (a link crumb) ── */
-[data-ui="breadcrumb"] [data-part="item"] {
+[data-ui="breadcrumb"] > :where([data-part="list"]) > :where(li) > [data-part="item"] {
   color: var(--color-fg-muted);
   text-decoration: none;
   border-radius: var(--radius-sm);
   transition: color var(--duration-fast) var(--ease-default);
 }
 
-[data-ui="breadcrumb"] [data-part="item"]:hover {
+[data-ui="breadcrumb"] > :where([data-part="list"]) > :where(li) > [data-part="item"]:hover {
   color: var(--color-primary-hover);
   text-decoration-line: var(--link-decoration);
 }
 
-[data-ui="breadcrumb"] [data-part="item"]:focus-visible {
+[data-ui="breadcrumb"] > :where([data-part="list"]) > :where(li) > [data-part="item"]:focus-visible {
   outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
   outline-offset: var(--focus-ring-offset);
   box-shadow: var(--focus-shadow);
 }
 
 /* ── Separator (presentational) ── */
-[data-ui="breadcrumb"] [data-part="separator"] {
+[data-ui="breadcrumb"] > :where([data-part="list"]) > [data-part="separator"] {
   display: inline-flex;
   align-items: center;
   color: var(--color-fg-subtle);
@@ -50,12 +50,12 @@
 }
 
 /* Default glyph when the separator is left empty */
-[data-ui="breadcrumb"] [data-part="separator"]:empty::before {
+[data-ui="breadcrumb"] > :where([data-part="list"]) > [data-part="separator"]:empty::before {
   content: var(--breadcrumb-separator, "/");
 }
 
 /* ── Current page ── */
-[data-ui="breadcrumb"] [data-part="current"] {
+[data-ui="breadcrumb"] > :where([data-part="list"]) > :where(li) > [data-part="current"] {
   color: var(--color-fg);
   font-weight: var(--weight-medium);
 }
@@ -71,7 +71,7 @@
 
 /* ── Motion ── */
 @media (prefers-reduced-motion: reduce) {
-  [data-ui="breadcrumb"] [data-part="item"] {
+  [data-ui="breadcrumb"] > :where([data-part="list"]) > :where(li) > [data-part="item"] {
     transition: none;
   }
 }

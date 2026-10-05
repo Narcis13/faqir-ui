@@ -9,14 +9,14 @@
 }
 
 /* ── Step ── */
-[data-ui="stepper"] [data-part="step"] {
+[data-ui="stepper"] > [data-part="step"] {
   display: flex;
   align-items: center;
   gap: 0;
 }
 
 /* ── Indicator (circle) ── */
-[data-ui="stepper"] [data-part="indicator"] {
+[data-ui="stepper"] > :where([data-part="step"]) > [data-part="indicator"] {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -31,7 +31,7 @@
 }
 
 /* ── Active step ── */
-[data-ui="stepper"] [data-part="step"][data-state="active"] [data-part="indicator"] {
+[data-ui="stepper"] > [data-part="step"][data-state="active"] > [data-part="indicator"] {
   background: var(--color-primary);
   color: var(--color-primary-fg);
 }
@@ -46,7 +46,7 @@
    `--color-success` ON `--color-success-subtle`. Completed reads as a settled
    tint next to the active step's solid fill, which is what "done" should look
    like beside "you are here". [W3-3] */
-[data-ui="stepper"] [data-part="step"][data-state="completed"] [data-part="indicator"] {
+[data-ui="stepper"] > [data-part="step"][data-state="completed"] > [data-part="indicator"] {
   background: var(--color-success-subtle);
   color: var(--color-success);
 }
@@ -57,7 +57,7 @@
    responsive block at the foot of this sheet. `revert` rather than a literal
    `inline` so the element's own tag decides — the CSS does not have to know
    that the slot ships as a `<span>`. */
-[data-ui="stepper"] [data-part="label"] {
+[data-ui="stepper"] > :where([data-part="step"]) > [data-part="label"] {
   display: none;
   font-size: var(--text-xs);
   color: var(--color-fg-muted);
@@ -65,18 +65,18 @@
   white-space: nowrap;
 }
 
-[data-ui="stepper"] [data-part="step"][data-state="active"] [data-part="label"] {
+[data-ui="stepper"] > [data-part="step"][data-state="active"] > [data-part="label"] {
   color: var(--color-primary);
   font-weight: var(--weight-medium);
 }
 
-[data-ui="stepper"] [data-part="step"][data-state="completed"] [data-part="label"] {
+[data-ui="stepper"] > [data-part="step"][data-state="completed"] > [data-part="label"] {
   color: var(--color-success);
 }
 
 /* ── Connector ──
    The tight phone metrics are the base; the roomier ones arrive at `sm`. */
-[data-ui="stepper"] [data-part="connector"] {
+[data-ui="stepper"] > [data-part="connector"] {
   flex: 1;
   height: var(--border-width-strong);
   background: var(--color-border);
@@ -84,7 +84,7 @@
   min-width: var(--space-2);
 }
 
-[data-ui="stepper"] [data-part="connector"][data-state="completed"] {
+[data-ui="stepper"] > [data-part="connector"][data-state="completed"] {
   background: var(--color-success);
 }
 
@@ -94,12 +94,12 @@
   align-items: flex-start;
 }
 
-[data-ui="stepper"][data-variant="vertical"] [data-part="step"] {
+[data-ui="stepper"][data-variant="vertical"] > [data-part="step"] {
   flex-direction: row;
   align-items: center;
 }
 
-[data-ui="stepper"][data-variant="vertical"] [data-part="connector"] {
+[data-ui="stepper"][data-variant="vertical"] > [data-part="connector"] {
   width: 2px;
   height: var(--space-6);
   min-width: 0;
@@ -107,24 +107,24 @@
 }
 
 /* ── Size: small ── */
-[data-ui="stepper"][data-size="sm"] [data-part="indicator"] {
+[data-ui="stepper"][data-size="sm"] > :where([data-part="step"]) > [data-part="indicator"] {
   width: 1.5rem;
   height: 1.5rem;
   font-size: var(--text-xs);
 }
 
-[data-ui="stepper"][data-size="sm"][data-variant="vertical"] [data-part="connector"] {
+[data-ui="stepper"][data-size="sm"][data-variant="vertical"] > [data-part="connector"] {
   margin-inline-start: calc(0.75rem - 1px);
 }
 
 /* ── Size: large ── */
-[data-ui="stepper"][data-size="lg"] [data-part="indicator"] {
+[data-ui="stepper"][data-size="lg"] > :where([data-part="step"]) > [data-part="indicator"] {
   width: 2.5rem;
   height: 2.5rem;
   font-size: var(--text-sm);
 }
 
-[data-ui="stepper"][data-size="lg"][data-variant="vertical"] [data-part="connector"] {
+[data-ui="stepper"][data-size="lg"][data-variant="vertical"] > [data-part="connector"] {
   margin-inline-start: calc(1.25rem - 1px);
 }
 
@@ -134,11 +134,11 @@
    observable difference is the boundary itself, which now belongs to the wide
    side (at exactly 640px labels show rather than hide). */
 @media (min-width: 40rem) {
-  [data-ui="stepper"] [data-part="label"] {
+  [data-ui="stepper"] > :where([data-part="step"]) > [data-part="label"] {
     display: revert;
   }
 
-  [data-ui="stepper"] [data-part="connector"] {
+  [data-ui="stepper"] > [data-part="connector"] {
     min-width: var(--space-4);
     margin: 0 var(--space-2);
   }

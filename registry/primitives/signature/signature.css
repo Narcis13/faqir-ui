@@ -11,13 +11,13 @@
 }
 
 /* ── Line ── */
-[data-ui="signature"] [data-part="line"] {
+[data-ui="signature"] > [data-part="line"] {
   border-top: var(--border-width) solid var(--doc-signature-line-color);
   min-height: 1px;
 }
 
 /* ── Label ── */
-[data-ui="signature"] [data-part="label"] {
+[data-ui="signature"] > [data-part="label"] {
   font-size: var(--doc-signature-label-size);
   font-weight: var(--weight-medium);
   color: var(--doc-signature-label-color);

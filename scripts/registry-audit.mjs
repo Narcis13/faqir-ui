@@ -4,7 +4,7 @@
  * registry remediated in 0.3-10; theme-manifest gate added in 0.4-12;
  * document-rule gate added in 0.4-15). See FAQIR-PLAN §10.4.
  *
- * Eight gates, all fatal on a single finding:
+ * Nine gates, all fatal on a single finding:
  *
  *  1. **logical-properties** — runs the framework's own audit rule engine
  *     (`buildLogicalPropertyResults`, the same one `faqir audit` runs per
@@ -57,6 +57,14 @@
  *     stylesheet's `@ui:tokens` header and the `var()`s its CSS reads agree.
  *     Regenerate with `bun run gen:component-tokens`.
  *
+ *  9. **descendant-part-selector** (task 1.1F-23) — no stylesheet reaches a
+ *     `[data-part=…]` across a descendant combinator (a bare `:has([data-part])`
+ *     included), because such a rule also styles that part of any component
+ *     nested inside. Parts are reached by child combinators, with the hops in
+ *     `:where()`. Exceptions are named selector by selector in
+ *     `DESCENDANT_PART_ALLOWED`; `DESCENDANT_PART_PENDING` lists the pattern
+ *     sheets follow-up 1.1F-39 still has to convert.
+ *
  * Bun-only: imports the TypeScript rule engine from `src/`. Run via
  * `bun run audit:registry` (or `bun scripts/registry-audit.mjs`).
  */
@@ -71,6 +79,7 @@ import { DOCUMENT_RULES } from "../src/audit/rules";
 import { auditHtmlSource } from "../src/audit/html-audit";
 import { knownUiValues, loadRegistryManifestMap, loadRegistryStylesheetMap } from "../src/utils/components";
 import { checkComponentTokens, readTokenLayer } from "../src/component-tokens";
+import { findDescendantPartSelectors } from "../src/audit/part-selectors";
 import {
   buildBreakpointCanonResults,
   buildUndeclaredAttributeResults,
@@ -396,6 +405,30 @@ if (tokenOffenders.length > 0) {
   failed = true;
 } else {
   console.log(`✓ Zero findings — every component declares exactly the tokens its CSS reads.`);
+}
+
+// ── Gate 9: no part reached across a descendant combinator (1.1F-23) ─────────
+// `[data-ui="tabs"] [data-part="trigger"]` styled the <summary data-part="trigger">
+// of every collapsible in a panel; 1.1F-20 … 1.1F-23 rewrote every such
+// selectors as child chains (`> :where([data-part="list"]) > [data-part="trigger"]`).
+// This keeps them that way, over every stylesheet in the registry.
+const partOffenders = findDescendantPartSelectors(
+  cssFiles.map((rel) => ({ rel, css: readFileSync(join(REGISTRY, rel), "utf8") })),
+).map((f) => `  ${f.file}:${f.line} — [${f.kind}] ${f.message}`);
+
+console.log(`\n▶ Registry self-audit — descendant-part-selector over registry/**/*.css`);
+console.log(`  scanned ${cssFiles.length} stylesheet(s)`);
+
+if (partOffenders.length > 0) {
+  console.error(`\n✗ ${partOffenders.length} finding(s) — a part rule that reaches into nested components:`);
+  console.error(partOffenders.join("\n"));
+  console.error(
+    `\nReach the part through child combinators, the hops in :where() so the weight stays.` +
+    `\nA selector that has to recurse goes in DESCENDANT_PART_ALLOWED (src/audit/part-selectors.ts).`,
+  );
+  failed = true;
+} else {
+  console.log(`✓ Zero findings — every part rule stops at its own component's parts.`);
 }
 
 process.exit(failed ? 1 : 0);

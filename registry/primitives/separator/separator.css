@@ -33,7 +33,7 @@ div[data-ui="separator"]::after {
   border-top: var(--divider-width) var(--divider-style) var(--color-border);
 }
 
-[data-ui="separator"] [data-part="label"] {
+[data-ui="separator"] > [data-part="label"] {
   font-family: var(--font-ui);
   font-size: var(--text-xs);
   color: var(--color-fg-muted);

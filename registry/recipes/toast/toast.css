@@ -41,7 +41,7 @@
 }
 
 /* ── Individual Toast ── */
-[data-ui="toast"] [data-part="toast"] {
+[data-ui="toast"] > [data-part="toast"] {
   display: flex;
   align-items: center;
   gap: var(--space-3);
@@ -60,76 +60,76 @@
 }
 
 @supports ((-webkit-backdrop-filter: blur(1rem)) or (backdrop-filter: blur(1rem))) {
-  [data-ui="toast"] [data-part="toast"] {
+  [data-ui="toast"] > [data-part="toast"] {
     -webkit-backdrop-filter: var(--surface-backdrop);
     backdrop-filter: var(--surface-backdrop);
   }
 }
 
 /* ── State: Entering ── */
-[data-ui="toast"][data-variant="top-right"] [data-part="toast"][data-state="entering"],
-[data-ui="toast"][data-variant="top-left"] [data-part="toast"][data-state="entering"] {
+[data-ui="toast"][data-variant="top-right"] > [data-part="toast"][data-state="entering"],
+[data-ui="toast"][data-variant="top-left"] > [data-part="toast"][data-state="entering"] {
   opacity: 0;
   transform: translateY(-16px);
 }
 
-[data-ui="toast"][data-variant="bottom-right"] [data-part="toast"][data-state="entering"],
-[data-ui="toast"][data-variant="bottom-left"] [data-part="toast"][data-state="entering"] {
+[data-ui="toast"][data-variant="bottom-right"] > [data-part="toast"][data-state="entering"],
+[data-ui="toast"][data-variant="bottom-left"] > [data-part="toast"][data-state="entering"] {
   opacity: 0;
   transform: translateY(16px);
 }
 
 /* ── State: Visible ── */
-[data-ui="toast"] [data-part="toast"][data-state="visible"] {
+[data-ui="toast"] > [data-part="toast"][data-state="visible"] {
   opacity: 1;
   transform: translateY(0);
 }
 
 /* ── State: Exiting ── */
-[data-ui="toast"][data-variant="top-right"] [data-part="toast"][data-state="exiting"],
-[data-ui="toast"][data-variant="top-left"] [data-part="toast"][data-state="exiting"] {
+[data-ui="toast"][data-variant="top-right"] > [data-part="toast"][data-state="exiting"],
+[data-ui="toast"][data-variant="top-left"] > [data-part="toast"][data-state="exiting"] {
   opacity: 0;
   transform: translateX(16px);
 }
 
-[data-ui="toast"][data-variant="bottom-right"] [data-part="toast"][data-state="exiting"],
-[data-ui="toast"][data-variant="bottom-left"] [data-part="toast"][data-state="exiting"] {
+[data-ui="toast"][data-variant="bottom-right"] > [data-part="toast"][data-state="exiting"],
+[data-ui="toast"][data-variant="bottom-left"] > [data-part="toast"][data-state="exiting"] {
   opacity: 0;
   transform: translateX(16px);
 }
 
-[data-ui="toast"][data-variant="top-left"] [data-part="toast"][data-state="exiting"],
-[data-ui="toast"][data-variant="bottom-left"] [data-part="toast"][data-state="exiting"] {
+[data-ui="toast"][data-variant="top-left"] > [data-part="toast"][data-state="exiting"],
+[data-ui="toast"][data-variant="bottom-left"] > [data-part="toast"][data-state="exiting"] {
   transform: translateX(-16px);
 }
 
 /* ── Tone Variants ── */
-[data-ui="toast"] [data-part="toast"][data-variant="success"] {
+[data-ui="toast"] > [data-part="toast"][data-variant="success"] {
   border-inline-start: var(--border-width-lg) solid var(--color-success, oklch(0.55 0.18 145));
 }
 
-[data-ui="toast"] [data-part="toast"][data-variant="success"] [data-part="icon"] {
+[data-ui="toast"] > [data-part="toast"][data-variant="success"] > [data-part="icon"] {
   color: var(--color-success, oklch(0.55 0.18 145));
 }
 
-[data-ui="toast"] [data-part="toast"][data-variant="error"] {
+[data-ui="toast"] > [data-part="toast"][data-variant="error"] {
   border-inline-start: var(--border-width-lg) solid var(--color-destructive, oklch(0.55 0.22 25));
 }
 
-[data-ui="toast"] [data-part="toast"][data-variant="error"] [data-part="icon"] {
+[data-ui="toast"] > [data-part="toast"][data-variant="error"] > [data-part="icon"] {
   color: var(--color-destructive, oklch(0.55 0.22 25));
 }
 
-[data-ui="toast"] [data-part="toast"][data-variant="warning"] {
+[data-ui="toast"] > [data-part="toast"][data-variant="warning"] {
   border-inline-start: var(--border-width-lg) solid var(--color-warning, oklch(0.7 0.18 85));
 }
 
-[data-ui="toast"] [data-part="toast"][data-variant="warning"] [data-part="icon"] {
+[data-ui="toast"] > [data-part="toast"][data-variant="warning"] > [data-part="icon"] {
   color: var(--color-warning, oklch(0.7 0.18 85));
 }
 
 /* ── Icon ── */
-[data-ui="toast"] [data-part="icon"] {
+[data-ui="toast"] > :where([data-part="toast"]) > [data-part="icon"] {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -141,7 +141,7 @@
 }
 
 /* ── Message ── */
-[data-ui="toast"] [data-part="message"] {
+[data-ui="toast"] > :where([data-part="toast"]) > [data-part="message"] {
   flex: 1;
   font-family: var(--font-ui);
   font-size: var(--text-sm);
@@ -151,7 +151,7 @@
 }
 
 /* ── Action Button ── */
-[data-ui="toast"] [data-part="action"] {
+[data-ui="toast"] > :where([data-part="toast"]) > [data-part="action"] {
   flex-shrink: 0;
   padding: var(--space-1, 0.25rem) var(--space-2);
   border: var(--border-width) solid var(--color-border);
@@ -166,17 +166,17 @@
   transition: background var(--duration-normal) var(--ease-out);
 }
 
-[data-ui="toast"] [data-part="action"]:hover {
+[data-ui="toast"] > :where([data-part="toast"]) > [data-part="action"]:hover {
   background: var(--color-bg-muted, oklch(0.96 0.004 260));
 }
 
-[data-ui="toast"] [data-part="action"]:focus-visible {
+[data-ui="toast"] > :where([data-part="toast"]) > [data-part="action"]:focus-visible {
   outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
   outline-offset: var(--focus-ring-offset);
 }
 
 /* ── Close Button ── */
-[data-ui="toast"] [data-part="close"] {
+[data-ui="toast"] > :where([data-part="toast"]) > [data-part="close"] {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -192,20 +192,20 @@
   cursor: pointer;
 }
 
-[data-ui="toast"] [data-part="close"]:hover {
+[data-ui="toast"] > :where([data-part="toast"]) > [data-part="close"]:hover {
   background: var(--color-bg-muted, oklch(0.96 0.004 260));
   color: var(--color-fg);
 }
 
-[data-ui="toast"] [data-part="close"]:focus-visible {
+[data-ui="toast"] > :where([data-part="toast"]) > [data-part="close"]:focus-visible {
   outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
   outline-offset: var(--focus-ring-offset);
 }
 
 /* ── Motion ── */
 @media (prefers-reduced-motion: reduce) {
-  [data-ui="toast"] [data-part="toast"],
-  [data-ui="toast"] [data-part="action"] {
+  [data-ui="toast"] > [data-part="toast"],
+  [data-ui="toast"] > :where([data-part="toast"]) > [data-part="action"] {
     transition: none;
   }
 }

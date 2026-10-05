@@ -1,12 +1,17 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "field-group",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "kind": "primitive",
   "category": "forms",
   "description": "Form field wrapper combining label, control, and help/error text with a tight density-aware inner step; the surrounding default rhythm owns the looser step between fields. Includes the normalized §7.1 validation contract (invalid | validating | disabled).",
 
   "changes": [
+    {
+      "version": "2.1.1",
+      "note": "Nested components keep their own parts. The stylesheet reached its label, input, description and error with descendant selectors, so a radio-group or checkbox-group in the input slot (the shape @faqir-ui/forms renders) had every option's <span data-part=\"label\"> styled as the field's label — its size, weight and colour, red when the field was invalid, and a required marker after each option under the legacy data-required — and a date-picker's input took the input slot's flex layout. Label, input, description and error are the root's children; required is the label's. Options now look as a radio-group or checkbox-group does anywhere else, so on the form-page pattern and on @faqir-ui/forms pages their text is the page's body size and weight, no longer the field label's. Every part rule is now a child chain from the root, with the hops in :where(), so no rule changes specificity. No change for markup that follows the template.",
+      "breaking": false
+    },
     {
       "version": "2.1.0",
       "note": "Field spacing now uses density-aware --space-* rungs for every size. field-group owns only the tight label → control → description/error step; the surrounding flow root owns the looser sibling-field step through --flow-space/--section-gap-sm. The horizontal label-beside-control layout remains an explicit data-variant value rather than incidental markup.",

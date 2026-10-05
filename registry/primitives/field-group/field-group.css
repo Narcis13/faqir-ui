@@ -15,7 +15,7 @@
 }
 
 /* ── Label ── */
-[data-ui="field-group"] [data-part="label"] {
+[data-ui="field-group"] > [data-part="label"] {
   font-size: var(--field-label-size);
   font-weight: var(--field-label-weight);
   color: var(--field-label-color);
@@ -29,23 +29,23 @@
    It carries the marker's color and is announced/hidden as one unit. The legacy
    [data-required] attribute still renders a CSS ::after marker for backward
    compatibility; author pages should prefer the part. */
-[data-ui="field-group"] [data-part="required"] {
+[data-ui="field-group"] > :where([data-part="label"]) > [data-part="required"] {
   color: var(--field-required-color);
 }
 
-[data-ui="field-group"][data-required] [data-part="label"]::after {
+[data-ui="field-group"][data-required] > [data-part="label"]::after {
   content: var(--field-required-marker);
   color: var(--field-required-color);
 }
 
 /* ── Input Slot ── */
-[data-ui="field-group"] [data-part="input"] {
+[data-ui="field-group"] > [data-part="input"] {
   display: flex;
   flex-direction: column;
 }
 
 /* ── Description ── */
-[data-ui="field-group"] [data-part="description"] {
+[data-ui="field-group"] > [data-part="description"] {
   font-size: var(--field-description-size);
   color: var(--field-description-color);
   margin: 0;
@@ -53,7 +53,7 @@
 }
 
 /* ── Error Message ── */
-[data-ui="field-group"] [data-part="error"] {
+[data-ui="field-group"] > [data-part="error"] {
   font-size: var(--field-error-size);
   color: var(--field-error-color);
   margin: 0;
@@ -65,15 +65,15 @@
    Normalized validation vocabulary (§7.1): invalid | validating | disabled.
    Renamed from the shipped `error` state in v2.0.0 (breaking — see manifest
    `changes`). The error part is revealed purely by state, no JS class toggling. */
-[data-ui="field-group"][data-state="invalid"] [data-part="label"] {
+[data-ui="field-group"][data-state="invalid"] > [data-part="label"] {
   color: var(--field-error-color);
 }
 
-[data-ui="field-group"][data-state="invalid"] [data-part="error"] {
+[data-ui="field-group"][data-state="invalid"] > [data-part="error"] {
   display: block;
 }
 
-[data-ui="field-group"][data-state="invalid"] [data-part="description"] {
+[data-ui="field-group"][data-state="invalid"] > [data-part="description"] {
   display: none;
 }
 
@@ -102,7 +102,7 @@
   cursor: not-allowed;
 }
 
-[data-ui="field-group"][data-state="disabled"] [data-part="label"] {
+[data-ui="field-group"][data-state="disabled"] > [data-part="label"] {
   color: var(--field-description-color);
 }
 
@@ -121,13 +121,13 @@
   gap: var(--space-4);
 }
 
-[data-ui="field-group"][data-variant="horizontal"] [data-part="label"] {
+[data-ui="field-group"][data-variant="horizontal"] > [data-part="label"] {
   min-width: 8rem;
   padding-top: var(--space-2);
   flex-shrink: 0;
 }
 
-[data-ui="field-group"][data-variant="horizontal"] [data-part="input"] {
+[data-ui="field-group"][data-variant="horizontal"] > [data-part="input"] {
   flex: 1;
 }
 
@@ -136,7 +136,7 @@
   gap: var(--space-1);
 }
 
-[data-ui="field-group"][data-size="sm"] [data-part="label"] {
+[data-ui="field-group"][data-size="sm"] > [data-part="label"] {
   font-size: var(--text-xs);
 }
 
@@ -145,7 +145,7 @@
   gap: var(--space-3);
 }
 
-[data-ui="field-group"][data-size="lg"] [data-part="label"] {
+[data-ui="field-group"][data-size="lg"] > [data-part="label"] {
   font-size: var(--text-sm);
 }
 

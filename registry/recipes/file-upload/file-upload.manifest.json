@@ -1,10 +1,17 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "file-upload",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "kind": "recipe",
   "category": "forms",
   "description": "Native file selection plus drag-and-drop, local accept/size validation, removable file list, and event-only app upload handoff",
+  "changes": [
+    {
+      "version": "1.0.1",
+      "note": "Nested components keep their own parts. The stylesheet reached the dropzone, input, file rows and status with descendant selectors, so a component nested inside with parts of the same name took this one's styles. Parts are root > dropzone > input, prompt and description (the input may also be the root's child, labelled by the dropzone); root > list > empty and file > details > name and metadata, file > remove; root > status. The dropzone's focus ring asks :has() about its own input only. Every part rule is now a child chain from the root, with the hops in :where(), so no rule changes specificity. No change for markup that follows the template.",
+      "breaking": false
+    }
+  ],
   "anatomy": {
     "tag": "div",
     "selector": "[data-ui='file-upload']",
@@ -21,7 +28,7 @@
       "selector": "[data-part='input']",
       "required": true,
       "tag_hint": "input",
-      "description": "Real type=file control for keyboard, screen-reader, picker, form, and change-event access; never replace with a scripted div"
+      "description": "Real type=file control for keyboard, screen-reader, picker, form, and change-event access; never replace with a scripted div. Inside the dropzone, or the root's child beside it (the controller then points the dropzone label at it)"
     },
     "prompt": {
       "selector": "[data-part='prompt']",

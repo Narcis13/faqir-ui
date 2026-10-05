@@ -5,10 +5,16 @@
  * root, including the `<summary data-part="trigger">` of a collapsible that
  * happens to sit in a panel. The fix is structural: a part is reached by child
  * combinators only, so a nested component's parts are out of reach by
- * construction. This module is the reader both gates share:
+ * construction. This module is the reader the registry gate and the nesting
+ * tests share:
  *
  *   - `descendantPartSelectors()` — the selectors that still cross a descendant
- *     combinator on their way to a `[data-part=…]`;
+ *     combinator on their way to a `[data-part=…]`, including the implicit one
+ *     a bare `:has([data-part=…])` takes;
+ *   - `findDescendantPartSelectors()` — that, over a set of stylesheets, as the
+ *     `descendant-part-selector` gate of `audit:registry` (1.1F-23), with its
+ *     allowlist (`DESCENDANT_PART_ALLOWED`) and the pattern sheets still waiting
+ *     for 1.1F-39 (`DESCENDANT_PART_PENDING`);
  *   - `partSkeletons()` — each part rule reduced to its structural path, which a
  *     DOM can be queried with to prove nothing leaks into a nested component;
  *   - `specificity()` — so a conversion can be shown to move no rule in the
@@ -150,12 +156,21 @@ function functionalArgs(compound: string): { name: string; arg: string }[] {
   return out;
 }
 
-/** Does this complex selector cross a descendant combinator into a part? */
+/**
+ * Does this complex selector cross a descendant combinator into a part? A
+ * `:has()` argument is a relative selector, and one that starts without a
+ * combinator starts with a descendant one: `:has([data-part="thumb"])` asks
+ * about every thumb below, `:has(> [data-part="thumb"])` about its own.
+ */
 export function crossesIntoPart(selector: string): boolean {
   return steps(selector).some((step) => {
     if (step.combinator === " " && step.compound.includes("[data-part")) return true;
-    return functionalArgs(step.compound).some(({ arg }) =>
-      splitSelectorList(arg).some(crossesIntoPart),
+    return functionalArgs(step.compound).some(({ name, arg }) =>
+      splitSelectorList(arg).some(
+        (s) =>
+          (name === "has" && !/^[>+~]/.test(s) && steps(s)[0]?.compound.includes("[data-part")) ||
+          crossesIntoPart(s),
+      ),
     );
   });
 }
@@ -233,4 +248,107 @@ export function partSkeletons(source: string, root: string): string[] {
     );
   }
   return [...out];
+}
+
+// ── the gate ─────────────────────────────────────────────────────────────────
+
+/**
+ * Descendant part selectors the registry keeps on purpose, as `<registry-relative
+ * path> <selector>`. Named one by one, like `GLYPH_RULES` in the shape-focus
+ * tests, so the exception cannot quietly grow.
+ *
+ * tree-view: an item's group holds items at any depth, which no chain of child
+ * combinators can express. Each rule takes exactly one descendant step, from
+ * the root to the item or group the recursion is made of; the rest are child
+ * hops. The sheet carries the same note.
+ */
+export const DESCENDANT_PART_ALLOWED: ReadonlySet<string> = new Set(
+  [
+    `[data-ui="tree-view"] :where([data-part="item"]) > [data-part="group"]`,
+    `[data-ui="tree-view"] :where([data-part="group"]) > [data-part="item"]`,
+    `[data-ui="tree-view"] :where([data-part="item"]) > [data-part="label"]`,
+    `[data-ui="tree-view"] :where([data-part="group"]) > [data-part="item"]:not([aria-disabled="true"]) > [data-part="label"]:hover`,
+    `[data-ui="tree-view"] :where([data-part="group"]) > [data-part="item"]:focus-visible > [data-part="label"]`,
+    `[data-ui="tree-view"] :where([data-part="group"]) > [data-part="item"][aria-selected="true"] > [data-part="label"]`,
+    `[data-ui="tree-view"] :where([data-part="group"]) > [data-part="item"][aria-disabled="true"] > [data-part="label"]`,
+    `[data-ui="tree-view"] :where([data-part="item"]) > :where([data-part="label"]) > [data-part="toggle"]`,
+    `[data-ui="tree-view"] :where([data-part="group"]) > [data-part="item"]:not([aria-expanded]) > [data-part="label"] > [data-part="toggle"]`,
+    `[data-ui="tree-view"] :where([data-part="group"]) > [data-part="item"][aria-expanded="true"] > [data-part="label"] > [data-part="toggle"]`,
+  ].map((selector) => `recipes/tree-view/tree-view.css ${selector}`),
+);
+
+/**
+ * Pattern stylesheets not converted yet: follow-up 1.1F-39 converts them and
+ * empties this list. Every other sheet in the registry is held to the gate, a
+ * new one included; a sheet listed here that has nothing left to convert fails,
+ * so the list only shrinks.
+ */
+export const DESCENDANT_PART_PENDING: ReadonlySet<string> = new Set([
+  "patterns/auth-form/auth-form.css",
+  "patterns/crud-table/crud-table.css",
+  "patterns/dashboard-shell/dashboard-shell.css",
+  "patterns/document/document.css",
+  "patterns/feature-grid/feature-grid.css",
+  "patterns/hero/hero.css",
+  "patterns/pricing/pricing.css",
+  "patterns/search-results/search-results.css",
+  "patterns/settings-page/settings-page.css",
+  "patterns/site-footer/site-footer.css",
+  "patterns/stats-dashboard/stats-dashboard.css",
+  "patterns/wizard/wizard.css",
+]);
+
+export interface DescendantPartFinding {
+  /** Registry-relative stylesheet path. */
+  file: string;
+  /** 1-based line of the rule, or 0 for an allowlist entry that matches nothing. */
+  line: number;
+  kind: "descendant-part-selector" | "stale-allowlist" | "stale-pending";
+  message: string;
+}
+
+/**
+ * The `descendant-part-selector` gate: every selector in `sheets` that reaches
+ * a part across a descendant combinator, unless allowlisted or its sheet is
+ * pending. Allowlist entries and pending sheets that no longer match anything
+ * are findings too.
+ */
+export function findDescendantPartSelectors(
+  sheets: readonly { rel: string; css: string }[],
+  allowed: ReadonlySet<string> = DESCENDANT_PART_ALLOWED,
+  pending: ReadonlySet<string> = DESCENDANT_PART_PENDING,
+): DescendantPartFinding[] {
+  const out: DescendantPartFinding[] = [];
+  const used = new Set<string>();
+  const scanned = new Set<string>();
+  for (const { rel, css } of sheets) {
+    scanned.add(rel);
+    const found = descendantPartSelectors(css);
+    if (pending.has(rel)) {
+      if (found.length === 0) {
+        out.push({ file: rel, line: 0, kind: "stale-pending", message: "has no descendant part selector left: take it off DESCENDANT_PART_PENDING" });
+      }
+      continue;
+    }
+    for (const { selector, line } of found) {
+      const key = `${rel} ${selector}`;
+      if (allowed.has(key)) {
+        used.add(key);
+        continue;
+      }
+      out.push({
+        file: rel,
+        line,
+        kind: "descendant-part-selector",
+        message: `${selector} — reaches a part across a descendant combinator, so it also styles that part of a nested component. Use child combinators with :where() hops.`,
+      });
+    }
+  }
+  for (const key of allowed) {
+    const rel = key.slice(0, key.indexOf(" "));
+    if (scanned.has(rel) && !used.has(key)) {
+      out.push({ file: rel, line: 0, kind: "stale-allowlist", message: `allowlisted selector no longer in the sheet: ${key.slice(rel.length + 1)}` });
+    }
+  }
+  return out;
 }

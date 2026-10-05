@@ -145,7 +145,7 @@ describe("token resolution · why token-exists missed it", () => {
     // 0.8-10 (undeclared-attribute, breakpoint-canon), so the count is read out
     // of the header rather than pinned to the number this task left it at.
     const gate = readFileSync(join(ROOT, "scripts/registry-audit.mjs"), "utf8");
-    expect(gate).toMatch(/^ \* (Four|Five|Six|Seven|Eight) gates, all fatal on a single finding:$/m);
+    expect(gate).toMatch(/^ \* (Four|Five|Six|Seven|Eight|Nine|Ten) gates, all fatal on a single finding:$/m);
     expect(gate).toContain("var() resolution");
     for (const older of ["logical-properties", "theme-manifests", "document-rules"]) {
       expect(gate).toContain(older);

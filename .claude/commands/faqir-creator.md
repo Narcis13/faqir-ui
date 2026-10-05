@@ -332,9 +332,11 @@ Recipes auto-initialize via `faqir-core.js` or `faqir.js`. Include the script an
 
 ### Toast
 ```html
-<div data-ui="toast" data-variant="default|success|error" data-state="visible">
-  <div data-part="message">Notification text</div>
-  <button data-part="close" aria-label="Dismiss">✕</button>
+<div data-ui="toast" data-part="container" data-variant="top-right" role="region" aria-label="Notifications">
+  <div data-part="toast" data-variant="default|success|error|warning" data-state="visible" role="status">
+    <span data-part="message">Notification text</span>
+    <button data-part="close" aria-label="Dismiss">✕</button>
+  </div>
 </div>
 ```
 

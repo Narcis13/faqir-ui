@@ -43,14 +43,14 @@ const CONTROL_REFERENCES = ["input", "select", "textarea"].map((name) => ({
 describe("field-group · error part visibility is CSS-driven (§7.1)", () => {
   it("hides [data-part=\"error\"] by default", () => {
     // The base error-part rule sets display:none — the message only appears via state.
-    const baseRule = /\[data-ui="field-group"\]\s+\[data-part="error"\]\s*\{[^}]*\}/.exec(CSS);
+    const baseRule = /\[data-ui="field-group"\]\s+>\s+\[data-part="error"\]\s*\{[^}]*\}/.exec(CSS);
     expect(baseRule).not.toBeNull();
     expect(baseRule![0]).toContain("display: none");
   });
 
   it("reveals the error part only under [data-state=\"invalid\"]", () => {
-    expect(CSS).toContain('[data-ui="field-group"][data-state="invalid"] [data-part="error"] {');
-    const revealRule = /\[data-state="invalid"\]\s+\[data-part="error"\]\s*\{[^}]*\}/.exec(CSS);
+    expect(CSS).toContain('[data-ui="field-group"][data-state="invalid"] > [data-part="error"] {');
+    const revealRule = /\[data-state="invalid"\]\s+>\s+\[data-part="error"\]\s*\{[^}]*\}/.exec(CSS);
     expect(revealRule![0]).toContain("display: block");
   });
 
@@ -64,7 +64,7 @@ describe("field-group · error part visibility is CSS-driven (§7.1)", () => {
   });
 
   it("styles the standardized [data-part=\"required\"] marker", () => {
-    expect(CSS).toContain('[data-ui="field-group"] [data-part="required"] {');
+    expect(CSS).toContain('[data-ui="field-group"] > :where([data-part="label"]) > [data-part="required"] {');
   });
 });
 
@@ -91,7 +91,8 @@ describe("field-group · manifest documents the normalized contract", () => {
   });
 
   it("carries a breaking 2.0.0 `changes` entry for the rename", () => {
-    expect(MANIFEST.version).toBe("2.1.0");
+    // Any 2.x: later patches bump the version past the rename.
+    expect(MANIFEST.version).toMatch(/^2\.\d+\.\d+$/);
     const changes = MANIFEST.changes ?? [];
     const entry = changes.find((c) => c.version === "2.0.0");
     expect(entry).toBeDefined();
@@ -256,7 +257,7 @@ describe("field-group · faqir upgrade migrates a project off the old vocabulary
 
     // Clean fast-forward (ours == base), old → new version, breaking flagged.
     expect(code).toBe(0);
-    expect(output).toContain("1.0.0 → 2.1.0");
+    expect(output).toContain(`1.0.0 → ${MANIFEST.version}`);
     expect(output.toLowerCase()).toContain("breaking");
 
     // Working copy is now on the normalized vocabulary.

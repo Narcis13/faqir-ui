@@ -77,8 +77,8 @@
   position: relative;
 }
 
-[data-ui="input-group"] [data-part="prefix"],
-[data-ui="input-group"] [data-part="suffix"] {
+[data-ui="input-group"] > [data-part="prefix"],
+[data-ui="input-group"] > [data-part="suffix"] {
   display: flex;
   align-items: center;
   padding-inline: var(--space-3);
@@ -88,19 +88,19 @@
   position: absolute;
 }
 
-[data-ui="input-group"] [data-part="prefix"] {
+[data-ui="input-group"] > [data-part="prefix"] {
   inset-inline-start: 0;
 }
 
-[data-ui="input-group"] [data-part="suffix"] {
+[data-ui="input-group"] > [data-part="suffix"] {
   inset-inline-end: 0;
 }
 
-[data-ui="input-group"]:has([data-part="prefix"]) [data-ui="input"] {
+[data-ui="input-group"]:has(> [data-part="prefix"]) [data-ui="input"] {
   padding-inline-start: var(--space-10, 2.5rem);
 }
 
-[data-ui="input-group"]:has([data-part="suffix"]) [data-ui="input"] {
+[data-ui="input-group"]:has(> [data-part="suffix"]) [data-ui="input"] {
   padding-inline-end: var(--space-10, 2.5rem);
 }
 

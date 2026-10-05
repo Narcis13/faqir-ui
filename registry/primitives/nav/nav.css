@@ -9,7 +9,7 @@
 }
 
 /* ── Link ── */
-[data-ui="nav"] [data-part="link"] {
+[data-ui="nav"] > [data-part="link"] {
   display: inline-flex;
   align-items: center;
   padding: var(--space-1) var(--space-3);
@@ -26,13 +26,13 @@
   font-family: inherit;
 }
 
-[data-ui="nav"] [data-part="link"]:hover {
+[data-ui="nav"] > [data-part="link"]:hover {
   color: var(--color-fg);
   background: var(--color-bg-subtle);
 }
 
 /* Active link */
-[data-ui="nav"] [data-part="link"][data-state="active"] {
+[data-ui="nav"] > [data-part="link"][data-state="active"] {
   color: var(--color-primary);
   background: var(--color-primary-subtle);
 }
@@ -43,7 +43,7 @@
   align-items: stretch;
 }
 
-[data-ui="nav"][data-variant="vertical"] [data-part="link"] {
+[data-ui="nav"][data-variant="vertical"] > [data-part="link"] {
   padding: var(--space-2) var(--space-3);
 }
 
@@ -53,19 +53,19 @@
   gap: 0;
 }
 
-[data-ui="nav"][data-variant="underline"] [data-part="link"] {
+[data-ui="nav"][data-variant="underline"] > [data-part="link"] {
   border-radius: 0;
   padding: var(--space-2) var(--space-4);
   border-bottom: var(--border-width-strong) solid transparent;
   margin-bottom: -1px;
 }
 
-[data-ui="nav"][data-variant="underline"] [data-part="link"]:hover {
+[data-ui="nav"][data-variant="underline"] > [data-part="link"]:hover {
   background: transparent;
   border-bottom-color: var(--color-border);
 }
 
-[data-ui="nav"][data-variant="underline"] [data-part="link"][data-state="active"] {
+[data-ui="nav"][data-variant="underline"] > [data-part="link"][data-state="active"] {
   background: transparent;
   border-bottom-color: var(--color-primary);
   color: var(--color-primary);
@@ -79,25 +79,25 @@
   padding: var(--space-0h);
 }
 
-[data-ui="nav"][data-variant="pill"] [data-part="link"] {
+[data-ui="nav"][data-variant="pill"] > [data-part="link"] {
   border-radius: var(--radius-md);
 }
 
-[data-ui="nav"][data-variant="pill"] [data-part="link"][data-state="active"] {
+[data-ui="nav"][data-variant="pill"] > [data-part="link"][data-state="active"] {
   background: var(--color-bg);
   color: var(--color-fg);
   box-shadow: var(--shadow-sm);
 }
 
 /* ── Separator within nav ── */
-[data-ui="nav"] [data-part="separator"] {
+[data-ui="nav"] > [data-part="separator"] {
   width: 1px;
   height: 1rem;
   background: var(--color-border);
   margin: 0 var(--space-1);
 }
 
-[data-ui="nav"][data-variant="vertical"] [data-part="separator"] {
+[data-ui="nav"][data-variant="vertical"] > [data-part="separator"] {
   width: auto;
   height: 1px;
   margin: var(--space-1) 0;
@@ -105,7 +105,7 @@
 
 /* ── Reduced Motion ── */
 @media (prefers-reduced-motion: reduce) {
-  [data-ui="nav"] [data-part="link"] {
+  [data-ui="nav"] > [data-part="link"] {
     transition: none;
   }
 }

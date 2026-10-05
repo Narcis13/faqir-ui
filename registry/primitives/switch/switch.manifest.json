@@ -1,11 +1,16 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "switch",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "kind": "primitive",
   "category": "forms",
   "description": "Toggle switch with on/off states, disabled state, and size variants; compose sibling labeled switches in a cluster with data-gap=4 while one may stand alone",
   "changes": [
+    {
+      "version": "1.1.1",
+      "note": "Nested components keep their own parts. The stylesheet reached the thumb with descendant selectors, so a component nested inside with parts of the same name took this one's styles. The thumb is the switch's child, and the rule that hides the pseudo-thumb asks :has(> thumb). Every part rule is now a child chain from the root, with the hops in :where(), so no rule changes specificity. No change for markup that follows the template.",
+      "breaking": false
+    },
     {
       "version": "1.1.0",
       "note": "Canonical switch rows now use cluster data-gap='4', keeping the inter-control step wider than each label's internal space-2 step; a single labeled switch remains valid without a cluster.",

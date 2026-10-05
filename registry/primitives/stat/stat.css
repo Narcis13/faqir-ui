@@ -10,7 +10,7 @@
 }
 
 /* ── Label ── */
-[data-ui="stat"] [data-part="label"] {
+[data-ui="stat"] > [data-part="label"] {
   font-size: var(--stat-label-size);
   font-weight: var(--weight-semibold);
   color: var(--stat-label-color);
@@ -19,7 +19,7 @@
 }
 
 /* ── Value ── */
-[data-ui="stat"] [data-part="value"] {
+[data-ui="stat"] > [data-part="value"] {
   font-family: var(--font-heading);
   font-size: var(--stat-value-size);
   font-weight: var(--stat-value-weight);
@@ -30,7 +30,7 @@
 }
 
 /* ── Change Indicator ── */
-[data-ui="stat"] [data-part="change"] {
+[data-ui="stat"] > [data-part="change"] {
   font-size: var(--text-xs);
   font-weight: var(--weight-semibold);
   color: var(--color-fg-muted);
@@ -38,41 +38,41 @@
 }
 
 /* ── Icon ── */
-[data-ui="stat"] [data-part="icon"] {
+[data-ui="stat"] > [data-part="icon"] {
   flex-shrink: 0;
   color: var(--color-fg-muted);
 }
 
 /* ── Trend: Up ── */
-[data-ui="stat"][data-trend="up"] [data-part="change"] {
+[data-ui="stat"][data-trend="up"] > [data-part="change"] {
   color: var(--stat-change-positive);
 }
 
 /* ── Trend: Down ── */
-[data-ui="stat"][data-trend="down"] [data-part="change"] {
+[data-ui="stat"][data-trend="down"] > [data-part="change"] {
   color: var(--stat-change-negative);
 }
 
 /* ── Trend: Neutral ── */
-[data-ui="stat"][data-trend="neutral"] [data-part="change"] {
+[data-ui="stat"][data-trend="neutral"] > [data-part="change"] {
   color: var(--color-fg-muted);
 }
 
 /* ── Size: Small ── */
-[data-ui="stat"][data-size="sm"] [data-part="value"] {
+[data-ui="stat"][data-size="sm"] > [data-part="value"] {
   font-size: var(--text-lg, 1.125rem);
 }
 
-[data-ui="stat"][data-size="sm"] [data-part="label"] {
+[data-ui="stat"][data-size="sm"] > [data-part="label"] {
   font-size: var(--text-xs);
 }
 
 /* ── Size: Large ── */
-[data-ui="stat"][data-size="lg"] [data-part="value"] {
+[data-ui="stat"][data-size="lg"] > [data-part="value"] {
   font-size: var(--text-3xl, 1.875rem);
 }
 
-[data-ui="stat"][data-size="lg"] [data-part="label"] {
+[data-ui="stat"][data-size="lg"] > [data-part="label"] {
   font-size: var(--text-sm);
 }
 
@@ -86,7 +86,7 @@
 }
 
 /* ── Value + Change Inline ── */
-[data-ui="stat"] [data-part="value"] + [data-part="change"] {
+[data-ui="stat"] > [data-part="value"] + [data-part="change"] {
   margin-top: var(--space-1);
 }
 

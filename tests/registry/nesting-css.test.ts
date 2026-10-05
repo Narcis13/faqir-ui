@@ -21,20 +21,27 @@
 // The computed styles are pinned in Chromium by `tests/visual/nesting.pw.ts`.
 //
 // Add a component to `CONVERTED` when its stylesheet is converted. 1.1F-23
-// turns the first check into a registry-audit gate over every component.
+// made the first check gate 9 of `audit:registry`, over every stylesheet in the
+// registry (`findDescendantPartSelectors`); its cases are at the end.
 
 import { afterEach, describe, expect, it } from "bun:test";
+import { Glob } from "bun";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { validateManifest, type Manifest } from "../../src/manifest";
+// Its main() runs only as argv[1], so importing it is safe (tests/meta/spawn-timeouts).
+import { PREFLIGHT } from "../../scripts/release.mjs";
 import {
   crossesIntoPart,
+  DESCENDANT_PART_ALLOWED,
+  DESCENDANT_PART_PENDING,
   descendantPartSelectors,
+  findDescendantPartSelectors,
   partSkeletons,
   sheetSelectors,
   specificity,
   steps,
-} from "../helpers/part-selectors";
+} from "../../src/audit/part-selectors";
 
 const REGISTRY = join(import.meta.dir, "../..", "registry");
 
@@ -64,6 +71,35 @@ const CONVERTED = [
   ["recipes", "menubar", "1.0.1"],
   // 1.1F-22: table.
   ["recipes", "table", "3.2.2"],
+  // 1.1F-23: the long tail. (tree-view recurses, so it has cases of its own.)
+  ["primitives", "avatar", "1.1.1"],
+  ["primitives", "breadcrumb", "1.0.2"],
+  ["primitives", "button", "1.2.1"],
+  ["primitives", "chip", "1.0.1"],
+  ["primitives", "field-group", "2.1.1"],
+  ["primitives", "image", "1.0.1"],
+  ["primitives", "input", "1.2.1"],
+  ["primitives", "label", "1.1.1"],
+  ["primitives", "nav", "1.0.1"],
+  ["primitives", "separator", "1.1.1"],
+  ["primitives", "signature", "1.0.1"],
+  ["primitives", "stat", "1.0.1"],
+  ["primitives", "stepper", "1.1.1"],
+  ["primitives", "switch", "1.1.1"],
+  ["recipes", "calendar", "1.1.1"],
+  ["recipes", "combobox", "1.1.1"],
+  ["recipes", "command-palette", "1.3.1"],
+  ["recipes", "date-picker", "2.0.1"],
+  ["recipes", "file-upload", "1.0.1"],
+  ["recipes", "input-otp", "1.2.1"],
+  ["recipes", "pagination", "1.0.1"],
+  ["recipes", "qr-code", "1.0.1"],
+  ["recipes", "select-custom", "1.1.1"],
+  ["recipes", "slider", "1.0.1"],
+  ["recipes", "tag-input", "1.1.1"],
+  ["recipes", "toast", "1.0.1"],
+  ["recipes", "toggle-group", "1.1.2"],
+  ["patterns", "inbox", "2.0.1"],
 ] as const;
 
 const read = (kind: string, name: string, ext: string) =>
@@ -94,6 +130,12 @@ describe("part-selectors — the reader the gate is built on", () => {
     expect(crossesIntoPart('[data-ui="x"] > [data-part="y"]')).toBe(false);
     expect(crossesIntoPart('[data-ui="x"] > :where([data-part="y"]) > [data-part="z"]')).toBe(false);
     expect(crossesIntoPart('[data-ui="x"] > [data-part="y"] + [data-part="z"]')).toBe(false);
+    // A bare :has() argument is a relative selector that starts with a descendant step.
+    expect(crossesIntoPart('[data-ui="x"]:has([data-part="y"]:checked)')).toBe(true);
+    expect(crossesIntoPart('[data-ui="x"]:has(> [data-part="y"]:checked)')).toBe(false);
+    expect(crossesIntoPart('[data-ui="x"]:has(> :where([data-part="a"]) > [data-part="y"], > [data-part="y"])')).toBe(false);
+    expect(crossesIntoPart('[data-ui="x"]:has(> [data-part="a"] [data-part="y"])')).toBe(true);
+    expect(crossesIntoPart('[data-ui="x"]:has([data-ui="switch"]:disabled)')).toBe(false);
     // A descendant combinator before something that is not a part is not this gate's business.
     expect(crossesIntoPart('[data-ui="x"] > [data-part="y"] p')).toBe(false);
     expect(crossesIntoPart('[data-ui="x"][data-part="y"]')).toBe(false);
@@ -158,12 +200,15 @@ afterEach(() => {
   box = null;
 });
 
+/** The root a sheet's parts hang off, where it is not the component's own name. */
+const ROOT_OF: Record<string, string> = { input: "input-group" };
+
 /** The component's reference page in a disposable container. */
 function mountReference(kind: string, name: string): HTMLElement[] {
   box = document.createElement("div");
   box.innerHTML = read(kind, name, "html").replace(/<!--[^]*?-->/g, "");
   document.body.appendChild(box);
-  return [...box.querySelectorAll<HTMLElement>(`[data-ui="${name}"]`)];
+  return [...box.querySelectorAll<HTMLElement>(`[data-ui="${ROOT_OF[name] ?? name}"]`)];
 }
 
 /**
@@ -219,7 +264,13 @@ describe("nesting, CSS — a component's part rules stop at its own parts", () =
         // (table's hidden-rows rule ends in `tr[data-part]`, which names no part.)
         const styled = new Set(skeletons.map((p) => /\[data-part="([^"]+)"\]$/.exec(p)?.[1]).filter(Boolean));
         expect(styled.size).toBeGreaterThan(0);
+        // Only the component's own parts: a part belongs to the nearest root
+        // above it, unless that is a stack or cluster a sheet hops through (an
+        // inbox's tabs keeps its own list; a dialog's title may sit in a stack).
+        const owner = (el: Element) =>
+          el.parentElement!.closest('[data-ui]:not([data-ui="stack"], [data-ui="cluster"])');
         const orphans = [...box!.querySelectorAll("[data-part]")]
+          .filter((el) => roots.includes(owner(el) as HTMLElement))
           .filter((el) => styled.has(el.getAttribute("data-part")!))
           .filter((el) => !reached.has(el))
           .map((el) => `${el.tagName.toLowerCase()}[data-part="${el.getAttribute("data-part")}"]`);
@@ -522,6 +573,252 @@ describe("nesting, CSS — a table in a table (1.1F-22)", () => {
       expect(reaches(sheet, root, root.querySelector("input")!), wrap).toBe(false);
       box!.remove();
     }
+  });
+});
+
+describe("nesting, CSS — the long tail (1.1F-23)", () => {
+  it("field-group leaves the options of a radio or checkbox group, and a date-picker's input, to them", () => {
+    // The shape @faqir-ui/forms renders: each option's text is the
+    // radio-label's own `label` part, inside the field-group's input slot.
+    const sheet = read("primitives", "field-group", "css");
+    const root = mount(
+      `<div data-ui="field-group" data-state="invalid" data-required>
+         <label data-part="label">Plan <span data-part="required">*</span></label>
+         <div data-part="input">
+           <div data-ui="radio-group"><label data-ui="radio-label"><input data-ui="radio" type="radio"><span data-part="label">Free</span></label></div>
+           <div data-ui="checkbox-group"><label data-ui="checkbox-label"><input data-ui="checkbox" type="checkbox"><span data-part="label">Email</span></label></div>
+           <div data-ui="date-picker"><div data-part="trigger"><input data-part="input"></div></div>
+         </div>
+         <p data-part="error">Pick one</p>
+       </div>`,
+    );
+    const [own, radio, check] = root.querySelectorAll('[data-part="label"]');
+    expect(reaches(sheet, root, own)).toBe(true);
+    expect(reaches(sheet, root, root.querySelector('[data-part="required"]')!)).toBe(true);
+    expect(reaches(sheet, root, root.querySelector('[data-part="error"]')!)).toBe(true);
+    expect(reaches(sheet, root, radio)).toBe(false);
+    expect(reaches(sheet, root, check)).toBe(false);
+    expect(reaches(sheet, root, root.querySelector('[data-ui="date-picker"] [data-part="input"]')!)).toBe(false);
+    // …and no selector at all, state and the ::after marker included, matches an option.
+    const all = sheetSelectors(sheet).map((s) => s.selector.replace(/::?(after|before|hover|focus-visible)\b/g, ""));
+    expect(all.filter((s) => radio.matches(s) || check.matches(s))).toEqual([]);
+  });
+
+  it("calendar styles the days its controller renders, and a header-less calendar's controls", async () => {
+    const { createCalendar } = await import("../../registry/recipes/calendar/calendar.js");
+    const sheet = read("recipes", "calendar", "css");
+    const [root] = mountReference("recipes", "calendar");
+    const api = createCalendar(root);
+    const days = root.querySelectorAll('[data-part="day"]');
+    expect(days.length).toBeGreaterThan(27);
+    for (const day of [days[0], days[days.length - 1]]) expect(reaches(sheet, root, day)).toBe(true);
+    api.destroy();
+    box!.remove();
+    // The header is optional: its controls may be the root's own children.
+    const bare = mount(
+      `<div data-ui="calendar"><button data-part="nav-prev"></button><span data-part="month-label"></span>
+         <button data-part="nav-next"></button><table data-part="grid"><tbody data-part="grid-body"></tbody></table></div>`,
+    );
+    for (const el of bare.querySelectorAll("button, span")) expect(reaches(sheet, bare, el), el.getAttribute("data-part")!).toBe(true);
+  });
+
+  it("command-palette styles a search without its wrapper, items without groups, and an empty state in the panel", () => {
+    const sheet = read("recipes", "command-palette", "css");
+    const root = mount(
+      `<div data-ui="command-palette"><div data-part="overlay"></div><div data-part="panel">
+         <input data-part="search">
+         <div data-part="list"><div data-part="item"><span data-part="item-label">Open</span><kbd data-part="kbd">O</kbd></div></div>
+         <div data-part="empty">None</div>
+       </div></div>`,
+    );
+    for (const el of root.querySelectorAll("[data-part]")) {
+      expect(reaches(sheet, root, el), el.getAttribute("data-part")!).toBe(true);
+    }
+  });
+
+  it("file-upload styles the rows its controller renders, and an input beside the dropzone", async () => {
+    const { createFileUpload } = await import("../../registry/recipes/file-upload/file-upload.js");
+    const sheet = read("recipes", "file-upload", "css");
+    const [root] = mountReference("recipes", "file-upload");
+    const api = createFileUpload(root);
+    const data = new DataTransfer();
+    data.items.add(new File(["x"], "a.png", { type: "image/png" }));
+    const input = root.querySelector<HTMLInputElement>('[data-part="input"]')!;
+    input.files = data.files;
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+    const rows = [...root.querySelectorAll('[data-part="list"] [data-part]')];
+    expect(rows.map((el) => el.getAttribute("data-part"))).toEqual(["file", "details", "name", "metadata", "remove"]);
+    for (const el of rows) expect(reaches(sheet, root, el), el.getAttribute("data-part")!).toBe(true);
+    api.destroy();
+    box!.remove();
+    const beside = mount(
+      `<div data-ui="file-upload"><input data-part="input" type="file"><label data-part="dropzone"><span data-part="prompt">Drop</span></label></div>`,
+    );
+    expect(reaches(sheet, beside, beside.querySelector("input")!)).toBe(true);
+  });
+
+  it("toast styles the toasts its controller adds", async () => {
+    const { createToastContainer } = await import("../../registry/recipes/toast/toast.js");
+    const sheet = read("recipes", "toast", "css");
+    const root = mount(`<div data-ui="toast" data-part="container" data-variant="top-right"></div>`);
+    const api = createToastContainer(root);
+    api.add({ message: "Saved", tone: "success", icon: "✓", actionLabel: "Undo", onAction() {} });
+    const parts = [...root.querySelectorAll("[data-part]")];
+    expect(new Set(parts.map((el) => el.getAttribute("data-part")))).toEqual(
+      new Set(["toast", "icon", "message", "action", "close"]),
+    );
+    for (const el of parts) expect(reaches(sheet, root, el), el.getAttribute("data-part")!).toBe(true);
+    api.destroy();
+  });
+
+  it("inbox reaches its rows through their <li>, and only the prose of a tabs panel in a detail", () => {
+    const sheet = read("patterns", "inbox", "css");
+    const root = mount(
+      `<div data-ui="inbox"><section data-part="list-pane"><ul data-part="list">
+         <li><button data-part="item"><span data-part="item-sender">Ana</span></button></li></ul></section>
+       <section data-part="detail-pane"><article data-part="detail">
+         <div data-ui="tabs"><div data-part="list"><button data-part="trigger">Body</button></div>
+           <div data-part="panel"><p>Hello</p></div></div>
+         <div data-ui="combobox"><div data-part="listbox"><div data-part="empty">None</div></div></div>
+       </article></section></div>`,
+    );
+    for (const part of ["item", "item-sender"]) {
+      expect(reaches(sheet, root, root.querySelector(`[data-part="${part}"]`)!), part).toBe(true);
+    }
+    // The tabs keep their list and the combobox its empty state…
+    expect(reaches(sheet, root, root.querySelector('[data-ui="tabs"] [data-part="list"]')!)).toBe(false);
+    expect(reaches(sheet, root, root.querySelector('[data-ui="combobox"] [data-part="empty"]')!)).toBe(false);
+    // …while the panel's prose rule, on purpose, names the tabs it reaches into.
+    const prose = sheetSelectors(sheet).map((s) => s.selector).filter((s) => s.endsWith("p"));
+    expect(prose.some((s) => root.querySelector('[data-part="panel"] p')!.matches(s))).toBe(true);
+    expect(prose.find((s) => s.includes("panel"))).toContain(':where([data-ui="tabs"]) > [data-part="panel"]');
+  });
+
+  it("asks :has() about its own parts only", () => {
+    // `:has([data-part="control"])` is a descendant query: a toggle-group item
+    // holding a checked control of some other component read as checked.
+    const has = (rel: string) =>
+      sheetSelectors(readFileSync(join(REGISTRY, rel), "utf8"))
+        .map((s) => s.selector)
+        .filter((s) => /:has\([^)]*data-part/.test(s));
+    const found = [
+      ...has("primitives/input/input.css"),
+      ...has("primitives/switch/switch.css"),
+      ...has("recipes/file-upload/file-upload.css"),
+      ...has("recipes/toggle-group/toggle-group.css"),
+    ];
+    expect(found.length).toBe(7);
+    for (const s of found) expect(crossesIntoPart(s), s).toBe(false);
+    // happy-dom cannot evaluate a relative :has(); tests/visual/nesting.pw.ts
+    // checks in Chromium that a nested checked control no longer counts.
+    for (const s of found) {
+      for (const [, arg] of s.matchAll(/:has\(((?:[^()]|\([^()]*\))*)\)/g)) {
+        if (arg.includes("data-part")) expect(arg.split(", ").every((a) => a.startsWith("> ")), s).toBe(true);
+      }
+    }
+  });
+});
+
+describe("nesting, CSS — tree-view recurses (1.1F-23)", () => {
+  const sheet = read("recipes", "tree-view", "css");
+  const tree = `<ul data-ui="tree-view"><li data-part="item" aria-expanded="true">
+      <span data-part="label"><span data-part="toggle"></span>Projects
+        <span data-ui="chip"><span data-part="label">new</span><span data-part="toggle"></span></span></span>
+      <ul data-part="group"><li data-part="item" aria-expanded="true"><span data-part="label"><span data-part="toggle"></span>faqir</span>
+        <ul data-part="group"><li data-part="item"><span data-part="label"><span data-part="toggle"></span>README</span></li></ul>
+      </li></ul></li></ul>`;
+
+  it("reaches items, labels, toggles and groups at every depth", () => {
+    const root = mount(tree);
+    for (const el of root.querySelectorAll("[data-part]")) {
+      if (el.closest('[data-ui="chip"]')) continue;
+      expect(reaches(sheet, root, el), el.outerHTML.slice(0, 40)).toBe(true);
+    }
+  });
+
+  it("but not a component's parts inside an item's label", () => {
+    const root = mount(tree);
+    for (const el of root.querySelectorAll('[data-ui="chip"] [data-part]')) {
+      expect(reaches(sheet, root, el), el.getAttribute("data-part")!).toBe(false);
+    }
+  });
+
+  it("takes one descendant step per rule, into an item or a group, and the allowlist names exactly those", () => {
+    const found = descendantPartSelectors(sheet).map((s) => s.selector);
+    expect(found.length).toBeGreaterThan(0);
+    for (const selector of found) {
+      const crossings = steps(selector).filter((s, i) => i > 0 && s.combinator === " ");
+      expect(crossings.map((s) => s.compound), selector).toEqual([
+        expect.stringMatching(/^:where\(\[data-part="(item|group)"\]\)$/),
+      ]);
+      expect(DESCENDANT_PART_ALLOWED.has(`recipes/tree-view/tree-view.css ${selector}`), selector).toBe(true);
+    }
+    expect(new Set(found).size).toBe(DESCENDANT_PART_ALLOWED.size);
+  });
+});
+
+describe("descendant-part-selector — gate 9 of audit:registry (1.1F-23)", () => {
+  const sheets = [...new Glob("**/*.css").scanSync(REGISTRY)]
+    .sort()
+    .map((rel) => ({ rel, css: readFileSync(join(REGISTRY, rel), "utf8") }));
+
+  it("passes on the registry", () => {
+    expect(sheets.length).toBeGreaterThan(100);
+    expect(findDescendantPartSelectors(sheets)).toEqual([]);
+  });
+
+  it("fails a planted descendant part selector, with its file and line", () => {
+    const planted = {
+      rel: "primitives/x/x.css",
+      css: `[data-ui="x"] {\n  display: block;\n}\n\n[data-ui="x"] > [data-part="a"],\n[data-ui="x"] [data-part="y"] {\n  color: red;\n}\n`,
+    };
+    const findings = findDescendantPartSelectors([...sheets, planted]);
+    expect(findings).toEqual([
+      expect.objectContaining({ file: "primitives/x/x.css", line: 5, kind: "descendant-part-selector" }),
+    ]);
+    expect(findings[0].message).toContain('[data-ui="x"] [data-part="y"]');
+  });
+
+  it("fails a bare :has() over a part, which is a descendant query too", () => {
+    const planted = { rel: "recipes/x/x.css", css: `[data-ui="x"]:has([data-part="y"]:checked) {\n  color: red;\n}\n` };
+    expect(findDescendantPartSelectors([planted], new Set(), new Set())).toEqual([
+      expect.objectContaining({ file: "recipes/x/x.css", line: 1, kind: "descendant-part-selector" }),
+    ]);
+    const child = { rel: "recipes/x/x.css", css: `[data-ui="x"]:has(> [data-part="y"]:checked) {\n  color: red;\n}\n` };
+    expect(findDescendantPartSelectors([child], new Set(), new Set())).toEqual([]);
+  });
+
+  it("passes an allowlisted selector, and fails an allowlist entry the sheet no longer has", () => {
+    const sheet = { rel: "recipes/x/x.css", css: `[data-ui="x"] :where([data-part="g"]) > [data-part="i"] {\n  color: red;\n}\n` };
+    const allowed = new Set([`recipes/x/x.css [data-ui="x"] :where([data-part="g"]) > [data-part="i"]`]);
+    expect(findDescendantPartSelectors([sheet], allowed, new Set())).toEqual([]);
+    expect(findDescendantPartSelectors([sheet], new Set(), new Set())).toHaveLength(1);
+    const stale = new Set([...allowed, `recipes/x/x.css [data-ui="x"] [data-part="gone"]`]);
+    expect(findDescendantPartSelectors([sheet], stale, new Set())).toEqual([
+      expect.objectContaining({ file: "recipes/x/x.css", kind: "stale-allowlist" }),
+    ]);
+  });
+
+  it("skips a pending pattern sheet until it is converted, then requires it off the list", () => {
+    const leaky = { rel: "patterns/p/p.css", css: `[data-ui="p"] [data-part="y"] { color: red; }\n` };
+    const clean = { rel: "patterns/p/p.css", css: `[data-ui="p"] > [data-part="y"] { color: red; }\n` };
+    const pending = new Set(["patterns/p/p.css"]);
+    expect(findDescendantPartSelectors([leaky], new Set(), pending)).toEqual([]);
+    expect(findDescendantPartSelectors([clean], new Set(), pending)).toEqual([
+      expect.objectContaining({ file: "patterns/p/p.css", kind: "stale-pending" }),
+    ]);
+    // The real list: twelve pattern sheets, each still waiting (1.1F-39).
+    expect(DESCENDANT_PART_PENDING.size).toBe(12);
+    for (const rel of DESCENDANT_PART_PENDING) {
+      expect(rel.startsWith("patterns/"), rel).toBe(true);
+      expect(descendantPartSelectors(readFileSync(join(REGISTRY, rel), "utf8")).length, rel).toBeGreaterThan(0);
+    }
+  });
+
+  it("is wired into audit:registry, which the release preflight runs", () => {
+    const audit = readFileSync(join(REGISTRY, "../scripts/registry-audit.mjs"), "utf8");
+    expect(audit).toContain("findDescendantPartSelectors(");
+    expect(PREFLIGHT.map(([script]: string[]) => script)).toContain("audit:registry");
   });
 });
 

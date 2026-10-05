@@ -17,12 +17,12 @@
    the inner step in one owner and leaves the outer step to the default rhythm. */
 
 /* ── Parts ── */
-[data-ui="label"] [data-part="indicator"] {
+[data-ui="label"] > [data-part="indicator"] {
   color: var(--color-fg-muted);
   font-weight: var(--weight-normal, 400);
 }
 
-[data-ui="label"][data-variant="required"] [data-part="indicator"] {
+[data-ui="label"][data-variant="required"] > [data-part="indicator"] {
   color: var(--color-destructive);
 }
 

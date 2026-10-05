@@ -1,8 +1,16 @@
 /* @ui:component tree-view */
 /* @ui:tokens color-bg-muted color-fg color-fg-muted color-fg-subtle color-primary color-primary-subtle color-ring space-1 space-2 space-5 radius-md text-sm font-ui weight-medium duration-fast ease-default focus-ring-width focus-ring-style focus-ring-color focus-ring-offset */
 
+/* Nesting (1.1F-23). A tree is the same parts all the way down — an item's
+   group holds items, at any depth — and no chain of child combinators can say
+   "at any depth". So each rule takes exactly one descendant step, from the root
+   to the item or group the recursion is made of; everything below that is a
+   child hop: an item is the root's or a group's child, a label and a group an
+   item's, a toggle a label's. These are the registry's only allowlisted
+   descendant part selectors (`DESCENDANT_PART_ALLOWED`, src/audit/part-selectors.ts). */
+
 [data-ui="tree-view"],
-[data-ui="tree-view"] [data-part="group"] {
+[data-ui="tree-view"] :where([data-part="item"]) > [data-part="group"] {
   margin: 0;
   padding: 0;
   list-style: none;
@@ -16,15 +24,16 @@
   font-size: var(--text-sm);
 }
 
-[data-ui="tree-view"] [data-part="group"] {
+[data-ui="tree-view"] :where([data-part="item"]) > [data-part="group"] {
   margin-inline-start: var(--space-5);
 }
 
-[data-ui="tree-view"] [data-part="item"] {
+[data-ui="tree-view"] > [data-part="item"],
+[data-ui="tree-view"] :where([data-part="group"]) > [data-part="item"] {
   outline: none;
 }
 
-[data-ui="tree-view"] [data-part="label"] {
+[data-ui="tree-view"] :where([data-part="item"]) > [data-part="label"] {
   display: flex;
   align-items: center;
   gap: var(--space-1);
@@ -35,26 +44,30 @@
   cursor: default;
 }
 
-[data-ui="tree-view"] [data-part="item"]:not([aria-disabled="true"]) > [data-part="label"]:hover {
+[data-ui="tree-view"] > [data-part="item"]:not([aria-disabled="true"]) > [data-part="label"]:hover,
+[data-ui="tree-view"] :where([data-part="group"]) > [data-part="item"]:not([aria-disabled="true"]) > [data-part="label"]:hover {
   background: var(--color-bg-muted);
 }
 
-[data-ui="tree-view"] [data-part="item"]:focus-visible > [data-part="label"] {
+[data-ui="tree-view"] > [data-part="item"]:focus-visible > [data-part="label"],
+[data-ui="tree-view"] :where([data-part="group"]) > [data-part="item"]:focus-visible > [data-part="label"] {
   outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
   outline-offset: var(--focus-ring-offset);
 }
 
-[data-ui="tree-view"] [data-part="item"][aria-selected="true"] > [data-part="label"] {
+[data-ui="tree-view"] > [data-part="item"][aria-selected="true"] > [data-part="label"],
+[data-ui="tree-view"] :where([data-part="group"]) > [data-part="item"][aria-selected="true"] > [data-part="label"] {
   background: var(--color-primary-subtle);
   color: var(--color-primary);
   font-weight: var(--weight-medium);
 }
 
-[data-ui="tree-view"] [data-part="item"][aria-disabled="true"] > [data-part="label"] {
+[data-ui="tree-view"] > [data-part="item"][aria-disabled="true"] > [data-part="label"],
+[data-ui="tree-view"] :where([data-part="group"]) > [data-part="item"][aria-disabled="true"] > [data-part="label"] {
   color: var(--color-fg-subtle);
 }
 
-[data-ui="tree-view"] [data-part="toggle"] {
+[data-ui="tree-view"] :where([data-part="item"]) > :where([data-part="label"]) > [data-part="toggle"] {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -64,16 +77,18 @@
   transition: transform var(--duration-fast) var(--ease-default);
 }
 
-[data-ui="tree-view"] [data-part="item"]:not([aria-expanded]) > [data-part="label"] [data-part="toggle"] {
+[data-ui="tree-view"] > [data-part="item"]:not([aria-expanded]) > [data-part="label"] > [data-part="toggle"],
+[data-ui="tree-view"] :where([data-part="group"]) > [data-part="item"]:not([aria-expanded]) > [data-part="label"] > [data-part="toggle"] {
   visibility: hidden;
 }
 
-[data-ui="tree-view"] [data-part="item"][aria-expanded="true"] > [data-part="label"] [data-part="toggle"] {
+[data-ui="tree-view"] > [data-part="item"][aria-expanded="true"] > [data-part="label"] > [data-part="toggle"],
+[data-ui="tree-view"] :where([data-part="group"]) > [data-part="item"][aria-expanded="true"] > [data-part="label"] > [data-part="toggle"] {
   transform: rotate(90deg);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  [data-ui="tree-view"] [data-part="toggle"] {
+  [data-ui="tree-view"] :where([data-part="item"]) > :where([data-part="label"]) > [data-part="toggle"] {
     transition: none;
   }
 }

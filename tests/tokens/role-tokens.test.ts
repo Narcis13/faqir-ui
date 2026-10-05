@@ -316,7 +316,8 @@ describe("role tokens · every mono surface reads --mono-ligatures [1.1F-19]", (
       'primitives/kbd/kbd.css · [data-ui="kbd"]',
       'primitives/text/text.css · [data-ui="text"][data-variant="mono"]',
       'recipes/barcode/barcode.css · [data-ui="barcode"] > [data-part="caption"]',
-      'recipes/command-palette/command-palette.css · [data-ui="command-palette"] [data-part="kbd"]',
+      // A kbd is its item's child; an item its group's, or the list's when there are no groups (1.1F-23).
+      'recipes/command-palette/command-palette.css · [data-ui="command-palette"] > :where([data-part="panel"]) > :where([data-part="list"]) > :where([data-part="group"]) > :where([data-part="item"]) > [data-part="kbd"], [data-ui="command-palette"] > :where([data-part="panel"]) > :where([data-part="list"]) > :where([data-part="item"]) > [data-part="kbd"]',
     ]);
   });
 

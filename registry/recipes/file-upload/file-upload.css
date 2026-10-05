@@ -1,6 +1,12 @@
 /* @ui:component file-upload */
 /* @ui:tokens color-bg color-bg-subtle color-fg color-fg-muted color-border color-border-strong color-primary color-primary-subtle color-ring color-destructive color-destructive-subtle space-px space-1 space-2 space-3 space-4 space-8 radius-md radius-lg text-xs text-sm text-base weight-semibold font-ui duration-fast ease-default focus-ring-width focus-ring-style focus-ring-color focus-ring-offset border-width disabled-opacity */
 
+/* Nesting (1.1F-23): every part is reached by child combinators from the root,
+   the hops in :where() so no rule changes weight. Kept beyond the template: the
+   input may be the root's child beside the dropzone (the controller points the
+   dropzone label at it). File rows are the controller's:
+   root > list > file > details > name, metadata and file > remove. */
+
 [data-ui="file-upload"] {
   display: grid;
   gap: var(--space-4);
@@ -9,7 +15,7 @@
   font-family: var(--font-ui);
 }
 
-[data-ui="file-upload"] [data-part="dropzone"] {
+[data-ui="file-upload"] > [data-part="dropzone"] {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -29,7 +35,8 @@
     box-shadow var(--duration-fast) var(--ease-default);
 }
 
-[data-ui="file-upload"] [data-part="input"] {
+[data-ui="file-upload"] > :where([data-part="dropzone"]) > [data-part="input"],
+[data-ui="file-upload"] > [data-part="input"] {
   position: absolute;
   inline-size: var(--space-px);
   block-size: var(--space-px);
@@ -40,29 +47,29 @@
   border: 0;
 }
 
-[data-ui="file-upload"]:has([data-part="input"]:focus-visible) [data-part="dropzone"] {
+[data-ui="file-upload"]:has(> :where([data-part="dropzone"]) > [data-part="input"]:focus-visible, > [data-part="input"]:focus-visible) > [data-part="dropzone"] {
   outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
   outline-offset: var(--focus-ring-offset);
 }
 
-[data-ui="file-upload"][data-state="dragging"] [data-part="dropzone"] {
+[data-ui="file-upload"][data-state="dragging"] > [data-part="dropzone"] {
   border-color: var(--color-primary);
   background: var(--color-primary-subtle);
   box-shadow: 0 0 0 var(--border-width) var(--color-primary);
 }
 
-[data-ui="file-upload"] [data-part="prompt"] {
+[data-ui="file-upload"] > :where([data-part="dropzone"]) > [data-part="prompt"] {
   color: var(--color-fg);
   font-size: var(--text-base);
   font-weight: var(--weight-semibold);
 }
 
-[data-ui="file-upload"] [data-part="description"] {
+[data-ui="file-upload"] > :where([data-part="dropzone"]) > [data-part="description"] {
   color: var(--color-fg-muted);
   font-size: var(--text-sm);
 }
 
-[data-ui="file-upload"] [data-part="list"] {
+[data-ui="file-upload"] > [data-part="list"] {
   display: grid;
   gap: var(--space-2);
   margin: 0;
@@ -70,7 +77,7 @@
   list-style: none;
 }
 
-[data-ui="file-upload"] [data-part="file"] {
+[data-ui="file-upload"] > :where([data-part="list"]) > [data-part="file"] {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
@@ -81,16 +88,16 @@
   background: var(--color-bg);
 }
 
-[data-ui="file-upload"] [data-part="details"] {
+[data-ui="file-upload"] > :where([data-part="list"]) > :where([data-part="file"]) > [data-part="details"] {
   min-inline-size: 0;
 }
 
-[data-ui="file-upload"] [data-part="name"],
-[data-ui="file-upload"] [data-part="metadata"] {
+[data-ui="file-upload"] > :where([data-part="list"]) > :where([data-part="file"]) > :where([data-part="details"]) > [data-part="name"],
+[data-ui="file-upload"] > :where([data-part="list"]) > :where([data-part="file"]) > :where([data-part="details"]) > [data-part="metadata"] {
   display: block;
 }
 
-[data-ui="file-upload"] [data-part="name"] {
+[data-ui="file-upload"] > :where([data-part="list"]) > :where([data-part="file"]) > :where([data-part="details"]) > [data-part="name"] {
   overflow: hidden;
   font-size: var(--text-sm);
   font-weight: var(--weight-semibold);
@@ -98,13 +105,13 @@
   white-space: nowrap;
 }
 
-[data-ui="file-upload"] [data-part="metadata"] {
+[data-ui="file-upload"] > :where([data-part="list"]) > :where([data-part="file"]) > :where([data-part="details"]) > [data-part="metadata"] {
   margin-block-start: var(--space-1);
   color: var(--color-fg-muted);
   font-size: var(--text-xs);
 }
 
-[data-ui="file-upload"] [data-part="remove"] {
+[data-ui="file-upload"] > :where([data-part="list"]) > :where([data-part="file"]) > [data-part="remove"] {
   padding-block: var(--space-2);
   padding-inline: var(--space-3);
   border: var(--space-px) solid var(--color-border);
@@ -116,24 +123,24 @@
   cursor: pointer;
 }
 
-[data-ui="file-upload"] [data-part="remove"]:hover {
+[data-ui="file-upload"] > :where([data-part="list"]) > :where([data-part="file"]) > [data-part="remove"]:hover {
   border-color: var(--color-destructive);
   background: var(--color-destructive-subtle);
 }
 
-[data-ui="file-upload"] [data-part="remove"]:focus-visible {
+[data-ui="file-upload"] > :where([data-part="list"]) > :where([data-part="file"]) > [data-part="remove"]:focus-visible {
   outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
   outline-offset: var(--focus-ring-offset);
 }
 
-[data-ui="file-upload"] [data-part="empty"] {
+[data-ui="file-upload"] > :where([data-part="list"]) > [data-part="empty"] {
   padding: var(--space-3) var(--space-4);
   color: var(--color-fg-muted);
   font-size: var(--text-sm);
   text-align: center;
 }
 
-[data-ui="file-upload"] [data-part="status"] {
+[data-ui="file-upload"] > [data-part="status"] {
   position: absolute;
   inline-size: var(--space-px);
   block-size: var(--space-px);
@@ -148,13 +155,13 @@
   opacity: var(--disabled-opacity);
 }
 
-[data-ui="file-upload"][data-disabled] [data-part="dropzone"],
-[data-ui="file-upload"][data-disabled] [data-part="remove"] {
+[data-ui="file-upload"][data-disabled] > [data-part="dropzone"],
+[data-ui="file-upload"][data-disabled] > :where([data-part="list"]) > :where([data-part="file"]) > [data-part="remove"] {
   cursor: not-allowed;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  [data-ui="file-upload"] [data-part="dropzone"] {
+  [data-ui="file-upload"] > [data-part="dropzone"] {
     transition: none;
   }
 }

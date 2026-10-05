@@ -1,12 +1,17 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "label",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "kind": "primitive",
   "category": "forms",
   "description": "Form label with optional required/optional indicator; spacing to a control belongs to the containing field-group rather than the label itself",
 
   "changes": [
+    {
+      "version": "1.1.1",
+      "note": "Nested components keep their own parts. The stylesheet reached the required indicator with descendant selectors, so a component nested inside with parts of the same name took this one's styles. The indicator is the label's child. Every part rule is now a child chain from the root, with the hops in :where(), so no rule changes specificity. No change for markup that follows the template.",
+      "breaking": false
+    },
     {
       "version": "1.1.0",
       "note": "Removed the label's external margin so it no longer competes with field-group's density-aware inner step or the default rhythm's sibling-field step.",

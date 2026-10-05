@@ -20,7 +20,7 @@
 }
 
 /* ── Track ── */
-[data-ui="slider"] [data-part="track"] {
+[data-ui="slider"] > [data-part="track"] {
   position: relative;
   flex: 1 1 auto;
   block-size: var(--slider-track-size);
@@ -29,7 +29,7 @@
 }
 
 /* ── Filled range ── */
-[data-ui="slider"] [data-part="range"] {
+[data-ui="slider"] > :where([data-part="track"]) > [data-part="range"] {
   position: absolute;
   inset-block: 0;
   inset-inline-start: var(--slider-start, 0%);
@@ -39,7 +39,7 @@
 }
 
 /* ── Thumb ── */
-[data-ui="slider"] [data-part="thumb"] {
+[data-ui="slider"] > :where([data-part="track"]) > [data-part="thumb"] {
   position: absolute;
   inset-block-start: 50%;
   inset-inline-start: var(--pos, 0%);
@@ -57,24 +57,24 @@
   transition: box-shadow var(--duration-fast) var(--ease-default);
 }
 
-[data-ui="slider"] [data-part="thumb"]:hover {
+[data-ui="slider"] > :where([data-part="track"]) > [data-part="thumb"]:hover {
   box-shadow: var(--shadow-sm),
               0 0 0 4px var(--color-primary-subtle);
 }
 
-[data-ui="slider"] [data-part="thumb"]:focus-visible {
+[data-ui="slider"] > :where([data-part="track"]) > [data-part="thumb"]:focus-visible {
   outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
   outline-offset: var(--focus-ring-offset);
 }
 
-[data-ui="slider"] [data-part="thumb"][data-state="dragging"] {
+[data-ui="slider"] > :where([data-part="track"]) > [data-part="thumb"][data-state="dragging"] {
   cursor: grabbing;
   box-shadow: var(--shadow-sm),
               0 0 0 5px var(--color-primary-subtle);
 }
 
 /* ── Value output ── */
-[data-ui="slider"] [data-part="output"] {
+[data-ui="slider"] > [data-part="output"] {
   flex: 0 0 auto;
   min-inline-size: 3ch;
   color: var(--color-fg-muted);
@@ -104,7 +104,7 @@
 
 /* ── Motion ── */
 @media (prefers-reduced-motion: reduce) {
-  [data-ui="slider"] [data-part="thumb"] {
+  [data-ui="slider"] > :where([data-part="track"]) > [data-part="thumb"] {
     transition: none;
   }
 }
@@ -114,22 +114,22 @@
    drops both: the slider showed no value. The range and the thumb opt out of
    the substitution so the control still reads as "this much, up to here". [W3-3] */
 @media (forced-colors: active) {
-  [data-ui="slider"] [data-part="track"] {
+  [data-ui="slider"] > [data-part="track"] {
     border: var(--border-width) solid ButtonText;
   }
 
-  [data-ui="slider"] [data-part="range"] {
+  [data-ui="slider"] > :where([data-part="track"]) > [data-part="range"] {
     forced-color-adjust: none;
     background: Highlight;
   }
 
-  [data-ui="slider"] [data-part="thumb"] {
+  [data-ui="slider"] > :where([data-part="track"]) > [data-part="thumb"] {
     forced-color-adjust: none;
     background: ButtonText;
     border: var(--border-width) solid ButtonFace;
   }
 
-  [data-ui="slider"] [data-part="thumb"]:focus-visible {
+  [data-ui="slider"] > :where([data-part="track"]) > [data-part="thumb"]:focus-visible {
     outline-color: Highlight;
   }
 }

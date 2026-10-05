@@ -1,10 +1,17 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "tree-view",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "kind": "recipe",
   "category": "navigation",
   "description": "Single-select hierarchical tree with complete WAI keyboard navigation, explicit positional ARIA, keyed-rendering support, and lazy expansion events",
+  "changes": [
+    {
+      "version": "1.0.1",
+      "note": "Nested components keep their own parts. The stylesheet reached items, labels, toggles and groups with descendant selectors, so a component in an item's label with parts of those names (a chip's label) took the tree's. A tree's items recurse to any depth, which child combinators cannot express, so each rule keeps one descendant step, from the root to an item or group, and everything below it is a child hop: an item is the root's or a group's child, a label and a group an item's, a toggle a label's. The hops are in :where(), so no rule changes specificity. No change for markup that follows the template.",
+      "breaking": false
+    }
+  ],
   "anatomy": {
     "tag": "ul",
     "selector": "[data-ui='tree-view']",

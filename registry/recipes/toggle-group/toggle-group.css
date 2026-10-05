@@ -12,7 +12,7 @@
 }
 
 /* ── Item: the visible "button" (a <label> wrapping the native control) ── */
-[data-ui="toggle-group"] [data-part="item"] {
+[data-ui="toggle-group"] > [data-part="item"] {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -31,7 +31,7 @@
               color var(--duration-fast) var(--ease-default);
 }
 
-[data-ui="toggle-group"] [data-part="item"]:hover {
+[data-ui="toggle-group"] > [data-part="item"]:hover {
   background: var(--color-bg-muted);
   color: var(--color-fg);
 }
@@ -39,7 +39,7 @@
 /* ── The native control is the accessible, focusable element; hide it visually
       but keep it operable (no display:none, which would drop it from the a11y
       tree and disable focus). ── */
-[data-ui="toggle-group"] [data-part="control"] {
+[data-ui="toggle-group"] > :where([data-part="item"]) > [data-part="control"] {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -54,27 +54,27 @@
 
 /* ── Checked / on — driven off the native control's state (and the mirrored
       data-state for engines/tools that key on it) ── */
-[data-ui="toggle-group"] [data-part="item"]:has([data-part="control"]:checked),
-[data-ui="toggle-group"] [data-part="item"][data-state="on"] {
+[data-ui="toggle-group"] > [data-part="item"]:has(> [data-part="control"]:checked),
+[data-ui="toggle-group"] > [data-part="item"][data-state="on"] {
   background: var(--color-primary-subtle);
   color: var(--color-primary);
 }
 
 /* ── Keyboard focus ring on the item (focus lives on the hidden control) ── */
-[data-ui="toggle-group"] [data-part="item"]:has([data-part="control"]:focus-visible) {
+[data-ui="toggle-group"] > [data-part="item"]:has(> [data-part="control"]:focus-visible) {
   outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
   outline-offset: var(--focus-ring-offset);
 }
 
 /* ── Disabled control ── */
-[data-ui="toggle-group"] [data-part="item"]:has([data-part="control"]:disabled) {
+[data-ui="toggle-group"] > [data-part="item"]:has(> [data-part="control"]:disabled) {
   opacity: var(--disabled-opacity);
   cursor: not-allowed;
 }
 
 /* ── Motion ── */
 @media (prefers-reduced-motion: reduce) {
-  [data-ui="toggle-group"] [data-part="item"] {
+  [data-ui="toggle-group"] > [data-part="item"] {
     transition: none;
   }
 }

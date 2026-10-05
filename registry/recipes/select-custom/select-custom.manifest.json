@@ -1,11 +1,16 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "select-custom",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "kind": "recipe",
   "category": "forms",
   "description": "Custom styled select dropdown with search filtering and keyboard navigation",
   "changes": [
+    {
+      "version": "1.1.1",
+      "note": "Nested components keep their own parts. The stylesheet reached the trigger, value, chevron, listbox, search, options and empty state with descendant selectors, so a component nested inside with parts of the same name took this one's styles. Parts are root > trigger > value and chevron, and root > listbox > search, option and empty. Every part rule is now a child chain from the root, with the hops in :where(), so no rule changes specificity. No change for markup that follows the template.",
+      "breaking": false
+    },
     {
       "version": "1.1.0",
       "note": "data-highlighted and data-hidden are now declared. The controller has always written both onto the options (active descendant and filtered-out respectively) and the CSS has always styled them, but no manifest named them. They are states rather than props because a controller writes them: a state is the runtime's vocabulary, a prop is what an author types. 0.8-10's undeclared-attribute rule now makes this class of drift impossible: an attribute a component's CSS selects on that its manifest never declares fails the registry gate.",

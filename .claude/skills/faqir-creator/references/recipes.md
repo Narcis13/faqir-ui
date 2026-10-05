@@ -191,7 +191,7 @@ Standalone month-grid calendar with roving-tabindex keyboard navigation, min/max
 
 ```text
 [data-ui='calendar']  ·  <div> · content: slots
-├─ [data-part='header']  <div>  optional  — Row holding the month navigation buttons and the month label
+├─ [data-part='header']  <div>  optional  — Row holding the month navigation buttons and the month label. Without it, the label and buttons are the root's own children
 ├─ [data-part='nav-prev']  <button>  optional  — Navigate to previous month; auto-disabled when the whole previous month is before data-min
 ├─ [data-part='nav-next']  <button>  optional  — Navigate to next month; auto-disabled when the whole next month is after data-max
 ├─ [data-part='month-label']  <span>  required  — Displays current month and year
@@ -373,11 +373,11 @@ Cmd+K style modal command interface with search and keyboard navigation
 [data-ui='command-palette']  ·  <div> · content: slots
 ├─ [data-part='overlay']  <div>  required  — Backdrop overlay, click to close
 ├─ [data-part='panel']  <div>  required  — The command palette dialog container
-├─ [data-part='search']  <input>  required  — Search input with role=combobox for filtering commands
+├─ [data-part='search']  <input>  required  — Search input with role=combobox for filtering commands. Sits in the search-wrapper, or directly in the panel when there is none
 ├─ [data-part='list']  <div>  required  — Scrollable list container with role=listbox
 ├─ [data-part='group']  <div>  optional  — Group container with label and items
-├─ [data-part='item']  <div>  required  — Individual command item with role=option
-├─ [data-part='empty']  <div>  optional  — Empty state shown when no commands match
+├─ [data-part='item']  <div>  required  — Individual command item with role=option. A child of a group, or of the list when there are no groups
+├─ [data-part='empty']  <div>  optional  — Empty state shown when no commands match. Inside the list, or directly in the panel
 ├─ [data-part='kbd']  <kbd>  optional  — Keyboard shortcut hint displayed in items
 ├─ [data-part='search-wrapper']  <div>  optional  — Row holding the search input and its leading icon
 ├─ [data-part='group-label']  <div>  optional  — Heading naming a group of commands
@@ -711,7 +711,7 @@ Native file selection plus drag-and-drop, local accept/size validation, removabl
 ```text
 [data-ui='file-upload']  ·  <div> · content: slots
 ├─ [data-part='dropzone']  <label>  required  — Native label activation target and pointer drop surface; contains or references the real file input
-├─ [data-part='input']  <input>  required  — Real type=file control for keyboard, screen-reader, picker, form, and change-event access; never replace with a scripted div
+├─ [data-part='input']  <input>  required  — Real type=file control for keyboard, screen-reader, picker, form, and change-event access; never replace with a scripted div. Inside the dropzone, or the root's child beside it (the controller then points the dropzone label at it)
 ├─ [data-part='prompt']  <span>  required  — Visible label text describing picker and drag-and-drop activation
 ├─ [data-part='description']  <span>  required  — Visible accept and size guidance referenced by the input through aria-describedby
 ├─ [data-part='list']  <ul>  required  — Retained accepted files; the controller renders one file row per File object

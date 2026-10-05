@@ -174,6 +174,55 @@ const master = (attrs: string, inner: string, rowAttrs = "") =>
       row("INV-3", "4"),
   );
 
+// ── 1.1F-23: the long tail ──
+
+const radioGroup = (mark: string) =>
+  `<div data-ui="radio-group" role="radiogroup" aria-label="Plan">
+  <label data-ui="radio-label"><input data-ui="radio" type="radio" name="plan-${mark ? "p" : "r"}" value="free"><span data-part="label" ${mark}>Free</span></label>
+</div>`;
+
+const fieldGroup = (inner: string) =>
+  `<div data-ui="field-group" data-state="invalid">
+  <span data-part="label">Plan</span>
+  <div data-part="input">${inner}</div>
+  <p data-part="error">Pick a plan.</p>
+</div>`;
+
+const iconButton = (mark: string) =>
+  `<button data-ui="button" data-variant="ghost" data-size="sm" type="button"><span data-part="icon" aria-hidden="true" ${mark}>&#x2605;</span>Star</button>`;
+
+const toastWith = (inner: string) =>
+  `<div data-ui="toast" data-part="container" data-variant="top-right" role="region" aria-label="Notifications">
+  <div data-part="toast" data-variant="default" data-state="visible" role="status">
+    <span data-part="icon" aria-hidden="true">i</span><span data-part="message">Saved.</span>${inner}
+  </div>
+</div>`;
+
+const chip = (mark: string) => `<span data-ui="chip"><span data-part="label" ${mark}>new</span></span>`;
+
+const treeWith = (label: string) =>
+  `<ul data-ui="tree-view" role="tree" aria-label="Files">
+  <li data-part="item" role="treeitem" aria-level="1" aria-selected="false" tabindex="0"><span data-part="label">Projects ${label}</span></li>
+</ul>`;
+
+/** A toggle-group item; `extra` goes inside it, after its own (unchecked) control. */
+const toggleItem = (mark: string, extra = "") =>
+  `<div data-ui="toggle-group" data-mode="multiple" role="group" aria-label="Format">
+  <label data-part="item" ${mark}><input data-part="control" type="checkbox" value="b"><span data-part="label">Bold</span>${extra}</label>
+</div>`;
+
+/** A command palette; `list` is the list's content. Open, so its panel lays out. */
+const palette = (list: string) =>
+  `<div data-ui="command-palette" data-state="open">
+  <div data-part="overlay"></div>
+  <div data-part="panel" role="dialog" aria-label="Commands">
+    <input data-part="search" type="text" aria-label="Search commands">
+    <div data-part="list" role="listbox">${list}</div>
+  </div>
+</div>`;
+
+const paletteItem = (mark: string) => `<div data-part="item" role="option" ${mark}><span data-part="item-label">Open file</span></div>`;
+
 const FIXTURES: readonly Fixture[] = [
   {
     name: "an open collapsible holding a closed one keeps the inner chevron unrotated",
@@ -459,6 +508,59 @@ const FIXTURES: readonly Fixture[] = [
     nested: table("", row("Widget", "2"), `<div data-ui="cluster"><input data-part="filter" aria-label="Filter" data-probe></div>`),
     alone: table("", row("Widget", "2"), `<input data-part="filter" aria-label="Filter" data-ref>`),
     props: ["width", "padding-top", "padding-left", "font-size", "border-top-width", "border-top-left-radius"],
+  },
+  // ── 1.1F-23 ──
+  {
+    // The shape @faqir-ui/forms renders: options in the field-group's input slot.
+    name: "a radio option in an invalid field-group keeps its own label",
+    nested: fieldGroup(radioGroup("data-probe")),
+    alone: radioGroup("data-ref"),
+    props: ["font-size", "font-weight", "color", "line-height"],
+    revert: `[data-ui="field-group"] [data-part="label"] { font-weight: var(--field-label-weight); line-height: 1.4; }
+      [data-ui="field-group"][data-state="invalid"] [data-part="label"] { color: var(--field-error-color); }`,
+  },
+  {
+    name: "a progress bar in a stat keeps its own label",
+    nested: `<div data-ui="stat"><span data-part="label">Quota</span><span data-part="value">40%</span>${progress("data-probe")}</div>`,
+    alone: progress("data-ref"),
+    props: ["font-size", "font-weight", "color", "line-height", "order"],
+    revert: `[data-ui="stat"] [data-part="label"] { font-size: var(--stat-label-size); font-weight: var(--weight-semibold); color: var(--stat-label-color); line-height: 1.2; order: -1; }`,
+  },
+  {
+    name: "a button in a toast keeps its own icon",
+    nested: toastWith(iconButton("data-probe")),
+    alone: iconButton("data-ref"),
+    props: ["width", "height", "color", "font-size"],
+    revert: `[data-ui="toast"] [data-part="icon"] { width: 20px; height: 20px; font-size: var(--text-sm); color: var(--color-fg-muted); }`,
+  },
+  {
+    name: "a chip in a tree item's label keeps its own label",
+    nested: treeWith(chip("data-probe")),
+    alone: chip("data-ref"),
+    props: ["display", "padding-left", "padding-top", "border-top-left-radius"],
+    revert: `[data-ui="tree-view"] [data-part="label"] { display: flex; padding-block: var(--space-1); padding-inline: var(--space-2); border-radius: var(--radius-md); }`,
+  },
+  {
+    // :has([data-part="control"]:checked) asked about every control below the item.
+    name: "a toggle-group item is not on because a nested component's control is checked",
+    nested: toggleItem("data-probe", `<span data-ui="nested"><input data-part="control" type="checkbox" checked aria-label="Other"></span>`),
+    alone: toggleItem("data-ref"),
+    props: ["background-color", "color"],
+    revert: `[data-ui="toggle-group"] > [data-part="item"]:has([data-part="control"]:checked) { background: var(--color-primary-subtle); color: var(--color-primary); }`,
+  },
+  {
+    // Groups are optional in a command palette.
+    name: "a command-palette item without a group is styled like a grouped one",
+    nested: palette(paletteItem("data-probe")),
+    alone: palette(`<div data-part="group" role="group">${paletteItem("data-ref")}</div>`),
+    props: ["display", "padding-top", "padding-left", "font-size", "border-top-left-radius", "cursor"],
+  },
+  {
+    // The header is optional in a calendar.
+    name: "a calendar's month navigation without a header is styled like one in it",
+    nested: `<div data-ui="calendar"><button data-part="nav-prev" type="button" aria-label="Previous month" data-probe>&lsaquo;</button><span data-part="month-label">July</span></div>`,
+    alone: `<div data-ui="calendar"><div data-part="header"><button data-part="nav-prev" type="button" aria-label="Previous month" data-ref>&lsaquo;</button><span data-part="month-label">July</span></div></div>`,
+    props: ["width", "height", "border-top-width", "border-top-left-radius", "font-size", "cursor"],
   },
 ];
 

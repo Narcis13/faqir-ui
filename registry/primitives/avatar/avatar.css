@@ -15,13 +15,13 @@
 }
 
 /* ── Parts ── */
-[data-ui="avatar"] [data-part="image"] {
+[data-ui="avatar"] > [data-part="image"] {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-[data-ui="avatar"] [data-part="fallback"] {
+[data-ui="avatar"] > [data-part="fallback"] {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -40,7 +40,7 @@
   width: var(--avatar-size-sm, 32px);
   height: var(--avatar-size-sm, 32px);
 }
-[data-ui="avatar"][data-size="sm"] [data-part="fallback"] {
+[data-ui="avatar"][data-size="sm"] > [data-part="fallback"] {
   font-size: var(--text-xs);
 }
 
@@ -48,6 +48,6 @@
   width: var(--avatar-size-lg, 48px);
   height: var(--avatar-size-lg, 48px);
 }
-[data-ui="avatar"][data-size="lg"] [data-part="fallback"] {
+[data-ui="avatar"][data-size="lg"] > [data-part="fallback"] {
   font-size: var(--text-base, 1rem);
 }

@@ -27,7 +27,7 @@
 /* ── List pane ──
    No inline end border in the single-pane base: there is nothing beside it to
    separate from. The md block adds the rule once the second pane arrives. */
-[data-ui="inbox"] [data-part="list-pane"] {
+[data-ui="inbox"] > [data-part="list-pane"] {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
@@ -40,46 +40,46 @@
 /* The pane the selection is NOT about steps aside while only one fits. The md
    block puts both back — `display: flex` there is not a reset but the value
    both panes declare for themselves, restated once the grid has two columns. */
-[data-ui="inbox"] [data-part="list-pane"][data-state="inactive"],
-[data-ui="inbox"] [data-part="detail-pane"][data-state="inactive"] {
+[data-ui="inbox"] > [data-part="list-pane"][data-state="inactive"],
+[data-ui="inbox"] > [data-part="detail-pane"][data-state="inactive"] {
   display: none;
 }
 
-[data-ui="inbox"] [data-part="list-header"] {
+[data-ui="inbox"] > :where([data-part="list-pane"]) > [data-part="list-header"] {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-2);
 }
 
-[data-ui="inbox"] [data-part="list-heading"] {
+[data-ui="inbox"] > :where([data-part="list-pane"]) > :where([data-part="list-header"]) > [data-part="list-heading"] {
   margin: 0;
   font-size: var(--text-base);
   font-weight: var(--weight-semibold);
   line-height: var(--leading-tight);
 }
 
-[data-ui="inbox"] [data-part="search"] {
+[data-ui="inbox"] > :where([data-part="list-pane"]) > [data-part="search"] {
   inline-size: 100%;
 }
 
 /* Loading and error lines above the list — both live in the flow, so the list
    never jumps when one appears. */
-[data-ui="inbox"] [data-part="status"],
-[data-ui="inbox"] [data-part="error"] {
+[data-ui="inbox"] > :where([data-part="list-pane"]) > [data-part="status"],
+[data-ui="inbox"] > :where([data-part="list-pane"]) > [data-part="error"] {
   margin: 0;
   font-size: var(--text-sm);
   line-height: var(--leading-normal);
   color: var(--color-fg-muted);
 }
 
-[data-ui="inbox"] [data-part="error"] {
+[data-ui="inbox"] > :where([data-part="list-pane"]) > [data-part="error"] {
   color: var(--color-destructive);
 }
 
 /* Scoped to the list pane on purpose: the nested tabs in a detail own a
    [data-part="list"] too, and an unscoped rule here would restyle its tablist. */
-[data-ui="inbox"] [data-part="list-pane"] [data-part="list"] {
+[data-ui="inbox"] > [data-part="list-pane"] > [data-part="list"] {
   display: grid;
   gap: var(--space-1);
   margin: 0;
@@ -90,7 +90,7 @@
 /* ── Message row ──
    A real <button>: one tab stop per message, Enter/Space for free, and the
    selected row is marked with aria-current as well as a colour. */
-[data-ui="inbox"] [data-part="item"] {
+[data-ui="inbox"] > :where([data-part="list-pane"]) > :where([data-part="list"]) > :where(li) > [data-part="item"] {
   display: grid;
   grid-template-columns: auto 1fr auto;
   gap: var(--space-1) var(--space-3);
@@ -106,24 +106,24 @@
   cursor: pointer;
 }
 
-[data-ui="inbox"] [data-part="item"]:hover {
+[data-ui="inbox"] > :where([data-part="list-pane"]) > :where([data-part="list"]) > :where(li) > [data-part="item"]:hover {
   background: var(--color-bg-muted);
 }
 
-[data-ui="inbox"] [data-part="item"]:focus-visible {
+[data-ui="inbox"] > :where([data-part="list-pane"]) > :where([data-part="list"]) > :where(li) > [data-part="item"]:focus-visible {
   outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
   outline-offset: var(--focus-ring-offset);
 }
 
-[data-ui="inbox"] [data-part="item"][data-state="selected"] {
+[data-ui="inbox"] > :where([data-part="list-pane"]) > :where([data-part="list"]) > :where(li) > [data-part="item"][data-state="selected"] {
   background: var(--color-primary-subtle);
 }
 
-[data-ui="inbox"] [data-part="item"] [data-ui="avatar"] {
+[data-ui="inbox"] > :where([data-part="list-pane"]) > :where([data-part="list"]) > :where(li) > [data-part="item"] [data-ui="avatar"] {
   grid-row: 1 / 3;
 }
 
-[data-ui="inbox"] [data-part="item-sender"] {
+[data-ui="inbox"] > :where([data-part="list-pane"]) > :where([data-part="list"]) > :where(li) > :where([data-part="item"]) > [data-part="item-sender"] {
   min-inline-size: 0;
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
@@ -133,14 +133,14 @@
   white-space: nowrap;
 }
 
-[data-ui="inbox"] [data-part="item-time"] {
+[data-ui="inbox"] > :where([data-part="list-pane"]) > :where([data-part="list"]) > :where(li) > :where([data-part="item"]) > [data-part="item-time"] {
   font-size: var(--text-xs);
   line-height: var(--leading-tight);
   color: var(--color-fg-muted);
   white-space: nowrap;
 }
 
-[data-ui="inbox"] [data-part="item-subject"] {
+[data-ui="inbox"] > :where([data-part="list-pane"]) > :where([data-part="list"]) > :where(li) > :where([data-part="item"]) > [data-part="item-subject"] {
   grid-column: 2 / -1;
   min-inline-size: 0;
   font-size: var(--text-sm);
@@ -151,7 +151,7 @@
   white-space: nowrap;
 }
 
-[data-ui="inbox"] [data-part="item-preview"] {
+[data-ui="inbox"] > :where([data-part="list-pane"]) > :where([data-part="list"]) > :where(li) > :where([data-part="item"]) > [data-part="item-preview"] {
   grid-column: 2 / -1;
   min-inline-size: 0;
   font-size: var(--text-sm);
@@ -164,7 +164,7 @@
 }
 
 /* ── Detail pane ── */
-[data-ui="inbox"] [data-part="detail-pane"] {
+[data-ui="inbox"] > [data-part="detail-pane"] {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
@@ -176,19 +176,19 @@
 /* Back navigation exists only in the collapsed, single-pane layout — which is
    the base. From md up both panes are on screen and there is nothing to go back
    to, so the md block hides it. */
-[data-ui="inbox"] [data-part="back"] {
+[data-ui="inbox"] > :where([data-part="detail-pane"]) > [data-part="back"] {
   display: inline-flex;
   align-self: start;
 }
 
-[data-ui="inbox"] [data-part="detail"] {
+[data-ui="inbox"] > :where([data-part="detail-pane"]) > [data-part="detail"] {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
   min-inline-size: 0;
 }
 
-[data-ui="inbox"] [data-part="detail-subject"] {
+[data-ui="inbox"] > :where([data-part="detail-pane"]) > :where([data-part="detail"]) > [data-part="detail-subject"] {
   margin: 0;
   font-size: var(--text-xl);
   font-weight: var(--weight-semibold);
@@ -196,25 +196,25 @@
   text-wrap: balance;
 }
 
-[data-ui="inbox"] [data-part="detail-meta"] {
+[data-ui="inbox"] > :where([data-part="detail-pane"]) > :where([data-part="detail"]) > [data-part="detail-meta"] {
   margin: 0;
   font-size: var(--text-sm);
   line-height: var(--leading-normal);
   color: var(--color-fg-muted);
 }
 
-[data-ui="inbox"] [data-part="detail-body"] {
+[data-ui="inbox"] > :where([data-part="detail-pane"]) > :where([data-part="detail"]) > [data-part="detail-body"] {
   font-size: var(--text-base);
   line-height: var(--leading-relaxed);
 }
 
-[data-ui="inbox"] [data-part="detail-body"] p,
-[data-ui="inbox"] [data-part="detail"] [data-part="panel"] p {
+[data-ui="inbox"] > :where([data-part="detail-pane"]) > :where([data-part="detail"]) > [data-part="detail-body"] p,
+[data-ui="inbox"] > :where([data-part="detail-pane"]) > [data-part="detail"] > :where([data-ui="tabs"]) > [data-part="panel"] p {
   margin: 0;
   margin-block-end: var(--space-3);
 }
 
-[data-ui="inbox"] [data-part="detail-actions"] {
+[data-ui="inbox"] > :where([data-part="detail-pane"]) > :where([data-part="detail"]) > [data-part="detail-actions"] {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-3);
@@ -224,7 +224,7 @@
 
 /* ── Empty state ──
    Nothing selected: the pane says so instead of going blank. */
-[data-ui="inbox"] [data-part="empty"] {
+[data-ui="inbox"] > :where([data-part="detail-pane"]) > [data-part="empty"] {
   display: grid;
   place-items: center;
   block-size: 100%;
@@ -245,20 +245,20 @@
     min-block-size: 0;
   }
 
-  [data-ui="inbox"] [data-part="list-pane"] {
+  [data-ui="inbox"] > [data-part="list-pane"] {
     border-inline-end: var(--space-px, 1px) solid var(--color-border);
   }
 
-  [data-ui="inbox"] [data-part="list-pane"][data-state="inactive"],
-  [data-ui="inbox"] [data-part="detail-pane"][data-state="inactive"] {
+  [data-ui="inbox"] > [data-part="list-pane"][data-state="inactive"],
+  [data-ui="inbox"] > [data-part="detail-pane"][data-state="inactive"] {
     display: flex;
   }
 
-  [data-ui="inbox"] [data-part="back"] {
+  [data-ui="inbox"] > :where([data-part="detail-pane"]) > [data-part="back"] {
     display: none;
   }
 
-  [data-ui="inbox"] [data-part="detail-pane"] {
+  [data-ui="inbox"] > [data-part="detail-pane"] {
     padding: var(--space-6);
   }
 }

@@ -28,11 +28,11 @@
       "name": "avatar",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "files": [
         {
           "path": "avatar.css",
-          "sha256": "c4087e958b161e67d1d796658c9ec5555ea38d5029b2c0c19245a6f46fcc5324"
+          "sha256": "dbbb3ba2020b44f001640f8c50dc1b95e4285dc2108854c83a6b5c0712fae1f4"
         },
         {
           "path": "avatar.html",
@@ -40,10 +40,10 @@
         },
         {
           "path": "avatar.manifest.json",
-          "sha256": "d51289f125efa1ddb324dc69654be51926485438357a0bc3f01176b344cc56af"
+          "sha256": "105470bfeaeb8b41a36bff2f3ddcdeea19a346b6d0befc40e4889e444183326d"
         }
       ],
-      "hash": "c16c84f7b9ac5d05693cdc9782dee4a44f710f4da4e9e6c972c8c9cb4f595861",
+      "hash": "fc1859bf95c055d54dd950d270e9ee30f2260ea4d959a4b6e06e627b2026685a",
       "deps": []
     },
     {
@@ -72,11 +72,11 @@
       "name": "breadcrumb",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "files": [
         {
           "path": "breadcrumb.css",
-          "sha256": "2ed71285360c427bdf1a39501941beaa81794e518711413e694cd47d652527ab"
+          "sha256": "02641ce5935840158742614ddb93d9d070a35590534aa27d2c7991ebc7cf2bbb"
         },
         {
           "path": "breadcrumb.html",
@@ -84,21 +84,21 @@
         },
         {
           "path": "breadcrumb.manifest.json",
-          "sha256": "8ee65e1686cf132d8cc03ff8fd298a745f43baa32042ad0595ae469095c70d4d"
+          "sha256": "79d6093d125a5df67332dc1583aec3e7ee3e04a5acff99b386672802da973103"
         }
       ],
-      "hash": "f78054c74f797598d2229e8a7a411c1db0701655f2ed83ab0e261cd97bd00e87",
+      "hash": "89dc6bdf38b337c804ac298282fb2afd438df5adae45964e5afdb8ab75c494ea",
       "deps": []
     },
     {
       "name": "button",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "files": [
         {
           "path": "button.css",
-          "sha256": "708b7921a3d12a324ebe10422e4b39db888200694a191794e6636b40c3c7545b"
+          "sha256": "911569ffe81860009f73479b0283f67b611c0638e20c181044cbe9eefd632380"
         },
         {
           "path": "button.html",
@@ -106,10 +106,10 @@
         },
         {
           "path": "button.manifest.json",
-          "sha256": "a510a396e68354f6b6a2b42986e7749ff0b16831eeec3993ee441d8a805003e2"
+          "sha256": "7f6ad405b8ad55e3d5f07bf6b21d7f3540288cda1d76e0a8a789d27f18b4a4b2"
         }
       ],
-      "hash": "132dc0e0b5397d4421209f4b24d226a48b7784c237ae318743648ceeaddadbac",
+      "hash": "3673cc609052a916dca9f6c6ecb1d06af513c1fbed46e5b26424813b37eaa3d4",
       "deps": []
     },
     {
@@ -186,11 +186,11 @@
       "name": "chip",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "files": [
         {
           "path": "chip.css",
-          "sha256": "9705a5c025794fb474e84fe15b77f1681f4b37e085139cd561e892f39822164f"
+          "sha256": "746e222b8f73c7d5ea9a5da10c9fcf98da052db2a75b0366af1e5a8ce1a94dd7"
         },
         {
           "path": "chip.html",
@@ -198,10 +198,10 @@
         },
         {
           "path": "chip.manifest.json",
-          "sha256": "704b7b296faa6dc9b36f9ab6d13dfbd330347ab5ad064acad7e296d9ac1ca3f6"
+          "sha256": "b0114322a152ee762dd4167571edfd0f080e16dd9944036986e2c595c0d823b4"
         }
       ],
-      "hash": "b1d4a9730d9f7c6cf6e1525f61a9c3234aebc030f1ad2c7e9a5081b1e82fa6cd",
+      "hash": "99fee1211ad403bc705f5b3c27dcbb72f9d992efa0893d590f6d00d6af0b93aa",
       "deps": []
     },
     {
@@ -320,11 +320,11 @@
       "name": "field-group",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "2.1.0",
+      "version": "2.1.1",
       "files": [
         {
           "path": "field-group.css",
-          "sha256": "7053ac6a6bb805dead84a66fe405f604d8e36c4be17b1af92b1560b035d3f9fd"
+          "sha256": "fe85197a3a5bd6db3c2dd2358283d5b06bbbcccfabf158afef63b4624ea0afe2"
         },
         {
           "path": "field-group.html",
@@ -332,10 +332,10 @@
         },
         {
           "path": "field-group.manifest.json",
-          "sha256": "7a7817fbd31db7111198c7ab8c415390212c0e7f97b6fd7e8dafe3c67c636eec"
+          "sha256": "4b45a5d477e720b1135842e7fd7f83d8c8fd94123727d8b81dea472f092eba4d"
         }
       ],
-      "hash": "a49d6fdb5b340b11ec1ac957163206b9834dcb7ee88548e2cd715b94133368ff",
+      "hash": "b06fd4095615b5b1fd9022a4d6972da2f9961ff9f8b1a6424a6620c9d2ee5a2b",
       "deps": [
         "input",
         "select",
@@ -399,11 +399,11 @@
       "name": "image",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "files": [
         {
           "path": "image.css",
-          "sha256": "a51c2f908315d30a379907b1e40041505be66a22a458a08fc78945d1b4f373e0"
+          "sha256": "f5b20a517c50b44a6bda1e631875970992531a73623a21061e2d80dfd0ad144d"
         },
         {
           "path": "image.html",
@@ -411,21 +411,21 @@
         },
         {
           "path": "image.manifest.json",
-          "sha256": "9667b572966ec15f2900c7d262bd74cdb85a386c92ac1a963d6bf2a421095bf7"
+          "sha256": "acaca0cff9faaa55a816e6373d8e2b72bf9954487e2a9f885a0116a8b98867b5"
         }
       ],
-      "hash": "d80e05349505c4a79b71525c95c5f305eaec5580a7a30bc85902c42443292e69",
+      "hash": "5bd1f0a95f711020dc967ec9642621036bd4d0fa04c38b93076a9318a91d90a9",
       "deps": []
     },
     {
       "name": "input",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "files": [
         {
           "path": "input.css",
-          "sha256": "605247a38d73d39b707285413a74ab37a89f58e6e7ff409c279c70e9fbad3e57"
+          "sha256": "82fbbafb47e3016c6a50f5ac10778eb75880f2490fc1c2a76e78a2c624888cf9"
         },
         {
           "path": "input.html",
@@ -433,10 +433,10 @@
         },
         {
           "path": "input.manifest.json",
-          "sha256": "b7a564e300861569d29a99cf0ec831fa3925667bcbd700e837fd121a9014b25a"
+          "sha256": "9b6fe91d095bb00857e13a9269b0cf29c377b9472e456306c5fc9b4e856d20b0"
         }
       ],
-      "hash": "eae5261fb019d8d8b26ed74b69b90bc157897b0a225ec2fe549b8f7cfabc4b31",
+      "hash": "c2eec1b0a2e71fcd5c3603069f80d31656b2070b61c5c21ad19305f9fc5b7583",
       "deps": []
     },
     {
@@ -487,11 +487,11 @@
       "name": "label",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "files": [
         {
           "path": "label.css",
-          "sha256": "c90dd27517f34646888fe0ca22461e7bfe5b68d3d9355f7a6904333a2dcf17d2"
+          "sha256": "6b9f68ea1466ed62a7b76540324d9645944c67e63b04bbc9a9add44ea1aef112"
         },
         {
           "path": "label.html",
@@ -499,10 +499,10 @@
         },
         {
           "path": "label.manifest.json",
-          "sha256": "1e592dfadf23f50cb1cc0efc9d588b9e5eb2db126714e96625d73161c7d60901"
+          "sha256": "b735f3ac5f898505710f9b284ee6b7b7f740b1906f33a1690f7112bb9cf7d939"
         }
       ],
-      "hash": "44d46446e545ac28a4dcf41c2df59a7c3b68a2d103e2d7d80190b0cbdb28c68b",
+      "hash": "b591dd2dca5ef3562a6050a32ff7947af34777c05225f5bd0e3fae7b19bc8b61",
       "deps": []
     },
     {
@@ -531,11 +531,11 @@
       "name": "nav",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "files": [
         {
           "path": "nav.css",
-          "sha256": "80421016516870d5200c972a642a20cbc15e74dd6b9f1f14a6ef6af6d5134eb9"
+          "sha256": "afb7b54c239ca56636e13671588494dcd8faae303497f483d65d051ec5e5ac3c"
         },
         {
           "path": "nav.html",
@@ -543,10 +543,10 @@
         },
         {
           "path": "nav.manifest.json",
-          "sha256": "4709f2fdd5d87afcdc5fb9074e17b1fec074cea736c84ac7438c97d3a22f28d4"
+          "sha256": "c5dc154c66d491f161d5e1718703642582bd9491907736b48fd59aa417c4b806"
         }
       ],
-      "hash": "a185dbd9a9eeee891e12a278c28fa4331722defa452293569c750ef2d3f28efa",
+      "hash": "171fbc69c6b3ef1c8f3224b71d94f08eb4d620b92911c0faf6b50aaabd2f517c",
       "deps": []
     },
     {
@@ -641,11 +641,11 @@
       "name": "separator",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "files": [
         {
           "path": "separator.css",
-          "sha256": "367881acfcc4d54a56bc4cec65781cea115f0916e6be2fae2b2ea58174f254b8"
+          "sha256": "8d243ba782c527d56dd0aeb20de9cf6da38ece6dcc5a52f974c2ca3bbec0f08b"
         },
         {
           "path": "separator.html",
@@ -653,21 +653,21 @@
         },
         {
           "path": "separator.manifest.json",
-          "sha256": "3f7e01ec71b275e1defda5661b0ba8196b6b395531d821c34420e9b0947000fb"
+          "sha256": "432022501e1d4bd75ff5fcdf9b3a9b3bc31fcc5ef427abafeb9bcdbfff72962e"
         }
       ],
-      "hash": "5b63ab72ca3c71bad6fd3077fa111d00fc375d71d6cdd4114e71cd56e093eba8",
+      "hash": "b72a53043eb55d04b5a9a2b1bc91f9128bb6359fe6ede2e11eddc2f58b1a8208",
       "deps": []
     },
     {
       "name": "signature",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "files": [
         {
           "path": "signature.css",
-          "sha256": "aa4f1292279e862f25619b0a83fbfedec2ab3d453ba106996fd7d6c377662a63"
+          "sha256": "7c7bd97cb4e90d3e84210120e3742e581f03261900a9d507a4d383ca7ac93fc2"
         },
         {
           "path": "signature.html",
@@ -675,10 +675,10 @@
         },
         {
           "path": "signature.manifest.json",
-          "sha256": "7542b1d7780824f48ee2931697e960636012d2ab022d271ec2afefee6871dc55"
+          "sha256": "6d96cabd039052057fb7974de0dbe2c4c00295d343e4a3b63c7ca1f65c4f5704"
         }
       ],
-      "hash": "0aa2b337dad75ab8f620db5126dc00dc2ea5238a582060f1898f45f73bc43223",
+      "hash": "9a9e5c203e2e3ae6829342ff07236b8478d568ab9bb9b090ce0842e94b2c06de",
       "deps": []
     },
     {
@@ -751,11 +751,11 @@
       "name": "stat",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "files": [
         {
           "path": "stat.css",
-          "sha256": "1a20e6fc80161313ac02a664688b39b500a868225fbe316ff988a42109e57f6b"
+          "sha256": "8494015417e350dbe54fc00f22a41f1701c6192aab8764f627240391b5e494a2"
         },
         {
           "path": "stat.html",
@@ -763,10 +763,10 @@
         },
         {
           "path": "stat.manifest.json",
-          "sha256": "555d70477abe4752ff29ebbfb62a7040bb45a495dddfa88e2773c312cc210ef9"
+          "sha256": "2f9affceeb5c3c6e6f1a8b7a156457ac619f411c6e66bedc894a8e31c09fe1c5"
         }
       ],
-      "hash": "64a6e5c30b750f33b2beb755228b95bce87dc0da022671ab0f8bca5fd6fd108a",
+      "hash": "a6fbaa5c8e7b25ead41ea4b26ac983e1f4bc3ac118f46d95b716c63a66b57a92",
       "deps": [
         "badge"
       ]
@@ -775,11 +775,11 @@
       "name": "stepper",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "files": [
         {
           "path": "stepper.css",
-          "sha256": "98525a94abe9bc33fd1f5733bc668e6d36cb040b8ed8f12a0c74841da909d9f5"
+          "sha256": "57b73c1b6af5d74ad741c3206f329ba724613b2f544a196bcfd583fd0fea9c3d"
         },
         {
           "path": "stepper.html",
@@ -787,10 +787,10 @@
         },
         {
           "path": "stepper.manifest.json",
-          "sha256": "69ceb98302536fdba2d8227ee77e1d1ff0a057ff6b48e316511b7b955d28ac3f"
+          "sha256": "699b06e18f47563ebec66364d4474bdeb890229ef8a3d64d93aa52dd0c3a74d0"
         }
       ],
-      "hash": "5c3eedc26e37e111be5895987319b459f82fb1263b22a5fce78caf6541a45750",
+      "hash": "e434677fe440a6b694fa4af35a3bae92d237804e2cfbc99f35994303cc62bad4",
       "deps": []
     },
     {
@@ -819,11 +819,11 @@
       "name": "switch",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "files": [
         {
           "path": "switch.css",
-          "sha256": "c4b09b6359429b5ed1e305747bb15f68a924e192fe21036c3f17f18f06931499"
+          "sha256": "3fc4de6338535348ec505dc0e90f059657398279f6fe5132a703012809b36df1"
         },
         {
           "path": "switch.html",
@@ -831,10 +831,10 @@
         },
         {
           "path": "switch.manifest.json",
-          "sha256": "cf86bfe038e8e56d30c7ad767c578b2c93bd48315c7b9e80f23f30739407b175"
+          "sha256": "615439e486cbd4dd583ebeca5c591b5db748f045b9d833c734d96646a8c25c23"
         }
       ],
-      "hash": "22f8858c0f4bad044b6b47e439d078b807d1dcf9247be7f4eba7eb5f63732141",
+      "hash": "0a6ff8395717f0f15b0e2ef132df086429916f967ce330211204ce417e6a1620",
       "deps": []
     },
     {
@@ -1031,11 +1031,11 @@
       "name": "calendar",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "files": [
         {
           "path": "calendar.css",
-          "sha256": "95e676b89bc1c78d858e34866ad914780c4598d158c1e50122c5e3fd5c9f6106"
+          "sha256": "9631b2007b9b583b50c463379bfc40ed152e034bd7a84f7f219898f71dce666e"
         },
         {
           "path": "calendar.html",
@@ -1047,10 +1047,10 @@
         },
         {
           "path": "calendar.manifest.json",
-          "sha256": "b5e3b6df2ade95653b9e7a8bdc6a5d97d347faabe575cde3021cc6a2107691cc"
+          "sha256": "18c73e5db96293ca4de6e226695746d2dcc7e64094ac21a75cb9ba98dc63c88e"
         }
       ],
-      "hash": "fb301f177e86a981ac96c7645cd4fcd5393e64cea8dad74011171c5ddc7988d4",
+      "hash": "c8eeb13eed31a8458f04cde2629e90ce7eec99b03ce4c88e66fe07eccaee12a7",
       "deps": []
     },
     {
@@ -1083,11 +1083,11 @@
       "name": "combobox",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "files": [
         {
           "path": "combobox.css",
-          "sha256": "ec4b2c4271470b203b9ef2c5b45f1779dc8faeb3472b5ada1e0e9dc03d1be523"
+          "sha256": "8d0b03ccd5e07aa564184fa535daac9d90b3dcdb09ebefe1e4cb523bc16fbed0"
         },
         {
           "path": "combobox.html",
@@ -1099,21 +1099,21 @@
         },
         {
           "path": "combobox.manifest.json",
-          "sha256": "2d1b149a144769a1b4ca0942854f60d6102994ecf385f35f80e37b74624d26d3"
+          "sha256": "13e378f38150e2c88042b4aea869b43befce0336a34ffc4446192b91ed697272"
         }
       ],
-      "hash": "c24e290244985502faa4272997ebed387b01d9ee9cc2328fbfab71ac334b6249",
+      "hash": "5d6cd6e02cd97c9e80038ee6c4bf475c9503c44300192677a6974e63582ce90d",
       "deps": []
     },
     {
       "name": "command-palette",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.3.0",
+      "version": "1.3.1",
       "files": [
         {
           "path": "command-palette.css",
-          "sha256": "dcd0b42f77e464dd41457d0d4ef3752e0ab572cfd320519c277ed1df5c244213"
+          "sha256": "0a2a191782897d617acb29ffa579f412804dc1eb0706f1519c9b9495551b51f7"
         },
         {
           "path": "command-palette.html",
@@ -1125,10 +1125,10 @@
         },
         {
           "path": "command-palette.manifest.json",
-          "sha256": "cf77dce8c8a8b5d1a19f7c5782cbfe5cd9969a8af6ecacc0a924bd21031da510"
+          "sha256": "465ade29c97936454d60f15ebfcad4aaf32f0979a742ae68b0ee09016c83746c"
         }
       ],
-      "hash": "bec85a021002d8bd92a0243b0e0a5ed5823947b8653cce1fea876051b2997f83",
+      "hash": "20ad2acb2ce733d9ef5c29f7a62b0499ac467dc861b7d9f9a7f23a25eabc54e4",
       "deps": [
         "kbd"
       ]
@@ -1163,11 +1163,11 @@
       "name": "date-picker",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "files": [
         {
           "path": "date-picker.css",
-          "sha256": "3f18bfc4434a5eb16fea4ea91fb2187734c287fdbb4bc40e6ce271be06355e84"
+          "sha256": "1fbf88099fe776b76355e12f44bf82fa52df12f9b74c73cb3b431309abaf3e0e"
         },
         {
           "path": "date-picker.html",
@@ -1179,10 +1179,10 @@
         },
         {
           "path": "date-picker.manifest.json",
-          "sha256": "f21a8cce77db2c166393efa594cf21d89d5a56be1c2bd570e97c133b5eb3b092"
+          "sha256": "a10ced20a93dd7e2e064449e36acbec48f2759a0315a6e65af6c55120777ac93"
         }
       ],
-      "hash": "9486d8ea714f1d0859729c96b7069030e838be42ad7ed4afe99fff45bf80d3b3",
+      "hash": "382b6d60c99ac035ac7b947d583261e53e072620e06aa0c7e91077ae0996b128",
       "deps": [
         "calendar",
         "button"
@@ -1274,11 +1274,11 @@
       "name": "file-upload",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "files": [
         {
           "path": "file-upload.css",
-          "sha256": "3072be7416c6acf90baa022fd05f8ac176c45c58ffcf2f638e52904374d0ad10"
+          "sha256": "67b5547b5cc30f7117eb10e66aee153fdd20876f73c89d7eba97820be3cdd7fc"
         },
         {
           "path": "file-upload.html",
@@ -1290,21 +1290,21 @@
         },
         {
           "path": "file-upload.manifest.json",
-          "sha256": "746d78a2559415e83778d6d24eb0d386192f0c6479860f7edfabd48233b6c350"
+          "sha256": "4fc400bb4b5a2dba965c0d5edd0b58550a80d0199042ce5d0cfcb5c0a4a8e88f"
         }
       ],
-      "hash": "2c11279813609db5944580b244eae425942f07572174e21924dcc11472b4d1d8",
+      "hash": "c75f6fa6fa53202f8df86b2c01306f86bffa9f1da4b9962dd34cb6a06fc7e05f",
       "deps": []
     },
     {
       "name": "input-otp",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "files": [
         {
           "path": "input-otp.css",
-          "sha256": "7be436233b70dbe7bd15f687c89291df47a784d31709c22fb8356ce6523163be"
+          "sha256": "1be58fb043ae17612563cea3d8bf33b369b144e77b28f1b413dfc1b52ae2960c"
         },
         {
           "path": "input-otp.html",
@@ -1316,10 +1316,10 @@
         },
         {
           "path": "input-otp.manifest.json",
-          "sha256": "e78f3dd865c4c6d5fec662770102b392453c330e0eef257bfddd61432107f224"
+          "sha256": "4e97cfa1f1aa640a4d00fd51e8cf88f93719df68bec6b4d328d45d7520ee3734"
         }
       ],
-      "hash": "48a78d6b5ee6e0e0008744af017b5bcbc9e30d171f345412fb6d1a1ddb520dd9",
+      "hash": "0fa4f8fc84f7a94ee1607b3d87e5614008693cd15e1583bf719245e239001214",
       "deps": []
     },
     {
@@ -1352,11 +1352,11 @@
       "name": "pagination",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "files": [
         {
           "path": "pagination.css",
-          "sha256": "077367d91356b025b5740d6d0e87e4e97735e951ade86ba336f30a157c59d693"
+          "sha256": "ab1de69dd041e8b70ec44f8148da88f2f20352d688fa8332839811edfef22bc9"
         },
         {
           "path": "pagination.html",
@@ -1368,10 +1368,10 @@
         },
         {
           "path": "pagination.manifest.json",
-          "sha256": "5922ad46684d057fe7985ef814c9a546c31d98f08d33b48d99319d6e20a1d112"
+          "sha256": "beb9767061237c8f58749460b9fcd706832f8dc8d0fea7da94c41a2ab774b778"
         }
       ],
-      "hash": "591f08dc010562ac573cdcd02a07bea28ecbf22d33245a15fc8540a71e07e269",
+      "hash": "f4e227956accb38f2a512ebd666a17ae57cd51fa0c24a75c05e844d20463eb6c",
       "deps": [
         "button"
       ]
@@ -1408,11 +1408,11 @@
       "name": "qr-code",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "files": [
         {
           "path": "qr-code.css",
-          "sha256": "533dcd2a9f9ff184e32776a0f8d50f6c155718058a8b5d0d872c1c3c69fe043f"
+          "sha256": "bf53da25c1571352d22faba8f38ecb0f2d49d6a8c2af128488874325704a61c6"
         },
         {
           "path": "qr-code.html",
@@ -1424,21 +1424,21 @@
         },
         {
           "path": "qr-code.manifest.json",
-          "sha256": "d4c2088273920cbb8882b78bcf654a1b2fdb9c8c6dbebbed4a4ceea7ae28e8c2"
+          "sha256": "2270cfbb73ce5f50d9bef0b5fae12726d165fcdfb597a41b2dc2a8abbb882d19"
         }
       ],
-      "hash": "6229a34c8edea54ed657d12696bb25c852fd01062a24f2dfb35749ca1a1b8a3a",
+      "hash": "22f804d105c1e0746cea00c1e19136a0c1b729f7ed44b58ce75c96c6dc75cec2",
       "deps": []
     },
     {
       "name": "select-custom",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "files": [
         {
           "path": "select-custom.css",
-          "sha256": "a25e774c2b3304b4de22ec070b68c15f64621eccf917214ca87b600c47d92389"
+          "sha256": "866bd5b41fe2c76d15bd5c31bf53ecc60d8bf4e634b9eeb09ab4f8f3519b23c8"
         },
         {
           "path": "select-custom.html",
@@ -1450,10 +1450,10 @@
         },
         {
           "path": "select-custom.manifest.json",
-          "sha256": "d551281cb239336048ea7825b90650aff14c595bc1a47a705cff110f54fea608"
+          "sha256": "249c1cbbde9fd45a95f97883412f85433a39568df014d77c7ba0cec2b417b509"
         }
       ],
-      "hash": "7c542cadd726597dfd557ce6dc1ee9120a0baa70e5f02b05696aa761a4b5612b",
+      "hash": "ba03ad478a28517648812bb6d9fb846fe9c1594b3437ce523cb8a9fd4265fe60",
       "deps": []
     },
     {
@@ -1519,11 +1519,11 @@
       "name": "slider",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "files": [
         {
           "path": "slider.css",
-          "sha256": "66c6a33976bf42df5771ecf3e653d627c191901b71d062dc8d6081e41e97a745"
+          "sha256": "acbe61e2f4a9e2ce20dc47cf98af423faa4615800875ad903939c26f623038de"
         },
         {
           "path": "slider.html",
@@ -1535,10 +1535,10 @@
         },
         {
           "path": "slider.manifest.json",
-          "sha256": "6a3cd3125d96744d4183b64aa03b910dc388d85f02e7de983302f87b728fbf9d"
+          "sha256": "0057d5c6e25e4a1bba2f9071f3ed18b9ea12ff51eb10bd362e0fc0ee5713bbb3"
         }
       ],
-      "hash": "ecb394d4dfbe9bdce28af8f7748e639c6a82ee612e5583de7a0472c455db2514",
+      "hash": "a7dd68a6b77863c022754251cd803602108056cd2ecbfc55d12740eb26bcdc64",
       "deps": []
     },
     {
@@ -1602,11 +1602,11 @@
       "name": "tag-input",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "files": [
         {
           "path": "tag-input.css",
-          "sha256": "02aa83d2df024f8e8f0d04e58cde42a9c0072ee6aa0617ac2ee5bab35957d150"
+          "sha256": "2f8167537f4fed3790e53087b7cc86005c115abaaf620f4eb1f33d302652dae1"
         },
         {
           "path": "tag-input.html",
@@ -1618,10 +1618,10 @@
         },
         {
           "path": "tag-input.manifest.json",
-          "sha256": "f6fe1d8863949708e5a0a01dd0decb1af263c5fdd3da32724cf83a83bdcbaffe"
+          "sha256": "14663c78fd5a75e0efb62a3894ccbcaefc0009e24483e027eceef0f293018313"
         }
       ],
-      "hash": "9986379a538da18e11cf7172d22cda5d400ab4d4af4a113b3a51f3c402182170",
+      "hash": "c3549e2168b7dd1ebfbd00efd96bffba400b4d60ac1a96cf1adcbf1c1b1580f9",
       "deps": [
         "chip"
       ]
@@ -1630,11 +1630,11 @@
       "name": "toast",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "files": [
         {
           "path": "toast.css",
-          "sha256": "fd5d29193a58cae9740d2cd083349c5cfd912ac6822d394d4883379457d9dd0f"
+          "sha256": "1b13c5422e9da6e17aefdae519a6a654dabd11f56607f7b9e88cb8ca4efd3df5"
         },
         {
           "path": "toast.html",
@@ -1646,10 +1646,10 @@
         },
         {
           "path": "toast.manifest.json",
-          "sha256": "9266864da6bd32bb0410771f4623f47a969bfac60668c6d915f76ef75c013ec1"
+          "sha256": "2df0957485f1335e06f9774f0198f95964955535456b1eef0b464f18ecbcbdc7"
         }
       ],
-      "hash": "a612203c6c63d8f8d2b70961f9777380de4cb8d9978a28abed324e240718bd6f",
+      "hash": "29369541bb4e2196793de19e8f9ba0334510b3b4b282fe299657c2e0b756c20b",
       "deps": [
         "button"
       ]
@@ -1658,11 +1658,11 @@
       "name": "toggle-group",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.1.1",
+      "version": "1.1.2",
       "files": [
         {
           "path": "toggle-group.css",
-          "sha256": "610e65841cacc72bb3a99686356b9a5fefec7deecfac337e932c9f66573d75a0"
+          "sha256": "57435fdc0989b0b7564450811e8aa9fc19b19dd5938fdb99f9442013fa71c21e"
         },
         {
           "path": "toggle-group.html",
@@ -1674,10 +1674,10 @@
         },
         {
           "path": "toggle-group.manifest.json",
-          "sha256": "585a8addcf1b68e90ed87c672d60637381a70686bece61e81328dc7fb80aa7af"
+          "sha256": "b030d75ff73c4cd149038ae1963e4229b5a965ae0d3e4cd9dac9d20b4177d8d7"
         }
       ],
-      "hash": "5c86e657ae601109931a2567a5b5052682fe20597cb4d70ae2a7bdf1c68e4c21",
+      "hash": "ccd92b564ff3d25140fd4243c9440caec672a1668a2b91facc56094097152f17",
       "deps": []
     },
     {
@@ -1712,11 +1712,11 @@
       "name": "tree-view",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "files": [
         {
           "path": "tree-view.css",
-          "sha256": "75c45098d6301832f19726adad1783fd918d048d61c6b4fc9afcc523cd787147"
+          "sha256": "bde3e5a2534e64006594b19a4b7f19df6fe958473c34e298ae88ab2934c997ab"
         },
         {
           "path": "tree-view.html",
@@ -1728,10 +1728,10 @@
         },
         {
           "path": "tree-view.manifest.json",
-          "sha256": "bee960202bd9fcfa11077bd758a5cfd6333751dd4c6a16aa7285d48d05452e03"
+          "sha256": "ee60e09c54f8995242dea7442e174098558ce044a785ed43b65ec07d03ad8e42"
         }
       ],
-      "hash": "804216a923f854ba7c1a16c07c9dfe2bfaf33f5daa8ed8fb11f416c905eb675d",
+      "hash": "a049a0ff20b2e97d947ea45e39d43504db156e3177ede8bdaccaf05aef900478",
       "deps": []
     },
     {
@@ -1966,11 +1966,11 @@
       "name": "inbox",
       "kind": "pattern",
       "layer": "patterns",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "files": [
         {
           "path": "inbox.css",
-          "sha256": "b0067e9d22401cb9137a52f22fd822c5e1ae554577780374d8fcfea45b6dfe2a"
+          "sha256": "9b0deca8568ece777008a383627101130cb173d383631393321d0bc5db481758"
         },
         {
           "path": "inbox.html",
@@ -1978,10 +1978,10 @@
         },
         {
           "path": "inbox.manifest.json",
-          "sha256": "a23d7de161b8cad54a6fe1fb8336730782ca86706b724baea64f1118db68d515"
+          "sha256": "7eb3027d4e1b86296e09fd7e0adc2105d37affcd2c85e321c57f9c7fd775c7e6"
         }
       ],
-      "hash": "cddeccfa721aee05bc3255fe00a6013a1d7722b3d2ddef10cc6b38e967799279",
+      "hash": "21331a9b2ae49f4caf76ab165b93cf54b6dc2cde5684cc1c972a8c0a75cc0749",
       "deps": [
         "avatar",
         "badge",

@@ -10,13 +10,13 @@
 }
 
 /* ── SVG ── */
-[data-ui="qr-code"] [data-part="svg"],
+[data-ui="qr-code"] > [data-part="svg"],
 [data-ui="qr-code"] svg {
   display: block;
 }
 
 /* ── Caption ── */
-[data-ui="qr-code"] [data-part="caption"] {
+[data-ui="qr-code"] > [data-part="caption"] {
   font-family: var(--doc-font, var(--font-body));
   font-size: var(--doc-legal-size, var(--text-xs));
   color: var(--doc-legal-color, var(--color-fg-muted));
