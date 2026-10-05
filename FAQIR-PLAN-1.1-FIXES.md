@@ -1251,9 +1251,30 @@ two serialisers) is out of scope; add a follow-up row if wanted.
 **Acceptance**
 - [ ] Tagged, published, `cdn.json` SRI verified; `faqir_bugs.md` entries struck.
 
+**Progress (2026-10-05, session 1 — prepared, not yet published).** *Scope changed by the
+owner:* every additive task was already on `main`, with its commits interleaved among the
+patch commits, so 1.1.2 ships **both sets**. This is D1's additive-in-patch recommendation,
+confirmed. 1.1F-32's release folds into this one, and its un-patch checklist is in the
+notes. Done so far: `docs/release-1.1.2.md` (the repository has no CHANGELOG file, and the
+1.1 notes live in `docs/release-1.1.md`), which has one line per entry, the behaviour
+changes, the un-patch checklist and the verification record. All 33 `faqir_bugs.md` entries
+are struck: 32 fixed, and 30 closed as by design (D6). `node scripts/release.mjs 1.1.2
+--dry-run` on Bun 1.3.8 is green: 15 preflight gates, 8,066 + 64 / 0, seven packages at
+1.1.2, 37 SRI hashes, tarball smoke under Node and Bun. `test:a11y` 4,060, `test:browser`
+54 and `lint:layout` 8 all pass. The Linux-container visual run is **not done**: there is
+no container runtime on this machine. When it runs, regenerate the `text` (1.1F-18) and
+`form-page` (1.1F-23) baselines. **Remaining:** the owner runs `npm login`, then `node
+scripts/release.mjs 1.1.2 --otp <code>`, then the checklist's "After" steps (npm versions,
+jsDelivr SRI load). A follow-up session then ticks this box.
+
 ### 1.1F-32 · Release the additive set; downstream un-patch checklist
 
 **Depends:** all of 1.1F-01 … 1.1F-30
+
+*(2026-10-05: the release half ships inside 1.1.2 with 1.1F-31; D1 resolved as
+additive-in-patch. The behaviour-change call-out and the un-patch checklist are in
+`docs/release-1.1.2.md`, and entry 30 is marked closed by D6. What is left here is
+confirming the publish and ticking the box.)*
 
 - Release at the version chosen in D1. The release notes call out the behaviour change from
   1.1F-14 (links leave the Tab order of a navigable table).

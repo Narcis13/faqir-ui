@@ -188,3 +188,37 @@ Seven packages ship at 1.1.2, in lockstep: `faqir-ui-cli`, `@faqir-ui/core`,
 ---
 
 ## Release verification
+
+Recorded on 2026-10-05 at `a4df672` (these notes, the struck `faqir_bugs.md`
+entries and the plan's bookkeeping, on top of 1.1F-30's `b78dc6c`). The machine
+was macOS with Bun 1.3.8, the version `.bun-version` pins; `release.mjs` refuses
+any other.
+
+- `node scripts/release.mjs 1.1.2 --dry-run`: **green.** All guards passed.
+  The guards warned that `main` was one commit ahead of `origin/main`; it has
+  been pushed since. All 15 preflight gates passed, including the
+  full suite: 8,066 pass / 0 fail in the main partition (271 files) and 64 / 0
+  in the dev-engine partition. `size` measured engine 10.88/14 KB and engine +
+  controllers 45.44/46 KB gzip. All seven packages were stamped 1.1.2 in
+  lockstep, and `Faqir.version` and all 37 SRI hashes in `cdn.json` read
+  1.1.2. The packed CLI tarball installs and answers `--version` and
+  `context --skill` under Node and under Bun. Every tracked file was restored
+  afterwards.
+  (`build:core-package` prints "size budget OVER — 45.69 KB > 45.00 KB" for
+  `faqir-core.min.js`. That line is advisory: the script's 45 KB constant
+  predates the enforced 46 KB budget in `check-size.mjs`, and
+  `tests/build/core-package.test.ts`, which is the real gate, passes.)
+- Manual suites, run on macOS Chromium:
+  - `bun run test:a11y`: **4,060 passed**, zero axe violations.
+  - `bun run test:browser`: **54 passed.**
+  - `bun run lint:layout`: **8 passed.**
+  - `bun run test:visual` and `test:visual:print`: **not run.** Their baselines
+    exist only in the pinned Linux container, and the release machine has no
+    container runtime. Each CSS task in the plan ran a zero-tolerance
+    before/after Chromium comparison of its components instead. **When the
+    container run happens, expect two intentional baseline changes:** `text`'s
+    reference page gained three anchors (1.1F-18), and `form-page` options lost
+    the field label's typography (1.1F-23, entry 5). Regenerate both; do not
+    read them as regressions.
+- Published, tagged and SRI-checked against jsDelivr: *pending; the owner runs
+  `node scripts/release.mjs 1.1.2 --otp <code>`.*
