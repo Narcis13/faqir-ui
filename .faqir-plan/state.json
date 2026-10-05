@@ -139,7 +139,7 @@
     {
       "id": "1.1F-23",
       "completed": "2026-10-05",
-      "commit": "",
+      "commit": "e3eaed8",
       "summary": "Nesting, CSS IV + gate 9. 29 sheets (28 primitives/recipes + inbox) converted by script from a per-component path spec built from a survey of every tracked file and the live DOM of 14 controllers: 399 descendant part selectors -> 435 child chains, :where() hops, same specificity, preludes only. Kept shapes: headerless calendar nav, groupless palette items / wrapperless search / empty in panel, file-upload input beside the dropzone; inbox rows through <li>, its tabs-panel prose via :where([data-ui=tabs]). tree-view recurses: one descendant step per rule into :where(item|group), 10 allowlisted selectors. 7 bare :has([data-part]) -> :has(> ...). Gate 9 descendant-part-selector in audit:registry (findDescendantPartSelectors, reader moved to src/audit/part-selectors.ts): all 129 sheets, file:line findings, DESCENDANT_PART_ALLOWED + DESCENDANT_PART_PENDING (the 12 patterns of 1.1F-39, decided: convert), stale entries fail. 29 manifests bumped. Visual zero-tolerance vs HEAD, 2,598 captures: only crud-table scrollbar-gutter noise and form-page, where field-group no longer styles radio option labels as the field label (accepted as the fix by the owner; follow-up 1.1F-40 for option typography; 1.1F-31 must regenerate form-page baselines). nesting-css 187 cases (59 red at HEAD), nesting.pw 65 (+12). Suite 7,941 + 64 / 0."
     }
   ],
