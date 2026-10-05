@@ -131,3 +131,36 @@ describe("controller-loaded / focus-trap: engine entry points", () => {
     expect(engineControllers.has("my-dialog")).toBe(false);
   });
 });
+
+// What `faqir repair` may write for a missing controller (task 1.1F-25, entry
+// 10). It used to be `<script type="module" src="ui/recipes/<name>/<name>.js">`:
+// a hard-coded `ui/`, wrong from any page not at the project root, and a module
+// that only exports its factory, so it started nothing.
+describe("controller-loaded: the add-script fix", () => {
+  const fixOf = (source: string, runtimeScript?: string) =>
+    auditHtmlSource({ source, file: "pages/p.html", manifests, engineControllers, runtimeScript })
+      .filter((r) => r.rule_id === "controller-loaded")
+      .map((r) => r.fix);
+
+  it("loads the runtime path the caller gives, for every missing recipe", () => {
+    const body = `${dialog()}\n${dialog("my-dialog")}`;
+    expect(fixOf(page("", body), "../web/ui/core/faqir.js")).toEqual([
+      { type: "add-script", offset: 0, details: { src: "../web/ui/core/faqir.js", component: "dialog" } },
+      { type: "add-script", offset: 0, details: { src: "../web/ui/core/faqir.js", component: "my-dialog" } },
+    ]);
+  });
+
+  it("a caller with no page location offers no fix, only the finding", () => {
+    expect(fixOf(page(""))).toEqual([undefined]);
+  });
+
+  it("an engine page gets no fix: the runtime would load the registry's controllers twice", () => {
+    const engineOnly = page(`<script src="ui/core/faqir-core.js" defer></script>`, `${dialog()}\n${dialog("my-dialog")}`);
+    expect(fixOf(engineOnly, "../ui/core/faqir.js")).toEqual([undefined]);
+  });
+
+  it("an engine-module page has nothing to fix", () => {
+    const moduled = page(`<script type="module">import Faqir from "../ui/core/faqir-core.mjs";</script>`);
+    expect(fixOf(moduled, "../ui/core/faqir.js")).toEqual([]);
+  });
+});

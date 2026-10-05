@@ -208,6 +208,23 @@ describe("faqir_repair_html", () => {
     expect(data.changes.some((c: any) => c.rule_id === "close-label")).toBe(true);
     expect(data.html).toContain('aria-label="Close"');
   });
+
+  // A bare string has no page location to write a script path relative to
+  // (task 1.1F-25): the controller finding stays, and no script is invented.
+  it("never adds a script for a missing controller", async () => {
+    const { client } = await makeClient();
+    const page = `<!DOCTYPE html>
+<html lang="en"><body><main>
+  <div data-ui="dialog"><div data-part="panel" role="dialog" aria-modal="true" aria-label="Demo"><button data-part="close" aria-label="Close"></button></div></div>
+</main></body></html>`;
+    const res = await client.callTool({ name: "faqir_repair_html", arguments: { html: page } });
+    const data = res.structuredContent as any;
+    expect(data.changes.some((c: any) => c.type === "add-script")).toBe(false);
+    expect(data.html).not.toContain("<script");
+    const controller = data.after.findings.filter((f: any) => f.rule_id === "controller-loaded");
+    expect(controller.length).toBe(1);
+    expect(controller[0].fixable).toBe(false);
+  });
 });
 
 describe("faqir_scaffold_page", () => {

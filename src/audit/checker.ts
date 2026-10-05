@@ -1,7 +1,7 @@
 // DOM contract checker — walks HTML files and runs audit rules against manifests
 
 import { existsSync } from "node:fs";
-import { dirname, join, relative, resolve } from "node:path";
+import { dirname, join, relative, resolve, sep } from "node:path";
 import { extractComponents, parseDocument } from "../parser/html-parser";
 import { extractTokenReferences, extractTokenDefinitions, collectDefinedTokens, hasReducedMotionQuery, hasAnimationProperties, findImportantDeclarations, findClassSelectors, findIdSelectors, findHardcodedColorValues, findLogicalPropertyViolations } from "../parser/css-parser";
 import { findExternalImports, findDataFetching } from "../parser/js-parser";
@@ -145,6 +145,14 @@ export function engineControllerNames(registryPath: string): Set<string> {
 }
 
 /**
+ * `target` as a `src` written in the page at `pagePath`: relative to the
+ * page's directory, with `/` separators on every platform.
+ */
+export function pageRelativeSrc(pagePath: string, target: string): string {
+  return relative(dirname(pagePath), target).split(sep).join("/");
+}
+
+/**
  * Run a full audit on the project.
  */
 export async function runAudit(options: AuditOptions = {}): Promise<AuditSummary> {
@@ -169,6 +177,12 @@ export async function runAudit(options: AuditOptions = {}): Promise<AuditSummary
   }
 
   const engineControllers = engineControllerNames(registryPath);
+
+  // The assembled runtime `faqir add` writes once a recipe is installed — what
+  // a `controller-loaded` fix loads (task 1.1F-25). Absent, the finding gets no
+  // fix: a script tag pointing at nothing is not a repair.
+  const projectRuntime = join(outputDir, "core", "faqir.js");
+  const hasProjectRuntime = existsSync(projectRuntime);
 
   // Find HTML files to scan
   const htmlFiles: string[] = [];
@@ -209,6 +223,7 @@ export async function runAudit(options: AuditOptions = {}): Promise<AuditSummary
         knownUiValues: known,
         runtimeReferences: await moduleImportReferences(source, filePath, cwd),
         engineControllers,
+        runtimeScript: hasProjectRuntime ? pageRelativeSrc(filePath, projectRuntime) : undefined,
         skipRules: options.skipRules,
       }),
     );

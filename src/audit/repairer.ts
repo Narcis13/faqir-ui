@@ -6,6 +6,8 @@ import { join } from "node:path";
 import type { AuditResult, RepairAction } from "./rules";
 import type { TagEdit } from "./field-wiring";
 import { log } from "../utils/logger";
+import { parseDocument } from "../parser/html-parser";
+import { pageScripts } from "./html-audit";
 
 // Fix types whose `offset` indexes into the file source and must be applied
 // high-to-low so earlier edits never invalidate later offsets. See `applyRepairs`.
@@ -62,7 +64,10 @@ export interface SourceRepairResult {
  * and run last.
  */
 export function applyRepairsToSource(source: string, results: AuditResult[]): SourceRepairResult {
-  const { source: repaired, applied, skipped, changes } = repairSource(source, results);
+  // `add-script` writes a path relative to the page, and a bare string has no
+  // page — so it is left out here rather than guessed (task 1.1F-25).
+  const placeable = results.filter((r) => r.fix?.type !== "add-script");
+  const { source: repaired, applied, skipped, changes } = repairSource(source, placeable);
   return { source: repaired, applied, skipped, changes };
 }
 
@@ -423,23 +428,24 @@ function findTagEnd(source: string, tagStart: number): number {
 }
 
 /**
- * Add a script tag for a recipe controller.
+ * Load the project's assembled runtime (`<output_dir>/core/faqir.js`, which
+ * imports and starts every installed recipe) with a module script before
+ * `</body>`, or at the end of a file that has none (task 1.1F-25). `src` comes
+ * from the audit already page-relative; nothing is added when the page already
+ * runs a script from that path, so a second repair is a no-op and the one fix
+ * every missing recipe carries is written once.
  */
-function addScript(source: string, fix: RepairAction, _result: AuditResult): string | null {
-  const { src, component } = fix.details;
+function addScript(source: string, fix: RepairAction, result: AuditResult): string | null {
+  const { src } = fix.details;
   if (!src) return null;
+  if (pageScripts(parseDocument(source, result.file)).some((s) => s.src === src)) return null;
 
-  // Check if the script is already referenced
-  if (source.includes(src) || source.includes("faqir.js")) return null;
-
-  // Find the closing </body> or end of file
   const bodyClose = source.lastIndexOf("</body>");
   if (bodyClose !== -1) {
-    const scriptTag = `  <script type="module" src="ui/recipes/${component}/${src}"></script>\n`;
+    const scriptTag = `  <script type="module" src="${src}"></script>\n`;
     return source.slice(0, bodyClose) + scriptTag + source.slice(bodyClose);
   }
 
-  // No </body> tag — append at end
-  const scriptTag = `\n<script type="module" src="ui/recipes/${component}/${src}"></script>\n`;
+  const scriptTag = `\n<script type="module" src="${src}"></script>\n`;
   return source + scriptTag;
 }

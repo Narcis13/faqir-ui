@@ -936,11 +936,12 @@ exit code.
 | `contrast-tokens` | error | theme tokens | Every declared foreground/background pair clears WCAG AA |
 | `surface-elevation` | error | theme tokens | The bg → surface-1 → surface-2 ramp keeps 0.03 OKLab ΔE |
 
-**Repair** runs the audit, applies deterministic fixes (missing ARIA, controller
-scripts, close labels, duplicate ids, field wiring, logical properties) and
-re-audits. **Conform** reorders attributes to `data-ui`, `data-part`,
-`data-state`, `data-variant`, `data-size`, ARIA, then others, touching only
-elements that already carry a protocol attribute and preserving their quoting.
+**Repair** runs the audit, applies deterministic fixes (missing ARIA, the
+project's `core/faqir.js` for a page that loads no controller, close labels,
+duplicate ids, field wiring, logical properties) and re-audits. **Conform**
+reorders attributes to `data-ui`, `data-part`, `data-state`, `data-variant`,
+`data-size`, ARIA, then others, touching only elements that already carry a
+protocol attribute and preserving their quoting.
 
 ---
 

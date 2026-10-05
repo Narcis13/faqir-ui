@@ -103,38 +103,81 @@ describe("Repairer", () => {
     expect(summary.fixes_applied).toBe(0);
   });
 
-  it("adds script tag for missing controller", async () => {
+  it("adds the project runtime for a missing controller, once (1.1F-25)", async () => {
     const html = `<!DOCTYPE html>
 <html>
 <body>
   <div data-ui="dialog" data-state="closed">
     <button data-part="trigger">Open</button>
   </div>
+  <div data-ui="tabs"></div>
 </body>
 </html>`;
     const filePath = join(TEST_DIR, "test.html");
     await Bun.write(filePath, html);
 
-    const results: AuditResult[] = [{
+    // One fix per missing recipe, all naming the same runtime: the first writes
+    // it and the second finds it already loaded.
+    const finding = (component: string): AuditResult => ({
+      rule_id: "controller-loaded",
+      severity: "error",
+      component_name: component,
+      file: "test.html",
+      line: 4,
+      message: `Recipe [data-ui="${component}"] needs its controller "${component}.js" loaded`,
+      fix: {
+        type: "add-script",
+        offset: 0,
+        details: { src: "../web/ui/core/faqir.js", component },
+      },
+    });
+
+    const summary = await applyRepairs([finding("dialog"), finding("tabs")], TEST_DIR);
+    expect(summary.fixes_applied).toBe(1);
+    expect(summary.fixes_skipped).toBe(1);
+
+    const result = await Bun.file(filePath).text();
+    expect(result).toContain('  <script type="module" src="../web/ui/core/faqir.js"></script>\n</body>');
+    expect(result.match(/<script/g)?.length).toBe(1);
+    expect(result).not.toContain("recipes/");
+
+    // A second repair finds the script and changes nothing.
+    const again = await applyRepairs([finding("dialog")], TEST_DIR);
+    expect(again.fixes_applied).toBe(0);
+    expect(await Bun.file(filePath).text()).toBe(result);
+  });
+
+  it("a script named only in a comment does not count as loaded", async () => {
+    const html = `<!DOCTYPE html><html><body><!-- <script type="module" src="ui/core/faqir.js"></script> -->\n</body></html>`;
+    const filePath = join(TEST_DIR, "test.html");
+    await Bun.write(filePath, html);
+    const summary = await applyRepairs([{
       rule_id: "controller-loaded",
       severity: "error",
       component_name: "dialog",
       file: "test.html",
-      line: 4,
-      message: 'Recipe [data-ui="dialog"] needs its controller "dialog.js" loaded',
-      fix: {
-        type: "add-script",
-        offset: 0,
-        details: { src: "dialog.js", component: "dialog" },
-      },
-    }];
-
-    const summary = await applyRepairs(results, TEST_DIR);
+      line: 1,
+      message: "x",
+      fix: { type: "add-script", offset: 0, details: { src: "ui/core/faqir.js", component: "dialog" } },
+    }], TEST_DIR);
     expect(summary.fixes_applied).toBe(1);
+    expect(await Bun.file(filePath).text()).toContain('-->\n  <script type="module" src="ui/core/faqir.js"></script>\n</body>');
+  });
 
-    const result = await Bun.file(filePath).text();
-    expect(result).toContain('<script type="module"');
-    expect(result).toContain("dialog.js");
+  it("the string-only repair never adds a script: it has no page to be relative to", () => {
+    const html = `<!DOCTYPE html><html><body>\n</body></html>`;
+    const out = applyRepairsToSource(html, [{
+      rule_id: "controller-loaded",
+      severity: "error",
+      component_name: "dialog",
+      file: "input.html",
+      line: 1,
+      message: "x",
+      fix: { type: "add-script", offset: 0, details: { src: "ui/core/faqir.js", component: "dialog" } },
+    }]);
+    expect(out.source).toBe(html);
+    expect(out.applied).toBe(0);
+    expect(out.changes).toEqual([]);
   });
 
   it("handles multiple fixes to same file", async () => {

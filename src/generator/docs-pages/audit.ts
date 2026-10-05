@@ -84,8 +84,12 @@ export const AUTO_FIXES: Record<string, FixNote> = {
   "controller-loaded": {
     type: "add-script",
     note:
-      "Appends a module <script> for the controller before </body> " +
-      "(or at the end of the file when there is no body).",
+      "Loads the project's assembled runtime, <output_dir>/core/faqir.js, which starts every " +
+      "installed recipe: one module <script> before </body> (or at the end of the file when " +
+      "there is no body), its src relative to the page. Written once, however many recipes " +
+      "are missing, and not again on a second run. No fix is offered on a page that already " +
+      "runs the engine, since faqir.js would load its controllers a second time, nor by the " +
+      "string-only callers (--stdin, MCP, the playground), which have no page to be relative to.",
   },
   "duplicate-id": {
     type: "rename-id",

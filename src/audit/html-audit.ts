@@ -99,6 +99,15 @@ export interface HtmlAuditInput {
    * Omitted, an engine reference covers every recipe, as it always did.
    */
   engineControllers?: ReadonlySet<string>;
+  /**
+   * Where the page would load the project's assembled runtime from: the
+   * page-relative path to `<output_dir>/core/faqir.js` (task 1.1F-25). Only a
+   * caller that knows the page's location and the project can say, so only
+   * then does a `controller-loaded` finding carry an `add-script` fix. A
+   * string-only caller (`--stdin`, MCP, the playground) omits it and the
+   * finding carries no fix.
+   */
+  runtimeScript?: string;
   /** Rule IDs to skip. */
   skipRules?: string[];
 }
@@ -189,7 +198,7 @@ export function auditHtmlSource(input: HtmlAuditInput): AuditResult[] {
   // simply dropped. Mirrors the reconciliation in runAudit.
   const references = [...pageScriptReferences(doc), ...(input.runtimeReferences ?? [])];
   const missingControllers = () =>
-    checkControllersInFile(references, file, components, manifests, input.engineControllers);
+    checkControllersInFile(references, file, components, manifests, input.engineControllers, input.runtimeScript);
   if (!skipRules.has("controller-loaded")) {
     const fileControllerResults = missingControllers();
     const hasGeneric = results.some((r) => r.rule_id === "controller-loaded");
@@ -282,6 +291,7 @@ export function checkControllersInFile(
   components: ReturnType<typeof extractComponents>,
   manifests: Map<string, Manifest>,
   engineControllers?: ReadonlySet<string>,
+  runtimeScript?: string,
 ): AuditResult[] {
   const results: AuditResult[] = [];
   const recipeComponents = components.filter(c => {
@@ -319,11 +329,14 @@ export function checkControllersInFile(
         file: filePath,
         line: comp.line,
         message: `Recipe [data-ui="${comp.name}"] needs its controller "${jsFile}" loaded via script tag or import`,
-        fix: {
-          type: "add-script",
-          offset: 0,
-          details: { src: jsFile, component: comp.name },
-        },
+        // The fix loads the assembled runtime, which imports and starts every
+        // installed recipe; a bare controller module only exports its factory
+        // and would start nothing (task 1.1F-25). A page that already runs the
+        // engine gets no fix: `faqir.js` would load the registry's controllers
+        // a second time beside it, so the custom recipe is left to a human.
+        ...(runtimeScript && !engine
+          ? { fix: { type: "add-script" as const, offset: 0, details: { src: runtimeScript, component: comp.name } } }
+          : {}),
       });
     }
   }

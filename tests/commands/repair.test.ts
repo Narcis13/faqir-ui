@@ -13,7 +13,7 @@
 // which the entry arms.
 
 import { afterAll, beforeAll, describe, expect, it, setDefaultTimeout } from "bun:test";
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { parseAuditTarget, parseSkipRules } from "../../src/commands/audit";
@@ -160,5 +160,54 @@ describe("faqir repair --json", () => {
     expect(doc.fixes.every((f: { file: string }) => f.file === "b.html")).toBe(true);
     expect(doc.fixes.some((f: { applied: boolean }) => f.applied)).toBe(true);
     expect(readFileSync(join(cwd, "b.html"), "utf8")).toBe(PAGE("B"));
+  });
+});
+
+// `repair` and a missing controller (task 1.1F-25, entry 10). It used to append
+// `<script type="module" src="ui/recipes/dialog/dialog.js">` beside an engine
+// that already carried the controller: a hard-coded `ui/`, wrong from a page in
+// a subdirectory, checked for idempotency by `includes("faqir.js")`, and a
+// module that only exports `createDialog`, so it started nothing.
+describe("faqir repair: a missing controller", () => {
+  const FULL_PAGE = `<!doctype html>
+<html lang="en"><head><title>P</title></head><body><main>
+<div data-ui="dialog"><div data-part="panel" role="dialog" aria-modal="true" aria-label="P"><button data-part="close" aria-label="Close"></button>P</div></div>
+</main></body></html>
+`;
+  type Fix = { file: string; rule_id: string; type: string; applied: boolean };
+
+  it("a page that runs the engine from a module gets no add-script fix", () => {
+    const cwd = project();
+    mkdirSync(join(cwd, "app"));
+    writeFileSync(join(cwd, "app/main.mjs"), `import Faqir from "../ui/core/faqir-core.mjs";\n`);
+    const page = FULL_PAGE.replace("</head>", `<script type="module" src="app/main.mjs"></script></head>`);
+    writeFileSync(join(cwd, "index.html"), page);
+
+    const doc = JSON.parse(cli(["repair", "--json", "index.html"], cwd).stdout);
+    expect((doc.fixes as Fix[]).filter((f) => f.type === "add-script")).toEqual([]);
+    expect(doc.remaining.filter((r: Fix) => r.rule_id === "controller-loaded")).toEqual([]);
+    expect(readFileSync(join(cwd, "index.html"), "utf8")).toBe(page);
+  });
+
+  it("loads <output_dir>/core/faqir.js relative to the page, and a second run is a no-op", () => {
+    const cwd = mkdtempSync(join(workspace, "deep-"));
+    expect(cli(["init", "--yes", "--dir", "web/ui"], cwd).status).toBe(0);
+    expect(cli(["add", "dialog"], cwd).status).toBe(0);
+    mkdirSync(join(cwd, "pages"));
+    writeFileSync(join(cwd, "pages/p.html"), FULL_PAGE);
+
+    const first = JSON.parse(cli(["repair", "--json", "pages/p.html"], cwd).stdout);
+    const scripts = (first.fixes as Fix[]).filter((f) => f.type === "add-script");
+    expect(scripts.map((f) => [f.rule_id, f.applied])).toEqual([["controller-loaded", true]]);
+    const repaired = readFileSync(join(cwd, "pages/p.html"), "utf8");
+    expect(repaired).toContain(`  <script type="module" src="../web/ui/core/faqir.js"></script>\n</body>`);
+    expect(repaired).not.toContain("recipes/");
+    expect(existsSync(join(cwd, "pages", "../web/ui/core/faqir.js"))).toBe(true);
+    expect(first.remaining.filter((r: Fix) => r.rule_id === "controller-loaded" || r.rule_id === "focus-trap")).toEqual([]);
+
+    const second = JSON.parse(cli(["repair", "--json", "pages/p.html"], cwd).stdout);
+    expect(second.fixes_applied).toBe(0);
+    expect(second.files_modified).toBe(0);
+    expect(readFileSync(join(cwd, "pages/p.html"), "utf8")).toBe(repaired);
   });
 });
