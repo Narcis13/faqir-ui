@@ -1,8 +1,8 @@
 {
   "$schema": "./state.schema.md",
   "plan": "FAQIR-PLAN-1.1-FIXES.md",
-  "current": "1.1F-26",
-  "last_completed": "1.1F-25",
+  "current": null,
+  "last_completed": "1.1F-26",
   "history": [
     {
       "id": "1.1F-01",
@@ -153,6 +153,12 @@
       "completed": "2026-10-05",
       "commit": "7de8842",
       "summary": "faqir repair: the controller-loaded fix loads <output_dir>/core/faqir.js (the assembled runtime that starts every installed recipe) by a page-relative src, instead of a hard-coded ui/recipes/<name>/<name>.js module that only exported its factory. New HtmlAuditInput.runtimeScript, set by runAudit (pageRelativeSrc) only when faqir.js exists; no fix for string-only callers or on a page already running the engine (would double-load controllers). addScript is idempotent on parsed <script> srcs (one tag for N recipes, second run no-op); applyRepairsToSource (MCP) drops add-script. Docs note + README updated; audit-browser rebuilt. 9 new tests; suite 7,978 + 64 / 0."
+    },
+    {
+      "id": "1.1F-26",
+      "completed": "2026-10-05",
+      "commit": "fe17239",
+      "summary": "Manifest $schema resolves at any output_dir depth: new src/utils/schema-ref.ts (schemaRefFor + ensureProjectSchema moved from create.ts; text-level read/with/normalizeSchemaRef; pointManifestsAtProjectSchema). init writes manifest.schema.json ($id guard) and lists it; add repoints installed manifests (local + remote) and writes the schema for older projects; pristine stays byte-exact. diff/upgrade normalise $schema to the pristine's before comparing; upgrade repoints written manifests and restores a missing schema. doctor gains a Manifest schema check. README init tree + paragraph. 12 new tests; suite 7,990 + 64 / 0."
     }
   ],
   "note": "Pointer file for the /faqir-plan slash command. FAQIR-PLAN-1.1-FIXES.md status cells (⬜/✅) are the source of truth; this file records the cross-session cursor and a per-task log. Do not hand-edit `current` while a session is running. The 1.1 plan's cursor (31 history entries, through 1.1R-01) is archived unchanged at state-1.1.json; FAQIR-PLAN-1.1.md still has six open follow-up rows (1.1A-21, 1.1A-24, 1.1A-27, 1.1A-28, 1.1A-29, 1.1N-03), reachable by pointing `plan` back at it. The 1.0 cursor is at state-1.0.json."
