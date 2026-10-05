@@ -215,10 +215,14 @@ describe("v0.2.4 → 1.0 · the project the CLI cannot see", () => {
   it("audits as a broken 1.0 project before the migration", () => {
     expect(preAudit.passed).toBe(false);
     const pageFindings = preAudit.results.filter((r) => r.file.startsWith("app/"));
-    // The v0.2.4 vocabulary the 1.0 registry no longer recognises, plus the
-    // engine the page loads under its old name.
+    // The v0.2.4 vocabulary the 1.0 registry no longer recognises.
     expect(pageFindings.some((r) => r.message.includes("striped"))).toBe(true);
-    expect(pageFindings.some((r) => r.rule_id === "controller-loaded")).toBe(true);
+    // Not the runtime, though. The page loads it under its old name,
+    // `ui/core/loom.js`, which no 1.0 name matches. Until 1.1F-24 that read as
+    // "no controller loaded". The audit now follows the page's local modules,
+    // and `loom.js` imports `recipes/dialog/dialog.js` and `recipes/table/table.js`,
+    // so the controllers it really loads are found.
+    expect(pageFindings.some((r) => r.rule_id === "controller-loaded")).toBe(false);
     // Both halves: `counts` is authored-only since W2-3, and a pre-migration
     // project is broken on both sides of that line — the page speaks a
     // vocabulary the 1.0 manifests no longer declare, and `ui/` still holds

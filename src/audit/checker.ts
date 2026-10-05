@@ -1,7 +1,7 @@
 // DOM contract checker — walks HTML files and runs audit rules against manifests
 
 import { existsSync } from "node:fs";
-import { join, relative, resolve } from "node:path";
+import { dirname, join, relative, resolve } from "node:path";
 import { extractComponents, parseDocument } from "../parser/html-parser";
 import { extractTokenReferences, extractTokenDefinitions, collectDefinedTokens, hasReducedMotionQuery, hasAnimationProperties, findImportantDeclarations, findClassSelectors, findIdSelectors, findHardcodedColorValues, findLogicalPropertyViolations } from "../parser/css-parser";
 import { findExternalImports, findDataFetching } from "../parser/js-parser";
@@ -20,9 +20,10 @@ import {
   buildUndeclaredAttributeResults,
 } from "./css-rules";
 import { readConfig, type FaqirConfig } from "../utils/config";
-import { installedStylesheetFile, knownUiValues } from "../utils/components";
+import { installedStylesheetFile, knownUiValues, listRegistryComponents } from "../utils/components";
 import { getRegistryPath } from "../utils/fs";
-import { auditHtmlSource, type HtmlAuditInput } from "./html-audit";
+import { isInside } from "../utils/paths";
+import { auditHtmlSource, pageScripts, type HtmlAuditInput } from "./html-audit";
 
 // The string-in/findings-out core lives in `./html-audit` because it must stay
 // free of `node:*` to be bundlable for the browser (the docs-site playground,
@@ -131,6 +132,19 @@ export async function loadInstalledAuditInputs(
 }
 
 /**
+ * The recipes `faqir-core.*` carries (task 1.1F-24): every registry recipe with
+ * a controller, which is what `build:core` inlines. A project's own recipe is
+ * not among them, so an engine reference does not clear it.
+ */
+export function engineControllerNames(registryPath: string): Set<string> {
+  return new Set(
+    listRegistryComponents(registryPath, "recipes").filter((name) =>
+      existsSync(join(registryPath, "recipes", name, `${name}.js`)),
+    ),
+  );
+}
+
+/**
  * Run a full audit on the project.
  */
 export async function runAudit(options: AuditOptions = {}): Promise<AuditSummary> {
@@ -153,6 +167,8 @@ export async function runAudit(options: AuditOptions = {}): Promise<AuditSummary
   } catch {
     known = undefined;
   }
+
+  const engineControllers = engineControllerNames(registryPath);
 
   // Find HTML files to scan
   const htmlFiles: string[] = [];
@@ -191,6 +207,8 @@ export async function runAudit(options: AuditOptions = {}): Promise<AuditSummary
         manifests,
         styles,
         knownUiValues: known,
+        runtimeReferences: await moduleImportReferences(source, filePath, cwd),
+        engineControllers,
         skipRules: options.skipRules,
       }),
     );
@@ -249,6 +267,88 @@ export async function runAudit(options: AuditOptions = {}): Promise<AuditSummary
     vendor_counts,
     passed: gating.critical === 0 && gating.error === 0,
   };
+}
+
+/** `import … from "x"`, `import "x"`, `export … from "x"` and `import("x")`. */
+const IMPORT_SPECIFIER = /\b(?:from|import)\s*\(?\s*(["'])([^"'\n]+)\1/g;
+
+/** How deep `moduleImportReferences` follows: the page's module, then what it imports. */
+const MODULE_FOLLOW_DEPTH = 2;
+
+function importSpecifiers(js: string): string[] {
+  return [...js.matchAll(IMPORT_SPECIFIER)].map((m) => m[2]);
+}
+
+function isRelativeSpecifier(specifier: string): boolean {
+  if (specifier.startsWith("//")) return false; // protocol-relative: another host
+  return specifier.startsWith("./") || specifier.startsWith("../") || specifier.startsWith("/");
+}
+
+/** A script `src` as a specifier: a path with no scheme or host is relative to the page. */
+function toRelativeUrl(src: string): string {
+  if (/^[a-z][a-z\d+.-]*:/i.test(src) || src.startsWith("/") || src.startsWith("./") || src.startsWith("../")) {
+    return src;
+  }
+  return `./${src}`;
+}
+
+/**
+ * The import specifiers of the local modules a page runs (task 1.1F-24) — the
+ * {@link HtmlAuditInput.runtimeReferences} the file-level `controller-loaded`
+ * check reads beside the page's own `<script>` tags.
+ *
+ * A page that boots the engine from `app/main.mjs` (`import Faqir from
+ * "../ui/core/faqir-core.mjs"`, the safe way to register stores before it binds)
+ * names no engine file in its HTML at all. So each `<script type="module">` —
+ * external, or inline with relative imports — is read, and so are the relative
+ * modules *it* imports: two levels, enough for an entry module and the one it
+ * delegates to. A `/`-rooted path resolves against the project root. Nothing
+ * outside the project root is read, and a file that is missing is skipped.
+ */
+async function moduleImportReferences(source: string, htmlPath: string, cwd: string): Promise<string[]> {
+  const references: string[] = [];
+  const seen = new Set<string>();
+  const resolveLocal = (specifier: string, fromDir: string): string | undefined => {
+    if (!isRelativeSpecifier(specifier)) return undefined;
+    const path = specifier.replace(/[?#].*$/, "");
+    if (path === "") return undefined;
+    const full = path.startsWith("/") ? join(cwd, path) : resolve(fromDir, path);
+    return isInside(cwd, full) ? full : undefined;
+  };
+
+  let frontier: string[] = [];
+  const htmlDir = dirname(htmlPath);
+  for (const script of pageScripts(parseDocument(source, htmlPath))) {
+    if (script.type !== "module") continue;
+    // A `src` is a URL, so `app/main.mjs` is as relative as `./app/main.mjs`;
+    // only an import specifier without `./` is bare.
+    const entries = script.src !== "" ? [toRelativeUrl(script.src)] : importSpecifiers(script.text);
+    for (const specifier of entries) {
+      const file = resolveLocal(specifier, htmlDir);
+      if (file !== undefined) frontier.push(file);
+    }
+  }
+
+  for (let depth = 0; depth < MODULE_FOLLOW_DEPTH && frontier.length > 0; depth++) {
+    const next: string[] = [];
+    for (const file of frontier) {
+      if (seen.has(file)) continue;
+      seen.add(file);
+      let js: string;
+      try {
+        js = await Bun.file(file).text();
+      } catch {
+        continue; // missing, or a directory: nothing this page can load
+      }
+      for (const specifier of importSpecifiers(js)) {
+        references.push(specifier);
+        const imported = resolveLocal(specifier, dirname(file));
+        if (imported !== undefined) next.push(imported);
+      }
+    }
+    frontier = next;
+  }
+  return references;
 }
 
 /**

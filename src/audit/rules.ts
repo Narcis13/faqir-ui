@@ -677,8 +677,10 @@ export const iconNameRule: AuditRule = {
 };
 
 // ── Rule: controller-loaded ──
-// Recipe components must have their JS controller referenced
-// (We check for script tags or module imports referencing the controller file)
+// Recipe components must have their JS controller referenced. The real answer
+// is file-level (`checkControllersInFile` in html-audit.ts reads the page's
+// <script> elements and the modules they import); this per-component finding is
+// the reminder that answer replaces.
 export const controllerLoadedRule: AuditRule = {
   id: "controller-loaded",
   severity: "error",

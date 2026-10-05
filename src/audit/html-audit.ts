@@ -14,7 +14,7 @@
 // makes CLI ↔ browser finding parity structural rather than a coincidence to
 // re-test.
 
-import { extractComponents, parseDocument } from "../parser/html-parser";
+import { type ParsedDocument, extractComponents, parseDocument } from "../parser/html-parser";
 import type { Manifest } from "../manifest";
 import {
   type AuditResult,
@@ -82,6 +82,23 @@ export interface HtmlAuditInput {
    * report every component the project has not installed yet.
    */
   knownUiValues?: Iterable<string>;
+  /**
+   * What the page's local modules import (task 1.1F-24): the import specifiers
+   * of each `<script type="module">` file and of the relative modules it
+   * imports, read by a caller that can reach the disk. `runAudit` follows them
+   * two levels deep, inside the project root. They are tested exactly as the
+   * page's own `<script>` sources and inline text are, so an `app/main.mjs`
+   * that imports `faqir-core.mjs` loads the runtime. A caller holding only a
+   * string (`--stdin`, MCP, the playground) omits it and gets inline detection.
+   */
+  runtimeReferences?: readonly string[];
+  /**
+   * The recipes the engine bundle carries — the registry's own (task 1.1F-24).
+   * A reference to `faqir-core.*` or `@faqir-ui/core` loads these controllers
+   * and no others, so a project's custom recipe still needs its own script.
+   * Omitted, an engine reference covers every recipe, as it always did.
+   */
+  engineControllers?: ReadonlySet<string>;
   /** Rule IDs to skip. */
   skipRules?: string[];
 }
@@ -170,8 +187,11 @@ export function auditHtmlSource(input: HtmlAuditInput): AuditResult[] {
   // (emitted by controllerLoadedRule) with the precise "is the script actually
   // referenced?" findings. When every controller is referenced, the generics are
   // simply dropped. Mirrors the reconciliation in runAudit.
+  const references = [...pageScriptReferences(doc), ...(input.runtimeReferences ?? [])];
+  const missingControllers = () =>
+    checkControllersInFile(references, file, components, manifests, input.engineControllers);
   if (!skipRules.has("controller-loaded")) {
-    const fileControllerResults = checkControllersInFile(source, file, components, manifests);
+    const fileControllerResults = missingControllers();
     const hasGeneric = results.some((r) => r.rule_id === "controller-loaded");
     if (hasGeneric) {
       for (let i = results.length - 1; i >= 0; i--) {
@@ -190,9 +210,7 @@ export function auditHtmlSource(input: HtmlAuditInput): AuditResult[] {
   // its own message names, and the copy-for-agents payloads — real documents
   // carrying the CDN preamble — are clean under the full rule set because of it.
   if (!skipRules.has("focus-trap") && results.some((r) => r.rule_id === "focus-trap")) {
-    const missing = new Set(
-      checkControllersInFile(source, file, components, manifests).map((r) => r.component_name),
-    );
+    const missing = new Set(missingControllers().map((r) => r.component_name));
     for (let i = results.length - 1; i >= 0; i--) {
       if (results[i].rule_id === "focus-trap" && !missing.has(results[i].component_name)) {
         results.splice(i, 1);
@@ -203,14 +221,67 @@ export function auditHtmlSource(input: HtmlAuditInput): AuditResult[] {
   return results;
 }
 
+/** Script types the browser runs (an import map is how a module finds the engine). */
+const RUNNABLE_SCRIPT_TYPES = new Set([
+  "", "module", "importmap", "text/javascript", "application/javascript",
+]);
+
+/** One `<script>` the page runs: its `src` and its inline text, either possibly empty. */
+export interface PageScript {
+  type: string;
+  src: string;
+  text: string;
+}
+
 /**
- * Check if recipe controllers are referenced in an HTML file via script tags or imports.
+ * Every script element the page runs, read from the parsed document rather
+ * than the raw source (task 1.1F-24) — so a `<script>` inside a comment, or a
+ * file name in body copy, is not a loaded runtime.
+ */
+export function pageScripts(doc: ParsedDocument): PageScript[] {
+  const scripts: PageScript[] = [];
+  for (const el of doc.elements) {
+    if (el.tag !== "script") continue;
+    const type = (el.attrs.type ?? "").trim().toLowerCase();
+    if (!RUNNABLE_SCRIPT_TYPES.has(type)) continue;
+    const close = doc.source.slice(el.tagEnd).search(/<\/script\s*>/i);
+    const text = close < 0 ? "" : doc.source.slice(el.tagEnd, el.tagEnd + close);
+    scripts.push({ type, src: (el.attrs.src ?? "").trim(), text });
+  }
+  return scripts;
+}
+
+/** The strings a page's scripts reference the runtime by: each `src` and inline body. */
+function pageScriptReferences(doc: ParsedDocument): string[] {
+  return pageScripts(doc).flatMap((s) => [s.src, s.text].filter((r) => r.trim() !== ""));
+}
+
+/**
+ * The engine bundle, under every name it ships as: `faqir-core.js`, `.min.js`,
+ * `.dev.js` and `.mjs`, and the `@faqir-ui/core` package, bare or by subpath.
+ * It carries the registry's recipe controllers (see `engineControllers`).
+ */
+const ENGINE_REFERENCE = /(?<![\w.-])faqir-core(?:\.min|\.dev)?\.m?js(?![\w.-])|@faqir-ui\/core(?![\w-])/;
+
+/** The project's assembled runtime (`core/faqir.js`), which imports every installed recipe. */
+const PROJECT_RUNTIME_REFERENCE = /(?<![\w.-])faqir(?:\.min)?\.js(?![\w.-])/;
+
+function escapeRegExp(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * Which recipe controllers the page does not load. `references` are the
+ * strings it could load them by — each `<script>`'s `src` and inline text, plus
+ * whatever the caller read out of the local modules they import — so only what
+ * the page runs counts, never prose or a comment that names a file.
  */
 export function checkControllersInFile(
-  source: string,
+  references: readonly string[],
   filePath: string,
   components: ReturnType<typeof extractComponents>,
   manifests: Map<string, Manifest>,
+  engineControllers?: ReadonlySet<string>,
 ): AuditResult[] {
   const results: AuditResult[] = [];
   const recipeComponents = components.filter(c => {
@@ -220,29 +291,25 @@ export function checkControllersInFile(
 
   if (recipeComponents.length === 0) return results;
 
-  // Check for script tags or imports referencing the controllers.
-  //
-  // Comments are stripped first (task 0.9-04). Every reference fragment opens
-  // with `<!-- @ui:controller dialog.js -->`, and a plain substring test over
-  // the raw source read that annotation as a loaded controller — so the rule
-  // passed on any file that merely *named* its controller in prose, which is
-  // the opposite of what it checks for.
-  const sourceLower = source.replace(/<!--[\s\S]*?-->/g, " ").toLowerCase();
+  // Lower-cased once: file names were always matched case-insensitively. Each
+  // pattern is anchored on a path boundary, so `alert-dialog.js` does not load
+  // `dialog.js` and `my-faqir.js` is not the project runtime.
+  const refs = references.map((r) => r.toLowerCase());
+  const projectRuntime = refs.some((r) => PROJECT_RUNTIME_REFERENCE.test(r));
+  const engine = refs.some((r) => ENGINE_REFERENCE.test(r));
+
   for (const comp of recipeComponents) {
     const manifest = manifests.get(comp.name)!;
     const jsFile = manifest.files.js!;
 
-    // Check for a direct controller import or any assembled auto-init runtime.
-    // `faqir-core.min.js` belongs in this list (task 0.9-04): it is the file the
-    // CDN preamble loads — the one the copy-for-agents payloads, the README's
-    // two-tag snippet and every "no build step" page in the docs actually
-    // reference — so leaving it out reported 147 findings against pages that
-    // load the runtime by its most common name.
-    const hasScript = sourceLower.includes(jsFile)
-      || sourceLower.includes("faqir-core.js")
-      || sourceLower.includes("faqir-core.min.js")
-      || sourceLower.includes("faqir.js")
-      || sourceLower.includes("faqir.min.js");
+    // The engine bundle carries the registry's controllers, so it clears a
+    // registry recipe and not a project's own (task 1.1F-24); the assembled
+    // `faqir.js` imports every installed recipe and clears them all. Otherwise
+    // the page has to load the controller file itself.
+    const own = new RegExp(`(?<![\\w.-])${escapeRegExp(jsFile.toLowerCase())}(?![\\w.-])`);
+    const hasScript = projectRuntime
+      || (engine && (engineControllers === undefined || engineControllers.has(manifest.name)))
+      || refs.some((r) => own.test(r));
 
     if (!hasScript) {
       results.push({

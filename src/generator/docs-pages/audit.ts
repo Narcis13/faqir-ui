@@ -141,7 +141,9 @@ export const RULE_NOTES: Record<string, string[]> = {
   ],
   "controller-loaded": [
     "Recipes with files.js only.",
-    "Satisfied by any reference to the controller file, or to faqir-core.js, faqir-core.min.js, faqir.js or faqir.min.js. HTML comments are stripped first, so an @ui:controller annotation does not count.",
+    "Read from the page's <script> elements, never the raw source: a src, an inline script's text, or an import map. A file named in a comment (an @ui:controller annotation), in body copy or in a JSON data block does not count.",
+    "The engine counts under every name it ships as: faqir-core.js, .min.js, .dev.js and .mjs, and @faqir-ui/core, bare or by subpath. It carries the registry's recipe controllers, so a project's own recipe still needs its controller file, or the project runtime faqir.js, which imports every installed recipe.",
+    "faqir audit also reads the local modules a page loads with type=\"module\", and the relative modules they import, two levels deep and inside the project root: an app/main.mjs that imports faqir-core.mjs loads the runtime. --stdin, MCP and the playground hold only a string, so they see the page's own scripts.",
     "Fragments skip it: a fragment cannot carry the runtime.",
   ],
   "orphan-part": ["Only data-part values the manifest does not name as a slot."],

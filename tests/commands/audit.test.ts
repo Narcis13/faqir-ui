@@ -137,6 +137,107 @@ describe("faqir audit", () => {
     expect(controllerResults.length).toBeGreaterThan(0);
   });
 
+  // Task 1.1F-24 (entry 9). A page that boots the engine from a module names no
+  // engine file in its HTML: `index.html` loads `app/main.mjs`, which imports
+  // `faqir-core.mjs`. `runAudit` reads the page's local modules, and what they
+  // import, inside the project root.
+  describe("an engine loaded from a local module", () => {
+    const OUTSIDE = join(import.meta.dir, "../.tmp-audit-outside");
+    const dialogPage = (script: string) => `<!doctype html>
+<html lang="en"><head><title>T</title>${script}</head><body><main>
+<div data-ui="dialog" data-state="closed" id="d">
+  <button data-part="trigger">Open</button>
+  <div data-part="overlay"></div>
+  <div data-part="panel" role="dialog" aria-modal="true" aria-labelledby="d-t" tabindex="-1">
+    <h2 data-part="title" id="d-t">T</h2>
+    <button data-part="close" aria-label="Close">X</button>
+    <div data-part="body">C</div>
+  </div>
+</div>
+</main></body></html>`;
+    const runtimeFindings = async () =>
+      (await runAudit({ cwd: TEST_DIR, file: "index.html" })).results
+        .filter((r) => r.rule_id === "controller-loaded" || r.rule_id === "focus-trap")
+        .map((r) => `${r.rule_id}:${r.component_name}`)
+        .sort();
+
+    afterEach(() => rmSync(OUTSIDE, { recursive: true, force: true }));
+
+    it("an external .mjs that imports the engine is clean", async () => {
+      await setupProject(["dialog"]);
+      await Bun.write(join(TEST_DIR, "app/main.mjs"), `import Faqir from "../ui/core/faqir-core.mjs";\nFaqir.store("x", {});\n`);
+      await Bun.write(join(TEST_DIR, "index.html"), dialogPage(`<script type="module" src="app/main.mjs"></script>`));
+      expect(await runtimeFindings()).toEqual([]);
+    });
+
+    it("follows a second level, and a root-relative src", async () => {
+      await setupProject(["dialog"]);
+      await Bun.write(join(TEST_DIR, "app/main.mjs"), `import "./boot.mjs";\n`);
+      await Bun.write(join(TEST_DIR, "app/boot.mjs"), `export { default } from '../ui/core/faqir-core.mjs';\n`);
+      await Bun.write(join(TEST_DIR, "index.html"), dialogPage(`<script type="module" src="/app/main.mjs?v=2"></script>`));
+      expect(await runtimeFindings()).toEqual([]);
+    });
+
+    it("an inline module's relative import is followed too", async () => {
+      await setupProject(["dialog"]);
+      await Bun.write(join(TEST_DIR, "app/main.mjs"), `import Faqir from "../ui/core/faqir-core.mjs";\n`);
+      await Bun.write(join(TEST_DIR, "index.html"), dialogPage(`<script type="module">import "./app/main.mjs";</script>`));
+      expect(await runtimeFindings()).toEqual([]);
+    });
+
+    it("stops after two levels", async () => {
+      await setupProject(["dialog"]);
+      await Bun.write(join(TEST_DIR, "app/main.mjs"), `import "./a.mjs";\n`);
+      await Bun.write(join(TEST_DIR, "app/a.mjs"), `import "./b.mjs";\n`);
+      await Bun.write(join(TEST_DIR, "app/b.mjs"), `import "../ui/core/faqir-core.mjs";\n`);
+      await Bun.write(join(TEST_DIR, "index.html"), dialogPage(`<script type="module" src="app/main.mjs"></script>`));
+      expect(await runtimeFindings()).toEqual(["controller-loaded:dialog", "focus-trap:dialog"]);
+    });
+
+    it("a module outside the project root is not followed", async () => {
+      await setupProject(["dialog"]);
+      await Bun.write(join(OUTSIDE, "main.mjs"), `import Faqir from "./faqir-core.mjs";\n`);
+      await Bun.write(
+        join(TEST_DIR, "index.html"),
+        dialogPage(`<script type="module" src="../.tmp-audit-outside/main.mjs"></script>`),
+      );
+      expect(await runtimeFindings()).toEqual(["controller-loaded:dialog", "focus-trap:dialog"]);
+    });
+
+    it("an engine reference does not clear a project's own recipe", async () => {
+      await setupProject(["dialog"]);
+      // A custom recipe, installed the way `faqir create` leaves one: its own
+      // directory, manifest and controller, and a name in `installed.recipes`.
+      const manifest = JSON.parse(readFileSync(join(TEST_DIR, "ui/recipes/dialog/dialog.manifest.json"), "utf8"));
+      manifest.name = "my-dialog";
+      manifest.files = { ...manifest.files, js: "my-dialog.js", css: "my-dialog.css", html: "my-dialog.html" };
+      await Bun.write(join(TEST_DIR, "ui/recipes/my-dialog/my-dialog.manifest.json"), JSON.stringify(manifest, null, 2));
+      const configPath = join(TEST_DIR, "faqir.config.json");
+      const config = JSON.parse(readFileSync(configPath, "utf8"));
+      config.installed.recipes.push("my-dialog");
+      await Bun.write(configPath, JSON.stringify(config, null, 2));
+
+      await Bun.write(join(TEST_DIR, "app/main.mjs"), `import Faqir from "../ui/core/faqir-core.mjs";\n`);
+      await Bun.write(
+        join(TEST_DIR, "index.html"),
+        dialogPage(`<script type="module" src="app/main.mjs"></script>`).replace(
+          "</main>",
+          `<div data-ui="my-dialog" data-state="closed" id="m">
+  <button data-part="trigger">Open</button>
+  <div data-part="overlay"></div>
+  <div data-part="panel" role="dialog" aria-modal="true" aria-labelledby="m-t" tabindex="-1">
+    <h2 data-part="title" id="m-t">T</h2>
+    <button data-part="close" aria-label="Close">X</button>
+    <div data-part="body">C</div>
+  </div>
+</div>
+</main>`,
+        ),
+      );
+      expect(await runtimeFindings()).toEqual(["controller-loaded:my-dialog", "focus-trap:my-dialog"]);
+    });
+  });
+
   // Task 0.9-04, resolving follow-up 0.7-17. `faqir audit` scans `ui/**`, which
   // includes every reference fragment `faqir add` copied in; before this, a
   // fresh `init` + `add` reported a wall of findings from Faqir's own markup.

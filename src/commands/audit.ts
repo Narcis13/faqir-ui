@@ -15,7 +15,7 @@ import { log } from "../utils/logger";
 import { getRegistryPath } from "../utils/fs";
 import { knownUiValues, loadRegistryManifestMap } from "../utils/components";
 import { extractComponents } from "../parser/html-parser";
-import { runAudit, auditHtmlSource, loadInstalledAuditInputs, type AuditSummary } from "../audit/checker";
+import { runAudit, auditHtmlSource, engineControllerNames, loadInstalledAuditInputs, type AuditSummary } from "../audit/checker";
 import type { AuditResult, Severity } from "../audit/rules";
 import { printAuditReport, printAuditJSON, printRuleInventory } from "../audit/reporter";
 import { readStdin } from "../utils/stdin";
@@ -162,6 +162,7 @@ async function auditStdin(args: string[], cwd: string): Promise<void> {
     manifests,
     styles,
     knownUiValues: [...known],
+    engineControllers: engineControllerNames(registryPath),
     skipRules: parseSkipRules(args),
   });
   const componentsFound = extractComponents(source, "<stdin>").length;

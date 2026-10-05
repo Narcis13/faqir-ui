@@ -47,7 +47,7 @@ A Faqir page is ordinary HTML with two additions: one stylesheet and one script.
 
 Add `integrity`/`crossorigin` for production — `packages/core/cdn.json` carries the SHA-384 for every published file, beside the version it was computed for.
 
-Check the page found both: `faqir audit` reports `controller-loaded` when a recipe's controller is missing, and an unstyled render means the stylesheet is not resolving.
+Check the page found both: `faqir audit` reports `controller-loaded` when a recipe's controller is missing, and an unstyled render means the stylesheet is not resolving. The audit reads the page's `<script>` tags, so the engine counts under any name it ships as (`faqir-core.js`, `.min.js`, `.dev.js`, `.mjs`, `@faqir-ui/core`), from a `src`, an inline import or a local module the page loads.
 
 ## The Attribute Protocol
 

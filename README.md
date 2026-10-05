@@ -905,7 +905,7 @@ exit code.
 | `valid-state` | error | markup vs manifest | `data-state` value not defined in manifest |
 | `valid-size` | error | markup vs manifest | `data-size` value not defined in manifest |
 | `icon-name` | error | markup vs manifest | `data-icon` must be a known icon name |
-| `controller-loaded` | error | markup vs manifest | Recipe controller is not referenced |
+| `controller-loaded` | error | markup vs manifest | Recipe controller is not loaded by a `<script>` (or a local module it imports) |
 | `orphan-part` | warning | markup vs manifest | `data-part` value is not a slot in the manifest |
 | `aria-describedby` | warning | markup vs manifest | Description slot exists but panel lacks `aria-describedby` |
 | `close-label` | warning | markup vs manifest | Close button has no accessible name |

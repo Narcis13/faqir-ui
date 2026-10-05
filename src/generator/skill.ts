@@ -439,7 +439,10 @@ function renderFirstPage(outputDir = "ui"): string[] {
       "carries the SHA-384 for every published file, beside the version it was computed for.",
     "",
     "Check the page found both: `faqir audit` reports `controller-loaded` when a " +
-      "recipe's controller is missing, and an unstyled render means the stylesheet is not resolving.",
+      "recipe's controller is missing, and an unstyled render means the stylesheet is not resolving. " +
+      "The audit reads the page's `<script>` tags, so the engine counts under any name it ships as " +
+      "(`faqir-core.js`, `.min.js`, `.dev.js`, `.mjs`, `@faqir-ui/core`), from a `src`, an inline " +
+      "import or a local module the page loads.",
     "",
   ];
 }
