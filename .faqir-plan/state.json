@@ -171,6 +171,12 @@
       "completed": "2026-10-05",
       "commit": "3fa175d",
       "summary": "MCP audit is project-aware: loadRegistryAuditInputs + withProjectAuditInputs (checker.ts) factor the --stdin overlay; audit/repair/generate/scaffold take a contained `root` (isInside) defaulting to the server's project root, laying a faqir.config.json project's manifests, known names, styles and forbid_directives over a copy of the cached registry inputs; knownUiValues always passed (unknown-component). `strict` on audit/repair adds undeclared-markup-attribute (warning; `undeclared-attribute` was already the CSS rule's id; inventory 38 -> 39). Entry 33: tri-state declaresSlot gives an unclaimed part to the nearest manifest-less owner. README/MCP README/docs-page/security.md updated; site/lib/faqir-audit.js rebuilt. 19 new tests; suite 8,023 + 64 / 0."
+    },
+    {
+      "id": "1.1F-29",
+      "completed": "2026-10-05",
+      "commit": "459a2ee",
+      "summary": "@faqir-ui/forms accepts flow-schema keywords: additionalProperties (root, object fields, row items; false -> fixed closed-object comment note, other values ignored), type [T,\"null\"] for one scalar/object T (denullProperties pre-pass normalises to T, drops default:null; required stays required; rules get T; other unions throw with path), examples (first = placeholder for input/textarea/date-picker), const (string/number -> readonly input/textarea with the value, date const without picker, emitted as rules `const`; refused on boolean, with enum, with a different default). index.d.ts (Nullable<T>, AdditionalProperties) + README section. 3 new audit-clean goldens, existing goldens unchanged; +8 forms, +2 rules tests (lint-clean, server enforces const). Suite 8,099 / 0 on Bun 1.3.8."
     }
   ],
   "note": "Pointer file for the /faqir-plan slash command. FAQIR-PLAN-1.1-FIXES.md status cells (⬜/✅) are the source of truth; this file records the cross-session cursor and a per-task log. Do not hand-edit `current` while a session is running. The 1.1 plan's cursor (31 history entries, through 1.1R-01) is archived unchanged at state-1.1.json; FAQIR-PLAN-1.1.md still has six open follow-up rows (1.1A-21, 1.1A-24, 1.1A-27, 1.1A-28, 1.1A-29, 1.1N-03), reachable by pointing `plan` back at it. The 1.0 cursor is at state-1.0.json."
