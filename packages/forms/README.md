@@ -19,6 +19,45 @@ and a form that carries rules adds `faqir-rules.js`. The HTML contains a
 machine-readable `@ui:requires` comment so page assemblers can retain those
 runtime requirements.
 
+## `buildForm`: the same form as DOM nodes
+
+```js
+import { buildForm } from "@faqir-ui/forms/dom";
+
+const form = buildForm(jsonSchema, document, uiSchema, { idPrefix: "signup" });
+container.append(form);
+```
+
+`buildForm` is a separate entry because it needs a DOM: it takes the `document`
+to build on and never reads a global one. It writes no markup. Every schema
+string goes in through `textContent` or `setAttribute`, so a property name
+like `"><img onerror=…>` is a label's text and nothing else. No expression is
+derived from the schema. The form carries a bare `l-data` and a bare
+`l-validate` and no other directive, and ids are a counter, never a property
+name. Schema strings land only in text and in data attributes (`name`,
+`value`, `placeholder`, `pattern`, `aria-label`, a calendar's `data-value`).
+Repeatable rows are added and removed by listeners on their buttons instead of
+an `l-for`, and their names are renumbered (`meds[0].dose`, `meds[1].dose`, …)
+on every change.
+
+The widgets are the ones `renderForm` picks, element for element, and the
+accepted schema is the same: `buildForm` runs `renderForm` to check the schema,
+so it fails with the same errors. It builds scalars, nested objects, enum
+arrays, repeatable rows and `ui:groups`. It throws on a `ui:wizard` and on
+anything that needs a rules definition: the conditional keywords, `opts.rules`,
+or a `pattern` no HTML attribute can carry.
+
+**Which one to use.** Use `renderForm` to produce HTML: on a server, in a
+build, for an agent writing a page, or for a wizard or rules. Use `buildForm`
+when the form is assembled in a browser from a schema you do not fully trust,
+where you would otherwise hand `renderForm`'s string to `innerHTML`. With
+`buildForm` the safety comes from the DOM API, not from an escaper.
+
+What it does **not** remove is the engine's `new Function`. faqir-core still
+compiles the expressions *your page* writes, so a page served under a CSP
+without `'unsafe-eval'` needs the same arrangements as any other Faqir page.
+`buildForm` only guarantees that a schema contributes no expression of its own.
+
 ## Widget mapping (§7.2)
 
 | JSON Schema | Default Faqir widget |

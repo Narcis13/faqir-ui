@@ -12,6 +12,11 @@
       "import": "./src/index.js",
       "default": "./src/index.js"
     },
+    "./dom": {
+      "types": "./src/dom.d.ts",
+      "import": "./src/dom.js",
+      "default": "./src/dom.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
