@@ -527,4 +527,93 @@ export const GOLDEN_CASES: GoldenCase[] = [
     uiSchema: PLAN_WIZARD_UI,
     opts: { idPrefix: "plan" },
   },
+  {
+    // 1.1F-29: `false` leaves a note at the root, a nested object and a row;
+    // any other value (the open `true`, a schema) is ignored.
+    name: "additional-properties",
+    schema: {
+      type: "object",
+      title: "Flow input",
+      additionalProperties: false,
+      properties: {
+        name: { type: "string", title: "Name" },
+        address: {
+          type: "object",
+          title: "Address",
+          additionalProperties: false,
+          properties: { city: { type: "string", title: "City" } },
+        },
+        meta: {
+          type: "object",
+          title: "Metadata",
+          additionalProperties: { type: "string" },
+          properties: { source: { type: "string", title: "Source" } },
+        },
+        tags: {
+          type: "array",
+          title: "Tags",
+          items: {
+            type: "object",
+            additionalProperties: false,
+            properties: { label: { type: "string", title: "Label" } },
+          },
+        },
+      },
+      required: ["name"],
+    },
+    opts: { idPrefix: "flow" },
+  },
+  {
+    // 1.1F-29: `[T, "null"]` in either order renders as T, keeps `required`,
+    // reads `default: null` as no default, and emits T into the rules.
+    name: "nullable",
+    schema: {
+      type: "object",
+      title: "Nullable fields",
+      properties: {
+        nickname: { type: ["string", "null"], title: "Nickname", maxLength: 20 },
+        age: { type: ["null", "integer"], title: "Age", minimum: 0, default: null },
+        plan: { type: ["string", "null"], title: "Plan", enum: ["free", "team"] },
+        address: {
+          type: ["object", "null"],
+          title: "Address",
+          properties: { city: { type: ["string", "null"], title: "City" } },
+        },
+        contacts: {
+          type: "array",
+          title: "Contacts",
+          items: { type: "object", properties: { phone: { type: ["string", "null"], title: "Phone" } } },
+        },
+      },
+      required: ["nickname"],
+      dependentRequired: { age: ["plan"] },
+    },
+    opts: { idPrefix: "nullable" },
+  },
+  {
+    // 1.1F-29: the first example is the placeholder when the UI schema gives
+    // none; a const field is read-only and shows its value.
+    name: "examples-const",
+    schema: {
+      type: "object",
+      title: "Examples and constants",
+      properties: {
+        city: { type: "string", title: "City", examples: ["Lisbon", "Porto"] },
+        budget: { type: "number", title: "Budget", examples: [2500] },
+        notes: { type: "string", title: "Notes", examples: ["Anything we should know"] },
+        startsOn: { type: "string", format: "date", title: "Starts on", examples: ["2026-11-02"] },
+        region: { type: "string", title: "Region", enum: ["eu", "us"], examples: ["eu"] },
+        apiVersion: { type: "string", title: "API version", const: "2026-10" },
+        replicas: { type: "integer", title: "Replicas", const: 3, default: 3 },
+        snapshotOn: { type: "string", format: "date", title: "Snapshot date", const: "2026-10-05" },
+        email: { type: "string", format: "email", title: "Email", examples: ["ada@example.com"] },
+      },
+      required: ["city", "apiVersion"],
+    },
+    uiSchema: {
+      notes: { widget: "textarea" },
+      email: { placeholder: "you@company.com" },
+    },
+    opts: { idPrefix: "examples" },
+  },
 ];

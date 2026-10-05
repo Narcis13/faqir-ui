@@ -192,13 +192,41 @@ Schema text and attribute values are HTML-escaped. A required checkbox group
 renders the required marker only — group-level minimum selection is not
 natively enforceable (multi-select `required` is native).
 
+## `additionalProperties`, nullable fields, `examples` and `const`
+
+Keywords an API's input schema usually carries are accepted:
+
+- **`additionalProperties`** at the root, on a nested object, and on a
+  repeatable group's `items`. A form submits only the controls it renders, so
+  the object is closed whatever the keyword says: `false` leaves a fixed
+  `<!-- additionalProperties: false … -->` note where the schema said it (first
+  in the form, the fieldset body, or the row), and any other value is ignored.
+  Neither reaches the rules definition, which has no such keyword.
+- **`type: [T, "null"]`** (either order), for one scalar or object `T`, is a
+  nullable `T`. It renders as `T` and is emitted into the rules as `T`. A form
+  cannot tell null from empty — an empty control is absent from its data — so
+  a nullable field named in `required` **stays required**: drop it from
+  `required` if empty is an answer. `default: null` on a nullable field means
+  no default. Any other union (`["string", "number"]`, `["array", "null"]`)
+  still throws.
+- **`examples`** on a scalar: a non-empty array of values of the field's type.
+  The first becomes the `placeholder` of an input, textarea or date picker when
+  the UI schema gives none. A choice list's prompt and a checkbox ignore it.
+- **`const`** on a string or number field: the field's only value. It renders
+  as a `readonly` input (or textarea) showing it — a date const included, with
+  no picker — and is emitted into the rules, so a server's `validate()` refuses
+  any other value. `const` cannot combine with `enum`, and a `default` must
+  equal it. On a boolean it throws: a checkbox cannot be read-only, and a box
+  that must be ticked is a required boolean.
+
 ## Supported subset is strict
 
 The root is an object whose properties are scalars, nested objects, enum
 arrays (`items.enum` strings, optional `uniqueItems: true` and `default`), or
 repeatable object arrays (scalar rows, `minItems`/`maxItems`), plus the
 conditional keywords above (`if`/`then`/`else`, conditional `allOf`,
-`dependentRequired`), which become rules rather than markup. Unions, other
+`dependentRequired`), which become rules rather than markup, and the keywords
+of the section above. Unions other than `[T, "null"]`, other
 composition keywords, unknown formats, unknown UI keys,
 incompatible widgets, malformed group/wizard field partitions, and
 expression-unsafe repeatable-row names throw a path-specific error. Nothing

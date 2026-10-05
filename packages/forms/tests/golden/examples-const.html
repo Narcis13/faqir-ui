@@ -1,0 +1,104 @@
+<!-- @ui:requires faqir-core.js faqir-validate.js date-picker.js calendar.js -->
+<form id="examples-form" l-data l-validate aria-label="Examples and constants">
+  <h1>Examples and constants</h1>
+  <div data-ui="field-group">
+    <label data-part="label" for="examples-field-city">City <span data-part="required">*</span></label>
+    <div data-part="input">
+      <input data-ui="input" id="examples-field-city" name="city" required aria-required="true" aria-describedby="examples-field-city-error" type="text" placeholder="Lisbon">
+    </div>
+    <p data-part="error" id="examples-field-city-error" aria-live="polite"></p>
+  </div>
+  <div data-ui="field-group">
+    <label data-part="label" for="examples-field-budget">Budget</label>
+    <div data-part="input">
+      <input data-ui="input" id="examples-field-budget" name="budget" aria-describedby="examples-field-budget-error" type="number" placeholder="2500" step="any">
+    </div>
+    <p data-part="error" id="examples-field-budget-error" aria-live="polite"></p>
+  </div>
+  <div data-ui="field-group">
+    <label data-part="label" for="examples-field-notes">Notes</label>
+    <div data-part="input">
+      <textarea data-ui="textarea" id="examples-field-notes" name="notes" aria-describedby="examples-field-notes-error" rows="4" placeholder="Anything we should know"></textarea>
+    </div>
+    <p data-part="error" id="examples-field-notes-error" aria-live="polite"></p>
+  </div>
+  <div data-ui="field-group">
+    <label data-part="label" for="examples-field-startson">Starts on</label>
+    <div data-part="input">
+      <div data-ui="date-picker" data-state="closed" data-size="md">
+        <div data-part="trigger">
+          <input data-part="input" id="examples-field-startson" name="startsOn" aria-describedby="examples-field-startson-error" type="text" role="combobox" readonly aria-haspopup="dialog" aria-expanded="false" aria-label="Choose Starts on" placeholder="2026-11-02">
+          <span data-part="icon" aria-hidden="true">&#x1F4C5;</span>
+        </div>
+        <div data-part="calendar" role="dialog" aria-label="Calendar" hidden>
+          <div data-ui="calendar" data-size="md">
+            <div data-part="header">
+              <button data-part="nav-prev" type="button" aria-label="Previous month">&lsaquo;</button>
+              <span data-part="month-label"></span>
+              <button data-part="nav-next" type="button" aria-label="Next month">&rsaquo;</button>
+            </div>
+            <table data-part="grid" role="grid" aria-label="Calendar">
+              <thead>
+                <tr>
+                  <th scope="col" abbr="Sunday">Su</th>
+                  <th scope="col" abbr="Monday">Mo</th>
+                  <th scope="col" abbr="Tuesday">Tu</th>
+                  <th scope="col" abbr="Wednesday">We</th>
+                  <th scope="col" abbr="Thursday">Th</th>
+                  <th scope="col" abbr="Friday">Fr</th>
+                  <th scope="col" abbr="Saturday">Sa</th>
+                </tr>
+              </thead>
+              <tbody data-part="grid-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p data-part="error" id="examples-field-startson-error" aria-live="polite"></p>
+  </div>
+  <div data-ui="field-group">
+    <label data-part="label" id="examples-field-region-label" for="examples-field-region-option-1">Region</label>
+    <div data-part="input">
+      <div data-ui="radio-group" role="radiogroup" aria-labelledby="examples-field-region-label" aria-describedby="examples-field-region-error">
+        <label data-ui="radio-label">
+          <input data-ui="radio" type="radio" id="examples-field-region-option-1" name="region" value="eu" aria-describedby="examples-field-region-error">
+          <span data-part="label">eu</span>
+        </label>
+        <label data-ui="radio-label">
+          <input data-ui="radio" type="radio" id="examples-field-region-option-2" name="region" value="us" aria-describedby="examples-field-region-error">
+          <span data-part="label">us</span>
+        </label>
+      </div>
+    </div>
+    <p data-part="error" id="examples-field-region-error" aria-live="polite"></p>
+  </div>
+  <div data-ui="field-group">
+    <label data-part="label" for="examples-field-apiversion">API version <span data-part="required">*</span></label>
+    <div data-part="input">
+      <input data-ui="input" id="examples-field-apiversion" name="apiVersion" required aria-required="true" aria-describedby="examples-field-apiversion-error" type="text" value="2026-10" readonly>
+    </div>
+    <p data-part="error" id="examples-field-apiversion-error" aria-live="polite"></p>
+  </div>
+  <div data-ui="field-group">
+    <label data-part="label" for="examples-field-replicas">Replicas</label>
+    <div data-part="input">
+      <input data-ui="input" id="examples-field-replicas" name="replicas" aria-describedby="examples-field-replicas-error" type="number" value="3" readonly step="1">
+    </div>
+    <p data-part="error" id="examples-field-replicas-error" aria-live="polite"></p>
+  </div>
+  <div data-ui="field-group">
+    <label data-part="label" for="examples-field-snapshoton">Snapshot date</label>
+    <div data-part="input">
+      <input data-ui="input" id="examples-field-snapshoton" name="snapshotOn" aria-describedby="examples-field-snapshoton-error" type="text" value="2026-10-05" readonly>
+    </div>
+    <p data-part="error" id="examples-field-snapshoton-error" aria-live="polite"></p>
+  </div>
+  <div data-ui="field-group">
+    <label data-part="label" for="examples-field-email">Email</label>
+    <div data-part="input">
+      <input data-ui="input" id="examples-field-email" name="email" aria-describedby="examples-field-email-error" type="email" placeholder="you@company.com">
+    </div>
+    <p data-part="error" id="examples-field-email-error" aria-live="polite"></p>
+  </div>
+</form>

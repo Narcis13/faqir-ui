@@ -11,13 +11,34 @@ export type Widget =
   | "checkbox-group"
   | "multi-select";
 
+/**
+ * `[T, "null"]`, in either order: a nullable `T`. It renders and emits rules as
+ * `T` — a form cannot submit null — and stays required when `required` names it.
+ * No other union is accepted.
+ */
+export type Nullable<T extends string> = [T, "null"] | ["null", T];
+
+/**
+ * `additionalProperties`: `false` leaves a closed-object note in the markup (a
+ * form submits only the fields it renders); any other value is ignored.
+ */
+export type AdditionalProperties = boolean | Record<string, unknown>;
+
 export interface ScalarSchema {
-  type: ScalarType;
+  type: ScalarType | Nullable<ScalarType>;
   title?: string;
   description?: string;
   enum?: string[];
   format?: StringFormat;
-  default?: string | number | boolean;
+  /** `null` is accepted on a nullable field only, and means no default. */
+  default?: string | number | boolean | null;
+  /** The first entry is the placeholder when the UI schema gives none (inputs, textareas, date pickers). */
+  examples?: Array<string | number | boolean>;
+  /**
+   * The field's only value: rendered read-only, showing it, and emitted into
+   * the rules. Not on a boolean, and not with `enum`; a `default` must equal it.
+   */
+  const?: string | number;
   minLength?: number;
   maxLength?: number;
   pattern?: string;
@@ -30,11 +51,12 @@ export interface ScalarSchema {
 
 /** Nested object → fieldset card. Children may be any supported field kind. */
 export interface ObjectFieldSchema {
-  type: "object";
+  type: "object" | Nullable<"object">;
   title?: string;
   description?: string;
   properties: Record<string, FieldSchema>;
   required?: string[];
+  additionalProperties?: AdditionalProperties;
 }
 
 /** Array of enum strings → checkbox group (≤ threshold) or multi-select. */
@@ -56,6 +78,7 @@ export interface ObjectArraySchema {
     type: "object";
     properties: Record<string, ScalarSchema>;
     required?: string[];
+    additionalProperties?: AdditionalProperties;
   };
   minItems?: number;
   maxItems?: number;
@@ -96,6 +119,7 @@ export interface ObjectSchema {
   description?: string;
   properties: Record<string, FieldSchema>;
   required?: string[];
+  additionalProperties?: AdditionalProperties;
   /** Conditional visibility/requiredness → `show` / `require` rules. */
   if?: SchemaCondition;
   then?: SchemaConsequent;

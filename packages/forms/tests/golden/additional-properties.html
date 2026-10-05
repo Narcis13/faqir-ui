@@ -1,0 +1,58 @@
+<!-- @ui:requires faqir-core.js faqir-validate.js -->
+<form id="flow-form" l-data="{ rowsTags: [{ __key: 1 }], seqTags: 1 }" l-validate aria-label="Flow input">
+  <!-- additionalProperties: false - a closed object: the form submits only the fields rendered here -->
+  <h1>Flow input</h1>
+  <div data-ui="field-group">
+    <label data-part="label" for="flow-field-name">Name <span data-part="required">*</span></label>
+    <div data-part="input">
+      <input data-ui="input" id="flow-field-name" name="name" required aria-required="true" aria-describedby="flow-field-name-error" type="text">
+    </div>
+    <p data-part="error" id="flow-field-name-error" aria-live="polite"></p>
+  </div>
+  <fieldset data-ui="card" data-variant="outlined">
+    <legend data-part="title">Address</legend>
+    <div data-part="body">
+      <!-- additionalProperties: false - a closed object: the form submits only the fields rendered here -->
+      <div data-ui="field-group">
+        <label data-part="label" for="flow-field-address-city">City</label>
+        <div data-part="input">
+          <input data-ui="input" id="flow-field-address-city" name="address.city" aria-describedby="flow-field-address-city-error" type="text">
+        </div>
+        <p data-part="error" id="flow-field-address-city-error" aria-live="polite"></p>
+      </div>
+    </div>
+  </fieldset>
+  <fieldset data-ui="card" data-variant="outlined">
+    <legend data-part="title">Metadata</legend>
+    <div data-part="body">
+      <div data-ui="field-group">
+        <label data-part="label" for="flow-field-meta-source">Source</label>
+        <div data-part="input">
+          <input data-ui="input" id="flow-field-meta-source" name="meta.source" aria-describedby="flow-field-meta-source-error" type="text">
+        </div>
+        <p data-part="error" id="flow-field-meta-source-error" aria-live="polite"></p>
+      </div>
+    </div>
+  </fieldset>
+  <fieldset data-ui="card" data-variant="outlined">
+    <legend data-part="title">Tags</legend>
+    <div data-part="body">
+      <template l-for="(row, rowIndex) in rowsTags" l-key="row.__key">
+        <div data-ui="card" data-variant="filled" data-size="sm">
+          <div data-part="body">
+            <!-- additionalProperties: false - a closed object: the form submits only the fields rendered here -->
+            <div data-ui="field-group">
+              <label data-part="label" for="flow-field-tags-item-label" :for="&#39;flow-field-tags-&#39; + row.__key + &#39;-label&#39;">Label</label>
+              <div data-part="input">
+                <input data-ui="input" id="flow-field-tags-item-label" :id="&#39;flow-field-tags-&#39; + row.__key + &#39;-label&#39;" name="tags[].label" :name="&#39;tags[&#39; + rowIndex + &#39;].label&#39;" aria-describedby="flow-field-tags-item-label-error" :aria-describedby="&#39;flow-field-tags-&#39; + row.__key + &#39;-label-error&#39;" type="text">
+              </div>
+              <p data-part="error" id="flow-field-tags-item-label-error" :id="&#39;flow-field-tags-&#39; + row.__key + &#39;-label-error&#39;" aria-live="polite"></p>
+            </div>
+            <button type="button" data-ui="button" data-variant="ghost" data-size="sm" @click="rowsTags.splice(rowIndex, 1)">Remove Tags</button>
+          </div>
+        </div>
+      </template>
+      <button type="button" data-ui="button" data-variant="outline" data-size="sm" @click="rowsTags.push({ __key: (seqTags = seqTags + 1) })">Add Tags</button>
+    </div>
+  </fieldset>
+</form>

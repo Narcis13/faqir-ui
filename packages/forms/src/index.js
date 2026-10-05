@@ -21,17 +21,21 @@ const ROOT_KEYS = new Set([
   // The conditional keywords (1.1B-06): understood, and turned into rules —
   // never rendered as markup, and never ignored.
   "if", "then", "else", "allOf", "dependentRequired",
+  // A form submits only the controls it renders, so it is closed whatever this
+  // says: `false` is noted in the markup, anything else is ignored.
+  "additionalProperties",
 ]);
 const SCALAR_TYPES = new Set(["string", "number", "integer", "boolean"]);
 const FIELD_KEYS = new Set([
   "type", "title", "description", "enum", "format", "default",
   "minLength", "maxLength", "pattern", "minimum", "maximum", "multipleOf", "step",
+  "examples", "const",
 ]);
-const OBJECT_FIELD_KEYS = new Set(["type", "title", "description", "properties", "required"]);
+const OBJECT_FIELD_KEYS = new Set(["type", "title", "description", "properties", "required", "additionalProperties"]);
 const ENUM_ARRAY_KEYS = new Set(["type", "title", "description", "items", "uniqueItems", "default"]);
 const ENUM_ARRAY_ITEM_KEYS = new Set(["type", "enum"]);
 const OBJECT_ARRAY_KEYS = new Set(["type", "title", "description", "items", "minItems", "maxItems"]);
-const OBJECT_ARRAY_ITEM_KEYS = new Set(["type", "properties", "required"]);
+const OBJECT_ARRAY_ITEM_KEYS = new Set(["type", "properties", "required", "additionalProperties"]);
 const UI_KEYS = new Set([
   "widget", "ui:widget", "placeholder", "ui:placeholder",
   "rows", "ui:rows", "enumLabels", "ui:enumLabels",
@@ -122,6 +126,73 @@ function assertStringArray(value, path) {
   }
   return /** @type {string[]} */ (value);
 }
+
+/** Does a JSON value fit a scalar field's type? @param {unknown} value @param {string} type */
+function matchesType(value, type) {
+  if (type === "integer") return Number.isInteger(value);
+  if (type === "number") return typeof value === "number" && Number.isFinite(value);
+  return typeof value === type;
+}
+
+/**
+ * `type: [T, "null"]`, in either order, is a nullable T for one scalar or
+ * object T, and every other union throws. @param {unknown[]} types @param {string} path
+ */
+function nullableType(types, path) {
+  const rest = types.filter((type) => type !== "null");
+  if (types.length === 2 && rest.length === 1 && typeof rest[0] === "string" &&
+      (SCALAR_TYPES.has(rest[0]) || rest[0] === "object")) {
+    return rest[0];
+  }
+  throw new Error(
+    `@faqir-ui/forms: ${path} ${JSON.stringify(types)} is a union; the only union supported is ` +
+    `[T, "null"] — one scalar or object type, made nullable.`,
+  );
+}
+
+/**
+ * A nullable field renders as its type: a form cannot submit null — an empty
+ * control is absent from its data — so nullability changes nothing it draws or
+ * the rules it emits, and a nullable field named in `required` stays required.
+ * `default: null` on one means no default. Applied to the whole property tree
+ * before anything reads a `type`, so the rest of the renderer only ever sees a
+ * string; a shape it does not recognise is left for the validators to reject.
+ * @param {Record<string, unknown>} properties
+ * @param {string} path The map's own path (`….properties`).
+ * @returns {Record<string, unknown>}
+ */
+function denullProperties(properties, path) {
+  /** @type {Record<string, unknown>} */
+  const out = {};
+  for (const [name, raw] of Object.entries(properties)) {
+    out[name] = isRecord(raw) ? denullField(raw, `${path}.${name}`) : raw;
+  }
+  return out;
+}
+
+/** @param {Record<string, unknown>} schema @param {string} path */
+function denullField(schema, path) {
+  let field = schema;
+  if (Array.isArray(field.type)) {
+    field = { ...field, type: nullableType(field.type, `${path}.type`) };
+    if (field.default === null) delete field.default;
+  }
+  if (isRecord(field.properties)) {
+    field = { ...field, properties: denullProperties(field.properties, `${path}.properties`) };
+  }
+  const items = field.items;
+  if (isRecord(items) && isRecord(items.properties)) {
+    field = { ...field, items: { ...items, properties: denullProperties(items.properties, `${path}.items.properties`) } };
+  }
+  return field;
+}
+
+/**
+ * What `additionalProperties: false` becomes. A form submits only the controls
+ * it renders, so the object is closed either way; the note says so where the
+ * schema did. Fixed text: nothing from the schema reaches a comment.
+ */
+const CLOSED_NOTE = "<!-- additionalProperties: false - a closed object: the form submits only the fields rendered here -->";
 
 /** @param {string} value */
 function escapeHtml(value) {
@@ -308,14 +379,58 @@ function validateFieldSchema(schema, path) {
   }
 
   if (schema.default !== undefined) {
-    const expected = type === "integer" ? "number" : type;
-    if (typeof schema.default !== expected || (type === "integer" && !Number.isInteger(schema.default))) {
+    if (!matchesType(schema.default, type)) {
       throw new TypeError(`@faqir-ui/forms: ${path}.default must match type "${type}".`);
     }
     if (schema.enum !== undefined && !(/** @type {string[]} */ (schema.enum)).includes(/** @type {string} */ (schema.default))) {
       throw new Error(`@faqir-ui/forms: ${path}.default must be one of its enum values.`);
     }
   }
+
+  // `const` is the field's only value, so it renders read-only, showing it.
+  if (schema.const !== undefined) {
+    if (type === "boolean") {
+      throw new Error(
+        `@faqir-ui/forms: ${path}.const is not supported on a boolean field — a checkbox cannot be read-only. ` +
+        "A box that must be ticked is a required boolean.",
+      );
+    }
+    if (!matchesType(schema.const, type)) {
+      throw new TypeError(`@faqir-ui/forms: ${path}.const must match type "${type}".`);
+    }
+    if (schema.enum !== undefined) {
+      throw new Error(`@faqir-ui/forms: ${path} cannot combine const with enum; a const is the field's only value.`);
+    }
+    if (schema.default !== undefined && schema.default !== schema.const) {
+      throw new Error(`@faqir-ui/forms: ${path}.default must equal its const.`);
+    }
+  }
+
+  if (schema.examples !== undefined) {
+    if (!Array.isArray(schema.examples) || schema.examples.length === 0) {
+      throw new TypeError(`@faqir-ui/forms: ${path}.examples must be a non-empty array.`);
+    }
+    schema.examples.forEach((example, index) => {
+      if (!matchesType(example, type)) {
+        throw new TypeError(`@faqir-ui/forms: ${path}.examples[${index}] must match type "${type}".`);
+      }
+    });
+  }
+}
+
+/**
+ * The first of a field's `examples`, as the placeholder its control shows when
+ * the UI schema gives none — for the controls that show one: an input, a
+ * textarea or a date picker. A choice list's prompt is not an example, and a
+ * const field already shows its value.
+ * @param {Record<string, unknown>} schema
+ */
+function examplePlaceholder(schema) {
+  if (!Array.isArray(schema.examples) || schema.enum !== undefined || schema.const !== undefined ||
+      schema.type === "boolean") {
+    return undefined;
+  }
+  return String(schema.examples[0]);
 }
 
 /**
@@ -458,7 +573,9 @@ function normalizeUi(ui, schema, path, inRow = false) {
 
   const type = schema.type;
   const format = schema.format;
-  const allowed = type === "string"
+  const allowed = schema.const !== undefined
+    ? new Set(type === "string" ? ["input", "textarea"] : ["input"])
+    : type === "string"
     ? schema.enum !== undefined
       ? inRow ? new Set(["select"]) : new Set(["select", "radio"])
       : format === "date"
@@ -477,7 +594,7 @@ function normalizeUi(ui, schema, path, inRow = false) {
     throw new Error(`@faqir-ui/forms: ${path}.placeholder is supported only for string fields.`);
   }
 
-  return { widget, placeholder, rows, enumLabels };
+  return { widget, placeholder: placeholder ?? examplePlaceholder(schema), rows, enumLabels };
 }
 
 /**
@@ -659,6 +776,7 @@ function rulesFieldSchema(schema, path) {
     out.type = schema.type;
     if (schema.title !== undefined) out.title = schema.title;
     if (schema.enum !== undefined) out.enum = schema.enum;
+    if (schema.const !== undefined) out.const = schema.const;
     if (schema.format !== undefined) out.format = schema.format;
     if (schema.pattern !== undefined) out.pattern = schema.pattern;
     if (schema.minLength !== undefined) out.minLength = schema.minLength;
@@ -1168,7 +1286,7 @@ function renderControl(schema, ui, ctx) {
     return renderSelect(values, labels, schema.default, ui.placeholder, common, ctx);
   }
 
-  if (type === "string" && schema.format === "date") {
+  if (type === "string" && schema.format === "date" && schema.const === undefined) {
     return renderDatePicker(schema, ui, common, ctx);
   }
 
@@ -1184,11 +1302,13 @@ function renderControl(schema, ui, ctx) {
   if (type === "string" && ui.widget === "textarea") {
     const attrs = ['data-ui="textarea"', ...common];
     attrs.push(`rows="${attrValue(ui.rows ?? 4)}"`);
+    if (schema.const !== undefined) attrs.push("readonly");
     if (ui.placeholder !== undefined) attrs.push(`placeholder="${attrValue(ui.placeholder)}"`);
     if (schema.minLength !== undefined) attrs.push(`minlength="${attrValue(/** @type {number} */ (schema.minLength))}"`);
     if (schema.maxLength !== undefined) attrs.push(`maxlength="${attrValue(/** @type {number} */ (schema.maxLength))}"`);
     pushPattern(attrs, schema);
-    const value = schema.default === undefined ? "" : escapeHtml(/** @type {string} */ (schema.default));
+    const text = schema.const ?? schema.default;
+    const value = text === undefined ? "" : escapeHtml(/** @type {string} */ (text));
     return [`<textarea${renderAttrs(attrs)}>${value}</textarea>`];
   }
 
@@ -1197,7 +1317,9 @@ function renderControl(schema, ui, ctx) {
     : "number";
   const attrs = ['data-ui="input"', ...common, `type="${htmlType}"`];
   if (ui.placeholder !== undefined) attrs.push(`placeholder="${attrValue(ui.placeholder)}"`);
-  if (schema.default !== undefined) attrs.push(`value="${attrValue(/** @type {string | number | boolean} */ (schema.default))}"`);
+  const value = schema.const ?? schema.default;
+  if (value !== undefined) attrs.push(`value="${attrValue(/** @type {string | number | boolean} */ (value))}"`);
+  if (schema.const !== undefined) attrs.push("readonly");
   if (schema.minLength !== undefined) attrs.push(`minlength="${attrValue(/** @type {number} */ (schema.minLength))}"`);
   if (schema.maxLength !== undefined) attrs.push(`maxlength="${attrValue(/** @type {number} */ (schema.maxLength))}"`);
   pushPattern(attrs, schema);
@@ -1466,7 +1588,7 @@ function buildFieldGroup(schema, ui, state, spec) {
     chosenWidget = ui.widget ?? (
       schema.type === "string" && schema.enum !== undefined
         ? !dyn && (/** @type {string[]} */ (schema.enum)).length <= state.threshold ? "radio" : "select"
-        : schema.type === "string" && schema.format === "date" ? "date-picker"
+        : schema.type === "string" && schema.format === "date" && schema.const === undefined ? "date-picker"
           : schema.type === "boolean" ? "checkbox" : "input"
     );
     if (chosenWidget === "date-picker") state.flags.usesDatePicker = true;
@@ -1560,7 +1682,7 @@ function renderField(name, schema, ui, state, spec) {
     }
     const title = schema.title === undefined ? humanize(name) : /** @type {string} */ (schema.title);
     /** @type {string[]} */
-    const bodyLines = [];
+    const bodyLines = schema.additionalProperties === false ? [CLOSED_NOTE] : [];
     for (const [childName, rawChild] of Object.entries(properties)) {
       const childSchema = assertRecord(rawChild, `${schemaPath}.properties.${childName}`);
       const childUi = ui[childName] === undefined ? {} : assertRecord(ui[childName], `${uiPath}.${childName}`);
@@ -1597,8 +1719,9 @@ function renderField(name, schema, ui, state, spec) {
   const initial = Array.from({ length: initialRows }, (_, index) => `{ __key: ${index + 1} }`).join(", ");
   state.scopeEntries.push(`${rowsVar}: [${initial}]`, `${seqVar}: ${initialRows}`);
 
+  const items = assertRecord(schema.items, `${schemaPath}.items`);
   /** @type {string[]} */
-  const rowLines = [];
+  const rowLines = items.additionalProperties === false ? [CLOSED_NOTE] : [];
   for (const [childName, rawChild] of Object.entries(properties)) {
     const childSchema = assertRecord(rawChild, `${schemaPath}.items.properties.${childName}`);
     const childUiRaw = itemsUi[childName] === undefined ? {} : assertRecord(itemsUi[childName], `${uiPath}.items.${childName}`);
@@ -1740,7 +1863,7 @@ export function renderForm(jsonSchema, uiSchema = {}, opts = {}) {
     const type = Array.isArray(root.type) ? JSON.stringify(root.type) : String(root.type);
     throw new Error(`@faqir-ui/forms: jsonSchema.type must be "object"; received ${type}.`);
   }
-  const properties = assertRecord(root.properties, "jsonSchema.properties");
+  const properties = denullProperties(assertRecord(root.properties, "jsonSchema.properties"), "jsonSchema.properties");
   if (root.title !== undefined) assertString(root.title, "jsonSchema.title");
   if (root.description !== undefined) assertString(root.description, "jsonSchema.description");
   if (root.$schema !== undefined) assertString(root.$schema, "jsonSchema.$schema");
@@ -1911,6 +2034,7 @@ export function renderForm(jsonSchema, uiSchema = {}, opts = {}) {
   const output = [`<!-- @ui:requires ${dependencies} -->`];
   if (rulesDefinition) output.push(...rulesScriptLines(rulesId, rulesDefinition));
   output.push(`<form${renderAttrs(formAttrs)}>`);
+  if (root.additionalProperties === false) output.push(`  ${CLOSED_NOTE}`);
   if (root.title !== undefined) output.push(`  <h1>${escapeHtml(/** @type {string} */ (root.title))}</h1>`);
   if (root.description !== undefined) {
     output.push(`  <p id="${attrValue(`${normalizedOptions.prefix}-form-description`)}">${escapeHtml(/** @type {string} */ (root.description))}</p>`);

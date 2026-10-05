@@ -1,0 +1,130 @@
+<!-- @ui:requires faqir-core.js faqir-validate.js faqir-rules.js -->
+<script type="application/json" id="nullable-rules">
+{
+  "version": "1",
+  "fields": {
+    "nickname": {
+      "type": "string",
+      "title": "Nickname",
+      "maxLength": 20
+    },
+    "age": {
+      "type": "integer",
+      "title": "Age",
+      "minimum": 0
+    },
+    "plan": {
+      "type": "string",
+      "title": "Plan",
+      "enum": [
+        "free",
+        "team"
+      ]
+    },
+    "address": {
+      "type": "object",
+      "title": "Address",
+      "properties": {
+        "city": {
+          "type": "string",
+          "title": "City"
+        }
+      }
+    },
+    "contacts": {
+      "type": "array",
+      "title": "Contacts",
+      "items": {
+        "type": "object",
+        "properties": {
+          "phone": {
+            "type": "string",
+            "title": "Phone"
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "nickname"
+  ],
+  "rules": [
+    {
+      "id": "require-plan-with-age",
+      "require": "plan",
+      "when": {
+        "!": {
+          "missing": [
+            "age"
+          ]
+        }
+      }
+    }
+  ]
+}
+</script>
+<form id="nullable-form" l-data="{ rowsContacts: [{ __key: 1 }], seqContacts: 1 }" l-validate l-rules="#nullable-rules" aria-label="Nullable fields">
+  <h1>Nullable fields</h1>
+  <div data-ui="field-group">
+    <label data-part="label" for="nullable-field-nickname">Nickname <span data-part="required">*</span></label>
+    <div data-part="input">
+      <input data-ui="input" id="nullable-field-nickname" name="nickname" required aria-required="true" aria-describedby="nullable-field-nickname-error" type="text" maxlength="20">
+    </div>
+    <p data-part="error" id="nullable-field-nickname-error" aria-live="polite"></p>
+  </div>
+  <div data-ui="field-group">
+    <label data-part="label" for="nullable-field-age">Age</label>
+    <div data-part="input">
+      <input data-ui="input" id="nullable-field-age" name="age" aria-describedby="nullable-field-age-error" type="number" min="0" step="1">
+    </div>
+    <p data-part="error" id="nullable-field-age-error" aria-live="polite"></p>
+  </div>
+  <div data-ui="field-group">
+    <label data-part="label" id="nullable-field-plan-label" for="nullable-field-plan-option-1">Plan</label>
+    <div data-part="input">
+      <div data-ui="radio-group" role="radiogroup" aria-labelledby="nullable-field-plan-label" aria-describedby="nullable-field-plan-error">
+        <label data-ui="radio-label">
+          <input data-ui="radio" type="radio" id="nullable-field-plan-option-1" name="plan" value="free" aria-describedby="nullable-field-plan-error">
+          <span data-part="label">free</span>
+        </label>
+        <label data-ui="radio-label">
+          <input data-ui="radio" type="radio" id="nullable-field-plan-option-2" name="plan" value="team" aria-describedby="nullable-field-plan-error">
+          <span data-part="label">team</span>
+        </label>
+      </div>
+    </div>
+    <p data-part="error" id="nullable-field-plan-error" aria-live="polite"></p>
+  </div>
+  <fieldset data-ui="card" data-variant="outlined">
+    <legend data-part="title">Address</legend>
+    <div data-part="body">
+      <div data-ui="field-group">
+        <label data-part="label" for="nullable-field-address-city">City</label>
+        <div data-part="input">
+          <input data-ui="input" id="nullable-field-address-city" name="address.city" aria-describedby="nullable-field-address-city-error" type="text">
+        </div>
+        <p data-part="error" id="nullable-field-address-city-error" aria-live="polite"></p>
+      </div>
+    </div>
+  </fieldset>
+  <fieldset data-ui="card" data-variant="outlined">
+    <legend data-part="title">Contacts</legend>
+    <div data-part="body">
+      <template l-for="(row, rowIndex) in rowsContacts" l-key="row.__key">
+        <div data-ui="card" data-variant="filled" data-size="sm">
+          <div data-part="body">
+            <div data-ui="field-group">
+              <label data-part="label" for="nullable-field-contacts-item-phone" :for="&#39;nullable-field-contacts-&#39; + row.__key + &#39;-phone&#39;">Phone</label>
+              <div data-part="input">
+                <input data-ui="input" id="nullable-field-contacts-item-phone" :id="&#39;nullable-field-contacts-&#39; + row.__key + &#39;-phone&#39;" name="contacts[].phone" :name="&#39;contacts[&#39; + rowIndex + &#39;].phone&#39;" aria-describedby="nullable-field-contacts-item-phone-error" :aria-describedby="&#39;nullable-field-contacts-&#39; + row.__key + &#39;-phone-error&#39;" type="text">
+              </div>
+              <p data-part="error" id="nullable-field-contacts-item-phone-error" :id="&#39;nullable-field-contacts-&#39; + row.__key + &#39;-phone-error&#39;" aria-live="polite"></p>
+            </div>
+            <button type="button" data-ui="button" data-variant="ghost" data-size="sm" @click="rowsContacts.splice(rowIndex, 1)">Remove Contacts</button>
+          </div>
+        </div>
+      </template>
+      <button type="button" data-ui="button" data-variant="outline" data-size="sm" @click="rowsContacts.push({ __key: (seqContacts = seqContacts + 1) })">Add Contacts</button>
+    </div>
+  </fieldset>
+</form>

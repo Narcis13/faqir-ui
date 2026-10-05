@@ -385,3 +385,100 @@ describe("number step", () => {
     expect(html).not.toMatch(/name="label"[^>]*step=/);
   });
 });
+
+// 1.1F-29: the keywords a flow's input schema carries (bug entry 15).
+describe("additionalProperties, nullable unions, examples and const", () => {
+  const NOTE = "<!-- additionalProperties: false - a closed object: the form submits only the fields rendered here -->";
+  const renderUnchecked = (schema: unknown, uiSchema: unknown = {}) =>
+    renderForm(schema as ObjectSchema, uiSchema as UISchema);
+  const one = (field: object, ui?: object) =>
+    renderUnchecked({ type: "object", properties: { f: field } }, ui ? { f: ui } : {});
+
+  it("notes additionalProperties: false and ignores every other value", () => {
+    const closed = renderUnchecked({ type: "object", additionalProperties: false, properties: { a: { type: "string" } } });
+    expect(closed).toContain(`<form id="faqir-form" l-data l-validate>\n  ${NOTE}\n`);
+    const open = { type: "object", properties: { a: { type: "string" } } };
+    const plain = renderUnchecked(open);
+    for (const value of [true, {}, { type: "string" }]) {
+      expect(renderUnchecked({ ...open, additionalProperties: value })).toBe(plain);
+    }
+    // The note never carries schema text, whatever the schema says.
+    expect(closed.match(/<!--/g)?.length).toBe(2);
+  });
+
+  it("renders a nullable field as its type, in either order", () => {
+    for (const type of ["string", "number", "integer", "boolean"]) {
+      expect(one({ type: [type, "null"] })).toBe(one({ type }));
+      expect(one({ type: ["null", type] })).toBe(one({ type }));
+    }
+    const nested = { type: "object", properties: { x: { type: "string" } } };
+    expect(one({ ...nested, type: ["object", "null"] })).toBe(one(nested));
+  });
+
+  it("keeps a required nullable field required and reads default: null as no default", () => {
+    const html = renderUnchecked({
+      type: "object",
+      properties: { name: { type: ["string", "null"], default: null } },
+      required: ["name"],
+    });
+    expect(html).toContain('name="name" required aria-required="true"');
+    expect(html).not.toContain("value=");
+    // Only a nullable field may default to null.
+    expect(() => one({ type: "string", default: null })).toThrow('default must match type "string"');
+  });
+
+  it("still throws on a union that is not [T, \"null\"], with the path and the supported form", () => {
+    const message = (type: unknown) => {
+      try {
+        one({ type });
+      } catch (error) {
+        return (error as Error).message;
+      }
+      return "";
+    };
+    expect(message(["string", "number"])).toBe(
+      '@faqir-ui/forms: jsonSchema.properties.f.type ["string","number"] is a union; the only union supported is [T, "null"] — one scalar or object type, made nullable.',
+    );
+    for (const type of [["string", "number", "null"], ["array", "null"], ["null"], ["null", "null"], [], ["string"]]) {
+      expect(message(type), JSON.stringify(type)).toContain('the only union supported is [T, "null"]');
+    }
+    expect(() => renderUnchecked({ type: "object", properties: { o: { type: "object", properties: { x: { type: ["string", "boolean"] } } } } }))
+      .toThrow("jsonSchema.properties.o.properties.x.type");
+    expect(() => renderUnchecked({ type: "object", properties: { r: { type: "array", items: { type: "object", properties: { x: { type: ["integer", "string"] } } } } } }))
+      .toThrow("jsonSchema.properties.r.items.properties.x.type");
+    // The root is an object, never null.
+    expect(() => renderUnchecked({ type: ["object", "null"], properties: { a: { type: "string" } } }))
+      .toThrow('jsonSchema.type must be "object"');
+  });
+
+  it("uses the first example as the placeholder, unless the UI schema gives one", () => {
+    expect(one({ type: "string", examples: ["Lisbon", "Porto"] })).toContain('placeholder="Lisbon"');
+    expect(one({ type: "string", examples: ["Lisbon"] }, { placeholder: "City" })).toContain('placeholder="City"');
+    expect(one({ type: "integer", examples: [3] })).toContain('placeholder="3"');
+    expect(one({ type: "string", examples: ["<b>"] }, { widget: "textarea" })).toContain('placeholder="&lt;b&gt;"');
+    // A choice list's prompt is not an example, and a checkbox shows none.
+    expect(one({ type: "string", enum: ["a", "b", "c", "d", "e"], examples: ["a"] })).toContain(">Select F</option>");
+    expect(one({ type: "boolean", examples: [true] })).not.toContain("placeholder");
+  });
+
+  it("renders a const read-only, showing its value", () => {
+    expect(one({ type: "string", const: "v1" })).toContain('type="text" value="v1" readonly>');
+    expect(one({ type: "number", const: 1.5 })).toContain('type="number" value="1.5" readonly step="any">');
+    expect(one({ type: "string", const: "a\nb" }, { widget: "textarea" })).toContain('rows="4" readonly>a\nb</textarea>');
+    // A date const is a value to show, not a date to pick.
+    const date = one({ type: "string", format: "date", const: "2026-10-05" });
+    expect(date).not.toContain("date-picker");
+    expect(date).toContain('value="2026-10-05" readonly>');
+  });
+
+  it("rejects examples and const that cannot mean anything", () => {
+    expect(() => one({ type: "string", examples: [] })).toThrow("f.examples must be a non-empty array");
+    expect(() => one({ type: "string", examples: "x" })).toThrow("f.examples must be a non-empty array");
+    expect(() => one({ type: "integer", examples: [1, 1.5] })).toThrow('f.examples[1] must match type "integer"');
+    expect(() => one({ type: "string", const: 1 })).toThrow('f.const must match type "string"');
+    expect(() => one({ type: "boolean", const: true })).toThrow("a checkbox cannot be read-only");
+    expect(() => one({ type: "string", enum: ["a"], const: "a" })).toThrow("cannot combine const with enum");
+    expect(() => one({ type: "string", const: "a", default: "b" })).toThrow("f.default must equal its const");
+    expect(() => one({ type: "string", format: "date", const: "2026-10-05" }, { widget: "date-picker" })).toThrow('widget "date-picker" is incompatible');
+  });
+});

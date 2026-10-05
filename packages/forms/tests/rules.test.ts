@@ -313,6 +313,59 @@ describe("renderForm derives rules from the schema", () => {
   });
 });
 
+// 1.1F-29: keywords a flow's input schema carries. `@faqir-ui/rules` refuses a
+// non-string `type` and has no `additionalProperties` or `examples`, so the
+// definition carries the nullable field's own type and `const`, and nothing else.
+describe("renderForm rules for nullable, const and closed schemas", () => {
+  const FLOW: ObjectSchema = {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      name: { type: ["string", "null"], minLength: 2 },
+      count: { type: ["null", "integer"], minimum: 1, default: null },
+      apiVersion: { type: "string", const: "2026-10", examples: ["2026-10"] },
+      address: {
+        type: ["object", "null"],
+        additionalProperties: false,
+        properties: { city: { type: ["string", "null"], examples: ["Lisbon"] } },
+        required: ["city"],
+      },
+      rows: {
+        type: "array",
+        items: {
+          type: "object",
+          additionalProperties: { type: "string" },
+          properties: { label: { type: ["string", "null"] } },
+        },
+      },
+    },
+    required: ["name"],
+  };
+
+  it("emits each nullable field's own type, and the const", () => {
+    const definition = definitionOf(renderForm(FLOW, {}, { rules: {} }));
+    expect(definition.fields).toEqual({
+      name: { type: "string", minLength: 2 },
+      count: { type: "integer", minimum: 1 },
+      apiVersion: { type: "string", const: "2026-10" },
+      address: { type: "object", properties: { city: { type: "string" } }, required: ["city"] },
+      rows: { type: "array", items: { type: "object", properties: { label: { type: "string" } } } },
+    });
+    // A nullable field named in `required` stays required.
+    expect(definition.required).toEqual(["name"]);
+    expectLintClean(definition);
+  });
+
+  it("lets the server enforce the const the page shows read-only", () => {
+    const definition = definitionOf(renderForm(FLOW, {}, { rules: {} }));
+    const ok = validate(definition, { name: "Ada", apiVersion: "2026-10", address: { city: "Lisbon" } });
+    expect(ok.findings).toEqual([]);
+    const tampered = validate(definition, { name: "Ada", apiVersion: "2025-01", address: { city: "Lisbon" } });
+    expect(tampered.valid).toBe(false);
+    expect(tampered.findings.map((finding) => finding.path)).toEqual(["apiVersion"]);
+  });
+});
+
 describe("renderForm rules strict failures", () => {
   const renderUnchecked = (schema: unknown, uiSchema: unknown = {}, opts: unknown = {}) =>
     renderForm(schema as ObjectSchema, uiSchema as UISchema, opts as RenderFormOptions);
