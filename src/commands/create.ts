@@ -1,8 +1,9 @@
-import { existsSync, readFileSync } from "node:fs";
-import { join, relative } from "node:path";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { log } from "../utils/logger";
 import { configExists, readConfig, writeConfig, missingConfigMessage } from "../utils/config";
-import { ensureDir, getPackageRoot } from "../utils/fs";
+import { ensureDir } from "../utils/fs";
+import { ensureProjectSchema, schemaRefFor } from "../utils/schema-ref";
 import { controllerName } from "../utils/components";
 import { regenerateContext } from "../utils/codegen";
 import { generateBundle } from "../utils/bundler";
@@ -71,51 +72,6 @@ function printHelp() {
     ["--kind <type>", "Component kind: primitive, recipe or pattern (required)"],
     ["--category <name>", "Component category (default: 'custom')"],
   ]);
-}
-
-/**
- * The `$schema` a scaffolded manifest carries (task 1.0R-04).
- *
- * Computed exactly the way `scripts/add-schema-refs.mjs` computes it for the
- * registry: a path from the manifest's own directory to the project root's
- * `manifest.schema.json`, so it resolves at any `output_dir` depth and a fresh
- * component satisfies the same rule every installed manifest already does.
- * Before this, `faqir create` was the one thing in a project that produced a
- * manifest with no `$schema` at all.
- */
-function schemaRefFor(manifestDir: string, projectRoot: string): string {
-  const rel = relative(manifestDir, join(projectRoot, "manifest.schema.json")).split("\\").join("/");
-  return rel.startsWith(".") ? rel : `./${rel}`;
-}
-
-/**
- * Put the schema the `$schema` above points at where it points.
- *
- * The reference resolves to `<project>/manifest.schema.json`, and nothing ever
- * wrote that file: the created manifest named a schema that was not there, so
- * an editor validated nothing and reported the dangling reference instead. The
- * CLI's own copy is written when the project has none, and refreshed when the
- * one there is a CLI copy (same `$id`) from an older release; a schema file of
- * the project's own is never touched.
- */
-async function ensureProjectSchema(projectRoot: string): Promise<void> {
-  const source = join(getPackageRoot(), "manifest.schema.json");
-  if (!existsSync(source)) return;
-  const target = join(projectRoot, "manifest.schema.json");
-  const shipped = readFileSync(source, "utf8");
-  if (existsSync(target)) {
-    const current = readFileSync(target, "utf8");
-    if (current === shipped) return;
-    let ours = false;
-    try {
-      ours = (JSON.parse(current) as { $id?: unknown }).$id === (JSON.parse(shipped) as { $id?: unknown }).$id;
-    } catch {
-      // Not JSON we wrote — the project's own file.
-    }
-    if (!ours) return;
-  }
-  await Bun.write(target, shipped);
-  log.success("manifest.schema.json");
 }
 
 function generateManifest(name: string, kind: Kind, category: string, schemaRef: string): object {
@@ -283,7 +239,9 @@ export async function create(args: string[]): Promise<void> {
   ensureDir(compDir);
 
   // Generate files
-  await ensureProjectSchema(cwd);
+  // The schema the `$schema` below points at (task 1.0R-04; `init` writes it
+  // too since 1.1F-26, so this only restores a deleted or older CLI copy).
+  if (await ensureProjectSchema(cwd)) log.success("manifest.schema.json");
   const manifest = generateManifest(name, options.kind, options.category, schemaRefFor(compDir, cwd));
   await Bun.write(join(compDir, `${name}.manifest.json`), JSON.stringify(manifest, null, 2) + "\n");
   log.success(`${name}.manifest.json`);

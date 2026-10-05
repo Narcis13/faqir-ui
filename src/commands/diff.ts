@@ -26,6 +26,7 @@ import {
   type PristineEntry,
 } from "../utils/pristine";
 import { unifiedDiff, diffSummary } from "../utils/diff";
+import { isManifestPath, normalizeSchemaRef } from "../utils/schema-ref";
 
 /** Stable schema id for the `--json` envelope. */
 const DIFF_JSON_SCHEMA = "faqir-diff@1";
@@ -133,7 +134,10 @@ async function computeDrift(
 
   for (const rel of paths) {
     const oldText = (await readPristineText(cwd, entry, rel)) ?? "";
-    const newText = await readTextOrEmpty(join(installedDir, ...rel.split("/")));
+    let newText = await readTextOrEmpty(join(installedDir, ...rel.split("/")));
+    // `add` points `$schema` at the project's schema (task 1.1F-26); that is
+    // not a local edit, so compare with the pristine's value put back.
+    if (isManifestPath(rel)) newText = normalizeSchemaRef(newText, oldText);
     if (oldText === newText) continue; // unchanged
 
     const status: FileDrift["status"] =

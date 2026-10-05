@@ -5,6 +5,7 @@ import { isInside } from "../utils/paths";
 import { configExists, readConfig, writeConfig, DEFAULT_CONFIG, type FaqirConfig } from "../utils/config";
 import { ensureDir, copyDir, copyFile, getRegistryPath, getPackageRoot } from "../utils/fs";
 import { generateBundle } from "../utils/bundler";
+import { ensureProjectSchema, PROJECT_SCHEMA_FILE } from "../utils/schema-ref";
 
 interface InitOptions {
   theme: string;
@@ -220,6 +221,13 @@ export async function init(args: string[]): Promise<void> {
   if (kept > 0) log.dim(`Kept ${kept} installed component${kept === 1 ? "" : "s"} in the config.`);
   await writeConfig(config, cwd);
 
+  // 6b. The manifest schema, at the project root (task 1.1F-26). Every manifest
+  // `add` installs and `create` scaffolds points its `$schema` here; until this
+  // was written by `init`, those references dangled until the first `create`.
+  // A schema file of the project's own (a different `$id`) is left alone.
+  log.step(`Writing ${PROJECT_SCHEMA_FILE}...`);
+  await ensureProjectSchema(cwd);
+
   // 7. Create .faqir directory with context placeholder
   log.step("Creating .faqir directory...");
   const faqirDir = join(cwd, ".faqir");
@@ -303,6 +311,7 @@ export async function init(args: string[]): Promise<void> {
   log.step(`${opts.dir}/recipes/   — interactive components`);
   log.step(`${opts.dir}/patterns/  — compositions`);
   log.step(`${opts.dir}/faqir.bundle.css — single CSS bundle`);
+  log.step(`${PROJECT_SCHEMA_FILE} — the manifest contract every $schema points at`);
   log.blank();
   console.log("  Next steps:");
   log.step("faqir add button card input   — add components");

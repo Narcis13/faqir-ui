@@ -12,6 +12,7 @@ import { readPristineIndex, savePristine, readComponentFiles } from "../utils/pr
 import { missingTokens, syncFramework } from "../utils/framework-assets";
 import { VERSION } from "../version";
 import { addIcons } from "./icons";
+import { ensureProjectSchema, pointManifestsAtProjectSchema } from "../utils/schema-ref";
 import {
   parseScopedName,
   resolveRegistryUrl,
@@ -241,6 +242,10 @@ async function finalizeInstall(config: FaqirConfig, cwd: string, outputDir: stri
 
   await writeConfig(config, cwd);
 
+  // The file every installed manifest's `$schema` now points at. `init` writes
+  // it; a project initialized by an older CLI gets it here.
+  if (await ensureProjectSchema(cwd)) log.step("manifest.schema.json written.");
+
   // Regenerate auto-init faqir.js if any recipes are installed
   if (config.installed.recipes.length > 0 && config.include_core !== false) {
     await regenerateFaqirInit(config, outputDir);
@@ -430,6 +435,7 @@ async function addLocal(
   for (const comp of toInstall) {
     const destDir = join(outputDir, comp.layer, comp.name);
     await copyDir(comp.path, destDir);
+    await pointManifestsAtProjectSchema(destDir, cwd);
 
     // Update config
     if (!config.installed[comp.layer].includes(comp.name)) {
@@ -604,6 +610,9 @@ async function addRemote(
     }
     ensureDir(dirname(dest));
     await Bun.write(dest, write.bytes);
+  }
+  for (const entry of toInstall) {
+    await pointManifestsAtProjectSchema(join(outputDir, entry.layer, entry.name), cwd);
   }
 
   for (const entry of toInstall) {

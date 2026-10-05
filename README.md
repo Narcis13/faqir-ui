@@ -113,8 +113,15 @@ your-project/
 │   ├── fonts/  fonts.css            appear after `faqir fonts add`
 │   └── faqir.bundle.css             single CSS bundle (auto-generated)
 ├── faqir.config.json                project configuration
+├── manifest.schema.json             the manifest contract every installed manifest's `$schema` points at
 └── .faqir/context.json, README.md   agent context, and this document for offline reference
 ```
+
+`faqir add` and `faqir create` point each manifest's `$schema` at the root
+`manifest.schema.json` by a path from the manifest's own directory, so editors
+validate it at any `--dir` depth. A schema file of your own (a different `$id`)
+is never overwritten; `faqir doctor` reports the file missing and `faqir upgrade`
+restores it.
 
 ### Use in HTML
 

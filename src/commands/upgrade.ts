@@ -45,6 +45,7 @@ import {
 import { mergeFile, type FileMergeOutcome, type FileMergeStatus } from "../utils/merge";
 import { syncFramework, type FrameworkReport } from "../utils/framework-assets";
 import { VERSION } from "../version";
+import { ensureProjectSchema, isManifestPath, normalizeSchemaRef, schemaRefFor, withSchemaRef } from "../utils/schema-ref";
 
 /** Stable schema id for the `--json` envelope. */
 const UPGRADE_JSON_SCHEMA = "faqir-upgrade@1";
@@ -252,7 +253,16 @@ async function upgradeComponent(
       oursSet.has(rel) ? readTextOrNull(join(installedDir, ...rel.split("/"))) : Promise.resolve(null),
       theirsSet.has(rel) ? readTextOrNull(join(found.path, ...rel.split("/"))) : Promise.resolve(null),
     ]);
-    outcomes.push(mergeFile({ path: rel, base: baseText, ours: oursText, theirs: theirsText }, markerOpts));
+    // `add` points a manifest's `$schema` at the project's schema (task
+    // 1.1F-26); merge with the registry's value put back so that is never a
+    // local edit, and point whatever is written back at the project's schema.
+    const manifest = isManifestPath(rel);
+    const ours = manifest && oursText !== null ? normalizeSchemaRef(oursText, baseText ?? theirsText) : oursText;
+    const outcome = mergeFile({ path: rel, base: baseText, ours, theirs: theirsText }, markerOpts);
+    if (manifest && outcome.action === "write" && outcome.content !== undefined) {
+      outcome.content = withSchemaRef(outcome.content, schemaRefFor(installedDir, ctx.cwd));
+    }
+    outcomes.push(outcome);
   }
 
   const summary = emptySummary();
@@ -451,6 +461,10 @@ export async function upgrade(args: string[], internal?: { registryPath?: string
     version: `faqir ${VERSION}`,
   });
 
+  // The schema every manifest's `$schema` points at is framework-owned too:
+  // restored when missing, refreshed when it is an older CLI copy.
+  const schemaWritten = options.dryRun ? false : await ensureProjectSchema(cwd);
+
   const reports: ComponentReport[] = [];
   for (const name of targets) {
     reports.push(await upgradeComponent(name, config, ctx, index, options.dryRun));
@@ -471,6 +485,7 @@ export async function upgrade(args: string[], internal?: { registryPath?: string
     emitJSON({ schema: UPGRADE_JSON_SCHEMA, dryRun: options.dryRun, framework, components: reports, hasConflicts });
   } else {
     printFrameworkHuman(framework);
+    if (schemaWritten) log.step("manifest.schema.json — written");
     if (targets.length === 0) log.info("No components installed.");
     for (const r of reports) printComponentHuman(r);
     log.blank();

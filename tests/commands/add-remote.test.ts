@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from "bun:test";
 import { existsSync, mkdirSync, rmSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { init } from "../../src/commands/init";
 import { add } from "../../src/commands/add";
 import { readConfig, writeConfig } from "../../src/utils/config";
@@ -199,6 +199,18 @@ describe("faqir add --registry (remote)", () => {
       const want = readFileSync(join(REMOTE_DIR, "primitives/button", rel));
       expect(Buffer.compare(got, want)).toBe(0);
     }
+  });
+
+  // Task 1.1F-26: the remote bytes are snapshotted verbatim, but the installed
+  // manifest's `$schema` points at the project's schema at any `output_dir` depth.
+  it("points an installed manifest's $schema at the project's schema under a nested output_dir", async () => {
+    await init(["--dir", "web/ui"]);
+    expect(await runAdd(["button", "--registry", BASE])).toBe(0);
+
+    const manifestPath = join(TEST_DIR, "web/ui/primitives/button/button.manifest.json");
+    const ref = JSON.parse(readFileSync(manifestPath, "utf8")).$schema;
+    expect(ref).toBe("../../../../manifest.schema.json");
+    expect(existsSync(join(dirname(manifestPath), ref))).toBe(true);
   });
 });
 

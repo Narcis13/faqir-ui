@@ -10,6 +10,7 @@ import {
   fontFilePath,
   referencedFiles,
 } from "../fonts/install";
+import { PROJECT_SCHEMA_FILE } from "../utils/schema-ref";
 
 interface CheckResult {
   name: string;
@@ -289,6 +290,23 @@ export async function doctor(args: string[]): Promise<void> {
         message: invalidManifests.join("; "),
       });
     }
+  }
+
+  // 8b'. The schema every manifest's `$schema` points at (task 1.1F-26)
+  //
+  // `init` writes it at the project root and `add` points each installed
+  // manifest at it. Without it an editor validates nothing and reports a
+  // dangling reference on every manifest instead.
+  if (existsSync(join(cwd, PROJECT_SCHEMA_FILE))) {
+    results.push({ name: "Manifest schema", passed: true, message: `${PROJECT_SCHEMA_FILE} present` });
+  } else {
+    results.push({
+      name: "Manifest schema",
+      passed: false,
+      message:
+        `${PROJECT_SCHEMA_FILE} not found at the project root, where every manifest's $schema points. ` +
+        `Run 'faqir upgrade' to restore it.`,
+    });
   }
 
   // 8c. Every token the installed components read is defined
