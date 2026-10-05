@@ -189,26 +189,28 @@ Seven packages ship at 1.1.2, in lockstep: `faqir-ui-cli`, `@faqir-ui/core`,
 
 ## Release verification
 
-Recorded on 2026-10-05 at `a4df672` (these notes, the struck `faqir_bugs.md`
-entries and the plan's bookkeeping, on top of 1.1F-30's `b78dc6c`). The machine
-was macOS with Bun 1.3.8, the version `.bun-version` pins; `release.mjs` refuses
-any other.
+Recorded on 2026-10-05 on macOS. The rehearsal ran twice. The first run was at
+`a4df672` with Bun 1.3.8, the version `.bun-version` pinned then. The second was
+at `5cfd533`, after the pin moved to **Bun 1.4.2** and the three pinned bundles
+(`faqir-audit.js`, `faqir-rules.js`, `cdn.json`) were regenerated with it. Both
+runs are green. The numbers below are from the 1.4.2 run, except where marked.
 
 - `node scripts/release.mjs 1.1.2 --dry-run`: **green.** All guards passed.
   The guards warned that `main` was one commit ahead of `origin/main`; it has
   been pushed since. All 15 preflight gates passed, including the
   full suite: 8,066 pass / 0 fail in the main partition (271 files) and 64 / 0
   in the dev-engine partition. `size` measured engine 10.88/14 KB and engine +
-  controllers 45.44/46 KB gzip. All seven packages were stamped 1.1.2 in
+  controllers 45.15/46 KB gzip (45.44 under 1.3.8). All seven packages were stamped 1.1.2 in
   lockstep, and `Faqir.version` and all 37 SRI hashes in `cdn.json` read
   1.1.2. The packed CLI tarball installs and answers `--version` and
   `context --skill` under Node and under Bun. Every tracked file was restored
   afterwards.
-  (`build:core-package` prints "size budget OVER — 45.69 KB > 45.00 KB" for
+  (`build:core-package` prints "size budget OVER — 45.50 KB > 45.00 KB" for
   `faqir-core.min.js`. That line is advisory: the script's 45 KB constant
   predates the enforced 46 KB budget in `check-size.mjs`, and
   `tests/build/core-package.test.ts`, which is the real gate, passes.)
-- Manual suites, run on macOS Chromium:
+- Manual suites, run on macOS Chromium before the pin change and not re-run
+  since. The 1.4.2 regeneration changed only minifier output:
   - `bun run test:a11y`: **4,060 passed**, zero axe violations.
   - `bun run test:browser`: **54 passed.**
   - `bun run lint:layout`: **8 passed.**
