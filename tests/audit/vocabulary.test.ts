@@ -16,6 +16,7 @@ import {
   DIRECTIVE_NAME_RULE,
   FORBIDDEN_DIRECTIVE_RULE,
   PART_ELEMENT_RULE,
+  UNDECLARED_MARKUP_ATTRIBUTE_RULE,
   UNKNOWN_ATTRIBUTE_RULE,
   VOCABULARY_RULES,
   forbiddenDirectiveName,
@@ -240,6 +241,54 @@ describe("unknown-attribute · the two shapes it reports", () => {
     expect(found).toHaveLength(1);
     expect(found[0]).toContain("grid");
     expect(found[0]).toContain("stack does not declare it");
+  });
+});
+
+// ── undeclared-markup-attribute (strict, task 1.1F-28) ──────────────────────
+
+describe("undeclared-markup-attribute · strict only", () => {
+  const strict = (source: string, skipRules?: string[]) =>
+    auditHtmlSource({ source, file: "page.html", manifests, strict: true, skipRules })
+      .filter((r) => r.rule_id === UNDECLARED_MARKUP_ATTRIBUTE_RULE.id);
+
+  it("is off unless asked for", () => {
+    expect(messages(`<div data-ui="card" data-bogus></div>`, UNDECLARED_MARKUP_ATTRIBUTE_RULE.id)).toEqual([]);
+  });
+
+  it("reports an app's own data-* on a component and on an element inside one", () => {
+    const found = strict(
+      `<div data-ui="card" data-bogus="1"><div data-part="body"><p data-tracking="x">y</p></div></div>`,
+    );
+    expect(found.map((r) => r.severity)).toEqual(["warning", "warning"]);
+    expect(found[0].message).toContain("data-bogus");
+    expect(found[1].message).toContain("data-tracking");
+    expect(found[1].message).toContain("(card)");
+  });
+
+  it("leaves a near-miss and another component's attribute to unknown-attribute", () => {
+    expect(strict(`<div data-ui="grid" data-colls="3"></div>`)).toEqual([]);
+    expect(strict(`<div data-ui="stack" data-min="8"></div>`)).toEqual([]);
+  });
+
+  it("but reports them itself when unknown-attribute is skipped", () => {
+    expect(strict(`<div data-ui="grid" data-colls="3"></div>`, [UNKNOWN_ATTRIBUTE_RULE.id])).toHaveLength(1);
+  });
+
+  it("exempts what unknown-attribute exempts, and declared attributes anywhere on the chain", () => {
+    const clean = [
+      `<div data-ui="card" data-testid="c" data-prop-x="1" data-motion="enter" data-skin="dark"></div>`,
+      `<main data-ui="surface" data-gap="4"></main>`,
+      `<div data-ui="cluster"><button data-ui="button" data-push>x</button></div>`,
+      `<div data-ui="grid" data-cols="3" data-cols-md="4"></div>`,
+      `<p data-tracking="x">outside any component</p>`,
+      `<div data-ui="my-own-thing"><p data-tracking="x">no manifest held</p></div>`,
+    ];
+    for (const html of clean) expect(strict(html), html).toEqual([]);
+  });
+
+  it("is in the inventory and honours --skip-rules", () => {
+    expect(VOCABULARY_RULES.map((r) => r.id)).toContain(UNDECLARED_MARKUP_ATTRIBUTE_RULE.id);
+    expect(strict(`<div data-ui="card" data-bogus></div>`, [UNDECLARED_MARKUP_ATTRIBUTE_RULE.id])).toEqual([]);
   });
 });
 

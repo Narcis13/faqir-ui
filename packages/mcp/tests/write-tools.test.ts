@@ -1,5 +1,7 @@
-import { describe, it, expect } from "bun:test";
+import { describe, it, expect, beforeAll, afterAll } from "bun:test";
 import { CONTRAST_PAIRS } from "../../../src/audit/contrast-tokens";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
@@ -22,8 +24,8 @@ const REPO_ROOT = resolve(import.meta.dir, "../../..");
 const REGISTRY = join(REPO_ROOT, "registry");
 
 /** A fresh server + in-process client, with output-schema validators primed. */
-async function makeClient() {
-  const server = createFaqirMcpServer({ registryPath: REGISTRY });
+async function makeClient(projectRoot?: string) {
+  const server = createFaqirMcpServer({ registryPath: REGISTRY, ...(projectRoot ? { projectRoot } : {}) });
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   const client = new Client({ name: "faqir-mcp-test", version: "0.0.0" });
   await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
@@ -176,6 +178,185 @@ describe("faqir_audit_html", () => {
     expect(data.passed).toBe(true);
     expect(data.counts.critical).toBe(0);
     expect(data.counts.error).toBe(0);
+  });
+});
+
+describe("project-aware audit (task 1.1F-28)", () => {
+  // The server's project root holds no faqir.config.json; `app/` beneath it is a
+  // project with one custom primitive (`widget`, variants a|b), an edited copy
+  // of `badge` whose only variant is `odd`, and a ban on l-html.
+  let serverRoot: string;
+  const widget = {
+    name: "widget",
+    version: "1.0.0",
+    kind: "primitive",
+    category: "display",
+    description: "fixture",
+    anatomy: { tag: "div", selector: "[data-ui='widget']", content_model: "flow" },
+    slots: { body: { required: false, description: "Body" } },
+    variants: {
+      visual: { values: ["a", "b"], default: "a", attr: "data-variant", applied_to: "root" },
+    },
+    states: {},
+    a11y: {},
+    tokens_used: [],
+    templates: { html: '<div data-ui="widget" data-variant="{variant}"><div data-part="body">{body}</div></div>' },
+    safe_transforms: [],
+    unsafe_transforms: [],
+    composition: { contains: [], used_in: [] },
+    files: { html: "widget.html", css: "widget.css", manifest: "widget.manifest.json" },
+    tests: [],
+  };
+
+  beforeAll(() => {
+    serverRoot = mkdtempSync(join(tmpdir(), "faqir-mcp-root-"));
+    const app = join(serverRoot, "app");
+    mkdirSync(join(app, "ui", "primitives", "widget"), { recursive: true });
+    writeFileSync(join(app, "ui", "primitives", "widget", "widget.manifest.json"), JSON.stringify(widget));
+    writeFileSync(
+      join(app, "faqir.config.json"),
+      JSON.stringify({
+        version: "1.1.1",
+        theme: "default",
+        output_dir: "ui",
+        tokens_split: false,
+        include_core: true,
+        installed: { primitives: ["widget"], recipes: [], patterns: [] },
+        audit: { forbid_directives: ["l-html"] },
+      }),
+    );
+  });
+  afterAll(() => rmSync(serverRoot, { recursive: true, force: true }));
+
+  const audit = async (client: Client, args: Record<string, unknown>) => {
+    const res = await client.callTool({ name: "faqir_audit_html", arguments: args });
+    return res as { isError?: boolean; structuredContent: any; content: any[] };
+  };
+  const rules = (res: { structuredContent: any }) =>
+    res.structuredContent.findings.map((f: any) => f.rule_id) as string[];
+
+  it("reports an invented data-ui as unknown-component, with no project at all", async () => {
+    const { client } = await makeClient();
+    const res = await audit(client, { html: `<div data-ui="nonsense-thing">x</div>` });
+    const finding = res.structuredContent.findings.find((f: any) => f.rule_id === "unknown-component");
+    expect(finding).toBeDefined();
+    expect(finding.component_name).toBe("nonsense-thing");
+  });
+
+  it("with root at a project, audits its own component against its manifest", async () => {
+    const { client } = await makeClient(serverRoot);
+    const html = `<div data-ui="widget" data-variant="zzz"><div data-part="body">x</div></div>`;
+
+    // The server root is not a project: widget is a name Faqir does not define.
+    const bare = await audit(client, { html });
+    expect(rules(bare)).toContain("unknown-component");
+    expect(rules(bare)).not.toContain("valid-variant");
+
+    // Relative and absolute spellings of the same project agree.
+    for (const root of ["app", join(serverRoot, "app")]) {
+      const res = await audit(client, { html, root });
+      expect(res.isError).toBeFalsy();
+      expect(rules(res)).not.toContain("unknown-component");
+      const variant = res.structuredContent.findings.find((f: any) => f.rule_id === "valid-variant");
+      expect(variant?.message).toContain('"zzz"');
+      expect(res.structuredContent.passed).toBe(false);
+    }
+
+    const clean = await audit(client, {
+      html: `<div data-ui="widget" data-variant="b"><div data-part="body">x</div></div>`,
+      root: "app",
+    });
+    expect(clean.structuredContent.passed).toBe(true);
+  });
+
+  it("applies the project's audit.forbid_directives under root", async () => {
+    const { client } = await makeClient(serverRoot);
+    const html = `<div l-data="{ h: '' }"><p l-html="h"></p></div>`;
+    expect(rules(await audit(client, { html }))).not.toContain("forbidden-directive");
+    expect(rules(await audit(client, { html, root: "app" }))).toContain("forbidden-directive");
+  });
+
+  it("generates and repairs against the project at root", async () => {
+    const { client } = await makeClient(serverRoot);
+    const gen = await client.callTool({
+      name: "faqir_generate",
+      arguments: { component: "widget", variant: "b", slots: { body: "Hi" }, root: "app" },
+    });
+    expect(gen.isError).toBeFalsy();
+    const data = gen.structuredContent as any;
+    expect(data.html).toContain('data-variant="b"');
+    expect(data.audit.passed).toBe(true);
+
+    // Without the project, widget does not exist.
+    const missing = await client.callTool({ name: "faqir_generate", arguments: { component: "widget" } });
+    expect(missing.isError).toBe(true);
+
+    const repair = await client.callTool({
+      name: "faqir_repair_html",
+      arguments: { html: `<div data-ui="widget" data-variant="zzz" data-bogus></div>`, root: "app", strict: true },
+    });
+    const repaired = repair.structuredContent as any;
+    const before = repaired.before.findings.map((f: any) => f.rule_id);
+    expect(before).toContain("valid-variant");
+    expect(before).toContain("undeclared-markup-attribute");
+  });
+
+  it("strict reports an undeclared data-* inside a component; without it, nothing does", async () => {
+    const { client } = await makeClient();
+    const html = `<button data-ui="button" data-variant="primary" data-bogus="1">OK</button>`;
+
+    const lax = await audit(client, { html });
+    expect(rules(lax)).toEqual([]);
+
+    const strict = await audit(client, { html, strict: true });
+    const finding = strict.structuredContent.findings.find(
+      (f: any) => f.rule_id === "undeclared-markup-attribute",
+    );
+    expect(finding?.severity).toBe("warning");
+    expect(finding?.message).toContain("data-bogus");
+    // A warning: strict findings never fail the audit on their own.
+    expect(strict.structuredContent.passed).toBe(true);
+
+    // Convention attributes, token modifiers and the protocol stay exempt.
+    const exempt = await audit(client, {
+      html: `<button data-ui="button" data-variant="primary" data-testid="ok" data-skin="dark" data-prop-x="1">OK</button>`,
+      strict: true,
+    });
+    expect(rules(exempt)).toEqual([]);
+
+    // skip_rules turns it off like any other rule.
+    const skipped = await audit(client, { html, strict: true, skip_rules: ["undeclared-markup-attribute"] });
+    expect(rules(skipped)).toEqual([]);
+  });
+
+  it("an outer owner with no manifest takes the part nobody declares (entry 33)", async () => {
+    const { client } = await makeClient();
+    const nested = `<div data-ui="app-frame"><div data-ui="card"><nav data-part="rail">x</nav><div data-part="body">y</div></div></div>`;
+    const res = await audit(client, { html: nested, skip_rules: ["unknown-component"] });
+    expect(rules(res)).not.toContain("orphan-part");
+
+    // With no unknown owner on the chain the card still answers for it.
+    const alone = `<div data-ui="card"><nav data-part="rail">x</nav><div data-part="body">y</div></div>`;
+    const control = await audit(client, { html: alone });
+    const orphan = control.structuredContent.findings.find((f: any) => f.rule_id === "orphan-part");
+    expect(orphan?.component_name).toBe("card");
+  });
+
+  it("refuses a root outside the server's project root, on every tool that takes one", async () => {
+    const { client } = await makeClient(serverRoot);
+    const calls: [string, Record<string, unknown>][] = [
+      ["faqir_audit_html", { html: "<p>x</p>" }],
+      ["faqir_repair_html", { html: "<p>x</p>" }],
+      ["faqir_generate", { component: "button" }],
+      ["faqir_scaffold_page", { sections: [{ heading: "x" }] }],
+    ];
+    for (const root of ["..", "/etc", join(serverRoot, "..")]) {
+      for (const [name, args] of calls) {
+        const res = await client.callTool({ name, arguments: { ...args, root } });
+        expect(res.isError, `${name} root=${root}`).toBe(true);
+        expect((res.content as any[])[0].text).toContain("outside the server's project root");
+      }
+    }
   });
 });
 

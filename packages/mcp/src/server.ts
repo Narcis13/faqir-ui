@@ -8,7 +8,7 @@
  * free-form. All Faqir logic lives in `core.ts`, which wraps the CLI internals.
  */
 import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { isAbsolute, relative, resolve } from "node:path";
+import { resolve } from "node:path";
 import { z } from "zod";
 
 import pkg from "../package.json" with { type: "json" };
@@ -31,14 +31,22 @@ import type { Manifest } from "./core";
 import { loadManifestMap, readTokenReference } from "./registry";
 import {
   auditHtml,
+  auditInput,
   generateComponent,
   scaffoldPage,
   toAuditReport,
   GenerateError,
+  type AuditContext,
   type ScaffoldSection,
 } from "./generate";
 import { applyRepairsToSource } from "../../../src/audit/repairer";
-import { auditHtmlSource } from "../../../src/audit/checker";
+import {
+  auditHtmlSource,
+  loadRegistryAuditInputs,
+  withProjectAuditInputs,
+  type RegistryAuditInputs,
+} from "../../../src/audit/checker";
+import { isInside } from "../../../src/utils/paths";
 import {
   generateThemeBundle,
   themeScorecard,
@@ -60,7 +68,10 @@ import {
 export interface FaqirMcpServerOptions {
   /** Registry root. Defaults to `FAQIR_REGISTRY_PATH` or the bundled registry. */
   registryPath?: string;
-  /** Host project root for `faqir_project_context`. Defaults to `process.cwd()`. */
+  /**
+   * Host project root: what `faqir_project_context` reads and whose components
+   * the write/verify tools know. Defaults to `FAQIR_PROJECT_ROOT`, then `process.cwd()`.
+   */
   projectRoot?: string;
 }
 
@@ -335,18 +346,27 @@ function guarded<A, R>(handler: (args: A) => Promise<R>): (args: A) => Promise<R
 }
 
 /**
- * The directory `faqir_project_context` may inspect for a requested `root`:
- * the server's project root or something beneath it, resolved relative to it.
- * Null for anything else. The tool reads `faqir.config.json` and
- * `.faqir/context.json` and returns them verbatim, so an unconstrained `root`
- * let any client read those names out of any directory the server could reach.
+ * The directory a tool may read for a requested `root`: the server's project
+ * root or something beneath it, resolved relative to it. Null for anything
+ * else. `faqir_project_context` returns `faqir.config.json` and
+ * `.faqir/context.json` verbatim, and the write/verify tools read a project's
+ * manifests and stylesheets (task 1.1F-28), so an unconstrained `root` let any
+ * client read those names out of any directory the server could reach.
+ * `isInside` is the containment test (`rel.startsWith("..")` also refused a
+ * child literally named `..foo`).
  */
 export function containedProjectRoot(projectRoot: string, requested: string): string | null {
   const base = resolve(projectRoot);
-  const target = resolve(base, requested);
-  const rel = relative(base, target);
-  if (rel.startsWith("..") || isAbsolute(rel)) return null;
-  return target;
+  return isInside(base, requested) ? resolve(base, requested) : null;
+}
+
+/** The refusal every tool gives a `root` outside the server's project root. */
+function outsideRoot(root: string, projectRoot: string) {
+  return fail(
+    `root '${root}' is outside the server's project root (${projectRoot}). ` +
+      "Pass a directory inside it, relative or absolute, or start the server in the project " +
+      "you want to inspect (FAQIR_PROJECT_ROOT).",
+  );
 }
 
 /**
@@ -567,13 +587,7 @@ export function createFaqirMcpServer(options: FaqirMcpServerOptions = {}): McpSe
     },
     guarded(async ({ root }) => {
       const target = root === undefined ? projectRoot : containedProjectRoot(projectRoot, root);
-      if (target === null) {
-        return fail(
-          `root '${root}' is outside the server's project root (${projectRoot}). ` +
-            "Pass a directory inside it, relative or absolute, or start the server in the project " +
-            "you want to inspect (FAQIR_PROJECT_ROOT).",
-        );
-      }
+      if (target === null) return outsideRoot(root!, projectRoot);
       const result = await readProjectContext(target);
       return ok({
         in_project: result.in_project,
@@ -586,11 +600,46 @@ export function createFaqirMcpServer(options: FaqirMcpServerOptions = {}): McpSe
   );
 
   // The manifest map that backs every write/verify tool. Loaded once, lazily, and
-  // cached — so the audit/repair handlers themselves do zero filesystem access
-  // per call (they only touch the input string and this in-memory map).
+  // cached — so the audit/repair engines themselves do zero filesystem access
+  // per call (they only touch the input string and in-memory maps).
   let manifestMapPromise: Promise<Map<string, Manifest>> | null = null;
   const manifests = (): Promise<Map<string, Manifest>> =>
     (manifestMapPromise ??= loadManifestMap(registryPath));
+  // The rest of the registry side of an audit — known `data-ui` names and the
+  // engine's recipes — cached beside it.
+  let registryInputsPromise: Promise<RegistryAuditInputs> | null = null;
+  const registryInputs = (): Promise<RegistryAuditInputs> =>
+    (registryInputsPromise ??= manifests().then((map) => loadRegistryAuditInputs(registryPath, map)));
+
+  /**
+   * The audit context for a call (task 1.1F-28): the cached registry inputs,
+   * with the project at `root` (default: the server's project root) laid over
+   * them when it holds a `faqir.config.json` — its installed and custom
+   * components, their stylesheets and its `audit.forbid_directives`. The project
+   * is read per call, so an edit to it is seen at once; outside a project this
+   * costs one `stat`. Null when `root` escapes the server's project root.
+   */
+  const auditContext = async (root: string | undefined): Promise<AuditContext | null> => {
+    const target = root === undefined ? projectRoot : containedProjectRoot(projectRoot, root);
+    if (target === null) return null;
+    return withProjectAuditInputs(await registryInputs(), target);
+  };
+  const rootInput = z
+    .string()
+    .optional()
+    .describe(
+      "Project directory (inside the server's project root; relative or absolute) whose " +
+        "faqir.config.json components, stylesheets and audit settings apply. Defaults to the " +
+        "server's project root; a directory with no faqir.config.json audits against the registry alone.",
+    );
+  const strictInput = z
+    .boolean()
+    .optional()
+    .describe(
+      "Also report every data-* attribute inside a known component that no manifest on its " +
+        "chain declares (rule undeclared-markup-attribute, warning). Off by default: an app's " +
+        "own data-* hooks are legitimate.",
+    );
 
   // ── faqir_generate ───────────────────────────────────────────────────────
   server.registerTool(
@@ -603,7 +652,8 @@ export function createFaqirMcpServer(options: FaqirMcpServerOptions = {}): McpSe
         "own manifest (valid variant/size, required slots and ARIA present). " +
         "`variant`/`size` are validated against the manifest; `props`/`slots` fill the " +
         "template's `{placeholders}` by name. Recipes report the controller they need " +
-        "via `requires_controller` (a page concern, not a fragment finding).",
+        "via `requires_controller` (a page concern, not a fragment finding). `root` names " +
+        "the project whose own components can be generated and whose manifests win.",
       inputSchema: {
         component: z.string().describe("Component name or alias, e.g. 'button' or 'alert'."),
         variant: z.string().optional().describe("Visual variant (data-variant); defaults to the manifest default."),
@@ -612,6 +662,7 @@ export function createFaqirMcpServer(options: FaqirMcpServerOptions = {}): McpSe
         props: propsSchema.optional().describe("Template placeholder values by name, e.g. { text: 'Save' }."),
         id: z.string().optional().describe("Stable id for templates that need {id} (defaults to the component name)."),
         template: z.string().optional().describe("Named template variant from the manifest (defaults to 'html')."),
+        root: rootInput,
       },
       outputSchema: {
         html: z.string(),
@@ -624,9 +675,11 @@ export function createFaqirMcpServer(options: FaqirMcpServerOptions = {}): McpSe
         audit: auditReportSchema,
       },
     },
-    guarded(async (input) => {
+    guarded(async ({ root, ...input }) => {
+      const context = await auditContext(root);
+      if (context === null) return outsideRoot(root!, projectRoot);
       try {
-        const result = generateComponent(input, await manifests());
+        const result = generateComponent(input, context);
         return ok({ ...result });
       } catch (err) {
         if (err instanceof GenerateError) return fail(err.message);
@@ -645,12 +698,14 @@ export function createFaqirMcpServer(options: FaqirMcpServerOptions = {}): McpSe
         "`sections` is an ordered list of components ({ component, variant?, size?, " +
         "props?, slots? }), headings ({ heading, level? }), or raw HTML ({ html }). The " +
         "content is wrapped in a <main> landmark and, when any recipe is used, the " +
-        "auto-init controller script is included — then the whole page is audited.",
+        "auto-init controller script is included — then the whole page is audited " +
+        "(against the project at `root`, as faqir_audit_html does).",
       inputSchema: {
         title: z.string().optional().describe("Document <title> (default 'Untitled')."),
         layout: z.enum(["stack", "grid", "none"]).optional().describe("Container wrapping the sections (default 'stack')."),
         stylesheet: z.string().optional().describe("Stylesheet href to link (default 'ui/faqir.bundle.css')."),
         sections: z.array(sectionSchema).min(1).describe("Ordered page sections."),
+        root: rootInput,
       },
       outputSchema: {
         html: z.string(),
@@ -658,12 +713,11 @@ export function createFaqirMcpServer(options: FaqirMcpServerOptions = {}): McpSe
         audit: auditReportSchema,
       },
     },
-    guarded(async (input) => {
+    guarded(async ({ root, ...input }) => {
+      const context = await auditContext(root);
+      if (context === null) return outsideRoot(root!, projectRoot);
       try {
-        const result = scaffoldPage(
-          { ...input, sections: input.sections as ScaffoldSection[] },
-          await manifests(),
-        );
+        const result = scaffoldPage({ ...input, sections: input.sections as ScaffoldSection[] }, context);
         return ok({ ...result });
       } catch (err) {
         if (err instanceof GenerateError) return fail(err.message);
@@ -681,10 +735,15 @@ export function createFaqirMcpServer(options: FaqirMcpServerOptions = {}): McpSe
         "Audit an HTML **string** against the Faqir manifests and return findings JSON " +
         "(rule id, severity, line, message, whether it is auto-fixable). String in, " +
         "no filesystem needed — cloud agents without disk can validate their own output. " +
-        "`skip_rules` opts out of specific rule ids.",
+        "Registry components are always known, so an invented `data-ui` is `unknown-component`. " +
+        "`root` lays a project over the registry: its own components, edited manifests, " +
+        "stylesheets and `audit.forbid_directives` count (the server's project root by default). " +
+        "`strict` also reports undeclared `data-*` attributes. `skip_rules` opts out of rule ids.",
       inputSchema: {
         html: z.string().describe("The HTML to audit."),
         skip_rules: z.array(z.string()).optional().describe("Rule ids to skip."),
+        root: rootInput,
+        strict: strictInput,
       },
       outputSchema: {
         passed: z.boolean(),
@@ -692,8 +751,10 @@ export function createFaqirMcpServer(options: FaqirMcpServerOptions = {}): McpSe
         findings: z.array(findingSchema),
       },
     },
-    guarded(async ({ html, skip_rules }) => {
-      const report = auditHtml(html, await manifests(), skip_rules);
+    guarded(async ({ html, skip_rules, root, strict }) => {
+      const context = await auditContext(root);
+      if (context === null) return outsideRoot(root!, projectRoot);
+      const report = auditHtml(html, context, { skipRules: skip_rules, strict });
       return ok({ ...report });
     })
   );
@@ -706,11 +767,14 @@ export function createFaqirMcpServer(options: FaqirMcpServerOptions = {}): McpSe
       description:
         "Apply Faqir's deterministic auto-fixes to an HTML **string** and return the " +
         "repaired HTML plus a change log and before/after audits. String in, string out, " +
-        "no filesystem. Fixes cover missing ARIA (aria-label/labelledby/describedby, " +
-        "roles), safe duplicate-id renames, and field-group wiring.",
+        "nothing written to disk. Fixes cover missing ARIA (aria-label/labelledby/describedby, " +
+        "roles), safe duplicate-id renames, and field-group wiring. `root` and `strict` " +
+        "shape both audits exactly as they do for faqir_audit_html.",
       inputSchema: {
         html: z.string().describe("The HTML to repair."),
         skip_rules: z.array(z.string()).optional().describe("Rule ids to skip when auditing."),
+        root: rootInput,
+        strict: strictInput,
       },
       outputSchema: {
         html: z.string(),
@@ -721,11 +785,13 @@ export function createFaqirMcpServer(options: FaqirMcpServerOptions = {}): McpSe
         after: auditReportSchema,
       },
     },
-    guarded(async ({ html, skip_rules }) => {
-      const manifestMap = await manifests();
-      const before = auditHtmlSource({ source: html, manifests: manifestMap, skipRules: skip_rules });
+    guarded(async ({ html, skip_rules, root, strict }) => {
+      const context = await auditContext(root);
+      if (context === null) return outsideRoot(root!, projectRoot);
+      const switches = { skipRules: skip_rules, strict };
+      const before = auditHtmlSource(auditInput(html, context, switches));
       const repaired = applyRepairsToSource(html, before);
-      const after = auditHtmlSource({ source: repaired.source, manifests: manifestMap, skipRules: skip_rules });
+      const after = auditHtmlSource(auditInput(repaired.source, context, switches));
       return ok({
         html: repaired.source,
         applied: repaired.applied,

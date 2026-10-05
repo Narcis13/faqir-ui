@@ -116,6 +116,13 @@ export interface HtmlAuditInput {
    * the rule finds nothing.
    */
   forbidDirectives?: readonly string[];
+  /**
+   * Report every undeclared `data-*` inside a known component, not only the
+   * near-misses `unknown-attribute` catches — the `undeclared-markup-attribute`
+   * rule (task 1.1F-28). The MCP tools' `strict` input. Off by default, because
+   * an application's own `data-*` hooks are legitimate markup.
+   */
+  strict?: boolean;
   /** Rule IDs to skip. */
   skipRules?: string[];
 }
@@ -155,9 +162,12 @@ export function auditHtmlSource(input: HtmlAuditInput): AuditResult[] {
   // Composition-aware part attribution (task 0.9-04): the manifests decide which
   // enclosing component a `data-part` belongs to, so a pattern's own slot stays
   // its own when it sits inside a nested primitive. See `extractComponents`.
-  const components = extractComponents(source, file, (name, slot) =>
-    manifests.get(name)?.slots?.[slot] !== undefined,
-  );
+  // A component with no manifest here answers `undefined` — it may well declare
+  // the slot, so a part nobody else claims is left with it (task 1.1F-28).
+  const components = extractComponents(source, file, (name, slot) => {
+    const manifest = manifests.get(name);
+    return manifest ? manifest.slots?.[slot] !== undefined : undefined;
+  });
 
   const triggerContract = !skipRules.has(TRIGGER_CONTRACT_RULE.id) && input.styles !== undefined;
   const known = input.knownUiValues !== undefined ? new Set(input.knownUiValues) : undefined;
@@ -198,7 +208,7 @@ export function auditHtmlSource(input: HtmlAuditInput): AuditResult[] {
   // attributes they check are not all written on a component root or on a part
   // (`data-span` lives on a plain grid CHILD), and a directive attribute is
   // normally on an element carrying no `data-ui` at all.
-  results.push(...buildVocabularyResults(doc, manifests, file, skipRules, input.forbidDirectives));
+  results.push(...buildVocabularyResults(doc, manifests, file, skipRules, input.forbidDirectives, input.strict));
 
   // File-level controller-loaded: replace the generic per-component reminders
   // (emitted by controllerLoadedRule) with the precise "is the script actually

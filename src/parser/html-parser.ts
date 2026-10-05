@@ -250,13 +250,21 @@ function findByAttr(roots: ParsedElement[], attr: string): ParsedElement[] {
  *   auth-form's title all the same; both statements are true and neither rule
  *   needs the other's answer.
  *
+ * **An owner that cannot answer (task 1.1F-28).** The predicate may return
+ * `undefined` for a component it holds no manifest for. When no owner declares
+ * the slot, the part goes to the nearest such owner rather than to the nearest
+ * owner outright: `<div data-ui="app-shell"><div data-ui="card"><nav
+ * data-part="nav">` is `app-shell`'s slot as far as anyone can tell, and
+ * charging it to the card reported `orphan-part` on correct markup. The rules
+ * skip a component with no manifest, so the part is simply not judged.
+ *
  * Without the predicate the function is byte-for-byte its old self, and
  * `filledSlots` is just the key set of `parts`.
  */
 export function extractComponents(
   source: string,
   filePath: string,
-  declaresSlot?: (componentName: string, slotName: string) => boolean,
+  declaresSlot?: (componentName: string, slotName: string) => boolean | undefined,
 ): ParsedComponent[] {
   const roots = parseHTML(source);
   const components: ParsedComponent[] = [];
@@ -278,15 +286,22 @@ export function extractComponents(
     if (owners && "data-part" in el.attrs) {
       const partName = el.attrs["data-part"];
       if (partName) {
-        // Claim: nearest declaring owner, else the nearest owner outright.
+        // Claim: nearest declaring owner, else the nearest owner that cannot
+        // answer (task 1.1F-28), else the nearest owner outright.
         let claimant = owners.component;
         if (declaresSlot) {
+          let unanswered: ParsedComponent | null = null;
+          let declared = false;
           for (let link: Chain | null = owners; link; link = link.outer) {
-            if (declaresSlot(link.component.name, partName)) {
+            const answer = declaresSlot(link.component.name, partName);
+            if (answer) {
               claimant = link.component;
+              declared = true;
               break;
             }
+            if (answer === undefined && !unanswered) unanswered = link.component;
           }
+          if (!declared && unanswered) claimant = unanswered;
         }
         if (!claimant.parts[partName]) claimant.parts[partName] = [];
         claimant.parts[partName].push(el);

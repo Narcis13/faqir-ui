@@ -450,6 +450,9 @@ describe("faqir_project_context", () => {
     expect(containedProjectRoot("/a/b", "../c")).toBeNull();
     expect(containedProjectRoot("/a/b", "/a/bc")).toBeNull();
     expect(containedProjectRoot("/a/b", "/etc")).toBeNull();
+    // A child literally named `..foo` is inside (isInside; task 1.1F-28).
+    expect(containedProjectRoot("/a/b", "..foo")).toBe("/a/b/..foo");
+    expect(containedProjectRoot("/a/b", "..")).toBeNull();
   });
 });
 

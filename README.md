@@ -176,7 +176,7 @@ the harness a capable model needs, built as software instead of as a prompt.
 
 **Verification is the bottleneck, not generation.** A model produces text; it
 has no oracle. Faqir gives it one. Every component ships a manifest, and
-`faqir audit` checks markup against those manifests with 38 rules, from
+`faqir audit` checks markup against those manifests with 39 rules, from
 `required-slot` and `focus-trap` to `duplicate-id`, `heading-order` and
 `contrast-tokens`. It reads from stdin, emits versioned JSON, and is the same
 code in the CLI, the MCP server and the browser. A failure that would otherwise
@@ -913,7 +913,7 @@ audit does not see it.
 ### Audit rules
 
 `faqir audit --rules` prints the live registry, which is the source of truth
-(38 rules today). The ids below are the ones `--skip-rules` accepts.
+(39 rules today). The ids below are the ones `--skip-rules` accepts.
 
 | Rule | Severity | Scope | What it checks |
 |------|----------|-------|----------------|
@@ -937,6 +937,7 @@ audit does not see it.
 | `unknown-component` | warning | data-ui vs registry | A `data-ui` value must name something Faqir defines |
 | `attribute-vocabulary` | error | vocabulary | A declared attribute carries a value from its set; tier suffix only where responsive |
 | `unknown-attribute` | warning | vocabulary | A `data-*` near-miss of a declared attribute, or one owned by another component |
+| `undeclared-markup-attribute` | warning | vocabulary | Strict only (MCP `strict: true`): any `data-*` inside a known component that no manifest on its chain declares |
 | `directive-name` | error | vocabulary | An `l-*` attribute names a real directive with legal argument and modifiers |
 | `forbidden-directive` | error | vocabulary | A directive the project bans in `audit.forbid_directives` appears in markup |
 | `part-element` | warning | vocabulary | A slot with a `tag_hint` expects that element |

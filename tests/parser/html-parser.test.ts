@@ -134,6 +134,42 @@ line4`;
       const components = extractComponents(html, "test.html");
       expect(components[0].line).toBe(3);
     });
+
+    // Task 1.1F-28 (entry 33): a predicate that answers `undefined` for a
+    // component it has no manifest for.
+    describe("an owner that cannot answer", () => {
+      const slots: Record<string, string[]> = { card: ["body", "title"], shell: ["nav"] };
+      const declares = (name: string, slot: string) =>
+        name in slots ? slots[name].includes(slot) : undefined;
+      const owner = (html: string, part: string) =>
+        extractComponents(html, "t.html", declares).find((c) => c.parts[part])?.name;
+
+      it("takes a part no owner declares, when it lies outside one that does not", () => {
+        const html = `<div data-ui="app"><div data-ui="card"><nav data-part="rail"></nav></div></div>`;
+        expect(owner(html, "rail")).toBe("app");
+      });
+
+      it("the nearest unanswering owner wins", () => {
+        const html = `<div data-ui="outer"><div data-ui="inner"><div data-ui="card"><i data-part="rail"></i></div></div></div>`;
+        expect(owner(html, "rail")).toBe("inner");
+      });
+
+      it("never beats an owner that declares the slot, inside or out", () => {
+        expect(owner(`<div data-ui="app"><div data-ui="card"><h3 data-part="title"></h3></div></div>`, "title")).toBe("card");
+        expect(owner(`<div data-ui="shell"><div data-ui="app"><nav data-part="nav"></nav></div></div>`, "nav")).toBe("shell");
+      });
+
+      it("with every owner known, an undeclared part stays with the nearest", () => {
+        const html = `<div data-ui="shell"><div data-ui="card"><i data-part="rail"></i></div></div>`;
+        expect(owner(html, "rail")).toBe("card");
+      });
+
+      it("filled slots are unchanged: every enclosing owner sees the part", () => {
+        const html = `<div data-ui="app"><div data-ui="card"><nav data-part="rail"></nav></div></div>`;
+        const components = extractComponents(html, "t.html", declares);
+        for (const c of components) expect(c.filledSlots.has("rail")).toBe(true);
+      });
+    });
   });
 
   describe("findAllUIElements", () => {

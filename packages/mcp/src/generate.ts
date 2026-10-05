@@ -9,7 +9,7 @@
  * landmark-correct HTML document. Both lean on the same shared audit/repair core
  * the CLI uses (`auditHtmlSource` / `applyRepairsToSource`).
  */
-import { auditHtmlSource } from "../../../src/audit/checker";
+import { auditHtmlSource, type HtmlAuditInput } from "../../../src/audit/checker";
 import { applyRepairsToSource, type SourceRepairChange } from "../../../src/audit/repairer";
 import type { AuditResult, Severity } from "../../../src/audit/rules";
 import type { Manifest, ManifestVariant } from "../../../src/manifest";
@@ -61,13 +61,31 @@ export function toAuditReport(results: AuditResult[]): AuditReport {
   };
 }
 
-/** Audit an HTML string against the manifest map; returns the findings report. */
-export function auditHtml(
-  html: string,
-  manifests: Map<string, Manifest>,
-  skipRules?: string[],
-): AuditReport {
-  return toAuditReport(auditHtmlSource({ source: html, manifests, skipRules }));
+/**
+ * Everything an audit is decided from besides the HTML (task 1.1F-28): the
+ * manifests (registry, with a project's laid over them) and, when the caller
+ * has them, the known `data-ui` names, the project's stylesheets, the engine's
+ * recipes and the project's banned directives.
+ */
+export type AuditContext = Pick<
+  HtmlAuditInput,
+  "manifests" | "styles" | "knownUiValues" | "engineControllers" | "forbidDirectives"
+>;
+
+/** Per-call audit switches: rule ids to skip, and `strict` (`undeclared-markup-attribute`). */
+export interface AuditSwitches {
+  skipRules?: string[];
+  strict?: boolean;
+}
+
+/** The `auditHtmlSource` input for one string under a context. */
+export function auditInput(html: string, context: AuditContext, switches: AuditSwitches = {}): HtmlAuditInput {
+  return { ...context, source: html, skipRules: switches.skipRules, strict: switches.strict };
+}
+
+/** Audit an HTML string under the audit context; returns the findings report. */
+export function auditHtml(html: string, context: AuditContext, switches: AuditSwitches = {}): AuditReport {
+  return toAuditReport(auditHtmlSource(auditInput(html, context, switches)));
 }
 
 // ── Component generation ──────────────────────────────────────────────────────
@@ -207,12 +225,16 @@ function resolveValue(
  * (is the controller script on the page?), reported via `requires_controller`
  * rather than as fragment findings. Any auto-fixable finding is repaired in place.
  */
-export function generateComponent(input: GenerateInput, manifests: Map<string, Manifest>): GenerateResult {
-  const rendered = renderComponent(input, manifests);
-  const skip = ["controller-loaded", "focus-trap"];
+export function generateComponent(
+  input: GenerateInput,
+  context: AuditContext,
+  switches: AuditSwitches = {},
+): GenerateResult {
+  const rendered = renderComponent(input, context.manifests);
+  const audit = { ...switches, skipRules: ["controller-loaded", "focus-trap", ...(switches.skipRules ?? [])] };
 
   let html = rendered.html;
-  let results = auditHtmlSource({ source: html, manifests, skipRules: skip });
+  let results = auditHtmlSource(auditInput(html, context, audit));
   let repairs: SourceRepairChange[] = [];
 
   if (results.some((r) => r.severity === "critical" || r.severity === "error")) {
@@ -220,11 +242,11 @@ export function generateComponent(input: GenerateInput, manifests: Map<string, M
     if (repaired.source !== html) {
       html = repaired.source;
       repairs = repaired.changes;
-      results = auditHtmlSource({ source: html, manifests, skipRules: skip });
+      results = auditHtmlSource(auditInput(html, context, audit));
     }
   }
 
-  const manifest = manifests.get(input.component)!;
+  const manifest = context.manifests.get(input.component)!;
   const requires_controller =
     manifest.kind === "recipe" && manifest.files?.js ? manifest.files.js : undefined;
 
@@ -276,7 +298,8 @@ function escapeHtml(s: string): string {
  * controller script is included (so `controller-loaded` passes). The finished
  * page is audited and returned with its findings.
  */
-export function scaffoldPage(input: ScaffoldInput, manifests: Map<string, Manifest>): ScaffoldResult {
+export function scaffoldPage(input: ScaffoldInput, context: AuditContext): ScaffoldResult {
+  const manifests = context.manifests;
   const title = input.title ?? "Untitled";
   const layout = input.layout ?? "stack";
   const stylesheet = input.stylesheet ?? "ui/faqir.bundle.css";
@@ -333,7 +356,7 @@ ${body}
   return {
     html,
     components_used: [...used].sort(),
-    audit: auditHtml(html, manifests),
+    audit: auditHtml(html, context),
   };
 }
 

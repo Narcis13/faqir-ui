@@ -34,10 +34,10 @@ Read-only; each returns structured JSON validated against a declared MCP output 
 
 | Tool | Input | Returns |
 |------|-------|---------|
-| `faqir_generate` | `{ component, variant?, size?, slots?, props?, id?, template? }` | Component HTML rendered from the manifest template, **audit-verified before it is returned** — valid variant/size, required slots and ARIA present. `props`/`slots` fill the template's `{placeholders}` by name; invalid `variant`/`size` errors cleanly with the valid values. Recipes report the controller they need via `requires_controller`. |
-| `faqir_scaffold_page` | `{ title?, layout?, stylesheet?, sections }` | A complete, landmark-correct HTML document. `sections` is an ordered list of components (`{ component, variant?, size?, props?, slots? }`), headings (`{ heading, level? }`), or raw HTML (`{ html }`). Content is wrapped in `<main>`; recipe controllers are auto-included; the whole page is audited. |
-| `faqir_audit_html` | `{ html, skip_rules? }` | Findings JSON — `{ passed, counts, findings[] }` (rule id, severity, line, message, `fixable`). **String in, no filesystem** — a cloud agent with no disk can validate its own output. |
-| `faqir_repair_html` | `{ html, skip_rules? }` | `{ html, applied, skipped, changes[], before, after }` — deterministic auto-fixes applied to the string (missing ARIA, safe duplicate-id renames, field-group wiring) plus before/after audits. **String in, string out, no filesystem.** |
+| `faqir_generate` | `{ component, variant?, size?, slots?, props?, id?, template?, root? }` | Component HTML rendered from the manifest template, **audit-verified before it is returned** — valid variant/size, required slots and ARIA present. `props`/`slots` fill the template's `{placeholders}` by name; invalid `variant`/`size` errors cleanly with the valid values. Recipes report the controller they need via `requires_controller`. Under a project `root` its own components can be generated too. |
+| `faqir_scaffold_page` | `{ title?, layout?, stylesheet?, sections, root? }` | A complete, landmark-correct HTML document. `sections` is an ordered list of components (`{ component, variant?, size?, props?, slots? }`), headings (`{ heading, level? }`), or raw HTML (`{ html }`). Content is wrapped in `<main>`; recipe controllers are auto-included; the whole page is audited. |
+| `faqir_audit_html` | `{ html, skip_rules?, root?, strict? }` | Findings JSON — `{ passed, counts, findings[] }` (rule id, severity, line, message, `fixable`). **String in** — a cloud agent with no disk can validate its own output. Every registry name is known, so an invented `data-ui` is `unknown-component`. `root` (inside the server's project root, which is the default) lays a project with a `faqir.config.json` over the registry: its own components, its edited manifests, their stylesheets and its `audit.forbid_directives` all count, exactly as `faqir audit --stdin` run there. `strict: true` adds `undeclared-markup-attribute`: any `data-*` inside a known component that no manifest on its chain declares. |
+| `faqir_repair_html` | `{ html, skip_rules?, root?, strict? }` | `{ html, applied, skipped, changes[], before, after }` — deterministic auto-fixes applied to the string (missing ARIA, safe duplicate-id renames, field-group wiring) plus before/after audits, which `root` and `strict` shape as they do `faqir_audit_html`. **String in, string out.** |
 | `faqir_generate_theme` | `{ accent?, name?, neutral?, radius?, scheme?, document? }` | Deterministic 11-step OKLCH theme generation. Returns contrast-verified CSS, a derived manifest, and computed ratios entirely in memory; `document: true` adds a matching print variant. |
 
 ## Resources
@@ -74,7 +74,7 @@ a clean MCP channel.
 | Variable | Purpose |
 |----------|---------|
 | `FAQIR_REGISTRY_PATH` | Point the server at a specific registry root (defaults to the bundled registry). |
-| `FAQIR_PROJECT_ROOT` | The host project root for `faqir_project_context` (defaults to `process.cwd()`). |
+| `FAQIR_PROJECT_ROOT` | The host project root (defaults to `process.cwd()`): what `faqir_project_context` reads, the project the write/verify tools audit against, and the boundary every `root` input must stay inside. |
 
 ## Host configuration
 

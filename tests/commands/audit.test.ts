@@ -3,7 +3,7 @@ import { existsSync, rmSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { init } from "../../src/commands/init";
 import { add } from "../../src/commands/add";
-import { runAudit } from "../../src/audit/checker";
+import { loadRegistryAuditInputs, runAudit, withProjectAuditInputs } from "../../src/audit/checker";
 import { applyRepairs } from "../../src/audit/repairer";
 
 const TEST_DIR = join(import.meta.dir, "../.tmp-audit-test");
@@ -30,6 +30,38 @@ describe("faqir audit", () => {
       process.chdir(origCwd);
     }
   }
+
+  // The overlay `audit --stdin` and the MCP tools share (task 1.1F-28).
+  it("withProjectAuditInputs lays a project over the registry without touching it", async () => {
+    const registry = await loadRegistryAuditInputs(join(import.meta.dir, "../../registry"));
+    const registrySize = registry.manifests.size;
+
+    // Not a project: the registry inputs come back as they are.
+    const bare = await withProjectAuditInputs(registry, TEST_DIR);
+    expect(bare.project).toBeNull();
+    expect(bare.manifests).toBe(registry.manifests);
+    expect(bare.styles).toBeUndefined();
+
+    await setupProject(["button"]);
+    const manifestPath = join(TEST_DIR, "ui/primitives/button/button.manifest.json");
+    const edited = JSON.parse(readFileSync(manifestPath, "utf8"));
+    edited.variants.visual.values = ["only"];
+    await Bun.write(manifestPath, JSON.stringify(edited));
+    const configPath = join(TEST_DIR, "faqir.config.json");
+    const config = JSON.parse(readFileSync(configPath, "utf8"));
+    config.audit = { forbid_directives: ["l-html"] };
+    await Bun.write(configPath, JSON.stringify(config));
+
+    const project = await withProjectAuditInputs(registry, TEST_DIR);
+    expect(project.project).toBe(TEST_DIR);
+    expect(project.manifests).not.toBe(registry.manifests);
+    expect(project.manifests.get("button")!.variants.visual.values).toEqual(["only"]);
+    expect(project.styles!.has("button")).toBe(true);
+    expect(project.forbidDirectives).toEqual(["l-html"]);
+    // The cached registry side is unchanged.
+    expect(registry.manifests.size).toBe(registrySize);
+    expect(registry.manifests.get("button")!.variants.visual.values).not.toEqual(["only"]);
+  });
 
   it("passes on a clean project with no HTML files", async () => {
     await setupProject(["button"]);

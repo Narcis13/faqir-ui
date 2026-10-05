@@ -91,10 +91,26 @@ export const FORBIDDEN_DIRECTIVE_RULE: RuleInfo = {
     "unless the project configures it.",
 };
 
+export const UNDECLARED_MARKUP_ATTRIBUTE_RULE: RuleInfo = {
+  id: "undeclared-markup-attribute",
+  severity: "warning",
+  applies_to: "data-* attributes inside a known component, in HTML, when the caller asks for strict (MCP `strict: true`)",
+  exempt: [
+    "the five protocol attributes, the token modifiers and the convention attributes (data-prop-*, data-error-*, data-testid …)",
+    "an element inside a component whose manifest the caller does not hold",
+  ],
+  description:
+    "Every `data-*` attribute inside a known component must be declared by a " +
+    "manifest on its component chain. The strict counterpart of `unknown-attribute`, " +
+    "which reports only near-misses and other components' attributes: this one " +
+    "also reports an application's own `data-*` hooks, so it is off unless asked for.",
+};
+
 /** Every rule this module contributes, for the rule inventory. */
 export const VOCABULARY_RULES: RuleInfo[] = [
   ATTRIBUTE_VOCABULARY_RULE,
   UNKNOWN_ATTRIBUTE_RULE,
+  UNDECLARED_MARKUP_ATTRIBUTE_RULE,
   DIRECTIVE_NAME_RULE,
   FORBIDDEN_DIRECTIVE_RULE,
   PART_ELEMENT_RULE,
@@ -319,11 +335,13 @@ export function buildAttributeVocabularyResults(
   manifests: Map<string, Manifest>,
   file: string,
   skip: Set<string> = new Set(),
+  strict = false,
 ): AuditResult[] {
   const results: AuditResult[] = [];
   const wantsVocabulary = !skip.has(ATTRIBUTE_VOCABULARY_RULE.id);
   const wantsUnknown = !skip.has(UNKNOWN_ATTRIBUTE_RULE.id);
-  if (!wantsVocabulary && !wantsUnknown) return results;
+  const wantsUndeclared = strict && !skip.has(UNDECLARED_MARKUP_ATTRIBUTE_RULE.id);
+  if (!wantsVocabulary && !wantsUnknown && !wantsUndeclared) return results;
 
   // One flattened vocabulary per manifest, not per element.
   const vocabularies = new Map<string, Map<string, DeclaredAttribute>>();
@@ -483,35 +501,55 @@ export function buildAttributeVocabularyResults(
       //     (`data-cols` on a `stack`) — the cross-component confusion an agent
       //     makes from a half-remembered layout doc.
       //
-      // Anything else is the author's own namespace and is left alone.
-      if (!wantsUnknown || unresolved) continue;
-      const declaredHere = chain.flatMap((c) => [...c.vocabulary.keys()]);
-      const nearMiss = suggestClosest(name, declaredHere, 2);
-      if (nearMiss) {
-        results.push(
-          finding(
-            UNKNOWN_ATTRIBUTE_RULE.id,
-            "warning",
-            activeName,
-            file,
-            el,
-            `${name} on <${el.tag}> is not declared by the ${activeName} manifest — ` +
-              `nothing reads it and nothing styles it. Did you mean ${nearMiss}?`,
-          ),
-        );
-        continue;
+      // Anything else is the author's own namespace and is left alone — unless
+      // the caller asked for strict (task 1.1F-28), which reports it too.
+      if (unresolved) continue;
+      if (wantsUnknown) {
+        const declaredHere = chain.flatMap((c) => [...c.vocabulary.keys()]);
+        const nearMiss = suggestClosest(name, declaredHere, 2);
+        if (nearMiss) {
+          results.push(
+            finding(
+              UNKNOWN_ATTRIBUTE_RULE.id,
+              "warning",
+              activeName,
+              file,
+              el,
+              `${name} on <${el.tag}> is not declared by the ${activeName} manifest — ` +
+                `nothing reads it and nothing styles it. Did you mean ${nearMiss}?`,
+            ),
+          );
+          continue;
+        }
+        const elsewhere = attributeOwners(manifests).get(name);
+        if (elsewhere && elsewhere.length > 0) {
+          results.push(
+            finding(
+              UNKNOWN_ATTRIBUTE_RULE.id,
+              "warning",
+              activeName,
+              file,
+              el,
+              `${name} on <${el.tag}> is a ${elsewhere.slice(0, 3).join("/")} attribute, and ` +
+                `${activeName} does not declare it — nothing reads it here.`,
+            ),
+          );
+          continue;
+        }
       }
-      const elsewhere = attributeOwners(manifests).get(name);
-      if (elsewhere && elsewhere.length > 0) {
+      // One finding per attribute: a near-miss above already said it.
+      if (wantsUndeclared) {
+        const owners = chain.map((c) => c.name).join(", ");
         results.push(
           finding(
-            UNKNOWN_ATTRIBUTE_RULE.id,
+            UNDECLARED_MARKUP_ATTRIBUTE_RULE.id,
             "warning",
             activeName,
             file,
             el,
-            `${name} on <${el.tag}> is a ${elsewhere.slice(0, 3).join("/")} attribute, and ` +
-              `${activeName} does not declare it — nothing reads it here.`,
+            `${name} on <${el.tag}> is declared by no manifest on its component chain ` +
+              `(${owners}) — no Faqir component reads it. Remove it, declare it in the ` +
+              `manifest, or drop strict if it is the application's own hook.`,
           ),
         );
       }
@@ -962,9 +1000,10 @@ export function buildVocabularyResults(
   file: string,
   skipRules: Set<string> = new Set(),
   forbidDirectives: readonly string[] = [],
+  strict = false,
 ): AuditResult[] {
   const results: AuditResult[] = [];
-  results.push(...buildAttributeVocabularyResults(doc, manifests, file, skipRules));
+  results.push(...buildAttributeVocabularyResults(doc, manifests, file, skipRules, strict));
   if (!skipRules.has(DIRECTIVE_NAME_RULE.id)) {
     results.push(...buildDirectiveNameResults(doc, file));
   }

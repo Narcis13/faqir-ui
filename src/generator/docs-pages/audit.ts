@@ -150,12 +150,21 @@ export const RULE_NOTES: Record<string, string[]> = {
     "faqir audit also reads the local modules a page loads with type=\"module\", and the relative modules they import, two levels deep and inside the project root: an app/main.mjs that imports faqir-core.mjs loads the runtime. --stdin, MCP and the playground hold only a string, so they see the page's own scripts.",
     "Fragments skip it: a fragment cannot carry the runtime.",
   ],
-  "orphan-part": ["Only data-part values the manifest does not name as a slot."],
+  "orphan-part": [
+    "Only data-part values the manifest does not name as a slot.",
+    "A part belongs to the nearest enclosing component that declares the slot. When none does and one of them has no manifest here (an app's own wrapper, or a component not installed), the part is left with that one and not judged: it may well be its slot.",
+  ],
+  "undeclared-markup-attribute": [
+    "Off unless the caller asks for strict: the MCP tools' strict: true. faqir audit and the playground never report it.",
+    "Reports what unknown-attribute leaves alone: an application's own data-* hooks inside a component. A near-miss or another component's attribute is unknown-attribute's finding, not a second one here.",
+    "Exempt: the five protocol attributes, the token modifiers, the convention attributes (data-prop-*, data-error-*, data-persist-*, data-testid, data-open …) and data-gap on a flow root.",
+    "An element inside a component whose manifest is not held is skipped, as unknown-attribute skips it.",
+  ],
   "forbidden-directive": [
     "Off unless faqir.config.json sets audit.forbid_directives, a list such as [\"l-html\"]. faqir doctor rejects an entry that names no directive.",
     "Matched on the directive, not its spelling: a ban on l-on catches @click, l-on:keydown and their modifiers; :src falls to a ban on l-bind.",
     "Markup only. An innerHTML assignment in the page's own script is not an attribute, and the audit does not see it.",
-    "faqir audit and faqir audit --stdin inside a project read the list; the MCP tool and the playground have no project config, so they never report it.",
+    "faqir audit and faqir audit --stdin inside a project read the list, as do the MCP tools for the project at their root. The playground has no project config, so it never reports it.",
   ],
   "aria-describedby": [
     "Only components whose manifest declares a description slot, and only when the markup fills it.",

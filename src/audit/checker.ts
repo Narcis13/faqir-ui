@@ -19,8 +19,8 @@ import {
   buildBreakpointCanonResults,
   buildUndeclaredAttributeResults,
 } from "./css-rules";
-import { readConfig, type FaqirConfig } from "../utils/config";
-import { installedStylesheetFile, knownUiValues, listRegistryComponents } from "../utils/components";
+import { configExists, readConfig, type FaqirConfig } from "../utils/config";
+import { installedStylesheetFile, knownUiValues, listRegistryComponents, loadRegistryManifestMap } from "../utils/components";
 import { getRegistryPath } from "../utils/fs";
 import { isInside } from "../utils/paths";
 import { auditHtmlSource, pageScripts, type HtmlAuditInput } from "./html-audit";
@@ -129,6 +129,78 @@ export async function loadInstalledAuditInputs(
     }
   }
   return { manifests, styles };
+}
+
+/**
+ * What a string audit decides from on the registry side: every registry
+ * manifest (aliases included), every `data-ui` value Faqir defines, and the
+ * recipes the engine bundle carries. Read once by a long-lived caller (the MCP
+ * server caches it) and laid under each project by {@link withProjectAuditInputs}.
+ */
+export interface RegistryAuditInputs {
+  manifests: Map<string, Manifest>;
+  knownUiValues: readonly string[];
+  engineControllers: ReadonlySet<string>;
+}
+
+export async function loadRegistryAuditInputs(
+  registryPath: string,
+  manifests?: Map<string, Manifest>,
+): Promise<RegistryAuditInputs> {
+  return {
+    manifests: manifests ?? (await loadRegistryManifestMap(registryPath)),
+    knownUiValues: knownUiValues(registryPath),
+    engineControllers: engineControllerNames(registryPath),
+  };
+}
+
+/** The inputs `auditHtmlSource` takes besides the source, for one string audit. */
+export type StringAuditInputs = Pick<
+  HtmlAuditInput,
+  "manifests" | "styles" | "knownUiValues" | "engineControllers" | "forbidDirectives"
+> & {
+  /** The project laid over the registry, or null when `root` holds no `faqir.config.json`. */
+  project: string | null;
+};
+
+/**
+ * The registry inputs with a project's laid over them (task 1.1F-28, factored
+ * out of `audit --stdin`): when `projectRoot` holds a `faqir.config.json`, its
+ * installed manifests replace the registry's copies and its own components
+ * become known names, its stylesheets feed the markup+css rules, and its
+ * `audit.forbid_directives` applies. Outside a project the registry inputs come
+ * back as they are, so a caller that caches them pays one `stat` per call.
+ *
+ * The registry map is never mutated: a project gets a copy.
+ */
+export async function withProjectAuditInputs(
+  registry: RegistryAuditInputs,
+  projectRoot?: string,
+): Promise<StringAuditInputs> {
+  const base: StringAuditInputs = {
+    manifests: registry.manifests,
+    knownUiValues: registry.knownUiValues,
+    engineControllers: registry.engineControllers,
+    project: null,
+  };
+  if (projectRoot === undefined || !configExists(projectRoot)) return base;
+
+  const config = await readConfig(projectRoot);
+  const installed = await loadInstalledAuditInputs(config, join(projectRoot, config.output_dir));
+  const manifests = new Map(registry.manifests);
+  const known = new Set(registry.knownUiValues);
+  for (const [name, manifest] of installed.manifests) {
+    manifests.set(name, manifest);
+    known.add(name);
+  }
+  return {
+    manifests,
+    styles: installed.styles,
+    knownUiValues: [...known],
+    engineControllers: registry.engineControllers,
+    forbidDirectives: config.audit?.forbid_directives,
+    project: projectRoot,
+  };
 }
 
 /**

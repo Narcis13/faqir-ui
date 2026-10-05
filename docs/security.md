@@ -134,7 +134,8 @@ worse than one that is absent.
 - A project that never wants `l-html` can make the audit enforce it. Add
   `"audit": { "forbid_directives": ["l-html"] }` to `faqir.config.json` and
   every `l-html` in markup becomes a `forbidden-directive` error in
-  `faqir audit` (and in `faqir audit --stdin` run inside the project).
+  `faqir audit` (and in `faqir audit --stdin` run inside the project, and in
+  the MCP audit tools when their `root` is the project).
   `faqir doctor` rejects an entry that names no directive. **This checks markup
   only.** It does not see an `innerHTML` assignment in your own JavaScript, or
   markup that a server or a script builds at runtime, so it is a guard against
