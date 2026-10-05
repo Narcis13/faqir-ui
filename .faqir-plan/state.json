@@ -177,6 +177,12 @@
       "completed": "2026-10-05",
       "commit": "459a2ee",
       "summary": "@faqir-ui/forms accepts flow-schema keywords: additionalProperties (root, object fields, row items; false -> fixed closed-object comment note, other values ignored), type [T,\"null\"] for one scalar/object T (denullProperties pre-pass normalises to T, drops default:null; required stays required; rules get T; other unions throw with path), examples (first = placeholder for input/textarea/date-picker), const (string/number -> readonly input/textarea with the value, date const without picker, emitted as rules `const`; refused on boolean, with enum, with a different default). index.d.ts (Nullable<T>, AdditionalProperties) + README section. 3 new audit-clean goldens, existing goldens unchanged; +8 forms, +2 rules tests (lint-clean, server enforces const). Suite 8,099 / 0 on Bun 1.3.8."
+    },
+    {
+      "id": "1.1F-30",
+      "completed": "2026-10-05",
+      "commit": "2d83156",
+      "summary": "New @faqir-ui/forms/dom entry: buildForm(jsonSchema, document, uiSchema?, opts?) -> HTMLFormElement. It builds the form with createElement on the given document and puts schema strings in only through textContent/setAttribute. The form has a bare l-data and l-validate, no schema-derived expression, and counter-based ids. The schema is checked by running renderForm, so both accept the same subset with the same errors. It throws on ui:wizard, opts.rules, and any schema that needs a rules script. Repeatable rows are added and removed imperatively, with names renumbered and min/max disabled gates. tests/dom.test.ts (31): element-for-element parity with renderForm on 18 golden cases plus a nullable one, audit-clean, second-Window document, plain-Node import, add/remove/renumber, hostile-schema walk. README section on buildForm vs renderForm (new Function remains). Follow-up 1.1F-41 for full parity. Suite 8066 + 64 / 0 on Bun 1.3.8."
     }
   ],
   "note": "Pointer file for the /faqir-plan slash command. FAQIR-PLAN-1.1-FIXES.md status cells (⬜/✅) are the source of truth; this file records the cross-session cursor and a per-task log. Do not hand-edit `current` while a session is running. The 1.1 plan's cursor (31 history entries, through 1.1R-01) is archived unchanged at state-1.1.json; FAQIR-PLAN-1.1.md still has six open follow-up rows (1.1A-21, 1.1A-24, 1.1A-27, 1.1A-28, 1.1A-29, 1.1N-03), reachable by pointing `plan` back at it. The 1.0 cursor is at state-1.0.json."
