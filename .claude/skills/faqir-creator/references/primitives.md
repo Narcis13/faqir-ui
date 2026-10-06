@@ -2,7 +2,7 @@
 
 # Faqir Primitives Reference
 
-42 primitives, each with its anatomy tree, variant table, and safe/unsafe transforms — all derived from the component manifest.
+51 primitives, each with its anatomy tree, variant table, and safe/unsafe transforms — all derived from the component manifest.
 
 ## aspect-ratio
 
@@ -60,6 +60,32 @@ User avatar with image and fallback initials
 - **Unsafe (never do):** `remove-fallback-slot`, `remove-alt-attribute-from-image`
 - **Required ARIA:** `img must have alt attribute`
 
+## backdrop
+
+_kind: primitive · category: marketing_
+
+Ambient animated light behind a section — aurora, spotlight, grid, dots or beams — painted by the wrapper's own pseudo-elements, so there is no decorative element to hide and nothing to position. Colours come from the theme's accent, info and success; pure CSS, still under reduced motion, gone in forced colours and print.
+
+```html
+<div data-ui="backdrop" data-variant="{scene}">{children}</div>
+```
+
+**Anatomy**
+
+```text
+[data-ui='backdrop']  ·  <div> · content: block
+```
+
+**Variants**
+
+| Variant | Values | Default | Attribute | Applied to |
+|---------|--------|---------|-----------|------------|
+| scene | `aurora`, `spotlight`, `grid`, `dots`, `beams` | `aurora` | `data-variant` | root |
+| intensity | `subtle`, `normal`, `vivid` | `normal` | `data-intensity` | root |
+
+- **Safe transforms:** `change-scene`, `change-intensity`, `toggle-static`, `change-custom-property-colors`, `change-custom-property-timing`, `wrap-a-section`, `unwrap-a-section`
+- **Unsafe (never do):** `use-vivid-intensity-behind-body-text`, `nest-a-backdrop-directly-inside-another`, `pass-a-hardcoded-color-instead-of-a-token`
+
 ## badge
 
 _kind: primitive · category: data-display_
@@ -83,7 +109,7 @@ Small status indicator with color variants
 | visual | `default`, `primary`, `secondary`, `destructive`, `success`, `warning` | `default` | `data-variant` | root |
 | size | `sm`, `md`, `lg` | `md` | `data-size` | root |
 
-- **Safe transforms:** `change-variant`, `change-size`, `change-text-content`
+- **Safe transforms:** `change-variant`, `change-size`, `change-text-content`, `toggle-live`
 - **Unsafe (never do):** `remove-badge-element`
 
 ## breadcrumb
@@ -141,7 +167,7 @@ Interactive button with multiple visual variants and sizes
 | visual | `default`, `primary`, `secondary`, `destructive`, `ghost`, `outline`, `link` | `default` | `data-variant` | root |
 | size | `sm`, `md`, `lg` | `md` | `data-size` | root |
 
-- **Safe transforms:** `change-variant`, `change-size`, `add-icon`, `add-loading-state`, `set-pressed-true`, `set-pressed-false`, `wrap-in-button-group`, `change-text-content`
+- **Safe transforms:** `change-variant`, `change-size`, `add-icon`, `add-loading-state`, `set-pressed-true`, `set-pressed-false`, `wrap-in-button-group`, `change-text-content`, `set-effect`
 - **Unsafe (never do):** `remove-button-element`, `change-to-div-without-role`, `remove-disabled-state-handling`, `remove-aria-pressed-when-off`
 - **A11y:** keys: Enter, Space
 - **Required ARIA:** `aria-label required when icon-only (no text content)`; `type="button" and aria-pressed="true|false" on a toggle button`
@@ -200,6 +226,7 @@ Container surface with header, optional divider, body, and footer slots; direct 
 
 ```text
 [data-ui='card']  ·  <div> · content: slots
+├─ [data-part='media']  <figure>  optional  — A picture across the top of the card, before the header: a <figure> holding one <img> (with alt). Full bleed to the card edges, cut to --card-media-ratio, image covering the frame.
 ├─ [data-part='header']  <div>  optional  — Card header area containing title and description
 ├─ [data-part='title']  <h3>  optional  — Card title text
 ├─ [data-part='description']  <p>  optional  — Brief card description
@@ -215,7 +242,7 @@ Container surface with header, optional divider, body, and footer slots; direct 
 | visual | `default`, `outlined`, `filled` | `default` | `data-variant` | root |
 | size | `sm`, `md`, `lg` | `md` | `data-size` | root |
 
-- **Safe transforms:** `change-variant`, `add-header`, `add-divider`, `add-footer`, `change-title`, `restyle-background`
+- **Safe transforms:** `change-variant`, `add-header`, `add-divider`, `add-footer`, `change-title`, `restyle-background`, `add-media`, `set-hover`
 - **Unsafe (never do):** `remove-body-slot`, `flatten-to-single-div`
 
 ## checkbox
@@ -462,6 +489,32 @@ Form field wrapper combining label, control, and help/error text with a tight de
 - **Unsafe (never do):** `remove-label`, `remove-for-attribute`, `remove-aria-describedby`
 - **Required ARIA:** `label must have for attribute matching input id`; `aria-describedby on input pointing to description/error id`; `aria-invalid="true" on input in error state`; `aria-required="true" on required inputs`
 
+## glow
+
+_kind: primitive · category: marketing_
+
+Animated light around one box: a rotating gradient ring or a single orbiting beam, with an optional blurred halo behind the child. The ring is drawn outside the wrapped element by a masked pseudo-element, so the child keeps its own background and border. Pure CSS (a registered angle property drives the orbit); always on, or only under the pointer and keyboard.
+
+```html
+<div data-ui="glow">{child}</div>
+```
+
+**Anatomy**
+
+```text
+[data-ui='glow']  ·  <div> · content: block
+```
+
+**Variants**
+
+| Variant | Values | Default | Attribute | Applied to |
+|---------|--------|---------|-----------|------------|
+| style | `gradient`, `beam` | `gradient` | `data-variant` | root |
+| trigger | `always`, `hover` | `always` | `data-trigger` | root |
+
+- **Safe transforms:** `change-style`, `change-trigger`, `toggle-halo`, `toggle-static`, `change-custom-property-colors`, `match-radius-to-the-wrapped-component`
+- **Unsafe (never do):** `wrap-more-than-one-child`, `leave-the-radius-mismatched-with-the-child`, `use-as-the-only-focus-indicator`, `pass-a-hardcoded-color-instead-of-a-token`
+
 ## grid
 
 _kind: primitive · category: layout_
@@ -489,6 +542,31 @@ CSS Grid container with configurable columns and gap — mobile-first responsive
 
 - **Safe transforms:** `change-cols`, `change-gap`, `add-responsive-tier`, `switch-to-auto-mode`, `change-min`, `enable-card-row-alignment`, `add-children`, `remove-children`
 - **Unsafe (never do):** `change-display-property`, `replace-with-non-grid-container`, `use-row-alignment-with-non-card-children`, `change-the-four-row-card-contract-per-instance`, `combine-row-alignment-with-scroll`
+
+## highlight
+
+_kind: primitive · category: typography_
+
+Inline emphasis for the words a headline wants read first: accent-gradient text, a highlighter marker, a drawn underline, or a shimmer. Every effect is a background under or clipped to real text — selectable, searchable, announced once — and each can play its motion (pan, draw-in) from tokens. Pure CSS; restores plain text under forced colours.
+
+```html
+<span data-ui="highlight" data-variant="{style}">{text}</span>
+```
+
+**Anatomy**
+
+```text
+[data-ui='highlight']  ·  <span> · content: inline
+```
+
+**Variants**
+
+| Variant | Values | Default | Attribute | Applied to |
+|---------|--------|---------|-----------|------------|
+| style | `gradient`, `shimmer`, `marker`, `underline` | `gradient` | `data-variant` | root |
+
+- **Safe transforms:** `change-style`, `toggle-animate`, `change-custom-property-colors`, `wrap-words-in-a-heading`, `unwrap-text`
+- **Unsafe (never do):** `duplicate-the-text-for-an-effect`, `highlight-a-whole-paragraph`, `use-gradient-on-small-body-text-without-checking-contrast`, `pass-a-hardcoded-color-instead-of-a-token`
 
 ## icon
 
@@ -542,7 +620,7 @@ Responsive image with variants for different display modes and print optimizatio
 | variant | `responsive`, `thumbnail`, `cover`, `contain` | `responsive` | `data-variant` | root |
 | size | `xs`, `sm`, `md`, `lg`, `full` | `md` | `data-size` | root |
 
-- **Safe transforms:** `change-size`, `change-variant`, `swap-image-src`, `change-alt-text`, `add-caption`, `remove-caption`
+- **Safe transforms:** `change-size`, `change-variant`, `swap-image-src`, `change-alt-text`, `add-caption`, `remove-caption`, `set-hover`
 - **Unsafe (never do):** `remove-alt-attribute`, `remove-img-element`
 - **Required ARIA:** `img must have non-empty alt attribute`
 
@@ -680,9 +758,46 @@ Styled anchor with external/muted variants; external links get a CSS-only indica
 |---------|--------|---------|-----------|------------|
 | style | `default`, `external`, `muted` | `default` | `data-variant` | root |
 
-- **Safe transforms:** `change-variant`, `change-href`, `change-text-content`
+- **Safe transforms:** `change-variant`, `change-href`, `change-text-content`, `set-effect`
 - **Unsafe (never do):** `remove-href`, `remove-rel-noopener-on-external`
 - **A11y:** keys: Enter
+
+## marquee
+
+_kind: primitive · category: marketing_
+
+An endless, seamless strip of items — logos, quotes, tags, headlines — moving in a row or a column. Pure CSS: the items are written twice and both copies slide by exactly one copy, so nothing is measured and nothing is scripted. Pauses under the pointer and the keyboard, fades at the edges on request, and becomes ordinary wrapped content under reduced motion.
+
+```html
+<div data-ui="marquee" role="group" aria-label="{label}">
+  <ul data-part="track">
+    {items}
+  </ul>
+  <ul data-part="track" aria-hidden="true">
+    {items}
+  </ul>
+</div>
+```
+
+**Anatomy**
+
+```text
+[data-ui='marquee']  ·  <div> · content: slots
+└─ [data-part='track']  <ul>  required  — One full copy of the strip. Write it exactly twice, with identical children; the second copy carries aria-hidden="true" so assistive technology reads each item once. Items are the track's direct children.
+```
+
+**Variants**
+
+| Variant | Values | Default | Attribute | Applied to |
+|---------|--------|---------|-----------|------------|
+| orientation | `horizontal`, `vertical` | `horizontal` | `data-variant` | root |
+| direction | `forward`, `reverse` | `forward` | `data-direction` | root |
+| speed | `slow`, `normal`, `fast` | `normal` | `data-speed` | root |
+
+- **Safe transforms:** `change-orientation`, `change-direction`, `change-speed`, `toggle-fade`, `change-custom-property-timing`, `add-item-to-both-tracks`, `remove-item-from-both-tracks`
+- **Unsafe (never do):** `remove-the-second-track`, `edit-one-track-without-the-other`, `remove-aria-hidden-from-the-second-track`, `remove-the-group-label`, `set-pause-never-on-readable-text`, `put-focusable-content-in-the-hidden-track`
+- **A11y:** keys: Tab
+- **Required ARIA:** `role="group" and an aria-label on the root naming what the strip is`; `aria-hidden="true" on the second track`; `alt text on every image in the first track; empty alt on the copies in the second`
 
 ## nav
 
@@ -770,6 +885,47 @@ Progress bar with animated fill, color variants, and an optional percentage labe
 - **A11y:** role=progressbar
 - **Required ARIA:** `aria-label`; `aria-valuenow`; `aria-valuemin`; `aria-valuemax`
 
+## quote
+
+_kind: primitive · category: typography_
+
+A quotation and its attribution — testimonial, pull quote or featured endorsement — as a native figure/blockquote/figcaption. Plain, card and editorial pull variants, three sizes, an optional avatar and rating, and a large decorative opening mark in the document language's own quotation glyph. The card variant reads the card aliases, so themes restyle both together.
+
+```html
+<figure data-ui="quote" data-variant="{style}">
+  <blockquote data-part="text">
+    <p>{quote}</p>
+  </blockquote>
+  <figcaption data-part="author">
+    <span data-part="name">{name}</span>
+    <span data-part="role">{role}</span>
+  </figcaption>
+</figure>
+```
+
+**Anatomy**
+
+```text
+[data-ui='quote']  ·  <figure> · content: slots
+├─ [data-part='text']  <blockquote>  required  — The quotation itself. Put one or more <p> inside; do not type quotation marks — the decorative mark is drawn by the stylesheet.
+├─ [data-part='author']  <figcaption>  optional  — Attribution: an optional media part followed by name and role.
+├─ [data-part='media']  <span>  optional  — Inside author: wrapper for a nested data-ui="avatar" (or a logo image). The avatar keeps its own data-size.
+├─ [data-part='name']  <span>  optional  — Inside author: who said it.
+└─ [data-part='role']  <span>  optional  — Inside author: title, company or source.
+```
+
+**Variants**
+
+| Variant | Values | Default | Attribute | Applied to |
+|---------|--------|---------|-----------|------------|
+| style | `plain`, `card`, `pull` | `plain` | `data-variant` | root |
+| size | `sm`, `md`, `lg` | `md` | `data-size` | root |
+| align | `start`, `center` | `start` | `data-align` | root |
+
+- **Safe transforms:** `change-style`, `change-size`, `change-align`, `add-author`, `remove-author`, `add-avatar-in-media`, `add-rating-before-text`, `change-custom-property-colors`
+- **Unsafe (never do):** `remove-text`, `replace-blockquote-with-a-div`, `type-literal-quotation-marks-in-the-text`, `put-the-attribution-inside-the-blockquote`, `add-data-size-to-the-media-part-instead-of-the-avatar`
+- **Required ARIA:** `the quotation in a <blockquote>, the attribution in the figure's <figcaption>`; `alt text on any image inside the media slot`
+
 ## radio
 
 _kind: primitive · category: forms_
@@ -803,6 +959,86 @@ Custom styled radio button for single selection within a group, with size varian
 - **Unsafe (never do):** `remove-input-element`, `remove-fieldset-wrapper`, `remove-name-attribute`, `change-type-attribute`
 - **A11y:** keys: Tab, ArrowUp/ArrowLeft, ArrowDown/ArrowRight, Space
 - **Required ARIA:** `fieldset + legend for radio groups`; `each radio needs a wrapping label or aria-label`; `name attribute groups radios together`; `type="radio" required on input element`
+
+## rating
+
+_kind: primitive · category: data-display_
+
+A read-only five-star score drawn by a single element: a repeated star mask over a gradient filled to value/5, so half stars and exact averages need no extra markup. Sizes with the surrounding text, fills from the line's start edge in either direction, and stays legible in forced colours.
+
+```html
+<span data-ui="rating" data-value="{value}" role="img" aria-label="Rated {value} out of 5"></span>
+```
+
+**Anatomy**
+
+```text
+[data-ui='rating']  ·  <span> · content: empty
+```
+
+**Variants**
+
+| Variant | Values | Default | Attribute | Applied to |
+|---------|--------|---------|-----------|------------|
+| size | `sm`, `md`, `lg` | `md` | `data-size` | root |
+
+- **Safe transforms:** `change-value-and-label-together`, `change-size`, `change-custom-property-colors`
+- **Unsafe (never do):** `remove-aria-label`, `remove-role-img`, `change-the-value-without-the-label`, `add-child-elements`, `use-as-an-input`
+- **A11y:** role=img
+- **Required ARIA:** `role="img" on the root`; `aria-label stating the score in words, e.g. "Rated 4.5 out of 5"`
+
+## reveal
+
+_kind: primitive · category: layout_
+
+Entrance choreography for any content: seven effects, three triggers (on load, scrubbed by scroll, or released by a state), and a staggered mode that brings a group's children in one after another. Pure CSS — a view timeline where supported, a load entrance where not — and every distance, duration and easing is a motion token a theme can re-point.
+
+```html
+<div data-ui="reveal" data-variant="{effect}">{children}</div>
+```
+
+**Anatomy**
+
+```text
+[data-ui='reveal']  ·  <div> · content: block
+```
+
+**Variants**
+
+| Variant | Values | Default | Attribute | Applied to |
+|---------|--------|---------|-----------|------------|
+| effect | `fade`, `rise`, `fall`, `slide-start`, `slide-end`, `zoom`, `blur` | `rise` | `data-variant` | root |
+| trigger | `load`, `scroll` | `load` | `data-trigger` | root |
+
+- **Safe transforms:** `change-effect`, `change-trigger`, `toggle-stagger`, `change-custom-property-timing`, `wrap-existing-content`, `unwrap-content`
+- **Unsafe (never do):** `author-data-state-hidden-without-a-script-that-releases-it`, `put-focusable-content-in-a-reveal-that-never-arrives`, `nest-a-fixed-or-sticky-element-inside-a-reveal`
+
+## scroll-progress
+
+_kind: primitive · category: feedback_
+
+A reading-progress bar that grows from the start edge as the page — or the nearest scrolling pane — scrolls. One empty element and a scroll timeline: no script, no scroll listener. Painted in the theme's accent gradient, pinned top or bottom, and absent where scroll timelines are unsupported.
+
+```html
+<div data-ui="scroll-progress" aria-hidden="true"></div>
+```
+
+**Anatomy**
+
+```text
+[data-ui='scroll-progress']  ·  <div> · content: empty
+```
+
+**Variants**
+
+| Variant | Values | Default | Attribute | Applied to |
+|---------|--------|---------|-----------|------------|
+| position | `top`, `bottom` | `top` | `data-variant` | root |
+| scope | `page`, `nearest` | `page` | `data-scope` | root |
+
+- **Safe transforms:** `change-position`, `change-scope`, `change-custom-property-dimensions`, `change-custom-property-colors`
+- **Unsafe (never do):** `remove-aria-hidden`, `add-children`, `put-two-page-scoped-bars-on-one-page`, `place-a-nearest-scoped-bar-anywhere-but-the-scroller-edge`
+- **Required ARIA:** `aria-hidden="true" on the root`
 
 ## select
 
@@ -1187,6 +1423,48 @@ Multi-line text input with error, disabled states and size variants; compose lab
 - **Unsafe (never do):** `remove-textarea-element`, `change-to-div-without-role`
 - **A11y:** keys: Tab
 - **Required ARIA:** `aria-invalid="true" when in error state`; `id + matching label[for] for accessibility`
+
+## timeline
+
+_kind: primitive · category: data-display_
+
+Events in order, read down a rail: changelog, company history, roadmap, process steps. An ordered list whose items draw their own rail segments, with done/current/upcoming statuses, large markers that hold a number or icon, a centred alternating layout from the md tier, and an optional scroll-linked progress mode that fills each marker as it rises through the viewport — pure CSS.
+
+```html
+<ol data-ui="timeline">
+  <li data-part="item">
+    <span data-part="marker" aria-hidden="true"></span>
+    <div data-part="content">
+      <time data-part="time" datetime="{datetime}">{time}</time>
+      <p data-part="title">{title}</p>
+      <p data-part="description">{description}</p>
+    </div>
+  </li>
+</ol>
+```
+
+**Anatomy**
+
+```text
+[data-ui='timeline']  ·  <ol> · content: slots
+├─ [data-part='item']  <li>  required  — One event. Direct child of the list; holds a marker and a content block.
+├─ [data-part='marker']  <span>  required  — The ring on the rail. Decorative — give it aria-hidden="true". Empty by default; with data-size="lg" it can hold a step number or a nested data-ui="icon".
+├─ [data-part='content']  <div>  required  — The event's text: an optional time, a title and a description.
+├─ [data-part='time']  <time>  optional  — When it happened. Use a real <time datetime="…">.
+├─ [data-part='title']  <p>  required  — What happened, in a few words. A <p> by default so a timeline never disturbs the page's heading outline; use the heading level the surrounding section calls for when each event deserves one.
+└─ [data-part='description']  <p>  optional  — Supporting sentence or two.
+```
+
+**Variants**
+
+| Variant | Values | Default | Attribute | Applied to |
+|---------|--------|---------|-----------|------------|
+| layout | `start`, `alternate` | `start` | `data-variant` | root |
+| size | `md`, `lg` | `md` | `data-size` | root |
+
+- **Safe transforms:** `add-item`, `remove-item`, `reorder-items`, `change-layout`, `change-size`, `set-item-status`, `toggle-progress`, `change-custom-property-colors`
+- **Unsafe (never do):** `replace-the-ordered-list-with-divs`, `remove-aria-hidden-from-a-marker`, `convey-status-by-colour-alone`, `put-data-status-on-the-root`, `remove-the-content-wrapper`
+- **Required ARIA:** `an <ol> root with <li> items — the order is the meaning`; `aria-hidden="true" on every marker`; `a datetime attribute on each <time>`
 
 ## toggle
 

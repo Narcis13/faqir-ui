@@ -1,7 +1,7 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "hero",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "kind": "pattern",
   "category": "marketing",
   "description": "Landing-page hero section composing badge + heading + description + call-to-action buttons, with an optional media column. Composition only: zero JavaScript, no controller, no reactive directives — the two layout variants are pure CSS grid.",
@@ -66,6 +66,10 @@
     }
   },
 
+  "props": {
+    "--hero-bg": {"type":"string","default":"var(--color-bg)","description":"Background of the section (custom property). Set it to transparent when the hero sits inside a data-ui=\"backdrop\"."}
+  },
+
   "states": {
     "default": { "attr": "", "default": true }
   },
@@ -112,11 +116,12 @@
   ],
 
   "composition": {
-    "contains": ["badge", "button", "image"],
+    "contains": ["badge", "button", "image", "highlight"],
     "used_in": ["landing-page"],
     "notes": [
       "Nested primitives inside a slot keep their own five-attribute contract. A nested element must not carry both data-part and data-variant: the pattern validates a part's data-variant against the *pattern's* variant values (center|split), so a button's data-variant=\"primary\" on a part would be a false mismatch. Put buttons inside [data-part=\"actions\"] instead.",
-      "The centered layout is what `faqir scaffold landing-page` emits; the block between the <!-- @ui:scaffold landing-page --> markers in hero.html is copied into the generated page verbatim."
+      "The centered layout is what `faqir scaffold landing-page` emits; the block between the <!-- @ui:scaffold landing-page --> markers in hero.html is copied into the generated page verbatim.",
+      "Inside a backdrop — <div data-ui=\"backdrop\"><section data-ui=\"hero\" style=\"--hero-bg: transparent\">…</section></div> — the section goes transparent so the light shows. Wrap a few headline words in <span data-ui=\"highlight\"> for the accent gradient."
     ]
   },
 
@@ -139,6 +144,11 @@
   ],
 
   "changes": [
+    {
+      "version": "1.2.0",
+      "note": "A --hero-bg custom property: the section background, the page colour by default. A hero wrapped in a backdrop sets it transparent so the light behind shows through; a headline may hold a nested data-ui=\"highlight\". Nothing else changes.",
+      "breaking": false
+    },
     {
       "version": "1.1.0",
       "note": "The responsive ladder moves onto the breakpoint canon, mobile-first (task 0.8-09). The sheet's max-width media blocks became min-width floors on canon tiers (sm 40rem/640px, md 48rem/768px, lg 64rem/1024px), so every unconditional rule is now the PHONE case and a tier block only ever widens it. The split variant gains its second column at lg and the action row becomes a row at sm. The floors keep their values, so the only behavioural shift is at exactly a floor: 1024px now gets the wide layout rather than the narrow one.",

@@ -96,11 +96,11 @@
     :where(
       [data-ui="avatar"], [data-ui="badge"], [data-ui="barcode"], [data-ui="button"],
       [data-ui="calendar"], [data-ui="checkbox"], [data-ui="chip"], [data-ui="combobox"],
-      [data-ui="date-picker"], [data-ui="dropdown"], [data-ui="icon"], [data-ui="image"],
-      [data-ui="input-otp"], [data-ui="kbd"], [data-ui="link"], [data-ui="menubar"],
-      [data-ui="pagination"], [data-ui="popover"], [data-ui="qr-code"], [data-ui="radio"],
-      [data-ui="select-custom"], [data-ui="spinner"], [data-ui="switch"], [data-ui="toggle"],
-      [data-ui="toggle-group"], [data-ui="tooltip"]
+      [data-ui="date-picker"], [data-ui="dropdown"], [data-ui="highlight"], [data-ui="icon"],
+      [data-ui="image"], [data-ui="input-otp"], [data-ui="kbd"], [data-ui="link"],
+      [data-ui="menubar"], [data-ui="pagination"], [data-ui="popover"], [data-ui="qr-code"],
+      [data-ui="radio"], [data-ui="rating"], [data-ui="select-custom"], [data-ui="spinner"],
+      [data-ui="switch"], [data-ui="toggle"], [data-ui="toggle-group"], [data-ui="tooltip"]
     )
   ) {
   margin-block-start: var(--flow-space, var(--section-gap-sm));

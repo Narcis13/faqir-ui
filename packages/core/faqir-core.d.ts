@@ -795,6 +795,46 @@ export interface Devtools {
 // The global
 // ─────────────────────────────────────────────────────────────────────────
 
+/**
+ * The theme studio `plugins/faqir-tweak.js` installs as `Faqir.tweak`. A state
+ * is the position of every dial; `apply` writes the tokens it implies onto
+ * `<html>`, `css` renders the same overrides as a `:root` block.
+ */
+export interface TweakState {
+  scheme: "" | "light" | "dark" | "auto";
+  density: "" | "compact" | "comfortable" | "spacious";
+  hue: number;
+  chroma: number;
+  radius: number;
+  space: number;
+  type: number;
+  speed: number;
+  weight: string;
+  tracking: string;
+  headingFont: "" | "sans" | "serif" | "mono";
+  bodyFont: "" | "sans" | "serif" | "mono";
+  easing: "" | "spring" | "bounce" | "linear";
+  lift: string;
+  ambient: "" | "paused";
+  border: "" | "hairline" | "regular" | "heavy";
+  depth: "" | "flat" | "deep";
+  page: string;
+  surface: string;
+}
+
+export interface TweakApi {
+  /** Apply a (partial) state; omitted dials take their defaults. Returns the full state. */
+  apply(state: Partial<TweakState> | null): TweakState;
+  /** Remove every override and restore the page's own attributes. */
+  reset(): TweakState;
+  /** The current overrides as a `:root { … }` block, ready to paste into a theme. */
+  css(): string;
+  /** Re-apply the state saved in localStorage, if any. */
+  restore(): TweakState | null;
+  /** The current state, or null before the first apply. */
+  readonly state: TweakState | null;
+}
+
 export interface FaqirGlobal {
   readonly version: string;
 
@@ -896,6 +936,8 @@ export interface FaqirGlobal {
    * the engine for exactly this reason.  [1.1B-03]
    */
   readonly validate?: ValidateApi;
+  /** The theme studio `plugins/faqir-tweak.js` installs; absent until that file loads. */
+  readonly tweak?: TweakApi;
 }
 
 declare const Faqir: FaqirGlobal;

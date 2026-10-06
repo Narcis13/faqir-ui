@@ -1,12 +1,17 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "badge",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "kind": "primitive",
   "category": "data-display",
   "description": "Small status indicator with color variants",
 
   "changes": [
+    {
+      "version": "1.2.0",
+      "note": "A data-live boolean: a breathing dot before the text, drawn in currentColor so it takes the variant colour, on a loop cut from --motion-ambient-duration and frozen by --motion-ambient-play or reduced motion. For Live, Online, Recording.",
+      "breaking": false
+    },
     {
       "version": "1.1.0",
       "note": "Align sm, md, and lg atomic inline boxes to one bottom baseline so mixed-size badge rows no longer stagger.",
@@ -40,6 +45,7 @@
   "states": {},
 
   "props": {
+    "live": {"type":"boolean","default":false,"attr":"data-live","description":"A breathing dot before the text, in the variant colour — a status that is happening now (Live, Online, Recording)."},
     "text": { "type": "string", "default": "", "description": "Badge text content" }
   },
 
@@ -52,7 +58,7 @@
     "color-secondary-fg", "color-destructive", "color-destructive-subtle", "color-success",
     "color-success-subtle", "color-warning", "color-warning-subtle", "radius-full", "space-1",
     "space-2", "space-3", "font-ui", "text-xs", "text-sm", "weight-medium", "corner-shape",
-    "badge-radius", "badge-font"
+    "badge-radius", "badge-font", "motion-ambient-duration", "motion-ambient-play", "ease-in-out"
   ],
 
   "templates": {
@@ -62,7 +68,8 @@
   "safe_transforms": [
     "change-variant",
     "change-size",
-    "change-text-content"
+    "change-text-content",
+    "toggle-live"
   ],
 
   "unsafe_transforms": [
@@ -87,6 +94,8 @@
     "destructive-variant-uses-destructive-subtle",
     "sm-size-sets-data-size-sm",
     "all-sizes-share-one-computed-bottom-baseline",
-    "every-size-keeps-the-required-part-set"
+    "every-size-keeps-the-required-part-set",
+    "live-dot-takes-the-variant-colour",
+    "live-dot-stops-under-reduced-motion"
   ]
 }

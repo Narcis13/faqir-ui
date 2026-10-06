@@ -1,4 +1,14 @@
 {
+  "patterns/article/article.html": {
+    "article": 3,
+    "avatar": 3,
+    "badge": 7,
+    "image": 1,
+    "link": 5,
+    "nav": 1,
+    "quote": 2,
+    "scroll-progress": 1
+  },
   "patterns/auth-form/auth-form.html": {
     "auth-form": 7,
     "button": 11,
@@ -6,6 +16,11 @@
     "input": 14,
     "label": 14,
     "separator": 2
+  },
+  "patterns/bento/bento.html": {
+    "backdrop": 2,
+    "bento": 2,
+    "icon": 8
   },
   "patterns/crud-table/crud-table.html": {
     "badge": 5,
@@ -19,6 +34,13 @@
     "select": 1,
     "spinner": 1,
     "table": 3
+  },
+  "patterns/cta/cta.html": {
+    "backdrop": 1,
+    "button": 6,
+    "cta": 4,
+    "glow": 1,
+    "highlight": 1
   },
   "patterns/dashboard-shell/dashboard-shell.html": {
     "avatar": 5,
@@ -52,6 +74,11 @@
     "button": 5,
     "empty-state": 4
   },
+  "patterns/faq/faq.html": {
+    "collapsible": 12,
+    "faq": 3,
+    "link": 2
+  },
   "patterns/feature-grid/feature-grid.html": {
     "button": 1,
     "feature-grid": 3,
@@ -70,6 +97,7 @@
     "badge": 2,
     "button": 3,
     "hero": 2,
+    "highlight": 1,
     "image": 1
   },
   "patterns/inbox/inbox.html": {
@@ -81,6 +109,18 @@
     "input": 1,
     "stack": 4,
     "tabs": 1
+  },
+  "patterns/logo-cloud/logo-cloud.html": {
+    "logo-cloud": 3,
+    "marquee": 1,
+    "reveal": 1
+  },
+  "patterns/post-list/post-list.html": {
+    "avatar": 13,
+    "badge": 13,
+    "button": 2,
+    "link": 13,
+    "post-list": 3
   },
   "patterns/pricing/pricing.html": {
     "badge": 2,
@@ -122,6 +162,12 @@
     "separator": 1,
     "site-footer": 2
   },
+  "patterns/site-header/site-header.html": {
+    "button": 10,
+    "link": 2,
+    "nav": 6,
+    "site-header": 3
+  },
   "patterns/stats-dashboard/stats-dashboard.html": {
     "badge": 4,
     "button": 1,
@@ -130,6 +176,14 @@
     "stat": 7,
     "stats-dashboard": 2,
     "table": 2
+  },
+  "patterns/testimonials/testimonials.html": {
+    "avatar": 5,
+    "button": 1,
+    "marquee": 2,
+    "quote": 23,
+    "rating": 4,
+    "testimonials": 3
   },
   "patterns/wizard/wizard.html": {
     "button": 3,
@@ -148,8 +202,12 @@
   "primitives/avatar/avatar.html": {
     "avatar": 5
   },
+  "primitives/backdrop/backdrop.html": {
+    "backdrop": 6,
+    "container": 6
+  },
   "primitives/badge/badge.html": {
-    "badge": 9
+    "badge": 11
   },
   "primitives/breadcrumb/breadcrumb.html": {
     "breadcrumb": 4
@@ -163,7 +221,8 @@
   },
   "primitives/card/card.html": {
     "button": 2,
-    "card": 4
+    "card": 7,
+    "link": 1
   },
   "primitives/checkbox/checkbox.html": {
     "checkbox": 8,
@@ -201,14 +260,23 @@
     "select": 1,
     "textarea": 1
   },
+  "primitives/glow/glow.html": {
+    "button": 1,
+    "card": 5,
+    "glow": 6,
+    "link": 1
+  },
   "primitives/grid/grid.html": {
     "grid": 9
+  },
+  "primitives/highlight/highlight.html": {
+    "highlight": 7
   },
   "primitives/icon/icon.html": {
     "icon": 120
   },
   "primitives/image/image.html": {
-    "image": 10
+    "image": 13
   },
   "primitives/input/input.html": {
     "input": 9,
@@ -225,7 +293,11 @@
     "label": 7
   },
   "primitives/link/link.html": {
-    "link": 5
+    "link": 7
+  },
+  "primitives/marquee/marquee.html": {
+    "badge": 10,
+    "marquee": 4
   },
   "primitives/nav/nav.html": {
     "nav": 4
@@ -236,11 +308,27 @@
   "primitives/progress/progress.html": {
     "progress": 4
   },
+  "primitives/quote/quote.html": {
+    "avatar": 2,
+    "quote": 6,
+    "rating": 1
+  },
   "primitives/radio/radio.html": {
     "label": 3,
     "radio": 9,
     "radio-group": 3,
     "radio-label": 9
+  },
+  "primitives/rating/rating.html": {
+    "rating": 7
+  },
+  "primitives/reveal/reveal.html": {
+    "card": 6,
+    "reveal": 10
+  },
+  "primitives/scroll-progress/scroll-progress.html": {
+    "scroll-progress": 3,
+    "surface": 1
   },
   "primitives/select/select.html": {
     "label": 3,
@@ -289,6 +377,9 @@
   "primitives/textarea/textarea.html": {
     "label": 4,
     "textarea": 7
+  },
+  "primitives/timeline/timeline.html": {
+    "timeline": 3
   },
   "primitives/toggle/toggle.html": {
     "toggle": 7

@@ -45,3 +45,16 @@
 <figure data-ui="image" data-size="full">
   <img data-part="img" src="https://example.com/photo.jpg" alt="Full width image" loading="lazy">
 </figure>
+
+<!-- Hover: zoom (the figure clips, the picture leans in) -->
+<figure data-ui="image" data-variant="thumbnail" data-size="md" data-hover="zoom">
+  <img data-part="img" src="https://example.com/harbour.jpg" alt="Fishing boats in a harbour at dusk" loading="lazy">
+</figure>
+
+<!-- Hover: lift and fade, on images that are links -->
+<a href="#lift"><figure data-ui="image" data-variant="thumbnail" data-size="sm" data-hover="lift">
+  <img data-part="img" src="https://example.com/lift.jpg" alt="A paper plane mid-flight" loading="lazy">
+</figure></a>
+<a href="#fade"><figure data-ui="image" data-variant="thumbnail" data-size="sm" data-hover="fade">
+  <img data-part="img" src="https://example.com/fade.jpg" alt="A fogged window at dawn" loading="lazy">
+</figure></a>

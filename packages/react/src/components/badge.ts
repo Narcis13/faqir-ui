@@ -10,11 +10,13 @@ export type LBadgeVariant = "default" | "primary" | "secondary" | "destructive" 
 /** Allowed `size` values (manifest variant group "size", attr `data-size`). */
 export type LBadgeSize = "sm" | "md" | "lg";
 
-export interface LBadgeProps extends Omit<ComponentPropsWithoutRef<"span">, "variant" | "size"> {
+export interface LBadgeProps extends Omit<ComponentPropsWithoutRef<"span">, "variant" | "size" | "live"> {
   /** `data-variant`; omitted when unset (manifest default: "default"). */
   variant?: LBadgeVariant;
   /** `data-size`; omitted when unset (manifest default: "md"). */
   size?: LBadgeSize;
+  /** A breathing dot before the text, in the variant colour — a status that is happening now (Live, Online, Recording). */
+  live?: boolean;
 }
 
 /** `badge` — Small status indicator with color variants */
@@ -25,7 +27,9 @@ export const LBadge = createFaqirPrimitive<LBadgeProps>({
     { prop: "variant", attr: "data-variant", values: ["default", "primary", "secondary", "destructive", "success", "warning"] },
     { prop: "size", attr: "data-size", values: ["sm", "md", "lg"] },
   ],
-  states: [],
+  states: [
+    { prop: "live", attr: "data-live", value: null, kind: "presence" },
+  ],
   slots: [],
   defaultSlot: true,
 }, "LBadge");

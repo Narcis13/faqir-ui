@@ -112,6 +112,7 @@
   --duration-normal:  0ms;
   --duration-slow:    0ms;
   --duration-slower:  0ms;
+  --duration-slowest: 0ms;
 
   /* ── Decoration: the underline sits on the baseline ──
      `plain`, not the base layer's `offset`: a 0.2em gap is a screen

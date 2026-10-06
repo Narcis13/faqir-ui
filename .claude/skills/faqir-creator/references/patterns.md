@@ -2,7 +2,74 @@
 
 # Faqir Patterns Reference
 
-15 patterns, each with its anatomy tree, variant table, and safe/unsafe transforms — all derived from the component manifest.
+23 patterns, each with its anatomy tree, variant table, and safe/unsafe transforms — all derived from the component manifest.
+
+## article
+
+_kind: pattern · category: typography_
+
+Long-form reading layout composing a header (badge eyebrow, headline, standfirst, avatar byline), a cover image, the prose body with pull quotes, a sticky table of contents and a footer of tags and share links. Composition only: zero JavaScript, no controller, no reactive directives — the two layouts are pure CSS grid.
+
+```html
+<article data-ui="article" data-variant="{layout}" aria-labelledby="{id}-headline">
+  <header data-part="header">
+    <p data-part="eyebrow"><span data-ui="badge" data-variant="primary">{eyebrow}</span></p>
+    <h1 data-part="headline" id="{id}-headline">{headline}</h1>
+    <p data-part="summary">{summary}</p>
+    <div data-part="byline">
+      <span data-ui="avatar" data-size="sm"><span data-part="fallback">{initials}</span></span>
+      <span data-part="author">{author}</span>
+      <span data-part="meta"><time datetime="{date_iso}">{date}</time> · {reading_time}</span>
+    </div>
+  </header>
+  <div data-part="cover">
+    <figure data-ui="image" data-variant="responsive" data-size="full">
+      <img data-part="img" src="{cover_src}" alt="{cover_alt}" loading="lazy">
+    </figure>
+  </div>
+  <div data-part="body">
+    {body}
+  </div>
+  <footer data-part="footer">
+    <div data-part="tags">
+      <span data-ui="badge">{tag}</span>
+    </div>
+    <div data-part="share">
+      <a data-ui="link" data-variant="muted" href="{share_href}">{share_label}</a>
+    </div>
+  </footer>
+</article>
+```
+
+**Anatomy**
+
+```text
+[data-ui='article']  ·  <article> · content: slots
+├─ [data-part='header']  <header>  required  — The masthead of the piece: eyebrow, headline, summary and byline stacked in one grid
+├─ [data-part='eyebrow']  <p>  optional  — Short kicker above the headline, inside the header — typically holds a nested data-ui='badge'
+├─ [data-part='headline']  <h1>  required  — The title of the piece, in the heading voice. Give it an id and point the article's aria-labelledby at it so the article is named
+├─ [data-part='summary']  <p>  optional  — The standfirst under the headline: one size up from the body and muted
+├─ [data-part='byline']  <div>  optional  — One row inside the header: a nested data-ui='avatar', then the author and meta parts
+├─ [data-part='author']  <span>  optional  — The author's name, inside the byline
+├─ [data-part='meta']  <span>  optional  — Date and reading time, inside the byline. Put the date in a <time datetime> so it is machine-readable
+├─ [data-part='cover']  <div>  optional  — Wrapper for the cover picture — a nested data-ui='image' figure, which keeps its own caption
+├─ [data-part='body']  <div>  required  — The prose: ordinary paragraphs, h2/h3 headings, lists and figures in block flow. Only the measure and the vertical rhythm are set by the pattern. A nested data-ui='quote' with data-variant='pull' may sit between paragraphs
+├─ [data-part='aside']  <aside>  optional  — Table of contents: a nested data-ui='nav' data-variant='vertical' labelled 'On this page'. The sidebar layout pins it beside the body from the lg floor
+├─ [data-part='footer']  <footer>  optional  — Closing row under a hairline, holding the tags and share parts
+├─ [data-part='tags']  <div>  optional  — Topic tags inside the footer, each a nested data-ui='badge'
+└─ [data-part='share']  <div>  optional  — Share links inside the footer, each a nested data-ui='link' with real link text
+```
+
+**Variants**
+
+| Variant | Values | Default | Attribute | Applied to |
+|---------|--------|---------|-----------|------------|
+| layout | `centered`, `sidebar` | `centered` | `data-variant` | root |
+
+- **Safe transforms:** `change-layout-variant`, `change-headline-text`, `add-eyebrow`, `remove-eyebrow`, `remove-summary`, `add-cover`, `remove-cover`, `add-aside-with-table-of-contents`, `remove-aside`, `add-pull-quote-between-paragraphs`, `remove-footer`, `change-article-measure`, `add-scroll-progress-as-first-child`
+- **Unsafe (never do):** `remove-headline`, `remove-aria-labelledby`, `demote-headline-below-h1-while-it-names-the-page`, `skip-a-heading-level-inside-the-body`, `put-a-figure-element-in-the-cover-slot`, `add-data-part-to-nested-badge-avatar-or-quote`, `add-custom-script`
+- **A11y:** keys: Tab
+- **Required ARIA:** `aria-labelledby on the article pointing at the headline id`; `alt text on the cover image and on any avatar image in the byline`; `aria-label on the aside and on the nested table-of-contents nav`; `datetime on the <time> inside the meta part`
 
 ## auth-form
 
@@ -72,6 +139,48 @@ Authentication form with login, register, and social auth options
 - **A11y:** role=form · keys: Tab, Enter, Shift+Tab
 - **Required ARIA:** `aria-label or aria-labelledby on the form element`; `label[for] matching each input id`; `aria-invalid="true" on inputs in error state`; `aria-describedby pointing to error message when present`; `aria-busy="true" on form when in loading state`
 
+## bento
+
+_kind: pattern · category: marketing_
+
+Bento feature grid for a marketing page: a section heading plus a real <ul> of card-like tiles that may span two columns, two rows or both, packed densely into a four-column mosaic from the lg floor. Composition only: zero JavaScript, no controller, no reactive directives — the spans, the hover spotlight and the optional staggered entrance are pure CSS.
+
+```html
+<section data-ui="bento" aria-labelledby="{id}-heading">
+  <h2 data-part="heading" id="{id}-heading">{heading}</h2>
+  <p data-part="description">{description}</p>
+  <ul data-part="items">
+    <li data-part="item" data-span="{span}">
+      <span data-part="icon" aria-hidden="true"><span data-ui="icon" data-icon="{icon}"></span></span>
+      <h3 data-part="title">{item_title}</h3>
+      <p data-part="description">{item_description}</p>
+    </li>
+  </ul>
+</section>
+```
+
+**Anatomy**
+
+```text
+[data-ui='bento']  ·  <section> · content: slots
+├─ [data-part='heading']  <h2>  required  — Section heading. Give it an id and point the section's aria-labelledby at it so the landmark is named
+├─ [data-part='description']  <p>  optional  — A paragraph of copy. As a direct child of the section it is the intro under the heading, capped at the content measure; as a direct child of an item it is that tile's one or two sentences
+├─ [data-part='items']  <ul>  required  — The mosaic. Keep it a <ul> so the tiles are announced as a list; the marker is removed in CSS, not the semantics
+├─ [data-part='item']  <li>  required  — One tile — repeat once per feature, as a direct child of items. The card surface is drawn here (not by a nested card); its shape is data-span (wide | tall | large), written on this element
+├─ [data-part='media']  <div>  optional  — Optional stretched visual area at the top of a tile; its single child fills it, so a nested data-ui='backdrop' (data-static, so only one scene on the page moves) paints the whole panel. It grows into the spare height of a tall tile. Decoration: mark it aria-hidden='true'
+├─ [data-part='icon']  <span>  optional  — Tinted plate WRAPPING a nested data-ui='icon' (the plate is never the icon itself). Mark the plate aria-hidden='true' — the meaning is carried by the title beside it
+└─ [data-part='title']  <h3>  required  — Tile heading, one level below the section heading so the outline never skips. Set in the heading face
+```
+
+**Variants**
+
+_No variants._
+
+- **Safe transforms:** `add-item`, `remove-item`, `reorder-items`, `change-item-span`, `swap-icon-plate-for-media`, `change-item-icons`, `toggle-animate`, `add-section-description`, `remove-section-description`, `change-gap-or-row-floor`
+- **Unsafe (never do):** `replace-items-list-with-divs`, `replace-item-surface-with-a-nested-card`, `write-data-span-on-the-root`, `remove-aria-labelledby`, `remove-aria-hidden-from-media-or-icon-plate`, `promote-tile-titles-to-h2`, `add-custom-script`
+- **A11y:** keys: Tab
+- **Required ARIA:** `aria-labelledby on the section pointing at the heading id`; `aria-hidden='true' on every media area and icon plate — they are decoration`; `tile titles are real headings one level below the section heading`
+
 ## crud-table
 
 _kind: pattern · category: composite_
@@ -124,6 +233,50 @@ Data table with create, read, update, delete operations, search, and pagination
 - **Unsafe (never do):** `remove-table-semantics`, `remove-dialog-a11y`, `remove-search-label`, `remove-pagination`, `remove-row-action-labels`, `remove-delete-confirmation`
 - **A11y:** keys: Tab, Enter/Space, Escape
 - **Required ARIA:** `aria-label on search input`; `aria-label on create button when icon-only`; `aria-label on row action buttons`; `Proper table semantics delegated to nested table component`; `Dialog a11y delegated to nested dialog components`
+
+## cta
+
+_kind: pattern · category: marketing_
+
+Call-to-action panel — eyebrow, headline, description, a row of nested buttons and a line of fine print — stacked and centred, split beside media, or compressed into one banner row, painted as a bordered surface, the accent, or the accent gradient, and able to go transparent inside a backdrop. Composition only: zero JavaScript, no controller, no reactive directives.
+
+```html
+<section data-ui="cta" data-variant="{layout}" data-tone="{tone}" aria-labelledby="{id}-headline">
+  <p data-part="eyebrow">{eyebrow}</p>
+  <h2 data-part="headline" id="{id}-headline">{headline}</h2>
+  <p data-part="description">{description}</p>
+  <div data-part="actions">
+    <a data-ui="button" data-variant="primary" data-size="lg" href="{primary_href}">{primary_label}</a>
+    <a data-ui="button" data-variant="outline" data-size="lg" href="{secondary_href}">{secondary_label}</a>
+  </div>
+  <p data-part="note">{note}</p>
+</section>
+```
+
+**Anatomy**
+
+```text
+[data-ui='cta']  ·  <section> · content: slots
+├─ [data-part='eyebrow']  <p>  optional  — Short kicker above the headline, set small in the accent (in the ink on a filled tone)
+├─ [data-part='headline']  <h2>  required  — The ask, in the heading voice with balanced wrapping. Give it an id and point the section's aria-labelledby at it so the landmark is named. May hold a nested data-ui='highlight' around the words that matter
+├─ [data-part='description']  <p>  optional  — Supporting paragraph under the headline; capped at the prose measure for readability
+├─ [data-part='actions']  <div>  optional  — Call-to-action row. Put nested <a data-ui='button'> elements directly inside (optionally one wrapped in a data-ui='glow'); they keep their own data-variant/data-size and must NOT carry a data-part. Use the button's secondary variant on the primary and gradient tones
+├─ [data-part='note']  <p>  optional  — Fine print under the actions (pricing caveat, trust line)
+├─ [data-part='content']  <div>  optional  — Text column wrapper — required by the split and banner layouts, omitted by the centred one
+└─ [data-part='media']  <figure>  optional  — Media column of the split layout, holding an <img> with real alt text; rounded and clipped by the pattern
+```
+
+**Variants**
+
+| Variant | Values | Default | Attribute | Applied to |
+|---------|--------|---------|-----------|------------|
+| layout | `center`, `split`, `banner` | `center` | `data-variant` | root |
+| tone | `surface`, `primary`, `gradient` | `surface` | `data-tone` | root |
+
+- **Safe transforms:** `change-layout-variant`, `change-tone`, `toggle-transparent`, `change-headline-text`, `add-eyebrow`, `remove-eyebrow`, `add-highlight-inside-the-headline`, `add-secondary-action`, `wrap-the-featured-button-in-a-glow`, `remove-note`, `swap-media-image`, `change-custom-property-colors-or-padding`
+- **Unsafe (never do):** `remove-headline`, `remove-aria-labelledby`, `demote-headline-below-h2`, `add-data-part-to-action-buttons`, `restyle-nested-buttons-from-the-pattern`, `put-the-backdrop-inside-the-section`, `add-custom-script`
+- **A11y:** keys: Tab
+- **Required ARIA:** `aria-labelledby on the section pointing at the headline id`; `alt text on any image inside the media slot`; `descriptive link text on every action (never 'click here')`
 
 ## dashboard-shell
 
@@ -254,6 +407,48 @@ Placeholder display for empty content areas with icon, message, and action
 - **Safe transforms:** `change-size`, `change-icon`, `change-title-text`, `change-description-text`, `change-action-button-variant`, `add-secondary-action`, `remove-secondary-action`, `remove-icon`, `restyle-background`
 - **Unsafe (never do):** `remove-title-slot`, `flatten-to-single-div`, `remove-action-without-alternative`
 - **Required ARIA:** `role="status" on root when content changes dynamically`
+
+## faq
+
+_kind: pattern · category: marketing_
+
+Frequently-asked-questions section: a heading, an optional description, a stack of native <details data-ui='collapsible'> questions and a closing contact line. Composition only: zero JavaScript, no controller, no reactive directives — the two layouts are pure CSS grid and the optional numbering is a CSS counter.
+
+```html
+<section data-ui="faq" data-variant="{layout}" aria-labelledby="{id}-heading">
+  <h2 data-part="heading" id="{id}-heading">{heading}</h2>
+  <p data-part="description">{description}</p>
+  <div data-part="items">
+    <details data-ui="collapsible" data-variant="bordered">
+      <summary data-part="trigger">{question}</summary>
+      <div data-part="content">{answer}</div>
+    </details>
+  </div>
+  <p data-part="footer">{footer_text} <a data-ui="link" href="{footer_href}">{footer_label}</a></p>
+</section>
+```
+
+**Anatomy**
+
+```text
+[data-ui='faq']  ·  <section> · content: slots
+├─ [data-part='heading']  <h2>  required  — Section heading. Give it an id and point the section's aria-labelledby at it so the landmark is named. A direct child in the stacked layout; inside intro in the split layout
+├─ [data-part='description']  <p>  optional  — Optional intro paragraph under the heading. A direct child in the stacked layout; inside intro in the split layout
+├─ [data-part='intro']  <div>  optional  — Wrapper for heading, description and footer — required by the split layout, where it sticks beside the questions from the lg floor; omitted by the stacked one
+├─ [data-part='items']  <div>  required  — The stack of questions. Put one nested <details data-ui='collapsible'> per question directly inside; its <summary data-part='trigger'> and <div data-part='content'> are the COLLAPSIBLE's parts, not the faq's. Only the gap between questions is drawn here (--faq-gap)
+└─ [data-part='footer']  <p>  optional  — Closing line under the questions — typically 'Still have questions?' with a nested data-ui='link'. A direct child in the stacked layout; inside intro in the split layout
+```
+
+**Variants**
+
+| Variant | Values | Default | Attribute | Applied to |
+|---------|--------|---------|-----------|------------|
+| layout | `stacked`, `split` | `stacked` | `data-variant` | root |
+
+- **Safe transforms:** `add-question`, `remove-question`, `reorder-questions`, `change-layout-variant`, `toggle-numbered`, `open-a-question-by-default`, `add-section-description`, `remove-section-description`, `add-footer`, `remove-footer`, `change-question-gap`
+- **Unsafe (never do):** `replace-collapsibles-with-divs`, `add-data-part-to-a-collapsible`, `move-heading-outside-intro-in-split-layout`, `remove-aria-labelledby`, `promote-heading-to-h1-inside-a-page-that-has-one`, `add-custom-script`
+- **A11y:** keys: Tab, Enter/Space
+- **Required ARIA:** `aria-labelledby on the section pointing at the heading id`; `every question is a <details data-ui='collapsible'> whose trigger is its <summary>`; `descriptive link text in the footer (never 'click here')`
 
 ## feature-grid
 
@@ -463,6 +658,107 @@ _No variants._
 - **Unsafe (never do):** `replace-the-item-buttons-with-clickable-divs`, `signal-the-selected-row-with-colour-only`, `add-inbox-data-parts-inside-a-nested-tabs-or-empty-state`, `remove-the-back-button`, `drop-the-static-hidden-guard-from-an-authored-detail`, `add-custom-script`
 - **A11y:** keys: Tab, Enter / Space on a row, Enter / Space on the back button
 - **Required ARIA:** `aria-labelledby on the list pane pointing at the list heading id`; `each message row is a real button, so it is one tab stop with Enter/Space activation`; `aria-current='true' on the selected row, alongside data-state='selected'`; `aria-labelledby on each authored detail pointing at its own subject id`; `role='status' on the loading line and role='alert' on the error line of a server-bound list`; `an aria-label on the search input — the pattern ships no visible label for it`
+
+## logo-cloud
+
+_kind: pattern · category: marketing_
+
+"Trusted by" strip: a small muted eyebrow over a row of customer marks, each an <img> set to one height, desaturated at rest and returning to colour under the pointer. Composition only: zero JavaScript, no controller, no reactive directives — the grid layout is a centred wrapping cluster, the marquee layout hands the items to the nested marquee primitive.
+
+```html
+<section data-ui="logo-cloud" data-variant="grid" aria-labelledby="{id}-heading">
+  <p data-part="heading" id="{id}-heading">{heading}</p>
+  <ul data-part="items">
+    <li data-part="item"><img data-part="logo" src="{logo_src}" alt="{company}"></li>
+  </ul>
+</section>
+```
+
+**Anatomy**
+
+```text
+[data-ui='logo-cloud']  ·  <section> · content: slots
+├─ [data-part='heading']  <p>  required  — The eyebrow ('Trusted by teams at'). A paragraph, not a heading, so the strip stays out of the document outline; give it an id and point the section's aria-labelledby at it so the landmark is named
+├─ [data-part='items']  <ul>  optional  — The list of marks in the grid layout — a centred, wrapping cluster. Absent in the marquee layout, where the nested marquee's two [data-part='track'] lists take its place
+├─ [data-part='item']  <li>  optional  — One mark. A direct child of the items list, or of a marquee track; holds the logo as its direct child (or a link wrapping it — focus inside the item brings the colour back)
+└─ [data-part='logo']  <img>  optional  — The mark itself, an <img> whose alt is the company name. Sized to --logo-cloud-height with its own width (object-fit: contain), greyscale and dimmed at rest unless data-color is set. In a marquee's aria-hidden second track the copies carry alt=''
+```
+
+**Variants**
+
+| Variant | Values | Default | Attribute | Applied to |
+|---------|--------|---------|-----------|------------|
+| layout | `grid`, `marquee` | `grid` | `data-variant` | root |
+
+- **Safe transforms:** `change-layout-variant`, `toggle-color`, `add-logo`, `remove-logo`, `add-logo-to-both-marquee-tracks`, `remove-logo-from-both-marquee-tracks`, `change-heading-text`, `set-custom-property-knobs`, `wrap-the-section-in-a-reveal`
+- **Unsafe (never do):** `remove-heading`, `remove-aria-labelledby`, `promote-heading-to-an-h-element`, `remove-alt-from-a-logo-in-the-first-track`, `keep-items-list-in-the-marquee-layout`, `edit-one-marquee-track-without-the-other`, `put-a-link-in-the-hidden-marquee-track`, `add-custom-script`
+- **A11y:** keys: Tab
+- **Required ARIA:** `aria-labelledby on the section pointing at the heading id`; `alt text on every logo image naming the company (empty alt only on the copies in a marquee's aria-hidden second track)`; `in the marquee layout: role='group' and an aria-label on the nested marquee, and aria-hidden='true' on its second track`
+
+## post-list
+
+_kind: pattern · category: marketing_
+
+Blog index composing a heading, a line of description and a list of post cards — picture, badge tag, linked title, clamped excerpt and an avatar byline — in a grid, with a featured first post, or as a single horizontal list, with an optional staggered entrance. Composition only: zero JavaScript, no controller, no reactive directives — the three layouts and the entrance are pure CSS.
+
+```html
+<section data-ui="post-list" data-variant="{layout}" aria-labelledby="{id}-heading">
+  <h2 data-part="heading" id="{id}-heading">{heading}</h2>
+  <p data-part="description">{description}</p>
+  <ul data-part="items">
+    <li data-part="item">
+      <article data-part="card" aria-labelledby="{id}-{post_id}-title">
+        <a data-part="media" href="{post_href}">
+          <img src="{post_image_src}" alt="{post_image_alt}" loading="lazy">
+        </a>
+        <div data-part="content">
+          <p data-part="tag"><span data-ui="badge" data-variant="primary" data-size="sm">{post_tag}</span></p>
+          <h3 data-part="title" id="{id}-{post_id}-title"><a data-ui="link" href="{post_href}">{post_title}</a></h3>
+          <p data-part="excerpt">{post_excerpt}</p>
+          <div data-part="meta">
+            <span data-ui="avatar" data-size="sm"><span data-part="fallback">{author_initials}</span></span>
+            <span>{author}</span>
+            <time datetime="{date_iso}">{date}</time>
+            <span>{reading_time}</span>
+          </div>
+        </div>
+      </article>
+    </li>
+  </ul>
+  <div data-part="footer">
+    <a data-ui="button" data-variant="outline" href="{index_href}">{footer_label}</a>
+  </div>
+</section>
+```
+
+**Anatomy**
+
+```text
+[data-ui='post-list']  ·  <section> · content: slots
+├─ [data-part='heading']  <h2>  required  — The section heading. Give it an id and point the section's aria-labelledby at it so the region is named
+├─ [data-part='description']  <p>  optional  — Supporting line under the heading, muted and capped at the content measure
+├─ [data-part='items']  <ul>  required  — The list of posts — a real <ul> so assistive tech announces the count
+├─ [data-part='item']  <li>  required  — One list item, holding exactly one card
+├─ [data-part='card']  <article>  required  — The post card, drawn by the pattern from the card aliases: an <article> named by its title through aria-labelledby, media over content, lifting on hover
+├─ [data-part='media']  <a>  optional  — A link to the post wrapping a plain <img> with alt text; the alt is the link's name, so it describes the picture. The picture is cropped to 16:9 and leans in while the card is hovered or focused
+├─ [data-part='content']  <div>  required  — The text column of the card, padded by --card-padding; holds tag, title, excerpt and meta
+├─ [data-part='tag']  <p>  optional  — Category line above the title, holding a nested data-ui='badge'
+├─ [data-part='title']  <h3>  required  — The post title in the heading voice, wrapping a nested data-ui='link' so the whole title is the link. Give it an id and point the card's aria-labelledby at it
+├─ [data-part='excerpt']  <p>  optional  — Muted summary clamped to --post-list-lines lines, so the cards in a row end on the same line
+├─ [data-part='meta']  <div>  optional  — Byline row pushed to the bottom of the content: a nested data-ui='avatar' data-size='sm', the author in a <span>, a <time datetime> and the reading time in a <span>. Text items are separated by a decorative middle dot
+└─ [data-part='footer']  <div>  optional  — Closing action row under the list — typically one 'View all posts' link as a nested data-ui='button'
+```
+
+**Variants**
+
+| Variant | Values | Default | Attribute | Applied to |
+|---------|--------|---------|-----------|------------|
+| layout | `grid`, `featured`, `list` | `grid` | `data-variant` | root |
+
+- **Safe transforms:** `change-layout-variant`, `toggle-animate`, `add-post-item`, `remove-post-item`, `reorder-post-items`, `remove-description`, `remove-media-from-a-card`, `remove-tag-from-a-card`, `remove-excerpt-from-a-card`, `change-excerpt-line-count`, `change-gap`, `add-footer-action`, `remove-footer`
+- **Unsafe (never do):** `remove-heading`, `remove-aria-labelledby-from-section-or-card`, `replace-the-ul-with-divs`, `put-more-than-one-card-in-an-item`, `remove-alt-from-a-media-image`, `add-data-part-to-nested-badge-avatar-link-or-button`, `add-custom-script`
+- **A11y:** keys: Tab
+- **Required ARIA:** `aria-labelledby on the section pointing at the heading id`; `aria-labelledby on each card pointing at its title id`; `alt text on every image inside a media link — the alt is the link's accessible name`; `descriptive link text in every title (never 'read more')`; `datetime on the <time> inside the meta part`
 
 ## pricing
 
@@ -698,6 +994,62 @@ Marketing site footer: brand block with social links, titled link columns built 
 - **A11y:** keys: Tab
 - **Required ARIA:** `the root is a <footer> element (contentinfo landmark)`; `every nested nav has an accessible name via aria-labelledby (column title) or aria-label`; `icon-only social links carry aria-label; their icons carry aria-hidden='true'`
 
+## site-header
+
+_kind: pattern · category: navigation_
+
+Website header: a brand link, the nav primitive centred beside it, an actions cluster of buttons and links, and a native <details> phone menu that holds a vertical copy of the same nav. Composition only: zero JavaScript, no controller, no reactive directives — the plain/floating/glass styles, the sticky pin and the scroll-condense are pure CSS, the condense a scroll timeline that degrades to the plain sticky bar.
+
+```html
+<header data-ui="site-header" data-variant="{style}" data-sticky>
+  <a data-part="brand" href="{home_href}">{brand}</a>
+  <div data-part="nav">
+    <nav data-ui="nav" aria-label="Main">
+      <a data-part="link" data-state="active" href="{link_href}">{link_label}</a>
+    </nav>
+  </div>
+  <div data-part="actions">
+    <a data-ui="link" data-variant="muted" href="{secondary_href}">{secondary_label}</a>
+    <a data-ui="button" data-variant="primary" data-size="sm" href="{primary_href}">{primary_label}</a>
+  </div>
+  <details data-part="menu">
+    <summary data-part="toggle">Menu</summary>
+    <div data-part="panel">
+      <nav data-ui="nav" data-variant="vertical" aria-label="Main menu">
+        <a data-part="link" data-state="active" href="{link_href}">{link_label}</a>
+      </nav>
+      <div data-part="actions">
+        <a data-ui="button" data-variant="primary" href="{primary_href}">{primary_label}</a>
+        <a data-ui="button" data-variant="outline" href="{secondary_href}">{secondary_label}</a>
+      </div>
+    </div>
+  </details>
+</header>
+```
+
+**Anatomy**
+
+```text
+[data-ui='site-header']  ·  <header> · content: slots
+├─ [data-part='brand']  <a>  required  — Wordmark or logo, linking home. Keep it a link — not a heading, so the header never enters the document outline
+├─ [data-part='nav']  <div>  optional  — Wrapper that places a nested data-ui='nav' (aria-label it 'Main'). The nav owns its own [data-part='link'] slots. Hidden on a phone, where the menu panel carries the same links; centred in the row from the md floor
+├─ [data-part='actions']  <div>  optional  — End-of-row cluster of nested data-ui='button' and data-ui='link' elements; they keep their own data-variant/data-size and must NOT carry a data-part. Hidden on a phone. The same part name inside the menu panel stacks the actions full width under a rule
+├─ [data-part='menu']  <details>  optional  — The phone menu, a native <details>: open and closed with zero JavaScript. Shown below the md floor only
+├─ [data-part='toggle']  <summary>  optional  — The menu's <summary>, styled as a button with a chevron that turns when the menu is open. Write its text ('Menu'); it is the accessible name
+└─ [data-part='panel']  <div>  optional  — The menu's contents: a nested vertical data-ui='nav' with its own accessible name (aria-label 'Main menu'), then an actions part. Drops out of the bar as an overlay rather than pushing the page down
+```
+
+**Variants**
+
+| Variant | Values | Default | Attribute | Applied to |
+|---------|--------|---------|-----------|------------|
+| style | `plain`, `floating`, `glass` | `plain` | `data-variant` | root |
+
+- **Safe transforms:** `change-style-variant`, `toggle-sticky`, `toggle-condense`, `add-nav-link-to-both-navs`, `remove-nav-link-from-both-navs`, `change-action-buttons`, `change-brand-text`, `set-custom-property-knobs`
+- **Unsafe (never do):** `replace-header-element-with-div`, `remove-accessible-name-from-a-nav`, `give-both-navs-the-same-accessible-name`, `remove-the-summary-from-the-menu`, `edit-one-nav-without-the-other`, `add-data-part-to-action-buttons`, `promote-brand-to-a-heading`, `add-custom-script`
+- **A11y:** keys: Tab, Enter / Space
+- **Required ARIA:** `the root is a <header> element at the top of the page (banner landmark)`; `every nested nav has an accessible name via aria-label, and the inline nav and the menu nav use different names`; `the menu is a <details> whose <summary> carries visible text — that text is the toggle's accessible name`; `descriptive link text on the brand and on every action (never 'click here')`
+
 ## stats-dashboard
 
 _kind: pattern · category: composite_
@@ -773,6 +1125,56 @@ _No variants._
 - **Unsafe (never do):** `add-stats-dashboard-data-parts-inside-a-panel-card`, `add-a-data-part-to-a-metric-stat`, `remove-the-table-caption`, `remove-aria-labelledby`, `format-a-cell-differently-from-its-column-header`, `add-custom-script`
 - **A11y:** keys: Tab, Enter / Space on a sortable header
 - **Required ARIA:** `aria-labelledby on the section pointing at the heading id`; `aria-labelledby on each report panel pointing at its own title id`; `a <caption> on every report table saying what it counts and over which period`; `scope='col' on every table header cell`; `the trend of a stat is stated in its change text, not only by the data-trend colour`
+
+## testimonials
+
+_kind: pattern · category: marketing_
+
+A wall of customer quotes — heading, description and a real list of card quotes — laid out as an equal-row grid, as packed columns for quotes of different lengths, or as two marquee strips moving against each other, with an optional staggered entrance that reads the reveal tokens. Composition only: zero JavaScript, no controller, no reactive directives.
+
+```html
+<section data-ui="testimonials" data-variant="{layout}" aria-labelledby="{id}-heading">
+  <h2 data-part="heading" id="{id}-heading">{heading}</h2>
+  <p data-part="description">{description}</p>
+  <ul data-part="items">
+    <li data-part="item">
+      <figure data-ui="quote" data-variant="card">
+        <blockquote data-part="text">
+          <p>{quote}</p>
+        </blockquote>
+        <figcaption data-part="author">
+          <span data-part="name">{name}</span>
+          <span data-part="role">{role}</span>
+        </figcaption>
+      </figure>
+    </li>
+  </ul>
+</section>
+```
+
+**Anatomy**
+
+```text
+[data-ui='testimonials']  ·  <section> · content: slots
+├─ [data-part='heading']  <h2>  required  — The section heading. Give it an id and point the section's aria-labelledby at it so the landmark is named
+├─ [data-part='description']  <p>  optional  — Supporting paragraph under the heading; capped at the prose measure for readability
+├─ [data-part='items']  <ul>  optional  — The list of quotes — the grid and columns layouts lay this out; the marquee layout uses strips instead. A real <ul>, so assistive technology announces the count
+├─ [data-part='item']  <li>  optional  — One entry of the list, wrapping exactly one nested data-ui='quote' in its card variant (with its own optional rating and avatar). The quote keeps its own data-variant/data-size and must NOT carry a data-part
+├─ [data-part='strips']  <div>  optional  — Marquee layout only: stacks two nested data-ui='marquee' strips, the second with data-direction='reverse' and data-speed='slow' so the pair reads as depth. Each marquee is written the marquee's way: two identical tracks, the second aria-hidden
+├─ [data-part='slide']  <div>  optional  — Marquee layout only: the pattern's own wrapper around each quote, inside a marquee track's <li>. It carries the card width (--testimonials-card-width) so neither the marquee's items nor the quote are restyled
+└─ [data-part='footer']  <div>  optional  — Closing row under the quotes — a nested data-ui='button' or data-ui='link' to the full stories. Nested elements keep their own data-variant and must NOT carry a data-part
+```
+
+**Variants**
+
+| Variant | Values | Default | Attribute | Applied to |
+|---------|--------|---------|-----------|------------|
+| layout | `grid`, `columns`, `marquee` | `grid` | `data-variant` | root |
+
+- **Safe transforms:** `change-layout-variant`, `toggle-animate`, `change-heading-text`, `add-description`, `remove-description`, `add-item-with-a-card-quote`, `remove-item`, `add-rating-to-a-quote`, `add-avatar-to-a-quote`, `add-footer-action`, `remove-footer`, `change-custom-property-gap-or-card-width`
+- **Unsafe (never do):** `remove-heading`, `remove-aria-labelledby`, `replace-the-items-list-with-divs`, `add-data-part-to-a-nested-quote`, `put-a-link-inside-a-marquee-strip`, `edit-one-marquee-track-without-the-other`, `remove-aria-hidden-from-a-second-track`, `add-custom-script`
+- **A11y:** keys: Tab
+- **Required ARIA:** `aria-labelledby on the section pointing at the heading id`; `quotes inside a <ul data-part='items'> of <li data-part='item'> in the grid and columns layouts`; `role='group' and an aria-label on each nested marquee, and aria-hidden='true' on its second track`
 
 ## wizard
 

@@ -1,0 +1,247 @@
+/* @ui:component article */
+/* @ui:tokens space-8 space-12 space-4 space-3 space-2 space-5 space-10 space-6 space-16 measure-content measure-prose measure-wide font-body font-heading color-fg color-fg-muted color-border text-sm text-3xl text-lg text-base text-2xl text-xl text-4xl heading-weight heading-tracking heading-transform heading-caps heading-leading leading-relaxed leading-snug weight-semibold border-width content-gutter */
+
+/* ── Root ──
+   A long-form page: one reading column, with the header, the cover, the prose,
+   an optional table of contents and the footer stacked in a grid. The two
+   layout variants only change where that grid puts the aside, so the same
+   markup reads centred on a phone and beside its contents on a desk.
+
+   Mobile-first: every declaration here is the PHONE case, and the `@media`
+   blocks at the foot of the sheet widen it from a canon floor up. Nothing
+   below is an override of something bigger. */
+[data-ui="article"] {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-8);
+  max-inline-size: var(--measure-content);
+  margin-inline: auto;
+  padding-block: var(--space-12);
+  padding-inline: var(--space-4);
+  font-family: var(--font-body);
+  color: var(--color-fg);
+}
+
+/* ── Header ──
+   Eyebrow, headline, standfirst and byline, each its own row so the rhythm
+   between them is one gap and not four margins. */
+[data-ui="article"] > [data-part="header"] {
+  display: grid;
+  gap: var(--space-4);
+}
+
+[data-ui="article"] > :where([data-part="header"]) > [data-part="eyebrow"] {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-fg-muted);
+}
+
+/* The headline in the heading voice; `balance` keeps a two-line title from
+   stranding a single word on its second line. */
+[data-ui="article"] > :where([data-part="header"]) > [data-part="headline"] {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: var(--text-3xl);
+  font-weight: var(--heading-weight);
+  letter-spacing: var(--heading-tracking);
+  text-transform: var(--heading-transform);
+  font-variant-caps: var(--heading-caps);
+  line-height: var(--heading-leading);
+  color: var(--color-fg);
+  text-wrap: balance;
+}
+
+/* The standfirst: one size up from the body and muted, so it reads as a
+   summary of the piece rather than its first paragraph. */
+[data-ui="article"] > :where([data-part="header"]) > [data-part="summary"] {
+  margin: 0;
+  max-inline-size: var(--measure-content);
+  font-size: var(--text-lg);
+  line-height: var(--leading-relaxed);
+  color: var(--color-fg-muted);
+  text-wrap: pretty;
+}
+
+/* ── Byline ──
+   Avatar, author and meta on one line. The avatar keeps its own contract; the
+   byline only sets the row it sits in. */
+[data-ui="article"] > :where([data-part="header"]) > [data-part="byline"] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-block-start: var(--space-2);
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+}
+
+[data-ui="article"] > :where([data-part="header"]) > :where([data-part="byline"]) > [data-part="author"] {
+  font-weight: var(--weight-semibold);
+  color: var(--color-fg);
+}
+
+[data-ui="article"] > :where([data-part="header"]) > :where([data-part="byline"]) > [data-part="meta"] {
+  color: var(--color-fg-muted);
+}
+
+/* ── Cover ──
+   A wrapper for the image primitive, not a figure of its own: the primitive
+   already IS the figure, with its caption, and two nested figures would give
+   assistive tech two things to announce for one picture. */
+[data-ui="article"] > [data-part="cover"] {
+  inline-size: 100%;
+}
+
+/* ── Body ──
+   The prose. Only its measure and its vertical rhythm are set here; the
+   paragraphs, headings and lists inside are ordinary HTML in block flow, so
+   their margins collapse and a figure that asks for more air gets it without
+   stacking two gaps. The measure is a knob with the prose measure beneath it,
+   sized in characters so it tracks the reader's font rather than the layout. */
+[data-ui="article"] > [data-part="body"] {
+  max-inline-size: var(--article-measure, var(--measure-prose));
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  color: var(--color-fg);
+  text-wrap: pretty;
+}
+
+[data-ui="article"] > :where([data-part="body"]) > * {
+  margin-block: 0;
+}
+
+[data-ui="article"] > :where([data-part="body"]) > * + * {
+  margin-block-start: var(--space-5);
+}
+
+/* The section headings inside the prose take the heading voice. They open
+   more space above than below, so each one reads as the start of what follows
+   and not the end of what came before. */
+[data-ui="article"] > :where([data-part="body"]) > h2,
+[data-ui="article"] > :where([data-part="body"]) > h3 {
+  font-family: var(--font-heading);
+  font-weight: var(--heading-weight);
+  letter-spacing: var(--heading-tracking);
+  text-transform: var(--heading-transform);
+  font-variant-caps: var(--heading-caps);
+  line-height: var(--heading-leading);
+  color: var(--color-fg);
+  text-wrap: balance;
+}
+
+[data-ui="article"] > :where([data-part="body"]) > h2 {
+  margin-block-start: var(--space-10);
+  font-size: var(--text-2xl);
+}
+
+[data-ui="article"] > :where([data-part="body"]) > h3 {
+  margin-block-start: var(--space-8);
+  font-size: var(--text-xl);
+}
+
+[data-ui="article"] > :where([data-part="body"]) > :where(h2, h3) + * {
+  margin-block-start: var(--space-3);
+}
+
+/* A figure between paragraphs — a pull quote, a picture — gets a wider berth
+   than a paragraph. Margins collapse, so this wins over the sibling rhythm
+   above rather than adding to it. */
+[data-ui="article"] > :where([data-part="body"]) > figure {
+  margin-block: var(--space-8);
+}
+
+/* ── Aside ──
+   The table of contents. In flow on a phone, where it sits after the body as
+   a plain block; the lg block of the sidebar layout moves it beside the prose
+   and pins it. */
+[data-ui="article"] > [data-part="aside"] {
+  font-size: var(--text-sm);
+}
+
+/* ── Footer ──
+   Tags and share links under a hairline, the same rule a section break draws. */
+[data-ui="article"] > [data-part="footer"] {
+  display: grid;
+  gap: var(--space-4);
+  padding-block-start: var(--space-6);
+  border-block-start: var(--border-width) solid var(--color-border);
+}
+
+[data-ui="article"] > :where([data-part="footer"]) > [data-part="tags"] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+[data-ui="article"] > :where([data-part="footer"]) > [data-part="share"] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  font-size: var(--text-sm);
+}
+
+/* ── Layout: centered (default) ──
+   One centred column at the content measure — the root's own default, so the
+   variant only restates it for readers of the sheet. */
+[data-ui="article"][data-variant="centered"] {
+  max-inline-size: var(--measure-content);
+}
+
+/* ── Layout: sidebar ──
+   The same single column below lg: a 16rem rail beside the prose on a phone
+   would leave the prose nothing. The lg block at the foot of the sheet earns
+   the second column. */
+[data-ui="article"][data-variant="sidebar"] {
+  max-inline-size: var(--measure-content);
+}
+
+/* ── Responsive ──
+   Canon tiers only, min-width only, ascending. sm: the type scale and the
+   block padding open up. lg: the sidebar layout widens to the page measure,
+   the header, cover and footer span both columns, and the aside takes the end
+   column beside the body and sticks there. */
+@media (min-width: 40rem) {
+  [data-ui="article"] {
+    padding-block: var(--space-16);
+    padding-inline: var(--content-gutter);
+  }
+
+  [data-ui="article"] > :where([data-part="header"]) > [data-part="headline"] {
+    font-size: var(--text-4xl);
+  }
+
+  [data-ui="article"] > :where([data-part="header"]) > [data-part="summary"] {
+    font-size: var(--text-xl);
+  }
+
+  [data-ui="article"] > [data-part="body"] {
+    font-size: var(--text-lg);
+  }
+}
+
+@media (min-width: 64rem) {
+  [data-ui="article"][data-variant="sidebar"] {
+    grid-template-columns: minmax(0, 1fr) 16rem;
+    column-gap: var(--space-12);
+    max-inline-size: var(--measure-wide);
+  }
+
+  [data-ui="article"][data-variant="sidebar"] > [data-part="header"],
+  [data-ui="article"][data-variant="sidebar"] > [data-part="cover"],
+  [data-ui="article"][data-variant="sidebar"] > [data-part="footer"] {
+    grid-column: 1 / -1;
+  }
+
+  [data-ui="article"][data-variant="sidebar"] > [data-part="body"] {
+    grid-column: 1;
+  }
+
+  /* `start` rather than the stretched default: a sticky box that fills its
+     grid area has nowhere to travel, so it would never actually stick. */
+  [data-ui="article"][data-variant="sidebar"] > [data-part="aside"] {
+    grid-column: 2;
+    align-self: start;
+    position: sticky;
+    inset-block-start: var(--space-8);
+  }
+}

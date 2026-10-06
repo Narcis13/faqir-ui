@@ -1522,7 +1522,7 @@
 
   // Named presets shipped by motion-presets.css. Unknown names still animate
   // (the attribute is stamped) but have no styling, so we warn to catch typos.
-  var MOTION_PRESETS = { fade: 1, 'slide-up': 1, scale: 1 };
+  var MOTION_PRESETS = { fade: 1, 'slide-up': 1, 'slide-down': 1, 'slide-start': 1, 'slide-end': 1, scale: 1, blur: 1, flip: 1 };
 
   function prefersReducedMotion() {
     return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1576,7 +1576,7 @@
     var preset = el.getAttribute('l-transition') || 'fade';
     if (!MOTION_PRESETS[preset]) {
       console.warn('[Faqir] l-transition: unknown preset "' + preset +
-        '" — expected one of: fade, slide-up, scale');
+        '" — expected one of: ' + Object.keys(MOTION_PRESETS).join(', '));
     }
 
     el.setAttribute('data-motion', phase); // from-state (no transition yet)

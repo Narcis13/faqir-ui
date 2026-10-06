@@ -15,7 +15,9 @@
   padding-inline: var(--space-4);
   font-family: var(--font-body);
   color: var(--color-fg);
-  background-color: var(--color-bg);
+  /* The page colour unless the author says otherwise: a hero wrapped in a
+     backdrop sets `--hero-bg: transparent` so the light behind it shows. */
+  background-color: var(--hero-bg, var(--color-bg));
   background-image: var(--texture-surface);
 }
 

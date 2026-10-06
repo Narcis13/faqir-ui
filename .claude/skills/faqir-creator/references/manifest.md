@@ -307,12 +307,12 @@ How far this theme sits from the nearest other shipped theme, written by the dis
 
 ## File Set Per Kind
 
-`files` requires `html`, `css` and `manifest` whatever the kind — `js` is declared by the components that ship a controller, and only those. Counted across the 86 manifests in `registry/`:
+`files` requires `html`, `css` and `manifest` whatever the kind — `js` is declared by the components that ship a controller, and only those. Counted across the 103 manifests in `registry/`:
 
 | `kind` | Components | Declare `files.js` |
 |---|---|---|
-| `pattern` | 15 | 0 |
-| `primitive` | 42 | 0 |
+| `pattern` | 23 | 0 |
+| `primitive` | 51 | 0 |
 | `recipe` | 29 | 29 |
 
 ## Closed Enums
@@ -378,12 +378,17 @@ The shipped `button` manifest, verbatim. Not an illustration of one: this is the
 {
   "$schema": "../../../manifest.schema.json",
   "name": "button",
-  "version": "1.2.1",
+  "version": "1.3.0",
   "kind": "primitive",
   "category": "actions",
   "description": "Interactive button with multiple visual variants and sizes",
 
   "changes": [
+    {
+      "version": "1.3.0",
+      "note": "A data-effect prop, additive to every variant: shine (a highlight sweeps across the face on hover and focus), pulse (a ring leaves the edge on a loop, cut from --motion-ambient-duration and frozen by --motion-ambient-play) and press (sinks to 0.96 under the pointer). The ring is drawn by ::before, so it never collides with the loading spinner on ::after. Every effect has a reduced-motion fallback. No change for a button without the attribute.",
+      "breaking": false
+    },
     {
       "version": "1.2.1",
       "note": "Nested components keep their own parts. The stylesheet reached the icon with descendant selectors, so a component nested inside with parts of the same name took this one's styles. The icon is the button's child. Every part rule is now a child chain from the root, with the hops in :where(), so no rule changes specificity. No change for markup that follows the template.",
@@ -442,6 +447,7 @@ The shipped `button` manifest, verbatim. Not an illustration of one: this is the
   },
 
   "props": {
+    "effect": {"type":"enum","values":["shine","pulse","press"],"attr":"data-effect","description":"Attention on top of the variant: shine sweeps a highlight across the face on hover; pulse sends a ring out from the edge on a loop — for the one action the screen is waiting on, never two; press sinks the button under the pointer."},
     "caption": { "type": "string", "default": "Click me", "description": "Button label text" },
     "icon": { "type": "string", "default": "", "description": "Icon content for the icon slot" },
     "disabled": { "type": "boolean", "default": false, "description": "Whether the button is disabled" },
@@ -466,10 +472,12 @@ The shipped `button` manifest, verbatim. Not an illustration of one: this is the
     "color-destructive-fg", "color-bg", "color-bg-muted", "color-bg-subtle", "color-fg",
     "color-border", "color-ring", "color-primary-subtle", "radius-md", "radius-full", "space-2",
     "space-3", "space-4", "space-6", "font-ui", "text-xs", "text-sm", "text-base", "weight-medium",
-    "duration-fast", "ease-default", "border-width", "border-width-strong", "corner-shape",
-    "focus-ring-width", "focus-ring-offset", "focus-ring-style", "focus-ring-color", "focus-shadow",
+    "duration-fast", "duration-slower", "ease-default", "ease-emphasized", "ease-out",
+    "border-width", "border-width-strong", "border-width-md", "corner-shape", "focus-ring-width",
+    "focus-ring-offset", "focus-ring-style", "focus-ring-color", "focus-shadow",
     "button-text-transform", "button-height-md", "button-radius", "button-height-sm",
-    "button-height-lg", "motion-hover-lift", "link-decoration", "disabled-opacity"
+    "button-height-lg", "motion-hover-lift", "motion-ambient-duration", "motion-ambient-play",
+    "link-decoration", "disabled-opacity"
   ],
 
   "templates": {
@@ -487,7 +495,8 @@ The shipped `button` manifest, verbatim. Not an illustration of one: this is the
     "set-pressed-true",
     "set-pressed-false",
     "wrap-in-button-group",
-    "change-text-content"
+    "change-text-content",
+    "set-effect"
   ],
 
   "unsafe_transforms": [
@@ -517,7 +526,10 @@ The shipped `button` manifest, verbatim. Not an illustration of one: this is the
     "loading-state-sets-data-state-loading",
     "icon-only-requires-aria-label",
     "pressed-state-styles-off-aria-pressed-true",
-    "link-variant-keeps-its-text-box-under-a-size"
+    "link-variant-keeps-its-text-box-under-a-size",
+    "effects-are-additive-to-every-variant",
+    "pulse-ring-never-collides-with-the-loading-spinner",
+    "effects-stop-under-reduced-motion"
   ]
 }
 ```
@@ -535,5 +547,5 @@ The manifest is the contract; the sources repeat the machine-readable part of it
 
 ```css
 /* @ui:component button */
-/* @ui:tokens color-primary color-primary-hover color-primary-fg color-secondary color-secondary-hover color-secondary-fg color-destructive color-destructive-hover color-destructive-fg color-bg color-bg-muted color-bg-subtle color-fg color-border color-ring color-primary-subtle radius-md radius-full space-2 space-3 space-4 space-6 font-ui text-xs text-sm text-base weight-medium duration-fast ease-default border-width border-width-strong corner-shape focus-ring-width focus-ring-offset focus-ring-style focus-ring-color focus-shadow button-text-transform button-height-md button-radius button-height-sm button-height-lg motion-hover-lift link-decoration disabled-opacity */
+/* @ui:tokens color-primary color-primary-hover color-primary-fg color-secondary color-secondary-hover color-secondary-fg color-destructive color-destructive-hover color-destructive-fg color-bg color-bg-muted color-bg-subtle color-fg color-border color-ring color-primary-subtle radius-md radius-full space-2 space-3 space-4 space-6 font-ui text-xs text-sm text-base weight-medium duration-fast duration-slower ease-default ease-emphasized ease-out border-width border-width-strong border-width-md corner-shape focus-ring-width focus-ring-offset focus-ring-style focus-ring-color focus-shadow button-text-transform button-height-md button-radius button-height-sm button-height-lg motion-hover-lift motion-ambient-duration motion-ambient-play link-decoration disabled-opacity */
 ```

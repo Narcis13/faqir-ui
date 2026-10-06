@@ -1,0 +1,202 @@
+{
+  "$schema": "../../../manifest.schema.json",
+  "name": "article",
+  "version": "1.0.0",
+  "kind": "pattern",
+  "category": "typography",
+  "description": "Long-form reading layout composing a header (badge eyebrow, headline, standfirst, avatar byline), a cover image, the prose body with pull quotes, a sticky table of contents and a footer of tags and share links. Composition only: zero JavaScript, no controller, no reactive directives — the two layouts are pure CSS grid.",
+
+  "anatomy": {
+    "tag": "article",
+    "selector": "[data-ui='article']",
+    "content_model": "slots"
+  },
+
+  "slots": {
+    "header": {
+      "selector": "[data-part='header']",
+      "required": true,
+      "tag_hint": "header",
+      "description": "The masthead of the piece: eyebrow, headline, summary and byline stacked in one grid"
+    },
+    "eyebrow": {
+      "selector": "[data-part='eyebrow']",
+      "required": false,
+      "tag_hint": "p",
+      "description": "Short kicker above the headline, inside the header — typically holds a nested data-ui='badge'"
+    },
+    "headline": {
+      "selector": "[data-part='headline']",
+      "required": true,
+      "tag_hint": "h1",
+      "description": "The title of the piece, in the heading voice. Give it an id and point the article's aria-labelledby at it so the article is named"
+    },
+    "summary": {
+      "selector": "[data-part='summary']",
+      "required": false,
+      "tag_hint": "p",
+      "description": "The standfirst under the headline: one size up from the body and muted"
+    },
+    "byline": {
+      "selector": "[data-part='byline']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "One row inside the header: a nested data-ui='avatar', then the author and meta parts"
+    },
+    "author": {
+      "selector": "[data-part='author']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "The author's name, inside the byline"
+    },
+    "meta": {
+      "selector": "[data-part='meta']",
+      "required": false,
+      "tag_hint": "span",
+      "description": "Date and reading time, inside the byline. Put the date in a <time datetime> so it is machine-readable"
+    },
+    "cover": {
+      "selector": "[data-part='cover']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Wrapper for the cover picture — a nested data-ui='image' figure, which keeps its own caption"
+    },
+    "body": {
+      "selector": "[data-part='body']",
+      "required": true,
+      "tag_hint": "div",
+      "description": "The prose: ordinary paragraphs, h2/h3 headings, lists and figures in block flow. Only the measure and the vertical rhythm are set by the pattern. A nested data-ui='quote' with data-variant='pull' may sit between paragraphs"
+    },
+    "aside": {
+      "selector": "[data-part='aside']",
+      "required": false,
+      "tag_hint": "aside",
+      "description": "Table of contents: a nested data-ui='nav' data-variant='vertical' labelled 'On this page'. The sidebar layout pins it beside the body from the lg floor"
+    },
+    "footer": {
+      "selector": "[data-part='footer']",
+      "required": false,
+      "tag_hint": "footer",
+      "description": "Closing row under a hairline, holding the tags and share parts"
+    },
+    "tags": {
+      "selector": "[data-part='tags']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Topic tags inside the footer, each a nested data-ui='badge'"
+    },
+    "share": {
+      "selector": "[data-part='share']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Share links inside the footer, each a nested data-ui='link' with real link text"
+    }
+  },
+
+  "variants": {
+    "layout": {
+      "values": ["centered", "sidebar"],
+      "default": "centered",
+      "attr": "data-variant",
+      "applied_to": "root"
+    }
+  },
+
+  "props": {
+    "--article-measure": {
+      "type": "string",
+      "default": "var(--measure-prose)",
+      "description": "Maximum inline size of the body prose (custom property). Pass a measure token; the default is the prose measure, sized in characters so it tracks the reader's font."
+    }
+  },
+
+  "states": {
+    "default": { "attr": "", "default": true }
+  },
+
+  "a11y": {
+    "required_attrs": [
+      "aria-labelledby on the article pointing at the headline id",
+      "alt text on the cover image and on any avatar image in the byline",
+      "aria-label on the aside and on the nested table-of-contents nav",
+      "datetime on the <time> inside the meta part"
+    ],
+    "notes": "The headline is the page's h1; headings inside the body start at h2 and never skip a level. The table of contents is a navigation landmark of its own inside a complementary landmark, so both carry a name. The reading-progress bar, when composed in, is aria-hidden: the browser's own scrollbar already reports position.",
+    "keyboard": {
+      "Tab": "move through the table-of-contents links, the links inside the prose and the share links in source order"
+    }
+  },
+
+  "tokens_used": [
+    "space-8", "space-12", "space-4", "space-3", "space-2", "space-5", "space-10", "space-6",
+    "space-16", "measure-content", "measure-prose", "measure-wide", "font-body", "font-heading",
+    "color-fg", "color-fg-muted", "color-border", "text-sm", "text-3xl", "text-lg", "text-base",
+    "text-2xl", "text-xl", "text-4xl", "heading-weight", "heading-tracking", "heading-transform",
+    "heading-caps", "heading-leading", "leading-relaxed", "leading-snug", "weight-semibold",
+    "border-width", "content-gutter"
+  ],
+
+  "templates": {
+    "html": "<article data-ui=\"article\" data-variant=\"{layout}\" aria-labelledby=\"{id}-headline\">\n  <header data-part=\"header\">\n    <p data-part=\"eyebrow\"><span data-ui=\"badge\" data-variant=\"primary\">{eyebrow}</span></p>\n    <h1 data-part=\"headline\" id=\"{id}-headline\">{headline}</h1>\n    <p data-part=\"summary\">{summary}</p>\n    <div data-part=\"byline\">\n      <span data-ui=\"avatar\" data-size=\"sm\"><span data-part=\"fallback\">{initials}</span></span>\n      <span data-part=\"author\">{author}</span>\n      <span data-part=\"meta\"><time datetime=\"{date_iso}\">{date}</time> · {reading_time}</span>\n    </div>\n  </header>\n  <div data-part=\"cover\">\n    <figure data-ui=\"image\" data-variant=\"responsive\" data-size=\"full\">\n      <img data-part=\"img\" src=\"{cover_src}\" alt=\"{cover_alt}\" loading=\"lazy\">\n    </figure>\n  </div>\n  <div data-part=\"body\">\n    {body}\n  </div>\n  <footer data-part=\"footer\">\n    <div data-part=\"tags\">\n      <span data-ui=\"badge\">{tag}</span>\n    </div>\n    <div data-part=\"share\">\n      <a data-ui=\"link\" data-variant=\"muted\" href=\"{share_href}\">{share_label}</a>\n    </div>\n  </footer>\n</article>"
+  },
+
+  "safe_transforms": [
+    "change-layout-variant",
+    "change-headline-text",
+    "add-eyebrow",
+    "remove-eyebrow",
+    "remove-summary",
+    "add-cover",
+    "remove-cover",
+    "add-aside-with-table-of-contents",
+    "remove-aside",
+    "add-pull-quote-between-paragraphs",
+    "remove-footer",
+    "change-article-measure",
+    "add-scroll-progress-as-first-child"
+  ],
+
+  "unsafe_transforms": [
+    "remove-headline",
+    "remove-aria-labelledby",
+    "demote-headline-below-h1-while-it-names-the-page",
+    "skip-a-heading-level-inside-the-body",
+    "put-a-figure-element-in-the-cover-slot",
+    "add-data-part-to-nested-badge-avatar-or-quote",
+    "add-custom-script"
+  ],
+
+  "composition": {
+    "contains": ["badge", "avatar", "image", "quote", "nav", "link", "scroll-progress"],
+    "used_in": [],
+    "notes": [
+      "Nested primitives inside a slot keep their own five-attribute contract and must not carry a data-part: the badge sits inside [data-part=\"eyebrow\"] or [data-part=\"tags\"], the avatar inside [data-part=\"byline\"], the image figure inside [data-part=\"cover\"], the vertical nav inside [data-part=\"aside\"].",
+      "[data-part=\"cover\"] is a <div> that wraps the image primitive, not a <figure>: the primitive already is the figure, with its own caption part, and two nested figures would announce one picture twice.",
+      "The body is ordinary HTML in block flow. The pattern sets its measure, its type size and the rhythm between direct children — paragraphs, h2/h3 headings, lists, figures — and nothing inside them. A pull quote is the quote primitive with data-variant=\"pull\" placed between two paragraphs.",
+      "A reading-progress bar is composition, not a prop: put ONE <div data-ui=\"scroll-progress\" aria-hidden=\"true\"></div> as the first child of the article and it pins itself to the top of the page. The pattern itself does nothing for it.",
+      "The sidebar layout is the single centred column below the lg floor — a 16rem rail beside the prose on a phone would starve the text — and the aside is a plain block after the body there. From lg the header, cover and footer span both columns and the aside sits in the end column, sticky at --space-8 from the top.",
+      "Headings inside the body that the table of contents links to carry ids: an anchor needs a target, and that is the one reason an id appears inside the prose."
+    ]
+  },
+
+  "files": {
+    "html": "article.html",
+    "css": "article.css",
+    "manifest": "article.manifest.json"
+  },
+
+  "tests": [
+    "renders-as-article-with-data-ui-article",
+    "header-headline-and-body-slots-are-required",
+    "article-is-labelled-by-its-headline",
+    "centered-is-the-default-layout",
+    "body-measure-reads-the-article-measure-knob-over-the-prose-measure",
+    "body-rhythm-styles-only-direct-children",
+    "headline-and-body-type-scale-open-up-at-the-sm-floor",
+    "sidebar-variant-gains-its-second-column-at-the-lg-floor",
+    "aside-is-sticky-only-in-the-sidebar-layout-from-lg",
+    "nested-primitives-carry-no-data-part",
+    "ships-zero-javascript",
+    "reference-page-is-audit-clean"
+  ]
+}

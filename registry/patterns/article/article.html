@@ -1,0 +1,191 @@
+<!-- @ui:component article -->
+<!-- @ui:kind pattern -->
+<!-- @ui:slots header eyebrow headline summary byline author meta cover body aside footer tags share -->
+<!-- @ui:variants layout=centered|sidebar -->
+<!-- @ui:composition badge avatar image quote nav link scroll-progress -->
+<!--
+  Article — a long-form reading layout, composition only, zero JavaScript.
+    · An <article> named by its headline through aria-labelledby, so the piece
+      is one labelled thing in the outline. The headline is the page's h1.
+    · [data-part="body"] is the prose itself: ordinary paragraphs, headings and
+      lists, in block flow, with only the measure and the vertical rhythm set
+      by the pattern. A pull quote between paragraphs is the quote primitive
+      with data-variant="pull" — a component, so it keeps its own contract.
+    · [data-part="cover"] WRAPS the image primitive rather than being a figure:
+      the primitive already is the figure, caption and all.
+    · The table of contents is a nested vertical nav inside [data-part="aside"].
+      The sidebar layout pins it beside the prose from the lg floor; below that
+      it is a plain block after the body, where a rail would starve the text.
+    · A reading-progress bar is composition, not a prop: put ONE page-scoped
+      scroll-progress as the first child and it pins itself to the top.
+-->
+
+<!-- Centered (default), with a reading-progress bar -->
+<article data-ui="article" aria-labelledby="article-centered-headline">
+  <div data-ui="scroll-progress" aria-hidden="true"></div>
+  <header data-part="header">
+    <p data-part="eyebrow"><span data-ui="badge" data-variant="primary">Engineering</span></p>
+    <h1 data-part="headline" id="article-centered-headline">The selector is the documentation</h1>
+    <p data-part="summary">
+      What changed when we stopped naming things twice — once in the markup and
+      once in a stylesheet nobody could read — and let five attributes carry the
+      whole interface.
+    </p>
+    <div data-part="byline">
+      <span data-ui="avatar" data-size="sm">
+        <span data-part="fallback">AO</span>
+      </span>
+      <span data-part="author">Ada Okafor</span>
+      <span data-part="meta"><time datetime="2026-09-14">14 September 2026</time> · 7 min read</span>
+    </div>
+  </header>
+  <div data-part="cover">
+    <figure data-ui="image" data-variant="responsive" data-size="full">
+      <img data-part="img" src="https://example.com/articles/selector-documentation.jpg" alt="A printed stylesheet laid over a wireframe, the attribute selectors circled in red pen" loading="lazy">
+      <figcaption data-part="caption">The first audit, on paper, before the rule engine existed.</figcaption>
+    </figure>
+  </div>
+  <div data-part="body">
+    <p>
+      Every team we talked to had the same stylesheet: four thousand lines of
+      utility classes, a naming convention three people remembered, and a rule
+      somewhere near the bottom that nobody dared delete. The markup that used
+      it was unreadable in the honest sense — you could not tell what a block
+      was for without opening the sheet beside it.
+    </p>
+    <p>
+      So we tried the opposite. A component is a <code>data-ui</code>, its
+      children are <code>data-part</code>s, and anything that changes how it
+      looks or what it is doing is a <code>data-variant</code>, a
+      <code>data-size</code> or a <code>data-state</code>. Five attributes.
+      Nothing else is allowed to carry meaning.
+    </p>
+    <h2>What the constraint bought us</h2>
+    <p>
+      The first thing it bought was a reader that is not a person. A manifest
+      can say which parts a component has and which variants it accepts, and a
+      linter can check a page against that in a few milliseconds — not by
+      guessing at class names, but by reading the same attributes the
+      stylesheet reads.
+    </p>
+    <figure data-ui="quote" data-variant="pull">
+      <blockquote data-part="text">
+        <p>An interface an agent can read is an interface a new hire can read.</p>
+      </blockquote>
+    </figure>
+    <p>
+      The second thing was cheaper than we expected: the stylesheet shrank.
+      When a selector is the attribute it styles, there is nowhere for a dead
+      rule to hide, and every part of every component is listed in one place
+      that the audit keeps honest.
+    </p>
+  </div>
+  <footer data-part="footer">
+    <div data-part="tags">
+      <span data-ui="badge">Design systems</span>
+      <span data-ui="badge">CSS</span>
+      <span data-ui="badge">Accessibility</span>
+    </div>
+    <div data-part="share">
+      <a data-ui="link" data-variant="muted" href="https://example.com/share/mastodon">Share on Mastodon</a>
+      <a data-ui="link" data-variant="muted" href="https://example.com/share/linkedin">Share on LinkedIn</a>
+      <a data-ui="link" data-variant="muted" href="https://example.com/share/email">Share by email</a>
+    </div>
+  </footer>
+</article>
+
+<!-- Sidebar: a sticky table of contents beside the prose from the lg floor -->
+<article data-ui="article" data-variant="sidebar" aria-labelledby="article-sidebar-headline">
+  <header data-part="header">
+    <p data-part="eyebrow"><span data-ui="badge" data-variant="secondary">Field notes</span></p>
+    <h1 data-part="headline" id="article-sidebar-headline">Shipping a theme without touching a component</h1>
+    <p data-part="summary">
+      Six axes, one seed, and the tokens that let a serif editorial theme and a
+      flat dashboard theme share every line of component CSS.
+    </p>
+    <div data-part="byline">
+      <span data-ui="avatar" data-size="sm">
+        <img data-part="image" src="https://example.com/people/mateo-rossi.jpg" alt="Mateo Rossi">
+        <span data-part="fallback" hidden>MR</span>
+      </span>
+      <span data-part="author">Mateo Rossi</span>
+      <span data-part="meta"><time datetime="2026-08-02">2 August 2026</time> · 11 min read</span>
+    </div>
+  </header>
+  <div data-part="body">
+    <p>
+      A theme used to be a fork. You copied the stylesheet, changed the colours,
+      and from that day on every fix upstream was a merge conflict waiting for
+      you. The tokens changed that in a way the colours alone never could,
+      because the things a theme wants to say are not colours.
+    </p>
+    <h2 id="article-sidebar-axes">The six axes</h2>
+    <p>
+      Type, shape, depth, material, motion and density. Each axis is a handful
+      of tokens a theme re-points, and each token has exactly one job: the
+      heading face, the corner shape, how far a card rises under the pointer.
+      A theme is a short file of opinions, not a second copy of the registry.
+    </p>
+    <h3>Type and shape</h3>
+    <p>
+      The heading voice is four tokens — face, weight, tracking and leading —
+      and every heading in the registry reads them. Swap the face for a serif
+      and the hero, the cards and the dialog titles follow, with nothing to
+      chase.
+    </p>
+    <figure data-ui="quote" data-variant="pull">
+      <blockquote data-part="text">
+        <p>A theme is a short file of opinions, not a second copy of the registry.</p>
+      </blockquote>
+    </figure>
+    <h2 id="article-sidebar-motion">Motion is a token too</h2>
+    <p>
+      How content arrives is one family: a distance, a duration, an easing and
+      a stagger. A brisk theme shortens all four; a theatrical one lengthens
+      them. And because reduced motion is honoured by every component that
+      moves, a theme never has to think about it.
+    </p>
+  </div>
+  <aside data-part="aside" aria-label="Table of contents">
+    <nav data-ui="nav" data-variant="vertical" aria-label="On this page">
+      <a data-part="link" data-state="active" href="#article-sidebar-axes">The six axes</a>
+      <a data-part="link" href="#article-sidebar-motion">Motion is a token too</a>
+    </nav>
+  </aside>
+  <footer data-part="footer">
+    <div data-part="tags">
+      <span data-ui="badge">Theming</span>
+      <span data-ui="badge">Tokens</span>
+    </div>
+    <div data-part="share">
+      <a data-ui="link" data-variant="muted" href="https://example.com/share/mastodon">Share on Mastodon</a>
+      <a data-ui="link" data-variant="muted" href="https://example.com/share/email">Share by email</a>
+    </div>
+  </footer>
+</article>
+
+<!-- Centered, minimal: no eyebrow, no cover, no footer, a wider measure -->
+<article data-ui="article" data-variant="centered" aria-labelledby="article-minimal-headline" style="--article-measure: var(--measure-content)">
+  <header data-part="header">
+    <h1 data-part="headline" id="article-minimal-headline">Release notes, written for the reader</h1>
+    <div data-part="byline">
+      <span data-ui="avatar" data-size="sm">
+        <span data-part="fallback">PN</span>
+      </span>
+      <span data-part="author">Priya Nair</span>
+      <span data-part="meta"><time datetime="2026-06-20">20 June 2026</time> · 3 min read</span>
+    </div>
+  </header>
+  <div data-part="body">
+    <p>
+      A changelog is read by someone who has one question: does this break me?
+      We now answer that in the first line of every entry, before the list of
+      what changed, and we say it in the words of the thing that broke — the
+      attribute, the part, the token — not the task number that moved it.
+    </p>
+    <p>
+      The migration gate reads the same file, so an entry that forgets to say
+      so does not ship.
+    </p>
+  </div>
+</article>

@@ -1,0 +1,330 @@
+<!-- @ui:component post-list -->
+<!-- @ui:kind pattern -->
+<!-- @ui:slots heading description items item card media content tag title excerpt meta footer -->
+<!-- @ui:variants layout=grid|featured|list -->
+<!-- @ui:composition badge avatar link button -->
+<!--
+  Post list — a blog index, composition only, zero JavaScript.
+    · Each post is a real list item holding an <article data-part="card">,
+      named by its title through aria-labelledby, so assistive tech announces
+      "list, 6 items" and then one labelled article per post.
+    · The card is drawn by the pattern's own parts rather than by the card
+      primitive: a post title belongs to the post, not to a card header. It
+      reads the same card aliases, so a theme restyles both at once.
+    · The title wraps a link primitive, so the whole title is the link. The
+      media link's name is its image's alt, which therefore describes the
+      picture and not the post.
+    · data-animate staggers the items in the same way a staggered reveal
+      brings in its children — a view timeline where the browser has one, a
+      load entrance where not, and nothing at all under reduced motion.
+-->
+
+<!-- Grid (default), staggered entrance -->
+<section data-ui="post-list" data-animate aria-labelledby="post-list-grid-heading">
+  <h2 data-part="heading" id="post-list-grid-heading">From the blog</h2>
+  <p data-part="description">
+    Field notes on building interfaces that an agent can read and a new hire
+    can maintain.
+  </p>
+  <ul data-part="items">
+    <li data-part="item">
+      <article data-part="card" aria-labelledby="post-grid-1-title">
+        <a data-part="media" href="https://example.com/blog/selector-documentation">
+          <img src="https://example.com/blog/selector-documentation/cover.jpg" alt="A printed stylesheet laid over a wireframe, the attribute selectors circled in red pen" loading="lazy">
+        </a>
+        <div data-part="content">
+          <p data-part="tag"><span data-ui="badge" data-variant="primary" data-size="sm">Engineering</span></p>
+          <h3 data-part="title" id="post-grid-1-title"><a data-ui="link" href="https://example.com/blog/selector-documentation">The selector is the documentation</a></h3>
+          <p data-part="excerpt">
+            What changed when we stopped naming things twice — once in the
+            markup and once in a stylesheet nobody could read — and let five
+            attributes carry the whole interface.
+          </p>
+          <div data-part="meta">
+            <span data-ui="avatar" data-size="sm"><span data-part="fallback">AO</span></span>
+            <span>Ada Okafor</span>
+            <time datetime="2026-09-14">14 Sep 2026</time>
+            <span>7 min read</span>
+          </div>
+        </div>
+      </article>
+    </li>
+    <li data-part="item">
+      <article data-part="card" aria-labelledby="post-grid-2-title">
+        <a data-part="media" href="https://example.com/blog/theme-without-touching">
+          <img src="https://example.com/blog/theme-without-touching/cover.jpg" alt="Six colour swatches fanned out on a desk beside a serif type specimen" loading="lazy">
+        </a>
+        <div data-part="content">
+          <p data-part="tag"><span data-ui="badge" data-variant="secondary" data-size="sm">Theming</span></p>
+          <h3 data-part="title" id="post-grid-2-title"><a data-ui="link" href="https://example.com/blog/theme-without-touching">Shipping a theme without touching a component</a></h3>
+          <p data-part="excerpt">
+            Six axes, one seed, and the tokens that let a serif editorial theme
+            and a flat dashboard theme share every line of component CSS.
+          </p>
+          <div data-part="meta">
+            <span data-ui="avatar" data-size="sm"><span data-part="fallback">MR</span></span>
+            <span>Mateo Rossi</span>
+            <time datetime="2026-08-02">2 Aug 2026</time>
+            <span>11 min read</span>
+          </div>
+        </div>
+      </article>
+    </li>
+    <li data-part="item">
+      <article data-part="card" aria-labelledby="post-grid-3-title">
+        <a data-part="media" href="https://example.com/blog/audit-before-users">
+          <img src="https://example.com/blog/audit-before-users/cover.jpg" alt="A terminal showing a single audit finding highlighted in yellow" loading="lazy">
+        </a>
+        <div data-part="content">
+          <p data-part="tag"><span data-ui="badge" data-variant="success" data-size="sm">Accessibility</span></p>
+          <h3 data-part="title" id="post-grid-3-title"><a data-ui="link" href="https://example.com/blog/audit-before-users">The audit caught it before our users did</a></h3>
+          <p data-part="excerpt">
+            A missing label on a search field, found in a pull request rather
+            than a support ticket, and what it taught us about where a rule
+            engine earns its keep.
+          </p>
+          <div data-part="meta">
+            <span data-ui="avatar" data-size="sm"><span data-part="fallback">PN</span></span>
+            <span>Priya Nair</span>
+            <time datetime="2026-07-19">19 Jul 2026</time>
+            <span>5 min read</span>
+          </div>
+        </div>
+      </article>
+    </li>
+    <li data-part="item">
+      <article data-part="card" aria-labelledby="post-grid-4-title">
+        <a data-part="media" href="https://example.com/blog/print-geometry">
+          <img src="https://example.com/blog/print-geometry/cover.jpg" alt="An invoice printed on A4 with its margins marked in pencil" loading="lazy">
+        </a>
+        <div data-part="content">
+          <p data-part="tag"><span data-ui="badge" data-size="sm">Documents</span></p>
+          <h3 data-part="title" id="post-grid-4-title"><a data-ui="link" href="https://example.com/blog/print-geometry">Real page geometry for printed documents</a></h3>
+          <p data-part="excerpt">
+            Invoices and reports from the same tokens as the dashboard, with
+            page breaks that land where a reader expects them.
+          </p>
+          <div data-part="meta">
+            <span data-ui="avatar" data-size="sm"><span data-part="fallback">LK</span></span>
+            <span>Lena Kowalski</span>
+            <time datetime="2026-06-30">30 Jun 2026</time>
+            <span>6 min read</span>
+          </div>
+        </div>
+      </article>
+    </li>
+    <li data-part="item">
+      <article data-part="card" aria-labelledby="post-grid-5-title">
+        <a data-part="media" href="https://example.com/blog/rtl-by-attribute">
+          <img src="https://example.com/blog/rtl-by-attribute/cover.jpg" alt="The same settings page rendered left-to-right and right-to-left, side by side" loading="lazy">
+        </a>
+        <div data-part="content">
+          <p data-part="tag"><span data-ui="badge" data-variant="primary" data-size="sm">Engineering</span></p>
+          <h3 data-part="title" id="post-grid-5-title"><a data-ui="link" href="https://example.com/blog/rtl-by-attribute">Right-to-left is a document attribute</a></h3>
+          <p data-part="excerpt">
+            Logical properties throughout, so a locale switch flips the layout
+            without a second stylesheet.
+          </p>
+          <div data-part="meta">
+            <span data-ui="avatar" data-size="sm"><span data-part="fallback">AO</span></span>
+            <span>Ada Okafor</span>
+            <time datetime="2026-06-11">11 Jun 2026</time>
+            <span>4 min read</span>
+          </div>
+        </div>
+      </article>
+    </li>
+    <li data-part="item">
+      <article data-part="card" aria-labelledby="post-grid-6-title">
+        <a data-part="media" href="https://example.com/blog/release-notes-for-readers">
+          <img src="https://example.com/blog/release-notes-for-readers/cover.jpg" alt="A changelog page with the first line of each entry underlined" loading="lazy">
+        </a>
+        <div data-part="content">
+          <p data-part="tag"><span data-ui="badge" data-variant="warning" data-size="sm">Releases</span></p>
+          <h3 data-part="title" id="post-grid-6-title"><a data-ui="link" href="https://example.com/blog/release-notes-for-readers">Release notes, written for the reader</a></h3>
+          <p data-part="excerpt">
+            Does this break me? We now answer that in the first line of every
+            entry, in the words of the thing that changed.
+          </p>
+          <div data-part="meta">
+            <span data-ui="avatar" data-size="sm"><span data-part="fallback">PN</span></span>
+            <span>Priya Nair</span>
+            <time datetime="2026-05-28">28 May 2026</time>
+            <span>3 min read</span>
+          </div>
+        </div>
+      </article>
+    </li>
+  </ul>
+  <div data-part="footer">
+    <a data-ui="button" data-variant="outline" href="https://example.com/blog">View all posts</a>
+  </div>
+</section>
+
+<!-- Featured: the first post spans the row from the md floor, side by side -->
+<section data-ui="post-list" data-variant="featured" aria-labelledby="post-list-featured-heading">
+  <h2 data-part="heading" id="post-list-featured-heading">Latest</h2>
+  <ul data-part="items">
+    <li data-part="item">
+      <article data-part="card" aria-labelledby="post-featured-1-title">
+        <a data-part="media" href="https://example.com/blog/theme-without-touching">
+          <img src="https://example.com/blog/theme-without-touching/cover.jpg" alt="Six colour swatches fanned out on a desk beside a serif type specimen" loading="lazy">
+        </a>
+        <div data-part="content">
+          <p data-part="tag"><span data-ui="badge" data-variant="secondary" data-size="sm">Theming</span></p>
+          <h3 data-part="title" id="post-featured-1-title"><a data-ui="link" href="https://example.com/blog/theme-without-touching">Shipping a theme without touching a component</a></h3>
+          <p data-part="excerpt">
+            Six axes, one seed, and the tokens that let a serif editorial theme
+            and a flat dashboard theme share every line of component CSS. A
+            theme is a short file of opinions, not a second copy of the
+            registry.
+          </p>
+          <div data-part="meta">
+            <span data-ui="avatar" data-size="sm"><img data-part="image" src="https://example.com/people/mateo-rossi.jpg" alt="Mateo Rossi"><span data-part="fallback" hidden>MR</span></span>
+            <span>Mateo Rossi</span>
+            <time datetime="2026-08-02">2 Aug 2026</time>
+            <span>11 min read</span>
+          </div>
+        </div>
+      </article>
+    </li>
+    <li data-part="item">
+      <article data-part="card" aria-labelledby="post-featured-2-title">
+        <a data-part="media" href="https://example.com/blog/audit-before-users">
+          <img src="https://example.com/blog/audit-before-users/cover.jpg" alt="A terminal showing a single audit finding highlighted in yellow" loading="lazy">
+        </a>
+        <div data-part="content">
+          <p data-part="tag"><span data-ui="badge" data-variant="success" data-size="sm">Accessibility</span></p>
+          <h3 data-part="title" id="post-featured-2-title"><a data-ui="link" href="https://example.com/blog/audit-before-users">The audit caught it before our users did</a></h3>
+          <p data-part="excerpt">
+            A missing label on a search field, found in a pull request rather
+            than a support ticket.
+          </p>
+          <div data-part="meta">
+            <span data-ui="avatar" data-size="sm"><span data-part="fallback">PN</span></span>
+            <span>Priya Nair</span>
+            <time datetime="2026-07-19">19 Jul 2026</time>
+            <span>5 min read</span>
+          </div>
+        </div>
+      </article>
+    </li>
+    <li data-part="item">
+      <article data-part="card" aria-labelledby="post-featured-3-title">
+        <a data-part="media" href="https://example.com/blog/print-geometry">
+          <img src="https://example.com/blog/print-geometry/cover.jpg" alt="An invoice printed on A4 with its margins marked in pencil" loading="lazy">
+        </a>
+        <div data-part="content">
+          <p data-part="tag"><span data-ui="badge" data-size="sm">Documents</span></p>
+          <h3 data-part="title" id="post-featured-3-title"><a data-ui="link" href="https://example.com/blog/print-geometry">Real page geometry for printed documents</a></h3>
+          <p data-part="excerpt">
+            Invoices and reports from the same tokens as the dashboard, with
+            page breaks that land where a reader expects them.
+          </p>
+          <div data-part="meta">
+            <span data-ui="avatar" data-size="sm"><span data-part="fallback">LK</span></span>
+            <span>Lena Kowalski</span>
+            <time datetime="2026-06-30">30 Jun 2026</time>
+            <span>6 min read</span>
+          </div>
+        </div>
+      </article>
+    </li>
+    <li data-part="item">
+      <article data-part="card" aria-labelledby="post-featured-4-title">
+        <a data-part="media" href="https://example.com/blog/rtl-by-attribute">
+          <img src="https://example.com/blog/rtl-by-attribute/cover.jpg" alt="The same settings page rendered left-to-right and right-to-left, side by side" loading="lazy">
+        </a>
+        <div data-part="content">
+          <p data-part="tag"><span data-ui="badge" data-variant="primary" data-size="sm">Engineering</span></p>
+          <h3 data-part="title" id="post-featured-4-title"><a data-ui="link" href="https://example.com/blog/rtl-by-attribute">Right-to-left is a document attribute</a></h3>
+          <p data-part="excerpt">
+            Logical properties throughout, so a locale switch flips the layout
+            without a second stylesheet.
+          </p>
+          <div data-part="meta">
+            <span data-ui="avatar" data-size="sm"><span data-part="fallback">AO</span></span>
+            <span>Ada Okafor</span>
+            <time datetime="2026-06-11">11 Jun 2026</time>
+            <span>4 min read</span>
+          </div>
+        </div>
+      </article>
+    </li>
+  </ul>
+</section>
+
+<!-- List: one column, each card horizontal from the sm floor, two-line excerpts -->
+<section data-ui="post-list" data-variant="list" aria-labelledby="post-list-list-heading" style="--post-list-lines: 2; --post-list-gap: var(--space-4)">
+  <h2 data-part="heading" id="post-list-list-heading">More on accessibility</h2>
+  <p data-part="description">Everything we have written about the rule engine and what it catches.</p>
+  <ul data-part="items">
+    <li data-part="item">
+      <article data-part="card" aria-labelledby="post-list-1-title">
+        <a data-part="media" href="https://example.com/blog/audit-before-users">
+          <img src="https://example.com/blog/audit-before-users/cover.jpg" alt="A terminal showing a single audit finding highlighted in yellow" loading="lazy">
+        </a>
+        <div data-part="content">
+          <p data-part="tag"><span data-ui="badge" data-variant="success" data-size="sm">Accessibility</span></p>
+          <h3 data-part="title" id="post-list-1-title"><a data-ui="link" href="https://example.com/blog/audit-before-users">The audit caught it before our users did</a></h3>
+          <p data-part="excerpt">
+            A missing label on a search field, found in a pull request rather
+            than a support ticket, and what it taught us about where a rule
+            engine earns its keep.
+          </p>
+          <div data-part="meta">
+            <span data-ui="avatar" data-size="sm"><span data-part="fallback">PN</span></span>
+            <span>Priya Nair</span>
+            <time datetime="2026-07-19">19 Jul 2026</time>
+            <span>5 min read</span>
+          </div>
+        </div>
+      </article>
+    </li>
+    <li data-part="item">
+      <article data-part="card" aria-labelledby="post-list-2-title">
+        <a data-part="media" href="https://example.com/blog/focus-order-is-source-order">
+          <img src="https://example.com/blog/focus-order-is-source-order/cover.jpg" alt="A keyboard with the Tab key worn smooth" loading="lazy">
+        </a>
+        <div data-part="content">
+          <p data-part="tag"><span data-ui="badge" data-variant="success" data-size="sm">Accessibility</span></p>
+          <h3 data-part="title" id="post-list-2-title"><a data-ui="link" href="https://example.com/blog/focus-order-is-source-order">Focus order is source order</a></h3>
+          <p data-part="excerpt">
+            Why no component in the registry sets a positive tabindex, and what
+            a dialog does instead.
+          </p>
+          <div data-part="meta">
+            <span data-ui="avatar" data-size="sm"><span data-part="fallback">LK</span></span>
+            <span>Lena Kowalski</span>
+            <time datetime="2026-05-06">6 May 2026</time>
+            <span>8 min read</span>
+          </div>
+        </div>
+      </article>
+    </li>
+    <li data-part="item">
+      <article data-part="card" aria-labelledby="post-list-3-title">
+        <a data-part="media" href="https://example.com/blog/reduced-motion-by-default">
+          <img src="https://example.com/blog/reduced-motion-by-default/cover.jpg" alt="An operating-system accessibility panel with the reduce-motion switch turned on" loading="lazy">
+        </a>
+        <div data-part="content">
+          <p data-part="tag"><span data-ui="badge" data-variant="success" data-size="sm">Accessibility</span></p>
+          <h3 data-part="title" id="post-list-3-title"><a data-ui="link" href="https://example.com/blog/reduced-motion-by-default">Every component that moves honours reduced motion</a></h3>
+          <p data-part="excerpt">
+            The entrance, the zoom and the lift all read one media query, so a
+            theme never has to think about it.
+          </p>
+          <div data-part="meta">
+            <span data-ui="avatar" data-size="sm"><span data-part="fallback">MR</span></span>
+            <span>Mateo Rossi</span>
+            <time datetime="2026-04-22">22 Apr 2026</time>
+            <span>4 min read</span>
+          </div>
+        </div>
+      </article>
+    </li>
+  </ul>
+  <div data-part="footer">
+    <a data-ui="button" data-variant="outline" href="https://example.com/blog/tag/accessibility">View all posts</a>
+  </div>
+</section>

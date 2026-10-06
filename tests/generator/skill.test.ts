@@ -846,7 +846,7 @@ describe("shipped directive reference", () => {
 
   it("takes the `l-transition` presets from MOTION_PRESETS", () => {
     const presets = parseEngineMap(ENGINE, "MOTION_PRESETS").map(([name]) => name);
-    expect(presets).toEqual(["fade", "slide-up", "scale"]);
+    expect(presets).toEqual(["fade", "slide-up", "slide-down", "slide-start", "slide-end", "scale", "blur", "flip"]);
     for (const preset of presets) expect(REFERENCE).toContain(`\`${preset}\``);
   });
 

@@ -241,7 +241,10 @@ function ringStylesheets(): string[] {
     const dir = join(REGISTRY, kind);
     for (const rel of new Glob("*/*.css").scanSync(dir)) {
       const css = readFileSync(join(dir, rel), "utf8");
-      if (/:focus(-visible|-within)?\b/.test(css.replace(/\/\*[\s\S]*?\*\//g, ""))) {
+      // `:focus-within` alone is excluded: a card, image or glow that answers
+      // focus-within with the hover gesture draws no ring — the focused link
+      // inside it draws its own.
+      if (/:focus(-visible)?(?![\w-])/.test(css.replace(/\/\*[\s\S]*?\*\//g, ""))) {
         found.push(`${kind}/${rel}`);
       }
     }

@@ -69,6 +69,7 @@ Each file in `dist/plugins/` is a self-registering classic script: load it
 | `faqir-mask.js` | `l-mask` | caret-safe input masking |
 | `faqir-persist.js` | `l-persist`, `$persist()` | localStorage-backed reactive state |
 | `faqir-rules.js` | `l-rules`, `$rules` | a form's conditional logic, from one JSON definition |
+| `faqir-tweak.js` | `l-tweak`, `Faqir.tweak` | a live theme studio that writes tokens onto `<html>` and exports them |
 | `faqir-validate.js` | `l-validate` | declarative + programmatic form validation |
 
 ```html
