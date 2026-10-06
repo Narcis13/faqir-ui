@@ -266,6 +266,18 @@ function collectBoxes(): Omit<PageObservation, "page"> {
     // purpose: `aria-hidden` alone would also swallow every decorative icon,
     // which *is* content the reader sees.
     if (el.closest("[inert]")) return false;
+    // A closed <details> is the same case by native means: everything but its
+    // <summary> is `content-visibility: hidden` — laid out, painted nowhere. The
+    // containment that hides it also makes the <details> the containing block
+    // of an absolute panel inside, so site-header's closed phone menu lays its
+    // links out in a column as narrow as the toggle, past the window's edge,
+    // where no reader can ever see them; opened, the panel spans the bar.
+    // Every closed ancestor counts, so a summary inside a closed outer menu is
+    // as hidden as the rest of it.
+    const closed = "details:not([open])";
+    for (let d = el.parentElement?.closest(closed); d; d = d.parentElement?.closest(closed)) {
+      if (el.closest("summary")?.parentElement !== d) return false;
+    }
     const r = el.getBoundingClientRect();
     return r.width >= 1 && r.height >= 1;
   };
@@ -444,6 +456,21 @@ test("an off-canvas panel is not a bleed; the same panel left reachable is", asy
   expect(byLabel.get("div")).toBeCloseTo(45, 0);
 });
 
+test("a closed menu's panel is not a bleed; the same panel opened past the edge is", async ({ page }) => {
+  // The third exemption (site-header's phone menu): a closed <details> lays its
+  // content out but paints none of it. Its summary is still on screen, so the
+  // toggle stays measured; opened, the identical panel is ordinary content and
+  // a bleed again, so the exemption is the closed state and nothing wider.
+  await page.setViewportSize(PHONE);
+  await page.setContent(CLOSED_MENU_PAGE, { waitUntil: "load" });
+  const closed = lintPage({ page: "synthetic/closed-menu", ...(await page.evaluate(collectBoxes)) });
+  expect(closed.bleeds).toEqual([]);
+
+  await page.evaluate(() => document.querySelector("details")!.setAttribute("open", ""));
+  const opened = lintPage({ page: "synthetic/open-menu", ...(await page.evaluate(collectBoxes)) });
+  expect(opened.bleeds.map((b) => b.label)).toEqual(['div[data-part="panel"]', "a"]);
+});
+
 test("the four inline-control references have zero layout seams", () => {
   // Both navigable renderings are pinned: the contract page and the canonical
   // reference page. A future generator change must not hide a seam in one while
@@ -592,6 +619,21 @@ const OFF_CANVAS_PAGE = `
   <div class="shell"><aside data-part="clipped"><span>behind the shell</span></aside></div>
   <aside data-part="dismissed" inert><span>closed drawer</span></aside>
   <aside data-part="stranded"><span>nothing to bring me back</span></aside>
+  <p>page content</p>
+</main>`;
+
+/** A menu whose panel sits past the window end: hidden while the <details> is
+ *  closed, a bleed once it is opened. The summary is on screen either way. */
+const CLOSED_MENU_PAGE = `
+<style>
+  html, body { margin: 0; }
+  main { padding: 16px; }
+  details { position: relative; width: 120px; }
+  [data-part="panel"] { position: absolute; inset-inline-start: 300px; width: 200px; }
+  [data-part="panel"] > a { display: block; }
+</style>
+<main>
+  <details><summary>Menu</summary><div data-part="panel"><a href="#a">a link</a></div></details>
   <p>page content</p>
 </main>`;
 

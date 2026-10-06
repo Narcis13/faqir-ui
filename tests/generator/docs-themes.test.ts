@@ -33,6 +33,9 @@ import {
   themePreviewPath,
   PLAYGROUND_PAGE,
   ENGINE_PAGE,
+  MOTION_PAGE,
+  STUDIO_PAGE,
+  TWEAK_SCRIPT,
   RESPONSIVE_PAGE,
   THEMES_PAGE,
   THEME_LINK_ID,
@@ -316,13 +319,18 @@ describe("site JavaScript", () => {
     );
   }
 
-  it("runs the shared appearance wiring on every HTML page, from exactly six files", () => {
+  it("runs the shared appearance wiring on every HTML page, from a closed list of files", () => {
     const shipped = files
       .filter((f) => f.path.startsWith("scripts/"))
       .map((f) => f.path)
       .sort();
     expect(shipped).toEqual(
-      ["scripts/faqir-core.js", "scripts/faqir-manifests.js", ...SITE_SCRIPTS.map((n) => `scripts/${n}`)].sort(),
+      [
+        "scripts/faqir-core.js",
+        "scripts/faqir-manifests.js",
+        TWEAK_SCRIPT,
+        ...SITE_SCRIPTS.map((n) => `scripts/${n}`),
+      ].sort(),
     );
 
     const withScripts = files
@@ -352,6 +360,17 @@ describe("site JavaScript", () => {
     expect(scriptsOf(ENGINE_PAGE)).toEqual([
       "scripts/gallery.js",
       "scripts/faqir-core.js",
+    ]);
+    // So are the motion page's interactive demos; the studio is a plugin of it.
+    expect(scriptsOf(MOTION_PAGE)).toEqual([
+      "scripts/gallery.js",
+      "scripts/faqir-core.js",
+    ]);
+    expect(scriptsOf(STUDIO_PAGE)).toEqual([
+      "scripts/gallery.js",
+      "scripts/faqir-core.js",
+      TWEAK_SCRIPT,
+      "scripts/studio.js",
     ]);
     expect(scriptsOf("components/primitives/button.html")).toEqual([
       "scripts/gallery.js",
@@ -383,15 +402,17 @@ describe("site JavaScript", () => {
       (f) =>
         isShellPage(f.path) &&
         f.path !== PLAYGROUND_PAGE &&
-        f.path !== THEMES_PAGE,
+        f.path !== THEMES_PAGE &&
+        f.path !== STUDIO_PAGE,
     );
     // +2 on 1.0R-09: the engine page, and the signpost at the retired lab URL.
     // +1 on 1.0-03: the migration guide.
     // +7 and one per theme on 1.1: the audit rules, rules & validation, CLI,
     // integrations, Night Shift, axes and authoring pages, and a specimen
     // sheet per theme (src/generator/docs-pages/).
+    // +1: the motion page (the studio is checked above, with its plugin).
     expect(documentation.length).toBe(
-      components.length + 16 + 7 + SCAFFOLD_NAMES.length + themes.length,
+      components.length + 16 + 7 + 1 + SCAFFOLD_NAMES.length + themes.length,
     );
     for (const f of documentation) {
       const scripts = [...f.content.matchAll(/<script\b[^>]*>/g)].map((m) => m[0]);
@@ -405,7 +426,7 @@ describe("site JavaScript", () => {
             `<script src="${relUrl(f.path, "scripts/gallery.js")}" defer>`,
             `<script src="${relUrl(f.path, "scripts/copy-snippet.js")}" defer>`,
           ]
-        : f.path === RESPONSIVE_PAGE || f.path === ENGINE_PAGE
+        : f.path === RESPONSIVE_PAGE || f.path === ENGINE_PAGE || f.path === MOTION_PAGE
           ? [
               `<script src="${relUrl(f.path, "scripts/gallery.js")}" defer>`,
               `<script src="${relUrl(f.path, "scripts/faqir-core.js")}" defer>`,

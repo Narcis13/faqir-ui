@@ -27,11 +27,14 @@ registry copy with one extra component in it.
 | `site/content/home.html` | you | Hand-written homepage: hero and specimen, the 1.1 release story, the agent loop, the site map and quick start. The theme runway with its spec plate, the numbers row and the scaffold frames are inserted at markers. |
 | `site/content/responsive.html` | you | Hand-written responsive layout lab (published at `responsive/`). |
 | `site/content/engine.html` | you | Hand-written reactive-engine guide; the vocabulary tables are inserted at markers, read out of the engine itself. |
+| `site/content/motion.html` | you | Hand-written motion & effects page (published at `motion/`): live demos of reveal, highlight, backdrop, glow, marquee, quote, rating, timeline, scroll-progress, the additive effect properties and the `l-transition` presets. The choreography token table is inserted at a marker from `registry/tokens/motion.css` and the manifests' `tokens_used`. |
+| `site/content/studio.html` | you | Hand-written theme studio (published at `studio/`): the `faqir-tweak` plugin's `<aside l-tweak>` beside a board of registry components. |
 | `site/content/playground.html` | you | Hand-written: the playground's sample markup. |
 | `site/styles/docs.css` | you | Documentation presentation layer: attribute selectors, tokens, responsive rules, reduced-motion fallback. |
 | `site/lib/playground.js` | you | The playground and live-preview wiring. |
 | `site/lib/gallery.js` | you | Shared theme persistence, frame sync, mobile navigation, component/icon filters, the theme gallery's axis filter, icon copying, and preview controls. |
 | `site/lib/copy-snippet.js` | you | The copy-for-agents button. |
+| `site/lib/studio.js` | you | Mounts the theme studio once the theme stylesheet has settled, and reloads the studio page on a theme switch (the dials scale the theme's computed values). |
 | `site/lib/faqir-audit.js` | generated | The audit engine, compiled for the browser. **Committed** — `bun run build:audit-browser`. |
 | `scripts/build-docs.mjs` | — | The writer: builds in memory, clears `site/dist`, writes. |
 | `scripts/build-audit-browser.mjs` | — | The bundler for `site/lib/faqir-audit.js`. |
@@ -51,6 +54,8 @@ typography/index.html             type tokens, hierarchy and prose specimens
 layout/index.html                 the layout doctrine, ladder and archetypes
 responsive/index.html             the responsive lab: live, resizable demos
 engine/index.html                 faqir-core: directives, magics, plugins
+motion/index.html                 choreography tokens, entrances, ambient loops, effects
+studio/index.html                 the faqir-tweak theme studio, live
 layouts/index.html                signpost for the retired responsive-lab URL
 tokens/index.html                 token reference, grouped by token file
 playground/index.html             in-browser audit playground
@@ -83,11 +88,13 @@ _headers                          security baseline + machine-file content types
 styles/faqir.css                  tokens + base + every component CSS
 styles/themes/<name>.css          one per registry theme — the swappable link
 scripts/faqir-core.js             the registry engine
+scripts/faqir-tweak.js            the theme-studio plugin, verbatim from the registry
 scripts/faqir-audit.js            the audit engine, compiled for the browser
 scripts/faqir-manifests.js        every manifest as one global
 scripts/playground.js             playground wiring
 scripts/gallery.js                shared docs-shell + appearance wiring
 scripts/copy-snippet.js           the copy-for-agents button
+scripts/studio.js                 theme-studio mount and reload wiring
 ```
 
 Every navigational and fetched asset URL in the site is relative, so the output
@@ -181,7 +188,9 @@ Page-specific JavaScript is kept explicit:
 | `scripts/faqir-audit.js` | `src/audit/browser.ts` compiled to an IIFE that installs one global, `FaqirAudit`. Zero dependencies, no DOM required. |
 | `scripts/faqir-manifests.js` | Every registry manifest, verbatim, as `window.__FAQIR_MANIFESTS__`. A script, not JSON + `fetch`, so it works from `file://`. |
 | `scripts/playground.js` | Textarea → findings list → preview frame. |
-| `scripts/faqir-core.js` | Reactive engine for live examples and the table recipe in the layout lab. |
+| `scripts/faqir-core.js` | Reactive engine for live examples, the table recipe in the layout lab, and the motion page's interactive demos. |
+| `scripts/faqir-tweak.js` | The registry's theme-studio plugin, verbatim; loaded only by `studio/`. |
+| `scripts/studio.js` | Mounts `<aside l-tweak>` after the theme stylesheet settles; reloads `studio/` on a theme switch. |
 | `scripts/copy-snippet.js` | Clipboard enhancement on component contract pages. |
 
 Nothing on the site fetches application data. **The audit runs in the page**,
@@ -288,7 +297,9 @@ and a permissive `Access-Control-Allow-Origin` — a browser-based agent that
 cannot read the file cross-origin cannot use it at all. Its site-wide rule also
 sets `nosniff`, a strict referrer policy, a closed permissions policy, same-origin
 framing, and a CSP that allows only the site's own scripts, styles, and frames
-(plus inline reference-demo styles and data images).
+(plus inline reference-demo styles and data images). Its `script-src` carries
+`'unsafe-eval'`, as [`docs/security.md`](security.md) requires: without it the
+engine loads and every `l-*` expression on the site is silently inert.
 
 ### Copy for agents
 

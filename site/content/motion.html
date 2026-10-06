@@ -1,0 +1,421 @@
+<!--
+  Motion & effects: the choreography the registry gained with reveal, marquee,
+  backdrop, glow, highlight, quote, rating, timeline and scroll-progress, and
+  the additive effect properties on card, button, image, link and badge.
+
+  The `@faqir:motion-tokens` marker is replaced by src/generator/docs.ts with
+  every token `registry/tokens/motion.css` declares, its value, and the
+  components whose manifests read it. Each <template data-docs-example> becomes
+  a live demo plus a copyable code block from the same bytes; the page loads
+  scripts/faqir-core.js, so the interactive ones are running as you read them.
+-->
+      <div data-docs-motion>
+        <div data-ui="scroll-progress" aria-hidden="true"></div>
+
+        <div data-ui="backdrop" data-variant="aurora" data-intensity="subtle" data-docs-motion-hero>
+          <section data-ui="hero" data-variant="center" aria-labelledby="motion-heading" data-docs-hero>
+            <div data-ui="reveal" data-variant="rise" data-stagger data-docs-motion-hero-copy>
+              <span data-ui="badge" data-variant="primary" data-live>New in the registry</span>
+              <h1 data-part="headline" id="motion-heading">Interfaces that <span data-ui="highlight" data-animate>move like the theme</span>, not like a script.</h1>
+              <p data-part="description">
+                Nine CSS-only primitives and one family of choreography tokens. Every entrance,
+                loop and glow on this page reads the same few custom properties, so a theme
+                states its motion once and every component follows.
+              </p>
+              <div data-part="actions">
+                <span data-ui="glow" data-halo data-docs-button-glow>
+                  <a data-ui="button" data-variant="primary" data-size="lg" data-effect="shine" href="#reveal-heading">See the entrances</a>
+                </span>
+                <a data-ui="button" data-variant="outline" data-size="lg" data-effect="press" href="../studio/index.html">Open the theme studio</a>
+              </div>
+              <p data-part="note">Scroll: the bar along the top fills, the timeline below inks in.</p>
+            </div>
+          </section>
+        </div>
+
+        <section aria-labelledby="motion-tokens-heading" data-docs-section>
+          <div data-docs-section-heading>
+            <span data-ui="badge" data-variant="secondary">Choreography tokens</span>
+            <h2 id="motion-tokens-heading">One file of timing, read by every component that moves.</h2>
+            <p>
+              No component spells an easing or a duration of its own. A brisk theme shortens
+              <code>--motion-reveal-distance</code> and <code>--motion-reveal-duration</code>; a
+              theatrical one lengthens both and raises <code>--motion-stagger</code>. Setting
+              <code>--motion-ambient-play: paused</code> on <code>:root</code>, or on any subtree,
+              freezes every loop there without touching a transition.
+            </p>
+          </div>
+<!-- @faqir:motion-tokens -->
+        </section>
+
+        <section aria-labelledby="reveal-heading" data-docs-section>
+          <div data-docs-section-heading>
+            <span data-ui="badge" data-variant="secondary">Entrances</span>
+            <h2 id="reveal-heading">Reveal: seven effects, three triggers, one stagger.</h2>
+            <p>
+              An entrance plays once on load by default. <code>data-trigger="scroll"</code> scrubs
+              it with the scrollbar on a view timeline. A <code>data-state</code> the page writes
+              holds it back and releases it. Reduced motion and print resolve every one to
+              “already arrived”, and markup without a script is never hidden.
+            </p>
+          </div>
+
+          <template data-docs-example="reveal-picker" data-title="Pick an effect and replay it (released by data-state)">
+<div data-ui="stack" data-gap="4" l-data="{ effect: 'rise', shown: true, replay() { this.shown = false; setTimeout(() => { this.shown = true }, 80) } }">
+  <div data-ui="cluster" data-gap="3" data-align="end">
+    <div data-ui="field-group">
+      <label data-part="label" for="motion-reveal-effect">Effect</label>
+      <select data-ui="select" data-part="input" id="motion-reveal-effect" l-model="effect" @change="replay()">
+        <option value="fade">fade</option>
+        <option value="rise" selected>rise</option>
+        <option value="fall">fall</option>
+        <option value="slide-start">slide-start</option>
+        <option value="slide-end">slide-end</option>
+        <option value="zoom">zoom</option>
+        <option value="blur">blur</option>
+      </select>
+    </div>
+    <button data-ui="button" data-variant="outline" type="button" @click="replay()">Replay</button>
+  </div>
+  <div data-ui="reveal" data-variant="rise" data-state="shown" data-stagger :data-variant="effect" :data-state="shown ? 'shown' : 'hidden'" data-docs-reveal-row>
+    <div data-ui="card" data-variant="outlined"><div data-part="body">First, on the beat</div></div>
+    <div data-ui="card" data-variant="outlined"><div data-part="body">Second, one stagger later</div></div>
+    <div data-ui="card" data-variant="outlined"><div data-part="body">Third, and settled</div></div>
+  </div>
+</div>
+          </template>
+
+          <template data-docs-example="reveal-scroll" data-title="Scrubbed by the scrollbar (no script at all)">
+<div data-ui="grid" data-cols="1" data-cols-md="3" data-gap="4">
+  <div data-ui="reveal" data-variant="slide-start" data-trigger="scroll">
+    <div data-ui="card"><div data-part="body">slide-start</div></div>
+  </div>
+  <div data-ui="reveal" data-variant="zoom" data-trigger="scroll">
+    <div data-ui="card"><div data-part="body">zoom</div></div>
+  </div>
+  <div data-ui="reveal" data-variant="slide-end" data-trigger="scroll">
+    <div data-ui="card"><div data-part="body">slide-end</div></div>
+  </div>
+</div>
+          </template>
+
+          <div data-ui="cluster" data-gap="3">
+            <a data-ui="link" data-effect="arrow" href="../components/primitives/reveal.html">The reveal contract</a>
+          </div>
+        </section>
+
+        <section aria-labelledby="emphasis-heading" data-docs-section>
+          <div data-docs-section-heading>
+            <span data-ui="badge" data-variant="secondary">Emphasis</span>
+            <h2 id="emphasis-heading">Highlight: the words a headline wants read first.</h2>
+            <p>
+              Every effect is a background under or clipped to real text, so it stays
+              selectable, searchable and announced once. Forced colours restore plain text.
+            </p>
+          </div>
+
+          <template data-docs-example="highlight" data-title="Four styles; data-animate plays the pan or the draw-in">
+<div data-ui="stack" data-gap="3">
+  <p data-ui="text" data-size="2xl" data-weight="bold">Ship the <span data-ui="highlight" data-animate>interface</span>, not the design system.</p>
+  <p data-ui="text" data-size="2xl" data-weight="bold">Audited <span data-ui="highlight" data-variant="shimmer">before it ships</span>.</p>
+  <p data-ui="text" data-size="2xl" data-weight="bold">One <span data-ui="highlight" data-variant="marker" data-animate>attribute</span> per decision.</p>
+  <p data-ui="text" data-size="2xl" data-weight="bold">Tokens, <span data-ui="highlight" data-variant="underline" data-animate>not overrides</span>.</p>
+</div>
+          </template>
+
+          <div data-ui="cluster" data-gap="3">
+            <a data-ui="link" data-effect="arrow" href="../components/primitives/highlight.html">The highlight contract</a>
+          </div>
+        </section>
+
+        <section aria-labelledby="ambient-heading" data-docs-section l-data="{ paused: false }">
+          <div data-docs-section-heading>
+            <span data-ui="badge" data-variant="secondary">Ambient</span>
+            <h2 id="ambient-heading">Light and movement nobody had to ask for.</h2>
+            <p>
+              Backdrops, glows and marquees run on <code>--motion-ambient-duration</code> and stop
+              on <code>--motion-ambient-play</code>. They are still under reduced motion and gone
+              in forced colours and print.
+            </p>
+            <button data-ui="button" data-variant="secondary" type="button" aria-pressed="false" :aria-pressed="paused ? 'true' : 'false'" @click="paused = !paused; document.documentElement.style.setProperty('--motion-ambient-play', paused ? 'paused' : 'running')" l-text="paused ? 'Resume every ambient loop' : 'Pause every ambient loop'">Pause every ambient loop</button>
+          </div>
+
+          <template data-docs-example="backdrop" data-title="Backdrop: five scenes painted by the wrapper's own pseudo-elements">
+<div data-ui="grid" data-cols="auto" data-min="12" data-gap="4">
+  <div data-ui="backdrop" data-variant="aurora" data-docs-scene><p>aurora</p></div>
+  <div data-ui="backdrop" data-variant="spotlight" data-docs-scene><p>spotlight</p></div>
+  <div data-ui="backdrop" data-variant="grid" data-docs-scene><p>grid</p></div>
+  <div data-ui="backdrop" data-variant="dots" data-docs-scene><p>dots</p></div>
+  <div data-ui="backdrop" data-variant="beams" data-docs-scene><p>beams</p></div>
+</div>
+          </template>
+
+          <template data-docs-example="glow" data-title="Glow: a rotating ring, an orbiting beam, or light on hover">
+<div data-ui="grid" data-cols="1" data-cols-md="3" data-gap="6">
+  <div data-ui="glow" data-halo>
+    <div data-ui="card"><div data-part="header"><h3 data-part="title">Ring with a halo</h3></div><div data-part="body">The accent gradient rotates around the card.</div></div>
+  </div>
+  <div data-ui="glow" data-variant="beam">
+    <div data-ui="card"><div data-part="header"><h3 data-part="title">Beam</h3></div><div data-part="body">One arc orbiting a quiet border.</div></div>
+  </div>
+  <div data-ui="glow" data-trigger="hover" data-halo>
+    <div data-ui="card"><div data-part="header"><h3 data-part="title">On hover</h3></div><div data-part="body"><a data-ui="link" href="#ambient-heading">Hover or focus to light it</a></div></div>
+  </div>
+</div>
+          </template>
+
+          <template data-docs-example="marquee" data-title="Marquee: written twice, slid by one copy, paused under the pointer">
+<div data-ui="stack" data-gap="3">
+  <div data-ui="marquee" data-fade role="group" aria-label="Primitives new in the registry">
+    <ul data-part="track">
+      <li data-part="item"><span data-ui="chip" data-variant="primary"><span data-part="label">reveal</span></span></li>
+      <li data-part="item"><span data-ui="chip"><span data-part="label">marquee</span></span></li>
+      <li data-part="item"><span data-ui="chip" data-variant="outline"><span data-part="label">backdrop</span></span></li>
+      <li data-part="item"><span data-ui="chip" data-variant="primary"><span data-part="label">glow</span></span></li>
+      <li data-part="item"><span data-ui="chip"><span data-part="label">highlight</span></span></li>
+      <li data-part="item"><span data-ui="chip" data-variant="outline"><span data-part="label">quote</span></span></li>
+      <li data-part="item"><span data-ui="chip" data-variant="primary"><span data-part="label">rating</span></span></li>
+      <li data-part="item"><span data-ui="chip"><span data-part="label">timeline</span></span></li>
+      <li data-part="item"><span data-ui="chip" data-variant="outline"><span data-part="label">scroll-progress</span></span></li>
+    </ul>
+    <ul data-part="track" aria-hidden="true">
+      <li data-part="item"><span data-ui="chip" data-variant="primary"><span data-part="label">reveal</span></span></li>
+      <li data-part="item"><span data-ui="chip"><span data-part="label">marquee</span></span></li>
+      <li data-part="item"><span data-ui="chip" data-variant="outline"><span data-part="label">backdrop</span></span></li>
+      <li data-part="item"><span data-ui="chip" data-variant="primary"><span data-part="label">glow</span></span></li>
+      <li data-part="item"><span data-ui="chip"><span data-part="label">highlight</span></span></li>
+      <li data-part="item"><span data-ui="chip" data-variant="outline"><span data-part="label">quote</span></span></li>
+      <li data-part="item"><span data-ui="chip" data-variant="primary"><span data-part="label">rating</span></span></li>
+      <li data-part="item"><span data-ui="chip"><span data-part="label">timeline</span></span></li>
+      <li data-part="item"><span data-ui="chip" data-variant="outline"><span data-part="label">scroll-progress</span></span></li>
+    </ul>
+  </div>
+  <div data-ui="marquee" data-fade data-direction="reverse" data-speed="slow" role="group" aria-label="Patterns new in the registry">
+    <ul data-part="track">
+      <li data-part="item"><span data-ui="badge">site-header</span></li>
+      <li data-part="item"><span data-ui="badge" data-variant="secondary">logo-cloud</span></li>
+      <li data-part="item"><span data-ui="badge">testimonials</span></li>
+      <li data-part="item"><span data-ui="badge" data-variant="secondary">cta</span></li>
+      <li data-part="item"><span data-ui="badge">faq</span></li>
+      <li data-part="item"><span data-ui="badge" data-variant="secondary">bento</span></li>
+      <li data-part="item"><span data-ui="badge">article</span></li>
+      <li data-part="item"><span data-ui="badge" data-variant="secondary">post-list</span></li>
+    </ul>
+    <ul data-part="track" aria-hidden="true">
+      <li data-part="item"><span data-ui="badge">site-header</span></li>
+      <li data-part="item"><span data-ui="badge" data-variant="secondary">logo-cloud</span></li>
+      <li data-part="item"><span data-ui="badge">testimonials</span></li>
+      <li data-part="item"><span data-ui="badge" data-variant="secondary">cta</span></li>
+      <li data-part="item"><span data-ui="badge">faq</span></li>
+      <li data-part="item"><span data-ui="badge" data-variant="secondary">bento</span></li>
+      <li data-part="item"><span data-ui="badge">article</span></li>
+      <li data-part="item"><span data-ui="badge" data-variant="secondary">post-list</span></li>
+    </ul>
+  </div>
+</div>
+          </template>
+
+          <div data-ui="cluster" data-gap="3">
+            <a data-ui="link" data-effect="arrow" href="../components/primitives/backdrop.html">backdrop</a>
+            <a data-ui="link" data-effect="arrow" href="../components/primitives/glow.html">glow</a>
+            <a data-ui="link" data-effect="arrow" href="../components/primitives/marquee.html">marquee</a>
+          </div>
+        </section>
+
+        <section aria-labelledby="effects-heading" data-docs-section>
+          <div data-docs-section-heading>
+            <span data-ui="badge" data-variant="secondary">Additive properties</span>
+            <h2 id="effects-heading">New behaviour on the components you already have.</h2>
+            <p>
+              Card hovers and a media slot, button and link effects, image hovers and live
+              badges. Every one is a new attribute; markup without it renders exactly as it did.
+            </p>
+          </div>
+
+          <template data-docs-example="card-hover" data-title="Card: data-hover is zoom, raise, tint or lift">
+<div data-ui="grid" data-cols="1" data-cols-md="2" data-cols-lg="4" data-gap="6">
+  <div data-ui="card" data-hover="zoom">
+    <figure data-part="media"><img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2036%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20stop-color%3D%22%236d28d9%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%230891b2%22%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Crect%20width%3D%2264%22%20height%3D%2236%22%20fill%3D%22url(%23g)%22%2F%3E%3Ccircle%20cx%3D%2248%22%20cy%3D%2211%22%20r%3D%225%22%20fill%3D%22%23fff%22%20fill-opacity%3D%22.55%22%2F%3E%3Cpath%20d%3D%22M0%2036L18%2019l12%2010%2014-12%2020%2016v3z%22%20fill-opacity%3D%22.3%22%2F%3E%3C%2Fsvg%3E" alt="Two mountain ridges under a pale sun"></figure>
+    <div data-part="header"><h3 data-part="title">zoom</h3></div>
+    <div data-part="body">The picture leans in.</div>
+  </div>
+  <div data-ui="card" data-hover="raise">
+    <div data-part="header"><h3 data-part="title">raise</h3><p data-part="description">Rises and climbs the shadow ramp.</p></div>
+    <div data-part="body"><a data-ui="link" data-effect="arrow" href="#effects-heading">Read more</a></div>
+  </div>
+  <div data-ui="card" data-variant="outlined" data-hover="tint">
+    <div data-part="header"><h3 data-part="title">tint</h3><p data-part="description">The accent along the edge.</p></div>
+    <div data-part="body"><a data-ui="link" data-effect="slide" href="#effects-heading">An underline that slides in</a></div>
+  </div>
+  <div data-ui="card" data-hover="lift">
+    <div data-part="header"><h3 data-part="title">lift</h3><p data-part="description">One spacing step up.</p></div>
+    <div data-part="body">
+      <div data-ui="cluster" data-gap="2">
+        <span data-ui="badge" data-variant="success" data-live>Live</span>
+        <span data-ui="badge" data-variant="destructive" data-live>Recording</span>
+      </div>
+    </div>
+  </div>
+</div>
+          </template>
+
+          <template data-docs-example="button-effects" data-title="Button: data-effect is shine, pulse or press">
+<div data-ui="cluster" data-gap="3">
+  <button data-ui="button" data-variant="primary" data-effect="shine" type="button">Shine</button>
+  <button data-ui="button" data-variant="primary" data-effect="pulse" type="button">Pulse</button>
+  <button data-ui="button" data-variant="outline" data-effect="press" type="button">Press</button>
+</div>
+          </template>
+
+          <template data-docs-example="image-hover" data-title="Image: data-hover is zoom, lift or fade">
+<div data-ui="cluster" data-gap="4">
+  <figure data-ui="image" data-variant="thumbnail" data-size="md" data-hover="zoom">
+    <img data-part="img" width="192" height="192" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2040%2040%22%3E%3Crect%20width%3D%2240%22%20height%3D%2240%22%20fill%3D%22%230e7490%22%2F%3E%3Ccircle%20cx%3D%2228%22%20cy%3D%2213%22%20r%3D%227%22%20fill%3D%22%23fde68a%22%2F%3E%3Cpath%20d%3D%22M0%2040V26q10-6%2020%200t20%200v14z%22%20fill%3D%22%23164e63%22%2F%3E%3C%2Fsvg%3E" alt="A sun over a calm sea">
+  </figure>
+  <figure data-ui="image" data-variant="thumbnail" data-size="md" data-hover="lift">
+    <img data-part="img" width="192" height="192" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2040%2040%22%3E%3Crect%20width%3D%2240%22%20height%3D%2240%22%20fill%3D%22%23be185d%22%2F%3E%3Cpath%20d%3D%22M6%2030L34%2010%2022%2034l-4-9z%22%20fill%3D%22%23fff%22%20fill-opacity%3D%22.85%22%2F%3E%3C%2Fsvg%3E" alt="A paper plane mid-flight">
+  </figure>
+  <figure data-ui="image" data-variant="thumbnail" data-size="md" data-hover="fade">
+    <img data-part="img" width="192" height="192" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2040%2040%22%3E%3Crect%20width%3D%2240%22%20height%3D%2240%22%20fill%3D%22%23475569%22%2F%3E%3Crect%20x%3D%228%22%20y%3D%228%22%20width%3D%2224%22%20height%3D%2224%22%20rx%3D%223%22%20fill%3D%22%23cbd5e1%22%20fill-opacity%3D%22.6%22%2F%3E%3C%2Fsvg%3E" alt="A fogged window at dawn">
+  </figure>
+</div>
+          </template>
+        </section>
+
+        <section aria-labelledby="content-heading" data-docs-section>
+          <div data-docs-section-heading>
+            <span data-ui="badge" data-variant="secondary">Content</span>
+            <h2 id="content-heading">Quotes, ratings and a timeline that inks in as you read.</h2>
+            <p>
+              The content primitives the new patterns are built from. Each timeline marker
+              fills on its own view timeline; where that is unsupported, the timeline is simply drawn.
+            </p>
+          </div>
+
+          <template data-docs-example="quote-rating" data-title="Quote with a rating, and a pull quote">
+<div data-ui="grid" data-cols="1" data-cols-md="2" data-gap="6">
+  <figure data-ui="quote" data-variant="card">
+    <span data-ui="rating" data-value="4.5" role="img" aria-label="Rated 4.5 out of 5"></span>
+    <blockquote data-part="text">
+      <p>The audit caught a missing label before our users did. That alone paid for the migration.</p>
+    </blockquote>
+    <figcaption data-part="author">
+      <span data-part="media"><span data-ui="avatar" data-size="sm"><span data-part="fallback">MR</span></span></span>
+      <span data-part="name">Mateo Rossi</span>
+      <span data-part="role">Head of design, Lumen</span>
+    </figcaption>
+  </figure>
+  <figure data-ui="quote" data-variant="pull">
+    <blockquote data-part="text">
+      <p>The selector is the documentation.</p>
+    </blockquote>
+  </figure>
+</div>
+          </template>
+
+          <template data-docs-example="timeline" data-title="Timeline, alternating, with data-progress">
+<ol data-ui="timeline" data-variant="alternate" data-progress>
+  <li data-part="item">
+    <span data-part="marker" aria-hidden="true"></span>
+    <div data-part="content">
+      <time data-part="time" datetime="2023">2023</time>
+      <p data-part="title">A CLI and twelve components</p>
+      <p data-part="description">The first registry, copied into projects file by file.</p>
+    </div>
+  </li>
+  <li data-part="item">
+    <span data-part="marker" aria-hidden="true"></span>
+    <div data-part="content">
+      <time data-part="time" datetime="2024">2024</time>
+      <p data-part="title">The reactive engine</p>
+      <p data-part="description">Directives, stores and recipes in one script tag.</p>
+    </div>
+  </li>
+  <li data-part="item">
+    <span data-part="marker" aria-hidden="true"></span>
+    <div data-part="content">
+      <time data-part="time" datetime="2025">2025</time>
+      <p data-part="title">Audit, repair, conform</p>
+      <p data-part="description">The framework started checking its own output.</p>
+    </div>
+  </li>
+  <li data-part="item">
+    <span data-part="marker" aria-hidden="true"></span>
+    <div data-part="content">
+      <time data-part="time" datetime="2026">2026</time>
+      <p data-part="title">Personality</p>
+      <p data-part="description">Themes that measurably differ, and motion to match.</p>
+    </div>
+  </li>
+</ol>
+          </template>
+
+          <div data-ui="cluster" data-gap="3">
+            <a data-ui="link" data-effect="arrow" href="../components/primitives/quote.html">quote</a>
+            <a data-ui="link" data-effect="arrow" href="../components/primitives/rating.html">rating</a>
+            <a data-ui="link" data-effect="arrow" href="../components/primitives/timeline.html">timeline</a>
+            <a data-ui="link" data-effect="arrow" href="../components/primitives/scroll-progress.html">scroll-progress</a>
+          </div>
+        </section>
+
+        <section aria-labelledby="transitions-heading" data-docs-section>
+          <div data-docs-section-heading>
+            <span data-ui="badge" data-variant="secondary">Engine transitions</span>
+            <h2 id="transitions-heading">Eight <code>l-transition</code> presets.</h2>
+            <p>
+              Five are new: <code>slide-down</code>, <code>slide-start</code>, <code>slide-end</code>,
+              <code>blur</code> and <code>flip</code>. Enter is slower and eased out, leave is faster
+              and eased in, both from motion tokens. The engine only stamps the phases; the CSS animates.
+            </p>
+          </div>
+
+          <template data-docs-example="transitions" data-title="Pick a preset, then hide and show">
+<div data-ui="stack" data-gap="4" l-data="{ preset: 'slide-start', shown: true }">
+  <div data-ui="cluster" data-gap="3" data-align="end">
+    <div data-ui="field-group">
+      <label data-part="label" for="motion-transition-preset">Preset</label>
+      <select data-ui="select" data-part="input" id="motion-transition-preset" l-model="preset">
+        <option value="fade">fade</option>
+        <option value="slide-up">slide-up</option>
+        <option value="slide-down">slide-down</option>
+        <option value="slide-start" selected>slide-start</option>
+        <option value="slide-end">slide-end</option>
+        <option value="scale">scale</option>
+        <option value="blur">blur</option>
+        <option value="flip">flip</option>
+      </select>
+    </div>
+    <button data-ui="button" data-variant="primary" type="button" @click="shown = !shown" l-text="shown ? 'Hide' : 'Show'">Hide</button>
+  </div>
+  <div data-docs-transition-stage>
+    <template l-if="shown">
+      <div data-ui="card" l-transition="slide-start" :l-transition="preset">
+        <div data-part="header">
+          <h3 data-part="title" l-text="preset">slide-start</h3>
+        </div>
+        <div data-part="body">Inserted and removed by l-if; animated by the preset's CSS.</div>
+      </div>
+    </template>
+  </div>
+</div>
+          </template>
+
+          <div data-ui="cluster" data-gap="3">
+            <a data-ui="link" data-effect="arrow" href="../engine/index.html">The reactive engine</a>
+          </div>
+        </section>
+
+        <section aria-labelledby="motion-a11y-heading" data-docs-section>
+          <div data-docs-section-heading>
+            <span data-ui="badge" data-variant="secondary">Restraint</span>
+            <h2 id="motion-a11y-heading">Everything here knows when to stop.</h2>
+          </div>
+          <ul data-docs-motion-rules>
+            <li><strong>Reduced motion.</strong> Every entrance resolves to its final state, every loop holds still, and a marquee becomes ordinary wrapped content.</li>
+            <li><strong>Forced colours.</strong> Gradients, glows and backdrops step aside; highlighted text becomes plain text in the system colours.</li>
+            <li><strong>Print.</strong> Nothing animates and nothing is hidden waiting for a scroll that will never come.</li>
+            <li><strong>Graceful support.</strong> Scroll-linked behaviour sits behind <code>@supports</code>. Where view timelines are missing, content is simply there.</li>
+            <li><strong>Pausable.</strong> A marquee pauses under the pointer and the keyboard, and every ambient loop answers to one token.</li>
+          </ul>
+        </section>
+      </div>

@@ -6,7 +6,7 @@
         "height": 900
       },
       "totals": {
-        "pages": 263,
+        "pages": 265,
         "zeroGutterPages": 0,
         "seamPages": 0,
         "seams": 0,
@@ -44,13 +44,31 @@
           "bleeds": 0,
           "overlaps": 0
         },
+        "components/patterns/article.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
         "components/patterns/auth-form.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
           "overlaps": 0
         },
+        "components/patterns/bento.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
         "components/patterns/crud-table.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "components/patterns/cta.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
@@ -69,6 +87,12 @@
           "overlaps": 0
         },
         "components/patterns/empty-state.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "components/patterns/faq.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
@@ -98,6 +122,18 @@
           "bleeds": 0,
           "overlaps": 0
         },
+        "components/patterns/logo-cloud.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "components/patterns/post-list.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
         "components/patterns/pricing.html": {
           "zeroGutter": false,
           "seams": 0,
@@ -122,7 +158,19 @@
           "bleeds": 0,
           "overlaps": 0
         },
+        "components/patterns/site-header.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
         "components/patterns/stats-dashboard.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "components/patterns/testimonials.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
@@ -141,6 +189,12 @@
           "overlaps": 0
         },
         "components/primitives/avatar.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "components/primitives/backdrop.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
@@ -224,7 +278,19 @@
           "bleeds": 0,
           "overlaps": 0
         },
+        "components/primitives/glow.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
         "components/primitives/grid.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "components/primitives/highlight.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
@@ -272,6 +338,12 @@
           "bleeds": 0,
           "overlaps": 0
         },
+        "components/primitives/marquee.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
         "components/primitives/nav.html": {
           "zeroGutter": false,
           "seams": 0,
@@ -290,7 +362,31 @@
           "bleeds": 0,
           "overlaps": 0
         },
+        "components/primitives/quote.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
         "components/primitives/radio.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "components/primitives/rating.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "components/primitives/reveal.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "components/primitives/scroll-progress.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
@@ -369,6 +465,12 @@
           "overlaps": 0
         },
         "components/primitives/textarea.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "components/primitives/timeline.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
@@ -572,13 +674,31 @@
           "bleeds": 0,
           "overlaps": 0
         },
+        "examples/patterns/article.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
         "examples/patterns/auth-form.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
           "overlaps": 0
         },
+        "examples/patterns/bento.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
         "examples/patterns/crud-table.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "examples/patterns/cta.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
@@ -597,6 +717,12 @@
           "overlaps": 0
         },
         "examples/patterns/empty-state.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "examples/patterns/faq.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
@@ -626,6 +752,18 @@
           "bleeds": 0,
           "overlaps": 0
         },
+        "examples/patterns/logo-cloud.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "examples/patterns/post-list.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
         "examples/patterns/pricing.html": {
           "zeroGutter": false,
           "seams": 0,
@@ -650,7 +788,19 @@
           "bleeds": 0,
           "overlaps": 0
         },
+        "examples/patterns/site-header.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
         "examples/patterns/stats-dashboard.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "examples/patterns/testimonials.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
@@ -669,6 +819,12 @@
           "overlaps": 0
         },
         "examples/primitives/avatar.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "examples/primitives/backdrop.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
@@ -752,7 +908,19 @@
           "bleeds": 0,
           "overlaps": 0
         },
+        "examples/primitives/glow.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
         "examples/primitives/grid.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "examples/primitives/highlight.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
@@ -800,6 +968,12 @@
           "bleeds": 0,
           "overlaps": 0
         },
+        "examples/primitives/marquee.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
         "examples/primitives/nav.html": {
           "zeroGutter": false,
           "seams": 0,
@@ -818,7 +992,31 @@
           "bleeds": 0,
           "overlaps": 0
         },
+        "examples/primitives/quote.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
         "examples/primitives/radio.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "examples/primitives/rating.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "examples/primitives/reveal.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "examples/primitives/scroll-progress.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
@@ -897,6 +1095,12 @@
           "overlaps": 0
         },
         "examples/primitives/textarea.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "examples/primitives/timeline.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
@@ -1124,6 +1328,12 @@
           "bleeds": 0,
           "overlaps": 0
         },
+        "motion/index.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
         "night-shift/index.html": {
           "zeroGutter": false,
           "seams": 0,
@@ -1191,6 +1401,12 @@
           "overlaps": 0
         },
         "spec/1.0/index.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "studio/index.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
@@ -1396,7 +1612,7 @@
         "height": 812
       },
       "totals": {
-        "pages": 263,
+        "pages": 265,
         "zeroGutterPages": 0,
         "seamPages": 0,
         "seams": 0,
@@ -1434,13 +1650,31 @@
           "bleeds": 0,
           "overlaps": 0
         },
+        "components/patterns/article.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
         "components/patterns/auth-form.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
           "overlaps": 0
         },
+        "components/patterns/bento.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
         "components/patterns/crud-table.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "components/patterns/cta.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
@@ -1459,6 +1693,12 @@
           "overlaps": 0
         },
         "components/patterns/empty-state.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "components/patterns/faq.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
@@ -1488,6 +1728,18 @@
           "bleeds": 0,
           "overlaps": 0
         },
+        "components/patterns/logo-cloud.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "components/patterns/post-list.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
         "components/patterns/pricing.html": {
           "zeroGutter": false,
           "seams": 0,
@@ -1512,7 +1764,19 @@
           "bleeds": 0,
           "overlaps": 0
         },
+        "components/patterns/site-header.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
         "components/patterns/stats-dashboard.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "components/patterns/testimonials.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
@@ -1531,6 +1795,12 @@
           "overlaps": 0
         },
         "components/primitives/avatar.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "components/primitives/backdrop.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
@@ -1614,7 +1884,19 @@
           "bleeds": 0,
           "overlaps": 0
         },
+        "components/primitives/glow.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
         "components/primitives/grid.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "components/primitives/highlight.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
@@ -1662,6 +1944,12 @@
           "bleeds": 0,
           "overlaps": 0
         },
+        "components/primitives/marquee.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
         "components/primitives/nav.html": {
           "zeroGutter": false,
           "seams": 0,
@@ -1680,7 +1968,31 @@
           "bleeds": 0,
           "overlaps": 0
         },
+        "components/primitives/quote.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
         "components/primitives/radio.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "components/primitives/rating.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "components/primitives/reveal.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "components/primitives/scroll-progress.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
@@ -1759,6 +2071,12 @@
           "overlaps": 0
         },
         "components/primitives/textarea.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "components/primitives/timeline.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
@@ -1962,13 +2280,31 @@
           "bleeds": 0,
           "overlaps": 0
         },
+        "examples/patterns/article.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
         "examples/patterns/auth-form.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
           "overlaps": 0
         },
+        "examples/patterns/bento.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
         "examples/patterns/crud-table.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "examples/patterns/cta.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
@@ -1987,6 +2323,12 @@
           "overlaps": 0
         },
         "examples/patterns/empty-state.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "examples/patterns/faq.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
@@ -2016,6 +2358,18 @@
           "bleeds": 0,
           "overlaps": 0
         },
+        "examples/patterns/logo-cloud.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "examples/patterns/post-list.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
         "examples/patterns/pricing.html": {
           "zeroGutter": false,
           "seams": 0,
@@ -2040,7 +2394,19 @@
           "bleeds": 0,
           "overlaps": 0
         },
+        "examples/patterns/site-header.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
         "examples/patterns/stats-dashboard.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "examples/patterns/testimonials.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
@@ -2059,6 +2425,12 @@
           "overlaps": 0
         },
         "examples/primitives/avatar.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "examples/primitives/backdrop.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
@@ -2142,7 +2514,19 @@
           "bleeds": 0,
           "overlaps": 0
         },
+        "examples/primitives/glow.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
         "examples/primitives/grid.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "examples/primitives/highlight.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
@@ -2190,6 +2574,12 @@
           "bleeds": 0,
           "overlaps": 0
         },
+        "examples/primitives/marquee.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
         "examples/primitives/nav.html": {
           "zeroGutter": false,
           "seams": 0,
@@ -2208,7 +2598,31 @@
           "bleeds": 0,
           "overlaps": 0
         },
+        "examples/primitives/quote.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
         "examples/primitives/radio.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "examples/primitives/rating.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "examples/primitives/reveal.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "examples/primitives/scroll-progress.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
@@ -2287,6 +2701,12 @@
           "overlaps": 0
         },
         "examples/primitives/textarea.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "examples/primitives/timeline.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,
@@ -2514,6 +2934,12 @@
           "bleeds": 0,
           "overlaps": 0
         },
+        "motion/index.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
         "night-shift/index.html": {
           "zeroGutter": false,
           "seams": 0,
@@ -2581,6 +3007,12 @@
           "overlaps": 0
         },
         "spec/1.0/index.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "studio/index.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,

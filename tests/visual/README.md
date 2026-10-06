@@ -159,11 +159,13 @@ Bleed is the one of the four that depends on the ruler, which is why the phone
 width was added in 1.0R-06: 1280 had been at zero bleeds since 0.9-11 while eight
 pages pushed up to 198px past the edge at 375, measured by nothing in the repo
 (`tests/a11y/mobile.pw.ts` re-scans narrow, but only the layout-bearing set, and
-axe has no reflow rule). Two subjects are deliberately *not* bleed, and
-`layout-lint.pw.ts` pins both with a synthetic page: a box whose visible slice is
-clipped away by an ancestor, and anything inside an `inert` subtree — a dismissed
-off-canvas drawer is not content a reader was offered. A box that is merely
-off-screen with neither excuse still counts.
+axe has no reflow rule). Three subjects are deliberately *not* bleed, and
+`layout-lint.pw.ts` pins each with a synthetic page: a box whose visible slice is
+clipped away by an ancestor, anything inside an `inert` subtree — a dismissed
+off-canvas drawer is not content a reader was offered — and the content of a
+closed `<details>` other than its `<summary>`, which the browser lays out but
+never paints (site-header's closed phone menu). A box that is merely off-screen
+with none of these excuses still counts, and so does the same menu opened.
 
 **It is a ratchet, not a wall.** `layout-budget.json` records today's counts, one
 section per viewport; a count that rises fails, a count that falls passes and

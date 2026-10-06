@@ -21,6 +21,8 @@
 //   layouts/index.html                signpost for the retired lab URL (task 1.0R-09)
 //   spacing/index.html                spacing ladder + default rhythm guide
 //   density/index.html                density axis + nesting/reset guide
+//   motion/index.html                 choreography tokens, entrances, ambient loops, effects
+//   studio/index.html                 the faqir-tweak theme studio, live over a specimen board
 //   icons/index.html                  searchable manifest-derived icon catalogue
 //   typography/index.html             type tokens, scale and prose specimens
 //   playground/index.html             live in-browser audit playground (task 0.7-14)
@@ -42,6 +44,7 @@
 //   styles/faqir.css                  tokens + base + components + docs presentation
 //   styles/themes/<name>.css          one file per registry theme — the swappable link
 //   scripts/faqir-core.js             the registry engine
+//   scripts/faqir-tweak.js            the theme-studio engine plugin, verbatim
 //   scripts/faqir-audit.js            the audit engine, compiled for the browser
 //   scripts/faqir-manifests.js        every manifest as one global, for the playground
 //   scripts/playground.js             playground wiring (authored, site/lib/)
@@ -343,6 +346,23 @@ export const SPACING_PAGE = "spacing/index.html";
 /** The `data-density` axis, remap inventory, and nesting/reset contract. */
 export const DENSITY_PAGE = "density/index.html";
 
+/**
+ * Motion & effects: the choreography token family, the entrance, emphasis,
+ * ambient and content primitives, and the additive effect properties, live.
+ * The token table is read out of `registry/tokens/motion.css` and the
+ * manifests' `tokens_used`, so it cannot list a token nothing declares.
+ */
+export const MOTION_PAGE = "motion/index.html";
+
+/**
+ * The theme studio: the `faqir-tweak` plugin mounted over a board of registry
+ * components. The plugin ships verbatim as {@link TWEAK_SCRIPT}.
+ */
+export const STUDIO_PAGE = "studio/index.html";
+
+/** Where the studio page loads the registry's `faqir-tweak` plugin from. */
+export const TWEAK_SCRIPT = "scripts/faqir-tweak.js";
+
 /** Searchable catalogue derived from the icon primitive's declared names. */
 export const ICONS_PAGE = "icons/index.html";
 
@@ -448,13 +468,14 @@ export const UI_VALUES_GLOBAL = "__FAQIR_UI_VALUES__";
  *
  * `faqir-audit.js` is generated-and-committed by
  * `scripts/build-audit-browser.mjs` (drift-gated by `bun run check:audit-browser`);
- * the other two are hand-written wiring.
+ * the others are hand-written wiring.
  */
 export const SITE_SCRIPTS = [
   "faqir-audit.js",
   "playground.js",
   "gallery.js",
   "copy-snippet.js",
+  "studio.js",
 ] as const;
 
 /** Registry directories that ship documentable components. */
@@ -1482,6 +1503,7 @@ const NAV_SECTIONS: { heading: string; items: [string, string][] }[] = [
       [RESPONSIVE_PAGE, "Responsive lab"],
       [SPACING_PAGE, "Spacing & rhythm"],
       [DENSITY_PAGE, "Density"],
+      [MOTION_PAGE, "Motion & effects"],
       ["tokens/index.html", "Design tokens"],
     ],
   },
@@ -1491,6 +1513,7 @@ const NAV_SECTIONS: { heading: string; items: [string, string][] }[] = [
       [THEMES_PAGE, "Theme gallery"],
       [THEME_AXES_PAGE, "The fourteen axes"],
       [THEME_AUTHORING_PAGE, "Authoring themes"],
+      [STUDIO_PAGE, "Theme studio"],
     ],
   },
   {
@@ -1619,9 +1642,9 @@ export function renderShell(input: ShellInput): string {
     const active =
       section === "components"
         ? current.startsWith("components/") ||
-          [ICONS_PAGE, TYPOGRAPHY_PAGE, LAYOUT_PAGE, RESPONSIVE_PAGE, SPACING_PAGE, DENSITY_PAGE, "tokens/index.html"].includes(current)
+          [ICONS_PAGE, TYPOGRAPHY_PAGE, LAYOUT_PAGE, RESPONSIVE_PAGE, SPACING_PAGE, DENSITY_PAGE, MOTION_PAGE, "tokens/index.html"].includes(current)
         : section === "themes"
-          ? current.startsWith("themes/")
+          ? current.startsWith("themes/") || current === STUDIO_PAGE
           : section === "engine"
             ? [ENGINE_PAGE, RULES_PAGE].includes(current)
             : section === "tooling"
@@ -3723,6 +3746,91 @@ function renderResponsivePage(ctx: {
   };
 }
 
+/** Marker in `site/content/motion.html` replaced by the choreography token table. */
+const MOTION_TOKENS_MARKER = "<!-- @faqir:motion-tokens -->";
+
+/**
+ * The authored motion page plus every `motion.css` token, its declared value,
+ * and the components whose manifests say they read it.
+ */
+function renderMotionPage(ctx: {
+  config: SiteConfig;
+  components: DocsComponent[];
+  themes: DocsTheme[];
+  authored: string;
+  tokenList: TokenEntry[];
+}): SiteFile {
+  const pagePath = MOTION_PAGE;
+  // A general-purpose token (`--ease-default`) is read by most of the registry;
+  // past a handful of names the list stops being information, so it becomes a count.
+  const READER_LIMIT = 8;
+  const readers = (token: string): string => {
+    const users = ctx.components.filter((c) =>
+      (c.manifest.tokens_used ?? []).includes(token),
+    );
+    if (users.length === 0) return "—";
+    if (users.length > READER_LIMIT) return `${users.length} components`;
+    return users
+      .map(
+        (c) =>
+          `<a data-ui="link" href="${escAttr(relUrl(pagePath, c.pagePath))}">${esc(c.name)}</a>`,
+      )
+      .join(", ");
+  };
+  const tokens = table(
+    ["Token", "Declared value", "Read by"],
+    ctx.tokenList
+      .filter((entry) => entry.group === "motion")
+      .map((entry) => [documentedToken(entry.name), code(entry.value), readers(entry.name)]),
+    "No motion tokens in this registry.",
+  );
+
+  let body = replaceGuideMarker(ctx.authored, MOTION_TOKENS_MARKER, tokens);
+  body = renderGuideExamples(body);
+  return {
+    path: pagePath,
+    content: renderShell({
+      pagePath,
+      title: `Motion & effects · ${ctx.config.title}`,
+      description:
+        "Faqir's choreography tokens and the CSS-only reveal, highlight, backdrop, glow, marquee, quote, rating, timeline and scroll-progress primitives, live.",
+      body,
+      config: ctx.config,
+      components: ctx.components,
+      themes: ctx.themes,
+      current: pagePath,
+      layout: "wide",
+      scripts: ["scripts/faqir-core.js"],
+    }),
+  };
+}
+
+/** The authored theme studio: `faqir-tweak` over a board of registry components. */
+function renderStudioPage(ctx: {
+  config: SiteConfig;
+  components: DocsComponent[];
+  themes: DocsTheme[];
+  authored: string;
+}): SiteFile {
+  const pagePath = STUDIO_PAGE;
+  return {
+    path: pagePath,
+    content: renderShell({
+      pagePath,
+      title: `Theme studio · ${ctx.config.title}`,
+      description:
+        "Tune any Faqir theme live with the faqir-tweak plugin: scheme, density, accent, shape, type, motion and material, exported as a :root block.",
+      body: ctx.authored,
+      config: ctx.config,
+      components: ctx.components,
+      themes: ctx.themes,
+      current: pagePath,
+      layout: "wide",
+      scripts: ["scripts/faqir-core.js", TWEAK_SCRIPT, "scripts/studio.js"],
+    }),
+  };
+}
+
 /**
  * The **copy-for-agents** mount: the reference fragment, verbatim, under exactly
  * the landmark it needs and nothing else. A fragment that declares its own
@@ -4820,7 +4928,7 @@ function renderHeadersFile(machine: MachineFile[]): SiteFile {
     "  Referrer-Policy: strict-origin-when-cross-origin",
     "  Permissions-Policy: camera=(), geolocation=(), microphone=()",
     "  X-Frame-Options: SAMEORIGIN",
-    "  Content-Security-Policy: default-src 'self'; base-uri 'self'; connect-src 'self'; font-src 'self'; frame-src 'self'; frame-ancestors 'self'; img-src 'self' data:; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'",
+    "  Content-Security-Policy: default-src 'self'; base-uri 'self'; connect-src 'self'; font-src 'self'; frame-src 'self'; frame-ancestors 'self'; img-src 'self' data:; object-src 'none'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'",
     "",
   ];
   for (const f of machine) {
@@ -5268,6 +5376,27 @@ export function buildDocsSite(options: DocsSiteOptions = {}): SiteFile[] {
     }),
   );
 
+  const authoredMotion = join(siteRoot, "content", "motion.html");
+  files.push(
+    renderMotionPage({
+      config,
+      components,
+      themes,
+      authored: existsSync(authoredMotion) ? readText(authoredMotion).trim() : "",
+      tokenList,
+    }),
+  );
+
+  const authoredStudio = join(siteRoot, "content", "studio.html");
+  files.push(
+    renderStudioPage({
+      config,
+      components,
+      themes,
+      authored: existsSync(authoredStudio) ? readText(authoredStudio).trim() : "",
+    }),
+  );
+
   const authoredSeed = join(siteRoot, "content", "playground.html");
   files.push(
     renderPlaygroundPage({
@@ -5370,6 +5499,11 @@ export function buildDocsSite(options: DocsSiteOptions = {}): SiteFile[] {
   const corePath = join(registryRoot, "core", "faqir-core.js");
   if (existsSync(corePath)) {
     files.push({ path: "scripts/faqir-core.js", content: readText(corePath) });
+  }
+  // The theme studio's plugin, verbatim — the same file `faqir add` copies.
+  const tweakPath = join(registryRoot, "core", "plugins", "faqir-tweak.js");
+  if (existsSync(tweakPath)) {
+    files.push({ path: TWEAK_SCRIPT, content: readText(tweakPath) });
   }
 
   // The manifests the playground audits against — the registry's own, verbatim

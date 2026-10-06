@@ -152,9 +152,10 @@ describe("docs site coverage", () => {
     // agents, 404, and the scaffold gallery — plus one page per scaffold
     // …the 1.1 sections: audit rules, rules & validation, CLI reference,
     // integrations, Night Shift, the fourteen axes, theme authoring (7) — plus
-    // one specimen page per theme (see src/generator/docs-pages/).
+    // one specimen page per theme (see src/generator/docs-pages/) — and the
+    // motion page and the theme studio (2).
     expect(shellPages.length).toBe(
-      components.length + 18 + 7 + SCAFFOLD_NAMES.length + themes.length,
+      components.length + 18 + 7 + 2 + SCAFFOLD_NAMES.length + themes.length,
     );
     // one gallery frame per theme, and one live document per scaffold
     expect(framePages.length).toBe(themes.length + SCAFFOLD_NAMES.length);
@@ -178,6 +179,9 @@ describe("docs site coverage", () => {
         "scripts/faqir-manifests.js",
         "scripts/gallery.js",
         "scripts/playground.js",
+        "scripts/studio.js",
+        // The theme studio's engine plugin, verbatim from the registry.
+        "scripts/faqir-tweak.js",
         "styles/faqir.css",
         "sitemap.xml",
         // The frozen protocol, published with its version in the path (1.0-01).

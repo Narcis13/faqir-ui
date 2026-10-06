@@ -14,10 +14,12 @@ bun run deploy:site         # build, then `wrangler pages deploy` (needs a login
 | File | What it is |
 |---|---|
 | `site.config.json` | Title, tagline, description, canonical public URL, initial theme, footer. |
-| `content/home.html` | Hand-written homepage: hero and live specimen, the 1.1 release story, the agent loop, the site map and quick start. The theme runway and its spec plate, the numbers row and the scaffold frames are injected at markers. |
+| `content/home.html` | Hand-written homepage: hero and live specimen, the 1.1 release story, the motion/content/studio bento, the agent loop, the site map and quick start. The theme runway and its spec plate, the numbers row and the scaffold frames are injected at markers. |
 | `content/responsive.html` | Hand-written responsive layout lab for cluster, switcher, grid, and the canonical breakpoint ladder. |
 | `content/engine.html` | Hand-written reactive-engine guide; the vocabulary tables are inserted at markers, read out of the engine itself. |
-| `styles/pages/*.css` | One presentation sheet per 1.1 section (audit, rules, tooling, night-shift, themes), concatenated after `docs.css`. |
+| `content/motion.html` | Hand-written motion & effects page: the new motion and content primitives and the additive effect properties, live. The choreography token table is inserted at a marker. |
+| `content/studio.html` | Hand-written theme studio: the `faqir-tweak` plugin over a board of registry components. |
+| `styles/pages/*.css` | One presentation sheet per section (audit, rules, tooling, night-shift, themes, motion), concatenated after `docs.css`. |
 | `content/spacing.html` | Spacing/rhythm doctrine and audited example templates; the generator injects the complete token ladders. |
 | `content/density.html` | Density, nesting/reset guidance, and audited example templates; the generator injects the scoped remap table. |
 | `content/messages.json` | Static same-origin data for the source-bound inbox demo. |
@@ -25,6 +27,7 @@ bun run deploy:site         # build, then `wrangler pages deploy` (needs a login
 | `lib/gallery.js` | Shared progressive enhancement: persistent theme/mode controls, the home page's spec plate, frame synchronization, mobile navigation, component/icon filters, icon copying, and preview widths. |
 | `lib/playground.js` | Browser audit playground wiring and live preview synchronization. |
 | `lib/copy-snippet.js` | Copy-for-agents wiring. |
+| `lib/studio.js` | Theme-studio wiring: mounts the studio once the theme stylesheet has loaded, reloads on a theme switch. |
 | `lib/faqir-audit.js` | Generated browser audit engine; regenerate with `bun run build:audit-browser`. |
 
 Adding a component to `registry/` adds its documentation page, its navigation

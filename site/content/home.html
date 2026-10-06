@@ -10,7 +10,7 @@
 
         <section data-ui="hero" data-variant="split" aria-labelledby="home-headline" data-docs-hero>
           <div data-part="content">
-            <h1 data-part="headline" id="home-headline">The interface is the contract. Now it has a personality.</h1>
+            <h1 data-part="headline" id="home-headline">The interface is the contract. Now it has a <span data-ui="highlight" data-animate>personality</span>.</h1>
             <p data-part="description">
               Faqir is a UI framework written for two readers at once. People get a
               component system that ships as plain HTML and CSS. Agents get manifests,
@@ -153,6 +153,70 @@ bun run dream:digest
           </div>
         </section>
 
+        <section data-ui="bento" data-animate aria-labelledby="new-heading" data-docs-section data-docs-new>
+          <h2 data-part="heading" id="new-heading">Motion, content and a studio to tune it</h2>
+          <p data-part="description">
+            Nine CSS-only primitives, eight page compositions, a choreography token family and
+            a live theme studio. Every entrance and loop reads the theme's tokens, and every one
+            stands still under reduced motion.
+          </p>
+          <ul data-part="items">
+            <li data-part="item" data-span="large">
+              <div data-part="media" aria-hidden="true">
+                <div data-ui="backdrop" data-variant="aurora"></div>
+              </div>
+              <h3 data-part="title"><a data-ui="link" data-effect="arrow" href="motion/index.html">Motion &amp; effects</a></h3>
+              <p data-part="description">
+                Reveal, highlight, backdrop, glow and marquee, driven by
+                <code>--motion-reveal-*</code>, <code>--motion-stagger</code> and one
+                <code>--motion-ambient-play</code> switch that pauses every loop.
+              </p>
+            </li>
+            <li data-part="item" data-span="wide">
+              <span data-part="icon" aria-hidden="true"><span data-ui="icon" data-icon="sliders-horizontal"></span></span>
+              <h3 data-part="title"><a data-ui="link" data-effect="arrow" href="studio/index.html">The theme studio</a></h3>
+              <p data-part="description">
+                <code>&lt;aside l-tweak&gt;</code> mounts dials for accent, shape, type, motion
+                and material, and exports what you tuned as a <code>:root</code> block.
+              </p>
+            </li>
+            <li data-part="item" data-span="tall">
+              <span data-part="icon" aria-hidden="true"><span data-ui="icon" data-icon="layers"></span></span>
+              <h3 data-part="title">Eight new patterns</h3>
+              <p data-part="description">
+                <a data-ui="link" href="components/patterns/site-header.html">site-header</a>,
+                <a data-ui="link" href="components/patterns/logo-cloud.html">logo-cloud</a>,
+                <a data-ui="link" href="components/patterns/testimonials.html">testimonials</a>,
+                <a data-ui="link" href="components/patterns/cta.html">cta</a>,
+                <a data-ui="link" href="components/patterns/faq.html">faq</a>,
+                <a data-ui="link" href="components/patterns/bento.html">bento</a> (this grid),
+                <a data-ui="link" href="components/patterns/article.html">article</a> and
+                <a data-ui="link" href="components/patterns/post-list.html">post-list</a>.
+              </p>
+            </li>
+            <li data-part="item">
+              <span data-part="icon" aria-hidden="true"><span data-ui="icon" data-icon="message-square"></span></span>
+              <h3 data-part="title">Content primitives</h3>
+              <p data-part="description">
+                <a data-ui="link" href="components/primitives/quote.html">quote</a>,
+                <a data-ui="link" href="components/primitives/rating.html">rating</a>,
+                <a data-ui="link" href="components/primitives/timeline.html">timeline</a> and
+                <a data-ui="link" href="components/primitives/scroll-progress.html">scroll-progress</a>.
+              </p>
+            </li>
+            <li data-part="item">
+              <span data-part="icon" aria-hidden="true"><span data-ui="icon" data-icon="star"></span></span>
+              <h3 data-part="title">Effects, additively</h3>
+              <p data-part="description">Card hovers and media, button and link effects, image hovers and live badges.</p>
+            </li>
+            <li data-part="item">
+              <span data-part="icon" aria-hidden="true"><span data-ui="icon" data-icon="zap"></span></span>
+              <h3 data-part="title">Eight transitions</h3>
+              <p data-part="description"><code>l-transition</code> adds slide-down, slide-start, slide-end, blur and flip.</p>
+            </li>
+          </ul>
+        </section>
+
         <section aria-labelledby="loop-heading" data-docs-section data-docs-loop>
           <div data-docs-section-heading>
             <h2 id="loop-heading">The loop an agent runs</h2>
@@ -208,6 +272,7 @@ bun run dream:digest
                 <li><a data-ui="link" href="responsive/index.html">Responsive lab</a> · resizable, live</li>
                 <li><a data-ui="link" href="spacing/index.html">Spacing and rhythm</a> · the ladder and who owns the gap</li>
                 <li><a data-ui="link" href="density/index.html">Density</a> · compact, comfortable, spacious</li>
+                <li><a data-ui="link" href="motion/index.html">Motion &amp; effects</a> · entrances, loops and the tokens behind them</li>
                 <li><a data-ui="link" href="tokens/index.html">Design tokens</a> · every token, by file</li>
               </ul>
             </div>
@@ -217,6 +282,7 @@ bun run dream:digest
                 <li><a data-ui="link" href="themes/index.html">Theme gallery</a> · filter by axis, switch live</li>
                 <li><a data-ui="link" href="themes/axes/index.html">The fourteen axes</a> · what each value does</li>
                 <li><a data-ui="link" href="themes/authoring/index.html">Authoring</a> · seeds, light-dark(), scopes, fonts</li>
+                <li><a data-ui="link" href="studio/index.html">Theme studio</a> · tune any theme live, export the CSS</li>
                 <li><a data-ui="link" href="engine/index.html">Reactive engine</a> · directives, magics, plugins</li>
                 <li><a data-ui="link" href="rules/index.html">Rules and validation</a> · one definition, three realms</li>
                 <li><a data-ui="link" href="scaffolds/index.html">Scaffolds</a> · five complete pages</li>

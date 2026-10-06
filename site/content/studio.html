@@ -1,0 +1,187 @@
+<!--
+  The theme studio, live. `<aside l-tweak>` is the faqir-tweak plugin
+  (registry/core/plugins/faqir-tweak.js), loaded after scripts/faqir-core.js:
+  it mounts its dials into the aside and writes tokens onto <html>, so the
+  specimen board beside it (and the site chrome around it) follows at once.
+
+  The aside waits in a <template> until site/lib/studio.js has seen the
+  theme stylesheet settle: the dials scale the values the theme computed when
+  the studio opened, so it must not open on the previous theme. Switching the
+  theme in the header afterwards reloads the page for the same reason.
+-->
+      <div data-docs-studio>
+        <header data-docs-studio-intro>
+          <span data-ui="badge" data-variant="primary" data-live>faqir-tweak</span>
+          <h1>The theme studio: turn a dial, and <span data-ui="highlight">every component follows</span>.</h1>
+          <p>
+            One element, <code>&lt;aside l-tweak&gt;</code>, mounts dials for scheme, density,
+            accent, shape, type, motion and material. Each dial writes design tokens onto
+            <code>&lt;html&gt;</code> as inline custom properties. Nothing is recompiled, and
+            <strong>Copy CSS</strong> hands the result back as a <code>:root</code> block to paste
+            into a theme. Pick a starting theme in the header first; the dials scale what that
+            theme declares.
+          </p>
+        </header>
+
+        <div data-docs-studio-layout>
+          <div data-docs-studio-panel>
+            <template data-docs-studio-mount>
+              <aside l-tweak aria-label="Theme studio dials"></aside>
+            </template>
+            <noscript><p>The studio needs JavaScript: it is a plugin of the reactive engine.</p></noscript>
+          </div>
+
+          <section aria-labelledby="studio-board-heading" data-docs-studio-board>
+            <h2 id="studio-board-heading" data-docs-a11y>Live specimen</h2>
+
+            <div data-ui="backdrop" data-variant="aurora" data-intensity="subtle" data-docs-studio-banner>
+              <div data-ui="stack" data-gap="3">
+                <span data-ui="badge" data-variant="secondary">Specimen</span>
+                <p data-ui="text" data-size="3xl" data-weight="bold" data-leading="tight">Ship the <span data-ui="highlight" data-animate>interface</span>, not the design system.</p>
+                <p data-ui="text" data-variant="muted">Headings, body copy, radius, spacing, shadows, motion and texture all come from the tokens the dials write.</p>
+                <div data-ui="cluster" data-gap="3">
+                  <span data-ui="glow" data-halo data-docs-button-glow>
+                    <button data-ui="button" data-variant="primary" data-effect="shine" type="button">Primary action</button>
+                  </span>
+                  <button data-ui="button" data-variant="outline" data-effect="press" type="button">Secondary</button>
+                  <button data-ui="button" data-variant="ghost" type="button">Ghost</button>
+                </div>
+              </div>
+            </div>
+
+            <div data-ui="grid" data-cols="1" data-cols-md="2" data-gap="4">
+              <div data-ui="card" data-hover="raise">
+                <div data-part="header">
+                  <div data-ui="cluster" data-gap="2" data-align="center" data-justify="between">
+                    <h3 data-part="title">Renew the studio plan</h3>
+                    <span data-ui="badge" data-variant="success" data-live>Active</span>
+                  </div>
+                  <p data-part="description">Three seats, billed yearly.</p>
+                </div>
+                <div data-part="body">
+                  <div data-ui="grid" data-cols="2" data-gap="3">
+                    <div data-ui="stat" data-size="sm">
+                      <span data-part="label">Seats</span>
+                      <span data-part="value">3</span>
+                    </div>
+                    <div data-ui="stat" data-size="sm" data-trend="up">
+                      <span data-part="label">Renewal</span>
+                      <span data-part="value">€1,140</span>
+                      <span data-part="change">saves 12%</span>
+                    </div>
+                  </div>
+                </div>
+                <div data-part="footer">
+                  <div data-ui="cluster" data-gap="2" data-justify="end">
+                    <button data-ui="button" data-variant="ghost" data-size="sm" type="button">Not now</button>
+                    <button data-ui="button" data-variant="primary" data-size="sm" type="button">Renew</button>
+                  </div>
+                </div>
+              </div>
+
+              <div data-ui="card" data-variant="outlined">
+                <div data-part="header">
+                  <h3 data-part="title">Billing contact</h3>
+                  <p data-part="description">Controls take their height and edge from the dials.</p>
+                </div>
+                <div data-part="body">
+                  <div data-ui="stack" data-gap="4">
+                    <div data-ui="field-group">
+                      <label data-part="label" for="studio-email">Email</label>
+                      <input data-ui="input" data-part="input" id="studio-email" type="email" value="ada@studio.example" autocomplete="off">
+                    </div>
+                    <div data-ui="field-group">
+                      <label data-part="label" for="studio-plan">Plan</label>
+                      <select data-ui="select" data-part="input" id="studio-plan">
+                        <option>Studio, yearly</option>
+                        <option>Studio, monthly</option>
+                      </select>
+                    </div>
+                    <div data-ui="cluster" data-gap="2">
+                      <span data-ui="chip" data-variant="primary"><span data-part="label">Yearly</span></span>
+                      <span data-ui="chip"><span data-part="label">Invoice</span></span>
+                      <span data-ui="chip" data-variant="outline"><span data-part="label">EU VAT</span></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div data-ui="callout" data-variant="info" role="note">
+              <span data-part="icon"><span data-ui="icon" data-icon="info" aria-hidden="true"></span></span>
+              <div data-part="content">
+                <strong data-part="title">The dials only ever write tokens.</strong>
+                <p>A scale dial reads the value the theme computed, multiplies the number and keeps the unit, so the theme's own proportions survive.</p>
+              </div>
+            </div>
+
+            <div data-ui="grid" data-cols="1" data-cols-md="2" data-gap="4">
+              <figure data-ui="quote" data-variant="card" data-size="sm">
+                <span data-ui="rating" data-value="5" role="img" aria-label="Rated 5 out of 5"></span>
+                <blockquote data-part="text">
+                  <p>Switching themes is one attribute. Tuning one is a few dials.</p>
+                </blockquote>
+                <figcaption data-part="author">
+                  <span data-part="name">Tomasz Zieliński</span>
+                  <span data-part="role">Harbor</span>
+                </figcaption>
+              </figure>
+              <div data-ui="stack" data-gap="3">
+                <div data-ui="cluster" data-gap="2">
+                  <span data-ui="badge">Default</span>
+                  <span data-ui="badge" data-variant="primary">Primary</span>
+                  <span data-ui="badge" data-variant="warning">Warning</span>
+                  <span data-ui="badge" data-variant="destructive">Destructive</span>
+                </div>
+                <div data-ui="cluster" data-gap="3" data-align="center">
+                  <span data-ui="avatar" data-size="md"><span data-part="fallback">AO</span></span>
+                  <span data-ui="avatar" data-size="md"><span data-part="fallback">PN</span></span>
+                  <span data-ui="avatar" data-size="md"><span data-part="fallback">LK</span></span>
+                  <a data-ui="link" data-effect="arrow" href="../motion/index.html">See the motion it drives</a>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <section aria-labelledby="studio-use-heading" data-docs-section>
+          <div data-docs-section-heading>
+            <span data-ui="badge" data-variant="secondary">In your own page</span>
+            <h2 id="studio-use-heading">Two script tags and one element.</h2>
+            <p>
+              The plugin is one self-registering file with no dependencies. Its state persists in
+              <code>localStorage</code>, so a tweak survives a reload; take it out of the page and
+              the theme is exactly what it was.
+            </p>
+          </div>
+          <pre tabindex="0"><code>&lt;script src="core/faqir-core.js" defer&gt;&lt;/script&gt;
+&lt;script src="core/plugins/faqir-tweak.js" defer&gt;&lt;/script&gt;
+
+&lt;aside l-tweak aria-label="Theme studio"&gt;&lt;/aside&gt;</code></pre>
+          <div data-ui="grid" data-cols="1" data-cols-md="2" data-gap="6" data-docs-studio-api>
+            <div>
+              <h3>From script</h3>
+              <ul>
+                <li><code>Faqir.tweak.css()</code> returns the overrides as a <code>:root</code> block.</li>
+                <li><code>Faqir.tweak.apply(state)</code> sets dials programmatically.</li>
+                <li><code>Faqir.tweak.reset()</code> goes back to the theme.</li>
+                <li><code>Faqir.tweak.restore()</code> re-applies the saved state.</li>
+                <li><code>Faqir.tweak.state</code> is the current dial values.</li>
+              </ul>
+            </div>
+            <div>
+              <h3>What the export looks like</h3>
+              <pre tabindex="0"><code>/* &lt;html data-density="compact"&gt; */
+:root {
+  --radius-md: 0.5625rem;
+  --color-primary: oklch(from … l calc(c * 1.2) calc(h + 40));
+  --motion-reveal-ease: var(--ease-spring);
+}</code></pre>
+            </div>
+          </div>
+          <div data-ui="cluster" data-gap="3">
+            <a data-ui="link" data-effect="arrow" href="../themes/authoring/index.html">Make the result a theme</a>
+            <a data-ui="link" data-effect="arrow" href="../engine/index.html#engine-plugins-heading">Every engine plugin</a>
+          </div>
+        </section>
+      </div>

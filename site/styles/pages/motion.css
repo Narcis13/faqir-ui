@@ -1,0 +1,221 @@
+/* ── Motion & effects, the theme studio, and the home page's "new" bento ──
+   Same rules as docs.css: attribute selectors and tokens only. */
+
+/* Home: the bento is a page section of its own, with a page gutter and a page
+   background; inside the docs column the column already supplies both. */
+[data-ui="bento"][data-docs-new] {
+  padding-inline: 0;
+  background: transparent;
+}
+
+[data-ui="bento"][data-docs-new] > [data-part="heading"] {
+  max-inline-size: 22ch;
+  font-size: var(--text-3xl);
+  text-wrap: balance;
+}
+
+[data-ui="bento"][data-docs-new] > [data-part="description"] {
+  max-inline-size: 60ch;
+  font-size: var(--text-lg);
+}
+
+/* A glow around a button takes the button's silhouette, not the card's. */
+[data-docs-button-glow] {
+  --glow-radius: var(--button-radius);
+  --glow-width: var(--border-width-sm);
+}
+
+/* Both pages sit inside the wide layout's prose article, whose `a` rule would
+   underline every link-shaped button. */
+:is([data-docs-motion], [data-docs-studio]) a[data-ui="button"] {
+  text-decoration-line: none;
+}
+
+/* ── Motion page ──
+   `minmax(0, 1fr)`: a marquee's track is one unbroken row, and an `auto`
+   track would grow to its min-content and push the page sideways. */
+[data-docs-motion] {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+}
+
+/* The shared guide-example figure is an `auto`-track grid too. */
+[data-docs-motion] [data-docs-guide-example] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+[data-docs-motion-hero] {
+  border-radius: var(--radius-2xl);
+  overflow: hidden;
+}
+
+[data-docs-motion-hero] > [data-ui="hero"] {
+  --hero-bg: transparent;
+  padding-block: var(--space-16);
+}
+
+[data-docs-motion-hero-copy] {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-4);
+  text-align: center;
+}
+
+[data-docs-motion-hero-copy] [data-part="headline"] {
+  margin: 0;
+  max-inline-size: 20ch;
+  text-wrap: balance;
+}
+
+[data-docs-motion-hero-copy] [data-part="description"] {
+  margin: 0;
+  max-inline-size: 60ch;
+}
+
+/* A staggered reveal moves its children, so it cannot also be a grid
+   primitive; the demo lays the three cards out itself. */
+[data-docs-reveal-row] {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  gap: var(--space-4);
+}
+
+[data-docs-scene] {
+  display: grid;
+  place-items: end start;
+  min-block-size: 9rem;
+  padding: var(--space-4);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+[data-docs-scene] > p {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+}
+
+/* The transition demo's card is inserted and removed: hold its room so the
+   controls above do not jump while it leaves. */
+[data-docs-transition-stage] {
+  min-block-size: 8rem;
+  max-inline-size: 28rem;
+}
+
+[data-docs-motion-rules] {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  gap: var(--space-4) var(--space-8);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+[data-docs-motion-rules] > li {
+  margin: 0;
+  padding-inline-start: 0;
+  list-style: none;
+  padding-block-start: var(--space-3);
+  border-block-start: var(--border-width) solid var(--color-border);
+  color: var(--color-fg-muted);
+}
+
+[data-docs-motion-rules] strong {
+  color: var(--color-fg);
+}
+
+/* ── Theme studio ── */
+[data-docs-studio] {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-8);
+}
+
+[data-docs-studio-intro] {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-3);
+  max-inline-size: var(--measure-content);
+  padding-block-start: var(--space-8);
+}
+
+[data-docs-studio-intro] h1,
+[data-docs-studio-intro] p {
+  margin: 0;
+}
+
+[data-docs-studio-intro] h1 {
+  text-wrap: balance;
+}
+
+[data-docs-studio-layout] {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-6);
+  align-items: start;
+}
+
+@media (min-width: 64rem) {
+  [data-docs-studio-layout] {
+    grid-template-columns: minmax(18rem, 22rem) minmax(0, 1fr);
+  }
+
+  [data-docs-studio-panel] {
+    position: sticky;
+    inset-block-start: var(--space-20);
+    max-block-size: calc(100dvh - var(--space-24));
+    overflow-y: auto;
+  }
+}
+
+[data-docs-studio-panel] {
+  padding: var(--space-4);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-subtle);
+  background-image: var(--texture-surface, none);
+}
+
+[data-docs-studio-panel] input[type="range"] {
+  flex: 1 1 8rem;
+  min-inline-size: 0;
+  accent-color: var(--color-primary);
+}
+
+[data-docs-studio-board] {
+  display: grid;
+  gap: var(--space-4);
+  min-inline-size: 0;
+}
+
+[data-docs-studio-banner] {
+  padding: var(--space-8);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+}
+
+[data-docs-studio-banner] p {
+  margin: 0;
+}
+
+[data-docs-studio-api] h3 {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-lg);
+}
+
+[data-docs-studio-api] ul {
+  margin: 0;
+  padding-inline-start: var(--space-5);
+  color: var(--color-fg-muted);
+}
+
+[data-docs-studio-api] pre {
+  margin: 0;
+  max-inline-size: 100%;
+  overflow-x: auto;
+  font-size: var(--text-xs);
+}

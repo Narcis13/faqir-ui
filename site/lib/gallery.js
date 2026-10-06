@@ -62,7 +62,20 @@
     if (!link || !validTheme(name)) return false;
     var href = link.getAttribute("href") || "";
     if (!/[^/]+\.css(?:[?#].*)?$/.test(href)) return false;
-    link.setAttribute("href", href.replace(/[^/]+\.css(?=[?#]|$)/, name + ".css"));
+    var next = href.replace(/[^/]+\.css(?=[?#]|$)/, name + ".css");
+    if (next !== href) {
+      // Marked until the new sheet arrives, for a script that must read the
+      // theme's computed tokens (the theme studio) rather than the old ones.
+      link.setAttribute("data-theme-loading", "");
+      var settled = function () {
+        link.removeAttribute("data-theme-loading");
+        link.removeEventListener("load", settled);
+        link.removeEventListener("error", settled);
+      };
+      link.addEventListener("load", settled);
+      link.addEventListener("error", settled);
+      link.setAttribute("href", next);
+    }
     link.setAttribute("data-theme-name", name);
     return true;
   }
