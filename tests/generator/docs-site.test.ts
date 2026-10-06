@@ -559,12 +559,12 @@ describe("demo captions are lifted from the fragments' own comments", () => {
     // Direction one: a fragment WITH labels renders them, verbatim, as captions.
     const badge = find("badge", "primitives");
     const rendered = page(badge.examplePath);
-    for (const caption of ["Default", "Variants", "Sizes"]) {
+    for (const caption of ["Default", "Variants", "Sizes", "Live: a breathing dot in the variant colour"]) {
       expect(rendered, `badge's "${caption}" demo is unlabelled`).toContain(
         `<figcaption data-docs-demo-caption>${caption}</figcaption>`,
       );
     }
-    expect((rendered.match(/<figure data-docs-demo>/g) ?? []).length).toBe(3);
+    expect((rendered.match(/<figure data-docs-demo>/g) ?? []).length).toBe(4);
 
     // Direction two: a fragment WITHOUT labels stays uncaptioned rather than
     // emitting an empty caption element. Derived, not hard-coded: every fragment

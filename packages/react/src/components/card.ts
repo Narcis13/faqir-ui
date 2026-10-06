@@ -10,11 +10,13 @@ export type LCardVariant = "default" | "outlined" | "filled";
 /** Allowed `size` values (manifest variant group "size", attr `data-size`). */
 export type LCardSize = "sm" | "md" | "lg";
 
-export interface LCardProps extends Omit<ComponentPropsWithoutRef<"div">, "variant" | "size" | "header" | "title" | "description" | "divider" | "body" | "footer"> {
+export interface LCardProps extends Omit<ComponentPropsWithoutRef<"div">, "variant" | "size" | "media" | "header" | "title" | "description" | "divider" | "body" | "footer"> {
   /** `data-variant`; omitted when unset (manifest default: "default"). */
   variant?: LCardVariant;
   /** `data-size`; omitted when unset (manifest default: "md"). */
   size?: LCardSize;
+  /** Projected into `<figure data-part="media">`. */
+  media?: ReactNode;
   /** Projected into `<div data-part="header">`. */
   header?: ReactNode;
   /** Projected into `<h3 data-part="title">`. */
@@ -39,6 +41,7 @@ export const LCard = createFaqirPrimitive<LCardProps>({
   ],
   states: [],
   slots: [
+    { name: "media", tag: "figure", required: false, isVoid: false },
     { name: "header", tag: "div", required: false, isVoid: false },
     { name: "title", tag: "h3", required: false, isVoid: false },
     { name: "description", tag: "p", required: false, isVoid: false },

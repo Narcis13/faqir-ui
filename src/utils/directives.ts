@@ -127,6 +127,7 @@ export const PLUGIN_DIRECTIVES: readonly DirectiveSpec[] = Object.freeze([
   },
   { name: "mask", attribute: "l-mask", shorthand: null, arg: "none", modifiers: [], plugin: "faqir-mask" },
   { name: "persist", attribute: "l-persist", shorthand: null, arg: "none", modifiers: [], plugin: "faqir-persist" },
+  { name: "tweak", attribute: "l-tweak", shorthand: null, arg: "none", modifiers: [], plugin: "faqir-tweak" },
   {
     // `l-rules` on the form, pointing at a definition — a selector to a JSON
     // script, or an expression in scope. It takes no argument and no modifier:

@@ -200,8 +200,9 @@ describe("button manifest — the pressed state is declared", () => {
 
   it("is schema-valid, with a 1.2.0 changes entry for it", () => {
     expect(validateManifest(m)).toEqual([]);
-    // 1.2.x: a later patch bumps the version past the entry (1.1F-23 did).
-    expect(m.version).toMatch(/^1\.2\.\d+$/);
+    // 1.2.x or later: a later release bumps the version past the entry (1.1F-23
+    // did with a patch, the data-effect prop with a minor).
+    expect(m.version).toMatch(/^1\.[2-9]\.\d+$/);
     const entry = m.changes?.find((c) => c.version === "1.2.0");
     expect(entry?.note).toContain("pressed");
     expect(entry?.note).toContain("link");

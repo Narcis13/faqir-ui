@@ -1,6 +1,6 @@
 {
   "schema": "faqir-registry-index@1",
-  "count": 86,
+  "count": 103,
   "components": [
     {
       "name": "aspect-ratio",
@@ -47,25 +47,47 @@
       "deps": []
     },
     {
+      "name": "backdrop",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "backdrop.css",
+          "sha256": "fe52ede7a23f3aab43184b72a9f1bb39edf0e59008ff878f4d9e6176e4bab52f"
+        },
+        {
+          "path": "backdrop.html",
+          "sha256": "fd12ad9f7dd1b66e05edea60442ea7378d32ccc2063b2d4d1c8e21502fe152da"
+        },
+        {
+          "path": "backdrop.manifest.json",
+          "sha256": "189e0819e78bf1b55f86723dff1626b1aa00414004d0bd57a67cbd600d7fcd53"
+        }
+      ],
+      "hash": "dddc8068c6977ca5a993bfd6e596b00437900f641c3ff6025d4ad3eb4decfac0",
+      "deps": []
+    },
+    {
       "name": "badge",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "files": [
         {
           "path": "badge.css",
-          "sha256": "6b9b0df61b0ce20e6871f7e646c3d1072303d87c1f106a35c1349b0833124e4f"
+          "sha256": "792abace7e99faf5ad089c53e48b6d5aa9d265d6d39c794dd026ef7312804046"
         },
         {
           "path": "badge.html",
-          "sha256": "334e72a9cf1dde2b4a6cf010be538dc3d7956242b70736a41ccdf3092f92b136"
+          "sha256": "28e4ca362ffbdb774a9e68a33c7e977e9122d7484a0f76d62b5e65073c8f5b49"
         },
         {
           "path": "badge.manifest.json",
-          "sha256": "afdf170c189a6039c9f8c30eb8f0c23ee27edbb6f854c5891492561f8d95956e"
+          "sha256": "a74ca4558dd5c397b8896b86bd0ebf29728646437285350ab18f61f58e6df51b"
         }
       ],
-      "hash": "855ef34d739d9d51b3f28f09d6aeaf71e948dd95bcbb9fe41aacb702232e8b8c",
+      "hash": "c0a748040cfc2fcbec870f9bc7ed16f876cbca778ad9f78cdc46787f2d04be53",
       "deps": []
     },
     {
@@ -94,22 +116,22 @@
       "name": "button",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.2.1",
+      "version": "1.3.0",
       "files": [
         {
           "path": "button.css",
-          "sha256": "911569ffe81860009f73479b0283f67b611c0638e20c181044cbe9eefd632380"
+          "sha256": "ebc3635cc59c9d55d803c94bb5ed27711a70cd296d1eb350549c254b1b537caa"
         },
         {
           "path": "button.html",
-          "sha256": "9c13ace6d1ff8027775335ebb386a1d3e6a87404c0cd8ccd6656f3d04e311692"
+          "sha256": "13185148e0a7dfe2edf3276f9b4101ed3066de19b86c54939dd60794b0215e21"
         },
         {
           "path": "button.manifest.json",
-          "sha256": "7f6ad405b8ad55e3d5f07bf6b21d7f3540288cda1d76e0a8a789d27f18b4a4b2"
+          "sha256": "f8cafe39357c9dff290217ba166415f5fddb2bcadb4d062aa1ba116125e91312"
         }
       ],
-      "hash": "3673cc609052a916dca9f6c6ecb1d06af513c1fbed46e5b26424813b37eaa3d4",
+      "hash": "a333fb6a01e5820806fe0b194b4139ba525cc880da99c2bf7812ecca150fad3e",
       "deps": []
     },
     {
@@ -140,22 +162,22 @@
       "name": "card",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "files": [
         {
           "path": "card.css",
-          "sha256": "d51297531ede7d8013376f325004a2d904f8bfcd057fe77483675e1216713aeb"
+          "sha256": "6dbf1e03a5bd987e8d08859176c96c961b208194fbf6c3bb4d58622a5bdc4d4f"
         },
         {
           "path": "card.html",
-          "sha256": "f502346b273d7378022bc2a3f8c93a84d4d88b0dc4264a331338a2ab2e6ae886"
+          "sha256": "5ba159cc270d5d3081684e26bab27a198215a8535452d7ae034f589c26d90308"
         },
         {
           "path": "card.manifest.json",
-          "sha256": "ba3d4d2c09958ad97c29bf76ca6a6c65238b57bd0392873d165ff65d25c61626"
+          "sha256": "e638e1fe89e6447bfa587fa4e68c212654344867743a20ef96b85da5ddb42c35"
         }
       ],
-      "hash": "91314cdbb8e5f6d3d29cf575f7afa067b0f6d7f8741918c7115115c6821d335c",
+      "hash": "1665c9a76bbde3a963237599e00b5b6f818966b718009a945750971de074d257",
       "deps": [
         "button"
       ]
@@ -346,6 +368,28 @@
       ]
     },
     {
+      "name": "glow",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "glow.css",
+          "sha256": "67cc0776f004779a7f15794301fd6008cd955debb1835d6aa97a44a9749c3b58"
+        },
+        {
+          "path": "glow.html",
+          "sha256": "510040e519c65259ccd31d7639d87a9bcdf3202db878a166428467ac30997d2c"
+        },
+        {
+          "path": "glow.manifest.json",
+          "sha256": "be8c6b65b63cf9bb6618cdad81ee37a8a12dce82a40f6ed4bd64cdbf3ec14990"
+        }
+      ],
+      "hash": "de7950ab3eab2d818a30dee02d52f57b6d156f173943ac405fa1c29929c34282",
+      "deps": []
+    },
+    {
       "name": "grid",
       "kind": "primitive",
       "layer": "primitives",
@@ -368,6 +412,28 @@
       "deps": [
         "card"
       ]
+    },
+    {
+      "name": "highlight",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "highlight.css",
+          "sha256": "b9438f09eb495ad7729e2e0b114ba733b77335a1298e1e8167dde03a55f5e76d"
+        },
+        {
+          "path": "highlight.html",
+          "sha256": "b161c6fc225fbd92efd61cea253bd89b800162cb65d43d5ffe8682af66c7df03"
+        },
+        {
+          "path": "highlight.manifest.json",
+          "sha256": "891418d49294a9ba874911d2c27dce3d75e6c7ded203bfca3b8a743f05e41cbd"
+        }
+      ],
+      "hash": "0ea9d5f3621b32acfc648c0d25ab744e9abaa0c87fbd19a10d0c7672001e1dd3",
+      "deps": []
     },
     {
       "name": "icon",
@@ -399,22 +465,22 @@
       "name": "image",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.0.1",
+      "version": "1.1.0",
       "files": [
         {
           "path": "image.css",
-          "sha256": "f5b20a517c50b44a6bda1e631875970992531a73623a21061e2d80dfd0ad144d"
+          "sha256": "35e675668ad55e535a677165c30cb95b5d1524df7d57fc585b926d5dfd4d1942"
         },
         {
           "path": "image.html",
-          "sha256": "d14917214d5453eec4193231f785fa5f5e9336c14a451b61ac898315a4221c09"
+          "sha256": "0e4929f155505a76e000bcf3b391b598c9a241e358b4704a5210a3ef5d2df0b3"
         },
         {
           "path": "image.manifest.json",
-          "sha256": "acaca0cff9faaa55a816e6373d8e2b72bf9954487e2a9f885a0116a8b98867b5"
+          "sha256": "969056c6aaae6db3f8f4942a419ba538c3262cb8cdffd8698143de020920dc9c"
         }
       ],
-      "hash": "5bd1f0a95f711020dc967ec9642621036bd4d0fa04c38b93076a9318a91d90a9",
+      "hash": "0a8861c55c1ef77f331f3d20d3dfe5b4699822e197362d2104dbb37658f1fe29",
       "deps": []
     },
     {
@@ -509,22 +575,44 @@
       "name": "link",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "files": [
         {
           "path": "link.css",
-          "sha256": "f1915d9c08f0625179845fdcafe3337a3cb1f2476ed92680dc4cf1100bdd9c28"
+          "sha256": "87458acc3e34dedccd2f91360cd617adcdaa71a987901122885b8665a0f744ba"
         },
         {
           "path": "link.html",
-          "sha256": "6ab771c85e1ef34a66e42875904cd20d36e51f421c174aa4912163a8a90ca01a"
+          "sha256": "c4cfe3b8016f62cb8b819e3f3be16c7c43e37f19de880dca22a96c368fbc5a72"
         },
         {
           "path": "link.manifest.json",
-          "sha256": "9e5874f31079ee7b3540c70036ed0b78dd5b482ac4b2165155f7af22ac20e70a"
+          "sha256": "33f16bff1cba34044bd6f47dfd74c005ea5f062c069ed75736e157774df5d527"
         }
       ],
-      "hash": "2c0daac57ea8c2d1ff30f989ea7c971200336a408757fc4b6a9779f0e88d75f9",
+      "hash": "ba5497d6f1fb8b0e0778f99364f25d1ff2fca8974ab0793fee85e4a35ed6a133",
+      "deps": []
+    },
+    {
+      "name": "marquee",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "marquee.css",
+          "sha256": "0c671d43263430a1b959517b97e8bc940cb336a9ae87e58db79a7f9801189b9b"
+        },
+        {
+          "path": "marquee.html",
+          "sha256": "e55a821f71e1d332261250155c60c5b00519d0dc296c11800b919b60fbe9ab64"
+        },
+        {
+          "path": "marquee.manifest.json",
+          "sha256": "fd2a8cb37ec61c8e3cac05dbf85c80248b67b4ec1b8ad6486da4e67986e0d5cb"
+        }
+      ],
+      "hash": "8f4ad98eba3b3b1da6a7366a70257ee4c41027482a6d513ded265f417c23164b",
       "deps": []
     },
     {
@@ -594,6 +682,31 @@
       "deps": []
     },
     {
+      "name": "quote",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "quote.css",
+          "sha256": "ffa949ce10ff4a2c92db49ea69f5e1bd2ecf63a55a6219ca912fd9ab345f92fc"
+        },
+        {
+          "path": "quote.html",
+          "sha256": "28ef4741ab28c59cadbae4a87a0d4ccbe02ea20759a21bc0d278840e10608ae0"
+        },
+        {
+          "path": "quote.manifest.json",
+          "sha256": "9b2dbd65cb85c63563c2dd3f4382ba22a4d758216ef25df966c5ef3cee6e5e46"
+        }
+      ],
+      "hash": "dafe24f1b832a4f80c4332032364e7143b7e007e7b23c60a6020fa2cf796a36b",
+      "deps": [
+        "avatar",
+        "rating"
+      ]
+    },
+    {
       "name": "radio",
       "kind": "primitive",
       "layer": "primitives",
@@ -613,6 +726,72 @@
         }
       ],
       "hash": "bf196936546045c0f24c2359bb0586dbaf7ab6d78eb0ed41957443b242911ae4",
+      "deps": []
+    },
+    {
+      "name": "rating",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "rating.css",
+          "sha256": "729c9f2811788df70bd6a77778e72e4a66aaf4839fcbf1af8faba2d7d4732bf3"
+        },
+        {
+          "path": "rating.html",
+          "sha256": "3f3f200d57b20827cfb0770747e185d9822f3dc90f271f929aad133acab1e84a"
+        },
+        {
+          "path": "rating.manifest.json",
+          "sha256": "1316a231986745f54a86c3f3acfb30ce54cb01b2b739a36c2a3bdfffa40c07a5"
+        }
+      ],
+      "hash": "2911069b7f6ac701c82a20423d9c6643e393131681d9d2119df0a974e8851e1c",
+      "deps": []
+    },
+    {
+      "name": "reveal",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "reveal.css",
+          "sha256": "7bbd77102c5dd2ee967d0163823e6d8486a5946ce3916c92d4c1421acb57d056"
+        },
+        {
+          "path": "reveal.html",
+          "sha256": "3dd1f8d37462780918d82bbf7f7e13a134bf4d97028f750c4f46d7996b253c29"
+        },
+        {
+          "path": "reveal.manifest.json",
+          "sha256": "72aa7bd3f50d37e63e4c2c30effc6f115ede2171f71b76eb5edf4ec2d4acf041"
+        }
+      ],
+      "hash": "0b76fe620bdf08f9952def9206ed3db0b6fc337f8c5882f898ca7167659288d6",
+      "deps": []
+    },
+    {
+      "name": "scroll-progress",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "scroll-progress.css",
+          "sha256": "75ce5b8417079b720f09a7d45f5ba47e330e81ffaba55c15f1b167b26564969a"
+        },
+        {
+          "path": "scroll-progress.html",
+          "sha256": "5187d185bef7a580762b81d51ee904e6350b3cacc49dca0aff18f2788fd4d5b9"
+        },
+        {
+          "path": "scroll-progress.manifest.json",
+          "sha256": "88cc5e6d7f1d627b23c521868b3e44bb0ded64331e00fcda885e1fd31625a76c"
+        }
+      ],
+      "hash": "bacf8b615430c3950dd55846b6c80665e31433137aa6c5e53c160340ed961caa",
       "deps": []
     },
     {
@@ -902,6 +1081,30 @@
       ],
       "hash": "1ed06fec3b9487af7410f2790f9132790b83eb21dacaa00bd0f494b01effae1c",
       "deps": []
+    },
+    {
+      "name": "timeline",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "timeline.css",
+          "sha256": "adee8ab08458e9a86cb45016cae689f1bb4c35d96b7a11e89841bb3b326460f8"
+        },
+        {
+          "path": "timeline.html",
+          "sha256": "e66ccf552717993631aaa4af813fe18b73a0704ac811b45f065a0fd5a2dd04ea"
+        },
+        {
+          "path": "timeline.manifest.json",
+          "sha256": "5a5327a67678ebbefc06e45cfc278ac25079315b26133c7320669ac73576c1c1"
+        }
+      ],
+      "hash": "d27061b327a6c452dae25213d36a68c2a76c6af03ad57d4c410c434527b98e8b",
+      "deps": [
+        "icon"
+      ]
     },
     {
       "name": "toggle",
@@ -1735,6 +1938,36 @@
       "deps": []
     },
     {
+      "name": "article",
+      "kind": "pattern",
+      "layer": "patterns",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "article.css",
+          "sha256": "bd67ddf994bc23883b83a37cb9038c096e826457eccc05f8ed322a45ea630517"
+        },
+        {
+          "path": "article.html",
+          "sha256": "c74ce555f14dac9d9c8109bc144e967ce973fa1f66d339b8a82fdb105f414940"
+        },
+        {
+          "path": "article.manifest.json",
+          "sha256": "a44cf2001d1f7ebced4025a438277cbe8b6bba7d99caef3084f79427bd4cb8e9"
+        }
+      ],
+      "hash": "6201fa0c4c7a40affdec6eca3668dbbc3a3287169921cb0738ab7f3dedad60d6",
+      "deps": [
+        "badge",
+        "avatar",
+        "image",
+        "quote",
+        "nav",
+        "link",
+        "scroll-progress"
+      ]
+    },
+    {
       "name": "auth-form",
       "kind": "pattern",
       "layer": "patterns",
@@ -1760,6 +1993,31 @@
         "button",
         "separator",
         "label"
+      ]
+    },
+    {
+      "name": "bento",
+      "kind": "pattern",
+      "layer": "patterns",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "bento.css",
+          "sha256": "b265649af3248331fadb5e3e6c08aa45526e272e031b026c01163228e73230d7"
+        },
+        {
+          "path": "bento.html",
+          "sha256": "f7e3132a384db504d2c929aca3a0a625de50b466070b2cb4d013ab94111c0aea"
+        },
+        {
+          "path": "bento.manifest.json",
+          "sha256": "5baaa74170ec77c230160dd6112bf7ef611a4565f9635686c9f17b6a4ec674b1"
+        }
+      ],
+      "hash": "0a4580a64e41db12a462fd97b41e6f2406183d21daf3705fdfd09b033023e0bb",
+      "deps": [
+        "backdrop",
+        "icon"
       ]
     },
     {
@@ -1789,6 +2047,32 @@
         "pagination",
         "input",
         "badge"
+      ]
+    },
+    {
+      "name": "cta",
+      "kind": "pattern",
+      "layer": "patterns",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "cta.css",
+          "sha256": "94a9fd6a0fade0cfa22623cfc7f896a0ef2daf5e34f8fd51f4d89a26372649e8"
+        },
+        {
+          "path": "cta.html",
+          "sha256": "d36b195ea25a53afc580e80ef9c01dee02e916f5aab13d9c8084369e477e1124"
+        },
+        {
+          "path": "cta.manifest.json",
+          "sha256": "84514c1041e84ddb2f88562f0dc8e78c85533d7ef0c9f0bfb74edb7588b12ee8"
+        }
+      ],
+      "hash": "bb894f5cc9b470a72c59dac0d3f2d4d22e41e32875e7f90682b62bc11026b2c9",
+      "deps": [
+        "button",
+        "highlight",
+        "glow"
       ]
     },
     {
@@ -1884,6 +2168,31 @@
       ]
     },
     {
+      "name": "faq",
+      "kind": "pattern",
+      "layer": "patterns",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "faq.css",
+          "sha256": "47d2fd8c19d92bf5d52b697191667861224fab19511e386381bcc87c3ee26c6a"
+        },
+        {
+          "path": "faq.html",
+          "sha256": "c1bfb0c8b4a53e6ef7ea6da31545fdeac36f594c1a8c8707e58b9096f50c64c7"
+        },
+        {
+          "path": "faq.manifest.json",
+          "sha256": "4e87b08609ff1a934cf2f04a532cd7cfe4d4426ebaad8209462cca611d6aad47"
+        }
+      ],
+      "hash": "17ff4fc77f53431534493d1d51859e89ca383969aea29e056ff18748bf79d47f",
+      "deps": [
+        "collapsible",
+        "link"
+      ]
+    },
+    {
       "name": "feature-grid",
       "kind": "pattern",
       "layer": "patterns",
@@ -1940,26 +2249,27 @@
       "name": "hero",
       "kind": "pattern",
       "layer": "patterns",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "files": [
         {
           "path": "hero.css",
-          "sha256": "6d579751bff40997745d7c0ecf2b3a2a04d1f27a0a754195af2678f069edf541"
+          "sha256": "0195e43fca5a9bcb7d990e10aa0dbe8f173b3b698da90b3088c9a61e42f2911a"
         },
         {
           "path": "hero.html",
-          "sha256": "1ff4cdd01c23aaf77eb3290585c6239f443885790378d701b444a42b11276bb0"
+          "sha256": "442357003f4b4fb249891a29d1d4f243efadcdc0f7527443fef155deab7c319a"
         },
         {
           "path": "hero.manifest.json",
-          "sha256": "0d32ec39415f93f4bc84b01778cb70b46ba06968b44f57d60b7c2d58464da7ba"
+          "sha256": "77f91c0513f1c5da4c8cde9009f3bc4b09ae23623340480d9e2cb243cce753b7"
         }
       ],
-      "hash": "f6c13cd16ac75e7f9c29068db1b7b2cca770a4034936f21c4cf4ddd95dbe08ee",
+      "hash": "dd18ae940cd1f237e5956c5492f1f51de1db82a99ac22e2a84509bc727e286d8",
       "deps": [
         "badge",
         "button",
-        "image"
+        "image",
+        "highlight"
       ]
     },
     {
@@ -1990,6 +2300,57 @@
         "empty-state",
         "button",
         "input"
+      ]
+    },
+    {
+      "name": "logo-cloud",
+      "kind": "pattern",
+      "layer": "patterns",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "logo-cloud.css",
+          "sha256": "f876929938d2d24e97cc959c4ca9d71959692efb8d1c031ac14418b042fe8577"
+        },
+        {
+          "path": "logo-cloud.html",
+          "sha256": "67625e4d3d05371867c59afaa09f0a734e99f6070505ec0ef659dad990d115cb"
+        },
+        {
+          "path": "logo-cloud.manifest.json",
+          "sha256": "1984e35bc1f350bfa80f7a3a6d334a87e9f21f703af19adaa0b94d1ea80a646c"
+        }
+      ],
+      "hash": "b770ae8ecf6400eff76295192c88c86b2b595d72e868b1ff69d8ddba6f3374c3",
+      "deps": [
+        "marquee"
+      ]
+    },
+    {
+      "name": "post-list",
+      "kind": "pattern",
+      "layer": "patterns",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "post-list.css",
+          "sha256": "7982feea88b4d0aa3642fcbbd7fdf288f15c98ed15556e9373b7c23696e54538"
+        },
+        {
+          "path": "post-list.html",
+          "sha256": "3b0961970ac060496fb559c5461d2b7f518137f5418aa384f37ca1739bd2cafe"
+        },
+        {
+          "path": "post-list.manifest.json",
+          "sha256": "50c3a871234296ae3e0441d60d6b780e4ca931771598a699b951bdb90f1eb228"
+        }
+      ],
+      "hash": "31d8de216ba35eb3533b18bac91d2b88e263175b72f9fdc960033c9ce60a088f",
+      "deps": [
+        "badge",
+        "avatar",
+        "link",
+        "button"
       ]
     },
     {
@@ -2108,6 +2469,32 @@
       ]
     },
     {
+      "name": "site-header",
+      "kind": "pattern",
+      "layer": "patterns",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "site-header.css",
+          "sha256": "bf7deb14fd3c81f4d30a45708cb13484cb3d1d5104cd25d609157273f280a106"
+        },
+        {
+          "path": "site-header.html",
+          "sha256": "03f28829957350c516e996e04e82bcdfed242cbc880c43c812e9c21c345a30c2"
+        },
+        {
+          "path": "site-header.manifest.json",
+          "sha256": "ae9f0e92f2ce29e38f80d6a5e2c91d11f26729e8f0a59a50c982b8c1046bff11"
+        }
+      ],
+      "hash": "f165a47c8b5e86b8db0de05a59bfc468e8aa713072b3813c4994f626c1ecc607",
+      "deps": [
+        "nav",
+        "link",
+        "button"
+      ]
+    },
+    {
       "name": "stats-dashboard",
       "kind": "pattern",
       "layer": "patterns",
@@ -2133,6 +2520,34 @@
         "card",
         "table",
         "badge",
+        "button"
+      ]
+    },
+    {
+      "name": "testimonials",
+      "kind": "pattern",
+      "layer": "patterns",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "testimonials.css",
+          "sha256": "b3469130e8e854a241d7ddb92654d510d19e19b5b6e0784df4e3b2e277f4a796"
+        },
+        {
+          "path": "testimonials.html",
+          "sha256": "b13cd99ea51a07a1010f17c2441c5a6cf06abbf79b4fd23d0bfd8f49e6cc268e"
+        },
+        {
+          "path": "testimonials.manifest.json",
+          "sha256": "d6cc8b85ba598e1ffa09af04d3ff4f8c19f530dc55473e0ca56ea086851a08dd"
+        }
+      ],
+      "hash": "79fd4f4db6f3d0fb8b48ed6ed4191349ee8365c1827ee7deee6fc0f558141989",
+      "deps": [
+        "quote",
+        "rating",
+        "avatar",
+        "marquee",
         "button"
       ]
     },

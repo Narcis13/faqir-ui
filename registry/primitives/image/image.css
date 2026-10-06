@@ -1,5 +1,5 @@
 /* @ui:component image */
-/* @ui:tokens color-bg-muted color-fg-muted radius-md space-2 text-xs font-body image-radius image-border-width image-border image-caption-size image-caption-color doc-font */
+/* @ui:tokens color-bg-muted color-fg-muted radius-md space-2 space-1 text-xs font-body image-radius image-border-width image-border image-caption-size image-caption-color doc-font duration-normal duration-slower ease-out ease-emphasized ease-default */
 
 /* ── Base ── */
 [data-ui="image"] {
@@ -115,5 +115,49 @@
 
   [data-ui="image"][data-size="full"] {
     max-width: 80%;
+  }
+}
+
+/* ── Hover ──
+   What a picture does under the pointer. `zoom` leans into the frame (the
+   figure clips, so the image grows without growing the layout), `lift` rises,
+   `fade` dims to say "this is a link". Focus-within gives a wrapped link the
+   same cue from the keyboard. */
+[data-ui="image"][data-hover] {
+  transition: translate var(--duration-normal) var(--ease-out);
+}
+
+[data-ui="image"][data-hover="zoom"] {
+  overflow: hidden;
+  border-radius: var(--image-radius);
+}
+
+[data-ui="image"][data-hover="zoom"] > [data-part="img"] {
+  transition: scale var(--duration-slower) var(--ease-emphasized);
+}
+
+[data-ui="image"][data-hover="zoom"]:hover > [data-part="img"],
+[data-ui="image"][data-hover="zoom"]:focus-within > [data-part="img"] {
+  scale: 1.05;
+}
+
+[data-ui="image"][data-hover="lift"]:hover,
+[data-ui="image"][data-hover="lift"]:focus-within {
+  translate: 0 calc(var(--space-1) * -1);
+}
+
+[data-ui="image"][data-hover="fade"] > [data-part="img"] {
+  transition: opacity var(--duration-normal) var(--ease-default);
+}
+
+[data-ui="image"][data-hover="fade"]:hover > [data-part="img"],
+[data-ui="image"][data-hover="fade"]:focus-within > [data-part="img"] {
+  opacity: 0.8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="image"][data-hover],
+  [data-ui="image"][data-hover] > [data-part="img"] {
+    transition: none;
   }
 }

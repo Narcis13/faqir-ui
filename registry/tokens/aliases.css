@@ -98,6 +98,13 @@
   --card-border-width: var(--border-width);
   --card-bg:           var(--color-surface-1);
   --card-padding:      var(--space-6);
+  /* The two reaches a card makes beyond its resting state. `--card-hover-shadow`
+     is the step it climbs to under the pointer when its data-hover says
+     `raise`; `--card-media-ratio` cuts the picture across its top. Neither is
+     read until the markup asks, so a card without them renders as it always
+     has. */
+  --card-hover-shadow: var(--shadow-lg);
+  --card-media-ratio:  16 / 9;
 
   /* ── Input ── */
   /* The text-control silhouette. `--input-border-width` (1.1A-02) is the edge;

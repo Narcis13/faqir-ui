@@ -220,7 +220,7 @@ describe("theme manifest · the token surface", () => {
     "heading-leading",
   ];
 
-  it("is 285 tokens — 241 plus shape, focus, depth, material, motion, decoration, controls, the panel fill, the disabled dim, small caps, the divider width and mono ligatures [1.1A-02 … 1.1F-19]", () => {
+  it("is 298 tokens — 241 plus shape, focus, depth, material, motion, decoration, controls, the panel fill, the disabled dim, small caps, the divider width, mono ligatures [1.1A-02 … 1.1F-19], the choreography family and the two card reaches", () => {
     // 1.1A-02 added five border-width steps/roles, --corner-shape, the five
     // focus tokens, and the two component silhouette aliases: 241 + 13.
     // 1.1A-04 added four: --shadow-color and --surface-backdrop (depth), and
@@ -254,7 +254,7 @@ describe("theme manifest · the token surface", () => {
     // 1.1F-19 added ONE: --mono-ligatures. Cascadia Code and JetBrains Mono,
     // both named by --font-mono, ligate by default, and no stylesheet said
     // otherwise; every rule that sets the mono stack now reads this beside it.
-    expect(SURFACE.length).toBe(285);
+    expect(SURFACE.length).toBe(298);
     expect(SURFACE).toContain("mono-ligatures");
     expect(SURFACE).toContain("disabled-opacity");
     expect(SURFACE).toContain("heading-caps");

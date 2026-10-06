@@ -1,0 +1,351 @@
+/* @ui:component post-list */
+/* @ui:tokens space-4 space-12 space-6 space-8 space-3 space-2 space-16 font-body font-heading color-fg color-bg color-fg-muted text-xl text-lg text-base text-sm text-3xl text-2xl heading-weight heading-tracking heading-transform heading-caps heading-leading measure-content leading-relaxed leading-normal leading-snug texture-surface card-bg card-border-width card-border card-radius card-shadow card-padding corner-shape duration-fast duration-slow ease-default ease-linear motion-hover-lift motion-reveal-duration motion-reveal-ease motion-stagger motion-reveal-distance focus-ring-width focus-ring-style focus-ring-color focus-ring-offset */
+
+/* ── Root ──
+   A blog index: a heading, a line of description and a list of post cards.
+   The cards are drawn by this pattern's own parts — a card primitive would
+   want the title in ITS header part, and the title here belongs to the post.
+
+   Mobile-first: every declaration here is the PHONE case, and the `@media`
+   blocks at the foot of the sheet widen it from a canon floor up. The stagger
+   index is declared on the root so that every item reads a value even before
+   its nth-child rule below has set one. */
+[data-ui="post-list"] {
+  --faqir-post-list-index: 0;
+  display: grid;
+  gap: var(--space-4);
+  padding-block: var(--space-12);
+  padding-inline: var(--space-4);
+  font-family: var(--font-body);
+  color: var(--color-fg);
+  background: var(--color-bg);
+}
+
+/* ── Section heading ── */
+[data-ui="post-list"] > [data-part="heading"] {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  font-weight: var(--heading-weight);
+  letter-spacing: var(--heading-tracking);
+  text-transform: var(--heading-transform);
+  font-variant-caps: var(--heading-caps);
+  line-height: var(--heading-leading);
+  text-wrap: balance;
+}
+
+[data-ui="post-list"] > [data-part="description"] {
+  margin: 0;
+  max-inline-size: var(--measure-content);
+  font-size: var(--text-lg);
+  line-height: var(--leading-relaxed);
+  color: var(--color-fg-muted);
+}
+
+/* ── Items ──
+   A real <ul>; the marker is removed rather than the semantics, so assistive
+   tech announces "list, 6 items". One column is the phone base; the layout
+   variants add columns in the tier blocks. The gap is a knob. */
+[data-ui="post-list"] > [data-part="items"] {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--post-list-gap, var(--space-6));
+  margin: 0;
+  margin-block-start: var(--space-8);
+  padding: 0;
+  list-style: none;
+}
+
+/* `min-inline-size: 0` so a long unbroken word in a title shrinks the card
+   rather than the grid track. */
+[data-ui="post-list"] > :where([data-part="items"]) > [data-part="item"] {
+  display: grid;
+  min-inline-size: 0;
+}
+
+/* ── Card ──
+   Media over content, with a third auto row for anything a project appends.
+   It reads the card aliases — fill, edge, radius, shadow, padding — so a theme
+   that restyles the card primitive restyles these too, and the same hover
+   lift. `clip` rather than `hidden`, so the box never becomes a scroller. */
+[data-ui="post-list"] > :where([data-part="items"]) > :where([data-part="item"]) > [data-part="card"] {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-inline-size: 0;
+  color: var(--color-fg);
+  background: var(--texture-surface), var(--card-bg);
+  border: var(--card-border-width) solid var(--card-border);
+  border-radius: var(--card-radius);
+  corner-shape: var(--corner-shape);
+  box-shadow: var(--card-shadow);
+  overflow: clip;
+  transition: translate var(--duration-fast) var(--ease-default);
+}
+
+[data-ui="post-list"] > :where([data-part="items"]) > :where([data-part="item"]) > [data-part="card"]:hover {
+  translate: var(--motion-hover-lift);
+}
+
+/* ── Media ──
+   A link around a plain <img>. The link's accessible name is the image's alt,
+   so the alt describes the picture, not the post. The ring is drawn inside
+   the box — the card clips its overflow, so an outside ring would be cut. */
+[data-ui="post-list"] > :where([data-part="items"]) > :where([data-part="item"]) > :where([data-part="card"]) > [data-part="media"] {
+  display: block;
+  min-inline-size: 0;
+  overflow: clip;
+}
+
+[data-ui="post-list"] > :where([data-part="items"]) > :where([data-part="item"]) > :where([data-part="card"]) > [data-part="media"]:focus-visible {
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  outline-offset: calc(var(--focus-ring-offset) * -1);
+}
+
+[data-ui="post-list"] > :where([data-part="items"]) > :where([data-part="item"]) > :where([data-part="card"]) > :where([data-part="media"]) > img {
+  display: block;
+  inline-size: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  transition: scale var(--duration-slow) var(--ease-default);
+}
+
+/* The picture leans in when the CARD is under the pointer or holds focus, not
+   only the picture itself: hovering the title is hovering the post. */
+[data-ui="post-list"] > :where([data-part="items"]) > :where([data-part="item"]) > :where([data-part="card"]):hover > :where([data-part="media"]) > img,
+[data-ui="post-list"] > :where([data-part="items"]) > :where([data-part="item"]) > :where([data-part="card"]):focus-within > :where([data-part="media"]) > img {
+  scale: 1.04;
+}
+
+/* ── Content ──
+   A column, so the meta row can push itself to the bottom edge and every card
+   in a row ends on the same line whatever the excerpt's length. */
+[data-ui="post-list"] > :where([data-part="items"]) > :where([data-part="item"]) > :where([data-part="card"]) > [data-part="content"] {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-inline-size: 0;
+  padding: var(--card-padding);
+}
+
+[data-ui="post-list"] > :where([data-part="items"]) > :where([data-part="item"]) > :where([data-part="card"]) > :where([data-part="content"]) > [data-part="tag"] {
+  margin: 0;
+}
+
+/* The title wraps a link primitive, so the whole title is the link and the
+   link keeps its own colour, underline and focus ring. */
+[data-ui="post-list"] > :where([data-part="items"]) > :where([data-part="item"]) > :where([data-part="card"]) > :where([data-part="content"]) > [data-part="title"] {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  font-weight: var(--heading-weight);
+  letter-spacing: var(--heading-tracking);
+  text-transform: var(--heading-transform);
+  font-variant-caps: var(--heading-caps);
+  line-height: var(--heading-leading);
+  text-wrap: balance;
+}
+
+/* Clamped to a few lines so the cards in a row stay the same height; the
+   count is a knob. The vendor box is still the only clamp every engine draws. */
+[data-ui="post-list"] > :where([data-part="items"]) > :where([data-part="item"]) > :where([data-part="card"]) > :where([data-part="content"]) > [data-part="excerpt"] {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--post-list-lines, 3);
+  overflow: hidden;
+  margin: 0;
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  color: var(--color-fg-muted);
+}
+
+/* ── Meta ──
+   Avatar, author, date and reading time on one line, pushed to the bottom of
+   the content column. A middle dot separates the text items from each other —
+   never from the avatar, which is a component and not text — and carries an
+   empty alternative where that syntax is understood, since it is decoration. */
+[data-ui="post-list"] > :where([data-part="items"]) > :where([data-part="item"]) > :where([data-part="card"]) > :where([data-part="content"]) > [data-part="meta"] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-block-start: auto;
+  padding-block-start: var(--space-2);
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  color: var(--color-fg-muted);
+}
+
+[data-ui="post-list"] > :where([data-part="items"]) > :where([data-part="item"]) > :where([data-part="card"]) > :where([data-part="content"]) > :where([data-part="meta"]) > :not([data-ui]) + :not([data-ui])::before {
+  content: "\00B7";
+  content: "\00B7" / "";
+  margin-inline-end: var(--space-2);
+}
+
+/* ── Footer ── */
+[data-ui="post-list"] > [data-part="footer"] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-block-start: var(--space-8);
+}
+
+/* ── Animate: the entrance ──
+   With `data-animate` the items arrive one after another, the same way a
+   staggered reveal brings in its children: one keyframe pair, a private index
+   per item, and the motion tokens for distance, duration, easing and stagger.
+   Twelve steps are counted; everything past the twelfth arrives with it, so a
+   long index does not hold its last row back for seconds. `both` holds the
+   from-state through the delay, so a later card is not visible, then hidden,
+   then revealed. */
+[data-ui="post-list"][data-animate] > :where([data-part="items"]) > [data-part="item"]:nth-child(2)    { --faqir-post-list-index: 1; }
+[data-ui="post-list"][data-animate] > :where([data-part="items"]) > [data-part="item"]:nth-child(3)    { --faqir-post-list-index: 2; }
+[data-ui="post-list"][data-animate] > :where([data-part="items"]) > [data-part="item"]:nth-child(4)    { --faqir-post-list-index: 3; }
+[data-ui="post-list"][data-animate] > :where([data-part="items"]) > [data-part="item"]:nth-child(5)    { --faqir-post-list-index: 4; }
+[data-ui="post-list"][data-animate] > :where([data-part="items"]) > [data-part="item"]:nth-child(6)    { --faqir-post-list-index: 5; }
+[data-ui="post-list"][data-animate] > :where([data-part="items"]) > [data-part="item"]:nth-child(7)    { --faqir-post-list-index: 6; }
+[data-ui="post-list"][data-animate] > :where([data-part="items"]) > [data-part="item"]:nth-child(8)    { --faqir-post-list-index: 7; }
+[data-ui="post-list"][data-animate] > :where([data-part="items"]) > [data-part="item"]:nth-child(9)    { --faqir-post-list-index: 8; }
+[data-ui="post-list"][data-animate] > :where([data-part="items"]) > [data-part="item"]:nth-child(10)   { --faqir-post-list-index: 9; }
+[data-ui="post-list"][data-animate] > :where([data-part="items"]) > [data-part="item"]:nth-child(11)   { --faqir-post-list-index: 10; }
+[data-ui="post-list"][data-animate] > :where([data-part="items"]) > [data-part="item"]:nth-child(n+12) { --faqir-post-list-index: 11; }
+
+[data-ui="post-list"][data-animate] > :where([data-part="items"]) > [data-part="item"] {
+  animation: faqir-post-list-reveal var(--motion-reveal-duration) var(--motion-reveal-ease) both;
+  animation-delay: calc(var(--motion-stagger) * var(--faqir-post-list-index));
+}
+
+/* Only a `from`: the animation ends on whatever the item already is. */
+@keyframes faqir-post-list-reveal {
+  from {
+    opacity: 0;
+    translate: 0 var(--motion-reveal-distance);
+  }
+}
+
+/* The same keyframes on a view timeline where the browser has one: the
+   entrance is scrubbed by the scrollbar as each item crosses the bottom of the
+   viewport, so a long index below the fold arrives as the reader reaches it,
+   not all at once on load. A time delay means nothing on a scroll timeline,
+   so the stagger offsets each item's RANGE instead: the same order, measured
+   in scroll. Where view timelines are unsupported the block is skipped and the
+   rule above still plays the entrance once on load — nothing is left hidden. */
+@supports (animation-timeline: view()) {
+  [data-ui="post-list"][data-animate] > :where([data-part="items"]) > [data-part="item"] {
+    animation-timeline: view();
+    animation-timing-function: var(--ease-linear);
+    animation-delay: 0s;
+    animation-range:
+      entry calc(5% + var(--faqir-post-list-index) * 6%)
+      entry calc(70% + var(--faqir-post-list-index) * 6%);
+  }
+}
+
+/* ── Layout: grid (default) ──
+   One column on a phone; the md and lg blocks below add the second and third.
+   The variant restates the base so a reader of the sheet finds it here. */
+[data-ui="post-list"][data-variant="grid"] > [data-part="items"] {
+  grid-template-columns: 1fr;
+}
+
+/* ── Layout: featured ──
+   The grid layout with the first post pulled out: from md it spans the row and
+   its card turns side by side, media beside content. On a phone it is the grid
+   layout, since there is no row to span. */
+[data-ui="post-list"][data-variant="featured"] > [data-part="items"] {
+  grid-template-columns: 1fr;
+}
+
+/* ── Layout: list ──
+   One column at every width; from sm each card is horizontal, a 16rem picture
+   beside the content. */
+[data-ui="post-list"][data-variant="list"] > [data-part="items"] {
+  grid-template-columns: 1fr;
+}
+
+/* ── Responsive ──
+   Canon tiers only, min-width only, ascending. sm: the type scale and the
+   block padding open up, and the list cards turn horizontal. md: two columns,
+   and the featured card turns side by side. lg: three columns.
+
+   A side-by-side card stretches its picture to the content's height: the
+   16:9 ratio gives way to `block-size: 100%`, and `object-fit: cover` crops
+   whatever does not fit. */
+@media (min-width: 40rem) {
+  [data-ui="post-list"] {
+    padding-block: var(--space-16);
+    padding-inline: var(--space-6);
+  }
+
+  [data-ui="post-list"] > [data-part="heading"] {
+    font-size: var(--text-3xl);
+  }
+
+  [data-ui="post-list"][data-variant="list"] > :where([data-part="items"]) > :where([data-part="item"]) > [data-part="card"] {
+    grid-template-columns: 16rem minmax(0, 1fr);
+    grid-template-rows: auto;
+  }
+
+  [data-ui="post-list"][data-variant="list"] > :where([data-part="items"]) > :where([data-part="item"]) > :where([data-part="card"]) > :where([data-part="media"]) > img {
+    block-size: 100%;
+    aspect-ratio: auto;
+  }
+}
+
+@media (min-width: 48rem) {
+  [data-ui="post-list"][data-variant="grid"] > [data-part="items"],
+  [data-ui="post-list"]:not([data-variant]) > [data-part="items"],
+  [data-ui="post-list"][data-variant="featured"] > [data-part="items"] {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  [data-ui="post-list"][data-variant="featured"] > :where([data-part="items"]) > [data-part="item"]:first-child {
+    grid-column: 1 / -1;
+  }
+
+  [data-ui="post-list"][data-variant="featured"] > :where([data-part="items"]) > :where([data-part="item"]):first-child > [data-part="card"] {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto;
+  }
+
+  [data-ui="post-list"][data-variant="featured"] > :where([data-part="items"]) > :where([data-part="item"]):first-child > :where([data-part="card"]) > :where([data-part="media"]) > img {
+    block-size: 100%;
+    aspect-ratio: auto;
+  }
+
+  /* The featured title has a whole row to itself: one size up. */
+  [data-ui="post-list"][data-variant="featured"] > :where([data-part="items"]) > :where([data-part="item"]):first-child > :where([data-part="card"]) > :where([data-part="content"]) > [data-part="title"] {
+    font-size: var(--text-2xl);
+  }
+}
+
+@media (min-width: 64rem) {
+  [data-ui="post-list"][data-variant="grid"] > [data-part="items"],
+  [data-ui="post-list"]:not([data-variant]) > [data-part="items"],
+  [data-ui="post-list"][data-variant="featured"] > [data-part="items"] {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ── Motion ──
+   Reduced motion removes the entrance and the zoom, not the content: every
+   item resolves to "already arrived", the picture stays put, and the lift —
+   a theme's own token, `none` by default — lands without a transition.
+   Paper gets the same treatment: a printed page has no entrance. */
+@media (prefers-reduced-motion: reduce), print {
+  [data-ui="post-list"][data-animate] > :where([data-part="items"]) > [data-part="item"] {
+    animation: none;
+  }
+
+  [data-ui="post-list"] > :where([data-part="items"]) > :where([data-part="item"]) > [data-part="card"] {
+    transition: none;
+  }
+
+  [data-ui="post-list"] > :where([data-part="items"]) > :where([data-part="item"]) > :where([data-part="card"]) > :where([data-part="media"]) > img {
+    transition: none;
+  }
+
+  [data-ui="post-list"] > :where([data-part="items"]) > :where([data-part="item"]) > :where([data-part="card"]):hover > :where([data-part="media"]) > img,
+  [data-ui="post-list"] > :where([data-part="items"]) > :where([data-part="item"]) > :where([data-part="card"]):focus-within > :where([data-part="media"]) > img {
+    scale: none;
+  }
+}

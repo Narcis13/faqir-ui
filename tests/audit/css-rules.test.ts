@@ -367,7 +367,7 @@ describe("registry sweep · both rules at zero", () => {
   it("pairs every component with a stylesheet, including icon's icons.css", () => {
     // Guards the two sweeps below against passing vacuously, and pins the one
     // component whose sheet is not named after it.
-    expect(COMPONENTS.length).toBe(86);
+    expect(COMPONENTS.length).toBe(103);
     const icon = COMPONENTS.find((c) => c.name === "icon");
     expect(icon?.rel).toBe(join("primitives", "icon", "icons.css"));
   });

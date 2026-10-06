@@ -72,7 +72,14 @@ export const BUDGETS = {
 //   that still reads a wizard's disabled steps, the observer that holds
 //   rule-hidden controls disabled, reset and teardown, and the pattern check
 //   for controls whose markup carries no `pattern` attribute.
+//
+// · faqir-tweak, 2 → 4 KB: the plugin is a whole panel — six sections of
+//   labelled dials built from the registry's own primitives, the override
+//   function the panel, the export and the restore share, and the localStorage
+//   round trip. The dials are the point: every token family a theme axis
+//   moves gets a control, and that list is what the kilobytes buy.
 export const PLUGIN_BUDGETS = {
+  "faqir-tweak.js": 4 * KB,
   "faqir-validate.js": 3 * KB,
   "faqir-rules.js": 13 * KB,
 };

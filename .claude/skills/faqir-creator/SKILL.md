@@ -41,8 +41,8 @@ A Faqir page is ordinary HTML with two additions: one stylesheet and one script.
 **No build step?** The same two tags from a CDN, no project required:
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.1.1/dist/faqir.default.css">
-<script src="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.1.1/dist/faqir-core.min.js" defer></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.1.2/dist/faqir.default.css">
+<script src="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.1.2/dist/faqir-core.min.js" defer></script>
 ```
 
 Add `integrity`/`crossorigin` for production — `packages/core/cdn.json` carries the SHA-384 for every published file, beside the version it was computed for.
@@ -136,11 +136,11 @@ Copy-ready page archetypes — Dashboard, Landing page, Prose / document, Split 
 
 ## Component Inventory
 
-**42 Primitives (CSS-only):** aspect-ratio, avatar, badge, breadcrumb, button, callout, card, checkbox, chip, cluster, collapsible, container, description-list, empty-state, field-group, grid, icon, image, input, kbd, key-value, label, link, nav, page-break, progress, radio, select, separator, signature, skeleton, spinner, stack, stat, stepper, surface, switch, switcher, text, textarea, toggle, watermark
+**51 Primitives (CSS-only):** aspect-ratio, avatar, backdrop, badge, breadcrumb, button, callout, card, checkbox, chip, cluster, collapsible, container, description-list, empty-state, field-group, glow, grid, highlight, icon, image, input, kbd, key-value, label, link, marquee, nav, page-break, progress, quote, radio, rating, reveal, scroll-progress, select, separator, signature, skeleton, spinner, stack, stat, stepper, surface, switch, switcher, text, textarea, timeline, toggle, watermark
 
 **29 Recipes (CSS + JS controller):** accordion, alert-dialog, barcode, calendar, carousel, combobox, command-palette, context-menu, date-picker, dialog, drawer, dropdown, file-upload, input-otp, menubar, pagination, popover, qr-code, select-custom, sheet, sidebar, slider, table, tabs, tag-input, toast, toggle-group, tooltip, tree-view
 
-**15 Patterns (composition, no JS):** auth-form, crud-table, dashboard-shell, document, empty-state, feature-grid, form-page, hero, inbox, pricing, search-results, settings-page, site-footer, stats-dashboard, wizard
+**23 Patterns (composition, no JS):** article, auth-form, bento, crud-table, cta, dashboard-shell, document, empty-state, faq, feature-grid, form-page, hero, inbox, logo-cloud, post-list, pricing, search-results, settings-page, site-footer, site-header, stats-dashboard, testimonials, wizard
 
 ## Provenance of the component text below
 
@@ -186,11 +186,49 @@ Load a plugin after `faqir-core.js`, or combine core plus every plugin with `faq
 - `faqir-mask` (`l-mask`): `registry/core/plugins/faqir-mask.js` — caret-safe input masking.
 - `faqir-persist` (`l-persist`, `$persist()`): `registry/core/plugins/faqir-persist.js` — localStorage-backed reactive state.
 - `faqir-rules` (`l-rules`, `$rules`): `registry/core/plugins/faqir-rules.js` — a form's conditional logic, from one JSON definition.
+- `faqir-tweak` (`l-tweak`): `registry/core/plugins/faqir-tweak.js` — a live theme studio for any Faqir page.
 - `faqir-validate` (`l-validate`): `registry/core/plugins/faqir-validate.js` — declarative + programmatic form validation.
 
 ## Canonical Compositions
 
 Real component compositions, taken verbatim from pattern manifests. Each shows how primitives and recipes assemble into a working unit.
+
+### article
+
+Long-form reading layout composing a header (badge eyebrow, headline, standfirst, avatar byline), a cover image, the prose body with pull quotes, a sticky table of contents and a footer of tags and share links. Composition only: zero JavaScript, no controller, no reactive directives — the two layouts are pure CSS grid.
+
+Composes: `badge`, `avatar`, `image`, `quote`, `nav`, `link`, `scroll-progress`
+
+```html
+<article data-ui="article" data-variant="{layout}" aria-labelledby="{id}-headline">
+  <header data-part="header">
+    <p data-part="eyebrow"><span data-ui="badge" data-variant="primary">{eyebrow}</span></p>
+    <h1 data-part="headline" id="{id}-headline">{headline}</h1>
+    <p data-part="summary">{summary}</p>
+    <div data-part="byline">
+      <span data-ui="avatar" data-size="sm"><span data-part="fallback">{initials}</span></span>
+      <span data-part="author">{author}</span>
+      <span data-part="meta"><time datetime="{date_iso}">{date}</time> · {reading_time}</span>
+    </div>
+  </header>
+  <div data-part="cover">
+    <figure data-ui="image" data-variant="responsive" data-size="full">
+      <img data-part="img" src="{cover_src}" alt="{cover_alt}" loading="lazy">
+    </figure>
+  </div>
+  <div data-part="body">
+    {body}
+  </div>
+  <footer data-part="footer">
+    <div data-part="tags">
+      <span data-ui="badge">{tag}</span>
+    </div>
+    <div data-part="share">
+      <a data-ui="link" data-variant="muted" href="{share_href}">{share_label}</a>
+    </div>
+  </footer>
+</article>
+```
 
 ### auth-form
 
@@ -230,42 +268,24 @@ Composes: `card`, `input`, `button`, `separator`, `label`
 </div>
 ```
 
-### crud-table
+### bento
 
-Data table with create, read, update, delete operations, search, and pagination
+Bento feature grid for a marketing page: a section heading plus a real <ul> of card-like tiles that may span two columns, two rows or both, packed densely into a four-column mosaic from the lg floor. Composition only: zero JavaScript, no controller, no reactive directives — the spans, the hover spotlight and the optional staggered entrance are pure CSS.
 
-Composes: `table`, `button`, `dialog`, `pagination`, `input`, `badge`
-
-```html
-<div data-ui="crud-table" data-state="default" data-variant="default">
-  <div data-part="toolbar">...</div>
-  <div data-part="table-wrapper">
-    <div data-ui="table">...</div>
-  </div>
-  <div data-part="pagination">
-    <div data-ui="pagination">...</div>
-  </div>
-</div>
-```
-
-### dashboard-shell
-
-Application dashboard layout with sidebar navigation, header, and content area
-
-Composes: `card`, `grid`, `avatar`, `dropdown`, `button`, `separator`, `badge`
+Composes: `backdrop`, `icon`
 
 ```html
-<div data-ui="dashboard-shell">
-  <aside data-part="sidebar" data-state="expanded">
-    <div data-part="logo">{logo}</div>
-    <nav data-part="nav" aria-label="Main navigation">
-      <a data-part="nav-item" aria-current="page">{item}</a>
-    </nav>
-  </aside>
-  <header data-part="header">{header}</header>
-  <main data-part="content">{content}</main>
-  <footer data-part="footer">{footer}</footer>
-</div>
+<section data-ui="bento" aria-labelledby="{id}-heading">
+  <h2 data-part="heading" id="{id}-heading">{heading}</h2>
+  <p data-part="description">{description}</p>
+  <ul data-part="items">
+    <li data-part="item" data-span="{span}">
+      <span data-part="icon" aria-hidden="true"><span data-ui="icon" data-icon="{icon}"></span></span>
+      <h3 data-part="title">{item_title}</h3>
+      <p data-part="description">{item_description}</p>
+    </li>
+  </ul>
+</section>
 ```
 
 ## Data-Driven Rendering
@@ -430,9 +450,9 @@ Every command accepts `--json` for machine-readable output.
 
 Full anatomy trees, variant tables, and safe/unsafe transforms for every component:
 
-- [references/primitives.md](references/primitives.md) — 42 primitives
+- [references/primitives.md](references/primitives.md) — 51 primitives
 - [references/recipes.md](references/recipes.md) — 29 recipes
-- [references/patterns.md](references/patterns.md) — 15 patterns
+- [references/patterns.md](references/patterns.md) — 23 patterns
 - [references/tokens.md](references/tokens.md) — every design token, derived from `registry/tokens/*.css`
 - [references/directives.md](references/directives.md) — every faqir-core directive, modifier and magic, plus the plugin vocabulary
 - [references/manifest.md](references/manifest.md) — the manifest contract, derived from `manifest.schema.json`: which fields are required, every closed enum, one shipped example

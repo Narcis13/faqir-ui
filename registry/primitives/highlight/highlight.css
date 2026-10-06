@@ -1,0 +1,127 @@
+/* @ui:component highlight */
+/* @ui:tokens color-primary color-info color-fg-muted color-fg motion-ambient-duration motion-ambient-play motion-reveal-duration motion-reveal-ease ease-in-out ease-linear radius-sm border-width-lg duration-slow */
+
+/* ── Root ──
+   An inline run of text the eye should land on. Every variant is a background
+   under (or clipped to) the glyphs — never a second copy of the text — so the
+   words stay selectable, searchable and read once by a screen reader.
+   `box-decoration-break: clone` makes a highlight that wraps restart on each
+   line instead of stretching one painting across all of them. */
+[data-ui="highlight"] {
+  --faqir-highlight-ink: var(--highlight-color, var(--color-primary));
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  background-repeat: no-repeat;
+}
+
+/* ── Variant: gradient (default) ──
+   The accent gradient, clipped to the letters. `--gradient-accent` is the
+   theme's signature gradient where a theme states one (aurora does); the
+   fallback builds it from the accent and info colours every theme has. */
+[data-ui="highlight"]:not([data-variant]),
+[data-ui="highlight"][data-variant="gradient"] {
+  background-image: var(--highlight-gradient, var(--gradient-accent, linear-gradient(135deg, var(--color-primary), var(--color-info))));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+[data-ui="highlight"]:not([data-variant])[data-animate],
+[data-ui="highlight"][data-variant="gradient"][data-animate] {
+  background-size: 220% 100%;
+  animation: faqir-highlight-pan calc(var(--motion-ambient-duration) / 4) var(--ease-in-out) infinite alternate;
+  animation-play-state: var(--motion-ambient-play);
+}
+
+/* ── Variant: shimmer ──
+   Muted text with a band of full-strength ink passing through it. */
+[data-ui="highlight"][data-variant="shimmer"] {
+  background-image: linear-gradient(110deg, var(--color-fg-muted) 38%, var(--color-fg) 50%, var(--color-fg-muted) 62%);
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: faqir-highlight-pan calc(var(--motion-ambient-duration) / 8) var(--ease-linear) infinite;
+  animation-play-state: var(--motion-ambient-play);
+}
+
+@keyframes faqir-highlight-pan {
+  from { background-position: 100% 50%; }
+  to   { background-position: 0% 50%; }
+}
+
+/* ── Variant: marker ──
+   A highlighter stroke across the lower half of the line, in the accent at low
+   strength, so the text keeps its own colour and its contrast. */
+[data-ui="highlight"][data-variant="marker"] {
+  margin-inline: -0.15em;
+  padding-inline: 0.15em;
+  border-radius: var(--radius-sm);
+  background-image: linear-gradient(color-mix(in oklch, var(--faqir-highlight-ink) 30%, transparent), color-mix(in oklch, var(--faqir-highlight-ink) 30%, transparent));
+  background-position: 0 88%;
+  background-size: 100% 46%;
+}
+
+/* ── Variant: underline ──
+   A rule under the words, as heavy as the theme's heaviest edge. */
+[data-ui="highlight"][data-variant="underline"] {
+  padding-block-end: 0.08em;
+  background-image: linear-gradient(var(--faqir-highlight-ink), var(--faqir-highlight-ink));
+  background-position: 0 100%;
+  background-size: 100% var(--border-width-lg);
+}
+
+/* The stroke starts where the line starts: the far edge in a right-to-left page. */
+[data-ui="highlight"][data-variant="marker"]:dir(rtl) {
+  background-position: 100% 88%;
+}
+
+[data-ui="highlight"][data-variant="underline"]:dir(rtl) {
+  background-position: 100% 100%;
+}
+
+/* Drawn in, once, like a pen stroke. Only a `from`: each ends on the size above. */
+[data-ui="highlight"][data-variant="marker"][data-animate] {
+  animation: faqir-highlight-draw var(--motion-reveal-duration) var(--motion-reveal-ease) both;
+  animation-delay: var(--highlight-delay, var(--duration-slow));
+}
+
+[data-ui="highlight"][data-variant="underline"][data-animate] {
+  animation: faqir-highlight-rule var(--motion-reveal-duration) var(--motion-reveal-ease) both;
+  animation-delay: var(--highlight-delay, var(--duration-slow));
+}
+
+@keyframes faqir-highlight-draw {
+  from { background-size: 0% 46%; }
+}
+
+@keyframes faqir-highlight-rule {
+  from { background-size: 0% var(--border-width-lg); }
+}
+
+/* ── Motion ── */
+@media (prefers-reduced-motion: reduce) {
+  [data-ui="highlight"] {
+    animation: none;
+  }
+
+  /* A shimmer that does not move is just dim text; give it its ink back. */
+  [data-ui="highlight"][data-variant="shimmer"] {
+    background-image: none;
+    -webkit-text-fill-color: currentColor;
+    color: inherit;
+  }
+}
+
+/* ── Forced colours ──
+   A clipped gradient is invisible on a system palette. Hand the text back. */
+@media (forced-colors: active) {
+  [data-ui="highlight"] {
+    background-image: none;
+    -webkit-text-fill-color: currentColor;
+    color: inherit;
+    animation: none;
+  }
+}

@@ -54,7 +54,7 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
-import { dirname, join, relative, resolve } from "node:path";
+import { dirname, join, relative as nativeRelative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -108,6 +108,16 @@ export function injectVersion(engineSrc, engineRel, version = pkgVersion()) {
     );
   }
   return engineSrc.replace(VERSION_LINE_RE, `$1$2${version}$2$3`);
+}
+
+/**
+ * `path.relative`, always with forward slashes. Every use below is a label that
+ * is written into the generated header or printed; on Windows the native
+ * separator made the committed artifact differ from a POSIX build of the same
+ * sources.
+ */
+function relative(from, to) {
+  return nativeRelative(from, to).split(sep).join("/");
 }
 
 /** A repo-relative label, or the bare tail for paths outside the repo (fixtures). */

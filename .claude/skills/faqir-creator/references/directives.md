@@ -118,7 +118,7 @@ Available on every scope without declaring them. They are non-enumerable, so `l-
 
 ## Transitions — `l-transition` and `data-motion`
 
-`l-transition` names one of 3 presets shipped by `registry/base/motion-presets.css`: `fade`, `slide-up`, `scale`. An empty value means `fade`; an unknown name still animates but has no styling, so the engine warns.
+`l-transition` names one of 8 presets shipped by `registry/base/motion-presets.css`: `fade`, `slide-up`, `slide-down`, `slide-start`, `slide-end`, `scale`, `blur`, `flip`. An empty value means `fade`; an unknown name still animates but has no styling, so the engine warns.
 
 There are no per-stage CSS classes: the lifecycle runs through one frozen token modifier, `data-motion`.
 
@@ -171,7 +171,7 @@ Modifiers: `.lazy`, `.optimistic`, `.poll`, `.key` — see the table above. Tear
 
 ## Plugin Vocabulary
 
-6 official plugins add directives and magics to the same expression language. Load one after `faqir-core.js` (`<script src="core/plugins/faqir-persist.js"></script>`), or bundle core plus every plugin with `faqir bundle --js`. Each self-registers, is dependency-free and is ≤ 2 KB gzip (`faqir-validate`, which carries the programmatic `Faqir.validate` API, ≤ 3 KB).
+7 official plugins add directives and magics to the same expression language. Load one after `faqir-core.js` (`<script src="core/plugins/faqir-persist.js"></script>`), or bundle core plus every plugin with `faqir bundle --js`. Each self-registers, is dependency-free and is ≤ 2 KB gzip (`faqir-validate`, which carries the programmatic `Faqir.validate` API, ≤ 3 KB).
 
 | Plugin | Provides | File | What it does |
 |---|---|---|---|
@@ -180,6 +180,7 @@ Modifiers: `.lazy`, `.optimistic`, `.poll`, `.key` — see the table above. Tear
 | `faqir-mask` | `l-mask` | `registry/core/plugins/faqir-mask.js` | caret-safe input masking. |
 | `faqir-persist` | `l-persist`, `$persist()` | `registry/core/plugins/faqir-persist.js` | localStorage-backed reactive state. |
 | `faqir-rules` | `l-rules`, `$rules` | `registry/core/plugins/faqir-rules.js` | a form's conditional logic, from one JSON definition. |
+| `faqir-tweak` | `l-tweak` | `registry/core/plugins/faqir-tweak.js` | a live theme studio for any Faqir page. |
 | `faqir-validate` | `l-validate` | `registry/core/plugins/faqir-validate.js` | declarative + programmatic form validation. |
 
 ### `faqir-collapse`
@@ -235,6 +236,14 @@ On init and on every `input`/`change`/`reset`, the form's controls are read (a c
                 "when": { "==": [{ "var": "plan" }, "team"] } }] }
 </script>
 <form l-validate l-rules="#signup-rules"> … </form>
+```
+
+### `faqir-tweak`
+
+Mounts a panel of dials into the element: scheme and density, the accent's hue and chroma, the radius, spacing, type and motion scales, the heading voice, easing personality, hover lift, edge weight, depth and material. Every dial writes design tokens onto `<html>` as inline custom properties — nothing is recompiled, every component on the page follows at once — and `Faqir.tweak.css()` hands back the overrides as a `:root` block to paste into a theme. The state persists in localStorage, so a tweak survives a reload. Self-registering, zero dependencies.
+
+```html
+<aside l-tweak aria-label="Theme studio"></aside>
 ```
 
 ### `faqir-validate`

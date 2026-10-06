@@ -167,11 +167,13 @@ describe("BUDGETS", () => {
   // bought faqir-validate a kilobyte for the programmatic registry and the
   // async validators, and 1.1B-04 bought faqir-rules nine for the evaluator it
   // bundles (raised to 13 in the 1.1 release hardening). Both are enforced from both sides below — not holes in the gate.
-  test("the per-plugin exceptions are exactly these two", () => {
+  test("the per-plugin exceptions are exactly these three", () => {
     expect(Object.keys(mod.PLUGIN_BUDGETS).sort()).toEqual([
       "faqir-rules.js",
+      "faqir-tweak.js",
       "faqir-validate.js",
     ]);
+    expect(mod.PLUGIN_BUDGETS["faqir-tweak.js"]).toBe(4 * KB);
     expect(mod.PLUGIN_BUDGETS["faqir-validate.js"]).toBe(3 * KB);
     expect(mod.PLUGIN_BUDGETS["faqir-rules.js"]).toBe(13 * KB);
     const targets = mod.collectDefaultTargets();

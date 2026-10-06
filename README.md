@@ -43,6 +43,50 @@ Docs site: **[faqir-ui.pages.dev](https://faqir-ui.pages.dev)** · npm: `faqir-u
 
 ---
 
+## What's new: motion, content and the theme studio
+
+Everything a marketing site or a content page is made of, with motion that is
+a token, not a script. Additive under [`SPEC-1.0.md` §8](SPEC-1.0.md): the five
+attributes did not move and every 1.1 page still audits clean.
+
+- **Nine CSS-only primitives.** `reveal` (seven entrances, on load, scrubbed by
+  scroll, or released by a state; staggered groups), `marquee` (a seamless
+  strip that pauses for the pointer and the keyboard), `backdrop` (aurora,
+  spotlight, grid, dots and beams painted behind a section by its own wrapper),
+  `glow` (a rotating gradient ring or orbiting beam around one box), `highlight`
+  (gradient, marker, underline and shimmer on real text), `quote` (figure +
+  blockquote + figcaption, plain, card or editorial pull), `rating` (five stars
+  from one labelled element), `timeline` (an ordered list down a rail, with
+  statuses and a scroll-linked progress mode) and `scroll-progress` (a reading
+  bar driven by a scroll timeline). Scroll-linked behaviour is guarded by
+  `@supports` and degrades to content that is simply there.
+- **Eight patterns.** `site-header` (sticky, floating or glass, a zero-JS phone
+  menu and a scroll-condense), `logo-cloud`, `testimonials` (grid, columns or
+  two counter-rotating marquees), `cta`, `faq`, `bento`, `article` and
+  `post-list` — compositions of the primitives, no custom JavaScript.
+- **More properties on the components you have.** `card` gains a `media` slot
+  and `data-hover="lift|raise|tint|zoom"`; `button` gains
+  `data-effect="shine|pulse|press"`; `image` gains `data-hover="zoom|lift|fade"`;
+  `link` gains `data-effect="slide|arrow"`; `badge` gains `data-live`; `hero`
+  gains `--hero-bg`. Every new primitive documents its `--name-*` custom
+  properties as props, so an instance is tuned from a `style` attribute.
+- **A choreography token family.** `--motion-reveal-duration/-ease/-distance/
+  -scale/-blur`, `--motion-stagger`, `--motion-ambient-duration` and
+  `--motion-ambient-play` (set it to `paused` and every marquee, backdrop, glow
+  and pulse on the page holds still), plus `--ease-linear`, `--ease-emphasized`,
+  `--duration-slowest`, `--card-hover-shadow` and `--card-media-ratio`. A theme
+  states its entrance once and every reveal, bento, testimonial and post card
+  follows.
+- **Five more `l-transition` presets.** `slide-down`, `slide-start`, `slide-end`
+  (logical: start is the right edge in RTL), `blur` and `flip` join `fade`,
+  `slide-up` and `scale`.
+- **The theme studio.** The `faqir-tweak` plugin mounts a panel of dials —
+  scheme, density, accent hue and chroma, radius, spacing, type and motion
+  scales, heading voice, easing personality, hover lift, edges, depth and
+  material — that write tokens onto `<html>` live, persist across reloads and
+  export as a `:root` block to paste into a theme. `<aside l-tweak></aside>`
+  is the whole integration.
+
 ## What's new in 1.1 "Personality"
 
 1.0 froze the contract. 1.1 gives it a voice. The protocol did not move: every
@@ -184,7 +228,7 @@ be silent becomes a finding with a rule id and a line number.
 
 **Consistency is a property of the system, not the author.** The design system
 lives in files, not in a prompt: a three-layer token ladder, 27 theme
-stylesheets, 86 components and one breakpoint canon. A page inherits them
+stylesheets, 103 components and one breakpoint canon. A page inherits them
 instead of re-deriving them, so a theme change moves every page at once, and a
 new agent in a new session lands on the same rhythm as the last one.
 
@@ -249,15 +293,16 @@ No specificity wars. No naming conventions to memorize. The selector is the docu
 
 ## Component Library
 
-Faqir ships 86 components across three layers. Every one has a page on the
+Faqir ships 103 components across three layers. Every one has a page on the
 [docs site](https://faqir-ui.pages.dev), generated from its manifest.
 
-**Primitives (42, CSS only).** `aspect-ratio` `avatar` `badge` `breadcrumb`
-`button` `callout` `card` `checkbox` `chip` `cluster` `collapsible` `container`
-`description-list` `empty-state` `field-group` `grid` `icon` `image` `input`
-`kbd` `key-value` `label` `link` `nav` `page-break` `progress` `radio` `select`
-`separator` `signature` `skeleton` `spinner` `stack` `stat` `stepper` `surface`
-`switch` `switcher` `text` `textarea` `toggle` `watermark`
+**Primitives (51, CSS only).** `aspect-ratio` `avatar` `backdrop` `badge`
+`breadcrumb` `button` `callout` `card` `checkbox` `chip` `cluster` `collapsible`
+`container` `description-list` `empty-state` `field-group` `glow` `grid`
+`highlight` `icon` `image` `input` `kbd` `key-value` `label` `link` `marquee`
+`nav` `page-break` `progress` `quote` `radio` `rating` `reveal` `scroll-progress`
+`select` `separator` `signature` `skeleton` `spinner` `stack` `stat` `stepper`
+`surface` `switch` `switcher` `text` `textarea` `timeline` `toggle` `watermark`
 
 **Recipes (29, CSS + JavaScript controller).** `accordion` `alert-dialog`
 `barcode` `calendar` `carousel` `combobox` `command-palette` `context-menu`
@@ -265,10 +310,11 @@ Faqir ships 86 components across three layers. Every one has a page on the
 `pagination` `popover` `qr-code` `select-custom` `sheet` `sidebar` `slider`
 `table` `tabs` `tag-input` `toast` `toggle-group` `tooltip` `tree-view`
 
-**Patterns (15, compositions with no custom JS).** `auth-form` `crud-table`
-`dashboard-shell` `document` `empty-state` `feature-grid` `form-page` `hero`
-`inbox` `pricing` `search-results` `settings-page` `site-footer`
-`stats-dashboard` `wizard`
+**Patterns (23, compositions with no custom JS).** `article` `auth-form` `bento`
+`crud-table` `cta` `dashboard-shell` `document` `empty-state` `faq`
+`feature-grid` `form-page` `hero` `inbox` `logo-cloud` `post-list` `pricing`
+`search-results` `settings-page` `site-footer` `site-header` `stats-dashboard`
+`testimonials` `wizard`
 
 Recipes auto-initialize when `faqir-core.js` is loaded; the engine scans for
 `[data-ui]` roots, calls each `create{Name}` factory and watches for elements
@@ -539,7 +585,7 @@ size from one ramp, `--control-height-sm|md|lg`, so they line up in a row.
 | `spacing.css` | `--space-0` through `--space-64`, 4px base with half steps and page-rhythm rungs |
 | `typography.css` | `--font-sans/-mono/-serif`; roles `--font-heading/-body/-ui`; `--heading-weight/-tracking/-transform/-leading`; `--text-*`, `--weight-*`, `--leading-*` |
 | `effects.css` | `--radius-*`, `--border-width-sm/md/lg` and `--border-width/-strong`, `--corner-shape`, `--shadow-*`, `--shadow-color`, `--surface-backdrop`, `--focus-ring-width/-offset/-color/-style`, `--focus-shadow`, `--z-*` |
-| `motion.css` | `--ease-default/-in/-out/-in-out/-bounce/-spring`, `--duration-instant` through `--duration-slower`, `--motion-enter-*`, `--motion-leave-*`, `--motion-hover-lift`, `--motion-scale-from`, `--motion-slide-distance` |
+| `motion.css` | `--ease-default/-in/-out/-in-out/-bounce/-spring/-linear/-emphasized`, `--duration-instant` through `--duration-slowest`, `--motion-enter-*`, `--motion-leave-*`, `--motion-hover-lift`, `--motion-scale-from`, `--motion-slide-distance`, the choreography family `--motion-reveal-*`, `--motion-stagger`, `--motion-ambient-duration/-play` |
 | `textures.css` | Six SVG surface materials (grain, paper, dots, grid, stripes, mesh), applied through `--texture-page` and `--texture-surface` |
 | `aliases.css` | Component aliases, `--control-height-*`, `--measure-narrow/-content/-wide/-prose` |
 | `density.css` | `[data-density]` subtree remap of `--space-*` and `--control-height-*` |
@@ -724,7 +770,7 @@ Add `data-manual` to that `<script type="module">` to boot it yourself with
 | `l-ref` | | Named element reference |
 | `l-effect` | | Tracked reactive side effect |
 | `l-cloak` | | Hide element until Faqir initializes |
-| `l-transition` | | Motion preset (`fade`, `slide-up`, `scale`) for `l-show` / `l-if` |
+| `l-transition` | | Motion preset (`fade`, `slide-up`, `slide-down`, `slide-start`, `slide-end`, `scale`, `blur`, `flip`) for `l-show` / `l-if` |
 | `l-teleport` | | Move the element elsewhere in the document |
 | `l-source:name` | | Declarative REST binding (see [Data-Driven Rendering](#data-driven-rendering)) |
 
@@ -770,6 +816,7 @@ plugin; or load them individually from `ui/core/plugins/` after the core script.
 | `faqir-mask` | `l-mask` | Caret-safe input masking; `l-model` still receives the raw characters |
 | `faqir-persist` | `l-persist`, `$persist()` | Namespaced, JSON-serialized reactive state in `localStorage` |
 | `faqir-rules` | `l-rules`, `$rules` | A form's conditional logic from one JSON definition |
+| `faqir-tweak` | `l-tweak`, `Faqir.tweak` | A live theme studio: dials for scheme, accent, shape, type, motion and material that write tokens onto `<html>`, persist, and export a `:root` block |
 | `faqir-validate` | `l-validate`, `Faqir.validate` | Declarative and programmatic form validation |
 
 **Inspecting a live page.** `Faqir.inspect(elementOrSelector)` returns one
@@ -1070,7 +1117,7 @@ write the other shapes, and `--skill` writes `.faqir/SKILL.md`.
 **Claude Code skill.** [`.claude/skills/faqir-creator/`](.claude/skills/faqir-creator/)
 is generated by `bun run gen:skill` and gated by `check:skill`. Its references:
 
-- `primitives.md`: all 42 primitives with full HTML anatomy
+- `primitives.md`: all 51 primitives with full HTML anatomy
 - `recipes.md`: all 29 recipes with HTML and controller patterns
 - `patterns.md`: all 15 compositions
 - `tokens.md`, `manifest.md`, `directives.md`: tokens, schema, and every directive, modifier, magic and plugin

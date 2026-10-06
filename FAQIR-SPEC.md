@@ -2356,10 +2356,10 @@ select on computed display, so the inline-level components are named in
 declaration — falling back to the root tag's UA default, which is what puts `link`
 there — and fails if the CSS, `src/utils/layout.ts` and the registry disagree.
 
-Inline-level components the rule skips (26): `avatar`, `badge`, `barcode`, `button`,
-`calendar`, `checkbox`, `chip`, `combobox`, `date-picker`, `dropdown`, `icon`, `image`,
-`input-otp`, `kbd`, `link`, `menubar`, `pagination`, `popover`, `qr-code`, `radio`,
-`select-custom`, `spinner`, `switch`, `toggle`, `toggle-group`, `tooltip`.
+Inline-level components the rule skips (28): `avatar`, `badge`, `barcode`, `button`,
+`calendar`, `checkbox`, `chip`, `combobox`, `date-picker`, `dropdown`, `highlight`, `icon`,
+`image`, `input-otp`, `kbd`, `link`, `menubar`, `pagination`, `popover`, `qr-code`, `radio`,
+`rating`, `select-custom`, `spinner`, `switch`, `toggle`, `toggle-group`, `tooltip`.
 
 ### Re-tuning and opting out
 

@@ -50,3 +50,31 @@
     <p>A simple card with just body content.</p>
   </div>
 </div>
+
+<!-- Media across the top, with the card leaning into its picture on hover -->
+<div data-ui="card" data-hover="zoom">
+  <figure data-part="media">
+    <img src="https://example.com/launch.jpg" alt="A rocket on the pad at dawn">
+  </figure>
+  <div data-part="header">
+    <h3 data-part="title">Launch week</h3>
+    <p data-part="description">Seven releases in seven days.</p>
+  </div>
+  <div data-part="body">
+    <p>The picture is cut to --card-media-ratio and covers the frame.</p>
+  </div>
+</div>
+
+<!-- Hover: raise (rises and climbs the shadow ramp) — a card that is a link -->
+<div data-ui="card" data-hover="raise">
+  <div data-part="body">
+    <p><a data-ui="link" href="#raise">Read the field notes</a></p>
+  </div>
+</div>
+
+<!-- Hover: tint (the accent along its edge) -->
+<div data-ui="card" data-variant="outlined" data-hover="tint">
+  <div data-part="body">
+    <p>The border takes the accent under the pointer.</p>
+  </div>
+</div>

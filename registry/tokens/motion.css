@@ -47,6 +47,39 @@
      existed, and a theme states the lift as `0 -1px`. `translate` rather than
      `transform` so a component's own transform is never clobbered. */
   --motion-hover-lift: none;
+
+  /* ── Choreography (reveal, marquee, backdrop, glow, highlight) ── */
+  /* Two more easings for the palette. `--ease-linear` is constant speed, by
+     name: a loop that eases stutters once per lap, and a scroll-scrubbed
+     timeline must not ease at all (the scrollbar is the easing). It is a token
+     rather than the keyword so that "no component spells an easing of its own"
+     stays a rule without exceptions for every new loop. `--ease-emphasized` is
+     the long decelerating arrival — fast out of the gate, a slow settle — that
+     makes an entrance read as placed rather than slid. */
+  --ease-linear:      linear;
+  --ease-emphasized:  cubic-bezier(0.2, 0, 0, 1);
+
+  /* One step past `slower`, for entrances that cross real distance. */
+  --duration-slowest: 700ms;
+
+  /* How content arrives. Every entrance in the registry — the `reveal`
+     primitive, the `l-transition` presets that travel — reads these, so a theme
+     states its entrance once: a brisk theme shortens the distance and the
+     duration, a theatrical one lengthens both and raises the stagger. */
+  --motion-reveal-duration: var(--duration-slowest);
+  --motion-reveal-ease:     var(--ease-emphasized);
+  --motion-reveal-distance: 1.5rem;   /* travel of rise / fall / slide */
+  --motion-reveal-scale:    0.94;     /* start factor of zoom */
+  --motion-reveal-blur:     0.5rem;   /* start radius of blur */
+  --motion-stagger:         70ms;     /* delay between siblings in a staggered group */
+
+  /* Things that move without being asked: a marquee's lap, a backdrop's drift,
+     a glow's orbit, a gradient's pan. One duration to slow or hurry them all
+     (each component scales it for its own loop), and one play state to freeze
+     them: `--motion-ambient-play: paused` on `:root` — or on any subtree — stops
+     every ambient loop there without touching a transition. */
+  --motion-ambient-duration: 24s;
+  --motion-ambient-play:     running;
 }
 
 /* The real spring, where `linear()` is understood (Chrome 113+, Safari 17.2+,

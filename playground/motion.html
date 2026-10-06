@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Faqir UI — Motion, content and the theme studio</title>
+
+  <!-- Tokens, base -->
+  <link rel="stylesheet" href="../registry/tokens/index.css">
+  <link rel="stylesheet" href="../registry/base/reset.css">
+  <link rel="stylesheet" href="../registry/base/prose.css">
+  <link rel="stylesheet" href="../registry/base/rhythm.css">
+  <link rel="stylesheet" href="../registry/base/motion-presets.css">
+
+  <!-- Themes (the studio's select toggles the `disabled` attribute) -->
+  <link rel="stylesheet" href="../registry/themes/default.css" id="theme-default">
+  <link rel="stylesheet" href="../registry/themes/aurora.css" id="theme-aurora" disabled>
+  <link rel="stylesheet" href="../registry/themes/midnight.css" id="theme-midnight" disabled>
+  <link rel="stylesheet" href="../registry/themes/candy.css" id="theme-candy" disabled>
+  <link rel="stylesheet" href="../registry/themes/soft.css" id="theme-soft" disabled>
+  <link rel="stylesheet" href="../registry/themes/neo.css" id="theme-neo" disabled>
+  <link rel="stylesheet" href="../registry/themes/luxe.css" id="theme-luxe" disabled>
+  <link rel="stylesheet" href="../registry/themes/paper.css" id="theme-paper" disabled>
+  <link rel="stylesheet" href="../registry/themes/terminal.css" id="theme-terminal" disabled>
+
+  <!-- Every component this page names -->
+  <link rel="stylesheet" href="../registry/primitives/avatar/avatar.css">
+  <link rel="stylesheet" href="../registry/primitives/backdrop/backdrop.css">
+  <link rel="stylesheet" href="../registry/primitives/badge/badge.css">
+  <link rel="stylesheet" href="../registry/patterns/bento/bento.css">
+  <link rel="stylesheet" href="../registry/primitives/button/button.css">
+  <link rel="stylesheet" href="../registry/primitives/card/card.css">
+  <link rel="stylesheet" href="../registry/primitives/cluster/cluster.css">
+  <link rel="stylesheet" href="../registry/primitives/collapsible/collapsible.css">
+  <link rel="stylesheet" href="../registry/primitives/container/container.css">
+  <link rel="stylesheet" href="../registry/patterns/cta/cta.css">
+  <link rel="stylesheet" href="../registry/patterns/faq/faq.css">
+  <link rel="stylesheet" href="../registry/primitives/field-group/field-group.css">
+  <link rel="stylesheet" href="../registry/primitives/glow/glow.css">
+  <link rel="stylesheet" href="../registry/primitives/grid/grid.css">
+  <link rel="stylesheet" href="../registry/patterns/hero/hero.css">
+  <link rel="stylesheet" href="../registry/primitives/highlight/highlight.css">
+  <link rel="stylesheet" href="../registry/primitives/icon/icons.css">
+  <link rel="stylesheet" href="../registry/primitives/label/label.css">
+  <link rel="stylesheet" href="../registry/primitives/link/link.css">
+  <link rel="stylesheet" href="../registry/patterns/logo-cloud/logo-cloud.css">
+  <link rel="stylesheet" href="../registry/primitives/marquee/marquee.css">
+  <link rel="stylesheet" href="../registry/primitives/nav/nav.css">
+  <link rel="stylesheet" href="../registry/patterns/post-list/post-list.css">
+  <link rel="stylesheet" href="../registry/primitives/quote/quote.css">
+  <link rel="stylesheet" href="../registry/primitives/rating/rating.css">
+  <link rel="stylesheet" href="../registry/primitives/reveal/reveal.css">
+  <link rel="stylesheet" href="../registry/primitives/scroll-progress/scroll-progress.css">
+  <link rel="stylesheet" href="../registry/primitives/select/select.css">
+  <link rel="stylesheet" href="../registry/primitives/separator/separator.css">
+  <link rel="stylesheet" href="../registry/patterns/site-footer/site-footer.css">
+  <link rel="stylesheet" href="../registry/patterns/site-header/site-header.css">
+  <link rel="stylesheet" href="../registry/primitives/stack/stack.css">
+  <link rel="stylesheet" href="../registry/patterns/testimonials/testimonials.css">
+  <link rel="stylesheet" href="../registry/primitives/text/text.css">
+  <link rel="stylesheet" href="../registry/primitives/timeline/timeline.css">
+
+  <script src="../registry/core/faqir-core.js" defer></script>
+  <script src="../registry/core/plugins/faqir-tweak.js" defer></script>
+</head>
+<body>
+<header data-ui="site-header" data-variant="glass" data-sticky data-condense>
+  <a data-part="brand" href="#home-glass">Acme</a>
+  <div data-part="nav">
+    <nav data-ui="nav" aria-label="Main, glass header">
+      <a data-part="link" data-state="active" href="#overview">Overview</a>
+      <a data-part="link" href="#showcase">Showcase</a>
+      <a data-part="link" href="#community">Community</a>
+    </nav>
+  </div>
+  <div data-part="actions">
+    <a data-ui="link" data-variant="muted" href="#signin-glass">Sign in</a>
+    <a data-ui="button" data-variant="primary" data-size="sm" href="#start-glass">Get started</a>
+  </div>
+  <details data-part="menu">
+    <summary data-part="toggle">Menu</summary>
+    <div data-part="panel">
+      <nav data-ui="nav" data-variant="vertical" aria-label="Main menu, glass header">
+        <a data-part="link" data-state="active" href="#overview">Overview</a>
+        <a data-part="link" href="#showcase">Showcase</a>
+        <a data-part="link" href="#community">Community</a>
+      </nav>
+      <div data-part="actions">
+        <a data-ui="button" data-variant="primary" href="#start-glass">Get started</a>
+        <a data-ui="button" data-variant="outline" href="#signin-glass">Sign in</a>
+      </div>
+    </div>
+  </details>
+</header>
+<main style="--flow-space: 0">
+
+<div data-ui="backdrop" data-variant="aurora">
+  <section data-ui="hero" data-variant="center" aria-labelledby="hero-headline" style="--hero-bg: transparent; padding-block-start: var(--space-24)">
+    <div data-ui="reveal" data-variant="rise" data-stagger style="display: grid; justify-items: center; gap: var(--space-4)">
+      <span data-ui="badge" data-variant="primary" data-live>New · motion, content and the theme studio</span>
+      <h1 data-part="headline" id="hero-headline">Interfaces that <span data-ui="highlight" data-animate>move like the theme</span>, not like a script</h1>
+      <p data-part="description">
+        Nine CSS-only primitives, eight patterns and a choreography token family. Every entrance,
+        loop and glow on this page reads the same tokens — open the studio in the corner and watch
+        them all change at once.
+      </p>
+      <div data-part="actions">
+        <span data-ui="glow" data-halo style="--glow-radius: var(--button-radius); --glow-width: var(--border-width-sm)">
+          <a data-ui="button" data-variant="primary" data-size="lg" data-effect="shine" href="#bento">See the components</a>
+        </span>
+        <a data-ui="button" data-variant="outline" data-size="lg" data-effect="press" href="#studio">Open the theme studio</a>
+      </div>
+      <p data-part="note">Scroll — the header condenses, the bar fills, the timeline lights up.</p>
+    </div>
+  </section>
+</div>
+<section data-ui="logo-cloud" data-variant="marquee" aria-labelledby="logo-cloud-marquee-heading">
+  <p data-part="heading" id="logo-cloud-marquee-heading">Powering products at</p>
+  <div data-ui="marquee" data-fade data-speed="slow" role="group" aria-label="Customer logos">
+    <ul data-part="track">
+      <li data-part="item"><img data-part="logo" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22150%22%20height%3D%2240%22%20viewBox%3D%220%200%20150%2040%22%3E%3Ctext%20x%3D%2212%22%20y%3D%2227%22%20font-family%3D%22system-ui%2C%20sans-serif%22%20font-size%3D%2222%22%20font-weight%3D%22700%22%20letter-spacing%3D%22-0.5%22%20fill%3D%22currentColor%22%3ENorthwind%3C%2Ftext%3E%3C%2Fsvg%3E" alt="Northwind"></li>
+      <li data-part="item"><img data-part="logo" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22122%22%20height%3D%2240%22%20viewBox%3D%220%200%20122%2040%22%3E%3Ctext%20x%3D%2212%22%20y%3D%2227%22%20font-family%3D%22system-ui%2C%20sans-serif%22%20font-size%3D%2222%22%20font-weight%3D%22700%22%20letter-spacing%3D%22-0.5%22%20fill%3D%22currentColor%22%3EContoso%3C%2Ftext%3E%3C%2Fsvg%3E" alt="Contoso"></li>
+      <li data-part="item"><img data-part="logo" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22136%22%20height%3D%2240%22%20viewBox%3D%220%200%20136%2040%22%3E%3Ctext%20x%3D%2212%22%20y%3D%2227%22%20font-family%3D%22system-ui%2C%20sans-serif%22%20font-size%3D%2222%22%20font-weight%3D%22700%22%20letter-spacing%3D%22-0.5%22%20fill%3D%22currentColor%22%3EFabrikam%3C%2Ftext%3E%3C%2Fsvg%3E" alt="Fabrikam"></li>
+      <li data-part="item"><img data-part="logo" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22122%22%20height%3D%2240%22%20viewBox%3D%220%200%20122%2040%22%3E%3Ctext%20x%3D%2212%22%20y%3D%2227%22%20font-family%3D%22system-ui%2C%20sans-serif%22%20font-size%3D%2222%22%20font-weight%3D%22700%22%20letter-spacing%3D%22-0.5%22%20fill%3D%22currentColor%22%3ELitware%3C%2Ftext%3E%3C%2Fsvg%3E" alt="Litware"></li>
+      <li data-part="item"><img data-part="logo" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22206%22%20height%3D%2240%22%20viewBox%3D%220%200%20206%2040%22%3E%3Ctext%20x%3D%2212%22%20y%3D%2227%22%20font-family%3D%22system-ui%2C%20sans-serif%22%20font-size%3D%2222%22%20font-weight%3D%22700%22%20letter-spacing%3D%22-0.5%22%20fill%3D%22currentColor%22%3ETailspin%20Toys%3C%2Ftext%3E%3C%2Fsvg%3E" alt="Tailspin Toys"></li>
+      <li data-part="item"><img data-part="logo" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22122%22%20height%3D%2240%22%20viewBox%3D%220%200%20122%2040%22%3E%3Ctext%20x%3D%2212%22%20y%3D%2227%22%20font-family%3D%22system-ui%2C%20sans-serif%22%20font-size%3D%2222%22%20font-weight%3D%22700%22%20letter-spacing%3D%22-0.5%22%20fill%3D%22currentColor%22%3EWingtip%3C%2Ftext%3E%3C%2Fsvg%3E" alt="Wingtip"></li>
+    </ul>
+    <ul data-part="track" aria-hidden="true">
+      <li data-part="item"><img data-part="logo" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2240%22%20viewBox%3D%220%200%2024%2040%22%3E%3Ctext%20x%3D%2212%22%20y%3D%2227%22%20font-family%3D%22system-ui%2C%20sans-serif%22%20font-size%3D%2222%22%20font-weight%3D%22700%22%20letter-spacing%3D%22-0.5%22%20fill%3D%22currentColor%22%3E%3C%2Ftext%3E%3C%2Fsvg%3E" alt=""></li>
+      <li data-part="item"><img data-part="logo" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2240%22%20viewBox%3D%220%200%2024%2040%22%3E%3Ctext%20x%3D%2212%22%20y%3D%2227%22%20font-family%3D%22system-ui%2C%20sans-serif%22%20font-size%3D%2222%22%20font-weight%3D%22700%22%20letter-spacing%3D%22-0.5%22%20fill%3D%22currentColor%22%3E%3C%2Ftext%3E%3C%2Fsvg%3E" alt=""></li>
+      <li data-part="item"><img data-part="logo" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2240%22%20viewBox%3D%220%200%2024%2040%22%3E%3Ctext%20x%3D%2212%22%20y%3D%2227%22%20font-family%3D%22system-ui%2C%20sans-serif%22%20font-size%3D%2222%22%20font-weight%3D%22700%22%20letter-spacing%3D%22-0.5%22%20fill%3D%22currentColor%22%3E%3C%2Ftext%3E%3C%2Fsvg%3E" alt=""></li>
+      <li data-part="item"><img data-part="logo" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2240%22%20viewBox%3D%220%200%2024%2040%22%3E%3Ctext%20x%3D%2212%22%20y%3D%2227%22%20font-family%3D%22system-ui%2C%20sans-serif%22%20font-size%3D%2222%22%20font-weight%3D%22700%22%20letter-spacing%3D%22-0.5%22%20fill%3D%22currentColor%22%3E%3C%2Ftext%3E%3C%2Fsvg%3E" alt=""></li>
+      <li data-part="item"><img data-part="logo" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2240%22%20viewBox%3D%220%200%2024%2040%22%3E%3Ctext%20x%3D%2212%22%20y%3D%2227%22%20font-family%3D%22system-ui%2C%20sans-serif%22%20font-size%3D%2222%22%20font-weight%3D%22700%22%20letter-spacing%3D%22-0.5%22%20fill%3D%22currentColor%22%3E%3C%2Ftext%3E%3C%2Fsvg%3E" alt=""></li>
+      <li data-part="item"><img data-part="logo" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2240%22%20viewBox%3D%220%200%2024%2040%22%3E%3Ctext%20x%3D%2212%22%20y%3D%2227%22%20font-family%3D%22system-ui%2C%20sans-serif%22%20font-size%3D%2222%22%20font-weight%3D%22700%22%20letter-spacing%3D%22-0.5%22%20fill%3D%22currentColor%22%3E%3C%2Ftext%3E%3C%2Fsvg%3E" alt=""></li>
+    </ul>
+  </div>
+</section>
+<div id="bento" style="padding-block: var(--section-gap-md)"><section data-ui="bento" data-animate aria-labelledby="bento-heading">
+  <h2 data-part="heading" id="bento-heading">One registry, every surface</h2>
+  <p data-part="description">
+    The same five attributes describe a marketing page, a dashboard and a
+    printed invoice — and the same audit keeps all three honest.
+  </p>
+  <ul data-part="items">
+    <li data-part="item" data-span="large">
+      <div data-part="media" aria-hidden="true">
+        <div data-ui="backdrop" data-variant="aurora" data-static></div>
+      </div>
+      <h3 data-part="title">Themes that follow the brand</h3>
+      <p data-part="description">
+        Twenty-seven themes read one token layer. Swap the stylesheet and every
+        component, backdrop and chart re-colours itself.
+      </p>
+    </li>
+    <li data-part="item" data-span="wide">
+      <span data-part="icon" aria-hidden="true"><span data-ui="icon" data-icon="shield-check"></span></span>
+      <h3 data-part="title">Audited before it ships</h3>
+      <p data-part="description">
+        Roles, names, contrast and motion fallbacks are checked against each
+        component's manifest, on every page, in one command.
+      </p>
+    </li>
+    <li data-part="item" data-span="tall">
+      <span data-part="icon" aria-hidden="true"><span data-ui="icon" data-icon="zap"></span></span>
+      <h3 data-part="title">No runtime</h3>
+      <p data-part="description">
+        Markup and a stylesheet. Nothing to hydrate, nothing to bundle, nothing
+        to wait for.
+      </p>
+    </li>
+    <li data-part="item">
+      <span data-part="icon" aria-hidden="true"><span data-ui="icon" data-icon="globe"></span></span>
+      <h3 data-part="title">Right-to-left ready</h3>
+      <p data-part="description">Logical properties throughout; a locale is a document attribute.</p>
+    </li>
+    <li data-part="item">
+      <span data-part="icon" aria-hidden="true"><span data-ui="icon" data-icon="layers"></span></span>
+      <h3 data-part="title">Composable</h3>
+      <p data-part="description">Patterns are made of primitives you can read, not abstractions you must learn.</p>
+    </li>
+    <li data-part="item">
+      <span data-part="icon" aria-hidden="true"><span data-ui="icon" data-icon="lock"></span></span>
+      <h3 data-part="title">Private registries</h3>
+      <p data-part="description">Publish your own components next to the maintained ones.</p>
+    </li>
+  </ul>
+</section></div>
+
+<section data-ui="container" data-measure="wide" aria-labelledby="effects-heading" style="padding-block: var(--section-gap-md)" l-data="{ paused: false }">
+  <div data-ui="reveal" data-variant="rise" data-trigger="scroll">
+    <h2 id="effects-heading" data-ui="text" data-size="3xl" data-weight="bold">More properties on the components you already have</h2>
+    <p data-ui="text" data-variant="muted" data-size="lg">Card hovers, button effects, image hovers, link effects, live badges, ratings and quotes — all additive attributes.</p>
+  </div>
+  <div data-ui="grid" data-cols="1" data-cols-md="2" data-cols-lg="4" data-gap="6" style="margin-block-start: var(--space-8)">
+    <div data-ui="card" data-hover="zoom">
+      <figure data-part="media"><img src="https://picsum.photos/seed/faqir-a/640/360" alt="Mountains at dawn"></figure>
+      <div data-part="header"><h3 data-part="title">data-hover="zoom"</h3><p data-part="description">The picture leans in.</p></div>
+    </div>
+    <div data-ui="card" data-hover="raise">
+      <div data-part="header"><h3 data-part="title">data-hover="raise"</h3><p data-part="description">Rises and climbs the shadow ramp.</p></div>
+      <div data-part="body"><p><a data-ui="link" data-effect="arrow" href="#effects-heading">Read more</a></p></div>
+    </div>
+    <div data-ui="card" data-variant="outlined" data-hover="tint">
+      <div data-part="header"><h3 data-part="title">data-hover="tint"</h3><p data-part="description">The accent along the edge.</p></div>
+      <div data-part="body"><p><a data-ui="link" data-effect="slide" href="#effects-heading">An underline that slides in</a></p></div>
+    </div>
+    <div data-ui="card" data-hover="lift">
+      <div data-part="header"><h3 data-part="title">data-hover="lift"</h3><p data-part="description">One spacing step up.</p></div>
+      <div data-part="body">
+        <div data-ui="cluster" data-gap="2">
+          <span data-ui="badge" data-variant="success" data-live>Live</span>
+          <span data-ui="badge" data-variant="destructive" data-live>Recording</span>
+          <span data-ui="rating" data-value="4.5" role="img" aria-label="Rated 4.5 out of 5"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div data-ui="cluster" data-gap="3" style="margin-block-start: var(--space-8)">
+    <button data-ui="button" data-variant="primary" data-effect="shine" type="button">Shine</button>
+    <button data-ui="button" data-variant="primary" data-effect="pulse" type="button">Pulse</button>
+    <button data-ui="button" data-variant="outline" data-effect="press" type="button">Press</button>
+    <button data-ui="button" data-variant="secondary" type="button" @click="paused = !paused; document.documentElement.style.setProperty('--motion-ambient-play', paused ? 'paused' : 'running')" l-text="paused ? 'Resume ambient loops' : 'Pause every ambient loop'"></button>
+  </div>
+  <div data-ui="grid" data-cols="1" data-cols-md="3" data-gap="6" style="margin-block-start: var(--space-8)">
+    <div data-ui="glow" data-halo><div data-ui="card"><div data-part="header"><h3 data-part="title">glow</h3><p data-part="description">A rotating accent ring with its halo.</p></div></div></div>
+    <div data-ui="glow" data-variant="beam"><div data-ui="card"><div data-part="header"><h3 data-part="title">glow · beam</h3><p data-part="description">One arc orbiting a quiet border.</p></div></div></div>
+    <div data-ui="glow" data-trigger="hover" data-halo><div data-ui="card"><div data-part="header"><h3 data-part="title">glow · hover</h3><p data-part="description"><a data-ui="link" href="#effects-heading">Hover or focus to light it</a></p></div></div></div>
+  </div>
+  <div data-ui="grid" data-cols="1" data-cols-md="2" data-gap="6" style="margin-block-start: var(--space-8)">
+    <figure data-ui="quote" data-variant="card">
+  <span data-ui="rating" data-value="5" role="img" aria-label="Rated 5 out of 5"></span>
+  <blockquote data-part="text">
+    <p>The audit caught a missing label before our users did. That alone paid for the migration.</p>
+  </blockquote>
+  <figcaption data-part="author">
+    <span data-part="media">
+      <span data-ui="avatar" data-size="sm">
+        <span data-part="fallback">MR</span>
+      </span>
+    </span>
+    <span data-part="name">Mateo Rossi</span>
+    <span data-part="role">Head of design, Lumen</span>
+  </figcaption>
+</figure>
+    <figure data-ui="quote" data-variant="pull">
+  <blockquote data-part="text">
+    <p>The selector is the documentation.</p>
+  </blockquote>
+</figure>
+  </div>
+</section>
+<div style="padding-block: var(--section-gap-md)"><section data-ui="testimonials" data-variant="marquee" aria-labelledby="testimonials-marquee-heading">
+  <h2 data-part="heading" id="testimonials-marquee-heading">What people are saying</h2>
+  <p data-part="description">Hover or focus a strip to pause it.</p>
+  <div data-part="strips">
+    <div data-ui="marquee" data-fade role="group" aria-label="Quotes from customers, first strip">
+      <ul data-part="track">
+        <li>
+          <div data-part="slide">
+            <figure data-ui="quote" data-variant="card" data-size="sm">
+              <blockquote data-part="text">
+                <p>Markup our whole team can read.</p>
+              </blockquote>
+              <figcaption data-part="author">
+                <span data-part="name">Ada Okafor</span>
+                <span data-part="role">Northwind</span>
+              </figcaption>
+            </figure>
+          </div>
+        </li>
+        <li>
+          <div data-part="slide">
+            <figure data-ui="quote" data-variant="card" data-size="sm">
+              <blockquote data-part="text">
+                <p>The audit caught it before our users did.</p>
+              </blockquote>
+              <figcaption data-part="author">
+                <span data-part="name">Mateo Rossi</span>
+                <span data-part="role">Lumen</span>
+              </figcaption>
+            </figure>
+          </div>
+        </li>
+        <li>
+          <div data-part="slide">
+            <figure data-ui="quote" data-variant="card" data-size="sm">
+              <blockquote data-part="text">
+                <p>One stylesheet, one script, done.</p>
+              </blockquote>
+              <figcaption data-part="author">
+                <span data-part="name">Priya Nair</span>
+                <span data-part="role">Indie maker</span>
+              </figcaption>
+            </figure>
+          </div>
+        </li>
+      </ul>
+      <ul data-part="track" aria-hidden="true">
+        <li>
+          <div data-part="slide">
+            <figure data-ui="quote" data-variant="card" data-size="sm">
+              <blockquote data-part="text">
+                <p>Markup our whole team can read.</p>
+              </blockquote>
+              <figcaption data-part="author">
+                <span data-part="name">Ada Okafor</span>
+                <span data-part="role">Northwind</span>
+              </figcaption>
+            </figure>
+          </div>
+        </li>
+        <li>
+          <div data-part="slide">
+            <figure data-ui="quote" data-variant="card" data-size="sm">
+              <blockquote data-part="text">
+                <p>The audit caught it before our users did.</p>
+              </blockquote>
+              <figcaption data-part="author">
+                <span data-part="name">Mateo Rossi</span>
+                <span data-part="role">Lumen</span>
+              </figcaption>
+            </figure>
+          </div>
+        </li>
+        <li>
+          <div data-part="slide">
+            <figure data-ui="quote" data-variant="card" data-size="sm">
+              <blockquote data-part="text">
+                <p>One stylesheet, one script, done.</p>
+              </blockquote>
+              <figcaption data-part="author">
+                <span data-part="name">Priya Nair</span>
+                <span data-part="role">Indie maker</span>
+              </figcaption>
+            </figure>
+          </div>
+        </li>
+      </ul>
+    </div>
+    <div data-ui="marquee" data-fade data-direction="reverse" data-speed="slow" role="group" aria-label="Quotes from customers, second strip">
+      <ul data-part="track">
+        <li>
+          <div data-part="slide">
+            <figure data-ui="quote" data-variant="card" data-size="sm">
+              <blockquote data-part="text">
+                <p>Code I would have written by hand.</p>
+              </blockquote>
+              <figcaption data-part="author">
+                <span data-part="name">Lena Kowalski</span>
+                <span data-part="role">Fieldnote</span>
+              </figcaption>
+            </figure>
+          </div>
+        </li>
+        <li>
+          <div data-part="slide">
+            <figure data-ui="quote" data-variant="card" data-size="sm">
+              <blockquote data-part="text">
+                <p>Switching themes is one attribute.</p>
+              </blockquote>
+              <figcaption data-part="author">
+                <span data-part="name">Tomasz Zieliński</span>
+                <span data-part="role">Harbor</span>
+              </figcaption>
+            </figure>
+          </div>
+        </li>
+        <li>
+          <div data-part="slide">
+            <figure data-ui="quote" data-variant="card" data-size="sm">
+              <blockquote data-part="text">
+                <p>The selector is the documentation.</p>
+              </blockquote>
+              <figcaption data-part="author">
+                <span data-part="name">Sofia Bernard</span>
+                <span data-part="role">Tessel</span>
+              </figcaption>
+            </figure>
+          </div>
+        </li>
+      </ul>
+      <ul data-part="track" aria-hidden="true">
+        <li>
+          <div data-part="slide">
+            <figure data-ui="quote" data-variant="card" data-size="sm">
+              <blockquote data-part="text">
+                <p>Code I would have written by hand.</p>
+              </blockquote>
+              <figcaption data-part="author">
+                <span data-part="name">Lena Kowalski</span>
+                <span data-part="role">Fieldnote</span>
+              </figcaption>
+            </figure>
+          </div>
+        </li>
+        <li>
+          <div data-part="slide">
+            <figure data-ui="quote" data-variant="card" data-size="sm">
+              <blockquote data-part="text">
+                <p>Switching themes is one attribute.</p>
+              </blockquote>
+              <figcaption data-part="author">
+                <span data-part="name">Tomasz Zieliński</span>
+                <span data-part="role">Harbor</span>
+              </figcaption>
+            </figure>
+          </div>
+        </li>
+        <li>
+          <div data-part="slide">
+            <figure data-ui="quote" data-variant="card" data-size="sm">
+              <blockquote data-part="text">
+                <p>The selector is the documentation.</p>
+              </blockquote>
+              <figcaption data-part="author">
+                <span data-part="name">Sofia Bernard</span>
+                <span data-part="role">Tessel</span>
+              </figcaption>
+            </figure>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</section></div>
+
+<section data-ui="container" data-measure="content" aria-labelledby="timeline-heading" style="padding-block: var(--section-gap-md)">
+  <h2 id="timeline-heading" data-ui="text" data-size="3xl" data-weight="bold">A timeline that lights up as you read it</h2>
+  <p data-ui="text" data-variant="muted" data-size="lg" style="margin-block-end: var(--space-8)">Each marker fills and its rail inks in on its own view timeline.</p>
+  <ol data-ui="timeline" data-variant="alternate" data-progress>
+  <li data-part="item">
+    <span data-part="marker" aria-hidden="true"></span>
+    <div data-part="content">
+      <time data-part="time" datetime="2023">2023</time>
+      <p data-part="title">A CLI and twelve components</p>
+      <p data-part="description">The first registry, copied into projects file by file.</p>
+    </div>
+  </li>
+  <li data-part="item">
+    <span data-part="marker" aria-hidden="true"></span>
+    <div data-part="content">
+      <time data-part="time" datetime="2024">2024</time>
+      <p data-part="title">The reactive engine</p>
+      <p data-part="description">Directives, stores and recipes in one script tag.</p>
+    </div>
+  </li>
+  <li data-part="item">
+    <span data-part="marker" aria-hidden="true"></span>
+    <div data-part="content">
+      <time data-part="time" datetime="2025">2025</time>
+      <p data-part="title">Audit, repair, conform</p>
+      <p data-part="description">The framework started checking its own output.</p>
+    </div>
+  </li>
+  <li data-part="item">
+    <span data-part="marker" aria-hidden="true"></span>
+    <div data-part="content">
+      <time data-part="time" datetime="2026">2026</time>
+      <p data-part="title">Personality</p>
+      <p data-part="description">Themes that measurably differ, and motion to match.</p>
+    </div>
+  </li>
+</ol>
+</section>
+<div style="padding-block: var(--section-gap-md)"><section data-ui="post-list" data-variant="featured" aria-labelledby="post-list-featured-heading">
+  <h2 data-part="heading" id="post-list-featured-heading">Latest</h2>
+  <ul data-part="items">
+    <li data-part="item">
+      <article data-part="card" aria-labelledby="post-featured-1-title">
+        <a data-part="media" href="https://example.com/blog/theme-without-touching">
+          <img src="https://picsum.photos/seed/blogthemewithouttouchingcoverjpg/960/540" alt="Six colour swatches fanned out on a desk beside a serif type specimen" loading="lazy">
+        </a>
+        <div data-part="content">
+          <p data-part="tag"><span data-ui="badge" data-variant="secondary" data-size="sm">Theming</span></p>
+          <h3 data-part="title" id="post-featured-1-title"><a data-ui="link" href="https://example.com/blog/theme-without-touching">Shipping a theme without touching a component</a></h3>
+          <p data-part="excerpt">
+            Six axes, one seed, and the tokens that let a serif editorial theme
+            and a flat dashboard theme share every line of component CSS. A
+            theme is a short file of opinions, not a second copy of the
+            registry.
+          </p>
+          <div data-part="meta">
+            <span data-ui="avatar" data-size="sm"><img data-part="image" src="https://picsum.photos/seed/peoplemateorossijpg/960/540" alt="Mateo Rossi"><span data-part="fallback" hidden>MR</span></span>
+            <span>Mateo Rossi</span>
+            <time datetime="2026-08-02">2 Aug 2026</time>
+            <span>11 min read</span>
+          </div>
+        </div>
+      </article>
+    </li>
+    <li data-part="item">
+      <article data-part="card" aria-labelledby="post-featured-2-title">
+        <a data-part="media" href="https://example.com/blog/audit-before-users">
+          <img src="https://picsum.photos/seed/blogauditbeforeuserscoverjpg/960/540" alt="A terminal showing a single audit finding highlighted in yellow" loading="lazy">
+        </a>
+        <div data-part="content">
+          <p data-part="tag"><span data-ui="badge" data-variant="success" data-size="sm">Accessibility</span></p>
+          <h3 data-part="title" id="post-featured-2-title"><a data-ui="link" href="https://example.com/blog/audit-before-users">The audit caught it before our users did</a></h3>
+          <p data-part="excerpt">
+            A missing label on a search field, found in a pull request rather
+            than a support ticket.
+          </p>
+          <div data-part="meta">
+            <span data-ui="avatar" data-size="sm"><span data-part="fallback">PN</span></span>
+            <span>Priya Nair</span>
+            <time datetime="2026-07-19">19 Jul 2026</time>
+            <span>5 min read</span>
+          </div>
+        </div>
+      </article>
+    </li>
+    <li data-part="item">
+      <article data-part="card" aria-labelledby="post-featured-3-title">
+        <a data-part="media" href="https://example.com/blog/print-geometry">
+          <img src="https://picsum.photos/seed/blogprintgeometrycoverjpg/960/540" alt="An invoice printed on A4 with its margins marked in pencil" loading="lazy">
+        </a>
+        <div data-part="content">
+          <p data-part="tag"><span data-ui="badge" data-size="sm">Documents</span></p>
+          <h3 data-part="title" id="post-featured-3-title"><a data-ui="link" href="https://example.com/blog/print-geometry">Real page geometry for printed documents</a></h3>
+          <p data-part="excerpt">
+            Invoices and reports from the same tokens as the dashboard, with
+            page breaks that land where a reader expects them.
+          </p>
+          <div data-part="meta">
+            <span data-ui="avatar" data-size="sm"><span data-part="fallback">LK</span></span>
+            <span>Lena Kowalski</span>
+            <time datetime="2026-06-30">30 Jun 2026</time>
+            <span>6 min read</span>
+          </div>
+        </div>
+      </article>
+    </li>
+    <li data-part="item">
+      <article data-part="card" aria-labelledby="post-featured-4-title">
+        <a data-part="media" href="https://example.com/blog/rtl-by-attribute">
+          <img src="https://picsum.photos/seed/blogrtlbyattributecoverjpg/960/540" alt="The same settings page rendered left-to-right and right-to-left, side by side" loading="lazy">
+        </a>
+        <div data-part="content">
+          <p data-part="tag"><span data-ui="badge" data-variant="primary" data-size="sm">Engineering</span></p>
+          <h3 data-part="title" id="post-featured-4-title"><a data-ui="link" href="https://example.com/blog/rtl-by-attribute">Right-to-left is a document attribute</a></h3>
+          <p data-part="excerpt">
+            Logical properties throughout, so a locale switch flips the layout
+            without a second stylesheet.
+          </p>
+          <div data-part="meta">
+            <span data-ui="avatar" data-size="sm"><span data-part="fallback">AO</span></span>
+            <span>Ada Okafor</span>
+            <time datetime="2026-06-11">11 Jun 2026</time>
+            <span>4 min read</span>
+          </div>
+        </div>
+      </article>
+    </li>
+  </ul>
+</section></div>
+
+<section data-ui="container" data-measure="wide" aria-labelledby="transitions-heading" style="padding-block: var(--section-gap-md)" l-data="{ preset: 'slide-start', shown: true }">
+  <h2 id="transitions-heading" data-ui="text" data-size="3xl" data-weight="bold">Eight <code>l-transition</code> presets</h2>
+  <p data-ui="text" data-variant="muted" data-size="lg">Five are new: slide-down, slide-start, slide-end, blur and flip. Pick one and toggle.</p>
+  <div data-ui="cluster" data-gap="3" data-align="center" style="margin-block: var(--space-6)">
+    <select data-ui="select" l-model="preset" aria-label="Transition preset">
+      <option>fade</option><option>slide-up</option><option>slide-down</option><option>slide-start</option><option>slide-end</option><option>scale</option><option>blur</option><option>flip</option>
+    </select>
+    <button data-ui="button" data-variant="primary" type="button" @click="shown = !shown" l-text="shown ? 'Hide' : 'Show'"></button>
+  </div>
+  <template l-if="shown">
+    <div data-ui="card" :l-transition="preset" l-transition="slide-start" style="max-inline-size: 28rem">
+      <div data-part="header"><h3 data-part="title" l-text="preset"></h3><p data-part="description">Enter is slower and eased out, leave is faster and eased in — both from motion tokens.</p></div>
+    </div>
+  </template>
+</section>
+<div style="padding-block: var(--section-gap-md)"><section data-ui="faq" data-variant="split" data-numbered aria-labelledby="faq-split-heading">
+  <div data-part="intro">
+    <h2 data-part="heading" id="faq-split-heading">Billing and plans</h2>
+    <p data-part="description">
+      How seats, invoices and upgrades work. Numbered so support can point you
+      at the right answer.
+    </p>
+    <p data-part="footer">Need an invoice? <a data-ui="link" href="#billing-support">Write to billing</a></p>
+  </div>
+  <div data-part="items">
+    <details data-ui="collapsible" data-variant="bordered">
+      <summary data-part="trigger">How are seats counted?</summary>
+      <div data-part="content">
+        Anyone who can edit a project is a seat. Viewers and commenters are
+        free, without limit.
+      </div>
+    </details>
+    <details data-ui="collapsible" data-variant="bordered">
+      <summary data-part="trigger">Can I change plans mid-cycle?</summary>
+      <div data-part="content">
+        Yes. Upgrades apply immediately and are prorated; downgrades take
+        effect at the next renewal.
+      </div>
+    </details>
+    <details data-ui="collapsible" data-variant="bordered">
+      <summary data-part="trigger">Do you offer annual billing?</summary>
+      <div data-part="content">
+        Annual plans are billed up front at two months off the monthly price.
+      </div>
+    </details>
+    <details data-ui="collapsible" data-variant="bordered">
+      <summary data-part="trigger">Which payment methods do you accept?</summary>
+      <div data-part="content">
+        Cards and bank transfer. Purchase orders are available on annual plans.
+      </div>
+    </details>
+    <details data-ui="collapsible" data-variant="bordered">
+      <summary data-part="trigger">How do I cancel?</summary>
+      <div data-part="content">
+        From the workspace settings, any time. Your data stays exportable for
+        ninety days after the last renewal.
+      </div>
+    </details>
+  </div>
+</section></div>
+<div data-ui="container" data-measure="wide" style="padding-block: var(--section-gap-md)"><section data-ui="cta" data-variant="center" data-tone="surface" aria-labelledby="cta-headline">
+  <p data-part="eyebrow">Ready when you are</p>
+  <h2 data-part="headline" id="cta-headline">Ship the <span data-ui="highlight">interface</span>, not the design system</h2>
+  <p data-part="description">
+    Accessible components, design tokens and print-ready documents, in markup
+    your team already knows how to read. Start with one page.
+  </p>
+  <div data-part="actions">
+    <span data-ui="glow" data-halo style="--glow-radius: var(--button-radius); --glow-width: var(--border-width-sm)">
+      <a data-ui="button" data-variant="primary" data-size="lg" href="#signup">Start building</a>
+    </span>
+    <a data-ui="button" data-variant="outline" data-size="lg" href="#docs">Read the docs</a>
+  </div>
+  <p data-part="note">Free while you build · No credit card required</p>
+</section></div>
+</main>
+<footer data-ui="site-footer" data-variant="columns">
+  <div data-part="brand">
+    <p data-part="logo">Acme</p>
+    <p data-part="tagline">Interface pieces you compose, audit, and ship.</p>
+    <div data-part="social">
+      <a data-ui="link" data-variant="muted" href="#source" aria-label="Source repository">
+        <span data-ui="icon" data-icon="git-branch" aria-hidden="true"></span>
+      </a>
+      <a data-ui="link" data-variant="muted" href="#chat" aria-label="Community chat">
+        <span data-ui="icon" data-icon="message-circle" aria-hidden="true"></span>
+      </a>
+      <a data-ui="link" data-variant="muted" href="#mail" aria-label="Email us">
+        <span data-ui="icon" data-icon="mail" aria-hidden="true"></span>
+      </a>
+    </div>
+  </div>
+
+  <div data-part="columns">
+    <div data-part="column">
+      <h2 data-part="column-title" id="site-footer-product">Product</h2>
+      <nav data-ui="nav" data-variant="vertical" aria-labelledby="site-footer-product">
+        <a data-part="link" href="#features">Features</a>
+        <a data-part="link" href="#pricing">Pricing</a>
+        <a data-part="link" href="#changelog">Changelog</a>
+      </nav>
+    </div>
+
+    <div data-part="column">
+      <h2 data-part="column-title" id="site-footer-resources">Resources</h2>
+      <nav data-ui="nav" data-variant="vertical" aria-labelledby="site-footer-resources">
+        <a data-part="link" href="#docs">Documentation</a>
+        <a data-part="link" href="#guides">Guides</a>
+        <a data-part="link" href="#support">Support</a>
+      </nav>
+    </div>
+
+    <div data-part="column">
+      <h2 data-part="column-title" id="site-footer-company">Company</h2>
+      <nav data-ui="nav" data-variant="vertical" aria-labelledby="site-footer-company">
+        <a data-part="link" href="#about">About</a>
+        <a data-part="link" href="#careers">Careers</a>
+        <a data-part="link" href="#contact">Contact</a>
+      </nav>
+    </div>
+  </div>
+
+  <hr data-ui="separator">
+
+  <div data-part="bottom">
+    <p data-part="copyright">&copy; Acme, Inc. All rights reserved.</p>
+    <div data-part="legal">
+      <nav data-ui="nav" aria-label="Legal">
+        <a data-part="link" href="#privacy">Privacy</a>
+        <a data-part="link" href="#terms">Terms</a>
+        <a data-part="link" href="#cookies">Cookies</a>
+      </nav>
+    </div>
+  </div>
+</footer>
+<div data-ui="scroll-progress" aria-hidden="true"></div>
+
+<details data-ui="collapsible" data-variant="bordered" id="studio" l-data="{ theme: 'default', pick(name) { document.querySelectorAll('link[id^=theme-]').forEach(l => { l.disabled = l.id !== 'theme-' + name }) } }" style="position: fixed; inset-block-end: var(--space-4); inset-inline-end: var(--space-4); z-index: var(--z-overlay); inline-size: min(22rem, calc(100vw - 2rem)); max-block-size: calc(100vh - 2rem); overflow: auto; background: var(--panel-bg); box-shadow: var(--shadow-xl); border-radius: var(--radius-xl)">
+  <summary data-part="trigger">Theme studio</summary>
+  <div data-part="content">
+    <div data-ui="stack" data-gap="4">
+      <div data-ui="field-group">
+        <label data-ui="label" for="theme-pick">Theme stylesheet</label>
+        <select data-ui="select" id="theme-pick" l-model="theme" @change="pick(theme)">
+          <option value="default">default</option><option value="aurora">aurora</option><option value="midnight">midnight</option><option value="candy">candy</option><option value="soft">soft</option><option value="neo">neo</option><option value="luxe">luxe</option><option value="paper">paper</option><option value="terminal">terminal</option>
+        </select>
+      </div>
+      <aside l-tweak aria-label="Theme studio dials"></aside>
+    </div>
+  </div>
+</details>
+</body>
+</html>

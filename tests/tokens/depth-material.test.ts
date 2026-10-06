@@ -233,9 +233,11 @@ describe("depth & material · --surface-backdrop is fallback-first", () => {
 
   const consumers = REGISTRY_SHEETS.filter((s) => s.css.includes("var(--surface-backdrop)"));
 
-  it("is consumed by the card, the overlay surface and the seven floating recipes", () => {
+  it("is consumed by the card, the quote card, the glass site header, the overlay surface and the seven floating recipes", () => {
     expect(consumers.map((c) => c.rel).sort()).toEqual([
+      "patterns/site-header/site-header.css",
       "primitives/card/card.css",
+      "primitives/quote/quote.css",
       "primitives/surface/surface.css",
       "recipes/dialog/dialog.css",
       "recipes/drawer/drawer.css",

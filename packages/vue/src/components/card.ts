@@ -26,6 +26,7 @@ export const LCard = defineFaqirPrimitive<LCardProps>({
   ],
   states: [],
   slots: [
+    { name: "media", tag: "figure", required: false, isVoid: false },
     { name: "header", tag: "div", required: false, isVoid: false },
     { name: "title", tag: "h3", required: false, isVoid: false },
     { name: "description", tag: "p", required: false, isVoid: false },

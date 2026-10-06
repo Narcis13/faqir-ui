@@ -3553,7 +3553,7 @@ function renderHomePage(ctx: {
     [String(ctx.themes.length), "themes", "authored, generated and print companions", THEMES_PAGE],
     [String(ruleCount), "audit rules", "one engine in the CLI, MCP and browser", AUDIT_PAGE],
     [String(ctx.tokenCount), "design tokens", "one semantic cascade", "tokens/index.html"],
-    [String(ctx.pluginCount), "engine plugins", "collapse, intersect, mask, persist, rules, validate", ENGINE_PAGE],
+    [String(ctx.pluginCount), "engine plugins", "collapse, intersect, mask, persist, rules, tweak, validate", ENGINE_PAGE],
     ["0", "runtime dependencies", "plain HTML, CSS and JavaScript", "agents/index.html"],
   ];
   const stats =

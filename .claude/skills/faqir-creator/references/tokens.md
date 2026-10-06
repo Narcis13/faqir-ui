@@ -19,16 +19,16 @@ Cascade order, as `tokens/index.css` imports them: `palette.css` → `spacing.cs
 
 ## Token Groups
 
-359 tokens in 10 groups:
+372 tokens in 10 groups:
 
 - `palette` (67) — raw oklch color values, never referenced by components directly
 - `spacing` (23) — 4px base, harmonic scale
 - `typography` (29) — font families, sizes, line-heights, weights
 - `effects` (33) — radii, shape, shadows, focus, z-index
 - `textures` (6) — named surface materials (SVG data URIs)
-- `motion` (19) — easings, durations and motion personality
+- `motion` (30) — easings, durations and motion personality
 - `semantic` (31) — purpose-based tokens, referenced by components
-- `aliases` (63) — per-component overrides mapping to semantic tokens
+- `aliases` (65) — per-component overrides mapping to semantic tokens
 - `document` (42) — structural tokens for document/print rendering
 - `doc-aliases` (46) — component-level document tokens
 
@@ -313,7 +313,7 @@ _`registry/tokens/textures.css` · 6 tokens_
 
 ## motion — easings, durations and motion personality
 
-_`registry/tokens/motion.css` · 19 tokens_
+_`registry/tokens/motion.css` · 30 tokens_
 
 ### Easings
 
@@ -352,6 +352,22 @@ _`registry/tokens/motion.css` · 19 tokens_
 |---|---|
 | `--ease-spring` | `cubic-bezier(0.34, 1.56, 0.64, 1)` |
 | `--motion-hover-lift` | `none` |
+
+### Choreography (reveal, marquee, backdrop, glow, highlight)
+
+| Token | Value | Notes |
+|---|---|---|
+| `--ease-linear` | `linear` | — |
+| `--ease-emphasized` | `cubic-bezier(0.2, 0, 0, 1)` | — |
+| `--duration-slowest` | `700ms` | — |
+| `--motion-reveal-duration` | `var(--duration-slowest)` | — |
+| `--motion-reveal-ease` | `var(--ease-emphasized)` | — |
+| `--motion-reveal-distance` | `1.5rem` | travel of rise / fall / slide |
+| `--motion-reveal-scale` | `0.94` | start factor of zoom |
+| `--motion-reveal-blur` | `0.5rem` | start radius of blur |
+| `--motion-stagger` | `70ms` | delay between siblings in a staggered group |
+| `--motion-ambient-duration` | `24s` | — |
+| `--motion-ambient-play` | `running` | — |
 
 | Token | Value |
 |---|---|
@@ -424,7 +440,7 @@ _`registry/tokens/semantic.css` · 31 tokens_
 
 ## aliases — per-component overrides mapping to semantic tokens
 
-_`registry/tokens/aliases.css` · 63 tokens_
+_`registry/tokens/aliases.css` · 65 tokens_
 
 ### Controls
 
@@ -496,6 +512,8 @@ _`registry/tokens/aliases.css` · 63 tokens_
 | `--card-border-width` | `var(--border-width)` |
 | `--card-bg` | `var(--color-surface-1)` |
 | `--card-padding` | `var(--space-6)` |
+| `--card-hover-shadow` | `var(--shadow-lg)` |
+| `--card-media-ratio` | `16 / 9` |
 
 ### Input
 

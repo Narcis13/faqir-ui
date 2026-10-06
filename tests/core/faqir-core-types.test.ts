@@ -170,7 +170,7 @@ describe("FaqirGlobal matches the live engine", () => {
     expect(membersOf("FaqirGlobal").length).toBeGreaterThanOrEqual(19);
     // …and the optional-member rule is not a hole either: everything the ENGINE
     // itself defines is declared as required.
-    expect(optionalOf("FaqirGlobal")).toEqual(["validate"]);
+    expect(optionalOf("FaqirGlobal")).toEqual(["tweak", "validate"]);
   });
 
   it("declares every member as the kind the engine implements", () => {
@@ -179,7 +179,7 @@ describe("FaqirGlobal matches the live engine", () => {
       const value = (Faqir as Record<string, unknown>)[key];
       if (value === undefined && optional.includes(key)) continue; // plugin absent
       const expected =
-        key === "version" ? "string" : key === "devtools" || key === "validate" ? "object" : "function";
+        key === "version" ? "string" : key === "devtools" || key === "validate" || key === "tweak" ? "object" : "function";
       expect(typeof value, `Faqir.${key}`).toBe(expected);
     }
   });
