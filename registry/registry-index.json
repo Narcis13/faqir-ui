@@ -2101,7 +2101,7 @@
       "files": [
         {
           "path": "cta.css",
-          "sha256": "94a9fd6a0fade0cfa22623cfc7f896a0ef2daf5e34f8fd51f4d89a26372649e8"
+          "sha256": "a4236e3c0c2ce1078da3e301d6745cd8da8900e2298f2e4947d3406ff485f8c0"
         },
         {
           "path": "cta.html",
@@ -2112,7 +2112,7 @@
           "sha256": "84514c1041e84ddb2f88562f0dc8e78c85533d7ef0c9f0bfb74edb7588b12ee8"
         }
       ],
-      "hash": "bb894f5cc9b470a72c59dac0d3f2d4d22e41e32875e7f90682b62bc11026b2c9",
+      "hash": "7e68be410d7bdf99b4359bec5db443eeea90eec247d4a84701c41049a10f6cca",
       "deps": [
         "button",
         "highlight",

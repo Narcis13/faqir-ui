@@ -11,8 +11,9 @@ Motion, content and the theme studio. Full notes: [`docs/release-1.2.md`](docs/r
 
 **Upgrading from 1.1.x:** no breaking changes, no markup migrations. Run
 `faqir upgrade`, then `faqir audit`; CDN users move `@faqir-ui/core@1.1` to `@1.2`.
-Read the two behaviour changes first: `Faqir.validate` now follows the last copy
-of `faqir-validate.js` loaded, and a toast is never wider than its container.
+Read the three behaviour changes first: `faqir-validate` sets `novalidate` on its
+form, `Faqir.validate` follows the last copy of `faqir-validate.js` loaded, and a
+toast is never wider than its container.
 
 - **Added** — primitives `stamp`, `spotlight`, `reveal`, `marquee`, `backdrop`,
   `glow`, `highlight`, `quote`, `rating`, `timeline`, `scroll-progress`;
@@ -22,8 +23,11 @@ of `faqir-validate.js` loaded, and a toast is never wider than its container.
   `l-transition` presets; effect and hover properties on `card`, `button`,
   `image`, `link`, `badge`, `text`, `separator` and `toggle-group`.
 - **Fixed** — `qr-code` multi-block symbols, version selection and version
-  information; `toast` overflow on phones; `popover` close button over text;
-  `faqir-validate` loaded twice; docs-site overlay previews.
+  information; `toast` overflow on phones; `popover` width and close button;
+  `card` title/description without a header; labelled dashed `separator`;
+  `l-teleport` double binding; `l-model` on `switch`; `faqir-validate` inert
+  without `novalidate`, and loaded twice; `faqir-rules` stale reads; docs-site
+  overlay previews.
 - **Docs** — every engine and plugin directive, modifier and magic runs live on
   the engine page; a coverage test keeps every component, theme, token, command
   and MCP tool on the site.

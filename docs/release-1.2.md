@@ -26,8 +26,11 @@ faqir audit            # every 1.1.x page still audits clean
 CDN users move the pin from `@faqir-ui/core@1.1` to `@faqir-ui/core@1.2`; the
 docs site's copy-for-agents snippets carry the new SRI hashes.
 
-Two behaviour changes are worth reading before you upgrade:
+Three behaviour changes are worth reading before you upgrade:
 
+- **`faqir-validate` sets `novalidate` on its form.** The plugin shows its own
+  messages; the browser's bubbles no longer appear for a form with
+  `l-validate`, and an invalid submit now reaches the plugin in every browser.
 - **`Faqir.validate` follows the last `faqir-validate.js` that loaded.** A page
   that loads the plugin twice (two script tags, or a bundle beside the CDN copy)
   used to keep `Faqir.validate` on the first copy while the `l-validate`
@@ -90,8 +93,26 @@ without a live page or section.
   spec, including Reed–Solomon syndromes and the version word.
 - **`toast`** overflowed a 375 px screen (bottom-left past the right edge,
   bottom-right off the left).
-- **`popover`**'s close button sat on top of the content's text.
-- **`faqir-validate`**: the double-load split described above.
+- **`popover`**'s close button sat on top of the content's text, and every
+  popover was squeezed into a 200 px column (it was sized by its trigger-wide
+  root); it is now sized by its content, up to 20 rem.
+- **`card`**: a title and description written straight into the card — the
+  shape the `wizard` pattern and `@faqir-ui/forms` emit for each step — sat
+  flush against the border; they now take the header's inset.
+- **`separator`**: a labelled dashed or dotted separator drew a 3 px rule over
+  its label.
+- **Engine — `l-teleport`** bound its subtree twice when the target came later
+  in the same scope (one click, two increments).
+- **Engine — `l-model` on the `switch` primitive** never wrote back: a
+  `<button role="switch">` fires no `change` event. It now toggles on click.
+- **`faqir-validate`** did nothing in a real browser unless the form carried
+  `novalidate`: native validation cancelled an invalid submit before any submit
+  event fired. The directive now sets `novalidate` itself. Also the double-load
+  split described above.
+- **`faqir-rules`** judged stale data in two cases: a compute reading a field
+  that the same edit brought back into view (it came out `NaN` until the next
+  keystroke), and the first pass, which ran before the `l-model` bindings inside
+  the form had written their values.
 - **Docs site**: forced-open overlay previews (`popover`, `tooltip`, menus,
   dialogs) put the panel back in flow without keeping it positioned, so arrows
   and close buttons anchored to the wrong box.
