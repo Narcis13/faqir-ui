@@ -102,7 +102,15 @@ without a live page or section.
 - **`separator`**: a labelled dashed or dotted separator drew a 3 px rule over
   its label.
 - **Engine — `l-teleport`** bound its subtree twice when the target came later
-  in the same scope (one click, two increments).
+  in the same scope (one click, two increments), and re-initialised a
+  teleported element's own `l-data` scope.
+- **`qr-code`**'s second copy of the format information was misplaced: its
+  eighth bit landed on the always-dark module. Scanners recovered from the
+  first copy; the symbol now matches ISO/IEC 18004 §7.9.1.
+- **`switch`** markup now carries `type="button"`, so a switch inside a form
+  toggles instead of submitting it.
+- **`cta`**: the muted text on a primary or gradient panel failed AA on the
+  paper theme (4.19:1); it is now the ink at 88%.
 - **Engine — `l-model` on the `switch` primitive** never wrote back: a
   `<button role="switch">` fires no `change` event. It now toggles on click.
 - **`faqir-validate`** did nothing in a real browser unless the form carried
@@ -115,7 +123,29 @@ without a live page or section.
   the form had written their values.
 - **Docs site**: forced-open overlay previews (`popover`, `tooltip`, menus,
   dialogs) put the panel back in flow without keeping it positioned, so arrows
-  and close buttons anchored to the wrong box.
+  and close buttons anchored to the wrong box. At 375 px, 119 of 204 pages
+  scrolled sideways (wide tables, stretched grid columns); tables now scroll
+  inside themselves. Manifest prose renders its markdown, and a button-styled
+  link inside prose is no longer underlined.
+
+## Known limitations
+
+- **Plugins loaded as separate `defer` scripts can miss the engine's boot** on a
+  cold, slow load: while deferred scripts run, `readyState` is `interactive`, and
+  the engine's `setTimeout` boot can fire before the next plugin script has been
+  evaluated, leaving that plugin's directives inert for the page load. Load
+  plugins before `DOMContentLoaded` can fire *and* after the engine — or call
+  `Faqir.start()` yourself with `data-manual` — until the boot waits for
+  `DOMContentLoaded` in that state (a change to the tested boot contract).
+- **`faqir-rules` re-judges on `input` and `change`.** A value written into the
+  scope later (an `l-source` load, a click handler) updates the control without
+  those events and is not re-judged until the next edit.
+- **`popover` and `tooltip` do no viewport collision handling**: their placement
+  is CSS only, so a popover opened against the edge of the screen can be cut off.
+- **Theme contrast.** In several themes the borders of inputs, checkboxes and
+  radios sit under the 3:1 non-text contrast of WCAG 1.4.11, `brutalist`'s
+  secondary button is the page colour, and themes with `--radius-full: 0` square
+  off radios and the spinner. These are theme-design changes and are not in 1.2.
 
 ## Development
 
