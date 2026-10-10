@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kiln — interfaces, fired to last · Faqir landing craft</title>
+  <meta name="description" content="A full landing page built only from Faqir registry components, tokens and directives — the landing-craft showcase, in four seed themes.">
+
+  <!-- Tokens, base -->
+  <link rel="stylesheet" href="../registry/tokens/index.css">
+  <link rel="stylesheet" href="../registry/base/reset.css">
+  <link rel="stylesheet" href="../registry/base/prose.css">
+  <link rel="stylesheet" href="../registry/base/rhythm.css">
+
+  <!-- The four landing-craft themes. The switcher in the header (l-data +
+       l-effect, seeded from `?theme=`) flips the `disabled` attribute. -->
+  <link rel="stylesheet" href="../registry/themes/deco.css" id="theme-deco">
+  <link rel="stylesheet" href="../registry/themes/clay.css" id="theme-clay" disabled>
+  <link rel="stylesheet" href="../registry/themes/memphis.css" id="theme-memphis" disabled>
+  <link rel="stylesheet" href="../registry/themes/monolith.css" id="theme-monolith" disabled>
+
+  <!-- Every component this page names -->
+  <link rel="stylesheet" href="../registry/primitives/backdrop/backdrop.css">
+  <link rel="stylesheet" href="../registry/primitives/badge/badge.css">
+  <link rel="stylesheet" href="../registry/patterns/bento/bento.css">
+  <link rel="stylesheet" href="../registry/primitives/button/button.css">
+  <link rel="stylesheet" href="../registry/primitives/card/card.css">
+  <link rel="stylesheet" href="../registry/primitives/container/container.css">
+  <link rel="stylesheet" href="../registry/patterns/cta/cta.css">
+  <link rel="stylesheet" href="../registry/primitives/grid/grid.css">
+  <link rel="stylesheet" href="../registry/patterns/hero/hero.css">
+  <link rel="stylesheet" href="../registry/primitives/highlight/highlight.css">
+  <link rel="stylesheet" href="../registry/primitives/icon/icons.css">
+  <link rel="stylesheet" href="../registry/primitives/link/link.css">
+  <link rel="stylesheet" href="../registry/patterns/logo-cloud/logo-cloud.css">
+  <link rel="stylesheet" href="../registry/primitives/marquee/marquee.css">
+  <link rel="stylesheet" href="../registry/primitives/nav/nav.css">
+  <link rel="stylesheet" href="../registry/patterns/pricing/pricing.css">
+  <link rel="stylesheet" href="../registry/primitives/quote/quote.css">
+  <link rel="stylesheet" href="../registry/primitives/reveal/reveal.css">
+  <link rel="stylesheet" href="../registry/primitives/scroll-progress/scroll-progress.css">
+  <link rel="stylesheet" href="../registry/primitives/separator/separator.css">
+  <link rel="stylesheet" href="../registry/patterns/site-footer/site-footer.css">
+  <link rel="stylesheet" href="../registry/patterns/site-header/site-header.css">
+  <link rel="stylesheet" href="../registry/primitives/spotlight/spotlight.css">
+  <link rel="stylesheet" href="../registry/primitives/stack/stack.css">
+  <link rel="stylesheet" href="../registry/primitives/stamp/stamp.css">
+  <link rel="stylesheet" href="../registry/primitives/stat/stat.css">
+  <link rel="stylesheet" href="../registry/patterns/testimonials/testimonials.css">
+  <link rel="stylesheet" href="../registry/primitives/text/text.css">
+  <link rel="stylesheet" href="../registry/recipes/toggle-group/toggle-group.css">
+
+  <script src="../registry/core/faqir-core.js" defer></script>
+</head>
+<body>
+
+<!-- ── Navigation ───────────────────────────────────────────────────────── -->
+<header data-ui="site-header" data-sticky data-condense>
+  <a data-part="brand" href="#top">Kiln</a>
+  <div data-part="nav">
+    <nav data-ui="nav" aria-label="Main">
+      <a data-part="link" href="#features">Product</a>
+      <a data-part="link" href="#stories">Stories</a>
+      <a data-part="link" href="#pricing">Pricing</a>
+    </nav>
+  </div>
+  <div data-part="actions">
+    <!-- The theme switcher is a segmented toggle-group bound with l-model. -->
+    <div l-data="{ theme: (new URLSearchParams(location.search).get('theme')) || 'deco' }"
+         l-effect="document.querySelectorAll('link[id^=theme-]').forEach(l => { l.disabled = l.id !== 'theme-' + theme })">
+      <div data-ui="toggle-group" data-mode="single" data-variant="segmented" role="radiogroup" aria-label="Theme">
+        <label data-part="item"><input data-part="control" type="radio" name="theme" value="deco" l-model="theme"><span data-part="label">Deco</span></label>
+        <label data-part="item"><input data-part="control" type="radio" name="theme" value="clay" l-model="theme"><span data-part="label">Clay</span></label>
+        <label data-part="item"><input data-part="control" type="radio" name="theme" value="memphis" l-model="theme"><span data-part="label">Memphis</span></label>
+        <label data-part="item"><input data-part="control" type="radio" name="theme" value="monolith" l-model="theme"><span data-part="label">Monolith</span></label>
+      </div>
+    </div>
+    <a data-ui="button" data-variant="primary" data-size="sm" href="#pricing">Start free</a>
+  </div>
+  <details data-part="menu">
+    <summary data-part="toggle">Menu</summary>
+    <div data-part="panel">
+      <nav data-ui="nav" data-variant="vertical" aria-label="Main menu">
+        <a data-part="link" href="#features">Product</a>
+        <a data-part="link" href="#stories">Stories</a>
+        <a data-part="link" href="#pricing">Pricing</a>
+      </nav>
+      <div data-part="actions">
+        <a data-ui="button" data-variant="primary" href="#pricing">Start free</a>
+      </div>
+    </div>
+  </details>
+</header>
+
+<main id="top">
+
+<!-- ── Hero ─────────────────────────────────────────────────────────────── -->
+<div data-ui="backdrop" data-variant="aurora" data-intensity="subtle">
+  <section data-ui="hero" data-variant="cover" data-animate aria-labelledby="hero-headline" style="--hero-bg: transparent">
+    <p data-part="eyebrow" data-ui="text" data-variant="eyebrow">Kiln 3.0 · now in public beta</p>
+    <h1 data-part="headline" id="hero-headline">Interfaces, <span data-ui="highlight" data-variant="foil">fired</span> to last.</h1>
+    <p data-part="description">Kiln turns a brand into a design system your whole team ships from — tokens, components and pages that stay on-brand long after launch day.</p>
+    <div data-part="actions">
+      <a data-ui="button" data-variant="primary" data-size="lg" data-effect="arrow" href="#pricing">Start building free <span data-ui="icon" data-icon="arrow-right" data-part="icon" aria-hidden="true"></span></a>
+      <a data-ui="button" data-variant="outline" data-size="lg" data-effect="sink" href="#stories">See what teams made</a>
+    </div>
+    <p data-part="note">Free for one project · no credit card</p>
+  </section>
+</div>
+
+<!-- ── Logo cloud ───────────────────────────────────────────────────────── -->
+<section data-ui="logo-cloud" data-variant="marquee" aria-labelledby="logos-heading">
+  <p data-part="heading" id="logos-heading">Fired daily by teams at</p>
+  <div data-ui="marquee" data-fade data-speed="slow" role="group" aria-label="Customer logos">
+    <ul data-part="track">
+      <li data-part="item"><img data-part="logo" alt="Northwind" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 40'%3E%3Ctext x='80' y='27' text-anchor='middle' font-family='Georgia,serif' font-size='22' font-weight='700' fill='%23888'%3ENorthwind%3C/text%3E%3C/svg%3E"></li>
+      <li data-part="item"><img data-part="logo" alt="Quarry &amp; Co" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 40'%3E%3Ctext x='80' y='27' text-anchor='middle' font-family='system-ui,sans-serif' font-size='20' font-weight='800' letter-spacing='2' fill='%23888'%3EQUARRY%26amp;CO%3C/text%3E%3C/svg%3E"></li>
+      <li data-part="item"><img data-part="logo" alt="Lumen" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 40'%3E%3Ccircle cx='34' cy='20' r='9' fill='none' stroke='%23888' stroke-width='4'/%3E%3Ctext x='92' y='28' text-anchor='middle' font-family='system-ui,sans-serif' font-size='22' font-weight='600' fill='%23888'%3Elumen%3C/text%3E%3C/svg%3E"></li>
+      <li data-part="item"><img data-part="logo" alt="Atlas Freight" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 40'%3E%3Ctext x='80' y='27' text-anchor='middle' font-family='ui-monospace,monospace' font-size='18' font-weight='700' fill='%23888'%3Eatlas/freight%3C/text%3E%3C/svg%3E"></li>
+      <li data-part="item"><img data-part="logo" alt="Verdant" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 40'%3E%3Cpath d='M18 30 L28 10 L38 30 Z' fill='%23888'/%3E%3Ctext x='96' y='28' text-anchor='middle' font-family='Georgia,serif' font-size='22' font-style='italic' fill='%23888'%3EVerdant%3C/text%3E%3C/svg%3E"></li>
+      <li data-part="item"><img data-part="logo" alt="Halcyon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 40'%3E%3Ctext x='80' y='27' text-anchor='middle' font-family='system-ui,sans-serif' font-size='21' font-weight='300' letter-spacing='4' fill='%23888'%3EHALCYON%3C/text%3E%3C/svg%3E"></li>
+    </ul>
+    <ul data-part="track" aria-hidden="true">
+      <li data-part="item"><img data-part="logo" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 40'%3E%3Ctext x='80' y='27' text-anchor='middle' font-family='Georgia,serif' font-size='22' font-weight='700' fill='%23888'%3ENorthwind%3C/text%3E%3C/svg%3E"></li>
+      <li data-part="item"><img data-part="logo" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 40'%3E%3Ctext x='80' y='27' text-anchor='middle' font-family='system-ui,sans-serif' font-size='20' font-weight='800' letter-spacing='2' fill='%23888'%3EQUARRY%26amp;CO%3C/text%3E%3C/svg%3E"></li>
+      <li data-part="item"><img data-part="logo" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 40'%3E%3Ccircle cx='34' cy='20' r='9' fill='none' stroke='%23888' stroke-width='4'/%3E%3Ctext x='92' y='28' text-anchor='middle' font-family='system-ui,sans-serif' font-size='22' font-weight='600' fill='%23888'%3Elumen%3C/text%3E%3C/svg%3E"></li>
+      <li data-part="item"><img data-part="logo" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 40'%3E%3Ctext x='80' y='27' text-anchor='middle' font-family='ui-monospace,monospace' font-size='18' font-weight='700' fill='%23888'%3Eatlas/freight%3C/text%3E%3C/svg%3E"></li>
+      <li data-part="item"><img data-part="logo" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 40'%3E%3Cpath d='M18 30 L28 10 L38 30 Z' fill='%23888'/%3E%3Ctext x='96' y='28' text-anchor='middle' font-family='Georgia,serif' font-size='22' font-style='italic' fill='%23888'%3EVerdant%3C/text%3E%3C/svg%3E"></li>
+      <li data-part="item"><img data-part="logo" alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 40'%3E%3Ctext x='80' y='27' text-anchor='middle' font-family='system-ui,sans-serif' font-size='21' font-weight='300' letter-spacing='4' fill='%23888'%3EHALCYON%3C/text%3E%3C/svg%3E"></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ── Features ─────────────────────────────────────────────────────────── -->
+<div id="features" data-ui="container" data-measure="wide" data-gutter="4">
+  <div data-ui="stack" data-gap="4" data-align-text="center">
+    <p data-ui="text" data-variant="eyebrow">What's in the kiln</p>
+    <hr data-ui="separator" data-style="ornament">
+  </div>
+  <div data-ui="spotlight" style="--spotlight-size: 30rem; --spotlight-radius: 0" l-data="{}" @pointermove="const r = $this.getBoundingClientRect(); $this.style.setProperty('--spotlight-x', ($event.clientX - r.left) + 'px'); $this.style.setProperty('--spotlight-y', ($event.clientY - r.top) + 'px')">
+    <section data-ui="bento" data-animate aria-labelledby="features-heading">
+      <h2 data-part="heading" id="features-heading">One brand in, a whole system out</h2>
+      <p data-part="description">Kiln reads your brand once and keeps every surface in step — the marketing site, the product and the slide deck someone makes on a Friday.</p>
+      <ul data-part="items">
+        <li data-part="item" data-span="large">
+          <div data-part="media" aria-hidden="true">
+            <div data-ui="backdrop" data-variant="beams" data-static></div>
+          </div>
+          <h3 data-part="title">Themes from a single seed</h3>
+          <p data-part="description">Pick an accent and a handful of character axes. Kiln writes a contrast-checked theme, light and dark, and refuses one that looks like a rival's.</p>
+        </li>
+        <li data-part="item" data-span="wide">
+          <span data-part="icon" aria-hidden="true"><span data-ui="icon" data-icon="shield-check"></span></span>
+          <h3 data-part="title">Audited before it ships</h3>
+          <p data-part="description">Every page is checked for roles, names, contrast and motion fallbacks in one pass.</p>
+        </li>
+        <li data-part="item">
+          <span data-part="icon" aria-hidden="true"><span data-ui="icon" data-icon="zap"></span></span>
+          <h3 data-part="title">No runtime tax</h3>
+          <p data-part="description">Markup and a stylesheet. Nothing to hydrate.</p>
+        </li>
+        <li data-part="item">
+          <span data-part="icon" aria-hidden="true"><span data-ui="icon" data-icon="globe"></span></span>
+          <h3 data-part="title">Every locale</h3>
+          <p data-part="description">Right-to-left is one attribute.</p>
+        </li>
+        <li data-part="item" data-span="wide">
+          <span data-part="icon" aria-hidden="true"><span data-ui="icon" data-icon="layers"></span></span>
+          <h3 data-part="title">Composable all the way down</h3>
+          <p data-part="description">Patterns are components nested in components, never copies — fix a button once and every page has the fix.</p>
+        </li>
+        <li data-part="item" data-span="wide">
+          <span data-part="icon" aria-hidden="true"><span data-ui="icon" data-icon="sparkles"></span></span>
+          <h3 data-part="title">Agents welcome</h3>
+          <p data-part="description">Every component ships a manifest an agent can read, so generated pages come out on-brand the first time.</p>
+        </li>
+      </ul>
+    </section>
+  </div>
+</div>
+
+<!-- ── Testimonial ──────────────────────────────────────────────────────── -->
+<div id="stories" data-ui="container" data-measure="wide" data-gutter="4">
+  <div data-ui="reveal" data-trigger="scroll">
+    <figure data-ui="quote" data-variant="pull" data-size="lg">
+      <blockquote data-part="text">
+        <p>We rebuilt our marketing site in a week and the product team adopted the same theme the Monday after. Nobody has opened the brand PDF since.</p>
+      </blockquote>
+      <figcaption data-part="author">
+        <span data-part="name">Ines Okoro</span>
+        <span data-part="role">Head of design, Northwind (fictional)</span>
+      </figcaption>
+    </figure>
+  </div>
+</div>
+
+<div data-ui="container" data-measure="wide" data-gutter="4">
+<section data-ui="testimonials" data-variant="grid" data-animate aria-labelledby="stories-heading">
+  <h2 data-part="heading" id="stories-heading">Teams that switched, and stayed</h2>
+  <ul data-part="items">
+    <li data-part="item">
+      <figure data-ui="quote" data-variant="card">
+        <blockquote data-part="text"><p>The audit caught forty contrast failures we had shipped for a year. Fixing them took an afternoon.</p></blockquote>
+        <figcaption data-part="author"><span data-part="name">Tomás Rey</span><span data-part="role">Frontend lead, Quarry &amp; Co</span></figcaption>
+      </figure>
+    </li>
+    <li data-part="item">
+      <figure data-ui="quote" data-variant="card">
+        <blockquote data-part="text"><p>Our brand refresh was a seed change and a pull request. Every page followed.</p></blockquote>
+        <figcaption data-part="author"><span data-part="name">Aiko Brandt</span><span data-part="role">Brand director, Lumen</span></figcaption>
+      </figure>
+    </li>
+    <li data-part="item">
+      <figure data-ui="quote" data-variant="card">
+        <blockquote data-part="text"><p>Agents write the pages now. Kiln is the reason they come out on-brand the first time.</p></blockquote>
+        <figcaption data-part="author"><span data-part="name">Sam Achebe</span><span data-part="role">CTO, Atlas Freight</span></figcaption>
+      </figure>
+    </li>
+  </ul>
+</section>
+</div>
+
+<!-- ── Pricing ──────────────────────────────────────────────────────────── -->
+<div data-ui="container" data-measure="wide" data-gutter="4">
+<section id="pricing" data-ui="pricing" data-cols="3" aria-labelledby="pricing-heading">
+  <h2 data-part="heading" id="pricing-heading">Simple pricing, fired once a year if you like</h2>
+  <p data-part="description">Every plan includes every theme and every component. Switch to yearly for two months free.</p>
+
+  <div data-part="billing">
+    <div data-ui="toggle-group" data-mode="single" data-variant="segmented" role="radiogroup" aria-label="Billing period">
+      <label data-part="item" data-state="on">
+        <input data-part="control" type="radio" name="billing" value="monthly" checked>
+        <span data-part="label">Monthly</span>
+      </label>
+      <label data-part="item" data-state="off">
+        <input data-part="control" type="radio" name="billing" value="yearly">
+        <span data-part="label">Yearly</span>
+      </label>
+    </div>
+    <span data-ui="badge" data-variant="success">2 months free</span>
+  </div>
+
+  <div data-ui="grid" data-part="tiers" data-cols="1" data-cols-sm="2" data-cols-lg="3" data-gap="6" data-align-rows>
+    <article data-ui="card" data-part="tier" aria-labelledby="tier-studio">
+      <div data-part="header">
+        <h3 data-part="title" id="tier-studio">Studio</h3>
+        <p data-part="description">For one designer and their clients.</p>
+        <div data-ui="stat" data-size="lg">
+          <div data-part="value"><span data-part="monthly">$0</span><span data-part="yearly">$0</span></div>
+          <div data-part="label"><span data-part="monthly">free forever, one project</span><span data-part="yearly">free forever, one project</span></div>
+        </div>
+      </div>
+      <hr data-ui="separator" data-part="divider">
+      <div data-part="body">
+        <ul>
+          <li><span data-ui="icon" data-icon="check" aria-hidden="true"></span>One project, every theme</li>
+          <li><span data-ui="icon" data-icon="check" aria-hidden="true"></span>The full component registry</li>
+          <li><span data-ui="icon" data-icon="check" aria-hidden="true"></span>Community support</li>
+        </ul>
+      </div>
+      <div data-part="footer">
+        <a data-ui="button" data-variant="outline" data-full href="#start-studio">Start free</a>
+      </div>
+    </article>
+
+    <article data-ui="card" data-part="tier" data-state="featured" aria-labelledby="tier-team">
+      <div data-part="header">
+        <span data-ui="stamp" data-variant="primary" data-size="sm">Most fired</span>
+        <h3 data-part="title" id="tier-team">Team</h3>
+        <p data-part="description">For product teams sharing one system.</p>
+        <div data-ui="stat" data-size="lg">
+          <div data-part="value"><span data-part="monthly">$24</span><span data-part="yearly">$20</span></div>
+          <div data-part="label"><span data-part="monthly">per editor / month</span><span data-part="yearly">per editor / month, billed yearly</span></div>
+        </div>
+      </div>
+      <hr data-ui="separator" data-part="divider">
+      <div data-part="body">
+        <ul>
+          <li><span data-ui="icon" data-icon="check" aria-hidden="true"></span>Unlimited projects</li>
+          <li><span data-ui="icon" data-icon="check" aria-hidden="true"></span>Seeded themes and review history</li>
+          <li><span data-ui="icon" data-icon="check" aria-hidden="true"></span>Audit in every pull request</li>
+          <li><span data-ui="icon" data-icon="check" aria-hidden="true"></span>Support within one working day</li>
+        </ul>
+      </div>
+      <div data-part="footer">
+        <a data-ui="button" data-variant="primary" data-effect="shine" data-full href="#start-team">Start 14-day trial</a>
+      </div>
+    </article>
+
+    <article data-ui="card" data-part="tier" aria-labelledby="tier-company">
+      <div data-part="header">
+        <h3 data-part="title" id="tier-company">Company</h3>
+        <p data-part="description">For brands with many products and rules.</p>
+        <div data-ui="stat" data-size="lg">
+          <div data-part="value"><span data-part="monthly">$60</span><span data-part="yearly">$50</span></div>
+          <div data-part="label"><span data-part="monthly">per editor / month</span><span data-part="yearly">per editor / month, billed yearly</span></div>
+        </div>
+      </div>
+      <hr data-ui="separator" data-part="divider">
+      <div data-part="body">
+        <ul>
+          <li><span data-ui="icon" data-icon="check" aria-hidden="true"></span>Everything in Team</li>
+          <li><span data-ui="icon" data-icon="check" aria-hidden="true"></span>Single sign-on and audit log</li>
+          <li><span data-ui="icon" data-icon="check" aria-hidden="true"></span>A named design engineer</li>
+        </ul>
+      </div>
+      <div data-part="footer">
+        <a data-ui="button" data-variant="outline" data-full href="#contact-sales">Talk to us</a>
+      </div>
+    </article>
+  </div>
+
+  <p data-part="footnote">Prices are fictional, like Kiln. Yearly plans are billed once, up front.</p>
+</section>
+</div>
+
+<!-- ── CTA ──────────────────────────────────────────────────────────────── -->
+<div data-ui="container" data-measure="wide" data-gutter="4">
+  <div data-ui="backdrop" data-variant="grid" data-intensity="subtle">
+    <section data-ui="cta" data-variant="center" data-tone="surface" data-transparent aria-labelledby="cta-headline">
+      <p data-part="eyebrow"><span data-ui="stamp" data-shape="round" data-size="sm">Est. 2026</span></p>
+      <h2 data-part="headline" id="cta-headline">Light the <span data-ui="highlight" data-variant="echo">kiln</span>.</h2>
+      <p data-part="description">Bring a logo and a colour. Leave with a theme, a component library and a page you would put your name to.</p>
+      <div data-part="actions">
+        <a data-ui="button" data-variant="primary" data-size="lg" data-effect="arrow" href="#start">Start building free <span data-ui="icon" data-icon="arrow-right" data-part="icon" aria-hidden="true"></span></a>
+        <a data-ui="button" data-variant="ghost" data-size="lg" href="#contact-sales">Book a walkthrough</a>
+      </div>
+    </section>
+  </div>
+</div>
+
+</main>
+
+<!-- ── Footer ───────────────────────────────────────────────────────────── -->
+<div data-ui="container" data-measure="wide" data-gutter="4">
+<footer data-ui="site-footer" data-variant="columns">
+  <div data-part="brand">
+    <p data-part="logo">Kiln</p>
+    <p data-part="tagline">Interfaces, fired to last. A fictional product, built from Faqir parts.</p>
+    <div data-part="social">
+      <a data-ui="link" data-variant="muted" href="#mail" aria-label="Email"><span data-ui="icon" data-icon="mail" aria-hidden="true"></span></a>
+      <a data-ui="link" data-variant="muted" href="#changelog" aria-label="Changelog"><span data-ui="icon" data-icon="bell" aria-hidden="true"></span></a>
+    </div>
+  </div>
+  <div data-part="columns">
+    <div data-part="column">
+      <h2 data-part="column-title" id="foot-product">Product</h2>
+      <nav data-ui="nav" data-variant="vertical" aria-labelledby="foot-product">
+        <a data-part="link" href="#features">Features</a>
+        <a data-part="link" href="#pricing">Pricing</a>
+        <a data-part="link" href="#changelog">Changelog</a>
+      </nav>
+    </div>
+    <div data-part="column">
+      <h2 data-part="column-title" id="foot-company">Company</h2>
+      <nav data-ui="nav" data-variant="vertical" aria-labelledby="foot-company">
+        <a data-part="link" href="#stories">Stories</a>
+        <a data-part="link" href="#careers">Careers</a>
+        <a data-part="link" href="#press">Press</a>
+      </nav>
+    </div>
+    <div data-part="column">
+      <h2 data-part="column-title" id="foot-resources">Resources</h2>
+      <nav data-ui="nav" data-variant="vertical" aria-labelledby="foot-resources">
+        <a data-part="link" href="#docs">Documentation</a>
+        <a data-part="link" href="#themes">Theme gallery</a>
+        <a data-part="link" href="#status">Status</a>
+      </nav>
+    </div>
+  </div>
+  <hr data-ui="separator">
+  <div data-part="bottom">
+    <p data-part="copyright">&copy; 2026 Kiln (fictional). All rights reserved.</p>
+    <div data-part="legal">
+      <nav data-ui="nav" aria-label="Legal">
+        <a data-part="link" href="#privacy">Privacy</a>
+        <a data-part="link" href="#terms">Terms</a>
+      </nav>
+    </div>
+  </div>
+</footer>
+</div>
+<div data-ui="scroll-progress" aria-hidden="true"></div>
+</body>
+</html>

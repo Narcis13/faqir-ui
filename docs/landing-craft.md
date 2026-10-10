@@ -111,7 +111,8 @@ Ranked within each group by how much they lift the ceiling per line of code.
 | Stamps and edition marks ("SOLD OUT", "LOOK 07", "No. 0417") | 003, 006, 043 | `badge` (status colours only) | **shipped** | New `stamp` primitive: rotated, double-ruled, uppercase, in rect or round seal shape. A new component rather than a badge variant, because its shape is a second axis that badge's colour group cannot carry |
 | Ornamental section divider | 015, 085, 008 | `separator` solid/dashed/dotted/thick | **shipped** | `separator[data-style=ornament]`: a centred diamond with rules fading out on both sides; a label replaces the diamond |
 | Drop cap | 008, 085 | none | **shipped** | `text[data-dropcap]`: `initial-letter` where supported, a float fallback otherwise |
-| Pointer spotlight on tiles / 3D tilt with glare | 001, 068, 032 | bento had a static hover pool | **shipped** | New `spotlight` recipe: `light`, `border` and `tilt` effects. Its controller only writes custom properties. It is inert on touch, under reduced motion, in forced colours and in print |
+| Pointer spotlight on tiles | 001, 068 | bento had a static hover pool | **shipped** | New CSS-only `spotlight` primitive, with `light` and `border` effects. It fades in on hover and on focus-within at `--spotlight-x` / `--spotlight-y`. A page makes it follow the pointer with one `@pointermove` directive (the `html_follow` template). It is inert on touch, under reduced motion, in forced colours and in print |
+| 3D tilt toward the pointer with a specular glare | 001, 032 | none | deferred | Tilt needs the pointer's position normalised to the box, so it needs a controller or plugin. The engine's `engine + controllers` budget has no room for one (see below), and the `faqir-pointer` plugin VISION §7.3 plans is outside this change |
 | Marquee strip | 006, 058 | `marquee`, `logo-cloud[data-variant=marquee]` | used | — |
 | Scroll reveal | 008, 043, 096 | `reveal` with `animation-timeline: view()` | used | — |
 | Reading / scroll progress | 008, 014, 043 | `scroll-progress` | used | — |
@@ -143,11 +144,43 @@ Ranked within each group by how much they lift the ceiling per line of code.
 2. `hero[data-variant=cover]` and `hero[data-animate]`: the first frame.
 3. `text[data-size=display]` and `text[data-variant=eyebrow]`: editorial type scale.
 4. `highlight` `foil`, `outline` and `echo`: display-type finishes that carry a theme's character.
-5. `spotlight` (`light`, `border`, `tilt`): the one controller in the set, because CSS cannot read the pointer.
+5. `spotlight` (`light`, `border`): a hover light whose pointer-following is one directive the page opts into.
 6. `button` `arrow` and `sink`: CTA micro-interactions.
 7. `stamp`: edition marks and status seals.
 8. `separator[data-style=ornament]` and `text[data-dropcap]`: editorial ornament.
 9. Four seed themes: `deco`, `clay`, `memphis`, `monolith`.
+
+## Found along the way
+
+Building the showcase from registry parts surfaced five defects in components
+that already existed. Each was fixed at its source:
+
+- **`quote`: every quote after the first drew the nested mark (‘ instead of “).**
+  The mark is `open-quote`, which raises the document's quote depth, and nothing
+  lowered it again. A `no-close-quote` on `::after` fixes it.
+- **`bento`, `reveal` and `highlight`: reduced motion lost the cascade.** Their
+  `animation: none` selectors were less specific than the `[data-animate]` /
+  trigger rules they were meant to cancel, so the entrances still played. Each
+  reduced-motion block now repeats the entrance selectors.
+  `tests/registry/reduced-motion-specificity.test.ts` pins this for every
+  registry stylesheet: an entrance selector must be cancelled at its own
+  specificity, and it fails on the old CSS.
+- **`pricing`: the heading ignored the theme's heading voice**, so it rendered
+  bold and in mixed case under `deco` and `luxe`. It now reads `--heading-weight`,
+  `--heading-tracking`, `--heading-transform` and `--heading-caps`, as `bento`
+  does.
+
+The engine's size budget changed the design of `spotlight`. It was first
+built as a recipe, with a controller that published the pointer position.
+Every recipe controller is assembled into the engine bundle, and that bundle's
+`engine + controllers` budget (46 KB gzip) had about 140 B of room left on the
+CDN build. Even a controller cut to its bare minimum did not fit, and raising a
+budget is not this change's call.
+
+So the light became CSS. It shows on `:hover` and `:focus-within`, and a
+page that wants it to follow the pointer writes the two position properties
+from one `@pointermove` directive, which costs the engine nothing. The 3D
+tilt needs more than that, so it is deferred.
 
 ## Themes and the colour gate
 
