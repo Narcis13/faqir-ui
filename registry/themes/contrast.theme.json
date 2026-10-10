@@ -355,8 +355,8 @@
     "contrast": "high"
   },
   "distinctiveness": {
-    "nearest": "clinical",
-    "axis_distance": 10,
-    "token_distance": 0.0474
+    "nearest": "clay",
+    "axis_distance": 11,
+    "token_distance": 0.0378
   }
 }

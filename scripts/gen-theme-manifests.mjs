@@ -268,6 +268,38 @@ const SEED = {
     pairs_with: ["soft", "candy"],
     fonts: { heading: "nunito", body: "nunito", ui: "nunito" },
   },
+  // The landing-craft four (docs/landing-craft.md): aesthetics the first
+  // twenty-four left empty, each one seed with no signature stylesheet.
+  deco: {
+    version: "1.0.0",
+    mood: ["art-deco", "lacquer", "emerald", "hospitality", "dark"],
+    scheme: "dark",
+    dark_mode: "native",
+    pairs_with: ["luxe"],
+  },
+  clay: {
+    version: "1.0.0",
+    mood: ["claymorphism", "playful", "pastel", "tactile", "rounded"],
+    scheme: "light",
+    dark_mode: "none",
+    pairs_with: ["candy", "neumorph"],
+    fonts: { heading: "nunito", body: "nunito", ui: "nunito" },
+  },
+  memphis: {
+    version: "1.0.0",
+    mood: ["memphis", "postmodern", "bold", "event", "playful"],
+    scheme: "light",
+    dark_mode: "none",
+    pairs_with: ["neo"],
+  },
+  monolith: {
+    version: "1.0.0",
+    mood: ["brutalist-minimal", "architecture", "concrete", "portfolio", "uppercase"],
+    scheme: "light",
+    dark_mode: "none",
+    pairs_with: ["swiss"],
+    fonts: { heading: "inter", body: "inter", ui: "inter" },
+  },
 };
 
 // The base token layer, read twice for two different questions.

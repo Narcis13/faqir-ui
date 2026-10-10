@@ -405,9 +405,9 @@
     "contrast": "high"
   },
   "distinctiveness": {
-    "nearest": "ink",
-    "axis_distance": 9,
-    "token_distance": 0.0388
+    "nearest": "monolith",
+    "axis_distance": 10,
+    "token_distance": 0.0319
   },
   "visual_matrix": false
 }

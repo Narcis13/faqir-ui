@@ -1,0 +1,38 @@
+{
+  "name": "memphis",
+  "accent": "oklch(0.6 0.22 350)",
+  "neutral": "tinted",
+  "scheme": "light",
+  "type": {
+    "pairing": "sans-geometric",
+    "scale": 1.333,
+    "base": 17,
+    "voice": {
+      "weight": "black",
+      "tracking": "tight",
+      "transform": "none"
+    }
+  },
+  "shape": {
+    "radius": "crisp",
+    "border": "heavy",
+    "corner": "round"
+  },
+  "depth": "hard",
+  "material": "dots",
+  "motion": "springy",
+  "density": "comfortable",
+  "focus": "bold",
+  "decoration": {
+    "link": "thick",
+    "divider": "dashed"
+  },
+  "controls": {
+    "button": "rect",
+    "input": "box",
+    "checkbox": "round",
+    "switch": "pill"
+  },
+  "contrast": "high",
+  "document": false
+}

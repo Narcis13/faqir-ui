@@ -13,7 +13,7 @@
 //      (identical, partially different, wholly different) and token distance
 //      over synthetic stylesheets, where identity and symmetry are properties
 //      that must hold rather than numbers someone typed.
-//   2. **The 276 shipped pairs, pinned.** Every pair of the twenty-four shipped
+//   2. **The 378 shipped pairs, pinned.** Every pair of the twenty-eight shipped
 //      themes, with the numbers MEASURED in this task's session. A theme CSS
 //      edit that moves a pair shows up here as a diff, which is the difference
 //      between a deliberate change and drift. A generated theme's PRINT
@@ -328,7 +328,7 @@ describe("token distance · the colour surface, compared", () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// The thresholds, and the 276 shipped pairs they judge
+// The thresholds, and the 378 shipped pairs they judge
 // ═══════════════════════════════════════════════════════════════════════════
 
 describe("thresholds · named, and argued for", () => {
@@ -348,7 +348,7 @@ describe("thresholds · named, and argued for", () => {
 });
 
 /**
- * The 276 shipped pairs, MEASURED and pinned here. The same table is in the
+ * The 378 shipped pairs, MEASURED and pinned here. The same table is in the
  * commit body. A theme CSS change that moves a pair fails this test, which is
  * what makes such a change deliberate rather than drift.
  *
@@ -387,12 +387,22 @@ describe("thresholds · named, and argued for", () => {
  * were a colourway of glass's — so slate's surfaces took the theme's own claim
  * ("cool blue-gray", a dense console rather than a luminous page) and landed at
  * 0.0397. Every other movement in this table is structural.
+ *
+ * The landing-craft batch (docs/landing-craft.md) added `deco`, `clay`,
+ * `memphis` and `monolith`: twenty-eight themes are 378 pairs, the 276 above
+ * were re-measured unchanged, and the 102 new ones clear both bars. The light
+ * colour space is crowded — three of the four needed `contrast: high` and a
+ * `tinted` ground to clear it — and the tightest new pair is
+ * `clinical`/`monolith` at 0.0319, a hair over 1.1A-17's 0.0318. `deco` is
+ * the second dark-only theme, so nine more pairs abstain on colour.
  */
 const SHIPPED_PAIRS: Array<[string, string, number, number | null]> = [
   ["aurora", "brutalist", 11, 0.1961],
   ["aurora", "candy", 9, 0.063],
+  ["aurora", "clay", 12, 0.0788],
   ["aurora", "clinical", 8, 0.0901],
   ["aurora", "contrast", 9, 0.0888],
+  ["aurora", "deco", 14, 0.105],
   ["aurora", "default", 4, 0.0515],
   ["aurora", "document", 11, 0.1238],
   ["aurora", "document-serif", 10, 0.1459],
@@ -401,7 +411,9 @@ const SHIPPED_PAIRS: Array<[string, string, number, number | null]> = [
   ["aurora", "glass", 6, 0.0305],
   ["aurora", "ink", 13, 0.1072],
   ["aurora", "luxe", 8, 0.0997],
+  ["aurora", "memphis", 12, 0.0926],
   ["aurora", "midnight", 4, 0.0416],
+  ["aurora", "monolith", 13, 0.1186],
   ["aurora", "neo", 9, 0.0927],
   ["aurora", "neumorph", 7, 0.0398],
   ["aurora", "nordic", 8, 0.0718],
@@ -413,8 +425,10 @@ const SHIPPED_PAIRS: Array<[string, string, number, number | null]> = [
   ["aurora", "swiss", 9, 0.1039],
   ["aurora", "terminal", 11, 0.1035],
   ["brutalist", "candy", 10, 0.1924],
+  ["brutalist", "clay", 12, 0.1663],
   ["brutalist", "clinical", 9, 0.165],
   ["brutalist", "contrast", 7, 0.1811],
+  ["brutalist", "deco", 10, 0.1698],
   ["brutalist", "default", 10, 0.2047],
   ["brutalist", "document", 8, 0.1184],
   ["brutalist", "document-serif", 8, 0.1245],
@@ -423,7 +437,9 @@ const SHIPPED_PAIRS: Array<[string, string, number, number | null]> = [
   ["brutalist", "glass", 11, 0.1995],
   ["brutalist", "ink", 9, 0.1643],
   ["brutalist", "luxe", 13, 0.1671],
+  ["brutalist", "memphis", 10, 0.1848],
   ["brutalist", "midnight", 12, 0.1942],
+  ["brutalist", "monolith", 11, 0.1727],
   ["brutalist", "neo", 7, 0.1892],
   ["brutalist", "neumorph", 11, 0.1922],
   ["brutalist", "nordic", 11, 0.1843],
@@ -434,8 +450,10 @@ const SHIPPED_PAIRS: Array<[string, string, number, number | null]> = [
   ["brutalist", "sunset", 12, 0.1957],
   ["brutalist", "swiss", 8, 0.1808],
   ["brutalist", "terminal", 11, 0.1988],
+  ["candy", "clay", 11, 0.0548],
   ["candy", "clinical", 10, 0.0777],
   ["candy", "contrast", 9, 0.0874],
+  ["candy", "deco", 12, 0.0963],
   ["candy", "default", 6, 0.0798],
   ["candy", "document", 11, 0.1005],
   ["candy", "document-serif", 11, 0.103],
@@ -444,7 +462,9 @@ const SHIPPED_PAIRS: Array<[string, string, number, number | null]> = [
   ["candy", "glass", 7, 0.0723],
   ["candy", "ink", 13, 0.0586],
   ["candy", "luxe", 11, 0.0738],
+  ["candy", "memphis", 9, 0.0367],
   ["candy", "midnight", 10, 0.0857],
+  ["candy", "monolith", 11, 0.0828],
   ["candy", "neo", 8, 0.0618],
   ["candy", "neumorph", 7, 0.0356],
   ["candy", "nordic", 8, 0.0717],
@@ -455,7 +475,32 @@ const SHIPPED_PAIRS: Array<[string, string, number, number | null]> = [
   ["candy", "sunset", 8, 0.0344],
   ["candy", "swiss", 10, 0.0571],
   ["candy", "terminal", 9, 0.1026],
+  ["clay", "clinical", 13, 0.0339],
+  ["clay", "contrast", 11, 0.0378],
+  ["clay", "deco", 10, null],
+  ["clay", "default", 13, 0.0895],
+  ["clay", "document", 11, 0.075],
+  ["clay", "document-serif", 11, 0.0898],
+  ["clay", "editorial", 13, 0.0479],
+  ["clay", "fintech", 11, 0.0698],
+  ["clay", "glass", 11, 0.078],
+  ["clay", "ink", 12, 0.0468],
+  ["clay", "luxe", 12, null],
+  ["clay", "memphis", 11, 0.0401],
+  ["clay", "midnight", 11, 0.0815],
+  ["clay", "monolith", 9, 0.0617],
+  ["clay", "neo", 11, 0.0801],
+  ["clay", "neumorph", 9, 0.0422],
+  ["clay", "nordic", 11, 0.0633],
+  ["clay", "organic", 13, 0.0696],
+  ["clay", "paper", 13, 0.1024],
+  ["clay", "slate", 13, 0.075],
+  ["clay", "soft", 11, 0.1028],
+  ["clay", "sunset", 12, 0.0763],
+  ["clay", "swiss", 13, 0.0533],
+  ["clay", "terminal", 12, 0.095],
   ["clinical", "contrast", 10, 0.0474],
+  ["clinical", "deco", 10, 0.0346],
   ["clinical", "default", 8, 0.0808],
   ["clinical", "document", 9, 0.0728],
   ["clinical", "document-serif", 9, 0.0911],
@@ -464,7 +509,9 @@ const SHIPPED_PAIRS: Array<[string, string, number, number | null]> = [
   ["clinical", "glass", 9, 0.0833],
   ["clinical", "ink", 9, 0.0388],
   ["clinical", "luxe", 8, 0.0448],
+  ["clinical", "memphis", 11, 0.0589],
   ["clinical", "midnight", 8, 0.0872],
+  ["clinical", "monolith", 10, 0.0319],
   ["clinical", "neo", 11, 0.0693],
   ["clinical", "neumorph", 11, 0.0681],
   ["clinical", "nordic", 7, 0.0508],
@@ -475,6 +522,7 @@ const SHIPPED_PAIRS: Array<[string, string, number, number | null]> = [
   ["clinical", "sunset", 10, 0.0822],
   ["clinical", "swiss", 9, 0.0526],
   ["clinical", "terminal", 11, 0.0865],
+  ["contrast", "deco", 11, 0.0757],
   ["contrast", "default", 5, 0.0731],
   ["contrast", "document", 9, 0.0768],
   ["contrast", "document-serif", 9, 0.0971],
@@ -483,7 +531,9 @@ const SHIPPED_PAIRS: Array<[string, string, number, number | null]> = [
   ["contrast", "glass", 7, 0.0691],
   ["contrast", "ink", 11, 0.0537],
   ["contrast", "luxe", 10, 0.0794],
+  ["contrast", "memphis", 11, 0.0671],
   ["contrast", "midnight", 10, 0.0925],
+  ["contrast", "monolith", 12, 0.0568],
   ["contrast", "neo", 8, 0.092],
   ["contrast", "neumorph", 9, 0.072],
   ["contrast", "nordic", 9, 0.0635],
@@ -494,6 +544,27 @@ const SHIPPED_PAIRS: Array<[string, string, number, number | null]> = [
   ["contrast", "sunset", 9, 0.0988],
   ["contrast", "swiss", 10, 0.08],
   ["contrast", "terminal", 10, 0.0998],
+  ["deco", "default", 14, 0.0911],
+  ["deco", "document", 12, null],
+  ["deco", "document-serif", 11, null],
+  ["deco", "editorial", 11, 0.0657],
+  ["deco", "fintech", 11, 0.0485],
+  ["deco", "glass", 14, 0.1001],
+  ["deco", "ink", 9, null],
+  ["deco", "luxe", 10, 0.036],
+  ["deco", "memphis", 11, null],
+  ["deco", "midnight", 14, 0.0922],
+  ["deco", "monolith", 6, null],
+  ["deco", "neo", 12, 0.0614],
+  ["deco", "neumorph", 13, 0.0943],
+  ["deco", "nordic", 12, 0.0696],
+  ["deco", "organic", 13, 0.063],
+  ["deco", "paper", 12, 0.0973],
+  ["deco", "slate", 12, 0.0903],
+  ["deco", "soft", 13, 0.0836],
+  ["deco", "sunset", 14, 0.0867],
+  ["deco", "swiss", 11, 0.0581],
+  ["deco", "terminal", 10, 0.0855],
   ["default", "document", 9, 0.1221],
   ["default", "document-serif", 9, 0.1516],
   ["default", "editorial", 6, 0.0558],
@@ -501,7 +572,9 @@ const SHIPPED_PAIRS: Array<[string, string, number, number | null]> = [
   ["default", "glass", 4, 0.0415],
   ["default", "ink", 13, 0.1131],
   ["default", "luxe", 8, 0.0972],
+  ["default", "memphis", 12, 0.1139],
   ["default", "midnight", 5, 0.0588],
+  ["default", "monolith", 13, 0.1136],
   ["default", "neo", 8, 0.0905],
   ["default", "neumorph", 7, 0.0543],
   ["default", "nordic", 6, 0.0569],
@@ -518,7 +591,9 @@ const SHIPPED_PAIRS: Array<[string, string, number, number | null]> = [
   ["document", "glass", 10, 0.1176],
   ["document", "ink", 7, 0.084],
   ["document", "luxe", 11, null],
+  ["document", "memphis", 11, 0.102],
   ["document", "midnight", 13, 0.122],
+  ["document", "monolith", 10, 0.0902],
   ["document", "neo", 10, 0.0964],
   ["document", "neumorph", 12, 0.095],
   ["document", "nordic", 11, 0.0787],
@@ -534,7 +609,9 @@ const SHIPPED_PAIRS: Array<[string, string, number, number | null]> = [
   ["document-serif", "glass", 10, 0.1464],
   ["document-serif", "ink", 7, 0.0764],
   ["document-serif", "luxe", 10, null],
+  ["document-serif", "memphis", 11, 0.0976],
   ["document-serif", "midnight", 12, 0.1507],
+  ["document-serif", "monolith", 9, 0.0969],
   ["document-serif", "neo", 11, 0.1048],
   ["document-serif", "neumorph", 11, 0.117],
   ["document-serif", "nordic", 10, 0.1126],
@@ -549,7 +626,9 @@ const SHIPPED_PAIRS: Array<[string, string, number, number | null]> = [
   ["editorial", "glass", 9, 0.0542],
   ["editorial", "ink", 10, 0.0513],
   ["editorial", "luxe", 8, 0.0654],
+  ["editorial", "memphis", 14, 0.0713],
   ["editorial", "midnight", 8, 0.0654],
+  ["editorial", "monolith", 10, 0.0605],
   ["editorial", "neo", 10, 0.039],
   ["editorial", "neumorph", 11, 0.0367],
   ["editorial", "nordic", 7, 0.0324],
@@ -563,7 +642,9 @@ const SHIPPED_PAIRS: Array<[string, string, number, number | null]> = [
   ["fintech", "glass", 8, 0.0754],
   ["fintech", "ink", 13, 0.0578],
   ["fintech", "luxe", 10, 0.0668],
+  ["fintech", "memphis", 13, 0.0909],
   ["fintech", "midnight", 9, 0.0754],
+  ["fintech", "monolith", 10, 0.0484],
   ["fintech", "neo", 10, 0.0318],
   ["fintech", "neumorph", 9, 0.0653],
   ["fintech", "nordic", 9, 0.0325],
@@ -576,7 +657,9 @@ const SHIPPED_PAIRS: Array<[string, string, number, number | null]> = [
   ["fintech", "terminal", 8, 0.0568],
   ["glass", "ink", 13, 0.1049],
   ["glass", "luxe", 11, 0.1023],
+  ["glass", "memphis", 12, 0.1021],
   ["glass", "midnight", 6, 0.0443],
+  ["glass", "monolith", 13, 0.1094],
   ["glass", "neo", 8, 0.0901],
   ["glass", "neumorph", 5, 0.0452],
   ["glass", "nordic", 5, 0.0595],
@@ -588,7 +671,9 @@ const SHIPPED_PAIRS: Array<[string, string, number, number | null]> = [
   ["glass", "swiss", 10, 0.1098],
   ["glass", "terminal", 11, 0.0962],
   ["ink", "luxe", 10, null],
+  ["ink", "memphis", 10, 0.0469],
   ["ink", "midnight", 13, 0.1122],
+  ["ink", "monolith", 8, 0.0372],
   ["ink", "neo", 12, 0.0554],
   ["ink", "neumorph", 13, 0.0743],
   ["ink", "nordic", 13, 0.0729],
@@ -599,7 +684,9 @@ const SHIPPED_PAIRS: Array<[string, string, number, number | null]> = [
   ["ink", "sunset", 11, 0.0503],
   ["ink", "swiss", 10, 0.0377],
   ["ink", "terminal", 12, 0.0741],
+  ["luxe", "memphis", 13, null],
   ["luxe", "midnight", 10, 0.1063],
+  ["luxe", "monolith", 10, null],
   ["luxe", "neo", 13, 0.0597],
   ["luxe", "neumorph", 12, 0.087],
   ["luxe", "nordic", 9, 0.0878],
@@ -610,6 +697,19 @@ const SHIPPED_PAIRS: Array<[string, string, number, number | null]> = [
   ["luxe", "sunset", 8, 0.0578],
   ["luxe", "swiss", 12, 0.0344],
   ["luxe", "terminal", 12, 0.1003],
+  ["memphis", "midnight", 12, 0.1055],
+  ["memphis", "monolith", 11, 0.0731],
+  ["memphis", "neo", 11, 0.0898],
+  ["memphis", "neumorph", 11, 0.0573],
+  ["memphis", "nordic", 13, 0.0949],
+  ["memphis", "organic", 14, 0.0719],
+  ["memphis", "paper", 13, 0.0945],
+  ["memphis", "slate", 14, 0.0997],
+  ["memphis", "soft", 12, 0.1168],
+  ["memphis", "sunset", 12, 0.0598],
+  ["memphis", "swiss", 11, 0.032],
+  ["memphis", "terminal", 12, 0.1086],
+  ["midnight", "monolith", 13, 0.1181],
   ["midnight", "neo", 10, 0.0912],
   ["midnight", "neumorph", 7, 0.062],
   ["midnight", "nordic", 8, 0.0635],
@@ -620,6 +720,16 @@ const SHIPPED_PAIRS: Array<[string, string, number, number | null]> = [
   ["midnight", "sunset", 7, 0.1016],
   ["midnight", "swiss", 10, 0.1207],
   ["midnight", "terminal", 11, 0.0966],
+  ["monolith", "neo", 11, 0.0489],
+  ["monolith", "neumorph", 11, 0.0875],
+  ["monolith", "nordic", 10, 0.0649],
+  ["monolith", "organic", 11, 0.0474],
+  ["monolith", "paper", 11, 0.0964],
+  ["monolith", "slate", 12, 0.0865],
+  ["monolith", "soft", 12, 0.0862],
+  ["monolith", "sunset", 12, 0.0712],
+  ["monolith", "swiss", 12, 0.057],
+  ["monolith", "terminal", 9, 0.0562],
   ["neo", "neumorph", 8, 0.0714],
   ["neo", "nordic", 9, 0.0551],
   ["neo", "organic", 11, 0.0361],
@@ -693,7 +803,7 @@ const SHIPPED_PAIRS: Array<[string, string, number, number | null]> = [
  */
 const OBLIGATIONS: Record<string, "axis" | "token" | "axis+token"> = {};
 
-describe("the 276 shipped pairs, measured and pinned", () => {
+describe("the 378 shipped pairs, measured and pinned", () => {
   const measured = new Map<string, ReturnType<typeof distinctiveness>>();
   for (let i = 0; i < SHIPPED.length; i++) {
     for (let j = i + 1; j < SHIPPED.length; j++) {
@@ -701,9 +811,9 @@ describe("the 276 shipped pairs, measured and pinned", () => {
     }
   }
 
-  it("covers every pair exactly once — 24 themes is 276 pairs", () => {
-    expect(SHIPPED.length).toBe(24);
-    expect(measured.size).toBe((24 * 23) / 2);
+  it("covers every pair exactly once — 28 themes is 378 pairs", () => {
+    expect(SHIPPED.length).toBe(28);
+    expect(measured.size).toBe((28 * 27) / 2);
     expect(SHIPPED_PAIRS.length).toBe(measured.size);
     expect(SHIPPED_PAIRS.map(([a, b]) => `${a}/${b}`).sort()).toEqual([...measured.keys()].sort());
   });
@@ -771,19 +881,20 @@ describe("the 276 shipped pairs, measured and pinned", () => {
     // 1.1A-17 another 123: twelve generated themes went in without eating
     // anyone's margin. The closest NEW pair is recorded beside them so the
     // next batch has a number to beat — 1.1A-16 left 0.0334
-    // (`editorial`/`organic`), and this batch's tightest is `fintech`/`neo`.
-    const newest = new Set(["clinical", "fintech", "nordic", "sunset", "ink", "neumorph"]);
+    // (`editorial`/`organic`), 1.1A-17 left 0.0318 (`fintech`/`neo`), and the
+    // landing-craft batch's tightest is `clinical`/`monolith`.
+    const newest = new Set(["clay", "deco", "memphis", "monolith"]);
     const involvesNew = ([pair]: [string, unknown]) => pair.split("/").some((n) => newest.has(n));
     const newMin = [...measured]
       .filter(involvesNew)
       .map(([pair, r]) => [pair, r.token_distance] as const)
       .filter((row): row is readonly [string, number] => row[1] != null)
       .sort((x, y) => x[1] - y[1])[0];
-    expect(newMin).toEqual(["fintech/neo", 0.0318]);
+    expect(newMin).toEqual(["clinical/monolith", 0.0319]);
     const newAxisMin = Math.min(
       ...[...measured].filter(involvesNew).map(([, r]) => r.axis_distance),
     );
-    expect(newAxisMin).toBe(5);
+    expect(newAxisMin).toBe(6);
   });
 
   it("abstains rather than inventing a number when two themes share no scheme", () => {
@@ -795,7 +906,22 @@ describe("the 276 shipped pairs, measured and pinned", () => {
       .filter(([, r]) => r.token_distance == null)
       .map(([pair]) => pair)
       .sort();
-    expect(abstained).toEqual(["document-serif/luxe", "document/luxe", "ink/luxe"]);
+    // The landing-craft batch adds `deco`, a second dark-only theme, and three
+    // light-only ones (`clay`, `memphis`, `monolith`): nine more such pairs.
+    expect(abstained).toEqual([
+      "clay/deco",
+      "clay/luxe",
+      "deco/document",
+      "deco/document-serif",
+      "deco/ink",
+      "deco/memphis",
+      "deco/monolith",
+      "document-serif/luxe",
+      "document/luxe",
+      "ink/luxe",
+      "luxe/memphis",
+      "luxe/monolith",
+    ]);
     for (const pair of abstained) {
       const result = measured.get(pair)!;
       expect(result.schemes).toEqual([]);
@@ -816,17 +942,21 @@ describe("the 276 shipped pairs, measured and pinned", () => {
       aurora: "glass",
       brutalist: "document",
       candy: "sunset",
-      clinical: "ink",
-      contrast: "clinical",
+      clay: "clinical",
+      clinical: "monolith",
+      contrast: "clay",
+      deco: "clinical",
       default: "glass",
       document: "document-serif",
       "document-serif": "document",
       editorial: "nordic",
       fintech: "neo",
       glass: "aurora",
-      ink: "organic",
+      ink: "monolith",
       luxe: "swiss",
+      memphis: "swiss",
       midnight: "aurora",
+      monolith: "clinical",
       neo: "fintech",
       neumorph: "candy",
       nordic: "editorial",
@@ -835,8 +965,8 @@ describe("the 276 shipped pairs, measured and pinned", () => {
       slate: "glass",
       soft: "editorial",
       sunset: "organic",
-      swiss: "luxe",
-      terminal: "fintech",
+      swiss: "memphis",
+      terminal: "monolith",
     });
     // A theme is never its own neighbour, however small the set.
     for (const subject of SHIPPED) {
@@ -851,7 +981,7 @@ describe("the 276 shipped pairs, measured and pinned", () => {
 // The print companions, and why they are not peers                 [1.1A-16]
 // ═══════════════════════════════════════════════════════════════════════════
 //
-// The gate above judges twenty-four themes, not the twenty-seven stylesheets in
+// The gate above judges twenty-eight themes, not the thirty-one stylesheets in
 // `registry/themes`. The three it leaves out are the `<name>-document` companions
 // a seed with `document: true` produces — and the exclusion is not a threshold
 // anybody lowered but a fact about the GENERATOR, measured here so that it stays
@@ -932,7 +1062,7 @@ describe("print companions are excluded, and the numbers say why [1.1A-16]", () 
   });
 
   it("the exclusion buys nothing else — every companion still passes every other theme gate", () => {
-    // What is waived is membership of the 276-pair table and nothing more: a
+    // What is waived is membership of the 378-pair table and nothing more: a
     // companion is still a valid, schema-clean manifest whose tokens match its
     // CSS, which `tests/themes/manifest.test.ts` checks for all twenty files.
     for (const name of COMPANION_NAMES) {

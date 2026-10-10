@@ -1,0 +1,38 @@
+{
+  "name": "monolith",
+  "accent": "oklch(0.55 0.14 145)",
+  "neutral": "tinted",
+  "scheme": "light",
+  "type": {
+    "pairing": "sans-grotesque",
+    "scale": 1.333,
+    "base": 17,
+    "voice": {
+      "weight": "bold",
+      "tracking": "tight",
+      "transform": "uppercase"
+    }
+  },
+  "shape": {
+    "radius": "sharp",
+    "border": "hairline",
+    "corner": "round"
+  },
+  "depth": "flat",
+  "material": "grain",
+  "motion": "minimal",
+  "density": "spacious",
+  "focus": "inset",
+  "decoration": {
+    "link": "offset",
+    "divider": "solid"
+  },
+  "controls": {
+    "button": "rect",
+    "input": "underline",
+    "checkbox": "square",
+    "switch": "square"
+  },
+  "contrast": "high",
+  "document": false
+}

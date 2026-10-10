@@ -1471,7 +1471,7 @@ Reach it as `$ui.<method>()` from any expression inside this component, or as th
 
 _kind: recipe · category: forms · controller: createToggleGroup()_
 
-Single- or multi-select group of toggle buttons over native radio/checkbox controls, with roving-tabindex keyboard navigation and native l-model binding
+Single- or multi-select group of toggle buttons over native radio/checkbox controls, with roving-tabindex keyboard navigation and native l-model binding. A segmented style turns a single-select group into one track with a sliding thumb — the monthly/yearly switch of a pricing page — in pure CSS.
 
 ```html
 <div data-ui="toggle-group" data-mode="{mode}" role="radiogroup" aria-label="{label}">
@@ -1494,6 +1494,7 @@ Single- or multi-select group of toggle buttons over native radio/checkbox contr
 | Variant | Values | Default | Attribute | Applied to |
 |---------|--------|---------|-----------|------------|
 | mode | `single`, `multi` | `single` | `data-mode` | root |
+| style | `default`, `segmented` | `default` | `data-variant` | root |
 
 **Controller API**
 
@@ -1506,8 +1507,8 @@ Reach it as `$ui.<method>()` from any expression inside this component, or as th
 | `toggle(value)` | — |
 | `destroy()` | — |
 
-- **Safe transforms:** `add-item`, `remove-item`, `change-mode`, `change-label-text`, `add-disabled`, `remove-disabled`, `restyle-item-background`
-- **Unsafe (never do):** `remove-control-input`, `change-control-from-native-input`, `remove-role-radiogroup-or-group`, `remove-accessible-name`, `remove-keyboard-navigation`
+- **Safe transforms:** `add-item`, `remove-item`, `change-mode`, `change-label-text`, `add-disabled`, `remove-disabled`, `restyle-item-background`, `change-style-to-segmented-in-single-mode`, `change-style-to-default`
+- **Unsafe (never do):** `remove-control-input`, `change-control-from-native-input`, `remove-role-radiogroup-or-group`, `remove-accessible-name`, `remove-keyboard-navigation`, `use-segmented-style-in-multi-mode`, `put-more-than-six-items-in-a-segmented-group`, `put-non-item-children-in-a-segmented-group`
 - **A11y:** keys: Tab, ArrowRight/ArrowDown, ArrowLeft/ArrowUp, Home/End, Space/Enter
 - **Required ARIA:** `role="radiogroup" on root in single mode; role="group" in multi mode`; `aria-label (or aria-labelledby) on root`; `type="radio" on each control in single mode; type="checkbox" in multi mode`; `a wrapping <label> (or aria-label) giving every control an accessible name`
 

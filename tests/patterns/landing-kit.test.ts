@@ -168,7 +168,10 @@ describe("landing kit — manifests document composition and slots", () => {
           .filter((n) => n !== pattern),
       );
       for (const declared of m.composition.contains) {
-        expect(existsSync(join(REGISTRY, "primitives", declared)), `${declared} is a registry component`).toBe(true);
+        // A primitive, or a recipe (pricing's billing switch is a toggle-group).
+        const isComponent =
+          existsSync(join(REGISTRY, "primitives", declared)) || existsSync(join(REGISTRY, "recipes", declared));
+        expect(isComponent, `${declared} is a registry component`).toBe(true);
         expect(nested.has(declared), `${pattern} reference page nests ${declared}`).toBe(true);
       }
       for (const actual of nested) {

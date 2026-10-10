@@ -1,0 +1,38 @@
+{
+  "name": "deco",
+  "accent": "oklch(0.62 0.15 155)",
+  "neutral": "tinted",
+  "scheme": "dark",
+  "type": {
+    "pairing": "serif-modern",
+    "scale": 1.333,
+    "base": 17,
+    "voice": {
+      "weight": "regular",
+      "tracking": "wide",
+      "transform": "uppercase"
+    }
+  },
+  "shape": {
+    "radius": "sharp",
+    "border": "regular",
+    "corner": "round"
+  },
+  "depth": "flat",
+  "material": "stripes",
+  "motion": "minimal",
+  "density": "spacious",
+  "focus": "bold",
+  "decoration": {
+    "link": "thick",
+    "divider": "double"
+  },
+  "controls": {
+    "button": "rect",
+    "input": "underline",
+    "checkbox": "square",
+    "switch": "square"
+  },
+  "contrast": "high",
+  "document": false
+}

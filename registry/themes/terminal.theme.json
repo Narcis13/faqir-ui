@@ -364,8 +364,8 @@
     }
   ],
   "distinctiveness": {
-    "nearest": "fintech",
-    "axis_distance": 8,
-    "token_distance": 0.0568
+    "nearest": "monolith",
+    "axis_distance": 9,
+    "token_distance": 0.0562
   }
 }

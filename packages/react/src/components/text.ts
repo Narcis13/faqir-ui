@@ -5,10 +5,10 @@ import { createFaqirPrimitive } from "../runtime.js";
 import type { ComponentPropsWithoutRef } from "react";
 
 /** Allowed `variant` values (manifest variant group "variant", attr `data-variant`). */
-export type LTextVariant = "default" | "muted" | "subtle" | "primary" | "mono";
+export type LTextVariant = "default" | "muted" | "subtle" | "primary" | "mono" | "eyebrow";
 
 /** Allowed `size` values (manifest variant group "size", attr `data-size`). */
-export type LTextSize = "xs" | "sm" | "base" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "1" | "2" | "3" | "4" | "5" | "6";
+export type LTextSize = "xs" | "sm" | "base" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "display" | "1" | "2" | "3" | "4" | "5" | "6";
 
 /** Allowed `weight` values (manifest variant group "weight", attr `data-weight`). */
 export type LTextWeight = "normal" | "medium" | "semibold" | "bold";
@@ -19,7 +19,7 @@ export type LTextAlign = "left" | "center" | "right";
 /** Allowed `leading` values (manifest variant group "leading", attr `data-leading`). */
 export type LTextLeading = "tight" | "snug" | "normal" | "relaxed";
 
-export interface LTextProps extends Omit<ComponentPropsWithoutRef<"p">, "variant" | "size" | "weight" | "align" | "leading" | "done" | "truncate" | "tabular"> {
+export interface LTextProps extends Omit<ComponentPropsWithoutRef<"p">, "variant" | "size" | "weight" | "align" | "leading" | "done" | "truncate" | "dropcap" | "tabular"> {
   /** `data-variant`; omitted when unset (manifest default: "default"). */
   variant?: LTextVariant;
   /** `data-size`; omitted when unset (manifest default: "base"). */
@@ -34,6 +34,8 @@ export interface LTextProps extends Omit<ComponentPropsWithoutRef<"p">, "variant
   done?: boolean;
   /** Clip overflowing text to a single line with an ellipsis */
   truncate?: boolean;
+  /** Set the first letter of the paragraph as an ornamental drop cap three lines tall (initial-letter where supported, a float elsewhere), in the heading face and the primary colour. Text only; on a paragraph, not a one-line label */
+  dropcap?: boolean;
   /** Lay the text out as an aligned column at least --text-tabular-width wide (8ch by default) with tabular figures — for label/value lists */
   tabular?: boolean;
 }
@@ -43,8 +45,8 @@ export const LText = createFaqirPrimitive<LTextProps>({
   name: "text",
   tag: "p",
   variants: [
-    { prop: "variant", attr: "data-variant", values: ["default", "muted", "subtle", "primary", "mono"] },
-    { prop: "size", attr: "data-size", values: ["xs", "sm", "base", "lg", "xl", "2xl", "3xl", "4xl", "1", "2", "3", "4", "5", "6"] },
+    { prop: "variant", attr: "data-variant", values: ["default", "muted", "subtle", "primary", "mono", "eyebrow"] },
+    { prop: "size", attr: "data-size", values: ["xs", "sm", "base", "lg", "xl", "2xl", "3xl", "4xl", "display", "1", "2", "3", "4", "5", "6"] },
     { prop: "weight", attr: "data-weight", values: ["normal", "medium", "semibold", "bold"] },
     { prop: "align", attr: "data-align", values: ["left", "center", "right"] },
     { prop: "leading", attr: "data-leading", values: ["tight", "snug", "normal", "relaxed"] },
@@ -52,6 +54,7 @@ export const LText = createFaqirPrimitive<LTextProps>({
   states: [
     { prop: "done", attr: "data-state", value: "done", kind: "value" },
     { prop: "truncate", attr: "data-truncate", value: null, kind: "presence" },
+    { prop: "dropcap", attr: "data-dropcap", value: null, kind: "presence" },
     { prop: "tabular", attr: "data-tabular", value: null, kind: "presence" },
   ],
   slots: [],

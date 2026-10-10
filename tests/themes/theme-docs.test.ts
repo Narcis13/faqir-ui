@@ -92,9 +92,10 @@ describe("describe.ts — reading axes", () => {
     expect(themeKind(editorial)).toBe("generated");
     expect(themeKind(glass)).toBe("authored");
     expect(themeKind(companion)).toBe("companion");
-    // Twelve of each, plus the three companions the seeds with `document: true` bring.
+    // Twelve authored, sixteen generated, plus the three companions the seeds
+    // with `document: true` bring.
     const kinds = manifests.map(themeKind);
-    expect(kinds.filter((k) => k === "generated").length).toBe(12);
+    expect(kinds.filter((k) => k === "generated").length).toBe(16);
     expect(kinds.filter((k) => k === "authored").length).toBe(12);
     expect(kinds.filter((k) => k === "companion").length).toBe(3);
   });
@@ -173,11 +174,11 @@ describe("README.md carries the generated theme blocks", () => {
     expect(docBlockDrift(readme, blocks)).toEqual([]);
   });
 
-  it("tables the twenty-four themes with their axes, and names the companions apart", () => {
+  it("tables the twenty-eight themes with their axes, and names the companions apart", () => {
     const table = blocks["theme-table"]!;
     const rows = table.split("\n").filter((l) => /^\| `/.test(l));
     expect(rows.length).toBe(withAxes.length);
-    expect(withAxes.length).toBe(24);
+    expect(withAxes.length).toBe(28);
     for (const m of withAxes) {
       const row = rows.find((l) => l.startsWith(`| \`${m.name}\` |`))!;
       expect(row, m.name).toBeDefined();

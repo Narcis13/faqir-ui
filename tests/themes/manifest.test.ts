@@ -464,18 +464,18 @@ describe("theme manifest · the optional 1.1 fields", () => {
         expect(manifest.seed.name).toBe(name);
       }
     }
-    // The twelve authored themes of 1.0 are all still authored, and the twelve
-    // generated ones — six from 1.1A-16, six from 1.1A-17 — are named, so a
-    // hand-edit to a generated stylesheet cannot quietly reclassify it as
-    // authored by deleting its seed.
+    // The twelve authored themes of 1.0 are all still authored, and the sixteen
+    // generated ones — six from 1.1A-16, six from 1.1A-17, four from the
+    // landing-craft batch — are named, so a hand-edit to a generated stylesheet
+    // cannot quietly reclassify it as authored by deleting its seed.
     expect(kinds.authored.length).toBe(12);
     expect(kinds.generated).toEqual([
-      "candy", "clinical", "editorial", "fintech", "ink", "luxe",
-      "neo", "neumorph", "nordic", "organic", "sunset", "swiss",
+      "candy", "clay", "clinical", "deco", "editorial", "fintech", "ink", "luxe",
+      "memphis", "monolith", "neo", "neumorph", "nordic", "organic", "sunset", "swiss",
     ]);
     expect(kinds.companion).toEqual(["editorial-document", "ink-document", "swiss-document"]);
     // The field has a writer: exactly the themes the editorial seed gives a face.
-    expect(withFonts.sort()).toEqual(["candy", "editorial", "neo", "neumorph", "swiss", "terminal"]);
+    expect(withFonts.sort()).toEqual(["candy", "clay", "editorial", "monolith", "neo", "neumorph", "swiss", "terminal"]);
   });
 
   it("holds every shipped theme's axes to the full derived-block rules", () => {

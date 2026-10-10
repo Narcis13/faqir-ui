@@ -438,7 +438,7 @@ describe("CLI ↔ browser finding parity", () => {
           api.auditComponentCss({ css: f.css, manifest: f.manifest }).map((r) => r.message),
         ),
       ).toEqual([]);
-      expect(registryPairs.length).toBe(103);
+      expect(registryPairs.length).toBe(105);
     });
 
     it("honours skipRules and defaults the file label to the component's sheet", () => {

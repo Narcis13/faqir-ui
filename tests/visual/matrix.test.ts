@@ -210,18 +210,22 @@ describe("matrix membership policy (1.1A-13)", () => {
       expect(isMatrixTheme(manifest)).toBe(true);
     }
     // The twelve authored themes of 1.0 are all still here and all still
-    // members; the twelve generated ones (1.1A-16's six, 1.1A-17's six) and
-    // their three companions are the ones that are not.
+    // members; the sixteen generated ones (1.1A-16's six, 1.1A-17's six, the
+    // landing-craft four) and their three companions are the ones that are not.
     expect(authored.length).toBe(12);
     expect(generated.sort()).toEqual([
       "candy",
+      "clay",
       "clinical",
+      "deco",
       "editorial",
       "editorial-document",
       "fintech",
       "ink",
       "ink-document",
       "luxe",
+      "memphis",
+      "monolith",
       "neo",
       "neumorph",
       "nordic",
@@ -250,11 +254,11 @@ describe("matrix membership policy (1.1A-13)", () => {
     expect(per("fixture-reduced")).toBe(patterns.length * 2);
   });
 
-  test("a non-matrix theme costs 46 captures, not 412", () => {
+  test("a non-matrix theme costs 46 captures, not 420", () => {
     const components = discoverComponents();
     const cases = buildMatrix(components, ["reduced"], () => ({ visual_matrix: false }));
-    expect(components.length).toBe(103);
-    expect(components.length * SCHEMES.length * DIRECTIONS.length).toBe(412);
+    expect(components.length).toBe(105);
+    expect(components.length * SCHEMES.length * DIRECTIONS.length).toBe(420);
     expect(cases.length).toBe(46);
   });
 

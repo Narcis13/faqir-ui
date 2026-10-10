@@ -1,10 +1,18 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "highlight",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "kind": "primitive",
   "category": "typography",
-  "description": "Inline emphasis for the words a headline wants read first: accent-gradient text, a highlighter marker, a drawn underline, or a shimmer. Every effect is a background under or clipped to real text — selectable, searchable, announced once — and each can play its motion (pan, draw-in) from tokens. Pure CSS; restores plain text under forced colours.",
+  "description": "Inline emphasis for the words a headline wants read first: accent-gradient text, a highlighter marker, a drawn underline, a shimmer, metallic foil, outlined display type or a two-colour echo. Every effect is a background, stroke or shadow on real text — selectable, searchable, announced once — and each can play its motion (pan, draw-in, glint) from tokens. Pure CSS; restores plain text under forced colours.",
+
+  "changes": [
+    {
+      "version": "1.1.0",
+      "note": "Three more values for the style group, for display type on landing pages. foil: metallic text, a banded gradient built from the primary ramp (--color-primary, -hover and -active, which step away from the page in either scheme) clipped to the glyphs, with a slow glint that pans under prefers-reduced-motion: no-preference only; plain primary text where background-clip is unsupported. outline: transparent fill and a --border-width-strong stroke in the ink colour, inside an @supports (-webkit-text-stroke) guard so an unsupporting browser shows solid text. echo: two hard text-shadow copies at 0.04em and 0.08em, in the ink colour and in --highlight-echo (warning by default). All three drop to plain text under forced colours. Fixed alongside: the reduced-motion and forced-colours rules now name the [data-animate] and gradient/shimmer selectors they cancel — at their own specificity they had lost, so gradient pans and marker draws still played under reduced motion. New custom-property knob --highlight-echo. No change for the existing values.",
+      "breaking": false
+    }
+  ],
 
   "anatomy": {
     "tag": "span",
@@ -16,7 +24,7 @@
 
   "variants": {
     "style": {
-      "values": ["gradient", "shimmer", "marker", "underline"],
+      "values": ["gradient", "shimmer", "marker", "underline", "foil", "outline", "echo"],
       "default": "gradient",
       "attr": "data-variant",
       "applied_to": "root"
@@ -28,12 +36,17 @@
       "type": "boolean",
       "default": false,
       "attr": "data-animate",
-      "description": "Play the variant's motion: the gradient pans back and forth, the marker and the underline are drawn in once from the start of the line. Shimmer always moves and ignores this."
+      "description": "Play the variant's motion: the gradient pans back and forth, the marker and the underline are drawn in once from the start of the line. Shimmer and foil always move (until reduced motion) and ignore this; outline and echo are static."
     },
     "--highlight-color": {
       "type": "string",
       "default": "var(--color-primary)",
-      "description": "Ink of the marker and the underline (custom property). Pass a colour token."
+      "description": "Ink of the marker, the underline, the outline's stroke and the echo's first shadow (custom property). Pass a colour token."
+    },
+    "--highlight-echo": {
+      "type": "string",
+      "default": "var(--color-warning)",
+      "description": "With the echo style: colour of the second, farther shadow (custom property). Pass a colour token."
     },
     "--highlight-gradient": {
       "type": "string",
@@ -52,14 +65,15 @@
   },
 
   "a11y": {
-    "notes": "Purely visual: a highlight is a span with no role, and the text inside is the only text there is. Gradient and shimmer set the fill transparent and paint the glyphs with a background, so their contrast is the gradient's contrast against the page — keep both gradient stops at 4.5:1 against the surface, or use the highlight on large text only. Marker and underline leave the text colour alone. Forced colours remove the effect and restore the system text colour.",
+    "notes": "Purely visual: a highlight is a span with no role, and the text inside is the only text there is. Gradient and shimmer set the fill transparent and paint the glyphs with a background, so their contrast is the gradient's contrast against the page — keep both gradient stops at 4.5:1 against the surface, or use the highlight on large text only. Marker and underline leave the text colour alone. Foil, outline and echo are decorative treatments of real text, never a second copy of it: the words stay selectable, searchable and read once. Foil is gradient text, so hold it to the same rule, display size only; its bands are the primary ramp and keep at least about 3:1 against the page on the default theme. Outline has a transparent fill, so its legibility is the stroke's contrast against the page: use it at display size on a plain ground, never on body text or a busy image. Echo keeps the text colour, so its legibility is unchanged; the two shadow colours are decoration. Forced colours remove every one of these effects and restore the system text colour.",
     "keyboard": {}
   },
 
   "tokens_used": [
-    "color-primary", "color-info", "color-fg-muted", "color-fg", "motion-ambient-duration",
+    "color-primary", "color-info", "color-fg-muted", "color-fg", "color-primary-active",
+    "color-primary-hover", "color-bg", "color-warning", "motion-ambient-duration",
     "motion-ambient-play", "motion-reveal-duration", "motion-reveal-ease", "ease-in-out",
-    "ease-linear", "radius-sm", "border-width-lg", "duration-slow"
+    "ease-linear", "radius-sm", "border-width-lg", "border-width-strong", "duration-slow"
   ],
 
   "templates": {
@@ -107,6 +121,9 @@
     "wrapped-highlights-restart-per-line",
     "animate-draws-marker-and-underline-once",
     "reduced-motion-restores-shimmer-ink",
-    "forced-colors-restore-plain-text"
+    "forced-colors-restore-plain-text",
+    "foil-glint-only-under-no-preference",
+    "outline-is-guarded-by-supports-text-stroke",
+    "echo-offsets-are-em-relative"
   ]
 }

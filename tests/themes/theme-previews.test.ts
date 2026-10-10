@@ -45,7 +45,7 @@ function referencedFiles(html: string): string[] {
 
 describe("shipped theme previews", () => {
   it("ships one for every theme, and every manifest points at a file that is there", () => {
-    expect(themeNames.length).toBe(27);
+    expect(themeNames.length).toBe(31);
     for (const name of themeNames) {
       const manifest = manifestOf(name);
       expect(validateThemeManifest(manifest)).toEqual([]);
