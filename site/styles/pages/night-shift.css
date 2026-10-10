@@ -87,15 +87,31 @@
   box-shadow: 0 0 0 calc(var(--space-1) / 2) color-mix(in oklch, var(--color-primary) 30%, var(--color-bg));
 }
 
-/* the connector rule between one step and the next */
-[data-docs-night-step]:not(:last-child)::after {
-  content: "";
-  position: absolute;
-  inset-block-start: 0;
-  inset-inline-start: calc(var(--space-4) + var(--night-step-dot));
-  inline-size: calc(100% - var(--space-4) - var(--night-step-dot) + var(--space-4));
-  border-block-start: 1px dashed color-mix(in oklch, var(--color-primary) 45%, var(--color-border));
-  pointer-events: none;
+/* The connector rule between one step and the next. It only reads as a
+   connector when the five steps sit on one row, so it is drawn only at the
+   width that guarantees that row; a wrapped grid keeps just the numbered dots
+   (a rule off the end of a wrapped row would point at nothing). In between,
+   three and two rather than four and a stray fifth. */
+@media (min-width: 64rem) {
+  [data-docs-night-loop] {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 82rem) {
+  [data-docs-night-loop] {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  [data-docs-night-step]:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: calc(var(--space-4) + var(--night-step-dot));
+    inline-size: calc(100% - var(--space-4) - var(--night-step-dot) + var(--space-4));
+    border-block-start: 1px dashed color-mix(in oklch, var(--color-primary) 45%, var(--color-border));
+    pointer-events: none;
+  }
 }
 
 [data-docs-night-step-name] {

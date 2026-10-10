@@ -1781,18 +1781,41 @@ ${input.body}
 // Manifest-derived sections
 // ---------------------------------------------------------------------------
 
-/** A `<table>` with a header row, or an italic note when there is nothing to show. */
-export function table(headers: string[], rows: string[][], emptyNote: string): string {
+/**
+ * A `<table>` with a header row, or an italic note when there is nothing to show.
+ *
+ * The table sits in its own `[data-docs-table]` scroller: on a phone a reference
+ * table (`<code>` cells have a long min-content) is wider than the column, and
+ * the docs shell scrolls inside `<main>`, so without a scroller of its own the
+ * whole page would scroll sideways. `tabindex="0"` keeps that scroller reachable
+ * from the keyboard, the same convention as every `<pre>` on the site.
+ *
+ * Code in a table cell does not wrap (`data-variant="default"` split after
+ * `data-` reads as two tokens). `wrap` opts a table of long values — a shadow,
+ * a font stack — out of that for every column but the first.
+ */
+export function table(
+  headers: string[],
+  rows: string[][],
+  emptyNote: string,
+  opts: { wrap?: boolean } = {},
+): string {
   if (rows.length === 0) return `      <p><em>${esc(emptyNote)}</em></p>`;
   const head = headers.map((h) => `<th scope="col">${esc(h)}</th>`).join("");
   const body = rows
     .map((r) => `        <tr>${r.map((cell) => `<td>${cell}</td>`).join("")}</tr>`)
     .join("\n");
-  return `      <table>\n        <thead><tr>${head}</tr></thead>\n        <tbody>\n${body}\n        </tbody>\n      </table>`;
+  const scroller = opts.wrap ? `data-docs-table="wrap"` : `data-docs-table`;
+  return `      <div ${scroller} tabindex="0">\n      <table>\n        <thead><tr>${head}</tr></thead>\n        <tbody>\n${body}\n        </tbody>\n      </table>\n      </div>`;
 }
 
 export function code(value: string): string {
   return `<code>${esc(value)}</code>`;
+}
+
+/** `1 pattern`, `2 patterns` — a count with its noun agreeing. */
+export function plural(count: number, noun: string): string {
+  return `${count} ${noun}${count === 1 ? "" : "s"}`;
 }
 
 /**
@@ -1835,7 +1858,7 @@ function renderSlotTable(m: Manifest): string {
     code(slot.selector),
     slot.tag_hint ? code(`<${slot.tag_hint}>`) : "—",
     slot.required ? "required" : "optional",
-    esc(slot.description ?? ""),
+    inlineMarkdown(slot.description ?? ""),
   ]);
   return table(
     ["Slot", "Selector", "Tag hint", "Required", "Description"],
@@ -1878,7 +1901,7 @@ function renderStateTable(m: Manifest): string {
     s.attr ? code(s.attr) : "—",
     s.default ? "yes" : "no",
     code(s.applied_to ?? "root"),
-    esc(s.description ?? ""),
+    inlineMarkdown(s.description ?? ""),
   ]);
   return table(
     ["State", "Attribute", "Default", "Applied to", "Description"],
@@ -1896,7 +1919,12 @@ function renderA11yTable(m: Manifest): string {
   if (a.escape_closes) rows.push(["Escape", "closes the component"]);
   if (a.return_focus) rows.push(["Return focus", esc(a.return_focus)]);
   if (a.required_attrs?.length) {
-    rows.push(["Required ARIA", a.required_attrs.map((x) => code(x)).join("<br>")]);
+    // A bare attribute (`aria-expanded`) is code; a requirement written as a
+    // sentence is prose — set in code it could neither wrap nor be read.
+    rows.push([
+      "Required ARIA",
+      a.required_attrs.map((x) => (/\s/.test(x) ? inlineMarkdown(x) : code(x))).join("<br>"),
+    ]);
   }
   for (const [key, action] of Object.entries(a.keyboard ?? {})) {
     rows.push([code(key), esc(action)]);
@@ -2043,7 +2071,7 @@ function renderComponentPage(
       </nav>`,
     `      <h1>${esc(c.name)}</h1>`,
     metaBadges(c),
-    `      <p>${esc(m.description ?? "")}</p>`,
+    `      <p>${inlineMarkdown(m.description ?? "")}</p>`,
     m.aliases?.length
       ? `      <p>Also available as ${m.aliases.map((a) => code(a)).join(", ")}.</p>`
       : "",
@@ -2165,7 +2193,7 @@ function renderComponentIndex(ctx: {
           `            <h3 data-part="title"><a data-ui="link" href="${href}">${esc(c.name)}</a></h3>\n` +
           `            <p data-part="description">v${esc(c.manifest.version ?? "1.0.0")}</p>\n` +
           `          </div>\n` +
-          `          <div data-part="body">${esc(c.manifest.description ?? "")}</div>\n` +
+          `          <div data-part="body">${inlineMarkdown(c.manifest.description ?? "")}</div>\n` +
           `          <div data-part="footer">\n` +
           `            <a data-ui="link" href="${href}">Open contract <span data-ui="icon" data-icon="arrow-right" aria-hidden="true"></span></a>\n` +
           `          </div>\n` +
@@ -2686,7 +2714,7 @@ function renderTokenPage(ctx: {
         swatch,
       ];
     });
-    parts.push(table(["Token", "Value", "Sample"], rows, "No tokens in this group."));
+    parts.push(table(["Token", "Value", "Sample"], rows, "No tokens in this group.", { wrap: true }));
   }
 
   return {
@@ -2745,8 +2773,8 @@ function renderLayoutPage(ctx: {
           const c = ctx.components.find((x) => x.name === p.name);
           return [
             c ? `<a data-ui="link" href="${u(c.pagePath)}">${esc(p.name)}</a>` : code(p.name),
-            esc(p.mechanism),
-            esc(p.use),
+            inlineMarkdown(p.mechanism),
+            inlineMarkdown(p.use),
           ];
         }),
         "No layout primitives in this registry.",
@@ -3097,18 +3125,31 @@ function renderRetiredPage(ctx: {
 // ---------------------------------------------------------------------------
 
 /**
- * Inline markdown: code spans, bold, and links. Deliberately not a markdown
- * library — the migration document is written by us, the subset is the subset
- * we write, and anything unrecognised passes through escaped rather than
- * rendering as an accidental tag.
+ * Inline markdown: code spans, bold, emphasis and links. Deliberately not a
+ * markdown library — the migration document, the manifests' descriptions and
+ * the audit rules are written by us, the subset is the subset we write, and
+ * anything unrecognised passes through escaped rather than rendering as an
+ * accidental tag.
+ *
+ * Code spans are lifted out first and restored last, so a `*` inside one
+ * (`data-*`, `--space-*`) is never read as emphasis. Emphasis needs a
+ * word-boundary `*` on both sides (`*after*`), so a bare `data-*` or `5 * 3`
+ * outside a code span stays literal.
  */
 export function inlineMarkdown(value: string): string {
+  const spans: string[] = [];
+  const hold = (html: string) => `\u0000${spans.push(html) - 1}\u0000`;
   return esc(value)
-    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    .replace(/`([^`]+)`/g, (_, body: string) => hold(`<code>${body}</code>`))
     .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(
+      /(^|[\s(\[—–])\*(?=[^\s*])([^*]*?[^\s*])\*(?=$|[\s.,;:!?)\]—–])/g,
+      "$1<em>$2</em>",
+    )
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (whole, label: string, href: string) =>
       /^https?:/.test(href) ? `<a data-ui="link" href="${escAttr(href)}">${label}</a>` : label,
-    );
+    )
+    .replace(/\u0000(\d+)\u0000/g, (_, i: string) => spans[Number(i)]);
 }
 
 /**
@@ -3148,14 +3189,28 @@ export function renderMarkdownBlocks(markdown: string): string {
       out.push(table(head ?? [], body.map((row) => row.map(inlineMarkdown)), "No rows."));
       continue;
     }
+    if (THEMATIC_BREAK.test(line)) {
+      out.push(`      <hr>`);
+      i++;
+      continue;
+    }
     const paragraph: string[] = [];
-    while (i < lines.length && lines[i].trim() !== "" && !lines[i].startsWith("```") && !lines[i].startsWith("|")) {
+    while (
+      i < lines.length &&
+      lines[i].trim() !== "" &&
+      !lines[i].startsWith("```") &&
+      !lines[i].startsWith("|") &&
+      !THEMATIC_BREAK.test(lines[i])
+    ) {
       paragraph.push(lines[i++]);
     }
     out.push(`      <p>${inlineMarkdown(paragraph.join(" "))}</p>`);
   }
   return out.join("\n");
 }
+
+/** A markdown thematic break (`---`, `***`, `___`), which renders as `<hr>`. */
+const THEMATIC_BREAK = /^ {0,3}(?:-{3,}|\*{3,}|_{3,})\s*$/;
 
 /**
  * The migration guide at `migration/`.
@@ -3325,7 +3380,7 @@ function renderSpecPage(ctx: {
         ["Attribute", "Purpose", "Written by", "Legal values come from", "Enforced by"],
         ATTRIBUTE_SPECS.map((a) => [
           code(a.attr),
-          esc(a.purpose),
+          inlineMarkdown(a.purpose),
           esc(a.owner),
           esc(a.vocabulary.replace(/`/g, "")),
           a.rule ? code(a.rule) : "—",
@@ -3358,7 +3413,7 @@ function renderSpecPage(ctx: {
           ["Attribute", "Purpose", "Values", "Written by"],
           TOKEN_MODIFIERS.map((m) => [
             code(m.attr),
-            esc(m.purpose),
+            inlineMarkdown(m.purpose),
             m.values.map((v) => code(v)).join(" · "),
             esc(m.owner),
           ]),
@@ -4062,8 +4117,8 @@ function renderPlaygroundPage(ctx: {
   const ruleRows = getHtmlRuleInventory().map((r) => [
     code(r.id),
     esc(r.severity),
-    esc(r.applies_to),
-    esc(r.description),
+    inlineMarkdown(r.applies_to),
+    inlineMarkdown(r.description),
   ]);
 
   const body = [
@@ -4375,8 +4430,10 @@ function renderThemeGalleryPage(ctx: {
         `            <span data-ui="badge" data-variant="secondary">${esc(
           m ? `${m.scheme} scheme` : "no manifest",
         )}</span>\n` +
-        `            <a data-ui="link" href="${u(themeDetailPath(t.name))}">Specimen sheet</a>\n` +
-        `            <a data-ui="link" href="${u(frame)}">Open frame</a>\n` +
+        `            <span data-docs-card-links>\n` +
+        `              <a data-ui="link" href="${u(themeDetailPath(t.name))}">Specimen sheet</a>\n` +
+        `              <a data-ui="link" href="${u(frame)}">Open frame</a>\n` +
+        `            </span>\n` +
         `          </div>\n` +
         `        </div>`
       );
@@ -4658,9 +4715,9 @@ function renderScaffoldPage(ctx: {
     `      <p><span data-ui="badge" data-variant="primary">scaffold</span> ` +
       `<span data-ui="badge" data-variant="default">${esc(theme)} theme</span> ` +
       `<span data-ui="badge" data-variant="default">${esc(
-        `${def.patterns.length} patterns · ${def.components.length} components`,
+        `${plural(def.patterns.length, "pattern")} · ${plural(def.components.length, "component")}`,
       )}</span></p>`,
-    `      <p>${esc(def.description)}.</p>`,
+    `      <p>${inlineMarkdown(def.description)}.</p>`,
     section(
       "command",
       "The command",
@@ -4741,7 +4798,7 @@ function renderScaffoldGalleryPage(ctx: {
   const cards = ctx.defs
     .map(
       (def) =>
-        `        <div data-ui="card" data-variant="outlined" data-docs-theme-card>\n` +
+        `        <div data-ui="card" data-variant="outlined" data-docs-theme-card data-docs-scaffold-card>\n` +
         `          <div data-part="header">\n` +
         `            <h3 data-part="title">${esc(def.title)}</h3>\n` +
         `            <p data-part="description">${esc(def.description)}</p>\n` +
@@ -4753,7 +4810,7 @@ function renderScaffoldGalleryPage(ctx: {
         `          </div>\n` +
         `          <div data-part="footer">\n` +
         `            <span data-ui="badge" data-variant="secondary">${esc(
-          `${def.patterns.length} patterns`,
+          plural(def.patterns.length, "pattern"),
         )}</span>\n` +
         `            <a data-ui="link" href="${u(scaffoldPagePath(def.name))}">Open the scaffold</a>\n` +
         `          </div>\n` +
