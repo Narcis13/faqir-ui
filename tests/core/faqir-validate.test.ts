@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { settle, tick } from "../helpers/settle";
 
 // faqir-validate — l-validate form validation plugin. [0.6-02 · 1.1B-03 · §7.1, §A5, §8.3]
@@ -13,7 +15,16 @@ Faqir.plugin = function (fn: any) {
   return origPlugin.call(Faqir, fn);
 };
 (globalThis as any).Faqir = Faqir;
-const install = require("../../registry/core/plugins/faqir-validate.js");
+// Evaluated from source rather than require()d: another file in this shared
+// realm (faqir-core-types) may already hold the module in the require cache, and
+// a cached require neither runs the self-registration nor hands back a fresh
+// installer — which made this whole file depend on test-file order.
+const install = (() => {
+  const mod = { exports: {} as any };
+  const source = readFileSync(join(import.meta.dir, "../../registry/core/plugins/faqir-validate.js"), "utf8");
+  new Function("module", "exports", source)(mod, mod.exports);
+  return mod.exports;
+})();
 Faqir.plugin = origPlugin;
 
 /** Real time, for the 250 ms async debounce. */
@@ -107,6 +118,13 @@ describe("faqir-validate · registration", () => {
 });
 
 describe("faqir-validate · native constraints on submit", () => {
+  it("turns the browser's own validation off, so an invalid submit reaches the plugin", async () => {
+    // A real browser cancels an invalid submit before any submit event fires,
+    // so without `novalidate` the plugin never ran and showed nothing.
+    const { form } = await boot(group(`<input data-part="input" name="a" required>`));
+    expect(form.noValidate).toBe(true);
+  });
+
   it("required: empty field flips its field-group to invalid with a message", async () => {
     const { form } = await boot(group(`<input data-part="input" name="a" required>`));
     const input = form.querySelector("input")!;

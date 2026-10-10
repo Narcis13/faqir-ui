@@ -44,7 +44,7 @@
 //   styles/faqir.css                  tokens + base + components + docs presentation
 //   styles/themes/<name>.css          one file per registry theme — the swappable link
 //   scripts/faqir-core.js             the registry engine
-//   scripts/faqir-tweak.js            the theme-studio engine plugin, verbatim
+//   scripts/plugins/*.js              every official engine plugin, verbatim
 //   scripts/faqir-audit.js            the audit engine, compiled for the browser
 //   scripts/faqir-manifests.js        every manifest as one global, for the playground
 //   scripts/playground.js             playground wiring (authored, site/lib/)
@@ -360,8 +360,13 @@ export const MOTION_PAGE = "motion/index.html";
  */
 export const STUDIO_PAGE = "studio/index.html";
 
+/** Where each official plugin ships, verbatim, so the engine page runs them live. */
+export function pluginScriptPath(file: string): string {
+  return `scripts/plugins/${file}`;
+}
+
 /** Where the studio page loads the registry's `faqir-tweak` plugin from. */
-export const TWEAK_SCRIPT = "scripts/faqir-tweak.js";
+export const TWEAK_SCRIPT = pluginScriptPath("faqir-tweak.js");
 
 /** Searchable catalogue derived from the icon primitive's declared names. */
 export const ICONS_PAGE = "icons/index.html";
@@ -1066,8 +1071,9 @@ export function rendersOnlyTriggers(fragment: string): boolean {
  *     ties (`tooltip` has one). No `!important` here: nothing in the base layer
  *     competes for these properties, so ordinary specificity settles it.
  *
- * The panel is put back **in flow** (`position: static`) rather than shown where
- * it really opens. A fixed panel would cover the triggers, stack four deep on a
+ * The panel is put back **in flow** (`position: relative`, not `static`, so it
+ * stays the containing block its own arrow and close button are placed against)
+ * rather than shown where it really opens. A fixed panel would cover the triggers, stack four deep on a
  * page with four demos, and — since the layout gate of 0.9-01 counts overlapping
  * *fixed* boxes — turn every one of these pages into a finding. In flow it reads
  * as what it is: this trigger opens this panel.
@@ -1087,7 +1093,7 @@ export function renderOverlayPreviewRules(
           `  max-inline-size: 100%;\n` +
           `}\n\n` +
           `${page} [data-ui="${name}"] ${target}[hidden] {\n` +
-          `  position: static;\n` +
+          `  position: relative;\n` +
           `  inset: auto;\n` +
           `  inline-size: auto;\n` +
           `  block-size: auto;\n` +
@@ -1775,18 +1781,41 @@ ${input.body}
 // Manifest-derived sections
 // ---------------------------------------------------------------------------
 
-/** A `<table>` with a header row, or an italic note when there is nothing to show. */
-export function table(headers: string[], rows: string[][], emptyNote: string): string {
+/**
+ * A `<table>` with a header row, or an italic note when there is nothing to show.
+ *
+ * The table sits in its own `[data-docs-table]` scroller: on a phone a reference
+ * table (`<code>` cells have a long min-content) is wider than the column, and
+ * the docs shell scrolls inside `<main>`, so without a scroller of its own the
+ * whole page would scroll sideways. `tabindex="0"` keeps that scroller reachable
+ * from the keyboard, the same convention as every `<pre>` on the site.
+ *
+ * Code in a table cell does not wrap (`data-variant="default"` split after
+ * `data-` reads as two tokens). `wrap` opts a table of long values — a shadow,
+ * a font stack — out of that for every column but the first.
+ */
+export function table(
+  headers: string[],
+  rows: string[][],
+  emptyNote: string,
+  opts: { wrap?: boolean } = {},
+): string {
   if (rows.length === 0) return `      <p><em>${esc(emptyNote)}</em></p>`;
   const head = headers.map((h) => `<th scope="col">${esc(h)}</th>`).join("");
   const body = rows
     .map((r) => `        <tr>${r.map((cell) => `<td>${cell}</td>`).join("")}</tr>`)
     .join("\n");
-  return `      <table>\n        <thead><tr>${head}</tr></thead>\n        <tbody>\n${body}\n        </tbody>\n      </table>`;
+  const scroller = opts.wrap ? `data-docs-table="wrap"` : `data-docs-table`;
+  return `      <div ${scroller} tabindex="0">\n      <table>\n        <thead><tr>${head}</tr></thead>\n        <tbody>\n${body}\n        </tbody>\n      </table>\n      </div>`;
 }
 
 export function code(value: string): string {
   return `<code>${esc(value)}</code>`;
+}
+
+/** `1 pattern`, `2 patterns` — a count with its noun agreeing. */
+export function plural(count: number, noun: string): string {
+  return `${count} ${noun}${count === 1 ? "" : "s"}`;
 }
 
 /**
@@ -1829,7 +1858,7 @@ function renderSlotTable(m: Manifest): string {
     code(slot.selector),
     slot.tag_hint ? code(`<${slot.tag_hint}>`) : "—",
     slot.required ? "required" : "optional",
-    esc(slot.description ?? ""),
+    inlineMarkdown(slot.description ?? ""),
   ]);
   return table(
     ["Slot", "Selector", "Tag hint", "Required", "Description"],
@@ -1872,7 +1901,7 @@ function renderStateTable(m: Manifest): string {
     s.attr ? code(s.attr) : "—",
     s.default ? "yes" : "no",
     code(s.applied_to ?? "root"),
-    esc(s.description ?? ""),
+    inlineMarkdown(s.description ?? ""),
   ]);
   return table(
     ["State", "Attribute", "Default", "Applied to", "Description"],
@@ -1890,7 +1919,12 @@ function renderA11yTable(m: Manifest): string {
   if (a.escape_closes) rows.push(["Escape", "closes the component"]);
   if (a.return_focus) rows.push(["Return focus", esc(a.return_focus)]);
   if (a.required_attrs?.length) {
-    rows.push(["Required ARIA", a.required_attrs.map((x) => code(x)).join("<br>")]);
+    // A bare attribute (`aria-expanded`) is code; a requirement written as a
+    // sentence is prose — set in code it could neither wrap nor be read.
+    rows.push([
+      "Required ARIA",
+      a.required_attrs.map((x) => (/\s/.test(x) ? inlineMarkdown(x) : code(x))).join("<br>"),
+    ]);
   }
   for (const [key, action] of Object.entries(a.keyboard ?? {})) {
     rows.push([code(key), esc(action)]);
@@ -2037,7 +2071,7 @@ function renderComponentPage(
       </nav>`,
     `      <h1>${esc(c.name)}</h1>`,
     metaBadges(c),
-    `      <p>${esc(m.description ?? "")}</p>`,
+    `      <p>${inlineMarkdown(m.description ?? "")}</p>`,
     m.aliases?.length
       ? `      <p>Also available as ${m.aliases.map((a) => code(a)).join(", ")}.</p>`
       : "",
@@ -2159,7 +2193,7 @@ function renderComponentIndex(ctx: {
           `            <h3 data-part="title"><a data-ui="link" href="${href}">${esc(c.name)}</a></h3>\n` +
           `            <p data-part="description">v${esc(c.manifest.version ?? "1.0.0")}</p>\n` +
           `          </div>\n` +
-          `          <div data-part="body">${esc(c.manifest.description ?? "")}</div>\n` +
+          `          <div data-part="body">${inlineMarkdown(c.manifest.description ?? "")}</div>\n` +
           `          <div data-part="footer">\n` +
           `            <a data-ui="link" href="${href}">Open contract <span data-ui="icon" data-icon="arrow-right" aria-hidden="true"></span></a>\n` +
           `          </div>\n` +
@@ -2680,7 +2714,7 @@ function renderTokenPage(ctx: {
         swatch,
       ];
     });
-    parts.push(table(["Token", "Value", "Sample"], rows, "No tokens in this group."));
+    parts.push(table(["Token", "Value", "Sample"], rows, "No tokens in this group.", { wrap: true }));
   }
 
   return {
@@ -2739,8 +2773,8 @@ function renderLayoutPage(ctx: {
           const c = ctx.components.find((x) => x.name === p.name);
           return [
             c ? `<a data-ui="link" href="${u(c.pagePath)}">${esc(p.name)}</a>` : code(p.name),
-            esc(p.mechanism),
-            esc(p.use),
+            inlineMarkdown(p.mechanism),
+            inlineMarkdown(p.use),
           ];
         }),
         "No layout primitives in this registry.",
@@ -3013,7 +3047,13 @@ function renderEnginePage(ctx: {
       themes: ctx.themes,
       current: pagePath,
       layout: "wide",
-      scripts: ["scripts/faqir-core.js"],
+      // Core first, then every official plugin but the theme studio's (which has a
+      // page of its own): deferred scripts run in order, and each plugin
+      // self-registers on the global the engine has just defined.
+      scripts: [
+        "scripts/faqir-core.js",
+        ...ctx.plugins.map((p) => pluginScriptPath(p.file)).filter((path) => path !== TWEAK_SCRIPT),
+      ],
     }),
   };
 }
@@ -3085,18 +3125,32 @@ function renderRetiredPage(ctx: {
 // ---------------------------------------------------------------------------
 
 /**
- * Inline markdown: code spans, bold, and links. Deliberately not a markdown
- * library — the migration document is written by us, the subset is the subset
- * we write, and anything unrecognised passes through escaped rather than
- * rendering as an accidental tag.
+ * Inline markdown: code spans, bold, emphasis and links. Deliberately not a
+ * markdown library — the migration document, the manifests' descriptions and
+ * the audit rules are written by us, the subset is the subset we write, and
+ * anything unrecognised passes through escaped rather than rendering as an
+ * accidental tag.
+ *
+ * Code spans are lifted out first and restored last, so a `*` inside one
+ * (`data-*`, `--space-*`) is never read as emphasis. Emphasis needs a
+ * word-boundary `*` on both sides (`*after*`), so a bare `data-*` or `5 * 3`
+ * outside a code span stays literal.
  */
 export function inlineMarkdown(value: string): string {
+  const spans: string[] = [];
+  const hold = (html: string) => `\u0000${spans.push(html) - 1}\u0000`;
   return esc(value)
-    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    .replace(/`([^`]+)`/g, (_, body: string) => hold(`<code>${body}</code>`))
     .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(
+      /(^|[\s(\[—–])\*(?=[^\s*])([^*]*?[^\s*])\*(?=$|[\s.,;:!?)\]—–])/g,
+      "$1<em>$2</em>",
+    )
+    // `href` is already escaped with the rest of the text; only the quote is left.
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (whole, label: string, href: string) =>
-      /^https?:/.test(href) ? `<a data-ui="link" href="${escAttr(href)}">${label}</a>` : label,
-    );
+      /^https?:/.test(href) ? `<a data-ui="link" href="${href.replace(/"/g, "&quot;")}">${label}</a>` : label,
+    )
+    .replace(/\u0000(\d+)\u0000/g, (_, i: string) => spans[Number(i)]);
 }
 
 /**
@@ -3136,14 +3190,28 @@ export function renderMarkdownBlocks(markdown: string): string {
       out.push(table(head ?? [], body.map((row) => row.map(inlineMarkdown)), "No rows."));
       continue;
     }
+    if (THEMATIC_BREAK.test(line)) {
+      out.push(`      <hr>`);
+      i++;
+      continue;
+    }
     const paragraph: string[] = [];
-    while (i < lines.length && lines[i].trim() !== "" && !lines[i].startsWith("```") && !lines[i].startsWith("|")) {
+    while (
+      i < lines.length &&
+      lines[i].trim() !== "" &&
+      !lines[i].startsWith("```") &&
+      !lines[i].startsWith("|") &&
+      !THEMATIC_BREAK.test(lines[i])
+    ) {
       paragraph.push(lines[i++]);
     }
     out.push(`      <p>${inlineMarkdown(paragraph.join(" "))}</p>`);
   }
   return out.join("\n");
 }
+
+/** A markdown thematic break (`---`, `***`, `___`), which renders as `<hr>`. */
+const THEMATIC_BREAK = /^ {0,3}(?:-{3,}|\*{3,}|_{3,})\s*$/;
 
 /**
  * The migration guide at `migration/`.
@@ -3313,7 +3381,7 @@ function renderSpecPage(ctx: {
         ["Attribute", "Purpose", "Written by", "Legal values come from", "Enforced by"],
         ATTRIBUTE_SPECS.map((a) => [
           code(a.attr),
-          esc(a.purpose),
+          inlineMarkdown(a.purpose),
           esc(a.owner),
           esc(a.vocabulary.replace(/`/g, "")),
           a.rule ? code(a.rule) : "—",
@@ -3346,7 +3414,7 @@ function renderSpecPage(ctx: {
           ["Attribute", "Purpose", "Values", "Written by"],
           TOKEN_MODIFIERS.map((m) => [
             code(m.attr),
-            esc(m.purpose),
+            inlineMarkdown(m.purpose),
             m.values.map((v) => code(v)).join(" · "),
             esc(m.owner),
           ]),
@@ -3913,6 +3981,13 @@ function renderExamplePage(
     overlayPreview && c.name in OVERLAY_PREVIEW_SURFACES
       ? ` ${OVERLAY_PREVIEW_ATTR}="${escAttr(c.name)}"`
       : "";
+  // The plugins the fragment declares it needs (`<!-- @ui:requires … -->`), after
+  // the engine: form-page and wizard validate through faqir-validate.
+  const plugins = (/<!--\s*@ui:requires\s+([^>]*?)\s*-->/.exec(readText(c.referencePath))?.[1] ?? "")
+    .split(/\s+/)
+    .filter((file) => file.startsWith("faqir-") && file !== "faqir-core.js")
+    .map((file) => `\n<script src="${u(pluginScriptPath(file))}" defer></script>`)
+    .join("");
 
   return {
     path: c.examplePath,
@@ -3924,7 +3999,7 @@ function renderExamplePage(
 <title>${escAttr(`${c.name} example · ${config.title}`)}</title>
 <link rel="stylesheet" href="${u("styles/faqir.css")}">${renderThemeLink(c.examplePath, config.theme)}
 <script src="${u("scripts/gallery.js")}" defer></script>
-<script src="${u("scripts/faqir-core.js")}" defer></script>
+<script src="${u("scripts/faqir-core.js")}" defer></script>${plugins}
 <!-- ${DOCS_GENERATION_MARKER} · verbatim registry reference markup for ${escAttr(c.name)} -->
 </head>
 <body>
@@ -4043,8 +4118,8 @@ function renderPlaygroundPage(ctx: {
   const ruleRows = getHtmlRuleInventory().map((r) => [
     code(r.id),
     esc(r.severity),
-    esc(r.applies_to),
-    esc(r.description),
+    inlineMarkdown(r.applies_to),
+    inlineMarkdown(r.description),
   ]);
 
   const body = [
@@ -4356,7 +4431,10 @@ function renderThemeGalleryPage(ctx: {
         `            <span data-ui="badge" data-variant="secondary">${esc(
           m ? `${m.scheme} scheme` : "no manifest",
         )}</span>\n` +
-        `            <a data-ui="link" href="${u(frame)}">Open frame</a>\n` +
+        `            <span data-docs-card-links>\n` +
+        `              <a data-ui="link" href="${u(themeDetailPath(t.name))}">Specimen sheet</a>\n` +
+        `              <a data-ui="link" href="${u(frame)}">Open frame</a>\n` +
+        `            </span>\n` +
         `          </div>\n` +
         `        </div>`
       );
@@ -4638,9 +4716,9 @@ function renderScaffoldPage(ctx: {
     `      <p><span data-ui="badge" data-variant="primary">scaffold</span> ` +
       `<span data-ui="badge" data-variant="default">${esc(theme)} theme</span> ` +
       `<span data-ui="badge" data-variant="default">${esc(
-        `${def.patterns.length} patterns · ${def.components.length} components`,
+        `${plural(def.patterns.length, "pattern")} · ${plural(def.components.length, "component")}`,
       )}</span></p>`,
-    `      <p>${esc(def.description)}.</p>`,
+    `      <p>${inlineMarkdown(def.description)}.</p>`,
     section(
       "command",
       "The command",
@@ -4721,7 +4799,7 @@ function renderScaffoldGalleryPage(ctx: {
   const cards = ctx.defs
     .map(
       (def) =>
-        `        <div data-ui="card" data-variant="outlined" data-docs-theme-card>\n` +
+        `        <div data-ui="card" data-variant="outlined" data-docs-theme-card data-docs-scaffold-card>\n` +
         `          <div data-part="header">\n` +
         `            <h3 data-part="title">${esc(def.title)}</h3>\n` +
         `            <p data-part="description">${esc(def.description)}</p>\n` +
@@ -4733,7 +4811,7 @@ function renderScaffoldGalleryPage(ctx: {
         `          </div>\n` +
         `          <div data-part="footer">\n` +
         `            <span data-ui="badge" data-variant="secondary">${esc(
-          `${def.patterns.length} patterns`,
+          plural(def.patterns.length, "pattern"),
         )}</span>\n` +
         `            <a data-ui="link" href="${u(scaffoldPagePath(def.name))}">Open the scaffold</a>\n` +
         `          </div>\n` +
@@ -5500,10 +5578,11 @@ export function buildDocsSite(options: DocsSiteOptions = {}): SiteFile[] {
   if (existsSync(corePath)) {
     files.push({ path: "scripts/faqir-core.js", content: readText(corePath) });
   }
-  // The theme studio's plugin, verbatim — the same file `faqir add` copies.
-  const tweakPath = join(registryRoot, "core", "plugins", "faqir-tweak.js");
-  if (existsSync(tweakPath)) {
-    files.push({ path: TWEAK_SCRIPT, content: readText(tweakPath) });
+  // Every official plugin, verbatim — the same files `faqir add` copies. The
+  // engine page runs them all; the theme studio runs `faqir-tweak`.
+  const pluginsDir = join(registryRoot, "core", "plugins");
+  for (const plugin of loadPluginMetadata(pluginsDir)) {
+    files.push({ path: pluginScriptPath(plugin.file), content: readText(join(pluginsDir, plugin.file)) });
   }
 
   // The manifests the playground audits against — the registry's own, verbatim

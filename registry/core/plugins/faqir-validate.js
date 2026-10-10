@@ -80,8 +80,9 @@
  * optional `Faqir.validate` member — plugin-installed surface, declared in
  * `faqir-core.d.ts` as optional for exactly that reason. Zero dependencies,
  * ≤ 3 KB gzip. The only attributes it owns are `data-state="invalid"` and
- * `data-state="validating"` on the group and `aria-invalid`/`aria-describedby`
- * on the control — the frozen five-attribute protocol is untouched.
+ * `data-state="validating"` on the group, `aria-invalid`/`aria-describedby`
+ * on the control and `novalidate` on the form (the plugin replaces the
+ * browser's own bubbles) — the frozen five-attribute protocol is untouched.
  */
 (function () {
   "use strict";
@@ -554,12 +555,19 @@
   function install(Faqir) {
     F = Faqir;
     // Plugin-installed surface. Declared optional in faqir-core.d.ts because a
-    // page that never loads this file does not have it.
-    if (!Faqir.validate) Faqir.validate = api;
+    // page that never loads this file does not have it. Always this instance's:
+    // the directive below replaces any earlier one, so a second copy of this file
+    // (two script tags, a bundle beside the CDN) must not leave `register()`
+    // writing to a registry the live directive no longer reads.
+    Faqir.validate = api;
 
     Faqir.directive("validate", function (form, dir, scope) {
       var ctx = { scope: scope, submitted: false };
       contexts.set(form, ctx);
+      // This plugin runs the constraints and shows the messages. Left on, the
+      // browser's own validation cancels an invalid submit before any submit
+      // event fires, so a real browser never reached the handler below.
+      form.noValidate = true;
 
       // Submit: validate everything; block + focus the first offender when dirty.
       form.addEventListener("submit", function (e) {

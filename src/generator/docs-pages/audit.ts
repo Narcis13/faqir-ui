@@ -32,7 +32,7 @@ import { RUNTIME_PRESENCE_RULES, auditHtmlSource } from "../../audit/html-audit"
 import { buildAuditReport } from "../../audit/reporter";
 import type { Manifest } from "../../manifest";
 import { extractComponents } from "../../parser/html-parser";
-import { code, esc, escAttr, relUrl, renderShell } from "../docs";
+import { code, esc, escAttr, inlineMarkdown, relUrl, renderShell } from "../docs";
 import type { PageContext, SiteFile } from "./context";
 
 export const AUDIT_PAGE = "audit/index.html";
@@ -395,7 +395,7 @@ function renderAuditPage(ctx: PageContext): string {
     const unapplied = UNAPPLIED_FIXES[r.id];
     const notes = [...(r.exempt ?? []), ...(RULE_NOTES[r.id] ?? [])];
     const meta: [string, string][] = [
-      ["Applies to", esc(r.applies_to)],
+      ["Applies to", inlineMarkdown(r.applies_to)],
       ["Repair", fix ? `yes · ${code(fix.type)}` : unapplied ? "reported, not applied" : "no"],
       ["Playground", html.has(r.id) ? "yes" : "CLI only"],
     ];
@@ -414,14 +414,14 @@ function renderAuditPage(ctx: PageContext): string {
       `\n          </dl>\n` +
       `        </div>\n` +
       `        <div data-docs-rule-body>\n` +
-      `          <p>${esc(r.description)}</p>\n` +
+      `          <p>${inlineMarkdown(r.description)}</p>\n` +
       (notes.length > 0
         ? `          <p data-docs-rule-label>Skips and exemptions</p>\n          <ul>\n` +
-          notes.map((n) => `            <li>${esc(n)}</li>`).join("\n") +
+          notes.map((n) => `            <li>${inlineMarkdown(n)}</li>`).join("\n") +
           `\n          </ul>\n`
         : "") +
-      (fix ? `          <p data-docs-rule-label>Repair</p>\n          <p>${esc(fix.note)}</p>\n` : "") +
-      (unapplied ? `          <p data-docs-rule-label>Repair</p>\n          <p>${esc(unapplied)}</p>\n` : "") +
+      (fix ? `          <p data-docs-rule-label>Repair</p>\n          <p>${inlineMarkdown(fix.note)}</p>\n` : "") +
+      (unapplied ? `          <p data-docs-rule-label>Repair</p>\n          <p>${inlineMarkdown(unapplied)}</p>\n` : "") +
       `        </div>\n` +
       `      </article>\n`
     );
@@ -431,7 +431,7 @@ function renderAuditPage(ctx: PageContext): string {
     .map(
       (g) =>
         `      <h2 id="${escAttr(g.id)}">${esc(g.title)}</h2>\n` +
-        `      <p>${esc(g.lede)}</p>\n` +
+        `      <p>${inlineMarkdown(g.lede)}</p>\n` +
         `      <div data-docs-rule-list>\n` +
         g.rules.map(ruleCard).join("") +
         `      </div>\n`,

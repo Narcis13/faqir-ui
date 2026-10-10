@@ -39,7 +39,11 @@
 [data-ui="popover"] > [data-part="content"] {
   position: absolute;
   z-index: var(--z-dropdown);
+  /* Sized by its content, not by the trigger-wide root it is positioned in —
+     which squeezed every popover into a 200px column. */
+  width: max-content;
   min-width: 200px;
+  max-width: min(20rem, calc(100vw - 2 * var(--space-4)));
   padding: var(--space-4);
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-lg);
@@ -240,6 +244,11 @@
   color: var(--color-fg-muted, oklch(0.55 0 0));
   font-size: var(--text-xs, 0.75rem);
   cursor: pointer;
+}
+
+/* The close button sits in the corner; keep the content's text out from under it. */
+[data-ui="popover"] > [data-part="content"]:has(> [data-part="close"]) {
+  padding-inline-end: calc(var(--space-2, 0.5rem) * 2 + 24px);
 }
 
 [data-ui="popover"] > :where([data-part="content"]) > [data-part="close"]:hover {

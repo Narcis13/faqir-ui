@@ -143,7 +143,11 @@
       tbody.appendChild(row);
     });
     table.appendChild(tbody);
-    container.appendChild(table);
+    // The same horizontal scroller the generator puts around every reference
+    // table, so a long finding never pushes the page sideways on a phone.
+    var scroller = el("div", { "data-docs-table": "", tabindex: "0" });
+    scroller.appendChild(table);
+    container.appendChild(scroller);
 
     var worst = sorted[0].severity;
     count.textContent = String(findings.length);

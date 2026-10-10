@@ -56,13 +56,16 @@
   margin-block: var(--space-4);
 }
 
-[data-ui="prose"] a {
+/* A bare anchor only. A registry component rendered as an anchor (a
+   `data-ui="button"` call to action, a `data-ui="link"`) styles itself; the
+   `:where()` keeps this rule at its original (0,1,1) weight. */
+[data-ui="prose"] a:where(:not([data-ui])) {
   color: var(--color-primary);
   text-decoration-line: var(--link-decoration);
   text-underline-offset: var(--link-underline-offset);
 }
 
-[data-ui="prose"] a:hover {
+[data-ui="prose"] a:where(:not([data-ui])):hover {
   color: var(--color-primary-hover);
 }
 

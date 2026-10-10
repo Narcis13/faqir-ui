@@ -11,6 +11,9 @@
   --docs-content-max: 86rem;
   --docs-reading-max: 76rem;
   --docs-header-height: 4.25rem;
+  /* The content column's inset. A full-bleed block (the hero) cancels exactly
+     this, so the two cannot drift apart. */
+  --docs-content-pad: clamp(var(--space-4), 3vw, var(--space-10));
   --docs-gradient: var(
     --gradient-accent,
     linear-gradient(135deg, var(--color-primary), var(--color-info))
@@ -284,7 +287,7 @@ body {
 [data-ui="dashboard-shell"][data-docs-shell] > [data-part="content"] {
   display: block;
   min-inline-size: 0;
-  padding: clamp(var(--space-4), 3vw, var(--space-10));
+  padding: var(--docs-content-pad);
   background: var(--color-bg);
   scroll-padding-block-start: var(--space-8);
 }
@@ -361,12 +364,13 @@ body {
 
 [data-docs-home] {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-4);
 }
 
 [data-docs-home] > [data-ui="hero"],
 [data-docs-layouts] > [data-ui="hero"] {
-  margin: calc(var(--space-10) * -1);
+  margin: calc(var(--docs-content-pad) * -1);
   margin-block-end: var(--space-4);
 }
 
@@ -525,11 +529,25 @@ body {
 }
 
 /* The numbers: one row, thin rules between, no cards. */
+/* Six numbers: two rows of three, or one row of six where the column is wide
+   enough — never five and a stray. */
 [data-docs-numbers] {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-4) 0;
   padding-block: var(--space-6);
+}
+
+@media (min-width: 30rem) {
+  [data-docs-numbers] {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 82rem) {
+  [data-docs-numbers] {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
 }
 
 [data-docs-number] {
@@ -583,6 +601,7 @@ body {
 
 [data-docs-section-heading] {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   justify-items: start;
   gap: var(--space-3);
   max-inline-size: 60ch;
@@ -594,6 +613,13 @@ body {
   max-inline-size: 22ch;
   font-size: var(--text-3xl);
   text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+
+/* A heading that names an identifier (`window.__FAQIR_DEVTOOLS__`) has no break
+ * opportunity of its own; let it break rather than widen the column. */
+[data-ui="prose"] :is(h1, h2, h3, h4) code {
+  overflow-wrap: anywhere;
 }
 
 [data-docs-section-heading] p {
@@ -607,6 +633,14 @@ body {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
   gap: var(--space-8) var(--space-8);
+}
+
+/* Three releases sit on one row once the column can hold them, rather than
+   two and a stray third. */
+@media (min-width: 75rem) {
+  [data-docs-release-grid] {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 [data-docs-release-item] {
@@ -642,14 +676,27 @@ body {
 }
 
 /* The loop: a real sequence, so it is numbered. */
+/* Four steps: one row, two by two, or a single column — never three and one. */
 [data-docs-loop-steps] {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-6);
   margin: 0 0 var(--space-6);
   padding: 0;
   list-style: none;
   counter-reset: docs-loop;
+}
+
+@media (min-width: 36rem) {
+  [data-docs-loop-steps] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 75rem) {
+  [data-docs-loop-steps] {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 
 [data-docs-loop-steps] > li {
@@ -692,6 +739,10 @@ body {
   block-size: 32rem;
   border: 0;
   background: var(--color-bg);
+}
+
+[data-docs-featured-grid] > [data-ui="card"] > [data-part="header"] {
+  padding-block-end: var(--space-4);
 }
 
 [data-docs-featured-grid] [data-part="body"] {
@@ -782,6 +833,7 @@ body {
 
 [data-docs-foundation-page] {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-6);
 }
 
@@ -935,6 +987,14 @@ body {
   color: var(--color-fg-muted);
 }
 
+/* An eyebrow badge at the top of a column (a card header, the studio's
+ * specimen banner) keeps its own width instead of stretching into a grey bar
+ * across the column. */
+[data-ui="card"] > [data-part="header"] > [data-ui="badge"],
+[data-docs-studio-banner] [data-ui="stack"] > [data-ui="badge"] {
+  align-self: flex-start;
+}
+
 /* ── Component catalogue and references ─────────────────────────────────── */
 
 [data-docs-filter-panel] {
@@ -1072,17 +1132,59 @@ body {
   backdrop-filter: blur(1rem);
 }
 
+/* The no-script height. gallery.js grows each theme frame to its own document
+ * (fitThemeFrame), so a footer never slices a specimen mid-row. */
 [data-docs-theme-card] iframe {
   display: block;
   inline-size: 100%;
-  block-size: 25rem;
+  block-size: 36rem;
   border: 0;
   background: var(--color-bg);
+}
+
+[data-docs-theme-card] > [data-part="header"] {
+  padding-block-end: var(--space-4);
 }
 
 [data-docs-theme-card] > [data-part="body"] {
   padding: 0;
   border-block: 1px solid var(--color-border);
+}
+
+[data-docs-theme-card] > [data-part="footer"] {
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: var(--space-2) var(--space-4);
+  padding-block-start: var(--space-3);
+}
+
+[data-docs-theme-card] > [data-part="footer"] > [data-ui="badge"] {
+  margin-inline-end: auto;
+}
+
+/* The two links travel together: on a phone they wrap as one row under the
+ * badge rather than splitting across lines. */
+[data-docs-card-links] {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+}
+
+/* A scaffold is a whole page: its thumbnail renders the page at a desktop width
+ * (2.5x the card) and scales it down, so a dashboard shows its desktop layout
+ * rather than its phone drawer. The window is a fixed crop of the page top. */
+[data-docs-scaffold-card] > [data-part="body"] {
+  flex: none;
+  block-size: 25rem;
+  overflow: clip;
+  background: var(--color-bg);
+}
+
+[data-docs-scaffold-card] > [data-part="body"] > iframe {
+  inline-size: 250%;
+  block-size: 250%;
+  transform: scale(0.4);
+  transform-origin: 0 0;
 }
 
 [data-docs-theme-axes] {
@@ -1108,6 +1210,7 @@ body {
 
 [data-docs-layouts] {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-6);
 }
 
@@ -1115,6 +1218,7 @@ body {
 
 [data-docs-guide] {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-6);
 }
 
@@ -1133,6 +1237,7 @@ body {
 
 [data-docs-guide-example] {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-4);
   margin: 0;
   padding: var(--space-4);
@@ -1176,6 +1281,41 @@ body {
 
 [data-part="content"][data-docs-page] > [data-ui="container"] > [data-ui="prose"] table {
   display: table;
+}
+
+/* A reference table scrolls inside its own box rather than pushing the page
+ * sideways (the shell scrolls inside <main>, so the page would). Full width on
+ * a desktop; on a phone the cells keep a readable measure and the table
+ * scrolls, instead of squeezing a description column into a 300px-tall row. */
+[data-docs-table] {
+  max-inline-size: 100%;
+  overflow-x: auto;
+  margin-block: var(--space-6);
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-strong) transparent;
+}
+
+[data-docs-table]:focus-visible {
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset, 2px);
+}
+
+[data-ui="prose"] [data-docs-table] > table {
+  margin-block: 0;
+}
+
+/* A token, path or attribute in a cell reads as one word: wrapping it after
+ * `--` or `data-` leaves half a token per line. Several codes in one cell still
+ * wrap between each other; the scroller above absorbs what does not fit. A
+ * table of long values (a shadow, a font stack) opts out with
+ * `data-docs-table="wrap"` and keeps only its name column whole. */
+[data-docs-table]:not([data-docs-table="wrap"]) code,
+[data-docs-table] :is(th, td):first-child :is(code, [data-variant="mono"]) {
+  white-space: nowrap;
+}
+
+[data-docs-table]:not([data-docs-table="wrap"]) [data-ui="text"][data-variant="mono"] {
+  white-space: nowrap;
 }
 
 [data-part="content"][data-docs-page] > [data-ui="container"] > [data-ui="prose"] pre {
@@ -1313,8 +1453,8 @@ body {
     max-inline-size: 5.5rem;
   }
 
-  [data-ui="dashboard-shell"][data-docs-shell] > [data-part="content"] {
-    padding: var(--space-4);
+  :root {
+    --docs-content-pad: var(--space-4);
   }
 
   [data-ui="dashboard-shell"][data-docs-shell] > [data-part="footer"] {
@@ -1327,7 +1467,6 @@ body {
 
   [data-docs-home] > [data-ui="hero"],
   [data-docs-layouts] > [data-ui="hero"] {
-    margin: calc(var(--space-4) * -1);
     margin-block-end: var(--space-3);
   }
 
@@ -1359,8 +1498,7 @@ body {
     flex-direction: column;
   }
 
-  [data-docs-featured-grid] iframe,
-  [data-docs-theme-card] iframe {
+  [data-docs-featured-grid] iframe {
     block-size: 22rem;
   }
 
@@ -1407,6 +1545,29 @@ body {
     justify-items: start;
     inline-size: 100%;
   }
+
+  /* On a phone a cell keeps a readable measure and the table scrolls, rather
+     than squeezing the description (the last column, by convention) into a
+     one-word-per-line row hundreds of pixels tall. The `cqi` caps (a share of
+     the scroller's own width) keep a two-column table inside the column: it
+     only scrolls when it has more columns than a phone can hold. */
+  [data-docs-table] {
+    container-type: inline-size;
+  }
+
+  [data-docs-table] :is(th, td):not(:first-child) {
+    min-inline-size: min(7rem, 30cqi);
+  }
+
+  [data-docs-table] :is(th, td):last-child:not(:first-child) {
+    min-inline-size: min(16rem, 62cqi);
+  }
+
+  /* A third column means the table scrolls anyway: give its description a
+     full measure rather than a share of the phone. */
+  [data-docs-table] :is(th, td):last-child:nth-child(n + 3) {
+    min-inline-size: 18rem;
+  }
 }
 
 @media (max-width: 29rem) {
@@ -1415,12 +1576,15 @@ body {
   }
 
   [data-docs-control] [data-ui="select"] {
-    min-inline-size: 5.75rem;
-    max-inline-size: 6.5rem;
+    min-inline-size: 5.25rem;
+    max-inline-size: 6rem;
   }
 
-  [data-docs-control][data-docs-scheme-control] {
-    display: none;
+  /* The scheme stays reachable on a phone — it is the only way to pick
+     Light/Dark/Auto there — just narrower. */
+  [data-docs-control][data-docs-scheme-control] [data-ui="select"] {
+    min-inline-size: 4.5rem;
+    max-inline-size: 4.75rem;
   }
 }
 

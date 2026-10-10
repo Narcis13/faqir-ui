@@ -351,6 +351,50 @@ describe("faqir-rules · compute", () => {
     expect(scope.$rules.computed).toEqual({ total: 12 });
   });
 
+  it("reads a field the same keystroke brought back into view", async () => {
+    // `seats` was hidden — so absent from the data — when the edit that shows
+    // it was judged; the price used to come out of that stale read as null
+    // and only caught up on the next keystroke.
+    const { form } = await boot({
+      body:
+        group(`<input data-part="input" name="plan" value="solo">`) +
+        group(`<input data-part="input" name="seats" type="number" value="3">`) +
+        group(`<input data-part="input" name="price" readonly>`),
+      rules: {
+        version: "1",
+        fields: { plan: { type: "string" }, seats: { type: "integer" }, price: { type: "number" } },
+        rules: [
+          { id: "seats-for-teams", show: "seats", when: { "==": [{ var: "plan" }, "team"] } },
+          { id: "price", compute: "price", value: { "*": [{ var: "seats" }, 10] } },
+        ],
+      },
+    });
+    await type(control(form, "plan"), "team");
+    expect(control(form, "seats").disabled).toBe(false);
+    expect(control(form, "price").value).toBe("30");
+  });
+
+  it("judges the values l-model put into the controls, not the empty markup", async () => {
+    // `l-rules` sits on the form, so it is bound before the `l-model`s inside it
+    // have written their scope values into the controls.
+    unmount();
+    container = document.createElement("div");
+    container.innerHTML = `
+      <div l-data="{ qty: 3, price: 4, total: 0 }">
+        ${jsonScript("compute-model", definition)}
+        <form l-validate l-rules="#compute-model">
+          ${group(`<input data-part="input" name="qty" l-model.number="qty">`)}
+          ${group(`<input data-part="input" name="price" l-model.number="price">`)}
+          ${group(`<input data-part="input" name="total" readonly>`)}
+        </form>
+      </div>`;
+    document.body.appendChild(container);
+    Faqir.initTree(container.firstElementChild as Element);
+    await tick();
+    const form = container.querySelector("form") as HTMLFormElement;
+    expect(control(form, "total").value).toBe("12");
+  });
+
   it("does not invent scope structure a page never declared", async () => {
     const { scope } = await boot({
       body:

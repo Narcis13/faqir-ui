@@ -529,8 +529,10 @@
     for (var i = 0; i < children.length; i++) {
       var child = children[i];
 
-      // Skip elements already initialized by l-for or l-if
-      if (child.__faqirScope && !child.hasAttribute('l-data')) {
+      // Skip elements already initialized by l-for or l-if — or teleported here
+      // by an earlier sibling's l-teleport, which bound them (and, with an
+      // l-data of their own, scoped them) on the way out.
+      if (child.__faqirStray || (child.__faqirScope && !child.hasAttribute('l-data'))) {
         continue;
       }
 
@@ -1648,8 +1650,9 @@
         el.dataset.state = value ? 'on' : 'off';
         el.setAttribute('aria-checked', value ? 'true' : 'false');
       });
-      bind('change', function() {
-        writeModel(prop, el.checked, scope, el);
+      // A switch is a <button role="switch">: no `checked`, and no `change`.
+      bind('click', function() {
+        writeModel(prop, !evaluate(prop, scope, el), scope, el);
       });
       addCleanup(el, cl);
 

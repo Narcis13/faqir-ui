@@ -116,6 +116,7 @@
   font-family: var(--font-mono);
   font-size: var(--text-xs);
   color: var(--color-fg-subtle);
+  overflow-wrap: anywhere;
 }
 
 [data-docs-themes-axis-value] {

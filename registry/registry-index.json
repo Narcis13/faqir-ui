@@ -166,7 +166,7 @@
       "files": [
         {
           "path": "card.css",
-          "sha256": "6dbf1e03a5bd987e8d08859176c96c961b208194fbf6c3bb4d58622a5bdc4d4f"
+          "sha256": "5dfdc461f4466323224f71b574c7ff114b1f07370f9d4a9e18e8ca8e63ab287e"
         },
         {
           "path": "card.html",
@@ -177,7 +177,7 @@
           "sha256": "e638e1fe89e6447bfa587fa4e68c212654344867743a20ef96b85da5ddb42c35"
         }
       ],
-      "hash": "1665c9a76bbde3a963237599e00b5b6f818966b718009a945750971de074d257",
+      "hash": "79b776ce1a52e6341785df69eeed8eb9c915231b9aadd68f07440ffc3496da8d",
       "deps": [
         "button"
       ]
@@ -824,7 +824,7 @@
       "files": [
         {
           "path": "separator.css",
-          "sha256": "df05f0b6aa14d46e3c313f42c2745363589797e957318bfc222d720b999edd32"
+          "sha256": "b76329e79ba2f3df76f0b49f62557f82e96726f4c790abe6de85650c8122e82e"
         },
         {
           "path": "separator.html",
@@ -835,7 +835,7 @@
           "sha256": "a4376025f8e4977cbbaafb2348ee4b8c6105dbb54789eca4a36c16fd1b021e97"
         }
       ],
-      "hash": "a06ecdbe55c438a72efeb5f5ba7b5fd3bec6132efebaf9c94a89542bc8e35bfd",
+      "hash": "b0c1138ce2dcfe38241f16f0481bf0d172e1f9c222e211bd908089e7cff58a7a",
       "deps": []
     },
     {
@@ -1050,14 +1050,14 @@
         },
         {
           "path": "switch.html",
-          "sha256": "9a2c9a7dae67a58019899141ec93e2a4dc01e7aca6671dd3926f53952430404f"
+          "sha256": "d6a4a007bb717c46d4180ca040839d8847030431c06796b7185b57f6f99a1052"
         },
         {
           "path": "switch.manifest.json",
-          "sha256": "615439e486cbd4dd583ebeca5c591b5db748f045b9d833c734d96646a8c25c23"
+          "sha256": "e900b8afbfeb8aa42a006fb0bb7d1c80a568acadcb1984b6568f6ac3893df060"
         }
       ],
-      "hash": "0a6ff8395717f0f15b0e2ef132df086429916f967ce330211204ce417e6a1620",
+      "hash": "3aceeea399d5beba3ce45208b39cc9936118147ad3f989de1c823c8dd2f15b2c",
       "deps": []
     },
     {
@@ -1631,7 +1631,7 @@
       "files": [
         {
           "path": "popover.css",
-          "sha256": "a7accb8644815146718c8e7174f97a00bf5f985a2570efe4430e179adecf3577"
+          "sha256": "819eb0488f891e5192501f862fff65e3ea4b17ab9850fc447505da06828900e6"
         },
         {
           "path": "popover.html",
@@ -1646,7 +1646,7 @@
           "sha256": "ae41999166cfe86b9d3514eed9269d71d385eef113a78b9cdc26bc22c0a10d79"
         }
       ],
-      "hash": "d5ed21656f3ecbc9e6c6f620d7143649aec8aac3d4f9c57dc6344549fbbef7c8",
+      "hash": "1e6d872af0e69852b6c00cc77eb6cf475ebe979fe3aa1f7a1c1a1ba66b2d6991",
       "deps": [
         "button"
       ]
@@ -1667,14 +1667,14 @@
         },
         {
           "path": "qr-code.js",
-          "sha256": "3481a02559b2074f45df9b70efc0f3ef3aa86a55da271c8877b57a7407641030"
+          "sha256": "598fd631b7eaf389866e527650055b940d1eedfdb145a17630103bf3acba79ca"
         },
         {
           "path": "qr-code.manifest.json",
           "sha256": "2270cfbb73ce5f50d9bef0b5fae12726d165fcdfb597a41b2dc2a8abbb882d19"
         }
       ],
-      "hash": "22f804d105c1e0746cea00c1e19136a0c1b729f7ed44b58ce75c96c6dc75cec2",
+      "hash": "ac34be2f76d39aa562955eb4095608a078bf1300293a9ebaa3fd600c5ddd00c0",
       "deps": []
     },
     {
@@ -1881,7 +1881,7 @@
       "files": [
         {
           "path": "toast.css",
-          "sha256": "1b13c5422e9da6e17aefdae519a6a654dabd11f56607f7b9e88cb8ca4efd3df5"
+          "sha256": "2faaafefae89f9b3c36a9670c45cdb27c8bc1822b11dbbfaf5ef7985a336eb9f"
         },
         {
           "path": "toast.html",
@@ -1896,7 +1896,7 @@
           "sha256": "2df0957485f1335e06f9774f0198f95964955535456b1eef0b464f18ecbcbdc7"
         }
       ],
-      "hash": "29369541bb4e2196793de19e8f9ba0334510b3b4b282fe299657c2e0b756c20b",
+      "hash": "444fbad46d1bbfdd2bf5f544aac7e7b0c4699e74fa591d6866c6067086f03fdc",
       "deps": [
         "button"
       ]
@@ -2101,7 +2101,7 @@
       "files": [
         {
           "path": "cta.css",
-          "sha256": "94a9fd6a0fade0cfa22623cfc7f896a0ef2daf5e34f8fd51f4d89a26372649e8"
+          "sha256": "a4236e3c0c2ce1078da3e301d6745cd8da8900e2298f2e4947d3406ff485f8c0"
         },
         {
           "path": "cta.html",
@@ -2112,7 +2112,7 @@
           "sha256": "84514c1041e84ddb2f88562f0dc8e78c85533d7ef0c9f0bfb74edb7588b12ee8"
         }
       ],
-      "hash": "bb894f5cc9b470a72c59dac0d3f2d4d22e41e32875e7f90682b62bc11026b2c9",
+      "hash": "7e68be410d7bdf99b4359bec5db443eeea90eec247d4a84701c41049a10f6cca",
       "deps": [
         "button",
         "highlight",
@@ -2469,14 +2469,14 @@
         },
         {
           "path": "settings-page.html",
-          "sha256": "54ece38490abf5cd6c96553b1e4b2ee0258d755ee94294777dbf980553dd3c36"
+          "sha256": "fa05cde4ee8101c9efc42618ba6576b2ebd32baffde6640f929321c2037a6352"
         },
         {
           "path": "settings-page.manifest.json",
           "sha256": "8be7ec2bbd42bab09128e4f5acfe4b3118a321abb186e1b40f9efd07e64bf4e5"
         }
       ],
-      "hash": "9647da65304c831a1a12d0e7cc9bd6998432fbe86a1adec8e622c769c63edcc0",
+      "hash": "f3be0e4aed351b2ae32206c46c43da59a620cc5d984c0dd39658738ac7a463b6",
       "deps": [
         "tabs",
         "card",

@@ -179,6 +179,27 @@
     });
   }
 
+  /**
+   * A theme-gallery frame grows to its own document, so the card's footer
+   * never slices the specimen mid-row — a spacious or chunky theme is simply a
+   * taller card. Like everything else here the frame is told, never reached
+   * into: the theme preview reports its height (reportFrameHeight) and the
+   * host sizes the iframe whose window sent it. The stylesheet's fixed
+   * block-size stays the no-script fallback.
+   */
+  var MAX_FRAME_HEIGHT = 2400;
+
+  function fitThemeFrame(event) {
+    var data = event.data;
+    if (!data || typeof data !== "object" || data.faqir !== "frame-height") return;
+    var height = Math.ceil(Number(data.height));
+    if (!(height > 0)) return;
+    all("[data-docs-theme-card] iframe[data-theme-frame]").forEach(function (frame) {
+      if (frame.contentWindow !== event.source) return;
+      frame.style.blockSize = Math.min(height, MAX_FRAME_HEIGHT) + "px";
+    });
+  }
+
   function applyTheme(name, persist) {
     if (!setThemeLink(name)) return false;
     state.theme = name;
@@ -220,7 +241,18 @@
 
   // ── frame role ────────────────────────────────────────────────────────────
 
+  function reportFrameHeight() {
+    if (window.parent === window) return;
+    var root = document.documentElement;
+    function report() {
+      window.parent.postMessage({ faqir: "frame-height", height: root.scrollHeight }, "*");
+    }
+    report();
+    if (window.ResizeObserver && document.body) new ResizeObserver(report).observe(document.body);
+  }
+
   function startFrame() {
+    if (document.documentElement.getAttribute("data-preview-role") === "theme") reportFrameHeight();
     window.addEventListener("message", function (event) {
       var data = event.data;
       if (!data || typeof data !== "object") return;
@@ -496,6 +528,7 @@
     all("iframe[data-component-frame], iframe[data-theme-frame]").forEach(function (frame) {
       frame.addEventListener("load", broadcastAppearance);
     });
+    window.addEventListener("message", fitThemeFrame);
 
     startMobileNavigation();
     startSidebarFilter();

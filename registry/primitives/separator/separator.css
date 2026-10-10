@@ -41,7 +41,9 @@ div[data-ui="separator"]::after {
 }
 
 /* ── Style: Dashed ── */
-[data-ui="separator"][data-style="dashed"] {
+/* The root draws the line only on an hr: a labelled div draws it with ::before/::after,
+   and a style here would switch its own border back on at the default width. */
+hr[data-ui="separator"][data-style="dashed"] {
   border-top-style: dashed;
 }
 
@@ -56,7 +58,7 @@ div[data-ui="separator"][data-style="dashed"]::after {
 }
 
 /* ── Style: Dotted ── */
-[data-ui="separator"][data-style="dotted"] {
+hr[data-ui="separator"][data-style="dotted"] {
   border-top-style: dotted;
 }
 

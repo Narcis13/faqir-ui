@@ -58,6 +58,7 @@ import {
 import {
   buildDocsSite,
   esc,
+  inlineMarkdown,
   isRetiredPage,
   isShellPage,
   relUrl,
@@ -460,7 +461,7 @@ describe("docs site — the layout guide and the token reference", () => {
     const layout = page(LAYOUT_PAGE);
     expect(layout).toContain("<h1>Layout</h1>");
     for (const p of LAYOUT_PRIMITIVES) {
-      expect(layout, `the guide omits ${p.name}`).toContain(esc(p.use));
+      expect(layout, `the guide omits ${p.name}`).toContain(inlineMarkdown(p.use));
     }
     // The nav is rendered from one shell, so the home page is a sufficient witness.
     expect(page("index.html")).toContain(`href="${LAYOUT_PAGE}"`);

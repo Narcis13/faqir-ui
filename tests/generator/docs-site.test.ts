@@ -20,7 +20,7 @@
 //    page class is fetched and checked.
 
 import { describe, it, expect, beforeAll, afterAll } from "bun:test";
-import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { createServer, request } from "node:http";
 import { dirname, join } from "node:path";
 import { SPAWN_TIMEOUT, runSyncBun } from "../helpers/spawn";
@@ -180,8 +180,11 @@ describe("docs site coverage", () => {
         "scripts/gallery.js",
         "scripts/playground.js",
         "scripts/studio.js",
-        // The theme studio's engine plugin, verbatim from the registry.
-        "scripts/faqir-tweak.js",
+        // Every official engine plugin, verbatim from the registry: the engine
+        // page runs them all live, the theme studio runs faqir-tweak.
+        ...readdirSync(join(REGISTRY, "core", "plugins"))
+          .filter((f) => f.endsWith(".js"))
+          .map((f) => `scripts/plugins/${f}`),
         "styles/faqir.css",
         "sitemap.xml",
         // The frozen protocol, published with its version in the path (1.0-01).

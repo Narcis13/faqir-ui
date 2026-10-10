@@ -123,7 +123,16 @@
   margin-block-start: var(--space-1);
 }
 
-@media (min-width: 48rem) {
+/* Rule ids, selectors and token names are long unbroken words; on a phone
+   they break rather than widen the card. */
+[data-docs-rule-body],
+[data-docs-rule-head] [data-ui="description-list"] {
+  overflow-wrap: anywhere;
+}
+
+/* Side by side only once the card can give the body a real measure: at 48rem
+   the sidebar is open and an 18rem head left the body under 6rem. */
+@media (min-width: 64rem) {
   [data-docs-rule] {
     grid-template-columns: minmax(14rem, 18rem) minmax(0, 1fr);
   }

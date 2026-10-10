@@ -159,7 +159,7 @@
    would vanish. */
 [data-ui="cta"][data-tone="primary"] {
   --faqir-cta-ink: var(--cta-fg, var(--color-primary-fg));
-  --faqir-cta-muted: color-mix(in oklch, var(--faqir-cta-ink) 78%, transparent);
+  --faqir-cta-muted: color-mix(in oklch, var(--faqir-cta-ink) 88%, transparent);
   --faqir-cta-accent: var(--faqir-cta-ink);
   background: var(--cta-bg, var(--color-primary));
   border-color: transparent;
@@ -171,7 +171,7 @@
    from colours that share the accent's foreground. */
 [data-ui="cta"][data-tone="gradient"] {
   --faqir-cta-ink: var(--cta-fg, var(--color-primary-fg));
-  --faqir-cta-muted: color-mix(in oklch, var(--faqir-cta-ink) 78%, transparent);
+  --faqir-cta-muted: color-mix(in oklch, var(--faqir-cta-ink) 88%, transparent);
   --faqir-cta-accent: var(--faqir-cta-ink);
   background: var(--cta-gradient, var(--gradient-accent, linear-gradient(135deg, var(--color-primary), var(--color-info))));
   border-color: transparent;

@@ -922,7 +922,7 @@ function renderBindingsSection(ctx: PageContext): string {
       .map(
         (t) =>
           `<h3 id="bindings-${t.target}">${esc(t.pkg.name)}</h3>\n` +
-          `<p>${esc(t.pkg.description)}.</p>\n` +
+          `<p>${plainMarkdown(t.pkg.description)}.</p>\n` +
           pre(t.example),
       )
       .join("\n")
@@ -1029,7 +1029,7 @@ function renderFamilySection(ctx: PageContext): string {
     [
       code(root.name),
       esc(root.version),
-      esc(root.description),
+      plainMarkdown(root.description),
       external(`${REPO_URL}/tree/${ALIAS_REF}`, "repository root"),
     ],
     ...PACKAGE_DIRS.map((dir) => {
@@ -1037,7 +1037,7 @@ function renderFamilySection(ctx: PageContext): string {
       return [
         code(pkg.name),
         esc(pkg.version),
-        esc(pkg.description),
+        plainMarkdown(pkg.description),
         external(`${REPO_URL}/tree/${ALIAS_REF}/packages/${dir}`, `packages/${dir}`),
       ];
     }),

@@ -178,6 +178,124 @@ function decodeV1(matrix: number[][]): string {
   return new TextDecoder().decode(bytes);
 }
 
+// ── Independent multi-block reader (versions 1–10) ───────────────────────────
+// Block structure per ISO/IEC 18004 Table 9, per ECL (L, M, Q, H):
+// [EC codewords per block, [group-1 blocks, data codewords each], [group-2 …]].
+type Blocks = [number, [number, number], [number, number]];
+const SPEC_BLOCKS: Record<number, Blocks[]> = {
+  1: [[7, [1, 19], [0, 0]], [10, [1, 16], [0, 0]], [13, [1, 13], [0, 0]], [17, [1, 9], [0, 0]]],
+  2: [[10, [1, 34], [0, 0]], [16, [1, 28], [0, 0]], [22, [1, 22], [0, 0]], [28, [1, 16], [0, 0]]],
+  3: [[15, [1, 55], [0, 0]], [26, [1, 44], [0, 0]], [18, [2, 17], [0, 0]], [22, [2, 13], [0, 0]]],
+  4: [[20, [1, 80], [0, 0]], [18, [2, 32], [0, 0]], [26, [2, 24], [0, 0]], [16, [4, 9], [0, 0]]],
+  5: [[26, [1, 108], [0, 0]], [24, [2, 43], [0, 0]], [18, [2, 15], [2, 16]], [22, [2, 11], [2, 12]]],
+  6: [[18, [2, 68], [0, 0]], [16, [4, 27], [0, 0]], [24, [4, 19], [0, 0]], [28, [4, 15], [0, 0]]],
+  7: [[20, [2, 78], [0, 0]], [18, [4, 31], [0, 0]], [18, [2, 14], [4, 15]], [26, [4, 13], [1, 14]]],
+  8: [[24, [2, 97], [0, 0]], [22, [2, 38], [2, 39]], [22, [4, 18], [2, 19]], [26, [4, 14], [2, 15]]],
+  9: [[30, [2, 116], [0, 0]], [22, [3, 36], [2, 37]], [20, [4, 16], [4, 17]], [24, [4, 12], [4, 13]]],
+  10: [[18, [2, 68], [2, 69]], [26, [4, 43], [1, 44]], [24, [6, 19], [2, 20]], [28, [6, 15], [2, 16]]],
+};
+const ALIGN: Record<number, number[]> = {
+  1: [], 2: [6, 18], 3: [6, 22], 4: [6, 26], 5: [6, 30], 6: [6, 34],
+  7: [6, 22, 38], 8: [6, 24, 42], 9: [6, 26, 46], 10: [6, 28, 50],
+};
+/** Format-info ECL bits → index into SPEC_BLOCKS (L, M, Q, H). */
+const ECL_INDEX: Record<number, number> = { 1: 0, 0: 1, 3: 2, 2: 3 };
+
+function dataCapacity(version: number, eclIndex: number): number {
+  const [, g1, g2] = SPEC_BLOCKS[version][eclIndex];
+  return g1[0] * g1[1] + g2[0] * g2[1] - (version <= 9 ? 2 : 3); // minus mode + count header
+}
+
+function buildReserved(version: number): number[][] {
+  const size = version * 4 + 17;
+  const reserved = buildReservedV1(size);
+  const pos = ALIGN[version];
+  for (const r of pos) {
+    for (const c of pos) {
+      const onFinder = (r < 9 && c < 9) || (r < 9 && c > size - 10) || (r > size - 10 && c < 9);
+      if (onFinder) continue;
+      for (let dr = -2; dr <= 2; dr++) for (let dc = -2; dc <= 2; dc++) reserved[r + dr][c + dc] = 1;
+    }
+  }
+  if (version >= 7) {
+    for (let i = 0; i < 6; i++) {
+      for (let j = 0; j < 3; j++) {
+        reserved[i][size - 11 + j] = 1;
+        reserved[size - 11 + j][i] = 1;
+      }
+    }
+  }
+  return reserved;
+}
+
+/** The 18-bit version word from the top-right block, least significant bit first. */
+function readVersionWord(matrix: number[][]): number {
+  const size = matrix.length;
+  let bits = 0;
+  for (let i = 0; i < 18; i++) bits |= matrix[Math.floor(i / 3)][size - 11 + (i % 3)] << i;
+  return bits;
+}
+
+/** GF(256) multiply from the field definition (x^8+x^4+x^3+x^2+1) — not the encoder's tables. */
+function gfMulSpec(a: number, b: number): number {
+  let p = 0;
+  for (let i = 0; i < 8; i++) {
+    if (b & 1) p ^= a;
+    b >>= 1;
+    a = a & 0x80 ? ((a << 1) ^ 0x11d) & 0xff : a << 1;
+  }
+  return p;
+}
+
+/** A valid Reed-Solomon block has every syndrome c(α^i), i < ec, equal to zero. */
+function syndromesClean(block: number[], ec: number): boolean {
+  let alpha = 1;
+  for (let i = 0; i < ec; i++) {
+    let acc = 0;
+    for (const v of block) acc = gfMulSpec(acc, alpha) ^ v;
+    if (acc !== 0) return false;
+    alpha = gfMulSpec(alpha, 2);
+  }
+  return true;
+}
+
+/** Decode any version 1–10 byte-mode symbol: de-interleave, check RS, read the payload. */
+function decodeAny(matrix: number[][]): { text: string; version: number; rsClean: boolean } {
+  const version = (matrix.length - 17) / 4;
+  const reserved = buildReserved(version);
+  const { eclBits, mask } = readFormat(matrix);
+  const [ec, g1, g2] = SPEC_BLOCKS[version][ECL_INDEX[eclBits]];
+  const bits = readDataBits(unmask(matrix, reserved, mask), reserved);
+  const codewords: number[] = [];
+  for (let i = 0; i + 8 <= bits.length; i += 8) {
+    let v = 0;
+    for (let j = 0; j < 8; j++) v = (v << 1) | bits[i + j];
+    codewords.push(v);
+  }
+  const sizes = [...Array(g1[0]).fill(g1[1]), ...Array(g2[0]).fill(g2[1])];
+  const blocks: number[][] = sizes.map(() => []);
+  let p = 0;
+  for (let i = 0; i < Math.max(...sizes); i++) {
+    sizes.forEach((n, b) => {
+      if (i < n) blocks[b].push(codewords[p++]);
+    });
+  }
+  for (let i = 0; i < ec; i++) blocks.forEach((b) => b.push(codewords[p++]));
+  const rsClean = blocks.every((b) => syndromesClean(b, ec));
+  const data = blocks.flatMap((b, i) => b.slice(0, sizes[i]));
+  let bp = 0;
+  const take = (n: number) => {
+    let v = 0;
+    for (let i = 0; i < n; i++, bp++) v = (v << 1) | ((data[bp >> 3] >> (7 - (bp & 7))) & 1);
+    return v;
+  };
+  if (take(4) !== 0b0100) throw new Error("expected byte mode");
+  const len = take(version <= 9 ? 8 : 16);
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) bytes[i] = take(8);
+  return { text: new TextDecoder().decode(bytes), version, rsClean };
+}
+
 const FINDER = [
   [1, 1, 1, 1, 1, 1, 1],
   [1, 0, 0, 0, 0, 0, 1],
@@ -295,6 +413,64 @@ describe("qr-code controller", () => {
     const big = matrixOf(render("x".repeat(40)).root).length; // needs > v1
     expect(small).toBe(21);
     expect(big).toBeGreaterThan(21);
+  });
+
+  // ── every version and ECL, multi-block symbols included ────────────────────
+  it("fills every version v1–v10 at every ECL to capacity and round-trips with clean RS blocks", () => {
+    for (const [ecl, idx] of [["L", 0], ["M", 1], ["Q", 2], ["H", 3]] as const) {
+      for (let v = 1; v <= 10; v++) {
+        const text = "ab3".repeat(200).slice(0, dataCapacity(v, idx));
+        const decoded = decodeAny(matrixOf(render(text, ecl).root));
+        expect([ecl, decoded.version]).toEqual([ecl, v]);
+        expect(decoded.text).toBe(text);
+        expect(decoded.rsClean).toBe(true);
+      }
+    }
+  });
+
+  it("moves to the next version one byte past capacity, counting the mode and length header", () => {
+    for (let v = 1; v <= 9; v++) {
+      const m = matrixOf(render("y".repeat(dataCapacity(v, 1) + 1), "M").root);
+      expect(m.length).toBe((v + 1) * 4 + 17);
+    }
+  });
+
+  it("writes the second format copy where the spec puts it, and keeps the dark module dark", () => {
+    for (const ecl of ["L", "M", "Q", "H"] as const) {
+      for (const text of ["hello", "x".repeat(60)]) {
+        const m = matrixOf(render(text, ecl).root);
+        const s = m.length;
+        // First copy, MSB first, around the top-left finder (as readFormat reads it).
+        let first = 0;
+        for (let i = 0; i < 15; i++) {
+          const bit = i < 6 ? m[8][i] : i === 6 ? m[8][7] : i === 7 ? m[8][8] : i === 8 ? m[7][8] : m[14 - i][8];
+          first = (first << 1) | bit;
+        }
+        // Second copy (ISO/IEC 18004 §7.9.1): seven modules up column 8 from the
+        // bottom, then eight along row 8 to the right edge.
+        let second = 0;
+        for (let i = 0; i < 15; i++) second = (second << 1) | (i < 7 ? m[s - 1 - i][8] : m[8][s - 15 + i]);
+        expect([ecl, text.length, second]).toEqual([ecl, text.length, first]);
+        expect(m[s - 8][8]).toBe(1);
+      }
+    }
+  });
+
+  it("writes the BCH-coded version word for versions 7–10", () => {
+    // ISO/IEC 18004 Annex D, Table D.1.
+    const expected: Record<number, number> = { 7: 0x07c94, 8: 0x085bc, 9: 0x09a99, 10: 0x0a4d3 };
+    for (let v = 7; v <= 10; v++) {
+      const m = matrixOf(render("x".repeat(dataCapacity(v, 1)), "M").root);
+      expect(readVersionWord(m)).toBe(expected[v]);
+    }
+  });
+
+  it("renders the registry's high-ECL example (multi-block v6-H)", () => {
+    const text = "https://efactura.mfinante.gov.ro/verify/ABC123";
+    const decoded = decodeAny(matrixOf(render(text, "H").root));
+    expect(decoded.version).toBe(6);
+    expect(decoded.text).toBe(text);
+    expect(decoded.rsClean).toBe(true);
   });
 
   // ── empty / oversize handling ──────────────────────────────────────────────
