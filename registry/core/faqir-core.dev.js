@@ -11,7 +11,7 @@
 // DEVELOPMENT BUILD — verbose diagnostics, no size budget. Never ship this;
 // point <script src> at faqir-core.js for production.
 // Regenerate with: bun run build:core
-// Package version: 1.1.2
+// Package version: 1.2.0
 // ============================================================================
 
 /**
@@ -12247,7 +12247,7 @@ function createTreeView(root) {
     // one time it was hand-maintained (0.1.0 in a package versioned 0.2.4), so
     // the built artifact is now the only place the number is authoritative and
     // the build fails if this marker goes missing.
-    version: '1.1.2', // @faqir:version
+    version: '1.2.0', // @faqir:version
     reactive: reactive,
     effect: effect,
     batch: batch,

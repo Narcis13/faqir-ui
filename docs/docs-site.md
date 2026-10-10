@@ -308,9 +308,9 @@ complete, standalone document — the component's registry reference markup unde
 the two-tag CDN preamble, version-pinned with subresource integrity:
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.1.0/dist/faqir.aurora.css"
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.2.0/dist/faqir.aurora.css"
       integrity="sha384-…" crossorigin="anonymous">
-<script src="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.1.0/dist/faqir-core.min.js"
+<script src="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.2.0/dist/faqir-core.min.js"
         integrity="sha384-…" crossorigin="anonymous" defer></script>
 ```
 
