@@ -3146,8 +3146,9 @@ export function inlineMarkdown(value: string): string {
       /(^|[\s(\[—–])\*(?=[^\s*])([^*]*?[^\s*])\*(?=$|[\s.,;:!?)\]—–])/g,
       "$1<em>$2</em>",
     )
+    // `href` is already escaped with the rest of the text; only the quote is left.
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (whole, label: string, href: string) =>
-      /^https?:/.test(href) ? `<a data-ui="link" href="${escAttr(href)}">${label}</a>` : label,
+      /^https?:/.test(href) ? `<a data-ui="link" href="${href.replace(/"/g, "&quot;")}">${label}</a>` : label,
     )
     .replace(/\u0000(\d+)\u0000/g, (_, i: string) => spans[Number(i)]);
 }

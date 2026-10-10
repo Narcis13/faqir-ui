@@ -217,8 +217,9 @@ function placeFormatInfo(matrix, ecl, maskId) {
     else if (i === 7) matrix[8][8] = bit;
     else if (i === 8) matrix[7][8] = bit;
     else matrix[14 - i][8] = bit;
-    // Around other finders
-    if (i < 8) matrix[s - 1 - i][8] = bit;
+    // The second copy: bits 0–6 up column 8 from the bottom, 7–14 along row 8
+    // to the right edge. (s - 8, 8) between them is the always-dark module.
+    if (i < 7) matrix[s - 1 - i][8] = bit;
     else matrix[8][s - 15 + i] = bit;
   }
 }
@@ -290,8 +291,6 @@ function encodeQR(text, ecl = "M") {
 
   // Pad to byte boundary
   if (bitCount > 0) pushBits(0, 8 - bitCount);
-  // A full symbol has no room for the terminator.
-  codewords.splice(info.dc);
 
   // Pad to capacity
   while (codewords.length < info.dc) {

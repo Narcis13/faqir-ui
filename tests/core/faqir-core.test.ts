@@ -1940,6 +1940,36 @@ describe("Directives", () => {
     });
   });
 
+  describe("l-teleport with a scope of its own", () => {
+    it("initialises the teleported scope once when the target comes later", async () => {
+      let made = 0;
+      Faqir.data("teleportProbe", () => {
+        made++;
+        return { n: 0 };
+      });
+      const box = document.createElement("div");
+      box.innerHTML = `
+        <div l-data="{}">
+          <div l-data="teleportProbe" l-teleport="#later-scope-target">
+            <button @click="n++">+1</button><output l-text="n"></output>
+          </div>
+          <div id="later-scope-target"></div>
+        </div>`;
+      document.body.appendChild(box);
+      Faqir.initTree(box.firstElementChild);
+      await tick();
+      try {
+        expect(made).toBe(1);
+        box.querySelector<HTMLButtonElement>("#later-scope-target button")!.click();
+        await tick();
+        expect(box.querySelector("output")!.textContent).toBe("1");
+      } finally {
+        Faqir.destroy(box);
+        box.remove();
+      }
+    });
+  });
+
   describe("l-model on the switch primitive", () => {
     it("toggles the bound value on click — a <button role=switch> fires no change", async () => {
       const box = document.createElement("div");

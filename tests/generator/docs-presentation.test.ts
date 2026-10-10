@@ -55,6 +55,10 @@ describe("docs presentation — inline markdown", () => {
     expect(inlineMarkdown("see [the spec](https://example.com/x)")).toContain(
       `<a data-ui="link" href="https://example.com/x">the spec</a>`,
     );
+    // Escaped once with the rest of the text, not twice (`&amp;amp;`).
+    expect(inlineMarkdown("[q](https://example.com/?a=1&b=2)")).toBe(
+      `<a data-ui="link" href="https://example.com/?a=1&amp;b=2">q</a>`,
+    );
   });
 
   it("never reads a star inside a code span, or a bare data-*, as emphasis", () => {

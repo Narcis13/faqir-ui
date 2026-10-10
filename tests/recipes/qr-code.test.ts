@@ -435,6 +435,27 @@ describe("qr-code controller", () => {
     }
   });
 
+  it("writes the second format copy where the spec puts it, and keeps the dark module dark", () => {
+    for (const ecl of ["L", "M", "Q", "H"] as const) {
+      for (const text of ["hello", "x".repeat(60)]) {
+        const m = matrixOf(render(text, ecl).root);
+        const s = m.length;
+        // First copy, MSB first, around the top-left finder (as readFormat reads it).
+        let first = 0;
+        for (let i = 0; i < 15; i++) {
+          const bit = i < 6 ? m[8][i] : i === 6 ? m[8][7] : i === 7 ? m[8][8] : i === 8 ? m[7][8] : m[14 - i][8];
+          first = (first << 1) | bit;
+        }
+        // Second copy (ISO/IEC 18004 §7.9.1): seven modules up column 8 from the
+        // bottom, then eight along row 8 to the right edge.
+        let second = 0;
+        for (let i = 0; i < 15; i++) second = (second << 1) | (i < 7 ? m[s - 1 - i][8] : m[8][s - 15 + i]);
+        expect([ecl, text.length, second]).toEqual([ecl, text.length, first]);
+        expect(m[s - 8][8]).toBe(1);
+      }
+    }
+  });
+
   it("writes the BCH-coded version word for versions 7–10", () => {
     // ISO/IEC 18004 Annex D, Table D.1.
     const expected: Record<number, number> = { 7: 0x07c94, 8: 0x085bc, 9: 0x09a99, 10: 0x0a4d3 };

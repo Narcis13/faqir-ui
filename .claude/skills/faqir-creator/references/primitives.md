@@ -1368,8 +1368,8 @@ Toggle switch with on/off states, disabled state, and size variants; compose sib
 
 ```html
 <div data-ui="cluster" data-gap="4">
-  <label data-ui="switch-label" for="{id1}"><button data-ui="switch" id="{id1}" role="switch" aria-checked="false"><span data-part="thumb"></span></button><span data-part="label">{label1}</span></label>
-  <label data-ui="switch-label" for="{id2}"><button data-ui="switch" id="{id2}" role="switch" aria-checked="false"><span data-part="thumb"></span></button><span data-part="label">{label2}</span></label>
+  <label data-ui="switch-label" for="{id1}"><button type="button" data-ui="switch" id="{id1}" role="switch" aria-checked="false"><span data-part="thumb"></span></button><span data-part="label">{label1}</span></label>
+  <label data-ui="switch-label" for="{id2}"><button type="button" data-ui="switch" id="{id2}" role="switch" aria-checked="false"><span data-part="thumb"></span></button><span data-part="label">{label2}</span></label>
 </div>
 ```
 

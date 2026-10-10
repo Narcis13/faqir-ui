@@ -530,8 +530,9 @@
       var child = children[i];
 
       // Skip elements already initialized by l-for or l-if — or teleported here
-      // by an earlier sibling's l-teleport, which bound them on the way out.
-      if ((child.__faqirScope || child.__faqirStray) && !child.hasAttribute('l-data')) {
+      // by an earlier sibling's l-teleport, which bound them (and, with an
+      // l-data of their own, scoped them) on the way out.
+      if (child.__faqirStray || (child.__faqirScope && !child.hasAttribute('l-data'))) {
         continue;
       }
 
