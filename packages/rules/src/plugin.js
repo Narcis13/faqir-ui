@@ -306,10 +306,12 @@ function writeDisabled(ctx, el, value) {
  * @param {HTMLFormElement} form
  * @param {FormContext} ctx
  * @param {Record<string, boolean>} visible
+ * @returns {boolean} whether a control was hidden or brought back
  */
 function applyVisible(form, ctx, visible) {
   const keys = Object.keys(visible);
-  if (keys.length === 0) return;
+  let moved = false;
+  if (keys.length === 0) return moved;
   flush(ctx);
   /** @type {Map<Element, boolean>} group → hidden */
   const groups = new Map();
@@ -330,10 +332,12 @@ function applyVisible(form, ctx, visible) {
     const group = groupOf(el);
     groups.set(group, groups.get(group) === true || !shown);
     if (!shown && !ctx.hidden.has(el)) {
+      moved = true;
       ctx.foreign.set(el, el.disabled);
       ctx.hidden.add(el);
       writeDisabled(ctx, el, true);
     } else if (shown && ctx.hidden.has(el)) {
+      moved = true;
       const want = ctx.foreign.get(el) === true;
       ctx.hidden.delete(el);
       ctx.foreign.delete(el);
@@ -349,6 +353,7 @@ function applyVisible(form, ctx, visible) {
       ownHidden.delete(group);
     }
   });
+  return moved;
 }
 
 /**
@@ -414,15 +419,21 @@ function applyComputed(form, scope, path, value) {
 function repaint(form, ctx) {
   /** @type {ReturnType<typeof evaluate>} */
   let out;
-  try {
-    flush(ctx);
-    out = evaluate(ctx.definition, collect(form, ctx));
-  } catch (error) {
-    const why = error instanceof Error ? error.message : String(error);
-    report("l-rules could not evaluate its rules: " + why, form, why);
-    return;
+  // A hidden control is not read, so an answer that shows or hides one was
+  // judged on data it has just changed: judge again until the visible set
+  // holds still (each pass can only move what the last one decided; four is
+  // more than any chain of `show` rules a form carries).
+  for (let pass = 0; pass < 4; pass++) {
+    try {
+      flush(ctx);
+      out = evaluate(ctx.definition, collect(form, ctx));
+    } catch (error) {
+      const why = error instanceof Error ? error.message : String(error);
+      report("l-rules could not evaluate its rules: " + why, form, why);
+      return;
+    }
+    if (!applyVisible(form, ctx, out.visible)) break;
   }
-  applyVisible(form, ctx, out.visible);
   for (const path in out.required) applyRequired(form, path, out.required[path]);
   for (const path in out.computed) applyComputed(form, ctx.scope, path, out.computed[path]);
   ctx.state.visible = out.visible;
@@ -771,6 +782,11 @@ export function install(Faqir) {
     repaint(form, ctx);
 
     let live = true;
+    // `l-rules` sits on the form, so it is bound before the `l-model`s inside
+    // it have written their values into the controls: judge again once they have.
+    Promise.resolve().then(function () {
+      if (live) repaint(form, ctx);
+    });
     // Capture, so the DOM is already repainted — a field hidden by this
     // keystroke is disabled — before faqir-validate's live pass reads it.
     function onEdit() {
