@@ -307,12 +307,12 @@ How far this theme sits from the nearest other shipped theme, written by the dis
 
 ## File Set Per Kind
 
-`files` requires `html`, `css` and `manifest` whatever the kind — `js` is declared by the components that ship a controller, and only those. Counted across the 103 manifests in `registry/`:
+`files` requires `html`, `css` and `manifest` whatever the kind — `js` is declared by the components that ship a controller, and only those. Counted across the 105 manifests in `registry/`:
 
 | `kind` | Components | Declare `files.js` |
 |---|---|---|
 | `pattern` | 23 | 0 |
-| `primitive` | 51 | 0 |
+| `primitive` | 53 | 0 |
 | `recipe` | 29 | 29 |
 
 ## Closed Enums
@@ -378,12 +378,17 @@ The shipped `button` manifest, verbatim. Not an illustration of one: this is the
 {
   "$schema": "../../../manifest.schema.json",
   "name": "button",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "kind": "primitive",
   "category": "actions",
   "description": "Interactive button with multiple visual variants and sizes",
 
   "changes": [
+    {
+      "version": "1.4.0",
+      "note": "Two more data-effect values for landing pages. arrow: the trailing icon part (the last child) leans one --space-1 toward the inline end on hover and focus-visible, flipped under :dir(rtl), where the glyph is also mirrored so an arrow-right points the way it moves; CSS cannot tell a trailing icon from a lone leading one, so use it only on a button whose icon trails; the movement exists only under prefers-reduced-motion: no-preference. sink: the neo-brutalist press. The button rests on the theme's --shadow-md (a hard offset in a hard-depth theme, a soft one elsewhere), lifts off it on hover (--shadow-lg, up and back by the sink distance) and on :active (the pointer, or Space held on the keyboard) collapses to --shadow-xs while travelling the same distance the other way. Two new custom-property knobs, --sink-distance and --sink-shadow. No change for a button without the attribute or with the existing values.",
+      "breaking": false
+    },
     {
       "version": "1.3.0",
       "note": "A data-effect prop, additive to every variant: shine (a highlight sweeps across the face on hover and focus), pulse (a ring leaves the edge on a loop, cut from --motion-ambient-duration and frozen by --motion-ambient-play) and press (sinks to 0.96 under the pointer). The ring is drawn by ::before, so it never collides with the loading spinner on ::after. Every effect has a reduced-motion fallback. No change for a button without the attribute.",
@@ -417,7 +422,7 @@ The shipped `button` manifest, verbatim. Not an illustration of one: this is the
       "selector": "[data-part='icon']",
       "required": false,
       "tag_hint": "span",
-      "description": "Optional leading icon container"
+      "description": "Optional icon container, leading by default; as the last child it is the trailing icon that data-effect=\"arrow\" leans toward the inline end"
     }
   },
 
@@ -447,7 +452,9 @@ The shipped `button` manifest, verbatim. Not an illustration of one: this is the
   },
 
   "props": {
-    "effect": {"type":"enum","values":["shine","pulse","press"],"attr":"data-effect","description":"Attention on top of the variant: shine sweeps a highlight across the face on hover; pulse sends a ring out from the edge on a loop — for the one action the screen is waiting on, never two; press sinks the button under the pointer."},
+    "effect": {"type":"enum","values":["shine","pulse","press","arrow","sink"],"attr":"data-effect","description":"Attention on top of the variant: shine sweeps a highlight across the face on hover; pulse sends a ring out from the edge on a loop — for the one action the screen is waiting on, never two; press sinks the button under the pointer; arrow leans the trailing icon part toward the inline end on hover and focus (give it an arrow-right icon as its last child; not for a button whose only icon leads); sink rests the button on the theme's shadow and presses it flush on :active — a hard offset in a hard-depth theme, a soft one elsewhere."},
+    "--sink-distance": {"type":"string","default":"calc(var(--space-1) / 2)","description":"With data-effect=sink: how far the button lifts on hover and travels on :active (custom property). Match it to the theme's hard-shadow offset."},
+    "--sink-shadow": {"type":"string","default":"var(--shadow-md) at rest, var(--shadow-lg) on hover","description":"With data-effect=sink: replaces the resting and hover shadow (custom property), for a theme that sets every --shadow-* to none. Pass a shadow built from tokens."},
     "caption": { "type": "string", "default": "Click me", "description": "Button label text" },
     "icon": { "type": "string", "default": "", "description": "Icon content for the icon slot" },
     "disabled": { "type": "boolean", "default": false, "description": "Whether the button is disabled" },
@@ -471,19 +478,22 @@ The shipped `button` manifest, verbatim. Not an illustration of one: this is the
     "color-secondary-hover", "color-secondary-fg", "color-destructive", "color-destructive-hover",
     "color-destructive-fg", "color-bg", "color-bg-muted", "color-bg-subtle", "color-fg",
     "color-border", "color-ring", "color-primary-subtle", "radius-md", "radius-full", "space-2",
-    "space-3", "space-4", "space-6", "font-ui", "text-xs", "text-sm", "text-base", "weight-medium",
-    "duration-fast", "duration-slower", "ease-default", "ease-emphasized", "ease-out",
-    "border-width", "border-width-strong", "border-width-md", "corner-shape", "focus-ring-width",
-    "focus-ring-offset", "focus-ring-style", "focus-ring-color", "focus-shadow",
-    "button-text-transform", "button-height-md", "button-radius", "button-height-sm",
-    "button-height-lg", "motion-hover-lift", "motion-ambient-duration", "motion-ambient-play",
-    "link-decoration", "disabled-opacity"
+    "space-3", "space-4", "space-6", "space-1", "font-ui", "text-xs", "text-sm", "text-base",
+    "weight-medium", "duration-fast", "duration-slower", "duration-normal", "ease-default",
+    "ease-emphasized", "ease-out", "border-width", "border-width-strong", "border-width-md",
+    "corner-shape", "focus-ring-width", "focus-ring-offset", "focus-ring-style", "focus-ring-color",
+    "focus-shadow", "button-text-transform", "button-height-md", "button-radius",
+    "button-height-sm", "button-height-lg", "motion-hover-lift", "motion-ambient-duration",
+    "motion-ambient-play", "link-decoration", "disabled-opacity", "shadow-md", "shadow-lg",
+    "shadow-xs"
   ],
 
   "templates": {
     "html": "<button data-ui=\"button\" data-variant=\"{variant}\" data-size=\"{size}\">{text}</button>",
     "html_with_icon": "<button data-ui=\"button\" data-variant=\"{variant}\" data-size=\"{size}\"><span data-part=\"icon\">{icon}</span>{text}</button>",
     "html_icon_only": "<button data-ui=\"button\" data-variant=\"{variant}\" data-size=\"{size}\" aria-label=\"{label}\">{icon}</button>",
+    "html_arrow": "<button data-ui=\"button\" data-variant=\"primary\" data-size=\"{size}\" data-effect=\"arrow\">{text}<span data-ui=\"icon\" data-icon=\"arrow-right\" data-part=\"icon\" aria-hidden=\"true\"></span></button>",
+    "html_sink": "<button data-ui=\"button\" data-variant=\"primary\" data-size=\"{size}\" data-effect=\"sink\">{text}</button>",
     "html_pressed": "<button data-ui=\"button\" data-variant=\"outline\" data-size=\"{size}\" type=\"button\" aria-pressed=\"true\">{text}</button>"
   },
 
@@ -496,7 +506,8 @@ The shipped `button` manifest, verbatim. Not an illustration of one: this is the
     "set-pressed-false",
     "wrap-in-button-group",
     "change-text-content",
-    "set-effect"
+    "set-effect",
+    "add-trailing-arrow-icon"
   ],
 
   "unsafe_transforms": [
@@ -529,7 +540,9 @@ The shipped `button` manifest, verbatim. Not an illustration of one: this is the
     "link-variant-keeps-its-text-box-under-a-size",
     "effects-are-additive-to-every-variant",
     "pulse-ring-never-collides-with-the-loading-spinner",
-    "effects-stop-under-reduced-motion"
+    "effects-stop-under-reduced-motion",
+    "arrow-nudges-the-trailing-icon-only-under-no-preference",
+    "sink-presses-flush-on-active-and-keeps-the-theme-shadow"
   ]
 }
 ```
@@ -547,5 +560,5 @@ The manifest is the contract; the sources repeat the machine-readable part of it
 
 ```css
 /* @ui:component button */
-/* @ui:tokens color-primary color-primary-hover color-primary-fg color-secondary color-secondary-hover color-secondary-fg color-destructive color-destructive-hover color-destructive-fg color-bg color-bg-muted color-bg-subtle color-fg color-border color-ring color-primary-subtle radius-md radius-full space-2 space-3 space-4 space-6 font-ui text-xs text-sm text-base weight-medium duration-fast duration-slower ease-default ease-emphasized ease-out border-width border-width-strong border-width-md corner-shape focus-ring-width focus-ring-offset focus-ring-style focus-ring-color focus-shadow button-text-transform button-height-md button-radius button-height-sm button-height-lg motion-hover-lift motion-ambient-duration motion-ambient-play link-decoration disabled-opacity */
+/* @ui:tokens color-primary color-primary-hover color-primary-fg color-secondary color-secondary-hover color-secondary-fg color-destructive color-destructive-hover color-destructive-fg color-bg color-bg-muted color-bg-subtle color-fg color-border color-ring color-primary-subtle radius-md radius-full space-2 space-3 space-4 space-6 space-1 font-ui text-xs text-sm text-base weight-medium duration-fast duration-slower duration-normal ease-default ease-emphasized ease-out border-width border-width-strong border-width-md corner-shape focus-ring-width focus-ring-offset focus-ring-style focus-ring-color focus-shadow button-text-transform button-height-md button-radius button-height-sm button-height-lg motion-hover-lift motion-ambient-duration motion-ambient-play link-decoration disabled-opacity shadow-md shadow-lg shadow-xs */
 ```

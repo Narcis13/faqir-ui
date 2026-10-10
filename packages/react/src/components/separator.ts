@@ -8,7 +8,7 @@ import type { ComponentPropsWithoutRef } from "react";
 export type LSeparatorVariant = "horizontal" | "vertical";
 
 /** Allowed `styleVariant` values (manifest variant group "style", attr `data-style`). */
-export type LSeparatorStyleVariant = "solid" | "dashed" | "dotted" | "thick";
+export type LSeparatorStyleVariant = "solid" | "dashed" | "dotted" | "thick" | "ornament";
 
 /** Allowed `size` values (manifest variant group "size", attr `data-size`). */
 export type LSeparatorSize = "sm" | "md" | "lg";
@@ -28,7 +28,7 @@ export const LSeparator = createFaqirPrimitive<LSeparatorProps>({
   tag: "hr",
   variants: [
     { prop: "variant", attr: "data-variant", values: ["horizontal", "vertical"] },
-    { prop: "styleVariant", attr: "data-style", values: ["solid", "dashed", "dotted", "thick"] },
+    { prop: "styleVariant", attr: "data-style", values: ["solid", "dashed", "dotted", "thick", "ornament"] },
     { prop: "size", attr: "data-size", values: ["sm", "md", "lg"] },
   ],
   states: [],

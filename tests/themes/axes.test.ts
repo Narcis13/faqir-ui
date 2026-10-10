@@ -568,7 +568,7 @@ const THEME_TABLE: Row[] = [
   ["memphis", "tinted", "sans-geometric", "crisp", "heavy", "hard", "springy", "bold", "rect", "high"],
   ["midnight", "cool", "system", "soft", "hairline", "layered", "smooth", "glow", "soft", "standard"],
   ["monolith", "tinted", "sans-grotesque", "sharp", "hairline", "flat", "minimal", "inset", "rect", "high"],
-  ["neo","gray", "sans-grotesque", "sharp", "heavy", "hard", "playful", "bold", "rect", "standard"],
+  ["neo", "gray", "sans-grotesque", "sharp", "heavy", "hard", "playful", "bold", "rect", "standard"],
   ["neumorph", "tinted", "rounded", "round", "hairline", "inset", "smooth", "inset", "soft", "standard"],
   ["nordic", "cool", "sans-geometric", "round", "hairline", "flat", "smooth", "ring", "soft", "standard"],
   ["organic", "warm", "sans-humanist", "round", "hairline", "soft", "smooth", "ring", "soft", "standard"],

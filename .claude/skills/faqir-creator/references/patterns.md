@@ -535,7 +535,7 @@ _No variants._
 
 _kind: pattern · category: marketing_
 
-Landing-page hero section composing badge + heading + description + call-to-action buttons, with an optional media column. Composition only: zero JavaScript, no controller, no reactive directives — the two layout variants are pure CSS grid.
+Landing-page hero section composing badge + heading + description + call-to-action buttons, with an optional media column. Composition only: zero JavaScript, no controller, no reactive directives — the three layout variants (centred, split, and a full-bleed cover with display type over a backdrop) are pure CSS grid, and data-animate plays a staggered CSS entrance.
 
 ```html
 <section data-ui="hero" data-variant="{layout}" aria-labelledby="{id}-headline">
@@ -560,19 +560,19 @@ Landing-page hero section composing badge + heading + description + call-to-acti
 ├─ [data-part='actions']  <div>  optional  — Call-to-action row. Put nested data-ui='button' elements (or <a data-ui='button'>) directly inside; they keep their own data-variant/data-size and must NOT carry a data-part
 ├─ [data-part='note']  <p>  optional  — Fine print under the actions (pricing caveat, trust line)
 ├─ [data-part='content']  <div>  optional  — Text column wrapper — required by the split layout, omitted by the centered one
-└─ [data-part='media']  <figure>  optional  — Media column of the split layout — typically a nested data-ui='image'
+└─ [data-part='media']  <figure>  optional  — Media column of the split layout — typically a nested data-ui='image'. In the cover layout it is the backdrop BEHIND the words instead: a direct child of the section that absolutely fills it, holding one child that stretches to fill it — e.g. <figure data-ui='image' data-variant='cover' data-size='full'>, so the media element itself never carries a data-variant
 ```
 
 **Variants**
 
 | Variant | Values | Default | Attribute | Applied to |
 |---------|--------|---------|-----------|------------|
-| layout | `center`, `split` | `center` | `data-variant` | root |
+| layout | `center`, `split`, `cover` | `center` | `data-variant` | root |
 
-- **Safe transforms:** `change-layout-variant`, `change-headline-text`, `add-eyebrow`, `remove-eyebrow`, `add-secondary-action`, `remove-note`, `swap-media-image`
-- **Unsafe (never do):** `remove-headline`, `remove-aria-labelledby`, `demote-headline-below-h2`, `add-data-part-to-action-buttons`, `add-custom-script`
+- **Safe transforms:** `change-layout-variant`, `change-headline-text`, `add-eyebrow`, `remove-eyebrow`, `add-secondary-action`, `remove-note`, `swap-media-image`, `change-layout-to-cover-with-a-backdrop-media`, `toggle-animate`, `override-the-cover-display-size`
+- **Unsafe (never do):** `remove-headline`, `remove-aria-labelledby`, `demote-headline-below-h2`, `add-data-part-to-action-buttons`, `add-custom-script`, `put-data-variant-on-the-cover-media-element`, `remove-the-cover-scrim-over-a-photograph`
 - **A11y:** keys: Tab
-- **Required ARIA:** `aria-labelledby on the section pointing at the headline id`; `alt text on any image inside the media slot`; `descriptive link text on every action (never 'click here')`
+- **Required ARIA:** `aria-labelledby on the section pointing at the headline id`; `alt text on any image inside the media slot`; `descriptive link text on every action (never 'click here')`; `a cover layout's backdrop photograph is still content to a screen reader unless it is decorative: give it real alt text, or alt='' when it only sets the mood`
 
 ## inbox
 
@@ -764,7 +764,7 @@ Blog index composing a heading, a line of description and a list of post cards �
 
 _kind: pattern · category: marketing_
 
-Pricing table composing a row-aligned grid of card tiers with stat prices, highlight badges, separators, icon-ticked feature lists, and one call-to-action per tier. Composition only: zero JavaScript. A highlighted tier is data-state='featured' on the tier card.
+Pricing table composing a row-aligned grid of card tiers with stat prices, highlight badges, separators, icon-ticked feature lists, and one call-to-action per tier. An optional monthly/yearly billing switch swaps every price with :has() over native radios. Composition only: zero JavaScript. A highlighted tier is data-state='featured' on the tier card.
 
 ```html
 <section data-ui="pricing" data-cols="{columns}" aria-labelledby="{id}-heading">
@@ -801,6 +801,9 @@ Pricing table composing a row-aligned grid of card tiers with stat prices, highl
 [data-ui='pricing']  ·  <section> · content: slots
 ├─ [data-part='heading']  <h2>  required  — Section heading. Give it an id and point the section's aria-labelledby at it
 ├─ [data-part='description']  <p>  optional  — Optional intro paragraph. Must be a direct child of the section — the tiers' own card descriptions are card slots, not this one
+├─ [data-part='billing']  <div>  optional  — Optional monthly/yearly switch, centred between the description and the tiers. Must be a DIRECT child of the section. Holds a data-ui='toggle-group' with data-mode='single', data-variant='segmented' and role='radiogroup' whose two radio controls carry value='monthly' (checked) and value='yearly', plus optionally a badge ('Save 20%'). Shown only where :has() is supported; elsewhere it is display:none and the monthly prices stand
+├─ [data-part='monthly']  <span>  optional  — Wrapper around the monthly version of a price — shown by default, hidden while the billing switch's value='yearly' radio is checked. Canonically a <span> inside the tier stat's value and another inside its label, paired with a yearly sibling; any element anywhere inside the section works (a block wrapper keeps its own display). Only ever paired with a yearly wrapper
+├─ [data-part='yearly']  <span>  optional  — Wrapper around the yearly version of a price — the sibling of a monthly wrapper, hidden until the billing switch's value='yearly' radio is checked (and always hidden where :has() is unsupported). Placed exactly like its monthly pair
 ├─ [data-part='tiers']  <div>  required  — The tier grid — a nested data-ui='grid' with data-align-rows and a mirrored mobile-first column ladder. Manifest-aware slot ownership leaves this part and its tier children with pricing because grid declares neither slot
 ├─ [data-part='tier']  <article>  required  — One plan — a direct card child of the tier grid with exactly four direct rows in order: header, divider, body, footer. Inside a tier, those rows and title/description are card slots, never pricing slots
 └─ [data-part='footnote']  <p>  optional  — Fine print under the tiers (taxes, cancellation, currency)
@@ -812,10 +815,10 @@ Pricing table composing a row-aligned grid of card tiers with stat prices, highl
 |---------|--------|---------|-----------|------------|
 | columns | `2`, `3` | `3` | `data-cols` | root |
 
-- **Safe transforms:** `add-tier`, `remove-tier`, `change-column-count`, `move-featured-state-to-another-tier`, `change-prices-and-periods`, `add-feature-to-a-tier`, `change-tier-call-to-action`, `add-footnote`
-- **Unsafe (never do):** `add-pricing-data-parts-inside-a-tier-card`, `remove-aria-labelledby`, `signal-the-featured-tier-with-colour-only`, `replace-feature-lists-with-divs`, `add-custom-script`
-- **A11y:** keys: Tab
-- **Required ARIA:** `aria-labelledby on the section pointing at the heading id`; `aria-labelledby on each tier pointing at that tier's title id`; `aria-hidden='true' on the decorative feature tick icons`; `the featured tier states its emphasis in text, not only with colour`
+- **Safe transforms:** `add-tier`, `remove-tier`, `change-column-count`, `move-featured-state-to-another-tier`, `change-prices-and-periods`, `add-feature-to-a-tier`, `change-tier-call-to-action`, `add-footnote`, `add-billing-switch-with-monthly-and-yearly-prices`, `remove-billing-switch-and-yearly-wrappers`, `change-the-saving-badge-text`
+- **Unsafe (never do):** `add-pricing-data-parts-inside-a-tier-card`, `remove-aria-labelledby`, `signal-the-featured-tier-with-colour-only`, `replace-feature-lists-with-divs`, `add-custom-script`, `change-billing-radio-values-from-monthly-and-yearly`, `nest-the-billing-part-below-a-wrapper`, `add-a-yearly-wrapper-without-its-monthly-pair`, `make-the-tier-grid-an-aria-live-region`
+- **A11y:** keys: Tab, ArrowLeft/ArrowRight/ArrowUp/ArrowDown
+- **Required ARIA:** `aria-labelledby on the section pointing at the heading id`; `aria-labelledby on each tier pointing at that tier's title id`; `aria-hidden='true' on the decorative feature tick icons`; `the featured tier states its emphasis in text, not only with colour`; `with a billing switch: role='radiogroup' and an aria-label (e.g. 'Billing period') on its toggle-group, and every yearly price stating its period in words ('per month, billed yearly')`
 
 ## search-results
 

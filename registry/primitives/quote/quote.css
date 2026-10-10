@@ -34,6 +34,15 @@
   color: color-mix(in oklch, var(--faqir-quote-ink) 55%, transparent);
 }
 
+/* Every `open-quote` raises the document's quote depth, so without a matching
+   close the second quote on a page draws the NESTED mark (‘ rather than “).
+   `no-close-quote` lowers it again and draws nothing. Absolutely positioned,
+   so the (empty) box is not a grid item and adds no row or gap. */
+[data-ui="quote"]::after {
+  content: no-close-quote;
+  position: absolute;
+}
+
 /* ── Text ── */
 [data-ui="quote"] > [data-part="text"] {
   margin: 0;

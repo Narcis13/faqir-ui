@@ -215,6 +215,10 @@
    is already arrived and stays put under the pointer. Paper gets the same
    treatment — a printed page has no entrance and no hover. */
 @media (prefers-reduced-motion: reduce), print {
+  /* The entrance's own selector is repeated so this rule matches its
+     specificity: the plain one alone (0,2,0) lost to [data-animate] (0,3,0),
+     and the tiles kept scrubbing in under reduced motion. */
+  [data-ui="bento"][data-animate] > :where([data-part="items"]) > [data-part="item"],
   [data-ui="bento"] > :where([data-part="items"]) > [data-part="item"],
   [data-ui="bento"] > :where([data-part="items"]) > [data-part="item"]::after {
     animation: none;

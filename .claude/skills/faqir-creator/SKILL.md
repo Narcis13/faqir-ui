@@ -136,7 +136,7 @@ Copy-ready page archetypes — Dashboard, Landing page, Prose / document, Split 
 
 ## Component Inventory
 
-**51 Primitives (CSS-only):** aspect-ratio, avatar, backdrop, badge, breadcrumb, button, callout, card, checkbox, chip, cluster, collapsible, container, description-list, empty-state, field-group, glow, grid, highlight, icon, image, input, kbd, key-value, label, link, marquee, nav, page-break, progress, quote, radio, rating, reveal, scroll-progress, select, separator, signature, skeleton, spinner, stack, stat, stepper, surface, switch, switcher, text, textarea, timeline, toggle, watermark
+**53 Primitives (CSS-only):** aspect-ratio, avatar, backdrop, badge, breadcrumb, button, callout, card, checkbox, chip, cluster, collapsible, container, description-list, empty-state, field-group, glow, grid, highlight, icon, image, input, kbd, key-value, label, link, marquee, nav, page-break, progress, quote, radio, rating, reveal, scroll-progress, select, separator, signature, skeleton, spinner, spotlight, stack, stamp, stat, stepper, surface, switch, switcher, text, textarea, timeline, toggle, watermark
 
 **29 Recipes (CSS + JS controller):** accordion, alert-dialog, barcode, calendar, carousel, combobox, command-palette, context-menu, date-picker, dialog, drawer, dropdown, file-upload, input-otp, menubar, pagination, popover, qr-code, select-custom, sheet, sidebar, slider, table, tabs, tag-input, toast, toggle-group, tooltip, tree-view
 
@@ -328,15 +328,17 @@ Document scaffolds (`invoice`, `report`) default to the `document` theme and mar
 
 ## Themes
 
-27 themes ship with the registry — 12 authored, 12 generated from a committed seed, and 3 print companions those bring with them. A theme redefines tokens only — no component markup changes, so switching one never invalidates a page. Pick by **axes** (the columns below, derived from each stylesheet) or by **mood**, then `faqir theme set <name>`.
+31 themes ship with the registry — 12 authored, 16 generated from a committed seed, and 3 print companions those bring with them. A theme redefines tokens only — no component markup changes, so switching one never invalidates a page. Pick by **axes** (the columns below, derived from each stylesheet) or by **mood**, then `faqir theme set <name>`.
 
 | Theme | Mood | Scheme | Dark mode | Pairs with | Accent | Neutral | Type | Shape | Depth | Material | Motion | Density | Focus | Decoration | Controls | Contrast |
 |-------|------|--------|-----------|------------|--------|---------|------|-------|-------|----------|--------|---------|-------|------------|----------|----------|
 | `aurora` | dark, vibrant, modern, saas, gradient | both | native | `midnight` | 300° · 0.24 | gray | system · 1.2/16px · bold tight | soft · hairline · round | layered | mesh | smooth | comfortable | ring | offset · solid | soft · box · square · pill | standard |
 | `brutalist` | high-contrast, raw, minimal, bold | both | native | `midnight` | 0° · 0.00 | gray | system · 1.2/16px · bold wide uppercase | sharp · heavy · round | flat | none | minimal | comfortable | bold | thick · solid | rect · box · square · square | high |
 | `candy` | candy, sweet, bubbly, consumer, rounded | both | native | `soft` | 352° · 0.18 | tinted | rounded · 1.125/16px · bold | pill · hairline · round | soft | none | springy | comfortable | ring | offset · solid | pill · box · round · pill | standard |
+| `clay` | claymorphism, playful, pastel, tactile, rounded | light | none | `candy`, `neumorph` | 295° · 0.16 | tinted | rounded · 1.25/17px · black | round · regular · round | layered | none | playful | spacious | glow | thick · dotted | soft · filled · round · pill | high |
 | `clinical` | clinical, medical, calm, legible, healthcare | both | native | `slate`, `document` | 210° · 0.09 | cool | sans-humanist · 1.2/17px · medium | soft · hairline · round | flat | dots | minimal | comfortable | ring | offset · solid | soft · box · square · pill | high |
 | `contrast` | accessible, wcag-aaa, high-contrast, neutral | both | native | `default`, `document` | 250° · 0.16 | gray | system · 1.2/16px · bold | soft · regular · round | soft | none | smooth | comfortable | bold | thick · solid | soft · box · square · pill | high |
+| `deco` | art-deco, lacquer, emerald, hospitality, dark | dark | native | `luxe` | 155° · 0.13 | tinted | serif-modern · 1.333/17px · regular wide uppercase | sharp · regular · round | flat | stripes | minimal | spacious | bold | thick · double | rect · underline · square · square | high |
 | `default` | neutral, professional, versatile | both | native | — | 264° · 0.22 | gray | system · 1.2/16px · bold | soft · hairline · round | soft | none | smooth | comfortable | ring | offset · solid | soft · box · square · pill | standard |
 | `document-serif` | print, legal, formal, serif, traditional | light | none | `document`, `paper` | 25° · 0.07 | gray | serif-editorial · 1.2/16px · bold tight | sharp · hairline · round | flat | none | smooth | comfortable | ring | offset · dotted | rect · underline · square · square | high |
 | `document` | print, professional, business, minimal | light | none | `paper` | 250° · 0.06 | gray | sans-grotesque · 1.2/16px · bold | sharp · hairline · round | flat | none | none | comfortable | ring | plain · solid | rect · box · square · square | high |
@@ -347,7 +349,9 @@ Document scaffolds (`invoice`, `report`) default to the `document` theme and mar
 | `ink-document` | print, letterpress, monochrome, document, generated | light | none | `ink` | — | — | — | — | — | — | — | — | — | — | — | — |
 | `ink` | letterpress, monochrome, sepia, slab, print | light | none | `ink-document`, `paper` | 60° · 0.06 | warm | slab · 1.2/16px · semibold | sharp · hairline · round | flat | paper | minimal | comfortable | bold | plain · solid | rect · underline · square · square | high |
 | `luxe` | luxury, premium, gold, boutique, dark | dark | native | `midnight` | 84° · 0.10 | warm | serif-modern · 1.333/16px · regular wide uppercase | soft · hairline · round | soft | mesh | smooth | spacious | ring | offset · solid | soft · box · square · pill | high |
+| `memphis` | memphis, postmodern, bold, event, playful | light | none | `neo` | 350° · 0.22 | tinted | sans-geometric · 1.333/17px · black tight | crisp · heavy · round | hard | dots | springy | comfortable | bold | thick · dashed | rect · box · round · pill | high |
 | `midnight` | dark, technical, vibrant, cool | both | native | `brutalist` | 280° · 0.24 | cool | system · 1.2/16px · semibold | soft · hairline · round | layered | grid | smooth | comfortable | glow | offset · solid | soft · box · square · pill | standard |
+| `monolith` | brutalist-minimal, architecture, concrete, portfolio, uppercase | light | none | `swiss` | 145° · 0.14 | tinted | sans-grotesque · 1.333/17px · bold tight uppercase | sharp · hairline · round | flat | grain | minimal | spacious | inset | offset · solid | rect · underline · square · square | high |
 | `neo` | neo-brutalist, loud, playful, electric, graphic | both | native | `brutalist` | 121° · 0.17 | gray | sans-grotesque · 1.25/18px · black | sharp · heavy · round | hard | none | playful | comfortable | bold | offset · solid | rect · box · square · square | standard |
 | `neumorph` | neumorphic, soft-ui, pressed, tactile, rounded | both | native | `soft`, `candy` | 300° · 0.20 | tinted | rounded · 1.2/16px · medium | round · hairline · round | inset | none | smooth | comfortable | inset | offset · solid | soft · filled · round · pill | standard |
 | `nordic` | nordic, airy, cool, geometric, spacious | both | native | `glass`, `slate` | 220° · 0.18 | cool | sans-geometric · 1.2/16px · regular | round · hairline · round | flat | none | smooth | spacious | ring | offset · solid | soft · box · square · pill | standard |
@@ -450,7 +454,7 @@ Every command accepts `--json` for machine-readable output.
 
 Full anatomy trees, variant tables, and safe/unsafe transforms for every component:
 
-- [references/primitives.md](references/primitives.md) — 51 primitives
+- [references/primitives.md](references/primitives.md) — 53 primitives
 - [references/recipes.md](references/recipes.md) — 29 recipes
 - [references/patterns.md](references/patterns.md) — 23 patterns
 - [references/tokens.md](references/tokens.md) — every design token, derived from `registry/tokens/*.css`

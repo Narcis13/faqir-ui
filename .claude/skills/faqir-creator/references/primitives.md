@@ -2,7 +2,7 @@
 
 # Faqir Primitives Reference
 
-51 primitives, each with its anatomy tree, variant table, and safe/unsafe transforms — all derived from the component manifest.
+53 primitives, each with its anatomy tree, variant table, and safe/unsafe transforms — all derived from the component manifest.
 
 ## aspect-ratio
 
@@ -157,7 +157,7 @@ Interactive button with multiple visual variants and sizes
 
 ```text
 [data-ui='button']  ·  <button> · content: inline
-└─ [data-part='icon']  <span>  optional  — Optional leading icon container
+└─ [data-part='icon']  <span>  optional  — Optional icon container, leading by default; as the last child it is the trailing icon that data-effect="arrow" leans toward the inline end
 ```
 
 **Variants**
@@ -167,7 +167,7 @@ Interactive button with multiple visual variants and sizes
 | visual | `default`, `primary`, `secondary`, `destructive`, `ghost`, `outline`, `link` | `default` | `data-variant` | root |
 | size | `sm`, `md`, `lg` | `md` | `data-size` | root |
 
-- **Safe transforms:** `change-variant`, `change-size`, `add-icon`, `add-loading-state`, `set-pressed-true`, `set-pressed-false`, `wrap-in-button-group`, `change-text-content`, `set-effect`
+- **Safe transforms:** `change-variant`, `change-size`, `add-icon`, `add-loading-state`, `set-pressed-true`, `set-pressed-false`, `wrap-in-button-group`, `change-text-content`, `set-effect`, `add-trailing-arrow-icon`
 - **Unsafe (never do):** `remove-button-element`, `change-to-div-without-role`, `remove-disabled-state-handling`, `remove-aria-pressed-when-off`
 - **A11y:** keys: Enter, Space
 - **Required ARIA:** `aria-label required when icon-only (no text content)`; `type="button" and aria-pressed="true|false" on a toggle button`
@@ -547,7 +547,7 @@ CSS Grid container with configurable columns and gap — mobile-first responsive
 
 _kind: primitive · category: typography_
 
-Inline emphasis for the words a headline wants read first: accent-gradient text, a highlighter marker, a drawn underline, or a shimmer. Every effect is a background under or clipped to real text — selectable, searchable, announced once — and each can play its motion (pan, draw-in) from tokens. Pure CSS; restores plain text under forced colours.
+Inline emphasis for the words a headline wants read first: accent-gradient text, a highlighter marker, a drawn underline, a shimmer, metallic foil, outlined display type or a two-colour echo. Every effect is a background, stroke or shadow on real text — selectable, searchable, announced once — and each can play its motion (pan, draw-in, glint) from tokens. Pure CSS; restores plain text under forced colours.
 
 ```html
 <span data-ui="highlight" data-variant="{style}">{text}</span>
@@ -563,7 +563,7 @@ Inline emphasis for the words a headline wants read first: accent-gradient text,
 
 | Variant | Values | Default | Attribute | Applied to |
 |---------|--------|---------|-----------|------------|
-| style | `gradient`, `shimmer`, `marker`, `underline` | `gradient` | `data-variant` | root |
+| style | `gradient`, `shimmer`, `marker`, `underline`, `foil`, `outline`, `echo` | `gradient` | `data-variant` | root |
 
 - **Safe transforms:** `change-style`, `toggle-animate`, `change-custom-property-colors`, `wrap-words-in-a-heading`, `unwrap-text`
 - **Unsafe (never do):** `duplicate-the-text-for-an-effect`, `highlight-a-whole-paragraph`, `use-gradient-on-small-body-text-without-checking-contrast`, `pass-a-hardcoded-color-instead-of-a-token`
@@ -1091,7 +1091,7 @@ Horizontal or vertical divider line
 | Variant | Values | Default | Attribute | Applied to |
 |---------|--------|---------|-----------|------------|
 | orientation | `horizontal`, `vertical` | `horizontal` | `data-variant` | root |
-| style | `solid`, `dashed`, `dotted`, `thick` | `solid` | `data-style` | root |
+| style | `solid`, `dashed`, `dotted`, `thick`, `ornament` | `solid` | `data-style` | root |
 | size | `sm`, `md`, `lg` | `` | `data-size` | root |
 
 - **Safe transforms:** `change-orientation`, `add-label`, `change-style`
@@ -1184,6 +1184,31 @@ Circular loading spinner with multiple sizes
 - **A11y:** role=status
 - **Required ARIA:** `role="status"`; `aria-label="Loading"`
 
+## spotlight
+
+_kind: primitive · category: marketing_
+
+A hover light for a card, a tile or a whole grid of them: a soft pool of the accent laid over the surface, or a lit border ring, faded in while the pointer is over it or focus is inside. CSS only. The pool sits at --spotlight-x / --spotlight-y (top centre by default); a page that wants it to follow the pointer writes those two properties from one @pointermove directive (template html_follow). Inert on touch screens, under reduced motion, in forced colours and in print.
+
+```html
+<div data-ui="spotlight">{card}</div>
+```
+
+**Anatomy**
+
+```text
+[data-ui='spotlight']  ·  <div> · content: block
+```
+
+**Variants**
+
+| Variant | Values | Default | Attribute | Applied to |
+|---------|--------|---------|-----------|------------|
+| effect | `light`, `border` | `light` | `data-variant` | root |
+
+- **Safe transforms:** `change-effect`, `change-custom-property-values`, `add-or-remove-the-pointer-follow-directive`, `wrap-a-different-card-or-tile`, `match-radius-to-the-wrapped-component`, `change-the-wrapped-content`
+- **Unsafe (never do):** `wrap-more-than-one-sibling-without-a-grid`, `leave-the-radius-mismatched-with-the-child`, `add-tabindex-or-a-role-to-the-wrapper`, `put-the-only-cue-for-hover-in-the-light`, `pass-a-hardcoded-color-instead-of-a-token`, `raise-the-opacity-so-far-that-text-is-hard-to-read`
+
 ## stack
 
 _kind: primitive · category: layout_
@@ -1214,6 +1239,32 @@ Flexbox layout container for vertical or horizontal stacking with configurable g
 
 - **Safe transforms:** `change-direction`, `change-gap`, `change-alignment`, `change-justification`, `toggle-wrap`, `add-responsive-tier`, `add-children`, `remove-children`
 - **Unsafe (never do):** `change-display-property`, `replace-with-non-flex-container`
+
+## stamp
+
+_kind: primitive · category: marketing_
+
+A rubber-stamp or edition mark: wide-tracked capitals in a double rule, set at a slight angle. For "Sold out", "Look 07", "No. 0417", "Limited edition" — in a default, primary, destructive or success ink, three sizes, as a rectangle or a round seal. Pure CSS; the mark is real text.
+
+```html
+<span data-ui="stamp" data-variant="{variant}" data-size="{size}">{text}</span>
+```
+
+**Anatomy**
+
+```text
+[data-ui='stamp']  ·  <span> · content: inline
+```
+
+**Variants**
+
+| Variant | Values | Default | Attribute | Applied to |
+|---------|--------|---------|-----------|------------|
+| visual | `default`, `primary`, `destructive`, `success` | `default` | `data-variant` | root |
+| size | `sm`, `md`, `lg` | `md` | `data-size` | root |
+
+- **Safe transforms:** `change-variant`, `change-size`, `change-shape`, `change-text-content`, `change-rotation`
+- **Unsafe (never do):** `remove-stamp-element`, `use-colour-alone-to-convey-status`, `pass-a-hardcoded-color-instead-of-a-token`
 
 ## stat
 
@@ -1387,13 +1438,13 @@ Text and heading primitives with size, color, weight, alignment, and truncation 
 
 | Variant | Values | Default | Attribute | Applied to |
 |---------|--------|---------|-----------|------------|
-| variant | `default`, `muted`, `subtle`, `primary`, `mono` | `default` | `data-variant` | root |
-| size | `xs`, `sm`, `base`, `lg`, `xl`, `2xl`, `3xl`, `4xl`, `1`, `2`, `3`, `4`, `5`, `6` | `base` | `data-size` | root |
+| variant | `default`, `muted`, `subtle`, `primary`, `mono`, `eyebrow` | `default` | `data-variant` | root |
+| size | `xs`, `sm`, `base`, `lg`, `xl`, `2xl`, `3xl`, `4xl`, `display`, `1`, `2`, `3`, `4`, `5`, `6` | `base` | `data-size` | root |
 | weight | `normal`, `medium`, `semibold`, `bold` | `normal` | `data-weight` | root |
 | align | `left`, `center`, `right` | `left` | `data-align` | root |
 | leading | `tight`, `snug`, `normal`, `relaxed` | `normal` | `data-leading` | root |
 
-- **Safe transforms:** `Change data-size to any listed value`, `Change data-variant to any listed value`, `Change data-weight to any listed value`, `Change data-align to any listed value`, `Change text content`, `Add or remove data-truncate attribute`, `Make the root an <a href> when the text itself is the link`
+- **Safe transforms:** `Change data-size to any listed value`, `Change data-variant to any listed value`, `Change data-weight to any listed value`, `Change data-align to any listed value`, `Change text content`, `Add or remove data-truncate attribute`, `Add or remove data-dropcap attribute`, `Make the root an <a href> when the text itself is the link`
 - **Unsafe (never do):** `Remove data-ui attribute`
 - **A11y:** keys: Enter
 

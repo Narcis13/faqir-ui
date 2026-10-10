@@ -1,6 +1,6 @@
 {
   "schema": "faqir-registry-index@1",
-  "count": 103,
+  "count": 105,
   "components": [
     {
       "name": "aspect-ratio",
@@ -116,22 +116,22 @@
       "name": "button",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.3.0",
+      "version": "1.4.0",
       "files": [
         {
           "path": "button.css",
-          "sha256": "ebc3635cc59c9d55d803c94bb5ed27711a70cd296d1eb350549c254b1b537caa"
+          "sha256": "43b868f1356f13b28702a87a64f1b0e87c6dd612b027da8ded74d27ff80dd845"
         },
         {
           "path": "button.html",
-          "sha256": "13185148e0a7dfe2edf3276f9b4101ed3066de19b86c54939dd60794b0215e21"
+          "sha256": "7e5f8ece7eeb8eb16f596313914b9cd6afc90089e128dec544ecd865c3318e25"
         },
         {
           "path": "button.manifest.json",
-          "sha256": "f8cafe39357c9dff290217ba166415f5fddb2bcadb4d062aa1ba116125e91312"
+          "sha256": "acc2c930aca739918ffe2ce2cdf146d28aa89e54514d35cc50f2debaa3e17d26"
         }
       ],
-      "hash": "a333fb6a01e5820806fe0b194b4139ba525cc880da99c2bf7812ecca150fad3e",
+      "hash": "a36d11e672a43900fb07fa3f55c4daf982d2555f9399ab800f2cd5e49ccce292",
       "deps": []
     },
     {
@@ -417,22 +417,22 @@
       "name": "highlight",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "files": [
         {
           "path": "highlight.css",
-          "sha256": "b9438f09eb495ad7729e2e0b114ba733b77335a1298e1e8167dde03a55f5e76d"
+          "sha256": "6005f5c8cf9c3c72f0af2d085b39389a3f43689cb09a7a0ad2d158665e02419d"
         },
         {
           "path": "highlight.html",
-          "sha256": "b161c6fc225fbd92efd61cea253bd89b800162cb65d43d5ffe8682af66c7df03"
+          "sha256": "6abf65c36928dae1d503336114b1a96338839f2acb70ba3a84c9e0faacf99ae6"
         },
         {
           "path": "highlight.manifest.json",
-          "sha256": "891418d49294a9ba874911d2c27dce3d75e6c7ded203bfca3b8a743f05e41cbd"
+          "sha256": "5dca16aa8d713f03a30d459bf1e5261646b05791dc6b2788092e97d4ddef327b"
         }
       ],
-      "hash": "0ea9d5f3621b32acfc648c0d25ab744e9abaa0c87fbd19a10d0c7672001e1dd3",
+      "hash": "32741e93a11d3993f583d95fe8b0acefcf059e0876cc21ee0ee6e2a0ac45bafc",
       "deps": []
     },
     {
@@ -685,11 +685,11 @@
       "name": "quote",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "files": [
         {
           "path": "quote.css",
-          "sha256": "ffa949ce10ff4a2c92db49ea69f5e1bd2ecf63a55a6219ca912fd9ab345f92fc"
+          "sha256": "515044881e2a63026fdddaefd4dc49e36ad99fe1d55b07450da4f10df7180ae3"
         },
         {
           "path": "quote.html",
@@ -697,10 +697,10 @@
         },
         {
           "path": "quote.manifest.json",
-          "sha256": "9b2dbd65cb85c63563c2dd3f4382ba22a4d758216ef25df966c5ef3cee6e5e46"
+          "sha256": "5c5579d58e6243e51ab2bc0b76aeb4c3e8214bef1e993541cfbdb26eaa8488f7"
         }
       ],
-      "hash": "dafe24f1b832a4f80c4332032364e7143b7e007e7b23c60a6020fa2cf796a36b",
+      "hash": "22228ba02bc6ee44ef796ea805cef1c7bc4a607f492924b8a14c0ade58094c7a",
       "deps": [
         "avatar",
         "rating"
@@ -754,11 +754,11 @@
       "name": "reveal",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "files": [
         {
           "path": "reveal.css",
-          "sha256": "7bbd77102c5dd2ee967d0163823e6d8486a5946ce3916c92d4c1421acb57d056"
+          "sha256": "ecd4a8c58c96cf6cef2b7684f14ff0f657fb3cc202c4fde8521714d27a3fdce5"
         },
         {
           "path": "reveal.html",
@@ -766,10 +766,10 @@
         },
         {
           "path": "reveal.manifest.json",
-          "sha256": "72aa7bd3f50d37e63e4c2c30effc6f115ede2171f71b76eb5edf4ec2d4acf041"
+          "sha256": "bf9fb6c016518084d6ecd818992678679df763db48cce293f2768dbc593ef4f5"
         }
       ],
-      "hash": "0b76fe620bdf08f9952def9206ed3db0b6fc337f8c5882f898ca7167659288d6",
+      "hash": "32d2fb7adad0d99208585b6fd91e7c05862eeaa1a5c272011d8503f2de8462ce",
       "deps": []
     },
     {
@@ -820,22 +820,22 @@
       "name": "separator",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.1.1",
+      "version": "1.2.0",
       "files": [
         {
           "path": "separator.css",
-          "sha256": "8d243ba782c527d56dd0aeb20de9cf6da38ece6dcc5a52f974c2ca3bbec0f08b"
+          "sha256": "df05f0b6aa14d46e3c313f42c2745363589797e957318bfc222d720b999edd32"
         },
         {
           "path": "separator.html",
-          "sha256": "aa995aeeaf5477ec87ce1819e59a20871e88bc035e34fc40e57f544c7d750d77"
+          "sha256": "8a4bf77302971d528808d6d30e539974b0daa3a606115d1ae04482075910d866"
         },
         {
           "path": "separator.manifest.json",
-          "sha256": "432022501e1d4bd75ff5fcdf9b3a9b3bc31fcc5ef427abafeb9bcdbfff72962e"
+          "sha256": "a4376025f8e4977cbbaafb2348ee4b8c6105dbb54789eca4a36c16fd1b021e97"
         }
       ],
-      "hash": "b72a53043eb55d04b5a9a2b1bc91f9128bb6359fe6ede2e11eddc2f58b1a8208",
+      "hash": "a06ecdbe55c438a72efeb5f5ba7b5fd3bec6132efebaf9c94a89542bc8e35bfd",
       "deps": []
     },
     {
@@ -905,6 +905,28 @@
       "deps": []
     },
     {
+      "name": "spotlight",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "spotlight.css",
+          "sha256": "392b2bd0b79f58db5f71ec23b0acac0b58957ed12ee966b4f3f58c2f88bff083"
+        },
+        {
+          "path": "spotlight.html",
+          "sha256": "7a6c83074fb1cc4fe3659d19be23b3bec2b678caebbda29bc1dc9b49bbf76b16"
+        },
+        {
+          "path": "spotlight.manifest.json",
+          "sha256": "31682cfa968a80c3f5b569a5e12fb1716c6ca1bb5754f7729c9adba7f2e1e2d3"
+        }
+      ],
+      "hash": "151ce33c90b68fbdee5c58eea9214aa12eaa216382921a42332a21b8cad39b5a",
+      "deps": []
+    },
+    {
       "name": "stack",
       "kind": "primitive",
       "layer": "primitives",
@@ -924,6 +946,28 @@
         }
       ],
       "hash": "37dfca1750fb5a996da33967f7b4921532210bc591d7a9d03b83d987d57fd8da",
+      "deps": []
+    },
+    {
+      "name": "stamp",
+      "kind": "primitive",
+      "layer": "primitives",
+      "version": "1.0.0",
+      "files": [
+        {
+          "path": "stamp.css",
+          "sha256": "0e43834df5f3ef6eae7bf02e76595e4e005a54be75ad5376eecf57e7881b9e85"
+        },
+        {
+          "path": "stamp.html",
+          "sha256": "561339c68ae6cd857fc008226244e9a81721c5981a311ff9763bf269b3dc1553"
+        },
+        {
+          "path": "stamp.manifest.json",
+          "sha256": "d381397780ae20bde418cc1bb2b6ef1ab6e0a05710b16e6b09c217b76a16e27c"
+        }
+      ],
+      "hash": "a352c71f096aaccaeff0648f79178e165752399c29126f16ac708d2918d28645",
       "deps": []
     },
     {
@@ -1042,22 +1086,22 @@
       "name": "text",
       "kind": "primitive",
       "layer": "primitives",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "files": [
         {
           "path": "text.css",
-          "sha256": "724297effd7446fa60bdaf704ddd7469605a3868d7cb6cbc6442aef54aa95ccf"
+          "sha256": "2da835ac5dd99efb35bd13378785cf177dd9bef67ddedaa1e932ca9fa09d78dd"
         },
         {
           "path": "text.html",
-          "sha256": "d8526ae6503498f2c906aea509ff667c5a6e242185356ca5c2cebb4c6fce5746"
+          "sha256": "4eb5d81f8b8cfbf28af21c4d7be0c557cf7bb1c930cb8d2ba2d9e0a9c1681cef"
         },
         {
           "path": "text.manifest.json",
-          "sha256": "f106ae9ca87668d42a504122676ab7bbaeb34e2a2f96d45311f655088ea511b2"
+          "sha256": "73fe64764caff5d11195d23fd56ee99998c25886845d6a5530a9c187dcf17481"
         }
       ],
-      "hash": "00cb2cf0fadb37b222f883d7cccf4ef26223b65b816aa01ea9e272cd6c960ee6",
+      "hash": "fe958b194d3d5aeb650c90a721f5c547cea7dfc1f751bc0cab32e3de695552f7",
       "deps": []
     },
     {
@@ -1861,15 +1905,15 @@
       "name": "toggle-group",
       "kind": "recipe",
       "layer": "recipes",
-      "version": "1.1.2",
+      "version": "1.2.0",
       "files": [
         {
           "path": "toggle-group.css",
-          "sha256": "57435fdc0989b0b7564450811e8aa9fc19b19dd5938fdb99f9442013fa71c21e"
+          "sha256": "7ab578793bd0b36b7aa29df2d83faca1049f0166930dbb1fca4e3b62bd9b0ac9"
         },
         {
           "path": "toggle-group.html",
-          "sha256": "1c14023379a32ab2c1a7286a16973ad975dfdb4fee58141c035eae105e2f10db"
+          "sha256": "2b7f368ba8d41b4c8ca658ca5616fd16ff72f9bc9f55f64a382a6596793a1889"
         },
         {
           "path": "toggle-group.js",
@@ -1877,10 +1921,10 @@
         },
         {
           "path": "toggle-group.manifest.json",
-          "sha256": "b030d75ff73c4cd149038ae1963e4229b5a965ae0d3e4cd9dac9d20b4177d8d7"
+          "sha256": "48ffc2c1fccacfec7011f7e0c7354f50e6a83e5b3246fcf15798a7727a32cfdf"
         }
       ],
-      "hash": "ccd92b564ff3d25140fd4243c9440caec672a1668a2b91facc56094097152f17",
+      "hash": "f74592e84909b34603ac1dc58e5ab364c84214a6328057a14967e9ec768b49e3",
       "deps": []
     },
     {
@@ -1999,11 +2043,11 @@
       "name": "bento",
       "kind": "pattern",
       "layer": "patterns",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "files": [
         {
           "path": "bento.css",
-          "sha256": "b265649af3248331fadb5e3e6c08aa45526e272e031b026c01163228e73230d7"
+          "sha256": "d27fe5188a08cbc9b35f56aa8f802e79f82233a951630cb46878a88a1755162b"
         },
         {
           "path": "bento.html",
@@ -2011,10 +2055,10 @@
         },
         {
           "path": "bento.manifest.json",
-          "sha256": "5baaa74170ec77c230160dd6112bf7ef611a4565f9635686c9f17b6a4ec674b1"
+          "sha256": "5a52d6748b3566a066a7896a97f6b66612eee1c059a1115c8185d1874dfa048c"
         }
       ],
-      "hash": "0a4580a64e41db12a462fd97b41e6f2406183d21daf3705fdfd09b033023e0bb",
+      "hash": "7ed1c7e373be3ed35ec7e1e51cb26402895935792d93e3ba853d977380ae7104",
       "deps": [
         "backdrop",
         "icon"
@@ -2249,27 +2293,28 @@
       "name": "hero",
       "kind": "pattern",
       "layer": "patterns",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "files": [
         {
           "path": "hero.css",
-          "sha256": "0195e43fca5a9bcb7d990e10aa0dbe8f173b3b698da90b3088c9a61e42f2911a"
+          "sha256": "072c3ed58ce63c6849f29d5af4f9404fbf65e27547e051ec991f0f6aa20973e9"
         },
         {
           "path": "hero.html",
-          "sha256": "442357003f4b4fb249891a29d1d4f243efadcdc0f7527443fef155deab7c319a"
+          "sha256": "d121b177f0e201e55ad46aca7ce73d505979cf142b85885e2a716726feef87f4"
         },
         {
           "path": "hero.manifest.json",
-          "sha256": "77f91c0513f1c5da4c8cde9009f3bc4b09ae23623340480d9e2cb243cce753b7"
+          "sha256": "edb653d80c6f34ebe202e92d8c8a6c2246ca9ade8bcbaa066516feb87b4f41ba"
         }
       ],
-      "hash": "dd18ae940cd1f237e5956c5492f1f51de1db82a99ac22e2a84509bc727e286d8",
+      "hash": "6fe04847d2f3255d8544778f0d3429fbf34f3dc55eae73aab164053174d1fb17",
       "deps": [
         "badge",
         "button",
         "image",
-        "highlight"
+        "highlight",
+        "backdrop"
       ]
     },
     {
@@ -2357,22 +2402,22 @@
       "name": "pricing",
       "kind": "pattern",
       "layer": "patterns",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "files": [
         {
           "path": "pricing.css",
-          "sha256": "1932c4cb49ef9a652c085b04c7ea4847d25ef8b195731464a649d9774653e7b2"
+          "sha256": "a03cc050a71a4cb5b9b6ae1a65728079c7c4140e5a3d0169f769e998cb8170b6"
         },
         {
           "path": "pricing.html",
-          "sha256": "81fcd883f9737c9f6e482dbe2628e1b6f29de65077f50cde1d28006571431368"
+          "sha256": "2d3675bf784683de67c0f4de7bb20d76686d870f79f4ba95ff1df18287bf52c5"
         },
         {
           "path": "pricing.manifest.json",
-          "sha256": "6178991eb3eb8b24c271e0d55d0fdb626275854dee8304f52ea6fbe196b52427"
+          "sha256": "e1213a81810ed68b2c0ba40be96362d63338854ac04de66ce85dda1de28fa7cb"
         }
       ],
-      "hash": "64249550bed8b82dc36b822bffc54fcb956bc02218321561111b7fba4440801c",
+      "hash": "bc73976307ba117cff90caa364a08e4cc19cfeb4d57cb3a544c7669ed98c1a0a",
       "deps": [
         "grid",
         "card",
@@ -2380,7 +2425,8 @@
         "stat",
         "separator",
         "button",
-        "icon"
+        "icon",
+        "toggle-group"
       ]
     },
     {

@@ -1,7 +1,14 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "reveal",
-  "version": "1.0.0",
+  "version": "1.0.1",
+  "changes": [
+    {
+      "version": "1.0.1",
+      "note": "Fix: the reduced-motion block now repeats every trigger selector. `[data-ui=\"reveal\"]` alone (0,1,0) lost to the load and scroll triggers (0,2,0 to 0,4,0), so reveals still played under prefers-reduced-motion: reduce.",
+      "breaking": false
+    }
+  ],
   "kind": "primitive",
   "category": "layout",
   "description": "Entrance choreography for any content: seven effects, three triggers (on load, scrubbed by scroll, or released by a state), and a staggered mode that brings a group's children in one after another. Pure CSS — a view timeline where supported, a load entrance where not — and every distance, duration and easing is a motion token a theme can re-point.",

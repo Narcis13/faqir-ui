@@ -58,7 +58,7 @@ const byName = (layerDir: string, name: string) =>
 
 describe("the regenerated registry", () => {
   it("passes the gate: every component's three lists agree", () => {
-    expect(ALL.length).toBe(103);
+    expect(ALL.length).toBe(105);
     const findings = ALL.flatMap((c) => checkComponentTokens(c, LAYER));
     expect(findings).toEqual([]);
   });

@@ -136,8 +136,18 @@
    to "already arrived", including a `hidden` state a script has not released.
    Paper gets the same treatment — a printed page has no entrance. */
 @media (prefers-reduced-motion: reduce), print {
+  /* Every selector that starts an entrance is repeated here, so this rule
+     matches its specificity and, coming later, wins. `[data-ui="reveal"]`
+     alone (0,1,0) lost to the trigger rules (0,2,0 to 0,4,0), and a scroll
+     reveal kept scrubbing in under reduced motion. */
   [data-ui="reveal"],
-  [data-ui="reveal"][data-stagger] > * {
+  [data-ui="reveal"][data-stagger] > *,
+  [data-ui="reveal"]:not([data-stagger], [data-state]),
+  [data-ui="reveal"][data-stagger]:not([data-state]) > *,
+  [data-ui="reveal"][data-trigger="scroll"]:not([data-stagger], [data-state]),
+  [data-ui="reveal"][data-trigger="scroll"][data-stagger]:not([data-state]) > *,
+  [data-ui="reveal"][data-state]:not([data-stagger]),
+  [data-ui="reveal"][data-state][data-stagger] > * {
     animation: none;
     transition: none;
   }

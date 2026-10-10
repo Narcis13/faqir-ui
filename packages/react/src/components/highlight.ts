@@ -5,21 +5,21 @@ import { createFaqirPrimitive } from "../runtime.js";
 import type { ComponentPropsWithoutRef } from "react";
 
 /** Allowed `variant` values (manifest variant group "style", attr `data-variant`). */
-export type LHighlightVariant = "gradient" | "shimmer" | "marker" | "underline";
+export type LHighlightVariant = "gradient" | "shimmer" | "marker" | "underline" | "foil" | "outline" | "echo";
 
 export interface LHighlightProps extends Omit<ComponentPropsWithoutRef<"span">, "variant" | "animate"> {
   /** `data-variant`; omitted when unset (manifest default: "gradient"). */
   variant?: LHighlightVariant;
-  /** Play the variant's motion: the gradient pans back and forth, the marker and the underline are drawn in once from the start of the line. Shimmer always moves and ignores this. */
+  /** Play the variant's motion: the gradient pans back and forth, the marker and the underline are drawn in once from the start of the line. Shimmer and foil always move (until reduced motion) and ignore this; outline and echo are static. */
   animate?: boolean;
 }
 
-/** `highlight` — Inline emphasis for the words a headline wants read first: accent-gradient text, a highlighter marker, a drawn underline, or a shimmer. Every effect is a background under or clipped to real text — selectable, searchable, announced once — and each can play its motion (pan, draw-in) from tokens. Pure CSS; restores plain text under forced colours. */
+/** `highlight` — Inline emphasis for the words a headline wants read first: accent-gradient text, a highlighter marker, a drawn underline, a shimmer, metallic foil, outlined display type or a two-colour echo. Every effect is a background, stroke or shadow on real text — selectable, searchable, announced once — and each can play its motion (pan, draw-in, glint) from tokens. Pure CSS; restores plain text under forced colours. */
 export const LHighlight = createFaqirPrimitive<LHighlightProps>({
   name: "highlight",
   tag: "span",
   variants: [
-    { prop: "variant", attr: "data-variant", values: ["gradient", "shimmer", "marker", "underline"] },
+    { prop: "variant", attr: "data-variant", values: ["gradient", "shimmer", "marker", "underline", "foil", "outline", "echo"] },
   ],
   states: [
     { prop: "animate", attr: "data-animate", value: null, kind: "presence" },

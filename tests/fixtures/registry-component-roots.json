@@ -348,8 +348,25 @@
   "primitives/spinner/spinner.html": {
     "spinner": 4
   },
+  "primitives/spotlight/spotlight.html": {
+    "button": 1,
+    "card": 8,
+    "grid": 2,
+    "icon": 6,
+    "spotlight": 6,
+    "text": 8
+  },
   "primitives/stack/stack.html": {
     "stack": 8
+  },
+  "primitives/stamp/stamp.html": {
+    "button": 1,
+    "card": 2,
+    "cluster": 3,
+    "separator": 1,
+    "stack": 1,
+    "stamp": 16,
+    "text": 5
   },
   "primitives/stat/stat.html": {
     "grid": 1,

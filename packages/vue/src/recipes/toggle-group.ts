@@ -8,14 +8,19 @@ import { createToggleGroup } from "../controllers/toggle-group.js";
 /** Allowed `mode` values (manifest variant group "mode", attr `data-mode` on root). */
 export type LToggleGroupMode = "single" | "multi";
 
+/** Allowed `styleVariant` values (manifest variant group "style", attr `data-variant` on root). */
+export type LToggleGroupStyleVariant = "default" | "segmented";
+
 export interface LToggleGroupProps {
   /** Root/ARIA id base; auto-generated per instance when unset. */
   id?: string;
   /** `data-mode` on root; omitted when unset (manifest default: "single"). */
   mode?: LToggleGroupMode;
+  /** `data-variant` on root; omitted when unset (manifest default: "default"). */
+  styleVariant?: LToggleGroupStyleVariant;
 }
 
-/** `toggle-group` — Single- or multi-select group of toggle buttons over native radio/checkbox controls, with roving-tabindex keyboard navigation and native l-model binding Emits: `@change` (payload: `(detail, event)`). Exposes: `getValue()`, `setValue()`, `toggle()`. */
+/** `toggle-group` — Single- or multi-select group of toggle buttons over native radio/checkbox controls, with roving-tabindex keyboard navigation and native l-model binding. A segmented style turns a single-select group into one track with a sliding thumb — the monthly/yearly switch of a pricing page — in pure CSS. Emits: `@change` (payload: `(detail, event)`). Exposes: `getValue()`, `setValue()`, `toggle()`. */
 export const LToggleGroup = defineFaqirRecipe<LToggleGroupProps>({
   name: "toggle-group",
   create: createToggleGroup,
@@ -25,8 +30,9 @@ export const LToggleGroup = defineFaqirRecipe<LToggleGroupProps>({
   boolProps: [],
   variantProps: [
     { prop: "mode", values: ["single", "multi"] },
+    { prop: "styleVariant", values: ["default", "segmented"] },
   ],
-  tree: {"tag":"div","attrs":[["data-ui",["toggle-group"]],["role",["radiogroup"]]],"children":[{"tag":"label","attrs":[["data-part",["item"]],["data-state",["off"]]],"children":[{"tag":"input","attrs":[["data-part",["control"]],["type",["radio"]],["name",[{"p":"id"}]]],"children":[]},{"tag":"span","attrs":[["data-part",["label"]]],"children":[]}]},{"tag":"label","attrs":[["data-part",["item"]],["data-state",["off"]]],"children":[{"tag":"input","attrs":[["data-part",["control"]],["type",["radio"]],["name",[{"p":"id"}]]],"children":[]},{"tag":"span","attrs":[["data-part",["label"]]],"children":[]}]}],"dyn":[["mode","data-mode"]]} as unknown as RecipeNode,
+  tree: {"tag":"div","attrs":[["data-ui",["toggle-group"]],["role",["radiogroup"]]],"children":[{"tag":"label","attrs":[["data-part",["item"]],["data-state",["off"]]],"children":[{"tag":"input","attrs":[["data-part",["control"]],["type",["radio"]],["name",[{"p":"id"}]]],"children":[]},{"tag":"span","attrs":[["data-part",["label"]]],"children":[]}]},{"tag":"label","attrs":[["data-part",["item"]],["data-state",["off"]]],"children":[{"tag":"input","attrs":[["data-part",["control"]],["type",["radio"]],["name",[{"p":"id"}]]],"children":[]},{"tag":"span","attrs":[["data-part",["label"]]],"children":[]}]}],"dyn":[["mode","data-mode"],["styleVariant","data-variant"]]} as unknown as RecipeNode,
 });
 
 export default LToggleGroup;

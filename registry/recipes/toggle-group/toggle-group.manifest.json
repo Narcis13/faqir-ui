@@ -1,11 +1,16 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "toggle-group",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "kind": "recipe",
   "category": "forms",
-  "description": "Single- or multi-select group of toggle buttons over native radio/checkbox controls, with roving-tabindex keyboard navigation and native l-model binding",
+  "description": "Single- or multi-select group of toggle buttons over native radio/checkbox controls, with roving-tabindex keyboard navigation and native l-model binding. A segmented style turns a single-select group into one track with a sliding thumb — the monthly/yearly switch of a pricing page — in pure CSS.",
   "changes": [
+    {
+      "version": "1.2.0",
+      "note": "A data-variant style group: default (the existing look, unchanged, and what a group without the attribute renders) and segmented — one filled track on the theme's button radius, equal-width items and a single raised thumb (the root's ::before) that slides under the checked item; the checked label is also semibold, so the choice is never told by the thumb fill alone. It is pure CSS over the native radios: :has() counts the items (up to six) and finds the checked one, so it works before and without the controller, and the keyboard model is untouched. Single mode only; a segmented multi group keeps the default look, an engine without :has() keeps the default per-item fill, and forced colours paint the checked item in the system selection colours. The default checked rule was also split in two so an engine without :has() still honours data-state=\"on\".",
+      "breaking": false
+    },
     {
       "version": "1.1.2",
       "note": "Nested components keep their own parts. The stylesheet reached the items and controls with descendant selectors, so a component nested inside with parts of the same name took this one's styles. Parts are root > item > control, and the checked, focus and disabled rules ask :has(> control). Every part rule is now a child chain from the root, with the hops in :where(), so no rule changes specificity. No change for markup that follows the template.",
@@ -56,6 +61,15 @@
       "default": "single",
       "attr": "data-mode",
       "applied_to": "root"
+    },
+    "style": {
+      "values": [
+        "default",
+        "segmented"
+      ],
+      "default": "default",
+      "attr": "data-variant",
+      "applied_to": "root"
     }
   },
   "states": {
@@ -95,6 +109,16 @@
       "type": "string",
       "default": "single",
       "description": "single (radiogroup, one value) or multi (independent toggles, array value)"
+    },
+    "--toggle-group-track-bg": {
+      "type": "string",
+      "default": "var(--color-bg-muted)",
+      "description": "Fill of the segmented track (custom property, segmented style only). Pass a colour token."
+    },
+    "--toggle-group-thumb-bg": {
+      "type": "string",
+      "default": "var(--color-bg)",
+      "description": "Fill of the segmented thumb — the raised pill under the checked item (custom property, segmented style only). Pass a colour token; it is lifted by --shadow-sm and a hairline of --color-border."
     }
   },
   "a11y": {
@@ -111,7 +135,7 @@
       "Home/End": "focus the first/last enabled control",
       "Space/Enter": "toggle the focused control (select in single mode)"
     },
-    "notes": "The controls are REAL <input type=\"radio\"|\"checkbox\"> elements, so the platform provides the pressed/checked semantics and l-model binds through the engine's native radio (string) / checkbox-array (array) paths with no engine changes. Do not combine :checked with l-model on one control (two writers). The controller adds only roving tabindex, single-mode exclusivity for uncontrolled use, the [data-state] styling hook, and a faqir:change notification. Design note: multi mode uses native checkbox aria-checked rather than button aria-pressed specifically so array l-model works natively."
+    "notes": "The controls are REAL <input type=\"radio\"|\"checkbox\"> elements, so the platform provides the pressed/checked semantics and l-model binds through the engine's native radio (string) / checkbox-array (array) paths with no engine changes. Do not combine :checked with l-model on one control (two writers). The controller adds only roving tabindex, single-mode exclusivity for uncontrolled use, the [data-state] styling hook, and a faqir:change notification. Design note: multi mode uses native checkbox aria-checked rather than button aria-pressed specifically so array l-model works natively. The segmented style changes paint only: the thumb is a decorative ::before with no content, the checked item still carries the visible :focus-visible ring and the strongest text colour, so the selection is never told by the thumb alone. It applies to single mode (role=\"radiogroup\") only; a segmented group in multi mode renders the default look."
   },
   "tokens_used": [
     "color-bg",
@@ -129,17 +153,23 @@
     "text-sm",
     "font-ui",
     "weight-medium",
+    "weight-semibold",
     "duration-fast",
+    "duration-normal",
     "ease-default",
+    "ease-emphasized",
     "border-width",
     "focus-ring-width",
     "focus-ring-style",
     "focus-ring-color",
     "focus-ring-offset",
-    "disabled-opacity"
+    "disabled-opacity",
+    "button-radius",
+    "shadow-sm"
   ],
   "templates": {
-    "html": "<div data-ui=\"toggle-group\" data-mode=\"{mode}\" role=\"radiogroup\" aria-label=\"{label}\">\n  <label data-part=\"item\" data-state=\"off\"><input data-part=\"control\" type=\"radio\" name=\"{id}\" value=\"{value1}\"><span data-part=\"label\">{option1}</span></label>\n  <label data-part=\"item\" data-state=\"off\"><input data-part=\"control\" type=\"radio\" name=\"{id}\" value=\"{value2}\"><span data-part=\"label\">{option2}</span></label>\n</div>"
+    "html": "<div data-ui=\"toggle-group\" data-mode=\"{mode}\" role=\"radiogroup\" aria-label=\"{label}\">\n  <label data-part=\"item\" data-state=\"off\"><input data-part=\"control\" type=\"radio\" name=\"{id}\" value=\"{value1}\"><span data-part=\"label\">{option1}</span></label>\n  <label data-part=\"item\" data-state=\"off\"><input data-part=\"control\" type=\"radio\" name=\"{id}\" value=\"{value2}\"><span data-part=\"label\">{option2}</span></label>\n</div>",
+    "html_segmented": "<div data-ui=\"toggle-group\" data-mode=\"single\" data-variant=\"segmented\" role=\"radiogroup\" aria-label=\"{label}\">\n  <label data-part=\"item\" data-state=\"on\"><input data-part=\"control\" type=\"radio\" name=\"{id}\" value=\"{value1}\" checked><span data-part=\"label\">{option1}</span></label>\n  <label data-part=\"item\" data-state=\"off\"><input data-part=\"control\" type=\"radio\" name=\"{id}\" value=\"{value2}\"><span data-part=\"label\">{option2}</span></label>\n</div>"
   },
   "safe_transforms": [
     "add-item",
@@ -148,18 +178,25 @@
     "change-label-text",
     "add-disabled",
     "remove-disabled",
-    "restyle-item-background"
+    "restyle-item-background",
+    "change-style-to-segmented-in-single-mode",
+    "change-style-to-default"
   ],
   "unsafe_transforms": [
     "remove-control-input",
     "change-control-from-native-input",
     "remove-role-radiogroup-or-group",
     "remove-accessible-name",
-    "remove-keyboard-navigation"
+    "remove-keyboard-navigation",
+    "use-segmented-style-in-multi-mode",
+    "put-more-than-six-items-in-a-segmented-group",
+    "put-non-item-children-in-a-segmented-group"
   ],
   "composition": {
     "contains": [],
-    "used_in": []
+    "used_in": [
+      "pricing"
+    ]
   },
   "files": {
     "html": "toggle-group.html",
@@ -178,6 +215,8 @@
     "l-model-binds-string-in-single-mode",
     "l-model-binds-array-in-multi-mode",
     "disabled-controls-are-skipped",
-    "emits-faqir-change-on-selection"
+    "emits-faqir-change-on-selection",
+    "segmented-style-slides-one-thumb-under-the-checked-item",
+    "segmented-style-is-feature-detected-and-single-mode-only"
   ]
 }

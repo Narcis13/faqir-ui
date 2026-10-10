@@ -1,7 +1,14 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "bento",
-  "version": "1.0.0",
+  "version": "1.0.1",
+  "changes": [
+    {
+      "version": "1.0.1",
+      "note": "Fix: the reduced-motion block now repeats the data-animate entrance selector. At its old specificity (0,2,0) it lost to the entrance (0,3,0), so tiles still scrubbed in under prefers-reduced-motion: reduce.",
+      "breaking": false
+    }
+  ],
   "kind": "pattern",
   "category": "marketing",
   "description": "Bento feature grid for a marketing page: a section heading plus a real <ul> of card-like tiles that may span two columns, two rows or both, packed densely into a four-column mosaic from the lg floor. Composition only: zero JavaScript, no controller, no reactive directives — the spans, the hover spotlight and the optional staggered entrance are pure CSS.",

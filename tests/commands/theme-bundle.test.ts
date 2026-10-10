@@ -248,9 +248,9 @@ describe("scopeThemeCss · the scope root re-declares what reset.css puts on :ro
     expect(scopeRootScheme(":root { --a: red; }")).toBe("light"); // nothing dark to show
   });
 
-  it("only `luxe` pins dark, and only single-scheme light themes pin light", () => {
+  it("only the dark-only themes (`deco`, `luxe`) pin dark, and only single-scheme light themes pin light", () => {
     const by = (scheme: string) => THEMES.filter((name) => scopeRootScheme(themeCss(name)) === scheme);
-    expect(by("dark")).toEqual(["luxe"]);
+    expect(by("dark")).toEqual(["deco", "luxe"]);
     for (const name of by("light")) {
       expect(themeCss(name), `${name} pins light`).toMatch(/@ui:schemes\s+light(?!\s*,?\s*dark)/);
     }

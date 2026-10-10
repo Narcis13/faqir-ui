@@ -1,11 +1,16 @@
 {
   "$schema": "../../../manifest.schema.json",
   "name": "text",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "kind": "primitive",
   "category": "typography",
   "description": "Text and heading primitives with size, color, weight, alignment, and truncation via data attributes",
   "changes": [
+    {
+      "version": "1.3.0",
+      "note": "Landing-page typography, all additive. data-size=\"display\" (text and heading): fluid oversized type, clamp(min(--text-4xl, 11vw), 1rem + 6vw, 2.25 x --text-4xl), line-height 1, the theme's whole heading voice (--font-heading, --heading-weight, --heading-tracking, --heading-transform, --heading-caps), text-wrap: balance and overflow-wrap: anywhere so a long word breaks instead of scrolling the page at 360px. data-variant=\"eyebrow\" (text): a small kicker, uppercase, 0.14em tracking, semibold, in --font-ui and --color-primary; its --text-xs size is a default that a data-size on the same element overrides. data-dropcap (text, boolean): the first letter sunk three lines with initial-letter where supported, a float otherwise, in the heading face and --color-primary. No change for text that uses none of them.",
+      "breaking": false
+    },
     {
       "version": "1.2.0",
       "note": "data-variant=\"mono\" text sets font-variant-ligatures: var(--mono-ligatures), a new typography token that defaults to none. --font-mono names Cascadia Code and JetBrains Mono, and both ligate by default, so on any machine with either installed an id, an operator or a path containing !=, => or -> was drawn as one joined glyph. none also turns contextual alternates off, which is how JetBrains Mono ligates. Set --mono-ligatures: normal to get a face's ligatures back. Text that is mono only because a theme points a type role at --font-mono (terminal) is not covered.",
@@ -45,7 +50,8 @@
         "muted",
         "subtle",
         "primary",
-        "mono"
+        "mono",
+        "eyebrow"
       ],
       "default": "default",
       "attr": "data-variant",
@@ -61,6 +67,7 @@
         "2xl",
         "3xl",
         "4xl",
+        "display",
         "1",
         "2",
         "3",
@@ -115,6 +122,12 @@
       "attr": "data-truncate",
       "description": "Clip overflowing text to a single line with an ellipsis"
     },
+    "dropcap": {
+      "type": "boolean",
+      "default": false,
+      "attr": "data-dropcap",
+      "description": "Set the first letter of the paragraph as an ornamental drop cap three lines tall (initial-letter where supported, a float elsewhere), in the heading face and the primary colour. Text only; on a paragraph, not a one-line label"
+    },
     "tabular": {
       "type": "boolean",
       "default": false,
@@ -126,20 +139,24 @@
     "keyboard": {
       "Enter": "Follows the link (anchor root with an href only)"
     },
-    "notes": "The root may be an <a href> when the text itself is the link: an id, a ref, a version or a timestamp in a table or a list. It keeps the text's colour, variant and size and gains the theme's link underline and the focus ring. Without an href an anchor is not a link and is not styled as one. Link text must say where it goes. For a link in running prose, or one that should stand out in the primary colour, use data-ui=\"link\" instead."
+    "notes": "The root may be an <a href> when the text itself is the link: an id, a ref, a version or a timestamp in a table or a list. It keeps the text's colour, variant and size and gains the theme's link underline and the focus ring. Without an href an anchor is not a link and is not styled as one. Link text must say where it goes. For a link in running prose, or one that should stand out in the primary colour, use data-ui=\"link\" instead. Display size and the eyebrow are looks, not structure: a display line that is the page's title is still an <h1> (a heading root with data-size=\"display\"), and an eyebrow is a plain <p> that adds no heading level. The eyebrow's capitals are text-transform, so the source text keeps its own case and a screen reader reads it as written. The drop cap is ::first-letter: the letter is not duplicated or moved, so reading order and selection are unchanged."
   },
   "tokens_used": [
     "color-fg", "color-fg-muted", "color-primary", "color-destructive", "font-heading", "font-body",
-    "font-mono", "heading-weight", "heading-tracking", "heading-transform", "heading-caps",
-    "heading-leading", "text-xs", "text-sm", "text-base", "text-lg", "text-xl", "text-2xl",
-    "text-3xl", "text-4xl", "weight-normal", "weight-medium", "weight-semibold", "weight-bold",
-    "leading-tight", "leading-snug", "leading-normal", "leading-relaxed", "link-decoration",
-    "link-thickness", "link-underline-offset", "focus-ring-width", "focus-ring-style",
-    "focus-ring-color", "focus-ring-offset", "focus-shadow", "mono-ligatures"
+    "font-mono", "font-ui", "heading-weight", "heading-tracking", "heading-transform",
+    "heading-caps", "heading-leading", "text-xs", "text-sm", "text-base", "text-lg", "text-xl",
+    "text-2xl", "text-3xl", "text-4xl", "weight-normal", "weight-medium", "weight-semibold",
+    "weight-bold", "leading-tight", "leading-snug", "leading-normal", "leading-relaxed",
+    "link-decoration", "link-thickness", "link-underline-offset", "focus-ring-width",
+    "focus-ring-style", "focus-ring-color", "focus-ring-offset", "focus-shadow", "mono-ligatures",
+    "space-2"
   ],
   "templates": {
     "html": "<p data-ui=\"text\" data-size=\"{size}\" data-variant=\"{variant}\">{content}</p>",
-    "html_link": "<a data-ui=\"text\" data-size=\"{size}\" data-variant=\"{variant}\" href=\"{href}\">{content}</a>"
+    "html_link": "<a data-ui=\"text\" data-size=\"{size}\" data-variant=\"{variant}\" href=\"{href}\">{content}</a>",
+    "html_display": "<h1 data-ui=\"heading\" data-size=\"display\">{content}</h1>",
+    "html_eyebrow": "<p data-ui=\"text\" data-variant=\"eyebrow\">{content}</p>",
+    "html_dropcap": "<p data-ui=\"text\" data-dropcap>{content}</p>"
   },
   "safe_transforms": [
     "Change data-size to any listed value",
@@ -148,6 +165,7 @@
     "Change data-align to any listed value",
     "Change text content",
     "Add or remove data-truncate attribute",
+    "Add or remove data-dropcap attribute",
     "Make the root an <a href> when the text itself is the link"
   ],
   "unsafe_transforms": [
@@ -168,6 +186,9 @@
     "Weight attribute applies font-weight",
     "Alignment attribute sets text-align",
     "Truncate attribute clips overflow",
-    "Anchor root with an href is underlined in its own colour; a done link is struck through"
+    "Anchor root with an href is underlined in its own colour; a done link is struck through",
+    "Display size is fluid, uses the heading voice and breaks long words",
+    "Eyebrow is a tracked uppercase primary kicker whose size can still be set",
+    "Drop cap sinks three lines with initial-letter and falls back to a float"
   ]
 }

@@ -1,5 +1,5 @@
 /* @ui:component text */
-/* @ui:tokens color-fg color-fg-muted color-primary color-destructive font-heading font-body font-mono heading-weight heading-tracking heading-transform heading-caps heading-leading text-xs text-sm text-base text-lg text-xl text-2xl text-3xl text-4xl weight-normal weight-medium weight-semibold weight-bold leading-tight leading-snug leading-normal leading-relaxed link-decoration link-thickness link-underline-offset focus-ring-width focus-ring-style focus-ring-color focus-ring-offset focus-shadow mono-ligatures */
+/* @ui:tokens color-fg color-fg-muted color-primary color-destructive font-heading font-body font-mono font-ui heading-weight heading-tracking heading-transform heading-caps heading-leading text-xs text-sm text-base text-lg text-xl text-2xl text-3xl text-4xl weight-normal weight-medium weight-semibold weight-bold leading-tight leading-snug leading-normal leading-relaxed link-decoration link-thickness link-underline-offset focus-ring-width focus-ring-style focus-ring-color focus-ring-offset focus-shadow mono-ligatures space-2 */
 
 /* ── Heading ── */
 [data-ui="heading"] {
@@ -62,10 +62,50 @@
 [data-ui="text"][data-size="lg"] { font-size: var(--text-lg); }
 [data-ui="text"][data-size="xl"] { font-size: var(--text-xl); }
 
+/* Display — oversized, fluid type for a landing hero, on a heading or on text.
+   It takes the theme's whole heading voice (family, weight, tracking, case, caps)
+   whichever root carries it, so a serif or shouting theme follows. The size
+   starts at the largest step of the type scale (or 11vw on a phone, whichever
+   is smaller, so a large-scale theme does not split ordinary words), grows with the viewport and stops
+   at two and a quarter times that; lines run nearly solid, and the glyph box is
+   not the line box, so an inline highlight's background is not cut by them.
+   `anywhere` lets one long word break instead of widening the page at 360px;
+   `balance` keeps the lines of a short, large phrase level. It sits before the
+   weight, leading and alignment rules below so each of those can still adjust it. */
+[data-ui="text"][data-size="display"],
+[data-ui="heading"][data-size="display"] {
+  font-family: var(--font-heading);
+  font-weight: var(--heading-weight);
+  font-size: clamp(min(var(--text-4xl), 11vw), 1rem + 6vw, calc(var(--text-4xl) * 2.25));
+  line-height: 1;
+  letter-spacing: calc(-0.03em + var(--heading-tracking));
+  text-transform: var(--heading-transform);
+  font-variant-caps: var(--heading-caps);
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+
 /* Text color variants */
 [data-ui="text"][data-variant="muted"] { color: var(--color-fg-muted); }
 [data-ui="text"][data-variant="subtle"] { color: var(--color-fg-muted); }
 [data-ui="text"][data-variant="primary"] { color: var(--color-primary); }
+
+/* Eyebrow — the small kicker above a headline ("New", "Case study"). Wide-tracked
+   capitals in the control face, semibold, in the accent. There is no separate
+   "primary as text" token: --color-primary is the one the themes tune for text
+   contrast on both schemes (it is what variant="primary" already uses). The size
+   is a default only, in :where() so a data-size on the same element still wins. */
+[data-ui="text"][data-variant="eyebrow"] {
+  font-family: var(--font-ui);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+}
+
+[data-ui="text"]:where([data-variant="eyebrow"]) {
+  font-size: var(--text-xs);
+}
 
 /* Text weight */
 [data-ui="text"][data-weight="normal"] { font-weight: var(--weight-normal); }
@@ -147,4 +187,30 @@
 
   display: inline-block;
   min-width: var(--text-tabular-width);
+}
+
+/* Drop cap — the first letter of a paragraph, set large in the heading face and
+   the accent. Where `initial-letter` is understood the browser sinks it three
+   lines and aligns its cap height to the first line's, which is the correct
+   drop cap. Elsewhere a float stands in: a four-times capital whose box is
+   shorter than the three lines it spans, so the text wraps beside it. The
+   float approximates the sink (it assumes ordinary leading); both put the
+   letter on the inline-start side, and the gap on its inline end. */
+[data-ui="text"][data-dropcap]::first-letter {
+  float: inline-start;
+  margin-inline-end: var(--space-2);
+  font-family: var(--font-heading);
+  font-weight: var(--heading-weight);
+  font-size: 4em;
+  line-height: 0.8;
+  color: var(--color-primary);
+}
+
+@supports (initial-letter: 3) {
+  [data-ui="text"][data-dropcap]::first-letter {
+    float: none;
+    initial-letter: 3;
+    font-size: inherit;
+    line-height: inherit;
+  }
 }

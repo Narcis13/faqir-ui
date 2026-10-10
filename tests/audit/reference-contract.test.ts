@@ -108,6 +108,12 @@ const INTENDED_ROOT_CHANGES: Record<string, string> = {
   // Text as a link (1.1F-18): an anchor root had no rule, so it had no example.
   // Three anchors were added and nothing was recomposed.
   "primitives/text/text.html": "3 added anchors: a linked text, a mono id link, a done link",
+  // Landing craft (docs/landing-craft.md): each component gained values, and its
+  // reference gained one example per value. Nothing existing was recomposed.
+  "patterns/hero/hero.html": "2 added heroes: a cover layout, and a cover with data-animate inside a backdrop",
+  "primitives/highlight/highlight.html": "6 added highlights in display headings: foil, outline and echo",
+  "primitives/separator/separator.html": "4 added separators: the ornament style, bare and labelled",
+  "recipes/toggle-group/toggle-group.html": "2 added groups: the segmented variant, with two and with three options",
 };
 
 describe("the registry's own markup satisfies its own rules", () => {

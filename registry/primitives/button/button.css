@@ -1,5 +1,5 @@
 /* @ui:component button */
-/* @ui:tokens color-primary color-primary-hover color-primary-fg color-secondary color-secondary-hover color-secondary-fg color-destructive color-destructive-hover color-destructive-fg color-bg color-bg-muted color-bg-subtle color-fg color-border color-ring color-primary-subtle radius-md radius-full space-2 space-3 space-4 space-6 font-ui text-xs text-sm text-base weight-medium duration-fast duration-slower ease-default ease-emphasized ease-out border-width border-width-strong border-width-md corner-shape focus-ring-width focus-ring-offset focus-ring-style focus-ring-color focus-shadow button-text-transform button-height-md button-radius button-height-sm button-height-lg motion-hover-lift motion-ambient-duration motion-ambient-play link-decoration disabled-opacity */
+/* @ui:tokens color-primary color-primary-hover color-primary-fg color-secondary color-secondary-hover color-secondary-fg color-destructive color-destructive-hover color-destructive-fg color-bg color-bg-muted color-bg-subtle color-fg color-border color-ring color-primary-subtle radius-md radius-full space-2 space-3 space-4 space-6 space-1 font-ui text-xs text-sm text-base weight-medium duration-fast duration-slower duration-normal ease-default ease-emphasized ease-out border-width border-width-strong border-width-md corner-shape focus-ring-width focus-ring-offset focus-ring-style focus-ring-color focus-shadow button-text-transform button-height-md button-radius button-height-sm button-height-lg motion-hover-lift motion-ambient-duration motion-ambient-play link-decoration disabled-opacity shadow-md shadow-lg shadow-xs */
 
 /* ── Base ── */
 [data-ui="button"] {
@@ -222,7 +222,10 @@
    Attention a button can ask for, one at a time, on top of any variant.
    `shine` sweeps a highlight across the face on hover — the sheen on a glossy
    key; `pulse` sends a ring out from the edge on a loop, for the one action on
-   the screen that is waiting on the reader; `press` sinks under the pointer.
+   the screen that is waiting on the reader; `press` sinks under the pointer;
+   `arrow` leans the trailing icon toward the inline end, the "go" cue on a
+   call to action; `sink` is the neo-brutalist press, a resting offset shadow
+   the button lifts off on hover and is pushed flush into on :active.
    The ring is drawn by ::before (::after belongs to the loading spinner) and
    the sheen clips to the face, so neither reaches past the border. */
 [data-ui="button"][data-effect] {
@@ -292,4 +295,67 @@
   [data-ui="button"][data-effect="press"]:active {
     scale: none;
   }
+}
+
+/* ── Effect: arrow ──
+   The last icon child leans toward the inline end on hover and keyboard focus:
+   `Get started →` going where it says. The nudge is a private custom property
+   so right-to-left flips it in one place; the icon is whatever the page put
+   there (an arrow-right glyph, ordinarily). The movement lives wholly in the
+   no-preference query, so under reduced motion the icon simply stays put. */
+[data-ui="button"][data-effect="arrow"] {
+  --faqir-button-nudge: var(--space-1);
+}
+
+[data-ui="button"][data-effect="arrow"]:dir(rtl) {
+  --faqir-button-nudge: calc(var(--space-1) * -1);
+}
+
+/* In right-to-left the glyph is mirrored, so an arrow-right points the way it
+   moves. The effect is for a TRAILING icon: CSS cannot see the text beside an
+   icon, so a button whose only icon leads (`★ Save`) would nudge it too —
+   the manifest says so, and such a button wants no arrow effect. */
+[data-ui="button"][data-effect="arrow"]:dir(rtl) > [data-part="icon"]:last-child {
+  scale: -1 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-ui="button"][data-effect="arrow"] > [data-part="icon"]:last-child {
+    transition: translate var(--duration-normal) var(--ease-emphasized);
+  }
+
+  [data-ui="button"][data-effect="arrow"]:hover > [data-part="icon"]:last-child,
+  [data-ui="button"][data-effect="arrow"]:focus-visible > [data-part="icon"]:last-child {
+    translate: var(--faqir-button-nudge) 0;
+  }
+}
+
+/* ── Effect: sink ──
+   Depth you can push. At rest the button carries the theme's own shadow, so a
+   hard-depth theme (neo: `3px 3px 0`) draws a hard offset and a soft theme a
+   soft one. On hover the button lifts off it, up and back by the sink distance
+   while the shadow steps up a size, which keeps a hard shadow's tip where it
+   was. On :active (the pointer, or Space held on the keyboard) the
+   shadow collapses to its smallest step and the button travels the same
+   distance the other way, flush into the page.
+   `--sink-distance` is the travel (half a --space-1 by default) and
+   `--sink-shadow` replaces the resting and hover shadow, for a theme
+   that states none (brutalist sets every --shadow-* to none). The base focus
+   rule writes --focus-shadow to the same property; sink keeps its depth and
+   lets the focus outline, which it does not touch, mark focus.
+   Reduced motion: the base rule already drops every transition, so the states
+   change instantly. The shadow and the offset remain the feedback. */
+[data-ui="button"][data-effect="sink"] {
+  --faqir-button-sink: var(--sink-distance, calc(var(--space-1) / 2));
+  box-shadow: var(--sink-shadow, var(--shadow-md));
+}
+
+[data-ui="button"][data-effect="sink"]:hover {
+  box-shadow: var(--sink-shadow, var(--shadow-lg));
+  translate: calc(var(--faqir-button-sink) * -1) calc(var(--faqir-button-sink) * -1);
+}
+
+[data-ui="button"][data-effect="sink"]:active {
+  box-shadow: var(--shadow-xs);
+  translate: var(--faqir-button-sink) var(--faqir-button-sink);
 }
