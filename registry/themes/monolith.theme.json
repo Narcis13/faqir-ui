@@ -1,16 +1,16 @@
 {
   "$schema": "../../manifest.schema.json",
-  "name": "clinical",
+  "name": "monolith",
   "version": "1.0.0",
   "mood": [
-    "clinical",
-    "medical",
-    "calm",
-    "legible",
-    "healthcare"
+    "brutalist-minimal",
+    "architecture",
+    "concrete",
+    "portfolio",
+    "uppercase"
   ],
-  "scheme": "both",
-  "dark_mode": "native",
+  "scheme": "light",
+  "dark_mode": "none",
   "tokens_overridden": [
     "border-width",
     "border-width-strong",
@@ -72,17 +72,17 @@
     "link-decoration",
     "link-thickness",
     "link-underline-offset",
-    "palette-clinical-100",
-    "palette-clinical-200",
-    "palette-clinical-300",
-    "palette-clinical-400",
-    "palette-clinical-50",
-    "palette-clinical-500",
-    "palette-clinical-600",
-    "palette-clinical-700",
-    "palette-clinical-800",
-    "palette-clinical-900",
-    "palette-clinical-950",
+    "palette-monolith-100",
+    "palette-monolith-200",
+    "palette-monolith-300",
+    "palette-monolith-400",
+    "palette-monolith-50",
+    "palette-monolith-500",
+    "palette-monolith-600",
+    "palette-monolith-700",
+    "palette-monolith-800",
+    "palette-monolith-900",
+    "palette-monolith-950",
     "radius-2xl",
     "radius-lg",
     "radius-md",
@@ -325,87 +325,106 @@
     "z-toast"
   ],
   "pairs_with": [
-    "slate",
-    "document"
+    "swiss"
   ],
-  "preview": "clinical.preview.html",
+  "preview": "monolith.preview.html",
   "seed": {
-    "name": "clinical",
-    "accent": "#0f7b8a",
-    "neutral": "cool",
-    "scheme": "both",
+    "name": "monolith",
+    "accent": "oklch(0.55 0.14 145)",
+    "neutral": "tinted",
+    "scheme": "light",
     "type": {
-      "pairing": "sans-humanist",
-      "scale": 1.2,
+      "pairing": "sans-grotesque",
+      "scale": 1.333,
       "base": 17,
       "voice": {
-        "weight": "medium",
-        "tracking": "normal",
-        "transform": "none"
+        "weight": "bold",
+        "tracking": "tight",
+        "transform": "uppercase"
       }
     },
     "shape": {
-      "radius": "soft",
+      "radius": "sharp",
       "border": "hairline",
       "corner": "round"
     },
     "depth": "flat",
-    "material": "dots",
+    "material": "grain",
     "motion": "minimal",
-    "density": "comfortable",
-    "focus": "ring",
+    "density": "spacious",
+    "focus": "inset",
     "decoration": {
       "link": "offset",
       "divider": "solid"
     },
     "controls": {
-      "button": "soft",
-      "input": "box",
+      "button": "rect",
+      "input": "underline",
       "checkbox": "square",
-      "switch": "pill"
+      "switch": "square"
     },
     "contrast": "high",
     "document": false
   },
   "axes": {
-    "accent_hue": 210.1,
-    "accent_chroma": 0.0895,
-    "neutral": "cool",
-    "scheme": "both",
+    "accent_hue": 145,
+    "accent_chroma": 0.14,
+    "neutral": "tinted",
+    "scheme": "light",
     "type": {
-      "pairing": "sans-humanist",
-      "scale": 1.2,
+      "pairing": "sans-grotesque",
+      "scale": 1.333,
       "base": 17,
       "voice": {
-        "weight": "medium",
-        "tracking": "normal",
-        "transform": "none"
+        "weight": "bold",
+        "tracking": "tight",
+        "transform": "uppercase"
       }
     },
     "shape": {
-      "radius": "soft",
+      "radius": "sharp",
       "border": "hairline",
       "corner": "round"
     },
     "depth": "flat",
-    "material": "dots",
+    "material": "grain",
     "motion": "minimal",
-    "density": "comfortable",
-    "focus": "ring",
+    "density": "spacious",
+    "focus": "inset",
     "decoration": {
       "link": "offset",
       "divider": "solid"
     },
     "controls": {
-      "button": "soft",
-      "input": "box",
+      "button": "rect",
+      "input": "underline",
       "checkbox": "square",
-      "switch": "pill"
+      "switch": "square"
     },
     "contrast": "high"
   },
+  "fonts": [
+    {
+      "family": "Inter",
+      "license": "OFL-1.1",
+      "role": "heading",
+      "source": "inter"
+    },
+    {
+      "family": "Inter",
+      "license": "OFL-1.1",
+      "role": "body",
+      "source": "inter"
+    },
+    {
+      "family": "Inter",
+      "license": "OFL-1.1",
+      "role": "ui",
+      "source": "inter"
+    }
+  ],
   "distinctiveness": {
-    "nearest": "monolith",
+    "nearest": "clinical",
     "axis_distance": 10,
     "token_distance": 0.0319
   },

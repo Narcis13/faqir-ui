@@ -425,9 +425,9 @@
     }
   ],
   "distinctiveness": {
-    "nearest": "luxe",
-    "axis_distance": 12,
-    "token_distance": 0.0344
+    "nearest": "memphis",
+    "axis_distance": 11,
+    "token_distance": 0.032
   },
   "visual_matrix": false
 }

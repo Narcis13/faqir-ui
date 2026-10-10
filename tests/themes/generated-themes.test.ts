@@ -74,11 +74,13 @@ const SEEDED = [...new Glob("*.seed.json").scanSync(THEMES_DIR)]
 const BATCH_ONE = ["candy", "editorial", "luxe", "neo", "organic", "swiss"];
 /** The six 1.1A-17 shipped, on the same terms. */
 const BATCH_TWO = ["clinical", "fintech", "ink", "neumorph", "nordic", "sunset"];
-/** Both batches, in the order `SEEDED` discovers them (sorted). */
-const GENERATED = [...BATCH_ONE, ...BATCH_TWO].sort();
+/** The four landing-craft themes (docs/landing-craft.md), on the same terms. */
+const BATCH_THREE = ["clay", "deco", "memphis", "monolith"];
+/** Every batch, in the order `SEEDED` discovers them (sorted). */
+const GENERATED = [...BATCH_ONE, ...BATCH_TWO, ...BATCH_THREE].sort();
 
 describe("the shipped generated themes", () => {
-  it("is both batches — twelve themes, each with a seed on disk", () => {
+  it("is all three batches — sixteen themes, each with a seed on disk", () => {
     expect(SEEDED).toEqual(GENERATED);
     for (const name of SEEDED) {
       expect(existsSync(join(THEMES_DIR, `${name}.css`)), `${name}.css`).toBe(true);
@@ -339,7 +341,7 @@ describe("every value of the four structural axes has a shipped example", () => 
       const missing = vocabulary.filter((value) => (shipped[value] ?? []).length === 0);
       expect({ [path]: missing }).toEqual({ [path]: [] });
       // Not vacuous: the sweep must have read the whole shipped set.
-      expect(PEERS.length).toBe(24);
+      expect(PEERS.length).toBe(28);
       expect(Object.values(shipped).flat().length).toBe(PEERS.length);
     });
   }
@@ -352,17 +354,14 @@ describe("every value of the four structural axes has a shipped example", () => 
       }
     }
     expect(sole).toEqual({
-      // Three depths, each the whole argument for the theme that carries it.
-      "depth=hard": "neo",
+      // Two depths, each the whole argument for the theme that carries it.
+      // `hard` gained memphis in the landing-craft batch.
       "depth=glass": "glass",
       "depth=inset": "neumorph",
-      // Three materials. `grid`, `paper` and `mesh` have two or three each.
-      "material=grain": "organic",
-      "material=dots": "clinical",
-      "material=stripes": "terminal",
-      // A theme that does not animate, and one that animates the most.
+      // No material hangs on one theme any more: the landing-craft batch gave
+      // `grain` (monolith), `dots` (memphis) and `stripes` (deco) a second.
+      // A theme that does not animate. `playful` gained clay.
       "motion=none": "document",
-      "motion=playful": "neo",
     });
   });
 });

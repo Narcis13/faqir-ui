@@ -617,6 +617,37 @@ export const GALLERY_PREVIEWS: ThemePreviewSpec[] = [
     // well: the same pressed shadow every surface in this theme carries.
     signature: `<div style="height: var(--space-6); border-radius: var(--radius-xl); background: var(--color-surface-1); box-shadow: var(--shadow-lg);" aria-hidden="true"></div>`,
   },
+  {
+    name: "deco",
+    tagline: "Black lacquer and emerald — wide-tracked Didone capitals, double rules and pinstripes, no shadow anywhere.",
+    initials: "DC",
+    scheme: "dark",
+    density: "spacious",
+    signature: `<div style="height: var(--space-6); background-image: var(--texture-page); border-block: var(--divider-width, var(--border-width)) var(--divider-style, double) var(--color-primary);" aria-hidden="true"></div>`,
+  },
+  {
+    name: "clay",
+    tagline: "Modelling clay on lilac — a chunky rounded face, puffy layered shadows and controls that squash when pressed.",
+    initials: "CL",
+    scheme: "light",
+    density: "spacious",
+    signature: `<div style="height: var(--space-6); border-radius: var(--radius-full); background: var(--color-primary-subtle); box-shadow: var(--shadow-lg);" aria-hidden="true"></div>`,
+  },
+  {
+    name: "memphis",
+    tagline: "Milano '86 on white — black geometric type, heavy outlines, hard offset shadows and a confetti of dots.",
+    initials: "ME",
+    scheme: "light",
+    signature: `<div style="height: var(--space-6); background-image: var(--texture-page); border: var(--border-width-strong) solid var(--color-fg); box-shadow: var(--shadow-md);" aria-hidden="true"></div>`,
+  },
+  {
+    name: "monolith",
+    tagline: "Board-marked concrete and one patina green — tight uppercase grotesk, square slabs and vast negative space.",
+    initials: "MO",
+    scheme: "light",
+    density: "spacious",
+    signature: `<div style="height: var(--space-6); background-image: var(--texture-page); border-block-end: var(--border-width) solid var(--color-primary);" aria-hidden="true"></div>`,
+  },
 ];
 
 /**

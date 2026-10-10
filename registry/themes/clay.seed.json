@@ -1,0 +1,38 @@
+{
+  "name": "clay",
+  "accent": "oklch(0.62 0.17 295)",
+  "neutral": "tinted",
+  "scheme": "light",
+  "type": {
+    "pairing": "rounded",
+    "scale": 1.25,
+    "base": 17,
+    "voice": {
+      "weight": "black",
+      "tracking": "normal",
+      "transform": "none"
+    }
+  },
+  "shape": {
+    "radius": "round",
+    "border": "regular",
+    "corner": "round"
+  },
+  "depth": "layered",
+  "material": "none",
+  "motion": "playful",
+  "density": "spacious",
+  "focus": "glow",
+  "decoration": {
+    "link": "thick",
+    "divider": "dotted"
+  },
+  "controls": {
+    "button": "soft",
+    "input": "filled",
+    "checkbox": "round",
+    "switch": "pill"
+  },
+  "contrast": "high",
+  "document": false
+}

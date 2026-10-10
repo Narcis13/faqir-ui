@@ -1,16 +1,16 @@
 {
   "$schema": "../../manifest.schema.json",
-  "name": "clinical",
+  "name": "memphis",
   "version": "1.0.0",
   "mood": [
-    "clinical",
-    "medical",
-    "calm",
-    "legible",
-    "healthcare"
+    "memphis",
+    "postmodern",
+    "bold",
+    "event",
+    "playful"
   ],
-  "scheme": "both",
-  "dark_mode": "native",
+  "scheme": "light",
+  "dark_mode": "none",
   "tokens_overridden": [
     "border-width",
     "border-width-strong",
@@ -56,6 +56,7 @@
     "duration-normal",
     "duration-slow",
     "duration-slower",
+    "ease-default",
     "focus-ring-color",
     "focus-ring-offset",
     "focus-ring-style",
@@ -72,17 +73,17 @@
     "link-decoration",
     "link-thickness",
     "link-underline-offset",
-    "palette-clinical-100",
-    "palette-clinical-200",
-    "palette-clinical-300",
-    "palette-clinical-400",
-    "palette-clinical-50",
-    "palette-clinical-500",
-    "palette-clinical-600",
-    "palette-clinical-700",
-    "palette-clinical-800",
-    "palette-clinical-900",
-    "palette-clinical-950",
+    "palette-memphis-100",
+    "palette-memphis-200",
+    "palette-memphis-300",
+    "palette-memphis-400",
+    "palette-memphis-50",
+    "palette-memphis-500",
+    "palette-memphis-600",
+    "palette-memphis-700",
+    "palette-memphis-800",
+    "palette-memphis-900",
+    "palette-memphis-950",
     "radius-2xl",
     "radius-lg",
     "radius-md",
@@ -183,7 +184,6 @@
     "doc-table-stripe-bg",
     "duration-slowest",
     "ease-bounce",
-    "ease-default",
     "ease-emphasized",
     "ease-in",
     "ease-in-out",
@@ -325,89 +325,88 @@
     "z-toast"
   ],
   "pairs_with": [
-    "slate",
-    "document"
+    "neo"
   ],
-  "preview": "clinical.preview.html",
+  "preview": "memphis.preview.html",
   "seed": {
-    "name": "clinical",
-    "accent": "#0f7b8a",
-    "neutral": "cool",
-    "scheme": "both",
+    "name": "memphis",
+    "accent": "oklch(0.6 0.22 350)",
+    "neutral": "tinted",
+    "scheme": "light",
     "type": {
-      "pairing": "sans-humanist",
-      "scale": 1.2,
+      "pairing": "sans-geometric",
+      "scale": 1.333,
       "base": 17,
       "voice": {
-        "weight": "medium",
-        "tracking": "normal",
+        "weight": "black",
+        "tracking": "tight",
         "transform": "none"
       }
     },
     "shape": {
-      "radius": "soft",
-      "border": "hairline",
+      "radius": "crisp",
+      "border": "heavy",
       "corner": "round"
     },
-    "depth": "flat",
+    "depth": "hard",
     "material": "dots",
-    "motion": "minimal",
+    "motion": "springy",
     "density": "comfortable",
-    "focus": "ring",
+    "focus": "bold",
     "decoration": {
-      "link": "offset",
-      "divider": "solid"
+      "link": "thick",
+      "divider": "dashed"
     },
     "controls": {
-      "button": "soft",
+      "button": "rect",
       "input": "box",
-      "checkbox": "square",
+      "checkbox": "round",
       "switch": "pill"
     },
     "contrast": "high",
     "document": false
   },
   "axes": {
-    "accent_hue": 210.1,
-    "accent_chroma": 0.0895,
-    "neutral": "cool",
-    "scheme": "both",
+    "accent_hue": 350,
+    "accent_chroma": 0.22,
+    "neutral": "tinted",
+    "scheme": "light",
     "type": {
-      "pairing": "sans-humanist",
-      "scale": 1.2,
+      "pairing": "sans-geometric",
+      "scale": 1.333,
       "base": 17,
       "voice": {
-        "weight": "medium",
-        "tracking": "normal",
+        "weight": "black",
+        "tracking": "tight",
         "transform": "none"
       }
     },
     "shape": {
-      "radius": "soft",
-      "border": "hairline",
+      "radius": "crisp",
+      "border": "heavy",
       "corner": "round"
     },
-    "depth": "flat",
+    "depth": "hard",
     "material": "dots",
-    "motion": "minimal",
+    "motion": "springy",
     "density": "comfortable",
-    "focus": "ring",
+    "focus": "bold",
     "decoration": {
-      "link": "offset",
-      "divider": "solid"
+      "link": "thick",
+      "divider": "dashed"
     },
     "controls": {
-      "button": "soft",
+      "button": "rect",
       "input": "box",
-      "checkbox": "square",
+      "checkbox": "round",
       "switch": "pill"
     },
     "contrast": "high"
   },
   "distinctiveness": {
-    "nearest": "monolith",
-    "axis_distance": 10,
-    "token_distance": 0.0319
+    "nearest": "swiss",
+    "axis_distance": 11,
+    "token_distance": 0.032
   },
   "visual_matrix": false
 }

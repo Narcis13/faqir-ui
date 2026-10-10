@@ -1,16 +1,16 @@
 {
   "$schema": "../../manifest.schema.json",
-  "name": "clinical",
+  "name": "clay",
   "version": "1.0.0",
   "mood": [
-    "clinical",
-    "medical",
-    "calm",
-    "legible",
-    "healthcare"
+    "claymorphism",
+    "playful",
+    "pastel",
+    "tactile",
+    "rounded"
   ],
-  "scheme": "both",
-  "dark_mode": "native",
+  "scheme": "light",
+  "dark_mode": "none",
   "tokens_overridden": [
     "border-width",
     "border-width-strong",
@@ -56,10 +56,12 @@
     "duration-normal",
     "duration-slow",
     "duration-slower",
+    "ease-default",
     "focus-ring-color",
     "focus-ring-offset",
     "focus-ring-style",
     "focus-ring-width",
+    "focus-shadow",
     "font-body",
     "font-heading",
     "font-ui",
@@ -72,17 +74,18 @@
     "link-decoration",
     "link-thickness",
     "link-underline-offset",
-    "palette-clinical-100",
-    "palette-clinical-200",
-    "palette-clinical-300",
-    "palette-clinical-400",
-    "palette-clinical-50",
-    "palette-clinical-500",
-    "palette-clinical-600",
-    "palette-clinical-700",
-    "palette-clinical-800",
-    "palette-clinical-900",
-    "palette-clinical-950",
+    "motion-hover-lift",
+    "palette-clay-100",
+    "palette-clay-200",
+    "palette-clay-300",
+    "palette-clay-400",
+    "palette-clay-50",
+    "palette-clay-500",
+    "palette-clay-600",
+    "palette-clay-700",
+    "palette-clay-800",
+    "palette-clay-900",
+    "palette-clay-950",
     "radius-2xl",
     "radius-lg",
     "radius-md",
@@ -102,8 +105,7 @@
     "text-lg",
     "text-sm",
     "text-xl",
-    "text-xs",
-    "texture-page"
+    "text-xs"
   ],
   "tokens_inherited": [
     "avatar-radius",
@@ -183,7 +185,6 @@
     "doc-table-stripe-bg",
     "duration-slowest",
     "ease-bounce",
-    "ease-default",
     "ease-emphasized",
     "ease-in",
     "ease-in-out",
@@ -202,7 +203,6 @@
     "field-required-color",
     "field-required-marker",
     "field-validating-color",
-    "focus-shadow",
     "font-mono",
     "font-sans",
     "font-serif",
@@ -242,7 +242,6 @@
     "motion-ambient-play",
     "motion-enter-duration",
     "motion-enter-ease",
-    "motion-hover-lift",
     "motion-leave-duration",
     "motion-leave-ease",
     "motion-reveal-blur",
@@ -310,6 +309,7 @@
     "switch-thumb-shadow",
     "switch-travel",
     "switch-width",
+    "texture-page",
     "texture-surface",
     "weight-bold",
     "weight-medium",
@@ -325,89 +325,109 @@
     "z-toast"
   ],
   "pairs_with": [
-    "slate",
-    "document"
+    "candy",
+    "neumorph"
   ],
-  "preview": "clinical.preview.html",
+  "preview": "clay.preview.html",
   "seed": {
-    "name": "clinical",
-    "accent": "#0f7b8a",
-    "neutral": "cool",
-    "scheme": "both",
+    "name": "clay",
+    "accent": "oklch(0.62 0.17 295)",
+    "neutral": "tinted",
+    "scheme": "light",
     "type": {
-      "pairing": "sans-humanist",
-      "scale": 1.2,
+      "pairing": "rounded",
+      "scale": 1.25,
       "base": 17,
       "voice": {
-        "weight": "medium",
+        "weight": "black",
         "tracking": "normal",
         "transform": "none"
       }
     },
     "shape": {
-      "radius": "soft",
-      "border": "hairline",
+      "radius": "round",
+      "border": "regular",
       "corner": "round"
     },
-    "depth": "flat",
-    "material": "dots",
-    "motion": "minimal",
-    "density": "comfortable",
-    "focus": "ring",
+    "depth": "layered",
+    "material": "none",
+    "motion": "playful",
+    "density": "spacious",
+    "focus": "glow",
     "decoration": {
-      "link": "offset",
-      "divider": "solid"
+      "link": "thick",
+      "divider": "dotted"
     },
     "controls": {
       "button": "soft",
-      "input": "box",
-      "checkbox": "square",
+      "input": "filled",
+      "checkbox": "round",
       "switch": "pill"
     },
     "contrast": "high",
     "document": false
   },
   "axes": {
-    "accent_hue": 210.1,
-    "accent_chroma": 0.0895,
-    "neutral": "cool",
-    "scheme": "both",
+    "accent_hue": 295,
+    "accent_chroma": 0.1564,
+    "neutral": "tinted",
+    "scheme": "light",
     "type": {
-      "pairing": "sans-humanist",
-      "scale": 1.2,
+      "pairing": "rounded",
+      "scale": 1.25,
       "base": 17,
       "voice": {
-        "weight": "medium",
+        "weight": "black",
         "tracking": "normal",
         "transform": "none"
       }
     },
     "shape": {
-      "radius": "soft",
-      "border": "hairline",
+      "radius": "round",
+      "border": "regular",
       "corner": "round"
     },
-    "depth": "flat",
-    "material": "dots",
-    "motion": "minimal",
-    "density": "comfortable",
-    "focus": "ring",
+    "depth": "layered",
+    "material": "none",
+    "motion": "playful",
+    "density": "spacious",
+    "focus": "glow",
     "decoration": {
-      "link": "offset",
-      "divider": "solid"
+      "link": "thick",
+      "divider": "dotted"
     },
     "controls": {
       "button": "soft",
-      "input": "box",
-      "checkbox": "square",
+      "input": "filled",
+      "checkbox": "round",
       "switch": "pill"
     },
     "contrast": "high"
   },
+  "fonts": [
+    {
+      "family": "Nunito",
+      "license": "OFL-1.1",
+      "role": "heading",
+      "source": "nunito"
+    },
+    {
+      "family": "Nunito",
+      "license": "OFL-1.1",
+      "role": "body",
+      "source": "nunito"
+    },
+    {
+      "family": "Nunito",
+      "license": "OFL-1.1",
+      "role": "ui",
+      "source": "nunito"
+    }
+  ],
   "distinctiveness": {
-    "nearest": "monolith",
-    "axis_distance": 10,
-    "token_distance": 0.0319
+    "nearest": "clinical",
+    "axis_distance": 13,
+    "token_distance": 0.0339
   },
   "visual_matrix": false
 }

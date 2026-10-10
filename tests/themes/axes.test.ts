@@ -534,7 +534,7 @@ describe("axesFromCss · the two authoring forms agree", () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// 4 · The twenty-seven shipped stylesheets, as a table
+// 4 · The thirty-one shipped stylesheets, as a table
 // ═══════════════════════════════════════════════════════════════════════════
 //
 // The table this task's commit body records. Asserted here so that a later CSS
@@ -552,7 +552,9 @@ const THEME_TABLE: Row[] = [
   ["brutalist", "gray", "system", "sharp", "heavy", "flat", "minimal", "bold", "rect", "high"],
   ["clinical", "cool", "sans-humanist", "soft", "hairline", "flat", "minimal", "ring", "soft", "high"],
   ["candy", "tinted", "rounded", "pill", "hairline", "soft", "springy", "ring", "pill", "standard"],
+  ["clay", "tinted", "rounded", "round", "regular", "layered", "playful", "glow", "soft", "high"],
   ["contrast", "gray", "system", "soft", "regular", "soft", "smooth", "bold", "soft", "high"],
+  ["deco", "tinted", "serif-modern", "sharp", "regular", "flat", "minimal", "bold", "rect", "high"],
   ["default", "gray", "system", "soft", "hairline", "soft", "smooth", "ring", "soft", "standard"],
   ["document", "gray", "sans-grotesque", "sharp", "hairline", "flat", "none", "ring", "rect", "high"],
   ["document-serif", "gray", "serif-editorial", "sharp", "hairline", "flat", "smooth", "ring", "rect", "high"],
@@ -563,8 +565,10 @@ const THEME_TABLE: Row[] = [
   ["ink", "warm", "slab", "sharp", "hairline", "flat", "minimal", "bold", "rect", "high"],
   ["ink-document", "gray", "sans-grotesque", "sharp", "hairline", "flat", "smooth", "ring", "rect", "high"],
   ["luxe", "warm", "serif-modern", "soft", "hairline", "soft", "smooth", "ring", "soft", "high"],
+  ["memphis", "tinted", "sans-geometric", "crisp", "heavy", "hard", "springy", "bold", "rect", "high"],
   ["midnight", "cool", "system", "soft", "hairline", "layered", "smooth", "glow", "soft", "standard"],
-  ["neo", "gray", "sans-grotesque", "sharp", "heavy", "hard", "playful", "bold", "rect", "standard"],
+  ["monolith", "tinted", "sans-grotesque", "sharp", "hairline", "flat", "minimal", "inset", "rect", "high"],
+  ["neo","gray", "sans-grotesque", "sharp", "heavy", "hard", "playful", "bold", "rect", "standard"],
   ["neumorph", "tinted", "rounded", "round", "hairline", "inset", "smooth", "inset", "soft", "standard"],
   ["nordic", "cool", "sans-geometric", "round", "hairline", "flat", "smooth", "ring", "soft", "standard"],
   ["organic", "warm", "sans-humanist", "round", "hairline", "soft", "smooth", "ring", "soft", "standard"],
@@ -582,8 +586,10 @@ const THEME_ACCENTS: Record<string, { hue: number; chroma: number; scheme: strin
   aurora: { hue: 300, chroma: 0.24, scheme: "both", switch: "pill" },
   brutalist: { hue: 0, chroma: 0, scheme: "both", switch: "square" },
   candy: { hue: 351.5, chroma: 0.1788, scheme: "both", switch: "pill" },
+  clay: { hue: 295, chroma: 0.1564, scheme: "light", switch: "pill" },
   clinical: { hue: 210.1, chroma: 0.0895, scheme: "both", switch: "pill" },
   contrast: { hue: 250, chroma: 0.16, scheme: "both", switch: "pill" },
+  deco: { hue: 155, chroma: 0.132, scheme: "dark", switch: "square" },
   default: { hue: 264, chroma: 0.22, scheme: "both", switch: "pill" },
   document: { hue: 250, chroma: 0.06, scheme: "light", switch: "square" },
   "document-serif": { hue: 25, chroma: 0.07, scheme: "light", switch: "square" },
@@ -594,7 +600,9 @@ const THEME_ACCENTS: Record<string, { hue: number; chroma: number; scheme: strin
   ink: { hue: 60, chroma: 0.06, scheme: "light", switch: "square" },
   "ink-document": { hue: 60, chroma: 0.06, scheme: "light", switch: "square" },
   luxe: { hue: 84, chroma: 0.0988, scheme: "dark", switch: "pill" },
+  memphis: { hue: 350, chroma: 0.22, scheme: "light", switch: "pill" },
   midnight: { hue: 280, chroma: 0.24, scheme: "both", switch: "pill" },
+  monolith: { hue: 145, chroma: 0.14, scheme: "light", switch: "square" },
   neo: { hue: 121.1, chroma: 0.1676, scheme: "both", switch: "square" },
   neumorph: { hue: 300, chroma: 0.2, scheme: "both", switch: "pill" },
   nordic: { hue: 220, chroma: 0.184, scheme: "both", switch: "pill" },
@@ -612,7 +620,7 @@ function shippedAxes(name: string): ThemeAxes {
   return axesFromCss(readFileSync(join(THEMES_DIR, `${name}.css`), "utf8"), BASE);
 }
 
-describe("axesFromCss · the twenty-seven shipped stylesheets", () => {
+describe("axesFromCss · the thirty-one shipped stylesheets", () => {
   it("covers every theme in the registry — no row may go missing", () => {
     const shipped = [...new Glob("*.css").scanSync(THEMES_DIR)].map((f) => f.replace(/\.css$/, "")).sort();
     expect(THEME_TABLE.map((r) => r[0]).sort()).toEqual(shipped);
@@ -684,6 +692,12 @@ describe("axesFromCss · the twenty-seven shipped stylesheets", () => {
       nordic: "none/round/none/spacious",
       sunset: "mesh/round/none/comfortable",
       ink: "paper/round/none/comfortable",
+      // The landing-craft four: a second example each for `stripes` (deco),
+      // `dots` (memphis) and `grain` (monolith), the last two uppercase.
+      clay: "none/round/none/spacious",
+      deco: "stripes/round/uppercase/spacious",
+      memphis: "dots/round/none/comfortable",
+      monolith: "grain/round/uppercase/spacious",
     };
     for (const [name] of THEME_TABLE) {
       const a = shippedAxes(name);
@@ -957,7 +971,7 @@ describe("lengths, lists and shadows", () => {
 // again and 1.1A-12 arms the gate that forbids the low end. A theme edit that
 // makes the registry more varied must come here and say so.
 
-describe("axesFromCss · how alike the twenty-seven shipped stylesheets are [feeds 1.1A-12]", () => {
+describe("axesFromCss · how alike the thirty-one shipped stylesheets are [feeds 1.1A-12]", () => {
   const LEAVES = Object.keys(THEME_AXIS_VALUES);
   const NAMES = THEME_TABLE.map(([name]) => name);
   const DERIVED = new Map(NAMES.map((name) => [name, shippedAxes(name)]));
@@ -1016,7 +1030,7 @@ describe("axesFromCss · how alike the twenty-seven shipped stylesheets are [fee
     expect(identical.every((pair) => pair.split(" ↔ ").every((n) => n.endsWith("-document")))).toBe(true);
   });
 
-  it("7 of the 351 pairs sit below four DIFFERING LEAVES — and none is a gate failure", () => {
+  it("7 of the 465 pairs sit below four DIFFERING LEAVES — and none is a gate failure", () => {
     // This count is deliberately NOT the distinctiveness gate's. It compares the
     // twenty-three enumerated leaves one by one, and the two ACCENT axes are
     // continuous, so they are not in `THEME_AXIS_VALUES` and not counted here.
@@ -1045,7 +1059,7 @@ describe("axesFromCss · how alike the twenty-seven shipped stylesheets are [fee
         if (axisDistance(NAMES[i], NAMES[j]) < 4) below.push(`${NAMES[i]}/${NAMES[j]}`);
       }
     }
-    expect(NAMES.length).toBe(27);
+    expect(NAMES.length).toBe(31);
     expect(below.sort()).toEqual([
       "aurora/default",
       "document/editorial-document",
@@ -1055,7 +1069,7 @@ describe("axesFromCss · how alike the twenty-seven shipped stylesheets are [fee
       "editorial-document/swiss-document",
       "ink-document/swiss-document",
     ]);
-    // Every pair the GATE judges — the twenty-four with an axes block — clears it.
+    // Every pair the GATE judges — the twenty-eight with an axes block — clears it.
     const companions = new Set(NAMES.filter((name) => name.endsWith("-document")));
     expect([...companions].sort()).toEqual(["editorial-document", "ink-document", "swiss-document"]);
     expect(below.filter((pair) => !pair.split("/").some((n) => companions.has(n)))).toEqual([
