@@ -6,6 +6,10 @@
   "workspaces": [
     "packages/*"
   ],
+  "//overrides": "Development installs only (consumers ignore this field). The MCP SDK accepts zod ^3.25 || ^4, so a fresh install gave it its own zod 4 beside @faqir-ui/mcp's zod 3, and tsc comparing the two type universes exhausted a 4 GB heap in `bun run typecheck`. One zod, one type universe.",
+  "overrides": {
+    "zod": "3.25.76"
+  },
   "//exports": "Deliberately absent. This package is a CLI: `dist/faqir.mjs` calls main() at its top level, which parses process.argv and calls process.exit — so an `exports` map pointing at it made `import \"faqir-ui-cli\"` terminate the importing process. A bin-only package needs no exports map. The programmatic surfaces are the workspace packages (@faqir-ui/core, /react, /vue, /forms).",
   "bin": {
     "faqir": "./bin/faqir"
