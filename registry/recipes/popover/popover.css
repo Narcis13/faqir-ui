@@ -242,6 +242,11 @@
   cursor: pointer;
 }
 
+/* The close button sits in the corner; keep the content's text out from under it. */
+[data-ui="popover"] > [data-part="content"]:has(> [data-part="close"]) {
+  padding-inline-end: calc(var(--space-2, 0.5rem) * 2 + 24px);
+}
+
 [data-ui="popover"] > :where([data-part="content"]) > [data-part="close"]:hover {
   background: var(--color-bg-muted, oklch(0.96 0.004 260));
   color: var(--color-fg);

@@ -99,7 +99,7 @@ describe("theme studio", () => {
     expect(scripts).toEqual([
       "../scripts/gallery.js",
       "../scripts/faqir-core.js",
-      "../scripts/faqir-tweak.js",
+      "../scripts/plugins/faqir-tweak.js",
       "../scripts/studio.js",
     ]);
   });

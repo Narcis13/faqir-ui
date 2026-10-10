@@ -45,7 +45,8 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  max-width: 380px;
+  /* Never wider than the container: on a phone 380px is wider than the screen. */
+  max-width: min(380px, 100%);
   width: max-content;
   padding: var(--space-3) var(--space-4);
   background: var(--panel-bg);

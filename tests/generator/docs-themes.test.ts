@@ -18,7 +18,7 @@
 // `tests/visual/docs-switcher.pw.ts`.
 
 import { describe, it, expect } from "bun:test";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import {
   buildDocsSite,
@@ -47,6 +47,13 @@ import { SCAFFOLD_NAMES } from "../../src/scaffolds";
 
 const REPO = join(import.meta.dir, "../..");
 const REGISTRY = join(REPO, "registry");
+/** Every official plugin, as the site ships it — in file order, the order pages load them. */
+const PLUGIN_SCRIPTS = readdirSync(join(REGISTRY, "core", "plugins"))
+  .filter((f) => f.endsWith(".js"))
+  .sort()
+  .map((f) => `scripts/plugins/${f}`);
+/** The engine page runs every plugin but the theme studio's, which has a page of its own. */
+const ENGINE_PLUGIN_SCRIPTS = PLUGIN_SCRIPTS.filter((p) => p !== TWEAK_SCRIPT);
 
 const components = discoverDocsComponents(REGISTRY);
 const themes = discoverThemes(REGISTRY);
@@ -328,10 +335,11 @@ describe("site JavaScript", () => {
       [
         "scripts/faqir-core.js",
         "scripts/faqir-manifests.js",
-        TWEAK_SCRIPT,
+        ...PLUGIN_SCRIPTS,
         ...SITE_SCRIPTS.map((n) => `scripts/${n}`),
       ].sort(),
     );
+    expect(PLUGIN_SCRIPTS).toContain(TWEAK_SCRIPT);
 
     const withScripts = files
       .filter((f) => f.path.endsWith(".html") && /<script src=/.test(f.content))
@@ -356,10 +364,12 @@ describe("site JavaScript", () => {
       "scripts/gallery.js",
       "scripts/faqir-core.js",
     ]);
-    // The engine page's examples are the engine running (task 1.0R-09).
+    // The engine page's examples are the engine running (task 1.0R-09), and its
+    // plugin examples are every official plugin running after it.
     expect(scriptsOf(ENGINE_PAGE)).toEqual([
       "scripts/gallery.js",
       "scripts/faqir-core.js",
+      ...ENGINE_PLUGIN_SCRIPTS,
     ]);
     // So are the motion page's interactive demos; the studio is a plugin of it.
     expect(scriptsOf(MOTION_PAGE)).toEqual([
@@ -430,6 +440,9 @@ describe("site JavaScript", () => {
           ? [
               `<script src="${relUrl(f.path, "scripts/gallery.js")}" defer>`,
               `<script src="${relUrl(f.path, "scripts/faqir-core.js")}" defer>`,
+              ...(f.path === ENGINE_PAGE ? ENGINE_PLUGIN_SCRIPTS : []).map(
+                (p) => `<script src="${relUrl(f.path, p)}" defer>`,
+              ),
             ]
           : [`<script src="${relUrl(f.path, "scripts/gallery.js")}" defer>`];
       expect(scripts, `${f.path} ships unexpected JavaScript`).toEqual(allowed);

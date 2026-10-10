@@ -6400,41 +6400,37 @@ function rsEncode(data, ecLen) {
 
 const ECL_MAP = { L: 0, M: 1, Q: 2, H: 3 };
 
-// [version][ecl] → { totalBytes, ecPerBlock, blocks }
-const VERSION_TABLE = [
-  null, // index 0 unused
-  // v1
-  [{ dc: 19, ec: 7, b: 1 }, { dc: 16, ec: 10, b: 1 }, { dc: 13, ec: 13, b: 1 }, { dc: 9, ec: 17, b: 1 }],
-  // v2
-  [{ dc: 34, ec: 10, b: 1 }, { dc: 28, ec: 16, b: 1 }, { dc: 22, ec: 22, b: 1 }, { dc: 16, ec: 28, b: 1 }],
-  // v3
-  [{ dc: 55, ec: 15, b: 1 }, { dc: 44, ec: 26, b: 1 }, { dc: 34, ec: 18, b: 2 }, { dc: 26, ec: 22, b: 2 }],
-  // v4
-  [{ dc: 80, ec: 20, b: 1 }, { dc: 64, ec: 18, b: 2 }, { dc: 48, ec: 26, b: 2 }, { dc: 36, ec: 16, b: 4 }],
-  // v5
-  [{ dc: 108, ec: 26, b: 1 }, { dc: 86, ec: 24, b: 2 }, { dc: 62, ec: 18, b: 4 }, { dc: 46, ec: 22, b: 4 }],
-  // v6
-  [{ dc: 136, ec: 18, b: 2 }, { dc: 108, ec: 16, b: 4 }, { dc: 76, ec: 24, b: 4 }, { dc: 60, ec: 28, b: 4 }],
-  // v7
-  [{ dc: 156, ec: 20, b: 2 }, { dc: 124, ec: 18, b: 4 }, { dc: 88, ec: 18, b: 6 }, { dc: 66, ec: 26, b: 5 }],
-  // v8
-  [{ dc: 194, ec: 24, b: 2 }, { dc: 154, ec: 22, b: 4 }, { dc: 110, ec: 22, b: 6 }, { dc: 86, ec: 26, b: 6 }],
-  // v9
-  [{ dc: 232, ec: 30, b: 2 }, { dc: 182, ec: 22, b: 5 }, { dc: 132, ec: 20, b: 8 }, { dc: 98, ec: 24, b: 8 }],
-  // v10
-  [{ dc: 274, ec: 18, b: 4 }, { dc: 216, ec: 26, b: 5 }, { dc: 154, ec: 24, b: 8 }, { dc: 119, ec: 28, b: 8 }],
+// ISO/IEC 18004 Table 9, flattened as [(version - 1) * 4 + ecl]: EC codewords
+// per block, and the block count. Data codewords are what is left of the
+// version's total once the EC blocks are taken out.
+const EC_PER_BLOCK = [
+  7, 10, 13, 17, 10, 16, 22, 28, 15, 26, 18, 22, 20, 18, 26, 16, 26, 24, 18, 22,
+  18, 16, 24, 28, 20, 18, 18, 26, 24, 22, 22, 26, 30, 22, 20, 24, 18, 26, 24, 28,
 ];
+const BLOCKS = [
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 1, 2, 2, 4, 1, 2, 4, 4,
+  2, 4, 4, 4, 2, 4, 6, 5, 2, 4, 6, 6, 2, 5, 8, 8, 4, 5, 8, 8,
+];
+const TOTAL_CODEWORDS = [26, 44, 70, 100, 134, 172, 196, 242, 292, 346];
 
-const ALIGNMENT_POSITIONS = [
-  null, [], [6, 18], [6, 22], [6, 26], [6, 30],
-  [6, 34], [6, 22, 38], [6, 24, 42], [6, 26, 46], [6, 28, 50],
-];
+function versionInfo(version, eclIdx) {
+  const i = (version - 1) * 4 + eclIdx;
+  const ec = EC_PER_BLOCK[i];
+  const b = BLOCKS[i];
+  return { dc: TOTAL_CODEWORDS[version - 1] - ec * b, ec, b };
+}
+
+// Alignment centres: none for v1, two up to v6, three from v7 (evenly spaced).
+function alignmentPositions(v) {
+  return v < 2 ? [] : v < 7 ? [6, 4 * v + 10] : [6, 2 * v + 8, 4 * v + 10];
+}
 
 function selectVersion(dataLen, ecl) {
   const eclIdx = ECL_MAP[ecl] ?? 1;
   for (let v = 1; v <= 10; v++) {
-    const info = VERSION_TABLE[v][eclIdx];
-    if (dataLen <= info.dc) return v;
+    const info = versionInfo(v, eclIdx);
+    // + 4-bit mode and 8-bit (v1–9) or 16-bit (v10) character count, rounded up.
+    if (dataLen + (v < 10 ? 2 : 3) <= info.dc) return v;
   }
   return -1;
 }
@@ -6453,16 +6449,14 @@ function setModule(matrix, row, col, val, reserved) {
   }
 }
 
+// Both patterns are concentric squares, coloured by their ring (Chebyshev
+// distance from the centre): a finder is dark at rings 0, 1 and 3, light at 2 and
+// at its ring-4 separator; an alignment pattern is dark at 0 and 2, light at 1.
 function placeFinderPattern(matrix, reserved, row, col) {
   for (let r = -1; r <= 7; r++) {
     for (let c = -1; c <= 7; c++) {
-      const val =
-        (r >= 0 && r <= 6 && (c === 0 || c === 6)) ||
-        (c >= 0 && c <= 6 && (r === 0 || r === 6)) ||
-        (r >= 2 && r <= 4 && c >= 2 && c <= 4)
-          ? 1
-          : 0;
-      setModule(matrix, row + r, col + c, val, reserved);
+      const d = Math.max(Math.abs(r - 3), Math.abs(c - 3));
+      setModule(matrix, row + r, col + c, d !== 2 && d !== 4 ? 1 : 0, reserved);
     }
   }
 }
@@ -6470,9 +6464,8 @@ function placeFinderPattern(matrix, reserved, row, col) {
 function placeAlignmentPattern(matrix, reserved, row, col) {
   for (let r = -2; r <= 2; r++) {
     for (let c = -2; c <= 2; c++) {
-      const val =
-        Math.abs(r) === 2 || Math.abs(c) === 2 || (r === 0 && c === 0) ? 1 : 0;
-      setModule(matrix, row + r, col + c, val, reserved);
+      const d = Math.max(Math.abs(r), Math.abs(c));
+      setModule(matrix, row + r, col + c, d !== 1 ? 1 : 0, reserved);
     }
   }
 }
@@ -6498,23 +6491,34 @@ function reserveFormatArea(matrix, reserved) {
   setModule(matrix, s - 8, 8, 1, reserved); // dark module
 }
 
+// Versions 7+ carry an 18-bit version word (BCH 18,6) in two 6×3 blocks.
+function placeVersionInfo(matrix, reserved, version) {
+  if (version < 7) return;
+  const s = matrix.length;
+  let rem = version;
+  for (let i = 0; i < 12; i++) rem = (rem << 1) ^ ((rem >> 11) * 0x1f25);
+  const bits = (version << 12) | rem;
+  for (let i = 0; i < 18; i++) {
+    const bit = (bits >> i) & 1;
+    const a = s - 11 + (i % 3);
+    const b = (i / 3) | 0;
+    setModule(matrix, b, a, bit, reserved);
+    setModule(matrix, a, b, bit, reserved);
+  }
+}
+
 function placeData(matrix, reserved, bits) {
   const s = matrix.length;
   let bitIdx = 0;
-  let upward = true;
-  for (let col = s - 1; col >= 1; col -= 2) {
+  for (let col = s - 1, upward = true; col >= 1; col -= 2, upward = !upward) {
     if (col === 6) col = 5; // skip timing column
-    const rows = upward
-      ? Array.from({ length: s }, (_, i) => s - 1 - i)
-      : Array.from({ length: s }, (_, i) => i);
-    for (const row of rows) {
-      for (let c = 0; c < 2; c++) {
-        const cc = col - c;
-        if (reserved[row][cc]) continue;
-        matrix[row][cc] = bitIdx < bits.length ? bits[bitIdx++] : 0;
+    for (let i = 0; i < s; i++) {
+      const row = upward ? s - 1 - i : i;
+      for (let cc = col; cc > col - 2; cc--) {
+        // Past the last bit the remainder modules are 0.
+        if (!reserved[row][cc]) matrix[row][cc] = bits[bitIdx++] | 0;
       }
     }
-    upward = !upward;
   }
 }
 
@@ -6599,7 +6603,7 @@ function encodeQR(text, ecl = "M") {
   if (version < 0) throw new Error("Data too long for QR versions 1–10");
 
   const eclIdx = ECL_MAP[ecl] ?? 1;
-  const info = VERSION_TABLE[version][eclIdx];
+  const info = versionInfo(version, eclIdx);
   const size = version * 4 + 17;
 
   // Build data codewords
@@ -6629,6 +6633,8 @@ function encodeQR(text, ecl = "M") {
 
   // Pad to byte boundary
   if (bitCount > 0) pushBits(0, 8 - bitCount);
+  // A full symbol has no room for the terminator.
+  codewords.splice(info.dc);
 
   // Pad to capacity
   while (codewords.length < info.dc) {
@@ -6639,7 +6645,6 @@ function encodeQR(text, ecl = "M") {
   // Split into blocks and compute EC
   const blocks = [];
   const ecBlocks = [];
-  const ecPerBlock = info.ec / info.b;
   const dcPerBlock = Math.floor(info.dc / info.b);
   const remainder = info.dc % info.b;
   let offset = 0;
@@ -6649,7 +6654,7 @@ function encodeQR(text, ecl = "M") {
     const blockData = codewords.slice(offset, offset + blockDc);
     offset += blockDc;
     blocks.push(blockData);
-    ecBlocks.push(rsEncode(blockData, ecPerBlock));
+    ecBlocks.push(rsEncode(blockData, info.ec));
   }
 
   // Interleave
@@ -6660,10 +6665,8 @@ function encodeQR(text, ecl = "M") {
       if (i < block.length) interleaved.push(block[i]);
     }
   }
-  for (let i = 0; i < ecPerBlock; i++) {
-    for (const ec of ecBlocks) {
-      if (i < ec.length) interleaved.push(ec[i]);
-    }
+  for (let i = 0; i < info.ec; i++) {
+    for (const ec of ecBlocks) interleaved.push(ec[i]);
   }
 
   // Convert to bit array
@@ -6680,7 +6683,7 @@ function encodeQR(text, ecl = "M") {
   placeFinderPattern(matrix, reserved, 0, size - 7);
   placeFinderPattern(matrix, reserved, size - 7, 0);
 
-  const alignPos = ALIGNMENT_POSITIONS[version] || [];
+  const alignPos = alignmentPositions(version);
   for (const r of alignPos) {
     for (const c of alignPos) {
       if (reserved[r]?.[c]) continue;
@@ -6690,6 +6693,7 @@ function encodeQR(text, ecl = "M") {
 
   placeTimingPatterns(matrix, reserved);
   reserveFormatArea(matrix, reserved);
+  placeVersionInfo(matrix, reserved, version);
 
   // Try all masks, pick lowest penalty
   let bestMask = 0;

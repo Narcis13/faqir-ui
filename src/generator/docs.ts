@@ -44,7 +44,7 @@
 //   styles/faqir.css                  tokens + base + components + docs presentation
 //   styles/themes/<name>.css          one file per registry theme — the swappable link
 //   scripts/faqir-core.js             the registry engine
-//   scripts/faqir-tweak.js            the theme-studio engine plugin, verbatim
+//   scripts/plugins/*.js              every official engine plugin, verbatim
 //   scripts/faqir-audit.js            the audit engine, compiled for the browser
 //   scripts/faqir-manifests.js        every manifest as one global, for the playground
 //   scripts/playground.js             playground wiring (authored, site/lib/)
@@ -360,8 +360,13 @@ export const MOTION_PAGE = "motion/index.html";
  */
 export const STUDIO_PAGE = "studio/index.html";
 
+/** Where each official plugin ships, verbatim, so the engine page runs them live. */
+export function pluginScriptPath(file: string): string {
+  return `scripts/plugins/${file}`;
+}
+
 /** Where the studio page loads the registry's `faqir-tweak` plugin from. */
-export const TWEAK_SCRIPT = "scripts/faqir-tweak.js";
+export const TWEAK_SCRIPT = pluginScriptPath("faqir-tweak.js");
 
 /** Searchable catalogue derived from the icon primitive's declared names. */
 export const ICONS_PAGE = "icons/index.html";
@@ -1066,8 +1071,9 @@ export function rendersOnlyTriggers(fragment: string): boolean {
  *     ties (`tooltip` has one). No `!important` here: nothing in the base layer
  *     competes for these properties, so ordinary specificity settles it.
  *
- * The panel is put back **in flow** (`position: static`) rather than shown where
- * it really opens. A fixed panel would cover the triggers, stack four deep on a
+ * The panel is put back **in flow** (`position: relative`, not `static`, so it
+ * stays the containing block its own arrow and close button are placed against)
+ * rather than shown where it really opens. A fixed panel would cover the triggers, stack four deep on a
  * page with four demos, and — since the layout gate of 0.9-01 counts overlapping
  * *fixed* boxes — turn every one of these pages into a finding. In flow it reads
  * as what it is: this trigger opens this panel.
@@ -1087,7 +1093,7 @@ export function renderOverlayPreviewRules(
           `  max-inline-size: 100%;\n` +
           `}\n\n` +
           `${page} [data-ui="${name}"] ${target}[hidden] {\n` +
-          `  position: static;\n` +
+          `  position: relative;\n` +
           `  inset: auto;\n` +
           `  inline-size: auto;\n` +
           `  block-size: auto;\n` +
@@ -3013,7 +3019,13 @@ function renderEnginePage(ctx: {
       themes: ctx.themes,
       current: pagePath,
       layout: "wide",
-      scripts: ["scripts/faqir-core.js"],
+      // Core first, then every official plugin but the theme studio's (which has a
+      // page of its own): deferred scripts run in order, and each plugin
+      // self-registers on the global the engine has just defined.
+      scripts: [
+        "scripts/faqir-core.js",
+        ...ctx.plugins.map((p) => pluginScriptPath(p.file)).filter((path) => path !== TWEAK_SCRIPT),
+      ],
     }),
   };
 }
@@ -4356,6 +4368,7 @@ function renderThemeGalleryPage(ctx: {
         `            <span data-ui="badge" data-variant="secondary">${esc(
           m ? `${m.scheme} scheme` : "no manifest",
         )}</span>\n` +
+        `            <a data-ui="link" href="${u(themeDetailPath(t.name))}">Specimen sheet</a>\n` +
         `            <a data-ui="link" href="${u(frame)}">Open frame</a>\n` +
         `          </div>\n` +
         `        </div>`
@@ -5500,10 +5513,11 @@ export function buildDocsSite(options: DocsSiteOptions = {}): SiteFile[] {
   if (existsSync(corePath)) {
     files.push({ path: "scripts/faqir-core.js", content: readText(corePath) });
   }
-  // The theme studio's plugin, verbatim — the same file `faqir add` copies.
-  const tweakPath = join(registryRoot, "core", "plugins", "faqir-tweak.js");
-  if (existsSync(tweakPath)) {
-    files.push({ path: TWEAK_SCRIPT, content: readText(tweakPath) });
+  // Every official plugin, verbatim — the same files `faqir add` copies. The
+  // engine page runs them all; the theme studio runs `faqir-tweak`.
+  const pluginsDir = join(registryRoot, "core", "plugins");
+  for (const plugin of loadPluginMetadata(pluginsDir)) {
+    files.push({ path: pluginScriptPath(plugin.file), content: readText(join(pluginsDir, plugin.file)) });
   }
 
   // The manifests the playground audits against — the registry's own, verbatim

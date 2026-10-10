@@ -554,8 +554,11 @@
   function install(Faqir) {
     F = Faqir;
     // Plugin-installed surface. Declared optional in faqir-core.d.ts because a
-    // page that never loads this file does not have it.
-    if (!Faqir.validate) Faqir.validate = api;
+    // page that never loads this file does not have it. Always this instance's:
+    // the directive below replaces any earlier one, so a second copy of this file
+    // (two script tags, a bundle beside the CDN) must not leave `register()`
+    // writing to a registry the live directive no longer reads.
+    Faqir.validate = api;
 
     Faqir.directive("validate", function (form, dir, scope) {
       var ctx = { scope: scope, submitted: false };
