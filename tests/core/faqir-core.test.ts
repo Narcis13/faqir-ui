@@ -1915,6 +1915,58 @@ describe("Directives", () => {
       expect(target.children.length).toBe(1);
       expect(target.children[0].textContent).toBe("Teleported");
     });
+
+    it("binds a subtree once when the target comes later in the same scope", async () => {
+      // The walker reached the target after the teleport had moved the subtree
+      // into it, and bound every directive in it a second time: one click, n += 2.
+      const box = document.createElement("div");
+      box.innerHTML = `
+        <div l-data="{ n: 0 }">
+          <div l-teleport="#later-target"><button @click="n++">+1</button></div>
+          <span l-text="n"></span>
+          <div id="later-target"></div>
+        </div>`;
+      document.body.appendChild(box);
+      Faqir.initTree(box.firstElementChild);
+      await tick();
+      try {
+        box.querySelector<HTMLButtonElement>("#later-target button")!.click();
+        await tick();
+        expect(box.querySelector("span")!.textContent).toBe("1");
+      } finally {
+        Faqir.destroy(box);
+        box.remove();
+      }
+    });
+  });
+
+  describe("l-model on the switch primitive", () => {
+    it("toggles the bound value on click — a <button role=switch> fires no change", async () => {
+      const box = document.createElement("div");
+      box.innerHTML = `
+        <div l-data="{ on: false }">
+          <button data-ui="switch" role="switch" aria-checked="false" l-model="on"><span data-part="thumb"></span></button>
+          <output l-text="on"></output>
+        </div>`;
+      document.body.appendChild(box);
+      Faqir.initTree(box.firstElementChild);
+      await tick();
+      try {
+        const sw = box.querySelector<HTMLButtonElement>("[data-ui=switch]")!;
+        sw.click();
+        await tick();
+        expect(box.querySelector("output")!.textContent).toBe("true");
+        expect(sw.getAttribute("aria-checked")).toBe("true");
+        expect(sw.dataset.state).toBe("on");
+        sw.click();
+        await tick();
+        expect(box.querySelector("output")!.textContent).toBe("false");
+        expect(sw.getAttribute("aria-checked")).toBe("false");
+      } finally {
+        Faqir.destroy(box);
+        box.remove();
+      }
+    });
   });
 });
 

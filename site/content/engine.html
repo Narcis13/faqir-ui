@@ -7,9 +7,11 @@
   builds the skill's references/directives.md. Nothing here restates a directive.
 
   Each <template data-docs-example> is expanded into a live example and a copyable
-  code block from the exact same inner bytes. The page loads scripts/faqir-core.js,
-  so those examples are running as you read them, and the suite audits the bytes
-  before the page ships.
+  code block from the exact same inner bytes. The page loads scripts/faqir-core.js
+  and then every official plugin from scripts/plugins/, so those examples are
+  running as you read them, and the suite audits the bytes before the page ships.
+  tests/generator/docs-coverage.test.ts fails unless every public directive,
+  modifier and magic — the engine's and the plugins' — appears in one of them.
 -->
       <div data-docs-guide>
         <header>
@@ -94,6 +96,46 @@
   </div>
 </div>
           </template>
+
+          <p>
+            <code>l-init</code> runs once, when the scope is ready; <code>l-effect</code> runs
+            straight away and again whenever something it read changes. Together they reach
+            outside the scope — the next example writes this browser tab's title, so type
+            and watch the tab. <code>l-cloak</code> keeps the line it sits on hidden until
+            the engine has bound it, so nobody sees it empty.
+          </p>
+
+          <template data-docs-example="lifecycle" data-title="l-init, l-effect and l-cloak reach the tab title">
+<div data-ui="stack" data-gap="3" l-data="{ original: '', title: '' }" l-init="original = document.title; title = original">
+  <label data-ui="label" for="engine-tab-title">This tab's title</label>
+  <input data-ui="input" id="engine-tab-title" type="text" l-model="title" l-effect="document.title = title || original">
+  <div data-ui="cluster" data-gap="3" data-align="center">
+    <button data-ui="button" data-variant="outline" data-size="sm" type="button" @click="title = original">Restore it</button>
+    <span data-ui="text" data-variant="muted" l-cloak l-text="'l-init captured: ' + original"></span>
+  </div>
+</div>
+          </template>
+
+          <p>
+            <code>l-html</code> writes markup rather than text. It is never sanitized, so
+            bind only markup your own expression built — the development build reports
+            every use. <code>l-teleport</code> moves an element to the first match of a CSS
+            selector and keeps it bound to the scope that wrote it: the buttons below are
+            written last, inside the stack, but render in the bar at the top, and still
+            change <code>step</code>. Overlays use it with <code>l-teleport="body"</code>
+            to escape a clipping ancestor.
+          </p>
+
+          <template data-docs-example="html-teleport" data-title="l-html renders markup, l-teleport moves a subtree and keeps its scope">
+<div data-ui="stack" data-gap="3" l-data="{ step: 0, steps: ['Drafted', 'Reviewed', 'Approved', 'Shipped'] }">
+  <div data-ui="surface" data-variant="flat" data-size="sm" id="engine-teleport-bar"></div>
+  <p l-html="'Step <strong>' + (step + 1) + '</strong> of ' + steps.length + ': <em>' + steps[step] + '</em>'">Step 1 of 4: Drafted</p>
+  <div data-ui="cluster" data-gap="2" l-teleport="#engine-teleport-bar">
+    <button data-ui="button" data-variant="outline" data-size="sm" type="button" :disabled="step === 0" @click="step = step - 1">Back</button>
+    <button data-ui="button" data-variant="primary" data-size="sm" type="button" :disabled="step === steps.length - 1" @click="step = step + 1">Advance</button>
+  </div>
+</div>
+          </template>
         </section>
 
         <section aria-labelledby="engine-modifiers-heading" data-docs-section>
@@ -107,6 +149,121 @@
             </p>
           </div>
 <!-- @faqir:engine-modifiers -->
+
+          <p>
+            <code>l-model</code>'s modifiers decide what reaches the scope and when.
+            <code>.number</code> stores a number, so the total below is a sum and not two
+            strings glued together; <code>.lazy</code> waits for <code>change</code>, which
+            fires when you leave the field; and <code>@submit.prevent</code> keeps the form
+            on this page instead of navigating.
+          </p>
+
+          <template data-docs-example="model-modifiers" data-title="l-model.number, l-model.lazy and @submit.prevent on an order form">
+<form data-ui="stack" data-gap="3" aria-label="Order" l-data="{ qty: 2, price: 12.5, note: '', placed: '' }" @submit.prevent="placed = 'Ordered ' + qty + ' for ' + (qty * price).toFixed(2) + (note ? ', note: ' + note : '') + '.'">
+  <div data-ui="grid" data-cols="1" data-cols-sm="2" data-gap="3">
+    <div data-ui="field-group">
+      <label data-part="label" for="engine-qty">Quantity</label>
+      <div data-part="input">
+        <input data-ui="input" id="engine-qty" name="qty" type="number" min="0" l-model.number="qty">
+      </div>
+    </div>
+    <div data-ui="field-group">
+      <label data-part="label" for="engine-price">Unit price</label>
+      <div data-part="input">
+        <input data-ui="input" id="engine-price" name="price" type="number" min="0" step="0.5" l-model.number="price">
+      </div>
+    </div>
+  </div>
+  <p>Total: <span data-ui="text" data-variant="mono" data-weight="semibold" l-text="(qty * price).toFixed(2)">25.00</span></p>
+  <div data-ui="field-group">
+    <label data-part="label" for="engine-order-note">Note for the courier</label>
+    <div data-part="input">
+      <input data-ui="input" id="engine-order-note" name="note" type="text" l-model.lazy="note">
+    </div>
+    <p data-part="description" l-text="note ? 'Saved: ' + note : 'Saved when you leave the field, not on every key.'">Saved when you leave the field, not on every key.</p>
+  </div>
+  <div data-ui="cluster" data-gap="3" data-align="center">
+    <button data-ui="button" data-variant="primary" data-size="sm" type="submit">Place the order</button>
+    <span data-ui="text" data-variant="muted" l-text="placed || 'Nothing ordered yet.'">Nothing ordered yet.</span>
+  </div>
+</form>
+          </template>
+
+          <p>
+            <code>l-model.debounce</code> holds the write until you stop typing for 300ms.
+            The counter is a <code>$watch</code> on the bound key, so it counts the writes
+            the scope actually received.
+          </p>
+
+          <template data-docs-example="debounce-filter" data-title="l-model.debounce writes once per pause">
+<div data-ui="stack" data-gap="3" l-data="{ query: '', writes: 0, themes: ['aurora', 'brutalist', 'clay', 'deco', 'memphis', 'midnight', 'monolith', 'nordic', 'paper', 'terminal'] }" l-init="$watch('query', function () { writes++ })">
+  <div data-ui="field-group">
+    <label data-part="label" for="engine-theme-filter">Filter the themes</label>
+    <div data-part="input">
+      <input data-ui="input" id="engine-theme-filter" type="search" autocomplete="off" l-model.debounce="query">
+    </div>
+    <p data-part="description" l-text="'The scope was written ' + writes + (writes === 1 ? ' time.' : ' times.')">The scope was written 0 times.</p>
+  </div>
+  <div data-ui="cluster" data-gap="2">
+    <template l-for="theme in themes.filter(function (t) { return t.indexOf(query.trim().toLowerCase()) !== -1 })" l-key="theme">
+      <span data-ui="badge" data-variant="secondary" l-text="theme"></span>
+    </template>
+  </div>
+</div>
+          </template>
+
+          <p>
+            <code>l-on</code>'s modifiers shape the event itself. Every click in the next
+            example is traced: the root hears it first through <code>.capture</code> and
+            again as it bubbles back; <code>.self</code> answers only when the panel itself
+            is the target; <code>.stop</code> ends the trip at its button; and
+            <code>.once</code> removes its own listener after the first click.
+          </p>
+
+          <template data-docs-example="event-path" data-title="Where a click goes: .capture, .self, .stop and .once">
+<div data-ui="stack" data-gap="3" l-data="{ path: [], bonus: 0, hear(step) { this.path.push(step) } }" @click.capture="path = []; hear('root, .capture: heard first, on the way down')" @click="hear('root: heard again as it bubbled back up')">
+  <div data-ui="surface" data-variant="raised" data-size="md" @click.self="hear('panel, .self: the click landed on the panel itself')">
+    <div data-ui="stack" data-gap="3">
+      <div data-ui="cluster" data-gap="2">
+        <button data-ui="button" data-variant="outline" data-size="sm" type="button" @click="hear('button: handled, and the click bubbles on')">Bubble</button>
+        <button data-ui="button" data-variant="outline" data-size="sm" type="button" @click.stop="hear('button, .stop: handled, and propagation stops here')">Stop here</button>
+        <button data-ui="button" data-variant="primary" data-size="sm" type="button" @click.once="bonus = bonus + 10; hear('button, .once: +10, then the listener removed itself')" l-text="bonus ? 'Bonus claimed' : 'Claim the bonus once'">Claim the bonus once</button>
+      </div>
+      <p>Click the empty panel too. Bonus: <span data-ui="text" data-weight="semibold" l-text="bonus">0</span></p>
+    </div>
+  </div>
+  <ol data-ui="stack" data-gap="1">
+    <template l-for="(step, i) in path" l-key="i">
+      <li data-ui="text" data-variant="muted" l-text="step"></li>
+    </template>
+  </ol>
+</div>
+          </template>
+
+          <p>
+            <code>.window</code> and <code>.document</code> move the listener off the element.
+            <code>.debounce</code> and <code>.throttle</code> take their time inside the same
+            modifier — resize the window (the width lands 300ms after you stop), scroll the
+            page (at most one update per 100ms), press a key anywhere. The scroll
+            listener sits on the document in the capture phase: <code>scroll</code> does not
+            bubble, and this site scrolls inside its <code>&lt;main&gt;</code> rather than
+            the window, so <code>.capture</code> is how a document listener hears it. It is
+            also <code>.passive</code>, telling the browser it never calls
+            <code>preventDefault()</code>, so scrolling never waits on it.
+          </p>
+
+          <template data-docs-example="global-events" data-title="Listening past the element: .window, .document, .passive, .debounce and .throttle">
+<div data-ui="stack" data-gap="3" l-data="{ width: window.innerWidth, scrolled: Math.round(window.scrollY), key: 'none yet' }" @resize.window.debounce300ms="width = window.innerWidth" @scroll.document.capture.passive.throttle100ms="scrolled = Math.round($event.target.scrollTop || window.scrollY)" @keydown.document="key = $event.key === ' ' ? 'Space' : $event.key">
+  <dl data-ui="key-value">
+    <dt data-part="label">Window width</dt>
+    <dd data-part="value" l-text="width + 'px'"></dd>
+    <dt data-part="label">Scroll position</dt>
+    <dd data-part="value" l-text="scrolled + 'px'"></dd>
+    <dt data-part="label">Last key pressed</dt>
+    <dd data-part="value"><kbd data-ui="kbd" l-text="key">none yet</kbd></dd>
+  </dl>
+</div>
+          </template>
         </section>
 
         <section aria-labelledby="engine-magics-heading" data-docs-section>
@@ -130,6 +287,134 @@
     <button data-ui="button" data-variant="outline" data-size="sm" type="button" @click="$refs.note.focus()">Focus it</button>
     <span data-ui="text" data-variant="muted" id="engine-note-count" l-text="note.length + ' characters'">0 characters</span>
   </div>
+</div>
+          </template>
+
+          <p>
+            <code>$el</code> is the scope root, the callout here; <code>$this</code> is the
+            element the expression is written on, so each button reads its own
+            <code>value</code>. Assigning <code>$variant</code> writes the callout's
+            <code>data-variant</code>, and the title, which reads it, follows.
+          </p>
+
+          <template data-docs-example="protocol-magics" data-title="$el, $this and a writable $variant">
+<div data-ui="callout" data-variant="info" role="note" l-data="{ pressed: 'none yet' }">
+  <div data-part="content">
+    <strong data-part="title" l-text="'This callout is ' + $variant">This callout is info</strong>
+    <p>The scope root is <code l-text="$el.tagName.toLowerCase() + '[data-ui=' + $el.dataset.ui + ']'">div[data-ui=callout]</code>; the last button pressed was <code l-text="pressed">none yet</code>.</p>
+    <div data-ui="cluster" data-gap="2">
+      <button data-ui="button" data-variant="outline" data-size="sm" type="button" value="info" @click="$variant = $this.value; pressed = $this.textContent">Info</button>
+      <button data-ui="button" data-variant="outline" data-size="sm" type="button" value="success" @click="$variant = $this.value; pressed = $this.textContent">Success</button>
+      <button data-ui="button" data-variant="outline" data-size="sm" type="button" value="warning" @click="$variant = $this.value; pressed = $this.textContent">Warning</button>
+      <button data-ui="button" data-variant="outline" data-size="sm" type="button" value="destructive" @click="$variant = $this.value; pressed = $this.textContent">Destructive</button>
+    </div>
+  </div>
+</div>
+          </template>
+
+          <p>
+            <code>$ui</code> is the controller of the component a scope sits in —
+            <code>$ui.close()</code> inside the popover — and, called with a selector, any
+            other component's: the second button opens the popover with
+            <code>$ui('#engine-popover').open()</code>. The popover's own scope reads
+            <code>$state</code>, which its controller writes, so the trigger's label follows
+            the popover however it opened or closed — by click, by <kbd data-ui="kbd">Esc</kbd>
+            or by a click elsewhere. Its buttons report back with <code>$dispatch</code>,
+            a bubbling event the outer scope reads through <code>$event.detail</code>.
+          </p>
+
+          <template data-docs-example="popover-ui" data-title="$ui drives a popover, $state follows it, $dispatch reports back">
+<div data-ui="stack" data-gap="3" l-data="{ verdict: 'Nothing chosen yet.' }" @picked="verdict = 'The popover answered: ' + $event.detail.choice + '.'">
+  <div data-ui="cluster" data-gap="3" data-align="center">
+    <div data-ui="popover" data-state="closed" id="engine-popover" l-data="{}">
+      <button data-part="trigger" data-ui="button" data-variant="primary" data-size="sm" type="button" aria-haspopup="true" aria-expanded="false" l-text="$state === 'open' ? 'Close the reply menu' : 'Reply to the invite'">Reply to the invite</button>
+      <div data-part="content" data-variant="bottom" data-align="start" hidden>
+        <div data-ui="stack" data-gap="2">
+          <p>Coming on Friday?</p>
+          <div data-ui="cluster" data-gap="2">
+            <button data-ui="button" data-variant="primary" data-size="sm" type="button" @click="$dispatch('picked', { choice: 'yes' }); $ui.close()">Yes</button>
+            <button data-ui="button" data-variant="outline" data-size="sm" type="button" @click="$dispatch('picked', { choice: 'maybe' }); $ui.close()">Maybe</button>
+          </div>
+        </div>
+        <button data-part="close" type="button" aria-label="Close popover">&#x2715;</button>
+      </div>
+    </div>
+    <button data-ui="button" data-variant="outline" data-size="sm" type="button" @click="$ui('#engine-popover').open()">Open it from outside</button>
+  </div>
+  <div data-ui="surface" data-variant="flat" data-size="md">
+    <div data-ui="stack" data-gap="1">
+      <p data-ui="text" data-weight="semibold" l-text="verdict">Nothing chosen yet.</p>
+      <p data-ui="text" data-variant="muted">The popover's buttons call <code>$dispatch('picked', …)</code>; this scope listens with <code>@picked</code>.</p>
+    </div>
+  </div>
+</div>
+          </template>
+
+          <p>
+            <code>$store</code> holds every store registered with <code>Faqir.store()</code>,
+            shared by every scope on the page. A page would normally register one from a
+            script; this page carries no inline scripts, so the outer scope makes the same
+            <code>Faqir.store()</code> call from its <code>l-init</code>, which runs before
+            either card binds. Change the unit in one card and the other follows.
+          </p>
+
+          <template data-docs-example="store" data-title="$store shares state between two scopes">
+<div data-ui="grid" data-cols="1" data-cols-md="2" data-gap="4" l-data l-init="Faqir.store('forecast', { unit: 'C' })">
+  <div data-ui="card" data-variant="outlined" l-data="{ days: [{ day: 'Monday', c: 18 }, { day: 'Tuesday', c: 23 }, { day: 'Wednesday', c: 9 }] }">
+    <div data-part="header">
+      <h3 data-part="title">Forecast</h3>
+    </div>
+    <div data-part="body">
+      <ul data-ui="stack" data-gap="2">
+        <template l-for="d in days" l-key="d.day">
+          <li data-ui="cluster" data-gap="3" data-justify="between">
+            <span l-text="d.day"></span>
+            <span data-ui="text" data-variant="mono" l-text="$store.forecast.unit === 'F' ? Math.round(d.c * 9 / 5 + 32) + ' °F' : d.c + ' °C'"></span>
+          </li>
+        </template>
+      </ul>
+    </div>
+  </div>
+  <div data-ui="card" data-variant="outlined" l-data>
+    <div data-part="header">
+      <h3 data-part="title">Settings</h3>
+    </div>
+    <div data-part="body">
+      <div data-ui="field-group">
+        <label data-part="label" for="engine-unit">Temperature unit</label>
+        <div data-part="input">
+          <select data-ui="select" id="engine-unit" l-model="$store.forecast.unit">
+            <option value="C">Celsius</option>
+            <option value="F">Fahrenheit</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+          </template>
+
+          <p>
+            <code>$nextTick</code> runs after the DOM has caught up: the editor below only
+            exists once <code>l-if</code> renders it, so focusing it has to wait a tick.
+            <code>$watch</code> hands a callback the new and the old value — here it notices
+            the moment the word count crosses the goal — and <code>$id</code> makes ids
+            unique to this scope, for <code>aria-describedby</code>.
+          </p>
+
+          <template data-docs-example="draft-goal" data-title="$nextTick, $watch and $id on a writing goal">
+<div data-ui="stack" data-gap="3" l-data="{ writing: false, text: '', goal: 10, reached: '', get words() { return this.text.trim() ? this.text.trim().split(/\s+/).length : 0 } }" l-init="$watch('words', function (now, before) { if (now &gt;= goal &amp;&amp; before &lt; goal) reached = 'Goal reached at ' + new Date().toLocaleTimeString() + '.'; if (now &lt; goal) reached = '' })">
+  <div data-ui="cluster" l-show="!writing">
+    <button data-ui="button" data-variant="primary" data-size="sm" type="button" @click="writing = true; $nextTick(function () { $refs.pad.focus() })">Write a summary</button>
+  </div>
+  <template l-if="writing">
+    <div data-ui="stack" data-gap="2">
+      <label data-ui="label" for="engine-summary">Summary, in ten words or more</label>
+      <textarea data-ui="textarea" id="engine-summary" rows="3" l-ref="pad" l-model="text" :aria-describedby="$id('count')"></textarea>
+      <p data-ui="text" data-variant="muted" :id="$id('count')" l-text="words + ' of ' + goal + ' words'"></p>
+    </div>
+  </template>
+  <p data-ui="text" data-weight="semibold" l-show="reached" l-text="reached"></p>
 </div>
           </template>
         </section>
@@ -161,6 +446,54 @@
   </ul>
 </div>
           </template>
+
+          <p>
+            <code>.lazy</code> skips the first load, so nothing is fetched until you ask.
+            <code>.key.id</code> names the property that identifies a row — the controller
+            finds rows by it — and <code>.optimistic</code> applies a write to the list
+            before the server answers, undoing it if the request fails. This site is a
+            static host that only answers <code>GET</code>, so the <code>DELETE</code>
+            behind Archive fails: the row leaves, comes straight back, and the error says why.
+            Against a real API the row would stay gone.
+          </p>
+
+          <template data-docs-example="source-optimistic" data-title="l-source.lazy, .key and .optimistic: load on demand, roll back on failure">
+<div data-ui="stack" data-gap="3" l-data l-source:inbox.lazy.optimistic.key.id="../api/messages">
+  <div data-ui="cluster" data-gap="3" data-align="center">
+    <button data-ui="button" data-variant="primary" data-size="sm" type="button" :disabled="inboxLoading" @click="$inbox.load()" l-text="inbox.length ? 'Reload the inbox' : 'Load the inbox'">Load the inbox</button>
+    <span data-ui="text" data-variant="muted" l-text="inboxLoading ? 'Loading…' : inbox.length + ' messages loaded'">0 messages loaded</span>
+  </div>
+  <p data-ui="text" data-variant="muted" l-show="inboxError" l-text="'Archive failed (' + inboxError + '), so .optimistic put the row back.'"></p>
+  <ul data-ui="stack" data-gap="2">
+    <template l-for="message in inbox" l-key="message.id">
+      <li data-ui="cluster" data-gap="3" data-align="center">
+        <span data-ui="text" data-weight="semibold" l-text="message.sender"></span>
+        <span data-ui="text" data-variant="muted" l-text="message.subject"></span>
+        <button data-ui="button" data-variant="ghost" data-size="sm" type="button" @click="$inbox.remove(message.id)">Archive</button>
+      </li>
+    </template>
+  </ul>
+</div>
+          </template>
+
+          <p>
+            <code>.poll.15000</code> re-loads the collection every fifteen seconds. An
+            <code>l-effect</code> on the root stamps the time whenever a load finishes, and
+            the controller's <code>stopPolling()</code> and <code>startPolling()</code>
+            pause and resume it.
+          </p>
+
+          <template data-docs-example="source-poll" data-title="l-source.poll keeps a collection fresh">
+<div data-ui="stack" data-gap="3" l-data="{ checked: 'not yet', polling: true }" l-source:feed.poll.15000="../api/messages" l-effect="feedLoading || (checked = new Date().toLocaleTimeString())">
+  <div data-ui="cluster" data-gap="3" data-align="center">
+    <span data-ui="badge" data-variant="secondary" l-text="polling ? 'Polling every 15s' : 'Paused'">Polling every 15s</span>
+    <span data-ui="text" data-variant="muted" l-text="feed.length + ' messages, last checked ' + checked">0 messages, last checked not yet</span>
+  </div>
+  <div data-ui="cluster">
+    <button data-ui="button" data-variant="outline" data-size="sm" type="button" @click="polling ? $feed.stopPolling() : $feed.startPolling(); polling = !polling" l-text="polling ? 'Pause polling' : 'Resume polling'">Pause polling</button>
+  </div>
+</div>
+          </template>
         </section>
 
         <section aria-labelledby="engine-plugins-heading" data-docs-section>
@@ -169,11 +502,130 @@
             <h2 id="engine-plugins-heading">The official plugins, each one file.</h2>
             <p>
               A plugin adds directives and magics to the same expression language. Copy the
-              file, load it after the engine, and the vocabulary is there. Each row and each
-              example below is read from the plugin's own source header.
+              file, load it after the engine, and the vocabulary is there. The table and the
+              snippet under each plugin's name are read from the plugin's own source header;
+              the live examples after them run on this page.
             </p>
           </div>
 <!-- @faqir:engine-plugins -->
+
+          <h3 id="engine-plugins-live">All of them, running</h3>
+          <p>
+            This page loads every plugin after the engine, so the examples below are live.
+            <code>l-collapse</code> animates the list's height; <code>l-persist</code> saves
+            <code>open</code> to <code>localStorage</code>, so the list is still open after
+            a reload; and <code>$persist()</code> reads and writes one value by hand — here,
+            a count of your visits.
+          </p>
+
+          <template data-docs-example="plugin-persist-collapse" data-title="faqir-collapse and faqir-persist: a panel that remembers">
+<div data-ui="card" l-data="{ open: false, visits: 0 }" l-init="visits = ($persist('visits') || 0) + 1; $persist('visits', visits)" l-persist="open">
+  <div data-part="header">
+    <h3 data-part="title">The plugins on this page</h3>
+    <p data-part="description" l-text="'You have opened this page ' + visits + (visits === 1 ? ' time' : ' times') + ' in this browser.'">You have opened this page once in this browser.</p>
+  </div>
+  <div data-part="body">
+    <div data-ui="stack" data-gap="3">
+      <div data-ui="cluster">
+        <button data-ui="button" data-variant="outline" data-size="sm" type="button" aria-controls="engine-plugin-list" :aria-expanded="String(open)" @click="open = !open" l-text="open ? 'Hide the list' : 'Show the list'">Show the list</button>
+      </div>
+      <div id="engine-plugin-list" l-collapse="open">
+        <ul data-ui="stack" data-gap="1">
+          <li><strong>faqir-collapse</strong> animated this list open.</li>
+          <li><strong>faqir-persist</strong> will reopen it after a reload.</li>
+          <li><strong>faqir-intersect</strong>, <strong>faqir-mask</strong>, <strong>faqir-validate</strong> and <strong>faqir-rules</strong> run below.</li>
+          <li><strong>faqir-tweak</strong> runs the theme studio.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+          </template>
+
+          <p>
+            <code>l-intersect</code> runs when its element enters the viewport,
+            <code>l-intersect.leave</code> when it leaves, and <code>l-intersect.once</code>
+            disconnects after its first match. Scroll this card off the screen and back.
+          </p>
+
+          <template data-docs-example="plugin-intersect" data-title="faqir-intersect: a card that knows when it is seen">
+<div data-ui="card" data-variant="outlined" l-data="{ inView: false, entries: 0, firstSeen: '' }" l-intersect="inView = true; entries = entries + 1" l-intersect.leave="inView = false" l-intersect.once="firstSeen = new Date().toLocaleTimeString()">
+  <div data-part="header">
+    <h3 data-part="title">This card watches itself</h3>
+  </div>
+  <div data-part="body">
+    <div data-ui="stack" data-gap="2">
+      <div data-ui="cluster" data-gap="3" data-align="center">
+        <span data-ui="badge" data-variant="secondary" l-text="inView ? 'In view' : 'Out of view'">Out of view</span>
+        <span data-ui="text" l-text="'Entered the viewport ' + entries + (entries === 1 ? ' time' : ' times')">Entered the viewport 0 times</span>
+      </div>
+      <p data-ui="text" data-variant="muted" l-text="firstSeen ? 'First seen at ' + firstSeen + '; .once has disconnected that observer.' : 'Not seen yet.'">Not seen yet.</p>
+    </div>
+  </div>
+</div>
+          </template>
+
+          <p>
+            One form, three plugins. <code>l-validate</code> paints each field-group's
+            errors on submit and live after it, and its expression runs only when the form
+            is clean. <code>l-validate:available.async</code> waits on a promise — this page
+            has no server, so <code>isFree()</code> answers after 300ms from a short list
+            (<em>admin</em>, <em>faqir</em> and <em>root</em> are taken). <code>l-mask</code>
+            formats the phone number while <code>l-model</code> keeps the bare digits.
+            <code>l-rules</code> applies a JSON rules definition — the same one a server
+            would check — that shows and requires Company only for a team, asks a team
+            for at least two seats, and computes the price — 5 a seat, or 8 for a team —
+            which <code>$rules</code> reads back.
+          </p>
+
+          <template data-docs-example="plugin-form" data-title="faqir-validate, faqir-rules and faqir-mask on one form">
+<form data-ui="stack" data-gap="4" novalidate aria-label="Request a workspace" l-data="{ plan: 'solo', seats: 1, company: '', handle: '', phone: '', price: 0, sent: '', definition: { version: '1', fields: { plan: { type: 'string' }, seats: { type: 'integer' }, company: { type: 'string' }, price: { type: 'number' } }, rules: [{ id: 'company-for-teams', show: 'company', when: { '==': [{ var: 'plan' }, 'team'] } }, { id: 'company-required', require: 'company', when: { '==': [{ var: 'plan' }, 'team'] } }, { id: 'team-size', validate: { or: [{ '!=': [{ var: 'plan' }, 'team'] }, { '>=': [{ var: 'seats' }, 2] }] }, path: 'seats', message: 'A team plan starts at two seats.' }, { id: 'price', compute: 'price', value: { '*': [{ var: 'seats' }, { if: [{ '==': [{ var: 'plan' }, 'team'] }, 8, 5] }] } }] }, isFree(name) { return new Promise(function (resolve) { setTimeout(function () { resolve(['admin', 'faqir', 'root'].indexOf(name.toLowerCase()) === -1) }, 300) }) } }" l-rules="definition" l-validate="sent = 'Requested a ' + plan + ' workspace for @' + handle + '.'">
+  <div data-ui="field-group">
+    <label data-part="label" for="engine-plan">Plan</label>
+    <div data-part="input">
+      <select data-ui="select" id="engine-plan" name="plan" l-model="plan">
+        <option value="solo">Solo</option>
+        <option value="team">Team</option>
+      </select>
+    </div>
+  </div>
+  <div data-ui="field-group">
+    <label data-part="label" for="engine-seats">Seats</label>
+    <div data-part="input">
+      <input data-ui="input" id="engine-seats" name="seats" type="number" min="1" value="1" aria-describedby="engine-seats-error" l-model.number="seats">
+    </div>
+    <p data-part="error" id="engine-seats-error"></p>
+  </div>
+  <div data-ui="field-group">
+    <label data-part="label" for="engine-company">Company</label>
+    <div data-part="input">
+      <input data-ui="input" id="engine-company" name="company" type="text" autocomplete="organization" aria-describedby="engine-company-error" l-model.trim="company" data-error-required="A team needs a company name.">
+    </div>
+    <p data-part="error" id="engine-company-error"></p>
+  </div>
+  <div data-ui="field-group">
+    <label data-part="label" for="engine-handle">Handle <span data-part="required">*</span></label>
+    <div data-part="input">
+      <input data-ui="input" id="engine-handle" name="handle" type="text" autocomplete="off" required aria-describedby="engine-handle-hint engine-handle-error" l-model.trim="handle" l-validate:available.async="isFree(value)" data-error-required="Pick a handle." data-error-available="That handle is taken. Try another.">
+    </div>
+    <p data-part="description" id="engine-handle-hint">admin, faqir and root are taken.</p>
+    <p data-part="error" id="engine-handle-error"></p>
+  </div>
+  <div data-ui="field-group">
+    <label data-part="label" for="engine-phone">Phone <span data-part="required">*</span></label>
+    <div data-part="input">
+      <input data-ui="input" id="engine-phone" name="phone" type="tel" inputmode="numeric" required pattern="\(\d{3}\) \d{3}-\d{4}" placeholder="Ten digits" aria-describedby="engine-phone-raw engine-phone-error" l-model="phone" l-mask="(999) 999-9999" data-error-required="A phone number, please." data-error-pattern="Ten digits, please.">
+    </div>
+    <p data-part="description" id="engine-phone-raw" l-text="'l-model holds: ' + (phone || 'nothing yet')">l-model holds: nothing yet</p>
+    <p data-part="error" id="engine-phone-error"></p>
+  </div>
+  <p data-ui="text" data-weight="semibold" l-text="'Price, computed by the rules: ' + ($rules.computed.price || 0) + ' a month'">Price, computed by the rules: 5 a month</p>
+  <div data-ui="cluster" data-gap="3" data-align="center">
+    <button data-ui="button" data-variant="primary" data-size="sm" type="submit">Request it</button>
+    <span data-ui="text" data-variant="muted" role="status" l-text="sent || 'Not requested yet.'">Not requested yet.</span>
+  </div>
+</form>
+          </template>
         </section>
 
         <section aria-labelledby="engine-inspect-heading" data-docs-section>

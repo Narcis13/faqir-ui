@@ -118,6 +118,13 @@ describe("faqir-validate · registration", () => {
 });
 
 describe("faqir-validate · native constraints on submit", () => {
+  it("turns the browser's own validation off, so an invalid submit reaches the plugin", async () => {
+    // A real browser cancels an invalid submit before any submit event fires,
+    // so without `novalidate` the plugin never ran and showed nothing.
+    const { form } = await boot(group(`<input data-part="input" name="a" required>`));
+    expect(form.noValidate).toBe(true);
+  });
+
   it("required: empty field flips its field-group to invalid with a message", async () => {
     const { form } = await boot(group(`<input data-part="input" name="a" required>`));
     const input = form.querySelector("input")!;

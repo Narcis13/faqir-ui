@@ -389,12 +389,17 @@ describe("site JavaScript", () => {
     for (const theme of themes) {
       expect(scriptsOf(themePreviewPath(theme.name))).toEqual(["scripts/gallery.js"]);
     }
-    for (const f of files.filter((candidate) => candidate.path.startsWith("examples/"))) {
-      expect(scriptsOf(f.path)).toEqual([
-        "scripts/gallery.js",
-        "scripts/faqir-core.js",
-      ]);
+    // An example runs the engine, plus exactly the plugins its fragment's
+    // `@ui:requires` line names (form-page and wizard validate).
+    for (const c of components) {
+      const requires = /<!--\s*@ui:requires\s+([^>]*?)\s*-->/.exec(readFileSync(c.referencePath, "utf8"))?.[1] ?? "";
+      const plugins = requires
+        .split(/\s+/)
+        .filter((file) => file.startsWith("faqir-") && file !== "faqir-core.js")
+        .map((file) => `scripts/plugins/${file}`);
+      expect(scriptsOf(c.examplePath)).toEqual(["scripts/gallery.js", "scripts/faqir-core.js", ...plugins]);
     }
+    expect(scriptsOf("examples/patterns/form-page.html")).toContain("scripts/plugins/faqir-validate.js");
     for (const f of files) {
       if (!f.path.endsWith(".html")) continue;
       for (const src of scriptsOf(f.path)) {

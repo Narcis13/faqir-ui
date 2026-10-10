@@ -3925,6 +3925,13 @@ function renderExamplePage(
     overlayPreview && c.name in OVERLAY_PREVIEW_SURFACES
       ? ` ${OVERLAY_PREVIEW_ATTR}="${escAttr(c.name)}"`
       : "";
+  // The plugins the fragment declares it needs (`<!-- @ui:requires … -->`), after
+  // the engine: form-page and wizard validate through faqir-validate.
+  const plugins = (/<!--\s*@ui:requires\s+([^>]*?)\s*-->/.exec(readText(c.referencePath))?.[1] ?? "")
+    .split(/\s+/)
+    .filter((file) => file.startsWith("faqir-") && file !== "faqir-core.js")
+    .map((file) => `\n<script src="${u(pluginScriptPath(file))}" defer></script>`)
+    .join("");
 
   return {
     path: c.examplePath,
@@ -3936,7 +3943,7 @@ function renderExamplePage(
 <title>${escAttr(`${c.name} example · ${config.title}`)}</title>
 <link rel="stylesheet" href="${u("styles/faqir.css")}">${renderThemeLink(c.examplePath, config.theme)}
 <script src="${u("scripts/gallery.js")}" defer></script>
-<script src="${u("scripts/faqir-core.js")}" defer></script>
+<script src="${u("scripts/faqir-core.js")}" defer></script>${plugins}
 <!-- ${DOCS_GENERATION_MARKER} · verbatim registry reference markup for ${escAttr(c.name)} -->
 </head>
 <body>

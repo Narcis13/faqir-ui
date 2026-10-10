@@ -19,6 +19,7 @@ Docs site: **[faqir-ui.pages.dev](https://faqir-ui.pages.dev)** · npm: `faqir-u
 
 ## Table of Contents
 
+- [What's new in 1.2: motion, content and the theme studio](#whats-new-in-12-motion-content-and-the-theme-studio)
 - [What's new in 1.1 "Personality"](#whats-new-in-11-personality)
 - [Quick Start](#quick-start)
 - [Why Faqir](#why-faqir)
@@ -43,13 +44,17 @@ Docs site: **[faqir-ui.pages.dev](https://faqir-ui.pages.dev)** · npm: `faqir-u
 
 ---
 
-## What's new: motion, content and the theme studio
+## What's new in 1.2: motion, content and the theme studio
 
 Everything a marketing site or a content page is made of, with motion that is
 a token, not a script. Additive under [`SPEC-1.0.md` §8](SPEC-1.0.md): the five
-attributes did not move and every 1.1 page still audits clean.
+attributes did not move and every 1.1 page still audits clean. Release notes and
+the upgrade path: [`CHANGELOG.md`](CHANGELOG.md) and
+[`docs/release-1.2.md`](docs/release-1.2.md).
 
-- **Nine CSS-only primitives.** `reveal` (seven entrances, on load, scrubbed by
+- **Eleven CSS-only primitives.** `stamp` (an edition or status mark, boxed or a
+  round seal, at a custom angle), `spotlight` (a hover light that follows the
+  pointer across one card or a whole grid), `reveal` (seven entrances, on load, scrubbed by
   scroll, or released by a state; staggered groups), `marquee` (a seamless
   strip that pauses for the pointer and the keyboard), `backdrop` (aurora,
   spotlight, grid, dots and beams painted behind a section by its own wrapper),
@@ -86,6 +91,13 @@ attributes did not move and every 1.1 page still audits clean.
   material — that write tokens onto `<html>` live, persist across reloads and
   export as a `:root` block to paste into a theme. `<aside l-tweak></aside>`
   is the whole integration.
+- **Four seed themes.** `deco`, `clay`, `memphis` and `monolith`, generated from
+  a seed and gated like the rest: 31 themes in all.
+- **Fixed on the way to the release.** `qr-code` encodes every version 1–10 at
+  every error-correction level (multi-block symbols used to fail), a second copy
+  of `faqir-validate.js` no longer detaches `Faqir.validate` from the live
+  directive, toasts fit a phone screen, and a popover's close button no longer
+  sits on its text. See [`docs/release-1.2.md`](docs/release-1.2.md).
 
 ## What's new in 1.1 "Personality"
 
@@ -197,10 +209,10 @@ with no shell, [`@faqir-ui/core`](packages/core/README.md) publishes a prebuilt 
 
 ```html
 <!-- A theme's full CSS bundle: tokens + theme + base + every component -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.1/dist/faqir.default.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.2/dist/faqir.default.css">
 
 <!-- The engine, minified — sets window.Faqir and boots on DOMContentLoaded -->
-<script src="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.1/dist/faqir-core.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.2/dist/faqir-core.min.js" defer></script>
 ```
 
 Swap the stylesheet to change theme; every theme ships a bundle. Every `dist/`
@@ -227,8 +239,8 @@ code in the CLI, the MCP server and the browser. A failure that would otherwise
 be silent becomes a finding with a rule id and a line number.
 
 **Consistency is a property of the system, not the author.** The design system
-lives in files, not in a prompt: a three-layer token ladder, 27 theme
-stylesheets, 103 components and one breakpoint canon. A page inherits them
+lives in files, not in a prompt: a three-layer token ladder, 31 theme
+stylesheets, 105 components and one breakpoint canon. A page inherits them
 instead of re-deriving them, so a theme change moves every page at once, and a
 new agent in a new session lands on the same rhythm as the last one.
 
@@ -293,15 +305,16 @@ No specificity wars. No naming conventions to memorize. The selector is the docu
 
 ## Component Library
 
-Faqir ships 103 components across three layers. Every one has a page on the
+Faqir ships 105 components across three layers. Every one has a page on the
 [docs site](https://faqir-ui.pages.dev), generated from its manifest.
 
-**Primitives (51, CSS only).** `aspect-ratio` `avatar` `backdrop` `badge`
+**Primitives (53, CSS only).** `aspect-ratio` `avatar` `backdrop` `badge`
 `breadcrumb` `button` `callout` `card` `checkbox` `chip` `cluster` `collapsible`
 `container` `description-list` `empty-state` `field-group` `glow` `grid`
 `highlight` `icon` `image` `input` `kbd` `key-value` `label` `link` `marquee`
 `nav` `page-break` `progress` `quote` `radio` `rating` `reveal` `scroll-progress`
-`select` `separator` `signature` `skeleton` `spinner` `stack` `stat` `stepper`
+`select` `separator` `signature` `skeleton` `spinner` `spotlight` `stack`
+`stamp` `stat` `stepper`
 `surface` `switch` `switcher` `text` `textarea` `timeline` `toggle` `watermark`
 
 **Recipes (29, CSS + JavaScript controller).** `accordion` `alert-dialog`
@@ -1121,9 +1134,9 @@ write the other shapes, and `--skill` writes `.faqir/SKILL.md`.
 **Claude Code skill.** [`.claude/skills/faqir-creator/`](.claude/skills/faqir-creator/)
 is generated by `bun run gen:skill` and gated by `check:skill`. Its references:
 
-- `primitives.md`: all 51 primitives with full HTML anatomy
+- `primitives.md`: all 53 primitives with full HTML anatomy
 - `recipes.md`: all 29 recipes with HTML and controller patterns
-- `patterns.md`: all 15 compositions
+- `patterns.md`: all 23 compositions
 - `tokens.md`, `manifest.md`, `directives.md`: tokens, schema, and every directive, modifier, magic and plugin
 
 **MCP server.** [`@faqir-ui/mcp`](packages/mcp/README.md) serves ten tools

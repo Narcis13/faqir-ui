@@ -51,7 +51,8 @@
   padding-bottom: 0;
 }
 
-[data-ui="card"] > [data-part="header"] > [data-part="title"] {
+[data-ui="card"] > [data-part="header"] > [data-part="title"],
+[data-ui="card"] > [data-part="title"] {
   font-family: var(--font-heading);
   font-size: var(--text-lg);
   font-weight: var(--weight-semibold);
@@ -60,10 +61,27 @@
   margin: 0;
 }
 
-[data-ui="card"] > [data-part="header"] > [data-part="description"] {
+[data-ui="card"] > [data-part="header"] > [data-part="description"],
+[data-ui="card"] > [data-part="description"] {
   font-size: var(--text-sm);
   color: var(--color-fg-muted);
   margin: 0;
+}
+
+/* The header is optional: a title and description written straight into the
+   card (the shape @faqir-ui/forms emits for each wizard step) take the header's
+   inset themselves instead of sitting flush against the border. */
+[data-ui="card"] > [data-part="title"],
+[data-ui="card"] > [data-part="description"] {
+  padding-inline: var(--card-padding, var(--space-6));
+}
+
+[data-ui="card"] > [data-part="title"] {
+  padding-block-start: var(--card-padding, var(--space-6));
+}
+
+[data-ui="card"] > [data-part="description"] {
+  padding-block-start: var(--space-1, 0.25rem);
 }
 
 [data-ui="card"] > [data-part="body"] {
