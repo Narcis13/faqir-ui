@@ -1,0 +1,4 @@
++card(variant="outlined" title=post.title)
+  @body
+    p {{ post.body }}
+    +badge(variant="primary") {{ post.tag }}

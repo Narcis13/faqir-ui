@@ -1,0 +1,5 @@
+//- One row of a code table. Parameters: name (the code), when (what causes it).
+tr
+  td
+    code {{ name }}
+  td {{ when }}

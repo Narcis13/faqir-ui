@@ -1,0 +1,3 @@
++card(variant="outlined" title="Release notes")
+  @body
+    p Faqir 1.2.5 ships the template engine.

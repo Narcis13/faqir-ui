@@ -1,0 +1,5 @@
+h3 {{ upper(shop.name) }}
+p
+    | {{ cart.count }} {{ plural(cart.count, "item", "items") }}, {{ money(cart.total) }}
+p
+    | {{ gift.count }} {{ plural(gift.count, "item", "items") }}, {{ money(gift.total) }}

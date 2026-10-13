@@ -1,0 +1,5 @@
+//- The overlay region of a page in this section: the dialog-class markup its
+//- examples drew, which the site's shell mounts beside <main> because overlays
+//- belong outside the content flow. Data: overlays, each an example's overlay.
+each overlay in overlays
+  raw overlay.html

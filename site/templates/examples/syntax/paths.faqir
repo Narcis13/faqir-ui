@@ -1,0 +1,11 @@
+dl
+    dt Customer
+    dd {{ order.customer.name }}
+    dt First item
+    dd {{ order.items[0].name }}
+    dt Items
+    dd {{ order.items.length }}
+    dt Chosen item
+    dd {{ order.items[order.pick].name }}
+    dt Initial
+    dd {{ order.customer.name[0] }}

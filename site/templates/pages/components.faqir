@@ -1,11 +1,185 @@
 layout "layouts/section.faqir"
 
 block lede
-  p Coming in this release.
+  p Templates compose two ways: a page fills a layout's blocks, and a partial is included with parameters. Registry components are called by name and checked against their manifests. Everything the server draws is markup faqir-core already knows, so the browser takes it over.
 
 block toc
   li
-    a(href="#colophon") How this page was made
+    a(href="#composition") Layouts, blocks and includes
+  li
+    a(href="#components") Component calls
+  li
+    a(href="#island") The l-data island
+  li
+    a(href="#hydration") Server-rendered recipes in the browser
 
 block content
-  p This page is being written.
+  h2#composition Layouts, blocks and includes
+  p
+    | A file whose first statement is
+    code layout
+    | is a page, and the rest of it is
+    code block
+    | definitions. In the layout, each block marks a place and its children are the default. The page's block replaces those children and is rendered with the page's data.
+  p
+    | A layout does not have to be a whole document. The one below draws a card, and puts two of its blocks inside the card's slots. The page fills the title and the content, and leaves the footer alone, so the layout's default footer is what you see.
+  include "partials/example.faqir" (example=ex.layout)
+  p
+    | There is one layout level, blocks only replace, and a block the layout does not have is a compile error rather than content that silently disappears.
+  include "partials/failure.faqir" (failure=err.block)
+
+  h3#composition-include Includes with parameters
+  p
+    | A partial is the one reusable piece of markup. It is rendered with a fresh scope that holds only the parameters the
+    code include
+    | line passes, so it reads the same wherever it is included. Parameters are written like attributes: an expression, a quoted literal with holes, or a bare name meaning true.
+  include "partials/example.faqir" (example=ex.include)
+  p
+    | Notice
+    code aria-current
+    | on one link only. The comparison
+    code item.href == current
+    | is made per row by the caller and arrives in the partial as the boolean
+    code current
+    | which the partial turns into the attribute or leaves out.
+  p
+    | Nothing else crosses into the partial. The page below has a user in its data, and the partial still cannot see it.
+  include "partials/failure.faqir" (failure=err.scope)
+  p
+    | Names are relative to the loader's root from every file, never to the including file. An include chain that returns to a file already on it, or that nests deeper than 16, is found when the template compiles, so a compiled template cannot recurse.
+
+  h2#components Component calls
+  p
+    | A line starting with
+    code +
+    | calls a registry component: the engine writes that component's reference markup from its manifest, with the same attributes, ARIA wiring and hidden guards the registry ships. The table this site compiles with describes {{ facts.callable }} callable components. Each argument is matched against the manifest, in this order:
+  div(data-docs-table tabindex="0")
+    table
+      thead
+        tr
+          th Argument
+          th Written as
+          th Checked
+      tbody
+        tr
+          td
+            | A variant, named by its attribute without
+            code data-
+            | such as
+            code variant
+            | or
+            code size
+          td The manifest's attribute, on the element the manifest puts it on. The default writes nothing.
+          td A literal at compile time, an expression at render time, against the manifest's values
+        tr
+          td
+            | A state, such as
+            code loading
+            | or
+            code disabled
+          td The manifest's attribute on the root, when the value is truthy
+          td Bare, or an expression tested for truthiness
+        tr
+          td
+            | A string prop, such as
+            code title
+          td The text or attribute the reference markup uses it for
+          td A literal or an expression giving text
+        tr
+          td
+            code id
+          td The component's id, which every id inside it derives from
+          td Unset, the render's next id
+        tr
+          td
+            code role
+            | ,
+            code aria-*
+            | , a faqir-core attribute and a few more
+          td Passed through onto the root
+          td As on a plain element
+  p
+    | Named slots are filled with
+    code @slot
+    | lines under the call; a component whose manifest says its content is inline, text or block also takes plain children as its default slot. Here a card takes its title and description as props, its body and footer as fills, and nests a badge and a button inside.
+  include "partials/example.faqir" (example=ex.call)
+  p
+    | Notice what the manifests decided. The badge's variant came from the data and was checked against the badge's allowed values when the page rendered. The button's size became
+    code data-size
+    | while its default variant wrote nothing at all.
+  p
+    | States are booleans. A state that is on writes the manifest's attribute; a state that is off writes nothing.
+  include "partials/example.faqir" (example=ex.states)
+  p
+    | A wrong argument is a compile error that lists what the component does take, and the five protocol attributes cannot be written by hand on a call, because the manifest's own names are the only way to reach them.
+  include "partials/failure.faqir" (failure=err.argument)
+  include "partials/failure.faqir" (failure=err.protocol)
+  p
+    | A variant that comes from data cannot be checked when the template compiles, so it is checked when it renders, against the same list.
+  include "partials/failure.faqir" (failure=err.variant)
+  h3#components-plain Plain elements
+  p
+    | A plain element may carry
+    code data-ui
+    | too. It is written as you typed it and not checked as a call. That is how you write a component that is also a part of another one, such as a button that is a dialog's trigger, because a call never takes
+    code data-part
+  p
+    | Some recipes repeat a part: the tabs recipe has one trigger and one panel per tab. A repeated part is not a slot, so
+    code +tabs
+    | renders the reference markup as it ships. Draw those from data with plain elements, as the recipes below do.
+
+  h2#island The l-data island
+  p
+    | Server data reaches faqir-core's evaluator in exactly one way:
+    code l-data=json(expr)
+    | which writes the value as a JSON literal, escaped for the attribute. JSON text is a pure literal to the client, so a string in the data cannot become code. The expressions the client runs, such as
+    code count++
+    | are literal strings the template's author wrote, and they pass through untouched.
+  include "partials/example.faqir" (example=ex.island)
+  p
+    | Notice that the count already reads 2 when the page arrives: the server drew it as text, and
+    code l-text
+    | keeps it in step once the island is live. Press Add one to see it. The note in the data, with its quotes and its closing tag, sits inside the attribute as escaped JSON and never reaches the page as markup.
+  p
+    | Data in any other faqir-core attribute is refused when the template compiles, and so is
+    code json()
+    | anywhere but the whole value of
+    code l-data
+  include "partials/failure.faqir" (failure=err.interpolation)
+  include "partials/failure.faqir" (failure=err.misplaced)
+
+  h2#hydration Server-rendered recipes in the browser
+  p
+    | The three recipes below were drawn by the engine from data when this site was built. Nothing in the browser knows that. faqir-core finds
+    code data-ui="tabs"
+    | and its siblings, runs their controllers, and from then on they behave exactly as recipes written by hand. Each result starts with an
+    code @ui:requires
+    | comment naming the engine and the controllers it needs, and this page loads faqir-core because of it.
+  h3#hydration-tabs Tabs
+  include "partials/example.faqir" (example=ex.tabs)
+  p
+    | Click a tab, or focus the selected tab and press
+    +kbd ←
+    | or
+    +kbd →
+    | to move between them.
+  h3#hydration-accordion Accordion
+  include "partials/example.faqir" (example=ex.accordion)
+  p
+    | Click a question, or focus it and press
+    +kbd Enter
+    | to open it. Opening another closes the first.
+  h3#hydration-dialog Dialog
+  include "partials/example.faqir" (example=ex.dialog)
+  p
+    | Open the dialog, then press
+    +kbd Esc
+    | to close it. Focus returns to the button that opened it.
+  p
+    | A dialog is an overlay, and an overlay inside the page's main content breaks the audit's landmark rule. So the dialog comes from a second template,
+    code dialog.overlay.faqir
+    | rendered with the same data and mounted beside the main content. The button reaches it through the controller's
+    code data-open
+    | hook, which a call passes through like any other attribute. The Cancel button is a plain element with
+    code data-ui="button"
+    | because it is a part of the dialog as well as a button, and so is Delete, which in this demo only closes it.

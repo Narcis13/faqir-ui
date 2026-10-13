@@ -1482,6 +1482,13 @@ export interface ShellInput {
    * and are not a URL of this site any more.
    */
   noindex?: boolean;
+  /**
+   * Dialog-class markup the page draws, mounted beside the shell rather than
+   * inside `<main>`: overlays belong outside the content flow (the audit's
+   * `landmark` rule), as on the live-example pages. Its triggers stay in the
+   * body and reach it through the controller's external `data-open` hook.
+   */
+  overlays?: string;
 }
 
 /**
@@ -1776,7 +1783,7 @@ ${input.body}
   </footer>
 
 </div>
-</body>
+${input.overlays ?? ""}</body>
 </html>
 `;
 }

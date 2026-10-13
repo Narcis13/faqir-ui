@@ -1,0 +1,6 @@
+//- One line item of an order. Parameter: line (name, qty, price in cents).
+tr
+  td {{ line.name }}
+  td {{ line.qty }}
+  td {{ money(line.price) }}
+  td {{ money(line.qty * line.price) }}

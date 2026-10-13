@@ -1,0 +1,13 @@
+{
+  "article": {
+    "title": "Rotating an API key",
+    "author": "The docs team",
+    "sections": [
+      { "kind": "paragraph", "text": "Keys expire after 90 days. Press <b>Rotate</b> in the console; placeholders such as {{ key }} are text too." },
+      { "kind": "callout", "tone": "warning", "text": "The old key stops working as soon as the new one is issued." },
+      { "kind": "list", "items": ["Create the new key", "Deploy it", "Revoke the old key"] },
+      { "kind": "code", "text": "faqir rotate --key prod" },
+      { "kind": "video", "text": "rotate.mp4" }
+    ]
+  }
+}

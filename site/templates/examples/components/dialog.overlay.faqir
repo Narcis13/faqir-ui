@@ -1,0 +1,11 @@
+div#delete-project(data-ui="dialog" data-state="closed")
+  div(data-part="overlay" hidden)
+  div(data-part="panel" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="delete-project-title" data-size="sm" hidden)
+    div(data-part="header")
+      h2#delete-project-title(data-part="title") Delete {{ project.name }}?
+      button(type="button" data-part="close" aria-label="Close dialog") ✕
+    div(data-part="body")
+      p This removes {{ project.invoices }} invoices and cannot be undone.
+    div(data-part="footer")
+      button(type="button" data-part="close" data-ui="button" data-variant="outline") Cancel
+      button(type="button" data-part="close" data-ui="button" data-variant="destructive") Delete

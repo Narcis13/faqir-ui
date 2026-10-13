@@ -1,0 +1,5 @@
+div
+  h3 {{ post.title }}
+  raw post.html
+raw
+  <p>A literal block is written <em>verbatim</em>.</p>

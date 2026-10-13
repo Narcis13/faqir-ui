@@ -1,0 +1,1 @@
+include "partials/components-tabs.faqir" (id="plan" label="Plan details" tabs=plan.tabs)

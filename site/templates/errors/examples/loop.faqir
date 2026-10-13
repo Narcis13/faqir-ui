@@ -1,0 +1,4 @@
+each a in tags
+  each b in tags
+    each c in tags
+      p {{ a }} {{ b }} {{ c }}

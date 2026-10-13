@@ -1,0 +1,6 @@
+div(l-data="{ count: 0 }")
+    p
+        | Clicked
+        strong(l-text="count") 0
+        | times.
+    button(type="button" @click="count++" :disabled="count >= 3") Add one

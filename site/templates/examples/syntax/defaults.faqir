@@ -1,0 +1,6 @@
+ul
+    li {{ user.name ?? "anonymous" }}
+    li {{ user.nickname ?? user.name }}
+    li {{ user.title ?? "no title" }}
+    li {{ user.bio ?? user.nickname ?? "nothing at all" }}
+    li {{ user.score ?? 10 }}

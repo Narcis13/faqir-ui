@@ -1,0 +1,10 @@
+div
+    h3 Packing list
+    ul
+        li Passport
+        li
+            | Charger
+            ul
+                li USB-C cable
+                li Wall plug
+    p Dedented from four levels deep straight back to one.

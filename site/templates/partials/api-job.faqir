@@ -1,0 +1,3 @@
+//- Partials see only their parameters: name and state.
++badge(variant=state == "failed" ? "destructive" : "success") {{ state }}
+span {{ name }}

@@ -35,6 +35,7 @@ import type { ComponentTable, Template } from "../../../packages/template/src/in
 import { createFileLoader } from "../../../packages/template/src/node.js";
 import { components as registryTable } from "../../../packages/template/src/registry.js";
 import { helpers as siteHelpers } from "../../../site/templates/helpers.js";
+import { COMMAND_DEFINITIONS } from "../../command-registry";
 import { PACKAGE_ROOT, pluginScriptPath, relUrl, renderShell, type SiteFile } from "../docs";
 import type { PageContext } from "./context";
 
@@ -63,8 +64,16 @@ export interface TemplateExample {
   data: string;
   options: string;
   html: string;
+  /** The compiled AST, as the JSON a host would store. */
+  ast: string;
   requires: string[];
   deps: { file: string; source: string }[];
+  /**
+   * The example's dialog-class markup, from `<name>.overlay.faqir` rendered
+   * with the same data: the page mounts it beside `<main>`, and the example's
+   * own output holds what opens it. Null for an example without one.
+   */
+  overlay: { file: string; source: string; html: string; requires: string[] } | null;
 }
 
 /** A template that must fail, and how it failed. */
@@ -87,6 +96,8 @@ export interface TemplatePage {
   file: string;
   data: Record<string, unknown>;
   body: string;
+  /** The overlay region beside `<main>`, rendered by the engine; null when no example has one. */
+  overlays: string | null;
   requires: string[];
 }
 
@@ -97,6 +108,7 @@ const SITE_LINKS: Record<string, string> = {
   engine: "engine/index.html",
   rules: "rules/index.html",
   cli: "cli/index.html",
+  cliTemplate: "cli/index.html#cmd-template",
   integrations: "integrations/index.html",
   audit: "audit/index.html",
   agents: "agents/index.html",
@@ -108,6 +120,7 @@ const SITE_LINKS: Record<string, string> = {
   callout: "components/primitives/callout.html",
   button: "components/primitives/button.html",
   badge: "components/primitives/badge.html",
+  useCases: "template/examples/index.html",
 };
 
 const RUN_OPTION_KEYS: Record<keyof TemplateRunOptions, string[]> = {
@@ -137,11 +150,17 @@ function readRunOptions(dir: string, name: string): TemplateRunOptions {
   return { compile: options.compile ?? {}, render: options.render ?? {} };
 }
 
-/** The `.faqir` files in a directory, by base name, sorted. Empty when it is absent. */
+const OVERLAY_SUFFIX = ".overlay.faqir";
+
+/**
+ * The `.faqir` files in a directory, by base name, sorted; an example's
+ * `.overlay.faqir` companion is part of that example, not one of its own.
+ * Empty when the directory is absent.
+ */
 function templateNames(dir: string): string[] {
   if (!existsSync(dir)) return [];
   return readdirSync(dir)
-    .filter((f) => f.endsWith(".faqir"))
+    .filter((f) => f.endsWith(".faqir") && !f.endsWith(OVERLAY_SUFFIX))
     .map((f) => f.slice(0, -".faqir".length))
     .sort();
 }
@@ -193,14 +212,22 @@ export function renderTemplateExamples(templatesRoot: string, slug: string): Rec
     const data = readData(dir, name);
     const options = readRunOptions(dir, name);
     const { ast, html } = runTemplate(templatesRoot, file, data, { ...options, idPrefix: `${slug}-${name}` });
+    const overlayFile = `examples/${slug}/${name}${OVERLAY_SUFFIX}`;
+    let overlay: TemplateExample["overlay"] = null;
+    if (existsSync(join(templatesRoot, overlayFile))) {
+      const drawn = runTemplate(templatesRoot, overlayFile, data, { ...options, idPrefix: `${slug}-${name}-overlay` });
+      overlay = { file: overlayFile, source: readText(join(templatesRoot, overlayFile)), html: drawn.html, requires: drawn.ast.requires };
+    }
     out[name] = {
       file,
       source: readText(join(templatesRoot, file)),
       data: pretty(data),
       options: existsSync(join(dir, `${name}.options.json`)) ? pretty(options) : "",
       html,
+      ast: pretty(ast),
       requires: ast.requires,
       deps: depsOf(templatesRoot, ast.files, file),
+      overlay,
     };
   }
   return out;
@@ -280,38 +307,63 @@ function templateFacts(templatesRoot: string): Record<string, unknown> {
     plugins: Object.entries(table.plugins)
       .map(([directive, file]) => ({ directive, file }))
       .sort((a, b) => a.directive.localeCompare(b.directive)),
+    command: {
+      name: "template",
+      summary: COMMAND_DEFINITIONS.template.summary,
+      args: COMMAND_DEFINITIONS.template.args ?? "",
+    },
     helpers: { file: "helpers.js", names: Object.keys(siteHelpers), source: readText(join(templatesRoot, "helpers.js")) },
   };
 }
 
+/** The template that draws a page's overlay region from its examples' overlays. */
+export const OVERLAYS_LAYOUT = "layouts/section-overlays.faqir";
+
 /** Every page of the section, rendered by the engine (no shell yet). */
 export function renderTemplateSection(ctx: Pick<PageContext, "siteRoot">): TemplatePage[] {
-  const templatesRoot = join(ctx.siteRoot, "templates");
-  const pages = readTemplateSection(ctx.siteRoot);
-  const facts = templateFacts(templatesRoot);
-  const layoutFile = "layouts/section.faqir";
+  return readTemplateSection(ctx.siteRoot).map((meta) => renderTemplatePage(ctx.siteRoot, meta.slug));
+}
 
-  return pages.map((meta) => {
-    const file = `pages/${meta.slug}.faqir`;
-    const ex = renderTemplateExamples(templatesRoot, meta.slug);
-    const err = captureTemplateFailures(templatesRoot, meta.slug);
-    const data: Record<string, unknown> = {
-      page: {
-        ...meta,
-        file,
-        source: readText(join(templatesRoot, file)),
-        layout: { file: layoutFile, source: readText(join(templatesRoot, layoutFile)) },
-      },
-      section: pages.map((p) => ({ href: relUrl(meta.path, p.path), label: p.label, current: p.slug === meta.slug })),
-      links: Object.fromEntries(Object.entries(SITE_LINKS).map(([k, to]) => [k, relUrl(meta.path, to)])),
-      facts,
-      ex,
-      err,
-    };
-    const { ast, html } = runTemplate(templatesRoot, file, data, { compile: {}, render: {} });
-    const requires = [...new Set([...ast.requires, ...Object.values(ex).flatMap((e) => e.requires)])].sort();
-    return { meta, file, data, body: html, requires };
-  });
+/** One page of the section, rendered by the engine (no shell yet). */
+export function renderTemplatePage(siteRoot: string, slug: string): TemplatePage {
+  const templatesRoot = join(siteRoot, "templates");
+  const pages = readTemplateSection(siteRoot);
+  const meta = pages.find((p) => p.slug === slug);
+  if (!meta) throw new Error(`template docs: section.json has no page "${slug}"`);
+  const file = `pages/${slug}.faqir`;
+  const layoutFile = "layouts/section.faqir";
+  const ex = renderTemplateExamples(templatesRoot, slug);
+  const err = captureTemplateFailures(templatesRoot, slug);
+  const data: Record<string, unknown> = {
+    page: {
+      ...meta,
+      file,
+      source: readText(join(templatesRoot, file)),
+      layout: { file: layoutFile, source: readText(join(templatesRoot, layoutFile)) },
+    },
+    section: pages.map((p) => ({
+      href: relUrl(meta.path, p.path),
+      label: p.label,
+      title: p.title,
+      description: p.description,
+      current: p.slug === slug,
+    })),
+    links: Object.fromEntries(Object.entries(SITE_LINKS).map(([k, to]) => [k, relUrl(meta.path, to)])),
+    facts: templateFacts(templatesRoot),
+    // The page's own material, when it keeps some as data: pages/<slug>.json.
+    content: readData(join(templatesRoot, "pages"), slug),
+    ex,
+    err,
+  };
+  const { ast, html } = runTemplate(templatesRoot, file, data, { compile: {}, render: {} });
+  const withOverlay = Object.values(ex).filter((e) => e.overlay !== null);
+  const overlays = withOverlay.length
+    ? runTemplate(templatesRoot, OVERLAYS_LAYOUT, { overlays: withOverlay.map((e) => e.overlay) }, { compile: {}, render: {} }).html
+    : null;
+  const requires = [
+    ...new Set([...ast.requires, ...Object.values(ex).flatMap((e) => [...e.requires, ...(e.overlay?.requires ?? [])])]),
+  ].sort();
+  return { meta, file, data, body: html, overlays, requires };
 }
 
 /**
@@ -330,13 +382,19 @@ function scriptsFor(requires: string[]): string[] {
  * byte for byte: the shell adds only what surrounds `<article>`'s content.
  */
 export function renderTemplatePages(ctx: PageContext): SiteFile[] {
-  return renderTemplateSection(ctx).map((p) => ({
+  return renderTemplateSection(ctx).map((p) => shellTemplatePage(ctx, p));
+}
+
+/** One rendered page in the site's shell. */
+export function shellTemplatePage(ctx: PageContext, p: TemplatePage): SiteFile {
+  return {
     path: p.meta.path,
     content: renderShell({
       pagePath: p.meta.path,
       title: `${p.meta.title} · ${ctx.config.title}`,
       description: p.meta.description,
       body: p.body,
+      overlays: p.overlays ?? undefined,
       config: ctx.config,
       components: ctx.components,
       themes: ctx.themes,
@@ -344,5 +402,5 @@ export function renderTemplatePages(ctx: PageContext): SiteFile[] {
       layout: "reference",
       scripts: scriptsFor(p.requires),
     }),
-  }));
+  };
 }

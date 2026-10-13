@@ -1,0 +1,2 @@
+p Hi {{ customer.name }}, your order has shipped.
+raw customer.bio

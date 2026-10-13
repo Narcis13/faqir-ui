@@ -13,6 +13,12 @@ div(data-docs-template-example)
         +text(variant="mono" size="sm") {{ dep.file }}
       pre(tabindex="0")
         code {{ dep.source }}
+    if example.overlay
+      div(data-docs-template-label)
+        +badge Overlay
+        +text(variant="mono" size="sm") {{ example.overlay.file }}
+      pre(tabindex="0")
+        code {{ example.overlay.source }}
   div(data-docs-template-pane="data")
     div(data-docs-template-label)
       +badge Data
@@ -28,8 +34,13 @@ div(data-docs-template-example)
       +badge(variant="success") Rendered
     div(data-docs-template-result)
       raw example.html
+    if example.overlay
+      p(data-docs-template-note) The overlay template's output is mounted beside the page's main content, where overlays belong; the button above opens it.
     +collapsible
       @trigger The HTML it wrote
       @content
         pre(tabindex="0")
           code {{ example.html }}
+        if example.overlay
+          pre(tabindex="0")
+            code {{ example.overlay.html }}

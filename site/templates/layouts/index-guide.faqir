@@ -1,0 +1,5 @@
+//- A small layout for the overview's first look: a heading, then content.
+section(aria-labelledby="first-look-title")
+  h3#first-look-title
+    block title
+  block content

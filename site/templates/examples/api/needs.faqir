@@ -1,0 +1,8 @@
+div(data-ui="accordion" data-variant="single")
+  each item, i in items
+    div(data-part="item" data-state="collapsed")
+      button(data-part="trigger" id="needs-trigger-{{ i + 1 }}" aria-expanded="false" aria-controls="needs-content-{{ i + 1 }}")
+        span {{ item.question }}
+        span(data-part="icon" aria-hidden="true") ▾
+      div(data-part="content" id="needs-content-{{ i + 1 }}" role="region" aria-labelledby="needs-trigger-{{ i + 1 }}" hidden)
+        p {{ item.answer }}

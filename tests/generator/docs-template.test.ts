@@ -26,6 +26,7 @@ import { auditHtmlSource } from "../../src/audit/checker";
 import { loadRegistryManifestMap } from "../../src/utils/components";
 import { LLMS_FULL_FILE, LLMS_INDEX_FILE, SITEMAP_FILE, buildDocsSite, isShellPage, relUrl } from "../../src/generator/docs";
 import {
+  OVERLAYS_LAYOUT,
   TEMPLATE_PAGE,
   readTemplateSection,
   renderTemplateSection,
@@ -51,7 +52,7 @@ const json = (path: string): Record<string, unknown> =>
 const faqirNames = (dir: string): string[] =>
   existsSync(dir)
     ? readdirSync(dir)
-        .filter((f) => f.endsWith(".faqir"))
+        .filter((f) => f.endsWith(".faqir") && !f.endsWith(".overlay.faqir"))
         .map((f) => f.slice(0, -".faqir".length))
         .sort()
     : [];
@@ -78,6 +79,12 @@ function articleBody(html: string): string {
   return html.slice(start + open.length, end);
 }
 
+/** What the shell mounts beside it: everything between the shell's last </div> and </body>. */
+function overlayRegion(html: string): string {
+  const shellEnd = "\n  </footer>\n\n</div>\n";
+  return html.slice(html.lastIndexOf(shellEnd) + shellEnd.length, html.lastIndexOf("</body>"));
+}
+
 beforeAll(() => {
   rmSync(OUT, { recursive: true, force: true });
   const build = spawnSync(process.execPath, [join(REPO, "scripts", "build-docs.mjs"), "--out", OUT], {
@@ -101,12 +108,15 @@ describe("every page of the section is render() output", () => {
     it(`${page.path} is pages/${page.slug}.faqir rendered with its data, byte for byte`, () => {
       const data = rendered.find((p) => p.meta.slug === page.slug)!.data;
       const fresh = draw(`pages/${page.slug}.faqir`, data);
-      expect(articleBody(readFileSync(join(OUT, page.path), "utf8"))).toBe(fresh);
-      if (existsSync(join(DIST, page.path))) {
-        expect(
-          articleBody(readFileSync(join(DIST, page.path), "utf8")),
-          `site/dist/${page.path} is stale — run \`bun run build:docs\``,
-        ).toBe(fresh);
+      const overlays = Object.values(data.ex as Record<string, TemplateExample>)
+        .filter((e) => e.overlay !== null)
+        .map((e) => e.overlay);
+      const freshOverlays = overlays.length ? draw(OVERLAYS_LAYOUT, { overlays }) : "";
+      const built = [readFileSync(join(OUT, page.path), "utf8")];
+      if (existsSync(join(DIST, page.path))) built.push(readFileSync(join(DIST, page.path), "utf8"));
+      for (const html of built) {
+        expect(articleBody(html), `${page.path} is stale — run \`bun run build:docs\``).toBe(fresh);
+        expect(overlayRegion(html), `${page.path}'s overlays are stale`).toBe(freshOverlays);
       }
     });
   }
@@ -130,6 +140,12 @@ describe("what a page shows is its examples' own files, run", () => {
         expect(ex[name].source).toBe(read(file));
         expect(ex[name].data).toBe(JSON.stringify(data, null, 2));
         expect(ex[name].html).toBe(html);
+        const overlayFile = `examples/${page.slug}/${name}.overlay.faqir`;
+        if (existsSync(join(TEMPLATES, overlayFile))) {
+          expect(ex[name].overlay!.html).toBe(draw(overlayFile, data, `${page.slug}-${name}-overlay`, options));
+        } else {
+          expect(ex[name].overlay).toBeNull();
+        }
         // Live, and as text: the page carries the markup itself and its escaped source.
         expect(p.body, `${file}'s output is not live on the page`).toContain(html);
         expect(p.body, `${file} is not named on the page`).toContain(file);
@@ -167,16 +183,86 @@ describe("what a page shows is its examples' own files, run", () => {
     });
   }
 
-  it("uses raw in its pages, layout and partials once: to place what an example rendered", () => {
+  it("uses raw in its own templates only to place what the engine already rendered", () => {
     const uses: string[] = [];
     for (const dir of ["pages", "layouts", "partials"]) {
       for (const f of readdirSync(join(TEMPLATES, dir)).filter((n) => n.endsWith(".faqir"))) {
-        read(`${dir}/${f}`)
-          .split("\n")
-          .forEach((line, i) => /^ *raw\b/.test(line) && uses.push(`${dir}/${f}:${i + 1}: ${line.trim()}`));
+        for (const line of read(`${dir}/${f}`).split("\n")) if (/^ *raw\b/.test(line)) uses.push(`${dir}/${f}: ${line.trim()}`);
       }
     }
-    expect(uses).toEqual(["partials/example.faqir:30: raw example.html"]);
+    expect(uses.sort()).toEqual([
+      `${OVERLAYS_LAYOUT}: raw overlay.html`,
+      "partials/example.faqir: raw example.html",
+    ]);
+  });
+});
+
+// ── every topic keeps its section ───────────────────────────────────────────
+
+/**
+ * The topics the section must teach: the page, the h2 that holds the topic, and
+ * text the section must show. Each section must also carry a live example.
+ */
+const TOPICS: { topic: string; slug: string; id: string; shows: string[] }[] = [
+  { topic: "source text and indentation", slug: "syntax", id: "source-text", shows: ["bad-indent"] },
+  { topic: "elements and attributes", slug: "syntax", id: "elements", shows: ["directive-interpolation"] },
+  { topic: "text, holes and the \\{{ escape", slug: "syntax", id: "text", shows: ["\\{{"] },
+  { topic: "comments", slug: "syntax", id: "comments", shows: ["//-"] },
+  { topic: "expressions, operators, ?? and helpers", slug: "syntax", id: "expressions", shows: ["??", "helpers.js"] },
+  { topic: "if, else and each", slug: "syntax", id: "control-flow", shows: ["else if", "each"] },
+  { topic: "layout, block and include", slug: "components", id: "composition", shows: ["layout", "block", "include"] },
+  { topic: "component calls", slug: "components", id: "components", shows: ["+card", "@body", "unknown-arg"] },
+  { topic: "the l-data island", slug: "components", id: "island", shows: ["l-data=json(", "json-misplaced"] },
+  { topic: "server-rendered recipes", slug: "components", id: "hydration", shows: ['data-ui="tabs"', 'data-ui="accordion"', 'data-open="'] },
+  { topic: "escaping contexts", slug: "safety", id: "escaping", shows: ["unsafe-url"] },
+  { topic: "raw", slug: "safety", id: "raw", shows: ["raw-refused"] },
+  { topic: "limits", slug: "safety", id: "limits", shows: ["step-limit", "output-limit"] },
+  { topic: "diagnostics", slug: "safety", id: "diagnostics", shows: ["Compile error", "unknown-component"] },
+  { topic: "compile", slug: "api", id: "compile", shows: ["@faqir-ui/template/compile"] },
+  { topic: "render", slug: "api", id: "render", shows: ["@ui:requires"] },
+  { topic: "the /node and /registry entries", slug: "api", id: "entries", shows: ["createFileLoader", "@faqir-ui/template/registry"] },
+  { topic: "the faqir template command", slug: "api", id: "cli", shows: ["faqir template", "--check"] },
+  { topic: "how it relates to @faqir-ui/render", slug: "api", id: "render-package", shows: ["@faqir-ui/render"] },
+  { topic: "server-rendered app pages", slug: "examples", id: "app-pages", shows: ["l-data"] },
+  { topic: "documentation and CMS content", slug: "examples", id: "content", shows: ["+callout"] },
+  { topic: "email-style static output", slug: "examples", id: "email", shows: ["money("] },
+  { topic: "templates you do not trust", slug: "examples", id: "untrusted", shows: ["raw-refused", "step-limit"] },
+];
+
+/** A page's h2 section: from its heading to the next h2 (or the colophon). */
+function sectionOf(body: string, id: string): string {
+  const start = body.indexOf(`<h2 id="${id}">`);
+  if (start < 0) return "";
+  const next = body.indexOf("<h2 ", start + 1);
+  return body.slice(start, next < 0 ? undefined : next);
+}
+
+describe("every topic keeps its section, with a live example", () => {
+  for (const t of TOPICS) {
+    it(`${t.topic} — template/${t.slug === "index" ? "" : `${t.slug}/`}#${t.id}`, () => {
+      const page = rendered.find((p) => p.meta.slug === t.slug)!;
+      const section = sectionOf(page.body, t.id);
+      expect(section, `no <h2 id="${t.id}"> on ${page.meta.path}`).not.toBe("");
+      // A live result, or a failure the engine reported when the site was built.
+      expect(section, `${t.id} has no live example`).toMatch(/<div data-docs-template-example[ >]/);
+      const text = section.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&amp;/g, "&");
+      for (const s of t.shows) expect(text, `${t.id} does not show ${s}`).toContain(s);
+    });
+  }
+
+  it("captures at least one real compile error, with its message, at build time", () => {
+    const failures = rendered.flatMap((p) => Object.values(p.data.err as Record<string, TemplateFailure>));
+    expect(failures.filter((f) => f.stage === "compile").length).toBeGreaterThan(0);
+    expect(failures.filter((f) => f.stage === "render").length).toBeGreaterThan(0);
+  });
+
+  it("hydrates: the recipes and an island are live markup, and the page loads the engine for them", () => {
+    const html = byPath.get("template/components/index.html")!;
+    expect(html).toContain('<script src="../../scripts/faqir-core.js" defer></script>');
+    for (const ui of ["tabs", "accordion", "dialog"]) expect(html).toContain(`data-ui="${ui}"`);
+    expect(html).toMatch(/<div l-data="\{[^"]*\}">/);
+    // The dialog is mounted beside <main>, where overlays belong.
+    expect(html).toMatch(/<\/main>[\s\S]*<div id="delete-project" data-ui="dialog" data-state="closed">/);
   });
 });
 

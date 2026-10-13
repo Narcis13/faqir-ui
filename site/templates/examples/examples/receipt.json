@@ -1,0 +1,17 @@
+{
+  "shop": { "name": "Lumen Stationery" },
+  "customer": { "name": "Mara" },
+  "order": {
+    "number": "A-1042",
+    "placed": "12 October 2026",
+    "url": "https://example.com/orders/A-1042",
+    "lines": [
+      { "name": "Dotted notebook", "qty": 2, "price": 1250 },
+      { "name": "Fountain pen", "qty": 1, "price": 3900 },
+      { "name": "Ink cartridge", "qty": 6, "price": 40 }
+    ],
+    "subtotal": 6640,
+    "shipping": 0,
+    "total": 6640
+  }
+}

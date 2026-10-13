@@ -1,0 +1,9 @@
++field-group
+  @label Email
+  @description We only write about your order.
++field-group(id="ids-name")
+  @label Name
+  @description As it appears on the invoice.
++field-group
+  @label Phone
+  @description Digits only.

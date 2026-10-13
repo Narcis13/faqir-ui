@@ -1,0 +1,7 @@
++card(variant="outlined" title=project.name description=project.summary)
+  @body
+    p
+      +badge(variant=project.tone) {{ project.status }}
+    p {{ project.openIssues }} open issues
+  @footer
+    +button(variant="primary" size="sm") Open project

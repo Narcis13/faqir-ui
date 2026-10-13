@@ -1,0 +1,21 @@
+layout "layouts/examples-app.faqir"
+
+block content
+  +card(variant="outlined" title="Open orders ({{ orders.length }})")
+    @body
+      ul
+        each order in orders
+          include "partials/examples-order-row.faqir" (order=order noun=view.noun)
+  +card(variant="outlined" title="Returns")
+    @body
+      each item in returns
+        p {{ item.customer }}
+      else
+        +callout(variant="muted")
+          @content
+            p No returns this week.
+  div(l-data=json(flags))
+    button(type="button" @click="flagged = flagged + 1") Flag for review
+    p
+      | Flagged so far:
+      span(l-text="flagged") {{ flags.flagged }}

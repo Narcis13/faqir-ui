@@ -1,0 +1,6 @@
+p Hello, {{ user.name }}!
+p
+    | You have
+    | {{ user.unread }} unread
+    | {{ plural(user.unread, "message", "messages") }}.
+p Verified: {{ user.verified }}. Tom & Jerry <3 and {{ user.bio }}

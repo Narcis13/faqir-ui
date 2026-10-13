@@ -1,0 +1,1 @@
+p {{ lower(user.name) }}

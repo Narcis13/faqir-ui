@@ -1,0 +1,3 @@
+p
+  | Items in your cart:
+  strong(l-text=cart.count)

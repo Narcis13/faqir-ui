@@ -1,0 +1,11 @@
+{
+  "user": { "name": "Ada Okafor" },
+  "view": { "title": "Orders", "noun": "Order" },
+  "orders": [
+    { "id": 1042, "customer": "Northwind Traders", "total": 12900, "status": "Shipped", "tone": "success" },
+    { "id": 1043, "customer": "Contoso Ltd", "total": 4550, "status": "Pending", "tone": "warning" },
+    { "id": 1044, "customer": "Fabrikam", "total": 880, "status": "Cancelled", "tone": "destructive" }
+  ],
+  "returns": [],
+  "flags": { "flagged": 0 }
+}

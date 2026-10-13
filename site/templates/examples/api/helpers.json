@@ -1,0 +1,7 @@
+{
+  "customer": "Ada Lovelace",
+  "lines": [
+    { "name": "Difference engine", "cents": 129900 },
+    { "name": "Punch cards", "cents": 450 }
+  ]
+}

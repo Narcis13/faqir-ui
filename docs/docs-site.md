@@ -39,7 +39,8 @@ registry copy with one extra component in it.
 | `scripts/build-docs.mjs` | — | The writer: builds in memory, clears `site/dist`, writes. |
 | `scripts/build-audit-browser.mjs` | — | The bundler for `site/lib/faqir-audit.js`. |
 | `src/generator/docs.ts` | — | The generator: shell, navigation, home and the 1.0 pages. Pure, `node:fs` only, zero dependencies. |
-| `src/generator/docs-pages/*.ts` | — | The 1.1 sections, one module each (`audit`, `rules`, `tooling`, `night-shift`, `themes`), sharing `PageContext` from `context.ts` and the shell from `docs.ts`. |
+| `src/generator/docs-pages/*.ts` | — | The 1.1 sections, one module each (`audit`, `rules`, `tooling`, `night-shift`, `themes`), sharing `PageContext` from `context.ts` and the shell from `docs.ts`. `template` (1.2.5) is the odd one out: it writes no markup, it runs `@faqir-ui/template`. |
+| `site/templates/**` | you | The Server templates section, as templates: `section.json` (the page list), `pages/*.faqir` (one per page, optional `pages/<slug>.json` data), `layouts/` and `partials/`, `examples/<page>/*.faqir` with their JSON data (rendered at build time and shown as source, data and live result), `errors/<page>/*.faqir` (templates that must fail; the error is captured at build time) and `helpers.js`. Compiled and rendered by the engine with the registry component table and a file loader rooted here; the generator only wraps the output in the shell. `tests/generator/docs-template.test.ts` re-renders every page and example and byte-compares them with the built site. |
 | `site/styles/pages/*.css` | you | One presentation sheet per 1.1 section, concatenated into `styles/faqir.css` after `docs.css`. Same rules: attribute selectors and tokens only. |
 | `site/dist/**` | generated | The static site. Git-ignored — rebuild, never commit. |
 
@@ -69,6 +70,8 @@ rules/rules.schema.json           the rules definition schema, verbatim (1.1)
 cli/index.html                    the CLI reference, from the command registry (1.1)
 integrations/index.html           MCP, React/Vue bindings, CDN, the skill, packages (1.1)
 night-shift/index.html            the nightly theme loop: queue, rubric, ledger, digest (1.1)
+template/index.html               Server templates: @faqir-ui/template, rendered by itself (1.2.5)
+template/<page>/index.html        syntax, components, safety, api, examples — each a .faqir page
 agents/index.html                 the machine surfaces, documented
 spec/<version>/index.html         the frozen protocol, rendered
 spec/<version>/spec.md            the same spec, verbatim markdown
@@ -308,9 +311,9 @@ complete, standalone document — the component's registry reference markup unde
 the two-tag CDN preamble, version-pinned with subresource integrity:
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.2.0/dist/faqir.aurora.css"
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.2.5/dist/faqir.aurora.css"
       integrity="sha384-…" crossorigin="anonymous">
-<script src="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.2.0/dist/faqir-core.min.js"
+<script src="https://cdn.jsdelivr.net/npm/@faqir-ui/core@1.2.5/dist/faqir-core.min.js"
         integrity="sha384-…" crossorigin="anonymous" defer></script>
 ```
 

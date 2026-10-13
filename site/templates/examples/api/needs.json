@@ -1,0 +1,6 @@
+{
+  "items": [
+    { "question": "Which entry draws a stored AST?", "answer": "The runtime entry, with render." },
+    { "question": "Who writes the ids here?", "answer": "The template does, from the loop index." }
+  ]
+}

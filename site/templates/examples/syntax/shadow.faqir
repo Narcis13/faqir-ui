@@ -1,0 +1,5 @@
+p Before the loop: {{ name }}
+ul
+    each name in names
+        li {{ name }}
+p After the loop: {{ name }}

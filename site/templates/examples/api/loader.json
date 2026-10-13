@@ -1,0 +1,6 @@
+{
+  "jobs": [
+    { "name": "Build the docs", "state": "passed" },
+    { "name": "Publish the package", "state": "failed" }
+  ]
+}

@@ -1,11 +1,345 @@
 layout "layouts/section.faqir"
 
 block lede
-  p Coming in this release.
+  p Templates render data they did not write, and sometimes they are not yours either. This page shows how the engine escapes data for each place it lands, the one keyword that switches escaping off, the limits that bound a hostile template, and the diagnostics every mistake comes back as.
 
 block toc
   li
-    a(href="#colophon") How this page was made
+    a(href="#escaping") Escaping contexts
+  li
+    a(href="#raw") The raw keyword
+  li
+    a(href="#limits") Limits
+  li
+    a(href="#diagnostics") Diagnostics
 
 block content
-  p This page is being written.
+  h2#escaping Escaping contexts
+  p Data is drawn, never executed. Every value that reaches the output is escaped for the place it lands in, and the place decides the rules. The engine never writes an inline script, an inline style or an event handler of its own, so its output works under a content security policy without the unsafe-inline source.
+  div(data-docs-table tabindex="0")
+    table
+      thead
+        tr
+          th(scope="col") Context
+          th(scope="col") Escaping
+          th(scope="col") What it refuses
+      tbody
+        tr
+          td Text
+          td
+            code & < >
+            | become entities.
+          td Nothing: every value is text.
+        tr
+          td Attribute value
+          td
+            code & < > "
+            | become entities. Values are always double-quoted.
+          td Nothing: every value is a value.
+        tr
+          td URL attribute
+          td As an attribute value, and a value that has a scheme must use http, https, mailto or tel.
+          td
+            code unsafe-url
+        tr
+          td The l-data island
+          td JSON text, escaped as an attribute value.
+          td
+            code json-value
+        tr
+          td HTML comment
+          td Literal text only.
+          td
+            code bad-comment
+
+  h3 Text
+  p The user name below is trying to be a script element. It is a hole in a paragraph, like any other value.
+  include "partials/example.faqir" (example=ex.text)
+  p In the result the tag is visible characters on the page. Open the HTML it wrote: the angle brackets are entities and the quotation marks are untouched, because text only needs the ampersand and the angle brackets escaped.
+  p Literal text in a template is escaped exactly like data. You write the character, never the entity, so markup cannot appear by accident, and the only way to write a literal pair of opening braces is a backslash before it.
+  include "partials/example.faqir" (example=ex.literal)
+  p Notice that the bold element is drawn as text, and that the backslash is gone from the result.
+
+  h3 Attribute values
+  p In an attribute the double quote is escaped as well, since it is the character that would end the value. This profile tries to break out of a title attribute and to smuggle markup into a name.
+  include "partials/example.faqir" (example=ex.attrs)
+  p Notice that the quotation marks in the title and in the input value are entities, so the text after them is still inside the attribute and not a new one. The ampersand in the link is an entity too, which is how HTML wants it written.
+
+  h3 URL attributes
+  p
+    | Four attributes hold URLs:
+    code href, src, action, formaction
+    | in any letter case and with any namespace prefix, such as xlink:href. Besides being escaped as attribute values, they are checked. After ASCII whitespace and control characters are removed, a value that has a scheme must use http, https, mailto or tel.
+  include "partials/example.faqir" (example=ex.urls)
+  p Notice that all three links are written, and that the ampersand in the first is an entity. A value without a scheme, such as a relative path, a fragment or an address that starts with two slashes, has nothing to check and is written as is.
+  p Any other scheme stops the render. The data below holds a link that would run script when clicked.
+  include "partials/failure.faqir" (failure=err.unsafeurl)
+  p Notice that nothing was written: a render error is thrown, naming the attribute and the value, and pointing at the element. It is a render error and not a compile error because the value comes from data. The check also covers a literal in the template, such as a link written with the same scheme.
+
+  h3 Data inside component calls
+  p Component arguments and slot content go through the same escaping, because a component call is only a way to write elements.
+  include "partials/example.faqir" (example=ex.nested)
+  p Notice that the card title, the paragraph and the badge all show the hostile text as text, and that the markup around it is exactly the card's own.
+
+  h3 The l-data island
+  p
+    | The one way server data reaches the browser's evaluator is the island, written with
+    code json()
+    | as the whole value of an
+    code l-data
+    | attribute. Its JSON text is escaped as an attribute value, so data cannot leave its strings. The island has its own page section, with a live example:
+    a(href="../components/index.html#island") the l-data island in Composition and components
+  p Anything that is not JSON data, or is nested deeper than 64 levels, is the render error json-value.
+
+  h3 HTML comments
+  p A comment is literal text. The template writes the comment and data never can, which is why holes in comments are refused.
+  include "partials/example.faqir" (example=ex.comment)
+  p Notice that the comment is in the HTML the engine wrote and not in the rendered result. A comment that contains a hole, two hyphens or a leading greater-than sign is refused, since any of them could end the comment early or turn its text into markup.
+  include "partials/failure.faqir" (failure=err.comment)
+
+  h3 Places where data is refused outright
+  p Some places cannot be made safe by escaping, so the compiler refuses to let data into them at all. Each refusal is a compile error with a stable code, found when the template is saved and before any data exists.
+  ul
+    li
+      code event-attr
+      | refuses every
+      code on*
+      | attribute, literal or not. An inline handler would need a policy that allows inline script. Write events as
+      code @click
+      | instead.
+    li
+      code unsafe-attr
+      | refuses data in
+      code srcdoc, style, to, from, values, by
+      | (a whole document, CSS, and the SVG animation values that can set a link target). A literal is fine.
+    li
+      code script-content
+      | refuses anything but literal text inside
+      code script
+      | or
+      code style
+      | and any text that would close the element early. Literal content there is written unescaped.
+    li
+      code directive-interpolation
+      | refuses a hole in a faqir-core attribute such as
+      code l-text
+      | because it would hand server data to the client evaluator. The island is the single exception.
+  include "partials/failure.faqir" (failure=err.srcdoc)
+  include "partials/failure.faqir" (failure=err.handler)
+  include "partials/failure.faqir" (failure=err.script)
+  p Notice that each diagnostic names its place in the file, and that the last one points at the line that holds the hole.
+
+  h2#raw The raw keyword
+  p
+    | Escaping is the default, and
+    code raw
+    | is the only way to write HTML the engine did not build. It has two forms: an expression, which writes a string from the data without escaping it, and a block, whose indented lines are written verbatim. Anything but a string after
+    code raw
+    | is a
+    code type
+    | error.
+  include "partials/example.faqir" (example=ex.trusted)
+  p Notice that the converted paragraph and the literal block both arrive as markup, and that neither is indented: raw output is written exactly as given. The title above them is an ordinary hole and is still escaped.
+  p Because the keyword is the only door, every use of it can be found. A search for lines that start with it lists them all.
+  pre(tabindex="0")
+    code
+      | grep -rn "^ *raw" site/templates --include="*.faqir"
+  p
+    | Only give
+    code raw
+    | markup you trust: HTML you wrote, or HTML your own converter produced from a source you control. Never give it a value a visitor typed.
+  h3 Refusing raw altogether
+  p
+    | A host that renders templates written by other people can turn the keyword off for the whole compile with the option
+    code raw: false
+    | and then neither form compiles. The options file beside the template below is what the docs build passed to the compiler.
+  include "partials/failure.faqir" (failure=err.refused)
+  p Notice that the safe paragraph before it did not save the template: the diagnostic points at the keyword itself, so the grep and the compiler agree on where it is.
+
+  h2#limits Limits
+  p A template can be hostile too, and escaping only protects the page from data. Limits protect the host from the template. Each one is checked by the engine as it works, and each has its own error code.
+  div(data-docs-table tabindex="0")
+    table
+      thead
+        tr
+          th(scope="col") Limit
+          th(scope="col") Default
+          th(scope="col") Error
+      tbody
+        tr
+          td Template nesting in one file
+          td 64 levels
+          td
+            code too-deep
+        tr
+          td Expression nesting
+          td 32 levels
+          td
+            code expr-too-deep
+        tr
+          td Include chain
+          td 16 includes
+          td
+            code include-depth
+        tr
+          td Output, as the render option maxOutput
+          td 16 MiB (16 777 216 UTF-16 code units)
+          td
+            code output-limit
+        tr
+          td Render steps, as the render option maxSteps
+          td 10 000 000
+          td
+            code step-limit
+        tr
+          td Nesting of a json() value
+          td 64 levels
+          td
+            code json-value
+  p Nesting, expression depth and the include chain are checked at compile time, so a template that breaks them never gets an AST. Include chains are checked at render time as well, which protects a host that renders stored ASTs it did not compile. Output and steps are checked while rendering.
+  h3 Counting steps
+  p A step is one node rendered or one loop iteration, so a loop over a lot of data costs steps even when it writes little. The limit is a render option, and this example sets it low enough to show. It has two rows of three cells, and the limit is 50.
+  include "partials/example.faqir" (example=ex.within)
+  p Notice that it renders: the options are part of the input, and the result is the same as it would be with the default limit. Now the same template with fifteen cells.
+  include "partials/failure.faqir" (failure=err.steps)
+  p Notice that the error comes from inside the inner loop, at the node that crossed the limit, and that no partial output is returned. The output limit works the same way, counting every character written instead of every node. Here is the same template and data again, with plenty of steps but an output limit of 200 characters; the error names the node that was being written when the output crossed it.
+  include "partials/failure.faqir" (failure=err.output)
+  h3 What a hostile template cannot do
+  p
+    | The limits are the last item in a list of things the language rules out by construction, so that compiling and rendering a template you do not trust is safe.
+  ul
+    li
+      strong It cannot run code.
+      | There is no eval, no embedded script line and no function literal. Expressions are paths, literals and operators, and a call can only reach a helper the host declared to the compiler, so an unknown name is
+      code unknown-helper
+      | at compile time.
+    li
+      strong It cannot reach into your objects.
+      | A path reads own data properties only. The names
+      code __proto__, prototype, constructor
+      | are refused as names with
+      code forbidden-name
+      | and as computed keys with a
+      code type
+      | error at render time.
+    li
+      strong It cannot read outside the loader.
+      | Include and layout names are root-relative paths ending in
+      code .faqir
+      | with no leading slash, no backslash and no dot segment, otherwise they are
+      code bad-path
+      | and the loader returns nothing for a file it does not serve.
+    li
+      strong It cannot recurse or run forever.
+      | There are no mixins and no recursion: an include that returns to a file on its own chain is
+      code include-cycle
+      | and the chain is limited. The only loop is each over the data, and steps are counted.
+    li
+      strong It cannot write without bound.
+      | Output is limited, and so is the nesting of everything that could grow it.
+
+  h2#diagnostics Diagnostics
+  p
+    | The compiler does not throw for anything in a template. It returns an object with the AST and a list of diagnostics, and when the list is not empty the AST is null.
+    | A diagnostic is a plain object with the machine-readable code, a message for people, and the place it was found. The renderer throws instead, with the same kind of information on the error.
+  pre(tabindex="0")
+    code
+      | const { ast, diagnostics } = compile(source, options);
+      | // diagnostics: [{ code, message, file, line, col }, …]
+      | // line and col start at 1; ast is null when there is any
+      |
+      | try {
+      |   const html = render(ast, data, { helpers });
+      | } catch (error) {
+      |   // error.code, error.file, error.line, error.col, error.path
+      | }
+  p Match on the code, never on the message. Codes are stable and the words of a message may be improved at any time. The compile examples below show the first diagnostic of a template, though the compiler can report several at once.
+  h3 Mistakes in component calls
+  p A component call is checked against the manifest the compiler was given. A misspelled name gets the nearest names the table holds.
+  include "partials/failure.faqir" (failure=err.typo)
+  p A wrong argument value gets the values the manifest allows.
+  include "partials/failure.faqir" (failure=err.value)
+  p A slot that does not exist gets the slots that do.
+  include "partials/failure.faqir" (failure=err.slot)
+  p A required slot that is left empty gets its name.
+  include "partials/failure.faqir" (failure=err.required)
+  p Notice that each message says what to write instead, and that the line and column point at the call or at the argument that is wrong.
+  h3 Mistakes in data
+  p
+    | Data is only known at render time, so its errors are thrown then. A path that is not there is the render error
+    code missing
+    | and it names the path, which makes a misspelled key easy to find. A missing value is never silent empty text.
+  include "partials/failure.faqir" (failure=err.missing)
+  p
+    | Notice that the name key exists and the misspelled one is the one reported. To ask for an optional value, put the
+    code ??
+    | operator after it, with a default.
+  h3 Compile codes
+  p Every one of these is a diagnostic returned by the compiler, so none of them can occur when you render a template that compiled.
+  div(data-docs-table tabindex="0")
+    table
+      thead
+        tr
+          th(scope="col") Code
+          th(scope="col") When
+      tbody
+        include "partials/safety-row.faqir" (name="tab-indent" when="a tab in a line's indentation")
+        include "partials/safety-row.faqir" (name="bad-indent" when="indentation that is not one step deeper than the parent or an enclosing level")
+        include "partials/safety-row.faqir" (name="too-deep" when="more than 64 nesting levels")
+        include "partials/safety-row.faqir" (name="bad-line" when="a line that is no construct of the language")
+        include "partials/safety-row.faqir" (name="bad-attr" when="a malformed attribute list")
+        include "partials/safety-row.faqir" (name="duplicate-attr" when="the same attribute twice on one element or call")
+        include "partials/safety-row.faqir" (name="bad-string" when="an unterminated string literal or an unknown escape")
+        include "partials/safety-row.faqir" (name="bad-hole" when="an unterminated or empty hole")
+        include "partials/safety-row.faqir" (name="bad-expr" when="an expression syntax error, or a number that is not finite")
+        include "partials/safety-row.faqir" (name="expr-too-deep" when="expression nesting deeper than 32")
+        include "partials/safety-row.faqir" (name="forbidden-name" when="__proto__, prototype or constructor as a name")
+        include "partials/safety-row.faqir" (name="orphan-else" when="else with no if or each before it")
+        include "partials/safety-row.faqir" (name="void-children" when="children under a void element")
+        include "partials/safety-row.faqir" (name="bad-doctype" when="a doctype other than doctype html")
+        include "partials/safety-row.faqir" (name="misplaced" when="a construct where the grammar does not allow it")
+        include "partials/safety-row.faqir" (name="no-loader" when="include or layout without a loader")
+        include "partials/safety-row.faqir" (name="bad-path" when="an include or layout name that breaks the path rules")
+        include "partials/safety-row.faqir" (name="not-found" when="the loader has no such file")
+        include "partials/safety-row.faqir" (name="include-cycle" when="an include chain that returns to a file on it")
+        include "partials/safety-row.faqir" (name="include-depth" when="an include chain deeper than 16")
+        include "partials/safety-row.faqir" (name="nested-layout" when="a layout that has a layout")
+        include "partials/safety-row.faqir" (name="unknown-block" when="a page block the layout does not have")
+        include "partials/safety-row.faqir" (name="duplicate-block" when="the same block twice in one file")
+        include "partials/safety-row.faqir" (name="unknown-component" when="a call to a name that is not in the component table")
+        include "partials/safety-row.faqir" (name="unknown-arg" when="an argument the component does not take")
+        include "partials/safety-row.faqir" (name="protocol-attr" when="a protocol attribute as a raw call argument")
+        include "partials/safety-row.faqir" (name="bad-value" when="a literal argument the manifest does not allow")
+        include "partials/safety-row.faqir" (name="unknown-slot" when="a fill of a slot the component cannot fill")
+        include "partials/safety-row.faqir" (name="duplicate-slot" when="the same slot filled twice")
+        include "partials/safety-row.faqir" (name="no-default-slot" when="plain children under a component without a default slot")
+        include "partials/safety-row.faqir" (name="slot-conflict" when="default content and named fills in one call")
+        include "partials/safety-row.faqir" (name="missing-slot" when="a required slot left unfilled")
+        include "partials/safety-row.faqir" (name="unknown-helper" when="a call to a helper not declared to the compiler")
+        include "partials/safety-row.faqir" (name="json-misplaced" when="json() anywhere but the whole value of l-data")
+        include "partials/safety-row.faqir" (name="directive-interpolation" when="a hole or expression in a faqir-core attribute")
+        include "partials/safety-row.faqir" (name="event-attr" when="an on* attribute")
+        include "partials/safety-row.faqir" (name="script-content" when="anything but literal text in script or style, or text that closes it early")
+        include "partials/safety-row.faqir" (name="unsafe-attr" when="data in srcdoc, style, to, from, values or by")
+        include "partials/safety-row.faqir" (name="bad-comment" when="a hole, two hyphens or a leading greater-than sign in an HTML comment")
+        include "partials/safety-row.faqir" (name="raw-refused" when="raw, when the compile option raw is false")
+  h3 Render codes
+  p The renderer throws an error with a code, the file, line and column of the template node, and the path of the expression where one is involved. Programming mistakes in the call itself, such as a limit that is not a positive integer, are an ordinary type error and not one of these.
+  div(data-docs-table tabindex="0")
+    table
+      thead
+        tr
+          th(scope="col") Code
+          th(scope="col") When
+      tbody
+        include "partials/safety-row.faqir" (name="missing" when="a path that is not in scope or not held by its value")
+        include "partials/safety-row.faqir" (name="type" when="a value of the wrong type for an operator, a step, each, raw, or a forbidden computed key")
+        include "partials/safety-row.faqir" (name="not-text" when="a value that cannot be text or an attribute value")
+        include "partials/safety-row.faqir" (name="bad-value" when="a dynamic variant argument the manifest does not allow")
+        include "partials/safety-row.faqir" (name="unsafe-url" when="a URL attribute whose scheme is not allowed")
+        include "partials/safety-row.faqir" (name="json-value" when="a json() value that is not JSON data")
+        include "partials/safety-row.faqir" (name="helper-error" when="a helper missing from the render options, or one that threw")
+        include "partials/safety-row.faqir" (name="include-depth" when="an AST whose includes nest deeper than 16")
+        include "partials/safety-row.faqir" (name="output-limit" when="output beyond maxOutput")
+        include "partials/safety-row.faqir" (name="step-limit" when="more than maxSteps steps")
+        include "partials/safety-row.faqir" (name="bad-ast" when="a node the renderer does not know, or a malformed or too deeply nested AST")

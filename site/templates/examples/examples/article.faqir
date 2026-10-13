@@ -1,0 +1,5 @@
+layout "layouts/examples-article.faqir"
+
+block body
+  each entry in article.sections
+    include "partials/examples-section.faqir" (entry=entry)

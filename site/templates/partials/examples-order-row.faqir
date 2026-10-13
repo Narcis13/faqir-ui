@@ -1,0 +1,6 @@
+//- One order as a list row. Parameters: order, noun.
+//- A partial sees only its parameters, so the caller passes the noun in.
+li
+  strong {{ order.customer }}
+  | — {{ noun }} {{ order.id }}, {{ money(order.total) }}
+  +badge(variant=order.tone) {{ order.status }}

@@ -1,11 +1,530 @@
 layout "layouts/section.faqir"
 
 block lede
-  p Coming in this release.
+  p
+    | How a host drives the engine: install the package, compile a template once, render it as often as you like, load template files from disk, and keep a project's own copy of the engine current with the
+    code faqir template
+    | command.
 
 block toc
   li
-    a(href="#colophon") How this page was made
+    a(href="#install") Installing
+  li
+    a(href="#compile") compile
+  li
+    a(href="#render") render
+  li
+    a(href="#entries") The node and registry entries
+  li
+    a(href="#cli") The faqir template command
+  li
+    a(href="#render-package") Relation to @faqir-ui/render
 
 block content
-  p This page is being written.
+  h2#install Installing
+  p
+    | The engine is one npm package, first published in Faqir 1.2.5. It has no dependencies, ships ES modules with type declarations, and runs on Node 18 or newer, on Bun and in a browser.
+  pre(tabindex="0")
+    code
+      | npm install @faqir-ui/template
+  p
+    | Its
+    code package.json
+    | exports {{ facts.entries.length }} entries. Each is a separate import, so a host loads only the part it needs.
+  div(data-docs-table tabindex="0")
+    table
+      thead
+        tr
+          th Entry
+          th Exports
+          th Runs in
+          th Reach for it
+      tbody
+        each entry in facts.entries
+          include "partials/api-entry.faqir" (entry=entry)
+  pre(tabindex="0")
+    code
+      | import { render } from "@faqir-ui/template";
+      | import { compile } from "@faqir-ui/template/compile";
+      | import { createFileLoader } from "@faqir-ui/template/node";
+      | import { components } from "@faqir-ui/template/registry";
+  p
+    | Compiling and rendering are different jobs, so they are different entries. A host that compiles when a template is saved and renders the stored result on every request needs
+    code compile
+    | on the save path and only
+    code render
+    | on the request path. The runtime is about 4 KB minified and gzipped, held to an 8 KB budget; the compiler, which carries the parser and the text of every diagnostic, is more than twice that. Both are plain JavaScript with no host globals.
+  +callout(variant="info")
+    @content
+      p
+        | The package is ESM only. From a CommonJS file, load it with a dynamic
+        code import()
+        | call.
+
+  h2#compile compile
+  p
+    | The compiler is
+    code compile(source, options)
+    | from the
+    code @faqir-ui/template/compile
+    | entry. It reads a template's source, resolves its includes and layout through a loader, checks every component call, helper and attribute, and returns the template as data.
+  h3 Options
+  div(data-docs-table tabindex="0")
+    table
+      thead
+        tr
+          th Option
+          th Default
+          th What it does
+      tbody
+        tr
+          td
+            code file
+          td
+            code template.faqir
+          td The name this template carries in diagnostics and in the AST's list of files.
+        tr
+          td
+            code loader
+          td none
+          td
+            | A function from a name to the file's text, or null. Needed by include and layout; without one they fail with
+            code no-loader
+        tr
+          td
+            code components
+          td none
+          td
+            | The component table that calls are checked against. Without a table every call fails with
+            code unknown-component
+        tr
+          td
+            code helpers
+          td an empty list
+          td
+            | The names of the helper functions a template may call. A call to any other name fails with
+            code unknown-helper
+        tr
+          td
+            code raw
+          td
+            code true
+          td
+            | Pass false to refuse the raw keyword in every file the template loads, so a template that must not carry raw HTML cannot. It fails with
+            code raw-refused
+  h3 What it returns
+  p
+    | An object with two properties,
+    code ast
+    | and
+    code diagnostics
+    | in that order. Each diagnostic holds a code, a message, the file, and the line and column from 1. Every diagnostic is an error, so when there is one the AST is null and there is nothing to render. Codes are stable; messages are not, so test the code and show the message.
+  p
+    | A mistake in a template never throws. The one exception is a call that is itself wrong: a source that is not a string, an option compile does not know, or an option of the wrong type throws a
+    code TypeError
+    | to the host, because that is a bug in the host, not in the template.
+  pre(tabindex="0")
+    code
+      | import { compile } from "@faqir-ui/template/compile";
+      | import { components } from "@faqir-ui/template/registry";
+      | import { createFileLoader } from "@faqir-ui/template/node";
+      |
+      | const { ast, diagnostics } = compile(source, {
+      |   file: "pages/welcome.faqir",
+      |   loader: createFileLoader("./templates"),
+      |   components,
+      |   helpers: ["upper", "money"],
+      |   raw: false,
+      | });
+      |
+      | if (!ast) {
+      |   for (const d of diagnostics) {
+      |     console.error(d.file + ":" + d.line + ":" + d.col + " " + d.code + " " + d.message);
+      |   }
+      | }
+  h3 The AST is plain JSON
+  p
+    | The AST holds only objects, arrays, strings, numbers and booleans. This template has one element and one hole; open the AST below to see both. The text is split into the literal pieces and the hole between them, and every node that could be the site of an error carries its file index, line and column.
+  include "partials/example.faqir" (example=ex.compiled)
+  +collapsible(variant="bordered")
+    @trigger The AST compile returned for it
+    @content
+      pre(tabindex="0")
+        code {{ ex.compiled.ast }}
+  p
+    | Nothing in it is a function or a class instance, so it can be stored, sent over a network or cached as it is.
+
+  h2#render render
+  p
+    | The runtime is
+    code render(ast, data, options)
+    | from the
+    code @faqir-ui/template
+    | entry. It takes a compiled AST and a plain object of data, and returns the HTML as a string that ends with one newline. It is deterministic: the same AST, data and options give the same bytes.
+  p
+    | It throws a
+    code TypeError
+    | for wrong arguments: an AST that is not a compiled template, data that is not a plain object, a limit that is not a positive integer, or an idPrefix that is not a string. For everything else it throws an error with these properties:
+  ul
+    li
+      code code
+      | is the stable name of what went wrong, such as missing or step-limit.
+    li
+      code file
+      | and
+      code line
+      | and
+      code col
+      | locate the template node where it happened.
+    li
+      code path
+      | holds the text of the expression involved, when there was one.
+  div(data-docs-table tabindex="0")
+    table
+      thead
+        tr
+          th Option
+          th Default
+          th What it does
+      tbody
+        tr
+          td
+            code helpers
+          td an empty object
+          td
+            | The helper functions by name. A call to a name that is not here fails at render time with
+            code helper-error
+        tr
+          td
+            code idPrefix
+          td
+            code t
+          td The prefix of generated component ids.
+        tr
+          td
+            code maxOutput
+          td 16 MiB
+          td
+            | The most UTF-16 code units the render may write. Beyond it the error is
+            code output-limit
+        tr
+          td
+            code maxSteps
+          td 10 million
+          td
+            | The most steps, counting nodes rendered and loop iterations. Beyond it the error is
+            code step-limit
+  h3 Helpers
+  p
+    | A helper is a plain function the host owns. The template can call it but never defines, passes or receives one. The docs site declares these names to
+    code compile
+    | and passes their functions to
+    code render
+    | when it draws a page. The names are:
+  ul
+    each name in facts.helpers.names
+      li
+        code {{ name }}
+  include "partials/example.faqir" (example=ex.helpers)
+  p
+    | Notice the amount: the helper turned a number of cents into text, and
+    code plural
+    | chose a word from the count. The functions below are exactly what the build gave
+    code render
+    | as its helpers option.
+  +collapsible(variant="bordered")
+    @trigger The helpers this site registers
+    @content
+      pre(tabindex="0")
+        code {{ facts.helpers.source }}
+  h3 Ids
+  p
+    | A component call whose markup needs an id, for a label and its input or a trigger and its panel, takes one from a counter that starts at 1 for each render. The id is the prefix, a hyphen and the next number. An id the author writes is used as it is and does not use up a number. Ids are never random and never derived from data.
+  p
+    | The docs build gives every example its own prefix, and for this one the prefix is
+    code api-ids
+    | which is why the generated ids read
+    code api-ids-1
+    | and
+    code api-ids-2
+    | in the result. Your host chooses its own with the
+    code idPrefix
+    | option; when you do not, the prefix is
+    code t
+    | and the first id is t-1. Give each render of a page that shows several fragments a different prefix to keep their ids apart.
+  include "partials/example.faqir" (example=ex.ids)
+  p
+    | Look at the labels in the HTML it wrote: each
+    code for
+    | matches the id of its input. The second field kept the id the template gave it, and the third took
+    code api-ids-2
+    | because the second had not drawn from the counter.
+  h3 Limits
+  p
+    | Besides the output size, a render counts steps, so a loop over a large list cannot run for ever while writing little. Every node rendered and every loop iteration is one step. The defaults suit a page; set them lower for a template you do not trust. This template renders a list of ten numbers, and the host allowed only thirty steps. The same template renders without complaint under the default limit.
+  include "partials/failure.faqir" (failure=err.steplimit)
+  h3 Compile once, render many
+  p
+    | The AST is plain JSON, so
+    code JSON.parse(JSON.stringify(ast))
+    | renders the same bytes as the AST itself. That lets a host keep compiled templates as data.
+  pre(tabindex="0")
+    code
+      | import { render } from "@faqir-ui/template";
+      |
+      | // when the template is saved, with the compiler
+      | const { ast, diagnostics } = compile(source, { components, helpers: ["upper"] });
+      | if (ast) store.set(name, JSON.stringify(ast));
+      |
+      | // on every request, with the runtime alone
+      | const stored = JSON.parse(store.get(name));
+      | const html = render(stored, { user }, { helpers: { upper } });
+  p
+    | An AST that was damaged on the way, with a node the renderer does not know, is the render error
+    code bad-ast
+    | and never a crash of the host.
+  h3 What the page needs in the browser
+  p
+    | Faqir's interactive recipes are driven by faqir-core and a controller script each. While it compiles, the engine collects what the page uses into
+    code ast.requires
+    | and
+    code render
+    | writes that list as the first line of its output, after the doctype if there is one. The line is always written when the list is not empty; there is no option to leave it out.
+  pre(tabindex="0")
+    code
+      | <!-- @ui:requires faqir-core.js accordion.js -->
+  p
+    | The list starts with
+    code faqir-core.js
+    | whenever any faqir-core attribute or controller is present. Then come the plugin files whose directives appear, sorted, and then the controller files of the recipes the page uses, with the recipe controllers they import. A recipe counts whether the page calls it with a plus sign or writes a plain element with a literal
+    code data-ui
+    | attribute.
+  p
+    | The template below writes an accordion as plain elements, with
+    code each
+    | doing the repetition. Nothing in it calls a component, yet the output begins with the comment, because the engine recognises the recipe by its
+    code data-ui
+    | value. It lists these files:
+  ul
+    each file in ex.needs.requires
+      li
+        code {{ file }}
+  include "partials/example.faqir" (example=ex.needs)
+  p
+    | Open the HTML it wrote and read its first line. The triggers are buttons with text,
+    code aria-expanded
+    | and
+    code aria-controls
+    | attributes, and each panel names its trigger back, exactly as the accordion's reference markup does. This site's build reads the same list to decide which scripts to load for the page, which is why the accordion above opens and closes.
+
+  h2#entries The /node and /registry entries
+  p
+    | The runtime and the compiler were described above. The other two entries supply what the compiler needs to check a template against a real project: files to load and components to check against. Neither is needed to render.
+  h3 The Node loader
+  p
+    code createFileLoader(root)
+    | from
+    code @faqir-ui/template/node
+    | returns a loader that reads template files from one directory. It is the only module in the package that touches
+    code node:
+    | modules.
+  pre(tabindex="0")
+    code
+      | import { createFileLoader } from "@faqir-ui/template/node";
+      |
+      | const loader = createFileLoader("/srv/app/templates");
+      | loader("partials/nav.faqir");  // the file's text
+      | loader("../secret.faqir");     // null: not a valid name
+  p
+    | A name is a quoted path from the loader's root, in the same form from every file: forward slashes, ending in
+    code .faqir
+    | with no empty,
+    code .
+    | or
+    code ..
+    | segment, no leading slash and no backslash. The loader returns null for a file that is missing, for a name that breaks those rules, and for a path that leaves the root through a symbolic link. A template therefore learns nothing about the disk beyond what it is allowed to include.
+  p
+    | The loader returns null; compile turns that into a diagnostic. This template loads a partial by name, from the loader's root, and the partial's own source is shown beside it.
+  include "partials/example.faqir" (example=ex.loader)
+  p
+    | Notice that the partial received only the two parameters it was given, and that its badge is chosen from the state it was passed. A name that breaks the rules is refused before any file is read:
+  include "partials/failure.faqir" (failure=err.badpath)
+  p
+    | A well-formed name that the loader does not know is the diagnostic
+    code not-found
+    | instead.
+  h3 The component table
+  p
+    code components
+    | from
+    code @faqir-ui/template/registry
+    | is the table of Faqir's registry primitives and recipes. It holds {{ facts.callable }} callable components, each with its reference markup, its fillable slots, its variants, states and props, which are what compile checks every call against. Beside them it records the controller files of {{ facts.controllers.length }} components, and the plugin file for each plugin directive.
+  p
+    | A few registry components cannot be called, and the table says why. A call to one fails with
+    code unknown-component
+    | and the message gives the reason. A reason is one of three gaps: the component's manifest cannot be described by the table, its reference markup is a group of samples rather than one component, or two of its arguments would share a name. Such a component is still available as a plain element with a literal
+    code data-ui
+    | attribute, and its controller, if it has one, is still listed.
+  div(data-docs-table tabindex="0")
+    table
+      thead
+        tr
+          th Component
+          th Why it cannot be called
+      tbody
+        each u in facts.unavailable
+          tr
+            td
+              code {{ u.name }}
+            td {{ u.reason }}
+  include "partials/failure.faqir" (failure=err.unavailable)
+  p
+    | The plugin directives and the files that provide them are what the requires comment names when a page uses one:
+  div(data-docs-table tabindex="0")
+    table
+      thead
+        tr
+          th Directive
+          th Plugin file
+      tbody
+        each plugin in facts.plugins
+          tr
+            td
+              code {{ plugin.directive }}
+            td
+              code {{ plugin.file }}
+  +collapsible(variant="bordered")
+    @trigger The components that have a controller
+    @content
+      ul
+        each c in facts.controllers
+          li
+            code {{ c }}
+  p
+    | The registry entry is a snapshot of the registry the package shipped with. A project with components of its own needs a table built from its own manifests; the
+    code faqir template
+    | command below writes one.
+  +callout(variant="muted")
+    @content
+      p
+        | A browser that only draws stored ASTs needs none of this. The runtime entry on its own has no table, no compiler and no loader, which is what keeps it small.
+
+  h2#cli The faqir template command
+  p
+    | Not every project takes Faqir from npm. Projects that keep Faqir as committed files install the engine with the CLI instead. The command is
+    code faqir {{ facts.command.name }} {{ facts.command.args }}
+    | and its summary reads: {{ facts.command.summary }}.
+  p
+    | Run it in a project that has a
+    code faqir.config.json
+    | file. It writes into a
+    code template/
+    | directory under the project's
+    code output_dir
+    | setting, which is
+    code ./ui
+    | by default:
+  pre(tabindex="0")
+    code
+      | ui/template/
+      |   attrs.js  checks.js  compile.js  components.js  compose.js
+      |   diagnostics.js  escape.js  evaluate.js  expr.js  index.js
+      |   json.js  lines.js  node.js  parse.js  render.js  text.js
+      |   table.js
+  p
+    | The first sixteen files are the engine, copied byte for byte from the package's source, which is embedded in the CLI when it is built. Then comes
+    code table.js
+    | which holds the project's own component table. It is built from the manifests of the components the project has installed, project-made ones included, and from its installed plugins, or the registry's when it has none. It exports the same
+    code components
+    | that the registry entry does, so you pass it to
+    code compile
+    | in the same way. There is no registry module in the copy; the project's table takes its place.
+  p
+    | The files are committed with the rest of the output directory. Run the command again whenever a component is added or the engine is upgraded.
+  div(data-docs-table tabindex="0")
+    table
+      thead
+        tr
+          th Command
+          th Exit code
+          th What happens
+      tbody
+        tr
+          td
+            code faqir template
+          td 0
+          td Writes the seventeen files and reports how many changed.
+        tr
+          td
+            code faqir template --check
+          td 0
+          td Every file is in sync with a fresh install. Nothing is written.
+        tr
+          td
+            code faqir template --check
+          td 1
+          td At least one file is missing or differs. The names are listed and nothing is written, so a script can fail a build on it.
+        tr
+          td Any run without a config file
+          td 1
+          td The command asks you to run faqir init first.
+  p
+    | With
+    code --json
+    | the command prints one JSON document and nothing else, with this shape in both modes:
+  pre(tabindex="0")
+    code
+      | { ok, dir, files, drifted }
+  ul
+    li
+      code dir
+      | is the absolute path of the template directory.
+    li
+      code files
+      | lists the names of all seventeen files.
+    li
+      code drifted
+      | lists the files that were missing or different before the run.
+    li
+      code ok
+      | is true when nothing drifted in a check, and always true after an install. A check that finds drift still exits with code 1 in JSON mode.
+  p
+    | That document is data like any other. A build step can hand it to a template and show the result to whoever ran the build. Here is a check that found the engine upgraded under a project which had not reinstalled it:
+  include "partials/example.faqir" (example=ex.check)
+  p
+    | A project then imports the copy by path, from a file at its root when the output directory is the default:
+  pre(tabindex="0")
+    code
+      | import { compile } from "./ui/template/compile.js";
+      | import { render } from "./ui/template/index.js";
+      | import { createFileLoader } from "./ui/template/node.js";
+      | import { components } from "./ui/template/table.js";
+  p
+    | The command is listed with the rest of the CLI in
+    a(href=links.cliTemplate) the CLI reference
+    | for this release.
+
+  h2#render-package Relation to @faqir-ui/render
+  p
+    | The Faqir vision plans a package called
+    code @faqir-ui/render
+    | that turns JSON definitions into markup. It rests on the same insight as this engine: a block is a component, and the manifests are the grammar. The engine is the layer under it, not a rival. It is not part of this package, and this package does not read definitions.
+  p
+    | A definition's block names a component, gives it a variant and fills its slots. That is, word for word, a component call. Here is a block sketched as a definition, and the call that says the same thing:
+  pre(tabindex="0")
+    code
+      | {
+      |   "type": "card",
+      |   "variant": "outlined",
+      |   "slots": {
+      |     "title": "Release notes",
+      |     "body": "Faqir 1.2.5 ships the template engine."
+      |   }
+      | }
+  include "partials/example.faqir" (example=ex.block)
+  p
+    | The type is the component, the variant is an argument checked against the manifest's values, the title slot is a text argument, and the body slot is a fill. A definitions renderer could therefore compile a definition into this same AST and let
+    code render
+    | draw it, inheriting the escaping, the URL policy, the island for client data and the limits.
+  p
+    | What this engine does not do is read definitions, profiles, data sources or an HTML block; those stay with the render package. What the two share is the component table: a gap in a manifest's reference markup shows up once, in one place, for both.

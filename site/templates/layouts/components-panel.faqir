@@ -1,0 +1,13 @@
+//- A layout can draw a fragment as well as a document: here, a card whose
+//- title, body and footer are blocks. Each block's children are its default.
++card(variant="outlined")
+  @header
+    h3(data-part="title")
+      block title
+        | Untitled project
+  @body
+    block content
+      p Nothing here yet.
+  @footer
+    block footer
+      p Drawn on the server.

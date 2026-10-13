@@ -1,0 +1,6 @@
+div(l-data=json(cart))
+  p
+    | Items in your cart:
+    strong(l-text="count" aria-live="polite") {{ cart.count }}
+  +button(variant="primary" @click="count++") Add one
+  +button(variant="ghost" @click="count = 0") Empty the cart
