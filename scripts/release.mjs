@@ -67,6 +67,7 @@ const PACKAGES = [
   { name: "@faqir-ui/vue", dir: "packages/vue", dist: "packages/vue/dist/index.js" },
   { name: "@faqir-ui/forms", dir: "packages/forms", dist: "packages/forms/src/index.js" },
   { name: "@faqir-ui/rules", dir: "packages/rules", dist: "packages/rules/src/index.js" },
+  { name: "@faqir-ui/template", dir: "packages/template", dist: "packages/template/src/index.js" },
   { name: "@faqir-ui/mcp", dir: "packages/mcp", dist: "packages/mcp/dist/index.mjs" },
   { name: "faqir-ui-cli", dir: ".", dist: "dist/faqir.mjs" },
 ];
@@ -85,12 +86,13 @@ const CLI_VERSION_FILE = "src/version.ts";
  * under a second each and usually just mean "run the generator".
  */
 const PREFLIGHT = [
-  ["typecheck", "TypeScript across the CLI, both bindings, forms and mcp"],
+  ["typecheck", "TypeScript across the CLI, both bindings, forms, rules, template and mcp"],
   ["check:registry-index", "registry-index.json matches the registry"],
   ["check:manifest-api", "every controller's @ui:provides is in its manifest"],
   ["check:core-package", "packages/core/dist and cdn.json's SRI hashes"],
   ["check:audit-browser", "site/lib/faqir-audit.js matches src/audit/browser.ts"],
   ["check:rules-plugin", "registry/core/plugins/faqir-rules.js matches @faqir-ui/rules"],
+  ["check:template-table", "@faqir-ui/template's component table matches the registry"],
   ["check:schema-refs", "every manifest carries a current $schema"],
   ["check:component-tokens", "tokens_used and @ui:tokens match each component's CSS"],
   ["check:bindings", "the generated Vue and React components are current"],

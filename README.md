@@ -1104,7 +1104,7 @@ and `create`; set `bundle.auto` to `false` in `faqir.config.json` to stop that.
 
 ## Packages
 
-Seven publishables live in this repository. The CLI is the root package; the
+Eight publishables live in this repository. The CLI is the root package; the
 rest are workspaces under `packages/`.
 
 | Package | What it is | README |
