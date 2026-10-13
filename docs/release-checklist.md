@@ -60,7 +60,11 @@ The a11y suite also carries the docs site's one *interactive* case (task
 `depth = glass`, checks that only the cards whose derived axes say so remain and
 that the live count follows — then runs axe on the filtered page. The filter's
 markup is gated without a browser (`tests/generator/docs-themes.test.ts`); its
-behaviour is this case, and it is as manual as the rest of the suite.
+behaviour is this case, and it is as manual as the rest of the suite. 1.2.5 adds
+a second, `docs__template_hydration__{light,dark}`: it drives the tabs, accordion,
+dialog and `l-data` island that `@faqir-ui/template` drew on
+`template/components/`, asserts that faqir-core took each one over and that the
+console stays empty, and runs axe with the dialog open and again after it closes.
 
 **How big those two suites are is a manifest fact, not a constant** (task
 1.1A-13). The visual and a11y matrices are multiplicative in themes, so each theme

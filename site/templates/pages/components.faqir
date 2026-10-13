@@ -92,10 +92,11 @@ block content
           td Unset, the render's next id
         tr
           td
+            | Attributes such as
             code role
-            | ,
+            | and
             code aria-*
-            | , a faqir-core attribute and a few more
+            | and any faqir-core attribute
           td Passed through onto the root
           td As on a plain element
   p

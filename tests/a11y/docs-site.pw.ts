@@ -155,3 +155,65 @@ for (const scheme of SCHEMES) {
     await expect(page.locator("#theme-result-count")).toHaveText(`${total} of ${total} themes`);
   });
 }
+
+// The Server templates section (1.2.5): recipes and an l-data island that
+// @faqir-ui/template drew when the site was built, taken over by faqir-core in
+// the browser. Driven the way a reader drives them — a click and a key press on
+// the tabs, the accordion and the dialog, a click on the island — then scanned
+// in that state. The page must log nothing to the console on the way.
+for (const scheme of SCHEMES) {
+  test(`docs__template_hydration__${scheme}`, async ({ page }) => {
+    const messages: string[] = [];
+    page.on("console", (m) => (m.type() === "error" || m.type() === "warning") && messages.push(m.text()));
+    page.on("pageerror", (e) => messages.push(e.message));
+    await page.goto(`${origin}/template/components/index.html`, { waitUntil: "load" });
+    await page.addStyleTag({
+      content: "*, *::before, *::after { transition: none !important; animation: none !important; }",
+    });
+    await page.evaluate((s) => document.documentElement.setAttribute("data-theme", s), scheme);
+    await page.evaluate(() => document.fonts.ready);
+
+    // Tabs: a click selects, ArrowRight moves the selection and its panel.
+    await page.locator("#plan-tab-2").click();
+    await expect(page.locator("#plan-tab-2")).toHaveAttribute("aria-selected", "true");
+    await expect(page.locator("#plan-panel-2")).toBeVisible();
+    await page.keyboard.press("ArrowRight");
+    await expect(page.locator("#plan-tab-3")).toHaveAttribute("aria-selected", "true");
+    await expect(page.locator("#plan-tab-3")).toBeFocused();
+    await expect(page.locator("#plan-panel-2")).toBeHidden();
+
+    // Accordion: a click opens an item; Enter on another opens it and closes the first.
+    await page.locator("#faq-trigger-1").click();
+    await expect(page.locator("#faq-content-1")).toBeVisible();
+    await page.locator("#faq-trigger-2").focus();
+    await page.keyboard.press("Enter");
+    await expect(page.locator("#faq-trigger-2")).toHaveAttribute("aria-expanded", "true");
+    await expect(page.locator("#faq-content-1")).toBeHidden();
+
+    // The island: the server drew the count as text, the click is the client's.
+    const island = page.locator("[l-data] strong[l-text='count']");
+    await expect(island).toHaveText("2");
+    await page.getByRole("button", { name: "Add one", exact: true }).first().click();
+    await expect(island).toHaveText("3");
+
+    // Dialog: opened from its external trigger, closed with Escape, focus returned.
+    const trigger = page.locator('[data-open="delete-project"]');
+    await trigger.click();
+    await expect(page.locator("#delete-project")).toHaveAttribute("data-state", "open");
+    await expect(page.getByRole("dialog", { name: "Delete Billing service?" })).toBeVisible();
+    const open = await new AxeBuilder({ page }).withTags([...WCAG_TAGS]).analyze();
+    const openViolations = open.violations as unknown as AxeViolation[];
+    expect(
+      openViolations.length ? formatViolations(`template/components · dialog open · ${scheme}`, openViolations) : "",
+    ).toBe("");
+    await page.keyboard.press("Escape");
+    await expect(page.locator("#delete-project")).toHaveAttribute("data-state", "closed");
+    await expect(trigger).toBeFocused();
+
+    const results = await new AxeBuilder({ page }).withTags([...WCAG_TAGS]).analyze();
+    const violations = results.violations as unknown as AxeViolation[];
+    const report = violations.length ? formatViolations(`template/components · hydrated · ${scheme}`, violations) : "";
+    expect(report, `Accessibility violations on the hydrated template page (${scheme})`).toBe("");
+    expect(messages, "console output on template/components").toEqual([]);
+  });
+}

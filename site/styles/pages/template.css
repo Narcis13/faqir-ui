@@ -72,6 +72,13 @@
   font-size: var(--text-sm);
 }
 
+/* An unfilled card slot renders its reference element empty (docs/template.md
+ * §11.4); on these pages an empty description or footer takes no room. */
+[data-docs-template] [data-ui="card"] > [data-part="header"] > [data-part="description"]:empty,
+[data-docs-template] [data-ui="card"] > [data-part="footer"]:empty {
+  display: none;
+}
+
 /* ── One example: template, data, result ────────────────────────────────── */
 
 [data-docs-template-example] {

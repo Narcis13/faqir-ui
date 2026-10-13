@@ -15,7 +15,7 @@ block content
           @content
             p No returns this week.
   div(l-data=json(flags))
-    button(type="button" @click="flagged = flagged + 1") Flag for review
+    button(type="button" data-ui="button" data-variant="outline" @click="flagged = flagged + 1") Flag for review
     p
       | Flagged so far:
       span(l-text="flagged") {{ flags.flagged }}
