@@ -8,7 +8,7 @@ import { report } from "./diagnostics.js";
 import { parseExpression } from "./expr.js";
 import { parseText } from "./text.js";
 
-const NAME = /^[A-Za-z_:@][^\s=(),"']*/;
+const NAME = /^[A-Za-z_:@][A-Za-z0-9_:@.-]*/;
 
 /**
  * @typedef {true | { parts: Array<string | { expr: any }> } | { expr: any }} AttrValue
@@ -28,6 +28,7 @@ const NAME = /^[A-Za-z_:@][^\s=(),"']*/;
 export function parseAttrs(src, open, ctx, line, colBase) {
   /** @type {ParsedAttr[]} */
   const attrs = [];
+  const names = new Set();
   let i = open + 1;
   for (;;) {
     while (src[i] === " " || src[i] === ",") i++;
@@ -38,10 +39,11 @@ export function parseAttrs(src, open, ctx, line, colBase) {
     if (src[i] === ")") return { attrs, end: i + 1 };
     const attr = parseAttr(src, i, ctx, line, colBase);
     if (!attr) return null;
-    if (attrs.some((a) => a.name === attr.attr.name)) {
+    if (names.has(attr.attr.name.toLowerCase())) {
       report(ctx, "duplicate-attr", `attribute "${attr.attr.name}" is given twice`, line, colBase + i);
       return null;
     }
+    names.add(attr.attr.name.toLowerCase());
     attrs.push(attr.attr);
     i = attr.end;
   }

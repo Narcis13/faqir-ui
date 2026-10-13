@@ -77,7 +77,7 @@ describe("control flow (§9)", () => {
 describe("the l-data island (§11.7)", () => {
   it("writes JSON escaped for the attribute", () => {
     const out = html("div(l-data=json(state))", { state: { n: 1, s: '"</div><script>x</script>&' } });
-    expect(out).toBe('<!-- @ui:requires faqir-core.js -->\n<div l-data="{&quot;n&quot;:1,&quot;s&quot;:&quot;\\&quot;</div><script>x</script>&amp;&quot;}"></div>\n');
+    expect(out).toBe('<!-- @ui:requires faqir-core.js -->\n<div l-data="{&quot;n&quot;:1,&quot;s&quot;:&quot;\\&quot;&lt;/div&gt;&lt;script&gt;x&lt;/script&gt;&amp;&quot;}"></div>\n');
   });
 
   it("refuses values that are not JSON data", () => {

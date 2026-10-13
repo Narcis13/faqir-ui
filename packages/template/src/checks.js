@@ -1,6 +1,9 @@
 // Compile-time checks over the composed AST (docs/template.md §5, §8.4, §11.6,
 // §11.7, §12.3): where data may not go, which helpers exist, and what the page
 // needs in the browser. One walk over every node and every expression site.
+// It also turns `l-data=json(…)` into the island node (`{ json }`), since
+// that is where the attribute is recognised. Attribute names are compared
+// lowercased: the HTML parser lowercases them, so `L-TEXT` is `l-text`.
 
 import { reportAt } from "./diagnostics.js";
 
@@ -12,7 +15,19 @@ import { reportAt } from "./diagnostics.js";
 
 /** True for an attribute faqir-core evaluates (§5). */
 export function isDirective(/** @type {string} */ name) {
-  return name.startsWith("l-") || name.startsWith(":") || name.startsWith("@");
+  const n = name.toLowerCase();
+  return n.startsWith("l-") || n.startsWith(":") || n.startsWith("@");
+}
+
+/**
+ * Attributes that take no data (§12.3): `srcdoc` is a whole document, `style`
+ * is CSS, and SVG animation values can set an `href` the URL check never sees.
+ */
+const NO_DATA_ATTRS = new Set(["srcdoc", "style", "to", "from", "values", "by"]);
+
+/** True for a bare attribute or a literal without holes. @param {any} value */
+function isLiteral(value) {
+  return value === true || Boolean(value.parts && value.parts.every((/** @type {unknown} */ p) => typeof p === "string"));
 }
 
 /**
@@ -90,7 +105,7 @@ function checkElement(node, k) {
   for (const attr of node.attrs) checkAttr(attr, node, k);
   const tag = String(node.tag).toLowerCase();
   checkNodes(node.children, k, tag === "script" || tag === "style");
-  const ui = node.attrs.find((/** @type {any} */ a) => a.name === "data-ui")?.value;
+  const ui = node.attrs.find((/** @type {any} */ a) => a.name.toLowerCase() === "data-ui")?.value;
   const name = ui?.parts?.length === 1 && typeof ui.parts[0] === "string" ? ui.parts[0] : undefined;
   const files = name && k.table?.controllers ? Object.getOwnPropertyDescriptor(k.table.controllers, name)?.value : undefined;
   for (const file of files ?? []) k.controllers.add(file);
@@ -105,16 +120,20 @@ function checkElement(node, k) {
  */
 function checkAttr(attr, node, k) {
   const loc = attr.col ? [node.loc[0], node.loc[1], attr.col] : node.loc;
-  if (/^on/i.test(attr.name)) return reportAt(k.ctx, "event-attr", `${attr.name}: inline event handlers are refused; use @event`, loc);
-  if (!isDirective(attr.name)) return checkValue(attr.value, loc, k);
+  const name = attr.name.toLowerCase();
+  if (name.startsWith("on")) return reportAt(k.ctx, "event-attr", `${attr.name}: inline event handlers are refused; use @event`, loc);
+  if (NO_DATA_ATTRS.has(name.replace(/^.*:/, "")) && !isLiteral(attr.value)) {
+    return reportAt(k.ctx, "unsafe-attr", `${attr.name} takes a literal, not data`, loc);
+  }
+  if (!isDirective(name)) return checkValue(attr.value, loc, k);
   k.core = true;
-  const plugin = k.table?.plugins?.[attr.name.replace(/[:.].*$/, "")];
+  const plugin = k.table?.plugins?.[name.replace(/[:.].*$/, "")];
   if (typeof plugin === "string") k.plugins.add(plugin);
-  if (attr.name === "l-data" && isJsonCall(attr.value)) {
+  if (name === "l-data" && isJsonCall(attr.value)) {
     attr.value = { json: attr.value.expr.args[0] };
     return checkExpr(attr.value.json, loc, k);
   }
-  if (attr.value !== true && !(attr.value.parts && attr.value.parts.every((/** @type {unknown} */ p) => typeof p === "string"))) {
+  if (!isLiteral(attr.value)) {
     reportAt(k.ctx, "directive-interpolation", `${attr.name} is evaluated by faqir-core; it takes a literal, not server data`, loc);
   }
 }

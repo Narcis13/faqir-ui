@@ -46,7 +46,7 @@ export interface TableEntry {
   defaultSlot: boolean;
   slots: Record<string, { required: boolean; prop?: string }>;
   variants: Record<string, { attr: string; values: string[]; default: string }>;
-  states: Record<string, { attr: string; value: string | null; kind: string; optional?: true }>;
+  states: Record<string, { attr: string; value: string | null; kind: string }>;
   props: Record<string, { default: string }>;
   bools: string[];
   tree: RecipeNode;
@@ -119,7 +119,7 @@ function slotProp(tree: RecipeNode, slot: string): string | undefined {
 /** Controller files a component needs: its own, then the recipe controllers it imports. */
 function requiresOf(source: TableSource): string[] {
   if (source.controller === undefined) return [];
-  const own = source.manifest.files.js ?? `${source.manifest.name}.js`;
+  const own = source.manifest.files.js as string; // a controller is read only when files.js names it
   const scan = scanController(source.controller, source.label);
   return [own, ...scan.recipeImports.map((dep) => `${dep}.js`)];
 }
@@ -158,7 +158,7 @@ export function tableEntry(source: TableSource): TableEntry {
     entry.variants[names.get(v.prop)!] = { attr: v.attr, values: [...v.values], default: v.default };
   }
   for (const s of base.states) {
-    entry.states[s.prop] = { attr: s.attr, value: s.value, kind: s.kind, ...(s.optional ? { optional: true as const } : {}) };
+    entry.states[s.prop] = { attr: s.attr, value: s.value, kind: s.kind };
   }
   for (const p of ir.stringProps) entry.props[p.prop] = { default: p.default };
   assertDistinctArgs(entry, label);
@@ -177,7 +177,7 @@ function assertDistinctArgs(entry: TableEntry, label: string): void {
 
 /**
  * Directive → plugin file, from each plugin's `@ui:plugin` / `@ui:provides`
- * header (docs/template.md §11.6).
+ * header (docs/template.md §11.6): each `l-*` name it lists maps to the plugin file.
  */
 export function pluginTable(pluginDir: string): Record<string, string> {
   const plugins: Record<string, string> = {};

@@ -5,8 +5,8 @@
 // template cannot make a render run away.
 
 import { renderError } from "./diagnostics.js";
-import { escapeAttr, escapeText, isSafeUrl, URL_ATTRS } from "./escape.js";
-import { evaluate, kind, readOwn } from "./evaluate.js";
+import { escapeAttr, escapeText, isSafeUrl, isUrlAttr } from "./escape.js";
+import { evaluate, kind, MISSING, readOwn } from "./evaluate.js";
 import { islandJson } from "./json.js";
 
 export const DEFAULT_MAX_OUTPUT = 16 * 1024 * 1024;
@@ -34,15 +34,46 @@ const VERBATIM = new Set(["pre", "textarea", "script", "style"]);
 export function render(ast, data = {}, options = {}) {
   if (ast?.type !== "Template") throw new TypeError("render: the first argument must be a compiled template");
   if (typeof data !== "object" || data === null || Array.isArray(data)) throw new TypeError("render: data must be a plain object");
-  /** @type {State} */
-  const state = {
-    ast, out: [], size: 0, steps: 0,
-    maxOutput: options.maxOutput ?? DEFAULT_MAX_OUTPUT,
-    maxSteps: options.maxSteps ?? DEFAULT_MAX_STEPS,
-    helpers: options.helpers ?? {},
-    idPrefix: options.idPrefix ?? "t",
-    idCount: 0, ids: [], includes: 0,
-  };
+  const state = newState(ast, options);
+  try {
+    return renderTemplate(ast, data, state);
+  } catch (error) {
+    // Anything without a code came from a node the renderer could not read: a
+    // hand-made or damaged AST (a missing list, a cycle deep enough to exhaust
+    // the stack). It is still a template error, never a crash of the host's.
+    if (error instanceof Error && "code" in error) throw error;
+    throw renderError("bad-ast", `malformed template: ${error instanceof Error ? error.message : String(error)}`, ast, undefined);
+  }
+}
+
+/**
+ * Validate render's options and build the render state. Wrong options are a
+ * programming error, so they throw; a limit that is not a positive integer
+ * would silently switch the limit off.
+ * @param {any} ast
+ * @param {{ helpers?: Record<string, unknown>, idPrefix?: string, maxOutput?: number, maxSteps?: number }} options
+ * @returns {State}
+ */
+function newState(ast, options) {
+  const { helpers = {}, idPrefix = "t", maxOutput = DEFAULT_MAX_OUTPUT, maxSteps = DEFAULT_MAX_STEPS } = options;
+  for (const [name, n] of [["maxOutput", maxOutput], ["maxSteps", maxSteps]]) {
+    if (!Number.isSafeInteger(n) || /** @type {number} */ (n) <= 0) throw new TypeError(`render: ${name} must be a positive integer`);
+  }
+  if (typeof idPrefix !== "string") throw new TypeError("render: idPrefix must be a string");
+  if (typeof helpers !== "object" || helpers === null) throw new TypeError("render: helpers must be an object");
+  return { ast, out: [], size: 0, steps: 0, maxOutput, maxSteps, helpers, idPrefix, idCount: 0, ids: [], includes: 0 };
+}
+
+/**
+ * Render the template's body, with the @ui:requires line after the doctype.
+ * @param {any} ast
+ * @param {Record<string, unknown>} data
+ * @param {State} state
+ */
+function renderTemplate(ast, data, state) {
+  if (!Array.isArray(ast.body) || !Array.isArray(ast.requires) || !Array.isArray(ast.files) || typeof ast.partials !== "object" || ast.partials === null) {
+    throw renderError("bad-ast", "a template needs files, requires, body and partials", ast, undefined);
+  }
   const frame = { scope: [data], depth: 0, verbatim: false };
   const body = /** @type {any[]} */ (ast.body);
   const lead = body[0]?.type === "Doctype" ? 1 : 0;
@@ -182,7 +213,7 @@ function renderAttrs(node, frame, state) {
     const value = attrValue(attr, node, frame, state);
     if (value === false) continue;
     if (value === true) { out += ` ${attr.name}`; continue; }
-    if (URL_ATTRS.has(attr.name) && !isSafeUrl(value)) {
+    if (isUrlAttr(attr.name) && !isSafeUrl(value)) {
       throw renderError("unsafe-url", `${attr.name} has an unsafe URL scheme: ${JSON.stringify(value.slice(0, 40))}`, state.ast, node.loc);
     }
     out += ` ${attr.name}="${escapeAttr(value)}"`;
@@ -308,11 +339,18 @@ function renderEach(node, frame, state) {
  * @returns {Array<[unknown, unknown]>}
  */
 function eachEntries(of, node, state) {
-  if (Array.isArray(of)) return of.map((item, i) => [item, i]);
+  const e = env(state, { scope: [], depth: 0, verbatim: false }, node.loc);
+  // Items are read as own data, like any path step: an index getter would be
+  // host code run by the template, and a hole is a missing value.
+  const read = (/** @type {string | number} */ key) => {
+    const value = readOwn(of, key, e, node.of);
+    if (value === MISSING) throw renderError("missing", `item ${key} is missing`, state.ast, node.loc);
+    return value;
+  };
+  if (Array.isArray(of)) return Array.from({ length: /** @type {number} */ (read("length")) }, (_, i) => [read(i), i]);
   const proto = typeof of === "object" && of !== null ? Object.getPrototypeOf(of) : undefined;
   if (proto === Object.prototype || proto === null) {
-    const e = env(state, { scope: [], depth: 0, verbatim: false }, node.loc);
-    return Object.keys(/** @type {object} */ (of)).map((key) => [key, readOwn(of, key, e, node.of)]);
+    return Object.keys(/** @type {object} */ (of)).map((key) => [key, read(key)]);
   }
   throw renderError("type", `each needs an array or a plain object, not ${kind(of)}`, state.ast, node.loc);
 }

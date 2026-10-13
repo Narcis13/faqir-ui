@@ -8,7 +8,7 @@ import { renderError } from "./diagnostics.js";
 import { FORBIDDEN_NAMES, exprText } from "./expr.js";
 
 /** What a lookup returns when the value does not hold the property. */
-const MISSING = Symbol("missing");
+export const MISSING = Symbol("missing");
 
 /**
  * @typedef {{ ast: { files: string[] }, loc: number[] | undefined,

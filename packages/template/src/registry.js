@@ -1275,8 +1275,7 @@ export const components = {
     "pressed": {
      "attr": "aria-pressed",
      "value": null,
-     "kind": "aria",
-     "optional": true
+     "kind": "aria"
     },
     "full": {
      "attr": "data-full",

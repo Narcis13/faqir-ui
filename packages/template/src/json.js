@@ -21,7 +21,8 @@ function problem(value, depth) {
   if (typeof value === "number") return Number.isFinite(value) ? null : "a number that is not finite";
   if (typeof value !== "object") return `a ${typeof value}`;
   const proto = Object.getPrototypeOf(value);
-  if (!Array.isArray(value) && proto !== Object.prototype && proto !== null) return "an object that is not plain data";
+  const plain = Array.isArray(value) ? proto === Array.prototype : proto === Object.prototype || proto === null;
+  if (!plain) return "an object that is not plain data";
   for (const key of Reflect.ownKeys(value)) {
     if (typeof key !== "string") return "a symbol key";
     if (key === "__proto__") return 'the key "__proto__"';

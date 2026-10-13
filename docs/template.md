@@ -113,14 +113,14 @@ fill       = "@" name [ " " text ] ;
 piped      = "|" [ " " text ] ;
 comment    = "//-" { any } | "//" { any } ;
 
-attrs      = attr { [ "," ] attr } ;
+attrs      = { attr | "," } ;               (* commas are optional separators *)
 attr       = attrname [ "=" ( string | expr ) ] ;
 
 tag        = letter { letter | digit | "-" } ;
 name       = lower { lower | digit | "-" } ;
 ident      = ( letter | "_" ) { letter | digit | "_" } ;
 idname     = ( letter | "_" ) { letter | digit | "_" | "-" } ;
-attrname   = ( letter | "_" | ":" | "@" ) { any but space "=" "(" ")" "," quote } ;
+attrname   = ( letter | "_" | ":" | "@" ) { letter | digit | "_" | ":" | "@" | "." | "-" } ;
 string     = '"' { char } '"' | "'" { char } "'" ;
 ```
 
@@ -161,6 +161,9 @@ button(type="button" disabled=form.locked) Save
   never evaluated by the engine. Their values must be quoted literals without
   holes (`directive-interpolation`); the one exception is the `l-data` island
   (§11.7).
+- **Attribute names** are compared lowercased, as the HTML parser reads them:
+  `L-TEXT` is a faqir-core attribute and `ONCLICK` an `on*` one. A name is
+  letters, digits and `_ : @ . -` only, so no name can carry another inside it.
 - **`on*` attributes are refused** (`event-attr`), literal or not: faqir-core
   writes events as `@event`, and an inline handler would need `'unsafe-inline'`.
 - **Plain elements carrying `data-ui`** are allowed and are not checked as
@@ -258,7 +261,7 @@ object passed to `render` (elsewhere). Each further step reads one property:
 | `a \|\| b`, `a && b`, `!a` | JavaScript truthiness; `\|\|` and `&&` short-circuit and return an operand |
 | `==`, `!=` | strict equality (no coercion) |
 | `<`, `<=`, `>`, `>=` | two numbers or two strings; otherwise `type` |
-| `+` | two numbers add; if either is a string, both join as text (numbers as written by `String`); otherwise `type` |
+| `+` | two numbers add; a string and a string or a number join as text (numbers as written by `String`); anything else is `type` |
 | `-`, `*`, `/`, `%`, unary `-` | numbers only; a result that is not finite is `type` |
 
 ### 8.4 Helpers
@@ -350,6 +353,8 @@ block content
   have is `unknown-block`; a block defined twice in one file is
   `duplicate-block`. There is no append or prepend.
 - Blocks render in the page's scope, with the page's data.
+- A file with blocks and no `layout` renders each block's default content: a
+  layout can be rendered on its own.
 - A layout cannot itself have a layout (`nested-layout`), and a partial cannot
   hold `layout` or `block` (`misplaced`).
 
@@ -391,10 +396,12 @@ each component with a controller — callable or not — to the controller files
 needs, and each plugin directive to its file (§11.6).
 
 A component the table cannot describe is listed under `unavailable` with the
-reason, and a call to it is `unknown-component` naming that reason. Two gaps put
-a component there: the IR refuses its manifest, or its `templates.html` root is
-another component (a group of samples rather than one component). The registry's
-list is asserted in `packages/template/tests/registry.test.ts`.
+reason, and a call to it is `unknown-component` naming that reason. Three gaps
+put a component there: the IR refuses its manifest; its `templates.html` root is
+another component (a group of samples rather than one component); or two of its
+arguments would share a name. The registry's list is asserted in
+`packages/template/tests/registry.test.ts`, together with the callable
+components whose reference markup fails one named audit rule.
 
 ### 11.2 Calls
 
@@ -415,7 +422,7 @@ Each argument is matched, in this order:
 
 | Argument | Is | Value |
 |---|---|---|
-| a **variant**, named by its attribute without `data-` (`variant`, `size`, `cols-md`); a group whose attribute another group of the same component already names is named by its manifest group | written on the element the manifest puts it on | a literal checked at compile time, or an expression checked at render time, against the manifest's values (`bad-value`). The manifest default writes no attribute. |
+| a **variant**, named by its attribute without `data-` (`variant`, `size`, `cols-md`); a group whose attribute another group of the same component already names is named by its manifest group | written on the element the manifest puts it on | a literal checked at compile time, or an expression checked at render time, against the manifest's values (`bad-value`; a bare variant or a literal with a hole is `bad-value` too). The manifest default writes no attribute. |
 | a **state** (manifest `states`, root-applied) or a boolean prop with an `attr` | written on the root as the manifest's attribute | bare, or an expression tested for truthiness (a quoted literal is `bad-value`). Off writes nothing — except an `aria-*` state, which writes `"false"`. Several states writing `data-state`: the first that is on wins, else the reference value. |
 | a **string prop** the reference tree uses (`title`, `triggerText`) | its placeholder's text or attribute | a literal or an expression giving text; unset, the manifest default |
 | `id` | the component's id; every `{id}` in the reference tree derives from it | unset, the next id of the render (§11.5) |
@@ -514,8 +521,8 @@ Pug's whitespace rules are a known pain; these are this language's, in full.
 | Context | Escaping |
 |---|---|
 | Text | `&` `<` `>` become entities |
-| Attribute value (always double-quoted) | `&` `"` become entities |
-| URL attribute: `href`, `src`, `action`, `formaction` | as an attribute; and after removing ASCII whitespace and control characters, a value with a scheme must use `http`, `https`, `mailto` or `tel` — anything else (`javascript:`, `data:`, `vbscript:`) is the render error `unsafe-url` |
+| Attribute value (always double-quoted) | `&` `<` `>` `"` become entities (`<` and `>` so that no value can close a raw-text parent such as `noscript`) |
+| URL attribute: `href`, `src`, `action`, `formaction`, in any case and with any namespace prefix (`xlink:href`) | as an attribute; and after removing ASCII whitespace and control characters, a value with a scheme must use `http`, `https`, `mailto` or `tel` — anything else (`javascript:`, `data:`, `vbscript:`) is the render error `unsafe-url` |
 | `l-data` island | JSON text, escaped as an attribute (§11.7) |
 | HTML comment | literal only (§7) |
 
@@ -524,7 +531,11 @@ Pug's whitespace rules are a known pain; these are this language's, in full.
 - A hole or expression in a faqir-core attribute (`directive-interpolation`),
   except the island.
 - Any `on*` attribute (`event-attr`).
-- A hole in `script` or `style` content, or content that would close the element
+- Data in `srcdoc` (a whole document), `style` (CSS) or the SVG animation values
+  `to`, `from`, `values` and `by` (which can set an `href` past the URL check):
+  `unsafe-attr`. A literal is fine.
+- Anything but literal text in `script` or `style` — a hole, an element, a
+  control-flow node — or text that would close the element
   early (`</script`, `</style`) — `script-content`. Their literal content is
   written unescaped.
 - A hole in a comment, `--` or a leading `>` (`bad-comment`).
@@ -610,7 +621,8 @@ errors: when there is any, `ast` is `null`. Codes are stable; messages are not.
 | `json-misplaced` | `json()` anywhere but the whole value of `l-data` |
 | `directive-interpolation` | a hole or expression in a faqir-core attribute |
 | `event-attr` | an `on*` attribute |
-| `script-content` | a hole in, or an early close of, `script`/`style` content |
+| `script-content` | anything but literal text in `script`/`style`, or text that closes it early |
+| `unsafe-attr` | data in `srcdoc`, `style`, `to`, `from`, `values` or `by` |
 | `bad-comment` | a hole, `--` or leading `>` in an HTML comment |
 | `raw-refused` | `raw` under `{ raw: false }` |
 
@@ -625,14 +637,14 @@ involved.
 | `missing` | a path that is not in scope or not held by its value |
 | `type` | a value of the wrong type for an operator, a step, `each`, `raw`, or a forbidden computed key |
 | `not-text` | a value that cannot be text or an attribute value |
-| `bad-value` | a variant or state argument the manifest does not allow |
+| `bad-value` | a dynamic variant argument the manifest does not allow |
 | `unsafe-url` | a URL attribute whose scheme is not allowed |
 | `json-value` | a `json()` value that is not JSON data (§11.7) |
 | `helper-error` | a helper missing from `render`'s helpers, or one that threw |
 | `include-depth` | an AST whose includes nest deeper than 16 |
 | `output-limit` | output beyond `maxOutput` |
 | `step-limit` | more than `maxSteps` steps |
-| `bad-ast` | a node the renderer does not know |
+| `bad-ast` | a node the renderer does not know, or a malformed or too deeply nested AST |
 
 ## 15. API
 
@@ -666,7 +678,9 @@ if (ast) {
 ```
 
 - `compile` never throws for anything in the template; it throws `TypeError` only
-  for wrong options.
+  for wrong options. `render` throws `TypeError` for wrong arguments (a limit
+  that is not a positive integer, a non-string `idPrefix`) and a render error
+  (§14.2) for everything else.
 - `render` takes a compiled AST — or the same AST after a JSON round trip:
   `render(JSON.parse(JSON.stringify(ast)), data)` gives the same bytes, so a host
   can store or cache compiled templates as data. `data` is a plain object.
@@ -714,10 +728,10 @@ error carry `loc: [fileIndex, line, col]`, indexing `Template.files`.
 | Node | Shape |
 |---|---|
 | `Template` | `{ type, files: string[], requires: string[], body: Node[], partials: { [name]: Node[] } }` |
-| `Doctype` | `{ type }` |
+| `Doctype` | `{ type, loc }` |
 | `Element` | `{ type, tag, attrs: Attr[], children: Node[], loc }` |
 | `Text` | `{ type, parts: Part[], loc }` |
-| `Comment` | `{ type, text }` |
+| `Comment` | `{ type, text, loc }` |
 | `Raw` | `{ type, text, loc }` or `{ type, expr, loc }` |
 | `If` | `{ type, branches: { test: Expr \| null, body: Node[] }[], loc }` |
 | `Each` | `{ type, names: string[], of: Expr, body: Node[], else: Node[], loc }` |
@@ -759,7 +773,7 @@ A `Part` is a string, `{ expr: Expr }`, or `{ id: true }` (the enclosing
     dialog: {
       defaultSlot: false,
       slots: { body: { required: true }, title: { required: true, prop: "title" }, … },
-      variants: { size: { attr: "data-size", values: ["sm", "md", "lg"], default: "md" }, … },
+      variants: { size: { attr: "data-size", values: ["sm", "md", "lg", "full"], default: "md" }, … },
       states: { open: { attr: "data-state", value: "open", kind: "value" }, … },
       props: { title: { default: "" }, triggerText: { default: "Open" } },
       bools: [],

@@ -114,7 +114,7 @@ function sortArgs(call, entry, ctx) {
     else if (own(entry.props, arg.name)) checkProp(arg, args, loc, ctx);
     else if (arg.name === "id" && arg.value === true) reportAt(ctx, "bad-value", "id needs a value", loc);
     else if (arg.name === "id") args.id = arg.value;
-    else if (PROTOCOL.has(arg.name)) reportAt(ctx, "protocol-attr", `${arg.name} is written through the manifest's own names (${argList(entry)})`, loc);
+    else if (PROTOCOL.has(arg.name.toLowerCase())) reportAt(ctx, "protocol-attr", `${arg.name} is written through the manifest's own names (${argList(entry)})`, loc);
     else if (isPassthrough(arg.name)) args.pass.push(arg);
     else reportAt(ctx, "unknown-arg", `+${call.name} takes no "${arg.name}"; it takes ${argList(entry)}`, loc);
   }
@@ -123,7 +123,8 @@ function sortArgs(call, entry, ctx) {
 
 /** True for an argument passed through onto the root (§11.3). @param {string} name */
 function isPassthrough(name) {
-  return PASSTHROUGH.has(name) || name.startsWith("aria-") || name.startsWith("data-") || isDirective(name);
+  const n = name.toLowerCase();
+  return PASSTHROUGH.has(n) || n.startsWith("aria-") || n.startsWith("data-") || isDirective(n);
 }
 
 /** Every argument a component takes, for messages. @param {any} entry */

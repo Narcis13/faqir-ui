@@ -81,12 +81,30 @@ function applyLayout(nodes, c) {
     reportAt(c.ctx, "nested-layout", "a layout cannot itself have a layout", nested.loc);
     return [];
   }
-  const used = new Set();
-  const body = fillBlocks(layout, blocks, used, c, new Set());
+  const names = layoutBlocks(layout, c, new Set());
   for (const [name, block] of blocks) {
-    if (!used.has(name)) reportAt(c.ctx, "unknown-block", `the layout has no block "${name}"`, block.loc);
+    if (!names.has(name)) reportAt(c.ctx, "unknown-block", `the layout has no block "${name}"`, block.loc);
   }
-  return body;
+  return fillBlocks(layout, blocks);
+}
+
+/**
+ * Every block name the layout has, nested ones included — a page may define a
+ * block that sits inside another block it also replaces. Reports a name
+ * defined twice.
+ * @param {any[]} nodes
+ * @param {Composer} c
+ * @param {Set<string>} names
+ */
+function layoutBlocks(nodes, c, names) {
+  for (const node of nodes) {
+    if (node.type === "Block") {
+      if (names.has(node.name)) reportAt(c.ctx, "duplicate-block", `block "${node.name}" is defined twice`, node.loc);
+      names.add(node.name);
+    }
+    mapChildren(node, (kids) => (layoutBlocks(kids, c, names), kids));
+  }
+  return names;
 }
 
 /**
@@ -115,19 +133,13 @@ function pageBlocks(nodes, c) {
  * Replace the layout's blocks with the page's (or their defaults), recursively.
  * @param {any[]} nodes
  * @param {Map<string, any>} blocks
- * @param {Set<string>} used
- * @param {Composer} c
- * @param {Set<string>} seen layout block names, for duplicates
  * @returns {any[]}
  */
-function fillBlocks(nodes, blocks, used, c, seen) {
+function fillBlocks(nodes, blocks) {
   return nodes.flatMap((node) => {
-    if (node.type !== "Block") return [mapChildren(node, (kids) => fillBlocks(kids, blocks, used, c, seen))];
-    if (seen.has(node.name)) reportAt(c.ctx, "duplicate-block", `block "${node.name}" is defined twice`, node.loc);
-    seen.add(node.name);
-    used.add(node.name);
+    if (node.type !== "Block") return [mapChildren(node, (kids) => fillBlocks(kids, blocks))];
     const own = blocks.get(node.name);
-    return own ? own.body : fillBlocks(node.body, blocks, used, c, seen);
+    return own ? own.body : fillBlocks(node.body, blocks);
   });
 }
 

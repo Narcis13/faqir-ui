@@ -3,7 +3,10 @@
 // attribute, whose scheme must be on the allow-list after the characters a
 // browser ignores in a scheme are removed.
 
-/** Attributes whose value a browser follows as a URL (§12.2). */
+/**
+ * Attributes whose value a browser follows as a URL (§12.2), named without a
+ * namespace prefix (`xlink:href` is `href`) and lowercased.
+ */
 export const URL_ATTRS = new Set(["href", "src", "action", "formaction"]);
 
 const SAFE_SCHEMES = new Set(["http", "https", "mailto", "tel"]);
@@ -21,7 +24,17 @@ export function escapeText(value) {
  * @param {string} value
  */
 export function escapeAttr(value) {
-  return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+  // `<` and `>` too: inside a raw-text parent (noscript, iframe, xmp) the
+  // whole element is text, and an unescaped `</noscript>` would end it.
+  return escapeText(value).replace(/"/g, "&quot;");
+}
+
+/**
+ * True when an attribute is a URL attribute, whatever its case or prefix.
+ * @param {string} name
+ */
+export function isUrlAttr(name) {
+  return URL_ATTRS.has(name.toLowerCase().replace(/^.*:/, ""));
 }
 
 /**

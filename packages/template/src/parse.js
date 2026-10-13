@@ -10,7 +10,6 @@ import { buildLineTree } from "./lines.js";
 import { VOID_TAGS } from "./render.js";
 import { parseText } from "./text.js";
 
-
 const KEYWORDS = new Set(["doctype", "layout", "block", "include", "if", "else", "each", "raw"]);
 const TAG = /^[A-Za-z][A-Za-z0-9-]*/;
 const NAME = /^[a-z][a-z0-9-]*/;
@@ -131,7 +130,7 @@ function parseComment(line, ctx) {
   const block = line.block ?? [];
   const text = block.length === 0 ? ` ${inline} ` : `${inline ? ` ${inline}` : ""}\n${block.join("\n")}\n`;
   const bad = text.includes("{{") ? "a hole" : text.includes("--") ? '"--"' : inline.startsWith(">") ? 'a leading ">"' : "";
-  if (!bad) return { type: "Comment", text };
+  if (!bad) return { type: "Comment", text, loc: loc(line, ctx) };
   report(ctx, "bad-comment", `an HTML comment cannot contain ${bad}`, line.line, line.col);
   return null;
 }
@@ -340,7 +339,13 @@ function parseBlock(line, ctx) {
   return { type: "Block", name, body: parseNodes(line.children, ctx, false), loc: loc(line, ctx) };
 }
 
-/** @param {LineNode} line @param {Context} ctx */
+/**
+ * `include "name" (params)` — the parameters are written as attributes, but
+ * each name becomes a variable in the partial's scope, so it must be an
+ * identifier and not a forbidden name (§10.3).
+ * @param {LineNode} line
+ * @param {Context} ctx
+ */
 function parseInclude(line, ctx) {
   const q = quotedName(line, 8, ctx);
   if (!q) return null;
