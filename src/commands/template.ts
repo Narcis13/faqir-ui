@@ -9,12 +9,36 @@
 // writes the registry's table into the package; this command writes a
 // project's, from its installed manifests, beside a copy of the engine.
 
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { isVoidTag, manifestToIR } from "../bindings/ir";
 import { manifestTreeIR, scanController, type RecipeNode, type RecipeSeg } from "../bindings/recipe-ir";
 import { loadManifest, type Manifest } from "../manifest";
 import { listRegistryComponents } from "../utils/components";
+import { configExists, missingConfigMessage, readConfig, type FaqirConfig } from "../utils/config";
+import { ensureDir, getRegistryPath } from "../utils/fs";
+import { emitJSON, isJSONMode } from "../utils/json-output";
+import { log } from "../utils/logger";
+// The engine's files, embedded as text at build time so the compiled CLI can
+// install them without shipping `packages/`. The single source stays
+// packages/template/src. A text import has no TypeScript type of its own, so
+// each comes in as a namespace and is read through `text()` below.
+import * as attrsJs from "../../packages/template/src/attrs.js" with { type: "text" };
+import * as checksJs from "../../packages/template/src/checks.js" with { type: "text" };
+import * as compileJs from "../../packages/template/src/compile.js" with { type: "text" };
+import * as componentsJs from "../../packages/template/src/components.js" with { type: "text" };
+import * as composeJs from "../../packages/template/src/compose.js" with { type: "text" };
+import * as diagnosticsJs from "../../packages/template/src/diagnostics.js" with { type: "text" };
+import * as escapeJs from "../../packages/template/src/escape.js" with { type: "text" };
+import * as evaluateJs from "../../packages/template/src/evaluate.js" with { type: "text" };
+import * as exprJs from "../../packages/template/src/expr.js" with { type: "text" };
+import * as indexJs from "../../packages/template/src/index.js" with { type: "text" };
+import * as jsonJs from "../../packages/template/src/json.js" with { type: "text" };
+import * as linesJs from "../../packages/template/src/lines.js" with { type: "text" };
+import * as nodeJs from "../../packages/template/src/node.js" with { type: "text" };
+import * as parseJs from "../../packages/template/src/parse.js" with { type: "text" };
+import * as renderJs from "../../packages/template/src/render.js" with { type: "text" };
+import * as textJs from "../../packages/template/src/text.js" with { type: "text" };
 
 export const TEMPLATE_TABLE_VERSION = 1;
 
@@ -205,4 +229,80 @@ export function tableModule(table: TemplateTable, generator: string): string {
     `export const components = ${JSON.stringify(table, null, 1)};`,
     "",
   ].join("\n");
+}
+
+/** A text import's content (see the import block at the top). */
+function text(module: unknown): string {
+  return (module as { default: string }).default;
+}
+
+/** The engine's files by name, as `faqir template` installs them. */
+export function engineFiles(): Map<string, string> {
+  const modules: [string, unknown][] = [
+    ["attrs.js", attrsJs], ["checks.js", checksJs], ["compile.js", compileJs], ["components.js", componentsJs],
+    ["compose.js", composeJs], ["diagnostics.js", diagnosticsJs], ["escape.js", escapeJs], ["evaluate.js", evaluateJs],
+    ["expr.js", exprJs], ["index.js", indexJs], ["json.js", jsonJs], ["lines.js", linesJs],
+    ["node.js", nodeJs], ["parse.js", parseJs], ["render.js", renderJs], ["text.js", textJs],
+  ];
+  return new Map(modules.map(([name, module]) => [name, text(module)]));
+}
+
+/**
+ * A project's table: every installed primitive and recipe (project-made ones
+ * included, since `faqir create` lists them as installed), and the plugins it
+ * has installed — the registry's when it has none of its own.
+ */
+export async function projectTemplateTable(config: Pick<FaqirConfig, "installed">, outputDir: string): Promise<TemplateTable> {
+  const sources: TableSource[] = [];
+  for (const layer of ["primitives", "recipes"] as const) {
+    for (const name of [...config.installed[layer]].sort()) {
+      const dir = join(outputDir, layer, name);
+      if (existsSync(join(dir, `${name}.manifest.json`))) sources.push(await readSource(dir, name, `${layer}/${name}`));
+    }
+  }
+  const own = join(outputDir, "core", "plugins");
+  return buildTemplateTable(sources, pluginTable(existsSync(own) ? own : join(getRegistryPath(), "core", "plugins")));
+}
+
+function printHelp(): void {
+  log.heading("faqir template");
+  console.log("Install @faqir-ui/template into <output_dir>/template/ — the engine's files and");
+  console.log("table.js, this project's component table from its installed manifests.");
+  console.log("Options:");
+  console.log("  --check     Report files that differ from a fresh install; write nothing");
+}
+
+/**
+ * `faqir template [--check]` (docs/template.md §15.4): copy the engine into the
+ * project and write its component table, or report drift.
+ */
+export async function template(args: string[]): Promise<void> {
+  if (args.includes("--help") || args.includes("-h")) return printHelp();
+  const cwd = process.cwd();
+  if (!configExists(cwd)) {
+    log.error(missingConfigMessage(cwd));
+    process.exit(1);
+  }
+  const config = await readConfig(cwd);
+  const dir = join(cwd, config.output_dir, "template");
+  const files = engineFiles();
+  files.set("table.js", tableModule(await projectTemplateTable(config, join(cwd, config.output_dir)), "faqir template"));
+
+  const drifted = [...files].filter(([name, content]) => {
+    const path = join(dir, name);
+    return !existsSync(path) || readFileSync(path, "utf8") !== content;
+  }).map(([name]) => name);
+
+  if (args.includes("--check")) {
+    if (isJSONMode()) emitJSON({ ok: drifted.length === 0, dir, files: [...files.keys()], drifted });
+    else if (drifted.length > 0) log.error(`Template engine drift in ${dir}: ${drifted.join(", ")} — run 'faqir template'.`);
+    else log.success(`Template engine in sync: ${files.size} files in ${dir}.`);
+    if (drifted.length > 0) process.exit(1);
+    return;
+  }
+
+  ensureDir(dir);
+  for (const [name, content] of files) writeFileSync(join(dir, name), content);
+  if (isJSONMode()) return emitJSON({ ok: true, dir, files: [...files.keys()], drifted });
+  log.success(`Installed @faqir-ui/template into ${dir} (${files.size} files; ${drifted.length} changed).`);
 }

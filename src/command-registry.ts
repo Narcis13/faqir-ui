@@ -34,6 +34,7 @@ import { bundle } from "./commands/bundle";
 import { dev } from "./commands/dev";
 import { bindings } from "./commands/bindings";
 import { rules } from "./commands/rules";
+import { template } from "./commands/template";
 
 /** The headings `faqir help` groups commands under, in display order. */
 export const COMMAND_CATEGORIES = [
@@ -232,6 +233,13 @@ export const COMMAND_DEFINITIONS: Record<string, CommandDefinition> = {
     summary: "Generate framework bindings from manifests (vue, react)",
     args: "vue|react [--out <dir>] [--check]",
     skillNote: "generate typed Vue/React components from manifests",
+  },
+  template: {
+    run: template,
+    category: "Development",
+    summary: "Install the @faqir-ui/template engine and this project's component table",
+    args: "[--check]",
+    skillNote: "install the server-side template engine into <output_dir>/template",
   },
 };
 
