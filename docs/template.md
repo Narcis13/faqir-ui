@@ -386,7 +386,9 @@ as the `components` option.
 
 Each entry holds the component's reference tree (its `templates.html`, with its
 contract attributes and placeholders resolved by the IR), its fillable slots,
-its variants, states and props, and the controller files it needs (§16.3).
+its variants, states and props (§16.3). Beside the entries, the table maps
+each component with a controller — callable or not — to the controller files it
+needs, and each plugin directive to its file (§11.6).
 
 A component the table cannot describe is listed under `unavailable` with the
 reason, and a call to it is `unknown-component` naming that reason. Two gaps put
@@ -752,9 +754,9 @@ A `Part` is a string, `{ expr: Expr }`, or `{ id: true }` (the enclosing
 {
   version: 1,
   plugins: { "l-validate": "faqir-validate.js", … },
+  controllers: { dialog: ["dialog.js"], "alert-dialog": ["alert-dialog.js", "dialog.js"], table: ["table.js"], … },
   components: {
     dialog: {
-      requires: ["dialog.js"],
       defaultSlot: false,
       slots: { body: { required: true }, title: { required: true, prop: "title" }, … },
       variants: { size: { attr: "data-size", values: ["sm", "md", "lg"], default: "md" }, … },

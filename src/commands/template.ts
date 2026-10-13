@@ -43,7 +43,6 @@ import * as textJs from "../../packages/template/src/text.js" with { type: "text
 export const TEMPLATE_TABLE_VERSION = 1;
 
 export interface TableEntry {
-  requires: string[];
   defaultSlot: boolean;
   slots: Record<string, { required: boolean; prop?: string }>;
   variants: Record<string, { attr: string; values: string[]; default: string }>;
@@ -57,6 +56,11 @@ export interface TemplateTable {
   version: number;
   plugins: Record<string, string>;
   components: Record<string, TableEntry>;
+  /**
+   * Controller files by component, for every component with a controller —
+   * callable or not, since a plain `data-ui` element needs them too (§11.6).
+   */
+  controllers: Record<string, string[]>;
   /** Components the IR refuses, with the reason (docs/template.md §11.1). */
   unavailable: Record<string, string>;
 }
@@ -132,7 +136,6 @@ export function tableEntry(source: TableSource): TableEntry {
   }
   const names = variantArgNames(ir.variantProps);
   const entry: TableEntry = {
-    requires: requiresOf(source),
     defaultSlot: base.defaultSlot,
     slots: {},
     variants: {},
@@ -191,7 +194,10 @@ export function pluginTable(pluginDir: string): Record<string, string> {
 export function buildTemplateTable(sources: TableSource[], plugins: Record<string, string>): TemplateTable {
   const components: Record<string, TableEntry> = {};
   const unavailable: Record<string, string> = {};
+  const controllers: Record<string, string[]> = {};
   for (const source of [...sources].sort((a, b) => a.manifest.name.localeCompare(b.manifest.name))) {
+    const files = requiresOf(source);
+    if (files.length > 0) controllers[source.manifest.name] = files;
     // A manifest the IR refuses cannot be called; the table says why, so the
     // engine's `unknown-component` diagnostic can name the manifest gap.
     try {
@@ -200,7 +206,7 @@ export function buildTemplateTable(sources: TableSource[], plugins: Record<strin
       unavailable[source.manifest.name] = error instanceof Error ? error.message : String(error);
     }
   }
-  return { version: TEMPLATE_TABLE_VERSION, plugins, components, unavailable };
+  return { version: TEMPLATE_TABLE_VERSION, plugins, controllers, components, unavailable };
 }
 
 /** Read a component directory's manifest and controller. */

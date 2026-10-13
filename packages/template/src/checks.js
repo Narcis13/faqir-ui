@@ -92,8 +92,8 @@ function checkElement(node, k) {
   checkNodes(node.children, k, tag === "script" || tag === "style");
   const ui = node.attrs.find((/** @type {any} */ a) => a.name === "data-ui")?.value;
   const name = ui?.parts?.length === 1 && typeof ui.parts[0] === "string" ? ui.parts[0] : undefined;
-  const entry = name && k.table ? Object.getOwnPropertyDescriptor(k.table.components, name)?.value : undefined;
-  for (const file of entry?.requires ?? []) k.controllers.add(file);
+  const files = name && k.table?.controllers ? Object.getOwnPropertyDescriptor(k.table.controllers, name)?.value : undefined;
+  for (const file of files ?? []) k.controllers.add(file);
 }
 
 /**

@@ -11,11 +11,99 @@ export const components = {
   "l-tweak": "faqir-tweak.js",
   "l-validate": "faqir-validate.js"
  },
+ "controllers": {
+  "accordion": [
+   "accordion.js"
+  ],
+  "alert-dialog": [
+   "alert-dialog.js",
+   "dialog.js"
+  ],
+  "barcode": [
+   "barcode.js"
+  ],
+  "calendar": [
+   "calendar.js"
+  ],
+  "carousel": [
+   "carousel.js"
+  ],
+  "combobox": [
+   "combobox.js"
+  ],
+  "command-palette": [
+   "command-palette.js"
+  ],
+  "context-menu": [
+   "context-menu.js"
+  ],
+  "date-picker": [
+   "date-picker.js",
+   "calendar.js"
+  ],
+  "dialog": [
+   "dialog.js"
+  ],
+  "drawer": [
+   "drawer.js"
+  ],
+  "dropdown": [
+   "dropdown.js"
+  ],
+  "file-upload": [
+   "file-upload.js"
+  ],
+  "input-otp": [
+   "input-otp.js"
+  ],
+  "menubar": [
+   "menubar.js"
+  ],
+  "pagination": [
+   "pagination.js"
+  ],
+  "popover": [
+   "popover.js"
+  ],
+  "qr-code": [
+   "qr-code.js"
+  ],
+  "select-custom": [
+   "select-custom.js"
+  ],
+  "sheet": [
+   "sheet.js"
+  ],
+  "sidebar": [
+   "sidebar.js"
+  ],
+  "slider": [
+   "slider.js"
+  ],
+  "table": [
+   "table.js"
+  ],
+  "tabs": [
+   "tabs.js"
+  ],
+  "tag-input": [
+   "tag-input.js"
+  ],
+  "toast": [
+   "toast.js"
+  ],
+  "toggle-group": [
+   "toggle-group.js"
+  ],
+  "tooltip": [
+   "tooltip.js"
+  ],
+  "tree-view": [
+   "tree-view.js"
+  ]
+ },
  "components": {
   "accordion": {
-   "requires": [
-    "accordion.js"
-   ],
    "defaultSlot": false,
    "slots": {},
    "variants": {
@@ -314,10 +402,6 @@ export const components = {
    }
   },
   "alert-dialog": {
-   "requires": [
-    "alert-dialog.js",
-    "dialog.js"
-   ],
    "defaultSlot": false,
    "slots": {
     "trigger": {
@@ -677,7 +761,6 @@ export const components = {
    }
   },
   "aspect-ratio": {
-   "requires": [],
    "defaultSlot": true,
    "slots": {},
    "variants": {
@@ -723,7 +806,6 @@ export const components = {
    }
   },
   "avatar": {
-   "requires": [],
    "defaultSlot": false,
    "slots": {
     "fallback": {
@@ -818,7 +900,6 @@ export const components = {
    }
   },
   "backdrop": {
-   "requires": [],
    "defaultSlot": true,
    "slots": {},
    "variants": {
@@ -876,7 +957,6 @@ export const components = {
    }
   },
   "badge": {
-   "requires": [],
    "defaultSlot": true,
    "slots": {},
    "variants": {
@@ -943,9 +1023,6 @@ export const components = {
    }
   },
   "barcode": {
-   "requires": [
-    "barcode.js"
-   ],
    "defaultSlot": false,
    "slots": {},
    "variants": {
@@ -1025,7 +1102,6 @@ export const components = {
    }
   },
   "breadcrumb": {
-   "requires": [],
    "defaultSlot": false,
    "slots": {
     "list": {
@@ -1159,7 +1235,6 @@ export const components = {
    }
   },
   "button": {
-   "requires": [],
    "defaultSlot": true,
    "slots": {},
    "variants": {
@@ -1235,9 +1310,6 @@ export const components = {
    }
   },
   "calendar": {
-   "requires": [
-    "calendar.js"
-   ],
    "defaultSlot": false,
    "slots": {
     "header": {
@@ -1475,7 +1547,6 @@ export const components = {
    }
   },
   "callout": {
-   "requires": [],
    "defaultSlot": false,
    "slots": {
     "icon": {
@@ -1554,7 +1625,6 @@ export const components = {
    }
   },
   "card": {
-   "requires": [],
    "defaultSlot": false,
    "slots": {
     "header": {
@@ -1704,9 +1774,6 @@ export const components = {
    }
   },
   "carousel": {
-   "requires": [
-    "carousel.js"
-   ],
    "defaultSlot": false,
    "slots": {
     "viewport": {
@@ -2032,7 +2099,6 @@ export const components = {
    }
   },
   "chip": {
-   "requires": [],
    "defaultSlot": false,
    "slots": {
     "label": {
@@ -2110,7 +2176,6 @@ export const components = {
    }
   },
   "cluster": {
-   "requires": [],
    "defaultSlot": true,
    "slots": {},
    "variants": {
@@ -2390,7 +2455,6 @@ export const components = {
    }
   },
   "collapsible": {
-   "requires": [],
    "defaultSlot": false,
    "slots": {
     "trigger": {
@@ -2466,9 +2530,6 @@ export const components = {
    }
   },
   "combobox": {
-   "requires": [
-    "combobox.js"
-   ],
    "defaultSlot": false,
    "slots": {
     "listbox": {
@@ -2688,9 +2749,6 @@ export const components = {
    }
   },
   "command-palette": {
-   "requires": [
-    "command-palette.js"
-   ],
    "defaultSlot": false,
    "slots": {
     "overlay": {
@@ -3028,7 +3086,6 @@ export const components = {
    }
   },
   "container": {
-   "requires": [],
    "defaultSlot": true,
    "slots": {},
    "variants": {
@@ -3127,9 +3184,6 @@ export const components = {
    }
   },
   "context-menu": {
-   "requires": [
-    "context-menu.js"
-   ],
    "defaultSlot": false,
    "slots": {
     "target": {
@@ -3370,10 +3424,6 @@ export const components = {
    }
   },
   "date-picker": {
-   "requires": [
-    "date-picker.js",
-    "calendar.js"
-   ],
    "defaultSlot": false,
    "slots": {
     "trigger": {
@@ -3733,7 +3783,6 @@ export const components = {
    }
   },
   "description-list": {
-   "requires": [],
    "defaultSlot": false,
    "slots": {
     "term": {
@@ -3816,9 +3865,6 @@ export const components = {
    }
   },
   "dialog": {
-   "requires": [
-    "dialog.js"
-   ],
    "defaultSlot": false,
    "slots": {
     "trigger": {
@@ -4088,9 +4134,6 @@ export const components = {
    }
   },
   "drawer": {
-   "requires": [
-    "drawer.js"
-   ],
    "defaultSlot": false,
    "slots": {
     "trigger": {
@@ -4360,9 +4403,6 @@ export const components = {
    }
   },
   "dropdown": {
-   "requires": [
-    "dropdown.js"
-   ],
    "defaultSlot": false,
    "slots": {
     "trigger": {
@@ -4558,7 +4598,6 @@ export const components = {
    }
   },
   "empty-state": {
-   "requires": [],
    "defaultSlot": false,
    "slots": {
     "icon": {
@@ -4659,7 +4698,6 @@ export const components = {
    }
   },
   "field-group": {
-   "requires": [],
    "defaultSlot": false,
    "slots": {
     "label": {
@@ -4808,9 +4846,6 @@ export const components = {
    }
   },
   "file-upload": {
-   "requires": [
-    "file-upload.js"
-   ],
    "defaultSlot": false,
    "slots": {
     "dropzone": {
@@ -5046,7 +5081,6 @@ export const components = {
    }
   },
   "glow": {
-   "requires": [],
    "defaultSlot": true,
    "slots": {},
    "variants": {
@@ -5105,7 +5139,6 @@ export const components = {
    }
   },
   "grid": {
-   "requires": [],
    "defaultSlot": true,
    "slots": {},
    "variants": {
@@ -5325,7 +5358,6 @@ export const components = {
    }
   },
   "highlight": {
-   "requires": [],
    "defaultSlot": true,
    "slots": {},
    "variants": {
@@ -5372,7 +5404,6 @@ export const components = {
    }
   },
   "icon": {
-   "requires": [],
    "defaultSlot": true,
    "slots": {},
    "variants": {
@@ -5532,7 +5563,6 @@ export const components = {
    }
   },
   "image": {
-   "requires": [],
    "defaultSlot": false,
    "slots": {},
    "variants": {
@@ -5628,7 +5658,6 @@ export const components = {
    }
   },
   "input": {
-   "requires": [],
    "defaultSlot": false,
    "slots": {},
    "variants": {
@@ -5699,9 +5728,6 @@ export const components = {
    }
   },
   "input-otp": {
-   "requires": [
-    "input-otp.js"
-   ],
    "defaultSlot": false,
    "slots": {
     "segments": {
@@ -5943,7 +5969,6 @@ export const components = {
    }
   },
   "kbd": {
-   "requires": [],
    "defaultSlot": true,
    "slots": {},
    "variants": {},
@@ -5972,7 +5997,6 @@ export const components = {
    }
   },
   "key-value": {
-   "requires": [],
    "defaultSlot": false,
    "slots": {
     "label": {
@@ -6056,7 +6080,6 @@ export const components = {
    }
   },
   "label": {
-   "requires": [],
    "defaultSlot": true,
    "slots": {},
    "variants": {
@@ -6119,7 +6142,6 @@ export const components = {
    }
   },
   "link": {
-   "requires": [],
    "defaultSlot": true,
    "slots": {},
    "variants": {
@@ -6175,7 +6197,6 @@ export const components = {
    }
   },
   "marquee": {
-   "requires": [],
    "defaultSlot": false,
    "slots": {},
    "variants": {
@@ -6283,9 +6304,6 @@ export const components = {
    }
   },
   "menubar": {
-   "requires": [
-    "menubar.js"
-   ],
    "defaultSlot": false,
    "slots": {},
    "variants": {
@@ -6762,7 +6780,6 @@ export const components = {
    }
   },
   "nav": {
-   "requires": [],
    "defaultSlot": false,
    "slots": {
     "link": {
@@ -6824,7 +6841,6 @@ export const components = {
    }
   },
   "page-break": {
-   "requires": [],
    "defaultSlot": false,
    "slots": {},
    "variants": {
@@ -6872,9 +6888,6 @@ export const components = {
    }
   },
   "pagination": {
-   "requires": [
-    "pagination.js"
-   ],
    "defaultSlot": false,
    "slots": {
     "nav": {
@@ -7072,9 +7085,6 @@ export const components = {
    }
   },
   "popover": {
-   "requires": [
-    "popover.js"
-   ],
    "defaultSlot": false,
    "slots": {
     "trigger": {
@@ -7222,7 +7232,6 @@ export const components = {
    }
   },
   "progress": {
-   "requires": [],
    "defaultSlot": false,
    "slots": {
     "track": {
@@ -7356,9 +7365,6 @@ export const components = {
    }
   },
   "qr-code": {
-   "requires": [
-    "qr-code.js"
-   ],
    "defaultSlot": false,
    "slots": {},
    "variants": {
@@ -7433,7 +7439,6 @@ export const components = {
    }
   },
   "quote": {
-   "requires": [],
    "defaultSlot": false,
    "slots": {
     "text": {
@@ -7568,7 +7573,6 @@ export const components = {
    }
   },
   "rating": {
-   "requires": [],
    "defaultSlot": false,
    "slots": {},
    "variants": {
@@ -7633,7 +7637,6 @@ export const components = {
    }
   },
   "reveal": {
-   "requires": [],
    "defaultSlot": true,
    "slots": {},
    "variants": {
@@ -7702,7 +7705,6 @@ export const components = {
    }
   },
   "scroll-progress": {
-   "requires": [],
    "defaultSlot": false,
    "slots": {},
    "variants": {
@@ -7756,7 +7758,6 @@ export const components = {
    }
   },
   "select": {
-   "requires": [],
    "defaultSlot": true,
    "slots": {},
    "variants": {
@@ -7823,9 +7824,6 @@ export const components = {
    }
   },
   "select-custom": {
-   "requires": [
-    "select-custom.js"
-   ],
    "defaultSlot": false,
    "slots": {
     "trigger": {
@@ -8076,7 +8074,6 @@ export const components = {
    }
   },
   "separator": {
-   "requires": [],
    "defaultSlot": false,
    "slots": {},
    "variants": {
@@ -8140,9 +8137,6 @@ export const components = {
    }
   },
   "sheet": {
-   "requires": [
-    "sheet.js"
-   ],
    "defaultSlot": false,
    "slots": {
     "trigger": {
@@ -8397,9 +8391,6 @@ export const components = {
    }
   },
   "sidebar": {
-   "requires": [
-    "sidebar.js"
-   ],
    "defaultSlot": false,
    "slots": {
     "overlay": {
@@ -8715,7 +8706,6 @@ export const components = {
    }
   },
   "signature": {
-   "requires": [],
    "defaultSlot": false,
    "slots": {
     "line": {
@@ -8811,7 +8801,6 @@ export const components = {
    }
   },
   "skeleton": {
-   "requires": [],
    "defaultSlot": true,
    "slots": {},
    "variants": {
@@ -8854,9 +8843,6 @@ export const components = {
    }
   },
   "slider": {
-   "requires": [
-    "slider.js"
-   ],
    "defaultSlot": false,
    "slots": {
     "track": {
@@ -9071,7 +9057,6 @@ export const components = {
    }
   },
   "spinner": {
-   "requires": [],
    "defaultSlot": false,
    "slots": {},
    "variants": {
@@ -9121,7 +9106,6 @@ export const components = {
    }
   },
   "spotlight": {
-   "requires": [],
    "defaultSlot": true,
    "slots": {},
    "variants": {
@@ -9157,7 +9141,6 @@ export const components = {
    }
   },
   "stack": {
-   "requires": [],
    "defaultSlot": true,
    "slots": {},
    "variants": {
@@ -9514,7 +9497,6 @@ export const components = {
    }
   },
   "stamp": {
-   "requires": [],
    "defaultSlot": true,
    "slots": {},
    "variants": {
@@ -9573,7 +9555,6 @@ export const components = {
    }
   },
   "stat": {
-   "requires": [],
    "defaultSlot": false,
    "slots": {
     "value": {
@@ -9685,7 +9666,6 @@ export const components = {
    }
   },
   "stepper": {
-   "requires": [],
    "defaultSlot": false,
    "slots": {
     "step": {
@@ -9785,7 +9765,6 @@ export const components = {
    }
   },
   "surface": {
-   "requires": [],
    "defaultSlot": true,
    "slots": {},
    "variants": {
@@ -9836,7 +9815,6 @@ export const components = {
    }
   },
   "switcher": {
-   "requires": [],
    "defaultSlot": true,
    "slots": {},
    "variants": {
@@ -9894,9 +9872,6 @@ export const components = {
    }
   },
   "tabs": {
-   "requires": [
-    "tabs.js"
-   ],
    "defaultSlot": false,
    "slots": {
     "list": {
@@ -10137,9 +10112,6 @@ export const components = {
    }
   },
   "tag-input": {
-   "requires": [
-    "tag-input.js"
-   ],
    "defaultSlot": false,
    "slots": {
     "taglist": {
@@ -10265,7 +10237,6 @@ export const components = {
    }
   },
   "text": {
-   "requires": [],
    "defaultSlot": true,
    "slots": {},
    "variants": {
@@ -10392,7 +10363,6 @@ export const components = {
    }
   },
   "textarea": {
-   "requires": [],
    "defaultSlot": true,
    "slots": {},
    "variants": {
@@ -10452,7 +10422,6 @@ export const components = {
    }
   },
   "timeline": {
-   "requires": [],
    "defaultSlot": false,
    "slots": {
     "item": {
@@ -10612,9 +10581,6 @@ export const components = {
    }
   },
   "toast": {
-   "requires": [
-    "toast.js"
-   ],
    "defaultSlot": false,
    "slots": {},
    "variants": {
@@ -10678,9 +10644,6 @@ export const components = {
    }
   },
   "toggle-group": {
-   "requires": [
-    "toggle-group.js"
-   ],
    "defaultSlot": false,
    "slots": {},
    "variants": {
@@ -10849,9 +10812,6 @@ export const components = {
    }
   },
   "tooltip": {
-   "requires": [
-    "tooltip.js"
-   ],
    "defaultSlot": false,
    "slots": {
     "trigger": {
@@ -10963,9 +10923,6 @@ export const components = {
    }
   },
   "tree-view": {
-   "requires": [
-    "tree-view.js"
-   ],
    "defaultSlot": false,
    "slots": {
     "group": {
@@ -11236,7 +11193,6 @@ export const components = {
    }
   },
   "watermark": {
-   "requires": [],
    "defaultSlot": false,
    "slots": {
     "mark": {

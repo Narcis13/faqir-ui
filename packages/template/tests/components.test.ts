@@ -85,8 +85,8 @@ describe("ids (§11.5)", () => {
 
 describe("@ui:requires (§11.6)", () => {
   it("names faqir-core, plugins and controllers, with the controllers they import", () => {
-    const out = run("+alert-dialog(title='T' description='D' confirmText='OK')\n  @trigger Delete\n  @body\n    p b\nform(l-validate)\ndiv(data-ui='tabs')\n");
-    expect(out.split("\n")[0]).toBe("<!-- @ui:requires faqir-core.js faqir-validate.js alert-dialog.js dialog.js tabs.js -->");
+    const out = run("+alert-dialog(title='T' description='D' confirmText='OK')\n  @trigger Delete\n  @body\n    p b\nform(l-validate)\ndiv(data-ui='tabs')\ndiv(data-ui='table')\n");
+    expect(out.split("\n")[0]).toBe("<!-- @ui:requires faqir-core.js faqir-validate.js alert-dialog.js dialog.js table.js tabs.js -->");
   });
 
   it("goes after the doctype and is absent when nothing is needed", () => {
@@ -121,9 +121,9 @@ describe("component diagnostics", () => {
   it("refuses default content beside named fills", () => {
     // No registry component has both a default slot and a fillable slot, so a
     // one-entry table stands in for a project-made one.
-    const box = { requires: [], defaultSlot: true, slots: { head: { required: false } }, variants: {}, states: {}, props: {}, bools: [],
+    const box = { defaultSlot: true, slots: { head: { required: false } }, variants: {}, states: {}, props: {}, bools: [],
       tree: { tag: "div", attrs: [["data-ui", ["box"]]], children: [{ tag: "h2", attrs: [["data-part", ["head"]]], slot: "head", children: [] }] } };
-    const own = { version: 1, plugins: {}, unavailable: {}, components: { box } };
+    const own = { version: 1, plugins: {}, controllers: {}, unavailable: {}, components: { box } };
     expect(codes("+box\n  @head H\n  p loose\n", { components: own })).toEqual(["slot-conflict"]);
     expect(html("+box\n  @head H\n", {}, { components: own })).toBe('<div data-ui="box">\n  <h2 data-part="head">H</h2>\n</div>\n');
   });

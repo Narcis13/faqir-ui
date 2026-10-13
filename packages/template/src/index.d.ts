@@ -12,6 +12,7 @@ export interface Diagnostic {
 export interface ComponentTable {
   version: number;
   plugins: Record<string, string>;
+  controllers: Record<string, string[]>;
   components: Record<string, unknown>;
   unavailable: Record<string, string>;
 }
