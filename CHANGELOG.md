@@ -1,9 +1,35 @@
 # Changelog
 
-All seven packages (`faqir-ui-cli`, `@faqir-ui/core`, `@faqir-ui/react`,
-`@faqir-ui/vue`, `@faqir-ui/forms`, `@faqir-ui/rules`, `@faqir-ui/mcp`) are
-versioned in lockstep. The protocol is frozen at [`SPEC-1.0.md`](SPEC-1.0.md);
+All eight packages (`faqir-ui-cli`, `@faqir-ui/core`, `@faqir-ui/react`,
+`@faqir-ui/vue`, `@faqir-ui/forms`, `@faqir-ui/rules`, `@faqir-ui/template`,
+`@faqir-ui/mcp`) are versioned in lockstep. The protocol is frozen at [`SPEC-1.0.md`](SPEC-1.0.md);
 every release below is additive under its §8 unless it says otherwise.
+
+## 1.2.5
+
+The server template language. Full notes: [`docs/release-1.2.5.md`](docs/release-1.2.5.md).
+
+All eight packages ship at 1.2.5; `@faqir-ui/template` is published to npm for
+the first time. 1.2.1–1.2.4 were skipped on purpose: the template engine merged
+after 1.2.0, and the version says the eight packages move together from here.
+
+**Upgrading from 1.2.0:** no breaking changes, no markup migrations. Run
+`faqir upgrade`; CDN users move `@faqir-ui/core@1.2.0` to `@1.2.5`.
+
+- **Added** — `@faqir-ui/template`: an indentation-based, zero-dependency
+  template language that renders Faqir primitives and recipes on a server, with
+  component calls checked against their manifests, escaping per context, the
+  `l-data` island, limits for untrusted templates, and audit-clean output that
+  faqir-core takes over in the browser. Entries `.` (render), `/compile`,
+  `/node` and `/registry`. `faqir template` installs it into a project with
+  the project's own component table; `check:template-table` joins the release
+  preflight.
+- **Fixed** — an `output-limit` render error now carries the file, line and
+  column of the node being written, as every other render error does.
+- **Docs** — a Server templates section (`template/`): six pages, 44 live
+  examples and 35 captured errors, every page rendered by the engine it
+  documents from `site/templates/` and byte-compared by a test; linked from the
+  navigation, the home page, the sitemap and the hosted llms files.
 
 ## 1.2.0
 
