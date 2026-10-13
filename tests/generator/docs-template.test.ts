@@ -24,10 +24,9 @@ import { components as table } from "../../packages/template/src/registry.js";
 import { helpers } from "../../site/templates/helpers.js";
 import { auditHtmlSource } from "../../src/audit/checker";
 import { loadRegistryManifestMap } from "../../src/utils/components";
-import { LLMS_FULL_FILE, LLMS_INDEX_FILE, SITEMAP_FILE, buildDocsSite, isShellPage, relUrl } from "../../src/generator/docs";
+import { LLMS_FULL_FILE, LLMS_INDEX_FILE, SITEMAP_FILE, TEMPLATE_PAGE, buildDocsSite, isShellPage, relUrl } from "../../src/generator/docs";
 import {
   OVERLAYS_LAYOUT,
-  TEMPLATE_PAGE,
   readTemplateSection,
   renderTemplateSection,
   type TemplateExample,
@@ -167,13 +166,15 @@ describe("what a page shows is its examples' own files, run", () => {
         let code = diagnostics[0]?.code;
         let message = diagnostics[0]?.message;
         if (ast) {
+          let thrown: any = null;
           try {
             render(ast, json(join(errDir, `${name}.json`)), { helpers, ...(options.render ?? {}) });
-            throw new Error(`${file} rendered without an error`);
-          } catch (e: any) {
-            code = e.code;
-            message = e.message;
+          } catch (e) {
+            thrown = e;
           }
+          expect(thrown, `${file} rendered without an error`).not.toBeNull();
+          code = thrown.code;
+          message = thrown.message;
         }
         expect(err[name].code).toBe(code);
         expect(err[name].message).toBe(message);

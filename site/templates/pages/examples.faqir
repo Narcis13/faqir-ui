@@ -74,7 +74,7 @@ block content
     | HTML that you have already sanitised yourself can opt out of escaping with the
     code raw
     | keyword. The
-    a(href="../safety/index.html#raw") safety page
+    a(href=links.raw) safety page
     | explains when that is a good idea.
 
   h2#email Email and other static output
@@ -106,7 +106,7 @@ block content
     code
       | const { ast, diagnostics } = compile(source, { loader, components, helpers: ["upper"], raw: false });
       | const html = render(ast, data, { helpers, maxSteps: 2000, maxOutput: 20000 });
-  p The first call refuses raw HTML for this template. The second stops it after 2000 steps or 20000 characters of output; without these options the limits are 10 million steps and 16 MiB. A customer's notification written within those rules renders as usual:
+  p The first call refuses raw HTML for this template. The second stops it after 2000 steps or 20000 characters of output; without these options the limits are 10 million steps and 16 777 216 characters. A customer's notification written within those rules renders as usual:
   include "partials/example.faqir" (example=ex.custom)
   p
     | Look at the Options pane: the policy belongs to the host, and the template cannot change it. The template itself is ordinary, with a callout, a helper call and a loop. Everything it calls (the callout's manifest, the

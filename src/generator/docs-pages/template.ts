@@ -39,9 +39,6 @@ import { COMMAND_DEFINITIONS } from "../../command-registry";
 import { PACKAGE_ROOT, pluginScriptPath, relUrl, renderShell, type SiteFile } from "../docs";
 import type { PageContext } from "./context";
 
-export const TEMPLATE_PAGE = "template/index.html";
-export const TEMPLATE_NAV_TITLE = "Server templates";
-
 /** One entry of `site/templates/section.json`. */
 export interface TemplateSectionPage {
   slug: string;
@@ -103,24 +100,10 @@ export interface TemplatePage {
 
 /** The site-relative pages the section links to, by the name a page uses. */
 const SITE_LINKS: Record<string, string> = {
-  home: "index.html",
-  components: "components/index.html",
-  engine: "engine/index.html",
-  rules: "rules/index.html",
-  cli: "cli/index.html",
   cliTemplate: "cli/index.html#cmd-template",
-  integrations: "integrations/index.html",
-  audit: "audit/index.html",
-  agents: "agents/index.html",
-  playground: "playground/index.html",
-  dialog: "components/recipes/dialog.html",
-  tabs: "components/recipes/tabs.html",
-  accordion: "components/recipes/accordion.html",
-  card: "components/primitives/card.html",
-  callout: "components/primitives/callout.html",
-  button: "components/primitives/button.html",
-  badge: "components/primitives/badge.html",
   useCases: "template/examples/index.html",
+  island: "template/components/index.html#island",
+  raw: "template/safety/index.html#raw",
 };
 
 const RUN_OPTION_KEYS: Record<keyof TemplateRunOptions, string[]> = {
@@ -165,6 +148,17 @@ function templateNames(dir: string): string[] {
     .sort();
 }
 
+/** What every template of the section compiles with: the registry table, a loader rooted at site/templates/, the site's helpers. */
+function compileOptions(templatesRoot: string, file: string, extra: TemplateRunOptions["compile"]) {
+  return {
+    file,
+    loader: createFileLoader(templatesRoot),
+    components: registryTable as ComponentTable,
+    helpers: Object.keys(siteHelpers),
+    ...extra,
+  };
+}
+
 /**
  * Compile and render one template under `site/templates/`, the way every page
  * and example of the section is drawn: the registry table, the file loader
@@ -176,13 +170,7 @@ export function runTemplate(
   data: Record<string, unknown>,
   options: TemplateRunOptions & { idPrefix?: string },
 ): { ast: Template; html: string } {
-  const result = compile(readText(join(templatesRoot, file)), {
-    file,
-    loader: createFileLoader(templatesRoot),
-    components: registryTable as ComponentTable,
-    helpers: Object.keys(siteHelpers),
-    ...options.compile,
-  });
+  const result = compile(readText(join(templatesRoot, file)), compileOptions(templatesRoot, file, options.compile));
   if (!result.ast) {
     const d = result.diagnostics[0];
     throw new Error(`template docs: ${d.file}:${d.line}:${d.col} ${d.code} — ${d.message}`);
@@ -252,13 +240,7 @@ export function captureTemplateFailures(templatesRoot: string, slug: string): Re
       data: pretty(data),
       options: existsSync(join(dir, `${name}.options.json`)) ? pretty(options) : "",
     };
-    const result = compile(source, {
-      file,
-      loader: createFileLoader(templatesRoot),
-      components: registryTable as ComponentTable,
-      helpers: Object.keys(siteHelpers),
-      ...options.compile,
-    });
+    const result = compile(source, compileOptions(templatesRoot, file, options.compile));
     if (!result.ast) {
       const d = result.diagnostics[0];
       out[name] = { ...base, stage: "compile", code: d.code, message: d.message, line: d.line, col: d.col, deps: [] };
@@ -321,13 +303,17 @@ export const OVERLAYS_LAYOUT = "layouts/section-overlays.faqir";
 
 /** Every page of the section, rendered by the engine (no shell yet). */
 export function renderTemplateSection(ctx: Pick<PageContext, "siteRoot">): TemplatePage[] {
-  return readTemplateSection(ctx.siteRoot).map((meta) => renderTemplatePage(ctx.siteRoot, meta.slug));
+  const pages = readTemplateSection(ctx.siteRoot);
+  return pages.map((meta) => renderTemplatePage(ctx.siteRoot, meta.slug, pages));
 }
 
 /** One page of the section, rendered by the engine (no shell yet). */
-export function renderTemplatePage(siteRoot: string, slug: string): TemplatePage {
+export function renderTemplatePage(
+  siteRoot: string,
+  slug: string,
+  pages: TemplateSectionPage[] = readTemplateSection(siteRoot),
+): TemplatePage {
   const templatesRoot = join(siteRoot, "templates");
-  const pages = readTemplateSection(siteRoot);
   const meta = pages.find((p) => p.slug === slug);
   if (!meta) throw new Error(`template docs: section.json has no page "${slug}"`);
   const file = `pages/${slug}.faqir`;

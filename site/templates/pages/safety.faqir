@@ -88,7 +88,7 @@ block content
     | as the whole value of an
     code l-data
     | attribute. Its JSON text is escaped as an attribute value, so data cannot leave its strings. The island has its own page section, with a live example:
-    a(href="../components/index.html#island") the l-data island in Composition and components
+    a(href=links.island) the l-data island in Composition and components
   p Anything that is not JSON data, or is nested deeper than 64 levels, is the render error json-value.
 
   h3 HTML comments

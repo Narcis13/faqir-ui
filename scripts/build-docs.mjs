@@ -4,8 +4,10 @@
  *
  * A thin writer around `src/generator/docs.ts`: the generator produces every file
  * in memory, this script clears the output directory and writes them. There is no
- * bundler, no template engine, and no runtime build — the output is plain HTML +
- * one stylesheet, servable by any static file server.
+ * bundler and no runtime build — the output is plain HTML + one stylesheet,
+ * servable by any static file server. The one template engine involved is
+ * `@faqir-ui/template`, which renders the Server templates section's pages at
+ * build time (src/generator/docs-pages/template.ts).
  *
  * Usage:
  *   bun run build:docs                  → site/dist

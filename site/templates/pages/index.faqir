@@ -57,13 +57,13 @@ block content
 
   h2#runs Where it runs
   p
-    | The engine is two plain JavaScript entries with no dependencies.
+    | The engine is plain JavaScript with no dependencies, and its work is two functions.
     code compile
     | turns template source into a plain JSON tree, once, when a template is saved.
     code render
     | draws that tree with data, as many times as you like, and is the only part a browser needs to draw a stored template.
   p
-    | This site is static, so its server is the docs build. Every page in this section was compiled and rendered by the engine when the site was built, on Node and Bun, from the files under
+    | This site is static, so its server is the docs build. Every page in this section was compiled and rendered by the engine when the site was built, by the same engine a Node server runs, from the files under
     code site/templates
     | which is the same work a Node server does per request. The end of each page says how it was made.
 
