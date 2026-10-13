@@ -23,6 +23,8 @@
     "check:registry-index": "bun scripts/build-registry-index.mjs --check",
     "build:manifest-api": "bun scripts/build-manifest-api.mjs",
     "check:manifest-api": "bun scripts/build-manifest-api.mjs --check",
+    "build:template-table": "bun scripts/build-template-table.mjs",
+    "check:template-table": "bun scripts/build-template-table.mjs --check",
     "build:core-package": "node scripts/build-core-package.mjs",
     "check:core-package": "node scripts/build-core-package.mjs --check",
     "install:type-fixture": "node scripts/install-type-fixture.mjs",

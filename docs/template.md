@@ -387,6 +387,12 @@ Each entry holds the component's reference tree (its `templates.html`, with its
 contract attributes and placeholders resolved by the IR), its fillable slots,
 its variants, states and props, and the controller files it needs (§16.3).
 
+A component the table cannot describe is listed under `unavailable` with the
+reason, and a call to it is `unknown-component` naming that reason. Two gaps put
+a component there: the IR refuses its manifest, or its `templates.html` root is
+another component (a group of samples rather than one component). The registry's
+list is asserted in `packages/template/tests/registry.test.ts`.
+
 ### 11.2 Calls
 
 ```
@@ -407,7 +413,7 @@ Each argument is matched, in this order:
 | Argument | Is | Value |
 |---|---|---|
 | a **variant**, named by its attribute without `data-` (`variant`, `size`, `cols-md`); a group whose attribute another group of the same component already names is named by its manifest group | written on the element the manifest puts it on | a literal checked at compile time, or an expression checked at render time, against the manifest's values (`bad-value`). The manifest default writes no attribute. |
-| a **state** (manifest `states`, root-applied) or a boolean prop with an `attr` | written on the root as the manifest's attribute | bare (`true`) or an expression giving a boolean (`bad-value` otherwise). `false` writes nothing — except an `aria-*` state, which writes `"false"`. |
+| a **state** (manifest `states`, root-applied) or a boolean prop with an `attr` | written on the root as the manifest's attribute | bare, or an expression tested for truthiness (a quoted literal is `bad-value`). Off writes nothing — except an `aria-*` state, which writes `"false"`. Several states writing `data-state`: the first that is on wins, else the reference value. |
 | a **string prop** the reference tree uses (`title`, `triggerText`) | its placeholder's text or attribute | a literal or an expression giving text; unset, the manifest default |
 | `id` | the component's id; every `{id}` in the reference tree derives from it | unset, the next id of the render (§11.5) |
 | `class`, `role`, `title`, `tabindex`, `hidden`, `lang`, `dir`, `aria-*`, a non-protocol `data-*`, or a faqir-core attribute | passed through onto the root, replacing a reference attribute of the same name | as on a plain element (§5) |
@@ -421,7 +427,8 @@ names, where they are checked.
 
 - **Named slots** are filled with `@name` lines under the call. A slot is
   fillable when its part appears on exactly one element of the reference tree,
-  other than the root; the fill replaces that element's children, and the
+  other than the root, and that element is not void; the fill replaces that
+  element's children, and the
   element itself, with its contract attributes, always renders. Filling any
   other name is `unknown-slot` (which lists the fillable slots); filling one
   twice is `duplicate-slot`.
@@ -431,14 +438,15 @@ names, where they are checked.
   component are `no-default-slot`. A call cannot give both default content and
   named fills (`slot-conflict`).
 - **Required slots.** A fillable slot the manifest marks required must be filled
-  (`missing-slot`), unless its reference content is a single prop placeholder
-  and the call sets that prop (`+dialog(title="…")` fills `title`).
+  (`missing-slot`) when its reference content is a sample — placeholders the IR
+  drops, like `<div data-part="body">{body}</div>` — or a single prop
+  placeholder, which the call may set instead (`+dialog(title="…")` fills
+  `title`). A required part whose reference content is structure or literal
+  text (dialog's `panel`, its `close` button's `✕`) is already there.
 - Unfilled slots render their reference children, with sample placeholders
   dropped.
 - A required part that repeats in the reference tree (tabs' triggers and
-  panels) is not fillable; it renders as the reference ships it. Components whose
-  required slots cannot be filled through a call are listed, with the manifest
-  gap that blocks them, in `packages/template/tests/registry.test.js`.
+  panels) is not fillable; it renders as the reference ships it.
 
 ### 11.5 Ids
 
@@ -690,13 +698,14 @@ error carry `loc: [fileIndex, line, col]`, indexing `Template.files`.
 | `Element` | `{ type, tag, attrs: Attr[], children: Node[], loc }` |
 | `Text` | `{ type, parts: Part[], loc }` |
 | `Comment` | `{ type, text }` |
-| `Raw` | `{ type, text }` or `{ type, expr, loc }` |
+| `Raw` | `{ type, text, loc }` or `{ type, expr, loc }` |
 | `If` | `{ type, branches: { test: Expr \| null, body: Node[] }[], loc }` |
 | `Each` | `{ type, names: string[], of: Expr, body: Node[], else: Node[], loc }` |
 | `Include` | `{ type, name, params: { name, value: AttrValue }[], loc }` |
 | `Component` | `{ type, name, id: AttrValue \| null, body: Node[], loc }` |
 
-`Attr` is `{ name, value }`. `AttrValue` is one of:
+`Attr` is `{ name, value, col? }` — `col`, the attribute's column, is there
+when the attribute was written in the template. `AttrValue` is one of:
 
 - `true` — bare;
 - `{ parts: Part[] }` — a literal with holes;
@@ -736,7 +745,8 @@ A `Part` is a string, `{ expr: Expr }`, or `{ id: true }` (the enclosing
       bools: [],
       tree: { tag, attrs: [[name, true | { b: arg } | Seg[]]], slot?, dyn?: [[arg, attr]], children: (TreeNode | Seg)[] }
     }
-  }
+  },
+  unavailable: { table: "…the reason…" }
 }
 ```
 
@@ -774,12 +784,14 @@ engine is the layer under it, not a competitor:
 4. **One component walker.** The table is built from the bindings IR: the
    reference tree from `recipe-ir.ts` for primitives and recipes alike (it keeps
    `role`, `aria-*` and `hidden` exactly as `templates.html` ships them), states
-   and the default slot from `ir.ts`. The IR gained an option to keep `l-*`
-   attributes, since server output is taken over by faqir-core, not by a
-   framework.
-5. **Required means fill.** A required slot is satisfied by a fill (or the prop
-   its reference content is), not by its reference sample: a sample is not
-   content.
+   and the default slot from `ir.ts`. The IR gained two options the bindings
+   do not use: keep `l-*` attributes, since server output is taken over by
+   faqir-core, not by a framework; and mark elements whose reference text was
+   only sample placeholders, which is what decides a required fill.
+5. **Required means fill where the reference holds a sample.** A sample is not
+   content, so a required slot showing one must be filled (or its prop set); a
+   required part whose reference is structure is already there, and asking for
+   a fill would replace that structure.
 6. **Partials see only their parameters.** No implicit scope leaks into a
    partial, so a partial reads the same wherever it is included.
 7. **Missing is loud.** A missing value is an error everywhere — text, attribute,
