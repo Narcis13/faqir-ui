@@ -1,0 +1,7 @@
+{
+  "jobs": [
+    { "label": "Deploy", "variant": "primary", "running": false, "locked": false },
+    { "label": "Deploying…", "variant": "primary", "running": true, "locked": false },
+    { "label": "Roll back", "variant": "destructive", "running": false, "locked": true }
+  ]
+}

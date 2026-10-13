@@ -1,0 +1,8 @@
+div
+    p
+        label(for="attrs-email") Email address
+    input#attrs-email(type="email" name="email" required disabled=signup.locked)
+    hr
+    button(type="submit" data-ui="button" disabled=signup.empty) Subscribe
+    p
+        a(href="https://example.com/lists/{{ signup.list }}" aria-label="Open the {{ signup.list }} archive") Archive

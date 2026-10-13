@@ -1,0 +1,46 @@
+{
+  "pages": [
+    {
+      "slug": "index",
+      "path": "template/index.html",
+      "label": "Overview",
+      "title": "Server templates",
+      "description": "@faqir-ui/template, the Faqir template language: indentation-based templates that render Faqir components on the server, checked against their manifests and escaped for every context."
+    },
+    {
+      "slug": "syntax",
+      "path": "template/syntax/index.html",
+      "label": "Syntax",
+      "title": "Template syntax",
+      "description": "Source text and indentation, elements and attributes, text and holes, comments, expressions and helpers, and if/else/each in the Faqir template language."
+    },
+    {
+      "slug": "components",
+      "path": "template/components/index.html",
+      "label": "Composition & components",
+      "title": "Composition and components",
+      "description": "Layouts, blocks and includes; component calls checked against Faqir manifests; the l-data island; and server-rendered recipes that faqir-core takes over in the browser."
+    },
+    {
+      "slug": "safety",
+      "path": "template/safety/index.html",
+      "label": "Escaping & limits",
+      "title": "Escaping, limits and diagnostics",
+      "description": "How @faqir-ui/template escapes data for each context, what raw is for, the limits that bound a hostile template, and the diagnostics a template gets back."
+    },
+    {
+      "slug": "api",
+      "path": "template/api/index.html",
+      "label": "API & CLI",
+      "title": "API and CLI",
+      "description": "compile, render and the /compile, /node and /registry entries of @faqir-ui/template, the faqir template command, and how the engine relates to @faqir-ui/render."
+    },
+    {
+      "slug": "examples",
+      "path": "template/examples/index.html",
+      "label": "Use cases",
+      "title": "Use cases",
+      "description": "Worked examples of @faqir-ui/template: a server-rendered app page, documentation and CMS content, email-style static output, and rendering templates you do not trust."
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+//- One summary row under the line items. Parameters: label, amount (text).
+tr
+  th(scope="row" colspan="3") {{ label }}
+  td {{ amount }}

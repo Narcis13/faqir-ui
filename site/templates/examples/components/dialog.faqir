@@ -1,0 +1,1 @@
++button(variant="destructive" data-open="delete-project" aria-haspopup="dialog") Delete {{ project.name }}

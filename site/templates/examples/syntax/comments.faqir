@@ -1,0 +1,9 @@
+//- A template comment: nothing is written for it.
+// A page comment: written as an HTML comment.
+//
+    Lines indented under a comment
+    belong to it, verbatim.
+//-
+    A block template comment
+    that never reaches the output.
+p Only this paragraph is visible.

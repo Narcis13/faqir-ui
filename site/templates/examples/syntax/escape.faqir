@@ -1,0 +1,4 @@
+p Holes look like \{{ user.name }} in a template.
+p The value of user.name is {{ user.name }}.
+p A backslash anywhere else is plain text: C:\temp
+p A closing pair inside a string is fine: {{ "}}" }}

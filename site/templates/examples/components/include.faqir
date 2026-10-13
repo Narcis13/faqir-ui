@@ -1,0 +1,4 @@
+nav(aria-label="Project sections")
+  ul
+    each item in sections
+      include "partials/components-nav-item.faqir" (href=item.href label=item.label current=item.href == current)

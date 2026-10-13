@@ -1,0 +1,3 @@
++card(colour="blue" title="Billing service")
+  @body
+    p Invoices, refunds and the monthly close.

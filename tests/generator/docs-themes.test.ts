@@ -426,8 +426,9 @@ describe("site JavaScript", () => {
     // integrations, Night Shift, axes and authoring pages, and a specimen
     // sheet per theme (src/generator/docs-pages/).
     // +1: the motion page (the studio is checked above, with its plugin).
+    // +6 on 1.2.5: the Server templates section (src/generator/docs-pages/template.ts).
     expect(documentation.length).toBe(
-      components.length + 16 + 7 + 1 + SCAFFOLD_NAMES.length + themes.length,
+      components.length + 16 + 7 + 1 + 6 + SCAFFOLD_NAMES.length + themes.length,
     );
     for (const f of documentation) {
       const scripts = [...f.content.matchAll(/<script\b[^>]*>/g)].map((m) => m[0]);
@@ -436,12 +437,16 @@ describe("site JavaScript", () => {
       const isComponentPage =
         components.some((c) => c.pagePath === f.path) ||
         SCAFFOLD_NAMES.some((name) => scaffoldPagePath(name) === f.path);
+      // A Server templates page loads the engine exactly when the markup the
+      // template engine wrote for it says so, in its `@ui:requires` comment.
+      const templateNeedsEngine =
+        f.path.startsWith("template/") && f.content.includes("<!-- @ui:requires faqir-core.js");
       const allowed = isComponentPage
         ? [
             `<script src="${relUrl(f.path, "scripts/gallery.js")}" defer>`,
             `<script src="${relUrl(f.path, "scripts/copy-snippet.js")}" defer>`,
           ]
-        : f.path === RESPONSIVE_PAGE || f.path === ENGINE_PAGE || f.path === MOTION_PAGE
+        : f.path === RESPONSIVE_PAGE || f.path === ENGINE_PAGE || f.path === MOTION_PAGE || templateNeedsEngine
           ? [
               `<script src="${relUrl(f.path, "scripts/gallery.js")}" defer>`,
               `<script src="${relUrl(f.path, "scripts/faqir-core.js")}" defer>`,

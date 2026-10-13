@@ -34,6 +34,11 @@ export default defineConfig({
     // block can't perturb what axe evaluates.
     colorScheme: "light",
     reducedMotion: "reduce",
+    // `use.reducedMotion` alone is ignored by Playwright 1.61 here, so entrance
+    // animations (reveal, logo-cloud, …) were scanned mid-flight and reported
+    // contrast failures no settled page has. The browser-context option is the
+    // one that takes effect.
+    contextOptions: { reducedMotion: "reduce" },
   },
 
   projects: [

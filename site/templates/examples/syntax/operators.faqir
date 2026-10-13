@@ -1,0 +1,9 @@
+ul
+    li {{ n.a }} / {{ n.b }} = {{ n.a / n.b }}
+    li {{ n.a }} % {{ n.b }} = {{ n.a % n.b }}
+    li Is {{ n.a }} greater than {{ n.b }}? {{ n.a > n.b }}
+    li Is {{ n.a }} == "7"? {{ n.a == "7" }}
+    li {{ "Order #" + n.id }}
+    li {{ n.nickname || n.name }}
+    li {{ n.a > 5 ? "big" : "small" }}
+    li {{ !n.flag }}

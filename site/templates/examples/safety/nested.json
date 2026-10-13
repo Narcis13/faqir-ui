@@ -1,0 +1,7 @@
+{
+  "post": {
+    "title": "<img src=x onerror=alert(1)>",
+    "body": "</p><script>steal()</script>",
+    "tag": "a & b"
+  }
+}

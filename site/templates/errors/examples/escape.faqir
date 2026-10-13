@@ -1,0 +1,2 @@
+p Your order has shipped.
+include "../../package.json"

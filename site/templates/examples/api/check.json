@@ -1,0 +1,12 @@
+{
+  "report": {
+    "ok": false,
+    "dir": "/srv/shop/ui/template",
+    "files": [
+      "attrs.js", "checks.js", "compile.js", "components.js", "compose.js", "diagnostics.js",
+      "escape.js", "evaluate.js", "expr.js", "index.js", "json.js", "lines.js",
+      "node.js", "parse.js", "render.js", "text.js", "table.js"
+    ],
+    "drifted": ["render.js", "table.js"]
+  }
+}

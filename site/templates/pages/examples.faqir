@@ -1,0 +1,196 @@
+layout "layouts/section.faqir"
+
+block lede
+  p Four jobs the engine does well, each built from a layout, partials and a page template: an app page drawn on the server, content from a CMS, an email that needs no browser code, and a template written by someone you do not trust.
+
+block toc
+  li
+    a(href="#app-pages") A server-rendered app page
+  li
+    a(href="#content") Documentation and CMS content
+  li
+    a(href="#email") Email and other static output
+  li
+    a(href="#untrusted") Rendering templates you do not trust
+
+block content
+  h2#app-pages A server-rendered app page
+  p Most pages of an application are drawn on the server: a handler loads data, and by the time the response leaves it is HTML. The example is one panel of such an app, written as three files: a layout that frames it, a partial that draws one order, and the page template that fills the layout's content block.
+  p The layout renders a fragment, with no doctype, html, body or main of its own, so the host chooses where it lands: inside its page shell, or alone as the response to a request for one part of a page. The files listed under Loads are the layout and the partial.
+  include "partials/example.faqir" (example=ex.orders)
+  p
+    | Each row is the same partial, called with
+    code order=order noun=view.noun
+    | and nothing else. A partial sees only the parameters it is given, which is why the noun travels as one. The badge's colour comes from the data:
+    code +badge(variant=order.tone)
+    | takes the value of
+    code tone
+    | from each order, and the engine checks it against the badge manifest as it renders. The allowed values include success, warning and destructive. A tone the manifest does not list stops the render and names the ones it does:
+  include "partials/failure.faqir" (failure=err.tone)
+  p
+    | That is a render error rather than a compile error because the template cannot know the value until it has the data. A literal the manifest does not allow, such as
+    code variant="danger"
+    | written in the template, is caught when the template is compiled.
+  p
+    | The Returns card shows what the
+    code else
+    | branch of an each is for. Its list is empty, so a muted callout was drawn in place of an empty box.
+  h3 What runs where
+  p The server did all of it. The engine walked the template once with the data above and returned a string. The cards, the rows, the badges and the empty-state callout are plain HTML that needs no script, and they look the same with JavaScript turned off.
+  p
+    | The one live part is the island at the bottom, which the template writes as
+    code div(l-data=json(flags))
+    | in the page template. The json call puts the data into the attribute as JSON text; in the browser, faqir-core finds that root and takes over. The button's
+    code @click
+    | and the span's
+    code l-text
+    | are client expressions that the template's author wrote as literal strings. The engine passes them through without evaluating them, and it refuses to let data in: writing
+    code l-text=flags.flagged
+    | instead of the quoted string is a compile error, directive-interpolation. Press the button in the result above to see faqir-core at work.
+  p
+    | Because the fragment carries faqir-core attributes, the engine began its output with an
+    code @ui:requires
+    | comment naming what the browser must load. For this one it lists
+    each file in ex.orders.requires
+      code {{ file }}
+    | and nothing else. This docs page loaded that file for the same reason. A host drawing a fragment into its own shell reads the same comment and adds the script.
+
+  h2#content Documentation and CMS content
+  p Documentation sites, help centres and CMS-backed pages keep an article as data: a title, an author and a list of sections, each with a kind. The template is where the kinds become markup. Three files do it: a layout for the frame of an article, a partial that draws one section by its kind, and a page template that loops over the sections.
+  include "partials/example.faqir" (example=ex.article)
+  p
+    | The partial is an
+    code if
+    | and
+    code else if
+    | chain that tests the kind of each entry, so what an editor can publish is a fixed vocabulary: paragraph, callout, list or code. The callout's tone comes from the data and goes through the same manifest check as the badge above. The last section has a kind the template does not know, and the closing
+    code else
+    | turns it into a muted callout, rather than dropping it silently or failing the whole page.
+  p
+    | Now the first paragraph. Its text holds a bold tag, typed by an author, and a placeholder in double braces. Both arrive as text: the tag shows as characters instead of making anything bold, and the placeholder is not looked up. Everything that comes from data is escaped for the place it lands in, so
+    code <b>Rotate</b>
+    | in the data can only ever be the letters you see.
+  p
+    | HTML that you have already sanitised yourself can opt out of escaping with the
+    code raw
+    | keyword. The
+    a(href=links.raw) safety page
+    | explains when that is a good idea.
+
+  h2#email Email and other static output
+  p Not every template feeds a browser. A receipt or a notification is static markup: the engine renders it once, the host sends it, and nothing in it ever runs. The example draws a receipt from order data with three support files: a layout with the greeting and sign-off every message shares, a partial for a line item, and a partial for a summary row under the table.
+  include "partials/example.faqir" (example=ex.receipt)
+  p
+    | The template calls two helpers that the host registered, which this site keeps in
+    code {{ facts.helpers.file }}
+    | and passes to the engine. Prices are integer cents in the data, the
+    code money
+    | helper turns them into text, and
+    code plural
+    | picks "product" or "products" from the count. The Shipping row is a conditional expression: a shipping cost of zero prints Free.
+  p
+    | Nothing here needs the browser. The engine collected
+    strong {{ ex.receipt.requires.length }}
+    | files for this template, so it wrote no
+    code @ui:requires
+    | comment at all. Open The HTML it wrote under the result and see for yourself that no comment comes before the markup.
+  p
+    | The output is deterministic: the same data gives the same bytes. Nothing in it is random, and the engine has no clock, so the date of the order arrives as data. Even the ids that components need are numbered in render order, never random; this receipt has none. That makes the output safe to cache, to compare in a test, or to hash.
+  p
+    | The div around the table is this site's own convention, which its tests require; a message of yours would not need it. The templates carry no class or style attributes either, because the docs site bans them in examples, although the language passes class through on any element. A real email pipeline would inline its CSS into this markup afterwards, as a separate step outside the engine.
+
+  h2#untrusted Rendering templates you do not trust
+  p
+    | Sometimes the template itself comes from someone else: a customer's own notification, a plugin author's page. The language is built for that. Compiling and rendering a hostile template cannot run code, read outside the loader it is given, recurse without bound, or produce unbounded output. You set the policy in the options of two calls:
+  pre(tabindex="0")
+    code
+      | const { ast, diagnostics } = compile(source, { loader, components, helpers: ["upper"], raw: false });
+      | const html = render(ast, data, { helpers, maxSteps: 2000, maxOutput: 20000 });
+  p The first call refuses raw HTML for this template. The second stops it after 2000 steps or 20000 characters of output; without these options the limits are 10 million steps and 16 777 216 characters. A customer's notification written within those rules renders as usual:
+  include "partials/example.faqir" (example=ex.custom)
+  p
+    | Look at the Options pane: the policy belongs to the host, and the template cannot change it. The template itself is ordinary, with a callout, a helper call and a loop. Everything it calls (the callout's manifest, the
+    code upper
+    | helper) is something the host chose to give it. What a hostile one gets, by the kind of thing it tries:
+  div(data-docs-table tabindex="0")
+    table
+      thead
+        tr
+          th(scope="col") A hostile template tries to
+          th(scope="col") The engine answers
+      tbody
+        tr
+          td Write markup of its own
+          td
+            code raw-refused
+            | or
+            code event-attr
+        tr
+          td Run code, or reach into the host's objects
+          td
+            code unknown-helper
+            | or
+            code forbidden-name
+        tr
+          td Read a file outside the loader
+          td
+            code bad-path
+            | or
+            code not-found
+        tr
+          td Loop or print without end
+          td
+            code step-limit
+            | or
+            code output-limit
+  h3 Markup it cannot write
+  p
+    | With raw off, the
+    code raw
+    | keyword is refused when the template is compiled, in both of its forms, and nothing is rendered:
+  include "partials/failure.faqir" (failure=err.refused)
+  p
+    | The same goes for inline handlers. An
+    code on*
+    | attribute is refused whatever its value, because an inline handler would force the host to allow unsafe inline script. A faqir-core event is written
+    code @click
+    | instead, and its value must be a quoted literal:
+  include "partials/failure.faqir" (failure=err.handler)
+  h3 Names it cannot read
+  p
+    | Property reads see only a value's own data properties, and the names
+    code constructor
+    | and
+    code prototype
+    | and
+    code __proto__
+    | are refused outright, at compile time:
+  include "partials/failure.faqir" (failure=err.forbidden)
+  p
+    | An expression such as
+    code user["con" + "structor"]
+    | builds the name at render time, which gets past the compile-time check but not the render: reading it fails with the error type. A template also cannot define a function or receive one. Calling
+    code eval
+    | or any other name the host did not register is a compile error, unknown-helper.
+  h3 Files it cannot reach
+  p
+    | A name is a relative path under the loader's root: forward slashes, no leading slash, no empty or
+    code ..
+    | segment, and the extension
+    code .faqir
+    | is required. A name that breaks the rules is not looked up at all:
+  include "partials/failure.faqir" (failure=err.escape)
+  p
+    | A well-formed name for a file the loader does not hold gets the code
+    code not-found
+    | instead. The file loader in the node entry serves files under one directory and nothing else, and it treats a symbolic link that leaves that directory as missing. Because names are relative to the root and never to the including file, giving each customer a loader rooted in their own directory keeps their templates apart.
+  h3 Work it cannot make
+  p The template below is four lines, and the data is twelve strings. Three nested loops make twelve times twelve times twelve passes, and every pass counts as a step:
+  include "partials/failure.faqir" (failure=err.loop)
+  p
+    | The render stops at the node where the limit was crossed and returns nothing.
+    code maxOutput
+    | does the same for size, with the code
+    code output-limit
+    | as its error. Includes cannot recurse either: a template that includes itself, directly or through others, is a compile error, and no chain of includes may be deeper than 16.
+  p The pattern for a host is to compile once, when the customer saves the template, and show the author the diagnostics, which carry the file, line and column. What gets stored is the compiled AST, and rendering it later needs only the runtime.

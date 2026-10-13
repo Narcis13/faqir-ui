@@ -1,0 +1,6 @@
+{
+  "user": {
+    "name": "<script>alert(\"owned\")</script>",
+    "note": "5 > 3 & 2 < 4"
+  }
+}

@@ -1,0 +1,46 @@
+//- One example, three ways: the template, the data it was given, and what
+//- render() wrote, live. Parameter: example, one entry of a page's ex.
+div(data-docs-template-example)
+  div(data-docs-template-pane="source")
+    div(data-docs-template-label)
+      +badge Template
+      +text(variant="mono" size="sm") {{ example.file }}
+    pre(tabindex="0")
+      code {{ example.source }}
+    each dep in example.deps
+      div(data-docs-template-label)
+        +badge Loads
+        +text(variant="mono" size="sm") {{ dep.file }}
+      pre(tabindex="0")
+        code {{ dep.source }}
+    if example.overlay
+      div(data-docs-template-label)
+        +badge Overlay
+        +text(variant="mono" size="sm") {{ example.overlay.file }}
+      pre(tabindex="0")
+        code {{ example.overlay.source }}
+  div(data-docs-template-pane="data")
+    div(data-docs-template-label)
+      +badge Data
+    pre(tabindex="0")
+      code {{ example.data }}
+    if example.options != ""
+      div(data-docs-template-label)
+        +badge Options
+      pre(tabindex="0")
+        code {{ example.options }}
+  div(data-docs-template-pane="result")
+    div(data-docs-template-label)
+      +badge(variant="success") Rendered
+    div(data-docs-template-result)
+      raw example.html
+    if example.overlay
+      p(data-docs-template-note) The overlay template's output is mounted beside the page's main content, where overlays belong; the button above opens it.
+    +collapsible
+      @trigger The HTML it wrote
+      @content
+        pre(tabindex="0")
+          code {{ example.html }}
+        if example.overlay
+          pre(tabindex="0")
+            code {{ example.overlay.html }}

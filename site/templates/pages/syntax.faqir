@@ -1,0 +1,334 @@
+layout "layouts/section.faqir"
+
+block lede
+  p Everything you write in a template, in the order you meet it: how lines and indentation work, elements and attributes, text and holes, comments, expressions, and the two control-flow constructs. Each rule has a live example, and the ones that fail show the error the engine gave.
+
+block toc
+  li
+    a(href="#source-text") Source text and indentation
+  li
+    a(href="#elements") Elements and attributes
+  li
+    a(href="#text") Text, holes and the escape
+  li
+    a(href="#comments") Comments
+  li
+    a(href="#expressions") Expressions, operators and helpers
+  li
+    a(href="#control-flow") Control flow
+
+block content
+  h2#source-text Source text and indentation
+  p A template is UTF-8 text, usually in a file ending in .faqir. The language is line-based: every construct starts on its own line, and a blank line is ignored. Nesting is written with indentation alone, as in Pug, so there are no closing tags and nothing to balance.
+  h3 Indentation rules
+  ul
+    li
+      strong Spaces only.
+      | A tab anywhere in a line's indentation is the compile error
+      code tab-indent
+      | because editors disagree about how wide a tab is.
+    li
+      strong The first indented line sets the step.
+      | Two spaces, four, eight: whatever the first indented line of the file uses is the step for the whole file.
+    li
+      strong One step deeper per child.
+      | A child is indented exactly one step more than its parent. A half step or a jump of two steps is
+      code bad-indent
+      | and the diagnostic points at the line.
+    li
+      strong Dedent to any enclosing level.
+      | A line may return to the indentation of any ancestor, however many levels that skips.
+  include "partials/example.faqir" (example=ex.indent)
+  p Notice that the first indented line is the h3, four spaces in, so four spaces is the step: every child sits exactly four deeper than its parent. The last paragraph steps out of four open elements in one move.
+  p Both ways to get this wrong are reported with a line and a column. The tab in the first template below is a real tab character, which is why you cannot see what is wrong with it.
+  include "partials/failure.faqir" (failure=err.tabindent)
+  include "partials/failure.faqir" (failure=err.badindent)
+  p The second template uses a four-space step, then indents the last line by six: neither a child (eight) nor an enclosing level (four or zero). The engine refuses to guess which one you meant.
+
+  h3 What comes out
+  p The output is as plain as the input. These are the whole rules, and every example on this page follows them.
+  ol
+    li Every node is written on its own line, indented two spaces per level of output nesting. A line break in HTML renders as one space between inline content and is ignored between blocks, so words never run together across lines.
+    li An element whose only child is text is written on one line, as in a paragraph that holds a sentence.
+    li Inside pre, textarea, script and style, nothing is added: children are written one after another and piped lines are joined by a newline, with no indentation.
+    li Output ends with a single newline.
+  include "partials/example.faqir" (example=ex.whitespace)
+  p Open the HTML it wrote to compare. The short paragraph is one line. In the second paragraph, the text and the two elements each have a line to themselves, which the browser reads as a single space between them. The pre block keeps its piped lines exactly, including the indent on its second line: the first space after a pipe is only the separator, and the two spaces after it belong to the text.
+  +callout(variant="warning")
+    @content
+      p
+        strong The honest consequence:
+        | because an inline element is always followed by a line break, punctuation cannot follow it directly. A comma or full stop that starts the next piped line would be rendered with a space before it.
+      p Put a word after the element, put the punctuation inside the element's own text, or restructure the sentence. The paragraphs of this page do the first.
+
+  h2#elements Elements and attributes
+  p An element is a tag, an optional id, optional attributes in parentheses, and optional inline text, in that order. Any HTML or custom element name works.
+  ul
+    li
+      strong The id shorthand.
+      code #id
+      | after the tag sets the id. It is the only shorthand: there is no class shorthand, because Faqir identifies things through the five protocol attributes and the id. Even so, the language passes a class attribute through when you write it in parentheses.
+    li
+      strong Quoted literals.
+      code name="text"
+      | is a literal value. It may hold holes, written like holes in text.
+    li
+      strong Expressions.
+      code name=expr
+      | takes the value of an expression. The value true writes the attribute bare, false leaves it out, and a string or a number is the value. Anything else, including null, stops the render with the error
+      code not-text
+      | and the name of the attribute.
+    li
+      strong Bare attributes.
+      | A name alone is a boolean attribute.
+    li
+      strong Void elements.
+      | The elements HTML never closes, such as input, hr and br, take no children and are written without a closing tag.
+    li
+      strong Separators.
+      | Attributes are separated by spaces, and a comma is also accepted. An attribute can appear only once on an element.
+  include "partials/example.faqir" (example=ex.attrs)
+  p Notice the three ways a value becomes an attribute. The input gets a bare disabled attribute because signup.locked is true, and the button has no disabled attribute at all because signup.empty is false. The link's href and its aria-label both carry holes inside quoted literals, and every value is escaped for the attribute it lands in.
+
+  h3 Directives pass through
+  p
+    | Faqir-core's own attributes are written exactly as in HTML: the
+    code l-*
+    | directives, the
+    code :prop
+    | bindings and the
+    code @event
+    | handlers, with any modifiers. The engine never evaluates them. Their values belong to the browser, so they must be quoted literals with no holes.
+  include "partials/example.faqir" (example=ex.directives)
+  p Click the button: the counter above is faqir-core running in this page, taking over the markup the engine wrote. The server did not know it was a counter, and the page that loads faqir-core did so because the engine listed it in the requires comment at the top of the HTML. After the third click the button disables itself through the bound disabled attribute, and the greater-than sign in that literal is written as an entity, which the browser reads back as the character you typed.
+  p
+    | The rule has a reason. If a template could put server data into a client expression, then data could run as code in the browser. So a hole or an expression in a faqir-core attribute is the compile error
+    code directive-interpolation
+    | and the only door for server data into the client is the
+    code l-data
+    | island, covered on the Composition and components page.
+  include "partials/failure.faqir" (failure=err.directive)
+  p
+    | Likewise any attribute starting with
+    code on
+    | is refused with
+    code event-attr
+    | whether its value is literal or not. Write
+    code @click
+    | instead, which keeps the page working under a strict content security policy.
+
+  h2#text Text, holes and the escape
+  p
+    | Text follows a tag after one space, or sits on a line of its own that starts with a pipe. A hole is written
+    code \{{ expr }}
+    | and puts the value of an expression into the text. A hole ends at the closing pair that follows a complete expression, so you can use it anywhere inside text.
+  include "partials/example.faqir" (example=ex.holes)
+  p Notice that a hole can be followed directly by punctuation, since holes are part of the text and not separate nodes. The three types a hole may produce are text, a finite number and a boolean, and all are written as you would expect. The bio in the data contains angle brackets and an ampersand, and they arrive as text: literal text and data are escaped the same way.
+  p
+    | Because both are escaped, write the character you mean. Typing an entity such as
+    code &mdash;
+    | would show those characters, not a dash. Template text is not a way to write markup. The only way is the keyword
+    code raw
+    | which the Escaping, limits and diagnostics page explains.
+
+  h3 The escape
+  p
+    | The one escape of the language is a backslash before the opening braces, written
+    code \\{{
+    | in a template. It writes a literal pair of opening braces, and a backslash anywhere else is just a backslash.
+  include "partials/example.faqir" (example=ex.escape)
+  p Notice that the first line prints the template syntax and the second line evaluates it. The last line shows that the engine reads a hole to the closing pair that ends a complete expression, so a string inside a hole may contain the pair itself.
+
+  h3 What a hole will not print
+  p
+    | A hole shows a string, a finite number or a boolean. A value that is not there, an object or an array is an error, never silent empty text, because an empty space is how mistakes hide. A path that is not in the data is
+    code missing
+    | and the error names the path and the line.
+  include "partials/failure.faqir" (failure=err.missing)
+  p
+    | A value that is there but is null, or is an object, is the other error
+    code not-text
+    | with the same line information. Neither is fixed by hiding it: if a value really is optional, say so with the operator in the expressions section below.
+  include "partials/failure.faqir" (failure=err.nottext)
+
+  h2#comments Comments
+  p
+    | There are two kinds, and they differ in who gets to read them.
+    code //-
+    | starts a template comment, which is not written to the output at all. A plain
+    code //
+    | starts an HTML comment, which is written as a comment for people who view the source.
+  p Either kind swallows the lines indented under it, which makes a block comment. Inside a block, lines are kept verbatim after the block's indentation.
+  include "partials/example.faqir" (example=ex.comments)
+  p
+    | Notice in the HTML it wrote that the page comment came out as an HTML comment, with the block lines under it, and the template comments left no trace. Only the paragraph is visible. Use
+    code //-
+    | for notes to the next author and
+    code //
+    | when the reader of the page should see something in its source.
+  p
+    | An HTML comment is literal, since text that is data-driven could end the comment early. A hole, a double hyphen or a leading
+    code >
+    | inside one is the compile error
+    code bad-comment
+    | and the line it is on.
+
+  h2#expressions Expressions, operators and helpers
+  p An expression appears in a hole, as an attribute value, in an if test and as the subject of an each. It is parsed by the engine itself into plain data, and there is no way to write assignment, a function, a method call or a global. That is deliberate: there is no route from data to running code.
+
+  h3 Paths and scope
+  p
+    | A path starts with a name from the scope. The scope holds the variables of the loops you are inside, innermost first, then the data passed to
+    code render()
+    | or, in an included partial, only its parameters. After the first name, a dot reads a property and square brackets read the result of an expression.
+  include "partials/example.faqir" (example=ex.paths)
+  p Notice that the brackets can hold a number, as in the first item, or another path, as in the chosen item. Strings expose their length and their indexes, and arrays do the same.
+  ul
+    li
+      strong Own data properties only.
+      | A step reads a property only if the value holds it itself. Nothing is inherited and no getter is run.
+    li
+      strong Forbidden names.
+      code __proto__
+      | and
+      code prototype
+      | and
+      code constructor
+      | are refused as any name at compile time, and as a computed key at render time.
+    li
+      strong Missing is an error.
+      | A name that is not in scope is
+      code missing
+      | and a step through null, a number, a boolean or a function is
+      code type
+      | which names the step it could not take.
+
+  h3 Operators
+  p Listed from the loosest binding to the tightest. Parentheses group as usual, and each row binds tighter than the one above it.
+  div(data-docs-table tabindex="0")
+    table
+      thead
+        tr
+          th Operator
+          th What it does
+      tbody
+        tr
+          td
+            code a ? b : c
+          td b if a is truthy, otherwise c.
+        tr
+          td
+            code a ?? b
+          td The value of a, unless a is a path that is missing or is null, in which case b. The only way to ask for an optional value.
+        tr
+          td
+            code a || b
+          td The first operand that is truthy, else the last. It stops at the first one.
+        tr
+          td
+            code a && b
+          td The first operand that is falsy, else the last. It stops at the first one.
+        tr
+          td
+            code == !=
+          td Strict equality. Nothing is converted, so the number 7 is not equal to the text 7.
+        tr
+          td
+            code < <= > >=
+          td Two numbers or two strings, otherwise the render error type.
+        tr
+          td
+            code +
+          td Two numbers add. Text with text or a number joins them. Anything else is type.
+        tr
+          td
+            code - * / %
+          td Numbers only, and a result that is not finite is type. Subtraction binds as loosely as addition, and the other three bind tighter.
+        tr
+          td
+            code !a
+          td Not, by the language's truthiness: empty text, 0, false and null are false.
+  include "partials/example.faqir" (example=ex.operators)
+  p Notice the quirks that follow from the table: dividing 7 by 2 gives 3.5, the equality test against the text 7 is false, and the empty nickname is falsy so the name is used instead. A plain plus between a text and a number joins them.
+
+  h3 The optional value
+  p
+    | A missing value is an error everywhere in a template except on the left of
+    code ??
+    | which makes optional data something you ask for out loud, rather than something that silently works until it does not.
+  include "partials/example.faqir" (example=ex.defaults)
+  p
+    | Notice what falls through. The nickname is null and the title is not in the data at all, so both give way to the next value, while a score of 0 is a real value and is kept. The operator chains, trying each in turn, and it replaces only an absent value. It does not replace an empty string or a false, so use
+    code ||
+    | when you want those replaced as well.
+  p The left side is rescued only when the value itself is absent or null. A path that steps through a null, such as reading the name of a user whose profile is null, is still the render error type, because there is no value to ask about.
+
+  h3 Helpers
+  p
+    | A call such as
+    code upper(name)
+    | uses a helper, a plain function registered by the host. A template can call a helper but cannot define one, pass one on or receive one, which keeps the host in charge of everything with side effects. The host gives
+    code compile
+    | the names of its helpers, so a misspelled call is found when the template is compiled, and gives
+    code render
+    | the functions themselves.
+  p This site registers these helpers, from site/templates/helpers.js:
+  ul
+    each name in facts.helpers.names
+      li
+        code {{ name }}
+  p This is the file, exactly as the docs build reads it:
+  pre(tabindex="0")
+    code {{ facts.helpers.source }}
+  p
+    | The builder then declares the names to the compiler and hands the functions to the renderer, in the same shape as this:
+  pre(tabindex="0")
+    code
+      | const { ast } = compile(source, { helpers: Object.keys(helpers) });
+      | const html = render(ast, data, { helpers });
+  include "partials/example.faqir" (example=ex.helpers)
+  p
+    | Notice that plural takes the count first, then the singular and the plural word, and money takes an amount in cents. A name the host did not declare is the compile error
+    code unknown-helper
+    | and one that is declared but missing from the functions passed to render, or that throws, is
+    code helper-error
+    | at render time.
+  include "partials/failure.faqir" (failure=err.helper)
+
+  h2#control-flow Control flow
+  p There are two constructs, and no others: a condition and a loop. Both are statements that start a line, with their body indented beneath them.
+
+  h3 Conditions
+  p
+    code if
+    | tests an expression by JavaScript truthiness. Add any number of
+    code else if
+    | branches and one
+    code else
+    | and only the first branch whose test is true is written.
+  include "partials/example.faqir" (example=ex.conditions)
+  p
+    | Notice the last line: the account has no invoice, so a bare test would stop with
+    code missing
+    | and the
+    code ??
+    | with
+    code false
+    | turns it into an ordinary no.
+
+  h3 Loops
+  p
+    code each
+    | walks an array: the first name is the item, and an optional second name is its index, counting from 0. An
+    code else
+    | at the same level as the loop is written when the array is empty, which saves a separate test.
+  include "partials/example.faqir" (example=ex.loops)
+  p Notice that the second list has nothing in it, so its else branch is shown, and that the index was shifted by one with a plus for display. Anything that is not an array or an object is the render error type.
+  p Over an object the first name is the key and the second is the value, in the object's own key order. That is JavaScript's order, so a key that looks like a whole number comes before the others.
+  include "partials/example.faqir" (example=ex.objects)
+  p Notice the values are numbers and booleans as well as text, and each one is written the way a hole writes it.
+
+  h3 Loop names shadow
+  p A loop name hides any outer name that is spelled the same, for as long as the body runs, and is gone afterwards.
+  include "partials/example.faqir" (example=ex.shadow)
+  p Notice that the name inside the list is each item and the name after it is the original value again. That holds because loop names live in a scope of their own and never overwrite the data.

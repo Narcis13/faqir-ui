@@ -1,0 +1,7 @@
+{
+  "faq": [
+    { "question": "Can I change plans later?", "answer": "Yes. The new price applies from the next invoice." },
+    { "question": "Who can see the audit log?", "answer": "Owners and admins. Members see their own actions only." },
+    { "question": "Do you keep my data after I cancel?", "answer": "For 30 days, then it is deleted for good." }
+  ]
+}

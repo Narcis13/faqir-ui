@@ -1,0 +1,7 @@
+//- The frame of every message the shop sends: a greeting, the body block,
+//- a sign-off. This one draws a fragment; a message sent as a whole document
+//- would start with doctype html and carry its own html, head and body.
+div
+  p Hello {{ customer.name }},
+  block body
+  p Thanks for shopping with {{ shop.name }}.

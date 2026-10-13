@@ -117,6 +117,21 @@ describe("limits (§13)", () => {
     expect(renderCode("each x in xs\n  p {{ x }}\n", { xs: Array(100).fill("abcdefghij") }, {}, { maxOutput: 500 })).toBe("output-limit");
   });
 
+  it("names the node it was writing when it hit the output limit (§14.2)", () => {
+    // Every other render error carries file, line and col; the output limit
+    // used to be thrown with no position at all.
+    const ast = ok("div\n  each x in xs\n    p {{ x }}\n", { file: "page.faqir" });
+    let error: any;
+    try {
+      render(ast, { xs: Array(100).fill("abcdefghij") }, { maxOutput: 500 });
+    } catch (e) {
+      error = e;
+    }
+    expect(error.code).toBe("output-limit");
+    expect([error.file, error.line, error.col]).toEqual(["page.faqir", 3, 5]);
+    expect(error.message).toContain("(page.faqir:3:5)");
+  });
+
   it("stops at the step limit, even with no output", () => {
     const xs = Array.from({ length: 100 }, (_, i) => i);
     const src = "each a in xs\n  each b in xs\n    each c in xs\n      if false\n        | x\n";

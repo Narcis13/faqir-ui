@@ -1,0 +1,11 @@
+{
+  "customer": { "name": "Mara" },
+  "order": {
+    "number": "A-1042",
+    "status": "shipped",
+    "lines": [
+      { "name": "Dotted notebook", "qty": 2 },
+      { "name": "Fountain pen", "qty": 1 }
+    ]
+  }
+}

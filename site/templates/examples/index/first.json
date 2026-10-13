@@ -1,0 +1,7 @@
+{
+  "release": {
+    "title": "Faqir 1.2.5",
+    "summary": "The template engine ships on npm.",
+    "changes": ["@faqir-ui/template, published", "faqir template", "This guide"]
+  }
+}

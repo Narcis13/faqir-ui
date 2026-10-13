@@ -1,0 +1,9 @@
+{
+  "project": {
+    "name": "Billing service",
+    "summary": "Invoices, refunds and the monthly close.",
+    "status": "Healthy",
+    "tone": "success",
+    "openIssues": 3
+  }
+}

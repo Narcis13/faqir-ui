@@ -1,0 +1,4 @@
+p Welcome back, {{ user.name }}.
+p
+  | Last comment:
+  | {{ user.note }}

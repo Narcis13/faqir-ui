@@ -1,0 +1,3 @@
+each row in rows
+  each cell in row
+    span {{ cell }}

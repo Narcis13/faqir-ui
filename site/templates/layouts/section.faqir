@@ -1,0 +1,44 @@
+//- The body of every page in the Server templates section. The docs build
+//- renders a page with this layout and wraps what render() returns in the
+//- site's shell: everything inside the page's article comes from here.
+div(data-docs-template)
+  p(data-docs-template-eyebrow)
+    +badge(variant="primary") @faqir-ui/template {{ facts.version }}
+  h1 {{ page.title }}
+  div(data-docs-template-lede)
+    block lede
+  nav(aria-label="Server templates pages" data-docs-template-pages)
+    ul
+      each item in section
+        li
+          a(href=item.href aria-current=item.current ? "page" : false) {{ item.label }}
+  nav(aria-label="On this page" data-docs-toc)
+    ul
+      block toc
+      li
+        a(href="#colophon") How this page was made
+  block content
+  h2#colophon How this page was made
+  div(data-docs-template-colophon)
+    p
+      | This page is a template. What you are reading is the HTML that
+      code render()
+      | returned for
+      code site/templates/{{ page.file }}
+      | under the layout
+      code site/templates/{{ page.layout.file }}
+      | when the docs were built, with the registry component table and the data the build gave it. The site's navigation around it is the only part the docs generator wrote.
+    p
+      | Each live result above is the HTML the engine wrote for that example, placed with the
+      code raw
+      | keyword, and a dialog an example draws is placed the same way beside the main content. Those are the only two uses of raw in the section's own templates. A test renders every example and every page again and compares the bytes with the built site.
+    +collapsible(variant="bordered")
+      @trigger The source of this page
+      @content
+        pre(tabindex="0")
+          code {{ page.source }}
+    +collapsible(variant="bordered")
+      @trigger The section layout
+      @content
+        pre(tabindex="0")
+          code {{ page.layout.source }}

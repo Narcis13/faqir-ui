@@ -1,0 +1,2 @@
+p Your order has shipped.
+button(type="button" onclick="track()") Track it

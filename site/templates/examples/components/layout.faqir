@@ -1,0 +1,8 @@
+layout "layouts/components-panel.faqir"
+
+block title
+  | {{ project.name }}
+
+block content
+  p {{ project.summary }}
+  p Owner: {{ project.owner }}

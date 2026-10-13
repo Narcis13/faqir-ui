@@ -1,0 +1,2 @@
+each job in jobs
+  +button(variant=job.variant loading=job.running disabled=job.locked) {{ job.label }}

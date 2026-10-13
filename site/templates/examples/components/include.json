@@ -1,0 +1,8 @@
+{
+  "current": "https://example.com/billing/invoices",
+  "sections": [
+    { "href": "https://example.com/billing", "label": "Overview" },
+    { "href": "https://example.com/billing/invoices", "label": "Invoices" },
+    { "href": "https://example.com/billing/refunds", "label": "Refunds" }
+  ]
+}

@@ -1,0 +1,6 @@
+//- The frame of one article: title, byline, then whatever the page puts in
+//- the body block. Every article on the site shares it.
+div
+  h3 {{ article.title }}
+  p By {{ article.author }}
+  block body

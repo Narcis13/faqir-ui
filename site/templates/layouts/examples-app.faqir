@@ -1,0 +1,8 @@
+//- A layout for a page FRAGMENT: no doctype, html, body or main. The host
+//- decides where the fragment lands, inside its own shell or alone as the
+//- response to a request for part of a page. The layout only fixes the frame.
+div
+  p
+    strong {{ view.title }}
+    | for {{ user.name }}
+  block content

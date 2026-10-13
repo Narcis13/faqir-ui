@@ -1,0 +1,22 @@
+layout "layouts/index-guide.faqir"
+
+block title
+  | {{ page.title }}
+
+block content
+  +callout(variant="warning")
+    @content
+      p You need a running kernel and an admin token.
+  each step, i in page.steps
+    +card(variant="outlined")
+      @header
+        h4(data-part="title") {{ i + 1 }}. {{ step.title }}
+      @body
+        p {{ step.text }}
+  else
+    p Nothing here yet.
+  div(l-data=json(page.state))
+    p
+      | Steps done:
+      strong(l-text="done" aria-live="polite") {{ page.state.done }}
+    +button(size="sm" @click="done++") Mark one done

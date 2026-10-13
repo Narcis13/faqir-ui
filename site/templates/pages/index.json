@@ -1,0 +1,28 @@
+{
+  "useCases": [
+    {
+      "title": "Server-rendered app pages",
+      "text": "Layouts, partials and component calls draw a page from your data on each request, and l-data islands hand the browser exactly the state it needs.",
+      "anchor": "app-pages",
+      "link": "An app page, worked"
+    },
+    {
+      "title": "Documentation and CMS content",
+      "text": "Structured content becomes prose, callouts and lists; whatever an author typed is escaped as text.",
+      "anchor": "content",
+      "link": "Content from data, worked"
+    },
+    {
+      "title": "Email-style static output",
+      "text": "Plain static markup that needs no browser engine, with the same bytes for the same input every time.",
+      "anchor": "email",
+      "link": "A receipt, worked"
+    },
+    {
+      "title": "Templates you do not trust",
+      "text": "Compile a customer's template with raw refused and small limits; a hostile template gets an error, not your server.",
+      "anchor": "untrusted",
+      "link": "Untrusted templates, worked"
+    }
+  ]
+}

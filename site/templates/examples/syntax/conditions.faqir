@@ -1,0 +1,8 @@
+if account.admin
+    p Welcome, administrator.
+else if account.trial
+    p Your trial ends in {{ account.days }} {{ plural(account.days, "day", "days") }}.
+else
+    p Welcome back.
+if account.invoice ?? false
+    p Latest invoice: {{ account.invoice }}

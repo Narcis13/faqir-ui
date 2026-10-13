@@ -1,0 +1,18 @@
+//- One section of an article, drawn by its kind. Parameter: entry.
+if entry.kind == "paragraph"
+  p {{ entry.text }}
+else if entry.kind == "callout"
+  +callout(variant=entry.tone)
+    @content
+      p {{ entry.text }}
+else if entry.kind == "list"
+  ul
+    each item in entry.items
+      li {{ item }}
+else if entry.kind == "code"
+  pre(tabindex="0")
+    code {{ entry.text }}
+else
+  +callout(variant="muted")
+    @content
+      p Unsupported section kind: {{ entry.kind }}

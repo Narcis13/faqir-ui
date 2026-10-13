@@ -1,0 +1,28 @@
+//- One row of the entries table. Parameter: entry, a key of the package's exports.
+tr
+  td
+    code {{ entry }}
+  if entry == "."
+    td
+      code render
+    td Node, Bun, browsers
+    td At request time, to draw a compiled template. It is also the only entry a browser needs to draw stored ASTs.
+  else if entry == "./compile"
+    td
+      code compile
+    td Node, Bun, browsers
+    td When a template is saved or a site is built: the static analysis that turns source into an AST and diagnostics.
+  else if entry == "./node"
+    td
+      code createFileLoader
+    td Node and Bun
+    td When compile has to follow include and layout into files on disk. The only entry that touches the file system.
+  else if entry == "./registry"
+    td
+      code components
+    td Node, Bun, browsers
+    td When a template calls registry components: the table compile checks every call against.
+  else
+    td
+    td
+    td

@@ -1,0 +1,5 @@
+p Order for {{ upper(customer) }}
+ul
+  each line in lines
+    li {{ line.name }} for {{ money(line.cents) }}
+p {{ lines.length }} {{ plural(lines.length, "line", "lines") }} in this order.

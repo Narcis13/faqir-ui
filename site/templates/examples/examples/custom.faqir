@@ -1,0 +1,7 @@
+//- Written by a customer, not by us: their own "order shipped" notification.
++callout(variant="success")
+  @content
+    p Hi {{ customer.name }}, order {{ order.number }} is {{ upper(order.status) }}.
+ul
+  each line in order.lines
+    li {{ line.qty }} × {{ line.name }}

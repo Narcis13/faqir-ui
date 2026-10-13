@@ -1,0 +1,4 @@
+ul
+  each job in jobs
+    li
+      include "partials/api-job.faqir" (name=job.name state=job.state)

@@ -6,7 +6,7 @@
         "height": 900
       },
       "totals": {
-        "pages": 273,
+        "pages": 279,
         "zeroGutterPages": 0,
         "seamPages": 0,
         "seams": 0,
@@ -1436,6 +1436,42 @@
           "bleeds": 0,
           "overlaps": 0
         },
+        "template/api/index.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "template/components/index.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "template/examples/index.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "template/index.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "template/safety/index.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "template/syntax/index.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
         "themes/aurora/index.html": {
           "zeroGutter": false,
           "seams": 0,
@@ -1660,7 +1696,7 @@
         "height": 812
       },
       "totals": {
-        "pages": 273,
+        "pages": 279,
         "zeroGutterPages": 0,
         "seamPages": 0,
         "seams": 0,
@@ -3085,6 +3121,42 @@
           "overlaps": 0
         },
         "studio/index.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "template/api/index.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "template/components/index.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "template/examples/index.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "template/index.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "template/safety/index.html": {
+          "zeroGutter": false,
+          "seams": 0,
+          "bleeds": 0,
+          "overlaps": 0
+        },
+        "template/syntax/index.html": {
           "zeroGutter": false,
           "seams": 0,
           "bleeds": 0,

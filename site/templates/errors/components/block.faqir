@@ -1,0 +1,7 @@
+layout "layouts/components-panel.faqir"
+
+block title
+  | Billing service
+
+block sidebar
+  p The panel layout has no sidebar.

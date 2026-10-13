@@ -116,7 +116,7 @@ describe("argument parsing", () => {
 });
 
 describe("a dry-run version bump reaches every version file", () => {
-  it("propagates 1.1.0 to all seven package.json files and src/version.ts", () => {
+  it("propagates 1.1.0 to all eight package.json files and src/version.ts", () => {
     // Runs the same function `applyVersion` calls, against a copy of the real
     // version files — so a package added to PACKAGES without its package.json in
     // the lockstep set, or a version.ts whose literal stops matching, fails here
@@ -129,7 +129,7 @@ describe("a dry-run version bump reaches every version file", () => {
       }
       stampVersion("1.1.0", tmp);
 
-      expect(VERSION_FILES.length).toBe(7);
+      expect(VERSION_FILES.length).toBe(8);
       expect(VERSION_FILES.length).toBe(PACKAGES.length);
       for (const rel of VERSION_FILES) {
         const pkg = JSON.parse(readFileSync(join(tmp, rel), "utf8"));
@@ -142,7 +142,7 @@ describe("a dry-run version bump reaches every version file", () => {
       // A second stamp at the same version is a no-op, not a failure.
       const again = stampVersion("1.1.0", tmp);
       expect([...again.rewritten]).toEqual([]);
-      expect(again.unchanged.length).toBe(8);
+      expect(again.unchanged.length).toBe(9);
     } finally {
       rmSync(tmp, { recursive: true, force: true });
     }
@@ -153,6 +153,13 @@ describe("a dry-run version bump reaches every version file", () => {
     const gates = PREFLIGHT.map(([script]: string[]) => script);
     expect(gates).toContain("check:rules-plugin");
     expect(gates).toContain("check:theme-docs");
+  });
+
+  it("the package list includes template, before mcp, and the preflight includes its table gate", () => {
+    const names = PACKAGES.map((p: { name: string }) => p.name);
+    expect(names).toContain("@faqir-ui/template");
+    expect(names.indexOf("@faqir-ui/template")).toBeLessThan(names.indexOf("@faqir-ui/mcp"));
+    expect(PREFLIGHT.map(([script]: string[]) => script)).toContain("check:template-table");
   });
 
   it("no stale package count survives in the script", () => {
@@ -305,7 +312,7 @@ describe("the release script is the only gate there is", () => {
 
   it("publishes the root CLI last", () => {
     const order = [...SOURCE.matchAll(/\{ name: "([^"]+)", dir:/g)].map((m) => m[1]);
-    expect(order.length).toBe(7);
+    expect(order.length).toBe(8);
     expect(order[order.length - 1]).toBe("faqir-ui-cli");
     expect(order[0]).toBe("@faqir-ui/core");
   });
@@ -319,6 +326,7 @@ describe("the release script is the only gate there is", () => {
       "packages/mcp",
       "packages/react",
       "packages/rules",
+      "packages/template",
       "packages/vue",
     ]) {
       expect(SOURCE, `${dir} is not in the lockstep set`).toContain(`dir: "${dir}"`);
@@ -361,9 +369,10 @@ describe("the release checklist", () => {
   });
 
   it("counts the packages the script publishes", () => {
-    expect(CHECKLIST).toContain("seven packages on npm");
-    expect(CHECKLIST).not.toMatch(/\bsix packages\b/);
+    expect(CHECKLIST).toContain("eight packages on npm");
+    expect(CHECKLIST).not.toMatch(/\b(six|seven) packages\b/);
     expect(CHECKLIST).toContain("@faqir-ui/rules");
+    expect(CHECKLIST).toContain("@faqir-ui/template");
   });
 
   it("names the suites that cannot run without a Linux container", () => {

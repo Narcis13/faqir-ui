@@ -1,6 +1,6 @@
 # Release checklist
 
-Everything between a clean `main` and seven packages on npm. `scripts/release.mjs`
+Everything between a clean `main` and eight packages on npm. `scripts/release.mjs`
 automates the parts that can be automated and refuses to proceed past the parts
 that cannot; this document is the list of what it does, what it deliberately does
 not, and what a human has to do around it.
@@ -29,7 +29,7 @@ accounting is:
 than CI ever was, because they cannot be skipped by pushing to a branch:
 
 `typecheck` · `check:registry-index` · `check:manifest-api` · `check:core-package`
-· `check:audit-browser` · `check:rules-plugin` · `check:schema-refs`
+· `check:audit-browser` · `check:rules-plugin` · `check:template-table` · `check:schema-refs`
 · `check:component-tokens` · `check:bindings` · `check:skill` · `check:theme-docs`
 · `check:docs` · `audit:registry` · `size` · `test`
 
@@ -60,7 +60,11 @@ The a11y suite also carries the docs site's one *interactive* case (task
 `depth = glass`, checks that only the cards whose derived axes say so remain and
 that the live count follows — then runs axe on the filtered page. The filter's
 markup is gated without a browser (`tests/generator/docs-themes.test.ts`); its
-behaviour is this case, and it is as manual as the rest of the suite.
+behaviour is this case, and it is as manual as the rest of the suite. 1.2.5 adds
+a second, `docs__template_hydration__{light,dark}`: it drives the tabs, accordion,
+dialog and `l-data` island that `@faqir-ui/template` drew on
+`template/components/`, asserts that faqir-core took each one over and that the
+console stays empty, and runs axe with the dialog open and again after it closes.
 
 **How big those two suites are is a manifest fact, not a constant** (task
 1.1A-13). The visual and a11y matrices are multiplicative in themes, so each theme
@@ -84,12 +88,12 @@ They wake up on their own if CI returns.
 ## Before you start
 
 - [ ] The `faqir-ui` npm **organisation exists** and you are a member with publish
-      rights. All six scoped packages publish under it (`publishConfig.access` is
+      rights. All seven scoped packages publish under it (`publishConfig.access` is
       `public`); the root `faqir-ui-cli` is unscoped. `npm org ls faqir-ui` should
       list you.
 - [ ] `npm whoami` is the account you intend to publish as.
 - [ ] Two-factor is set up and you have the authenticator to hand — `npm publish`
-      blocks on the OTP prompt. Pass `--otp <code>` to avoid seven prompts — a
+      blocks on the OTP prompt. Pass `--otp <code>` to avoid eight prompts — a
       TOTP code lasts about 30 seconds, so a slow publish may still ask again.
 - [ ] `gh auth status` is green, if you want the GitHub release created for you.
 - [ ] `main` is clean, pushed, and identical to `origin/main`.
@@ -100,6 +104,23 @@ They wake up on their own if CI returns.
       purpose is its own commit: update `.bun-version`, run
       `bun run build:core-package`, `bun run build:audit-browser` and
       `bun run build:rules-plugin`, and commit all of it together.
+
+## New on npm in 1.2.5
+
+`@faqir-ui/template` is the one package 1.2.5 adds: the server-side template
+language that merged after 1.2.0. Like `@faqir-ui/rules` in 1.1, it is a first
+publish of a new name into the existing `faqir-ui` organisation — no org setup,
+nothing to reserve — and the only name in the lockstep set npm has never seen:
+
+- [ ] `npm view @faqir-ui/template` 404s before the release (the name is free
+      and unclaimed), and your account can publish into the org.
+- [ ] `npm pack --dry-run --workspace @faqir-ui/template` lists `src/` and
+      `README.md` (plus `package.json` and `LICENSE`) and nothing else.
+- [ ] After the release, `npm view @faqir-ui/template version` reports `1.2.5`
+      like the other seven.
+
+The versions already read 1.2.5 on the release branch, so the real run takes the
+version explicitly and only publishes: `node scripts/release.mjs 1.2.5`.
 
 ## New on npm in 1.1
 
@@ -121,7 +142,7 @@ Every other package is an ordinary version bump: `node scripts/release.mjs minor
    written, `--dry-run` and `--skip-preflight` included.
 2. **Preflight** — the gate list above. `--skip-preflight` exists for a retry
    after a partial publish and prints a loud warning; do not use it otherwise.
-3. **Version** — computes the next version and writes it to all seven
+3. **Version** — computes the next version and writes it to all eight
    `package.json` files and `src/version.ts`. Lockstep, always: no package
    depends on another by range, so there is no reason for them to differ and one
    good reason not to — "which versions go together" stops being a question. A
@@ -145,7 +166,7 @@ Every other package is an ordinary version bump: `node scripts/release.mjs minor
    than carrying an empty commit. An existing tag is reused only when it already
    points at HEAD; one pointing elsewhere aborts the release.
 7. **Publish** — `@faqir-ui/core`, then the bindings (`react`, `vue`), then
-   `@faqir-ui/forms` and `@faqir-ui/rules`, then `@faqir-ui/mcp`, then the root
+   `@faqir-ui/forms`, `@faqir-ui/rules` and `@faqir-ui/template`, then `@faqir-ui/mcp`, then the root
    CLI last, so the package people actually install is the last thing to appear.
 8. **GitHub release** — via `gh release create`, with notes. Skipped with a
    printed command if `gh` is missing.
@@ -157,7 +178,7 @@ Every other package is an ordinary version bump: `node scripts/release.mjs minor
   attestation to sign. This is a genuine gap in every 1.x release so far and a
   consequence of the CI decision, not an oversight — say so in the release notes
   rather than leaving it looking unconsidered.
-- **No automatic rollback.** npm has no transaction across seven packages. See
+- **No automatic rollback.** npm has no transaction across eight packages. See
   below.
 
 ## If a publish fails partway

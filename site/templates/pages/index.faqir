@@ -1,0 +1,87 @@
+layout "layouts/section.faqir"
+
+block lede
+  p
+    | A small, indentation-based template language for rendering Faqir pages, primitives and recipes on the server. Its grammar is Pug-like, its vocabulary is Faqir's manifests, and its rules are those of a host that renders data it did not write. It has no dependencies and runs unchanged in Node 18 or newer, in Bun and in a browser.
+
+block toc
+  li
+    a(href="#first") A first template
+  li
+    a(href="#rules") Three rules
+  li
+    a(href="#runs") Where it runs
+  li
+    a(href="#use-cases") What it is for
+  li
+    a(href="#pages") In this section
+
+block content
+  h2#first A first template
+  p
+    | A template is text, one construct per line, nested by indentation. A line starting with a tag name is an element, a line starting with
+    code +
+    | calls a registry component, and
+    code \{{ expr }}
+    | draws a value from the data. This one renders a release card from three fields:
+  include "partials/example.faqir" (example=ex.first)
+  p
+    | The card is the registry's own markup, with every attribute the card's manifest ships. The title came in as the card's
+    code title
+    | prop, and the list was drawn with
+    code each
+  p
+    | Here is a fuller first look. A page fills the blocks of a layout, a callout and a card per step are component calls, an
+    code each
+    | has an
+    code else
+    | for when there are no steps, and a small island hands one number to the browser.
+  include "partials/example.faqir" (example=ex.welcome)
+  p
+    | Press Mark one done. The count was drawn on the server as text, and faqir-core took over the island when the page loaded. The browser never learns that a server drew the rest.
+
+  h2#rules Three rules
+  p Three rules shape everything else in the language.
+  div(data-ui="grid" data-cols="1" data-cols-md="3" data-gap="4" data-docs-template-rules)
+    +card(variant="outlined" title="Manifests are the grammar")
+      @body
+        p A component call names a manifest. Its arguments are that manifest's variants, states and props, and its children fill the manifest's slots. A wrong value is a compile error that names the values the manifest allows.
+    +card(variant="outlined" title="No code runs from data")
+      @body
+        p There is no eval and no embedded JavaScript. Expressions are paths, literals, operators and calls to helpers the host registers. A path reads its value's own data properties and nothing else.
+    +card(variant="outlined" title="Data is drawn, never executed")
+      @body
+        p Every value is escaped for the place it lands in. Data never reaches a script, a style or an event handler; it reaches the browser's engine through one construct, the l-data island.
+  p
+    | A template can be untrusted too. Compiling and rendering a hostile one cannot run code, read files outside the loader it was given, recurse without bound or produce unbounded output.
+
+  h2#runs Where it runs
+  p
+    | The engine is plain JavaScript with no dependencies, and its work is two functions.
+    code compile
+    | turns template source into a plain JSON tree, once, when a template is saved.
+    code render
+    | draws that tree with data, as many times as you like, and is the only part a browser needs to draw a stored template.
+  p
+    | This site is static, so its server is the docs build. Every page in this section was compiled and rendered by the engine when the site was built, by the same engine a Node server runs, from the files under
+    code site/templates
+    | which is the same work a Node server does per request. The end of each page says how it was made.
+
+  h2#use-cases What it is for
+  div(data-ui="grid" data-cols="1" data-cols-md="2" data-gap="4" data-docs-template-cases)
+    each useCase in content.useCases
+      +card(variant="outlined" title=useCase.title)
+        @body
+          p {{ useCase.text }}
+        @footer
+          a(data-ui="link" href="{{ links.useCases }}#{{ useCase.anchor }}") {{ useCase.link }}
+
+  h2#pages In this section
+  div(data-ui="grid" data-cols="1" data-cols-md="2" data-gap="4" data-docs-template-pages-map)
+    each item, i in section
+      if i > 0
+        +card(variant="filled" title=item.title)
+          @body
+            p {{ item.description }}
+          @footer
+            a(data-ui="link" href=item.href) Read {{ item.label }}

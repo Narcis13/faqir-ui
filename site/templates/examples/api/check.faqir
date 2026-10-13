@@ -1,0 +1,14 @@
+//- A build step's report, drawn from what faqir template --check --json printed.
+if report.ok
+  +callout(variant="success")
+    @content
+      p All {{ report.files.length }} files in {{ report.dir }} match a fresh install.
+else
+  +callout(variant="warning")
+    @content
+      p {{ report.drifted.length }} of {{ report.files.length }} files in {{ report.dir }} differ from a fresh install:
+      ul
+        each name in report.drifted
+          li
+            code {{ name }}
+      p Run faqir template, review the diff and commit it.

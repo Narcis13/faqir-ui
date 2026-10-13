@@ -1,0 +1,21 @@
+layout "layouts/examples-email.faqir"
+
+block body
+  p Order {{ order.number }}, placed {{ order.placed }}: {{ order.lines.length }} {{ plural(order.lines.length, "product", "products") }}.
+  div(data-docs-table tabindex="0")
+    table
+      thead
+        tr
+          th(scope="col") Item
+          th(scope="col") Qty
+          th(scope="col") Price
+          th(scope="col") Line total
+      tbody
+        each line in order.lines
+          include "partials/examples-line.faqir" (line=line)
+      tfoot
+        include "partials/examples-total.faqir" (label="Subtotal" amount=money(order.subtotal))
+        include "partials/examples-total.faqir" (label="Shipping" amount=order.shipping == 0 ? "Free" : money(order.shipping))
+        include "partials/examples-total.faqir" (label="Total" amount=money(order.total))
+  p
+    a(href=order.url) View this order online

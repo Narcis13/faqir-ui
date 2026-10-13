@@ -1,0 +1,5 @@
++card(variant="outlined" title="Report")
+  @body
+    p Totals
+  @foot
+    p Nothing here

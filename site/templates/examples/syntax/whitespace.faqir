@@ -1,0 +1,12 @@
+p Short text stays on one line.
+p
+    | Text and elements
+    em take
+    | their own lines, and
+    strong each break
+    | reads as one space.
+pre(tabindex="0")
+    code
+        | first line
+        |   keeps its indent
+        | last line

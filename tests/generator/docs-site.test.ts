@@ -153,9 +153,10 @@ describe("docs site coverage", () => {
     // …the 1.1 sections: audit rules, rules & validation, CLI reference,
     // integrations, Night Shift, the fourteen axes, theme authoring (7) — plus
     // one specimen page per theme (see src/generator/docs-pages/) — and the
-    // motion page and the theme studio (2).
+    // motion page and the theme studio (2) — and the six pages of the Server
+    // templates section, rendered by @faqir-ui/template (6, on 1.2.5).
     expect(shellPages.length).toBe(
-      components.length + 18 + 7 + 2 + SCAFFOLD_NAMES.length + themes.length,
+      components.length + 18 + 7 + 2 + 6 + SCAFFOLD_NAMES.length + themes.length,
     );
     // one gallery frame per theme, and one live document per scaffold
     expect(framePages.length).toBe(themes.length + SCAFFOLD_NAMES.length);

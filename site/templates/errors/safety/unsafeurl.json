@@ -1,0 +1,6 @@
+{
+  "links": [
+    { "label": "Fine", "url": "https://example.com/docs" },
+    { "label": "Click me", "url": "javascript:alert(document.cookie)" }
+  ]
+}

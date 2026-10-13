@@ -1,0 +1,7 @@
+{
+  "project": {
+    "name": "Billing service",
+    "summary": "Invoices, refunds and the monthly close.",
+    "owner": "Platform team"
+  }
+}

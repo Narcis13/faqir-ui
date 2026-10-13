@@ -1,0 +1,12 @@
+h3 Today
+ul
+    each task, i in tasks
+        li {{ i + 1 }}. {{ task }}
+    else
+        li Nothing to do.
+h3 Finished
+ul
+    each task in finished
+        li {{ task }}
+    else
+        li Nothing finished yet.

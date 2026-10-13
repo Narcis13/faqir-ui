@@ -1,0 +1,3 @@
++card(variant="outlined" title="Report")
+  @footer
+    p Nothing here

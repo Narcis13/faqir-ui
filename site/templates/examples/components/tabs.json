@@ -1,0 +1,9 @@
+{
+  "plan": {
+    "tabs": [
+      { "label": "Overview", "text": "Team plan: ten seats, shared billing and audit logs." },
+      { "label": "Usage", "text": "7 of 10 seats in use; 41 GB of 100 GB stored." },
+      { "label": "Invoices", "text": "Next invoice on 1 November: €290.00." }
+    ]
+  }
+}

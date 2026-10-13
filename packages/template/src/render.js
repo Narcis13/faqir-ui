@@ -20,7 +20,7 @@ const VERBATIM = new Set(["pre", "textarea", "script", "style"]);
 /**
  * @typedef {{ ast: any, out: string[], size: number, steps: number, maxOutput: number,
  *   maxSteps: number, helpers: Record<string, unknown>, idPrefix: string, idCount: number,
- *   ids: Array<{ value: string | null }>, includes: number }} State
+ *   ids: Array<{ value: string | null }>, includes: number, loc?: number[] }} State
  * @typedef {{ scope: object[], depth: number, verbatim: boolean, raw?: boolean }} Frame
  */
 
@@ -93,7 +93,7 @@ function renderTemplate(ast, data, state) {
  */
 function put(state, text) {
   state.size += text.length;
-  if (state.size > state.maxOutput) throw renderError("output-limit", `output is larger than ${state.maxOutput} characters`, state.ast, undefined);
+  if (state.size > state.maxOutput) throw renderError("output-limit", `output is larger than ${state.maxOutput} characters`, state.ast, state.loc);
   state.out.push(text);
 }
 
@@ -147,6 +147,19 @@ function renderNodes(nodes, frame, state) {
  */
 function renderNode(node, frame, state) {
   step(state, node?.loc);
+  // The node being written, for an output-limit error raised while writing it.
+  const outer = state.loc;
+  if (node?.loc) state.loc = node.loc;
+  renderNodeOf(node, frame, state);
+  state.loc = outer;
+}
+
+/**
+ * @param {any} node
+ * @param {Frame} frame
+ * @param {State} state
+ */
+function renderNodeOf(node, frame, state) {
   switch (node?.type) {
     case "Doctype": return lineOrNot(state, frame, "<!doctype html>");
     case "Element": return renderElement(node, frame, state);

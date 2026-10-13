@@ -1,0 +1,7 @@
+{
+  "links": [
+    { "label": "A web page", "url": "https://example.com/docs?page=2&sort=name" },
+    { "label": "Write to us", "url": "mailto:team@example.com" },
+    { "label": "Call us", "url": "tel:+15550100" }
+  ]
+}

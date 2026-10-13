@@ -1,6 +1,6 @@
 {
   "name": "faqir-ui-cli",
-  "version": "1.2.0",
+  "version": "1.2.5",
   "description": "Agent-native UI framework — CLI-distributed, manifest-driven, zero-dependency components",
   "type": "module",
   "workspaces": [
@@ -24,6 +24,7 @@
     "build:manifest-api": "bun scripts/build-manifest-api.mjs",
     "check:manifest-api": "bun scripts/build-manifest-api.mjs --check",
     "build:template-table": "bun scripts/build-template-table.mjs",
+    "check:template-table": "bun scripts/build-template-table.mjs --check",
     "build:core-package": "node scripts/build-core-package.mjs",
     "check:core-package": "node scripts/build-core-package.mjs --check",
     "install:type-fixture": "node scripts/install-type-fixture.mjs",
