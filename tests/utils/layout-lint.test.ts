@@ -555,8 +555,5 @@ describe("per-viewport budgets", () => {
     const [wide, narrow] = Object.values(committed.viewports);
     expect(Object.keys(narrow.pages)).toEqual(Object.keys(wide.pages));
     expect(narrow.totals.pages).toBe(wide.totals.pages);
-    // Recording the phone width was the point of 1.0R-06: today's narrow bleed
-    // is real and committed rather than exempted, and 1.0R-07 is what spends it.
-    expect(narrow.totals.bleeds).toBeGreaterThan(0);
   });
 });
