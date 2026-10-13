@@ -428,6 +428,7 @@ faqir scaffold <name> [--output <path>] [--theme <name>]  # generate a whole pag
 faqir bundle [--minify] [--watch]                         # compose CSS into one file
 faqir dev [--port <n>] [--bundle]                         # local dev server with live reload
 faqir bindings vue|react [--out <dir>] [--check]          # generate typed Vue/React components from manifests
+faqir template [--check]                                  # install the server-side template engine into <output_dir>/template
 ```
 
 **Quality**

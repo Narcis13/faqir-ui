@@ -62,6 +62,19 @@ export interface RecipeNode {
   /** Variant props written onto this element when set: [prop, attr][]. */
   dyn?: [string, string][];
   children: (RecipeNode | RecipeSeg)[];
+  /**
+   * Set (only under `markSamples`) when the element's reference text was sample
+   * placeholders that resolution dropped (`<div data-part="body">{body}</div>`).
+   */
+  sample?: true;
+}
+
+/** Options of the reference-tree extraction; the bindings use neither. */
+export interface TreeOptions {
+  /** Keep `l-*` attributes (server output is taken over by faqir-core). */
+  keepDirectives?: boolean;
+  /** Mark elements whose reference text was only dropped sample placeholders. */
+  markSamples?: boolean;
 }
 
 export interface RecipeVariantProp {
@@ -210,7 +223,7 @@ function partOf(node: TNode): string | undefined {
 }
 
 /** Build the RecipeNode tree + prop registrations from manifest + template. */
-function extractTree(manifest: Manifest, template: TNode, label: string) {
+function extractTree(manifest: Manifest, template: TNode, label: string, options: TreeOptions = {}) {
   const props = manifest.props ?? {};
   const stringProps = new Map<string, string>();
   const boolProps: string[] = [];
@@ -294,7 +307,7 @@ function extractTree(manifest: Manifest, template: TNode, label: string) {
     const dyn: [string, string][] = [];
 
     for (const [name, value] of node.attrs) {
-      if (name.startsWith("l-")) continue; // directives never run inside bindings
+      if (name.startsWith("l-") && !options.keepDirectives) continue; // directives never run inside bindings
       const posMatch = name.match(/^\{([a-z][a-z0-9_-]*)\}$/);
       if (posMatch) {
         const prop = camelCase(posMatch[1]);
@@ -331,7 +344,9 @@ function extractTree(manifest: Manifest, template: TNode, label: string) {
     for (const c of node.children) {
       if (typeof c === "string") {
         if (c.trim() === "") continue;
-        rnode.children.push(...resolveSegs(c).filter((s) => s !== ""));
+        const segs = resolveSegs(c).filter((s) => s !== "");
+        if (options.markSamples && segs.length === 0) rnode.sample = true;
+        rnode.children.push(...segs);
       } else {
         rnode.children.push(convert(c, false));
       }
@@ -408,6 +423,20 @@ function extractTree(manifest: Manifest, template: TNode, label: string) {
     boolProps: boolProps.sort(),
     variantProps: variantProps.sort((a, b) => a.prop.localeCompare(b.prop)),
   };
+}
+
+/**
+ * The reference-tree IR of ANY manifest, primitive or recipe: its parsed
+ * `templates.html` with placeholders resolved by the rules above. The
+ * `@faqir-ui/template` component table is built from it (docs/template.md
+ * §11.1). Server-rendered markup is taken over by faqir-core rather than by a
+ * framework, so that caller keeps `l-*` attributes (`keepDirectives`), and asks
+ * which elements held only sample content (`markSamples`), since a required slot
+ * whose reference content is a sample is one the caller must fill.
+ */
+export function manifestTreeIR(manifest: Manifest, label: string, options: TreeOptions = {}) {
+  const template = parseTemplate(manifest.templates.html, label);
+  return extractTree(manifest, template, label, options);
 }
 
 /** Parse a controller source: factory, provides, dispatched events, imports. */

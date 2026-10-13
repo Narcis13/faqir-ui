@@ -1,0 +1,65 @@
+{
+  "name": "@faqir-ui/template",
+  "version": "1.2.0",
+  "description": "Zero-dependency, isomorphic Faqir template language: manifest-checked component calls, context escaping, audit-clean output",
+  "type": "module",
+  "main": "./src/index.js",
+  "module": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "import": "./src/index.js",
+      "default": "./src/index.js"
+    },
+    "./compile": {
+      "types": "./src/compile.d.ts",
+      "import": "./src/compile.js",
+      "default": "./src/compile.js"
+    },
+    "./node": {
+      "types": "./src/node.d.ts",
+      "import": "./src/node.js",
+      "default": "./src/node.js"
+    },
+    "./registry": {
+      "types": "./src/registry.d.ts",
+      "import": "./src/registry.js",
+      "default": "./src/registry.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "test": "bun test",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "keywords": [
+    "faqir",
+    "template",
+    "ssr",
+    "html",
+    "zero-dependency",
+    "isomorphic"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Narcis13/faqir-ui.git",
+    "directory": "packages/template"
+  },
+  "homepage": "https://github.com/Narcis13/faqir-ui/tree/main/packages/template#readme",
+  "bugs": {
+    "url": "https://github.com/Narcis13/faqir-ui/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

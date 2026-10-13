@@ -262,6 +262,7 @@ describe("universal --json guarantee · compiled bundle on Node, in a real proje
       "url",
     ],
     bindings: null,
+    template: ["dir", "drifted", "files", "ok"],
   };
 
   let template: string;
