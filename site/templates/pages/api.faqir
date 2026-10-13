@@ -1,0 +1,11 @@
+layout "layouts/section.faqir"
+
+block lede
+  p Coming in this release.
+
+block toc
+  li
+    a(href="#colophon") How this page was made
+
+block content
+  p This page is being written.

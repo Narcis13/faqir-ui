@@ -1,0 +1,6 @@
++card(variant="outlined" title=release.title)
+  @body
+    p {{ release.summary }}
+    ul
+      each change in release.changes
+        li {{ change }}

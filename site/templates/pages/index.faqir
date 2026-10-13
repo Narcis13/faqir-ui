@@ -1,0 +1,12 @@
+layout "layouts/section.faqir"
+
+block lede
+  p A small, indentation-based template language for rendering Faqir pages, primitives and recipes on the server.
+
+block toc
+  li
+    a(href="#first") A first template
+
+block content
+  h2#first A first template
+  include "partials/example.faqir" (example=ex.first)

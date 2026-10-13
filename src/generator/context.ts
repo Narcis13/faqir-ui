@@ -1323,6 +1323,22 @@ export function formatContextLlms(data: ContextData): string {
     lines.push("");
   }
 
+  // The hosted pair links into the docs site's guide; a project's llms.txt has
+  // no site beside it, so only the registry scope carries the section.
+  if (data.meta.scope === "registry") {
+    lines.push("## Server templates");
+    lines.push("");
+    lines.push(
+      "- [Server templates](llms-full.txt#server-templates): `@faqir-ui/template` renders Faqir components on a server — " +
+        "manifest-checked component calls, context escaping, the `l-data` island",
+    );
+    lines.push(
+      "- [Server templates guide](template/index.html): syntax, composition and components, escaping and limits, " +
+        "API and CLI, and use cases — each page rendered by the engine it documents",
+    );
+    lines.push("");
+  }
+
   lines.push("## Optional");
   lines.push("");
   lines.push("- [Attribute protocol](llms-full.txt#attribute-protocol): the data-ui / data-part / data-state contract");
@@ -1391,6 +1407,53 @@ function llmsFullComponentBlock(name: string, c: Record<string, unknown>): strin
   if (details.length > 0) lines.push("");
 
   return lines;
+}
+
+/**
+ * The `@faqir-ui/template` summary in the hosted llms-full.txt: enough to write
+ * a first template, then the guide (docs/template.md is the full reference).
+ */
+function serverTemplateLines(): string[] {
+  return [
+    "## Server templates",
+    "",
+    "`@faqir-ui/template` renders Faqir pages, primitives and recipes on a server — Node ≥ 18, Bun or a browser, " +
+      "no dependencies — from indentation-based `.faqir` templates. Install it from npm, or run `faqir template` in a " +
+      "project to copy the engine and the project's own component table into `<output_dir>/template/`.",
+    "",
+    "```js",
+    'import { compile } from "@faqir-ui/template/compile";',
+    'import { render } from "@faqir-ui/template";',
+    'import { createFileLoader } from "@faqir-ui/template/node";',
+    'import { components } from "@faqir-ui/template/registry";',
+    "",
+    'const { ast, diagnostics } = compile(source, { file: "page.faqir", loader: createFileLoader("templates"), components });',
+    "const html = render(ast, data);",
+    "```",
+    "",
+    "```",
+    'layout "layouts/app.faqir"',
+    "block content",
+    '  +card(variant="outlined" title=post.title)',
+    "    @body",
+    "      p {{ post.summary }}",
+    "  each item in items",
+    "    p {{ item.name }}",
+    "  else",
+    "    p Nothing yet.",
+    "  div(l-data=json(counter))",
+    '    span(l-text="count")',
+    "```",
+    "",
+    "- `+name(args)` calls a registry component: arguments are its manifest's variants, states and props, `@slot` lines fill its slots, and a value the manifest does not allow is a compile error.",
+    "- `{{ expr }}` is escaped for the context it lands in; `\\{{` writes a literal `{{`; `raw` is the only unescaped output, and `compile(…, { raw: false })` refuses it.",
+    "- Server data reaches faqir-core only through `l-data=json(expr)`; an expression in any other `l-*`, `:prop` or `@event` attribute is a compile error, and `on*` attributes are refused.",
+    "- Expressions are paths, literals, operators and host-registered helpers — no eval, no globals. A missing value is an error unless asked for with `??`.",
+    "- The output is canonical registry markup, so it passes `faqir audit` and faqir-core's controllers take it over in the browser.",
+    "",
+    "Guide, rendered by the engine itself: template/index.html — syntax, composition and components, escaping and limits, API and CLI, use cases.",
+    "",
+  ];
 }
 
 /**
@@ -1571,6 +1634,8 @@ export function formatContextLlmsFull(data: ContextData): string {
   lines.push("Options: `apiSource(url, { idKey: 'id', pollInterval: 0, optimistic: true })`");
   lines.push("Note: `apiSource()` is application code — recipe controllers still never call fetch.");
   lines.push("");
+
+  if (data.meta.scope === "registry") lines.push(...serverTemplateLines());
 
   if (Object.keys(data.plugins).length > 0) {
     lines.push("## Official plugins");

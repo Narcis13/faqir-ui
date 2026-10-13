@@ -174,6 +174,7 @@ import { renderRulesPages } from "./docs-pages/rules";
 import { renderToolingPages } from "./docs-pages/tooling";
 import { renderNightShiftPages } from "./docs-pages/night-shift";
 import { renderThemeSystemPages } from "./docs-pages/themes";
+import { renderTemplatePages } from "./docs-pages/template";
 import type { PageContext } from "./docs-pages/context";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -232,6 +233,8 @@ export const CLI_PAGE = "cli/index.html";
 export const INTEGRATIONS_PAGE = "integrations/index.html";
 /** The nightly theme loop: queue, dream, gate, ledger, digest. */
 export const NIGHT_SHIFT_PAGE = "night-shift/index.html";
+/** Server templates: the guide to `@faqir-ui/template`, rendered by it (1.2.5). */
+export const TEMPLATE_PAGE = "template/index.html";
 /** Theme System 2.0: the fourteen axes explained. */
 export const THEME_AXES_PAGE = "themes/axes/index.html";
 /** Theme System 2.0: authoring, generating, scoping, fonts. */
@@ -1527,6 +1530,7 @@ const NAV_SECTIONS: { heading: string; items: [string, string][] }[] = [
     items: [
       [ENGINE_PAGE, "Reactive engine"],
       [RULES_PAGE, "Rules & validation"],
+      [TEMPLATE_PAGE, "Server templates"],
     ],
   },
   {
@@ -1652,7 +1656,7 @@ export function renderShell(input: ShellInput): string {
         : section === "themes"
           ? current.startsWith("themes/") || current === STUDIO_PAGE
           : section === "engine"
-            ? [ENGINE_PAGE, RULES_PAGE].includes(current)
+            ? [ENGINE_PAGE, RULES_PAGE].includes(current) || current.startsWith("template/")
             : section === "tooling"
               ? [CLI_PAGE, AUDIT_PAGE, PLAYGROUND_PAGE, INTEGRATIONS_PAGE].includes(current) ||
                 current.startsWith("scaffolds/")
@@ -5509,6 +5513,7 @@ export function buildDocsSite(options: DocsSiteOptions = {}): SiteFile[] {
   files.push(...renderRulesPages(pageContext));
   files.push(...renderToolingPages(pageContext));
   files.push(...renderNightShiftPages(pageContext));
+  files.push(...renderTemplatePages(pageContext));
   if (themes.length > 0) files.push(...renderThemeSystemPages(pageContext));
 
   // The scaffold gallery (task 1.0R-08). Driven by SCAFFOLD_NAMES — the CLI's own

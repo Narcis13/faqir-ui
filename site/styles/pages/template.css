@@ -1,0 +1,155 @@
+/* ── Server templates (template/**) ────────────────────────────────────────
+ * Presentation for the pages `src/generator/docs-pages/template.ts` renders
+ * with @faqir-ui/template from `site/templates/`. Attribute selectors and
+ * design tokens only; every hook is `data-docs-template-*`.
+ */
+
+[data-docs-template-eyebrow] {
+  margin-block-end: var(--space-2);
+}
+
+[data-docs-template-lede] {
+  font-size: var(--text-lg);
+  line-height: var(--leading-normal);
+  color: var(--color-fg-muted);
+  max-inline-size: var(--measure-prose);
+}
+
+/* ── The section's pages, and the page's own contents ───────────────────── */
+
+[data-docs-template-pages] ul,
+[data-docs-template] [data-docs-toc] ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+[data-docs-template-pages] li,
+[data-docs-template] [data-docs-toc] li {
+  margin: 0;
+}
+
+[data-docs-template-pages] {
+  margin-block: var(--space-6) var(--space-3);
+}
+
+[data-docs-template-pages] a {
+  display: inline-block;
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  color: var(--color-fg);
+  text-decoration: none;
+}
+
+[data-docs-template-pages] a:hover {
+  border-color: var(--color-primary);
+}
+
+[data-docs-template-pages] a[aria-current="page"] {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-primary-fg);
+}
+
+[data-docs-template] [data-docs-toc] {
+  margin-block: var(--space-3) var(--space-8);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: color-mix(in oklch, var(--color-primary) 4%, var(--color-bg));
+}
+
+[data-docs-template] [data-docs-toc] ul {
+  gap: var(--space-1) var(--space-4);
+}
+
+[data-docs-template] [data-docs-toc] a {
+  font-size: var(--text-sm);
+}
+
+/* ── One example: template, data, result ────────────────────────────────── */
+
+[data-docs-template-example] {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  margin-block: var(--space-4) var(--space-8);
+}
+
+[data-docs-template-pane] {
+  min-inline-size: 0;
+}
+
+[data-docs-template-label] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-block-end: var(--space-2);
+}
+
+[data-docs-template-label] > * {
+  margin: 0;
+}
+
+[data-docs-template-pane] pre {
+  margin-block: 0 var(--space-3);
+  max-block-size: 28rem;
+  overflow: auto;
+}
+
+[data-docs-template-result] {
+  padding: var(--space-4);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg);
+  margin-block-end: var(--space-3);
+  overflow-x: auto;
+}
+
+[data-docs-template-result] > :first-child {
+  margin-block-start: 0;
+}
+
+[data-docs-template-result] > :last-child {
+  margin-block-end: 0;
+}
+
+@media (min-width: 64rem) {
+  [data-docs-template-example] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      "source result"
+      "data result";
+    align-items: start;
+  }
+
+  [data-docs-template-pane="source"] {
+    grid-area: source;
+  }
+
+  [data-docs-template-pane="data"] {
+    grid-area: data;
+  }
+
+  [data-docs-template-pane="result"] {
+    grid-area: result;
+  }
+}
+
+/* ── Colophon ───────────────────────────────────────────────────────────── */
+
+[data-docs-template-colophon] {
+  display: grid;
+  gap: var(--space-3);
+}
+
+[data-docs-template-colophon] pre {
+  max-block-size: 32rem;
+  overflow: auto;
+}

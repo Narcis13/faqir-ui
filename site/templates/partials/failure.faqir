@@ -1,0 +1,34 @@
+//- A template that fails, and the error the engine gave when the docs were
+//- built. Parameter: failure, one entry of a page's err.
+div(data-docs-template-example data-docs-template-failure)
+  div(data-docs-template-pane="source")
+    div(data-docs-template-label)
+      +badge Template
+      +text(variant="mono" size="sm") {{ failure.file }}
+    pre(tabindex="0")
+      code {{ failure.source }}
+    each dep in failure.deps
+      div(data-docs-template-label)
+        +badge Loads
+        +text(variant="mono" size="sm") {{ dep.file }}
+      pre(tabindex="0")
+        code {{ dep.source }}
+  div(data-docs-template-pane="data")
+    div(data-docs-template-label)
+      +badge Data
+    pre(tabindex="0")
+      code {{ failure.data }}
+    if failure.options != ""
+      div(data-docs-template-label)
+        +badge Options
+      pre(tabindex="0")
+        code {{ failure.options }}
+  div(data-docs-template-pane="result")
+    div(data-docs-template-label)
+      +badge(variant="destructive") {{ failure.stage == "compile" ? "Compile error" : "Render error" }}
+    +callout(variant="destructive")
+      @content
+        p
+          code {{ failure.code }}
+          | at line {{ failure.line }}, column {{ failure.col }}
+        p {{ failure.message }}
