@@ -8,11 +8,11 @@ import { renderError } from "./diagnostics.js";
 import { escapeAttr, escapeText, isSafeUrl, URL_ATTRS } from "./escape.js";
 import { evaluate, kind, readOwn } from "./evaluate.js";
 import { islandJson } from "./json.js";
-import { VOID_TAGS } from "./parse.js";
 
 export const DEFAULT_MAX_OUTPUT = 16 * 1024 * 1024;
 export const DEFAULT_MAX_STEPS = 10_000_000;
 export const MAX_INCLUDE_DEPTH = 16;
+export const VOID_TAGS = new Set(["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"]);
 
 /** Elements whose content is written exactly, with nothing added (§12.1). */
 const VERBATIM = new Set(["pre", "textarea", "script", "style"]);

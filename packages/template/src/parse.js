@@ -7,9 +7,9 @@ import { report } from "./diagnostics.js";
 import { FORBIDDEN_NAMES, parseExpression } from "./expr.js";
 import { parseAttrs } from "./attrs.js";
 import { buildLineTree } from "./lines.js";
+import { VOID_TAGS } from "./render.js";
 import { parseText } from "./text.js";
 
-export const VOID_TAGS = new Set(["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"]);
 
 const KEYWORDS = new Set(["doctype", "layout", "block", "include", "if", "else", "each", "raw"]);
 const TAG = /^[A-Za-z][A-Za-z0-9-]*/;

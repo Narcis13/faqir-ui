@@ -10,7 +10,8 @@ import { auditHtmlSource, loadRegistryAuditInputs, type RegistryAuditInputs } fr
 import { registryTemplateTable, tableModule } from "../../../src/commands/template";
 import { listRegistryComponents } from "../../../src/utils/components";
 import { getRegistryPath } from "../../../src/utils/fs";
-import { compile, render } from "../src/index.js";
+import { compile } from "../src/compile.js";
+import { render } from "../src/index.js";
 import { components as table } from "../src/registry.js";
 
 /**
@@ -76,7 +77,7 @@ describe("every registry primitive and recipe", () => {
 });
 
 describe("the shipped table", () => {
-  it("is the one the bindings IR builds today (check:template-table)", async () => {
+  it("is the one the bindings IR builds today (build:template-table)", async () => {
     const fresh = tableModule(await registryTemplateTable(getRegistryPath()), "scripts/build-template-table.mjs");
     expect(readFileSync(join(import.meta.dir, "../src/registry.js"), "utf8")).toBe(fresh);
   });

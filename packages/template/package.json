@@ -12,6 +12,11 @@
       "import": "./src/index.js",
       "default": "./src/index.js"
     },
+    "./compile": {
+      "types": "./src/compile.d.ts",
+      "import": "./src/compile.js",
+      "default": "./src/compile.js"
+    },
     "./node": {
       "types": "./src/node.d.ts",
       "import": "./src/node.js",

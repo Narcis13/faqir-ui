@@ -7,8 +7,11 @@
  * manifests — so there is one manifest walker, not two.
  *
  * Bun-only (imports the TypeScript builder from `src/`). Run via
- * `bun run build:template-table`, or `--check` to fail when the committed
- * table is stale.
+ * `bun run build:template-table`, or with `--check` to fail when the committed
+ * table is stale. There is deliberately no `check:` package script: the
+ * package's own test asserts the same thing inside `bun run test`, which the
+ * release preflight runs, and a new `check:` script must also be added to the
+ * preflight and the release checklist.
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";

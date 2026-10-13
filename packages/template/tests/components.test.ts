@@ -1,7 +1,8 @@
 // Piece 6 — component calls (docs/template.md §11): arguments, values, slots,
 // ids, @ui:requires, passthrough, and every component diagnostic code.
 import { describe, expect, it } from "bun:test";
-import { compile, render } from "../src/index.js";
+import { compile } from "../src/compile.js";
+import { render } from "../src/index.js";
 import { components } from "../src/registry.js";
 import { codes, html, ok, renderCode } from "./helpers";
 

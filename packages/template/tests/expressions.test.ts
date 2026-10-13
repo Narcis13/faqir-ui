@@ -3,7 +3,8 @@
 // must end in a diagnostic or a render error — never in code running, a
 // prototype read, or a hang.
 import { describe, expect, it } from "bun:test";
-import { compile, render } from "../src/index.js";
+import { compile } from "../src/compile.js";
+import { render } from "../src/index.js";
 import { html, ok, renderCode } from "./helpers";
 
 const show = (expr: string, data: Record<string, unknown> = {}, helpers: Record<string, (...a: any[]) => unknown> = {}) =>

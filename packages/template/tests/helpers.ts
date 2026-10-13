@@ -1,7 +1,9 @@
 // Shared test helpers for @faqir-ui/template: compile-and-render shortcuts and
 // a loader over an in-memory file map.
-import { compile, render } from "../src/index.js";
-import type { CompileOptions, RenderOptions, Template } from "../src/index.js";
+import { compile } from "../src/compile.js";
+import { render } from "../src/index.js";
+import type { CompileOptions } from "../src/compile.js";
+import type { RenderOptions, Template } from "../src/index.js";
 
 /** Compile, failing the test with the diagnostics if there are any. */
 export function ok(source: string, options: CompileOptions = {}): Template {

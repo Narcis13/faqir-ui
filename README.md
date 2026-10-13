@@ -1113,6 +1113,7 @@ rest are workspaces under `packages/`.
 | `@faqir-ui/core` | Prebuilt runtime: minified engine, per-theme CSS bundles, SRI hashes, ESM entry with 19 named exports | [packages/core](packages/core/README.md) |
 | `@faqir-ui/rules` | Isomorphic, zero-dependency form rules: shape validation, formats, logic, the `faqir-rules` plugin | [packages/rules](packages/rules/README.md) |
 | `@faqir-ui/forms` | JSON Schema to audit-clean Faqir form markup, rules included | [packages/forms](packages/forms/README.md) |
+| `@faqir-ui/template` | Zero-dependency template language: manifest-checked component calls, context escaping, audit-clean server output | [packages/template](packages/template/README.md) |
 | `@faqir-ui/mcp` | Stdio MCP server exposing the registry, manifests, themes, audit and generation to any MCP host | [packages/mcp](packages/mcp/README.md) |
 | `@faqir-ui/react` | React bindings generated from manifests by `faqir bindings react` | [packages/react](packages/react/README.md) |
 | `@faqir-ui/vue` | Vue 3 bindings generated from manifests by `faqir bindings vue` | [packages/vue](packages/vue/README.md) |

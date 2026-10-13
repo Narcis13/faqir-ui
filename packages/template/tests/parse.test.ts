@@ -1,7 +1,7 @@
 // Piece 2 — the lexer and parser (docs/template.md §3–§7, §9 syntax): every
 // construct, positions, and every syntax diagnostic code.
 import { describe, expect, it } from "bun:test";
-import { compile } from "../src/index.js";
+import { compile } from "../src/compile.js";
 import { codes, html, ok } from "./helpers";
 
 describe("constructs", () => {

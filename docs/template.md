@@ -378,8 +378,9 @@ the same manifest walker the Vue and React bindings use — passed to `compile`
 as the `components` option.
 
 - `@faqir-ui/template/registry` exports the table of every registry primitive
-  and recipe (`scripts/build-template-table.mjs`; `check:template-table`
-  verifies it is current).
+  and recipe, written by `bun run build:template-table`. The package's own test
+  (run by `bun run test`) fails when it is stale, and so does
+  `bun scripts/build-template-table.mjs --check`.
 - `faqir template` writes a project's own table from its installed manifests,
   project-made components included, beside a copy of the engine (§15.4).
 
@@ -633,10 +634,17 @@ involved.
 
 ## 15. API
 
-### 15.1 `@faqir-ui/template`
+### 15.1 `@faqir-ui/template` and `@faqir-ui/template/compile`
+
+The package has two isomorphic entries: the **runtime** (`.`, `render`) and the
+**compiler** (`/compile`, `compile`). A host compiles once, when a template is
+saved — the static analysis — and renders the stored AST at request time; a
+browser that draws stored ASTs needs only the runtime, which is the entry the
+8 KB size budget holds (`bun run size`).
 
 ```js
-import { compile, render } from "@faqir-ui/template";
+import { compile } from "@faqir-ui/template/compile";
+import { render } from "@faqir-ui/template";
 
 const { ast, diagnostics } = compile(source, {
   file: "pages/welcome.faqir",   // name in diagnostics; default "template.faqir"
@@ -679,10 +687,20 @@ for a file that does not exist, a name that breaks §10.1, or a path that leaves
 ### 15.4 Installing without npm
 
 `faqir template` (run in a Faqir project) copies the engine's files into
-`<output_dir>/template/` and writes `<output_dir>/template/components.js`, the
-project's table from its installed manifests, project-made ones included. The
-files are committed like the rest of `output_dir`; `--check` reports drift
-without writing.
+`<output_dir>/template/` and writes `<output_dir>/template/table.js`, the
+project's table from its installed manifests, project-made ones included, and
+its installed plugins (the registry's when it has none). The engine's files are
+embedded in the CLI at build time from `packages/template/src`, their single
+source. The files are committed like the rest of `output_dir`; `--check` reports
+drift without writing and exits 1 when there is any. With `--json` it prints
+`{ ok, dir, files, drifted }`.
+
+```js
+import { compile } from "./ui/template/compile.js";
+import { render } from "./ui/template/index.js";
+import { createFileLoader } from "./ui/template/node.js";
+import { components } from "./ui/template/table.js";
+```
 
 ## 16. AST
 
@@ -804,6 +822,12 @@ engine is the layer under it, not a competitor:
     loops over large data with empty bodies cannot spin without output.
 11. **The `@ui:requires` comment is always written** when the page needs
     something, as `@faqir-ui/forms` does; there is no option to drop it.
+12. **The runtime and the compiler are separate entries.** Compiling is the
+    static analysis a host runs when a template is saved; rendering is what
+    runs per request, and what a browser drawing stored ASTs needs. The core
+    entry is therefore the runtime (about 4 KB minified+gzip, under the 8 KB
+    budget); the compiler, with its diagnostics' messages, is about 10 KB and
+    has its own entry. Both are zero-dependency and isomorphic.
 
 ## 19. Examples
 

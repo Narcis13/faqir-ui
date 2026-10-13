@@ -1,4 +1,4 @@
-// Types for @faqir-ui/template (docs/template.md §15.1, §16).
+// Types for @faqir-ui/template, the runtime entry (docs/template.md §15.1, §16).
 
 export interface Diagnostic {
   code: string;
@@ -13,19 +13,7 @@ export interface ComponentTable {
   version: number;
   plugins: Record<string, string>;
   components: Record<string, unknown>;
-}
-
-export interface CompileOptions {
-  /** Name used in diagnostics. Default "template.faqir". */
-  file?: string;
-  /** Returns a template's source by name, or null. Needed by include and layout. */
-  loader?: (name: string) => string | null;
-  /** The component table component calls are checked against. */
-  components?: ComponentTable;
-  /** Names of the helpers calls may use. */
-  helpers?: string[];
-  /** false refuses `raw`. Default true. */
-  raw?: boolean;
+  unavailable: Record<string, string>;
 }
 
 /** A compiled template: plain JSON (§16). */
@@ -35,11 +23,6 @@ export interface Template {
   requires: string[];
   body: unknown[];
   partials: Record<string, unknown[]>;
-}
-
-export interface CompileResult {
-  ast: Template | null;
-  diagnostics: Diagnostic[];
 }
 
 export interface RenderOptions {
@@ -62,5 +45,4 @@ export interface RenderError extends Error {
   path?: string;
 }
 
-export function compile(source: string, options?: CompileOptions): CompileResult;
 export function render(ast: Template, data?: Record<string, unknown>, options?: RenderOptions): string;

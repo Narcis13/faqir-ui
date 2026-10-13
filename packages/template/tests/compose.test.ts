@@ -5,7 +5,8 @@ import { afterAll, describe, expect, it } from "bun:test";
 import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { compile, render } from "../src/index.js";
+import { compile } from "../src/compile.js";
+import { render } from "../src/index.js";
 import { createFileLoader } from "../src/node.js";
 import { codes, html, memoryLoader, ok } from "./helpers";
 

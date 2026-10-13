@@ -3,7 +3,8 @@
 // policy, limits, determinism, and an injection table in which every hostile
 // string, in every context, must come out inert.
 import { describe, expect, it } from "bun:test";
-import { compile, render } from "../src/index.js";
+import { compile } from "../src/compile.js";
+import { render } from "../src/index.js";
 import { codes, html, ok, renderCode } from "./helpers";
 
 describe("elements, text and whitespace (§12.1)", () => {

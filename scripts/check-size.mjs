@@ -47,6 +47,9 @@ export const BUDGETS = {
   engine: 14 * KB,
   engineWithControllers: 46 * KB,
   plugin: 2 * KB,
+  // @faqir-ui/template's core entry: the runtime that renders a compiled AST
+  // (docs/template.md §15.1). The compiler is its own entry, run at save time.
+  template: 8 * KB,
 };
 
 // Per-plugin exceptions to BUDGETS.plugin, by file name. Each is named for the
@@ -219,6 +222,7 @@ export function collectDefaultTargets(root = ROOT) {
       entry: "registry/core/faqir-core.dev.js",
       budgetBytes: null,
     },
+    { label: "@faqir-ui/template", entry: "packages/template/src/index.js", budgetBytes: BUDGETS.template },
   ];
 
   const pluginsDir = join(root, "registry", "core", "plugins");
