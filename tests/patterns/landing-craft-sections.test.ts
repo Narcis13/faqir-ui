@@ -158,7 +158,7 @@ describe("toggle-group · data-variant=\"segmented\"", () => {
     expect(groups).toHaveLength(1);
     expect(groups[0].values).toEqual(["default", "segmented"]);
     expect(groups[0].default).toBe("default");
-    expect(m.version).toBe("1.2.0");
+    expect(m.version).toBe("1.2.1");
     expect(m.props?.["--toggle-group-track-bg"]?.default).toBe("var(--color-bg-muted)");
     expect(m.props?.["--toggle-group-thumb-bg"]?.default).toBe("var(--color-bg)");
     expect((m.a11y as { notes?: string }).notes).toContain("single mode");

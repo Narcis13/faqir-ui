@@ -70,15 +70,15 @@ describe("barcode · Code 128-B known vectors", () => {
 });
 
 describe("barcode controller", () => {
-  it("renders a crisp inline SVG with background, bars, and ten-module quiet zones", () => {
+  it("renders a crisp inline SVG with background and bars drawn flush (quiet zone is CSS padding)", () => {
     const encoded = symbol(render("AB").root);
     expect(encoded.svg.getAttribute("shape-rendering")).toBe("crispEdges");
     expect(encoded.svg.querySelector("rect")).not.toBeNull();
     const path = encoded.svg.querySelector("path")!;
-    expect(path.getAttribute("d")).toStartWith("M10,0");
+    expect(path.getAttribute("d")).toStartWith("M0,0");
 
     const patternWidth = [...encoded.pattern!].reduce((sum, digit) => sum + Number(digit), 0);
-    expect(encoded.svg.getAttribute("viewBox")).toBe(`0 0 ${patternWidth + 20} 50`);
+    expect(encoded.svg.getAttribute("viewBox")).toBe(`0 0 ${patternWidth} 50`);
   });
 
   it("inserts generated SVG before an existing caption", () => {
