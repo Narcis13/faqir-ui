@@ -26,6 +26,7 @@ export const TOKEN_FILES_ORDERED = [
   "aliases.css",
   "document.css",
   "doc-aliases.css",
+  "accent.css",
   "density.css",
 ];
 

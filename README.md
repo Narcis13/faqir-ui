@@ -602,6 +602,7 @@ size from one ramp, `--control-height-sm|md|lg`, so they line up in a row.
 | `textures.css` | Six SVG surface materials (grain, paper, dots, grid, stripes, mesh), applied through `--texture-page` and `--texture-surface` |
 | `aliases.css` | Component aliases, `--control-height-*`, `--measure-narrow/-content/-wide/-prose` |
 | `density.css` | `[data-density]` subtree remap of `--space-*` and `--control-height-*` |
+| `accent.css` | `[data-accent]` subtree re-hue of `--color-primary/-hover/-active/-subtle` and `--color-ring` |
 | `document.css` | `--page-format`, `--page-margin`, `--doc-*` paged-media tokens |
 | `doc-aliases.css` | `--kv-*`, `--callout-*`, `--image-*`, `--field-*`, `--stat-*` document aliases |
 
@@ -746,6 +747,24 @@ returns every theme with its axes, `faqir_theme_info` one theme's manifest, and
 **Scoped themes.** `faqir theme bundle <name> --scope` rewrites every `:root`
 onto `[data-skin="<name>"]` and scopes every `[data-theme]` block beneath it, so
 a `data-theme` inside the island switches the island, not the page.
+
+**Runtime accent.** A brand hue without the CLI: `data-accent` on any element
+re-hues the five tokens a theme draws its accent with (`--color-primary`,
+`-hover`, `-active`, `-subtle` and `--color-ring`) for that subtree, keeping the
+active theme's own lightness and chroma, so every theme keeps its character and
+only the hue moves. `--doc-accent`, the print ink, follows it.
+
+```html
+<html data-theme="auto" data-accent="violet">      <!-- violet · purple · fuchsia · pink -->
+<section data-accent="custom" style="--accent-hue: 200">…any other hue…</section>
+```
+
+The named hues are the ones that clear every pair the `contrast-tokens` gate
+checks in every shipped theme, light and dark; the measurement that chose them is
+in [`docs/accent.md`](docs/accent.md). A `custom` hue is not measured — its
+contrast is yours to check. Browsers without relative colour syntax render the
+theme's own accent. `data-accent` is the fifth sanctioned token modifier
+(SPEC-1.0 §4), and `l-tweak`'s studio has a dial for it.
 
 Authoring rules, the deliberate-override list, the seed workflow and the drift
 gate are in [`CONTRIBUTING.md` § Theme Manifests](CONTRIBUTING.md#theme-manifests).

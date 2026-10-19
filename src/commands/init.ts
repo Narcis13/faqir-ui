@@ -124,6 +124,7 @@ export async function init(args: string[]): Promise<void> {
       "aliases.css",
       "document.css",
       "doc-aliases.css",
+      "accent.css",
       "density.css",
     ];
 

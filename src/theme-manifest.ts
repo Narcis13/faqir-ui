@@ -338,8 +338,12 @@ const VALID_DARK_MODES: ThemeDarkMode[] = ["native", "none"];
  *   components do read, and those stay in the surface. Listing the palette too
  *   would put six data URIs into every theme's `tokens_inherited` to say
  *   nothing — the same reasoning as `density.css`, one level up.
+ * - `accent.css` re-points surface tokens inside `[data-accent]` subtree scopes,
+ *   like `density.css`; the `--accent-base-*` it declares on `:root` are
+ *   captures of the theme's own values, which a theme overriding would break,
+ *   not tokens a theme sets.
  */
-export const NON_SURFACE_TOKEN_FILES = ["index.css", "density.css", "textures.css"] as const;
+export const NON_SURFACE_TOKEN_FILES = ["index.css", "density.css", "textures.css", "accent.css"] as const;
 
 /** Whether a `registry/tokens/<file>` contributes to the themeable surface. */
 export function isSurfaceTokenFile(file: string): boolean {

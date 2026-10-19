@@ -1075,6 +1075,67 @@ function renderDensityRemap(css: string, group: TokenGroup, rootGroups: TokenGro
 }
 
 /**
+ * The `[data-accent]` re-hue, derived from `accent.css` rather than described:
+ * the named hues, what is captured where a theme declares its values, and what
+ * is re-pointed below — a hue or a token added there appears here unedited.
+ */
+function renderAccentRemap(css: string, group: TokenGroup): string[] {
+  const masked = maskComments(css);
+  const hues: TokenDeclaration[] = [];
+  const blocks: { prelude: string; tokens: TokenDeclaration[] }[] = [];
+  for (const m of masked.matchAll(/([^{};]+)\{([^{}]*)\}/g)) {
+    const start = (m.index ?? 0) + m[0].indexOf("{") + 1;
+    const prelude = oneLine(m[1].replace(/^[\s\S]*@supports[^{]*$/, ""));
+    const tokens = scanDeclarations(css.slice(start, start + m[2].length));
+    const named = /^\[data-accent="([a-z0-9-]+)"\]$/.exec(prelude);
+    if (named) for (const t of tokens) hues.push({ ...t, name: named[1] });
+    else if (tokens.length) blocks.push({ prelude, tokens });
+  }
+  const supports = /@supports\s*([^{]+)\{/.exec(masked);
+  const capture = blocks.find((b) => !b.prelude.includes("[data-accent"));
+  const repoint = blocks.find((b) => b.prelude.includes("[data-accent"));
+  if (!capture || !repoint) return [];
+  const accent = TOKEN_MODIFIERS.find((m) => m.attr === "data-accent");
+  const unnamed = (accent?.values ?? []).filter((v) => !hues.some((h) => h.name === v));
+
+  const lines: string[] = [];
+  lines.push(`## ${group.group}${group.blurb ? ` — ${group.blurb}` : ""}`);
+  lines.push("");
+  lines.push(
+    `_\`registry/tokens/${group.file}\` · ${hues.length} named hues · ${repoint.tokens.length} tokens re-pointed per scope_`,
+  );
+  lines.push("");
+  lines.push(
+    `\`data-accent\` sets \`--accent-hue\` (OKLCH degrees) and re-points the tokens below to ` +
+      "`oklch(from <the theme's own value> l c <hue>)` — the theme's lightness and chroma, the accent's hue." +
+      (unnamed.length
+        ? ` ${unnamed.map((v) => `\`${v}\``).join(", ")} names no hue: set \`--accent-hue\` beside it.`
+        : ""),
+  );
+  lines.push("");
+  // Not "| `data-accent` |": that row shape is the modifier table's.
+  lines.push("| Value | `--accent-hue` |");
+  lines.push("|---|---|");
+  for (const h of hues) lines.push(`| \`${h.name}\` | ${cell(h.value)} |`);
+  lines.push("");
+  if (supports) {
+    lines.push(
+      `Everything below is inside \`@supports ${oneLine(supports[1])}\`: without it, the theme's own accent renders.`,
+    );
+    lines.push("");
+  }
+  lines.push(`### Captured on \`${capture.prelude}\``);
+  lines.push("");
+  lines.push(...renderTokenTable(capture.tokens));
+  lines.push("");
+  lines.push(`### Re-pointed on \`${repoint.prelude}\``);
+  lines.push("");
+  lines.push(...renderTokenTable(repoint.tokens));
+  lines.push("");
+  return lines;
+}
+
+/**
  * Build `references/tokens.md` from `<registryRoot>/tokens/*.css`. Exported so a
  * test can point it at a fixture registry and prove the file is derived rather
  * than transcribed.
@@ -1132,6 +1193,11 @@ export function renderTokensReference(registryRoot: string, schemaVersion: strin
 
   for (const g of scopedGroups) {
     lines.push(...renderDensityRemap(readFileSync(join(tokensDir, g.file), "utf8"), g, rootGroups));
+  }
+
+  for (const g of groups) {
+    const css = readFileSync(join(tokensDir, g.file), "utf8");
+    if (/\[data-accent[\]=]/.test(maskComments(css))) lines.push(...renderAccentRemap(css, g));
   }
 
   return lines.join("\n").replace(/\n{3,}/g, "\n\n").replace(/\s+$/g, "") + "\n";

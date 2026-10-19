@@ -11,7 +11,7 @@
 //
 // What lives here and what deliberately does not:
 //
-//   • here — the five attributes, their value grammars and owners; the four
+//   • here — the five attributes, their value grammars and owners; the five
 //     sanctioned token modifiers; the freeze statement and the amendment
 //     taxonomy; the manifest-schema changelog.
 //   • NOT here — the breakpoint canon (`src/utils/breakpoints.ts` owns it, and
@@ -183,8 +183,26 @@ export interface TokenModifier {
   open?: boolean;
 }
 
-/** The four sanctioned token modifiers, alphabetical by attribute. */
+/**
+ * The five sanctioned token modifiers, alphabetical by attribute.
+ *
+ * `data-accent` is the fifth (forecraft #9), additive under §8.2's "add a
+ * sanctioned token modifier" row. Its vocabulary is closed like the others: the
+ * named hues are those `src/theme/accent.ts` measured clean against every
+ * shipped theme, and `custom` is a closed value that reads the hue from the
+ * `--accent-hue` token — so the open-ended part lives in the token layer, which
+ * §1.2 already puts outside the freeze, not in the attribute.
+ */
 export const TOKEN_MODIFIERS: readonly TokenModifier[] = Object.freeze([
+  Object.freeze({
+    attr: "data-accent",
+    purpose:
+      "Re-hues the five accent tokens for a subtree, keeping the active theme's own lightness and chroma.",
+    values: Object.freeze(["violet", "purple", "fuchsia", "pink", "custom"]),
+    scope:
+      "Any element. Nesting is supported: an inner value replaces the outer one for its own subtree. `custom` takes its hue from `--accent-hue`.",
+    owner: "author" as AttributeOwner,
+  }),
   Object.freeze({
     attr: "data-density",
     purpose: "Re-declares the spacing and control-height ramps for a subtree.",
@@ -223,7 +241,7 @@ export function isTokenModifier(attr: string): boolean {
 }
 
 /**
- * Every attribute name the protocol itself sanctions — the five plus the three.
+ * Every attribute name the protocol itself sanctions — the five plus the token modifiers.
  * This is the set that needs no manifest declaration, which is what the
  * documentation cross-checks exempt (see `tests/generator/layout-docs.test.ts`).
  */

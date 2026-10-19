@@ -1,0 +1,103 @@
+/* @ui:tokens accent — [data-accent] subtree modifier (see SPEC-1.0.md §4; forecraft #9)
+
+   Put `data-accent="<hue>"` on ANY element and its subtree draws its accent in
+   that hue, in whatever theme is active. Five tokens are re-pointed — the five
+   `faqir-tweak`'s accent dial writes:
+
+     --color-primary  --color-primary-hover  --color-primary-active
+     --color-primary-subtle  --color-ring
+
+   each with relative colour syntax over the theme's OWN value of that token:
+   `oklch(from <theme value> l c <hue>)`. Lightness and chroma stay the theme's,
+   so a muted theme stays muted, a pale dark-mode accent stays pale, a
+   monochrome theme (chroma 0) stays monochrome, and only the hue moves.
+   `--color-primary-fg` is deliberately NOT re-pointed: the label keeps the ink
+   its theme chose, which is why the named hues are measured rather than picked.
+
+     <html data-accent="violet">              … the whole page …
+     <section data-accent="pink">             … one region …
+     <div data-accent="custom" style="--accent-hue: 200"> … any other hue …
+
+   ── The vocabulary ──
+   Closed: the four named hues below, plus `custom`. Each named hue is held by
+   `tests/tokens/forecraft-accent.test.ts` (via `checkAccentContrast` in
+   src/audit/contrast-tokens.ts) to clear every pair the `contrast-tokens` gate
+   checks — primary text on the muted and subtle plates, the primary label on
+   the primary fill, the focus ring on every surface — in every shipped theme,
+   light and dark. Hues that failed in any theme × scheme were dropped; the
+   numbers are in that test. At equal OKLCH lightness two hues still differ in
+   WCAG luminance, and themes tuned to clear AA by a hair in their own hue do
+   not clear it in most others.
+
+   `custom` names no hue: the author states `--accent-hue` (a number of degrees,
+   or an angle) beside it. Nothing measures a custom hue against the theme — that
+   contrast is the author's to check. A `data-accent` whose hue resolves to
+   nothing (a `custom` without `--accent-hue`, or a value outside the
+   vocabulary) keeps the hue it would otherwise have had — the theme's, or an
+   enclosing accent's, since `--accent-hue` inherits: the channel falls back
+   to `h`, the origin's own hue.
+
+   ── Why the theme's values are captured first ──
+   A custom property cannot read its own value: `--color-primary:
+   oklch(from var(--color-primary) …)` is a cycle, and a cycle makes the token
+   invalid. So the theme's five values are first captured into `--accent-base-*`
+   on the elements a theme declares them on — `:root`, and every `[data-theme]` /
+   `[data-skin]` island — and the re-pointing reads the capture. Where
+   `data-accent` sits on one of those same elements (`<html data-accent>`, the
+   common case), it re-points the element's CHILDREN instead, so the capture and
+   the re-point never meet on one element — and an island is never re-pointed
+   itself, for the same reason. An island nested inside an accent region
+   re-captures its own theme's values and its children are re-pointed again,
+   which is how a block-form theme's `[data-theme="dark"]` island keeps the
+   accent. The cost: on a capture element the accent starts one level down, so
+   the element's OWN border or fill keeps the theme's accent.
+
+   ── Print ──
+   `--doc-accent` (tokens/document.css), the one ink a print theme draws in,
+   follows the accent by default: it is captured and re-hued like the five, so a
+   print theme's own darker `@media print` ink keeps its lightness and takes the
+   accent's hue.
+
+   ── Fallback ──
+   Everything that re-points is inside `@supports` for relative colour syntax
+   over a `light-dark()` origin (every one-block theme's tokens are
+   `light-dark()` calls). A browser without it ignores the block and renders
+   the theme's own accent: the attribute degrades to a no-op, never to a page
+   with no primary colour.
+
+   `data-accent` is NOT a sixth protocol attribute: no manifest, controller or
+   component knows about it. It only re-declares tokens. */
+
+/* ── The named hues (OKLCH degrees) ── */
+[data-accent="violet"]  { --accent-hue: 293; }
+[data-accent="purple"]  { --accent-hue: 304; }
+[data-accent="fuchsia"] { --accent-hue: 322; }
+[data-accent="pink"]    { --accent-hue: 354; }
+
+@supports (color: oklch(from light-dark(red, red) l c h)) {
+  /* ── Capture: the theme's values, where the theme declares them ── */
+  :root,
+  [data-theme],
+  [data-skin] {
+    --accent-base-primary:        var(--color-primary);
+    --accent-base-primary-hover:  var(--color-primary-hover);
+    --accent-base-primary-active: var(--color-primary-active);
+    --accent-base-primary-subtle: var(--color-primary-subtle);
+    --accent-base-ring:           var(--color-ring);
+    --accent-base-doc:            var(--doc-accent);
+  }
+
+  /* ── Re-point: the theme's lightness and chroma, the accent's hue ── */
+  [data-accent]:not(:root, [data-theme], [data-skin]),
+  :is(:root, [data-theme], [data-skin])[data-accent] > :not([data-theme], [data-skin]),
+  [data-accent] :is([data-theme], [data-skin]) > :not([data-theme], [data-skin]) {
+    --color-primary:        oklch(from var(--accent-base-primary) l c var(--accent-hue, h));
+    --color-primary-hover:  oklch(from var(--accent-base-primary-hover) l c var(--accent-hue, h));
+    --color-primary-active: oklch(from var(--accent-base-primary-active) l c var(--accent-hue, h));
+    --color-primary-subtle: oklch(from var(--accent-base-primary-subtle) l c var(--accent-hue, h));
+    --color-ring:           oklch(from var(--accent-base-ring) l c var(--accent-hue, h));
+    --doc-accent:           oklch(from var(--accent-base-doc) l c var(--accent-hue, h));
+    /* Declared on :root, the focus ring resolved the theme's ring there. */
+    --focus-ring-color:     var(--color-ring);
+  }
+}
