@@ -30,6 +30,12 @@
 //   curl -sSO "https://cdn.jsdelivr.net/npm/$P@$V/files/lora-latin-wght-normal.woff2"
 //   shasum -a 256 lora-latin-wght-normal.woff2
 //
+// An italic row is the same procedure on the `-italic` twin of each upright
+// file (`lora-latin-wght-italic.woff2`; `ibm-plex-serif-latin-400-italic.woff2`
+// for a static family), taken only when `metadata.json`'s `styles` lists
+// "italic" — `<wght|weight>-italic.css` in the same package confirms the
+// face's `font-weight` and `unicode-range` match the upright row's.
+//
 // A new family needs a row here AND a row in `FAMILY_CLASSES`
 // (`src/theme/axes.ts`), because `class` below is a claim about what
 // `axesFromCss` will report for a stylesheet that names it —
@@ -41,14 +47,17 @@
 //   needs Cyrillic is past what a curated list can decide for it, and the file
 //   layout here (one directory per family, one `@font-face` per subset) is what
 //   a hand-added face slots into.
-// * Italic PINS. The installer supports true italics (`italics` below, opt-in
-//   with `faqir fonts add <family> --italic`, the same download → hash check →
-//   all-or-nothing write as the upright faces), but no family carries an
-//   `italics` row yet: a pin is only worth something when its hash was taken
-//   from the bytes themselves, by the procedure above, and the rows wait for
-//   that. The files are Fontsource's `…-wght-italic.woff2` (variable) and
-//   `…-<weight>-italic.woff2` (static) beside the upright ones, at the same
-//   version. Until a family has rows, `--italic` refuses it by name.
+// * Italics for Manrope, Space Grotesk and Bricolage Grotesque. Their Fontsource
+//   packages ship `styles: ["normal"]` only, so there is nothing to pin, and
+//   `--italic` refuses them by name; emphasis in them is a browser-slanted
+//   upright. Every other family carries an `italics` row (opt-in with
+//   `faqir fonts add <family> --italic`, the same download → hash check →
+//   all-or-nothing write as the upright faces), pinned by the procedure above
+//   from the bytes themselves: Fontsource's `…-wght-italic.woff2` (variable) or
+//   `…-<weight>-italic.woff2` (static, the same weights as the upright rows)
+//   beside the upright files, at the same package version, with the same
+//   subsets and `unicode-range`s. `tests/commands/forecraft-italics.test.ts`
+//   holds every italic row to its upright twin.
 // * `size-adjust` / `ascent-override` metrics, which would let a fallback face
 //   occupy the same space as the webfont and remove the layout shift on swap.
 //   They cannot be written by hand — they are measured out of the font's `head`
@@ -115,8 +124,9 @@ interface CatalogFamilyInput {
   /** The upright (`font-style: normal`) faces — what every install gets. */
   files: readonly CatalogFile[];
   /**
-   * The true-italic faces, installed only on request (`--italic`). Absent or
-   * empty means the catalog pins none for this family yet.
+   * The true-italic faces, installed only on request (`--italic`): one per
+   * upright file, same subset and weight. Absent means the family's upstream
+   * package ships no italic, so the catalog pins none.
    */
   italics?: readonly CatalogFile[];
 }
@@ -158,6 +168,24 @@ const FAMILIES: readonly CatalogFamilyInput[] = [
         url: "https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5.3.0/files/inter-latin-ext-wght-normal.woff2",
       },
     ],
+    italics: [
+      {
+        file: "inter-latin-wght-italic.woff2",
+        subset: "latin",
+        weight: "100 900",
+        bytes: 51832,
+        sha256: "7291b5970da2237441273c03b424a504b70b18f09791473fab99687dcc314720",
+        url: "https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5.3.0/files/inter-latin-wght-italic.woff2",
+      },
+      {
+        file: "inter-latin-ext-wght-italic.woff2",
+        subset: "latin-ext",
+        weight: "100 900",
+        bytes: 91900,
+        sha256: "71254244ccb1ec21e14db3480fef6f6826d1136dc4aca1c7d3ca7ce31294fcce",
+        url: "https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5.3.0/files/inter-latin-ext-wght-italic.woff2",
+      },
+    ],
   },
   {
     id: "geist",
@@ -183,6 +211,24 @@ const FAMILIES: readonly CatalogFamilyInput[] = [
         bytes: 16512,
         sha256: "824f485b5d26e2f2da3c2b236132ece1bc8e4e43373452950bb0e40548b4313f",
         url: "https://cdn.jsdelivr.net/npm/@fontsource-variable/geist@5.3.0/files/geist-latin-ext-wght-normal.woff2",
+      },
+    ],
+    italics: [
+      {
+        file: "geist-latin-wght-italic.woff2",
+        subset: "latin",
+        weight: "100 900",
+        bytes: 31008,
+        sha256: "9b10496762af92659f3b05d2b084b0c8f962c3ecdf637aa764e3b7fd17f5acaf",
+        url: "https://cdn.jsdelivr.net/npm/@fontsource-variable/geist@5.3.0/files/geist-latin-wght-italic.woff2",
+      },
+      {
+        file: "geist-latin-ext-wght-italic.woff2",
+        subset: "latin-ext",
+        weight: "100 900",
+        bytes: 17892,
+        sha256: "56dc9ac98e3fc45e7ee487d03ee205b35858c672f2e15053eabbb119c0bc1e74",
+        url: "https://cdn.jsdelivr.net/npm/@fontsource-variable/geist@5.3.0/files/geist-latin-ext-wght-italic.woff2",
       },
     ],
   },
@@ -237,6 +283,24 @@ const FAMILIES: readonly CatalogFamilyInput[] = [
         bytes: 18228,
         sha256: "a5d38fe99f930275684999b462c7123faa063d9e44e73b4b241723d884aa0f49",
         url: "https://cdn.jsdelivr.net/npm/@fontsource-variable/dm-sans@5.3.0/files/dm-sans-latin-ext-wght-normal.woff2",
+      },
+    ],
+    italics: [
+      {
+        file: "dm-sans-latin-wght-italic.woff2",
+        subset: "latin",
+        weight: "100 1000",
+        bytes: 39712,
+        sha256: "f1a235db5bcb8730707844188d35201ecdf63e56c5dcce97bab24a9c7066091d",
+        url: "https://cdn.jsdelivr.net/npm/@fontsource-variable/dm-sans@5.3.0/files/dm-sans-latin-wght-italic.woff2",
+      },
+      {
+        file: "dm-sans-latin-ext-wght-italic.woff2",
+        subset: "latin-ext",
+        weight: "100 1000",
+        bytes: 20808,
+        sha256: "6e646d2022808fb4532e77d38a9348e4dcf832796be2acc43a79052b60900db2",
+        url: "https://cdn.jsdelivr.net/npm/@fontsource-variable/dm-sans@5.3.0/files/dm-sans-latin-ext-wght-italic.woff2",
       },
     ],
   },
@@ -320,6 +384,24 @@ const FAMILIES: readonly CatalogFamilyInput[] = [
         url: "https://cdn.jsdelivr.net/npm/@fontsource-variable/ibm-plex-sans@5.3.0/files/ibm-plex-sans-latin-ext-wght-normal.woff2",
       },
     ],
+    italics: [
+      {
+        file: "ibm-plex-sans-latin-wght-italic.woff2",
+        subset: "latin",
+        weight: "100 700",
+        bytes: 50184,
+        sha256: "4363757d2695c7633f98472855849f7c30528eba869d7968ee35b58c87cf14c1",
+        url: "https://cdn.jsdelivr.net/npm/@fontsource-variable/ibm-plex-sans@5.3.0/files/ibm-plex-sans-latin-wght-italic.woff2",
+      },
+      {
+        file: "ibm-plex-sans-latin-ext-wght-italic.woff2",
+        subset: "latin-ext",
+        weight: "100 700",
+        bytes: 33900,
+        sha256: "bf44b77cc751203b2f0ce95c048a9d8f984313f84b58106c7c4410ca50314016",
+        url: "https://cdn.jsdelivr.net/npm/@fontsource-variable/ibm-plex-sans@5.3.0/files/ibm-plex-sans-latin-ext-wght-italic.woff2",
+      },
+    ],
   },
   {
     id: "ibm-plex-serif",
@@ -361,6 +443,40 @@ const FAMILIES: readonly CatalogFamilyInput[] = [
         bytes: 15568,
         sha256: "4c47e5be83b18b0851ffb58d6ec94ef439bd52a190b66ea479cfb19298720f68",
         url: "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-serif@5.3.0/files/ibm-plex-serif-latin-ext-700-normal.woff2",
+      },
+    ],
+    italics: [
+      {
+        file: "ibm-plex-serif-latin-400-italic.woff2",
+        subset: "latin",
+        weight: "400",
+        bytes: 20900,
+        sha256: "d3f861b1ca55e50ca94de4c1756cb0d67c73de615172adf6b5b2078d939c723a",
+        url: "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-serif@5.3.0/files/ibm-plex-serif-latin-400-italic.woff2",
+      },
+      {
+        file: "ibm-plex-serif-latin-700-italic.woff2",
+        subset: "latin",
+        weight: "700",
+        bytes: 21336,
+        sha256: "8cf0a1103f7785a0b457568d47467d40f2283c9f743a82a80c77b8acf6e7db47",
+        url: "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-serif@5.3.0/files/ibm-plex-serif-latin-700-italic.woff2",
+      },
+      {
+        file: "ibm-plex-serif-latin-ext-400-italic.woff2",
+        subset: "latin-ext",
+        weight: "400",
+        bytes: 16296,
+        sha256: "68091cb647810f7ac24fb72fe7ac506ffc4769ef51435a87969345249fc7f035",
+        url: "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-serif@5.3.0/files/ibm-plex-serif-latin-ext-400-italic.woff2",
+      },
+      {
+        file: "ibm-plex-serif-latin-ext-700-italic.woff2",
+        subset: "latin-ext",
+        weight: "700",
+        bytes: 16588,
+        sha256: "683b44b3a162d257171b19d98a66abd27ba811c2eafd94cb39b484f875746ebb",
+        url: "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-serif@5.3.0/files/ibm-plex-serif-latin-ext-700-italic.woff2",
       },
     ],
   },
@@ -406,6 +522,40 @@ const FAMILIES: readonly CatalogFamilyInput[] = [
         url: "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-mono@5.3.0/files/ibm-plex-mono-latin-ext-700-normal.woff2",
       },
     ],
+    italics: [
+      {
+        file: "ibm-plex-mono-latin-400-italic.woff2",
+        subset: "latin",
+        weight: "400",
+        bytes: 16448,
+        sha256: "0840095faae86403735a8c04014b72cb29e7923646b222b360b7e8252932e4e3",
+        url: "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-mono@5.3.0/files/ibm-plex-mono-latin-400-italic.woff2",
+      },
+      {
+        file: "ibm-plex-mono-latin-700-italic.woff2",
+        subset: "latin",
+        weight: "700",
+        bytes: 16540,
+        sha256: "2bb0d4c82652472446ed1a5a89a0553f2db1e4ea17cbda66a45e690899d83e91",
+        url: "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-mono@5.3.0/files/ibm-plex-mono-latin-700-italic.woff2",
+      },
+      {
+        file: "ibm-plex-mono-latin-ext-400-italic.woff2",
+        subset: "latin-ext",
+        weight: "400",
+        bytes: 14524,
+        sha256: "1b07eee6df7d26b31864581c2365131d384077605e0b63ae67c4a0a64363a6de",
+        url: "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-mono@5.3.0/files/ibm-plex-mono-latin-ext-400-italic.woff2",
+      },
+      {
+        file: "ibm-plex-mono-latin-ext-700-italic.woff2",
+        subset: "latin-ext",
+        weight: "700",
+        bytes: 14684,
+        sha256: "18c8dc28d75ecbda23c88fb11126852b2232916ec2e6d6dc0225def886a0cc98",
+        url: "https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-mono@5.3.0/files/ibm-plex-mono-latin-ext-700-italic.woff2",
+      },
+    ],
   },
   {
     id: "source-serif-4",
@@ -436,6 +586,24 @@ const FAMILIES: readonly CatalogFamilyInput[] = [
         url: "https://cdn.jsdelivr.net/npm/@fontsource-variable/source-serif-4@5.3.0/files/source-serif-4-latin-ext-wght-normal.woff2",
       },
     ],
+    italics: [
+      {
+        file: "source-serif-4-latin-wght-italic.woff2",
+        subset: "latin",
+        weight: "200 900",
+        bytes: 51516,
+        sha256: "663e7ef3037a56dce81dfc33f68c1e6445995ffd8887991b3c0b68a7689c9da5",
+        url: "https://cdn.jsdelivr.net/npm/@fontsource-variable/source-serif-4@5.3.0/files/source-serif-4-latin-wght-italic.woff2",
+      },
+      {
+        file: "source-serif-4-latin-ext-wght-italic.woff2",
+        subset: "latin-ext",
+        weight: "200 900",
+        bytes: 44260,
+        sha256: "515639854d3566c43860d2005770645c590df8b43a0144c70fe2566c33015ede",
+        url: "https://cdn.jsdelivr.net/npm/@fontsource-variable/source-serif-4@5.3.0/files/source-serif-4-latin-ext-wght-italic.woff2",
+      },
+    ],
   },
   {
     id: "fraunces",
@@ -461,6 +629,24 @@ const FAMILIES: readonly CatalogFamilyInput[] = [
         bytes: 33584,
         sha256: "a21ecfbf41fbc393e24ef9b7e38532a27e8da5e0a074aa7d66802d1b5ccec2f0",
         url: "https://cdn.jsdelivr.net/npm/@fontsource-variable/fraunces@5.3.0/files/fraunces-latin-ext-wght-normal.woff2",
+      },
+    ],
+    italics: [
+      {
+        file: "fraunces-latin-wght-italic.woff2",
+        subset: "latin",
+        weight: "100 900",
+        bytes: 45656,
+        sha256: "bceec2ef4d549efbc8df0194a8d5280b6a64c3e399244dffccd9ea1bd9ad6db7",
+        url: "https://cdn.jsdelivr.net/npm/@fontsource-variable/fraunces@5.3.0/files/fraunces-latin-wght-italic.woff2",
+      },
+      {
+        file: "fraunces-latin-ext-wght-italic.woff2",
+        subset: "latin-ext",
+        weight: "100 900",
+        bytes: 40528,
+        sha256: "877bcc2fd1be299c950d0971578336818ca5818e1e956f12e0d8c6736436ca45",
+        url: "https://cdn.jsdelivr.net/npm/@fontsource-variable/fraunces@5.3.0/files/fraunces-latin-ext-wght-italic.woff2",
       },
     ],
   },
@@ -490,6 +676,24 @@ const FAMILIES: readonly CatalogFamilyInput[] = [
         url: "https://cdn.jsdelivr.net/npm/@fontsource/instrument-serif@5.3.0/files/instrument-serif-latin-ext-400-normal.woff2",
       },
     ],
+    italics: [
+      {
+        file: "instrument-serif-latin-400-italic.woff2",
+        subset: "latin",
+        weight: "400",
+        bytes: 22128,
+        sha256: "5a51946dfffa82972bc98745359c46761515641fda557c25116459a9f83da4a7",
+        url: "https://cdn.jsdelivr.net/npm/@fontsource/instrument-serif@5.3.0/files/instrument-serif-latin-400-italic.woff2",
+      },
+      {
+        file: "instrument-serif-latin-ext-400-italic.woff2",
+        subset: "latin-ext",
+        weight: "400",
+        bytes: 12384,
+        sha256: "d0014821252a8a770bf7551641572f239a8ede83d75652d84fef0c3627751baf",
+        url: "https://cdn.jsdelivr.net/npm/@fontsource/instrument-serif@5.3.0/files/instrument-serif-latin-ext-400-italic.woff2",
+      },
+    ],
   },
   {
     id: "newsreader",
@@ -515,6 +719,24 @@ const FAMILIES: readonly CatalogFamilyInput[] = [
         bytes: 36244,
         sha256: "ac6fa9ed533278f4c8fd3ae44a1fc78c7df736040237ab86fc1160d020af0af2",
         url: "https://cdn.jsdelivr.net/npm/@fontsource-variable/newsreader@5.3.0/files/newsreader-latin-ext-wght-normal.woff2",
+      },
+    ],
+    italics: [
+      {
+        file: "newsreader-latin-wght-italic.woff2",
+        subset: "latin",
+        weight: "200 800",
+        bytes: 64520,
+        sha256: "48bc8861b9b2ca9300747cad4fd6a3b4ac3028d364df00bd1b72097baa75e509",
+        url: "https://cdn.jsdelivr.net/npm/@fontsource-variable/newsreader@5.3.0/files/newsreader-latin-wght-italic.woff2",
+      },
+      {
+        file: "newsreader-latin-ext-wght-italic.woff2",
+        subset: "latin-ext",
+        weight: "200 800",
+        bytes: 39684,
+        sha256: "d8c263970d52e0b94b3d5d4250d5962fe39f8f3b6fa9ad13b406d73ff3f4b036",
+        url: "https://cdn.jsdelivr.net/npm/@fontsource-variable/newsreader@5.3.0/files/newsreader-latin-ext-wght-italic.woff2",
       },
     ],
   },
@@ -544,6 +766,24 @@ const FAMILIES: readonly CatalogFamilyInput[] = [
         url: "https://cdn.jsdelivr.net/npm/@fontsource-variable/lora@5.3.0/files/lora-latin-ext-wght-normal.woff2",
       },
     ],
+    italics: [
+      {
+        file: "lora-latin-wght-italic.woff2",
+        subset: "latin",
+        weight: "400 700",
+        bytes: 40772,
+        sha256: "d824d807d4d832d12c87932d0b8ec1314dcfd502157a56dee6bb04cf8a3768ae",
+        url: "https://cdn.jsdelivr.net/npm/@fontsource-variable/lora@5.3.0/files/lora-latin-wght-italic.woff2",
+      },
+      {
+        file: "lora-latin-ext-wght-italic.woff2",
+        subset: "latin-ext",
+        weight: "400 700",
+        bytes: 21128,
+        sha256: "45f989df83f3a9f40007d2ecdea98bff248c8767a1a0bbe60e94fb37b605ecee",
+        url: "https://cdn.jsdelivr.net/npm/@fontsource-variable/lora@5.3.0/files/lora-latin-ext-wght-italic.woff2",
+      },
+    ],
   },
   {
     id: "nunito",
@@ -571,6 +811,24 @@ const FAMILIES: readonly CatalogFamilyInput[] = [
         url: "https://cdn.jsdelivr.net/npm/@fontsource-variable/nunito@5.3.0/files/nunito-latin-ext-wght-normal.woff2",
       },
     ],
+    italics: [
+      {
+        file: "nunito-latin-wght-italic.woff2",
+        subset: "latin",
+        weight: "200 1000",
+        bytes: 41760,
+        sha256: "6cfcc3786d5ba3b5c3a41797f95272e57f4290ccbd283a4bfd0033a3d857e64c",
+        url: "https://cdn.jsdelivr.net/npm/@fontsource-variable/nunito@5.3.0/files/nunito-latin-wght-italic.woff2",
+      },
+      {
+        file: "nunito-latin-ext-wght-italic.woff2",
+        subset: "latin-ext",
+        weight: "200 1000",
+        bytes: 39072,
+        sha256: "1bb48a49c837d76a727223515b78eb2a14eaab783563be84b0718f338c56c846",
+        url: "https://cdn.jsdelivr.net/npm/@fontsource-variable/nunito@5.3.0/files/nunito-latin-ext-wght-italic.woff2",
+      },
+    ],
   },
   {
     id: "jetbrains-mono",
@@ -596,6 +854,24 @@ const FAMILIES: readonly CatalogFamilyInput[] = [
         bytes: 15196,
         sha256: "79bfdab9ba467e26eea4122e6f2567e188dd8a09a8c730d501fc487c4ab99c6e",
         url: "https://cdn.jsdelivr.net/npm/@fontsource-variable/jetbrains-mono@5.3.0/files/jetbrains-mono-latin-ext-wght-normal.woff2",
+      },
+    ],
+    italics: [
+      {
+        file: "jetbrains-mono-latin-wght-italic.woff2",
+        subset: "latin",
+        weight: "100 800",
+        bytes: 42964,
+        sha256: "a8afa085e9ca5e53434e2ee918ba6b65c7dd4dda56509976b36591478c99d62e",
+        url: "https://cdn.jsdelivr.net/npm/@fontsource-variable/jetbrains-mono@5.3.0/files/jetbrains-mono-latin-wght-italic.woff2",
+      },
+      {
+        file: "jetbrains-mono-latin-ext-wght-italic.woff2",
+        subset: "latin-ext",
+        weight: "100 800",
+        bytes: 16520,
+        sha256: "60652c78382d7e5021ce4c3ed8985fc41d8f3d1b1a3bedcec2a44ed8979fe5eb",
+        url: "https://cdn.jsdelivr.net/npm/@fontsource-variable/jetbrains-mono@5.3.0/files/jetbrains-mono-latin-ext-wght-italic.woff2",
       },
     ],
   },
