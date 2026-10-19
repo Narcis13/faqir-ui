@@ -192,5 +192,5 @@ block content
     code maxOutput
     | does the same for size, with the code
     code output-limit
-    | as its error. Includes cannot recurse either: a template that includes itself, directly or through others, is a compile error, and no chain of includes may be deeper than 16.
+    | as its error. Includes cannot recurse either: a template that includes itself, directly or through others, is a compile error unless that include carries a depth budget, and no chain of includes may be deeper than 16.
   p The pattern for a host is to compile once, when the customer saves the template, and show the author the diagnostics, which carry the file, line and column. What gets stored is the compiled AST, and rendering it later needs only the runtime.

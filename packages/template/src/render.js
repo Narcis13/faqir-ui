@@ -25,7 +25,7 @@ const OPENING = /[(\[{«“‘]$/;
  * @typedef {{ ast: any, out: string[], size: number, steps: number, maxOutput: number,
  *   maxSteps: number, helpers: Record<string, unknown>, idPrefix: string, idCount: number,
  *   ids: Array<{ value: string | null, copies?: Map<string, number> }>, copy: number[],
- *   includes: number, glue: boolean, loc?: number[] }} State
+ *   chain: string[], glue: boolean, loc?: number[] }} State
  * @typedef {{ scope: object[], depth: number, verbatim: boolean, raw?: boolean }} Frame
  */
 
@@ -66,7 +66,7 @@ function newState(ast, options) {
   }
   if (typeof idPrefix !== "string") throw new TypeError("render: idPrefix must be a string");
   if (typeof helpers !== "object" || helpers === null) throw new TypeError("render: helpers must be an object");
-  return { ast, out: [], size: 0, steps: 0, maxOutput, maxSteps, helpers, idPrefix, idCount: 0, ids: [], copy: [], includes: 0, glue: false };
+  return { ast, out: [], size: 0, steps: 0, maxOutput, maxSteps, helpers, idPrefix, idCount: 0, ids: [], copy: [], chain: [], glue: false };
 }
 
 /**
@@ -413,7 +413,14 @@ function eachEntries(of, node, state) {
 function renderInclude(node, frame, state) {
   const partial = Object.getOwnPropertyDescriptor(state.ast.partials, node.name)?.value;
   if (!Array.isArray(partial)) throw renderError("bad-ast", `no partial ${JSON.stringify(node.name)}`, state.ast, node.loc);
-  if (state.includes >= MAX_INCLUDE_DEPTH) throw renderError("include-depth", `includes nest deeper than ${MAX_INCLUDE_DEPTH}`, state.ast, node.loc);
+  if (state.chain.length >= MAX_INCLUDE_DEPTH) throw renderError("include-depth", `includes nest deeper than ${MAX_INCLUDE_DEPTH}`, state.ast, node.loc);
+  // A budget lets the partial be open at most `depth` times at once on the
+  // include chain, this include counted (§10.3).
+  if (node.depth !== undefined) {
+    if (!Number.isSafeInteger(node.depth) || node.depth < 1) throw renderError("bad-ast", "an include's depth must be a positive integer", state.ast, node.loc);
+    const open = state.chain.filter((name) => name === node.name).length;
+    if (open >= node.depth) throw renderError("include-depth", `including "${node.name}" again would nest it deeper than its budget, depth=${node.depth}`, state.ast, node.loc);
+  }
   const params = Object.create(null);
   for (const p of node.params) params[p.name] = paramValue(p.value, node, frame, state);
   // Declared parameters left out take their defaults, in order, each seeing
@@ -422,9 +429,9 @@ function renderInclude(node, frame, state) {
   for (const p of declared?.params ?? []) {
     if (!(p.name in params) && p.value !== null) params[p.name] = paramValue(p.value, declared, { scope: [params], depth: 0, verbatim: false }, state);
   }
-  state.includes++;
+  state.chain.push(node.name);
   renderNodes(partial, { scope: [params], depth: frame.depth, verbatim: frame.verbatim }, state);
-  state.includes--;
+  state.chain.pop();
 }
 
 /**

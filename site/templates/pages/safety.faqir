@@ -231,9 +231,9 @@ block content
       | and the loader returns nothing for a file it does not serve.
     li
       strong It cannot recurse or run forever.
-      | There are no mixins and no recursion: an include that returns to a file on its own chain is
+      | There are no mixins, and no recursion unless an include asks for it: an include that returns to a file on its own chain is
       code include-cycle
-      | and the chain is limited. The only loop is each over the data, and steps are counted.
+      | unless it carries a depth budget of at most 16, which the render counts, and the chain is limited. The only loop is each over the data, and steps are counted.
     li
       strong It cannot write without bound.
       | Output is limited, and so is the nesting of everything that could grow it.
@@ -303,7 +303,7 @@ block content
         include "partials/safety-row.faqir" (name="no-loader" when="include or layout without a loader")
         include "partials/safety-row.faqir" (name="bad-path" when="an include or layout name that breaks the path rules")
         include "partials/safety-row.faqir" (name="not-found" when="the loader has no such file")
-        include "partials/safety-row.faqir" (name="include-cycle" when="an include chain that returns to a file on it")
+        include "partials/safety-row.faqir" (name="include-cycle" when="an include chain that returns to a file on it, through an include without a depth budget")
         include "partials/safety-row.faqir" (name="include-depth" when="an include chain deeper than 16")
         include "partials/safety-row.faqir" (name="unknown-param" when="an include passing a parameter its partial does not declare")
         include "partials/safety-row.faqir" (name="missing-param" when="an include leaving out a parameter declared without a default")
