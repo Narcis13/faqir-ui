@@ -5090,11 +5090,6 @@ export const components = {
      "attr": "data-disabled",
      "value": null,
      "kind": "presence"
-    },
-    "multiple": {
-     "attr": "multiple on [data-part",
-     "value": "input']",
-     "kind": "value"
     }
    },
    "props": {

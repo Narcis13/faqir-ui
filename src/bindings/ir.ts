@@ -233,8 +233,11 @@ export function manifestToIR(manifest: Manifest, manifestPath: string): Componen
   // same IR channel rather than growing a fourth spec array in every runtime.
   // A kebab-case manifest name (table's `no-resize`) becomes its camelCase
   // prop (`noResize`), as attribute names do everywhere else in the bindings.
+  // A prop whose attr targets a part (file-upload's
+  // `multiple on [data-part='input']`) is not a root attribute: the part's
+  // reference markup carries it, so it is not a prop here.
   for (const [manifestName, p] of Object.entries(manifest.props ?? {})) {
-    if (p.type !== "boolean" || !p.attr) continue;
+    if (p.type !== "boolean" || !p.attr || p.attr.includes(" on [")) continue;
     const propName = manifestName.replace(/-([a-z0-9])/g, (_, c: string) => c.toUpperCase());
     if (!/^[a-z][A-Za-z0-9]*$/.test(propName)) {
       throw new Error(

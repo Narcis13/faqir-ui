@@ -7,7 +7,7 @@ import { report } from "./diagnostics.js";
 import { FORBIDDEN_NAMES, parseExpression } from "./expr.js";
 import { parseAttrs } from "./attrs.js";
 import { buildLineTree } from "./lines.js";
-import { VOID_TAGS } from "./render.js";
+import { MAX_INCLUDE_DEPTH, VOID_TAGS } from "./render.js";
 import { isKnownTag } from "./tags.js";
 import { parseText } from "./text.js";
 
@@ -503,9 +503,11 @@ function parseBlock(line, ctx) {
 }
 
 /**
- * `include "name" (params)` — the parameters are written as attributes, but
- * each name becomes a variable in the partial's scope, so it must be an
- * identifier and not a forbidden name (§10.3).
+ * `include "name" (params) depth=N` — the parameters are written as
+ * attributes, but each name becomes a variable in the partial's scope, so it
+ * must be an identifier and not a forbidden name. `depth=N`, a whole number
+ * from 1 to the include-depth limit, is the include's recursion budget
+ * (§10.3).
  * @param {LineNode} line
  * @param {Context} ctx
  */
@@ -516,8 +518,21 @@ function parseInclude(line, ctx) {
   while (line.text[i] === " ") i++;
   const parsed = line.text[i] === "(" ? parseAttrs(line.text, i, ctx, line.line, line.col) : { attrs: [], end: i };
   if (!parsed) return null;
-  if (line.text.slice(parsed.end).trim() !== "") {
-    report(ctx, "bad-line", "unexpected text after the include", line.line, line.col + parsed.end);
+  let end = parsed.end;
+  while (line.text[end] === " ") end++;
+  /** @type {number | undefined} */
+  let depth;
+  if (line.text.startsWith("depth", end) && !/\w/.test(line.text[end + 5] ?? "")) {
+    const m = /^depth=([0-9]+)(?= |$)/.exec(line.text.slice(end));
+    if (!m || !(Number(m[1]) >= 1 && Number(m[1]) <= MAX_INCLUDE_DEPTH)) {
+      report(ctx, "bad-line", `an include's depth budget is depth=N, a whole number from 1 to ${MAX_INCLUDE_DEPTH}`, line.line, line.col + end);
+      return null;
+    }
+    depth = Number(m[1]);
+    end += m[0].length;
+  }
+  if (line.text.slice(end).trim() !== "") {
+    report(ctx, "bad-line", "unexpected text after the include", line.line, line.col + end);
     return null;
   }
   const bad = parsed.attrs.find((a) => !/^[A-Za-z_]\w*$/.test(a.name) || FORBIDDEN_NAMES.has(a.name));
@@ -527,7 +542,8 @@ function parseInclude(line, ctx) {
     return null;
   }
   const params = parsed.attrs.map((a) => ({ name: a.name, value: a.value }));
-  return noChildren(line, ctx, "include") ? { type: "Include", name: q.name, params, loc: loc(line, ctx) } : null;
+  if (!noChildren(line, ctx, "include")) return null;
+  return { type: "Include", name: q.name, params, ...(depth === undefined ? {} : { depth }), loc: loc(line, ctx) };
 }
 
 /**
