@@ -26,9 +26,10 @@ const baseValues = baseLayerUiValues(baseFiles);
 
 describe("the base layer is derived, not listed", () => {
   it("finds the data-ui values that base CSS defines and no component claims", () => {
-    // Today that is exactly one. The assertion is on the SET, so a second
-    // base-layer value fails here first and has to be documented.
-    expect(baseValues).toEqual(["prose"]);
+    // Today that is two: prose, and visually-hidden in reset.css (forecraft
+    // #31). The assertion is on the SET, so a third base-layer value fails here
+    // first and has to be documented.
+    expect(baseValues).toEqual(["prose", "visually-hidden"]);
     expect(baseFiles.map((f) => f.file)).toEqual([
       "motion-presets.css",
       "prose.css",

@@ -33,6 +33,13 @@ export interface BaseLayerFile {
   blurb: string;
   /** `data-ui` values this file styles that no registry component declares, sorted. */
   defines: string[];
+  /**
+   * What each defined value styles, from an optional
+   * `@ui:base-value <value> — <blurb>` comment. A file that defines one value
+   * can leave it to the header; a file that defines a value unrelated to its
+   * own header (`visually-hidden` in the reset) says what that one is.
+   */
+  describes: Record<string, string>;
 }
 
 /** The layers a `data-ui` value can be a component in. */
@@ -40,6 +47,7 @@ const COMPONENT_LAYERS = ["primitives", "recipes", "patterns"] as const;
 
 const HEADER_RE = /\/\*\s*@ui:base\s+([a-z][a-z0-9-]*)\s*(?:—|--)\s*([^\n*]+)/;
 const UI_VALUE_RE = /data-ui\s*=\s*"([a-z][a-z0-9-]*)"/g;
+const VALUE_BLURB_RE = /\/\*\s*@ui:base-value\s+([a-z][a-z0-9-]*)\s*(?:—|--)\s*([^\n*]+)/g;
 
 /** Every component name the registry ships, across all three layers. */
 export function registryComponentNames(registryPath: string): Set<string> {
@@ -81,14 +89,25 @@ export function loadBaseLayer(registryPath: string): BaseLayerFile[] {
     while ((match = UI_VALUE_RE.exec(source)) !== null) {
       if (!components.has(match[1])) defines.add(match[1]);
     }
+    const describes: Record<string, string> = {};
+    VALUE_BLURB_RE.lastIndex = 0;
+    while ((match = VALUE_BLURB_RE.exec(source)) !== null) {
+      if (defines.has(match[1])) describes[match[1]] = match[2].trim();
+    }
     files.push({
       file,
       name: header[1],
       blurb: header[2].trim().replace(/\s*\*\/\s*$/, "").trim(),
       defines: [...defines].sort(),
+      describes,
     });
   }
   return files;
+}
+
+/** What a base-layer value styles: its own `@ui:base-value` blurb, else its file's header blurb. */
+export function baseLayerValueBlurb(file: BaseLayerFile, value: string): string {
+  return file.describes[value] ?? file.blurb;
 }
 
 /** Every base-layer `data-ui` value in the registry, sorted. The set that must be documented. */

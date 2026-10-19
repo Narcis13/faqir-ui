@@ -87,8 +87,15 @@ const RULES = cssBody
     return { sel: chunk.slice(0, brace).trim(), body: chunk.slice(brace + 1).trim() };
   });
 
-/** The one rule that applies the rhythm; everything after it is the ladder. */
+/** The one rule that applies the rhythm; the ladder follows it. */
 const RULE = RULES[0];
+
+/**
+ * The `data-gap` ladder. Rules after the ladder that only take the margin away
+ * again (`margin-block-start: 0`, the chrome exception) are tested in their own
+ * files and are not ladder rules.
+ */
+const LADDER = RULES.slice(1).filter((r) => r.body !== "margin-block-start: 0;");
 
 /** Remove every `:where(…)` group, parens balanced — what is left carries weight. */
 function stripWhere(selector: string): string {
@@ -231,7 +238,7 @@ describe("rhythm — registry/base/rhythm.css is the module, in CSS", () => {
   });
 
   it("exposes the whole data-gap ladder on a flow root, scoped to flow roots", () => {
-    const rules = RULES.slice(1).map((r) => {
+    const rules = LADDER.map((r) => {
       const m = new RegExp(`^:where\\(([^)]*)\\)\\[${FLOW_GAP_ATTRIBUTE}="(\\d+)"\\]$`).exec(r.sel);
       expect(m, `ladder rule is not a flow-root data-gap rule: ${r.sel}`).not.toBeNull();
       const value = new RegExp(`^${FLOW_SPACE_PROPERTY}: ([^;]+);$`).exec(r.body);

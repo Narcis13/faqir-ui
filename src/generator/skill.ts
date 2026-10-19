@@ -34,7 +34,7 @@ import {
   spacingLadderLine,
 } from "../utils/layout";
 import { TOKEN_MODIFIERS } from "../protocol";
-import { BASE_LAYER_BLURB, baseLayerUiValues, loadBaseLayer } from "../base-layer";
+import { BASE_LAYER_BLURB, baseLayerUiValues, baseLayerValueBlurb, loadBaseLayer } from "../base-layer";
 import { COMMAND_CATEGORIES, commandsInCategory } from "../command-registry";
 import { DOCUMENT_SCAFFOLD_NAMES, SCAFFOLDS } from "../scaffolds/registry";
 import type { ThemeManifest } from "../theme-manifest";
@@ -785,12 +785,12 @@ function renderBaseLayer(registryPath: string, prefix = "base"): string[] {
   lines.push("|-----------|------------|----------------|");
   for (const file of files) {
     for (const value of file.defines) {
-      lines.push(`| \`${value}\` | \`${prefix}/${file.file}\` | ${file.blurb} |`);
+      lines.push(`| \`${value}\` | \`${prefix}/${file.file}\` | ${baseLayerValueBlurb(file, value)} |`);
     }
   }
   lines.push("");
   lines.push(
-    "Use it for any run of authored copy — documentation, an article, a changelog, " +
+    "Use `prose` for any run of authored copy — documentation, an article, a changelog, " +
       "the body of a marketing page. Write ordinary HTML inside; it styles the elements for you:",
   );
   lines.push("");
@@ -804,9 +804,20 @@ function renderBaseLayer(registryPath: string, prefix = "base"): string[] {
   lines.push("");
   lines.push(
     "Width is the one thing it sets for you: `max-inline-size: var(--measure-prose)`. " +
-      "Pair it with `container` when the page needs a different measure.",
+      "Pair it with `container` when the page needs a different measure. A table wider " +
+      'than the column scrolls inside its own wrapper: `<div role="region" tabindex="0" ' +
+      'aria-label="…"><table>…</table></div>` (or a `<figure>` with a `<figcaption>`).',
   );
   lines.push("");
+  if (values.includes("visually-hidden")) {
+    lines.push(
+      '`<span data-ui="visually-hidden">…</span>` hides text from sight and keeps it for ' +
+        "screen readers — the label of an icon-only control, a caption the layout does not " +
+        "show. Write it instead of `class=\"sr-only\"` (a `no-class-attribute` warning). Never " +
+        "put it on a focusable element: a link that appears on focus is the `skip-link` primitive.",
+    );
+    lines.push("");
+  }
   return lines;
 }
 

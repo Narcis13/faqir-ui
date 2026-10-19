@@ -1,0 +1,55 @@
+/* @ui:component skip-link */
+/* @ui:tokens space-2 space-4 z-max font-ui text-sm weight-medium leading-normal color-fg color-bg color-border border-width radius-md shadow-lg focus-ring-width focus-ring-style focus-ring-color focus-ring-offset link-decoration link-thickness link-underline-offset */
+
+/* ── Skip link ──
+   The first thing in the tab order of a page: "Skip to content", pointing at
+   the id of the main element of the page. Out of sight until it takes
+   focus, then pinned to the top-start corner of the nearest positioned
+   ancestor (a sticky site-header, or the page), above everything on it.
+
+   Hidden by the same clip as `data-ui="visually-hidden"`, so a screen reader
+   reads it at every moment; it is revealed on `:focus` rather than only
+   `:focus-visible`, because a link that has focus and cannot be seen is the
+   one thing this primitive exists to prevent. Absolutely positioned, so it is
+   out of the flow either way and the page does not shift when it appears.
+   Nothing animates — it appears and disappears in one frame — so there is no
+   motion to reduce. `display: block` is what absolute positioning computes
+   anyway; saying it keeps the root out of the inline-level rhythm list. */
+[data-ui="skip-link"] {
+  position: absolute;
+  inset-block-start: var(--space-2);
+  inset-inline-start: var(--space-2);
+  z-index: var(--z-max);
+  display: block;
+  padding: var(--space-2) var(--space-4);
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-normal);
+  color: var(--color-fg);
+  text-decoration-line: var(--link-decoration);
+  text-decoration-thickness: var(--link-thickness);
+  text-underline-offset: var(--link-underline-offset);
+  background: var(--color-bg);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+}
+
+[data-ui="skip-link"]:focus-visible {
+  outline: var(--focus-ring-width) var(--focus-ring-style) var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+
+[data-ui="skip-link"]:not(:focus) {
+  inline-size: 1px;
+  block-size: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border-width: 0;
+  box-shadow: none;
+}

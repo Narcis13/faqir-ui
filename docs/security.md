@@ -250,9 +250,11 @@ primitive and no pattern ships a single `.js` file, and a page that loads only
 That is the answer for a CSP-restricted environment:
 
 - **Primitives** — pure markup and CSS. They work as-is under a strict policy.
-- **Patterns** — likewise, with two exceptions that are markup-level reactive
-  demos rather than styling: `inbox` and `wizard` carry `l-*` attributes with
-  expressions in them and need the evaluator. Every other pattern does not —
+- **Patterns** — likewise, with three exceptions that are markup-level reactive
+  demos rather than styling: `dashboard-shell`, `inbox` and `wizard` carry `l-*`
+  attributes with expressions in them and need the evaluator. (`dashboard-shell`
+  only for its phone drawer: without the evaluator the drawer stays closed and the
+  docked desktop sidebar is unaffected.) Every other pattern does not —
   including `form-page`, whose `<form l-data l-validate>` is value-less: a bare
   `l-data` initializes an empty scope and compiles nothing.
 - **Recipes** — behaviour comes from an ordinary function in an external file

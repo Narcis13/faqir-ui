@@ -1,0 +1,77 @@
+{
+  "$schema": "../../../manifest.schema.json",
+  "name": "skip-link",
+  "version": "1.0.0",
+  "kind": "primitive",
+  "category": "navigation",
+  "description": "\"Skip to content\" link: the page's first tab stop, visually hidden until it takes focus, then pinned to the top-start corner above everything else",
+
+  "anatomy": {
+    "tag": "a",
+    "selector": "[data-ui='skip-link']",
+    "content_model": "inline"
+  },
+
+  "slots": {},
+
+  "variants": {},
+
+  "states": {},
+
+  "props": {
+    "href": { "type": "string", "default": "#main", "description": "Fragment link to the page's main content: the id of its <main> (required)" },
+    "text": { "type": "string", "default": "Skip to content", "description": "Link text, read by screen readers at every moment and shown on focus" }
+  },
+
+  "a11y": {
+    "required_attrs": [
+      "href pointing at the id of the page's <main> (or its first content landmark)",
+      "visible link text that says where it goes (\"Skip to content\")"
+    ],
+    "keyboard": {
+      "Tab": "The first Tab on the page focuses the link and reveals it",
+      "Enter": "Follows the link: focus and scroll move to the main content"
+    },
+    "notes": "Put it first in <body> (or first inside the site-header root), so it is the first tab stop, and give the <main> it targets an id. It is hidden with the same clip as data-ui=\"visually-hidden\", so it is never removed from the accessibility tree, and it is revealed on :focus (not only :focus-visible) so a focused link is never invisible. Nothing animates, so there is no motion to reduce. Use one per page; a page with a long navigation block may add a second that skips that block."
+  },
+
+  "tokens_used": [
+    "space-2", "space-4", "z-max", "font-ui", "text-sm", "weight-medium", "leading-normal",
+    "color-fg", "color-bg", "color-border", "border-width", "radius-md", "shadow-lg",
+    "focus-ring-width", "focus-ring-style", "focus-ring-color", "focus-ring-offset",
+    "link-decoration", "link-thickness", "link-underline-offset"
+  ],
+
+  "templates": {
+    "html": "<a data-ui=\"skip-link\" href=\"#{main_id}\">{text}</a>"
+  },
+
+  "safe_transforms": [
+    "change-text-content",
+    "change-target-id"
+  ],
+
+  "unsafe_transforms": [
+    "remove-href",
+    "move-after-other-focusable-content",
+    "hide-with-display-none"
+  ],
+
+  "composition": {
+    "contains": [],
+    "used_in": ["site-header"]
+  },
+
+  "files": {
+    "html": "skip-link.html",
+    "css": "skip-link.css",
+    "manifest": "skip-link.manifest.json"
+  },
+
+  "tests": [
+    "is-the-first-tab-stop-on-the-page",
+    "visually-hidden-until-focused",
+    "revealed-on-focus-above-the-page",
+    "never-removed-from-the-accessibility-tree"
+  ]
+}

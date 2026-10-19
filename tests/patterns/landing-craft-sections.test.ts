@@ -376,7 +376,7 @@ describe("hero · data-variant=\"cover\"", () => {
   const cover = find("hero", (r) => r.selector.includes('[data-variant="cover"]'));
 
   it("declares cover as a layout value", () => {
-    expect(m.version).toBe("1.3.0");
+    expect(m.version).toBe("1.4.0");
     expect(m.variants.layout.values).toEqual(["center", "split", "cover"]);
     expect(m.variants.layout.default).toBe("center");
     expect(m.templates.html_cover).toContain('data-variant="cover"');

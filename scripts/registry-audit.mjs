@@ -4,7 +4,7 @@
  * registry remediated in 0.3-10; theme-manifest gate added in 0.4-12;
  * document-rule gate added in 0.4-15). See FAQIR-PLAN §10.4.
  *
- * Nine gates, all fatal on a single finding:
+ * Ten gates, all fatal on a single finding:
  *
  *  1. **logical-properties** — runs the framework's own audit rule engine
  *     (`buildLogicalPropertyResults`, the same one `faqir audit` runs per
@@ -65,6 +65,12 @@
  *     `DESCENDANT_PART_ALLOWED`; `DESCENDANT_PART_PENDING` lists the pattern
  *     sheets follow-up 1.1F-39 still has to convert.
  *
+ * 10. **manifest templates** (forecraft #12) — every manifest's `templates`
+ *     markup under the same full rule set as gate 7, at zero `error` and
+ *     `critical`. A finding about a value that is still a `{placeholder}` is the
+ *     caller's to fill and is exempt; templates another area still owns are
+ *     named in `TEMPLATE_AUDIT_PENDING` (`src/audit/manifest-templates.ts`).
+ *
  * Bun-only: imports the TypeScript rule engine from `src/`. Run via
  * `bun run audit:registry` (or `bun scripts/registry-audit.mjs`).
  */
@@ -80,6 +86,11 @@ import { auditHtmlSource } from "../src/audit/html-audit";
 import { knownUiValues, loadRegistryManifestMap, loadRegistryStylesheetMap } from "../src/utils/components";
 import { checkComponentTokens, readTokenLayer } from "../src/component-tokens";
 import { findDescendantPartSelectors } from "../src/audit/part-selectors";
+import {
+  TEMPLATE_AUDIT_PENDING,
+  auditManifestTemplates,
+  listManifestTemplates,
+} from "../src/audit/manifest-templates";
 import {
   buildBreakpointCanonResults,
   buildUndeclaredAttributeResults,
@@ -429,6 +440,43 @@ if (partOffenders.length > 0) {
   failed = true;
 } else {
   console.log(`✓ Zero findings — every part rule stops at its own component's parts.`);
+}
+
+// ── Gate 10: the manifest templates under the full rule set (forecraft #12) ──
+// Gate 7 audits the reference fragments; the manifests' `templates` — the
+// skill's examples, what `faqir template` fills, the markup agents copy — were
+// never audited, and auth-form's put its form straight into a card with no
+// required body. Same engine and inputs as gate 7; error and critical must be
+// zero, except findings about a value that is still a `{placeholder}`.
+const templates = listManifestTemplates(REGISTRY);
+const templateFindings = auditManifestTemplates({
+  templates,
+  manifests: fullRuleManifests,
+  styles: fullRuleStyles,
+  knownUiValues: fullRuleKnown,
+});
+const templateOffenders = templateFindings
+  .filter((f) => !(f.id in TEMPLATE_AUDIT_PENDING))
+  .map((f) => `  ${f.id}:${f.result.line} — [${f.result.rule_id}] ${f.result.message}`);
+const stillPending = new Set(templateFindings.map((f) => f.id));
+const stalePending = Object.keys(TEMPLATE_AUDIT_PENDING).filter((id) => !stillPending.has(id));
+
+console.log(`\n▶ Registry self-audit — the full rule set over every manifest template`);
+console.log(`  scanned ${templates.length} template(s); ${Object.keys(TEMPLATE_AUDIT_PENDING).length} pending (reported, not failed)`);
+for (const id of Object.keys(TEMPLATE_AUDIT_PENDING)) {
+  if (stillPending.has(id)) console.log(`  · pending ${id} — ${TEMPLATE_AUDIT_PENDING[id]}`);
+}
+if (stalePending.length > 0) {
+  console.log(`  ! stale pending entr${stalePending.length === 1 ? "y" : "ies"} — now clean, remove from TEMPLATE_AUDIT_PENDING: ${stalePending.join(", ")}`);
+}
+
+if (templateOffenders.length > 0) {
+  console.error(`\n✗ ${templateOffenders.length} finding(s) — a template its own components reject:`);
+  console.error(templateOffenders.join("\n"));
+  console.error(`\nFix the template in the manifest (src/audit/manifest-templates.ts says what is exempt).`);
+  failed = true;
+} else {
+  console.log(`✓ Zero findings — every template satisfies the rules its components declare.`);
 }
 
 process.exit(failed ? 1 : 0);
