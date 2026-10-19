@@ -25,6 +25,16 @@
       "default": "./dist/faqir-core.mjs"
     },
     "./faqir-core.min.js": "./dist/faqir-core.min.js",
+    "./csp": {
+      "types": "./faqir-core.d.ts",
+      "import": "./dist/faqir-core.csp.mjs",
+      "default": "./dist/faqir-core.csp.mjs"
+    },
+    "./faqir-core.csp.js": {
+      "types": "./faqir-core.d.ts",
+      "default": "./dist/faqir-core.csp.js"
+    },
+    "./faqir-core.csp.min.js": "./dist/faqir-core.csp.min.js",
     "./sri.json": "./dist/sri.json",
     "./subset": {
       "types": "./subset.d.ts",
@@ -48,6 +58,9 @@
     "./dist/faqir-core.mjs",
     "./dist/faqir-core.js",
     "./dist/faqir-core.min.js",
+    "./dist/faqir-core.csp.mjs",
+    "./dist/faqir-core.csp.js",
+    "./dist/faqir-core.csp.min.js",
     "./dist/*.css"
   ],
   "scripts": {

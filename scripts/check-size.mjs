@@ -50,6 +50,10 @@ export const BUDGETS = {
   // @faqir-ui/template's core entry: the runtime that renders a compiled AST
   // (docs/template.md §15.1). The compiler is its own entry, run at save time.
   template: 8 * KB,
+  // The strict-CSP engine (forecraft #50): engine + controllers with the
+  // expression interpreter in place of `new Function` — measured at 51.01 KB,
+  // about 4.7 KB of it the interpreter. Its own artifact, its own budget.
+  engineCsp: 52 * KB,
 };
 
 // Per-plugin exceptions to BUDGETS.plugin, by file name. Each is named for the
@@ -229,6 +233,8 @@ export function collectDefaultTargets(root = ROOT) {
       budgetBytes: null,
     },
     { label: "@faqir-ui/template", entry: "packages/template/src/index.js", budgetBytes: BUDGETS.template },
+    { label: "engine + controllers (strict CSP)", entry: "registry/core/faqir-core.csp.js", budgetBytes: BUDGETS.engineCsp },
+    { label: "strict-CSP dev engine (report only)", entry: "registry/core/faqir-core.csp.dev.js", budgetBytes: null },
   ];
 
   const pluginsDir = join(root, "registry", "core", "plugins");

@@ -1,10 +1,11 @@
 import { describe, it, expect, beforeEach } from "bun:test";
+import { loadEngine } from "../helpers/engine-build";
 
 // Transitions 2.0 — attribute-visible l-transition lifecycle. [0.4-11 · §A4]
 // The engine drives show/hide through a single `data-motion` attribute
 // (enter → enter-active → cleared / leave → leave-active → cleared) with NO
 // per-stage CSS classes, and a timeout fallback so leave always completes.
-const Faqir = require("../../registry/core/faqir-core.js");
+const Faqir = loadEngine();
 
 // setTimeout(0) resolves after the microtask queue AND the requestAnimationFrame
 // callback (happy-dom order: microtask → rAF → timeout-0), so one tick advances

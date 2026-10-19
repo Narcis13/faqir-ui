@@ -9,6 +9,9 @@
  *                              condition, because the UMD file exports NOTHING
  *                              under `"type": "module"` (see src/esm-entry.js).
  *   - `faqir-core.min.js`    — minified classic-script build (+ `.map` sourcemap)
+ *   - `faqir-core.csp.{js,min.js,mjs}` — the same three shapes of the strict-CSP
+ *                              engine (forecraft #50), for pages without
+ *                              `'unsafe-eval'`; bundled from the same entries
  *   - `faqir.{theme}.css`    — one prebuilt full CSS bundle per registry theme,
  *                              split into `/* === path === *\/` sections (a
  *                              contract: `@faqir-ui/core/subset` cuts on them)
@@ -76,6 +79,7 @@ const ENGINE_SRC = join(REGISTRY, "core", "faqir-core.js");
 const CDN_ENTRY = join(PKG, "src", "cdn-entry.js");
 const ESM_ENTRY = join(PKG, "src", "esm-entry.js");
 const CDN_PIN = join(PKG, "cdn.json");
+const CSP_ENGINE_SRC = join(REGISTRY, "core", "faqir-core.csp.js");
 /** The package's own name + version — what a CDN URL pins to. */
 const pkg = JSON.parse(readFileSync(join(PKG, "package.json"), "utf8"));
 
@@ -93,6 +97,10 @@ const noPin = process.argv.slice(2).includes("--no-pin");
 // src/core-src/engine.js; this package artifact intentionally assembles every
 // recipe controller and is governed by the 45 KB launch budget.
 const ASSEMBLED_GZIP_BUDGET = 45 * 1024;
+// The strict-CSP engine's own budget (forecraft #50): the same runtime with the
+// expression interpreter in place of `new Function`. Enforced by
+// scripts/check-size.mjs and tests/build/core-package-forecraft-csp.test.ts.
+const CSP_GZIP_BUDGET = 52 * 1024;
 
 // Token files in cascade order (mirrors src/utils/bundler.ts). We concatenate the
 // individual files rather than tokens/index.css precisely because index.css is a
@@ -251,6 +259,32 @@ bunBuild(CDN_ENTRY, ["--minify", "--format=iife", "--sourcemap=linked"], "faqir-
 //     stack trace, and the bundler minifies it again anyway.
 bunBuild(ESM_ENTRY, ["--format=esm", "--target=browser"], "faqir-core.mjs");
 
+// 2c. The strict-CSP engine (forecraft #50), in the same three shapes. Its two
+//     bundles come from the two entries above with their one import pointed at
+//     registry/core/faqir-core.csp.js — written into dist/ (which sits as deep
+//     as src/, so the relative path holds) and deleted again before the SRI
+//     pass. The named-export list keeps one home.
+if (!existsSync(CSP_ENGINE_SRC)) {
+  process.stderr.write(`Strict-CSP engine not found at ${relative(ROOT, CSP_ENGINE_SRC)} — run bun run build:core.\n`);
+  process.exit(1);
+}
+copyFileSync(CSP_ENGINE_SRC, join(DIST, "faqir-core.csp.js"));
+for (const [entry, flags, outName] of [
+  [CDN_ENTRY, ["--minify", "--format=iife", "--sourcemap=linked"], "faqir-core.csp.min.js"],
+  [ESM_ENTRY, ["--format=esm", "--target=browser"], "faqir-core.csp.mjs"],
+]) {
+  const from = '"../../../registry/core/faqir-core.js"';
+  const source = readFileSync(entry, "utf8");
+  if (!source.includes(from)) {
+    process.stderr.write(`${relative(ROOT, entry)} no longer imports ${from}; update step 2c of build-core-package.mjs.\n`);
+    process.exit(1);
+  }
+  const tmp = join(DIST, outName.replace(/\.(min\.js|mjs)$/, ".entry.js"));
+  writeFileSync(tmp, source.replace(from, '"../../../registry/core/faqir-core.csp.js"'));
+  bunBuild(tmp, flags, outName);
+  rmSync(tmp);
+}
+
 // 3. Per-theme CSS bundles.
 const themes = readdirSync(join(REGISTRY, "themes"))
   .filter((f) => f.endsWith(".css"))
@@ -347,6 +381,11 @@ console.log(`✓ Built @faqir-ui/core → ${relative(ROOT, DIST)}`);
 console.log(`  faqir-core.js        ${kb(statSync(join(DIST, "faqir-core.js")).size)} KB (UMD)`);
 console.log(`  faqir-core.mjs       ${kb(statSync(join(DIST, "faqir-core.mjs")).size)} KB (ESM)`);
 console.log(`  faqir-core.min.js    ${kb(minRaw)} KB raw · ${kb(minGzip)} KB gzip`);
+const cspGzip = gzipSync(readFileSync(join(DIST, "faqir-core.csp.min.js"))).length;
+console.log(
+  `  faqir-core.csp.min.js ${kb(cspGzip)} KB gzip (strict CSP) — ` +
+    `${cspGzip <= CSP_GZIP_BUDGET ? "≤" : "OVER"} ${kb(CSP_GZIP_BUDGET)} KB budget`,
+);
 console.log(`  themes               ${themes.map((t) => `faqir.${t}.css`).join(", ")}`);
 console.log(`  plugins              ${pluginFiles.length ? pluginFiles.join(", ") : "(none yet)"}`);
 console.log(`  sri.json             ${Object.keys(sri).length} files hashed (SHA-384)`);

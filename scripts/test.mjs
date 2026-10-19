@@ -54,7 +54,19 @@ const all = [...walk(join(ROOT, "tests")), ...walk(join(ROOT, "packages"))]
   .sort();
 
 const devEngine = all.filter((f) => LOADS_DEV_ENGINE.test(readFileSync(join(ROOT, f), "utf8")));
-const main = all.filter((f) => !devEngine.includes(f));
+
+// The strict-CSP builds (forecraft #50) bootstrap on `require` exactly like the
+// two above, so each gets a process of its own. A file that loads the engine
+// through `tests/helpers/engine-build` is a parameterised suite: it runs in the
+// production pass AND again in the CSP pass, there with FAQIR_ENGINE_BUILD=csp.
+const LOADS_CSP_ENGINE = /require\(\s*["'][^"']*faqir-core\.csp\.js["']\s*\)/;
+const LOADS_CSP_DEV_ENGINE = /require\(\s*["'][^"']*faqir-core\.csp\.dev\.js["']\s*\)/;
+const ENGINE_MATRIX = /from\s+["'][^"']*helpers\/engine-build["']/;
+const source = (f) => readFileSync(join(ROOT, f), "utf8");
+const cspDevEngine = all.filter((f) => LOADS_CSP_DEV_ENGINE.test(source(f)));
+const cspEngine = all.filter((f) => LOADS_CSP_ENGINE.test(source(f)) && !cspDevEngine.includes(f));
+const matrix = all.filter((f) => ENGINE_MATRIX.test(source(f)));
+const main = all.filter((f) => !devEngine.includes(f) && !cspEngine.includes(f) && !cspDevEngine.includes(f));
 
 /**
  * The last backstop. Every `spawnSync` inside the suite carries its own budget
@@ -72,7 +84,7 @@ const PARTITION_TIMEOUT_MS = (() => {
 })();
 
 /** One `bun test` process over `files`. Returns its exit status. */
-function run(label, files) {
+function run(label, files, env) {
   if (files.length === 0) return 0;
   process.stdout.write(`\n──── ${label} — ${files.length} file(s) ────\n`);
   const args = ["test", ...files];
@@ -80,6 +92,7 @@ function run(label, files) {
     cwd: ROOT,
     stdio: "inherit",
     timeout: PARTITION_TIMEOUT_MS,
+    ...(env ? { env: { ...process.env, ...env } } : {}),
   });
   if (isTimeout(result)) {
     process.stderr.write(
@@ -101,12 +114,21 @@ function run(label, files) {
 // surfaces before the (much smaller) dev-engine pass runs.
 const mainStatus = run("production engine + everything else", main);
 const devStatus = run("dev engine (isolated process)", devEngine);
+const cspStatus = run("strict-CSP engine (isolated process)", [...cspEngine, ...matrix].sort(), {
+  FAQIR_ENGINE_BUILD: "csp",
+});
+const cspDevStatus = run("strict-CSP dev engine (isolated process)", cspDevEngine);
 
-if (mainStatus !== 0 || devStatus !== 0) {
+const passes = [
+  ["production pass", mainStatus],
+  ["dev-engine pass", devStatus],
+  ["strict-CSP pass", cspStatus],
+  ["strict-CSP dev pass", cspDevStatus],
+];
+if (passes.some(([, status]) => status !== 0)) {
   process.stderr.write(
-    `\n✗ test failed — production pass: ${mainStatus === 0 ? "ok" : "FAILED"}, ` +
-      `dev-engine pass: ${devStatus === 0 ? "ok" : "FAILED"}\n`,
+    `\n✗ test failed — ${passes.map(([name, status]) => `${name}: ${status === 0 ? "ok" : "FAILED"}`).join(", ")}\n`,
   );
   process.exit(1);
 }
-process.stdout.write(`\n✓ all ${all.length} test file(s) passed across 2 isolated processes\n`);
+process.stdout.write(`\n✓ all ${all.length} test file(s) passed across ${passes.length} isolated processes\n`);

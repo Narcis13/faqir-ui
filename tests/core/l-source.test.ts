@@ -76,9 +76,10 @@
 // ═══════════════════════════════════════════════════════════════════════════
 
 import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll } from "bun:test";
+import { loadEngine } from "../helpers/engine-build";
 
 // faqir-core.js is a UMD module that attaches Faqir to globalThis on require.
-const Faqir = require("../../registry/core/faqir-core.js");
+const Faqir = loadEngine();
 
 // setTimeout(0) resolves after the microtask queue (incl. the reactive flush
 // and the whole fetch().then() chain) drains — one tick settles a full load().

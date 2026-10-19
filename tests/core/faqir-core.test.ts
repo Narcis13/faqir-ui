@@ -1,10 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
+import { loadEngine } from "../helpers/engine-build";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 // Import faqir-core.js — it's a UMD module that attaches Faqir to globalThis
 // We need to re-require it fresh for some tests
-const Faqir = require("../../registry/core/faqir-core.js");
+const Faqir = loadEngine();
 
 // Helper to flush all pending microtasks — setTimeout(0) runs after the microtask queue drains
 function tick(): Promise<void> {
