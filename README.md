@@ -305,15 +305,15 @@ No specificity wars. No naming conventions to memorize. The selector is the docu
 
 ## Component Library
 
-Faqir ships 105 components across three layers. Every one has a page on the
+Faqir ships 107 components across three layers. Every one has a page on the
 [docs site](https://faqir-ui.pages.dev), generated from its manifest.
 
-**Primitives (53, CSS only).** `aspect-ratio` `avatar` `backdrop` `badge`
-`breadcrumb` `button` `callout` `card` `checkbox` `chip` `cluster` `collapsible`
+**Primitives (55, CSS only).** `aspect-ratio` `avatar` `backdrop` `badge`
+`breadcrumb` `button` `callout` `card` `chart` `checkbox` `chip` `cluster` `collapsible`
 `container` `description-list` `empty-state` `field-group` `glow` `grid`
 `highlight` `icon` `image` `input` `kbd` `key-value` `label` `link` `marquee`
 `nav` `page-break` `progress` `quote` `radio` `rating` `reveal` `scroll-progress`
-`select` `separator` `signature` `skeleton` `spinner` `spotlight` `stack`
+`select` `separator` `signature` `skeleton` `skip-link` `spinner` `spotlight` `stack`
 `stamp` `stat` `stepper`
 `surface` `switch` `switcher` `text` `textarea` `timeline` `toggle` `watermark`
 
@@ -843,6 +843,7 @@ plugin; or load them individually from `ui/core/plugins/` after the core script.
 
 | Plugin | Provides | What it does |
 |---|---|---|
+| `faqir-chart` | the `chart` controller (`$ui.redraw()`) | Draws a `chart` primitive's data table as an inline SVG bar, column or line chart; without it the table is the chart |
 | `faqir-collapse` | `l-collapse` | Height auto-animation for a boolean; honours `prefers-reduced-motion` |
 | `faqir-intersect` | `l-intersect` | Enter, `.leave` and `.once` IntersectionObserver hooks |
 | `faqir-mask` | `l-mask` | Caret-safe input masking; `l-model` still receives the raw characters |

@@ -1,0 +1,223 @@
+{
+  "$schema": "../../../manifest.schema.json",
+  "name": "chart",
+  "version": "1.0.0",
+  "kind": "primitive",
+  "category": "data-display",
+  "description": "Bar, column or line chart drawn from its own data table: the table is the source of truth and prints, the inline SVG is a progressive enhancement from the opt-in faqir-chart plugin",
+  "anatomy": {
+    "tag": "figure",
+    "selector": "[data-ui='chart']",
+    "content_model": "slots"
+  },
+  "slots": {
+    "caption": {
+      "selector": "[data-part='caption']",
+      "required": false,
+      "tag_hint": "figcaption",
+      "description": "The chart's title. It opens the SVG's aria-label, so name the measure and its unit here (\"Revenue, thousand euro\")"
+    },
+    "plot": {
+      "selector": "[data-part='plot']",
+      "required": false,
+      "tag_hint": "div",
+      "description": "Where faqir-chart draws the SVG; empty and collapsed until it does. The plugin creates it before the table when the markup leaves it out"
+    },
+    "data": {
+      "selector": "[data-part='data']",
+      "required": true,
+      "tag_hint": "table",
+      "description": "The numbers: the last thead row names the category column and then one series per column; each tbody row is a category, its first cell the label, the rest one value per series. A cell's number is its data-value when present, else its text read in the page language; the text itself is what the labels and the aria-label read. Visible without JavaScript; once the chart draws, visually hidden on screen and printed under the chart"
+    },
+    "grid": {
+      "selector": "[data-part='grid']",
+      "required": false,
+      "tag_hint": "g",
+      "description": "Drawn by faqir-chart: the value-axis rules, one line per tick"
+    },
+    "axis": {
+      "selector": "[data-part='axis']",
+      "required": false,
+      "tag_hint": "g",
+      "description": "Drawn by faqir-chart: the tick and category labels"
+    },
+    "marks": {
+      "selector": "[data-part='marks']",
+      "required": false,
+      "tag_hint": "g",
+      "description": "Drawn by faqir-chart: one series group per table column, in table order"
+    },
+    "series": {
+      "selector": "[data-part='series']",
+      "required": false,
+      "tag_hint": "g",
+      "description": "Drawn by faqir-chart: one series' marks, labels and name. Its position in marks picks its lightness band"
+    },
+    "mark": {
+      "selector": "[data-part='mark']",
+      "required": false,
+      "tag_hint": "rect",
+      "description": "Drawn by faqir-chart: a bar or column (rect), or a line's point (circle)"
+    },
+    "line": {
+      "selector": "[data-part='line']",
+      "required": false,
+      "tag_hint": "path",
+      "description": "Drawn by faqir-chart: a line series' path, dashed per series (solid, dash, dot, dash-dot)"
+    },
+    "label": {
+      "selector": "[data-part='label']",
+      "required": false,
+      "tag_hint": "text",
+      "description": "Drawn by faqir-chart: a value label on a mark, the cell's own text, where it fits"
+    },
+    "name": {
+      "selector": "[data-part='name']",
+      "required": false,
+      "tag_hint": "text",
+      "description": "Drawn by faqir-chart: a series name written on its marks (bar, column) or after its end (line) instead of a legend, where every name fits"
+    },
+    "baseline": {
+      "selector": "[data-part='baseline']",
+      "required": false,
+      "tag_hint": "line",
+      "description": "Drawn by faqir-chart: the zero rule the bars and columns grow from"
+    },
+    "legend": {
+      "selector": "[data-part='legend']",
+      "required": false,
+      "tag_hint": "g",
+      "description": "Drawn by faqir-chart only when the series names do not fit on the marks"
+    },
+    "key": {
+      "selector": "[data-part='key']",
+      "required": false,
+      "tag_hint": "g",
+      "description": "Drawn by faqir-chart: one legend entry, a swatch and the series name"
+    },
+    "swatch": {
+      "selector": "[data-part='swatch']",
+      "required": false,
+      "tag_hint": "rect",
+      "description": "Drawn by faqir-chart: a legend key's sample of the series' band (and dash, for lines)"
+    }
+  },
+  "variants": {
+    "variant": {
+      "values": [
+        "column",
+        "bar",
+        "line"
+      ],
+      "default": "column",
+      "attr": "data-variant",
+      "applied_to": "root"
+    }
+  },
+  "props": {
+    "table": {
+      "type": "enum",
+      "values": [
+        "auto",
+        "visible",
+        "hidden"
+      ],
+      "default": "auto",
+      "attr": "data-table",
+      "description": "Where the data table shows once the chart has drawn: auto hides it on screen (a screen reader still reaches it) and prints it under the chart; visible keeps it on screen too; hidden leaves it off paper as well. Without the plugin the table always shows"
+    },
+    "value": {
+      "type": "string",
+      "default": "",
+      "attr": "data-value",
+      "description": "On a td of the data table, not the root: the number the cell plots, when its text is not one the page language reads plainly (\"about 40\", or a figure in another locale). Without it the cell's text is read in the language of the nearest lang attribute, keeping its decimal mark and dropping grouping and units, so 1,240.5 in English and 1.240,5 in Romanian are both 1240.5. The text is still what the labels and the aria-label read"
+    },
+    "--chart-accent": {
+      "type": "string",
+      "default": "var(--color-primary)",
+      "description": "The hue of the series ramp (custom property). The four lightness bands are mixed from it, the text colour and the background, so any hue keeps them apart in greyscale"
+    }
+  },
+  "states": {
+    "drawn": {
+      "attr": "data-state=\"drawn\"",
+      "description": "faqir-chart has drawn the SVG from the table; the table is visually hidden on screen unless data-table=\"visible\". Absent, nothing is drawn and the table is the chart"
+    }
+  },
+  "api": {
+    "methods": [
+      {
+        "name": "redraw",
+        "params": "",
+        "description": "Read the data table again and redraw the chart; false when it holds no number."
+      },
+      {
+        "name": "destroy",
+        "params": "",
+        "description": "Stop watching the table, remove the drawing and show the table again."
+      }
+    ]
+  },
+  "a11y": {
+    "required_attrs": [
+      "a <table data-part=\"data\"> with th scope=\"col\" headers and th scope=\"row\" category labels",
+      "the drawn svg carries role=\"img\" and an aria-label reading the caption, the kind and every value"
+    ],
+    "keyboard": {},
+    "notes": "The table is the accessible form: it stays in the accessibility tree after the chart draws. The SVG is one image whose aria-label reads the numbers in table order; its marks are not focusable"
+  },
+  "tokens_used": [
+    "color-primary",
+    "color-fg",
+    "color-bg",
+    "color-border",
+    "color-fg-muted",
+    "space-2",
+    "space-1",
+    "doc-font",
+    "font-body",
+    "text-sm",
+    "text-xs",
+    "weight-semibold",
+    "leading-snug",
+    "border-width",
+    "border-width-lg"
+  ],
+  "templates": {
+    "html": "<figure data-ui=\"chart\" data-variant=\"{variant}\">\n  <figcaption data-part=\"caption\">{caption}</figcaption>\n  <div data-part=\"plot\"></div>\n  <table data-part=\"data\">\n    <thead>\n      <tr><th scope=\"col\">{category_heading}</th><th scope=\"col\">{series}</th></tr>\n    </thead>\n    <tbody>\n      <tr><th scope=\"row\">{category}</th><td>{value}</td></tr>\n    </tbody>\n  </table>\n</figure>"
+  },
+  "safe_transforms": [
+    "Change data-variant to column, bar or line",
+    "Add, remove or reorder table rows (categories) and columns (series)",
+    "Edit a cell's text, or add a data-value with its number",
+    "Change data-table to auto, visible or hidden",
+    "Set --chart-accent to another colour token"
+  ],
+  "unsafe_transforms": [
+    "Remove the data table",
+    "Draw the chart without the table (an SVG alone has no accessible numbers and nothing to print without JavaScript)",
+    "Give the marks literal colours"
+  ],
+  "composition": {
+    "contains": [],
+    "used_in": [
+      "document",
+      "dashboard-shell",
+      "card"
+    ]
+  },
+  "files": {
+    "html": "chart.html",
+    "css": "chart.css",
+    "manifest": "chart.manifest.json"
+  },
+  "tests": [
+    "the table is the chart without JavaScript",
+    "bar and column value axes start at zero",
+    "series names sit on the marks where they fit, else a legend",
+    "lines differ by dash pattern",
+    "the svg is role=img with an aria-label that reads the numbers",
+    "the table is visually hidden on screen once drawn and printed under the chart",
+    "three series print in three distinct lightness bands"
+  ]
+}

@@ -1,0 +1,181 @@
+/* @ui:component chart */
+/* @ui:tokens color-primary color-fg color-bg color-border color-fg-muted space-2 space-1 doc-font font-body text-sm text-xs weight-semibold leading-snug border-width border-width-lg */
+
+/* ── Base ──
+   The series ramp is one hue (--chart-accent, else the primary) at four
+   lightness bands, set by how much of the text colour against the background
+   each band carries. The hue is the same share of every band, so the steps
+   between bands are fixed fractions of the fg–bg contrast whatever the hue:
+   they stay apart in greyscale, on paper and in the dark scheme (where the
+   ramp runs light to dark the other way). A fifth series repeats the first
+   band; lines add a dash pattern per series on top of the band. */
+[data-ui="chart"] {
+  --faqir-chart-hue: var(--chart-accent, var(--color-primary));
+  --faqir-chart-1: color-mix(in oklab, var(--faqir-chart-hue) 35%, color-mix(in oklab, var(--color-fg) 90%, var(--color-bg)));
+  --faqir-chart-2: color-mix(in oklab, var(--faqir-chart-hue) 35%, color-mix(in oklab, var(--color-fg) 60%, var(--color-bg)));
+  --faqir-chart-3: color-mix(in oklab, var(--faqir-chart-hue) 35%, color-mix(in oklab, var(--color-fg) 30%, var(--color-bg)));
+  --faqir-chart-4: color-mix(in oklab, var(--faqir-chart-hue) 35%, var(--color-bg));
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-inline-size: 0;
+  margin: 0;
+  font-family: var(--doc-font, var(--font-body));
+  color: var(--color-fg);
+}
+
+/* ── Caption ── */
+[data-ui="chart"] > [data-part="caption"] {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-snug);
+}
+
+/* ── Plot: the SVG the plugin draws, sized to the plot's width ── */
+[data-ui="chart"] > [data-part="plot"] {
+  min-inline-size: 0;
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+[data-ui="chart"] > [data-part="plot"]:empty {
+  display: none;
+}
+
+[data-ui="chart"] > :where([data-part="plot"]) > svg {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+  overflow: visible;
+}
+
+[data-ui="chart"] > :where([data-part="plot"]) > :where(svg) > [data-part="grid"] {
+  stroke: var(--color-border);
+  stroke-width: var(--border-width);
+}
+
+[data-ui="chart"] > :where([data-part="plot"]) > :where(svg) > [data-part="axis"] {
+  fill: var(--color-fg-muted);
+}
+
+[data-ui="chart"] > :where([data-part="plot"]) > :where(svg) > [data-part="baseline"] {
+  stroke: var(--color-fg-muted);
+  stroke-width: var(--border-width);
+}
+
+/* ── Series: one band each, in order, for the marks and the legend keys ── */
+[data-ui="chart"] > :where([data-part="plot"]) > :where(svg) > :where([data-part="marks"], [data-part="legend"]) > :nth-child(4n + 1) {
+  --faqir-chart-ink: var(--faqir-chart-1);
+  --faqir-chart-on: var(--color-bg);
+}
+
+[data-ui="chart"] > :where([data-part="plot"]) > :where(svg) > :where([data-part="marks"], [data-part="legend"]) > :nth-child(4n + 2) {
+  --faqir-chart-ink: var(--faqir-chart-2);
+  --faqir-chart-on: var(--color-bg);
+}
+
+[data-ui="chart"] > :where([data-part="plot"]) > :where(svg) > :where([data-part="marks"], [data-part="legend"]) > :nth-child(4n + 3) {
+  --faqir-chart-ink: var(--faqir-chart-3);
+  --faqir-chart-on: var(--color-fg);
+}
+
+[data-ui="chart"] > :where([data-part="plot"]) > :where(svg) > :where([data-part="marks"], [data-part="legend"]) > :nth-child(4n + 4) {
+  --faqir-chart-ink: var(--faqir-chart-4);
+  --faqir-chart-on: var(--color-fg);
+}
+
+[data-ui="chart"] > :where([data-part="plot"]) > :where(svg) > :where([data-part="marks"]) > :where([data-part="series"]) > [data-part="mark"] {
+  fill: var(--faqir-chart-ink);
+}
+
+[data-ui="chart"] > :where([data-part="plot"]) > :where(svg) > :where([data-part="marks"]) > :where([data-part="series"]) > [data-part="line"] {
+  fill: none;
+  stroke: var(--faqir-chart-ink);
+  stroke-width: var(--border-width-lg);
+  stroke-linejoin: round;
+}
+
+/* Value labels beside the marks */
+[data-ui="chart"] > :where([data-part="plot"]) > :where(svg) > :where([data-part="marks"]) > :where([data-part="series"]) > [data-part="label"] {
+  fill: var(--color-fg);
+}
+
+/* Series names on the marks, in the colour that reads on that band */
+[data-ui="chart"] > :where([data-part="plot"]) > :where(svg) > :where([data-part="marks"]) > :where([data-part="series"]) > [data-part="name"] {
+  fill: var(--faqir-chart-on);
+  font-weight: var(--weight-semibold);
+}
+
+/* A line's name sits after its end, on the page rather than on a mark */
+[data-ui="chart"][data-variant="line"] > :where([data-part="plot"]) > :where(svg) > :where([data-part="marks"]) > :where([data-part="series"]) > [data-part="name"] {
+  fill: var(--color-fg);
+}
+
+/* ── Legend: only when the names do not fit on the marks ── */
+[data-ui="chart"] > :where([data-part="plot"]) > :where(svg) > [data-part="legend"] {
+  fill: var(--color-fg);
+}
+
+[data-ui="chart"] > :where([data-part="plot"]) > :where(svg) > :where([data-part="legend"]) > :where([data-part="key"]) > [data-part="swatch"] {
+  fill: var(--faqir-chart-ink);
+  stroke: var(--faqir-chart-ink);
+  stroke-width: var(--border-width-lg);
+}
+
+/* ── Data: the source of truth, and what prints ── */
+[data-ui="chart"] > [data-part="data"] {
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+[data-ui="chart"] > :where([data-part="data"]) > :where(thead, tbody) > :where(tr) > :where(th, td) {
+  padding-block: var(--space-1);
+  padding-inline: var(--space-2);
+  border-block-end: var(--border-width) solid var(--color-border);
+  text-align: start;
+}
+
+[data-ui="chart"] > :where([data-part="data"]) > :where(thead) > :where(tr) > th {
+  font-weight: var(--weight-semibold);
+}
+
+/* Numbers, and the series headings above them, align on the end edge */
+[data-ui="chart"] > :where([data-part="data"]) > :where(thead) > :where(tr) > :where(th) + th,
+[data-ui="chart"] > :where([data-part="data"]) > :where(tbody) > :where(tr) > td {
+  text-align: end;
+}
+
+/* Once the chart draws, the table leaves the screen but not the page: a
+   screen reader still reaches it. data-table="visible" keeps it in view. */
+[data-ui="chart"][data-state="drawn"]:not([data-table="visible"]) > [data-part="data"] {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ── Print: the chart and, under it, the numbers it was drawn from ── */
+@media print {
+  [data-ui="chart"] {
+    break-inside: avoid;
+  }
+
+  [data-ui="chart"] > :where([data-part="plot"]) > svg {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  [data-ui="chart"][data-state="drawn"]:not([data-table="hidden"]) > [data-part="data"] {
+    position: static;
+    inline-size: auto;
+    block-size: auto;
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
+  }
+}

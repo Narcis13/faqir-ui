@@ -224,6 +224,9 @@
     "card": 7,
     "link": 1
   },
+  "primitives/chart/chart.html": {
+    "chart": 4
+  },
   "primitives/checkbox/checkbox.html": {
     "checkbox": 8,
     "checkbox-label": 8

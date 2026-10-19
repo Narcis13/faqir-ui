@@ -87,7 +87,15 @@ export const BUDGETS = {
 //   function the panel, the export and the restore share, and the localStorage
 //   round trip. The dials are the point: every token family a theme axis
 //   moves gets a control, and that list is what the kilobytes buy.
+//
+// · faqir-chart, 2 → 4 KB, measured at 3.66 KB: the `chart` primitive's
+//   drawing (forecraft #36) — reading the data table in the page's locale,
+//   nice ticks, the bar, column and line layouts with their direct labels and
+//   the legend they fall back to, the aria-label that reads every number, and
+//   the SVG writer. It ships as its own opt-in file precisely so that none of
+//   it lands in faqir-core.js, whose budget has no room.
 export const PLUGIN_BUDGETS = {
+  "faqir-chart.js": 4 * KB,
   "faqir-tweak.js": 4 * KB,
   "faqir-validate.js": 4 * KB,
   "faqir-rules.js": 14 * KB,
